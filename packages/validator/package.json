@@ -1,0 +1,72 @@
+{
+  "name": "@forklaunch/validator",
+  "version": "0.1.15",
+  "description": "Schema validator for ForkLaunch components.",
+  "files": [
+    "dist"
+  ],
+  "types": "dist/index.d.ts",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "jest",
+    "build": "tsc",
+    "lint": "eslint . -c eslint.config.mjs",
+    "lint:fix": "eslint . -c eslint.config.mjs --fix"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/forklaunch/forklaunch-js.git"
+  },
+  "author": "Rohin Bhargava",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/forklaunch/forklaunch-js/issues"
+  },
+  "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
+  "dependencies": {
+    "@anatine/zod-openapi": "^2.2.6",
+    "@forklaunch/common": "^0.1.2",
+    "@sinclair/typebox": "^0.32.34",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.6.0",
+    "globals": "^15.7.0",
+    "openapi3-ts": "^4.3.3",
+    "ts-jest": "^29.1.5",
+    "ts-node": "^10.9.2",
+    "typescript-eslint": "^7.15.0"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./types": {
+      "types": "./dist/types/schema.types.d.ts",
+      "default": "./dist/types/schema.types.js"
+    },
+    "./interfaces": {
+      "types": "./dist/interfaces/schemaValidator.interfaces.d.ts",
+      "default": "./dist/interfaces/schemaValidator.interfaces.js"
+    },
+    "./typebox": {
+      "types": "./dist/typebox/index.d.ts",
+      "default": "./dist/typebox/index.js"
+    },
+    "./zod": {
+      "types": "./dist/zod/index.d.ts",
+      "default": "./dist/zod/index.js"
+    },
+    "./typebox/types": {
+      "types": "./dist/typebox/types/typebox.schema.types.d.ts",
+      "default": "./dist/typebox/types/typebox.schema.types.js"
+    },
+    "./zod/types": {
+      "types": "./dist/zod/types/zod.schema.types.d.ts",
+      "default": "./dist/zod/types/zod.schema.types.js"
+    }
+  }
+}

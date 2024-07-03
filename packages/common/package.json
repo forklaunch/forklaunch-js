@@ -1,0 +1,48 @@
+{
+  "name": "@forklaunch/common",
+  "version": "0.1.2",
+  "description": "Common package for base types, interfaces, implementations.",
+  "files": [
+    "dist/**"
+  ],
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "docs": "typedoc --out docs **/*.ts",
+    "lint": "eslint . -c eslint.config.mjs",
+    "lint:fix": "eslint . -c eslint.config.mjs --fix"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/forklaunch/forklaunch-js.git"
+  },
+  "author": "Rohin Bhargava",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/forklaunch/forklaunch-js/issues"
+  },
+  "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
+  "devDependencies": {
+    "@eslint/js": "^9.6.0",
+    "argparse": "^2.0.1",
+    "balanced-match": "^1.0.2",
+    "brace-expansion": "^2.0.1",
+    "entities": "^4.5.0",
+    "eslint": "^9.6.0",
+    "globals": "^15.7.0",
+    "linkify-it": "^5.0.0",
+    "lunr": "^2.3.9",
+    "markdown-it": "^14.1.0",
+    "mdurl": "^2.0.0",
+    "minimatch": "^9.0.5",
+    "punycode.js": "^2.3.1",
+    "shiki": "^1.9.1",
+    "ts-jest": "^29.1.5",
+    "ts-node": "^10.9.2",
+    "typedoc": "^0.26.3",
+    "typescript": "^5.5.2",
+    "typescript-eslint": "^7.15.0",
+    "uc.micro": "^2.1.0",
+    "yaml": "^2.4.5"
+  }
+}
