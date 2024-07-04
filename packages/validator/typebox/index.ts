@@ -51,8 +51,8 @@ export class TypeboxSchemaValidator implements SchemaValidator<
             if (typeof schema[key] === 'object' && Kind in (schema[key] as TSchema)) {
                 newSchema[key] = schema[key] as TSchema;
             } else {
-                const scheme = this.schemify(schema[key]);
-                newSchema[key] = scheme;
+                const schemified = this.schemify(schema[key]);
+                newSchema[key] = schemified;
             }
         });
        
@@ -68,8 +68,8 @@ export class TypeboxSchemaValidator implements SchemaValidator<
         if (Kind in (schema as TSchema)) {
             return Type.Optional(schema as TSchema) as TOptional<TResolve<T>>;
         }
-        const scheme = this.schemify(schema);
-        return Type.Optional(scheme) as TOptional<TResolve<T>>; 
+        const schemified = this.schemify(schema);
+        return Type.Optional(schemified) as TOptional<TResolve<T>>; 
     }
 
     /**
@@ -81,8 +81,8 @@ export class TypeboxSchemaValidator implements SchemaValidator<
         if (Kind in (schema as TSchema)) {
             return Type.Array(schema as TSchema) as TArray<TResolve<T>>;
         }
-        const scheme = this.schemify(schema);
-        return Type.Array(scheme) as TArray<TResolve<T>>;
+        const schemified = this.schemify(schema);
+        return Type.Array(schemified) as TArray<TResolve<T>>;
     }
 
     /**
@@ -119,8 +119,12 @@ export class TypeboxSchemaValidator implements SchemaValidator<
      * @param {unknown} value - The value to validate.
      * @returns {boolean} True if valid, otherwise false.
      */
-    validate<T extends TSchema>(schema: T, value: unknown): boolean {
-        return Value.Check(schema, value);
+    validate<T extends TIdiomaticSchema | TSchema>(schema: T, value: unknown): boolean {
+        if (Kind in (schema as TSchema)) {
+            return Value.Check(schema as TSchema, value);
+        }
+        const schemified = this.schemify(schema);
+        return Value.Check(schemified, value);
     }
 
     /**

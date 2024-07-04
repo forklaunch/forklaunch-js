@@ -119,3 +119,5 @@ export type ValidSchemaObject<SV extends AnySchemaValidator> = SchemaObject<Sche
  * @template SV - SchemaValidator type.
  */
 export type Schema<T extends ValidSchemaObject<SV> | IdiomaticSchema<SchemaCatchall<SV>>, SV extends AnySchemaValidator> = SchemaPrettify<SchemaResolve<T, SV>, SV>;
+
+export * from "./interfaces";

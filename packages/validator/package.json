@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/validator",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Schema validator for ForkLaunch components.",
   "files": [
     "dist"
@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.6.0",
+    "@types/jest": "^29.5.12",
     "globals": "^15.7.0",
     "openapi3-ts": "^4.3.3",
     "ts-jest": "^29.1.5",

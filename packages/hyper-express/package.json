@@ -1,0 +1,19 @@
+{
+  "name": "@forklaunch/hyper-express",
+  "version": "0.1.0",
+  "description": "Forklaunch framework for hyper-express.",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/forklaunch/forklaunch-js.git"
+  },
+  "author": "Rohin Bhargava",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/forklaunch/forklaunch-js/issues"
+  },
+  "homepage": "https://github.com/forklaunch/forklaunch-js#readme"
+}

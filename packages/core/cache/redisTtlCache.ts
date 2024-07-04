@@ -1,6 +1,6 @@
 import { createClient } from 'redis';
 import { TtlCache } from './interfaces/ttlCache.interface';
-import { TtlCacheRecord } from './types/ttlCacheRecord';
+import { TtlCacheRecord } from './types/ttlCacheRecord.types';
 
 /**
  * Class representing a Redis-based TTL (Time-To-Live) cache.

@@ -1,4 +1,4 @@
-import { TtlCacheRecord } from "../types/ttlCacheRecord";
+import { TtlCacheRecord } from "../types/ttlCacheRecord.types";
 
 /**
  * Interface representing a TTL (Time-To-Live) cache.

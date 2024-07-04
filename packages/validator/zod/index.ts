@@ -118,8 +118,7 @@ export class ZodSchemaValidator implements SchemaValidator<
      * @returns {boolean} True if valid, otherwise false.
      */
     validate<T extends ZodCatchall>(schema: T, value: unknown): boolean {
-        schema.parse(value);
-        return true;
+        return schema.safeParse(value).success;
     }
 
     /**
