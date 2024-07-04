@@ -18,15 +18,6 @@ export abstract class RequestEntityMapper<Entity extends BaseEntity, SV extends 
      * @protected
      */
     _Entity!: Entity;
-    
-    // /**
-    //  * Creates an instance of RequestEntityMapper.
-    //  * 
-    //  * @param {SV} schemaValidator - The schema provider.
-    //  */
-    // constructor(schemaValidator?: SV) {
-    //     super(schemaValidator);
-    // }
 
     /**
      * Converts the underlying DTO to an entity.
