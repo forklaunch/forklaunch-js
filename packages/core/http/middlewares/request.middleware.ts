@@ -1,3 +1,4 @@
+import { AnySchemaValidator } from "@forklaunch/validator";
 import { SchemaValidator } from "@forklaunch/validator/interfaces";
 import * as jose from "jose";
 import { v4 } from "uuid";
@@ -5,13 +6,13 @@ import { ForklaunchNextFunction, ForklaunchRequest, ForklaunchResponse } from ".
 import { AuthMethod, HttpContractDetails, PathParamHttpContractDetails, StringOnlyObject } from "../types/primitive.types";
 
 export function createRequestContext<
-    SV extends SchemaValidator,
+    SV extends AnySchemaValidator,
     Request extends ForklaunchRequest<SV>,
     Response extends ForklaunchResponse,
     NextFunction extends ForklaunchNextFunction
 >(schemaValidator: SV) {
     return (req: Request, res: Response, next?: NextFunction) => {
-        req.schemaValidator = schemaValidator;
+        req.schemaValidator = schemaValidator as unknown as SchemaValidator;
 
         let correlationId = v4();
 
@@ -32,7 +33,7 @@ export function createRequestContext<
 }
 
 export function enrichRequestDetails<
-    SV extends SchemaValidator,
+    SV extends AnySchemaValidator,
     Request extends ForklaunchRequest<SV>,
     Response extends ForklaunchResponse,
     NextFunction extends ForklaunchNextFunction
@@ -46,7 +47,7 @@ export function enrichRequestDetails<
     }
 }
 
-export function preHandlerParse<SV extends SchemaValidator>(schemaValidator: SV, object: unknown, schemaInput?: StringOnlyObject<SV>) {
+export function preHandlerParse<SV extends AnySchemaValidator>(schemaValidator: SchemaValidator, object: unknown, schemaInput?: StringOnlyObject<SV>) {
     if (!schemaInput) {
         return;
     }
@@ -58,7 +59,7 @@ export function preHandlerParse<SV extends SchemaValidator>(schemaValidator: SV,
 }
 
 export function parseRequestParams<
-    SV extends SchemaValidator,
+    SV extends AnySchemaValidator,
     Request extends ForklaunchRequest<SV>,
     Response extends ForklaunchResponse, 
     NextFunction extends ForklaunchNextFunction
@@ -76,14 +77,14 @@ export function parseRequestParams<
 }
 
 export function parseRequestBody<
-    SV extends SchemaValidator,
+    SV extends AnySchemaValidator,
     Request extends ForklaunchRequest<SV>,
     Response extends ForklaunchResponse, 
     NextFunction extends ForklaunchNextFunction
 >(req: Request, res: Response, next?: NextFunction) {
     if (req.headers['content-type'] === 'application/json') {
-        const body = (req.schemaValidator, req.contractDetails as HttpContractDetails<typeof req.schemaValidator>).body;
-        if (preHandlerParse(req.body, body as StringOnlyObject<typeof req.schemaValidator>) === 400) {
+        const body = (req.schemaValidator, req.contractDetails as HttpContractDetails<SV>).body;
+        if (preHandlerParse(req.schemaValidator, req.body, body as StringOnlyObject<SV>) === 400) {
             res.status(400).send("Invalid request body.");
             if (next) {
                 next(new Error("Invalid request body."));
@@ -96,7 +97,7 @@ export function parseRequestBody<
 }
 
 export function parseRequestHeaders<
-    SV extends SchemaValidator,
+    SV extends AnySchemaValidator,
     Request extends ForklaunchRequest<SV>,
     Response extends ForklaunchResponse, 
     NextFunction extends ForklaunchNextFunction
@@ -114,7 +115,7 @@ export function parseRequestHeaders<
 }
 
 export function parseRequestQuery<
-    SV extends SchemaValidator,
+    SV extends AnySchemaValidator,
     Request extends ForklaunchRequest<SV>,
     Response extends ForklaunchResponse, 
     NextFunction extends ForklaunchNextFunction
@@ -131,7 +132,7 @@ export function parseRequestQuery<
     }
 }
 
-async function checkAuthorizationToken(authorizationMethod?: AuthMethod, authorizationString?: string): Promise<[number, string] | string | undefined> {
+async function checkAuthorizationToken(authorizationMethod?: AuthMethod, authorizationString?: string): Promise<[401 | 403, string] | string | undefined> {
     if (!authorizationString) {
         return [401, "No Authorization token provided."];
     }
@@ -161,7 +162,7 @@ function mapPermissions(authorizationType?: AuthMethod, authorizationToken?: str
 }
 
 export async function parseRequestAuth<
-    SV extends SchemaValidator,
+    SV extends AnySchemaValidator,
     Request extends ForklaunchRequest<SV>,
     Response extends ForklaunchResponse, 
     NextFunction extends ForklaunchNextFunction

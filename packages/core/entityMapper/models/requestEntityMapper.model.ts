@@ -1,7 +1,8 @@
-import { SchemaValidator } from "@forklaunch/validator/interfaces";
+import { AnySchemaValidator } from "@forklaunch/validator";
 import { BaseEntity } from "../../database/mikro/models/entities/base.entity";
 import { EntityMapperConstructor } from "../interfaces/entityMapper.interface";
 import { BaseEntityMapper, construct } from "./baseEntityMapper.model";
+
 
 /**
  * Abstract class representing a request entityMapper.
@@ -10,7 +11,7 @@ import { BaseEntityMapper, construct } from "./baseEntityMapper.model";
  * @template SV - A type that extends SchemaValidator.
  * @extends {BaseEntityMapper<SV>}
  */
-export abstract class RequestEntityMapper<Entity extends BaseEntity | unknown, SV extends SchemaValidator> extends BaseEntityMapper<SV> {
+export abstract class RequestEntityMapper<Entity extends BaseEntity, SV extends AnySchemaValidator> extends BaseEntityMapper<SV> {
     /**
      * The entity.
      * @type {Entity}
@@ -18,14 +19,14 @@ export abstract class RequestEntityMapper<Entity extends BaseEntity | unknown, S
      */
     _Entity!: Entity;
     
-    /**
-     * Creates an instance of RequestEntityMapper.
-     * 
-     * @param {SV} schemaValidator - The schema provider.
-     */
-    constructor(schemaValidator: SV) {
-        super(schemaValidator);
-    }
+    // /**
+    //  * Creates an instance of RequestEntityMapper.
+    //  * 
+    //  * @param {SV} schemaValidator - The schema provider.
+    //  */
+    // constructor(schemaValidator?: SV) {
+    //     super(schemaValidator);
+    // }
 
     /**
      * Converts the underlying DTO to an entity.
@@ -64,27 +65,27 @@ export abstract class RequestEntityMapper<Entity extends BaseEntity | unknown, S
     /**
      * Creates an instance of a RequestEntityMapper from a JSON object.
      *
-     * @template EntityMapperType - A type that extends RequestEntityMapper.
-     * @param {EntityMapperConstructor<EntityMapperType>} this - The constructor of the EntityMapperType.
-     * @param {EntityMapperType['_SV']} schemaValidator - The schema provider.
-     * @param {EntityMapperType['_dto']} json - The JSON object.
-     * @returns {EntityMapperType} - An instance of the EntityMapperType.
+     * @template T - A type that extends RequestEntityMapper.
+     * @param {EntityMapperConstructor<T>} this - The constructor of the T.
+     * @param {T['_SV']} schemaValidator - The schema provider.
+     * @param {T['_dto']} json - The JSON object.
+     * @returns {T} - An instance of the T.
      */
-    static fromJson<EntityMapperType extends RequestEntityMapper<unknown, any>>(this: EntityMapperConstructor<EntityMapperType, EntityMapperType['_SV']>, schemaValidator: EntityMapperType['_SV'], json: EntityMapperType['_dto']): EntityMapperType {
-        return construct(this, schemaValidator).fromJson(json as unknown as EntityMapperType['_dto']);
+    static fromJson<T extends RequestEntityMapper<BaseEntity, AnySchemaValidator>>(this: EntityMapperConstructor<T, T['_SV']>, schemaValidator: T['_SV'], json: T['_dto']): T {
+        return construct(this, schemaValidator).fromJson(json);
     }
 
     /**
      * Deserializes a JSON object to an entity.
      *
-     * @template EntityMapperType - A type that extends RequestEntityMapper.
-     * @param {EntityMapperConstructor<EntityMapperType>} this - The constructor of the EntityMapperType.
-     * @param {EntityMapperType['_SV']} schemaValidator - The schema provider.
-     * @param {EntityMapperType['_dto']} json - The JSON object.
+     * @template T - A type that extends RequestEntityMapper.
+     * @param {EntityMapperConstructor<T>} this - The constructor of the T.
+     * @param {T['_SV']} schemaValidator - The schema provider.
+     * @param {T['_dto']} json - The JSON object.
      * @param {...unknown[]} additionalArgs - Additional arguments.
-     * @returns {EntityMapperType['_Entity']} - The entity.
+     * @returns {T['_Entity']} - The entity.
      */
-    static deserializeJsonToEntity<EntityMapperType extends RequestEntityMapper<unknown, any>>(this: EntityMapperConstructor<EntityMapperType, EntityMapperType['_SV']>, schemaValidator: EntityMapperType['_SV'], json: EntityMapperType['_dto'], ...additionalArgs: unknown[]): EntityMapperType['_Entity'] {
-        return construct(this, schemaValidator).fromJson(json as EntityMapperType['_dto']).toEntity(...additionalArgs);
+    static deserializeJsonToEntity<T extends RequestEntityMapper<BaseEntity, AnySchemaValidator>>(this: EntityMapperConstructor<T, T['_SV']>, schemaValidator: T['_SV'], json: T['_dto'], ...additionalArgs: unknown[]): T['_Entity'] {
+        return construct(this, schemaValidator).fromJson(json as T['_dto']).toEntity(...additionalArgs);
     }
 }

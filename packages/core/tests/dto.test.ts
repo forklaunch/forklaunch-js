@@ -1,6 +1,4 @@
-import { SchemaValidator } from "@forklaunch/validator/interfaces";
 import { TypeboxSchemaValidator, number, string } from "@forklaunch/validator/typebox";
-import { TCatchall, TIdiomaticSchema, TUnionContainer } from "@forklaunch/validator/typebox/types";
 import { BaseEntity } from "../database/mikro/models/entities/base.entity";
 import { RequestEntityMapper } from "../entityMapper/models/requestEntityMapper.model";
 import { ResponseEntityMapper } from "../entityMapper/models/responseEntityMapper.model";
@@ -9,37 +7,6 @@ class TestEntity extends BaseEntity {
     name: string;
     age: number;
 }
-
-class T extends RequestEntityMapper<TestEntity, TypeboxSchemaValidator> {
-    toEntity(...additionalArgs: unknown[]): TestEntity {
-        const entity = new TestEntity();
-        entity.id = this.dto.id;
-        entity.name = this.dto.name;
-        entity.age = this.dto.age;
-
-        return entity;
-    }
-    schema = {
-        id: string,
-        name: string,
-        age: number
-    };
-
-}
-
-const y = new T(new TypeboxSchemaValidator());
-y.fromJson({ id: '123', name: 'test', age: 1 });
-
-var x = { id: '123', name: 'test', age: 1 };
-
-type r = typeof x extends T['_dto'] ? true : false;
-
-T.fromJson(new TypeboxSchemaValidator(), x);
-T.fromJson(new TypeboxSchemaValidator(), { 
-    id: '123', 
-    name: 'test', 
-    age: 1 
-});
 
 class TestRequestEntityMapper extends RequestEntityMapper<TestEntity, TypeboxSchemaValidator> {
     schema = {
@@ -58,20 +25,6 @@ class TestRequestEntityMapper extends RequestEntityMapper<TestEntity, TypeboxSch
     }
 }
 
-type h = Expand<SchemaValidator>;
-type TypeboxSV = SchemaValidator<TUnionContainer, TIdiomaticSchema, TCatchall>;
-type y = TypeboxSchemaValidator extends SchemaValidator ? true : false;
-type j = TypeboxSV extends SchemaValidator<unknown, unknown, unknown> ? true : false;
-type m = TypeboxSV extends TypeboxSchemaValidator ? true : false;
-type n = TypeboxSchemaValidator extends TypeboxSV ? true : false;
-type k = string extends unknown ? true : false;
-type u = Expand<TypeboxSchemaValidator>;
-type ExpandRecursively<T> = T extends object
-  ? T extends infer O ? { [K in keyof O]: ExpandRecursively<O[K]> } : never
-  : T;
-type Expand<T> = T extends infer O ? { [K in keyof O]: O[K] } : never;
-
-
 class TestResponseEntityMapper extends ResponseEntityMapper<TestEntity, TypeboxSchemaValidator> {
     schema = {
         id: string,
@@ -89,8 +42,6 @@ class TestResponseEntityMapper extends ResponseEntityMapper<TestEntity, TypeboxS
         return this;
     }
 }
-
-type iii = Expand<TestResponseEntityMapper['schema']>;
 
 function extractNonTimeBasedEntityFields<T extends BaseEntity>(entity: T): T {
     entity.createdAt = new Date(0);

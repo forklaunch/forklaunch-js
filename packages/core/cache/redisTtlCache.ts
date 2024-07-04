@@ -17,7 +17,9 @@ export class RedisTtlCache implements TtlCache {
   constructor(private ttlMilliseconds: number) {
     // Connects to localhost:6379 by default
     // url usage: redis[s]://[[username][:password]@][host][:port][/db-number]
-    this.client = createClient();
+    this.client = createClient({
+        url: process.env.REDIS_URL
+    });
     this.client.on('error', (err) => console.log('Redis Client Error', err));
     this.client.on('connect', () => {
       console.log('\x1b[32m%s\x1b[0m', 'Successfully Connected to Redis');  // Green text

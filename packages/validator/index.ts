@@ -6,7 +6,6 @@
  */
 
 import { Prettify } from "@forklaunch/common";
-import { SchemaValidator } from "./interfaces/schemaValidator.interfaces";
 import { TypeboxSchemaValidator } from "./typebox";
 import { TCatchall, TObject, TObjectShape, TOuterArray, TResolve, TSchemaTranslate } from "./typebox/types/typebox.schema.types";
 import { IdiomaticSchema } from "./types/schema.types";
@@ -14,12 +13,18 @@ import { ZodSchemaValidator } from "./zod";
 import { ZodCatchall, ZodObject, ZodObjectShape, ZodOuterArray, ZodResolve, ZodSchemaTranslate } from "./zod/types/zod.schema.types";
 
 /**
+ * Interface representing any schema validator.
+ * Extends the SchemaValidator interface with any schema types.
+ */
+export type AnySchemaValidator = TypeboxSchemaValidator | ZodSchemaValidator;
+
+/**
  * Type alias for a schema object shape.
  * Resolves to ZodObjectShape for Zod schemas and TObjectShape for TypeBox schemas.
  * 
  * @template SV - SchemaValidator type.
  */
-type SchemaObjectShape<SV extends SchemaValidator> = (
+type SchemaObjectShape<SV extends AnySchemaValidator> = (
   SV extends ZodSchemaValidator ? ZodObjectShape :
   SV extends TypeboxSchemaValidator ? TObjectShape :
   never
@@ -32,7 +37,7 @@ type SchemaObjectShape<SV extends SchemaValidator> = (
  * @template T - Schema object shape.
  * @template SV - SchemaValidator type.
  */
-type SchemaObject<T extends SchemaObjectShape<SV>, SV extends SchemaValidator> = (
+type SchemaObject<T extends SchemaObjectShape<SV>, SV extends AnySchemaValidator> = (
   SV extends ZodSchemaValidator ? ZodObject<T> :
   SV extends TypeboxSchemaValidator ? TObject<T> :
   never
@@ -45,7 +50,7 @@ type SchemaObject<T extends SchemaObjectShape<SV>, SV extends SchemaValidator> =
  * @template T - Schema object.
  * @template SV - SchemaValidator type.
  */
-type SchemaOuterArray<T extends SchemaObject<SchemaObjectShape<SV>, SV>, SV extends SchemaValidator> = (
+type SchemaOuterArray<T extends SchemaObject<SchemaObjectShape<SV>, SV>, SV extends AnySchemaValidator> = (
   SV extends ZodSchemaValidator ? ZodOuterArray<T> :
   SV extends TypeboxSchemaValidator ? TOuterArray<T> :
   never
@@ -58,7 +63,7 @@ type SchemaOuterArray<T extends SchemaObject<SchemaObjectShape<SV>, SV>, SV exte
  * @template T - Schema type.
  * @template SV - SchemaValidator type.
  */
-type SchemaResolve<T, SV extends SchemaValidator> = (
+type SchemaResolve<T, SV extends AnySchemaValidator> = (
   SV extends ZodSchemaValidator ? ZodResolve<T> :
   SV extends TypeboxSchemaValidator ? TResolve<T> :
   never
@@ -71,7 +76,7 @@ type SchemaResolve<T, SV extends SchemaValidator> = (
  * @template T - Schema type.
  * @template SV - SchemaValidator type.
  */
-type SchemaTranslate<T, SV extends SchemaValidator> = (
+type SchemaTranslate<T, SV extends AnySchemaValidator> = (
   SV extends ZodSchemaValidator ? ZodSchemaTranslate<T> :
   SV extends TypeboxSchemaValidator ? TSchemaTranslate<T> :
   never
@@ -84,7 +89,7 @@ type SchemaTranslate<T, SV extends SchemaValidator> = (
  * @template T - Schema type.
  * @template SV - SchemaValidator type.
  */
-type SchemaPrettify<T, SV extends SchemaValidator> = Prettify<SchemaTranslate<T, SV>>;
+type SchemaPrettify<T, SV extends AnySchemaValidator> = Prettify<SchemaTranslate<T, SV>>;
 
 /**
  * Type alias for a schema catchall type.
@@ -92,7 +97,7 @@ type SchemaPrettify<T, SV extends SchemaValidator> = Prettify<SchemaTranslate<T,
  * 
  * @template SV - SchemaValidator type.
  */
-export type SchemaCatchall<SV extends SchemaValidator> = (
+export type SchemaCatchall<SV extends AnySchemaValidator> = (
   SV extends ZodSchemaValidator ? ZodCatchall : 
   SV extends TypeboxSchemaValidator ? TCatchall : 
   never
@@ -104,7 +109,7 @@ export type SchemaCatchall<SV extends SchemaValidator> = (
  * 
  * @template SV - SchemaValidator type.
  */
-export type ValidSchemaObject<SV extends SchemaValidator> = SchemaObject<SchemaObjectShape<SV>, SV> | SchemaOuterArray<SchemaObject<SchemaObjectShape<SV>, SV>, SV>;
+export type ValidSchemaObject<SV extends AnySchemaValidator> = SchemaObject<SchemaObjectShape<SV>, SV> | SchemaOuterArray<SchemaObject<SchemaObjectShape<SV>, SV>, SV>;
 
 /**
  * Type alias for a schema.
@@ -113,4 +118,4 @@ export type ValidSchemaObject<SV extends SchemaValidator> = SchemaObject<SchemaO
  * @template T - Valid schema object or idiomatic schema.
  * @template SV - SchemaValidator type.
  */
-export type Schema<T extends ValidSchemaObject<SV> | IdiomaticSchema<SchemaCatchall<SV>>, SV extends SchemaValidator> = SchemaPrettify<SchemaResolve<T, SV>, SV>;
+export type Schema<T extends ValidSchemaObject<SV> | IdiomaticSchema<SchemaCatchall<SV>>, SV extends AnySchemaValidator> = SchemaPrettify<SchemaResolve<T, SV>, SV>;
