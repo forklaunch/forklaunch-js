@@ -7,8 +7,9 @@ function checkAnyValidation<SV extends SchemaValidator>(contractDetails: HttpCon
 }
 
 export function parseResponse<
-    Request extends ForklaunchRequest<any, any, any, any>,
-    Response extends ForklaunchResponse<any, any>, 
+    SV extends SchemaValidator,
+    Request extends ForklaunchRequest<SV>,
+    Response extends ForklaunchResponse,
     NextFunction extends ForklaunchNextFunction
 > (req: Request, res: Response, next?: NextFunction) {
     if (req.contractDetails.responseHeaders) {
@@ -22,7 +23,7 @@ export function parseResponse<
     ) {
         return;
     }
-    if (!req.contractDetails.responses.hasOwnProperty(res.statusCode)) {
+    if (Object.prototype.hasOwnProperty.call(!req.contractDetails.responses, res.statusCode)) {
         if (next) {
             next(new Error(`Response code ${res.statusCode} not defined in contract.`));
         };

@@ -1,7 +1,6 @@
 import { SchemaValidator } from "@forklaunch/validator/interfaces";
 import { BaseEntity } from "../../database/mikro/models/entities/base.entity";
 import { EntityMapperConstructor } from "../interfaces/entityMapper.interface";
-import { EntityMapperStaticSchema } from "../types/entityMapper.types";
 import { BaseEntityMapper, construct } from "./baseEntityMapper.model";
 
 /**
@@ -68,7 +67,7 @@ export abstract class RequestEntityMapper<Entity extends BaseEntity | unknown, S
      * @template EntityMapperType - A type that extends RequestEntityMapper.
      * @param {EntityMapperConstructor<EntityMapperType>} this - The constructor of the EntityMapperType.
      * @param {EntityMapperType['_SV']} schemaValidator - The schema provider.
-     * @param {EntityMapperStaticSchema<EntityMapperType>} json - The JSON object.
+     * @param {EntityMapperType['_dto']} json - The JSON object.
      * @returns {EntityMapperType} - An instance of the EntityMapperType.
      */
     static fromJson<EntityMapperType extends RequestEntityMapper<unknown, any>>(this: EntityMapperConstructor<EntityMapperType, EntityMapperType['_SV']>, schemaValidator: EntityMapperType['_SV'], json: EntityMapperType['_dto']): EntityMapperType {
@@ -81,7 +80,7 @@ export abstract class RequestEntityMapper<Entity extends BaseEntity | unknown, S
      * @template EntityMapperType - A type that extends RequestEntityMapper.
      * @param {EntityMapperConstructor<EntityMapperType>} this - The constructor of the EntityMapperType.
      * @param {EntityMapperType['_SV']} schemaValidator - The schema provider.
-     * @param {EntityMapperStaticSchema<EntityMapperType>} json - The JSON object.
+     * @param {EntityMapperType['_dto']} json - The JSON object.
      * @param {...unknown[]} additionalArgs - Additional arguments.
      * @returns {EntityMapperType['_Entity']} - The entity.
      */

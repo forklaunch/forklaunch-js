@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/core",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "forklaunch-js core package. Contains useful building blocks.",
   "main": "index.js",
   "scripts": {
@@ -40,5 +40,8 @@
     "typedoc": "^0.26.3",
     "typescript": "^5.5.3",
     "typescript-eslint": "^7.15.0"
+  },
+  "directories": {
+    "test": "tests"
   }
 }

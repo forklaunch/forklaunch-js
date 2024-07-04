@@ -5,10 +5,12 @@ import { ForklaunchNextFunction, ForklaunchRequest, ForklaunchResponse } from ".
 import { AuthMethod, HttpContractDetails, PathParamHttpContractDetails, StringOnlyObject } from "../types/primitive.types";
 
 export function createRequestContext<
-    Request extends ForklaunchRequest<any, any, any, any>,
-    Response extends ForklaunchResponse<any, any>
->(schemaValidator: SchemaValidator) {
-    return (req: Request, res: Response, next?: Function) => {
+    SV extends SchemaValidator,
+    Request extends ForklaunchRequest<SV>,
+    Response extends ForklaunchResponse,
+    NextFunction extends ForklaunchNextFunction
+>(schemaValidator: SV) {
+    return (req: Request, res: Response, next?: NextFunction) => {
         req.schemaValidator = schemaValidator;
 
         let correlationId = v4();
@@ -31,10 +33,11 @@ export function createRequestContext<
 
 export function enrichRequestDetails<
     SV extends SchemaValidator,
-    Request extends ForklaunchRequest<any, any, any, any>,
-    Response extends ForklaunchResponse<any, any>
+    Request extends ForklaunchRequest<SV>,
+    Response extends ForklaunchResponse,
+    NextFunction extends ForklaunchNextFunction
 >(contractDetails: PathParamHttpContractDetails<SV> | HttpContractDetails<SV>) {
-    return (req: Request, _res: Response, next?: Function) => {
+    return (req: Request, _res: Response, next?: NextFunction) => {
         req.contractDetails = contractDetails;
 
         if (next) {
@@ -55,8 +58,9 @@ export function preHandlerParse<SV extends SchemaValidator>(schemaValidator: SV,
 }
 
 export function parseRequestParams<
-    Request extends ForklaunchRequest<any, any, any, any>,
-    Response extends ForklaunchResponse<any, any>, 
+    SV extends SchemaValidator,
+    Request extends ForklaunchRequest<SV>,
+    Response extends ForklaunchResponse, 
     NextFunction extends ForklaunchNextFunction
 >(req: Request, res: Response, next?: NextFunction) {
     const params = req.contractDetails.params;
@@ -72,8 +76,9 @@ export function parseRequestParams<
 }
 
 export function parseRequestBody<
-    Request extends ForklaunchRequest<any, any, any, any>,
-    Response extends ForklaunchResponse<any, any>, 
+    SV extends SchemaValidator,
+    Request extends ForklaunchRequest<SV>,
+    Response extends ForklaunchResponse, 
     NextFunction extends ForklaunchNextFunction
 >(req: Request, res: Response, next?: NextFunction) {
     if (req.headers['content-type'] === 'application/json') {
@@ -91,8 +96,9 @@ export function parseRequestBody<
 }
 
 export function parseRequestHeaders<
-    Request extends ForklaunchRequest<any, any, any, any>,
-    Response extends ForklaunchResponse<any, any>, 
+    SV extends SchemaValidator,
+    Request extends ForklaunchRequest<SV>,
+    Response extends ForklaunchResponse, 
     NextFunction extends ForklaunchNextFunction
 > (req: Request, res: Response, next?: NextFunction) {
     const headers = req.contractDetails.requestHeaders;
@@ -108,12 +114,13 @@ export function parseRequestHeaders<
 }
 
 export function parseRequestQuery<
-    Request extends ForklaunchRequest<any, any, any, any>,
-    Response extends ForklaunchResponse<any, any>, 
+    SV extends SchemaValidator,
+    Request extends ForklaunchRequest<SV>,
+    Response extends ForklaunchResponse, 
     NextFunction extends ForklaunchNextFunction
 >(req: Request, res: Response, next?: NextFunction) {
     const query = req.contractDetails.query;
-    if (preHandlerParse(req.query, query) === 400) {
+    if (preHandlerParse(req.schemaValidator, req.query, query) === 400) {
         res.status(400).send("Invalid request query.");
         if (next) {
             next(new Error("Invalid request query."));
@@ -154,8 +161,9 @@ function mapPermissions(authorizationType?: AuthMethod, authorizationToken?: str
 }
 
 export async function parseRequestAuth<
-    Request extends ForklaunchRequest<any, any, any, any>,
-    Response extends ForklaunchResponse<any, any>, 
+    SV extends SchemaValidator,
+    Request extends ForklaunchRequest<SV>,
+    Response extends ForklaunchResponse, 
     NextFunction extends ForklaunchNextFunction
 >(req: Request, res: Response, next?: NextFunction) {
     const auth = req.contractDetails.auth;
