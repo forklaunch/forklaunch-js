@@ -9,9 +9,9 @@ import { LiteralSchema } from "../types/schema.types";
  * @template Catchall - The catch-all type for all schemas.
  */
 export interface SchemaValidator<
-    UnionContainer = any, 
-    IdiomaticSchema = any,
-    Catchall = any
+    UnionContainer = unknown, 
+    IdiomaticSchema = unknown,
+    Catchall = unknown
 > {
     /**
      * Validator for string type.

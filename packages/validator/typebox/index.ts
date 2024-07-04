@@ -10,7 +10,7 @@ import { Value } from '@sinclair/typebox/value';
 import { SchemaObject } from 'openapi3-ts/oas31';
 import { SchemaValidator } from '../interfaces/schemaValidator.interfaces';
 import { LiteralSchema } from '../types/schema.types';
-import { TIdiomaticSchema, TResolve, TUnionContainer, UnionTResolve } from './types/typebox.schema.types';
+import { TIdiomaticSchema, TObjectShape, TResolve, TUnionContainer, UnionTResolve } from './types/typebox.schema.types';
 
 /**
  * Class representing a TypeBox schema definition.
@@ -46,9 +46,7 @@ export class TypeboxSchemaValidator implements SchemaValidator<
             return schema as TResolve<T>;
         }
         
-        const newSchema: {
-            [key: string]: TSchema;
-        } = {};
+        const newSchema: TObjectShape = {};
         Object.getOwnPropertyNames(schema).forEach((key) => {
             if (typeof schema[key] === 'object' && Kind in (schema[key] as TSchema)) {
                 newSchema[key] = schema[key] as TSchema;
@@ -57,7 +55,7 @@ export class TypeboxSchemaValidator implements SchemaValidator<
                 newSchema[key] = scheme;
             }
         });
-        
+       
         return Type.Object(newSchema) as TResolve<T>;
     }
 

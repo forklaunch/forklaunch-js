@@ -1,3 +1,4 @@
+import { AnySchemaValidator } from "@forklaunch/validator";
 import { SchemaValidator } from "@forklaunch/validator/interfaces";
 import * as jose from "jose";
 import { v4 } from "uuid";
@@ -5,11 +6,13 @@ import { ForklaunchNextFunction, ForklaunchRequest, ForklaunchResponse } from ".
 import { AuthMethod, HttpContractDetails, PathParamHttpContractDetails, StringOnlyObject } from "../types/primitive.types";
 
 export function createRequestContext<
-    Request extends ForklaunchRequest<any, any, any, any>,
-    Response extends ForklaunchResponse<any, any>
->(schemaValidator: SchemaValidator) {
-    return (req: Request, res: Response, next?: Function) => {
-        req.schemaValidator = schemaValidator;
+    SV extends AnySchemaValidator,
+    Request extends ForklaunchRequest<SV>,
+    Response extends ForklaunchResponse,
+    NextFunction extends ForklaunchNextFunction
+>(schemaValidator: SV) {
+    return (req: Request, res: Response, next?: NextFunction) => {
+        req.schemaValidator = schemaValidator as unknown as SchemaValidator;
 
         let correlationId = v4();
 
@@ -30,11 +33,12 @@ export function createRequestContext<
 }
 
 export function enrichRequestDetails<
-    SV extends SchemaValidator,
-    Request extends ForklaunchRequest<any, any, any, any>,
-    Response extends ForklaunchResponse<any, any>
+    SV extends AnySchemaValidator,
+    Request extends ForklaunchRequest<SV>,
+    Response extends ForklaunchResponse,
+    NextFunction extends ForklaunchNextFunction
 >(contractDetails: PathParamHttpContractDetails<SV> | HttpContractDetails<SV>) {
-    return (req: Request, _res: Response, next?: Function) => {
+    return (req: Request, _res: Response, next?: NextFunction) => {
         req.contractDetails = contractDetails;
 
         if (next) {
@@ -43,7 +47,7 @@ export function enrichRequestDetails<
     }
 }
 
-export function preHandlerParse<SV extends SchemaValidator>(schemaValidator: SV, object: unknown, schemaInput?: StringOnlyObject<SV>) {
+export function preHandlerParse<SV extends AnySchemaValidator>(schemaValidator: SchemaValidator, object: unknown, schemaInput?: StringOnlyObject<SV>) {
     if (!schemaInput) {
         return;
     }
@@ -55,8 +59,9 @@ export function preHandlerParse<SV extends SchemaValidator>(schemaValidator: SV,
 }
 
 export function parseRequestParams<
-    Request extends ForklaunchRequest<any, any, any, any>,
-    Response extends ForklaunchResponse<any, any>, 
+    SV extends AnySchemaValidator,
+    Request extends ForklaunchRequest<SV>,
+    Response extends ForklaunchResponse, 
     NextFunction extends ForklaunchNextFunction
 >(req: Request, res: Response, next?: NextFunction) {
     const params = req.contractDetails.params;
@@ -72,13 +77,14 @@ export function parseRequestParams<
 }
 
 export function parseRequestBody<
-    Request extends ForklaunchRequest<any, any, any, any>,
-    Response extends ForklaunchResponse<any, any>, 
+    SV extends AnySchemaValidator,
+    Request extends ForklaunchRequest<SV>,
+    Response extends ForklaunchResponse, 
     NextFunction extends ForklaunchNextFunction
 >(req: Request, res: Response, next?: NextFunction) {
     if (req.headers['content-type'] === 'application/json') {
-        const body = (req.schemaValidator, req.contractDetails as HttpContractDetails<typeof req.schemaValidator>).body;
-        if (preHandlerParse(req.body, body as StringOnlyObject<typeof req.schemaValidator>) === 400) {
+        const body = (req.schemaValidator, req.contractDetails as HttpContractDetails<SV>).body;
+        if (preHandlerParse(req.schemaValidator, req.body, body as StringOnlyObject<SV>) === 400) {
             res.status(400).send("Invalid request body.");
             if (next) {
                 next(new Error("Invalid request body."));
@@ -91,8 +97,9 @@ export function parseRequestBody<
 }
 
 export function parseRequestHeaders<
-    Request extends ForklaunchRequest<any, any, any, any>,
-    Response extends ForklaunchResponse<any, any>, 
+    SV extends AnySchemaValidator,
+    Request extends ForklaunchRequest<SV>,
+    Response extends ForklaunchResponse, 
     NextFunction extends ForklaunchNextFunction
 > (req: Request, res: Response, next?: NextFunction) {
     const headers = req.contractDetails.requestHeaders;
@@ -108,12 +115,13 @@ export function parseRequestHeaders<
 }
 
 export function parseRequestQuery<
-    Request extends ForklaunchRequest<any, any, any, any>,
-    Response extends ForklaunchResponse<any, any>, 
+    SV extends AnySchemaValidator,
+    Request extends ForklaunchRequest<SV>,
+    Response extends ForklaunchResponse, 
     NextFunction extends ForklaunchNextFunction
 >(req: Request, res: Response, next?: NextFunction) {
     const query = req.contractDetails.query;
-    if (preHandlerParse(req.query, query) === 400) {
+    if (preHandlerParse(req.schemaValidator, req.query, query) === 400) {
         res.status(400).send("Invalid request query.");
         if (next) {
             next(new Error("Invalid request query."));
@@ -124,7 +132,7 @@ export function parseRequestQuery<
     }
 }
 
-async function checkAuthorizationToken(authorizationMethod?: AuthMethod, authorizationString?: string): Promise<[number, string] | string | undefined> {
+async function checkAuthorizationToken(authorizationMethod?: AuthMethod, authorizationString?: string): Promise<[401 | 403, string] | string | undefined> {
     if (!authorizationString) {
         return [401, "No Authorization token provided."];
     }
@@ -154,8 +162,9 @@ function mapPermissions(authorizationType?: AuthMethod, authorizationToken?: str
 }
 
 export async function parseRequestAuth<
-    Request extends ForklaunchRequest<any, any, any, any>,
-    Response extends ForklaunchResponse<any, any>, 
+    SV extends AnySchemaValidator,
+    Request extends ForklaunchRequest<SV>,
+    Response extends ForklaunchResponse, 
     NextFunction extends ForklaunchNextFunction
 >(req: Request, res: Response, next?: NextFunction) {
     const auth = req.contractDetails.auth;

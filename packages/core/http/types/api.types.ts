@@ -1,5 +1,5 @@
 import { Prettify } from "@forklaunch/common";
-import { Schema, SchemaCatchall, ValidSchemaObject } from "@forklaunch/validator";
+import { AnySchemaValidator, Schema, SchemaCatchall, ValidSchemaObject } from "@forklaunch/validator";
 import { SchemaValidator } from "@forklaunch/validator/interfaces";
 import { IdiomaticSchema } from "@forklaunch/validator/types";
 import { IncomingHttpHeaders, OutgoingHttpHeader } from "http";
@@ -12,15 +12,15 @@ export interface RequestContext {
 }
 
 export interface ForklaunchRequest<
-    SV extends SchemaValidator,
+    SV extends AnySchemaValidator,
     P = ParamsDictionary,
-    ReqBody = any,
+    ReqBody = unknown,
     ReqQuery = ParsedQs,
     Headers = IncomingHttpHeaders,
 > {
     context: Prettify<RequestContext>;
     contractDetails: HttpContractDetails<SV> | PathParamHttpContractDetails<SV>;
-    schemaValidator: SV;
+    schemaValidator: SchemaValidator;
 
     params: P;
     headers: Headers;
@@ -29,7 +29,12 @@ export interface ForklaunchRequest<
 }
 
 export interface ForklaunchResponse<
-    ResBody = any,
+    ResBody = {
+        400: unknown;
+        401: unknown;
+        403: unknown;
+        500: unknown;
+    },
     StatusCode = number,
 > {
     bodyData: unknown;
@@ -57,9 +62,9 @@ export interface ForklaunchResponse<
         <T>(body?: ResBody): T;
     }
 }
-export type MapSchema<SV extends SchemaValidator, T extends IdiomaticSchema<SchemaCatchall<SV>> | ValidSchemaObject<SV>> = Schema<T, SV> extends infer U ? 
+export type MapSchema<SV extends AnySchemaValidator, T extends IdiomaticSchema<SchemaCatchall<SV>> | ValidSchemaObject<SV>> = Schema<T, SV> extends infer U ? 
 { [key: string]: unknown } extends U ? 
   never : 
   U : 
 never;
-export type ForklaunchNextFunction = (err?: any) => void;
+export type ForklaunchNextFunction = (err?: unknown) => void;

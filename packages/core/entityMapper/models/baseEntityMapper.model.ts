@@ -1,16 +1,17 @@
+import { AnySchemaValidator, Schema } from "@forklaunch/validator";
 import { SchemaValidator } from "@forklaunch/validator/interfaces";
 import { EntityMapperConstructor } from "../interfaces/entityMapper.interface";
-import { EntityMapperSchema, EntityMapperSchemaValidatorObject } from "../types/entityMapper.types";
+import { EntityMapperSchemaValidatorObject } from "../types/entityMapper.types";
 
 /**
- * Constructs an instance of a EntityMapperType.
+ * Constructs an instance of a T.
  *
- * @template EntityMapperType - A type that extends BaseEntityMapper.
- * @param {EntityMapperConstructor<EntityMapperType>} self - The constructor of the EntityMapperType.
+ * @template T - A type that extends BaseEntityMapper.
+ * @param {EntityMapperConstructor<T>} self - The constructor of the T.
  * @param {...any[]} args - The arguments to pass to the constructor.
- * @returns {EntityMapperType} - An instance of the EntityMapperType.
+ * @returns {T} - An instance of the T.
  */
-export function construct<EntityMapperType, SV extends SchemaValidator>(self: EntityMapperConstructor<EntityMapperType, SV>, schemaValidator?: SV): EntityMapperType {
+export function construct<T, SV extends AnySchemaValidator>(self: EntityMapperConstructor<T, SV>, schemaValidator?: SV): T {
     return new self(schemaValidator || {} as SV);
 }
 
@@ -19,20 +20,20 @@ export function construct<EntityMapperType, SV extends SchemaValidator>(self: En
  *
  * @template SV - A type that extends SchemaValidator.
  */
-export abstract class BaseEntityMapper<SV extends SchemaValidator> {
+export abstract class BaseEntityMapper<SV extends AnySchemaValidator> {
      /**
-     * The schema validator.
+     * The schema validator exact type.
      * @type {SV}
      * @protected
      */
     _SV!: SV;
 
     /**
-     * The schema provider.
-     * @type {SV}
+     * The schema validator as a general type.
+     * @type {SchemaValidator}
      * @protected
      */
-    protected schemaValidator: SV;
+    protected schemaValidator: SchemaValidator;
 
     /**
      * The schema definition.
@@ -43,10 +44,10 @@ export abstract class BaseEntityMapper<SV extends SchemaValidator> {
 
     /**
      * The Data Transfer Object (DTO).
-     * @type {EntityMapperSchema<this['schema'], SV>}
+     * @type {Schema<this['schema'], SV>}
      *
      */
-    _dto: EntityMapperSchema<this['schema'], SV> = {} as unknown as EntityMapperSchema<this['schema'], SV>;
+    _dto: Schema<this['schema'], SV> = {} as unknown as Schema<this['schema'], SV>;
 
     /**
      * Creates an instance of BaseEntityMapper.
@@ -54,7 +55,7 @@ export abstract class BaseEntityMapper<SV extends SchemaValidator> {
      * @param {SV} schemaValidator - The schema provider.
      */
     constructor(schemaValidator: SV) {
-        this.schemaValidator = schemaValidator;
+        this.schemaValidator = schemaValidator as unknown as SchemaValidator;
     }
 
     /**
@@ -67,7 +68,7 @@ export abstract class BaseEntityMapper<SV extends SchemaValidator> {
         if (!this.schemaValidator.validate(this.schemaValidator.schemify(this.schema), _dto)) {
             throw new Error('Invalid DTO');
         }
-        this._dto = _dto as unknown as EntityMapperSchema<this['schema'], SV>;
+        this._dto = _dto as unknown as Schema<this['schema'], SV>;
     }
 
     /**
@@ -81,13 +82,13 @@ export abstract class BaseEntityMapper<SV extends SchemaValidator> {
     }
 
     /**
-     * Gets the schema of a EntityMapperType.
+     * Gets the schema of a T.
      * 
-     * @template EntityMapperType - A type that extends BaseEntityMapper.
-     * @param {EntityMapperConstructor<EntityMapperType>} this - The constructor of the EntityMapperType.
-     * @returns {EntityMapperType['schema']} - The schema of the EntityMapperType.
+     * @template T - A type that extends BaseEntityMapper.
+     * @param {EntityMapperConstructor<T>} this - The constructor of the T.
+     * @returns {T['schema']} - The schema of the T.
      */
-    static schema<EntityMapperType extends BaseEntityMapper<any>>(this: EntityMapperConstructor<EntityMapperType, EntityMapperType['_SV']>): EntityMapperType['schema'] {
+    static schema<T extends BaseEntityMapper<AnySchemaValidator>>(this: EntityMapperConstructor<T, T['_SV']>): T['schema'] {
         return construct(this).schema;
     }
 }
