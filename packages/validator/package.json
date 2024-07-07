@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/validator",
-  "version": "0.2.3",
+  "version": "0.2.5",
   "description": "Schema validator for ForkLaunch components.",
   "files": [
     "dist"
@@ -68,6 +68,10 @@
     "./zod/types": {
       "types": "./dist/zod/types/zod.schema.types.d.ts",
       "default": "./dist/zod/types/zod.schema.types.js"
+    },
+    "./tests/mockSchemaValidator": {
+      "types": "./dist/tests/mockSchemaValidator.d.ts",
+      "default": "./dist/tests/mockSchemaValidator.js"
     }
   }
 }

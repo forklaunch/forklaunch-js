@@ -14,7 +14,7 @@ export interface SchemaValidator<
     ArrayFunction = <T>(schema: T) => unknown,
     UnionFunction = <T>(schemas: T[]) => unknown,
     LiteralFunction = <T extends LiteralSchema>(schema: T) => unknown,
-    ValidationFunction = <T>(schema: T) => unknown,
+    ValidationFunction = <T>(schema: T, value: unknown) => boolean,
     OpenAPIFunction = <T>(schema: T) => SchemaObject
 > {
 
