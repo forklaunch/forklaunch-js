@@ -9,17 +9,24 @@ import { Kind, TArray, TLiteral, TOptional, TSchema, TUnion, Type } from '@sincl
 import { Value } from '@sinclair/typebox/value';
 import { SchemaObject } from 'openapi3-ts/oas31';
 import { SchemaValidator } from '../interfaces/schemaValidator.interfaces';
-import { LiteralSchema } from '../types/schema.types';
+import { IdiomaticSchema, LiteralSchema } from '../types/schema.types';
 import { TIdiomaticSchema, TObjectShape, TResolve, TUnionContainer, UnionTResolve } from './types/typebox.schema.types';
+
+type U = TIdiomaticSchema extends IdiomaticSchema<unknown> ? true : false;
+type M = TUnionContainer extends Array<IdiomaticSchema<unknown>> ? true : false; 
 
 /**
  * Class representing a TypeBox schema definition.
  * @implements {SchemaValidator}
  */
 export class TypeboxSchemaValidator implements SchemaValidator<
-    TUnionContainer,
-    TIdiomaticSchema,
-    TSchema
+    <T extends TIdiomaticSchema>(schema: T) => TResolve<T>, 
+    <T extends TIdiomaticSchema>(schema: T) => TOptional<TResolve<T>>,
+    <T extends TIdiomaticSchema>(schema: T) => TArray<TResolve<T>>,
+    <T extends TUnionContainer>(schemas: T) => TUnion<UnionTResolve<T>>,
+    <T extends LiteralSchema>(value: T) => TLiteral<T>,
+    <T extends TIdiomaticSchema>(schema: T, value: unknown) => boolean,
+    <T extends TIdiomaticSchema>(schema: T) => SchemaObject
 > {
     string = Type.String();
     number = Type.Number();

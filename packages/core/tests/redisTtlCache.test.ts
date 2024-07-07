@@ -1,42 +1,63 @@
+import { GenericContainer, StartedTestContainer } from 'testcontainers';
 import { RedisTtlCache } from '../cache/redisTtlCache';
 
 describe('RedisTtlCache', () => {
+    let container: StartedTestContainer;
     let cache: RedisTtlCache;
+    let key: string;
+    let value: unknown;
+    let ttlMilliseconds: number;
 
-    beforeAll(() => {
-        // Mock the Redis client
-        // Override the RedisTtlCache's client with the mock client
-        cache = new RedisTtlCache(5000);
-    });
+    beforeAll(async () => {
+        container = await new GenericContainer("redis")
+            .withExposedPorts(6379)
+            .start();
+
+        cache = new RedisTtlCache(5000, {
+            url: `redis://${container.getHost()}:${container.getMappedPort(6379)}`
+        });
+
+        key = 'testKey';
+        value = { data: 'testValue' };
+        ttlMilliseconds = 1000;
+    }, 30000);
+
 
     afterAll(async () => {
-        // Ensure the Redis client is disconnected after tests complete
         await cache.disconnect();
+        await container.stop();
     });
 
-    test('putRecord and readRecord', async () => {
-        const key = 'testKey';
-        const value = { data: 'testValue' };
-        const ttlMilliseconds = 10000; // 10 seconds
-
+    it('PutRecord', async () => {
         await cache.putRecord({ key, value, ttlMilliseconds });
+    });
+
+    test('Read Record', async () => {
         const storedValue = await cache.readRecord(key);
 
-        expect(storedValue).toEqual(value);
-    });
+        expect(storedValue).toEqual({
+            key,
+            ttlMilliseconds,
+            value
+        });
+    })
 
-    test('peekRecord', async () => {
-        const key = 'testKey';
+    test('Peek Record', async () => {
         const exists = await cache.peekRecord(key);
 
         expect(exists).toBeTruthy();
     });
 
-    test('deleteRecord', async () => {
-        const key = 'testKey';
+    test('Delete Record', async () => {
         await cache.deleteRecord(key);
         const existsAfterDelete = await cache.peekRecord(key);
 
         expect(existsAfterDelete).toBeFalsy();
+    });
+
+    test('Check No Record', async () => {
+        await Promise.resolve(setTimeout(async () => {}, ttlMilliseconds));
+        const existsAfterTtl = await cache.peekRecord(key);
+        expect(existsAfterTtl).toBeFalsy();
     });
 });

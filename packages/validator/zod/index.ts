@@ -17,9 +17,13 @@ import { UnionZodResolve, ZodCatchall, ZodIdiomaticSchema, ZodResolve, ZodUnionC
  * @implements {SchemaValidator}
  */
 export class ZodSchemaValidator implements SchemaValidator<
-    ZodUnionContainer,
-    ZodIdiomaticSchema,
-    ZodCatchall
+    <T extends ZodIdiomaticSchema>(schema: T) => ZodResolve<T>, 
+    <T extends ZodIdiomaticSchema>(schema: T) => ZodOptional<ZodResolve<T>>,
+    <T extends ZodIdiomaticSchema>(schema: T) => ZodArray<ZodResolve<T>>,
+    <T extends ZodUnionContainer>(schemas: T) => ZodUnion<UnionZodResolve<T>>,
+    <T extends LiteralSchema>(value: T) => ZodLiteral<ZodResolve<T>>,
+    <T extends ZodCatchall>(schema: T, value: unknown) => boolean,
+    <T extends ZodIdiomaticSchema>(schema: T) => SchemaObject
 > {
     string = z.string();
     number = z.number();

@@ -1,4 +1,4 @@
-import { createClient } from 'redis';
+import { RedisClientOptions, createClient } from 'redis';
 import { TtlCache } from './interfaces/ttlCache.interface';
 import { TtlCacheRecord } from './types/ttlCacheRecord.types';
 
@@ -14,12 +14,10 @@ export class RedisTtlCache implements TtlCache {
    * 
    * @param {number} ttlMilliseconds - The default TTL in milliseconds.
    */
-  constructor(private ttlMilliseconds: number) {
+  constructor(private ttlMilliseconds: number, hostingOptions?: RedisClientOptions) {
     // Connects to localhost:6379 by default
     // url usage: redis[s]://[[username][:password]@][host][:port][/db-number]
-    this.client = createClient({
-        url: process.env.REDIS_URL
-    });
+    this.client = createClient(hostingOptions);
     this.client.on('error', (err) => console.log('Redis Client Error', err));
     this.client.on('connect', () => {
       console.log('\x1b[32m%s\x1b[0m', 'Successfully Connected to Redis');  // Green text

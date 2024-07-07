@@ -5,14 +5,19 @@ import { LiteralSchema } from "../types/schema.types";
  * Interface representing a schema validator.
  *
  * @template UnionContainer - The type for union schemas.
- * @template IdiomaticSchema - The type for idiomatic schemas.
+ * @template IdiomaticSchema<unknown> - The type for idiomatic schemas.
  * @template Catchall - The catch-all type for all schemas.
  */
 export interface SchemaValidator<
-    UnionContainer = unknown, 
-    IdiomaticSchema = unknown,
-    Catchall = unknown
+    SchematicFunction = <T>(schema: T) => unknown,
+    OptionalFunction =<T>(schema: T) => unknown,
+    ArrayFunction = <T>(schema: T) => unknown,
+    UnionFunction = <T>(schemas: T[]) => unknown,
+    LiteralFunction = <T extends LiteralSchema>(schema: T) => unknown,
+    ValidationFunction = <T>(schema: T) => unknown,
+    OpenAPIFunction = <T>(schema: T) => SchemaObject
 > {
+
     /**
      * Validator for string type.
      */
@@ -70,7 +75,7 @@ export interface SchemaValidator<
      * @param {T} schema - The schema to schemify.
      * @returns {unknown} - The schemified form of the schema.
      */
-    schemify<T extends IdiomaticSchema>(schema: T): unknown;
+    schemify: SchematicFunction;
 
     /**
      * Converts a schema into an optional schema.
@@ -79,7 +84,7 @@ export interface SchemaValidator<
      * @param {T} schema - The schema to make optional.
      * @returns {unknown} - The optional form of the schema.
      */
-    optional<T extends IdiomaticSchema>(schema: T): unknown;
+    optional: OptionalFunction;
 
     /**
      * Converts a schema into an array schema.
@@ -88,7 +93,7 @@ export interface SchemaValidator<
      * @param {T} schema - The schema to convert into an array.
      * @returns {unknown} - The array form of the schema.
      */
-    array<T extends IdiomaticSchema>(schema: T): unknown;
+    array: ArrayFunction;
 
     /**
      * Converts multiple schemas into a union schema.
@@ -97,7 +102,9 @@ export interface SchemaValidator<
      * @param {T} schemas - The schemas to unionize.
      * @returns {unknown} - The union form of the schemas.
      */
-    union<T extends UnionContainer>(schemas: T): unknown;
+    // union<T extends UnionContainer>(schemas: T): unknown;
+    union: UnionFunction;
+
 
     /**
      * Creates a literal schema from a value.
@@ -106,7 +113,7 @@ export interface SchemaValidator<
      * @param {T} value - The literal value.
      * @returns {unknown} - The literal schema.
      */
-    literal<T extends LiteralSchema>(value: T): unknown;
+    literal: LiteralFunction;
 
     /**
      * Validates a value against a schema.
@@ -116,7 +123,7 @@ export interface SchemaValidator<
      * @param {unknown} value - The value to validate.
      * @returns {boolean} - Whether the value is valid according to the schema.
      */
-    validate<T extends Catchall>(schema: T, value: unknown): boolean;
+    validate: ValidationFunction;
 
     /**
      * Converts a schema into an OpenAPI schema object.
@@ -125,5 +132,5 @@ export interface SchemaValidator<
      * @param {T} schema - The schema to convert.
      * @returns {SchemaObject} - The OpenAPI schema object.
      */
-    openapi<T extends IdiomaticSchema>(schema: T): SchemaObject;
+    openapi: OpenAPIFunction;
 }

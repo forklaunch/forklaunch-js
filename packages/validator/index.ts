@@ -6,6 +6,7 @@
  */
 
 import { Prettify } from "@forklaunch/common";
+import { SchemaValidator } from "./interfaces/schemaValidator.interfaces";
 import { TypeboxSchemaValidator } from "./typebox";
 import { TCatchall, TObject, TObjectShape, TOuterArray, TResolve, TSchemaTranslate } from "./typebox/types/typebox.schema.types";
 import { IdiomaticSchema } from "./types/schema.types";
@@ -13,10 +14,10 @@ import { ZodSchemaValidator } from "./zod";
 import { ZodCatchall, ZodObject, ZodObjectShape, ZodOuterArray, ZodResolve, ZodSchemaTranslate } from "./zod/types/zod.schema.types";
 
 /**
- * Interface representing any schema validator.
- * Extends the SchemaValidator interface with any schema types.
+ * Interface representing unknown schema validator.
+ * Extends the SchemaValidator interface with unknown schema types.
  */
-export type AnySchemaValidator = TypeboxSchemaValidator | ZodSchemaValidator;
+export type AnySchemaValidator = SchemaValidator<unknown, unknown, unknown, unknown, unknown, unknown, unknown>;
 
 /**
  * Type alias for a schema object shape.
