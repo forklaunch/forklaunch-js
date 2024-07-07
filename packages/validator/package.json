@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/validator",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Schema validator for ForkLaunch components.",
   "files": [
     "dist"
