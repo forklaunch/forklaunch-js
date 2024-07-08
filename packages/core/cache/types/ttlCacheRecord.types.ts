@@ -7,7 +7,7 @@
  * @property {number} ttlMilliseconds - The time-to-live of the cache record in milliseconds.
  */
 export type TtlCacheRecord = {
-    key: string;
-    value: unknown;
-    ttlMilliseconds: number;
+  key: string;
+  value: unknown;
+  ttlMilliseconds: number;
 };

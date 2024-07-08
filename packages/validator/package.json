@@ -12,6 +12,7 @@
   "scripts": {
     "test": "jest",
     "build": "tsc",
+    "docs": "typedoc --out docs *",
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.ts' --write"

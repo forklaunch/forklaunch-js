@@ -4,4 +4,3 @@ export * from './database';
 export * from './entityMapper';
 export * from './http';
 export * from './services';
-
