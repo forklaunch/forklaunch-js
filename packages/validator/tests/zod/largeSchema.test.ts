@@ -69,8 +69,8 @@ describe('Zod Large Schema Tests', () => {
             }
         }
         
-        const deepUnion = union([deepOne, deepTwo])
-        type DeepUnionSchema = Schema<typeof deepUnion, ZodSchemaValidator>
+        const deepUnion = union([deepOne, deepTwo]);
+        type DeepUnionSchema = Schema<typeof deepUnion, ZodSchemaValidator>;
     });
 
     it('Realistic Schema', async () => {
@@ -142,6 +142,6 @@ describe('Zod Large Schema Tests', () => {
             }
         });
 
-        type RealisticSchema = Schema<typeof realistic, ZodSchemaValidator>
+        type RealisticSchema = Schema<typeof realistic, ZodSchemaValidator>;
     });
 });

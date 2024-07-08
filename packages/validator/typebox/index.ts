@@ -5,15 +5,11 @@
  * @module TypeboxSchemaValidator
  */
 
-import { Kind, TArray, TLiteral, TOptional, TSchema, TUnion, Type } from '@sinclair/typebox';
+import { Kind, TArray, TLiteral, TOptional, TProperties, TSchema, TUnion, Type } from '@sinclair/typebox';
 import { Value } from '@sinclair/typebox/value';
 import { SchemaObject } from 'openapi3-ts/oas31';
-import { SchemaValidator } from '../interfaces/schemaValidator.interfaces';
-import { IdiomaticSchema, LiteralSchema } from '../types/schema.types';
-import { TIdiomaticSchema, TObjectShape, TResolve, TUnionContainer, UnionTResolve } from './types/typebox.schema.types';
-
-type U = TIdiomaticSchema extends IdiomaticSchema<unknown> ? true : false;
-type M = TUnionContainer extends Array<IdiomaticSchema<unknown>> ? true : false; 
+import { LiteralSchema, SchemaValidator } from '../types/schema.types';
+import { TIdiomaticSchema, TObject, TObjectShape, TResolve, TUnionContainer, UnionTResolve } from './types/typebox.schema.types';
 
 /**
  * Class representing a TypeBox schema definition.
@@ -28,6 +24,10 @@ export class TypeboxSchemaValidator implements SchemaValidator<
     <T extends TIdiomaticSchema>(schema: T, value: unknown) => boolean,
     <T extends TIdiomaticSchema>(schema: T) => SchemaObject
 > {
+    _Type!: 'TypeBox';
+    _SchemaCatchall!: TSchema
+    _ValidSchemaObject!: TObject<TProperties> | TArray<TObject<TProperties>>;
+
     string = Type.String();
     number = Type.Number();
     bigint = Type.BigInt();

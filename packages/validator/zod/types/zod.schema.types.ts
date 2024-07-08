@@ -1,4 +1,5 @@
 import { ZodObject as OriginalZodObject, ZodArray, ZodLiteral, ZodNever, ZodRawShape, ZodType, ZodTypeAny, ZodUnknown, z } from "zod";
+import { ZodSchemaValidator } from "..";
 import { IdiomaticSchema, Increment, LiteralSchema, UnboxedObjectSchema } from "../../types/schema.types";
 
 /**
@@ -35,12 +36,12 @@ export type ZodSchemaTranslate<T> = T extends ZodCatchall ? z.infer<T> : ZodNeve
 /**
  * Represents an unboxed Zod object schema where each key can have an idiomatic schema.
  */
-export type ZodObjectSchema = UnboxedObjectSchema<ZodCatchall>;
+export type ZodObjectSchema = UnboxedObjectSchema<ZodSchemaValidator>;
 
 /**
  * Represents an idiomatic schema for Zod which can be an unboxed object schema or a literal schema.
  */
-export type ZodIdiomaticSchema = IdiomaticSchema<ZodCatchall>;
+export type ZodIdiomaticSchema = IdiomaticSchema<ZodSchemaValidator>;
 
 /**
  * Represents a container for a union of Zod idiomatic schemas.

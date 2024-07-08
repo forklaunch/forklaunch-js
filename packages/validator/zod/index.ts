@@ -7,9 +7,8 @@
 
 import { generateSchema } from '@anatine/zod-openapi';
 import { SchemaObject } from 'openapi3-ts/oas31';
-import { ZodArray, ZodLiteral, ZodOptional, ZodRawShape, ZodType, ZodUnion, z } from "zod";
-import { SchemaValidator } from "../interfaces/schemaValidator.interfaces";
-import { LiteralSchema } from "../types/schema.types";
+import { ZodArray, ZodLiteral, ZodObject, ZodOptional, ZodRawShape, ZodType, ZodUnion, z } from "zod";
+import { LiteralSchema, SchemaValidator } from "../types/schema.types";
 import { UnionZodResolve, ZodCatchall, ZodIdiomaticSchema, ZodResolve, ZodUnionContainer } from "./types/zod.schema.types";
 
 /**
@@ -25,6 +24,10 @@ export class ZodSchemaValidator implements SchemaValidator<
     <T extends ZodCatchall>(schema: T, value: unknown) => boolean,
     <T extends ZodIdiomaticSchema>(schema: T) => SchemaObject
 > {
+    _Type!: 'Zod';
+    _SchemaCatchall!: ZodType;
+    _ValidSchemaObject!: ZodObject<ZodRawShape> | ZodArray<ZodObject<ZodRawShape>>;
+
     string = z.string();
     number = z.number();
     bigint = z.bigint();

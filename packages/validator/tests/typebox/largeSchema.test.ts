@@ -69,8 +69,8 @@ describe("Typebox Large Schema Tests", () => {
             }
         }
         
-        const deepUnion = union([deepOne, deepTwo])
-        type DeepUnionSchema = Schema<typeof deepUnion, TypeboxSchemaValidator>
+        const deepUnion = union([deepOne, deepTwo]);
+        type DeepUnionSchema = Schema<typeof deepUnion, TypeboxSchemaValidator>;
     });
 
     it("Realistic Schema", () => {
@@ -142,6 +142,6 @@ describe("Typebox Large Schema Tests", () => {
             }
         });
         
-        type RealisticSchema = Schema<typeof realistic, TypeboxSchemaValidator>
+        type RealisticSchema = Schema<typeof realistic, TypeboxSchemaValidator>;
     });
 })

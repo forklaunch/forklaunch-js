@@ -129,7 +129,7 @@ const compareSchemas = (schema1: ZodCatchall, schema2: ZodCatchall) => {
   };
 
 describe('Zod Equality Tests', () => {
-    let schema: UnboxedObjectSchema<ZodCatchall>
+    let schema: UnboxedObjectSchema<ZodSchemaValidator>
     let schemified: ZodObject<ZodObjectShape>
     let expectedSchema: ZodObject<ZodObjectShape>
 

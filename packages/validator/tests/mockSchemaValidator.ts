@@ -1,8 +1,11 @@
 import { SchemaValidator } from "../index";
 import { LiteralSchema } from "../types/schema.types";
 
-
 export class MockSchemaValidator implements SchemaValidator {
+    _Type!: 'Mock';
+    _SchemaCatchall!: string;
+    _ValidSchemaObject!: string;
+
     string = 'string';
     number = 'number';
     bigint = 'bigint';
