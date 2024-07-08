@@ -152,29 +152,29 @@ export type AnySchemaValidator = SchemaValidator<
   unknown
 >;
 
-interface SchemaResolve<T> {
+export interface SchemaResolve<T> {
   Zod: ZodResolve<T>;
   TypeBox: TResolve<T>;
 }
 
-interface SchemaTranslate<T> {
+export interface SchemaTranslate<T> {
   Zod: ZodSchemaTranslate<T>;
   TypeBox: TSchemaTranslate<T>;
 }
 
 type SchemaPrettify<
   T,
-  SV extends AnySchemaValidator
-> = SV['_Type'] extends keyof SchemaTranslate<T>
-  ? Prettify<SchemaTranslate<T>[SV['_Type']]>
-  : never;
+  SV extends {
+    _Type: keyof SchemaResolve<T>;
+  } & AnySchemaValidator
+> = Prettify<SchemaTranslate<T>[SV['_Type']]>;
 
 export type Schema<
   T extends SV['_ValidSchemaObject'] | IdiomaticSchema<SV>,
-  SV extends AnySchemaValidator
-> = SV['_Type'] extends keyof SchemaResolve<T>
-  ? SchemaPrettify<SchemaResolve<T>[SV['_Type']], SV>
-  : never;
+  SV extends {
+    _Type: keyof SchemaResolve<T>;
+  } & AnySchemaValidator
+> = SchemaPrettify<SchemaResolve<T>[SV['_Type']], SV>;
 
 /**
  * Represents a schema for an unboxed object where each key can have an idiomatic schema.
