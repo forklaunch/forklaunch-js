@@ -150,7 +150,9 @@ export type AnySchemaValidator = SchemaValidator<
   unknown,
   unknown,
   unknown
->;
+> & {
+  _Type: keyof SchemaResolve<unknown>;
+};
 
 export interface SchemaResolve<T> {
   Zod: ZodResolve<T>;
@@ -162,18 +164,13 @@ export interface SchemaTranslate<T> {
   TypeBox: TSchemaTranslate<T>;
 }
 
-type SchemaPrettify<
-  T,
-  SV extends {
-    _Type: keyof SchemaResolve<T>;
-  } & AnySchemaValidator
-> = Prettify<SchemaTranslate<T>[SV['_Type']]>;
+type SchemaPrettify<T, SV extends AnySchemaValidator> = Prettify<
+  SchemaTranslate<T>[SV['_Type']]
+>;
 
 export type Schema<
   T extends SV['_ValidSchemaObject'] | IdiomaticSchema<SV>,
-  SV extends {
-    _Type: keyof SchemaResolve<T>;
-  } & AnySchemaValidator
+  SV extends AnySchemaValidator
 > = SchemaPrettify<SchemaResolve<T>[SV['_Type']], SV>;
 
 /**
