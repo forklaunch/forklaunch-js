@@ -62,7 +62,7 @@ export abstract class RequestEntityMapper<Entity extends BaseEntity, SV extends 
      * @param {T['_dto']} json - The JSON object.
      * @returns {T} - An instance of the T.
      */
-    static fromJson<T extends RequestEntityMapper<BaseEntity, AnySchemaValidator>>(this: EntityMapperConstructor<T, T['_SV']>, schemaValidator: T['_SV'], json: T['_dto']): T {
+    static fromJson<T extends RequestEntityMapper<BaseEntity, SV>, SV extends AnySchemaValidator, JsonType extends T['_dto']>(this: EntityMapperConstructor<T, SV>, schemaValidator: SV, json: JsonType): T {
         return construct(this, schemaValidator).fromJson(json);
     }
 
@@ -76,7 +76,7 @@ export abstract class RequestEntityMapper<Entity extends BaseEntity, SV extends 
      * @param {...unknown[]} additionalArgs - Additional arguments.
      * @returns {T['_Entity']} - The entity.
      */
-    static deserializeJsonToEntity<T extends RequestEntityMapper<BaseEntity, AnySchemaValidator>>(this: EntityMapperConstructor<T, T['_SV']>, schemaValidator: T['_SV'], json: T['_dto'], ...additionalArgs: unknown[]): T['_Entity'] {
-        return construct(this, schemaValidator).fromJson(json as T['_dto']).toEntity(...additionalArgs);
+    static deserializeJsonToEntity<T extends RequestEntityMapper<BaseEntity, SV>, SV extends AnySchemaValidator, JsonType extends T['_dto']>(this: EntityMapperConstructor<T, SV>, schemaValidator: SV, json: JsonType, ...additionalArgs: unknown[]): T['_Entity'] {
+        return construct(this, schemaValidator).fromJson(json).toEntity(...additionalArgs);
     }
 }

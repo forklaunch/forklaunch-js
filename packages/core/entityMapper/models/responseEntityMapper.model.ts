@@ -58,7 +58,7 @@ export abstract class ResponseEntityMapper<Entity extends BaseEntity, SV extends
      * @param {T['_Entity']} entity - The entity to convert.
      * @returns {T} - An instance of the T.
      */
-    static fromEntity<T extends ResponseEntityMapper<BaseEntity, AnySchemaValidator>>(this: EntityMapperConstructor<T, T['_SV']>, schemaValidator: T['_SV'], entity: T['_Entity']): T {
+    static fromEntity<T extends ResponseEntityMapper<BaseEntity, SV>, SV extends AnySchemaValidator>(this: EntityMapperConstructor<T, SV>, schemaValidator: SV, entity: T['_Entity']): T {
         return construct(this, schemaValidator).fromEntity(entity);
     }
 
@@ -70,7 +70,7 @@ export abstract class ResponseEntityMapper<Entity extends BaseEntity, SV extends
      * @param {T['_Entity']} entity - The entity to serialize.
      * @returns {T['_dto']} - The JSON object.
      */
-    static serializeEntityToJson<T extends ResponseEntityMapper<BaseEntity, AnySchemaValidator>>(this: EntityMapperConstructor<T, T['_SV']>, schemaValidator: T['_SV'], entity: T['_Entity']): T['_dto'] {
+    static serializeEntityToJson<T extends ResponseEntityMapper<BaseEntity, SV>, SV extends AnySchemaValidator>(this: EntityMapperConstructor<T, SV>, schemaValidator: SV, entity: T['_Entity']): T['_dto'] {
         return construct(this, schemaValidator).serializeEntityToJson(entity);
     }
 }

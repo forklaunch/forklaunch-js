@@ -1,5 +1,4 @@
-import { AnySchemaValidator, Schema } from "@forklaunch/validator";
-import { SchemaValidator } from "@forklaunch/validator/interfaces";
+import { AnySchemaValidator, Schema, SchemaValidator } from "@forklaunch/validator";
 import { EntityMapperConstructor } from "../interfaces/entityMapper.interface";
 import { EntityMapperSchemaValidatorObject } from "../types/entityMapper.types";
 
@@ -21,11 +20,11 @@ export function construct<T, SV extends AnySchemaValidator>(self: EntityMapperCo
  * @template SV - A type that extends SchemaValidator.
  */
 export abstract class BaseEntityMapper<SV extends AnySchemaValidator> {
-     /**
-     * The schema validator exact type.
-     * @type {SV}
-     * @protected
-     */
+    /**
+    * The schema validator exact type.
+    * @type {SV}
+    * @protected
+    */
     _SV!: SV;
 
     /**
@@ -88,7 +87,7 @@ export abstract class BaseEntityMapper<SV extends AnySchemaValidator> {
      * @param {EntityMapperConstructor<T>} this - The constructor of the T.
      * @returns {T['schema']} - The schema of the T.
      */
-    static schema<T extends BaseEntityMapper<AnySchemaValidator>>(this: EntityMapperConstructor<T, T['_SV']>): T['schema'] {
+    static schema<T extends BaseEntityMapper<SV>, SV extends AnySchemaValidator>(this: EntityMapperConstructor<T, SV>): T['schema'] {
         return construct(this).schema;
     }
 }

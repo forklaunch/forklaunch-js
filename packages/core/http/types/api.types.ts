@@ -1,6 +1,5 @@
 import { Prettify } from "@forklaunch/common";
-import { AnySchemaValidator, Schema, SchemaCatchall, ValidSchemaObject } from "@forklaunch/validator";
-import { SchemaValidator } from "@forklaunch/validator/interfaces";
+import { AnySchemaValidator, Schema, SchemaValidator } from "@forklaunch/validator";
 import { IdiomaticSchema } from "@forklaunch/validator/types";
 import { IncomingHttpHeaders, OutgoingHttpHeader } from "http";
 import { ParsedQs } from "qs";
@@ -40,7 +39,7 @@ export interface ForklaunchResponse<
     bodyData: unknown;
     statusCode: StatusCode;
     corked: boolean;
-    
+
     getHeaders: () => OutgoingHttpHeader;
     setHeader: (key: string, value: string) => void;
     status: {
@@ -62,9 +61,9 @@ export interface ForklaunchResponse<
         <T>(body?: ResBody): T;
     }
 }
-export type MapSchema<SV extends AnySchemaValidator, T extends IdiomaticSchema<SchemaCatchall<SV>> | ValidSchemaObject<SV>> = Schema<T, SV> extends infer U ? 
-{ [key: string]: unknown } extends U ? 
-  never : 
-  U : 
-never;
+export type MapSchema<SV extends AnySchemaValidator, T extends IdiomaticSchema<SV> | SV['_ValidSchemaObject']> = Schema<T, SV> extends infer U ?
+    { [key: string]: unknown } extends U ?
+    never :
+    U :
+    never;
 export type ForklaunchNextFunction = (err?: unknown) => void;

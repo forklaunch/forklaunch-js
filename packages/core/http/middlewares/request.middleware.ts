@@ -1,5 +1,4 @@
-import { AnySchemaValidator } from "@forklaunch/validator";
-import { SchemaValidator } from "@forklaunch/validator/interfaces";
+import { AnySchemaValidator, SchemaValidator } from "@forklaunch/validator";
 import * as jose from "jose";
 import { v4 } from "uuid";
 import { ForklaunchNextFunction, ForklaunchRequest, ForklaunchResponse } from "../types/api.types";
@@ -61,7 +60,7 @@ export function preHandlerParse<SV extends AnySchemaValidator>(schemaValidator: 
 export function parseRequestParams<
     SV extends AnySchemaValidator,
     Request extends ForklaunchRequest<SV>,
-    Response extends ForklaunchResponse, 
+    Response extends ForklaunchResponse,
     NextFunction extends ForklaunchNextFunction
 >(req: Request, res: Response, next?: NextFunction) {
     const params = req.contractDetails.params;
@@ -79,7 +78,7 @@ export function parseRequestParams<
 export function parseRequestBody<
     SV extends AnySchemaValidator,
     Request extends ForklaunchRequest<SV>,
-    Response extends ForklaunchResponse, 
+    Response extends ForklaunchResponse,
     NextFunction extends ForklaunchNextFunction
 >(req: Request, res: Response, next?: NextFunction) {
     if (req.headers['content-type'] === 'application/json') {
@@ -99,9 +98,9 @@ export function parseRequestBody<
 export function parseRequestHeaders<
     SV extends AnySchemaValidator,
     Request extends ForklaunchRequest<SV>,
-    Response extends ForklaunchResponse, 
+    Response extends ForklaunchResponse,
     NextFunction extends ForklaunchNextFunction
-> (req: Request, res: Response, next?: NextFunction) {
+>(req: Request, res: Response, next?: NextFunction) {
     const headers = req.contractDetails.requestHeaders;
     if (preHandlerParse(req.schemaValidator, req.headers, headers) === 400) {
         res.status(400).send("Invalid request headers.");
@@ -117,7 +116,7 @@ export function parseRequestHeaders<
 export function parseRequestQuery<
     SV extends AnySchemaValidator,
     Request extends ForklaunchRequest<SV>,
-    Response extends ForklaunchResponse, 
+    Response extends ForklaunchResponse,
     NextFunction extends ForklaunchNextFunction
 >(req: Request, res: Response, next?: NextFunction) {
     const query = req.contractDetails.query;
@@ -144,7 +143,7 @@ async function checkAuthorizationToken(authorizationMethod?: AuthMethod, authori
             try {
                 const decodedJwt = await jose.jwtVerify(authorizationString.split(' ')[1], new TextEncoder().encode(process.env.JWT_SECRET || 'your-256-bit-secret'));
                 return decodedJwt.payload.iss;
-            } catch(error) {
+            } catch (error) {
                 console.error(error);
                 return [403, "Invalid Authorization token."];
             }
@@ -164,7 +163,7 @@ function mapPermissions(authorizationType?: AuthMethod, authorizationToken?: str
 export async function parseRequestAuth<
     SV extends AnySchemaValidator,
     Request extends ForklaunchRequest<SV>,
-    Response extends ForklaunchResponse, 
+    Response extends ForklaunchResponse,
     NextFunction extends ForklaunchNextFunction
 >(req: Request, res: Response, next?: NextFunction) {
     const auth = req.contractDetails.auth;
@@ -178,7 +177,7 @@ export async function parseRequestAuth<
         }
 
         // TODO: Implement role and permission checking
-        const permissionSlugs  = mapPermissions(auth.method, req.headers.authorization);
+        const permissionSlugs = mapPermissions(auth.method, req.headers.authorization);
         const roles = mapRoles(auth.method, req.headers.authorization);
 
         const permissionErrorMessage = "User does not have sufficient permissions to perform action.";
@@ -192,7 +191,7 @@ export async function parseRequestAuth<
                 if (next) {
                     next(new Error(permissionErrorMessage));
                 }
-            } 
+            }
         });
         roles.forEach(role => {
             if (!req.contractDetails.auth?.allowedRoles?.has(role) || req.contractDetails.auth?.forbiddenRoles?.has(role)) {
@@ -200,10 +199,10 @@ export async function parseRequestAuth<
                 if (next) {
                     next(new Error(roleErrorMessage));
                 }
-            } 
+            }
         });
     }
-    
+
     // if (next) {
     //     next();
     // }
