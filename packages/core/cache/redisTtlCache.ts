@@ -1,6 +1,6 @@
-import { createClient } from 'redis';
+import { RedisClientOptions, createClient } from 'redis';
 import { TtlCache } from './interfaces/ttlCache.interface';
-import { TtlCacheRecord } from './types/ttlCacheRecord';
+import { TtlCacheRecord } from './types/ttlCacheRecord.types';
 
 /**
  * Class representing a Redis-based TTL (Time-To-Live) cache.
@@ -11,29 +11,34 @@ export class RedisTtlCache implements TtlCache {
 
   /**
    * Creates an instance of RedisTtlCache.
-   * 
+   *
    * @param {number} ttlMilliseconds - The default TTL in milliseconds.
    */
-  constructor(private ttlMilliseconds: number) {
+  constructor(
+    private ttlMilliseconds: number,
+    hostingOptions?: RedisClientOptions
+  ) {
     // Connects to localhost:6379 by default
     // url usage: redis[s]://[[username][:password]@][host][:port][/db-number]
-    this.client = createClient({
-        url: process.env.REDIS_URL
-    });
+    this.client = createClient(hostingOptions);
     this.client.on('error', (err) => console.log('Redis Client Error', err));
     this.client.on('connect', () => {
-      console.log('\x1b[32m%s\x1b[0m', 'Successfully Connected to Redis');  // Green text
+      console.log('\x1b[32m%s\x1b[0m', 'Successfully Connected to Redis'); // Green text
     });
     this.client.connect().catch(console.error);
   }
 
   /**
    * Puts a record into the Redis cache.
-   * 
+   *
    * @param {TtlCacheRecord} param0 - The cache record to put into the cache.
    * @returns {Promise<void>} - A promise that resolves when the record is put into the cache.
    */
-  async putRecord({ key, value, ttlMilliseconds = this.ttlMilliseconds }: TtlCacheRecord): Promise<void> {
+  async putRecord({
+    key,
+    value,
+    ttlMilliseconds = this.ttlMilliseconds
+  }: TtlCacheRecord): Promise<void> {
     await this.client.set(key, JSON.stringify(value), {
       PX: ttlMilliseconds
     });
@@ -41,7 +46,7 @@ export class RedisTtlCache implements TtlCache {
 
   /**
    * Deletes a record from the Redis cache.
-   * 
+   *
    * @param {string} cacheRecordKey - The key of the cache record to delete.
    * @returns {Promise<void>} - A promise that resolves when the record is deleted from the cache.
    */
@@ -51,7 +56,7 @@ export class RedisTtlCache implements TtlCache {
 
   /**
    * Reads a record from the Redis cache.
-   * 
+   *
    * @param {string} cacheRecordKey - The key of the cache record to read.
    * @returns {Promise<TtlCacheRecord>} - A promise that resolves with the cache record.
    * @throws {Error} - Throws an error if the record is not found.
@@ -66,12 +71,12 @@ export class RedisTtlCache implements TtlCache {
       key: cacheRecordKey,
       value: JSON.parse(value),
       ttlMilliseconds: ttl * 1000
-    }; 
+    };
   }
 
   /**
    * Lists the keys in the Redis cache that match a pattern prefix.
-   * 
+   *
    * @param {string} pattern_prefix - The pattern prefix to match.
    * @returns {Promise<string[]>} - A promise that resolves with an array of keys matching the pattern prefix.
    */
@@ -82,7 +87,7 @@ export class RedisTtlCache implements TtlCache {
 
   /**
    * Peeks at a record in the Redis cache to check if it exists.
-   * 
+   *
    * @param {string} cacheRecordKey - The key of the cache record to peek at.
    * @returns {Promise<boolean>} - A promise that resolves with a boolean indicating if the record exists.
    */
@@ -93,7 +98,7 @@ export class RedisTtlCache implements TtlCache {
 
   /**
    * Disconnects the Redis client.
-   * 
+   *
    * @returns {Promise<void>} - A promise that resolves when the client is disconnected.
    */
   async disconnect(): Promise<void> {
@@ -102,7 +107,7 @@ export class RedisTtlCache implements TtlCache {
 
   /**
    * Gets the default TTL (Time-To-Live) in milliseconds.
-   * 
+   *
    * @returns {number} - The TTL in milliseconds.
    */
   getTtlMilliseconds(): number {

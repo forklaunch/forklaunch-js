@@ -1,10 +1,16 @@
-import { Prettify } from "@forklaunch/common";
-import { AnySchemaValidator, Schema, SchemaCatchall, ValidSchemaObject } from "@forklaunch/validator";
-import { SchemaValidator } from "@forklaunch/validator/interfaces";
-import { IdiomaticSchema } from "@forklaunch/validator/types";
-import { IncomingHttpHeaders, OutgoingHttpHeader } from "http";
-import { ParsedQs } from "qs";
-import { HttpContractDetails, ParamsDictionary, PathParamHttpContractDetails } from "./primitive.types";
+import { Prettify } from '@forklaunch/common';
+import {
+    AnySchemaValidator,
+    Schema
+} from '@forklaunch/validator';
+import { IdiomaticSchema, SchemaValidator } from '@forklaunch/validator/types';
+import { IncomingHttpHeaders, OutgoingHttpHeader } from 'http';
+import { ParsedQs } from 'qs';
+import {
+    HttpContractDetails,
+    ParamsDictionary,
+    PathParamHttpContractDetails
+} from './primitive.types';
 
 export interface RequestContext {
     correlationId: string;
@@ -16,7 +22,7 @@ export interface ForklaunchRequest<
     P = ParamsDictionary,
     ReqBody = unknown,
     ReqQuery = ParsedQs,
-    Headers = IncomingHttpHeaders,
+    Headers = IncomingHttpHeaders
 > {
     context: Prettify<RequestContext>;
     contractDetails: HttpContractDetails<SV> | PathParamHttpContractDetails<SV>;
@@ -35,36 +41,43 @@ export interface ForklaunchResponse<
         403: unknown;
         500: unknown;
     },
-    StatusCode = number,
+    StatusCode = number
 > {
     bodyData: unknown;
     statusCode: StatusCode;
     corked: boolean;
-    
+
     getHeaders: () => OutgoingHttpHeader;
     setHeader: (key: string, value: string) => void;
     status: {
         <U extends keyof ResBody>(code: U): ForklaunchResponse<ResBody[U], U>;
-        <U extends keyof ResBody>(code: U, message?: string): ForklaunchResponse<ResBody[U], U>;
+        <U extends keyof ResBody>(
+            code: U,
+            message?: string
+        ): ForklaunchResponse<ResBody[U], U>;
         <U extends 500>(code: U): ForklaunchResponse<string, U>;
         <U extends 500>(code: U, message?: string): ForklaunchResponse<string, U>;
-    }
+    };
     send: {
         <T>(body?: ResBody, close_connection?: boolean): T;
         <T>(body?: ResBody): T;
-    }
+    };
     json: {
         (body?: ResBody): boolean;
         <T>(body?: ResBody): T;
-    }
+    };
     jsonp: {
         (body?: ResBody): boolean;
         <T>(body?: ResBody): T;
-    }
+    };
 }
-export type MapSchema<SV extends AnySchemaValidator, T extends IdiomaticSchema<SchemaCatchall<SV>> | ValidSchemaObject<SV>> = Schema<T, SV> extends infer U ? 
-{ [key: string]: unknown } extends U ? 
-  never : 
-  U : 
-never;
+export type MapSchema<
+    SV extends AnySchemaValidator,
+    T extends IdiomaticSchema<SV> | SV['_ValidSchemaObject']
+> =
+    Schema<T, SV> extends infer U
+    ? { [key: string]: unknown } extends U
+    ? never
+    : U
+    : never;
 export type ForklaunchNextFunction = (err?: unknown) => void;

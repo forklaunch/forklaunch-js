@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/validator",
-  "version": "0.2.1",
+  "version": "0.2.9",
   "description": "Schema validator for ForkLaunch components.",
   "files": [
     "dist"
@@ -12,8 +12,10 @@
   "scripts": {
     "test": "jest",
     "build": "tsc",
+    "docs": "typedoc --out docs *",
     "lint": "eslint . -c eslint.config.mjs",
-    "lint:fix": "eslint . -c eslint.config.mjs --fix"
+    "lint:fix": "eslint . -c eslint.config.mjs --fix",
+    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.ts' --write"
   },
   "repository": {
     "type": "git",
@@ -33,6 +35,9 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.6.0",
+    "@types/jest": "^29.5.12",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.1.3",
     "globals": "^15.7.0",
     "openapi3-ts": "^4.3.3",
     "ts-jest": "^29.1.5",
@@ -67,6 +72,10 @@
     "./zod/types": {
       "types": "./dist/zod/types/zod.schema.types.d.ts",
       "default": "./dist/zod/types/zod.schema.types.js"
+    },
+    "./tests/mockSchemaValidator": {
+      "types": "./dist/tests/mockSchemaValidator.d.ts",
+      "default": "./dist/tests/mockSchemaValidator.js"
     }
   }
 }

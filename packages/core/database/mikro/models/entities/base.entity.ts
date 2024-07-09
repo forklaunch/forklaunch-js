@@ -1,5 +1,5 @@
 import { v4 } from 'uuid';
-import { PrimaryKey, Property } from "@mikro-orm/core";
+import { PrimaryKey, Property } from '@mikro-orm/core';
 
 /**
  * Abstract class representing a base entity.
@@ -7,16 +7,16 @@ import { PrimaryKey, Property } from "@mikro-orm/core";
 export abstract class BaseEntity {
   /**
    * The unique identifier for the entity.
-   * 
+   *
    * @type {string}
    * @readonly
    */
-  @PrimaryKey({ type: "uuid" })
+  @PrimaryKey({ type: 'uuid' })
   id: string = v4();
 
   /**
    * The date when the entity was created.
-   * 
+   *
    * @type {Date}
    */
   @Property()
@@ -24,7 +24,7 @@ export abstract class BaseEntity {
 
   /**
    * The date when the entity was last updated.
-   * 
+   *
    * @type {Date}
    * @readonly
    */
