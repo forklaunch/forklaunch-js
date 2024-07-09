@@ -2,10 +2,11 @@ import { SchemaValidator } from '@forklaunch/validator';
 import {
     MockSchemaValidator,
     literal,
+    mockSchemaValidator,
     optional,
     union
 } from '@forklaunch/validator/tests/mockSchemaValidator';
-import { ForklaunchRequest, ForklaunchResponse, HttpContractDetails, parseRequestBody, parseRequestHeaders, parseRequestParams, parseRequestQuery, parseResponse } from '../http';
+import { ForklaunchRequest, ForklaunchResponse, HttpContractDetails, RequestContext, createRequestContext, enrichRequestDetails, parseRequestBody, parseRequestHeaders, parseRequestParams, parseRequestQuery, parseResponse } from '../http';
 
 describe('Http Middleware Tests', () => {
     let contractDetails: HttpContractDetails<MockSchemaValidator>;
@@ -24,21 +25,23 @@ describe('Http Middleware Tests', () => {
         contractDetails = {
             name: 'Test Contract',
             summary: 'Test Contract Summary',
+            body: testSchema,
+            params: testSchema,
+            requestHeaders: testSchema,
+            query: testSchema,
             responses: {
                 200: testSchema
             }
         };
 
         req = {
-            context: {
-                correlationId: '123'
-            },
-            contractDetails,
-            schemaValidator: new MockSchemaValidator() as SchemaValidator,
-            params: {},
-            headers: {},
-            body: {},
-            query: {}
+            context: {} as RequestContext,
+            contractDetails: {} as HttpContractDetails<MockSchemaValidator>,
+            schemaValidator: {} as SchemaValidator,
+            params: testSchema,
+            headers: testSchema,
+            body: testSchema,
+            query: testSchema
         };
 
         resp = {
@@ -52,6 +55,22 @@ describe('Http Middleware Tests', () => {
             json: jest.fn(),
             jsonp: jest.fn(),
         };
+    });
+
+
+
+    test('Create Request Context', async () => {
+        req.context = {} as RequestContext;
+        req.schemaValidator = {} as SchemaValidator;
+        createRequestContext(mockSchemaValidator)(req, resp, nextFunction);
+        expect(req.context.correlationId).not.toBe('123');
+        expect(req.schemaValidator).toBe(mockSchemaValidator);
+    });
+
+    test('Enrich Request Details', async () => {
+        req.contractDetails = {} as HttpContractDetails<MockSchemaValidator>;
+        enrichRequestDetails(contractDetails)(req, resp, nextFunction);
+        expect(req.contractDetails).toEqual(contractDetails);
     });
 
     test('Validate Request Params', async () => {

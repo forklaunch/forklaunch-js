@@ -136,8 +136,8 @@ describe('Request Entity Mapper Test', () => {
 
     // @ts-expect-error
     expect(() => TestRequestEM.fromJson(json)).toThrow();
-    // @ts-expect-error
     expect(() =>
+      // @ts-expect-error
       TestRequestEntityMapper.fromJson(new TypeboxSchemaValidator(), json)
     ).toThrow();
   });
