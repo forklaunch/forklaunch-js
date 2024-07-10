@@ -17,20 +17,20 @@ import { RequestHandler } from '../types/forklaunch.express.types';
  * @returns {RequestHandler<SV, P, ResBody, ReqBody, ReqQuery, LocalsObj, StatusCode>} - The wrapped middleware function.
  */
 export function asyncMiddleware<
-    SV extends AnySchemaValidator,
-    P = ParamsDictionary,
-    ResBody = unknown,
-    ReqBody = unknown,
-    ReqQuery = ParsedQs,
-    LocalsObj extends Record<string, unknown> = Record<string, unknown>,
-    StatusCode extends number = number
+  SV extends AnySchemaValidator,
+  P = ParamsDictionary,
+  ResBody = unknown,
+  ReqBody = unknown,
+  ReqQuery = ParsedQs,
+  LocalsObj extends Record<string, unknown> = Record<string, unknown>,
+  StatusCode extends number = number
 >(
-    fn: RequestHandler<SV, P, ResBody, ReqBody, ReqQuery, LocalsObj, StatusCode>
+  fn: RequestHandler<SV, P, ResBody, ReqBody, ReqQuery, LocalsObj, StatusCode>
 ): RequestHandler<SV, P, ResBody, ReqBody, ReqQuery, LocalsObj, StatusCode> {
-    return async (req, res, next) => {
-        await Promise.resolve(fn(req, res, next)).catch(next);
-        if (next) {
-            next();
-        }
-    };
+  return async (req, res, next) => {
+    await Promise.resolve(fn(req, res, next)).catch(next);
+    if (next) {
+      next();
+    }
+  };
 }

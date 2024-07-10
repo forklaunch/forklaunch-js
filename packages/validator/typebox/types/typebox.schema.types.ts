@@ -76,23 +76,21 @@ export type UnionTResolve<T extends TUnionContainer> = T extends [
   : [];
 
 /**
- * Resolves a schema type T to its resolved type. The depth is limited to 45 to prevent infinite recursion.
+ * Resolves a schema type T to its resolved type. The depth is limited to 22 to prevent infinite recursion.
  *
  * @template T - The schema type to resolve.
  * @template Depth - The current depth of the resolution.
  */
-export type TResolve<T, Depth extends number = 0> = Depth extends 45
+export type TResolve<T, Depth extends number = 0> = Depth extends 22
   ? TUnknown
   : T extends LiteralSchema
     ? TLiteral<T>
-    : T extends TObject<TObjectShape>
+    : T extends TKind
       ? T
-      : T extends TSchema
+      : T extends TObject<TObjectShape>
         ? T
-        : T extends TKind
-          ? T
-          : T extends UnboxedTObjectSchema
-            ? TObject<{
-                [K in keyof T]: TResolve<T[K], Increment<Depth>>;
-              }>
-            : TNever;
+        : T extends UnboxedTObjectSchema
+          ? TObject<{
+              [K in keyof T]: TResolve<T[K], Increment<Depth>>;
+            }>
+          : TNever;

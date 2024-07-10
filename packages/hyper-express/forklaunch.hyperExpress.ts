@@ -43,7 +43,7 @@ import {
  *
  * @template SV - A type that extends AnySchemaValidator.
  */
-class Application<SV extends AnySchemaValidator> {
+export class Application<SV extends AnySchemaValidator> {
   internal = new Server();
   private routers: Router<SV>[] = [];
 
@@ -61,22 +61,44 @@ class Application<SV extends AnySchemaValidator> {
    * @returns {this} - The application instance.
    */
   use(
-    ...args: (
-      | string
-      | Router<SV>
-      | MiddlewareHandler<SV>
-      | MiddlewareHandler<SV>[]
-    )[]
+    router: Router<SV> | MiddlewareHandler<SV> | MiddlewareHandler<SV>[],
+    ...args: (Router<SV> | MiddlewareHandler<SV> | MiddlewareHandler<SV>[])[]
   ): this {
-    const newArgs = args.map((arg) => {
-      if (arg instanceof Router) {
-        this.routers.push(arg);
-        return arg.internal;
+    if (router instanceof Router) {
+      this.routers.push(router);
+      this.internal.use(router.basePath, router.internal);
+      return this;
+    } else {
+      const router = args.pop();
+      if (!(router instanceof Router)) {
+        throw new Error('Last argument must be a router');
       }
-      return arg;
-    });
-    this.internal.use(...(newArgs as UsableSpreadableArguments));
-    return this;
+
+      args.forEach((arg) => {
+        if (arg instanceof Router) {
+          throw new Error('Only one router is allowed');
+        }
+      });
+
+      this.internal.use(
+        router.basePath,
+        ...(args as unknown as (
+          | ExpressMiddlewareHandler
+          | ExpressMiddlewareHandler[]
+        )[]),
+        router.internal
+      );
+      return this;
+    }
+    // const newArgs = args.map((arg) => {
+    //   if (arg instanceof Router) {
+    //     this.routers.push(arg);
+    //     return arg.internal;
+    //   }
+    //   return arg;
+    // });
+    // this.internal.use(...(newArgs as UsableSpreadableArguments));
+    // return this;
   }
 
   /**
@@ -180,17 +202,17 @@ export class Router<SV extends AnySchemaValidator>
   /**
    * Resolves middlewares based on the contract details.
    *
-   * @param {HttpContractDetails<SV>} contractDetails - The contract details.
+   * @param {PathParamHttpContractDetails<SV> | HttpContractDetails<SV>} contractDetails - The contract details.
    * @returns {MiddlewareHandler<SV>[]} - The resolved middlewares.
    */
   private resolveMiddlewares(
-    contractDetails: HttpContractDetails<SV>
+    contractDetails: PathParamHttpContractDetails<SV> | HttpContractDetails<SV>
   ): MiddlewareHandler<SV>[] {
     const middlewares = [enrichRequestDetails(contractDetails)];
     if (contractDetails.params) {
       middlewares.push(parseRequestParams);
     }
-    if (contractDetails.body) {
+    if ((contractDetails as HttpContractDetails<SV>).body) {
       middlewares.push(parseRequestBody);
     }
     if (contractDetails.requestHeaders) {
@@ -217,7 +239,7 @@ export class Router<SV extends AnySchemaValidator>
    * @param {MiddlewareHandler<SV, P, ResBody | string, ReqBody, ReqQuery, LocalsObj, StatusCode>} requestHandler - The request handler.
    * @returns {ExpressMiddlewareHandler} - The Express request handler.
    */
-  parseAndRunControllerFunction<
+  private parseAndRunControllerFunction<
     P = ParamsDictionary,
     ResBody = unknown,
     ReqBody = unknown,
@@ -279,7 +301,7 @@ export class Router<SV extends AnySchemaValidator>
    * @returns {MiddlewareHandler<SV, P, ResBody, ReqBody, ReqQuery, LocalsObj>} - The extracted controller function.
    * @throws {Error} - Throws an error if the last argument is not a function.
    */
-  extractControllerFunction<
+  private extractControllerFunction<
     P = ParamsDictionary,
     ResBody = unknown,
     ReqBody = unknown,
@@ -304,7 +326,7 @@ export class Router<SV extends AnySchemaValidator>
    * @returns {string} - The extracted SDK path.
    * @throws {Error} - Throws an error if the path is not defined.
    */
-  extractSdkPath(path: string | RegExp | (string | RegExp)[]): string {
+  private extractSdkPath(path: string | RegExp | (string | RegExp)[]): string {
     let sdkPath = path;
 
     if (Array.isArray(path)) {
@@ -619,7 +641,7 @@ export class Router<SV extends AnySchemaValidator>
  * @returns {Router<SV>} - The new router instance.
  */
 export function forklaunchRouter<SV extends AnySchemaValidator>(
-  basePath: string,
+  basePath: `/${string}`,
   schemaValidator: SV
 ): Router<SV> {
   const router = new Router(basePath, schemaValidator);

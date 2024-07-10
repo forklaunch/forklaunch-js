@@ -22,7 +22,7 @@
   },
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "dependencies": {
-    "@forklaunch/core": "^0.1.6",
+    "@forklaunch/core": "^0.1.7",
     "hyper-express": "^6.16.4",
     "live-directory": "^3.0.3",
     "qs": "^6.12.3",
@@ -31,12 +31,15 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.6.0",
-    "prettier": "^3.3.2",
-    "ts-jest": "^29.1.5",
     "@types/jest": "^29.5.12",
     "@types/qs": "^6.9.15",
     "@types/swagger-ui-dist": "^3.30.5",
     "@types/swagger-ui-express": "^4.1.6",
+    "kill-port-process": "^3.2.1",
+    "prettier": "^3.3.2",
+    "ts-jest": "^29.2.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.3",
     "typescript-eslint": "^7.16.0"
   }
 }

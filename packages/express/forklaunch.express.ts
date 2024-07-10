@@ -43,8 +43,8 @@ import {
  *
  * @template SV - A type that extends AnySchemaValidator.
  */
-class Application<SV extends AnySchemaValidator> {
-    private internal = express();
+export class Application<SV extends AnySchemaValidator> {
+    internal = express();
     private routers: Router<SV>[] = [];
 
     /**
@@ -54,22 +54,33 @@ class Application<SV extends AnySchemaValidator> {
      */
     constructor(private schemaValidator: SV) { }
 
+    //TODO: change this to different signatures and handle different cases
     /**
      * Registers middleware or routers to the application.
      *
-     * @param {...RequestHandler<SV>[]} args - The middleware or routers to register.
+     * @param {...(Router<SV> | RequestHandler<SV>)[]} args - The middleware or routers to register.
      * @returns {this} - The application instance.
      */
-    use(...args: RequestHandler<SV>[]): this {
-        const newArgs = args.map((arg) => {
-            if (arg instanceof Router) {
-                this.routers.push(arg);
-                return arg.internal;
+    use(router: (Router<SV> | RequestHandler<SV>), ...args: (Router<SV> | RequestHandler<SV>)[]): this {
+        if (router instanceof Router) {
+            this.routers.push(router);
+            this.internal.use(router.basePath, router.internal);
+            return this;
+        } else {
+            const router = args.pop();
+            if (!(router instanceof Router)) {
+                throw new Error('Last argument must be a router');
             }
-            return arg;
-        });
-        this.internal.use(...(newArgs as ExpressRequestHandler[]));
-        return this;
+
+            args.forEach((arg) => {
+                if (arg instanceof Router) {
+                    throw new Error('Only one router is allowed');
+                }
+            });
+
+            this.internal.use(router.basePath, ...args as unknown as ExpressRequestHandler[], router.internal);
+            return this;
+        }
     }
 
     /**
@@ -78,14 +89,20 @@ class Application<SV extends AnySchemaValidator> {
      * @param {...unknown[]} args - The arguments to pass to the listen method.
      * @returns {Server} - The HTTP server.
      */
-    listen(port: number, hostname: string, backlog: number, callback?: () => void): Server;
+    listen(
+        port: number,
+        hostname: string,
+        backlog: number,
+        callback?: () => void
+    ): Server;
     listen(port: number, hostname: string, callback?: () => void): Server;
     listen(port: number, callback?: () => void): Server;
     listen(callback?: () => void): Server;
     listen(path: string, callback?: () => void): Server;
     listen(handle: any, listeningListener?: () => void): Server;
     listen(...args: unknown[]): Server {
-        const port = typeof args[0] === 'number' ? args[0] : Number(process.env.PORT);
+        const port =
+            typeof args[0] === 'number' ? args[0] : Number(process.env.PORT);
         this.internal.use(
             `/api${process.env.VERSION ?? '/v1'}${process.env.SWAGGER_PATH ?? '/swagger'}`,
             swaggerUi.serve,
@@ -129,7 +146,7 @@ export class Router<SV extends AnySchemaValidator>
      * @param {SV} schemaValidator - The schema validator.
      */
     constructor(
-        public basePath: string,
+        public basePath: `/${string}`,
         public schemaValidator: SV
     ) {
         this.internal.use(express.json());
@@ -144,17 +161,17 @@ export class Router<SV extends AnySchemaValidator>
     /**
      * Resolves middlewares based on the contract details.
      *
-     * @param {HttpContractDetails<SV>} contractDetails - The contract details.
+     * @param {PathParamHttpContractDetails<SV> | HttpContractDetails<SV>} contractDetails - The contract details.
      * @returns {RequestHandler<SV>[]} - The resolved middlewares.
      */
-    private resolveMiddlewares(contractDetails: HttpContractDetails<SV>) {
+    private resolveMiddlewares(contractDetails: PathParamHttpContractDetails<SV> | HttpContractDetails<SV>) {
         const middlewares: RequestHandler<SV>[] = [
             enrichRequestDetails(contractDetails)
         ];
         if (contractDetails.params) {
             middlewares.push(parseRequestParams);
         }
-        if (contractDetails.body) {
+        if ((contractDetails as HttpContractDetails<SV>).body) {
             middlewares.push(parseRequestBody);
         }
         if (contractDetails.requestHeaders) {
@@ -181,7 +198,7 @@ export class Router<SV extends AnySchemaValidator>
      * @param {RequestHandler<SV, P, ResBody | string, ReqBody, ReqQuery, LocalsObj, StatusCode>} requestHandler - The request handler.
      * @returns {ExpressRequestHandler} - The Express request handler.
      */
-    parseAndRunControllerFunction<
+    private parseAndRunControllerFunction<
         P = ParamsDictionary,
         ResBody = unknown,
         ReqBody = unknown,
@@ -198,7 +215,15 @@ export class Router<SV extends AnySchemaValidator>
             LocalsObj,
             StatusCode
         >
-    ): RequestHandler<SV, P, ResBody | string, ReqBody, ReqQuery, LocalsObj, StatusCode> {
+    ): RequestHandler<
+        SV,
+        P,
+        ResBody | string,
+        ReqBody,
+        ReqQuery,
+        LocalsObj,
+        StatusCode
+    > {
         return async (
             req: Request<SV, P, ResBody | string, ReqBody, ReqQuery, LocalsObj>,
             res: Response<ResBody | string, LocalsObj, StatusCode>,
@@ -236,7 +261,7 @@ export class Router<SV extends AnySchemaValidator>
      * @returns {RequestHandler<SV, P, ResBody, ReqBody, ReqQuery, LocalsObj, StatusCode>} - The extracted controller function.
      * @throws {Error} - Throws an error if the last argument is not a function.
      */
-    extractControllerFunction<
+    private extractControllerFunction<
         P = ParamsDictionary,
         ResBody = unknown,
         ReqBody = unknown,
@@ -270,7 +295,7 @@ export class Router<SV extends AnySchemaValidator>
      * @returns {string} - The extracted SDK path.
      * @throws {Error} - Throws an error if the path is not defined.
      */
-    extractSdkPath(path: string | RegExp | (string | RegExp)[]): string {
+    private extractSdkPath(path: string | RegExp | (string | RegExp)[]): string {
         let sdkPath = path;
 
         if (Array.isArray(path)) {
@@ -584,9 +609,9 @@ export class Router<SV extends AnySchemaValidator>
  * @returns {Router<SV>} - The new router instance.
  */
 export function forklaunchRouter<SV extends AnySchemaValidator>(
-    basePath: string,
+    basePath: `/${string}`,
     schemaValidator: SV
-) {
+): Router<SV> {
     const router = new Router(basePath, schemaValidator);
     return router;
 }

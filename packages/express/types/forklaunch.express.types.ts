@@ -1,4 +1,4 @@
-import { FlattenKeys } from '@forklaunch/common';
+import { FlattenKeys, Prettify } from '@forklaunch/common';
 import {
     Body,
     ForklaunchRequest,
@@ -111,7 +111,7 @@ export type SchemaRequestHandler<
 > = RequestHandler<
     SV,
     MapSchema<SV, P>,
-    MapSchema<SV, ResBody> & { 500: string },
+    Prettify<MapSchema<SV, ResBody> & { 500: string }>,
     MapSchema<SV, ReqBody>,
     MapSchema<SV, ReqQuery>,
     LocalsObj,
