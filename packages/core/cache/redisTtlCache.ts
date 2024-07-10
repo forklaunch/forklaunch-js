@@ -13,6 +13,7 @@ export class RedisTtlCache implements TtlCache {
    * Creates an instance of RedisTtlCache.
    *
    * @param {number} ttlMilliseconds - The default TTL in milliseconds.
+   * @param {RedisClientOptions} [hostingOptions] - The Redis client options.
    */
   constructor(
     private ttlMilliseconds: number,

@@ -1,10 +1,5 @@
-cache/
-controllers/
-database/
-entityMapper/
-http/
-services/
-tests
+middleware/
+types/
 
 docs/
 jest.config.js

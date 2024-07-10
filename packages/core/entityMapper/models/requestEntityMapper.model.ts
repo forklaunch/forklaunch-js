@@ -4,10 +4,10 @@ import { EntityMapperConstructor } from '../interfaces/entityMapper.interface';
 import { BaseEntityMapper, construct } from './baseEntityMapper.model';
 
 /**
- * Abstract class representing a request entityMapper.
+ * Abstract class representing a request entity mapper.
  *
  * @template Entity - A type that extends BaseEntity.
- * @template SV - A type that extends SchemaValidator.
+ * @template SV - A type that extends AnySchemaValidator.
  * @extends {BaseEntityMapper<SV>}
  */
 export abstract class RequestEntityMapper<
@@ -15,7 +15,7 @@ export abstract class RequestEntityMapper<
   SV extends AnySchemaValidator
 > extends BaseEntityMapper<SV> {
   /**
-   * The entity.
+   * The entity type.
    * @type {Entity}
    * @protected
    */
@@ -67,9 +67,11 @@ export abstract class RequestEntityMapper<
    * Creates an instance of a RequestEntityMapper from a JSON object.
    *
    * @template T - A type that extends RequestEntityMapper.
-   * @param {EntityMapperConstructor<T>} this - The constructor of the T.
-   * @param {T['_SV']} schemaValidator - The schema provider.
-   * @param {T['_dto']} json - The JSON object.
+   * @template SV - A type that extends AnySchemaValidator.
+   * @template JsonType - The type of the JSON object.
+   * @param {EntityMapperConstructor<T, SV>} this - The constructor of the T.
+   * @param {SV} schemaValidator - The schema provider.
+   * @param {JsonType} json - The JSON object.
    * @returns {T} - An instance of the T.
    */
   static fromJson<
@@ -88,9 +90,11 @@ export abstract class RequestEntityMapper<
    * Deserializes a JSON object to an entity.
    *
    * @template T - A type that extends RequestEntityMapper.
-   * @param {EntityMapperConstructor<T>} this - The constructor of the T.
-   * @param {T['_SV']} schemaValidator - The schema provider.
-   * @param {T['_dto']} json - The JSON object.
+   * @template SV - A type that extends AnySchemaValidator.
+   * @template JsonType - The type of the JSON object.
+   * @param {EntityMapperConstructor<T, SV>} this - The constructor of the T.
+   * @param {SV} schemaValidator - The schema provider.
+   * @param {JsonType} json - The JSON object.
    * @param {...unknown[]} additionalArgs - Additional arguments.
    * @returns {T['_Entity']} - The entity.
    */

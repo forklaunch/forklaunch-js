@@ -1,0 +1,64 @@
+import { parseResponse } from '@forklaunch/core';
+import { AnySchemaValidator } from '@forklaunch/validator';
+import { MiddlewareNext } from 'hyper-express';
+import { Request, Response } from '../types/forklaunch.hyperExpress.types';
+
+/**
+ * Middleware to enrich the response transmission by intercepting and parsing responses before they are sent.
+ *
+ * @template SV - A type that extends AnySchemaValidator.
+ * @param {Request<SV>} req - The request object.
+ * @param {Response} res - The response object.
+ * @param {MiddlewareNext} next - The next middleware function.
+ */
+export function enrichResponseTransmission<SV extends AnySchemaValidator>(
+  req: Request<SV>,
+  res: Response,
+  next: MiddlewareNext
+) {
+  const originalSend = res.send;
+  const originalJson = res.json;
+
+  /**
+   * Intercepts the JSON response to include additional processing.
+   *
+   * @param {unknown} data - The data to send in the response.
+   * @returns {boolean} - The result of the original JSON method.
+   */
+  res.json = function (data: unknown) {
+    res.bodyData = data;
+    const result = originalJson.call(this, data);
+    return result as boolean;
+  };
+
+  /**
+   * Intercepts the send response to include additional processing and error handling.
+   *
+   * @param {unknown} data - The data to send in the response.
+   * @returns {Response} - The result of the original send method.
+   */
+  res.send = function (data) {
+    if (!res.bodyData) {
+      res.bodyData = data;
+      res.statusCode = res._status_code;
+      res.corked = res._corked;
+    }
+
+    try {
+      if ((res._cork && !res.corked) || !res._cork) {
+        parseResponse(req, res);
+      }
+      return originalSend.call(this, data);
+    } catch (error: unknown) {
+      console.error(error);
+      res.status(500);
+      originalSend.call(
+        this,
+        'Internal Server Error: ' + (error as Error).message
+      );
+      throw error;
+    }
+  };
+
+  next();
+}
