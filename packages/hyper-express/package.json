@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/hyper-express",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Forklaunch framework for hyper-express.",
   "main": "index.js",
   "scripts": {
@@ -23,7 +23,7 @@
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "dependencies": {
     "@forklaunch/core": "^0.1.7",
-    "hyper-express": "^6.16.4",
+    "@forklaunch/hyper-express-fork": "^6.16.4",
     "live-directory": "^3.0.3",
     "qs": "^6.12.3",
     "swagger-ui-dist": "^5.17.14",

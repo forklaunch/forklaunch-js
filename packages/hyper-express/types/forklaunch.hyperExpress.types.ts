@@ -9,12 +9,12 @@ import {
   QueryObject,
   ResponsesObject
 } from '@forklaunch/core';
-import { AnySchemaValidator } from '@forklaunch/validator';
 import {
   Request as ExpressRequest,
   Response as ExpressResponse,
   MiddlewareNext
-} from 'hyper-express';
+} from '@forklaunch/hyper-express-fork';
+import { AnySchemaValidator } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
 
 /**
@@ -34,7 +34,7 @@ export interface Request<
   ReqQuery = ParsedQs,
   LocalsObj extends Record<string, unknown> = Record<string, unknown>
 > extends ForklaunchRequest<SV, P, ReqBody, ReqQuery>,
-    Omit<ExpressRequest<LocalsObj>, 'params' | 'query' | 'headers'> {
+  Omit<ExpressRequest<LocalsObj>, 'params' | 'query' | 'headers'> {
   /** The request body */
   body: ReqBody;
   /** The request query parameters */
@@ -55,16 +55,16 @@ export interface Response<
   LocalsObj extends Record<string, unknown> = Record<string, unknown>,
   StatusCode extends number = number
 > extends ForklaunchResponse<ResBody, StatusCode>,
-    Omit<
-      ExpressResponse<LocalsObj>,
-      | 'getHeaders'
-      | 'setHeader'
-      | 'send'
-      | 'status'
-      | 'statusCode'
-      | 'json'
-      | 'jsonp'
-    > {
+  Omit<
+    ExpressResponse<LocalsObj>,
+    | 'getHeaders'
+    | 'setHeader'
+    | 'send'
+    | 'status'
+    | 'statusCode'
+    | 'json'
+    | 'jsonp'
+  > {
   /** The body data of the response */
   bodyData: unknown;
   /** The status code of the response */

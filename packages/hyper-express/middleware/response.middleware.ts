@@ -1,6 +1,6 @@
 import { parseResponse } from '@forklaunch/core';
+import { MiddlewareNext } from '@forklaunch/hyper-express-fork';
 import { AnySchemaValidator } from '@forklaunch/validator';
-import { MiddlewareNext } from 'hyper-express';
 import { Request, Response } from '../types/forklaunch.hyperExpress.types';
 
 /**

@@ -18,14 +18,14 @@ import {
   parseRequestParams,
   parseRequestQuery
 } from '@forklaunch/core';
-import { AnySchemaValidator } from '@forklaunch/validator';
 import {
   MiddlewareHandler as ExpressMiddlewareHandler,
   Router as ExpressRouter,
   MiddlewareNext,
   Server,
   UsableSpreadableArguments
-} from 'hyper-express';
+} from '@forklaunch/hyper-express-fork';
+import { AnySchemaValidator } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
 import * as uWebsockets from 'uWebSockets.js';
 import { contentParse } from './middleware/contentParse.middleware';
@@ -52,7 +52,7 @@ export class Application<SV extends AnySchemaValidator> {
    *
    * @param {SV} schemaValidator - The schema validator.
    */
-  constructor(private schemaValidator: SV) {}
+  constructor(private schemaValidator: SV) { }
 
   /**
    * Registers middleware or routers to the application.
