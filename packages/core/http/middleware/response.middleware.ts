@@ -6,6 +6,13 @@ import {
 } from '../types/api.types';
 import { HttpContractDetails } from '../types/primitive.types';
 
+/**
+ * Checks if any validation is required for the given contract details.
+ *
+ * @template SV - A type that extends AnySchemaValidator.
+ * @param {HttpContractDetails<SV>} contractDetails - The contract details.
+ * @returns {boolean} - True if any validation is required, otherwise false.
+ */
 function checkAnyValidation<SV extends AnySchemaValidator>(
   contractDetails: HttpContractDetails<SV>
 ) {
@@ -17,6 +24,17 @@ function checkAnyValidation<SV extends AnySchemaValidator>(
   );
 }
 
+/**
+ * Middleware to parse and validate the response.
+ *
+ * @template SV - A type that extends AnySchemaValidator.
+ * @template Request - A type that extends ForklaunchRequest.
+ * @template Response - A type that extends ForklaunchResponse.
+ * @template NextFunction - A type that extends ForklaunchNextFunction.
+ * @param {Request} req - The request object.
+ * @param {Response} res - The response object.
+ * @param {NextFunction} [next] - The next middleware function.
+ */
 export function parseResponse<
   SV extends AnySchemaValidator,
   Request extends ForklaunchRequest<SV>,
@@ -39,23 +57,24 @@ export function parseResponse<
     req.schemaValidator.validate(req.schemaValidator.string, res.bodyData);
     return;
   }
+
   if (
     Object.prototype.hasOwnProperty.call(
-      !req.contractDetails.responses,
+      req.contractDetails.responses,
       res.statusCode
     )
   ) {
+    const schema = req.schemaValidator.schemify(
+      req.contractDetails.responses[res.statusCode]
+    );
+    req.schemaValidator.validate(schema, res.bodyData);
+  } else {
     if (next) {
       next(
         new Error(`Response code ${res.statusCode} not defined in contract.`)
       );
     }
   }
-
-  const schema = req.schemaValidator.schemify(
-    req.contractDetails.responses[res.statusCode]
-  );
-  req.schemaValidator.validate(schema, res.bodyData);
 
   if (next) {
     next();

@@ -4,6 +4,7 @@ import { AnySchemaValidator } from '@forklaunch/validator';
  * Interface representing a constructor for an entity mapper.
  *
  * @template T - The type of the entity mapper.
+ * @template SV - The type of the schema validator.
  * @interface EntityMapperConstructor
  */
 export interface EntityMapperConstructor<T, SV extends AnySchemaValidator> {

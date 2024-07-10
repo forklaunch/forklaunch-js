@@ -1,25 +1,68 @@
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { UnboxedObjectSchema } from '@forklaunch/validator/types';
 
+/**
+ * Dictionary type for URL parameters.
+ */
 export type ParamsDictionary = { [key: string]: string };
 
+/**
+ * Type representing an object with only string keys.
+ *
+ * @template SV - A type that extends AnySchemaValidator.
+ */
 export type StringOnlyObject<SV extends AnySchemaValidator> = Omit<
   UnboxedObjectSchema<SV>,
   number | symbol
 >;
+
+/**
+ * Type representing an object with only number keys.
+ *
+ * @template SV - A type that extends AnySchemaValidator.
+ */
 export type NumberOnlyObject<SV extends AnySchemaValidator> = Omit<
   UnboxedObjectSchema<SV>,
   string | symbol
 >;
 
+/**
+ * Type representing the body object in a request.
+ *
+ * @template SV - A type that extends AnySchemaValidator.
+ */
 export type BodyObject<SV extends AnySchemaValidator> = StringOnlyObject<SV> &
   unknown;
+
+/**
+ * Type representing the parameters object in a request.
+ *
+ * @template SV - A type that extends AnySchemaValidator.
+ */
 export type ParamsObject<SV extends AnySchemaValidator> = StringOnlyObject<SV> &
   unknown;
+
+/**
+ * Type representing the query object in a request.
+ *
+ * @template SV - A type that extends AnySchemaValidator.
+ */
 export type QueryObject<SV extends AnySchemaValidator> = StringOnlyObject<SV> &
   unknown;
+
+/**
+ * Type representing the headers object in a request.
+ *
+ * @template SV - A type that extends AnySchemaValidator.
+ */
 export type HeadersObject<SV extends AnySchemaValidator> =
   StringOnlyObject<SV> & unknown;
+
+/**
+ * Type representing the responses object in a request.
+ *
+ * @template SV - A type that extends AnySchemaValidator.
+ */
 export type ResponsesObject<SV extends AnySchemaValidator> = {
   [key: number]:
     | SV['_ValidSchemaObject']
@@ -28,25 +71,50 @@ export type ResponsesObject<SV extends AnySchemaValidator> = {
     | SV['string'];
 } & unknown;
 
+/**
+ * Type representing the body in a request.
+ *
+ * @template SV - A type that extends AnySchemaValidator.
+ */
 export type Body<SV extends AnySchemaValidator> =
   | BodyObject<SV>
   | SV['_ValidSchemaObject']
   | SV['_SchemaCatchall'];
 
+/**
+ * Type representing the authentication method.
+ */
 export type AuthMethod = 'jwt' | 'session';
+
+/**
+ * Interface representing HTTP contract details for path parameters.
+ *
+ * @template SV - A type that extends AnySchemaValidator.
+ * @template ParamSchemas - A type for parameter schemas, defaulting to ParamsObject.
+ * @template ResponseSchemas - A type for response schemas, defaulting to ResponsesObject.
+ * @template QuerySchemas - A type for query schemas, defaulting to QueryObject.
+ */
 export interface PathParamHttpContractDetails<
   SV extends AnySchemaValidator,
   ParamSchemas extends ParamsObject<SV> = ParamsObject<SV>,
   ResponseSchemas extends ResponsesObject<SV> = ResponsesObject<SV>,
   QuerySchemas extends QueryObject<SV> = QueryObject<SV>
 > {
+  /** Name of the contract */
   name: string;
+  /** Summary of the contract */
   summary: string;
+  /** Response schemas for the contract */
   responses: ResponseSchemas;
+  /** Optional request headers for the contract */
   requestHeaders?: HeadersObject<SV>;
+  /** Optional response headers for the contract */
   responseHeaders?: HeadersObject<SV>;
+  /** Optional parameter schemas for the contract */
   params?: ParamSchemas;
+  /** Optional query schemas for the contract */
   query?: QuerySchemas;
+  /** Optional authentication details for the contract */
   auth?: {
     method: AuthMethod;
     allowedSlugs?: Set<string>;
@@ -56,6 +124,15 @@ export interface PathParamHttpContractDetails<
   };
 }
 
+/**
+ * Interface representing HTTP contract details.
+ *
+ * @template SV - A type that extends AnySchemaValidator.
+ * @template ParamSchemas - A type for parameter schemas, defaulting to ParamsObject.
+ * @template ResponseSchemas - A type for response schemas, defaulting to ResponsesObject.
+ * @template BodySchema - A type for the body schema, defaulting to Body.
+ * @template QuerySchemas - A type for query schemas, defaulting to QueryObject.
+ */
 export interface HttpContractDetails<
   SV extends AnySchemaValidator,
   ParamSchemas extends ParamsObject<SV> = ParamsObject<SV>,
@@ -68,7 +145,9 @@ export interface HttpContractDetails<
     ResponseSchemas,
     QuerySchemas
   > {
+  /** Optional body schema for the contract */
   body?: BodySchema;
+  /** Optional content type for the contract */
   contentType?:
     | 'application/json'
     | 'multipart/form-data'

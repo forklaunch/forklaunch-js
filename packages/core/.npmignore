@@ -1,8 +1,10 @@
 cache/
 controllers/
 database/
-network/
+entityMapper/
+http/
 services/
+tests
 
 docs/
 jest.config.js

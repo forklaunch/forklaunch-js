@@ -17,21 +17,21 @@ type RecursiveUnion<T extends readonly string[]> = T extends readonly [
   ...infer R extends readonly string[]
 ]
   ? R extends []
-  ? F
-  : `${F} | ${RecursiveUnion<R>}`
+    ? F
+    : `${F} | ${RecursiveUnion<R>}`
   : '';
 
 export class MockSchemaValidator
   implements
-  SchemaValidator<
-    <T extends string>(schema: T) => T,
-    <T extends string>(schema: T) => `optional ${T}`,
-    <T extends string>(schema: T) => `array ${T}`,
-    <T extends readonly string[]>(schemas: T) => RecursiveUnion<T>,
-    <T extends LiteralSchema>(schema: T) => `literal ${T}`,
-    <T extends string>(schema: T, value: string) => boolean,
-    <T extends string>(schema: T) => SchemaObject
-  >
+    SchemaValidator<
+      <T extends string>(schema: T) => T,
+      <T extends string>(schema: T) => `optional ${T}`,
+      <T extends string>(schema: T) => `array ${T}`,
+      <T extends readonly string[]>(schemas: T) => RecursiveUnion<T>,
+      <T extends LiteralSchema>(schema: T) => `literal ${T}`,
+      <T extends string>(schema: T, value: string) => boolean,
+      <T extends string>(schema: T) => SchemaObject
+    >
 {
   _Type!: 'Mock';
   _SchemaCatchall!: string;

@@ -16,7 +16,7 @@ import {
   symbol,
   union,
   validate
-} from '../../typebox/index';
+} from '../../typebox/typebox.schemaValidator';
 import { UnboxedTObjectSchema } from '../../typebox/types/typebox.schema.types';
 
 const one = array({

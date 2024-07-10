@@ -9,9 +9,13 @@ import { ZodResolve, ZodSchemaTranslate } from '../zod/types/zod.schema.types';
 /**
  * Interface representing a schema validator.
  *
- * @template UnionContainer - The type for union schemas.
- * @template IdiomaticSchema<unknown> - The type for idiomatic schemas.
- * @template Catchall - The catch-all type for all schemas.
+ * @template SchematicFunction - The function type for schemifying a schema.
+ * @template OptionalFunction - The function type for making a schema optional.
+ * @template ArrayFunction - The function type for converting a schema into an array.
+ * @template UnionFunction - The function type for unionizing multiple schemas.
+ * @template LiteralFunction - The function type for creating a literal schema.
+ * @template ValidationFunction - The function type for validating a value against a schema.
+ * @template OpenAPIFunction - The function type for converting a schema into an OpenAPI schema object.
  */
 export interface SchemaValidator<
   SchematicFunction = <T>(schema: T) => unknown,
@@ -22,8 +26,19 @@ export interface SchemaValidator<
   ValidationFunction = <T>(schema: T, value: unknown) => boolean,
   OpenAPIFunction = <T>(schema: T) => SchemaObject
 > {
+  /**
+   * The type of the schema validator. Meant to be used with non-null assertions.
+   */
   _Type: unknown;
+
+  /**
+   * The catch-all type for the schema. Meant to be used with non-null assertions.
+   */
   _SchemaCatchall: unknown;
+
+  /**
+   * The valid schema object type. Meant to be used with non-null assertions.
+   */
   _ValidSchemaObject: unknown;
 
   /**
@@ -79,7 +94,6 @@ export interface SchemaValidator<
   /**
    * Converts a valid schema input into a schemified form.
    *
-   * @template T - The type of the idiomatic schema.
    * @param {T} schema - The schema to schemify.
    * @returns {unknown} - The schemified form of the schema.
    */
@@ -88,7 +102,6 @@ export interface SchemaValidator<
   /**
    * Converts a schema into an optional schema.
    *
-   * @template T - The type of the idiomatic schema.
    * @param {T} schema - The schema to make optional.
    * @returns {unknown} - The optional form of the schema.
    */
@@ -97,7 +110,6 @@ export interface SchemaValidator<
   /**
    * Converts a schema into an array schema.
    *
-   * @template T - The type of the idiomatic schema.
    * @param {T} schema - The schema to convert into an array.
    * @returns {unknown} - The array form of the schema.
    */
@@ -106,17 +118,14 @@ export interface SchemaValidator<
   /**
    * Converts multiple schemas into a union schema.
    *
-   * @template T - The type of the union container.
-   * @param {T} schemas - The schemas to unionize.
+   * @param {T[]} schemas - The schemas to unionize.
    * @returns {unknown} - The union form of the schemas.
    */
-  // union<T extends UnionContainer>(schemas: T): unknown;
   union: UnionFunction;
 
   /**
    * Creates a literal schema from a value.
    *
-   * @template T - The type of the literal value.
    * @param {T} value - The literal value.
    * @returns {unknown} - The literal schema.
    */
@@ -125,7 +134,6 @@ export interface SchemaValidator<
   /**
    * Validates a value against a schema.
    *
-   * @template T - The type of the catch-all schema.
    * @param {T} schema - The schema to validate against.
    * @param {unknown} value - The value to validate.
    * @returns {boolean} - Whether the value is valid according to the schema.
@@ -135,13 +143,15 @@ export interface SchemaValidator<
   /**
    * Converts a schema into an OpenAPI schema object.
    *
-   * @template T - The type of the idiomatic schema.
    * @param {T} schema - The schema to convert.
    * @returns {SchemaObject} - The OpenAPI schema object.
    */
   openapi: OpenAPIFunction;
 }
 
+/**
+ * Type representing any schema validator.
+ */
 export type AnySchemaValidator = SchemaValidator<
   unknown,
   unknown,
@@ -151,23 +161,62 @@ export type AnySchemaValidator = SchemaValidator<
   unknown,
   unknown
 > & {
+  /**
+   * The type of the schema resolver.
+   */
   _Type: keyof SchemaResolve<unknown>;
 };
 
+/**
+ * Interface representing schema resolution for different validation libraries.
+ *
+ * @template T - The type of the schema to resolve.
+ */
 export interface SchemaResolve<T> {
+  /**
+   * Schema resolution for Zod.
+   */
   Zod: ZodResolve<T>;
+
+  /**
+   * Schema resolution for TypeBox.
+   */
   TypeBox: TResolve<T>;
 }
 
+/**
+ * Interface representing schema translation for different validation libraries.
+ *
+ * @template T - The type of the schema to translate.
+ */
 export interface SchemaTranslate<T> {
+  /**
+   * Schema translation for Zod.
+   */
   Zod: ZodSchemaTranslate<T>;
+
+  /**
+   * Schema translation for TypeBox.
+   */
   TypeBox: TSchemaTranslate<T>;
 }
 
+/**
+ * Type representing the prettified schema translation.
+ *
+ * @template T - The type of the schema to translate.
+ * @template SV - The type of the schema validator.
+ */
 type SchemaPrettify<T, SV extends AnySchemaValidator> = Prettify<
   SchemaTranslate<T>[SV['_Type']]
 >;
 
+/**
+ * Type representing a schema, which can be a valid schema object or an idiomatic schema.
+ *
+ * @template T - The type of the schema.
+ * @template SV - The type of the schema validator.
+ */
 export type Schema<
   T extends SV['_ValidSchemaObject'] | IdiomaticSchema<SV>,
   SV extends AnySchemaValidator
@@ -176,7 +225,7 @@ export type Schema<
 /**
  * Represents a schema for an unboxed object where each key can have an idiomatic schema.
  *
- * @template Catchall - The type to use for catch-all cases in the schema.
+ * @template SV - The type of the schema validator.
  */
 export type UnboxedObjectSchema<SV extends AnySchemaValidator> = {
   [key: KeyTypes]: IdiomaticSchema<SV>;
@@ -190,7 +239,7 @@ export type LiteralSchema = string | number | boolean;
 /**
  * Represents an idiomatic schema which can be an unboxed object schema, a literal schema, or a catch-all type.
  *
- * @template Catchall - The type to use for catch-all cases in the schema.
+ * @template SV - The type of the schema validator.
  */
 export type IdiomaticSchema<SV extends AnySchemaValidator> =
   | UnboxedObjectSchema<SV>

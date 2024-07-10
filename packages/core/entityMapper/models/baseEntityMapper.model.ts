@@ -10,8 +10,9 @@ import { EntityMapperSchemaValidatorObject } from '../types/entityMapper.types';
  * Constructs an instance of a T.
  *
  * @template T - A type that extends BaseEntityMapper.
- * @param {EntityMapperConstructor<T>} self - The constructor of the T.
- * @param {...any[]} args - The arguments to pass to the constructor.
+ * @template SV - A type that extends AnySchemaValidator.
+ * @param {EntityMapperConstructor<T, SV>} self - The constructor of the T.
+ * @param {SV} [schemaValidator] - The optional schema validator.
  * @returns {T} - An instance of the T.
  */
 export function construct<T, SV extends AnySchemaValidator>(
@@ -22,9 +23,9 @@ export function construct<T, SV extends AnySchemaValidator>(
 }
 
 /**
- * Abstract class representing a base entityMapper.
+ * Abstract class representing a base entity mapper.
  *
- * @template SV - A type that extends SchemaValidator.
+ * @template SV - A type that extends AnySchemaValidator.
  */
 export abstract class BaseEntityMapper<SV extends AnySchemaValidator> {
   /**
@@ -51,7 +52,6 @@ export abstract class BaseEntityMapper<SV extends AnySchemaValidator> {
   /**
    * The Data Transfer Object (DTO).
    * @type {Schema<this['schema'], SV>}
-   *
    */
   _dto: Schema<this['schema'], SV> = {} as unknown as Schema<
     this['schema'],
@@ -89,7 +89,6 @@ export abstract class BaseEntityMapper<SV extends AnySchemaValidator> {
    * Validates and gets the Data Transfer Object (DTO).
    *
    * @returns {this['_dto']} - The Data Transfer Object (DTO).
-   * @throws {Error} - Throws an error if the DTO is invalid.
    */
   get dto(): this['_dto'] {
     return this._dto as unknown as this['_dto'];
@@ -99,7 +98,8 @@ export abstract class BaseEntityMapper<SV extends AnySchemaValidator> {
    * Gets the schema of a T.
    *
    * @template T - A type that extends BaseEntityMapper.
-   * @param {EntityMapperConstructor<T>} this - The constructor of the T.
+   * @template SV - A type that extends AnySchemaValidator.
+   * @param {EntityMapperConstructor<T, SV>} this - The constructor of the T.
    * @returns {T['schema']} - The schema of the T.
    */
   static schema<T extends BaseEntityMapper<SV>, SV extends AnySchemaValidator>(
