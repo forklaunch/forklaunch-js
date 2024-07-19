@@ -3,12 +3,16 @@ import {
   number,
   string
 } from '@forklaunch/validator/typebox';
+import { Property } from '@mikro-orm/core';
 import { BaseEntity } from '../database/mikro/models/entities/base.entity';
 import { RequestEntityMapper } from '../entityMapper/models/requestEntityMapper.model';
 import { ResponseEntityMapper } from '../entityMapper/models/responseEntityMapper.model';
 
 class TestEntity extends BaseEntity {
+  @Property()
   name: string;
+
+  @Property()
   age: number;
 }
 
