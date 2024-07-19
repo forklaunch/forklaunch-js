@@ -9,8 +9,12 @@
   },
   "scripts": {
     "build": "pnpm -r run build",
-    "clean": "rm -rf node_modules pnpm-lock.yaml && pnpm store prune && pnpm store clear",
+    "clean": "rm -rf node_modules pnpm-lock.yaml && pnpm -r clean && pnpm store prune",
     "clean:purge": "pnpm run clean && pnpm store clear",
+    "docs": "pnpm -r run docs",
+    "lint": "pnpm -r run lint",
+    "lint:fix": "pnpm -r run lint:fix",
+    "format": "pnpm -r run format",
     "test": "jest"
   },
   "keywords": [],

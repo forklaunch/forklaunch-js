@@ -2,7 +2,6 @@
 {
   "compilerOptions": {
     // important stuff
-    // "outDir": "${configDir}/lib",
     "composite": true,
     "incremental": true,
     "declaration": true,
@@ -20,6 +19,5 @@
     "moduleResolution": "bundler",
     "skipLibCheck": true,
     "jsx": "react-jsx"
-  },
-//   "exclude": ["${configDir}/lib"]
+  }
 }
