@@ -99,7 +99,7 @@ export class Application<SV extends AnySchemaValidator> {
     listen(port: number, callback?: () => void): Server;
     listen(callback?: () => void): Server;
     listen(path: string, callback?: () => void): Server;
-    listen(handle: any, listeningListener?: () => void): Server;
+    listen(handle: unknown, listeningListener?: () => void): Server;
     listen(...args: unknown[]): Server {
         const port =
             typeof args[0] === 'number' ? args[0] : Number(process.env.PORT);
