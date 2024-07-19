@@ -1,5 +1,5 @@
-import { TypeboxSchemaValidator, number, string } from '@forklaunch/validator/typebox';
-import forklaunchExpress, { forklaunchRouter } from './forklaunch.hyperExpress';
+import { number, string, TypeboxSchemaValidator } from '@forklaunch/validator/typebox';
+import forklaunchExpress, { forklaunchRouter, Router } from './forklaunch.hyperExpress';
 
 const typeboxSchemaValidator = new TypeboxSchemaValidator();
 
@@ -15,7 +15,11 @@ export const dsd = {
       name: 'Test',
       summary: 'Test Summary',
       responses: {
-        200: string
+        200: {
+          one: string,
+          two: string,
+          three: number
+        }
       },
       requestHeaders: {
         'x-test-req': string
@@ -25,7 +29,11 @@ export const dsd = {
       }
     },
     (req, res) => {
-      res.status(200).send('Hello World');
+      res.status(200).json({
+        one: 'Hello',
+        two: 'World',
+        three: 3
+      });
     }
   ),
 
@@ -42,12 +50,16 @@ export const dsd = {
         }
       },
       responses: {
-        200: string,
+        200: {
+          one: string,
+          two: string,
+          three: number
+        },
         500: number
       }
     },
     (req, res) => {
-      res.status(200).json(req.body.test.one);
+      res.status(200).json(req.body.test);
     }
   ),
 
@@ -119,7 +131,7 @@ export const dsd2 = {
     }
   )
 }
-
+type u = typeof forklaunchRouterInstance extends Router<typeof forklaunchApplication['schemaValidator'], `/${string}`> ? true : false;
 forklaunchApplication.use(forklaunchRouterInstance);
 forklaunchApplication.use(forklaunchRouterInstance2);
 

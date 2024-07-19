@@ -1,6 +1,7 @@
 import { parseResponse } from '@forklaunch/core';
 import { MiddlewareNext } from '@forklaunch/hyper-express-fork';
 import { AnySchemaValidator } from '@forklaunch/validator';
+import cors from 'cors';
 import { Request, Response } from '../types/forklaunch.hyperExpress.types';
 
 /**
@@ -45,7 +46,8 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
     }
 
     try {
-      if ((res._cork && !res.corked) || !res._cork) {
+      if (!res.cors && ((res._cork && !res.corked) || !res._cork)) {
+        res.getHeaders();
         parseResponse(req, res);
       }
       return originalSend.call(this, data);
@@ -68,14 +70,16 @@ export async function corsMiddleware<SV extends AnySchemaValidator>(
   res: Response,
   next: MiddlewareNext
 ) {
-  res.setHeader('vary', 'Origin')
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization')
-  res.setHeader("Content-Type", "application/json");
-  res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, POST, GET, PUT, DELETE')
-  res.setHeader('Access-Control-Allow-Credentials', "true")
+  res.cors = true;
+  cors()(req, res, next);
+  // res.setHeader('vary', 'Origin')
+  // res.setHeader('Access-Control-Allow-Origin', '*')
+  // res.setHeader('Access-Control-Allow-Headers', '*')
+  // // res.setHeader("Content-Type", "application/json");
+  // res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, POST, GET, PUT, DELETE')
+  // res.setHeader('Access-Control-Allow-Credentials', "true")
 
-  if (next) {
-    next();
-  }
+  // if (next) {
+  //   next();
+  // }
 }

@@ -30,6 +30,7 @@ import { AnySchemaValidator } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
 import * as uWebsockets from 'uWebSockets.js';
 import { contentParse } from './middleware/contentParse.middleware';
+import { polyfillGetHeaders } from './middleware/polyfillGetHeaders.middleware';
 import { corsMiddleware, enrichResponseTransmission } from './middleware/response.middleware';
 import { swagger, swaggerRedirect } from './middleware/swagger.middleware';
 import {
@@ -46,8 +47,8 @@ import {
  * @template SV - A type that extends AnySchemaValidator.
  */
 export class Application<SV extends AnySchemaValidator> {
-  internal = new Server();
-  private routers: Router<SV, string>[] = [];
+  private internal = new Server();
+  private routers: ForklaunchRouter<SV>[] = [];
 
   /**
    * Creates an instance of the Application class.
@@ -59,16 +60,16 @@ export class Application<SV extends AnySchemaValidator> {
   /**
    * Registers middleware or routers to the application.
    *
-   * @param {(string | Router<SV> | MiddlewareHandler | MiddlewareHandler[])[]} args - The middleware or routers to register.
+   * @param {ForklaunchRouter<SV> | MiddlewareHandler<SV> | MiddlewareHandler<SV>[]} router - The router or middleware to register.
+   * @param {...(ForklaunchRouter<SV> | MiddlewareHandler<SV> | MiddlewareHandler<SV>[])} args - Additional arguments.
    * @returns {this} - The application instance.
    */
-  // use<BasePath extends `/${string}`>(
   use(
-    router: Router<SV, string> | MiddlewareHandler<SV> | MiddlewareHandler<SV>[],
-    ...args: (Router<SV, string> | MiddlewareHandler<SV> | MiddlewareHandler<SV>[])[]
+    router: ForklaunchRouter<SV> | MiddlewareHandler<SV> | MiddlewareHandler<SV>[],
+    ...args: (ForklaunchRouter<SV> | MiddlewareHandler<SV> | MiddlewareHandler<SV>[])[]
   ): this {
     if (router instanceof Router) {
-      this.routers.push(router as Router<SV, string>);
+      this.routers.push(router);
       this.internal.use(router.basePath, router.internal);
       return this;
     } else {
@@ -166,7 +167,7 @@ export default function forklaunchExpress<SV extends AnySchemaValidator>(
  * @template SV - A type that extends AnySchemaValidator.
  * @implements {ForklaunchRouter<SV>}
  */
-export class Router<SV extends AnySchemaValidator, BasePath extends `/${string}` | string>
+export class Router<SV extends AnySchemaValidator, BasePath extends `/${string}`>
   implements ForklaunchRouter<SV>
 {
   readonly routes: ForklaunchRoute<SV>[] = [];
@@ -182,7 +183,8 @@ export class Router<SV extends AnySchemaValidator, BasePath extends `/${string}`
     public basePath: BasePath,
     private schemaValidator: SV
   ) {
-    this.internal.use(contentParse());
+    this.internal.use(polyfillGetHeaders);
+    this.internal.use(contentParse);
     this.internal.use(
       createRequestContext(
         this.schemaValidator
@@ -192,9 +194,7 @@ export class Router<SV extends AnySchemaValidator, BasePath extends `/${string}`
       enrichResponseTransmission as unknown as ExpressMiddlewareHandler
     );
 
-    this.internal.options('*', corsMiddleware as unknown as ExpressMiddlewareHandler, (_req, res) => {
-      res.status(200).send();
-    });
+    this.internal.options('*', corsMiddleware as unknown as ExpressMiddlewareHandler);
   }
 
   /**
@@ -207,7 +207,7 @@ export class Router<SV extends AnySchemaValidator, BasePath extends `/${string}`
     contractDetails: PathParamHttpContractDetails<SV> | HttpContractDetails<SV>
   ): MiddlewareHandler<SV>[] {
     const middlewares = [
-      corsMiddleware,
+      // corsMiddleware,
       enrichRequestDetails(contractDetails)
     ];
     if (contractDetails.params) {

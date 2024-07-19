@@ -76,6 +76,8 @@ export interface Response<
   _cork: boolean;
   /** Whether the response is currently corked */
   _corked: boolean;
+  /** Check if pre-flight request, skip validations */
+  cors: boolean;
 }
 
 /**
