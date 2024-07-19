@@ -1,7 +1,7 @@
 import { Prettify } from '@forklaunch/common';
 import { AnySchemaValidator, Schema } from '@forklaunch/validator';
 import { IdiomaticSchema, SchemaValidator } from '@forklaunch/validator/types';
-import { IncomingHttpHeaders, OutgoingHttpHeader } from 'http';
+import { IncomingHttpHeaders } from 'http';
 import { ParsedQs } from 'qs';
 import {
   HttpContractDetails,
@@ -65,7 +65,8 @@ export interface ForklaunchResponse<
     403: unknown;
     500: unknown;
   },
-  StatusCode = number
+  StatusCode = number,
+  Headers = { 'x-correlation-id': string }
 > {
   /** Data of the response body */
   bodyData: unknown;
@@ -76,16 +77,16 @@ export interface ForklaunchResponse<
 
   /**
    * Gets the headers of the response.
-   * @returns {OutgoingHttpHeader} - The headers of the response.
+   * @returns {Headers} - The headers of the response.
    */
-  getHeaders: () => OutgoingHttpHeader;
+  getHeaders: () => Headers;
 
   /**
    * Sets a header for the response.
    * @param {string} key - The header key.
    * @param {string} value - The header value.
    */
-  setHeader: (key: string, value: string) => void;
+  setHeader: <K extends keyof Headers>(key: K, value: Headers[K]) => void;
 
   /**
    * Sets the status of the response.
@@ -147,7 +148,7 @@ export type MapSchema<
 > =
   Schema<T, SV> extends infer U
     ? { [key: string]: unknown } extends U
-      ? never
+      ? unknown
       : U
     : never;
 

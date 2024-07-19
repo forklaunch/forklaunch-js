@@ -98,7 +98,9 @@ export interface PathParamHttpContractDetails<
   SV extends AnySchemaValidator,
   ParamSchemas extends ParamsObject<SV> = ParamsObject<SV>,
   ResponseSchemas extends ResponsesObject<SV> = ResponsesObject<SV>,
-  QuerySchemas extends QueryObject<SV> = QueryObject<SV>
+  QuerySchemas extends QueryObject<SV> = QueryObject<SV>,
+  RequestHeaders extends HeadersObject<SV> = HeadersObject<SV>,
+  ResponseHeaders extends HeadersObject<SV> = HeadersObject<SV>
 > {
   /** Name of the contract */
   name: string;
@@ -107,9 +109,9 @@ export interface PathParamHttpContractDetails<
   /** Response schemas for the contract */
   responses: ResponseSchemas;
   /** Optional request headers for the contract */
-  requestHeaders?: HeadersObject<SV>;
+  requestHeaders?: RequestHeaders;
   /** Optional response headers for the contract */
-  responseHeaders?: HeadersObject<SV>;
+  responseHeaders?: ResponseHeaders;
   /** Optional parameter schemas for the contract */
   params?: ParamSchemas;
   /** Optional query schemas for the contract */
@@ -138,12 +140,16 @@ export interface HttpContractDetails<
   ParamSchemas extends ParamsObject<SV> = ParamsObject<SV>,
   ResponseSchemas extends ResponsesObject<SV> = ResponsesObject<SV>,
   BodySchema extends Body<SV> = Body<SV>,
-  QuerySchemas extends QueryObject<SV> = QueryObject<SV>
+  QuerySchemas extends QueryObject<SV> = QueryObject<SV>,
+  RequestHeaders extends HeadersObject<SV> = HeadersObject<SV>,
+  ResponseHeaders extends HeadersObject<SV> = HeadersObject<SV>
 > extends PathParamHttpContractDetails<
     SV,
     ParamSchemas,
     ResponseSchemas,
-    QuerySchemas
+    QuerySchemas,
+    RequestHeaders,
+    ResponseHeaders
   > {
   /** Optional body schema for the contract */
   body?: BodySchema;

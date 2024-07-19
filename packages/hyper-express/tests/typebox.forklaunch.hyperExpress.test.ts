@@ -1,16 +1,14 @@
 import { TypeboxSchemaValidator, string } from '@forklaunch/validator/typebox';
 import { killPortProcess } from 'kill-port-process';
 import forklaunchExpress, {
-  Application,
-  Router,
   forklaunchRouter
 } from '../forklaunch.hyperExpress';
 
 const typeboxSchemaValidator = new TypeboxSchemaValidator();
 
 describe('Forklaunch Hyper-Express Tests', () => {
-  let forklaunchApplication: Application<TypeboxSchemaValidator>;
-  let forklaunchRouterInstance: Router<TypeboxSchemaValidator>;
+  let forklaunchApplication;
+  let forklaunchRouterInstance;
 
   beforeAll(async () => {
     await killPortProcess(6934);

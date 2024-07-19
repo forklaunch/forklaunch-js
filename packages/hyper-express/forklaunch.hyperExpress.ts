@@ -2,6 +2,7 @@ import {
   Body,
   ForklaunchRoute,
   ForklaunchRouter,
+  HeadersObject,
   HttpContractDetails,
   ParamsDictionary,
   ParamsObject,
@@ -29,9 +30,10 @@ import { AnySchemaValidator } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
 import * as uWebsockets from 'uWebSockets.js';
 import { contentParse } from './middleware/contentParse.middleware';
-import { enrichResponseTransmission } from './middleware/response.middleware';
+import { corsMiddleware, enrichResponseTransmission } from './middleware/response.middleware';
 import { swagger, swaggerRedirect } from './middleware/swagger.middleware';
 import {
+  LiveTypeFunction,
   MiddlewareHandler,
   Request,
   Response,
@@ -45,7 +47,7 @@ import {
  */
 export class Application<SV extends AnySchemaValidator> {
   internal = new Server();
-  private routers: Router<SV>[] = [];
+  private routers: Router<SV, string>[] = [];
 
   /**
    * Creates an instance of the Application class.
@@ -60,12 +62,13 @@ export class Application<SV extends AnySchemaValidator> {
    * @param {(string | Router<SV> | MiddlewareHandler | MiddlewareHandler[])[]} args - The middleware or routers to register.
    * @returns {this} - The application instance.
    */
+  // use<BasePath extends `/${string}`>(
   use(
-    router: Router<SV> | MiddlewareHandler<SV> | MiddlewareHandler<SV>[],
-    ...args: (Router<SV> | MiddlewareHandler<SV> | MiddlewareHandler<SV>[])[]
+    router: Router<SV, string> | MiddlewareHandler<SV> | MiddlewareHandler<SV>[],
+    ...args: (Router<SV, string> | MiddlewareHandler<SV> | MiddlewareHandler<SV>[])[]
   ): this {
     if (router instanceof Router) {
-      this.routers.push(router);
+      this.routers.push(router as Router<SV, string>);
       this.internal.use(router.basePath, router.internal);
       return this;
     } else {
@@ -81,7 +84,7 @@ export class Application<SV extends AnySchemaValidator> {
       });
 
       this.internal.use(
-        router.basePath,
+        router.basePath as string,
         ...(args as unknown as (
           | ExpressMiddlewareHandler
           | ExpressMiddlewareHandler[]
@@ -90,15 +93,6 @@ export class Application<SV extends AnySchemaValidator> {
       );
       return this;
     }
-    // const newArgs = args.map((arg) => {
-    //   if (arg instanceof Router) {
-    //     this.routers.push(arg);
-    //     return arg.internal;
-    //   }
-    //   return arg;
-    // });
-    // this.internal.use(...(newArgs as UsableSpreadableArguments));
-    // return this;
   }
 
   /**
@@ -172,7 +166,7 @@ export default function forklaunchExpress<SV extends AnySchemaValidator>(
  * @template SV - A type that extends AnySchemaValidator.
  * @implements {ForklaunchRouter<SV>}
  */
-export class Router<SV extends AnySchemaValidator>
+export class Router<SV extends AnySchemaValidator, BasePath extends `/${string}` | string>
   implements ForklaunchRouter<SV>
 {
   readonly routes: ForklaunchRoute<SV>[] = [];
@@ -185,7 +179,7 @@ export class Router<SV extends AnySchemaValidator>
    * @param {SV} schemaValidator - The schema validator.
    */
   constructor(
-    public basePath: string,
+    public basePath: BasePath,
     private schemaValidator: SV
   ) {
     this.internal.use(contentParse());
@@ -197,6 +191,10 @@ export class Router<SV extends AnySchemaValidator>
     this.internal.use(
       enrichResponseTransmission as unknown as ExpressMiddlewareHandler
     );
+
+    this.internal.options('*', corsMiddleware as unknown as ExpressMiddlewareHandler, (_req, res) => {
+      res.status(200).send();
+    });
   }
 
   /**
@@ -208,7 +206,10 @@ export class Router<SV extends AnySchemaValidator>
   private resolveMiddlewares(
     contractDetails: PathParamHttpContractDetails<SV> | HttpContractDetails<SV>
   ): MiddlewareHandler<SV>[] {
-    const middlewares = [enrichRequestDetails(contractDetails)];
+    const middlewares = [
+      corsMiddleware,
+      enrichRequestDetails(contractDetails)
+    ];
     if (contractDetails.params) {
       middlewares.push(parseRequestParams);
     }
@@ -244,6 +245,8 @@ export class Router<SV extends AnySchemaValidator>
     ResBody = unknown,
     ReqBody = unknown,
     ReqQuery = ParsedQs,
+    RequestHeaders = Record<string, string>,
+    ResponseHeaders = Record<string, string>,
     LocalsObj extends Record<string, unknown> = Record<string, unknown>,
     StatusCode extends number = number
   >(
@@ -253,6 +256,8 @@ export class Router<SV extends AnySchemaValidator>
       ResBody | string,
       ReqBody,
       ReqQuery,
+      RequestHeaders,
+      ResponseHeaders,
       LocalsObj,
       StatusCode
     >
@@ -262,12 +267,14 @@ export class Router<SV extends AnySchemaValidator>
     ResBody | string,
     ReqBody,
     ReqQuery,
+    RequestHeaders,
+    ResponseHeaders,
     LocalsObj,
     StatusCode
   > {
     return async (
-      req: Request<SV, P, ReqBody, ReqQuery, LocalsObj>,
-      res: Response<ResBody | string, LocalsObj, StatusCode>,
+      req: Request<SV, P, ReqBody, ReqQuery, RequestHeaders, LocalsObj>,
+      res: Response<ResBody | string, ResponseHeaders, LocalsObj, StatusCode>,
       next?: MiddlewareNext
     ) => {
       if (!requestHandler) {
@@ -306,10 +313,12 @@ export class Router<SV extends AnySchemaValidator>
     ResBody = unknown,
     ReqBody = unknown,
     ReqQuery = ParsedQs,
+    RequestHeaders = Record<string, string>,
+    ResponseHeaders = Record<string, string>,
     LocalsObj extends Record<string, unknown> = Record<string, unknown>
   >(
-    functions: MiddlewareHandler<SV, P, ResBody, ReqBody, ReqQuery, LocalsObj>[]
-  ): MiddlewareHandler<SV, P, ResBody, ReqBody, ReqQuery, LocalsObj> {
+    functions: MiddlewareHandler<SV, P, ResBody, ReqBody, ReqQuery, RequestHeaders, ResponseHeaders, LocalsObj>[]
+  ): MiddlewareHandler<SV, P, ResBody, ReqBody, ReqQuery, RequestHeaders, ResponseHeaders, LocalsObj> {
     const controllerFunction = functions.pop();
 
     if (typeof controllerFunction !== 'function') {
@@ -355,6 +364,89 @@ export class Router<SV extends AnySchemaValidator>
     return this;
   }
 
+  private localParamRequest<
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBody extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    RequestHeaders extends HeadersObject<SV>,
+    ResponseHeaders extends HeadersObject<SV>
+  >(functions: ExpressMiddlewareHandler[], controllerFunction: ExpressMiddlewareHandler) {
+    return (async (
+        route: string,
+        request?: {
+          params?: Record<string, string>;
+          query?: Record<string, string>;
+          headers?: Record<string, string>;
+          body?: Record<string, unknown>;
+        }
+      ) => {
+        let statusCode;
+        let responseMessage;
+        const responseHeaders: Record<string, string> = {};
+
+        const req = {
+          params: request?.params ?? {},
+          query: request?.query ?? {},
+          headers: request?.headers ?? {},
+          body: request?.body ?? {},
+          path: route,
+
+        };
+
+        const res = {
+          status: (code: number) => {
+            statusCode = code;
+            return res;
+          },
+          send: (message: string) => {
+            responseMessage = message;
+          },
+          json: (body: Record<string, unknown>) => {
+            responseMessage = body;
+          },
+          jsonp: (body: Record<string, unknown>) => {
+            responseMessage = body;
+          },
+          setHeader: (key: string, value: string) => {
+            responseHeaders[key] = value;
+          }
+        };
+        
+        let cursor = functions.shift() as unknown as (req_: typeof req, resp_: typeof res, next: MiddlewareNext) => void;
+        if (cursor) {
+          for (const fn of functions) {
+            await cursor(req, res, (err?: Error) => {
+              if (err) {
+                throw err;
+              }
+
+              cursor = fn as unknown as (req_: typeof req, resp_: typeof res, next: MiddlewareNext) => void;
+            });
+          } 
+          await cursor(req, res, async (err?: Error) => {
+            if (err) {
+                throw err;
+              }
+          })
+        } 
+
+        const cFunction = controllerFunction as unknown as (req_: typeof req, resp_: typeof res, next: MiddlewareNext) => void;
+        await cFunction(req, res, (err?: Error) => {
+          if (err) {
+            throw err;
+          }
+        });
+
+        return {
+          code: statusCode,
+          response: responseMessage,
+          headers: responseHeaders
+        } 
+      }) as LiveTypeFunction<SV, `${BasePath}${Path}`, P, ResBody, ReqBody, ReqQuery, RequestHeaders, ResponseHeaders>;
+  }
+
   /**
    * Registers a GET route with the specified contract details and handler functions.
    *
@@ -369,23 +461,28 @@ export class Router<SV extends AnySchemaValidator>
    * @returns {ExpressRouter} - The Express router.
    */
   get<
+    Path extends `/${string}`,
     P extends ParamsObject<SV> = ParamsObject<SV>,
     ResBody extends ResponsesObject<SV> = ResponsesObject<SV>,
     ReqBody extends Body<SV> = Body<SV>,
     ReqQuery extends QueryObject<SV> = QueryObject<SV>,
+    RequestHeaders extends HeadersObject<SV> = HeadersObject<SV>,
+    ResponseHeaders extends HeadersObject<SV> = HeadersObject<SV>,
     LocalsObj extends Record<string, unknown> = Record<string, unknown>
-  >(
-    path: string,
-    contractDetails: PathParamHttpContractDetails<SV, P, ResBody, ReqQuery>,
+  > (
+    path: Path,
+    contractDetails: PathParamHttpContractDetails<SV, P, ResBody, ReqQuery, RequestHeaders, ResponseHeaders>,
     ...functions: SchemaMiddlewareHandler<
       SV,
       P,
       ResBody,
       ReqBody,
       ReqQuery,
+      RequestHeaders,
+      ResponseHeaders,
       LocalsObj
     >[]
-  ): ExpressRouter {
+  ) {
     const controllerFunction = this.extractControllerFunction(functions);
     const sdkPath = this.extractSdkPath(path);
 
@@ -397,15 +494,27 @@ export class Router<SV extends AnySchemaValidator>
       contractDetails
     });
 
-    return this.internal.get(
+    this.internal.get(
       path,
       ...(functions.concat(
-        this.resolveMiddlewares(contractDetails) as typeof functions
+        this.resolveMiddlewares(contractDetails) as unknown as typeof functions
       ) as unknown as ExpressMiddlewareHandler[]),
       this.parseAndRunControllerFunction(
         controllerFunction
       ) as unknown as ExpressMiddlewareHandler
     );
+
+    return {
+      get: this.localParamRequest<
+        Path,
+        P,
+        ResBody,
+        ReqBody,
+        ReqQuery,
+        RequestHeaders,
+        ResponseHeaders
+      >(functions as unknown as ExpressMiddlewareHandler[], controllerFunction as unknown as ExpressMiddlewareHandler)
+    };
   }
 
   /**
@@ -422,23 +531,29 @@ export class Router<SV extends AnySchemaValidator>
    * @returns {ExpressRouter} - The Express router.
    */
   post<
+    Path extends `/${string}`,
     P extends ParamsObject<SV> = ParamsObject<SV>,
     ResBody extends ResponsesObject<SV> = ResponsesObject<SV>,
     ReqBody extends Body<SV> = Body<SV>,
     ReqQuery extends QueryObject<SV> = QueryObject<SV>,
+    RequestHeaders extends HeadersObject<SV> = HeadersObject<SV>,
+    ResponseHeaders extends HeadersObject<SV> = HeadersObject<SV>,
     LocalsObj extends Record<string, unknown> = Record<string, unknown>
   >(
-    path: string,
-    contractDetails: HttpContractDetails<SV, P, ResBody, ReqBody, ReqQuery>,
+    path: Path,
+    contractDetails: HttpContractDetails<SV, P, ResBody, ReqBody, ReqQuery, RequestHeaders, ResponseHeaders>,
     ...functions: SchemaMiddlewareHandler<
       SV,
       P,
       ResBody,
       ReqBody,
       ReqQuery,
+      RequestHeaders,
+      ResponseHeaders,
       LocalsObj
     >[]
-  ): ExpressRouter {
+  ) {
+    // : LiveType<SV, P, ResBody, ReqBody, ReqQuery> {
     const controllerFunction = this.extractControllerFunction(functions);
     const sdkPath = this.extractSdkPath(path);
 
@@ -450,15 +565,27 @@ export class Router<SV extends AnySchemaValidator>
       contractDetails
     });
 
-    return this.internal.post(
+    this.internal.post(
       path,
       ...(functions.concat(
-        this.resolveMiddlewares(contractDetails) as typeof functions
+        this.resolveMiddlewares(contractDetails) as unknown as typeof functions
       ) as unknown as ExpressMiddlewareHandler[]),
       this.parseAndRunControllerFunction(
         controllerFunction
       ) as unknown as ExpressMiddlewareHandler
     );
+
+    return {
+      post: this.localParamRequest<
+        Path,
+        P,
+        ResBody,
+        ReqBody,
+        ReqQuery,
+        RequestHeaders,
+        ResponseHeaders
+      >(functions as unknown as ExpressMiddlewareHandler[], controllerFunction as unknown as ExpressMiddlewareHandler)
+    };
   }
 
   /**
@@ -475,23 +602,28 @@ export class Router<SV extends AnySchemaValidator>
    * @returns {ExpressRouter} - The Express router.
    */
   put<
+    Path extends `/${string}`,
     P extends ParamsObject<SV> = ParamsObject<SV>,
     ResBody extends ResponsesObject<SV> = ResponsesObject<SV>,
     ReqBody extends Body<SV> = Body<SV>,
     ReqQuery extends QueryObject<SV> = QueryObject<SV>,
+    RequestHeaders extends HeadersObject<SV> = HeadersObject<SV>,
+    ResponseHeaders extends HeadersObject<SV> = HeadersObject<SV>,
     LocalsObj extends Record<string, unknown> = Record<string, unknown>
   >(
-    path: string,
-    contractDetails: HttpContractDetails<SV, P, ResBody, ReqBody, ReqQuery>,
+    path: Path,
+    contractDetails: HttpContractDetails<SV, P, ResBody, ReqBody, ReqQuery, RequestHeaders, ResponseHeaders>,
     ...functions: SchemaMiddlewareHandler<
       SV,
       P,
       ResBody,
       ReqBody,
       ReqQuery,
+      RequestHeaders,
+      ResponseHeaders,
       LocalsObj
     >[]
-  ): ExpressRouter {
+  ) {
     const controllerFunction = this.extractControllerFunction(functions);
     const sdkPath = this.extractSdkPath(path);
 
@@ -503,15 +635,27 @@ export class Router<SV extends AnySchemaValidator>
       contractDetails
     });
 
-    return this.internal.put(
+    this.internal.put(
       path,
       ...(functions.concat(
-        this.resolveMiddlewares(contractDetails) as typeof functions
+        this.resolveMiddlewares(contractDetails) as unknown as typeof functions
       ) as unknown as ExpressMiddlewareHandler[]),
       this.parseAndRunControllerFunction(
         controllerFunction
       ) as unknown as ExpressMiddlewareHandler
     );
+
+    return {
+      put: this.localParamRequest<
+        Path,
+        P,
+        ResBody,
+        ReqBody,
+        ReqQuery,
+        RequestHeaders,
+        ResponseHeaders
+      >(functions as unknown as ExpressMiddlewareHandler[], controllerFunction as unknown as ExpressMiddlewareHandler)
+    };
   }
 
   /**
@@ -528,23 +672,28 @@ export class Router<SV extends AnySchemaValidator>
    * @returns {ExpressRouter} - The Express router.
    */
   patch<
+    Path extends `/${string}`,
     P extends ParamsObject<SV> = ParamsObject<SV>,
     ResBody extends ResponsesObject<SV> = ResponsesObject<SV>,
     ReqBody extends Body<SV> = Body<SV>,
     ReqQuery extends QueryObject<SV> = QueryObject<SV>,
+    RequestHeaders extends HeadersObject<SV> = HeadersObject<SV>,
+    ResponseHeaders extends HeadersObject<SV> = HeadersObject<SV>,
     LocalsObj extends Record<string, unknown> = Record<string, unknown>
   >(
-    path: string,
-    contractDetails: HttpContractDetails<SV, P, ResBody, ReqBody, ReqQuery>,
+    path: Path,
+    contractDetails: HttpContractDetails<SV, P, ResBody, ReqBody, ReqQuery, RequestHeaders, ResponseHeaders>,
     ...functions: SchemaMiddlewareHandler<
       SV,
       P,
       ResBody,
       ReqBody,
       ReqQuery,
+      RequestHeaders,
+      ResponseHeaders,
       LocalsObj
     >[]
-  ): ExpressRouter {
+  ) {
     const controllerFunction = this.extractControllerFunction(functions);
     const sdkPath = this.extractSdkPath(path);
 
@@ -556,15 +705,27 @@ export class Router<SV extends AnySchemaValidator>
       contractDetails
     });
 
-    return this.internal.patch(
+    this.internal.patch(
       path,
       ...(functions.concat(
-        this.resolveMiddlewares(contractDetails) as typeof functions
+        this.resolveMiddlewares(contractDetails) as unknown as typeof functions
       ) as unknown as ExpressMiddlewareHandler[]),
       this.parseAndRunControllerFunction(
         controllerFunction
       ) as unknown as ExpressMiddlewareHandler
     );
+
+    return {
+      patch: this.localParamRequest<
+        Path,
+        P,
+        ResBody,
+        ReqBody,
+        ReqQuery,
+        RequestHeaders,
+        ResponseHeaders
+      >(functions as unknown as ExpressMiddlewareHandler[], controllerFunction as unknown as ExpressMiddlewareHandler)
+    };
   }
 
   /**
@@ -581,23 +742,28 @@ export class Router<SV extends AnySchemaValidator>
    * @returns {ExpressRouter} - The Express router.
    */
   delete<
+    Path extends `/${string}`,
     P extends ParamsObject<SV> = ParamsObject<SV>,
     ResBody extends ResponsesObject<SV> = ResponsesObject<SV>,
     ReqBody extends Body<SV> = Body<SV>,
     ReqQuery extends QueryObject<SV> = QueryObject<SV>,
+    RequestHeaders extends HeadersObject<SV> = HeadersObject<SV>,
+    ResponseHeaders extends HeadersObject<SV> = HeadersObject<SV>,
     LocalsObj extends Record<string, unknown> = Record<string, unknown>
   >(
-    path: string,
-    contractDetails: PathParamHttpContractDetails<SV, P, ResBody, ReqQuery>,
+    path: Path,
+    contractDetails: PathParamHttpContractDetails<SV, P, ResBody, ReqQuery, RequestHeaders, ResponseHeaders>,
     ...functions: SchemaMiddlewareHandler<
       SV,
       P,
       ResBody,
       ReqBody,
       ReqQuery,
+      RequestHeaders,
+      ResponseHeaders,
       LocalsObj
     >[]
-  ): ExpressRouter {
+  ) {
     const controllerFunction = this.extractControllerFunction(functions);
     const sdkPath = this.extractSdkPath(path);
 
@@ -609,27 +775,28 @@ export class Router<SV extends AnySchemaValidator>
       contractDetails
     });
 
-    return this.internal.delete(
+    this.internal.delete(
       path,
       ...(functions.concat(
-        this.resolveMiddlewares(contractDetails) as typeof functions
+        this.resolveMiddlewares(contractDetails) as unknown as typeof functions
       ) as unknown as ExpressMiddlewareHandler[]),
       this.parseAndRunControllerFunction(
         controllerFunction
       ) as unknown as ExpressMiddlewareHandler
     );
-  }
 
-  /**
-   * Handles the incoming request.
-   *
-   * @param {Request<SV>} req - The request object.
-   * @param {Response} res - The response object.
-   * @param {MiddlewareNext} out - The next middleware function.
-   */
-  // handle(req: Request<SV>, res: Response, out: MiddlewareNext) {
-  //     this.internal(req, res, out);
-  // }
+    return {
+      delete: this.localParamRequest<
+        Path,
+        P,
+        ResBody,
+        ReqBody,
+        ReqQuery,
+        RequestHeaders,
+        ResponseHeaders
+      >(functions as unknown as ExpressMiddlewareHandler[], controllerFunction as unknown as ExpressMiddlewareHandler)
+    };
+  }
 }
 
 /**
@@ -640,10 +807,10 @@ export class Router<SV extends AnySchemaValidator>
  * @param {SV} schemaValidator - The schema validator.
  * @returns {Router<SV>} - The new router instance.
  */
-export function forklaunchRouter<SV extends AnySchemaValidator>(
-  basePath: `/${string}`,
+export function forklaunchRouter<SV extends AnySchemaValidator, BasePath extends `/${string}`>(
+  basePath: BasePath,
   schemaValidator: SV
-): Router<SV> {
+): Router<SV, BasePath> {
   const router = new Router(basePath, schemaValidator);
   return router;
 }

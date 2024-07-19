@@ -111,9 +111,17 @@ export type SchemaRequestHandler<
 > = RequestHandler<
     SV,
     MapSchema<SV, P>,
-    Prettify<MapSchema<SV, ResBody> & { 500: string }>,
+    Prettify<MapSchema<SV, ResBody> & ResErrorTypes>,
     MapSchema<SV, ReqBody>,
     MapSchema<SV, ReqQuery>,
     LocalsObj,
     FlattenKeys<ResBody> & number
 >;
+
+/**
+ * Represents the error types for responses.
+ */
+export type ResErrorTypes = {
+    400: string;
+    500: string;
+}

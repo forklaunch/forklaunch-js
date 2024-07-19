@@ -1,0 +1,17 @@
+{
+  "name": "@forklaunch/monorepo",
+  "version": "0.1.0",
+  "description": "",
+  "devDependencies": {
+		"tsx": "^4.16.2",
+		"typescript": "^5.5.3"
+	},
+  "scripts": {
+    "build": "pnpm build",
+    "clean": "pnpm clean",
+    "test": "jest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

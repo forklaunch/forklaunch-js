@@ -41,7 +41,6 @@ describe('OpenApiV3Generator Tests', () => {
       ]
     );
 
-    console.log(generatedOpenApiSpec);
     expect(generatedOpenApiSpec).toEqual({
       openapi: '3.1.0',
       info: { title: '', version: '1.0.0' },

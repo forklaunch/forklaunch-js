@@ -1,16 +1,14 @@
 import { ZodSchemaValidator, string } from '@forklaunch/validator/zod';
 import { killPortProcess } from 'kill-port-process';
 import forklaunchExpress, {
-  Application,
-  Router,
   forklaunchRouter
 } from '../forklaunch.hyperExpress';
 
 const zodSchemaValidator = new ZodSchemaValidator();
 
 describe('Forklaunch Hyper-Express Tests', () => {
-  let forklaunchApplication: Application<ZodSchemaValidator>;
-  let forklaunchRouterInstance: Router<ZodSchemaValidator>;
+  let forklaunchApplication;
+  let forklaunchRouterInstance;
 
   beforeAll(async () => {
     await killPortProcess(6935);

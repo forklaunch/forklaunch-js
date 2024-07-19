@@ -62,3 +62,20 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
 
   next();
 }
+
+export async function corsMiddleware<SV extends AnySchemaValidator>(
+  req: Request<SV>,
+  res: Response,
+  next: MiddlewareNext
+) {
+  res.setHeader('vary', 'Origin')
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization')
+  res.setHeader("Content-Type", "application/json");
+  res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, POST, GET, PUT, DELETE')
+  res.setHeader('Access-Control-Allow-Credentials', "true")
+
+  if (next) {
+    next();
+  }
+}
