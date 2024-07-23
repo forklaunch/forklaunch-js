@@ -1,6 +1,6 @@
-import type { Config } from 'jest';
+// import type { Config } from 'jest';
 
-const config: Config = {
+const config = {
   verbose: true,
   preset: 'ts-jest',
   testEnvironment: 'node',
