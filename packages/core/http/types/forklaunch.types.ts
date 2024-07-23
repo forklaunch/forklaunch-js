@@ -26,10 +26,8 @@ export interface ForklaunchRoute<SV extends AnySchemaValidator> {
   basePath: string;
   /** The path for the route, which can be a string, RegExp, or an array of strings or RegExps */
   path: string | RegExp | (string | RegExp)[];
-  /** The SDK path for the route */
-  sdkPath: string;
   /** The HTTP method for the route */
-  method: 'get' | 'post' | 'put' | 'patch' | 'delete';
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   /** The contract details for the route */
   contractDetails: PathParamHttpContractDetails<SV> | HttpContractDetails<SV>;
 }

@@ -10,10 +10,10 @@ import { ResponseEntityMapper } from '../entityMapper/models/responseEntityMappe
 
 class TestEntity extends BaseEntity {
   @Property()
-  name: string;
+  name!: string;
 
   @Property()
-  age: number;
+  age!: number;
 }
 
 class TestRequestEntityMapper extends RequestEntityMapper<

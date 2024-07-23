@@ -1,4 +1,4 @@
-import { SchemaValidator } from '@forklaunch/validator';
+import { IdiomaticSchema, SchemaValidator } from '@forklaunch/validator';
 import {
   MockSchemaValidator,
   literal,
@@ -10,11 +10,12 @@ import {
   ForklaunchRequest,
   ForklaunchResponse,
   HttpContractDetails,
+  ParamsDictionary,
   RequestContext,
   createRequestContext,
   enrichRequestDetails,
+  parseReqHeaders,
   parseRequestBody,
-  parseRequestHeaders,
   parseRequestParams,
   parseRequestQuery,
   parseResponse
@@ -22,8 +23,18 @@ import {
 
 describe('Http Middleware Tests', () => {
   let contractDetails: HttpContractDetails<MockSchemaValidator>;
-  let req: ForklaunchRequest<MockSchemaValidator>;
-  let res: ForklaunchResponse;
+  let req: ForklaunchRequest<
+    MockSchemaValidator,
+    ParamsDictionary,
+    Record<string, IdiomaticSchema<MockSchemaValidator>>,
+    Record<string, string>,
+    Record<string, string>
+  >;
+  let res: ForklaunchResponse<
+    Record<number, unknown>,
+    Record<string, string>,
+    Record<string, unknown>
+  >;
 
   const nextFunction = (err?: unknown) => {
     expect(err).toBeFalsy();
@@ -63,9 +74,11 @@ describe('Http Middleware Tests', () => {
       getHeaders: jest.fn(),
       setHeader: jest.fn(),
       status: jest.fn(),
-      send: jest.fn(),
-      json: jest.fn(),
-      jsonp: jest.fn()
+      headersSent: false,
+      locals: {}
+      // send: jest.fn(),
+      // json: jest.fn(),
+      // jsonp: jest.fn()
     };
   });
 
@@ -88,7 +101,7 @@ describe('Http Middleware Tests', () => {
   });
 
   test('Validate Request Headers', async () => {
-    parseRequestHeaders(req, res, nextFunction);
+    parseReqHeaders(req, res, nextFunction);
   });
 
   test('Validate Request Body', async () => {

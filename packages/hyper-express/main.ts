@@ -18,8 +18,10 @@ export const dsd = {
         200: {
           one: string,
           two: string,
-          three: number
-        }
+          three: number,
+          four: string
+        },
+        500: string
       },
       requestHeaders: {
         'x-test-req': string
@@ -32,7 +34,8 @@ export const dsd = {
       res.status(200).json({
         one: 'Hello',
         two: 'World',
-        three: 3
+        three: 3,
+        four: '221'
       });
     }
   ),

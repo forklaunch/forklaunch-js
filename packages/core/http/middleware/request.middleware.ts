@@ -1,15 +1,23 @@
 import { AnySchemaValidator, SchemaValidator } from '@forklaunch/validator';
 import * as jose from 'jose';
+import { ParsedQs } from 'qs';
 import { v4 } from 'uuid';
 import {
   ForklaunchNextFunction,
   ForklaunchRequest,
-  ForklaunchResponse
+  ForklaunchResponse,
+  ForklaunchSchemaMiddlewareHandler
 } from '../types/api.types';
 import {
   AuthMethod,
+  Body,
+  HeadersObject,
   HttpContractDetails,
+  ParamsDictionary,
+  ParamsObject,
   PathParamHttpContractDetails,
+  QueryObject,
+  ResponsesObject,
   StringOnlyObject
 } from '../types/primitive.types';
 
@@ -25,17 +33,32 @@ import {
  */
 export function createRequestContext<
   SV extends AnySchemaValidator,
-  Request extends ForklaunchRequest<SV>,
-  Response extends ForklaunchResponse,
-  NextFunction extends ForklaunchNextFunction
->(schemaValidator: SV) {
-  return (req: Request, res: Response, next?: NextFunction) => {
+  P extends ParamsObject<SV>,
+  ResBodyMap extends ResponsesObject<SV>,
+  ReqBody extends Body<SV>,
+  ReqQuery extends QueryObject<SV>,
+  ReqHeaders extends HeadersObject<SV>,
+  ResHeaders extends HeadersObject<SV>,
+  LocalsObj extends Record<string, unknown>
+>(
+  schemaValidator: SV
+): ForklaunchSchemaMiddlewareHandler<
+  SV,
+  P,
+  ResBodyMap,
+  ReqBody,
+  ReqQuery,
+  ReqHeaders,
+  ResHeaders,
+  LocalsObj
+> {
+  return (req, res, next?) => {
     req.schemaValidator = schemaValidator as SchemaValidator;
 
     let correlationId = v4();
 
     if (req.headers['x-correlation-id']) {
-      correlationId = req.headers['x-correlation-id'] as string;
+      correlationId = req.headers['x-correlation-id'];
     }
 
     res.setHeader('x-correlation-id', correlationId);
@@ -62,11 +85,35 @@ export function createRequestContext<
  */
 export function enrichRequestDetails<
   SV extends AnySchemaValidator,
-  Request extends ForklaunchRequest<SV>,
-  Response extends ForklaunchResponse,
-  NextFunction extends ForklaunchNextFunction
->(contractDetails: PathParamHttpContractDetails<SV> | HttpContractDetails<SV>) {
-  return (req: Request, _res: Response, next?: NextFunction) => {
+  P extends ParamsObject<SV>,
+  ResBodyMap extends ResponsesObject<SV>,
+  ReqBody extends Body<SV>,
+  ReqQuery extends QueryObject<SV>,
+  ReqHeaders extends HeadersObject<SV>,
+  ResHeaders extends HeadersObject<SV>,
+  LocalsObj extends Record<string, unknown>
+>(
+  contractDetails:
+    | PathParamHttpContractDetails<
+        SV,
+        P,
+        ResBodyMap,
+        ReqQuery,
+        ReqHeaders,
+        ResHeaders
+      >
+    | HttpContractDetails<SV, P, ResBodyMap, ReqQuery, ReqHeaders, ResHeaders>
+): ForklaunchSchemaMiddlewareHandler<
+  SV,
+  P,
+  ResBodyMap,
+  ReqBody,
+  ReqQuery,
+  ReqHeaders,
+  ResHeaders,
+  LocalsObj
+> {
+  return (req, _res, next?) => {
     req.contractDetails = contractDetails;
 
     if (next) {
@@ -88,7 +135,7 @@ export function preHandlerParse<SV extends AnySchemaValidator>(
   schemaValidator: SchemaValidator,
   object: unknown,
   schemaInput?: StringOnlyObject<SV>
-) {
+): 400 | undefined {
   if (!schemaInput) {
     return;
   }
@@ -112,10 +159,18 @@ export function preHandlerParse<SV extends AnySchemaValidator>(
  */
 export function parseRequestParams<
   SV extends AnySchemaValidator,
-  Request extends ForklaunchRequest<SV>,
-  Response extends ForklaunchResponse,
-  NextFunction extends ForklaunchNextFunction
->(req: Request, res: Response, next?: NextFunction) {
+  P extends ParamsDictionary,
+  ResBodyMap extends Record<number, unknown>,
+  ReqBody extends Record<string, unknown>,
+  ReqQuery extends ParsedQs,
+  ReqHeaders extends Record<string, string>,
+  ResHeaders extends Record<string, string>,
+  LocalsObj extends Record<string, unknown>
+>(
+  req: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>,
+  res: ForklaunchResponse<ResBodyMap, ResHeaders, LocalsObj>,
+  next?: ForklaunchNextFunction
+) {
   const params = req.contractDetails.params;
   if (preHandlerParse(req.schemaValidator, req.params, params) === 400) {
     res.status(400).send('Invalid request parameters.');
@@ -141,10 +196,18 @@ export function parseRequestParams<
  */
 export function parseRequestBody<
   SV extends AnySchemaValidator,
-  Request extends ForklaunchRequest<SV>,
-  Response extends ForklaunchResponse,
-  NextFunction extends ForklaunchNextFunction
->(req: Request, res: Response, next?: NextFunction) {
+  P extends ParamsDictionary,
+  ResBodyMap extends Record<number, unknown>,
+  ReqBody extends Record<string, unknown>,
+  ReqQuery extends ParsedQs,
+  ReqHeaders extends Record<string, string>,
+  ResHeaders extends Record<string, string>,
+  LocalsObj extends Record<string, unknown>
+>(
+  req: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>,
+  res: ForklaunchResponse<ResBodyMap, ResHeaders, LocalsObj>,
+  next?: ForklaunchNextFunction
+) {
   if (req.headers['content-type'] === 'application/json') {
     const body = (req.schemaValidator,
     req.contractDetails as HttpContractDetails<SV>).body;
@@ -177,12 +240,20 @@ export function parseRequestBody<
  * @param {Response} res - The response object.
  * @param {NextFunction} [next] - The next middleware function.
  */
-export function parseRequestHeaders<
+export function parseReqHeaders<
   SV extends AnySchemaValidator,
-  Request extends ForklaunchRequest<SV>,
-  Response extends ForklaunchResponse,
-  NextFunction extends ForklaunchNextFunction
->(req: Request, res: Response, next?: NextFunction) {
+  P extends ParamsDictionary,
+  ResBodyMap extends Record<number, unknown>,
+  ReqBody extends Record<string, unknown>,
+  ReqQuery extends ParsedQs,
+  ReqHeaders extends Record<string, string>,
+  ResHeaders extends Record<string, string>,
+  LocalsObj extends Record<string, unknown>
+>(
+  req: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>,
+  res: ForklaunchResponse<ResBodyMap, ResHeaders, LocalsObj>,
+  next?: ForklaunchNextFunction
+) {
   const headers = req.contractDetails.requestHeaders;
   if (preHandlerParse(req.schemaValidator, req.headers, headers) === 400) {
     res.status(400).send('Invalid request headers.');
@@ -208,10 +279,18 @@ export function parseRequestHeaders<
  */
 export function parseRequestQuery<
   SV extends AnySchemaValidator,
-  Request extends ForklaunchRequest<SV>,
-  Response extends ForklaunchResponse,
-  NextFunction extends ForklaunchNextFunction
->(req: Request, res: Response, next?: NextFunction) {
+  P extends ParamsDictionary,
+  ResBodyMap extends Record<number, unknown>,
+  ReqBody extends Record<string, unknown>,
+  ReqQuery extends ParsedQs,
+  ReqHeaders extends Record<string, string>,
+  ResHeaders extends Record<string, string>,
+  LocalsObj extends Record<string, unknown>
+>(
+  req: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>,
+  res: ForklaunchResponse<ResBodyMap, ResHeaders, LocalsObj>,
+  next?: ForklaunchNextFunction
+) {
   const query = req.contractDetails.query;
   if (preHandlerParse(req.schemaValidator, req.query, query) === 400) {
     res.status(400).send('Invalid request query.');
@@ -302,10 +381,18 @@ async function checkAuthorizationToken(
  */
 export async function parseRequestAuth<
   SV extends AnySchemaValidator,
-  Request extends ForklaunchRequest<SV>,
-  Response extends ForklaunchResponse,
-  NextFunction extends ForklaunchNextFunction
->(req: Request, res: Response, next?: NextFunction) {
+  P extends ParamsDictionary,
+  ResBodyMap extends Record<number, unknown>,
+  ReqBody extends Record<string, unknown>,
+  ReqQuery extends ParsedQs,
+  ReqHeaders extends Record<string, string>,
+  ResHeaders extends Record<string, string>,
+  LocalsObj extends Record<string, unknown>
+>(
+  req: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>,
+  res: ForklaunchResponse<ResBodyMap, ResHeaders, LocalsObj>,
+  next?: ForklaunchNextFunction
+) {
   const auth = req.contractDetails.auth;
   if (auth) {
     const errorAndMessage = await checkAuthorizationToken(
@@ -320,39 +407,39 @@ export async function parseRequestAuth<
     }
 
     // TODO: Implement role and permission checking
-  //   const permissionSlugs = mapPermissions(
-  //     auth.method,
-  //     req.headers.authorization
-  //   );
-  //   const roles = mapRoles(auth.method, req.headers.authorization);
+    //   const permissionSlugs = mapPermissions(
+    //     auth.method,
+    //     req.headers.authorization
+    //   );
+    //   const roles = mapRoles(auth.method, req.headers.authorization);
 
-  //   const permissionErrorMessage =
-  //     'User does not have sufficient permissions to perform action.';
-  //   const roleErrorMessage =
-  //     'User does not have correct role to perform action.';
+    //   const permissionErrorMessage =
+    //     'User does not have sufficient permissions to perform action.';
+    //   const roleErrorMessage =
+    //     'User does not have correct role to perform action.';
 
-  //   permissionSlugs.forEach((permissionSlug) => {
-  //     if (
-  //       !req.contractDetails.auth?.allowedSlugs?.has(permissionSlug) ||
-  //       req.contractDetails.auth?.forbiddenSlugs?.has(permissionSlug)
-  //     ) {
-  //       res.status(403).send(permissionErrorMessage);
-  //       if (next) {
-  //         next(new Error(permissionErrorMessage));
-  //       }
-  //     }
-  //   });
-  //   roles.forEach((role) => {
-  //     if (
-  //       !req.contractDetails.auth?.allowedRoles?.has(role) ||
-  //       req.contractDetails.auth?.forbiddenRoles?.has(role)
-  //     ) {
-  //       res.status(403).send(roleErrorMessage);
-  //       if (next) {
-  //         next(new Error(roleErrorMessage));
-  //       }
-  //     }
-  //   });
+    //   permissionSlugs.forEach((permissionSlug) => {
+    //     if (
+    //       !req.contractDetails.auth?.allowedSlugs?.has(permissionSlug) ||
+    //       req.contractDetails.auth?.forbiddenSlugs?.has(permissionSlug)
+    //     ) {
+    //       res.status(403).send(permissionErrorMessage);
+    //       if (next) {
+    //         next(new Error(permissionErrorMessage));
+    //       }
+    //     }
+    //   });
+    //   roles.forEach((role) => {
+    //     if (
+    //       !req.contractDetails.auth?.allowedRoles?.has(role) ||
+    //       req.contractDetails.auth?.forbiddenRoles?.has(role)
+    //     ) {
+    //       res.status(403).send(roleErrorMessage);
+    //       if (next) {
+    //         next(new Error(roleErrorMessage));
+    //       }
+    //     }
+    //   });
   }
 
   // if (next) {
