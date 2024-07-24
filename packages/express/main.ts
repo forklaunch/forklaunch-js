@@ -1,3 +1,4 @@
+import { MapSchema } from '@forklaunch/core';
 import {
   number,
   string,
@@ -19,6 +20,9 @@ export const dsd = {
     {
       name: 'Test',
       summary: 'Test Summary',
+      query: {
+        test: string
+      },
       responses: {
         200: {
           one: string,
@@ -158,11 +162,14 @@ const x = {};
 
 (x as typeof x & { i: 'a' }).i = 'a';
 
-type ik = typeof x;
+type ik = MapSchema<TypeboxSchemaValidator, Record<string, string>>;
 
 async function test() {
   console.log(
-    await dsd.x.get('/testpath/test', { headers: { 'x-test-req': 'test' } })
+    await dsd.x.get('/testpath/test', {
+      headers: { 'x-test-req': 'test' },
+      query: { test: 'test' }
+    })
   );
 }
 

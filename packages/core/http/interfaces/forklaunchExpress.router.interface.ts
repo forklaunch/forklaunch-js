@@ -535,7 +535,6 @@ export abstract class ForklaunchExpressLikeRouter<
       LocalsObj
     >[]
   ) {
-    // : LiveType<SV, P, ResBodyMap, ReqBody, ReqQuery> {
     const controllerFunction = this.#extractControllerFunction(functions);
 
     this.routes.push({

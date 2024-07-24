@@ -166,12 +166,7 @@ export interface ForklaunchResponse<
 export type MapSchema<
   SV extends AnySchemaValidator,
   T extends IdiomaticSchema<SV> | SV['_ValidSchemaObject']
-> =
-  Schema<T, SV> extends infer U
-    ? { [key: string]: unknown } extends U
-      ? unknown
-      : U
-    : never;
+> = Schema<T, SV> extends infer U ? (T extends U ? unknown : U) : never;
 
 /**
  * Type representing the next function in a middleware.
@@ -230,34 +225,34 @@ export type ForklaunchSchemaMiddlewareHandler<
   SV,
   MapSchema<SV, P> extends infer Params
     ? unknown extends Params
-      ? never
+      ? ParamsDictionary
       : Params
-    : never,
+    : ParamsDictionary,
   MapSchema<SV, ResBodyMap> extends infer ResponseBodyMap
     ? unknown extends ResponseBodyMap
       ? ForklaunchResErrors
       : ResponseBodyMap
-    : never,
+    : ForklaunchResErrors,
   MapSchema<SV, ReqBody> extends infer Body
     ? unknown extends Body
-      ? never
+      ? Record<string, unknown>
       : Body
-    : never,
+    : Record<string, unknown>,
   MapSchema<SV, ReqQuery> extends infer Query
     ? unknown extends Query
-      ? never
+      ? ParsedQs
       : Query
-    : never,
+    : ParsedQs,
   MapSchema<SV, ReqHeaders> extends infer RequestHeaders
     ? unknown extends RequestHeaders
-      ? ForklaunchResHeaders
+      ? Record<string, string>
       : ReqHeaders
-    : never,
+    : Record<string, string>,
   MapSchema<SV, ResHeaders> extends infer ResponseHeaders
     ? unknown extends ResponseHeaders
-      ? never
+      ? ForklaunchResHeaders
       : ResHeaders
-    : never,
+    : ForklaunchResHeaders,
   LocalsObj
 >;
 
@@ -283,48 +278,36 @@ export type LiveTypeFunction<
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>
-> = (MapSchema<SV, P> extends infer Params
-  ? never extends Params
+> = (ParamsDictionary extends P
+  ? unknown
+  : {
+      params: MapSchema<SV, P>;
+    }) &
+  (Record<string, unknown> extends ReqBody
     ? unknown
     : {
-        params: Params;
-      }
-  : unknown) &
-  (MapSchema<SV, ReqBody> extends infer Body
-    ? never extends Body
-      ? unknown
-      : {
-          body: Body;
-        }
-    : unknown) &
-  (MapSchema<SV, ReqQuery> extends infer Query
-    ? never extends Query
-      ? unknown
-      : {
-          query: Query;
-        }
-    : unknown) &
-  (MapSchema<SV, ReqHeaders> extends infer ReqHeaders
-    ? never extends ReqHeaders
-      ? unknown
-      : {
-          headers: ReqHeaders;
-        }
-    : unknown) extends infer Request
+        body: MapSchema<SV, ReqBody>;
+      }) &
+  (ParsedQs extends ReqQuery
+    ? unknown
+    : {
+        query: MapSchema<SV, ReqQuery>;
+      }) &
+  (Record<string, string> extends ReqHeaders
+    ? unknown
+    : {
+        headers: MapSchema<SV, ReqHeaders>;
+      }) extends infer Request
   ? SdkResponse<
       ForklaunchResErrors &
-        (MapSchema<SV, ResBodyMap> extends infer Response
-          ? never extends Response
-            ? unknown
-            : Response
-          : unknown),
-      MapSchema<SV, ResHeaders> extends infer ResHeaders
-        ? never extends ResHeaders
+        (Record<number, unknown> extends ResBodyMap
           ? unknown
-          : ResHeaders
-        : unknown
+          : MapSchema<SV, ResBodyMap>),
+      ForklaunchResHeaders extends ResHeaders
+        ? unknown
+        : MapSchema<SV, ResHeaders>
     > extends infer Return
-    ? never extends Request
+    ? unknown extends Request
       ? (route: Route) => Promise<Return>
       : (route: Route, request: Request) => Promise<Return>
     : never

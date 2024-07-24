@@ -11,7 +11,6 @@
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.ts' --write"
-
   },
   "repository": {
     "type": "git",
@@ -25,7 +24,7 @@
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "dependencies": {
     "@forklaunch/common": "^0.1.2",
-    "@forklaunch/core": "^0.2.0",
+    "@forklaunch/core": "^0.2.2",
     "@forklaunch/hyper-express-fork": "^6.16.4",
     "@forklaunch/validator": "^0.3.1",
     "cors": "^2.8.5",
