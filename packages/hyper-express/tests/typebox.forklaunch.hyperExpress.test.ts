@@ -1,6 +1,7 @@
 import { TypeboxSchemaValidator, string } from '@forklaunch/validator/typebox';
 import * as uWebSockets from 'uWebSockets.js';
-import forklaunchExpress, {
+import {
+  forklaunchExpress,
   forklaunchRouter
 } from '../forklaunch.hyperExpress';
 

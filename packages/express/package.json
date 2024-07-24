@@ -22,7 +22,7 @@
   },
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "dependencies": {
-    "@forklaunch/core": "^0.1.7",
+    "@forklaunch/core": "^0.2.0",
     "@forklaunch/validator": "^0.3.1",
     "@types/express": "^4.17.21",
     "express": "^4.19.2",
@@ -32,6 +32,7 @@
   "devDependencies": {
     "@eslint/js": "^9.6.0",
     "@types/jest": "^29.5.12",
+    "@types/qs": "^6.9.15",
     "@types/swagger-ui-express": "^4.1.6",
     "kill-port-process": "^3.2.1",
     "prettier": "^3.3.2",

@@ -162,8 +162,8 @@ importers:
   packages/express:
     dependencies:
       '@forklaunch/core':
-        specifier: ^0.1.7
-        version: 0.1.9(openapi3-ts@4.3.3)
+        specifier: ^0.2.0
+        version: 0.2.0
       '@forklaunch/validator':
         specifier: ^0.3.1
         version: 0.3.1(openapi3-ts@4.3.3)
@@ -186,6 +186,9 @@ importers:
       '@types/jest':
         specifier: ^29.5.12
         version: 29.5.12
+      '@types/qs':
+        specifier: ^6.9.15
+        version: 6.9.15
       '@types/swagger-ui-express':
         specifier: ^4.1.6
         version: 4.1.6
@@ -214,8 +217,8 @@ importers:
         specifier: ^0.1.2
         version: 0.1.2
       '@forklaunch/core':
-        specifier: ^0.1.9
-        version: 0.1.9(openapi3-ts@4.3.3)
+        specifier: ^0.2.0
+        version: 0.2.0
       '@forklaunch/hyper-express-fork':
         specifier: ^6.16.4
         version: 6.16.4
@@ -642,8 +645,8 @@ packages:
   '@forklaunch/common@0.1.2':
     resolution: {integrity: sha512-ThzqAO97Hk5PZYjtDyokoQFG7Ktq5Kjbyr3zRP4LslzOxe+wMPcbrm3wiQDabV2liQR/BZYXYi5m3RkmxlmaeA==}
 
-  '@forklaunch/core@0.1.9':
-    resolution: {integrity: sha512-KhwYnNCIO7hDxEJa5tPsP5NNIrSKsCMHwqwgkpMpxaGVrgNDgNpkwCBvIXPOmb71bft/wePjLWzzknpfL4yNSw==}
+  '@forklaunch/core@0.2.0':
+    resolution: {integrity: sha512-556wbGnweZ4lrpd5WTb81vTtDs+LmTzl9o/NmIJ3FCVNyTvcM8nkVAUZJz/JoZhkSaMIYbCMYQFSJ0zB1AAF+g==}
 
   '@forklaunch/hyper-express-fork@6.16.4':
     resolution: {integrity: sha512-km9zbkiDaS21UVU0yD22kKWZdkcyFJr9V+rKNow1MeEsVXnH2dq2+PfHvfPc2ZO8y5S+aTiT6nDC5Un/rPJBag==}
@@ -3201,15 +3204,14 @@ snapshots:
 
   '@forklaunch/common@0.1.2': {}
 
-  '@forklaunch/core@0.1.9(openapi3-ts@4.3.3)':
+  '@forklaunch/core@0.2.0':
     dependencies:
       '@forklaunch/validator': 0.3.1(openapi3-ts@4.3.3)
       '@mikro-orm/core': 6.3.0
       jose: 5.6.3
+      openapi3-ts: 4.3.3
       redis: 4.6.15
       uuid: 10.0.0
-    transitivePeerDependencies:
-      - openapi3-ts
 
   '@forklaunch/hyper-express-fork@6.16.4':
     dependencies:

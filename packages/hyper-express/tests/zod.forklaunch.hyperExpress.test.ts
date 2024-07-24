@@ -1,6 +1,7 @@
 import { ZodSchemaValidator, string } from '@forklaunch/validator/zod';
 import * as uWebSockets from 'uWebSockets.js';
-import forklaunchExpress, {
+import {
+  forklaunchExpress,
   forklaunchRouter
 } from '../forklaunch.hyperExpress';
 
@@ -12,7 +13,6 @@ describe('Forklaunch Hyper-Express Tests', () => {
   let server: uWebSockets.us_listen_socket;
 
   beforeAll(async () => {
-
     forklaunchApplication = forklaunchExpress(zodSchemaValidator);
     forklaunchRouterInstance = forklaunchRouter(
       '/testpath',

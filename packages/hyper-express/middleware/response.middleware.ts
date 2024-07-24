@@ -1,7 +1,12 @@
-import { parseResponse } from '@forklaunch/core';
+import {
+  ForklaunchNextFunction,
+  ParamsDictionary,
+  parseResponse
+} from '@forklaunch/core';
 import { MiddlewareNext } from '@forklaunch/hyper-express-fork';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import cors from 'cors';
+import { ParsedQs } from 'qs';
 import { Request, Response } from '../types/forklaunch.hyperExpress.types';
 
 /**
@@ -13,9 +18,20 @@ import { Request, Response } from '../types/forklaunch.hyperExpress.types';
  * @param {MiddlewareNext} next - The next middleware function.
  */
 export function enrichResponseTransmission<SV extends AnySchemaValidator>(
-  req: Request<SV>,
-  res: Response,
-  next: MiddlewareNext
+  req: Request<
+    SV,
+    ParamsDictionary,
+    Record<string, unknown>,
+    ParsedQs,
+    Record<string, string>,
+    Record<string, unknown>
+  >,
+  res: Response<
+    Record<number, unknown>,
+    Record<string, string>,
+    Record<string, unknown>
+  >,
+  next: ForklaunchNextFunction
 ) {
   const originalSend = res.send;
   const originalJson = res.json;
@@ -26,7 +42,7 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
    * @param {unknown} data - The data to send in the response.
    * @returns {boolean} - The result of the original JSON method.
    */
-  res.json = function (data: unknown) {
+  res.json = function (data?: Record<string, unknown>) {
     res.bodyData = data;
     const result = originalJson.call(this, data);
     return result as boolean;
@@ -66,20 +82,21 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
 }
 
 export async function corsMiddleware<SV extends AnySchemaValidator>(
-  req: Request<SV>,
-  res: Response,
+  req: Request<
+    SV,
+    ParamsDictionary,
+    Record<string, unknown>,
+    ParsedQs,
+    Record<string, string>,
+    Record<string, unknown>
+  >,
+  res: Response<
+    Record<number, unknown>,
+    Record<string, string>,
+    Record<string, unknown>
+  >,
   next: MiddlewareNext
 ) {
   res.cors = true;
   cors()(req, res, next);
-  // res.setHeader('vary', 'Origin')
-  // res.setHeader('Access-Control-Allow-Origin', '*')
-  // res.setHeader('Access-Control-Allow-Headers', '*')
-  // // res.setHeader("Content-Type", "application/json");
-  // res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, POST, GET, PUT, DELETE')
-  // res.setHeader('Access-Control-Allow-Credentials', "true")
-
-  // if (next) {
-  //   next();
-  // }
 }

@@ -25,7 +25,7 @@
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "dependencies": {
     "@forklaunch/common": "^0.1.2",
-    "@forklaunch/core": "^0.1.9",
+    "@forklaunch/core": "^0.2.0",
     "@forklaunch/hyper-express-fork": "^6.16.4",
     "@forklaunch/validator": "^0.3.1",
     "cors": "^2.8.5",

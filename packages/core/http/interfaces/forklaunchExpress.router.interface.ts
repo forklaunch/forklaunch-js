@@ -10,7 +10,6 @@ import {
 } from '../middleware';
 import {
   Body,
-  ExpressLikeRouterFunction,
   ForklaunchMiddlewareHandler,
   ForklaunchRoute,
   ForklaunchSchemaMiddlewareHandler,
@@ -24,27 +23,30 @@ import {
   ResponsesObject
 } from '../types';
 
-interface ExpressLikeApplication {}
-
-interface ExpressLikeRouter {
-  use: (...args: unknown[]) => void;
-  get(path: string, ...handlers: ExpressLikeRouterFunction[]): void;
-  post(path: string, ...handlers: ExpressLikeRouterFunction[]): void;
-  put(path: string, ...handlers: ExpressLikeRouterFunction[]): void;
-  patch(path: string, ...handlers: ExpressLikeRouterFunction[]): void;
-  delete(path: string, ...handlers: ExpressLikeRouterFunction[]): void;
+interface ExpressLikeRouter<RouterFunction> {
+  use: (...args: RouterFunction[]) => this;
+  get(path: string, ...handlers: RouterFunction[]): void;
+  post(path: string, ...handlers: RouterFunction[]): void;
+  put(path: string, ...handlers: RouterFunction[]): void;
+  patch(path: string, ...handlers: RouterFunction[]): void;
+  delete(path: string, ...handlers: RouterFunction[]): void;
 }
 
-export abstract class ForklaunchExpressRouter<
+export abstract class ForklaunchExpressLikeRouter<
   SV extends AnySchemaValidator,
-  BasePath extends `/${string}`
+  BasePath extends `/${string}`,
+  RouterFunction,
+  Internal extends ExpressLikeRouter<RouterFunction>
 > {
-  private routes: ForklaunchRoute<SV>[] = [];
+  readonly routes: ForklaunchRoute<SV>[] = [];
+  readonly basePath: BasePath;
 
   constructor(
-    public basePath: BasePath,
-    public readonly internal: ExpressLikeRouter
-  ) {}
+    basePath: BasePath,
+    readonly internal: Internal
+  ) {
+    this.basePath = basePath;
+  }
 
   /**
    * Resolves middlewares based on the contract details.
@@ -52,7 +54,7 @@ export abstract class ForklaunchExpressRouter<
    * @param {PathParamHttpContractDetails<SV> | HttpContractDetails<SV>} contractDetails - The contract details.
    * @returns {MiddlewareHandler<SV>[]} - The resolved middlewares.
    */
-  private resolveMiddlewares<
+  #resolveMiddlewares<
     SV extends AnySchemaValidator,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -134,7 +136,7 @@ export abstract class ForklaunchExpressRouter<
    * @param {MiddlewareHandler<SV, P, ResBodyMap | string, ReqBody, ReqQuery, LocalsObj, StatusCode>} requestHandler - The request handler.
    * @returns {ExpressMiddlewareHandler} - The Express request handler.
    */
-  private parseAndRunControllerFunction<
+  #parseAndRunControllerFunction<
     SV extends AnySchemaValidator,
     P extends ParamsDictionary,
     ResBodyMap extends Record<number, unknown>,
@@ -205,7 +207,7 @@ export abstract class ForklaunchExpressRouter<
    * @returns {MiddlewareHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, LocalsObj>} - The extracted controller function.
    * @throws {Error} - Throws an error if the last argument is not a function.
    */
-  private extractControllerFunction<
+  #extractControllerFunction<
     SV extends AnySchemaValidator,
     P extends ParamsDictionary,
     ResBodyMap extends Record<number, unknown>,
@@ -253,7 +255,7 @@ export abstract class ForklaunchExpressRouter<
   //    * @returns {string} - The extracted SDK path.
   //    * @throws {Error} - Throws an error if the path is not defined.
   //    */
-  //   private extractSdkPath(path: string | RegExp | (string | RegExp)[]): string {
+  //   extractSdkPath(path: string | RegExp | (string | RegExp)[]): string {
   //     let sdkPath = path;
 
   //     if (Array.isArray(path)) {
@@ -278,7 +280,7 @@ export abstract class ForklaunchExpressRouter<
    * @returns {this} - The router instance.
    */
   use(...args: unknown[]): this {
-    this.internal.use(...args);
+    this.internal.use(...(args as RouterFunction[]));
     return this;
   }
 
@@ -289,7 +291,7 @@ export abstract class ForklaunchExpressRouter<
    * @param controllerFunction
    * @returns
    */
-  private localParamRequest<
+  #localParamRequest<
     Path extends `/${string}`,
     SV extends AnySchemaValidator,
     P extends ParamsDictionary,
@@ -460,7 +462,7 @@ export abstract class ForklaunchExpressRouter<
       LocalsObj
     >[]
   ) {
-    const controllerFunction = this.extractControllerFunction(functions);
+    const controllerFunction = this.#extractControllerFunction(functions);
 
     this.routes.push({
       basePath: this.basePath,
@@ -471,7 +473,7 @@ export abstract class ForklaunchExpressRouter<
 
     this.internal.get(
       path,
-      ...(this.resolveMiddlewares<
+      ...(this.#resolveMiddlewares<
         SV,
         P,
         ResBodyMap,
@@ -480,14 +482,12 @@ export abstract class ForklaunchExpressRouter<
         ReqHeaders,
         ResHeaders,
         LocalsObj
-      >(contractDetails).concat(functions) as ExpressLikeRouterFunction[]),
-      this.parseAndRunControllerFunction(
-        controllerFunction
-      ) as ExpressLikeRouterFunction
+      >(contractDetails).concat(functions) as RouterFunction[]),
+      this.#parseAndRunControllerFunction(controllerFunction) as RouterFunction
     );
 
     return {
-      get: this.localParamRequest(functions, controllerFunction)
+      get: this.#localParamRequest(functions, controllerFunction)
     };
   }
 
@@ -536,7 +536,7 @@ export abstract class ForklaunchExpressRouter<
     >[]
   ) {
     // : LiveType<SV, P, ResBodyMap, ReqBody, ReqQuery> {
-    const controllerFunction = this.extractControllerFunction(functions);
+    const controllerFunction = this.#extractControllerFunction(functions);
 
     this.routes.push({
       basePath: this.basePath,
@@ -547,7 +547,7 @@ export abstract class ForklaunchExpressRouter<
 
     this.internal.post(
       path,
-      ...(this.resolveMiddlewares<
+      ...(this.#resolveMiddlewares<
         SV,
         P,
         ResBodyMap,
@@ -556,14 +556,12 @@ export abstract class ForklaunchExpressRouter<
         ReqHeaders,
         ResHeaders,
         LocalsObj
-      >(contractDetails).concat(functions) as ExpressLikeRouterFunction[]),
-      this.parseAndRunControllerFunction(
-        controllerFunction
-      ) as ExpressLikeRouterFunction
+      >(contractDetails).concat(functions) as RouterFunction[]),
+      this.#parseAndRunControllerFunction(controllerFunction) as RouterFunction
     );
 
     return {
-      post: this.localParamRequest(functions, controllerFunction)
+      post: this.#localParamRequest(functions, controllerFunction)
     };
   }
 
@@ -611,7 +609,7 @@ export abstract class ForklaunchExpressRouter<
       LocalsObj
     >[]
   ) {
-    const controllerFunction = this.extractControllerFunction(functions);
+    const controllerFunction = this.#extractControllerFunction(functions);
 
     this.routes.push({
       basePath: this.basePath,
@@ -622,7 +620,7 @@ export abstract class ForklaunchExpressRouter<
 
     this.internal.put(
       path,
-      ...(this.resolveMiddlewares<
+      ...(this.#resolveMiddlewares<
         SV,
         P,
         ResBodyMap,
@@ -631,14 +629,12 @@ export abstract class ForklaunchExpressRouter<
         ReqHeaders,
         ResHeaders,
         LocalsObj
-      >(contractDetails).concat(functions) as ExpressLikeRouterFunction[]),
-      this.parseAndRunControllerFunction(
-        controllerFunction
-      ) as ExpressLikeRouterFunction
+      >(contractDetails).concat(functions) as RouterFunction[]),
+      this.#parseAndRunControllerFunction(controllerFunction) as RouterFunction
     );
 
     return {
-      put: this.localParamRequest(functions, controllerFunction)
+      put: this.#localParamRequest(functions, controllerFunction)
     };
   }
 
@@ -686,7 +682,7 @@ export abstract class ForklaunchExpressRouter<
       LocalsObj
     >[]
   ) {
-    const controllerFunction = this.extractControllerFunction(functions);
+    const controllerFunction = this.#extractControllerFunction(functions);
 
     this.routes.push({
       basePath: this.basePath,
@@ -697,7 +693,7 @@ export abstract class ForklaunchExpressRouter<
 
     this.internal.patch(
       path,
-      ...(this.resolveMiddlewares<
+      ...(this.#resolveMiddlewares<
         SV,
         P,
         ResBodyMap,
@@ -706,14 +702,12 @@ export abstract class ForklaunchExpressRouter<
         ReqHeaders,
         ResHeaders,
         LocalsObj
-      >(contractDetails).concat(functions) as ExpressLikeRouterFunction[]),
-      this.parseAndRunControllerFunction(
-        controllerFunction
-      ) as ExpressLikeRouterFunction
+      >(contractDetails).concat(functions) as RouterFunction[]),
+      this.#parseAndRunControllerFunction(controllerFunction) as RouterFunction
     );
 
     return {
-      patch: this.localParamRequest(functions, controllerFunction)
+      patch: this.#localParamRequest(functions, controllerFunction)
     };
   }
 
@@ -760,7 +754,7 @@ export abstract class ForklaunchExpressRouter<
       LocalsObj
     >[]
   ) {
-    const controllerFunction = this.extractControllerFunction(functions);
+    const controllerFunction = this.#extractControllerFunction(functions);
 
     this.routes.push({
       basePath: this.basePath,
@@ -771,7 +765,7 @@ export abstract class ForklaunchExpressRouter<
 
     this.internal.delete(
       path,
-      ...(this.resolveMiddlewares<
+      ...(this.#resolveMiddlewares<
         SV,
         P,
         ResBodyMap,
@@ -780,14 +774,12 @@ export abstract class ForklaunchExpressRouter<
         ReqHeaders,
         ResHeaders,
         LocalsObj
-      >(contractDetails).concat(functions) as ExpressLikeRouterFunction[]),
-      this.parseAndRunControllerFunction(
-        controllerFunction
-      ) as ExpressLikeRouterFunction
+      >(contractDetails).concat(functions) as RouterFunction[]),
+      this.#parseAndRunControllerFunction(controllerFunction) as RouterFunction
     );
 
     return {
-      delete: this.localParamRequest(functions, controllerFunction)
+      delete: this.#localParamRequest(functions, controllerFunction)
     };
   }
 }
