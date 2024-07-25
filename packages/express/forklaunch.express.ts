@@ -13,7 +13,10 @@ import express, {
 } from 'express';
 import { Server } from 'http';
 import swaggerUi from 'swagger-ui-express';
-import { enrichResponseTransmission } from './middleware/response.middleware';
+import {
+  corsMiddleware,
+  enrichResponseTransmission
+} from './middleware/response.middleware';
 
 /**
  * Application class that sets up an Express server with Forklaunch routers and middleware.
@@ -140,6 +143,7 @@ class Router<SV extends AnySchemaValidator, BasePath extends `/${string}`>
     super(basePath, express.Router());
 
     this.internal.use(express.json());
+    this.internal.use(corsMiddleware as unknown as RequestHandler);
     this.internal.use(
       createRequestContext(schemaValidator) as unknown as RequestHandler
     );

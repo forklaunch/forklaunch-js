@@ -59,4 +59,7 @@ export interface Response<
       | 'jsonp'
       | 'locals'
     >,
-    ForklaunchStatusResponse<ResBodyMap> {}
+    ForklaunchStatusResponse<ResBodyMap> {
+  /** If cors are applied to the response */
+  cors: boolean;
+}

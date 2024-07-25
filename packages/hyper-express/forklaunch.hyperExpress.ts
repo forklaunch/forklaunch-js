@@ -158,11 +158,10 @@ class Router<SV extends AnySchemaValidator, BasePath extends `/${string}`>
     this.internal.use(
       createRequestContext(this.schemaValidator) as unknown as MiddlewareHandler
     );
+    this.internal.use(corsMiddleware as unknown as MiddlewareHandler);
     this.internal.use(
       enrichResponseTransmission as unknown as MiddlewareHandler
     );
-
-    this.internal.options('*', corsMiddleware as unknown as MiddlewareHandler);
   }
 }
 

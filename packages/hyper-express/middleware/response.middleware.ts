@@ -97,6 +97,8 @@ export async function corsMiddleware<SV extends AnySchemaValidator>(
   >,
   next: MiddlewareNext
 ) {
-  res.cors = true;
+  if (req.method === 'OPTIONS') {
+    res.cors = true;
+  }
   cors()(req, res, next);
 }

@@ -1,5 +1,6 @@
 import { ParamsDictionary, parseResponse } from '@forklaunch/core';
 import { AnySchemaValidator } from '@forklaunch/validator';
+import cors from 'cors';
 import { NextFunction } from 'express';
 import { ParsedQs } from 'qs';
 import { Request, Response } from '../types/forklaunch.express.types';
@@ -57,7 +58,9 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
     }
 
     try {
-      parseResponse(req, res);
+      if (!res.cors) {
+        parseResponse(req, res);
+      }
       const result = originalSend.call(this, data);
       return result;
     } catch (error: unknown) {
@@ -76,4 +79,27 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
   if (next) {
     next();
   }
+}
+
+export async function corsMiddleware<SV extends AnySchemaValidator>(
+  req: Request<
+    SV,
+    ParamsDictionary,
+    Record<number, unknown>,
+    Record<string, unknown>,
+    ParsedQs,
+    Record<string, string>,
+    Record<string, unknown>
+  >,
+  res: Response<
+    Record<number, unknown>,
+    Record<string, string>,
+    Record<string, unknown>
+  >,
+  next: NextFunction
+) {
+  if (req.method === 'OPTIONS') {
+    res.cors = true;
+  }
+  cors()(req, res, next);
 }
