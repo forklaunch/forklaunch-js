@@ -1,0 +1,25 @@
+{
+  "name": "@forklaunch/monorepo",
+  "version": "0.1.0",
+  "description": "",
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.3",
+    "tsx": "^4.16.2",
+    "typescript": "^5.5.3"
+  },
+  "scripts": {
+    "build": "pnpm -r run build",
+    "clean": "rm -rf node_modules pnpm-lock.yaml && pnpm -r clean && pnpm store prune",
+    "clean:purge": "pnpm run clean && pnpm store clear",
+    "docs": "pnpm -r run docs",
+    "lint": "pnpm -r run lint",
+    "lint:fix": "pnpm -r run lint:fix",
+    "format": "pnpm -r run format",
+    "test": "jest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

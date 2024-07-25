@@ -1,6 +1,8 @@
-import { parseResponse } from '@forklaunch/core';
+import { ParamsDictionary, parseResponse } from '@forklaunch/core';
 import { AnySchemaValidator } from '@forklaunch/validator';
+import cors from 'cors';
 import { NextFunction } from 'express';
+import { ParsedQs } from 'qs';
 import { Request, Response } from '../types/forklaunch.express.types';
 
 /**
@@ -12,8 +14,20 @@ import { Request, Response } from '../types/forklaunch.express.types';
  * @param {NextFunction} [next] - The next middleware function.
  */
 export function enrichResponseTransmission<SV extends AnySchemaValidator>(
-  req: Request<SV>,
-  res: Response,
+  req: Request<
+    SV,
+    ParamsDictionary,
+    Record<number, unknown>,
+    Record<string, unknown>,
+    ParsedQs,
+    Record<string, string>,
+    Record<string, unknown>
+  >,
+  res: Response<
+    Record<number, unknown>,
+    Record<string, string>,
+    Record<string, unknown>
+  >,
   next?: NextFunction
 ) {
   const originalSend = res.send;
@@ -26,7 +40,7 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
    * @param {unknown} data - The data to send in the response.
    * @returns {T} - The result of the original JSON method.
    */
-  res.json = function <T>(data: unknown) {
+  res.json = function <T>(data?: Record<number, unknown>) {
     res.bodyData = data;
     const result = originalJson.call(this, data);
     return result as T;
@@ -38,13 +52,15 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
    * @param {unknown} data - The data to send in the response.
    * @returns {Response} - The result of the original send method.
    */
-  res.send = function (data) {
+  res.send = function (data?: Record<number, unknown>) {
     if (!res.bodyData) {
       res.bodyData = data;
     }
 
     try {
-      parseResponse<SV, Request<SV>, Response, NextFunction>(req, res);
+      if (!res.cors) {
+        parseResponse(req, res);
+      }
       const result = originalSend.call(this, data);
       return result;
     } catch (error: unknown) {
@@ -63,4 +79,27 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
   if (next) {
     next();
   }
+}
+
+export async function corsMiddleware<SV extends AnySchemaValidator>(
+  req: Request<
+    SV,
+    ParamsDictionary,
+    Record<number, unknown>,
+    Record<string, unknown>,
+    ParsedQs,
+    Record<string, string>,
+    Record<string, unknown>
+  >,
+  res: Response<
+    Record<number, unknown>,
+    Record<string, string>,
+    Record<string, unknown>
+  >,
+  next: NextFunction
+) {
+  if (req.method === 'OPTIONS') {
+    res.cors = true;
+  }
+  cors()(req, res, next);
 }

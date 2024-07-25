@@ -2,3 +2,9 @@ node_modules
 .idea
 .DS_Store
 
+testfe/
+ts-playground/
+
+lib
+
+.vscode

@@ -6,6 +6,7 @@
   "scripts": {
     "test": "jest",
     "build": "tsc",
+    "clean": "rm -rf dist pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
@@ -22,23 +23,31 @@
   },
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "dependencies": {
-    "@forklaunch/core": "^0.1.7",
+    "@forklaunch/common": "^0.1.2",
+    "@forklaunch/core": "^0.2.2",
     "@forklaunch/hyper-express-fork": "^6.16.4",
+    "@forklaunch/validator": "^0.3.1",
+    "cors": "^2.8.5",
     "live-directory": "^3.0.3",
+    "openapi3-ts": "^4.3.3",
     "qs": "^6.12.3",
     "swagger-ui-dist": "^5.17.14",
-    "swagger-ui-express": "^5.0.1"
+    "swagger-ui-express": "^5.0.1",
+    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.44.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.6.0",
+    "@types/cors": "^2.8.17",
     "@types/jest": "^29.5.12",
     "@types/qs": "^6.9.15",
     "@types/swagger-ui-dist": "^3.30.5",
     "@types/swagger-ui-express": "^4.1.6",
+    "jest": "^29.7.0",
     "kill-port-process": "^3.2.1",
     "prettier": "^3.3.2",
     "ts-jest": "^29.2.0",
     "ts-node": "^10.9.2",
+    "tsx": "^4.16.2",
     "typescript": "^5.5.3",
     "typescript-eslint": "^7.16.0"
   }

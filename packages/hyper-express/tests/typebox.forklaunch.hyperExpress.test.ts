@@ -1,20 +1,18 @@
 import { TypeboxSchemaValidator, string } from '@forklaunch/validator/typebox';
-import { killPortProcess } from 'kill-port-process';
-import forklaunchExpress, {
-  Application,
-  Router,
+import * as uWebSockets from 'uWebSockets.js';
+import {
+  forklaunchExpress,
   forklaunchRouter
 } from '../forklaunch.hyperExpress';
 
 const typeboxSchemaValidator = new TypeboxSchemaValidator();
 
 describe('Forklaunch Hyper-Express Tests', () => {
-  let forklaunchApplication: Application<TypeboxSchemaValidator>;
-  let forklaunchRouterInstance: Router<TypeboxSchemaValidator>;
+  let forklaunchApplication;
+  let forklaunchRouterInstance;
+  let server: uWebSockets.us_listen_socket;
 
   beforeAll(async () => {
-    await killPortProcess(6934);
-
     forklaunchApplication = forklaunchExpress(typeboxSchemaValidator);
     forklaunchRouterInstance = forklaunchRouter(
       '/testpath',
@@ -102,7 +100,7 @@ describe('Forklaunch Hyper-Express Tests', () => {
 
     forklaunchApplication.use(forklaunchRouterInstance);
 
-    await forklaunchApplication.listen(6934, () => {
+    server = await forklaunchApplication.listen(6934, () => {
       console.log('Server started');
     });
   });
@@ -159,6 +157,6 @@ describe('Forklaunch Hyper-Express Tests', () => {
   });
 
   afterAll(async () => {
-    setTimeout(async () => await killPortProcess(6934), 500);
+    uWebSockets.us_listen_socket_close(server);
   });
 });

@@ -1,20 +1,18 @@
 import { ZodSchemaValidator, string } from '@forklaunch/validator/zod';
-import { killPortProcess } from 'kill-port-process';
-import forklaunchExpress, {
-  Application,
-  Router,
+import * as uWebSockets from 'uWebSockets.js';
+import {
+  forklaunchExpress,
   forklaunchRouter
 } from '../forklaunch.hyperExpress';
 
 const zodSchemaValidator = new ZodSchemaValidator();
 
 describe('Forklaunch Hyper-Express Tests', () => {
-  let forklaunchApplication: Application<ZodSchemaValidator>;
-  let forklaunchRouterInstance: Router<ZodSchemaValidator>;
+  let forklaunchApplication;
+  let forklaunchRouterInstance;
+  let server: uWebSockets.us_listen_socket;
 
   beforeAll(async () => {
-    await killPortProcess(6935);
-
     forklaunchApplication = forklaunchExpress(zodSchemaValidator);
     forklaunchRouterInstance = forklaunchRouter(
       '/testpath',
@@ -102,13 +100,14 @@ describe('Forklaunch Hyper-Express Tests', () => {
 
     forklaunchApplication.use(forklaunchRouterInstance);
 
-    await forklaunchApplication.listen(6935, () => {
+    await forklaunchApplication.listen(6935, (token) => {
+      server = token;
       console.log('Server started');
     });
   });
 
   test('Get', async () => {
-    const testGet = await fetch('http://localhost:6934/testpath/test', {
+    const testGet = await fetch('http://localhost:6935/testpath/test', {
       method: 'GET'
     });
 
@@ -117,7 +116,7 @@ describe('Forklaunch Hyper-Express Tests', () => {
   });
 
   test('Post', async () => {
-    const testPost = await fetch('http://localhost:6934/testpath/test', {
+    const testPost = await fetch('http://localhost:6935/testpath/test', {
       method: 'POST',
       body: JSON.stringify({ test: 'Hello World' }),
       headers: { 'Content-Type': 'application/json' }
@@ -128,7 +127,7 @@ describe('Forklaunch Hyper-Express Tests', () => {
   });
 
   test('Put', async () => {
-    const testPut = await fetch('http://localhost:6934/testpath/test', {
+    const testPut = await fetch('http://localhost:6935/testpath/test', {
       method: 'PUT',
       body: JSON.stringify({ test: 'Hello World' }),
       headers: { 'Content-Type': 'application/json' }
@@ -139,7 +138,7 @@ describe('Forklaunch Hyper-Express Tests', () => {
   });
 
   test('Patch', async () => {
-    const testPatch = await fetch('http://localhost:6934/testpath/test', {
+    const testPatch = await fetch('http://localhost:6935/testpath/test', {
       method: 'PATCH',
       body: JSON.stringify({ test: 'Hello World' }),
       headers: { 'Content-Type': 'application/json' }
@@ -150,7 +149,7 @@ describe('Forklaunch Hyper-Express Tests', () => {
   });
 
   test('Delete', async () => {
-    const testDelete = await fetch('http://localhost:6934/testpath/test', {
+    const testDelete = await fetch('http://localhost:6935/testpath/test', {
       method: 'DELETE'
     });
 
@@ -159,6 +158,6 @@ describe('Forklaunch Hyper-Express Tests', () => {
   });
 
   afterAll(async () => {
-    setTimeout(async () => await killPortProcess(6935), 500);
+    uWebSockets.us_listen_socket_close(server);
   });
 });
