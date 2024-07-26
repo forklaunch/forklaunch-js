@@ -1,27 +1,29 @@
 import forklaunchExpress, {
+  Application,
+  Router,
   forklaunchRouter
-} from '../forklaunch.hyperExpress';
-import { TypeboxSchemaValidator, string } from '@forklaunch/validator/typebox';
-import { Static, Type } from '@sinclair/typebox';
+} from '../packages/hyper-express/forklaunch.hyperExpress';
+import { z } from 'zod';
+import { ZodSchemaValidator } from "../packages/validator/zod";
 
 // Create a new instance of TypeboxSchemaValidator
-const typeboxSchemaValidator = new TypeboxSchemaValidator();
+const zodSchemaValidator = new ZodSchemaValidator();
 
 // Initialize the application using forklaunchExpress with TypeboxSchemaValidator
-const forklaunchApp = forklaunchExpress(typeboxSchemaValidator);
+const forklaunchApp: Application<ZodSchemaValidator> = forklaunchExpress(zodSchemaValidator);
 
 // Create a router instance
-const router = forklaunchRouter('/api/books', typeboxSchemaValidator);
+const router = forklaunchRouter('/api/books', zodSchemaValidator);
 
-// Define TypeBox schemas
-const BookSchema = Type.Object({
-  id: Type.Optional(Type.Number()),
-  title: Type.String(),
-  author: Type.String(),
-  year: Type.Number()
+// Define Zod schemas
+const BookSchema = z.object({
+  id: z.number().optional(),
+  title: z.string(),
+  author: z.string(),
+  year: z.number()
 });
 
-const BooksSchema = Type.Array(BookSchema);
+const BooksSchema = z.array(BookSchema);
 
 // Dummy data for books
 const books = [
@@ -29,8 +31,7 @@ const books = [
   { id: 2, title: 'The Great Gatsby', author: 'F. Scott Fitzgerald', year: 1925 }
 ];
 
-type Book = Static<typeof BookSchema>;
-type Books = Static<typeof BooksSchema>;
+type Book = z.infer<typeof BookSchema>;
 
 // GET - Retrieve all books
 router.get('/', {
@@ -38,7 +39,7 @@ router.get('/', {
   summary: 'Retrieves list of all books',
   responses: {
     200: BooksSchema,
-    500: string
+    500: z.string()
   }
 }, (req, res) => {
   try {
@@ -50,7 +51,6 @@ router.get('/', {
   }
 });
 
-
 // POST - Add a new book
 router.post('/', {
   name: 'AddBook',
@@ -58,7 +58,7 @@ router.post('/', {
   body: BookSchema,
   responses: {
     200: BookSchema,
-    400: string
+    400: z.string()
   }
 }, (req, res) => {
   try {
@@ -77,16 +77,16 @@ router.post('/', {
 router.put('/:id', {
   name: 'UpdateBook',
   summary: 'Updates an existing book',
-  params: Type.Object({
-    id: Type.Number()
-  }),
+  params: {
+    id: z.number()
+  },
   body: BookSchema,
   responses: {
     200: BookSchema,
-    404: string
+    404: z.string()
   }
 }, (req, res) => {
-  const id = parseInt(req.params.id);
+  const id = req.params.id;
   const index = books.findIndex(book => book.id === id);
   if (index !== -1) {
     books[index] = { ...books[index], ...req.body };
@@ -101,15 +101,15 @@ router.put('/:id', {
 router.delete('/:id', {
   name: 'DeleteBook',
   summary: 'Deletes an existing book',
-  params: Type.Object({
-    id: Type.Number()
-  }),
+  params: {
+    id: z.number()
+  },
   responses: {
-    200: string,
-    404: string
+    200: z.string(),
+    404: z.string()
   }
 }, (req, res) => {
-  const id = parseInt(req.params.id);
+  const id = req.params.id;
   const index = books.findIndex(book => book.id === id);
   if (index !== -1) {
     books.splice(index, 1);
@@ -123,6 +123,6 @@ router.delete('/:id', {
 forklaunchApp.use(router);
 
 // Start the server on port 3000
-forklaunchApp.listen(3030, () => {
-  console.log('Server running on http://localhost:3030');
+forklaunchApp.listen(3001, () => {
+  console.log('Server running on http://localhost:3001');
 });

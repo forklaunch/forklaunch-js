@@ -1,4 +1,6 @@
-import forklaunchExpress, { Application, Router, forklaunchRouter } from "../forklaunch.express";
+import forklaunchExpress, {
+  forklaunchRouter
+} from '../forklaunch.hyperExpress';
 import { z } from 'zod';
 import { ZodSchemaValidator } from "@forklaunch/validator/zod";
 
@@ -6,10 +8,9 @@ import { ZodSchemaValidator } from "@forklaunch/validator/zod";
 const zodSchemaValidator = new ZodSchemaValidator();
 
 // Initialize the application using forklaunchExpress with TypeboxSchemaValidator
-const forklaunchApp: Application<ZodSchemaValidator> = forklaunchExpress(zodSchemaValidator);
-
+const forklaunchApp = forklaunchExpress(zodSchemaValidator);
 // Create a router instance
-const router: Router<ZodSchemaValidator> = forklaunchRouter('/api/books', zodSchemaValidator);
+const router = forklaunchRouter('/api/books', zodSchemaValidator);
 
 // Define Zod schemas
 const BookSchema = z.object({
@@ -119,7 +120,7 @@ router.delete('/:id', {
 // Apply the router to the application
 forklaunchApp.use(router);
 
-// Start the server on port 3000
+// Start the server on port 3001
 forklaunchApp.listen(3001, () => {
   console.log('Server running on http://localhost:3001');
 });

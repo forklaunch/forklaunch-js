@@ -1,12 +1,12 @@
-import { TypeboxSchemaValidator, string } from "@forklaunch/validator/typebox";
-import forklaunchExpress, { Application, Router, forklaunchRouter } from "@forklaunch/hyper-express";
-import { Type } from '@sinclair/typebox';
+import { TypeboxSchemaValidator, string } from "../packages/validator/typebox";
+import forklaunchExpress, { Application, Router, forklaunchRouter } from "../packages/express/forklaunch.express";
+import { Static, Type } from '@sinclair/typebox';
 
 // Create a new instance of TypeboxSchemaValidator
 const typeboxSchemaValidator = new TypeboxSchemaValidator();
 
 // Initialize the application using forklaunchExpress with TypeboxSchemaValidator
-const app: Application<TypeboxSchemaValidator> = forklaunchExpress(typeboxSchemaValidator);
+const forklaunchApp: Application<TypeboxSchemaValidator> = forklaunchExpress(typeboxSchemaValidator);
 
 // Create a router instance
 const router: Router<TypeboxSchemaValidator> = forklaunchRouter('/api/books', typeboxSchemaValidator);
@@ -27,45 +27,69 @@ const books = [
     { id: 2, title: 'The Great Gatsby', author: 'F. Scott Fitzgerald', year: 1925 }
 ];
 
+type Book = Static<typeof BookSchema>;
+type Books = Static<typeof BooksSchema>;
+
 // GET - Retrieve all books
 router.get('/', {
     name: 'GetBooks',
     summary: 'Retrieves list of all books',
     responses: {
-        200: BooksSchema
+        200: BooksSchema,
+        500: string
     }
 }, (req, res) => {
-    res.status(200).json(books);
+    try {
+        const validatedBooks = BooksSchema.parse(books);
+        res.status(200).json(validatedBooks);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("Server error in parsing books data.");
+    }
 });
+
 
 // POST - Add a new book
 router.post('/', {
     name: 'AddBook',
     summary: 'Adds a new book',
-    body: BookSchema.omit({ id: true }), // ID is not required when adding a new book
+    body: BookSchema,
     responses: {
-        200: BookSchema
+        200: BookSchema,
+        400: string
     }
 }, (req, res) => {
-    const newBook = { id: books.length + 1, ...req.body };
-    books.push(newBook);
-    res.status(200).json(newBook);
+    try {
+        const bookData: Book = BookSchema.parse(req.body);
+        const booksId = books.length + 1;
+        const createdBook = { id: booksId, ...bookData };
+        books.push(createdBook);
+        const validatedBook = BookSchema.parse(createdBook);
+        res.status(200).json(validatedBook);
+    } catch (error) {
+        res.status(400).send("Invalid book data provided.");
+    }
 });
 
 // PUT - Update a book
 router.put('/:id', {
     name: 'UpdateBook',
     summary: 'Updates an existing book',
+    params: Type.Object({
+        id: Type.Number()
+    }),
     body: BookSchema,
     responses: {
-        200: BookSchema
+        200: BookSchema,
+        404: string
     }
 }, (req, res) => {
     const id = parseInt(req.params.id);
     const index = books.findIndex(book => book.id === id);
     if (index !== -1) {
         books[index] = { ...books[index], ...req.body };
-        res.status(200).json(books[index]);
+        const validatedBook = BookSchema.parse(books[index]);
+        res.status(200).json(validatedBook);
     } else {
         res.status(404).send('Book not found');
     }
@@ -75,8 +99,12 @@ router.put('/:id', {
 router.delete('/:id', {
     name: 'DeleteBook',
     summary: 'Deletes an existing book',
+    params: Type.Object({
+        id: Type.Number()
+    }),
     responses: {
-        200: string
+        200: string,
+        404: string
     }
 }, (req, res) => {
     const id = parseInt(req.params.id);
@@ -90,9 +118,9 @@ router.delete('/:id', {
 });
 
 // Apply the router to the application
-app.use(router);
+forklaunchApp.use(router);
 
 // Start the server on port 3000
-app.listen(3000, () => {
+forklaunchApp.listen(3000, () => {
     console.log('Server running on http://localhost:3000');
 });
