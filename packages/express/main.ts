@@ -3,7 +3,7 @@ import {
   string,
   TypeboxSchemaValidator
 } from '@forklaunch/validator/typebox';
-import { forklaunchExpress, forklaunchRouter } from './forklaunch.hyperExpress';
+import { forklaunchExpress, forklaunchRouter } from './forklaunch.express';
 
 const typeboxSchemaValidator = new TypeboxSchemaValidator();
 

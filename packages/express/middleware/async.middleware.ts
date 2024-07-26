@@ -1,7 +1,7 @@
 import { ParamsDictionary } from '@forklaunch/core';
 import { AnySchemaValidator } from '@forklaunch/validator';
+import { RequestHandler } from 'express';
 import { ParsedQs } from 'qs';
-import { RequestHandler } from '../types/forklaunch.express.types';
 
 /**
  * Wraps an asynchronous middleware function to handle errors and pass them to the next middleware.
@@ -13,8 +13,8 @@ import { RequestHandler } from '../types/forklaunch.express.types';
  * @template ReqQuery - A type for the request query, defaulting to ParsedQs.
  * @template LocalsObj - A type for local variables, defaulting to an empty object.
  * @template StatusCode - A type for the status code, defaulting to number.
- * @param {RequestHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, LocalsObj, StatusCode>} fn - The asynchronous middleware function to wrap.
- * @returns {RequestHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, LocalsObj, StatusCode>} - The wrapped middleware function.
+ * @param {RequestHandler} fn - The asynchronous middleware function to wrap.
+ * @returns {RequestHandler} - The wrapped middleware function.
  */
 export function asyncMiddleware<
   SV extends AnySchemaValidator,
@@ -24,17 +24,7 @@ export function asyncMiddleware<
   ReqQuery = ParsedQs,
   LocalsObj extends Record<string, unknown> = Record<string, unknown>,
   StatusCode extends number = number
->(
-  fn: RequestHandler<
-    SV,
-    P,
-    ResBodyMap,
-    ReqBody,
-    ReqQuery,
-    LocalsObj,
-    StatusCode
-  >
-): RequestHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, LocalsObj, StatusCode> {
+>(fn: RequestHandler): RequestHandler {
   return async (req, res, next) => {
     await Promise.resolve(fn(req, res, next)).catch(next);
     if (next) {

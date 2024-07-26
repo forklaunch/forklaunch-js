@@ -6,3 +6,5 @@ testfe/
 ts-playground/
 
 lib
+
+.vscode
