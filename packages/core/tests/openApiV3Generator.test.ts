@@ -22,8 +22,7 @@ describe('OpenApiV3Generator Tests', () => {
             {
               basePath: '/test',
               path: '/',
-              sdkPath: '/test',
-              method: 'get',
+              method: 'GET',
               contractDetails: {
                 name: 'Test Contract',
                 summary: 'Test Contract Summary',
@@ -41,7 +40,6 @@ describe('OpenApiV3Generator Tests', () => {
       ]
     );
 
-    console.log(generatedOpenApiSpec);
     expect(generatedOpenApiSpec).toEqual({
       openapi: '3.1.0',
       info: { title: '', version: '1.0.0' },

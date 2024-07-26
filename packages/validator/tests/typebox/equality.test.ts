@@ -1,4 +1,4 @@
-import { TObject, Type } from '@sinclair/typebox';
+import { Kind, TObject, TProperties, TSchema, Type } from '@sinclair/typebox';
 import { Schema } from '../../index';
 import {
   TypeboxSchemaValidator,
@@ -105,27 +105,27 @@ const three = schemify(
   )
 );
 
-export function assert<T extends never>() {}
+export function assert<T extends never>() { }
 type Equality<A, B> = Exclude<A, B> | Exclude<B, A>;
 
 type Expected = {
   name: {
     j:
-      | string
-      | number
-      | bigint
-      | boolean
-      | symbol
-      | void
-      | Date
-      | null
-      | undefined;
+    | string
+    | number
+    | bigint
+    | boolean
+    | symbol
+    | void
+    | Date
+    | null
+    | undefined;
     t?:
-      | string
-      | {
-          y: number[];
-        }[]
-      | undefined;
+    | string
+    | {
+      y: number[];
+    }[]
+    | undefined;
     m: {
       a?: string | undefined;
       b: number;
@@ -342,3 +342,15 @@ describe('Typebox Equality Tests', () => {
     expect(openApi).toEqual(schemified);
   });
 });
+
+function objectify(x: Record<string, unknown>) {
+  const newObject: typeof x = {}
+  for (const key in x) {
+    if (Kind in (x[key] as TSchema)) {
+      newObject[key] = x[key]
+    } else {
+      newObject[key] = objectify(x[key] as Record<string, unknown>)
+    }
+  }
+  return Type.Object(newObject as TProperties);
+}

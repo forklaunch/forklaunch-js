@@ -1,0 +1,32 @@
+{
+  "name": "@forklaunch/universal-sdk",
+  "version": "0.1.0",
+  "description": "Cross runtime fetch library for forklaunch router sdks",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "build": "tsc",
+    "clean": "rm -rf dist pnpm.lock.yaml node_modules",
+    "docs": "typedoc --out docs *",
+    "lint": "eslint . -c eslint.config.mjs",
+    "lint:fix": "eslint . -c eslint.config.mjs --fix",
+    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.ts' --write"
+
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/forklaunch/forklaunch-js.git"
+  },
+  "keywords": [
+    "fetch",
+    "http",
+    "express",
+    "hyper-express"
+  ],
+  "author": "Rohin Bhargava",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/forklaunch/forklaunch-js/issues"
+  },
+  "homepage": "https://github.com/forklaunch/forklaunch-js#readme"
+}

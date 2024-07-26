@@ -1,10 +1,15 @@
 import { AnySchemaValidator } from '@forklaunch/validator';
+import { ParsedQs } from 'qs';
 import {
   ForklaunchNextFunction,
   ForklaunchRequest,
+  ForklaunchResHeaders,
   ForklaunchResponse
 } from '../types/api.types';
-import { HttpContractDetails } from '../types/primitive.types';
+import {
+  HttpContractDetails,
+  ParamsDictionary
+} from '../types/primitive.types';
 
 /**
  * Checks if any validation is required for the given contract details.
@@ -37,10 +42,22 @@ function checkAnyValidation<SV extends AnySchemaValidator>(
  */
 export function parseResponse<
   SV extends AnySchemaValidator,
-  Request extends ForklaunchRequest<SV>,
-  Response extends ForklaunchResponse,
-  NextFunction extends ForklaunchNextFunction
->(req: Request, res: Response, next?: NextFunction) {
+  P extends ParamsDictionary,
+  ResBodyMap extends Record<number, unknown>,
+  ReqBody extends Record<string, unknown>,
+  ReqQuery extends ParsedQs,
+  ReqHeaders extends Record<string, string>,
+  ResHeaders extends Record<string, string>,
+  LocalsObj extends Record<string, unknown>
+>(
+  req: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>,
+  res: ForklaunchResponse<
+    ResBodyMap,
+    ForklaunchResHeaders & ResHeaders,
+    LocalsObj
+  >,
+  next?: ForklaunchNextFunction
+) {
   if (req.contractDetails.responseHeaders) {
     const schema = req.schemaValidator.schemify(
       req.contractDetails.responseHeaders
