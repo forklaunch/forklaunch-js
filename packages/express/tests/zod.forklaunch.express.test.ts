@@ -18,10 +18,10 @@ describe('Forklaunch Express Tests', () => {
             name: 'Test',
             summary: 'Test Summary',
             responses: {
-                200: string
+                200: { hello: string }
             }
         }, (req, res) => {
-            res.status(200).send('Hello World');
+            res.status(200).send({ hello: 'Hello World' });
         });
 
         forklaunchRouterInstance.post('/test', {

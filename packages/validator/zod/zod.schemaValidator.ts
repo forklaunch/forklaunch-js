@@ -78,14 +78,15 @@ export class ZodSchemaValidator
     }
 
     const newSchema: ZodRawShape = {};
-    Object.getOwnPropertyNames(schema).forEach((key) => {
-      if (schema[key] instanceof ZodType) {
-        newSchema[key] = schema[key] as unknown as ZodType;
-      } else {
-        newSchema[key] = this.schemify(schema[key]);
-      }
-    });
-
+    if (schema) {
+      Object.getOwnPropertyNames(schema).forEach((key) => {
+        if (schema[key] instanceof ZodType) {
+          newSchema[key] = schema[key] as unknown as ZodType;
+        } else {
+          newSchema[key] = this.schemify(schema[key]);
+        }
+      });
+    }
     return z.object(newSchema) as ZodResolve<T>;
   }
 
