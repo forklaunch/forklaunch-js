@@ -1,5 +1,6 @@
-import forklaunchExpress, {
-    forklaunchRouter
+import {
+    forklaunchRouter,
+    forklaunchExpress
 } from '../packages/hyper-express/forklaunch.hyperExpress';
 import { TypeboxSchemaValidator, schemify, string, number, optional, array } from "../packages/validator/typebox";
 
@@ -13,16 +14,16 @@ const forklaunchApp = forklaunchExpress(typeboxSchemaValidator);
 const router = forklaunchRouter('/api/books', typeboxSchemaValidator);
 
 // Define TypeBox schemas using schemify
-const BookSchema = schemify({
+const BookSchema = {
     id: optional(number),
     title: string,
     author: string,
     year: number
-});
+};
 
-const BooksSchema = schemify({
+const BooksSchema = {
     items: array(BookSchema)
-});
+};
 
 // Dummy data for books
 const books = [
@@ -123,6 +124,6 @@ router.delete('/:id', {
 forklaunchApp.use(router);
 
 // Start the server on port 3000
-forklaunchApp.listen(3030, () => {
-    console.log('Server running on http://localhost:3030');
+forklaunchApp.listen(3000, () => {
+    console.log('🔥Server running on http://localhost:3000 🔥');
 });
