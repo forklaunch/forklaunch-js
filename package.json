@@ -7,7 +7,7 @@
     "jest": "^29.7.0",
     "ts-jest": "^29.2.3",
     "tsx": "^4.16.2",
-    "typescript": "^5.5.3"
+    "typescript": "^5.5.4"
   },
   "scripts": {
     "build": "pnpm -r run build",
