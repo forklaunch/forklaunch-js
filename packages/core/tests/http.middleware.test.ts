@@ -69,16 +69,13 @@ describe('Http Middleware Tests', () => {
 
     res = {
       bodyData: {},
-      statusCode: 200,
+      statusCode: 400 | 401 | 403 | 500,
       corked: false,
       getHeaders: jest.fn(),
       setHeader: jest.fn(),
       status: jest.fn(),
       headersSent: false,
       locals: {}
-      // send: jest.fn(),
-      // json: jest.fn(),
-      // jsonp: jest.fn()
     };
   });
 

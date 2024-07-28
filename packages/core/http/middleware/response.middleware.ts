@@ -67,7 +67,8 @@ export function parseResponse<
 
   if (
     res.statusCode === 500 ||
-    (checkAnyValidation(req.contractDetails) && res.statusCode === 400) ||
+    (checkAnyValidation(req.contractDetails as HttpContractDetails<SV>) &&
+      res.statusCode === 400) ||
     (req.contractDetails.auth &&
       (res.statusCode === 401 || res.statusCode === 403))
   ) {

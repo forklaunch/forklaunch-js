@@ -5,4 +5,6 @@ packages:
   - 'packages/core'
   - 'packages/express'
   - 'packages/hyper-express'
+  - 'packages/hyper-koa'
   - 'packages/universal-sdk'
+  - 'packages/validator'

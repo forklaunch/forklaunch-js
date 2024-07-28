@@ -22,7 +22,7 @@ describe('OpenApiV3Generator Tests', () => {
             {
               basePath: '/test',
               path: '/',
-              method: 'GET',
+              method: 'get',
               contractDetails: {
                 name: 'Test Contract',
                 summary: 'Test Contract Summary',

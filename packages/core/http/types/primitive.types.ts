@@ -90,15 +90,15 @@ export type AuthMethod = 'jwt' | 'session';
  * Interface representing HTTP contract details for path parameters.
  *
  * @template SV - A type that extends AnySchemaValidator.
- * @template ParamSchemas - A type for parameter schemas, defaulting to ParamsObject.
+ * @template ParamsSchema - A type for parameter schemas, defaulting to ParamsObject.
  * @template ResponseSchemas - A type for response schemas, defaulting to ResponsesObject.
- * @template QuerySchemas - A type for query schemas, defaulting to QueryObject.
+ * @template QuerySchema - A type for query schemas, defaulting to QueryObject.
  */
 export interface PathParamHttpContractDetails<
   SV extends AnySchemaValidator,
-  ParamSchemas extends ParamsObject<SV> = ParamsObject<SV>,
+  ParamsSchema extends ParamsObject<SV> = ParamsObject<SV>,
   ResponseSchemas extends ResponsesObject<SV> = ResponsesObject<SV>,
-  QuerySchemas extends QueryObject<SV> = QueryObject<SV>,
+  QuerySchema extends QueryObject<SV> = QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV> = HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV> = HeadersObject<SV>
 > {
@@ -113,9 +113,9 @@ export interface PathParamHttpContractDetails<
   /** Optional response headers for the contract */
   responseHeaders?: ResHeaders;
   /** Optional parameter schemas for the contract */
-  params?: ParamSchemas;
+  params?: ParamsSchema;
   /** Optional query schemas for the contract */
-  query?: QuerySchemas;
+  query?: QuerySchema;
   /** Optional authentication details for the contract */
   auth?: {
     method: AuthMethod;
@@ -130,32 +130,47 @@ export interface PathParamHttpContractDetails<
  * Interface representing HTTP contract details.
  *
  * @template SV - A type that extends AnySchemaValidator.
- * @template ParamSchemas - A type for parameter schemas, defaulting to ParamsObject.
+ * @template ParamsSchema - A type for parameter schemas, defaulting to ParamsObject.
  * @template ResponseSchemas - A type for response schemas, defaulting to ResponsesObject.
  * @template BodySchema - A type for the body schema, defaulting to Body.
- * @template QuerySchemas - A type for query schemas, defaulting to QueryObject.
+ * @template QuerySchema - A type for query schemas, defaulting to QueryObject.
  */
 export interface HttpContractDetails<
   SV extends AnySchemaValidator,
-  ParamSchemas extends ParamsObject<SV> = ParamsObject<SV>,
+  ParamsSchema extends ParamsObject<SV> = ParamsObject<SV>,
   ResponseSchemas extends ResponsesObject<SV> = ResponsesObject<SV>,
   BodySchema extends Body<SV> = Body<SV>,
-  QuerySchemas extends QueryObject<SV> = QueryObject<SV>,
+  QuerySchema extends QueryObject<SV> = QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV> = HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV> = HeadersObject<SV>
 > extends PathParamHttpContractDetails<
     SV,
-    ParamSchemas,
+    ParamsSchema,
     ResponseSchemas,
-    QuerySchemas,
+    QuerySchema,
     ReqHeaders,
     ResHeaders
   > {
-  /** Optional body schema for the contract */
-  body?: BodySchema;
+  /** Required body schema for the contract */
+  body: BodySchema;
   /** Optional content type for the contract */
   contentType?:
     | 'application/json'
     | 'multipart/form-data'
     | 'application/x-www-form-urlencoded';
 }
+
+/**
+ * Represents the path parameter methods.
+ */
+export type PathParameterMethod = 'get' | 'delete' | 'options';
+
+/**
+ * Represents the body parameter methods.
+ */
+export type HttpMethod = 'post' | 'patch' | 'put';
+
+/**
+ * Represents all supported typed methods.
+ */
+export type Method = PathParameterMethod | HttpMethod;

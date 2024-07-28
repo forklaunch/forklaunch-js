@@ -6,8 +6,11 @@ import {
   Body,
   HeadersObject,
   HttpContractDetails,
+  HttpMethod,
+  Method,
   ParamsDictionary,
   ParamsObject,
+  PathParameterMethod,
   PathParamHttpContractDetails,
   QueryObject,
   ResponsesObject
@@ -103,7 +106,7 @@ export interface ForklaunchResponse<
   /** Data of the response body */
   bodyData: unknown;
   /** Status code of the response */
-  statusCode: keyof ResBodyMap & number;
+  statusCode: number;
   /** Whether the response is corked */
   corked: boolean;
   /** Whether the response is finished */
@@ -269,6 +272,50 @@ export type ForklaunchSchemaMiddlewareHandler<
  * @template ResHeaders - A type for the response headers.
  *
  */
+// export type LiveTypeFunction<
+//   SV extends AnySchemaValidator,
+//   Route extends string,
+//   P extends ParamsObject<SV>,
+//   ResBodyMap extends ResponsesObject<SV>,
+//   ReqBody extends Body<SV>,
+//   ReqQuery extends QueryObject<SV>,
+//   ReqHeaders extends HeadersObject<SV>,
+//   ResHeaders extends HeadersObject<SV>
+// > = (ParamsDictionary extends P
+//   ? unknown
+//   : {
+//       params: MapSchema<SV, P>;
+//     }) &
+//   (Record<string, unknown> extends ReqBody
+//     ? unknown
+//     : {
+//         body: MapSchema<SV, ReqBody>;
+//       }) &
+//   (ParsedQs extends ReqQuery
+//     ? unknown
+//     : {
+//         query: MapSchema<SV, ReqQuery>;
+//       }) &
+//   (Record<string, string> extends ReqHeaders
+//     ? unknown
+//     : {
+//         headers: MapSchema<SV, ReqHeaders>;
+//       }) extends infer Request
+//   ? SdkResponse<
+//       ForklaunchResErrors &
+//         (Record<number, unknown> extends ResBodyMap
+//           ? unknown
+//           : MapSchema<SV, ResBodyMap>),
+//       ForklaunchResHeaders extends ResHeaders
+//         ? unknown
+//         : MapSchema<SV, ResHeaders>
+//     > extends infer Return
+//     ? unknown extends Request
+//       ? (route: Route) => Promise<Return>
+//       : (route: Route, request: Request) => Promise<Return>
+//     : never
+//   : never;
+
 export type LiveTypeFunction<
   SV extends AnySchemaValidator,
   Route extends string,
@@ -278,29 +325,29 @@ export type LiveTypeFunction<
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>
-> = (ParamsDictionary extends P
+> = (ParamsObject<SV> extends P
   ? unknown
   : {
       params: MapSchema<SV, P>;
     }) &
-  (Record<string, unknown> extends ReqBody
+  (Body<SV> extends ReqBody
     ? unknown
     : {
         body: MapSchema<SV, ReqBody>;
       }) &
-  (ParsedQs extends ReqQuery
+  (QueryObject<SV> extends ReqQuery
     ? unknown
     : {
         query: MapSchema<SV, ReqQuery>;
       }) &
-  (Record<string, string> extends ReqHeaders
+  (HeadersObject<SV> extends ReqHeaders
     ? unknown
     : {
         headers: MapSchema<SV, ReqHeaders>;
       }) extends infer Request
   ? SdkResponse<
       ForklaunchResErrors &
-        (Record<number, unknown> extends ResBodyMap
+        (HeadersObject<SV> extends ResBodyMap
           ? unknown
           : MapSchema<SV, ResBodyMap>),
       ForklaunchResHeaders extends ResHeaders
@@ -352,10 +399,34 @@ export type ForklaunchResErrors<
 export type ForklaunchResHeaders = { 'x-correlation-id': string };
 
 /**
- * Represents the default error types for responses.
+ * Utility for different Contract Detail types
  */
-export type ExpressLikeRouterFunction = (
-  req: unknown,
-  res: unknown,
-  next?: (err?: unknown) => void
-) => Promise<void> | void;
+export type ContractDetails<
+  ContractMethod extends Method,
+  SV extends AnySchemaValidator,
+  ParamsSchema extends ParamsObject<SV>,
+  ResponseSchemas extends ResponsesObject<SV>,
+  BodySchema extends Body<SV>,
+  QuerySchema extends QueryObject<SV>,
+  ReqHeaders extends HeadersObject<SV>,
+  ResHeaders extends HeadersObject<SV>
+> = ContractMethod extends PathParameterMethod
+  ? PathParamHttpContractDetails<
+      SV,
+      ParamsSchema,
+      ResponseSchemas,
+      QuerySchema,
+      ReqHeaders,
+      ResHeaders
+    >
+  : ContractMethod extends HttpMethod
+    ? HttpContractDetails<
+        SV,
+        ParamsSchema,
+        ResponseSchemas,
+        BodySchema,
+        QuerySchema,
+        ReqHeaders,
+        ResHeaders
+      >
+    : never;
