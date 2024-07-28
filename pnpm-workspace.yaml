@@ -1,5 +1,6 @@
 packages:
   - 'billing'
+  - 'examples'
   - 'iam'
   - 'packages/common'
   - 'packages/core'

@@ -30,6 +30,19 @@ describe('Forklaunch Express Tests', () => {
       }
     );
 
+    forklaunchRouterInstance.get(
+      '/test',
+      {
+        name: 'Test',
+        summary: 'Test Summary',
+        responses: {
+          200: { hello: string }
+        }
+      },
+      (req, res) => {
+        res.status(200).send({ hello: 'Hello World' });
+      }
+    );
     forklaunchRouterInstance.post(
       '/test',
       {
