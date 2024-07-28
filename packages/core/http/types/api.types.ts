@@ -272,49 +272,6 @@ export type ForklaunchSchemaMiddlewareHandler<
  * @template ResHeaders - A type for the response headers.
  *
  */
-// export type LiveTypeFunction<
-//   SV extends AnySchemaValidator,
-//   Route extends string,
-//   P extends ParamsObject<SV>,
-//   ResBodyMap extends ResponsesObject<SV>,
-//   ReqBody extends Body<SV>,
-//   ReqQuery extends QueryObject<SV>,
-//   ReqHeaders extends HeadersObject<SV>,
-//   ResHeaders extends HeadersObject<SV>
-// > = (ParamsDictionary extends P
-//   ? unknown
-//   : {
-//       params: MapSchema<SV, P>;
-//     }) &
-//   (Record<string, unknown> extends ReqBody
-//     ? unknown
-//     : {
-//         body: MapSchema<SV, ReqBody>;
-//       }) &
-//   (ParsedQs extends ReqQuery
-//     ? unknown
-//     : {
-//         query: MapSchema<SV, ReqQuery>;
-//       }) &
-//   (Record<string, string> extends ReqHeaders
-//     ? unknown
-//     : {
-//         headers: MapSchema<SV, ReqHeaders>;
-//       }) extends infer Request
-//   ? SdkResponse<
-//       ForklaunchResErrors &
-//         (Record<number, unknown> extends ResBodyMap
-//           ? unknown
-//           : MapSchema<SV, ResBodyMap>),
-//       ForklaunchResHeaders extends ResHeaders
-//         ? unknown
-//         : MapSchema<SV, ResHeaders>
-//     > extends infer Return
-//     ? unknown extends Request
-//       ? (route: Route) => Promise<Return>
-//       : (route: Route, request: Request) => Promise<Return>
-//     : never
-//   : never;
 
 export type LiveTypeFunction<
   SV extends AnySchemaValidator,

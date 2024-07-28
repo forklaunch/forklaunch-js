@@ -79,5 +79,6 @@
       "types": "./dist/tests/mockSchemaValidator.d.ts",
       "default": "./dist/tests/mockSchemaValidator.js"
     }
-  }
+  },
+  "type": "module"
 }

@@ -7,7 +7,7 @@
   ],
   "types": "dist/index.d.ts",
   "scripts": {
-    "test": "jest",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "build": "tsc",
     "clean": "rm -rf dist pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
@@ -58,5 +58,6 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
-  }
+  },
+  "type": "module"
 }

@@ -423,7 +423,7 @@ export abstract class ForklaunchExpressLikeRouter<
       ResHeaders,
       LocalsObj
     >[]
-  ): unknown {
+  ) {
     if (contractDetailsOrTypedHandler instanceof TypedHandler) {
       const typedHandler = contractDetailsOrTypedHandler as TypedHandler<
         SV,
@@ -436,7 +436,8 @@ export abstract class ForklaunchExpressLikeRouter<
         ResHeaders,
         LocalsObj
       >;
-      return this.#registerRoute<
+
+      const x = this.#registerRoute<
         ContractMethod,
         Path,
         P,
@@ -489,9 +490,19 @@ export abstract class ForklaunchExpressLikeRouter<
       this.#parseAndRunControllerFunction(controllerFunction) as RouterFunction
     );
 
-    return {
-      [method]: this.#localParamRequest(functions, controllerFunction)
-    };
+    return this.#localParamRequest(
+      functions,
+      controllerFunction
+    ) as LiveTypeFunction<
+      SV,
+      `${BasePath}${Path}`,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders
+    >;
   }
 
   /**
@@ -549,35 +560,28 @@ export abstract class ForklaunchExpressLikeRouter<
       LocalsObj
     >[]
   ) {
-    // const controllerFunction = this.#extractControllerFunction(functions);
+    return {
+      get: this.#registerRoute<
+        'get',
+        Path,
+        P,
+        ResBodyMap,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders,
+        ResHeaders,
+        LocalsObj
+      >(
+        'get',
+        path,
+        this.internal.get,
+        contractDetailsOrTypedHandler,
+        ...functions
+      )
+    };
 
-    // this.routes.push({
-    //   basePath: this.basePath,
-    //   path,
-    //   method: 'get',
-    //   contractDetails
-    // });
-
-    // this.internal.get(
-    //   path,
-    //   ...(this.#resolveMiddlewares<
-    //     SV,
-    //     P,
-    //     ResBodyMap,
-    //     ReqBody,
-    //     ReqQuery,
-    //     ReqHeaders,
-    //     ResHeaders,
-    //     LocalsObj
-    //   >(contractDetails).concat(functions) as RouterFunction[]),
-    //   this.#parseAndRunControllerFunction(controllerFunction) as RouterFunction
-    // );
-
-    // return {
-    //   get: this.#localParamRequest(
-    //     functions,
-    //     controllerFunction
-    //   ) as LiveTypeFunction<
+    // as {
+    //   get: LiveTypeFunction<
     //     SV,
     //     `${BasePath}${Path}`,
     //     P,
@@ -586,37 +590,8 @@ export abstract class ForklaunchExpressLikeRouter<
     //     ReqQuery,
     //     ReqHeaders,
     //     ResHeaders
-    //   >
+    //   >;
     // };
-
-    return this.#registerRoute<
-      'get',
-      Path,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders,
-      LocalsObj
-    >(
-      'get',
-      path,
-      this.internal.get,
-      contractDetailsOrTypedHandler,
-      ...functions
-    ) as {
-      get: LiveTypeFunction<
-        SV,
-        `${BasePath}${Path}`,
-        P,
-        ResBodyMap,
-        ReqBody,
-        ReqQuery,
-        ReqHeaders,
-        ResHeaders
-      >;
-    };
   }
 
   /**
@@ -675,73 +650,24 @@ export abstract class ForklaunchExpressLikeRouter<
       LocalsObj
     >[]
   ) {
-    // const controllerFunction = this.#extractControllerFunction(functions);
-
-    // this.routes.push({
-    //   basePath: this.basePath,
-    //   path,
-    //   method: 'post',
-    //   contractDetails
-    // });
-
-    // this.internal.post(
-    //   path,
-    //   ...(this.#resolveMiddlewares<
-    //     SV,
-    //     P,
-    //     ResBodyMap,
-    //     ReqBody,
-    //     ReqQuery,
-    //     ReqHeaders,
-    //     ResHeaders,
-    //     LocalsObj
-    //   >(contractDetails).concat(functions) as RouterFunction[]),
-    //   this.#parseAndRunControllerFunction(controllerFunction) as RouterFunction
-    // );
-
-    // return {
-    //   post: this.#localParamRequest(
-    //     functions,
-    //     controllerFunction
-    //   ) as LiveTypeFunction<
-    //     SV,
-    //     `${BasePath}${Path}`,
-    //     P,
-    //     ResBodyMap,
-    //     ReqBody,
-    //     ReqQuery,
-    //     ReqHeaders,
-    //     ResHeaders
-    //   >
-    // };
-
-    return this.#registerRoute<
-      'post',
-      Path,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders,
-      LocalsObj
-    >(
-      'post',
-      path,
-      this.internal.post,
-      contractDetailsOrTypedHandler,
-      ...functions
-    ) as {
-      post: LiveTypeFunction<
-        SV,
-        `${BasePath}${Path}`,
+    return {
+      post: this.#registerRoute<
+        'post',
+        Path,
         P,
         ResBodyMap,
         ReqBody,
         ReqQuery,
         ReqHeaders,
-        ResHeaders
-      >;
+        ResHeaders,
+        LocalsObj
+      >(
+        'post',
+        path,
+        this.internal.post,
+        contractDetailsOrTypedHandler,
+        ...functions
+      )
     };
   }
 
@@ -801,73 +727,24 @@ export abstract class ForklaunchExpressLikeRouter<
       LocalsObj
     >[]
   ) {
-    // const controllerFunction = this.#extractControllerFunction(functions);
-
-    // this.routes.push({
-    //   basePath: this.basePath,
-    //   path,
-    //   method: 'put',
-    //   contractDetails
-    // });
-
-    // this.internal.put(
-    //   path,
-    //   ...(this.#resolveMiddlewares<
-    //     SV,
-    //     P,
-    //     ResBodyMap,
-    //     ReqBody,
-    //     ReqQuery,
-    //     ReqHeaders,
-    //     ResHeaders,
-    //     LocalsObj
-    //   >(contractDetails).concat(functions) as RouterFunction[]),
-    //   this.#parseAndRunControllerFunction(controllerFunction) as RouterFunction
-    // );
-
-    // return {
-    //   put: this.#localParamRequest(
-    //     functions,
-    //     controllerFunction
-    //   ) as LiveTypeFunction<
-    //     SV,
-    //     `${BasePath}${Path}`,
-    //     P,
-    //     ResBodyMap,
-    //     ReqBody,
-    //     ReqQuery,
-    //     ReqHeaders,
-    //     ResHeaders
-    //   >
-    // };
-
-    return this.#registerRoute<
-      'put',
-      Path,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders,
-      LocalsObj
-    >(
-      'put',
-      path,
-      this.internal.put,
-      contractDetailsOrTypedHandler,
-      ...functions
-    ) as {
-      put: LiveTypeFunction<
-        SV,
-        `${BasePath}${Path}`,
+    return {
+      put: this.#registerRoute<
+        'put',
+        Path,
         P,
         ResBodyMap,
         ReqBody,
         ReqQuery,
         ReqHeaders,
-        ResHeaders
-      >;
+        ResHeaders,
+        LocalsObj
+      >(
+        'put',
+        path,
+        this.internal.put,
+        contractDetailsOrTypedHandler,
+        ...functions
+      )
     };
   }
 
@@ -927,73 +804,24 @@ export abstract class ForklaunchExpressLikeRouter<
       LocalsObj
     >[]
   ) {
-    // const controllerFunction = this.#extractControllerFunction(functions);
-
-    // this.routes.push({
-    //   basePath: this.basePath,
-    //   path,
-    //   method: 'patch',
-    //   contractDetails
-    // });
-
-    // this.internal.patch(
-    //   path,
-    //   ...(this.#resolveMiddlewares<
-    //     SV,
-    //     P,
-    //     ResBodyMap,
-    //     ReqBody,
-    //     ReqQuery,
-    //     ReqHeaders,
-    //     ResHeaders,
-    //     LocalsObj
-    //   >(contractDetails).concat(functions) as RouterFunction[]),
-    //   this.#parseAndRunControllerFunction(controllerFunction) as RouterFunction
-    // );
-
-    // return {
-    //   patch: this.#localParamRequest(
-    //     functions,
-    //     controllerFunction
-    //   ) as LiveTypeFunction<
-    //     SV,
-    //     `${BasePath}${Path}`,
-    //     P,
-    //     ResBodyMap,
-    //     ReqBody,
-    //     ReqQuery,
-    //     ReqHeaders,
-    //     ResHeaders
-    //   >
-    // };
-
-    return this.#registerRoute<
-      'patch',
-      Path,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders,
-      LocalsObj
-    >(
-      'patch',
-      path,
-      this.internal.patch,
-      contractDetailsOrTypedHandler,
-      ...functions
-    ) as {
-      patch: LiveTypeFunction<
-        SV,
-        `${BasePath}${Path}`,
+    return {
+      patch: this.#registerRoute<
+        'patch',
+        Path,
         P,
         ResBodyMap,
         ReqBody,
         ReqQuery,
         ReqHeaders,
-        ResHeaders
-      >;
+        ResHeaders,
+        LocalsObj
+      >(
+        'patch',
+        path,
+        this.internal.patch,
+        contractDetailsOrTypedHandler,
+        ...functions
+      )
     };
   }
 
@@ -1051,123 +879,25 @@ export abstract class ForklaunchExpressLikeRouter<
       ResHeaders,
       LocalsObj
     >[]
-  ): {
-    delete: LiveTypeFunction<
-      SV,
-      `${BasePath}${Path}`,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders
-    >;
-  } {
-    // if (contractDetailsOrTypedHandler instanceof TypedHandler) {
-    //   const typedHandler = contractDetailsOrTypedHandler as TypedHandler<
-    //     SV,
-    //     'delete',
-    //     P,
-    //     ResBodyMap,
-    //     ReqBody,
-    //     ReqQuery,
-    //     ReqHeaders,
-    //     ResHeaders,
-    //     LocalsObj
-    //   >;
-    //   return this.delete<
-    //     Path,
-    //     P,
-    //     ResBodyMap,
-    //     ReqBody,
-    //     ReqQuery,
-    //     ReqHeaders,
-    //     ResHeaders,
-    //     LocalsObj
-    //   >(
-    //     path,
-    //     typedHandler.contractDetails,
-    //     ...typedHandler.functions.concat(functions)
-    //   );
-    // }
-
-    // const contractDetails =
-    //   contractDetailsOrTypedHandler as PathParamHttpContractDetails<
-    //     SV,
-    //     P,
-    //     ResBodyMap,
-    //     ReqQuery,
-    //     ReqHeaders,
-    //     ResHeaders
-    //   >;
-
-    // const controllerFunction = this.#extractControllerFunction(functions);
-
-    // this.routes.push({
-    //   basePath: this.basePath,
-    //   path,
-    //   method: 'delete',
-    //   contractDetails
-    // });
-
-    // this.internal.delete(
-    //   path,
-    //   ...(this.#resolveMiddlewares<
-    //     SV,
-    //     P,
-    //     ResBodyMap,
-    //     ReqBody,
-    //     ReqQuery,
-    //     ReqHeaders,
-    //     ResHeaders,
-    //     LocalsObj
-    //   >(contractDetails).concat(functions) as RouterFunction[]),
-    //   this.#parseAndRunControllerFunction(controllerFunction) as RouterFunction
-    // );
-
-    // return {
-    //   delete: this.#localParamRequest(
-    //     functions,
-    //     controllerFunction
-    //   ) as LiveTypeFunction<
-    //     SV,
-    //     `${BasePath}${Path}`,
-    //     P,
-    //     ResBodyMap,
-    //     ReqBody,
-    //     ReqQuery,
-    //     ReqHeaders,
-    //     ResHeaders
-    //   >
-    // };
-
-    return this.#registerRoute<
-      'delete',
-      Path,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders,
-      LocalsObj
-    >(
-      'delete',
-      path,
-      this.internal.delete,
-      contractDetailsOrTypedHandler,
-      ...functions
-    ) as {
-      delete: LiveTypeFunction<
-        SV,
-        `${BasePath}${Path}`,
+  ) {
+    return {
+      delete: this.#registerRoute<
+        'delete',
+        Path,
         P,
         ResBodyMap,
         ReqBody,
         ReqQuery,
         ReqHeaders,
-        ResHeaders
-      >;
+        ResHeaders,
+        LocalsObj
+      >(
+        'delete',
+        path,
+        this.internal.delete,
+        contractDetailsOrTypedHandler,
+        ...functions
+      )
     };
   }
 }

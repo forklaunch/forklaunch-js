@@ -47,5 +47,6 @@
     "typescript-eslint": "^7.17.0",
     "uc.micro": "^2.1.0",
     "yaml": "^2.5.0"
-  }
+  },
+  "type": "module"
 }
