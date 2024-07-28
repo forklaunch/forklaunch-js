@@ -1,6 +1,7 @@
 import { AnySchemaValidator } from '@forklaunch/validator';
 import {
   HttpContractDetails,
+  Method,
   PathParamHttpContractDetails
 } from './primitive.types';
 
@@ -27,7 +28,7 @@ export interface ForklaunchRoute<SV extends AnySchemaValidator> {
   /** The path for the route, which can be a string, RegExp, or an array of strings or RegExps */
   path: string | RegExp | (string | RegExp)[];
   /** The HTTP method for the route */
-  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  method: Method;
   /** The contract details for the route */
   contractDetails: PathParamHttpContractDetails<SV> | HttpContractDetails<SV>;
 }

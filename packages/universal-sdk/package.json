@@ -28,5 +28,6 @@
   "bugs": {
     "url": "https://github.com/forklaunch/forklaunch-js/issues"
   },
-  "homepage": "https://github.com/forklaunch/forklaunch-js#readme"
+  "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
+  "type": "module"
 }
