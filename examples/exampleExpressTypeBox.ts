@@ -1,14 +1,14 @@
-import { forklaunchExpress, Application, Router, forklaunchRouter } from "../packages/express/forklaunch.express";
+import { forklaunchExpress, forklaunchRouter } from "../packages/express/forklaunch.express";
 import { TypeboxSchemaValidator, string, number, optional, array } from "../packages/validator/typebox";
 
 // Create a new instance of TypeboxSchemaValidator
 const typeboxSchemaValidator = new TypeboxSchemaValidator();
 
 // Initialize the application using forklaunchExpress with TypeboxSchemaValidator
-const forklaunchApp: Application<TypeboxSchemaValidator> = forklaunchExpress(typeboxSchemaValidator);
+const forklaunchApp = forklaunchExpress(typeboxSchemaValidator);
 
 // Create a router instance
-const router: Router<TypeboxSchemaValidator> = forklaunchRouter('/api/books', typeboxSchemaValidator);
+const router = forklaunchRouter('/api/books', typeboxSchemaValidator);
 
 // Define TypeBox schemas
 const BookSchema = {
