@@ -1,16 +1,14 @@
 import { Prettify } from '@forklaunch/common';
-import { AnySchemaValidator, Schema } from '@forklaunch/validator';
-import { IdiomaticSchema, SchemaValidator } from '@forklaunch/validator/types';
+import { AnySchemaValidator } from '@forklaunch/validator';
+import { SchemaValidator } from '@forklaunch/validator/types';
 import { ParsedQs } from 'qs';
 import {
   Body,
   HeadersObject,
   HttpContractDetails,
-  HttpMethod,
-  Method,
+  MapSchema,
   ParamsDictionary,
   ParamsObject,
-  PathParameterMethod,
   PathParamHttpContractDetails,
   QueryObject,
   ResponsesObject
@@ -159,17 +157,6 @@ export interface ForklaunchResponse<
   /** Local variables */
   locals: LocalsObj;
 }
-
-/**
- * Type representing a mapped schema.
- *
- * @template SV - A type that extends AnySchemaValidator.
- * @template T - A type that extends IdiomaticSchema or a valid schema object.
- */
-export type MapSchema<
-  SV extends AnySchemaValidator,
-  T extends IdiomaticSchema<SV> | SV['_ValidSchemaObject']
-> = Schema<T, SV> extends infer U ? (T extends U ? unknown : U) : never;
 
 /**
  * Type representing the next function in a middleware.
@@ -354,36 +341,3 @@ export type ForklaunchResErrors<
  * Represents the default header types for responses.
  */
 export type ForklaunchResHeaders = { 'x-correlation-id': string };
-
-/**
- * Utility for different Contract Detail types
- */
-export type ContractDetails<
-  ContractMethod extends Method,
-  SV extends AnySchemaValidator,
-  ParamsSchema extends ParamsObject<SV>,
-  ResponseSchemas extends ResponsesObject<SV>,
-  BodySchema extends Body<SV>,
-  QuerySchema extends QueryObject<SV>,
-  ReqHeaders extends HeadersObject<SV>,
-  ResHeaders extends HeadersObject<SV>
-> = ContractMethod extends PathParameterMethod
-  ? PathParamHttpContractDetails<
-      SV,
-      ParamsSchema,
-      ResponseSchemas,
-      QuerySchema,
-      ReqHeaders,
-      ResHeaders
-    >
-  : ContractMethod extends HttpMethod
-    ? HttpContractDetails<
-        SV,
-        ParamsSchema,
-        ResponseSchemas,
-        BodySchema,
-        QuerySchema,
-        ReqHeaders,
-        ResHeaders
-      >
-    : never;

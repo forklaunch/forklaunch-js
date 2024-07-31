@@ -15,10 +15,16 @@ export const forklaunchRouterInstance = forklaunchRouter(
 
 export const dsd = {
   x: forklaunchRouterInstance.get(
-    '/test',
+    '/test/:hell/:bell',
     {
       name: 'Test',
       summary: 'Test Summary',
+      params: {
+        hell: number
+      },
+      query: {
+        hell: number
+      },
       responses: {
         200: {
           one: string,
@@ -36,6 +42,7 @@ export const dsd = {
       }
     },
     (req, res) => {
+      console.log(req.query.hell * 7);
       res.status(200).json({
         one: 'Hello',
         two: 'World',
@@ -146,7 +153,7 @@ export const dsd2 = {
 //   >
 //     ? true
 //     : false;
-console.log(forklaunchApplication);
+// console.log(forklaunchApplication);
 forklaunchApplication.use(forklaunchRouterInstance);
 forklaunchApplication.use(forklaunchRouterInstance2);
 
@@ -162,10 +169,83 @@ type ik = typeof x;
 
 async function test() {
   console.log(
-    await dsd.x.get('/testpath/test', { headers: { 'x-test-req': 'test' } })
+    await dsd.x.get('/testpath/test/:hell', {
+      params: { hell: 1 },
+      query: { hell: 1 },
+      headers: { 'x-test-req': 'test' }
+    })
   );
 }
 
-test().then(() => console.log('done'));
+test().then(() => {
+  console.log('done');
+
+  console.log(
+    // @ts-expect-error
+    forklaunchApplication.internal.routes['get']['/testpath/test/:hell']
+  );
+  // @ts-expect-error
+  forklaunchApplication.internal.routes['get'][
+    '/testpath/test/:hell'
+    // @ts-expect-error
+  ].options.middlewares.forEach((middleware) => console.log(middleware));
+});
 
 export type i = typeof dsd;
+
+// import HyperExpress from '@forklaunch/hyper-express-fork';
+
+// const webserver = new HyperExpress.Server();
+// const router = new HyperExpress.Router();
+
+// const mw1 = (request: any, response: any, next: () => void) => {
+//   console.log('basaa');
+//   next();
+// };
+
+// // Create GET route to serve 'Hello World'
+// router.get(
+//   '/',
+//   (request, response, next) => {
+//     console.log('asaa');
+//     next();
+//   },
+//   mw1,
+//   (request, response) => {
+//     response.send('Hello World');
+//   }
+// );
+
+// router.post(
+//   '/',
+//   (request: any, response: any, next: () => void) => {
+//     console.log('asaa');
+//     next();
+//   },
+//   mw1,
+//   (request: any, response: { send: (arg0: string) => void }) => {
+//     response.send('Hello World');
+//   }
+// );
+
+// router.put(
+//   '/',
+//   (request, response, next) => {
+//     console.log('asaa');
+//     next();
+//   },
+//   (request, response) => {
+//     response.send('Hello World');
+//   }
+// );
+
+// webserver.use('/test', router);
+
+// //@ts-expect-error
+// webserver.routes['get']['/test'].options.middlewares.forEach((middleware) =>
+//   console.log(middleware)
+// );
+
+// webserver.listen(6934, () => {
+//   console.log('Server started');
+// });
