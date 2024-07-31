@@ -85,6 +85,7 @@ export function createRequestContext<
  */
 export function enrichRequestDetails<
   SV extends AnySchemaValidator,
+  Path extends `/${string}`,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
   ReqBody extends Body<SV>,
@@ -96,13 +97,22 @@ export function enrichRequestDetails<
   contractDetails:
     | PathParamHttpContractDetails<
         SV,
+        Path,
         P,
         ResBodyMap,
         ReqQuery,
         ReqHeaders,
         ResHeaders
       >
-    | HttpContractDetails<SV, P, ResBodyMap, ReqQuery, ReqHeaders, ResHeaders>
+    | HttpContractDetails<
+        SV,
+        Path,
+        P,
+        ResBodyMap,
+        ReqQuery,
+        ReqHeaders,
+        ResHeaders
+      >
 ): ForklaunchSchemaMiddlewareHandler<
   SV,
   P,
@@ -178,6 +188,7 @@ export function parseRequestParams<
       next(new Error('Invalid request parameters.'));
     }
   }
+  // req.params = req.params;
   if (next) {
     next();
   }

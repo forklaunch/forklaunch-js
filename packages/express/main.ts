@@ -15,16 +15,23 @@ export const forklaunchRouterInstance = forklaunchRouter(
 
 export const dsd = {
   x: forklaunchRouterInstance.get(
-    '/test',
+    '/test/:four/:five',
     {
       name: 'Test',
       summary: 'Test Summary',
+      params: {
+        four: number,
+        five: number
+      },
       responses: {
         200: {
           one: string,
           two: string,
           three: number,
-          four: string
+          four: string,
+          k: {
+            j: string
+          }
         },
         500: string
       },
@@ -40,7 +47,10 @@ export const dsd = {
         one: 'Hello',
         two: 'World',
         three: 3,
-        four: '221'
+        four: '221',
+        k: {
+          j: 'asdafasdf'
+        }
       });
     }
   ),
@@ -146,7 +156,6 @@ export const dsd2 = {
 //   >
 //     ? true
 //     : false;
-console.log(forklaunchApplication);
 forklaunchApplication.use(forklaunchRouterInstance);
 forklaunchApplication.use(forklaunchRouterInstance2);
 
@@ -158,7 +167,7 @@ const x = {};
 
 (x as typeof x & { i: 'a' }).i = 'a';
 
-type ik = typeof x;
+// type ik = typeof x;
 
 async function test() {
   console.log(

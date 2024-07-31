@@ -58,6 +58,7 @@ export abstract class ForklaunchExpressLikeRouter<
    */
   #resolveMiddlewares<
     SV extends AnySchemaValidator,
+    Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
     ReqBody extends Body<SV>,
@@ -69,13 +70,22 @@ export abstract class ForklaunchExpressLikeRouter<
     contractDetails:
       | PathParamHttpContractDetails<
           SV,
+          Path,
           P,
           ResBodyMap,
           ReqQuery,
           ReqHeaders,
           ResHeaders
         >
-      | HttpContractDetails<SV, P, ResBodyMap, ReqQuery, ReqHeaders, ResHeaders>
+      | HttpContractDetails<
+          SV,
+          Path,
+          P,
+          ResBodyMap,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders
+        >
   ): ForklaunchSchemaMiddlewareHandler<
     SV,
     P,
@@ -98,6 +108,7 @@ export abstract class ForklaunchExpressLikeRouter<
     >[] = [
       enrichRequestDetails<
         SV,
+        Path,
         P,
         ResBodyMap,
         ReqBody,
@@ -393,8 +404,9 @@ export abstract class ForklaunchExpressLikeRouter<
     >],
     contractDetailsOrTypedHandler:
       | ContractDetails<
-          ContractMethod,
           SV,
+          ContractMethod,
+          Path,
           P,
           ResBodyMap,
           ReqBody,
@@ -405,6 +417,7 @@ export abstract class ForklaunchExpressLikeRouter<
       | TypedHandler<
           SV,
           ContractMethod,
+          Path,
           P,
           ResBodyMap,
           ReqBody,
@@ -423,11 +436,21 @@ export abstract class ForklaunchExpressLikeRouter<
       ResHeaders,
       LocalsObj
     >[]
-  ) {
+  ): LiveTypeFunction<
+    SV,
+    `${BasePath}${Path}`,
+    P,
+    ResBodyMap,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    ResHeaders
+  > {
     if (contractDetailsOrTypedHandler instanceof TypedHandler) {
       const typedHandler = contractDetailsOrTypedHandler as TypedHandler<
         SV,
         ContractMethod,
+        Path,
         P,
         ResBodyMap,
         ReqBody,
@@ -437,7 +460,7 @@ export abstract class ForklaunchExpressLikeRouter<
         LocalsObj
       >;
 
-      const x = this.#registerRoute<
+      return this.#registerRoute<
         ContractMethod,
         Path,
         P,
@@ -453,12 +476,22 @@ export abstract class ForklaunchExpressLikeRouter<
         registrationFunction,
         typedHandler.contractDetails,
         ...typedHandler.functions.concat(functions)
-      );
+      ) as unknown as LiveTypeFunction<
+        SV,
+        `${BasePath}${Path}`,
+        P,
+        ResBodyMap,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders,
+        ResHeaders
+      >;
     }
 
     const contractDetails =
       contractDetailsOrTypedHandler as PathParamHttpContractDetails<
         SV,
+        Path,
         P,
         ResBodyMap,
         ReqQuery,
@@ -475,10 +508,11 @@ export abstract class ForklaunchExpressLikeRouter<
       contractDetails
     });
 
-    registrationFunction(
+    registrationFunction.bind(this.internal)(
       path,
       ...(this.#resolveMiddlewares<
         SV,
+        Path,
         P,
         ResBodyMap,
         ReqBody,
@@ -532,6 +566,7 @@ export abstract class ForklaunchExpressLikeRouter<
     contractDetailsOrTypedHandler:
       | PathParamHttpContractDetails<
           SV,
+          Path,
           P,
           ResBodyMap,
           ReqQuery,
@@ -541,6 +576,7 @@ export abstract class ForklaunchExpressLikeRouter<
       | TypedHandler<
           SV,
           'get',
+          Path,
           P,
           ResBodyMap,
           ReqBody,
@@ -579,19 +615,6 @@ export abstract class ForklaunchExpressLikeRouter<
         ...functions
       )
     };
-
-    // as {
-    //   get: LiveTypeFunction<
-    //     SV,
-    //     `${BasePath}${Path}`,
-    //     P,
-    //     ResBodyMap,
-    //     ReqBody,
-    //     ReqQuery,
-    //     ReqHeaders,
-    //     ResHeaders
-    //   >;
-    // };
   }
 
   /**
@@ -621,6 +644,7 @@ export abstract class ForklaunchExpressLikeRouter<
     contractDetailsOrTypedHandler:
       | HttpContractDetails<
           SV,
+          Path,
           P,
           ResBodyMap,
           ReqBody,
@@ -631,6 +655,7 @@ export abstract class ForklaunchExpressLikeRouter<
       | TypedHandler<
           SV,
           'post',
+          Path,
           P,
           ResBodyMap,
           ReqBody,
@@ -698,6 +723,7 @@ export abstract class ForklaunchExpressLikeRouter<
     contractDetailsOrTypedHandler:
       | HttpContractDetails<
           SV,
+          Path,
           P,
           ResBodyMap,
           ReqBody,
@@ -708,6 +734,7 @@ export abstract class ForklaunchExpressLikeRouter<
       | TypedHandler<
           SV,
           'put',
+          Path,
           P,
           ResBodyMap,
           ReqBody,
@@ -775,6 +802,7 @@ export abstract class ForklaunchExpressLikeRouter<
     contractDetailsOrTypedHandler:
       | HttpContractDetails<
           SV,
+          Path,
           P,
           ResBodyMap,
           ReqBody,
@@ -785,6 +813,7 @@ export abstract class ForklaunchExpressLikeRouter<
       | TypedHandler<
           SV,
           'patch',
+          Path,
           P,
           ResBodyMap,
           ReqBody,
@@ -852,6 +881,7 @@ export abstract class ForklaunchExpressLikeRouter<
     contractDetailsOrTypedHandler:
       | PathParamHttpContractDetails<
           SV,
+          Path,
           P,
           ResBodyMap,
           ReqQuery,
@@ -861,6 +891,7 @@ export abstract class ForklaunchExpressLikeRouter<
       | TypedHandler<
           SV,
           'delete',
+          Path,
           P,
           ResBodyMap,
           ReqBody,
@@ -905,6 +936,7 @@ export abstract class ForklaunchExpressLikeRouter<
 class TypedHandler<
   SV extends AnySchemaValidator,
   ContractMethod extends Method,
+  Path extends `/${string}`,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
   ReqBody extends Body<SV>,
@@ -915,8 +947,9 @@ class TypedHandler<
 > {
   constructor(
     public contractDetails: ContractDetails<
-      ContractMethod,
       SV,
+      ContractMethod,
+      Path,
       P,
       ResBodyMap,
       ReqBody,
@@ -945,8 +978,9 @@ class TypedHandler<
  * @template functions - The handler middlware and function.
  */
 export function typedHandler<
-  ContractMethod extends Method,
   SV extends AnySchemaValidator,
+  ContractMethod extends Method,
+  Path extends `/${string}`,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
   ReqBody extends Body<SV>,
@@ -958,8 +992,9 @@ export function typedHandler<
   _schemaValidator: SV,
   _method: ContractMethod,
   contractDetails: ContractDetails<
-    ContractMethod,
     SV,
+    ContractMethod,
+    Path,
     P,
     ResBodyMap,
     ReqBody,
@@ -980,7 +1015,8 @@ export function typedHandler<
 ) {
   return new TypedHandler<
     SV,
-    Method,
+    ContractMethod,
+    Path,
     P,
     ResBodyMap,
     ReqBody,
