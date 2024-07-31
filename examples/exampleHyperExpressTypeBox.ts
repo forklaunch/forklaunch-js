@@ -25,9 +25,7 @@ const BookSchema = {
   year: number
 };
 
-const BooksSchema = {
-  items: array(BookSchema)
-};
+const BooksSchema = array(BookSchema);
 
 // Dummy data for books
 const books = [
@@ -57,7 +55,6 @@ router.get(
   },
   (req, res) => {
     try {
-      // HINT: TAKE A LOOK AT HOW YOU'VE DEFINED BOOKS SCHEMA
       res.status(200).json(books);
     } catch (error) {
       console.error(error);
@@ -81,13 +78,13 @@ router.post(
   (req, res) => {
     const { title, author, year } = req.body;
     if (!title || !author || !year) {
-      res.status(400).json({ error: 'Missing required book fields.' } as any);
+      res.status(400).json({ error: 'Missing required book fields.' });
       return;
     }
     const booksId = books.length + 1;
     const createdBook = { id: booksId, title, author, year };
     books.push(createdBook);
-    const validatedBook = BookSchema.parse(createdBook);
+    const validatedBook = createdBook;
     res.status(200).json(validatedBook);
   }
 );
@@ -98,9 +95,9 @@ router.put(
   {
     name: 'UpdateBook',
     summary: 'Updates an existing book',
-    params: schemify({
+    params: {
       id: number
-    }),
+    },
     body: BookSchema,
     responses: {
       200: BookSchema,
@@ -108,15 +105,14 @@ router.put(
     }
   },
   (req, res) => {
-    const id = parseInt(req.params.id);
+    const id = req.params.id;
     const index = books.findIndex((book) => book.id === id);
     if (index !== -1) {
       books[index] = { ...books[index], ...req.body };
-      // HINT, FORKLAUNCH DOES THIS FOR YOU
-      const validatedBook = BookSchema.parse(books[index]);
+      const validatedBook = books[index];
       res.status(200).json(validatedBook);
     } else {
-      res.status(404).json({ error: 'Book not found' } as any);
+      res.status(404).json({ error: 'Book not found' });
     }
   }
 );
@@ -127,22 +123,22 @@ router.delete(
   {
     name: 'DeleteBook',
     summary: 'Deletes an existing book',
-    params: schemify({
+    params: {
       id: number
-    }),
+    },
     responses: {
       200: { message: string },
       404: { error: string }
     }
   },
   (req, res) => {
-    const id = parseInt(req.params.id);
+    const id = req.params.id;
     const index = books.findIndex((book) => book.id === id);
     if (index !== -1) {
       books.splice(index, 1);
-      res.status(200).json({ message: 'Book deleted successfully' } as any);
+      res.status(200).json({ message: 'Book deleted successfully' });
     } else {
-      res.status(404).json({ error: 'Book not found' } as any);
+      res.status(404).json({ error: 'Book not found' });
     }
   }
 );

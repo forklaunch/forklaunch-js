@@ -140,6 +140,6 @@ router.delete(
 forklaunchApp.use(router);
 
 // Start the server on port 3000
-forklaunchApp.listen(3000, () => {
-  console.log('🔥Server running on http://localhost:3000 🔥');
+forklaunchApp.listen(3001, () => {
+  console.log('🔥Server running on http://localhost:3001 🔥');
 });
