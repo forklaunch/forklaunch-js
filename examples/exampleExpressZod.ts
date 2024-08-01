@@ -23,7 +23,6 @@ const BookSchema = {
   year: number
 };
 
-// HINT: THE FOLLOWING LINE IS PROBABLY SCREWING WITH THINGS
 const BooksSchema = array(BookSchema);
 
 // Dummy data for books
@@ -140,6 +139,6 @@ router.delete(
 forklaunchApp.use(router);
 
 // Start the server on port 3000
-forklaunchApp.listen(3001, () => {
-  console.log('🔥Server running on http://localhost:3001 🔥');
+forklaunchApp.listen(3000, () => {
+  console.log('🔥Server running on http://localhost:3000 🔥');
 });

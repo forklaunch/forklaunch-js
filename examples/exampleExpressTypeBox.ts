@@ -99,9 +99,8 @@ router.put(
     }
   },
   (req, res) => {
-    // HINT: The id is a number
-    // const id = parseInt(req.params.id);
-    const index = books.findIndex((book) => book.id === req.params.id);
+    const id = req.params.id;
+    const index = books.findIndex((book) => book.id === id);
     if (index !== -1) {
       books[index] = { ...books[index], ...req.body };
       res.status(200).json(books[index]);
@@ -126,9 +125,8 @@ router.delete(
     }
   },
   (req, res) => {
-    // HINT: The id is a number
-    // const id = parseInt(req.params.id);
-    const index = books.findIndex((book) => book.id === req.params.id);
+    const id = req.params.id;
+    const index = books.findIndex((book) => book.id === id);
     if (index !== -1) {
       books.splice(index, 1);
       res.status(200).send('Book deleted successfully');
