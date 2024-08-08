@@ -1,2 +1,2 @@
-export * from './types/flatten.types';
-export * from './types/prettify.types';
+export * from './guards';
+export * from './types';

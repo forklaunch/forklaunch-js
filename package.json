@@ -5,11 +5,14 @@
   "devDependencies": {
     "@types/jest": "^29.5.12",
     "jest": "^29.7.0",
-    "ts-jest": "^29.2.3",
-    "tsx": "^4.16.2",
+    "ts-jest": "^29.2.4",
+    "tsx": "^4.16.5",
     "typescript": "^5.5.4"
   },
-  "workspaces": ["packages/*", "iam"],
+  "workspaces": [
+    "packages/*",
+    "iam"
+  ],
   "scripts": {
     "build": "pnpm -r run build",
     "clean": "rm -rf node_modules pnpm-lock.yaml && pnpm -r clean && pnpm store prune",
@@ -18,7 +21,8 @@
     "lint": "pnpm -r run lint",
     "lint:fix": "pnpm -r run lint:fix",
     "format": "pnpm -r run format",
-    "test": "jest"
+    "test": "pnpm -r test",
+    "up": "pnpm -r up"
   },
   "keywords": [],
   "author": "",

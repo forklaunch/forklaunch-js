@@ -103,29 +103,6 @@ function contentResolver<SV extends AnySchemaValidator>(
 }
 
 /**
- * Maps a method to a Swagger method type.
- *
- * @param {string} method - The method to map.
- * @returns {string} - The mapped method.
- */
-function mapMethodType(method: string) {
-  switch (method) {
-    case 'GET':
-      return 'get';
-    case 'POST':
-      return 'post';
-    case 'PUT':
-      return 'put';
-    case 'DELETE':
-      return 'delete';
-    case 'PATCH':
-      return 'patch';
-    default:
-      return 'get';
-  }
-}
-
-/**
  * Generates a Swagger document from given routers.
  *
  * @template SV - A type that extends AnySchemaValidator.
@@ -234,7 +211,7 @@ export function generateSwaggerDocument<SV extends AnySchemaValidator>(
         }
       }
 
-      paths[fullPath][mapMethodType(route.method)] = pathItemObject;
+      paths[fullPath][route.method] = pathItemObject;
     });
   });
 

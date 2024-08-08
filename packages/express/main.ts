@@ -15,13 +15,14 @@ export const forklaunchRouterInstance = forklaunchRouter(
 
 export const dsd = {
   x: forklaunchRouterInstance.get(
-    '/test/:four/:five',
+    '/test/:four/:five/:other',
     {
       name: 'Test',
       summary: 'Test Summary',
       params: {
         four: number,
-        five: number
+        five: number,
+        other: string
       },
       responses: {
         200: {
@@ -46,7 +47,7 @@ export const dsd = {
       res.status(200).json({
         one: 'Hello',
         two: 'World',
-        three: 3,
+        three: 1,
         four: '221',
         k: {
           j: 'asdafasdf'
@@ -171,7 +172,10 @@ const x = {};
 
 async function test() {
   console.log(
-    await dsd.x.get('/testpath/test', { headers: { 'x-test-req': 'test' } })
+    await dsd.x.get('/testpath/test/:four/:five/:other', {
+      headers: { 'x-test-req': 'test' },
+      params: { four: 1, five: 2, other: 'test' }
+    })
   );
 }
 

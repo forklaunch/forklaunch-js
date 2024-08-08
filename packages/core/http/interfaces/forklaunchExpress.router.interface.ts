@@ -45,6 +45,7 @@ export abstract class ForklaunchExpressLikeRouter<
 
   constructor(
     basePath: BasePath,
+    private schemaValidator: SV,
     readonly internal: Internal
   ) {
     this.basePath = basePath;
@@ -57,7 +58,6 @@ export abstract class ForklaunchExpressLikeRouter<
    * @returns {MiddlewareHandler<SV>[]} - The resolved middlewares.
    */
   #resolveMiddlewares<
-    SV extends AnySchemaValidator,
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -116,7 +116,7 @@ export abstract class ForklaunchExpressLikeRouter<
         ReqHeaders,
         ResHeaders,
         LocalsObj
-      >(contractDetails)
+      >(this.schemaValidator, contractDetails)
     ];
     if (contractDetails.params) {
       middlewares.push(parseRequestParams);
@@ -150,7 +150,6 @@ export abstract class ForklaunchExpressLikeRouter<
    * @returns {ExpressMiddlewareHandler} - The Express request handler.
    */
   #parseAndRunControllerFunction<
-    SV extends AnySchemaValidator,
     P extends ParamsDictionary,
     ResBodyMap extends Record<number, unknown>,
     ReqBody extends Record<string, unknown>,
@@ -212,7 +211,6 @@ export abstract class ForklaunchExpressLikeRouter<
    * @throws {Error} - Throws an error if the last argument is not a function.
    */
   #extractControllerFunction<
-    SV extends AnySchemaValidator,
     P extends ParamsDictionary,
     ResBodyMap extends Record<number, unknown>,
     ReqBody extends Record<string, unknown>,
@@ -511,7 +509,6 @@ export abstract class ForklaunchExpressLikeRouter<
     registrationFunction.bind(this.internal)(
       path,
       ...(this.#resolveMiddlewares<
-        SV,
         Path,
         P,
         ResBodyMap,

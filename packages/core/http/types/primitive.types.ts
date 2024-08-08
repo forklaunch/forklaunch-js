@@ -157,8 +157,6 @@ export type PathParamHttpContractDetails<
   summary: string;
   /** Response schemas for the contract */
   responses: ResponseSchemas;
-  // /** Optional parameters for the contract */
-  params?: ParamsSchema;
   /** Optional request headers for the contract */
   requestHeaders?: ReqHeaders;
   /** Optional response headers for the contract */
@@ -174,8 +172,12 @@ export type PathParamHttpContractDetails<
     forbiddenRoles?: Set<string>;
   };
 } & (string | number | symbol extends ExtractedParamsObject<Path>
-  ? unknown
+  ? {
+      /** Optional parameters for the contract */
+      params?: ParamsSchema;
+    }
   : {
+      /** Required parameters for the contract */
       params: ExtractedParamsObject<Path>;
     });
 

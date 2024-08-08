@@ -9,6 +9,7 @@ import { generateSchema } from '@anatine/zod-openapi';
 import { SchemaObject } from 'openapi3-ts/oas31';
 import {
   ZodArray,
+  ZodError,
   ZodLiteral,
   ZodObject,
   ZodOptional,
@@ -17,7 +18,11 @@ import {
   ZodUnion,
   z
 } from 'zod';
-import { LiteralSchema, SchemaValidator } from '../types/schema.types';
+import {
+  LiteralSchema,
+  ParseResult,
+  SchemaValidator
+} from '../types/schema.types';
 import {
   UnionZodResolve,
   ZodCatchall,
@@ -33,12 +38,17 @@ import {
 export class ZodSchemaValidator
   implements
     SchemaValidator<
+      <T extends ZodObject<ZodRawShape>>(schema: T) => ZodResolve<T>,
       <T extends ZodIdiomaticSchema>(schema: T) => ZodResolve<T>,
       <T extends ZodIdiomaticSchema>(schema: T) => ZodOptional<ZodResolve<T>>,
       <T extends ZodIdiomaticSchema>(schema: T) => ZodArray<ZodResolve<T>>,
       <T extends ZodUnionContainer>(schemas: T) => ZodUnion<UnionZodResolve<T>>,
       <T extends LiteralSchema>(value: T) => ZodLiteral<ZodResolve<T>>,
       <T extends ZodCatchall>(schema: T, value: unknown) => boolean,
+      <T extends ZodCatchall>(
+        schema: T,
+        value: unknown
+      ) => ParseResult<ZodResolve<T>>,
       <T extends ZodIdiomaticSchema>(schema: T) => SchemaObject
     >
 {
@@ -48,16 +58,50 @@ export class ZodSchemaValidator
     | ZodObject<ZodRawShape>
     | ZodArray<ZodObject<ZodRawShape>>;
 
-  string = z.string();
-  number = z.number();
-  bigint = z.bigint();
-  boolean = z.boolean();
-  date = z.date();
+  string = z.coerce.string().refine((value) => value !== 'undefined', {
+    message: 'String cannot be undefined'
+  });
+  number = z.coerce.number();
+  bigint = z.coerce.bigint();
+  boolean = z.preprocess((val) => {
+    if (typeof val === 'string') {
+      if (val.toLowerCase() === 'true') return true;
+      if (val.toLowerCase() === 'false') return false;
+    }
+    return val;
+  }, z.boolean());
+  date = z.coerce.date();
   symbol = z.symbol();
   empty = z.union([z.void(), z.null(), z.undefined()]);
   any = z.any();
   unknown = z.unknown();
   never = z.never();
+
+  /**
+   * Pretty print Zod errors.
+   *
+   * @param {ZodError} error - The Zod error to pretty print.
+   * @returns
+   */
+  private prettyPrintZodErrors(error?: ZodError): string | undefined {
+    if (!error) return;
+
+    const errorMessages = error.errors.map((err, index) => {
+      const path = err.path.length > 0 ? err.path.join(' > ') : 'root';
+      return `${index + 1}. Path: ${path}\n   Message: ${err.message}`;
+    });
+    return `Validation failed with the following errors:\n${errorMessages.join('\n\n')}`;
+  }
+
+  /**
+   * Compiles schema if this exists, for optimal performance.
+   *
+   * @param {ZodObject<ZodRawShape>} schema - The schema to compile.
+   * @returns {ZodResolve<T>} - The compiled schema.
+   */
+  compile<T extends ZodObject<ZodRawShape>>(schema: T): ZodResolve<T> {
+    return schema as ZodResolve<T>;
+  }
 
   /**
    * Convert a schema to a Zod schema.
@@ -80,7 +124,7 @@ export class ZodSchemaValidator
     const newSchema: ZodRawShape = {};
     Object.getOwnPropertyNames(schema).forEach((key) => {
       if (schema[key] instanceof ZodType) {
-        newSchema[key] = schema[key] as unknown as ZodType;
+        newSchema[key] = schema[key];
       } else {
         newSchema[key] = this.schemify(schema[key]);
       }
@@ -99,8 +143,9 @@ export class ZodSchemaValidator
   ): ZodOptional<ZodResolve<T>> {
     if (schema instanceof ZodType) {
       return schema.optional() as ZodOptional<ZodResolve<T>>;
+    } else {
+      return this.schemify(schema).optional() as ZodOptional<ZodResolve<T>>;
     }
-    return this.schemify(schema).optional() as ZodOptional<ZodResolve<T>>;
   }
 
   /**
@@ -111,8 +156,9 @@ export class ZodSchemaValidator
   array<T extends ZodIdiomaticSchema>(schema: T): ZodArray<ZodResolve<T>> {
     if (schema instanceof ZodType) {
       return schema.array() as ZodArray<ZodResolve<T>>;
+    } else {
+      return this.schemify(schema).array() as ZodArray<ZodResolve<T>>;
     }
-    return this.schemify(schema).array() as ZodArray<ZodResolve<T>>;
   }
 
   /**
@@ -154,6 +200,25 @@ export class ZodSchemaValidator
    */
   validate<T extends ZodCatchall>(schema: T, value: unknown): boolean {
     return schema.safeParse(value).success;
+  }
+
+  /**
+   * Parses a value to a schema validation.
+   *
+   * @param {ZodCatchall} schema - The schema to validate against.
+   * @param {unknown} value - The value to validate.
+   * @returns {ParseResult} - The discrimintated parsed value if successful, the error if unsuccessful.
+   */
+  parse<T extends ZodCatchall>(
+    schema: T,
+    value: unknown
+  ): ParseResult<ZodResolve<T>> {
+    const result = schema.safeParse(value);
+    return {
+      ok: result.success,
+      value: result.success && result.data,
+      error: this.prettyPrintZodErrors(result.error)
+    };
   }
 
   /**
@@ -259,6 +324,12 @@ export const literal: typeof SchemaValidator.literal =
  */
 export const validate: typeof SchemaValidator.validate =
   SchemaValidator.validate.bind(SchemaValidator);
+
+/**
+ * Parses a value to be conformant to a particular schema.
+ */
+export const parse: typeof SchemaValidator.parse =
+  SchemaValidator.parse.bind(SchemaValidator);
 
 /**
  * Generates an OpenAPI schema object from a valid schema.

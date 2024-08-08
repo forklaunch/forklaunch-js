@@ -13,6 +13,7 @@ import {
   number,
   openapi,
   optional,
+  parse,
   schemify,
   string,
   symbol,
@@ -351,7 +352,62 @@ describe('Zod Equality Tests', () => {
           bar: 42
         }
       })
+    ).toBe(true);
+    expect(
+      validate(schemified, {
+        hello: {
+          world: 55
+        },
+        foo: {}
+      })
     ).toBe(false);
+  });
+
+  test('Parse Schema', () => {
+    const validParse = parse(schemified, {
+      hello: {
+        world: 'world'
+      },
+      foo: {
+        bar: 42
+      }
+    });
+    expect(validParse.ok).toBe(true);
+    expect(validParse.value).toBe({
+      hello: {
+        world: 'world'
+      },
+      foo: {
+        bar: 42
+      }
+    });
+
+    const parsedString = parse(schemified, {
+      hello: {
+        world: 55
+      },
+      foo: {
+        bar: 42
+      }
+    });
+    expect(parsedString.ok).toBe(true);
+    expect(parsedString.value).toBe({
+      hello: {
+        world: '55'
+      },
+      foo: {
+        bar: 42
+      }
+    });
+
+    const failedParse = parse(schemified, {
+      hello: {
+        world: 55
+      },
+      foo: {}
+    });
+    expect(failedParse.ok).toBe(false);
+    expect(failedParse.error).toBe('aaaa');
   });
 
   test('OpenAPI Conversion', async () => {

@@ -1,6 +1,6 @@
 import { SchemaObject } from 'openapi3-ts/oas31';
 import { SchemaValidator } from '../index';
-import { LiteralSchema } from '../types/schema.types';
+import { LiteralSchema, ParseResult } from '../types/schema.types';
 
 declare module '../types/schema.types' {
   interface SchemaResolve<T> {
@@ -25,11 +25,13 @@ export class MockSchemaValidator
   implements
     SchemaValidator<
       <T extends string>(schema: T) => T,
+      <T extends string>(schema: T) => T,
       <T extends string>(schema: T) => `optional ${T}`,
       <T extends string>(schema: T) => `array ${T}`,
       <T extends readonly string[]>(schemas: T) => RecursiveUnion<T>,
       <T extends LiteralSchema>(schema: T) => `literal ${T}`,
       <T extends string>(schema: T, value: string) => boolean,
+      <T extends string>(schema: T, value: string) => ParseResult<T>,
       <T extends string>(schema: T) => SchemaObject
     >
 {
@@ -48,7 +50,10 @@ export class MockSchemaValidator
   unknown = 'unknown';
   never = 'never';
 
-  schemify<T>(schema: T) {
+  compile<T extends string>(schema: T): T {
+    return schema;
+  }
+  schemify<T extends string>(schema: T) {
     return schema;
   }
   optional<T extends string>(schema: T): `optional ${T}` {
@@ -65,6 +70,13 @@ export class MockSchemaValidator
   }
   validate<T extends string>(schema: T, value: string): boolean {
     return schema === value;
+  }
+  parse<T extends string>(schema: T, value: string): ParseResult<T> {
+    return {
+      ok: schema === value,
+      value: schema === value ? schema : undefined,
+      error: schema === value ? undefined : 'Some error'
+    };
   }
   openapi<T extends string>(_schema: T): SchemaObject {
     return {};
@@ -85,7 +97,7 @@ export const never = mockSchemaValidator.never;
 export const schemify = mockSchemaValidator.schemify.bind(mockSchemaValidator);
 export const optional = mockSchemaValidator.optional.bind(mockSchemaValidator);
 export const array = mockSchemaValidator.array.bind(mockSchemaValidator);
-// note, use 'as const' when calling on the input array, for proper type coercion
+// note, use 'as const' when calling on the input array, for proper type parsing
 export const union = mockSchemaValidator.union.bind(mockSchemaValidator);
 export const literal = mockSchemaValidator.literal.bind(mockSchemaValidator);
 export const validate = mockSchemaValidator.validate.bind(mockSchemaValidator);

@@ -125,6 +125,8 @@ class Application<
   }
 }
 
+export type App<SV extends AnySchemaValidator> = Application<SV>;
+
 /**
  * Creates a new instance of Application with the given schema validator.
  *

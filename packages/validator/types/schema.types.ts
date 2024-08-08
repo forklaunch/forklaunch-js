@@ -7,6 +7,16 @@ import {
 import { ZodResolve, ZodSchemaTranslate } from '../zod/types/zod.schema.types';
 
 /**
+ * The result associated with an attempted parsing.
+ *
+ */
+export type ParseResult<T> = {
+  ok: boolean;
+  value?: T;
+  error?: string;
+};
+
+/**
  * Interface representing a schema validator.
  *
  * @template SchematicFunction - The function type for schemifying a schema.
@@ -18,12 +28,17 @@ import { ZodResolve, ZodSchemaTranslate } from '../zod/types/zod.schema.types';
  * @template OpenAPIFunction - The function type for converting a schema into an OpenAPI schema object.
  */
 export interface SchemaValidator<
+  CompilationFunction = <T>(schema: T) => unknown,
   SchematicFunction = <T>(schema: T) => unknown,
   OptionalFunction = <T>(schema: T) => unknown,
   ArrayFunction = <T>(schema: T) => unknown,
   UnionFunction = <T>(schemas: T[]) => unknown,
   LiteralFunction = <T extends LiteralSchema>(schema: T) => unknown,
   ValidationFunction = <T>(schema: T, value: unknown) => boolean,
+  ParseFunction = <T>(
+    schema: T,
+    value: unknown
+  ) => ParseResult<SchemaResolve<T>>,
   OpenAPIFunction = <T>(schema: T) => SchemaObject
 > {
   /**
@@ -92,6 +107,14 @@ export interface SchemaValidator<
   never: unknown;
 
   /**
+   * Compiles schema if this exists, for optimal performance.
+   *
+   * @param {T} schema - The schema to compile.
+   * @returns {unknown} - The compiled schema.
+   */
+  compile: CompilationFunction;
+
+  /**
    * Converts a valid schema input into a schemified form.
    *
    * @param {T} schema - The schema to schemify.
@@ -141,6 +164,15 @@ export interface SchemaValidator<
   validate: ValidationFunction;
 
   /**
+   * Parses a value to a schema validation.
+   *
+   * @param {T} schema - The schema to validate against.
+   * @param {unknown} value - The value to validate.
+   * @returns {ParseResult} - The discrimintated parsed value if successful, the error if unsuccessful.
+   */
+  parse: ParseFunction;
+
+  /**
    * Converts a schema into an OpenAPI schema object.
    *
    * @param {T} schema - The schema to convert.
@@ -153,6 +185,8 @@ export interface SchemaValidator<
  * Type representing any schema validator.
  */
 export type AnySchemaValidator = SchemaValidator<
+  unknown,
+  unknown,
   unknown,
   unknown,
   unknown,

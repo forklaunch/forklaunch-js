@@ -94,6 +94,7 @@ export function enrichRequestDetails<
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>
 >(
+  schemaValidator: SV,
   contractDetails:
     | PathParamHttpContractDetails<
         SV,
@@ -125,6 +126,22 @@ export function enrichRequestDetails<
 > {
   return (req, _res, next?) => {
     req.contractDetails = contractDetails;
+
+    if (req.headers) {
+      req.headers = schemaValidator.parse(
+        req.headers,
+        contractDetails.requestHeaders
+      );
+    }
+    if (req.params) {
+      req.params = schemaValidator.parse(req.params, contractDetails.params);
+    }
+    if (req.query) {
+      req.query = schemaValidator.parse(req.query, contractDetails.query);
+    }
+    if (req.body) {
+      req.body = schemaValidator.parse(req.body, contractDetails.body);
+    }
 
     if (next) {
       next();

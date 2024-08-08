@@ -22,10 +22,7 @@ export class RedisTtlCache implements TtlCache {
     // Connects to localhost:6379 by default
     // url usage: redis[s]://[[username][:password]@][host][:port][/db-number]
     this.client = createClient(hostingOptions);
-    this.client.on('error', (err) => console.log('Redis Client Error', err));
-    this.client.on('connect', () => {
-      console.log('\x1b[32m%s\x1b[0m', 'Successfully Connected to Redis'); // Green text
-    });
+    this.client.on('error', (err) => console.error('Redis Client Error', err));
     this.client.connect().catch(console.error);
   }
 

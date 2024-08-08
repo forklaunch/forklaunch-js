@@ -1,53 +1,56 @@
-import {
-  number,
-  string,
-  TypeboxSchemaValidator
-} from '@forklaunch/validator/typebox';
+import { typedHandler } from '@forklaunch/core';
+import { number, string, ZodSchemaValidator } from '@forklaunch/validator/zod';
 import { forklaunchExpress, forklaunchRouter } from './forklaunch.hyperExpress';
 
-const typeboxSchemaValidator = new TypeboxSchemaValidator();
+const zodSchemaValidator = new ZodSchemaValidator();
 
-const forklaunchApplication = forklaunchExpress(typeboxSchemaValidator);
+const forklaunchApplication = forklaunchExpress(zodSchemaValidator);
 export const forklaunchRouterInstance = forklaunchRouter(
   '/testpath',
-  typeboxSchemaValidator
+  zodSchemaValidator
 );
 
 export const dsd = {
   x: forklaunchRouterInstance.get(
-    '/test/:hell/:bell',
+    '/test/:bell/assss/:jkk',
     {
       name: 'Test',
       summary: 'Test Summary',
       params: {
-        hell: number
+        bell: number,
+        jkk: number
       },
       query: {
-        hell: number
+        hell: number,
+        kell: string
       },
       responses: {
         200: {
           one: string,
           two: string,
-          three: number,
-          four: string
+          three: number
         },
         500: string
       },
       requestHeaders: {
-        'x-test-req': string
+        'x-test-req': string,
+        p: number
       },
       responseHeaders: {
-        'x-test': string
+        'x-test': string,
+        p: number
       }
     },
     (req, res) => {
+      req.headers['x-test-req'];
+      req.headers.p;
+      res.getHeaders();
+      req.query.hell;
       console.log(req.query.hell * 7);
       res.status(200).json({
         one: 'Hello',
         two: 'World',
-        three: 3,
-        four: '221'
+        three: 3
       });
     }
   ),
@@ -70,7 +73,7 @@ export const dsd = {
           two: string,
           three: number
         },
-        500: number
+        500: string
       }
     },
     (req, res) => {
@@ -129,7 +132,7 @@ export const dsd = {
 
 const forklaunchRouterInstance2 = forklaunchRouter(
   '/testpath2',
-  typeboxSchemaValidator
+  zodSchemaValidator
 );
 export const dsd2 = {
   a: forklaunchRouterInstance2.get(
@@ -165,31 +168,19 @@ const x = {};
 
 (x as typeof x & { i: 'a' }).i = 'a';
 
-type ik = typeof x;
+// async function test() {
+//   console.log(
+//     await dsd.x.get('/testpath/test/:hell/:bell/:sell', {
+//       params: { hell: 1, bell: 2, sell: 'test' },
+//       query: { hell: 1 },
+//       headers: { 'x-test-req': 'test' }
+//     })
+//   );
+// }
 
-async function test() {
-  console.log(
-    await dsd.x.get('/testpath/test/:hell', {
-      params: { hell: 1 },
-      query: { hell: 1 },
-      headers: { 'x-test-req': 'test' }
-    })
-  );
-}
-
-test().then(() => {
-  console.log('done');
-
-  console.log(
-    // @ts-expect-error
-    forklaunchApplication.internal.routes['get']['/testpath/test/:hell']
-  );
-  // @ts-expect-error
-  forklaunchApplication.internal.routes['get'][
-    '/testpath/test/:hell'
-    // @ts-expect-error
-  ].options.middlewares.forEach((middleware) => console.log(middleware));
-});
+// test().then(() => {
+//   console.log('done');
+// });
 
 export type i = typeof dsd;
 
@@ -249,3 +240,18 @@ export type i = typeof dsd;
 // webserver.listen(6934, () => {
 //   console.log('Server started');
 // });
+
+typedHandler(
+  new ZodSchemaValidator(),
+  'get',
+  {
+    name: 'Test',
+    summary: 'Test Summary',
+    responses: {
+      200: string
+    }
+  },
+  (req, res) => {
+    return res.status(200).send('Hello World');
+  }
+);

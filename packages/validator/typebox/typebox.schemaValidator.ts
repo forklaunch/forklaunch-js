@@ -6,18 +6,26 @@
  */
 
 import {
-  Kind,
+  KindGuard,
   TArray,
+  TBigInt,
+  TBoolean,
   TLiteral,
+  TNumber,
   TOptional,
   TProperties,
   TSchema,
   TUnion,
   Type
 } from '@sinclair/typebox';
-import { Value } from '@sinclair/typebox/value';
+import { TypeCheck, TypeCompiler } from '@sinclair/typebox/compiler';
+import { Value, ValueError } from '@sinclair/typebox/value';
 import { SchemaObject } from 'openapi3-ts/oas31';
-import { LiteralSchema, SchemaValidator } from '../types/schema.types';
+import {
+  LiteralSchema,
+  ParseResult,
+  SchemaValidator
+} from '../types/schema.types';
 import {
   TIdiomaticSchema,
   TObject,
@@ -34,12 +42,17 @@ import {
 export class TypeboxSchemaValidator
   implements
     SchemaValidator<
+      <T extends TObject<TProperties>>(schema: T) => TypeCheck<T>,
       <T extends TIdiomaticSchema>(schema: T) => TResolve<T>,
       <T extends TIdiomaticSchema>(schema: T) => TOptional<TResolve<T>>,
       <T extends TIdiomaticSchema>(schema: T) => TArray<TResolve<T>>,
       <T extends TUnionContainer>(schemas: T) => TUnion<UnionTResolve<T>>,
       <T extends LiteralSchema>(value: T) => TLiteral<T>,
       <T extends TIdiomaticSchema>(schema: T, value: unknown) => boolean,
+      <T extends TIdiomaticSchema>(
+        schema: T,
+        value: unknown
+      ) => ParseResult<TResolve<T>>,
       <T extends TIdiomaticSchema>(schema: T) => SchemaObject
     >
 {
@@ -48,15 +61,85 @@ export class TypeboxSchemaValidator
   _ValidSchemaObject!: TObject<TProperties> | TArray<TObject<TProperties>>;
 
   string = Type.String();
-  number = Type.Number();
-  bigint = Type.BigInt();
-  boolean = Type.Boolean();
+  number = Type.Transform(
+    Type.Union([Type.Number(), Type.String({ format: 'number' })])
+  )
+    .Decode((value) => {
+      if (typeof value === 'string') {
+        const num = Number(value);
+        if (isNaN(num)) {
+          throw new Error('Invalid number');
+        } else {
+          return num;
+        }
+      }
+      return value;
+    })
+    .Encode(Number) as unknown as TNumber;
+  bigint = Type.Transform(
+    Type.Union([
+      Type.BigInt(),
+      Type.Number(),
+      Type.String({ format: 'bigint' })
+    ])
+  )
+    .Decode((value) => {
+      if (typeof value === 'string') {
+        try {
+          return BigInt(value);
+        } catch (error) {
+          throw new Error('Invalid bigint');
+        }
+      }
+      return BigInt(value);
+    })
+    .Encode(BigInt) as unknown as TBigInt;
+  boolean = Type.Transform(
+    Type.Union([Type.Boolean(), Type.String({ format: 'boolean' })])
+  )
+    .Decode((value) => {
+      if (typeof value === 'string') {
+        if ((value as string).toLowerCase() === 'true') return true;
+        if ((value as string).toLowerCase() === 'false') return false;
+      } else {
+        return value;
+      }
+    })
+    .Encode(Boolean) as unknown as TBoolean;
   date = Type.Date();
   symbol = Type.Symbol();
   empty = Type.Union([Type.Void(), Type.Null(), Type.Undefined()]);
   any = Type.Any();
   unknown = Type.Unknown();
   never = Type.Never();
+
+  /**
+   * Pretty print TypeBox errors.
+   *
+   * @param {ValueError[]} errors
+   * @returns
+   */
+  private prettyPrintTypeBoxErrors(errors: ValueError[]): string | undefined {
+    console.log(errors);
+    if (!errors || errors.length === 0) return;
+
+    const errorMessages = errors.map((err, index) => {
+      const path =
+        err.path.length > 0 ? err.path.split('/').slice(1).join(' > ') : 'root';
+      return `${index + 1}. Path: ${path}\n   Message: ${err.message}`;
+    });
+    return `Validation failed with the following errors:\n${errorMessages.join('\n\n')}`;
+  }
+
+  /**
+   * Compiles schema if this exists, for optimal performance.
+   *
+   * @param {TObject<TProperties>} schema - The schema to compile.
+   * @returns {TypeCheck<T>} - The compiled schema.
+   */
+  compile<T extends TObject<TProperties>>(schema: T): TypeCheck<T> {
+    return TypeCompiler.Compile(schema);
+  }
 
   /**
    * Convert a schema to a TypeBox schema.
@@ -72,14 +155,14 @@ export class TypeboxSchemaValidator
       return Type.Literal(schema) as TResolve<T>;
     }
 
-    if (Kind in (schema as TSchema)) {
+    if (KindGuard.IsSchema(schema)) {
       return schema as TResolve<T>;
     }
 
     const newSchema: TObjectShape = {};
     Object.getOwnPropertyNames(schema).forEach((key) => {
-      if (typeof schema[key] === 'object' && Kind in (schema[key] as TSchema)) {
-        newSchema[key] = schema[key] as TSchema;
+      if (KindGuard.IsSchema(schema[key])) {
+        newSchema[key] = schema[key];
       } else {
         const schemified = this.schemify(schema[key]);
         newSchema[key] = schemified;
@@ -95,10 +178,12 @@ export class TypeboxSchemaValidator
    * @returns {TOptional<TResolve<T>>} The optional schema.
    */
   optional<T extends TIdiomaticSchema>(schema: T): TOptional<TResolve<T>> {
-    if (Kind in (schema as TSchema)) {
-      return Type.Optional(schema as TSchema) as TOptional<TResolve<T>>;
+    let schemified;
+    if (KindGuard.IsSchema(schema)) {
+      schemified = schema;
+    } else {
+      schemified = this.schemify(schema);
     }
-    const schemified = this.schemify(schema);
     return Type.Optional(schemified) as TOptional<TResolve<T>>;
   }
 
@@ -108,10 +193,12 @@ export class TypeboxSchemaValidator
    * @returns {TArray<TResolve<T>>} The array schema.
    */
   array<T extends TIdiomaticSchema>(schema: T): TArray<TResolve<T>> {
-    if (Kind in (schema as TSchema)) {
-      return Type.Array(schema as TSchema) as TArray<TResolve<T>>;
+    let schemified;
+    if (KindGuard.IsSchema(schema)) {
+      schemified = schema;
+    } else {
+      schemified = this.schemify(schema);
     }
-    const schemified = this.schemify(schema);
     return Type.Array(schemified) as TArray<TResolve<T>>;
   }
 
@@ -125,10 +212,11 @@ export class TypeboxSchemaValidator
    */
   union<T extends TUnionContainer>(schemas: T): TUnion<UnionTResolve<T>> {
     const unionTypes = schemas.map((schema) => {
-      if (Kind in (schema as TSchema)) {
-        return schema as TSchema;
+      if (KindGuard.IsSchema(schema)) {
+        return schema;
+      } else {
+        return this.schemify(schema);
       }
-      return this.schemify(schema);
     });
 
     return Type.Union(unionTypes) as TUnion<UnionTResolve<T>>;
@@ -145,19 +233,68 @@ export class TypeboxSchemaValidator
 
   /**
    * Validate a value against a schema.
+   *
    * @param {TSchema} schema - The schema to validate against.
    * @param {unknown} value - The value to validate.
    * @returns {boolean} True if valid, otherwise false.
    */
   validate<T extends TIdiomaticSchema | TSchema>(
-    schema: T,
+    schema: T | TypeCheck<TResolve<T>>,
     value: unknown
   ): boolean {
-    if (Kind in (schema as TSchema)) {
-      return Value.Check(schema as TSchema, value);
+    if (schema instanceof TypeCheck) {
+      return schema.Check(value);
+    } else {
+      let schemified;
+      if (KindGuard.IsSchema(schema)) {
+        schemified = schema;
+      } else {
+        schemified = this.schemify(schema);
+      }
+      return Value.Check(schemified, value);
     }
-    const schemified = this.schemify(schema);
-    return Value.Check(schemified, value);
+  }
+
+  /**
+   * Parse a value against a schema.
+   *
+   * @param {TSchema} schema - The schema to validate against.
+   * @param {unknown} value - The value to validate.
+   * @returns {ParseResult<TResolve<T>>} The parsing result.
+   */
+  parse<T extends TIdiomaticSchema | TSchema>(
+    schema: T | TypeCheck<TResolve<T>>,
+    value: unknown
+  ): ParseResult<TResolve<T>> {
+    let errors: ValueError[] = [];
+    let conversion: unknown;
+    if (schema instanceof TypeCheck) {
+      if (!schema.Check(value)) {
+        errors = Array.from(schema.Errors(value));
+      } else {
+        conversion = schema.Decode(value);
+      }
+    } else {
+      let schemified;
+      if (KindGuard.IsSchema(schema)) {
+        schemified = schema;
+      } else {
+        schemified = this.schemify(schema);
+      }
+
+      if (!Value.Check(schemified, value)) {
+        errors = Array.from(Value.Errors(schemified, value));
+      } else {
+        conversion = Value.Decode(schemified, value);
+      }
+    }
+
+    return {
+      ok: conversion !== undefined,
+      value: conversion as TResolve<T>,
+      error:
+        errors !== undefined ? this.prettyPrintTypeBoxErrors(errors) : undefined
+    };
   }
 
   /**
@@ -263,6 +400,12 @@ export const literal: typeof SchemaValidator.literal =
  */
 export const validate: typeof SchemaValidator.validate =
   SchemaValidator.validate.bind(SchemaValidator);
+
+/**
+ * Parses a value against a valid schema.
+ */
+export const parse: typeof SchemaValidator.parse =
+  SchemaValidator.parse.bind(SchemaValidator);
 
 /**
  * Generates an OpenAPI schema object from a valid schema.

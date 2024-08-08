@@ -236,12 +236,12 @@ export type ForklaunchSchemaMiddlewareHandler<
   MapSchema<SV, ReqHeaders> extends infer RequestHeaders
     ? unknown extends RequestHeaders
       ? Record<string, string>
-      : ReqHeaders
+      : RequestHeaders
     : Record<string, string>,
   MapSchema<SV, ResHeaders> extends infer ResponseHeaders
     ? unknown extends ResponseHeaders
       ? ForklaunchResHeaders
-      : ResHeaders
+      : ResponseHeaders
     : ForklaunchResHeaders,
   LocalsObj
 >;
