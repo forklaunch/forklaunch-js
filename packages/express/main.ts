@@ -1,4 +1,3 @@
-import { IdiomaticSchema } from '@forklaunch/validator';
 import {
   date,
   literal,
@@ -11,12 +10,6 @@ import {
 import { forklaunchExpress, forklaunchRouter } from './forklaunch.express';
 
 const typeboxSchemaValidator = new TypeboxSchemaValidator();
-
-type O<T extends IdiomaticSchema<TypeboxSchemaValidator>> = {
-  a: T;
-};
-
-const o = union([literal('ok'), number]);
 
 const forklaunchApplication = forklaunchExpress(typeboxSchemaValidator);
 export const forklaunchRouterInstance = forklaunchRouter(

@@ -296,9 +296,9 @@ export type LiteralSchema = string | number | boolean;
  * @template SV - The type of the schema validator.
  */
 export type IdiomaticSchema<SV extends AnySchemaValidator> =
-  | UnboxedObjectSchema<SV>
   | LiteralSchema
-  | SV['_SchemaCatchall'];
+  | SV['_SchemaCatchall']
+  | UnboxedObjectSchema<SV>;
 
 /**
  * Increments a number type by one, with support up to 50.

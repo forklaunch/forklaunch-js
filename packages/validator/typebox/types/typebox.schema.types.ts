@@ -81,14 +81,16 @@ export type TResolve<T, Depth extends number = 0> = Depth extends 12
   ? TUnknown
   : T extends LiteralSchema
     ? TLiteral<T>
-    : T extends TKind
+    : T extends TSchema
       ? T
-      : T extends TObject<TObjectShape>
+      : T extends TKind
         ? T
-        : T extends UnboxedTObjectSchema
-          ? TObject<{
-              [K in keyof T]: TResolve<T[K], Increment<Depth>>;
-            }>
-          : T extends TypeCheck<infer Type>
-            ? TResolve<Type>
-            : TNever;
+        : T extends TObject<TObjectShape>
+          ? T
+          : T extends UnboxedTObjectSchema
+            ? TObject<{
+                [K in keyof T]: TResolve<T[K], Increment<Depth>>;
+              }>
+            : T extends TypeCheck<infer Type>
+              ? TResolve<Type, Increment<Depth>>
+              : TNever;

@@ -9,6 +9,7 @@ import {
   Kind,
   KindGuard,
   TArray,
+  TKind,
   TLiteral,
   TOptional,
   TProperties,
@@ -58,7 +59,7 @@ export class TypeboxSchemaValidator
       <T extends TIdiomaticSchema>(schema: T) => TResolve<T>,
       <T extends TIdiomaticSchema>(schema: T) => TOptional<TResolve<T>>,
       <T extends TIdiomaticSchema>(schema: T) => TArray<TResolve<T>>,
-      <T extends TUnionContainer>(schemas: T) => TUnion<UnionTResolve<T>>,
+      <T extends TUnionContainer>(schemas: [...T]) => TUnion<UnionTResolve<T>>,
       <T extends LiteralSchema>(value: T) => TLiteral<T>,
       <T extends TIdiomaticSchema>(schema: T, value: unknown) => boolean,
       <T extends TIdiomaticSchema>(
@@ -69,7 +70,7 @@ export class TypeboxSchemaValidator
     >
 {
   _Type!: 'TypeBox';
-  _SchemaCatchall!: TSchema;
+  _SchemaCatchall!: TKind;
   _ValidSchemaObject!: TObject<TProperties> | TArray<TObject<TProperties>>;
 
   string = Type.String();
@@ -259,7 +260,7 @@ export class TypeboxSchemaValidator
    * WARNING: If "empty" or TUndefined is included in the union, the key will still be expected.
    * This is a limitation of TypeBox. Consider using "optional" instead.
    */
-  union<T extends TUnionContainer>(schemas: T): TUnion<UnionTResolve<T>> {
+  union<T extends TUnionContainer>(schemas: [...T]): TUnion<UnionTResolve<T>> {
     const unionTypes = schemas.map((schema) => {
       if (KindGuard.IsSchema(schema)) {
         return schema;
