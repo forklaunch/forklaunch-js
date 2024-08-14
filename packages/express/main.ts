@@ -1,12 +1,22 @@
+import { IdiomaticSchema } from '@forklaunch/validator';
 import {
   date,
+  literal,
   number,
   string,
-  TypeboxSchemaValidator
+  TypeboxSchemaValidator,
+  union,
+  uuid
 } from '@forklaunch/validator/typebox';
 import { forklaunchExpress, forklaunchRouter } from './forklaunch.express';
 
 const typeboxSchemaValidator = new TypeboxSchemaValidator();
+
+type O<T extends IdiomaticSchema<TypeboxSchemaValidator>> = {
+  a: T;
+};
+
+const o = union([literal('ok'), number]);
 
 const forklaunchApplication = forklaunchExpress(typeboxSchemaValidator);
 export const forklaunchRouterInstance = forklaunchRouter(
@@ -28,7 +38,8 @@ export const dsd = {
       },
       query: {
         hell: number,
-        kell: string
+        kell: string,
+        ok: union([literal('ok'), number])
       },
       responses: {
         200: {
@@ -38,7 +49,7 @@ export const dsd = {
           four: string,
           k: {
             j: string,
-            // m: uuid,
+            m: uuid,
             n: date
           }
         },
@@ -53,6 +64,8 @@ export const dsd = {
       }
     },
     (req, res) => {
+      console.log(req.params.four * req.query.hell);
+      console.log(req.query.ok);
       res.setHeader('x-test', 'test');
       res.setHeader('p', 23);
       res.status(200).json({
@@ -62,7 +75,7 @@ export const dsd = {
         four: '221',
         k: {
           j: 'asdafasdf',
-          // m: '123e4567-e89b-12d3-a456-426614174000',
+          m: '123e4567-e89b-12d3-a456-426614174000',
           n: new Date()
         }
       });
@@ -184,14 +197,14 @@ const x = {};
 
 // type ik = typeof x;
 
-async function test() {
-  await dsd.x.get('/testpath/test/:four/:five/:other/:lol', {
-    headers: { 'x-test-req': 'test' },
-    params: { four: 1, five: 2, other: 'test', lol: 'lol' },
-    query: { hell: 1, kell: 'test' }
-  });
-}
+// async function test() {
+//   await dsd.x.get('/testpath/test/:four/:five/:other/:lol', {
+//     headers: { 'x-test-req': 'test' },
+//     params: { four: 1, five: 2, other: 'test', lol: 'lol' },
+//     query: { hell: 1, kell: 'test' }
+//   });
+// }
 
-test();
+// test();
 
 export type i = typeof dsd;

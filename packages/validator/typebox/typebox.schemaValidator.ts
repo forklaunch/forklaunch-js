@@ -6,6 +6,7 @@
  */
 
 import {
+  Kind,
   KindGuard,
   TArray,
   TLiteral,
@@ -16,6 +17,10 @@ import {
   Type
 } from '@sinclair/typebox';
 import { TypeCheck, TypeCompiler } from '@sinclair/typebox/compiler';
+import {
+  DefaultErrorFunction,
+  SetErrorFunction
+} from '@sinclair/typebox/errors';
 import { Value, ValueError } from '@sinclair/typebox/value';
 import { SchemaObject } from 'openapi3-ts/oas31';
 import {
@@ -24,6 +29,7 @@ import {
   SchemaValidator
 } from '../types/schema.types';
 import {
+  TCatchall,
   TIdiomaticSchema,
   TObject,
   TObjectShape,
@@ -31,6 +37,15 @@ import {
   TUnionContainer,
   UnionTResolve
 } from './types/typebox.schema.types';
+
+/**
+ * Typebox custom error function
+ */
+SetErrorFunction((params) =>
+  params.schema.errorType
+    ? `Expected ${params.schema.errorType} value${params.schema.errorSuffix ? 's' : ''}`
+    : DefaultErrorFunction(params)
+);
 
 /**
  * Class representing a TypeBox schema definition.
@@ -60,12 +75,23 @@ export class TypeboxSchemaValidator
   string = Type.String();
   // uuid = Type.String({ format: 'uuid' });
   uuid = Type.String({
-    format: 'uuid'
+    pattern:
+      '^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$',
+    errorType: 'uuid'
   });
-  uri = Type.String({ format: 'uri' });
-  email = Type.String({ format: 'email' });
+  uri = Type.String({
+    pattern: '/^[a-zA-Z][a-zA-Z\\d+-.]*:[^\\s]*$/',
+    errorType: 'uri'
+  });
+  email = Type.String({
+    pattern:
+      '(?:[a-z0-9!#$%&\'*+/=?^_{|}~-]+(?:\\.[a-z0-9!#$%&\'*+/=?^_{|}~-]+)*|"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)])',
+    errorType: 'email'
+  });
   number = Type.Transform(
-    Type.Union([Type.Number(), Type.String({ pattern: '^[0-9]+$' })])
+    Type.Union([Type.Number(), Type.String({ pattern: '^[0-9]+$' })], {
+      errorType: 'number-like'
+    })
   )
     .Decode((value) => {
       if (typeof value === 'string') {
@@ -80,11 +106,12 @@ export class TypeboxSchemaValidator
     })
     .Encode(Number);
   bigint = Type.Transform(
-    Type.Union([
-      Type.BigInt(),
-      Type.Number(),
-      Type.String({ pattern: '^[0-9]+$' })
-    ])
+    Type.Union(
+      [Type.BigInt(), Type.Number(), Type.String({ pattern: '^[0-9]+$' })],
+      {
+        errorType: 'BigInt-like'
+      }
+    )
   )
     .Decode((value) => {
       if (typeof value === 'string') {
@@ -98,7 +125,12 @@ export class TypeboxSchemaValidator
     })
     .Encode(BigInt);
   boolean = Type.Transform(
-    Type.Union([Type.Boolean(), Type.String({ pattern: '^(?i:true|false)$' })])
+    Type.Union(
+      [Type.Boolean(), Type.String({ pattern: '^(?i:true|false)$' })],
+      {
+        errorType: 'boolean-like'
+      }
+    )
   )
     .Decode((value) => {
       if (typeof value === 'string') {
@@ -115,6 +147,19 @@ export class TypeboxSchemaValidator
   any = Type.Any();
   unknown = Type.Unknown();
   never = Type.Never();
+
+  /**
+   * Extracts the error type of a schema for error messages.
+   *
+   * @param {TCatchall} schema - A schema that contains some type information.
+   * @returns The type of the schema for error messages.
+   */
+  private errorType(schema: TCatchall) {
+    if (Object.hasOwn(schema, 'errorType')) {
+      return schema.errorType;
+    }
+    return schema[Kind].toLowerCase();
+  }
 
   /**
    * Pretty print TypeBox errors.
@@ -201,7 +246,9 @@ export class TypeboxSchemaValidator
     } else {
       schemified = this.schemify(schema);
     }
-    return Type.Array(schemified) as TArray<TResolve<T>>;
+    return Type.Array(schemified, {
+      errorType: `array of ${this.errorType(schemified)}`
+    }) as TArray<TResolve<T>>;
   }
 
   /**
@@ -221,7 +268,12 @@ export class TypeboxSchemaValidator
       }
     });
 
-    return Type.Union(unionTypes) as TUnion<UnionTResolve<T>>;
+    return Type.Union(unionTypes, {
+      errorType: `any of ${unionTypes
+        .map((s) => this.errorType(s))
+        .join(', ')}`,
+      errorSuffix: true
+    }) as TUnion<UnionTResolve<T>>;
   }
 
   /**
@@ -230,7 +282,9 @@ export class TypeboxSchemaValidator
    * @returns {TLiteral<T>} The literal schema.
    */
   literal<T extends LiteralSchema>(value: T): TLiteral<T> {
-    return Type.Literal(value);
+    return Type.Literal(value, {
+      errorType: `literal "${value}"`
+    });
   }
 
   /**
