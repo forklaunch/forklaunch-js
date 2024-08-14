@@ -1,5 +1,11 @@
 import { typedHandler } from '@forklaunch/core';
-import { number, string, ZodSchemaValidator } from '@forklaunch/validator/zod';
+import {
+  number,
+  string,
+  // date,
+  uuid,
+  ZodSchemaValidator
+} from '@forklaunch/validator/zod';
 import { forklaunchExpress, forklaunchRouter } from './forklaunch.hyperExpress';
 
 const zodSchemaValidator = new ZodSchemaValidator();
@@ -12,7 +18,7 @@ export const forklaunchRouterInstance = forklaunchRouter(
 
 export const dsd = {
   x: forklaunchRouterInstance.get(
-    '/test/:bell/assss/:jkk',
+    '/test/:bell/:jkk',
     {
       name: 'Test',
       summary: 'Test Summary',
@@ -30,7 +36,11 @@ export const dsd = {
           two: string,
           three: number
         },
-        500: string
+        500: string,
+        123: {
+          // one: date,
+          two: uuid
+        }
       },
       requestHeaders: {
         'x-test-req': string,
@@ -39,10 +49,16 @@ export const dsd = {
       responseHeaders: {
         'x-test': string,
         p: number
+      },
+      options: {
+        requestValidation: 'error',
+        responseValidation: 'error'
       }
     },
-    (req, res) => {
-      req.headers['x-test-req'];
+    async (req, res) => {
+      console.log(req.headers['x-test-req']);
+      res.setHeader('x-test', 'test');
+      res.setHeader('p', 23);
       req.headers.p;
       res.getHeaders();
       req.query.hell;
@@ -52,6 +68,10 @@ export const dsd = {
         two: 'World',
         three: 3
       });
+      // res.status(123).json({
+      //   // one: new Date()
+      //   two: '0d1f7e7d-0a3c-4b5d-8e1f-3e9b8c7e9b8c'
+      // });
     }
   ),
 

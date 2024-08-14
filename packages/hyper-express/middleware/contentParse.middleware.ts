@@ -6,7 +6,11 @@ import { Request } from '@forklaunch/hyper-express-fork';
  * @returns {Function} - The middleware function.
  */
 export async function contentParse(req: Request) {
-  switch (req.headers['content-type'] && req.headers['content-type'].split(';')[0]) {
+  console.debug('[MIDDLEWARE] contentParse started');
+  switch (
+    req.headers['content-type'] &&
+    req.headers['content-type'].split(';')[0]
+  ) {
     case 'application/json':
       req.body = await req.json();
       break;
@@ -23,4 +27,4 @@ export async function contentParse(req: Request) {
       req.body = await req.json();
       break;
   }
-};
+}

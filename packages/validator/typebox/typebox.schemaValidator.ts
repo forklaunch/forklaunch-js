@@ -8,10 +8,7 @@
 import {
   KindGuard,
   TArray,
-  TBigInt,
-  TBoolean,
   TLiteral,
-  TNumber,
   TOptional,
   TProperties,
   TSchema,
@@ -61,8 +58,14 @@ export class TypeboxSchemaValidator
   _ValidSchemaObject!: TObject<TProperties> | TArray<TObject<TProperties>>;
 
   string = Type.String();
+  // uuid = Type.String({ format: 'uuid' });
+  uuid = Type.String({
+    format: 'uuid'
+  });
+  uri = Type.String({ format: 'uri' });
+  email = Type.String({ format: 'email' });
   number = Type.Transform(
-    Type.Union([Type.Number(), Type.String({ format: 'number' })])
+    Type.Union([Type.Number(), Type.String({ pattern: '^[0-9]+$' })])
   )
     .Decode((value) => {
       if (typeof value === 'string') {
@@ -75,12 +78,12 @@ export class TypeboxSchemaValidator
       }
       return value;
     })
-    .Encode(Number) as unknown as TNumber;
+    .Encode(Number);
   bigint = Type.Transform(
     Type.Union([
       Type.BigInt(),
       Type.Number(),
-      Type.String({ format: 'bigint' })
+      Type.String({ pattern: '^[0-9]+$' })
     ])
   )
     .Decode((value) => {
@@ -93,9 +96,9 @@ export class TypeboxSchemaValidator
       }
       return BigInt(value);
     })
-    .Encode(BigInt) as unknown as TBigInt;
+    .Encode(BigInt);
   boolean = Type.Transform(
-    Type.Union([Type.Boolean(), Type.String({ format: 'boolean' })])
+    Type.Union([Type.Boolean(), Type.String({ pattern: '^(?i:true|false)$' })])
   )
     .Decode((value) => {
       if (typeof value === 'string') {
@@ -105,7 +108,7 @@ export class TypeboxSchemaValidator
         return value;
       }
     })
-    .Encode(Boolean) as unknown as TBoolean;
+    .Encode(Boolean);
   date = Type.Date();
   symbol = Type.Symbol();
   empty = Type.Union([Type.Void(), Type.Null(), Type.Undefined()]);
@@ -120,7 +123,6 @@ export class TypeboxSchemaValidator
    * @returns
    */
   private prettyPrintTypeBoxErrors(errors: ValueError[]): string | undefined {
-    console.log(errors);
     if (!errors || errors.length === 0) return;
 
     const errorMessages = errors.map((err, index) => {
@@ -155,7 +157,7 @@ export class TypeboxSchemaValidator
       return Type.Literal(schema) as TResolve<T>;
     }
 
-    if (KindGuard.IsSchema(schema)) {
+    if (KindGuard.IsSchema(schema) || schema instanceof TypeCheck) {
       return schema as TResolve<T>;
     }
 
@@ -269,10 +271,10 @@ export class TypeboxSchemaValidator
     let errors: ValueError[] = [];
     let conversion: unknown;
     if (schema instanceof TypeCheck) {
-      if (!schema.Check(value)) {
-        errors = Array.from(schema.Errors(value));
-      } else {
+      if (schema.Check(value)) {
         conversion = schema.Decode(value);
+      } else {
+        errors = Array.from(schema.Errors(value));
       }
     } else {
       let schemified;
@@ -282,19 +284,25 @@ export class TypeboxSchemaValidator
         schemified = this.schemify(schema);
       }
 
-      if (!Value.Check(schemified, value)) {
-        errors = Array.from(Value.Errors(schemified, value));
-      } else {
+      if (Value.Check(schemified, value)) {
         conversion = Value.Decode(schemified, value);
+      } else {
+        errors = Array.from(Value.Errors(schemified, value));
       }
     }
 
-    return {
-      ok: conversion !== undefined,
-      value: conversion as TResolve<T>,
-      error:
-        errors !== undefined ? this.prettyPrintTypeBoxErrors(errors) : undefined
-    };
+    return conversion !== undefined
+      ? {
+          ok: true,
+          value: conversion as TResolve<T>
+        }
+      : {
+          ok: false,
+          error:
+            errors !== undefined
+              ? this.prettyPrintTypeBoxErrors(errors)
+              : undefined
+        };
   }
 
   /**
@@ -319,6 +327,21 @@ const SchemaValidator = TypeboxSchema();
  * TypeBox schema definition for string type.
  */
 export const string: typeof SchemaValidator.string = SchemaValidator.string;
+
+/**
+ * TypeBox schema definition for UUID type.
+ */
+export const uuid: typeof SchemaValidator.uuid = SchemaValidator.uuid;
+
+/**
+ * TypeBox schema definition for URI type.
+ */
+export const uri: typeof SchemaValidator.uri = SchemaValidator.uri;
+
+/**
+ * TypeBox schema definition for email type.
+ */
+export const email: typeof SchemaValidator.email = SchemaValidator.email;
 
 /**
  * TypeBox schema definition for number type.

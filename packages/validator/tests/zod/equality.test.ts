@@ -373,14 +373,16 @@ describe('Zod Equality Tests', () => {
       }
     });
     expect(validParse.ok).toBe(true);
-    expect(validParse.value).toBe({
-      hello: {
-        world: 'world'
-      },
-      foo: {
-        bar: 42
-      }
-    });
+    if (validParse.ok) {
+      expect(validParse.value).toBe({
+        hello: {
+          world: 'world'
+        },
+        foo: {
+          bar: 42
+        }
+      });
+    }
 
     const parsedString = parse(schemified, {
       hello: {
@@ -391,14 +393,16 @@ describe('Zod Equality Tests', () => {
       }
     });
     expect(parsedString.ok).toBe(true);
-    expect(parsedString.value).toBe({
-      hello: {
-        world: '55'
-      },
-      foo: {
-        bar: 42
-      }
-    });
+    if (parsedString.ok) {
+      expect(parsedString.value).toBe({
+        hello: {
+          world: '55'
+        },
+        foo: {
+          bar: 42
+        }
+      });
+    }
 
     const failedParse = parse(schemified, {
       hello: {
@@ -407,7 +411,9 @@ describe('Zod Equality Tests', () => {
       foo: {}
     });
     expect(failedParse.ok).toBe(false);
-    expect(failedParse.error).toBe('aaaa');
+    if (!failedParse.ok) {
+      expect(failedParse.error).toBe('aaaa');
+    }
   });
 
   test('OpenAPI Conversion', async () => {

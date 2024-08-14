@@ -3,7 +3,7 @@ import {
   HttpContractDetails,
   Method,
   PathParamHttpContractDetails
-} from './primitive.types';
+} from './contractDetails.types';
 
 /**
  * Interface representing a Forklaunch router.

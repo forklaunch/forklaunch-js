@@ -11,9 +11,9 @@ import {
   ResponsesObject,
   TagObject
 } from 'openapi3-ts/oas31';
-import HTTPStatuses from './httpStatusCodes';
-import { ForklaunchRouter } from './types/forklaunch.types';
-import { HttpContractDetails } from './types/primitive.types';
+import { HttpContractDetails } from '../types/contractDetails.types';
+import { ForklaunchRouter } from '../types/router.types';
+import HTTPStatuses from '../utils/httpStatusCodes';
 
 /**
  * Capitalizes the first letter of a string.

@@ -1,2 +1,2 @@
-export * from './forklaunchExpress.application.interface';
-export * from './forklaunchExpress.router.interface';
+export * from './expressLikeApplication.interface';
+export * from './expressLikeRouter.interface';

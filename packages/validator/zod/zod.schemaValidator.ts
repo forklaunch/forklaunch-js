@@ -61,6 +61,9 @@ export class ZodSchemaValidator
   string = z.coerce.string().refine((value) => value !== 'undefined', {
     message: 'String cannot be undefined'
   });
+  uuid = z.coerce.string().uuid();
+  email = z.coerce.string().email();
+  uri = z.coerce.string().url();
   number = z.coerce.number();
   bigint = z.coerce.bigint();
   boolean = z.preprocess((val) => {
@@ -243,6 +246,21 @@ const SchemaValidator = ZodSchema();
  * Zod schema definition for string type.
  */
 export const string: typeof SchemaValidator.string = SchemaValidator.string;
+
+/**
+ * Zod schema definition for UUID type.
+ */
+export const uuid: typeof SchemaValidator.uuid = SchemaValidator.uuid;
+
+/**
+ * Zod schema definition for email type.
+ */
+export const email: typeof SchemaValidator.email = SchemaValidator.email;
+
+/**
+ * Zod schema definition for URI type.
+ */
+export const uri: typeof SchemaValidator.uri = SchemaValidator.uri;
 
 /**
  * Zod schema definition for number type.

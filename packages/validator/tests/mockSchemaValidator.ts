@@ -40,6 +40,9 @@ export class MockSchemaValidator
   _ValidSchemaObject!: string;
 
   string = 'string';
+  uuid = 'uuid';
+  email = 'email';
+  uri = 'uri';
   number = 'number';
   bigint = 'bigint';
   boolean = 'boolean';
@@ -72,11 +75,15 @@ export class MockSchemaValidator
     return schema === value;
   }
   parse<T extends string>(schema: T, value: string): ParseResult<T> {
-    return {
-      ok: schema === value,
-      value: schema === value ? schema : undefined,
-      error: schema === value ? undefined : 'Some error'
-    };
+    return schema === value
+      ? {
+          ok: true,
+          value: schema
+        }
+      : {
+          ok: false,
+          error: 'Some error'
+        };
   }
   openapi<T extends string>(_schema: T): SchemaObject {
     return {};

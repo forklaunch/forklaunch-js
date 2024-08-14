@@ -11,8 +11,9 @@ import {
   ParamsObject,
   PathParamHttpContractDetails,
   QueryObject,
+  ResponseCompiledSchema,
   ResponsesObject
-} from './primitive.types';
+} from './contractDetails.types';
 
 /**
  * Interface representing the context of a request.
@@ -55,8 +56,39 @@ export interface ForklaunchRequest<
   body: ReqBody;
   /** Request query */
   query: ReqQuery;
+
+  /** Method */
+  method:
+    | 'GET'
+    | 'POST'
+    | 'PUT'
+    | 'PATCH'
+    | 'DELETE'
+    | 'OPTIONS'
+    | 'HEAD'
+    | 'CONNECT'
+    | 'TRACE';
+
+  /** Request schema, compiled */
+  requestSchema: unknown;
 }
 
+/**
+ * Represents the types of data that can be sent in a response.
+ */
+export type ForklaunchSendableData =
+  | Record<string, unknown>
+  | string
+  | Buffer
+  | ArrayBuffer
+  | NodeJS.ReadableStream
+  | null
+  | undefined;
+
+/**
+ * Interface representing a Forklaunch response status.
+ * @template ResBody - A type for the response body.
+ */
 export interface ForklaunchStatusResponse<ResBody> {
   /**
    * Sends the response.
@@ -105,8 +137,6 @@ export interface ForklaunchResponse<
   bodyData: unknown;
   /** Status code of the response */
   statusCode: number;
-  /** Whether the response is corked */
-  corked: boolean;
   /** Whether the response is finished */
   headersSent: boolean;
 
@@ -147,15 +177,22 @@ export interface ForklaunchResponse<
     ): ForklaunchStatusResponse<
       (Omit<ForklaunchResErrors, keyof ResBodyMap> & ResBodyMap)[U]
     >;
-    // <U extends 500>(code: U): ForklaunchStatusResponse<string>;
-    // <U extends 500>(
-    //   code: U,
-    //   message?: string
-    // ): ForklaunchStatusResponse<string>;
   };
+
+  /**
+   * Ends the response.
+   * @param {string} [data] - Optional data to send.
+   */
+  end: (data?: string) => void;
 
   /** Local variables */
   locals: LocalsObj;
+
+  /** Cors */
+  cors: boolean;
+
+  /** Response schema, compiled */
+  responseSchemas: ResponseCompiledSchema;
 }
 
 /**
@@ -259,7 +296,6 @@ export type ForklaunchSchemaMiddlewareHandler<
  * @template ResHeaders - A type for the response headers.
  *
  */
-
 export type LiveTypeFunction<
   SV extends AnySchemaValidator,
   Route extends string,
@@ -341,3 +377,23 @@ export type ForklaunchResErrors<
  * Represents the default header types for responses.
  */
 export type ForklaunchResHeaders = { 'x-correlation-id': string };
+
+/**
+ * Represents the default error types for responses.
+ */
+export type ErrorContainer<Code extends number> = {
+  /** The error code */
+  code: Code;
+  /** The error message */
+  error: string;
+};
+
+/**
+ * Represents a parsed response shape.
+ */
+export type ResponseShape<Params, Headers, Query, Body> = {
+  params: Params;
+  headers: Headers;
+  query: Query;
+  body: Body;
+};

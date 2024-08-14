@@ -1,6 +1,6 @@
 import {
   TObject as OriginalTObject,
-  Static,
+  StaticDecode,
   TArray,
   TKind,
   TLiteral,
@@ -42,7 +42,9 @@ export type TObject<T> = T extends TObjectShape ? OriginalTObject<T> : TNever;
  *
  * @template T - The schema type to translate.
  */
-export type TSchemaTranslate<T> = T extends TCatchall ? Static<T> : TNever;
+export type TSchemaTranslate<T> = T extends TCatchall
+  ? StaticDecode<T>
+  : TNever;
 
 /**
  * Represents an unboxed object schema where each key can have an idiomatic schema.
@@ -75,7 +77,7 @@ export type UnionTResolve<T extends TUnionContainer> =
  * @template T - The schema type to resolve.
  * @template Depth - The current depth of the resolution.
  */
-export type TResolve<T, Depth extends number = 0> = Depth extends 22
+export type TResolve<T, Depth extends number = 0> = Depth extends 12
   ? TUnknown
   : T extends LiteralSchema
     ? TLiteral<T>

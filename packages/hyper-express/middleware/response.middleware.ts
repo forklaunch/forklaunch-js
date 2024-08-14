@@ -1,11 +1,9 @@
 import {
+  enrichExpressLikeSend,
   ForklaunchNextFunction,
-  ParamsDictionary,
-  parseResponse
+  ParamsDictionary
 } from '@forklaunch/core';
-import { MiddlewareNext } from '@forklaunch/hyper-express-fork';
 import { AnySchemaValidator } from '@forklaunch/validator';
-import cors from 'cors';
 import { ParsedQs } from 'qs';
 import { Request, Response } from '../types/forklaunch.hyperExpress.types';
 
@@ -33,8 +31,13 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
   >,
   next: ForklaunchNextFunction
 ) {
+  console.debug('[MIDDLEWARE] enrichResponseTransmission');
   const originalSend = res.send;
   const originalJson = res.json;
+  const originalSetHeader = res.setHeader as (
+    key: string,
+    value: string | string[]
+  ) => void;
 
   /**
    * Intercepts the JSON response to include additional processing.
@@ -42,7 +45,7 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
    * @param {unknown} data - The data to send in the response.
    * @returns {boolean} - The result of the original JSON method.
    */
-  res.json = function (data?: Record<string, unknown>) {
+  res.json = function <T extends Record<string, unknown>>(data: T) {
     res.bodyData = data;
     const result = originalJson.call(this, data);
     return result as boolean;
@@ -58,47 +61,33 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
     if (!res.bodyData) {
       res.bodyData = data;
       res.statusCode = res._status_code;
-      res.corked = res._corked;
     }
-
-    try {
-      if (!res.cors && ((res._cork && !res.corked) || !res._cork)) {
-        res.getHeaders();
-        parseResponse(req, res);
-      }
-      return originalSend.call(this, data);
-    } catch (error: unknown) {
-      console.error(error);
-      res.status(500);
-      originalSend.call(
-        this,
-        'Internal Server Error: ' + (error as Error).message
-      );
-      throw error;
-    }
+    return enrichExpressLikeSend(
+      this,
+      req,
+      res,
+      originalSend,
+      data,
+      !res.cors && ((res._cork && !res._corked) || !res._cork)
+    );
   };
 
+  /**
+   * Intercepts the setHeader method to stringify the value before setting the header.
+   *
+   * @param {string}
+   */
+  res.setHeader = function (name: string, value: unknown | unknown[]) {
+    let stringifiedValue;
+    if (Array.isArray(value)) {
+      stringifiedValue = value.map((v) =>
+        typeof v !== 'string' ? JSON.stringify(v) : v
+      );
+    } else {
+      stringifiedValue =
+        typeof value !== 'string' ? JSON.stringify(value) : value;
+    }
+    return originalSetHeader.call(this, name, stringifiedValue);
+  };
   next();
-}
-
-export async function corsMiddleware<SV extends AnySchemaValidator>(
-  req: Request<
-    SV,
-    ParamsDictionary,
-    Record<string, unknown>,
-    ParsedQs,
-    Record<string, string>,
-    Record<string, unknown>
-  >,
-  res: Response<
-    Record<number, unknown>,
-    Record<string, string>,
-    Record<string, unknown>
-  >,
-  next: MiddlewareNext
-) {
-  if (req.method === 'OPTIONS') {
-    res.cors = true;
-  }
-  cors()(req, res, next);
 }

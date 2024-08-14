@@ -2,7 +2,6 @@ import {
   ForklaunchExpressLikeApplication,
   ForklaunchExpressLikeRouter,
   ForklaunchRouter,
-  createRequestContext,
   generateSwaggerDocument
 } from '@forklaunch/core';
 import {
@@ -14,10 +13,7 @@ import { AnySchemaValidator } from '@forklaunch/validator';
 import * as uWebsockets from 'uWebSockets.js';
 import { contentParse } from './middleware/contentParse.middleware';
 import { polyfillGetHeaders } from './middleware/polyfillGetHeaders.middleware';
-import {
-  corsMiddleware,
-  enrichResponseTransmission
-} from './middleware/response.middleware';
+import { enrichResponseTransmission } from './middleware/response.middleware';
 import { swagger, swaggerRedirect } from './middleware/swagger.middleware';
 
 /**
@@ -101,6 +97,15 @@ class Application<
     if (typeof arg0 === 'number') {
       const port = arg0 || Number(process.env.PORT);
 
+      this.internal.set_error_handler((_req, res, err) => {
+        res.locals.errorMessage = err.message;
+        res
+          .status(
+            res.statusCode && res.statusCode >= 400 ? res.statusCode : 500
+          )
+          .send(`Internal server error:\n\n${err.message}`);
+      });
+
       const swaggerPath = `/api${process.env.VERSION ?? '/v1'}${process.env.SWAGGER_PATH ?? '/swagger'}`;
       this.internal.use(swaggerPath, swaggerRedirect(swaggerPath));
       this.internal.get(
@@ -151,16 +156,12 @@ class Router<SV extends AnySchemaValidator, BasePath extends `/${string}`>
 {
   constructor(
     public basePath: BasePath,
-    public schemaValidator: SV
+    schemaValidator: SV
   ) {
-    super(basePath, new ExpressRouter());
+    super(basePath, schemaValidator, new ExpressRouter());
 
     this.internal.use(polyfillGetHeaders);
     this.internal.use(contentParse);
-    this.internal.use(
-      createRequestContext(this.schemaValidator) as unknown as MiddlewareHandler
-    );
-    this.internal.use(corsMiddleware as unknown as MiddlewareHandler);
     this.internal.use(
       enrichResponseTransmission as unknown as MiddlewareHandler
     );

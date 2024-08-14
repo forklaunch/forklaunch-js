@@ -10,11 +10,15 @@ import { ZodResolve, ZodSchemaTranslate } from '../zod/types/zod.schema.types';
  * The result associated with an attempted parsing.
  *
  */
-export type ParseResult<T> = {
-  ok: boolean;
-  value?: T;
-  error?: string;
-};
+export type ParseResult<T> =
+  | {
+      ok: true;
+      value: T;
+    }
+  | {
+      ok: false;
+      error?: string;
+    };
 
 /**
  * Interface representing a schema validator.
@@ -25,6 +29,7 @@ export type ParseResult<T> = {
  * @template UnionFunction - The function type for unionizing multiple schemas.
  * @template LiteralFunction - The function type for creating a literal schema.
  * @template ValidationFunction - The function type for validating a value against a schema.
+ * @template ParseFunction - The function type for parsing a value against a schema.
  * @template OpenAPIFunction - The function type for converting a schema into an OpenAPI schema object.
  */
 export interface SchemaValidator<
@@ -60,6 +65,21 @@ export interface SchemaValidator<
    * Validator for string type.
    */
   string: unknown;
+
+  /**
+   * Validator for uuid type.
+   */
+  uuid: unknown;
+
+  /**
+   * Validator for uri type.
+   */
+  uri: unknown;
+
+  /**
+   * Validator for email type.
+   */
+  email: unknown;
 
   /**
    * Validator for number type.

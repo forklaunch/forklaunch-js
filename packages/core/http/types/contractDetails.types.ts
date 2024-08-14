@@ -114,7 +114,7 @@ type ExtractParams<Path extends `/${string}`> =
 /**
  * Type representing the parameters in a request.
  */
-type ExtractedParamsObject<Path extends `/${string}`> = Record<
+export type ExtractedParamsObject<Path extends `/${string}`> = Record<
   ExtractParams<Path>,
   unknown
 >;
@@ -135,6 +135,14 @@ export type HttpMethod = 'post' | 'patch' | 'put';
 export type Method = PathParamMethod | HttpMethod;
 
 /**
+ * Interface representing a compiled schema for a response.
+ */
+export type ResponseCompiledSchema = {
+  headers?: unknown;
+  responses: Record<number, unknown>;
+};
+
+/**
  * Interface representing HTTP contract details for path parameters.
  *
  * @template SV - A type that extends AnySchemaValidator.
@@ -152,33 +160,38 @@ export type PathParamHttpContractDetails<
   ResHeaders extends HeadersObject<SV> = HeadersObject<SV>
 > = {
   /** Name of the contract */
-  name: string;
+  readonly name: string;
   /** Summary of the contract */
-  summary: string;
+  readonly summary: string;
   /** Response schemas for the contract */
-  responses: ResponseSchemas;
+  readonly responses: ResponseSchemas;
   /** Optional request headers for the contract */
-  requestHeaders?: ReqHeaders;
+  readonly requestHeaders?: ReqHeaders;
   /** Optional response headers for the contract */
-  responseHeaders?: ResHeaders;
+  readonly responseHeaders?: ResHeaders;
   /** Optional query schemas for the contract */
-  query?: QuerySchema;
+  readonly query?: QuerySchema;
   /** Optional authentication details for the contract */
-  auth?: {
-    method: AuthMethod;
-    allowedSlugs?: Set<string>;
-    forbiddenSlugs?: Set<string>;
-    allowedRoles?: Set<string>;
-    forbiddenRoles?: Set<string>;
+  readonly auth?: {
+    readonly method: AuthMethod;
+    readonly allowedSlugs?: Set<string>;
+    readonly forbiddenSlugs?: Set<string>;
+    readonly allowedRoles?: Set<string>;
+    readonly forbiddenRoles?: Set<string>;
+  };
+
+  readonly options?: {
+    readonly requestValidation: 'error' | 'warning' | 'none';
+    readonly responseValidation: 'error' | 'warning' | 'none';
   };
 } & (string | number | symbol extends ExtractedParamsObject<Path>
   ? {
       /** Optional parameters for the contract */
-      params?: ParamsSchema;
+      readonly params?: ParamsSchema;
     }
   : {
       /** Required parameters for the contract */
-      params: ExtractedParamsObject<Path>;
+      readonly params: ExtractedParamsObject<Path>;
     });
 
 /**
@@ -209,9 +222,9 @@ export type HttpContractDetails<
   ResHeaders
 > & {
   /** Required body schema for the contract */
-  body: BodySchema;
+  readonly body: BodySchema;
   /** Optional content type for the contract */
-  contentType?:
+  readonly contentType?:
     | 'application/json'
     | 'multipart/form-data'
     | 'application/x-www-form-urlencoded';

@@ -1,4 +1,5 @@
 import {
+  date,
   number,
   string,
   TypeboxSchemaValidator
@@ -15,14 +16,19 @@ export const forklaunchRouterInstance = forklaunchRouter(
 
 export const dsd = {
   x: forklaunchRouterInstance.get(
-    '/test/:four/:five/:other',
+    '/test/:four/:five/:other/:lol',
     {
       name: 'Test',
       summary: 'Test Summary',
       params: {
         four: number,
         five: number,
-        other: string
+        other: string,
+        lol: string
+      },
+      query: {
+        hell: number,
+        kell: string
       },
       responses: {
         200: {
@@ -31,7 +37,9 @@ export const dsd = {
           three: number,
           four: string,
           k: {
-            j: string
+            j: string,
+            // m: uuid,
+            n: date
           }
         },
         500: string
@@ -40,17 +48,22 @@ export const dsd = {
         'x-test-req': string
       },
       responseHeaders: {
-        'x-test': string
+        'x-test': string,
+        p: number
       }
     },
     (req, res) => {
+      res.setHeader('x-test', 'test');
+      res.setHeader('p', 23);
       res.status(200).json({
         one: 'Hello',
         two: 'World',
         three: 1,
         four: '221',
         k: {
-          j: 'asdafasdf'
+          j: 'asdafasdf',
+          // m: '123e4567-e89b-12d3-a456-426614174000',
+          n: new Date()
         }
       });
     }
@@ -65,7 +78,8 @@ export const dsd = {
         test: {
           one: string,
           two: string,
-          three: number
+          three: number,
+          four: string
         }
       },
       responses: {
@@ -171,14 +185,13 @@ const x = {};
 // type ik = typeof x;
 
 async function test() {
-  console.log(
-    await dsd.x.get('/testpath/test/:four/:five/:other', {
-      headers: { 'x-test-req': 'test' },
-      params: { four: 1, five: 2, other: 'test' }
-    })
-  );
+  await dsd.x.get('/testpath/test/:four/:five/:other/:lol', {
+    headers: { 'x-test-req': 'test' },
+    params: { four: 1, five: 2, other: 'test', lol: 'lol' },
+    query: { hell: 1, kell: 'test' }
+  });
 }
 
-test().then(() => console.log('done'));
+test();
 
 export type i = typeof dsd;

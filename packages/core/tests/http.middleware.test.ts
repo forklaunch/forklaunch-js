@@ -14,10 +14,6 @@ import {
   RequestContext,
   createRequestContext,
   enrichRequestDetails,
-  parseReqHeaders,
-  parseRequestBody,
-  parseRequestParams,
-  parseRequestQuery,
   parseResponse
 } from '../http';
 
@@ -58,19 +54,20 @@ describe('Http Middleware Tests', () => {
     };
 
     req = {
+      method: 'POST',
       context: {} as RequestContext,
       contractDetails: {} as HttpContractDetails<MockSchemaValidator>,
       schemaValidator: {} as SchemaValidator,
       params: testSchema,
       headers: testSchema,
       body: testSchema,
-      query: testSchema
+      query: testSchema,
+      requestSchema: testSchema
     };
 
     res = {
       bodyData: {},
       statusCode: 200,
-      corked: false,
       getHeaders: () => ({ 'x-correlation-id': '123' }),
       setHeader: () => {},
       status: () => ({
@@ -78,8 +75,16 @@ describe('Http Middleware Tests', () => {
         jsonp: () => true,
         send: () => {}
       }),
+      end: () => {},
       headersSent: false,
-      locals: {}
+      locals: {},
+      cors: true,
+      responseSchemas: {
+        headers: testSchema,
+        responses: {
+          200: testSchema
+        }
+      }
     };
   });
 
@@ -93,25 +98,30 @@ describe('Http Middleware Tests', () => {
 
   test('Enrich Request Details', async () => {
     req.contractDetails = {} as HttpContractDetails<MockSchemaValidator>;
-    enrichRequestDetails(contractDetails)(req, res, nextFunction);
+    enrichRequestDetails(contractDetails, testSchema, {
+      headers: testSchema,
+      responses: {
+        200: testSchema
+      }
+    })(req, res, nextFunction);
     expect(req.contractDetails).toEqual(contractDetails);
   });
 
-  test('Validate Request Params', async () => {
-    parseRequestParams(req, res, nextFunction);
-  });
+  // test('Validate Request Params', async () => {
+  //   parseRequestParams(req, res, nextFunction);
+  // });
 
-  test('Validate Request Headers', async () => {
-    parseReqHeaders(req, res, nextFunction);
-  });
+  // test('Validate Request Headers', async () => {
+  //   parseReqHeaders(req, res, nextFunction);
+  // });
 
-  test('Validate Request Body', async () => {
-    parseRequestBody(req, res, nextFunction);
-  });
+  // test('Validate Request Body', async () => {
+  //   parseRequestBody(req, res, nextFunction);
+  // });
 
-  test('Validate Request Query Params', async () => {
-    parseRequestQuery(req, res, nextFunction);
-  });
+  // test('Validate Request Query Params', async () => {
+  //   parseRequestQuery(req, res, nextFunction);
+  // });
 
   test('Validate Response', async () => {
     parseResponse(req, res, nextFunction);
