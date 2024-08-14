@@ -1,20 +1,19 @@
 import { Prettify } from '@forklaunch/common';
-import { AnySchemaValidator, Schema } from '@forklaunch/validator';
-import { IdiomaticSchema, SchemaValidator } from '@forklaunch/validator/types';
+import { AnySchemaValidator } from '@forklaunch/validator';
+import { SchemaValidator } from '@forklaunch/validator/types';
 import { ParsedQs } from 'qs';
 import {
   Body,
   HeadersObject,
   HttpContractDetails,
-  HttpMethod,
-  Method,
+  MapSchema,
   ParamsDictionary,
   ParamsObject,
-  PathParameterMethod,
   PathParamHttpContractDetails,
   QueryObject,
+  ResponseCompiledSchema,
   ResponsesObject
-} from './primitive.types';
+} from './contractDetails.types';
 
 /**
  * Interface representing the context of a request.
@@ -57,8 +56,39 @@ export interface ForklaunchRequest<
   body: ReqBody;
   /** Request query */
   query: ReqQuery;
+
+  /** Method */
+  method:
+    | 'GET'
+    | 'POST'
+    | 'PUT'
+    | 'PATCH'
+    | 'DELETE'
+    | 'OPTIONS'
+    | 'HEAD'
+    | 'CONNECT'
+    | 'TRACE';
+
+  /** Request schema, compiled */
+  requestSchema: unknown;
 }
 
+/**
+ * Represents the types of data that can be sent in a response.
+ */
+export type ForklaunchSendableData =
+  | Record<string, unknown>
+  | string
+  | Buffer
+  | ArrayBuffer
+  | NodeJS.ReadableStream
+  | null
+  | undefined;
+
+/**
+ * Interface representing a Forklaunch response status.
+ * @template ResBody - A type for the response body.
+ */
 export interface ForklaunchStatusResponse<ResBody> {
   /**
    * Sends the response.
@@ -107,8 +137,6 @@ export interface ForklaunchResponse<
   bodyData: unknown;
   /** Status code of the response */
   statusCode: number;
-  /** Whether the response is corked */
-  corked: boolean;
   /** Whether the response is finished */
   headersSent: boolean;
 
@@ -149,27 +177,23 @@ export interface ForklaunchResponse<
     ): ForklaunchStatusResponse<
       (Omit<ForklaunchResErrors, keyof ResBodyMap> & ResBodyMap)[U]
     >;
-    // <U extends 500>(code: U): ForklaunchStatusResponse<string>;
-    // <U extends 500>(
-    //   code: U,
-    //   message?: string
-    // ): ForklaunchStatusResponse<string>;
   };
+
+  /**
+   * Ends the response.
+   * @param {string} [data] - Optional data to send.
+   */
+  end: (data?: string) => void;
 
   /** Local variables */
   locals: LocalsObj;
-}
 
-/**
- * Type representing a mapped schema.
- *
- * @template SV - A type that extends AnySchemaValidator.
- * @template T - A type that extends IdiomaticSchema or a valid schema object.
- */
-export type MapSchema<
-  SV extends AnySchemaValidator,
-  T extends IdiomaticSchema<SV> | SV['_ValidSchemaObject']
-> = Schema<T, SV> extends infer U ? (T extends U ? unknown : U) : never;
+  /** Cors */
+  cors: boolean;
+
+  /** Response schema, compiled */
+  responseSchemas: ResponseCompiledSchema;
+}
 
 /**
  * Type representing the next function in a middleware.
@@ -249,12 +273,12 @@ export type ForklaunchSchemaMiddlewareHandler<
   MapSchema<SV, ReqHeaders> extends infer RequestHeaders
     ? unknown extends RequestHeaders
       ? Record<string, string>
-      : ReqHeaders
+      : RequestHeaders
     : Record<string, string>,
   MapSchema<SV, ResHeaders> extends infer ResponseHeaders
     ? unknown extends ResponseHeaders
       ? ForklaunchResHeaders
-      : ResHeaders
+      : ResponseHeaders
     : ForklaunchResHeaders,
   LocalsObj
 >;
@@ -272,7 +296,6 @@ export type ForklaunchSchemaMiddlewareHandler<
  * @template ResHeaders - A type for the response headers.
  *
  */
-
 export type LiveTypeFunction<
   SV extends AnySchemaValidator,
   Route extends string,
@@ -356,34 +379,21 @@ export type ForklaunchResErrors<
 export type ForklaunchResHeaders = { 'x-correlation-id': string };
 
 /**
- * Utility for different Contract Detail types
+ * Represents the default error types for responses.
  */
-export type ContractDetails<
-  ContractMethod extends Method,
-  SV extends AnySchemaValidator,
-  ParamsSchema extends ParamsObject<SV>,
-  ResponseSchemas extends ResponsesObject<SV>,
-  BodySchema extends Body<SV>,
-  QuerySchema extends QueryObject<SV>,
-  ReqHeaders extends HeadersObject<SV>,
-  ResHeaders extends HeadersObject<SV>
-> = ContractMethod extends PathParameterMethod
-  ? PathParamHttpContractDetails<
-      SV,
-      ParamsSchema,
-      ResponseSchemas,
-      QuerySchema,
-      ReqHeaders,
-      ResHeaders
-    >
-  : ContractMethod extends HttpMethod
-    ? HttpContractDetails<
-        SV,
-        ParamsSchema,
-        ResponseSchemas,
-        BodySchema,
-        QuerySchema,
-        ReqHeaders,
-        ResHeaders
-      >
-    : never;
+export type ErrorContainer<Code extends number> = {
+  /** The error code */
+  code: Code;
+  /** The error message */
+  error: string;
+};
+
+/**
+ * Represents a parsed response shape.
+ */
+export type ResponseShape<Params, Headers, Query, Body> = {
+  params: Params;
+  headers: Headers;
+  query: Query;
+  body: Body;
+};

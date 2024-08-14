@@ -11,9 +11,9 @@ import {
   ResponsesObject,
   TagObject
 } from 'openapi3-ts/oas31';
-import HTTPStatuses from './httpStatusCodes';
-import { ForklaunchRouter } from './types/forklaunch.types';
-import { HttpContractDetails } from './types/primitive.types';
+import { HttpContractDetails } from '../types/contractDetails.types';
+import { ForklaunchRouter } from '../types/router.types';
+import HTTPStatuses from '../utils/httpStatusCodes';
 
 /**
  * Capitalizes the first letter of a string.
@@ -100,29 +100,6 @@ function contentResolver<SV extends AnySchemaValidator>(
           schema: bodySpec
         }
       };
-}
-
-/**
- * Maps a method to a Swagger method type.
- *
- * @param {string} method - The method to map.
- * @returns {string} - The mapped method.
- */
-function mapMethodType(method: string) {
-  switch (method) {
-    case 'GET':
-      return 'get';
-    case 'POST':
-      return 'post';
-    case 'PUT':
-      return 'put';
-    case 'DELETE':
-      return 'delete';
-    case 'PATCH':
-      return 'patch';
-    default:
-      return 'get';
-  }
 }
 
 /**
@@ -234,7 +211,7 @@ export function generateSwaggerDocument<SV extends AnySchemaValidator>(
         }
       }
 
-      paths[fullPath][mapMethodType(route.method)] = pathItemObject;
+      paths[fullPath][route.method] = pathItemObject;
     });
   });
 

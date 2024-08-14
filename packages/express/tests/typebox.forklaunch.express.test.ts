@@ -25,7 +25,7 @@ describe('Forklaunch Express Tests', () => {
           200: string
         }
       },
-      (req, res) => {
+      (_req, res) => {
         res.status(200).send('Hello World');
       }
     );
@@ -90,16 +90,14 @@ describe('Forklaunch Express Tests', () => {
           200: string
         }
       },
-      (req, res) => {
+      (_req, res) => {
         res.status(200).send('Hello World');
       }
     );
 
     forklaunchApplication.use(forklaunchRouterInstance);
 
-    server = await forklaunchApplication.listen(6934, () => {
-      console.log('Server started');
-    });
+    server = await forklaunchApplication.listen(6934, () => {});
   });
 
   test('Get', async () => {
@@ -154,6 +152,6 @@ describe('Forklaunch Express Tests', () => {
   });
 
   afterAll(async () => {
-    setTimeout(async () => server.close(), 500);
+    server.close();
   });
 });

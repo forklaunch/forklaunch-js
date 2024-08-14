@@ -1,12 +1,11 @@
-import { AnySchemaValidator } from '@forklaunch/validator';
+import { AnySchemaValidator, SchemaValidator } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
+import { isHttpContractDetails } from '../guards/isHttpContractDetails';
 import {
+  corsMiddleware,
+  createRequestContext,
   enrichRequestDetails,
-  parseReqHeaders,
-  parseRequestAuth,
-  parseRequestBody,
-  parseRequestParams,
-  parseRequestQuery
+  parseRequest
 } from '../middleware';
 import {
   Body,
@@ -22,6 +21,7 @@ import {
   ParamsObject,
   PathParamHttpContractDetails,
   QueryObject,
+  ResponseCompiledSchema,
   ResponsesObject
 } from '../types';
 
@@ -34,6 +34,9 @@ interface ExpressLikeRouter<RouterFunction> {
   delete(path: string, ...handlers: RouterFunction[]): void;
 }
 
+/**
+ * A class that represents an Express-like router.
+ */
 export abstract class ForklaunchExpressLikeRouter<
   SV extends AnySchemaValidator,
   BasePath extends `/${string}`,
@@ -45,9 +48,15 @@ export abstract class ForklaunchExpressLikeRouter<
 
   constructor(
     basePath: BasePath,
+    readonly schemaValidator: SV,
     readonly internal: Internal
   ) {
     this.basePath = basePath;
+
+    this.internal.use(
+      createRequestContext(this.schemaValidator) as RouterFunction
+    );
+    this.internal.use(corsMiddleware as RouterFunction);
   }
 
   /**
@@ -57,7 +66,8 @@ export abstract class ForklaunchExpressLikeRouter<
    * @returns {MiddlewareHandler<SV>[]} - The resolved middlewares.
    */
   #resolveMiddlewares<
-    SV extends AnySchemaValidator,
+    ContractMethod extends Method,
+    Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
     ReqBody extends Body<SV>,
@@ -66,16 +76,19 @@ export abstract class ForklaunchExpressLikeRouter<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>
   >(
-    contractDetails:
-      | PathParamHttpContractDetails<
-          SV,
-          P,
-          ResBodyMap,
-          ReqQuery,
-          ReqHeaders,
-          ResHeaders
-        >
-      | HttpContractDetails<SV, P, ResBodyMap, ReqQuery, ReqHeaders, ResHeaders>
+    contractDetails: ContractDetails<
+      SV,
+      ContractMethod,
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders
+    >,
+    requestSchema: unknown,
+    responseSchemas: ResponseCompiledSchema
   ): ForklaunchSchemaMiddlewareHandler<
     SV,
     P,
@@ -86,18 +99,11 @@ export abstract class ForklaunchExpressLikeRouter<
     ResHeaders,
     LocalsObj
   >[] {
-    const middlewares: ForklaunchSchemaMiddlewareHandler<
-      SV,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders,
-      LocalsObj
-    >[] = [
+    return [
       enrichRequestDetails<
         SV,
+        ContractMethod,
+        Path,
         P,
         ResBodyMap,
         ReqBody,
@@ -105,25 +111,9 @@ export abstract class ForklaunchExpressLikeRouter<
         ReqHeaders,
         ResHeaders,
         LocalsObj
-      >(contractDetails)
+      >(contractDetails, requestSchema, responseSchemas),
+      parseRequest
     ];
-    if (contractDetails.params) {
-      middlewares.push(parseRequestParams);
-    }
-    if ((contractDetails as HttpContractDetails<SV>).body) {
-      middlewares.push(parseRequestBody);
-    }
-    if (contractDetails.requestHeaders) {
-      middlewares.push(parseReqHeaders);
-    }
-    if (contractDetails.query) {
-      middlewares.push(parseRequestQuery);
-    }
-    if (contractDetails.auth) {
-      middlewares.push(parseRequestAuth);
-    }
-
-    return middlewares;
   }
 
   /**
@@ -139,7 +129,6 @@ export abstract class ForklaunchExpressLikeRouter<
    * @returns {ExpressMiddlewareHandler} - The Express request handler.
    */
   #parseAndRunControllerFunction<
-    SV extends AnySchemaValidator,
     P extends ParamsDictionary,
     ResBodyMap extends Record<number, unknown>,
     ReqBody extends Record<string, unknown>,
@@ -176,9 +165,7 @@ export abstract class ForklaunchExpressLikeRouter<
       try {
         await requestHandler(req, res, next);
       } catch (error) {
-        if (next) {
-          next(error as Error);
-        }
+        next?.(error as Error);
 
         console.error(error);
         if (!res.headersSent) {
@@ -201,7 +188,6 @@ export abstract class ForklaunchExpressLikeRouter<
    * @throws {Error} - Throws an error if the last argument is not a function.
    */
   #extractControllerFunction<
-    SV extends AnySchemaValidator,
     P extends ParamsDictionary,
     ResBodyMap extends Record<number, unknown>,
     ReqBody extends Record<string, unknown>,
@@ -275,6 +261,74 @@ export abstract class ForklaunchExpressLikeRouter<
   use(...args: unknown[]): this {
     this.internal.use(...(args as RouterFunction[]));
     return this;
+  }
+
+  #compile<
+    ContractMethod extends Method,
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>
+  >(
+    contractDetails: ContractDetails<
+      SV,
+      ContractMethod,
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders
+    >
+  ) {
+    const schemaValidator = this.schemaValidator as SchemaValidator;
+
+    const requestSchema = schemaValidator.compile(
+      schemaValidator.schemify({
+        ...(contractDetails.params ? { params: contractDetails.params } : {}),
+        ...(contractDetails.requestHeaders
+          ? { headers: contractDetails.requestHeaders }
+          : {}),
+        ...(contractDetails.query ? { query: contractDetails.query } : {}),
+        ...(isHttpContractDetails(contractDetails) && contractDetails.body
+          ? { body: contractDetails.body }
+          : {})
+      })
+    );
+
+    const responseEntries = {
+      400: schemaValidator.string,
+      401: schemaValidator.string,
+      403: schemaValidator.string,
+      404: schemaValidator.string,
+      500: schemaValidator.string,
+      ...contractDetails.responses
+    };
+
+    const responseSchemas: ResponseCompiledSchema = {
+      responses: {},
+      ...(contractDetails.responseHeaders
+        ? {
+            headers: schemaValidator.compile(
+              schemaValidator.schemify(contractDetails.responseHeaders)
+            )
+          }
+        : {})
+    };
+    Object.entries(responseEntries).forEach(([code, responseShape]) => {
+      responseSchemas.responses[Number(code)] = schemaValidator.compile(
+        schemaValidator.schemify(responseShape)
+      );
+    });
+
+    return {
+      requestSchema,
+      responseSchemas
+    };
   }
 
   /**
@@ -393,8 +447,9 @@ export abstract class ForklaunchExpressLikeRouter<
     >],
     contractDetailsOrTypedHandler:
       | ContractDetails<
-          ContractMethod,
           SV,
+          ContractMethod,
+          Path,
           P,
           ResBodyMap,
           ReqBody,
@@ -405,6 +460,7 @@ export abstract class ForklaunchExpressLikeRouter<
       | TypedHandler<
           SV,
           ContractMethod,
+          Path,
           P,
           ResBodyMap,
           ReqBody,
@@ -423,11 +479,21 @@ export abstract class ForklaunchExpressLikeRouter<
       ResHeaders,
       LocalsObj
     >[]
-  ) {
+  ): LiveTypeFunction<
+    SV,
+    `${BasePath}${Path}`,
+    P,
+    ResBodyMap,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    ResHeaders
+  > {
     if (contractDetailsOrTypedHandler instanceof TypedHandler) {
       const typedHandler = contractDetailsOrTypedHandler as TypedHandler<
         SV,
         ContractMethod,
+        Path,
         P,
         ResBodyMap,
         ReqBody,
@@ -437,7 +503,7 @@ export abstract class ForklaunchExpressLikeRouter<
         LocalsObj
       >;
 
-      const x = this.#registerRoute<
+      return this.#registerRoute<
         ContractMethod,
         Path,
         P,
@@ -453,20 +519,29 @@ export abstract class ForklaunchExpressLikeRouter<
         registrationFunction,
         typedHandler.contractDetails,
         ...typedHandler.functions.concat(functions)
-      );
-    }
-
-    const contractDetails =
-      contractDetailsOrTypedHandler as PathParamHttpContractDetails<
+      ) as unknown as LiveTypeFunction<
         SV,
+        `${BasePath}${Path}`,
         P,
         ResBodyMap,
+        ReqBody,
         ReqQuery,
         ReqHeaders,
         ResHeaders
       >;
+    }
 
-    const controllerFunction = this.#extractControllerFunction(functions);
+    const contractDetails = contractDetailsOrTypedHandler as ContractDetails<
+      SV,
+      ContractMethod,
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders
+    >;
 
     this.routes.push({
       basePath: this.basePath,
@@ -475,10 +550,15 @@ export abstract class ForklaunchExpressLikeRouter<
       contractDetails
     });
 
-    registrationFunction(
+    const { requestSchema, responseSchemas } = this.#compile(contractDetails);
+
+    const controllerFunction = this.#extractControllerFunction(functions);
+
+    registrationFunction.bind(this.internal)(
       path,
       ...(this.#resolveMiddlewares<
-        SV,
+        ContractMethod,
+        Path,
         P,
         ResBodyMap,
         ReqBody,
@@ -486,7 +566,9 @@ export abstract class ForklaunchExpressLikeRouter<
         ReqHeaders,
         ResHeaders,
         LocalsObj
-      >(contractDetails).concat(functions) as RouterFunction[]),
+      >(contractDetails, requestSchema, responseSchemas).concat(
+        functions
+      ) as RouterFunction[]),
       this.#parseAndRunControllerFunction(controllerFunction) as RouterFunction
     );
 
@@ -532,6 +614,7 @@ export abstract class ForklaunchExpressLikeRouter<
     contractDetailsOrTypedHandler:
       | PathParamHttpContractDetails<
           SV,
+          Path,
           P,
           ResBodyMap,
           ReqQuery,
@@ -541,6 +624,7 @@ export abstract class ForklaunchExpressLikeRouter<
       | TypedHandler<
           SV,
           'get',
+          Path,
           P,
           ResBodyMap,
           ReqBody,
@@ -579,19 +663,6 @@ export abstract class ForklaunchExpressLikeRouter<
         ...functions
       )
     };
-
-    // as {
-    //   get: LiveTypeFunction<
-    //     SV,
-    //     `${BasePath}${Path}`,
-    //     P,
-    //     ResBodyMap,
-    //     ReqBody,
-    //     ReqQuery,
-    //     ReqHeaders,
-    //     ResHeaders
-    //   >;
-    // };
   }
 
   /**
@@ -621,6 +692,7 @@ export abstract class ForklaunchExpressLikeRouter<
     contractDetailsOrTypedHandler:
       | HttpContractDetails<
           SV,
+          Path,
           P,
           ResBodyMap,
           ReqBody,
@@ -631,6 +703,7 @@ export abstract class ForklaunchExpressLikeRouter<
       | TypedHandler<
           SV,
           'post',
+          Path,
           P,
           ResBodyMap,
           ReqBody,
@@ -698,6 +771,7 @@ export abstract class ForklaunchExpressLikeRouter<
     contractDetailsOrTypedHandler:
       | HttpContractDetails<
           SV,
+          Path,
           P,
           ResBodyMap,
           ReqBody,
@@ -708,6 +782,7 @@ export abstract class ForklaunchExpressLikeRouter<
       | TypedHandler<
           SV,
           'put',
+          Path,
           P,
           ResBodyMap,
           ReqBody,
@@ -775,6 +850,7 @@ export abstract class ForklaunchExpressLikeRouter<
     contractDetailsOrTypedHandler:
       | HttpContractDetails<
           SV,
+          Path,
           P,
           ResBodyMap,
           ReqBody,
@@ -785,6 +861,7 @@ export abstract class ForklaunchExpressLikeRouter<
       | TypedHandler<
           SV,
           'patch',
+          Path,
           P,
           ResBodyMap,
           ReqBody,
@@ -852,6 +929,7 @@ export abstract class ForklaunchExpressLikeRouter<
     contractDetailsOrTypedHandler:
       | PathParamHttpContractDetails<
           SV,
+          Path,
           P,
           ResBodyMap,
           ReqQuery,
@@ -861,6 +939,7 @@ export abstract class ForklaunchExpressLikeRouter<
       | TypedHandler<
           SV,
           'delete',
+          Path,
           P,
           ResBodyMap,
           ReqBody,
@@ -905,6 +984,7 @@ export abstract class ForklaunchExpressLikeRouter<
 class TypedHandler<
   SV extends AnySchemaValidator,
   ContractMethod extends Method,
+  Path extends `/${string}`,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
   ReqBody extends Body<SV>,
@@ -915,8 +995,9 @@ class TypedHandler<
 > {
   constructor(
     public contractDetails: ContractDetails<
-      ContractMethod,
       SV,
+      ContractMethod,
+      Path,
       P,
       ResBodyMap,
       ReqBody,
@@ -945,8 +1026,9 @@ class TypedHandler<
  * @template functions - The handler middlware and function.
  */
 export function typedHandler<
-  ContractMethod extends Method,
   SV extends AnySchemaValidator,
+  ContractMethod extends Method,
+  Path extends `/${string}`,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
   ReqBody extends Body<SV>,
@@ -958,8 +1040,9 @@ export function typedHandler<
   _schemaValidator: SV,
   _method: ContractMethod,
   contractDetails: ContractDetails<
-    ContractMethod,
     SV,
+    ContractMethod,
+    Path,
     P,
     ResBodyMap,
     ReqBody,
@@ -980,7 +1063,8 @@ export function typedHandler<
 ) {
   return new TypedHandler<
     SV,
-    Method,
+    ContractMethod,
+    Path,
     P,
     ResBodyMap,
     ReqBody,

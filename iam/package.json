@@ -4,7 +4,7 @@
   "description": "IAM basic implementation for Forklaunch",
   "main": "app.ts",
   "scripts": {
-    "test": "jest"
+    "test": "jest --passWithNoTests"
   },
   "repository": {
     "type": "git",

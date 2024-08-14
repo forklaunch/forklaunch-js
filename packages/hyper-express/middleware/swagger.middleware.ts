@@ -20,9 +20,7 @@ export function swaggerRedirect(path: string): MiddlewareHandler {
     if (req.path === path) {
       res.redirect(`${path}/`);
     }
-    if (next) {
-      return next();
-    }
+    return next?.();
   };
 }
 

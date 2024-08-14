@@ -8,3 +8,6 @@ ts-playground/
 lib
 
 .vscode
+
+*dist
+*lib

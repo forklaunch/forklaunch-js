@@ -1,6 +1,6 @@
 import {
   TObject as OriginalTObject,
-  Static,
+  StaticDecode,
   TArray,
   TKind,
   TLiteral,
@@ -9,6 +9,7 @@ import {
   TSchema,
   TUnknown
 } from '@sinclair/typebox';
+import { TypeCheck } from '@sinclair/typebox/compiler';
 import { Increment, KeyTypes, LiteralSchema } from '../../types/schema.types';
 
 /**
@@ -41,7 +42,9 @@ export type TObject<T> = T extends TObjectShape ? OriginalTObject<T> : TNever;
  *
  * @template T - The schema type to translate.
  */
-export type TSchemaTranslate<T> = T extends TCatchall ? Static<T> : TNever;
+export type TSchemaTranslate<T> = T extends TCatchall
+  ? StaticDecode<T>
+  : TNever;
 
 /**
  * Represents an unboxed object schema where each key can have an idiomatic schema.
@@ -65,32 +68,29 @@ export type TUnionContainer = [...TIdiomaticSchema[]];
  *
  * @template T - The union container to resolve.
  */
-export type UnionTResolve<T extends TUnionContainer> = T extends [
-  ...infer A extends TIdiomaticSchema[]
-]
-  ? [
-      ...{
-        [K in keyof A]: TResolve<A[K]>;
-      }
-    ]
-  : [];
+export type UnionTResolve<T extends TUnionContainer> =
+  T extends (infer UnionTypes)[] ? [TResolve<UnionTypes>] : TNever;
 
 /**
- * Resolves a schema type T to its resolved type. The depth is limited to 22 to prevent infinite recursion.
+ * Resolves a schema type T to its resolved type. The depth is limited to 12 to prevent infinite recursion, due to StaticDecode limitations.
  *
  * @template T - The schema type to resolve.
  * @template Depth - The current depth of the resolution.
  */
-export type TResolve<T, Depth extends number = 0> = Depth extends 22
+export type TResolve<T, Depth extends number = 0> = Depth extends 12
   ? TUnknown
   : T extends LiteralSchema
     ? TLiteral<T>
-    : T extends TKind
+    : T extends TSchema
       ? T
-      : T extends TObject<TObjectShape>
+      : T extends TKind
         ? T
-        : T extends UnboxedTObjectSchema
-          ? TObject<{
-              [K in keyof T]: TResolve<T[K], Increment<Depth>>;
-            }>
-          : TNever;
+        : T extends TObject<TObjectShape>
+          ? T
+          : T extends UnboxedTObjectSchema
+            ? TObject<{
+                [K in keyof T]: TResolve<T[K], Increment<Depth>>;
+              }>
+            : T extends TypeCheck<infer Type>
+              ? TResolve<Type, Increment<Depth>>
+              : TNever;

@@ -10,7 +10,7 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "jest",
+    "test": "jest --passWithNoTests",
     "build": "tsc",
     "clean": "rm -rf dist pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",

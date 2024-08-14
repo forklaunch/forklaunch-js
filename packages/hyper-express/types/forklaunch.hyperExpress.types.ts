@@ -1,6 +1,7 @@
 import {
   ForklaunchRequest,
   ForklaunchResponse,
+  ForklaunchSendableData,
   ForklaunchStatusResponse,
   ParamsDictionary
 } from '@forklaunch/core';
@@ -29,7 +30,7 @@ export interface Request<
   ReqHeaders extends Record<string, string>,
   LocalsObj extends Record<string, unknown>
 > extends ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>,
-    Omit<ExpressRequest<LocalsObj>, 'params' | 'query' | 'headers'> {
+    Omit<ExpressRequest<LocalsObj>, 'method' | 'params' | 'query' | 'headers'> {
   /** The request body */
   body: ReqBody;
   /** The request query parameters */
@@ -60,8 +61,9 @@ export interface Response<
       | 'statusCode'
       | 'json'
       | 'jsonp'
+      | 'end'
     >,
-    ForklaunchStatusResponse<ResBodyMap> {
+    ForklaunchStatusResponse<ForklaunchSendableData> {
   /** The body data of the response */
   bodyData: unknown;
   /** If cors are applied to the response */

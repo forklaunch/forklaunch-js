@@ -1,6 +1,6 @@
 import { TypeboxSchemaValidator, string } from '@forklaunch/validator/typebox';
-import * as uWebSockets from 'uWebSockets.js';
 import {
+  App,
   forklaunchExpress,
   forklaunchRouter
 } from '../forklaunch.hyperExpress';
@@ -8,9 +8,8 @@ import {
 const typeboxSchemaValidator = new TypeboxSchemaValidator();
 
 describe('Forklaunch Hyper-Express Tests', () => {
-  let forklaunchApplication;
+  let forklaunchApplication: App<TypeboxSchemaValidator>;
   let forklaunchRouterInstance;
-  let server: uWebSockets.us_listen_socket;
 
   beforeAll(async () => {
     forklaunchApplication = forklaunchExpress(typeboxSchemaValidator);
@@ -28,7 +27,7 @@ describe('Forklaunch Hyper-Express Tests', () => {
           200: string
         }
       },
-      (req, res) => {
+      (_req, res) => {
         res.status(200).send('Hello World');
       }
     );
@@ -93,20 +92,18 @@ describe('Forklaunch Hyper-Express Tests', () => {
           200: string
         }
       },
-      (req, res) => {
+      (_req, res) => {
         res.status(200).send('Hello World');
       }
     );
 
     forklaunchApplication.use(forklaunchRouterInstance);
 
-    server = await forklaunchApplication.listen(6934, () => {
-      console.log('Server started');
-    });
+    await forklaunchApplication.listen(6936, () => {});
   });
 
   test('Get', async () => {
-    const testGet = await fetch('http://localhost:6934/testpath/test', {
+    const testGet = await fetch('http://localhost:6936/testpath/test', {
       method: 'GET'
     });
 
@@ -115,7 +112,7 @@ describe('Forklaunch Hyper-Express Tests', () => {
   });
 
   test('Post', async () => {
-    const testPost = await fetch('http://localhost:6934/testpath/test', {
+    const testPost = await fetch('http://localhost:6936/testpath/test', {
       method: 'POST',
       body: JSON.stringify({ test: 'Hello World' }),
       headers: { 'Content-Type': 'application/json' }
@@ -126,7 +123,7 @@ describe('Forklaunch Hyper-Express Tests', () => {
   });
 
   test('Put', async () => {
-    const testPut = await fetch('http://localhost:6934/testpath/test', {
+    const testPut = await fetch('http://localhost:6936/testpath/test', {
       method: 'PUT',
       body: JSON.stringify({ test: 'Hello World' }),
       headers: { 'Content-Type': 'application/json' }
@@ -137,7 +134,7 @@ describe('Forklaunch Hyper-Express Tests', () => {
   });
 
   test('Patch', async () => {
-    const testPatch = await fetch('http://localhost:6934/testpath/test', {
+    const testPatch = await fetch('http://localhost:6936/testpath/test', {
       method: 'PATCH',
       body: JSON.stringify({ test: 'Hello World' }),
       headers: { 'Content-Type': 'application/json' }
@@ -148,7 +145,7 @@ describe('Forklaunch Hyper-Express Tests', () => {
   });
 
   test('Delete', async () => {
-    const testDelete = await fetch('http://localhost:6934/testpath/test', {
+    const testDelete = await fetch('http://localhost:6936/testpath/test', {
       method: 'DELETE'
     });
 
@@ -157,6 +154,6 @@ describe('Forklaunch Hyper-Express Tests', () => {
   });
 
   afterAll(async () => {
-    uWebSockets.us_listen_socket_close(server);
+    forklaunchApplication.internal.shutdown();
   });
 });

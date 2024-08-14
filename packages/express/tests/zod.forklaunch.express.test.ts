@@ -25,7 +25,7 @@ describe('Forklaunch Express Tests', () => {
           200: string
         }
       },
-      (req, res) => {
+      (_req, res) => {
         res.status(200).send('Hello World');
       }
     );
@@ -90,20 +90,18 @@ describe('Forklaunch Express Tests', () => {
           200: string
         }
       },
-      (req, res) => {
+      (_req, res) => {
         res.status(200).send('Hello World');
       }
     );
 
     forklaunchApplication.use(forklaunchRouterInstance);
 
-    await forklaunchApplication.listen(6935, () => {
-      console.log('Server started');
-    });
+    server = await forklaunchApplication.listen(6935, () => {});
   });
 
   test('Get', async () => {
-    const testGet = await fetch('http://localhost:6934/testpath/test', {
+    const testGet = await fetch('http://localhost:6935/testpath/test', {
       method: 'GET'
     });
 
@@ -112,7 +110,7 @@ describe('Forklaunch Express Tests', () => {
   });
 
   test('Post', async () => {
-    const testPost = await fetch('http://localhost:6934/testpath/test', {
+    const testPost = await fetch('http://localhost:6935/testpath/test', {
       method: 'POST',
       body: JSON.stringify({ test: 'Hello World' }),
       headers: { 'Content-Type': 'application/json' }
@@ -123,7 +121,7 @@ describe('Forklaunch Express Tests', () => {
   });
 
   test('Put', async () => {
-    const testPut = await fetch('http://localhost:6934/testpath/test', {
+    const testPut = await fetch('http://localhost:6935/testpath/test', {
       method: 'PUT',
       body: JSON.stringify({ test: 'Hello World' }),
       headers: { 'Content-Type': 'application/json' }
@@ -134,7 +132,7 @@ describe('Forklaunch Express Tests', () => {
   });
 
   test('Patch', async () => {
-    const testPatch = await fetch('http://localhost:6934/testpath/test', {
+    const testPatch = await fetch('http://localhost:6935/testpath/test', {
       method: 'PATCH',
       body: JSON.stringify({ test: 'Hello World' }),
       headers: { 'Content-Type': 'application/json' }
@@ -145,7 +143,7 @@ describe('Forklaunch Express Tests', () => {
   });
 
   test('Delete', async () => {
-    const testDelete = await fetch('http://localhost:6934/testpath/test', {
+    const testDelete = await fetch('http://localhost:6935/testpath/test', {
       method: 'DELETE'
     });
 
@@ -154,6 +152,6 @@ describe('Forklaunch Express Tests', () => {
   });
 
   afterAll(async () => {
-    setTimeout(async () => server.close(), 500);
+    server.close();
   });
 });

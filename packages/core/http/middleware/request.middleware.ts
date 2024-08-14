@@ -1,25 +1,60 @@
 import { AnySchemaValidator, SchemaValidator } from '@forklaunch/validator';
+import cors from 'cors';
 import * as jose from 'jose';
 import { ParsedQs } from 'qs';
 import { v4 } from 'uuid';
+import { isResponseShape } from '../guards/isResponseShape';
 import {
   ForklaunchNextFunction,
   ForklaunchRequest,
+  ForklaunchResHeaders,
   ForklaunchResponse,
   ForklaunchSchemaMiddlewareHandler
-} from '../types/api.types';
+} from '../types/apiDefinition.types';
 import {
   AuthMethod,
   Body,
+  ContractDetails,
   HeadersObject,
-  HttpContractDetails,
+  Method,
   ParamsDictionary,
   ParamsObject,
-  PathParamHttpContractDetails,
   QueryObject,
-  ResponsesObject,
-  StringOnlyObject
-} from '../types/primitive.types';
+  ResponseCompiledSchema,
+  ResponsesObject
+} from '../types/contractDetails.types';
+
+/**
+ * Cors middleware handler
+ *
+ * @param req - Express-like request object
+ * @param res - Express-like response object
+ * @param next - Express-like next function
+ */
+export function corsMiddleware<
+  SV extends AnySchemaValidator,
+  P extends ParamsDictionary,
+  ResBodyMap extends Record<number, unknown>,
+  ReqBody extends Record<string, unknown>,
+  ReqQuery extends ParsedQs,
+  ReqHeaders extends Record<string, string>,
+  ResHeaders extends Record<string, string>,
+  LocalsObj extends Record<string, unknown>
+>(
+  req: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>,
+  res: ForklaunchResponse<
+    ResBodyMap,
+    ForklaunchResHeaders & ResHeaders,
+    LocalsObj
+  >,
+  next?: ForklaunchNextFunction
+) {
+  console.debug('[MIDDLEWARE] cors started');
+  if (req.method === 'OPTIONS') {
+    res.cors = true;
+  }
+  cors()(req, res, next ?? (() => {}));
+}
 
 /**
  * Middleware to create and add a request context.
@@ -53,6 +88,7 @@ export function createRequestContext<
   LocalsObj
 > {
   return (req, res, next?) => {
+    console.debug('[MIDDLEWARE] createRequestContext started');
     req.schemaValidator = schemaValidator as SchemaValidator;
 
     let correlationId = v4();
@@ -67,9 +103,7 @@ export function createRequestContext<
       correlationId: correlationId
     };
 
-    if (next) {
-      next();
-    }
+    next?.();
   };
 }
 
@@ -85,6 +119,8 @@ export function createRequestContext<
  */
 export function enrichRequestDetails<
   SV extends AnySchemaValidator,
+  ContractMethod extends Method,
+  Path extends `/${string}`,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
   ReqBody extends Body<SV>,
@@ -93,16 +129,19 @@ export function enrichRequestDetails<
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>
 >(
-  contractDetails:
-    | PathParamHttpContractDetails<
-        SV,
-        P,
-        ResBodyMap,
-        ReqQuery,
-        ReqHeaders,
-        ResHeaders
-      >
-    | HttpContractDetails<SV, P, ResBodyMap, ReqQuery, ReqHeaders, ResHeaders>
+  contractDetails: ContractDetails<
+    SV,
+    ContractMethod,
+    Path,
+    P,
+    ResBodyMap,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    ResHeaders
+  >,
+  requestSchema: unknown,
+  responseSchemas: ResponseCompiledSchema
 ): ForklaunchSchemaMiddlewareHandler<
   SV,
   P,
@@ -113,12 +152,12 @@ export function enrichRequestDetails<
   ResHeaders,
   LocalsObj
 > {
-  return (req, _res, next?) => {
+  return (req, res, next?) => {
+    console.debug('[MIDDLEWARE] enrichRequestDetails started');
     req.contractDetails = contractDetails;
-
-    if (next) {
-      next();
-    }
+    req.requestSchema = requestSchema;
+    res.responseSchemas = responseSchemas;
+    next?.();
   };
 }
 
@@ -126,30 +165,6 @@ export function enrichRequestDetails<
  * Pre-handler function to parse and validate input.
  *
  * @template SV - A type that extends AnySchemaValidator.
- * @param {SchemaValidator} schemaValidator - The schema validator.
- * @param {unknown} object - The object to validate.
- * @param {StringOnlyObject<SV>} [schemaInput] - The schema input.
- * @returns {number | void} - Returns 400 if validation fails.
- */
-export function preHandlerParse<SV extends AnySchemaValidator>(
-  schemaValidator: SchemaValidator,
-  object: unknown,
-  schemaInput?: StringOnlyObject<SV>
-): 400 | undefined {
-  if (!schemaInput) {
-    return;
-  }
-
-  const schema = schemaValidator.schemify(schemaInput);
-  if (!schemaValidator.validate(schema, object)) {
-    return 400;
-  }
-}
-
-/**
- * Middleware to parse request parameters.
- *
- * @template SV - A type that extends AnySchemaValidator.
  * @template Request - A type that extends ForklaunchRequest.
  * @template Response - A type that extends ForklaunchResponse.
  * @template NextFunction - A type that extends ForklaunchNextFunction.
@@ -157,7 +172,7 @@ export function preHandlerParse<SV extends AnySchemaValidator>(
  * @param {Response} res - The response object.
  * @param {NextFunction} [next] - The next middleware function.
  */
-export function parseRequestParams<
+export function parseRequest<
   SV extends AnySchemaValidator,
   P extends ParamsDictionary,
   ResBodyMap extends Record<number, unknown>,
@@ -168,139 +183,43 @@ export function parseRequestParams<
   LocalsObj extends Record<string, unknown>
 >(
   req: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>,
-  res: ForklaunchResponse<ResBodyMap, ResHeaders, LocalsObj>,
+  _res: ForklaunchResponse<ResBodyMap, ResHeaders, LocalsObj>,
   next?: ForklaunchNextFunction
 ) {
-  const params = req.contractDetails.params;
-  if (preHandlerParse(req.schemaValidator, req.params, params) === 400) {
-    res.status(400).send('Invalid request parameters.');
-    if (next) {
-      next(new Error('Invalid request parameters.'));
-    }
-  }
-  if (next) {
-    next();
-  }
-}
+  console.debug('[MIDDLEWARE] parseRequest started');
+  const request = {
+    params: req.params,
+    query: req.query,
+    headers: req.headers,
+    body: req.body
+  };
 
-/**
- * Middleware to parse request body.
- *
- * @template SV - A type that extends AnySchemaValidator.
- * @template Request - A type that extends ForklaunchRequest.
- * @template Response - A type that extends ForklaunchResponse.
- * @template NextFunction - A type that extends ForklaunchNextFunction.
- * @param {Request} req - The request object.
- * @param {Response} res - The response object.
- * @param {NextFunction} [next] - The next middleware function.
- */
-export function parseRequestBody<
-  SV extends AnySchemaValidator,
-  P extends ParamsDictionary,
-  ResBodyMap extends Record<number, unknown>,
-  ReqBody extends Record<string, unknown>,
-  ReqQuery extends ParsedQs,
-  ReqHeaders extends Record<string, string>,
-  ResHeaders extends Record<string, string>,
-  LocalsObj extends Record<string, unknown>
->(
-  req: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>,
-  res: ForklaunchResponse<ResBodyMap, ResHeaders, LocalsObj>,
-  next?: ForklaunchNextFunction
-) {
-  if (req.headers['content-type'] === 'application/json') {
-    const body = (req.schemaValidator,
-    req.contractDetails as HttpContractDetails<SV>).body;
-    if (
-      preHandlerParse(
-        req.schemaValidator,
-        req.body,
-        body as StringOnlyObject<SV>
-      ) === 400
-    ) {
-      res.status(400).send('Invalid request body.');
-      if (next) {
-        next(new Error('Invalid request body.'));
-      }
-    }
-  }
-  if (next) {
-    next();
-  }
-}
+  const parsedRequest = req.schemaValidator.parse(req.requestSchema, request);
 
-/**
- * Middleware to parse request headers.
- *
- * @template SV - A type that extends AnySchemaValidator.
- * @template Request - A type that extends ForklaunchRequest.
- * @template Response - A type that extends ForklaunchResponse.
- * @template NextFunction - A type that extends ForklaunchNextFunction.
- * @param {Request} req - The request object.
- * @param {Response} res - The response object.
- * @param {NextFunction} [next] - The next middleware function.
- */
-export function parseReqHeaders<
-  SV extends AnySchemaValidator,
-  P extends ParamsDictionary,
-  ResBodyMap extends Record<number, unknown>,
-  ReqBody extends Record<string, unknown>,
-  ReqQuery extends ParsedQs,
-  ReqHeaders extends Record<string, string>,
-  ResHeaders extends Record<string, string>,
-  LocalsObj extends Record<string, unknown>
->(
-  req: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>,
-  res: ForklaunchResponse<ResBodyMap, ResHeaders, LocalsObj>,
-  next?: ForklaunchNextFunction
-) {
-  const headers = req.contractDetails.requestHeaders;
-  if (preHandlerParse(req.schemaValidator, req.headers, headers) === 400) {
-    res.status(400).send('Invalid request headers.');
-    if (next) {
-      next(new Error('Invalid request headers.'));
+  if (
+    parsedRequest.ok &&
+    isResponseShape<P, ReqHeaders, ReqQuery, ReqBody>(parsedRequest.value)
+  ) {
+    req.body = parsedRequest.value.body;
+    req.params = parsedRequest.value.params;
+    req.query = parsedRequest.value.query;
+    req.headers = parsedRequest.value.headers;
+  }
+  if (!parsedRequest.ok) {
+    switch (req.contractDetails.options?.requestValidation) {
+      default:
+      case 'error':
+        next?.(new Error(`Invalid request: ${parsedRequest.error}`));
+        break;
+      case 'warning':
+        console.warn(`Invalid request: ${parsedRequest.error}`);
+        break;
+      case 'none':
+        break;
     }
   }
-  if (next) {
-    next();
-  }
-}
 
-/**
- * Middleware to parse request query.
- *
- * @template SV - A type that extends AnySchemaValidator.
- * @template Request - A type that extends ForklaunchRequest.
- * @template Response - A type that extends ForklaunchResponse.
- * @template NextFunction - A type that extends ForklaunchNextFunction.
- * @param {Request} req - The request object.
- * @param {Response} res - The response object.
- * @param {NextFunction} [next] - The next middleware function.
- */
-export function parseRequestQuery<
-  SV extends AnySchemaValidator,
-  P extends ParamsDictionary,
-  ResBodyMap extends Record<number, unknown>,
-  ReqBody extends Record<string, unknown>,
-  ReqQuery extends ParsedQs,
-  ReqHeaders extends Record<string, string>,
-  ResHeaders extends Record<string, string>,
-  LocalsObj extends Record<string, unknown>
->(
-  req: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>,
-  res: ForklaunchResponse<ResBodyMap, ResHeaders, LocalsObj>,
-  next?: ForklaunchNextFunction
-) {
-  const query = req.contractDetails.query;
-  if (preHandlerParse(req.schemaValidator, req.query, query) === 400) {
-    res.status(400).send('Invalid request query.');
-    if (next) {
-      next(new Error('Invalid request query.'));
-    }
-  }
-  if (next) {
-    next();
-  }
+  next?.();
 }
 
 /**
@@ -401,9 +320,7 @@ export async function parseRequestAuth<
     );
     if (Array.isArray(errorAndMessage)) {
       res.status(errorAndMessage[0]).send(errorAndMessage[1]);
-      if (next) {
-        next(new Error(errorAndMessage[1]));
-      }
+      next?.(new Error(errorAndMessage[1]));
     }
 
     // TODO: Implement role and permission checking
@@ -424,8 +341,7 @@ export async function parseRequestAuth<
     //       req.contractDetails.auth?.forbiddenSlugs?.has(permissionSlug)
     //     ) {
     //       res.status(403).send(permissionErrorMessage);
-    //       if (next) {
-    //         next(new Error(permissionErrorMessage));
+    //       next?.(new Error(permissionErrorMessage));
     //       }
     //     }
     //   });
@@ -435,14 +351,10 @@ export async function parseRequestAuth<
     //       req.contractDetails.auth?.forbiddenRoles?.has(role)
     //     ) {
     //       res.status(403).send(roleErrorMessage);
-    //       if (next) {
-    //         next(new Error(roleErrorMessage));
-    //       }
+    //       next?.(new Error(roleErrorMessage));
     //     }
     //   });
   }
 
-  // if (next) {
-  //     next();
-  // }
+  // next?.();
 }

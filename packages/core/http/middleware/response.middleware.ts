@@ -5,40 +5,33 @@ import {
   ForklaunchRequest,
   ForklaunchResHeaders,
   ForklaunchResponse
-} from '../types/api.types';
-import {
-  HttpContractDetails,
-  ParamsDictionary
-} from '../types/primitive.types';
+} from '../types/apiDefinition.types';
+import { ParamsDictionary } from '../types/contractDetails.types';
 
 /**
- * Checks if any validation is required for the given contract details.
+ * Middleware to parse and validate the response according to the provided schema.
  *
- * @template SV - A type that extends AnySchemaValidator.
- * @param {HttpContractDetails<SV>} contractDetails - The contract details.
- * @returns {boolean} - True if any validation is required, otherwise false.
- */
-function checkAnyValidation<SV extends AnySchemaValidator>(
-  contractDetails: HttpContractDetails<SV>
-) {
-  return (
-    contractDetails.body ||
-    contractDetails.params ||
-    contractDetails.requestHeaders ||
-    contractDetails.query
-  );
-}
-
-/**
- * Middleware to parse and validate the response.
+ * This function validates the response against a schema provided by the request's schema validator.
+ * If the response does not conform to the schema, the behavior is determined by the `responseValidation`
+ * option in `req.contractDetails.options`:
+ * - `'error'` (default): Calls `next` with an error.
+ * - `'warning'`: Logs a warning to the console.
+ * - `'none'`: Silently continues without action.
  *
- * @template SV - A type that extends AnySchemaValidator.
- * @template Request - A type that extends ForklaunchRequest.
- * @template Response - A type that extends ForklaunchResponse.
- * @template NextFunction - A type that extends ForklaunchNextFunction.
- * @param {Request} req - The request object.
- * @param {Response} res - The response object.
- * @param {NextFunction} [next] - The next middleware function.
+ * @template SV - The type of the schema validator used in the request.
+ * @template P - The type of the parameters dictionary used in the request.
+ * @template ResBodyMap - A record type mapping status codes to response body types.
+ * @template ReqBody - The type of the request body.
+ * @template ReqQuery - The type of the parsed query string.
+ * @template ReqHeaders - The type of the request headers.
+ * @template ResHeaders - The type of the response headers, extended from `ForklaunchResHeaders`.
+ * @template LocalsObj - The type of the locals object in the response.
+ *
+ * @param {ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>} req - The request object, containing the schema validator and other request data.
+ * @param {ForklaunchResponse<ResBodyMap, ForklaunchResHeaders & ResHeaders, LocalsObj>} res - The response object, including headers and body data.
+ * @param {ForklaunchNextFunction} [next] - The next middleware function to be called. If not provided, the function will return after processing.
+ *
+ * @returns {void} This function does not return a value.
  */
 export function parseResponse<
   SV extends AnySchemaValidator,
@@ -58,43 +51,40 @@ export function parseResponse<
   >,
   next?: ForklaunchNextFunction
 ) {
-  if (req.contractDetails.responseHeaders) {
-    const schema = req.schemaValidator.schemify(
-      req.contractDetails.responseHeaders
+  console.debug('[MIDDLEWARE] parseResponse started');
+  const { headers, responses } = res.responseSchemas;
+
+  const parsedResponse = req.schemaValidator.parse(
+    responses?.[res.statusCode],
+    res.bodyData
+  );
+
+  const parsedHeaders = req.schemaValidator.parse(headers, res.getHeaders());
+  const parseErrors: string[] = [];
+  if (!parsedHeaders.ok) {
+    parseErrors.push(
+      `${parsedHeaders.error ? `Header ${parsedHeaders.error}` : ''}`
     );
-    req.schemaValidator.validate(schema, res.getHeaders());
   }
 
-  if (
-    res.statusCode === 500 ||
-    (checkAnyValidation(req.contractDetails as HttpContractDetails<SV>) &&
-      res.statusCode === 400) ||
-    (req.contractDetails.auth &&
-      (res.statusCode === 401 || res.statusCode === 403))
-  ) {
-    req.schemaValidator.validate(req.schemaValidator.string, res.bodyData);
-    return;
+  if (!parsedResponse.ok) {
+    parseErrors.push(
+      `${parsedResponse.error ? `Response ${parsedResponse.error}` : ''}`
+    );
   }
 
-  if (
-    Object.prototype.hasOwnProperty.call(
-      req.contractDetails.responses,
-      res.statusCode
-    )
-  ) {
-    const schema = req.schemaValidator.schemify(
-      req.contractDetails.responses[res.statusCode]
-    );
-    req.schemaValidator.validate(schema, res.bodyData);
-  } else {
-    if (next) {
-      next(
-        new Error(`Response code ${res.statusCode} not defined in contract.`)
-      );
+  if (parseErrors.length > 0) {
+    switch (req.contractDetails.options?.responseValidation) {
+      default:
+      case 'error':
+        next?.(new Error(`Invalid response:\n${parseErrors.join('\n\n')}`));
+        break;
+      case 'warning':
+        console.warn(`Invalid response:\n${parseErrors.join('\n\n')}`);
+        break;
+      case 'none':
+        break;
     }
   }
-
-  if (next) {
-    next();
-  }
+  next?.();
 }

@@ -2,21 +2,18 @@ import {
   ForklaunchExpressLikeApplication,
   ForklaunchExpressLikeRouter,
   ForklaunchRouter,
-  createRequestContext,
   generateSwaggerDocument
 } from '@forklaunch/core';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import express, {
+  ErrorRequestHandler,
   Express,
   Router as ExpressRouter,
   RequestHandler
 } from 'express';
 import { Server } from 'http';
 import swaggerUi from 'swagger-ui-express';
-import {
-  corsMiddleware,
-  enrichResponseTransmission
-} from './middleware/response.middleware';
+import { enrichResponseTransmission } from './middleware/response.middleware';
 
 /**
  * Application class that sets up an Express server with Forklaunch routers and middleware.
@@ -98,6 +95,15 @@ class Application<
         generateSwaggerDocument(this.schemaValidator, port, this.routers)
       )
     );
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+      res.locals.errorMessage = err.message;
+      res
+        .status(res.statusCode && res.statusCode >= 400 ? res.statusCode : 500)
+        .send(`Internal server error:\n\n${err.message}`);
+    };
+    this.internal.use(errorHandler);
     return this.internal.listen(...(args as (() => void)[]));
   }
 }
@@ -138,15 +144,11 @@ class Router<SV extends AnySchemaValidator, BasePath extends `/${string}`>
    */
   constructor(
     public basePath: BasePath,
-    public schemaValidator: SV
+    schemaValidator: SV
   ) {
-    super(basePath, express.Router());
+    super(basePath, schemaValidator, express.Router());
 
     this.internal.use(express.json());
-    this.internal.use(
-      createRequestContext(schemaValidator) as unknown as RequestHandler
-    );
-    this.internal.use(corsMiddleware as unknown as RequestHandler);
     this.internal.use(enrichResponseTransmission as unknown as RequestHandler);
   }
 }
