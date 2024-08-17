@@ -3,16 +3,16 @@
   "version": "0.3.1",
   "description": "Schema validator for ForkLaunch components.",
   "files": [
-    "dist"
+    "lib"
   ],
-  "types": "dist/index.d.ts",
+  "types": "lib/index.d.ts",
   "directories": {
     "test": "tests"
   },
   "scripts": {
     "test": "vitest --passWithNoTests",
     "build": "tsc",
-    "clean": "rm -rf dist pnpm.lock.yaml node_modules",
+    "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
@@ -49,36 +49,36 @@
   },
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
     },
     "./types": {
-      "types": "./dist/types/schema.types.d.ts",
-      "default": "./dist/types/schema.types.js"
+      "types": "./lib/types/schema.types.d.ts",
+      "default": "./lib/types/schema.types.js"
     },
     "./interfaces": {
-      "types": "./dist/interfaces/schemaValidator.interfaces.d.ts",
-      "default": "./dist/interfaces/schemaValidator.interfaces.js"
+      "types": "./lib/interfaces/schemaValidator.interfaces.d.ts",
+      "default": "./lib/interfaces/schemaValidator.interfaces.js"
     },
     "./typebox": {
-      "types": "./dist/typebox/index.d.ts",
-      "default": "./dist/typebox/index.js"
+      "types": "./lib/typebox/index.d.ts",
+      "default": "./lib/typebox/index.js"
     },
     "./zod": {
-      "types": "./dist/zod/index.d.ts",
-      "default": "./dist/zod/index.js"
+      "types": "./lib/zod/index.d.ts",
+      "default": "./lib/zod/index.js"
     },
     "./typebox/types": {
-      "types": "./dist/typebox/types/typebox.schema.types.d.ts",
-      "default": "./dist/typebox/types/typebox.schema.types.js"
+      "types": "./lib/typebox/types/typebox.schema.types.d.ts",
+      "default": "./lib/typebox/types/typebox.schema.types.js"
     },
     "./zod/types": {
-      "types": "./dist/zod/types/zod.schema.types.d.ts",
-      "default": "./dist/zod/types/zod.schema.types.js"
+      "types": "./lib/zod/types/zod.schema.types.d.ts",
+      "default": "./lib/zod/types/zod.schema.types.js"
     },
     "./tests/mockSchemaValidator": {
-      "types": "./dist/tests/mockSchemaValidator.d.ts",
-      "default": "./dist/tests/mockSchemaValidator.js"
+      "types": "./lib/tests/mockSchemaValidator.d.ts",
+      "default": "./lib/tests/mockSchemaValidator.js"
     }
   },
   "type": "module"

@@ -16,9 +16,9 @@ import {
   symbol,
   union,
   validate
-} from '../../typebox/schemaValidatorExports';
-import { TypeboxSchemaValidator } from '../../typebox/typeboxSchemaValidator';
-import { UnboxedTObjectSchema } from '../../typebox/types/schema.types';
+} from '../../src/typebox/schemaValidatorExports';
+import { TypeboxSchemaValidator } from '../../src/typebox/typeboxSchemaValidator';
+import { UnboxedTObjectSchema } from '../../src/typebox/types/schema.types';
 import { compare } from '../utils/compare';
 
 const one = array({

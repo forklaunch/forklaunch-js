@@ -14,7 +14,7 @@ import {
   Increment,
   LiteralSchema,
   UnboxedObjectSchema
-} from '../../types/schema.types';
+} from '../../shared/types/schema.types';
 import { ZodSchemaValidator } from '../zodSchemaValidator';
 
 /**

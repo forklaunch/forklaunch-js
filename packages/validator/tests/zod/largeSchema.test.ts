@@ -11,8 +11,8 @@ import {
   string,
   symbol,
   union
-} from '../../zod/schemaValidatorExports';
-import { ZodSchemaValidator } from '../../zod/zodSchemaValidator';
+} from '../../src/zod/schemaValidatorExports';
+import { ZodSchemaValidator } from '../../src/zod/zodSchemaValidator';
 
 describe('Zod Large Schema Tests', () => {
   it('Deep Union', async () => {
@@ -82,7 +82,10 @@ describe('Zod Large Schema Tests', () => {
     };
 
     const deepUnion = union([deepOne, deepTwo]);
-    type DeepUnionSchema = Schema<typeof deepUnion, ZodSchemaValidator>;
+    type _DeepUnionSchemaDepthCheck = Schema<
+      typeof deepUnion,
+      ZodSchemaValidator
+    >;
   });
 
   it('Realistic Schema', async () => {
@@ -168,6 +171,9 @@ describe('Zod Large Schema Tests', () => {
       }
     });
 
-    type RealisticSchema = Schema<typeof realistic, ZodSchemaValidator>;
+    type _RealisticSchemaDepthCheck = Schema<
+      typeof realistic,
+      ZodSchemaValidator
+    >;
   });
 });

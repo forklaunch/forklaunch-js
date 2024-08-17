@@ -3,13 +3,13 @@
   "version": "0.1.2",
   "description": "Common package for base types, interfaces, implementations.",
   "files": [
-    "dist/**"
+    "lib/**"
   ],
-  "types": "dist/index.d.ts",
+  "types": "lib/index.d.ts",
   "scripts": {
     "test": "vitest --passWithNoTests",
     "build": "tsc",
-    "clean": "rm -rf dist pnpm.lock.yaml node_modules",
+    "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",

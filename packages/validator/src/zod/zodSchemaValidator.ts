@@ -22,7 +22,7 @@ import {
   LiteralSchema,
   ParseResult,
   SchemaValidator as SV
-} from '../types/schema.types';
+} from '../shared/types/schema.types';
 import {
   UnionZodResolve,
   ZodCatchall,

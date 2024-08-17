@@ -1,1 +1,1 @@
-export * from './types';
+export * from './src/shared/types/schema.types';

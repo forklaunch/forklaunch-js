@@ -11,8 +11,8 @@ import {
   string,
   symbol,
   union
-} from '../../typebox/schemaValidatorExports';
-import { TypeboxSchemaValidator } from '../../typebox/typeboxSchemaValidator';
+} from '../../src/typebox/schemaValidatorExports';
+import { TypeboxSchemaValidator } from '../../src/typebox/typeboxSchemaValidator';
 
 describe('Typebox Large Schema Tests', () => {
   it('Deep Union', () => {

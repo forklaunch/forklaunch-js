@@ -10,7 +10,11 @@ import {
   TUnknown
 } from '@sinclair/typebox';
 import { TypeCheck } from '@sinclair/typebox/compiler';
-import { Increment, KeyTypes, LiteralSchema } from '../../types/schema.types';
+import {
+  Increment,
+  KeyTypes,
+  LiteralSchema
+} from '../../shared/types/schema.types';
 
 /**
  * Represents a catch-all schema type.

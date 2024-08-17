@@ -1,7 +1,7 @@
 import { Prettify } from '@forklaunch/common';
 import { SchemaObject } from 'openapi3-ts/oas31';
-import { TResolve, TSchemaTranslate } from '../typebox/types/schema.types';
-import { ZodResolve, ZodSchemaTranslate } from '../zod/types/schema.types';
+import { TResolve, TSchemaTranslate } from '../../typebox/types/schema.types';
+import { ZodResolve, ZodSchemaTranslate } from '../../zod/types/schema.types';
 
 /**
  * The result associated with an attempted parsing.

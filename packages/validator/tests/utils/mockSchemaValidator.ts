@@ -1,8 +1,11 @@
 import { SchemaObject } from 'openapi3-ts/oas31';
 import { SchemaValidator } from '../../index';
-import { LiteralSchema, ParseResult } from '../../types/schema.types';
+import {
+  LiteralSchema,
+  ParseResult
+} from '../../src/shared/types/schema.types';
 
-declare module '../../types/schema.types' {
+declare module '../../src/shared/types/schema.types' {
   interface SchemaResolve<T> {
     Mock: T;
   }
