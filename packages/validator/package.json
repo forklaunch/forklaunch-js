@@ -52,33 +52,25 @@
       "types": "./lib/index.d.ts",
       "default": "./lib/index.js"
     },
-    "./types": {
-      "types": "./lib/types/schema.types.d.ts",
-      "default": "./lib/types/schema.types.js"
-    },
-    "./interfaces": {
-      "types": "./lib/interfaces/schemaValidator.interfaces.d.ts",
-      "default": "./lib/interfaces/schemaValidator.interfaces.js"
-    },
     "./typebox": {
-      "types": "./lib/typebox/index.d.ts",
-      "default": "./lib/typebox/index.js"
+      "types": "./lib/src/typebox/index.d.ts",
+      "default": "./lib/src/typebox/index.js"
     },
     "./zod": {
-      "types": "./lib/zod/index.d.ts",
-      "default": "./lib/zod/index.js"
+      "types": "./lib/src/zod/index.d.ts",
+      "default": "./lib/src/zod/index.js"
     },
     "./typebox/types": {
-      "types": "./lib/typebox/types/typebox.schema.types.d.ts",
-      "default": "./lib/typebox/types/typebox.schema.types.js"
+      "types": "./lib/src/typebox/types/schema.types.d.ts",
+      "default": "./lib/src/typebox/types/schema.types.js"
     },
     "./zod/types": {
-      "types": "./lib/zod/types/zod.schema.types.d.ts",
-      "default": "./lib/zod/types/zod.schema.types.js"
+      "types": "./lib/src/zod/types/schema.types.d.ts",
+      "default": "./lib/src/zod/types/schema.types.js"
     },
     "./tests/mockSchemaValidator": {
-      "types": "./lib/tests/mockSchemaValidator.d.ts",
-      "default": "./lib/tests/mockSchemaValidator.js"
+      "types": "./lib/tests/utils/mockSchemaValidator.d.ts",
+      "default": "./lib/tests/utils/mockSchemaValidator.js"
     }
   },
   "type": "module"
