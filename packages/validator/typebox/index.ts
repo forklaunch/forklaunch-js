@@ -1,1 +1,1 @@
-export * from './schemaValidator';
+export * from './schemaValidatorExports';

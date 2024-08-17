@@ -1,6 +1,5 @@
 import { Schema } from '../../index';
 import {
-  ZodSchemaValidator,
   array,
   bigint,
   boolean,
@@ -12,7 +11,8 @@ import {
   string,
   symbol,
   union
-} from '../../zod/index';
+} from '../../zod/schemaValidatorExports';
+import { ZodSchemaValidator } from '../../zod/zodSchemaValidator';
 
 describe('Zod Large Schema Tests', () => {
   it('Deep Union', async () => {

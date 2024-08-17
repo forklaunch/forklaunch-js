@@ -28,7 +28,7 @@ import { SchemaObject } from 'openapi3-ts/oas31';
 import {
   LiteralSchema,
   ParseResult,
-  SchemaValidator
+  SchemaValidator as SV
 } from '../types/schema.types';
 import {
   TCatchall,
@@ -63,7 +63,7 @@ SetErrorFunction((params) => {
  */
 export class TypeboxSchemaValidator
   implements
-    SchemaValidator<
+    SV<
       <T extends TObject<TProperties>>(schema: T) => TypeCheck<T>,
       <T extends TIdiomaticSchema>(schema: T) => TResolve<T>,
       <T extends TIdiomaticSchema>(schema: T) => TOptional<TResolve<T>>,
@@ -378,124 +378,3 @@ export class TypeboxSchemaValidator
     return this.schemify(schema);
   }
 }
-
-/**
- * Factory function for creating a TypeboxSchemaValidator instance.
- * @returns {TypeboxSchemaValidator} The TypeboxSchemaValidator instance.
- */
-export const TypeboxSchema = () => new TypeboxSchemaValidator();
-
-const SchemaValidator = TypeboxSchema();
-
-/**
- * TypeBox schema definition for string type.
- */
-export const string: typeof SchemaValidator.string = SchemaValidator.string;
-
-/**
- * TypeBox schema definition for UUID type.
- */
-export const uuid: typeof SchemaValidator.uuid = SchemaValidator.uuid;
-
-/**
- * TypeBox schema definition for URI type.
- */
-export const uri: typeof SchemaValidator.uri = SchemaValidator.uri;
-
-/**
- * TypeBox schema definition for email type.
- */
-export const email: typeof SchemaValidator.email = SchemaValidator.email;
-
-/**
- * TypeBox schema definition for number type.
- */
-export const number: typeof SchemaValidator.number = SchemaValidator.number;
-
-/**
- * TypeBox schema definition for bigint type.
- */
-export const bigint: typeof SchemaValidator.bigint = SchemaValidator.bigint;
-
-/**
- * TypeBox schema definition for boolean type.
- */
-export const boolean: typeof SchemaValidator.boolean = SchemaValidator.boolean;
-
-/**
- * TypeBox schema definition for date type.
- */
-export const date: typeof SchemaValidator.date = SchemaValidator.date;
-
-/**
- * TypeBox schema definition for symbol type.
- */
-export const symbol: typeof SchemaValidator.symbol = SchemaValidator.symbol;
-
-/**
- * TypeBox schema definition for undefined, null, void types.
- */
-export const empty: typeof SchemaValidator.empty = SchemaValidator.empty;
-
-/**
- * TypeBox schema definition for any type.
- */
-export const any: typeof SchemaValidator.any = SchemaValidator.any;
-
-/**
- * TypeBox schema definition for unknown type.
- */
-export const unknown: typeof SchemaValidator.unknown = SchemaValidator.unknown;
-
-/**
- * TypeBox schema definition for never type.
- */
-export const never: typeof SchemaValidator.never = SchemaValidator.never;
-
-/**
- * Transforms valid schema into TypeBox schema.
- */
-export const schemify: typeof SchemaValidator.schemify =
-  SchemaValidator.schemify.bind(SchemaValidator);
-
-/**
- * Makes a valid schema optional.
- */
-export const optional: typeof SchemaValidator.optional =
-  SchemaValidator.optional.bind(SchemaValidator);
-
-/**
- * Defines an array for a valid schema.
- */
-export const array: typeof SchemaValidator.array =
-  SchemaValidator.array.bind(SchemaValidator);
-
-/**
- * Defines a union for a valid schema.
- */
-export const union: typeof SchemaValidator.union =
-  SchemaValidator.union.bind(SchemaValidator);
-
-/**
- * Defines a literal for a valid schema.
- */
-export const literal: typeof SchemaValidator.literal =
-  SchemaValidator.literal.bind(SchemaValidator);
-
-/**
- * Validates a value against a valid schema.
- */
-export const validate: typeof SchemaValidator.validate =
-  SchemaValidator.validate.bind(SchemaValidator);
-
-/**
- * Parses a value against a valid schema.
- */
-export const parse: typeof SchemaValidator.parse =
-  SchemaValidator.parse.bind(SchemaValidator);
-
-/**
- * Generates an OpenAPI schema object from a valid schema.
- */
-export const openapi: typeof SchemaValidator.openapi =
-  SchemaValidator.openapi.bind(SchemaValidator);

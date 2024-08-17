@@ -3,7 +3,6 @@ import { ZodObject, z } from 'zod';
 import { Schema } from '../../index';
 import { UnboxedObjectSchema } from '../../types/schema.types';
 import {
-  ZodSchemaValidator,
   array,
   bigint,
   boolean,
@@ -21,6 +20,7 @@ import {
   validate
 } from '../../zod';
 import { ZodObjectShape } from '../../zod/types/schema.types';
+import { ZodSchemaValidator } from '../../zod/zodSchemaValidator';
 import { compare } from '../utils/compare';
 
 const one = array({

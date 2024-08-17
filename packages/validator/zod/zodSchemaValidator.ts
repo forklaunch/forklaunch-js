@@ -21,7 +21,7 @@ import {
 import {
   LiteralSchema,
   ParseResult,
-  SchemaValidator
+  SchemaValidator as SV
 } from '../types/schema.types';
 import {
   UnionZodResolve,
@@ -33,11 +33,11 @@ import {
 
 /**
  * Class representing a Zod schema definition.
- * @implements {SchemaValidator}
+ * @implements {StaticSchemaValidator}
  */
 export class ZodSchemaValidator
   implements
-    SchemaValidator<
+    SV<
       <T extends ZodObject<ZodRawShape>>(schema: T) => ZodResolve<T>,
       <T extends ZodIdiomaticSchema>(schema: T) => ZodResolve<T>,
       <T extends ZodIdiomaticSchema>(schema: T) => ZodOptional<ZodResolve<T>>,
@@ -231,124 +231,3 @@ export class ZodSchemaValidator
     return generateSchema(this.schemify(schema));
   }
 }
-
-/**
- * Factory function for creating a ZodSchemaValidator instance.
- * @returns {ZodSchemaValidator} The ZodSchemaValidator instance.
- */
-export const ZodSchema = () => new ZodSchemaValidator();
-
-const SchemaValidator = ZodSchema();
-
-/**
- * Zod schema definition for string type.
- */
-export const string: typeof SchemaValidator.string = SchemaValidator.string;
-
-/**
- * Zod schema definition for UUID type.
- */
-export const uuid: typeof SchemaValidator.uuid = SchemaValidator.uuid;
-
-/**
- * Zod schema definition for email type.
- */
-export const email: typeof SchemaValidator.email = SchemaValidator.email;
-
-/**
- * Zod schema definition for URI type.
- */
-export const uri: typeof SchemaValidator.uri = SchemaValidator.uri;
-
-/**
- * Zod schema definition for number type.
- */
-export const number: typeof SchemaValidator.number = SchemaValidator.number;
-
-/**
- * Zod schema definition for bigint type.
- */
-export const bigint: typeof SchemaValidator.bigint = SchemaValidator.bigint;
-
-/**
- * Zod schema definition for boolean type.
- */
-export const boolean: typeof SchemaValidator.boolean = SchemaValidator.boolean;
-
-/**
- * Zod schema definition for date type.
- */
-export const date: typeof SchemaValidator.date = SchemaValidator.date;
-
-/**
- * Zod schema definition for symbol type.
- */
-export const symbol: typeof SchemaValidator.symbol = SchemaValidator.symbol;
-
-/**
- * Zod schema definition for undefined, null, void types.
- */
-export const empty: typeof SchemaValidator.empty = SchemaValidator.empty;
-
-/**
- * Zod schema definition for any type.
- */
-export const any: typeof SchemaValidator.any = SchemaValidator.any;
-
-/**
- * Zod schema definition for unknown type.
- */
-export const unknown: typeof SchemaValidator.unknown = SchemaValidator.unknown;
-
-/**
- * Zod schema definition for never type.
- */
-export const never: typeof SchemaValidator.never = SchemaValidator.never;
-
-/**
- * Transforms valid schema into Zod schema.
- */
-export const schemify: typeof SchemaValidator.schemify =
-  SchemaValidator.schemify.bind(SchemaValidator);
-
-/**
- * Makes a valid schema optional.
- */
-export const optional: typeof SchemaValidator.optional =
-  SchemaValidator.optional.bind(SchemaValidator);
-
-/**
- * Defines an array for a valid schema.
- */
-export const array: typeof SchemaValidator.array =
-  SchemaValidator.array.bind(SchemaValidator);
-
-/**
- * Defines a union for a valid schema.
- */
-export const union: typeof SchemaValidator.union =
-  SchemaValidator.union.bind(SchemaValidator);
-
-/**
- * Defines a literal for a valid schema.
- */
-export const literal: typeof SchemaValidator.literal =
-  SchemaValidator.literal.bind(SchemaValidator);
-
-/**
- * Validates a value against a valid schema.
- */
-export const validate: typeof SchemaValidator.validate =
-  SchemaValidator.validate.bind(SchemaValidator);
-
-/**
- * Parses a value to be conformant to a particular schema.
- */
-export const parse: typeof SchemaValidator.parse =
-  SchemaValidator.parse.bind(SchemaValidator);
-
-/**
- * Generates an OpenAPI schema object from a valid schema.
- */
-export const openapi: typeof SchemaValidator.openapi =
-  SchemaValidator.openapi.bind(SchemaValidator);

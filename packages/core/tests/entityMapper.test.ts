@@ -1,12 +1,12 @@
-import {
-  TypeboxSchemaValidator,
-  number,
-  string
-} from '@forklaunch/validator/typebox';
+import { SchemaValidator, number, string } from '@forklaunch/validator/typebox';
 import { Property } from '@mikro-orm/core';
 import { BaseEntity } from '../database/mikro/models/entities/base.entity';
 import { RequestEntityMapper } from '../entityMapper/models/requestEntityMapper.model';
 import { ResponseEntityMapper } from '../entityMapper/models/responseEntityMapper.model';
+
+const SV = SchemaValidator();
+
+type TypeboxSchemaValidator = typeof SV;
 
 class TestEntity extends BaseEntity {
   @Property()
@@ -67,7 +67,7 @@ describe('Request Entity Mapper Test', () => {
   let TestRequestEM: TestRequestEntityMapper;
 
   beforeAll(() => {
-    TestRequestEM = new TestRequestEntityMapper(new TypeboxSchemaValidator());
+    TestRequestEM = new TestRequestEntityMapper(SchemaValidator());
   });
 
   test('Schema Equality', async () => {
@@ -82,10 +82,7 @@ describe('Request Entity Mapper Test', () => {
     };
 
     const responseEM = TestRequestEM.fromJson(json);
-    const staticEM = TestRequestEntityMapper.fromJson(
-      new TypeboxSchemaValidator(),
-      json
-    );
+    const staticEM = TestRequestEntityMapper.fromJson(SchemaValidator(), json);
     const expectedDto = {
       id: '123',
       name: 'test',
@@ -111,10 +108,7 @@ describe('Request Entity Mapper Test', () => {
       TestRequestEM.fromJson(json).toEntity()
     );
     const staticEntity = extractNonTimeBasedEntityFields(
-      TestRequestEntityMapper.deserializeJsonToEntity(
-        new TypeboxSchemaValidator(),
-        json
-      )
+      TestRequestEntityMapper.deserializeJsonToEntity(SchemaValidator(), json)
     );
     let expectedEntity = new TestEntity();
     expectedEntity.id = '123';
@@ -151,7 +145,7 @@ describe('Response Entity Mapper Test', () => {
   let TestResponseEM: TestResponseEntityMapper;
 
   beforeAll(() => {
-    TestResponseEM = new TestResponseEntityMapper(new TypeboxSchemaValidator());
+    TestResponseEM = new TestResponseEntityMapper(SchemaValidator());
   });
 
   test('Schema Equality', async () => {
@@ -166,7 +160,7 @@ describe('Response Entity Mapper Test', () => {
 
     const responseEM = TestResponseEM.fromEntity(entity);
     const staticEM = TestResponseEntityMapper.fromEntity(
-      new TypeboxSchemaValidator(),
+      SchemaValidator(),
       entity
     );
     const expectedDto = {
@@ -189,7 +183,7 @@ describe('Response Entity Mapper Test', () => {
     const json = TestResponseEM.serializeEntityToJson(entity);
     const objectJson = TestResponseEM.fromEntity(entity).toJson();
     const staticJson = TestResponseEntityMapper.serializeEntityToJson(
-      new TypeboxSchemaValidator(),
+      SchemaValidator(),
       entity
     );
     const expectedJson = {
@@ -214,10 +208,7 @@ describe('Response Entity Mapper Test', () => {
 
     expect(() => TestResponseEM.fromEntity(entity).toJson()).toThrow();
     expect(() =>
-      TestResponseEntityMapper.fromEntity(
-        new TypeboxSchemaValidator(),
-        entity
-      ).toJson()
+      TestResponseEntityMapper.fromEntity(SchemaValidator(), entity).toJson()
     ).toThrow();
   });
 });

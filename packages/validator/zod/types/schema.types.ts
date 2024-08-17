@@ -9,13 +9,13 @@ import {
   ZodUnknown,
   z
 } from 'zod';
-import { ZodSchemaValidator } from '..';
 import {
   IdiomaticSchema,
   Increment,
   LiteralSchema,
   UnboxedObjectSchema
 } from '../../types/schema.types';
+import { ZodSchemaValidator } from '../zodSchemaValidator';
 
 /**
  * Represents a catch-all Zod schema type.

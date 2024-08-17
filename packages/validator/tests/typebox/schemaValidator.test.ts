@@ -1,7 +1,6 @@
 import { TObject, Type } from '@sinclair/typebox';
 import { Schema } from '../../index';
 import {
-  TypeboxSchemaValidator,
   array,
   bigint,
   boolean,
@@ -17,7 +16,8 @@ import {
   symbol,
   union,
   validate
-} from '../../typebox/schemaValidator';
+} from '../../typebox/schemaValidatorExports';
+import { TypeboxSchemaValidator } from '../../typebox/typeboxSchemaValidator';
 import { UnboxedTObjectSchema } from '../../typebox/types/schema.types';
 import { compare } from '../utils/compare';
 

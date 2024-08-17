@@ -1,6 +1,5 @@
 import { Schema } from '../../index';
 import {
-  TypeboxSchemaValidator,
   array,
   bigint,
   boolean,
@@ -12,7 +11,8 @@ import {
   string,
   symbol,
   union
-} from '../../typebox/schemaValidator';
+} from '../../typebox/schemaValidatorExports';
+import { TypeboxSchemaValidator } from '../../typebox/typeboxSchemaValidator';
 
 describe('Typebox Large Schema Tests', () => {
   it('Deep Union', () => {
