@@ -29,7 +29,7 @@ import {
   ZodIdiomaticSchema,
   ZodResolve,
   ZodUnionContainer
-} from './types/zod.schema.types';
+} from './types/schema.types';
 
 /**
  * Class representing a Zod schema definition.
@@ -58,9 +58,7 @@ export class ZodSchemaValidator
     | ZodObject<ZodRawShape>
     | ZodArray<ZodObject<ZodRawShape>>;
 
-  string = z.coerce.string().refine((value) => value !== 'undefined', {
-    message: 'String cannot be undefined'
-  });
+  string = z.string();
   uuid = z.coerce.string().uuid();
   email = z.coerce.string().email();
   uri = z.coerce.string().url();

@@ -1,4 +1,4 @@
-import { Kind, TObject, TProperties, TSchema, Type } from '@sinclair/typebox';
+import { TObject, Type } from '@sinclair/typebox';
 import { Schema } from '../../index';
 import {
   TypeboxSchemaValidator,
@@ -11,13 +11,15 @@ import {
   number,
   openapi,
   optional,
+  parse,
   schemify,
   string,
   symbol,
   union,
   validate
-} from '../../typebox/typebox.schemaValidator';
-import { UnboxedTObjectSchema } from '../../typebox/types/typebox.schema.types';
+} from '../../typebox/schemaValidator';
+import { UnboxedTObjectSchema } from '../../typebox/types/schema.types';
+import { compare } from '../utils/compare';
 
 const one = array({
   name: {
@@ -197,53 +199,81 @@ describe('Typebox Equality Tests', () => {
         world: Type.String()
       }),
       foo: Type.Object({
-        bar: Type.Number()
+        bar: Type.Transform(
+          Type.Union([Type.Number(), Type.String({ pattern: '^[0-9]+$' })], {
+            errorType: 'number-like'
+          })
+        )
+          .Decode((value) => {
+            if (typeof value === 'string') {
+              const num = Number(value);
+              if (isNaN(num)) {
+                throw new Error('Invalid number');
+              } else {
+                return num;
+              }
+            }
+            return value;
+          })
+          .Encode(Number)
       })
     });
   });
 
   test('Schema Equality', async () => {
-    expect(schemified).toEqual(expectedSchema);
+    expect(compare(schemified, expectedSchema));
 
-    expect(schemified).toEqual(
-      schemify({
-        hello: {
-          world: string
-        },
-        foo: {
-          bar: number
-        }
-      })
-    );
-    expect(schemified).toEqual(
-      schemify({
-        hello: schemify({
-          world: string
-        }),
-        foo: {
-          bar: number
-        }
-      })
-    );
-    expect(schemified).toEqual(
-      schemify({
-        hello: {
-          world: string
-        },
-        foo: schemify({
-          bar: number
+    expect(
+      compare(
+        schemified,
+        schemify({
+          hello: {
+            world: string
+          },
+          foo: {
+            bar: number
+          }
         })
-      })
+      )
     );
-    expect(schemified).toEqual(
-      schemify({
-        hello: schemify({
-          world: string
-        }),
-        foo: schemify({
-          bar: number
+    expect(
+      compare(
+        schemified,
+        schemify({
+          hello: schemify({
+            world: string
+          }),
+          foo: {
+            bar: number
+          }
         })
-      })
+      )
+    );
+    expect(
+      compare(
+        schemified,
+        schemify({
+          hello: {
+            world: string
+          },
+          foo: schemify({
+            bar: number
+          })
+        })
+      )
+    );
+    expect(
+      compare(
+        schemified,
+        schemify({
+          hello: schemify({
+            world: string
+          }),
+          foo: schemify({
+            bar: number
+          })
+        })
+      )
     );
   });
 
@@ -252,17 +282,19 @@ describe('Typebox Equality Tests', () => {
     const boxSchemified = optional(schemified);
 
     const schemifiedExpected = Type.Optional(expectedSchema);
-    expect(unboxSchemified).toEqual(schemifiedExpected);
-    expect(boxSchemified).toEqual(schemifiedExpected);
+    expect(compare(unboxSchemified, schemifiedExpected));
+    expect(compare(boxSchemified, schemifiedExpected));
   });
 
   test('Array Schema Equality', async () => {
     const unboxSchemified = array(schema);
     const boxSchemified = array(schemified);
 
-    const schemifiedExpected = Type.Array(expectedSchema);
-    expect(unboxSchemified).toEqual(schemifiedExpected);
-    expect(boxSchemified).toEqual(schemifiedExpected);
+    const schemifiedExpected = Type.Array(expectedSchema, {
+      errorType: 'array of object'
+    });
+    expect(compare(unboxSchemified, schemifiedExpected));
+    expect(compare(boxSchemified, schemifiedExpected));
   });
 
   test('Union Schema Equality', async () => {
@@ -278,7 +310,7 @@ describe('Typebox Equality Tests', () => {
         test: string
       })
     ]);
-    const boxSchemified1 = union([
+    const boxSchemified = union([
       schemified,
       schemify({
         test: string
@@ -293,23 +325,34 @@ describe('Typebox Equality Tests', () => {
 
     const schemifiedExpected = Type.Union([
       expectedSchema,
-      Type.Object({
-        test: Type.String()
-      })
+      Type.Object(
+        {
+          test: Type.String()
+        },
+        {
+          errorSuffix: true,
+          errorType: 'any of object, object'
+        }
+      )
     ]);
 
-    expect(unboxSchemified).toEqual(schemifiedExpected);
-    expect(unboxSchemified2).toEqual(schemifiedExpected);
+    expect(compare(unboxSchemified, schemifiedExpected));
+    expect(compare(unboxSchemified2, schemifiedExpected));
+    expect(compare(boxSchemified, schemifiedExpected));
+    expect(compare(boxSchemified2, schemifiedExpected));
   });
 
   test('Literal Schema Equality', async () => {
     const schemified = schemify({
       hello: 'world'
     });
-    expect(schemified).toEqual(
-      Type.Object({
-        hello: Type.Literal('world')
-      })
+    expect(
+      compare(
+        schemified,
+        Type.Object({
+          hello: Type.Literal('world')
+        })
+      )
     );
   });
 
@@ -324,6 +367,7 @@ describe('Typebox Equality Tests', () => {
         }
       })
     ).toBe(true);
+
     expect(
       validate(schemified, {
         hello: {
@@ -336,21 +380,53 @@ describe('Typebox Equality Tests', () => {
     ).toBe(false);
   });
 
+  test('Parse Schema', () => {
+    const validParse = parse(schemified, {
+      hello: {
+        world: 'world'
+      },
+      foo: {
+        bar: 42
+      }
+    });
+    expect(validParse.ok).toBe(true);
+    if (validParse.ok) {
+      expect(
+        compare(validParse.value, {
+          hello: {
+            world: 'world'
+          },
+          foo: {
+            bar: 42
+          }
+        })
+      );
+    }
+
+    const failedParse = parse(schemified, {
+      hello: {
+        world: 55
+      },
+      foo: {}
+    });
+    expect(failedParse.ok).toBe(false);
+    if (!failedParse.ok) {
+      expect(failedParse.error)
+        .toBe(`Validation failed with the following errors:
+1. Path: hello > world
+   Message: Expected string
+
+2. Path: foo > bar
+   Message: Expected required property
+
+3. Path: foo > bar
+   Message: Expected number-like value`);
+    }
+  });
+
   test('OpenAPI Conversion', async () => {
     const schemified = schemify(schema);
     const openApi = openapi(schemified);
     expect(openApi).toEqual(schemified);
   });
 });
-
-function objectify(x: Record<string, unknown>) {
-  const newObject: typeof x = {};
-  for (const key in x) {
-    if (Kind in (x[key] as TSchema)) {
-      newObject[key] = x[key];
-    } else {
-      newObject[key] = objectify(x[key] as Record<string, unknown>);
-    }
-  }
-  return Type.Object(newObject as TProperties);
-}

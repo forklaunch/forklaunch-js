@@ -12,7 +12,7 @@ import {
   string,
   symbol,
   union
-} from '../../typebox/typebox.schemaValidator';
+} from '../../typebox/schemaValidator';
 
 describe('Typebox Large Schema Tests', () => {
   it('Deep Union', () => {

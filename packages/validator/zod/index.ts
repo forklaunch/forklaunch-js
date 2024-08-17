@@ -1,1 +1,1 @@
-export * from './zod.schemaValidator';
+export * from './schemaValidator';

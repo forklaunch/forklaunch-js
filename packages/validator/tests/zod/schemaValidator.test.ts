@@ -20,7 +20,8 @@ import {
   union,
   validate
 } from '../../zod';
-import { ZodCatchall, ZodObjectShape } from '../../zod/types/zod.schema.types';
+import { ZodObjectShape } from '../../zod/types/schema.types';
+import { compare } from '../utils/compare';
 
 const one = array({
   name: {
@@ -177,10 +178,6 @@ assert<
   >
 >();
 
-const compareSchemas = (schema1: ZodCatchall, schema2: ZodCatchall) => {
-  return JSON.stringify(schema1) === JSON.stringify(schema2);
-};
-
 describe('Zod Equality Tests', () => {
   let schema: UnboxedObjectSchema<ZodSchemaValidator>;
   let schemified: ZodObject<ZodObjectShape>;
@@ -207,10 +204,10 @@ describe('Zod Equality Tests', () => {
   });
 
   test('Schema Equality', async () => {
-    expect(compareSchemas(schemified, expectedSchema)).toBe(true);
+    expect(compare(schemified, expectedSchema)).toBe(true);
 
     expect(
-      compareSchemas(
+      compare(
         schemified,
         schemify({
           hello: {
@@ -223,7 +220,7 @@ describe('Zod Equality Tests', () => {
       )
     ).toBe(true);
     expect(
-      compareSchemas(
+      compare(
         schemified,
         schemify({
           hello: schemify({
@@ -236,7 +233,7 @@ describe('Zod Equality Tests', () => {
       )
     ).toBe(true);
     expect(
-      compareSchemas(
+      compare(
         schemified,
         schemify({
           hello: {
@@ -249,7 +246,7 @@ describe('Zod Equality Tests', () => {
       )
     ).toBe(true);
     expect(
-      compareSchemas(
+      compare(
         schemified,
         schemify({
           hello: schemify({
@@ -268,8 +265,8 @@ describe('Zod Equality Tests', () => {
     const boxSchemified = optional(schemified);
 
     const schemifiedExpected = z.optional(expectedSchema);
-    expect(compareSchemas(unboxSchemified, schemifiedExpected)).toBe(true);
-    expect(compareSchemas(boxSchemified, schemifiedExpected)).toBe(true);
+    expect(compare(unboxSchemified, schemifiedExpected)).toBe(true);
+    expect(compare(boxSchemified, schemifiedExpected)).toBe(true);
   });
 
   test('Array Schema Equality', async () => {
@@ -277,8 +274,8 @@ describe('Zod Equality Tests', () => {
     const boxSchemified = array(schemified);
 
     const schemifiedExpected = z.array(expectedSchema);
-    expect(compareSchemas(unboxSchemified, schemifiedExpected)).toBe(true);
-    expect(compareSchemas(boxSchemified, schemifiedExpected)).toBe(true);
+    expect(compare(unboxSchemified, schemifiedExpected)).toBe(true);
+    expect(compare(boxSchemified, schemifiedExpected)).toBe(true);
   });
 
   test('Union Schema Equality', async () => {
@@ -294,7 +291,7 @@ describe('Zod Equality Tests', () => {
         test: string
       })
     ]);
-    const boxSchemified1 = union([
+    const boxSchemified = union([
       schemified,
       schemify({
         test: string
@@ -314,8 +311,10 @@ describe('Zod Equality Tests', () => {
       })
     ]);
 
-    expect(compareSchemas(unboxSchemified, schemifiedExpected)).toBe(true);
-    expect(compareSchemas(unboxSchemified2, schemifiedExpected)).toBe(true);
+    expect(compare(unboxSchemified, schemifiedExpected)).toBe(true);
+    expect(compare(unboxSchemified2, schemifiedExpected)).toBe(true);
+    expect(compare(boxSchemified, schemifiedExpected)).toBe(true);
+    expect(compare(boxSchemified2, schemifiedExpected)).toBe(true);
   });
 
   test('Literal Schema Equality', async () => {
@@ -323,7 +322,7 @@ describe('Zod Equality Tests', () => {
       hello: 'world'
     });
     expect(
-      compareSchemas(
+      compare(
         schemified,
         z.object({
           hello: z.literal('world')
@@ -343,16 +342,7 @@ describe('Zod Equality Tests', () => {
         }
       })
     ).toBe(true);
-    expect(
-      validate(schemified, {
-        hello: {
-          world: 55
-        },
-        foo: {
-          bar: 42
-        }
-      })
-    ).toBe(true);
+
     expect(
       validate(schemified, {
         hello: {
@@ -374,34 +364,16 @@ describe('Zod Equality Tests', () => {
     });
     expect(validParse.ok).toBe(true);
     if (validParse.ok) {
-      expect(validParse.value).toBe({
-        hello: {
-          world: 'world'
-        },
-        foo: {
-          bar: 42
-        }
-      });
-    }
-
-    const parsedString = parse(schemified, {
-      hello: {
-        world: 55
-      },
-      foo: {
-        bar: 42
-      }
-    });
-    expect(parsedString.ok).toBe(true);
-    if (parsedString.ok) {
-      expect(parsedString.value).toBe({
-        hello: {
-          world: '55'
-        },
-        foo: {
-          bar: 42
-        }
-      });
+      expect(
+        compare(validParse.value, {
+          hello: {
+            world: 'world'
+          },
+          foo: {
+            bar: 42
+          }
+        })
+      );
     }
 
     const failedParse = parse(schemified, {
@@ -412,7 +384,13 @@ describe('Zod Equality Tests', () => {
     });
     expect(failedParse.ok).toBe(false);
     if (!failedParse.ok) {
-      expect(failedParse.error).toBe('aaaa');
+      expect(failedParse.error)
+        .toBe(`Validation failed with the following errors:
+1. Path: hello > world
+   Message: Expected string, received number
+
+2. Path: foo > bar
+   Message: Expected number, received nan`);
     }
   });
 

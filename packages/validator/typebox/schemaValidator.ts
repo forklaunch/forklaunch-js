@@ -20,7 +20,8 @@ import {
 import { TypeCheck, TypeCompiler } from '@sinclair/typebox/compiler';
 import {
   DefaultErrorFunction,
-  SetErrorFunction
+  SetErrorFunction,
+  ValueErrorType
 } from '@sinclair/typebox/errors';
 import { Value, ValueError } from '@sinclair/typebox/value';
 import { SchemaObject } from 'openapi3-ts/oas31';
@@ -37,16 +38,24 @@ import {
   TResolve,
   TUnionContainer,
   UnionTResolve
-} from './types/typebox.schema.types';
+} from './types/schema.types';
 
 /**
  * Typebox custom error function
  */
-SetErrorFunction((params) =>
-  params.schema.errorType
-    ? `Expected ${params.schema.errorType} value${params.schema.errorSuffix ? 's' : ''}`
-    : DefaultErrorFunction(params)
-);
+SetErrorFunction((params) => {
+  switch (params.errorType) {
+    case ValueErrorType.Union:
+    case ValueErrorType.Array:
+    case ValueErrorType.String:
+    case ValueErrorType.Number:
+      return params.schema.errorType
+        ? `Expected ${params.schema.errorType} value${params.schema.errorSuffix ? 's' : ''}`
+        : DefaultErrorFunction(params);
+    default:
+      return DefaultErrorFunction(params);
+  }
+});
 
 /**
  * Class representing a TypeBox schema definition.

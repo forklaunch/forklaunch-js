@@ -1,1 +1,1 @@
-export * from './typebox.schemaValidator';
+export * from './schemaValidator';
