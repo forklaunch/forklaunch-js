@@ -1,5 +1,5 @@
 export * from './application/expressLikeApplication';
-export * from './handler/typedHandler';
+export * from './handlers/typedHandler';
 export * from './interfaces/expressLikeRouter.interface';
 export * from './openApiV3Generator/openApiV3Generator';
 export * from './router/expressLikeRouter';

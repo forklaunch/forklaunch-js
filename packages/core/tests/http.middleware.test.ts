@@ -42,7 +42,7 @@ describe('http middleware tests', () => {
     test: union(['a', optional(literal('test'))] as const)
   };
 
-  beforeAll(() => {
+  beforeEach(() => {
     contractDetails = {
       name: 'Test Contract',
       summary: 'Test Contract Summary',
@@ -64,11 +64,16 @@ describe('http middleware tests', () => {
       headers: testSchema,
       body: testSchema,
       query: testSchema,
-      requestSchema: testSchema
+      requestSchema: {
+        params: testSchema,
+        query: testSchema,
+        headers: testSchema,
+        body: testSchema
+      }
     };
 
     res = {
-      bodyData: {},
+      bodyData: testSchema,
       statusCode: 200,
       getHeaders: () => ({ 'x-correlation-id': '123' }),
       setHeader: () => {},
@@ -83,7 +88,7 @@ describe('http middleware tests', () => {
       cors: true,
       responseSchemas: {
         headers: {
-          testSchema
+          'x-correlation-id': '123'
         },
         responses: {
           200: testSchema
@@ -108,7 +113,7 @@ describe('http middleware tests', () => {
   test('request enrich details', async () => {
     req.contractDetails = {} as HttpContractDetails<MockSchemaValidator>;
     enrichDetails(contractDetails, testSchema, {
-      headers: testSchema,
+      headers: { 'x-correlation-id': '123' },
       responses: {
         200: testSchema
       }
@@ -117,10 +122,12 @@ describe('http middleware tests', () => {
   });
 
   test('parse request', async () => {
+    createContext(mockSchemaValidator)(req, res, nextFunction);
     parseRequest(req, res, nextFunction);
   });
 
   test('parse response', async () => {
+    createContext(mockSchemaValidator)(req, res, nextFunction);
     parseResponse(req, res, nextFunction);
   });
 

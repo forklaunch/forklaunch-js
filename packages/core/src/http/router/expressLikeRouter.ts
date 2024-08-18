@@ -1,7 +1,7 @@
 import { AnySchemaValidator, SchemaValidator } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
 import { isHttpContractDetails } from '../guards/isHttpContractDetails';
-import { TypedHandler } from '../handler/typedHandler';
+import { TypedHandler } from '../handlers/typedHandler';
 import { ExpressLikeRouter } from '../interfaces/expressLikeRouter.interface';
 import { cors } from '../middleware/request/cors.middleware';
 import { createContext } from '../middleware/request/createContext.middleware';

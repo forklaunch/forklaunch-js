@@ -64,14 +64,14 @@ function extractNonTimeBasedEntityFields<T extends BaseEntity>(entity: T): T {
 }
 
 describe('request dtoMapper tests', () => {
-  let TestRequestEM: TestRequestDtoMapper;
+  let TestRequestDM: TestRequestDtoMapper;
 
   beforeAll(() => {
-    TestRequestEM = new TestRequestDtoMapper(SchemaValidator());
+    TestRequestDM = new TestRequestDtoMapper(SchemaValidator());
   });
 
   test('schema static and constructed equality', async () => {
-    expect(TestRequestEM.schema).toEqual(TestRequestDtoMapper.schema());
+    expect(TestRequestDM.schema).toEqual(TestRequestDtoMapper.schema());
   });
 
   test('from JSON', async () => {
@@ -81,17 +81,17 @@ describe('request dtoMapper tests', () => {
       age: 1
     };
 
-    const responseEM = TestRequestEM.fromJson(json);
-    const staticEM = TestRequestDtoMapper.fromJson(SchemaValidator(), json);
+    const responseDM = TestRequestDM.fromJson(json);
+    const staticDM = TestRequestDtoMapper.fromJson(SchemaValidator(), json);
     const expectedDto = {
       id: '123',
       name: 'test',
       age: 1
     };
 
-    expect(staticEM.dto).toEqual(expectedDto);
-    expect(responseEM.dto).toEqual(expectedDto);
-    expect(responseEM.dto).toEqual(staticEM.dto);
+    expect(staticDM.dto).toEqual(expectedDto);
+    expect(responseDM.dto).toEqual(expectedDto);
+    expect(responseDM.dto).toEqual(staticDM.dto);
   });
 
   test('deserialize', async () => {
@@ -102,10 +102,10 @@ describe('request dtoMapper tests', () => {
     };
 
     const entity = extractNonTimeBasedEntityFields(
-      TestRequestEM.deserializeJsonToEntity(json)
+      TestRequestDM.deserializeJsonToEntity(json)
     );
     const objectEntity = extractNonTimeBasedEntityFields(
-      TestRequestEM.fromJson(json).toEntity()
+      TestRequestDM.fromJson(json).toEntity()
     );
     const staticEntity = extractNonTimeBasedEntityFields(
       TestRequestDtoMapper.deserializeJsonToEntity(SchemaValidator(), json)
@@ -133,7 +133,7 @@ describe('request dtoMapper tests', () => {
     };
 
     // @ts-expect-error
-    expect(() => TestRequestEM.fromJson(json)).toThrow();
+    expect(() => TestRequestDM.fromJson(json)).toThrow();
     expect(() =>
       // @ts-expect-error
       TestRequestDtoMapper.fromJson(new TypeboxSchemaValidator(), json)
@@ -142,14 +142,14 @@ describe('request dtoMapper tests', () => {
 });
 
 describe('response dtoMapper tests', () => {
-  let TestResponseEM: TestResponseDtoMapper;
+  let TestResponseDM: TestResponseDtoMapper;
 
   beforeAll(() => {
-    TestResponseEM = new TestResponseDtoMapper(SchemaValidator());
+    TestResponseDM = new TestResponseDtoMapper(SchemaValidator());
   });
 
   test('schema static and constructed equality', async () => {
-    expect(TestResponseEM.schema).toEqual(TestResponseDtoMapper.schema());
+    expect(TestResponseDM.schema).toEqual(TestResponseDtoMapper.schema());
   });
 
   test('from entity', async () => {
@@ -158,8 +158,8 @@ describe('response dtoMapper tests', () => {
     entity.name = 'test';
     entity.age = 1;
 
-    const responseEM = TestResponseEM.fromEntity(entity);
-    const staticEM = TestResponseDtoMapper.fromEntity(
+    const responseDM = TestResponseDM.fromEntity(entity);
+    const staticDM = TestResponseDtoMapper.fromEntity(
       SchemaValidator(),
       entity
     );
@@ -169,9 +169,9 @@ describe('response dtoMapper tests', () => {
       age: 1
     };
 
-    expect(staticEM.dto).toEqual(expectedDto);
-    expect(responseEM.dto).toEqual(expectedDto);
-    expect(responseEM.dto).toEqual(staticEM.dto);
+    expect(staticDM.dto).toEqual(expectedDto);
+    expect(responseDM.dto).toEqual(expectedDto);
+    expect(responseDM.dto).toEqual(staticDM.dto);
   });
 
   test('serialize', async () => {
@@ -180,8 +180,8 @@ describe('response dtoMapper tests', () => {
     entity.name = 'test';
     entity.age = 1;
 
-    const json = TestResponseEM.serializeEntityToJson(entity);
-    const objectJson = TestResponseEM.fromEntity(entity).toJson();
+    const json = TestResponseDM.serializeEntityToJson(entity);
+    const objectJson = TestResponseDM.fromEntity(entity).toJson();
     const staticJson = TestResponseDtoMapper.serializeEntityToJson(
       SchemaValidator(),
       entity
@@ -206,7 +206,7 @@ describe('response dtoMapper tests', () => {
     entity.id = '123';
     entity.name = 'test';
 
-    expect(() => TestResponseEM.fromEntity(entity).toJson()).toThrow();
+    expect(() => TestResponseDM.fromEntity(entity).toJson()).toThrow();
     expect(() =>
       TestResponseDtoMapper.fromEntity(SchemaValidator(), entity).toJson()
     ).toThrow();
