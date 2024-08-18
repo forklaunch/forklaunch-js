@@ -4,7 +4,7 @@ import {
   ForklaunchSendableData,
   ForklaunchStatusResponse,
   ParamsDictionary
-} from '@forklaunch/core';
+} from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import {
   Request as ExpressRequest,

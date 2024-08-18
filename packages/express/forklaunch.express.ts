@@ -3,7 +3,7 @@ import {
   ForklaunchExpressLikeRouter,
   ForklaunchRouter,
   generateSwaggerDocument
-} from '@forklaunch/core';
+} from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import express, {
   ErrorRequestHandler,

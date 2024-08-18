@@ -3,7 +3,7 @@ import {
   ForklaunchExpressLikeRouter,
   ForklaunchRouter,
   generateSwaggerDocument
-} from '@forklaunch/core';
+} from '@forklaunch/core/http';
 import {
   Router as ExpressRouter,
   MiddlewareHandler,

@@ -2,14 +2,14 @@ import {
   date,
   literal,
   number,
+  SchemaValidator,
   string,
-  TypeboxSchemaValidator,
   union,
   uuid
 } from '@forklaunch/validator/typebox';
 import { forklaunchExpress, forklaunchRouter } from './forklaunch.express';
 
-const typeboxSchemaValidator = new TypeboxSchemaValidator();
+const typeboxSchemaValidator = SchemaValidator();
 
 const forklaunchApplication = forklaunchExpress(typeboxSchemaValidator);
 export const forklaunchRouterInstance = forklaunchRouter(

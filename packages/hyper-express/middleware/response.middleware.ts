@@ -2,7 +2,7 @@ import {
   enrichExpressLikeSend,
   ForklaunchNextFunction,
   ParamsDictionary
-} from '@forklaunch/core';
+} from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
 import { Request, Response } from '../types/forklaunch.hyperExpress.types';

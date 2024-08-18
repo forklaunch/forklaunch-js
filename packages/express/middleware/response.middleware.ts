@@ -1,4 +1,4 @@
-import { enrichExpressLikeSend, ParamsDictionary } from '@forklaunch/core';
+import { enrichExpressLikeSend, ParamsDictionary } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { NextFunction } from 'express';
 import { ParsedQs } from 'qs';

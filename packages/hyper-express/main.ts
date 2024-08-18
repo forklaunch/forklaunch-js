@@ -1,14 +1,14 @@
-import { typedHandler } from '@forklaunch/core';
+import { typedHandler } from '@forklaunch/core/http';
 import {
   number,
+  SchemaValidator,
   string,
   // date,
-  uuid,
-  ZodSchemaValidator
+  uuid
 } from '@forklaunch/validator/zod';
 import { forklaunchExpress, forklaunchRouter } from './forklaunch.hyperExpress';
 
-const zodSchemaValidator = new ZodSchemaValidator();
+const zodSchemaValidator = SchemaValidator();
 
 const forklaunchApplication = forklaunchExpress(zodSchemaValidator);
 export const forklaunchRouterInstance = forklaunchRouter(
@@ -262,7 +262,7 @@ export type i = typeof dsd;
 // });
 
 typedHandler(
-  new ZodSchemaValidator(),
+  SchemaValidator(),
   'get',
   {
     name: 'Test',

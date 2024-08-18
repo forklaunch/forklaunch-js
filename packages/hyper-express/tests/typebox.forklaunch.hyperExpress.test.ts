@@ -1,14 +1,14 @@
-import { TypeboxSchemaValidator, string } from '@forklaunch/validator/typebox';
+import { SchemaValidator, string } from '@forklaunch/validator/typebox';
 import {
   App,
   forklaunchExpress,
   forklaunchRouter
 } from '../forklaunch.hyperExpress';
 
-const typeboxSchemaValidator = new TypeboxSchemaValidator();
+const typeboxSchemaValidator = SchemaValidator();
 
 describe('Forklaunch Hyper-Express Tests', () => {
-  let forklaunchApplication: App<TypeboxSchemaValidator>;
+  let forklaunchApplication: App<typeof typeboxSchemaValidator>;
   let forklaunchRouterInstance;
 
   beforeAll(async () => {
