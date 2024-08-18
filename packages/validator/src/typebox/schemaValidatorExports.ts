@@ -64,8 +64,8 @@ export const symbol: typeof StaticSchemaValidator.symbol =
 /**
  * TypeBox schema definition for undefined, null, void types.
  */
-export const empty: typeof StaticSchemaValidator.empty =
-  StaticSchemaValidator.empty;
+export const nullish: typeof StaticSchemaValidator.nullish =
+  StaticSchemaValidator.nullish;
 
 /**
  * TypeBox schema definition for any type.

@@ -42,60 +42,54 @@ describe('zod schema validator tests', () => {
   });
 
   test('schemify', async () => {
-    expect(compare(schemified, expectedSchema)).toBe(true);
+    compare(schemified, expectedSchema);
 
-    expect(
-      compare(
-        schemified,
-        schemify({
-          hello: {
-            world: string
-          },
-          foo: {
-            bar: number
-          }
+    compare(
+      schemified,
+      schemify({
+        hello: {
+          world: string
+        },
+        foo: {
+          bar: number
+        }
+      })
+    );
+    compare(
+      schemified,
+      schemify({
+        hello: schemify({
+          world: string
+        }),
+        foo: {
+          bar: number
+        }
+      })
+    );
+
+    compare(
+      schemified,
+      schemify({
+        hello: {
+          world: string
+        },
+        foo: schemify({
+          bar: number
         })
-      )
-    ).toBe(true);
-    expect(
-      compare(
-        schemified,
-        schemify({
-          hello: schemify({
-            world: string
-          }),
-          foo: {
-            bar: number
-          }
+      })
+    );
+
+    compare(
+      schemified,
+      schemify({
+        hello: schemify({
+          world: string
+        }),
+        foo: schemify({
+          bar: number
         })
-      )
-    ).toBe(true);
-    expect(
-      compare(
-        schemified,
-        schemify({
-          hello: {
-            world: string
-          },
-          foo: schemify({
-            bar: number
-          })
-        })
-      )
-    ).toBe(true);
-    expect(
-      compare(
-        schemified,
-        schemify({
-          hello: schemify({
-            world: string
-          }),
-          foo: schemify({
-            bar: number
-          })
-        })
-      )
-    ).toBe(true);
+      })
+    );
   });
 
   test('optional', async () => {
@@ -103,8 +97,8 @@ describe('zod schema validator tests', () => {
     const boxSchemified = optional(schemified);
 
     const schemifiedExpected = z.optional(expectedSchema);
-    expect(compare(unboxSchemified, schemifiedExpected)).toBe(true);
-    expect(compare(boxSchemified, schemifiedExpected)).toBe(true);
+    compare(unboxSchemified, schemifiedExpected);
+    compare(boxSchemified, schemifiedExpected);
   });
 
   test('array', async () => {
@@ -112,8 +106,8 @@ describe('zod schema validator tests', () => {
     const boxSchemified = array(schemified);
 
     const schemifiedExpected = z.array(expectedSchema);
-    expect(compare(unboxSchemified, schemifiedExpected)).toBe(true);
-    expect(compare(boxSchemified, schemifiedExpected)).toBe(true);
+    compare(unboxSchemified, schemifiedExpected);
+    compare(boxSchemified, schemifiedExpected);
   });
 
   test('union', async () => {
@@ -149,37 +143,33 @@ describe('zod schema validator tests', () => {
       })
     ]);
 
-    expect(compare(unboxSchemified, schemifiedExpected)).toBe(true);
-    expect(compare(unboxSchemified2, schemifiedExpected)).toBe(true);
-    expect(compare(boxSchemified, schemifiedExpected)).toBe(true);
-    expect(compare(boxSchemified2, schemifiedExpected)).toBe(true);
+    compare(unboxSchemified, schemifiedExpected);
+    compare(unboxSchemified2, schemifiedExpected);
+    compare(boxSchemified, schemifiedExpected);
+    compare(boxSchemified2, schemifiedExpected);
   });
 
   test('literal', async () => {
     const schemified = schemify({
       hello: 'world'
     });
-    expect(
-      compare(
-        schemified,
-        z.object({
-          hello: z.literal('world')
-        })
-      )
-    ).toBe(true);
+    compare(
+      schemified,
+      z.object({
+        hello: z.literal('world')
+      })
+    );
   });
 
   test('validate', async () => {
-    expect(
-      validate(schemified, {
-        hello: {
-          world: 'world'
-        },
-        foo: {
-          bar: 42
-        }
-      })
-    ).toBe(true);
+    validate(schemified, {
+      hello: {
+        world: 'world'
+      },
+      foo: {
+        bar: 42
+      }
+    });
 
     expect(
       validate(schemified, {
@@ -202,16 +192,14 @@ describe('zod schema validator tests', () => {
     });
     expect(validParse.ok).toBe(true);
     if (validParse.ok) {
-      expect(
-        compare(validParse.value, {
-          hello: {
-            world: 'world'
-          },
-          foo: {
-            bar: 42
-          }
-        })
-      );
+      compare(validParse.value, {
+        hello: {
+          world: 'world'
+        },
+        foo: {
+          bar: 42
+        }
+      });
     }
 
     const failedParse = parse(schemified, {

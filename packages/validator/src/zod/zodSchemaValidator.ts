@@ -73,7 +73,7 @@ export class ZodSchemaValidator
   }, z.boolean());
   date = z.coerce.date();
   symbol = z.symbol();
-  empty = z.union([z.void(), z.null(), z.undefined()]);
+  nullish = z.union([z.void(), z.null(), z.undefined()]);
   any = z.any();
   unknown = z.unknown();
   never = z.never();
@@ -214,12 +214,20 @@ export class ZodSchemaValidator
     schema: T,
     value: unknown
   ): ParseResult<ZodResolve<T>> {
-    const result = schema.safeParse(value);
-    return {
-      ok: result.success,
-      value: result.success && result.data,
-      error: this.prettyPrintZodErrors(result.error)
-    };
+    try {
+      const result = schema.safeParse(value);
+      return result.success
+        ? { ok: true, value: result.data }
+        : {
+            ok: false,
+            error: this.prettyPrintZodErrors(result.error)
+          };
+    } catch (error) {
+      return {
+        ok: false,
+        error: `Unexpected zod safeParse error: ${(error as Error).message}`
+      };
+    }
   }
 
   /**

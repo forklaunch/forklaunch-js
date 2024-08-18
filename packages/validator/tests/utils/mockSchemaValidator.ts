@@ -51,7 +51,7 @@ export class MockSchemaValidator
   boolean = 'boolean';
   date = 'date';
   symbol = 'symbol';
-  empty = 'empty';
+  nullish = 'nullish';
   any = 'any';
   unknown = 'unknown';
   never = 'never';
@@ -100,7 +100,7 @@ export const bigint = mockSchemaValidator.bigint;
 export const boolean = mockSchemaValidator.boolean;
 export const date = mockSchemaValidator.date;
 export const symbol = mockSchemaValidator.symbol;
-export const empty = mockSchemaValidator.empty;
+export const nullish = mockSchemaValidator.nullish;
 export const any = mockSchemaValidator.any;
 export const unknown = mockSchemaValidator.unknown;
 export const never = mockSchemaValidator.never;

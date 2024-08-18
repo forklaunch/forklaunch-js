@@ -104,9 +104,9 @@ export interface SchemaValidator<
   symbol: unknown;
 
   /**
-   * Validator for empty type.
+   * Validator for nullish type.
    */
-  empty: unknown;
+  nullish: unknown;
 
   /**
    * Validator for any type.

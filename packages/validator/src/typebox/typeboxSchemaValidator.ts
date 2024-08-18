@@ -90,7 +90,7 @@ export class TypeboxSchemaValidator
     errorType: 'uuid'
   });
   uri = Type.String({
-    pattern: '/^[a-zA-Z][a-zA-Z\\d+-.]*:[^\\s]*$/',
+    pattern: '^[a-zA-Z][a-zA-Z\\d+-.]*:[^\\s]*$',
     errorType: 'uri'
   });
   email = Type.String({
@@ -99,12 +99,23 @@ export class TypeboxSchemaValidator
     errorType: 'email'
   });
   number = Type.Transform(
-    Type.Union([Type.Number(), Type.String({ pattern: '^[0-9]+$' })], {
-      errorType: 'number-like'
-    })
+    Type.Union(
+      [
+        Type.Number(),
+        Type.String({ pattern: '^[0-9]+$' }),
+        Type.Boolean(),
+        Type.Null(),
+        Type.Date(),
+        Type.BigInt()
+      ],
+      {
+        errorType: 'number-like',
+        openapiType: Type.Number()
+      }
+    )
   )
     .Decode((value) => {
-      if (typeof value === 'string') {
+      if (typeof value !== 'number') {
         const num = Number(value);
         if (isNaN(num)) {
           throw new Error('Invalid number');
@@ -117,28 +128,41 @@ export class TypeboxSchemaValidator
     .Encode(Number);
   bigint = Type.Transform(
     Type.Union(
-      [Type.BigInt(), Type.Number(), Type.String({ pattern: '^[0-9]+$' })],
+      [
+        Type.BigInt(),
+        Type.Number(),
+        Type.String({ pattern: '^[0-9]+$' }),
+        Type.Boolean(),
+        Type.Date()
+      ],
       {
-        errorType: 'BigInt-like'
+        errorType: 'BigInt-like',
+        openapiType: Type.BigInt()
       }
     )
   )
     .Decode((value) => {
-      if (typeof value === 'string') {
+      if (typeof value !== 'bigint') {
         try {
-          return BigInt(value);
+          return BigInt(value instanceof Date ? value.getTime() : value);
         } catch (error) {
           throw new Error('Invalid bigint');
         }
       }
-      return BigInt(value);
+      return value;
     })
     .Encode(BigInt);
   boolean = Type.Transform(
     Type.Union(
-      [Type.Boolean(), Type.String({ pattern: '^(?i:true|false)$' })],
+      [
+        Type.Boolean(),
+        Type.String({
+          pattern: '^(t|T)(r|R)(u|U)(e|E)$|^(f|F)(a|A)(l|L)(s|S)(e|E)$'
+        })
+      ],
       {
-        errorType: 'boolean-like'
+        errorType: 'boolean-like',
+        openapiType: Type.Boolean()
       }
     )
   )
@@ -151,9 +175,38 @@ export class TypeboxSchemaValidator
       }
     })
     .Encode(Boolean);
-  date = Type.Date();
+  date = Type.Transform(
+    Type.Union(
+      [
+        Type.Date(),
+        Type.Number(),
+        Type.String({
+          pattern:
+            '^\\d{4}(-\\d{2}){0,2}(T\\d{2}:\\d{2}(:\\d{2}(\\.\\d{1,3})?)?(Z|([+-]\\d{2}:\\d{2}))?)?$|^\\d{1,2}\\/\\d{1,2}\\/\\d{4}$|^\\d{4}\\/\\d{1,2}\\/\\d{1,2}$|^\\d+$'
+        }),
+        Type.Boolean(),
+        Type.Null()
+      ],
+      {
+        errorType: 'date',
+        openapiType: Type.Date()
+      }
+    )
+  )
+    .Decode((value) => {
+      if (!(value instanceof Date)) {
+        if (value === null || typeof value === 'boolean') {
+          return new Date(value ? 1 : 0);
+        }
+        return new Date(value);
+      }
+      return value;
+    })
+    .Encode((value) => new Date(value));
   symbol = Type.Symbol();
-  empty = Type.Union([Type.Void(), Type.Null(), Type.Undefined()]);
+  nullish = Type.Union([Type.Void(), Type.Null(), Type.Undefined()], {
+    errorType: 'nullish'
+  });
   any = Type.Any();
   unknown = Type.Unknown();
   never = Type.Never();
@@ -235,12 +288,9 @@ export class TypeboxSchemaValidator
    * @returns {TOptional<TResolve<T>>} The optional schema.
    */
   optional<T extends TIdiomaticSchema>(schema: T): TOptional<TResolve<T>> {
-    let schemified;
-    if (KindGuard.IsSchema(schema)) {
-      schemified = schema;
-    } else {
-      schemified = this.schemify(schema);
-    }
+    const schemified = KindGuard.IsSchema(schema)
+      ? schema
+      : this.schemify(schema);
     return Type.Optional(schemified) as TOptional<TResolve<T>>;
   }
 
@@ -250,12 +300,9 @@ export class TypeboxSchemaValidator
    * @returns {TArray<TResolve<T>>} The array schema.
    */
   array<T extends TIdiomaticSchema>(schema: T): TArray<TResolve<T>> {
-    let schemified;
-    if (KindGuard.IsSchema(schema)) {
-      schemified = schema;
-    } else {
-      schemified = this.schemify(schema);
-    }
+    const schemified = KindGuard.IsSchema(schema)
+      ? schema
+      : this.schemify(schema);
     return Type.Array(schemified, {
       errorType: `array of ${this.errorType(schemified)}`
     }) as TArray<TResolve<T>>;
@@ -266,16 +313,12 @@ export class TypeboxSchemaValidator
    * @param {TUnionContainer} schemas - The schemas to union.
    * @returns {TUnion<UnionTResolve<T>>} The union schema.
    *
-   * WARNING: If "empty" or TUndefined is included in the union, the key will still be expected.
+   * WARNING: If "nullish" or TUndefined is included in the union, the key will still be expected.
    * This is a limitation of TypeBox. Consider using "optional" instead.
    */
   union<T extends TUnionContainer>(schemas: [...T]): TUnion<UnionTResolve<T>> {
     const unionTypes = schemas.map((schema) => {
-      if (KindGuard.IsSchema(schema)) {
-        return schema;
-      } else {
-        return this.schemify(schema);
-      }
+      return KindGuard.IsSchema(schema) ? schema : this.schemify(schema);
     });
 
     return Type.Union(unionTypes, {
@@ -311,12 +354,9 @@ export class TypeboxSchemaValidator
     if (schema instanceof TypeCheck) {
       return schema.Check(value);
     } else {
-      let schemified;
-      if (KindGuard.IsSchema(schema)) {
-        schemified = schema;
-      } else {
-        schemified = this.schemify(schema);
-      }
+      const schemified = KindGuard.IsSchema(schema)
+        ? schema
+        : this.schemify(schema);
       return Value.Check(schemified, value);
     }
   }
@@ -341,12 +381,9 @@ export class TypeboxSchemaValidator
         errors = Array.from(schema.Errors(value));
       }
     } else {
-      let schemified;
-      if (KindGuard.IsSchema(schema)) {
-        schemified = schema;
-      } else {
-        schemified = this.schemify(schema);
-      }
+      const schemified = KindGuard.IsSchema(schema)
+        ? schema
+        : this.schemify(schema);
 
       if (Value.Check(schemified, value)) {
         conversion = Value.Decode(schemified, value);
@@ -355,17 +392,14 @@ export class TypeboxSchemaValidator
       }
     }
 
-    return conversion !== undefined
+    return errors != null && errors.length === 0
       ? {
           ok: true,
           value: conversion as TResolve<T>
         }
       : {
           ok: false,
-          error:
-            errors !== undefined
-              ? this.prettyPrintTypeBoxErrors(errors)
-              : undefined
+          error: this.prettyPrintTypeBoxErrors(errors)
         };
   }
 
@@ -375,6 +409,29 @@ export class TypeboxSchemaValidator
    * @returns {SchemaObject} The OpenAPI schema object.
    */
   openapi<T extends TIdiomaticSchema | TSchema>(schema: T): SchemaObject {
-    return this.schemify(schema);
+    const schemified = KindGuard.IsSchema(schema)
+      ? schema
+      : this.schemify(schema);
+
+    if (
+      Object.hasOwn(schemified, 'openapiType') ||
+      KindGuard.IsLiteral(schemified)
+    ) {
+      return schemified.openapiType as SchemaObject;
+    }
+
+    const newSchema: SchemaObject = Object.assign({}, schemified);
+    if (Object.hasOwn(newSchema, 'properties')) {
+      newSchema.properties = { ...schemified.properties };
+      if (newSchema.properties) {
+        Object.entries(newSchema.properties).forEach(([key, value]) => {
+          if (KindGuard.IsSchema(value) && newSchema.properties) {
+            newSchema.properties[key] = this.openapi(value);
+          }
+        });
+      }
+    }
+
+    return newSchema;
   }
 }

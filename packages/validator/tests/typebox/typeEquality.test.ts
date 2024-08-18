@@ -12,8 +12,8 @@ import {
   string,
   symbol,
   union
-} from '../../src/zod';
-import { ZodSchemaValidator } from '../../src/zod/zodSchemaValidator';
+} from '../../src/typebox/schemaValidatorExports';
+import { TypeboxSchemaValidator } from '../../src/typebox/typeboxSchemaValidator';
 
 const one = array({
   name: {
@@ -113,13 +113,9 @@ const three = schemify(
 export function assert<T extends never>() {}
 type Equality<A, B> = Exclude<A, B> | Exclude<B, A>;
 
-type SchemaOne = Schema<typeof one, ZodSchemaValidator>;
-type SchemaTwo = Schema<typeof two, ZodSchemaValidator>;
-type SchemaThree = Schema<typeof three, ZodSchemaValidator>;
-
 type Expected = {
   name: {
-    j?:
+    j:
       | string
       | number
       | bigint
@@ -152,7 +148,12 @@ type Expected = {
   };
 }[];
 
-assert<Equality<SchemaOne, Expected>>();
+assert<Equality<SchemaThree, Expected>>();
+
+type SchemaOne = Schema<typeof one, TypeboxSchemaValidator>;
+type SchemaTwo = Schema<typeof two, TypeboxSchemaValidator>;
+type SchemaThree = Schema<typeof three, TypeboxSchemaValidator>;
+
 assert<Equality<SchemaOne, SchemaTwo>>();
 assert<Equality<SchemaOne, SchemaThree>>();
 assert<Equality<SchemaTwo, SchemaThree>>();
@@ -171,10 +172,12 @@ type ShortExpected = {
   s: string;
   non: number;
 };
-assert<Equality<Schema<typeof shortOne, ZodSchemaValidator>, ShortExpected>>();
+assert<
+  Equality<Schema<typeof shortOne, TypeboxSchemaValidator>, ShortExpected>
+>();
 assert<
   Equality<
-    Schema<typeof shortOne, ZodSchemaValidator>,
-    Schema<typeof shortTwo, ZodSchemaValidator>
+    Schema<typeof shortOne, TypeboxSchemaValidator>,
+    Schema<typeof shortTwo, TypeboxSchemaValidator>
   >
 >();

@@ -1,3 +1,8 @@
-export const compare = (object1: unknown, object2: unknown) => {
-  return JSON.stringify(object1) === JSON.stringify(object2);
+export const compare = (received: unknown, expected: unknown) => {
+  switch (typeof received) {
+    case 'bigint':
+      return expect(received).toBe(expected);
+    default:
+      return expect(JSON.stringify(received)).toBe(JSON.stringify(expected));
+  }
 };

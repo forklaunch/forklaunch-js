@@ -64,8 +64,8 @@ export const symbol: typeof StaticSchemaValidator.symbol =
 /**
  * Zod schema definition for undefined, null, void types.
  */
-export const empty: typeof StaticSchemaValidator.empty =
-  StaticSchemaValidator.empty;
+export const nullish: typeof StaticSchemaValidator.nullish =
+  StaticSchemaValidator.nullish;
 
 /**
  * Zod schema definition for any type.

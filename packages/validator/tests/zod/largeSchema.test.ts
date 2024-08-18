@@ -4,8 +4,8 @@ import {
   bigint,
   boolean,
   date,
-  empty,
   never,
+  nullish,
   number,
   optional,
   string,
@@ -98,7 +98,7 @@ describe('Zod Large Schema Tests', () => {
             date,
             boolean,
             bigint,
-            empty,
+            nullish,
             symbol,
             never
           ]),
@@ -137,7 +137,7 @@ describe('Zod Large Schema Tests', () => {
           }
         },
         additionalField1: {
-          a: union([string, boolean, bigint, empty]),
+          a: union([string, boolean, bigint, nullish]),
           b: optional(array(number)),
           c: {
             d: string,
