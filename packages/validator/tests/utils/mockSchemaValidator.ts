@@ -78,6 +78,7 @@ export class MockSchemaValidator
     return schema === value;
   }
   parse<T extends string>(schema: T, value: string): ParseResult<T> {
+    console.log('schema', schema, 'value', value);
     return schema === value
       ? {
           ok: true,

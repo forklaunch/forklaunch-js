@@ -1,7 +1,7 @@
 cache/
 controllers/
 database/
-entityMapper/
+dtoMapper/
 http/
 services/
 tests/

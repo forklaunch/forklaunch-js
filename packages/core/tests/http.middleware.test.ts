@@ -11,13 +11,15 @@ import {
   ForklaunchResponse,
   HttpContractDetails,
   ParamsDictionary,
-  RequestContext,
-  createRequestContext,
-  enrichRequestDetails,
-  parseResponse
-} from '../http';
+  RequestContext
+} from '../src/http';
+import { cors } from '../src/http/middleware/request/cors.middleware';
+import { createContext } from '../src/http/middleware/request/createContext.middleware';
+import { enrichDetails } from '../src/http/middleware/request/enrichDetails.middleware';
+import { parse as parseRequest } from '../src/http/middleware/request/parse.middleware';
+import { parse as parseResponse } from '../src/http/middleware/response/parse.middleware';
 
-describe('Http Middleware Tests', () => {
+describe('http middleware tests', () => {
   let contractDetails: HttpContractDetails<MockSchemaValidator>;
   let req: ForklaunchRequest<
     MockSchemaValidator,
@@ -80,7 +82,9 @@ describe('Http Middleware Tests', () => {
       locals: {},
       cors: true,
       responseSchemas: {
-        headers: testSchema,
+        headers: {
+          testSchema
+        },
         responses: {
           200: testSchema
         }
@@ -88,17 +92,22 @@ describe('Http Middleware Tests', () => {
     };
   });
 
-  test('Create Request Context', async () => {
+  test('cors middleware', async () => {
+    cors(req, res, nextFunction);
+    expect(res.cors).toBe(true);
+  });
+
+  test('create request context', async () => {
     req.context = {} as RequestContext;
     req.schemaValidator = {} as SchemaValidator;
-    createRequestContext(mockSchemaValidator)(req, res, nextFunction);
+    createContext(mockSchemaValidator)(req, res, nextFunction);
     expect(req.context.correlationId).not.toBe('123');
     expect(req.schemaValidator).toBe(mockSchemaValidator);
   });
 
-  test('Enrich Request Details', async () => {
+  test('request enrich details', async () => {
     req.contractDetails = {} as HttpContractDetails<MockSchemaValidator>;
-    enrichRequestDetails(contractDetails, testSchema, {
+    enrichDetails(contractDetails, testSchema, {
       headers: testSchema,
       responses: {
         200: testSchema
@@ -107,25 +116,15 @@ describe('Http Middleware Tests', () => {
     expect(req.contractDetails).toEqual(contractDetails);
   });
 
-  // test('Validate Request Params', async () => {
-  //   parseRequestParams(req, res, nextFunction);
-  // });
+  test('parse request', async () => {
+    parseRequest(req, res, nextFunction);
+  });
 
-  // test('Validate Request Headers', async () => {
-  //   parseReqHeaders(req, res, nextFunction);
-  // });
-
-  // test('Validate Request Body', async () => {
-  //   parseRequestBody(req, res, nextFunction);
-  // });
-
-  // test('Validate Request Query Params', async () => {
-  //   parseRequestQuery(req, res, nextFunction);
-  // });
-
-  test('Validate Response', async () => {
+  test('parse response', async () => {
     parseResponse(req, res, nextFunction);
   });
+
+  // TODO: enrich transmission response test
 
   // Not supported yet
   // test('Validate Auth', async () => {

@@ -3,9 +3,9 @@
   "version": "0.2.5",
   "description": "forklaunch-js core package. Contains useful building blocks.",
   "files": [
-    "dist"
+    "lib"
   ],
-  "types": "dist/index.d.ts",
+  "types": "lib/index.d.ts",
   "scripts": {
     "test": "vitest --passWithNoTests",
     "build": "tsc",
@@ -55,9 +55,29 @@
     "test": "tests"
   },
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+    "./cache": {
+      "types": "./lib/src/cache/index.d.ts",
+      "default": "./lib/src/cache/index.js"
+    },
+    "./controllers": {
+      "types": "./lib/src/controllers/index.d.ts",
+      "default": "./lib/src/controllers/index.js"
+    },
+    "./database": { 
+      "types": "./lib/src/database/index.d.ts",
+      "default": "./lib/src/database/index.js"
+    },
+    "./dtoMapper": {
+      "types": "./lib/src/dtoMapper/index.d.ts",
+      "default": "./lib/src/dtoMapper/index.js"
+    },
+    "./http": {
+      "types": "./lib/src/http/index.d.ts",
+      "default": "./lib/src/http/index.js"
+    },
+    "./services": {
+      "types": "./lib/src/services/index.d.ts",
+      "default": "./lib/src/services/index.js"
     }
   },
   "type": "module"

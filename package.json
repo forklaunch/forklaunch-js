@@ -22,7 +22,7 @@
     "lint": "pnpm --parallel -r run lint",
     "lint:fix": "pnpm --parallel -r run lint:fix",
     "format": "pnpm --parallel -r run format",
-    "test": "pnpm --parallel -r test",
+    "test": "pnpm vitest --passWithNoTests",
     "up": "pnpm --parallel -r up"
   },
   "keywords": [],

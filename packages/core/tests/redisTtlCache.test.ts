@@ -1,7 +1,7 @@
 import { GenericContainer, StartedTestContainer } from 'testcontainers';
-import { RedisTtlCache } from '../cache/redisTtlCache';
+import { RedisTtlCache } from '../src/cache/redisTtlCache';
 
-describe('RedisTtlCache', () => {
+describe('redisTtlCache', () => {
   let container: StartedTestContainer;
   let cache: RedisTtlCache;
   let key: string;
@@ -27,11 +27,11 @@ describe('RedisTtlCache', () => {
     await container.stop();
   });
 
-  it('PutRecord', async () => {
+  it('put', async () => {
     await cache.putRecord({ key, value, ttlMilliseconds });
   });
 
-  test('Read Record', async () => {
+  test('read', async () => {
     const storedValue = await cache.readRecord(key);
 
     expect(storedValue).toEqual({
@@ -41,20 +41,20 @@ describe('RedisTtlCache', () => {
     });
   });
 
-  test('Peek Record', async () => {
+  test('peek', async () => {
     const exists = await cache.peekRecord(key);
 
     expect(exists).toBeTruthy();
   });
 
-  test('Delete Record', async () => {
+  test('delete', async () => {
     await cache.deleteRecord(key);
     const existsAfterDelete = await cache.peekRecord(key);
 
     expect(existsAfterDelete).toBeFalsy();
   });
 
-  test('Check No Record', async () => {
+  test('check no record after ttl', async () => {
     await Promise.resolve(setTimeout(async () => {}, ttlMilliseconds));
     const existsAfterTtl = await cache.peekRecord(key);
     expect(existsAfterTtl).toBeFalsy();
