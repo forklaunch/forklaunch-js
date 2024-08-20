@@ -27,15 +27,15 @@
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "dependencies": {
     "@forklaunch/validator": "workspace:*",
-    "@mikro-orm/core": "^6.3.2",
+    "@mikro-orm/core": "^6.3.6",
     "cors": "^2.8.5",
-    "jose": "^5.6.3",
+    "jose": "^5.7.0",
     "openapi3-ts": "^4.3.3",
     "redis": "^4.7.0",
     "uuid": "^10.0.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.8.0",
+    "@eslint/js": "^9.9.0",
     "@forklaunch/common": "workspace:*",
     "@types/cors": "^2.8.17",
     "@types/jest": "^29.5.12",
@@ -47,7 +47,7 @@
     "testcontainers": "^10.11.0",
     "ts-jest": "^29.2.4",
     "ts-node": "^10.9.2",
-    "typedoc": "^0.26.5",
+    "typedoc": "^0.26.6",
     "typescript": "^5.5.4",
     "typescript-eslint": "^7.18.0"
   },
@@ -63,7 +63,7 @@
       "types": "./lib/src/controllers/index.d.ts",
       "default": "./lib/src/controllers/index.js"
     },
-    "./database": { 
+    "./database": {
       "types": "./lib/src/database/index.d.ts",
       "default": "./lib/src/database/index.js"
     },
