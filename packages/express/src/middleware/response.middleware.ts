@@ -2,7 +2,7 @@ import { enrichExpressLikeSend, ParamsDictionary } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { NextFunction } from 'express';
 import { ParsedQs } from 'qs';
-import { Request, Response } from '../types/forklaunch.express.types';
+import { Request, Response } from '../types/express.types';
 
 /**
  * Middleware to enrich the response transmission by intercepting and parsing responses before they are sent.

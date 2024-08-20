@@ -12,7 +12,7 @@ import {
   string,
   symbol,
   union
-} from '../../src/typebox/schemaValidatorExports';
+} from '../../src/typebox/staticSchemaValidator';
 import { TypeboxSchemaValidator } from '../../src/typebox/typeboxSchemaValidator';
 
 const one = array({

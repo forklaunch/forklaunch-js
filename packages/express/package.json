@@ -2,6 +2,10 @@
   "name": "@forklaunch/express",
   "version": "0.1.0",
   "description": "Forklaunch framework for express.",
+  "files": [
+    "lib/**"
+  ],
+  "types": "lib/index.d.ts",
   "scripts": {
     "test": "vitest --passWithNoTests",
     "build": "tsc",

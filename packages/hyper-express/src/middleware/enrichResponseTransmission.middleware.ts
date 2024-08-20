@@ -5,7 +5,7 @@ import {
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
-import { Request, Response } from '../types/forklaunch.hyperExpress.types';
+import { Request, Response } from '../types/hyperExpress.types';
 
 /**
  * Middleware to enrich the response transmission by intercepting and parsing responses before they are sent.

@@ -1,26 +1,20 @@
 import {
   ForklaunchExpressLikeApplication,
-  ForklaunchExpressLikeRouter,
   ForklaunchRouter,
   generateSwaggerDocument
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
-import express, {
-  ErrorRequestHandler,
-  Express,
-  Router as ExpressRouter,
-  RequestHandler
-} from 'express';
+import express, { ErrorRequestHandler, Express, RequestHandler } from 'express';
 import { Server } from 'http';
 import swaggerUi from 'swagger-ui-express';
-import { enrichResponseTransmission } from './middleware/response.middleware';
+import { Router } from './expressRouter';
 
 /**
  * Application class that sets up an Express server with Forklaunch routers and middleware.
  *
  * @template SV - A type that extends AnySchemaValidator.
  */
-class Application<
+export class Application<
   SV extends AnySchemaValidator
 > extends ForklaunchExpressLikeApplication<SV, Express> {
   /**
@@ -98,6 +92,7 @@ class Application<
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+      console.error(err);
       res.locals.errorMessage = err.message;
       res
         .status(res.statusCode && res.statusCode >= 400 ? res.statusCode : 500)
@@ -106,65 +101,4 @@ class Application<
     this.internal.use(errorHandler);
     return this.internal.listen(...(args as (() => void)[]));
   }
-}
-
-/**
- * Creates a new instance of Application with the given schema validator.
- *
- * @template SV - A type that extends AnySchemaValidator.
- * @param {SV} schemaValidator - The schema validator.
- * @returns {Application<SV>} - The new application instance.
- */
-export function forklaunchExpress<SV extends AnySchemaValidator>(
-  schemaValidator: SV
-) {
-  return new Application(schemaValidator);
-}
-
-/**
- * Router class that sets up routes and middleware for an Express router.
- *
- * @template SV - A type that extends AnySchemaValidator.
- * @implements {ForklaunchRouter<SV>}
- */
-class Router<SV extends AnySchemaValidator, BasePath extends `/${string}`>
-  extends ForklaunchExpressLikeRouter<
-    SV,
-    BasePath,
-    RequestHandler,
-    ExpressRouter
-  >
-  implements ForklaunchRouter<SV>
-{
-  /**
-   * Creates an instance of Router.
-   *
-   * @param {string} basePath - The base path for the router.
-   * @param {SV} schemaValidator - The schema validator.
-   */
-  constructor(
-    public basePath: BasePath,
-    schemaValidator: SV
-  ) {
-    super(basePath, schemaValidator, express.Router());
-
-    this.internal.use(express.json());
-    this.internal.use(enrichResponseTransmission as unknown as RequestHandler);
-  }
-}
-
-/**
- * Creates a new instance of Router with the given base path and schema validator.
- *
- * @template SV - A type that extends AnySchemaValidator.
- * @param {string} basePath - The base path for the router.
- * @param {SV} schemaValidator - The schema validator.
- * @returns {Router<SV>} - The new router instance.
- */
-export function forklaunchRouter<
-  SV extends AnySchemaValidator,
-  BasePath extends `/${string}`
->(basePath: BasePath, schemaValidator: SV): Router<SV, BasePath> {
-  const router = new Router(basePath, schemaValidator);
-  return router;
 }

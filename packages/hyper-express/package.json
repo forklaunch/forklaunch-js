@@ -2,9 +2,12 @@
   "name": "@forklaunch/hyper-express",
   "version": "0.1.1",
   "description": "Forklaunch framework for hyper-express.",
-  "main": "index.js",
+  "files": [
+    "lib/**"
+  ],
+  "types": "lib/index.d.ts",
   "scripts": {
-    "test": "jest --passWithNoTests --detectOpenHandles --forceExit",
+    "test": "vitest --passWithNoTests",
     "build": "tsc",
     "clean": "rm -rf dist pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
@@ -25,7 +28,7 @@
   "dependencies": {
     "@forklaunch/common": "workspace:*",
     "@forklaunch/core": "workspace:*",
-    "@forklaunch/hyper-express-fork": "^6.16.4",
+    "@forklaunch/hyper-express-fork": "6.16.4-1",
     "@forklaunch/validator": "workspace:*",
     "cors": "^2.8.5",
     "live-directory": "^3.0.3",

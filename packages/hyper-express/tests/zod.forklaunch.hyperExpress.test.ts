@@ -1,9 +1,5 @@
 import { SchemaValidator, string } from '@forklaunch/validator/zod';
-import {
-  App,
-  forklaunchExpress,
-  forklaunchRouter
-} from '../forklaunch.hyperExpress';
+import { App, forklaunchExpress, forklaunchRouter } from '../index';
 
 const zodSchemaValidator = SchemaValidator();
 

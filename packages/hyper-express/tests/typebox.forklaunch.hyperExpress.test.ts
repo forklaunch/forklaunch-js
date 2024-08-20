@@ -1,9 +1,5 @@
 import { SchemaValidator, string } from '@forklaunch/validator/typebox';
-import {
-  App,
-  forklaunchExpress,
-  forklaunchRouter
-} from '../forklaunch.hyperExpress';
+import { App, forklaunchExpress, forklaunchRouter } from '../index';
 
 const typeboxSchemaValidator = SchemaValidator();
 
@@ -99,7 +95,9 @@ describe('Forklaunch Hyper-Express Tests', () => {
 
     forklaunchApplication.use(forklaunchRouterInstance);
 
-    await forklaunchApplication.listen(6936, () => {});
+    await forklaunchApplication.listen(6936, () => {
+      console.log('server started on 6936');
+    });
   });
 
   test('Get', async () => {

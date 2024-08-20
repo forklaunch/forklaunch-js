@@ -9,7 +9,7 @@ import {
   string,
   union,
   validate
-} from '../../src/typebox/schemaValidatorExports';
+} from '../../src/typebox/staticSchemaValidator';
 import { UnboxedTObjectSchema } from '../../src/typebox/types/schema.types';
 import { compare } from '../utils/compare';
 

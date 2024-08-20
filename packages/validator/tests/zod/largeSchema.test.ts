@@ -11,7 +11,7 @@ import {
   string,
   symbol,
   union
-} from '../../src/zod/schemaValidatorExports';
+} from '../../src/zod/staticSchemaValidator';
 import { ZodSchemaValidator } from '../../src/zod/zodSchemaValidator';
 
 describe('Zod Large Schema Tests', () => {

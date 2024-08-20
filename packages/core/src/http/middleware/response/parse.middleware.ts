@@ -59,7 +59,10 @@ export function parse<
     res.bodyData
   );
 
-  const parsedHeaders = req.schemaValidator.parse(headers, res.getHeaders());
+  const parsedHeaders = req.schemaValidator.parse(
+    headers ?? req.schemaValidator.unknown,
+    res.getHeaders()
+  );
   const parseErrors: string[] = [];
   if (!parsedHeaders.ok) {
     parseErrors.push(

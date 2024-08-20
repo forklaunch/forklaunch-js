@@ -1,19 +1,12 @@
 import {
   ForklaunchExpressLikeApplication,
-  ForklaunchExpressLikeRouter,
   ForklaunchRouter,
   generateSwaggerDocument
 } from '@forklaunch/core/http';
-import {
-  Router as ExpressRouter,
-  MiddlewareHandler,
-  Server
-} from '@forklaunch/hyper-express-fork';
+import { MiddlewareHandler, Server } from '@forklaunch/hyper-express-fork';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import * as uWebsockets from 'uWebSockets.js';
-import { contentParse } from './middleware/contentParse.middleware';
-import { polyfillGetHeaders } from './middleware/polyfillGetHeaders.middleware';
-import { enrichResponseTransmission } from './middleware/response.middleware';
+import { Router } from './hyperExpressRouter';
 import { swagger, swaggerRedirect } from './middleware/swagger.middleware';
 
 /**
@@ -21,7 +14,7 @@ import { swagger, swaggerRedirect } from './middleware/swagger.middleware';
  *
  * @template SV - A type that extends AnySchemaValidator.
  */
-class Application<
+export class Application<
   SV extends AnySchemaValidator
 > extends ForklaunchExpressLikeApplication<SV, Server> {
   /**
@@ -99,6 +92,8 @@ class Application<
 
       this.internal.set_error_handler((_req, res, err) => {
         res.locals.errorMessage = err.message;
+        // TODO: replace with logger
+        console.error(err);
         res
           .status(
             res.statusCode && res.statusCode >= 400 ? res.statusCode : 500
@@ -128,58 +123,4 @@ class Application<
       arg1 as (listen_socket: uWebsockets.us_listen_socket) => void
     );
   }
-}
-
-export type App<SV extends AnySchemaValidator> = Application<SV>;
-
-/**
- * Creates a new instance of Application with the given schema validator.
- *
- * @template SV - A type that extends AnySchemaValidator.
- * @param {SV} schemaValidator - The schema validator.
- * @returns {Application<SV>} - The new application instance.
- */
-export function forklaunchExpress<SV extends AnySchemaValidator>(
-  schemaValidator: SV
-) {
-  return new Application(schemaValidator);
-}
-
-class Router<SV extends AnySchemaValidator, BasePath extends `/${string}`>
-  extends ForklaunchExpressLikeRouter<
-    SV,
-    BasePath,
-    MiddlewareHandler,
-    ExpressRouter
-  >
-  implements ForklaunchRouter<SV>
-{
-  constructor(
-    public basePath: BasePath,
-    schemaValidator: SV
-  ) {
-    super(basePath, schemaValidator, new ExpressRouter());
-
-    this.internal.use(polyfillGetHeaders);
-    this.internal.use(contentParse);
-    this.internal.use(
-      enrichResponseTransmission as unknown as MiddlewareHandler
-    );
-  }
-}
-
-/**
- * Creates a new instance of Router with the given base path and schema validator.
- *
- * @template SV - A type that extends AnySchemaValidator.
- * @param {string} basePath - The base path for the router.
- * @param {SV} schemaValidator - The schema validator.
- * @returns {Router<SV>} - The new router instance.
- */
-export function forklaunchRouter<
-  SV extends AnySchemaValidator,
-  BasePath extends `/${string}`
->(basePath: BasePath, schemaValidator: SV): Router<SV, BasePath> {
-  const router = new Router(basePath, schemaValidator);
-  return router;
 }
