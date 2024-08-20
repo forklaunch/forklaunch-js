@@ -1,8 +1,8 @@
-import { TypeboxSchemaValidator, string } from '@forklaunch/validator/typebox';
+import { SchemaValidator, string } from '@forklaunch/validator/typebox';
 import { Server } from 'http';
-import { forklaunchExpress, forklaunchRouter } from '../forklaunch.express';
+import { forklaunchExpress, forklaunchRouter } from '../index';
 
-const typeboxSchemaValidator = new TypeboxSchemaValidator();
+const typeboxSchemaValidator = SchemaValidator();
 
 describe('Forklaunch Express Tests', () => {
   let forklaunchApplication;

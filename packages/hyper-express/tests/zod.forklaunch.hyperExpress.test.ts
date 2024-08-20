@@ -1,14 +1,10 @@
-import { ZodSchemaValidator, string } from '@forklaunch/validator/zod';
-import {
-  App,
-  forklaunchExpress,
-  forklaunchRouter
-} from '../forklaunch.hyperExpress';
+import { SchemaValidator, string } from '@forklaunch/validator/zod';
+import { App, forklaunchExpress, forklaunchRouter } from '../index';
 
-const zodSchemaValidator = new ZodSchemaValidator();
+const zodSchemaValidator = SchemaValidator();
 
 describe('Forklaunch Hyper-Express Tests', () => {
-  let forklaunchApplication: App<ZodSchemaValidator>;
+  let forklaunchApplication: App<typeof zodSchemaValidator>;
   let forklaunchRouterInstance;
 
   beforeAll(async () => {

@@ -1,14 +1,10 @@
-import { TypeboxSchemaValidator, string } from '@forklaunch/validator/typebox';
-import {
-  App,
-  forklaunchExpress,
-  forklaunchRouter
-} from '../forklaunch.hyperExpress';
+import { SchemaValidator, string } from '@forklaunch/validator/typebox';
+import { App, forklaunchExpress, forklaunchRouter } from '../index';
 
-const typeboxSchemaValidator = new TypeboxSchemaValidator();
+const typeboxSchemaValidator = SchemaValidator();
 
 describe('Forklaunch Hyper-Express Tests', () => {
-  let forklaunchApplication: App<TypeboxSchemaValidator>;
+  let forklaunchApplication: App<typeof typeboxSchemaValidator>;
   let forklaunchRouterInstance;
 
   beforeAll(async () => {
@@ -99,7 +95,9 @@ describe('Forklaunch Hyper-Express Tests', () => {
 
     forklaunchApplication.use(forklaunchRouterInstance);
 
-    await forklaunchApplication.listen(6936, () => {});
+    await forklaunchApplication.listen(6936, () => {
+      console.log('server started on 6936');
+    });
   });
 
   test('Get', async () => {

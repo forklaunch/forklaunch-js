@@ -1,18 +1,18 @@
 import { Schema } from '../../index';
 import {
-  ZodSchemaValidator,
   array,
   bigint,
   boolean,
   date,
-  empty,
   never,
+  nullish,
   number,
   optional,
   string,
   symbol,
   union
-} from '../../zod/index';
+} from '../../src/zod/staticSchemaValidator';
+import { ZodSchemaValidator } from '../../src/zod/zodSchemaValidator';
 
 describe('Zod Large Schema Tests', () => {
   it('Deep Union', async () => {
@@ -82,7 +82,10 @@ describe('Zod Large Schema Tests', () => {
     };
 
     const deepUnion = union([deepOne, deepTwo]);
-    type DeepUnionSchema = Schema<typeof deepUnion, ZodSchemaValidator>;
+    type _DeepUnionSchemaDepthCheck = Schema<
+      typeof deepUnion,
+      ZodSchemaValidator
+    >;
   });
 
   it('Realistic Schema', async () => {
@@ -95,7 +98,7 @@ describe('Zod Large Schema Tests', () => {
             date,
             boolean,
             bigint,
-            empty,
+            nullish,
             symbol,
             never
           ]),
@@ -134,7 +137,7 @@ describe('Zod Large Schema Tests', () => {
           }
         },
         additionalField1: {
-          a: union([string, boolean, bigint, empty]),
+          a: union([string, boolean, bigint, nullish]),
           b: optional(array(number)),
           c: {
             d: string,
@@ -168,6 +171,9 @@ describe('Zod Large Schema Tests', () => {
       }
     });
 
-    type RealisticSchema = Schema<typeof realistic, ZodSchemaValidator>;
+    type _RealisticSchemaDepthCheck = Schema<
+      typeof realistic,
+      ZodSchemaValidator
+    >;
   });
 });

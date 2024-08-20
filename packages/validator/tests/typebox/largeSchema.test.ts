@@ -1,21 +1,21 @@
 import { Schema } from '../../index';
 import {
-  TypeboxSchemaValidator,
   array,
   bigint,
   boolean,
   date,
-  empty,
   never,
+  nullish,
   number,
   optional,
   string,
   symbol,
   union
-} from '../../typebox/typebox.schemaValidator';
+} from '../../src/typebox/staticSchemaValidator';
+import { TypeboxSchemaValidator } from '../../src/typebox/typeboxSchemaValidator';
 
-describe('Typebox Large Schema Tests', () => {
-  it('Deep Union', () => {
+describe('typebox large schema tests', () => {
+  it('deep union', () => {
     const deepOne = {
       s: {
         s: {
@@ -85,7 +85,7 @@ describe('Typebox Large Schema Tests', () => {
     type DeepUnionSchema = Schema<typeof deepUnion, TypeboxSchemaValidator>;
   });
 
-  it('Realistic Schema', () => {
+  it('realistic schema', () => {
     const realistic = array({
       level1: {
         name: {
@@ -95,7 +95,7 @@ describe('Typebox Large Schema Tests', () => {
             date,
             boolean,
             bigint,
-            empty,
+            nullish,
             symbol,
             never
           ]),
@@ -134,7 +134,7 @@ describe('Typebox Large Schema Tests', () => {
           }
         },
         additionalField1: {
-          a: union([string, boolean, bigint, empty]),
+          a: union([string, boolean, bigint, nullish]),
           b: optional(array(number)),
           c: {
             d: string,

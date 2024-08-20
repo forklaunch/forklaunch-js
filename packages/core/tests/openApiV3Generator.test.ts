@@ -4,14 +4,14 @@ import {
   optional,
   union
 } from '@forklaunch/validator/tests/mockSchemaValidator';
-import { generateSwaggerDocument } from '../http/openApiV3Generator';
+import { generateSwaggerDocument } from '../src/http/openApiV3Generator/openApiV3Generator';
 
-describe('OpenApiV3Generator Tests', () => {
+describe('openApiV3Generator tests', () => {
   const testSchema = {
     test: union(['a', optional(literal('test'))] as const)
   };
 
-  test('Generate OpenApiV3', async () => {
+  test('generate openApiV3', async () => {
     const generatedOpenApiSpec = generateSwaggerDocument(
       mockSchemaValidator,
       8000,

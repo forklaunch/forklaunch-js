@@ -2,8 +2,12 @@
   "name": "@forklaunch/express",
   "version": "0.1.0",
   "description": "Forklaunch framework for express.",
+  "files": [
+    "lib/**"
+  ],
+  "types": "lib/index.d.ts",
   "scripts": {
-    "test": "jest --passWithNoTests",
+    "test": "vitest --passWithNoTests",
     "build": "tsc",
     "clean": "rm -rf dist pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
@@ -28,11 +32,11 @@
     "@types/express": "^4.17.21",
     "cors": "^2.8.5",
     "express": "^4.19.2",
-    "qs": "^6.12.3",
+    "qs": "^6.13.0",
     "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
-    "@eslint/js": "^9.8.0",
+    "@eslint/js": "^9.9.0",
     "@types/cors": "^2.8.17",
     "@types/jest": "^29.5.12",
     "@types/qs": "^6.9.15",
@@ -40,10 +44,10 @@
     "jest": "^29.7.0",
     "kill-port-process": "^3.2.1",
     "prettier": "^3.3.3",
-    "ts-jest": "^29.2.3",
+    "ts-jest": "^29.2.4",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.4",
-    "typescript-eslint": "^7.17.0"
+    "typescript-eslint": "^8.2.0"
   },
   "type": "module"
 }

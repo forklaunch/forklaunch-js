@@ -6,8 +6,9 @@
     "@types/jest": "^29.5.12",
     "jest": "^29.7.0",
     "ts-jest": "^29.2.4",
-    "tsx": "^4.16.5",
-    "typescript": "^5.5.4"
+    "tsx": "^4.17.0",
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.5"
   },
   "workspaces": [
     "packages/*",
@@ -21,7 +22,7 @@
     "lint": "pnpm --parallel -r run lint",
     "lint:fix": "pnpm --parallel -r run lint:fix",
     "format": "pnpm --parallel -r run format",
-    "test": "pnpm --parallel -r test",
+    "test": "pnpm vitest --passWithNoTests",
     "up": "pnpm --parallel -r up"
   },
   "keywords": [],

@@ -1,8 +1,8 @@
-import { ZodSchemaValidator, string } from '@forklaunch/validator/zod';
+import { SchemaValidator, string } from '@forklaunch/validator/zod';
 import { Server } from 'http';
-import { forklaunchExpress, forklaunchRouter } from '../forklaunch.express';
+import { forklaunchExpress, forklaunchRouter } from '../index';
 
-const zodSchemaValidator = new ZodSchemaValidator();
+const zodSchemaValidator = SchemaValidator();
 
 describe('Forklaunch Express Tests', () => {
   let forklaunchApplication;

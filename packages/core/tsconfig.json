@@ -1,11 +1,11 @@
 {
 	"extends": "../../tsconfig.base.json",
     "compilerOptions": {
-        "outDir": "dist",
+        "outDir": "lib",
         "experimentalDecorators": true
     },
     "exclude": [
         "node_modules",
-        "dist"
+        "lib"
     ]
 }

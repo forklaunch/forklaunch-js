@@ -3,16 +3,16 @@
   "version": "0.3.1",
   "description": "Schema validator for ForkLaunch components.",
   "files": [
-    "dist"
+    "lib"
   ],
-  "types": "dist/index.d.ts",
+  "types": "lib/index.d.ts",
   "directories": {
     "test": "tests"
   },
   "scripts": {
-    "test": "jest --passWithNoTests",
+    "test": "vitest --passWithNoTests",
     "build": "tsc",
-    "clean": "rm -rf dist pnpm.lock.yaml node_modules",
+    "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
@@ -31,53 +31,46 @@
   "dependencies": {
     "@anatine/zod-openapi": "^2.2.6",
     "@forklaunch/common": "workspace:*",
-    "@sinclair/typebox": "^0.32.35",
+    "@sinclair/typebox": "^0.33.7",
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@eslint/js": "^9.8.0",
+    "@eslint/js": "^9.9.0",
     "@types/jest": "^29.5.12",
+    "@vitest/coverage-v8": "^2.0.5",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
-    "globals": "^15.8.0",
+    "globals": "^15.9.0",
     "jest": "^29.7.0",
     "openapi3-ts": "^4.3.3",
-    "ts-jest": "^29.2.3",
+    "ts-jest": "^29.2.4",
     "ts-node": "^10.9.2",
-    "typescript-eslint": "^7.17.0"
+    "typescript-eslint": "^8.2.0"
   },
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    },
-    "./types": {
-      "types": "./dist/types/schema.types.d.ts",
-      "default": "./dist/types/schema.types.js"
-    },
-    "./interfaces": {
-      "types": "./dist/interfaces/schemaValidator.interfaces.d.ts",
-      "default": "./dist/interfaces/schemaValidator.interfaces.js"
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
     },
     "./typebox": {
-      "types": "./dist/typebox/index.d.ts",
-      "default": "./dist/typebox/index.js"
+      "types": "./lib/src/typebox/index.d.ts",
+      "default": "./lib/src/typebox/index.js"
     },
     "./zod": {
-      "types": "./dist/zod/index.d.ts",
-      "default": "./dist/zod/index.js"
+      "types": "./lib/src/zod/index.d.ts",
+      "default": "./lib/src/zod/index.js"
     },
     "./typebox/types": {
-      "types": "./dist/typebox/types/typebox.schema.types.d.ts",
-      "default": "./dist/typebox/types/typebox.schema.types.js"
+      "types": "./lib/src/typebox/types/schema.types.d.ts",
+      "default": "./lib/src/typebox/types/schema.types.js"
     },
     "./zod/types": {
-      "types": "./dist/zod/types/zod.schema.types.d.ts",
-      "default": "./dist/zod/types/zod.schema.types.js"
+      "types": "./lib/src/zod/types/schema.types.d.ts",
+      "default": "./lib/src/zod/types/schema.types.js"
     },
     "./tests/mockSchemaValidator": {
-      "types": "./dist/tests/mockSchemaValidator.d.ts",
-      "default": "./dist/tests/mockSchemaValidator.js"
+      "types": "./lib/tests/utils/mockSchemaValidator.d.ts",
+      "default": "./lib/tests/utils/mockSchemaValidator.js"
     }
   },
   "type": "module"
