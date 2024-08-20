@@ -1,0 +1,16 @@
+{
+  "name": "@forklaunch/examples",
+  "version": "0.1.0",
+  "scripts": {
+    "build": "tsc"
+  },
+  "keywords": ["starter", "example", "forklaunch"],
+  "author": "Rohin Bhargava",
+  "license": "ISC",
+  "description": "A curation of forklaunch examples, showcasing the capabilities of the underlying forklaunch framework.",
+  "dependencies": {
+    "@forklaunch/express": "workspace:*",
+    "@forklaunch/hyper-express": "workspace:*",
+    "@forklaunch/validator": "workspace:*"
+  }
+}

@@ -27,6 +27,18 @@ importers:
         specifier: ^2.0.5
         version: 2.0.5(@types/node@22.4.1)
 
+  examples:
+    dependencies:
+      '@forklaunch/express':
+        specifier: workspace:*
+        version: link:../packages/express
+      '@forklaunch/hyper-express':
+        specifier: workspace:*
+        version: link:../packages/hyper-express
+      '@forklaunch/validator':
+        specifier: workspace:*
+        version: link:../packages/validator
+
   iam: {}
 
   packages/common:
