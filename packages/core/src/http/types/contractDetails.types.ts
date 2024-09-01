@@ -122,7 +122,7 @@ export type ExtractedParamsObject<Path extends `/${string}`> = Record<
 /**
  * Represents the path parameter methods.
  */
-export type PathParamMethod = 'get' | 'delete' | 'options';
+export type PathParamMethod = 'get' | 'delete' | 'options' | 'head' | 'trace';
 
 /**
  * Represents the body parameter methods.
@@ -184,14 +184,16 @@ export type PathParamHttpContractDetails<
     readonly requestValidation: 'error' | 'warning' | 'none';
     readonly responseValidation: 'error' | 'warning' | 'none';
   };
-} & (string | number | symbol extends ExtractedParamsObject<Path>
+} & (string | number | symbol extends ExtractedParamsObject<Path> // TODO: think about optional parameters, this makes no sense
   ? {
       /** Optional parameters for the contract */
       readonly params?: ParamsSchema;
     }
   : {
       /** Required parameters for the contract */
-      readonly params: ExtractedParamsObject<Path>;
+      readonly params: {
+        [K in keyof ExtractedParamsObject<Path>]: ParamsSchema[K];
+      };
     });
 
 /**
@@ -223,6 +225,7 @@ export type HttpContractDetails<
 > & {
   /** Required body schema for the contract */
   readonly body: BodySchema;
+  // TODO: Add support for content type
   /** Optional content type for the contract */
   readonly contentType?:
     | 'application/json'
@@ -237,7 +240,7 @@ export type ContractDetails<
   SV extends AnySchemaValidator,
   ContractMethod extends Method,
   Path extends `/${string}`,
-  ParamsSchema extends ExtractedParamsObject<Path> & ParamsObject<SV>,
+  ParamsSchema extends ParamsObject<SV>,
   ResponseSchemas extends ResponsesObject<SV>,
   BodySchema extends Body<SV>,
   QuerySchema extends QueryObject<SV>,

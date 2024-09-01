@@ -238,10 +238,10 @@ export interface ForklaunchMiddlewareHandler<
  * @template ReqQuery - A type for the request query, defaulting to QueryObject.
  * @template LocalsObj - A type for local variables, defaulting to an empty object.
  */
-export type ForklaunchSchemaMiddlewareHandler<
+export type ExpressLikeSchemaMiddlewareHandler<
   SV extends AnySchemaValidator,
   P extends ParamsObject<SV>,
-  ResBodyMap extends ResponsesObject<SV> | unknown,
+  ResBodyMap extends ResponsesObject<SV>,
   ReqBody extends Body<SV>,
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
@@ -350,9 +350,9 @@ type SdkResponse<
   ResHeaders extends Record<string, string> | unknown
 > = Prettify<
   {
-    [key in keyof ResBodyMap]: {
-      code: key;
-      response: ResBodyMap[key];
+    [K in keyof ResBodyMap]: {
+      code: K;
+      response: ResBodyMap[K];
     } & (unknown extends ResHeaders ? unknown : { headers: ResHeaders });
   }[keyof ResBodyMap]
 >;

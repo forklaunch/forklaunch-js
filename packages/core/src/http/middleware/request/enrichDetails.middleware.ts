@@ -1,5 +1,5 @@
 import { AnySchemaValidator } from '@forklaunch/validator';
-import { ForklaunchSchemaMiddlewareHandler } from '../../types/apiDefinition.types';
+import { ExpressLikeSchemaMiddlewareHandler } from '../../types/apiDefinition.types';
 import {
   Body,
   ContractDetails,
@@ -46,7 +46,7 @@ export function enrichDetails<
   >,
   requestSchema: unknown,
   responseSchemas: ResponseCompiledSchema
-): ForklaunchSchemaMiddlewareHandler<
+): ExpressLikeSchemaMiddlewareHandler<
   SV,
   P,
   ResBodyMap,
