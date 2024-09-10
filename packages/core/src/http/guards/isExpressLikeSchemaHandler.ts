@@ -1,18 +1,16 @@
+import { extractArgumentNames } from '@forklaunch/common';
 import { AnySchemaValidator } from '@forklaunch/validator';
-import { TypedHandler } from '../handlers/typedHandler';
+import { ExpressLikeSchemaHandler } from '../types/apiDefinition.types';
 import {
   Body,
   HeadersObject,
-  Method,
   ParamsObject,
   QueryObject,
   ResponsesObject
 } from '../types/contractDetails.types';
 
-export function isTypedHandler<
+export function isExpressLikeSchemaHandler<
   SV extends AnySchemaValidator,
-  ContractMethod extends Method,
-  Path extends `/${string}`,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
   ReqBody extends Body<SV>,
@@ -21,11 +19,9 @@ export function isTypedHandler<
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>
 >(
-  maybeTypedHandler: unknown
-): maybeTypedHandler is TypedHandler<
+  middleware: unknown
+): middleware is ExpressLikeSchemaHandler<
   SV,
-  ContractMethod,
-  Path,
   P,
   ResBodyMap,
   ReqBody,
@@ -34,10 +30,13 @@ export function isTypedHandler<
   ResHeaders,
   LocalsObj
 > {
+  const extractedArgumentNames =
+    typeof middleware === 'function' &&
+    new Set(extractArgumentNames(middleware));
   return (
-    maybeTypedHandler != null &&
-    typeof maybeTypedHandler === 'object' &&
-    '_typedHandler' in maybeTypedHandler &&
-    maybeTypedHandler._typedHandler === true
+    extractedArgumentNames &&
+    extractedArgumentNames.has('req') &&
+    extractedArgumentNames.has('res') &&
+    extractedArgumentNames.has('next')
   );
 }

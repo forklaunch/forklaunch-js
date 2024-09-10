@@ -132,7 +132,7 @@ export type HttpMethod = 'post' | 'patch' | 'put';
 /**
  * Represents all supported typed methods.
  */
-export type Method = PathParamMethod | HttpMethod;
+export type Method = PathParamMethod | HttpMethod | 'middleware';
 
 /**
  * Interface representing a compiled schema for a response.
@@ -234,6 +234,41 @@ export type HttpContractDetails<
 };
 
 /**
+ * Interface representing HTTP contract details for middleware.
+ *
+ * @template SV - A type that extends AnySchemaValidator.
+ * @template ParamsSchema - A type for parameter schemas, defaulting to ParamsObject.
+ * @template ResponseSchemas - A type for response schemas, defaulting to ResponsesObject.
+ * @template QuerySchema - A type for query schemas, defaulting to QueryObject.
+ * @template ReqHeaders - A type for request headers, defaulting to HeadersObject.
+ * @template ResHeaders - A type for response headers, defaulting to HeadersObject.
+ */
+export type MiddlewareContractDetails<
+  SV extends AnySchemaValidator,
+  Path extends `/${string}` = `/${string}`,
+  ParamsSchema extends ParamsObject<SV> = ParamsObject<SV>,
+  ResponseSchemas extends ResponsesObject<SV> = ResponsesObject<SV>,
+  BodySchema extends Body<SV> = Body<SV>,
+  QuerySchema extends QueryObject<SV> = QueryObject<SV>,
+  ReqHeaders extends HeadersObject<SV> = HeadersObject<SV>,
+  ResHeaders extends HeadersObject<SV> = HeadersObject<SV>
+> = Omit<
+  Partial<
+    HttpContractDetails<
+      SV,
+      Path,
+      ParamsSchema,
+      ResponseSchemas,
+      BodySchema,
+      QuerySchema,
+      ReqHeaders,
+      ResHeaders
+    >
+  >,
+  'name' | 'summary' | 'responses'
+>;
+
+/**
  * Utility for different Contract Detail types
  */
 export type ContractDetails<
@@ -267,4 +302,14 @@ export type ContractDetails<
         ReqHeaders,
         ResHeaders
       >
-    : never;
+    : ContractMethod extends 'middleware'
+      ? MiddlewareContractDetails<
+          SV,
+          Path,
+          ParamsSchema,
+          ResponseSchemas,
+          QuerySchema,
+          ReqHeaders,
+          ResHeaders
+        >
+      : never;

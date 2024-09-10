@@ -1,20 +1,30 @@
-import { Method } from '../types/contractDetails.types';
+export interface PathBasedHandler<RouterHandler> {
+  (path: string, ...handlers: RouterHandler[]): unknown;
+}
 
-type MethodKeys = {
-  [Key in Method]: unknown;
-};
+export interface PathOrMiddlewareBasedHandler<RouterHandler>
+  extends PathBasedHandler<RouterHandler> {
+  (...args: RouterHandler[]): unknown;
+}
 
-export interface ExpressLikeRouter<RouterFunction> extends MethodKeys {
-  use(...args: RouterFunction[]): this;
-  all(...args: RouterFunction[]): this;
-  any(...args: RouterFunction[]): this;
-  connect(...args: RouterFunction[]): this;
-  get(path: string, ...handlers: RouterFunction[]): unknown;
-  post(path: string, ...handlers: RouterFunction[]): unknown;
-  put(path: string, ...handlers: RouterFunction[]): unknown;
-  patch(path: string, ...handlers: RouterFunction[]): unknown;
-  delete(path: string, ...handlers: RouterFunction[]): unknown;
-  options(path: string, ...handlers: RouterFunction[]): unknown;
-  head(path: string, ...handlers: RouterFunction[]): unknown;
-  trace(path: string, ...handlers: RouterFunction[]): unknown;
+export interface NestableRouterBasedHandler<RouterHandler, Router>
+  extends PathOrMiddlewareBasedHandler<RouterHandler> {
+  (...args: Router[]): unknown;
+  (path: string, ...handlers: Router[]): unknown;
+}
+
+export interface ExpressLikeRouter<RouterHandler, Router> {
+  // use: PathOrMiddlewareBasedHandler<RouterHandler>;
+  use: NestableRouterBasedHandler<RouterHandler, Router>;
+  all: PathOrMiddlewareBasedHandler<RouterHandler>;
+  // any: PathOrMiddlewareBasedHandler<RouterHandler>;
+  connect: PathOrMiddlewareBasedHandler<RouterHandler>;
+  get: PathBasedHandler<RouterHandler>;
+  post: PathBasedHandler<RouterHandler>;
+  put: PathBasedHandler<RouterHandler>;
+  patch: PathBasedHandler<RouterHandler>;
+  delete: PathBasedHandler<RouterHandler>;
+  options: PathBasedHandler<RouterHandler>;
+  head: PathBasedHandler<RouterHandler>;
+  trace: PathBasedHandler<RouterHandler>;
 }

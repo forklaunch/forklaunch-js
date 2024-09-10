@@ -1,7 +1,7 @@
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { TypedHandler } from '../handlers/typedHandler';
 import {
-  ExpressLikeSchemaMiddlewareHandler,
+  ExpressLikeSchemaHandler,
   LiveTypeFunction
 } from './apiDefinition.types';
 import {
@@ -66,7 +66,7 @@ export interface LiveTypeRouteDefinition<
     LocalsObj extends Record<string, unknown>
   >(
     path: Path,
-    middleware: ExpressLikeSchemaMiddlewareHandler<
+    middleware: ExpressLikeSchemaHandler<
       SV,
       P,
       ResBodyMap,
@@ -77,7 +77,7 @@ export interface LiveTypeRouteDefinition<
       LocalsObj
     >,
     ...middlewareAndTypedHandler: [
-      ...ExpressLikeSchemaMiddlewareHandler<
+      ...ExpressLikeSchemaHandler<
         SV,
         P,
         ResBodyMap,
@@ -135,7 +135,7 @@ export interface LiveTypeRouteDefinition<
       ReqHeaders,
       ResHeaders
     >,
-    ...middleware: ExpressLikeSchemaMiddlewareHandler<
+    ...middleware: ExpressLikeSchemaHandler<
       SV,
       P,
       ResBodyMap,
@@ -157,6 +157,240 @@ export interface LiveTypeRouteDefinition<
       ResHeaders
     >;
   };
+}
+
+export interface TypedMiddlewareDefinition<
+  ChainableRouter,
+  SV extends AnySchemaValidator
+> {
+  <
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    path: Path,
+    typedHandler: TypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >
+  ): ChainableRouter;
+
+  <
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    typedHandler: TypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >
+  ): ChainableRouter;
+
+  <
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    path: Path,
+    middleware: ExpressLikeSchemaHandler<
+      SV,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewareAndTypedHandler: [
+      ...ExpressLikeSchemaHandler<
+        SV,
+        P,
+        ResBodyMap,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders,
+        ResHeaders,
+        LocalsObj
+      >[],
+      TypedHandler<
+        SV,
+        'middleware',
+        Path,
+        P,
+        ResBodyMap,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders,
+        ResHeaders,
+        LocalsObj
+      >
+    ]
+  ): ChainableRouter;
+
+  <
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    middleware: ExpressLikeSchemaHandler<
+      SV,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewareAndTypedHandler: [
+      ...ExpressLikeSchemaHandler<
+        SV,
+        P,
+        ResBodyMap,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders,
+        ResHeaders,
+        LocalsObj
+      >[],
+      TypedHandler<
+        SV,
+        'middleware',
+        Path,
+        P,
+        ResBodyMap,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders,
+        ResHeaders,
+        LocalsObj
+      >
+    ]
+  ): ChainableRouter;
+
+  <
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    path: Path,
+    contractDetails: ContractDetails<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders
+    >,
+    middleware: ExpressLikeSchemaHandler<
+      SV,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewares: ExpressLikeSchemaHandler<
+      SV,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >[]
+  ): ChainableRouter;
+
+  <
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    contractDetails: ContractDetails<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders
+    >,
+    middleware: ExpressLikeSchemaHandler<
+      SV,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewares: ExpressLikeSchemaHandler<
+      SV,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >[]
+  ): ChainableRouter;
 }
 
 export type ContractDetailsOrMiddlewareOrTypedHandler<
@@ -182,7 +416,7 @@ export type ContractDetailsOrMiddlewareOrTypedHandler<
       ReqHeaders,
       ResHeaders
     >
-  | ExpressLikeSchemaMiddlewareHandler<
+  | ExpressLikeSchemaHandler<
       SV,
       P,
       ResBodyMap,
@@ -216,8 +450,8 @@ export type MiddlewareOrMiddlewareWithTypedHandler<
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>
-> = (
-  | ExpressLikeSchemaMiddlewareHandler<
+> =
+  | ExpressLikeSchemaHandler<
       SV,
       P,
       ResBodyMap,
@@ -238,5 +472,4 @@ export type MiddlewareOrMiddlewareWithTypedHandler<
       ReqHeaders,
       ResHeaders,
       LocalsObj
-    >
-)[];
+    >;

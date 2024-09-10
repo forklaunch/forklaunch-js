@@ -211,7 +211,7 @@ export type ForklaunchNextFunction = (err?: unknown) => void;
  * @template LocalsObj - A type for local variables, defaulting to an empty object.
  * @template StatusCode - A type for the status code, defaulting to number.
  */
-export interface ForklaunchMiddlewareHandler<
+export interface ExpressLikeHandler<
   SV extends AnySchemaValidator,
   P extends ParamsDictionary,
   ResBodyMap extends Record<number, unknown>,
@@ -238,7 +238,7 @@ export interface ForklaunchMiddlewareHandler<
  * @template ReqQuery - A type for the request query, defaulting to QueryObject.
  * @template LocalsObj - A type for local variables, defaulting to an empty object.
  */
-export type ExpressLikeSchemaMiddlewareHandler<
+export type ExpressLikeSchemaHandler<
   SV extends AnySchemaValidator,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
@@ -247,7 +247,7 @@ export type ExpressLikeSchemaMiddlewareHandler<
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>
-> = ForklaunchMiddlewareHandler<
+> = ExpressLikeHandler<
   SV,
   MapSchema<SV, P> extends infer Params
     ? unknown extends Params

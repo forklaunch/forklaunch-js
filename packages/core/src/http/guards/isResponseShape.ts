@@ -1,13 +1,13 @@
 import { ResponseShape } from '../types/apiDefinition.types';
 
 export function isResponseShape<Params, Headers, Query, Body>(
-  response: object | undefined
-): response is ResponseShape<Params, Headers, Query, Body> {
+  maybeResponseShape: object | undefined
+): maybeResponseShape is ResponseShape<Params, Headers, Query, Body> {
   return (
-    response != null &&
-    Object.hasOwn(response, 'body') &&
-    Object.hasOwn(response, 'query') &&
-    Object.hasOwn(response, 'params') &&
-    Object.hasOwn(response, 'headers')
+    maybeResponseShape != null &&
+    'body' in maybeResponseShape &&
+    'query' in maybeResponseShape &&
+    'params' in maybeResponseShape &&
+    'headers' in maybeResponseShape
   );
 }

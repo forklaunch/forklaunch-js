@@ -1,6 +1,6 @@
 import { AnySchemaValidator, SchemaValidator } from '@forklaunch/validator';
 import { v4 } from 'uuid';
-import { ExpressLikeSchemaMiddlewareHandler } from '../../types/apiDefinition.types';
+import { ExpressLikeSchemaHandler } from '../../types/apiDefinition.types';
 import {
   Body,
   HeadersObject,
@@ -30,7 +30,7 @@ export function createContext<
   LocalsObj extends Record<string, unknown>
 >(
   schemaValidator: SV
-): ExpressLikeSchemaMiddlewareHandler<
+): ExpressLikeSchemaHandler<
   SV,
   P,
   ResBodyMap,

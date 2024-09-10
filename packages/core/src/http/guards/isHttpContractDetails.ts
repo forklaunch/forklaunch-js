@@ -5,10 +5,10 @@ import {
   HeadersObject,
   HttpContractDetails,
   ParamsObject,
-  PathParamHttpContractDetails,
   QueryObject,
   ResponsesObject
 } from '../types/contractDetails.types';
+import { isPathParamHttpContractDetails } from './isPathParamContractDetails';
 
 /**
  * Type guard for HttpContractDetails
@@ -23,27 +23,8 @@ export function isHttpContractDetails<
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>
 >(
-  contractDetails:
-    | PathParamHttpContractDetails<
-        SV,
-        Path,
-        ParamsSchema,
-        ResponseSchemas,
-        QuerySchema,
-        ReqHeaders,
-        ResHeaders
-      >
-    | HttpContractDetails<
-        SV,
-        Path,
-        ParamsSchema,
-        ResponseSchemas,
-        BodySchema,
-        QuerySchema,
-        ReqHeaders,
-        ResHeaders
-      >
-): contractDetails is HttpContractDetails<
+  maybeContractDetails: unknown
+): maybeContractDetails is HttpContractDetails<
   SV,
   Path,
   ParamsSchema,
@@ -54,17 +35,8 @@ export function isHttpContractDetails<
   ResHeaders
 > {
   return (
-    (
-      contractDetails as HttpContractDetails<
-        SV,
-        Path,
-        ParamsSchema,
-        ResponseSchemas,
-        BodySchema,
-        QuerySchema,
-        ReqHeaders,
-        ResHeaders
-      >
-    ).body !== undefined
+    isPathParamHttpContractDetails(maybeContractDetails) &&
+    'body' in maybeContractDetails &&
+    maybeContractDetails.body != null
   );
 }
