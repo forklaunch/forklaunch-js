@@ -1,6 +1,14 @@
 import {
+  Body,
+  ContractDetailsOrMiddlewareOrTypedHandler,
   ForklaunchExpressLikeRouter,
-  ForklaunchRouter
+  ForklaunchRouter,
+  HeadersObject,
+  MiddlewareOrMiddlewareWithTypedHandler,
+  ParamsObject,
+  QueryObject,
+  ResponsesObject,
+  TypedMiddlewareDefinition
 } from '@forklaunch/core/http';
 import {
   AnySchemaValidator,
@@ -54,52 +62,1289 @@ export class Router<
     return this;
   }
 
-  param<ParamName extends string>(
-    types: {
+  param<
+    ParamName extends string,
+    Types extends {
       req?: LiteralSchema | SV['_SchemaCatchall'];
       res?: IdiomaticSchema<SV>;
     } & {
       [K in ParamName]: IdiomaticSchema<SV>;
-    },
-    callback: (
-      name: ParamName,
-      matcher: RegExp
-    ) => (
-      req: SchemaResolve<typeof types.req>,
-      res: SchemaResolve<typeof types.res>,
-      next: NextFunction,
-      value: SchemaResolve<(typeof types)[ParamName]>,
-      name: ParamName
-    ) => void
-  ): this;
-  param<ParamName extends string>(
+    }
+  >(
     name: ParamName,
-    types: {
-      req?: LiteralSchema | SV['_SchemaCatchall'];
-      res?: IdiomaticSchema<SV>;
-    } & {
-      [K in ParamName]: IdiomaticSchema<SV>;
-    },
+    types: Types,
     handler: (
-      req: SchemaResolve<typeof types.req>,
-      res: SchemaResolve<typeof types.res>,
+      req: SchemaResolve<Types['req']>,
+      res: SchemaResolve<Types['res']>,
       next: NextFunction,
-      value: SchemaResolve<(typeof types)[ParamName]>,
+      value: SchemaResolve<Types[ParamName]>,
       name: ParamName
     ) => void
-  ): this;
-  params<ParamName extends string>() {
+  ): this {
     this.internal.param(name, (req, res, next, value, name) => {
       handler(
-        req as unknown as SchemaResolve<typeof type.req>,
-        res as unknown as SchemaResolve<typeof type.res>,
+        req as unknown as SchemaResolve<Types['req']>,
+        res as unknown as SchemaResolve<Types['res']>,
         next,
-        value as unknown as SchemaResolve<(typeof type)[ParamName]>,
+        value,
         name as ParamName
       );
     });
+
     return this;
   }
 
-  checkout: LiveTypeRouteDefinition;
+  checkout: TypedMiddlewareDefinition<this, SV> = <
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    pathOrContractDetailsOrMiddlewareOrTypedHandler:
+      | Path
+      | ContractDetailsOrMiddlewareOrTypedHandler<
+          SV,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >,
+    contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >[]
+  ) => {
+    return this.registerMiddlewareHandler<
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >(
+      this.internal.checkout,
+      pathOrContractDetailsOrMiddlewareOrTypedHandler,
+      contractDetailsOrMiddlewareOrTypedHandler,
+      ...middlewareOrMiddlewareWithTypedHandler
+    );
+  };
+
+  copy: TypedMiddlewareDefinition<this, SV> = <
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    pathOrContractDetailsOrMiddlewareOrTypedHandler:
+      | Path
+      | ContractDetailsOrMiddlewareOrTypedHandler<
+          SV,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >,
+    contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >[]
+  ) => {
+    return this.registerMiddlewareHandler<
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >(
+      this.internal.copy,
+      pathOrContractDetailsOrMiddlewareOrTypedHandler,
+      contractDetailsOrMiddlewareOrTypedHandler,
+      ...middlewareOrMiddlewareWithTypedHandler
+    );
+  };
+
+  lock: TypedMiddlewareDefinition<this, SV> = <
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    pathOrContractDetailsOrMiddlewareOrTypedHandler:
+      | Path
+      | ContractDetailsOrMiddlewareOrTypedHandler<
+          SV,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >,
+    contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >[]
+  ) => {
+    return this.registerMiddlewareHandler<
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >(
+      this.internal.lock,
+      pathOrContractDetailsOrMiddlewareOrTypedHandler,
+      contractDetailsOrMiddlewareOrTypedHandler,
+      ...middlewareOrMiddlewareWithTypedHandler
+    );
+  };
+
+  merge: TypedMiddlewareDefinition<this, SV> = <
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    pathOrContractDetailsOrMiddlewareOrTypedHandler:
+      | Path
+      | ContractDetailsOrMiddlewareOrTypedHandler<
+          SV,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >,
+    contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >[]
+  ) => {
+    return this.registerMiddlewareHandler<
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >(
+      this.internal.merge,
+      pathOrContractDetailsOrMiddlewareOrTypedHandler,
+      contractDetailsOrMiddlewareOrTypedHandler,
+      ...middlewareOrMiddlewareWithTypedHandler
+    );
+  };
+
+  mkcactivity: TypedMiddlewareDefinition<this, SV> = <
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    pathOrContractDetailsOrMiddlewareOrTypedHandler:
+      | Path
+      | ContractDetailsOrMiddlewareOrTypedHandler<
+          SV,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >,
+    contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >[]
+  ) => {
+    return this.registerMiddlewareHandler<
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >(
+      this.internal.mkactivity,
+      pathOrContractDetailsOrMiddlewareOrTypedHandler,
+      contractDetailsOrMiddlewareOrTypedHandler,
+      ...middlewareOrMiddlewareWithTypedHandler
+    );
+  };
+
+  mkcol: TypedMiddlewareDefinition<this, SV> = <
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    pathOrContractDetailsOrMiddlewareOrTypedHandler:
+      | Path
+      | ContractDetailsOrMiddlewareOrTypedHandler<
+          SV,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >,
+    contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >[]
+  ) => {
+    return this.registerMiddlewareHandler<
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >(
+      this.internal.mkcol,
+      pathOrContractDetailsOrMiddlewareOrTypedHandler,
+      contractDetailsOrMiddlewareOrTypedHandler,
+      ...middlewareOrMiddlewareWithTypedHandler
+    );
+  };
+
+  move: TypedMiddlewareDefinition<this, SV> = <
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    pathOrContractDetailsOrMiddlewareOrTypedHandler:
+      | Path
+      | ContractDetailsOrMiddlewareOrTypedHandler<
+          SV,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >,
+    contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >[]
+  ) => {
+    return this.registerMiddlewareHandler<
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >(
+      this.internal.move,
+      pathOrContractDetailsOrMiddlewareOrTypedHandler,
+      contractDetailsOrMiddlewareOrTypedHandler,
+      ...middlewareOrMiddlewareWithTypedHandler
+    );
+  };
+
+  'm-search': TypedMiddlewareDefinition<this, SV> = <
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    pathOrContractDetailsOrMiddlewareOrTypedHandler:
+      | Path
+      | ContractDetailsOrMiddlewareOrTypedHandler<
+          SV,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >,
+    contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >[]
+  ) => {
+    return this.registerMiddlewareHandler<
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >(
+      this.internal['m-search'],
+      pathOrContractDetailsOrMiddlewareOrTypedHandler,
+      contractDetailsOrMiddlewareOrTypedHandler,
+      ...middlewareOrMiddlewareWithTypedHandler
+    );
+  };
+
+  notify: TypedMiddlewareDefinition<this, SV> = <
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    pathOrContractDetailsOrMiddlewareOrTypedHandler:
+      | Path
+      | ContractDetailsOrMiddlewareOrTypedHandler<
+          SV,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >,
+    contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >[]
+  ) => {
+    return this.registerMiddlewareHandler<
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >(
+      this.internal.notify,
+      pathOrContractDetailsOrMiddlewareOrTypedHandler,
+      contractDetailsOrMiddlewareOrTypedHandler,
+      ...middlewareOrMiddlewareWithTypedHandler
+    );
+  };
+
+  propfind: TypedMiddlewareDefinition<this, SV> = <
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    pathOrContractDetailsOrMiddlewareOrTypedHandler:
+      | Path
+      | ContractDetailsOrMiddlewareOrTypedHandler<
+          SV,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >,
+    contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >[]
+  ) => {
+    return this.registerMiddlewareHandler<
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >(
+      this.internal.propfind,
+      pathOrContractDetailsOrMiddlewareOrTypedHandler,
+      contractDetailsOrMiddlewareOrTypedHandler,
+      ...middlewareOrMiddlewareWithTypedHandler
+    );
+  };
+
+  proppatch: TypedMiddlewareDefinition<this, SV> = <
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    pathOrContractDetailsOrMiddlewareOrTypedHandler:
+      | Path
+      | ContractDetailsOrMiddlewareOrTypedHandler<
+          SV,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >,
+    contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >[]
+  ) => {
+    return this.registerMiddlewareHandler<
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >(
+      this.internal.proppatch,
+      pathOrContractDetailsOrMiddlewareOrTypedHandler,
+      contractDetailsOrMiddlewareOrTypedHandler,
+      ...middlewareOrMiddlewareWithTypedHandler
+    );
+  };
+
+  purge: TypedMiddlewareDefinition<this, SV> = <
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    pathOrContractDetailsOrMiddlewareOrTypedHandler:
+      | Path
+      | ContractDetailsOrMiddlewareOrTypedHandler<
+          SV,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >,
+    contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >[]
+  ) => {
+    return this.registerMiddlewareHandler<
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >(
+      this.internal.purge,
+      pathOrContractDetailsOrMiddlewareOrTypedHandler,
+      contractDetailsOrMiddlewareOrTypedHandler,
+      ...middlewareOrMiddlewareWithTypedHandler
+    );
+  };
+
+  report: TypedMiddlewareDefinition<this, SV> = <
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    pathOrContractDetailsOrMiddlewareOrTypedHandler:
+      | Path
+      | ContractDetailsOrMiddlewareOrTypedHandler<
+          SV,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >,
+    contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >[]
+  ) => {
+    return this.registerMiddlewareHandler<
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >(
+      this.internal.report,
+      pathOrContractDetailsOrMiddlewareOrTypedHandler,
+      contractDetailsOrMiddlewareOrTypedHandler,
+      ...middlewareOrMiddlewareWithTypedHandler
+    );
+  };
+
+  search: TypedMiddlewareDefinition<this, SV> = <
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    pathOrContractDetailsOrMiddlewareOrTypedHandler:
+      | Path
+      | ContractDetailsOrMiddlewareOrTypedHandler<
+          SV,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >,
+    contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >[]
+  ) => {
+    return this.registerMiddlewareHandler<
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >(
+      this.internal.search,
+      pathOrContractDetailsOrMiddlewareOrTypedHandler,
+      contractDetailsOrMiddlewareOrTypedHandler,
+      ...middlewareOrMiddlewareWithTypedHandler
+    );
+  };
+
+  subscribe: TypedMiddlewareDefinition<this, SV> = <
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    pathOrContractDetailsOrMiddlewareOrTypedHandler:
+      | Path
+      | ContractDetailsOrMiddlewareOrTypedHandler<
+          SV,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >,
+    contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >[]
+  ) => {
+    return this.registerMiddlewareHandler<
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >(
+      this.internal.subscribe,
+      pathOrContractDetailsOrMiddlewareOrTypedHandler,
+      contractDetailsOrMiddlewareOrTypedHandler,
+      ...middlewareOrMiddlewareWithTypedHandler
+    );
+  };
+
+  unlock: TypedMiddlewareDefinition<this, SV> = <
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    pathOrContractDetailsOrMiddlewareOrTypedHandler:
+      | Path
+      | ContractDetailsOrMiddlewareOrTypedHandler<
+          SV,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >,
+    contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >[]
+  ) => {
+    return this.registerMiddlewareHandler<
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >(
+      this.internal.unlock,
+      pathOrContractDetailsOrMiddlewareOrTypedHandler,
+      contractDetailsOrMiddlewareOrTypedHandler,
+      ...middlewareOrMiddlewareWithTypedHandler
+    );
+  };
+
+  unsubscribe: TypedMiddlewareDefinition<this, SV> = <
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    pathOrContractDetailsOrMiddlewareOrTypedHandler:
+      | Path
+      | ContractDetailsOrMiddlewareOrTypedHandler<
+          SV,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >,
+    contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >[]
+  ) => {
+    return this.registerMiddlewareHandler<
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >(
+      this.internal.unsubscribe,
+      pathOrContractDetailsOrMiddlewareOrTypedHandler,
+      contractDetailsOrMiddlewareOrTypedHandler,
+      ...middlewareOrMiddlewareWithTypedHandler
+    );
+  };
+
+  link: TypedMiddlewareDefinition<this, SV> = <
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    pathOrContractDetailsOrMiddlewareOrTypedHandler:
+      | Path
+      | ContractDetailsOrMiddlewareOrTypedHandler<
+          SV,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >,
+    contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >[]
+  ) => {
+    return this.registerMiddlewareHandler<
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >(
+      this.internal.link,
+      pathOrContractDetailsOrMiddlewareOrTypedHandler,
+      contractDetailsOrMiddlewareOrTypedHandler,
+      ...middlewareOrMiddlewareWithTypedHandler
+    );
+  };
+
+  unlink: TypedMiddlewareDefinition<this, SV> = <
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    pathOrContractDetailsOrMiddlewareOrTypedHandler:
+      | Path
+      | ContractDetailsOrMiddlewareOrTypedHandler<
+          SV,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >,
+    contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >[]
+  ) => {
+    return this.registerMiddlewareHandler<
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >(
+      this.internal.unlink,
+      pathOrContractDetailsOrMiddlewareOrTypedHandler,
+      contractDetailsOrMiddlewareOrTypedHandler,
+      ...middlewareOrMiddlewareWithTypedHandler
+    );
+  };
 }

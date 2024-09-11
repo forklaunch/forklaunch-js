@@ -14,10 +14,8 @@ export interface NestableRouterBasedHandler<RouterHandler, Router>
 }
 
 export interface ExpressLikeRouter<RouterHandler, Router> {
-  // use: PathOrMiddlewareBasedHandler<RouterHandler>;
   use: NestableRouterBasedHandler<RouterHandler, Router>;
   all: PathOrMiddlewareBasedHandler<RouterHandler>;
-  // any: PathOrMiddlewareBasedHandler<RouterHandler>;
   connect: PathOrMiddlewareBasedHandler<RouterHandler>;
   get: PathBasedHandler<RouterHandler>;
   post: PathBasedHandler<RouterHandler>;
