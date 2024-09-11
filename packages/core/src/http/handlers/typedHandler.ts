@@ -1,5 +1,5 @@
 import { AnySchemaValidator } from '@forklaunch/validator';
-import { ForklaunchSchemaMiddlewareHandler } from '../types/apiDefinition.types';
+import { ExpressLikeSchemaHandler } from '../types/apiDefinition.types';
 import {
   Body,
   ContractDetails,
@@ -10,14 +10,28 @@ import {
   ResponsesObject
 } from '../types/contractDetails.types';
 
-/**
- * TypedHandler class that sets up routes and middleware for an Express router, for use with controller/routes pattern.
- *
- * @template SV - A type that extends AnySchemaValidator.
- * @template contractDetails - The contract details.
- * @template functions - The handler middlware and function.
- */
-export class TypedHandler<
+// This is a hack to satisfy the type checker -- later ts versions may fix this
+export type ContractDetailsExpressLikeSchemaHandler<
+  SV extends AnySchemaValidator,
+  P extends ParamsObject<SV>,
+  ResBodyMap extends ResponsesObject<SV>,
+  ReqBody extends Body<SV>,
+  ReqQuery extends QueryObject<SV>,
+  ReqHeaders extends HeadersObject<SV>,
+  ResHeaders extends HeadersObject<SV>,
+  LocalsObj extends Record<string, unknown>
+> = ExpressLikeSchemaHandler<
+  SV,
+  P,
+  ResBodyMap,
+  ReqBody,
+  ReqQuery,
+  ReqHeaders,
+  ResHeaders,
+  LocalsObj
+>;
+
+export type TypedHandler<
   SV extends AnySchemaValidator,
   ContractMethod extends Method,
   Path extends `/${string}`,
@@ -28,38 +42,38 @@ export class TypedHandler<
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>
-> {
-  constructor(
-    public contractDetails: ContractDetails<
-      SV,
-      ContractMethod,
-      Path,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders
-    >,
-    public functions: ForklaunchSchemaMiddlewareHandler<
-      SV,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders,
-      LocalsObj
-    >[]
-  ) {}
-}
+> = {
+  _typedHandler: true;
+  contractDetails: ContractDetails<
+    SV,
+    ContractMethod,
+    Path,
+    P,
+    ResBodyMap,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    ResHeaders
+  >;
+  // This is an alias hack to satisfy the type checker -- later ts versions may fix this
+  handlers: ContractDetailsExpressLikeSchemaHandler<
+    SV,
+    P,
+    ResBodyMap,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    ResHeaders,
+    LocalsObj
+  >[];
+};
 
 /**
  * Router class that sets up routes and middleware for an Express router, for use with controller/routes pattern.
  *
  * @template SV - A type that extends AnySchemaValidator.
  * @template contractDetails - The contract details.
- * @template functions - The handler middlware and function.
+ * @template handlers - The handler middlware and handler.
  */
 export function typedHandler<
   SV extends AnySchemaValidator,
@@ -74,7 +88,8 @@ export function typedHandler<
   LocalsObj extends Record<string, unknown>
 >(
   _schemaValidator: SV,
-  _method: ContractMethod,
+  _path: Path,
+  _contractMethod: ContractMethod,
   contractDetails: ContractDetails<
     SV,
     ContractMethod,
@@ -86,7 +101,7 @@ export function typedHandler<
     ReqHeaders,
     ResHeaders
   >,
-  ...functions: ForklaunchSchemaMiddlewareHandler<
+  ...handlers: ExpressLikeSchemaHandler<
     SV,
     P,
     ResBodyMap,
@@ -96,8 +111,9 @@ export function typedHandler<
     ResHeaders,
     LocalsObj
   >[]
-) {
-  return new TypedHandler<
+): {
+  _typedHandler: true;
+  contractDetails: ContractDetails<
     SV,
     ContractMethod,
     Path,
@@ -106,7 +122,205 @@ export function typedHandler<
     ReqBody,
     ReqQuery,
     ReqHeaders,
+    ResHeaders
+  >;
+  handlers: ExpressLikeSchemaHandler<
+    SV,
+    P,
+    ResBodyMap,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
     ResHeaders,
     LocalsObj
-  >(contractDetails, functions);
+  >[];
+};
+export function typedHandler<
+  SV extends AnySchemaValidator,
+  ContractMethod extends Method,
+  Path extends `/${string}`,
+  P extends ParamsObject<SV>,
+  ResBodyMap extends ResponsesObject<SV>,
+  ReqBody extends Body<SV>,
+  ReqQuery extends QueryObject<SV>,
+  ReqHeaders extends HeadersObject<SV>,
+  ResHeaders extends HeadersObject<SV>,
+  LocalsObj extends Record<string, unknown>
+>(
+  _schemaValidator: SV,
+  _contractMethod: ContractMethod,
+  contractDetails: ContractDetails<
+    SV,
+    ContractMethod,
+    Path,
+    P,
+    ResBodyMap,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    ResHeaders
+  >,
+  ...handlers: ExpressLikeSchemaHandler<
+    SV,
+    P,
+    ResBodyMap,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    ResHeaders,
+    LocalsObj
+  >[]
+): {
+  _typedHandler: true;
+  contractDetails: ContractDetails<
+    SV,
+    ContractMethod,
+    Path,
+    P,
+    ResBodyMap,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    ResHeaders
+  >;
+  handlers: ExpressLikeSchemaHandler<
+    SV,
+    P,
+    ResBodyMap,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    ResHeaders,
+    LocalsObj
+  >[];
+};
+export function typedHandler<
+  SV extends AnySchemaValidator,
+  ContractMethod extends Method,
+  Path extends `/${string}`,
+  P extends ParamsObject<SV>,
+  ResBodyMap extends ResponsesObject<SV>,
+  ReqBody extends Body<SV>,
+  ReqQuery extends QueryObject<SV>,
+  ReqHeaders extends HeadersObject<SV>,
+  ResHeaders extends HeadersObject<SV>,
+  LocalsObj extends Record<string, unknown>
+>(
+  _schemaValidator: SV,
+  _pathOrContractDetails: Path | ContractMethod,
+  contractMethodOrContractDetails:
+    | ContractMethod
+    | ContractDetails<
+        SV,
+        ContractMethod,
+        Path,
+        P,
+        ResBodyMap,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders,
+        ResHeaders
+      >,
+  contractDetailsOrHandler:
+    | ContractDetails<
+        SV,
+        ContractMethod,
+        Path,
+        P,
+        ResBodyMap,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders,
+        ResHeaders
+      >
+    | ExpressLikeSchemaHandler<
+        SV,
+        P,
+        ResBodyMap,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders,
+        ResHeaders,
+        LocalsObj
+      >,
+  ...handlerArray: ExpressLikeSchemaHandler<
+    SV,
+    P,
+    ResBodyMap,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    ResHeaders,
+    LocalsObj
+  >[]
+): {
+  _typedHandler: true;
+  contractDetails: ContractDetails<
+    SV,
+    ContractMethod,
+    Path,
+    P,
+    ResBodyMap,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    ResHeaders
+  >;
+  handlers: ExpressLikeSchemaHandler<
+    SV,
+    P,
+    ResBodyMap,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    ResHeaders,
+    LocalsObj
+  >[];
+} {
+  // TODO: Clean this up with guards
+
+  let contractDetails: ContractDetails<
+    SV,
+    ContractMethod,
+    Path,
+    P,
+    ResBodyMap,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    ResHeaders
+  >;
+  let handlers: ExpressLikeSchemaHandler<
+    SV,
+    P,
+    ResBodyMap,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    ResHeaders,
+    LocalsObj
+  >[];
+  // If path is not provided
+  if (typeof contractMethodOrContractDetails === 'string') {
+    if (typeof contractDetailsOrHandler !== 'function') {
+      contractDetails = contractDetailsOrHandler;
+    } else {
+      throw new Error('Invalid definition for contract details');
+    }
+    handlers = handlerArray;
+  }
+  // If path is provided
+  else {
+    contractDetails = contractMethodOrContractDetails;
+    if (typeof contractDetailsOrHandler === 'function') {
+      handlers = [contractDetailsOrHandler, ...handlerArray];
+    } else {
+      throw new Error('Invalid definition for handler');
+    }
+  }
+  return {
+    _typedHandler: true as const,
+    contractDetails,
+    handlers
+  };
 }

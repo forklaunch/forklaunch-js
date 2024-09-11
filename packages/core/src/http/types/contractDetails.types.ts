@@ -122,7 +122,7 @@ export type ExtractedParamsObject<Path extends `/${string}`> = Record<
 /**
  * Represents the path parameter methods.
  */
-export type PathParamMethod = 'get' | 'delete' | 'options';
+export type PathParamMethod = 'get' | 'delete' | 'options' | 'head' | 'trace';
 
 /**
  * Represents the body parameter methods.
@@ -132,7 +132,7 @@ export type HttpMethod = 'post' | 'patch' | 'put';
 /**
  * Represents all supported typed methods.
  */
-export type Method = PathParamMethod | HttpMethod;
+export type Method = PathParamMethod | HttpMethod | 'middleware';
 
 /**
  * Interface representing a compiled schema for a response.
@@ -184,14 +184,16 @@ export type PathParamHttpContractDetails<
     readonly requestValidation: 'error' | 'warning' | 'none';
     readonly responseValidation: 'error' | 'warning' | 'none';
   };
-} & (string | number | symbol extends ExtractedParamsObject<Path>
+} & (string | number | symbol extends ExtractedParamsObject<Path> // TODO: think about optional parameters, this makes no sense
   ? {
       /** Optional parameters for the contract */
       readonly params?: ParamsSchema;
     }
   : {
       /** Required parameters for the contract */
-      readonly params: ExtractedParamsObject<Path>;
+      readonly params: {
+        [K in keyof ExtractedParamsObject<Path>]: ParamsSchema[K];
+      };
     });
 
 /**
@@ -223,6 +225,7 @@ export type HttpContractDetails<
 > & {
   /** Required body schema for the contract */
   readonly body: BodySchema;
+  // TODO: Add support for content type
   /** Optional content type for the contract */
   readonly contentType?:
     | 'application/json'
@@ -231,13 +234,48 @@ export type HttpContractDetails<
 };
 
 /**
+ * Interface representing HTTP contract details for middleware.
+ *
+ * @template SV - A type that extends AnySchemaValidator.
+ * @template ParamsSchema - A type for parameter schemas, defaulting to ParamsObject.
+ * @template ResponseSchemas - A type for response schemas, defaulting to ResponsesObject.
+ * @template QuerySchema - A type for query schemas, defaulting to QueryObject.
+ * @template ReqHeaders - A type for request headers, defaulting to HeadersObject.
+ * @template ResHeaders - A type for response headers, defaulting to HeadersObject.
+ */
+export type MiddlewareContractDetails<
+  SV extends AnySchemaValidator,
+  Path extends `/${string}` = `/${string}`,
+  ParamsSchema extends ParamsObject<SV> = ParamsObject<SV>,
+  ResponseSchemas extends ResponsesObject<SV> = ResponsesObject<SV>,
+  BodySchema extends Body<SV> = Body<SV>,
+  QuerySchema extends QueryObject<SV> = QueryObject<SV>,
+  ReqHeaders extends HeadersObject<SV> = HeadersObject<SV>,
+  ResHeaders extends HeadersObject<SV> = HeadersObject<SV>
+> = Omit<
+  Partial<
+    HttpContractDetails<
+      SV,
+      Path,
+      ParamsSchema,
+      ResponseSchemas,
+      BodySchema,
+      QuerySchema,
+      ReqHeaders,
+      ResHeaders
+    >
+  >,
+  'name' | 'summary' | 'responses'
+>;
+
+/**
  * Utility for different Contract Detail types
  */
 export type ContractDetails<
   SV extends AnySchemaValidator,
   ContractMethod extends Method,
   Path extends `/${string}`,
-  ParamsSchema extends ExtractedParamsObject<Path> & ParamsObject<SV>,
+  ParamsSchema extends ParamsObject<SV>,
   ResponseSchemas extends ResponsesObject<SV>,
   BodySchema extends Body<SV>,
   QuerySchema extends QueryObject<SV>,
@@ -264,4 +302,14 @@ export type ContractDetails<
         ReqHeaders,
         ResHeaders
       >
-    : never;
+    : ContractMethod extends 'middleware'
+      ? MiddlewareContractDetails<
+          SV,
+          Path,
+          ParamsSchema,
+          ResponseSchemas,
+          QuerySchema,
+          ReqHeaders,
+          ResHeaders
+        >
+      : never;

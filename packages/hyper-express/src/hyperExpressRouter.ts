@@ -1,12 +1,21 @@
 import {
+  Body,
+  ContractDetailsOrMiddlewareOrTypedHandler,
   ForklaunchExpressLikeRouter,
-  ForklaunchRouter
+  ForklaunchRouter,
+  HeadersObject,
+  MiddlewareOrMiddlewareWithTypedHandler,
+  ParamsObject,
+  QueryObject,
+  ResponsesObject,
+  TypedMiddlewareDefinition
 } from '@forklaunch/core/http';
 import {
   Router as ExpressRouter,
   MiddlewareHandler
 } from '@forklaunch/hyper-express-fork';
 import { AnySchemaValidator } from '@forklaunch/validator';
+
 import { contentParse } from './middleware/contentParse.middleware';
 import { enrichResponseTransmission } from './middleware/enrichResponseTransmission.middleware';
 import { polyfillGetHeaders } from './middleware/polyfillGetHeaders.middleware';
@@ -35,4 +44,79 @@ export class Router<
       enrichResponseTransmission as unknown as MiddlewareHandler
     );
   }
+
+  route(path: string): this {
+    this.internal.route(path);
+    return this;
+  }
+
+  any: TypedMiddlewareDefinition<this, SV> = <
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    pathOrContractDetailsOrMiddlewareOrTypedHandler:
+      | Path
+      | ContractDetailsOrMiddlewareOrTypedHandler<
+          SV,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >,
+    contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >[]
+  ) => {
+    return this.registerMiddlewareHandler<
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >(
+      this.internal.any,
+      pathOrContractDetailsOrMiddlewareOrTypedHandler,
+      contractDetailsOrMiddlewareOrTypedHandler,
+      ...middlewareOrMiddlewareWithTypedHandler
+    );
+  };
+
+  // TODO: Implement the rest of the methods
+  // upgrade
+  // ws
 }

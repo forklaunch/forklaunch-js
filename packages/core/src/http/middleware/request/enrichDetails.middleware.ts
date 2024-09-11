@@ -1,11 +1,11 @@
 import { AnySchemaValidator } from '@forklaunch/validator';
-import { ForklaunchSchemaMiddlewareHandler } from '../../types/apiDefinition.types';
+import { ExpressLikeSchemaHandler } from '../../types/apiDefinition.types';
 import {
   Body,
-  ContractDetails,
   HeadersObject,
-  Method,
+  HttpContractDetails,
   ParamsObject,
+  PathParamHttpContractDetails,
   QueryObject,
   ResponseCompiledSchema,
   ResponsesObject
@@ -23,8 +23,6 @@ import {
  */
 export function enrichDetails<
   SV extends AnySchemaValidator,
-  ContractMethod extends Method,
-  Path extends `/${string}`,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
   ReqBody extends Body<SV>,
@@ -33,20 +31,10 @@ export function enrichDetails<
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>
 >(
-  contractDetails: ContractDetails<
-    SV,
-    ContractMethod,
-    Path,
-    P,
-    ResBodyMap,
-    ReqBody,
-    ReqQuery,
-    ReqHeaders,
-    ResHeaders
-  >,
+  contractDetails: HttpContractDetails<SV> | PathParamHttpContractDetails<SV>,
   requestSchema: unknown,
   responseSchemas: ResponseCompiledSchema
-): ForklaunchSchemaMiddlewareHandler<
+): ExpressLikeSchemaHandler<
   SV,
   P,
   ResBodyMap,

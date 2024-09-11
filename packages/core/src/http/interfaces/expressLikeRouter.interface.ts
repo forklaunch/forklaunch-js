@@ -1,8 +1,28 @@
-export interface ExpressLikeRouter<RouterFunction> {
-  use(...args: RouterFunction[]): this;
-  get(path: string, ...handlers: RouterFunction[]): void;
-  post(path: string, ...handlers: RouterFunction[]): void;
-  put(path: string, ...handlers: RouterFunction[]): void;
-  patch(path: string, ...handlers: RouterFunction[]): void;
-  delete(path: string, ...handlers: RouterFunction[]): void;
+export interface PathBasedHandler<RouterHandler> {
+  (path: string, ...handlers: RouterHandler[]): unknown;
+}
+
+export interface PathOrMiddlewareBasedHandler<RouterHandler>
+  extends PathBasedHandler<RouterHandler> {
+  (...args: RouterHandler[]): unknown;
+}
+
+export interface NestableRouterBasedHandler<RouterHandler, Router>
+  extends PathOrMiddlewareBasedHandler<RouterHandler> {
+  (...args: Router[]): unknown;
+  (path: string, ...handlers: Router[]): unknown;
+}
+
+export interface ExpressLikeRouter<RouterHandler, Router> {
+  use: NestableRouterBasedHandler<RouterHandler, Router>;
+  all: PathOrMiddlewareBasedHandler<RouterHandler>;
+  connect: PathOrMiddlewareBasedHandler<RouterHandler>;
+  get: PathBasedHandler<RouterHandler>;
+  post: PathBasedHandler<RouterHandler>;
+  put: PathBasedHandler<RouterHandler>;
+  patch: PathBasedHandler<RouterHandler>;
+  delete: PathBasedHandler<RouterHandler>;
+  options: PathBasedHandler<RouterHandler>;
+  head: PathBasedHandler<RouterHandler>;
+  trace: PathBasedHandler<RouterHandler>;
 }

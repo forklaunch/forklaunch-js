@@ -211,7 +211,9 @@ export function generateSwaggerDocument<SV extends AnySchemaValidator>(
         }
       }
 
-      paths[fullPath][route.method] = pathItemObject;
+      if (route.method !== 'middleware') {
+        paths[fullPath][route.method] = pathItemObject;
+      }
     });
   });
 

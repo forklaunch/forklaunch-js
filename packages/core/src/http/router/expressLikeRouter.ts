@@ -1,15 +1,21 @@
 import { AnySchemaValidator, SchemaValidator } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
+import { isExpressLikeSchemaHandler } from '../guards/isExpressLikeSchemaHandler';
 import { isHttpContractDetails } from '../guards/isHttpContractDetails';
-import { TypedHandler } from '../handlers/typedHandler';
-import { ExpressLikeRouter } from '../interfaces/expressLikeRouter.interface';
+import { isPathParamHttpContractDetails } from '../guards/isPathParamContractDetails';
+import { isTypedHandler } from '../guards/isTypedHandler';
+import {
+  ExpressLikeRouter,
+  PathBasedHandler,
+  PathOrMiddlewareBasedHandler
+} from '../interfaces/expressLikeRouter.interface';
 import { cors } from '../middleware/request/cors.middleware';
 import { createContext } from '../middleware/request/createContext.middleware';
 import { enrichDetails } from '../middleware/request/enrichDetails.middleware';
 import { parse } from '../middleware/request/parse.middleware';
 import {
-  ForklaunchMiddlewareHandler,
-  ForklaunchSchemaMiddlewareHandler,
+  ExpressLikeHandler,
+  ExpressLikeSchemaHandler,
   LiveTypeFunction
 } from '../types/apiDefinition.types';
 import {
@@ -25,16 +31,22 @@ import {
   ResponseCompiledSchema,
   ResponsesObject
 } from '../types/contractDetails.types';
+import {
+  ContractDetailsOrMiddlewareOrTypedHandler,
+  LiveTypeRouteDefinition,
+  MiddlewareOrMiddlewareWithTypedHandler,
+  TypedMiddlewareDefinition
+} from '../types/expressLikeRouter.types';
 import { ForklaunchRoute } from '../types/router.types';
 
 /**
  * A class that represents an Express-like router.
  */
-export abstract class ForklaunchExpressLikeRouter<
+export class ForklaunchExpressLikeRouter<
   SV extends AnySchemaValidator,
   BasePath extends `/${string}`,
-  RouterFunction,
-  Internal extends ExpressLikeRouter<RouterFunction>
+  RouterHandler,
+  Internal extends ExpressLikeRouter<RouterHandler, Internal>
 > {
   readonly routes: ForklaunchRoute<SV>[] = [];
   readonly basePath: BasePath;
@@ -46,8 +58,8 @@ export abstract class ForklaunchExpressLikeRouter<
   ) {
     this.basePath = basePath;
 
-    this.internal.use(createContext(this.schemaValidator) as RouterFunction);
-    this.internal.use(cors as RouterFunction);
+    this.internal.use(createContext(this.schemaValidator) as RouterHandler);
+    this.internal.use(cors as RouterHandler);
   }
 
   /**
@@ -57,8 +69,6 @@ export abstract class ForklaunchExpressLikeRouter<
    * @returns {MiddlewareHandler<SV>[]} - The resolved middlewares.
    */
   #resolveMiddlewares<
-    ContractMethod extends Method,
-    Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
     ReqBody extends Body<SV>,
@@ -67,20 +77,10 @@ export abstract class ForklaunchExpressLikeRouter<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>
   >(
-    contractDetails: ContractDetails<
-      SV,
-      ContractMethod,
-      Path,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders
-    >,
+    contractDetails: PathParamHttpContractDetails<SV> | HttpContractDetails<SV>,
     requestSchema: unknown,
     responseSchemas: ResponseCompiledSchema
-  ): ForklaunchSchemaMiddlewareHandler<
+  ): ExpressLikeSchemaHandler<
     SV,
     P,
     ResBodyMap,
@@ -93,8 +93,6 @@ export abstract class ForklaunchExpressLikeRouter<
     return [
       enrichDetails<
         SV,
-        ContractMethod,
-        Path,
         P,
         ResBodyMap,
         ReqBody,
@@ -108,7 +106,7 @@ export abstract class ForklaunchExpressLikeRouter<
   }
 
   /**
-   * Parses and runs the controller function with error handling.
+   * Parses and runs the controller handler with error handling.
    *
    * @template P - The type of request parameters.
    * @template ResBodyMap - The type of response body.
@@ -119,7 +117,7 @@ export abstract class ForklaunchExpressLikeRouter<
    * @param {MiddlewareHandler<SV, P, ResBodyMap | string, ReqBody, ReqQuery, LocalsObj, StatusCode>} requestHandler - The request handler.
    * @returns {ExpressMiddlewareHandler} - The Express request handler.
    */
-  #parseAndRunControllerFunction<
+  #parseAndRunControllerHandler<
     P extends ParamsDictionary,
     ResBodyMap extends Record<number, unknown>,
     ReqBody extends Record<string, unknown>,
@@ -128,7 +126,7 @@ export abstract class ForklaunchExpressLikeRouter<
     ResHeaders extends Record<string, string>,
     LocalsObj extends Record<string, unknown>
   >(
-    requestHandler: ForklaunchMiddlewareHandler<
+    requestHandler: ExpressLikeHandler<
       SV,
       P,
       ResBodyMap,
@@ -138,7 +136,7 @@ export abstract class ForklaunchExpressLikeRouter<
       ResHeaders,
       LocalsObj
     >
-  ): ForklaunchMiddlewareHandler<
+  ): ExpressLikeHandler<
     SV,
     P,
     ResBodyMap,
@@ -150,7 +148,7 @@ export abstract class ForklaunchExpressLikeRouter<
   > {
     return async (req, res, next) => {
       if (!requestHandler) {
-        throw new Error('Controller function is not defined');
+        throw new Error('Controller handler is not defined');
       }
 
       try {
@@ -167,18 +165,18 @@ export abstract class ForklaunchExpressLikeRouter<
   }
 
   /**
-   * Extracts the controller function from the provided functions.
+   * Extracts the controller handler from the provided handlers.
    *
    * @template P - The type of request parameters.
    * @template ResBodyMap - The type of response body.
    * @template ReqBody - The type of request body.
    * @template ReqQuery - The type of request query.
    * @template LocalsObj - The type of local variables.
-   * @param {MiddlewareHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, LocalsObj>[]} functions - The provided functions.
-   * @returns {MiddlewareHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, LocalsObj>} - The extracted controller function.
-   * @throws {Error} - Throws an error if the last argument is not a function.
+   * @param {MiddlewareHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, LocalsObj>[]} handlers - The provided handlers.
+   * @returns {MiddlewareHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, LocalsObj>} - The extracted controller handler.
+   * @throws {Error} - Throws an error if the last argument is not a handler.
    */
-  #extractControllerFunction<
+  #extractControllerHandler<
     P extends ParamsDictionary,
     ResBodyMap extends Record<number, unknown>,
     ReqBody extends Record<string, unknown>,
@@ -187,7 +185,7 @@ export abstract class ForklaunchExpressLikeRouter<
     ResHeaders extends Record<string, string>,
     LocalsObj extends Record<string, unknown>
   >(
-    functions: ForklaunchMiddlewareHandler<
+    handlers: ExpressLikeHandler<
       SV,
       P,
       ResBodyMap,
@@ -197,7 +195,7 @@ export abstract class ForklaunchExpressLikeRouter<
       ResHeaders,
       LocalsObj
     >[]
-  ): ForklaunchMiddlewareHandler<
+  ): ExpressLikeHandler<
     SV,
     P,
     ResBodyMap,
@@ -207,13 +205,13 @@ export abstract class ForklaunchExpressLikeRouter<
     ResHeaders,
     LocalsObj
   > {
-    const controllerFunction = functions.pop();
+    const controllerHandler = handlers.pop();
 
-    if (typeof controllerFunction !== 'function') {
-      throw new Error('Last argument must be a function');
+    if (typeof controllerHandler !== 'function') {
+      throw new Error('Last argument must be a handler');
     }
 
-    return controllerFunction;
+    return controllerHandler;
   }
 
   // TODO: Move to UniversalSDK
@@ -242,17 +240,6 @@ export abstract class ForklaunchExpressLikeRouter<
 
   //     return sdkPath as string;
   //   }
-
-  /**
-   * Registers middleware to the router.
-   *
-   * @param {...unknown[]} args - The middleware to register.
-   * @returns {this} - The router instance.
-   */
-  use(...args: unknown[]): this {
-    this.internal.use(...(args as RouterFunction[]));
-    return this;
-  }
 
   #compile<
     ContractMethod extends Method,
@@ -297,7 +284,10 @@ export abstract class ForklaunchExpressLikeRouter<
       403: schemaValidator.string,
       404: schemaValidator.string,
       500: schemaValidator.string,
-      ...contractDetails.responses
+      ...(isPathParamHttpContractDetails(contractDetails) ||
+      isHttpContractDetails(contractDetails)
+        ? { ...contractDetails.responses }
+        : {})
     };
 
     const responseSchemas: ResponseCompiledSchema = {
@@ -325,13 +315,13 @@ export abstract class ForklaunchExpressLikeRouter<
   /**
    * Executes request locally, applying parameters
    *
-   * @param functions {ForklaunchMiddlewareHandler<SV>}
-   * @param controllerFunction
+   * @param handlers {ExpressLikeHandler<SV>}
+   * @param controllerHandler
    * @returns
    */
   #localParamRequest<Middleware>(
-    functions: Middleware[],
-    controllerFunction: Middleware
+    handlers: Middleware[],
+    controllerHandler: Middleware
   ) {
     return async (
       route: string,
@@ -373,14 +363,14 @@ export abstract class ForklaunchExpressLikeRouter<
         }
       };
 
-      let cursor = functions.shift() as unknown as (
+      let cursor = handlers.shift() as unknown as (
         req_: typeof req,
         resp_: typeof res,
         next: (err?: Error) => Promise<void> | void
       ) => Promise<void> | void;
 
       if (cursor) {
-        for (const fn of functions) {
+        for (const fn of handlers) {
           await cursor(req, res, (err?: Error) => {
             if (err) {
               throw err;
@@ -400,12 +390,12 @@ export abstract class ForklaunchExpressLikeRouter<
         });
       }
 
-      const cFunction = controllerFunction as unknown as (
+      const cHandler = controllerHandler as unknown as (
         req_: typeof req,
         resp_: typeof res,
         next: (err?: Error) => Promise<void> | void
       ) => void;
-      await cFunction(req, res, (err?: Error) => {
+      await cHandler(req, res, (err?: Error) => {
         if (err) {
           throw err;
         }
@@ -419,7 +409,7 @@ export abstract class ForklaunchExpressLikeRouter<
     };
   }
 
-  #registerRoute<
+  registerRoute<
     ContractMethod extends Method,
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
@@ -432,36 +422,23 @@ export abstract class ForklaunchExpressLikeRouter<
   >(
     method: ContractMethod,
     path: Path,
-    registrationFunction: ExpressLikeRouter<RouterFunction>[keyof Omit<
-      ExpressLikeRouter<RouterFunction>,
-      'use'
-    >],
-    contractDetailsOrTypedHandler:
-      | ContractDetails<
-          SV,
-          ContractMethod,
-          Path,
-          P,
-          ResBodyMap,
-          ReqBody,
-          ReqQuery,
-          ReqHeaders,
-          ResHeaders
-        >
-      | TypedHandler<
-          SV,
-          ContractMethod,
-          Path,
-          P,
-          ResBodyMap,
-          ReqBody,
-          ReqQuery,
-          ReqHeaders,
-          ResHeaders,
-          LocalsObj
-        >,
-    ...functions: ForklaunchSchemaMiddlewareHandler<
+    registrationMethod: PathBasedHandler<RouterHandler>,
+    contractDetailsOrMiddlewareOrTypedHandler: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
+      ContractMethod,
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewareOrMiddlewareAndTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+      SV,
+      ContractMethod,
+      Path,
       P,
       ResBodyMap,
       ReqBody,
@@ -480,8 +457,9 @@ export abstract class ForklaunchExpressLikeRouter<
     ReqHeaders,
     ResHeaders
   > {
-    if (contractDetailsOrTypedHandler instanceof TypedHandler) {
-      const typedHandler = contractDetailsOrTypedHandler as TypedHandler<
+    // in this case, we know that the first argument is the typedHandler. As a result, we only use defined handlers
+    if (
+      isTypedHandler<
         SV,
         ContractMethod,
         Path,
@@ -492,9 +470,11 @@ export abstract class ForklaunchExpressLikeRouter<
         ReqHeaders,
         ResHeaders,
         LocalsObj
-      >;
-
-      return this.#registerRoute<
+      >(contractDetailsOrMiddlewareOrTypedHandler)
+    ) {
+      const { contractDetails, handlers } =
+        contractDetailsOrMiddlewareOrTypedHandler;
+      return this.registerRoute<
         ContractMethod,
         Path,
         P,
@@ -507,9 +487,9 @@ export abstract class ForklaunchExpressLikeRouter<
       >(
         method,
         path,
-        registrationFunction,
-        typedHandler.contractDetails,
-        ...typedHandler.functions.concat(functions)
+        registrationMethod,
+        contractDetails,
+        ...handlers
       ) as unknown as LiveTypeFunction<
         SV,
         `${BasePath}${Path}`,
@@ -521,100 +501,13 @@ export abstract class ForklaunchExpressLikeRouter<
         ResHeaders
       >;
     }
-
-    const contractDetails = contractDetailsOrTypedHandler as ContractDetails<
-      SV,
-      ContractMethod,
-      Path,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders
-    >;
-
-    this.routes.push({
-      basePath: this.basePath,
-      path,
-      method,
-      contractDetails
-    });
-
-    const { requestSchema, responseSchemas } = this.#compile(contractDetails);
-
-    const controllerFunction = this.#extractControllerFunction(functions);
-
-    registrationFunction.bind(this.internal)(
-      path,
-      ...(this.#resolveMiddlewares<
-        ContractMethod,
-        Path,
-        P,
-        ResBodyMap,
-        ReqBody,
-        ReqQuery,
-        ReqHeaders,
-        ResHeaders,
-        LocalsObj
-      >(contractDetails, requestSchema, responseSchemas).concat(
-        functions
-      ) as RouterFunction[]),
-      this.#parseAndRunControllerFunction(controllerFunction) as RouterFunction
-    );
-
-    return this.#localParamRequest(
-      functions,
-      controllerFunction
-    ) as LiveTypeFunction<
-      SV,
-      `${BasePath}${Path}`,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders
-    >;
-  }
-
-  /**
-   * Registers a GET route with the specified contract details and handler functions.
-   *
-   * @template P - The type of request parameters.
-   * @template ResBodyMap - The type of response body.
-   * @template ReqBody - The type of request body.
-   * @template ReqQuery - The type of request query.
-   * @template LocalsObj - The type of local variables.
-   * @param {string} path - The path for the route.
-   * @param {PathParamHttpContractDetails<SV, P, ResBodyMap, ReqQuery>} contractDetails - The contract details.
-   * @param {...SchemaMiddlewareHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, LocalsObj>[]} functions - The handler functions.
-   * @returns {ExpressRouter} - The Express router.
-   */
-  get<
-    Path extends `/${string}`,
-    P extends ParamsObject<SV> = ParamsObject<SV>,
-    ResBodyMap extends ResponsesObject<SV> = ResponsesObject<SV>,
-    ReqBody extends Body<SV> = Body<SV>,
-    ReqQuery extends QueryObject<SV> = QueryObject<SV>,
-    ReqHeaders extends HeadersObject<SV> = HeadersObject<SV>,
-    ResHeaders extends HeadersObject<SV> = HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown> = Record<string, unknown>
-  >(
-    path: Path,
-    contractDetailsOrTypedHandler:
-      | PathParamHttpContractDetails<
+    // in this case, we test for the last element of the handlers. If typed handler, break this down
+    else {
+      const maybeTypedHandler = middlewareOrMiddlewareAndTypedHandler.pop();
+      if (
+        isTypedHandler<
           SV,
-          Path,
-          P,
-          ResBodyMap,
-          ReqQuery,
-          ReqHeaders,
-          ResHeaders
-        >
-      | TypedHandler<
-          SV,
-          'get',
+          ContractMethod,
           Path,
           P,
           ResBodyMap,
@@ -623,9 +516,164 @@ export abstract class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj
-        >,
-    ...functions: ForklaunchSchemaMiddlewareHandler<
+        >(maybeTypedHandler)
+      ) {
+        const { contractDetails, handlers } = maybeTypedHandler;
+        return this.registerRoute<
+          ContractMethod,
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >(
+          method,
+          path,
+          registrationMethod,
+          contractDetails,
+          ...middlewareOrMiddlewareAndTypedHandler.concat(handlers)
+        ) as unknown as LiveTypeFunction<
+          SV,
+          `${BasePath}${Path}`,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders
+        >;
+      } else {
+        if (
+          isExpressLikeSchemaHandler<
+            SV,
+            P,
+            ResBodyMap,
+            ReqBody,
+            ReqQuery,
+            ReqHeaders,
+            ResHeaders,
+            LocalsObj
+          >(contractDetailsOrMiddlewareOrTypedHandler) ||
+          isTypedHandler<
+            SV,
+            ContractMethod,
+            Path,
+            P,
+            ResBodyMap,
+            ReqBody,
+            ReqQuery,
+            ReqHeaders,
+            ResHeaders,
+            LocalsObj
+          >(contractDetailsOrMiddlewareOrTypedHandler)
+        ) {
+          throw new Error('Contract details are not defined');
+        }
+        const contractDetails = contractDetailsOrMiddlewareOrTypedHandler;
+
+        const handlers = (
+          middlewareOrMiddlewareAndTypedHandler as unknown[]
+        ).filter((handler) =>
+          isExpressLikeSchemaHandler<
+            SV,
+            P,
+            ResBodyMap,
+            ReqBody,
+            ReqQuery,
+            ReqHeaders,
+            ResHeaders,
+            LocalsObj
+          >(handler)
+        );
+
+        if (
+          !isHttpContractDetails<
+            SV,
+            Path,
+            P,
+            ResBodyMap,
+            ReqBody,
+            ReqQuery,
+            ReqHeaders,
+            ResHeaders
+          >(contractDetails) ||
+          !isPathParamHttpContractDetails<
+            SV,
+            Path,
+            P,
+            ResBodyMap,
+            ReqQuery,
+            ReqHeaders,
+            ResHeaders
+          >(contractDetails)
+        ) {
+          throw new Error(
+            'Contract details are malformed for route definition'
+          );
+        }
+
+        this.routes.push({
+          basePath: this.basePath,
+          path,
+          method,
+          contractDetails
+        });
+
+        const { requestSchema, responseSchemas } =
+          this.#compile(contractDetails);
+
+        const controllerHandler = this.#extractControllerHandler(handlers);
+
+        registrationMethod.bind(this.internal)(
+          path,
+          ...(this.#resolveMiddlewares<
+            P,
+            ResBodyMap,
+            ReqBody,
+            ReqQuery,
+            ReqHeaders,
+            ResHeaders,
+            LocalsObj
+          >(contractDetails, requestSchema, responseSchemas).concat(
+            handlers
+          ) as RouterHandler[]),
+          this.#parseAndRunControllerHandler(controllerHandler) as RouterHandler
+        );
+
+        return this.#localParamRequest(
+          handlers,
+          controllerHandler
+        ) as LiveTypeFunction<
+          SV,
+          `${BasePath}${Path}`,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders
+        >;
+      }
+    }
+  }
+
+  #extractMiddlewareFromEnrichedTypedHandlerArray<
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
+      'middleware',
+      Path,
       P,
       ResBodyMap,
       ReqBody,
@@ -635,8 +683,475 @@ export abstract class ForklaunchExpressLikeRouter<
       LocalsObj
     >[]
   ) {
+    const lastHandler = middlewareOrMiddlewareWithTypedHandler.pop();
+    let rawHandler = [lastHandler];
+    if (
+      isTypedHandler<
+        SV,
+        'middleware',
+        Path,
+        P,
+        ResBodyMap,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders,
+        ResHeaders,
+        LocalsObj
+      >(lastHandler)
+    ) {
+      rawHandler = lastHandler.handlers;
+    }
+
+    return [
+      ...(middlewareOrMiddlewareWithTypedHandler as RouterHandler[]),
+      ...(rawHandler as RouterHandler[])
+    ];
+  }
+
+  #extractMiddlewareAsRouterHandlers<
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    contractDetailsOrMiddlewareOrTypedHandler:
+      | ContractDetailsOrMiddlewareOrTypedHandler<
+          SV,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >
+      | undefined,
+    middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >[]
+  ) {
+    const middleware: RouterHandler[] = [];
+
+    if (
+      isTypedHandler<
+        SV,
+        'middleware',
+        Path,
+        P,
+        ResBodyMap,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders,
+        ResHeaders,
+        LocalsObj
+      >(contractDetailsOrMiddlewareOrTypedHandler)
+    ) {
+      middleware.push(
+        ...(contractDetailsOrMiddlewareOrTypedHandler.handlers as RouterHandler[])
+      );
+    } else if (
+      isExpressLikeSchemaHandler(contractDetailsOrMiddlewareOrTypedHandler)
+    ) {
+      middleware.push(
+        contractDetailsOrMiddlewareOrTypedHandler as RouterHandler
+      );
+    }
+
+    middleware.push(
+      ...this.#extractMiddlewareFromEnrichedTypedHandlerArray<
+        Path,
+        P,
+        ResBodyMap,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders,
+        ResHeaders,
+        LocalsObj
+      >(middlewareOrMiddlewareWithTypedHandler)
+    );
+
+    return middleware;
+  }
+
+  registerMiddlewareHandler<
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    registrationMethod: PathOrMiddlewareBasedHandler<RouterHandler>,
+    pathOrContractDetailsOrMiddlewareOrTypedHandler:
+      | Path
+      | ContractDetailsOrMiddlewareOrTypedHandler<
+          SV,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >,
+    contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >[]
+  ): this {
+    const middleware: RouterHandler[] = [];
+
+    if (typeof pathOrContractDetailsOrMiddlewareOrTypedHandler === 'string') {
+      middleware.push(
+        ...this.#extractMiddlewareAsRouterHandlers<
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >(
+          contractDetailsOrMiddlewareOrTypedHandler,
+          middlewareOrMiddlewareWithTypedHandler
+        )
+      );
+      const path = pathOrContractDetailsOrMiddlewareOrTypedHandler;
+      registrationMethod.bind(this.internal)(path, ...middleware);
+    } else {
+      middleware.push(
+        ...this.#extractMiddlewareAsRouterHandlers<
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >(
+          pathOrContractDetailsOrMiddlewareOrTypedHandler,
+          (isExpressLikeSchemaHandler<
+            SV,
+            P,
+            ResBodyMap,
+            ReqBody,
+            ReqQuery,
+            ReqHeaders,
+            ResHeaders,
+            LocalsObj
+          >(contractDetailsOrMiddlewareOrTypedHandler) ||
+          isTypedHandler<
+            SV,
+            'middleware',
+            Path,
+            P,
+            ResBodyMap,
+            ReqBody,
+            ReqQuery,
+            ReqHeaders,
+            ResHeaders,
+            LocalsObj
+          >(contractDetailsOrMiddlewareOrTypedHandler)
+            ? [contractDetailsOrMiddlewareOrTypedHandler]
+            : []
+          ).concat(middlewareOrMiddlewareWithTypedHandler)
+        )
+      );
+      registrationMethod.bind(this.internal)(...middleware);
+    }
+    return this;
+  }
+
+  use: TypedMiddlewareDefinition<this, SV> = <
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    pathOrContractDetailsOrMiddlewareOrTypedHandler:
+      | Path
+      | ContractDetailsOrMiddlewareOrTypedHandler<
+          SV,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >,
+    contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >[]
+  ) => {
+    return this.registerMiddlewareHandler<
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >(
+      this.internal.use,
+      pathOrContractDetailsOrMiddlewareOrTypedHandler,
+      contractDetailsOrMiddlewareOrTypedHandler,
+      ...middlewareOrMiddlewareWithTypedHandler
+    );
+  };
+
+  all: TypedMiddlewareDefinition<this, SV> = <
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    pathOrContractDetailsOrMiddlewareOrTypedHandler:
+      | Path
+      | ContractDetailsOrMiddlewareOrTypedHandler<
+          SV,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >,
+    contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >[]
+  ) => {
+    return this.registerMiddlewareHandler<
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >(
+      this.internal.all,
+      pathOrContractDetailsOrMiddlewareOrTypedHandler,
+      contractDetailsOrMiddlewareOrTypedHandler,
+      ...middlewareOrMiddlewareWithTypedHandler
+    );
+  };
+
+  connect: TypedMiddlewareDefinition<this, SV> = <
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    pathOrContractDetailsOrMiddlewareOrTypedHandler:
+      | Path
+      | ContractDetailsOrMiddlewareOrTypedHandler<
+          SV,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >,
+    contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >[]
+  ) => {
+    return this.registerMiddlewareHandler<
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >(
+      this.internal.connect,
+      pathOrContractDetailsOrMiddlewareOrTypedHandler,
+      contractDetailsOrMiddlewareOrTypedHandler,
+      ...middlewareOrMiddlewareWithTypedHandler
+    );
+  };
+
+  /**
+   * Registers a GET route with the specified contract details and handler handlers.
+   *
+   * @template P - The type of request parameters.
+   * @template ResBodyMap - The type of response body.
+   * @template ReqBody - The type of request body.
+   * @template ReqQuery - The type of request query.
+   * @template LocalsObj - The type of local variables.
+   * @param {string} path - The path for the route.
+   * @param {PathParamHttpContractDetails<SV, P, ResBodyMap, ReqQuery>} contractDetails - The contract details.
+   * @param {...SchemaHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, LocalsObj>[]} handlers - The handler handlers.
+   * @returns {ExpressRouter} - The Express router.
+   */
+  get: LiveTypeRouteDefinition<SV, BasePath, 'get'> = <
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    path: Path,
+    contractDetailsOrMiddlewareOrTypedHandler: ContractDetailsOrMiddlewareOrTypedHandler<
+      SV,
+      'get',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+      SV,
+      'get',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >[]
+  ) => {
     return {
-      get: this.#registerRoute<
+      get: this.registerRoute<
         'get',
         Path,
         P,
@@ -650,14 +1165,14 @@ export abstract class ForklaunchExpressLikeRouter<
         'get',
         path,
         this.internal.get,
-        contractDetailsOrTypedHandler,
-        ...functions
+        contractDetailsOrMiddlewareOrTypedHandler,
+        ...middlewareOrMiddlewareWithTypedHandler
       )
     };
-  }
+  };
 
   /**
-   * Registers a POST route with the specified contract details and handler functions.
+   * Registers a POST route with the specified contract details and handler handlers.
    *
    * @template P - The type of request parameters.
    * @template ResBodyMap - The type of response body.
@@ -666,45 +1181,36 @@ export abstract class ForklaunchExpressLikeRouter<
    * @template LocalsObj - The type of local variables.
    * @param {string} path - The path for the route.
    * @param {HttpContractDetails<SV, P, ResBodyMap, ReqBody, ReqQuery>} contractDetails - The contract details.
-   * @param {...SchemaMiddlewareHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, LocalsObj>[]} functions - The handler functions.
-   * @returns {ExpressRouter} - The Express router.
+   * @param {...SchemaHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, LocalsObj>[]} handlers - The handler handlers.
+   * @returns {ExpressRouter} - The Expxwress router.
    */
-  post<
+  post: LiveTypeRouteDefinition<SV, BasePath, 'post'> = <
     Path extends `/${string}`,
-    P extends ParamsObject<SV> = ParamsObject<SV>,
-    ResBodyMap extends ResponsesObject<SV> = ResponsesObject<SV>,
-    ReqBody extends Body<SV> = Body<SV>,
-    ReqQuery extends QueryObject<SV> = QueryObject<SV>,
-    ReqHeaders extends HeadersObject<SV> = HeadersObject<SV>,
-    ResHeaders extends HeadersObject<SV> = HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown> = Record<string, unknown>
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
   >(
     path: Path,
-    contractDetailsOrTypedHandler:
-      | HttpContractDetails<
-          SV,
-          Path,
-          P,
-          ResBodyMap,
-          ReqBody,
-          ReqQuery,
-          ReqHeaders,
-          ResHeaders
-        >
-      | TypedHandler<
-          SV,
-          'post',
-          Path,
-          P,
-          ResBodyMap,
-          ReqBody,
-          ReqQuery,
-          ReqHeaders,
-          ResHeaders,
-          LocalsObj
-        >,
-    ...functions: ForklaunchSchemaMiddlewareHandler<
+    contractDetailsOrMiddlewareOrTypedHandler: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
+      'post',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+      SV,
+      'post',
+      Path,
       P,
       ResBodyMap,
       ReqBody,
@@ -713,9 +1219,9 @@ export abstract class ForklaunchExpressLikeRouter<
       ResHeaders,
       LocalsObj
     >[]
-  ) {
+  ) => {
     return {
-      post: this.#registerRoute<
+      post: this.registerRoute<
         'post',
         Path,
         P,
@@ -729,14 +1235,14 @@ export abstract class ForklaunchExpressLikeRouter<
         'post',
         path,
         this.internal.post,
-        contractDetailsOrTypedHandler,
-        ...functions
+        contractDetailsOrMiddlewareOrTypedHandler,
+        ...middlewareOrMiddlewareWithTypedHandler
       )
     };
-  }
+  };
 
   /**
-   * Registers a PUT route with the specified contract details and handler functions.
+   * Registers a PUT route with the specified contract details and handler handlers.
    *
    * @template P - The type of request parameters.
    * @template ResBodyMap - The type of response body.
@@ -745,45 +1251,36 @@ export abstract class ForklaunchExpressLikeRouter<
    * @template LocalsObj - The type of local variables.
    * @param {string} path - The path for the route.
    * @param {HttpContractDetails<SV, P, ResBodyMap, ReqBody, ReqQuery>} contractDetails - The contract details.
-   * @param {...SchemaMiddlewareHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, LocalsObj>[]} functions - The handler functions.
+   * @param {...SchemaHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, LocalsObj>[]} handlers - The handler handlers.
    * @returns {ExpressRouter} - The Express router.
    */
-  put<
+  put: LiveTypeRouteDefinition<SV, BasePath, 'put'> = <
     Path extends `/${string}`,
-    P extends ParamsObject<SV> = ParamsObject<SV>,
-    ResBodyMap extends ResponsesObject<SV> = ResponsesObject<SV>,
-    ReqBody extends Body<SV> = Body<SV>,
-    ReqQuery extends QueryObject<SV> = QueryObject<SV>,
-    ReqHeaders extends HeadersObject<SV> = HeadersObject<SV>,
-    ResHeaders extends HeadersObject<SV> = HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown> = Record<string, unknown>
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
   >(
     path: Path,
-    contractDetailsOrTypedHandler:
-      | HttpContractDetails<
-          SV,
-          Path,
-          P,
-          ResBodyMap,
-          ReqBody,
-          ReqQuery,
-          ReqHeaders,
-          ResHeaders
-        >
-      | TypedHandler<
-          SV,
-          'put',
-          Path,
-          P,
-          ResBodyMap,
-          ReqBody,
-          ReqQuery,
-          ReqHeaders,
-          ResHeaders,
-          LocalsObj
-        >,
-    ...functions: ForklaunchSchemaMiddlewareHandler<
+    contractDetailsOrMiddlewareOrTypedHandler: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
+      'put',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+      SV,
+      'put',
+      Path,
       P,
       ResBodyMap,
       ReqBody,
@@ -792,9 +1289,9 @@ export abstract class ForklaunchExpressLikeRouter<
       ResHeaders,
       LocalsObj
     >[]
-  ) {
+  ) => {
     return {
-      put: this.#registerRoute<
+      put: this.registerRoute<
         'put',
         Path,
         P,
@@ -808,14 +1305,14 @@ export abstract class ForklaunchExpressLikeRouter<
         'put',
         path,
         this.internal.put,
-        contractDetailsOrTypedHandler,
-        ...functions
+        contractDetailsOrMiddlewareOrTypedHandler,
+        ...middlewareOrMiddlewareWithTypedHandler
       )
     };
-  }
+  };
 
   /**
-   * Registers a PATCH route with the specified contract details and handler functions.
+   * Registers a PATCH route with the specified contract details and handler handlers.
    *
    * @template P - The type of request parameters.
    * @template ResBodyMap - The type of response body.
@@ -824,45 +1321,36 @@ export abstract class ForklaunchExpressLikeRouter<
    * @template LocalsObj - The type of local variables.
    * @param {string} path - The path for the route.
    * @param {HttpContractDetails<SV, P, ResBodyMap, ReqBody, ReqQuery>} contractDetails - The contract details.
-   * @param {...SchemaMiddlewareHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, LocalsObj>[]} functions - The handler functions.
+   * @param {...SchemaHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, LocalsObj>[]} handlers - The handler handlers.
    * @returns {ExpressRouter} - The Express router.
    */
-  patch<
+  patch: LiveTypeRouteDefinition<SV, BasePath, 'patch'> = <
     Path extends `/${string}`,
-    P extends ParamsObject<SV> = ParamsObject<SV>,
-    ResBodyMap extends ResponsesObject<SV> = ResponsesObject<SV>,
-    ReqBody extends Body<SV> = Body<SV>,
-    ReqQuery extends QueryObject<SV> = QueryObject<SV>,
-    ReqHeaders extends HeadersObject<SV> = HeadersObject<SV>,
-    ResHeaders extends HeadersObject<SV> = HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown> = Record<string, unknown>
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
   >(
     path: Path,
-    contractDetailsOrTypedHandler:
-      | HttpContractDetails<
-          SV,
-          Path,
-          P,
-          ResBodyMap,
-          ReqBody,
-          ReqQuery,
-          ReqHeaders,
-          ResHeaders
-        >
-      | TypedHandler<
-          SV,
-          'patch',
-          Path,
-          P,
-          ResBodyMap,
-          ReqBody,
-          ReqQuery,
-          ReqHeaders,
-          ResHeaders,
-          LocalsObj
-        >,
-    ...functions: ForklaunchSchemaMiddlewareHandler<
+    contractDetailsOrMiddlewareOrTypedHandler: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
+      'patch',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+      SV,
+      'patch',
+      Path,
       P,
       ResBodyMap,
       ReqBody,
@@ -871,9 +1359,9 @@ export abstract class ForklaunchExpressLikeRouter<
       ResHeaders,
       LocalsObj
     >[]
-  ) {
+  ) => {
     return {
-      patch: this.#registerRoute<
+      patch: this.registerRoute<
         'patch',
         Path,
         P,
@@ -887,14 +1375,14 @@ export abstract class ForklaunchExpressLikeRouter<
         'patch',
         path,
         this.internal.patch,
-        contractDetailsOrTypedHandler,
-        ...functions
+        contractDetailsOrMiddlewareOrTypedHandler,
+        ...middlewareOrMiddlewareWithTypedHandler
       )
     };
-  }
+  };
 
   /**
-   * Registers a DELETE route with the specified contract details and handler functions.
+   * Registers a DELETE route with the specified contract details and handler handlers.
    *
    * @template P - The type of request parameters.
    * @template ResBodyMap - The type of response body.
@@ -903,44 +1391,36 @@ export abstract class ForklaunchExpressLikeRouter<
    * @template LocalsObj - The type of local variables.
    * @param {string} path - The path for the route.
    * @param {PathParamHttpContractDetails<SV, P, ResBodyMap, ReqQuery>} contractDetails - The contract details.
-   * @param {...SchemaMiddlewareHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, LocalsObj>[]} functions - The handler functions.
+   * @param {...SchemaHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, LocalsObj>[]} handlers - The handler handlers.
    * @returns {ExpressRouter} - The Express router.
    */
-  delete<
+  delete: LiveTypeRouteDefinition<SV, BasePath, 'delete'> = <
     Path extends `/${string}`,
-    P extends ParamsObject<SV> = ParamsObject<SV>,
-    ResBodyMap extends ResponsesObject<SV> = ResponsesObject<SV>,
-    ReqBody extends Body<SV> = Body<SV>,
-    ReqQuery extends QueryObject<SV> = QueryObject<SV>,
-    ReqHeaders extends HeadersObject<SV> = HeadersObject<SV>,
-    ResHeaders extends HeadersObject<SV> = HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown> = Record<string, unknown>
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
   >(
     path: Path,
-    contractDetailsOrTypedHandler:
-      | PathParamHttpContractDetails<
-          SV,
-          Path,
-          P,
-          ResBodyMap,
-          ReqQuery,
-          ReqHeaders,
-          ResHeaders
-        >
-      | TypedHandler<
-          SV,
-          'delete',
-          Path,
-          P,
-          ResBodyMap,
-          ReqBody,
-          ReqQuery,
-          ReqHeaders,
-          ResHeaders,
-          LocalsObj
-        >,
-    ...functions: ForklaunchSchemaMiddlewareHandler<
+    contractDetailsOrMiddlewareOrTypedHandler: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
+      'delete',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+      SV,
+      'delete',
+      Path,
       P,
       ResBodyMap,
       ReqBody,
@@ -949,9 +1429,9 @@ export abstract class ForklaunchExpressLikeRouter<
       ResHeaders,
       LocalsObj
     >[]
-  ) {
+  ) => {
     return {
-      delete: this.#registerRoute<
+      delete: this.registerRoute<
         'delete',
         Path,
         P,
@@ -965,9 +1445,219 @@ export abstract class ForklaunchExpressLikeRouter<
         'delete',
         path,
         this.internal.delete,
-        contractDetailsOrTypedHandler,
-        ...functions
+        contractDetailsOrMiddlewareOrTypedHandler,
+        ...middlewareOrMiddlewareWithTypedHandler
       )
     };
-  }
+  };
+
+  /**
+   * Registers a OPTIONS route with the specified contract details and handler handlers.
+   *
+   * @template P - The type of request parameters.
+   * @template ResBodyMap - The type of response body.
+   * @template ReqBody - The type of request body.
+   * @template ReqQuery - The type of request query.
+   * @template LocalsObj - The type of local variables.
+   * @param {string} path - The path for the route.
+   * @param {PathParamHttpContractDetails<SV, P, ResBodyMap, ReqQuery>} contractDetails - The contract details.
+   * @param {...SchemaHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, LocalsObj>[]} handlers - The handler handlers.
+   * @returns {ExpressRouter} - The Express router.
+   */
+  options: LiveTypeRouteDefinition<SV, BasePath, 'options'> = <
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    path: Path,
+    contractDetailsOrMiddlewareOrTypedHandler: ContractDetailsOrMiddlewareOrTypedHandler<
+      SV,
+      'options',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+      SV,
+      'options',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >[]
+  ) => {
+    return {
+      options: this.registerRoute<
+        'options',
+        Path,
+        P,
+        ResBodyMap,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders,
+        ResHeaders,
+        LocalsObj
+      >(
+        'options',
+        path,
+        this.internal.options,
+        contractDetailsOrMiddlewareOrTypedHandler,
+        ...middlewareOrMiddlewareWithTypedHandler
+      )
+    };
+  };
+
+  /**
+   * Registers a HEAD route with the specified contract details and handler handlers.
+   *
+   * @template P - The type of request parameters.
+   * @template ResBodyMap - The type of response body.
+   * @template ReqBody - The type of request body.
+   * @template ReqQuery - The type of request query.
+   * @template LocalsObj - The type of local variables.
+   * @param {string} path - The path for the route.
+   * @param {PathParamHttpContractDetails<SV, P, ResBodyMap, ReqQuery>} contractDetails - The contract details.
+   * @param {...SchemaHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, LocalsObj>[]} handlers - The handler handlers.
+   * @returns {ExpressRouter} - The Express router.
+   */
+  head: LiveTypeRouteDefinition<SV, BasePath, 'head'> = <
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    path: Path,
+    contractDetailsOrMiddlewareOrTypedHandler: ContractDetailsOrMiddlewareOrTypedHandler<
+      SV,
+      'head',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+      SV,
+      'head',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >[]
+  ) => {
+    return {
+      head: this.registerRoute<
+        'head',
+        Path,
+        P,
+        ResBodyMap,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders,
+        ResHeaders,
+        LocalsObj
+      >(
+        'head',
+        path,
+        this.internal.head,
+        contractDetailsOrMiddlewareOrTypedHandler,
+        ...middlewareOrMiddlewareWithTypedHandler
+      )
+    };
+  };
+
+  /**
+   * Registers a TRACE route with the specified contract details and handler handlers.
+   *
+   * @template P - The type of request parameters.
+   * @template ResBodyMap - The type of response body.
+   * @template ReqBody - The type of request body.
+   * @template ReqQuery - The type of request query.
+   * @template LocalsObj - The type of local variables.
+   * @param {string} path - The path for the route.
+   * @param {PathParamHttpContractDetails<SV, P, ResBodyMap, ReqQuery>} contractDetails - The contract details.
+   * @param {...SchemaHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, LocalsObj>[]} handlers - The handler handlers.
+   * @returns {ExpressRouter} - The Express router.
+   */
+  trace: LiveTypeRouteDefinition<SV, BasePath, 'trace'> = <
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    path: Path,
+    contractDetailsOrMiddlewareOrTypedHandler: ContractDetailsOrMiddlewareOrTypedHandler<
+      SV,
+      'trace',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >,
+    ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
+      SV,
+      'trace',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >[]
+  ) => {
+    return {
+      trace: this.registerRoute<
+        'trace',
+        Path,
+        P,
+        ResBodyMap,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders,
+        ResHeaders,
+        LocalsObj
+      >(
+        'trace',
+        path,
+        this.internal.trace,
+        contractDetailsOrMiddlewareOrTypedHandler,
+        ...middlewareOrMiddlewareWithTypedHandler
+      )
+    };
+  };
 }
