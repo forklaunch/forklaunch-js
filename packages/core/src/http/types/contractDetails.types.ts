@@ -95,19 +95,14 @@ export type AuthMethods<
   ParamsSchema extends ParamsObject<SV>,
   ReqBody extends Body<SV>,
   QuerySchema extends QueryObject<SV>,
-  ReqHeaders extends HeadersObject<SV>,
-  P extends ParamsObject<SV> =
-    | string
-    | number
-    | symbol extends ExtractedParamsObject<Path>
-    ? ParamsSchema
-    : { [K in keyof ExtractedParamsObject<Path>]: ParamsSchema[K] }
+  ReqHeaders extends HeadersObject<SV>
 > = (
   | {
       readonly method: 'jwt' | 'basic';
     }
   | {
       readonly method: 'other';
+      readonly tokenPrefix: string;
       readonly decode: (token: string) => {
         permissions: Set<string>;
         roles: Set<string>;
@@ -116,14 +111,18 @@ export type AuthMethods<
 ) & {
   readonly mapPermissions?: ExpressLikeSchemaAuthMapper<
     SV,
-    P,
+    string | number | symbol extends ExtractedParamsObject<Path>
+      ? ParamsSchema
+      : { [K in keyof ExtractedParamsObject<Path>]: ParamsSchema[K] },
     ReqBody,
     QuerySchema,
     ReqHeaders
   >;
   readonly mapRoles?: ExpressLikeSchemaAuthMapper<
     SV,
-    P,
+    string | number | symbol extends ExtractedParamsObject<Path>
+      ? ParamsSchema
+      : { [K in keyof ExtractedParamsObject<Path>]: ParamsSchema[K] },
     ReqBody,
     QuerySchema,
     ReqHeaders

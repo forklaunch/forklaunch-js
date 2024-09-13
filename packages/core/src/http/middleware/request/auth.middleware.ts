@@ -1,5 +1,4 @@
 import { AnySchemaValidator } from '@forklaunch/validator';
-import * as jose from 'jose';
 import { ParsedQs } from 'qs';
 import {
   ForklaunchNextFunction,
@@ -7,7 +6,7 @@ import {
   ForklaunchResponse
 } from '../../types/apiDefinition.types';
 import {
-  AuthMethod,
+  AuthMethods,
   ParamsDictionary
 } from '../../types/contractDetails.types';
 
@@ -15,38 +14,42 @@ import {
  * Checks the authorization token for validity.
  *
  * @param {AuthMethod} [authorizationMethod] - The method of authorization.
- * @param {string} [authorizationString] - The authorization string.
+ * @param {string} [authorizationToken] - The authorization string.
  * @returns {Promise<[401 | 403, string] | string | undefined>} - The result of the authorization check.
  */
-async function checkAuthorizationToken(
-  authorizationMethod?: AuthMethod,
-  authorizationString?: string
-): Promise<[401 | 403, string] | string | undefined> {
-  if (!authorizationString) {
+async function checkAuthorizationToken<
+  SV extends AnySchemaValidator,
+  Path extends `/${string}`,
+  P extends ParamsDictionary,
+  ReqBody extends Record<string, unknown>,
+  ReqQuery extends ParsedQs,
+  ReqHeaders extends Record<string, string>,
+>(
+  authorizationMethod: AuthMethods<SV, Path, P, ReqBody, ReqQuery, ReqHeaders>,
+  authorizationToken?: string
+): Promise<readonly [401 | 403, string] | string | undefined> {
+  if (authorizationToken == null) {
     return [401, 'No Authorization token provided.'];
   }
-  switch (authorizationMethod) {
-    case 'jwt': {
-      if (!authorizationString.startsWith('Bearer ')) {
-        return [401, 'Invalid Authorization token format.'];
-      }
-      try {
-        const decodedJwt = await jose.jwtVerify(
-          authorizationString.split(' ')[1],
-          new TextEncoder().encode(
-            process.env.JWT_SECRET || 'your-256-bit-secret'
-          )
-        );
-        return decodedJwt.payload.iss;
-      } catch (error) {
-        console.error(error);
-        return [403, 'Invalid Authorization token.'];
+  const invalidAuthorizationTokenFormat = [401, 'Invalid Authorization token format.'] as const;
+    if (authorizationMethod.method === 'jwt') {
+      if (!authorizationToken.startsWith('Bearer ')) {
+        return invalidAuthorizationTokenFormat;
       }
     }
-    default:
-      return [401, 'Invalid Authorization method.'];
+    else if (authorizationMethod.method === 'basic') {
+      if (!authorizationToken.startsWith('Basic ')) {
+        return invalidAuthorizationTokenFormat;
+      }
+    }
+    else if (authorizationMethod.method === 'other') {
+      if (!authorizationToken.startsWith(`${authorizationMethod.tokenPrefix} `)) {
+        return invalidAuthorizationTokenFormat;
+      }
+    }
+    
+    return [401, 'Invalid Authorization method.'];
   }
-}
 
 /**
  * Middleware to parse request authorization.
@@ -61,6 +64,7 @@ async function checkAuthorizationToken(
  */
 export async function parseRequestAuth<
   SV extends AnySchemaValidator,
+  Path extends `/${string}`,
   P extends ParamsDictionary,
   ResBodyMap extends Record<number, unknown>,
   ReqBody extends Record<string, unknown>,
@@ -75,8 +79,16 @@ export async function parseRequestAuth<
 ) {
   const auth = req.contractDetails.auth;
   if (auth) {
-    const errorAndMessage = await checkAuthorizationToken(
-      auth.method,
+    const errorAndMessage = await checkAuthorizationToken<
+      SV,
+      Path,
+      P,
+  ReqBody,
+  ReqQuery,
+  ReqHeaders
+
+    >(
+      auth,
       req.headers.authorization
     );
     if (Array.isArray(errorAndMessage)) {
@@ -84,6 +96,18 @@ export async function parseRequestAuth<
       next?.(new Error(errorAndMessage[1]));
     }
 
+    try {
+        const decodedJwt = await jose.jwtVerify(
+          authorizationToken.split(' ')[1],
+          new TextEncoder().encode(
+            process.env.JWT_SECRET || 'your-256-bit-secret'
+          )
+        );
+        return decodedJwt.payload.iss;
+      } catch (error) {
+        console.error(error);
+        return [403, 'Invalid Authorization token.'];
+      }
     // TODO: Implement role and permission checking
       const permissionSlugs = mapPermissions(
         auth.method,
