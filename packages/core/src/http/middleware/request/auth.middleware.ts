@@ -49,34 +49,6 @@ async function checkAuthorizationToken(
 }
 
 /**
- * Maps roles from authorization.
- *
- * @param {AuthMethod} [authorizationType] - The method of authorization.
- * @param {string} [authorizationToken] - The authorization token.
- * @returns {string[]} - The mapped roles.
- */
-// function mapRoles(
-//   authorizationType?: AuthMethod,
-//   authorizationToken?: string
-// ): string[] {
-//   return [];
-// }
-
-/**
- * Maps permissions from authorization.
- *
- * @param {AuthMethod} [authorizationType] - The method of authorization.
- * @param {string} [authorizationToken] - The authorization token.
- * @returns {string[]} - The mapped permissions.
- */
-// function mapPermissions(
-//   authorizationType?: AuthMethod,
-//   authorizationToken?: string
-// ): string[] {
-//   return [];
-// }
-
-/**
  * Middleware to parse request authorization.
  *
  * @template SV - A type that extends AnySchemaValidator.
@@ -113,37 +85,37 @@ export async function parseRequestAuth<
     }
 
     // TODO: Implement role and permission checking
-    //   const permissionSlugs = mapPermissions(
-    //     auth.method,
-    //     req.headers.authorization
-    //   );
-    //   const roles = mapRoles(auth.method, req.headers.authorization);
+      const permissionSlugs = mapPermissions(
+        auth.method,
+        req.headers.authorization
+      );
+      const roles = mapRoles(auth.method, req.headers.authorization);
 
-    //   const permissionErrorMessage =
-    //     'User does not have sufficient permissions to perform action.';
-    //   const roleErrorMessage =
-    //     'User does not have correct role to perform action.';
+      const permissionErrorMessage =
+        'User does not have sufficient permissions to perform action.';
+      const roleErrorMessage =
+        'User does not have correct role to perform action.';
 
-    //   permissionSlugs.forEach((permissionSlug) => {
-    //     if (
-    //       !req.contractDetails.auth?.allowedSlugs?.has(permissionSlug) ||
-    //       req.contractDetails.auth?.forbiddenSlugs?.has(permissionSlug)
-    //     ) {
-    //       res.status(403).send(permissionErrorMessage);
-    //       next?.(new Error(permissionErrorMessage));
-    //       }
-    //     }
-    //   });
-    //   roles.forEach((role) => {
-    //     if (
-    //       !req.contractDetails.auth?.allowedRoles?.has(role) ||
-    //       req.contractDetails.auth?.forbiddenRoles?.has(role)
-    //     ) {
-    //       res.status(403).send(roleErrorMessage);
-    //       next?.(new Error(roleErrorMessage));
-    //     }
-    //   });
+      permissionSlugs.forEach((permissionSlug) => {
+        if (
+          !req.contractDetails.auth?.allowedSlugs?.has(permissionSlug) ||
+          req.contractDetails.auth?.forbiddenSlugs?.has(permissionSlug)
+        ) {
+          res.status(403).send(permissionErrorMessage);
+          next?.(new Error(permissionErrorMessage));
+          }
+        }
+      });
+      roles.forEach((role) => {
+        if (
+          !req.contractDetails.auth?.allowedRoles?.has(role) ||
+          req.contractDetails.auth?.forbiddenRoles?.has(role)
+        ) {
+          res.status(403).send(roleErrorMessage);
+          next?.(new Error(roleErrorMessage));
+        }
+      });
   }
 
-  // next?.();
+  next?.();
 }

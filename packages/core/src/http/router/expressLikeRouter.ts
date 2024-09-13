@@ -622,8 +622,16 @@ export class ForklaunchExpressLikeRouter<
           contractDetails
         });
 
-        const { requestSchema, responseSchemas } =
-          this.#compile(contractDetails);
+        const { requestSchema, responseSchemas } = this.#compile<
+          ContractMethod,
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders
+        >(contractDetails);
 
         const controllerHandler = this.#extractControllerHandler(handlers);
 

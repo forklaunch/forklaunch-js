@@ -283,6 +283,71 @@ export type ExpressLikeSchemaHandler<
 >;
 
 /**
+ * Represents a function that maps an authenticated request to a set of authorization strings.
+ *
+ * @template SV - The type representing the schema validator.
+ * @template P - The type representing request parameters.
+ * @template ReqBody - The type representing the request body.
+ * @template ReqQuery - The type representing the request query parameters.
+ * @template ReqHeaders - The type representing the request headers.
+ *
+ * @param {ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>} req - The request object with schema validation.
+ * @returns {Set<string> | Promise<Set<string>>} - A set of authorization strings or a promise that resolves to it.
+ */
+export type ExpressLikeAuthMapper<
+  SV extends AnySchemaValidator,
+  P extends ParamsDictionary,
+  ReqBody extends Record<string, unknown>,
+  ReqQuery extends ParsedQs,
+  ReqHeaders extends Record<string, string>
+> = (
+  req: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>
+) => Set<string> | Promise<Set<string>>;
+
+/**
+ * Represents a function that maps an authenticated request with schema validation
+ * to a set of authorization strings, with request properties automatically inferred from the schema.
+ *
+ * @template SV - The type representing the schema validator.
+ * @template P - The type representing request parameters inferred from the schema.
+ * @template ReqBody - The type representing the request body inferred from the schema.
+ * @template ReqQuery - The type representing the request query parameters inferred from the schema.
+ * @template ReqHeaders - The type representing the request headers inferred from the schema.
+ *
+ * @param {ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>} req - The request object with schema validation.
+ * @returns {Set<string> | Promise<Set<string>>} - A set of authorization strings or a promise that resolves to it.
+ */
+export type ExpressLikeSchemaAuthMapper<
+  SV extends AnySchemaValidator,
+  P extends ParamsObject<SV>,
+  ReqBody extends Body<SV>,
+  ReqQuery extends QueryObject<SV>,
+  ReqHeaders extends HeadersObject<SV>
+> = ExpressLikeAuthMapper<
+  SV,
+  MapSchema<SV, P> extends infer Params
+    ? unknown extends Params
+      ? ParamsDictionary
+      : Params
+    : ParamsDictionary,
+  MapSchema<SV, ReqBody> extends infer Body
+    ? unknown extends Body
+      ? Record<string, unknown>
+      : Body
+    : Record<string, unknown>,
+  MapSchema<SV, ReqQuery> extends infer Query
+    ? unknown extends Query
+      ? ParsedQs
+      : Query
+    : ParsedQs,
+  MapSchema<SV, ReqHeaders> extends infer RequestHeaders
+    ? unknown extends RequestHeaders
+      ? Record<string, string>
+      : RequestHeaders
+    : Record<string, string>
+>;
+
+/**
  * Represents a live type function for the SDK.
  *
  * @template SV - A type that extends AnySchemaValidator.

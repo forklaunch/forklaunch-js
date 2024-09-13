@@ -4,6 +4,7 @@ import {
   Schema,
   UnboxedObjectSchema
 } from '@forklaunch/validator';
+import { ExpressLikeSchemaAuthMapper } from './apiDefinition.types';
 
 /**
  * Dictionary type for URL parameters.
@@ -86,9 +87,67 @@ export type Body<SV extends AnySchemaValidator> =
   | SV['_SchemaCatchall'];
 
 /**
- * Type representing the authentication method.
+ * Type representing the authentication methods.
  */
-export type AuthMethod = 'jwt' | 'session';
+export type AuthMethods<
+  SV extends AnySchemaValidator,
+  Path extends `/${string}`,
+  ParamsSchema extends ParamsObject<SV>,
+  ReqBody extends Body<SV>,
+  QuerySchema extends QueryObject<SV>,
+  ReqHeaders extends HeadersObject<SV>,
+  P extends ParamsObject<SV> =
+    | string
+    | number
+    | symbol extends ExtractedParamsObject<Path>
+    ? ParamsSchema
+    : { [K in keyof ExtractedParamsObject<Path>]: ParamsSchema[K] }
+> = (
+  | {
+      readonly method: 'jwt' | 'basic';
+    }
+  | {
+      readonly method: 'other';
+      readonly decode: (token: string) => {
+        permissions: Set<string>;
+        roles: Set<string>;
+      };
+    }
+) & {
+  readonly mapPermissions?: ExpressLikeSchemaAuthMapper<
+    SV,
+    P,
+    ReqBody,
+    QuerySchema,
+    ReqHeaders
+  >;
+  readonly mapRoles?: ExpressLikeSchemaAuthMapper<
+    SV,
+    P,
+    ReqBody,
+    QuerySchema,
+    ReqHeaders
+  >;
+} & (
+    | {
+        readonly allowedPermissions: Set<string>;
+        readonly forbiddenPermissions?: Set<string>;
+      }
+    | {
+        readonly allowedPermissions?: Set<string>;
+        readonly forbiddenPermissions: Set<string>;
+      }
+  ) &
+  (
+    | {
+        readonly allowedRoles: Set<string>;
+        readonly forbiddenRoles?: Set<string>;
+      }
+    | {
+        readonly allowedRoles?: Set<string>;
+        readonly forbiddenRoles: Set<string>;
+      }
+  );
 
 /**
  * Type representing a mapped schema.
@@ -172,13 +231,14 @@ export type PathParamHttpContractDetails<
   /** Optional query schemas for the contract */
   readonly query?: QuerySchema;
   /** Optional authentication details for the contract */
-  readonly auth?: {
-    readonly method: AuthMethod;
-    readonly allowedSlugs?: Set<string>;
-    readonly forbiddenSlugs?: Set<string>;
-    readonly allowedRoles?: Set<string>;
-    readonly forbiddenRoles?: Set<string>;
-  };
+  readonly auth?: AuthMethods<
+    SV,
+    Path,
+    ParamsSchema,
+    Body<SV>,
+    QuerySchema,
+    ReqHeaders
+  >;
 
   readonly options?: {
     readonly requestValidation: 'error' | 'warning' | 'none';
