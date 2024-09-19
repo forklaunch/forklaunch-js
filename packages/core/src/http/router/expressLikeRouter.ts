@@ -9,6 +9,7 @@ import {
   PathBasedHandler,
   PathOrMiddlewareBasedHandler
 } from '../interfaces/expressLikeRouter.interface';
+import { parseRequestAuth } from '../middleware/request/auth.middleware';
 import { cors } from '../middleware/request/cors.middleware';
 import { createContext } from '../middleware/request/createContext.middleware';
 import { enrichDetails } from '../middleware/request/enrichDetails.middleware';
@@ -77,7 +78,7 @@ export class ForklaunchExpressLikeRouter<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>
   >(
-    contractDetails: PathParamHttpContractDetails<SV> | HttpContractDetails<SV>,
+    contractDetails: HttpContractDetails<SV> | PathParamHttpContractDetails<SV>,
     requestSchema: unknown,
     responseSchemas: ResponseCompiledSchema
   ): ExpressLikeSchemaHandler<
@@ -101,7 +102,17 @@ export class ForklaunchExpressLikeRouter<
         ResHeaders,
         LocalsObj
       >(contractDetails, requestSchema, responseSchemas),
-      parse
+      parse,
+      parseRequestAuth<
+        SV,
+        P,
+        ResBodyMap,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders,
+        ResHeaders,
+        LocalsObj
+      >
     ];
   }
 
@@ -599,7 +610,7 @@ export class ForklaunchExpressLikeRouter<
             ReqQuery,
             ReqHeaders,
             ResHeaders
-          >(contractDetails) ||
+          >(contractDetails) &&
           !isPathParamHttpContractDetails<
             SV,
             Path,

@@ -24,6 +24,25 @@ export interface RequestContext {
   idempotencyKey?: string;
 }
 
+export interface ForklaunchBaseRequest<
+  P extends ParamsDictionary,
+  ReqBody extends Record<string, unknown>,
+  ReqQuery extends ParsedQs,
+  ReqHeaders extends Record<string, string>
+> {
+  /** Context of the request */
+  context: Prettify<RequestContext>;
+
+  /** Request parameters */
+  params: P;
+  /** Request headers */
+  headers: ReqHeaders;
+  /** Request body */
+  body: ReqBody;
+  /** Request query */
+  query: ReqQuery;
+}
+
 /**
  * Interface representing a Forklaunch request.
  *
@@ -39,22 +58,11 @@ export interface ForklaunchRequest<
   ReqBody extends Record<string, unknown>,
   ReqQuery extends ParsedQs,
   ReqHeaders extends Record<string, string>
-> {
-  /** Context of the request */
-  context: Prettify<RequestContext>;
+> extends ForklaunchBaseRequest<P, ReqBody, ReqQuery, ReqHeaders> {
   /** Contract details for the request */
-  contractDetails: HttpContractDetails<SV> | PathParamHttpContractDetails<SV>;
+  contractDetails: PathParamHttpContractDetails<SV> | HttpContractDetails<SV>;
   /** Schema validator */
   schemaValidator: SchemaValidator;
-
-  /** Request parameters */
-  params: P;
-  /** Request headers */
-  headers: ReqHeaders;
-  /** Request body */
-  body: ReqBody;
-  /** Request query */
-  query: ReqQuery;
 
   /** Method */
   method:
@@ -228,6 +236,66 @@ export interface ExpressLikeHandler<
   ): void | Promise<void>;
 }
 
+export type MapParamsSchema<
+  SV extends AnySchemaValidator,
+  P extends ParamsObject<SV>
+> =
+  MapSchema<SV, P> extends infer Params
+    ? unknown extends Params
+      ? ParamsDictionary
+      : Params
+    : ParamsDictionary;
+
+export type MapResBodyMapSchema<
+  SV extends AnySchemaValidator,
+  ResBodyMap extends ResponsesObject<SV>
+> =
+  MapSchema<SV, ResBodyMap> extends infer ResponseBodyMap
+    ? unknown extends ResponseBodyMap
+      ? ForklaunchResErrors
+      : ResponseBodyMap
+    : ForklaunchResErrors;
+
+export type MapReqBodySchema<
+  SV extends AnySchemaValidator,
+  ReqBody extends Body<SV>
+> =
+  MapSchema<SV, ReqBody> extends infer Body
+    ? unknown extends Body
+      ? Record<string, unknown>
+      : Body
+    : Record<string, unknown>;
+
+export type MapReqQuerySchema<
+  SV extends AnySchemaValidator,
+  ReqQuery extends QueryObject<SV>
+> =
+  MapSchema<SV, ReqQuery> extends infer Query
+    ? unknown extends Query
+      ? ParsedQs
+      : Query
+    : ParsedQs;
+
+export type MapReqHeadersSchema<
+  SV extends AnySchemaValidator,
+  ReqHeaders extends HeadersObject<SV>
+> =
+  MapSchema<SV, ReqHeaders> extends infer RequestHeaders
+    ? unknown extends RequestHeaders
+      ? Record<string, string>
+      : RequestHeaders
+    : Record<string, string>;
+
+export type MapResHeadersSchema<
+  SV extends AnySchemaValidator,
+  ResHeaders extends HeadersObject<SV>
+> =
+  MapSchema<SV, ResHeaders> extends infer ResponseHeaders
+    ? unknown extends ResponseHeaders
+      ? ForklaunchResHeaders
+      : ResponseHeaders
+    : ForklaunchResHeaders;
+
 /**
  * Represents a schema middleware handler with typed parameters, responses, body, and query.
  *
@@ -249,60 +317,14 @@ export type ExpressLikeSchemaHandler<
   LocalsObj extends Record<string, unknown>
 > = ExpressLikeHandler<
   SV,
-  MapSchema<SV, P> extends infer Params
-    ? unknown extends Params
-      ? ParamsDictionary
-      : Params
-    : ParamsDictionary,
-  MapSchema<SV, ResBodyMap> extends infer ResponseBodyMap
-    ? unknown extends ResponseBodyMap
-      ? ForklaunchResErrors
-      : ResponseBodyMap
-    : ForklaunchResErrors,
-  MapSchema<SV, ReqBody> extends infer Body
-    ? unknown extends Body
-      ? Record<string, unknown>
-      : Body
-    : Record<string, unknown>,
-  MapSchema<SV, ReqQuery> extends infer Query
-    ? unknown extends Query
-      ? ParsedQs
-      : Query
-    : ParsedQs,
-  MapSchema<SV, ReqHeaders> extends infer RequestHeaders
-    ? unknown extends RequestHeaders
-      ? Record<string, string>
-      : RequestHeaders
-    : Record<string, string>,
-  MapSchema<SV, ResHeaders> extends infer ResponseHeaders
-    ? unknown extends ResponseHeaders
-      ? ForklaunchResHeaders
-      : ResponseHeaders
-    : ForklaunchResHeaders,
+  MapParamsSchema<SV, P>,
+  MapResBodyMapSchema<SV, ResBodyMap>,
+  MapReqBodySchema<SV, ReqBody>,
+  MapReqQuerySchema<SV, ReqQuery>,
+  MapReqHeadersSchema<SV, ReqHeaders>,
+  MapResHeadersSchema<SV, ResHeaders>,
   LocalsObj
 >;
-
-/**
- * Represents a function that maps an authenticated request to a set of authorization strings.
- *
- * @template SV - The type representing the schema validator.
- * @template P - The type representing request parameters.
- * @template ReqBody - The type representing the request body.
- * @template ReqQuery - The type representing the request query parameters.
- * @template ReqHeaders - The type representing the request headers.
- *
- * @param {ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>} req - The request object with schema validation.
- * @returns {Set<string> | Promise<Set<string>>} - A set of authorization strings or a promise that resolves to it.
- */
-export type ExpressLikeAuthMapper<
-  SV extends AnySchemaValidator,
-  P extends ParamsDictionary,
-  ReqBody extends Record<string, unknown>,
-  ReqQuery extends ParsedQs,
-  ReqHeaders extends Record<string, string>
-> = (
-  req: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>
-) => Set<string> | Promise<Set<string>>;
 
 /**
  * Represents a function that maps an authenticated request with schema validation
@@ -325,27 +347,22 @@ export type ExpressLikeSchemaAuthMapper<
   ReqHeaders extends HeadersObject<SV>
 > = ExpressLikeAuthMapper<
   SV,
-  MapSchema<SV, P> extends infer Params
-    ? unknown extends Params
-      ? ParamsDictionary
-      : Params
-    : ParamsDictionary,
-  MapSchema<SV, ReqBody> extends infer Body
-    ? unknown extends Body
-      ? Record<string, unknown>
-      : Body
-    : Record<string, unknown>,
-  MapSchema<SV, ReqQuery> extends infer Query
-    ? unknown extends Query
-      ? ParsedQs
-      : Query
-    : ParsedQs,
-  MapSchema<SV, ReqHeaders> extends infer RequestHeaders
-    ? unknown extends RequestHeaders
-      ? Record<string, string>
-      : RequestHeaders
-    : Record<string, string>
+  MapParamsSchema<SV, P>,
+  MapReqBodySchema<SV, ReqBody>,
+  MapReqQuerySchema<SV, ReqQuery>,
+  MapReqHeadersSchema<SV, ReqHeaders>
 >;
+
+export type ExpressLikeAuthMapper<
+  SV extends AnySchemaValidator,
+  P extends ParamsDictionary,
+  ReqBody extends Record<string, unknown>,
+  ReqQuery extends ParsedQs,
+  ReqHeaders extends Record<string, string>
+> = (
+  sub: string,
+  req?: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>
+) => Set<string> | Promise<Set<string>>;
 
 /**
  * Represents a live type function for the SDK.

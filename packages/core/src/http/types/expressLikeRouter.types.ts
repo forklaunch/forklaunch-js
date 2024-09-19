@@ -1,5 +1,5 @@
 import { AnySchemaValidator } from '@forklaunch/validator';
-import { TypedHandler } from '../handlers/typedHandler';
+
 import {
   ExpressLikeSchemaHandler,
   LiveTypeFunction
@@ -13,6 +13,7 @@ import {
   QueryObject,
   ResponsesObject
 } from './contractDetails.types';
+import { TypedHandler } from './typedHandler.types';
 
 export interface LiveTypeRouteDefinition<
   SV extends AnySchemaValidator,
