@@ -1,4 +1,5 @@
 import { RequestType, ResponseType } from './types/sdkTypes';
+import { getSdkPath } from './utils/resolvePath';
 
 /**
  * A class representing the Forklaunch SDK.
@@ -25,7 +26,7 @@ export class UniversalSdk {
     request?: RequestType
   ): Promise<ResponseType> {
     const { params, body, query, headers } = request || {};
-    let url = this.host + route;
+    let url = getSdkPath(this.host + route);
 
     if (params) {
       for (const key in params) {
