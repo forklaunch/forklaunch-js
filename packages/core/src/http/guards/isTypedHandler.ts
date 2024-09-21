@@ -1,5 +1,5 @@
 import { AnySchemaValidator } from '@forklaunch/validator';
-import { TypedHandler } from '../handlers/typedHandler';
+
 import {
   Body,
   HeadersObject,
@@ -8,6 +8,7 @@ import {
   QueryObject,
   ResponsesObject
 } from '../types/contractDetails.types';
+import { TypedHandler } from '../types/typedHandler.types';
 
 export function isTypedHandler<
   SV extends AnySchemaValidator,

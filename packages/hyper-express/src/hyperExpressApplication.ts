@@ -1,7 +1,8 @@
 import {
   ForklaunchExpressLikeApplication,
   ForklaunchRouter,
-  generateSwaggerDocument
+  generateSwaggerDocument,
+  isForklaunchRouter
 } from '@forklaunch/core/http';
 import { MiddlewareHandler, Server } from '@forklaunch/hyper-express-fork';
 import { AnySchemaValidator } from '@forklaunch/validator';
@@ -37,26 +38,34 @@ export class Application<
     router: ForklaunchRouter<SV> | MiddlewareHandler | MiddlewareHandler[],
     ...args: (ForklaunchRouter<SV> | MiddlewareHandler | MiddlewareHandler[])[]
   ): this {
-    if (router instanceof Router) {
-      this.routers.push(router as unknown as Router<SV, `/${string}`>);
-      this.internal.use(router.basePath, router.internal);
+    // if (router instanceof Router) {
+    if (isForklaunchRouter<SV>(router)) {
+      const hyperExpressRouter = router as unknown as Router<SV, `/${string}`>;
+      this.routers.push(hyperExpressRouter);
+      this.internal.use(
+        hyperExpressRouter.basePath,
+        hyperExpressRouter.internal
+      );
       return this;
     } else {
-      const router = args.pop();
-      if (!(router instanceof Router)) {
+      const hyperExpressRouter = args.pop() as unknown as Router<
+        SV,
+        `/${string}`
+      >;
+      if (!isForklaunchRouter<SV>(router)) {
         throw new Error('Last argument must be a router');
       }
 
       args.forEach((arg) => {
-        if (arg instanceof Router) {
+        if (isForklaunchRouter<SV>(router)) {
           throw new Error('Only one router is allowed');
         }
       });
 
       this.internal.use(
-        router.basePath as string,
+        hyperExpressRouter.basePath,
         ...(args as unknown as (MiddlewareHandler | MiddlewareHandler[])[]),
-        router.internal
+        hyperExpressRouter.internal
       );
       return this;
     }
@@ -107,7 +116,7 @@ export class Application<
         `${swaggerPath}/*`,
         swagger(
           swaggerPath,
-          generateSwaggerDocument(this.schemaValidator, port, this.routers)
+          generateSwaggerDocument<SV>(this.schemaValidator, port, this.routers)
         )
       );
 

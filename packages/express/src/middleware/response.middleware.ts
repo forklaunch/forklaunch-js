@@ -59,7 +59,16 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
       res.bodyData = data;
     }
 
-    return enrichExpressLikeSend(this, req, res, originalSend, data, !res.cors);
+    return enrichExpressLikeSend<
+      SV,
+      ParamsDictionary,
+      Record<number, unknown>,
+      Record<string, unknown>,
+      ParsedQs,
+      Record<string, string>,
+      Record<string, string>,
+      Record<string, unknown>
+    >(this, req, res, originalSend, data, !res.cors);
   };
 
   /**

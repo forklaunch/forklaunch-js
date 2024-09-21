@@ -1,9 +1,15 @@
+import { Prettify } from '@forklaunch/common';
 import {
   AnySchemaValidator,
   IdiomaticSchema,
   Schema,
   UnboxedObjectSchema
 } from '@forklaunch/validator';
+import { ParsedQs } from 'qs';
+import {
+  ExpressLikeAuthMapper,
+  ExpressLikeSchemaAuthMapper
+} from './apiDefinition.types';
 
 /**
  * Dictionary type for URL parameters.
@@ -85,14 +91,104 @@ export type Body<SV extends AnySchemaValidator> =
   | SV['_ValidSchemaObject']
   | SV['_SchemaCatchall'];
 
+export type AuthMethodsBase = (
+  | {
+      readonly method: 'jwt';
+    }
+  | {
+      readonly method: 'basic';
+      readonly login: (username: string, password: string) => boolean;
+    }
+  | {
+      readonly method: 'other';
+      readonly tokenPrefix: string;
+      readonly headerName?: string;
+      readonly decodeResource: (token: string) => string;
+    }
+) &
+  (
+    | {
+        readonly allowedPermissions: Set<string>;
+        readonly forbiddenPermissions?: Set<string>;
+        readonly allowedRoles?: Set<string>;
+        readonly forbiddenRoles?: Set<string>;
+      }
+    | {
+        readonly allowedPermissions?: Set<string>;
+        readonly forbiddenPermissions: Set<string>;
+        readonly allowedRoles?: Set<string>;
+        readonly forbiddenRoles?: Set<string>;
+      }
+    | {
+        readonly allowedPermissions?: Set<string>;
+        readonly forbiddenPermissions?: Set<string>;
+        readonly allowedRoles: Set<string>;
+        readonly forbiddenRoles?: Set<string>;
+      }
+    | {
+        readonly allowedPermissions?: Set<string>;
+        readonly forbiddenPermissions?: Set<string>;
+        readonly allowedRoles?: Set<string>;
+        readonly forbiddenRoles: Set<string>;
+      }
+  );
+
 /**
- * Type representing the authentication method.
+ * Type representing the authentication methods.
  */
-export type AuthMethod = 'jwt' | 'session';
+export type SchemaAuthMethods<
+  SV extends AnySchemaValidator,
+  ParamsSchema extends ParamsObject<SV>,
+  ReqBody extends Body<SV>,
+  QuerySchema extends QueryObject<SV>,
+  ReqHeaders extends HeadersObject<SV>
+> = Prettify<
+  AuthMethodsBase & {
+    readonly mapPermissions?: ExpressLikeSchemaAuthMapper<
+      SV,
+      ParamsSchema,
+      ReqBody,
+      QuerySchema,
+      ReqHeaders
+    >;
+    readonly mapRoles?: ExpressLikeSchemaAuthMapper<
+      SV,
+      ParamsSchema,
+      ReqBody,
+      QuerySchema,
+      ReqHeaders
+    >;
+  }
+>;
+
+export type AuthMethods<
+  SV extends AnySchemaValidator,
+  P extends ParamsDictionary,
+  ReqBody extends Record<string, unknown>,
+  ReqQuery extends ParsedQs,
+  ReqHeaders extends Record<string, string>
+> = AuthMethodsBase & {
+  readonly mapPermissions?: ExpressLikeAuthMapper<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders
+  >;
+  readonly mapRoles?: ExpressLikeAuthMapper<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders
+  >;
+};
 
 /**
  * Type representing a mapped schema.
- *
+ *s ParamsDictionary,
+//   ReqBody extends Record<string, unknown>,
+// 
  * @template SV - A type that extends AnySchemaValidator.
  * @template T - A type that extends IdiomaticSchema or a valid schema object.
  */
@@ -172,13 +268,17 @@ export type PathParamHttpContractDetails<
   /** Optional query schemas for the contract */
   readonly query?: QuerySchema;
   /** Optional authentication details for the contract */
-  readonly auth?: {
-    readonly method: AuthMethod;
-    readonly allowedSlugs?: Set<string>;
-    readonly forbiddenSlugs?: Set<string>;
-    readonly allowedRoles?: Set<string>;
-    readonly forbiddenRoles?: Set<string>;
-  };
+  readonly auth?: SchemaAuthMethods<
+    SV,
+    string | number | symbol extends ExtractedParamsObject<Path>
+      ? {
+          [K in keyof ExtractedParamsObject<Path>]: ParamsSchema[K];
+        }
+      : ParamsSchema,
+    never,
+    QuerySchema,
+    ReqHeaders
+  > & {};
 
   readonly options?: {
     readonly requestValidation: 'error' | 'warning' | 'none';
@@ -231,6 +331,17 @@ export type HttpContractDetails<
     | 'application/json'
     | 'multipart/form-data'
     | 'application/x-www-form-urlencoded';
+  readonly auth?: SchemaAuthMethods<
+    SV,
+    string | number | symbol extends ExtractedParamsObject<Path>
+      ? {
+          [K in keyof ExtractedParamsObject<Path>]: ParamsSchema[K];
+        }
+      : ParamsSchema,
+    BodySchema,
+    QuerySchema,
+    ReqHeaders
+  > & {};
 };
 
 /**
@@ -308,6 +419,7 @@ export type ContractDetails<
           Path,
           ParamsSchema,
           ResponseSchemas,
+          BodySchema,
           QuerySchema,
           ReqHeaders,
           ResHeaders

@@ -9,6 +9,30 @@ import {
   ForklaunchExpressLikeRouter,
   typedHandler
 } from '../src/http';
+import { typedAuthHandler } from '../src/http/handlers/typedAuthHandler';
+
+const contractDetails = {
+  name: 'string',
+  summary: 'string',
+  params: {
+    name: string,
+    id: number
+    // a: string
+  },
+  requestHeaders: {
+    'x-test': number
+  },
+  responses: {
+    200: date,
+    400: string
+  }
+};
+
+const kl = typedAuthHandler(SchemaValidator(), contractDetails, (sub, req) => {
+  const j = req?.params.id;
+  const x = req?.headers['x-test'];
+  return new Set(['admin', 'user']);
+});
 
 const xasd = typedHandler(
   SchemaValidator(),
@@ -27,6 +51,15 @@ const xasd = typedHandler(
     responses: {
       200: date,
       400: string
+    },
+    auth: {
+      method: 'jwt',
+      mapPermissions: kl,
+      // (sub, req) => {
+      //   const j = req?.params.id;
+      //   return new Set(['admin', 'user']);
+      // },
+      allowedPermissions: new Set(['admin', 'user'])
     }
   },
   async (req, res) => {
@@ -47,22 +80,41 @@ const xa = new ForklaunchExpressLikeRouter(
   SchemaValidator(),
   {} as ExpressLikeRouter<unknown, unknown>
 );
-const contractDetails = {
-  name: 'string',
-  summary: 'string',
-  params: {
-    name: string,
-    id: number
-    // a: string
+
+const bl = xa.trace(
+  '/test/:name/:id',
+  {
+    name: 'string',
+    summary: 'string',
+    params: {
+      name: string,
+      id: number
+      // a: string
+    },
+    requestHeaders: {
+      'x-test': number
+    },
+    responses: {
+      200: date,
+      400: string
+    },
+    auth: {
+      method: 'jwt',
+      // mapPermissions: (sub, req) => {
+      //   const j = req?.params.id;
+      //   return new Set(['admin', 'user']);
+      // },
+      mapPermissions: kl,
+      mapRoles: kl,
+      allowedPermissions: new Set(['admin', 'user'])
+    }
   },
-  requestHeaders: {
-    'x-test': number
-  },
-  responses: {
-    200: date,
-    400: string
+  async (req, res) => {
+    const i = req.headers['x-test'] * 7;
+    const l = res.getHeaders()['x-correlation-id'];
+    res.status(200).send(new Date());
   }
-};
+);
 
 const a = xa.trace(
   '/test/:name/:id',

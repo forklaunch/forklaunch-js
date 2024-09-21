@@ -204,7 +204,7 @@ export function generateSwaggerDocument<SV extends AnySchemaValidator>(
           pathItemObject.security = [
             {
               bearer: Array.from(
-                route.contractDetails.auth.allowedSlugs?.values() || []
+                route.contractDetails.auth.allowedPermissions?.values() || []
               )
             }
           ];
