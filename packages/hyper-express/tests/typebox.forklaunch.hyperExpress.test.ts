@@ -1,19 +1,15 @@
 import { SchemaValidator, string } from '@forklaunch/validator/typebox';
-import { App, forklaunchExpress, forklaunchRouter } from '../index';
+import { forklaunchExpress, forklaunchRouter } from '../index';
 
 const typeboxSchemaValidator = SchemaValidator();
+const forklaunchApplication = forklaunchExpress(typeboxSchemaValidator);
+const forklaunchRouterInstance = forklaunchRouter(
+  '/testpath',
+  typeboxSchemaValidator
+);
 
 describe('Forklaunch Hyper-Express Tests', () => {
-  let forklaunchApplication: App<typeof typeboxSchemaValidator>;
-  let forklaunchRouterInstance;
-
   beforeAll(async () => {
-    forklaunchApplication = forklaunchExpress(typeboxSchemaValidator);
-    forklaunchRouterInstance = forklaunchRouter(
-      '/testpath',
-      typeboxSchemaValidator
-    );
-
     forklaunchRouterInstance.get(
       '/test',
       {

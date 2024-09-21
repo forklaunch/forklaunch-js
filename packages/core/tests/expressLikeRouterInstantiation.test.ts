@@ -9,12 +9,31 @@ import {
   ForklaunchExpressLikeRouter,
   typedHandler
 } from '../src/http';
+import { typedAuthHandler } from '../src/http/handlers/typedAuthHandler';
 
-const kl = (sub: any, req: any) => {
+const contractDetails = {
+  name: 'string',
+  summary: 'string',
+  params: {
+    name: string,
+    id: number
+    // a: string
+  },
+  requestHeaders: {
+    'x-test': number
+  },
+  responses: {
+    200: date,
+    400: string
+  }
+};
+
+const kl = typedAuthHandler(SchemaValidator(), contractDetails, (sub, req) => {
   const j = req?.params.id;
   const x = req?.headers['x-test'];
   return new Set(['admin', 'user']);
-};
+});
+
 const xasd = typedHandler(
   SchemaValidator(),
   '/test/:name/:id',
@@ -36,6 +55,10 @@ const xasd = typedHandler(
     auth: {
       method: 'jwt',
       mapPermissions: kl,
+      // (sub, req) => {
+      //   const j = req?.params.id;
+      //   return new Set(['admin', 'user']);
+      // },
       allowedPermissions: new Set(['admin', 'user'])
     }
   },
@@ -57,22 +80,6 @@ const xa = new ForklaunchExpressLikeRouter(
   SchemaValidator(),
   {} as ExpressLikeRouter<unknown, unknown>
 );
-const contractDetails = {
-  name: 'string',
-  summary: 'string',
-  params: {
-    name: string,
-    id: number
-    // a: string
-  },
-  requestHeaders: {
-    'x-test': number
-  },
-  responses: {
-    200: date,
-    400: string
-  }
-};
 
 const bl = xa.trace(
   '/test/:name/:id',
@@ -93,10 +100,12 @@ const bl = xa.trace(
     },
     auth: {
       method: 'jwt',
-      mapPermissions: (sub, req) => {
-        const j = req?.params.id;
-        return new Set(['admin', 'user']);
-      },
+      // mapPermissions: (sub, req) => {
+      //   const j = req?.params.id;
+      //   return new Set(['admin', 'user']);
+      // },
+      mapPermissions: kl,
+      mapRoles: kl,
       allowedPermissions: new Set(['admin', 'user'])
     }
   },
