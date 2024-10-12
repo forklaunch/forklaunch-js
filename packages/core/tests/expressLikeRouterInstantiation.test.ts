@@ -11,6 +11,8 @@ import {
 } from '../src/http';
 import { typedAuthHandler } from '../src/http/handlers/typedAuthHandler';
 
+// TODO: write tests
+
 const contractDetails = {
   name: 'string',
   summary: 'string',
@@ -78,6 +80,7 @@ const xasd = typedHandler(
 const xa = new ForklaunchExpressLikeRouter(
   '/l',
   SchemaValidator(),
+  // TODO: implement this
   {} as ExpressLikeRouter<unknown, unknown>
 );
 

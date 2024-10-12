@@ -5,7 +5,7 @@ import { EntityManager } from '@mikro-orm/core';
  *
  * @interface BaseService
  */
-export default interface BaseService {
+export interface BaseService {
   /**
    * The EntityManager instance for managing entities.
    *

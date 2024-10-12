@@ -1,6 +1,4 @@
 packages:
-  - 'billing'
-  - 'iam'
   - 'packages/common'
   - 'packages/core'
   - 'packages/express'

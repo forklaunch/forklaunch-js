@@ -1,0 +1,42 @@
+{
+  "name": "@forklaunch/iam",
+  "version": "0.1.0",
+  "description": "IAM basic implementation for Forklaunch",
+  "main": "app.ts",
+  "scripts": {
+    "test": "vitest --passWithNoTests",
+    "build": "tsc",
+    "clean": "rm -rf lib pnpm.lock.yaml node_modules",
+    "docs": "typedoc --out docs *",
+    "lint": "eslint . -c eslint.config.mjs",
+    "lint:fix": "eslint . -c eslint.config.mjs --fix",
+    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.ts' --write"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/forklaunch/forklaunch-js.git"
+  },
+  "author": "Rohin Bhargava",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/forklaunch/forklaunch-js/issues"
+  },
+  "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
+  "dependencies": {
+    "@forklaunch/common": "^0.1.7",
+    "@forklaunch/core": "^0.2.11",
+    "@forklaunch/express": "^0.1.5",
+    "@forklaunch/hyper-express": "^0.1.6",
+    "@forklaunch/validator": "^0.3.5",
+    "@mikro-orm/core": "^6.3.13",
+    "@mikro-orm/migrations": "^6.3.13",
+    "@mikro-orm/mongodb": "^6.3.13",
+    "@mikro-orm/mysql": "^6.3.13",
+    "@mikro-orm/postgresql": "^6.3.13",
+    "@mikro-orm/reflection": "^6.3.13",
+    "@mikro-orm/sqlite": "^6.3.13",
+    "@sinclair/typebox": "^0.33.14",
+    "core": "workspace:*",
+    "zod": "^3.23.8"
+  }
+}

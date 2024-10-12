@@ -1,7 +1,8 @@
 {
 	"extends": "../tsconfig.base.json",
     "compilerOptions": {
-        "outDir": "dist"
+        "outDir": "dist",
+        "experimentalDecorators": true
     },
     "exclude": [
         "node_modules",

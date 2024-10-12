@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/common",
-  "version": "0.1.3",
+  "version": "0.1.7",
   "description": "Common package for base types, interfaces, implementations.",
   "files": [
     "lib/**"
@@ -48,6 +48,5 @@
     "typescript-eslint": "^8.2.0",
     "uc.micro": "^2.1.0",
     "yaml": "^2.5.0"
-  },
-  "type": "module"
+  }
 }

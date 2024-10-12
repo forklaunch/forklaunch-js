@@ -1,0 +1,30 @@
+{
+  "name": "core",
+  "version": "1.0.0",
+  "description": "The common core lib for all monorepo services",
+  "files": [
+    "lib"
+  ],
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "test": "vitest --passWithNoTests",
+    "build": "tsc",
+    "clean": "rm -rf lib pnpm.lock.yaml node_modules",
+    "docs": "typedoc --out docs *",
+    "lint": "eslint . -c eslint.config.mjs",
+    "lint:fix": "eslint . -c eslint.config.mjs --fix",
+    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.ts' --write"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@forklaunch/common": "^0.1.7",
+    "@forklaunch/core": "^0.2.11",
+    "@forklaunch/express": "^0.1.5",
+    "@forklaunch/hyper-express": "^0.1.6",
+    "@forklaunch/validator": "^0.3.5",
+    "@sinclair/typebox": "^0.33.14",
+    "zod": "^3.23.8"
+  }
+}
