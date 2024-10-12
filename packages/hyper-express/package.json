@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/hyper-express",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Forklaunch framework for hyper-express.",
   "files": [
     "lib/**"
@@ -28,9 +28,9 @@
   "dependencies": {
     "@forklaunch/common": "workspace:*",
     "@forklaunch/core": "workspace:*",
-    "@forklaunch/hyper-express-fork": "workspace:*",
     "@forklaunch/validator": "workspace:*",
     "cors": "^2.8.5",
+    "hyper-express": "6.17.2",
     "live-directory": "^3.0.3",
     "openapi3-ts": "^4.3.3",
     "qs": "^6.13.0",
