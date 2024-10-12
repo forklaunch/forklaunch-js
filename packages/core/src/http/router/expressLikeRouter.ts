@@ -219,7 +219,9 @@ export class ForklaunchExpressLikeRouter<
     const controllerHandler = handlers.pop();
 
     if (typeof controllerHandler !== 'function') {
-      throw new Error('Last argument must be a handler');
+      throw new Error(
+        `Last argument must be a handler, received: ${controllerHandler}`
+      );
     }
 
     return controllerHandler;

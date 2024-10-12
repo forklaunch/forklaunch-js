@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.2.13
+
+### Patch Changes
+
+- Improve controller handler error message
+
 ## 0.2.12
 
 ### Patch Changes
