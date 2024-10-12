@@ -36,14 +36,14 @@ importers:
         specifier: ^0.1.8
         version: 0.1.8
       '@forklaunch/core':
-        specifier: ^0.2.12
-        version: 0.2.12
+        specifier: ^0.2.13
+        version: 0.2.13
       '@forklaunch/express':
-        specifier: ^0.1.6
-        version: 0.1.6(openapi3-ts@4.4.0)
-      '@forklaunch/hyper-express':
         specifier: ^0.1.7
-        version: 0.1.7(express@4.21.1)
+        version: 0.1.7(openapi3-ts@4.4.0)
+      '@forklaunch/hyper-express':
+        specifier: ^0.1.8
+        version: 0.1.8(express@4.21.1)
       '@forklaunch/validator':
         specifier: ^0.3.6
         version: 0.3.6(openapi3-ts@4.4.0)
@@ -571,11 +571,20 @@ packages:
   '@forklaunch/core@0.2.12':
     resolution: {integrity: sha512-5gbyl+66OYekVuXBj8YFGOyXNDm+MA8DzDwmJ3VGFb3t1GefK5s82TyqDtkdmcc8OfEB2YWMy7EMknkcgt5PHw==}
 
+  '@forklaunch/core@0.2.13':
+    resolution: {integrity: sha512-Dn3vhnWRyhQxLn/P0PsssgMrjk0QKodrM2lPd/+1uRZtP8KL2KVY00vniF9JCh3ykgniwy2ncVydHBPioEycsA==}
+
   '@forklaunch/express@0.1.6':
     resolution: {integrity: sha512-hCaRDGZx0B8DZbYYS2vG2b5qGnLjv7+KlqGTAMgD5vA9LIgjkK31+9jTcJtSnBZnO83qauDL+wRHh3hfjYMjLg==}
 
+  '@forklaunch/express@0.1.7':
+    resolution: {integrity: sha512-JtRODnz7rwaFli3bjEPr6eFMm5dO+4PPAR+gvi5wu/mhfwjC8mZiEunNa/veV61Er9DkKCzH+klpC3K9H5Whcg==}
+
   '@forklaunch/hyper-express@0.1.7':
     resolution: {integrity: sha512-J0l60wfNmxf1sVv2Aj9XRIf74wJSYeC2Z4FysjSSBL6Y5fSVcUAdn2zqEz++nM4l7ayA0aFKOsxv3XPkFdzTzw==}
+
+  '@forklaunch/hyper-express@0.1.8':
+    resolution: {integrity: sha512-9A4slbtUo4mqjoPxMpWciRu4H3ihAmw20kLVSFJoFNFDIWJopnzsNhNbB+YrK+kIbaQRHemC9BMSXOZMPoyBXA==}
 
   '@forklaunch/validator@0.3.6':
     resolution: {integrity: sha512-Om1KKXNoshTQmqrmfcroYHYGEaoOq1YlhMonA/9NZ1X3Iw8cIewixnbM6d1NOWrjgZvTUqtX6iypnHr75nSrHw==}
@@ -3525,6 +3534,17 @@ snapshots:
       redis: 4.7.0
       uuid: 10.0.0
 
+  '@forklaunch/core@0.2.13':
+    dependencies:
+      '@forklaunch/common': 0.1.8
+      '@forklaunch/validator': 0.3.6(openapi3-ts@4.4.0)
+      '@mikro-orm/core': 6.3.13
+      cors: 2.8.5
+      jose: 5.9.4
+      openapi3-ts: 4.4.0
+      redis: 4.7.0
+      uuid: 10.0.0
+
   '@forklaunch/express@0.1.6(openapi3-ts@4.4.0)':
     dependencies:
       '@forklaunch/common': 0.1.8
@@ -3539,10 +3559,40 @@ snapshots:
       - openapi3-ts
       - supports-color
 
+  '@forklaunch/express@0.1.7(openapi3-ts@4.4.0)':
+    dependencies:
+      '@forklaunch/common': 0.1.8
+      '@forklaunch/core': 0.2.13
+      '@forklaunch/validator': 0.3.6(openapi3-ts@4.4.0)
+      '@types/express': 4.17.21
+      cors: 2.8.5
+      express: 4.21.1
+      qs: 6.13.0
+      swagger-ui-express: 5.0.1(express@4.21.1)
+    transitivePeerDependencies:
+      - openapi3-ts
+      - supports-color
+
   '@forklaunch/hyper-express@0.1.7(express@4.21.1)':
     dependencies:
       '@forklaunch/common': 0.1.8
       '@forklaunch/core': 0.2.12
+      '@forklaunch/validator': 0.3.6(openapi3-ts@4.4.0)
+      cors: 2.8.5
+      hyper-express: 6.17.2
+      live-directory: 3.0.3
+      openapi3-ts: 4.4.0
+      qs: 6.13.0
+      swagger-ui-dist: 5.17.14
+      swagger-ui-express: 5.0.1(express@4.21.1)
+      uWebSockets.js: https://codeload.github.com/uNetworking/uWebSockets.js/tar.gz/8fa05571bf6ea95be8966ad313d9d39453e381ae
+    transitivePeerDependencies:
+      - express
+
+  '@forklaunch/hyper-express@0.1.8(express@4.21.1)':
+    dependencies:
+      '@forklaunch/common': 0.1.8
+      '@forklaunch/core': 0.2.13
       '@forklaunch/validator': 0.3.6(openapi3-ts@4.4.0)
       cors: 2.8.5
       hyper-express: 6.17.2

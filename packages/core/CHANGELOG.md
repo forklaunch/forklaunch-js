@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.2.14
+
+### Patch Changes
+
+- Improve error messages
+
 ## 0.2.13
 
 ### Patch Changes
