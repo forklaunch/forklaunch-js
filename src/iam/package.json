@@ -38,5 +38,14 @@
     "@sinclair/typebox": "^0.33.16",
     "core": "workspace:*",
     "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@mikro-orm/cli": "^6.3.13"
+  },
+  "mikro-orm": {
+    "configPaths": [
+      "./mikro-orm.config.ts",
+      "./dist/mikro-orm.config.js"
+    ]
   }
 }

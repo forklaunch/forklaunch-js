@@ -49,8 +49,9 @@ import {
 
 export const SchemaValidator = RegisteredSchemaValidator;
 export type SchemaValidator = ReturnType<typeof RegisteredSchemaValidator>;
-export const forklaunchRouter = (basePath: `/${string}`) =>
-  registeredForklaunchRouter(basePath, SchemaValidator());
+export const forklaunchRouter = <BasePath extends `/${string}`>(
+  basePath: BasePath
+) => registeredForklaunchRouter(basePath, SchemaValidator());
 export const forklaunchExpress = () =>
   registeredForklaunchExpress(SchemaValidator());
 

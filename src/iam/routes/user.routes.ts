@@ -1,5 +1,7 @@
 import { array, forklaunchRouter, SchemaValidator, string } from 'core';
-import { ci } from '../app';
+import { OrganizationService } from '../interfaces/organizationService.interface';
+import { RoleService } from '../interfaces/roleService.interface';
+import { UserService } from '../interfaces/userService.interface';
 import {
   CreateUserDtoMapper,
   UpdateUserDtoMapper,
@@ -9,11 +11,14 @@ import { Organization } from '../models/persistence/organization.entity';
 import { Role } from '../models/persistence/role.entity';
 
 export const router = forklaunchRouter('/user');
-const service = () => ci.resolve('userService');
-const organizationService = () => ci.resolve('organizationService');
-const roleService = () => ci.resolve('roleService');
 
-export const userRoutes = {
+export const UserRoutes = (
+  service: () => UserService,
+  organizationService: () => OrganizationService,
+  roleService: () => RoleService
+) => ({
+  router,
+
   // Create user
   createUser: router.post(
     '/',
@@ -311,4 +316,4 @@ export const userRoutes = {
       res.status(200).send('User has the specified permission');
     }
   )
-};
+});

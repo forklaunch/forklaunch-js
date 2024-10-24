@@ -489,7 +489,10 @@ export class ForklaunchExpressLikeRouter<
     }
     // in this case, we test for the last element of the handlers. If typed handler, break this down
     else {
-      const maybeTypedHandler = middlewareOrMiddlewareAndTypedHandler.pop();
+      const maybeTypedHandler =
+        middlewareOrMiddlewareAndTypedHandler[
+          middlewareOrMiddlewareAndTypedHandler.length - 1
+        ];
       if (
         isTypedHandler<
           SV,

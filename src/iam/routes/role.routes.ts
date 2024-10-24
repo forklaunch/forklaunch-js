@@ -1,5 +1,5 @@
 import { array, forklaunchRouter, SchemaValidator, string } from 'core';
-import { ci } from '../app';
+import { RoleService } from '../interfaces/roleService.interface';
 import {
   CreateRoleDtoMapper,
   RoleDtoMapper,
@@ -7,9 +7,10 @@ import {
 } from '../models/dtoMapper/role.dtoMapper';
 
 export const router = forklaunchRouter('/role');
-const service = () => ci.resolve('roleService');
 
-export const roleRoutes = {
+export const RoleRoutes = (service: () => RoleService) => ({
+  router,
+
   // Create role
   createRole: router.post(
     '/',
@@ -200,4 +201,4 @@ export const roleRoutes = {
       res.status(200).send('Batch roles deleted successfully');
     }
   )
-};
+});

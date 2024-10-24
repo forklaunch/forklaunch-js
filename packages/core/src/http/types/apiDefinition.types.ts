@@ -1,4 +1,4 @@
-import { Prettify } from '@forklaunch/common';
+import { Flatten, Prettify } from '@forklaunch/common';
 import { AnySchemaValidator, SchemaValidator } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
 import {
@@ -477,4 +477,15 @@ export type ResponseShape<Params, Headers, Query, Body> = {
   headers: Headers;
   query: Query;
   body: Body;
+};
+
+/**
+ * Acts as a container to collect API routes for export to SDK consumers.
+ */
+export type ApiClient<Routes extends Record<string, unknown>> = {
+  [Key in keyof Routes]: Routes[Key] extends (
+    ...args: never[]
+  ) => infer ReturnType
+    ? Flatten<Omit<ReturnType, 'router'>>
+    : never;
 };

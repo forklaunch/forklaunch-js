@@ -1,6 +1,6 @@
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { forklaunchRouter, SchemaValidator, string } from 'core';
-import { ci } from '../app';
+import { OrganizationService } from '../interfaces/organizationService.interface';
 import {
   CreateOrganizationDtoMapper,
   OrganizationDtoMapper,
@@ -8,9 +8,10 @@ import {
 } from '../models/dtoMapper/organization.dtoMapper';
 
 export const router = forklaunchRouter('/organization');
-const service = () => ci.resolve('organizationService');
 
-export const organizationRoutes = {
+export const OrganizationRoutes = (service: () => OrganizationService) => ({
+  router,
+
   // Create organization
   createOrganization: router.post(
     '/',
@@ -113,4 +114,4 @@ export const organizationRoutes = {
       res.status(200).send('Organization deleted successfully');
     }
   )
-};
+});

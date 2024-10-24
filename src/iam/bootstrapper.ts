@@ -1,73 +1,79 @@
 import { ConfigInjector, Lifetime } from '@forklaunch/core/services';
 import { EntityManager, ForkOptions, MikroORM } from '@mikro-orm/core';
 import { SchemaValidator } from 'core';
-import config from './mikro-orm.config';
-import {
-  default as BaseOrganizationService,
-  default as OrganizationService
-} from './services/organization.service';
+import mikroOrmOptionsConfig from './mikro-orm.config';
+import BaseOrganizationService from './services/organization.service';
 import BasePermissionService from './services/permission.service';
 import BaseRoleService from './services/role.service';
 import BaseUserService from './services/user.service';
 
-export function bootstrap() {
-  const em = MikroORM.initSync(config).em;
+const configValidator = {
+  entityManager: EntityManager,
+  organizationService: BaseOrganizationService,
+  permissionService: BasePermissionService,
+  roleService: BaseRoleService,
+  userService: BaseUserService
+};
 
-  return new ConfigInjector(
-    SchemaValidator(),
-    {
-      entityManager: EntityManager,
-      organizationService: BaseOrganizationService,
-      permissionService: BasePermissionService,
-      roleService: BaseRoleService,
-      userService: BaseUserService
-    },
-    {
-      entityManager: {
-        lifetime: Lifetime.Scoped,
-        factory: (_args, _resolve, context) =>
-          em.fork(context?.entityManagerOptions as ForkOptions | undefined)
-      },
-      organizationService: {
-        lifetime: Lifetime.Scoped,
-        factory: ({ entityManager }, resolve, context) => {
-          let em = entityManager;
-          if (context.entityManagerOptions) {
-            em = resolve('entityManager', context);
+export function bootstrap(
+  callback: (
+    ci: ConfigInjector<SchemaValidator, typeof configValidator>
+  ) => void
+) {
+  MikroORM.init(mikroOrmOptionsConfig).then((orm) => {
+    const configInjector = new ConfigInjector(
+      SchemaValidator(),
+      configValidator,
+      {
+        entityManager: {
+          lifetime: Lifetime.Scoped,
+          factory: (_args, _resolve, context) =>
+            orm.em.fork(
+              context?.entityManagerOptions as ForkOptions | undefined
+            )
+        },
+        organizationService: {
+          lifetime: Lifetime.Scoped,
+          factory: ({ entityManager }, resolve, context) => {
+            let em = entityManager;
+            if (context.entityManagerOptions) {
+              em = resolve('entityManager', context);
+            }
+            return new BaseOrganizationService(em);
           }
-          return new OrganizationService(em);
-        }
-      },
-      permissionService: {
-        lifetime: Lifetime.Scoped,
-        factory: ({ entityManager }, resolve, context) => {
-          let em = entityManager;
-          if (context.entityManagerOptions) {
-            em = resolve('entityManager', context);
+        },
+        permissionService: {
+          lifetime: Lifetime.Scoped,
+          factory: ({ entityManager }, resolve, context) => {
+            let em = entityManager;
+            if (context.entityManagerOptions) {
+              em = resolve('entityManager', context);
+            }
+            return new BasePermissionService(em);
           }
-          return new BasePermissionService(em);
-        }
-      },
-      roleService: {
-        lifetime: Lifetime.Scoped,
-        factory: ({ entityManager }, resolve, context) => {
-          let em = entityManager;
-          if (context.entityManagerOptions) {
-            em = resolve('entityManager', context);
+        },
+        roleService: {
+          lifetime: Lifetime.Scoped,
+          factory: ({ entityManager }, resolve, context) => {
+            let em = entityManager;
+            if (context.entityManagerOptions) {
+              em = resolve('entityManager', context);
+            }
+            return new BaseRoleService(em);
           }
-          return new BaseRoleService(em);
-        }
-      },
-      userService: {
-        lifetime: Lifetime.Scoped,
-        factory: ({ entityManager }, resolve, context) => {
-          let em = entityManager;
-          if (context.entityManagerOptions) {
-            em = resolve('entityManager', context);
+        },
+        userService: {
+          lifetime: Lifetime.Scoped,
+          factory: ({ entityManager }, resolve, context) => {
+            let em = entityManager;
+            if (context.entityManagerOptions) {
+              em = resolve('entityManager', context);
+            }
+            return new BaseUserService(em);
           }
-          return new BaseUserService(em);
         }
       }
-    }
-  );
+    );
+    callback(configInjector);
+  });
 }

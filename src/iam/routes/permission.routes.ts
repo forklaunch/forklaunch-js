@@ -1,5 +1,6 @@
 import { array, forklaunchRouter, SchemaValidator, string } from 'core';
-import { ci } from '../app';
+import { PermissionService } from '../interfaces/permissionService.interface';
+import { RoleService } from '../interfaces/roleService.interface';
 import {
   CreatePermissionDtoMapper,
   PermissionDtoMapper,
@@ -8,10 +9,13 @@ import {
 import { Role } from '../models/persistence/role.entity';
 
 export const router = forklaunchRouter('/permission');
-const service = () => ci.resolve('permissionService');
-const roleService = () => ci.resolve('roleService');
 
-export const permissionRoutes = {
+export const PermissionRoutes = (
+  service: () => PermissionService,
+  roleService: () => RoleService
+) => ({
+  router,
+
   // Create a permission
   createPermission: router.post(
     '/',
@@ -278,4 +282,4 @@ export const permissionRoutes = {
       res.status(200).send('Batch permissions deleted successfully');
     }
   )
-};
+});

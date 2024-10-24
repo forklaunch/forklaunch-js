@@ -1,20 +1,40 @@
-import { forklaunchExpress } from 'core';
+import { forklaunchExpress } from 'core/index';
 import { bootstrap } from './bootstrapper';
-import { router as organizationRouter } from './routes/organization.routes';
-import { router as permissionRouter } from './routes/permission.routes';
-import { router as roleRouter } from './routes/role.routes';
-import { router as userRouter } from './routes/user.routes';
-
-export const ci = bootstrap();
+import { OrganizationRoutes } from './routes/organization.routes';
+import { PermissionRoutes } from './routes/permission.routes';
+import { RoleRoutes } from './routes/role.routes';
+import { UserRoutes } from './routes/user.routes';
 
 const app = forklaunchExpress();
 const port = Number(process.env.PORT) || 8000;
 
-app.use(organizationRouter);
-app.use(roleRouter);
-app.use(permissionRouter);
-app.use(userRouter);
+bootstrap((ci) => {
+  const organizationRoutes = OrganizationRoutes(() =>
+    ci.resolve('organizationService')
+  );
+  const permissionRoutes = PermissionRoutes(
+    () => ci.resolve('permissionService'),
+    () => ci.resolve('roleService')
+  );
+  const roleRoutes = RoleRoutes(() => ci.resolve('roleService'));
+  const userRoutes = UserRoutes(
+    () => ci.resolve('userService'),
+    () => ci.resolve('organizationService'),
+    () => ci.resolve('roleService')
+  );
 
-app.listen(port, () => {
-  console.log(`🎉 IAM Server is running at http://localhost:${port} 🎉`);
+  app.use(organizationRoutes.router);
+  app.use(roleRoutes.router);
+  app.use(permissionRoutes.router);
+  app.use(userRoutes.router);
+  app.listen(port, () => {
+    console.log(`🎉 IAM Server is running at http://localhost:${port} 🎉`);
+  });
 });
+
+export type IamApiClient = ApiClient<{
+  organization: typeof OrganizationRoutes;
+  role: typeof RoleRoutes;
+  permission: typeof PermissionRoutes;
+  user: typeof UserRoutes;
+}>;
