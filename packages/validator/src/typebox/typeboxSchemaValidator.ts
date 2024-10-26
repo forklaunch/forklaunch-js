@@ -83,12 +83,14 @@ export class TypeboxSchemaValidator
   _ValidSchemaObject!: TObject<TProperties> | TArray<TObject<TProperties>>;
 
   string = Type.String();
-  // uuid = Type.String({ format: 'uuid' });
-  uuid = Type.String({
-    pattern:
-      '^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$',
-    errorType: 'uuid'
-  });
+  uuid = Type.Intersect([
+    Type.String({
+      pattern:
+        '^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$',
+      errorType: 'uuid'
+    }),
+    Type.Object({ __brand: Type.Literal('Uuid') })
+  ]);
   uri = Type.String({
     pattern: '^[a-zA-Z][a-zA-Z\\d+-.]*:[^\\s]*$',
     errorType: 'uri'
