@@ -36,20 +36,20 @@ importers:
         specifier: ^0.1.8
         version: 0.1.8
       '@forklaunch/core':
-        specifier: ^0.2.13
-        version: 0.2.13
+        specifier: ^0.2.15
+        version: 0.2.15
       '@forklaunch/express':
-        specifier: ^0.1.7
-        version: 0.1.7(openapi3-ts@4.4.0)
+        specifier: ^0.1.9
+        version: 0.1.9(openapi3-ts@4.4.0)
       '@forklaunch/hyper-express':
-        specifier: ^0.1.8
-        version: 0.1.8(express@4.21.1)
+        specifier: ^0.1.10
+        version: 0.1.10(express@4.21.1)
       '@forklaunch/validator':
         specifier: ^0.3.6
         version: 0.3.6(openapi3-ts@4.4.0)
       '@sinclair/typebox':
-        specifier: ^0.33.16
-        version: 0.33.16
+        specifier: ^0.33.17
+        version: 0.33.17
       zod:
         specifier: ^3.23.8
         version: 3.23.8
@@ -60,14 +60,14 @@ importers:
         specifier: ^0.1.8
         version: 0.1.8
       '@forklaunch/core':
-        specifier: ^0.2.13
-        version: 0.2.13
+        specifier: ^0.2.15
+        version: 0.2.15
       '@forklaunch/express':
-        specifier: ^0.1.7
-        version: 0.1.7(openapi3-ts@4.4.0)
+        specifier: ^0.1.9
+        version: 0.1.9(openapi3-ts@4.4.0)
       '@forklaunch/hyper-express':
-        specifier: ^0.1.8
-        version: 0.1.8(express@4.21.1)
+        specifier: ^0.1.10
+        version: 0.1.10(express@4.21.1)
       '@forklaunch/validator':
         specifier: ^0.3.6
         version: 0.3.6(openapi3-ts@4.4.0)
@@ -76,7 +76,7 @@ importers:
         version: 6.3.13
       '@mikro-orm/migrations':
         specifier: ^6.3.13
-        version: 6.3.13(@mikro-orm/core@6.3.13)(@types/node@22.7.5)(pg@8.13.0)
+        version: 6.3.13(@mikro-orm/core@6.3.13)(@types/node@22.8.1)(pg@8.13.0)
       '@mikro-orm/mongodb':
         specifier: ^6.3.13
         version: 6.3.13(@mikro-orm/core@6.3.13)(socks@2.8.3)
@@ -93,8 +93,8 @@ importers:
         specifier: ^6.3.13
         version: 6.3.13(@mikro-orm/core@6.3.13)(pg@8.13.0)
       '@sinclair/typebox':
-        specifier: ^0.33.16
-        version: 0.33.16
+        specifier: ^0.33.17
+        version: 0.33.17
       core:
         specifier: workspace:*
         version: link:../core
@@ -572,14 +572,14 @@ packages:
   '@forklaunch/common@0.1.8':
     resolution: {integrity: sha512-W4dbQyU2foudXxGb7KkqzodV7P8pr+uhVLAr7zziQRkyS6emutwmatlvQniMlKIgbx17Umxch2v0YIjHfIyjig==}
 
-  '@forklaunch/core@0.2.13':
-    resolution: {integrity: sha512-Dn3vhnWRyhQxLn/P0PsssgMrjk0QKodrM2lPd/+1uRZtP8KL2KVY00vniF9JCh3ykgniwy2ncVydHBPioEycsA==}
+  '@forklaunch/core@0.2.15':
+    resolution: {integrity: sha512-bl7PgjDBICShZ/FYBwqTq0VUWHdXraFsrHtOmfpqepZyCwxWG9NVSV0xqw4OiJ55cyNi4onl0UzoWNOPxSc2pQ==}
 
-  '@forklaunch/express@0.1.7':
-    resolution: {integrity: sha512-JtRODnz7rwaFli3bjEPr6eFMm5dO+4PPAR+gvi5wu/mhfwjC8mZiEunNa/veV61Er9DkKCzH+klpC3K9H5Whcg==}
+  '@forklaunch/express@0.1.9':
+    resolution: {integrity: sha512-QD5KoiZTSTNm7wu27nh3DT6Bug4BH0LJCBgcK6cnhHU9y9m2pWGDuha2gJaHzChLKPmGq/d7moCSZSu9P/oXyg==}
 
-  '@forklaunch/hyper-express@0.1.8':
-    resolution: {integrity: sha512-9A4slbtUo4mqjoPxMpWciRu4H3ihAmw20kLVSFJoFNFDIWJopnzsNhNbB+YrK+kIbaQRHemC9BMSXOZMPoyBXA==}
+  '@forklaunch/hyper-express@0.1.10':
+    resolution: {integrity: sha512-wWn81v0Mj7BdZuUq3E7liJmyxO4ODFuZmXoau/SMNYWxqXbCEh9+l/K31VV4eHpMMHka6w86SIWNh0vVGPSaGA==}
 
   '@forklaunch/validator@0.3.6':
     resolution: {integrity: sha512-Om1KKXNoshTQmqrmfcroYHYGEaoOq1YlhMonA/9NZ1X3Iw8cIewixnbM6d1NOWrjgZvTUqtX6iypnHr75nSrHw==}
@@ -891,14 +891,14 @@ packages:
       '@types/node':
         optional: true
 
-  '@rushstack/ts-command-line@4.22.8':
-    resolution: {integrity: sha512-XbFjOoV7qZHJnSuFUHv0pKaFA4ixyCuki+xMjsMfDwfvQjs5MYG0IK5COal3tRnG7KCDe2l/G+9LrzYE/RJhgg==}
+  '@rushstack/ts-command-line@4.23.0':
+    resolution: {integrity: sha512-jYREBtsxduPV6ptNq8jOKp9+yx0ld1Tb/Tkdnlj8gTjazl1sF3DwX2VbluyYrNd0meWIL0bNeer7WDf5tKFjaQ==}
 
   '@sinclair/typebox@0.27.8':
     resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
 
-  '@sinclair/typebox@0.33.16':
-    resolution: {integrity: sha512-jsz4f3LxXGh217hJE3MAOB+i3pzgr9wLGUBiCRNWaG/rRcVoS4+dzQok9SeZLtwNdmY44oGYQWlJCjIJxeLKEw==}
+  '@sinclair/typebox@0.33.17':
+    resolution: {integrity: sha512-75232GRx3wp3P7NP+yc4nRK3XUAnaQShxTAzapgmQrgs0QvSq0/mOJGoZXRpH15cFCKyys+4laCPbBselqJ5Ag==}
 
   '@sinonjs/commons@3.0.1':
     resolution: {integrity: sha512-K3mCHKQ9sVh8o1C9cxkwxaOmXoAMlDxC1mYyHrjqOWEcBjYr76t96zL2zlj5dUGZ3HSw240X1qgH3Mjf1yJWpQ==}
@@ -970,8 +970,8 @@ packages:
   '@types/node@22.5.5':
     resolution: {integrity: sha512-Xjs4y5UPO/CLdzpgR6GirZJx36yScjh73+2NlLlkFRSoQN8B0DpfXPdZGnvVmLRLOsqDpOfTNv7D9trgGhmOIA==}
 
-  '@types/node@22.7.5':
-    resolution: {integrity: sha512-jML7s2NAzMWc//QSJ1a3prpk78cOPchGvXJsC3C6R6PSMoooztvRVQEz89gmBTBY1SPMaqo5teB4uNHPdetShQ==}
+  '@types/node@22.8.1':
+    resolution: {integrity: sha512-k6Gi8Yyo8EtrNtkHXutUu2corfDf9su95VYVP10aGYMMROM6SAItZi0w1XszA6RtWTHSVp5OeFof37w0IEqCQg==}
 
   '@types/qs@6.9.16':
     resolution: {integrity: sha512-7i+zxXdPD0T4cKDuxCUXJ4wHcsJLwENa6Z3dCu8cfCK743OGy5Nu1RmAGqDPsoTDINVEcdXKRvR/zre+P2Ku1A==}
@@ -1188,8 +1188,8 @@ packages:
   bser@2.1.1:
     resolution: {integrity: sha512-gQxTNE/GAfIIrmHLUE3oJyp5FO6HRBfhjnw4/wMmA63ZGDJnWBmgY/lyQBpnDUkGmAhbSe39tx2d/iTOAfglwQ==}
 
-  bson@6.8.0:
-    resolution: {integrity: sha512-iOJg8pr7wq2tg/zSlCCHMi3hMm5JTOxLTagf3zxhcenHsFp+c6uOs6K7W5UE7A4QIJGtqh/ZovFNMP4mOPJynQ==}
+  bson@6.9.0:
+    resolution: {integrity: sha512-X9hJeyeM0//Fus+0pc5dSUMhhrrmWwQUtdavaQeF3Ta6m69matZkGWV/MrBcnwUeLC8W9kwwc2hfkZgUuCX3Ig==}
     engines: {node: '>=16.20.1'}
 
   buffer-from@1.1.2:
@@ -2024,8 +2024,8 @@ packages:
   jju@1.4.0:
     resolution: {integrity: sha512-8wb9Yw966OSxApiCt0K3yNJL8pnNeIv+OEq2YMidz4FKP6nonSRoOXc80iXY4JaN2FC11B9qsNmDsm+ZOfMROA==}
 
-  jose@5.9.4:
-    resolution: {integrity: sha512-WBBl6au1qg6OHj67yCffCgFR3BADJBXN8MdRvCgJDuMv3driV2nHr7jdGvaKX9IolosAsn+M0XRArqLXUhyJHQ==}
+  jose@5.9.6:
+    resolution: {integrity: sha512-AMlnetc9+CV9asI19zHmrgS/WYsWUwCn2R7RzlbJWD7F9eWYUTGyBmU9o6PxngtLGOiDGPRu+Uc4fhKzbpteZQ==}
 
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -2320,8 +2320,12 @@ packages:
     resolution: {integrity: sha512-+EUsqGPLsM+j/zdChZjsnX51g4XrHFOIXwfnCVPGlQk/k5giakcKsuxCObBRu6DSm9opw/O6slWbJdghQM4bBg==}
     engines: {node: '>= 0.6'}
 
-  node-abi@3.68.0:
-    resolution: {integrity: sha512-7vbj10trelExNjFSBm5kTvZXXa7pZyKWx9RCKIyqe6I9Ev3IzGpQoqBP3a+cOdxY+pWj6VkP28n/2wWysBHD/A==}
+  negotiator@0.6.4:
+    resolution: {integrity: sha512-myRT3DiWPHqho5PrJaIRyaMv2kgYf0mUVgBNOYMuCH5Ki1yEiQaf/ZJuQ62nvpc44wL5WDbTX7yGJi1Neevw8w==}
+    engines: {node: '>= 0.6'}
+
+  node-abi@3.71.0:
+    resolution: {integrity: sha512-SZ40vRiy/+wRTf21hxkkEjPJZpARzUMVcJoQse2EF8qkUWbbO2z7vd5oA/H6bVH6SZQ5STGcu0KRDS7biNRfxw==}
     engines: {node: '>=10'}
 
   node-addon-api@7.1.1:
@@ -2960,8 +2964,8 @@ packages:
     resolution: {integrity: sha512-NoZ4roiN7LnbKn9QqE1amc9DJfzvZXxF4xDavcOWt1BPkdx+m+0gJuPM+S0vCe7zTJMYUP0R8pO2XMr+Y8oLIg==}
     engines: {node: '>=6'}
 
-  tslib@2.7.0:
-    resolution: {integrity: sha512-gLXCKdN1/j47AiHiOkJN69hJmcbGTHI0ImLmbYLHykhgeN0jVGola9yVjFgzCUklsZQMW55o+dW7IXv3RCXDzA==}
+  tslib@2.8.0:
+    resolution: {integrity: sha512-jWVzBLplnCmoaTr13V9dYbiQ99wvZRd0vNWaDRg+aVYRcjDF3nDksxFDE/+fkXnKhpnUUkmx5pK/v8mCtLVqZA==}
 
   tsx@4.19.1:
     resolution: {integrity: sha512-0flMz1lh74BR4wOvBjuh9olbnwqCPc35OOlfyzHba0Dc+QNUeWX/Gq2YTbnwcWPO3BMd8fkzRVrHcsR+a7z7rA==}
@@ -3166,8 +3170,8 @@ packages:
   yallist@4.0.0:
     resolution: {integrity: sha512-3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A==}
 
-  yaml@2.5.1:
-    resolution: {integrity: sha512-bLQOjaX/ADgQ20isPJRvF0iRUHIxVhYvr53Of7wGcWlO2jvtUlH5m87DsmulFVxRpNLOnI4tB6p/oh8D7kpn9Q==}
+  yaml@2.6.0:
+    resolution: {integrity: sha512-a6ae//JvKDEra2kdi1qzCyrJW/WZCgFi8ydDV+eXExl95t+5R+ijnqHJbz9tmMh8FUjx3iv2fCQ4dclAQlO2UQ==}
     engines: {node: '>= 14'}
     hasBin: true
 
@@ -3543,21 +3547,21 @@ snapshots:
 
   '@forklaunch/common@0.1.8': {}
 
-  '@forklaunch/core@0.2.13':
+  '@forklaunch/core@0.2.15':
     dependencies:
       '@forklaunch/common': 0.1.8
       '@forklaunch/validator': 0.3.6(openapi3-ts@4.4.0)
       '@mikro-orm/core': 6.3.13
       cors: 2.8.5
-      jose: 5.9.4
+      jose: 5.9.6
       openapi3-ts: 4.4.0
       redis: 4.7.0
       uuid: 10.0.0
 
-  '@forklaunch/express@0.1.7(openapi3-ts@4.4.0)':
+  '@forklaunch/express@0.1.9(openapi3-ts@4.4.0)':
     dependencies:
       '@forklaunch/common': 0.1.8
-      '@forklaunch/core': 0.2.13
+      '@forklaunch/core': 0.2.15
       '@forklaunch/validator': 0.3.6(openapi3-ts@4.4.0)
       '@types/express': 4.17.21
       cors: 2.8.5
@@ -3568,10 +3572,10 @@ snapshots:
       - openapi3-ts
       - supports-color
 
-  '@forklaunch/hyper-express@0.1.8(express@4.21.1)':
+  '@forklaunch/hyper-express@0.1.10(express@4.21.1)':
     dependencies:
       '@forklaunch/common': 0.1.8
-      '@forklaunch/core': 0.2.13
+      '@forklaunch/core': 0.2.15
       '@forklaunch/validator': 0.3.6(openapi3-ts@4.4.0)
       cors: 2.8.5
       hyper-express: 6.17.2
@@ -3588,7 +3592,7 @@ snapshots:
     dependencies:
       '@anatine/zod-openapi': 2.2.6(openapi3-ts@4.4.0)(zod@3.23.8)
       '@forklaunch/common': 0.1.8
-      '@sinclair/typebox': 0.33.16
+      '@sinclair/typebox': 0.33.17
       zod: 3.23.8
     transitivePeerDependencies:
       - openapi3-ts
@@ -3866,12 +3870,12 @@ snapshots:
       - supports-color
       - tedious
 
-  '@mikro-orm/migrations@6.3.13(@mikro-orm/core@6.3.13)(@types/node@22.7.5)(pg@8.13.0)':
+  '@mikro-orm/migrations@6.3.13(@mikro-orm/core@6.3.13)(@types/node@22.8.1)(pg@8.13.0)':
     dependencies:
       '@mikro-orm/core': 6.3.13
       '@mikro-orm/knex': 6.3.13(@mikro-orm/core@6.3.13)(pg@8.13.0)
       fs-extra: 11.2.0
-      umzug: 3.8.2(@types/node@22.7.5)
+      umzug: 3.8.2(@types/node@22.8.1)
     transitivePeerDependencies:
       - '@types/node'
       - better-sqlite3
@@ -3888,7 +3892,7 @@ snapshots:
   '@mikro-orm/mongodb@6.3.13(@mikro-orm/core@6.3.13)(socks@2.8.3)':
     dependencies:
       '@mikro-orm/core': 6.3.13
-      bson: 6.8.0
+      bson: 6.9.0
       mongodb: 6.9.0(socks@2.8.3)
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
@@ -4061,7 +4065,7 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.22.4':
     optional: true
 
-  '@rushstack/node-core-library@5.9.0(@types/node@22.7.5)':
+  '@rushstack/node-core-library@5.9.0(@types/node@22.8.1)':
     dependencies:
       ajv: 8.13.0
       ajv-draft-04: 1.0.0(ajv@8.13.0)
@@ -4072,18 +4076,18 @@ snapshots:
       resolve: 1.22.8
       semver: 7.5.4
     optionalDependencies:
-      '@types/node': 22.7.5
+      '@types/node': 22.8.1
 
-  '@rushstack/terminal@0.14.2(@types/node@22.7.5)':
+  '@rushstack/terminal@0.14.2(@types/node@22.8.1)':
     dependencies:
-      '@rushstack/node-core-library': 5.9.0(@types/node@22.7.5)
+      '@rushstack/node-core-library': 5.9.0(@types/node@22.8.1)
       supports-color: 8.1.1
     optionalDependencies:
-      '@types/node': 22.7.5
+      '@types/node': 22.8.1
 
-  '@rushstack/ts-command-line@4.22.8(@types/node@22.7.5)':
+  '@rushstack/ts-command-line@4.23.0(@types/node@22.8.1)':
     dependencies:
-      '@rushstack/terminal': 0.14.2(@types/node@22.7.5)
+      '@rushstack/terminal': 0.14.2(@types/node@22.8.1)
       '@types/argparse': 1.0.38
       argparse: 1.0.10
       string-argv: 0.3.2
@@ -4092,7 +4096,7 @@ snapshots:
 
   '@sinclair/typebox@0.27.8': {}
 
-  '@sinclair/typebox@0.33.16': {}
+  '@sinclair/typebox@0.33.17': {}
 
   '@sinonjs/commons@3.0.1':
     dependencies:
@@ -4138,11 +4142,11 @@ snapshots:
   '@types/body-parser@1.19.5':
     dependencies:
       '@types/connect': 3.4.38
-      '@types/node': 22.7.5
+      '@types/node': 22.8.1
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 22.7.5
+      '@types/node': 22.8.1
 
   '@types/estree@1.0.5': {}
 
@@ -4150,7 +4154,7 @@ snapshots:
 
   '@types/express-serve-static-core@4.19.6':
     dependencies:
-      '@types/node': 22.7.5
+      '@types/node': 22.8.1
       '@types/qs': 6.9.16
       '@types/range-parser': 1.2.7
       '@types/send': 0.17.4
@@ -4189,7 +4193,7 @@ snapshots:
     dependencies:
       undici-types: 6.19.8
 
-  '@types/node@22.7.5':
+  '@types/node@22.8.1':
     dependencies:
       undici-types: 6.19.8
 
@@ -4200,12 +4204,12 @@ snapshots:
   '@types/send@0.17.4':
     dependencies:
       '@types/mime': 1.3.5
-      '@types/node': 22.7.5
+      '@types/node': 22.8.1
 
   '@types/serve-static@1.15.7':
     dependencies:
       '@types/http-errors': 2.0.4
-      '@types/node': 22.7.5
+      '@types/node': 22.8.1
       '@types/send': 0.17.4
 
   '@types/stack-utils@2.0.3': {}
@@ -4463,7 +4467,7 @@ snapshots:
     dependencies:
       node-int64: 0.4.0
 
-  bson@6.8.0: {}
+  bson@6.9.0: {}
 
   buffer-from@1.1.2: {}
 
@@ -5528,7 +5532,7 @@ snapshots:
 
   jju@1.4.0: {}
 
-  jose@5.9.4: {}
+  jose@5.9.6: {}
 
   js-tokens@4.0.0: {}
 
@@ -5683,7 +5687,7 @@ snapshots:
       minipass-fetch: 1.4.1
       minipass-flush: 1.0.5
       minipass-pipeline: 1.2.4
-      negotiator: 0.6.3
+      negotiator: 0.6.4
       promise-retry: 2.0.1
       socks-proxy-agent: 6.2.1
       ssri: 8.0.1
@@ -5795,7 +5799,7 @@ snapshots:
   mongodb@6.9.0(socks@2.8.3):
     dependencies:
       '@mongodb-js/saslprep': 1.1.9
-      bson: 6.8.0
+      bson: 6.9.0
       mongodb-connection-string-url: 3.0.1
     optionalDependencies:
       socks: 2.8.3
@@ -5830,7 +5834,10 @@ snapshots:
 
   negotiator@0.6.3: {}
 
-  node-abi@3.68.0:
+  negotiator@0.6.4:
+    optional: true
+
+  node-abi@3.71.0:
     dependencies:
       semver: 7.6.3
 
@@ -5894,7 +5901,7 @@ snapshots:
 
   openapi3-ts@4.4.0:
     dependencies:
-      yaml: 2.5.1
+      yaml: 2.6.0
 
   p-limit@2.3.0:
     dependencies:
@@ -6023,7 +6030,7 @@ snapshots:
       minimist: 1.2.8
       mkdirp-classic: 0.5.3
       napi-build-utils: 1.0.2
-      node-abi: 3.68.0
+      node-abi: 3.71.0
       pump: 3.0.2
       rc: 1.2.8
       simple-get: 4.0.1
@@ -6171,7 +6178,7 @@ snapshots:
 
   rxjs@7.8.1:
     dependencies:
-      tslib: 2.7.0
+      tslib: 2.8.0
     optional: true
 
   safe-buffer@5.2.1: {}
@@ -6471,7 +6478,7 @@ snapshots:
       minimist: 1.2.8
       strip-bom: 3.0.0
 
-  tslib@2.7.0:
+  tslib@2.8.0:
     optional: true
 
   tsx@4.19.1:
@@ -6506,9 +6513,9 @@ snapshots:
 
   uWebSockets.js@https://codeload.github.com/uNetworking/uWebSockets.js/tar.gz/8fa05571bf6ea95be8966ad313d9d39453e381ae: {}
 
-  umzug@3.8.2(@types/node@22.7.5):
+  umzug@3.8.2(@types/node@22.8.1):
     dependencies:
-      '@rushstack/ts-command-line': 4.22.8(@types/node@22.7.5)
+      '@rushstack/ts-command-line': 4.23.0(@types/node@22.8.1)
       emittery: 0.13.1
       fast-glob: 3.3.2
       pony-cause: 2.1.11
@@ -6664,7 +6671,7 @@ snapshots:
 
   yallist@4.0.0: {}
 
-  yaml@2.5.1: {}
+  yaml@2.6.0: {}
 
   yargs-parser@21.1.1: {}
 

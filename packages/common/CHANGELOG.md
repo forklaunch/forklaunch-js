@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.1.9
+
+### Patch Changes
+
+- Add flatten type to flatten deeply nested objects
+
 ## 0.1.8
 
 ### Patch Changes
