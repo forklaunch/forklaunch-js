@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.2.17
+
+### Patch Changes
+
+- Remove unnecessary flatten
+
 ## 0.2.16
 
 ### Patch Changes
