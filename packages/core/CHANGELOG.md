@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.2.20
+
+### Patch Changes
+
+- last version not built
+
 ## 0.2.19
 
 ### Patch Changes
