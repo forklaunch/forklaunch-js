@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.2.19
+
+### Patch Changes
+
+- loosen constraint on isExpressLikeSchemaHandler
+
 ## 0.2.18
 
 ### Patch Changes

@@ -3,7 +3,7 @@
 import {
   forklaunchExpress as registeredForklaunchExpress,
   forklaunchRouter as registeredForklaunchRouter
-} from '@forklaunch/express/lib';
+} from '@forklaunch/express';
 // import { forklaunchRouter as registeredForklaunchRouter, forklaunchExpress as registeredForklaunchExpress } from '@forklaunch/hyper-express';
 
 // import {
