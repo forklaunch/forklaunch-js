@@ -1,0 +1,32 @@
+FROM node:21.6.1-alpine as base
+
+WORKDIR /common
+COPY common /common
+
+RUN pnpm ci && pnpm cache clean --force
+RUN pnpm install
+
+# Set the working directory in the container
+WORKDIR /iam
+
+# Copy package.json and package-lock.json to the container
+COPY iam/package*.json ./
+COPY iam/tsconfig.json ./
+
+# Install dependencies
+RUN pnpm ci && pnpm cache clean --force
+RUN pnpm install
+
+# Set environment variables
+ENV FORKLIFT_DB_HOST="postgres"
+ENV FORKLIFT_DB_USER="postgres"
+ENV FORKLIFT_DB_PASSWORD="postgres"
+ENV FORKLIFT_DB_NAME="forklaunch-dev"
+ENV FORKLIFT_DB_TYPE="postgresql"
+ENV PORT=8000
+
+# Expose the port that the Express.js app will run on
+EXPOSE 8000
+
+# Run migrations and then start the Express.js application
+CMD sh -c "pnpx mikro-orm migration:up && pnpm run dev"

@@ -3,7 +3,7 @@ import {
   MiddlewareNext,
   Request,
   Response
-} from '@forklaunch/hyper-express-fork';
+} from 'hyper-express';
 import LiveDirectory from 'live-directory';
 import { OpenAPIObject } from 'openapi3-ts/oas31';
 import getAbsoluteSwaggerFsPath from 'swagger-ui-dist/absolute-path';

@@ -10,11 +10,8 @@ import {
   ResponsesObject,
   TypedMiddlewareDefinition
 } from '@forklaunch/core/http';
-import {
-  Router as ExpressRouter,
-  MiddlewareHandler
-} from '@forklaunch/hyper-express-fork';
 import { AnySchemaValidator } from '@forklaunch/validator';
+import { Router as ExpressRouter, MiddlewareHandler } from 'hyper-express';
 
 import { contentParse } from './middleware/contentParse.middleware';
 import { enrichResponseTransmission } from './middleware/enrichResponseTransmission.middleware';
