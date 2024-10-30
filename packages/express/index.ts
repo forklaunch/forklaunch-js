@@ -31,4 +31,6 @@ export function forklaunchRouter<
   return router;
 }
 
+export type { Application } from './src/expressApplication';
+export type { Router } from './src/expressRouter';
 export * from './src/types/express.types';
