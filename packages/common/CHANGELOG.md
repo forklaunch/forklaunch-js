@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.1.10
+
+### Patch Changes
+
+- adds proper exports to packages
+
 ## 0.1.9
 
 ### Patch Changes
