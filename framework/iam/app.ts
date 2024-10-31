@@ -10,18 +10,23 @@ const app = forklaunchExpress();
 const port = Number(process.env.PORT) || 8000;
 
 bootstrap((ci) => {
-  const organizationRoutes = OrganizationRoutes(() =>
-    ci.resolve('organizationService')
+  const organizationRoutes = OrganizationRoutes((scope?: typeof ci) =>
+    (scope ?? ci.createScope()).resolve('organizationService')
   );
   const permissionRoutes = PermissionRoutes(
-    () => ci.resolve('permissionService'),
-    () => ci.resolve('roleService')
+    (scope?: typeof ci) =>
+      (scope ?? ci.createScope()).resolve('permissionService'),
+    (scope?: typeof ci) => (scope ?? ci.createScope()).resolve('roleService')
   );
-  const roleRoutes = RoleRoutes(() => ci.resolve('roleService'));
+  const roleRoutes = RoleRoutes((scope?: typeof ci) =>
+    (scope ?? ci).resolve('roleService')
+  );
   const userRoutes = UserRoutes(
-    () => ci.resolve('userService'),
-    () => ci.resolve('organizationService'),
-    () => ci.resolve('roleService')
+    ci.createScope,
+    (scope?: typeof ci) => (scope ?? ci.createScope()).resolve('userService'),
+    (scope?: typeof ci) =>
+      (scope ?? ci.createScope()).resolve('organizationService'),
+    (scope?: typeof ci) => (scope ?? ci.createScope()).resolve('roleService')
   );
 
   app.use(organizationRoutes.router);
@@ -29,7 +34,9 @@ bootstrap((ci) => {
   app.use(permissionRoutes.router);
   app.use(userRoutes.router);
   app.listen(port, () => {
-    console.log(`🎉 IAM Server is running at http://localhost:${port} 🎉`);
+    console.log(
+      `🎉 IAM Server is running at http://localhost:${port} 🎉.\nAn API reference can be accessed at http://localhost:${port}/api${process.env.VERSION ?? '/v1'}${process.env.SWAGGER_PATH ?? '/swagger'}`
+    );
   });
 });
 

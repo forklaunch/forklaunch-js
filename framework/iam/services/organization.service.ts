@@ -9,18 +9,24 @@ import { Organization } from '../models/persistence/organization.entity';
 export default class BaseOrganizationService implements OrganizationService {
   constructor(public em: EntityManager) {}
 
-  async createOrganization(data: CreateOrganizationData): Promise<void> {
-    console.log(data);
-    await this.em.persistAndFlush(data);
+  async createOrganization(
+    data: CreateOrganizationData
+  ): Promise<Organization> {
+    console.log(await this.em.persistAndFlush(data));
+    return data;
   }
 
   async getOrganization(id: string): Promise<Organization> {
     return await this.em.findOneOrFail(Organization, { id });
   }
 
-  async updateOrganization(data: UpdateOrganizationData): Promise<void> {
+  async updateOrganization(
+    data: UpdateOrganizationData
+  ): Promise<Organization> {
     const updatedOrganization = await this.em.upsert(data);
+    console.log(updatedOrganization);
     await this.em.persistAndFlush(updatedOrganization);
+    return data;
   }
 
   async deleteOrganization(id: string): Promise<void> {

@@ -22,7 +22,8 @@ describe('serviceFactory', () => {
       c: X,
       d: number,
       e: number,
-      f: number
+      f: number,
+      g: number
     },
     {
       a: {
@@ -51,6 +52,10 @@ describe('serviceFactory', () => {
       f: {
         lifetime: Lifetime.Transient,
         factory: ({ d }) => d
+      },
+      g: {
+        lifetime: Lifetime.Transient,
+        factory: (_args) => 6
       }
     }
   );
@@ -109,6 +114,15 @@ describe('serviceFactory', () => {
     const scope = configInjector.createScope();
     expect(scope).toBeInstanceOf(ConfigInjector);
     expect(scope.instances).not.toEqual(configInjector.instances);
+  });
+
+  test('scoped resolver', () => {
+    const scope = configInjector.createScope();
+    scope.resolve('c', {
+      num: 5
+    });
+    expect(configInjector.resolve('c').dummy()).toEqual('a20');
+    expect(configInjector.scopedResolver('c')(scope).dummy()).toEqual('a25');
   });
 
   test('dispose', () => {

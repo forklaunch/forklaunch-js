@@ -7,8 +7,8 @@ export type CreateOrganizationData = Organization;
 export type UpdateOrganizationData = CreateOrganizationData;
 
 export interface OrganizationService extends BaseService {
-  createOrganization(data: CreateOrganizationData): Promise<void>;
+  createOrganization(data: CreateOrganizationData): Promise<Organization>;
   getOrganization(id: string): Promise<Organization>;
-  updateOrganization(data: UpdateOrganizationData): Promise<void>;
+  updateOrganization(data: UpdateOrganizationData): Promise<Organization>;
   deleteOrganization(id: string): Promise<void>;
 }

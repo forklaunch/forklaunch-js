@@ -1,10 +1,13 @@
 // When generating, generate one of each flavor, depending on configuration, and this file should be generated
 
+// import {
+//   forklaunchExpress as registeredForklaunchExpress,
+//   forklaunchRouter as registeredForklaunchRouter
+// } from '@forklaunch/express';
 import {
   forklaunchExpress as registeredForklaunchExpress,
   forklaunchRouter as registeredForklaunchRouter
-} from '@forklaunch/express';
-// import { forklaunchRouter as registeredForklaunchRouter, forklaunchExpress as registeredForklaunchExpress } from '@forklaunch/hyper-express';
+} from '@forklaunch/hyper-express';
 
 // import {
 //   SchemaValidator as RegisteredSchemaValidator,

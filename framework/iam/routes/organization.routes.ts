@@ -9,7 +9,9 @@ import {
 
 export const router = forklaunchRouter('/organization');
 
-export const OrganizationRoutes = (service: () => OrganizationService) => ({
+export const OrganizationRoutes = <ConfigInjectorScope>(
+  service: (scope?: ConfigInjectorScope) => OrganizationService
+) => ({
   router,
 
   // Create organization
@@ -20,20 +22,22 @@ export const OrganizationRoutes = (service: () => OrganizationService) => ({
       summary: 'Creates a new organization',
       body: CreateOrganizationDtoMapper.schema(),
       responses: {
-        201: string,
+        201: OrganizationDtoMapper.schema(),
         409: string
       }
     },
     async (req, res) => {
       try {
-        console.log(req.body);
-        await service().createOrganization(
-          CreateOrganizationDtoMapper.deserializeJsonToEntity(
-            SchemaValidator(),
-            req.body
+        const organizationJson = OrganizationDtoMapper.serializeEntityToJson(
+          SchemaValidator(),
+          await service().createOrganization(
+            CreateOrganizationDtoMapper.deserializeJsonToEntity(
+              SchemaValidator(),
+              req.body
+            )
           )
         );
-        res.status(201).send('Organization created successfully');
+        res.status(201).json(organizationJson);
       } catch (error: Error | unknown) {
         if (error instanceof UniqueConstraintViolationException) {
           res.status(409).send('Organization already exists');
@@ -80,7 +84,7 @@ export const OrganizationRoutes = (service: () => OrganizationService) => ({
       summary: 'Updates an organization by ID',
       body: UpdateOrganizationDtoMapper.schema(),
       responses: {
-        200: string,
+        200: OrganizationDtoMapper.schema(),
         404: string
       }
     },
@@ -89,8 +93,11 @@ export const OrganizationRoutes = (service: () => OrganizationService) => ({
         SchemaValidator(),
         req.body
       );
-      await service().updateOrganization(organization);
-      res.status(200).send('Organization updated successfully');
+      const updatedOrgainzation = OrganizationDtoMapper.serializeEntityToJson(
+        SchemaValidator(),
+        await service().updateOrganization(organization)
+      );
+      res.status(200).json(updatedOrgainzation);
     }
   ),
 

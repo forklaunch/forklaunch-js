@@ -35,6 +35,15 @@ export class ConfigInjector<
     resolutionPath: (keyof CV)[] = []
   ): ResolvedConfigValidator<SV, CV>[T] {
     const injectorArgument = extractArgumentNames(definition.factory)[0];
+    // short circuit as no args
+    if (injectorArgument === '_args') {
+      return definition.factory(
+        {} as Omit<ResolvedConfigValidator<SV, CV>, T>,
+        this.resolve.bind(this),
+        context ?? ({} as Record<string, unknown>)
+      );
+    }
+
     if (!injectorArgument.startsWith('{') || !injectorArgument.endsWith('}')) {
       throw new Error(
         `Invalid injector argument for ${String(token)}: ${injectorArgument}. Please use object destructuring syntax: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment.`
@@ -45,7 +54,7 @@ export class ConfigInjector<
         .replace('{', '')
         .replace('}', '')
         .split(',')
-        .map((arg) => arg.trim())
+        .map((arg) => arg.split(':')[0].trim())
         .map((arg) => {
           resolutionPath = [...resolutionPath, token];
 
@@ -84,10 +93,12 @@ export class ConfigInjector<
     config: Partial<ResolvedConfigValidator<SV, CV>>
   ): boolean {
     return (this.schemaValidator as SchemaValidator).validate(
-      Object.fromEntries(
-        Object.entries(this.configShapes).filter(
-          ([key]) =>
-            this.dependenciesDefinition[key].lifetime === Lifetime.Singleton
+      (this.schemaValidator as SchemaValidator).schemify(
+        Object.fromEntries(
+          Object.entries(this.configShapes).filter(
+            ([key]) =>
+              this.dependenciesDefinition[key].lifetime === Lifetime.Singleton
+          )
         )
       ),
       config
@@ -139,6 +150,15 @@ export class ConfigInjector<
     } else {
       return instance;
     }
+  }
+
+  scopedResolver<T extends keyof CV>(
+    token: T,
+    context?: Record<string, unknown>,
+    resolutionPath: (keyof CV)[] = []
+  ): (scope?: typeof this) => ResolvedConfigValidator<SV, CV>[T] {
+    return (scope?: typeof this) =>
+      (scope ?? this).resolve<T>(token, context, resolutionPath);
   }
 
   createScope(): ConfigInjector<SV, CV> {

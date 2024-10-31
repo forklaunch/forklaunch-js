@@ -8,7 +8,9 @@ import {
 
 export const router = forklaunchRouter('/role');
 
-export const RoleRoutes = (service: () => RoleService) => ({
+export const RoleRoutes = <ConfigInjectorScope>(
+  service: (scope?: ConfigInjectorScope) => RoleService
+) => ({
   router,
 
   // Create role
