@@ -17,7 +17,7 @@
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.ts' --write",
-    "publish": "pnpm publish"
+    "publish": "./publish-package.bash"
   },
   "repository": {
     "type": "git",
