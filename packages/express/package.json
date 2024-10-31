@@ -13,7 +13,8 @@
     "docs": "typedoc --out docs *",
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
-    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.ts' --write"
+    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.ts' --write",
+    "publish": "pnpm publish"
   },
   "repository": {
     "type": "git",
