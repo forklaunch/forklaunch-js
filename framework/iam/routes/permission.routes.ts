@@ -11,6 +11,7 @@ import { Role } from '../models/persistence/role.entity';
 export const router = forklaunchRouter('/permission');
 
 export const PermissionRoutes = <ConfigInjectorScope>(
+  createScope: () => ConfigInjectorScope,
   service: (scope?: ConfigInjectorScope) => PermissionService,
   roleService: (scope?: ConfigInjectorScope) => RoleService
 ) => ({

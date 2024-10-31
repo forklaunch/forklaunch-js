@@ -1,11 +1,5 @@
 import { ConfigInjector, Lifetime } from '@forklaunch/core/services';
-import {
-  Connection,
-  EntityManager,
-  ForkOptions,
-  IDatabaseDriver,
-  MikroORM
-} from '@mikro-orm/core';
+import { EntityManager, ForkOptions, MikroORM } from '@mikro-orm/core';
 import { SchemaValidator } from 'core';
 import mikroOrmOptionsConfig from './mikro-orm.config';
 import BaseOrganizationService from './services/organization.service';
@@ -14,10 +8,10 @@ import BaseRoleService from './services/role.service';
 import BaseUserService from './services/user.service';
 
 const configValidator = {
-  _orm: MikroORM<
-    IDatabaseDriver<Connection>,
-    EntityManager<IDatabaseDriver<Connection>>
-  >,
+  // orm: MikroORM<
+  //   IDatabaseDriver<Connection>,
+  //   EntityManager<IDatabaseDriver<Connection>>
+  // >,
   entityManager: EntityManager,
   organizationService: BaseOrganizationService,
   permissionService: BasePermissionService,
@@ -35,14 +29,14 @@ export function bootstrap(
       SchemaValidator(),
       configValidator,
       {
-        _orm: {
-          lifetime: Lifetime.Singleton,
-          value: orm
-        },
+        // orm: {
+        //   lifetime: Lifetime.Singleton,
+        //   value: orm
+        // },
         entityManager: {
           lifetime: Lifetime.Scoped,
-          factory: ({ _orm }, _resolve, context) =>
-            _orm.em.fork(
+          factory: (_args, _resolve, context) =>
+            orm.em.fork(
               context?.entityManagerOptions as ForkOptions | undefined
             )
         },

@@ -26,7 +26,7 @@
     "publish:packages": "pnpm -r run publish",
     "format": "pnpm --parallel -r run format",
     "test": "pnpm vitest --passWithNoTests",
-    "up": "pnpm --parallel -r up"
+    "up": "pnpm --parallel -r run up"
   },
   "keywords": [],
   "author": "",

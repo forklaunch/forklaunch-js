@@ -10,28 +10,33 @@ const app = forklaunchExpress();
 const port = Number(process.env.PORT) || 8000;
 
 bootstrap((ci) => {
-  const organizationRoutes = OrganizationRoutes((scope?: typeof ci) =>
-    (scope ?? ci.createScope()).resolve('organizationService')
+  const scopedOrganizationServiceResolver = ci.scopedResolver(
+    'organizationService'
+  );
+  const scopedPermissionServiceResolver =
+    ci.scopedResolver('permissionService');
+  const scopedRoleServiceResolver = ci.scopedResolver('roleService');
+  const scopedUserServiceResolver = ci.scopedResolver('userService');
+
+  const organizationRoutes = OrganizationRoutes(
+    scopedOrganizationServiceResolver
   );
   const permissionRoutes = PermissionRoutes(
-    (scope?: typeof ci) =>
-      (scope ?? ci.createScope()).resolve('permissionService'),
-    (scope?: typeof ci) => (scope ?? ci.createScope()).resolve('roleService')
+    ci.createScope,
+    scopedPermissionServiceResolver,
+    scopedRoleServiceResolver
   );
-  const roleRoutes = RoleRoutes((scope?: typeof ci) =>
-    (scope ?? ci).resolve('roleService')
-  );
+  const roleRoutes = RoleRoutes(scopedRoleServiceResolver);
   const userRoutes = UserRoutes(
     ci.createScope,
-    (scope?: typeof ci) => (scope ?? ci.createScope()).resolve('userService'),
-    (scope?: typeof ci) =>
-      (scope ?? ci.createScope()).resolve('organizationService'),
-    (scope?: typeof ci) => (scope ?? ci.createScope()).resolve('roleService')
+    scopedUserServiceResolver,
+    scopedOrganizationServiceResolver,
+    scopedRoleServiceResolver
   );
 
   app.use(organizationRoutes.router);
-  app.use(roleRoutes.router);
   app.use(permissionRoutes.router);
+  app.use(roleRoutes.router);
   app.use(userRoutes.router);
   app.listen(port, () => {
     console.log(

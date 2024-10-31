@@ -158,7 +158,7 @@ export class ConfigInjector<
     resolutionPath: (keyof CV)[] = []
   ): (scope?: typeof this) => ResolvedConfigValidator<SV, CV>[T] {
     return (scope?: typeof this) =>
-      (scope ?? this).resolve<T>(token, context, resolutionPath);
+      (scope ?? this.createScope()).resolve<T>(token, context, resolutionPath);
   }
 
   createScope(): ConfigInjector<SV, CV> {
