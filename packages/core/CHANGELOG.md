@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.2.21
+
+### Patch Changes
+
+- updates config injector with scopedResolver for nicer handling when used with routers
+
 ## 0.2.20
 
 ### Patch Changes
