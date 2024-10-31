@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/express",
-  "version": "0.1.16",
+  "version": "0.1.17",
   "description": "Forklaunch framework for express.",
   "files": [
     "lib/**"

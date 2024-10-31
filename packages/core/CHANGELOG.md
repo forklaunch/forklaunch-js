@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.2.22
+
+### Patch Changes
+
+- scopedResolver in ConfigInjector should create a new scope if not supplied with one
+
 ## 0.2.21
 
 ### Patch Changes
