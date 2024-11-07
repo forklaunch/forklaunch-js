@@ -2,12 +2,19 @@ import {
   RequestDtoMapper,
   ResponseDtoMapper
 } from '@forklaunch/core/dtoMapper';
+import {
+  array,
+  optional,
+  SchemaValidator,
+  string,
+  uuid
+} from '@forklaunch/framework-core';
 import { Collection } from '@mikro-orm/core';
-import { array, optional, SchemaValidator, string, uuid } from 'core';
 import { Permission } from '../persistence/permission.entity';
 import { Role } from '../persistence/role.entity';
 import { PermissionDtoMapper } from './permission.dtoMapper';
 
+export type CreateRoleDto = CreateRoleDtoMapper['dto'];
 export class CreateRoleDtoMapper extends RequestDtoMapper<
   Role,
   SchemaValidator
@@ -26,6 +33,7 @@ export class CreateRoleDtoMapper extends RequestDtoMapper<
   }
 }
 
+export type UpdateRoleDto = UpdateRoleDtoMapper['dto'];
 export class UpdateRoleDtoMapper extends RequestDtoMapper<
   Role,
   SchemaValidator
@@ -50,6 +58,7 @@ export class UpdateRoleDtoMapper extends RequestDtoMapper<
   }
 }
 
+export type RoleDto = RoleDtoMapper['dto'];
 export class RoleDtoMapper extends ResponseDtoMapper<Role, SchemaValidator> {
   schema = {
     id: uuid,
@@ -58,18 +67,20 @@ export class RoleDtoMapper extends ResponseDtoMapper<Role, SchemaValidator> {
   };
 
   fromEntity(entity: Role): this {
-    this.dto.id = entity.id;
-    this.dto.name = entity.name;
-    this.dto.permissions = entity.permissions.isInitialized()
-      ? entity.permissions
-          .getItems()
-          .map((permission) =>
-            PermissionDtoMapper.fromEntity(
-              SchemaValidator(),
-              permission
-            ).toJson()
-          )
-      : [];
+    this.dto = {
+      id: entity.id,
+      name: entity.name,
+      permissions: entity.permissions.isInitialized()
+        ? entity.permissions
+            .getItems()
+            .map((permission) =>
+              PermissionDtoMapper.fromEntity(
+                SchemaValidator(),
+                permission
+              ).toJson()
+            )
+        : []
+    };
 
     return this;
   }

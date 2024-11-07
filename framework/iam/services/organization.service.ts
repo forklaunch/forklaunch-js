@@ -1,19 +1,37 @@
+import { SchemaValidator } from '@forklaunch/framework-core';
 import { EntityManager } from '@mikro-orm/core';
+import { OrganizationService } from '../interfaces/organizationService.interface';
 import {
-  CreateOrganizationData,
-  OrganizationService,
-  UpdateOrganizationData
-} from '../interfaces/organizationService.interface';
+  CreateOrganizationDto,
+  CreateOrganizationDtoMapper,
+  OrganizationDto,
+  OrganizationDtoMapper,
+  UpdateOrganizationDto
+} from '../models/dtoMapper/organization.dtoMapper';
 import { Organization } from '../models/persistence/organization.entity';
 
 export default class BaseOrganizationService implements OrganizationService {
   constructor(public em: EntityManager) {}
 
   async createOrganization(
-    data: CreateOrganizationData
-  ): Promise<Organization> {
-    console.log(await this.em.persistAndFlush(data));
-    return data;
+    organizationDto: CreateOrganizationDto
+  ): Promise<OrganizationDto> {
+    const organization = CreateOrganizationDtoMapper.deserializeJsonToEntity(
+      SchemaValidator(),
+      organizationDto
+    );
+
+    await this.em.persistAndFlush(
+      CreateOrganizationDtoMapper.deserializeJsonToEntity(
+        SchemaValidator(),
+        organizationDto
+      )
+    );
+
+    return OrganizationDtoMapper.serializeEntityToJson(
+      SchemaValidator(),
+      organization
+    );
   }
 
   async getOrganization(id: string): Promise<Organization> {
@@ -21,12 +39,11 @@ export default class BaseOrganizationService implements OrganizationService {
   }
 
   async updateOrganization(
-    data: UpdateOrganizationData
-  ): Promise<Organization> {
-    const updatedOrganization = await this.em.upsert(data);
-    console.log(updatedOrganization);
+    organizationDto: UpdateOrganizationDto
+  ): Promise<OrganizationDto> {
+    const updatedOrganization = await this.em.upsert(organizationDto);
     await this.em.persistAndFlush(updatedOrganization);
-    return data;
+    return updatedOrganization;
   }
 
   async deleteOrganization(id: string): Promise<void> {

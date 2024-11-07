@@ -12,12 +12,13 @@ import {
   string,
   unknown,
   uuid
-} from 'core';
+} from '@forklaunch/framework-core';
 import passwordEncrypt from '../../utils/passwordEncrypt';
 import { Role } from '../persistence/role.entity';
 import { User } from '../persistence/user.entity';
 import { RoleDtoMapper } from './role.dtoMapper';
 
+export type CreateUserDto = CreateUserDtoMapper['dto'];
 export class CreateUserDtoMapper extends RequestDtoMapper<
   User,
   SchemaValidator
@@ -55,6 +56,7 @@ export class CreateUserDtoMapper extends RequestDtoMapper<
   }
 }
 
+export type UpdateUserDto = UpdateUserDtoMapper['dto'];
 export class UpdateUserDtoMapper extends RequestDtoMapper<
   User,
   SchemaValidator
@@ -103,6 +105,7 @@ export class UpdateUserDtoMapper extends RequestDtoMapper<
   }
 }
 
+export type UserDto = UserDtoMapper['dto'];
 export class UserDtoMapper extends ResponseDtoMapper<User, SchemaValidator> {
   schema = {
     id: uuid,
@@ -116,17 +119,20 @@ export class UserDtoMapper extends ResponseDtoMapper<User, SchemaValidator> {
   };
 
   fromEntity(entity: User): this {
-    this.dto.id = entity.id;
-    this.dto.email = entity.email;
-    this.dto.firstName = entity.firstName;
-    this.dto.lastName = entity.lastName;
-    this.dto.roles = entity.roles.isInitialized()
-      ? entity.roles
-          .getItems()
-          .map((role) =>
-            RoleDtoMapper.fromEntity(SchemaValidator(), role).toJson()
-          )
-      : [];
+    this.dto = {
+      id: entity.id,
+      email: entity.email,
+      firstName: entity.firstName,
+      lastName: entity.lastName,
+      roles: entity.roles.isInitialized()
+        ? entity.roles
+            .getItems()
+            .map((role) =>
+              RoleDtoMapper.fromEntity(SchemaValidator(), role).toJson()
+            )
+        : []
+    };
+
     if (entity.phoneNumber) {
       this.dto.phoneNumber = entity.phoneNumber;
     }

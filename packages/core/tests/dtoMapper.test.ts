@@ -63,11 +63,15 @@ function extractNonTimeBasedEntityFields<T extends BaseEntity>(entity: T): T {
   return entity;
 }
 
+function genericDtoWrapperFunction<T>(dto: T): T {
+  return dto;
+}
+
 describe('request dtoMapper tests', () => {
   let TestRequestDM: TestRequestDtoMapper;
 
   beforeAll(() => {
-    TestRequestDM = new TestRequestDtoMapper(SchemaValidator());
+    TestRequestDM = new TestRequestDtoMapper(SV);
   });
 
   test('schema static and constructed equality', async () => {
@@ -82,7 +86,7 @@ describe('request dtoMapper tests', () => {
     };
 
     const responseDM = TestRequestDM.fromJson(json);
-    const staticDM = TestRequestDtoMapper.fromJson(SchemaValidator(), json);
+    const staticDM = TestRequestDtoMapper.fromJson(SV, json);
     const expectedDto = {
       id: '123',
       name: 'test',
@@ -107,8 +111,9 @@ describe('request dtoMapper tests', () => {
     const objectEntity = extractNonTimeBasedEntityFields(
       TestRequestDM.fromJson(json).toEntity()
     );
+    const e = TestRequestDtoMapper.deserializeJsonToEntity(SV, json);
     const staticEntity = extractNonTimeBasedEntityFields(
-      TestRequestDtoMapper.deserializeJsonToEntity(SchemaValidator(), json)
+      TestRequestDtoMapper.deserializeJsonToEntity(SV, json)
     );
     let expectedEntity = new TestEntity();
     expectedEntity.id = '123';
@@ -134,10 +139,8 @@ describe('request dtoMapper tests', () => {
 
     // @ts-expect-error
     expect(() => TestRequestDM.fromJson(json)).toThrow();
-    expect(() =>
-      // @ts-expect-error
-      TestRequestDtoMapper.fromJson(new TypeboxSchemaValidator(), json)
-    ).toThrow();
+    // @ts-expect-error
+    expect(() => TestRequestDtoMapper.fromJson(SV, json)).toThrow();
   });
 });
 
@@ -145,7 +148,7 @@ describe('response dtoMapper tests', () => {
   let TestResponseDM: TestResponseDtoMapper;
 
   beforeAll(() => {
-    TestResponseDM = new TestResponseDtoMapper(SchemaValidator());
+    TestResponseDM = new TestResponseDtoMapper(SV);
   });
 
   test('schema static and constructed equality', async () => {
@@ -159,10 +162,7 @@ describe('response dtoMapper tests', () => {
     entity.age = 1;
 
     const responseDM = TestResponseDM.fromEntity(entity);
-    const staticDM = TestResponseDtoMapper.fromEntity(
-      SchemaValidator(),
-      entity
-    );
+    const staticDM = TestResponseDtoMapper.fromEntity(SV, entity);
     const expectedDto = {
       id: '123',
       name: 'test',
@@ -180,11 +180,14 @@ describe('response dtoMapper tests', () => {
     entity.name = 'test';
     entity.age = 1;
 
-    const json = TestResponseDM.serializeEntityToJson(entity);
-    const objectJson = TestResponseDM.fromEntity(entity).toJson();
-    const staticJson = TestResponseDtoMapper.serializeEntityToJson(
-      SchemaValidator(),
-      entity
+    const json = genericDtoWrapperFunction(
+      TestResponseDM.serializeEntityToJson(entity)
+    );
+    const objectJson = genericDtoWrapperFunction(
+      TestResponseDM.fromEntity(entity).toJson()
+    );
+    const staticJson = genericDtoWrapperFunction(
+      TestResponseDtoMapper.serializeEntityToJson(SV, entity)
     );
     const expectedJson = {
       id: '123',
@@ -208,7 +211,7 @@ describe('response dtoMapper tests', () => {
 
     expect(() => TestResponseDM.fromEntity(entity).toJson()).toThrow();
     expect(() =>
-      TestResponseDtoMapper.fromEntity(SchemaValidator(), entity).toJson()
+      TestResponseDtoMapper.fromEntity(SV, entity).toJson()
     ).toThrow();
   });
 });

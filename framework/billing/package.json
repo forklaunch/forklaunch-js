@@ -1,7 +1,7 @@
 {
-  "name": "@forklaunch/framework-iam",
+  "name": "@forklaunch/framework-billing",
   "version": "0.1.0",
-  "description": "IAM basic implementation for Forklaunch",
+  "description": "Billing basic implementation for forklaunch",
   "main": "app.ts",
   "scripts": {
     "test": "vitest --passWithNoTests",
@@ -37,10 +37,12 @@
     "@mikro-orm/reflection": "^6.3.13",
     "@mikro-orm/sqlite": "^6.3.13",
     "@sinclair/typebox": "^0.33.17",
+    "uuid": "^11.0.2",
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@mikro-orm/cli": "^6.3.13"
+    "@mikro-orm/cli": "^6.3.13",
+    "@types/uuid": "^10.0.0"
   },
   "mikro-orm": {
     "configPaths": [

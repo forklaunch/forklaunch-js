@@ -1,6 +1,6 @@
 import { ConfigInjector, Lifetime } from '@forklaunch/core/services';
+import { SchemaValidator } from '@forklaunch/framework-core';
 import { EntityManager, ForkOptions, MikroORM } from '@mikro-orm/core';
-import { SchemaValidator } from 'core';
 import mikroOrmOptionsConfig from './mikro-orm.config';
 import BaseOrganizationService from './services/organization.service';
 import BasePermissionService from './services/permission.service';

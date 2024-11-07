@@ -1,5 +1,5 @@
 import { ApiClient } from '@forklaunch/core/http';
-import { forklaunchExpress } from 'core';
+import { forklaunchExpress } from '@forklaunch/framework-core';
 import { bootstrap } from './bootstrapper';
 import { OrganizationRoutes } from './routes/organization.routes';
 import { PermissionRoutes } from './routes/permission.routes';
@@ -38,6 +38,7 @@ bootstrap((ci) => {
   app.use(permissionRoutes.router);
   app.use(roleRoutes.router);
   app.use(userRoutes.router);
+
   app.listen(port, () => {
     console.log(
       `🎉 IAM Server is running at http://localhost:${port} 🎉.\nAn API reference can be accessed at http://localhost:${port}/api${process.env.VERSION ?? '/v1'}${process.env.SWAGGER_PATH ?? '/swagger'}`

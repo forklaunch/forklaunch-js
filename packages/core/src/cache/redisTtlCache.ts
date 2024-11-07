@@ -32,11 +32,11 @@ export class RedisTtlCache implements TtlCache {
    * @param {TtlCacheRecord} param0 - The cache record to put into the cache.
    * @returns {Promise<void>} - A promise that resolves when the record is put into the cache.
    */
-  async putRecord({
+  async putRecord<T>({
     key,
     value,
     ttlMilliseconds = this.ttlMilliseconds
-  }: TtlCacheRecord): Promise<void> {
+  }: TtlCacheRecord<T>): Promise<void> {
     await this.client.set(key, JSON.stringify(value), {
       PX: ttlMilliseconds
     });
@@ -59,7 +59,7 @@ export class RedisTtlCache implements TtlCache {
    * @returns {Promise<TtlCacheRecord>} - A promise that resolves with the cache record.
    * @throws {Error} - Throws an error if the record is not found.
    */
-  async readRecord(cacheRecordKey: string): Promise<TtlCacheRecord> {
+  async readRecord<T>(cacheRecordKey: string): Promise<TtlCacheRecord<T>> {
     const value = await this.client.get(cacheRecordKey);
     if (value === null) {
       throw new Error(`Record not found for key: ${cacheRecordKey}`);

@@ -30,44 +30,23 @@ importers:
         specifier: ^2.1.4
         version: 2.1.4(@types/node@22.8.4)
 
-  core:
+  billing:
     dependencies:
       '@forklaunch/common':
         specifier: ^0.1.10
         version: 0.1.10
       '@forklaunch/core':
-        specifier: ^0.2.21
-        version: 0.2.21
+        specifier: ^0.2.22
+        version: 0.2.22
       '@forklaunch/express':
-        specifier: ^0.1.16
-        version: 0.1.16(openapi3-ts@4.4.0)
-      '@forklaunch/hyper-express':
         specifier: ^0.1.17
-        version: 0.1.17(express@4.21.1)
-      '@forklaunch/validator':
-        specifier: ^0.3.8
-        version: 0.3.8(openapi3-ts@4.4.0)
-      '@sinclair/typebox':
-        specifier: ^0.33.17
-        version: 0.33.17
-      zod:
-        specifier: ^3.23.8
-        version: 3.23.8
-
-  iam:
-    dependencies:
-      '@forklaunch/common':
-        specifier: ^0.1.10
-        version: 0.1.10
-      '@forklaunch/core':
-        specifier: ^0.2.21
-        version: 0.2.21
-      '@forklaunch/express':
-        specifier: ^0.1.16
-        version: 0.1.16(openapi3-ts@4.4.0)
+        version: 0.1.17(openapi3-ts@4.4.0)
+      '@forklaunch/framework-core':
+        specifier: workspace:*
+        version: link:../core
       '@forklaunch/hyper-express':
-        specifier: ^0.1.17
-        version: 0.1.17(express@4.21.1)
+        specifier: ^0.1.18
+        version: 0.1.18(express@4.21.1)
       '@forklaunch/validator':
         specifier: ^0.3.8
         version: 0.3.8(openapi3-ts@4.4.0)
@@ -95,9 +74,88 @@ importers:
       '@sinclair/typebox':
         specifier: ^0.33.17
         version: 0.33.17
-      core:
+      uuid:
+        specifier: ^11.0.2
+        version: 11.0.2
+      zod:
+        specifier: ^3.23.8
+        version: 3.23.8
+    devDependencies:
+      '@mikro-orm/cli':
+        specifier: ^6.3.13
+        version: 6.3.13(pg@8.13.0)
+      '@types/uuid':
+        specifier: ^10.0.0
+        version: 10.0.0
+
+  core:
+    dependencies:
+      '@forklaunch/common':
+        specifier: ^0.1.10
+        version: 0.1.10
+      '@forklaunch/core':
+        specifier: ^0.2.22
+        version: 0.2.22
+      '@forklaunch/express':
+        specifier: ^0.1.17
+        version: 0.1.17(openapi3-ts@4.4.0)
+      '@forklaunch/hyper-express':
+        specifier: ^0.1.18
+        version: 0.1.18(express@4.21.1)
+      '@forklaunch/validator':
+        specifier: ^0.3.8
+        version: 0.3.8(openapi3-ts@4.4.0)
+      '@sinclair/typebox':
+        specifier: ^0.33.17
+        version: 0.33.17
+      zod:
+        specifier: ^3.23.8
+        version: 3.23.8
+
+  iam:
+    dependencies:
+      '@forklaunch/common':
+        specifier: ^0.1.10
+        version: 0.1.10
+      '@forklaunch/core':
+        specifier: ^0.2.22
+        version: 0.2.22
+      '@forklaunch/express':
+        specifier: ^0.1.17
+        version: 0.1.17(openapi3-ts@4.4.0)
+      '@forklaunch/framework-core':
         specifier: workspace:*
         version: link:../core
+      '@forklaunch/hyper-express':
+        specifier: ^0.1.18
+        version: 0.1.18(express@4.21.1)
+      '@forklaunch/validator':
+        specifier: ^0.3.8
+        version: 0.3.8(openapi3-ts@4.4.0)
+      '@mikro-orm/core':
+        specifier: ^6.3.13
+        version: 6.3.13
+      '@mikro-orm/migrations':
+        specifier: ^6.3.13
+        version: 6.3.13(@mikro-orm/core@6.3.13)(@types/node@22.8.4)(pg@8.13.0)
+      '@mikro-orm/mongodb':
+        specifier: ^6.3.13
+        version: 6.3.13(@mikro-orm/core@6.3.13)(socks@2.8.3)
+      '@mikro-orm/mysql':
+        specifier: ^6.3.13
+        version: 6.3.13(@mikro-orm/core@6.3.13)(pg@8.13.0)
+      '@mikro-orm/postgresql':
+        specifier: ^6.3.13
+        version: 6.3.13(@mikro-orm/core@6.3.13)
+      '@mikro-orm/reflection':
+        specifier: ^6.3.13
+        version: 6.3.13(@mikro-orm/core@6.3.13)
+      '@mikro-orm/sqlite':
+        specifier: ^6.3.13
+        version: 6.3.13(@mikro-orm/core@6.3.13)(pg@8.13.0)
+      '@sinclair/typebox':
+        specifier: ^0.33.17
+        version: 0.33.17
       zod:
         specifier: ^3.23.8
         version: 3.23.8
@@ -564,14 +622,14 @@ packages:
   '@forklaunch/common@0.1.10':
     resolution: {integrity: sha512-RkrUscPDfgswInEtN2Cp7w6WKWCjkKMPZUkug5vfFvkbNoRlxz7Hp+ZZjS0RotNkP27A9V0w+RozRHiQYgij1w==}
 
-  '@forklaunch/core@0.2.21':
-    resolution: {integrity: sha512-+R0Ocupn0VjrO5xyy7t4+dDR4NipRX5KGoaPee5hd8OspJXwvWXD4mkEeOfXWuRPziVwLZktHR0l75arL0jxRQ==}
+  '@forklaunch/core@0.2.22':
+    resolution: {integrity: sha512-0OhVyi3NN9tr6J03l19KRAh25c0yzzJn2O6aiPpO/fQrtEEvbXMu6LJKLDUD33s5UGMGVZkqKC32UNZnCSC3ag==}
 
-  '@forklaunch/express@0.1.16':
-    resolution: {integrity: sha512-7vbdUbbfTHq9sCTvq3l3j8QaBFFPDr3mGEnl0fHKEDsPX+z2m6ePnwff8mTHWX5nTGiCLqjdBwrujKc5iKVyTw==}
+  '@forklaunch/express@0.1.17':
+    resolution: {integrity: sha512-CFzsSAhtAn+Z1KGtmAK9FhFJBnY3KnG7zPKl9pwx2uuVFvupWKP4jn1QuWghNj4PYXrNnBUXHOJA8qYKbmjnNQ==}
 
-  '@forklaunch/hyper-express@0.1.17':
-    resolution: {integrity: sha512-w0AY36mamt0KL20BctRSuKaRX4gH20cvImO8Q1uEaw/C9i6/SjHHDyfon+e18mEF7yXkdy//fdlPe5mX/bvxBA==}
+  '@forklaunch/hyper-express@0.1.18':
+    resolution: {integrity: sha512-vxf0lyEBCS1GTm+0M9ZLnXbMIWhNL5ghxWEYsZa1PfOalAJzPsdVS0OsNbX+ZL9T8R9DTFwy5A2VLTCfCuaVOw==}
 
   '@forklaunch/validator@0.3.8':
     resolution: {integrity: sha512-RvvQTh6KCEDEFSMqvElVgby7a1Ua8foSLHRf/XFrgCXOtnGqYW1qQSSXcK7OPnpUnjOt8uHWgfwnHUjO8zVm3A==}
@@ -983,6 +1041,9 @@ packages:
 
   '@types/stack-utils@2.0.3':
     resolution: {integrity: sha512-9aEbYZ3TbYMznPdcdr3SmIrLXwC/AKZXQeCf9Pgao5CKb8CyHuEX5jzWPTkvregvhRJHcpRO6BFoGW9ycaOkYw==}
+
+  '@types/uuid@10.0.0':
+    resolution: {integrity: sha512-7gqG38EyHgyP1S+7+xomFtL+ZNHcKv6DwNaCZmJmo1vgMugyF3TCnXVg4t1uk89mLNwnLtnY3TpOpCOyp1/xHQ==}
 
   '@types/webidl-conversions@7.0.3':
     resolution: {integrity: sha512-CiJJvcRtIgzadHCYXw7dqEnMNRjhGZlYK05Mj9OyktqV8uVT8fD2BFOB7S1uwBE3Kj2Z+4UyPmFw/Ixgw/LAlA==}
@@ -3018,6 +3079,10 @@ packages:
     resolution: {integrity: sha512-8XkAphELsDnEGrDxUOHB3RGvXz6TeuYSGEZBOjtTtPm2lwhGBjLgOzLHB63IUWfBpNucQjND6d3AOudO+H3RWQ==}
     hasBin: true
 
+  uuid@11.0.2:
+    resolution: {integrity: sha512-14FfcOJmqdjbBPdDjFQyk/SdT4NySW4eM0zcG+HqbHP5jzuH56xO3J1DGhgs/cEMCfwYi3HQI1gnTO62iaG+tQ==}
+    hasBin: true
+
   v8-to-istanbul@9.3.0:
     resolution: {integrity: sha512-kiGUalWN+rgBJ/1OHZsBtU4rXZOfj/7rKQxULKlIzwzQSvMJUUNgPwJEEh7gU6xEVxC0ahoOBvN2YI8GH6FNgA==}
     engines: {node: '>=10.12.0'}
@@ -3499,7 +3564,7 @@ snapshots:
 
   '@forklaunch/common@0.1.10': {}
 
-  '@forklaunch/core@0.2.21':
+  '@forklaunch/core@0.2.22':
     dependencies:
       '@forklaunch/common': 0.1.10
       '@forklaunch/validator': 0.3.8(openapi3-ts@4.4.0)
@@ -3510,10 +3575,10 @@ snapshots:
       redis: 4.7.0
       uuid: 10.0.0
 
-  '@forklaunch/express@0.1.16(openapi3-ts@4.4.0)':
+  '@forklaunch/express@0.1.17(openapi3-ts@4.4.0)':
     dependencies:
       '@forklaunch/common': 0.1.10
-      '@forklaunch/core': 0.2.21
+      '@forklaunch/core': 0.2.22
       '@forklaunch/validator': 0.3.8(openapi3-ts@4.4.0)
       '@types/express': 4.17.21
       cors: 2.8.5
@@ -3524,10 +3589,10 @@ snapshots:
       - openapi3-ts
       - supports-color
 
-  '@forklaunch/hyper-express@0.1.17(express@4.21.1)':
+  '@forklaunch/hyper-express@0.1.18(express@4.21.1)':
     dependencies:
       '@forklaunch/common': 0.1.10
-      '@forklaunch/core': 0.2.21
+      '@forklaunch/core': 0.2.22
       '@forklaunch/validator': 0.3.8(openapi3-ts@4.4.0)
       cors: 2.8.5
       hyper-express: 6.17.2
@@ -3751,7 +3816,7 @@ snapshots:
     dependencies:
       '@jercle/yargonaut': 1.1.5
       '@mikro-orm/core': 6.3.13
-      '@mikro-orm/knex': 6.3.13(@mikro-orm/core@6.3.13)(pg@8.13.0)
+      '@mikro-orm/knex': 6.3.13(@mikro-orm/core@6.3.13)(pg@8.13.0)(sqlite3@5.1.7)
       fs-extra: 11.2.0
       tsconfig-paths: 4.2.0
       yargs: 17.7.2
@@ -3792,21 +3857,6 @@ snapshots:
       - supports-color
       - tedious
 
-  '@mikro-orm/knex@6.3.13(@mikro-orm/core@6.3.13)(pg@8.13.0)':
-    dependencies:
-      '@mikro-orm/core': 6.3.13
-      fs-extra: 11.2.0
-      knex: 3.1.0(pg@8.13.0)
-      sqlstring: 2.3.3
-    transitivePeerDependencies:
-      - mysql
-      - mysql2
-      - pg
-      - pg-native
-      - sqlite3
-      - supports-color
-      - tedious
-
   '@mikro-orm/knex@6.3.13(@mikro-orm/core@6.3.13)(pg@8.13.0)(sqlite3@5.1.7)':
     dependencies:
       '@mikro-orm/core': 6.3.13
@@ -3825,7 +3875,7 @@ snapshots:
   '@mikro-orm/migrations@6.3.13(@mikro-orm/core@6.3.13)(@types/node@22.8.4)(pg@8.13.0)':
     dependencies:
       '@mikro-orm/core': 6.3.13
-      '@mikro-orm/knex': 6.3.13(@mikro-orm/core@6.3.13)(pg@8.13.0)
+      '@mikro-orm/knex': 6.3.13(@mikro-orm/core@6.3.13)(pg@8.13.0)(sqlite3@5.1.7)
       fs-extra: 11.2.0
       umzug: 3.8.2(@types/node@22.8.4)
     transitivePeerDependencies:
@@ -3874,7 +3924,7 @@ snapshots:
   '@mikro-orm/postgresql@6.3.13(@mikro-orm/core@6.3.13)':
     dependencies:
       '@mikro-orm/core': 6.3.13
-      '@mikro-orm/knex': 6.3.13(@mikro-orm/core@6.3.13)(pg@8.13.0)
+      '@mikro-orm/knex': 6.3.13(@mikro-orm/core@6.3.13)(pg@8.13.0)(sqlite3@5.1.7)
       pg: 8.13.0
       postgres-array: 3.0.2
       postgres-date: 2.1.0
@@ -4165,6 +4215,8 @@ snapshots:
       '@types/send': 0.17.4
 
   '@types/stack-utils@2.0.3': {}
+
+  '@types/uuid@10.0.0': {}
 
   '@types/webidl-conversions@7.0.3': {}
 
@@ -5518,27 +5570,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  knex@3.1.0(pg@8.13.0):
-    dependencies:
-      colorette: 2.0.19
-      commander: 10.0.1
-      debug: 4.3.4
-      escalade: 3.2.0
-      esm: 3.2.25
-      get-package-type: 0.1.0
-      getopts: 2.3.0
-      interpret: 2.2.0
-      lodash: 4.17.21
-      pg-connection-string: 2.6.2
-      rechoir: 0.8.0
-      resolve-from: 5.0.0
-      tarn: 3.0.2
-      tildify: 2.0.0
-    optionalDependencies:
-      pg: 8.13.0
-    transitivePeerDependencies:
-      - supports-color
-
   knex@3.1.0(pg@8.13.0)(sqlite3@5.1.7):
     dependencies:
       colorette: 2.0.19
@@ -6482,6 +6513,8 @@ snapshots:
   utils-merge@1.0.1: {}
 
   uuid@10.0.0: {}
+
+  uuid@11.0.2: {}
 
   v8-to-istanbul@9.3.0:
     dependencies:

@@ -38,13 +38,12 @@ export abstract class ResponseDtoMapper<
    * @throws {Error} - Throws an error if the DTO is invalid.
    */
   toJson(): this['_dto'] {
-    if (
-      !this.schemaValidator.validate(
-        this.schemaValidator.schemify(this.schema),
-        this.dto
-      )
-    ) {
-      throw new Error('Invalid DTO');
+    const parsedSchema = this.schemaValidator.parse(
+      this.schemaValidator.schemify(this.schema),
+      this.dto
+    );
+    if (!parsedSchema.ok) {
+      throw new Error(`Invalid DTO: ${parsedSchema.error}`);
     }
     return this.dto;
   }
@@ -94,12 +93,15 @@ export abstract class ResponseDtoMapper<
    */
   static serializeEntityToJson<
     T extends ResponseDtoMapper<BaseEntity, SV>,
-    SV extends AnySchemaValidator
+    SV extends AnySchemaValidator,
+    JsonType extends T['_dto']
   >(
     this: DtoMapperConstructor<T, SV>,
     schemaValidator: SV,
     entity: T['_Entity']
-  ): T['_dto'] {
-    return construct(this, schemaValidator).serializeEntityToJson(entity);
+  ): JsonType {
+    return construct(this, schemaValidator).serializeEntityToJson(
+      entity
+    ) as JsonType;
   }
 }

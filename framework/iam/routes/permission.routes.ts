@@ -1,4 +1,9 @@
-import { array, forklaunchRouter, SchemaValidator, string } from 'core';
+import {
+  array,
+  forklaunchRouter,
+  SchemaValidator,
+  string
+} from '@forklaunch/framework-core';
 import { PermissionService } from '../interfaces/permissionService.interface';
 import { RoleService } from '../interfaces/roleService.interface';
 import {

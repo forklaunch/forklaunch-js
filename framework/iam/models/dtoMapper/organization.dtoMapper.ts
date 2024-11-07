@@ -2,10 +2,17 @@ import {
   RequestDtoMapper,
   ResponseDtoMapper
 } from '@forklaunch/core/dtoMapper';
-import { array, optional, SchemaValidator, string, uuid } from 'core';
+import {
+  array,
+  optional,
+  SchemaValidator,
+  string,
+  uuid
+} from '@forklaunch/framework-core';
 import { Organization } from '../persistence/organization.entity';
 import { UserDtoMapper } from './user.dtoMapper';
 
+export type CreateOrganizationDto = CreateOrganizationDtoMapper['dto'];
 export class CreateOrganizationDtoMapper extends RequestDtoMapper<
   Organization,
   SchemaValidator
@@ -30,6 +37,7 @@ export class CreateOrganizationDtoMapper extends RequestDtoMapper<
   }
 }
 
+export type UpdateOrganizationDto = UpdateOrganizationDtoMapper['dto'];
 export class UpdateOrganizationDtoMapper extends RequestDtoMapper<
   Organization,
   SchemaValidator
@@ -62,6 +70,7 @@ export class UpdateOrganizationDtoMapper extends RequestDtoMapper<
   }
 }
 
+export type OrganizationDto = OrganizationDtoMapper['dto'];
 export class OrganizationDtoMapper extends ResponseDtoMapper<
   Organization,
   SchemaValidator
@@ -77,18 +86,21 @@ export class OrganizationDtoMapper extends ResponseDtoMapper<
   };
 
   fromEntity(entity: Organization): this {
-    this.dto.id = entity.id;
-    this.dto.name = entity.name;
-    this.dto.users = entity.users.isInitialized()
-      ? entity.users
-          .getItems()
-          .map((user) =>
-            UserDtoMapper.fromEntity(SchemaValidator(), user).toJson()
-          )
-      : [];
-    this.dto.domain = entity.domain;
-    this.dto.subscription = entity.subscription;
-    this.dto.status = entity.status;
+    this.dto = {
+      id: entity.id,
+      name: entity.name,
+      users: entity.users.isInitialized()
+        ? entity.users
+            .getItems()
+            .map((user) =>
+              UserDtoMapper.fromEntity(SchemaValidator(), user).toJson()
+            )
+        : [],
+      domain: entity.domain,
+      subscription: entity.subscription,
+      status: entity.status
+    };
+
     if (entity.logoUrl) {
       this.dto.logoUrl = entity.logoUrl;
     }

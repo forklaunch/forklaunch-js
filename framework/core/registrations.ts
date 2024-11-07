@@ -8,6 +8,7 @@ import {
   forklaunchExpress as registeredForklaunchExpress,
   forklaunchRouter as registeredForklaunchRouter
 } from '@forklaunch/hyper-express';
+import { LiteralSchema } from '@forklaunch/validator';
 
 // import {
 //   SchemaValidator as RegisteredSchemaValidator,
@@ -75,3 +76,6 @@ export const optional = schemaOptional;
 export const array = schemaArray;
 export const union = schemaUnion;
 export const literal = schemaLiteral;
+export const enum_ = <Enum extends LiteralSchema>(
+  schemaEnum: Record<string, Enum>
+) => union(Object.values<Enum>(schemaEnum));

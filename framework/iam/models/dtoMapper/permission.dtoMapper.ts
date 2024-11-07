@@ -2,9 +2,16 @@ import {
   RequestDtoMapper,
   ResponseDtoMapper
 } from '@forklaunch/core/dtoMapper';
-import { array, optional, SchemaValidator, string, uuid } from 'core';
+import {
+  array,
+  optional,
+  SchemaValidator,
+  string,
+  uuid
+} from '@forklaunch/framework-core';
 import { Permission } from '../persistence/permission.entity';
 
+export type CreatePermissionDto = CreatePermissionDtoMapper['dto'];
 export class CreatePermissionDtoMapper extends RequestDtoMapper<
   Permission,
   SchemaValidator
@@ -22,6 +29,7 @@ export class CreatePermissionDtoMapper extends RequestDtoMapper<
   }
 }
 
+export type UpdatePermissionDto = UpdatePermissionDtoMapper['dto'];
 export class UpdatePermissionDtoMapper extends RequestDtoMapper<
   Permission,
   SchemaValidator
@@ -43,6 +51,8 @@ export class UpdatePermissionDtoMapper extends RequestDtoMapper<
     return permission;
   }
 }
+
+export type PermissionDto = PermissionDtoMapper['dto'];
 export class PermissionDtoMapper extends ResponseDtoMapper<
   Permission,
   SchemaValidator
@@ -53,8 +63,10 @@ export class PermissionDtoMapper extends ResponseDtoMapper<
   };
 
   fromEntity(entity: Permission): this {
-    this.dto.id = entity.id;
-    this.dto.slug = entity.slug;
+    this.dto = {
+      id: entity.id,
+      slug: entity.slug
+    };
 
     return this;
   }

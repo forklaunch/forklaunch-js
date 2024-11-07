@@ -1,5 +1,5 @@
 {
-  "name": "core",
+  "name": "@forklaunch/framework-core",
   "version": "1.0.0",
   "description": "The common core lib for all monorepo services",
   "files": [
@@ -20,9 +20,9 @@
   "license": "ISC",
   "dependencies": {
     "@forklaunch/common": "^0.1.10",
-    "@forklaunch/core": "^0.2.21",
-    "@forklaunch/express": "^0.1.16",
-    "@forklaunch/hyper-express": "^0.1.17",
+    "@forklaunch/core": "^0.2.22",
+    "@forklaunch/express": "^0.1.17",
+    "@forklaunch/hyper-express": "^0.1.18",
     "@forklaunch/validator": "^0.3.8",
     "@sinclair/typebox": "^0.33.17",
     "zod": "^3.23.8"

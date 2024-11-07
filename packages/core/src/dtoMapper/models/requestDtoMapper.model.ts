@@ -37,13 +37,12 @@ export abstract class RequestDtoMapper<
    * @returns {this} - The instance of the RequestDtoMapper.
    */
   fromJson(json: this['_dto']): this {
-    if (
-      !this.schemaValidator.validate(
-        this.schemaValidator.schemify(this.schema),
-        json
-      )
-    ) {
-      throw new Error('Invalid DTO');
+    const parsedSchema = this.schemaValidator.parse(
+      this.schemaValidator.schemify(this.schema),
+      json
+    );
+    if (!parsedSchema.ok) {
+      throw new Error(`Invalid DTO: ${parsedSchema.error}`);
     }
     this.dto = json;
     return this;
@@ -78,11 +77,7 @@ export abstract class RequestDtoMapper<
     T extends RequestDtoMapper<BaseEntity, SV>,
     SV extends AnySchemaValidator,
     JsonType extends T['_dto']
-  >(
-    this: DtoMapperConstructor<T, SV>,
-    schemaValidator: SV,
-    json: JsonType
-  ): T {
+  >(this: DtoMapperConstructor<T, SV>, schemaValidator: SV, json: JsonType): T {
     return construct(this, schemaValidator).fromJson(json);
   }
 
