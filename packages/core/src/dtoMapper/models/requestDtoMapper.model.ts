@@ -36,7 +36,7 @@ export abstract class RequestDtoMapper<
    * @param {this['_dto']} json - The JSON object.
    * @returns {this} - The instance of the RequestDtoMapper.
    */
-  fromJson(json: this['_dto']): this {
+  fromDto(json: this['_dto']): this {
     const parsedSchema = this.schemaValidator.parse(
       this.schemaValidator.schemify(this.schema),
       json
@@ -55,11 +55,11 @@ export abstract class RequestDtoMapper<
    * @param {...unknown[]} additionalArgs - Additional arguments.
    * @returns {Entity} - The entity.
    */
-  deserializeJsonToEntity(
+  deserializeDtoToEntity(
     json: this['_dto'],
     ...additionalArgs: unknown[]
   ): Entity {
-    return this.fromJson(json).toEntity(...additionalArgs);
+    return this.fromDto(json).toEntity(...additionalArgs);
   }
 
   /**
@@ -73,12 +73,12 @@ export abstract class RequestDtoMapper<
    * @param {JsonType} json - The JSON object.
    * @returns {T} - An instance of the T.
    */
-  static fromJson<
+  static fromDto<
     T extends RequestDtoMapper<BaseEntity, SV>,
     SV extends AnySchemaValidator,
     JsonType extends T['_dto']
   >(this: DtoMapperConstructor<T, SV>, schemaValidator: SV, json: JsonType): T {
-    return construct(this, schemaValidator).fromJson(json);
+    return construct(this, schemaValidator).fromDto(json);
   }
 
   /**
@@ -93,7 +93,7 @@ export abstract class RequestDtoMapper<
    * @param {...unknown[]} additionalArgs - Additional arguments.
    * @returns {T['_Entity']} - The entity.
    */
-  static deserializeJsonToEntity<
+  static deserializeDtoToEntity<
     T extends RequestDtoMapper<BaseEntity, SV>,
     SV extends AnySchemaValidator,
     JsonType extends T['_dto']
@@ -104,7 +104,7 @@ export abstract class RequestDtoMapper<
     ...additionalArgs: unknown[]
   ): T['_Entity'] {
     return construct(this, schemaValidator)
-      .fromJson(json)
+      .fromDto(json)
       .toEntity(...additionalArgs);
   }
 }

@@ -50,7 +50,7 @@ export class BaseBillingService implements BillingService {
   }
 
   async createPlan(planDto: CreatePlanDto): Promise<PlanDto> {
-    const plan = CreatePlanDtoMapper.deserializeJsonToEntity(
+    const plan = CreatePlanDtoMapper.deserializeDtoToEntity(
       SchemaValidator(),
       planDto
     );
@@ -63,13 +63,13 @@ export class BaseBillingService implements BillingService {
   }
 
   async updatePlan(planDto: UpdatePlanDto): Promise<PlanDto> {
-    const plan = UpdatePlanDtoMapper.deserializeJsonToEntity(
+    const plan = UpdatePlanDtoMapper.deserializeDtoToEntity(
       SchemaValidator(),
       planDto
     );
     const updatedPlan = await this.em.upsert(plan);
     await this.em.persistAndFlush(plan);
-    const updatedPlanDto = PlanDtoMapper.serializeEntityToJson(
+    const updatedPlanDto = PlanDtoMapper.serializeEntityToDto(
       SchemaValidator(),
       updatedPlan
     );
@@ -83,7 +83,7 @@ export class BaseBillingService implements BillingService {
   async createCheckoutSession(
     sessionDto: CreateSessionDto
   ): Promise<SessionDto> {
-    const session = CreateSessionDtoMapper.deserializeJsonToEntity(
+    const session = CreateSessionDtoMapper.deserializeDtoToEntity(
       SchemaValidator(),
       sessionDto
     );
@@ -98,7 +98,7 @@ export class BaseBillingService implements BillingService {
     const cachedSessionDetails = await this.cache.readRecord<Session>(
       `checkout_session_${session.id}`
     );
-    const createdSessionDto = SessionDtoMapper.serializeEntityToJson(
+    const createdSessionDto = SessionDtoMapper.serializeEntityToDto(
       SchemaValidator(),
       cachedSessionDetails.value
     );
@@ -175,7 +175,7 @@ export class BaseBillingService implements BillingService {
   ): Promise<PaymentLinkDto> {
     // TODO:Perform permission checks here
     const linkId = v4();
-    const paymentLink = CreatePaymentLinkDtoMapper.deserializeJsonToEntity(
+    const paymentLink = CreatePaymentLinkDtoMapper.deserializeDtoToEntity(
       SchemaValidator(),
       paymentLinkDto
     );
@@ -184,7 +184,7 @@ export class BaseBillingService implements BillingService {
       value: paymentLink,
       ttlMilliseconds: this.cache.getTtlMilliseconds()
     });
-    const createdPaymentLinkDto = PaymentLinkDtoMapper.serializeEntityToJson(
+    const createdPaymentLinkDto = PaymentLinkDtoMapper.serializeEntityToDto(
       SchemaValidator(),
       paymentLink
     );
@@ -200,7 +200,7 @@ export class BaseBillingService implements BillingService {
     if (!existingLink) {
       throw new Error('Payment link not found');
     }
-    const paymentLink = UpdatePaymentLinkDtoMapper.deserializeJsonToEntity(
+    const paymentLink = UpdatePaymentLinkDtoMapper.deserializeDtoToEntity(
       SchemaValidator(),
       paymentLinkDto
     );
@@ -210,7 +210,7 @@ export class BaseBillingService implements BillingService {
       value: updatedLink,
       ttlMilliseconds: this.cache.getTtlMilliseconds()
     });
-    const updatedPaymentLinkDto = PaymentLinkDtoMapper.serializeEntityToJson(
+    const updatedPaymentLinkDto = PaymentLinkDtoMapper.serializeEntityToDto(
       SchemaValidator(),
       updatedLink
     );
@@ -224,7 +224,7 @@ export class BaseBillingService implements BillingService {
     if (!paymentLink) {
       throw new Error('Payment link not found');
     }
-    const retrievedPaymentLink = PaymentLinkDtoMapper.serializeEntityToJson(
+    const retrievedPaymentLink = PaymentLinkDtoMapper.serializeEntityToDto(
       SchemaValidator(),
       paymentLink.value
     );
@@ -241,7 +241,7 @@ export class BaseBillingService implements BillingService {
     return await Promise.all(
       keys.map(async (key) => {
         const paymentLink = await this.cache.readRecord<PaymentLink>(key);
-        const paymentLinkDto = PaymentLinkDtoMapper.serializeEntityToJson(
+        const paymentLinkDto = PaymentLinkDtoMapper.serializeEntityToDto(
           SchemaValidator(),
           paymentLink.value
         );
@@ -253,12 +253,12 @@ export class BaseBillingService implements BillingService {
   async createSubscription(
     subscriptionDto: CreateSubscriptionDto
   ): Promise<SubscriptionDto> {
-    const subscription = CreateSubscriptionDtoMapper.deserializeJsonToEntity(
+    const subscription = CreateSubscriptionDtoMapper.deserializeDtoToEntity(
       SchemaValidator(),
       subscriptionDto
     );
     await this.em.persistAndFlush(subscription);
-    const createdSubscriptionDto = SubscriptionDtoMapper.serializeEntityToJson(
+    const createdSubscriptionDto = SubscriptionDtoMapper.serializeEntityToDto(
       SchemaValidator(),
       subscription
     );
@@ -266,7 +266,7 @@ export class BaseBillingService implements BillingService {
   }
 
   async getSubscription(id: string): Promise<SubscriptionDto> {
-    const subscription = SubscriptionDtoMapper.serializeEntityToJson(
+    const subscription = SubscriptionDtoMapper.serializeEntityToDto(
       SchemaValidator(),
       await this.em.findOneOrFail(Subscription, { id })
     );
@@ -275,7 +275,7 @@ export class BaseBillingService implements BillingService {
   }
 
   async getUserSubscription(id: string): Promise<SubscriptionDto> {
-    const subscription = SubscriptionDtoMapper.serializeEntityToJson(
+    const subscription = SubscriptionDtoMapper.serializeEntityToDto(
       SchemaValidator(),
       await this.em.findOneOrFail(Subscription, {
         partyId: id,
@@ -288,7 +288,7 @@ export class BaseBillingService implements BillingService {
   }
 
   async getOrganizationSubscription(id: string): Promise<SubscriptionDto> {
-    const subscription = SubscriptionDtoMapper.serializeEntityToJson(
+    const subscription = SubscriptionDtoMapper.serializeEntityToDto(
       SchemaValidator(),
       await this.em.findOneOrFail(Subscription, {
         partyId: id,
@@ -303,13 +303,13 @@ export class BaseBillingService implements BillingService {
   async updateSubscription(
     subscriptionDto: UpdateSubscriptionDto
   ): Promise<SubscriptionDto> {
-    const subscription = UpdateSubscriptionDtoMapper.deserializeJsonToEntity(
+    const subscription = UpdateSubscriptionDtoMapper.deserializeDtoToEntity(
       SchemaValidator(),
       subscriptionDto
     );
     const updatedSubscription = await this.em.upsert(subscription);
     await this.em.persistAndFlush(updatedSubscription);
-    const updatedSubscriptionDto = SubscriptionDtoMapper.serializeEntityToJson(
+    const updatedSubscriptionDto = SubscriptionDtoMapper.serializeEntityToDto(
       SchemaValidator(),
       updatedSubscription
     );
@@ -335,7 +335,7 @@ export class BaseBillingService implements BillingService {
     });
 
     return subscriptions.map((subscription) => {
-      const subscriptionDto = SubscriptionDtoMapper.serializeEntityToJson(
+      const subscriptionDto = SubscriptionDtoMapper.serializeEntityToDto(
         SchemaValidator(),
         subscription
       );

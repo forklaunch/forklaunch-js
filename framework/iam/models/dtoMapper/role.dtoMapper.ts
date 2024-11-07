@@ -77,7 +77,7 @@ export class RoleDtoMapper extends ResponseDtoMapper<Role, SchemaValidator> {
               PermissionDtoMapper.fromEntity(
                 SchemaValidator(),
                 permission
-              ).toJson()
+              ).toDto()
             )
         : []
     };

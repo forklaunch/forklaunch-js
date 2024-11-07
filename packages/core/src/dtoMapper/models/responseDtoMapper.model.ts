@@ -37,7 +37,7 @@ export abstract class ResponseDtoMapper<
    * @returns {this['_dto']} - The JSON object.
    * @throws {Error} - Throws an error if the DTO is invalid.
    */
-  toJson(): this['_dto'] {
+  toDto(): this['_dto'] {
     const parsedSchema = this.schemaValidator.parse(
       this.schemaValidator.schemify(this.schema),
       this.dto
@@ -55,8 +55,8 @@ export abstract class ResponseDtoMapper<
    * @returns {this['_dto']} - The JSON object.
    * @throws {Error} - Throws an error if the DTO is invalid.
    */
-  serializeEntityToJson(entity: Entity): this['_dto'] {
-    return this.fromEntity(entity).toJson();
+  serializeEntityToDto(entity: Entity): this['_dto'] {
+    return this.fromEntity(entity).toDto();
   }
 
   /**
@@ -91,7 +91,7 @@ export abstract class ResponseDtoMapper<
    * @returns {T['_dto']} - The JSON object.
    * @throws {Error} - Throws an error if the DTO is invalid.
    */
-  static serializeEntityToJson<
+  static serializeEntityToDto<
     T extends ResponseDtoMapper<BaseEntity, SV>,
     SV extends AnySchemaValidator,
     JsonType extends T['_dto']
@@ -100,7 +100,7 @@ export abstract class ResponseDtoMapper<
     schemaValidator: SV,
     entity: T['_Entity']
   ): JsonType {
-    return construct(this, schemaValidator).serializeEntityToJson(
+    return construct(this, schemaValidator).serializeEntityToDto(
       entity
     ) as JsonType;
   }

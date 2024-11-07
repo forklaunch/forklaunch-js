@@ -32,10 +32,10 @@ export const OrganizationRoutes = <ConfigInjectorScope>(
     },
     async (req, res) => {
       try {
-        const organizationJson = OrganizationDtoMapper.serializeEntityToJson(
+        const organizationJson = OrganizationDtoMapper.serializeEntityToDto(
           SchemaValidator(),
           await service().createOrganization(
-            CreateOrganizationDtoMapper.deserializeJsonToEntity(
+            CreateOrganizationDtoMapper.deserializeDtoToEntity(
               SchemaValidator(),
               req.body
             )
@@ -69,7 +69,7 @@ export const OrganizationRoutes = <ConfigInjectorScope>(
     async (req, res) => {
       const organization = await service().getOrganization(req.params.id);
       if (organization) {
-        const organizationJson = OrganizationDtoMapper.serializeEntityToJson(
+        const organizationJson = OrganizationDtoMapper.serializeEntityToDto(
           SchemaValidator(),
           organization
         );
@@ -93,11 +93,11 @@ export const OrganizationRoutes = <ConfigInjectorScope>(
       }
     },
     async (req, res) => {
-      const organization = UpdateOrganizationDtoMapper.deserializeJsonToEntity(
+      const organization = UpdateOrganizationDtoMapper.deserializeDtoToEntity(
         SchemaValidator(),
         req.body
       );
-      const updatedOrgainzation = OrganizationDtoMapper.serializeEntityToJson(
+      const updatedOrgainzation = OrganizationDtoMapper.serializeEntityToDto(
         SchemaValidator(),
         await service().updateOrganization(organization)
       );

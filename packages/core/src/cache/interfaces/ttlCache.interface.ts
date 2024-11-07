@@ -10,7 +10,7 @@ export interface TtlCache {
    * @param {TtlCacheRecord} cacheRecord - The cache record to put into the cache.
    * @returns {Promise<void>} - A promise that resolves when the record is put into the cache.
    */
-  putRecord(cacheRecord: TtlCacheRecord): Promise<void>;
+  putRecord<T>(cacheRecord: TtlCacheRecord<T>): Promise<void>;
 
   /**
    * Deletes a record from the cache.
@@ -26,7 +26,7 @@ export interface TtlCache {
    * @param {string} cacheRecordKey - The key of the cache record to read.
    * @returns {Promise<TtlCacheRecord>} - A promise that resolves with the cache record.
    */
-  readRecord(cacheRecordKey: string): Promise<TtlCacheRecord>;
+  readRecord<T>(cacheRecordKey: string): Promise<TtlCacheRecord<T>>;
 
   /**
    * Peeks at a record in the cache to check if it exists.

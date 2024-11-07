@@ -32,7 +32,7 @@ export const RoleRoutes = <ConfigInjectorScope>(
     },
     async (req, res) => {
       const role = req.body;
-      const roleEntity = CreateRoleDtoMapper.deserializeJsonToEntity(
+      const roleEntity = CreateRoleDtoMapper.deserializeDtoToEntity(
         SchemaValidator(),
         role
       );
@@ -57,7 +57,7 @@ export const RoleRoutes = <ConfigInjectorScope>(
     async (req, res) => {
       const roles = req.body;
       const roleEntities = roles.map((role) =>
-        CreateRoleDtoMapper.deserializeJsonToEntity(SchemaValidator(), role)
+        CreateRoleDtoMapper.deserializeDtoToEntity(SchemaValidator(), role)
       );
 
       await service().createBatchRoles(roleEntities);
@@ -83,7 +83,7 @@ export const RoleRoutes = <ConfigInjectorScope>(
       const id = req.params.id;
       const roleEntity = await service().getRole(id);
 
-      const roleDto = RoleDtoMapper.serializeEntityToJson(
+      const roleDto = RoleDtoMapper.serializeEntityToDto(
         SchemaValidator(),
         roleEntity
       );
@@ -111,7 +111,7 @@ export const RoleRoutes = <ConfigInjectorScope>(
       const roles = await service().getBatchRoles(ids);
 
       const rolesDto = roles.map((role) =>
-        RoleDtoMapper.serializeEntityToJson(SchemaValidator(), role)
+        RoleDtoMapper.serializeEntityToDto(SchemaValidator(), role)
       );
 
       res.status(200).json(rolesDto);
@@ -132,7 +132,7 @@ export const RoleRoutes = <ConfigInjectorScope>(
     },
     async (req, res) => {
       const role = req.body;
-      const roleEntity = UpdateRoleDtoMapper.deserializeJsonToEntity(
+      const roleEntity = UpdateRoleDtoMapper.deserializeDtoToEntity(
         SchemaValidator(),
         role
       );
@@ -157,7 +157,7 @@ export const RoleRoutes = <ConfigInjectorScope>(
     async (req, res) => {
       const roles = req.body;
       const roleEntities = roles.map((role) =>
-        UpdateRoleDtoMapper.deserializeJsonToEntity(SchemaValidator(), role)
+        UpdateRoleDtoMapper.deserializeDtoToEntity(SchemaValidator(), role)
       );
 
       await service().updateBatchRoles(roleEntities);

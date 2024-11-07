@@ -35,11 +35,10 @@ export const PermissionRoutes = <ConfigInjectorScope>(
       }
     },
     async (req, res) => {
-      const permissionEntity =
-        CreatePermissionDtoMapper.deserializeJsonToEntity(
-          SchemaValidator(),
-          req.body
-        );
+      const permissionEntity = CreatePermissionDtoMapper.deserializeDtoToEntity(
+        SchemaValidator(),
+        req.body
+      );
       const addToRolesEntities = req.body.addToRolesIds
         ? await roleService().getBatchRoles(req.body.addToRolesIds)
         : undefined;
@@ -85,7 +84,7 @@ export const PermissionRoutes = <ConfigInjectorScope>(
           );
 
           return {
-            permission: CreatePermissionDtoMapper.deserializeJsonToEntity(
+            permission: CreatePermissionDtoMapper.deserializeDtoToEntity(
               SchemaValidator(),
               createPermissionDtoMapper
             ),
@@ -118,7 +117,7 @@ export const PermissionRoutes = <ConfigInjectorScope>(
       const id = req.params.id;
       const permission = await service().getPermission(id);
 
-      const permissionJson = PermissionDtoMapper.serializeEntityToJson(
+      const permissionJson = PermissionDtoMapper.serializeEntityToDto(
         SchemaValidator(),
         permission
       );
@@ -144,7 +143,7 @@ export const PermissionRoutes = <ConfigInjectorScope>(
       const ids = req.query.ids.split(',');
       const permissions = await service().getBatchPermissions(ids);
       const permissionDtos = permissions.map((permission) =>
-        PermissionDtoMapper.serializeEntityToJson(SchemaValidator(), permission)
+        PermissionDtoMapper.serializeEntityToDto(SchemaValidator(), permission)
       );
 
       res.status(200).json(permissionDtos);
@@ -164,11 +163,10 @@ export const PermissionRoutes = <ConfigInjectorScope>(
       }
     },
     async (req, res) => {
-      const permissionEntity =
-        UpdatePermissionDtoMapper.deserializeJsonToEntity(
-          SchemaValidator(),
-          req.body
-        );
+      const permissionEntity = UpdatePermissionDtoMapper.deserializeDtoToEntity(
+        SchemaValidator(),
+        req.body
+      );
       const addToRolesEntity = req.body.addToRolesIds
         ? await Promise.all(
             req.body.addToRolesIds.map(
@@ -232,7 +230,7 @@ export const PermissionRoutes = <ConfigInjectorScope>(
             );
 
           return {
-            permission: UpdatePermissionDtoMapper.deserializeJsonToEntity(
+            permission: UpdatePermissionDtoMapper.deserializeDtoToEntity(
               SchemaValidator(),
               updatePermissionDtoMapper
             ),

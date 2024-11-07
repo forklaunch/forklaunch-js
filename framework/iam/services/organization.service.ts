@@ -16,19 +16,19 @@ export default class BaseOrganizationService implements OrganizationService {
   async createOrganization(
     organizationDto: CreateOrganizationDto
   ): Promise<OrganizationDto> {
-    const organization = CreateOrganizationDtoMapper.deserializeJsonToEntity(
+    const organization = CreateOrganizationDtoMapper.deserializeDtoToEntity(
       SchemaValidator(),
       organizationDto
     );
 
     await this.em.persistAndFlush(
-      CreateOrganizationDtoMapper.deserializeJsonToEntity(
+      CreateOrganizationDtoMapper.deserializeDtoToEntity(
         SchemaValidator(),
         organizationDto
       )
     );
 
-    return OrganizationDtoMapper.serializeEntityToJson(
+    return OrganizationDtoMapper.serializeEntityToDto(
       SchemaValidator(),
       organization
     );

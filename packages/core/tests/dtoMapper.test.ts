@@ -85,8 +85,8 @@ describe('request dtoMapper tests', () => {
       age: 1
     };
 
-    const responseDM = TestRequestDM.fromJson(json);
-    const staticDM = TestRequestDtoMapper.fromJson(SV, json);
+    const responseDM = TestRequestDM.fromDto(json);
+    const staticDM = TestRequestDtoMapper.fromDto(SV, json);
     const expectedDto = {
       id: '123',
       name: 'test',
@@ -106,14 +106,14 @@ describe('request dtoMapper tests', () => {
     };
 
     const entity = extractNonTimeBasedEntityFields(
-      TestRequestDM.deserializeJsonToEntity(json)
+      TestRequestDM.deserializeDtoToEntity(json)
     );
     const objectEntity = extractNonTimeBasedEntityFields(
-      TestRequestDM.fromJson(json).toEntity()
+      TestRequestDM.fromDto(json).toEntity()
     );
-    const e = TestRequestDtoMapper.deserializeJsonToEntity(SV, json);
+    const e = TestRequestDtoMapper.deserializeDtoToEntity(SV, json);
     const staticEntity = extractNonTimeBasedEntityFields(
-      TestRequestDtoMapper.deserializeJsonToEntity(SV, json)
+      TestRequestDtoMapper.deserializeDtoToEntity(SV, json)
     );
     let expectedEntity = new TestEntity();
     expectedEntity.id = '123';
@@ -138,9 +138,9 @@ describe('request dtoMapper tests', () => {
     };
 
     // @ts-expect-error
-    expect(() => TestRequestDM.fromJson(json)).toThrow();
+    expect(() => TestRequestDM.fromDto(json)).toThrow();
     // @ts-expect-error
-    expect(() => TestRequestDtoMapper.fromJson(SV, json)).toThrow();
+    expect(() => TestRequestDtoMapper.fromDto(SV, json)).toThrow();
   });
 });
 
@@ -181,13 +181,13 @@ describe('response dtoMapper tests', () => {
     entity.age = 1;
 
     const json = genericDtoWrapperFunction(
-      TestResponseDM.serializeEntityToJson(entity)
+      TestResponseDM.serializeEntityToDto(entity)
     );
     const objectJson = genericDtoWrapperFunction(
-      TestResponseDM.fromEntity(entity).toJson()
+      TestResponseDM.fromEntity(entity).toDto()
     );
     const staticJson = genericDtoWrapperFunction(
-      TestResponseDtoMapper.serializeEntityToJson(SV, entity)
+      TestResponseDtoMapper.serializeEntityToDto(SV, entity)
     );
     const expectedJson = {
       id: '123',
@@ -209,9 +209,9 @@ describe('response dtoMapper tests', () => {
     entity.id = '123';
     entity.name = 'test';
 
-    expect(() => TestResponseDM.fromEntity(entity).toJson()).toThrow();
+    expect(() => TestResponseDM.fromEntity(entity).toDto()).toThrow();
     expect(() =>
-      TestResponseDtoMapper.fromEntity(SV, entity).toJson()
+      TestResponseDtoMapper.fromEntity(SV, entity).toDto()
     ).toThrow();
   });
 });

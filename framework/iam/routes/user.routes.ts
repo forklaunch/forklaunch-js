@@ -39,7 +39,7 @@ export const UserRoutes = <ConfigInjectorScope>(
     },
     async (req, res) => {
       // use req context to prepopulate organizationId from AuthToken
-      const userEntity = CreateUserDtoMapper.deserializeJsonToEntity(
+      const userEntity = CreateUserDtoMapper.deserializeDtoToEntity(
         SchemaValidator(),
         req.body
       );
@@ -100,7 +100,7 @@ export const UserRoutes = <ConfigInjectorScope>(
             roleCache[role.id] = role;
           });
           return {
-            user: CreateUserDtoMapper.deserializeJsonToEntity(
+            user: CreateUserDtoMapper.deserializeDtoToEntity(
               SchemaValidator(),
               createUserType
             ),
@@ -132,7 +132,7 @@ export const UserRoutes = <ConfigInjectorScope>(
     async (req, res) => {
       const id = req.params.id;
       const user = await service().getUser(id);
-      const userDto = UserDtoMapper.serializeEntityToJson(
+      const userDto = UserDtoMapper.serializeEntityToDto(
         SchemaValidator(),
         user
       );
@@ -159,7 +159,7 @@ export const UserRoutes = <ConfigInjectorScope>(
       const ids = req.query.ids.split(',');
       const users = await service().getBatchUsers(ids);
       const userDtos = users.map((user) =>
-        UserDtoMapper.serializeEntityToJson(SchemaValidator(), user)
+        UserDtoMapper.serializeEntityToDto(SchemaValidator(), user)
       );
 
       res.status(200).json(userDtos);
@@ -179,7 +179,7 @@ export const UserRoutes = <ConfigInjectorScope>(
       }
     },
     async (req, res) => {
-      const userEntity = UpdateUserDtoMapper.deserializeJsonToEntity(
+      const userEntity = UpdateUserDtoMapper.deserializeDtoToEntity(
         SchemaValidator(),
         req.body
       );
@@ -223,7 +223,7 @@ export const UserRoutes = <ConfigInjectorScope>(
             roleCache[role.id] = role;
           });
           return {
-            user: UpdateUserDtoMapper.deserializeJsonToEntity(
+            user: UpdateUserDtoMapper.deserializeDtoToEntity(
               SchemaValidator(),
               updateUserType
             ),

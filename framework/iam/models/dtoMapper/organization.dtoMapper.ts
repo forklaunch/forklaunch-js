@@ -93,7 +93,7 @@ export class OrganizationDtoMapper extends ResponseDtoMapper<
         ? entity.users
             .getItems()
             .map((user) =>
-              UserDtoMapper.fromEntity(SchemaValidator(), user).toJson()
+              UserDtoMapper.fromEntity(SchemaValidator(), user).toDto()
             )
         : [],
       domain: entity.domain,

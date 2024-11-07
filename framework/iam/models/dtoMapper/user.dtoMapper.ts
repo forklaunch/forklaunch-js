@@ -128,7 +128,7 @@ export class UserDtoMapper extends ResponseDtoMapper<User, SchemaValidator> {
         ? entity.roles
             .getItems()
             .map((role) =>
-              RoleDtoMapper.fromEntity(SchemaValidator(), role).toJson()
+              RoleDtoMapper.fromEntity(SchemaValidator(), role).toDto()
             )
         : []
     };
