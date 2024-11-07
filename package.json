@@ -23,7 +23,7 @@
     "docs": "pnpm --parallel -r run docs",
     "lint": "pnpm --parallel -r run lint",
     "lint:fix": "pnpm --parallel -r run lint:fix",
-    "publish:packages": "pnpm -r run publish",
+    "publish:packages": "pnpm -r run publish:package",
     "format": "pnpm --parallel -r run format",
     "test": "pnpm vitest --passWithNoTests",
     "up": "pnpm --parallel -r run up"

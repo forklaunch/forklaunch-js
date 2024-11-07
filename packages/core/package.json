@@ -14,7 +14,7 @@
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.ts' --write",
-    "publish": "./publish-package.bash"
+    "publish:package": "./publish-package.bash"
   },
   "author": "Rohin Bhargava",
   "license": "MIT",
