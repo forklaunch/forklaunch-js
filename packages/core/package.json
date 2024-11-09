@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/core",
-  "version": "0.2.23",
+  "version": "0.2.24",
   "description": "forklaunch-js core package. Contains useful building blocks.",
   "files": [
     "lib"

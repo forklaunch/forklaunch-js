@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.2.24
+
+### Patch Changes
+
+- Improve typing on dto mapper methods
+
 ## 0.2.23
 
 ### Patch Changes

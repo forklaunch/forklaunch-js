@@ -101,7 +101,6 @@ export abstract class RequestDtoMapper<
     this: DtoMapperConstructor<T, SV>,
     schemaValidator: SV,
     json: JsonType,
-    // ...additionalArgs: unknown[]
     ...additionalArgs: Parameters<T['toEntity']>
   ): T['_Entity'] {
     return construct(this, schemaValidator)
