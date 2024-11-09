@@ -1,20 +1,22 @@
 // https://ts.dev/style/#descriptive-names
 
 import { BaseService } from '@forklaunch/core/services';
+import { EntityManager } from '@mikro-orm/core';
 import {
   CreateOrganizationDto,
   OrganizationDto,
   UpdateOrganizationDto
 } from '../models/dtoMapper/organization.dtoMapper';
-import { Organization } from '../models/persistence/organization.entity';
 
 export interface OrganizationService extends BaseService {
   createOrganization(
-    organizationDto: CreateOrganizationDto
+    organizationDto: CreateOrganizationDto,
+    em?: EntityManager
   ): Promise<OrganizationDto>;
-  getOrganization(id: string): Promise<Organization>;
+  getOrganization(id: string, em?: EntityManager): Promise<OrganizationDto>;
   updateOrganization(
-    organizationDto: UpdateOrganizationDto
+    organizationDto: UpdateOrganizationDto,
+    em?: EntityManager
   ): Promise<OrganizationDto>;
-  deleteOrganization(id: string): Promise<void>;
+  deleteOrganization(id: string, em?: EntityManager): Promise<void>;
 }

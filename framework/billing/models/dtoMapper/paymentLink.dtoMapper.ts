@@ -3,6 +3,7 @@ import {
   ResponseDtoMapper
 } from '@forklaunch/core/dtoMapper';
 import {
+  date,
   enum_,
   number,
   optional,
@@ -109,14 +110,18 @@ export class PaymentLinkDtoMapper extends ResponseDtoMapper<
     metadata: optional(unknown),
     successRedirectUri: optional(string),
     cancelRedirectUri: optional(string),
-    extraFields: optional(unknown)
+    extraFields: optional(unknown),
+    createdAt: date,
+    updatedAt: date
   };
 
   fromEntity(paymentLink: PaymentLink): this {
     this.dto = {
       id: paymentLink.id,
       amount: paymentLink.amount,
-      currency: paymentLink.currency
+      currency: paymentLink.currency,
+      createdAt: paymentLink.createdAt,
+      updatedAt: paymentLink.updatedAt
     };
 
     if (paymentLink.description) {

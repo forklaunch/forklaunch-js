@@ -4,6 +4,7 @@ import {
 } from '@forklaunch/core/dtoMapper';
 import {
   array,
+  date,
   enum_,
   optional,
   SchemaValidator,
@@ -86,7 +87,9 @@ export class SessionDtoMapper extends ResponseDtoMapper<
     paymentMethods: array(enum_(PaymentMethod)),
     successRedirectUri: string,
     cancelRedirectUri: string,
-    extraFields: optional(unknown)
+    extraFields: optional(unknown),
+    createdAt: date,
+    updatedAt: date
   };
 
   fromEntity(session: Session): this {
@@ -95,7 +98,9 @@ export class SessionDtoMapper extends ResponseDtoMapper<
       customerEmail: session.customerEmail,
       paymentMethods: session.paymentMethods,
       successRedirectUri: session.successRedirectUri,
-      cancelRedirectUri: session.cancelRedirectUri
+      cancelRedirectUri: session.cancelRedirectUri,
+      createdAt: session.createdAt,
+      updatedAt: session.updatedAt
     };
     if (session.extraFields) {
       this.dto.extraFields = session.extraFields;

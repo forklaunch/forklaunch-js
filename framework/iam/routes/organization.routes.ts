@@ -1,8 +1,4 @@
-import {
-  forklaunchRouter,
-  SchemaValidator,
-  string
-} from '@forklaunch/framework-core';
+import { forklaunchRouter, string } from '@forklaunch/framework-core';
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { OrganizationService } from '../interfaces/organizationService.interface';
 import {
@@ -32,16 +28,7 @@ export const OrganizationRoutes = <ConfigInjectorScope>(
     },
     async (req, res) => {
       try {
-        const organizationJson = OrganizationDtoMapper.serializeEntityToDto(
-          SchemaValidator(),
-          await service().createOrganization(
-            CreateOrganizationDtoMapper.deserializeDtoToEntity(
-              SchemaValidator(),
-              req.body
-            )
-          )
-        );
-        res.status(201).json(organizationJson);
+        res.status(201).json(await service().createOrganization(req.body));
       } catch (error: Error | unknown) {
         if (error instanceof UniqueConstraintViolationException) {
           res.status(409).send('Organization already exists');
@@ -67,13 +54,9 @@ export const OrganizationRoutes = <ConfigInjectorScope>(
       }
     },
     async (req, res) => {
-      const organization = await service().getOrganization(req.params.id);
-      if (organization) {
-        const organizationJson = OrganizationDtoMapper.serializeEntityToDto(
-          SchemaValidator(),
-          organization
-        );
-        res.status(200).json(organizationJson);
+      const organizationDto = await service().getOrganization(req.params.id);
+      if (organizationDto) {
+        res.status(200).json(organizationDto);
       } else {
         res.status(404).send('Organization not found');
       }
@@ -93,15 +76,7 @@ export const OrganizationRoutes = <ConfigInjectorScope>(
       }
     },
     async (req, res) => {
-      const organization = UpdateOrganizationDtoMapper.deserializeDtoToEntity(
-        SchemaValidator(),
-        req.body
-      );
-      const updatedOrgainzation = OrganizationDtoMapper.serializeEntityToDto(
-        SchemaValidator(),
-        await service().updateOrganization(organization)
-      );
-      res.status(200).json(updatedOrgainzation);
+      res.status(200).json(await service().updateOrganization(req.body));
     }
   ),
 
@@ -120,8 +95,7 @@ export const OrganizationRoutes = <ConfigInjectorScope>(
       }
     },
     async (req, res) => {
-      const id = req.params.id;
-      await service().deleteOrganization(id);
+      await service().deleteOrganization(req.params.id);
       res.status(200).send('Organization deleted successfully');
     }
   )

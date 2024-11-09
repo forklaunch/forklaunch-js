@@ -136,7 +136,9 @@ export class SubscriptionDtoMapper extends ResponseDtoMapper<
     endDate: date,
     status: string,
     billingProvider: optional(enum_(BillingProvider)),
-    extraFields: optional(unknown)
+    extraFields: optional(unknown),
+    createdAt: date,
+    updatedAt: date
   };
 
   fromEntity(entity: Subscription): this {
@@ -149,7 +151,9 @@ export class SubscriptionDtoMapper extends ResponseDtoMapper<
       externalId: entity.externalId,
       startDate: entity.startDate,
       endDate: entity.endDate,
-      status: entity.status
+      status: entity.status,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt
     };
     if (entity.description) {
       this.dto.description = entity.description;

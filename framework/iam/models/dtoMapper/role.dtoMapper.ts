@@ -4,6 +4,7 @@ import {
 } from '@forklaunch/core/dtoMapper';
 import {
   array,
+  date,
   optional,
   SchemaValidator,
   string,
@@ -63,7 +64,9 @@ export class RoleDtoMapper extends ResponseDtoMapper<Role, SchemaValidator> {
   schema = {
     id: uuid,
     name: string,
-    permissions: array(PermissionDtoMapper.schema())
+    permissions: array(PermissionDtoMapper.schema()),
+    createdAt: date,
+    updatedAt: date
   };
 
   fromEntity(entity: Role): this {
@@ -79,7 +82,9 @@ export class RoleDtoMapper extends ResponseDtoMapper<Role, SchemaValidator> {
                 permission
               ).toDto()
             )
-        : []
+        : [],
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt
     };
 
     return this;

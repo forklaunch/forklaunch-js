@@ -1,45 +1,134 @@
+import { SchemaValidator } from '@forklaunch/framework-core';
 import { EntityManager } from '@mikro-orm/core';
+import { PermissionService } from '../interfaces/permissionService.interface';
+import { RoleService } from '../interfaces/roleService.interface';
 import {
-  CreateRoleData,
-  RoleService,
-  UpdateRoleData
-} from '../interfaces/roleService.interface';
+  CreateRoleDto,
+  CreateRoleDtoMapper,
+  RoleDto,
+  RoleDtoMapper,
+  UpdateRoleDto,
+  UpdateRoleDtoMapper
+} from '../models/dtoMapper/role.dtoMapper';
 import { Role } from '../models/persistence/role.entity';
 
 export default class BaseRoleService implements RoleService {
-  constructor(public em: EntityManager) {}
+  private permissionService: PermissionService;
 
-  async createRole(data: CreateRoleData): Promise<void> {
-    await this.em.persistAndFlush(data);
+  constructor(
+    public em: EntityManager,
+    permissionService: () => PermissionService
+  ) {
+    this.permissionService = permissionService();
   }
 
-  async createBatchRoles(data: CreateRoleData[]): Promise<void> {
-    await this.em.persistAndFlush(data);
+  async createRole(
+    roleDto: CreateRoleDto,
+    em?: EntityManager
+  ): Promise<RoleDto> {
+    // TODO: Think about removing static method here, since we need specific args
+    const role = CreateRoleDtoMapper.deserializeDtoToEntity(
+      SchemaValidator(),
+      roleDto,
+      roleDto.permissionIds
+        ? await this.permissionService.getBatchPermissions(
+            roleDto.permissionIds,
+            em
+          )
+        : []
+    );
+    await (em ?? this.em).transactional((em) => em.persist(role));
+    return RoleDtoMapper.serializeEntityToDto(SchemaValidator(), role);
   }
 
-  async getRole(id: string): Promise<Role> {
-    return await this.em.findOneOrFail(Role, { id });
+  async createBatchRoles(
+    roleDtos: CreateRoleDto[],
+    em?: EntityManager
+  ): Promise<RoleDto[]> {
+    const roles = await Promise.all(
+      roleDtos.map(async (roleDto) =>
+        CreateRoleDtoMapper.deserializeDtoToEntity(
+          SchemaValidator(),
+          roleDto,
+          roleDto.permissionIds
+            ? await this.permissionService.getBatchPermissions(
+                roleDto.permissionIds,
+                em
+              )
+            : []
+        )
+      )
+    );
+    await (em ?? this.em).transactional((em) => em.persist(roles));
+    return roles.map((role) =>
+      RoleDtoMapper.serializeEntityToDto(SchemaValidator(), role)
+    );
   }
 
-  async getBatchRoles(ids: string[]): Promise<Role[]> {
-    return await this.em.find(Role, ids);
+  async getRole(id: string, em?: EntityManager): Promise<RoleDto> {
+    return RoleDtoMapper.serializeEntityToDto(
+      SchemaValidator(),
+      await (em ?? this.em).findOneOrFail(Role, { id })
+    );
   }
 
-  async updateRole(data: UpdateRoleData): Promise<void> {
-    const updatedRole = await this.em.upsert(Role, data);
-    await this.em.persistAndFlush(updatedRole);
+  async getBatchRoles(ids: string[], em?: EntityManager): Promise<RoleDto[]> {
+    return (await (em ?? this.em).find(Role, ids)).map((role) =>
+      RoleDtoMapper.serializeEntityToDto(SchemaValidator(), role)
+    );
   }
 
-  async updateBatchRoles(data: UpdateRoleData[]): Promise<void> {
-    const updatedRoles = await this.em.upsertMany(Role, data);
-    await this.em.persistAndFlush(updatedRoles);
+  async updateRole(
+    roleDto: UpdateRoleDto,
+    em?: EntityManager
+  ): Promise<RoleDto> {
+    let role = UpdateRoleDtoMapper.deserializeDtoToEntity(
+      SchemaValidator(),
+      roleDto,
+      roleDto.permissionIds
+        ? await this.permissionService.getBatchPermissions(
+            roleDto.permissionIds,
+            em
+          )
+        : []
+    );
+    await (em ?? this.em).transactional(async (em) => {
+      role = await em.upsert(Role, role);
+    });
+    return RoleDtoMapper.serializeEntityToDto(SchemaValidator(), role);
   }
 
-  async deleteRole(id: string): Promise<void> {
-    await this.em.nativeDelete(Role, { id });
+  async updateBatchRoles(
+    roleDtos: UpdateRoleDto[],
+    em?: EntityManager
+  ): Promise<RoleDto[]> {
+    let roles = await Promise.all(
+      roleDtos.map(async (roleDto) =>
+        UpdateRoleDtoMapper.deserializeDtoToEntity(
+          SchemaValidator(),
+          roleDto,
+          roleDto.permissionIds
+            ? await this.permissionService.getBatchPermissions(
+                roleDto.permissionIds,
+                em
+              )
+            : []
+        )
+      )
+    );
+    await (em ?? this.em).transactional(async (em) => {
+      roles = await em.upsertMany(Role, roles);
+    });
+    return roles.map((role) =>
+      RoleDtoMapper.serializeEntityToDto(SchemaValidator(), role)
+    );
   }
 
-  async deleteRoles(ids: string[]): Promise<void> {
-    await this.em.nativeDelete(Role, { id: { $in: ids } });
+  async deleteRole(id: string, em?: EntityManager): Promise<void> {
+    await (em ?? this.em).nativeDelete(Role, { id });
+  }
+
+  async deleteRoles(ids: string[], em?: EntityManager): Promise<void> {
+    await (em ?? this.em).nativeDelete(Role, { id: { $in: ids } });
   }
 }

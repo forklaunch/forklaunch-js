@@ -5,6 +5,7 @@ import {
 import {
   array,
   boolean,
+  date,
   enum_,
   number,
   optional,
@@ -127,7 +128,9 @@ export class PlanDtoMapper extends ResponseDtoMapper<Plan, SchemaValidator> {
     extraFields: optional(unknown),
     externalId: string,
     billingProvider: optional(enum_(BillingProvider)),
-    active: boolean
+    active: boolean,
+    createdAt: date,
+    updatedAt: date
   };
 
   fromEntity(plan: Plan): this {
@@ -138,7 +141,9 @@ export class PlanDtoMapper extends ResponseDtoMapper<Plan, SchemaValidator> {
       price: plan.price,
       cadence: plan.cadence,
       externalId: plan.externalId,
-      active: plan.active
+      active: plan.active,
+      createdAt: plan.createdAt,
+      updatedAt: plan.updatedAt
     };
 
     if (plan.description) {

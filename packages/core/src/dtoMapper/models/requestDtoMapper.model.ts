@@ -57,7 +57,7 @@ export abstract class RequestDtoMapper<
    */
   deserializeDtoToEntity(
     json: this['_dto'],
-    ...additionalArgs: unknown[]
+    ...additionalArgs: Parameters<this['toEntity']>
   ): Entity {
     return this.fromDto(json).toEntity(...additionalArgs);
   }
@@ -101,7 +101,8 @@ export abstract class RequestDtoMapper<
     this: DtoMapperConstructor<T, SV>,
     schemaValidator: SV,
     json: JsonType,
-    ...additionalArgs: unknown[]
+    // ...additionalArgs: unknown[]
+    ...additionalArgs: Parameters<T['toEntity']>
   ): T['_Entity'] {
     return construct(this, schemaValidator)
       .fromDto(json)

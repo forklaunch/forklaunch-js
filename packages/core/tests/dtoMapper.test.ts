@@ -26,12 +26,11 @@ class TestRequestDtoMapper extends RequestDtoMapper<
     age: number
   };
 
-  toEntity(...additionalArgs: unknown[]): TestEntity {
+  toEntity(arg1: string, arg2?: string): TestEntity {
     const entity = new TestEntity();
     entity.id = this.dto.id;
     entity.name = this.dto.name;
     entity.age = this.dto.age;
-
     return entity;
   }
 }
@@ -46,7 +45,7 @@ class TestResponseDtoMapper extends ResponseDtoMapper<
     age: number
   };
 
-  fromEntity(entity: TestEntity): this {
+  fromEntity(entity: TestEntity, arg1: string, arg2?: string): this {
     this.dto = {
       id: entity.id,
       name: entity.name,
@@ -106,14 +105,13 @@ describe('request dtoMapper tests', () => {
     };
 
     const entity = extractNonTimeBasedEntityFields(
-      TestRequestDM.deserializeDtoToEntity(json)
+      TestRequestDM.deserializeDtoToEntity(json, 'arg1')
     );
     const objectEntity = extractNonTimeBasedEntityFields(
-      TestRequestDM.fromDto(json).toEntity()
+      TestRequestDM.fromDto(json).toEntity('arg1')
     );
-    const e = TestRequestDtoMapper.deserializeDtoToEntity(SV, json);
     const staticEntity = extractNonTimeBasedEntityFields(
-      TestRequestDtoMapper.deserializeDtoToEntity(SV, json)
+      TestRequestDtoMapper.deserializeDtoToEntity(SV, json, 'arg1', 'arg2')
     );
     let expectedEntity = new TestEntity();
     expectedEntity.id = '123';
@@ -161,8 +159,8 @@ describe('response dtoMapper tests', () => {
     entity.name = 'test';
     entity.age = 1;
 
-    const responseDM = TestResponseDM.fromEntity(entity);
-    const staticDM = TestResponseDtoMapper.fromEntity(SV, entity);
+    const responseDM = TestResponseDM.fromEntity(entity, 'arg1');
+    const staticDM = TestResponseDtoMapper.fromEntity(SV, entity, 'arg1');
     const expectedDto = {
       id: '123',
       name: 'test',
@@ -181,13 +179,13 @@ describe('response dtoMapper tests', () => {
     entity.age = 1;
 
     const json = genericDtoWrapperFunction(
-      TestResponseDM.serializeEntityToDto(entity)
+      TestResponseDM.serializeEntityToDto(entity, 'arg1')
     );
     const objectJson = genericDtoWrapperFunction(
-      TestResponseDM.fromEntity(entity).toDto()
+      TestResponseDM.fromEntity(entity, 'arg1').toDto()
     );
     const staticJson = genericDtoWrapperFunction(
-      TestResponseDtoMapper.serializeEntityToDto(SV, entity)
+      TestResponseDtoMapper.serializeEntityToDto(SV, entity, 'arg1', 'arg2')
     );
     const expectedJson = {
       id: '123',
@@ -209,9 +207,9 @@ describe('response dtoMapper tests', () => {
     entity.id = '123';
     entity.name = 'test';
 
-    expect(() => TestResponseDM.fromEntity(entity).toDto()).toThrow();
+    expect(() => TestResponseDM.fromEntity(entity, 'arg1').toDto()).toThrow();
     expect(() =>
-      TestResponseDtoMapper.fromEntity(SV, entity).toDto()
+      TestResponseDtoMapper.fromEntity(SV, entity, 'arg1', 'arg2').toDto()
     ).toThrow();
   });
 });

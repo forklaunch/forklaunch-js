@@ -6,7 +6,8 @@ import {
   CreateOrganizationDtoMapper,
   OrganizationDto,
   OrganizationDtoMapper,
-  UpdateOrganizationDto
+  UpdateOrganizationDto,
+  UpdateOrganizationDtoMapper
 } from '../models/dtoMapper/organization.dtoMapper';
 import { Organization } from '../models/persistence/organization.entity';
 
@@ -14,39 +15,54 @@ export default class BaseOrganizationService implements OrganizationService {
   constructor(public em: EntityManager) {}
 
   async createOrganization(
-    organizationDto: CreateOrganizationDto
+    organizationDto: CreateOrganizationDto,
+    em?: EntityManager
   ): Promise<OrganizationDto> {
     const organization = CreateOrganizationDtoMapper.deserializeDtoToEntity(
       SchemaValidator(),
       organizationDto
     );
-
-    await this.em.persistAndFlush(
-      CreateOrganizationDtoMapper.deserializeDtoToEntity(
-        SchemaValidator(),
-        organizationDto
-      )
-    );
-
+    if (em) {
+      await em.persist(organization);
+    } else {
+      await this.em.persistAndFlush(organization);
+    }
     return OrganizationDtoMapper.serializeEntityToDto(
       SchemaValidator(),
       organization
     );
   }
 
-  async getOrganization(id: string): Promise<Organization> {
-    return await this.em.findOneOrFail(Organization, { id });
+  async getOrganization(
+    id: string,
+    em?: EntityManager
+  ): Promise<OrganizationDto> {
+    return OrganizationDtoMapper.serializeEntityToDto(
+      SchemaValidator(),
+      await (em ?? this.em).findOneOrFail(Organization, { id })
+    );
   }
 
   async updateOrganization(
-    organizationDto: UpdateOrganizationDto
+    organizationDto: UpdateOrganizationDto,
+    em?: EntityManager
   ): Promise<OrganizationDto> {
-    const updatedOrganization = await this.em.upsert(organizationDto);
-    await this.em.persistAndFlush(updatedOrganization);
-    return updatedOrganization;
+    const updatedOrganization =
+      UpdateOrganizationDtoMapper.deserializeDtoToEntity(
+        SchemaValidator(),
+        organizationDto
+      );
+    await (em ?? this.em).upsert(updatedOrganization);
+    if (!em) {
+      await this.em.persistAndFlush(updatedOrganization);
+    }
+    return OrganizationDtoMapper.serializeEntityToDto(
+      SchemaValidator(),
+      updatedOrganization
+    );
   }
 
-  async deleteOrganization(id: string): Promise<void> {
-    await this.em.nativeDelete(Organization, { id });
+  async deleteOrganization(id: string, em?: EntityManager): Promise<void> {
+    await (em ?? this.em).nativeDelete(Organization, { id });
   }
 }

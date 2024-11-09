@@ -6,6 +6,7 @@ import {
 } from '@forklaunch/core/dtoMapper';
 import {
   array,
+  date,
   email,
   optional,
   SchemaValidator,
@@ -115,7 +116,9 @@ export class UserDtoMapper extends ResponseDtoMapper<User, SchemaValidator> {
     roles: array(RoleDtoMapper.schema()),
     phoneNumber: optional(string),
     subscription: optional(string),
-    extraFields: optional(unknown)
+    extraFields: optional(unknown),
+    createdAt: date,
+    updatedAt: date
   };
 
   fromEntity(entity: User): this {
@@ -130,7 +133,9 @@ export class UserDtoMapper extends ResponseDtoMapper<User, SchemaValidator> {
             .map((role) =>
               RoleDtoMapper.fromEntity(SchemaValidator(), role).toDto()
             )
-        : []
+        : [],
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt
     };
 
     if (entity.phoneNumber) {

@@ -4,6 +4,7 @@ import {
 } from '@forklaunch/core/dtoMapper';
 import {
   array,
+  date,
   optional,
   SchemaValidator,
   string,
@@ -82,7 +83,9 @@ export class OrganizationDtoMapper extends ResponseDtoMapper<
     domain: string,
     subscription: string,
     status: string,
-    logoUrl: optional(string)
+    logoUrl: optional(string),
+    createdAt: date,
+    updatedAt: date
   };
 
   fromEntity(entity: Organization): this {
@@ -98,7 +101,9 @@ export class OrganizationDtoMapper extends ResponseDtoMapper<
         : [],
       domain: entity.domain,
       subscription: entity.subscription,
-      status: entity.status
+      status: entity.status,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt
     };
 
     if (entity.logoUrl) {

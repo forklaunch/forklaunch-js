@@ -1,35 +1,45 @@
 // https://ts.dev/style/#descriptive-names
 
 import { BaseService } from '@forklaunch/core/services';
+import { EntityManager } from '@mikro-orm/core';
 import {
   CreatePermissionDto,
-  PermissionDto
+  PermissionDto,
+  UpdatePermissionDto
 } from '../models/dtoMapper/permission.dtoMapper';
-import { RoleDto } from '../models/dtoMapper/role.dtoMapper';
 
 export type CreatePermissionData = {
-  permission: CreatePermissionDto;
-  addToRoles?: RoleDto[];
+  permissionDto: CreatePermissionDto;
+  addToRolesIds?: string[];
 };
-export type UpdatePermissionData = CreatePermissionData & {
-  removeFromRoles?: RoleDto[];
+export type UpdatePermissionData = {
+  permissionDto: UpdatePermissionDto;
+  addToRolesIds?: string[];
+  removeFromRolesIds?: string[];
 };
 
 export interface PermissionService extends BaseService {
   createPermission(
-    permissionData: CreatePermissionData
+    permissionData: CreatePermissionData,
+    em?: EntityManager
   ): Promise<PermissionDto>;
   createBatchPermissions(
-    permissionData: CreatePermissionData[]
+    permissionData: CreatePermissionData[],
+    em?: EntityManager
   ): Promise<PermissionDto[]>;
-  getPermission(id: string): Promise<PermissionDto>;
-  getBatchPermissions(ids: string[]): Promise<PermissionDto[]>;
+  getPermission(id: string, em?: EntityManager): Promise<PermissionDto>;
+  getBatchPermissions(
+    ids: string[],
+    em?: EntityManager
+  ): Promise<PermissionDto[]>;
   updatePermission(
-    permissionData: UpdatePermissionData
+    permissionData: UpdatePermissionData,
+    em?: EntityManager
   ): Promise<PermissionDto>;
   updateBatchPermissions(
-    permissionData: UpdatePermissionData[]
+    permissionData: UpdatePermissionData[],
+    em?: EntityManager
   ): Promise<PermissionDto[]>;
-  deletePermission(id: string): Promise<void>;
-  deletePermissions(ids: string[]): Promise<void>;
+  deletePermission(id: string, em?: EntityManager): Promise<void>;
+  deletePermissions(ids: string[], em?: EntityManager): Promise<void>;
 }

@@ -57,7 +57,9 @@ export function bootstrap(
             if (context.entityManagerOptions) {
               em = resolve('entityManager', context);
             }
-            return new BasePermissionService(em);
+            return new BasePermissionService(em, () =>
+              resolve('roleService', context)
+            );
           }
         },
         roleService: {
@@ -67,7 +69,9 @@ export function bootstrap(
             if (context.entityManagerOptions) {
               em = resolve('entityManager', context);
             }
-            return new BaseRoleService(em);
+            return new BaseRoleService(em, () =>
+              resolve('permissionService', context)
+            );
           }
         },
         userService: {
@@ -77,7 +81,9 @@ export function bootstrap(
             if (context.entityManagerOptions) {
               em = resolve('entityManager', context);
             }
-            return new BaseUserService(em);
+            return new BaseUserService(em, () =>
+              resolve('roleService', context)
+            );
           }
         }
       }
