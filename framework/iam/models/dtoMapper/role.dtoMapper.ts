@@ -13,7 +13,10 @@ import {
 import { Collection } from '@mikro-orm/core';
 import { Permission } from '../persistence/permission.entity';
 import { Role } from '../persistence/role.entity';
-import { PermissionDtoMapper } from './permission.dtoMapper';
+import {
+  PermissionDtoMapper,
+  PermissionEntityMapper
+} from './permission.dtoMapper';
 
 export type CreateRoleDto = CreateRoleDtoMapper['dto'];
 export class CreateRoleDtoMapper extends RequestDtoMapper<
@@ -59,15 +62,17 @@ export class UpdateRoleDtoMapper extends RequestDtoMapper<
   }
 }
 
+const roleSchema = {
+  id: uuid,
+  name: string,
+  permissions: array(PermissionDtoMapper.schema()),
+  createdAt: date,
+  updatedAt: date
+};
+
 export type RoleDto = RoleDtoMapper['dto'];
 export class RoleDtoMapper extends ResponseDtoMapper<Role, SchemaValidator> {
-  schema = {
-    id: uuid,
-    name: string,
-    permissions: array(PermissionDtoMapper.schema()),
-    createdAt: date,
-    updatedAt: date
-  };
+  schema = roleSchema;
 
   fromEntity(entity: Role): this {
     this.dto = {
@@ -88,5 +93,27 @@ export class RoleDtoMapper extends ResponseDtoMapper<Role, SchemaValidator> {
     };
 
     return this;
+  }
+}
+
+export class RoleEntityMapper extends RequestDtoMapper<Role, SchemaValidator> {
+  schema = roleSchema;
+
+  toEntity(): Role {
+    const role = new Role();
+    role.id = this.dto.id;
+    role.name = this.dto.name;
+    role.permissions = new Collection(
+      role,
+      this.dto.permissions.map((permission) =>
+        PermissionEntityMapper.deserializeDtoToEntity(
+          this.schemaValidator as SchemaValidator,
+          permission
+        )
+      )
+    );
+    role.createdAt = this.dto.createdAt;
+    role.updatedAt = this.dto.updatedAt;
+    return role;
   }
 }

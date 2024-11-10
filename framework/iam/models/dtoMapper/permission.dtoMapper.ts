@@ -53,17 +53,19 @@ export class UpdatePermissionDtoMapper extends RequestDtoMapper<
   }
 }
 
+const permissionSchema = {
+  id: uuid,
+  slug: string,
+  createdAt: date,
+  updatedAt: date
+};
+
 export type PermissionDto = PermissionDtoMapper['dto'];
 export class PermissionDtoMapper extends ResponseDtoMapper<
   Permission,
   SchemaValidator
 > {
-  schema = {
-    id: uuid,
-    slug: string,
-    createdAt: date,
-    updatedAt: date
-  };
+  schema = permissionSchema;
 
   fromEntity(entity: Permission): this {
     this.dto = {
@@ -74,5 +76,21 @@ export class PermissionDtoMapper extends ResponseDtoMapper<
     };
 
     return this;
+  }
+}
+
+export class PermissionEntityMapper extends RequestDtoMapper<
+  Permission,
+  SchemaValidator
+> {
+  schema = permissionSchema;
+
+  toEntity(): Permission {
+    const permission = new Permission();
+    permission.id = this.dto.id;
+    permission.slug = this.dto.slug;
+    permission.createdAt = this.dto.createdAt;
+    permission.updatedAt = this.dto.updatedAt;
+    return permission;
   }
 }

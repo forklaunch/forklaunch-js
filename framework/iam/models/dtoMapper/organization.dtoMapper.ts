@@ -5,13 +5,18 @@ import {
 import {
   array,
   date,
+  enum_,
   optional,
   SchemaValidator,
   string,
   uuid
 } from '@forklaunch/framework-core';
-import { Organization } from '../persistence/organization.entity';
-import { UserDtoMapper } from './user.dtoMapper';
+import { Collection } from '@mikro-orm/core';
+import {
+  Organization,
+  OrganizationStatus
+} from '../persistence/organization.entity';
+import { UserDtoMapper, UserEntityMapper } from './user.dtoMapper';
 
 export type CreateOrganizationDto = CreateOrganizationDtoMapper['dto'];
 export class CreateOrganizationDtoMapper extends RequestDtoMapper<
@@ -71,22 +76,24 @@ export class UpdateOrganizationDtoMapper extends RequestDtoMapper<
   }
 }
 
+const organizationSchema = {
+  id: uuid,
+  name: string,
+  users: array(UserDtoMapper.schema()),
+  domain: string,
+  subscription: string,
+  status: enum_(OrganizationStatus),
+  logoUrl: optional(string),
+  createdAt: date,
+  updatedAt: date
+};
+
 export type OrganizationDto = OrganizationDtoMapper['dto'];
 export class OrganizationDtoMapper extends ResponseDtoMapper<
   Organization,
   SchemaValidator
 > {
-  schema = {
-    id: uuid,
-    name: string,
-    users: array(UserDtoMapper.schema()),
-    domain: string,
-    subscription: string,
-    status: string,
-    logoUrl: optional(string),
-    createdAt: date,
-    updatedAt: date
-  };
+  schema = organizationSchema;
 
   fromEntity(entity: Organization): this {
     this.dto = {
@@ -111,5 +118,37 @@ export class OrganizationDtoMapper extends ResponseDtoMapper<
     }
 
     return this;
+  }
+}
+
+export class OrganizationEntityMapper extends RequestDtoMapper<
+  Organization,
+  SchemaValidator
+> {
+  schema = organizationSchema;
+
+  toEntity(): Organization {
+    const organization = new Organization();
+    organization.id = this.dto.id;
+    organization.name = this.dto.name;
+    organization.users = new Collection(
+      organization,
+      this.dto.users.map((user) =>
+        UserEntityMapper.deserializeDtoToEntity(
+          this.schemaValidator as SchemaValidator,
+          user
+        )
+      )
+    );
+    organization.domain = this.dto.domain;
+    organization.subscription = this.dto.subscription;
+    organization.status = this.dto.status;
+    if (this.dto.logoUrl) {
+      organization.logoUrl = this.dto.logoUrl;
+    }
+    organization.createdAt = this.dto.createdAt;
+    organization.updatedAt = this.dto.updatedAt;
+
+    return organization;
   }
 }

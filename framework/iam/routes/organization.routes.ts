@@ -1,6 +1,6 @@
 import { forklaunchRouter, string } from '@forklaunch/framework-core';
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
-import { OrganizationService } from '../interfaces/organizationService.interface';
+import { OrganizationService } from '../interfaces/organization.service.interface';
 import {
   CreateOrganizationDtoMapper,
   OrganizationDtoMapper,

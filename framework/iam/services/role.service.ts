@@ -1,7 +1,8 @@
 import { SchemaValidator } from '@forklaunch/framework-core';
 import { EntityManager } from '@mikro-orm/core';
-import { PermissionService } from '../interfaces/permissionService.interface';
-import { RoleService } from '../interfaces/roleService.interface';
+import { PermissionService } from '../interfaces/permission.service.interface';
+import { RoleService } from '../interfaces/role.service.interface';
+import { PermissionEntityMapper } from '../models/dtoMapper/permission.dtoMapper';
 import {
   CreateRoleDto,
   CreateRoleDtoMapper,
@@ -10,6 +11,7 @@ import {
   UpdateRoleDto,
   UpdateRoleDtoMapper
 } from '../models/dtoMapper/role.dtoMapper';
+import { Permission } from '../models/persistence/permission.entity';
 import { Role } from '../models/persistence/role.entity';
 
 export default class BaseRoleService implements RoleService {
@@ -22,6 +24,22 @@ export default class BaseRoleService implements RoleService {
     this.permissionService = permissionService();
   }
 
+  private async getBatchPermissions(
+    permissionIds?: string[],
+    em?: EntityManager
+  ): Promise<Permission[]> {
+    return permissionIds
+      ? (
+          await this.permissionService.getBatchPermissions(permissionIds, em)
+        ).map((permission) => {
+          return PermissionEntityMapper.deserializeDtoToEntity(
+            SchemaValidator(),
+            permission
+          );
+        })
+      : [];
+  }
+
   async createRole(
     roleDto: CreateRoleDto,
     em?: EntityManager
@@ -30,12 +48,7 @@ export default class BaseRoleService implements RoleService {
     const role = CreateRoleDtoMapper.deserializeDtoToEntity(
       SchemaValidator(),
       roleDto,
-      roleDto.permissionIds
-        ? await this.permissionService.getBatchPermissions(
-            roleDto.permissionIds,
-            em
-          )
-        : []
+      await this.getBatchPermissions(roleDto.permissionIds, em)
     );
     await (em ?? this.em).transactional((em) => em.persist(role));
     return RoleDtoMapper.serializeEntityToDto(SchemaValidator(), role);
@@ -50,12 +63,7 @@ export default class BaseRoleService implements RoleService {
         CreateRoleDtoMapper.deserializeDtoToEntity(
           SchemaValidator(),
           roleDto,
-          roleDto.permissionIds
-            ? await this.permissionService.getBatchPermissions(
-                roleDto.permissionIds,
-                em
-              )
-            : []
+          await this.getBatchPermissions(roleDto.permissionIds, em)
         )
       )
     );
@@ -85,12 +93,7 @@ export default class BaseRoleService implements RoleService {
     let role = UpdateRoleDtoMapper.deserializeDtoToEntity(
       SchemaValidator(),
       roleDto,
-      roleDto.permissionIds
-        ? await this.permissionService.getBatchPermissions(
-            roleDto.permissionIds,
-            em
-          )
-        : []
+      await this.getBatchPermissions(roleDto.permissionIds, em)
     );
     await (em ?? this.em).transactional(async (em) => {
       role = await em.upsert(Role, role);
@@ -107,12 +110,7 @@ export default class BaseRoleService implements RoleService {
         UpdateRoleDtoMapper.deserializeDtoToEntity(
           SchemaValidator(),
           roleDto,
-          roleDto.permissionIds
-            ? await this.permissionService.getBatchPermissions(
-                roleDto.permissionIds,
-                em
-              )
-            : []
+          await this.getBatchPermissions(roleDto.permissionIds, em)
         )
       )
     );

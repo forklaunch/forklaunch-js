@@ -81,8 +81,10 @@ export function bootstrap(
             if (context.entityManagerOptions) {
               em = resolve('entityManager', context);
             }
-            return new BaseUserService(em, () =>
-              resolve('roleService', context)
+            return new BaseUserService(
+              em,
+              () => resolve('roleService', context),
+              () => resolve('organizationService', context)
             );
           }
         }

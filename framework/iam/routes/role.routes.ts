@@ -1,10 +1,5 @@
-import {
-  array,
-  forklaunchRouter,
-  SchemaValidator,
-  string
-} from '@forklaunch/framework-core';
-import { RoleService } from '../interfaces/roleService.interface';
+import { array, forklaunchRouter, string } from '@forklaunch/framework-core';
+import { RoleService } from '../interfaces/role.service.interface';
 import {
   CreateRoleDtoMapper,
   RoleDtoMapper,
@@ -31,13 +26,7 @@ export const RoleRoutes = <ConfigInjectorScope>(
       }
     },
     async (req, res) => {
-      const role = req.body;
-      const roleEntity = CreateRoleDtoMapper.deserializeDtoToEntity(
-        SchemaValidator(),
-        role
-      );
-
-      await service().createRole(roleEntity);
+      await service().createRole(req.body);
       res.status(201).send('Role created successfully');
     }
   ),
@@ -55,12 +44,7 @@ export const RoleRoutes = <ConfigInjectorScope>(
       }
     },
     async (req, res) => {
-      const roles = req.body;
-      const roleEntities = roles.map((role) =>
-        CreateRoleDtoMapper.deserializeDtoToEntity(SchemaValidator(), role)
-      );
-
-      await service().createBatchRoles(roleEntities);
+      await service().createBatchRoles(req.body);
       res.status(201).send('Batch roles created successfully');
     }
   ),
@@ -80,15 +64,7 @@ export const RoleRoutes = <ConfigInjectorScope>(
       }
     },
     async (req, res) => {
-      const id = req.params.id;
-      const roleEntity = await service().getRole(id);
-
-      const roleDto = RoleDtoMapper.serializeEntityToDto(
-        SchemaValidator(),
-        roleEntity
-      );
-
-      res.status(200).json(roleDto);
+      res.status(200).json(await service().getRole(req.params.id));
     }
   ),
 
@@ -107,14 +83,9 @@ export const RoleRoutes = <ConfigInjectorScope>(
       }
     },
     async (req, res) => {
-      const ids = req.query.ids.split(',');
-      const roles = await service().getBatchRoles(ids);
-
-      const rolesDto = roles.map((role) =>
-        RoleDtoMapper.serializeEntityToDto(SchemaValidator(), role)
-      );
-
-      res.status(200).json(rolesDto);
+      res
+        .status(200)
+        .json(await service().getBatchRoles(req.query.ids.split(',')));
     }
   ),
 
@@ -131,13 +102,7 @@ export const RoleRoutes = <ConfigInjectorScope>(
       }
     },
     async (req, res) => {
-      const role = req.body;
-      const roleEntity = UpdateRoleDtoMapper.deserializeDtoToEntity(
-        SchemaValidator(),
-        role
-      );
-
-      await service().updateRole(roleEntity);
+      await service().updateRole(req.body);
       res.status(200).send('Role updated successfully');
     }
   ),
@@ -155,12 +120,7 @@ export const RoleRoutes = <ConfigInjectorScope>(
       }
     },
     async (req, res) => {
-      const roles = req.body;
-      const roleEntities = roles.map((role) =>
-        UpdateRoleDtoMapper.deserializeDtoToEntity(SchemaValidator(), role)
-      );
-
-      await service().updateBatchRoles(roleEntities);
+      await service().updateBatchRoles(req.body);
       res.status(200).send('Batch roles updated successfully');
     }
   ),
@@ -180,9 +140,7 @@ export const RoleRoutes = <ConfigInjectorScope>(
       }
     },
     async (req, res) => {
-      const id = req.params.id;
-
-      await service().deleteRole(id);
+      await service().deleteRole(req.params.id);
       res.status(200).send('Role deleted successfully');
     }
   ),
@@ -202,9 +160,7 @@ export const RoleRoutes = <ConfigInjectorScope>(
       }
     },
     async (req, res) => {
-      const ids = req.query.ids.split(',');
-
-      await service().deleteRoles(ids);
+      await service().deleteRoles(req.query.ids.split(','));
       res.status(200).send('Batch roles deleted successfully');
     }
   )

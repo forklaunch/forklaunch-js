@@ -8,23 +8,13 @@ import {
   UpdatePermissionDto
 } from '../models/dtoMapper/permission.dtoMapper';
 
-export type CreatePermissionData = {
-  permissionDto: CreatePermissionDto;
-  addToRolesIds?: string[];
-};
-export type UpdatePermissionData = {
-  permissionDto: UpdatePermissionDto;
-  addToRolesIds?: string[];
-  removeFromRolesIds?: string[];
-};
-
 export interface PermissionService extends BaseService {
   createPermission(
-    permissionData: CreatePermissionData,
+    permissionDto: CreatePermissionDto,
     em?: EntityManager
   ): Promise<PermissionDto>;
   createBatchPermissions(
-    permissionData: CreatePermissionData[],
+    permissionDtos: CreatePermissionDto[],
     em?: EntityManager
   ): Promise<PermissionDto[]>;
   getPermission(id: string, em?: EntityManager): Promise<PermissionDto>;
@@ -33,11 +23,11 @@ export interface PermissionService extends BaseService {
     em?: EntityManager
   ): Promise<PermissionDto[]>;
   updatePermission(
-    permissionData: UpdatePermissionData,
+    permissionDto: UpdatePermissionDto,
     em?: EntityManager
   ): Promise<PermissionDto>;
   updateBatchPermissions(
-    permissionData: UpdatePermissionData[],
+    permissionDtos: UpdatePermissionDto[],
     em?: EntityManager
   ): Promise<PermissionDto[]>;
   deletePermission(id: string, em?: EntityManager): Promise<void>;

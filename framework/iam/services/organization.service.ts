@@ -1,6 +1,6 @@
 import { SchemaValidator } from '@forklaunch/framework-core';
 import { EntityManager } from '@mikro-orm/core';
-import { OrganizationService } from '../interfaces/organizationService.interface';
+import { OrganizationService } from '../interfaces/organization.service.interface';
 import {
   CreateOrganizationDto,
   CreateOrganizationDtoMapper,

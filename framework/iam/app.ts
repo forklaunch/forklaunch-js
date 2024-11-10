@@ -21,18 +21,9 @@ bootstrap((ci) => {
   const organizationRoutes = OrganizationRoutes(
     scopedOrganizationServiceResolver
   );
-  const permissionRoutes = PermissionRoutes(
-    ci.createScope,
-    scopedPermissionServiceResolver,
-    scopedRoleServiceResolver
-  );
+  const permissionRoutes = PermissionRoutes(scopedPermissionServiceResolver);
   const roleRoutes = RoleRoutes(scopedRoleServiceResolver);
-  const userRoutes = UserRoutes(
-    ci.createScope,
-    scopedUserServiceResolver,
-    scopedOrganizationServiceResolver,
-    scopedRoleServiceResolver
-  );
+  const userRoutes = UserRoutes(scopedUserServiceResolver);
 
   app.use(organizationRoutes.router);
   app.use(permissionRoutes.router);

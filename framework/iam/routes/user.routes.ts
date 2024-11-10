@@ -1,27 +1,15 @@
-import {
-  array,
-  forklaunchRouter,
-  SchemaValidator,
-  string
-} from '@forklaunch/framework-core';
-import { OrganizationService } from '../interfaces/organizationService.interface';
-import { RoleService } from '../interfaces/roleService.interface';
-import { UserService } from '../interfaces/userService.interface';
+import { array, forklaunchRouter, string } from '@forklaunch/framework-core';
+import { UserService } from '../interfaces/user.service.interface';
 import {
   CreateUserDtoMapper,
   UpdateUserDtoMapper,
   UserDtoMapper
 } from '../models/dtoMapper/user.dtoMapper';
-import { Organization } from '../models/persistence/organization.entity';
-import { Role } from '../models/persistence/role.entity';
 
 export const router = forklaunchRouter('/user');
 
 export const UserRoutes = <ConfigInjectorScope>(
-  createScope: () => ConfigInjectorScope,
-  service: (scope?: ConfigInjectorScope) => UserService,
-  organizationService: (scope?: ConfigInjectorScope) => OrganizationService,
-  roleService: (scope?: ConfigInjectorScope) => RoleService
+  service: (scope?: ConfigInjectorScope) => UserService
 ) => ({
   router,
 
@@ -38,23 +26,8 @@ export const UserRoutes = <ConfigInjectorScope>(
       }
     },
     async (req, res) => {
-      // use req context to prepopulate organizationId from AuthToken
-      const userEntity = CreateUserDtoMapper.deserializeDtoToEntity(
-        SchemaValidator(),
-        req.body
-      );
-      const organizationEntity = req.body.organizationId
-        ? await organizationService().getOrganization(req.body.organizationId)
-        : undefined;
-      const rolesEntities = req.body.roleIds
-        ? await roleService().getBatchRoles(req.body.roleIds)
-        : undefined;
-
-      await service().createUser({
-        user: userEntity,
-        organization: organizationEntity,
-        roles: rolesEntities
-      });
+      // use req context to prepopulate organizationId from AuthToken in future
+      await service().createUser(req.body);
       res.status(201).send('User created successfully');
     }
   ),
@@ -72,45 +45,7 @@ export const UserRoutes = <ConfigInjectorScope>(
       }
     },
     async (req, res) => {
-      let organization: Organization;
-      const roleCache: Record<string, Role> = {};
-      const batchUsers = await Promise.all(
-        req.body.map(async (createUserType) => {
-          if (createUserType.organizationId) {
-            if (!organization) {
-              organization = await organizationService().getOrganization(
-                createUserType.organizationId
-              );
-            } else if (organization.id !== createUserType.organizationId) {
-              throw new Error(
-                'All users in a batch must belong to the same organization'
-              );
-            }
-          }
-
-          const lookupRoles: string[] = [];
-          createUserType.roleIds?.forEach((roleId) => {
-            if (!roleCache[roleId]) {
-              lookupRoles.push(roleId);
-            }
-          });
-          const mergeRoles = await roleService().getBatchRoles(lookupRoles);
-
-          mergeRoles.forEach((role) => {
-            roleCache[role.id] = role;
-          });
-          return {
-            user: CreateUserDtoMapper.deserializeDtoToEntity(
-              SchemaValidator(),
-              createUserType
-            ),
-            organization,
-            roles: createUserType.roleIds?.map((roleId) => roleCache[roleId])
-          };
-        })
-      );
-
-      await service().createBatchUsers(batchUsers);
+      await service().createBatchUsers(req.body);
       res.status(201).send('Batch users created successfully');
     }
   ),
@@ -130,14 +65,7 @@ export const UserRoutes = <ConfigInjectorScope>(
       }
     },
     async (req, res) => {
-      const id = req.params.id;
-      const user = await service().getUser(id);
-      const userDto = UserDtoMapper.serializeEntityToDto(
-        SchemaValidator(),
-        user
-      );
-
-      res.status(200).json(userDto);
+      res.status(200).json(await service().getUser(req.params.id));
     }
   ),
 
@@ -156,13 +84,9 @@ export const UserRoutes = <ConfigInjectorScope>(
       }
     },
     async (req, res) => {
-      const ids = req.query.ids.split(',');
-      const users = await service().getBatchUsers(ids);
-      const userDtos = users.map((user) =>
-        UserDtoMapper.serializeEntityToDto(SchemaValidator(), user)
-      );
-
-      res.status(200).json(userDtos);
+      res
+        .status(200)
+        .json(await service().getBatchUsers(req.query.ids.split(',')));
     }
   ),
 
@@ -179,18 +103,7 @@ export const UserRoutes = <ConfigInjectorScope>(
       }
     },
     async (req, res) => {
-      const userEntity = UpdateUserDtoMapper.deserializeDtoToEntity(
-        SchemaValidator(),
-        req.body
-      );
-      const rolesEntities = req.body.roleIds
-        ? await roleService().getBatchRoles(req.body.roleIds)
-        : undefined;
-
-      await service().updateUser({
-        user: userEntity,
-        roles: rolesEntities
-      });
+      await service().updateUser(req.body);
       res.status(200).send('User updated successfully');
     }
   ),
@@ -208,31 +121,7 @@ export const UserRoutes = <ConfigInjectorScope>(
       }
     },
     async (req, res) => {
-      const roleCache: Record<string, Role> = {};
-      const batchUsers = await Promise.all(
-        req.body.map(async (updateUserType) => {
-          const lookupRoles: string[] = [];
-          updateUserType.roleIds?.forEach((roleId) => {
-            if (!roleCache[roleId]) {
-              lookupRoles.push(roleId);
-            }
-          });
-          const mergeRoles = await roleService().getBatchRoles(lookupRoles);
-
-          mergeRoles.forEach((role) => {
-            roleCache[role.id] = role;
-          });
-          return {
-            user: UpdateUserDtoMapper.deserializeDtoToEntity(
-              SchemaValidator(),
-              updateUserType
-            ),
-            roles: updateUserType.roleIds?.map((roleId) => roleCache[roleId])
-          };
-        })
-      );
-
-      await service().updateBatchUsers(batchUsers);
+      await service().updateBatchUsers(req.body);
       res.status(200).send('Batch users updated successfully');
     }
   ),
@@ -252,8 +141,7 @@ export const UserRoutes = <ConfigInjectorScope>(
       }
     },
     async (req, res) => {
-      const id = req.params.id;
-      await service().deleteUser(id);
+      await service().deleteUser(req.params.id);
       res.status(200).send('User deleted successfully');
     }
   ),
@@ -273,8 +161,7 @@ export const UserRoutes = <ConfigInjectorScope>(
       }
     },
     async (req, res) => {
-      const ids = req.query.ids.split(',');
-      await service().deleteUsers(ids);
+      await service().deleteUsers(req.query.ids.split(','));
       res.status(200).send('Batch users deleted successfully');
     }
   ),

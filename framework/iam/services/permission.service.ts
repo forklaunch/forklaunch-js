@@ -1,17 +1,16 @@
 import { SchemaValidator } from '@forklaunch/framework-core';
 import { EntityManager } from '@mikro-orm/core';
+import { PermissionService } from '../interfaces/permission.service.interface';
+import { RoleService } from '../interfaces/role.service.interface';
 import {
-  CreatePermissionData,
-  PermissionService,
-  UpdatePermissionData
-} from '../interfaces/permissionService.interface';
-import { RoleService } from '../interfaces/roleService.interface';
-import {
+  CreatePermissionDto,
   CreatePermissionDtoMapper,
   PermissionDto,
   PermissionDtoMapper,
+  UpdatePermissionDto,
   UpdatePermissionDtoMapper
 } from '../models/dtoMapper/permission.dtoMapper';
+import { RoleEntityMapper } from '../models/dtoMapper/role.dtoMapper';
 import { Permission } from '../models/persistence/permission.entity';
 import { Role } from '../models/persistence/role.entity';
 
@@ -56,10 +55,24 @@ export default class BasePermissionService implements PermissionService {
       })
     );
   }
+
+  private async getBatchRoles(
+    roleIds?: string[],
+    em?: EntityManager
+  ): Promise<Role[]> {
+    return roleIds
+      ? (await this.roleService.getBatchRoles(roleIds, em)).map((role) => {
+          return RoleEntityMapper.deserializeDtoToEntity(
+            SchemaValidator(),
+            role
+          );
+        })
+      : [];
+  }
   // end: global helper functions
 
   // start: createPermission helper functions
-  private async createPermissionData({
+  private async createPermissionDto({
     permission,
     addToRoles
   }: CreatePermissionEntityData): Promise<{
@@ -74,8 +87,8 @@ export default class BasePermissionService implements PermissionService {
     return { permission, roles };
   }
 
-  private async extractCreatePermissionDataToEntityData(
-    { permissionDto, addToRolesIds }: CreatePermissionData,
+  private async extractCreatePermissionDtoToEntityData(
+    permissionDto: CreatePermissionDto,
     em?: EntityManager
   ): Promise<CreatePermissionEntityData> {
     return {
@@ -83,22 +96,17 @@ export default class BasePermissionService implements PermissionService {
         SchemaValidator(),
         permissionDto
       ),
-      addToRoles: addToRolesIds
-        ? await this.roleService.getBatchRoles(addToRolesIds, em)
-        : []
+      addToRoles: await this.getBatchRoles(permissionDto.addToRolesIds, em)
     };
   }
   // end: createPermission helper functions
 
   async createPermission(
-    createPermissionData: CreatePermissionData,
+    createPermissionDto: CreatePermissionDto,
     em?: EntityManager
   ): Promise<PermissionDto> {
-    const { permission, roles } = await this.createPermissionData(
-      await this.extractCreatePermissionDataToEntityData(
-        createPermissionData,
-        em
-      )
+    const { permission, roles } = await this.createPermissionDto(
+      await this.extractCreatePermissionDtoToEntityData(createPermissionDto, em)
     );
     if (em) {
       await em.persist([permission, ...roles]);
@@ -112,16 +120,16 @@ export default class BasePermissionService implements PermissionService {
   }
 
   async createBatchPermissions(
-    data: CreatePermissionData[],
+    permissionDtos: CreatePermissionDto[],
     em?: EntityManager
   ): Promise<PermissionDto[]> {
     const rolesCache: Record<string, Role> = {};
     const permissions: Permission[] = [];
     await (em ?? this.em).transactional(async (em) => {
-      data.map(async (createPermissionData) => {
-        const { permission, roles } = await this.createPermissionData(
-          await this.extractCreatePermissionDataToEntityData(
-            createPermissionData,
+      permissionDtos.map(async (createPermissionDto) => {
+        const { permission, roles } = await this.createPermissionDto(
+          await this.extractCreatePermissionDtoToEntityData(
+            createPermissionDto,
             em
           )
         );
@@ -170,8 +178,8 @@ export default class BasePermissionService implements PermissionService {
   }
 
   // start: updatePermission helper functions
-  private updatePermissionData = async (
-    { permissionDto, addToRolesIds, removeFromRolesIds }: UpdatePermissionData,
+  private updatePermissionDto = async (
+    permissionDto: UpdatePermissionDto,
     em?: EntityManager
   ): Promise<{
     permission: Permission;
@@ -181,12 +189,14 @@ export default class BasePermissionService implements PermissionService {
       SchemaValidator(),
       permissionDto
     );
-    const addToRoles = addToRolesIds
-      ? await this.roleService.getBatchRoles(addToRolesIds, em)
-      : [];
-    const removeFromRoles = removeFromRolesIds
-      ? await this.roleService.getBatchRoles(removeFromRolesIds, em)
-      : [];
+    const addToRoles = await this.getBatchRoles(
+      permissionDto.addToRolesIds,
+      em
+    );
+    const removeFromRoles = await this.getBatchRoles(
+      permissionDto.removeFromRolesIds,
+      em
+    );
 
     let roles: Role[] = [];
 
@@ -205,10 +215,10 @@ export default class BasePermissionService implements PermissionService {
   // end: updatePermission helper functions
 
   async updatePermission(
-    data: UpdatePermissionData,
+    permissionDto: UpdatePermissionDto,
     em?: EntityManager
   ): Promise<PermissionDto> {
-    const { permission, roles } = await this.updatePermissionData(data);
+    const { permission, roles } = await this.updatePermissionDto(permissionDto);
     await (em ?? this.em).upsertMany([permission, ...roles]);
     if (!em) {
       this.em.flush();
@@ -220,15 +230,15 @@ export default class BasePermissionService implements PermissionService {
   }
 
   async updateBatchPermissions(
-    data: UpdatePermissionData[],
+    permissionDtos: UpdatePermissionDto[],
     em?: EntityManager
   ): Promise<PermissionDto[]> {
     const rolesCache: Record<string, Role> = {};
     const permissions: Permission[] = [];
     await (em ?? this.em).transactional(async (em) => {
-      data.map(async (updatePermissionData) => {
+      permissionDtos.map(async (updatePermissionDto) => {
         const { permission, roles } =
-          await this.updatePermissionData(updatePermissionData);
+          await this.updatePermissionDto(updatePermissionDto);
         roles.forEach((role) => {
           if (
             rolesCache[role.id] &&

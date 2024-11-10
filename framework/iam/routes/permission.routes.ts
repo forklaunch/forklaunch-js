@@ -1,24 +1,15 @@
-import {
-  array,
-  forklaunchRouter,
-  SchemaValidator,
-  string
-} from '@forklaunch/framework-core';
-import { PermissionService } from '../interfaces/permissionService.interface';
-import { RoleService } from '../interfaces/roleService.interface';
+import { array, forklaunchRouter, string } from '@forklaunch/framework-core';
+import { PermissionService } from '../interfaces/permission.service.interface';
 import {
   CreatePermissionDtoMapper,
   PermissionDtoMapper,
   UpdatePermissionDtoMapper
 } from '../models/dtoMapper/permission.dtoMapper';
-import { Role } from '../models/persistence/role.entity';
 
 export const router = forklaunchRouter('/permission');
 
 export const PermissionRoutes = <ConfigInjectorScope>(
-  createScope: () => ConfigInjectorScope,
-  service: (scope?: ConfigInjectorScope) => PermissionService,
-  roleService: (scope?: ConfigInjectorScope) => RoleService
+  service: (scope?: ConfigInjectorScope) => PermissionService
 ) => ({
   router,
 
@@ -35,19 +26,7 @@ export const PermissionRoutes = <ConfigInjectorScope>(
       }
     },
     async (req, res) => {
-      const permissionEntity = CreatePermissionDtoMapper.deserializeDtoToEntity(
-        SchemaValidator(),
-        req.body
-      );
-      const addToRolesEntities = req.body.addToRolesIds
-        ? await roleService().getBatchRoles(req.body.addToRolesIds)
-        : undefined;
-
-      await service().createPermission({
-        permission: permissionEntity,
-        addToRoles: addToRolesEntities
-      });
-
+      await service().createPermission(req.body);
       res.status(201).send('Permission created successfully');
     }
   ),
@@ -65,36 +44,7 @@ export const PermissionRoutes = <ConfigInjectorScope>(
       }
     },
     async (req, res) => {
-      const roleCache: Record<string, Role> = {};
-
-      const batchPermissions = await Promise.all(
-        req.body.map(async (createPermissionDtoMapper) => {
-          const lookupRoles: string[] = [];
-          createPermissionDtoMapper.addToRolesIds?.forEach((roleId) => {
-            if (!roleCache[roleId]) {
-              lookupRoles.push(roleId);
-            }
-          });
-          const mergeRoles = await roleService().getBatchRoles(lookupRoles);
-          mergeRoles.forEach((role) => {
-            roleCache[role.id] = role;
-          });
-          const addToRoles = createPermissionDtoMapper.addToRolesIds?.map(
-            (roleId) => roleCache[roleId]
-          );
-
-          return {
-            permission: CreatePermissionDtoMapper.deserializeDtoToEntity(
-              SchemaValidator(),
-              createPermissionDtoMapper
-            ),
-            addToRoles
-          };
-        })
-      );
-
-      await service().createBatchPermissions(batchPermissions);
-
+      await service().createBatchPermissions(req.body);
       res.status(201).send('Batch permissions created successfully');
     }
   ),
@@ -114,14 +64,7 @@ export const PermissionRoutes = <ConfigInjectorScope>(
       }
     },
     async (req, res) => {
-      const id = req.params.id;
-      const permission = await service().getPermission(id);
-
-      const permissionJson = PermissionDtoMapper.serializeEntityToDto(
-        SchemaValidator(),
-        permission
-      );
-      res.status(200).json(permissionJson);
+      res.status(200).json(await service().getPermission(req.params.id));
     }
   ),
 
@@ -140,13 +83,9 @@ export const PermissionRoutes = <ConfigInjectorScope>(
       }
     },
     async (req, res) => {
-      const ids = req.query.ids.split(',');
-      const permissions = await service().getBatchPermissions(ids);
-      const permissionDtos = permissions.map((permission) =>
-        PermissionDtoMapper.serializeEntityToDto(SchemaValidator(), permission)
-      );
-
-      res.status(200).json(permissionDtos);
+      res
+        .status(200)
+        .json(await service().getBatchPermissions(req.query.ids.split(',')));
     }
   ),
 
@@ -163,30 +102,7 @@ export const PermissionRoutes = <ConfigInjectorScope>(
       }
     },
     async (req, res) => {
-      const permissionEntity = UpdatePermissionDtoMapper.deserializeDtoToEntity(
-        SchemaValidator(),
-        req.body
-      );
-      const addToRolesEntity = req.body.addToRolesIds
-        ? await Promise.all(
-            req.body.addToRolesIds.map(
-              async (roleId) => await roleService().getRole(roleId)
-            )
-          )
-        : undefined;
-      const removeFromRolesEntity = req.body.removeFromRolesIds
-        ? await Promise.all(
-            req.body.removeFromRolesIds.map(
-              async (roleId) => await roleService().getRole(roleId)
-            )
-          )
-        : undefined;
-
-      await service().updatePermission({
-        permission: permissionEntity,
-        addToRoles: addToRolesEntity,
-        removeFromRoles: removeFromRolesEntity
-      });
+      await service().updatePermission(req.body);
       res.status(200).send('Permission updated successfully');
     }
   ),
@@ -204,43 +120,7 @@ export const PermissionRoutes = <ConfigInjectorScope>(
       }
     },
     async (req, res) => {
-      const roleCache: Record<string, Role> = {};
-
-      const batchPermissions = await Promise.all(
-        req.body.map(async (updatePermissionDtoMapper) => {
-          const lookupRoles: string[] = [];
-          const roleIds = (
-            updatePermissionDtoMapper.addToRolesIds || []
-          ).concat(updatePermissionDtoMapper.removeFromRolesIds || []);
-          roleIds.forEach((roleId) => {
-            if (!roleCache[roleId]) {
-              lookupRoles.push(roleId);
-            }
-          });
-          const mergeRoles = await roleService().getBatchRoles(lookupRoles);
-          mergeRoles.forEach((role) => {
-            roleCache[role.id] = role;
-          });
-          const addToRoles = updatePermissionDtoMapper.addToRolesIds?.map(
-            (roleId) => roleCache[roleId]
-          );
-          const removeFromRoles =
-            updatePermissionDtoMapper.removeFromRolesIds?.map(
-              (roleId) => roleCache[roleId]
-            );
-
-          return {
-            permission: UpdatePermissionDtoMapper.deserializeDtoToEntity(
-              SchemaValidator(),
-              updatePermissionDtoMapper
-            ),
-            addToRoles,
-            removeFromRoles
-          };
-        })
-      );
-
-      await service().updateBatchPermissions(batchPermissions);
+      await service().updateBatchPermissions(req.body);
       res.status(200).send('Batch permissions updated successfully');
     }
   ),
@@ -260,8 +140,7 @@ export const PermissionRoutes = <ConfigInjectorScope>(
       }
     },
     async (req, res) => {
-      const id = req.params.id;
-      await service().deletePermission(id);
+      await service().deletePermission(req.params.id);
       res.status(200).send('Permission deleted successfully');
     }
   ),
@@ -281,8 +160,7 @@ export const PermissionRoutes = <ConfigInjectorScope>(
       }
     },
     async (req, res) => {
-      const ids = req.query.ids.split(',');
-      await service().deletePermissions(ids);
+      await service().deletePermissions(req.query.ids.split(','));
       res.status(200).send('Batch permissions deleted successfully');
     }
   )

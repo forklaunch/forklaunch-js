@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.2.25
+
+### Patch Changes
+
+- includes wrapper functions for better ergonomics for typedHandler functions (get, delete\_, options, head, trace, post, patch, put, middleware)
+
 ## 0.2.24
 
 ### Patch Changes

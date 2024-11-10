@@ -8,24 +8,17 @@ import {
   UserDto
 } from '../models/dtoMapper/user.dtoMapper';
 
-export type CreateUserData = {
-  userDto: CreateUserDto;
-  roleIds?: string[];
-  organizationId?: string;
-};
-export type UpdateUserData = { userDto: UpdateUserDto; roleIds?: string[] };
-
 export interface UserService extends BaseService {
-  createUser(userData: CreateUserData, em?: EntityManager): Promise<UserDto>;
+  createUser(userDto: CreateUserDto, em?: EntityManager): Promise<UserDto>;
   createBatchUsers(
-    userData: CreateUserData[],
+    userDtos: CreateUserDto[],
     em?: EntityManager
   ): Promise<UserDto[]>;
   getUser(id: string, em?: EntityManager): Promise<UserDto>;
   getBatchUsers(ids: string[], em?: EntityManager): Promise<UserDto[]>;
-  updateUser(userData: UpdateUserData, em?: EntityManager): Promise<UserDto>;
+  updateUser(userDto: UpdateUserDto, em?: EntityManager): Promise<UserDto>;
   updateBatchUsers(
-    userData: UpdateUserData[],
+    userDtos: UpdateUserDto[],
     em?: EntityManager
   ): Promise<UserDto[]>;
   deleteUser(id: string, em?: EntityManager): Promise<void>;

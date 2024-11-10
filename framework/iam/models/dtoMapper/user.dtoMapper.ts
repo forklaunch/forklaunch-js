@@ -15,9 +15,10 @@ import {
   uuid
 } from '@forklaunch/framework-core';
 import passwordEncrypt from '../../utils/passwordEncrypt';
+import { Organization } from '../persistence/organization.entity';
 import { Role } from '../persistence/role.entity';
 import { User } from '../persistence/user.entity';
-import { RoleDtoMapper } from './role.dtoMapper';
+import { RoleDtoMapper, RoleEntityMapper } from './role.dtoMapper';
 
 export type CreateUserDto = CreateUserDtoMapper['dto'];
 export class CreateUserDtoMapper extends RequestDtoMapper<
@@ -36,7 +37,7 @@ export class CreateUserDtoMapper extends RequestDtoMapper<
     extraFields: optional(string)
   };
 
-  toEntity(roles: Role[]): User {
+  toEntity(roles: Role[], organization?: Organization): User {
     const user = new User();
     user.email = this.dto.email;
     user.passwordHash = passwordEncrypt(this.dto.password);
@@ -51,6 +52,9 @@ export class CreateUserDtoMapper extends RequestDtoMapper<
     }
     if (this.dto.extraFields) {
       user.extraFields = this.dto.extraFields;
+    }
+    if (organization) {
+      user.organization = organization;
     }
 
     return user;
@@ -74,7 +78,7 @@ export class UpdateUserDtoMapper extends RequestDtoMapper<
     extraFields: optional(string)
   };
 
-  toEntity(roles: Role[]): User {
+  toEntity(roles: Role[], organization?: Organization): User {
     const user = new User();
     user.id = this.dto.id;
     if (this.dto.email) {
@@ -101,25 +105,30 @@ export class UpdateUserDtoMapper extends RequestDtoMapper<
     if (this.dto.extraFields) {
       user.extraFields = this.dto.extraFields;
     }
+    if (organization) {
+      user.organization = organization;
+    }
 
     return user;
   }
 }
 
+const userSchema = {
+  id: uuid,
+  email: email,
+  firstName: string,
+  lastName: string,
+  roles: array(RoleDtoMapper.schema()),
+  phoneNumber: optional(string),
+  subscription: optional(string),
+  extraFields: optional(unknown),
+  createdAt: date,
+  updatedAt: date
+};
+
 export type UserDto = UserDtoMapper['dto'];
 export class UserDtoMapper extends ResponseDtoMapper<User, SchemaValidator> {
-  schema = {
-    id: uuid,
-    email: email,
-    firstName: string,
-    lastName: string,
-    roles: array(RoleDtoMapper.schema()),
-    phoneNumber: optional(string),
-    subscription: optional(string),
-    extraFields: optional(unknown),
-    createdAt: date,
-    updatedAt: date
-  };
+  schema = userSchema;
 
   fromEntity(entity: User): this {
     this.dto = {
@@ -148,5 +157,39 @@ export class UserDtoMapper extends ResponseDtoMapper<User, SchemaValidator> {
       this.dto.extraFields = entity.extraFields;
     }
     return this;
+  }
+}
+
+export class UserEntityMapper extends RequestDtoMapper<User, SchemaValidator> {
+  schema = userSchema;
+
+  toEntity(): User {
+    const user = new User();
+    user.id = this.dto.id;
+    user.email = this.dto.email;
+    user.firstName = this.dto.firstName;
+    user.lastName = this.dto.lastName;
+    user.roles = new Collection(
+      user,
+      this.dto.roles.map((role) =>
+        RoleEntityMapper.deserializeDtoToEntity(
+          this.schemaValidator as SchemaValidator,
+          role
+        )
+      )
+    );
+    if (this.dto.phoneNumber) {
+      user.phoneNumber = this.dto.phoneNumber;
+    }
+    if (this.dto.subscription) {
+      user.subscription = this.dto.subscription;
+    }
+    if (this.dto.extraFields) {
+      user.extraFields = this.dto.extraFields;
+    }
+    user.createdAt = this.dto.createdAt;
+    user.updatedAt = this.dto.updatedAt;
+
+    return user;
   }
 }
