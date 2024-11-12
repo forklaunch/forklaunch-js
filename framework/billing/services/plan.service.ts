@@ -1,6 +1,6 @@
 import { SchemaValidator } from '@forklaunch/framework-core';
 import { EntityManager } from '@mikro-orm/core';
-import { PlanService } from '../interfaces/planService.interface';
+import { PlanService } from '../interfaces/plan.service.interface';
 import {
   CreatePlanDto,
   CreatePlanDtoMapper,

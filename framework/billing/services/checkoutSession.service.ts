@@ -1,7 +1,7 @@
 import { TtlCache } from '@forklaunch/core/cache';
 import { SchemaValidator } from '@forklaunch/framework-core';
 import { v4 } from 'uuid';
-import { CheckoutSessionService } from '../interfaces/checkoutSessionService.interface';
+import { CheckoutSessionService } from '../interfaces/checkoutSession.service.interface';
 import {
   CreateSessionDto,
   CreateSessionDtoMapper,
@@ -12,6 +12,13 @@ import { Session } from '../models/persistence/session.entity';
 
 export class BaseCheckoutSessionService implements CheckoutSessionService {
   constructor(private cache: TtlCache) {}
+
+  // TODO: move this into core
+  private cacheKeyPrefix = 'checkout_session';
+
+  private createCacheKey(id: string): string {
+    return `${this.cacheKeyPrefix}:${id}`;
+  }
 
   async createCheckoutSession(
     sessionDto: CreateSessionDto

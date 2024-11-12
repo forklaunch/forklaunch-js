@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.2.26
+
+### Patch Changes
+
+- Adds utility type for controllers, utilities for constructing cache keys, and ensures that router registrations match the path of the typed handler
+
 ## 0.2.25
 
 ### Patch Changes

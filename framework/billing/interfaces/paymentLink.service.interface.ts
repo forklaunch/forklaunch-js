@@ -11,12 +11,15 @@ export interface PaymentLinkService {
   createPaymentLink: (
     paymentLink: CreatePaymentLinkDto
   ) => Promise<PaymentLinkDto>;
-  // invalidates payment link
   updatePaymentLink: (
     paymentLink: UpdatePaymentLinkDto
   ) => Promise<PaymentLinkDto>;
-  // get metadata about the payment link
   getPaymentLink: (id: string) => Promise<PaymentLinkDto>;
+  expirePaymentLink: (id: string) => Promise<void>;
+
+  handlePaymentSuccess: (id: string) => Promise<void>;
+  handlePaymentFailure: (id: string) => Promise<void>;
+
   // admin API, make sure that permissions are correct here
   listPaymentLinks: (ids?: string[]) => Promise<PaymentLinkDto[]>;
 }

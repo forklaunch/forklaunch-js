@@ -1,6 +1,6 @@
 import { SchemaValidator } from '@forklaunch/framework-core';
 import { EntityManager } from '@mikro-orm/core';
-import { SubscriptionService } from '../interfaces/subscriptionService.interface';
+import { SubscriptionService } from '../interfaces/subscription.service.interface';
 import {
   CreateSubscriptionDto,
   CreateSubscriptionDtoMapper,

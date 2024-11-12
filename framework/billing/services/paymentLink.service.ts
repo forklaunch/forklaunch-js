@@ -1,7 +1,7 @@
 import { TtlCache } from '@forklaunch/core/cache';
 import { SchemaValidator } from '@forklaunch/framework-core';
 import { v4 } from 'uuid';
-import { PaymentLinkService } from '../interfaces/paymentLinkService.interface';
+import { PaymentLinkService } from '../interfaces/paymentLink.service.interface';
 import {
   CreatePaymentLinkDto,
   CreatePaymentLinkDtoMapper,
@@ -15,17 +15,23 @@ import { PaymentLink } from '../models/persistence/paymentLink.entity';
 export class BasePaymentLinkService implements PaymentLinkService {
   constructor(private cache: TtlCache) {}
 
+  private cacheKeyPrefix = 'payment_link';
+
+  private createCacheKey(id: string): string {
+    return `${this.cacheKeyPrefix}:${id}`;
+  }
+
   async createPaymentLink(
     paymentLinkDto: CreatePaymentLinkDto
   ): Promise<PaymentLinkDto> {
-    // TODO:Perform permission checks here
+    // TODO: Perform permission checks here
     const linkId = v4();
     const paymentLink = CreatePaymentLinkDtoMapper.deserializeDtoToEntity(
       SchemaValidator(),
       paymentLinkDto
     );
     await this.cache.putRecord({
-      key: `payment_link_${linkId}`,
+      key: this.createCacheKey(linkId),
       value: paymentLink,
       ttlMilliseconds: this.cache.getTtlMilliseconds()
     });
@@ -40,7 +46,7 @@ export class BasePaymentLinkService implements PaymentLinkService {
   async updatePaymentLink(
     paymentLinkDto: UpdatePaymentLinkDto
   ): Promise<PaymentLinkDto> {
-    const cacheKey = `payment_link_${paymentLinkDto.id}`;
+    const cacheKey = this.createCacheKey(paymentLinkDto.id);
     const existingLink = await this.cache.readRecord<PaymentLink>(cacheKey);
     if (!existingLink) {
       throw new Error('Payment link not found');
@@ -64,7 +70,7 @@ export class BasePaymentLinkService implements PaymentLinkService {
   }
 
   async getPaymentLink(id: string): Promise<PaymentLinkDto> {
-    const cacheKey = `payment_link_${id}`;
+    const cacheKey = this.createCacheKey(id);
     const paymentLink = await this.cache.readRecord<PaymentLink>(cacheKey);
     if (!paymentLink) {
       throw new Error('Payment link not found');
@@ -77,11 +83,26 @@ export class BasePaymentLinkService implements PaymentLinkService {
     return retrievedPaymentLink;
   }
 
+  async expirePaymentLink(id: string): Promise<void> {
+    // TODO: log payment link expiration, the payment system should keep a record, but we should too
+    await this.cache.deleteRecord(this.createCacheKey(id));
+  }
+
+  async handlePaymentSuccess(id: string): Promise<void> {
+    // TODO: log payment link success, the payment system should keep a record, but we should too
+    await this.cache.deleteRecord(this.createCacheKey(id));
+  }
+
+  async handlePaymentFailure(id: string): Promise<void> {
+    // TODO: log payment link failure, the payment system should keep a record, but we should too
+    await this.cache.deleteRecord(this.createCacheKey(id));
+  }
+
   async listPaymentLinks(ids?: string[]): Promise<PaymentLinkDto[]> {
     // TODO: Perform admin permission checks here
     const keys =
-      ids?.map((id) => `payment_link_${id}`) ??
-      (await this.cache.listKeys('payment_link'));
+      ids?.map((id) => this.createCacheKey(id)) ??
+      (await this.cache.listKeys(this.cacheKeyPrefix));
 
     return await Promise.all(
       keys.map(async (key) => {

@@ -489,3 +489,15 @@ export type ApiClient<Routes extends Record<string, unknown>> = {
     ? Omit<ReturnType, 'router'>
     : never;
 };
+
+/**
+ * Represents a path match.
+ */
+export type PathMatch<
+  SuppliedPath extends `/${string}`,
+  ActualPath extends `/${string}`
+> = ActualPath extends SuppliedPath
+  ? SuppliedPath extends ActualPath
+    ? SuppliedPath
+    : never
+  : never;
