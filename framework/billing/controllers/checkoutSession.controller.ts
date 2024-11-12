@@ -1,3 +1,4 @@
+import { Controller } from '@forklaunch/core/controllers';
 import { get, post } from '@forklaunch/core/http';
 import { SchemaValidator, string } from '@forklaunch/framework-core';
 import { CheckoutSessionService } from '../interfaces/checkoutSession.service.interface';
@@ -5,9 +6,14 @@ import {
   CreateSessionDtoMapper,
   SessionDtoMapper
 } from '../models/dtoMapper/session.dtoMapper';
-import { Controller } from './temp';
 
-export class CheckoutSessionController<ConfigInjectorScope>
+export const CheckoutSessionController = <ConfigInjectorScope>(
+  service: (scope?: ConfigInjectorScope) => CheckoutSessionService
+) => new InternalCheckoutSessionController(service);
+export type CheckoutSessionController<ConfigInjectorScope> =
+  InternalCheckoutSessionController<ConfigInjectorScope>;
+
+class InternalCheckoutSessionController<ConfigInjectorScope>
   implements Controller<CheckoutSessionService>
 {
   constructor(

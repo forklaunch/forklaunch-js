@@ -8,10 +8,6 @@ import BaseRoleService from './services/role.service';
 import BaseUserService from './services/user.service';
 
 const configValidator = {
-  // orm: MikroORM<
-  //   IDatabaseDriver<Connection>,
-  //   EntityManager<IDatabaseDriver<Connection>>
-  // >,
   entityManager: EntityManager,
   organizationService: BaseOrganizationService,
   permissionService: BasePermissionService,
@@ -29,10 +25,6 @@ export function bootstrap(
       SchemaValidator(),
       configValidator,
       {
-        // orm: {
-        //   lifetime: Lifetime.Singleton,
-        //   value: orm
-        // },
         entityManager: {
           lifetime: Lifetime.Scoped,
           factory: (_args, _resolve, context) =>

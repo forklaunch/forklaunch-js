@@ -3,7 +3,7 @@ import { CheckoutSessionController } from '../controllers/checkoutSession.contro
 
 export const router = forklaunchRouter('/checkout-session');
 
-export const checkoutSessionRoutes = <ConfigInjectorScope>(
+export const CheckoutSessionRoutes = <ConfigInjectorScope>(
   controller: CheckoutSessionController<ConfigInjectorScope>
 ) => ({
   router,

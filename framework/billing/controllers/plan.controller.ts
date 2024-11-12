@@ -1,14 +1,25 @@
+import { Controller } from '@forklaunch/core/controllers';
 import { delete_, get, post, put } from '@forklaunch/core/http';
-import { SchemaValidator, string } from '@forklaunch/framework-core';
+import {
+  array,
+  optional,
+  SchemaValidator,
+  string
+} from '@forklaunch/framework-core';
 import { PlanService } from '../interfaces/plan.service.interface';
 import {
   CreatePlanDtoMapper,
   PlanDtoMapper,
   UpdatePlanDtoMapper
 } from '../models/dtoMapper/plan.dtoMapper';
-import { Controller } from './temp';
 
-export class PlanController<ConfigInjectorScope>
+export const PlanController = <ConfigInjectorScope>(
+  service: (scope?: ConfigInjectorScope) => PlanService
+) => new InternalPlanController(service);
+export type PlanController<ConfigInjectorScope> =
+  InternalPlanController<ConfigInjectorScope>;
+
+class InternalPlanController<ConfigInjectorScope>
   implements Controller<PlanService>
 {
   constructor(
@@ -84,5 +95,21 @@ export class PlanController<ConfigInjectorScope>
     }
   );
 
-  listPlans: unknown;
+  listPlans = get(
+    SchemaValidator(),
+    '/',
+    {
+      name: 'listPlans',
+      summary: 'List plans',
+      query: {
+        ids: optional(array(string))
+      },
+      responses: {
+        200: array(PlanDtoMapper.schema())
+      }
+    },
+    async (req, res) => {
+      res.status(200).json(await this.service().listPlans());
+    }
+  );
 }

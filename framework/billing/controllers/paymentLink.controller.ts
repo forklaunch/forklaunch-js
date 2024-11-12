@@ -1,14 +1,25 @@
+import { Controller } from '@forklaunch/core/controllers';
 import { delete_, get, post, put } from '@forklaunch/core/http';
-import { array, SchemaValidator, string } from '@forklaunch/framework-core';
+import {
+  array,
+  optional,
+  SchemaValidator,
+  string
+} from '@forklaunch/framework-core';
 import { PaymentLinkService } from '../interfaces/paymentLink.service.interface';
 import {
   CreatePaymentLinkDtoMapper,
   PaymentLinkDtoMapper,
   UpdatePaymentLinkDtoMapper
 } from '../models/dtoMapper/paymentLink.dtoMapper';
-import { Controller } from './temp';
 
-export class PaymentLinkController<ConfigInjectorScope>
+export const PaymentLinkController = <ConfigInjectorScope>(
+  service: (scope?: ConfigInjectorScope) => PaymentLinkService
+) => new InternalPaymentLinkController(service);
+export type PaymentLinkController<ConfigInjectorScope> =
+  InternalPaymentLinkController<ConfigInjectorScope>;
+
+class InternalPaymentLinkController<ConfigInjectorScope>
   implements Controller<PaymentLinkService>
 {
   constructor(
@@ -16,6 +27,7 @@ export class PaymentLinkController<ConfigInjectorScope>
       scope?: ConfigInjectorScope
     ) => PaymentLinkService
   ) {}
+
   createPaymentLink = post(
     SchemaValidator(),
     '/',
@@ -29,6 +41,24 @@ export class PaymentLinkController<ConfigInjectorScope>
     },
     async (req, res) => {
       res.status(200).json(await this.service().createPaymentLink(req.body));
+    }
+  );
+
+  getPaymentLink = get(
+    SchemaValidator(),
+    '/:id',
+    {
+      name: 'getPaymentLink',
+      summary: 'Get a payment link',
+      params: {
+        id: string
+      },
+      responses: {
+        200: PaymentLinkDtoMapper.schema()
+      }
+    },
+    async (req, res) => {
+      res.status(200).json(await this.service().getPaymentLink(req.params.id));
     }
   );
 
@@ -48,24 +78,6 @@ export class PaymentLinkController<ConfigInjectorScope>
     },
     async (req, res) => {
       res.status(200).json(await this.service().updatePaymentLink(req.body));
-    }
-  );
-
-  getPaymentLink = get(
-    SchemaValidator(),
-    '/:id',
-    {
-      name: 'getPaymentLink',
-      summary: 'Get a payment link',
-      params: {
-        id: string
-      },
-      responses: {
-        200: PaymentLinkDtoMapper.schema()
-      }
-    },
-    async (req, res) => {
-      res.status(200).json(await this.service().getPaymentLink(req.params.id));
     }
   );
 
@@ -132,12 +144,17 @@ export class PaymentLinkController<ConfigInjectorScope>
     {
       name: 'listPaymentLinks',
       summary: 'List payment links',
+      query: {
+        ids: optional(array(string))
+      },
       responses: {
         200: array(PaymentLinkDtoMapper.schema())
       }
     },
     async (req, res) => {
-      res.status(200).json(await this.service().listPaymentLinks());
+      res
+        .status(200)
+        .json(await this.service().listPaymentLinks(req.query.ids));
     }
   );
 }

@@ -1,80 +1,132 @@
+import { Controller } from '@forklaunch/core/controllers';
 import { delete_, get, post, put } from '@forklaunch/core/http';
-import { array, SchemaValidator, string } from '@forklaunch/framework-core';
-import { PaymentLinkService } from '../interfaces/paymentLink.service.interface';
 import {
-  CreatePaymentLinkDtoMapper,
-  PaymentLinkDtoMapper,
-  UpdatePaymentLinkDtoMapper
-} from '../models/dtoMapper/paymentLink.dtoMapper';
-import { Controller } from './temp';
+  array,
+  optional,
+  SchemaValidator,
+  string
+} from '@forklaunch/framework-core';
+import { SubscriptionService } from '../interfaces/subscription.service.interface';
+import {
+  CreateSubscriptionDtoMapper,
+  SubscriptionDtoMapper,
+  UpdateSubscriptionDtoMapper
+} from '../models/dtoMapper/subscription.dtoMapper';
 
-export class PaymentLinkController<ConfigInjectorScope>
-  implements Controller<PaymentLinkService>
+export const SubscriptionController = <ConfigInjectorScope>(
+  service: (scope?: ConfigInjectorScope) => SubscriptionService
+) => new InternalSubscriptionController(service);
+export type SubscriptionController<ConfigInjectorScope> =
+  InternalSubscriptionController<ConfigInjectorScope>;
+
+class InternalSubscriptionController<ConfigInjectorScope>
+  implements Controller<SubscriptionService>
 {
   constructor(
     private readonly service: (
       scope?: ConfigInjectorScope
-    ) => PaymentLinkService
+    ) => SubscriptionService
   ) {}
-  createPaymentLink = post(
+
+  createSubscription = post(
     SchemaValidator(),
     '/',
     {
-      name: 'createPaymentLink',
-      summary: 'Create a payment link',
-      body: CreatePaymentLinkDtoMapper.schema(),
+      name: 'createSubscription',
+      summary: 'Create a subscription',
+      body: CreateSubscriptionDtoMapper.schema(),
       responses: {
-        200: PaymentLinkDtoMapper.schema()
+        200: SubscriptionDtoMapper.schema()
       }
     },
     async (req, res) => {
-      res.status(200).json(await this.service().createPaymentLink(req.body));
+      res.status(200).json(await this.service().createSubscription(req.body));
     }
   );
 
-  updatePaymentLink = put(
+  getSubscription = get(
     SchemaValidator(),
     '/:id',
     {
-      name: 'updatePaymentLink',
-      summary: 'Update a payment link',
-      body: UpdatePaymentLinkDtoMapper.schema(),
+      name: 'getSubscription',
+      summary: 'Get a subscription',
       params: {
         id: string
       },
       responses: {
-        200: PaymentLinkDtoMapper.schema()
+        200: SubscriptionDtoMapper.schema()
       }
     },
     async (req, res) => {
-      res.status(200).json(await this.service().updatePaymentLink(req.body));
+      res.status(200).json(await this.service().getSubscription(req.params.id));
     }
   );
 
-  getPaymentLink = get(
+  getUserSubscription = get(
     SchemaValidator(),
-    '/:id',
+    '/user/:id',
     {
-      name: 'getPaymentLink',
-      summary: 'Get a payment link',
+      name: 'getUserSubscription',
+      summary: 'Get a user subscription',
       params: {
         id: string
       },
       responses: {
-        200: PaymentLinkDtoMapper.schema()
+        200: SubscriptionDtoMapper.schema()
       }
     },
     async (req, res) => {
-      res.status(200).json(await this.service().getPaymentLink(req.params.id));
+      res
+        .status(200)
+        .json(await this.service().getUserSubscription(req.params.id));
     }
   );
 
-  expirePaymentLink = delete_(
+  getOrganizationSubscription = get(
+    SchemaValidator(),
+    '/organization/:id',
+    {
+      name: 'getOrganizationSubscription',
+      summary: 'Get an organization subscription',
+      params: {
+        id: string
+      },
+      responses: {
+        200: SubscriptionDtoMapper.schema()
+      }
+    },
+    async (req, res) => {
+      res
+        .status(200)
+        .json(await this.service().getOrganizationSubscription(req.params.id));
+    }
+  );
+
+  updateSubscription = put(
     SchemaValidator(),
     '/:id',
     {
-      name: 'expirePaymentLink',
-      summary: 'Expire a payment link',
+      name: 'updateSubscription',
+      summary: 'Update a subscription',
+      params: {
+        id: string
+      },
+      body: UpdateSubscriptionDtoMapper.schema(),
+      responses: {
+        200: SubscriptionDtoMapper.schema()
+      }
+    },
+    async (req, res) => {
+      res.status(200).json(await this.service().updateSubscription(req.body));
+    }
+  );
+
+  deleteSubscription = delete_(
+    SchemaValidator(),
+    '/:id',
+    {
+      name: 'deleteSubscription',
+      summary: 'Delete a subscription',
       params: {
         id: string
       },
@@ -83,61 +135,66 @@ export class PaymentLinkController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      await this.service().expirePaymentLink(req.params.id);
-      res.status(200).send(`Expired payment link ${req.params.id}`);
+      await this.service().deleteSubscription(req.params.id);
+      res.status(200).send(`Deleted subscription ${req.params.id}`);
     }
   );
 
-  handlePaymentSuccess = get(
-    SchemaValidator(),
-    '/:id/success',
-    {
-      name: 'handlePaymentSuccess',
-      summary: 'Handle a payment success',
-      params: {
-        id: string
-      },
-      responses: {
-        200: string
-      }
-    },
-    async (req, res) => {
-      await this.service().handlePaymentSuccess(req.params.id);
-      res.status(200).send(`Handled payment success for ${req.params.id}`);
-    }
-  );
-
-  handlePaymentFailure = get(
-    SchemaValidator(),
-    '/:id/failure',
-    {
-      name: 'handlePaymentFailure',
-      summary: 'Handle a payment failure',
-      params: {
-        id: string
-      },
-      responses: {
-        200: string
-      }
-    },
-    async (req, res) => {
-      await this.service().handlePaymentFailure(req.params.id);
-      res.status(200).send(`Handled payment failure for ${req.params.id}`);
-    }
-  );
-
-  listPaymentLinks = get(
+  listSubscriptions = get(
     SchemaValidator(),
     '/',
     {
-      name: 'listPaymentLinks',
-      summary: 'List payment links',
+      name: 'listSubscriptions',
+      summary: 'List subscriptions',
+      query: {
+        ids: optional(array(string))
+      },
       responses: {
-        200: array(PaymentLinkDtoMapper.schema())
+        200: array(SubscriptionDtoMapper.schema())
       }
     },
     async (req, res) => {
-      res.status(200).json(await this.service().listPaymentLinks());
+      res
+        .status(200)
+        .json(await this.service().listSubscriptions(req.query.ids));
+    }
+  );
+
+  cancelSubscription = get(
+    SchemaValidator(),
+    '/:id/cancel',
+    {
+      name: 'cancelSubscription',
+      summary: 'Cancel a subscription',
+      params: {
+        id: string
+      },
+      responses: {
+        200: string
+      }
+    },
+    async (req, res) => {
+      await this.service().cancelSubscription(req.params.id);
+      res.status(200).send(`Cancelled subscription ${req.params.id}`);
+    }
+  );
+
+  resumeSubscription = get(
+    SchemaValidator(),
+    '/:id/resume',
+    {
+      name: 'resumeSubscription',
+      summary: 'Resume a subscription',
+      params: {
+        id: string
+      },
+      responses: {
+        200: string
+      }
+    },
+    async (req, res) => {
+      await this.service().resumeSubscription(req.params.id);
+      res.status(200).send(`Resumed subscription ${req.params.id}`);
     }
   );
 }
