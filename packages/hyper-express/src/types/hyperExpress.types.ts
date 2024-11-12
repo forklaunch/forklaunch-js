@@ -5,11 +5,11 @@ import {
   ForklaunchStatusResponse,
   ParamsDictionary
 } from '@forklaunch/core/http';
+import { AnySchemaValidator } from '@forklaunch/validator';
 import {
   Request as ExpressRequest,
   Response as ExpressResponse
-} from '@forklaunch/hyper-express-fork';
-import { AnySchemaValidator } from '@forklaunch/validator';
+} from 'hyper-express';
 import { ParsedQs } from 'qs';
 
 /**

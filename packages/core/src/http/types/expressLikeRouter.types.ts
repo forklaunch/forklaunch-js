@@ -2,7 +2,8 @@ import { AnySchemaValidator } from '@forklaunch/validator';
 
 import {
   ExpressLikeSchemaHandler,
-  LiveTypeFunction
+  LiveTypeFunction,
+  PathMatch
 } from './apiDefinition.types';
 import {
   Body,
@@ -22,6 +23,7 @@ export interface LiveTypeRouteDefinition<
 > {
   <
     Path extends `/${string}`,
+    SuppliedPath extends Path,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
     ReqBody extends Body<SV>,
@@ -30,7 +32,7 @@ export interface LiveTypeRouteDefinition<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>
   >(
-    path: Path,
+    path: PathMatch<SuppliedPath, Path>,
     typedHandler: TypedHandler<
       SV,
       ContractMethod,
@@ -44,7 +46,7 @@ export interface LiveTypeRouteDefinition<
       LocalsObj
     >
   ): {
-    [key in ContractMethod]: LiveTypeFunction<
+    [Key in ContractMethod]: LiveTypeFunction<
       SV,
       `${BasePath}${Path}`,
       P,
@@ -58,6 +60,7 @@ export interface LiveTypeRouteDefinition<
 
   <
     Path extends `/${string}`,
+    SuppliedPath extends Path,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
     ReqBody extends Body<SV>,
@@ -66,7 +69,7 @@ export interface LiveTypeRouteDefinition<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>
   >(
-    path: Path,
+    path: PathMatch<SuppliedPath, Path>,
     middleware: ExpressLikeSchemaHandler<
       SV,
       P,
@@ -102,7 +105,7 @@ export interface LiveTypeRouteDefinition<
       >
     ]
   ): {
-    [key in ContractMethod]: LiveTypeFunction<
+    [Key in ContractMethod]: LiveTypeFunction<
       SV,
       `${BasePath}${Path}`,
       P,
@@ -147,7 +150,7 @@ export interface LiveTypeRouteDefinition<
       LocalsObj
     >[]
   ): {
-    [key in ContractMethod]: LiveTypeFunction<
+    [Key in ContractMethod]: LiveTypeFunction<
       SV,
       `${BasePath}${Path}`,
       P,
@@ -166,6 +169,7 @@ export interface TypedMiddlewareDefinition<
 > {
   <
     Path extends `/${string}`,
+    SuppliedPath extends Path,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
     ReqBody extends Body<SV>,
@@ -174,7 +178,7 @@ export interface TypedMiddlewareDefinition<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>
   >(
-    path: Path,
+    path: PathMatch<SuppliedPath, Path>,
     typedHandler: TypedHandler<
       SV,
       'middleware',
@@ -215,6 +219,7 @@ export interface TypedMiddlewareDefinition<
 
   <
     Path extends `/${string}`,
+    SuppliedPath extends Path,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
     ReqBody extends Body<SV>,
@@ -223,7 +228,7 @@ export interface TypedMiddlewareDefinition<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>
   >(
-    path: Path,
+    path: PathMatch<SuppliedPath, Path>,
     middleware: ExpressLikeSchemaHandler<
       SV,
       P,

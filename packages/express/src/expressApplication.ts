@@ -50,7 +50,7 @@ export class Application<
       }
 
       args.forEach((arg) => {
-        if (isForklaunchRouter<SV>(expressRouter)) {
+        if (isForklaunchRouter<SV>(arg)) {
           throw new Error('Only one router is allowed');
         }
       });

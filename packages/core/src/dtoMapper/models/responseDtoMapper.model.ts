@@ -37,14 +37,13 @@ export abstract class ResponseDtoMapper<
    * @returns {this['_dto']} - The JSON object.
    * @throws {Error} - Throws an error if the DTO is invalid.
    */
-  toJson(): this['_dto'] {
-    if (
-      !this.schemaValidator.validate(
-        this.schemaValidator.schemify(this.schema),
-        this.dto
-      )
-    ) {
-      throw new Error('Invalid DTO');
+  toDto(): this['_dto'] {
+    const parsedSchema = this.schemaValidator.parse(
+      this.schemaValidator.schemify(this.schema),
+      this.dto
+    );
+    if (!parsedSchema.ok) {
+      throw new Error(`Invalid DTO: ${parsedSchema.error}`);
     }
     return this.dto;
   }
@@ -56,8 +55,10 @@ export abstract class ResponseDtoMapper<
    * @returns {this['_dto']} - The JSON object.
    * @throws {Error} - Throws an error if the DTO is invalid.
    */
-  serializeEntityToJson(entity: Entity): this['_dto'] {
-    return this.fromEntity(entity).toJson();
+  serializeEntityToDto(
+    ...[entity, ...additionalArgs]: Parameters<this['fromEntity']>
+  ): this['_dto'] {
+    return this.fromEntity(entity, ...additionalArgs).toDto();
   }
 
   /**
@@ -76,9 +77,12 @@ export abstract class ResponseDtoMapper<
   >(
     this: DtoMapperConstructor<T, SV>,
     schemaValidator: SV,
-    entity: T['_Entity']
+    ...[entity, ...additionalArgs]: Parameters<T['fromEntity']>
   ): T {
-    return construct(this, schemaValidator).fromEntity(entity);
+    return construct(this, schemaValidator).fromEntity(
+      entity,
+      ...additionalArgs
+    );
   }
 
   /**
@@ -92,14 +96,17 @@ export abstract class ResponseDtoMapper<
    * @returns {T['_dto']} - The JSON object.
    * @throws {Error} - Throws an error if the DTO is invalid.
    */
-  static serializeEntityToJson<
+  static serializeEntityToDto<
     T extends ResponseDtoMapper<BaseEntity, SV>,
-    SV extends AnySchemaValidator
+    SV extends AnySchemaValidator,
+    DtoType extends T['_dto']
   >(
     this: DtoMapperConstructor<T, SV>,
     schemaValidator: SV,
-    entity: T['_Entity']
-  ): T['_dto'] {
-    return construct(this, schemaValidator).serializeEntityToJson(entity);
+    ...[entity, ...additionalArgs]: Parameters<T['fromEntity']>
+  ): DtoType {
+    return construct(this, schemaValidator)
+      .fromEntity(entity, ...additionalArgs)
+      .toDto() as DtoType;
   }
 }

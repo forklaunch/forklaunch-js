@@ -219,7 +219,9 @@ export class ForklaunchExpressLikeRouter<
     const controllerHandler = handlers.pop();
 
     if (typeof controllerHandler !== 'function') {
-      throw new Error('Last argument must be a handler');
+      throw new Error(
+        `Last argument must be a handler, received: ${controllerHandler}`
+      );
     }
 
     return controllerHandler;
@@ -487,7 +489,10 @@ export class ForklaunchExpressLikeRouter<
     }
     // in this case, we test for the last element of the handlers. If typed handler, break this down
     else {
-      const maybeTypedHandler = middlewareOrMiddlewareAndTypedHandler.pop();
+      const maybeTypedHandler =
+        middlewareOrMiddlewareAndTypedHandler[
+          middlewareOrMiddlewareAndTypedHandler.length - 1
+        ];
       if (
         isTypedHandler<
           SV,

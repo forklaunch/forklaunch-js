@@ -478,3 +478,26 @@ export type ResponseShape<Params, Headers, Query, Body> = {
   query: Query;
   body: Body;
 };
+
+/**
+ * Acts as a container to collect API routes for export to SDK consumers.
+ */
+export type ApiClient<Routes extends Record<string, unknown>> = {
+  [Key in keyof Routes]: Routes[Key] extends (
+    ...args: never[]
+  ) => infer ReturnType
+    ? Omit<ReturnType, 'router'>
+    : never;
+};
+
+/**
+ * Represents a path match.
+ */
+export type PathMatch<
+  SuppliedPath extends `/${string}`,
+  ActualPath extends `/${string}`
+> = ActualPath extends SuppliedPath
+  ? SuppliedPath extends ActualPath
+    ? SuppliedPath
+    : never
+  : never;

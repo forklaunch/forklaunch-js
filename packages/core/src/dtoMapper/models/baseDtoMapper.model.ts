@@ -74,13 +74,12 @@ export abstract class BaseDtoMapper<SV extends AnySchemaValidator> {
    * @throws {Error} - Throws an error if the DTO is invalid.
    */
   set dto(_dto: this['_dto']) {
-    if (
-      !this.schemaValidator.validate(
-        this.schemaValidator.schemify(this.schema),
-        _dto
-      )
-    ) {
-      throw new Error('Invalid DTO');
+    const parsedSchema = this.schemaValidator.parse(
+      this.schemaValidator.schemify(this.schema),
+      _dto
+    );
+    if (!parsedSchema.ok) {
+      throw new Error(`Invalid DTO: ${parsedSchema.error}`);
     }
     this._dto = _dto as unknown as Schema<this['schema'], SV>;
   }

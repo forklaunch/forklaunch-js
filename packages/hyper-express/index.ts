@@ -33,4 +33,6 @@ export function forklaunchRouter<
   return router;
 }
 
+export type { Application } from './src/hyperExpressApplication';
+export type { Router } from './src/hyperExpressRouter';
 export * from './src/types/hyperExpress.types';

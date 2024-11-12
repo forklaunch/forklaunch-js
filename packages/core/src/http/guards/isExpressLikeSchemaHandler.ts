@@ -32,11 +32,16 @@ export function isExpressLikeSchemaHandler<
 > {
   const extractedArgumentNames =
     typeof middleware === 'function' &&
-    new Set(extractArgumentNames(middleware));
+    new Set(
+      extractArgumentNames(middleware).map((argumentName) =>
+        argumentName.toLowerCase()
+      )
+    );
   return (
     extractedArgumentNames &&
-    extractedArgumentNames.has('req') &&
-    extractedArgumentNames.has('res') &&
-    extractedArgumentNames.has('next')
+    (extractedArgumentNames.has('req') ||
+      extractedArgumentNames.has('request')) &&
+    (extractedArgumentNames.has('res') ||
+      extractedArgumentNames.has('response'))
   );
 }

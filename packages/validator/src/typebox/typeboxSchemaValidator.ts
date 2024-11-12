@@ -145,7 +145,7 @@ export class TypeboxSchemaValidator
       if (typeof value !== 'bigint') {
         try {
           return BigInt(value instanceof Date ? value.getTime() : value);
-        } catch (error) {
+        } catch {
           throw new Error('Invalid bigint');
         }
       }
