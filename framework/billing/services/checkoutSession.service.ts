@@ -1,4 +1,4 @@
-import { TtlCache } from '@forklaunch/core/cache';
+import { createCacheKey, TtlCache } from '@forklaunch/core/cache';
 import { SchemaValidator } from '@forklaunch/framework-core';
 import { v4 } from 'uuid';
 import { CheckoutSessionService } from '../interfaces/checkoutSession.service.interface';
@@ -13,12 +13,7 @@ import { Session } from '../models/persistence/session.entity';
 export class BaseCheckoutSessionService implements CheckoutSessionService {
   constructor(private cache: TtlCache) {}
 
-  // TODO: move this into core
-  private cacheKeyPrefix = 'checkout_session';
-
-  private createCacheKey(id: string): string {
-    return `${this.cacheKeyPrefix}:${id}`;
-  }
+  private createCacheKey = createCacheKey('checkout_session');
 
   async createCheckoutSession(
     sessionDto: CreateSessionDto
@@ -31,12 +26,12 @@ export class BaseCheckoutSessionService implements CheckoutSessionService {
 
     // Store the session details in the cache
     await this.cache.putRecord({
-      key: `checkout_session_${session.id}`,
+      key: this.createCacheKey(session.id),
       value: session,
       ttlMilliseconds: this.cache.getTtlMilliseconds()
     });
     const cachedSessionDetails = await this.cache.readRecord<Session>(
-      `checkout_session_${session.id}`
+      this.createCacheKey(session.id)
     );
     const createdSessionDto = SessionDtoMapper.serializeEntityToDto(
       SchemaValidator(),
@@ -47,7 +42,7 @@ export class BaseCheckoutSessionService implements CheckoutSessionService {
 
   async getCheckoutSession(id: string): Promise<SessionDto> {
     const sessionDetails = await this.cache.readRecord<Session>(
-      `checkout_session_${id}`
+      this.createCacheKey(id)
     );
     if (!sessionDetails) {
       throw new Error('Session not found');
@@ -56,22 +51,20 @@ export class BaseCheckoutSessionService implements CheckoutSessionService {
   }
 
   async expireCheckoutSession(id: string): Promise<void> {
-    const sessionDetails = await this.cache.readRecord(
-      `checkout_session_${id}`
-    );
+    const sessionDetails = await this.cache.readRecord(this.createCacheKey(id));
     if (!sessionDetails) {
       throw new Error('Session not found');
     }
-    await this.cache.deleteRecord(`checkout_session_${id}`);
+    await this.cache.deleteRecord(this.createCacheKey(id));
   }
 
   async handleCheckoutSuccess(id: string): Promise<void> {
     // TODO: add log here to make sure that this action is recorded
-    await this.cache.deleteRecord(`checkout_session_${id}`);
+    await this.cache.deleteRecord(this.createCacheKey(id));
   }
 
   async handleCheckoutFailure(id: string): Promise<void> {
     // TODO: add log here to make sure that this action is recorded
-    await this.cache.deleteRecord(`checkout_session_${id}`);
+    await this.cache.deleteRecord(this.createCacheKey(id));
   }
 }

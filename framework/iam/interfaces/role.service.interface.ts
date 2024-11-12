@@ -1,6 +1,5 @@
 // https://ts.dev/style/#descriptive-names
 
-import { BaseService } from '@forklaunch/core/services';
 import { EntityManager } from '@mikro-orm/core';
 import {
   CreateRoleDto,
@@ -8,7 +7,7 @@ import {
   UpdateRoleDto
 } from '../models/dtoMapper/role.dtoMapper';
 
-export interface RoleService extends BaseService {
+export interface RoleService {
   createRole(roleDto: CreateRoleDto, em?: EntityManager): Promise<RoleDto>;
   createBatchRoles(
     roleDtos: CreateRoleDto[],
@@ -22,5 +21,5 @@ export interface RoleService extends BaseService {
     em?: EntityManager
   ): Promise<RoleDto[]>;
   deleteRole(id: string, em?: EntityManager): Promise<void>;
-  deleteRoles(ids: string[], em?: EntityManager): Promise<void>;
+  deleteBatchRoles(ids: string[], em?: EntityManager): Promise<void>;
 }

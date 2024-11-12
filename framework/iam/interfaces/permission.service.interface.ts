@@ -1,6 +1,5 @@
 // https://ts.dev/style/#descriptive-names
 
-import { BaseService } from '@forklaunch/core/services';
 import { EntityManager } from '@mikro-orm/core';
 import {
   CreatePermissionDto,
@@ -8,7 +7,7 @@ import {
   UpdatePermissionDto
 } from '../models/dtoMapper/permission.dtoMapper';
 
-export interface PermissionService extends BaseService {
+export interface PermissionService {
   createPermission(
     permissionDto: CreatePermissionDto,
     em?: EntityManager
@@ -31,5 +30,5 @@ export interface PermissionService extends BaseService {
     em?: EntityManager
   ): Promise<PermissionDto[]>;
   deletePermission(id: string, em?: EntityManager): Promise<void>;
-  deletePermissions(ids: string[], em?: EntityManager): Promise<void>;
+  deleteBatchPermissions(ids: string[], em?: EntityManager): Promise<void>;
 }

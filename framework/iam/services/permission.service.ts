@@ -1,3 +1,4 @@
+import { BaseService } from '@forklaunch/core/services';
 import { SchemaValidator } from '@forklaunch/framework-core';
 import { EntityManager } from '@mikro-orm/core';
 import { PermissionService } from '../interfaces/permission.service.interface';
@@ -19,7 +20,9 @@ type CreatePermissionEntityData = {
   addToRoles: Role[];
 };
 
-export default class BasePermissionService implements PermissionService {
+export default class BasePermissionService
+  implements PermissionService, BaseService
+{
   private roleService: RoleService;
 
   constructor(
@@ -267,7 +270,10 @@ export default class BasePermissionService implements PermissionService {
     await (em ?? this.em).nativeDelete(Permission, { id });
   }
 
-  async deletePermissions(ids: string[], em?: EntityManager): Promise<void> {
+  async deleteBatchPermissions(
+    ids: string[],
+    em?: EntityManager
+  ): Promise<void> {
     await (em ?? this.em).nativeDelete(Permission, { id: { $in: ids } });
   }
 }

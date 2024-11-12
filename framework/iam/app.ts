@@ -1,6 +1,10 @@
 import { ApiClient } from '@forklaunch/core/http';
 import { forklaunchExpress } from '@forklaunch/framework-core';
 import { bootstrap } from './bootstrapper';
+import { OrganizationController } from './controllers/organization.controller';
+import { PermissionController } from './controllers/permission.controller';
+import { RoleController } from './controllers/role.controller';
+import { UserController } from './controllers/user.controller';
 import { OrganizationRoutes } from './routes/organization.routes';
 import { PermissionRoutes } from './routes/permission.routes';
 import { RoleRoutes } from './routes/role.routes';
@@ -10,20 +14,18 @@ const app = forklaunchExpress();
 const port = Number(process.env.PORT) || 8000;
 
 bootstrap((ci) => {
-  const scopedOrganizationServiceResolver = ci.scopedResolver(
-    'organizationService'
-  );
-  const scopedPermissionServiceResolver =
-    ci.scopedResolver('permissionService');
-  const scopedRoleServiceResolver = ci.scopedResolver('roleService');
-  const scopedUserServiceResolver = ci.scopedResolver('userService');
-
   const organizationRoutes = OrganizationRoutes(
-    scopedOrganizationServiceResolver
+    OrganizationController(ci.scopedResolver('organizationService'))
   );
-  const permissionRoutes = PermissionRoutes(scopedPermissionServiceResolver);
-  const roleRoutes = RoleRoutes(scopedRoleServiceResolver);
-  const userRoutes = UserRoutes(scopedUserServiceResolver);
+  const permissionRoutes = PermissionRoutes(
+    PermissionController(ci.scopedResolver('permissionService'))
+  );
+  const roleRoutes = RoleRoutes(
+    RoleController(ci.scopedResolver('roleService'))
+  );
+  const userRoutes = UserRoutes(
+    UserController(ci.scopedResolver('userService'))
+  );
 
   app.use(organizationRoutes.router);
   app.use(permissionRoutes.router);

@@ -12,11 +12,13 @@ describe('universalSdk tests', () => {
   }>('https://api.example.com');
 
   beforeEach(() => {
-    fetchMock.reset(); // Reset fetchMock before each test
+    fetchMock.clearHistory();
+    fetchMock.removeRoutes();
   });
 
   afterAll(() => {
-    fetchMock.restore(); // Restore fetchMock after all tests are done
+    fetchMock.clearHistory();
+    fetchMock.removeRoutes();
   });
 
   test('GET request should be called with correct URL and method', async () => {
@@ -27,7 +29,9 @@ describe('universalSdk tests', () => {
     });
 
     const response = await sdk.get('/test');
-    expect(fetchMock.called('https://api.example.com/test')).toBe(true);
+    expect(fetchMock.callHistory.called('https://api.example.com/test')).toBe(
+      true
+    );
     expect(await response.content).toEqual({ message: 'Success' });
   });
 
@@ -43,14 +47,19 @@ describe('universalSdk tests', () => {
       headers: { Authorization: 'Bearer token' }
     });
 
-    expect(fetchMock.called('https://api.example.com/test')).toBe(true);
-    const lastCall = fetchMock.lastCall('https://api.example.com/test');
-    expect(lastCall?.[1]?.method).toBe('POST');
-    expect(lastCall?.[1]?.headers).toEqual({
+    expect(fetchMock.callHistory.called('https://api.example.com/test')).toBe(
+      true
+    );
+    const lastCall = fetchMock.callHistory.lastCall(
+      'https://api.example.com/test'
+    );
+
+    expect(lastCall?.request?.method).toBe('POST');
+    expect(lastCall?.request?.headers).toEqual({
       'Content-Type': 'application/json',
       Authorization: 'Bearer token'
     });
-    expect(lastCall?.[1]?.body).toBe(JSON.stringify({ key: 'value' }));
+    expect(lastCall?.request?.body).toBe(JSON.stringify({ key: 'value' }));
     expect(await response.content).toEqual({ message: 'Created' });
   });
 
@@ -66,14 +75,20 @@ describe('universalSdk tests', () => {
       headers: { Authorization: 'Bearer token' }
     });
 
-    expect(fetchMock.called('https://api.example.com/test/123')).toBe(true);
-    const lastCall = fetchMock.lastCall('https://api.example.com/test/123');
-    expect(lastCall?.[1]?.method).toBe('PUT');
-    expect(lastCall?.[1]?.headers).toEqual({
+    expect(
+      fetchMock.callHistory.called('https://api.example.com/test/123')
+    ).toBe(true);
+    const lastCall = fetchMock.callHistory.lastCall(
+      'https://api.example.com/test/123'
+    );
+    expect(lastCall?.request?.method).toBe('PUT');
+    expect(lastCall?.request?.headers).toEqual({
       'Content-Type': 'application/json',
       Authorization: 'Bearer token'
     });
-    expect(lastCall?.[1]?.body).toBe(JSON.stringify({ key: 'updatedValue' }));
+    expect(lastCall?.request?.body).toBe(
+      JSON.stringify({ key: 'updatedValue' })
+    );
     expect(await response.content).toEqual({ message: 'Updated' });
   });
 
@@ -89,14 +104,20 @@ describe('universalSdk tests', () => {
       headers: { Authorization: 'Bearer token' }
     });
 
-    expect(fetchMock.called('https://api.example.com/test/123')).toBe(true);
-    const lastCall = fetchMock.lastCall('https://api.example.com/test/123');
-    expect(lastCall?.[1]?.method).toBe('PATCH');
-    expect(lastCall?.[1]?.headers).toEqual({
+    expect(
+      fetchMock.callHistory.called('https://api.example.com/test/123')
+    ).toBe(true);
+    const lastCall = fetchMock.callHistory.lastCall(
+      'https://api.example.com/test/123'
+    );
+    expect(lastCall?.request?.method).toBe('PATCH');
+    expect(lastCall?.request?.headers).toEqual({
       'Content-Type': 'application/json',
       Authorization: 'Bearer token'
     });
-    expect(lastCall?.[1]?.body).toBe(JSON.stringify({ key: 'patchedValue' }));
+    expect(lastCall?.request?.body).toBe(
+      JSON.stringify({ key: 'patchedValue' })
+    );
     expect(await response.content).toEqual({ message: 'Patched' });
   });
 
@@ -107,9 +128,13 @@ describe('universalSdk tests', () => {
     });
 
     const response = await sdk.delete('/test/123');
-    expect(fetchMock.called('https://api.example.com/test/123')).toBe(true);
-    const lastCall = fetchMock.lastCall('https://api.example.com/test/123');
-    expect(lastCall?.[1]?.method).toBe('DELETE');
+    expect(
+      fetchMock.callHistory.called('https://api.example.com/test/123')
+    ).toBe(true);
+    const lastCall = fetchMock.callHistory.lastCall(
+      'https://api.example.com/test/123'
+    );
+    expect(lastCall?.request?.method).toBe('DELETE');
     expect(response.code).toBe(204);
   });
 });

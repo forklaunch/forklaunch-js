@@ -1,3 +1,4 @@
+import { BaseService } from '@forklaunch/core/services';
 import { SchemaValidator } from '@forklaunch/framework-core';
 import { EntityManager } from '@mikro-orm/core';
 import { OrganizationService } from '../interfaces/organization.service.interface';
@@ -11,7 +12,9 @@ import {
 } from '../models/dtoMapper/organization.dtoMapper';
 import { Organization } from '../models/persistence/organization.entity';
 
-export default class BaseOrganizationService implements OrganizationService {
+export default class BaseOrganizationService
+  implements OrganizationService, BaseService
+{
   constructor(public em: EntityManager) {}
 
   async createOrganization(

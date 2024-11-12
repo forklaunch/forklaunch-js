@@ -1,3 +1,4 @@
+import { BaseService } from '@forklaunch/core/services';
 import { SchemaValidator } from '@forklaunch/framework-core';
 import { Collection, EntityManager } from '@mikro-orm/core';
 import { OrganizationService } from '../interfaces/organization.service.interface';
@@ -16,7 +17,7 @@ import {
 import { Role } from '../models/persistence/role.entity';
 import { User } from '../models/persistence/user.entity';
 
-export default class BaseUserService implements UserService {
+export default class BaseUserService implements UserService, BaseService {
   private roleService: RoleService;
   private organizationService: OrganizationService;
   constructor(
@@ -154,7 +155,7 @@ export default class BaseUserService implements UserService {
     await entityManager.nativeDelete(User, { id });
   }
 
-  async deleteUsers(ids: string[], em?: EntityManager): Promise<void> {
+  async deleteBatchUsers(ids: string[], em?: EntityManager): Promise<void> {
     const entityManager = em || this.em;
     await entityManager.nativeDelete(User, { id: { $in: ids } });
   }

@@ -1,6 +1,5 @@
 // https://ts.dev/style/#descriptive-usernames
 
-import { BaseService } from '@forklaunch/core/services';
 import { EntityManager } from '@mikro-orm/core';
 import {
   CreateUserDto,
@@ -8,7 +7,7 @@ import {
   UserDto
 } from '../models/dtoMapper/user.dtoMapper';
 
-export interface UserService extends BaseService {
+export interface UserService {
   createUser(userDto: CreateUserDto, em?: EntityManager): Promise<UserDto>;
   createBatchUsers(
     userDtos: CreateUserDto[],
@@ -22,7 +21,7 @@ export interface UserService extends BaseService {
     em?: EntityManager
   ): Promise<UserDto[]>;
   deleteUser(id: string, em?: EntityManager): Promise<void>;
-  deleteUsers(ids: string[], em?: EntityManager): Promise<void>;
+  deleteBatchUsers(ids: string[], em?: EntityManager): Promise<void>;
 
   verifyHasRole(id: string, roleId: string, em?: EntityManager): Promise<void>;
   verifyHasPermission(

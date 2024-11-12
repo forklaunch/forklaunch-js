@@ -1,4 +1,4 @@
-import { TtlCache } from '@forklaunch/core/cache';
+import { createCacheKey, TtlCache } from '@forklaunch/core/cache';
 import { SchemaValidator } from '@forklaunch/framework-core';
 import { v4 } from 'uuid';
 import { PaymentLinkService } from '../interfaces/paymentLink.service.interface';
@@ -16,10 +16,7 @@ export class BasePaymentLinkService implements PaymentLinkService {
   constructor(private cache: TtlCache) {}
 
   private cacheKeyPrefix = 'payment_link';
-
-  private createCacheKey(id: string): string {
-    return `${this.cacheKeyPrefix}:${id}`;
-  }
+  private createCacheKey = createCacheKey(this.cacheKeyPrefix);
 
   async createPaymentLink(
     paymentLinkDto: CreatePaymentLinkDto

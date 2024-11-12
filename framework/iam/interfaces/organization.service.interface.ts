@@ -1,6 +1,5 @@
 // https://ts.dev/style/#descriptive-names
 
-import { BaseService } from '@forklaunch/core/services';
 import { EntityManager } from '@mikro-orm/core';
 import {
   CreateOrganizationDto,
@@ -8,7 +7,7 @@ import {
   UpdateOrganizationDto
 } from '../models/dtoMapper/organization.dtoMapper';
 
-export interface OrganizationService extends BaseService {
+export interface OrganizationService {
   createOrganization(
     organizationDto: CreateOrganizationDto,
     em?: EntityManager
