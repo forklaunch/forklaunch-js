@@ -660,7 +660,7 @@ export class ForklaunchExpressLikeRouter<
     }
   }
 
-  #extractMiddlewareFromEnrichedTypedHandlerArray<
+  #extractHandlers<
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -668,23 +668,28 @@ export class ForklaunchExpressLikeRouter<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    ArrayReturnType
   >(
-    middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
-      SV,
-      'middleware',
-      Path,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders,
-      LocalsObj
-    >[]
+    handlers: (
+      | MiddlewareOrMiddlewareWithTypedHandler<
+          SV,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >
+      | ForklaunchExpressLikeRouter<SV, `/${string}`, RouterHandler, Internal>
+    )[],
+    processMiddleware?: (handler: unknown) => RouterHandler | Internal
   ) {
-    const lastHandler = middlewareOrMiddlewareWithTypedHandler.pop();
-    let rawHandler = [lastHandler];
+    const last = handlers.pop();
+    let finalHandlers = [last];
     if (
       isTypedHandler<
         SV,
@@ -697,12 +702,12 @@ export class ForklaunchExpressLikeRouter<
         ReqHeaders,
         ResHeaders,
         LocalsObj
-      >(lastHandler)
+      >(last)
     ) {
-      rawHandler = lastHandler.handlers;
+      finalHandlers = last.handlers;
     }
 
-    middlewareOrMiddlewareWithTypedHandler.forEach((parameter) => {
+    handlers.forEach((handler) => {
       if (
         isTypedHandler<
           SV,
@@ -715,7 +720,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj
-        >(parameter)
+        >(handler)
       ) {
         throw new Error(
           'Only the last argument supplied to this function can be a typed handler. Please use only middleware.'
@@ -723,10 +728,47 @@ export class ForklaunchExpressLikeRouter<
       }
     });
 
-    return [
-      ...(middlewareOrMiddlewareWithTypedHandler as RouterHandler[]),
-      ...(rawHandler as RouterHandler[])
-    ];
+    const middleware = processMiddleware
+      ? handlers.map(processMiddleware)
+      : (handlers as ArrayReturnType[]);
+
+    return [...middleware, ...finalHandlers] as ArrayReturnType[];
+  }
+
+  #extractMiddlewareFromEnrichedTypedHandlerArray<
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    handlers: MiddlewareOrMiddlewareWithTypedHandler<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj
+    >[]
+  ) {
+    return this.#extractHandlers<
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj,
+      RouterHandler
+    >(handlers);
   }
 
   #extractNestableMiddlewareFromEnrichedTypedHandlerArray<
@@ -739,7 +781,7 @@ export class ForklaunchExpressLikeRouter<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>
   >(
-    middlewareOrMiddlewareWithTypedHandler: (
+    handlers: (
       | MiddlewareOrMiddlewareWithTypedHandler<
           SV,
           'middleware',
@@ -755,67 +797,23 @@ export class ForklaunchExpressLikeRouter<
       | ForklaunchExpressLikeRouter<SV, `/${string}`, RouterHandler, Internal>
     )[]
   ) {
-    const lastHandler = middlewareOrMiddlewareWithTypedHandler.pop();
-    let rawHandler = [lastHandler];
-    if (
-      isTypedHandler<
-        SV,
-        'middleware',
-        Path,
-        P,
-        ResBodyMap,
-        ReqBody,
-        ReqQuery,
-        ReqHeaders,
-        ResHeaders,
-        LocalsObj
-      >(lastHandler)
-    ) {
-      rawHandler = lastHandler.handlers;
-    }
-
-    middlewareOrMiddlewareWithTypedHandler.forEach((parameter) => {
-      if (
-        isTypedHandler<
-          SV,
-          'middleware',
-          Path,
-          P,
-          ResBodyMap,
-          ReqBody,
-          ReqQuery,
-          ReqHeaders,
-          ResHeaders,
-          LocalsObj
-        >(parameter)
-      ) {
-        throw new Error(
-          'Only the last argument supplied to this function can be a typed handler. Please use only middleware.'
-        );
-      }
-    });
-
-    // map trips up the type compile due to the complex generic types being passed through
-    const routerFriendlyParameters: (RouterHandler | Internal)[] = [];
-    for (const parameter of middlewareOrMiddlewareWithTypedHandler) {
-      if (
-        isForklaunchExpressLikeRouter<
-          SV,
-          `/${string}`,
-          RouterHandler,
-          Internal
-        >(parameter)
-      ) {
-        routerFriendlyParameters.push(parameter.internal);
-      } else {
-        routerFriendlyParameters.push(parameter as RouterHandler);
-      }
-    }
-
-    return [
-      ...routerFriendlyParameters,
-      ...(rawHandler as (RouterHandler | Internal)[])
-    ];
+    return this.#extractHandlers<
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj,
+      RouterHandler | Internal
+    >(handlers, (handler) =>
+      isForklaunchExpressLikeRouter<SV, `/${string}`, RouterHandler, Internal>(
+        handler
+      )
+        ? handler.internal
+        : (handler as RouterHandler)
+    );
   }
 
   #extractMiddlewareAsRouterHandlers<
