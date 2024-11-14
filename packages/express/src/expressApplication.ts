@@ -1,14 +1,11 @@
 import {
   ForklaunchExpressLikeApplication,
-  ForklaunchRouter,
-  generateSwaggerDocument,
-  isForklaunchRouter
+  generateSwaggerDocument
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import express, { ErrorRequestHandler, Express, RequestHandler } from 'express';
 import { Server } from 'http';
 import swaggerUi from 'swagger-ui-express';
-import { Router } from './expressRouter';
 
 /**
  * Application class that sets up an Express server with Forklaunch routers and middleware.
@@ -17,7 +14,7 @@ import { Router } from './expressRouter';
  */
 export class Application<
   SV extends AnySchemaValidator
-> extends ForklaunchExpressLikeApplication<SV, Express> {
+> extends ForklaunchExpressLikeApplication<SV, Express, RequestHandler> {
   /**
    * Creates an instance of Application.
    *
@@ -27,42 +24,50 @@ export class Application<
     super(schemaValidator, express());
   }
 
-  //TODO: change this to different signatures and handle different cases
-  /**
-   * Registers middleware or routers to the application.
-   *
-   * @param {...(ForklaunchRouter<SV> | RequestHandler)[]} args - The middleware or routers to register.
-   * @returns {this} - The application instance.
-   */
-  use(
-    router: ForklaunchRouter<SV> | RequestHandler,
-    ...args: (ForklaunchRouter<SV> | RequestHandler)[]
-  ): this {
-    if (isForklaunchRouter<SV>(router)) {
-      const expressRouter = router as Router<SV, `/${string}`>;
-      this.routers.push(expressRouter);
-      this.internal.use(expressRouter.basePath, expressRouter.internal);
-      return this;
-    } else {
-      const expressRouter = args.pop() as Router<SV, `/${string}`>;
-      if (!isForklaunchRouter<SV>(expressRouter)) {
-        throw new Error('Last argument must be a router');
-      }
+  // //TODO: change this to different signatures and handle different cases
+  // /**
+  //  * Registers middleware or routers to the application.
+  //  *
+  //  * @param {...(ForklaunchRouter<SV> | RequestHandler)[]} args - The middleware or routers to register.
+  //  * @returns {this} - The application instance.
+  //  */
+  // use(
+  //   arg:
+  //     | `/${string}`
+  //     | ForklaunchExpressLikeRouter<SV, `/${string}`, RequestHandler, Express>
+  //     | RequestHandler,
+  //   ...args: (
+  //     | ForklaunchExpressLikeRouter<SV, `/${string}`, RequestHandler, Express>
+  //     | RequestHandler
+  //   )[]
+  // ): this {
+  //   if (isForklaunchRouter<SV>(arg)) {
+  //     // const expressRouter = arg as Router<SV, `/${string}`>;
+  //     const expressRouter = arg;
+  //     this.routers.push(expressRouter);
+  //     this.internal.use(expressRouter.basePath, expressRouter.internal);
+  //     return this;
+  //   } else {
+  //     // const expressRouter = args.pop() as Router<SV, `/${string}`>;
+  //     const expressRouter = args.pop();
+  //     if (!isForklaunchRouter<SV>(expressRouter)) {
+  //       throw new Error('Last argument must be a router');
+  //     }
 
-      args.forEach((arg) => {
-        if (isForklaunchRouter<SV>(arg)) {
-          throw new Error('Only one router is allowed');
-        }
-      });
+  //     args.forEach((arg) => {
+  //       if (isForklaunchRouter<SV>(arg)) {
+  //         throw new Error('Only one router is allowed');
+  //       }
+  //     });
 
-      this.internal.use(
-        expressRouter.basePath,
-        ...(args as unknown as RequestHandler[]),
-        expressRouter.internal
-      );
-      return this;
-    }
-  }
+  //     this.internal.use(
+  //       expressRouter.basePath,
+  //       ...(args as unknown as RequestHandler[]),
+  //       expressRouter.internal
+  //     );
+  //     return this;
+  //   }
+  // }
 
   /**
    * Starts the server and sets up Swagger documentation.

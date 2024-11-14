@@ -9,8 +9,8 @@ export interface PathOrMiddlewareBasedHandler<RouterHandler>
 
 export interface NestableRouterBasedHandler<RouterHandler, Router>
   extends PathOrMiddlewareBasedHandler<RouterHandler> {
-  (...args: Router[]): unknown;
-  (path: string, ...handlers: Router[]): unknown;
+  (...args: (Router | RouterHandler)[]): unknown;
+  (path: string, ...handlers: (Router | RouterHandler)[]): unknown;
 }
 
 export interface ExpressLikeRouter<RouterHandler, Router> {

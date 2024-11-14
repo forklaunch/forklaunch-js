@@ -1,4 +1,6 @@
 import { AnySchemaValidator } from '@forklaunch/validator';
+import { ExpressLikeRouter } from '../interfaces/expressLikeRouter.interface';
+import { ForklaunchExpressLikeRouter } from '../router/expressLikeRouter';
 import { ForklaunchRouter } from '../types/router.types';
 
 /**
@@ -9,8 +11,9 @@ import { ForklaunchRouter } from '../types/router.types';
  */
 export abstract class ForklaunchExpressLikeApplication<
   SV extends AnySchemaValidator,
-  Server
-> {
+  Server extends ExpressLikeRouter<RouterHandler, Server>,
+  RouterHandler
+> extends ForklaunchExpressLikeRouter<SV, '/', RouterHandler, Server> {
   routers: ForklaunchRouter<SV>[] = [];
 
   /**
@@ -21,8 +24,10 @@ export abstract class ForklaunchExpressLikeApplication<
   constructor(
     readonly schemaValidator: SV,
     readonly internal: Server
-  ) {}
+  ) {
+    super('/', schemaValidator, internal);
+  }
 
-  abstract use(...args: unknown[]): this;
+  // abstract use(...args: unknown[]): this;
   abstract listen(...args: unknown[]): void;
 }

@@ -1,11 +1,13 @@
 import { AnySchemaValidator, SchemaValidator } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
 import { isExpressLikeSchemaHandler } from '../guards/isExpressLikeSchemaHandler';
+import { isForklaunchRouter } from '../guards/isForklaunchRouter';
 import { isHttpContractDetails } from '../guards/isHttpContractDetails';
 import { isPathParamHttpContractDetails } from '../guards/isPathParamContractDetails';
 import { isTypedHandler } from '../guards/isTypedHandler';
 import {
   ExpressLikeRouter,
+  NestableRouterBasedHandler,
   PathBasedHandler,
   PathOrMiddlewareBasedHandler
 } from '../interfaces/expressLikeRouter.interface';
@@ -900,6 +902,268 @@ export class ForklaunchExpressLikeRouter<
     return this;
   }
 
+  #extractNestableMiddlewareFromEnrichedTypedHandlerArray<
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    middlewareOrMiddlewareWithTypedHandler: (
+      | MiddlewareOrMiddlewareWithTypedHandler<
+          SV,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >
+      | ForklaunchExpressLikeRouter<SV, `/${string}`, RouterHandler, Internal>
+    )[]
+  ) {
+    const lastHandler = middlewareOrMiddlewareWithTypedHandler.pop();
+    let rawHandler = [lastHandler];
+    if (
+      isTypedHandler<
+        SV,
+        'middleware',
+        Path,
+        P,
+        ResBodyMap,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders,
+        ResHeaders,
+        LocalsObj
+      >(lastHandler)
+    ) {
+      rawHandler = lastHandler.handlers;
+    }
+
+    return [
+      ...middlewareOrMiddlewareWithTypedHandler.map((parameter) => {
+        if (isForklaunchRouter<SV>(parameter)) {
+          return parameter.internal as Internal;
+        }
+        return parameter as RouterHandler;
+      }),
+      ...(rawHandler as (RouterHandler | Internal)[])
+    ];
+  }
+
+  #extractNestableMiddlewareAsRouterHandlers<
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    contractDetailsOrMiddlewareOrTypedHandler:
+      | ContractDetailsOrMiddlewareOrTypedHandler<
+          SV,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >
+      | ForklaunchExpressLikeRouter<SV, `/${string}`, RouterHandler, Internal>
+      | undefined,
+    middlewareOrMiddlewareWithTypedHandler: (
+      | MiddlewareOrMiddlewareWithTypedHandler<
+          SV,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >
+      | ForklaunchExpressLikeRouter<SV, `/${string}`, RouterHandler, Internal>
+    )[]
+  ) {
+    const middleware: (RouterHandler | Internal)[] = [];
+
+    if (
+      isTypedHandler<
+        SV,
+        'middleware',
+        Path,
+        P,
+        ResBodyMap,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders,
+        ResHeaders,
+        LocalsObj
+      >(contractDetailsOrMiddlewareOrTypedHandler)
+    ) {
+      middleware.push(
+        ...(contractDetailsOrMiddlewareOrTypedHandler.handlers as RouterHandler[])
+      );
+    } else if (
+      isExpressLikeSchemaHandler(contractDetailsOrMiddlewareOrTypedHandler)
+    ) {
+      middleware.push(
+        contractDetailsOrMiddlewareOrTypedHandler as RouterHandler
+      );
+    }
+
+    middleware.push(
+      ...this.#extractNestableMiddlewareFromEnrichedTypedHandlerArray<
+        Path,
+        P,
+        ResBodyMap,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders,
+        ResHeaders,
+        LocalsObj
+      >(middlewareOrMiddlewareWithTypedHandler)
+    );
+
+    return middleware;
+  }
+
+  registerNestableMiddlewareHandler<
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>
+  >(
+    registrationMethod: NestableRouterBasedHandler<RouterHandler, Internal>,
+    pathOrContractDetailsOrMiddlewareOrTypedHandler:
+      | Path
+      | ContractDetailsOrMiddlewareOrTypedHandler<
+          SV,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >
+      | ForklaunchExpressLikeRouter<SV, `/${string}`, RouterHandler, Internal>,
+    contractDetailsOrMiddlewareOrTypedHandler?:
+      | ContractDetailsOrMiddlewareOrTypedHandler<
+          SV,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >
+      | ForklaunchExpressLikeRouter<SV, `/${string}`, RouterHandler, Internal>,
+    ...middlewareOrMiddlewareWithTypedHandler: (
+      | MiddlewareOrMiddlewareWithTypedHandler<
+          SV,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >
+      | ForklaunchExpressLikeRouter<SV, `/${string}`, RouterHandler, Internal>
+    )[]
+  ): this {
+    const middleware: (RouterHandler | Internal)[] = [];
+
+    if (typeof pathOrContractDetailsOrMiddlewareOrTypedHandler === 'string') {
+      middleware.push(
+        ...this.#extractNestableMiddlewareAsRouterHandlers<
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >(
+          contractDetailsOrMiddlewareOrTypedHandler,
+          middlewareOrMiddlewareWithTypedHandler
+        )
+      );
+      const path = pathOrContractDetailsOrMiddlewareOrTypedHandler;
+      registrationMethod.bind(this.internal)(path, ...middleware);
+    } else {
+      middleware.push(
+        ...this.#extractNestableMiddlewareAsRouterHandlers<
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >(
+          pathOrContractDetailsOrMiddlewareOrTypedHandler,
+          (isExpressLikeSchemaHandler<
+            SV,
+            P,
+            ResBodyMap,
+            ReqBody,
+            ReqQuery,
+            ReqHeaders,
+            ResHeaders,
+            LocalsObj
+          >(contractDetailsOrMiddlewareOrTypedHandler) ||
+          isTypedHandler<
+            SV,
+            'middleware',
+            Path,
+            P,
+            ResBodyMap,
+            ReqBody,
+            ReqQuery,
+            ReqHeaders,
+            ResHeaders,
+            LocalsObj
+          >(contractDetailsOrMiddlewareOrTypedHandler) ||
+          isForklaunchRouter<SV>(contractDetailsOrMiddlewareOrTypedHandler)
+            ? [contractDetailsOrMiddlewareOrTypedHandler]
+            : []
+          ).concat(middlewareOrMiddlewareWithTypedHandler)
+        )
+      );
+      registrationMethod.bind(this.internal)(...middleware);
+    }
+    return this;
+  }
+
   use: TypedMiddlewareDefinition<this, SV> = <
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
@@ -923,33 +1187,39 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj
-        >,
-    contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
-      SV,
-      'middleware',
-      Path,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders,
-      LocalsObj
-    >,
-    ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
-      SV,
-      'middleware',
-      Path,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders,
-      LocalsObj
-    >[]
+        >
+      | ForklaunchExpressLikeRouter<SV, `/${string}`, RouterHandler, Internal>,
+    contractDetailsOrMiddlewareOrTypedHandler?:
+      | ContractDetailsOrMiddlewareOrTypedHandler<
+          SV,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >
+      | ForklaunchExpressLikeRouter<SV, `/${string}`, RouterHandler, Internal>,
+    ...middlewareOrMiddlewareWithTypedHandler: (
+      | MiddlewareOrMiddlewareWithTypedHandler<
+          SV,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >
+      | ForklaunchExpressLikeRouter<SV, `/${string}`, RouterHandler, Internal>
+    )[]
   ) => {
-    return this.registerMiddlewareHandler<
+    return this.registerNestableMiddlewareHandler<
       Path,
       P,
       ResBodyMap,
