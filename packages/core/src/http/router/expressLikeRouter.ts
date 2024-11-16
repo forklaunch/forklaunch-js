@@ -1,6 +1,7 @@
 import { AnySchemaValidator, SchemaValidator } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
 
+import { RemoveTrailingSlash } from '@forklaunch/common';
 import { isConstrainedForklaunchRouter } from '../guards/isConstrainedForklaunchRouter';
 import { isExpressLikeSchemaHandler } from '../guards/isExpressLikeSchemaHandler';
 import { isForklaunchExpressLikeRouter } from '../guards/isForklaunchExpressLikeRouter';
@@ -315,12 +316,12 @@ export class ForklaunchExpressLikeRouter<
    * @param controllerHandler
    * @returns
    */
-  #localParamRequest<Middleware>(
+  #localParamRequest<Middleware, Route extends string>(
     handlers: Middleware[],
     controllerHandler: Middleware
   ) {
     return async (
-      route: string,
+      route: RemoveTrailingSlash<Route>,
       request?: {
         params?: Record<string, string>;
         query?: Record<string, string>;

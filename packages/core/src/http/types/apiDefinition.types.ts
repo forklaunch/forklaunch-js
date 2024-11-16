@@ -1,4 +1,8 @@
-import { Prettify } from '@forklaunch/common';
+import {
+  MakePropertyOptionalIfChildrenOptional,
+  Prettify,
+  RemoveTrailingSlash
+} from '@forklaunch/common';
 import { AnySchemaValidator, SchemaValidator } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
 import {
@@ -416,8 +420,11 @@ export type LiveTypeFunction<
         : MapSchema<SV, ResHeaders>
     > extends infer Return
     ? unknown extends Request
-      ? (route: Route) => Promise<Return>
-      : (route: Route, request: Request) => Promise<Return>
+      ? (route: RemoveTrailingSlash<Route>) => Promise<Return>
+      : (
+          route: RemoveTrailingSlash<Route>,
+          request: MakePropertyOptionalIfChildrenOptional<Request> & unknown
+        ) => Promise<Return>
     : never
   : never;
 

@@ -1,4 +1,8 @@
-import { SchemaValidator, string } from '@forklaunch/validator/typebox';
+import {
+  optional,
+  SchemaValidator,
+  string
+} from '@forklaunch/validator/typebox';
 import { Server } from 'http';
 import { forklaunchExpress, forklaunchRouter } from '../index';
 
@@ -19,6 +23,12 @@ describe('Forklaunch Express Tests', () => {
       {
         name: 'Test',
         summary: 'Test Summary',
+        params: {
+          test: optional(string)
+        },
+        query: {
+          test: string
+        },
         responses: {
           200: string
         }
