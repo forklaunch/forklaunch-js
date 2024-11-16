@@ -409,8 +409,8 @@ export interface TypedNestableMiddlewareDefinition<
 > extends TypedMiddlewareDefinition<ChainableRouter, SV> {
   (router: ConstrainedForklaunchRouter<SV, RouterHandler>): ChainableRouter;
 
-  <Path extends `/${string}`, SuppliedPath extends Path>(
-    path: PathMatch<SuppliedPath, Path>,
+  <Path extends `/${string}`>(
+    path: Path,
     router: ConstrainedForklaunchRouter<SV, RouterHandler>
   ): ChainableRouter;
 
