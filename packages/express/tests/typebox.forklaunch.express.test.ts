@@ -4,18 +4,16 @@ import { forklaunchExpress, forklaunchRouter } from '../index';
 
 const typeboxSchemaValidator = SchemaValidator();
 
+const forklaunchApplication = forklaunchExpress(typeboxSchemaValidator);
+const forklaunchRouterInstance = forklaunchRouter(
+  '/testpath',
+  typeboxSchemaValidator
+);
+
 describe('Forklaunch Express Tests', () => {
-  let forklaunchApplication;
-  let forklaunchRouterInstance;
   let server: Server;
 
   beforeAll(async () => {
-    forklaunchApplication = forklaunchExpress(typeboxSchemaValidator);
-    forklaunchRouterInstance = forklaunchRouter(
-      '/testpath',
-      typeboxSchemaValidator
-    );
-
     forklaunchRouterInstance.get(
       '/test',
       {

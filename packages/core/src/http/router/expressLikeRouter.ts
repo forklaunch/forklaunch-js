@@ -1,8 +1,9 @@
 import { AnySchemaValidator, SchemaValidator } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
+
+import { isConstrainedForklaunchRouter } from '../guards/isConstrainedForklaunchRouter';
 import { isExpressLikeSchemaHandler } from '../guards/isExpressLikeSchemaHandler';
 import { isForklaunchExpressLikeRouter } from '../guards/isForklaunchExpressLikeRouter';
-import { isForklaunchRouter } from '../guards/isForklaunchRouter';
 import { isHttpContractDetails } from '../guards/isHttpContractDetails';
 import { isPathParamHttpContractDetails } from '../guards/isPathParamContractDetails';
 import { isTypedHandler } from '../guards/isTypedHandler';
@@ -39,9 +40,13 @@ import {
   ContractDetailsOrMiddlewareOrTypedHandler,
   LiveTypeRouteDefinition,
   MiddlewareOrMiddlewareWithTypedHandler,
-  TypedMiddlewareDefinition
+  TypedMiddlewareDefinition,
+  TypedNestableMiddlewareDefinition
 } from '../types/expressLikeRouter.types';
-import { ForklaunchRoute } from '../types/router.types';
+import {
+  ConstrainedForklaunchRouter,
+  ForklaunchRoute
+} from '../types/router.types';
 
 /**
  * A class that represents an Express-like router.
@@ -51,7 +56,9 @@ export class ForklaunchExpressLikeRouter<
   BasePath extends `/${string}`,
   RouterHandler,
   Internal extends ExpressLikeRouter<RouterHandler, Internal>
-> {
+> implements ConstrainedForklaunchRouter<SV, RouterHandler>
+{
+  requestHandler!: RouterHandler;
   readonly routes: ForklaunchRoute<SV>[] = [];
   readonly basePath: BasePath;
 
@@ -684,7 +691,7 @@ export class ForklaunchExpressLikeRouter<
           ResHeaders,
           LocalsObj
         >
-      | ForklaunchExpressLikeRouter<SV, `/${string}`, RouterHandler, Internal>
+      | ConstrainedForklaunchRouter<SV, RouterHandler>
     )[],
     processMiddleware?: (handler: unknown) => RouterHandler | Internal
   ) {
@@ -794,7 +801,7 @@ export class ForklaunchExpressLikeRouter<
           ResHeaders,
           LocalsObj
         >
-      | ForklaunchExpressLikeRouter<SV, `/${string}`, RouterHandler, Internal>
+      | ConstrainedForklaunchRouter<SV, RouterHandler>
     )[]
   ) {
     return this.#extractHandlers<
@@ -808,9 +815,7 @@ export class ForklaunchExpressLikeRouter<
       LocalsObj,
       RouterHandler | Internal
     >(handlers, (handler) =>
-      isForklaunchExpressLikeRouter<SV, `/${string}`, RouterHandler, Internal>(
-        handler
-      )
+      isForklaunchExpressLikeRouter<SV, Path, RouterHandler, Internal>(handler)
         ? handler.internal
         : (handler as RouterHandler)
     );
@@ -951,7 +956,7 @@ export class ForklaunchExpressLikeRouter<
           ResHeaders,
           LocalsObj
         >
-      | ForklaunchExpressLikeRouter<SV, `/${string}`, RouterHandler, Internal>
+      | ConstrainedForklaunchRouter<SV, RouterHandler>
       | undefined,
     middlewareOrMiddlewareWithTypedHandler: (
       | MiddlewareOrMiddlewareWithTypedHandler<
@@ -966,7 +971,7 @@ export class ForklaunchExpressLikeRouter<
           ResHeaders,
           LocalsObj
         >
-      | ForklaunchExpressLikeRouter<SV, `/${string}`, RouterHandler, Internal>
+      | ConstrainedForklaunchRouter<SV, RouterHandler>
     )[]
   ) {
     const middleware: (RouterHandler | Internal)[] = [];
@@ -997,13 +1002,11 @@ export class ForklaunchExpressLikeRouter<
     );
 
     if (
-      isForklaunchExpressLikeRouter<SV, `/${string}`, RouterHandler, Internal>(
+      isForklaunchExpressLikeRouter<SV, Path, RouterHandler, Internal>(
         contractDetailsOrMiddlewareOrTypedHandler
       )
     ) {
-      middleware.push(
-        contractDetailsOrMiddlewareOrTypedHandler.internal as Internal
-      );
+      middleware.push(contractDetailsOrMiddlewareOrTypedHandler.internal);
     }
 
     middleware.push(
@@ -1162,7 +1165,7 @@ export class ForklaunchExpressLikeRouter<
           ResHeaders,
           LocalsObj
         >
-      | ForklaunchExpressLikeRouter<SV, `/${string}`, RouterHandler, Internal>,
+      | ConstrainedForklaunchRouter<SV, RouterHandler>,
     contractDetailsOrMiddlewareOrTypedHandler?:
       | ContractDetailsOrMiddlewareOrTypedHandler<
           SV,
@@ -1176,7 +1179,7 @@ export class ForklaunchExpressLikeRouter<
           ResHeaders,
           LocalsObj
         >
-      | ForklaunchExpressLikeRouter<SV, `/${string}`, RouterHandler, Internal>,
+      | ConstrainedForklaunchRouter<SV, RouterHandler>,
     ...middlewareOrMiddlewareWithTypedHandler: (
       | MiddlewareOrMiddlewareWithTypedHandler<
           SV,
@@ -1190,7 +1193,7 @@ export class ForklaunchExpressLikeRouter<
           ResHeaders,
           LocalsObj
         >
-      | ForklaunchExpressLikeRouter<SV, `/${string}`, RouterHandler, Internal>
+      | ConstrainedForklaunchRouter<SV, RouterHandler>
     )[]
   ): this {
     const middleware: (RouterHandler | Internal)[] = [];
@@ -1248,7 +1251,9 @@ export class ForklaunchExpressLikeRouter<
             ResHeaders,
             LocalsObj
           >(contractDetailsOrMiddlewareOrTypedHandler) ||
-          isForklaunchRouter<SV>(contractDetailsOrMiddlewareOrTypedHandler)
+          isConstrainedForklaunchRouter<SV, RouterHandler>(
+            contractDetailsOrMiddlewareOrTypedHandler
+          )
             ? [contractDetailsOrMiddlewareOrTypedHandler]
             : []
           ).concat(middlewareOrMiddlewareWithTypedHandler)
@@ -1259,7 +1264,7 @@ export class ForklaunchExpressLikeRouter<
     return this;
   }
 
-  use: TypedMiddlewareDefinition<this, SV> = <
+  use: TypedNestableMiddlewareDefinition<this, RouterHandler, Internal, SV> = <
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -1267,7 +1272,14 @@ export class ForklaunchExpressLikeRouter<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    Subpath extends `/${string}`,
+    Router extends ForklaunchExpressLikeRouter<
+      SV,
+      Subpath,
+      RouterHandler,
+      Internal
+    >
   >(
     pathOrContractDetailsOrMiddlewareOrTypedHandler:
       | Path
@@ -1283,7 +1295,7 @@ export class ForklaunchExpressLikeRouter<
           ResHeaders,
           LocalsObj
         >
-      | ForklaunchExpressLikeRouter<SV, `/${string}`, RouterHandler, Internal>,
+      | Router,
     contractDetailsOrMiddlewareOrTypedHandler?:
       | ContractDetailsOrMiddlewareOrTypedHandler<
           SV,
@@ -1297,7 +1309,7 @@ export class ForklaunchExpressLikeRouter<
           ResHeaders,
           LocalsObj
         >
-      | ForklaunchExpressLikeRouter<SV, `/${string}`, RouterHandler, Internal>,
+      | Router,
     ...middlewareOrMiddlewareWithTypedHandler: (
       | MiddlewareOrMiddlewareWithTypedHandler<
           SV,
@@ -1311,7 +1323,7 @@ export class ForklaunchExpressLikeRouter<
           ResHeaders,
           LocalsObj
         >
-      | ForklaunchExpressLikeRouter<SV, `/${string}`, RouterHandler, Internal>
+      | Router
     )[]
   ) => {
     return this.registerNestableMiddlewareHandler<

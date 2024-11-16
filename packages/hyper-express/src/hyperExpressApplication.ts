@@ -24,55 +24,6 @@ export class Application<
     super(schemaValidator, new Server());
   }
 
-  // /**
-  //  * Registers middleware or routers to the application.
-  //  *
-  //  * @param {ForklaunchRouter<SV> | MiddlewareHandler<SV> | MiddlewareHandler<SV>[]} router - The router or middleware to register.
-  //  * @param {...(ForklaunchRouter<SV> | MiddlewareHandler<SV> | MiddlewareHandler<SV>[])} args - Additional arguments.
-  //  * @returns {this} - The application instance.
-  //  */
-  // use(
-  //   router:
-  //     | `/${string}`
-  //     | Router<SV, `/${string}`>
-  //     | MiddlewareHandler
-  //     | MiddlewareHandler[],
-  //   ...args: (
-  //     | Router<SV, `/${string}`>
-  //     | MiddlewareHandler
-  //     | MiddlewareHandler[]
-  //   )[]
-  // ): this {
-  //   // if (router instanceof Router) {
-  //   if (isForklaunchRouter<SV>(router)) {
-  //     const hyperExpressRouter = router;
-  //     this.routers.push(hyperExpressRouter);
-  //     this.internal.use(
-  //       hyperExpressRouter.basePath,
-  //       hyperExpressRouter.internal
-  //     );
-  //     return this;
-  //   } else {
-  //     const hyperExpressRouter = args.pop();
-  //     if (!isForklaunchRouter<SV>(router)) {
-  //       throw new Error('Last argument must be a router');
-  //     }
-
-  //     args.forEach((arg) => {
-  //       if (isForklaunchRouter<SV>(arg)) {
-  //         throw new Error('Only one router is allowed');
-  //       }
-  //     });
-
-  //     this.internal.use(
-  //       hyperExpressRouter.basePath,
-  //       ...(args as unknown as (MiddlewareHandler | MiddlewareHandler[])[]),
-  //       hyperExpressRouter.internal
-  //     );
-  //     return this;
-  //   }
-  // }
-
   /**
    * Starts the server and sets up Swagger documentation.
    *

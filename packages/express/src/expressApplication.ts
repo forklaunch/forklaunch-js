@@ -24,51 +24,6 @@ export class Application<
     super(schemaValidator, express());
   }
 
-  // //TODO: change this to different signatures and handle different cases
-  // /**
-  //  * Registers middleware or routers to the application.
-  //  *
-  //  * @param {...(ForklaunchRouter<SV> | RequestHandler)[]} args - The middleware or routers to register.
-  //  * @returns {this} - The application instance.
-  //  */
-  // use(
-  //   arg:
-  //     | `/${string}`
-  //     | ForklaunchExpressLikeRouter<SV, `/${string}`, RequestHandler, Express>
-  //     | RequestHandler,
-  //   ...args: (
-  //     | ForklaunchExpressLikeRouter<SV, `/${string}`, RequestHandler, Express>
-  //     | RequestHandler
-  //   )[]
-  // ): this {
-  //   if (isForklaunchRouter<SV>(arg)) {
-  //     // const expressRouter = arg as Router<SV, `/${string}`>;
-  //     const expressRouter = arg;
-  //     this.routers.push(expressRouter);
-  //     this.internal.use(expressRouter.basePath, expressRouter.internal);
-  //     return this;
-  //   } else {
-  //     // const expressRouter = args.pop() as Router<SV, `/${string}`>;
-  //     const expressRouter = args.pop();
-  //     if (!isForklaunchRouter<SV>(expressRouter)) {
-  //       throw new Error('Last argument must be a router');
-  //     }
-
-  //     args.forEach((arg) => {
-  //       if (isForklaunchRouter<SV>(arg)) {
-  //         throw new Error('Only one router is allowed');
-  //       }
-  //     });
-
-  //     this.internal.use(
-  //       expressRouter.basePath,
-  //       ...(args as unknown as RequestHandler[]),
-  //       expressRouter.internal
-  //     );
-  //     return this;
-  //   }
-  // }
-
   /**
    * Starts the server and sets up Swagger documentation.
    *
