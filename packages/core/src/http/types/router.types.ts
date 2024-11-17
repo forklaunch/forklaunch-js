@@ -5,6 +5,13 @@ import {
   PathParamHttpContractDetails
 } from './contractDetails.types';
 
+export interface ConstrainedForklaunchRouter<
+  SV extends AnySchemaValidator,
+  RequestHandler
+> extends ForklaunchRouter<SV> {
+  requestHandler: RequestHandler;
+}
+
 /**
  * Interface representing a Forklaunch router.
  *
@@ -12,7 +19,7 @@ import {
  */
 export interface ForklaunchRouter<SV extends AnySchemaValidator> {
   /** The base path for the router */
-  basePath: string;
+  basePath: `/${string}`;
   /** The routes associated with the router */
   routes: ForklaunchRoute<SV>[];
 }

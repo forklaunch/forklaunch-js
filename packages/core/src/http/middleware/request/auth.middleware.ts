@@ -227,6 +227,7 @@ export async function parseRequestAuth<
   >,
   next?: ForklaunchNextFunction
 ) {
+  console.debug('[MIDDLEWARE] parseRequest started');
   const auth = req.contractDetails.auth as AuthMethods<
     SV,
     MapParamsSchema<SV, P>,
@@ -248,7 +249,7 @@ export async function parseRequestAuth<
       res.status(errorAndMessage[0]).send(errorAndMessage[1]);
       next?.(new Error(errorAndMessage[1]));
     }
-
-    next?.();
   }
+
+  next?.();
 }

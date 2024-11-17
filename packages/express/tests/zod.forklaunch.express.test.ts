@@ -3,19 +3,16 @@ import { Server } from 'http';
 import { forklaunchExpress, forklaunchRouter } from '../index';
 
 const zodSchemaValidator = SchemaValidator();
+const forklaunchApplication = forklaunchExpress(zodSchemaValidator);
+const forklaunchRouterInstance = forklaunchRouter(
+  '/testpath',
+  zodSchemaValidator
+);
 
 describe('Forklaunch Express Tests', () => {
-  let forklaunchApplication;
-  let forklaunchRouterInstance;
   let server: Server;
 
   beforeAll(async () => {
-    forklaunchApplication = forklaunchExpress(zodSchemaValidator);
-    forklaunchRouterInstance = forklaunchRouter(
-      '/testpath',
-      zodSchemaValidator
-    );
-
     forklaunchRouterInstance.get(
       '/test',
       {

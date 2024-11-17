@@ -1,13 +1,10 @@
 import {
   ForklaunchExpressLikeApplication,
-  ForklaunchRouter,
-  generateSwaggerDocument,
-  isForklaunchRouter
+  generateSwaggerDocument
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { MiddlewareHandler, Server } from 'hyper-express';
 import * as uWebsockets from 'uWebSockets.js';
-import { Router } from './hyperExpressRouter';
 import { swagger, swaggerRedirect } from './middleware/swagger.middleware';
 
 /**
@@ -17,7 +14,7 @@ import { swagger, swaggerRedirect } from './middleware/swagger.middleware';
  */
 export class Application<
   SV extends AnySchemaValidator
-> extends ForklaunchExpressLikeApplication<SV, Server> {
+> extends ForklaunchExpressLikeApplication<SV, Server, MiddlewareHandler> {
   /**
    * Creates an instance of the Application class.
    *
@@ -25,50 +22,6 @@ export class Application<
    */
   constructor(schemaValidator: SV) {
     super(schemaValidator, new Server());
-  }
-
-  /**
-   * Registers middleware or routers to the application.
-   *
-   * @param {ForklaunchRouter<SV> | MiddlewareHandler<SV> | MiddlewareHandler<SV>[]} router - The router or middleware to register.
-   * @param {...(ForklaunchRouter<SV> | MiddlewareHandler<SV> | MiddlewareHandler<SV>[])} args - Additional arguments.
-   * @returns {this} - The application instance.
-   */
-  use(
-    router: ForklaunchRouter<SV> | MiddlewareHandler | MiddlewareHandler[],
-    ...args: (ForklaunchRouter<SV> | MiddlewareHandler | MiddlewareHandler[])[]
-  ): this {
-    // if (router instanceof Router) {
-    if (isForklaunchRouter<SV>(router)) {
-      const hyperExpressRouter = router as unknown as Router<SV, `/${string}`>;
-      this.routers.push(hyperExpressRouter);
-      this.internal.use(
-        hyperExpressRouter.basePath,
-        hyperExpressRouter.internal
-      );
-      return this;
-    } else {
-      const hyperExpressRouter = args.pop() as unknown as Router<
-        SV,
-        `/${string}`
-      >;
-      if (!isForklaunchRouter<SV>(router)) {
-        throw new Error('Last argument must be a router');
-      }
-
-      args.forEach((arg) => {
-        if (isForklaunchRouter<SV>(arg)) {
-          throw new Error('Only one router is allowed');
-        }
-      });
-
-      this.internal.use(
-        hyperExpressRouter.basePath,
-        ...(args as unknown as (MiddlewareHandler | MiddlewareHandler[])[]),
-        hyperExpressRouter.internal
-      );
-      return this;
-    }
   }
 
   /**

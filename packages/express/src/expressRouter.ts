@@ -2,7 +2,7 @@ import {
   Body,
   ContractDetailsOrMiddlewareOrTypedHandler,
   ForklaunchExpressLikeRouter,
-  ForklaunchRouter,
+  // ForklaunchRouter,
   HeadersObject,
   MiddlewareOrMiddlewareWithTypedHandler,
   ParamsObject,
@@ -30,17 +30,15 @@ import { enrichResponseTransmission } from './middleware/response.middleware';
  * @implements {ForklaunchRouter<SV>}
  */
 export class Router<
-    SV extends AnySchemaValidator,
-    BasePath extends `/${string}`
-  >
-  extends ForklaunchExpressLikeRouter<
-    SV,
-    BasePath,
-    RequestHandler,
-    ExpressRouter
-  >
-  implements ForklaunchRouter<SV>
-{
+  SV extends AnySchemaValidator,
+  BasePath extends `/${string}`
+> extends ForklaunchExpressLikeRouter<
+  SV,
+  BasePath,
+  RequestHandler,
+  ExpressRouter
+> {
+  // implements ForklaunchRouter<SV>
   /**
    * Creates an instance of Router.
    *
