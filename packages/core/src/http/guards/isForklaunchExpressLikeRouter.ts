@@ -19,6 +19,8 @@ export function isForklaunchExpressLikeRouter<
   return (
     isConstrainedForklaunchRouter<SV, RouterHandler>(
       maybeForklaunchExpressLikeRouter
-    ) && 'internal' in maybeForklaunchExpressLikeRouter
+    ) &&
+    'basePath' in maybeForklaunchExpressLikeRouter &&
+    'internal' in maybeForklaunchExpressLikeRouter
   );
 }

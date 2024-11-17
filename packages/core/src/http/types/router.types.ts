@@ -19,7 +19,7 @@ export interface ConstrainedForklaunchRouter<
  */
 export interface ForklaunchRouter<SV extends AnySchemaValidator> {
   /** The base path for the router */
-  basePath: string;
+  basePath: `/${string}`;
   /** The routes associated with the router */
   routes: ForklaunchRoute<SV>[];
 }

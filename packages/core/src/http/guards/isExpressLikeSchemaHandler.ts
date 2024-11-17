@@ -37,11 +37,5 @@ export function isExpressLikeSchemaHandler<
         argumentName.toLowerCase()
       )
     );
-  return (
-    extractedArgumentNames &&
-    (extractedArgumentNames.has('req') ||
-      extractedArgumentNames.has('request')) &&
-    (extractedArgumentNames.has('res') ||
-      extractedArgumentNames.has('response'))
-  );
+  return extractedArgumentNames && extractedArgumentNames.size <= 3;
 }

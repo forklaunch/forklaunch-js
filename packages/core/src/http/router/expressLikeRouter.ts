@@ -697,7 +697,7 @@ export class ForklaunchExpressLikeRouter<
     processMiddleware?: (handler: unknown) => RouterHandler | Internal
   ) {
     const last = handlers.pop();
-    let finalHandlers = [last];
+    let finalHandlers = last ? [last] : [];
     if (
       isTypedHandler<
         SV,
@@ -1198,6 +1198,7 @@ export class ForklaunchExpressLikeRouter<
     )[]
   ): this {
     const middleware: (RouterHandler | Internal)[] = [];
+    let path: `/${string}` | undefined;
 
     if (typeof pathOrContractDetailsOrMiddlewareOrTypedHandler === 'string') {
       middleware.push(
@@ -1215,9 +1216,15 @@ export class ForklaunchExpressLikeRouter<
           middlewareOrMiddlewareWithTypedHandler
         )
       );
-      const path = pathOrContractDetailsOrMiddlewareOrTypedHandler;
-      registrationMethod.bind(this.internal)(path, ...middleware);
+      path = pathOrContractDetailsOrMiddlewareOrTypedHandler;
     } else {
+      if (
+        isConstrainedForklaunchRouter<SV, RouterHandler>(
+          pathOrContractDetailsOrMiddlewareOrTypedHandler
+        )
+      ) {
+        path = pathOrContractDetailsOrMiddlewareOrTypedHandler.basePath;
+      }
       middleware.push(
         ...this.#extractNestableMiddlewareAsRouterHandlers<
           Path,
@@ -1260,6 +1267,11 @@ export class ForklaunchExpressLikeRouter<
           ).concat(middlewareOrMiddlewareWithTypedHandler)
         )
       );
+    }
+
+    if (path) {
+      registrationMethod.bind(this.internal)(path, ...middleware);
+    } else {
       registrationMethod.bind(this.internal)(...middleware);
     }
     return this;
