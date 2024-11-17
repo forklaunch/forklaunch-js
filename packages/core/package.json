@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/core",
-  "version": "0.2.27",
+  "version": "0.2.28",
   "description": "forklaunch-js core package. Contains useful building blocks.",
   "files": [
     "lib"
@@ -37,7 +37,7 @@
     "uuid": "^11.0.3"
   },
   "devDependencies": {
-    "@eslint/js": "^9.14.0",
+    "@eslint/js": "^9.15.0",
     "@types/cors": "^2.8.17",
     "@types/jest": "^29.5.14",
     "@types/qs": "^6.9.17",

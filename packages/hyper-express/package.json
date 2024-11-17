@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/hyper-express",
-  "version": "0.1.23",
+  "version": "0.1.24",
   "description": "Forklaunch framework for hyper-express.",
   "files": [
     "lib/**"
@@ -40,7 +40,7 @@
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.44.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.14.0",
+    "@eslint/js": "^9.15.0",
     "@types/cors": "^2.8.17",
     "@types/jest": "^29.5.14",
     "@types/qs": "^6.9.17",

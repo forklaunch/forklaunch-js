@@ -19,12 +19,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@forklaunch/common": "^0.1.10",
-    "@forklaunch/core": "^0.2.26",
-    "@forklaunch/express": "^0.1.21",
-    "@forklaunch/hyper-express": "^0.1.22",
-    "@forklaunch/validator": "^0.3.8",
-    "@sinclair/typebox": "^0.33.22",
+    "@forklaunch/common": "^0.1.11",
+    "@forklaunch/core": "^0.2.27",
+    "@forklaunch/express": "^0.1.22",
+    "@forklaunch/hyper-express": "^0.1.23",
+    "@forklaunch/validator": "^0.3.9",
+    "@sinclair/typebox": "0.33.22",
     "zod": "^3.23.8"
   }
 }
