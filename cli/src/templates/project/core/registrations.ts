@@ -5,7 +5,7 @@ import { LiteralSchema } from '@forklaunch/validator';
 import {
   forklaunchExpress as registeredForklaunchExpress,
   forklaunchRouter as registeredForklaunchRouter
-} from '@forklaunch/{{ http-framework }}';
+} from '@forklaunch/{{ http_framework }}';
 
 import {
   SchemaValidator as RegisteredSchemaValidator,

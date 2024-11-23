@@ -1,5 +1,5 @@
 {
-  "name": "{{ app-name }}-monorepo",
+  "name": "{{ app_name }}-monorepo",
   "version": "0.1.0",
   "description": "",
   "devDependencies": {

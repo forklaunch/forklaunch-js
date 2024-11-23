@@ -1,3 +1,6 @@
+use std::path::Path;
+
+use anyhow::bail;
 use clap::Command;
 
 pub(crate) fn forklaunch_command(
@@ -11,9 +14,11 @@ pub(crate) fn forklaunch_command(
 }
 
 pub(crate) fn get_token() -> anyhow::Result<String> {
-    Ok(
-        std::fs::read_to_string(format!("{}/.forklaunch/token", std::env::var("HOME")?))?
-            .trim()
-            .to_string(),
-    )
+    let home_path = format!("{}/.forklaunch/token", std::env::var("HOME")?);
+
+    if !Path::new(&home_path).exists() {
+        bail!("No token found. Please run `forklaunch login` to get a token.");
+    }
+
+    Ok(std::fs::read_to_string(&home_path)?.trim().to_string())
 }

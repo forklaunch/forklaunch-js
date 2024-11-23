@@ -1,4 +1,4 @@
-use clap::{command, Arg, Command};
+use clap::{command, Command};
 
 mod config;
 mod depcheck;
@@ -10,7 +10,9 @@ mod whoami;
 
 mod utils;
 
-fn main() {
+const LATEST_CLI_VERSION: &str = "0.1.0";
+
+fn main() -> anyhow::Result<()> {
     let matches = command!()
         .propagate_version(true)
         .arg_required_else_help(true)
@@ -23,5 +25,9 @@ fn main() {
         .subcommand(Command::new("whoami").about("Get the current user"))
         .subcommand(Command::new("version").about("Get the current version of forklaunch"))
         .get_matches();
-    // println!("{:?}");
+
+    match matches.subcommand() {
+        Some(("init", sub_matches)) => init::handler(sub_matches),
+        _ => unreachable!(),
+    }
 }

@@ -14,6 +14,11 @@ pub(crate) fn command() -> Command {
         .subcommand(service::command())
 }
 
-pub(crate) fn handler(matches: &ArgMatches) {
-    println!("{:?}", matches);
+pub(crate) fn handler(matches: &ArgMatches) -> anyhow::Result<()> {
+    match matches.subcommand() {
+        Some(("application", sub_matches)) => application::handler(sub_matches),
+        // Some(("library", sub_matches)) => library::handler(sub_matches).unwrap(),
+        // Some(("service", sub_matches)) => service::handler(sub_matches).unwrap(),
+        _ => unreachable!(),
+    }
 }

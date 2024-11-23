@@ -13,8 +13,8 @@ pub(crate) fn command() -> Command {
 
 pub(crate) fn handler(matches: &ArgMatches) {
     match matches.subcommand() {
-        Some(("pull", matches)) => pull::handler(matches),
-        Some(("push", matches)) => push::handler(matches),
+        Some(("pull", matches)) => pull::handler(matches).unwrap(),
+        Some(("push", matches)) => push::handler(matches).unwrap(),
         _ => unreachable!(),
     }
 }

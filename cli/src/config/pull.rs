@@ -23,7 +23,7 @@ pub(crate) fn command() -> Command {
     )
 }
 
-pub(crate) async fn handler(matches: &ArgMatches) -> anyhow::Result<()> {
+pub(crate) fn handler(matches: &ArgMatches) -> anyhow::Result<()> {
     let id = unwrap_id(matches)?;
 
     let output = format!("{}.env", id);
@@ -32,16 +32,16 @@ pub(crate) async fn handler(matches: &ArgMatches) -> anyhow::Result<()> {
     let token = get_token()?;
 
     let url = format!("https://api.forklaunch.dev/config/{}", id);
-    let client = reqwest::Client::new();
+    let client = reqwest::blocking::Client::new();
     let request = client.get(url).bearer_auth(token);
-    let response = request.send().await?;
+    let response = request.send()?;
 
     match response.status() {
         reqwest::StatusCode::OK => println!("Config received, saving to {}", output),
-        _ => anyhow::bail!("Failed to pull config: {}", response.text().await?),
+        _ => anyhow::bail!("Failed to pull config: {}", response.text()?),
     }
 
-    let bytes = response.bytes().await?;
+    let bytes = response.bytes()?;
     std::fs::write(output, bytes)?;
 
     Ok(())

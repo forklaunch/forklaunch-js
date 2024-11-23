@@ -1,37 +1,37 @@
 volumes:
-  {{ app-name }}-postgres-data:
+  {{ app_name }}-postgres-data:
     driver: local
 
 networks:
-  {{ app-name }}-network:
-    name: {{ app-name }}-network
+  {{ app_name }}-network:
+    name: {{ app_name }}-network
     driver: bridge
 
 services:
   postgres:
     image: postgres:latest
     hostname: postgres
-    container_name: {{ app-name }}-pg
+    container_name: {{ app_name }}-pg
     restart: unless-stopped
     ports:
       - '5432:5432'
     environment:
-      POSTGRES_DB: {{ app-name }}-dev
+      POSTGRES_DB: {{ app_name }}-dev
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_HOST_AUTH_METHOD: 'trust'
     networks:
-      - {{ app-name }}-network
+      - {{ app_name }}-network
     volumes:
-      - {{ app-name }}-postgres-data:/var/lib/postgresql/{{ app-name }}/data
+      - {{ app_name }}-postgres-data:/var/lib/postgresql/{{ app_name }}/data
 
   redis:
     image: redis/redis-stack-server:latest
-    container_name: {{ app-name }}-redis
+    container_name: {{ app_name }}-redis
     depends_on:
       - postgres
     restart: always
     ports:
       - '6379:6379'
     networks:
-      - {{ app-name }}-network
+      - {{ app_name }}-network
