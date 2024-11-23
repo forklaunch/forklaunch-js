@@ -1,13 +1,13 @@
 {
-  "name": "@forklaunch/framework-core",
-  "version": "1.0.0",
-  "description": "The common core lib for all monorepo services",
+  "name": "@{{ app-name }}/core",
+  "version": "0.1.0",
+  "description": "The common core lib for all monorepo services for {{ app-name }}",
   "files": [
     "lib"
   ],
   "types": "lib/index.d.ts",
   "scripts": {
-    "test": "vitest --passWithNoTests",
+    "test": "{{ test-framework }} --passWithNoTests",
     "build": "tsc",
     "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",

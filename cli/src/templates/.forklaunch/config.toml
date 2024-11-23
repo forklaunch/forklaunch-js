@@ -1,0 +1,8 @@
+name = "{{ app-name }}"
+validator = "{{ validator }}"
+http-framework = "{{ http-framework }}"
+cli-version = "{{ latest-cli-version }}"
+projects = {{ generated-projects list }}
+
+[project-peer-topology]
+"{{ app-name }}" = {{ generated-projects list }}

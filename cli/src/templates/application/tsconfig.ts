@@ -1,0 +1,1 @@
+../../../../framework/tsconfig.ts

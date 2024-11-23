@@ -1,0 +1,1 @@
+../../../../framework/eslint.config.mjs

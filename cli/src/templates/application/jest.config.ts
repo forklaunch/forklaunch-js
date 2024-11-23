@@ -1,0 +1,1 @@
+../../../../framework/jest.config.ts
