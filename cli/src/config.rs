@@ -1,4 +1,4 @@
-use clap::{Arg, ArgMatches, Command};
+use clap::{ArgMatches, Command};
 
 use crate::utils::forklaunch_command;
 

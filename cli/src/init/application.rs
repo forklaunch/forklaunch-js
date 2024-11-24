@@ -1,4 +1,4 @@
-use std::fs;
+use std::{fs, path::Path};
 
 use anyhow::bail;
 use clap::{Arg, ArgMatches, Command};
@@ -60,29 +60,43 @@ pub(crate) fn command() -> Command {
         )
 }
 
+pub(crate) struct PathIO {
+    input_path: String,
+    output_path: String,
+    project: bool,
+}
+
 #[derive(Debug, Content)]
 pub(crate) struct ConfigData {
     latest_cli_version: String,
-    name: String,
+    app_name: String,
     validator: String,
     http_framework: String,
     runtime: String,
     test_framework: String,
     token: String,
-    generated_projects: Vec<String>,
+    generated_projects: String,
 }
 
 pub(crate) fn apply_templates(
     name: &String,
-    template_dir: &String,
+    template_dir: &PathIO,
     template: &mut Ramhorns,
     data: &ConfigData,
+    ignore_files: &Vec<String>,
 ) -> anyhow::Result<()> {
-    for entry in std::fs::read_dir(template_dir)? {
+    println!("applying templates for {}", template_dir.input_path);
+    for entry in std::fs::read_dir(get_template_path(&template_dir)?)? {
         let entry = entry?;
         let path = entry.path();
 
-        let output_path = std::path::Path::new(name.as_str()).join(path.file_name().unwrap());
+        let output_path = std::path::Path::new(name.as_str())
+            .join(&template_dir.output_path)
+            .join(path.file_name().unwrap());
+        if !output_path.exists() {
+            std::fs::create_dir_all(output_path.parent().unwrap())?;
+        }
+
         println!(
             "{} -> {}",
             path.to_str().unwrap(),
@@ -92,21 +106,46 @@ pub(crate) fn apply_templates(
         if path.is_file() {
             let tpl = template.from_file(&path.to_str().unwrap())?;
             let rendered = tpl.render(&data);
-            std::fs::write(output_path, rendered)?;
+            if !output_path.exists()
+                && !ignore_files
+                    .iter()
+                    .any(|ignore_file| output_path.to_str().unwrap().contains(ignore_file))
+            {
+                std::fs::write(output_path, rendered)?;
+            }
         } else if path.is_dir() {
-            std::fs::create_dir_all(output_path)?;
-            apply_templates(name, &path.to_str().unwrap().to_string(), template, data)?;
+            apply_templates(
+                name,
+                &PathIO {
+                    input_path: std::path::Path::new(&template_dir.input_path)
+                        .join(&entry.file_name())
+                        .to_string_lossy()
+                        .to_string(),
+                    output_path: std::path::Path::new(&template_dir.output_path)
+                        .join(&entry.file_name())
+                        .to_string_lossy()
+                        .to_string(),
+                    project: false,
+                },
+                template,
+                data,
+                ignore_files,
+            )?;
         }
+    }
+
+    if template_dir.project {
+        // TODO: Generate symlinks in project
     }
 
     Ok(())
 }
 
-pub(crate) fn get_template_path(path: &str) -> anyhow::Result<String> {
+pub(crate) fn get_template_path(path: &PathIO) -> anyhow::Result<String> {
     Ok(std::env::current_exe()?
         .parent()
         .unwrap()
-        .join(path)
+        .join(&path.input_path)
         .to_string_lossy()
         .to_string())
 }
@@ -119,9 +158,22 @@ pub(crate) fn handler(matches: &ArgMatches) -> anyhow::Result<()> {
     let test_framework = matches.get_one::<String>("test-framework").unwrap();
     let packages = matches.get_many::<String>("packages").unwrap_or_default();
 
-    if fs::exists(".forklaunch")? {
-        bail!("A .forklaunch directory already exists. To regenerate, delete the directory and run the command again. Note the generated code will overwrite existing files.");
-    }
+    let mut ignore_files = vec!["pnpm-workspace.yaml", "pnpm-lock.yaml"];
+
+    // TODO: maybe abstract this into a function
+    let all_test_framework_config_files = vec!["vitest.config.ts", "jest.config.ts"];
+    let test_framework_config_file = match test_framework.as_str() {
+        "vitest" => "vitest.config.ts",
+        "jest" => "jest.config.ts",
+        _ => bail!("Invalid test framework: {}", test_framework),
+    };
+    ignore_files.extend(
+        all_test_framework_config_files
+            .into_iter()
+            .filter(|config| config != &test_framework_config_file),
+    );
+
+    let generate_pnpm_workspace = runtime != "bun";
 
     if runtime == "bun" && http_framework == "hyper-express" {
         bail!("Hyper Express is not supported for bun");
@@ -129,11 +181,11 @@ pub(crate) fn handler(matches: &ArgMatches) -> anyhow::Result<()> {
 
     let token = get_token()?;
 
-    let additional_projects = packages.map(|p| p.to_string());
+    let additional_projects = packages.map(|p| p.to_string()).collect::<Vec<String>>();
 
     let data = ConfigData {
         latest_cli_version: LATEST_CLI_VERSION.to_string(),
-        name: name.to_string(),
+        app_name: name.to_string(),
         validator: validator.to_string(),
         http_framework: http_framework.to_string(),
         runtime: runtime.to_string(),
@@ -142,29 +194,62 @@ pub(crate) fn handler(matches: &ArgMatches) -> anyhow::Result<()> {
         generated_projects: {
             let mut projects = vec!["core".to_string()];
             projects.extend(additional_projects.clone());
-            projects
+            format!("[{}]", projects.join(","))
         },
     };
 
-    println!("{:?}", data);
-
     // TODO: support different path delimiters
     let mut template_dirs = vec![
-        get_template_path(&"templates/application".to_string())?,
-        get_template_path(&"templates/.forklaunch".to_string())?,
-        get_template_path(&"templates/project/core".to_string())?,
+        PathIO {
+            input_path: "templates/application".to_string(),
+            output_path: "".to_string(),
+            project: false,
+        },
+        PathIO {
+            input_path: "templates/.forklaunch".to_string(),
+            output_path: ".forklaunch".to_string(),
+            project: false,
+        },
+        PathIO {
+            input_path: "templates/project/core".to_string(),
+            output_path: "core".to_string(),
+            project: true,
+        },
     ];
 
-    template_dirs.extend(
-        additional_projects
-            .clone()
-            .map(|p| get_template_path(&format!("templates/project/{}", p))?),
-    );
+    template_dirs.extend(additional_projects.clone().into_iter().map(|path| PathIO {
+        input_path: format!("templates/project/{}", path),
+        output_path: path,
+        project: true,
+    }));
+
+    let mut template = Ramhorns::lazy(std::env::current_exe()?.parent().unwrap())?;
 
     for template_dir in template_dirs {
-        println!("{}", std::env::current_dir()?.display());
-        let mut template = Ramhorns::lazy(&template_dir)?;
-        apply_templates(name, &template_dir, &mut template, &data)?;
+        apply_templates(
+            name,
+            &template_dir,
+            &mut template,
+            &data,
+            &ignore_files
+                .iter()
+                .map(|ignore_file| ignore_file.to_string())
+                .collect::<Vec<String>>(),
+        )?;
+    }
+
+    // TODO: Generate pnpm workspaces
+    if generate_pnpm_workspace {
+        let pnpm_workspace_path = Path::new(name).join("pnpm-workspace.yaml");
+        if !pnpm_workspace_path.exists() {
+            std::fs::write(
+                pnpm_workspace_path,
+                format!(
+                    "packages:\n  - \"core\"\n  - \"{}\"",
+                    additional_projects.join("\n  - ")
+                ),
+            )?;
+        }
     }
 
     Ok(())

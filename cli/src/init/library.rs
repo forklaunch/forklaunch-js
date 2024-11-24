@@ -1,4 +1,7 @@
 use clap::{Arg, ArgMatches, Command};
+use std::fs;
+use std::io::Write;
+use std::os::unix::fs::symlink;
 
 use super::forklaunch_command;
 
@@ -15,11 +18,6 @@ pub(crate) fn command() -> Command {
 pub(crate) fn handler(matches: &ArgMatches) {
     println!("{:?}", matches);
 }
-
-use std::fs;
-use std::io::Write;
-use std::os::unix::fs::symlink;
-use std::path::Path;
 
 fn setup_basic_package() -> std::io::Result<()> {
     // Create symlinks
