@@ -2,10 +2,12 @@ use clap::{Arg, ArgMatches, Command};
 use std::fs;
 use std::io::Write;
 use std::os::unix::fs::symlink;
+use std::path::Path;
 
+use super::application::ConfigData;
 use super::forklaunch_command;
 
-pub(crate) fn command() -> Command {
+pub(super) fn command() -> Command {
     forklaunch_command("library", "Initialize a new library")
         .alias("lib")
         .arg(
@@ -15,21 +17,53 @@ pub(crate) fn command() -> Command {
         )
 }
 
-pub(crate) fn handler(matches: &ArgMatches) {
+pub(super) fn handler(matches: &ArgMatches) {
     println!("{:?}", matches);
 }
 
-fn setup_basic_package() -> std::io::Result<()> {
+pub(super) fn setup_symlinks(
+    base_path: Option<&str>,
+    current_path: Option<&str>,
+    config_data: &ConfigData,
+) -> std::io::Result<()> {
     // Create symlinks
-    symlink("../.prettierignore", ".prettierignore")?;
-    symlink("../.prettierrc", ".prettierrc")?;
-    symlink("../eslint.config.mjs", "eslint.config.mjs")?;
+    let source_path_prefix = match base_path {
+        Some(base_path) => Path::new(base_path),
+        None => Path::new(".."),
+    };
 
-    // Link either vitest or jest config
-    symlink("../vitest.config.ts", "vitest.config.ts")?;
-    // symlink("../jest.config.ts", "jest.config.ts")?;
+    let current_path_prefix = match current_path {
+        Some(current_path) => Path::new(current_path),
+        None => Path::new("."),
+    };
 
-    // Create tsconfig.json
+    symlink(
+        source_path_prefix.join(".prettierignore"),
+        current_path_prefix.join(".prettierignore"),
+    )?;
+    symlink(
+        source_path_prefix.join(".prettierrc"),
+        current_path_prefix.join(".prettierrc"),
+    )?;
+    symlink(
+        source_path_prefix.join("eslint.config.mjs"),
+        current_path_prefix.join("eslint.config.mjs"),
+    )?;
+
+    match config_data.test_framework.as_str() {
+        "vitest" => symlink(
+            source_path_prefix.join("vitest.config.ts"),
+            current_path_prefix.join("vitest.config.ts"),
+        ),
+        "jest" => symlink(
+            source_path_prefix.join("jest.config.ts"),
+            current_path_prefix.join("jest.config.ts"),
+        ),
+        _ => Ok(()),
+    }
+}
+
+pub(super) fn setup_tsconfig() -> std::io::Result<()> {
     let tsconfig = r#"{
 	"extends": "../tsconfig.base.json",
     "compilerOptions": {
@@ -40,10 +74,13 @@ fn setup_basic_package() -> std::io::Result<()> {
         "dist"
     ]
 }"#;
+
     let mut tsconfig_file = fs::File::create("tsconfig.json")?;
     tsconfig_file.write_all(tsconfig.as_bytes())?;
+    Ok(())
+}
 
-    // Create .gitignore
+pub(super) fn setup_gitignore() -> std::io::Result<()> {
     let gitignore = r#"node_modules
 .idea
 .DS_Store
@@ -58,7 +95,18 @@ lib
     let mut gitignore_file = fs::File::create(".gitignore")?;
     gitignore_file.write_all(gitignore.as_bytes())?;
 
-    // Create directories
+    Ok(())
+}
+
+pub(super) fn setup_basic_package(
+    base_path: Option<&str>,
+    current_path: Option<&str>,
+    config_data: &ConfigData,
+) -> std::io::Result<()> {
+    self::setup_symlinks(base_path, current_path, config_data)?;
+    self::setup_tsconfig()?;
+    self::setup_gitignore()?;
+
     let dirs = [
         "controllers",
         "interfaces",

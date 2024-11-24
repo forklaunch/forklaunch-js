@@ -68,14 +68,14 @@ pub(crate) struct PathIO {
 
 #[derive(Debug, Content)]
 pub(crate) struct ConfigData {
-    latest_cli_version: String,
-    app_name: String,
-    validator: String,
-    http_framework: String,
-    runtime: String,
-    test_framework: String,
-    token: String,
-    generated_projects: String,
+    pub(super) latest_cli_version: String,
+    pub(super) app_name: String,
+    pub(super) validator: String,
+    pub(super) http_framework: String,
+    pub(super) runtime: String,
+    pub(super) test_framework: String,
+    pub(super) token: String,
+    pub(super) generated_projects: String,
 }
 
 pub(crate) fn apply_templates(
