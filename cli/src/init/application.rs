@@ -244,10 +244,14 @@ pub(crate) fn handler(matches: &ArgMatches) -> anyhow::Result<()> {
         if !pnpm_workspace_path.exists() {
             std::fs::write(
                 pnpm_workspace_path,
-                format!(
-                    "packages:\n  - \"core\"\n  - \"{}\"",
-                    additional_projects.join("\n  - ")
-                ),
+                if additional_projects.is_empty() {
+                    "packages:\n  - \"core\"".to_string()
+                } else {
+                    format!(
+                        "packages:\n  - \"core\"\n  - \"{}\"",
+                        additional_projects.join("\n  - ")
+                    )
+                },
             )?;
         }
     }
