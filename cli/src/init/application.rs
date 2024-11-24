@@ -4,7 +4,11 @@ use anyhow::bail;
 use clap::{Arg, ArgMatches, Command};
 use ramhorns::{Content, Ramhorns};
 
-use crate::{utils::get_token, LATEST_CLI_VERSION};
+use crate::{
+    init::library::{setup_gitignore, setup_symlinks, setup_tsconfig},
+    utils::get_token,
+    LATEST_CLI_VERSION,
+};
 
 use super::forklaunch_command;
 
@@ -135,7 +139,9 @@ pub(crate) fn apply_templates(
     }
 
     if template_dir.project {
-        // TODO: Generate symlinks in project
+        setup_symlinks(base_path, current_path, config_data)?;
+        setup_gitignore()?;
+        setup_tsconfig()?;
     }
 
     Ok(())

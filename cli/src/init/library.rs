@@ -63,7 +63,7 @@ pub(super) fn setup_symlinks(
     }
 }
 
-pub(super) fn setup_tsconfig() -> std::io::Result<()> {
+pub(super) fn setup_tsconfig(current_path: Option<&str>) -> std::io::Result<()> {
     let tsconfig = r#"{
 	"extends": "../tsconfig.base.json",
     "compilerOptions": {
@@ -75,12 +75,16 @@ pub(super) fn setup_tsconfig() -> std::io::Result<()> {
     ]
 }"#;
 
-    let mut tsconfig_file = fs::File::create("tsconfig.json")?;
+    let path = match current_path {
+        Some(path) => Path::new(path).join("tsconfig.json"),
+        None => Path::new("tsconfig.json").to_path_buf(),
+    };
+    let mut tsconfig_file = fs::File::create(path)?;
     tsconfig_file.write_all(tsconfig.as_bytes())?;
     Ok(())
 }
 
-pub(super) fn setup_gitignore() -> std::io::Result<()> {
+pub(super) fn setup_gitignore(current_path: Option<&str>) -> std::io::Result<()> {
     let gitignore = r#"node_modules
 .idea
 .DS_Store
@@ -92,7 +96,12 @@ lib
 
 *dist
 *lib"#;
-    let mut gitignore_file = fs::File::create(".gitignore")?;
+
+    let path = match current_path {
+        Some(path) => Path::new(path).join(".gitignore"),
+        None => Path::new(".gitignore").to_path_buf(),
+    };
+    let mut gitignore_file = fs::File::create(path)?;
     gitignore_file.write_all(gitignore.as_bytes())?;
 
     Ok(())
@@ -104,8 +113,8 @@ pub(super) fn setup_basic_package(
     config_data: &ConfigData,
 ) -> std::io::Result<()> {
     self::setup_symlinks(base_path, current_path, config_data)?;
-    self::setup_tsconfig()?;
-    self::setup_gitignore()?;
+    self::setup_tsconfig(current_path)?;
+    self::setup_gitignore(current_path)?;
 
     let dirs = [
         "controllers",
