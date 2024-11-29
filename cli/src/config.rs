@@ -1,3 +1,4 @@
+use anyhow::Result;
 use clap::{ArgMatches, Command};
 
 use crate::utils::forklaunch_command;
@@ -11,15 +12,15 @@ pub(crate) fn command() -> Command {
         .subcommand(push::command())
 }
 
-pub(crate) fn handler(matches: &ArgMatches) {
+pub(crate) fn handler(matches: &ArgMatches) -> Result<()> {
     match matches.subcommand() {
-        Some(("pull", matches)) => pull::handler(matches).unwrap(),
-        Some(("push", matches)) => push::handler(matches).unwrap(),
+        Some(("pull", matches)) => pull::handler(matches),
+        Some(("push", matches)) => push::handler(matches),
         _ => unreachable!(),
     }
 }
 
-pub(crate) fn unwrap_id(matches: &ArgMatches) -> anyhow::Result<&String> {
+pub(crate) fn unwrap_id(matches: &ArgMatches) -> Result<&String> {
     let wrapped_id = matches.get_one::<String>("id");
     Ok(match wrapped_id {
         None => anyhow::bail!("No id provided"),

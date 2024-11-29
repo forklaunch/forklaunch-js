@@ -50,7 +50,7 @@ import {
   unknown as schemaUnknown,
   uri as schemaUri,
   uuid as schemaUuid
-} from '@forklaunch/validator/typebox';
+} from '@forklaunch/validator/zod';
 
 export const SchemaValidator = RegisteredSchemaValidator;
 export type SchemaValidator = ReturnType<typeof RegisteredSchemaValidator>;
@@ -79,4 +79,4 @@ export const union = schemaUnion;
 export const literal = schemaLiteral;
 export const enum_ = <Enum extends LiteralSchema>(
   schemaEnum: Record<string, Enum>
-) => union(Object.values<Enum>(schemaEnum));
+) => union(Object.values<Enum>(schemaEnum) as [Enum, Enum, ...Enum[]]);

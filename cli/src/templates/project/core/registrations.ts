@@ -55,4 +55,4 @@ export const union = schemaUnion;
 export const literal = schemaLiteral;
 export const enum_ = <Enum extends LiteralSchema>(
   schemaEnum: Record<string, Enum>
-) => union(Object.values<Enum>(schemaEnum));
+) => union(Object.values<Enum>(schemaEnum) as [Enum, Enum, ...Enum[]]);

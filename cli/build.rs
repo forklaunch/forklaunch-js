@@ -9,7 +9,6 @@ fn copy_templates(src: &Path, dest: &Path) -> std::io::Result<()> {
     }
 
     for entry in fs::read_dir(src)? {
-        println!("{:?}", entry);
         let entry = entry?;
         let path = entry.path();
         let dest_path = dest.join(path.file_name().unwrap());

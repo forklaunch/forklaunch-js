@@ -1,3 +1,4 @@
+use anyhow::Result;
 use clap::{Arg, ArgMatches, Command};
 
 use crate::utils::get_token;
@@ -20,7 +21,7 @@ pub(crate) fn command() -> Command {
         )
 }
 
-pub(crate) fn handler(matches: &ArgMatches) -> anyhow::Result<()> {
+pub(crate) fn handler(matches: &ArgMatches) -> Result<()> {
     let id = unwrap_id(matches)?;
 
     let input = format!("{}.env", id);

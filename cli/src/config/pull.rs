@@ -1,6 +1,8 @@
-use clap::{Arg, ArgMatches, Command};
-
 use crate::utils::{forklaunch_command, get_token};
+use anyhow::{bail, Result};
+use clap::{Arg, ArgMatches, Command};
+use reqwest::{blocking::Client, StatusCode};
+use std::fs::write;
 
 use super::unwrap_id;
 
@@ -23,7 +25,7 @@ pub(crate) fn command() -> Command {
     )
 }
 
-pub(crate) fn handler(matches: &ArgMatches) -> anyhow::Result<()> {
+pub(crate) fn handler(matches: &ArgMatches) -> Result<()> {
     let id = unwrap_id(matches)?;
 
     let output = format!("{}.env", id);
@@ -32,17 +34,17 @@ pub(crate) fn handler(matches: &ArgMatches) -> anyhow::Result<()> {
     let token = get_token()?;
 
     let url = format!("https://api.forklaunch.dev/config/{}", id);
-    let client = reqwest::blocking::Client::new();
+    let client = Client::new();
     let request = client.get(url).bearer_auth(token);
     let response = request.send()?;
 
     match response.status() {
-        reqwest::StatusCode::OK => println!("Config received, saving to {}", output),
-        _ => anyhow::bail!("Failed to pull config: {}", response.text()?),
+        StatusCode::OK => println!("Config received, saving to {}", output),
+        _ => bail!("Failed to pull config: {}", response.text()?),
     }
 
     let bytes = response.bytes()?;
-    std::fs::write(output, bytes)?;
+    write(output, bytes)?;
 
     Ok(())
 }

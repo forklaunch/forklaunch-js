@@ -1,133 +1,101 @@
+use anyhow::Result;
 use clap::{Arg, ArgMatches, Command};
-use std::fs;
-use std::io::Write;
-use std::os::unix::fs::symlink;
+use ramhorns::{Content, Ramhorns};
+use serde::{Deserialize, Serialize};
+use std::env::{current_dir, current_exe};
+use std::fs::read_to_string;
 use std::path::Path;
+use toml::from_str;
 
-use super::application::ConfigData;
-use super::forklaunch_command;
+use crate::config_struct;
 
-pub(super) fn command() -> Command {
-    forklaunch_command("library", "Initialize a new library")
-        .alias("lib")
-        .arg(
-            Arg::new("name")
-                .required(true)
-                .help("The name of the application"),
-        )
-}
+use super::{
+    forklaunch_command, setup_gitignore, setup_symlinks, setup_tsconfig, setup_with_template,
+    CliCommand, PathIO,
+};
 
-pub(super) fn handler(matches: &ArgMatches) {
-    println!("{:?}", matches);
-}
+config_struct!(
+    #[derive(Debug, Content, Serialize)]
+    struct LibraryConfigData {
+        library_name: String,
+    }
+);
 
-pub(super) fn setup_symlinks(
-    base_path: Option<&str>,
-    current_path: Option<&str>,
-    config_data: &ConfigData,
-) -> std::io::Result<()> {
-    // Create symlinks
-    let source_path_prefix = match base_path {
-        Some(base_path) => Path::new(base_path),
-        None => Path::new(".."),
-    };
+#[derive(Debug)]
+pub(super) struct LibraryCommand;
 
-    let current_path_prefix = match current_path {
-        Some(current_path) => Path::new(current_path),
-        None => Path::new("."),
-    };
-
-    symlink(
-        source_path_prefix.join(".prettierignore"),
-        current_path_prefix.join(".prettierignore"),
-    )?;
-    symlink(
-        source_path_prefix.join(".prettierrc"),
-        current_path_prefix.join(".prettierrc"),
-    )?;
-    symlink(
-        source_path_prefix.join("eslint.config.mjs"),
-        current_path_prefix.join("eslint.config.mjs"),
-    )?;
-
-    match config_data.test_framework.as_str() {
-        "vitest" => symlink(
-            source_path_prefix.join("vitest.config.ts"),
-            current_path_prefix.join("vitest.config.ts"),
-        ),
-        "jest" => symlink(
-            source_path_prefix.join("jest.config.ts"),
-            current_path_prefix.join("jest.config.ts"),
-        ),
-        _ => Ok(()),
+impl LibraryCommand {
+    pub(super) fn new() -> Self {
+        Self {}
     }
 }
 
-pub(super) fn setup_tsconfig(current_path: Option<&str>) -> std::io::Result<()> {
-    let tsconfig = r#"{
-	"extends": "../tsconfig.base.json",
-    "compilerOptions": {
-        "outDir": "dist"
-    },
-    "exclude": [
-        "node_modules",
-        "dist"
-    ]
-}"#;
-
-    let path = match current_path {
-        Some(path) => Path::new(path).join("tsconfig.json"),
-        None => Path::new("tsconfig.json").to_path_buf(),
-    };
-    let mut tsconfig_file = fs::File::create(path)?;
-    tsconfig_file.write_all(tsconfig.as_bytes())?;
-    Ok(())
-}
-
-pub(super) fn setup_gitignore(current_path: Option<&str>) -> std::io::Result<()> {
-    let gitignore = r#"node_modules
-.idea
-.DS_Store
-
-dist
-lib
-
-.vscode
-
-*dist
-*lib"#;
-
-    let path = match current_path {
-        Some(path) => Path::new(path).join(".gitignore"),
-        None => Path::new(".gitignore").to_path_buf(),
-    };
-    let mut gitignore_file = fs::File::create(path)?;
-    gitignore_file.write_all(gitignore.as_bytes())?;
-
-    Ok(())
-}
-
-pub(super) fn setup_basic_package(
-    base_path: Option<&str>,
-    current_path: Option<&str>,
-    config_data: &ConfigData,
-) -> std::io::Result<()> {
-    self::setup_symlinks(base_path, current_path, config_data)?;
-    self::setup_tsconfig(current_path)?;
-    self::setup_gitignore(current_path)?;
-
-    let dirs = [
-        "controllers",
-        "interfaces",
-        "middleware",
-        "models",
-        "routes",
-        "services",
-        "utils",
-    ];
-    for dir in dirs {
-        fs::create_dir(dir)?;
+impl CliCommand for LibraryCommand {
+    fn command(&self) -> Command {
+        forklaunch_command("library", "Initialize a new library")
+            .alias("lib")
+            .arg(
+                Arg::new("name")
+                    .required(true)
+                    .help("The name of the library"),
+            )
+            .arg(
+                Arg::new("base_path")
+                    .short('p')
+                    .long("path")
+                    .required(false)
+                    .help("The application path to initialize the library in."),
+            )
     }
+
+    // pass token in from parent and perform get token above?
+    fn handler(&self, matches: &ArgMatches) -> Result<()> {
+        let library_name = matches.get_one::<String>("name").unwrap();
+        let current_path = current_dir()?;
+        let base_path = match matches.get_one::<String>("base_path") {
+            Some(path) => path,
+            None => current_path.to_str().unwrap(),
+        };
+
+        let config_path = Path::new(&base_path).join(".forklaunch/config.toml");
+
+        let mut config_data: LibraryConfigData = from_str(&read_to_string(config_path)?)?;
+        config_data.library_name = library_name.clone();
+        println!("{:?}", config_data);
+
+        setup_basic_library(&library_name, &base_path.to_string(), &config_data)?;
+        Ok(())
+    }
+}
+
+fn setup_basic_library(
+    library_name: &String,
+    base_path: &String,
+    config_data: &LibraryConfigData,
+) -> Result<()> {
+    let output_path = Path::new(base_path)
+        .join(library_name)
+        .to_string_lossy()
+        .to_string();
+
+    let template_dir = PathIO {
+        input_path: "templates/project/library".to_string(),
+        output_path: output_path.clone(),
+    };
+    let mut template = Ramhorns::lazy(current_exe()?.parent().unwrap())?;
+
+    let ignore_files = vec![];
+
+    setup_with_template(
+        None,
+        &template_dir,
+        &mut template,
+        config_data,
+        &ignore_files,
+    )?;
+    setup_symlinks(Some(base_path), &template_dir.output_path, config_data)?;
+    setup_tsconfig(&output_path)?;
+    setup_gitignore(&output_path)?;
 
     Ok(())
 }

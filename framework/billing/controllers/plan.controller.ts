@@ -13,13 +13,7 @@ import {
   UpdatePlanDtoMapper
 } from '../models/dtoMapper/plan.dtoMapper';
 
-export const PlanController = <ConfigInjectorScope>(
-  service: (scope?: ConfigInjectorScope) => PlanService
-) => new InternalPlanController(service);
-export type PlanController<ConfigInjectorScope> =
-  InternalPlanController<ConfigInjectorScope>;
-
-class InternalPlanController<ConfigInjectorScope>
+export class PlanController<ConfigInjectorScope>
   implements Controller<PlanService>
 {
   constructor(
