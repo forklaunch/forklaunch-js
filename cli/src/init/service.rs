@@ -1,6 +1,6 @@
 use std::{
     env::{current_dir, current_exe},
-    fs::read_to_string,
+    fs::{read_to_string, write},
     path::Path,
 };
 
@@ -13,34 +13,24 @@ use toml::from_str;
 use crate::config_struct;
 
 use super::{
-    forklaunch_command, setup_gitignore, setup_symlinks, setup_tsconfig, setup_with_template,
-    CliCommand, PathIO,
+    core::{
+        docker::add_service_definition_to_docker_compose,
+        gitignore::setup_gitignore,
+        manifest::add_service_definition_to_manifest,
+        package_json::add_service_definition_to_package_json,
+        symlinks::setup_symlinks,
+        template::{setup_with_template, PathIO},
+        tsconfig::setup_tsconfig,
+    },
+    forklaunch_command, CliCommand,
 };
 
 config_struct!(
     #[derive(Debug, Content, Serialize)]
-    struct ServiceConfigData {
-        service_name: String,
+    pub(crate) struct ServiceConfigData {
+        pub(crate) service_name: String,
     }
 );
-
-// impl<'de> Deserialize<'de> for ServiceConfigData {
-//     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-//     where
-//         D: serde::Deserializer<'de>,
-//     {
-//         let mut data: ServiceConfigData = Deserialize::deserialize(deserializer)?;
-//         data.is_express = data.http_framework == "express";
-//         data.is_hyper_express = data.http_framework == "hyper-express";
-//         data.is_zod = data.validator == "zod";
-//         data.is_typebox = data.validator == "typebox";
-//         data.is_bun = data.runtime == "bun";
-//         data.is_node = data.runtime == "node";
-//         data.is_vitest = data.test_framework == "vitest";
-//         data.is_jest = data.test_framework == "jest";
-//         Ok(data)
-//     }
-// }
 
 #[derive(Debug)]
 pub(super) struct ServiceCommand;
@@ -79,12 +69,14 @@ impl CliCommand for ServiceCommand {
             None => current_path.to_str().unwrap(),
         };
 
-        let config_path = Path::new(&base_path).join(".forklaunch/config.toml");
+        let config_path = Path::new(&base_path)
+            .join(".forklaunch")
+            .join("config.toml");
 
         let mut config_data: ServiceConfigData = from_str(&read_to_string(config_path)?)?;
         config_data.service_name = service_name.clone();
 
-        setup_basic_service(service_name, &base_path.to_string(), &config_data)?;
+        setup_basic_service(service_name, &base_path.to_string(), &mut config_data)?;
         Ok(())
     }
 }
@@ -92,14 +84,18 @@ impl CliCommand for ServiceCommand {
 fn setup_basic_service(
     service_name: &String,
     base_path: &String,
-    config_data: &ServiceConfigData,
+    config_data: &mut ServiceConfigData,
 ) -> Result<()> {
     let output_path = Path::new(base_path)
         .join(service_name)
         .to_string_lossy()
         .to_string();
     let template_dir = PathIO {
-        input_path: "templates/project/service".to_string(),
+        input_path: Path::new("templates")
+            .join("project")
+            .join("service")
+            .to_string_lossy()
+            .to_string(),
         output_path: output_path.clone(),
     };
     let mut template = Ramhorns::lazy(current_exe()?.parent().unwrap())?;
@@ -116,6 +112,31 @@ fn setup_basic_service(
     setup_symlinks(Some(base_path), &template_dir.output_path, config_data)?;
     setup_tsconfig(&output_path)?;
     setup_gitignore(&output_path)?;
+
+    add_service_to_artifacts(config_data, base_path)?;
+
+    Ok(())
+}
+
+fn add_service_to_artifacts(config_data: &mut ServiceConfigData, base_path: &String) -> Result<()> {
+    let (docker_compose_buffer, port_number) =
+        add_service_definition_to_docker_compose(config_data, base_path)?;
+    let package_json_buffer = add_service_definition_to_package_json(config_data, base_path)?;
+    let forklaunch_definition_buffer =
+        add_service_definition_to_manifest(config_data, port_number)?;
+
+    write(
+        Path::new(base_path).join("docker-compose.yml"),
+        docker_compose_buffer,
+    )?;
+    write(
+        Path::new(base_path).join("package.json"),
+        package_json_buffer,
+    )?;
+    write(
+        Path::new(base_path).join(".forklaunch").join("config.toml"),
+        forklaunch_definition_buffer,
+    )?;
 
     Ok(())
 }

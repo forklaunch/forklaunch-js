@@ -1,17 +1,16 @@
 {
-  "name": "@{{ app_name }}/{{ service_name }}",
+  "name": "@{{app_name}}/{{service_name}}",
   "version": "0.1.0",
   "description": "",
-  "devDependencies": {
+  "devDependencies": { {{#is_jest}}
     "@types/jest": "^29.5.14",
-    "globals": "^15.12.0",
     "jest": "^29.7.0",
-    "ts-jest": "^29.2.5",
+    "ts-jest": "^29.2.5",{{/is_jest}}{{#is_vitest}}
+    "vitest": "^2.1.5",{{/is_vitest}}
+    "globals": "^15.12.0",
     "tsx": "^4.19.2",
-    "typescript": "^5.6.3",
-    "vitest": "^2.1.5"
+    "typescript": "^5.6.3"
   },
-  "workspaces": [],
   "scripts": {
     "build": "pnpm -r run build",
     "clean": "rm -rf node_modules pnpm-lock.yaml && pnpm --parallel -r clean && pnpm store prune",
@@ -20,10 +19,19 @@
     "lint": "pnpm --parallel -r run lint",
     "lint:fix": "pnpm --parallel -r run lint:fix",
     "format": "pnpm --parallel -r run format",
-    "test": "pnpm {{ test-framework }} --passWithNoTests",
+    "test": "pnpm {{test-framework}} --passWithNoTests",
     "up:packages": "pnpm -r update --latest"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@forklaunch/common": "^0.1.11",
+    "@forklaunch/core": "^0.2.27",{{#is_express}}
+    "@forklaunch/express": "^0.1.22",{{/is_express}}{{#is_hyper_express}}
+    "@forklaunch/hyper-express": "^0.1.23",{{/is_hyper_express}}
+    "@forklaunch/validator": "^0.3.9",{{#is_typebox}}
+    "@sinclair/typebox": "^0.33.22",{{/is_typebox}}{{#is_zod}}
+    "zod": "^3.23.8"{{/is_zod}}
+  }
 }

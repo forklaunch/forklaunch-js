@@ -9,8 +9,13 @@ use std::fs::write;
 use crate::{config_struct, utils::get_token, LATEST_CLI_VERSION};
 
 use super::{
-    forklaunch_command, setup_forklaunch_config, setup_symlinks, setup_with_template, CliCommand,
-    PathIO,
+    core::{
+        config::ProjectEntry,
+        manifest::setup_manifest,
+        symlinks::setup_symlinks,
+        template::{setup_with_template, PathIO},
+    },
+    forklaunch_command, CliCommand,
 };
 
 config_struct!(
@@ -109,16 +114,30 @@ impl CliCommand for ApplicationCommand {
             bail!("Hyper Express is not supported for bun");
         }
 
-        // Include basic token checks (expiration, permissions mapping) in this method
+        // TODO: Include basic token checks (expiration, permissions mapping) in this method, but retrieve token from parent command
         let _token = get_token()?;
 
         // Inline specific perms checks here. Make remote calls to receive templates for specific packages if needed here (premium only).
 
-        let mut additional_projects = packages.map(|p| p.to_string()).collect::<Vec<String>>();
-        additional_projects.push("core".to_string());
+        let mut additional_projects = vec![ProjectEntry {
+            name: "core".to_string(),
+            port: None,
+        }];
+        let port_number = 8000;
+        additional_projects.extend(packages.enumerate().map(|(i, p)| ProjectEntry {
+            name: p.to_string(),
+            port: Some((port_number + i).try_into().unwrap()),
+        }));
 
         let mut project_peer_topology = HashMap::new();
-        project_peer_topology.insert(name.to_string(), additional_projects.clone());
+        project_peer_topology.insert(
+            name.to_string(),
+            additional_projects
+                .clone()
+                .iter()
+                .map(|p| p.name.clone())
+                .collect(),
+        );
 
         let data = ApplicationConfigData {
             cli_version: LATEST_CLI_VERSION.to_string(),
@@ -127,7 +146,7 @@ impl CliCommand for ApplicationCommand {
             http_framework: http_framework.to_string(),
             runtime: runtime.to_string(),
             test_framework: test_framework.to_string(),
-            generated_projects: additional_projects.clone(),
+            projects: additional_projects.clone(),
             project_peer_topology,
 
             is_express: http_framework == "express",
@@ -140,17 +159,24 @@ impl CliCommand for ApplicationCommand {
             is_jest: test_framework == "jest",
         };
 
-        setup_forklaunch_config(&Path::new(name).to_string_lossy().to_string(), &data)?;
+        setup_manifest(&Path::new(name).to_string_lossy().to_string(), &data)?;
 
         // TODO: support different path delimiters
         let mut template_dirs = vec![PathIO {
-            input_path: "templates/application".to_string(),
+            input_path: Path::new("templates")
+                .join("application")
+                .to_string_lossy()
+                .to_string(),
             output_path: "".to_string(),
         }];
 
         let additional_projects_dirs = additional_projects.clone().into_iter().map(|path| PathIO {
-            input_path: format!("templates/project/{}", path),
-            output_path: path,
+            input_path: Path::new("templates")
+                .join("project")
+                .join(&path.name)
+                .to_string_lossy()
+                .to_string(),
+            output_path: path.name,
         });
         template_dirs.extend(additional_projects_dirs.clone());
 
@@ -193,7 +219,11 @@ impl CliCommand for ApplicationCommand {
                     } else {
                         format!(
                             "packages:\n  - \"core\"\n  - \"{}\"",
-                            additional_projects.join("\n  - ")
+                            additional_projects
+                                .iter()
+                                .map(|p| p.name.clone())
+                                .collect::<Vec<String>>()
+                                .join("\n  - ")
                         )
                     },
                 )?;

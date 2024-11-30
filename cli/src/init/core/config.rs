@@ -1,3 +1,16 @@
+use ramhorns::Content;
+use serde::{Deserialize, Serialize};
+
+pub(crate) trait Config {
+    fn test_framework(&self) -> &String;
+}
+
+#[derive(Debug, Serialize, Deserialize, Content, Clone)]
+pub(crate) struct ProjectEntry {
+    pub(crate) name: String,
+    pub(crate) port: Option<i32>,
+}
+
 #[macro_export]
 macro_rules! internal_config_struct {
     (
@@ -18,7 +31,7 @@ macro_rules! internal_config_struct {
             $vis http_framework: String,
             $vis runtime: String,
             $vis test_framework: String,
-            $vis generated_projects: Vec<String>,
+            $vis projects: Vec<crate::init::core::config::ProjectEntry>,
             $vis project_peer_topology: std::collections::HashMap<String, Vec<String>>,
 
             $(
@@ -96,7 +109,7 @@ macro_rules! config_struct {
                     http_framework: shadow.http_framework.clone(),
                     runtime: shadow.runtime.clone(),
                     test_framework: shadow.test_framework.clone(),
-                    generated_projects: shadow.generated_projects.clone(),
+                    projects: shadow.projects.clone(),
                     project_peer_topology: shadow.project_peer_topology.clone(),
                     is_express: shadow.http_framework == "express",
                     is_hyper_express: shadow.http_framework == "hyper-express",
@@ -120,7 +133,7 @@ macro_rules! config_struct {
             }
         }
 
-        impl crate::init::Config for $name {
+        impl crate::init::core::config::Config for $name {
             fn test_framework(&self) -> &String {
                 &self.test_framework
             }

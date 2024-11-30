@@ -1,13 +1,13 @@
 {
-  "name": "@{{ app_name }}/core",
+  "name": "@{{app_name}}/core",
   "version": "0.1.0",
-  "description": "The common core lib for all monorepo services for {{ app_name }}",
+  "description": "The common core lib for all monorepo services for {{app_name}}",
   "files": [
     "lib"
   ],
   "types": "lib/index.d.ts",
   "scripts": {
-    "test": "{{ test-framework }} --passWithNoTests",
+    "test": "{{test-framework}} --passWithNoTests",
     "build": "tsc",
     "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
@@ -20,11 +20,11 @@
   "license": "ISC",
   "dependencies": {
     "@forklaunch/common": "^0.1.11",
-    "@forklaunch/core": "^0.2.27",
-    "@forklaunch/express": "^0.1.22",
-    "@forklaunch/hyper-express": "^0.1.23",
-    "@forklaunch/validator": "^0.3.9",
-    "@sinclair/typebox": "^0.33.22",
-    "zod": "^3.23.8"
+    "@forklaunch/core": "^0.2.27",{{#is_express}}
+    "@forklaunch/express": "^0.1.22",{{/is_express}}{{#is_hyper_express}}
+    "@forklaunch/hyper-express": "^0.1.23",{{/is_hyper_express}}
+    "@forklaunch/validator": "^0.3.9",{{#is_typebox}}
+    "@sinclair/typebox": "^0.33.22",{{/is_typebox}}{{#is_zod}}
+    "zod": "^3.23.8"{{/is_zod}}
   }
 }

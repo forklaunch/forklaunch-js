@@ -27,8 +27,7 @@ const parseDbType = <Db extends string>(
 
 const mikroOrmOptionsConfig = {
   driver: parseDbType(process.env.FORKLIFT_DB_TYPE),
-  dbName:
-    process.env.FORKLIFT_DB_NAME || '{{ app_name }}-{{ service_name }}-dev',
+  dbName: process.env.FORKLIFT_DB_NAME || '{{app_name}}-{{service_name}}-dev',
   host: process.env.FORKLIFT_DB_HOST || 'localhost',
   user: process.env.FORKLIFT_DB_USER || 'postgres',
   password: process.env.FORKLIFT_DB_PASSWORD || 'postgres',

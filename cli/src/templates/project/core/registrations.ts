@@ -5,7 +5,7 @@ import { LiteralSchema } from '@forklaunch/validator';
 import {
   forklaunchExpress as registeredForklaunchExpress,
   forklaunchRouter as registeredForklaunchRouter
-} from '@forklaunch/{{ http_framework }}';
+} from '@forklaunch/{{http_framework}}';
 
 import {
   SchemaValidator as RegisteredSchemaValidator,
@@ -26,7 +26,7 @@ import {
   unknown as schemaUnknown,
   uri as schemaUri,
   uuid as schemaUuid
-} from '@forklaunch/validator/{{ validator }}';
+} from '@forklaunch/validator/{{validator}}';
 
 export const SchemaValidator = RegisteredSchemaValidator;
 export type SchemaValidator = ReturnType<typeof RegisteredSchemaValidator>;

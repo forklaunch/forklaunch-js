@@ -1,5 +1,3 @@
-// Note: This file should be moved to cli/build.rs, not cli/src/build.rs
-// Build scripts should be at the crate root level, not in src/
 use std::fs;
 use std::path::{Path, PathBuf};
 

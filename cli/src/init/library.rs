@@ -9,10 +9,11 @@ use toml::from_str;
 
 use crate::config_struct;
 
-use super::{
-    forklaunch_command, setup_gitignore, setup_symlinks, setup_tsconfig, setup_with_template,
-    CliCommand, PathIO,
-};
+use super::core::gitignore::setup_gitignore;
+use super::core::symlinks::setup_symlinks;
+use super::core::template::{setup_with_template, PathIO};
+use super::core::tsconfig::setup_tsconfig;
+use super::{forklaunch_command, CliCommand};
 
 config_struct!(
     #[derive(Debug, Content, Serialize)]
@@ -57,11 +58,12 @@ impl CliCommand for LibraryCommand {
             None => current_path.to_str().unwrap(),
         };
 
-        let config_path = Path::new(&base_path).join(".forklaunch/config.toml");
+        let config_path = Path::new(&base_path)
+            .join(".forklaunch")
+            .join("config.toml");
 
         let mut config_data: LibraryConfigData = from_str(&read_to_string(config_path)?)?;
         config_data.library_name = library_name.clone();
-        println!("{:?}", config_data);
 
         setup_basic_library(&library_name, &base_path.to_string(), &config_data)?;
         Ok(())
@@ -79,7 +81,11 @@ fn setup_basic_library(
         .to_string();
 
     let template_dir = PathIO {
-        input_path: "templates/project/library".to_string(),
+        input_path: Path::new("templates")
+            .join("project")
+            .join("library")
+            .to_string_lossy()
+            .to_string(),
         output_path: output_path.clone(),
     };
     let mut template = Ramhorns::lazy(current_exe()?.parent().unwrap())?;
