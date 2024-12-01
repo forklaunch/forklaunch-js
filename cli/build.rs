@@ -29,7 +29,7 @@ fn copy_templates(src: &Path, dest: &Path) -> std::io::Result<()> {
 fn main() -> std::io::Result<()> {
     let out_dir = PathBuf::from(std::env::var("CARGO_TARGET_DIR").unwrap_or("target".to_string()))
         .join(std::env::var("PROFILE").unwrap_or("debug".to_string()));
-    let templates_dir = PathBuf::from("src/templates");
+    let templates_dir = PathBuf::from("src").join("templates");
 
     copy_templates(&templates_dir, &out_dir.join("templates"))?;
 

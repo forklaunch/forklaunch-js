@@ -18,8 +18,8 @@ use super::{
         docker::add_service_definition_to_docker_compose,
         gitignore::setup_gitignore,
         manifest::add_project_definition_to_manifest,
-        package_json::add_service_definition_to_package_json,
-        pnpm_workspace::add_service_to_pnpm_workspace,
+        package_json::add_project_definition_to_package_json,
+        pnpm_workspace::add_project_definition_to_pnpm_workspace,
         symlinks::setup_symlinks,
         template::{setup_with_template, PathIO},
         tsconfig::setup_tsconfig,
@@ -133,14 +133,17 @@ fn add_service_to_artifacts(config_data: &mut ServiceConfigData, base_path: &Str
         add_project_definition_to_manifest(config_data, Some(port_number))?;
     let mut package_json_buffer: Option<String> = None;
     if config_data.runtime == "bun" {
-        package_json_buffer = Some(add_service_definition_to_package_json(
+        package_json_buffer = Some(add_project_definition_to_package_json(
             config_data,
             base_path,
         )?);
     }
     let mut pnpm_workspace_buffer: Option<String> = None;
     if config_data.runtime == "node" {
-        pnpm_workspace_buffer = Some(add_service_to_pnpm_workspace(base_path, config_data)?);
+        pnpm_workspace_buffer = Some(add_project_definition_to_pnpm_workspace(
+            base_path,
+            config_data,
+        )?);
     }
 
     write(

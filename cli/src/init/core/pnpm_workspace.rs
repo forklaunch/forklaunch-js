@@ -5,9 +5,7 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_yml::{from_str, to_string};
 
-use crate::init::service::ServiceConfigData;
-
-use super::config::ProjectEntry;
+use super::config::{Config, ProjectConfig, ProjectEntry};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub(crate) struct PnpmWorkspace {
@@ -30,17 +28,15 @@ pub(crate) fn generate_pnpm_workspace(
     Ok(())
 }
 
-pub(crate) fn add_service_to_pnpm_workspace(
-    app_name: &str,
-    config_data: &ServiceConfigData,
+pub(crate) fn add_project_definition_to_pnpm_workspace<T: Config + ProjectConfig + Serialize>(
+    base_path: &str,
+    config_data: &T,
 ) -> Result<String> {
-    let pnpm_workspace_path = Path::new(app_name).join("pnpm-workspace.yaml");
+    let pnpm_workspace_path = Path::new(base_path).join("pnpm-workspace.yaml");
     let pnpm_workspace_content = read_to_string(&pnpm_workspace_path)?;
     let mut pnpm_workspace: PnpmWorkspace = from_str(&pnpm_workspace_content)?;
-    if !pnpm_workspace.packages.contains(&config_data.service_name) {
-        pnpm_workspace
-            .packages
-            .push(config_data.service_name.clone());
+    if !pnpm_workspace.packages.contains(&config_data.name()) {
+        pnpm_workspace.packages.push(config_data.name().clone());
     }
     Ok(to_string(&pnpm_workspace)?)
 }

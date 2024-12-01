@@ -1,6 +1,6 @@
 use std::{collections::HashMap, env::current_exe, path::Path};
 
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use ramhorns::{Content, Ramhorns};
 use serde::{Deserialize, Serialize};
@@ -172,7 +172,8 @@ impl CliCommand for ApplicationCommand {
             bun_package_json_workspace_string,
         };
 
-        setup_manifest(&Path::new(name).to_string_lossy().to_string(), &data)?;
+        setup_manifest(&Path::new(name).to_string_lossy().to_string(), &data)
+            .with_context(|| "Failed to setup manifest file for application")?;
 
         // TODO: support different path delimiters
         let mut template_dirs = vec![PathIO {

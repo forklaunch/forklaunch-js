@@ -12,6 +12,8 @@ use crate::config_struct;
 use super::core::config::ProjectConfig;
 use super::core::gitignore::setup_gitignore;
 use super::core::manifest::add_project_definition_to_manifest;
+use super::core::package_json::add_project_definition_to_package_json;
+use super::core::pnpm_workspace::add_project_definition_to_pnpm_workspace;
 use super::core::symlinks::setup_symlinks;
 use super::core::template::{setup_with_template, PathIO};
 use super::core::tsconfig::setup_tsconfig;
@@ -127,7 +129,10 @@ fn add_library_to_artifacts(config_data: &mut LibraryConfigData, base_path: &Str
     }
     let mut pnpm_workspace_buffer: Option<String> = None;
     if config_data.runtime == "node" {
-        pnpm_workspace_buffer = Some(add_library_to_pnpm_workspace(base_path, config_data)?);
+        pnpm_workspace_buffer = Some(add_project_definition_to_pnpm_workspace(
+            base_path,
+            config_data,
+        )?);
     }
 
     write(
