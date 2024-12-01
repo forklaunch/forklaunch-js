@@ -23,7 +23,7 @@ pub(crate) fn handler(matches: &ArgMatches) -> Result<()> {
 pub(crate) fn unwrap_id(matches: &ArgMatches) -> Result<&String> {
     let wrapped_id = matches.get_one::<String>("id");
     Ok(match wrapped_id {
-        None => anyhow::bail!("No id provided"),
+        None => anyhow::bail!("Failed to parse id."),
         Some(id) => id,
     })
 }

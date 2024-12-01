@@ -1,11 +1,17 @@
 use std::{fs::read_to_string, path::Path};
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use serde_yml::{from_str, to_string, to_value, Value};
 
-use crate::init::service::ServiceConfigData;
+use crate::{
+    constants::{
+        ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE,
+        ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE, ERROR_FAILED_TO_READ_DOCKER_COMPOSE,
+    },
+    init::service::ServiceConfigData,
+};
 
 #[derive(Debug, Serialize, Deserialize)]
 struct DockerCompose {
@@ -46,10 +52,13 @@ pub(crate) fn add_service_definition_to_docker_compose(
     config_data: &ServiceConfigData,
     base_path: &String,
 ) -> Result<(String, i32)> {
-    let mut full_docker_compose: Value = from_str(&read_to_string(
-        Path::new(base_path).join("docker-compose.yml"),
-    )?)?;
-    let mut docker_compose: DockerCompose = Deserialize::deserialize(&full_docker_compose)?;
+    let mut full_docker_compose: Value = from_str(
+        &read_to_string(Path::new(base_path).join("docker-compose.yml"))
+            .with_context(|| ERROR_FAILED_TO_READ_DOCKER_COMPOSE)?,
+    )
+    .with_context(|| ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE)?;
+    let mut docker_compose: DockerCompose = Deserialize::deserialize(&full_docker_compose)
+        .with_context(|| ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE)?;
 
     let mut port_number = 8000;
     for (_, value) in docker_compose.services.iter() {
@@ -67,7 +76,11 @@ pub(crate) fn add_service_definition_to_docker_compose(
 
         if let Some(container_name) = &value.container_name {
             if container_name == &format!("{}-{}", config_data.app_name, config_data.service_name) {
-                return Ok((to_string(&full_docker_compose)?, port_number));
+                return Ok((
+                    to_string(&full_docker_compose)
+                        .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?,
+                    port_number,
+                ));
             }
         }
     }

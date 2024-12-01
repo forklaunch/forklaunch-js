@@ -5,7 +5,7 @@ use clap::{Arg, ArgAction, ArgMatches, Command};
 use ramhorns::{Content, Ramhorns};
 use serde::{Deserialize, Serialize};
 
-use crate::{config_struct, utils::get_token, LATEST_CLI_VERSION};
+use crate::{config_struct, constants::LATEST_CLI_VERSION, utils::get_token};
 
 use super::{
     core::{
@@ -173,7 +173,7 @@ impl CliCommand for ApplicationCommand {
         };
 
         setup_manifest(&Path::new(name).to_string_lossy().to_string(), &data)
-            .with_context(|| "Failed to setup manifest file for application")?;
+            .with_context(|| "Failed to setup manifest file for application.")?;
 
         // TODO: support different path delimiters
         let mut template_dirs = vec![PathIO {

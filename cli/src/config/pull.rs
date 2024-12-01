@@ -1,5 +1,8 @@
-use crate::utils::{forklaunch_command, get_token};
-use anyhow::{bail, Result};
+use crate::{
+    constants::{ERROR_FAILED_TO_SEND_REQUEST, ERROR_FAILED_TO_WRITE_FILE},
+    utils::{forklaunch_command, get_token},
+};
+use anyhow::{bail, Context, Result};
 use clap::{Arg, ArgMatches, Command};
 use reqwest::{blocking::Client, StatusCode};
 use std::fs::write;
@@ -31,12 +34,15 @@ pub(crate) fn handler(matches: &ArgMatches) -> Result<()> {
     let output = format!("{}.env", id);
     let output = matches.get_one::<String>("output").unwrap_or(&output);
 
+    // TODO: remove and pass token from parent
     let token = get_token()?;
 
-    let url = format!("https://api.forklaunch.dev/config/{}", id);
+    let url = format!("https://api.forklaunch.com/config/{}", id);
     let client = Client::new();
     let request = client.get(url).bearer_auth(token);
-    let response = request.send()?;
+    let response = request
+        .send()
+        .with_context(|| ERROR_FAILED_TO_SEND_REQUEST)?;
 
     match response.status() {
         StatusCode::OK => println!("Config received, saving to {}", output),
@@ -44,7 +50,7 @@ pub(crate) fn handler(matches: &ArgMatches) -> Result<()> {
     }
 
     let bytes = response.bytes()?;
-    write(output, bytes)?;
+    write(output, bytes).with_context(|| ERROR_FAILED_TO_WRITE_FILE)?;
 
     Ok(())
 }
