@@ -8,9 +8,7 @@ use ramhorns::Content;
 use serde::Serialize;
 use toml::to_string_pretty;
 
-use crate::init::service::ServiceConfigData;
-
-use super::config::{Config, ProjectEntry};
+use super::config::{Config, ProjectConfig, ProjectEntry};
 
 pub(crate) fn setup_manifest<T: Content + Config + Serialize>(
     path_dir: &String,
@@ -30,20 +28,28 @@ pub(crate) fn setup_manifest<T: Content + Config + Serialize>(
     Ok(())
 }
 
-pub(crate) fn add_service_definition_to_manifest(
-    config_data: &mut ServiceConfigData,
-    port_number: i32,
+pub(crate) fn add_project_definition_to_manifest<T: Config + ProjectConfig + Serialize>(
+    config_data: &mut T,
+    port: Option<i32>,
 ) -> Result<String> {
-    for project in config_data.projects.iter() {
-        if project.name == config_data.service_name {
+    let name = config_data.name().to_owned();
+    for project in config_data.projects().iter() {
+        if project.name == name {
             return Ok(to_string_pretty(&config_data)?);
         }
     }
 
-    config_data.projects.push(ProjectEntry {
-        name: config_data.service_name.clone(),
-        port: Some(port_number),
+    config_data.projects_mut().push(ProjectEntry {
+        name: name.clone(),
+        port,
     });
+
+    let app_name = config_data.app_name().to_owned();
+    config_data
+        .project_peer_topology_mut()
+        .entry(app_name)
+        .or_insert_with(Vec::new)
+        .push(name.clone());
 
     Ok(to_string_pretty(&config_data)?)
 }

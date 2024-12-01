@@ -14,10 +14,12 @@ use crate::config_struct;
 
 use super::{
     core::{
+        config::ProjectConfig,
         docker::add_service_definition_to_docker_compose,
         gitignore::setup_gitignore,
-        manifest::add_service_definition_to_manifest,
+        manifest::add_project_definition_to_manifest,
         package_json::add_service_definition_to_package_json,
+        pnpm_workspace::add_service_to_pnpm_workspace,
         symlinks::setup_symlinks,
         template::{setup_with_template, PathIO},
         tsconfig::setup_tsconfig,
@@ -31,6 +33,12 @@ config_struct!(
         pub(crate) service_name: String,
     }
 );
+
+impl ProjectConfig for ServiceConfigData {
+    fn name(&self) -> &String {
+        &self.service_name
+    }
+}
 
 #[derive(Debug)]
 pub(super) struct ServiceCommand;
@@ -121,22 +129,40 @@ fn setup_basic_service(
 fn add_service_to_artifacts(config_data: &mut ServiceConfigData, base_path: &String) -> Result<()> {
     let (docker_compose_buffer, port_number) =
         add_service_definition_to_docker_compose(config_data, base_path)?;
-    let package_json_buffer = add_service_definition_to_package_json(config_data, base_path)?;
     let forklaunch_definition_buffer =
-        add_service_definition_to_manifest(config_data, port_number)?;
+        add_project_definition_to_manifest(config_data, Some(port_number))?;
+    let mut package_json_buffer: Option<String> = None;
+    if config_data.runtime == "bun" {
+        package_json_buffer = Some(add_service_definition_to_package_json(
+            config_data,
+            base_path,
+        )?);
+    }
+    let mut pnpm_workspace_buffer: Option<String> = None;
+    if config_data.runtime == "node" {
+        pnpm_workspace_buffer = Some(add_service_to_pnpm_workspace(base_path, config_data)?);
+    }
 
     write(
         Path::new(base_path).join("docker-compose.yml"),
         docker_compose_buffer,
     )?;
     write(
-        Path::new(base_path).join("package.json"),
-        package_json_buffer,
-    )?;
-    write(
         Path::new(base_path).join(".forklaunch").join("config.toml"),
         forklaunch_definition_buffer,
     )?;
+    if let Some(package_json_buffer) = package_json_buffer {
+        write(
+            Path::new(base_path).join("package.json"),
+            package_json_buffer,
+        )?;
+    }
+    if let Some(pnpm_workspace_buffer) = pnpm_workspace_buffer {
+        write(
+            Path::new(base_path).join("pnpm-workspace.yaml"),
+            pnpm_workspace_buffer,
+        )?;
+    }
 
     Ok(())
 }

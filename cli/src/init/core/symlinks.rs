@@ -9,7 +9,7 @@ use super::config::Config;
 pub(crate) fn setup_symlinks<T: Content + Config>(
     base_path_dir: Option<&String>,
     path_dir: &String,
-    config_data: &T,
+    config_data: &mut T,
 ) -> Result<()> {
     let current_path_dir = current_dir()?;
     let source_path = match base_path_dir {

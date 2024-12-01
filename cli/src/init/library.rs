@@ -3,13 +3,15 @@ use clap::{Arg, ArgMatches, Command};
 use ramhorns::{Content, Ramhorns};
 use serde::{Deserialize, Serialize};
 use std::env::{current_dir, current_exe};
-use std::fs::read_to_string;
+use std::fs::{read_to_string, write};
 use std::path::Path;
 use toml::from_str;
 
 use crate::config_struct;
 
+use super::core::config::ProjectConfig;
 use super::core::gitignore::setup_gitignore;
+use super::core::manifest::add_project_definition_to_manifest;
 use super::core::symlinks::setup_symlinks;
 use super::core::template::{setup_with_template, PathIO};
 use super::core::tsconfig::setup_tsconfig;
@@ -17,10 +19,16 @@ use super::{forklaunch_command, CliCommand};
 
 config_struct!(
     #[derive(Debug, Content, Serialize)]
-    struct LibraryConfigData {
-        library_name: String,
+    pub(crate) struct LibraryConfigData {
+        pub(crate) library_name: String,
     }
 );
+
+impl ProjectConfig for LibraryConfigData {
+    fn name(&self) -> &String {
+        &self.library_name
+    }
+}
 
 #[derive(Debug)]
 pub(super) struct LibraryCommand;
@@ -65,7 +73,7 @@ impl CliCommand for LibraryCommand {
         let mut config_data: LibraryConfigData = from_str(&read_to_string(config_path)?)?;
         config_data.library_name = library_name.clone();
 
-        setup_basic_library(&library_name, &base_path.to_string(), &config_data)?;
+        setup_basic_library(&library_name, &base_path.to_string(), &mut config_data)?;
         Ok(())
     }
 }
@@ -73,7 +81,7 @@ impl CliCommand for LibraryCommand {
 fn setup_basic_library(
     library_name: &String,
     base_path: &String,
-    config_data: &LibraryConfigData,
+    config_data: &mut LibraryConfigData,
 ) -> Result<()> {
     let output_path = Path::new(base_path)
         .join(library_name)
@@ -102,6 +110,42 @@ fn setup_basic_library(
     setup_symlinks(Some(base_path), &template_dir.output_path, config_data)?;
     setup_tsconfig(&output_path)?;
     setup_gitignore(&output_path)?;
+
+    add_library_to_artifacts(config_data, base_path)?;
+
+    Ok(())
+}
+
+fn add_library_to_artifacts(config_data: &mut LibraryConfigData, base_path: &String) -> Result<()> {
+    let forklaunch_definition_buffer = add_project_definition_to_manifest(config_data, None)?;
+    let mut package_json_buffer: Option<String> = None;
+    if config_data.runtime == "bun" {
+        package_json_buffer = Some(add_project_definition_to_package_json(
+            config_data,
+            base_path,
+        )?);
+    }
+    let mut pnpm_workspace_buffer: Option<String> = None;
+    if config_data.runtime == "node" {
+        pnpm_workspace_buffer = Some(add_library_to_pnpm_workspace(base_path, config_data)?);
+    }
+
+    write(
+        Path::new(base_path).join(".forklaunch").join("config.toml"),
+        forklaunch_definition_buffer,
+    )?;
+    if let Some(package_json_buffer) = package_json_buffer {
+        write(
+            Path::new(base_path).join("package.json"),
+            package_json_buffer,
+        )?;
+    }
+    if let Some(pnpm_workspace_buffer) = pnpm_workspace_buffer {
+        write(
+            Path::new(base_path).join("pnpm-workspace.yaml"),
+            pnpm_workspace_buffer,
+        )?;
+    }
 
     Ok(())
 }

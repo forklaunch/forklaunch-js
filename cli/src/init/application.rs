@@ -4,7 +4,6 @@ use anyhow::{bail, Result};
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use ramhorns::{Content, Ramhorns};
 use serde::{Deserialize, Serialize};
-use std::fs::write;
 
 use crate::{config_struct, utils::get_token, LATEST_CLI_VERSION};
 
@@ -12,6 +11,7 @@ use super::{
     core::{
         config::ProjectEntry,
         manifest::setup_manifest,
+        pnpm_workspace::generate_pnpm_workspace,
         symlinks::setup_symlinks,
         template::{setup_with_template, PathIO},
     },
@@ -20,7 +20,10 @@ use super::{
 
 config_struct!(
     #[derive(Debug, Serialize, Content)]
-    struct ApplicationConfigData {}
+    struct ApplicationConfigData {
+        #[serde(skip_serializing, skip_deserializing)]
+        bun_package_json_workspace_string: Option<String>,
+    }
 );
 
 #[derive(Debug)]
@@ -108,8 +111,6 @@ impl CliCommand for ApplicationCommand {
                 .filter(|config| config != &test_framework_config_file),
         );
 
-        let generate_pnpm_workspace = runtime != "bun";
-
         if runtime == "bun" && http_framework == "hyper-express" {
             bail!("Hyper Express is not supported for bun");
         }
@@ -129,17 +130,27 @@ impl CliCommand for ApplicationCommand {
             port: Some((port_number + i).try_into().unwrap()),
         }));
 
-        let mut project_peer_topology = HashMap::new();
-        project_peer_topology.insert(
-            name.to_string(),
-            additional_projects
-                .clone()
-                .iter()
-                .map(|p| p.name.clone())
-                .collect(),
-        );
+        let additional_projects_names = additional_projects
+            .clone()
+            .into_iter()
+            .map(|p| p.name.clone())
+            .collect::<Vec<String>>();
 
-        let data = ApplicationConfigData {
+        let mut project_peer_topology = HashMap::new();
+        project_peer_topology.insert(name.to_string(), additional_projects_names.clone());
+
+        let bun_package_json_workspace_string = match runtime.as_str() {
+            "bun" => Some(
+                additional_projects_names
+                    .iter()
+                    .map(|p| format!("\"{}\"", p))
+                    .collect::<Vec<String>>()
+                    .join(", "),
+            ),
+            _ => None,
+        };
+
+        let mut data = ApplicationConfigData {
             cli_version: LATEST_CLI_VERSION.to_string(),
             app_name: name.to_string(),
             validator: validator.to_string(),
@@ -157,6 +168,8 @@ impl CliCommand for ApplicationCommand {
             is_node: runtime == "node",
             is_vitest: test_framework == "vitest",
             is_jest: test_framework == "jest",
+
+            bun_package_json_workspace_string,
         };
 
         setup_manifest(&Path::new(name).to_string_lossy().to_string(), &data)?;
@@ -204,30 +217,12 @@ impl CliCommand for ApplicationCommand {
                         .join(&template_dir.output_path)
                         .to_string_lossy()
                         .to_string(),
-                    &data,
+                    &mut data,
                 )
             })?;
 
-        // TODO: create a function for this
-        if generate_pnpm_workspace {
-            let pnpm_workspace_path = Path::new(name).join("pnpm-workspace.yaml");
-            if !pnpm_workspace_path.exists() {
-                write(
-                    pnpm_workspace_path,
-                    if additional_projects.is_empty() {
-                        "packages:\n  - \"core\"".to_string()
-                    } else {
-                        format!(
-                            "packages:\n  - \"core\"\n  - \"{}\"",
-                            additional_projects
-                                .iter()
-                                .map(|p| p.name.clone())
-                                .collect::<Vec<String>>()
-                                .join("\n  - ")
-                        )
-                    },
-                )?;
-            }
+        if runtime == "node" {
+            generate_pnpm_workspace(name, &additional_projects)?;
         }
 
         Ok(())

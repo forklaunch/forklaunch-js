@@ -1,8 +1,18 @@
+use std::collections::HashMap;
+
 use ramhorns::Content;
 use serde::{Deserialize, Serialize};
 
 pub(crate) trait Config {
+    fn app_name(&self) -> &String;
     fn test_framework(&self) -> &String;
+    fn projects(&self) -> &Vec<ProjectEntry>;
+    fn projects_mut(&mut self) -> &mut Vec<ProjectEntry>;
+    fn project_peer_topology_mut(&mut self) -> &mut HashMap<String, Vec<String>>;
+}
+
+pub(crate) trait ProjectConfig {
+    fn name(&self) -> &String;
 }
 
 #[derive(Debug, Serialize, Deserialize, Content, Clone)]
@@ -134,8 +144,20 @@ macro_rules! config_struct {
         }
 
         impl crate::init::core::config::Config for $name {
+            fn app_name(&self) -> &String {
+                &self.app_name
+            }
             fn test_framework(&self) -> &String {
                 &self.test_framework
+            }
+            fn projects(&self) -> &Vec<crate::init::core::config::ProjectEntry> {
+                &self.projects
+            }
+            fn projects_mut(&mut self) -> &mut Vec<crate::init::core::config::ProjectEntry> {
+                &mut self.projects
+            }
+            fn project_peer_topology_mut(&mut self) -> &mut std::collections::HashMap<String, Vec<String>> {
+                &mut self.project_peer_topology
             }
         }
     };

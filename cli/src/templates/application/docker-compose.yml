@@ -24,7 +24,6 @@ services:
       - {{app_name}}-network
     volumes:
       - {{app_name}}-postgres-data:/var/lib/postgresql/{{app_name}}/data
-
   redis:
     image: redis/redis-stack-server:latest
     container_name: {{app_name}}-redis
@@ -34,9 +33,7 @@ services:
     ports:
       - '6379:6379'
     networks:
-      - {{app_name}}-network
-  {{#projects}}
-  {{#port}}
+      - {{app_name}}-network {{#projects}}{{#port}}
   {{name}}:
     hostname: {{name}}
     container_name: {{app_name}}-{{name}}
@@ -54,6 +51,4 @@ services:
     networks:
       - {{app_name}}-network
     volumes:
-      - ./{{name}}:/{{name}}
-  {{/port}}
-  {{/projects}}
+      - ./{{name}}:/{{name}} {{/port}}{{/projects}}
