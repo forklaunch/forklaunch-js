@@ -1,5 +1,7 @@
 // When generating, generate one of each flavor, depending on configuration, and this file should be generated
 
+import { LiteralSchema } from '@forklaunch/validator';
+
 // import {
 //   forklaunchExpress as registeredForklaunchExpress,
 //   forklaunchRouter as registeredForklaunchRouter
@@ -8,7 +10,6 @@ import {
   forklaunchExpress as registeredForklaunchExpress,
   forklaunchRouter as registeredForklaunchRouter
 } from '@forklaunch/hyper-express';
-import { LiteralSchema } from '@forklaunch/validator';
 
 // import {
 //   SchemaValidator as RegisteredSchemaValidator,
@@ -49,7 +50,7 @@ import {
   unknown as schemaUnknown,
   uri as schemaUri,
   uuid as schemaUuid
-} from '@forklaunch/validator/typebox';
+} from '@forklaunch/validator/zod';
 
 export const SchemaValidator = RegisteredSchemaValidator;
 export type SchemaValidator = ReturnType<typeof RegisteredSchemaValidator>;
@@ -78,4 +79,4 @@ export const union = schemaUnion;
 export const literal = schemaLiteral;
 export const enum_ = <Enum extends LiteralSchema>(
   schemaEnum: Record<string, Enum>
-) => union(Object.values<Enum>(schemaEnum));
+) => union(Object.values<Enum>(schemaEnum) as [Enum, Enum, ...Enum[]]);

@@ -13,13 +13,7 @@ import {
   UpdateSubscriptionDtoMapper
 } from '../models/dtoMapper/subscription.dtoMapper';
 
-export const SubscriptionController = <ConfigInjectorScope>(
-  service: (scope?: ConfigInjectorScope) => SubscriptionService
-) => new InternalSubscriptionController(service);
-export type SubscriptionController<ConfigInjectorScope> =
-  InternalSubscriptionController<ConfigInjectorScope>;
-
-class InternalSubscriptionController<ConfigInjectorScope>
+export class SubscriptionController<ConfigInjectorScope>
   implements Controller<SubscriptionService>
 {
   constructor(

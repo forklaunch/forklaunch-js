@@ -8,13 +8,7 @@ import {
   UserDtoMapper
 } from '../models/dtoMapper/user.dtoMapper';
 
-export const UserController = <ConfigInjectorScope>(
-  service: (scope?: ConfigInjectorScope) => UserService
-) => new InternalUserController(service);
-export type UserController<ConfigInjectorScope> =
-  InternalUserController<ConfigInjectorScope>;
-
-class InternalUserController<ConfigInjectorScope>
+export class UserController<ConfigInjectorScope>
   implements Controller<UserService>
 {
   constructor(

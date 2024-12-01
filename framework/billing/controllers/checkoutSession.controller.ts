@@ -7,13 +7,7 @@ import {
   SessionDtoMapper
 } from '../models/dtoMapper/session.dtoMapper';
 
-export const CheckoutSessionController = <ConfigInjectorScope>(
-  service: (scope?: ConfigInjectorScope) => CheckoutSessionService
-) => new InternalCheckoutSessionController(service);
-export type CheckoutSessionController<ConfigInjectorScope> =
-  InternalCheckoutSessionController<ConfigInjectorScope>;
-
-class InternalCheckoutSessionController<ConfigInjectorScope>
+export class CheckoutSessionController<ConfigInjectorScope>
   implements Controller<CheckoutSessionService>
 {
   constructor(

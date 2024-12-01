@@ -8,13 +8,7 @@ import {
   UpdateRoleDtoMapper
 } from '../models/dtoMapper/role.dtoMapper';
 
-export const RoleController = <ConfigInjectorScope>(
-  service: (scope?: ConfigInjectorScope) => RoleService
-) => new InternalRoleController(service);
-export type RoleController<ConfigInjectorScope> =
-  InternalRoleController<ConfigInjectorScope>;
-
-class InternalRoleController<ConfigInjectorScope>
+export class RoleController<ConfigInjectorScope>
   implements Controller<RoleService>
 {
   constructor(

@@ -15,16 +15,16 @@ const port = Number(process.env.PORT) || 8001;
 
 bootstrap((ci) => {
   const checkoutSessionRoutes = CheckoutSessionRoutes(
-    CheckoutSessionController(ci.scopedResolver('checkoutSessionService'))
+    new CheckoutSessionController(ci.scopedResolver('checkoutSessionService'))
   );
   const paymentLinkRoutes = PaymentLinkRoutes(
-    PaymentLinkController(ci.scopedResolver('paymentLinkService'))
+    new PaymentLinkController(ci.scopedResolver('paymentLinkService'))
   );
   const planRoutes = PlanRoutes(
-    PlanController(ci.scopedResolver('planService'))
+    new PlanController(ci.scopedResolver('planService'))
   );
   const subscriptionRoutes = SubscriptionRoutes(
-    SubscriptionController(ci.scopedResolver('subscriptionService'))
+    new SubscriptionController(ci.scopedResolver('subscriptionService'))
   );
   app.use(checkoutSessionRoutes.router);
   app.use(paymentLinkRoutes.router);

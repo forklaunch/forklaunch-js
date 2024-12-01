@@ -15,16 +15,16 @@ const port = Number(process.env.PORT) || 8000;
 
 bootstrap((ci) => {
   const organizationRoutes = OrganizationRoutes(
-    OrganizationController(ci.scopedResolver('organizationService'))
+    new OrganizationController(ci.scopedResolver('organizationService'))
   );
   const permissionRoutes = PermissionRoutes(
-    PermissionController(ci.scopedResolver('permissionService'))
+    new PermissionController(ci.scopedResolver('permissionService'))
   );
   const roleRoutes = RoleRoutes(
-    RoleController(ci.scopedResolver('roleService'))
+    new RoleController(ci.scopedResolver('roleService'))
   );
   const userRoutes = UserRoutes(
-    UserController(ci.scopedResolver('userService'))
+    new UserController(ci.scopedResolver('userService'))
   );
 
   app.use(organizationRoutes.router);

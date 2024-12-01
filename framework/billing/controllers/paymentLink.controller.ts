@@ -13,13 +13,7 @@ import {
   UpdatePaymentLinkDtoMapper
 } from '../models/dtoMapper/paymentLink.dtoMapper';
 
-export const PaymentLinkController = <ConfigInjectorScope>(
-  service: (scope?: ConfigInjectorScope) => PaymentLinkService
-) => new InternalPaymentLinkController(service);
-export type PaymentLinkController<ConfigInjectorScope> =
-  InternalPaymentLinkController<ConfigInjectorScope>;
-
-class InternalPaymentLinkController<ConfigInjectorScope>
+export class PaymentLinkController<ConfigInjectorScope>
   implements Controller<PaymentLinkService>
 {
   constructor(

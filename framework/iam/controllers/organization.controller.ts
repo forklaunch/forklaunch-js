@@ -9,13 +9,7 @@ import {
   UpdateOrganizationDtoMapper
 } from '../models/dtoMapper/organization.dtoMapper';
 
-export const OrganizationController = <ConfigInjectorScope>(
-  service: (scope?: ConfigInjectorScope) => OrganizationService
-) => new InternalOrganizationController(service);
-export type OrganizationController<ConfigInjectorScope> =
-  InternalOrganizationController<ConfigInjectorScope>;
-
-class InternalOrganizationController<ConfigInjectorScope>
+export class OrganizationController<ConfigInjectorScope>
   implements Controller<OrganizationService>
 {
   constructor(

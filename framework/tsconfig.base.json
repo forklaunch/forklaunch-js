@@ -5,7 +5,6 @@
     "incremental": true,
     "declaration": true,
     "declarationMap": true,
-    "customConditions": ["@forklaunch/source"],
 
     "lib": ["ESNext", "DOM"],
     "target": "ESNext",

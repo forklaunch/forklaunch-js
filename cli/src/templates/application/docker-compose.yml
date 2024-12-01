@@ -1,0 +1,54 @@
+volumes:
+  {{app_name}}-postgres-data:
+    driver: local
+
+networks:
+  {{app_name}}-network:
+    name: {{app_name}}-network
+    driver: bridge
+
+services:
+  postgres:
+    image: postgres:latest
+    hostname: postgres
+    container_name: {{app_name}}-pg
+    restart: unless-stopped
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_DB: {{app_name}}-dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST_AUTH_METHOD: 'trust'
+    networks:
+      - {{app_name}}-network
+    volumes:
+      - {{app_name}}-postgres-data:/var/lib/postgresql/{{app_name}}/data
+  redis:
+    image: redis/redis-stack-server:latest
+    container_name: {{app_name}}-redis
+    depends_on:
+      - postgres
+    restart: always
+    ports:
+      - '6379:6379'
+    networks:
+      - {{app_name}}-network {{#projects}}{{#port}}
+  {{name}}:
+    hostname: {{name}}
+    container_name: {{app_name}}-{{name}}
+    restart: always
+    build:
+      context: ./src
+      dockerfile: ./{{name}}/Dockerfile.dev
+    image: {{app_name}}_{{name}}:latest
+    environment:
+      ENV: development
+    depends_on:
+      - postgres
+    ports:
+      - {{port}}:{{port}}
+    networks:
+      - {{app_name}}-network
+    volumes:
+      - ./{{name}}:/{{name}} {{/port}}{{/projects}}

@@ -8,13 +8,7 @@ import {
   UpdatePermissionDtoMapper
 } from '../models/dtoMapper/permission.dtoMapper';
 
-export const PermissionController = <ConfigInjectorScope>(
-  service: (scope?: ConfigInjectorScope) => PermissionService
-) => new InternalPermissionController(service);
-export type PermissionController<ConfigInjectorScope> =
-  InternalPermissionController<ConfigInjectorScope>;
-
-class InternalPermissionController<ConfigInjectorScope>
+export class PermissionController<ConfigInjectorScope>
   implements Controller<PermissionService>
 {
   constructor(
