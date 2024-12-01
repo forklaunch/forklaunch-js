@@ -1,3 +1,5 @@
+use std::fs::read;
+
 use anyhow::{Context, Result};
 use clap::{Arg, ArgMatches, Command};
 
@@ -32,10 +34,8 @@ pub(crate) fn handler(matches: &ArgMatches) -> Result<()> {
 
     let url = format!("https://api.forklaunch.dev/config/{}", id);
     let client = reqwest::blocking::Client::new();
-    let request = client
-        .post(url)
-        .bearer_auth(token)
-        .body(std::fs::read(input)?);
+    // TODO: fix this, this doesn't seem right
+    let request = client.post(url).bearer_auth(token).body(read(input)?);
     let response = request
         .send()
         .with_context(|| ERROR_FAILED_TO_SEND_REQUEST)?;

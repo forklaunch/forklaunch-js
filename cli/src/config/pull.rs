@@ -1,11 +1,11 @@
 use crate::{
-    constants::{ERROR_FAILED_TO_SEND_REQUEST, ERROR_FAILED_TO_WRITE_FILE},
+    constants::{error_failed_to_write_file, ERROR_FAILED_TO_SEND_REQUEST},
     utils::{forklaunch_command, get_token},
 };
 use anyhow::{bail, Context, Result};
 use clap::{Arg, ArgMatches, Command};
 use reqwest::{blocking::Client, StatusCode};
-use std::fs::write;
+use std::{fs::write, path::Path};
 
 use super::unwrap_id;
 
@@ -50,7 +50,7 @@ pub(crate) fn handler(matches: &ArgMatches) -> Result<()> {
     }
 
     let bytes = response.bytes()?;
-    write(output, bytes).with_context(|| ERROR_FAILED_TO_WRITE_FILE)?;
+    write(output, bytes).with_context(|| error_failed_to_write_file(&Path::new(output)))?;
 
     Ok(())
 }

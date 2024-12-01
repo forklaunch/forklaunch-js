@@ -127,5 +127,9 @@ pub(crate) fn add_service_definition_to_docker_compose(
 
     full_docker_compose["services"] = to_value(docker_compose.services)?;
 
-    Ok((to_string(&full_docker_compose)?, port_number))
+    Ok((
+        to_string(&full_docker_compose)
+            .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?,
+        port_number,
+    ))
 }

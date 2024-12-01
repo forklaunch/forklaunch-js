@@ -8,7 +8,10 @@ use ramhorns::Content;
 use serde::Serialize;
 use toml::to_string_pretty;
 
-use crate::constants::{ERROR_FAILED_TO_CREATE_DIR, ERROR_FAILED_TO_WRITE_FILE};
+use crate::constants::{
+    error_failed_to_write_file, ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
+    ERROR_FAILED_TO_CREATE_DIR, ERROR_FAILED_TO_CREATE_MANIFEST,
+};
 
 use super::config::{Config, ProjectConfig, ProjectEntry};
 
@@ -16,7 +19,7 @@ pub(crate) fn setup_manifest<T: Content + Config + Serialize>(
     path_dir: &String,
     data: &T,
 ) -> Result<()> {
-    let config_str = to_string_pretty(&data)?;
+    let config_str = to_string_pretty(&data).with_context(|| ERROR_FAILED_TO_CREATE_MANIFEST)?;
     let forklaunch_path = Path::new(path_dir).join(".forklaunch");
 
     if !forklaunch_path.exists() {
@@ -25,7 +28,8 @@ pub(crate) fn setup_manifest<T: Content + Config + Serialize>(
 
     let config_path = forklaunch_path.join("manifest.toml");
     if !config_path.exists() {
-        write(config_path, config_str).with_context(|| ERROR_FAILED_TO_WRITE_FILE)?;
+        write(&config_path, config_str)
+            .with_context(|| error_failed_to_write_file(&config_path))?;
     }
     Ok(())
 }
@@ -37,7 +41,8 @@ pub(crate) fn add_project_definition_to_manifest<T: Config + ProjectConfig + Ser
     let name = config_data.name().to_owned();
     for project in config_data.projects().iter() {
         if project.name == name {
-            return Ok(to_string_pretty(&config_data)?);
+            return Ok(to_string_pretty(&config_data)
+                .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?);
         }
     }
 
@@ -53,5 +58,6 @@ pub(crate) fn add_project_definition_to_manifest<T: Config + ProjectConfig + Ser
         .or_insert_with(Vec::new)
         .push(name.clone());
 
-    Ok(to_string_pretty(&config_data)?)
+    Ok(to_string_pretty(&config_data)
+        .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?)
 }

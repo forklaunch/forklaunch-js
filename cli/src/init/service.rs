@@ -189,7 +189,7 @@ fn add_service_to_artifacts(config_data: &mut ServiceConfigData, base_path: &Str
     }
     if let Some(pnpm_workspace_buffer) = pnpm_workspace_buffer {
         write(
-            Path::new(base_path).join("pnpm-workspace.yaml"),
+            Path::new(base_path).join("pnpm-workspace.yml"),
             pnpm_workspace_buffer,
         )
         .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?;

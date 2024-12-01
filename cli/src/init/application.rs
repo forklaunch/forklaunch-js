@@ -5,7 +5,11 @@ use clap::{Arg, ArgAction, ArgMatches, Command};
 use ramhorns::{Content, Ramhorns};
 use serde::{Deserialize, Serialize};
 
-use crate::{config_struct, constants::LATEST_CLI_VERSION, utils::get_token};
+use crate::{
+    config_struct,
+    constants::{ERROR_FAILED_TO_CREATE_PNPM_WORKSPACE, LATEST_CLI_VERSION},
+    utils::get_token,
+};
 
 use super::{
     core::{
@@ -96,7 +100,7 @@ impl CliCommand for ApplicationCommand {
         let test_framework = matches.get_one::<String>("test-framework").unwrap();
         let packages = matches.get_many::<String>("packages").unwrap_or_default();
 
-        let mut ignore_files = vec!["pnpm-workspace.yaml", "pnpm-lock.yaml"];
+        let mut ignore_files = vec!["pnpm-workspace.yml", "pnpm-lock.yml"];
 
         // TODO: maybe abstract this into a function
         let all_test_framework_config_files = vec!["vitest.config.ts", "jest.config.ts"];
@@ -223,7 +227,8 @@ impl CliCommand for ApplicationCommand {
             })?;
 
         if runtime == "node" {
-            generate_pnpm_workspace(name, &additional_projects)?;
+            generate_pnpm_workspace(name, &additional_projects)
+                .with_context(|| ERROR_FAILED_TO_CREATE_PNPM_WORKSPACE)?;
         }
 
         Ok(())
