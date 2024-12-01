@@ -70,7 +70,7 @@ impl CliCommand for LibraryCommand {
 
         let config_path = Path::new(&base_path)
             .join(".forklaunch")
-            .join("config.toml");
+            .join("manifest.toml");
 
         let mut config_data: LibraryConfigData = from_str(&read_to_string(config_path)?)?;
         config_data.library_name = library_name.clone();
@@ -136,7 +136,9 @@ fn add_library_to_artifacts(config_data: &mut LibraryConfigData, base_path: &Str
     }
 
     write(
-        Path::new(base_path).join(".forklaunch").join("config.toml"),
+        Path::new(base_path)
+            .join(".forklaunch")
+            .join("manifest.toml"),
         forklaunch_definition_buffer,
     )?;
     if let Some(package_json_buffer) = package_json_buffer {

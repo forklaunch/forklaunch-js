@@ -21,7 +21,7 @@ pub(crate) fn setup_manifest<T: Content + Config + Serialize>(
         create_dir_all(&forklaunch_path)?;
     }
 
-    let config_path = forklaunch_path.join("config.toml");
+    let config_path = forklaunch_path.join("manifest.toml");
     if !config_path.exists() {
         write(config_path, config_str)?;
     }

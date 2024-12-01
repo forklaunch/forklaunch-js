@@ -79,7 +79,7 @@ impl CliCommand for ServiceCommand {
 
         let config_path = Path::new(&base_path)
             .join(".forklaunch")
-            .join("config.toml");
+            .join("manifest.toml");
 
         let mut config_data: ServiceConfigData = from_str(&read_to_string(config_path)?)?;
         config_data.service_name = service_name.clone();
@@ -151,7 +151,7 @@ fn add_service_to_artifacts(config_data: &mut ServiceConfigData, base_path: &Str
         docker_compose_buffer,
     )?;
     write(
-        Path::new(base_path).join(".forklaunch").join("config.toml"),
+        Path::new(base_path).join(".forklaunch").join("manifest.toml"),
         forklaunch_definition_buffer,
     )?;
     if let Some(package_json_buffer) = package_json_buffer {
