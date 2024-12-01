@@ -1,7 +1,9 @@
-use anyhow::Result;
+use std::fs::read;
+
+use anyhow::{Context, Result};
 use clap::{Arg, ArgMatches, Command};
 
-use crate::utils::get_token;
+use crate::{constants::ERROR_FAILED_TO_SEND_REQUEST, utils::get_token};
 
 use super::{forklaunch_command, unwrap_id};
 
@@ -27,15 +29,16 @@ pub(crate) fn handler(matches: &ArgMatches) -> Result<()> {
     let input = format!("{}.env", id);
     let input = matches.get_one::<String>("input").unwrap_or(&input);
 
+    // TODO: remove and pass token from parent
     let token = get_token()?;
 
     let url = format!("https://api.forklaunch.dev/config/{}", id);
     let client = reqwest::blocking::Client::new();
-    let request = client
-        .post(url)
-        .bearer_auth(token)
-        .body(std::fs::read(input)?);
-    let response = request.send()?;
+    // TODO: fix this, this doesn't seem right
+    let request = client.post(url).bearer_auth(token).body(read(input)?);
+    let response = request
+        .send()
+        .with_context(|| ERROR_FAILED_TO_SEND_REQUEST)?;
 
     match response.status() {
         reqwest::StatusCode::OK => println!("Config pushed to {}", id),

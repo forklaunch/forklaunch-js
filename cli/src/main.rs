@@ -3,6 +3,7 @@ use clap::{command, ArgMatches, Command};
 use init::InitCommand;
 
 mod config;
+mod constants;
 mod depcheck;
 mod init;
 mod login;
@@ -11,8 +12,6 @@ mod version;
 mod whoami;
 
 mod utils;
-
-const LATEST_CLI_VERSION: &str = "0.1.0";
 
 pub(crate) trait CliCommand {
     fn command(&self) -> Command;
