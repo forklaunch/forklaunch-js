@@ -1,7 +1,5 @@
 // When generating, generate one of each flavor, depending on configuration, and this file should be generated
 
-import { LiteralSchema } from '@forklaunch/validator';
-
 // import {
 //   forklaunchExpress as registeredForklaunchExpress,
 //   forklaunchRouter as registeredForklaunchRouter
@@ -10,27 +8,8 @@ import {
   forklaunchExpress as registeredForklaunchExpress,
   forklaunchRouter as registeredForklaunchRouter
 } from '@forklaunch/hyper-express';
+import { LiteralSchema } from '@forklaunch/validator';
 
-// import {
-//   SchemaValidator as RegisteredSchemaValidator,
-//   any as schemaAny,
-//   array as schemaArray,
-//   bigint as schemaBigint,
-//   boolean as schemaBoolean,
-//   date as schemaDate,
-//   email as schemaEmail,
-//   literal as schemaLiteral,
-//   never as schemaNever,
-//   nullish as schemaNullish,
-//   number as schemaNumber,
-//   optional as schemaOptional,
-//   string as schemaString,
-//   symbol as schemaSymbol,
-//   union as schemaUnion,
-//   unknown as schemaUnknown,
-//   uri as schemaUri,
-//   uuid as schemaUuid
-// } from '@forklaunch/validator/typebox';
 import {
   SchemaValidator as RegisteredSchemaValidator,
   any as schemaAny,
@@ -51,6 +30,26 @@ import {
   uri as schemaUri,
   uuid as schemaUuid
 } from '@forklaunch/validator/zod';
+// import {
+//   SchemaValidator as RegisteredSchemaValidator,
+//   any as schemaAny,
+//   array as schemaArray,
+//   bigint as schemaBigint,
+//   boolean as schemaBoolean,
+//   date as schemaDate,
+//   email as schemaEmail,
+//   literal as schemaLiteral,
+//   never as schemaNever,
+//   nullish as schemaNullish,
+//   number as schemaNumber,
+//   optional as schemaOptional,
+//   string as schemaString,
+//   symbol as schemaSymbol,
+//   union as schemaUnion,
+//   unknown as schemaUnknown,
+//   uri as schemaUri,
+//   uuid as schemaUuid
+// } from '@forklaunch/validator/zod';
 
 export const SchemaValidator = RegisteredSchemaValidator;
 export type SchemaValidator = ReturnType<typeof RegisteredSchemaValidator>;
@@ -77,6 +76,15 @@ export const optional = schemaOptional;
 export const array = schemaArray;
 export const union = schemaUnion;
 export const literal = schemaLiteral;
-export const enum_ = <Enum extends LiteralSchema>(
-  schemaEnum: Record<string, Enum>
-) => union(Object.values<Enum>(schemaEnum) as [Enum, Enum, ...Enum[]]);
+export const enum_ = <EnumDefinition extends LiteralSchema>(
+  schemaEnum: Record<string, EnumDefinition>
+) =>
+  union(
+    Object.values<EnumDefinition>(schemaEnum) as [
+      EnumDefinition,
+      EnumDefinition,
+      ...EnumDefinition[]
+    ]
+  ) as ReturnType<
+    typeof schemaUnion<[EnumDefinition, EnumDefinition, ...EnumDefinition[]]>
+  >;

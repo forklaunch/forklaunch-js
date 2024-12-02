@@ -21,7 +21,7 @@ pub(crate) fn generate_pnpm_workspace(
     app_name: &str,
     additional_projects: &Vec<ProjectEntry>,
 ) -> Result<()> {
-    let pnpm_workspace_path = Path::new(app_name).join("pnpm-workspace.yml");
+    let pnpm_workspace_path = Path::new(app_name).join("pnpm-workspace.yaml");
     if !pnpm_workspace_path.exists() {
         write(
             pnpm_workspace_path,
@@ -38,7 +38,7 @@ pub(crate) fn add_project_definition_to_pnpm_workspace<T: Config + ProjectConfig
     base_path: &str,
     config_data: &T,
 ) -> Result<String> {
-    let pnpm_workspace_path = Path::new(base_path).join("pnpm-workspace.yml");
+    let pnpm_workspace_path = Path::new(base_path).join("pnpm-workspace.yaml");
     let mut pnpm_workspace: PnpmWorkspace = from_str(
         &read_to_string(&pnpm_workspace_path)
             .with_context(|| ERROR_FAILED_TO_READ_PNPM_WORKSPACE)?,

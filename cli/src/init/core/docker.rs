@@ -53,7 +53,7 @@ pub(crate) fn add_service_definition_to_docker_compose(
     base_path: &String,
 ) -> Result<(String, i32)> {
     let mut full_docker_compose: Value = from_str(
-        &read_to_string(Path::new(base_path).join("docker-compose.yml"))
+        &read_to_string(Path::new(base_path).join("docker-compose.yaml"))
             .with_context(|| ERROR_FAILED_TO_READ_DOCKER_COMPOSE)?,
     )
     .with_context(|| ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE)?;

@@ -100,7 +100,7 @@ impl CliCommand for ApplicationCommand {
         let test_framework = matches.get_one::<String>("test-framework").unwrap();
         let packages = matches.get_many::<String>("packages").unwrap_or_default();
 
-        let mut ignore_files = vec!["pnpm-workspace.yml", "pnpm-lock.yml"];
+        let mut ignore_files = vec!["pnpm-workspace.yaml", "pnpm-lock.yml"];
 
         // TODO: maybe abstract this into a function
         let all_test_framework_config_files = vec!["vitest.config.ts", "jest.config.ts"];

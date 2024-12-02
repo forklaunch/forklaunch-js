@@ -1,5 +1,3 @@
-// When generating, generate one of each flavor, depending on configuration, and this file should be generated
-
 import { LiteralSchema } from '@forklaunch/validator';
 
 import {
@@ -53,6 +51,15 @@ export const optional = schemaOptional;
 export const array = schemaArray;
 export const union = schemaUnion;
 export const literal = schemaLiteral;
-export const enum_ = <Enum extends LiteralSchema>(
-  schemaEnum: Record<string, Enum>
-) => union(Object.values<Enum>(schemaEnum) as [Enum, Enum, ...Enum[]]);
+export const enum_ = <EnumDefinition extends LiteralSchema>(
+  schemaEnum: Record<string, EnumDefinition>
+) =>
+  union(
+    Object.values<EnumDefinition>(schemaEnum) as [
+      EnumDefinition,
+      EnumDefinition,
+      ...EnumDefinition[]
+    ]
+  ) as ReturnType<
+    typeof schemaUnion<[EnumDefinition, EnumDefinition, ...EnumDefinition[]]>
+  >;
