@@ -70,6 +70,9 @@ export class TypeboxSchemaValidator
       <T extends TIdiomaticSchema>(schema: T) => TArray<TResolve<T>>,
       <T extends TUnionContainer>(schemas: [...T]) => TUnion<UnionTResolve<T>>,
       <T extends LiteralSchema>(value: T) => TLiteral<T>,
+      <T extends LiteralSchema>(
+        schemaEnum: Record<string, T>
+      ) => TUnion<UnionTResolve<T[]>>,
       <T extends TIdiomaticSchema>(schema: T, value: unknown) => boolean,
       <T extends TIdiomaticSchema>(
         schema: T,
@@ -220,6 +223,8 @@ export class TypeboxSchemaValidator
   private errorType(schema: TCatchall) {
     if (Object.hasOwn(schema, 'errorType')) {
       return schema.errorType;
+    } else if (KindGuard.IsLiteral(schema)) {
+      return schema.const;
     }
     return schema[Kind].toLowerCase();
   }
@@ -336,8 +341,19 @@ export class TypeboxSchemaValidator
    */
   literal<T extends LiteralSchema>(value: T): TLiteral<T> {
     return Type.Literal(value, {
-      errorType: `literal "${value}"`
+      errorType: value
     });
+  }
+
+  /**
+   * Create an enum schema.
+   * @param {Record<string, LiteralSchema>} schemaEnum - The enum schema.
+   * @returns {TUnion<UnionTResolve<T[]>>} The enum schema.
+   */
+  enum_<T extends LiteralSchema>(
+    schemaEnum: Record<string, T>
+  ): TUnion<UnionTResolve<T[]>> {
+    return this.union(Object.values(schemaEnum));
   }
 
   /**

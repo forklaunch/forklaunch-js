@@ -1,8 +1,8 @@
 export const compare = (received: unknown, expected: unknown) => {
   switch (typeof received) {
     case 'bigint':
-      return expect(received).toBe(expected);
+      return expect(expected).toEqual(received);
     default:
-      return expect(JSON.stringify(received)).toBe(JSON.stringify(expected));
+      return expect(JSON.stringify(expected)).toEqual(JSON.stringify(received));
   }
 };

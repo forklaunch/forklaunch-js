@@ -1,8 +1,9 @@
 import { generateSchema } from '@anatine/zod-openapi';
-import { ZodObject, z } from 'zod';
+import { ZodLiteral, ZodObject, ZodTypeAny, z } from 'zod';
 import { UnboxedObjectSchema } from '../../src/shared/types/schema.types';
 import {
   array,
+  enum_,
   number,
   openapi,
   optional,
@@ -158,6 +159,32 @@ describe('zod schema validator tests', () => {
       z.object({
         hello: z.literal('world')
       })
+    );
+  });
+
+  test('enum', async () => {
+    enum TestSingleEnum {
+      WORLD = 'world'
+    }
+    const schemified = enum_(TestSingleEnum);
+
+    compare(
+      schemified,
+      z.union([z.literal('world')] as unknown as [
+        ZodLiteral<'world'>,
+        ZodTypeAny,
+        ...ZodTypeAny[]
+      ])
+    );
+
+    enum TestMultipleEnum {
+      WORLD = 'world',
+      HELLO = 'hello'
+    }
+    const schemifiedMultiple = enum_(TestMultipleEnum);
+    compare(
+      schemifiedMultiple,
+      z.union([z.literal('world'), z.literal('hello')])
     );
   });
 

@@ -36,6 +36,9 @@ export interface SchemaValidator<
   ArrayFunction = <T>(schema: T) => unknown,
   UnionFunction = <T>(schemas: T[]) => unknown,
   LiteralFunction = <T extends LiteralSchema>(schema: T) => unknown,
+  EnumFunction = <T extends LiteralSchema>(
+    schemaEnum: Record<string, T>
+  ) => unknown,
   ValidationFunction = <T>(schema: T, value: unknown) => boolean,
   ParseFunction = <T>(
     schema: T,
@@ -172,6 +175,14 @@ export interface SchemaValidator<
   literal: LiteralFunction;
 
   /**
+   * Creates an enum schema from a record of literal values.
+   *
+   * @param {Record<string, T>} schemaEnum - The enum schema.
+   * @returns {unknown} - The enum schema.
+   */
+  enum_: EnumFunction;
+
+  /**
    * Validates a value against a schema.
    *
    * @param {T} schema - The schema to validate against.
@@ -202,6 +213,7 @@ export interface SchemaValidator<
  * Type representing any schema validator.
  */
 export type AnySchemaValidator = SchemaValidator<
+  unknown,
   unknown,
   unknown,
   unknown,

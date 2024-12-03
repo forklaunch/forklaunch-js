@@ -1,6 +1,7 @@
 import { TObject, Type } from '@sinclair/typebox';
 import {
   array,
+  enum_,
   number,
   openapi,
   optional,
@@ -191,6 +192,35 @@ describe('typebox schema validator tests', () => {
       schemified,
       Type.Object({
         hello: Type.Literal('world')
+      })
+    );
+  });
+
+  test('enum', async () => {
+    enum TestSingleEnum {
+      WORLD = 'world'
+    }
+    const schemified = enum_(TestSingleEnum);
+
+    compare(
+      schemified,
+      Type.Literal('world', {
+        errorType: 'any of world',
+        errorSuffix: true
+      })
+    );
+
+    enum TestMultipleEnum {
+      WORLD = 'world',
+      HELLO = 'hello'
+    }
+    const schemifiedMultiple = enum_(TestMultipleEnum);
+
+    compare(
+      schemifiedMultiple,
+      Type.Union([Type.Literal('world'), Type.Literal('hello')], {
+        errorType: 'any of world, hello',
+        errorSuffix: true
       })
     );
   });

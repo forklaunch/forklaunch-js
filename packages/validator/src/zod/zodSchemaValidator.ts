@@ -44,6 +44,9 @@ export class ZodSchemaValidator
       <T extends ZodIdiomaticSchema>(schema: T) => ZodArray<ZodResolve<T>>,
       <T extends ZodUnionContainer>(schemas: T) => ZodUnion<UnionZodResolve<T>>,
       <T extends LiteralSchema>(value: T) => ZodLiteral<ZodResolve<T>>,
+      <T extends LiteralSchema>(
+        schemaEnum: Record<string, T>
+      ) => ZodUnion<UnionZodResolve<[T, T, ...T[]]>>,
       <T extends ZodCatchall>(schema: T, value: unknown) => boolean,
       <T extends ZodCatchall>(
         schema: T,
@@ -168,11 +171,7 @@ export class ZodSchemaValidator
    * @returns {ZodUnion<UnionZodResolve<T>>} The union schema.
    */
   union<T extends ZodUnionContainer>(schemas: T): ZodUnion<UnionZodResolve<T>> {
-    if (schemas.length < 2) {
-      throw new Error('Union must have at least two schemas');
-    }
-
-    const unionTypes = schemas.map((schema) => {
+    const resolvedSchemas = schemas.map((schema) => {
       if (schema instanceof ZodType) {
         return schema;
       }
@@ -180,7 +179,7 @@ export class ZodSchemaValidator
     });
 
     return z.union(
-      unionTypes as unknown as [ZodType, ZodType, ...ZodType[]]
+      resolvedSchemas as [ZodType, ZodType, ...ZodType[]]
     ) as ZodUnion<UnionZodResolve<T>>;
   }
 
@@ -191,6 +190,17 @@ export class ZodSchemaValidator
    */
   literal<T extends LiteralSchema>(value: T): ZodLiteral<ZodResolve<T>> {
     return z.literal(value) as ZodLiteral<ZodResolve<T>>;
+  }
+
+  /**
+   * Create an enum schema.
+   * @param {Record<string, LiteralSchema>} schemaEnum - The enum schema.
+   * @returns {ZodUnion<UnionZodResolve<[T, T, ...T[]]>>} The enum schema.
+   */
+  enum_<T extends LiteralSchema>(
+    schemaEnum: Record<string, T>
+  ): ZodUnion<UnionZodResolve<[T, T, ...T[]]>> {
+    return this.union(Object.values(schemaEnum) as [T, T, ...T[]]);
   }
 
   /**
