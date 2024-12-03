@@ -1,7 +1,0 @@
-packages:
-  - 'packages/common'
-  - 'packages/core'
-  - 'packages/express'
-  - 'packages/hyper-express'
-  - 'packages/universal-sdk'
-  - 'packages/validator'

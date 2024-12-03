@@ -1,4 +1,12 @@
+node_modules
+.idea
+.DS_Store
 
-.nx/installation
-.nx/cache
-.nx/workspace-data
+ts-playground/
+
+lib
+
+.vscode
+
+*dist
+*lib

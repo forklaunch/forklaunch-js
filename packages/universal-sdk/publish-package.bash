@@ -1,1 +1,1 @@
-../../publish-package.bash
+../publish-package.bash

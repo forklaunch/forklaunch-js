@@ -6,10 +6,10 @@
     "@types/jest": "^29.5.14",
     "jest": "^29.7.0",
     "ts-jest": "^29.2.5",{{/is_jest}}{{#is_vitest}}
-    "vitest": "^2.1.5",{{/is_vitest}}
-    "globals": "^15.12.0",
+    "vitest": "^2.1.8",{{/is_vitest}}
+    "globals": "^15.13.0",
     "tsx": "^4.19.2",
-    "typescript": "^5.6.3"
+    "typescript": "^5.7.2"
   }, {{#is_bun}}
   "workspaces": [{{{bun_package_json_workspace_string}}}],{{/is_bun}}
   "scripts": {

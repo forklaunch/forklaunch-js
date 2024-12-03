@@ -1,1 +1,1 @@
-../../vitest.config.ts
+../vitest.config.ts
