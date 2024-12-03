@@ -91,11 +91,7 @@ export function swagger(
     const extension = fileParts[fileParts.length - 1];
 
     const content = file.content;
-    if (content instanceof Buffer) {
-      return res.type(extension).send(content);
-    } else {
-      return res.type(extension).stream(content);
-    }
+    return res.type(extension).send(content);
   };
 
   const ui = swaggerUi.setup(
