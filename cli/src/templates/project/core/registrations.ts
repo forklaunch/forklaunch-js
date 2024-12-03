@@ -1,4 +1,3 @@
-import { LiteralSchema } from '@forklaunch/validator';
 
 import {
   forklaunchExpress as registeredForklaunchExpress,
@@ -13,6 +12,7 @@ import {
   boolean as schemaBoolean,
   date as schemaDate,
   email as schemaEmail,
+  enum_ as schemaEnum,
   literal as schemaLiteral,
   never as schemaNever,
   nullish as schemaNullish,
@@ -51,15 +51,4 @@ export const optional = schemaOptional;
 export const array = schemaArray;
 export const union = schemaUnion;
 export const literal = schemaLiteral;
-export const enum_ = <EnumDefinition extends LiteralSchema>(
-  schemaEnum: Record<string, EnumDefinition>
-) =>
-  union(
-    Object.values<EnumDefinition>(schemaEnum) as [
-      EnumDefinition,
-      EnumDefinition,
-      ...EnumDefinition[]
-    ]
-  ) as ReturnType<
-    typeof schemaUnion<[EnumDefinition, EnumDefinition, ...EnumDefinition[]]>
-  >;
+export const enum_ = schemaEnum;

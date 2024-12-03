@@ -8,7 +8,6 @@ import {
   forklaunchExpress as registeredForklaunchExpress,
   forklaunchRouter as registeredForklaunchRouter
 } from '@forklaunch/hyper-express';
-import { LiteralSchema } from '@forklaunch/validator';
 
 import {
   SchemaValidator as RegisteredSchemaValidator,
@@ -18,6 +17,7 @@ import {
   boolean as schemaBoolean,
   date as schemaDate,
   email as schemaEmail,
+  enum_ as schemaEnum,
   literal as schemaLiteral,
   never as schemaNever,
   nullish as schemaNullish,
@@ -29,7 +29,7 @@ import {
   unknown as schemaUnknown,
   uri as schemaUri,
   uuid as schemaUuid
-} from '@forklaunch/validator/zod';
+} from '@forklaunch/validator/typebox';
 // import {
 //   SchemaValidator as RegisteredSchemaValidator,
 //   any as schemaAny,
@@ -76,15 +76,4 @@ export const optional = schemaOptional;
 export const array = schemaArray;
 export const union = schemaUnion;
 export const literal = schemaLiteral;
-export const enum_ = <EnumDefinition extends LiteralSchema>(
-  schemaEnum: Record<string, EnumDefinition>
-) =>
-  union(
-    Object.values<EnumDefinition>(schemaEnum) as [
-      EnumDefinition,
-      EnumDefinition,
-      ...EnumDefinition[]
-    ]
-  ) as ReturnType<
-    typeof schemaUnion<[EnumDefinition, EnumDefinition, ...EnumDefinition[]]>
-  >;
+export const enum_ = schemaEnum;
