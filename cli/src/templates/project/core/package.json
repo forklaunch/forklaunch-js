@@ -25,7 +25,7 @@
   "dependencies": {
     "@forklaunch/common": "^0.1.12",
     "@forklaunch/core": "^0.2.28",{{#is_express}}
-    "@forklaunch/express": "^0.1.22",{{/is_express}}{{#is_hyper_express}}
+    "@forklaunch/express": "^0.1.23",{{/is_express}}{{#is_hyper_express}}
     "@forklaunch/hyper-express": "^0.1.24",{{/is_hyper_express}}
     "@forklaunch/validator": "^0.3.10",{{#is_typebox}}
     "@sinclair/typebox": "^0.34.9"{{/is_typebox}}{{#is_zod}}
