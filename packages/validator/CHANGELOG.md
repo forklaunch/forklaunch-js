@@ -1,5 +1,13 @@
 # @forklaunch/validator
 
+## 0.3.11
+
+### Patch Changes
+
+- Move enum into validator, and bump package versions
+- Updated dependencies
+  - @forklaunch/common@0.1.13
+
 ## 0.3.10
 
 ### Patch Changes

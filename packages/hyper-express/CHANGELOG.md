@@ -1,5 +1,15 @@
 # @forklaunch/hyper-express
 
+## 0.1.25
+
+### Patch Changes
+
+- Move enum into validator, and bump package versions
+- Updated dependencies
+  - @forklaunch/common@0.1.13
+  - @forklaunch/core@0.2.29
+  - @forklaunch/validator@0.3.11
+
 ## 0.1.24
 
 ### Patch Changes

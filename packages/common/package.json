@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/common",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "description": "Common package for base types, interfaces, implementations.",
   "files": [
     "lib/**"
