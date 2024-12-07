@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/hyper-express",
-  "version": "0.1.27",
+  "version": "0.1.28",
   "description": "Forklaunch framework for hyper-express.",
   "files": [
     "lib/**"

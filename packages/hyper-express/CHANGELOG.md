@@ -1,5 +1,13 @@
 # @forklaunch/hyper-express
 
+## 0.1.28
+
+### Patch Changes
+
+- append subrouters to router to enable openapi spec
+- Updated dependencies
+  - @forklaunch/core@0.2.32
+
 ## 0.1.27
 
 ### Patch Changes

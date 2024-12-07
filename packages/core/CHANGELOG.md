@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.2.32
+
+### Patch Changes
+
+- append subrouters to router to enable openapi spec
+
 ## 0.2.31
 
 ### Patch Changes
