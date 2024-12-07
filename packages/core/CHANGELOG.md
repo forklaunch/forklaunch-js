@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.2.30
+
+### Patch Changes
+
+- 59d4bfd: Upgrade core package to be more compatible with bun
+
 ## 0.2.29
 
 ### Patch Changes
