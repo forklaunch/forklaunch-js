@@ -1,7 +1,8 @@
 import { Controller } from '@forklaunch/core/controllers';
-import { get } from '@forklaunch/core/http';
+import { post } from '@forklaunch/core/http';
+import { SchemaValidator } from '@{{app_name}}/core';
 import { HelloForklaunchService } from '../interfaces/helloForklaunch.interface';
-import { HelloForklaunchResponseDtoMapper } from '../models/dtoMapper/helloForklaunch.dtoMapper';
+import { HelloForklaunchRequestDtoMapper, HelloForklaunchResponseDtoMapper } from '../models/dtoMapper/helloForklaunch.dtoMapper';
 
 export class HelloForklaunchController<ConfigInjectorScope>
   implements Controller<HelloForklaunchService>
@@ -12,11 +13,13 @@ export class HelloForklaunchController<ConfigInjectorScope>
     ) => HelloForklaunchService
   ) {}
 
-  helloForklaunch = get(
+  helloForklaunch = post(
+    SchemaValidator(),
     '/hello',
     {
       name: 'helloForklaunch',
       summary: 'Hello Forklaunch',
+      body: HelloForklaunchRequestDtoMapper.schema(),
       responses: {
         200: HelloForklaunchResponseDtoMapper.schema()
       }

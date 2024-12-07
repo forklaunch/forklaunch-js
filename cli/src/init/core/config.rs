@@ -37,6 +37,7 @@ macro_rules! internal_config_struct {
         $vis struct $name {
             $vis cli_version: String,
             $vis app_name: String,
+            $vis database: String,
             $vis validator: String,
             $vis http_framework: String,
             $vis runtime: String,
@@ -92,6 +93,9 @@ macro_rules! config_struct {
                     #[serde(skip_serializing)]
                     $vis is_jest: bool,
 
+                    #[serde(skip_serializing)]
+                    $vis db_driver: String,
+
                     $(
                         $(#[$field_meta])*
                         $field_vis $field: $ty
@@ -115,6 +119,7 @@ macro_rules! config_struct {
                 Self {
                     cli_version: shadow.cli_version.clone(),
                     app_name: shadow.app_name.clone(),
+                    database: shadow.database.clone(),
                     validator: shadow.validator.clone(),
                     http_framework: shadow.http_framework.clone(),
                     runtime: shadow.runtime.clone(),
@@ -129,6 +134,7 @@ macro_rules! config_struct {
                     is_node: shadow.runtime == "node",
                     is_vitest: shadow.test_framework == "vitest",
                     is_jest: shadow.test_framework == "jest",
+                    db_driver: crate::init::core::database::match_database(&shadow.database),
                     $(
                         $field: shadow.$field
                     ),*

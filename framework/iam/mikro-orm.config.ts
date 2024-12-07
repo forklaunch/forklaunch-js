@@ -26,11 +26,11 @@ const parseDbType = <Db extends string>(
 };
 
 const mikroOrmOptionsConfig = {
-  driver: parseDbType(process.env.FORKLIFT_DB_TYPE),
-  dbName: process.env.FORKLIFT_DB_NAME || 'forklaunch-dev',
-  host: process.env.FORKLIFT_DB_HOST || 'localhost',
-  user: process.env.FORKLIFT_DB_USER || 'postgres',
-  password: process.env.FORKLIFT_DB_PASSWORD || 'postgres',
+  driver: parseDbType(process.env.FORKLAUNCH_DB_TYPE),
+  dbName: process.env.FORKLAUNCH_DB_NAME || 'forklaunch-dev',
+  host: process.env.FORKLAUNCH_DB_HOST || 'localhost',
+  user: process.env.FORKLAUNCH_DB_USER || 'postgres',
+  password: process.env.FORKLAUNCH_DB_PASSWORD || 'postgres',
   port: 5432,
   entities: ['dist/**/*.entity.js'],
   entitiesTs: ['models/persistence/**/*.entity.ts'],

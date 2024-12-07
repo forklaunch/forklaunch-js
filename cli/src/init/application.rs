@@ -14,6 +14,7 @@ use crate::{
 use super::{
     core::{
         config::ProjectEntry,
+        database::match_database,
         manifest::setup_manifest,
         pnpm_workspace::generate_pnpm_workspace,
         symlinks::setup_symlinks,
@@ -48,6 +49,14 @@ impl CliCommand for ApplicationCommand {
             Arg::new("name")
                 .required(true)
                 .help("The name of the application"),
+        )
+        .arg(
+            Arg::new("database")
+                .short('d')
+                .long("database")
+                .required(true)
+                .help("The database to use. Valid values = [sqlite, postgresql, mysql, mongodb]")
+                .value_parser(["sqlite", "postgresql", "mysql", "mongodb"]),
         )
         .arg(
             Arg::new("validator")
@@ -94,6 +103,7 @@ impl CliCommand for ApplicationCommand {
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
         let name = matches.get_one::<String>("name").unwrap();
+        let database = matches.get_one::<String>("database").unwrap();
         let validator = matches.get_one::<String>("validator").unwrap();
         let http_framework = matches.get_one::<String>("http-framework").unwrap();
         let runtime = matches.get_one::<String>("runtime").unwrap();
@@ -157,6 +167,7 @@ impl CliCommand for ApplicationCommand {
         let mut data = ApplicationConfigData {
             cli_version: LATEST_CLI_VERSION.to_string(),
             app_name: name.to_string(),
+            database: database.to_string(),
             validator: validator.to_string(),
             http_framework: http_framework.to_string(),
             runtime: runtime.to_string(),
@@ -172,6 +183,7 @@ impl CliCommand for ApplicationCommand {
             is_node: runtime == "node",
             is_vitest: test_framework == "vitest",
             is_jest: test_framework == "jest",
+            db_driver: match_database(&database),
 
             bun_package_json_workspace_string,
         };

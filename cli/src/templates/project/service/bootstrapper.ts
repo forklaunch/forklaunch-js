@@ -1,7 +1,7 @@
 import { RedisTtlCache } from '@forklaunch/core/cache';
 import { ConfigInjector, Lifetime } from '@forklaunch/core/services';
-import { SchemaValidator } from '@forklaunch/framework-core';
 import { EntityManager, ForkOptions, MikroORM } from '@mikro-orm/core';
+import { SchemaValidator } from '@{{app_name}}/core';
 import mikroOrmOptionsConfig from './mikro-orm.config';
 import { BaseHelloForklaunchService } from './services/helloForklaunch.service';
 

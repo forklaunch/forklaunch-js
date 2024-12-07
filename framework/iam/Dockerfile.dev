@@ -18,11 +18,11 @@ RUN pnpm ci && pnpm cache clean --force
 RUN pnpm install
 
 # Set environment variables
-ENV FORKLIFT_DB_HOST="postgres"
-ENV FORKLIFT_DB_USER="postgres"
-ENV FORKLIFT_DB_PASSWORD="postgres"
-ENV FORKLIFT_DB_NAME="forklaunch-dev"
-ENV FORKLIFT_DB_TYPE="postgresql"
+ENV FORKLAUNCH_DB_HOST="postgres"
+ENV FORKLAUNCH_DB_USER="postgres"
+ENV FORKLAUNCH_DB_PASSWORD="postgres"
+ENV FORKLAUNCH_DB_NAME="forklaunch-dev"
+ENV FORKLAUNCH_DB_TYPE="postgresql"
 ENV PORT=8000
 
 # Expose the port that the Express.js app will run on

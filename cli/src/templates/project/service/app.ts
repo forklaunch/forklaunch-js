@@ -1,5 +1,5 @@
 import { ApiClient } from '@forklaunch/core/http';
-import { forklaunchExpress } from '@forklaunch/framework-core';
+import { forklaunchExpress } from '@{{app_name}}/core';
 import { bootstrap } from './bootstrapper';
 import { HelloForklaunchController } from './controllers/helloForklaunch.controller';
 import { HelloForklaunchRoutes } from './routes/helloForklaunch.routes';

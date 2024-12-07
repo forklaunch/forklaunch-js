@@ -33,7 +33,9 @@ bootstrap((ci) => {
 
   app.listen(port, () => {
     console.log(
-      `🎉 Billing Server is running at http://localhost:${port} 🎉.\nAn API reference can be accessed at http://localhost:${port}/api${process.env.VERSION ?? '/v1'}${process.env.SWAGGER_PATH ?? '/swagger'}`
+      `🎉 Billing Server is running at http://localhost:${port} 🎉.\nAn API reference can be accessed at http://localhost:${port}/api${
+        process.env.VERSION ?? '/v1'
+      }${process.env.SWAGGER_PATH ?? '/swagger'}`
     );
   });
 });

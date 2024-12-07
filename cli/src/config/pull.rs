@@ -1,5 +1,5 @@
 use crate::{
-    constants::{error_failed_to_write_file, ERROR_FAILED_TO_SEND_REQUEST},
+    constants::{error_failed_to_write_file, ERROR_FAILED_TO_SEND_REQUEST, PROD_API_URL},
     utils::{forklaunch_command, get_token},
 };
 use anyhow::{bail, Context, Result};
@@ -37,7 +37,7 @@ pub(crate) fn handler(matches: &ArgMatches) -> Result<()> {
     // TODO: remove and pass token from parent
     let token = get_token()?;
 
-    let url = format!("https://api.forklaunch.com/config/{}", id);
+    let url = format!("{}/config/{}", PROD_API_URL, id);
     let client = Client::new();
     let request = client.get(url).bearer_auth(token);
     let response = request

@@ -1,7 +1,7 @@
 {
   "name": "@{{app_name}}/core",
   "version": "0.1.0",
-  "description": "The common core lib for all monorepo services for {{app_name}}",
+  "description": "The common core lib for all {{app_name}} monorepo services",
   "files": [
     "lib"
   ],

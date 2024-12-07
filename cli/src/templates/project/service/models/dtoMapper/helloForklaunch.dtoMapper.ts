@@ -1,8 +1,8 @@
 import {
-  RequestDtoMapper,
-  ResponseDtoMapper
+    RequestDtoMapper,
+    ResponseDtoMapper
 } from '@forklaunch/core/dtoMapper';
-import { SchemaValidator, string } from '@forklaunch/framework-core';
+import { SchemaValidator, string } from '@{{app_name}}/core';
 import { HelloForklaunchRecord } from '../persistence/helloForklaunchRecord.entity';
 
 export type HelloForklaunchRequestDto = HelloForklaunchRequestDtoMapper['dto'];

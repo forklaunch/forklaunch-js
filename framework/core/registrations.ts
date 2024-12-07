@@ -1,13 +1,7 @@
-// When generating, generate one of each flavor, depending on configuration, and this file should be generated
-
-// import {
-//   forklaunchExpress as registeredForklaunchExpress,
-//   forklaunchRouter as registeredForklaunchRouter
-// } from '@forklaunch/express';
 import {
   forklaunchExpress as registeredForklaunchExpress,
   forklaunchRouter as registeredForklaunchRouter
-} from '@forklaunch/hyper-express';
+} from '@forklaunch/express';
 
 import {
   SchemaValidator as RegisteredSchemaValidator,
@@ -30,26 +24,6 @@ import {
   uri as schemaUri,
   uuid as schemaUuid
 } from '@forklaunch/validator/typebox';
-// import {
-//   SchemaValidator as RegisteredSchemaValidator,
-//   any as schemaAny,
-//   array as schemaArray,
-//   bigint as schemaBigint,
-//   boolean as schemaBoolean,
-//   date as schemaDate,
-//   email as schemaEmail,
-//   literal as schemaLiteral,
-//   never as schemaNever,
-//   nullish as schemaNullish,
-//   number as schemaNumber,
-//   optional as schemaOptional,
-//   string as schemaString,
-//   symbol as schemaSymbol,
-//   union as schemaUnion,
-//   unknown as schemaUnknown,
-//   uri as schemaUri,
-//   uuid as schemaUuid
-// } from '@forklaunch/validator/zod';
 
 export const SchemaValidator = RegisteredSchemaValidator;
 export type SchemaValidator = ReturnType<typeof RegisteredSchemaValidator>;

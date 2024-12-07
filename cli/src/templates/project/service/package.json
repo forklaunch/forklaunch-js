@@ -2,36 +2,36 @@
   "name": "@{{app_name}}/{{service_name}}",
   "version": "0.1.0",
   "description": "",
-  "devDependencies": { {{#is_jest}}
-    "@types/jest": "^29.5.14",
-    "jest": "^29.7.0",
-    "ts-jest": "^29.2.5",{{/is_jest}}{{#is_vitest}}
-    "vitest": "^2.1.5",{{/is_vitest}}
-    "globals": "^15.12.0",
-    "tsx": "^4.19.2",
-    "typescript": "^5.6.3"
-  },
   "scripts": {
-    "build": "pnpm -r run build",
-    "clean": "rm -rf node_modules pnpm-lock.yaml && pnpm --parallel -r clean && pnpm store prune",
-    "clean:purge": "pnpm run clean && pnpm store clear",
-    "docs": "pnpm --parallel -r run docs",
-    "lint": "pnpm --parallel -r run lint",
-    "lint:fix": "pnpm --parallel -r run lint:fix",
-    "format": "pnpm --parallel -r run format",
-    "test": "pnpm {{test-framework}} --passWithNoTests",
-    "up:packages": "pnpm -r update --latest"
+    "test": "{{test_framework}} --passWithNoTests",
+    "build": "tsc",
+    "clean": "rm -rf dist pnpm.lock.yaml node_modules",
+    "docs": "typedoc --out docs *",
+    "lint": "eslint . -c eslint.config.mjs",
+    "lint:fix": "eslint . -c eslint.config.mjs --fix",
+    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.ts' --write"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "devDependencies": {
+    "eslint": "^9.16.0",
+    "@mikro-orm/cli": "^6.4.0",
+    "typescript-eslint": "^8.16.0"
+  },
   "dependencies": {
-    "@forklaunch/common": "^0.1.11",
-    "@forklaunch/core": "^0.2.27",{{#is_express}}
-    "@forklaunch/express": "^0.1.22",{{/is_express}}{{#is_hyper_express}}
-    "@forklaunch/hyper-express": "^0.1.23",{{/is_hyper_express}}
-    "@forklaunch/validator": "^0.3.9",{{#is_typebox}}
-    "@sinclair/typebox": "^0.33.22",{{/is_typebox}}{{#is_zod}}
+    "@{{app_name}}/core": "workspace:*",
+    "@forklaunch/common": "^0.1.13",
+    "@forklaunch/core": "^0.2.29",{{#is_express}}
+    "@forklaunch/express": "^0.1.24",{{/is_express}}{{#is_hyper_express}}
+    "@forklaunch/hyper-express": "^0.1.25",{{/is_hyper_express}}
+    "@forklaunch/validator": "^0.3.11",
+    "@mikro-orm/core": "^6.4.0",
+    "@mikro-orm/migrations": "^6.4.0",
+    "@mikro-orm/postgresql": "^6.4.0",
+    "@mikro-orm/reflection": "^6.4.0",{{#is_typebox}}
+    "@sinclair/typebox": "^0.34.9"{{/is_typebox}}{{#is_zod}}
     "zod": "^3.23.8"{{/is_zod}}
   }
 }
+
