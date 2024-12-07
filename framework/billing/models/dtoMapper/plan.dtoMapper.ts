@@ -14,8 +14,8 @@ import {
   unknown,
   uuid
 } from '@forklaunch/framework-core';
-import { BillingProvider } from '../enum/billingProvider.enum';
-import { PlanCadence } from '../enum/planCadence.enum';
+import { BillingProviderEnum } from '../enum/billingProvider.enum';
+import { PlanCadenceEnum } from '../enum/planCadence.enum';
 import { Plan } from '../persistence/plan.entity';
 
 export type CreatePlanDto = CreatePlanDtoMapper['dto'];
@@ -28,11 +28,11 @@ export class CreatePlanDtoMapper extends RequestDtoMapper<
     name: string,
     description: optional(string),
     price: number,
-    cadence: enum_(PlanCadence),
+    cadence: enum_(PlanCadenceEnum),
     features: optional(array(string)),
     extraFields: optional(unknown),
     externalId: string,
-    billingProvider: optional(enum_(BillingProvider)),
+    billingProvider: optional(enum_(BillingProviderEnum)),
     active: boolean
   };
 
@@ -70,11 +70,11 @@ export class UpdatePlanDtoMapper extends RequestDtoMapper<
     name: optional(string),
     description: optional(string),
     price: optional(number),
-    cadence: optional(enum_(PlanCadence)),
+    cadence: optional(enum_(PlanCadenceEnum)),
     features: optional(array(string)),
     extraFields: optional(unknown),
     externalId: optional(string),
-    billingProvider: optional(enum_(BillingProvider)),
+    billingProvider: optional(enum_(BillingProviderEnum)),
     active: optional(boolean)
   };
 
@@ -123,11 +123,11 @@ export class PlanDtoMapper extends ResponseDtoMapper<Plan, SchemaValidator> {
     name: string,
     description: optional(string),
     price: number,
-    cadence: enum_(PlanCadence),
+    cadence: enum_(PlanCadenceEnum),
     features: optional(array(string)),
     extraFields: optional(unknown),
     externalId: string,
-    billingProvider: optional(enum_(BillingProvider)),
+    billingProvider: optional(enum_(BillingProviderEnum)),
     active: boolean,
     createdAt: date,
     updatedAt: date

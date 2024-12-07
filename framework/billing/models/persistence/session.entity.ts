@@ -1,6 +1,6 @@
 import { BaseEntity } from '@forklaunch/core/database';
 import { Entity, Property } from '@mikro-orm/core';
-import { PaymentMethod } from '../enum/paymentMethod.enum';
+import { PaymentMethodEnum } from '../enum/paymentMethod.enum';
 
 // This is to represent connection information for a billing provider
 @Entity()
@@ -9,7 +9,7 @@ export class Session extends BaseEntity {
   customerEmail!: string;
 
   @Property()
-  paymentMethods!: PaymentMethod[];
+  paymentMethods!: PaymentMethodEnum[];
 
   @Property({ type: 'json', nullable: true })
   metadata?: unknown;

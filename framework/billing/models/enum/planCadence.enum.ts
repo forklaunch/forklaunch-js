@@ -1,4 +1,4 @@
-export enum PlanCadence {
+export enum PlanCadenceEnum {
   WEEKLY = 'WEEKLY',
   BIWEEKLY = 'BIWEEKLY',
   MONTHLY = 'MONTHLY',

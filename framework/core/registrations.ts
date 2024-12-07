@@ -1,7 +1,7 @@
 import {
   forklaunchExpress as registeredForklaunchExpress,
   forklaunchRouter as registeredForklaunchRouter
-} from '@forklaunch/express';
+} from '@forklaunch/hyper-express';
 
 import {
   SchemaValidator as RegisteredSchemaValidator,

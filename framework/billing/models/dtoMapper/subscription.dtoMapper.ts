@@ -12,8 +12,8 @@ import {
   unknown,
   uuid
 } from '@forklaunch/framework-core';
-import { BillingProvider } from '../enum/billingProvider.enum';
-import { Party } from '../enum/party.enum';
+import { BillingProviderEnum } from '../enum/billingProvider.enum';
+import { PartyEnum } from '../enum/party.enum';
 import { Subscription } from '../persistence/subscription.entity';
 
 export type CreateSubscriptionDto = CreateSubscriptionDtoMapper['dto'];
@@ -23,7 +23,7 @@ export class CreateSubscriptionDtoMapper extends RequestDtoMapper<
 > {
   schema = {
     partyId: string,
-    partyType: enum_(Party),
+    partyType: enum_(PartyEnum),
     productId: string,
     description: optional(string),
     active: boolean,
@@ -31,7 +31,7 @@ export class CreateSubscriptionDtoMapper extends RequestDtoMapper<
     startDate: date,
     endDate: date,
     status: string,
-    billingProvider: optional(enum_(BillingProvider)),
+    billingProvider: optional(enum_(BillingProviderEnum)),
     extraFields: optional(unknown)
   };
 
@@ -67,7 +67,7 @@ export class UpdateSubscriptionDtoMapper extends RequestDtoMapper<
   schema = {
     id: uuid,
     partyId: optional(string),
-    partyType: optional(enum_(Party)),
+    partyType: optional(enum_(PartyEnum)),
     productId: optional(string),
     description: optional(string),
     active: optional(boolean),
@@ -75,7 +75,7 @@ export class UpdateSubscriptionDtoMapper extends RequestDtoMapper<
     startDate: optional(date),
     endDate: optional(date),
     status: optional(string),
-    billingProvider: optional(enum_(BillingProvider)),
+    billingProvider: optional(enum_(BillingProviderEnum)),
     extraFields: optional(unknown)
   };
 
@@ -127,7 +127,7 @@ export class SubscriptionDtoMapper extends ResponseDtoMapper<
   schema = {
     id: uuid,
     partyId: string,
-    partyType: enum_(Party),
+    partyType: enum_(PartyEnum),
     productId: string,
     description: optional(string),
     active: boolean,
@@ -135,7 +135,7 @@ export class SubscriptionDtoMapper extends ResponseDtoMapper<
     startDate: date,
     endDate: date,
     status: string,
-    billingProvider: optional(enum_(BillingProvider)),
+    billingProvider: optional(enum_(BillingProviderEnum)),
     extraFields: optional(unknown),
     createdAt: date,
     updatedAt: date

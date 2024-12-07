@@ -1,7 +1,4 @@
-FROM node:23-alpine
-
-# Install pnpm
-RUN npm install -g pnpm
+FROM oven/bun:1
 
 WORKDIR /app
 
@@ -10,13 +7,13 @@ COPY package*.json ./
 COPY tsconfig*.json ./
 
 # Install dependencies
-RUN pnpm install
+RUN bun install
 
 # Copy source code
 COPY . .
 
 # Build TypeScript code
-RUN pnpm run build
+RUN bun run build
 
 # Expose port
 EXPOSE 8001
@@ -25,4 +22,4 @@ EXPOSE 8001
 ENV NODE_ENV=production
 ENV PORT=8001
 
-CMD ["node", "dist/app.js"]
+CMD ["bun", "dist/app.js"]

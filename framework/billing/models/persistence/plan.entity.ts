@@ -1,7 +1,7 @@
 import { BaseEntity } from '@forklaunch/core/database';
 import { ArrayType, Entity, Enum, Property, Unique } from '@mikro-orm/core';
-import { BillingProvider } from '../enum/billingProvider.enum';
-import { PlanCadence } from '../enum/planCadence.enum';
+import { BillingProviderEnum } from '../enum/billingProvider.enum';
+import { PlanCadenceEnum } from '../enum/planCadence.enum';
 
 @Entity()
 export class Plan extends BaseEntity {
@@ -21,7 +21,7 @@ export class Plan extends BaseEntity {
   price!: number;
 
   @Property()
-  cadence!: PlanCadence;
+  cadence!: PlanCadenceEnum;
 
   // tie to permissions (slugs)
   @Property({ type: ArrayType, nullable: true })
@@ -34,6 +34,6 @@ export class Plan extends BaseEntity {
   @Unique()
   externalId!: string;
 
-  @Enum({ items: () => BillingProvider, nullable: true })
-  billingProvider?: BillingProvider;
+  @Enum({ items: () => BillingProviderEnum, nullable: true })
+  billingProvider?: BillingProviderEnum;
 }

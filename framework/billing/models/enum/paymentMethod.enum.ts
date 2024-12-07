@@ -1,4 +1,4 @@
-export enum PaymentMethod {
+export enum PaymentMethodEnum {
   ACH = 'ach',
   CREDIT_CARD = 'credit_card',
   DEBIT_CARD = 'debit_card',

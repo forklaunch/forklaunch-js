@@ -9,7 +9,7 @@ import {
   UpdateSubscriptionDto,
   UpdateSubscriptionDtoMapper
 } from '../models/dtoMapper/subscription.dtoMapper';
-import { Party } from '../models/enum/party.enum';
+import { PartyEnum } from '../models/enum/party.enum';
 import { Subscription } from '../models/persistence/subscription.entity';
 
 export class BaseSubscriptionService implements SubscriptionService {
@@ -51,7 +51,7 @@ export class BaseSubscriptionService implements SubscriptionService {
       SchemaValidator(),
       await (em ?? this.em).findOneOrFail(Subscription, {
         partyId: id,
-        partyType: Party.USER,
+        partyType: PartyEnum.USER,
         active: true
       })
     );
@@ -67,7 +67,7 @@ export class BaseSubscriptionService implements SubscriptionService {
       SchemaValidator(),
       await (em ?? this.em).findOneOrFail(Subscription, {
         partyId: id,
-        partyType: Party.ORGANIZATION,
+        partyType: PartyEnum.ORGANIZATION,
         active: true
       })
     );

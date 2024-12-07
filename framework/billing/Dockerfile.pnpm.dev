@@ -25,4 +25,4 @@ EXPOSE 8001
 ENV NODE_ENV=production
 ENV PORT=8001
 
-CMD ["node", "dist/app.js"]
+CMD ["node", "--import", "tsx", "dist/app.js"]

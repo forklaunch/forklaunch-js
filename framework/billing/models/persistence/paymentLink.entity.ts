@@ -1,6 +1,6 @@
 import { BaseEntity } from '@forklaunch/core/database';
 import { Entity, Property } from '@mikro-orm/core';
-import { Currency } from '../enum/currency.enum';
+import { CurrencyEnum } from '../enum/currency.enum';
 
 // This is to represent connection information for a billing provider
 @Entity()
@@ -9,7 +9,7 @@ export class PaymentLink extends BaseEntity {
   amount!: number;
 
   @Property()
-  currency!: Currency;
+  currency!: CurrencyEnum;
 
   @Property()
   description!: string;

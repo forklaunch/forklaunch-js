@@ -12,7 +12,7 @@ import {
   unknown,
   uuid
 } from '@forklaunch/framework-core';
-import { Currency } from '../enum/currency.enum';
+import { CurrencyEnum } from '../enum/currency.enum';
 import { PaymentLink } from '../persistence/paymentLink.entity';
 
 export type CreatePaymentLinkDto = CreatePaymentLinkDtoMapper['dto'];
@@ -22,7 +22,7 @@ export class CreatePaymentLinkDtoMapper extends RequestDtoMapper<
 > {
   schema = {
     amount: number,
-    currency: enum_(Currency),
+    currency: enum_(CurrencyEnum),
     description: optional(string),
     metadata: optional(unknown),
     successRedirectUri: optional(string),
@@ -61,7 +61,7 @@ export class UpdatePaymentLinkDtoMapper extends RequestDtoMapper<
   schema = {
     id: uuid,
     amount: optional(number),
-    currency: optional(enum_(Currency)),
+    currency: optional(enum_(CurrencyEnum)),
     description: optional(string),
     metadata: optional(unknown),
     successRedirectUri: optional(string),
@@ -105,7 +105,7 @@ export class PaymentLinkDtoMapper extends ResponseDtoMapper<
   schema = {
     id: uuid,
     amount: number,
-    currency: enum_(Currency),
+    currency: enum_(CurrencyEnum),
     description: optional(string),
     metadata: optional(unknown),
     successRedirectUri: optional(string),

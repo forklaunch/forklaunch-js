@@ -24,10 +24,10 @@
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "dependencies": {
     "@forklaunch/common": "^0.1.13",
-    "@forklaunch/core": "^0.2.30",
-    "@forklaunch/express": "^0.1.25",
+    "@forklaunch/core": "^0.2.31",
+    "@forklaunch/express": "^0.1.26",
     "@forklaunch/framework-core": "workspace:*",
-    "@forklaunch/hyper-express": "^0.1.26",
+    "@forklaunch/hyper-express": "^0.1.27",
     "@forklaunch/validator": "^0.3.11",
     "@mikro-orm/core": "^6.4.0",
     "@mikro-orm/migrations": "^6.4.0",
