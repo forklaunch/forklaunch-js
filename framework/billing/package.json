@@ -24,10 +24,10 @@
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "dependencies": {
     "@forklaunch/common": "^0.1.13",
-    "@forklaunch/core": "^0.2.29",
-    "@forklaunch/express": "^0.1.24",
+    "@forklaunch/core": "^0.2.30",
+    "@forklaunch/express": "^0.1.25",
     "@forklaunch/framework-core": "workspace:*",
-    "@forklaunch/hyper-express": "^0.1.25",
+    "@forklaunch/hyper-express": "^0.1.26",
     "@forklaunch/validator": "^0.3.11",
     "@mikro-orm/core": "^6.4.0",
     "@mikro-orm/migrations": "^6.4.0",
@@ -36,7 +36,7 @@
     "@mikro-orm/postgresql": "^6.4.0",
     "@mikro-orm/reflection": "^6.4.0",
     "@mikro-orm/sqlite": "^6.4.0",
-    "@sinclair/typebox": "^0.34.9",
+    "@sinclair/typebox": "^0.34.11",
     "uuid": "^11.0.3",
     "zod": "^3.23.8"
   },

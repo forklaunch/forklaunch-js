@@ -1,5 +1,13 @@
 # @forklaunch/express
 
+## 0.1.26
+
+### Patch Changes
+
+- jose export for bun compatibility
+- Updated dependencies
+  - @forklaunch/core@0.2.31
+
 ## 0.1.25
 
 ### Patch Changes

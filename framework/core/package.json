@@ -20,11 +20,11 @@
   "license": "ISC",
   "dependencies": {
     "@forklaunch/common": "^0.1.13",
-    "@forklaunch/core": "^0.2.29",
-    "@forklaunch/express": "^0.1.24",
-    "@forklaunch/hyper-express": "^0.1.25",
+    "@forklaunch/core": "^0.2.30",
+    "@forklaunch/express": "^0.1.25",
+    "@forklaunch/hyper-express": "^0.1.26",
     "@forklaunch/validator": "^0.3.11",
-    "@sinclair/typebox": "^0.34.9",
+    "@sinclair/typebox": "^0.34.11",
     "zod": "^3.23.8"
   }
 }

@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.2.31
+
+### Patch Changes
+
+- jose export for bun compatibility
+
 ## 0.2.30
 
 ### Patch Changes
