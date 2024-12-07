@@ -5,6 +5,7 @@ import { RemoveTrailingSlash } from '@forklaunch/common';
 import { isConstrainedForklaunchRouter } from '../guards/isConstrainedForklaunchRouter';
 import { isExpressLikeSchemaHandler } from '../guards/isExpressLikeSchemaHandler';
 import { isForklaunchExpressLikeRouter } from '../guards/isForklaunchExpressLikeRouter';
+import { isForklaunchRouter } from '../guards/isForklaunchRouter';
 import { isHttpContractDetails } from '../guards/isHttpContractDetails';
 import { isPathParamHttpContractDetails } from '../guards/isPathParamContractDetails';
 import { isTypedHandler } from '../guards/isTypedHandler';
@@ -46,7 +47,8 @@ import {
 } from '../types/expressLikeRouter.types';
 import {
   ConstrainedForklaunchRouter,
-  ForklaunchRoute
+  ForklaunchRoute,
+  ForklaunchRouter
 } from '../types/router.types';
 
 /**
@@ -60,6 +62,7 @@ export class ForklaunchExpressLikeRouter<
 > implements ConstrainedForklaunchRouter<SV, RouterHandler>
 {
   requestHandler!: RouterHandler;
+  routers: ForklaunchRouter<SV>[] = [];
   readonly routes: ForklaunchRoute<SV>[] = [];
   readonly basePath: BasePath;
 
@@ -1339,6 +1342,16 @@ export class ForklaunchExpressLikeRouter<
       | Router
     )[]
   ) => {
+    [
+      pathOrContractDetailsOrMiddlewareOrTypedHandler,
+      contractDetailsOrMiddlewareOrTypedHandler,
+      ...middlewareOrMiddlewareWithTypedHandler
+    ].forEach((arg) => {
+      if (isForklaunchRouter<SV>(arg)) {
+        this.routers.push(arg);
+      }
+    });
+
     return this.registerNestableMiddlewareHandler<
       Path,
       P,
