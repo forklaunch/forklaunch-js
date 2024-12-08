@@ -1,0 +1,31 @@
+{
+  "name": "monorepo",
+  "version": "0.1.0",
+  "description": "",
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "globals": "^15.13.0",
+    "typescript": "^5.7.2"
+  },
+  "workspaces": [
+    "core",
+    "iam",
+    "billing"
+  ],
+  "scripts": {
+    "build": "bun run -r build",
+    "clean": "rm -rf node_modules bun.lockb && bun -r clean",
+    "clean:purge": "bun run clean",
+    "docs": "bun -r docs",
+    "lint": "bun -r lint",
+    "lint:fix": "bun -r lint:fix", 
+    "format": "bun -r format",
+    "test": "bun test",
+    "up:packages": "bun update --latest",
+    "dev": "RUNTIME=node docker compose up --build",
+    "dev:bun": "RUNTIME=bun docker compose up --build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

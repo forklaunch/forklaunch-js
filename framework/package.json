@@ -14,8 +14,7 @@
   "workspaces": [
     "core",
     "iam",
-    "billing",
-    "logging"
+    "billing"
   ],
   "scripts": {
     "build": "pnpm -r run build",

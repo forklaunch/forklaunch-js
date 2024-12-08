@@ -41,7 +41,9 @@ export function bootstrap(
         },
         ttlCache: {
           lifetime: Lifetime.Singleton,
-          value: new RedisTtlCache(60 * 60 * 1000)
+          value: new RedisTtlCache(60 * 60 * 1000, {
+            url: process.env.REDIS_URL ?? ''
+          })
         },
         checkoutSessionService: {
           lifetime: Lifetime.Scoped,

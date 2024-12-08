@@ -4,6 +4,7 @@ WORKDIR /app
 
 # Copy source code
 COPY . .
+RUN mv package.bun.json package.json
 
 # Install dependencies
 RUN bun install
@@ -12,4 +13,4 @@ RUN bun install
 RUN bun run build
 
 # Start the app
-ENTRYPOINT ["../scripts/startup.dev.bun.sh", ".env.docker"]
+ENTRYPOINT ["bash", "../scripts/startup.dev.bun.sh", ".env.docker"]

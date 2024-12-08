@@ -14,4 +14,4 @@ set +a
 
 NODE_OPTIONS='--import tsx' bun mikro-orm migration:up
 
-bun run dist/app.js
+bun run app.ts
