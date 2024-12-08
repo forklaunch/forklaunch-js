@@ -1,0 +1,17 @@
+FROM node:23-alpine
+
+RUN npm install -g pnpm
+
+WORKDIR /app
+
+# Copy source code
+COPY . .
+
+# Install dependencies
+RUN pnpm install
+
+# # Build TypeScript code
+RUN pnpm build
+
+# Start the app
+ENTRYPOINT ["sh", "../scripts/startup.dev.node.sh", ".env.docker"]

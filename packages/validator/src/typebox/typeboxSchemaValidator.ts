@@ -73,6 +73,7 @@ export class TypeboxSchemaValidator
       <T extends LiteralSchema>(
         schemaEnum: Record<string, T>
       ) => TUnion<UnionTResolve<T[]>>,
+      (value: unknown) => value is TSchema,
       <T extends TIdiomaticSchema>(schema: T, value: unknown) => boolean,
       <T extends TIdiomaticSchema>(
         schema: T,
@@ -354,6 +355,15 @@ export class TypeboxSchemaValidator
     schemaEnum: Record<string, T>
   ): TUnion<UnionTResolve<T[]>> {
     return this.union(Object.values(schemaEnum));
+  }
+
+  /**
+   * Check if a value is a TypeBox object schema.
+   * @param {unknown} value - The value to check.
+   * @returns {boolean} True if the value is a TypeBox object schema.
+   */
+  isSchema(value: unknown): value is TSchema {
+    return KindGuard.IsSchema(value);
   }
 
   /**

@@ -47,6 +47,7 @@ export class ZodSchemaValidator
       <T extends LiteralSchema>(
         schemaEnum: Record<string, T>
       ) => ZodUnion<UnionZodResolve<[T, T, ...T[]]>>,
+      (value: unknown) => value is ZodType,
       <T extends ZodCatchall>(schema: T, value: unknown) => boolean,
       <T extends ZodCatchall>(
         schema: T,
@@ -201,6 +202,15 @@ export class ZodSchemaValidator
     schemaEnum: Record<string, T>
   ): ZodUnion<UnionZodResolve<[T, T, ...T[]]>> {
     return this.union(Object.values(schemaEnum) as [T, T, ...T[]]);
+  }
+
+  /**
+   * Checks if a value is a Zod schema.
+   * @param {unknown} value - The value to check.
+   * @returns {boolean} True if the value is a Zod schema.
+   */
+  isSchema(value: unknown): value is ZodType {
+    return value instanceof ZodType;
   }
 
   /**

@@ -39,6 +39,7 @@ export interface SchemaValidator<
   EnumFunction = <T extends LiteralSchema>(
     schemaEnum: Record<string, T>
   ) => unknown,
+  SchemaGuardFunction = <T>(value: unknown) => value is T,
   ValidationFunction = <T>(schema: T, value: unknown) => boolean,
   ParseFunction = <T>(
     schema: T,
@@ -183,6 +184,14 @@ export interface SchemaValidator<
   enum_: EnumFunction;
 
   /**
+   * Checks if a value is a schema.
+   *
+   * @param {unknown} value - The value to check.
+   * @returns {boolean} - Whether the value is a schema.
+   */
+  isSchema: SchemaGuardFunction;
+
+  /**
    * Validates a value against a schema.
    *
    * @param {T} schema - The schema to validate against.
@@ -213,6 +222,7 @@ export interface SchemaValidator<
  * Type representing any schema validator.
  */
 export type AnySchemaValidator = SchemaValidator<
+  unknown,
   unknown,
   unknown,
   unknown,

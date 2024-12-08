@@ -1,6 +1,6 @@
 import { RedisTtlCache } from '@forklaunch/core/cache';
 import { ConfigInjector, Lifetime } from '@forklaunch/core/services';
-import { SchemaValidator } from '@forklaunch/framework-core';
+import { SchemaValidator, string } from '@forklaunch/framework-core';
 import { EntityManager, ForkOptions, MikroORM } from '@mikro-orm/core';
 import mikroOrmOptionsConfig from './mikro-orm.config';
 import { BaseCheckoutSessionService } from './services/checkoutSession.service';
@@ -9,6 +9,7 @@ import { BasePlanService } from './services/plan.service';
 import { BaseSubscriptionService } from './services/subscription.service';
 
 const configValidator = {
+  redisUrl: string,
   entityManager: EntityManager,
   ttlCache: RedisTtlCache,
   checkoutSessionService: BaseCheckoutSessionService,
@@ -27,6 +28,10 @@ export function bootstrap(
       SchemaValidator(),
       configValidator,
       {
+        redisUrl: {
+          lifetime: Lifetime.Singleton,
+          value: process.env.REDIS_URL ?? ''
+        },
         entityManager: {
           lifetime: Lifetime.Scoped,
           factory: (_args, _resolve, context) =>
@@ -57,6 +62,15 @@ export function bootstrap(
         }
       }
     );
+
+    if (
+      !configInjector.validateConfigSingletons({
+        redisUrl: process.env.REDIS_URL
+      })
+    ) {
+      throw new Error('Invalid environment variables supplied.');
+    }
+
     callback(configInjector);
   });
 }

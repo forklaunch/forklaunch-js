@@ -4,6 +4,7 @@ import { UnboxedObjectSchema } from '../../src/shared/types/schema.types';
 import {
   array,
   enum_,
+  isSchema,
   number,
   openapi,
   optional,
@@ -186,6 +187,19 @@ describe('zod schema validator tests', () => {
       schemifiedMultiple,
       z.union([z.literal('world'), z.literal('hello')])
     );
+  });
+
+  test('isSchema', () => {
+    expect(isSchema(z.string())).toBe(true);
+    expect(isSchema(z.number())).toBe(true);
+    expect(isSchema(z.object({ foo: z.string() }))).toBe(true);
+    expect(isSchema(schemified)).toBe(true);
+
+    expect(isSchema('not a schema')).toBe(false);
+    expect(isSchema(42)).toBe(false);
+    expect(isSchema({})).toBe(false);
+    expect(isSchema(null)).toBe(false);
+    expect(isSchema(undefined)).toBe(false);
   });
 
   test('validate', async () => {

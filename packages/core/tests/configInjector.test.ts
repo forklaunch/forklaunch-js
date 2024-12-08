@@ -101,12 +101,12 @@ describe('serviceFactory', () => {
     expect(
       configInjector.validateConfigSingletons({
         a: 'a'
-      })
+      }).ok
     ).toBe(true);
     expect(
       configInjector.validateConfigSingletons({
         a: 5 as unknown as string
-      })
+      }).ok
     ).toBe(false);
   });
 

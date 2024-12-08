@@ -26,7 +26,9 @@
     "lint:fix": "pnpm --parallel -r run lint:fix",
     "format": "pnpm --parallel -r run format",
     "test": "pnpm vitest --passWithNoTests",
-    "up:packages": "pnpm -r update --latest"
+    "up:packages": "pnpm -r update --latest",
+    "dev": "RUNTIME=node docker compose up --build",
+    "dev:bun": "RUNTIME=bun docker compose up --build"
   },
   "keywords": [],
   "author": "",

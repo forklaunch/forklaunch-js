@@ -110,6 +110,13 @@ export const literal = StaticSchemaValidator.literal.bind(
 export const enum_ = StaticSchemaValidator.enum_.bind(StaticSchemaValidator);
 
 /**
+ * Checks if a value is a TypeBox schema.
+ */
+export const isSchema = StaticSchemaValidator.isSchema.bind(
+  StaticSchemaValidator
+);
+
+/**
  * Validates a value against a valid schema.
  */
 export const validate = StaticSchemaValidator.validate.bind(

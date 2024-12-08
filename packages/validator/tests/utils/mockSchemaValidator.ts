@@ -34,6 +34,7 @@ export class MockSchemaValidator
       <T extends readonly string[]>(schemas: T) => RecursiveUnion<T>,
       <T extends LiteralSchema>(schema: T) => `literal ${T}`,
       <T extends LiteralSchema>(schemaEnum: Record<string, T>) => `enum ${T}`,
+      (value: unknown) => value is string,
       <T extends string>(schema: T, value: string) => boolean,
       <T extends string>(schema: T, value: string) => ParseResult<T>,
       <T extends string>(schema: T) => SchemaObject
@@ -77,6 +78,9 @@ export class MockSchemaValidator
   }
   enum_<T extends LiteralSchema>(schemaEnum: Record<string, T>): `enum ${T}` {
     return `enum ${Object.values(schemaEnum).join(' | ')}` as `enum ${T}`;
+  }
+  isSchema(value: unknown): value is string {
+    return typeof value === 'string';
   }
   validate<T extends string>(schema: T, value: string): boolean {
     return schema === value;

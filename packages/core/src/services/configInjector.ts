@@ -1,5 +1,9 @@
 import { extractArgumentNames, isNever } from '@forklaunch/common';
-import { AnySchemaValidator, SchemaValidator } from '@forklaunch/validator';
+import {
+  AnySchemaValidator,
+  ParseResult,
+  SchemaValidator
+} from '@forklaunch/validator';
 import {
   ConfigValidator,
   Constructed,
@@ -91,13 +95,15 @@ export class ConfigInjector<
 
   validateConfigSingletons(
     config: Partial<ResolvedConfigValidator<SV, CV>>
-  ): boolean {
-    return (this.schemaValidator as SchemaValidator).validate(
+  ): ParseResult<unknown> {
+    return (this.schemaValidator as SchemaValidator).parse(
       (this.schemaValidator as SchemaValidator).schemify(
         Object.fromEntries(
           Object.entries(this.configShapes).filter(
-            ([key]) =>
-              this.dependenciesDefinition[key].lifetime === Lifetime.Singleton
+            ([key, value]) =>
+              this.dependenciesDefinition[key].lifetime ===
+                Lifetime.Singleton &&
+              (this.schemaValidator as SchemaValidator).isSchema(value)
           )
         )
       ),

@@ -1,0 +1,15 @@
+FROM oven/bun:1
+
+WORKDIR /app
+
+# Copy source code
+COPY . .
+
+# Install dependencies
+RUN bun install
+
+# Build TypeScript code
+RUN bun run build
+
+# Start the app
+ENTRYPOINT ["../scripts/startup.dev.bun.sh", ".env.docker"]

@@ -1,37 +1,64 @@
-import { Configuration, IDatabaseDriver } from '@mikro-orm/core';
+import { ConfigInjector, Lifetime } from '@forklaunch/core/services';
+import { number, SchemaValidator, string } from '@forklaunch/framework-core';
 import { Migrator } from '@mikro-orm/migrations';
-import { MongoDriver } from '@mikro-orm/mongodb';
-import { MySqlDriver } from '@mikro-orm/mysql';
+// import { MongoDriver } from '@mikro-orm/mongodb';
+// import { MySqlDriver } from '@mikro-orm/mysql';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
-import { SqliteDriver } from '@mikro-orm/sqlite';
+// import { SqliteDriver } from '@mikro-orm/sqlite';
 
-const parseDbType = <Db extends string>(
-  dbType?: Db
-): {
-  new (config: Configuration): IDatabaseDriver;
-} => {
-  switch (dbType) {
-    case 'mongo':
-      return MongoDriver;
-    case 'postgres':
-      return PostgreSqlDriver;
-    case 'sqlite':
-      return SqliteDriver;
-    case 'mysql':
-      return MySqlDriver;
-    default:
-      return PostgreSqlDriver;
+const configInjector = new ConfigInjector(
+  SchemaValidator(),
+  {
+    dbName: string,
+    host: string,
+    user: string,
+    password: string,
+    port: number
+  },
+  {
+    dbName: {
+      lifetime: Lifetime.Singleton,
+      value: process.env.FORKLAUNCH_DB_NAME ?? 'forklaunch-dev'
+    },
+    host: {
+      lifetime: Lifetime.Singleton,
+      value: process.env.FORKLAUNCH_DB_HOST ?? 'localhost'
+    },
+    user: {
+      lifetime: Lifetime.Singleton,
+      value: process.env.FORKLAUNCH_DB_USER ?? 'postgres'
+    },
+    password: {
+      lifetime: Lifetime.Singleton,
+      value: process.env.FORKLAUNCH_DB_PASSWORD ?? 'postgres'
+    },
+    port: {
+      lifetime: Lifetime.Singleton,
+      value: Number(process.env.FORKLAUNCH_DB_PORT) ?? 5432
+    }
   }
-};
+);
+
+if (
+  !configInjector.validateConfigSingletons({
+    dbName: process.env.FORKLAUNCH_DB_NAME,
+    host: process.env.FORKLAUNCH_DB_HOST,
+    user: process.env.FORKLAUNCH_DB_USER,
+    password: process.env.FORKLAUNCH_DB_PASSWORD,
+    port: Number(process.env.FORKLAUNCH_DB_PORT)
+  })
+) {
+  throw new Error('Invalid environment variables supplied.');
+}
 
 const mikroOrmOptionsConfig = {
-  driver: parseDbType(process.env.FORKLAUNCH_DB_TYPE),
-  dbName: process.env.FORKLAUNCH_DB_NAME || 'forklaunch-dev',
-  host: process.env.FORKLAUNCH_DB_HOST || 'localhost',
-  user: process.env.FORKLAUNCH_DB_USER || 'postgres',
-  password: process.env.FORKLAUNCH_DB_PASSWORD || 'postgres',
-  port: 5432,
+  driver: PostgreSqlDriver,
+  dbName: configInjector.resolve('dbName'),
+  host: configInjector.resolve('host'),
+  user: configInjector.resolve('user'),
+  password: configInjector.resolve('password'),
+  port: configInjector.resolve('port'),
   entities: ['dist/**/*.entity.js'],
   entitiesTs: ['models/persistence/**/*.entity.ts'],
   metadataProvider: TsMorphMetadataProvider,

@@ -1,0 +1,33 @@
+# Node dependencies - including nested/subdirectories
+**/node_modules/
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/.pnpm-debug.log*
+
+# Environment files - anywhere in the tree
+**/.env.local
+**/.env.*.local
+
+# Build outputs - anywhere in the tree
+**/dist/
+**/build/
+**/.next/
+**/out/
+
+# Cache directories - anywhere in the tree
+**/.npm
+**/.yarn
+**/.pnp.*
+**/.cache
+
+# IDE/Editor - anywhere in the tree
+**/.idea/
+**/.vscode/
+**/*.swp
+**/*.swo
+
+# OS generated - anywhere in the tree
+**/.DS_Store
+**/Thumbs.db
+
