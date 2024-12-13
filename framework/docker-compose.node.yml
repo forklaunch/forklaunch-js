@@ -1,0 +1,16 @@
+services:
+  iam:
+    image: forklaunch_iam_node:latest
+    volumes:
+      - ./iam:/app/iam
+      - /app/iam/node_modules
+      - /app/iam/dist
+    entrypoint: ['pnpm', 'run', 'dev']
+
+  billing:
+    image: forklaunch_billing_node:latest
+    volumes:
+      - ./billing:/app/billing
+      - /app/billing/node_modules
+      - /app/billing/dist
+    entrypoint: ['pnpm', 'run', 'dev']

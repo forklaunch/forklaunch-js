@@ -19,34 +19,34 @@ const configInjector = new ConfigInjector(
   {
     dbName: {
       lifetime: Lifetime.Singleton,
-      value: process.env.FORKLAUNCH_DB_NAME ?? 'forklaunch-dev'
+      value: process.env.DB_NAME ?? 'forklaunch-dev'
     },
     host: {
       lifetime: Lifetime.Singleton,
-      value: process.env.FORKLAUNCH_DB_HOST ?? 'localhost'
+      value: process.env.DB_HOST ?? 'localhost'
     },
     user: {
       lifetime: Lifetime.Singleton,
-      value: process.env.FORKLAUNCH_DB_USER ?? 'postgres'
+      value: process.env.DB_USER ?? 'postgres'
     },
     password: {
       lifetime: Lifetime.Singleton,
-      value: process.env.FORKLAUNCH_DB_PASSWORD ?? 'postgres'
+      value: process.env.DB_PASSWORD ?? 'postgres'
     },
     port: {
       lifetime: Lifetime.Singleton,
-      value: Number(process.env.FORKLAUNCH_DB_PORT) ?? 5432
+      value: Number(process.env.DB_PORT) ?? 5432
     }
   }
 );
 
 if (
   !configInjector.validateConfigSingletons({
-    dbName: process.env.FORKLAUNCH_DB_NAME,
-    host: process.env.FORKLAUNCH_DB_HOST,
-    user: process.env.FORKLAUNCH_DB_USER,
-    password: process.env.FORKLAUNCH_DB_PASSWORD,
-    port: Number(process.env.FORKLAUNCH_DB_PORT)
+    dbName: process.env.DB_NAME,
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    port: Number(process.env.DB_PORT)
   })
 ) {
   throw new Error('Invalid environment variables supplied.');

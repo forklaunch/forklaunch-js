@@ -44,7 +44,7 @@ services:
 
   iam:
     hostname: iam
-    container_name: forklaunch-iam
+    container_name: forklaunch-iam-${RUNTIME}
     restart: always
     build:
       context: .
@@ -52,6 +52,12 @@ services:
     environment:
       ENV: development
       PORT: 8000
+      DB_NAME: forklaunch-dev
+      DB_HOST: postgres
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_PORT: 5432
+      REDIS_URL: redis://redis:6379
     depends_on:
       - postgres
       - redis
@@ -59,13 +65,12 @@ services:
       - 8000:8000
     networks:
       - forklaunch-network
-    volumes:
-      - ./iam:/app/iam
+
     working_dir: /app/iam
 
   billing:
     hostname: billing
-    container_name: forklaunch-billing
+    container_name: forklaunch-billing-${RUNTIME}
     restart: always
     build:
       context: .
@@ -73,6 +78,12 @@ services:
     environment:
       ENV: development
       PORT: 8001
+      DB_NAME: forklaunch-dev
+      DB_HOST: postgres
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_PORT: 5432
+      REDIS_URL: redis://redis:6379
     depends_on:
       - postgres
       - redis
@@ -80,8 +91,6 @@ services:
       - 8001:8001
     networks:
       - forklaunch-network
-    volumes:
-      - ./billing:/app/billing
     working_dir: /app/billing
 
   redis:

@@ -40,6 +40,8 @@ struct DockerService {
     networks: Option<Vec<String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     volumes: Option<Vec<String>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    entrypoint: Option<Vec<String>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -88,40 +90,68 @@ pub(crate) fn add_service_definition_to_docker_compose(
     port_number += 1;
 
     let mut environment = IndexMap::new();
-    environment.insert(
-        "POSTGRES_URL".to_string(),
-        "postgres://postgres:postgres@postgres:5432/postgres".to_string(),
-    );
-    environment.insert("REDIS_URL".to_string(), "redis://redis:6379".to_string());
+    environment.insert("ENV".to_string(), "development".to_string());
     environment.insert("HOST".to_string(), "0.0.0.0".to_string());
-    environment.insert("PORT".to_string(), port_number.to_string());
-    environment.insert("ENVIRONMENT".to_string(), "development".to_string());
+    environment.insert("PORT".to_string(), format!("{}", port_number));
+    // TODO: support other databases
+    environment.insert(
+        "DB_NAME".to_string(),
+        format!("{}-dev", config_data.app_name),
+    );
+    environment.insert("DB_HOST".to_string(), "postgres".to_string());
+    environment.insert("DB_USER".to_string(), "postgres".to_string());
+    environment.insert("DB_PASSWORD".to_string(), "postgres".to_string());
+    environment.insert("DB_PORT".to_string(), "5432".to_string());
+    environment.insert("REDIS_URL".to_string(), "redis://redis:6379".to_string());
+
+    let mut volumes = vec![
+        format!(
+            "./{}:/app/{}",
+            config_data.service_name, config_data.service_name
+        ),
+        format!(
+            "/{}/{}/dist",
+            config_data.app_name, config_data.service_name
+        ),
+    ];
+    if config_data.runtime == "node" {
+        volumes.push(format!(
+            "/{}/{}/node_modules",
+            config_data.app_name, config_data.service_name
+        ));
+    }
 
     docker_compose.services.insert(
         config_data.service_name.clone(),
         DockerService {
             hostname: Some(config_data.service_name.clone()),
             container_name: Some(format!(
-                "{}-{}",
-                config_data.app_name, config_data.service_name
+                "{}-{}-{}",
+                config_data.app_name, config_data.service_name, config_data.runtime
             )),
             restart: Some("always".to_string()),
             build: Some(DockerBuild {
-                context: format!("./{}", config_data.service_name),
-                dockerfile: format!("./Dockerfile.dev"),
+                context: ".".to_string(),
+                dockerfile: format!("./Dockerfile"),
             }),
             image: Some(format!(
-                "{}_{}:latest",
-                config_data.app_name, config_data.service_name
+                "{}_{}_{}",
+                config_data.app_name, config_data.service_name, config_data.runtime
             )),
             environment: Some(environment),
             depends_on: Some(vec!["postgres".to_string(), "redis".to_string()]),
             ports: Some(vec![format!("{}:{}", port_number, port_number)]),
             networks: Some(vec![format!("{}-network", config_data.app_name)]),
-            volumes: Some(vec![format!(
-                "{}:{}",
-                config_data.service_name, config_data.service_name
-            )]),
+            volumes: Some(volumes),
+            entrypoint: Some(vec![
+                match config_data.runtime.as_str() {
+                    "node" => "pnpm".to_string(),
+                    "bun" => "bun".to_string(),
+                    _ => unreachable!(),
+                },
+                "run".to_string(),
+                "dev".to_string(),
+            ]),
         },
     );
 

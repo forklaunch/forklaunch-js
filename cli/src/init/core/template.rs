@@ -66,7 +66,13 @@ pub(crate) fn setup_with_template<T: Content + Config>(
                 .with_context(|| {
                     format!("Failed to parse template file {}.", path.to_string_lossy())
                 })?;
-            let rendered = tpl.render(&data);
+            let rendered = tpl
+                .render(&data)
+                // TODO: find a potentially better strategy for symlinking dependencies that we create
+                .replace(
+                    "@forklaunch/framework-",
+                    format!("@{}/", &data.app_name()).as_str(),
+                );
             if !output_path.exists()
                 && !ignore_files
                     .iter()

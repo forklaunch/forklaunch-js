@@ -5,7 +5,7 @@
   "scripts": {
     "test": "{{test-framework}} --passWithNoTests",
     "build": "tsc",
-    "clean": "rm -rf lib pnpm.lock.yaml node_modules",
+    "clean": "rm -rf lib {{#is_node}}pnpm.lock.yaml{{/is_node}}{{#is_bun}}bun.lockb{{/is_bun}} node_modules",
     "docs": "typedoc --out docs *",
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",

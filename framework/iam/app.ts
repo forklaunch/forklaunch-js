@@ -10,10 +10,13 @@ import { PermissionRoutes } from './routes/permission.routes';
 import { RoleRoutes } from './routes/role.routes';
 import { UserRoutes } from './routes/user.routes';
 
-const app = forklaunchExpress();
-const port = Number(process.env.PORT) || 8000;
-
 bootstrap((ci) => {
+  const app = forklaunchExpress();
+  const host = ci.resolve('host');
+  const port = ci.resolve('port');
+  const version = ci.resolve('version');
+  const swaggerPath = ci.resolve('swaggerPath');
+
   const organizationRoutes = OrganizationRoutes(
     new OrganizationController(ci.scopedResolver('organizationService'))
   );
@@ -32,9 +35,9 @@ bootstrap((ci) => {
   app.use(roleRoutes.router);
   app.use(userRoutes.router);
 
-  app.listen(port, () => {
+  app.listen(port, host, () => {
     console.log(
-      `🎉 IAM Server is running at http://localhost:${port} 🎉.\nAn API reference can be accessed at http://localhost:${port}/api${process.env.VERSION ?? '/v1'}${process.env.SWAGGER_PATH ?? '/swagger'}`
+      `🎉 IAM Server is running at http://${host}:${port} 🎉.\nAn API reference can be accessed at http://${host}:${port}/api${version}${swaggerPath}`
     );
   });
 });

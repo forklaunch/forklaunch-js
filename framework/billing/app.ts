@@ -10,10 +10,13 @@ import { PaymentLinkRoutes } from './routes/paymentLink.routes';
 import { PlanRoutes } from './routes/plan.routes';
 import { SubscriptionRoutes } from './routes/subscription.routes';
 
-const app = forklaunchExpress();
-const port = Number(process.env.PORT) || 8001;
-
 bootstrap((ci) => {
+  const app = forklaunchExpress();
+  const host = ci.resolve('host');
+  const port = ci.resolve('port');
+  const version = ci.resolve('version');
+  const swaggerPath = ci.resolve('swaggerPath');
+
   const checkoutSessionRoutes = CheckoutSessionRoutes(
     new CheckoutSessionController(ci.scopedResolver('checkoutSessionService'))
   );
@@ -31,11 +34,9 @@ bootstrap((ci) => {
   app.use(planRoutes.router);
   app.use(subscriptionRoutes.router);
 
-  app.listen(port, () => {
+  app.listen(port, host, () => {
     console.log(
-      `🎉 Billing Server is running at http://localhost:${port} 🎉.\nAn API reference can be accessed at http://localhost:${port}/api${
-        process.env.VERSION ?? '/v1'
-      }${process.env.SWAGGER_PATH ?? '/swagger'}`
+      `🎉 Billing Server is running at http://${host}:${port} 🎉.\nAn API reference can be accessed at http://${host}:${port}/api${version}${swaggerPath}`
     );
   });
 });
