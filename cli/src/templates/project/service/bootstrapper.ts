@@ -5,6 +5,7 @@ import { SchemaValidator, number, optional, string } from '@{{app_name}}/core';
 import mikroOrmOptionsConfig from './mikro-orm.config';
 import { BaseHelloForklaunchService } from './services/helloForklaunch.service';
 
+// configValidator object that defines the configuration schema for the application
 export const configValidator = {
   redisUrl: string,
   protocol: optional(string),
@@ -17,12 +18,15 @@ export const configValidator = {
   helloForklaunchService: BaseHelloForklaunchService
 };
 
+// bootstrap function that initializes the application
 export function bootstrap(
   callback: (
     ci: ConfigInjector<SchemaValidator, typeof configValidator>
   ) => void
 ) {
+  // initializes the MikroORM instance with the mikroOrmOptionsConfig
   MikroORM.init(mikroOrmOptionsConfig).then((orm) => {
+    // creates a new ConfigInjector instance with the SchemaValidator, configValidator, and the configuration for the application
     const configInjector = new ConfigInjector(
       SchemaValidator(),
       configValidator,
@@ -72,6 +76,7 @@ export function bootstrap(
       }
     );
 
+    // validates the configuration singletons
     const parsedConfig = configInjector.validateConfigSingletons({
       redisUrl: process.env.REDIS_URL
     });
@@ -79,7 +84,8 @@ export function bootstrap(
     if (!parsedConfig.ok) {
       throw new Error(parsedConfig.error);
     }
-    
+
+    // calls the callback function with the configInjector instance
     callback(configInjector);
   });
 }

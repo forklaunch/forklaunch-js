@@ -26,11 +26,11 @@
   },
   "dependencies": {
     "@{{app_name}}/core": "workspace:*",
-    "@forklaunch/common": "^0.1.13",
-    "@forklaunch/core": "^0.2.34",{{#is_express}}
-    "@forklaunch/express": "^0.1.29",{{/is_express}}{{#is_hyper_express}}
-    "@forklaunch/hyper-express": "^0.1.30",{{/is_hyper_express}}
-    "@forklaunch/validator": "^0.3.12",
+    "@forklaunch/common": "^0.1.14",
+    "@forklaunch/core": "^0.2.35",{{#is_express}}
+    "@forklaunch/express": "^0.1.30",{{/is_express}}{{#is_hyper_express}}
+    "@forklaunch/hyper-express": "^0.1.31",{{/is_hyper_express}}
+    "@forklaunch/validator": "^0.3.13",
     "@mikro-orm/core": "^6.4.1",
     "@mikro-orm/migrations": "^6.4.1",
     "@mikro-orm/{{database}}": "^6.4.1",

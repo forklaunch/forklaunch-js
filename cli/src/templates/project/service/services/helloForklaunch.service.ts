@@ -9,9 +9,11 @@ import {
   HelloForklaunchResponseDtoMapper
 } from '../models/dtoMapper/helloForklaunch.dtoMapper';
 
+// BaseHelloForklaunchService class that implements the HelloForklaunchService interface
 export class BaseHelloForklaunchService implements HelloForklaunchService {
   constructor(private entityManager: EntityManager, private cache: TtlCache) {}
 
+  // helloForklaunchPost method that implements the HelloForklaunchService interface
   helloForklaunchPost = async (
     dto: HelloForklaunchRequestDto
   ): Promise<HelloForklaunchResponseDto> => {

@@ -33,7 +33,7 @@ services:
     ports:
       - '6379:6379'
     networks:
-      - {{app_name}}-network {{#projects}}{{#port}}
+      - {{app_name}}-network{{#projects}}{{#port}}
   {{name}}:
     hostname: {{name}}
     container_name: {{app_name}}-{{name}}-{{runtime}}
@@ -60,7 +60,7 @@ services:
     networks:
       - {{app_name}}-network
     volumes:
-      - ./{{name}}:/{{app_name}}  /{{name}}
+      - ./{{name}}:/{{app_name}}/{{name}}
       - /{{app_name}}/{{name}}/dist {{#is_node}}
       - /{{app_name}}/{{name}}/node_modules {{/is_node}}
     working_dir: /{{app_name}}/{{name}}

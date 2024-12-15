@@ -31,7 +31,7 @@
     "format": "bun -r format",
     "test": "bun test",
     "up:packages": "bun update --latest"{{/is_bun}},
-    "dev": "docker compose up"
+    "dev": "docker compose up --build"
   },
   "keywords": [],
   "author": "",

@@ -16,12 +16,12 @@
     "start": "{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} run migrate && {{#is_node}}node --import tsx dist/app.js{{/is_node}}{{#is_bun}}bun dist/app.js{{/is_bun}}"
   },
   "dependencies": {
-    "@forklaunch/common": "^0.1.13",
-    "@forklaunch/core": "^0.2.34",
-    "@forklaunch/express": "^0.1.29",
+    "@forklaunch/common": "^0.1.14",
+    "@forklaunch/core": "^0.2.35",
+    "@forklaunch/express": "^0.1.30",
     "@forklaunch/framework-core": "workspace:*",
-    "@forklaunch/hyper-express": "^0.1.30",
-    "@forklaunch/validator": "^0.3.12",
+    "@forklaunch/hyper-express": "^0.1.31",
+    "@forklaunch/validator": "^0.3.13",
     "@mikro-orm/core": "^6.4.1",
     "@mikro-orm/migrations": "^6.4.1",
     "@mikro-orm/{{database}}": "^6.4.1",

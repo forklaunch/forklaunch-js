@@ -4,6 +4,7 @@ import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
 import { number, SchemaValidator, string } from '@{{app_name}}/core';
 import { {{db_driver}} } from '@mikro-orm/{{database}}';
 
+// configInjector instance that makes it easy to resolve the configuration values
 const configInjector = new ConfigInjector(
   SchemaValidator(),
   {
@@ -37,6 +38,7 @@ const configInjector = new ConfigInjector(
   }
 );
 
+// validates the configuration singletons
 if (
   !configInjector.validateConfigSingletons({
     dbName: process.env.DB_NAME,
@@ -49,6 +51,7 @@ if (
   throw new Error('Invalid environment variables supplied.');
 }
 
+// mikroOrmOptionsConfig object that defines the options for the MikroORM instance
 const mikroOrmOptionsConfig = {
   driver: {{db_driver}},
   dbName: configInjector.resolve('dbName'),
@@ -63,5 +66,6 @@ const mikroOrmOptionsConfig = {
   extensions: [Migrator]
 };
 
+// exports the mikroOrmOptionsConfig object
 export default mikroOrmOptionsConfig;
 
