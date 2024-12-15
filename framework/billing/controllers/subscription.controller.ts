@@ -1,11 +1,13 @@
 import { Controller } from '@forklaunch/core/controllers';
 import { delete_, get, post, put } from '@forklaunch/core/http';
+import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import {
   array,
   optional,
   SchemaValidator,
   string
 } from '@forklaunch/framework-core';
+import { configValidator } from '../bootstrapper';
 import { SubscriptionService } from '../interfaces/subscription.service.interface';
 import {
   CreateSubscriptionDtoMapper,
@@ -13,13 +15,13 @@ import {
   UpdateSubscriptionDtoMapper
 } from '../models/dtoMapper/subscription.dtoMapper';
 
-export class SubscriptionController<ConfigInjectorScope>
-  implements Controller<SubscriptionService>
-{
+export class SubscriptionController implements Controller<SubscriptionService> {
   constructor(
-    private readonly service: (
-      scope?: ConfigInjectorScope
-    ) => SubscriptionService
+    private readonly serviceFactory: ScopedDependencyFactory<
+      SchemaValidator,
+      typeof configValidator,
+      'subscriptionService'
+    >
   ) {}
 
   createSubscription = post(
@@ -34,7 +36,9 @@ export class SubscriptionController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      res.status(200).json(await this.service().createSubscription(req.body));
+      res
+        .status(200)
+        .json(await this.serviceFactory().createSubscription(req.body));
     }
   );
 
@@ -52,7 +56,9 @@ export class SubscriptionController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      res.status(200).json(await this.service().getSubscription(req.params.id));
+      res
+        .status(200)
+        .json(await this.serviceFactory().getSubscription(req.params.id));
     }
   );
 
@@ -72,7 +78,7 @@ export class SubscriptionController<ConfigInjectorScope>
     async (req, res) => {
       res
         .status(200)
-        .json(await this.service().getUserSubscription(req.params.id));
+        .json(await this.serviceFactory().getUserSubscription(req.params.id));
     }
   );
 
@@ -92,7 +98,9 @@ export class SubscriptionController<ConfigInjectorScope>
     async (req, res) => {
       res
         .status(200)
-        .json(await this.service().getOrganizationSubscription(req.params.id));
+        .json(
+          await this.serviceFactory().getOrganizationSubscription(req.params.id)
+        );
     }
   );
 
@@ -111,7 +119,9 @@ export class SubscriptionController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      res.status(200).json(await this.service().updateSubscription(req.body));
+      res
+        .status(200)
+        .json(await this.serviceFactory().updateSubscription(req.body));
     }
   );
 
@@ -129,7 +139,7 @@ export class SubscriptionController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      await this.service().deleteSubscription(req.params.id);
+      await this.serviceFactory().deleteSubscription(req.params.id);
       res.status(200).send(`Deleted subscription ${req.params.id}`);
     }
   );
@@ -150,7 +160,7 @@ export class SubscriptionController<ConfigInjectorScope>
     async (req, res) => {
       res
         .status(200)
-        .json(await this.service().listSubscriptions(req.query.ids));
+        .json(await this.serviceFactory().listSubscriptions(req.query.ids));
     }
   );
 
@@ -168,7 +178,7 @@ export class SubscriptionController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      await this.service().cancelSubscription(req.params.id);
+      await this.serviceFactory().cancelSubscription(req.params.id);
       res.status(200).send(`Cancelled subscription ${req.params.id}`);
     }
   );
@@ -187,7 +197,7 @@ export class SubscriptionController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      await this.service().resumeSubscription(req.params.id);
+      await this.serviceFactory().resumeSubscription(req.params.id);
       res.status(200).send(`Resumed subscription ${req.params.id}`);
     }
   );

@@ -1,19 +1,23 @@
 import { Controller } from '@forklaunch/core/controllers';
 import { get, post } from '@forklaunch/core/http';
+import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { SchemaValidator, string } from '@forklaunch/framework-core';
+import { configValidator } from '../bootstrapper';
 import { CheckoutSessionService } from '../interfaces/checkoutSession.service.interface';
 import {
   CreateSessionDtoMapper,
   SessionDtoMapper
 } from '../models/dtoMapper/session.dtoMapper';
 
-export class CheckoutSessionController<ConfigInjectorScope>
+export class CheckoutSessionController
   implements Controller<CheckoutSessionService>
 {
   constructor(
-    private readonly service: (
-      scope?: ConfigInjectorScope
-    ) => CheckoutSessionService
+    private readonly serviceFactory: ScopedDependencyFactory<
+      SchemaValidator,
+      typeof configValidator,
+      'checkoutSessionService'
+    >
   ) {}
 
   createCheckoutSession = post(
@@ -30,7 +34,7 @@ export class CheckoutSessionController<ConfigInjectorScope>
     async (req, res) => {
       res
         .status(200)
-        .json(await this.service().createCheckoutSession(req.body));
+        .json(await this.serviceFactory().createCheckoutSession(req.body));
     }
   );
 
@@ -50,7 +54,7 @@ export class CheckoutSessionController<ConfigInjectorScope>
     async (req, res) => {
       res
         .status(200)
-        .json(await this.service().getCheckoutSession(req.params.id));
+        .json(await this.serviceFactory().getCheckoutSession(req.params.id));
     }
   );
 
@@ -68,7 +72,7 @@ export class CheckoutSessionController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      await this.service().expireCheckoutSession(req.params.id);
+      await this.serviceFactory().expireCheckoutSession(req.params.id);
       res.status(200).send(`Expired checkout session ${req.params.id}`);
     }
   );
@@ -87,7 +91,7 @@ export class CheckoutSessionController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      await this.service().handleCheckoutSuccess(req.params.id);
+      await this.serviceFactory().handleCheckoutSuccess(req.params.id);
       res
         .status(200)
         .send(`Handled checkout success for session ${req.params.id}`);
@@ -108,7 +112,7 @@ export class CheckoutSessionController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      await this.service().handleCheckoutFailure(req.params.id);
+      await this.serviceFactory().handleCheckoutFailure(req.params.id);
       res
         .status(200)
         .send(`Handled checkout failure for session ${req.params.id}`);

@@ -1,7 +1,8 @@
 import { Controller } from '@forklaunch/core/controllers';
-import { post } from '@forklaunch/core/http';
+import { get, post } from '@forklaunch/core/http';
 import { ConfigInjector, ScopedDependencyFactory } from '@forklaunch/core/services';
 import { SchemaValidator } from '@{{app_name}}/core';
+import { configValidator } from '../bootstrapper';
 import { HelloForklaunchService } from '../interfaces/helloForklaunch.interface';
 import { HelloForklaunchRequestDtoMapper, HelloForklaunchResponseDtoMapper } from '../models/dtoMapper/helloForklaunch.dtoMapper';
 

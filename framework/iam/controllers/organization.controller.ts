@@ -1,7 +1,9 @@
 import { Controller } from '@forklaunch/core/controllers';
 import { delete_, get, post, put } from '@forklaunch/core/http';
+import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { SchemaValidator, string } from '@forklaunch/framework-core';
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
+import { configValidator } from '../bootstrapper';
 import { OrganizationService } from '../interfaces/organization.service.interface';
 import {
   CreateOrganizationDtoMapper,
@@ -9,13 +11,13 @@ import {
   UpdateOrganizationDtoMapper
 } from '../models/dtoMapper/organization.dtoMapper';
 
-export class OrganizationController<ConfigInjectorScope>
-  implements Controller<OrganizationService>
-{
+export class OrganizationController implements Controller<OrganizationService> {
   constructor(
-    private readonly service: (
-      scope?: ConfigInjectorScope
-    ) => OrganizationService
+    private readonly serviceFactory: ScopedDependencyFactory<
+      SchemaValidator,
+      typeof configValidator,
+      'organizationService'
+    >
   ) {}
 
   createOrganization = post(
@@ -32,7 +34,9 @@ export class OrganizationController<ConfigInjectorScope>
     },
     async (req, res) => {
       try {
-        res.status(201).json(await this.service().createOrganization(req.body));
+        res
+          .status(201)
+          .json(await this.serviceFactory().createOrganization(req.body));
       } catch (error: Error | unknown) {
         if (error instanceof UniqueConstraintViolationException) {
           res.status(409).send('Organization already exists');
@@ -58,7 +62,7 @@ export class OrganizationController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      const organizationDto = await this.service().getOrganization(
+      const organizationDto = await this.serviceFactory().getOrganization(
         req.params.id
       );
       if (organizationDto) {
@@ -82,7 +86,9 @@ export class OrganizationController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      res.status(200).json(await this.service().updateOrganization(req.body));
+      res
+        .status(200)
+        .json(await this.serviceFactory().updateOrganization(req.body));
     }
   );
 
@@ -101,7 +107,7 @@ export class OrganizationController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      await this.service().deleteOrganization(req.params.id);
+      await this.serviceFactory().deleteOrganization(req.params.id);
       res.status(200).send('Organization deleted successfully');
     }
   );

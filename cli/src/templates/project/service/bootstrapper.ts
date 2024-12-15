@@ -5,7 +5,7 @@ import { SchemaValidator, number, optional, string } from '@{{app_name}}/core';
 import mikroOrmOptionsConfig from './mikro-orm.config';
 import { BaseHelloForklaunchService } from './services/helloForklaunch.service';
 
-const configValidator = {
+export const configValidator = {
   redisUrl: string,
   protocol: optional(string),
   host: optional(string),

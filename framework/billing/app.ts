@@ -17,17 +17,25 @@ bootstrap((ci) => {
   const version = ci.resolve('version');
   const swaggerPath = ci.resolve('swaggerPath');
 
+  const scopedCheckoutSessionServiceFactory = ci.scopedResolver(
+    'checkoutSessionService'
+  );
+  const scopedPaymentLinkServiceFactory =
+    ci.scopedResolver('paymentLinkService');
+  const scopedPlanServiceFactory = ci.scopedResolver('planService');
+  const scopedSubscriptionServiceFactory = ci.scopedResolver(
+    'subscriptionService'
+  );
+
   const checkoutSessionRoutes = CheckoutSessionRoutes(
-    new CheckoutSessionController(ci.scopedResolver('checkoutSessionService'))
+    new CheckoutSessionController(scopedCheckoutSessionServiceFactory)
   );
   const paymentLinkRoutes = PaymentLinkRoutes(
-    new PaymentLinkController(ci.scopedResolver('paymentLinkService'))
+    new PaymentLinkController(scopedPaymentLinkServiceFactory)
   );
-  const planRoutes = PlanRoutes(
-    new PlanController(ci.scopedResolver('planService'))
-  );
+  const planRoutes = PlanRoutes(new PlanController(scopedPlanServiceFactory));
   const subscriptionRoutes = SubscriptionRoutes(
-    new SubscriptionController(ci.scopedResolver('subscriptionService'))
+    new SubscriptionController(scopedSubscriptionServiceFactory)
   );
   app.use(checkoutSessionRoutes.router);
   app.use(paymentLinkRoutes.router);

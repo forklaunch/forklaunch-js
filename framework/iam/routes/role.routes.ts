@@ -3,9 +3,7 @@ import { RoleController } from '../controllers/role.controller';
 
 export const router = forklaunchRouter('/role');
 
-export const RoleRoutes = <ConfigInjectorScope>(
-  controller: RoleController<ConfigInjectorScope>
-) => ({
+export const RoleRoutes = (controller: RoleController) => ({
   router,
 
   // Create role

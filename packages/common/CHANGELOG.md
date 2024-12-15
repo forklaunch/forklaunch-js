@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.1.14
+
+### Patch Changes
+
+- changes to extractArgumentNames to accomodate exploded params
+
 ## 0.1.13
 
 ### Patch Changes

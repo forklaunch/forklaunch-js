@@ -1,11 +1,13 @@
 import { Controller } from '@forklaunch/core/controllers';
 import { delete_, get, post, put } from '@forklaunch/core/http';
+import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import {
   array,
   optional,
   SchemaValidator,
   string
 } from '@forklaunch/framework-core';
+import { configValidator } from '../bootstrapper';
 import { PaymentLinkService } from '../interfaces/paymentLink.service.interface';
 import {
   CreatePaymentLinkDtoMapper,
@@ -13,13 +15,13 @@ import {
   UpdatePaymentLinkDtoMapper
 } from '../models/dtoMapper/paymentLink.dtoMapper';
 
-export class PaymentLinkController<ConfigInjectorScope>
-  implements Controller<PaymentLinkService>
-{
+export class PaymentLinkController implements Controller<PaymentLinkService> {
   constructor(
-    private readonly service: (
-      scope?: ConfigInjectorScope
-    ) => PaymentLinkService
+    private readonly serviceFactory: ScopedDependencyFactory<
+      SchemaValidator,
+      typeof configValidator,
+      'paymentLinkService'
+    >
   ) {}
 
   createPaymentLink = post(
@@ -34,7 +36,9 @@ export class PaymentLinkController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      res.status(200).json(await this.service().createPaymentLink(req.body));
+      res
+        .status(200)
+        .json(await this.serviceFactory().createPaymentLink(req.body));
     }
   );
 
@@ -52,7 +56,9 @@ export class PaymentLinkController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      res.status(200).json(await this.service().getPaymentLink(req.params.id));
+      res
+        .status(200)
+        .json(await this.serviceFactory().getPaymentLink(req.params.id));
     }
   );
 
@@ -71,7 +77,9 @@ export class PaymentLinkController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      res.status(200).json(await this.service().updatePaymentLink(req.body));
+      res
+        .status(200)
+        .json(await this.serviceFactory().updatePaymentLink(req.body));
     }
   );
 
@@ -89,7 +97,7 @@ export class PaymentLinkController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      await this.service().expirePaymentLink(req.params.id);
+      await this.serviceFactory().expirePaymentLink(req.params.id);
       res.status(200).send(`Expired payment link ${req.params.id}`);
     }
   );
@@ -108,7 +116,7 @@ export class PaymentLinkController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      await this.service().handlePaymentSuccess(req.params.id);
+      await this.serviceFactory().handlePaymentSuccess(req.params.id);
       res.status(200).send(`Handled payment success for ${req.params.id}`);
     }
   );
@@ -127,7 +135,7 @@ export class PaymentLinkController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      await this.service().handlePaymentFailure(req.params.id);
+      await this.serviceFactory().handlePaymentFailure(req.params.id);
       res.status(200).send(`Handled payment failure for ${req.params.id}`);
     }
   );
@@ -148,7 +156,7 @@ export class PaymentLinkController<ConfigInjectorScope>
     async (req, res) => {
       res
         .status(200)
-        .json(await this.service().listPaymentLinks(req.query.ids));
+        .json(await this.serviceFactory().listPaymentLinks(req.query.ids));
     }
   );
 }

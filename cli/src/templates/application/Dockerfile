@@ -10,6 +10,6 @@ COPY . .
 {{#is_node}}RUN npm install -g pnpm
 RUN apk add --no-cache git
 RUN pnpm install{{/is_node}}{{#is_bun}}RUN bun install{{/is_bun}}
-
+{{#is_node}}
 # Build TypeScript code
-RUN {{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} build
+RUN pnpm build{{/is_node}}

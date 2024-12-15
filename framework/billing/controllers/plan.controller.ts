@@ -1,11 +1,13 @@
 import { Controller } from '@forklaunch/core/controllers';
 import { delete_, get, post, put } from '@forklaunch/core/http';
+import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import {
   array,
   optional,
   SchemaValidator,
   string
 } from '@forklaunch/framework-core';
+import { configValidator } from '../bootstrapper';
 import { PlanService } from '../interfaces/plan.service.interface';
 import {
   CreatePlanDtoMapper,
@@ -13,11 +15,13 @@ import {
   UpdatePlanDtoMapper
 } from '../models/dtoMapper/plan.dtoMapper';
 
-export class PlanController<ConfigInjectorScope>
-  implements Controller<PlanService>
-{
+export class PlanController implements Controller<PlanService> {
   constructor(
-    private readonly service: (scope?: ConfigInjectorScope) => PlanService
+    private readonly serviceFactory: ScopedDependencyFactory<
+      SchemaValidator,
+      typeof configValidator,
+      'planService'
+    >
   ) {}
 
   createPlan = post(
@@ -32,7 +36,7 @@ export class PlanController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      res.status(200).json(await this.service().createPlan(req.body));
+      res.status(200).json(await this.serviceFactory().createPlan(req.body));
     }
   );
 
@@ -50,7 +54,7 @@ export class PlanController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      res.status(200).json(await this.service().getPlan(req.params.id));
+      res.status(200).json(await this.serviceFactory().getPlan(req.params.id));
     }
   );
 
@@ -66,7 +70,7 @@ export class PlanController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      res.status(200).json(await this.service().updatePlan(req.body));
+      res.status(200).json(await this.serviceFactory().updatePlan(req.body));
     }
   );
 
@@ -84,7 +88,7 @@ export class PlanController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      await this.service().deletePlan(req.params.id);
+      await this.serviceFactory().deletePlan(req.params.id);
       res.status(200).json(`Deleted plan ${req.params.id}`);
     }
   );
@@ -103,7 +107,7 @@ export class PlanController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      res.status(200).json(await this.service().listPlans());
+      res.status(200).json(await this.serviceFactory().listPlans());
     }
   );
 }

@@ -13,7 +13,7 @@ import { BasePaymentLinkService } from './services/paymentLink.service';
 import { BasePlanService } from './services/plan.service';
 import { BaseSubscriptionService } from './services/subscription.service';
 
-const configValidator = {
+export const configValidator = {
   redisUrl: string,
   host: string,
   port: number,

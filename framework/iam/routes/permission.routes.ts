@@ -3,9 +3,7 @@ import { PermissionController } from '../controllers/permission.controller';
 
 export const router = forklaunchRouter('/permission');
 
-export const PermissionRoutes = <ConfigInjectorScope>(
-  controller: PermissionController<ConfigInjectorScope>
-) => ({
+export const PermissionRoutes = (controller: PermissionController) => ({
   router,
 
   // Create a permission

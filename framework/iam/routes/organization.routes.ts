@@ -3,9 +3,7 @@ import { OrganizationController } from '../controllers/organization.controller';
 
 export const router = forklaunchRouter('/organization');
 
-export const OrganizationRoutes = <ConfigInjectorScope>(
-  controller: OrganizationController<ConfigInjectorScope>
-) => ({
+export const OrganizationRoutes = (controller: OrganizationController) => ({
   router,
 
   // Create organization

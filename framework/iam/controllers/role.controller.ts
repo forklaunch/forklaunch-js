@@ -1,6 +1,8 @@
 import { Controller } from '@forklaunch/core/controllers';
 import { delete_, get, post, put } from '@forklaunch/core/http';
+import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { array, SchemaValidator, string } from '@forklaunch/framework-core';
+import { configValidator } from '../bootstrapper';
 import { RoleService } from '../interfaces/role.service.interface';
 import {
   CreateRoleDtoMapper,
@@ -8,11 +10,13 @@ import {
   UpdateRoleDtoMapper
 } from '../models/dtoMapper/role.dtoMapper';
 
-export class RoleController<ConfigInjectorScope>
-  implements Controller<RoleService>
-{
+export class RoleController implements Controller<RoleService> {
   constructor(
-    private readonly service: (scope?: ConfigInjectorScope) => RoleService
+    private readonly serviceFactory: ScopedDependencyFactory<
+      SchemaValidator,
+      typeof configValidator,
+      'roleService'
+    >
   ) {}
 
   createRole = post(
@@ -28,7 +32,7 @@ export class RoleController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      await this.service().createRole(req.body);
+      await this.serviceFactory().createRole(req.body);
       res.status(201).send('Role created successfully');
     }
   );
@@ -46,7 +50,7 @@ export class RoleController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      await this.service().createBatchRoles(req.body);
+      await this.serviceFactory().createBatchRoles(req.body);
       res.status(201).send('Batch roles created successfully');
     }
   );
@@ -66,7 +70,7 @@ export class RoleController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      res.status(200).json(await this.service().getRole(req.params.id));
+      res.status(200).json(await this.serviceFactory().getRole(req.params.id));
     }
   );
 
@@ -87,7 +91,9 @@ export class RoleController<ConfigInjectorScope>
     async (req, res) => {
       res
         .status(200)
-        .json(await this.service().getBatchRoles(req.query.ids.split(',')));
+        .json(
+          await this.serviceFactory().getBatchRoles(req.query.ids.split(','))
+        );
     }
   );
 
@@ -104,7 +110,7 @@ export class RoleController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      await this.service().updateRole(req.body);
+      await this.serviceFactory().updateRole(req.body);
       res.status(200).send('Role updated successfully');
     }
   );
@@ -122,7 +128,7 @@ export class RoleController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      await this.service().updateBatchRoles(req.body);
+      await this.serviceFactory().updateBatchRoles(req.body);
       res.status(200).send('Batch roles updated successfully');
     }
   );
@@ -142,7 +148,7 @@ export class RoleController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      await this.service().deleteRole(req.params.id);
+      await this.serviceFactory().deleteRole(req.params.id);
       res.status(200).send('Role deleted successfully');
     }
   );
@@ -162,7 +168,7 @@ export class RoleController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      await this.service().deleteBatchRoles(req.query.ids.split(','));
+      await this.serviceFactory().deleteBatchRoles(req.query.ids.split(','));
       res.status(200).send('Batch roles deleted successfully');
     }
   );

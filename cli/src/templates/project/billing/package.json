@@ -17,18 +17,18 @@
   },
   "dependencies": {
     "@forklaunch/common": "^0.1.13",
-    "@forklaunch/core": "^0.2.33",
-    "@forklaunch/express": "^0.1.28",
+    "@forklaunch/core": "^0.2.34",
+    "@forklaunch/express": "^0.1.29",
     "@{{app_name}}/core": "workspace:*",
-    "@forklaunch/hyper-express": "^0.1.29",
+    "@forklaunch/hyper-express": "^0.1.30",
     "@forklaunch/validator": "^0.3.12",
     "@mikro-orm/core": "^6.4.1",
     "@mikro-orm/migrations": "^6.4.1",
     "@mikro-orm/{{database}}": "^6.4.1",
     "@mikro-orm/reflection": "^6.4.1",{{#is_typebox}}
-    "@sinclair/typebox": "^0.34.11",{{/is_typebox}}
-    "uuid": "^11.0.3",{{#is_zod}}
-    "zod": "^3.23.8"{{/is_zod}}
+    "@sinclair/typebox": "^0.34.11"{{/is_typebox}}{{#is_zod}}
+    "uuid": "^11.0.3",
+    "zod": "^3.24.1"{{/is_zod}}
   },
   "devDependencies": {
     "@mikro-orm/cli": "^6.4.1",

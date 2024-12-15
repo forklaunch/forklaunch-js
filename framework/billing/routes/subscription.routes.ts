@@ -3,9 +3,7 @@ import { SubscriptionController } from '../controllers/subscription.controller';
 
 export const router = forklaunchRouter('/subscription');
 
-export const SubscriptionRoutes = <ConfigInjectorScope>(
-  controller: SubscriptionController<ConfigInjectorScope>
-) => ({
+export const SubscriptionRoutes = (controller: SubscriptionController) => ({
   router,
   createSubscription: router.post('/', controller.createSubscription),
   getSubscription: router.get('/:id', controller.getSubscription),

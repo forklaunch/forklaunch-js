@@ -17,18 +17,21 @@ bootstrap((ci) => {
   const version = ci.resolve('version');
   const swaggerPath = ci.resolve('swaggerPath');
 
+  const scopedOrganizationServiceFactory = ci.scopedResolver(
+    'organizationService'
+  );
+  const scopedPermissionServiceFactory = ci.scopedResolver('permissionService');
+  const scopedRoleServiceFactory = ci.scopedResolver('roleService');
+  const scopedUserServiceFactory = ci.scopedResolver('userService');
+
   const organizationRoutes = OrganizationRoutes(
-    new OrganizationController(ci.scopedResolver('organizationService'))
+    new OrganizationController(scopedOrganizationServiceFactory)
   );
   const permissionRoutes = PermissionRoutes(
-    new PermissionController(ci.scopedResolver('permissionService'))
+    new PermissionController(scopedPermissionServiceFactory)
   );
-  const roleRoutes = RoleRoutes(
-    new RoleController(ci.scopedResolver('roleService'))
-  );
-  const userRoutes = UserRoutes(
-    new UserController(ci.scopedResolver('userService'))
-  );
+  const roleRoutes = RoleRoutes(new RoleController(scopedRoleServiceFactory));
+  const userRoutes = UserRoutes(new UserController(scopedUserServiceFactory));
 
   app.use(organizationRoutes.router);
   app.use(permissionRoutes.router);

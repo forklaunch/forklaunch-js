@@ -3,9 +3,7 @@ import { PlanController } from '../controllers/plan.controller';
 
 export const router = forklaunchRouter('/plan');
 
-export const PlanRoutes = <ConfigInjectorScope>(
-  controller: PlanController<ConfigInjectorScope>
-) => ({
+export const PlanRoutes = (controller: PlanController) => ({
   router,
   createPlan: router.post('/', controller.createPlan),
   getPlan: router.get('/:id', controller.getPlan),

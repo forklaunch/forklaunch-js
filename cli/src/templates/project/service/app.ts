@@ -14,10 +14,12 @@ bootstrap((ci) => {
   const version = ci.resolve('version');
   const swaggerPath = ci.resolve('swaggerPath');
 
+  const scopedHelloForklaunchServiceFactory = ci.scopedResolver('helloForklaunchService');
+
   const helloForklaunchRoutes = HelloForklaunchRoutes(
     new HelloForklaunchController(
       ci.createScope(),
-      ci.scopedResolver('helloForklaunchService')
+      scopedHelloForklaunchServiceFactory
     )
   );
   app.use(helloForklaunchRoutes.router);

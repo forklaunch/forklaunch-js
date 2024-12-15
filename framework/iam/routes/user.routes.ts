@@ -3,9 +3,7 @@ import { UserController } from '../controllers/user.controller';
 
 export const router = forklaunchRouter('/user');
 
-export const UserRoutes = <ConfigInjectorScope>(
-  controller: UserController<ConfigInjectorScope>
-) => ({
+export const UserRoutes = (controller: UserController) => ({
   router,
 
   // Create user

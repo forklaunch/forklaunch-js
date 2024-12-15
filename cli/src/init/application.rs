@@ -7,7 +7,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     config_struct,
-    constants::{ERROR_FAILED_TO_CREATE_PNPM_WORKSPACE, LATEST_CLI_VERSION},
+    constants::{
+        ERROR_FAILED_TO_CREATE_GITIGNORE, ERROR_FAILED_TO_CREATE_PNPM_WORKSPACE, LATEST_CLI_VERSION,
+    },
     utils::get_token,
 };
 
@@ -15,6 +17,7 @@ use super::{
     core::{
         config::ProjectEntry,
         database::match_database,
+        gitignore::setup_gitignore,
         manifest::setup_manifest,
         pnpm_workspace::generate_pnpm_workspace,
         symlinks::setup_symlinks,
@@ -242,6 +245,9 @@ impl CliCommand for ApplicationCommand {
             generate_pnpm_workspace(name, &additional_projects)
                 .with_context(|| ERROR_FAILED_TO_CREATE_PNPM_WORKSPACE)?;
         }
+
+        setup_gitignore(&Path::new(name).to_string_lossy().to_string())
+            .with_context(|| ERROR_FAILED_TO_CREATE_GITIGNORE)?;
 
         Ok(())
     }
