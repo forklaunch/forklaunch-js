@@ -1,5 +1,5 @@
 import { AnySchemaValidator } from '@forklaunch/validator';
-import jose from 'jose';
+import { jwtVerify } from 'jose';
 import { ParsedQs } from 'qs';
 import {
   ForklaunchNextFunction,
@@ -80,7 +80,7 @@ async function checkAuthorizationToken<
       }
 
       try {
-        const decodedJwt = await jose.jwtVerify(
+        const decodedJwt = await jwtVerify(
           token,
           new TextEncoder().encode(
             // TODO: Check this at application startup if there is any route with jwt checking

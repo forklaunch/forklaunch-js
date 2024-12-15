@@ -1,5 +1,10 @@
 import { ConfigInjector, Lifetime } from '@forklaunch/core/services';
-import { SchemaValidator } from '@forklaunch/framework-core';
+import {
+  number,
+  optional,
+  SchemaValidator,
+  string
+} from '@forklaunch/framework-core';
 import { EntityManager, ForkOptions, MikroORM } from '@mikro-orm/core';
 import mikroOrmOptionsConfig from './mikro-orm.config';
 import BaseOrganizationService from './services/organization.service';
@@ -7,7 +12,11 @@ import BasePermissionService from './services/permission.service';
 import BaseRoleService from './services/role.service';
 import BaseUserService from './services/user.service';
 
-const configValidator = {
+export const configValidator = {
+  host: string,
+  port: number,
+  version: optional(string),
+  swaggerPath: optional(string),
   entityManager: EntityManager,
   organizationService: BaseOrganizationService,
   permissionService: BasePermissionService,
@@ -25,6 +34,22 @@ export function bootstrap(
       SchemaValidator(),
       configValidator,
       {
+        host: {
+          lifetime: Lifetime.Singleton,
+          value: process.env.HOST ?? 'localhost'
+        },
+        port: {
+          lifetime: Lifetime.Singleton,
+          value: Number(process.env.PORT ?? '8000')
+        },
+        version: {
+          lifetime: Lifetime.Singleton,
+          value: process.env.VERSION ?? '/v1'
+        },
+        swaggerPath: {
+          lifetime: Lifetime.Singleton,
+          value: process.env.SWAGGER_PATH ?? '/swagger'
+        },
         entityManager: {
           lifetime: Lifetime.Scoped,
           factory: (_args, _resolve, context) =>

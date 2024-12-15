@@ -1,7 +1,7 @@
 import { BaseEntity } from '@forklaunch/core/database';
 import { Entity, Enum, Property, Unique } from '@mikro-orm/core';
-import { BillingProvider } from '../enum/billingProvider.enum';
-import { Party } from '../enum/party.enum';
+import { BillingProviderEnum } from '../enum/billingProvider.enum';
+import { PartyEnum } from '../enum/party.enum';
 
 @Entity()
 export class Subscription extends BaseEntity {
@@ -10,7 +10,7 @@ export class Subscription extends BaseEntity {
   partyId!: string;
 
   @Property()
-  partyType!: Party;
+  partyType!: PartyEnum;
 
   @Property()
   description?: string;
@@ -30,8 +30,8 @@ export class Subscription extends BaseEntity {
   @Unique()
   externalId!: string;
 
-  @Enum({ items: () => BillingProvider, nullable: true })
-  billingProvider?: BillingProvider;
+  @Enum({ items: () => BillingProviderEnum, nullable: true })
+  billingProvider?: BillingProviderEnum;
 
   @Property()
   startDate!: Date;

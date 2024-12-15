@@ -1,0 +1,13 @@
+services:
+  billing:
+    image: forklaunch_billing_bun:latest
+    volumes:
+      - /app/billing/dist
+      - ./billing:/app/billing
+    entrypoint: ['bun', 'run', 'dev:bun']
+  iam:
+    image: forklaunch_iam_bun:latest
+    volumes:
+      - /app/iam/dist
+      - ./iam:/app/iam
+    entrypoint: ['bun', 'run', 'dev:bun']

@@ -1,5 +1,6 @@
 import { BaseEntity } from '@forklaunch/core/database';
 import { Entity, Enum, Property, Unique } from '@mikro-orm/core';
+import { BillingProviderEnum } from '../enum/billingProvider.enum';
 
 // This is to represent connection information for a billing provider
 @Entity()
@@ -13,6 +14,6 @@ export class BillingProvider extends BaseEntity {
   @Property({ type: 'json', nullable: true })
   extraFields?: unknown;
 
-  @Enum({ items: () => BillingProvider, nullable: true })
-  billingProvider?: BillingProvider;
+  @Enum({ items: () => BillingProviderEnum, nullable: true })
+  billingProvider?: BillingProviderEnum;
 }

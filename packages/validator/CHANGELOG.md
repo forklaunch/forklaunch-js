@@ -1,5 +1,18 @@
 # @forklaunch/validator
 
+## 0.3.13
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/common@0.1.14
+
+## 0.3.12
+
+### Patch Changes
+
+- Add schema check to validator interface, and for validating configurations, check if value is a schema and return any errors with pathing
+
 ## 0.3.11
 
 ### Patch Changes

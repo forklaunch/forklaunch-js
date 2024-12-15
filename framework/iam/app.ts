@@ -10,31 +10,37 @@ import { PermissionRoutes } from './routes/permission.routes';
 import { RoleRoutes } from './routes/role.routes';
 import { UserRoutes } from './routes/user.routes';
 
-const app = forklaunchExpress();
-const port = Number(process.env.PORT) || 8000;
-
 bootstrap((ci) => {
+  const app = forklaunchExpress();
+  const host = ci.resolve('host');
+  const port = ci.resolve('port');
+  const version = ci.resolve('version');
+  const swaggerPath = ci.resolve('swaggerPath');
+
+  const scopedOrganizationServiceFactory = ci.scopedResolver(
+    'organizationService'
+  );
+  const scopedPermissionServiceFactory = ci.scopedResolver('permissionService');
+  const scopedRoleServiceFactory = ci.scopedResolver('roleService');
+  const scopedUserServiceFactory = ci.scopedResolver('userService');
+
   const organizationRoutes = OrganizationRoutes(
-    new OrganizationController(ci.scopedResolver('organizationService'))
+    new OrganizationController(scopedOrganizationServiceFactory)
   );
   const permissionRoutes = PermissionRoutes(
-    new PermissionController(ci.scopedResolver('permissionService'))
+    new PermissionController(scopedPermissionServiceFactory)
   );
-  const roleRoutes = RoleRoutes(
-    new RoleController(ci.scopedResolver('roleService'))
-  );
-  const userRoutes = UserRoutes(
-    new UserController(ci.scopedResolver('userService'))
-  );
+  const roleRoutes = RoleRoutes(new RoleController(scopedRoleServiceFactory));
+  const userRoutes = UserRoutes(new UserController(scopedUserServiceFactory));
 
   app.use(organizationRoutes.router);
   app.use(permissionRoutes.router);
   app.use(roleRoutes.router);
   app.use(userRoutes.router);
 
-  app.listen(port, () => {
+  app.listen(port, host, () => {
     console.log(
-      `🎉 IAM Server is running at http://localhost:${port} 🎉.\nAn API reference can be accessed at http://localhost:${port}/api${process.env.VERSION ?? '/v1'}${process.env.SWAGGER_PATH ?? '/swagger'}`
+      `🎉 IAM Server is running at http://${host}:${port} 🎉.\nAn API reference can be accessed at http://${host}:${port}/api${version}${swaggerPath}`
     );
   });
 });

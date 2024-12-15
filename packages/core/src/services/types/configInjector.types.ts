@@ -3,6 +3,7 @@ import {
   IdiomaticSchema,
   Schema
 } from '@forklaunch/validator';
+import { ConfigInjector } from '../configInjector';
 
 export enum Lifetime {
   Singleton,
@@ -59,3 +60,9 @@ export type ResolvedConfigValidator<
           ? InstanceType<CV[M]>
           : Schema<CV[M], SV>;
 };
+
+export type ScopedDependencyFactory<
+  SV extends AnySchemaValidator,
+  CV extends ConfigValidator<SV>,
+  M extends keyof CV
+> = (scope?: ConfigInjector<SV, CV>) => ResolvedConfigValidator<SV, CV>[M];

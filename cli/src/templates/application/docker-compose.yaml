@@ -33,22 +33,36 @@ services:
     ports:
       - '6379:6379'
     networks:
-      - {{app_name}}-network {{#projects}}{{#port}}
+      - {{app_name}}-network{{#projects}}{{#port}}
   {{name}}:
     hostname: {{name}}
-    container_name: {{app_name}}-{{name}}
+    container_name: {{app_name}}-{{name}}-{{runtime}}
+    image: {{app_name}}_{{name}}_{{runtime}}:latest
     restart: always
     build:
-      context: ./src
-      dockerfile: ./{{name}}/Dockerfile.dev
-    image: {{app_name}}_{{name}}:latest
+      context: .
+      dockerfile: ./Dockerfile
     environment:
       ENV: development
+      HOST: 0.0.0.0
+      PORT: '{{port}}'
+      DB_NAME: {{app_name}}-dev
+      DB_HOST: postgres
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_PORT: '5432'
+      REDIS_URL: redis://redis:6379
     depends_on:
       - postgres
+      - redis
     ports:
       - {{port}}:{{port}}
     networks:
       - {{app_name}}-network
     volumes:
-      - ./{{name}}:/{{name}} {{/port}}{{/projects}}
+      - ./{{name}}:/{{app_name}}/{{name}}
+      - /{{app_name}}/{{name}}/dist {{#is_node}}
+      - /{{app_name}}/{{name}}/node_modules {{/is_node}}
+    working_dir: /{{app_name}}/{{name}}
+    entrypoint: ["{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}}", "run", "dev"] {{/port}}{{/projects}}
+

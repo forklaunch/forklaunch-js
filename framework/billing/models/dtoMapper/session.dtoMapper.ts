@@ -12,7 +12,7 @@ import {
   unknown,
   uuid
 } from '@forklaunch/framework-core';
-import { PaymentMethod } from '../enum/paymentMethod.enum';
+import { PaymentMethodEnum } from '../enum/paymentMethod.enum';
 import { Session } from '../persistence/session.entity';
 
 export type CreateSessionDto = CreateSessionDtoMapper['dto'];
@@ -22,7 +22,7 @@ export class CreateSessionDtoMapper extends RequestDtoMapper<
 > {
   schema = {
     customerEmail: string,
-    paymentMethods: array(enum_(PaymentMethod)),
+    paymentMethods: array(enum_(PaymentMethodEnum)),
     successRedirectUri: string,
     cancelRedirectUri: string,
     extraFields: optional(unknown)
@@ -49,7 +49,7 @@ export class UpdateSessionDtoMapper extends RequestDtoMapper<
   schema = {
     id: uuid,
     customerEmail: optional(string),
-    paymentMethods: optional(array(enum_(PaymentMethod))),
+    paymentMethods: optional(array(enum_(PaymentMethodEnum))),
     successRedirectUri: optional(string),
     cancelRedirectUri: optional(string),
     extraFields: optional(unknown)
@@ -84,7 +84,7 @@ export class SessionDtoMapper extends ResponseDtoMapper<
   schema = {
     id: uuid,
     customerEmail: string,
-    paymentMethods: array(enum_(PaymentMethod)),
+    paymentMethods: array(enum_(PaymentMethodEnum)),
     successRedirectUri: string,
     cancelRedirectUri: string,
     extraFields: optional(unknown),

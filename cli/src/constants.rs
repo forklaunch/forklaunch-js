@@ -33,9 +33,9 @@ pub(crate) const ERROR_FAILED_TO_READ_MANIFEST: &str =
 pub(crate) const ERROR_FAILED_TO_PARSE_MANIFEST: &str =
     "Failed to parse manifest file. Please verify the file is valid toml.";
 pub(crate) const ERROR_FAILED_TO_READ_DOCKER_COMPOSE: &str =
-    "Failed to read docker_compose.yml. Please check your target directory is a forklaunch application.";
+    "Failed to read docker_compose.yaml. Please check your target directory is a forklaunch application.";
 pub(crate) const ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE: &str =
-    "Failed to parse docker_compose.yml. Please verify the file is valid toml.";
+    "Failed to parse docker_compose.yaml. Please verify the file is valid yaml.";
 pub(crate) const ERROR_FAILED_TO_READ_PACKAGE_JSON: &str =
     "Failed to read package.json. Please check your target directory is a forklaunch application.";
 pub(crate) const ERROR_FAILED_TO_PARSE_PACKAGE_JSON: &str =

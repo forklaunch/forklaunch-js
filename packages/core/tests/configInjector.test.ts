@@ -13,18 +13,20 @@ class X {
   }
 }
 
+const configValidator = {
+  a: string,
+  b: number,
+  c: X,
+  d: number,
+  e: number,
+  f: number,
+  g: number
+};
+
 describe('serviceFactory', () => {
   const configInjector = new ConfigInjector(
     SchemaValidator(),
-    {
-      a: string,
-      b: number,
-      c: X,
-      d: number,
-      e: number,
-      f: number,
-      g: number
-    },
+    configValidator,
     {
       a: {
         lifetime: Lifetime.Singleton,
@@ -43,7 +45,7 @@ describe('serviceFactory', () => {
       },
       d: {
         lifetime: Lifetime.Transient,
-        factory: ({ e }) => e
+        factory: ({ a, e }) => e
       },
       e: {
         lifetime: Lifetime.Transient,
@@ -101,12 +103,12 @@ describe('serviceFactory', () => {
     expect(
       configInjector.validateConfigSingletons({
         a: 'a'
-      })
+      }).ok
     ).toBe(true);
     expect(
       configInjector.validateConfigSingletons({
         a: 5 as unknown as string
-      })
+      }).ok
     ).toBe(false);
   });
 

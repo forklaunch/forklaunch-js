@@ -1,6 +1,8 @@
 import { Controller } from '@forklaunch/core/controllers';
 import { delete_, get, post, put } from '@forklaunch/core/http';
+import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { array, SchemaValidator, string } from '@forklaunch/framework-core';
+import { configValidator } from '../bootstrapper';
 import { UserService } from '../interfaces/user.service.interface';
 import {
   CreateUserDtoMapper,
@@ -8,11 +10,13 @@ import {
   UserDtoMapper
 } from '../models/dtoMapper/user.dtoMapper';
 
-export class UserController<ConfigInjectorScope>
-  implements Controller<UserService>
-{
+export class UserController implements Controller<UserService> {
   constructor(
-    private readonly service: (scope?: ConfigInjectorScope) => UserService
+    private readonly serviceFactory: ScopedDependencyFactory<
+      SchemaValidator,
+      typeof configValidator,
+      'userService'
+    >
   ) {}
 
   createUser = post(
@@ -29,7 +33,7 @@ export class UserController<ConfigInjectorScope>
     },
     async (req, res) => {
       // use req context to prepopulate organizationId from AuthToken in future
-      await this.service().createUser(req.body);
+      await this.serviceFactory().createUser(req.body);
       res.status(201).send('User created successfully');
     }
   );
@@ -47,7 +51,7 @@ export class UserController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      await this.service().createBatchUsers(req.body);
+      await this.serviceFactory().createBatchUsers(req.body);
       res.status(201).send('Batch users created successfully');
     }
   );
@@ -67,7 +71,7 @@ export class UserController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      res.status(200).json(await this.service().getUser(req.params.id));
+      res.status(200).json(await this.serviceFactory().getUser(req.params.id));
     }
   );
 
@@ -88,7 +92,9 @@ export class UserController<ConfigInjectorScope>
     async (req, res) => {
       res
         .status(200)
-        .json(await this.service().getBatchUsers(req.query.ids.split(',')));
+        .json(
+          await this.serviceFactory().getBatchUsers(req.query.ids.split(','))
+        );
     }
   );
 
@@ -105,7 +111,7 @@ export class UserController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      await this.service().updateUser(req.body);
+      await this.serviceFactory().updateUser(req.body);
       res.status(200).send('User updated successfully');
     }
   );
@@ -123,7 +129,7 @@ export class UserController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      await this.service().updateBatchUsers(req.body);
+      await this.serviceFactory().updateBatchUsers(req.body);
       res.status(200).send('Batch users updated successfully');
     }
   );
@@ -143,7 +149,7 @@ export class UserController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      await this.service().deleteUser(req.params.id);
+      await this.serviceFactory().deleteUser(req.params.id);
       res.status(200).send('User deleted successfully');
     }
   );
@@ -163,7 +169,7 @@ export class UserController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      await this.service().deleteBatchUsers(req.query.ids.split(','));
+      await this.serviceFactory().deleteBatchUsers(req.query.ids.split(','));
       res.status(200).send('Batch users deleted successfully');
     }
   );
@@ -185,7 +191,7 @@ export class UserController<ConfigInjectorScope>
     },
     async (req, res) => {
       const { id, roleId } = req.params;
-      await this.service().verifyHasRole(id, roleId);
+      await this.serviceFactory().verifyHasRole(id, roleId);
       res.status(200).send('User has the specified role');
     }
   );
@@ -207,7 +213,7 @@ export class UserController<ConfigInjectorScope>
     },
     async (req, res) => {
       const { id, permissionId } = req.params;
-      await this.service().verifyHasPermission(id, permissionId);
+      await this.serviceFactory().verifyHasPermission(id, permissionId);
       res.status(200).send('User has the specified permission');
     }
   );

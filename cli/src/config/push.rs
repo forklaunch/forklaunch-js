@@ -3,7 +3,10 @@ use std::fs::read;
 use anyhow::{Context, Result};
 use clap::{Arg, ArgMatches, Command};
 
-use crate::{constants::ERROR_FAILED_TO_SEND_REQUEST, utils::get_token};
+use crate::{
+    constants::{ERROR_FAILED_TO_SEND_REQUEST, PROD_API_URL},
+    utils::get_token,
+};
 
 use super::{forklaunch_command, unwrap_id};
 
@@ -32,7 +35,7 @@ pub(crate) fn handler(matches: &ArgMatches) -> Result<()> {
     // TODO: remove and pass token from parent
     let token = get_token()?;
 
-    let url = format!("https://api.forklaunch.dev/config/{}", id);
+    let url = format!("{}/config/{}", PROD_API_URL, id);
     let client = reqwest::blocking::Client::new();
     // TODO: fix this, this doesn't seem right
     let request = client.post(url).bearer_auth(token).body(read(input)?);

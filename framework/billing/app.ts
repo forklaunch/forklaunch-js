@@ -10,30 +10,41 @@ import { PaymentLinkRoutes } from './routes/paymentLink.routes';
 import { PlanRoutes } from './routes/plan.routes';
 import { SubscriptionRoutes } from './routes/subscription.routes';
 
-const app = forklaunchExpress();
-const port = Number(process.env.PORT) || 8001;
-
 bootstrap((ci) => {
+  const app = forklaunchExpress();
+  const host = ci.resolve('host');
+  const port = ci.resolve('port');
+  const version = ci.resolve('version');
+  const swaggerPath = ci.resolve('swaggerPath');
+
+  const scopedCheckoutSessionServiceFactory = ci.scopedResolver(
+    'checkoutSessionService'
+  );
+  const scopedPaymentLinkServiceFactory =
+    ci.scopedResolver('paymentLinkService');
+  const scopedPlanServiceFactory = ci.scopedResolver('planService');
+  const scopedSubscriptionServiceFactory = ci.scopedResolver(
+    'subscriptionService'
+  );
+
   const checkoutSessionRoutes = CheckoutSessionRoutes(
-    new CheckoutSessionController(ci.scopedResolver('checkoutSessionService'))
+    new CheckoutSessionController(scopedCheckoutSessionServiceFactory)
   );
   const paymentLinkRoutes = PaymentLinkRoutes(
-    new PaymentLinkController(ci.scopedResolver('paymentLinkService'))
+    new PaymentLinkController(scopedPaymentLinkServiceFactory)
   );
-  const planRoutes = PlanRoutes(
-    new PlanController(ci.scopedResolver('planService'))
-  );
+  const planRoutes = PlanRoutes(new PlanController(scopedPlanServiceFactory));
   const subscriptionRoutes = SubscriptionRoutes(
-    new SubscriptionController(ci.scopedResolver('subscriptionService'))
+    new SubscriptionController(scopedSubscriptionServiceFactory)
   );
   app.use(checkoutSessionRoutes.router);
   app.use(paymentLinkRoutes.router);
   app.use(planRoutes.router);
   app.use(subscriptionRoutes.router);
 
-  app.listen(port, () => {
+  app.listen(port, host, () => {
     console.log(
-      `🎉 Billing Server is running at http://localhost:${port} 🎉.\nAn API reference can be accessed at http://localhost:${port}/api${process.env.VERSION ?? '/v1'}${process.env.SWAGGER_PATH ?? '/swagger'}`
+      `🎉 Billing Server is running at http://${host}:${port} 🎉.\nAn API reference can be accessed at http://${host}:${port}/api${version}${swaggerPath}`
     );
   });
 });

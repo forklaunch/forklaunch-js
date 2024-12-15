@@ -1,5 +1,9 @@
 import { extractArgumentNames, isNever } from '@forklaunch/common';
-import { AnySchemaValidator, SchemaValidator } from '@forklaunch/validator';
+import {
+  AnySchemaValidator,
+  ParseResult,
+  SchemaValidator
+} from '@forklaunch/validator';
 import {
   ConfigValidator,
   Constructed,
@@ -56,14 +60,13 @@ export class ConfigInjector<
         .split(',')
         .map((arg) => arg.split(':')[0].trim())
         .map((arg) => {
-          resolutionPath = [...resolutionPath, token];
-
+          const newResolutionPath = [...resolutionPath, token];
           if (resolutionPath.includes(arg)) {
             throw new Error(
-              `Circular dependency detected: ${resolutionPath.join(' -> ')} -> ${arg}`
+              `Circular dependency detected: ${newResolutionPath.join(' -> ')} -> ${arg}`
             );
           }
-          const resolvedArg = this.resolve(arg, context, resolutionPath);
+          const resolvedArg = this.resolve(arg, context, newResolutionPath);
           return [arg, resolvedArg];
         })
     ) as unknown as Omit<ResolvedConfigValidator<SV, CV>, T>;
@@ -91,13 +94,15 @@ export class ConfigInjector<
 
   validateConfigSingletons(
     config: Partial<ResolvedConfigValidator<SV, CV>>
-  ): boolean {
-    return (this.schemaValidator as SchemaValidator).validate(
+  ): ParseResult<unknown> {
+    return (this.schemaValidator as SchemaValidator).parse(
       (this.schemaValidator as SchemaValidator).schemify(
         Object.fromEntries(
           Object.entries(this.configShapes).filter(
-            ([key]) =>
-              this.dependenciesDefinition[key].lifetime === Lifetime.Singleton
+            ([key, value]) =>
+              this.dependenciesDefinition[key].lifetime ===
+                Lifetime.Singleton &&
+              (this.schemaValidator as SchemaValidator).isSchema(value)
           )
         )
       ),
@@ -156,8 +161,8 @@ export class ConfigInjector<
     token: T,
     context?: Record<string, unknown>,
     resolutionPath: (keyof CV)[] = []
-  ): (scope?: typeof this) => ResolvedConfigValidator<SV, CV>[T] {
-    return (scope?: typeof this) =>
+  ): (scope?: ConfigInjector<SV, CV>) => ResolvedConfigValidator<SV, CV>[T] {
+    return (scope) =>
       (scope ?? this.createScope()).resolve<T>(token, context, resolutionPath);
   }
 

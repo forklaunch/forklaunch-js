@@ -2,6 +2,7 @@ import { TObject, Type } from '@sinclair/typebox';
 import {
   array,
   enum_,
+  isSchema,
   number,
   openapi,
   optional,
@@ -223,6 +224,25 @@ describe('typebox schema validator tests', () => {
         errorSuffix: true
       })
     );
+  });
+
+  test('isSchema', () => {
+    expect(isSchema(Type.String())).toBe(true);
+    expect(isSchema(Type.Number())).toBe(true);
+    expect(
+      isSchema(
+        Type.Object({
+          foo: Type.String()
+        })
+      )
+    ).toBe(true);
+    expect(isSchema(Type.Array(Type.String()))).toBe(true);
+
+    expect(isSchema('not a schema')).toBe(false);
+    expect(isSchema(42)).toBe(false);
+    expect(isSchema({})).toBe(false);
+    expect(isSchema(null)).toBe(false);
+    expect(isSchema(undefined)).toBe(false);
   });
 
   test('validate', async () => {

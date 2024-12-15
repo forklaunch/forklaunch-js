@@ -1,4 +1,4 @@
-export enum Party {
+export enum PartyEnum {
   USER = 'user',
   ORGANIZATION = 'organization'
 }

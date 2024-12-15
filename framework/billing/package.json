@@ -10,7 +10,12 @@
     "docs": "typedoc --out docs *",
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
-    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.ts' --write"
+    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.ts' --write",
+    "migrate": "NODE_OPTIONS='--import=tsx' mikro-orm migration:up",
+    "dev": "pnpm run migrate && pnpm tsx watch app.ts",
+    "dev:bun": "bun run migrate && bun --watch app.ts",
+    "start": "NODE_OPTIONS='--import=tsx' node dist/app.js",
+    "start:bun": "bun run migrate && bun dist/app.js"
   },
   "repository": {
     "type": "git",
@@ -23,25 +28,25 @@
   },
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "dependencies": {
-    "@forklaunch/common": "^0.1.13",
-    "@forklaunch/core": "^0.2.29",
-    "@forklaunch/express": "^0.1.24",
+    "@forklaunch/common": "^0.1.14",
+    "@forklaunch/core": "^0.2.35",
+    "@forklaunch/express": "^0.1.30",
     "@forklaunch/framework-core": "workspace:*",
-    "@forklaunch/hyper-express": "^0.1.25",
-    "@forklaunch/validator": "^0.3.11",
-    "@mikro-orm/core": "^6.4.0",
-    "@mikro-orm/migrations": "^6.4.0",
-    "@mikro-orm/mongodb": "^6.4.0",
-    "@mikro-orm/mysql": "^6.4.0",
-    "@mikro-orm/postgresql": "^6.4.0",
-    "@mikro-orm/reflection": "^6.4.0",
-    "@mikro-orm/sqlite": "^6.4.0",
-    "@sinclair/typebox": "^0.34.9",
+    "@forklaunch/hyper-express": "^0.1.31",
+    "@forklaunch/validator": "^0.3.13",
+    "@mikro-orm/core": "^6.4.1",
+    "@mikro-orm/migrations": "^6.4.1",
+    "@mikro-orm/mongodb": "^6.4.1",
+    "@mikro-orm/mysql": "^6.4.1",
+    "@mikro-orm/postgresql": "^6.4.1",
+    "@mikro-orm/reflection": "^6.4.1",
+    "@mikro-orm/sqlite": "^6.4.1",
+    "@sinclair/typebox": "^0.34.11",
     "uuid": "^11.0.3",
-    "zod": "^3.23.8"
+    "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@mikro-orm/cli": "^6.4.0",
+    "@mikro-orm/cli": "^6.4.1",
     "@types/uuid": "^10.0.0"
   },
   "mikro-orm": {

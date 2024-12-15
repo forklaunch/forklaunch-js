@@ -1,5 +1,45 @@
 # @forklaunch/core
 
+## 0.2.35
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/common@0.1.14
+  - @forklaunch/validator@0.3.13
+
+## 0.2.34
+
+### Patch Changes
+
+- multiple improvements for config injector class
+
+## 0.2.33
+
+### Patch Changes
+
+- Add schema check to validator interface, and for validating configurations, check if value is a schema and return any errors with pathing
+- Updated dependencies
+  - @forklaunch/validator@0.3.12
+
+## 0.2.32
+
+### Patch Changes
+
+- append subrouters to router to enable openapi spec
+
+## 0.2.31
+
+### Patch Changes
+
+- jose export for bun compatibility
+
+## 0.2.30
+
+### Patch Changes
+
+- 59d4bfd: Upgrade core package to be more compatible with bun
+
 ## 0.2.29
 
 ### Patch Changes

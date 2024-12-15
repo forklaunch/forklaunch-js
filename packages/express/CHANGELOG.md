@@ -1,5 +1,53 @@
 # @forklaunch/express
 
+## 0.1.30
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/common@0.1.14
+  - @forklaunch/core@0.2.35
+  - @forklaunch/validator@0.3.13
+
+## 0.1.29
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.2.34
+
+## 0.1.28
+
+### Patch Changes
+
+- Add schema check to validator interface, and for validating configurations, check if value is a schema and return any errors with pathing
+- Updated dependencies
+  - @forklaunch/validator@0.3.12
+  - @forklaunch/core@0.2.33
+
+## 0.1.27
+
+### Patch Changes
+
+- append subrouters to router to enable openapi spec
+- Updated dependencies
+  - @forklaunch/core@0.2.32
+
+## 0.1.26
+
+### Patch Changes
+
+- jose export for bun compatibility
+- Updated dependencies
+  - @forklaunch/core@0.2.31
+
+## 0.1.25
+
+### Patch Changes
+
+- Updated dependencies [59d4bfd]
+  - @forklaunch/core@0.2.30
+
 ## 0.1.24
 
 ### Patch Changes

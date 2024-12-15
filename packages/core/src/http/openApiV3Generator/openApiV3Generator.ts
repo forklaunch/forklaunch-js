@@ -119,7 +119,7 @@ export function generateSwaggerDocument<SV extends AnySchemaValidator>(
   const tags: TagObject[] = [];
   const paths: PathObject = {};
 
-  routers.forEach((router) => {
+  routers.flat(Infinity).forEach((router) => {
     const controllerName = transformBasePath(router.basePath);
     tags.push({
       name: controllerName,

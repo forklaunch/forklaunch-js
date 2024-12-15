@@ -1,0 +1,13 @@
+FROM oven/bun:latest
+
+WORKDIR /app
+
+# Copy source code
+COPY . .
+RUN mv package.bun.json package.json
+
+# Install dependencies
+RUN bun install
+
+# Build TypeScript code
+RUN bun run build

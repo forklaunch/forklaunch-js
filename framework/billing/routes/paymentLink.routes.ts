@@ -3,9 +3,7 @@ import { PaymentLinkController } from '../controllers/paymentLink.controller';
 
 export const router = forklaunchRouter('/payment-link');
 
-export const PaymentLinkRoutes = <ConfigInjectorScope>(
-  controller: PaymentLinkController<ConfigInjectorScope>
-) => ({
+export const PaymentLinkRoutes = (controller: PaymentLinkController) => ({
   router,
   createPaymentLink: router.post('/', controller.createPaymentLink),
   getPaymentLink: router.get('/:id', controller.getPaymentLink),

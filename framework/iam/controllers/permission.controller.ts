@@ -1,6 +1,8 @@
 import { Controller } from '@forklaunch/core/controllers';
 import { delete_, get, post, put } from '@forklaunch/core/http';
+import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { array, SchemaValidator, string } from '@forklaunch/framework-core';
+import { configValidator } from '../bootstrapper';
 import { PermissionService } from '../interfaces/permission.service.interface';
 import {
   CreatePermissionDtoMapper,
@@ -8,11 +10,13 @@ import {
   UpdatePermissionDtoMapper
 } from '../models/dtoMapper/permission.dtoMapper';
 
-export class PermissionController<ConfigInjectorScope>
-  implements Controller<PermissionService>
-{
+export class PermissionController implements Controller<PermissionService> {
   constructor(
-    private readonly service: (scope?: ConfigInjectorScope) => PermissionService
+    private readonly serviceFactory: ScopedDependencyFactory<
+      SchemaValidator,
+      typeof configValidator,
+      'permissionService'
+    >
   ) {}
 
   createPermission = post(
@@ -28,7 +32,7 @@ export class PermissionController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      await this.service().createPermission(req.body);
+      await this.serviceFactory().createPermission(req.body);
       res.status(201).send('Permission created successfully');
     }
   );
@@ -46,7 +50,7 @@ export class PermissionController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      await this.service().createBatchPermissions(req.body);
+      await this.serviceFactory().createBatchPermissions(req.body);
       res.status(201).send('Batch permissions created successfully');
     }
   );
@@ -66,7 +70,9 @@ export class PermissionController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      res.status(200).json(await this.service().getPermission(req.params.id));
+      res
+        .status(200)
+        .json(await this.serviceFactory().getPermission(req.params.id));
     }
   );
 
@@ -88,7 +94,9 @@ export class PermissionController<ConfigInjectorScope>
       res
         .status(200)
         .json(
-          await this.service().getBatchPermissions(req.query.ids.split(','))
+          await this.serviceFactory().getBatchPermissions(
+            req.query.ids.split(',')
+          )
         );
     }
   );
@@ -106,7 +114,7 @@ export class PermissionController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      await this.service().updatePermission(req.body);
+      await this.serviceFactory().updatePermission(req.body);
       res.status(200).send('Permission updated successfully');
     }
   );
@@ -124,7 +132,7 @@ export class PermissionController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      await this.service().updateBatchPermissions(req.body);
+      await this.serviceFactory().updateBatchPermissions(req.body);
       res.status(200).send('Batch permissions updated successfully');
     }
   );
@@ -144,7 +152,7 @@ export class PermissionController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      await this.service().deletePermission(req.params.id);
+      await this.serviceFactory().deletePermission(req.params.id);
       res.status(200).send('Permission deleted successfully');
     }
   );
@@ -164,7 +172,9 @@ export class PermissionController<ConfigInjectorScope>
       }
     },
     async (req, res) => {
-      await this.service().deleteBatchPermissions(req.query.ids.split(','));
+      await this.serviceFactory().deleteBatchPermissions(
+        req.query.ids.split(',')
+      );
       res.status(200).send('Batch permissions deleted successfully');
     }
   );

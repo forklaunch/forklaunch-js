@@ -4,11 +4,7 @@ import {
   SchemaValidator,
   string
 } from '@forklaunch/validator/typebox';
-import {
-  ExpressLikeRouter,
-  ForklaunchExpressLikeRouter,
-  typedHandler
-} from '../src/http';
+import { ForklaunchExpressLikeRouter, typedHandler } from '../src/http';
 import { typedAuthHandler } from '../src/http/handlers/typedAuthHandler';
 
 // TODO: write tests
@@ -77,12 +73,19 @@ const xasd = typedHandler(
   }
 );
 
-const xa = new ForklaunchExpressLikeRouter(
-  '/l',
-  SchemaValidator(),
-  // TODO: implement this
-  {} as ExpressLikeRouter<unknown, unknown>
-);
+const xa = new ForklaunchExpressLikeRouter('/l', SchemaValidator(), {
+  use: () => {},
+  get: () => {},
+  post: () => {},
+  put: () => {},
+  delete: () => {},
+  all: () => {},
+  connect: () => {},
+  patch: () => {},
+  options: () => {},
+  head: () => {},
+  trace: () => {}
+});
 
 const bl = xa.trace(
   '/test/:name/:id',
