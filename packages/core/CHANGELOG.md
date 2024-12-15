@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.2.34
+
+### Patch Changes
+
+- multiple improvements for config injector class
+
 ## 0.2.33
 
 ### Patch Changes

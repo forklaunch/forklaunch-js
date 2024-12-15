@@ -1,9 +1,9 @@
 import { Controller } from '@forklaunch/core/controllers';
 import { post } from '@forklaunch/core/http';
+import { ConfigInjector, ScopedDependencyFactory } from '@forklaunch/core/services';
 import { SchemaValidator } from '@{{app_name}}/core';
 import { HelloForklaunchService } from '../interfaces/helloForklaunch.interface';
 import { HelloForklaunchRequestDtoMapper, HelloForklaunchResponseDtoMapper } from '../models/dtoMapper/helloForklaunch.dtoMapper';
-import { ConfigInjector } from '@forklaunch/core/services';
 
 export class HelloForklaunchController
   implements Controller<HelloForklaunchService>
@@ -13,9 +13,11 @@ export class HelloForklaunchController
       SchemaValidator,
       typeof configValidator
     >,
-    private serviceFactory: (
-      scope?: ConfigInjector<SchemaValidator, typeof configValidator>
-    ) => HelloForklaunchService
+    private serviceFactory: ScopedDependencyFactory<
+      SchemaValidator,
+      typeof configValidator,
+      'helloForklaunchService'
+    >
   ) {}
 
   helloForklaunchGet = get(
