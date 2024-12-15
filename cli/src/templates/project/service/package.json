@@ -21,6 +21,7 @@
   "devDependencies": {
     "eslint": "^9.16.0",
     "@mikro-orm/cli": "^6.4.0",
+    "tsx": "^4.19.2",
     "typescript-eslint": "^8.16.0"
   },
   "dependencies": {
@@ -36,6 +37,12 @@
     "@mikro-orm/reflection": "^6.4.0",{{#is_typebox}}
     "@sinclair/typebox": "^0.34.9"{{/is_typebox}}{{#is_zod}}
     "zod": "^3.23.8"{{/is_zod}}
+  },
+  "mikro-orm": {
+    "configPaths": [
+      "./mikro-orm.config.ts",
+      "./dist/mikro-orm.config.js"
+    ]
   }
 }
 

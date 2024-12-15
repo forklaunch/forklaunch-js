@@ -4,7 +4,7 @@ import {
 } from '../models/dtoMapper/helloForklaunch.dtoMapper';
 
 export interface HelloForklaunchService {
-  helloForklaunch: (
+  helloForklaunchPost: (
     dto: HelloForklaunchRequestDto
   ) => Promise<HelloForklaunchResponseDto>;
 }

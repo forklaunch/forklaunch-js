@@ -4,9 +4,9 @@ WORKDIR /app
 
 # Copy source code
 COPY . .
-RUN npm install -g pnpm
 
 # Install dependencies
+RUN npm install -g pnpm
 RUN apk add --no-cache git
 RUN pnpm install
 

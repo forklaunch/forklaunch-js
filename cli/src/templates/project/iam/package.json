@@ -30,7 +30,8 @@
     "zod": "^3.23.8"{{/is_zod}}
   },
   "devDependencies": {
-    "@mikro-orm/cli": "^6.4.1"
+    "@mikro-orm/cli": "^6.4.1",
+    "tsx": "^4.19.2"
   },
   "mikro-orm": {
     "configPaths": [

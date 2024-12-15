@@ -23,7 +23,7 @@ import {
   unknown as schemaUnknown,
   uri as schemaUri,
   uuid as schemaUuid
-} from '@forklaunch/validator/typebox';
+} from '@forklaunch/validator/zod';
 
 export const SchemaValidator = RegisteredSchemaValidator;
 export type SchemaValidator = ReturnType<typeof RegisteredSchemaValidator>;

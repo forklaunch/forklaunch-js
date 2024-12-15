@@ -6,8 +6,10 @@ import mikroOrmOptionsConfig from './mikro-orm.config';
 import { BaseHelloForklaunchService } from './services/helloForklaunch.service';
 
 const configValidator = {
-  host: string,
-  port: number,
+  redisUrl: string,
+  protocol: optional(string),
+  host: optional(string),
+  port: optional(number),
   version: optional(string),
   swaggerPath: optional(string),
   entityManager: EntityManager,
@@ -25,13 +27,21 @@ export function bootstrap(
       SchemaValidator(),
       configValidator,
       {
+        redisUrl: {
+          lifetime: Lifetime.Singleton,
+          value: process.env.REDIS_URL ?? ''
+        },
+        protocol: {
+          lifetime: Lifetime.Singleton,
+          value: process.env.PROTOCOL ?? 'http'
+        },
         host: {
           lifetime: Lifetime.Singleton,
-          value: process.env.DB_HOST ?? 'localhost'
+          value: process.env.HOST ?? 'localhost'
         },
         port: {
           lifetime: Lifetime.Singleton,
-          value: Number(process.env.DB_PORT ?? "8000")
+          value: Number(process.env.PORT ?? "8000")
         },
         version: {
           lifetime: Lifetime.Singleton,
@@ -50,7 +60,9 @@ export function bootstrap(
         },
         ttlCache: {
           lifetime: Lifetime.Singleton,
-          value: new RedisTtlCache(60 * 60 * 1000)
+          value: new RedisTtlCache(60 * 60 * 1000, {
+            url: process.env.REDIS_URL ?? ''
+          })
         },
         helloForklaunchService: {
           lifetime: Lifetime.Scoped,
@@ -59,6 +71,15 @@ export function bootstrap(
         }
       }
     );
+
+    const parsedConfig = configInjector.validateConfigSingletons({
+      redisUrl: process.env.REDIS_URL
+    });
+
+    if (!parsedConfig.ok) {
+      throw new Error(parsedConfig.error);
+    }
+    
     callback(configInjector);
   });
 }

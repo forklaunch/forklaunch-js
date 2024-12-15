@@ -10,12 +10,9 @@ import {
 } from '../models/dtoMapper/helloForklaunch.dtoMapper';
 
 export class BaseHelloForklaunchService implements HelloForklaunchService {
-  constructor(
-    private entityManager: EntityManager,
-    private cache: TtlCache
-  ) {}
+  constructor(private entityManager: EntityManager, private cache: TtlCache) {}
 
-    helloForklaunch = async (
+  helloForklaunchPost = async (
     dto: HelloForklaunchRequestDto
   ): Promise<HelloForklaunchResponseDto> => {
     const entity = HelloForklaunchRequestDtoMapper.deserializeDtoToEntity(

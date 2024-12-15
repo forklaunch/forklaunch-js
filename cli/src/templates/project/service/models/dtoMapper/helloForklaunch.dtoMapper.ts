@@ -11,12 +11,12 @@ export class HelloForklaunchRequestDtoMapper extends RequestDtoMapper<
   SchemaValidator
 > {
   schema = {
-    name: string
+    message: string
   };
 
   toEntity(): HelloForklaunchRecord {
     const entity = new HelloForklaunchRecord();
-    entity.name = this.dto.name;
+    entity.message = this.dto.message;
     return entity;
   }
 }
@@ -28,12 +28,12 @@ export class HelloForklaunchResponseDtoMapper extends ResponseDtoMapper<
   SchemaValidator
 > {
   schema = {
-    name: string
+    message: string
   };
 
   fromEntity(entity: HelloForklaunchRecord): this {
     this.dto = {
-      name: entity.name
+      message: entity.message
     };
     return this;
   }

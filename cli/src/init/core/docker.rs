@@ -41,6 +41,8 @@ struct DockerService {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     volumes: Option<Vec<String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    working_dir: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     entrypoint: Option<Vec<String>>,
 }
 
@@ -77,7 +79,12 @@ pub(crate) fn add_service_definition_to_docker_compose(
         }
 
         if let Some(container_name) = &value.container_name {
-            if container_name == &format!("{}-{}", config_data.app_name, config_data.service_name) {
+            if container_name
+                == &format!(
+                    "{}-{}-{}",
+                    config_data.app_name, config_data.service_name, config_data.runtime
+                )
+            {
                 return Ok((
                     to_string(&full_docker_compose)
                         .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?,
@@ -106,8 +113,8 @@ pub(crate) fn add_service_definition_to_docker_compose(
 
     let mut volumes = vec![
         format!(
-            "./{}:/app/{}",
-            config_data.service_name, config_data.service_name
+            "./{}:/{}/{}",
+            config_data.service_name, config_data.app_name, config_data.service_name
         ),
         format!(
             "/{}/{}/dist",
@@ -143,6 +150,10 @@ pub(crate) fn add_service_definition_to_docker_compose(
             ports: Some(vec![format!("{}:{}", port_number, port_number)]),
             networks: Some(vec![format!("{}-network", config_data.app_name)]),
             volumes: Some(volumes),
+            working_dir: Some(format!(
+                "/{}/{}",
+                config_data.app_name, config_data.service_name
+            )),
             entrypoint: Some(vec![
                 match config_data.runtime.as_str() {
                     "node" => "pnpm".to_string(),

@@ -1,12 +1,13 @@
 import { forklaunchRouter } from '@{{app_name}}/core';
 import { HelloForklaunchController } from '../controllers/helloForklaunch.controller';
 
-export const router = forklaunchRouter('/');
+export const router = forklaunchRouter('/hello');
 
-export const HelloForklaunchRoutes = <ConfigInjectorScope>(
-  controller: HelloForklaunchController<ConfigInjectorScope>
+export const HelloForklaunchRoutes = (
+  controller: HelloForklaunchController
 ) => ({
   router,
 
-  helloForklaunch: router.post('/hello', controller.helloForklaunch)
+  helloForklaunchGet: router.get('/', controller.helloForklaunchGet),
+  helloForklaunchPost: router.post('/', controller.helloForklaunchPost)
 });

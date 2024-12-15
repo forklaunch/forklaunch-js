@@ -11,6 +11,7 @@ import BaseOrganizationService from './services/organization.service';
 import BasePermissionService from './services/permission.service';
 import BaseRoleService from './services/role.service';
 import BaseUserService from './services/user.service';
+import { OrganizationService } from './interfaces/organization.service.interface';
 
 const configValidator = {
   host: string,

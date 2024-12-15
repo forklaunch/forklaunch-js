@@ -60,9 +60,9 @@ services:
     networks:
       - {{app_name}}-network
     volumes:
-      - ./{{name}}:/app/{{name}}
-      - /app/{{name}}/dist {{#is_node}}
-      - /app/{{name}}/node_modules {{/is_node}}
-    working_dir: /app/{{name}} {{/port}}{{/projects}}
-    entrypoint: ["{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}}", "run", "dev"]
+      - ./{{name}}:/{{app_name}}  /{{name}}
+      - /{{app_name}}/{{name}}/dist {{#is_node}}
+      - /{{app_name}}/{{name}}/node_modules {{/is_node}}
+    working_dir: /{{app_name}}/{{name}}
+    entrypoint: ["{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}}", "run", "dev"] {{/port}}{{/projects}}
 
