@@ -8,7 +8,8 @@ use serde::{Deserialize, Serialize};
 use crate::{
     config_struct,
     constants::{
-        ERROR_FAILED_TO_CREATE_GITIGNORE, ERROR_FAILED_TO_CREATE_PNPM_WORKSPACE, LATEST_CLI_VERSION,
+        ERROR_FAILED_TO_CREATE_GITIGNORE, ERROR_FAILED_TO_CREATE_PNPM_WORKSPACE,
+        ERROR_FAILED_TO_SETUP_IAM, LATEST_CLI_VERSION,
     },
     utils::get_token,
 };
@@ -16,8 +17,9 @@ use crate::{
 use super::{
     core::{
         config::ProjectEntry,
-        database::match_database,
+        database::{match_database, VALID_DATABASES},
         gitignore::setup_gitignore,
+        iam::setup_iam,
         manifest::setup_manifest,
         pnpm_workspace::generate_pnpm_workspace,
         symlinks::setup_symlinks,
@@ -58,8 +60,10 @@ impl CliCommand for ApplicationCommand {
                 .short('d')
                 .long("database")
                 .required(true)
-                .help("The database to use. Valid values = [sqlite, postgresql, mysql, mongodb]")
-                .value_parser(["sqlite", "postgresql", "mysql", "mongodb"]),
+                // .help("The database to use. Valid values = [sqlite, postgresql, mysql, mongodb]")
+                // .value_parser(["sqlite", "postgresql", "mysql", "mongodb"]),
+                .help("The database to use. Valid values = [postgresql, mongodb]")
+                .value_parser(VALID_DATABASES),
         )
         .arg(
             Arg::new("validator")
@@ -97,8 +101,17 @@ impl CliCommand for ApplicationCommand {
             Arg::new("packages")
                 .short('p')
                 .long("packages")
-                .help("Additional packages to include. Valid values = [billing, iam, monitoring]")
-                .value_parser(["billing", "iam", "monitoring"])
+                .help("Additional packages to include. Valid values = [billing, iam]")
+                .value_parser(["billing", "iam"])
+                .num_args(0..)
+                .action(ArgAction::Append),
+        )
+        .arg(
+            Arg::new("libraries")
+                .short('l')
+                .long("libraries")
+                .help("Additional libraries to include. Valid values = [monitoring]")
+                .value_parser(["monitoring"])
                 .num_args(0..)
                 .action(ArgAction::Append),
         )
@@ -112,6 +125,8 @@ impl CliCommand for ApplicationCommand {
         let runtime = matches.get_one::<String>("runtime").unwrap();
         let test_framework = matches.get_one::<String>("test-framework").unwrap();
         let packages = matches.get_many::<String>("packages").unwrap_or_default();
+        // TODO: Add support for libraries
+        // let libraries = matches.get_many::<String>("libraries").unwrap_or_default();
 
         let mut ignore_files = vec!["pnpm-workspace.yaml", "pnpm-lock.yml"];
 
@@ -140,11 +155,13 @@ impl CliCommand for ApplicationCommand {
         let mut additional_projects = vec![ProjectEntry {
             name: "core".to_string(),
             port: None,
+            database: None,
         }];
         let port_number = 8000;
-        additional_projects.extend(packages.enumerate().map(|(i, p)| ProjectEntry {
-            name: p.to_string(),
+        additional_projects.extend(packages.enumerate().map(|(i, package)| ProjectEntry {
+            name: package.to_string(),
             port: Some((port_number + i).try_into().unwrap()),
+            database: Some(database.to_string()),
         }));
 
         let additional_projects_names = additional_projects
@@ -170,7 +187,6 @@ impl CliCommand for ApplicationCommand {
         let mut data = ApplicationConfigData {
             cli_version: LATEST_CLI_VERSION.to_string(),
             app_name: name.to_string(),
-            database: database.to_string(),
             validator: validator.to_string(),
             http_framework: http_framework.to_string(),
             runtime: runtime.to_string(),
@@ -186,7 +202,11 @@ impl CliCommand for ApplicationCommand {
             is_node: runtime == "node",
             is_vitest: test_framework == "vitest",
             is_jest: test_framework == "jest",
+
+            database: database.to_string(),
             db_driver: match_database(&database),
+            is_postgres: database == "postgresql",
+            is_mongo: database == "mongodb",
 
             bun_package_json_workspace_string,
         };
@@ -244,6 +264,10 @@ impl CliCommand for ApplicationCommand {
         if runtime == "node" {
             generate_pnpm_workspace(name, &additional_projects)
                 .with_context(|| ERROR_FAILED_TO_CREATE_PNPM_WORKSPACE)?;
+        }
+
+        if additional_projects_names.contains(&"iam".to_string()) {
+            setup_iam(&Path::new(name)).with_context(|| ERROR_FAILED_TO_SETUP_IAM)?;
         }
 
         setup_gitignore(&Path::new(name).to_string_lossy().to_string())

@@ -9,7 +9,7 @@ export class Subscription extends BaseEntity {
   @Property()
   partyId!: string;
 
-  @Property()
+  @Enum(() => PartyEnum)
   partyType!: PartyEnum;
 
   @Property()

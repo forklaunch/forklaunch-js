@@ -27,6 +27,19 @@ pub(crate) fn get_template_path(path: &PathIO) -> Result<String> {
         .to_string())
 }
 
+fn database_replacements(database: &String, template: String) -> String {
+    match database.as_str() {
+        "mongodb" => template
+            .replace("BaseEntity", "MongoBaseEntity")
+            .replace("id: uuid", "id: string"),
+        _ => template,
+    }
+}
+
+fn forklaunch_replacements(app_name: &String, template: String) -> String {
+    template.replace("@forklaunch/framework-", format!("@{}/", app_name).as_str())
+}
+
 pub(crate) fn setup_with_template<T: Content + Config>(
     output_prefix: Option<&String>,
     template_dir: &PathIO,
@@ -66,13 +79,10 @@ pub(crate) fn setup_with_template<T: Content + Config>(
                 .with_context(|| {
                     format!("Failed to parse template file {}.", path.to_string_lossy())
                 })?;
-            let rendered = tpl
-                .render(&data)
-                // TODO: find a potentially better strategy for symlinking dependencies that we create
-                .replace(
-                    "@forklaunch/framework-",
-                    format!("@{}/", &data.app_name()).as_str(),
-                );
+            let rendered = database_replacements(
+                data.database(),
+                forklaunch_replacements(data.app_name(), tpl.render(&data)),
+            );
             if !output_path.exists()
                 && !ignore_files
                     .iter()

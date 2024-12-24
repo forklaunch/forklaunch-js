@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 
 pub(crate) trait Config {
     fn app_name(&self) -> &String;
+    fn database(&self) -> &String;
     fn test_framework(&self) -> &String;
     fn projects(&self) -> &Vec<ProjectEntry>;
     fn projects_mut(&mut self) -> &mut Vec<ProjectEntry>;
@@ -13,12 +14,14 @@ pub(crate) trait Config {
 
 pub(crate) trait ProjectConfig {
     fn name(&self) -> &String;
+    fn database(&self) -> &String;
 }
 
 #[derive(Debug, Serialize, Deserialize, Content, Clone)]
 pub(crate) struct ProjectEntry {
     pub(crate) name: String,
     pub(crate) port: Option<i32>,
+    pub(crate) database: Option<String>,
 }
 
 #[macro_export]
@@ -37,13 +40,15 @@ macro_rules! internal_config_struct {
         $vis struct $name {
             $vis cli_version: String,
             $vis app_name: String,
-            $vis database: String,
             $vis validator: String,
             $vis http_framework: String,
             $vis runtime: String,
             $vis test_framework: String,
             $vis projects: Vec<crate::init::core::config::ProjectEntry>,
             $vis project_peer_topology: std::collections::HashMap<String, Vec<String>>,
+
+            #[serde(skip_serializing)]
+            $vis database: String,
 
             $(
                 #[serde(default)]
@@ -96,6 +101,12 @@ macro_rules! config_struct {
                     #[serde(skip_serializing)]
                     $vis db_driver: String,
 
+                    #[serde(skip_serializing)]
+                    $vis is_postgres: bool,
+
+                    #[serde(skip_serializing)]
+                    $vis is_mongo: bool,
+
                     $(
                         $(#[$field_meta])*
                         $field_vis $field: $ty
@@ -135,6 +146,8 @@ macro_rules! config_struct {
                     is_vitest: shadow.test_framework == "vitest",
                     is_jest: shadow.test_framework == "jest",
                     db_driver: crate::init::core::database::match_database(&shadow.database),
+                    is_postgres: shadow.database == "postgresql",
+                    is_mongo: shadow.database == "mongodb",
                     $(
                         $field: shadow.$field
                     ),*
@@ -152,6 +165,9 @@ macro_rules! config_struct {
         impl crate::init::core::config::Config for $name {
             fn app_name(&self) -> &String {
                 &self.app_name
+            }
+            fn database(&self) -> &String {
+                &self.database
             }
             fn test_framework(&self) -> &String {
                 &self.test_framework

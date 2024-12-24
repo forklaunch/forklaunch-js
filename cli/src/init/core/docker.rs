@@ -1,4 +1,4 @@
-use std::{fs::read_to_string, path::Path};
+use std::{collections::HashSet, fs::read_to_string, path::Path};
 
 use anyhow::{Context, Result};
 use indexmap::IndexMap;
@@ -13,12 +13,22 @@ use crate::{
     init::service::ServiceConfigData,
 };
 
+use super::database::VALID_DATABASES;
+
 #[derive(Debug, Serialize, Deserialize)]
 struct DockerCompose {
     services: IndexMap<String, DockerService>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
+struct Healthcheck {
+    test: String,
+    interval: String,
+    timeout: String,
+    retries: i32,
+}
+
+#[derive(Debug, Serialize, Deserialize, Default)]
 struct DockerService {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     hostname: Option<String>,
@@ -30,6 +40,8 @@ struct DockerService {
     build: Option<DockerBuild>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     image: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    command: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     environment: Option<IndexMap<String, String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -44,12 +56,99 @@ struct DockerService {
     working_dir: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     entrypoint: Option<Vec<String>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    healthcheck: Option<Healthcheck>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 struct DockerBuild {
     context: String,
     dockerfile: String,
+}
+
+fn add_database_to_docker_compose(
+    config_data: &ServiceConfigData,
+    docker_compose: &mut DockerCompose,
+) -> Result<()> {
+    let mut active_databases = HashSet::new();
+    for (_, service) in docker_compose.services.iter_mut() {
+        if VALID_DATABASES.contains(&service.container_name.as_deref().unwrap()) {
+            active_databases.insert(service.container_name.as_deref().unwrap());
+        }
+    }
+
+    if !active_databases.contains(&config_data.database.as_str()) {
+        match config_data.database.as_str() {
+            "postgresql" => {
+                docker_compose.services.insert(
+                    "postgres".to_string(),
+                    DockerService {
+                        image: Some("postgres:latest".to_string()),
+                        container_name: Some(format!("{}-postgres", config_data.app_name)),
+                        hostname: Some("postgres".to_string()),
+                        restart: Some("unless-stopped".to_string()),
+                        ports: Some(vec!["5432:5432".to_string()]),
+                        environment: Some(IndexMap::from([
+                            ("POSTGRES_USER".to_string(), "postgres".to_string()),
+                            ("POSTGRES_PASSWORD".to_string(), "postgres".to_string()),
+                            ("POSTGRES_HOST_AUTH_METHOD".to_string(), "trust".to_string()),
+                        ])),
+                        networks: Some(vec![format!("{}-network", config_data.app_name)]),
+                        volumes: Some(vec![format!(
+                            "./{}/data:/var/lib/postgresql/forklaunch/data",
+                            config_data.app_name
+                        )]),
+                        build: None,
+                        command: None,
+                        depends_on: None,
+                        working_dir: None,
+                        entrypoint: None,
+                        healthcheck: None,
+                    },
+                );
+            }
+            "mongodb" => {
+                docker_compose.services.insert(
+                    "mongodb".to_string(),
+                    DockerService {
+                        image: Some("mongo:latest".to_string()),
+                        hostname: Some("mongodb".to_string()),
+                        container_name: Some(format!("{}-mongodb", config_data.app_name)),
+                        restart: Some("unless-stopped".to_string()),
+                        command: Some("--replSet rs0".to_string()),
+                        environment: Some(IndexMap::from([(
+                            "MONGO_INITDB_DATABASE".to_string(),
+                            format!("{}-dev", config_data.app_name),
+                        )])),
+                        ports: Some(vec!["27017:27017".to_string()]),
+                        networks: Some(vec![format!("{}-network", config_data.app_name)]),
+                        volumes: Some(vec![format!("./{}/data:/data/db", config_data.app_name)]),
+                        healthcheck: Some(Healthcheck {
+                            test: "mongosh --eval 'db.runCommand(\"ping\").ok' localhost:27017/test --quiet".to_string(),
+                            interval: "2s".to_string(),
+                            timeout: "3s".to_string(),
+                            retries: 5,
+                        }),
+                        ..Default::default()
+                    },
+                );
+                docker_compose.services.insert(
+                    "mongo-init".to_string(),
+                    DockerService {
+                        image: Some("mongo:latest".to_string()),
+                        depends_on: Some(vec!["mongodb".to_string()]),
+                        command: Some(format!(
+                            "sh -c \"sleep 5; mongosh --host mongodb:27017 --eval 'rs.initiate( {{ _id : \"rs0\", members: [ {{ _id: 0, host: \"mongodb:27017\" }} ] }})'\"",
+                        )),
+                        ..Default::default()
+                    },
+                );
+            }
+            _ => unreachable!(),
+        }
+    }
+
+    Ok(())
 }
 
 pub(crate) fn add_service_definition_to_docker_compose(
@@ -146,7 +245,7 @@ pub(crate) fn add_service_definition_to_docker_compose(
                 config_data.app_name, config_data.service_name, config_data.runtime
             )),
             environment: Some(environment),
-            depends_on: Some(vec!["postgres".to_string(), "redis".to_string()]),
+            depends_on: Some(vec![config_data.database.clone(), "redis".to_string()]),
             ports: Some(vec![format!("{}:{}", port_number, port_number)]),
             networks: Some(vec![format!("{}-network", config_data.app_name)]),
             volumes: Some(volumes),
@@ -163,8 +262,12 @@ pub(crate) fn add_service_definition_to_docker_compose(
                 "run".to_string(),
                 "dev".to_string(),
             ]),
+            ..Default::default()
         },
     );
+
+    add_database_to_docker_compose(config_data, &mut docker_compose)
+        .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
 
     full_docker_compose["services"] = to_value(docker_compose.services)?;
 

@@ -23,14 +23,10 @@ type CreatePermissionEntityData = {
 export default class BasePermissionService
   implements PermissionService, BaseService
 {
-  private roleService: RoleService;
-
   constructor(
     public em: EntityManager,
-    roleService: () => RoleService
-  ) {
-    this.roleService = roleService();
-  }
+    private roleServiceFactory: () => RoleService
+  ) {}
 
   // start: global helper functions
   private async updateRolesWithPermissions(
@@ -64,12 +60,13 @@ export default class BasePermissionService
     em?: EntityManager
   ): Promise<Role[]> {
     return roleIds
-      ? (await this.roleService.getBatchRoles(roleIds, em)).map((role) => {
-          return RoleEntityMapper.deserializeDtoToEntity(
-            SchemaValidator(),
-            role
-          );
-        })
+      ? (await this.roleServiceFactory().getBatchRoles(roleIds, em)).map(
+          (role) => {
+            return (em ?? this.em).merge(
+              RoleEntityMapper.deserializeDtoToEntity(SchemaValidator(), role)
+            );
+          }
+        )
       : [];
   }
   // end: global helper functions
@@ -95,9 +92,11 @@ export default class BasePermissionService
     em?: EntityManager
   ): Promise<CreatePermissionEntityData> {
     return {
-      permission: CreatePermissionDtoMapper.deserializeDtoToEntity(
-        SchemaValidator(),
-        permissionDto
+      permission: (em ?? this.em).merge(
+        CreatePermissionDtoMapper.deserializeDtoToEntity(
+          SchemaValidator(),
+          permissionDto
+        )
       ),
       addToRoles: await this.getBatchRoles(permissionDto.addToRolesIds, em)
     };
@@ -240,8 +239,9 @@ export default class BasePermissionService
     const permissions: Permission[] = [];
     await (em ?? this.em).transactional(async (em) => {
       permissionDtos.map(async (updatePermissionDto) => {
-        const { permission, roles } =
-          await this.updatePermissionDto(updatePermissionDto);
+        const { permission, roles } = await this.updatePermissionDto(
+          updatePermissionDto
+        );
         roles.forEach((role) => {
           if (
             rolesCache[role.id] &&

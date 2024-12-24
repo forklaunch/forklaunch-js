@@ -26,7 +26,11 @@
     "format": "bun -r format",
     "test": "bun test",
     "up:packages": "bun update --latest",
-    "dev": "RUNTIME=bun docker compose -f docker-compose.base.yml -f docker-compose.bun.yml up"
+    "dev": "RUNTIME=bun docker compose -f docker-compose.base.yml -f docker-compose.bun.yml up",
+    "migrate:init": "docker compose -f docker-compose.base.yml up -d postgres && bun -r run migrate:init",
+    "migrate:create": "docker compose -f docker-compose.base.yml up -d postgres && bun -r run migrate:create",
+    "migrate:up": "docker compose -f docker-compose.base.yml up -d postgres && bun -r run migrate:up",
+    "migrate:down": "docker compose -f docker-compose.base.yml up -d postgres && bun -r run migrate:down"
   },
   "keywords": [],
   "author": "",

@@ -37,6 +37,7 @@ pub(crate) fn setup_manifest<T: Content + Config + Serialize>(
 pub(crate) fn add_project_definition_to_manifest<T: Config + ProjectConfig + Serialize>(
     config_data: &mut T,
     port: Option<i32>,
+    database: Option<String>,
 ) -> Result<String> {
     let name = config_data.name().to_owned();
     for project in config_data.projects().iter() {
@@ -49,6 +50,7 @@ pub(crate) fn add_project_definition_to_manifest<T: Config + ProjectConfig + Ser
     config_data.projects_mut().push(ProjectEntry {
         name: name.clone(),
         port,
+        database,
     });
 
     let app_name = config_data.app_name().to_owned();

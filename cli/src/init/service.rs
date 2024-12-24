@@ -48,6 +48,9 @@ impl ProjectConfig for ServiceConfigData {
     fn name(&self) -> &String {
         &self.service_name
     }
+    fn database(&self) -> &String {
+        &self.database
+    }
 }
 
 #[derive(Debug)]
@@ -150,9 +153,12 @@ fn add_service_to_artifacts(config_data: &mut ServiceConfigData, base_path: &Str
     let (docker_compose_buffer, port_number) =
         add_service_definition_to_docker_compose(config_data, base_path)
             .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
-    let forklaunch_definition_buffer =
-        add_project_definition_to_manifest(config_data, Some(port_number))
-            .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
+    let forklaunch_definition_buffer = add_project_definition_to_manifest(
+        config_data,
+        Some(port_number),
+        Some(config_data.database().to_owned()),
+    )
+    .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
     let mut package_json_buffer: Option<String> = None;
     if config_data.runtime == "bun" {
         package_json_buffer = Some(

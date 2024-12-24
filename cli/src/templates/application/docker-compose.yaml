@@ -7,23 +7,56 @@ networks:
     name: {{app_name}}-network
     driver: bridge
 
-services:
+services:{{#is_postgres}}
   postgres:
     image: postgres:latest
     hostname: postgres
-    container_name: {{app_name}}-pg
+    container_name: {{app_name}}-postgres
     restart: unless-stopped
     ports:
       - '5432:5432'
     environment:
-      POSTGRES_DB: {{app_name}}-dev
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_HOST_AUTH_METHOD: 'trust'
     networks:
       - {{app_name}}-network
     volumes:
-      - {{app_name}}-postgres-data:/var/lib/postgresql/{{app_name}}/data
+      - {{app_name}}-postgres-data:/var/lib/postgresql/{{app_name}}/data{{/is_postgres}}{{#is_mongo}}
+  mongodb:
+    hostname: mongodb
+    container_name: {{app_name}}-mongo
+    restart: unless-stopped
+    image: mongo:latest
+    command: --replSet rs0
+    environment:
+      MONGO_INITDB_DATABASE: {{app_name}}-{{service_name}}-dev
+    ports:
+      - '27017:27017'
+    networks:
+      - {{app_name}}-network
+    volumes:
+      - {{app_name}}-mongo-data:/data/db
+    healthcheck:
+      test: mongosh --eval 'db.runCommand("ping").ok' localhost:27017/test --quiet
+      interval: 2s
+      timeout: 3s
+      retries: 5
+  mongo-init:
+    image: mongo:latest
+    depends_on:
+      - mongodb
+    networks:
+      - {{app_name}}-network
+    command: >
+      sh -c "sleep 5; mongosh --host mongodb:27017 --eval '
+      rs.initiate( {
+        _id : \"rs0\",
+        members: [
+          { _id: 0, host: \"mongodb:27017\" }
+        ]
+      })
+      '"{{/is_mongo}}
   redis:
     image: redis/redis-stack-server:latest
     container_name: {{app_name}}-redis
@@ -46,14 +79,14 @@ services:
       ENV: development
       HOST: 0.0.0.0
       PORT: '{{port}}'
-      DB_NAME: {{app_name}}-dev
+      DB_NAME: {{app_name}}-{{service_name}}-dev
       DB_HOST: postgres
       DB_USER: postgres
       DB_PASSWORD: postgres
       DB_PORT: '5432'
       REDIS_URL: redis://redis:6379
     depends_on:
-      - postgres
+      - {{#is_postgres}}postgres{{/is_postgres}}{{#is_mongo}}mongodb{{/is_mongo}}
       - redis
     ports:
       - {{port}}:{{port}}

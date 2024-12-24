@@ -15,15 +15,11 @@ import {
 import { Permission } from '../models/persistence/permission.entity';
 import { Role } from '../models/persistence/role.entity';
 
-export default class BaseRoleService implements RoleService, BaseService {
-  private permissionService: PermissionService;
-
+export default class BaseRoleService implements RoleService {
   constructor(
     public em: EntityManager,
-    permissionService: () => PermissionService
-  ) {
-    this.permissionService = permissionService();
-  }
+    private permissionServiceFactory: () => PermissionService
+  ) {}
 
   private async getBatchPermissions(
     permissionIds?: string[],
@@ -31,11 +27,16 @@ export default class BaseRoleService implements RoleService, BaseService {
   ): Promise<Permission[]> {
     return permissionIds
       ? (
-          await this.permissionService.getBatchPermissions(permissionIds, em)
+          await this.permissionServiceFactory().getBatchPermissions(
+            permissionIds,
+            em
+          )
         ).map((permission) => {
-          return PermissionEntityMapper.deserializeDtoToEntity(
-            SchemaValidator(),
-            permission
+          return (em ?? this.em).merge(
+            PermissionEntityMapper.deserializeDtoToEntity(
+              SchemaValidator(),
+              permission
+            )
           );
         })
       : [];
@@ -77,12 +78,22 @@ export default class BaseRoleService implements RoleService, BaseService {
   async getRole(id: string, em?: EntityManager): Promise<RoleDto> {
     return RoleDtoMapper.serializeEntityToDto(
       SchemaValidator(),
-      await (em ?? this.em).findOneOrFail(Role, { id })
+      await (em ?? this.em).findOneOrFail(
+        Role,
+        { id },
+        {
+          populate: ['*']
+        }
+      )
     );
   }
 
   async getBatchRoles(ids: string[], em?: EntityManager): Promise<RoleDto[]> {
-    return (await (em ?? this.em).find(Role, ids)).map((role) =>
+    return (
+      await (em ?? this.em).find(Role, ids, {
+        populate: ['*']
+      })
+    ).map((role) =>
       RoleDtoMapper.serializeEntityToDto(SchemaValidator(), role)
     );
   }

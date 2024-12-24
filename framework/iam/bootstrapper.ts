@@ -17,6 +17,7 @@ export const configValidator = {
   port: number,
   version: optional(string),
   swaggerPath: optional(string),
+  passwordEncryptionPublicKeyPath: string,
   entityManager: EntityManager,
   organizationService: BaseOrganizationService,
   permissionService: BasePermissionService,
@@ -49,6 +50,10 @@ export function bootstrap(
         swaggerPath: {
           lifetime: Lifetime.Singleton,
           value: process.env.SWAGGER_PATH ?? '/swagger'
+        },
+        passwordEncryptionPublicKeyPath: {
+          lifetime: Lifetime.Singleton,
+          value: process.env.PASSWORD_ENCRYPTION_PUBLIC_KEY_PATH ?? 'public.pem'
         },
         entityManager: {
           lifetime: Lifetime.Scoped,
@@ -93,13 +98,18 @@ export function bootstrap(
         },
         userService: {
           lifetime: Lifetime.Scoped,
-          factory: ({ entityManager }, resolve, context) => {
+          factory: (
+            { entityManager, passwordEncryptionPublicKeyPath },
+            resolve,
+            context
+          ) => {
             let em = entityManager;
             if (context.entityManagerOptions) {
               em = resolve('entityManager', context);
             }
             return new BaseUserService(
               em,
+              passwordEncryptionPublicKeyPath,
               () => resolve('roleService', context),
               () => resolve('organizationService', context)
             );
@@ -107,6 +117,10 @@ export function bootstrap(
         }
       }
     );
+    configInjector.validateConfigSingletons({
+      passwordEncryptionPublicKeyPath:
+        process.env.PASSWORD_ENCRYPTION_PUBLIC_KEY_PATH
+    });
     callback(configInjector);
   });
 }

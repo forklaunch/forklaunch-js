@@ -11,6 +11,7 @@ futures-io = "0.3.31"
 indexmap = { version = "2.6.0", features = ["serde"] }
 pathdiff = "0.2.2"
 ramhorns = "1.0.1"
+rcgen = "0.13.2"
 reqwest = { version = "0.12.5", features = ["blocking"] }
 serde = { version = "1.0.215", features = ["derive"] }
 serde_json = "1.0.133"

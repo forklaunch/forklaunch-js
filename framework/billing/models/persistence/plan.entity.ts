@@ -20,7 +20,7 @@ export class Plan extends BaseEntity {
   @Property()
   price!: number;
 
-  @Property()
+  @Enum(() => PlanCadenceEnum)
   cadence!: PlanCadenceEnum;
 
   // tie to permissions (slugs)

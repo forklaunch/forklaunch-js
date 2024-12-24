@@ -11,11 +11,14 @@
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.ts' --write",
-    "migrate": "NODE_OPTIONS='--import=tsx' mikro-orm migration:up",
-    "dev": "pnpm run migrate && pnpm tsx watch app.ts",
-    "dev:bun": "bun run migrate && bun --watch app.ts",
+    "migrate:init": "NODE_OPTIONS='--import=tsx' mikro-orm migration:create --initial",
+    "migrate:create": "NODE_OPTIONS='--import=tsx' mikro-orm migration:create",
+    "migrate:up": "NODE_OPTIONS='--import=tsx' mikro-orm migration:up",
+    "migrate:down": "NODE_OPTIONS='--import=tsx' mikro-orm migration:down",
+    "dev": "pnpm run migrate:up && pnpm tsx watch app.ts",
+    "dev:bun": "bun run migrate:up && bun --watch app.ts",
     "start": "NODE_OPTIONS='--import=tsx' node dist/app.js",
-    "start:bun": "bun run migrate && bun dist/app.js"
+    "start:bun": "bun run migrate:up && bun dist/app.js"
   },
   "repository": {
     "type": "git",

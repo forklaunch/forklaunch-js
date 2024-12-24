@@ -25,11 +25,7 @@ export default class BaseOrganizationService
       SchemaValidator(),
       organizationDto
     );
-    if (em) {
-      await em.persist(organization);
-    } else {
-      await this.em.persistAndFlush(organization);
-    }
+    await (em ?? this.em).persist(organization);
     return OrganizationDtoMapper.serializeEntityToDto(
       SchemaValidator(),
       organization
@@ -42,7 +38,13 @@ export default class BaseOrganizationService
   ): Promise<OrganizationDto> {
     return OrganizationDtoMapper.serializeEntityToDto(
       SchemaValidator(),
-      await (em ?? this.em).findOneOrFail(Organization, { id })
+      await (em ?? this.em).findOneOrFail(
+        Organization,
+        { id },
+        {
+          populate: ['*']
+        }
+      )
     );
   }
 
@@ -56,9 +58,6 @@ export default class BaseOrganizationService
         organizationDto
       );
     await (em ?? this.em).upsert(updatedOrganization);
-    if (!em) {
-      await this.em.persistAndFlush(updatedOrganization);
-    }
     return OrganizationDtoMapper.serializeEntityToDto(
       SchemaValidator(),
       updatedOrganization

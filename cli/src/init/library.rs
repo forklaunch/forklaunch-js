@@ -37,6 +37,9 @@ impl ProjectConfig for LibraryConfigData {
     fn name(&self) -> &String {
         &self.library_name
     }
+    fn database(&self) -> &String {
+        &self.database
+    }
 }
 
 #[derive(Debug)]
@@ -136,7 +139,7 @@ fn setup_basic_library(
 }
 
 fn add_library_to_artifacts(config_data: &mut LibraryConfigData, base_path: &String) -> Result<()> {
-    let forklaunch_definition_buffer = add_project_definition_to_manifest(config_data, None)
+    let forklaunch_definition_buffer = add_project_definition_to_manifest(config_data, None, None)
         .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
     let mut package_json_buffer: Option<String> = None;
     if config_data.runtime == "bun" {

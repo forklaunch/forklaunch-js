@@ -7,14 +7,17 @@ import fs from 'fs';
  * @param {string} data - The string to encrypt.
  * @returns {string} - The encrypted string.
  */
-export default function passwordEncrypt(password: string): string {
-  if (!process.env.PASSWORD_ENCRYPTION_PUBLIC_KEY_PATH) {
+export function passwordEncrypt(
+  password: string,
+  passwordEncryptionPublicKeyPath: string
+): string {
+  if (!passwordEncryptionPublicKeyPath) {
     throw new Error('Public key path not set');
   }
 
   const publicKey = fs.readFileSync(
     // TODO: Make this configurable
-    process.env.PASSWORD_ENCRYPTION_PUBLIC_KEY_PATH,
+    passwordEncryptionPublicKeyPath,
     'utf8'
   );
 

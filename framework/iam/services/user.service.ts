@@ -1,4 +1,3 @@
-import { BaseService } from '@forklaunch/core/services';
 import { SchemaValidator } from '@forklaunch/framework-core';
 import { Collection, EntityManager } from '@mikro-orm/core';
 import { OrganizationService } from '../interfaces/organization.service.interface';
@@ -17,29 +16,26 @@ import {
 import { Role } from '../models/persistence/role.entity';
 import { User } from '../models/persistence/user.entity';
 
-export default class BaseUserService implements UserService, BaseService {
-  private roleService: RoleService;
-  private organizationService: OrganizationService;
+export default class BaseUserService implements UserService {
   constructor(
     public em: EntityManager,
-    roleService: () => RoleService,
-    organizationService: () => OrganizationService
-  ) {
-    this.roleService = roleService();
-    this.organizationService = organizationService();
-  }
+    private passwordEncryptionPublicKeyPath: string,
+    private roleServiceFactory: () => RoleService,
+    private organizationServiceFactory: () => OrganizationService
+  ) {}
 
   private async getBatchRoles(
     roleIds?: string[],
     em?: EntityManager
   ): Promise<Role[]> {
     return roleIds
-      ? (await this.roleService.getBatchRoles(roleIds, em)).map((role) => {
-          return RoleEntityMapper.deserializeDtoToEntity(
-            SchemaValidator(),
-            role
-          );
-        })
+      ? (await this.roleServiceFactory().getBatchRoles(roleIds, em)).map(
+          (role) => {
+            return (em ?? this.em).merge(
+              RoleEntityMapper.deserializeDtoToEntity(SchemaValidator(), role)
+            );
+          }
+        )
       : [];
   }
 
@@ -50,17 +46,20 @@ export default class BaseUserService implements UserService, BaseService {
     const roles = await this.getBatchRoles(userDto.roleIds, em);
 
     const organization = userDto.organizationId
-      ? OrganizationEntityMapper.deserializeDtoToEntity(
-          SchemaValidator(),
-          await this.organizationService.getOrganization(
-            userDto.organizationId,
-            em
+      ? (em ?? this.em).merge(
+          OrganizationEntityMapper.deserializeDtoToEntity(
+            SchemaValidator(),
+            await this.organizationServiceFactory().getOrganization(
+              userDto.organizationId,
+              em
+            )
           )
         )
       : undefined;
     const user = CreateUserDtoMapper.deserializeDtoToEntity(
       SchemaValidator(),
       userDto,
+      this.passwordEncryptionPublicKeyPath,
       roles,
       organization
     );
@@ -101,12 +100,22 @@ export default class BaseUserService implements UserService, BaseService {
   async getUser(id: string, em?: EntityManager): Promise<UserDto> {
     return UserDtoMapper.serializeEntityToDto(
       SchemaValidator(),
-      await (em ?? this.em).findOneOrFail(User, { id })
+      await (em ?? this.em).findOneOrFail(
+        User,
+        { id },
+        {
+          populate: ['*']
+        }
+      )
     );
   }
 
   async getBatchUsers(ids: string[], em?: EntityManager): Promise<UserDto[]> {
-    return (await (em ?? this.em).find(User, ids)).map((user) =>
+    return (
+      await (em ?? this.em).find(User, ids, {
+        populate: ['*']
+      })
+    ).map((user) =>
       UserDtoMapper.serializeEntityToDto(SchemaValidator(), user)
     );
   }
@@ -119,6 +128,7 @@ export default class BaseUserService implements UserService, BaseService {
     const user = UpdateUserDtoMapper.deserializeDtoToEntity(
       SchemaValidator(),
       userDto,
+      this.passwordEncryptionPublicKeyPath,
       roles
     );
 
@@ -136,14 +146,17 @@ export default class BaseUserService implements UserService, BaseService {
     return UserDtoMapper.serializeEntityToDto(SchemaValidator(), user);
   }
 
-  async updateBatchUsers(userDtos: UpdateUserDto[]): Promise<UserDto[]> {
+  async updateBatchUsers(
+    userDtos: UpdateUserDto[],
+    em?: EntityManager
+  ): Promise<UserDto[]> {
     let users = await Promise.all(
       userDtos.map(
-        async (updateUserDto) => await this.updateUserDto(updateUserDto)
+        async (updateUserDto) => await this.updateUserDto(updateUserDto, em)
       )
     );
-    await this.em.transactional(async (em) => {
-      users = await em.upsertMany(users);
+    await (em ?? this.em).transactional(async (localEm) => {
+      users = await localEm.upsertMany(users);
     });
     return users.map((user) =>
       UserDtoMapper.serializeEntityToDto(SchemaValidator(), user)

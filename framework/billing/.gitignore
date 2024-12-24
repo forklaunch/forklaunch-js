@@ -10,3 +10,5 @@ lib
 *lib
 
 temp
+
+.env.local

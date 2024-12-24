@@ -14,7 +14,7 @@ import {
   unknown,
   uuid
 } from '@forklaunch/framework-core';
-import passwordEncrypt from '../../utils/passwordEncrypt';
+import { passwordEncrypt } from '../../utils/passwordEncrypt';
 import { Organization } from '../persistence/organization.entity';
 import { Role } from '../persistence/role.entity';
 import { User } from '../persistence/user.entity';
@@ -37,10 +37,17 @@ export class CreateUserDtoMapper extends RequestDtoMapper<
     extraFields: optional(string)
   };
 
-  toEntity(roles: Role[], organization?: Organization): User {
+  toEntity(
+    passwordEncryptionPublicKeyPath: string,
+    roles: Role[],
+    organization?: Organization
+  ): User {
     const user = new User();
     user.email = this.dto.email;
-    user.passwordHash = passwordEncrypt(this.dto.password);
+    user.passwordHash = passwordEncrypt(
+      this.dto.password,
+      passwordEncryptionPublicKeyPath
+    );
     user.firstName = this.dto.firstName;
     user.lastName = this.dto.lastName;
     user.roles = new Collection(user, roles);
@@ -78,14 +85,21 @@ export class UpdateUserDtoMapper extends RequestDtoMapper<
     extraFields: optional(string)
   };
 
-  toEntity(roles: Role[], organization?: Organization): User {
+  toEntity(
+    passwordEncryptionPublicKeyPath: string,
+    roles: Role[],
+    organization?: Organization
+  ): User {
     const user = new User();
     user.id = this.dto.id;
     if (this.dto.email) {
       user.email = this.dto.email;
     }
     if (this.dto.password) {
-      user.passwordHash = passwordEncrypt(this.dto.password);
+      user.passwordHash = passwordEncrypt(
+        this.dto.password,
+        passwordEncryptionPublicKeyPath
+      );
     }
     if (this.dto.firstName) {
       user.firstName = this.dto.firstName;

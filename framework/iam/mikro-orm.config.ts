@@ -3,8 +3,9 @@ import { number, SchemaValidator, string } from '@forklaunch/framework-core';
 import { Migrator } from '@mikro-orm/migrations';
 // import { MongoDriver } from '@mikro-orm/mongodb';
 // import { MySqlDriver } from '@mikro-orm/mysql';
-import { PostgreSqlDriver } from '@mikro-orm/postgresql';
+import { Platform, TextType, Type } from '@mikro-orm/core';
 import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
+import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 // import { SqliteDriver } from '@mikro-orm/sqlite';
 
 const configInjector = new ConfigInjector(
@@ -19,7 +20,7 @@ const configInjector = new ConfigInjector(
   {
     dbName: {
       lifetime: Lifetime.Singleton,
-      value: process.env.DB_NAME ?? 'forklaunch-dev'
+      value: process.env.DB_NAME ?? 'forklaunch-dev-iam'
     },
     host: {
       lifetime: Lifetime.Singleton,
@@ -63,7 +64,16 @@ const mikroOrmOptionsConfig = {
   entitiesTs: ['models/persistence/**/*.entity.ts'],
   metadataProvider: TsMorphMetadataProvider,
   debug: true,
-  extensions: [Migrator]
+  extensions: [Migrator],
+  discovery: {
+    getMappedType(type: string, platform: Platform) {
+      if (type === 'string') {
+        return Type.getType(TextType);
+      }
+
+      return platform.getDefaultMappedType(type);
+    }
+  }
 };
 
 export default mikroOrmOptionsConfig;
