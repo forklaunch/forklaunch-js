@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.2.36
+
+### Patch Changes
+
+- Include a mongo base entity for use with mongodb backends
+
 ## 0.2.35
 
 ### Patch Changes
