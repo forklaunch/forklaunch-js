@@ -9,6 +9,7 @@ anyhow = "1.0"
 clap = { version = "4.5.21", features = ["cargo"] }
 futures-io = "0.3.31"
 indexmap = { version = "2.6.0", features = ["serde"] }
+paste = "1.0.15"
 pathdiff = "0.2.2"
 ramhorns = "1.0.1"
 rcgen = "0.13.2"

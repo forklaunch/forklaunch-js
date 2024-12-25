@@ -32,23 +32,23 @@
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "dependencies": {
     "@forklaunch/common": "^0.1.14",
-    "@forklaunch/core": "^0.2.35",
-    "@forklaunch/express": "^0.1.30",
+    "@forklaunch/core": "^0.2.36",
+    "@forklaunch/express": "^0.1.31",
     "@forklaunch/framework-core": "workspace:*",
-    "@forklaunch/hyper-express": "^0.1.31",
+    "@forklaunch/hyper-express": "^0.1.32",
     "@forklaunch/validator": "^0.3.13",
-    "@mikro-orm/core": "^6.4.1",
-    "@mikro-orm/migrations": "^6.4.1",
-    "@mikro-orm/mongodb": "^6.4.1",
-    "@mikro-orm/mysql": "^6.4.1",
-    "@mikro-orm/postgresql": "^6.4.1",
-    "@mikro-orm/reflection": "^6.4.1",
-    "@mikro-orm/sqlite": "^6.4.1",
-    "@sinclair/typebox": "^0.34.11",
+    "@mikro-orm/core": "^6.4.2",
+    "@mikro-orm/migrations": "^6.4.2",
+    "@mikro-orm/mongodb": "^6.4.2",
+    "@mikro-orm/mysql": "^6.4.2",
+    "@mikro-orm/postgresql": "^6.4.2",
+    "@mikro-orm/reflection": "^6.4.2",
+    "@mikro-orm/sqlite": "^6.4.2",
+    "@sinclair/typebox": "^0.34.13",
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@mikro-orm/cli": "^6.4.1"
+    "@mikro-orm/cli": "^6.4.2"
   },
   "mikro-orm": {
     "configPaths": [

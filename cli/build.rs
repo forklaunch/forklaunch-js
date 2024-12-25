@@ -30,8 +30,13 @@ fn main() -> std::io::Result<()> {
     let out_dir = PathBuf::from(std::env::var("CARGO_TARGET_DIR").unwrap_or("target".to_string()))
         .join(std::env::var("PROFILE").unwrap_or("debug".to_string()));
     let templates_dir = PathBuf::from("src").join("templates");
+    let dest_templates = out_dir.join("templates");
 
-    copy_templates(&templates_dir, &out_dir.join("templates"))?;
+    if dest_templates.exists() {
+        fs::remove_dir_all(&dest_templates)?;
+    }
+
+    copy_templates(&templates_dir, &dest_templates)?;
 
     println!("cargo:rerun-if-changed=src/templates");
     Ok(())

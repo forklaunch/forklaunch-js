@@ -15,25 +15,25 @@
     "migrate:create": "NODE_OPTIONS='--import=tsx' mikro-orm migration:create",
     "migrate:up": "NODE_OPTIONS='--import=tsx' mikro-orm migration:up",
     "migrate:down": "NODE_OPTIONS='--import=tsx' mikro-orm migration:down",
-    "dev": "{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} run migrate && {{#is_node}}tsx watch app.ts{{/is_node}}{{#is_bun}}bun --watch app.ts{{/is_bun}}",
-    "start": "{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} run migrate && {{#is_node}}node --import tsx dist/app.js{{/is_node}}{{#is_bun}}bun dist/app.js{{/is_bun}}"
+    "dev": "{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} run migrate:up && {{#is_node}}tsx watch app.ts{{/is_node}}{{#is_bun}}bun --watch app.ts{{/is_bun}}",
+    "start": "{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} run migrate:up && {{#is_node}}node --import tsx dist/app.js{{/is_node}}{{#is_bun}}bun dist/app.js{{/is_bun}}"
   },
   "dependencies": {
     "@forklaunch/common": "^0.1.14",
-    "@forklaunch/core": "^0.2.35",
-    "@forklaunch/express": "^0.1.30",
+    "@forklaunch/core": "^0.2.36",
+    "@forklaunch/express": "^0.1.31",
     "@forklaunch/framework-core": "workspace:*",
-    "@forklaunch/hyper-express": "^0.1.31",
+    "@forklaunch/hyper-express": "^0.1.32",
     "@forklaunch/validator": "^0.3.13",
-    "@mikro-orm/core": "^6.4.1",
-    "@mikro-orm/migrations": "^6.4.1",
-    "@mikro-orm/{{database}}": "^6.4.1",
-    "@mikro-orm/reflection": "^6.4.1",{{#is_typebox}}
-    "@sinclair/typebox": "^0.34.11"{{/is_typebox}}{{#is_zod}}
+    "@mikro-orm/core": "^6.4.2",
+    "@mikro-orm/migrations{{#is_mongo}}-mongodb{{/is_mongo}}": "^6.4.2",
+    "@mikro-orm/{{database}}": "^6.4.2",
+    "@mikro-orm/reflection": "^6.4.2",{{#is_typebox}}
+    "@sinclair/typebox": "^0.34.13"{{/is_typebox}}{{#is_zod}}
     "zod": "^3.24.1"{{/is_zod}}
   },
   "devDependencies": {
-    "@mikro-orm/cli": "^6.4.1",
+    "@mikro-orm/cli": "^6.4.2",
     "tsx": "^4.19.2"
   },
   "mikro-orm": {

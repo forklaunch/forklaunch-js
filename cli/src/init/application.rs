@@ -23,14 +23,22 @@ use super::{
         manifest::setup_manifest,
         pnpm_workspace::generate_pnpm_workspace,
         symlinks::setup_symlinks,
-        template::{setup_with_template, PathIO},
+        template::{setup_with_template, PathIO, TemplateConfigData},
     },
-    forklaunch_command, CliCommand,
+    forklaunch_command,
+    service::ServiceConfigData,
+    CliCommand,
 };
 
 config_struct!(
-    #[derive(Debug, Serialize, Content)]
-    struct ApplicationConfigData {
+    #[derive(Debug, Serialize, Content, Clone)]
+    pub(crate) struct ApplicationConfigData {
+        #[serde(skip_serializing, skip_deserializing)]
+        database: String,
+        #[serde(skip_serializing, skip_deserializing)]
+        is_postgres: bool,
+        #[serde(skip_serializing, skip_deserializing)]
+        is_mongo: bool,
         #[serde(skip_serializing, skip_deserializing)]
         bun_package_json_workspace_string: Option<String>,
     }
@@ -186,6 +194,7 @@ impl CliCommand for ApplicationCommand {
 
         let mut data = ApplicationConfigData {
             cli_version: LATEST_CLI_VERSION.to_string(),
+            database: database.to_string(),
             app_name: name.to_string(),
             validator: validator.to_string(),
             http_framework: http_framework.to_string(),
@@ -203,8 +212,6 @@ impl CliCommand for ApplicationCommand {
             is_vitest: test_framework == "vitest",
             is_jest: test_framework == "jest",
 
-            database: database.to_string(),
-            db_driver: match_database(&database),
             is_postgres: database == "postgresql",
             is_mongo: database == "mongodb",
 
@@ -215,13 +222,7 @@ impl CliCommand for ApplicationCommand {
             .with_context(|| "Failed to setup manifest file for application.")?;
 
         // TODO: support different path delimiters
-        let mut template_dirs = vec![PathIO {
-            input_path: Path::new("templates")
-                .join("application")
-                .to_string_lossy()
-                .to_string(),
-            output_path: "".to_string(),
-        }];
+        let mut template_dirs = vec![];
 
         let additional_projects_dirs = additional_projects.clone().into_iter().map(|path| PathIO {
             input_path: Path::new("templates")
@@ -235,12 +236,53 @@ impl CliCommand for ApplicationCommand {
 
         let mut template = Ramhorns::lazy(current_exe()?.parent().unwrap())?;
 
+        setup_with_template(
+            Some(name),
+            &PathIO {
+                input_path: Path::new("templates")
+                    .join("application")
+                    .to_string_lossy()
+                    .to_string(),
+                output_path: "".to_string(),
+            },
+            &mut template,
+            &TemplateConfigData::Application(data.clone()),
+            &ignore_files
+                .iter()
+                .map(|ignore_file| ignore_file.to_string())
+                .collect::<Vec<String>>(),
+        )?;
+
         for template_dir in template_dirs {
             setup_with_template(
                 Some(name),
                 &template_dir,
                 &mut template,
-                &data,
+                &TemplateConfigData::Service(ServiceConfigData {
+                    cli_version: data.cli_version.clone(),
+                    app_name: data.app_name.clone(),
+                    service_name: template_dir.output_path.to_string(),
+                    validator: data.validator.clone(),
+                    http_framework: data.http_framework.clone(),
+                    runtime: data.runtime.clone(),
+                    test_framework: data.test_framework.clone(),
+                    projects: data.projects.clone(),
+                    project_peer_topology: data.project_peer_topology.clone(),
+
+                    is_express: data.is_express,
+                    is_hyper_express: data.is_hyper_express,
+                    is_zod: data.is_zod,
+                    is_typebox: data.is_typebox,
+                    is_bun: data.is_bun,
+                    is_node: data.is_node,
+                    is_vitest: data.is_vitest,
+                    is_jest: data.is_jest,
+                    is_postgres: database == "postgresql",
+                    is_mongo: database == "mongodb",
+
+                    database: database.to_string(),
+                    db_driver: match_database(&database),
+                }),
                 &ignore_files
                     .iter()
                     .map(|ignore_file| ignore_file.to_string())

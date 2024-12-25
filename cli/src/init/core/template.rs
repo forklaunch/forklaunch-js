@@ -5,16 +5,26 @@ use std::{
 };
 
 use anyhow::{Context, Result};
-use ramhorns::{Content, Ramhorns};
+use ramhorns::Ramhorns;
 
-use crate::constants::{error_failed_to_create_dir, ERROR_FAILED_TO_GET_EXE_WD};
-
-use super::config::Config;
+use crate::{
+    constants::{error_failed_to_create_dir, ERROR_FAILED_TO_GET_EXE_WD},
+    init::{
+        application::ApplicationConfigData, library::LibraryConfigData, service::ServiceConfigData,
+    },
+};
 
 #[derive(Debug)]
 pub(crate) struct PathIO {
     pub(crate) input_path: String,
     pub(crate) output_path: String,
+}
+
+#[derive(Debug)]
+pub(crate) enum TemplateConfigData {
+    Application(ApplicationConfigData),
+    Service(ServiceConfigData),
+    Library(LibraryConfigData),
 }
 
 pub(crate) fn get_template_path(path: &PathIO) -> Result<String> {
@@ -40,11 +50,11 @@ fn forklaunch_replacements(app_name: &String, template: String) -> String {
     template.replace("@forklaunch/framework-", format!("@{}/", app_name).as_str())
 }
 
-pub(crate) fn setup_with_template<T: Content + Config>(
+pub(crate) fn setup_with_template(
     output_prefix: Option<&String>,
     template_dir: &PathIO,
     template: &mut Ramhorns,
-    data: &T,
+    data: &TemplateConfigData,
     ignore_files: &Vec<String>,
 ) -> Result<()> {
     let output_dir = match output_prefix {
@@ -79,10 +89,18 @@ pub(crate) fn setup_with_template<T: Content + Config>(
                 .with_context(|| {
                     format!("Failed to parse template file {}.", path.to_string_lossy())
                 })?;
-            let rendered = database_replacements(
-                data.database(),
-                forklaunch_replacements(data.app_name(), tpl.render(&data)),
-            );
+            let rendered = match data {
+                TemplateConfigData::Application(data) => {
+                    forklaunch_replacements(&data.app_name, tpl.render(&data))
+                }
+                TemplateConfigData::Service(data) => database_replacements(
+                    &data.database,
+                    forklaunch_replacements(&data.app_name, tpl.render(&data)),
+                ),
+                TemplateConfigData::Library(data) => {
+                    forklaunch_replacements(&data.app_name, tpl.render(&data))
+                }
+            };
             if !output_path.exists()
                 && !ignore_files
                     .iter()

@@ -22,12 +22,12 @@ use super::core::manifest::add_project_definition_to_manifest;
 use super::core::package_json::add_project_definition_to_package_json;
 use super::core::pnpm_workspace::add_project_definition_to_pnpm_workspace;
 use super::core::symlinks::setup_symlinks;
-use super::core::template::{setup_with_template, PathIO};
+use super::core::template::{setup_with_template, PathIO, TemplateConfigData};
 use super::core::tsconfig::setup_tsconfig;
 use super::{forklaunch_command, CliCommand};
 
 config_struct!(
-    #[derive(Debug, Content, Serialize)]
+    #[derive(Debug, Content, Serialize, Clone)]
     pub(crate) struct LibraryConfigData {
         pub(crate) library_name: String,
     }
@@ -36,9 +36,6 @@ config_struct!(
 impl ProjectConfig for LibraryConfigData {
     fn name(&self) -> &String {
         &self.library_name
-    }
-    fn database(&self) -> &String {
-        &self.database
     }
 }
 
@@ -124,7 +121,7 @@ fn setup_basic_library(
         None,
         &template_dir,
         &mut template,
-        config_data,
+        &TemplateConfigData::Library(config_data.clone()),
         &ignore_files,
     )?;
     setup_symlinks(Some(base_path), &template_dir.output_path, config_data)

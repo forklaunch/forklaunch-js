@@ -26,7 +26,3 @@ RUST_BACKTRACE=1 cargo run init application application-typebox-hyper-express-no
 RUST_BACKTRACE=1 cargo run init application application-typebox-hyper-express-node-vitest -d postgresql -v typebox -f hyper-express -r node -t vitest
 RUST_BACKTRACE=1 cargo run init application application-typebox-hyper-express-node-jest-billing-iam -d postgresql -v typebox -f hyper-express -r node -t jest -p billing -p iam
 RUST_BACKTRACE=1 cargo run init application application-typebox-hyper-express-node-jest -d postgresql -v typebox -f hyper-express -r node -t jest
-
-# cd newapp
-# RUST_BACKTRACE=1 cargo run init library newlibrary
-# RUST_BACKTRACE=1 cargo run init service newservice

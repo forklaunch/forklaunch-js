@@ -12,8 +12,8 @@ importers:
         specifier: ^29.5.14
         version: 29.5.14
       globals:
-        specifier: ^15.13.0
-        version: 15.13.0
+        specifier: ^15.14.0
+        version: 15.14.0
       jest:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@22.10.2)
@@ -36,44 +36,44 @@ importers:
         specifier: ^0.1.14
         version: 0.1.14
       '@forklaunch/core':
-        specifier: ^0.2.35
-        version: 0.2.35
+        specifier: ^0.2.36
+        version: 0.2.36(socks@2.8.3)
       '@forklaunch/express':
-        specifier: ^0.1.30
-        version: 0.1.30(openapi3-ts@4.4.0)
+        specifier: ^0.1.31
+        version: 0.1.31(openapi3-ts@4.4.0)(socks@2.8.3)
       '@forklaunch/framework-core':
         specifier: workspace:*
         version: link:../core
       '@forklaunch/hyper-express':
-        specifier: ^0.1.31
-        version: 0.1.31(express@4.21.2)
+        specifier: ^0.1.32
+        version: 0.1.32(express@4.21.2)(socks@2.8.3)
       '@forklaunch/validator':
         specifier: ^0.3.13
         version: 0.3.13(openapi3-ts@4.4.0)
       '@mikro-orm/core':
-        specifier: ^6.4.1
-        version: 6.4.1
+        specifier: ^6.4.2
+        version: 6.4.2
       '@mikro-orm/migrations':
-        specifier: ^6.4.1
-        version: 6.4.1(@mikro-orm/core@6.4.1)(@types/node@22.10.2)(pg@8.13.1)
+        specifier: ^6.4.2
+        version: 6.4.2(@mikro-orm/core@6.4.2)(@types/node@22.10.2)(pg@8.13.1)
       '@mikro-orm/mongodb':
-        specifier: ^6.4.1
-        version: 6.4.1(@mikro-orm/core@6.4.1)(socks@2.8.3)
+        specifier: ^6.4.2
+        version: 6.4.2(@mikro-orm/core@6.4.2)(socks@2.8.3)
       '@mikro-orm/mysql':
-        specifier: ^6.4.1
-        version: 6.4.1(@mikro-orm/core@6.4.1)(pg@8.13.1)
+        specifier: ^6.4.2
+        version: 6.4.2(@mikro-orm/core@6.4.2)(pg@8.13.1)
       '@mikro-orm/postgresql':
-        specifier: ^6.4.1
-        version: 6.4.1(@mikro-orm/core@6.4.1)
+        specifier: ^6.4.2
+        version: 6.4.2(@mikro-orm/core@6.4.2)
       '@mikro-orm/reflection':
-        specifier: ^6.4.1
-        version: 6.4.1(@mikro-orm/core@6.4.1)
+        specifier: ^6.4.2
+        version: 6.4.2(@mikro-orm/core@6.4.2)
       '@mikro-orm/sqlite':
-        specifier: ^6.4.1
-        version: 6.4.1(@mikro-orm/core@6.4.1)(pg@8.13.1)
+        specifier: ^6.4.2
+        version: 6.4.2(@mikro-orm/core@6.4.2)(pg@8.13.1)
       '@sinclair/typebox':
-        specifier: ^0.34.11
-        version: 0.34.11
+        specifier: ^0.34.13
+        version: 0.34.13
       uuid:
         specifier: ^11.0.3
         version: 11.0.3
@@ -82,8 +82,8 @@ importers:
         version: 3.24.1
     devDependencies:
       '@mikro-orm/cli':
-        specifier: ^6.4.1
-        version: 6.4.1(pg@8.13.1)
+        specifier: ^6.4.2
+        version: 6.4.2(pg@8.13.1)
       '@types/uuid':
         specifier: ^10.0.0
         version: 10.0.0
@@ -94,20 +94,20 @@ importers:
         specifier: ^0.1.14
         version: 0.1.14
       '@forklaunch/core':
-        specifier: ^0.2.35
-        version: 0.2.35
+        specifier: ^0.2.36
+        version: 0.2.36(socks@2.8.3)
       '@forklaunch/express':
-        specifier: ^0.1.30
-        version: 0.1.30(openapi3-ts@4.4.0)
-      '@forklaunch/hyper-express':
         specifier: ^0.1.31
-        version: 0.1.31(express@4.21.2)
+        version: 0.1.31(openapi3-ts@4.4.0)(socks@2.8.3)
+      '@forklaunch/hyper-express':
+        specifier: ^0.1.32
+        version: 0.1.32(express@4.21.2)(socks@2.8.3)
       '@forklaunch/validator':
         specifier: ^0.3.13
         version: 0.3.13(openapi3-ts@4.4.0)
       '@sinclair/typebox':
-        specifier: ^0.34.11
-        version: 0.34.11
+        specifier: ^0.34.13
+        version: 0.34.13
       zod:
         specifier: ^3.24.1
         version: 3.24.1
@@ -118,51 +118,51 @@ importers:
         specifier: ^0.1.14
         version: 0.1.14
       '@forklaunch/core':
-        specifier: ^0.2.35
-        version: 0.2.35
+        specifier: ^0.2.36
+        version: 0.2.36(socks@2.8.3)
       '@forklaunch/express':
-        specifier: ^0.1.30
-        version: 0.1.30(openapi3-ts@4.4.0)
+        specifier: ^0.1.31
+        version: 0.1.31(openapi3-ts@4.4.0)(socks@2.8.3)
       '@forklaunch/framework-core':
         specifier: workspace:*
         version: link:../core
       '@forklaunch/hyper-express':
-        specifier: ^0.1.31
-        version: 0.1.31(express@4.21.2)
+        specifier: ^0.1.32
+        version: 0.1.32(express@4.21.2)(socks@2.8.3)
       '@forklaunch/validator':
         specifier: ^0.3.13
         version: 0.3.13(openapi3-ts@4.4.0)
       '@mikro-orm/core':
-        specifier: ^6.4.1
-        version: 6.4.1
+        specifier: ^6.4.2
+        version: 6.4.2
       '@mikro-orm/migrations':
-        specifier: ^6.4.1
-        version: 6.4.1(@mikro-orm/core@6.4.1)(@types/node@22.10.2)(pg@8.13.1)
+        specifier: ^6.4.2
+        version: 6.4.2(@mikro-orm/core@6.4.2)(@types/node@22.10.2)(pg@8.13.1)
       '@mikro-orm/mongodb':
-        specifier: ^6.4.1
-        version: 6.4.1(@mikro-orm/core@6.4.1)(socks@2.8.3)
+        specifier: ^6.4.2
+        version: 6.4.2(@mikro-orm/core@6.4.2)(socks@2.8.3)
       '@mikro-orm/mysql':
-        specifier: ^6.4.1
-        version: 6.4.1(@mikro-orm/core@6.4.1)(pg@8.13.1)
+        specifier: ^6.4.2
+        version: 6.4.2(@mikro-orm/core@6.4.2)(pg@8.13.1)
       '@mikro-orm/postgresql':
-        specifier: ^6.4.1
-        version: 6.4.1(@mikro-orm/core@6.4.1)
+        specifier: ^6.4.2
+        version: 6.4.2(@mikro-orm/core@6.4.2)
       '@mikro-orm/reflection':
-        specifier: ^6.4.1
-        version: 6.4.1(@mikro-orm/core@6.4.1)
+        specifier: ^6.4.2
+        version: 6.4.2(@mikro-orm/core@6.4.2)
       '@mikro-orm/sqlite':
-        specifier: ^6.4.1
-        version: 6.4.1(@mikro-orm/core@6.4.1)(pg@8.13.1)
+        specifier: ^6.4.2
+        version: 6.4.2(@mikro-orm/core@6.4.2)(pg@8.13.1)
       '@sinclair/typebox':
-        specifier: ^0.34.11
-        version: 0.34.11
+        specifier: ^0.34.13
+        version: 0.34.13
       zod:
         specifier: ^3.24.1
         version: 3.24.1
     devDependencies:
       '@mikro-orm/cli':
-        specifier: ^6.4.1
-        version: 6.4.1(pg@8.13.1)
+        specifier: ^6.4.2
+        version: 6.4.2(pg@8.13.1)
 
 packages:
 
@@ -622,14 +622,14 @@ packages:
   '@forklaunch/common@0.1.14':
     resolution: {integrity: sha512-/ZDUAZkLVHeGS85eTnXk2NfzXvC7JuKB6bkiqNIgv18+jGo2aOEzb2KsGrKfnaz4L6mZGhwJYUvsHfQReK507Q==}
 
-  '@forklaunch/core@0.2.35':
-    resolution: {integrity: sha512-UW7C1vclod6tnhdL9biP2sGmthR/orzKnuJd9ysP2Ue2c67kGT+iGKAqzy7MCY4ZoBU222RYrEwSPTPmEnldkg==}
+  '@forklaunch/core@0.2.36':
+    resolution: {integrity: sha512-UbR6tHVfkbsUAKzG6Kv1iitJfpTlpOwDOHNN1mc09+6WZebO5T3KCfNDgNjWMY6MUU5pJWz04xRJvFxfrkWFwA==}
 
-  '@forklaunch/express@0.1.30':
-    resolution: {integrity: sha512-98negfJkN2/S/q2ZVguFecZ+ri/I3PsV0NHyByI5feYmwjl+fkW7FZnKgxm0Z7cEbKYrsYqmtIlv8CAjU6o3DQ==}
+  '@forklaunch/express@0.1.31':
+    resolution: {integrity: sha512-d+hIcRSQwu04b4TfTjaPB8SHFXiYmTMvlvQI0eTPtEsn9pfAxgzjfnGA4UKZB1BtM16WrhJMXm7kuqLmw0kURg==}
 
-  '@forklaunch/hyper-express@0.1.31':
-    resolution: {integrity: sha512-p7eJIxVo93JQJ662HDeDopUtDPJb+wVRzfPvkI0G2l/3mXv9OGUv5xxuhqE2ecG3/7TjczLB6XCVFpVaG92N7g==}
+  '@forklaunch/hyper-express@0.1.32':
+    resolution: {integrity: sha512-BJOtVxbq0GyEJZyX5xdWS1oz0JwmgQQm+F9ITWYh8bw4rJFRCmW67LqnRUFWGqlZTbfwUE5c7IZwMOA1w1gWrw==}
 
   '@forklaunch/validator@0.3.13':
     resolution: {integrity: sha512-nVWb0ahKMlGwQ9CbBozSbuex+8kPLnN0qOyX1jrttB/nx9XmPsSSdnG0hvRGnM8UAA8ESwuVrR8eAzcF/lc8HA==}
@@ -732,17 +732,17 @@ packages:
   '@jridgewell/trace-mapping@0.3.25':
     resolution: {integrity: sha512-vNk6aEwybGtawWmy/PzwnGDOjCkLWSD2wqvjGGAgOAwCGWySYXfYoxt00IJkTF+8Lb57DwOb3Aa0o9CApepiYQ==}
 
-  '@mikro-orm/cli@6.4.1':
-    resolution: {integrity: sha512-5gXEdG3o2zPOAjAoP7gwfEy13PIxcOAstkY28acZ0INs29ln1us6zQRV4vCYDPDPd95DBQFvpP71eASrqFePqA==}
+  '@mikro-orm/cli@6.4.2':
+    resolution: {integrity: sha512-aGOpVNNbymdkxIsHt+rD5hU25UlGbcPrd3zMdDVh0H5jttB1kr9MpAT4Jt4SXqZfTc1ff6h479eufUYJP3mZZQ==}
     engines: {node: '>= 18.12.0'}
     hasBin: true
 
-  '@mikro-orm/core@6.4.1':
-    resolution: {integrity: sha512-OChUSn2Kx1cGnVo8TcB5J9+6LonVXZCuzK808oD1gnnkmQxWtqFMLO695s4m2jmBGl3LUXXvKfXndagp9v/h7g==}
+  '@mikro-orm/core@6.4.2':
+    resolution: {integrity: sha512-sk+rGxZoj8zx9q819CeXLqMMLXF81s7pQZtrdg3XUCBnUVqsaVIsbBj5WpyojQXmCvxgenWqDE/ybM5ftbDP/w==}
     engines: {node: '>= 18.12.0'}
 
-  '@mikro-orm/knex@6.4.1':
-    resolution: {integrity: sha512-Ex3RIDZOXfdIU4B3W+YSH2EjzctEnDW/fmSCaAXsIpP4aH5ReMVDReDCUNrbBdsRmpxOsE+HyCoK3/g3UUIscQ==}
+  '@mikro-orm/knex@6.4.2':
+    resolution: {integrity: sha512-vA72sVyR+8irrLsTP5f+zh84Q1a2tvzSfVgit4L/G+JOEgltG6F8Sfic/xt/1Wcis1zgNUiUL50ISQSLnhVNAw==}
     engines: {node: '>= 18.12.0'}
     peerDependencies:
       '@mikro-orm/core': ^6.0.0
@@ -757,38 +757,38 @@ packages:
       mariadb:
         optional: true
 
-  '@mikro-orm/migrations@6.4.1':
-    resolution: {integrity: sha512-fGLNnN6POW6vWncTkJKK0EOP1nVC19bK9fJwofDV1cOEVNP0NtVvcASZI3tqyhBrrALD2quTk1RM9o/nZRskzQ==}
+  '@mikro-orm/migrations@6.4.2':
+    resolution: {integrity: sha512-oLAOT+ejduIOb8rO6cJ8B6yr9bM17t22ejLPTxUnw1N093DXb31zWOg6Ptc8cicnB3BbFQGjQVw6Jf2e3vYpbA==}
     engines: {node: '>= 18.12.0'}
     peerDependencies:
       '@mikro-orm/core': ^6.0.0
 
-  '@mikro-orm/mongodb@6.4.1':
-    resolution: {integrity: sha512-sRvmhTlZxuHdMzqO9at6hu8INIFVUtREbuauQhK7SuqTwXHIefX1d7BGRherZjnCo4hrz40gBz3lJ6AAAhuIEA==}
+  '@mikro-orm/mongodb@6.4.2':
+    resolution: {integrity: sha512-Ui4s6pJNR0vdKOIn1AiOTE3+lIyM5WgdQxj26WHfZXbW4Y9FJC8TFDhLNTC7jCvhzCBmc4ssR6dVxG26CvQ6vg==}
     engines: {node: '>= 18.12.0'}
     peerDependencies:
       '@mikro-orm/core': ^6.0.0
 
-  '@mikro-orm/mysql@6.4.1':
-    resolution: {integrity: sha512-TdOS1+mJ+R43GpPtfOgntLmI4+B0T1rRaCLK21IzxQyMI5ika2IRNVnkTt1WRIz+sommERDi/hcgW67SUzMGeQ==}
+  '@mikro-orm/mysql@6.4.2':
+    resolution: {integrity: sha512-w6gch2Th/j7JJW1RUjt+naWsatiAJdHpTfrOBzsaYcjeZeW6qT2+igvbcLxq+pfQp+Ea3uZ21CxLKJOGKnVDnA==}
     engines: {node: '>= 18.12.0'}
     peerDependencies:
       '@mikro-orm/core': ^6.0.0
 
-  '@mikro-orm/postgresql@6.4.1':
-    resolution: {integrity: sha512-Y1fTORDKoxfvwpDLJwYqu7qIx5dTYdSzsfWReyOjFCyV9erZ5g7W07yjxc5/Gkf5bjLIpvL2QEiCXVUK3Ausaw==}
+  '@mikro-orm/postgresql@6.4.2':
+    resolution: {integrity: sha512-uIXAXE5W1oA1d8eZ9hc1CX7vyfmcslRvDG+GTPHDNmdtgJlSue2hLkJ9P+6uCp9gi/5istbniG0mxUeVgQfXrw==}
     engines: {node: '>= 18.12.0'}
     peerDependencies:
       '@mikro-orm/core': ^6.0.0
 
-  '@mikro-orm/reflection@6.4.1':
-    resolution: {integrity: sha512-0GkXSPCmp/7Fk4HVcTC6IrBEA0iUF6vy5imwVb3uULCxbu4nvxe1EYD/NURBNa1aq8Tz9GVDVTRYISxXTCkLBQ==}
+  '@mikro-orm/reflection@6.4.2':
+    resolution: {integrity: sha512-tCqy9xKc97a+6NlOK8xhaJlnj2b7C2dDhu7vhkU0ks/WuCOigHOmg21ikhFPz4VfKbGYPStt2DoZBUU9mCkMmA==}
     engines: {node: '>= 18.12.0'}
     peerDependencies:
       '@mikro-orm/core': ^6.0.0
 
-  '@mikro-orm/sqlite@6.4.1':
-    resolution: {integrity: sha512-8RuHATF1cW1WKGmNFbOHP/zoUHlKTyStw49ulBJ5nCchZgi+CM3WwhsNXNpH1C3rH4NfVSzqVO+yLw2vSMZxaw==}
+  '@mikro-orm/sqlite@6.4.2':
+    resolution: {integrity: sha512-nlEt7vg3ljZXkuwsQDk2d+eKUpsb+ziEEfNShmFXARd4meBisTkL/78Ojw+AD5vmdahHtgaWci0Qn6AHYOWqcA==}
     engines: {node: '>= 18.12.0'}
     peerDependencies:
       '@mikro-orm/core': ^6.0.0
@@ -845,98 +845,98 @@ packages:
     peerDependencies:
       '@redis/client': ^1.0.0
 
-  '@rollup/rollup-android-arm-eabi@4.28.1':
-    resolution: {integrity: sha512-2aZp8AES04KI2dy3Ss6/MDjXbwBzj+i0GqKtWXgw2/Ma6E4jJvujryO6gJAghIRVz7Vwr9Gtl/8na3nDUKpraQ==}
+  '@rollup/rollup-android-arm-eabi@4.29.1':
+    resolution: {integrity: sha512-ssKhA8RNltTZLpG6/QNkCSge+7mBQGUqJRisZ2MDQcEGaK93QESEgWK2iOpIDZ7k9zPVkG5AS3ksvD5ZWxmItw==}
     cpu: [arm]
     os: [android]
 
-  '@rollup/rollup-android-arm64@4.28.1':
-    resolution: {integrity: sha512-EbkK285O+1YMrg57xVA+Dp0tDBRB93/BZKph9XhMjezf6F4TpYjaUSuPt5J0fZXlSag0LmZAsTmdGGqPp4pQFA==}
+  '@rollup/rollup-android-arm64@4.29.1':
+    resolution: {integrity: sha512-CaRfrV0cd+NIIcVVN/jx+hVLN+VRqnuzLRmfmlzpOzB87ajixsN/+9L5xNmkaUUvEbI5BmIKS+XTwXsHEb65Ew==}
     cpu: [arm64]
     os: [android]
 
-  '@rollup/rollup-darwin-arm64@4.28.1':
-    resolution: {integrity: sha512-prduvrMKU6NzMq6nxzQw445zXgaDBbMQvmKSJaxpaZ5R1QDM8w+eGxo6Y/jhT/cLoCvnZI42oEqf9KQNYz1fqQ==}
+  '@rollup/rollup-darwin-arm64@4.29.1':
+    resolution: {integrity: sha512-2ORr7T31Y0Mnk6qNuwtyNmy14MunTAMx06VAPI6/Ju52W10zk1i7i5U3vlDRWjhOI5quBcrvhkCHyF76bI7kEw==}
     cpu: [arm64]
     os: [darwin]
 
-  '@rollup/rollup-darwin-x64@4.28.1':
-    resolution: {integrity: sha512-WsvbOunsUk0wccO/TV4o7IKgloJ942hVFK1CLatwv6TJspcCZb9umQkPdvB7FihmdxgaKR5JyxDjWpCOp4uZlQ==}
+  '@rollup/rollup-darwin-x64@4.29.1':
+    resolution: {integrity: sha512-j/Ej1oanzPjmN0tirRd5K2/nncAhS9W6ICzgxV+9Y5ZsP0hiGhHJXZ2JQ53iSSjj8m6cRY6oB1GMzNn2EUt6Ng==}
     cpu: [x64]
     os: [darwin]
 
-  '@rollup/rollup-freebsd-arm64@4.28.1':
-    resolution: {integrity: sha512-HTDPdY1caUcU4qK23FeeGxCdJF64cKkqajU0iBnTVxS8F7H/7BewvYoG+va1KPSL63kQ1PGNyiwKOfReavzvNA==}
+  '@rollup/rollup-freebsd-arm64@4.29.1':
+    resolution: {integrity: sha512-91C//G6Dm/cv724tpt7nTyP+JdN12iqeXGFM1SqnljCmi5yTXriH7B1r8AD9dAZByHpKAumqP1Qy2vVNIdLZqw==}
     cpu: [arm64]
     os: [freebsd]
 
-  '@rollup/rollup-freebsd-x64@4.28.1':
-    resolution: {integrity: sha512-m/uYasxkUevcFTeRSM9TeLyPe2QDuqtjkeoTpP9SW0XxUWfcYrGDMkO/m2tTw+4NMAF9P2fU3Mw4ahNvo7QmsQ==}
+  '@rollup/rollup-freebsd-x64@4.29.1':
+    resolution: {integrity: sha512-hEioiEQ9Dec2nIRoeHUP6hr1PSkXzQaCUyqBDQ9I9ik4gCXQZjJMIVzoNLBRGet+hIUb3CISMh9KXuCcWVW/8w==}
     cpu: [x64]
     os: [freebsd]
 
-  '@rollup/rollup-linux-arm-gnueabihf@4.28.1':
-    resolution: {integrity: sha512-QAg11ZIt6mcmzpNE6JZBpKfJaKkqTm1A9+y9O+frdZJEuhQxiugM05gnCWiANHj4RmbgeVJpTdmKRmH/a+0QbA==}
+  '@rollup/rollup-linux-arm-gnueabihf@4.29.1':
+    resolution: {integrity: sha512-Py5vFd5HWYN9zxBv3WMrLAXY3yYJ6Q/aVERoeUFwiDGiMOWsMs7FokXihSOaT/PMWUty/Pj60XDQndK3eAfE6A==}
     cpu: [arm]
     os: [linux]
 
-  '@rollup/rollup-linux-arm-musleabihf@4.28.1':
-    resolution: {integrity: sha512-dRP9PEBfolq1dmMcFqbEPSd9VlRuVWEGSmbxVEfiq2cs2jlZAl0YNxFzAQS2OrQmsLBLAATDMb3Z6MFv5vOcXg==}
+  '@rollup/rollup-linux-arm-musleabihf@4.29.1':
+    resolution: {integrity: sha512-RiWpGgbayf7LUcuSNIbahr0ys2YnEERD4gYdISA06wa0i8RALrnzflh9Wxii7zQJEB2/Eh74dX4y/sHKLWp5uQ==}
     cpu: [arm]
     os: [linux]
 
-  '@rollup/rollup-linux-arm64-gnu@4.28.1':
-    resolution: {integrity: sha512-uGr8khxO+CKT4XU8ZUH1TTEUtlktK6Kgtv0+6bIFSeiSlnGJHG1tSFSjm41uQ9sAO/5ULx9mWOz70jYLyv1QkA==}
+  '@rollup/rollup-linux-arm64-gnu@4.29.1':
+    resolution: {integrity: sha512-Z80O+taYxTQITWMjm/YqNoe9d10OX6kDh8X5/rFCMuPqsKsSyDilvfg+vd3iXIqtfmp+cnfL1UrYirkaF8SBZA==}
     cpu: [arm64]
     os: [linux]
 
-  '@rollup/rollup-linux-arm64-musl@4.28.1':
-    resolution: {integrity: sha512-QF54q8MYGAqMLrX2t7tNpi01nvq5RI59UBNx+3+37zoKX5KViPo/gk2QLhsuqok05sSCRluj0D00LzCwBikb0A==}
+  '@rollup/rollup-linux-arm64-musl@4.29.1':
+    resolution: {integrity: sha512-fOHRtF9gahwJk3QVp01a/GqS4hBEZCV1oKglVVq13kcK3NeVlS4BwIFzOHDbmKzt3i0OuHG4zfRP0YoG5OF/rA==}
     cpu: [arm64]
     os: [linux]
 
-  '@rollup/rollup-linux-loongarch64-gnu@4.28.1':
-    resolution: {integrity: sha512-vPul4uodvWvLhRco2w0GcyZcdyBfpfDRgNKU+p35AWEbJ/HPs1tOUrkSueVbBS0RQHAf/A+nNtDpvw95PeVKOA==}
+  '@rollup/rollup-linux-loongarch64-gnu@4.29.1':
+    resolution: {integrity: sha512-5a7q3tnlbcg0OodyxcAdrrCxFi0DgXJSoOuidFUzHZ2GixZXQs6Tc3CHmlvqKAmOs5eRde+JJxeIf9DonkmYkw==}
     cpu: [loong64]
     os: [linux]
 
-  '@rollup/rollup-linux-powerpc64le-gnu@4.28.1':
-    resolution: {integrity: sha512-pTnTdBuC2+pt1Rmm2SV7JWRqzhYpEILML4PKODqLz+C7Ou2apEV52h19CR7es+u04KlqplggmN9sqZlekg3R1A==}
+  '@rollup/rollup-linux-powerpc64le-gnu@4.29.1':
+    resolution: {integrity: sha512-9b4Mg5Yfz6mRnlSPIdROcfw1BU22FQxmfjlp/CShWwO3LilKQuMISMTtAu/bxmmrE6A902W2cZJuzx8+gJ8e9w==}
     cpu: [ppc64]
     os: [linux]
 
-  '@rollup/rollup-linux-riscv64-gnu@4.28.1':
-    resolution: {integrity: sha512-vWXy1Nfg7TPBSuAncfInmAI/WZDd5vOklyLJDdIRKABcZWojNDY0NJwruY2AcnCLnRJKSaBgf/GiJfauu8cQZA==}
+  '@rollup/rollup-linux-riscv64-gnu@4.29.1':
+    resolution: {integrity: sha512-G5pn0NChlbRM8OJWpJFMX4/i8OEU538uiSv0P6roZcbpe/WfhEO+AT8SHVKfp8qhDQzaz7Q+1/ixMy7hBRidnQ==}
     cpu: [riscv64]
     os: [linux]
 
-  '@rollup/rollup-linux-s390x-gnu@4.28.1':
-    resolution: {integrity: sha512-/yqC2Y53oZjb0yz8PVuGOQQNOTwxcizudunl/tFs1aLvObTclTwZ0JhXF2XcPT/zuaymemCDSuuUPXJJyqeDOg==}
+  '@rollup/rollup-linux-s390x-gnu@4.29.1':
+    resolution: {integrity: sha512-WM9lIkNdkhVwiArmLxFXpWndFGuOka4oJOZh8EP3Vb8q5lzdSCBuhjavJsw68Q9AKDGeOOIHYzYm4ZFvmWez5g==}
     cpu: [s390x]
     os: [linux]
 
-  '@rollup/rollup-linux-x64-gnu@4.28.1':
-    resolution: {integrity: sha512-fzgeABz7rrAlKYB0y2kSEiURrI0691CSL0+KXwKwhxvj92VULEDQLpBYLHpF49MSiPG4sq5CK3qHMnb9tlCjBw==}
+  '@rollup/rollup-linux-x64-gnu@4.29.1':
+    resolution: {integrity: sha512-87xYCwb0cPGZFoGiErT1eDcssByaLX4fc0z2nRM6eMtV9njAfEE6OW3UniAoDhX4Iq5xQVpE6qO9aJbCFumKYQ==}
     cpu: [x64]
     os: [linux]
 
-  '@rollup/rollup-linux-x64-musl@4.28.1':
-    resolution: {integrity: sha512-xQTDVzSGiMlSshpJCtudbWyRfLaNiVPXt1WgdWTwWz9n0U12cI2ZVtWe/Jgwyv/6wjL7b66uu61Vg0POWVfz4g==}
+  '@rollup/rollup-linux-x64-musl@4.29.1':
+    resolution: {integrity: sha512-xufkSNppNOdVRCEC4WKvlR1FBDyqCSCpQeMMgv9ZyXqqtKBfkw1yfGMTUTs9Qsl6WQbJnsGboWCp7pJGkeMhKA==}
     cpu: [x64]
     os: [linux]
 
-  '@rollup/rollup-win32-arm64-msvc@4.28.1':
-    resolution: {integrity: sha512-wSXmDRVupJstFP7elGMgv+2HqXelQhuNf+IS4V+nUpNVi/GUiBgDmfwD0UGN3pcAnWsgKG3I52wMOBnk1VHr/A==}
+  '@rollup/rollup-win32-arm64-msvc@4.29.1':
+    resolution: {integrity: sha512-F2OiJ42m77lSkizZQLuC+jiZ2cgueWQL5YC9tjo3AgaEw+KJmVxHGSyQfDUoYR9cci0lAywv2Clmckzulcq6ig==}
     cpu: [arm64]
     os: [win32]
 
-  '@rollup/rollup-win32-ia32-msvc@4.28.1':
-    resolution: {integrity: sha512-ZkyTJ/9vkgrE/Rk9vhMXhf8l9D+eAhbAVbsGsXKy2ohmJaWg0LPQLnIxRdRp/bKyr8tXuPlXhIoGlEB5XpJnGA==}
+  '@rollup/rollup-win32-ia32-msvc@4.29.1':
+    resolution: {integrity: sha512-rYRe5S0FcjlOBZQHgbTKNrqxCBUmgDJem/VQTCcTnA2KCabYSWQDrytOzX7avb79cAAweNmMUb/Zw18RNd4mng==}
     cpu: [ia32]
     os: [win32]
 
-  '@rollup/rollup-win32-x64-msvc@4.28.1':
-    resolution: {integrity: sha512-ZvK2jBafvttJjoIdKm/Q/Bh7IJ1Ose9IBOwpOXcOvW3ikGTQGmKDgxTC6oCAzW6PynbkKP8+um1du81XJHZ0JA==}
+  '@rollup/rollup-win32-x64-msvc@4.29.1':
+    resolution: {integrity: sha512-+10CMg9vt1MoHj6x1pxyjPSMjHTIlqs8/tBztXvPAx24SKs9jwVnKqHJumlH/IzhaPUaj3T6T6wfZr8okdXaIg==}
     cpu: [x64]
     os: [win32]
 
@@ -965,8 +965,8 @@ packages:
   '@sinclair/typebox@0.27.8':
     resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
 
-  '@sinclair/typebox@0.34.11':
-    resolution: {integrity: sha512-zE9pWGVSG82z+sFO+oUmqmqRVm8Wg5sVhmljYi1fDhLOSphBBy939QmC/qXcKFWqTiRJ6keyG4y75bIoTPRBAw==}
+  '@sinclair/typebox@0.34.13':
+    resolution: {integrity: sha512-ceVKqyCEgC355Kw0s/0tyfY9MzMQINSykJ/pG2w6YnaZyrcjV48svZpr8lVZrYgWjzOmrIPBhQRAtr/7eJpA5g==}
 
   '@sinonjs/commons@3.0.1':
     resolution: {integrity: sha512-K3mCHKQ9sVh8o1C9cxkwxaOmXoAMlDxC1mYyHrjqOWEcBjYr76t96zL2zlj5dUGZ3HSw240X1qgH3Mjf1yJWpQ==}
@@ -1278,12 +1278,8 @@ packages:
     resolution: {integrity: sha512-BhYE+WDaywFg2TBWYNXAE+8B1ATnThNBqXHP5nQu0jWJdVvY2hvkpyB3qOmtmDePiS5/BDQ8wASEWGMWRG148g==}
     engines: {node: '>= 0.4'}
 
-  call-bind@1.0.8:
-    resolution: {integrity: sha512-oKlSFMcMwpUg2ednkhQ454wfWiU/ul3CkJe/PEHcTKuiX6RpbehUiFMXu13HalGZxfUwCQzZG747YXBn1im9ww==}
-    engines: {node: '>= 0.4'}
-
-  call-bound@1.0.2:
-    resolution: {integrity: sha512-0lk0PHFe/uz0vl527fG9CgdE9WdafjDbCXvBbs+LUv000TVt2Jjhqbs4Jwm8gz070w8xXyEAxrPOMullsxXeGg==}
+  call-bound@1.0.3:
+    resolution: {integrity: sha512-YTd+6wGlNlPxSuri7Y6X8tY2dmm12UMH66RpKMhiX6rsk5wXXnYgbUcOt8kiS31/AjfoTOvCsE+w8nZQLQnzHA==}
     engines: {node: '>= 0.4'}
 
   callsites@3.1.0:
@@ -1298,8 +1294,8 @@ packages:
     resolution: {integrity: sha512-Gmy6FhYlCY7uOElZUSbxo2UCDH8owEk996gkbrpsgGtrJLM3J7jGxl9Ic7Qwwj4ivOE5AWZWRMecDdF7hqGjFA==}
     engines: {node: '>=10'}
 
-  caniuse-lite@1.0.30001688:
-    resolution: {integrity: sha512-Nmqpru91cuABu/DTCXbM2NSRHzM2uVHfPnhJ/1zEAJx/ILBRVmz3pzH4N7DZqbdG0gWClsCC05Oj0mJ/1AWMbA==}
+  caniuse-lite@1.0.30001690:
+    resolution: {integrity: sha512-5ExiE3qQN6oF8Clf8ifIDcMRCRE/dMGcETG/XGMD8/XiXm6HXQgQTh1yZYLXXpSOsEUlJm1Xr7kGULZTuGtP/w==}
 
   chai@5.1.2:
     resolution: {integrity: sha512-aGtmf24DW6MLHHG5gCx4zaI3uBq3KRtxeVs0DjFH6Z0rDNbsvTxFASFvdj79pxjxZ8/5u3PIiN3IwEIQkiiuPw==}
@@ -1473,10 +1469,6 @@ packages:
     resolution: {integrity: sha512-3sUqbMEc77XqpdNO7FRyRog+eW3ph+GYCbj+rK+uYyRMuwsVy0rMiVtPn+QJlKFvWP/1PYpapqYn0Me2knFn+A==}
     engines: {node: '>=0.10.0'}
 
-  define-data-property@1.1.4:
-    resolution: {integrity: sha512-rBMvIzlpA8v6E+SJZoo++HAYqsLrkg7MSfIinMPFhmkorw7X+dOXVJQs+QT69zGkzMyfDnIMN2Wid1+NbL3T+A==}
-    engines: {node: '>= 0.4'}
-
   delegates@1.0.0:
     resolution: {integrity: sha512-bd2L678uiWATM6m5Z1VzNCErI3jiGzt6HGY8OVICs40JQq/HALfbyNJmp0UDakEY4pMMaN0Ly5om/B1VI/+xfQ==}
 
@@ -1512,8 +1504,8 @@ packages:
     resolution: {integrity: sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ==}
     engines: {node: '>=12'}
 
-  dunder-proto@1.0.0:
-    resolution: {integrity: sha512-9+Sj30DIu+4KvHqMfLUGLFYL2PkURSYMVXJyXe92nFRvlYq5hBjLEhblKB+vkd/WVlUYMWigiY07T91Fkk0+4A==}
+  dunder-proto@1.0.1:
+    resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
     engines: {node: '>= 0.4'}
 
   ee-first@1.1.1:
@@ -1524,8 +1516,8 @@ packages:
     engines: {node: '>=0.10.0'}
     hasBin: true
 
-  electron-to-chromium@1.5.73:
-    resolution: {integrity: sha512-8wGNxG9tAG5KhGd3eeA0o6ixhiNdgr0DcHWm85XPCphwZgD1lIEoi6t3VERayWao7SF7AAZTw6oARGJeVjH8Kg==}
+  electron-to-chromium@1.5.76:
+    resolution: {integrity: sha512-CjVQyG7n7Sr+eBXE86HIulnL5N8xZY1sgmOPGuq/F0Rr0FJq63lg0kEtOIDfZBk44FnDLf6FUJ+dsJcuiUDdDQ==}
 
   emittery@0.13.1:
     resolution: {integrity: sha512-DeWwawk6r5yR9jFgnDKYt4sLS0LmHJJi3ZOnb5/JdbYwj3nW+FxQnHIjhBKz8YLC7oRNPVM9NQ47I3CVx34eqQ==}
@@ -1644,8 +1636,8 @@ packages:
   fast-json-stable-stringify@2.1.0:
     resolution: {integrity: sha512-lhd/wF+Lk98HZoTCtlVraHtfh5XYijIjalXck7saUtuanSDyLMxnHhSXEDJqHxD7msR8D0uCmqlkwjCV8xvwHw==}
 
-  fastq@1.17.1:
-    resolution: {integrity: sha512-sRVD3lWVIXWg6By68ZN7vho9a1pQcN/WBFaAAsDDFzlJjvoGx0P8z7V1t72grFJfJhu3YPZBuu25f7Kaw2jN1w==}
+  fastq@1.18.0:
+    resolution: {integrity: sha512-QKHXPW0hD8g4UET03SdOdunzSouc9N4AuHdsX8XNcTsuz+yYFILVNIX4l9yHABMhiEI9Db0JTTIpu0wB+Y1QQw==}
 
   fb-watchman@2.0.2:
     resolution: {integrity: sha512-p5161BqbuCaSnB8jIbzQHOlpgsPmK5rJVDfDKO91Axs5NC1uu3HRQm6wt9cd9/+GtQQIO53JdGXXoyDpTAsgYA==}
@@ -1768,8 +1760,8 @@ packages:
     resolution: {integrity: sha512-WOBp/EEGUiIsJSp7wcv/y6MO+lV9UoncWqxuFfm8eBwzWNgyfBd6Gz+IeKQ9jCmyhoH99g15M3T+QaVHFjizVA==}
     engines: {node: '>=4'}
 
-  globals@15.13.0:
-    resolution: {integrity: sha512-49TewVEz0UxZjr1WYYsWpPrhyC/B/pA8Bq0fUmet2n+eR7yn0IvNzNaoBwnK6mdkzcN+se7Ez9zUgULTz2QH4g==}
+  globals@15.14.0:
+    resolution: {integrity: sha512-OkToC372DtlQeje9/zHIo5CT8lRP/FUgEOKBEhU4e0abL7J7CD24fD9ohiLN5hagG/kWCYj4K5oaxxtj2Z0Dig==}
     engines: {node: '>=18'}
 
   globby@11.1.0:
@@ -1786,9 +1778,6 @@ packages:
   has-flag@4.0.0:
     resolution: {integrity: sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==}
     engines: {node: '>=8'}
-
-  has-property-descriptors@1.0.2:
-    resolution: {integrity: sha512-55JNKuIW+vq4Ke1BjOTjM2YctQIvCT7GFzHwmfZPGo5wnrgkid0YQtnAleFSqumZm4az3n2BS+erby5ipJdgrg==}
 
   has-symbols@1.1.0:
     resolution: {integrity: sha512-1cDNdwJ2Jaohmb3sg4OmKaMBwuC48sYni5HUw2DvsC8LjGTLK9h+eb1X6RyuOHe4hT0ULCW68iomhjUoKUqlPQ==}
@@ -1893,8 +1882,8 @@ packages:
     resolution: {integrity: sha512-ZMERYes6pDydyuGidse7OsHxtbI7WVeUEozgR/g7rd0xUimYNlvZRE/K2MgZTjWy725IfelLeVcEM97mmtRGXw==}
     engines: {node: '>=8'}
 
-  is-core-module@2.16.0:
-    resolution: {integrity: sha512-urTSINYfAYgcbLb0yDQ6egFm6h3Mo1DcF9EkyXSRjjzdHbsulg01qhwWuXdOoUBuTkbQ80KDboXa0vFJ+BDH+g==}
+  is-core-module@2.16.1:
+    resolution: {integrity: sha512-UfoeMA6fIJ8wTYFEUjelnaGI67v6+N7qXJEvQuIGa99l4xsCruSYOVSQ0uPANn4dAzm8lkYPaKLrrijLq7x23w==}
     engines: {node: '>= 0.4'}
 
   is-extglob@2.1.1:
@@ -2199,8 +2188,8 @@ packages:
     resolution: {integrity: sha512-FbAj6lXil6t8z4z3j0E5mfRlPzxkySotzUHwRXjlpRh10vc6AI6WN62ehZj82VG7M20rqogJ0GLwar2Xa05a8Q==}
     engines: {bun: '>=1.0.0', deno: '>=1.30.0', node: '>=8.0.0'}
 
-  magic-string@0.30.15:
-    resolution: {integrity: sha512-zXeaYRgZ6ldS1RJJUrMrYgNJ4fdwnyI6tVqoiIhyCyv5IVTK9BU8Ic2l253GGETQHxI4HNUwhJ3fjDhKqEoaAw==}
+  magic-string@0.30.17:
+    resolution: {integrity: sha512-sNPKHvyjVf7gyjwS4xGTaW/mCnF8wnjtifKBEhxfZ7E/S8tQ0rssrwGNn6q8JH/ohItJfSQp9mBtQYuTlH5QnA==}
 
   make-dir@4.0.0:
     resolution: {integrity: sha512-hXdUTZYIVOt1Ex//jAQi+wTZZpUpwBj/0QsOzqegb3rGMMeJiSEu5xLHnYfBrRV4RH2+OCSOO95Is/7x1WJ4bw==}
@@ -2216,8 +2205,8 @@ packages:
   makeerror@1.0.12:
     resolution: {integrity: sha512-JmqCvUhmt43madlpFzG4BQzG2Z3m6tvQDNKdClZnO3VbIudJYmxsT0FNJMeiB2+JTSlTQTSbU8QdesVmwJcmLg==}
 
-  math-intrinsics@1.0.0:
-    resolution: {integrity: sha512-4MqMiKP90ybymYvsut0CH2g4XWbfLtmlCkXmtmdcDCxNB+mQcu1w/1+L/VD7vi/PSv7X2JYV7SCcR+jiPXnQtA==}
+  math-intrinsics@1.1.0:
+    resolution: {integrity: sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==}
     engines: {node: '>= 0.4'}
 
   media-typer@0.3.0:
@@ -2245,8 +2234,8 @@ packages:
     resolution: {integrity: sha512-PXwfBhYu0hBCPw8Dn0E+WDYb7af3dSLVWKi3HGv84IdF4TyFoC0ysxFd0Goxw7nSv4T/PzEJQxsYsEiFCKo2BA==}
     engines: {node: '>=8.6'}
 
-  mikro-orm@6.4.1:
-    resolution: {integrity: sha512-hRVi5KE1vi4U83RqPcOyVnf+GXcC61jjsRHUuNUMzqYIwElmBubfXZ4Fz/GnKvDtlGcXHnVg2e366wJ++8uOtA==}
+  mikro-orm@6.4.2:
+    resolution: {integrity: sha512-PyivHOk8wlN16fzFv8fTfMXrTj9nWQ6Cnzi49twsVHVr1HUQuhFKMJUV/n0HlEdYBiQj0UK1pN4wNGo7h3nNGQ==}
     engines: {node: '>= 18.12.0'}
 
   mime-db@1.52.0:
@@ -2327,12 +2316,12 @@ packages:
   mongodb-connection-string-url@3.0.1:
     resolution: {integrity: sha512-XqMGwRX0Lgn05TDB4PyG2h2kKO/FfWJyCzYQbIhXUxz7ETt0I/FqHjUeqj37irJ+Dl1ZtU82uYyj14u2XsZKfg==}
 
-  mongodb@6.11.0:
-    resolution: {integrity: sha512-yVbPw0qT268YKhG241vAMLaDQAPbRyTgo++odSgGc9kXnzOujQI60Iyj23B9sQQFPSvmNPvMZ3dsFz0aN55KgA==}
+  mongodb@6.12.0:
+    resolution: {integrity: sha512-RM7AHlvYfS7jv7+BXund/kR64DryVI+cHbVAy9P61fnb1RcWZqOW1/Wj2YhqMCx+MuYhqTRGv7AwHBzmsCKBfA==}
     engines: {node: '>=16.20.1'}
     peerDependencies:
       '@aws-sdk/credential-providers': ^3.188.0
-      '@mongodb-js/zstd': ^1.1.0
+      '@mongodb-js/zstd': ^1.1.0 || ^2.0.0
       gcp-metadata: ^5.2.0
       kerberos: ^2.0.1
       mongodb-client-encryption: '>=6.0.0 <7'
@@ -2710,8 +2699,9 @@ packages:
     resolution: {integrity: sha512-OcXjMsGdhL4XnbShKpAcSqPMzQoYkYyhbEaeSko47MjRP9NfEQMhZkXL1DoFlt9LWQn4YttrdnV6X2OiyzBi+A==}
     engines: {node: '>=10'}
 
-  resolve@1.22.9:
-    resolution: {integrity: sha512-QxrmX1DzraFIi9PxdG5VkRfRwIgjwyud+z/iBwfRRrVmHc+P9Q7u2lSSpQ6bjr2gy5lrqIiU9vb6iAeGf2400A==}
+  resolve@1.22.10:
+    resolution: {integrity: sha512-NPRy+/ncIMeDlTAsuqwKIiferiawhefFJtkNSW0qZJEqMEb+qBt/77B/jGeeek+F0uOeN05CDa6HXbbIgtVX4w==}
+    engines: {node: '>= 0.4'}
     hasBin: true
 
   retry@0.12.0:
@@ -2727,8 +2717,8 @@ packages:
     deprecated: Rimraf versions prior to v4 are no longer supported
     hasBin: true
 
-  rollup@4.28.1:
-    resolution: {integrity: sha512-61fXYl/qNVinKmGSTHAZ6Yy8I3YIJC/r2m9feHo6SwVAVcLT5MPwOUFe7EuURA/4m0NR8lXG4BBXuo/IZEsjMg==}
+  rollup@4.29.1:
+    resolution: {integrity: sha512-RaJ45M/kmJUzSWDs1Nnd5DdV4eerC98idtUOVr6FfKcgxqvjwHmxc5upLF9qZU9EpsVzzhleFahrT3shLuJzIw==}
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
@@ -2771,10 +2761,6 @@ packages:
 
   set-blocking@2.0.0:
     resolution: {integrity: sha512-KiKBS8AnWGEyLzofFfmvKwpdPzqiy16LvQfK3yv/fVH7Bj13/wl3JSR1J+rfgRE9q7xUJK4qvgS8raSOeLUehw==}
-
-  set-function-length@1.2.2:
-    resolution: {integrity: sha512-pgRc4hJ4/sNjWCSS9AmnS40x3bNMDTknHgL5UaMBTMyJnU90EgWh1Rz+MC9eFu4BuN/UwZjKQuY/1v3rM7HMfg==}
-    engines: {node: '>= 0.4'}
 
   setprototypeof@1.2.0:
     resolution: {integrity: sha512-E5LDX7Wrp85Kil5bhZv46j8jOeboKq5JMmYM3gVGdGH8xFpPWXUMsNrlODCrkoxMEeNi/XZIwuRvY4XNwYMJpw==}
@@ -3065,8 +3051,8 @@ packages:
     resolution: {integrity: sha512-t0rzBq87m3fVcduHDUFhKmyyX+9eo6WQjZvf51Ea/M0Q7+T374Jp1aUiyUl0GKxp8M/OETVHSDvmkyPgvX+X2w==}
     engines: {node: '>=10'}
 
-  type-fest@4.30.1:
-    resolution: {integrity: sha512-ojFL7eDMX2NF0xMbDwPZJ8sb7ckqtlAi1GsmgsFXvErT9kFTk1r0DuQKvrCh73M6D4nngeHJmvogF9OluXs7Hw==}
+  type-fest@4.30.2:
+    resolution: {integrity: sha512-UJShLPYi1aWqCdq9HycOL/gwsuqda1OISdBO3t8RlXQC4QvtuIz4b5FCfe2dQIWEpmlRExKmcTBfP1r9bhY7ig==}
     engines: {node: '>=16'}
 
   type-is@1.6.18:
@@ -3615,21 +3601,30 @@ snapshots:
 
   '@forklaunch/common@0.1.14': {}
 
-  '@forklaunch/core@0.2.35':
+  '@forklaunch/core@0.2.36(socks@2.8.3)':
     dependencies:
       '@forklaunch/common': 0.1.14
       '@forklaunch/validator': 0.3.13(openapi3-ts@4.4.0)
-      '@mikro-orm/core': 6.4.1
+      '@mikro-orm/core': 6.4.2
+      '@mikro-orm/mongodb': 6.4.2(@mikro-orm/core@6.4.2)(socks@2.8.3)
       cors: 2.8.5
       jose: 5.9.6
       openapi3-ts: 4.4.0
       redis: 4.7.0
       uuid: 11.0.3
+    transitivePeerDependencies:
+      - '@aws-sdk/credential-providers'
+      - '@mongodb-js/zstd'
+      - gcp-metadata
+      - kerberos
+      - mongodb-client-encryption
+      - snappy
+      - socks
 
-  '@forklaunch/express@0.1.30(openapi3-ts@4.4.0)':
+  '@forklaunch/express@0.1.31(openapi3-ts@4.4.0)(socks@2.8.3)':
     dependencies:
       '@forklaunch/common': 0.1.14
-      '@forklaunch/core': 0.2.35
+      '@forklaunch/core': 0.2.36(socks@2.8.3)
       '@forklaunch/validator': 0.3.13(openapi3-ts@4.4.0)
       '@types/express': 5.0.0
       cors: 2.8.5
@@ -3637,13 +3632,20 @@ snapshots:
       qs: 6.13.1
       swagger-ui-express: 5.0.1(express@4.21.2)
     transitivePeerDependencies:
+      - '@aws-sdk/credential-providers'
+      - '@mongodb-js/zstd'
+      - gcp-metadata
+      - kerberos
+      - mongodb-client-encryption
       - openapi3-ts
+      - snappy
+      - socks
       - supports-color
 
-  '@forklaunch/hyper-express@0.1.31(express@4.21.2)':
+  '@forklaunch/hyper-express@0.1.32(express@4.21.2)(socks@2.8.3)':
     dependencies:
       '@forklaunch/common': 0.1.14
-      '@forklaunch/core': 0.2.35
+      '@forklaunch/core': 0.2.36(socks@2.8.3)
       '@forklaunch/validator': 0.3.13(openapi3-ts@4.4.0)
       cors: 2.8.5
       hyper-express: 6.17.2
@@ -3654,13 +3656,20 @@ snapshots:
       swagger-ui-express: 5.0.1(express@4.21.2)
       uWebSockets.js: https://codeload.github.com/uNetworking/uWebSockets.js/tar.gz/8fa05571bf6ea95be8966ad313d9d39453e381ae
     transitivePeerDependencies:
+      - '@aws-sdk/credential-providers'
+      - '@mongodb-js/zstd'
       - express
+      - gcp-metadata
+      - kerberos
+      - mongodb-client-encryption
+      - snappy
+      - socks
 
   '@forklaunch/validator@0.3.13(openapi3-ts@4.4.0)':
     dependencies:
       '@anatine/zod-openapi': 2.2.6(openapi3-ts@4.4.0)(zod@3.24.1)
       '@forklaunch/common': 0.1.14
-      '@sinclair/typebox': 0.34.11
+      '@sinclair/typebox': 0.34.13
       zod: 3.24.1
     transitivePeerDependencies:
       - openapi3-ts
@@ -3863,11 +3872,11 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
 
-  '@mikro-orm/cli@6.4.1(pg@8.13.1)':
+  '@mikro-orm/cli@6.4.2(pg@8.13.1)':
     dependencies:
       '@jercle/yargonaut': 1.1.5
-      '@mikro-orm/core': 6.4.1
-      '@mikro-orm/knex': 6.4.1(@mikro-orm/core@6.4.1)(pg@8.13.1)(sqlite3@5.1.7)
+      '@mikro-orm/core': 6.4.2
+      '@mikro-orm/knex': 6.4.2(@mikro-orm/core@6.4.2)(pg@8.13.1)(sqlite3@5.1.7)
       fs-extra: 11.2.0
       tsconfig-paths: 4.2.0
       yargs: 17.7.2
@@ -3883,19 +3892,19 @@ snapshots:
       - supports-color
       - tedious
 
-  '@mikro-orm/core@6.4.1':
+  '@mikro-orm/core@6.4.2':
     dependencies:
       dataloader: 2.2.3
       dotenv: 16.4.7
       esprima: 4.0.1
       fs-extra: 11.2.0
       globby: 11.1.0
-      mikro-orm: 6.4.1
+      mikro-orm: 6.4.2
       reflect-metadata: 0.2.2
 
-  '@mikro-orm/knex@6.4.1(@mikro-orm/core@6.4.1)(mysql2@3.11.5)(pg@8.13.1)':
+  '@mikro-orm/knex@6.4.2(@mikro-orm/core@6.4.2)(mysql2@3.11.5)(pg@8.13.1)':
     dependencies:
-      '@mikro-orm/core': 6.4.1
+      '@mikro-orm/core': 6.4.2
       fs-extra: 11.2.0
       knex: 3.1.0(mysql2@3.11.5)(pg@8.13.1)
       sqlstring: 2.3.3
@@ -3908,9 +3917,9 @@ snapshots:
       - supports-color
       - tedious
 
-  '@mikro-orm/knex@6.4.1(@mikro-orm/core@6.4.1)(pg@8.13.1)(sqlite3@5.1.7)':
+  '@mikro-orm/knex@6.4.2(@mikro-orm/core@6.4.2)(pg@8.13.1)(sqlite3@5.1.7)':
     dependencies:
-      '@mikro-orm/core': 6.4.1
+      '@mikro-orm/core': 6.4.2
       fs-extra: 11.2.0
       knex: 3.1.0(pg@8.13.1)(sqlite3@5.1.7)
       sqlstring: 2.3.3
@@ -3923,10 +3932,10 @@ snapshots:
       - supports-color
       - tedious
 
-  '@mikro-orm/migrations@6.4.1(@mikro-orm/core@6.4.1)(@types/node@22.10.2)(pg@8.13.1)':
+  '@mikro-orm/migrations@6.4.2(@mikro-orm/core@6.4.2)(@types/node@22.10.2)(pg@8.13.1)':
     dependencies:
-      '@mikro-orm/core': 6.4.1
-      '@mikro-orm/knex': 6.4.1(@mikro-orm/core@6.4.1)(pg@8.13.1)(sqlite3@5.1.7)
+      '@mikro-orm/core': 6.4.2
+      '@mikro-orm/knex': 6.4.2(@mikro-orm/core@6.4.2)(pg@8.13.1)(sqlite3@5.1.7)
       fs-extra: 11.2.0
       umzug: 3.8.2(@types/node@22.10.2)
     transitivePeerDependencies:
@@ -3942,11 +3951,11 @@ snapshots:
       - supports-color
       - tedious
 
-  '@mikro-orm/mongodb@6.4.1(@mikro-orm/core@6.4.1)(socks@2.8.3)':
+  '@mikro-orm/mongodb@6.4.2(@mikro-orm/core@6.4.2)(socks@2.8.3)':
     dependencies:
-      '@mikro-orm/core': 6.4.1
+      '@mikro-orm/core': 6.4.2
       bson: 6.10.1
-      mongodb: 6.11.0(socks@2.8.3)
+      mongodb: 6.12.0(socks@2.8.3)
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
       - '@mongodb-js/zstd'
@@ -3956,10 +3965,10 @@ snapshots:
       - snappy
       - socks
 
-  '@mikro-orm/mysql@6.4.1(@mikro-orm/core@6.4.1)(pg@8.13.1)':
+  '@mikro-orm/mysql@6.4.2(@mikro-orm/core@6.4.2)(pg@8.13.1)':
     dependencies:
-      '@mikro-orm/core': 6.4.1
-      '@mikro-orm/knex': 6.4.1(@mikro-orm/core@6.4.1)(mysql2@3.11.5)(pg@8.13.1)
+      '@mikro-orm/core': 6.4.2
+      '@mikro-orm/knex': 6.4.2(@mikro-orm/core@6.4.2)(mysql2@3.11.5)(pg@8.13.1)
       mysql2: 3.11.5
     transitivePeerDependencies:
       - better-sqlite3
@@ -3972,10 +3981,10 @@ snapshots:
       - supports-color
       - tedious
 
-  '@mikro-orm/postgresql@6.4.1(@mikro-orm/core@6.4.1)':
+  '@mikro-orm/postgresql@6.4.2(@mikro-orm/core@6.4.2)':
     dependencies:
-      '@mikro-orm/core': 6.4.1
-      '@mikro-orm/knex': 6.4.1(@mikro-orm/core@6.4.1)(pg@8.13.1)(sqlite3@5.1.7)
+      '@mikro-orm/core': 6.4.2
+      '@mikro-orm/knex': 6.4.2(@mikro-orm/core@6.4.2)(pg@8.13.1)(sqlite3@5.1.7)
       pg: 8.13.1
       postgres-array: 3.0.2
       postgres-date: 2.1.0
@@ -3991,16 +4000,16 @@ snapshots:
       - supports-color
       - tedious
 
-  '@mikro-orm/reflection@6.4.1(@mikro-orm/core@6.4.1)':
+  '@mikro-orm/reflection@6.4.2(@mikro-orm/core@6.4.2)':
     dependencies:
-      '@mikro-orm/core': 6.4.1
+      '@mikro-orm/core': 6.4.2
       globby: 11.1.0
       ts-morph: 24.0.0
 
-  '@mikro-orm/sqlite@6.4.1(@mikro-orm/core@6.4.1)(pg@8.13.1)':
+  '@mikro-orm/sqlite@6.4.2(@mikro-orm/core@6.4.2)(pg@8.13.1)':
     dependencies:
-      '@mikro-orm/core': 6.4.1
-      '@mikro-orm/knex': 6.4.1(@mikro-orm/core@6.4.1)(pg@8.13.1)(sqlite3@5.1.7)
+      '@mikro-orm/core': 6.4.2
+      '@mikro-orm/knex': 6.4.2(@mikro-orm/core@6.4.2)(pg@8.13.1)(sqlite3@5.1.7)
       fs-extra: 11.2.0
       sqlite3: 5.1.7
       sqlstring-sqlite: 0.1.1
@@ -4030,7 +4039,7 @@ snapshots:
   '@nodelib/fs.walk@1.2.8':
     dependencies:
       '@nodelib/fs.scandir': 2.1.5
-      fastq: 1.17.1
+      fastq: 1.18.0
 
   '@npmcli/fs@1.1.1':
     dependencies:
@@ -4070,61 +4079,61 @@ snapshots:
     dependencies:
       '@redis/client': 1.6.0
 
-  '@rollup/rollup-android-arm-eabi@4.28.1':
+  '@rollup/rollup-android-arm-eabi@4.29.1':
     optional: true
 
-  '@rollup/rollup-android-arm64@4.28.1':
+  '@rollup/rollup-android-arm64@4.29.1':
     optional: true
 
-  '@rollup/rollup-darwin-arm64@4.28.1':
+  '@rollup/rollup-darwin-arm64@4.29.1':
     optional: true
 
-  '@rollup/rollup-darwin-x64@4.28.1':
+  '@rollup/rollup-darwin-x64@4.29.1':
     optional: true
 
-  '@rollup/rollup-freebsd-arm64@4.28.1':
+  '@rollup/rollup-freebsd-arm64@4.29.1':
     optional: true
 
-  '@rollup/rollup-freebsd-x64@4.28.1':
+  '@rollup/rollup-freebsd-x64@4.29.1':
     optional: true
 
-  '@rollup/rollup-linux-arm-gnueabihf@4.28.1':
+  '@rollup/rollup-linux-arm-gnueabihf@4.29.1':
     optional: true
 
-  '@rollup/rollup-linux-arm-musleabihf@4.28.1':
+  '@rollup/rollup-linux-arm-musleabihf@4.29.1':
     optional: true
 
-  '@rollup/rollup-linux-arm64-gnu@4.28.1':
+  '@rollup/rollup-linux-arm64-gnu@4.29.1':
     optional: true
 
-  '@rollup/rollup-linux-arm64-musl@4.28.1':
+  '@rollup/rollup-linux-arm64-musl@4.29.1':
     optional: true
 
-  '@rollup/rollup-linux-loongarch64-gnu@4.28.1':
+  '@rollup/rollup-linux-loongarch64-gnu@4.29.1':
     optional: true
 
-  '@rollup/rollup-linux-powerpc64le-gnu@4.28.1':
+  '@rollup/rollup-linux-powerpc64le-gnu@4.29.1':
     optional: true
 
-  '@rollup/rollup-linux-riscv64-gnu@4.28.1':
+  '@rollup/rollup-linux-riscv64-gnu@4.29.1':
     optional: true
 
-  '@rollup/rollup-linux-s390x-gnu@4.28.1':
+  '@rollup/rollup-linux-s390x-gnu@4.29.1':
     optional: true
 
-  '@rollup/rollup-linux-x64-gnu@4.28.1':
+  '@rollup/rollup-linux-x64-gnu@4.29.1':
     optional: true
 
-  '@rollup/rollup-linux-x64-musl@4.28.1':
+  '@rollup/rollup-linux-x64-musl@4.29.1':
     optional: true
 
-  '@rollup/rollup-win32-arm64-msvc@4.28.1':
+  '@rollup/rollup-win32-arm64-msvc@4.29.1':
     optional: true
 
-  '@rollup/rollup-win32-ia32-msvc@4.28.1':
+  '@rollup/rollup-win32-ia32-msvc@4.29.1':
     optional: true
 
-  '@rollup/rollup-win32-x64-msvc@4.28.1':
+  '@rollup/rollup-win32-x64-msvc@4.29.1':
     optional: true
 
   '@rushstack/node-core-library@5.10.1(@types/node@22.10.2)':
@@ -4135,7 +4144,7 @@ snapshots:
       fs-extra: 7.0.1
       import-lazy: 4.0.0
       jju: 1.4.0
-      resolve: 1.22.9
+      resolve: 1.22.10
       semver: 7.5.4
     optionalDependencies:
       '@types/node': 22.10.2
@@ -4160,7 +4169,7 @@ snapshots:
 
   '@sinclair/typebox@0.27.8': {}
 
-  '@sinclair/typebox@0.34.11': {}
+  '@sinclair/typebox@0.34.13': {}
 
   '@sinonjs/commons@3.0.1':
     dependencies:
@@ -4296,7 +4305,7 @@ snapshots:
     dependencies:
       '@vitest/spy': 2.1.8
       estree-walker: 3.0.3
-      magic-string: 0.30.15
+      magic-string: 0.30.17
     optionalDependencies:
       vite: 5.4.11(@types/node@22.10.2)
 
@@ -4312,7 +4321,7 @@ snapshots:
   '@vitest/snapshot@2.1.8':
     dependencies:
       '@vitest/pretty-format': 2.1.8
-      magic-string: 0.30.15
+      magic-string: 0.30.17
       pathe: 1.1.2
 
   '@vitest/spy@2.1.8':
@@ -4509,8 +4518,8 @@ snapshots:
 
   browserslist@4.24.3:
     dependencies:
-      caniuse-lite: 1.0.30001688
-      electron-to-chromium: 1.5.73
+      caniuse-lite: 1.0.30001690
+      electron-to-chromium: 1.5.76
       node-releases: 2.0.19
       update-browserslist-db: 1.1.1(browserslist@4.24.3)
 
@@ -4568,16 +4577,9 @@ snapshots:
       es-errors: 1.3.0
       function-bind: 1.1.2
 
-  call-bind@1.0.8:
+  call-bound@1.0.3:
     dependencies:
       call-bind-apply-helpers: 1.0.1
-      es-define-property: 1.0.1
-      get-intrinsic: 1.2.6
-      set-function-length: 1.2.2
-
-  call-bound@1.0.2:
-    dependencies:
-      call-bind: 1.0.8
       get-intrinsic: 1.2.6
 
   callsites@3.1.0: {}
@@ -4586,7 +4588,7 @@ snapshots:
 
   camelcase@6.3.0: {}
 
-  caniuse-lite@1.0.30001688: {}
+  caniuse-lite@1.0.30001690: {}
 
   chai@5.1.2:
     dependencies:
@@ -4728,12 +4730,6 @@ snapshots:
 
   deepmerge@4.3.1: {}
 
-  define-data-property@1.1.4:
-    dependencies:
-      es-define-property: 1.0.1
-      es-errors: 1.3.0
-      gopd: 1.2.0
-
   delegates@1.0.0:
     optional: true
 
@@ -4755,7 +4751,7 @@ snapshots:
 
   dotenv@16.4.7: {}
 
-  dunder-proto@1.0.0:
+  dunder-proto@1.0.1:
     dependencies:
       call-bind-apply-helpers: 1.0.1
       es-errors: 1.3.0
@@ -4767,7 +4763,7 @@ snapshots:
     dependencies:
       jake: 10.9.2
 
-  electron-to-chromium@1.5.73: {}
+  electron-to-chromium@1.5.76: {}
 
   emittery@0.13.1: {}
 
@@ -4949,7 +4945,7 @@ snapshots:
 
   fast-json-stable-stringify@2.1.0: {}
 
-  fastq@1.17.1:
+  fastq@1.18.0:
     dependencies:
       reusify: 1.0.4
 
@@ -5044,7 +5040,7 @@ snapshots:
   get-intrinsic@1.2.6:
     dependencies:
       call-bind-apply-helpers: 1.0.1
-      dunder-proto: 1.0.0
+      dunder-proto: 1.0.1
       es-define-property: 1.0.1
       es-errors: 1.3.0
       es-object-atoms: 1.0.0
@@ -5052,7 +5048,7 @@ snapshots:
       gopd: 1.2.0
       has-symbols: 1.1.0
       hasown: 2.0.2
-      math-intrinsics: 1.0.0
+      math-intrinsics: 1.1.0
 
   get-package-type@0.1.0: {}
 
@@ -5081,7 +5077,7 @@ snapshots:
 
   globals@11.12.0: {}
 
-  globals@15.13.0: {}
+  globals@15.14.0: {}
 
   globby@11.1.0:
     dependencies:
@@ -5097,10 +5093,6 @@ snapshots:
   graceful-fs@4.2.11: {}
 
   has-flag@4.0.0: {}
-
-  has-property-descriptors@1.0.2:
-    dependencies:
-      es-define-property: 1.0.1
 
   has-symbols@1.1.0: {}
 
@@ -5212,7 +5204,7 @@ snapshots:
     dependencies:
       binary-extensions: 2.3.0
 
-  is-core-module@2.16.0:
+  is-core-module@2.16.1:
     dependencies:
       hasown: 2.0.2
 
@@ -5463,7 +5455,7 @@ snapshots:
       jest-pnp-resolver: 1.2.3(jest-resolve@29.7.0)
       jest-util: 29.7.0
       jest-validate: 29.7.0
-      resolve: 1.22.9
+      resolve: 1.22.10
       resolve.exports: 2.0.3
       slash: 3.0.0
 
@@ -5703,7 +5695,7 @@ snapshots:
 
   lru.min@1.1.1: {}
 
-  magic-string@0.30.15:
+  magic-string@0.30.17:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.0
 
@@ -5740,7 +5732,7 @@ snapshots:
     dependencies:
       tmpl: 1.0.5
 
-  math-intrinsics@1.0.0: {}
+  math-intrinsics@1.1.0: {}
 
   media-typer@0.3.0: {}
 
@@ -5759,7 +5751,7 @@ snapshots:
       braces: 3.0.3
       picomatch: 2.3.1
 
-  mikro-orm@6.4.1: {}
+  mikro-orm@6.4.2: {}
 
   mime-db@1.52.0: {}
 
@@ -5836,7 +5828,7 @@ snapshots:
       '@types/whatwg-url': 11.0.5
       whatwg-url: 13.0.0
 
-  mongodb@6.11.0(socks@2.8.3):
+  mongodb@6.12.0(socks@2.8.3):
     dependencies:
       '@mongodb-js/saslprep': 1.1.9
       bson: 6.10.1
@@ -6153,7 +6145,7 @@ snapshots:
 
   rechoir@0.8.0:
     dependencies:
-      resolve: 1.22.9
+      resolve: 1.22.10
 
   redis@4.7.0:
     dependencies:
@@ -6180,9 +6172,9 @@ snapshots:
 
   resolve.exports@2.0.3: {}
 
-  resolve@1.22.9:
+  resolve@1.22.10:
     dependencies:
-      is-core-module: 2.16.0
+      is-core-module: 2.16.1
       path-parse: 1.0.7
       supports-preserve-symlinks-flag: 1.0.0
 
@@ -6196,29 +6188,29 @@ snapshots:
       glob: 7.2.3
     optional: true
 
-  rollup@4.28.1:
+  rollup@4.29.1:
     dependencies:
       '@types/estree': 1.0.6
     optionalDependencies:
-      '@rollup/rollup-android-arm-eabi': 4.28.1
-      '@rollup/rollup-android-arm64': 4.28.1
-      '@rollup/rollup-darwin-arm64': 4.28.1
-      '@rollup/rollup-darwin-x64': 4.28.1
-      '@rollup/rollup-freebsd-arm64': 4.28.1
-      '@rollup/rollup-freebsd-x64': 4.28.1
-      '@rollup/rollup-linux-arm-gnueabihf': 4.28.1
-      '@rollup/rollup-linux-arm-musleabihf': 4.28.1
-      '@rollup/rollup-linux-arm64-gnu': 4.28.1
-      '@rollup/rollup-linux-arm64-musl': 4.28.1
-      '@rollup/rollup-linux-loongarch64-gnu': 4.28.1
-      '@rollup/rollup-linux-powerpc64le-gnu': 4.28.1
-      '@rollup/rollup-linux-riscv64-gnu': 4.28.1
-      '@rollup/rollup-linux-s390x-gnu': 4.28.1
-      '@rollup/rollup-linux-x64-gnu': 4.28.1
-      '@rollup/rollup-linux-x64-musl': 4.28.1
-      '@rollup/rollup-win32-arm64-msvc': 4.28.1
-      '@rollup/rollup-win32-ia32-msvc': 4.28.1
-      '@rollup/rollup-win32-x64-msvc': 4.28.1
+      '@rollup/rollup-android-arm-eabi': 4.29.1
+      '@rollup/rollup-android-arm64': 4.29.1
+      '@rollup/rollup-darwin-arm64': 4.29.1
+      '@rollup/rollup-darwin-x64': 4.29.1
+      '@rollup/rollup-freebsd-arm64': 4.29.1
+      '@rollup/rollup-freebsd-x64': 4.29.1
+      '@rollup/rollup-linux-arm-gnueabihf': 4.29.1
+      '@rollup/rollup-linux-arm-musleabihf': 4.29.1
+      '@rollup/rollup-linux-arm64-gnu': 4.29.1
+      '@rollup/rollup-linux-arm64-musl': 4.29.1
+      '@rollup/rollup-linux-loongarch64-gnu': 4.29.1
+      '@rollup/rollup-linux-powerpc64le-gnu': 4.29.1
+      '@rollup/rollup-linux-riscv64-gnu': 4.29.1
+      '@rollup/rollup-linux-s390x-gnu': 4.29.1
+      '@rollup/rollup-linux-x64-gnu': 4.29.1
+      '@rollup/rollup-linux-x64-musl': 4.29.1
+      '@rollup/rollup-win32-arm64-msvc': 4.29.1
+      '@rollup/rollup-win32-ia32-msvc': 4.29.1
+      '@rollup/rollup-win32-x64-msvc': 4.29.1
       fsevents: 2.3.3
 
   run-parallel@1.2.0:
@@ -6274,15 +6266,6 @@ snapshots:
   set-blocking@2.0.0:
     optional: true
 
-  set-function-length@1.2.2:
-    dependencies:
-      define-data-property: 1.1.4
-      es-errors: 1.3.0
-      function-bind: 1.1.2
-      get-intrinsic: 1.2.6
-      gopd: 1.2.0
-      has-property-descriptors: 1.0.2
-
   setprototypeof@1.2.0: {}
 
   shebang-command@2.0.0:
@@ -6298,14 +6281,14 @@ snapshots:
 
   side-channel-map@1.0.1:
     dependencies:
-      call-bound: 1.0.2
+      call-bound: 1.0.3
       es-errors: 1.3.0
       get-intrinsic: 1.2.6
       object-inspect: 1.13.3
 
   side-channel-weakmap@1.0.2:
     dependencies:
-      call-bound: 1.0.2
+      call-bound: 1.0.3
       es-errors: 1.3.0
       get-intrinsic: 1.2.6
       object-inspect: 1.13.3
@@ -6567,7 +6550,7 @@ snapshots:
 
   type-fest@0.21.3: {}
 
-  type-fest@4.30.1: {}
+  type-fest@4.30.2: {}
 
   type-is@1.6.18:
     dependencies:
@@ -6590,7 +6573,7 @@ snapshots:
       emittery: 0.13.1
       fast-glob: 3.3.2
       pony-cause: 2.1.11
-      type-fest: 4.30.1
+      type-fest: 4.30.2
     transitivePeerDependencies:
       - '@types/node'
 
@@ -6658,7 +6641,7 @@ snapshots:
     dependencies:
       esbuild: 0.21.5
       postcss: 8.4.49
-      rollup: 4.28.1
+      rollup: 4.29.1
     optionalDependencies:
       '@types/node': 22.10.2
       fsevents: 2.3.3
@@ -6675,7 +6658,7 @@ snapshots:
       chai: 5.1.2
       debug: 4.4.0
       expect-type: 1.1.0
-      magic-string: 0.30.15
+      magic-string: 0.30.17
       pathe: 1.1.2
       std-env: 3.8.0
       tinybench: 2.9.0

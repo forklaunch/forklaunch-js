@@ -1,11 +1,9 @@
-use std::collections::HashMap;
-
 use ramhorns::Content;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 pub(crate) trait Config {
     fn app_name(&self) -> &String;
-    fn database(&self) -> &String;
     fn test_framework(&self) -> &String;
     fn projects(&self) -> &Vec<ProjectEntry>;
     fn projects_mut(&mut self) -> &mut Vec<ProjectEntry>;
@@ -14,7 +12,6 @@ pub(crate) trait Config {
 
 pub(crate) trait ProjectConfig {
     fn name(&self) -> &String;
-    fn database(&self) -> &String;
 }
 
 #[derive(Debug, Serialize, Deserialize, Content, Clone)]
@@ -46,10 +43,6 @@ macro_rules! internal_config_struct {
             $vis test_framework: String,
             $vis projects: Vec<crate::init::core::config::ProjectEntry>,
             $vis project_peer_topology: std::collections::HashMap<String, Vec<String>>,
-
-            #[serde(skip_serializing)]
-            $vis database: String,
-
             $(
                 #[serde(default)]
                 $(#[$field_meta])*
@@ -61,63 +54,55 @@ macro_rules! internal_config_struct {
 
 #[macro_export]
 macro_rules! config_struct {
-        (
-            $(#[$meta:meta])*
-            $vis:vis struct $name:ident {
+    (
+        $(#[$meta:meta])*
+        $vis:vis struct $name:ident {
+            $(
+                $(#[$field_meta:meta])*
+                $field_vis:vis $field:ident: $ty:ty
+            ),*
+            $(,)?
+        }
+    ) => {
+        crate::internal_config_struct! {
+            $(#[$meta])*
+            $vis struct $name {
+                #[serde(skip_serializing)]
+                $vis is_express: bool,
+
+                #[serde(skip_serializing)]
+                $vis is_hyper_express: bool,
+
+                #[serde(skip_serializing)]
+                $vis is_zod: bool,
+
+                #[serde(skip_serializing)]
+                $vis is_typebox: bool,
+
+                #[serde(skip_serializing)]
+                $vis is_bun: bool,
+
+                #[serde(skip_serializing)]
+                $vis is_node: bool,
+
+                #[serde(skip_serializing)]
+                $vis is_vitest: bool,
+
+                #[serde(skip_serializing)]
+                $vis is_jest: bool,
+
                 $(
-                    $(#[$field_meta:meta])*
-                    $field_vis:vis $field:ident: $ty:ty
+                    $(#[$field_meta])*
+                    $field_vis $field: $ty
                 ),*
-                $(,)?
             }
-        ) => {
+        }
+
+        paste::paste! {
             crate::internal_config_struct! {
                 $(#[$meta])*
-                $vis struct $name {
-                    #[serde(skip_serializing)]
-                    $vis is_express: bool,
-
-                    #[serde(skip_serializing)]
-                    $vis is_hyper_express: bool,
-
-                    #[serde(skip_serializing)]
-                    $vis is_zod: bool,
-
-                    #[serde(skip_serializing)]
-                    $vis is_typebox: bool,
-
-                    #[serde(skip_serializing)]
-                    $vis is_bun: bool,
-
-                    #[serde(skip_serializing)]
-                    $vis is_node: bool,
-
-                    #[serde(skip_serializing)]
-                    $vis is_vitest: bool,
-
-                    #[serde(skip_serializing)]
-                    $vis is_jest: bool,
-
-                    #[serde(skip_serializing)]
-                    $vis db_driver: String,
-
-                    #[serde(skip_serializing)]
-                    $vis is_postgres: bool,
-
-                    #[serde(skip_serializing)]
-                    $vis is_mongo: bool,
-
-                    $(
-                        $(#[$field_meta])*
-                        $field_vis $field: $ty
-                    ),*
-                }
-            }
-
-         crate::internal_config_struct! {
-                $(#[$meta])*
                 #[derive(Deserialize)]
-                struct Shadow {
+                struct [<Shadow $name>] {
                     $(
                         $(#[$field_meta])*
                         $field_vis $field: $ty
@@ -125,50 +110,49 @@ macro_rules! config_struct {
                 }
             }
 
-        impl From<Shadow> for $name {
-            fn from(shadow: Shadow) -> Self {
-                Self {
-                    cli_version: shadow.cli_version.clone(),
-                    app_name: shadow.app_name.clone(),
-                    database: shadow.database.clone(),
-                    validator: shadow.validator.clone(),
-                    http_framework: shadow.http_framework.clone(),
-                    runtime: shadow.runtime.clone(),
-                    test_framework: shadow.test_framework.clone(),
-                    projects: shadow.projects.clone(),
-                    project_peer_topology: shadow.project_peer_topology.clone(),
-                    is_express: shadow.http_framework == "express",
-                    is_hyper_express: shadow.http_framework == "hyper-express",
-                    is_zod: shadow.validator == "zod",
-                    is_typebox: shadow.validator == "typebox",
-                    is_bun: shadow.runtime == "bun",
-                    is_node: shadow.runtime == "node",
-                    is_vitest: shadow.test_framework == "vitest",
-                    is_jest: shadow.test_framework == "jest",
-                    db_driver: crate::init::core::database::match_database(&shadow.database),
-                    is_postgres: shadow.database == "postgresql",
-                    is_mongo: shadow.database == "mongodb",
-                    $(
-                        $field: shadow.$field
-                    ),*
+            impl From<[<Shadow $name>]> for $name {
+                fn from(shadow: [<Shadow $name>]) -> Self {
+                    Self {
+                        cli_version: shadow.cli_version.clone(),
+                        app_name: shadow.app_name.clone(),
+                        validator: shadow.validator.clone(),
+                        http_framework: shadow.http_framework.clone(),
+                        runtime: shadow.runtime.clone(),
+                        test_framework: shadow.test_framework.clone(),
+                        projects: shadow.projects.clone(),
+                        project_peer_topology: shadow.project_peer_topology.clone(),
+                        is_express: shadow.http_framework == "express",
+                        is_hyper_express: shadow.http_framework == "hyper-express",
+                        is_zod: shadow.validator == "zod",
+                        is_typebox: shadow.validator == "typebox",
+                        is_bun: shadow.runtime == "bun",
+                        is_node: shadow.runtime == "node",
+                        is_vitest: shadow.test_framework == "vitest",
+                        is_jest: shadow.test_framework == "jest",
+                        $(
+                            $field: shadow.$field
+                        ),*
+                    }
+                }
+            }
+
+            impl<'de> Deserialize<'de> for $name {
+                fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+                    let shadow: [<Shadow $name>] = Deserialize::deserialize(deserializer)?;
+                    Ok(shadow.into())
                 }
             }
         }
 
-        impl<'de> Deserialize<'de> for $name {
-            fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-                let shadow: Shadow = Deserialize::deserialize(deserializer)?;
-                Ok(shadow.into())
-            }
-        }
+
 
         impl crate::init::core::config::Config for $name {
             fn app_name(&self) -> &String {
                 &self.app_name
             }
-            fn database(&self) -> &String {
-                &self.database
-            }
+            // fn database(&self) -> &String {
+            //     &self.database
+            // }
             fn test_framework(&self) -> &String {
                 &self.test_framework
             }

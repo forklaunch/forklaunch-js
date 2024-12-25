@@ -15,6 +15,25 @@ use crate::{
 
 use super::database::VALID_DATABASES;
 
+const MONGO_INIT_COMMAND: &str = r#"sh -c "sleep 5; mongosh --host mongodb:27017 --eval '
+rs.initiate({
+    _id: \"rs0\",
+    members: [
+        { _id: 0, host: \"mongodb:27017\" }
+    ]
+});
+while (!rs.isMaster().ismaster) {
+    print(\"Waiting for replica set initialization...\");
+    sleep(1000);
+}
+print(\"Replica set initialized and primary elected\");
+db.getSiblingDB(\"admin\").createUser({
+    user: \"mongodb\",
+    pwd: \"mongodb\",
+    roles: [{ role: \"root\", db: \"admin\" }]
+});
+'""#;
+
 #[derive(Debug, Serialize, Deserialize)]
 struct DockerCompose {
     services: IndexMap<String, DockerService>,
@@ -69,6 +88,7 @@ struct DockerBuild {
 fn add_database_to_docker_compose(
     config_data: &ServiceConfigData,
     docker_compose: &mut DockerCompose,
+    environment: &mut IndexMap<String, String>,
 ) -> Result<()> {
     let mut active_databases = HashSet::new();
     for (_, service) in docker_compose.services.iter_mut() {
@@ -81,16 +101,16 @@ fn add_database_to_docker_compose(
         match config_data.database.as_str() {
             "postgresql" => {
                 docker_compose.services.insert(
-                    "postgres".to_string(),
+                    "postgresql".to_string(),
                     DockerService {
                         image: Some("postgres:latest".to_string()),
-                        container_name: Some(format!("{}-postgres", config_data.app_name)),
-                        hostname: Some("postgres".to_string()),
+                        container_name: Some(format!("{}-postgresql", config_data.app_name)),
+                        hostname: Some("postgresql".to_string()),
                         restart: Some("unless-stopped".to_string()),
                         ports: Some(vec!["5432:5432".to_string()]),
                         environment: Some(IndexMap::from([
-                            ("POSTGRES_USER".to_string(), "postgres".to_string()),
-                            ("POSTGRES_PASSWORD".to_string(), "postgres".to_string()),
+                            ("POSTGRES_USER".to_string(), "postgresql".to_string()),
+                            ("POSTGRES_PASSWORD".to_string(), "postgresql".to_string()),
                             ("POSTGRES_HOST_AUTH_METHOD".to_string(), "trust".to_string()),
                         ])),
                         networks: Some(vec![format!("{}-network", config_data.app_name)]),
@@ -98,14 +118,13 @@ fn add_database_to_docker_compose(
                             "./{}/data:/var/lib/postgresql/forklaunch/data",
                             config_data.app_name
                         )]),
-                        build: None,
-                        command: None,
-                        depends_on: None,
-                        working_dir: None,
-                        entrypoint: None,
-                        healthcheck: None,
+                        ..Default::default()
                     },
                 );
+                environment.insert("DB_HOST".to_string(), "postgresql".to_string());
+                environment.insert("DB_USER".to_string(), "postgresql".to_string());
+                environment.insert("DB_PASSWORD".to_string(), "postgresql".to_string());
+                environment.insert("DB_PORT".to_string(), "5432".to_string());
             }
             "mongodb" => {
                 docker_compose.services.insert(
@@ -137,12 +156,15 @@ fn add_database_to_docker_compose(
                     DockerService {
                         image: Some("mongo:latest".to_string()),
                         depends_on: Some(vec!["mongodb".to_string()]),
-                        command: Some(format!(
-                            "sh -c \"sleep 5; mongosh --host mongodb:27017 --eval 'rs.initiate( {{ _id : \"rs0\", members: [ {{ _id: 0, host: \"mongodb:27017\" }} ] }})'\"",
-                        )),
+                        networks: Some(vec![format!("{}-network", config_data.app_name)]),
+                        command: Some(MONGO_INIT_COMMAND.to_string()),
                         ..Default::default()
                     },
                 );
+                environment.insert("DB_HOST".to_string(), "mongodb".to_string());
+                environment.insert("DB_USER".to_string(), "mongodb".to_string());
+                environment.insert("DB_PASSWORD".to_string(), "mongodb".to_string());
+                environment.insert("DB_PORT".to_string(), "27017".to_string());
             }
             _ => unreachable!(),
         }
@@ -199,16 +221,12 @@ pub(crate) fn add_service_definition_to_docker_compose(
     environment.insert("ENV".to_string(), "development".to_string());
     environment.insert("HOST".to_string(), "0.0.0.0".to_string());
     environment.insert("PORT".to_string(), format!("{}", port_number));
-    // TODO: support other databases
-    environment.insert(
-        "DB_NAME".to_string(),
-        format!("{}-dev", config_data.app_name),
-    );
-    environment.insert("DB_HOST".to_string(), "postgres".to_string());
-    environment.insert("DB_USER".to_string(), "postgres".to_string());
-    environment.insert("DB_PASSWORD".to_string(), "postgres".to_string());
-    environment.insert("DB_PORT".to_string(), "5432".to_string());
+
+    // TODO: support other caches and only include if relevant
     environment.insert("REDIS_URL".to_string(), "redis://redis:6379".to_string());
+
+    add_database_to_docker_compose(config_data, &mut docker_compose, &mut environment)
+        .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
 
     let mut volumes = vec![
         format!(
@@ -265,9 +283,6 @@ pub(crate) fn add_service_definition_to_docker_compose(
             ..Default::default()
         },
     );
-
-    add_database_to_docker_compose(config_data, &mut docker_compose)
-        .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
 
     full_docker_compose["services"] = to_value(docker_compose.services)?;
 

@@ -12,3 +12,5 @@ lib
 temp
 
 .env.local
+public.pem
+private.pem

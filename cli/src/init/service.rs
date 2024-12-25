@@ -25,31 +25,36 @@ use crate::{
 use super::{
     core::{
         config::ProjectConfig,
+        database::{match_database, VALID_DATABASES},
         docker::add_service_definition_to_docker_compose,
         gitignore::setup_gitignore,
         manifest::add_project_definition_to_manifest,
-        package_json::add_project_definition_to_package_json,
+        package_json::{add_project_definition_to_package_json, update_application_package_json},
         pnpm_workspace::add_project_definition_to_pnpm_workspace,
         symlinks::setup_symlinks,
-        template::{setup_with_template, PathIO},
+        template::{setup_with_template, PathIO, TemplateConfigData},
         tsconfig::setup_tsconfig,
     },
     forklaunch_command, CliCommand,
 };
 
 config_struct!(
-    #[derive(Debug, Content, Serialize)]
+    #[derive(Debug, Content, Serialize, Clone)]
     pub(crate) struct ServiceConfigData {
         pub(crate) service_name: String,
+        pub(crate) database: String,
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) db_driver: String,
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) is_postgres: bool,
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) is_mongo: bool,
     }
 );
 
 impl ProjectConfig for ServiceConfigData {
     fn name(&self) -> &String {
         &self.service_name
-    }
-    fn database(&self) -> &String {
-        &self.database
     }
 }
 
@@ -80,6 +85,14 @@ impl CliCommand for ServiceCommand {
                     .required(false)
                     .help("The application path to initialize the service in."),
             )
+            .arg(
+                Arg::new("database")
+                    .short('d')
+                    .long("database")
+                    .required(true)
+                    .help("The database to use. Valid values = [postgresql, mongodb]")
+                    .value_parser(VALID_DATABASES),
+            )
     }
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
@@ -89,15 +102,23 @@ impl CliCommand for ServiceCommand {
             Some(path) => path,
             None => current_path.to_str().unwrap(),
         };
+        let database = matches.get_one::<String>("database").unwrap();
 
         let config_path = Path::new(&base_path)
             .join(".forklaunch")
             .join("manifest.toml");
 
-        let mut config_data: ServiceConfigData =
-            from_str(&read_to_string(config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?)
-                .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
-        config_data.service_name = service_name.clone();
+        let mut config_data: ServiceConfigData = ServiceConfigData {
+            service_name: service_name.clone(),
+
+            database: database.clone(),
+            db_driver: match_database(database),
+            is_mongo: database == "mongodb",
+            is_postgres: database == "postgresql",
+
+            ..from_str(&read_to_string(config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?)
+                .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
+        };
 
         setup_basic_service(service_name, &base_path.to_string(), &mut config_data)
             .with_context(|| "Failed to create service.")?;
@@ -135,7 +156,7 @@ fn setup_basic_service(
         None,
         &template_dir,
         &mut template,
-        config_data,
+        &TemplateConfigData::Service(config_data.clone()),
         &ignore_files,
     )?;
     setup_symlinks(Some(base_path), &template_dir.output_path, config_data)
@@ -145,6 +166,8 @@ fn setup_basic_service(
 
     add_service_to_artifacts(config_data, base_path)
         .with_context(|| "Failed to add service metadata to artifacts.")?;
+    update_application_package_json(config_data, base_path)
+        .with_context(|| "Failed to update application package.json.")?;
 
     Ok(())
 }
@@ -156,7 +179,7 @@ fn add_service_to_artifacts(config_data: &mut ServiceConfigData, base_path: &Str
     let forklaunch_definition_buffer = add_project_definition_to_manifest(
         config_data,
         Some(port_number),
-        Some(config_data.database().to_owned()),
+        Some(config_data.database.to_owned()),
     )
     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
     let mut package_json_buffer: Option<String> = None;

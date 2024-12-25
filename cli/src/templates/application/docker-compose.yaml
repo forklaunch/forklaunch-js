@@ -8,16 +8,16 @@ networks:
     driver: bridge
 
 services:{{#is_postgres}}
-  postgres:
+  postgresql:
     image: postgres:latest
-    hostname: postgres
+    hostname: postgresql
     container_name: {{app_name}}-postgres
     restart: unless-stopped
     ports:
       - '5432:5432'
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgresql
+      POSTGRES_PASSWORD: postgresql
       POSTGRES_HOST_AUTH_METHOD: 'trust'
     networks:
       - {{app_name}}-network
@@ -55,13 +55,21 @@ services:{{#is_postgres}}
         members: [
           { _id: 0, host: \"mongodb:27017\" }
         ]
-      })
+      });
+      while (!rs.isMaster().ismaster) {
+          print(\"Waiting for replica set initialization...\");
+          sleep(1000);
+      }
+      print(\"Replica set initialized and primary elected\");
+      db.getSiblingDB(\"admin\").createUser({
+        user: \"mongodb\",
+        pwd: \"mongodb\",
+        roles: [{ role: \"root\", db: \"admin\" }]
+      });
       '"{{/is_mongo}}
   redis:
     image: redis/redis-stack-server:latest
     container_name: {{app_name}}-redis
-    depends_on:
-      - postgres
     restart: always
     ports:
       - '6379:6379'
@@ -79,14 +87,14 @@ services:{{#is_postgres}}
       ENV: development
       HOST: 0.0.0.0
       PORT: '{{port}}'
-      DB_NAME: {{app_name}}-{{service_name}}-dev
-      DB_HOST: postgres
-      DB_USER: postgres
-      DB_PASSWORD: postgres
+      DB_NAME: {{app_name}}-{{name}}-dev
+      DB_HOST: postgresql
+      DB_USER: postgresql
+      DB_PASSWORD: postgresql
       DB_PORT: '5432'
       REDIS_URL: redis://redis:6379
     depends_on:
-      - {{#is_postgres}}postgres{{/is_postgres}}{{#is_mongo}}mongodb{{/is_mongo}}
+      - {{database}}
       - redis
     ports:
       - {{port}}:{{port}}
@@ -94,8 +102,8 @@ services:{{#is_postgres}}
       - {{app_name}}-network
     volumes:
       - ./{{name}}:/{{app_name}}/{{name}}
-      - /{{app_name}}/{{name}}/dist {{#is_node}}
-      - /{{app_name}}/{{name}}/node_modules {{/is_node}}
+      - /{{app_name}}/{{name}}/dist{{#is_node}}
+      - /{{app_name}}/{{name}}/node_modules{{/is_node}}
     working_dir: /{{app_name}}/{{name}}
     entrypoint: ["{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}}", "run", "dev"] {{/port}}{{/projects}}
 

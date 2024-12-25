@@ -1,5 +1,5 @@
 import { ConfigInjector, Lifetime } from '@forklaunch/core/services';
-import { Migrator } from '@mikro-orm/migrations';
+import { Migrator } from '@mikro-orm/migrations{{#is_mongo}}-mongodb{{/is_mongo}}';
 import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
 import { number, SchemaValidator, string } from '@{{app_name}}/core';{{^is_mongo}}
 import { Platform, TextType, Type } from '@mikro-orm/core';{{/is_mongo}}
@@ -17,7 +17,7 @@ const configInjector = new ConfigInjector(
   {
     dbName: {
       lifetime: Lifetime.Singleton,
-      value: process.env.DB_NAME ?? '{{app_name}}-dev-{{service_name}}'
+      value: process.env.DB_NAME ?? '{{app_name}}-{{service_name}}-dev'
     },
     host: {
       lifetime: Lifetime.Singleton,
@@ -48,15 +48,24 @@ if (
   })
 ) {
   throw new Error('Invalid environment variables supplied.');
-}
+}{{#is_mongo}}
 
+const clientUrl = `mongodb://${configInjector.resolve(
+    'user'
+  )}:${configInjector.resolve('password')}@${configInjector.resolve(
+    'host'
+  )}:${configInjector.resolve('port')}/${configInjector.resolve(
+    'dbName'
+  )}?authSource=admin&directConnection=true&replicaSet=rs0`
+{{/is_mongo}}
 const mikroOrmOptionsConfig = {
-  driver: {{db_driver}},
+  driver: {{db_driver}},{{#is_mongo}}
+  clientUrl,{{/is_mongo}}{{^is_mongo}}
   dbName: configInjector.resolve('dbName'),
   host: configInjector.resolve('host'),
   user: configInjector.resolve('user'),
   password: configInjector.resolve('password'),
-  port: configInjector.resolve('port'),
+  port: configInjector.resolve('port'),{{/is_mongo}}
   entities: ['dist/**/*.entity.js'],
   entitiesTs: ['models/persistence/**/*.entity.ts'],
   metadataProvider: TsMorphMetadataProvider,

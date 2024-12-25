@@ -63,7 +63,7 @@ export class HelloForklaunchController
         .json(
           // constructs a new service instance using the scopeFactory and calls the helloForklaunchPost method
           await this.serviceFactory(
-            this.scopeFactory.createScope()
+            this.scopeFactory()
           ).helloForklaunchPost(req.body)
         );
     }

@@ -4,21 +4,20 @@ use std::{
 };
 
 use anyhow::{Context, Result};
-use ramhorns::Content;
 use serde::Serialize;
 use toml::to_string_pretty;
 
-use crate::constants::{
-    error_failed_to_write_file, ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
-    ERROR_FAILED_TO_CREATE_DIR, ERROR_FAILED_TO_CREATE_MANIFEST,
+use crate::{
+    constants::{
+        error_failed_to_write_file, ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
+        ERROR_FAILED_TO_CREATE_DIR, ERROR_FAILED_TO_CREATE_MANIFEST,
+    },
+    init::application::ApplicationConfigData,
 };
 
 use super::config::{Config, ProjectConfig, ProjectEntry};
 
-pub(crate) fn setup_manifest<T: Content + Config + Serialize>(
-    path_dir: &String,
-    data: &T,
-) -> Result<()> {
+pub(crate) fn setup_manifest(path_dir: &String, data: &ApplicationConfigData) -> Result<()> {
     let config_str = to_string_pretty(&data).with_context(|| ERROR_FAILED_TO_CREATE_MANIFEST)?;
     let forklaunch_path = Path::new(path_dir).join(".forklaunch");
 
