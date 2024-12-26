@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.2.37
+
+### Patch Changes
+
+- Remove uuid constraint for primarykey
+
 ## 0.2.36
 
 ### Patch Changes
