@@ -20,10 +20,10 @@
   },
   "dependencies": {
     "@forklaunch/common": "^0.1.14",
-    "@forklaunch/core": "^0.2.36",
-    "@forklaunch/express": "^0.1.31",
+    "@forklaunch/core": "^0.2.37",
+    "@forklaunch/express": "^0.1.32",
     "@forklaunch/framework-core": "workspace:*",
-    "@forklaunch/hyper-express": "^0.1.32",
+    "@forklaunch/hyper-express": "^0.1.33",
     "@forklaunch/validator": "^0.3.13",
     "@mikro-orm/core": "^6.4.2",
     "@mikro-orm/migrations{{#is_mongo}}-mongodb{{/is_mongo}}": "^6.4.2",

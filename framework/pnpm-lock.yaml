@@ -36,17 +36,17 @@ importers:
         specifier: ^0.1.14
         version: 0.1.14
       '@forklaunch/core':
-        specifier: ^0.2.36
-        version: 0.2.36(socks@2.8.3)
+        specifier: ^0.2.37
+        version: 0.2.37(socks@2.8.3)
       '@forklaunch/express':
-        specifier: ^0.1.31
-        version: 0.1.31(openapi3-ts@4.4.0)(socks@2.8.3)
+        specifier: ^0.1.32
+        version: 0.1.32(openapi3-ts@4.4.0)(socks@2.8.3)
       '@forklaunch/framework-core':
         specifier: workspace:*
         version: link:../core
       '@forklaunch/hyper-express':
-        specifier: ^0.1.32
-        version: 0.1.32(express@4.21.2)(socks@2.8.3)
+        specifier: ^0.1.33
+        version: 0.1.33(express@4.21.2)(socks@2.8.3)
       '@forklaunch/validator':
         specifier: ^0.3.13
         version: 0.3.13(openapi3-ts@4.4.0)
@@ -94,14 +94,14 @@ importers:
         specifier: ^0.1.14
         version: 0.1.14
       '@forklaunch/core':
-        specifier: ^0.2.36
-        version: 0.2.36(socks@2.8.3)
+        specifier: ^0.2.37
+        version: 0.2.37(socks@2.8.3)
       '@forklaunch/express':
-        specifier: ^0.1.31
-        version: 0.1.31(openapi3-ts@4.4.0)(socks@2.8.3)
-      '@forklaunch/hyper-express':
         specifier: ^0.1.32
-        version: 0.1.32(express@4.21.2)(socks@2.8.3)
+        version: 0.1.32(openapi3-ts@4.4.0)(socks@2.8.3)
+      '@forklaunch/hyper-express':
+        specifier: ^0.1.33
+        version: 0.1.33(express@4.21.2)(socks@2.8.3)
       '@forklaunch/validator':
         specifier: ^0.3.13
         version: 0.3.13(openapi3-ts@4.4.0)
@@ -118,17 +118,17 @@ importers:
         specifier: ^0.1.14
         version: 0.1.14
       '@forklaunch/core':
-        specifier: ^0.2.36
-        version: 0.2.36(socks@2.8.3)
+        specifier: ^0.2.37
+        version: 0.2.37(socks@2.8.3)
       '@forklaunch/express':
-        specifier: ^0.1.31
-        version: 0.1.31(openapi3-ts@4.4.0)(socks@2.8.3)
+        specifier: ^0.1.32
+        version: 0.1.32(openapi3-ts@4.4.0)(socks@2.8.3)
       '@forklaunch/framework-core':
         specifier: workspace:*
         version: link:../core
       '@forklaunch/hyper-express':
-        specifier: ^0.1.32
-        version: 0.1.32(express@4.21.2)(socks@2.8.3)
+        specifier: ^0.1.33
+        version: 0.1.33(express@4.21.2)(socks@2.8.3)
       '@forklaunch/validator':
         specifier: ^0.3.13
         version: 0.3.13(openapi3-ts@4.4.0)
@@ -622,14 +622,14 @@ packages:
   '@forklaunch/common@0.1.14':
     resolution: {integrity: sha512-/ZDUAZkLVHeGS85eTnXk2NfzXvC7JuKB6bkiqNIgv18+jGo2aOEzb2KsGrKfnaz4L6mZGhwJYUvsHfQReK507Q==}
 
-  '@forklaunch/core@0.2.36':
-    resolution: {integrity: sha512-UbR6tHVfkbsUAKzG6Kv1iitJfpTlpOwDOHNN1mc09+6WZebO5T3KCfNDgNjWMY6MUU5pJWz04xRJvFxfrkWFwA==}
+  '@forklaunch/core@0.2.37':
+    resolution: {integrity: sha512-EH7eVaQd2hBM0qgd4fboYZLUJDSwAXtA/EKKc02gWmxJRSFowEiIUPQ+HgITaTaiEZhpaCC9Vl7X9RMEWBv/tw==}
 
-  '@forklaunch/express@0.1.31':
-    resolution: {integrity: sha512-d+hIcRSQwu04b4TfTjaPB8SHFXiYmTMvlvQI0eTPtEsn9pfAxgzjfnGA4UKZB1BtM16WrhJMXm7kuqLmw0kURg==}
+  '@forklaunch/express@0.1.32':
+    resolution: {integrity: sha512-dLoK1tmQDKRMe6bYzH6v04YVzANUtYzN/QeTRvdt7YFFlBatc6MyMgTbqhdcON3W9sxJOrwW4YTPswPAQnw/4g==}
 
-  '@forklaunch/hyper-express@0.1.32':
-    resolution: {integrity: sha512-BJOtVxbq0GyEJZyX5xdWS1oz0JwmgQQm+F9ITWYh8bw4rJFRCmW67LqnRUFWGqlZTbfwUE5c7IZwMOA1w1gWrw==}
+  '@forklaunch/hyper-express@0.1.33':
+    resolution: {integrity: sha512-bVoUiJyHlfOdwuP12FR3tmdBMREUjsDFcLYyXMkCrtf+JqXkhMi/0jKDjI9cYOwxSvYA1LY1Xwmw0yAUttl50g==}
 
   '@forklaunch/validator@0.3.13':
     resolution: {integrity: sha512-nVWb0ahKMlGwQ9CbBozSbuex+8kPLnN0qOyX1jrttB/nx9XmPsSSdnG0hvRGnM8UAA8ESwuVrR8eAzcF/lc8HA==}
@@ -3051,8 +3051,8 @@ packages:
     resolution: {integrity: sha512-t0rzBq87m3fVcduHDUFhKmyyX+9eo6WQjZvf51Ea/M0Q7+T374Jp1aUiyUl0GKxp8M/OETVHSDvmkyPgvX+X2w==}
     engines: {node: '>=10'}
 
-  type-fest@4.30.2:
-    resolution: {integrity: sha512-UJShLPYi1aWqCdq9HycOL/gwsuqda1OISdBO3t8RlXQC4QvtuIz4b5FCfe2dQIWEpmlRExKmcTBfP1r9bhY7ig==}
+  type-fest@4.31.0:
+    resolution: {integrity: sha512-yCxltHW07Nkhv/1F6wWBr8kz+5BGMfP+RbRSYFnegVb0qV/UMT0G0ElBloPVerqn4M2ZV80Ir1FtCcYv1cT6vQ==}
     engines: {node: '>=16'}
 
   type-is@1.6.18:
@@ -3601,7 +3601,7 @@ snapshots:
 
   '@forklaunch/common@0.1.14': {}
 
-  '@forklaunch/core@0.2.36(socks@2.8.3)':
+  '@forklaunch/core@0.2.37(socks@2.8.3)':
     dependencies:
       '@forklaunch/common': 0.1.14
       '@forklaunch/validator': 0.3.13(openapi3-ts@4.4.0)
@@ -3621,10 +3621,10 @@ snapshots:
       - snappy
       - socks
 
-  '@forklaunch/express@0.1.31(openapi3-ts@4.4.0)(socks@2.8.3)':
+  '@forklaunch/express@0.1.32(openapi3-ts@4.4.0)(socks@2.8.3)':
     dependencies:
       '@forklaunch/common': 0.1.14
-      '@forklaunch/core': 0.2.36(socks@2.8.3)
+      '@forklaunch/core': 0.2.37(socks@2.8.3)
       '@forklaunch/validator': 0.3.13(openapi3-ts@4.4.0)
       '@types/express': 5.0.0
       cors: 2.8.5
@@ -3642,10 +3642,10 @@ snapshots:
       - socks
       - supports-color
 
-  '@forklaunch/hyper-express@0.1.32(express@4.21.2)(socks@2.8.3)':
+  '@forklaunch/hyper-express@0.1.33(express@4.21.2)(socks@2.8.3)':
     dependencies:
       '@forklaunch/common': 0.1.14
-      '@forklaunch/core': 0.2.36(socks@2.8.3)
+      '@forklaunch/core': 0.2.37(socks@2.8.3)
       '@forklaunch/validator': 0.3.13(openapi3-ts@4.4.0)
       cors: 2.8.5
       hyper-express: 6.17.2
@@ -6550,7 +6550,7 @@ snapshots:
 
   type-fest@0.21.3: {}
 
-  type-fest@4.30.2: {}
+  type-fest@4.31.0: {}
 
   type-is@1.6.18:
     dependencies:
@@ -6573,7 +6573,7 @@ snapshots:
       emittery: 0.13.1
       fast-glob: 3.3.2
       pony-cause: 2.1.11
-      type-fest: 4.30.2
+      type-fest: 4.31.0
     transitivePeerDependencies:
       - '@types/node'
 

@@ -24,9 +24,9 @@
   },
   "dependencies": {
     "@forklaunch/common": "^0.1.14",
-    "@forklaunch/core": "^0.2.36",{{#is_express}}
-    "@forklaunch/express": "^0.1.31",{{/is_express}}{{#is_hyper_express}}
-    "@forklaunch/hyper-express": "^0.1.32",{{/is_hyper_express}}
+    "@forklaunch/core": "^0.2.37",{{#is_express}}
+    "@forklaunch/express": "^0.1.32",{{/is_express}}{{#is_hyper_express}}
+    "@forklaunch/hyper-express": "^0.1.33",{{/is_hyper_express}}
     "@forklaunch/validator": "^0.3.13",{{#is_typebox}}
     "@sinclair/typebox": "^0.34.13"{{/is_typebox}}{{#is_zod}}
     "zod": "^3.24.1"{{/is_zod}}

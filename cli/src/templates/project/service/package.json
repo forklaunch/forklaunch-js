@@ -31,9 +31,9 @@
   "dependencies": {
     "@{{app_name}}/core": "workspace:*",
     "@forklaunch/common": "^0.1.14",
-    "@forklaunch/core": "^0.2.36",{{#is_express}}
-    "@forklaunch/express": "^0.1.31",{{/is_express}}{{#is_hyper_express}}
-    "@forklaunch/hyper-express": "^0.1.32",{{/is_hyper_express}}
+    "@forklaunch/core": "^0.2.37",{{#is_express}}
+    "@forklaunch/express": "^0.1.32",{{/is_express}}{{#is_hyper_express}}
+    "@forklaunch/hyper-express": "^0.1.33",{{/is_hyper_express}}
     "@forklaunch/validator": "^0.3.13",
     "@mikro-orm/core": "^6.4.2",
     "@mikro-orm/migrations{{#is_mongo}}-mongodb{{/is_mongo}}": "^6.4.2",
