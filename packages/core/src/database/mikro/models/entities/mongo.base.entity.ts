@@ -11,7 +11,7 @@ export abstract class MongoBaseEntity {
    * @type {string}
    * @readonly
    */
-  @PrimaryKey({ type: 'uuid' })
+  @PrimaryKey()
   _id!: ObjectId;
 
   /**

@@ -28,7 +28,9 @@ export class BasePlanService implements PlanService {
       SchemaValidator(),
       planDto
     );
-    await (em ?? this.em).persistAndFlush(plan);
+    await (em ?? this.em).transactional(async (innerEm) => {
+      await innerEm.persist(plan);
+    });
     return plan;
   }
 
@@ -45,7 +47,9 @@ export class BasePlanService implements PlanService {
       planDto
     );
     const updatedPlan = await (em ?? this.em).upsert(plan);
-    await (em ?? this.em).persistAndFlush(plan);
+    await (em ?? this.em).transactional(async (innerEm) => {
+      await innerEm.persist(plan);
+    });
     const updatedPlanDto = PlanDtoMapper.serializeEntityToDto(
       SchemaValidator(),
       updatedPlan

@@ -25,7 +25,10 @@ export default class BaseOrganizationService
       SchemaValidator(),
       organizationDto
     );
-    await (em ?? this.em).persist(organization);
+    await (em ?? this.em).transactional(async (innerEm) => {
+      await innerEm.persist(organization);
+    });
+
     return OrganizationDtoMapper.serializeEntityToDto(
       SchemaValidator(),
       organization

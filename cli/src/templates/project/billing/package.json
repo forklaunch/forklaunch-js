@@ -34,6 +34,7 @@
     "zod": "^3.24.1"{{/is_zod}}
   },
   "devDependencies": {
+    "ajv": "^8.17.1",
     "@mikro-orm/cli": "^6.4.2",
     "@types/uuid": "^10.0.0",
     "tsx": "^4.19.2"

@@ -22,6 +22,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "ajv": "^8.17.1",
     "eslint": "^9.17.0",
     "@mikro-orm/cli": "^6.4.1",
     "tsx": "^4.19.2",

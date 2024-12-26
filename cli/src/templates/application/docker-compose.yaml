@@ -1,5 +1,5 @@
 volumes:
-  {{app_name}}-postgres-data:
+  {{app_name}}-{{database}}-data:
     driver: local
 
 networks:
@@ -22,21 +22,21 @@ services:{{#is_postgres}}
     networks:
       - {{app_name}}-network
     volumes:
-      - {{app_name}}-postgres-data:/var/lib/postgresql/{{app_name}}/data{{/is_postgres}}{{#is_mongo}}
+      - {{app_name}}-{{database}}-data:/var/lib/postgresql/{{app_name}}/data{{/is_postgres}}{{#is_mongo}}
   mongodb:
     hostname: mongodb
     container_name: {{app_name}}-mongo
     restart: unless-stopped
     image: mongo:latest
-    command: --replSet rs0
+    command: ['--replSet', 'rs0', '--logpath', '/var/log/mongodb/mongod.log']
     environment:
-      MONGO_INITDB_DATABASE: {{app_name}}-{{service_name}}-dev
+      MONGO_INITDB_DATABASE: {{app_name}}-dev
     ports:
       - '27017:27017'
     networks:
       - {{app_name}}-network
     volumes:
-      - {{app_name}}-mongo-data:/data/db
+      - {{app_name}}-{{database}}-data:/data/db
     healthcheck:
       test: mongosh --eval 'db.runCommand("ping").ok' localhost:27017/test --quiet
       interval: 2s
@@ -78,7 +78,7 @@ services:{{#is_postgres}}
   {{name}}:
     hostname: {{name}}
     container_name: {{app_name}}-{{name}}-{{runtime}}
-    image: {{app_name}}_{{name}}_{{runtime}}:latest
+    image: {{app_name}}-{{name}}-{{runtime}}:latest
     restart: always
     build:
       context: .
@@ -87,11 +87,15 @@ services:{{#is_postgres}}
       ENV: development
       HOST: 0.0.0.0
       PORT: '{{port}}'
-      DB_NAME: {{app_name}}-{{name}}-dev
+      DB_NAME: {{app_name}}-{{name}}-dev{{^is_mongo}}
       DB_HOST: postgresql
       DB_USER: postgresql
       DB_PASSWORD: postgresql
-      DB_PORT: '5432'
+      DB_PORT: '5432'{{/is_mongo}}{{#is_mongo}}
+      DB_HOST: mongodb
+      DB_USER: mongodb
+      DB_PASSWORD: mongodb
+      DB_PORT: '27017'{{/is_mongo}}
       REDIS_URL: redis://redis:6379
     depends_on:
       - {{database}}
@@ -102,8 +106,10 @@ services:{{#is_postgres}}
       - {{app_name}}-network
     volumes:
       - ./{{name}}:/{{app_name}}/{{name}}
-      - /{{app_name}}/{{name}}/dist{{#is_node}}
-      - /{{app_name}}/{{name}}/node_modules{{/is_node}}
+      - /{{app_name}}/{{name}}/dist
+      - /{{app_name}}/{{name}}/node_modules
+      - /{{app_name}}/core/node_modules
+      - /{{app_name}}/node_modules
     working_dir: /{{app_name}}/{{name}}
     entrypoint: ["{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}}", "run", "dev"] {{/port}}{{/projects}}
 

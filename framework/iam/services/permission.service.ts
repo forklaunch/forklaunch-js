@@ -110,11 +110,9 @@ export default class BasePermissionService
     const { permission, roles } = await this.createPermissionDto(
       await this.extractCreatePermissionDtoToEntityData(createPermissionDto, em)
     );
-    if (em) {
-      await em.persist([permission, ...roles]);
-    } else {
-      this.em.persistAndFlush([permission, ...roles]);
-    }
+    await (em ?? this.em).transactional(async (innerEm) => {
+      await innerEm.persist([permission, ...roles]);
+    });
     return PermissionDtoMapper.serializeEntityToDto(
       SchemaValidator(),
       permission
@@ -151,12 +149,11 @@ export default class BasePermissionService
         });
         permissions.push(permission);
       });
-      await em.persist([...permissions, ...Object.values(rolesCache)]);
+      await (em ?? this.em).persist([
+        ...permissions,
+        ...Object.values(rolesCache)
+      ]);
     });
-
-    if (!em) {
-      this.em.flush();
-    }
 
     return permissions.map((permission) =>
       PermissionDtoMapper.serializeEntityToDto(SchemaValidator(), permission)
@@ -258,7 +255,10 @@ export default class BasePermissionService
         });
         permissions.push(permission);
       });
-      await em.persist([...permissions, ...Object.values(rolesCache)]);
+      await (em ?? this.em).persist([
+        ...permissions,
+        ...Object.values(rolesCache)
+      ]);
     });
 
     return permissions.map((permission) =>

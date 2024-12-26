@@ -71,35 +71,44 @@ pub(crate) fn update_application_package_json(
     let database = config_data.database.to_string();
 
     let update_docker_cmd = |cmd: &str| {
-        let parts: Vec<&str> = cmd.split("&&").collect();
-        let docker_cmd = parts[0].trim();
-        let rest_cmd = parts[1].trim();
+        // Split into docker command and remaining commands
+        let (docker_cmd, rest_cmd) = match cmd.split_once("&&") {
+            Some((docker, rest)) => (docker.trim(), rest.trim()),
+            None => (cmd.trim(), ""),
+        };
 
-        let db_args: Vec<&str> = docker_cmd
+        // Extract existing database services
+        let mut services: Vec<&str> = docker_cmd
             .split("-d")
-            .skip(1)
-            .map(|s| s.trim())
+            .skip(1) // Skip the "docker compose up" part
+            .map(str::trim)
             .filter(|s| !s.is_empty())
             .collect();
 
-        let mut new_db_args = db_args.clone();
-        if !db_args.contains(&database.as_str()) {
-            new_db_args.push(&database);
+        // Add new database service if not present
+        if !services.contains(&database.as_str()) {
+            services.push(&database);
             if config_data.is_mongo {
-                new_db_args.push("mongo-init");
+                services.push("mongo-init");
             }
         }
 
+        // Build the new docker command
         let new_docker_cmd = format!(
             "docker compose up {}",
-            new_db_args
+            services
                 .iter()
-                .map(|db| format!("-d {}", db))
-                .collect::<Vec<String>>()
+                .map(|svc| format!("-d {}", svc))
+                .collect::<Vec<_>>()
                 .join(" ")
         );
 
-        format!("{} && {}", new_docker_cmd, rest_cmd)
+        // Combine with rest of command if any
+        if rest_cmd.is_empty() {
+            new_docker_cmd
+        } else {
+            format!("{} && {}", new_docker_cmd, rest_cmd)
+        }
     };
 
     if let Some(init_script) = scripts.get("migrate:init").and_then(Value::as_str) {

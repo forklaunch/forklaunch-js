@@ -36,6 +36,7 @@ db.getSiblingDB(\"admin\").createUser({
 
 #[derive(Debug, Serialize, Deserialize)]
 struct DockerCompose {
+    volumes: IndexMap<String, DockerVolume>,
     services: IndexMap<String, DockerService>,
 }
 
@@ -77,6 +78,11 @@ struct DockerService {
     entrypoint: Option<Vec<String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     healthcheck: Option<Healthcheck>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Default)]
+struct DockerVolume {
+    driver: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -125,6 +131,12 @@ fn add_database_to_docker_compose(
                 environment.insert("DB_USER".to_string(), "postgresql".to_string());
                 environment.insert("DB_PASSWORD".to_string(), "postgresql".to_string());
                 environment.insert("DB_PORT".to_string(), "5432".to_string());
+                docker_compose.volumes.insert(
+                    format!("{}-postgresql-data", config_data.app_name),
+                    DockerVolume {
+                        driver: "local".to_string(),
+                    },
+                );
             }
             "mongodb" => {
                 docker_compose.services.insert(
@@ -134,7 +146,8 @@ fn add_database_to_docker_compose(
                         hostname: Some("mongodb".to_string()),
                         container_name: Some(format!("{}-mongodb", config_data.app_name)),
                         restart: Some("unless-stopped".to_string()),
-                        command: Some("--replSet rs0".to_string()),
+                        command: Some(
+                            "['--replSet', 'rs0', '--logpath', '/var/log/mongodb/mongod.log']".to_string()),
                         environment: Some(IndexMap::from([(
                             "MONGO_INITDB_DATABASE".to_string(),
                             format!("{}-dev", config_data.app_name),
@@ -165,6 +178,12 @@ fn add_database_to_docker_compose(
                 environment.insert("DB_USER".to_string(), "mongodb".to_string());
                 environment.insert("DB_PASSWORD".to_string(), "mongodb".to_string());
                 environment.insert("DB_PORT".to_string(), "27017".to_string());
+                docker_compose.volumes.insert(
+                    format!("{}-mongodb-data", config_data.app_name),
+                    DockerVolume {
+                        driver: "local".to_string(),
+                    },
+                );
             }
             _ => unreachable!(),
         }
@@ -238,12 +257,14 @@ pub(crate) fn add_service_definition_to_docker_compose(
             config_data.app_name, config_data.service_name
         ),
     ];
-    if config_data.runtime == "node" {
-        volumes.push(format!(
-            "/{}/{}/node_modules",
-            config_data.app_name, config_data.service_name
-        ));
-    }
+    // if config_data.runtime == "node" {
+    volumes.push(format!(
+        "/{}/{}/node_modules",
+        config_data.app_name, config_data.service_name
+    ));
+    volumes.push(format!("/{}/core/node_modules", config_data.app_name));
+    volumes.push(format!("/{}/node_modules", config_data.app_name));
+    // }
 
     docker_compose.services.insert(
         config_data.service_name.clone(),
@@ -259,7 +280,7 @@ pub(crate) fn add_service_definition_to_docker_compose(
                 dockerfile: format!("./Dockerfile"),
             }),
             image: Some(format!(
-                "{}_{}_{}",
+                "{}-{}-{}",
                 config_data.app_name, config_data.service_name, config_data.runtime
             )),
             environment: Some(environment),
@@ -284,6 +305,7 @@ pub(crate) fn add_service_definition_to_docker_compose(
         },
     );
 
+    full_docker_compose["volumes"] = to_value(docker_compose.volumes)?;
     full_docker_compose["services"] = to_value(docker_compose.services)?;
 
     Ok((

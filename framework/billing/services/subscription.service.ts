@@ -23,7 +23,9 @@ export class BaseSubscriptionService implements SubscriptionService {
       SchemaValidator(),
       subscriptionDto
     );
-    await (em ?? this.em).persistAndFlush(subscription);
+    await (em ?? this.em).transactional(async (innerEm) => {
+      await innerEm.persist(subscription);
+    });
     const createdSubscriptionDto = SubscriptionDtoMapper.serializeEntityToDto(
       SchemaValidator(),
       subscription
@@ -84,7 +86,9 @@ export class BaseSubscriptionService implements SubscriptionService {
       subscriptionDto
     );
     const updatedSubscription = await (em ?? this.em).upsert(subscription);
-    await (em ?? this.em).persistAndFlush(updatedSubscription);
+    await (em ?? this.em).transactional(async (innerEm) => {
+      await innerEm.persist(updatedSubscription);
+    });
     const updatedSubscriptionDto = SubscriptionDtoMapper.serializeEntityToDto(
       SchemaValidator(),
       updatedSubscription
@@ -128,7 +132,9 @@ export class BaseSubscriptionService implements SubscriptionService {
       throw new Error('Subscription not found');
     }
     subscription.active = false;
-    await (em ?? this.em).persistAndFlush(subscription);
+    await (em ?? this.em).transactional(async (innerEm) => {
+      await innerEm.persist(subscription);
+    });
   }
   async resumeSubscription(id: string, em?: EntityManager): Promise<void> {
     const subscription = await (em ?? this.em).findOne(Subscription, { id });
@@ -136,6 +142,8 @@ export class BaseSubscriptionService implements SubscriptionService {
       throw new Error('Subscription not found');
     }
     subscription.active = true;
-    await (em ?? this.em).persistAndFlush(subscription);
+    await (em ?? this.em).transactional(async (innerEm) => {
+      await innerEm.persist(subscription);
+    });
   }
 }
