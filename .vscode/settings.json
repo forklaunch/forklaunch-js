@@ -6,5 +6,12 @@
   // Default (format when you paste)
   "editor.formatOnPaste": true,
   // Default (format when you save)
-  "editor.formatOnSave": true
+  "editor.formatOnSave": true,
+  // Ignore LICENSE files when formatting
+  "[plaintext]": {
+    "editor.formatOnSave": false
+  },
+  "[markdown]": {
+    "editor.formatOnSave": false
+  }
 }

@@ -48,6 +48,13 @@ struct Healthcheck {
     retries: i32,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(untagged)]
+enum Command {
+    Simple(String),
+    Multiple(Vec<String>),
+}
+
 #[derive(Debug, Serialize, Deserialize, Default)]
 struct DockerService {
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -61,7 +68,7 @@ struct DockerService {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     image: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    command: Option<String>,
+    command: Option<Command>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     environment: Option<IndexMap<String, String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -146,8 +153,12 @@ fn add_database_to_docker_compose(
                         hostname: Some("mongodb".to_string()),
                         container_name: Some(format!("{}-mongodb", config_data.app_name)),
                         restart: Some("unless-stopped".to_string()),
-                        command: Some(
-                            "['--replSet', 'rs0', '--logpath', '/var/log/mongodb/mongod.log']".to_string()),
+                        command: Some(Command::Multiple(vec![
+                            "--replSet".to_string(),
+                            "rs0".to_string(),
+                            "--logpath".to_string(),
+                            "/var/log/mongodb/mongod.log".to_string(),
+                        ])),
                         environment: Some(IndexMap::from([(
                             "MONGO_INITDB_DATABASE".to_string(),
                             format!("{}-dev", config_data.app_name),
@@ -170,7 +181,7 @@ fn add_database_to_docker_compose(
                         image: Some("mongo:latest".to_string()),
                         depends_on: Some(vec!["mongodb".to_string()]),
                         networks: Some(vec![format!("{}-network", config_data.app_name)]),
-                        command: Some(MONGO_INIT_COMMAND.to_string()),
+                        command: Some(Command::Simple(MONGO_INIT_COMMAND.to_string())),
                         ..Default::default()
                     },
                 );

@@ -4,8 +4,8 @@ import { Migrator } from '@mikro-orm/migrations';
 // import { MongoDriver } from '@mikro-orm/mongodb';
 // import { MySqlDriver } from '@mikro-orm/mysql';
 import { Platform, TextType, Type } from '@mikro-orm/core';
-import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
+import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
 // import { SqliteDriver } from '@mikro-orm/sqlite';
 
 const configInjector = new ConfigInjector(
@@ -15,7 +15,8 @@ const configInjector = new ConfigInjector(
     host: string,
     user: string,
     password: string,
-    port: number
+    port: number,
+    environment: string
   },
   {
     dbName: {
@@ -36,7 +37,11 @@ const configInjector = new ConfigInjector(
     },
     port: {
       lifetime: Lifetime.Singleton,
-      value: Number(process.env.DB_PORT) ?? 5432
+      value: Number(process.env.DB_PORT ?? 5432)
+    },
+    environment: {
+      lifetime: Lifetime.Singleton,
+      value: process.env.NODE_ENV ?? 'development'
     }
   }
 );
@@ -47,7 +52,8 @@ if (
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
-    port: Number(process.env.DB_PORT)
+    port: Number(process.env.DB_PORT),
+    environment: process.env.NODE_ENV
   })
 ) {
   throw new Error('Invalid environment variables supplied.');
