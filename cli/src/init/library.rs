@@ -30,6 +30,8 @@ config_struct!(
     #[derive(Debug, Content, Serialize, Clone)]
     pub(crate) struct LibraryConfigData {
         pub(crate) library_name: String,
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) description: String,
     }
 );
 
@@ -61,8 +63,13 @@ impl CliCommand for LibraryCommand {
                 Arg::new("base_path")
                     .short('p')
                     .long("path")
-                    .required(false)
                     .help("The application path to initialize the library in."),
+            )
+            .arg(
+                Arg::new("description")
+                    .short('D')
+                    .long("description")
+                    .help("The description of the service"),
             )
     }
 
@@ -74,15 +81,21 @@ impl CliCommand for LibraryCommand {
             Some(path) => path,
             None => current_path.to_str().unwrap(),
         };
-
+        let description = match matches.get_one::<String>("description") {
+            Some(description) => description,
+            None => &"".to_string(),
+        };
         let config_path = Path::new(&base_path)
             .join(".forklaunch")
             .join("manifest.toml");
 
-        let mut config_data: LibraryConfigData =
-            from_str(&read_to_string(config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?)
-                .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
-        config_data.library_name = library_name.clone();
+        let mut config_data: LibraryConfigData = LibraryConfigData {
+            library_name: library_name.clone(),
+            description: description.clone(),
+
+            ..from_str(&read_to_string(config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?)
+                .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
+        };
 
         setup_basic_library(&library_name, &base_path.to_string(), &mut config_data)
             .with_context(|| "Failed to create library.")?;

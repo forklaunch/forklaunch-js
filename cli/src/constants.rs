@@ -56,6 +56,8 @@ pub(crate) const ERROR_FAILED_TO_CREATE_TSCONFIG: &str =
     "Failed to create tsconfig file. Please check your target directory is writable.";
 pub(crate) const ERROR_FAILED_TO_CREATE_GITIGNORE: &str =
     "Failed to create gitignore file. Please check your target directory is writable.";
+pub(crate) const ERROR_FAILED_TO_CREATE_LICENSE: &str =
+    "Failed to create license file. Please check your target directory is writable.";
 pub(crate) const ERROR_FAILED_TO_CREATE_PNPM_WORKSPACE: &str =
     "Failed to create pnpm-workspace.yaml. Please check your target directory is writable.";
 pub(crate) const ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE: &str =

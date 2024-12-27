@@ -18,9 +18,8 @@
     "start": "{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} run migrate:up && {{#is_node}}node --import tsx dist/app.js{{/is_node}}{{#is_bun}}bun dist/app.js{{/is_bun}}"
 
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "{{author}}",
+  "license": "{{license}}",
   "devDependencies": {
     "ajv": "^8.17.1",
     "eslint": "^9.17.0",

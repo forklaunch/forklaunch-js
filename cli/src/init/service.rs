@@ -44,6 +44,8 @@ config_struct!(
         pub(crate) service_name: String,
         pub(crate) database: String,
         #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) description: String,
+        #[serde(skip_serializing, skip_deserializing)]
         pub(crate) db_driver: String,
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) is_postgres: bool,
@@ -82,7 +84,6 @@ impl CliCommand for ServiceCommand {
                 Arg::new("base_path")
                     .short('p')
                     .long("path")
-                    .required(false)
                     .help("The application path to initialize the service in."),
             )
             .arg(
@@ -92,6 +93,12 @@ impl CliCommand for ServiceCommand {
                     .required(true)
                     .help("The database to use. Valid values = [postgresql, mongodb]")
                     .value_parser(VALID_DATABASES),
+            )
+            .arg(
+                Arg::new("description")
+                    .short('D')
+                    .long("description")
+                    .help("The description of the service"),
             )
     }
 
@@ -103,6 +110,10 @@ impl CliCommand for ServiceCommand {
             None => current_path.to_str().unwrap(),
         };
         let database = matches.get_one::<String>("database").unwrap();
+        let description = match matches.get_one::<String>("description") {
+            Some(description) => description,
+            None => &"".to_string(),
+        };
 
         let config_path = Path::new(&base_path)
             .join(".forklaunch")
@@ -110,7 +121,7 @@ impl CliCommand for ServiceCommand {
 
         let mut config_data: ServiceConfigData = ServiceConfigData {
             service_name: service_name.clone(),
-
+            description: description.clone(),
             database: database.clone(),
             db_driver: match_database(database),
             is_mongo: database == "mongodb",

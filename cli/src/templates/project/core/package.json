@@ -15,9 +15,8 @@
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.ts' --write"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "{{author}}",
+  "license": "{{license}}",
   "devDependencies": {
     "eslint": "^9.17.0",
     "typescript-eslint": "^8.18.0"

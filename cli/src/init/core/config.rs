@@ -43,6 +43,8 @@ macro_rules! internal_config_struct {
             $vis test_framework: String,
             $vis projects: Vec<crate::init::core::config::ProjectEntry>,
             $vis project_peer_topology: std::collections::HashMap<String, Vec<String>>,
+            $vis author: String,
+            $vis license: String,
             $(
                 #[serde(default)]
                 $(#[$field_meta])*
@@ -121,6 +123,8 @@ macro_rules! config_struct {
                         test_framework: shadow.test_framework.clone(),
                         projects: shadow.projects.clone(),
                         project_peer_topology: shadow.project_peer_topology.clone(),
+                        author: shadow.author.clone(),
+                        license: shadow.license.clone(),
                         is_express: shadow.http_framework == "express",
                         is_hyper_express: shadow.http_framework == "hyper-express",
                         is_zod: shadow.validator == "zod",

@@ -1,7 +1,7 @@
 {
   "name": "@{{app_name}}/{{library_name}}",
   "version": "0.1.0",
-  "description": "",
+  "description": "{{description}}",
   "scripts": {
     "test": "{{test-framework}} --passWithNoTests",
     "build": "tsc",
@@ -11,9 +11,8 @@
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.ts' --write"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "{{author}}",
+  "license": "{{license}}",
   "devDependencies": {
     "eslint": "^9.17.0",
     "tsx": "^4.19.2",
