@@ -8,8 +8,8 @@ use serde::{Deserialize, Serialize};
 use crate::{
     config_struct,
     constants::{
-        ERROR_FAILED_TO_CREATE_GITIGNORE, ERROR_FAILED_TO_CREATE_PNPM_WORKSPACE,
-        ERROR_FAILED_TO_SETUP_IAM, LATEST_CLI_VERSION,
+        ERROR_FAILED_TO_CREATE_GITIGNORE, ERROR_FAILED_TO_CREATE_LICENSE,
+        ERROR_FAILED_TO_CREATE_PNPM_WORKSPACE, ERROR_FAILED_TO_SETUP_IAM, LATEST_CLI_VERSION,
     },
     utils::get_token,
 };
@@ -20,6 +20,7 @@ use super::{
         database::{match_database, VALID_DATABASES},
         gitignore::setup_gitignore,
         iam::setup_iam,
+        license::setup_license,
         manifest::setup_manifest,
         pnpm_workspace::generate_pnpm_workspace,
         symlinks::setup_symlinks,
@@ -35,6 +36,9 @@ config_struct!(
     pub(crate) struct ApplicationConfigData {
         #[serde(skip_serializing, skip_deserializing)]
         database: String,
+        #[serde(skip_serializing, skip_deserializing)]
+        description: String,
+
         #[serde(skip_serializing, skip_deserializing)]
         is_postgres: bool,
         #[serde(skip_serializing, skip_deserializing)]
@@ -123,6 +127,9 @@ impl CliCommand for ApplicationCommand {
                 .num_args(0..)
                 .action(ArgAction::Append),
         )
+        .arg(Arg::new("description").short('D').long("description").help("The description of the application"))
+        .arg(Arg::new("author").short('A').long("author").required(true).help("The author of the application"))
+        .arg(Arg::new("license").short('L').long("license").required(true).help("The license of the application").value_parser(["apgl", "gpl", "lgpl", "mozilla", "apache", "mit", "boost", "unlicense", "none"]))
     }
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
@@ -133,6 +140,28 @@ impl CliCommand for ApplicationCommand {
         let runtime = matches.get_one::<String>("runtime").unwrap();
         let test_framework = matches.get_one::<String>("test-framework").unwrap();
         let packages = matches.get_many::<String>("packages").unwrap_or_default();
+        let description = match matches.get_one::<String>("description") {
+            Some(description) => description,
+            None => &"".to_string(),
+        };
+        let author = matches.get_one::<String>("author").unwrap();
+        let license = match matches
+            .get_one::<String>("license")
+            .unwrap()
+            .to_lowercase()
+            .as_str()
+        {
+            "apgl" => "AGPL-3.0".to_string(),
+            "gpl" => "GPL-3.0".to_string(),
+            "lgpl" => "LGPL-3.0".to_string(),
+            "mozilla" => "MPL-2.0".to_string(),
+            "apache" => "Apache-2.0".to_string(),
+            "mit" => "MIT".to_string(),
+            "boost" => "BSL-1.0".to_string(),
+            "unlicense" => "Unlicense".to_string(),
+            "none" => "UNLICENSED".to_string(),
+            _ => bail!("Invalid license"),
+        };
         // TODO: Add support for libraries
         // let libraries = matches.get_many::<String>("libraries").unwrap_or_default();
 
@@ -202,6 +231,9 @@ impl CliCommand for ApplicationCommand {
             test_framework: test_framework.to_string(),
             projects: additional_projects.clone(),
             project_peer_topology,
+            description: description.to_string(),
+            author: author.to_string(),
+            license: license.to_string(),
 
             is_express: http_framework == "express",
             is_hyper_express: http_framework == "hyper-express",
@@ -268,6 +300,9 @@ impl CliCommand for ApplicationCommand {
                     test_framework: data.test_framework.clone(),
                     projects: data.projects.clone(),
                     project_peer_topology: data.project_peer_topology.clone(),
+                    author: data.author.clone(),
+                    description: data.description.clone(),
+                    license: data.license.clone(),
 
                     is_express: data.is_express,
                     is_hyper_express: data.is_hyper_express,
@@ -311,6 +346,9 @@ impl CliCommand for ApplicationCommand {
         if additional_projects_names.contains(&"iam".to_string()) {
             setup_iam(&Path::new(name)).with_context(|| ERROR_FAILED_TO_SETUP_IAM)?;
         }
+
+        setup_license(&Path::new(name).to_string_lossy().to_string(), &data)
+            .with_context(|| ERROR_FAILED_TO_CREATE_LICENSE)?;
 
         setup_gitignore(&Path::new(name).to_string_lossy().to_string())
             .with_context(|| ERROR_FAILED_TO_CREATE_GITIGNORE)?;

@@ -1,7 +1,7 @@
 {
   "name": "@{{app_name}}/iam",
   "version": "0.1.0",
-  "description": "IAM basic implementation for {{app_name}}",
+  "description": "IAM implementation for {{app_name}}",
   "main": "app.ts",
   "scripts": {
     "test": "vitest --passWithNoTests",
@@ -18,6 +18,8 @@
     "dev": "{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} run migrate:up && {{#is_node}}tsx watch app.ts{{/is_node}}{{#is_bun}}bun --watch app.ts{{/is_bun}}",
     "start": "{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} run migrate:up && {{#is_node}}node --import tsx dist/app.js{{/is_node}}{{#is_bun}}bun dist/app.js{{/is_bun}}"
   },
+  "author": "{{author}}",
+  "license": "{{license}}",
   "dependencies": {
     "@forklaunch/common": "^0.1.14",
     "@forklaunch/core": "^0.2.37",

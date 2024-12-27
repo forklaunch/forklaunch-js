@@ -1,0 +1,12 @@
+# License Information
+
+This monorepo contains multiple projects with different licenses. Please refer to the individual LICENSE files in each project directory for the full license text.
+
+## Project Licenses
+
+- AGPL-licensed project: Located in `/cli`
+- MIT-licensed project: Located in `/framework`, `/packages`
+
+Each project directory contains its own LICENSE file with the complete license text.
+
+For any use of the code in this repository, please make sure to comply with the terms of the respective licenses for each project.
