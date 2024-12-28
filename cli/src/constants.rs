@@ -26,8 +26,6 @@ pub(crate) fn error_failed_to_create_dir(path: &Path) -> String {
 pub(crate) const ERROR_FAILED_TO_SEND_REQUEST: &str =
     "Failed to send request. Please check internet connectivity.";
 pub(crate) const ERROR_FAILED_TO_GET_CWD: &str = "Failed to get current working directory.";
-pub(crate) const ERROR_FAILED_TO_GET_EXE_WD: &str =
-    "Failed to get executable working directory. Please ensure that the executable is in path, and has a templates directory.";
 pub(crate) const ERROR_FAILED_TO_READ_MANIFEST: &str =
     "Failed to read manifest file. Please check your target directory is a forklaunch application.";
 pub(crate) const ERROR_FAILED_TO_PARSE_MANIFEST: &str =

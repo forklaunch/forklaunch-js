@@ -1,8 +1,8 @@
 use anyhow::{Context, Result};
 use clap::{Arg, ArgMatches, Command};
-use ramhorns::{Content, Ramhorns};
+use ramhorns::Content;
 use serde::{Deserialize, Serialize};
-use std::env::{current_dir, current_exe};
+use std::env::current_dir;
 use std::fs::{read_to_string, write};
 use std::path::Path;
 use toml::from_str;
@@ -13,7 +13,7 @@ use crate::constants::{
     ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON,
     ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE, ERROR_FAILED_TO_CREATE_GITIGNORE,
     ERROR_FAILED_TO_CREATE_SYMLINKS, ERROR_FAILED_TO_CREATE_TSCONFIG, ERROR_FAILED_TO_GET_CWD,
-    ERROR_FAILED_TO_GET_EXE_WD, ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST,
+    ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST,
 };
 
 use super::core::config::ProjectConfig;
@@ -114,26 +114,18 @@ fn setup_basic_library(
         .to_string();
 
     let template_dir = PathIO {
-        input_path: Path::new("templates")
-            .join("project")
+        input_path: Path::new("project")
             .join("library")
             .to_string_lossy()
             .to_string(),
         output_path: output_path.clone(),
     };
-    let mut template = Ramhorns::lazy(
-        current_exe()
-            .with_context(|| ERROR_FAILED_TO_GET_EXE_WD)?
-            .parent()
-            .unwrap(),
-    )?;
 
     let ignore_files = vec![];
 
     setup_with_template(
         None,
         &template_dir,
-        &mut template,
         &TemplateConfigData::Library(config_data.clone()),
         &ignore_files,
     )?;

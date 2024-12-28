@@ -1,12 +1,12 @@
 use std::{
-    env::{current_dir, current_exe},
+    env::current_dir,
     fs::{read_to_string, write},
     path::Path,
 };
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgMatches, Command};
-use ramhorns::{Content, Ramhorns};
+use ramhorns::Content;
 use serde::{Deserialize, Serialize};
 use toml::from_str;
 
@@ -18,7 +18,7 @@ use crate::{
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE, ERROR_FAILED_TO_CREATE_GITIGNORE,
         ERROR_FAILED_TO_CREATE_SYMLINKS, ERROR_FAILED_TO_CREATE_TSCONFIG, ERROR_FAILED_TO_GET_CWD,
-        ERROR_FAILED_TO_GET_EXE_WD, ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST,
+        ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST,
     },
 };
 
@@ -147,26 +147,18 @@ fn setup_basic_service(
         .to_string_lossy()
         .to_string();
     let template_dir = PathIO {
-        input_path: Path::new("templates")
-            .join("project")
+        input_path: Path::new("project")
             .join("service")
             .to_string_lossy()
             .to_string(),
         output_path: output_path.clone(),
     };
-    let mut template = Ramhorns::lazy(
-        current_exe()
-            .with_context(|| ERROR_FAILED_TO_GET_EXE_WD)?
-            .parent()
-            .unwrap(),
-    )?;
 
     let ignore_files = vec![];
 
     setup_with_template(
         None,
         &template_dir,
-        &mut template,
         &TemplateConfigData::Service(config_data.clone()),
         &ignore_files,
     )?;

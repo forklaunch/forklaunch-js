@@ -1,8 +1,8 @@
-use std::{collections::HashMap, env::current_exe, path::Path};
+use std::{collections::HashMap, path::Path};
 
 use anyhow::{bail, Context, Result};
 use clap::{Arg, ArgAction, ArgMatches, Command};
-use ramhorns::{Content, Ramhorns};
+use ramhorns::Content;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -257,8 +257,7 @@ impl CliCommand for ApplicationCommand {
         let mut template_dirs = vec![];
 
         let additional_projects_dirs = additional_projects.clone().into_iter().map(|path| PathIO {
-            input_path: Path::new("templates")
-                .join("project")
+            input_path: Path::new("project")
                 .join(&path.name)
                 .to_string_lossy()
                 .to_string(),
@@ -266,18 +265,12 @@ impl CliCommand for ApplicationCommand {
         });
         template_dirs.extend(additional_projects_dirs.clone());
 
-        let mut template = Ramhorns::lazy(current_exe()?.parent().unwrap())?;
-
         setup_with_template(
             Some(name),
             &PathIO {
-                input_path: Path::new("templates")
-                    .join("application")
-                    .to_string_lossy()
-                    .to_string(),
+                input_path: Path::new("application").to_string_lossy().to_string(),
                 output_path: "".to_string(),
             },
-            &mut template,
             &TemplateConfigData::Application(data.clone()),
             &ignore_files
                 .iter()
@@ -289,7 +282,6 @@ impl CliCommand for ApplicationCommand {
             setup_with_template(
                 Some(name),
                 &template_dir,
-                &mut template,
                 &TemplateConfigData::Service(ServiceConfigData {
                     cli_version: data.cli_version.clone(),
                     app_name: data.app_name.clone(),

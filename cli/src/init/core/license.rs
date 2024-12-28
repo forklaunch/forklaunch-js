@@ -1,9 +1,9 @@
-use std::{env::current_exe, fs::write, path::Path};
+use std::{fs::write, path::Path};
 
-use crate::init::application::ApplicationConfigData;
+use crate::init::{application::ApplicationConfigData, TEMPLATES_DIR};
 use anyhow::Result;
 use log::warn;
-use ramhorns::Ramhorns;
+use ramhorns::Template;
 
 pub(crate) fn setup_license(app_path: &str, data: &ApplicationConfigData) -> Result<()> {
     let license_file = match data.license.as_str() {
@@ -26,15 +26,14 @@ pub(crate) fn setup_license(app_path: &str, data: &ApplicationConfigData) -> Res
         return Ok(());
     }
 
-    let mut template: Ramhorns = Ramhorns::lazy(current_exe()?.parent().unwrap())?;
-
-    let license_template = template.from_file(
-        Path::new("templates")
-            .join("licenses")
-            .join(license_file.unwrap())
-            .to_str()
+    let license_template = Template::new(
+        TEMPLATES_DIR
+            .get_file(Path::new("licenses").join(license_file.unwrap()))
+            .unwrap()
+            .contents_utf8()
             .unwrap(),
     )?;
+
     write(
         Path::new(app_path).join("LICENSE"),
         license_template.render(data),
