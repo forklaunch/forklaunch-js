@@ -1,16 +1,18 @@
-use std::fs::{read_to_string, write};
+use std::fs::read_to_string;
 use std::path::Path;
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Ok, Result};
 use serde::{Deserialize, Serialize};
 use serde_yml::{from_str, to_string};
 
 use crate::constants::{
-    ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE, ERROR_FAILED_TO_CREATE_PNPM_WORKSPACE,
-    ERROR_FAILED_TO_PARSE_PNPM_WORKSPACE, ERROR_FAILED_TO_READ_PNPM_WORKSPACE,
+    ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE,
+    ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE, ERROR_FAILED_TO_PARSE_PNPM_WORKSPACE,
+    ERROR_FAILED_TO_READ_PNPM_WORKSPACE,
 };
 
 use super::config::{Config, ProjectConfig, ProjectEntry};
+use super::rendered_template::RenderedTemplate;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub(crate) struct PnpmWorkspace {
@@ -20,18 +22,20 @@ pub(crate) struct PnpmWorkspace {
 pub(crate) fn generate_pnpm_workspace(
     app_name: &str,
     additional_projects: &Vec<ProjectEntry>,
-) -> Result<()> {
+) -> Result<Option<RenderedTemplate>> {
     let pnpm_workspace_path = Path::new(app_name).join("pnpm-workspace.yaml");
-    if !pnpm_workspace_path.exists() {
-        write(
-            pnpm_workspace_path,
-            to_string(&PnpmWorkspace {
-                packages: additional_projects.iter().map(|p| p.name.clone()).collect(),
-            })
-            .with_context(|| ERROR_FAILED_TO_CREATE_PNPM_WORKSPACE)?,
-        )?;
+    if pnpm_workspace_path.exists() {
+        return Ok(None);
     }
-    Ok(())
+
+    Ok(Some(RenderedTemplate {
+        path: pnpm_workspace_path,
+        content: to_string(&PnpmWorkspace {
+            packages: additional_projects.iter().map(|p| p.name.clone()).collect(),
+        })
+        .with_context(|| ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE)?,
+        context: None,
+    }))
 }
 
 pub(crate) fn add_project_definition_to_pnpm_workspace<T: Config + ProjectConfig + Serialize>(

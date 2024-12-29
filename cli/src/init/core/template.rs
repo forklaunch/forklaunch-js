@@ -1,7 +1,4 @@
-use std::{
-    fs::{create_dir_all, write},
-    path::Path,
-};
+use std::{fs::create_dir_all, path::Path};
 
 use anyhow::{Context, Result};
 use include_dir::{Dir, File};
@@ -14,6 +11,8 @@ use crate::{
         TEMPLATES_DIR,
     },
 };
+
+use super::rendered_template::RenderedTemplate;
 
 #[derive(Debug)]
 pub(crate) struct PathIO {
@@ -66,12 +65,14 @@ fn forklaunch_replacements(app_name: &String, template: String) -> String {
     template.replace("@forklaunch/framework-", format!("@{}/", app_name).as_str())
 }
 
-pub(crate) fn setup_with_template(
+pub(crate) fn generate_with_template(
     output_prefix: Option<&String>,
     template_dir: &PathIO,
     data: &TemplateConfigData,
     ignore_files: &Vec<String>,
-) -> Result<()> {
+) -> Result<Vec<RenderedTemplate>> {
+    let mut rendered_templates = Vec::new();
+
     let output_dir = match output_prefix {
         Some(output_prefix) => Path::new(output_prefix).join(&template_dir.output_path),
         None => Path::new(&template_dir.output_path).to_path_buf(),
@@ -109,37 +110,38 @@ pub(crate) fn setup_with_template(
                 .iter()
                 .any(|ignore_file| output_path.to_str().unwrap().contains(ignore_file))
         {
-            write(&output_path, rendered).with_context(|| {
-                format!(
-                    "Failed to write to {}. Please check your target directory is writable.",
-                    output_path.to_string_lossy()
-                )
-            })?;
+            rendered_templates.push(RenderedTemplate {
+                path: output_path,
+                content: rendered,
+                context: None,
+            });
         }
     }
 
     for subdirectory in get_directory_subdirectory_names(&template_dir)? {
-        setup_with_template(
-            output_prefix,
-            &PathIO {
-                input_path: Path::new(&subdirectory.path())
-                    .to_string_lossy()
-                    .to_string(),
-                output_path: Path::new(&template_dir.output_path)
-                    .join(&subdirectory.path().file_name().unwrap())
-                    .to_string_lossy()
-                    .to_string(),
-            },
-            data,
-            ignore_files,
-        )
-        .with_context(|| {
-            format!(
-                "Failed to create templates for {}.",
-                &subdirectory.path().to_string_lossy()
+        rendered_templates.extend(
+            generate_with_template(
+                output_prefix,
+                &PathIO {
+                    input_path: Path::new(&subdirectory.path())
+                        .to_string_lossy()
+                        .to_string(),
+                    output_path: Path::new(&template_dir.output_path)
+                        .join(&subdirectory.path().file_name().unwrap())
+                        .to_string_lossy()
+                        .to_string(),
+                },
+                data,
+                ignore_files,
             )
-        })?;
+            .with_context(|| {
+                format!(
+                    "Failed to create templates for {}.",
+                    &subdirectory.path().to_string_lossy()
+                )
+            })?,
+        );
     }
 
-    Ok(())
+    Ok(rendered_templates)
 }

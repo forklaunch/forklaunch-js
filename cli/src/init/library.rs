@@ -3,7 +3,7 @@ use clap::{Arg, ArgMatches, Command};
 use ramhorns::Content;
 use serde::{Deserialize, Serialize};
 use std::env::current_dir;
-use std::fs::{read_to_string, write};
+use std::fs::read_to_string;
 use std::path::Path;
 use toml::from_str;
 
@@ -17,18 +17,20 @@ use crate::constants::{
 };
 
 use super::core::config::ProjectConfig;
-use super::core::gitignore::setup_gitignore;
+use super::core::gitignore::generate_gitignore;
 use super::core::manifest::add_project_definition_to_manifest;
 use super::core::package_json::add_project_definition_to_package_json;
 use super::core::pnpm_workspace::add_project_definition_to_pnpm_workspace;
-use super::core::symlinks::setup_symlinks;
-use super::core::template::{setup_with_template, PathIO, TemplateConfigData};
-use super::core::tsconfig::setup_tsconfig;
+use super::core::rendered_template::{write_rendered_templates, RenderedTemplate};
+use super::core::symlinks::generate_symlinks;
+use super::core::template::{generate_with_template, PathIO, TemplateConfigData};
+use super::core::tsconfig::generate_tsconfig;
 use super::{forklaunch_command, CliCommand};
 
 config_struct!(
     #[derive(Debug, Content, Serialize, Clone)]
     pub(crate) struct LibraryConfigData {
+        #[serde(skip_serializing, skip_deserializing)]
         pub(crate) library_name: String,
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) description: String,
@@ -97,13 +99,13 @@ impl CliCommand for LibraryCommand {
                 .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
         };
 
-        setup_basic_library(&library_name, &base_path.to_string(), &mut config_data)
+        generate_basic_library(&library_name, &base_path.to_string(), &mut config_data)
             .with_context(|| "Failed to create library.")?;
         Ok(())
     }
 }
 
-fn setup_basic_library(
+fn generate_basic_library(
     library_name: &String,
     base_path: &String,
     config_data: &mut LibraryConfigData,
@@ -123,24 +125,35 @@ fn setup_basic_library(
 
     let ignore_files = vec![];
 
-    setup_with_template(
+    let mut rendered_templates = generate_with_template(
         None,
         &template_dir,
         &TemplateConfigData::Library(config_data.clone()),
         &ignore_files,
     )?;
-    setup_symlinks(Some(base_path), &template_dir.output_path, config_data)
-        .with_context(|| ERROR_FAILED_TO_CREATE_SYMLINKS)?;
-    setup_tsconfig(&output_path).with_context(|| ERROR_FAILED_TO_CREATE_TSCONFIG)?;
-    setup_gitignore(&output_path).with_context(|| ERROR_FAILED_TO_CREATE_GITIGNORE)?;
+    rendered_templates
+        .extend(generate_tsconfig(&output_path).with_context(|| ERROR_FAILED_TO_CREATE_TSCONFIG)?);
+    rendered_templates.extend(
+        generate_gitignore(&output_path).with_context(|| ERROR_FAILED_TO_CREATE_GITIGNORE)?,
+    );
+    rendered_templates.extend(
+        add_library_to_artifacts(config_data, base_path)
+            .with_context(|| "Failed to add library metadata to artifacts.")?,
+    );
 
-    add_library_to_artifacts(config_data, base_path)
-        .with_context(|| "Failed to add library metadata to artifacts.")?;
+    write_rendered_templates(&rendered_templates)
+        .with_context(|| "Failed to write library files.")?;
+
+    generate_symlinks(Some(base_path), &template_dir.output_path, config_data)
+        .with_context(|| ERROR_FAILED_TO_CREATE_SYMLINKS)?;
 
     Ok(())
 }
 
-fn add_library_to_artifacts(config_data: &mut LibraryConfigData, base_path: &String) -> Result<()> {
+fn add_library_to_artifacts(
+    config_data: &mut LibraryConfigData,
+    base_path: &String,
+) -> Result<Vec<RenderedTemplate>> {
     let forklaunch_definition_buffer = add_project_definition_to_manifest(config_data, None, None)
         .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
     let mut package_json_buffer: Option<String> = None;
@@ -158,27 +171,28 @@ fn add_library_to_artifacts(config_data: &mut LibraryConfigData, base_path: &Str
         );
     }
 
-    write(
-        Path::new(base_path)
+    let mut rendered_templates = Vec::new();
+    rendered_templates.push(RenderedTemplate {
+        path: Path::new(base_path)
             .join(".forklaunch")
             .join("manifest.toml"),
-        forklaunch_definition_buffer,
-    )
-    .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
+        content: forklaunch_definition_buffer,
+        context: Some(ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST.to_string()),
+    });
     if let Some(package_json_buffer) = package_json_buffer {
-        write(
-            Path::new(base_path).join("package.json"),
-            package_json_buffer,
-        )
-        .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON)?;
+        rendered_templates.push(RenderedTemplate {
+            path: Path::new(base_path).join("package.json"),
+            content: package_json_buffer,
+            context: Some(ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON.to_string()),
+        });
     }
     if let Some(pnpm_workspace_buffer) = pnpm_workspace_buffer {
-        write(
-            Path::new(base_path).join("pnpm-workspace.yaml"),
-            pnpm_workspace_buffer,
-        )
-        .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?;
+        rendered_templates.push(RenderedTemplate {
+            path: Path::new(base_path).join("pnpm-workspace.yaml"),
+            content: pnpm_workspace_buffer,
+            context: Some(ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE.to_string()),
+        });
     }
 
-    Ok(())
+    Ok(rendered_templates)
 }

@@ -9,7 +9,7 @@ use crate::{
     config_struct,
     constants::{
         ERROR_FAILED_TO_CREATE_GITIGNORE, ERROR_FAILED_TO_CREATE_LICENSE,
-        ERROR_FAILED_TO_CREATE_PNPM_WORKSPACE, ERROR_FAILED_TO_SETUP_IAM, LATEST_CLI_VERSION,
+        ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE, ERROR_FAILED_TO_SETUP_IAM, LATEST_CLI_VERSION,
     },
     utils::get_token,
 };
@@ -18,13 +18,14 @@ use super::{
     core::{
         config::ProjectEntry,
         database::{match_database, VALID_DATABASES},
-        gitignore::setup_gitignore,
-        iam::setup_iam,
-        license::setup_license,
-        manifest::setup_manifest,
+        gitignore::generate_gitignore,
+        iam::generate_iam_keys,
+        license::generate_license,
+        manifest::generate_manifest,
         pnpm_workspace::generate_pnpm_workspace,
-        symlinks::setup_symlinks,
-        template::{setup_with_template, PathIO, TemplateConfigData},
+        rendered_template::{create_forklaunch_dir, write_rendered_templates},
+        symlinks::generate_symlinks,
+        template::{generate_with_template, PathIO, TemplateConfigData},
     },
     forklaunch_command,
     service::ServiceConfigData,
@@ -250,8 +251,12 @@ impl CliCommand for ApplicationCommand {
             bun_package_json_workspace_string,
         };
 
-        setup_manifest(&Path::new(name).to_string_lossy().to_string(), &data)
-            .with_context(|| "Failed to setup manifest file for application.")?;
+        let mut rendered_templates = Vec::new();
+
+        rendered_templates.extend(
+            generate_manifest(&Path::new(name).to_string_lossy().to_string(), &data)
+                .with_context(|| "Failed to setup manifest file for application.")?,
+        );
 
         // TODO: support different path delimiters
         let mut template_dirs = vec![];
@@ -265,7 +270,7 @@ impl CliCommand for ApplicationCommand {
         });
         template_dirs.extend(additional_projects_dirs.clone());
 
-        setup_with_template(
+        rendered_templates.extend(generate_with_template(
             Some(name),
             &PathIO {
                 input_path: Path::new("application").to_string_lossy().to_string(),
@@ -276,10 +281,10 @@ impl CliCommand for ApplicationCommand {
                 .iter()
                 .map(|ignore_file| ignore_file.to_string())
                 .collect::<Vec<String>>(),
-        )?;
+        )?);
 
         for template_dir in template_dirs {
-            setup_with_template(
+            rendered_templates.extend(generate_with_template(
                 Some(name),
                 &template_dir,
                 &TemplateConfigData::Service(ServiceConfigData {
@@ -314,13 +319,38 @@ impl CliCommand for ApplicationCommand {
                     .iter()
                     .map(|ignore_file| ignore_file.to_string())
                     .collect::<Vec<String>>(),
-            )?;
+            )?);
         }
+
+        rendered_templates.extend(
+            generate_license(&Path::new(name).to_string_lossy().to_string(), &data)
+                .with_context(|| ERROR_FAILED_TO_CREATE_LICENSE)?,
+        );
+
+        rendered_templates.extend(
+            generate_gitignore(&Path::new(name).to_string_lossy().to_string())
+                .with_context(|| ERROR_FAILED_TO_CREATE_GITIGNORE)?,
+        );
+
+        if runtime == "node" {
+            rendered_templates.extend(
+                generate_pnpm_workspace(name, &additional_projects)
+                    .with_context(|| ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE)?,
+            );
+        }
+
+        if additional_projects_names.contains(&"iam".to_string()) {
+            generate_iam_keys(&Path::new(name)).with_context(|| ERROR_FAILED_TO_SETUP_IAM)?;
+        }
+
+        create_forklaunch_dir(&Path::new(name).to_string_lossy().to_string())?;
+        write_rendered_templates(&rendered_templates)
+            .with_context(|| "Failed to write application files.")?;
 
         additional_projects_dirs
             .into_iter()
             .try_for_each(|template_dir| {
-                setup_symlinks(
+                generate_symlinks(
                     Some(name),
                     &Path::new(name)
                         .join(&template_dir.output_path)
@@ -329,21 +359,6 @@ impl CliCommand for ApplicationCommand {
                     &mut data,
                 )
             })?;
-
-        if runtime == "node" {
-            generate_pnpm_workspace(name, &additional_projects)
-                .with_context(|| ERROR_FAILED_TO_CREATE_PNPM_WORKSPACE)?;
-        }
-
-        if additional_projects_names.contains(&"iam".to_string()) {
-            setup_iam(&Path::new(name)).with_context(|| ERROR_FAILED_TO_SETUP_IAM)?;
-        }
-
-        setup_license(&Path::new(name).to_string_lossy().to_string(), &data)
-            .with_context(|| ERROR_FAILED_TO_CREATE_LICENSE)?;
-
-        setup_gitignore(&Path::new(name).to_string_lossy().to_string())
-            .with_context(|| ERROR_FAILED_TO_CREATE_GITIGNORE)?;
 
         Ok(())
     }

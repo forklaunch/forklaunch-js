@@ -1,11 +1,16 @@
-use std::{fs::write, path::Path};
+use std::path::Path;
 
 use crate::init::{application::ApplicationConfigData, TEMPLATES_DIR};
 use anyhow::Result;
 use log::warn;
 use ramhorns::Template;
 
-pub(crate) fn setup_license(app_path: &str, data: &ApplicationConfigData) -> Result<()> {
+use super::rendered_template::RenderedTemplate;
+
+pub(crate) fn generate_license(
+    app_path: &str,
+    data: &ApplicationConfigData,
+) -> Result<Option<RenderedTemplate>> {
     let license_file = match data.license.as_str() {
         "AGPL-3.0" => Some("agpl-3.0"),
         "Apache-2.0" => Some("apache-2.0"),
@@ -23,7 +28,7 @@ pub(crate) fn setup_license(app_path: &str, data: &ApplicationConfigData) -> Res
     };
 
     if license_file.is_none() {
-        return Ok(());
+        return Ok(None);
     }
 
     let license_template = Template::new(
@@ -34,10 +39,9 @@ pub(crate) fn setup_license(app_path: &str, data: &ApplicationConfigData) -> Res
             .unwrap(),
     )?;
 
-    write(
-        Path::new(app_path).join("LICENSE"),
-        license_template.render(data),
-    )?;
-
-    Ok(())
+    Ok(Some(RenderedTemplate {
+        path: Path::new(app_path).join("LICENSE"),
+        content: license_template.render(data),
+        context: None,
+    }))
 }

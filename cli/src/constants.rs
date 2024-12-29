@@ -38,8 +38,7 @@ pub(crate) const ERROR_FAILED_TO_READ_PACKAGE_JSON: &str =
     "Failed to read package.json. Please check your target directory is a forklaunch application.";
 pub(crate) const ERROR_FAILED_TO_PARSE_PACKAGE_JSON: &str =
     "Failed to parse package.json. Please verify the file is valid json.";
-pub(crate) const ERROR_FAILED_TO_WRITE_TO_PACKAGE_JSON: &str =
-    "Failed to write to package.json. Please check your target directory is writable.";
+pub(crate) const ERROR_FAILED_TO_GENERATE_PACKAGE_JSON: &str = "Failed to generate package.json.";
 pub(crate) const ERROR_FAILED_TO_READ_PNPM_WORKSPACE: &str =
     "Failed to read pnpm-workspace.yaml. Please check your target directory is a forklaunch application.";
 pub(crate) const ERROR_FAILED_TO_PARSE_PNPM_WORKSPACE: &str =
@@ -56,8 +55,8 @@ pub(crate) const ERROR_FAILED_TO_CREATE_GITIGNORE: &str =
     "Failed to create gitignore file. Please check your target directory is writable.";
 pub(crate) const ERROR_FAILED_TO_CREATE_LICENSE: &str =
     "Failed to create license file. Please check your target directory is writable.";
-pub(crate) const ERROR_FAILED_TO_CREATE_PNPM_WORKSPACE: &str =
-    "Failed to create pnpm-workspace.yaml. Please check your target directory is writable.";
+pub(crate) const ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE: &str =
+    "Failed to generate pnpm-workspace.yaml.";
 pub(crate) const ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE: &str =
     "Failed to add project metadata to docker-compose.yaml.";
 pub(crate) const ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST: &str =

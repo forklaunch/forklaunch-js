@@ -8,6 +8,7 @@ pub(crate) mod license;
 pub(crate) mod manifest;
 pub(crate) mod package_json;
 pub(crate) mod pnpm_workspace;
+pub(crate) mod rendered_template;
 pub(crate) mod symlinks;
 pub(crate) mod template;
 pub(crate) mod tsconfig;

@@ -1,7 +1,4 @@
-use std::{
-    fs::{read_to_string, write},
-    path::Path,
-};
+use std::{fs::read_to_string, path::Path};
 
 use anyhow::{Context, Result};
 use ramhorns::{Content, Template};
@@ -10,13 +7,17 @@ use serde_json::{from_str, to_string_pretty, to_value, Value};
 
 use crate::{
     constants::{
-        ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON, ERROR_FAILED_TO_PARSE_PACKAGE_JSON,
-        ERROR_FAILED_TO_READ_PACKAGE_JSON, ERROR_FAILED_TO_WRITE_TO_PACKAGE_JSON,
+        ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON,
+        ERROR_FAILED_TO_GENERATE_PACKAGE_JSON, ERROR_FAILED_TO_PARSE_PACKAGE_JSON,
+        ERROR_FAILED_TO_READ_PACKAGE_JSON,
     },
     init::service::ServiceConfigData,
 };
 
-use super::config::{Config, ProjectConfig};
+use super::{
+    config::{Config, ProjectConfig},
+    rendered_template::RenderedTemplate,
+};
 
 #[derive(Debug, Serialize, Deserialize)]
 struct PackageJson {
@@ -57,7 +58,7 @@ pub(crate) fn add_project_definition_to_package_json<
 pub(crate) fn update_application_package_json(
     config_data: &ServiceConfigData,
     base_path: &String,
-) -> Result<()> {
+) -> Result<Option<RenderedTemplate>> {
     let mut full_package_json: Value = from_str(
         &read_to_string(Path::new(base_path).join("package.json"))
             .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?,
@@ -140,12 +141,11 @@ pub(crate) fn update_application_package_json(
     }
 
     full_package_json["scripts"] =
-        to_value(scripts).with_context(|| ERROR_FAILED_TO_WRITE_TO_PACKAGE_JSON)?;
+        to_value(scripts).with_context(|| ERROR_FAILED_TO_GENERATE_PACKAGE_JSON)?;
 
-    write(
-        Path::new(base_path).join("package.json"),
-        serde_json::to_string_pretty(&full_package_json)?,
-    )?;
-
-    Ok(())
+    Ok(Some(RenderedTemplate {
+        path: Path::new(base_path).join("package.json"),
+        content: serde_json::to_string_pretty(&full_package_json)?,
+        context: None,
+    }))
 }
