@@ -1,12 +1,8 @@
-use std::{
-    env::{current_dir, current_exe},
-    fs::{read_to_string, write},
-    path::Path,
-};
+use std::{env::current_dir, fs::read_to_string, path::Path};
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgMatches, Command};
-use ramhorns::{Content, Ramhorns};
+use ramhorns::Content;
 use serde::{Deserialize, Serialize};
 use toml::from_str;
 
@@ -18,7 +14,7 @@ use crate::{
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE, ERROR_FAILED_TO_CREATE_GITIGNORE,
         ERROR_FAILED_TO_CREATE_SYMLINKS, ERROR_FAILED_TO_CREATE_TSCONFIG, ERROR_FAILED_TO_GET_CWD,
-        ERROR_FAILED_TO_GET_EXE_WD, ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST,
+        ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST,
     },
 };
 
@@ -27,13 +23,14 @@ use super::{
         config::ProjectConfig,
         database::{match_database, VALID_DATABASES},
         docker::add_service_definition_to_docker_compose,
-        gitignore::setup_gitignore,
+        gitignore::generate_gitignore,
         manifest::add_project_definition_to_manifest,
         package_json::{add_project_definition_to_package_json, update_application_package_json},
         pnpm_workspace::add_project_definition_to_pnpm_workspace,
-        symlinks::setup_symlinks,
-        template::{setup_with_template, PathIO, TemplateConfigData},
-        tsconfig::setup_tsconfig,
+        rendered_template::{write_rendered_templates, RenderedTemplate},
+        symlinks::generate_symlinks,
+        template::{generate_with_template, PathIO, TemplateConfigData},
+        tsconfig::generate_tsconfig,
     },
     forklaunch_command, CliCommand,
 };
@@ -41,7 +38,9 @@ use super::{
 config_struct!(
     #[derive(Debug, Content, Serialize, Clone)]
     pub(crate) struct ServiceConfigData {
+        #[serde(skip_serializing, skip_deserializing)]
         pub(crate) service_name: String,
+        #[serde(skip_serializing, skip_deserializing)]
         pub(crate) database: String,
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) description: String,
@@ -131,13 +130,13 @@ impl CliCommand for ServiceCommand {
                 .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
         };
 
-        setup_basic_service(service_name, &base_path.to_string(), &mut config_data)
+        generate_basic_service(service_name, &base_path.to_string(), &mut config_data)
             .with_context(|| "Failed to create service.")?;
         Ok(())
     }
 }
 
-fn setup_basic_service(
+fn generate_basic_service(
     service_name: &String,
     base_path: &String,
     config_data: &mut ServiceConfigData,
@@ -147,43 +146,48 @@ fn setup_basic_service(
         .to_string_lossy()
         .to_string();
     let template_dir = PathIO {
-        input_path: Path::new("templates")
-            .join("project")
+        input_path: Path::new("project")
             .join("service")
             .to_string_lossy()
             .to_string(),
         output_path: output_path.clone(),
     };
-    let mut template = Ramhorns::lazy(
-        current_exe()
-            .with_context(|| ERROR_FAILED_TO_GET_EXE_WD)?
-            .parent()
-            .unwrap(),
-    )?;
 
     let ignore_files = vec![];
 
-    setup_with_template(
+    let mut rendered_templates = generate_with_template(
         None,
         &template_dir,
-        &mut template,
         &TemplateConfigData::Service(config_data.clone()),
         &ignore_files,
     )?;
-    setup_symlinks(Some(base_path), &template_dir.output_path, config_data)
-        .with_context(|| ERROR_FAILED_TO_CREATE_SYMLINKS)?;
-    setup_tsconfig(&output_path).with_context(|| ERROR_FAILED_TO_CREATE_TSCONFIG)?;
-    setup_gitignore(&output_path).with_context(|| ERROR_FAILED_TO_CREATE_GITIGNORE)?;
+    rendered_templates
+        .extend(generate_tsconfig(&output_path).with_context(|| ERROR_FAILED_TO_CREATE_TSCONFIG)?);
+    rendered_templates.extend(
+        generate_gitignore(&output_path).with_context(|| ERROR_FAILED_TO_CREATE_GITIGNORE)?,
+    );
+    rendered_templates.extend(
+        add_service_to_artifacts(config_data, base_path)
+            .with_context(|| "Failed to add service metadata to artifacts.")?,
+    );
+    rendered_templates.extend(
+        update_application_package_json(config_data, base_path)
+            .with_context(|| "Failed to update application package.json.")?,
+    );
 
-    add_service_to_artifacts(config_data, base_path)
-        .with_context(|| "Failed to add service metadata to artifacts.")?;
-    update_application_package_json(config_data, base_path)
-        .with_context(|| "Failed to update application package.json.")?;
+    write_rendered_templates(&rendered_templates)
+        .with_context(|| "Failed to write service files.")?;
+
+    generate_symlinks(Some(base_path), &template_dir.output_path, config_data)
+        .with_context(|| ERROR_FAILED_TO_CREATE_SYMLINKS)?;
 
     Ok(())
 }
 
-fn add_service_to_artifacts(config_data: &mut ServiceConfigData, base_path: &String) -> Result<()> {
+fn add_service_to_artifacts(
+    config_data: &mut ServiceConfigData,
+    base_path: &String,
+) -> Result<Vec<RenderedTemplate>> {
     let (docker_compose_buffer, port_number) =
         add_service_definition_to_docker_compose(config_data, base_path)
             .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
@@ -208,32 +212,36 @@ fn add_service_to_artifacts(config_data: &mut ServiceConfigData, base_path: &Str
         );
     }
 
-    write(
-        Path::new(base_path).join("docker-compose.yaml"),
-        docker_compose_buffer,
-    )
-    .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
-    write(
-        Path::new(base_path)
+    let mut rendered_templates = Vec::new();
+
+    rendered_templates.push(RenderedTemplate {
+        path: Path::new(base_path).join("docker-compose.yaml"),
+        content: docker_compose_buffer,
+        context: Some(ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE.to_string()),
+    });
+
+    rendered_templates.push(RenderedTemplate {
+        path: Path::new(base_path)
             .join(".forklaunch")
             .join("manifest.toml"),
-        forklaunch_definition_buffer,
-    )
-    .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
+        content: forklaunch_definition_buffer,
+        context: Some(ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST.to_string()),
+    });
+
     if let Some(package_json_buffer) = package_json_buffer {
-        write(
-            Path::new(base_path).join("package.json"),
-            package_json_buffer,
-        )
-        .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON)?;
+        rendered_templates.push(RenderedTemplate {
+            path: Path::new(base_path).join("package.json"),
+            content: package_json_buffer,
+            context: Some(ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON.to_string()),
+        });
     }
     if let Some(pnpm_workspace_buffer) = pnpm_workspace_buffer {
-        write(
-            Path::new(base_path).join("pnpm-workspace.yaml"),
-            pnpm_workspace_buffer,
-        )
-        .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?;
+        rendered_templates.push(RenderedTemplate {
+            path: Path::new(base_path).join("pnpm-workspace.yaml"),
+            content: pnpm_workspace_buffer,
+            context: Some(ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE.to_string()),
+        });
     }
 
-    Ok(())
+    Ok(rendered_templates)
 }

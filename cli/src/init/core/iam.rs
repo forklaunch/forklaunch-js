@@ -1,9 +1,12 @@
 use anyhow::Result;
 use base64::{engine::general_purpose::STANDARD, Engine};
 use rcgen::KeyPair;
-use std::{fs::write, path::Path};
+use std::path::Path;
 
-pub(crate) fn setup_iam(base_path: &Path) -> Result<()> {
+use super::rendered_template::RenderedTemplate;
+
+pub(crate) fn generate_iam_keys(base_path: &Path) -> Result<Vec<RenderedTemplate>> {
+    let mut rendered_templates = Vec::new();
     let key_pair = KeyPair::generate()?;
 
     // Format private key with PKCS#8 headers
@@ -11,14 +14,22 @@ pub(crate) fn setup_iam(base_path: &Path) -> Result<()> {
         "-----BEGIN PRIVATE KEY-----\n{}\n-----END PRIVATE KEY-----",
         STANDARD.encode(key_pair.serialize_der())
     );
-    write(base_path.join("iam").join("private.pem"), private_key_pem)?;
+    rendered_templates.push(RenderedTemplate {
+        path: base_path.join("iam").join("private.pem"),
+        content: private_key_pem,
+        context: None,
+    });
 
     // Format public key with SPKI headers
     let public_key_pem = format!(
         "-----BEGIN PUBLIC KEY-----\n{}\n-----END PUBLIC KEY-----",
         STANDARD.encode(key_pair.public_key_der())
     );
-    write(base_path.join("iam").join("public.pem"), public_key_pem)?;
+    rendered_templates.push(RenderedTemplate {
+        path: base_path.join("iam").join("public.pem"),
+        content: public_key_pem,
+        context: None,
+    });
 
-    Ok(())
+    Ok(rendered_templates)
 }

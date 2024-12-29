@@ -1,7 +1,4 @@
-use std::{
-    fs::{create_dir_all, write},
-    path::Path,
-};
+use std::path::Path;
 
 use anyhow::{Context, Result};
 use serde::Serialize;
@@ -9,28 +6,32 @@ use toml::to_string_pretty;
 
 use crate::{
     constants::{
-        error_failed_to_write_file, ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
-        ERROR_FAILED_TO_CREATE_DIR, ERROR_FAILED_TO_CREATE_MANIFEST,
+        ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST, ERROR_FAILED_TO_CREATE_MANIFEST,
     },
     init::application::ApplicationConfigData,
 };
 
-use super::config::{Config, ProjectConfig, ProjectEntry};
+use super::{
+    config::{Config, ProjectConfig, ProjectEntry},
+    rendered_template::RenderedTemplate,
+};
 
-pub(crate) fn setup_manifest(path_dir: &String, data: &ApplicationConfigData) -> Result<()> {
+pub(crate) fn generate_manifest(
+    path_dir: &String,
+    data: &ApplicationConfigData,
+) -> Result<Option<RenderedTemplate>> {
     let config_str = to_string_pretty(&data).with_context(|| ERROR_FAILED_TO_CREATE_MANIFEST)?;
     let forklaunch_path = Path::new(path_dir).join(".forklaunch");
 
-    if !forklaunch_path.exists() {
-        create_dir_all(&forklaunch_path).with_context(|| ERROR_FAILED_TO_CREATE_DIR)?;
-    }
-
     let config_path = forklaunch_path.join("manifest.toml");
-    if !config_path.exists() {
-        write(&config_path, config_str)
-            .with_context(|| error_failed_to_write_file(&config_path))?;
+    if config_path.exists() {
+        return Ok(None);
     }
-    Ok(())
+    Ok(Some(RenderedTemplate {
+        path: config_path,
+        content: config_str,
+        context: None,
+    }))
 }
 
 pub(crate) fn add_project_definition_to_manifest<T: Config + ProjectConfig + Serialize>(

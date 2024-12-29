@@ -1,32 +1,32 @@
-use std::{fs::File, io::Write, path::Path};
+use std::path::Path;
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 
-use crate::constants::ERROR_FAILED_TO_CREATE_GITIGNORE;
+use super::rendered_template::RenderedTemplate;
 
-pub(crate) fn setup_gitignore(path_dir: &String) -> Result<()> {
-    let gitignore = [
-        "node_modules",
-        ".idea",
-        ".DS_Store",
-        "",
-        "dist",
-        "lib",
-        "",
-        ".vscode",
-        "",
-        "*dist",
-        "*lib",
-    ]
-    .join("\n");
-
+pub(crate) fn generate_gitignore(path_dir: &String) -> Result<Option<RenderedTemplate>> {
     let path = Path::new(path_dir).join(".gitignore");
-    if !path.exists() {
-        let mut gitignore_file = File::create(path).context(ERROR_FAILED_TO_CREATE_GITIGNORE)?;
-        gitignore_file
-            .write_all(gitignore.as_bytes())
-            .with_context(|| ERROR_FAILED_TO_CREATE_GITIGNORE)?;
+
+    if path.exists() {
+        return Ok(None);
     }
 
-    Ok(())
+    Ok(Some(RenderedTemplate {
+        path,
+        content: [
+            "node_modules",
+            ".idea",
+            ".DS_Store",
+            "",
+            "dist",
+            "lib",
+            "",
+            ".vscode",
+            "",
+            "*dist",
+            "*lib",
+        ]
+        .join("\n"),
+        context: None,
+    }))
 }

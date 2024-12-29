@@ -1,11 +1,16 @@
-use std::{env::current_exe, fs::write, path::Path};
+use std::path::Path;
 
-use crate::init::application::ApplicationConfigData;
+use crate::init::{application::ApplicationConfigData, TEMPLATES_DIR};
 use anyhow::Result;
 use log::warn;
-use ramhorns::Ramhorns;
+use ramhorns::Template;
 
-pub(crate) fn setup_license(app_path: &str, data: &ApplicationConfigData) -> Result<()> {
+use super::rendered_template::RenderedTemplate;
+
+pub(crate) fn generate_license(
+    app_path: &str,
+    data: &ApplicationConfigData,
+) -> Result<Option<RenderedTemplate>> {
     let license_file = match data.license.as_str() {
         "AGPL-3.0" => Some("agpl-3.0"),
         "Apache-2.0" => Some("apache-2.0"),
@@ -23,22 +28,20 @@ pub(crate) fn setup_license(app_path: &str, data: &ApplicationConfigData) -> Res
     };
 
     if license_file.is_none() {
-        return Ok(());
+        return Ok(None);
     }
 
-    let mut template: Ramhorns = Ramhorns::lazy(current_exe()?.parent().unwrap())?;
-
-    let license_template = template.from_file(
-        Path::new("templates")
-            .join("licenses")
-            .join(license_file.unwrap())
-            .to_str()
+    let license_template = Template::new(
+        TEMPLATES_DIR
+            .get_file(Path::new("licenses").join(license_file.unwrap()))
+            .unwrap()
+            .contents_utf8()
             .unwrap(),
     )?;
-    write(
-        Path::new(app_path).join("LICENSE"),
-        license_template.render(data),
-    )?;
 
-    Ok(())
+    Ok(Some(RenderedTemplate {
+        path: Path::new(app_path).join("LICENSE"),
+        content: license_template.render(data),
+        context: None,
+    }))
 }
