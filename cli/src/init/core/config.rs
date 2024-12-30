@@ -35,6 +35,12 @@ macro_rules! internal_config_struct {
     ) => {
         $(#[$meta])*
         $vis struct $name {
+            $(
+                #[serde(default)]
+                $(#[$field_meta])*
+                $field_vis $field: $ty
+            ),*,
+
             $vis cli_version: String,
             $vis app_name: String,
             $vis validator: String,
@@ -45,11 +51,6 @@ macro_rules! internal_config_struct {
             $vis project_peer_topology: std::collections::HashMap<String, Vec<String>>,
             $vis author: String,
             $vis license: String,
-            $(
-                #[serde(default)]
-                $(#[$field_meta])*
-                $field_vis $field: $ty
-            ),*
         }
     };
 }
@@ -69,6 +70,11 @@ macro_rules! config_struct {
         crate::internal_config_struct! {
             $(#[$meta])*
             $vis struct $name {
+                $(
+                    $(#[$field_meta])*
+                    $field_vis $field: $ty
+                ),*,
+
                 #[serde(skip_serializing)]
                 $vis is_express: bool,
 
@@ -92,11 +98,6 @@ macro_rules! config_struct {
 
                 #[serde(skip_serializing)]
                 $vis is_jest: bool,
-
-                $(
-                    $(#[$field_meta])*
-                    $field_vis $field: $ty
-                ),*
             }
         }
 

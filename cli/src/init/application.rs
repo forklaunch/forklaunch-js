@@ -99,6 +99,112 @@ impl Completer for ArrayCompleter {
     }
 }
 
+fn prompt_without_validation(
+    line_editor: &mut Editor<ArrayCompleter, DefaultHistory>,
+    stdout: &mut StandardStream,
+    matches_key: &str,
+    matches: &ArgMatches,
+    prompt: &str,
+) -> Result<String> {
+    prompt_with_validation(
+        line_editor,
+        stdout,
+        matches_key,
+        matches,
+        prompt,
+        None,
+        |_| true,
+        |_| "".to_string(),
+    )
+}
+
+fn prompt_with_validation<F, V>(
+    line_editor: &mut Editor<ArrayCompleter, DefaultHistory>,
+    stdout: &mut StandardStream,
+    matches_key: &str,
+    matches: &ArgMatches,
+    prompt: &str,
+    valid_options: Option<&[&str]>,
+    validator: V,
+    error_message: F,
+) -> Result<String>
+where
+    F: Fn(&str) -> String,
+    V: Fn(&str) -> bool,
+{
+    loop {
+        let input = match matches.get_one::<String>(matches_key) {
+            Some(val) => val.to_string(),
+            None => {
+                if let Some(options) = valid_options {
+                    let completer = ArrayCompleter {
+                        options: options.iter().map(|&s| s.to_string()).collect(),
+                    };
+                    line_editor.set_helper(Some(completer));
+                    let prompt = if options.is_empty() {
+                        prompt.to_string()
+                    } else {
+                        format!("{} [{}]: ", prompt, options.join(", "))
+                    };
+                    line_editor.readline(&prompt)?.trim().to_string()
+                } else {
+                    line_editor.readline(prompt)?.trim().to_string()
+                }
+            }
+        };
+
+        if validator(&input) {
+            line_editor.set_helper(None);
+            break Ok(input);
+        }
+
+        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
+        write!(stdout, "{}", error_message(&input))?;
+        stdout.reset()?;
+        writeln!(stdout)?;
+    }
+}
+
+fn prompt_comma_separated_list(
+    line_editor: &mut Editor<ArrayCompleter, DefaultHistory>,
+    matches_key: &str,
+    matches: &ArgMatches,
+    valid_options: &[&str],
+    prompt_text: &str,
+    is_optional: bool,
+) -> Result<Vec<String>> {
+    match matches.get_many::<String>(matches_key) {
+        Some(values) => Ok(values.cloned().collect()),
+        None => {
+            let completer = ArrayCompleter {
+                options: valid_options.iter().map(|&s| s.to_string()).collect(),
+            };
+            line_editor.set_helper(Some(completer));
+            let optional_text = if is_optional { " (optional)" } else { "" };
+            let prompt = format!(
+                "Enter {} (comma-separated) [{}]{}: ",
+                prompt_text,
+                valid_options.join(", "),
+                optional_text
+            );
+            let input = line_editor.readline(&prompt)?;
+            if input.trim().is_empty() {
+                line_editor.set_helper(None);
+                Ok(vec![])
+            } else {
+                Ok(input
+                    .split(',')
+                    .map(|s| s.trim().to_string())
+                    .filter(|s| valid_options.contains(&s.as_str()))
+                    .collect::<Vec<String>>()
+                    .into_iter()
+                    .collect::<std::collections::HashSet<_>>()
+                    .into_iter()
+                    .collect())
+            }
+        }
+    }
+}
 // end move
 
 impl CliCommand for ApplicationCommand {
@@ -185,252 +291,127 @@ impl CliCommand for ApplicationCommand {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let name = loop {
-            let input = match matches.get_one::<String>("name") {
-                Some(n) => n.to_string(),
-                None => {
-                    let prompt = "Enter application name: ";
-                    line_editor.readline(prompt)?.trim().to_string()
-                }
-            };
-            if !input.is_empty() {
-                break input;
-            }
-            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
-            write!(
-                &mut stdout,
-                "Application name cannot be empty. Please try again"
-            )?;
-            stdout.reset()?;
-            writeln!(&mut stdout)?;
-        };
+        let name = prompt_with_validation(
+            &mut line_editor,
+            &mut stdout,
+            "name",
+            matches,
+            "Enter application name: ",
+            None,
+            |input: &str| !input.is_empty(),
+            |_| "Application name cannot be empty. Please try again".to_string(),
+        )?;
 
-        let database = loop {
-            let input = match matches.get_one::<String>("database") {
-                Some(db) => db.to_string(),
-                None => {
-                    let completer = ArrayCompleter {
-                        options: VALID_DATABASES.iter().map(|&s| s.to_string()).collect(),
-                    };
-                    line_editor.set_helper(Some(completer));
-                    let prompt = format!("Enter database type [{}]: ", VALID_DATABASES.join(", "));
-                    line_editor.readline(prompt.as_str())?.trim().to_string()
-                }
-            };
-            if VALID_DATABASES.contains(&input.as_str()) {
-                break input;
-            }
-            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
-            write!(&mut stdout, "Invalid database type. Please try again")?;
-            stdout.reset()?;
-            writeln!(&mut stdout)?;
-        };
+        let database = prompt_with_validation(
+            &mut line_editor,
+            &mut stdout,
+            "database",
+            matches,
+            "Enter database type",
+            Some(&VALID_DATABASES),
+            |input| VALID_DATABASES.contains(&input),
+            |_| "Invalid database type. Please try again".to_string(),
+        )?;
 
-        let validator = loop {
-            let input = match matches.get_one::<String>("validator") {
-                Some(v) => v.to_string(),
-                None => {
-                    let completer = ArrayCompleter {
-                        options: VALID_VALIDATORS.iter().map(|&s| s.to_string()).collect(),
-                    };
-                    line_editor.set_helper(Some(completer));
-                    let prompt =
-                        format!("Enter validator type [{}]: ", VALID_VALIDATORS.join(", "));
-                    line_editor.readline(prompt.as_str())?.trim().to_string()
-                }
-            };
-            if VALID_VALIDATORS.contains(&input.as_str()) {
-                break input;
-            }
-            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
-            write!(&mut stdout, "Invalid validator type. Please try again")?;
-            stdout.reset()?;
-            writeln!(&mut stdout)?;
-        };
+        let validator = prompt_with_validation(
+            &mut line_editor,
+            &mut stdout,
+            "validator",
+            matches,
+            "Enter validator type",
+            Some(&VALID_VALIDATORS),
+            |input| VALID_VALIDATORS.contains(&input),
+            |_| "Invalid validator type. Please try again".to_string(),
+        )?;
 
-        let runtime = loop {
-            let input = match matches.get_one::<String>("runtime") {
-                Some(r) => r.to_string(),
-                None => {
-                    let completer = ArrayCompleter {
-                        options: VALID_RUNTIMES.iter().map(|&s| s.to_string()).collect(),
-                    };
-                    line_editor.set_helper(Some(completer));
-                    let prompt = format!("Enter runtime [{}]: ", VALID_RUNTIMES.join(", "));
-                    line_editor.readline(prompt.as_str())?.trim().to_string()
-                }
-            };
-            if VALID_RUNTIMES.contains(&input.as_str()) {
-                break input;
-            }
-            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
-            write!(&mut stdout, "Invalid runtime. Please try again")?;
-            stdout.reset()?;
-            writeln!(&mut stdout)?;
-        };
+        let runtime = prompt_with_validation(
+            &mut line_editor,
+            &mut stdout,
+            "runtime",
+            matches,
+            "Enter runtime",
+            Some(&VALID_RUNTIMES),
+            |input| VALID_RUNTIMES.contains(&input),
+            |_| "Invalid runtime. Please try again".to_string(),
+        )?;
 
-        let http_framework = loop {
-            let input = match matches.get_one::<String>("http-framework") {
-                Some(f) => f.to_string(),
-                None => {
-                    let completer = ArrayCompleter {
-                        options: VALID_FRAMEWORKS.iter().map(|&s| s.to_string()).collect(),
-                    };
-                    line_editor.set_helper(Some(completer));
-                    let prompt =
-                        format!("Enter HTTP framework [{}]: ", VALID_FRAMEWORKS.join(", "));
-                    line_editor.readline(prompt.as_str())?.trim().to_string()
-                }
-            };
-
-            if VALID_FRAMEWORKS.contains(&input.as_str()) {
+        let http_framework = prompt_with_validation(
+            &mut line_editor,
+            &mut stdout,
+            "http-framework",
+            matches,
+            "Enter HTTP framework",
+            Some(&VALID_FRAMEWORKS),
+            |input| {
+                VALID_FRAMEWORKS.contains(&input) && !(runtime == "bun" && input == "hyper-express")
+            },
+            |input| {
                 if runtime == "bun" && input == "hyper-express" {
-                    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
-                    write!(&mut stdout, "Hyper Express is not supported for bun")?;
-                    stdout.reset()?;
-                    writeln!(&mut stdout)?;
-                    continue;
+                    "Hyper Express is not supported for bun".to_string()
                 } else {
-                    break input;
+                    "Invalid HTTP framework. Please try again".to_string()
                 }
-            }
-            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
-            write!(&mut stdout, "Invalid HTTP framework. Please try again")?;
-            stdout.reset()?;
-            writeln!(&mut stdout)?;
-        };
+            },
+        )?;
 
-        let test_framework = loop {
-            let input = match matches.get_one::<String>("test-framework") {
-                Some(t) => t.to_string(),
-                None => {
-                    let completer = ArrayCompleter {
-                        options: VALID_TEST_FRAMEWORKS
-                            .iter()
-                            .map(|&s| s.to_string())
-                            .collect(),
-                    };
-                    line_editor.set_helper(Some(completer));
-                    let prompt = format!(
-                        "Enter test framework [{}]: ",
-                        VALID_TEST_FRAMEWORKS.join(", ")
-                    );
-                    line_editor.readline(prompt.as_str())?.trim().to_string()
-                }
-            };
-            if VALID_TEST_FRAMEWORKS.contains(&input.as_str()) {
-                break input;
-            }
-            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
-            write!(&mut stdout, "Invalid test framework. Please try again")?;
-            stdout.reset()?;
-            writeln!(&mut stdout)?;
-        };
+        let test_framework = prompt_with_validation(
+            &mut line_editor,
+            &mut stdout,
+            "test-framework",
+            matches,
+            "Enter test framework",
+            Some(&VALID_TEST_FRAMEWORKS),
+            |input| VALID_TEST_FRAMEWORKS.contains(&input),
+            |_| "Invalid test framework. Please try again".to_string(),
+        )?;
 
-        let services = match matches.get_many::<String>("services") {
-            Some(p) => p.cloned().collect::<Vec<String>>(),
-            None => {
-                let completer = ArrayCompleter {
-                    options: VALID_SERVICES.iter().map(|&s| s.to_string()).collect(),
-                };
-                line_editor.set_helper(Some(completer));
-                let prompt = format!(
-                    "Enter services (comma-separated) [{}]: ",
-                    VALID_SERVICES.join(", ")
-                );
-                let input = line_editor.readline(prompt.as_str())?;
-                if input.trim().is_empty() {
-                    vec![]
-                } else {
-                    input
-                        .split(',')
-                        .map(|s| s.trim().to_string())
-                        .filter(|s| VALID_SERVICES.contains(&s.as_str()))
-                        .collect::<Vec<String>>()
-                        .into_iter()
-                        .collect::<std::collections::HashSet<_>>()
-                        .into_iter()
-                        .collect()
-                }
-            }
-        };
+        let services = prompt_comma_separated_list(
+            &mut line_editor,
+            "services",
+            matches,
+            &VALID_SERVICES,
+            "services",
+            false,
+        )?;
 
-        // TODO: Add support for libraries
-        let _libraries = match matches.get_many::<String>("libraries") {
-            Some(l) => l.cloned().collect::<Vec<String>>(),
-            None => {
-                let completer = ArrayCompleter {
-                    options: VALID_LIBRARIES.iter().map(|&s| s.to_string()).collect(),
-                };
-                line_editor.set_helper(Some(completer));
-                let prompt = format!(
-                    "Enter libraries (comma-separated) [{}] (optional): ",
-                    VALID_LIBRARIES.join(", ")
-                );
-                let input = line_editor.readline(prompt.as_str())?;
-                if input.trim().is_empty() {
-                    vec![]
-                } else {
-                    input
-                        .split(',')
-                        .map(|s| s.trim().to_string())
-                        .filter(|s| VALID_LIBRARIES.contains(&s.as_str()))
-                        .collect::<Vec<String>>()
-                        .into_iter()
-                        .collect::<std::collections::HashSet<_>>()
-                        .into_iter()
-                        .collect()
-                }
-            }
-        };
+        let _libraries = prompt_comma_separated_list(
+            &mut line_editor,
+            "libraries",
+            matches,
+            &VALID_LIBRARIES,
+            "libraries",
+            true,
+        )?;
 
-        let description = match matches.get_one::<String>("description") {
-            Some(d) => d.to_string(),
-            None => {
-                let prompt = "Enter project description (optional): ";
-                line_editor.readline(prompt)?.trim().to_string()
-            }
-        };
+        let description = prompt_without_validation(
+            &mut line_editor,
+            &mut stdout,
+            "description",
+            matches,
+            "Enter project description (optional): ",
+        )?;
 
-        let author = loop {
-            let input = match matches.get_one::<String>("author") {
-                Some(a) => a.to_string(),
-                None => {
-                    let prompt = "Enter author name: ";
-                    line_editor.readline(prompt)?.trim().to_string()
-                }
-            };
-            if !input.is_empty() {
-                break input;
-            }
-            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
-            write!(&mut stdout, "Author name cannot be empty. Please try again")?;
-            stdout.reset()?;
-            writeln!(&mut stdout)?;
-        };
+        let author = prompt_with_validation(
+            &mut line_editor,
+            &mut stdout,
+            "author",
+            matches,
+            "Enter author name: ",
+            None,
+            |input: &str| !input.is_empty(),
+            |_| "Author name cannot be empty. Please try again".to_string(),
+        )?;
 
-        let license = loop {
-            let input = match matches.get_one::<String>("license") {
-                Some(l) => l.to_string(),
-                None => {
-                    let completer = ArrayCompleter {
-                        options: VALID_LICENSES.iter().map(|&s| s.to_string()).collect(),
-                    };
-                    line_editor.set_helper(Some(completer));
-                    let prompt = format!("Enter license [{}]: ", VALID_LICENSES.join(", "));
-                    line_editor.readline(prompt.as_str())?.trim().to_lowercase()
-                }
-            };
-            match match_license(&input) {
-                Ok(l) => break l,
-                Err(_) => {
-                    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
-                    write!(&mut stdout, "Invalid license. Please try again")?;
-                    stdout.reset()?;
-                    writeln!(&mut stdout)?;
-                }
-            }
-        };
+        let license = prompt_with_validation(
+            &mut line_editor,
+            &mut stdout,
+            "license",
+            matches,
+            "Enter license",
+            Some(&VALID_LICENSES),
+            |input: &str| match_license(&input.to_lowercase()).is_ok(),
+            |_| "Invalid license. Please try again".to_string(),
+        )?;
         // TODO: Add support for libraries
         // let libraries = matches.get_many::<String>("libraries").unwrap_or_default();
 
