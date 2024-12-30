@@ -88,7 +88,7 @@ pub(crate) fn generate_with_template(
         let tpl = Template::new(get_file_contents(&Path::new(&entry.path())).with_context(
             || {
                 format!(
-                    "Failed to parse template file {}.",
+                    "Failed to parse template file {}",
                     &entry.path().to_string_lossy()
                 )
             },
@@ -136,7 +136,7 @@ pub(crate) fn generate_with_template(
             )
             .with_context(|| {
                 format!(
-                    "Failed to create templates for {}.",
+                    "Failed to create templates for {}",
                     &subdirectory.path().to_string_lossy()
                 )
             })?,

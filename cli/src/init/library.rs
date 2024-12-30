@@ -1,6 +1,7 @@
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use clap::{Arg, ArgMatches, Command};
 use ramhorns::Content;
+use rustyline::DefaultEditor;
 use serde::{Deserialize, Serialize};
 use std::env::current_dir;
 use std::fs::read_to_string;
@@ -56,16 +57,12 @@ impl CliCommand for LibraryCommand {
     fn command(&self) -> Command {
         forklaunch_command("library", "Initialize a new library")
             .alias("lib")
-            .arg(
-                Arg::new("name")
-                    .required(true)
-                    .help("The name of the library"),
-            )
+            .arg(Arg::new("name").help("The name of the library"))
             .arg(
                 Arg::new("base_path")
                     .short('p')
                     .long("path")
-                    .help("The application path to initialize the library in."),
+                    .help("The application path to initialize the library in"),
             )
             .arg(
                 Arg::new("description")
@@ -77,16 +74,42 @@ impl CliCommand for LibraryCommand {
 
     // pass token in from parent and perform get token above?
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
-        let library_name = matches.get_one::<String>("name").unwrap();
+        let mut line_editor = DefaultEditor::new()?;
+
+        let library_name = match matches.get_one::<String>("name") {
+            Some(n) => n.to_string(),
+            None => {
+                let prompt = "Enter library name: ";
+                let input = line_editor.readline(prompt)?;
+                if input.is_empty() {
+                    bail!("Library name cannot be empty");
+                }
+                input
+            }
+        };
+
         let current_path = current_dir().with_context(|| ERROR_FAILED_TO_GET_CWD)?;
         let base_path = match matches.get_one::<String>("base_path") {
-            Some(path) => path,
-            None => current_path.to_str().unwrap(),
+            Some(path) => path.to_string(),
+            None => {
+                let prompt = "Enter base path (optional, press enter for current directory): ";
+                let input = line_editor.readline(prompt)?;
+                if input.trim().is_empty() {
+                    current_path.to_str().unwrap().to_string()
+                } else {
+                    input
+                }
+            }
         };
+
         let description = match matches.get_one::<String>("description") {
-            Some(description) => description,
-            None => &"".to_string(),
+            Some(d) => d.to_string(),
+            None => {
+                let prompt = "Enter library description (optional): ";
+                line_editor.readline(prompt)?.trim().to_string()
+            }
         };
+
         let config_path = Path::new(&base_path)
             .join(".forklaunch")
             .join("manifest.toml");
@@ -100,7 +123,7 @@ impl CliCommand for LibraryCommand {
         };
 
         generate_basic_library(&library_name, &base_path.to_string(), &mut config_data)
-            .with_context(|| "Failed to create library.")?;
+            .with_context(|| "Failed to create library")?;
         Ok(())
     }
 }
@@ -138,11 +161,11 @@ fn generate_basic_library(
     );
     rendered_templates.extend(
         add_library_to_artifacts(config_data, base_path)
-            .with_context(|| "Failed to add library metadata to artifacts.")?,
+            .with_context(|| "Failed to add library metadata to artifacts")?,
     );
 
     write_rendered_templates(&rendered_templates)
-        .with_context(|| "Failed to write library files.")?;
+        .with_context(|| "Failed to write library files")?;
 
     generate_symlinks(Some(base_path), &template_dir.output_path, config_data)
         .with_context(|| ERROR_FAILED_TO_CREATE_SYMLINKS)?;

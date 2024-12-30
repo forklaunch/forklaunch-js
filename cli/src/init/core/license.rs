@@ -1,11 +1,26 @@
 use std::path::Path;
 
 use crate::init::{application::ApplicationConfigData, TEMPLATES_DIR};
-use anyhow::Result;
+use anyhow::{bail, Result};
 use log::warn;
 use ramhorns::Template;
 
 use super::rendered_template::RenderedTemplate;
+
+pub(crate) fn match_license(license: &str) -> Result<String> {
+    match license {
+        "apgl" => Ok("AGPL-3.0".to_string()),
+        "gpl" => Ok("GPL-3.0".to_string()),
+        "lgpl" => Ok("LGPL-3.0".to_string()),
+        "mozilla" => Ok("MPL-2.0".to_string()),
+        "apache" => Ok("Apache-2.0".to_string()),
+        "mit" => Ok("MIT".to_string()),
+        "boost" => Ok("BSL-1.0".to_string()),
+        "unlicense" => Ok("Unlicense".to_string()),
+        "none" => Ok("UNLICENSED".to_string()),
+        _ => bail!("Invalid license"),
+    }
+}
 
 pub(crate) fn generate_license(
     app_path: &str,
@@ -22,7 +37,7 @@ pub(crate) fn generate_license(
         "Unlicense" => Some("unlicense"),
         "UNLICENSED" => None,
         _ => {
-            warn!("No supported license found. Skipping license generation.");
+            warn!("No supported license found. Skipping license generation");
             None
         }
     };

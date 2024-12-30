@@ -25,7 +25,7 @@ pub(crate) fn write_rendered_templates(rendered_templates: &Vec<RenderedTemplate
             match &rendered_template.context {
                 Some(context) => context.clone(),
                 None => format!(
-                    "Failed to write {}. Please check your target directory is writable.",
+                    "Failed to write {}. Please check your target directory is writable",
                     rendered_template.path.display()
                 ),
             }
