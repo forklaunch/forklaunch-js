@@ -13,8 +13,8 @@ use crate::{
     constants::{
         ERROR_FAILED_TO_CREATE_GITIGNORE, ERROR_FAILED_TO_CREATE_LICENSE,
         ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE, ERROR_FAILED_TO_SETUP_IAM, LATEST_CLI_VERSION,
-        VALID_DATABASES, VALID_FRAMEWORKS, VALID_LIBRARIES, VALID_LICENSES, VALID_RUNTIMES,
-        VALID_SERVICES, VALID_TEST_FRAMEWORKS, VALID_VALIDATORS,
+        VALID_DATABASES, VALID_FRAMEWORKS, VALID_LICENSES, VALID_RUNTIMES, VALID_SERVICES,
+        VALID_TEST_FRAMEWORKS, VALID_VALIDATORS,
     },
     prompt::{
         prompt_comma_separated_list, prompt_with_validation, prompt_without_validation,
@@ -119,15 +119,15 @@ impl CliCommand for ApplicationCommand {
                     .num_args(0..)
                     .action(ArgAction::Append),
             )
-            .arg(
-                Arg::new("libraries")
-                    .short('l')
-                    .long("libraries")
-                    .help("Additional libraries to include.]")
-                    .value_parser(VALID_LIBRARIES)
-                    .num_args(0..)
-                    .action(ArgAction::Append),
-            )
+            // .arg(
+            //     Arg::new("libraries")
+            //         .short('l')
+            //         .long("libraries")
+            //         .help("Additional libraries to include.]")
+            //         .value_parser(VALID_LIBRARIES)
+            //         .num_args(0..)
+            //         .action(ArgAction::Append),
+            // )
             .arg(
                 Arg::new("description")
                     .short('D')
@@ -236,14 +236,14 @@ impl CliCommand for ApplicationCommand {
             false,
         )?;
 
-        let _libraries = prompt_comma_separated_list(
-            &mut line_editor,
-            "libraries",
-            matches,
-            &VALID_LIBRARIES,
-            "libraries",
-            true,
-        )?;
+        // let _libraries = prompt_comma_separated_list(
+        //     &mut line_editor,
+        //     "libraries",
+        //     matches,
+        //     &VALID_LIBRARIES,
+        //     "libraries",
+        //     true,
+        // )?;
 
         let description = prompt_without_validation(
             &mut line_editor,

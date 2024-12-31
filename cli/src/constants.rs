@@ -8,7 +8,7 @@ pub(crate) const VALID_VALIDATORS: [&str; 2] = ["zod", "typebox"];
 pub(crate) const VALID_FRAMEWORKS: [&str; 2] = ["express", "hyper-express"];
 pub(crate) const VALID_TEST_FRAMEWORKS: [&str; 2] = ["vitest", "jest"];
 pub(crate) const VALID_SERVICES: [&str; 2] = ["billing", "iam"];
-pub(crate) const VALID_LIBRARIES: [&str; 1] = ["monitoring"];
+// pub(crate) const VALID_LIBRARIES: [&str; 1] = ["monitoring"];
 pub(crate) const VALID_RUNTIMES: [&str; 2] = ["node", "bun"];
 pub(crate) const VALID_LICENSES: [&str; 9] = [
     "apgl",

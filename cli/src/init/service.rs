@@ -1,9 +1,9 @@
 use std::{env::current_dir, fs::read_to_string, path::Path};
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result};
 use clap::{Arg, ArgMatches, Command};
 use ramhorns::Content;
-use rustyline::{history::DefaultHistory, DefaultEditor, Editor};
+use rustyline::{history::DefaultHistory, Editor};
 use serde::{Deserialize, Serialize};
 use termcolor::{ColorChoice, StandardStream};
 use toml::from_str;

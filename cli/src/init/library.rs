@@ -1,8 +1,8 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result};
 use clap::{Arg, ArgMatches, Command};
 use ramhorns::Content;
 use rustyline::history::DefaultHistory;
-use rustyline::{DefaultEditor, Editor};
+use rustyline::Editor;
 use serde::{Deserialize, Serialize};
 use std::env::current_dir;
 use std::fs::read_to_string;
