@@ -1,11 +1,13 @@
 use anyhow::{bail, Context, Result};
 use clap::{Arg, ArgMatches, Command};
 use ramhorns::Content;
-use rustyline::DefaultEditor;
+use rustyline::history::DefaultHistory;
+use rustyline::{DefaultEditor, Editor};
 use serde::{Deserialize, Serialize};
 use std::env::current_dir;
 use std::fs::read_to_string;
 use std::path::Path;
+use termcolor::{ColorChoice, StandardStream};
 use toml::from_str;
 
 use crate::config_struct;
@@ -16,6 +18,7 @@ use crate::constants::{
     ERROR_FAILED_TO_CREATE_SYMLINKS, ERROR_FAILED_TO_CREATE_TSCONFIG, ERROR_FAILED_TO_GET_CWD,
     ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST,
 };
+use crate::prompt::{prompt_with_validation, prompt_without_validation, ArrayCompleter};
 
 use super::core::config::ProjectConfig;
 use super::core::gitignore::generate_gitignore;
@@ -74,41 +77,41 @@ impl CliCommand for LibraryCommand {
 
     // pass token in from parent and perform get token above?
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
-        let mut line_editor = DefaultEditor::new()?;
+        let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
+        let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let library_name = match matches.get_one::<String>("name") {
-            Some(n) => n.to_string(),
-            None => {
-                let prompt = "Enter library name: ";
-                let input = line_editor.readline(prompt)?;
-                if input.is_empty() {
-                    bail!("Library name cannot be empty");
-                }
-                input
-            }
-        };
+        let library_name = prompt_with_validation(
+            &mut line_editor,
+            &mut stdout,
+            "name",
+            matches,
+            "Enter library name: ",
+            None,
+            |input: &str| !input.is_empty(),
+            |_| "Library name cannot be empty. Please try again".to_string(),
+        )?;
 
         let current_path = current_dir().with_context(|| ERROR_FAILED_TO_GET_CWD)?;
-        let base_path = match matches.get_one::<String>("base_path") {
-            Some(path) => path.to_string(),
-            None => {
-                let prompt = "Enter base path (optional, press enter for current directory): ";
-                let input = line_editor.readline(prompt)?;
-                if input.trim().is_empty() {
-                    current_path.to_str().unwrap().to_string()
-                } else {
-                    input
-                }
-            }
+        let base_path = prompt_without_validation(
+            &mut line_editor,
+            &mut stdout,
+            "base_path",
+            matches,
+            "Enter base path (optional, press enter for current directory): ",
+        )?;
+        let base_path = if base_path.trim().is_empty() {
+            current_path.to_str().unwrap().to_string()
+        } else {
+            base_path
         };
 
-        let description = match matches.get_one::<String>("description") {
-            Some(d) => d.to_string(),
-            None => {
-                let prompt = "Enter library description (optional): ";
-                line_editor.readline(prompt)?.trim().to_string()
-            }
-        };
+        let description = prompt_without_validation(
+            &mut line_editor,
+            &mut stdout,
+            "description",
+            matches,
+            "Enter library description (optional): ",
+        )?;
 
         let config_path = Path::new(&base_path)
             .join(".forklaunch")

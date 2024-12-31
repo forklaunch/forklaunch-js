@@ -3,8 +3,9 @@ use std::{env::current_dir, fs::read_to_string, path::Path};
 use anyhow::{bail, Context, Result};
 use clap::{Arg, ArgMatches, Command};
 use ramhorns::Content;
-use rustyline::DefaultEditor;
+use rustyline::{history::DefaultHistory, DefaultEditor, Editor};
 use serde::{Deserialize, Serialize};
+use termcolor::{ColorChoice, StandardStream};
 use toml::from_str;
 
 use crate::{
@@ -17,6 +18,7 @@ use crate::{
         ERROR_FAILED_TO_CREATE_SYMLINKS, ERROR_FAILED_TO_CREATE_TSCONFIG, ERROR_FAILED_TO_GET_CWD,
         ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST, VALID_DATABASES,
     },
+    prompt::{prompt_with_validation, prompt_without_validation, ArrayCompleter},
 };
 
 use super::{
@@ -103,53 +105,52 @@ impl CliCommand for ServiceCommand {
     }
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
-        let mut line_editor = DefaultEditor::new()?;
+        let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
+        let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let service_name = match matches.get_one::<String>("name") {
-            Some(n) => n.to_string(),
-            None => {
-                let prompt = "Enter service name: ";
-                let input = line_editor.readline(prompt)?;
-                if input.is_empty() {
-                    bail!("Service name cannot be empty");
-                }
-                input
-            }
-        };
+        let service_name = prompt_with_validation(
+            &mut line_editor,
+            &mut stdout,
+            "name",
+            matches,
+            "Enter service name: ",
+            None,
+            |input: &str| !input.is_empty(),
+            |_| "Service name cannot be empty. Please try again".to_string(),
+        )?;
 
         let current_path = current_dir().with_context(|| ERROR_FAILED_TO_GET_CWD)?;
-        let base_path = match matches.get_one::<String>("base_path") {
-            Some(path) => path.to_string(),
-            None => {
-                let prompt = "Enter base path (optional, press enter for current directory): ";
-                let input = line_editor.readline(prompt)?;
-                if input.trim().is_empty() {
-                    current_path.to_str().unwrap().to_string()
-                } else {
-                    input
-                }
-            }
+        let base_path = prompt_without_validation(
+            &mut line_editor,
+            &mut stdout,
+            "base_path",
+            matches,
+            "Enter base path (optional, press enter for current directory): ",
+        )?;
+        let base_path = if base_path.trim().is_empty() {
+            current_path.to_str().unwrap().to_string()
+        } else {
+            base_path
         };
 
-        let database = match matches.get_one::<String>("database") {
-            Some(db) => db.to_string(),
-            None => {
-                let prompt = format!("Enter database type [{}]: ", VALID_DATABASES.join(", "));
-                let input = line_editor.readline(prompt.as_str())?;
-                if !VALID_DATABASES.contains(&input.as_str()) {
-                    bail!("Invalid database type");
-                }
-                input
-            }
-        };
+        let database = prompt_with_validation(
+            &mut line_editor,
+            &mut stdout,
+            "database",
+            matches,
+            "Enter database type",
+            Some(&VALID_DATABASES),
+            |input| VALID_DATABASES.contains(&input),
+            |_| "Invalid database type. Please try again".to_string(),
+        )?;
 
-        let description = match matches.get_one::<String>("description") {
-            Some(d) => d.to_string(),
-            None => {
-                let prompt = "Enter service description (optional): ";
-                line_editor.readline(prompt)?.trim().to_string()
-            }
-        };
+        let description = prompt_without_validation(
+            &mut line_editor,
+            &mut stdout,
+            "description",
+            matches,
+            "Enter service description (optional): ",
+        )?;
 
         let config_path = Path::new(&base_path)
             .join(".forklaunch")
