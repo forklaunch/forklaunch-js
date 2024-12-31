@@ -3,12 +3,7 @@ use std::{collections::HashMap, io::Write, path::Path};
 use anyhow::{bail, Context, Result};
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use ramhorns::Content;
-use rustyline::{
-    completion::{Completer, Pair},
-    history::DefaultHistory,
-    Editor,
-};
-use rustyline_derive::{Helper, Highlighter, Hinter, Validator};
+use rustyline::{history::DefaultHistory, Editor};
 use serde::{Deserialize, Serialize};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use uuid::Uuid;
@@ -20,6 +15,10 @@ use crate::{
         ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE, ERROR_FAILED_TO_SETUP_IAM, LATEST_CLI_VERSION,
         VALID_DATABASES, VALID_FRAMEWORKS, VALID_LIBRARIES, VALID_LICENSES, VALID_RUNTIMES,
         VALID_SERVICES, VALID_TEST_FRAMEWORKS, VALID_VALIDATORS,
+    },
+    prompt::{
+        prompt_comma_separated_list, prompt_with_validation, prompt_without_validation,
+        ArrayCompleter,
     },
     utils::get_token,
 };
@@ -69,143 +68,6 @@ impl ApplicationCommand {
         Self {}
     }
 }
-
-// move this to a separate file
-#[derive(Helper, Hinter, Validator, Highlighter)]
-struct ArrayCompleter {
-    options: Vec<String>,
-}
-
-impl Completer for ArrayCompleter {
-    type Candidate = Pair;
-
-    fn complete(
-        &self,
-        line: &str,
-        pos: usize,
-        _ctx: &rustyline::Context<'_>,
-    ) -> rustyline::Result<(usize, Vec<Pair>)> {
-        let current_line = line.split(',').last().unwrap_or(line).trim();
-        let matches: Vec<Pair> = self
-            .options
-            .iter()
-            .filter(|option| option.starts_with(current_line))
-            .map(|option| Pair {
-                display: option.clone(),
-                replacement: option.clone(),
-            })
-            .collect();
-        Ok((pos - current_line.len(), matches))
-    }
-}
-
-fn prompt_without_validation(
-    line_editor: &mut Editor<ArrayCompleter, DefaultHistory>,
-    stdout: &mut StandardStream,
-    matches_key: &str,
-    matches: &ArgMatches,
-    prompt: &str,
-) -> Result<String> {
-    prompt_with_validation(
-        line_editor,
-        stdout,
-        matches_key,
-        matches,
-        prompt,
-        None,
-        |_| true,
-        |_| "".to_string(),
-    )
-}
-
-fn prompt_with_validation<F, V>(
-    line_editor: &mut Editor<ArrayCompleter, DefaultHistory>,
-    stdout: &mut StandardStream,
-    matches_key: &str,
-    matches: &ArgMatches,
-    prompt: &str,
-    valid_options: Option<&[&str]>,
-    validator: V,
-    error_message: F,
-) -> Result<String>
-where
-    F: Fn(&str) -> String,
-    V: Fn(&str) -> bool,
-{
-    loop {
-        let input = match matches.get_one::<String>(matches_key) {
-            Some(val) => val.to_string(),
-            None => {
-                if let Some(options) = valid_options {
-                    let completer = ArrayCompleter {
-                        options: options.iter().map(|&s| s.to_string()).collect(),
-                    };
-                    line_editor.set_helper(Some(completer));
-                    let prompt = if options.is_empty() {
-                        prompt.to_string()
-                    } else {
-                        format!("{} [{}]: ", prompt, options.join(", "))
-                    };
-                    line_editor.readline(&prompt)?.trim().to_string()
-                } else {
-                    line_editor.readline(prompt)?.trim().to_string()
-                }
-            }
-        };
-
-        if validator(&input) {
-            line_editor.set_helper(None);
-            break Ok(input);
-        }
-
-        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
-        write!(stdout, "{}", error_message(&input))?;
-        stdout.reset()?;
-        writeln!(stdout)?;
-    }
-}
-
-fn prompt_comma_separated_list(
-    line_editor: &mut Editor<ArrayCompleter, DefaultHistory>,
-    matches_key: &str,
-    matches: &ArgMatches,
-    valid_options: &[&str],
-    prompt_text: &str,
-    is_optional: bool,
-) -> Result<Vec<String>> {
-    match matches.get_many::<String>(matches_key) {
-        Some(values) => Ok(values.cloned().collect()),
-        None => {
-            let completer = ArrayCompleter {
-                options: valid_options.iter().map(|&s| s.to_string()).collect(),
-            };
-            line_editor.set_helper(Some(completer));
-            let optional_text = if is_optional { " (optional)" } else { "" };
-            let prompt = format!(
-                "Enter {} (comma-separated) [{}]{}: ",
-                prompt_text,
-                valid_options.join(", "),
-                optional_text
-            );
-            let input = line_editor.readline(&prompt)?;
-            if input.trim().is_empty() {
-                line_editor.set_helper(None);
-                Ok(vec![])
-            } else {
-                Ok(input
-                    .split(',')
-                    .map(|s| s.trim().to_string())
-                    .filter(|s| valid_options.contains(&s.as_str()))
-                    .collect::<Vec<String>>()
-                    .into_iter()
-                    .collect::<std::collections::HashSet<_>>()
-                    .into_iter()
-                    .collect())
-            }
-        }
-    }
-}
-// end move
 
 impl CliCommand for ApplicationCommand {
     fn command(&self) -> Command {
