@@ -8,6 +8,7 @@ mod depcheck;
 mod init;
 mod login;
 mod logout;
+mod prompt;
 mod version;
 mod whoami;
 

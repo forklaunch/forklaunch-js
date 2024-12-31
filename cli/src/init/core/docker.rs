@@ -8,12 +8,10 @@ use serde_yml::{from_str, to_string, to_value, Value};
 use crate::{
     constants::{
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE,
-        ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE, ERROR_FAILED_TO_READ_DOCKER_COMPOSE,
+        ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE, ERROR_FAILED_TO_READ_DOCKER_COMPOSE, VALID_DATABASES,
     },
     init::service::ServiceConfigData,
 };
-
-use super::database::VALID_DATABASES;
 
 const MONGO_INIT_COMMAND: &str = r#"sh -c "sleep 5; mongosh --host mongodb:27017 --eval '
 rs.initiate({
@@ -287,7 +285,7 @@ pub(crate) fn add_service_definition_to_docker_compose(
             )),
             restart: Some("always".to_string()),
             build: Some(DockerBuild {
-                context: ".".to_string(),
+                context: "".to_string(),
                 dockerfile: format!("./Dockerfile"),
             }),
             image: Some(format!(

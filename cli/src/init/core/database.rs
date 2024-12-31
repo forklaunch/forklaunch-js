@@ -1,5 +1,3 @@
-pub(crate) const VALID_DATABASES: [&str; 2] = ["postgresql", "mongodb"];
-
 pub(crate) fn match_database(database: &str) -> String {
     match database {
         "mongodb" => "MongoDriver".to_string(),

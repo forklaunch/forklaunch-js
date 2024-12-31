@@ -3,7 +3,9 @@ use std::{env::current_dir, fs::read_to_string, path::Path};
 use anyhow::{Context, Result};
 use clap::{Arg, ArgMatches, Command};
 use ramhorns::Content;
+use rustyline::{history::DefaultHistory, Editor};
 use serde::{Deserialize, Serialize};
+use termcolor::{ColorChoice, StandardStream};
 use toml::from_str;
 
 use crate::{
@@ -14,14 +16,15 @@ use crate::{
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE, ERROR_FAILED_TO_CREATE_GITIGNORE,
         ERROR_FAILED_TO_CREATE_SYMLINKS, ERROR_FAILED_TO_CREATE_TSCONFIG, ERROR_FAILED_TO_GET_CWD,
-        ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST,
+        ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST, VALID_DATABASES,
     },
+    prompt::{prompt_with_validation, prompt_without_validation, ArrayCompleter},
 };
 
 use super::{
     core::{
         config::ProjectConfig,
-        database::{match_database, VALID_DATABASES},
+        database::match_database,
         docker::add_service_definition_to_docker_compose,
         gitignore::generate_gitignore,
         manifest::add_project_definition_to_manifest,
@@ -83,14 +86,14 @@ impl CliCommand for ServiceCommand {
                 Arg::new("base_path")
                     .short('p')
                     .long("path")
-                    .help("The application path to initialize the service in."),
+                    .help("The application path to initialize the service in"),
             )
             .arg(
                 Arg::new("database")
                     .short('d')
                     .long("database")
                     .required(true)
-                    .help("The database to use. Valid values = [postgresql, mongodb]")
+                    .help("The database to use")
                     .value_parser(VALID_DATABASES),
             )
             .arg(
@@ -102,17 +105,52 @@ impl CliCommand for ServiceCommand {
     }
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
-        let service_name = matches.get_one::<String>("name").unwrap();
+        let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
+        let mut stdout = StandardStream::stdout(ColorChoice::Always);
+
+        let service_name = prompt_with_validation(
+            &mut line_editor,
+            &mut stdout,
+            "name",
+            matches,
+            "Enter service name: ",
+            None,
+            |input: &str| !input.is_empty(),
+            |_| "Service name cannot be empty. Please try again".to_string(),
+        )?;
+
         let current_path = current_dir().with_context(|| ERROR_FAILED_TO_GET_CWD)?;
-        let base_path = match matches.get_one::<String>("base_path") {
-            Some(path) => path,
-            None => current_path.to_str().unwrap(),
+        let base_path = prompt_without_validation(
+            &mut line_editor,
+            &mut stdout,
+            "base_path",
+            matches,
+            "Enter base path (optional, press enter for current directory): ",
+        )?;
+        let base_path = if base_path.trim().is_empty() {
+            current_path.to_str().unwrap().to_string()
+        } else {
+            base_path
         };
-        let database = matches.get_one::<String>("database").unwrap();
-        let description = match matches.get_one::<String>("description") {
-            Some(description) => description,
-            None => &"".to_string(),
-        };
+
+        let database = prompt_with_validation(
+            &mut line_editor,
+            &mut stdout,
+            "database",
+            matches,
+            "Enter database type",
+            Some(&VALID_DATABASES),
+            |input| VALID_DATABASES.contains(&input),
+            |_| "Invalid database type. Please try again".to_string(),
+        )?;
+
+        let description = prompt_without_validation(
+            &mut line_editor,
+            &mut stdout,
+            "description",
+            matches,
+            "Enter service description (optional): ",
+        )?;
 
         let config_path = Path::new(&base_path)
             .join(".forklaunch")
@@ -122,7 +160,7 @@ impl CliCommand for ServiceCommand {
             service_name: service_name.clone(),
             description: description.clone(),
             database: database.clone(),
-            db_driver: match_database(database),
+            db_driver: match_database(&database),
             is_mongo: database == "mongodb",
             is_postgres: database == "postgresql",
 
@@ -130,8 +168,8 @@ impl CliCommand for ServiceCommand {
                 .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
         };
 
-        generate_basic_service(service_name, &base_path.to_string(), &mut config_data)
-            .with_context(|| "Failed to create service.")?;
+        generate_basic_service(&service_name, &base_path.to_string(), &mut config_data)
+            .with_context(|| "Failed to create service")?;
         Ok(())
     }
 }
@@ -168,15 +206,15 @@ fn generate_basic_service(
     );
     rendered_templates.extend(
         add_service_to_artifacts(config_data, base_path)
-            .with_context(|| "Failed to add service metadata to artifacts.")?,
+            .with_context(|| "Failed to add service metadata to artifacts")?,
     );
     rendered_templates.extend(
         update_application_package_json(config_data, base_path)
-            .with_context(|| "Failed to update application package.json.")?,
+            .with_context(|| "Failed to update application package.json")?,
     );
 
     write_rendered_templates(&rendered_templates)
-        .with_context(|| "Failed to write service files.")?;
+        .with_context(|| "Failed to write service files")?;
 
     generate_symlinks(Some(base_path), &template_dir.output_path, config_data)
         .with_context(|| ERROR_FAILED_TO_CREATE_SYMLINKS)?;
