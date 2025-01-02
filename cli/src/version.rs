@@ -3,7 +3,7 @@ use clap::{ArgMatches, Command};
 use std::io::Write;
 use termcolor::{ColorChoice, StandardStream};
 
-use crate::{constants::VERSION, core::command::command, CliCommand};
+use crate::{core::command::command, CliCommand};
 
 #[derive(Debug)]
 pub(crate) struct VersionCommand;
@@ -21,7 +21,7 @@ impl CliCommand for VersionCommand {
 
     fn handler(&self, _matches: &ArgMatches) -> Result<()> {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
-        writeln!(stdout, "{}", VERSION)?;
+        writeln!(stdout, "{}", env!("CARGO_PKG_VERSION"))?;
         Ok(())
     }
 }

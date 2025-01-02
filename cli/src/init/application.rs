@@ -14,7 +14,7 @@ use crate::{
         ERROR_FAILED_TO_CREATE_GITIGNORE, ERROR_FAILED_TO_CREATE_LICENSE,
         ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE, ERROR_FAILED_TO_SETUP_IAM, VALID_DATABASES,
         VALID_FRAMEWORKS, VALID_LICENSES, VALID_RUNTIMES, VALID_SERVICES, VALID_TEST_FRAMEWORKS,
-        VALID_VALIDATORS, VERSION,
+        VALID_VALIDATORS,
     },
     core::manifest::ProjectEntry,
     core::token::get_token,
@@ -331,7 +331,7 @@ impl CliCommand for ApplicationCommand {
 
         let mut data = ApplicationManifestData {
             id: Uuid::new_v4().to_string(),
-            cli_version: VERSION.to_string(),
+            cli_version: env!("CARGO_PKG_VERSION").to_string(),
             database: database.to_string(),
             app_name: name.to_string(),
             validator: validator.to_string(),

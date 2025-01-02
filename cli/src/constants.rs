@@ -1,6 +1,5 @@
 use std::path::Path;
 
-pub(crate) const VERSION: &str = "0.1.1";
 pub(crate) const PROD_API_URL: &str = "https://api.forklaunch.com";
 
 pub(crate) const VALID_DATABASES: [&str; 2] = ["postgresql", "mongodb"];
