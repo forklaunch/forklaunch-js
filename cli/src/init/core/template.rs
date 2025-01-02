@@ -7,8 +7,8 @@ use ramhorns::Template;
 use crate::{
     constants::error_failed_to_create_dir,
     init::{
-        application::ApplicationConfigData, library::LibraryConfigData, service::ServiceConfigData,
-        TEMPLATES_DIR,
+        application::ApplicationManifestData, library::LibraryManifestData,
+        service::ServiceManifestData, TEMPLATES_DIR,
     },
 };
 
@@ -21,10 +21,10 @@ pub(crate) struct PathIO {
 }
 
 #[derive(Debug)]
-pub(crate) enum TemplateConfigData {
-    Application(ApplicationConfigData),
-    Service(ServiceConfigData),
-    Library(LibraryConfigData),
+pub(crate) enum TemplateManifestData {
+    Application(ApplicationManifestData),
+    Service(ServiceManifestData),
+    Library(LibraryManifestData),
 }
 
 pub(crate) fn get_directory_filenames(path: &PathIO) -> Result<Vec<&File>> {
@@ -68,7 +68,7 @@ fn forklaunch_replacements(app_name: &String, template: String) -> String {
 pub(crate) fn generate_with_template(
     output_prefix: Option<&String>,
     template_dir: &PathIO,
-    data: &TemplateConfigData,
+    data: &TemplateManifestData,
     ignore_files: &Vec<String>,
 ) -> Result<Vec<RenderedTemplate>> {
     let mut rendered_templates = Vec::new();
@@ -94,14 +94,14 @@ pub(crate) fn generate_with_template(
             },
         )?)?;
         let rendered = match data {
-            TemplateConfigData::Application(data) => {
+            TemplateManifestData::Application(data) => {
                 forklaunch_replacements(&data.app_name, tpl.render(&data))
             }
-            TemplateConfigData::Service(data) => database_replacements(
+            TemplateManifestData::Service(data) => database_replacements(
                 &data.database,
                 forklaunch_replacements(&data.app_name, tpl.render(&data)),
             ),
-            TemplateConfigData::Library(data) => {
+            TemplateManifestData::Library(data) => {
                 forklaunch_replacements(&data.app_name, tpl.render(&data))
             }
         };

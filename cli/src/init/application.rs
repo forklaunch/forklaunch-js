@@ -12,20 +12,21 @@ use crate::{
     config_struct,
     constants::{
         ERROR_FAILED_TO_CREATE_GITIGNORE, ERROR_FAILED_TO_CREATE_LICENSE,
-        ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE, ERROR_FAILED_TO_SETUP_IAM, LATEST_CLI_VERSION,
-        VALID_DATABASES, VALID_FRAMEWORKS, VALID_LICENSES, VALID_RUNTIMES, VALID_SERVICES,
-        VALID_TEST_FRAMEWORKS, VALID_VALIDATORS,
+        ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE, ERROR_FAILED_TO_SETUP_IAM, VALID_DATABASES,
+        VALID_FRAMEWORKS, VALID_LICENSES, VALID_RUNTIMES, VALID_SERVICES, VALID_TEST_FRAMEWORKS,
+        VALID_VALIDATORS, VERSION,
     },
+    core::manifest::ProjectEntry,
+    core::token::get_token,
     prompt::{
         prompt_comma_separated_list, prompt_with_validation, prompt_without_validation,
         ArrayCompleter,
     },
-    utils::get_token,
 };
 
 use super::{
+    command,
     core::{
-        config::ProjectEntry,
         database::match_database,
         gitignore::generate_gitignore,
         iam::generate_iam_keys,
@@ -34,18 +35,15 @@ use super::{
         pnpm_workspace::generate_pnpm_workspace,
         rendered_template::{create_forklaunch_dir, write_rendered_templates},
         symlinks::generate_symlinks,
-        template::{generate_with_template, PathIO, TemplateConfigData},
+        template::{generate_with_template, PathIO, TemplateManifestData},
     },
-    forklaunch_command,
-    service::ServiceConfigData,
+    service::ServiceManifestData,
     CliCommand,
 };
 
 config_struct!(
     #[derive(Debug, Serialize, Content, Clone)]
-    pub(crate) struct ApplicationConfigData {
-        id: String,
-
+    pub(crate) struct ApplicationManifestData {
         #[serde(skip_serializing, skip_deserializing)]
         database: String,
         #[serde(skip_serializing, skip_deserializing)]
@@ -61,7 +59,7 @@ config_struct!(
 );
 
 #[derive(Debug)]
-pub(super) struct ApplicationCommand {}
+pub(super) struct ApplicationCommand;
 
 impl ApplicationCommand {
     pub(super) fn new() -> Self {
@@ -72,7 +70,7 @@ impl ApplicationCommand {
 impl CliCommand for ApplicationCommand {
     fn command(&self) -> Command {
         // TODO: Add support for biome
-        forklaunch_command("application", "Initialize a new full monorepo application")
+        command("application", "Initialize a new full monorepo application")
             .alias("app")
             .arg(Arg::new("name").help("The name of the application"))
             .arg(
@@ -150,6 +148,9 @@ impl CliCommand for ApplicationCommand {
     }
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
+        // TODO: Include basic token checks (expiration, permissions mapping) in this method, but retrieve token from parent command
+        let _token = get_token()?;
+
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
@@ -292,9 +293,6 @@ impl CliCommand for ApplicationCommand {
                 .filter(|config| config != &test_framework_config_file),
         );
 
-        // TODO: Include basic token checks (expiration, permissions mapping) in this method, but retrieve token from parent command
-        let _token = get_token()?;
-
         // Inline specific perms checks here. Make remote calls to receive templates for specific services if needed here (premium only).
 
         let mut additional_projects = vec![ProjectEntry {
@@ -331,9 +329,9 @@ impl CliCommand for ApplicationCommand {
             _ => None,
         };
 
-        let mut data = ApplicationConfigData {
+        let mut data = ApplicationManifestData {
             id: Uuid::new_v4().to_string(),
-            cli_version: LATEST_CLI_VERSION.to_string(),
+            cli_version: VERSION.to_string(),
             database: database.to_string(),
             app_name: name.to_string(),
             validator: validator.to_string(),
@@ -386,7 +384,7 @@ impl CliCommand for ApplicationCommand {
                 input_path: Path::new("application").to_string_lossy().to_string(),
                 output_path: "".to_string(),
             },
-            &TemplateConfigData::Application(data.clone()),
+            &TemplateManifestData::Application(data.clone()),
             &ignore_files
                 .iter()
                 .map(|ignore_file| ignore_file.to_string())
@@ -397,7 +395,8 @@ impl CliCommand for ApplicationCommand {
             rendered_templates.extend(generate_with_template(
                 Some(&name),
                 &template_dir,
-                &TemplateConfigData::Service(ServiceConfigData {
+                &TemplateManifestData::Service(ServiceManifestData {
+                    id: data.id.clone(),
                     cli_version: data.cli_version.clone(),
                     app_name: data.app_name.clone(),
                     service_name: template_dir.output_path.to_string(),
@@ -470,9 +469,8 @@ impl CliCommand for ApplicationCommand {
                 )
             })?;
 
-        let mut stdout = StandardStream::stdout(ColorChoice::Always);
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-        writeln!(&mut stdout, "{} initialized successfully!", name)?;
+        writeln!(stdout, "{} initialized successfully!", name)?;
         stdout.reset()?;
         Ok(())
     }

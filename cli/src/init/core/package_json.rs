@@ -11,13 +11,11 @@ use crate::{
         ERROR_FAILED_TO_GENERATE_PACKAGE_JSON, ERROR_FAILED_TO_PARSE_PACKAGE_JSON,
         ERROR_FAILED_TO_READ_PACKAGE_JSON,
     },
-    init::service::ServiceConfigData,
+    core::manifest::{ManifestConfig, ProjectManifestConfig},
+    init::service::ServiceManifestData,
 };
 
-use super::{
-    config::{Config, ProjectConfig},
-    rendered_template::RenderedTemplate,
-};
+use super::rendered_template::RenderedTemplate;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct PackageJson {
@@ -26,7 +24,7 @@ struct PackageJson {
 }
 
 pub(crate) fn add_project_definition_to_package_json<
-    T: Content + Config + ProjectConfig + Serialize,
+    T: Content + ManifestConfig + ProjectManifestConfig + Serialize,
 >(
     config_data: &T,
     base_path: &String,
@@ -56,7 +54,7 @@ pub(crate) fn add_project_definition_to_package_json<
 }
 
 pub(crate) fn update_application_package_json(
-    config_data: &ServiceConfigData,
+    config_data: &ServiceManifestData,
     base_path: &String,
 ) -> Result<Option<RenderedTemplate>> {
     let mut full_package_json: Value = from_str(
@@ -72,7 +70,6 @@ pub(crate) fn update_application_package_json(
     let database = config_data.database.to_string();
 
     let update_docker_cmd = |cmd: &str| {
-        // Split into docker command and remaining commands
         let (docker_cmd, rest_cmd) = match cmd.split_once("&&") {
             Some((docker, rest)) => (docker.trim(), rest.trim()),
             None => (cmd.trim(), ""),
@@ -86,7 +83,6 @@ pub(crate) fn update_application_package_json(
             .filter(|s| !s.is_empty())
             .collect();
 
-        // Add new database service if not present
         if !services.contains(&database.as_str()) {
             services.push(&database);
             if config_data.is_mongo {
@@ -94,7 +90,6 @@ pub(crate) fn update_application_package_json(
             }
         }
 
-        // Build the new docker command
         let new_docker_cmd = format!(
             "docker compose up {}",
             services
@@ -104,7 +99,6 @@ pub(crate) fn update_application_package_json(
                 .join(" ")
         );
 
-        // Combine with rest of command if any
         if rest_cmd.is_empty() {
             new_docker_cmd
         } else {

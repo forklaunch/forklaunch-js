@@ -23,7 +23,7 @@
   "devDependencies": {
     "ajv": "^8.17.1",
     "eslint": "^9.17.0",
-    "@mikro-orm/cli": "^6.4.1",
+    "@mikro-orm/cli": "^6.4.2",
     "tsx": "^4.19.2",
     "typescript-eslint": "^8.18.0"
   },
