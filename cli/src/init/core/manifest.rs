@@ -8,22 +8,21 @@ use crate::{
     constants::{
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST, ERROR_FAILED_TO_CREATE_MANIFEST,
     },
-    init::application::ApplicationConfigData,
+    core::manifest::{ManifestConfig, ProjectEntry, ProjectManifestConfig},
+    init::application::ApplicationManifestData,
 };
 
-use super::{
-    config::{Config, ProjectConfig, ProjectEntry},
-    rendered_template::RenderedTemplate,
-};
+use super::rendered_template::RenderedTemplate;
 
 pub(crate) fn generate_manifest(
     path_dir: &String,
-    data: &ApplicationConfigData,
+    data: &ApplicationManifestData,
 ) -> Result<Option<RenderedTemplate>> {
     let config_str = to_string_pretty(&data).with_context(|| ERROR_FAILED_TO_CREATE_MANIFEST)?;
-    let forklaunch_path = Path::new(path_dir).join(".forklaunch");
+    let config_path = Path::new(path_dir)
+        .join(".forklaunch")
+        .join("manifest.toml");
 
-    let config_path = forklaunch_path.join("manifest.toml");
     if config_path.exists() {
         return Ok(None);
     }
@@ -34,7 +33,9 @@ pub(crate) fn generate_manifest(
     }))
 }
 
-pub(crate) fn add_project_definition_to_manifest<T: Config + ProjectConfig + Serialize>(
+pub(crate) fn add_project_definition_to_manifest<
+    T: ManifestConfig + ProjectManifestConfig + Serialize,
+>(
     config_data: &mut T,
     port: Option<i32>,
     database: Option<String>,

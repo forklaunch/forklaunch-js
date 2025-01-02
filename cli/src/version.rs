@@ -1,13 +1,27 @@
 use anyhow::Result;
 use clap::{ArgMatches, Command};
+use std::io::Write;
+use termcolor::{ColorChoice, StandardStream};
 
-use crate::utils::forklaunch_command;
+use crate::{core::command::command, CliCommand};
 
-pub(crate) fn command() -> Command {
-    forklaunch_command("version", "Get the current version of forklaunch")
+#[derive(Debug)]
+pub(crate) struct VersionCommand;
+
+impl VersionCommand {
+    pub(crate) fn new() -> Self {
+        Self {}
+    }
 }
 
-pub(crate) fn handler(matches: &ArgMatches) -> Result<()> {
-    println!("{:?}", matches);
-    Ok(())
+impl CliCommand for VersionCommand {
+    fn command(&self) -> Command {
+        command("version", "Get the current version of forklaunch")
+    }
+
+    fn handler(&self, _matches: &ArgMatches) -> Result<()> {
+        let mut stdout = StandardStream::stdout(ColorChoice::Always);
+        writeln!(stdout, "{}", env!("CARGO_PKG_VERSION"))?;
+        Ok(())
+    }
 }

@@ -1,6 +1,7 @@
 use std::path::Path;
 
 use anyhow::Result;
+use serde_json::{json, to_string_pretty};
 
 use super::rendered_template::RenderedTemplate;
 
@@ -12,17 +13,17 @@ pub(crate) fn generate_tsconfig(path_dir: &String) -> Result<Option<RenderedTemp
 
     Ok(Some(RenderedTemplate {
         path,
-        content: serde_json::json!({
+        content: to_string_pretty(&json!({
             "extends": "../tsconfig.base.json",
             "compilerOptions": {
                 "outDir": "dist"
             },
             "exclude": [
                 "node_modules",
-                "dist"
+                "dist",
+                "eslint.config.mjs"
             ]
-        })
-        .to_string(),
+        }))?,
         context: None,
     }))
 }

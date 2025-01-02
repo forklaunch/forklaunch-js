@@ -5,12 +5,12 @@ use include_dir::{include_dir, Dir};
 use library::LibraryCommand;
 use service::ServiceCommand;
 
-use crate::{utils::forklaunch_command, CliCommand};
+use crate::{core::command::command, CliCommand};
 
-mod application;
-mod core;
-mod library;
-mod service;
+pub(crate) mod application;
+pub(crate) mod core;
+pub(crate) mod library;
+pub(crate) mod service;
 
 pub(crate) static TEMPLATES_DIR: Dir = include_dir!("src/templates");
 
@@ -34,7 +34,7 @@ impl InitCommand {
 
 impl CliCommand for InitCommand {
     fn command(&self) -> Command {
-        forklaunch_command("init", "Initialize a new forklaunch project")
+        command("init", "Initialize a new forklaunch project")
             .subcommand_required(true)
             .subcommand(self.application.command())
             .subcommand(self.library.command())

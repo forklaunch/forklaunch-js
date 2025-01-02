@@ -4,7 +4,6 @@ use ramhorns::Content;
 use rustyline::history::DefaultHistory;
 use rustyline::Editor;
 use serde::{Deserialize, Serialize};
-use std::env::current_dir;
 use std::fs::read_to_string;
 use std::path::Path;
 use termcolor::{ColorChoice, StandardStream};
@@ -15,25 +14,26 @@ use crate::constants::{
     ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
     ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON,
     ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE, ERROR_FAILED_TO_CREATE_GITIGNORE,
-    ERROR_FAILED_TO_CREATE_SYMLINKS, ERROR_FAILED_TO_CREATE_TSCONFIG, ERROR_FAILED_TO_GET_CWD,
+    ERROR_FAILED_TO_CREATE_SYMLINKS, ERROR_FAILED_TO_CREATE_TSCONFIG,
     ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST,
 };
+use crate::core::base_path::prompt_base_path;
+use crate::core::manifest::ProjectManifestConfig;
 use crate::prompt::{prompt_with_validation, prompt_without_validation, ArrayCompleter};
 
-use super::core::config::ProjectConfig;
 use super::core::gitignore::generate_gitignore;
 use super::core::manifest::add_project_definition_to_manifest;
 use super::core::package_json::add_project_definition_to_package_json;
 use super::core::pnpm_workspace::add_project_definition_to_pnpm_workspace;
 use super::core::rendered_template::{write_rendered_templates, RenderedTemplate};
 use super::core::symlinks::generate_symlinks;
-use super::core::template::{generate_with_template, PathIO, TemplateConfigData};
+use super::core::template::{generate_with_template, PathIO, TemplateManifestData};
 use super::core::tsconfig::generate_tsconfig;
-use super::{forklaunch_command, CliCommand};
+use super::{command, CliCommand};
 
 config_struct!(
     #[derive(Debug, Content, Serialize, Clone)]
-    pub(crate) struct LibraryConfigData {
+    pub(crate) struct LibraryManifestData {
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) library_name: String,
         #[serde(skip_serializing, skip_deserializing)]
@@ -41,7 +41,7 @@ config_struct!(
     }
 );
 
-impl ProjectConfig for LibraryConfigData {
+impl ProjectManifestConfig for LibraryManifestData {
     fn name(&self) -> &String {
         &self.library_name
     }
@@ -58,7 +58,7 @@ impl LibraryCommand {
 
 impl CliCommand for LibraryCommand {
     fn command(&self) -> Command {
-        forklaunch_command("library", "Initialize a new library")
+        command("library", "Initialize a new library")
             .alias("lib")
             .arg(Arg::new("name").help("The name of the library"))
             .arg(
@@ -91,19 +91,7 @@ impl CliCommand for LibraryCommand {
             |_| "Library name cannot be empty. Please try again".to_string(),
         )?;
 
-        let current_path = current_dir().with_context(|| ERROR_FAILED_TO_GET_CWD)?;
-        let base_path = prompt_without_validation(
-            &mut line_editor,
-            &mut stdout,
-            "base_path",
-            matches,
-            "Enter base path (optional, press enter for current directory): ",
-        )?;
-        let base_path = if base_path.trim().is_empty() {
-            current_path.to_str().unwrap().to_string()
-        } else {
-            base_path
-        };
+        let base_path = prompt_base_path(&mut line_editor, &mut stdout, matches)?;
 
         let description = prompt_without_validation(
             &mut line_editor,
@@ -117,7 +105,7 @@ impl CliCommand for LibraryCommand {
             .join(".forklaunch")
             .join("manifest.toml");
 
-        let mut config_data: LibraryConfigData = LibraryConfigData {
+        let mut config_data: LibraryManifestData = LibraryManifestData {
             library_name: library_name.clone(),
             description: description.clone(),
 
@@ -134,7 +122,7 @@ impl CliCommand for LibraryCommand {
 fn generate_basic_library(
     library_name: &String,
     base_path: &String,
-    config_data: &mut LibraryConfigData,
+    config_data: &mut LibraryManifestData,
 ) -> Result<()> {
     let output_path = Path::new(base_path)
         .join(library_name)
@@ -154,7 +142,7 @@ fn generate_basic_library(
     let mut rendered_templates = generate_with_template(
         None,
         &template_dir,
-        &TemplateConfigData::Library(config_data.clone()),
+        &TemplateManifestData::Library(config_data.clone()),
         &ignore_files,
     )?;
     rendered_templates
@@ -177,7 +165,7 @@ fn generate_basic_library(
 }
 
 fn add_library_to_artifacts(
-    config_data: &mut LibraryConfigData,
+    config_data: &mut LibraryManifestData,
     base_path: &String,
 ) -> Result<Vec<RenderedTemplate>> {
     let forklaunch_definition_buffer = add_project_definition_to_manifest(config_data, None, None)

@@ -10,7 +10,7 @@ use crate::{
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE,
         ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE, ERROR_FAILED_TO_READ_DOCKER_COMPOSE, VALID_DATABASES,
     },
-    init::service::ServiceConfigData,
+    init::service::ServiceManifestData,
 };
 
 const MONGO_INIT_COMMAND: &str = r#"sh -c "sleep 5; mongosh --host mongodb:27017 --eval '
@@ -97,7 +97,7 @@ struct DockerBuild {
 }
 
 fn add_database_to_docker_compose(
-    config_data: &ServiceConfigData,
+    config_data: &ServiceManifestData,
     docker_compose: &mut DockerCompose,
     environment: &mut IndexMap<String, String>,
 ) -> Result<()> {
@@ -202,7 +202,7 @@ fn add_database_to_docker_compose(
 }
 
 pub(crate) fn add_service_definition_to_docker_compose(
-    config_data: &ServiceConfigData,
+    config_data: &ServiceManifestData,
     base_path: &String,
 ) -> Result<(String, i32)> {
     let mut full_docker_compose: Value = from_str(
@@ -285,7 +285,7 @@ pub(crate) fn add_service_definition_to_docker_compose(
             )),
             restart: Some("always".to_string()),
             build: Some(DockerBuild {
-                context: "".to_string(),
+                context: ".".to_string(),
                 dockerfile: format!("./Dockerfile"),
             }),
             image: Some(format!(

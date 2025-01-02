@@ -1,5 +1,4 @@
 #[macro_use]
-pub(crate) mod config;
 pub(crate) mod database;
 pub(crate) mod docker;
 pub(crate) mod gitignore;

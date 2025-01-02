@@ -6,9 +6,9 @@ use ramhorns::Content;
 
 use crate::constants::{error_failed_to_create_symlink, ERROR_FAILED_TO_GET_CWD};
 
-use super::config::Config;
+use crate::core::manifest::ManifestConfig;
 
-pub(crate) fn generate_symlinks<T: Content + Config>(
+pub(crate) fn generate_symlinks<T: Content + ManifestConfig>(
     base_path_dir: Option<&String>,
     path_dir: &String,
     config_data: &mut T,

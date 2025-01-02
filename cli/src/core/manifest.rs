@@ -1,8 +1,10 @@
+use serde::Serialize;
+
 use ramhorns::Content;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use std::collections::HashMap;
 
-pub(crate) trait Config {
+pub(crate) trait ManifestConfig {
     fn app_name(&self) -> &String;
     fn test_framework(&self) -> &String;
     fn projects(&self) -> &Vec<ProjectEntry>;
@@ -10,7 +12,7 @@ pub(crate) trait Config {
     fn project_peer_topology_mut(&mut self) -> &mut HashMap<String, Vec<String>>;
 }
 
-pub(crate) trait ProjectConfig {
+pub(crate) trait ProjectManifestConfig {
     fn name(&self) -> &String;
 }
 
@@ -40,14 +42,14 @@ macro_rules! internal_config_struct {
                 $(#[$field_meta])*
                 $field_vis $field: $ty
             ),*,
-
+            $vis id: String,
             $vis cli_version: String,
             $vis app_name: String,
             $vis validator: String,
             $vis http_framework: String,
             $vis runtime: String,
             $vis test_framework: String,
-            $vis projects: Vec<crate::init::core::config::ProjectEntry>,
+            $vis projects: Vec<crate::core::manifest::ProjectEntry>,
             $vis project_peer_topology: std::collections::HashMap<String, Vec<String>>,
             $vis author: String,
             $vis license: String,
@@ -116,6 +118,7 @@ macro_rules! config_struct {
             impl From<[<Shadow $name>]> for $name {
                 fn from(shadow: [<Shadow $name>]) -> Self {
                     Self {
+                        id: shadow.id.clone(),
                         cli_version: shadow.cli_version.clone(),
                         app_name: shadow.app_name.clone(),
                         validator: shadow.validator.clone(),
@@ -151,20 +154,17 @@ macro_rules! config_struct {
 
 
 
-        impl crate::init::core::config::Config for $name {
+        impl crate::core::manifest::ManifestConfig for $name {
             fn app_name(&self) -> &String {
                 &self.app_name
             }
-            // fn database(&self) -> &String {
-            //     &self.database
-            // }
             fn test_framework(&self) -> &String {
                 &self.test_framework
             }
-            fn projects(&self) -> &Vec<crate::init::core::config::ProjectEntry> {
+            fn projects(&self) -> &Vec<crate::core::manifest::ProjectEntry> {
                 &self.projects
             }
-            fn projects_mut(&mut self) -> &mut Vec<crate::init::core::config::ProjectEntry> {
+            fn projects_mut(&mut self) -> &mut Vec<crate::core::manifest::ProjectEntry> {
                 &mut self.projects
             }
             fn project_peer_topology_mut(&mut self) -> &mut std::collections::HashMap<String, Vec<String>> {

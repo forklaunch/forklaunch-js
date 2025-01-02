@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::init::{application::ApplicationConfigData, TEMPLATES_DIR};
+use crate::init::{application::ApplicationManifestData, TEMPLATES_DIR};
 use anyhow::{bail, Result};
 use log::warn;
 use ramhorns::Template;
@@ -24,7 +24,7 @@ pub(crate) fn match_license(license: &str) -> Result<String> {
 
 pub(crate) fn generate_license(
     app_path: &str,
-    data: &ApplicationConfigData,
+    data: &ApplicationManifestData,
 ) -> Result<Option<RenderedTemplate>> {
     let license_file = match data.license.as_str() {
         "AGPL-3.0" => Some("agpl-3.0"),

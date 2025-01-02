@@ -1,4 +1,4 @@
-use std::{env::current_dir, fs::read_to_string, path::Path};
+use std::{fs::read_to_string, path::Path};
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgMatches, Command};
@@ -15,15 +15,16 @@ use crate::{
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE, ERROR_FAILED_TO_CREATE_GITIGNORE,
-        ERROR_FAILED_TO_CREATE_SYMLINKS, ERROR_FAILED_TO_CREATE_TSCONFIG, ERROR_FAILED_TO_GET_CWD,
+        ERROR_FAILED_TO_CREATE_SYMLINKS, ERROR_FAILED_TO_CREATE_TSCONFIG,
         ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST, VALID_DATABASES,
     },
+    core::{base_path::prompt_base_path, manifest::ProjectManifestConfig},
     prompt::{prompt_with_validation, prompt_without_validation, ArrayCompleter},
 };
 
 use super::{
+    command,
     core::{
-        config::ProjectConfig,
         database::match_database,
         docker::add_service_definition_to_docker_compose,
         gitignore::generate_gitignore,
@@ -32,15 +33,15 @@ use super::{
         pnpm_workspace::add_project_definition_to_pnpm_workspace,
         rendered_template::{write_rendered_templates, RenderedTemplate},
         symlinks::generate_symlinks,
-        template::{generate_with_template, PathIO, TemplateConfigData},
+        template::{generate_with_template, PathIO, TemplateManifestData},
         tsconfig::generate_tsconfig,
     },
-    forklaunch_command, CliCommand,
+    CliCommand,
 };
 
 config_struct!(
     #[derive(Debug, Content, Serialize, Clone)]
-    pub(crate) struct ServiceConfigData {
+    pub(crate) struct ServiceManifestData {
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) service_name: String,
         #[serde(skip_serializing, skip_deserializing)]
@@ -56,7 +57,7 @@ config_struct!(
     }
 );
 
-impl ProjectConfig for ServiceConfigData {
+impl ProjectManifestConfig for ServiceManifestData {
     fn name(&self) -> &String {
         &self.service_name
     }
@@ -73,15 +74,11 @@ impl ServiceCommand {
 
 impl CliCommand for ServiceCommand {
     fn command(&self) -> Command {
-        forklaunch_command("service", "Initialize a new service")
+        command("service", "Initialize a new service")
             .alias("svc")
             .alias("project")
             .alias("proj")
-            .arg(
-                Arg::new("name")
-                    .required(true)
-                    .help("The name of the application"),
-            )
+            .arg(Arg::new("name").help("The name of the service"))
             .arg(
                 Arg::new("base_path")
                     .short('p')
@@ -92,7 +89,6 @@ impl CliCommand for ServiceCommand {
                 Arg::new("database")
                     .short('d')
                     .long("database")
-                    .required(true)
                     .help("The database to use")
                     .value_parser(VALID_DATABASES),
             )
@@ -119,19 +115,7 @@ impl CliCommand for ServiceCommand {
             |_| "Service name cannot be empty. Please try again".to_string(),
         )?;
 
-        let current_path = current_dir().with_context(|| ERROR_FAILED_TO_GET_CWD)?;
-        let base_path = prompt_without_validation(
-            &mut line_editor,
-            &mut stdout,
-            "base_path",
-            matches,
-            "Enter base path (optional, press enter for current directory): ",
-        )?;
-        let base_path = if base_path.trim().is_empty() {
-            current_path.to_str().unwrap().to_string()
-        } else {
-            base_path
-        };
+        let base_path = prompt_base_path(&mut line_editor, &mut stdout, matches)?;
 
         let database = prompt_with_validation(
             &mut line_editor,
@@ -156,7 +140,7 @@ impl CliCommand for ServiceCommand {
             .join(".forklaunch")
             .join("manifest.toml");
 
-        let mut config_data: ServiceConfigData = ServiceConfigData {
+        let mut config_data: ServiceManifestData = ServiceManifestData {
             service_name: service_name.clone(),
             description: description.clone(),
             database: database.clone(),
@@ -177,7 +161,7 @@ impl CliCommand for ServiceCommand {
 fn generate_basic_service(
     service_name: &String,
     base_path: &String,
-    config_data: &mut ServiceConfigData,
+    config_data: &mut ServiceManifestData,
 ) -> Result<()> {
     let output_path = Path::new(base_path)
         .join(service_name)
@@ -196,7 +180,7 @@ fn generate_basic_service(
     let mut rendered_templates = generate_with_template(
         None,
         &template_dir,
-        &TemplateConfigData::Service(config_data.clone()),
+        &TemplateManifestData::Service(config_data.clone()),
         &ignore_files,
     )?;
     rendered_templates
@@ -223,7 +207,7 @@ fn generate_basic_service(
 }
 
 fn add_service_to_artifacts(
-    config_data: &mut ServiceConfigData,
+    config_data: &mut ServiceManifestData,
     base_path: &String,
 ) -> Result<Vec<RenderedTemplate>> {
     let (docker_compose_buffer, port_number) =

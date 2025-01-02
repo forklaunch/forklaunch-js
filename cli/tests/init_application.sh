@@ -1,28 +1,38 @@
-mkdir -p output/application
-cd output/application
+mkdir -p output/init-application
+cd output/init-application
 
-RUST_BACKTRACE=1 cargo run init application application-zod-express-bun-vitest-billing-iam -d postgresql -v zod -f express -r bun -t vitest -p billing -p iam
-RUST_BACKTRACE=1 cargo run init application application-zod-express-bun-vitest -d postgresql -v zod -f express -r bun -t vitest
-RUST_BACKTRACE=1 cargo run init application application-zod-express-bun-jest-billing-iam -d postgresql -v zod -f express -r bun -t jest -p billing -p iam
-RUST_BACKTRACE=1 cargo run init application application-zod-express-bun-jest -d postgresql -v zod -f express -r bun -t jest
-RUST_BACKTRACE=1 cargo run init application application-typebox-express-bun-vitest-billing-iam -d postgresql -v typebox -f express -r bun -t vitest -p billing -p iam
-RUST_BACKTRACE=1 cargo run init application application-typebox-express-bun-vitest -d postgresql -v typebox -f express -r bun -t vitest
-RUST_BACKTRACE=1 cargo run init application application-typebox-express-bun-jest-billing-iam -d postgresql -v typebox -f express -r bun -t jest -p billing -p iam
-RUST_BACKTRACE=1 cargo run init application application-typebox-express-bun-jest -d postgresql -v typebox -f express -r bun -t jest
-RUST_BACKTRACE=1 cargo run init application application-zod-hyper-express-node-vitest-billing-iam -d postgresql -v zod -f hyper-express -r node -t vitest -p billing -p iam
-RUST_BACKTRACE=1 cargo run init application application-zod-hyper-express-node-vitest -d postgresql -v zod -f hyper-express -r node -t vitest
-RUST_BACKTRACE=1 cargo run init application application-zod-hyper-express-node-jest-billing-iam -d postgresql -v zod -f hyper-express -r node -t jest -p billing -p iam
-RUST_BACKTRACE=1 cargo run init application application-zod-hyper-express-node-jest -d postgresql -v zod -f hyper-express -r node -t jest
-RUST_BACKTRACE=1 cargo run init application application-typebox-hyper-express-node-vitest-billing-iam -d postgresql -v typebox -f hyper-express -r node -t vitest -p billing -p iam
-RUST_BACKTRACE=1 cargo run init application application-typebox-hyper-express-node-vitest -d postgresql -v typebox -f hyper-express -r node -t vitest
-RUST_BACKTRACE=1 cargo run init application application-typebox-hyper-express-node-jest-billing-iam -d postgresql -v typebox -f hyper-express -r node -t jest -p billing -p iam
-RUST_BACKTRACE=1 cargo run init application application-typebox-hyper-express-node-jest -d postgresql -v typebox -f hyper-express -r node -t jest
+RUST_BACKTRACE=1 cargo run login
 
-RUST_BACKTRACE=1 cargo run init application application-zod-hyper-express-node-vitest-billing-iam -d postgresql -v zod -f hyper-express -r node -t vitest -p billing -p iam
-RUST_BACKTRACE=1 cargo run init application application-zod-hyper-express-node-vitest -d postgresql -v zod -f hyper-express -r node -t vitest
-RUST_BACKTRACE=1 cargo run init application application-zod-hyper-express-node-jest-billing-iam -d postgresql -v zod -f hyper-express -r node -t jest -p billing -p iam
-RUST_BACKTRACE=1 cargo run init application application-zod-hyper-express-node-jest -d postgresql -v zod -f hyper-express -r node -t jest
-RUST_BACKTRACE=1 cargo run init application application-typebox-hyper-express-node-vitest-billing-iam -d postgresql -v typebox -f hyper-express -r node -t vitest -p billing -p iam
-RUST_BACKTRACE=1 cargo run init application application-typebox-hyper-express-node-vitest -d postgresql -v typebox -f hyper-express -r node -t vitest
-RUST_BACKTRACE=1 cargo run init application application-typebox-hyper-express-node-jest-billing-iam -d postgresql -v typebox -f hyper-express -r node -t jest -p billing -p iam
-RUST_BACKTRACE=1 cargo run init application application-typebox-hyper-express-node-jest -d postgresql -v typebox -f hyper-express -r node -t jest
+databases=("postgresql" "mongodb")
+validators=("zod" "typebox")
+frameworks=("express" "hyper-express")
+runtimes=("bun" "node")
+test_frameworks=("vitest" "jest")
+
+for database in "${databases[@]}"; do
+  for validator in "${validators[@]}"; do
+    for framework in "${frameworks[@]}"; do
+        for runtime in "${runtimes[@]}"; do
+        if [ "$framework" = "hyper-express" ] && [ "$runtime" = "bun" ]; then
+            continue
+        fi
+        for test_framework in "${test_frameworks[@]}"; do
+            app_name="application-${validator}-${framework}-${runtime}-${test_framework}"
+
+            RUST_BACKTRACE=1 cargo run init application "$app_name" \
+                -d "$database" \
+                -v "$validator" \
+                -f "$framework" \
+                -r "$runtime" \
+                -t "$test_framework" \
+                -s "billing" \
+                -s "iam" \
+                -D "Test application" \
+                -A "Rohin Bhargava" \
+                -L "apgl" 
+
+        done
+        done
+    done
+  done
+done
