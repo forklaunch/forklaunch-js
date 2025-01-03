@@ -5,7 +5,8 @@ use clap::{Arg, ArgMatches, Command};
 use ramhorns::Content;
 use rustyline::{history::DefaultHistory, Editor};
 use serde::{Deserialize, Serialize};
-use termcolor::{ColorChoice, StandardStream};
+use std::io::Write;
+use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use toml::from_str;
 
 use crate::{
@@ -154,6 +155,11 @@ impl CliCommand for ServiceCommand {
 
         generate_basic_service(&service_name, &base_path.to_string(), &mut config_data)
             .with_context(|| "Failed to create service")?;
+
+        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+        writeln!(stdout, "{} initialized successfully!", service_name)?;
+        stdout.reset()?;
+
         Ok(())
     }
 }

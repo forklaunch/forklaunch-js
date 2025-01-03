@@ -472,6 +472,7 @@ impl CliCommand for ApplicationCommand {
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
         writeln!(stdout, "{} initialized successfully!", name)?;
         stdout.reset()?;
+
         Ok(())
     }
 }

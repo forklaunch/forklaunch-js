@@ -5,8 +5,9 @@ use rustyline::history::DefaultHistory;
 use rustyline::Editor;
 use serde::{Deserialize, Serialize};
 use std::fs::read_to_string;
+use std::io::Write;
 use std::path::Path;
-use termcolor::{ColorChoice, StandardStream};
+use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use toml::from_str;
 
 use crate::config_struct;
@@ -115,6 +116,11 @@ impl CliCommand for LibraryCommand {
 
         generate_basic_library(&library_name, &base_path.to_string(), &mut config_data)
             .with_context(|| "Failed to create library")?;
+
+        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+        writeln!(stdout, "{} initialized successfully!", library_name)?;
+        stdout.reset()?;
+
         Ok(())
     }
 }
