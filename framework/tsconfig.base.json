@@ -5,6 +5,7 @@
     "incremental": true,
     "declaration": true,
     "declarationMap": true,
+    "experimentalDecorators": true,
 
     "lib": ["ESNext", "DOM"],
     "target": "ESNext",
