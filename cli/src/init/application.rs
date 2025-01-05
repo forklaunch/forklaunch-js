@@ -265,15 +265,18 @@ impl CliCommand for ApplicationCommand {
             |_| "Author name cannot be empty. Please try again".to_string(),
         )?;
 
-        let license = prompt_with_validation(
-            &mut line_editor,
-            &mut stdout,
-            "license",
-            matches,
-            "Enter license",
-            Some(&VALID_LICENSES),
-            |input: &str| match_license(&input.to_lowercase()).is_ok(),
-            |_| "Invalid license. Please try again".to_string(),
+        let license = match_license(
+            prompt_with_validation(
+                &mut line_editor,
+                &mut stdout,
+                "license",
+                matches,
+                "Enter license",
+                Some(&VALID_LICENSES),
+                |input: &str| match_license(&input.to_lowercase()).is_ok(),
+                |_| "Invalid license. Please try again".to_string(),
+            )?
+            .as_str(),
         )?;
         // TODO: Add support for libraries
         // let libraries = matches.get_many::<String>("libraries").unwrap_or_default();
