@@ -449,7 +449,9 @@ impl CliCommand for ApplicationCommand {
         }
 
         if additional_projects_names.contains(&"iam".to_string()) {
-            generate_iam_keys(&Path::new(&name)).with_context(|| ERROR_FAILED_TO_SETUP_IAM)?;
+            rendered_templates.extend(
+                generate_iam_keys(&Path::new(&name)).with_context(|| ERROR_FAILED_TO_SETUP_IAM)?,
+            );
         }
 
         create_forklaunch_dir(&Path::new(&name).to_string_lossy().to_string())?;
