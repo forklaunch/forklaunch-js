@@ -9,7 +9,7 @@ use anyhow::{Context, Result};
 use clap::{Arg, ArgMatches, Command};
 use rustyline::{history::DefaultHistory, Editor};
 use serde::{Deserialize, Serialize};
-use serde_json::{from_str, Value};
+use serde_json::{from_str, json, Value};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 use crate::{
@@ -92,8 +92,14 @@ impl CliCommand for DepcheckCommand {
                         )
                         .with_context(|| format!("Failed to parse package.json for {}", project))?;
 
-                        let dependencies = package_json.get("dependencies").unwrap();
-                        let dev_dependencies = package_json.get("devDependencies").unwrap();
+                        let empty_dependencies = json!({});
+                        let dependencies = package_json
+                            .get("dependencies")
+                            .unwrap_or(&empty_dependencies);
+                        let empty_dev_dependencies = json!({});
+                        let dev_dependencies = package_json
+                            .get("devDependencies")
+                            .unwrap_or(&empty_dev_dependencies);
 
                         dependencies
                             .as_object()
