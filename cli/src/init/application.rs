@@ -338,7 +338,11 @@ impl CliCommand for ApplicationCommand {
             database: database.to_string(),
             app_name: name.to_string(),
             validator: validator.to_string(),
-            http_framework: http_framework.to_string(),
+            http_framework: match http_framework.as_str() {
+                "express" => "express".to_string(),
+                "hyper-express" => "@forklaunch/hyper-express-fork".to_string(),
+                _ => bail!("Invalid HTTP framework: {}", http_framework),
+            },
             runtime: runtime.to_string(),
             test_framework: test_framework.to_string(),
             projects: additional_projects.clone(),

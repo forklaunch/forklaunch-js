@@ -1,4 +1,4 @@
-{{#is_node}}FROM node:22-alpine{{/is_node}}{{#is_bun}}FROM oven/bun:1{{/is_bun}}
+{{#is_node}}FROM node:23-alpine{{/is_node}}{{#is_bun}}FROM oven/bun:1{{/is_bun}}
 
 # Set working directory
 WORKDIR /{{app_name}}

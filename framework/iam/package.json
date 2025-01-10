@@ -2,53 +2,53 @@
   "name": "@forklaunch/framework-iam",
   "version": "0.1.0",
   "description": "IAM basic implementation for Forklaunch",
-  "main": "app.ts",
-  "scripts": {
-    "test": "vitest --passWithNoTests",
-    "build": "tsc",
-    "clean": "rm -rf dist pnpm.lock.yaml node_modules",
-    "docs": "typedoc --out docs *",
-    "lint": "eslint . -c eslint.config.mjs",
-    "lint:fix": "eslint . -c eslint.config.mjs --fix",
-    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.ts' --write",
-    "migrate:init": "NODE_OPTIONS='--import=tsx' mikro-orm migration:create --initial",
-    "migrate:create": "NODE_OPTIONS='--import=tsx' mikro-orm migration:create",
-    "migrate:up": "NODE_OPTIONS='--import=tsx' mikro-orm migration:up",
-    "migrate:down": "NODE_OPTIONS='--import=tsx' mikro-orm migration:down",
-    "dev": "pnpm run migrate:up && pnpm tsx watch app.ts",
-    "dev:bun": "bun run migrate:up && bun --watch app.ts",
-    "start": "node --import=tsx dist/app.js",
-    "start:bun": "bun run migrate:up && bun dist/app.js"
+  "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
+  "bugs": {
+    "url": "https://github.com/forklaunch/forklaunch-js/issues"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/forklaunch/forklaunch-js.git"
   },
-  "author": "Rohin Bhargava",
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/forklaunch/forklaunch-js/issues"
+  "author": "Rohin Bhargava",
+  "main": "app.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist pnpm.lock.yaml node_modules",
+    "dev": "pnpm run migrate:up && pnpm tsx watch app.ts",
+    "dev:bun": "bun run migrate:up && bun --watch app.ts",
+    "docs": "typedoc --out docs *",
+    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.ts' --write",
+    "lint": "eslint . -c eslint.config.mjs",
+    "lint:fix": "eslint . -c eslint.config.mjs --fix",
+    "migrate:create": "NODE_OPTIONS='--import=tsx' mikro-orm migration:create",
+    "migrate:down": "NODE_OPTIONS='--import=tsx' mikro-orm migration:down",
+    "migrate:init": "NODE_OPTIONS='--import=tsx' mikro-orm migration:create --initial",
+    "migrate:up": "NODE_OPTIONS='--import=tsx' mikro-orm migration:up",
+    "start": "node --import=tsx dist/app.js",
+    "start:bun": "bun run migrate:up && bun dist/app.js",
+    "test": "vitest --passWithNoTests"
   },
-  "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "dependencies": {
-    "@forklaunch/common": "^0.1.14",
-    "@forklaunch/core": "^0.2.37",
-    "@forklaunch/express": "^0.1.32",
+    "@forklaunch/common": "^0.2.0",
+    "@forklaunch/core": "^0.3.0",
+    "@forklaunch/express": "^0.2.0",
     "@forklaunch/framework-core": "workspace:*",
-    "@forklaunch/hyper-express": "^0.1.33",
-    "@forklaunch/validator": "^0.3.13",
-    "@mikro-orm/core": "^6.4.2",
-    "@mikro-orm/migrations": "^6.4.2",
-    "@mikro-orm/mongodb": "^6.4.2",
-    "@mikro-orm/mysql": "^6.4.2",
-    "@mikro-orm/postgresql": "^6.4.2",
-    "@mikro-orm/reflection": "^6.4.2",
-    "@mikro-orm/sqlite": "^6.4.2",
+    "@forklaunch/hyper-express": "^0.2.0",
+    "@forklaunch/validator": "^0.4.0",
+    "@mikro-orm/core": "^6.4.3",
+    "@mikro-orm/migrations": "^6.4.3",
+    "@mikro-orm/mongodb": "^6.4.3",
+    "@mikro-orm/mysql": "^6.4.3",
+    "@mikro-orm/postgresql": "^6.4.3",
+    "@mikro-orm/reflection": "^6.4.3",
+    "@mikro-orm/sqlite": "^6.4.3",
     "@sinclair/typebox": "^0.34.13",
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@mikro-orm/cli": "^6.4.2"
+    "@mikro-orm/cli": "^6.4.3"
   },
   "mikro-orm": {
     "configPaths": [

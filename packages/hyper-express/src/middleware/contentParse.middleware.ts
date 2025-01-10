@@ -1,4 +1,4 @@
-import { Request } from 'hyper-express';
+import { Request } from '@forklaunch/hyper-express-fork';
 
 /**
  * Middleware function to parse the request body based on the content type.
