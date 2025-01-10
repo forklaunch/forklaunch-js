@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/express",
-  "version": "0.1.32",
+  "version": "0.2.0",
   "description": "Forklaunch framework for express.",
   "files": [
     "lib/**"
@@ -8,7 +8,7 @@
   "types": "lib/index.d.ts",
   "scripts": {
     "test": "vitest --passWithNoTests",
-    "build": "tsc",
+    "build": "tsc --noEmit && tsup index.ts --format cjs,esm --no-splitting --tsconfig tsconfig.json --outDir lib --dts --clean",
     "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
     "lint": "eslint . -c eslint.config.mjs",
@@ -47,12 +47,15 @@
     "prettier": "^3.4.1",
     "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
+    "tsup": "^8.3.5",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.17.0"
   },
   "exports": {
     ".": {
       "types": "./lib/index.d.ts",
+      "import": "./lib/index.mjs",
+      "require": "./lib/index.js",
       "default": "./lib/index.js"
     }
   }

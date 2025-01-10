@@ -5,7 +5,7 @@ import {
   ParseResult
 } from '../../src/shared/types/schema.types';
 
-declare module '../../src/shared/types/schema.types' {
+declare module '@forklaunch/validator' {
   interface SchemaResolve<T> {
     Mock: T;
   }
