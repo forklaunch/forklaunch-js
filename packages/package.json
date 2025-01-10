@@ -32,17 +32,12 @@
     "publish:packages": "pnpm -r run publish:package",
     "format": "pnpm --parallel -r run format",
     "test": "pnpm vitest --passWithNoTests",
-    "up:packages": "pnpm -r update --latest"
+    "up:packages": "pnpm -r update --latest",
+    "prepare": "husky"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged --relative",
-      "pre-push": "tsc"
-    }
-  },
   "lint-staged": {
     "**/*.{ts,json}": [
       "prettier --write",
