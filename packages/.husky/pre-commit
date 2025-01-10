@@ -1,0 +1,3 @@
+echo "Running pre-commit hooks"
+lint-staged --relative
+exit 1
