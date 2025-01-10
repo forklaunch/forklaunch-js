@@ -1,4 +1,8 @@
-import { MiddlewareNext, Request, Response } from 'hyper-express';
+import {
+  MiddlewareNext,
+  Request,
+  Response
+} from '@forklaunch/hyper-express-fork';
 
 // TODO: Move into fork, and create gh issue
 export function polyfillGetHeaders(

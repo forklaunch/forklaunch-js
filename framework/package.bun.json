@@ -2,15 +2,9 @@
   "name": "monorepo",
   "version": "0.1.0",
   "description": "",
-  "devDependencies": {
-    "@types/jest": "^29.5.14",
-    "globals": "^15.13.0",
-    "jest": "^29.7.0",
-    "ts-jest": "^29.2.5",
-    "tsx": "^4.19.2",
-    "typescript": "^5.7.2",
-    "vitest": "^2.1.8"
-  },
+  "keywords": [],
+  "license": "ISC",
+  "author": "",
   "workspaces": [
     "core",
     "iam",
@@ -20,19 +14,34 @@
     "build": "bun run -r build",
     "clean": "rm -rf node_modules bun.lockb && bun -r clean",
     "clean:purge": "bun run clean",
-    "docs": "bun -r docs",
-    "lint": "bun -r lint",
-    "lint:fix": "bun -r lint:fix", 
-    "format": "bun -r format",
-    "test": "bun test",
-    "up:packages": "bun update --latest",
     "dev": "RUNTIME=bun docker compose -f docker-compose.base.yml -f docker-compose.bun.yml up",
-    "migrate:init": "docker compose -f docker-compose.base.yml up -d postgres && bun -r run migrate:init",
+    "docs": "bun -r docs",
+    "format": "bun -r format",
+    "lint": "bun -r lint",
+    "lint:fix": "bun -r lint:fix",
     "migrate:create": "docker compose -f docker-compose.base.yml up -d postgres && bun -r run migrate:create",
+    "migrate:down": "docker compose -f docker-compose.base.yml up -d postgres && bun -r run migrate:down",
+    "migrate:init": "docker compose -f docker-compose.base.yml up -d postgres && bun -r run migrate:init",
     "migrate:up": "docker compose -f docker-compose.base.yml up -d postgres && bun -r run migrate:up",
-    "migrate:down": "docker compose -f docker-compose.base.yml up -d postgres && bun -r run migrate:down"
+    "test": "bun test",
+    "up:packages": "bun update --latest"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "lint-staged": {
+    "**/*.{ts,json}": [
+      "prettier --write",
+      "eslint --fix"
+    ]
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "globals": "^15.14.0",
+    "husky": "^9.1.7",
+    "jest": "^29.7.0",
+    "lint-staged": "^15.3.0",
+    "sort-package-json": "^2.12.0",
+    "ts-jest": "^29.2.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
+  }
 }

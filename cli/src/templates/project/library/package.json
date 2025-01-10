@@ -2,20 +2,21 @@
   "name": "@{{app_name}}/{{library_name}}",
   "version": "0.1.0",
   "description": "{{description}}",
+  "keywords": [],
+  "license": "{{license}}",
+  "author": "{{author}}",
   "scripts": {
-    "test": "{{test-framework}} --passWithNoTests",
     "build": "tsc",
     "clean": "rm -rf lib {{#is_node}}pnpm.lock.yaml{{/is_node}}{{#is_bun}}bun.lockb{{/is_bun}} node_modules",
     "docs": "typedoc --out docs *",
+    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.ts' --write",
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
-    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.ts' --write"
+    "test": "{{test-framework}} --passWithNoTests"
   },
-  "author": "{{author}}",
-  "license": "{{license}}",
   "devDependencies": {
     "eslint": "^9.17.0",
     "tsx": "^4.19.2",
-    "typescript-eslint": "^8.18.0"
+    "typescript-eslint": "^8.19.1"
   }
 }

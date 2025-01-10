@@ -2,8 +2,8 @@ import {
   ForklaunchExpressLikeApplication,
   generateSwaggerDocument
 } from '@forklaunch/core/http';
+import { MiddlewareHandler, Server } from '@forklaunch/hyper-express-fork';
 import { AnySchemaValidator } from '@forklaunch/validator';
-import { MiddlewareHandler, Server } from 'hyper-express';
 import * as uWebsockets from 'uWebSockets.js';
 import { swagger, swaggerRedirect } from './middleware/swagger.middleware';
 
