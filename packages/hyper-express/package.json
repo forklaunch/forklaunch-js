@@ -8,7 +8,7 @@
   "types": "lib/index.d.ts",
   "scripts": {
     "test": "vitest --passWithNoTests",
-    "build": "tsc --noEmit && tsup ./src --format cjs,esm --no-splitting --dts --tsconfig tsconfig.json --out-dir lib --clean",
+    "build": "tsc --noEmit && tsup index.ts --format cjs,esm --no-splitting --dts --tsconfig tsconfig.json --out-dir lib --clean",
     "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
     "lint": "eslint . -c eslint.config.mjs",
