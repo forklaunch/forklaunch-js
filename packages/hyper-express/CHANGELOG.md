@@ -1,5 +1,11 @@
 # @forklaunch/hyper-express
 
+## 0.2.1
+
+### Patch Changes
+
+- Uses fork, due to custom setters necessary for parsing
+
 ## 0.2.0
 
 ### Minor Changes
