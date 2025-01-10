@@ -33,7 +33,7 @@
     "format": "pnpm --parallel -r run format",
     "test": "pnpm vitest --passWithNoTests",
     "up:packages": "pnpm -r update --latest",
-    "prepare": "cd .. && husky"
+    "prepare": "cd .. && husky packages/.husky"
   },
   "keywords": [],
   "author": "",
