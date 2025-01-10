@@ -13,7 +13,7 @@
     "docs": "typedoc --out docs *",
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
-    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.ts' --write",
+    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,json}' --write",
     "publish:package": "./publish-package.bash"
   },
   "repository": {
@@ -26,19 +26,6 @@
     "url": "https://github.com/forklaunch/forklaunch-js/issues"
   },
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
-  "dependencies": {
-    "@forklaunch/common": "workspace:*",
-    "@forklaunch/core": "workspace:*",
-    "@forklaunch/validator": "workspace:*",
-    "cors": "^2.8.5",
-    "hyper-express": "6.17.3",
-    "live-directory": "^3.0.3",
-    "openapi3-ts": "^4.4.0",
-    "qs": "^6.13.1",
-    "swagger-ui-dist": "^5.18.2",
-    "swagger-ui-express": "^5.0.1",
-    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.44.0"
-  },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
     "@types/cors": "^2.8.17",
@@ -55,6 +42,19 @@
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.19.1"
+  },
+  "dependencies": {
+    "@forklaunch/common": "workspace:*",
+    "@forklaunch/core": "workspace:*",
+    "@forklaunch/validator": "workspace:*",
+    "cors": "^2.8.5",
+    "hyper-express": "6.17.3",
+    "live-directory": "^3.0.3",
+    "openapi3-ts": "^4.4.0",
+    "qs": "^6.13.1",
+    "swagger-ui-dist": "^5.18.2",
+    "swagger-ui-express": "^5.0.1",
+    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.44.0"
   },
   "exports": {
     ".": {

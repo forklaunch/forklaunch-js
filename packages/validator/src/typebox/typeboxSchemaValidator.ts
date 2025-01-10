@@ -50,7 +50,9 @@ SetErrorFunction((params) => {
     case ValueErrorType.String:
     case ValueErrorType.Number:
       return params.schema.errorType
-        ? `Expected ${params.schema.errorType} value${params.schema.errorSuffix ? 's' : ''}`
+        ? `Expected ${params.schema.errorType} value${
+            params.schema.errorSuffix ? 's' : ''
+          }`
         : DefaultErrorFunction(params);
     default:
       return DefaultErrorFunction(params);
@@ -244,7 +246,9 @@ export class TypeboxSchemaValidator
         err.path.length > 0 ? err.path.split('/').slice(1).join(' > ') : 'root';
       return `${index + 1}. Path: ${path}\n   Message: ${err.message}`;
     });
-    return `Validation failed with the following errors:\n${errorMessages.join('\n\n')}`;
+    return `Validation failed with the following errors:\n${errorMessages.join(
+      '\n\n'
+    )}`;
   }
 
   /**

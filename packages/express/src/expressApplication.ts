@@ -45,7 +45,9 @@ export class Application<
     const port =
       typeof args[0] === 'number' ? args[0] : Number(process.env.PORT);
     this.internal.use(
-      `/api${process.env.VERSION ?? '/v1'}${process.env.SWAGGER_PATH ?? '/swagger'}`,
+      `/api${process.env.VERSION ?? '/v1'}${
+        process.env.SWAGGER_PATH ?? '/swagger'
+      }`,
       swaggerUi.serve,
       swaggerUi.setup(
         generateSwaggerDocument<SV>(this.schemaValidator, port, this.routers)

@@ -63,7 +63,9 @@ export class Application<
           .send(`Internal server error:\n\n${err.message}`);
       });
 
-      const swaggerPath = `/api${process.env.VERSION ?? '/v1'}${process.env.SWAGGER_PATH ?? '/swagger'}`;
+      const swaggerPath = `/api${process.env.VERSION ?? '/v1'}${
+        process.env.SWAGGER_PATH ?? '/swagger'
+      }`;
       this.internal.use(swaggerPath, swaggerRedirect(swaggerPath));
       this.internal.get(
         `${swaggerPath}/*`,

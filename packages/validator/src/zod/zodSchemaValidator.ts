@@ -95,7 +95,9 @@ export class ZodSchemaValidator
       const path = err.path.length > 0 ? err.path.join(' > ') : 'root';
       return `${index + 1}. Path: ${path}\n   Message: ${err.message}`;
     });
-    return `Validation failed with the following errors:\n${errorMessages.join('\n\n')}`;
+    return `Validation failed with the following errors:\n${errorMessages.join(
+      '\n\n'
+    )}`;
   }
 
   /**

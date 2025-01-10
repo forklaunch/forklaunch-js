@@ -50,7 +50,9 @@ export class ConfigInjector<
 
     if (!injectorArgument.startsWith('{') || !injectorArgument.endsWith('}')) {
       throw new Error(
-        `Invalid injector argument for ${String(token)}: ${injectorArgument}. Please use object destructuring syntax: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment.`
+        `Invalid injector argument for ${String(
+          token
+        )}: ${injectorArgument}. Please use object destructuring syntax: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment.`
       );
     }
     const resolvedArguments = Object.fromEntries(
@@ -63,7 +65,9 @@ export class ConfigInjector<
           const newResolutionPath = [...resolutionPath, token];
           if (resolutionPath.includes(arg)) {
             throw new Error(
-              `Circular dependency detected: ${newResolutionPath.join(' -> ')} -> ${arg}`
+              `Circular dependency detected: ${newResolutionPath.join(
+                ' -> '
+              )} -> ${arg}`
             );
           }
           const resolvedArg = this.resolve(arg, context, newResolutionPath);
@@ -148,7 +152,9 @@ export class ConfigInjector<
         default: {
           isNever(definition);
           throw new Error(
-            `Unable to resolve lifetime for dependency ${String(token)}, ${resolutionPath}`
+            `Unable to resolve lifetime for dependency ${String(
+              token
+            )}, ${resolutionPath}`
           );
         }
       }

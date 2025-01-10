@@ -126,11 +126,9 @@ export function generateSwaggerDocument<SV extends AnySchemaValidator>(
       description: `${controllerName} Operations`
     });
     router.routes.forEach((route) => {
-      const fullPath =
-        `${router.basePath}${route.path === '/' ? '' : route.path}`.replace(
-          /:(\w+)/g,
-          '{$1}'
-        );
+      const fullPath = `${router.basePath}${
+        route.path === '/' ? '' : route.path
+      }`.replace(/:(\w+)/g, '{$1}');
       if (!paths[fullPath]) {
         paths[fullPath] = {};
       }
