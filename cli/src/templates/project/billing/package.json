@@ -2,42 +2,42 @@
   "name": "@{{app_name}}/billing",
   "version": "0.1.0",
   "description": "Billing implementation for {{app_name}}",
+  "keywords": [],
+  "license": "{{license}}",
+  "author": "{{author}}",
   "main": "app.ts",
   "scripts": {
-    "test": "vitest --passWithNoTests",
     "build": "tsc",
     "clean": "rm -rf dist pnpm.lock.yaml node_modules",
+    "dev": "{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} run migrate:up && {{#is_node}}tsx watch app.ts{{/is_node}}{{#is_bun}}bun --watch app.ts{{/is_bun}}",
     "docs": "typedoc --out docs *",
+    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.ts' --write",
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
-    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.ts' --write",
-    "migrate:init": "NODE_OPTIONS='--import=tsx' mikro-orm migration:create --initial",
     "migrate:create": "NODE_OPTIONS='--import=tsx' mikro-orm migration:create",
-    "migrate:up": "NODE_OPTIONS='--import=tsx' mikro-orm migration:up",
     "migrate:down": "NODE_OPTIONS='--import=tsx' mikro-orm migration:down",
-    "dev": "{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} run migrate:up && {{#is_node}}tsx watch app.ts{{/is_node}}{{#is_bun}}bun --watch app.ts{{/is_bun}}",
-    "start": "{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} run migrate:up && {{#is_node}}node --import tsx dist/app.js{{/is_node}}{{#is_bun}}bun dist/app.js{{/is_bun}}"
+    "migrate:init": "NODE_OPTIONS='--import=tsx' mikro-orm migration:create --initial",
+    "migrate:up": "NODE_OPTIONS='--import=tsx' mikro-orm migration:up",
+    "start": "{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} run migrate:up && {{#is_node}}node --import tsx dist/app.js{{/is_node}}{{#is_bun}}bun dist/app.js{{/is_bun}}",
+    "test": "vitest --passWithNoTests"
   },
-  "author": "{{author}}",
-  "license": "{{license}}",
   "dependencies": {
-    "@forklaunch/common": "^0.1.14",
-    "@forklaunch/core": "^0.2.37",
-    "@forklaunch/express": "^0.1.32",
+    "@forklaunch/common": "^0.2.0",
+    "@forklaunch/core": "^0.3.0",
+    "@forklaunch/express": "^0.2.0",
+    "@forklaunch/hyper-express": "^0.2.0",
+    "@forklaunch/validator": "^0.4.0",
     "@{{app_name}}/core": "workspace:*",
-    "@forklaunch/hyper-express": "^0.1.33",
-    "@forklaunch/validator": "^0.3.13",
-    "@mikro-orm/core": "^6.4.2",
-    "@mikro-orm/migrations{{#is_mongo}}-mongodb{{/is_mongo}}": "^6.4.2",
-    "@mikro-orm/{{database}}": "^6.4.2",
-    "@mikro-orm/reflection": "^6.4.2",{{#is_typebox}}
-    "@sinclair/typebox": "^0.34.13"{{/is_typebox}}{{#is_zod}}
-    "uuid": "^11.0.3",
+    "@mikro-orm/core": "^6.4.3",
+    "@mikro-orm/migrations{{#is_mongo}}-mongodb{{/is_mongo}}": "^6.4.3",
+    "@mikro-orm/{{database}}": "^6.4.3",
+    "@mikro-orm/reflection": "^6.4.3",{{#is_typebox}}
+    "@sinclair/typebox": "^0.34.13"{{/is_typebox}}
+    "uuid": "^11.0.5",{{#is_zod}}
     "zod": "^3.24.1"{{/is_zod}}
   },
   "devDependencies": {
-    "ajv": "^8.17.1",
-    "@mikro-orm/cli": "^6.4.2",
+    "@mikro-orm/cli": "^6.4.3",
     "@types/uuid": "^10.0.0",
     "tsx": "^4.19.2"
   },

@@ -2,32 +2,33 @@
   "name": "@{{app_name}}/core",
   "version": "0.1.0",
   "description": "The common core lib for all {{app_name}} monorepo services",
+  "keywords": [],
+  "license": "{{license}}",
+  "author": "{{author}}",
+  "types": "lib/index.d.ts",
   "files": [
     "lib"
   ],
-  "types": "lib/index.d.ts",
   "scripts": {
-    "test": "{{test-framework}} --passWithNoTests",
     "build": "tsc",
     "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
+    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.ts' --write",
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
-    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.ts' --write"
-  },
-  "author": "{{author}}",
-  "license": "{{license}}",
-  "devDependencies": {
-    "eslint": "^9.17.0",
-    "typescript-eslint": "^8.18.0"
+    "test": "{{test-framework}} --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/common": "^0.1.14",
-    "@forklaunch/core": "^0.2.37",{{#is_express}}
-    "@forklaunch/express": "^0.1.32",{{/is_express}}{{#is_hyper_express}}
-    "@forklaunch/hyper-express": "^0.1.33",{{/is_hyper_express}}
-    "@forklaunch/validator": "^0.3.13",{{#is_typebox}}
+    "@forklaunch/common": "^0.2.0",
+    "@forklaunch/core": "^0.3.0",{{#is_express}}
+    "@forklaunch/express": "^0.2.0",{{/is_express}}{{#is_hyper_express}}
+    "@forklaunch/hyper-express": "^0.2.0",{{/is_hyper_express}}
+    "@forklaunch/validator": "^0.4.0",{{#is_typebox}}
     "@sinclair/typebox": "^0.34.13"{{/is_typebox}}{{#is_zod}}
     "zod": "^3.24.1"{{/is_zod}}
+  },
+  "devDependencies": {
+    "eslint": "^9.17.0",
+    "typescript-eslint": "^8.19.1"
   }
 }

@@ -1,12 +1,10 @@
 volumes:
   {{app_name}}-{{database}}-data:
     driver: local
-
 networks:
   {{app_name}}-network:
     name: {{app_name}}-network
     driver: bridge
-
 services:{{#is_postgres}}
   postgresql:
     image: postgres:latest
