@@ -2,30 +2,41 @@
   "name": "@forklaunch/common",
   "version": "0.2.0",
   "description": "Common package for base types, interfaces, implementations.",
-  "files": [
-    "lib/**"
-  ],
-  "types": "lib/index.d.ts",
-  "scripts": {
-    "test": "vitest --passWithNoTests",
-    "build": "tsc --noEmit && tsup index.ts --format cjs,esm --no-splitting --tsconfig tsconfig.json --outDir lib --dts --clean",
-    "clean": "rm -rf lib pnpm.lock.yaml node_modules",
-    "docs": "typedoc --out docs *",
-    "lint": "eslint . -c eslint.config.mjs",
-    "lint:fix": "eslint . -c eslint.config.mjs --fix",
-    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.ts' --write",
-    "publish:package": "./publish-package.bash"
+  "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
+  "bugs": {
+    "url": "https://github.com/forklaunch/forklaunch-js/issues"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/forklaunch/forklaunch-js.git"
   },
-  "author": "Rohin Bhargava",
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/forklaunch/forklaunch-js/issues"
+  "author": "Rohin Bhargava",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "import": "./lib/index.mjs",
+      "require": "./lib/index.js",
+      "default": "./lib/index.js"
+    }
   },
-  "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
+  "types": "lib/index.d.ts",
+  "directories": {
+    "test": "tests"
+  },
+  "files": [
+    "lib/**"
+  ],
+  "scripts": {
+    "build": "tsc --noEmit && tsup index.ts --format cjs,esm --no-splitting --tsconfig tsconfig.json --outDir lib --dts --clean",
+    "clean": "rm -rf lib pnpm.lock.yaml node_modules",
+    "docs": "typedoc --out docs *",
+    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.ts' --write",
+    "lint": "eslint . -c eslint.config.mjs",
+    "lint:fix": "eslint . -c eslint.config.mjs --fix",
+    "publish:package": "./publish-package.bash",
+    "test": "vitest --passWithNoTests"
+  },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
     "@types/jest": "^29.5.14",
@@ -52,16 +63,5 @@
     "uc.micro": "^2.1.0",
     "vitest": "^2.1.8",
     "yaml": "^2.7.0"
-  },
-  "directories": {
-    "test": "tests"
-  },
-  "exports": {
-    ".": {
-      "types": "./lib/index.d.ts",
-      "import": "./lib/index.mjs",
-      "require": "./lib/index.js",
-      "default": "./lib/index.js"
-    }
   }
 }

@@ -2,61 +2,16 @@
   "name": "@forklaunch/core",
   "version": "0.3.0",
   "description": "forklaunch-js core package. Contains useful building blocks.",
-  "files": [
-    "lib"
-  ],
-  "types": "lib/index.d.ts",
-  "scripts": {
-    "test": "vitest --passWithNoTests",
-    "build": "tsc --noEmit && tsup ./src/cache/index.ts ./src/controllers/index.ts ./src/database/index.ts ./src/dtoMapper/index.ts ./src/http/index.ts ./src/services/index.ts --format cjs,esm --no-splitting --dts --tsconfig tsconfig.json --out-dir lib --clean",
-    "clean": "rm -rf lib pnpm.lock.yaml node_modules",
-    "docs": "typedoc --out docs *",
-    "lint": "eslint . -c eslint.config.mjs",
-    "lint:fix": "eslint . -c eslint.config.mjs --fix",
-    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.ts' --write",
-    "publish:package": "./publish-package.bash"
+  "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
+  "bugs": {
+    "url": "https://github.com/forklaunch/forklaunch-js/issues"
   },
-  "author": "Rohin Bhargava",
-  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/forklaunch/forklaunch-js.git"
   },
-  "bugs": {
-    "url": "https://github.com/forklaunch/forklaunch-js/issues"
-  },
-  "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
-  "dependencies": {
-    "@forklaunch/common": "workspace:*",
-    "@forklaunch/validator": "workspace:*",
-    "@mikro-orm/core": "^6.4.3",
-    "@mikro-orm/mongodb": "^6.4.3",
-    "cors": "^2.8.5",
-    "jose": "^5.9.6",
-    "openapi3-ts": "^4.4.0",
-    "redis": "^4.7.0",
-    "uuid": "^11.0.5"
-  },
-  "devDependencies": {
-    "@eslint/js": "^9.17.0",
-    "@types/cors": "^2.8.17",
-    "@types/jest": "^29.5.14",
-    "@types/qs": "^6.9.17",
-    "@types/uuid": "^10.0.0",
-    "globals": "^15.14.0",
-    "jest": "^29.7.0",
-    "prettier": "^3.4.2",
-    "testcontainers": "^10.16.0",
-    "ts-jest": "^29.2.5",
-    "ts-node": "^10.9.2",
-    "tsup": "^8.3.5",
-    "typedoc": "^0.27.6",
-    "typescript": "^5.7.3",
-    "typescript-eslint": "^8.19.1"
-  },
-  "directories": {
-    "test": "tests"
-  },
+  "license": "MIT",
+  "author": "Rohin Bhargava",
   "exports": {
     "./cache": {
       "types": "./lib/cache/index.d.ts",
@@ -94,5 +49,50 @@
       "require": "./lib/services/index.js",
       "default": "./lib/services/index.js"
     }
+  },
+  "types": "lib/index.d.ts",
+  "directories": {
+    "test": "tests"
+  },
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "build": "tsc --noEmit && tsup ./src/cache/index.ts ./src/controllers/index.ts ./src/database/index.ts ./src/dtoMapper/index.ts ./src/http/index.ts ./src/services/index.ts --format cjs,esm --no-splitting --dts --tsconfig tsconfig.json --out-dir lib --clean",
+    "clean": "rm -rf lib pnpm.lock.yaml node_modules",
+    "docs": "typedoc --out docs *",
+    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.ts' --write",
+    "lint": "eslint . -c eslint.config.mjs",
+    "lint:fix": "eslint . -c eslint.config.mjs --fix",
+    "publish:package": "./publish-package.bash",
+    "test": "vitest --passWithNoTests"
+  },
+  "dependencies": {
+    "@forklaunch/common": "workspace:*",
+    "@forklaunch/validator": "workspace:*",
+    "@mikro-orm/core": "^6.4.3",
+    "@mikro-orm/mongodb": "^6.4.3",
+    "cors": "^2.8.5",
+    "jose": "^5.9.6",
+    "openapi3-ts": "^4.4.0",
+    "redis": "^4.7.0",
+    "uuid": "^11.0.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@types/cors": "^2.8.17",
+    "@types/jest": "^29.5.14",
+    "@types/qs": "^6.9.17",
+    "@types/uuid": "^10.0.0",
+    "globals": "^15.14.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.4.2",
+    "testcontainers": "^10.16.0",
+    "ts-jest": "^29.2.5",
+    "ts-node": "^10.9.2",
+    "tsup": "^8.3.5",
+    "typedoc": "^0.27.6",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.19.1"
   }
 }
