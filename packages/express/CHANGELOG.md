@@ -1,5 +1,18 @@
 # @forklaunch/express
 
+## 0.2.0
+
+### Minor Changes
+
+- Changed build from tsc to tsup to accommodate cjs and esm consumers
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.4.0
+  - @forklaunch/common@0.2.0
+  - @forklaunch/core@0.3.0
+
 ## 0.1.32
 
 ### Patch Changes

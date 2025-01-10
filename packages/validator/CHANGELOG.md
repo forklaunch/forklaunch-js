@@ -1,5 +1,16 @@
 # @forklaunch/validator
 
+## 0.4.0
+
+### Minor Changes
+
+- Changed build from tsc to tsup to accommodate cjs and esm consumers
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/common@0.2.0
+
 ## 0.3.13
 
 ### Patch Changes
