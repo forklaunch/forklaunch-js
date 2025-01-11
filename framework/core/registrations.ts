@@ -23,7 +23,7 @@ import {
   unknown as schemaUnknown,
   uri as schemaUri,
   uuid as schemaUuid
-} from '@forklaunch/validator/zod';
+} from '@forklaunch/validator/typebox';
 
 export const SchemaValidator = RegisteredSchemaValidator;
 export type SchemaValidator = ReturnType<typeof RegisteredSchemaValidator>;
@@ -46,8 +46,8 @@ export const nullish = schemaNullish;
 export const any = schemaAny;
 export const unknown = schemaUnknown;
 export const never = schemaNever;
-export const optional = schemaOptional;
-export const array = schemaArray;
-export const union = schemaUnion;
-export const literal = schemaLiteral;
-export const enum_ = schemaEnum;
+export const optional: typeof schemaOptional = schemaOptional;
+export const array: typeof schemaArray = schemaArray;
+export const union: typeof schemaUnion = schemaUnion;
+export const literal: typeof schemaLiteral = schemaLiteral;
+export const enum_: typeof schemaEnum = schemaEnum;
