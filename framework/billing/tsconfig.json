@@ -3,9 +3,5 @@
   "compilerOptions": {
     "outDir": "dist"
   },
-  "exclude": [
-    "node_modules",
-    "dist",
-    "eslint.config.mjs"
-  ]
+  "exclude": ["node_modules", "dist", "eslint.config.mjs"]
 }
