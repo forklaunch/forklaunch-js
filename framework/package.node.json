@@ -29,7 +29,7 @@
     "up:packages": "pnpm -r update --latest"
   },
   "lint-staged": {
-    "**/*.{ts,json}": [
+    "**/*.ts": [
       "prettier --write",
       "eslint --fix"
     ]

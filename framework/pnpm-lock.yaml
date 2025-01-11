@@ -54,8 +54,8 @@ importers:
         specifier: workspace:*
         version: link:../core
       '@forklaunch/hyper-express':
-        specifier: ^0.2.0
-        version: 0.2.0(express@4.21.2)(socks@2.8.3)
+        specifier: ^0.2.1
+        version: 0.2.1(express@4.21.2)(socks@2.8.3)
       '@forklaunch/validator':
         specifier: ^0.4.0
         version: 0.4.0(openapi3-ts@4.4.0)
@@ -109,8 +109,8 @@ importers:
         specifier: ^0.2.0
         version: 0.2.0(openapi3-ts@4.4.0)(socks@2.8.3)
       '@forklaunch/hyper-express':
-        specifier: ^0.2.0
-        version: 0.2.0(express@4.21.2)(socks@2.8.3)
+        specifier: ^0.2.1
+        version: 0.2.1(express@4.21.2)(socks@2.8.3)
       '@forklaunch/validator':
         specifier: ^0.4.0
         version: 0.4.0(openapi3-ts@4.4.0)
@@ -143,8 +143,8 @@ importers:
         specifier: workspace:*
         version: link:../core
       '@forklaunch/hyper-express':
-        specifier: ^0.2.0
-        version: 0.2.0(express@4.21.2)(socks@2.8.3)
+        specifier: ^0.2.1
+        version: 0.2.1(express@4.21.2)(socks@2.8.3)
       '@forklaunch/validator':
         specifier: ^0.4.0
         version: 0.4.0(openapi3-ts@4.4.0)
@@ -678,8 +678,11 @@ packages:
   '@forklaunch/express@0.2.0':
     resolution: {integrity: sha512-BX2/Mk4rY44QgBvjT7RM06U0XeYvLPS6zvxaPbxH1gCA9uRbIYcpCZnK8IM8umqooJsiRM5V53fPFhbzgW8u0A==}
 
-  '@forklaunch/hyper-express@0.2.0':
-    resolution: {integrity: sha512-gkgCNeDxKNJhbQuN2413yVtNj9FV+CL5SJlKwjUQKYA4YeGAc0ENUJMSZjqInYK94LOdgzo6XQVCckGFhCZjvg==}
+  '@forklaunch/hyper-express-fork@6.17.3':
+    resolution: {integrity: sha512-tVTyLS28OWwtnAojdwWlngjKMZ2Dzz0JEDc14mN5eB80xlwd2hLY28WSbeNHk1IWOncRIi3sbteZpY810nGRiQ==}
+
+  '@forklaunch/hyper-express@0.2.1':
+    resolution: {integrity: sha512-I4yQ5U8kg5iiNWuTw6W6brIr3q+SgBXf32GrVt4MnHJDCtJpdU/tByrc3HtPsnavjU/9q5POldzv8/XyyDrGrA==}
 
   '@forklaunch/validator@0.4.0':
     resolution: {integrity: sha512-WXUm8IObLB9eqz2PZSlCTM15nMUSL4UcnpF4WsZcZxELSJeFbBkKVmknJBBvH6s5PSgMpTzYs3rsWhhT7ORY2g==}
@@ -2109,9 +2112,6 @@ packages:
     resolution: {integrity: sha512-5gs5ytaNjBrh5Ow3zrvdUUY+0VxIuWVL4i9irt6friV+BqdCfmV11CQTWMiBYWHbXhco+J1kHfTOUkePhCDvMA==}
     engines: {node: '>=18'}
     hasBin: true
-
-  hyper-express@6.17.3:
-    resolution: {integrity: sha512-fNFrRVEAIqjADtAq2F5wFRBlpo3G63QgK9PsNklsKLpM2S3fNlFaojafv926mlEW+C4zZ1VI8Tm5PCJOaIWJMQ==}
 
   iconv-lite@0.4.24:
     resolution: {integrity: sha512-v3MXnZAcvnywkTUEZomIActle7RXXeedOR31wwl7VlyoXO4Qi9arvSenNQWne1TcRwhCL1HwLI21bEqdpj8/rA==}
@@ -4163,13 +4163,25 @@ snapshots:
       - socks
       - supports-color
 
-  '@forklaunch/hyper-express@0.2.0(express@4.21.2)(socks@2.8.3)':
+  '@forklaunch/hyper-express-fork@6.17.3':
+    dependencies:
+      busboy: 1.6.0
+      cookie: 1.0.2
+      cookie-signature: 1.2.2
+      mime-types: 2.1.35
+      negotiator: 1.0.0
+      range-parser: 1.2.1
+      type-is: 1.6.18
+      typed-emitter: 2.1.0
+      uWebSockets.js: https://codeload.github.com/uNetworking/uWebSockets.js/tar.gz/6609a88ffa9a16ac5158046761356ce03250a0df
+
+  '@forklaunch/hyper-express@0.2.1(express@4.21.2)(socks@2.8.3)':
     dependencies:
       '@forklaunch/common': 0.2.0
       '@forklaunch/core': 0.3.0(socks@2.8.3)
+      '@forklaunch/hyper-express-fork': 6.17.3
       '@forklaunch/validator': 0.4.0(openapi3-ts@4.4.0)
       cors: 2.8.5
-      hyper-express: 6.17.3
       live-directory: 3.0.3
       openapi3-ts: 4.4.0
       qs: 6.13.1
@@ -5925,18 +5937,6 @@ snapshots:
     optional: true
 
   husky@9.1.7: {}
-
-  hyper-express@6.17.3:
-    dependencies:
-      busboy: 1.6.0
-      cookie: 1.0.2
-      cookie-signature: 1.2.2
-      mime-types: 2.1.35
-      negotiator: 1.0.0
-      range-parser: 1.2.1
-      type-is: 1.6.18
-      typed-emitter: 2.1.0
-      uWebSockets.js: https://codeload.github.com/uNetworking/uWebSockets.js/tar.gz/6609a88ffa9a16ac5158046761356ce03250a0df
 
   iconv-lite@0.4.24:
     dependencies:

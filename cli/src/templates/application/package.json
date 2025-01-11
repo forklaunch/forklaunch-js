@@ -39,7 +39,7 @@
     "up:packages": "bun update --latest"{{/is_bun}},
   },
   "lint-staged": {
-    "**/*.{ts,json}": [
+    "**/*.ts": [
       "prettier --write",
       "eslint --fix"
     ]
