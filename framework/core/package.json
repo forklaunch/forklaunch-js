@@ -13,7 +13,7 @@
     "build": "tsc",
     "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
-    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.ts' --write",
+    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
     "test": "vitest --passWithNoTests"
@@ -29,6 +29,7 @@
   },
   "devDependencies": {
     "eslint": "^9.17.0",
+    "prettier": "^3.4.2",
     "typescript-eslint": "^8.19.1"
   }
 }

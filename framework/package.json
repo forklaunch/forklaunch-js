@@ -1,1 +1,41 @@
-package.node.json
+{
+  "name": "monorepo",
+  "version": "0.1.0",
+  "description": "",
+  "keywords": [],
+  "license": "ISC",
+  "author": "",
+  "workspaces": [
+    "core",
+    "iam",
+    "billing"
+  ],
+  "scripts": {
+    "build": "pnpm -r run build",
+    "clean": "rm -rf node_modules pnpm-lock.yaml && pnpm --parallel -r clean && pnpm store prune",
+    "clean:purge": "pnpm run clean && pnpm store clear",
+    "dev": "RUNTIME=node docker compose -f docker-compose.base.yml -f docker-compose.node.yml up",
+    "dev:bun": "pnpm clean && RUNTIME=bun docker compose -f docker-compose.base.yml -f docker-compose.bun.yml up",
+    "docs": "pnpm --parallel -r run docs",
+    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
+    "lint": "eslint . -c eslint.config.mjs",
+    "lint:fix": "eslint . -c eslint.config.mjs --fix",
+    "migrate:create": "docker compose -f docker-compose.base.yml up -d postgres && pnpm -r run migrate:create",
+    "migrate:down": "docker compose -f docker-compose.base.yml up -d postgres && pnpm -r run migrate:down",
+    "migrate:init": "docker compose -f docker-compose.base.yml up -d postgres && pnpm -r run migrate:init",
+    "migrate:up": "docker compose -f docker-compose.base.yml up -d postgres && pnpm -r run migrate:up",
+    "test": "pnpm vitest --passWithNoTests",
+    "up:packages": "pnpm -r update --latest"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "globals": "^15.14.0",
+    "jest": "^29.7.0",
+    "lint-staged": "^15.3.0",
+    "sort-package-json": "^2.12.0",
+    "ts-jest": "^29.2.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
+  }
+}

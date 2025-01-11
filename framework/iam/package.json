@@ -19,7 +19,7 @@
     "dev": "pnpm run migrate:up && pnpm tsx watch app.ts",
     "dev:bun": "bun run migrate:up && bun --watch app.ts",
     "docs": "typedoc --out docs *",
-    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.ts' --write",
+    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
     "migrate:create": "NODE_OPTIONS='--import=tsx' mikro-orm migration:create",
@@ -48,7 +48,8 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@mikro-orm/cli": "^6.4.3"
+    "@mikro-orm/cli": "^6.4.3",
+    "prettier": "^3.4.2"
   },
   "mikro-orm": {
     "configPaths": [

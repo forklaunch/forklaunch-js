@@ -5,11 +5,7 @@
   "keywords": [],
   "license": "ISC",
   "author": "",
-  "workspaces": [
-    "core",
-    "iam",
-    "billing"
-  ],
+  "workspaces": ["core", "iam", "billing"],
   "scripts": {
     "build": "bun run -r build",
     "clean": "rm -rf node_modules bun.lockb && bun -r clean",
@@ -25,12 +21,6 @@
     "migrate:up": "docker compose -f docker-compose.base.yml up -d postgres && bun -r run migrate:up",
     "test": "bun test",
     "up:packages": "bun update --latest"
-  },
-  "lint-staged": {
-    "**/*.ts": [
-      "prettier --write",
-      "eslint --fix"
-    ]
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",

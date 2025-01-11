@@ -1,0 +1,9 @@
+cd framework
+pnpm lint-staged --relative
+pnpm sort-package-json */package.json
+cd ..
+cd packages
+pnpm lint-staged --relative
+pnpm sort-package-json */package.json
+cd ..
+
