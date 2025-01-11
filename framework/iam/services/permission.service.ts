@@ -236,9 +236,8 @@ export default class BasePermissionService
     const permissions: Permission[] = [];
     await (em ?? this.em).transactional(async (em) => {
       permissionDtos.map(async (updatePermissionDto) => {
-        const { permission, roles } = await this.updatePermissionDto(
-          updatePermissionDto
-        );
+        const { permission, roles } =
+          await this.updatePermissionDto(updatePermissionDto);
         roles.forEach((role) => {
           if (
             rolesCache[role.id] &&

@@ -1,4 +1,3 @@
-import { BaseService } from '@forklaunch/core/services';
 import { SchemaValidator } from '@forklaunch/framework-core';
 import { EntityManager } from '@mikro-orm/core';
 import { PermissionService } from '../interfaces/permission.service.interface';

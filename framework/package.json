@@ -17,7 +17,7 @@
     "dev": "RUNTIME=node docker compose -f docker-compose.base.yml -f docker-compose.node.yml up",
     "dev:bun": "pnpm clean && RUNTIME=bun docker compose -f docker-compose.base.yml -f docker-compose.bun.yml up",
     "docs": "pnpm --parallel -r run docs",
-    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.ts' --write",
+    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
     "migrate:create": "docker compose -f docker-compose.base.yml up -d postgres && pnpm -r run migrate:create",
