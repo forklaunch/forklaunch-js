@@ -10,7 +10,7 @@
     "clean": "rm -rf dist {{#is_node}}pnpm.lock.yaml{{/is_node}}{{#is_bun}}bun.lockb{{/is_bun}} node_modules",
     "dev": "{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} run migrate:up && {{#is_node}}tsx watch app.ts{{/is_node}}{{#is_bun}}bun --watch app.ts{{/is_bun}}",
     "docs": "typedoc --out docs *",
-    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.ts' --write",
+    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
     "migrate:create": "NODE_OPTIONS='--import=tsx' mikro-orm migration:create",
