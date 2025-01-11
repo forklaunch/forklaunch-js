@@ -24,14 +24,20 @@
     "migrate:down": "docker compose -f docker-compose.base.yml up -d postgres && pnpm -r run migrate:down",
     "migrate:init": "docker compose -f docker-compose.base.yml up -d postgres && pnpm -r run migrate:init",
     "migrate:up": "docker compose -f docker-compose.base.yml up -d postgres && pnpm -r run migrate:up",
-    "prepare": "cd .. && husky framework/.husky",
+    "prepare": "husky",
     "test": "pnpm vitest --passWithNoTests",
     "up:packages": "pnpm -r update --latest"
   },
   "lint-staged": {
     "**/*.ts": [
-      "prettier --write",
-      "eslint --fix"
+      "pnpm format",
+      "pnpm lint:fix"
+    ],
+    "package*.json": [
+      "pnpm sort-package-json"
+    ],
+    "**/package*.json": [
+      "pnpm sort-package-json"
     ]
   },
   "devDependencies": {
