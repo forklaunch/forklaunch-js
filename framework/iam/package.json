@@ -48,7 +48,8 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@mikro-orm/cli": "^6.4.3"
+    "@mikro-orm/cli": "^6.4.3",
+    "prettier": "^3.4.2"
   },
   "mikro-orm": {
     "configPaths": [

@@ -1,0 +1,4 @@
+{
+  "**/*.ts": ["pnpm lint:fix"],
+  "**/*.{json,ts}": ["pnpm format"]
+}

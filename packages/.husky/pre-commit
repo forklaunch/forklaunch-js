@@ -1,3 +1,0 @@
-cd packages
-pnpm lint-staged --relative 
-pnpm sort-package-json */package.json
