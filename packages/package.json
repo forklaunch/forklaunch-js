@@ -28,8 +28,8 @@
   },
   "lint-staged": {
     "**/*.ts": [
-      "prettier --write",
-      "eslint --fix"
+      "pnpm format",
+      "pnpm lint:fix"
     ]
   },
   "devDependencies": {
