@@ -1,11 +1,18 @@
-import { ConfigInjector, Lifetime } from '@forklaunch/core/services';
+import {
+  ConfigInjector,
+  getEnvVar,
+  Lifetime,
+  ValidConfigInjector
+} from '@forklaunch/core/services';
 import {
   number,
   optional,
   SchemaValidator,
   string
 } from '@forklaunch/framework-core';
+import { prettyPrintParseErrors } from '@forklaunch/validator';
 import { EntityManager, ForkOptions, MikroORM } from '@mikro-orm/core';
+import dotenv from 'dotenv';
 import mikroOrmOptionsConfig from './mikro-orm.config';
 import BaseOrganizationService from './services/organization.service';
 import BasePermissionService from './services/permission.service';
@@ -26,34 +33,37 @@ export const configValidator = {
 };
 
 export function bootstrap(
+  envFilePath: string,
   callback: (
-    ci: ConfigInjector<SchemaValidator, typeof configValidator>
+    ci: ValidConfigInjector<SchemaValidator, typeof configValidator>
   ) => void
 ) {
   MikroORM.init(mikroOrmOptionsConfig).then((orm) => {
+    dotenv.config({ path: envFilePath });
+
     const configInjector = new ConfigInjector(
       SchemaValidator(),
       configValidator,
       {
         host: {
           lifetime: Lifetime.Singleton,
-          value: process.env.HOST ?? 'localhost'
+          value: getEnvVar('HOST')
         },
         port: {
           lifetime: Lifetime.Singleton,
-          value: Number(process.env.PORT ?? '8000')
+          value: Number(getEnvVar('PORT'))
         },
         version: {
           lifetime: Lifetime.Singleton,
-          value: process.env.VERSION ?? '/v1'
+          value: getEnvVar('VERSION')
         },
         swaggerPath: {
           lifetime: Lifetime.Singleton,
-          value: process.env.SWAGGER_PATH ?? '/swagger'
+          value: getEnvVar('SWAGGER_PATH')
         },
         passwordEncryptionPublicKeyPath: {
           lifetime: Lifetime.Singleton,
-          value: process.env.PASSWORD_ENCRYPTION_PUBLIC_KEY_PATH ?? 'public.pem'
+          value: getEnvVar('PASSWORD_ENCRYPTION_PUBLIC_KEY_PATH')
         },
         entityManager: {
           lifetime: Lifetime.Scoped,
@@ -117,10 +127,19 @@ export function bootstrap(
         }
       }
     );
-    configInjector.validateConfigSingletons({
-      passwordEncryptionPublicKeyPath:
-        process.env.PASSWORD_ENCRYPTION_PUBLIC_KEY_PATH
-    });
-    callback(configInjector);
+
+    const maybeValidConfigInjectorResult =
+      configInjector.validateConfigSingletons();
+    if (maybeValidConfigInjectorResult.ok) {
+      console.log(
+        'Valid config injector result',
+        maybeValidConfigInjectorResult.value
+      );
+      callback(maybeValidConfigInjectorResult.value);
+    } else {
+      throw new Error(
+        prettyPrintParseErrors(maybeValidConfigInjectorResult.errors, '.env')
+      );
+    }
   });
 }

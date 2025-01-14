@@ -1,4 +1,7 @@
-import { AnySchemaValidator } from '@forklaunch/validator';
+import {
+  AnySchemaValidator,
+  prettyPrintParseErrors
+} from '@forklaunch/validator';
 import { BaseEntity } from '../../database/mikro/models/entities/base.entity';
 import { DtoMapperConstructor } from '../interfaces/dtoMapper.interface';
 import { BaseDtoMapper, construct } from './baseDtoMapper.model';
@@ -42,7 +45,7 @@ export abstract class RequestDtoMapper<
       json
     );
     if (!parsedSchema.ok) {
-      throw new Error(`Invalid DTO: ${parsedSchema.error}`);
+      throw new Error(prettyPrintParseErrors(parsedSchema.errors, 'DTO'));
     }
     this.dto = json;
     return this;

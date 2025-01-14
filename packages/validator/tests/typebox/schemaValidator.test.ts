@@ -1,4 +1,5 @@
 import { TObject, Type } from '@sinclair/typebox';
+import { prettyPrintParseErrors } from '../../src/shared/utils/prettyPrintParseErrors';
 import {
   array,
   enum_,
@@ -296,7 +297,7 @@ describe('typebox schema validator tests', () => {
     });
     expect(failedParse.ok).toBe(false);
     if (!failedParse.ok) {
-      expect(failedParse.error)
+      expect(prettyPrintParseErrors(failedParse.errors))
         .toBe(`Validation failed with the following errors:
 1. Path: hello > world
    Message: Expected string

@@ -8,7 +8,7 @@
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist {{#is_node}}pnpm.lock.yaml{{/is_node}}{{#is_bun}}bun.lockb{{/is_bun}} node_modules",
-    "dev": "{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} run migrate:up && {{#is_node}}tsx watch app.ts{{/is_node}}{{#is_bun}}bun --watch app.ts{{/is_bun}}",
+    "dev": "ENV_FILE_PATH=.env.local && {{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} run migrate:up && {{#is_node}}tsx watch app.ts{{/is_node}}{{#is_bun}}bun --watch app.ts{{/is_bun}}",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
     "lint": "eslint . -c eslint.config.mjs",
@@ -17,8 +17,8 @@
     "migrate:down": "NODE_OPTIONS='--import=tsx' mikro-orm migration:down",
     "migrate:init": "NODE_OPTIONS='--import=tsx' mikro-orm migration:create --initial",
     "migrate:up": "NODE_OPTIONS='--import=tsx' mikro-orm migration:up",
-    "start": "{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} run migrate:up && {{#is_node}}node --import tsx dist/app.js{{/is_node}}{{#is_bun}}bun dist/app.js{{/is_bun}}"
-    "test": "{{test_framework}} --passWithNoTests",
+    "start": "ENV_FILE_PATH=.env.prod && {{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} run migrate:up && {{#is_node}}node --import tsx dist/app.js{{/is_node}}{{#is_bun}}bun dist/app.js{{/is_bun}}",
+    "test": "{{test_framework}} --passWithNoTests"
   },
   "dependencies": {
     "@{{app_name}}/core": "workspace:*",

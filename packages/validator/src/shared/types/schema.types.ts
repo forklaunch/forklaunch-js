@@ -4,6 +4,14 @@ import { TResolve, TSchemaTranslate } from '../../typebox/types/schema.types';
 import { ZodResolve, ZodSchemaTranslate } from '../../zod/types/schema.types';
 
 /**
+ * Represents an error with a path and message.
+ */
+export type ParseError = {
+  path: string[];
+  message: string;
+};
+
+/**
  * The result associated with an attempted parsing.
  *
  */
@@ -14,7 +22,7 @@ export type ParseResult<T> =
     }
   | {
       ok: false;
-      error?: string;
+      errors?: ParseError[];
     };
 
 /**

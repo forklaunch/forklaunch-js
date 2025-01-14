@@ -233,25 +233,6 @@ export class TypeboxSchemaValidator
   }
 
   /**
-   * Pretty print TypeBox errors.
-   *
-   * @param {ValueError[]} errors
-   * @returns
-   */
-  private prettyPrintTypeBoxErrors(errors: ValueError[]): string | undefined {
-    if (!errors || errors.length === 0) return;
-
-    const errorMessages = errors.map((err, index) => {
-      const path =
-        err.path.length > 0 ? err.path.split('/').slice(1).join(' > ') : 'root';
-      return `${index + 1}. Path: ${path}\n   Message: ${err.message}`;
-    });
-    return `Validation failed with the following errors:\n${errorMessages.join(
-      '\n\n'
-    )}`;
-  }
-
-  /**
    * Compiles schema if this exists, for optimal performance.
    *
    * @param {TObject<TProperties>} schema - The schema to compile.
@@ -429,7 +410,10 @@ export class TypeboxSchemaValidator
         }
       : {
           ok: false,
-          error: this.prettyPrintTypeBoxErrors(errors)
+          errors: errors.map((error) => ({
+            path: error.path.split('/').slice(1),
+            message: error.message
+          }))
         };
   }
 

@@ -20,16 +20,16 @@
   },
   "dependencies": {
     "@forklaunch/common": "^0.2.0",
-    "@forklaunch/core": "^0.3.0",
-    "@forklaunch/express": "^0.2.0",
-    "@forklaunch/hyper-express": "^0.2.1",
-    "@forklaunch/validator": "^0.4.0",
+    "@forklaunch/core": "^0.3.2",
+    "@forklaunch/express": "^0.2.2",
+    "@forklaunch/hyper-express": "^0.2.3",
+    "@forklaunch/validator": "^0.4.1",
     "@sinclair/typebox": "^0.34.13",
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "eslint": "^9.17.0",
+    "eslint": "^9.18.0",
     "prettier": "^3.4.2",
-    "typescript-eslint": "^8.19.1"
+    "typescript-eslint": "^8.20.0"
   }
 }

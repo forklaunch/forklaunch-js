@@ -1,5 +1,19 @@
 # @forklaunch/core
 
+## 0.3.2
+
+### Patch Changes
+
+- Change return type of validateConfigSingletons to ValidConfigInjector to ensure validity
+
+## 0.3.1
+
+### Patch Changes
+
+- Validator parse methods now return errors, and config injector now validates class based or schematic singletons, returning a ValidConfigInjector object
+- Updated dependencies
+  - @forklaunch/validator@0.4.1
+
 ## 0.3.0
 
 ### Minor Changes

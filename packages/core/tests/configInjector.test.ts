@@ -20,10 +20,20 @@ const configValidator = {
   d: number,
   e: number,
   f: number,
-  g: number
+  g: number,
+  h: X,
+  i: {
+    j: string,
+    k: number
+  }
 };
 
 describe('serviceFactory', () => {
+  const staticX = new X('a', () => 5);
+  const staticI = {
+    j: 'a',
+    k: 'b' as unknown as number
+  };
   const configInjector = new ConfigInjector(
     SchemaValidator(),
     configValidator,
@@ -58,13 +68,23 @@ describe('serviceFactory', () => {
       g: {
         lifetime: Lifetime.Transient,
         factory: (_args) => 6
+      },
+      h: {
+        lifetime: Lifetime.Singleton,
+        value: staticX
+      },
+      i: {
+        lifetime: Lifetime.Singleton,
+        value: staticI
       }
     }
   );
 
   test('loadSingletons', () => {
     expect(configInjector.instances).toEqual({
-      a: 'a'
+      a: 'a',
+      h: staticX,
+      i: staticI
     });
   });
 
@@ -78,7 +98,7 @@ describe('serviceFactory', () => {
         })
         .dummy()
     ).toBe('a20');
-    expect(Object.keys(configInjector.instances)).toEqual(['a', 'c']);
+    expect(Object.keys(configInjector.instances)).toEqual(['a', 'h', 'i', 'c']);
   });
 
   test('circular dependency', () => {
@@ -100,16 +120,36 @@ describe('serviceFactory', () => {
   });
 
   test('validateConfigSingletons', () => {
-    expect(
-      configInjector.validateConfigSingletons({
-        a: 'a'
-      }).ok
-    ).toBe(true);
-    expect(
-      configInjector.validateConfigSingletons({
-        a: 5 as unknown as string
-      }).ok
-    ).toBe(false);
+    expect(configInjector.validateConfigSingletons().ok).toBe(true);
+    const newConfigInjector = new ConfigInjector(
+      SchemaValidator(),
+      {
+        a: string,
+        b: X,
+        c: X
+      },
+      {
+        a: {
+          lifetime: Lifetime.Singleton,
+          value: 4 as unknown as string
+        },
+        b: {
+          lifetime: Lifetime.Singleton,
+          value: 'a' as unknown as X
+        },
+        c: {
+          lifetime: Lifetime.Singleton,
+          value: new ConfigInjector(SchemaValidator(), {}, {}) as unknown as X
+        }
+      }
+    );
+    const badResult = newConfigInjector.validateConfigSingletons();
+    expect(badResult.ok).toBe(false);
+    expect(!badResult.ok && badResult.errors).toEqual([
+      { path: ['a'], message: 'Expected string, received number' },
+      { path: ['b'], message: 'Expected X, received string' },
+      { path: ['c'], message: 'Expected X, received ConfigInjector' }
+    ]);
   });
 
   test('createScope', () => {
@@ -129,6 +169,10 @@ describe('serviceFactory', () => {
 
   test('dispose', () => {
     configInjector.dispose();
-    expect(configInjector.instances).toEqual({ a: 'a' });
+    expect(configInjector.instances).toEqual({
+      a: 'a',
+      h: staticX,
+      i: staticI
+    });
   });
 });

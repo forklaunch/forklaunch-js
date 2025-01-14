@@ -1,5 +1,21 @@
 # @forklaunch/hyper-express
 
+## 0.2.3
+
+### Patch Changes
+
+- Change return type of validateConfigSingletons to ValidConfigInjector to ensure validity
+- Updated dependencies
+  - @forklaunch/core@0.3.2
+
+## 0.2.2
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.4.1
+  - @forklaunch/core@0.3.1
+
 ## 0.2.1
 
 ### Patch Changes

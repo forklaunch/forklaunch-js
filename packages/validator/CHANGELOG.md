@@ -1,5 +1,11 @@
 # @forklaunch/validator
 
+## 0.4.1
+
+### Patch Changes
+
+- Validator parse methods now return errors, and config injector now validates class based or schematic singletons, returning a ValidConfigInjector object
+
 ## 0.4.0
 
 ### Minor Changes

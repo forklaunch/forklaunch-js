@@ -10,7 +10,7 @@ import { PermissionRoutes } from './routes/permission.routes';
 import { RoleRoutes } from './routes/role.routes';
 import { UserRoutes } from './routes/user.routes';
 
-bootstrap((ci) => {
+bootstrap('.env', (ci) => {
   const app = forklaunchExpress();
   const host = ci.resolve('host');
   const port = ci.resolve('port');

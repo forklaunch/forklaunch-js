@@ -16,8 +16,8 @@
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist pnpm.lock.yaml node_modules",
-    "dev": "pnpm run migrate:up && pnpm tsx watch app.ts",
-    "dev:bun": "bun run migrate:up && bun --watch app.ts",
+    "dev": "ENV_FILE_PATH=.env.local pnpm run migrate:up && pnpm tsx watch app.ts",
+    "dev:bun": "ENV_FILE_PATH=.env.local bun run migrate:up && bun --watch app.ts",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
     "lint": "eslint . -c eslint.config.mjs",
@@ -32,11 +32,11 @@
   },
   "dependencies": {
     "@forklaunch/common": "^0.2.0",
-    "@forklaunch/core": "^0.3.0",
-    "@forklaunch/express": "^0.2.0",
+    "@forklaunch/core": "^0.3.2",
+    "@forklaunch/express": "^0.2.2",
     "@forklaunch/framework-core": "workspace:*",
-    "@forklaunch/hyper-express": "^0.2.1",
-    "@forklaunch/validator": "^0.4.0",
+    "@forklaunch/hyper-express": "^0.2.3",
+    "@forklaunch/validator": "^0.4.1",
     "@mikro-orm/core": "^6.4.3",
     "@mikro-orm/migrations": "^6.4.3",
     "@mikro-orm/mongodb": "^6.4.3",
@@ -45,6 +45,7 @@
     "@mikro-orm/reflection": "^6.4.3",
     "@mikro-orm/sqlite": "^6.4.3",
     "@sinclair/typebox": "^0.34.13",
+    "dotenv": "^16.4.7",
     "zod": "^3.24.1"
   },
   "devDependencies": {

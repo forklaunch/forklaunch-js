@@ -9,7 +9,6 @@ import { generateSchema } from '@anatine/zod-openapi';
 import { SchemaObject } from 'openapi3-ts/oas31';
 import {
   ZodArray,
-  ZodError,
   ZodLiteral,
   ZodObject,
   ZodOptional,
@@ -63,11 +62,29 @@ export class ZodSchemaValidator
     | ZodArray<ZodObject<ZodRawShape>>;
 
   string = z.string();
-  uuid = z.coerce.string().uuid();
-  email = z.coerce.string().email();
-  uri = z.coerce.string().url();
-  number = z.coerce.number();
-  bigint = z.coerce.bigint();
+  uuid = z.string().uuid();
+  email = z.string().email();
+  uri = z.string().url();
+  number = z
+    .any()
+    .transform((value) => {
+      try {
+        return Number(value);
+      } catch {
+        return value;
+      }
+    })
+    .pipe(z.number());
+  bigint = z
+    .any()
+    .transform((value) => {
+      try {
+        return BigInt(value);
+      } catch {
+        return value;
+      }
+    })
+    .pipe(z.bigint());
   boolean = z.preprocess((val) => {
     if (typeof val === 'string') {
       if (val.toLowerCase() === 'true') return true;
@@ -75,30 +92,21 @@ export class ZodSchemaValidator
     }
     return val;
   }, z.boolean());
-  date = z.coerce.date();
+  date = z
+    .any()
+    .transform((value) => {
+      try {
+        return new Date(value);
+      } catch {
+        return value;
+      }
+    })
+    .pipe(z.date());
   symbol = z.symbol();
   nullish = z.union([z.void(), z.null(), z.undefined()]);
   any = z.any();
   unknown = z.unknown();
   never = z.never();
-
-  /**
-   * Pretty print Zod errors.
-   *
-   * @param {ZodError} error - The Zod error to pretty print.
-   * @returns
-   */
-  private prettyPrintZodErrors(error?: ZodError): string | undefined {
-    if (!error) return;
-
-    const errorMessages = error.errors.map((err, index) => {
-      const path = err.path.length > 0 ? err.path.join(' > ') : 'root';
-      return `${index + 1}. Path: ${path}\n   Message: ${err.message}`;
-    });
-    return `Validation failed with the following errors:\n${errorMessages.join(
-      '\n\n'
-    )}`;
-  }
 
   /**
    * Compiles schema if this exists, for optimal performance.
@@ -236,20 +244,16 @@ export class ZodSchemaValidator
     schema: T,
     value: unknown
   ): ParseResult<ZodResolve<T>> {
-    try {
-      const result = schema.safeParse(value);
-      return result.success
-        ? { ok: true, value: result.data }
-        : {
-            ok: false,
-            error: this.prettyPrintZodErrors(result.error)
-          };
-    } catch (error) {
-      return {
-        ok: false,
-        error: `Unexpected zod safeParse error: ${(error as Error).message}`
-      };
-    }
+    const result = schema.safeParse(value);
+    return result.success
+      ? { ok: true, value: result.data }
+      : {
+          ok: false,
+          errors: result.error.errors.map((error) => ({
+            path: error.path.map((p) => p.toString()),
+            message: error.message
+          }))
+        };
   }
 
   /**
