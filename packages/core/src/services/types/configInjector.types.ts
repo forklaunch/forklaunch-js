@@ -66,8 +66,3 @@ export type ScopedDependencyFactory<
   CV extends ConfigValidator<SV>,
   M extends keyof CV
 > = (scope?: ConfigInjector<SV, CV>) => ResolvedConfigValidator<SV, CV>[M];
-
-export type ValidConfigInjector<
-  SV extends AnySchemaValidator,
-  CV extends ConfigValidator<SV>
-> = ConfigInjector<SV, CV> & { validResolvedConfigValidator: void };

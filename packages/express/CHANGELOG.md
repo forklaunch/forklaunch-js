@@ -1,5 +1,22 @@
 # @forklaunch/express
 
+## 0.2.4
+
+### Patch Changes
+
+- fix config injector ergonomics to be much nicer
+- Updated dependencies
+  - @forklaunch/validator@0.4.2
+  - @forklaunch/core@0.3.4
+
+## 0.2.3
+
+### Patch Changes
+
+- Create an actual type from valid config injector since splay dropped methods
+- Updated dependencies
+  - @forklaunch/core@0.3.3
+
 ## 0.2.2
 
 ### Patch Changes

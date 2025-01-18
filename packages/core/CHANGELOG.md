@@ -1,5 +1,19 @@
 # @forklaunch/core
 
+## 0.3.4
+
+### Patch Changes
+
+- fix config injector ergonomics to be much nicer
+- Updated dependencies
+  - @forklaunch/validator@0.4.2
+
+## 0.3.3
+
+### Patch Changes
+
+- Create an actual type from valid config injector since splay dropped methods
+
 ## 0.3.2
 
 ### Patch Changes

@@ -20,14 +20,18 @@
   },
   "dependencies": {
     "@forklaunch/common": "^0.2.0",
-    "@forklaunch/core": "^0.3.2",
-    "@forklaunch/express": "^0.2.2",
-    "@forklaunch/hyper-express": "^0.2.3",
+    "@forklaunch/core": "^0.3.3",
+    "@forklaunch/express": "^0.2.3",
+    "@forklaunch/hyper-express": "^0.2.4",
     "@forklaunch/validator": "^0.4.1",
+    "@mikro-orm/core": "^6.4.3",
+    "@mikro-orm/mongodb": "^6.4.3",
     "@sinclair/typebox": "^0.34.13",
+    "uuid": "^11.0.5",
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@types/uuid": "^10.0.0",
     "eslint": "^9.18.0",
     "prettier": "^3.4.2",
     "typescript-eslint": "^8.20.0"

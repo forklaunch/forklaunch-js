@@ -1,5 +1,5 @@
 import { RedisTtlCache } from '@forklaunch/core/cache';
-import { ConfigInjector, Lifetime } from '@forklaunch/core/services';
+import { ConfigInjector, getEnvVar, Lifetime } from '@forklaunch/core/services';
 import {
   number,
   optional,
@@ -39,23 +39,23 @@ export function bootstrap(
       {
         redisUrl: {
           lifetime: Lifetime.Singleton,
-          value: process.env.REDIS_URL ?? ''
+          value: getEnvVar('REDIS_URL')
         },
         host: {
           lifetime: Lifetime.Singleton,
-          value: process.env.HOST ?? 'localhost'
+          value: getEnvVar('HOST')
         },
         port: {
           lifetime: Lifetime.Singleton,
-          value: Number(process.env.PORT ?? '8000')
+          value: Number(getEnvVar('PORT'))
         },
         version: {
           lifetime: Lifetime.Singleton,
-          value: process.env.VERSION ?? '/v1'
+          value: getEnvVar('VERSION')
         },
         swaggerPath: {
           lifetime: Lifetime.Singleton,
-          value: process.env.SWAGGER_PATH ?? '/swagger'
+          value: getEnvVar('SWAGGER_PATH')
         },
         entityManager: {
           lifetime: Lifetime.Scoped,
@@ -67,7 +67,7 @@ export function bootstrap(
         ttlCache: {
           lifetime: Lifetime.Singleton,
           value: new RedisTtlCache(60 * 60 * 1000, {
-            url: process.env.REDIS_URL ?? ''
+            url: getEnvVar('REDIS_URL')
           })
         },
         checkoutSessionService: {
@@ -90,14 +90,8 @@ export function bootstrap(
       }
     );
 
-    if (
-      !configInjector.validateConfigSingletons({
-        redisUrl: process.env.REDIS_URL
-      })
-    ) {
-      throw new Error('Invalid environment variables supplied.');
-    }
-
-    callback(configInjector);
+    callback(
+      configInjector.validateConfigSingletons(getEnvVar('ENV_FILE_PATH'))
+    );
   });
 }

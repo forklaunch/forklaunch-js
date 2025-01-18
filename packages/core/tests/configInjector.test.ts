@@ -120,7 +120,7 @@ describe('serviceFactory', () => {
   });
 
   test('validateConfigSingletons', () => {
-    expect(configInjector.validateConfigSingletons().ok).toBe(true);
+    expect(configInjector.safeValidateConfigSingletons().ok).toBe(true);
     const newConfigInjector = new ConfigInjector(
       SchemaValidator(),
       {
@@ -143,7 +143,7 @@ describe('serviceFactory', () => {
         }
       }
     );
-    const badResult = newConfigInjector.validateConfigSingletons();
+    const badResult = newConfigInjector.safeValidateConfigSingletons();
     expect(badResult.ok).toBe(false);
     expect(!badResult.ok && badResult.errors).toEqual([
       { path: ['a'], message: 'Expected string, received number' },

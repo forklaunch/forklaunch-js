@@ -3,6 +3,7 @@ import {
   AnySchemaValidator,
   IdiomaticSchema,
   ParseResult,
+  prettyPrintParseErrors,
   SchemaValidator
 } from '@forklaunch/validator';
 import { isConstructed } from './guards/isConstructed';
@@ -14,8 +15,7 @@ import {
   ResolvedConfigValidator,
   SchemaConstructor,
   SchemaFunction,
-  Singleton,
-  ValidConfigInjector
+  Singleton
 } from './types/configInjector.types';
 
 export class ConfigInjector<
@@ -102,7 +102,7 @@ export class ConfigInjector<
     this.loadSingletons();
   }
 
-  validateConfigSingletons(): ParseResult<ValidConfigInjector<SV, CV>> {
+  safeValidateConfigSingletons(): ParseResult<ValidConfigInjector<SV, CV>> {
     const validNonSchemaSingletons = Object.entries(this.configShapes).reduce<
       ParseResult<ResolvedConfigValidator<SV, CV>>
     >(
@@ -181,14 +181,15 @@ export class ConfigInjector<
 
     return validNonSchemaSingletons.ok && schemaSingletonParseResult.ok
       ? {
-          ok: true,
-          value: {
-            validResolvedConfigValidator: undefined,
-            ...this
-          }
+          ok: true as const,
+          value: new ValidConfigInjector<SV, CV>(
+            this.schemaValidator,
+            this.configShapes,
+            this.dependenciesDefinition
+          )
         }
       : {
-          ok: false,
+          ok: false as const,
           errors: [
             ...(!validNonSchemaSingletons.ok && validNonSchemaSingletons.errors
               ? validNonSchemaSingletons.errors
@@ -202,6 +203,18 @@ export class ConfigInjector<
               configKeys.indexOf(a.path[0]) - configKeys.indexOf(b.path[0])
           )
         };
+  }
+
+  validateConfigSingletons(configName: string): ValidConfigInjector<SV, CV> {
+    const safeValidateResult = this.safeValidateConfigSingletons();
+
+    if (safeValidateResult.ok) {
+      return safeValidateResult.value;
+    }
+
+    throw new Error(
+      prettyPrintParseErrors(safeValidateResult.errors, configName)
+    );
   }
 
   resolve<T extends keyof CV>(
@@ -274,4 +287,11 @@ export class ConfigInjector<
     this.instances = {};
     this.loadSingletons();
   }
+}
+
+export class ValidConfigInjector<
+  SV extends AnySchemaValidator,
+  CV extends ConfigValidator<SV>
+> extends ConfigInjector<SV, CV> {
+  validConfigInjector!: void;
 }

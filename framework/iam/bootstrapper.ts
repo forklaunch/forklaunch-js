@@ -10,7 +10,6 @@ import {
   SchemaValidator,
   string
 } from '@forklaunch/framework-core';
-import { prettyPrintParseErrors } from '@forklaunch/validator';
 import { EntityManager, ForkOptions, MikroORM } from '@mikro-orm/core';
 import dotenv from 'dotenv';
 import mikroOrmOptionsConfig from './mikro-orm.config';
@@ -33,13 +32,12 @@ export const configValidator = {
 };
 
 export function bootstrap(
-  envFilePath: string,
   callback: (
     ci: ValidConfigInjector<SchemaValidator, typeof configValidator>
   ) => void
 ) {
   MikroORM.init(mikroOrmOptionsConfig).then((orm) => {
-    dotenv.config({ path: envFilePath });
+    dotenv.config({ path: getEnvVar('ENV_FILE_PATH') });
 
     const configInjector = new ConfigInjector(
       SchemaValidator(),
@@ -128,18 +126,8 @@ export function bootstrap(
       }
     );
 
-    const maybeValidConfigInjectorResult =
-      configInjector.validateConfigSingletons();
-    if (maybeValidConfigInjectorResult.ok) {
-      console.log(
-        'Valid config injector result',
-        maybeValidConfigInjectorResult.value
-      );
-      callback(maybeValidConfigInjectorResult.value);
-    } else {
-      throw new Error(
-        prettyPrintParseErrors(maybeValidConfigInjectorResult.errors, '.env')
-      );
-    }
+    callback(
+      configInjector.validateConfigSingletons(getEnvVar('ENV_FILE_PATH'))
+    );
   });
 }

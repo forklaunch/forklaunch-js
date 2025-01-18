@@ -1,6 +1,6 @@
 import { SchemaValidator, number, string } from '@forklaunch/validator/typebox';
-import { Property } from '@mikro-orm/core';
-import { BaseEntity } from '../src/database/mikro/models/entities/base.entity';
+import { PrimaryKey, Property } from '@mikro-orm/core';
+import { v4 } from 'uuid';
 import { RequestDtoMapper } from '../src/dtoMapper/models/requestDtoMapper.model';
 import { ResponseDtoMapper } from '../src/dtoMapper/models/responseDtoMapper.model';
 
@@ -8,7 +8,16 @@ const SV = SchemaValidator();
 
 type TypeboxSchemaValidator = typeof SV;
 
-class TestEntity extends BaseEntity {
+class TestEntity {
+  @PrimaryKey({ type: 'uuid' })
+  id: string = v4();
+
+  @Property()
+  createdAt: Date = new Date();
+
+  @Property({ onUpdate: () => new Date() })
+  updatedAt: Date = new Date();
+
   @Property()
   name!: string;
 
@@ -56,7 +65,12 @@ class TestResponseDtoMapper extends ResponseDtoMapper<
   }
 }
 
-function extractNonTimeBasedEntityFields<T extends BaseEntity>(entity: T): T {
+function extractNonTimeBasedEntityFields<
+  T extends {
+    createdAt: Date;
+    updatedAt: Date;
+  }
+>(entity: T): T {
   entity.createdAt = new Date(0);
   entity.updatedAt = new Date(0);
   return entity;

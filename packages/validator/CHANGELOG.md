@@ -1,5 +1,11 @@
 # @forklaunch/validator
 
+## 0.4.2
+
+### Patch Changes
+
+- fix config injector ergonomics to be much nicer
+
 ## 0.4.1
 
 ### Patch Changes

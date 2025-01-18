@@ -3,7 +3,6 @@ import { number, SchemaValidator, string } from '@forklaunch/framework-core';
 import { Migrator } from '@mikro-orm/migrations';
 // import { MongoDriver } from '@mikro-orm/mongodb';
 // import { MySqlDriver } from '@mikro-orm/mysql';
-import { prettyPrintParseErrors } from '@forklaunch/validator';
 import { Platform, TextType, Type } from '@mikro-orm/core';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
@@ -50,15 +49,9 @@ const configInjector = new ConfigInjector(
   }
 );
 
-const maybeValidConfigInjectorResult =
-  configInjector.validateConfigSingletons();
-if (!maybeValidConfigInjectorResult.ok) {
-  throw new Error(
-    prettyPrintParseErrors(maybeValidConfigInjectorResult.errors, '.env')
-  );
-}
-const validConfigInjector = maybeValidConfigInjectorResult.value;
-console.log('Valid config injector', validConfigInjector);
+const validConfigInjector = configInjector.validateConfigSingletons(
+  getEnvVar('ENV_FILE_PATH') ?? '.env'
+);
 
 const mikroOrmOptionsConfig = {
   driver: PostgreSqlDriver,
@@ -67,7 +60,7 @@ const mikroOrmOptionsConfig = {
   user: validConfigInjector.resolve('user'),
   password: validConfigInjector.resolve('password'),
   port: validConfigInjector.resolve('port'),
-  entities: ['dist/**/*.entity.js'],
+  entities: ['dist/**/*.entity.{js,mjs,cjs}'],
   entitiesTs: ['models/persistence/**/*.entity.ts'],
   metadataProvider: TsMorphMetadataProvider,
   debug: true,

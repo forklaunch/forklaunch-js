@@ -1,4 +1,4 @@
-import { BaseEntity } from '@forklaunch/core/database';
+import { BaseEntity } from '@forklaunch/framework-core';
 import { Entity, Property } from '@mikro-orm/core';
 
 @Entity()
