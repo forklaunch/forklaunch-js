@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.2.1
+
+### Patch Changes
+
+- Add utility to strip undefined properties from an object
+
 ## 0.2.0
 
 ### Minor Changes
