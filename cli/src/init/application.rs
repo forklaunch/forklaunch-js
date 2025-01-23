@@ -296,6 +296,19 @@ impl CliCommand for ApplicationCommand {
                 .filter(|config| config != &test_framework_config_file),
         );
 
+        // filter out database base entities if not used
+        let all_database_base_entities = vec!["base.entity.ts", "mongo.base.entity.ts"];
+        let database_base_entity = match database.as_str() {
+            "mongodb" => "mongo.base.entity.ts",
+            "postgresql" => "base.entity.ts",
+            _ => bail!("Invalid database: {}", database),
+        };
+        ignore_files.extend(
+            all_database_base_entities
+                .into_iter()
+                .filter(|entity| entity != &database_base_entity),
+        );
+
         // Inline specific perms checks here. Make remote calls to receive templates for specific services if needed here (premium only).
 
         let mut additional_projects = vec![ProjectEntry {

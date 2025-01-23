@@ -36,26 +36,7 @@ export class CreateSubscriptionDtoMapper extends RequestDtoMapper<
   };
 
   toEntity(): Subscription {
-    const subscription = new Subscription();
-    if (this.dto.description) {
-      subscription.description = this.dto.description;
-    }
-    subscription.startDate = this.dto.startDate;
-    subscription.endDate = this.dto.endDate;
-    subscription.status = this.dto.status;
-    subscription.partyId = this.dto.partyId;
-    subscription.partyType = this.dto.partyType;
-    subscription.active = this.dto.active ?? false;
-    subscription.productId = this.dto.productId;
-    subscription.externalId = this.dto.externalId;
-    if (this.dto.billingProvider) {
-      subscription.billingProvider = this.dto.billingProvider;
-    }
-    if (this.dto.extraFields) {
-      subscription.extraFields = this.dto.extraFields;
-    }
-
-    return subscription;
+    return Subscription.create(this.dto);
   }
 }
 
@@ -80,42 +61,7 @@ export class UpdateSubscriptionDtoMapper extends RequestDtoMapper<
   };
 
   toEntity(): Subscription {
-    const subscription = new Subscription();
-    subscription.id = this.dto.id;
-    if (this.dto.partyId) {
-      subscription.partyId = this.dto.partyId;
-    }
-    if (this.dto.partyType) {
-      subscription.partyType = this.dto.partyType;
-    }
-    if (this.dto.productId) {
-      subscription.productId = this.dto.productId;
-    }
-    if (this.dto.description) {
-      subscription.description = this.dto.description;
-    }
-    if (this.dto.active) {
-      subscription.active = this.dto.active;
-    }
-    if (this.dto.externalId) {
-      subscription.externalId = this.dto.externalId;
-    }
-    if (this.dto.startDate) {
-      subscription.startDate = this.dto.startDate;
-    }
-    if (this.dto.endDate) {
-      subscription.endDate = this.dto.endDate;
-    }
-    if (this.dto.status) {
-      subscription.status = this.dto.status;
-    }
-    if (this.dto.billingProvider) {
-      subscription.billingProvider = this.dto.billingProvider;
-    }
-    if (this.dto.extraFields) {
-      subscription.extraFields = this.dto.extraFields;
-    }
-    return subscription;
+    return Subscription.update(this.dto);
   }
 }
 
@@ -142,29 +88,7 @@ export class SubscriptionDtoMapper extends ResponseDtoMapper<
   };
 
   fromEntity(entity: Subscription): this {
-    this.dto = {
-      id: entity.id,
-      partyId: entity.partyId,
-      partyType: entity.partyType,
-      productId: entity.productId,
-      active: entity.active,
-      externalId: entity.externalId,
-      startDate: entity.startDate,
-      endDate: entity.endDate,
-      status: entity.status,
-      createdAt: entity.createdAt,
-      updatedAt: entity.updatedAt
-    };
-    if (entity.description) {
-      this.dto.description = entity.description;
-    }
-    if (entity.billingProvider) {
-      this.dto.billingProvider = entity.billingProvider;
-    }
-    if (entity.extraFields) {
-      this.dto.extraFields = entity.extraFields;
-    }
-
+    this.dto = entity.read();
     return this;
   }
 }

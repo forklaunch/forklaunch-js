@@ -21,6 +21,12 @@ pub(crate) fn create_forklaunch_dir(path_dir: &String) -> Result<()> {
 
 pub(crate) fn write_rendered_templates(rendered_templates: &Vec<RenderedTemplate>) -> Result<()> {
     for rendered_template in rendered_templates {
+        create_dir_all(&rendered_template.path.parent().unwrap()).with_context(|| {
+            format!(
+                "Failed to create parent directory for {}",
+                rendered_template.path.display()
+            )
+        })?;
         write(&rendered_template.path, rendered_template.content.clone()).with_context(|| {
             match &rendered_template.context {
                 Some(context) => context.clone(),

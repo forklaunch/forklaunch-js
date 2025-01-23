@@ -29,15 +29,7 @@ export class CreateSessionDtoMapper extends RequestDtoMapper<
   };
 
   toEntity(): Session {
-    const session = new Session();
-    session.customerEmail = this.dto.customerEmail;
-    session.paymentMethods = this.dto.paymentMethods;
-    session.successRedirectUri = this.dto.successRedirectUri;
-    session.cancelRedirectUri = this.dto.cancelRedirectUri;
-    if (this.dto.extraFields) {
-      session.extraFields = this.dto.extraFields;
-    }
-    return session;
+    return Session.create(this.dto);
   }
 }
 
@@ -56,23 +48,7 @@ export class UpdateSessionDtoMapper extends RequestDtoMapper<
   };
 
   toEntity(): Session {
-    const session = new Session();
-    if (this.dto.customerEmail) {
-      session.customerEmail = this.dto.customerEmail;
-    }
-    if (this.dto.paymentMethods) {
-      session.paymentMethods = this.dto.paymentMethods;
-    }
-    if (this.dto.successRedirectUri) {
-      session.successRedirectUri = this.dto.successRedirectUri;
-    }
-    if (this.dto.cancelRedirectUri) {
-      session.cancelRedirectUri = this.dto.cancelRedirectUri;
-    }
-    if (this.dto.extraFields) {
-      session.extraFields = this.dto.extraFields;
-    }
-    return session;
+    return Session.update(this.dto);
   }
 }
 
@@ -93,18 +69,7 @@ export class SessionDtoMapper extends ResponseDtoMapper<
   };
 
   fromEntity(session: Session): this {
-    this.dto = {
-      id: session.id,
-      customerEmail: session.customerEmail,
-      paymentMethods: session.paymentMethods,
-      successRedirectUri: session.successRedirectUri,
-      cancelRedirectUri: session.cancelRedirectUri,
-      createdAt: session.createdAt,
-      updatedAt: session.updatedAt
-    };
-    if (session.extraFields) {
-      this.dto.extraFields = session.extraFields;
-    }
+    this.dto = session.read();
     return this;
   }
 }

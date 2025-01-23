@@ -1,5 +1,3 @@
-import { Collection } from '@mikro-orm/core';
-
 import {
   RequestDtoMapper,
   ResponseDtoMapper
@@ -42,29 +40,19 @@ export class CreateUserDtoMapper extends RequestDtoMapper<
     roles: Role[],
     organization?: Organization
   ): User {
-    const user = new User();
-    user.email = this.dto.email;
-    user.passwordHash = passwordEncrypt(
-      this.dto.password,
-      passwordEncryptionPublicKeyPath
-    );
-    user.firstName = this.dto.firstName;
-    user.lastName = this.dto.lastName;
-    user.roles = new Collection(user, roles);
-    if (this.dto.phoneNumber) {
-      user.phoneNumber = this.dto.phoneNumber;
-    }
-    if (this.dto.subscription) {
-      user.subscription = this.dto.subscription;
-    }
-    if (this.dto.extraFields) {
-      user.extraFields = this.dto.extraFields;
-    }
-    if (organization) {
-      user.organization = organization;
-    }
-
-    return user;
+    return new User({
+      ...this.dto,
+      ...(organization ? { organization } : {}),
+      ...(roles ? { roles } : {}),
+      ...(passwordEncryptionPublicKeyPath
+        ? {
+            passwordHash: passwordEncrypt(
+              this.dto.password,
+              passwordEncryptionPublicKeyPath
+            )
+          }
+        : {})
+    });
   }
 }
 
@@ -90,40 +78,19 @@ export class UpdateUserDtoMapper extends RequestDtoMapper<
     roles: Role[],
     organization?: Organization
   ): User {
-    const user = new User();
-    user.id = this.dto.id;
-    if (this.dto.email) {
-      user.email = this.dto.email;
-    }
-    if (this.dto.password) {
-      user.passwordHash = passwordEncrypt(
-        this.dto.password,
-        passwordEncryptionPublicKeyPath
-      );
-    }
-    if (this.dto.firstName) {
-      user.firstName = this.dto.firstName;
-    }
-    if (this.dto.lastName) {
-      user.lastName = this.dto.lastName;
-    }
-    if (this.dto.roleIds) {
-      user.roles = new Collection(user, roles);
-    }
-    if (this.dto.phoneNumber) {
-      user.phoneNumber = this.dto.phoneNumber;
-    }
-    if (this.dto.subscription) {
-      user.subscription = this.dto.subscription;
-    }
-    if (this.dto.extraFields) {
-      user.extraFields = this.dto.extraFields;
-    }
-    if (organization) {
-      user.organization = organization;
-    }
-
-    return user;
+    return new User({
+      ...this.dto,
+      ...(organization ? { organization } : {}),
+      ...(roles ? { roles } : {}),
+      ...(passwordEncryptionPublicKeyPath && this.dto.password
+        ? {
+            passwordHash: passwordEncrypt(
+              this.dto.password,
+              passwordEncryptionPublicKeyPath
+            )
+          }
+        : {})
+    });
   }
 }
 
@@ -178,31 +145,19 @@ export class UserEntityMapper extends RequestDtoMapper<User, SchemaValidator> {
   schema = userSchema;
 
   toEntity(): User {
-    const user = new User();
-    user.id = this.dto.id;
-    user.email = this.dto.email;
-    user.firstName = this.dto.firstName;
-    user.lastName = this.dto.lastName;
-    user.roles = new Collection(
-      user,
-      this.dto.roles.map((role) =>
-        RoleEntityMapper.deserializeDtoToEntity(
-          this.schemaValidator as SchemaValidator,
-          role
-        )
-      )
-    );
-    if (this.dto.phoneNumber) {
-      user.phoneNumber = this.dto.phoneNumber;
-    }
-    if (this.dto.subscription) {
-      user.subscription = this.dto.subscription;
-    }
-    if (this.dto.extraFields) {
-      user.extraFields = this.dto.extraFields;
-    }
-    user.createdAt = this.dto.createdAt;
-    user.updatedAt = this.dto.updatedAt;
+    const user = new User({
+      ...this.dto,
+      ...(this.dto.roles
+        ? {
+            roles: this.dto.roles.map((role) =>
+              RoleEntityMapper.deserializeDtoToEntity(
+                this.schemaValidator as SchemaValidator,
+                role
+              )
+            )
+          }
+        : {})
+    });
 
     return user;
   }

@@ -1,5 +1,14 @@
+import { stripUndefinedProperties } from '@forklaunch/common';
+import {
+  Constructor,
+  EntityDTO,
+  FromEntityType,
+  PrimaryKey,
+  Property,
+  wrap
+} from '@mikro-orm/core';
 import { v4 } from 'uuid';
-import { PrimaryKey, Property } from '@mikro-orm/core';
+import { CreateShape, UpdateShape } from '../types/shapes';
 
 /**
  * Abstract class representing a base entity.
@@ -30,4 +39,42 @@ export abstract class BaseEntity {
    */
   @Property({ onUpdate: () => new Date() })
   updatedAt: Date = new Date();
+
+  static create<Entity extends BaseEntity>(
+    this: Constructor<Entity>,
+    ...args: Parameters<Entity['create']>
+  ): Entity {
+    const [data, ...additionalArgs] = args;
+    return new this().create(
+      data as CreateShape<BaseEntity, Entity>,
+      ...additionalArgs
+    );
+  }
+
+  static update<Entity extends BaseEntity>(
+    this: Constructor<Entity>,
+    ...args: Parameters<Entity['update']>
+  ): Entity {
+    const [data, ...additionalArgs] = args;
+    return new this().update(
+      data as UpdateShape<BaseEntity, Entity>,
+      ...additionalArgs
+    );
+  }
+
+  create(data: CreateShape<BaseEntity, this>): this {
+    Object.assign(this, data);
+    return this;
+  }
+
+  update(data: UpdateShape<BaseEntity, this>): this {
+    wrap(this).assign(
+      stripUndefinedProperties(data) as Partial<EntityDTO<FromEntityType<this>>>
+    );
+    return this;
+  }
+
+  read(): EntityDTO<this> {
+    return wrap(this).toPOJO();
+  }
 }

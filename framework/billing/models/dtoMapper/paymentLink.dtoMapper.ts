@@ -25,31 +25,13 @@ export class CreatePaymentLinkDtoMapper extends RequestDtoMapper<
     currency: enum_(CurrencyEnum),
     description: optional(string),
     metadata: optional(unknown),
-    successRedirectUri: optional(string),
-    cancelRedirectUri: optional(string),
+    successRedirectUri: string,
+    cancelRedirectUri: string,
     extraFields: optional(unknown)
   };
 
   toEntity(): PaymentLink {
-    const paymentLink = new PaymentLink();
-    paymentLink.amount = this.dto.amount;
-    paymentLink.currency = this.dto.currency;
-    if (this.dto.description) {
-      paymentLink.description = this.dto.description;
-    }
-    if (this.dto.metadata) {
-      paymentLink.metadata = this.dto.metadata;
-    }
-    if (this.dto.successRedirectUri) {
-      paymentLink.successRedirectUri = this.dto.successRedirectUri;
-    }
-    if (this.dto.cancelRedirectUri) {
-      paymentLink.cancelRedirectUri = this.dto.cancelRedirectUri;
-    }
-    if (this.dto.extraFields) {
-      paymentLink.extraFields = this.dto.extraFields;
-    }
-    return paymentLink;
+    return PaymentLink.create(this.dto);
   }
 }
 
@@ -70,30 +52,7 @@ export class UpdatePaymentLinkDtoMapper extends RequestDtoMapper<
   };
 
   toEntity(): PaymentLink {
-    const paymentLink = new PaymentLink();
-    paymentLink.id = this.dto.id;
-    if (this.dto.amount) {
-      paymentLink.amount = this.dto.amount;
-    }
-    if (this.dto.currency) {
-      paymentLink.currency = this.dto.currency;
-    }
-    if (this.dto.description) {
-      paymentLink.description = this.dto.description;
-    }
-    if (this.dto.metadata) {
-      paymentLink.metadata = this.dto.metadata;
-    }
-    if (this.dto.successRedirectUri) {
-      paymentLink.successRedirectUri = this.dto.successRedirectUri;
-    }
-    if (this.dto.cancelRedirectUri) {
-      paymentLink.cancelRedirectUri = this.dto.cancelRedirectUri;
-    }
-    if (this.dto.extraFields) {
-      paymentLink.extraFields = this.dto.extraFields;
-    }
-    return paymentLink;
+    return PaymentLink.update(this.dto);
   }
 }
 
@@ -116,30 +75,7 @@ export class PaymentLinkDtoMapper extends ResponseDtoMapper<
   };
 
   fromEntity(paymentLink: PaymentLink): this {
-    this.dto = {
-      id: paymentLink.id,
-      amount: paymentLink.amount,
-      currency: paymentLink.currency,
-      createdAt: paymentLink.createdAt,
-      updatedAt: paymentLink.updatedAt
-    };
-
-    if (paymentLink.description) {
-      this.dto.description = paymentLink.description;
-    }
-    if (paymentLink.metadata) {
-      this.dto.metadata = paymentLink.metadata;
-    }
-    if (paymentLink.successRedirectUri) {
-      this.dto.successRedirectUri = paymentLink.successRedirectUri;
-    }
-    if (paymentLink.cancelRedirectUri) {
-      this.dto.cancelRedirectUri = paymentLink.cancelRedirectUri;
-    }
-    if (paymentLink.extraFields) {
-      this.dto.extraFields = paymentLink.extraFields;
-    }
-
+    this.dto = paymentLink.read();
     return this;
   }
 }

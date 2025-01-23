@@ -19,9 +19,7 @@ export class HelloForklaunchRequestDtoMapper extends RequestDtoMapper<
 
   // toEntity method maps the request schema to the entity
   toEntity(): HelloForklaunchRecord {
-    const entity = new HelloForklaunchRecord();
-    entity.message = this.dto.message;
-    return entity;
+    return HelloForklaunchRecord.create(this.dto);
   }
 }
 
@@ -40,9 +38,7 @@ export class HelloForklaunchResponseDtoMapper extends ResponseDtoMapper<
 
   // fromEntity method maps the entity to the response schema
   fromEntity(entity: HelloForklaunchRecord): this {
-    this.dto = {
-      message: entity.message
-    };
+    this.dto = entity.read();
     return this;
   }
 }

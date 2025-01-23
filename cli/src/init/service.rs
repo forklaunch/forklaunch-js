@@ -202,6 +202,10 @@ fn generate_basic_service(
         update_application_package_json(config_data, base_path)
             .with_context(|| "Failed to update application package.json")?,
     );
+    rendered_templates.extend(
+        add_base_entity_to_core(config_data, base_path)
+            .with_context(|| "Failed to add base entity to core")?,
+    );
 
     write_rendered_templates(&rendered_templates)
         .with_context(|| "Failed to write service files")?;

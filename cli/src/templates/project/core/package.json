@@ -23,12 +23,17 @@
     "@forklaunch/core": "^0.3.0",{{#is_express}}
     "@forklaunch/express": "^0.2.0",{{/is_express}}{{#is_hyper_express}}
     "@forklaunch/hyper-express": "^0.2.1",{{/is_hyper_express}}
-    "@forklaunch/validator": "^0.4.0",{{#is_typebox}}
-    "@sinclair/typebox": "^0.34.13"{{/is_typebox}}{{#is_zod}}
-    "zod": "^3.24.1"{{/is_zod}}
+    "@forklaunch/validator": "^0.4.0",
+    "@mikro-orm/core": "^6.4.3",
+    "@mikro-orm/{{database}}": "^6.4.3",{{#is_typebox}}
+    "@sinclair/typebox": "^0.34.13"{{/is_typebox}}{{^is_mongo}}
+    "uuid": "^11.0.5"{{/is_mongo}}{{#is_postgres}}
+    "zod": "^3.24.1"{{/is_postgres}}
   },
-  "devDependencies": {
+  "devDependencies": { {{#is_zod}}
+    "@types/uuid": "^10.0.0",{{/is_zod}}
     "eslint": "^9.17.0",
+    "prettier": "^3.4.2",
     "typescript-eslint": "^8.19.1"
   }
 }

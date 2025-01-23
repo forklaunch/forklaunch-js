@@ -23,10 +23,7 @@ export class CreatePermissionDtoMapper extends RequestDtoMapper<
   };
 
   toEntity(): Permission {
-    const permission = new Permission();
-    permission.slug = this.dto.slug;
-
-    return permission;
+    return Permission.create(this.dto);
   }
 }
 
@@ -43,13 +40,7 @@ export class UpdatePermissionDtoMapper extends RequestDtoMapper<
   };
 
   toEntity(): Permission {
-    const permission = new Permission();
-    permission.id = this.dto.id;
-    if (this.dto.slug) {
-      permission.slug = this.dto.slug;
-    }
-
-    return permission;
+    return Permission.update(this.dto);
   }
 }
 
@@ -68,13 +59,7 @@ export class PermissionDtoMapper extends ResponseDtoMapper<
   schema = permissionSchema;
 
   fromEntity(entity: Permission): this {
-    this.dto = {
-      id: entity.id,
-      slug: entity.slug,
-      createdAt: entity.createdAt,
-      updatedAt: entity.updatedAt
-    };
-
+    this.dto = entity.read();
     return this;
   }
 }
@@ -86,11 +71,6 @@ export class PermissionEntityMapper extends RequestDtoMapper<
   schema = permissionSchema;
 
   toEntity(): Permission {
-    const permission = new Permission();
-    permission.id = this.dto.id;
-    permission.slug = this.dto.slug;
-    permission.createdAt = this.dto.createdAt;
-    permission.updatedAt = this.dto.updatedAt;
-    return permission;
+    return Permission.create(this.dto);
   }
 }

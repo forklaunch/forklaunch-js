@@ -31,12 +31,12 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/common": "^0.2.0",
-    "@forklaunch/core": "^0.3.3",
-    "@forklaunch/express": "^0.2.3",
+    "@forklaunch/common": "^0.2.1",
+    "@forklaunch/core": "^0.3.4",
+    "@forklaunch/express": "^0.2.4",
     "@forklaunch/framework-core": "workspace:*",
-    "@forklaunch/hyper-express": "^0.2.4",
-    "@forklaunch/validator": "^0.4.1",
+    "@forklaunch/hyper-express": "^0.2.5",
+    "@forklaunch/validator": "^0.4.2",
     "@mikro-orm/core": "^6.4.3",
     "@mikro-orm/migrations": "^6.4.3",
     "@mikro-orm/mongodb": "^6.4.3",
@@ -44,7 +44,7 @@
     "@mikro-orm/postgresql": "^6.4.3",
     "@mikro-orm/reflection": "^6.4.3",
     "@mikro-orm/sqlite": "^6.4.3",
-    "@sinclair/typebox": "^0.34.13",
+    "@sinclair/typebox": "^0.34.14",
     "dotenv": "^16.4.7",
     "uuid": "^11.0.5",
     "zod": "^3.24.1"

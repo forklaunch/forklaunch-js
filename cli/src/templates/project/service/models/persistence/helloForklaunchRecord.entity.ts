@@ -1,5 +1,5 @@
-import { BaseEntity } from '@forklaunch/core/database';
 import { Entity, Property } from '@mikro-orm/core';
+import { BaseEntity } from '@{{app_name}}/core';
 
 // Entity class that defines the structure of the HelloForklaunchRecord table
 @Entity()

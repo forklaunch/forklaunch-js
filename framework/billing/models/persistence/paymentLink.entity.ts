@@ -11,8 +11,8 @@ export class PaymentLink extends BaseEntity {
   @Enum(() => CurrencyEnum)
   currency!: CurrencyEnum;
 
-  @Property()
-  description!: string;
+  @Property({ nullable: true })
+  description?: string;
 
   @Property({ type: 'json', nullable: true })
   metadata?: unknown;

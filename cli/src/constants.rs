@@ -85,3 +85,5 @@ pub(crate) const ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE: &str =
     "Failed to add project metadata to pnpm-workspace.yaml.";
 pub(crate) const ERROR_FAILED_TO_SETUP_IAM: &str =
     "Failed to create private and public keys needed for iam service.";
+pub(crate) const ERROR_UNSUPPORTED_DATABASE: &str =
+    "Unsupported database. Failed to create base entity.";

@@ -29,11 +29,10 @@ export class CreateRoleDtoMapper extends RequestDtoMapper<
   };
 
   toEntity(permissions: Permission[]): Role {
-    const role = new Role();
-    role.name = this.dto.name;
-    role.permissions = new Collection(role, permissions);
-
-    return role;
+    return Role.create({
+      ...this.dto,
+      permissions: new Collection(permissions)
+    });
   }
 }
 
@@ -49,16 +48,10 @@ export class UpdateRoleDtoMapper extends RequestDtoMapper<
   };
 
   toEntity(permissions: Permission[]): Role {
-    const role = new Role();
-    role.id = this.dto.id;
-    if (this.dto.name) {
-      role.name = this.dto.name;
-    }
-    if (permissions) {
-      role.permissions = new Collection(role, permissions);
-    }
-
-    return role;
+    return Role.update({
+      ...this.dto,
+      ...(permissions ? { permissions: new Collection(permissions) } : {})
+    });
   }
 }
 
@@ -76,8 +69,7 @@ export class RoleDtoMapper extends ResponseDtoMapper<Role, SchemaValidator> {
 
   fromEntity(entity: Role): this {
     this.dto = {
-      id: entity.id,
-      name: entity.name,
+      ...entity.read(),
       permissions: entity.permissions.isInitialized()
         ? entity.permissions
             .getItems()
@@ -87,9 +79,7 @@ export class RoleDtoMapper extends ResponseDtoMapper<Role, SchemaValidator> {
                 permission
               ).toDto()
             )
-        : [],
-      createdAt: entity.createdAt,
-      updatedAt: entity.updatedAt
+        : []
     };
 
     return this;
@@ -100,20 +90,16 @@ export class RoleEntityMapper extends RequestDtoMapper<Role, SchemaValidator> {
   schema = roleSchema;
 
   toEntity(): Role {
-    const role = new Role();
-    role.id = this.dto.id;
-    role.name = this.dto.name;
-    role.permissions = new Collection(
-      role,
-      this.dto.permissions.map((permission) =>
-        PermissionEntityMapper.deserializeDtoToEntity(
-          this.schemaValidator as SchemaValidator,
-          permission
+    return Role.create({
+      ...this.dto,
+      permissions: new Collection(
+        this.dto.permissions.map((permission) =>
+          PermissionEntityMapper.deserializeDtoToEntity(
+            this.schemaValidator as SchemaValidator,
+            permission
+          )
         )
       )
-    );
-    role.createdAt = this.dto.createdAt;
-    role.updatedAt = this.dto.updatedAt;
-    return role;
+    });
   }
 }

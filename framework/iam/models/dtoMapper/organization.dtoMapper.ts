@@ -16,6 +16,7 @@ import {
   Organization,
   OrganizationStatus
 } from '../persistence/organization.entity';
+import { User } from '../persistence/user.entity';
 import { UserDtoMapper, UserEntityMapper } from './user.dtoMapper';
 
 export type CreateOrganizationDto = CreateOrganizationDtoMapper['dto'];
@@ -31,15 +32,11 @@ export class CreateOrganizationDtoMapper extends RequestDtoMapper<
   };
 
   toEntity() {
-    const organization = new Organization();
-    organization.name = this.dto.name;
-    organization.domain = this.dto.domain;
-    organization.subscription = this.dto.subscription;
-    if (this.dto.logoUrl) {
-      organization.logoUrl = this.dto.logoUrl;
-    }
-
-    return organization;
+    return Organization.create({
+      ...this.dto,
+      users: new Collection<User>([]),
+      status: OrganizationStatus.ACTIVE
+    });
   }
 }
 
@@ -57,22 +54,7 @@ export class UpdateOrganizationDtoMapper extends RequestDtoMapper<
   };
 
   toEntity(): Organization {
-    const organization = new Organization();
-    organization.id = this.dto.id;
-    if (this.dto.name) {
-      organization.name = this.dto.name;
-    }
-    if (this.dto.domain) {
-      organization.domain = this.dto.domain;
-    }
-    if (this.dto.subscription) {
-      organization.subscription = this.dto.subscription;
-    }
-    if (this.dto.logoUrl) {
-      organization.logoUrl = this.dto.logoUrl;
-    }
-
-    return organization;
+    return Organization.update(this.dto);
   }
 }
 
@@ -97,25 +79,15 @@ export class OrganizationDtoMapper extends ResponseDtoMapper<
 
   fromEntity(entity: Organization): this {
     this.dto = {
-      id: entity.id,
-      name: entity.name,
+      ...entity.read(),
       users: entity.users.isInitialized()
         ? entity.users
             .getItems()
             .map((user) =>
               UserDtoMapper.fromEntity(SchemaValidator(), user).toDto()
             )
-        : [],
-      domain: entity.domain,
-      subscription: entity.subscription,
-      status: entity.status,
-      createdAt: entity.createdAt,
-      updatedAt: entity.updatedAt
+        : []
     };
-
-    if (entity.logoUrl) {
-      this.dto.logoUrl = entity.logoUrl;
-    }
 
     return this;
   }
@@ -128,27 +100,20 @@ export class OrganizationEntityMapper extends RequestDtoMapper<
   schema = organizationSchema;
 
   toEntity(): Organization {
-    const organization = new Organization();
-    organization.id = this.dto.id;
-    organization.name = this.dto.name;
-    organization.users = new Collection(
-      organization,
-      this.dto.users.map((user) =>
-        UserEntityMapper.deserializeDtoToEntity(
-          this.schemaValidator as SchemaValidator,
-          user
-        )
-      )
-    );
-    organization.domain = this.dto.domain;
-    organization.subscription = this.dto.subscription;
-    organization.status = this.dto.status;
-    if (this.dto.logoUrl) {
-      organization.logoUrl = this.dto.logoUrl;
-    }
-    organization.createdAt = this.dto.createdAt;
-    organization.updatedAt = this.dto.updatedAt;
-
-    return organization;
+    return Organization.create({
+      ...this.dto,
+      ...(this.dto.users
+        ? {
+            users: new Collection(
+              this.dto.users.map((user) =>
+                UserEntityMapper.deserializeDtoToEntity(
+                  this.schemaValidator as SchemaValidator,
+                  user
+                )
+              )
+            )
+          }
+        : {})
+    });
   }
 }

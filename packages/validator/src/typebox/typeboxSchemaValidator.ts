@@ -174,8 +174,8 @@ export class TypeboxSchemaValidator
   )
     .Decode((value) => {
       if (typeof value === 'string') {
-        if ((value as string).toLowerCase() === 'true') return true;
-        if ((value as string).toLowerCase() === 'false') return false;
+        if (value.toLowerCase() === 'true') return true;
+        return false;
       } else {
         return value;
       }
