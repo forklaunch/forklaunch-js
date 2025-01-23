@@ -2,6 +2,7 @@ use std::{fs::read_to_string, path::Path};
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgMatches, Command};
+use convert_case::{Case, Casing};
 use ramhorns::Content;
 use rustyline::{history::DefaultHistory, Editor};
 use serde::{Deserialize, Serialize};
@@ -26,7 +27,7 @@ use crate::{
 use super::{
     command,
     core::{
-        database::match_database,
+        database::{add_base_entity_to_core, match_database},
         docker::add_service_definition_to_docker_compose,
         gitignore::generate_gitignore,
         manifest::add_project_definition_to_manifest,
@@ -45,6 +46,10 @@ config_struct!(
     pub(crate) struct ServiceManifestData {
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) service_name: String,
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) camel_case_service_name: String,
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) pascal_case_service_name: String,
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) database: String,
         #[serde(skip_serializing, skip_deserializing)]
@@ -143,6 +148,8 @@ impl CliCommand for ServiceCommand {
 
         let mut config_data: ServiceManifestData = ServiceManifestData {
             service_name: service_name.clone(),
+            camel_case_service_name: service_name.to_case(Case::Camel),
+            pascal_case_service_name: service_name.to_case(Case::Pascal),
             description: description.clone(),
             database: database.clone(),
             db_driver: match_database(&database),

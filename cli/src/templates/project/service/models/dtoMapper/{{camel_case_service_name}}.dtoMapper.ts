@@ -3,13 +3,15 @@ import {
   ResponseDtoMapper
 } from '@forklaunch/core/dtoMapper';
 import { SchemaValidator, string } from '@{{app_name}}/core';
-import { HelloForklaunchRecord } from '../persistence/helloForklaunchRecord.entity';
+import { } from {};
+{pascal_case_service_name}}Record } from '../persistence/{{camel_case_service_name}}Record.entity';
 
 // Exported type that matches the request schema
-export type HelloForklaunchRequestDto = HelloForklaunchRequestDtoMapper['dto'];
+export type { };
+{pascal_case_service_name}}RequestDto = {{pascal_case_service_name}}RequestDtoMapper['dto'];
 // RequestDtoMapper class that maps the request schema to the entity
-export class HelloForklaunchRequestDtoMapper extends RequestDtoMapper<
-  HelloForklaunchRecord,
+export class {{pascal_case_service_name}}RequestDtoMapper extends RequestDtoMapper<
+  {{pascal_case_service_name}}Record,
   SchemaValidator
 > {
   // idiomatic validator schema defines the request schema
@@ -18,17 +20,18 @@ export class HelloForklaunchRequestDtoMapper extends RequestDtoMapper<
   };
 
   // toEntity method maps the request schema to the entity
-  toEntity(): HelloForklaunchRecord {
-    return HelloForklaunchRecord.create(this.dto);
+  toEntity(): {{pascal_case_service_name}}Record {
+    return {{pascal_case_service_name}}Record.create(this.dto);
   }
 }
 
 // Exported type that matches the response schema
-export type HelloForklaunchResponseDto =
-  HelloForklaunchResponseDtoMapper['dto'];
+export type { };
+{pascal_case_service_name}}ResponseDto =
+  {{pascal_case_service_name}}ResponseDtoMapper['dto'];
 // ResponseDtoMapper class that maps the response schema to the entity
-export class HelloForklaunchResponseDtoMapper extends ResponseDtoMapper<
-  HelloForklaunchRecord,
+export class {{pascal_case_service_name}}ResponseDtoMapper extends ResponseDtoMapper<
+  {{pascal_case_service_name}}Record,
   SchemaValidator
 > {
   // idiomatic validator schema defines the response schema
@@ -37,7 +40,7 @@ export class HelloForklaunchResponseDtoMapper extends ResponseDtoMapper<
   };
 
   // fromEntity method maps the entity to the response schema
-  fromEntity(entity: HelloForklaunchRecord): this {
+  fromEntity(entity: {{pascal_case_service_name}}Record): this {
     this.dto = entity.read();
     return this;
   }

@@ -2,6 +2,7 @@ use std::{collections::HashMap, io::Write, path::Path};
 
 use anyhow::{bail, Context, Result};
 use clap::{Arg, ArgAction, ArgMatches, Command};
+use convert_case::{Case, Casing};
 use ramhorns::Content;
 use rustyline::{history::DefaultHistory, Editor};
 use serde::{Deserialize, Serialize};
@@ -420,6 +421,8 @@ impl CliCommand for ApplicationCommand {
                     cli_version: data.cli_version.clone(),
                     app_name: data.app_name.clone(),
                     service_name: template_dir.output_path.to_string(),
+                    camel_case_service_name: template_dir.output_path.to_case(Case::Camel),
+                    pascal_case_service_name: template_dir.output_path.to_case(Case::Pascal),
                     validator: data.validator.clone(),
                     http_framework: data.http_framework.clone(),
                     runtime: data.runtime.clone(),

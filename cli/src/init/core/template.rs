@@ -79,7 +79,16 @@ pub(crate) fn generate_with_template(
     };
 
     for entry in get_directory_filenames(&template_dir)? {
-        let output_path = output_dir.join(&entry.path().file_name().unwrap());
+        let output_path_template =
+            Template::new(entry.path().file_name().unwrap().to_string_lossy())?;
+        let output_path = output_dir.join(match data {
+            TemplateManifestData::Application(config_data) => {
+                output_path_template.render(config_data)
+            }
+            TemplateManifestData::Service(config_data) => output_path_template.render(config_data),
+            TemplateManifestData::Library(config_data) => output_path_template.render(config_data),
+        });
+
         if !output_path.exists() {
             create_dir_all(output_path.parent().unwrap())
                 .with_context(|| error_failed_to_create_dir(&output_path.parent().unwrap()))?;
@@ -94,15 +103,15 @@ pub(crate) fn generate_with_template(
             },
         )?)?;
         let rendered = match data {
-            TemplateManifestData::Application(data) => {
-                forklaunch_replacements(&data.app_name, tpl.render(&data))
+            TemplateManifestData::Application(config_data) => {
+                forklaunch_replacements(&config_data.app_name, tpl.render(&config_data))
             }
-            TemplateManifestData::Service(data) => database_replacements(
-                &data.database,
-                forklaunch_replacements(&data.app_name, tpl.render(&data)),
+            TemplateManifestData::Service(config_data) => database_replacements(
+                &config_data.database,
+                forklaunch_replacements(&config_data.app_name, tpl.render(&config_data)),
             ),
-            TemplateManifestData::Library(data) => {
-                forklaunch_replacements(&data.app_name, tpl.render(&data))
+            TemplateManifestData::Library(config_data) => {
+                forklaunch_replacements(&config_data.app_name, tpl.render(&config_data))
             }
         };
         if !output_path.exists()

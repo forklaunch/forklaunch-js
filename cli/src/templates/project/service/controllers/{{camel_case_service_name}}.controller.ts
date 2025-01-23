@@ -3,12 +3,14 @@ import { get, post } from '@forklaunch/core/http';
 import { ConfigInjector, ScopedDependencyFactory } from '@forklaunch/core/services';
 import { SchemaValidator } from '@{{app_name}}/core';
 import { configValidator } from '../bootstrapper';
-import { HelloForklaunchService } from '../interfaces/helloForklaunch.interface';
-import { HelloForklaunchRequestDtoMapper, HelloForklaunchResponseDtoMapper } from '../models/dtoMapper/helloForklaunch.dtoMapper';
+import { } from {};
+import { } from {};
+{pascal_case_service_name}}Service } from '../interfaces/{{camel_case_service_name}}.interface';
+{pascal_case_service_name}}RequestDtoMapper, {{pascal_case_service_name}}ResponseDtoMapper } from '../models/dtoMapper/{{camel_case_service_name}}.dtoMapper';
 
-// Controller class that implements the HelloForklaunchService interface 
-export class HelloForklaunchController
-  implements Controller<HelloForklaunchService>
+// Controller class that implements the {{pascal_case_service_name}}Service interface 
+export class {{pascal_case_service_name}}Controller
+  implements Controller<{{pascal_case_service_name}}Service>
 {
   constructor(
     // scopeFactory returns new scopes that can be used for joint transactions
@@ -20,20 +22,20 @@ export class HelloForklaunchController
     private serviceFactory: ScopedDependencyFactory<
       SchemaValidator,
       typeof configValidator,
-      'helloForklaunchService'
+      '{{camel_case_service_name}}Service'
     >
   ) {}
 
   // GET endpoint handler that returns a simple hello message
-  helloForklaunchGet = get(
+  {{camel_case_service_name}}Get = get(
     SchemaValidator(),
     '/',
     {
-      name: 'helloForklaunch',
+      name: '{{camel_case_service_name}}',
       summary: 'Hello Forklaunch',
       responses: {
         // specifies the success response schema using DtoMapper constructs
-        200: HelloForklaunchResponseDtoMapper.schema()
+        200: {{pascal_case_service_name}}ResponseDtoMapper.schema()
       }
     },
     async (req, res) => {
@@ -44,27 +46,27 @@ export class HelloForklaunchController
   );
 
   // POST endpoint handler that processes request body and returns response from service
-  helloForklaunchPost = post(
+  {{camel_case_service_name}}Post = post(
     SchemaValidator(),
     '/',
     {
-      name: 'helloForklaunch', 
+      name: '{{camel_case_service_name}}', 
       summary: 'Hello Forklaunch',
       // specifies the request body schema using DtoMapper constructs
-      body: HelloForklaunchRequestDtoMapper.schema(),
+      body: {{pascal_case_service_name}}RequestDtoMapper.schema(),
       responses: {
         // specifies the success response schema using DtoMapper constructs
-        200: HelloForklaunchResponseDtoMapper.schema()
+        200: {{pascal_case_service_name}}ResponseDtoMapper.schema()
       }
     },
     async (req, res) => {
       res
         .status(200)
         .json(
-          // constructs a new service instance using the scopeFactory and calls the helloForklaunchPost method
+          // constructs a new service instance using the scopeFactory and calls the {{camel_case_service_name}}Post method
           await this.serviceFactory(
             this.scopeFactory()
-          ).helloForklaunchPost(req.body)
+          ).{{camel_case_service_name}}Post(req.body)
         );
     }
   );

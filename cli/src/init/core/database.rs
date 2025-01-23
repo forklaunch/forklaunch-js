@@ -21,7 +21,7 @@ pub(crate) fn match_database(database: &str) -> String {
 
 pub(crate) fn add_base_entity_to_core(
     config_data: &ServiceManifestData,
-    base_path: &Path,
+    base_path: &String,
 ) -> Result<Vec<RenderedTemplate>> {
     let (filename, template_path) = match config_data.database.as_str() {
         "mongodb" => ("mongo.base.entity.ts", "mongo.base.entity.ts"),
@@ -29,15 +29,14 @@ pub(crate) fn add_base_entity_to_core(
         _ => bail!(ERROR_UNSUPPORTED_DATABASE),
     };
 
-    let entity_path = base_path
+    let entity_path = Path::new(base_path)
         .join("core")
         .join("persistence")
         .join("entities")
         .join(filename);
 
     let template = TEMPLATES_DIR.get_file(
-        base_path
-            .join("core")
+        Path::new("core")
             .join("persistence")
             .join("entities")
             .join(template_path),

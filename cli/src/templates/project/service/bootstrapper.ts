@@ -3,7 +3,8 @@ import { ConfigInjector, Lifetime } from '@forklaunch/core/services';
 import { EntityManager, ForkOptions, MikroORM } from '@mikro-orm/core';
 import { SchemaValidator, number, optional, string } from '@{{app_name}}/core';
 import mikroOrmOptionsConfig from './mikro-orm.config';
-import { BaseHelloForklaunchService } from './services/helloForklaunch.service';
+import { Base } from {};
+{pascal_case_service_name}}Service } from './services/{{camel_case_service_name}}.service';
 
 // configValidator object that defines the configuration schema for the application
 export const configValidator = {
@@ -15,7 +16,7 @@ export const configValidator = {
   swaggerPath: optional(string),
   entityManager: EntityManager,
   ttlCache: RedisTtlCache,
-  helloForklaunchService: BaseHelloForklaunchService
+  {{camel_case_service_name}}Service: Base{{pascal_case_service_name}}Service
 };
 
 // bootstrap function that initializes the application
@@ -68,10 +69,10 @@ export function bootstrap(
             url: process.env.REDIS_URL ?? ''
           })
         },
-        helloForklaunchService: {
+        {{camel_case_service_name}}Service: {
           lifetime: Lifetime.Scoped,
           factory: ({ entityManager, ttlCache }) =>
-            new BaseHelloForklaunchService(entityManager, ttlCache)
+            new Base{{pascal_case_service_name}}Service(entityManager, ttlCache)
         }
       }
     );
