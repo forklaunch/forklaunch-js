@@ -1,6 +1,5 @@
 import { forklaunchRouter } from '@{{app_name}}/core';
-import { } from {};
-{pascal_case_service_name}}Controller } from '../controllers/{{camel_case_service_name}}.controller';
+import { {{pascal_case_service_name}}Controller } from '../controllers/{{camel_case_service_name}}.controller';
 
 // defines the router for the {{camel_case_service_name}} routes
 export const router = forklaunchRouter('/hello');

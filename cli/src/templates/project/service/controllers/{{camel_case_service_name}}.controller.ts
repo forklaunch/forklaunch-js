@@ -3,10 +3,8 @@ import { get, post } from '@forklaunch/core/http';
 import { ConfigInjector, ScopedDependencyFactory } from '@forklaunch/core/services';
 import { SchemaValidator } from '@{{app_name}}/core';
 import { configValidator } from '../bootstrapper';
-import { } from {};
-import { } from {};
-{pascal_case_service_name}}Service } from '../interfaces/{{camel_case_service_name}}.interface';
-{pascal_case_service_name}}RequestDtoMapper, {{pascal_case_service_name}}ResponseDtoMapper } from '../models/dtoMapper/{{camel_case_service_name}}.dtoMapper';
+import { {{pascal_case_service_name}}Service } from '../interfaces/{{camel_case_service_name}}.interface';
+import { {{pascal_case_service_name}}RequestDtoMapper, {{pascal_case_service_name}}ResponseDtoMapper } from '../models/dtoMapper/{{camel_case_service_name}}.dtoMapper';
 
 // Controller class that implements the {{pascal_case_service_name}}Service interface 
 export class {{pascal_case_service_name}}Controller

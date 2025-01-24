@@ -3,10 +3,12 @@ import {
   ResponseDtoMapper
 } from '@forklaunch/core/dtoMapper';
 import { SchemaValidator, string } from '@{{app_name}}/core';
-import { {{pascal_case_service_name}}Record } from '../persistence/{{camel_case_service_name}}Record.entity';
+import { } from {};
+{pascal_case_service_name}}Record } from '../persistence/{{camel_case_service_name}}Record.entity';
 
 // Exported type that matches the request schema
-export type {{pascal_case_service_name}}RequestDto = {{pascal_case_service_name}}RequestDtoMapper['dto'];
+export type { };
+{pascal_case_service_name}}RequestDto = {{pascal_case_service_name}}RequestDtoMapper['dto'];
 // RequestDtoMapper class that maps the request schema to the entity
 export class {{pascal_case_service_name}}RequestDtoMapper extends RequestDtoMapper<
   {{pascal_case_service_name}}Record,
@@ -24,7 +26,8 @@ export class {{pascal_case_service_name}}RequestDtoMapper extends RequestDtoMapp
 }
 
 // Exported type that matches the response schema
-export type {{pascal_case_service_name}}ResponseDto =
+export type { };
+{pascal_case_service_name}}ResponseDto =
   {{pascal_case_service_name}}ResponseDtoMapper['dto'];
 // ResponseDtoMapper class that maps the response schema to the entity
 export class {{pascal_case_service_name}}ResponseDtoMapper extends ResponseDtoMapper<

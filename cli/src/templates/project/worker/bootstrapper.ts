@@ -3,7 +3,8 @@ import { ConfigInjector, Lifetime } from '@forklaunch/core/services';
 import { EntityManager, ForkOptions, MikroORM } from '@mikro-orm/core';
 import { SchemaValidator, number, optional, string } from '@{{app_name}}/core';
 import mikroOrmOptionsConfig from './mikro-orm.config';
-import { Base{{pascal_case_service_name}}Service } from './services/{{camel_case_service_name}}.service';
+import { Base } from {};
+{pascal_case_service_name}}Service } from './services/{{camel_case_service_name}}.service';
 
 // configValidator object that defines the configuration schema for the application
 export const configValidator = {
