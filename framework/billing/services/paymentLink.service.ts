@@ -60,7 +60,7 @@ export class BasePaymentLinkService implements PaymentLinkService {
     });
     const updatedPaymentLinkDto = PaymentLinkDtoMapper.serializeEntityToDto(
       SchemaValidator(),
-      updatedLink
+      PaymentLink.update(updatedLink)
     );
 
     return updatedPaymentLinkDto;
