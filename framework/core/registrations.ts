@@ -33,19 +33,19 @@ export const forklaunchRouter = <BasePath extends `/${string}`>(
 export const forklaunchExpress = () =>
   registeredForklaunchExpress(SchemaValidator());
 
-export const string = schemaString;
-export const uuid = schemaUuid;
-export const uri = schemaUri;
-export const email = schemaEmail;
-export const number = schemaNumber;
-export const bigint = schemaBigint;
-export const boolean = schemaBoolean;
-export const date = schemaDate;
-export const symbol = schemaSymbol;
-export const nullish = schemaNullish;
-export const any = schemaAny;
-export const unknown = schemaUnknown;
-export const never = schemaNever;
+export const string: typeof schemaString = schemaString;
+export const uuid: typeof schemaUuid = schemaUuid;
+export const uri: typeof schemaUri = schemaUri;
+export const email: typeof schemaEmail = schemaEmail;
+export const number: typeof schemaNumber = schemaNumber;
+export const bigint: typeof schemaBigint = schemaBigint;
+export const boolean: typeof schemaBoolean = schemaBoolean;
+export const date: typeof schemaDate = schemaDate;
+export const symbol: typeof schemaSymbol = schemaSymbol;
+export const nullish: typeof schemaNullish = schemaNullish;
+export const any: typeof schemaAny = schemaAny;
+export const unknown: typeof schemaUnknown = schemaUnknown;
+export const never: typeof schemaNever = schemaNever;
 export const optional: typeof schemaOptional = schemaOptional;
 export const array: typeof schemaArray = schemaArray;
 export const union: typeof schemaUnion = schemaUnion;

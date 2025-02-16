@@ -12,13 +12,15 @@ use uuid::Uuid;
 use crate::{
     config_struct,
     constants::{
-        ERROR_FAILED_TO_CREATE_GITIGNORE, ERROR_FAILED_TO_CREATE_LICENSE,
-        ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE, ERROR_FAILED_TO_SETUP_IAM, VALID_DATABASES,
-        VALID_FRAMEWORKS, VALID_LICENSES, VALID_RUNTIMES, VALID_SERVICES, VALID_TEST_FRAMEWORKS,
-        VALID_VALIDATORS,
+        ERROR_FAILED_TO_CREATE_DATABASE_EXPORT_INDEX_TS, ERROR_FAILED_TO_CREATE_GITIGNORE,
+        ERROR_FAILED_TO_CREATE_LICENSE, ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE,
+        ERROR_FAILED_TO_SETUP_IAM, VALID_DATABASES, VALID_FRAMEWORKS, VALID_LICENSES,
+        VALID_RUNTIMES, VALID_SERVICES, VALID_TEST_FRAMEWORKS, VALID_VALIDATORS,
     },
-    core::manifest::ProjectEntry,
-    core::token::get_token,
+    core::{
+        manifest::{ProjectEntry, ProjectType, ResourceInventory},
+        token::get_token,
+    },
     prompt::{
         prompt_comma_separated_list, prompt_with_validation, prompt_without_validation,
         ArrayCompleter,
@@ -28,7 +30,7 @@ use crate::{
 use super::{
     command,
     core::{
-        database::match_database,
+        database::{generate_database_export_index_ts, match_database},
         gitignore::generate_gitignore,
         iam::generate_iam_keys,
         license::{generate_license, match_license},
@@ -36,7 +38,9 @@ use super::{
         pnpm_workspace::generate_pnpm_workspace,
         rendered_template::{create_forklaunch_dir, write_rendered_templates},
         symlinks::generate_symlinks,
-        template::{generate_with_template, PathIO, TemplateManifestData},
+        template::{
+            generate_with_template, get_routers_from_standard_package, PathIO, TemplateManifestData,
+        },
     },
     service::ServiceManifestData,
     CliCommand,
@@ -313,16 +317,23 @@ impl CliCommand for ApplicationCommand {
         // Inline specific perms checks here. Make remote calls to receive templates for specific services if needed here (premium only).
 
         let mut additional_projects = vec![ProjectEntry {
+            r#type: ProjectType::Library,
             name: "core".to_string(),
             port: None,
-            database: None,
+            resources: None,
+            routers: None,
         }];
         let port_number = 8000;
         additional_projects.extend(services.into_iter().enumerate().map(|(i, package)| {
             ProjectEntry {
+                r#type: ProjectType::Service,
                 name: package.to_string(),
                 port: Some((port_number + i).try_into().unwrap()),
-                database: Some(database.to_string()),
+                resources: Some(ResourceInventory {
+                    database: Some(database.to_string()),
+                    cache: None,
+                }),
+                routers: get_routers_from_standard_package(package),
             }
         }));
 
@@ -421,8 +432,8 @@ impl CliCommand for ApplicationCommand {
                     cli_version: data.cli_version.clone(),
                     app_name: data.app_name.clone(),
                     service_name: template_dir.output_path.to_string(),
-                    camel_case_service_name: template_dir.output_path.to_case(Case::Camel),
-                    pascal_case_service_name: template_dir.output_path.to_case(Case::Pascal),
+                    camel_case_name: template_dir.output_path.to_case(Case::Camel),
+                    pascal_case_name: template_dir.output_path.to_case(Case::Pascal),
                     validator: data.validator.clone(),
                     http_framework: data.http_framework.clone(),
                     runtime: data.runtime.clone(),
@@ -453,6 +464,14 @@ impl CliCommand for ApplicationCommand {
                     .collect::<Vec<String>>(),
             )?);
         }
+
+        rendered_templates.push(
+            generate_database_export_index_ts(
+                &Path::new(&name).to_string_lossy().to_string(),
+                Some(vec![database.to_string()]),
+            )
+            .with_context(|| ERROR_FAILED_TO_CREATE_DATABASE_EXPORT_INDEX_TS)?,
+        );
 
         rendered_templates.extend(
             generate_license(&Path::new(&name).to_string_lossy().to_string(), &data)

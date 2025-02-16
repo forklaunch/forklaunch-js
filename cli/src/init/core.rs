@@ -1,4 +1,5 @@
 #[macro_use]
+pub(crate) mod ast;
 pub(crate) mod database;
 pub(crate) mod docker;
 pub(crate) mod gitignore;

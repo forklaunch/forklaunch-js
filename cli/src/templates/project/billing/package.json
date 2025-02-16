@@ -5,11 +5,11 @@
   "keywords": [],
   "license": "{{license}}",
   "author": "{{author}}",
-  "main": "app.ts",
+  "main": "server.ts",
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist pnpm.lock.yaml node_modules",
-    "dev": "{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} run migrate:up && {{#is_node}}tsx watch app.ts{{/is_node}}{{#is_bun}}bun --watch app.ts{{/is_bun}}",
+    "dev": "{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} run migrate:up && {{#is_node}}tsx watch server.ts{{/is_node}}{{#is_bun}}bun --watch server.ts{{/is_bun}}",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
     "lint": "eslint . -c eslint.config.mjs",
@@ -22,22 +22,23 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/common": "^0.2.0",
-    "@forklaunch/core": "^0.3.0",
-    "@forklaunch/express": "^0.2.0",
-    "@forklaunch/hyper-express": "^0.2.1",
-    "@forklaunch/validator": "^0.4.0",
+    "@forklaunch/common": "^0.2.1",
+    "@forklaunch/core": "^0.3.5",
+    "@forklaunch/express": "^0.2.5",
+    "@forklaunch/hyper-express": "^0.2.6",
+    "@forklaunch/validator": "^0.4.3",
     "@{{app_name}}/core": "workspace:*",
-    "@mikro-orm/core": "^6.4.3",
-    "@mikro-orm/migrations{{#is_mongo}}-mongodb{{/is_mongo}}": "^6.4.3",
-    "@mikro-orm/{{database}}": "^6.4.3",
-    "@mikro-orm/reflection": "^6.4.3",{{#is_typebox}}
-    "@sinclair/typebox": "^0.34.13"{{/is_typebox}}
-    "uuid": "^11.0.5",{{#is_zod}}
-    "zod": "^3.24.1"{{/is_zod}}
+    "@mikro-orm/core": "^6.4.6",
+    "@mikro-orm/migrations{{#is_mongo}}-mongodb{{/is_mongo}}": "^6.4.6",
+    "@mikro-orm/{{database}}": "^6.4.6",
+    "@mikro-orm/reflection": "^6.4.6",{{#is_typebox}}
+    "@sinclair/typebox": "^0.34.25",{{/is_typebox}}
+    "dotenv": "^16.4.7",
+    "uuid": "^11.0.5"{{#is_zod}},
+    "zod": "^3.24.2"{{/is_zod}}
   },
   "devDependencies": {
-    "@mikro-orm/cli": "^6.4.3",
+    "@mikro-orm/cli": "^6.4.6",
     "@types/uuid": "^10.0.0",
     "tsx": "^4.19.2"
   },

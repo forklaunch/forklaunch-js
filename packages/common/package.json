@@ -39,14 +39,14 @@
     "test": "vitest --passWithNoTests"
   },
   "devDependencies": {
-    "@eslint/js": "^9.18.0",
+    "@eslint/js": "^9.20.0",
     "depcheck": "^1.4.7",
-    "eslint": "^9.18.0",
-    "globals": "^15.14.0",
-    "tsup": "^8.3.5",
-    "typedoc": "^0.27.6",
+    "eslint": "^9.20.1",
+    "globals": "^15.15.0",
+    "tsup": "^8.3.6",
+    "typedoc": "^0.27.7",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.20.0",
-    "vitest": "^3.0.2"
+    "typescript-eslint": "^8.24.0",
+    "vitest": "^3.0.5"
   }
 }

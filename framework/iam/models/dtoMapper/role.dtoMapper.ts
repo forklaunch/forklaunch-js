@@ -13,10 +13,7 @@ import {
 import { Collection } from '@mikro-orm/core';
 import { Permission } from '../persistence/permission.entity';
 import { Role } from '../persistence/role.entity';
-import {
-  PermissionDtoMapper,
-  PermissionEntityMapper
-} from './permission.dtoMapper';
+import { PermissionDtoMapper } from './permission.dtoMapper';
 
 export type CreateRoleDto = CreateRoleDtoMapper['dto'];
 export class CreateRoleDtoMapper extends RequestDtoMapper<
@@ -90,16 +87,21 @@ export class RoleEntityMapper extends RequestDtoMapper<Role, SchemaValidator> {
   schema = roleSchema;
 
   toEntity(): Role {
-    return Role.create({
+    return Role.map({
       ...this.dto,
-      permissions: new Collection(
-        this.dto.permissions.map((permission) =>
-          PermissionEntityMapper.deserializeDtoToEntity(
-            this.schemaValidator as SchemaValidator,
-            permission
-          )
-        )
-      )
+      ...(this.dto.permissions
+        ? {
+            permissions: this.dto.permissions.map((permission) => permission.id)
+          }
+        : {})
+      // permissions: new Collection(
+      //   this.dto.permissions.map((permission) =>
+      //     PermissionEntityMapper.deserializeDtoToEntity(
+      //       this.schemaValidator as SchemaValidator,
+      //       permission
+      //     )
+      //   )
+      // )
     });
   }
 }

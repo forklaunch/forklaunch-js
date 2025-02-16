@@ -3,10 +3,8 @@ import { ConfigInjector, Lifetime } from '@forklaunch/core/services';
 import { EntityManager, ForkOptions, MikroORM } from '@mikro-orm/core';
 import { SchemaValidator, number, optional, string } from '@{{app_name}}/core';
 import mikroOrmOptionsConfig from './mikro-orm.config';
-import { Base } from {};
-{pascal_case_service_name}}Service } from './services/{{camel_case_service_name}}.service';
-
-// configValidator object that defines the configuration schema for the application
+import { Base{{pascal_case_name}}Service } from './services/{{camel_case_name}}.service';
+//! configValidator object that defines the configuration schema for the application
 export const configValidator = {
   redisUrl: string,
   protocol: optional(string),
@@ -16,18 +14,17 @@ export const configValidator = {
   swaggerPath: optional(string),
   entityManager: EntityManager,
   ttlCache: RedisTtlCache,
-  {{camel_case_service_name}}Service: Base{{pascal_case_service_name}}Service
+  {{camel_case_name}}Service: Base{{pascal_case_name}}Service
 };
-
-// bootstrap function that initializes the application
+//! bootstrap function that initializes the application
 export function bootstrap(
   callback: (
     ci: ConfigInjector<SchemaValidator, typeof configValidator>
   ) => void
 ) {
-  // initializes the MikroORM instance with the mikroOrmOptionsConfig
+  //! initializes the MikroORM instance with the mikroOrmOptionsConfig
   MikroORM.init(mikroOrmOptionsConfig).then((orm) => {
-    // creates a new ConfigInjector instance with the SchemaValidator, configValidator, and the configuration for the application
+    //! creates a new ConfigInjector instance with the SchemaValidator, configValidator, and the configuration for the application
     const configInjector = new ConfigInjector(
       SchemaValidator(),
       configValidator,
@@ -69,24 +66,13 @@ export function bootstrap(
             url: process.env.REDIS_URL ?? ''
           })
         },
-        {{camel_case_service_name}}Service: {
+        {{camel_case_name}}Service: {
           lifetime: Lifetime.Scoped,
           factory: ({ entityManager, ttlCache }) =>
-            new Base{{pascal_case_service_name}}Service(entityManager, ttlCache)
+            new Base{{pascal_case_name}}Service(entityManager, ttlCache)
         }
       }
     );
-
-    // validates the configuration singletons
-    const parsedConfig = configInjector.validateConfigSingletons({
-      redisUrl: process.env.REDIS_URL
-    });
-
-    if (!parsedConfig.ok) {
-      throw new Error(parsedConfig.error);
-    }
-
-    // calls the callback function with the configInjector instance
-    callback(configInjector);
+    callback(configInjector.validateConfigSingletons(getEnvVar('ENV_FILE_PATH')));
   });
 }

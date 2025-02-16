@@ -20,7 +20,10 @@ use crate::{
         ERROR_FAILED_TO_CREATE_SYMLINKS, ERROR_FAILED_TO_CREATE_TSCONFIG,
         ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST, VALID_DATABASES,
     },
-    core::{base_path::prompt_base_path, manifest::ProjectManifestConfig},
+    core::{
+        base_path::prompt_base_path,
+        manifest::{ProjectManifestConfig, ProjectType, ResourceInventory},
+    },
     prompt::{prompt_with_validation, prompt_without_validation, ArrayCompleter},
 };
 
@@ -47,9 +50,9 @@ config_struct!(
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) service_name: String,
         #[serde(skip_serializing, skip_deserializing)]
-        pub(crate) camel_case_service_name: String,
+        pub(crate) camel_case_name: String,
         #[serde(skip_serializing, skip_deserializing)]
-        pub(crate) pascal_case_service_name: String,
+        pub(crate) pascal_case_name: String,
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) database: String,
         #[serde(skip_serializing, skip_deserializing)]
@@ -148,8 +151,8 @@ impl CliCommand for ServiceCommand {
 
         let mut config_data: ServiceManifestData = ServiceManifestData {
             service_name: service_name.clone(),
-            camel_case_service_name: service_name.to_case(Case::Camel),
-            pascal_case_service_name: service_name.to_case(Case::Pascal),
+            camel_case_name: service_name.to_case(Case::Camel),
+            pascal_case_name: service_name.to_case(Case::Pascal),
             description: description.clone(),
             database: database.clone(),
             db_driver: match_database(&database),
@@ -231,9 +234,14 @@ fn add_service_to_artifacts(
         add_service_definition_to_docker_compose(config_data, base_path)
             .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
     let forklaunch_definition_buffer = add_project_definition_to_manifest(
+        ProjectType::Service,
         config_data,
         Some(port_number),
-        Some(config_data.database.to_owned()),
+        Some(ResourceInventory {
+            database: Some(config_data.database.to_owned()),
+            cache: None,
+        }),
+        Some(vec![config_data.service_name.clone()]),
     )
     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
     let mut package_json_buffer: Option<String> = None;

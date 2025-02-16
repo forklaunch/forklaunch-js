@@ -125,7 +125,6 @@ export function bootstrap(
         }
       }
     );
-
     callback(
       configInjector.validateConfigSingletons(getEnvVar('ENV_FILE_PATH'))
     );

@@ -62,6 +62,13 @@ export abstract class BaseEntity {
     );
   }
 
+  static map<Entity extends BaseEntity>(
+    this: Constructor<Entity>,
+    data: Partial<EntityDTO<FromEntityType<Entity>>>
+  ): Entity {
+    return new this().map(data);
+  }
+
   create(data: CreateShape<BaseEntity, this>): this {
     Object.assign(this, data);
     return this;
@@ -76,5 +83,10 @@ export abstract class BaseEntity {
 
   read(): EntityDTO<this> {
     return wrap(this).toPOJO();
+  }
+
+  map(data: Partial<EntityDTO<FromEntityType<this>>>): this {
+    wrap(this).assign(data);
+    return this;
   }
 }

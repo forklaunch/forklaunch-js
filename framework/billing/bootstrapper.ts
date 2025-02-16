@@ -12,7 +12,7 @@ import { BaseCheckoutSessionService } from './services/checkoutSession.service';
 import { BasePaymentLinkService } from './services/paymentLink.service';
 import { BasePlanService } from './services/plan.service';
 import { BaseSubscriptionService } from './services/subscription.service';
-
+//! defines the configuration schema for the application
 export const configValidator = {
   redisUrl: string,
   host: string,
@@ -26,7 +26,7 @@ export const configValidator = {
   planService: BasePlanService,
   subscriptionService: BaseSubscriptionService
 };
-
+//! bootstrap function that initializes the application
 export function bootstrap(
   callback: (
     ci: ConfigInjector<SchemaValidator, typeof configValidator>
@@ -89,7 +89,6 @@ export function bootstrap(
         }
       }
     );
-
     callback(
       configInjector.validateConfigSingletons(getEnvVar('ENV_FILE_PATH'))
     );

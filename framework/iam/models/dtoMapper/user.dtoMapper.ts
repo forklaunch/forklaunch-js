@@ -16,7 +16,8 @@ import { passwordEncrypt } from '../../utils/passwordEncrypt';
 import { Organization } from '../persistence/organization.entity';
 import { Role } from '../persistence/role.entity';
 import { User } from '../persistence/user.entity';
-import { RoleDtoMapper, RoleEntityMapper } from './role.dtoMapper';
+import { RoleDtoMapper } from './role.dtoMapper';
+import { Collection } from '@mikro-orm/core';
 
 export type CreateUserDto = CreateUserDtoMapper['dto'];
 export class CreateUserDtoMapper extends RequestDtoMapper<
@@ -40,18 +41,14 @@ export class CreateUserDtoMapper extends RequestDtoMapper<
     roles: Role[],
     organization?: Organization
   ): User {
-    return new User({
+    return User.create({
       ...this.dto,
-      ...(organization ? { organization } : {}),
-      ...(roles ? { roles } : {}),
-      ...(passwordEncryptionPublicKeyPath
-        ? {
-            passwordHash: passwordEncrypt(
-              this.dto.password,
-              passwordEncryptionPublicKeyPath
-            )
-          }
-        : {})
+      organization,
+      roles: new Collection(roles),
+      passwordHash: passwordEncrypt(
+        this.dto.password,
+        passwordEncryptionPublicKeyPath
+      )
     });
   }
 }
@@ -78,10 +75,10 @@ export class UpdateUserDtoMapper extends RequestDtoMapper<
     roles: Role[],
     organization?: Organization
   ): User {
-    return new User({
+    return User.update({
       ...this.dto,
       ...(organization ? { organization } : {}),
-      ...(roles ? { roles } : {}),
+      ...(roles ? { roles: new Collection(roles) } : {}),
       ...(passwordEncryptionPublicKeyPath && this.dto.password
         ? {
             passwordHash: passwordEncrypt(
@@ -145,18 +142,23 @@ export class UserEntityMapper extends RequestDtoMapper<User, SchemaValidator> {
   schema = userSchema;
 
   toEntity(): User {
-    const user = new User({
+    const user = User.map({
       ...this.dto,
       ...(this.dto.roles
-        ? {
-            roles: this.dto.roles.map((role) =>
-              RoleEntityMapper.deserializeDtoToEntity(
-                this.schemaValidator as SchemaValidator,
-                role
-              )
-            )
-          }
+        ? { roles: this.dto.roles.map((role) => role.id) }
         : {})
+      // ...(this.dto.roles
+      //   ? {
+      //       roles: new Collection(
+      //         this.dto.roles.map((role) =>
+      //           RoleEntityMapper.deserializeDtoToEntity(
+      //             this.schemaValidator as SchemaValidator,
+      //             role
+      //           )
+      //         )
+      //       )
+      //     }
+      //   : {})
     });
 
     return user;

@@ -71,6 +71,6 @@ export class PermissionEntityMapper extends RequestDtoMapper<
   schema = permissionSchema;
 
   toEntity(): Permission {
-    return Permission.create(this.dto);
+    return Permission.map(this.dto);
   }
 }

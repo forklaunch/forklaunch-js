@@ -17,7 +17,7 @@ import {
   OrganizationStatus
 } from '../persistence/organization.entity';
 import { User } from '../persistence/user.entity';
-import { UserDtoMapper, UserEntityMapper } from './user.dtoMapper';
+import { UserDtoMapper } from './user.dtoMapper';
 
 export type CreateOrganizationDto = CreateOrganizationDtoMapper['dto'];
 export class CreateOrganizationDtoMapper extends RequestDtoMapper<
@@ -100,20 +100,23 @@ export class OrganizationEntityMapper extends RequestDtoMapper<
   schema = organizationSchema;
 
   toEntity(): Organization {
-    return Organization.create({
+    return Organization.map({
       ...this.dto,
       ...(this.dto.users
-        ? {
-            users: new Collection(
-              this.dto.users.map((user) =>
-                UserEntityMapper.deserializeDtoToEntity(
-                  this.schemaValidator as SchemaValidator,
-                  user
-                )
-              )
-            )
-          }
+        ? { users: this.dto.users.map((user) => user.id) }
         : {})
+      // ...(this.dto.users
+      //   ? {
+      //       users: new Collection(
+      //         this.dto.users.map((user) =>
+      //           UserEntityMapper.deserializeDtoToEntity(
+      //             this.schemaValidator as SchemaValidator,
+      //             user
+      //           )
+      //         )
+      //       )
+      //     }
+      //   : {})
     });
   }
 }

@@ -87,3 +87,12 @@ pub(crate) const ERROR_FAILED_TO_SETUP_IAM: &str =
     "Failed to create private and public keys needed for iam service.";
 pub(crate) const ERROR_UNSUPPORTED_DATABASE: &str =
     "Unsupported database. Failed to create base entity.";
+pub(crate) const ERROR_DATABASE_INFORMATION: &str = 
+    "Database information not found, please ensure your service defines a database in your manifest.";
+pub(crate) const ERROR_FAILED_TO_ADD_ROUTER_TO_APP: &str = "Failed to add router metadata to app.";
+pub(crate) const ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER: &str =
+    "Failed to add router metadata to bootstrapper.";
+pub(crate) const ERROR_FAILED_TO_ADD_ROUTER_METADATA_TO_MANIFEST: &str =
+    "Failed to add router metadata to manifest.";
+pub(crate) const ERROR_FAILED_TO_CREATE_DATABASE_EXPORT_INDEX_TS: &str =
+    "Failed to create database export index.ts in core/persistence.";

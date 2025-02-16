@@ -19,7 +19,7 @@ use crate::constants::{
     ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST,
 };
 use crate::core::base_path::prompt_base_path;
-use crate::core::manifest::ProjectManifestConfig;
+use crate::core::manifest::{ProjectManifestConfig, ProjectType};
 use crate::prompt::{prompt_with_validation, prompt_without_validation, ArrayCompleter};
 
 use super::core::gitignore::generate_gitignore;
@@ -174,8 +174,9 @@ fn add_library_to_artifacts(
     config_data: &mut LibraryManifestData,
     base_path: &String,
 ) -> Result<Vec<RenderedTemplate>> {
-    let forklaunch_definition_buffer = add_project_definition_to_manifest(config_data, None, None)
-        .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
+    let forklaunch_definition_buffer =
+        add_project_definition_to_manifest(ProjectType::Library, config_data, None, None, None)
+            .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
     let mut package_json_buffer: Option<String> = None;
     if config_data.runtime == "bun" {
         package_json_buffer = Some(

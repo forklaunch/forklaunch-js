@@ -1,5 +1,11 @@
 # @forklaunch/validator
 
+## 0.4.4
+
+### Patch Changes
+
+- Update dependencies under the hood
+
 ## 0.4.3
 
 ### Patch Changes

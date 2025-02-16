@@ -26,7 +26,8 @@
     "build": "bun --filter='*' run build",
     "clean": "rm -rf node_modules bun.lockb && bun -r clean",
     "clean:purge": "bun run clean",
-    "dev": "docker compose up --build"
+    "dev": "docker compose up",
+    "dev:build": "docker compose up --build",
     "docs": "bun -r docs",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
     "lint": "eslint . -c eslint.config.mjs",
@@ -37,9 +38,9 @@
     "migrate:init": "docker compose up -d {{database}} {{#is_mongo}}-d mongo-init{{/is_mongo}} && sleep 5 && bun --filter='*' run migrate:init",
     "migrate:up": "docker compose up -d {{database}} {{#is_mongo}}-d mongo-init{{/is_mongo}} && bun --filter='*' run migrate:up",
     "test": "bun test",
-    "up:packages": "bun update --latest"{{/is_bun}},
+    "up:packages": "bun update --latest"{{/is_bun}}
   },
-  "devDependencies": {{{#is_jest}}
+  "devDependencies": { {{#is_jest}}
     "@types/jest": "^29.5.14",{{/is_jest}}
     "globals": "^15.14.0",
     "husky": "^9.1.7",{{#is_jest}}
@@ -50,5 +51,5 @@
     "tsx": "^4.19.2",
     "typescript": "^5.7.3"{{#is_vitest}},
     "vitest": "^2.1.8"{{/is_vitest}}
-  },
+  }
 }
