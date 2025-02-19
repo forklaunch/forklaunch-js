@@ -1,5 +1,11 @@
 # @forklaunch/hyper-express
 
+## 0.2.8
+
+### Patch Changes
+
+- Fixes issue with pathing for docs path
+
 ## 0.2.7
 
 ### Patch Changes

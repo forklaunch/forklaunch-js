@@ -1,5 +1,11 @@
 # @forklaunch/express
 
+## 0.2.7
+
+### Patch Changes
+
+- Fixes issue with pathing for docs path
+
 ## 0.2.6
 
 ### Patch Changes
