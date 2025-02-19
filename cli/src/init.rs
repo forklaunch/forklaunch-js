@@ -39,6 +39,7 @@ impl InitCommand {
 impl CliCommand for InitCommand {
     fn command(&self) -> Command {
         command("init", "Initialize a new forklaunch project")
+            .alias("add")
             .subcommand_required(true)
             .subcommand(self.application.command())
             .subcommand(self.library.command())
