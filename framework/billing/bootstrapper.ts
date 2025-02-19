@@ -7,6 +7,7 @@ import {
   string
 } from '@forklaunch/framework-core';
 import { EntityManager, ForkOptions, MikroORM } from '@mikro-orm/core';
+import dotenv from 'dotenv';
 import mikroOrmOptionsConfig from './mikro-orm.config';
 import { BaseCheckoutSessionService } from './services/checkoutSession.service';
 import { BasePaymentLinkService } from './services/paymentLink.service';
@@ -18,7 +19,7 @@ export const configValidator = {
   host: string,
   port: number,
   version: optional(string),
-  swaggerPath: optional(string),
+  docsPath: optional(string),
   entityManager: EntityManager,
   ttlCache: RedisTtlCache,
   checkoutSessionService: BaseCheckoutSessionService,
@@ -33,6 +34,8 @@ export function bootstrap(
   ) => void
 ) {
   MikroORM.init(mikroOrmOptionsConfig).then((orm) => {
+    dotenv.config({ path: getEnvVar('ENV_FILE_PATH') });
+
     const configInjector = new ConfigInjector(
       SchemaValidator(),
       configValidator,
@@ -53,9 +56,9 @@ export function bootstrap(
           lifetime: Lifetime.Singleton,
           value: getEnvVar('VERSION')
         },
-        swaggerPath: {
+        docsPath: {
           lifetime: Lifetime.Singleton,
-          value: getEnvVar('SWAGGER_PATH')
+          value: getEnvVar('DOCS_PATH')
         },
         entityManager: {
           lifetime: Lifetime.Scoped,

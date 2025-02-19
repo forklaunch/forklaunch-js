@@ -14,8 +14,10 @@ use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 use crate::{
     constants::{ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST},
-    core::base_path::prompt_base_path,
-    core::command::command,
+    core::{
+        base_path::{prompt_base_path, BasePathLocation},
+        command::command,
+    },
     init::application::ApplicationManifestData,
     prompt::ArrayCompleter,
     CliCommand,
@@ -62,7 +64,12 @@ impl CliCommand for DepcheckCommand {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let base_path = prompt_base_path(&mut line_editor, &mut stdout, matches)?;
+        let base_path = prompt_base_path(
+            &mut line_editor,
+            &mut stdout,
+            matches,
+            &BasePathLocation::Anywhere,
+        )?;
 
         let config_path = Path::new(&base_path)
             .join(".forklaunch")

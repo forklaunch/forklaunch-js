@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 use std::{fs::read_to_string, path::Path};
 
+use anyhow::{bail, Result};
 use convert_case::{Case, Casing};
 use oxc_allocator::Allocator;
 use oxc_ast::ast::SourceType;
@@ -25,7 +26,7 @@ fn inject_into_import_statement<'a>(
     injection_program_ast: &mut Program<'a>,
     import_source_identifier: &str,
     import_name_identifier: &str,
-) {
+) -> Result<()> {
     let mut injection_pos = None;
     let mut found_import = false;
 
@@ -67,6 +68,9 @@ fn inject_into_import_statement<'a>(
         for stmt in injection_program_ast.body.drain(..).rev() {
             app_program_ast.body.insert(index, stmt);
         }
+        Ok(())
+    } else {
+        bail!("Failed to inject into import statement")
     }
 }
 
@@ -74,7 +78,8 @@ fn inject_into_app_ts<'a, F>(
     app_program_ast: &mut Program<'a>,
     injection_program_ast: &mut Program<'a>,
     app_ts_injection_pos: F,
-) where
+) -> Result<()>
+where
     F: Fn(&oxc_allocator::Vec<'a, Statement>) -> Option<usize>,
 {
     for stmt in &mut app_program_ast.body {
@@ -102,68 +107,80 @@ fn inject_into_app_ts<'a, F>(
             for stmt in injection_program_ast.body.drain(..).rev() {
                 arrow.body.statements.insert(splice_pos, stmt);
             }
+
+            return Ok(());
         }
     }
+
+    bail!("Failed to inject into app.ts")
 }
 
-fn inject_into_export_declaration<'a>(
+fn inject_into_exported_api_client<'a>(
     app_program_ast: &mut Program<'a>,
     injection_program_ast: &mut Program<'a>,
-) {
-    app_program_ast.body.iter_mut().for_each(|stmt| {
+) -> Result<()> {
+    for stmt in app_program_ast.body.iter_mut() {
         let export = match stmt {
             Statement::ExportNamedDeclaration(export) => export,
-            _ => return,
+            _ => continue,
         };
 
         let ts_declaration = match &mut export.declaration {
             Some(Declaration::TSTypeAliasDeclaration(ts_decl)) => ts_decl,
-            _ => return,
+            _ => continue,
         };
 
-        if ts_declaration.id.name.contains("ApiClient") {
-            return;
+        if !ts_declaration.id.name.contains("ApiClient") {
+            continue;
         }
 
         let type_reference = match &mut ts_declaration.type_annotation {
             TSType::TSTypeReference(type_ref) => type_ref,
-            _ => return,
+            _ => continue,
         };
 
         let inner_sdk_instantiations = match type_reference
             .type_parameters
             .as_mut()
-            .and_then(|tp| tp.params.first_mut())
+            .and_then(|tp| tp.params.iter_mut().find(|_| true))
         {
             Some(TSType::TSTypeLiteral(inner)) => inner,
-            _ => return,
+            _ => continue,
         };
 
-        let expr = match injection_program_ast.body.first_mut() {
-            Some(Statement::ExpressionStatement(expr)) => expr,
-            _ => return,
-        };
+        for stmt in &mut injection_program_ast.body {
+            let expr = match stmt {
+                Statement::ExpressionStatement(expr) => expr,
+                _ => continue,
+            };
 
-        let inst = match &mut expr.expression {
-            Expression::TSInstantiationExpression(inst) => inst,
-            _ => return,
-        };
+            let inst = match &mut expr.expression {
+                Expression::TSInstantiationExpression(inst) => inst,
+                _ => continue,
+            };
 
-        let injected = match inst.type_parameters.params.first_mut() {
-            Some(TSType::TSTypeLiteral(injected)) => injected,
-            _ => return,
-        };
+            for param in inst.type_parameters.params.iter_mut() {
+                let injected = match param {
+                    TSType::TSTypeLiteral(injected) => injected,
+                    _ => continue,
+                };
 
-        inner_sdk_instantiations
-            .members
-            .extend(injected.members.drain(..));
-    });
+                inner_sdk_instantiations
+                    .members
+                    .extend(injected.members.drain(..));
+
+                return Ok(());
+            }
+        }
+    }
+
+    bail!("Failed to inject into export declaration");
 }
 
 fn inject_into_bootstrapper_config_validator<'a>(
     bootstrapper_program: &mut Program<'a>,
     config_validator_injection: &mut Program<'a>,
-) {
+) -> Result<()> {
     for stmt in bootstrapper_program.body.iter_mut() {
         // Find the configValidator export
         let export = match stmt {
@@ -176,47 +193,47 @@ fn inject_into_bootstrapper_config_validator<'a>(
             _ => continue,
         };
 
-        let variable_declarator = match variable_declaration.declarations.first_mut() {
-            Some(declarator) => declarator,
-            _ => continue,
-        };
+        for declarator in variable_declaration.declarations.iter_mut() {
+            match declarator.id.kind.get_identifier_name() {
+                Some(name) if name == "configValidator" => name,
+                _ => continue,
+            };
 
-        match variable_declarator.id.kind.get_identifier_name() {
-            Some(name) if name == "configValidator" => name,
-            _ => continue,
-        };
+            let object_expression = match &mut declarator.init {
+                Some(Expression::ObjectExpression(obj)) => obj,
+                _ => continue,
+            };
 
-        let object_expression = match &mut variable_declarator.init {
-            Some(Expression::ObjectExpression(obj)) => obj,
-            _ => continue,
-        };
+            // Get the injection object
+            for injected_stmt in config_validator_injection.body.iter_mut() {
+                let injected_export = match injected_stmt {
+                    Statement::ExportNamedDeclaration(export) => export,
+                    _ => continue,
+                };
 
-        // Get the injection object
-        let injected_export = match config_validator_injection.body.first_mut() {
-            Some(Statement::ExportNamedDeclaration(export)) => export,
-            _ => continue,
-        };
+                let injected_decl = match &mut injected_export.declaration {
+                    Some(Declaration::VariableDeclaration(decl)) => decl,
+                    _ => continue,
+                };
 
-        let injected_decl = match &mut injected_export.declaration {
-            Some(Declaration::VariableDeclaration(decl)) => decl,
-            _ => continue,
-        };
+                for injected_declarator in injected_decl.declarations.iter_mut() {
+                    let injected_obj = match &mut injected_declarator.init {
+                        Some(Expression::ObjectExpression(obj)) => obj,
+                        _ => continue,
+                    };
 
-        let injected_declarator = match injected_decl.declarations.first_mut() {
-            Some(declarator) => declarator,
-            _ => continue,
-        };
+                    // Merge the properties
+                    object_expression
+                        .properties
+                        .extend(injected_obj.properties.drain(..));
 
-        let injected_obj = match &mut injected_declarator.init {
-            Some(Expression::ObjectExpression(obj)) => obj,
-            _ => continue,
-        };
-
-        // Merge the properties
-        object_expression
-            .properties
-            .extend(injected_obj.properties.drain(..));
+                    return Ok(());
+                }
+            }
+        }
     }
+
+    bail!("Failed to inject into bootstrapper config validator");
 }
 
 fn inject_into_bootstrapper_config_injector<'a>(
@@ -242,84 +259,86 @@ fn inject_into_bootstrapper_config_injector<'a>(
             None => continue,
         };
 
-        // Get the first expression statement
-        let expression = match function_body.statements.first_mut() {
-            Some(Statement::ExpressionStatement(expr)) => expr,
-            _ => continue,
-        };
-
-        // Get the call expression
-        let call_expression = match &mut expression.expression {
-            Expression::CallExpression(call) => call,
-            _ => continue,
-        };
-
-        // Get the arrow function argument
-        let arrow_function = match call_expression.arguments.first_mut() {
-            Some(Argument::ArrowFunctionExpression(arrow)) => arrow,
-            _ => continue,
-        };
-
-        // Get the variable declaration
-        let var_decl = match arrow_function.body.statements.first_mut() {
-            Some(Statement::VariableDeclaration(decl)) => decl,
-            _ => continue,
-        };
-
-        // Get the variable declarator
-        let var_declarator = match var_decl.declarations.first_mut() {
-            Some(declarator) => declarator,
-            None => continue,
-        };
-
-        // Get the new expression
-        let new_expr = match &mut var_declarator.init {
-            Some(Expression::NewExpression(new_expr)) => new_expr,
-            _ => continue,
-        };
-
-        // For each argument in the new expression
-        for argument in &mut new_expr.arguments {
-            let object_expr = match argument {
-                Argument::ObjectExpression(obj) => obj,
+        for statement in function_body.statements.iter_mut() {
+            // Get the expression statement
+            let expression = match statement {
+                Statement::ExpressionStatement(expr) => expr,
                 _ => continue,
             };
 
-            // Get the injected variable declaration
-            let injected_var_decl = match config_injector_injection.body.first_mut() {
-                Some(Statement::VariableDeclaration(decl)) => decl,
+            // Get the call expression
+            let call_expression = match &mut expression.expression {
+                Expression::CallExpression(call) => call,
                 _ => continue,
             };
 
-            // Get the injected variable declarator
-            let injected_declarator = match injected_var_decl.declarations.first_mut() {
-                Some(declarator) => declarator,
-                None => continue,
-            };
-
-            // Get the injected new expression
-            let injected_new_expr = match &mut injected_declarator.init {
-                Some(Expression::NewExpression(new_expr)) => new_expr,
-                _ => continue,
-            };
-
-            // For each argument in the injected new expression
-            for injected_arg in &mut injected_new_expr.arguments {
-                let injected_obj = match injected_arg {
-                    Argument::ObjectExpression(obj) => obj,
+            for argument in &mut call_expression.arguments {
+                // Get the arrow function argument
+                let arrow_function = match argument {
+                    Argument::ArrowFunctionExpression(arrow) => arrow,
                     _ => continue,
                 };
 
-                // Extend the properties
-                object_expr
-                    .properties
-                    .extend(injected_obj.properties.drain(..));
+                for statement in arrow_function.body.statements.iter_mut() {
+                    // Get the variable declaration
+                    let var_decl = match statement {
+                        Statement::VariableDeclaration(decl) => decl,
+                        _ => continue,
+                    };
+
+                    for declarator in var_decl.declarations.iter_mut() {
+                        // Get the new expression
+                        let new_expr = match &mut declarator.init {
+                            Some(Expression::NewExpression(new_expr)) => new_expr,
+                            _ => continue,
+                        };
+
+                        // For each argument in the new expression
+                        for argument in &mut new_expr.arguments {
+                            let object_expr = match argument {
+                                Argument::ObjectExpression(obj) => obj,
+                                _ => continue,
+                            };
+
+                            // Process each statement in the injection
+                            for injected_stmt in config_injector_injection.body.iter_mut() {
+                                let injected_var_decl = match injected_stmt {
+                                    Statement::VariableDeclaration(decl) => decl,
+                                    _ => continue,
+                                };
+
+                                for injected_declarator in injected_var_decl.declarations.iter_mut()
+                                {
+                                    let injected_new_expr = match &mut injected_declarator.init {
+                                        Some(Expression::NewExpression(new_expr)) => new_expr,
+                                        _ => continue,
+                                    };
+
+                                    // For each argument in the injected new expression
+                                    for injected_arg in &mut injected_new_expr.arguments {
+                                        let injected_obj = match injected_arg {
+                                            Argument::ObjectExpression(obj) => obj,
+                                            _ => continue,
+                                        };
+
+                                        // Extend the properties
+                                        object_expr
+                                            .properties
+                                            .extend(injected_obj.properties.drain(..));
+
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
 }
 
-pub(crate) fn transform_app_ts(router_name: &str, base_path: &String) -> String {
+pub(crate) fn transform_app_ts(router_name: &str, base_path: &String) -> Result<String> {
     let allocator = Allocator::default();
     let app_path = Path::new(base_path).join("server.ts");
     let app_source_text = read_to_string(&app_path).unwrap();
@@ -342,7 +361,7 @@ pub(crate) fn transform_app_ts(router_name: &str, base_path: &String) -> String 
         &mut forklaunch_controller_import_injection,
         "/controllers/",
         format!("{router_name_pascal_case}Controller").as_str(),
-    );
+    )?;
 
     let scoped_service_factory_injection_text = format!(
         "const scoped{router_name_pascal_case}ServiceFactory = ci.scopedResolver('{router_name_camel_case}Service');",
@@ -384,7 +403,7 @@ pub(crate) fn transform_app_ts(router_name: &str, base_path: &String) -> String 
                 }
             });
         maybe_splice_pos
-    });
+    })?;
 
     let routes_injection_text = format!(
         "const {router_name_camel_case}Routes = {router_name_pascal_case}Routes(new {router_name_pascal_case}Controller(() => ci.createScope(), scoped{router_name_pascal_case}ServiceFactory));",
@@ -418,7 +437,7 @@ pub(crate) fn transform_app_ts(router_name: &str, base_path: &String) -> String 
                 }
             });
         maybe_splice_pos
-    });
+    })?;
 
     let use_injection_text = format!("app.use({router_name_camel_case}Routes.router);",);
     let mut injection_program_ast =
@@ -451,7 +470,7 @@ pub(crate) fn transform_app_ts(router_name: &str, base_path: &String) -> String 
             }
         });
         maybe_splice_pos
-    });
+    })?;
 
     let forklaunch_routes_import_text = format!(
         "import {{ {router_name_pascal_case}Routes }} from './routes/{router_name_camel_case}.routes';",
@@ -463,21 +482,21 @@ pub(crate) fn transform_app_ts(router_name: &str, base_path: &String) -> String 
         &mut forklaunch_routes_import_injection,
         "/routes/",
         format!("{router_name_pascal_case}Routes").as_str(),
-    );
+    )?;
 
     let api_client_skeleton_text =
         format!("ApiClient<{{{router_name_camel_case}: typeof {router_name_pascal_case}Routes}}>");
     let mut injected_api_client_skeleton =
         parse_ast_program(&allocator, &api_client_skeleton_text, app_source_type);
-    inject_into_export_declaration(&mut app_program, &mut injected_api_client_skeleton);
+    inject_into_exported_api_client(&mut app_program, &mut injected_api_client_skeleton)?;
 
-    CodeGenerator::new()
+    Ok(CodeGenerator::new()
         .with_options(CodegenOptions::default())
         .build(&app_program)
-        .code
+        .code)
 }
 
-pub(crate) fn transform_bootstrapper_ts(router_name: &str, base_path: &String) -> String {
+pub(crate) fn transform_bootstrapper_ts(router_name: &str, base_path: &String) -> Result<String> {
     let allocator = Allocator::default();
     let bootstrapper_path = Path::new(base_path).join("bootstrapper.ts");
     let bootstrapper_source_text = read_to_string(&bootstrapper_path).unwrap();
@@ -504,7 +523,7 @@ pub(crate) fn transform_bootstrapper_ts(router_name: &str, base_path: &String) -
         &mut forklaunch_routes_import_injection,
         "/services/",
         format!("Base{router_name_pascal_case}Services").as_str(),
-    );
+    )?;
 
     let config_validator_text = format!(
         "export const configValidator = {{
@@ -516,27 +535,28 @@ pub(crate) fn transform_bootstrapper_ts(router_name: &str, base_path: &String) -
     inject_into_bootstrapper_config_validator(
         &mut bootstrapper_program,
         &mut config_validator_injection,
-    );
+    )?;
 
     let config_injector_text = format!(
         "const configInjector = new ConfigInjector(configValidator, SchemaValidator(), {{
-        {router_name_camel_case}Service: {{
-          lifetime: Lifetime.Scoped,
-          factory: (
-            {{ entityManager }},
-            resolve,
-            context
-          ) => {{
-            let em = entityManager;
-            if (context.entityManagerOptions) {{
-              em = resolve('entityManager', context);
+            {router_name_camel_case}Service: {{
+            lifetime: Lifetime.Scoped,
+            factory: (
+                {{ entityManager, ttlCache }},
+                resolve,
+                context
+            ) => {{
+                let em = entityManager;
+                if (context.entityManagerOptions) {{
+                    em = resolve('entityManager', context);
+                }}
+                return new Base{router_name_pascal_case}Service(
+                    em,
+                    ttlCache
+                );
             }}
-            return new Base{router_name_pascal_case}Service(
-              em
-            );
-          }}
-        }}
-    }})"
+            }}
+        }})"
     );
 
     let mut config_injector_injection =
@@ -546,8 +566,8 @@ pub(crate) fn transform_bootstrapper_ts(router_name: &str, base_path: &String) -
         &mut config_injector_injection,
     );
 
-    CodeGenerator::new()
+    Ok(CodeGenerator::new()
         .with_options(CodegenOptions::default())
         .build(&bootstrapper_program)
-        .code
+        .code)
 }

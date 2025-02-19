@@ -21,7 +21,7 @@ use crate::{
         ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST, VALID_DATABASES,
     },
     core::{
-        base_path::prompt_base_path,
+        base_path::{prompt_base_path, BasePathLocation},
         manifest::{ProjectManifestConfig, ProjectType, ResourceInventory},
     },
     prompt::{prompt_with_validation, prompt_without_validation, ArrayCompleter},
@@ -124,7 +124,12 @@ impl CliCommand for ServiceCommand {
             |_| "Service name cannot be empty. Please try again".to_string(),
         )?;
 
-        let base_path = prompt_base_path(&mut line_editor, &mut stdout, matches)?;
+        let base_path = prompt_base_path(
+            &mut line_editor,
+            &mut stdout,
+            matches,
+            &BasePathLocation::Service,
+        )?;
 
         let database = prompt_with_validation(
             &mut line_editor,
@@ -231,7 +236,7 @@ fn add_service_to_artifacts(
     base_path: &String,
 ) -> Result<Vec<RenderedTemplate>> {
     let (docker_compose_buffer, port_number) =
-        add_service_definition_to_docker_compose(config_data, base_path)
+        add_service_definition_to_docker_compose(config_data, base_path, None)
             .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
     let forklaunch_definition_buffer = add_project_definition_to_manifest(
         ProjectType::Service,

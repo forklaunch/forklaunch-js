@@ -85,6 +85,8 @@ services:{{#is_postgres}}
       ENV: development
       HOST: 0.0.0.0
       PORT: '{{port}}'
+      VERSION: v1
+      DOCS_PATH: /docs
       DB_NAME: {{app_name}}-{{name}}-dev{{^is_mongo}}
       DB_HOST: postgresql
       DB_USER: postgresql

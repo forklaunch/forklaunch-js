@@ -12,7 +12,7 @@ bootstrap((ci) => {
   const host = ci.resolve('host');
   const port = ci.resolve('port');
   const version = ci.resolve('version');
-  const swaggerPath = ci.resolve('swaggerPath');
+  const docsPath = ci.resolve('docsPath');
   //! resolves the necessary services from the configuration
   const scoped{{pascal_case_name}}ServiceFactory = ci.scopedResolver('{{camel_case_name}}Service');
   //! constructs the necessary routes using the appropriate Routes functions
@@ -27,7 +27,7 @@ bootstrap((ci) => {
   //! starts the server
   app.listen(port, host, () => {
     console.log(
-      `🎉 {{pascal_case_name}} Server is running at ${protocol}://${host}:${port} 🎉.\nAn API reference can be accessed at ${protocol}://${host}:${port}/api${version}${swaggerPath}`
+      `🎉 {{pascal_case_name}} Server is running at ${protocol}://${host}:${port} 🎉.\nAn API reference can be accessed at ${protocol}://${host}:${port}/api/${version}${docsPath}`
     );
   });
 });

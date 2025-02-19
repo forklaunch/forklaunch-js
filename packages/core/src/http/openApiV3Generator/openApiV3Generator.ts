@@ -46,7 +46,7 @@ function transformBasePath(basePath: string) {
  * @param {PathObject} paths - The paths for the Swagger document.
  * @returns {OpenAPIObject} - The Swagger document.
  */
-function swaggerDocument(
+function generateOpenApiDocument(
   port: string | number,
   tags: TagObject[],
   paths: PathObject
@@ -156,7 +156,10 @@ export function generateSwaggerDocument<SV extends AnySchemaValidator>(
         for (const key in route.contractDetails.params) {
           pathItemObject.parameters?.push({
             name: key,
-            in: 'path'
+            in: 'path',
+            schema: (schemaValidator as SchemaValidator).openapi(
+              route.contractDetails.params[key]
+            )
           });
         }
       }
@@ -175,7 +178,10 @@ export function generateSwaggerDocument<SV extends AnySchemaValidator>(
         for (const key in requestHeaders) {
           pathItemObject.parameters?.push({
             name: key,
-            in: 'header'
+            in: 'header',
+            schema: (schemaValidator as SchemaValidator).openapi(
+              requestHeaders[key]
+            )
           });
         }
       }
@@ -184,7 +190,8 @@ export function generateSwaggerDocument<SV extends AnySchemaValidator>(
         for (const key in query) {
           pathItemObject.parameters?.push({
             name: key,
-            in: 'query'
+            in: 'query',
+            schema: (schemaValidator as SchemaValidator).openapi(query[key])
           });
         }
       }
@@ -215,5 +222,5 @@ export function generateSwaggerDocument<SV extends AnySchemaValidator>(
     });
   });
 
-  return swaggerDocument(port, tags, paths);
+  return generateOpenApiDocument(port, tags, paths);
 }

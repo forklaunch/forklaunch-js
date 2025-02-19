@@ -18,7 +18,7 @@ use crate::constants::{
     ERROR_FAILED_TO_CREATE_SYMLINKS, ERROR_FAILED_TO_CREATE_TSCONFIG,
     ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST,
 };
-use crate::core::base_path::prompt_base_path;
+use crate::core::base_path::{prompt_base_path, BasePathLocation};
 use crate::core::manifest::{ProjectManifestConfig, ProjectType};
 use crate::prompt::{prompt_with_validation, prompt_without_validation, ArrayCompleter};
 
@@ -92,7 +92,12 @@ impl CliCommand for LibraryCommand {
             |_| "Library name cannot be empty. Please try again".to_string(),
         )?;
 
-        let base_path = prompt_base_path(&mut line_editor, &mut stdout, matches)?;
+        let base_path = prompt_base_path(
+            &mut line_editor,
+            &mut stdout,
+            matches,
+            &BasePathLocation::Library,
+        )?;
 
         let description = prompt_without_validation(
             &mut line_editor,

@@ -22,7 +22,7 @@ export const configValidator = {
   host: string,
   port: number,
   version: optional(string),
-  swaggerPath: optional(string),
+  docsPath: optional(string),
   passwordEncryptionPublicKeyPath: string,
   entityManager: EntityManager,
   organizationService: BaseOrganizationService,
@@ -55,9 +55,9 @@ export function bootstrap(
           lifetime: Lifetime.Singleton,
           value: getEnvVar('VERSION')
         },
-        swaggerPath: {
+        docsPath: {
           lifetime: Lifetime.Singleton,
-          value: getEnvVar('SWAGGER_PATH')
+          value: getEnvVar('DOCS_PATH')
         },
         passwordEncryptionPublicKeyPath: {
           lifetime: Lifetime.Singleton,

@@ -6,6 +6,7 @@ use convert_case::{Case, Casing};
 use ramhorns::Content;
 use rustyline::{history::DefaultHistory, Editor};
 use serde::{Deserialize, Serialize};
+use serde_yml::to_string;
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use uuid::Uuid;
 
@@ -31,12 +32,13 @@ use super::{
     command,
     core::{
         database::{generate_database_export_index_ts, match_database},
+        docker::{add_service_definition_to_docker_compose, DockerCompose},
         gitignore::generate_gitignore,
         iam::generate_iam_keys,
         license::{generate_license, match_license},
         manifest::generate_manifest,
         pnpm_workspace::generate_pnpm_workspace,
-        rendered_template::{create_forklaunch_dir, write_rendered_templates},
+        rendered_template::{create_forklaunch_dir, write_rendered_templates, RenderedTemplate},
         symlinks::generate_symlinks,
         template::{
             generate_with_template, get_routers_from_standard_package, PathIO, TemplateManifestData,
@@ -423,47 +425,67 @@ impl CliCommand for ApplicationCommand {
                 .collect::<Vec<String>>(),
         )?);
 
+        let mut docker_compose_string = Some(to_string(&DockerCompose::default()).unwrap());
         for template_dir in template_dirs {
+            let service_data = ServiceManifestData {
+                id: data.id.clone(),
+                cli_version: data.cli_version.clone(),
+                app_name: data.app_name.clone(),
+                service_name: template_dir.output_path.to_string(),
+                camel_case_name: template_dir.output_path.to_case(Case::Camel),
+                pascal_case_name: template_dir.output_path.to_case(Case::Pascal),
+                validator: data.validator.clone(),
+                http_framework: data.http_framework.clone(),
+                runtime: data.runtime.clone(),
+                test_framework: data.test_framework.clone(),
+                projects: data.projects.clone(),
+                project_peer_topology: data.project_peer_topology.clone(),
+                author: data.author.clone(),
+                description: data.description.clone(),
+                license: data.license.clone(),
+
+                is_express: data.is_express,
+                is_hyper_express: data.is_hyper_express,
+                is_zod: data.is_zod,
+                is_typebox: data.is_typebox,
+                is_bun: data.is_bun,
+                is_node: data.is_node,
+                is_vitest: data.is_vitest,
+                is_jest: data.is_jest,
+                is_postgres: database == "postgresql",
+                is_mongo: database == "mongodb",
+
+                database: database.to_string(),
+                db_driver: match_database(&database),
+            };
+
+            if service_data.service_name != "core" {
+                docker_compose_string = Some(
+                    add_service_definition_to_docker_compose(
+                        &service_data,
+                        &Path::new(&name).to_string_lossy().to_string(),
+                        docker_compose_string,
+                    )?
+                    .0,
+                );
+            }
+
             rendered_templates.extend(generate_with_template(
                 Some(&name),
                 &template_dir,
-                &TemplateManifestData::Service(ServiceManifestData {
-                    id: data.id.clone(),
-                    cli_version: data.cli_version.clone(),
-                    app_name: data.app_name.clone(),
-                    service_name: template_dir.output_path.to_string(),
-                    camel_case_name: template_dir.output_path.to_case(Case::Camel),
-                    pascal_case_name: template_dir.output_path.to_case(Case::Pascal),
-                    validator: data.validator.clone(),
-                    http_framework: data.http_framework.clone(),
-                    runtime: data.runtime.clone(),
-                    test_framework: data.test_framework.clone(),
-                    projects: data.projects.clone(),
-                    project_peer_topology: data.project_peer_topology.clone(),
-                    author: data.author.clone(),
-                    description: data.description.clone(),
-                    license: data.license.clone(),
-
-                    is_express: data.is_express,
-                    is_hyper_express: data.is_hyper_express,
-                    is_zod: data.is_zod,
-                    is_typebox: data.is_typebox,
-                    is_bun: data.is_bun,
-                    is_node: data.is_node,
-                    is_vitest: data.is_vitest,
-                    is_jest: data.is_jest,
-                    is_postgres: database == "postgresql",
-                    is_mongo: database == "mongodb",
-
-                    database: database.to_string(),
-                    db_driver: match_database(&database),
-                }),
+                &TemplateManifestData::Service(service_data),
                 &ignore_files
                     .iter()
                     .map(|ignore_file| ignore_file.to_string())
                     .collect::<Vec<String>>(),
             )?);
         }
+
+        rendered_templates.push(RenderedTemplate {
+            path: Path::new(&name).join("docker-compose.yaml"),
+            content: docker_compose_string.unwrap(),
+            context: None,
+        });
 
         rendered_templates.push(
             generate_database_export_index_ts(

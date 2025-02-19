@@ -17,7 +17,7 @@ bootstrap((ci) => {
   const host = ci.resolve('host');
   const port = ci.resolve('port');
   const version = ci.resolve('version');
-  const swaggerPath = ci.resolve('swaggerPath');
+  const docsPath = ci.resolve('docsPath');
   //! resolves the necessary services from the configuration
   const scopedOrganizationServiceFactory = ci.scopedResolver(
     'organizationService'
@@ -42,7 +42,7 @@ bootstrap((ci) => {
   //! starts the server
   app.listen(port, host, () => {
     console.log(
-      `🎉 IAM Server is running at http://${host}:${port} 🎉.\nAn API reference can be accessed at http://${host}:${port}/api${version}${swaggerPath}`
+      `🎉 IAM Server is running at http://${host}:${port} 🎉.\nAn API reference can be accessed at http://${host}:${port}/api/${version}${docsPath}`
     );
   });
 });

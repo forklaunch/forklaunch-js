@@ -11,7 +11,7 @@ export const configValidator = {
   host: optional(string),
   port: optional(number),
   version: optional(string),
-  swaggerPath: optional(string),
+  docsPath: optional(string),
   entityManager: EntityManager,
   ttlCache: RedisTtlCache,
   {{camel_case_name}}Service: Base{{pascal_case_name}}Service
@@ -49,9 +49,9 @@ export function bootstrap(
           lifetime: Lifetime.Singleton,
           value: process.env.VERSION ?? '/v1'
         },
-        swaggerPath: {
+        docsPath: {
           lifetime: Lifetime.Singleton,
-          value: process.env.SWAGGER_PATH ?? '/swagger'
+          value: process.env.DOCS_PATH ?? '/docs'
         },
         entityManager: {
           lifetime: Lifetime.Scoped,

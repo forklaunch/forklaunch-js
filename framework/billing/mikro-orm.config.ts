@@ -44,7 +44,7 @@ const configInjector = new ConfigInjector(
     },
     environment: {
       lifetime: Lifetime.Singleton,
-      value: getEnvVar('NODE_ENV')
+      value: getEnvVar('ENV')
     }
   }
 );

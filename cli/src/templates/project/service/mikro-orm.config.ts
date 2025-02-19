@@ -4,6 +4,9 @@ import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
 import { number, SchemaValidator, string } from '@{{app_name}}/core';{{^is_mongo}}
 import { Platform, TextType, Type } from '@mikro-orm/core';{{/is_mongo}}
 import { {{db_driver}} } from '@mikro-orm/{{database}}';
+import dotenv from 'dotenv';
+
+dotenv.config({ path: getEnvVar('ENV_FILE_PATH') });
 
 const configInjector = new ConfigInjector(
   SchemaValidator(),
@@ -38,7 +41,7 @@ const configInjector = new ConfigInjector(
     },
     environment: {
       lifetime: Lifetime.Singleton,
-      value: getEnvVar('NODE_ENV')
+      value: getEnvVar('ENV')
     }
   }
 );

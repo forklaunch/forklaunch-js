@@ -17,7 +17,7 @@ bootstrap((ci) => {
   const host = ci.resolve('host');
   const port = ci.resolve('port');
   const version = ci.resolve('version');
-  const swaggerPath = ci.resolve('swaggerPath');
+  const docsPath = ci.resolve('docsPath');
   //! resolves the necessary services from the configuration
   const scopedCheckoutSessionServiceFactory = ci.scopedResolver(
     'checkoutSessionService'
@@ -47,7 +47,7 @@ bootstrap((ci) => {
   //! starts the server
   app.listen(port, host, () => {
     console.log(
-      `🎉 Billing Server is running at http://${host}:${port} 🎉.\nAn API reference can be accessed at http://${host}:${port}/api${version}${swaggerPath}`
+      `🎉 Billing Server is running at http://${host}:${port} 🎉.\nAn API reference can be accessed at http://${host}:${port}/api/${version}${docsPath}`
     );
   });
 });

@@ -12,22 +12,22 @@
   },
   "license": "MIT",
   "author": "Rohin Bhargava",
-  "main": "app.ts",
+  "main": "server.ts",
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist pnpm.lock.yaml node_modules",
-    "dev": "pnpm run migrate:up && pnpm tsx watch app.ts",
-    "dev:bun": "bun run migrate:up && bun --watch app.ts",
+    "dev": "pnpm run migrate:up && pnpm tsx watch server.ts",
+    "dev:bun": "bun run migrate:up && bun --watch server.ts",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
-    "migrate:create": "NODE_OPTIONS='--import=tsx' mikro-orm migration:create",
-    "migrate:down": "NODE_OPTIONS='--import=tsx' mikro-orm migration:down",
-    "migrate:init": "NODE_OPTIONS='--import=tsx' mikro-orm migration:create --initial",
-    "migrate:up": "NODE_OPTIONS='--import=tsx' mikro-orm migration:up",
-    "start": "NODE_OPTIONS='--import=tsx' node dist/app.js",
-    "start:bun": "bun run migrate:up && bun dist/app.js",
+    "migrate:create": "ENV_FILE_PATH=.env.local NODE_OPTIONS='--require ts-node/register' mikro-orm migration:create",
+    "migrate:down": "ENV_FILE_PATH=.env.local NODE_OPTIONS='--require ts-node/register' mikro-orm migration:down",
+    "migrate:init": "ENV_FILE_PATH=.env.local NODE_OPTIONS='--require ts-node/register' mikro-orm migration:create --initial",
+    "migrate:up": "ENV_FILE_PATH=.env.local NODE_OPTIONS='--require ts-node/register' mikro-orm migration:up",
+    "start": "ENV_FILE_PATH=.env.local NODE_OPTIONS='--require ts-node/register' node dist/server.js",
+    "start:bun": "bun run migrate:up && bun dist/server.js",
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
@@ -45,6 +45,7 @@
     "@mikro-orm/reflection": "^6.4.6",
     "@mikro-orm/sqlite": "^6.4.6",
     "@sinclair/typebox": "^0.34.25",
+    "ajv": "^8.17.1",
     "dotenv": "^16.4.7",
     "uuid": "^11.0.5",
     "zod": "^3.24.2"
@@ -52,7 +53,9 @@
   "devDependencies": {
     "@mikro-orm/cli": "^6.4.6",
     "@types/uuid": "^10.0.0",
-    "prettier": "^3.5.1"
+    "prettier": "^3.5.1",
+    "ts-node": "^10.9.2",
+    "typedoc": "^0.27.7"
   },
   "mikro-orm": {
     "configPaths": [

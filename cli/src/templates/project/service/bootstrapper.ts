@@ -2,8 +2,10 @@ import { RedisTtlCache } from '@forklaunch/core/cache';
 import { ConfigInjector, getEnvVar, Lifetime } from '@forklaunch/core/services';
 import { EntityManager, ForkOptions, MikroORM } from '@mikro-orm/core';
 import { SchemaValidator, number, optional, string } from '@{{app_name}}/core';
+import dotenv from 'dotenv';
 import mikroOrmOptionsConfig from './mikro-orm.config';
-import { Base{{pascal_case_name}}Service } from './services/{{camel_case_name}}.service';
+import { Base{import { pascal_case_name } from './routes/{{camel_case_name}}.routes';
+{pascal_case_name}}Service } from './services/{{camel_case_name}}.service';
 //! configValidator object that defines the configuration schema for the application
 export const configValidator = {
   redisUrl: string,
@@ -11,7 +13,7 @@ export const configValidator = {
   host: optional(string),
   port: optional(number),
   version: optional(string),
-  swaggerPath: optional(string),
+  docsPath: optional(string),
   entityManager: EntityManager,
   ttlCache: RedisTtlCache,
   {{camel_case_name}}Service: Base{{pascal_case_name}}Service
@@ -22,6 +24,7 @@ export function bootstrap(
     ci: ConfigInjector<SchemaValidator, typeof configValidator>
   ) => void
 ) {
+  dotenv.config({ path: getEnvVar('ENV_FILE_PATH') });
   //! initializes the MikroORM instance with the mikroOrmOptionsConfig
   MikroORM.init(mikroOrmOptionsConfig).then((orm) => {
     //! creates a new ConfigInjector instance with the SchemaValidator, configValidator, and the configuration for the application
@@ -49,9 +52,9 @@ export function bootstrap(
           lifetime: Lifetime.Singleton,
           value: getEnvVar('VERSION')
         },
-        swaggerPath: {
+        docsPath: {
           lifetime: Lifetime.Singleton,
-          value: getEnvVar('SWAGGER_PATH')
+          value: getEnvVar('DOCS_PATH')
         },
         entityManager: {
           lifetime: Lifetime.Scoped,

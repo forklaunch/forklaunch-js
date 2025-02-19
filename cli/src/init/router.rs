@@ -1,7 +1,4 @@
-use std::{
-    fs::read_to_string,
-    path::{Path, MAIN_SEPARATOR},
-};
+use std::{fs::read_to_string, path::Path};
 
 use anyhow::{bail, Context, Result};
 use clap::{Arg, ArgMatches, Command};
@@ -21,7 +18,10 @@ use crate::{
         ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER, ERROR_FAILED_TO_PARSE_MANIFEST,
         ERROR_FAILED_TO_READ_MANIFEST,
     },
-    core::{base_path::prompt_base_path, manifest::ProjectManifestConfig},
+    core::{
+        base_path::{prompt_base_path, BasePathLocation},
+        manifest::ProjectManifestConfig,
+    },
     prompt::{prompt_with_validation, ArrayCompleter},
 };
 
@@ -103,11 +103,17 @@ impl CliCommand for RouterCommand {
             |_| "Router name cannot be empty. Please try again".to_string(),
         )?;
 
-        let base_path = prompt_base_path(&mut line_editor, &mut stdout, matches)?;
+        let base_path = prompt_base_path(
+            &mut line_editor,
+            &mut stdout,
+            matches,
+            &BasePathLocation::Router,
+        )?;
 
-        let config_path = Path::new(&base_path)
+        let path = Path::new(&base_path);
+        let config_path = path
             .parent()
-            .unwrap_or_else(|| Path::new(&base_path))
+            .unwrap_or_else(|| path)
             .join(".forklaunch")
             .join("manifest.toml");
 
@@ -115,7 +121,8 @@ impl CliCommand for RouterCommand {
             from_str(&read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?)
                 .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
 
-        let service_name = base_path.split(MAIN_SEPARATOR).last().unwrap();
+        println!("{:?} {:?}", path, config_path);
+        let service_name = path.file_name().unwrap().to_str().unwrap();
         let service_data = manifest_data
             .projects
             .iter()
@@ -197,13 +204,13 @@ fn add_router_to_artifacts(
 
     rendered_templates.push(RenderedTemplate {
         path: Path::new(&base_path).join("server.ts"),
-        content: transform_app_ts(config_data.router_name.as_str(), &base_path),
+        content: transform_app_ts(config_data.router_name.as_str(), &base_path)?,
         context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_APP.to_string()),
     });
 
     rendered_templates.push(RenderedTemplate {
         path: Path::new(&base_path).join("bootstrapper.ts"),
-        content: transform_bootstrapper_ts(config_data.router_name.as_str(), &base_path),
+        content: transform_bootstrapper_ts(config_data.router_name.as_str(), &base_path)?,
         context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER.to_string()),
     });
 
