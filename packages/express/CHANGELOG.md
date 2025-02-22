@@ -1,5 +1,11 @@
 # @forklaunch/express
 
+## 0.2.8
+
+### Patch Changes
+
+- bump http frameworks to support docs path
+
 ## 0.2.7
 
 ### Patch Changes

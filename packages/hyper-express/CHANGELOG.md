@@ -1,5 +1,11 @@
 # @forklaunch/hyper-express
 
+## 0.2.9
+
+### Patch Changes
+
+- bump http frameworks to support docs path
+
 ## 0.2.8
 
 ### Patch Changes
