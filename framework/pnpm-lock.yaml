@@ -45,14 +45,14 @@ importers:
         specifier: ^0.3.6
         version: 0.3.6(socks@2.8.4)
       '@forklaunch/express':
-        specifier: ^0.2.7
-        version: 0.2.7(openapi3-ts@4.4.0)(socks@2.8.4)
+        specifier: ^0.2.8
+        version: 0.2.8(openapi3-ts@4.4.0)(socks@2.8.4)
       '@forklaunch/framework-core':
         specifier: workspace:*
         version: link:../core
       '@forklaunch/hyper-express':
-        specifier: ^0.2.8
-        version: 0.2.8(express@4.21.2)(socks@2.8.4)
+        specifier: ^0.2.9
+        version: 0.2.9(express@4.21.2)(socks@2.8.4)
       '@forklaunch/validator':
         specifier: ^0.4.4
         version: 0.4.4(openapi3-ts@4.4.0)
@@ -118,11 +118,11 @@ importers:
         specifier: ^0.3.6
         version: 0.3.6(socks@2.8.4)
       '@forklaunch/express':
-        specifier: ^0.2.7
-        version: 0.2.7(openapi3-ts@4.4.0)(socks@2.8.4)
-      '@forklaunch/hyper-express':
         specifier: ^0.2.8
-        version: 0.2.8(express@4.21.2)(socks@2.8.4)
+        version: 0.2.8(openapi3-ts@4.4.0)(socks@2.8.4)
+      '@forklaunch/hyper-express':
+        specifier: ^0.2.9
+        version: 0.2.9(express@4.21.2)(socks@2.8.4)
       '@forklaunch/validator':
         specifier: ^0.4.4
         version: 0.4.4(openapi3-ts@4.4.0)
@@ -164,14 +164,14 @@ importers:
         specifier: ^0.3.6
         version: 0.3.6(socks@2.8.4)
       '@forklaunch/express':
-        specifier: ^0.2.7
-        version: 0.2.7(openapi3-ts@4.4.0)(socks@2.8.4)
+        specifier: ^0.2.8
+        version: 0.2.8(openapi3-ts@4.4.0)(socks@2.8.4)
       '@forklaunch/framework-core':
         specifier: workspace:*
         version: link:../core
       '@forklaunch/hyper-express':
-        specifier: ^0.2.8
-        version: 0.2.8(express@4.21.2)(socks@2.8.4)
+        specifier: ^0.2.9
+        version: 0.2.9(express@4.21.2)(socks@2.8.4)
       '@forklaunch/validator':
         specifier: ^0.4.4
         version: 0.4.4(openapi3-ts@4.4.0)
@@ -739,14 +739,14 @@ packages:
   '@forklaunch/core@0.3.6':
     resolution: {integrity: sha512-CwkWTKv8t32Mp39957KdrRJRh+VlM56J73M7CZ0rkGDZf0/iXEhTCW9vlytUsg5JNHBqwfRgp/OO4dKX3GPkYA==}
 
-  '@forklaunch/express@0.2.7':
-    resolution: {integrity: sha512-IESj1tqCxpFAw61r+Hko3UZf4pmOYMAwAkmMH19YHF+wirGKH9Lpd4WafXxGTudQL8kUiEnIsiI+2jkFr6r7jA==}
+  '@forklaunch/express@0.2.8':
+    resolution: {integrity: sha512-ckQNSKPhEvkVGK8tHc6Qn1152Ecvp6M51S04JKwZSXHqR/oKYhBj7m0oE4TEQtctqSfMhLX6tdaZDzad59Xh1A==}
 
   '@forklaunch/hyper-express-fork@6.17.3':
     resolution: {integrity: sha512-tVTyLS28OWwtnAojdwWlngjKMZ2Dzz0JEDc14mN5eB80xlwd2hLY28WSbeNHk1IWOncRIi3sbteZpY810nGRiQ==}
 
-  '@forklaunch/hyper-express@0.2.8':
-    resolution: {integrity: sha512-+sNJZp/pvbMYMIkqfey0vOIBCYF7+9qvxm8CV4xwuEkGygw2gWywgPBSGZwsG97RrvnvJwHQIn4058sS0WFelQ==}
+  '@forklaunch/hyper-express@0.2.9':
+    resolution: {integrity: sha512-peL3qGfs1EcFHC2Bg+PFGOP+jQh5TDJZH7T2Q7kbuRywkIGnRFOyI6wzq3L+3DbP1QL4puMKzHMIONdL2SJdag==}
 
   '@forklaunch/validator@0.4.4':
     resolution: {integrity: sha512-+lNpiZf1Qv4rpC7Z48j/H0mUkbWiQ5OgzbEgI9gWqBxzQxk2TtCGyDXMfdOIkAVji+Ff0t0A0j2z1j2cj3fdNA==}
@@ -4321,7 +4321,7 @@ snapshots:
       - snappy
       - socks
 
-  '@forklaunch/express@0.2.7(openapi3-ts@4.4.0)(socks@2.8.4)':
+  '@forklaunch/express@0.2.8(openapi3-ts@4.4.0)(socks@2.8.4)':
     dependencies:
       '@forklaunch/common': 0.2.1
       '@forklaunch/core': 0.3.6(socks@2.8.4)
@@ -4354,7 +4354,7 @@ snapshots:
       typed-emitter: 2.1.0
       uWebSockets.js: https://codeload.github.com/uNetworking/uWebSockets.js/tar.gz/6609a88ffa9a16ac5158046761356ce03250a0df
 
-  '@forklaunch/hyper-express@0.2.8(express@4.21.2)(socks@2.8.4)':
+  '@forklaunch/hyper-express@0.2.9(express@4.21.2)(socks@2.8.4)':
     dependencies:
       '@forklaunch/common': 0.2.1
       '@forklaunch/core': 0.3.6(socks@2.8.4)

@@ -99,8 +99,8 @@ pub(crate) fn application_up_packages_script(runtime: &str) -> &str {
 pub(crate) const APP_CORE_VERSION: &str = "workspace:*";
 pub(crate) const COMMON_VERSION: &str = "^0.2.1";
 pub(crate) const CORE_VERSION: &str = "^0.3.6";
-pub(crate) const EXPRESS_VERSION: &str = "^0.2.7";
-pub(crate) const HYPER_EXPRESS_VERSION: &str = "^0.2.8";
+pub(crate) const EXPRESS_VERSION: &str = "^0.2.8";
+pub(crate) const HYPER_EXPRESS_VERSION: &str = "^0.2.9";
 pub(crate) const VALIDATOR_VERSION: &str = "^0.4.4";
 pub(crate) const MIKRO_ORM_CORE_VERSION: &str = "^6.4.6";
 pub(crate) const MIKRO_ORM_MIGRATIONS_VERSION: &str = "^6.4.6";
