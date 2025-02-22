@@ -52,6 +52,8 @@ pub(crate) const ERROR_FAILED_TO_READ_DOCKER_COMPOSE: &str =
     "Failed to read docker_compose.yaml. Please check your target directory is a forklaunch application.";
 pub(crate) const ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE: &str =
     "Failed to parse docker_compose.yaml. Please verify the file is valid yaml.";
+pub(crate) const ERROR_FAILED_TO_CREATE_PACKAGE_JSON: &str =
+    "Failed to create package.json. Please check your target directory is writable.";
 pub(crate) const ERROR_FAILED_TO_READ_PACKAGE_JSON: &str =
     "Failed to read package.json. Please check your target directory is a forklaunch application.";
 pub(crate) const ERROR_FAILED_TO_PARSE_PACKAGE_JSON: &str =
@@ -96,3 +98,5 @@ pub(crate) const ERROR_FAILED_TO_ADD_ROUTER_METADATA_TO_MANIFEST: &str =
     "Failed to add router metadata to manifest.";
 pub(crate) const ERROR_FAILED_TO_CREATE_DATABASE_EXPORT_INDEX_TS: &str =
     "Failed to create database export index.ts in core/persistence.";
+pub(crate) const ERROR_FAILED_TO_CREATE_LIBRARY_PACKAGE_JSON: &str =
+    "Failed to create library package.json.";

@@ -1,11 +1,10 @@
 import { RedisTtlCache } from '@forklaunch/core/cache';
 import { ConfigInjector, getEnvVar, Lifetime } from '@forklaunch/core/services';
 import { EntityManager, ForkOptions, MikroORM } from '@mikro-orm/core';
-import { SchemaValidator, number, optional, string } from '@{{app_name}}/core';
+import { number, optional, SchemaValidator, string } from '@{{app_name}}/core';
 import dotenv from 'dotenv';
 import mikroOrmOptionsConfig from './mikro-orm.config';
-import { Base{import { pascal_case_name } from './routes/{{camel_case_name}}.routes';
-{pascal_case_name}}Service } from './services/{{camel_case_name}}.service';
+import { Base{{pascal_case_name}}Service } from './services/{{camel_case_name}}.service';
 //! configValidator object that defines the configuration schema for the application
 export const configValidator = {
   redisUrl: string,

@@ -17,6 +17,10 @@ use crate::{
 
 use super::rendered_template::RenderedTemplate;
 
+pub(crate) mod application_package_json;
+pub(crate) mod package_json_constants;
+pub(crate) mod project_package_json;
+
 #[derive(Debug, Serialize, Deserialize)]
 struct PackageJson {
     #[serde(default)]

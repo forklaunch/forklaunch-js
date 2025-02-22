@@ -21,11 +21,11 @@ pub(crate) struct PathIO {
 }
 
 #[derive(Debug)]
-pub(crate) enum TemplateManifestData {
-    Application(ApplicationManifestData),
-    Service(ServiceManifestData),
-    Library(LibraryManifestData),
-    Router(RouterManifestData),
+pub(crate) enum TemplateManifestData<'a> {
+    Application(&'a ApplicationManifestData),
+    Service(&'a ServiceManifestData),
+    Library(&'a LibraryManifestData),
+    Router(&'a RouterManifestData),
 }
 
 pub(crate) fn get_directory_filenames(path: &PathIO) -> Result<Vec<&File>> {

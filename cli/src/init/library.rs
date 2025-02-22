@@ -4,6 +4,7 @@ use ramhorns::Content;
 use rustyline::history::DefaultHistory;
 use rustyline::Editor;
 use serde::{Deserialize, Serialize};
+use serde_json::to_string_pretty;
 use std::fs::read_to_string;
 use std::io::Write;
 use std::path::Path;
@@ -15,8 +16,8 @@ use crate::constants::{
     ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
     ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON,
     ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE, ERROR_FAILED_TO_CREATE_GITIGNORE,
-    ERROR_FAILED_TO_CREATE_SYMLINKS, ERROR_FAILED_TO_CREATE_TSCONFIG,
-    ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST,
+    ERROR_FAILED_TO_CREATE_LIBRARY_PACKAGE_JSON, ERROR_FAILED_TO_CREATE_SYMLINKS,
+    ERROR_FAILED_TO_CREATE_TSCONFIG, ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST,
 };
 use crate::core::base_path::{prompt_base_path, BasePathLocation};
 use crate::core::manifest::{ProjectManifestConfig, ProjectType};
@@ -25,6 +26,14 @@ use crate::prompt::{prompt_with_validation, prompt_without_validation, ArrayComp
 use super::core::gitignore::generate_gitignore;
 use super::core::manifest::add_project_definition_to_manifest;
 use super::core::package_json::add_project_definition_to_package_json;
+use super::core::package_json::package_json_constants::{
+    project_clean_script, project_test_script, ESLINT_VERSION, PROJECT_BUILD_SCRIPT,
+    PROJECT_DOCS_SCRIPT, PROJECT_FORMAT_SCRIPT, PROJECT_LINT_FIX_SCRIPT, PROJECT_LINT_SCRIPT,
+    TSX_VERSION, TYPESCRIPT_ESLINT_VERSION,
+};
+use super::core::package_json::project_package_json::{
+    ProjectDevDependencies, ProjectPackageJson, ProjectScripts,
+};
 use super::core::pnpm_workspace::add_project_definition_to_pnpm_workspace;
 use super::core::rendered_template::{write_rendered_templates, RenderedTemplate};
 use super::core::symlinks::generate_symlinks;
@@ -153,9 +162,10 @@ fn generate_basic_library(
     let mut rendered_templates = generate_with_template(
         None,
         &template_dir,
-        &TemplateManifestData::Library(config_data.clone()),
+        &TemplateManifestData::Library(&config_data),
         &ignore_files,
     )?;
+    rendered_templates.push(generate_library_package_json(config_data, &output_path)?);
     rendered_templates
         .extend(generate_tsconfig(&output_path).with_context(|| ERROR_FAILED_TO_CREATE_TSCONFIG)?);
     rendered_templates.extend(
@@ -221,4 +231,43 @@ fn add_library_to_artifacts(
     }
 
     Ok(rendered_templates)
+}
+
+fn generate_library_package_json(
+    config_data: &LibraryManifestData,
+    base_path: &String,
+) -> Result<RenderedTemplate> {
+    let package_json_buffer = ProjectPackageJson {
+        name: Some(format!(
+            "@{}/{}",
+            config_data.app_name, config_data.library_name
+        )),
+        version: Some("0.1.0".to_string()),
+        description: Some(config_data.description.clone()),
+        keywords: Some(vec![]),
+        license: Some(config_data.license.clone()),
+        author: Some(config_data.author.clone()),
+        scripts: Some(ProjectScripts {
+            build: Some(PROJECT_BUILD_SCRIPT.to_string()),
+            clean: Some(project_clean_script(&config_data.runtime).to_string()),
+            docs: Some(PROJECT_DOCS_SCRIPT.to_string()),
+            format: Some(PROJECT_FORMAT_SCRIPT.to_string()),
+            lint: Some(PROJECT_LINT_SCRIPT.to_string()),
+            lint_fix: Some(PROJECT_LINT_FIX_SCRIPT.to_string()),
+            test: Some(project_test_script(&config_data.test_framework).to_string()),
+            ..Default::default()
+        }),
+        dev_dependencies: Some(ProjectDevDependencies {
+            eslint: Some(ESLINT_VERSION.to_string()),
+            tsx: Some(TSX_VERSION.to_string()),
+            typescript_eslint: Some(TYPESCRIPT_ESLINT_VERSION.to_string()),
+            ..Default::default()
+        }),
+        ..Default::default()
+    };
+    Ok(RenderedTemplate {
+        path: Path::new(base_path).join("package.json"),
+        content: to_string_pretty(&package_json_buffer)?.to_string(),
+        context: Some(ERROR_FAILED_TO_CREATE_LIBRARY_PACKAGE_JSON.to_string()),
+    })
 }

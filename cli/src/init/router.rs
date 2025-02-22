@@ -18,10 +18,7 @@ use crate::{
         ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER, ERROR_FAILED_TO_PARSE_MANIFEST,
         ERROR_FAILED_TO_READ_MANIFEST,
     },
-    core::{
-        base_path::{prompt_base_path, BasePathLocation},
-        manifest::ProjectManifestConfig,
-    },
+    core::base_path::{prompt_base_path, BasePathLocation},
     prompt::{prompt_with_validation, ArrayCompleter},
 };
 
@@ -49,6 +46,8 @@ config_struct!(
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) pascal_case_name: String,
         #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) kebab_case_name: String,
+        #[serde(skip_serializing, skip_deserializing)]
         pub(crate) database: String,
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) db_driver: String,
@@ -58,12 +57,6 @@ config_struct!(
         pub(crate) is_mongo: bool,
     }
 );
-
-impl ProjectManifestConfig for RouterManifestData {
-    fn name(&self) -> &String {
-        &self.router_name
-    }
-}
 
 #[derive(Debug)]
 pub(super) struct RouterCommand;
@@ -134,6 +127,7 @@ impl CliCommand for RouterCommand {
                 router_name: router_name.clone(),
                 camel_case_name: router_name.to_case(Case::Camel),
                 pascal_case_name: router_name.to_case(Case::Pascal),
+                kebab_case_name: router_name.to_case(Case::Kebab),
 
                 database: database.clone(),
                 db_driver: match_database(&database),
@@ -177,7 +171,7 @@ fn generate_basic_router(
     let mut rendered_templates = generate_with_template(
         None,
         &template_dir,
-        &TemplateManifestData::Router(config_data.clone()),
+        &TemplateManifestData::Router(&config_data),
         &ignore_files,
     )?;
     rendered_templates.extend(
