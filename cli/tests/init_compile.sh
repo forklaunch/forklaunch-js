@@ -7,7 +7,10 @@ RUST_BACKTRACE=1 cargo run init application compile-test-node-application -d pos
 cd compile-test-node-application
 
 pnpm install
+pnpm build
 pnpm migrate:init
+
+docker compose -p compile-test-node-application down
 
 cd ..
 
@@ -17,3 +20,5 @@ cd compile-test-bun-application
 
 bun install
 bun migrate:init
+
+docker compose -p compile-test-bun-application down

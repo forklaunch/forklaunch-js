@@ -1,5 +1,48 @@
 # @forklaunch/core
 
+## 0.3.6
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.4.4
+
+## 0.3.5
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/common@0.2.1
+  - @forklaunch/validator@0.4.3
+
+## 0.3.4
+
+### Patch Changes
+
+- fix config injector ergonomics to be much nicer
+- Updated dependencies
+  - @forklaunch/validator@0.4.2
+
+## 0.3.3
+
+### Patch Changes
+
+- Create an actual type from valid config injector since splay dropped methods
+
+## 0.3.2
+
+### Patch Changes
+
+- Change return type of validateConfigSingletons to ValidConfigInjector to ensure validity
+
+## 0.3.1
+
+### Patch Changes
+
+- Validator parse methods now return errors, and config injector now validates class based or schematic singletons, returning a ValidConfigInjector object
+- Updated dependencies
+  - @forklaunch/validator@0.4.1
+
 ## 0.3.0
 
 ### Minor Changes

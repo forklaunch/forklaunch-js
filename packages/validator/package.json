@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/validator",
-  "version": "0.4.0",
+  "version": "0.4.4",
   "description": "Schema validator for ForkLaunch components.",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -59,6 +59,7 @@
   ],
   "scripts": {
     "build": "tsc --noEmit && tsup index.ts src/typebox/index.ts src/zod/index.ts tests/utils/mockSchemaValidator.ts --format cjs,esm --no-splitting --tsconfig tsconfig.json --outDir lib --dts --clean",
+    "check": "depcheck",
     "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
@@ -68,23 +69,23 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@anatine/zod-openapi": "^2.2.6",
+    "@anatine/zod-openapi": "^2.2.7",
     "@forklaunch/common": "workspace:*",
-    "@sinclair/typebox": "^0.34.13",
-    "zod": "^3.24.1"
+    "@sinclair/typebox": "^0.34.25",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@eslint/js": "^9.17.0",
+    "@eslint/js": "^9.20.0",
     "@types/jest": "^29.5.14",
-    "@vitest/coverage-v8": "^2.1.8",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-prettier": "^5.2.1",
-    "globals": "^15.14.0",
+    "@vitest/coverage-v8": "^3.0.5",
+    "eslint-config-prettier": "^10.0.1",
+    "eslint-plugin-prettier": "^5.2.3",
+    "globals": "^15.15.0",
     "jest": "^29.7.0",
     "openapi3-ts": "^4.4.0",
     "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
-    "tsup": "^8.3.5",
-    "typescript-eslint": "^8.19.1"
+    "tsup": "^8.3.6",
+    "typescript-eslint": "^8.24.0"
   }
 }

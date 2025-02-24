@@ -16,11 +16,28 @@ pub(crate) trait ProjectManifestConfig {
     fn name(&self) -> &String;
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub(crate) enum ProjectType {
+    Service,
+    Library,
+    Worker,
+}
+
+impl Content for ProjectType {}
+
+#[derive(Debug, Serialize, Deserialize, Content, Clone)]
+pub(crate) struct ResourceInventory {
+    pub(crate) database: Option<String>,
+    pub(crate) cache: Option<String>,
+}
+
 #[derive(Debug, Serialize, Deserialize, Content, Clone)]
 pub(crate) struct ProjectEntry {
+    pub(crate) r#type: ProjectType,
     pub(crate) name: String,
     pub(crate) port: Option<i32>,
-    pub(crate) database: Option<String>,
+    pub(crate) resources: Option<ResourceInventory>,
+    pub(crate) routers: Option<Vec<String>>,
 }
 
 #[macro_export]

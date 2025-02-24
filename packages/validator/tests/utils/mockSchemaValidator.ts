@@ -93,7 +93,7 @@ export class MockSchemaValidator
         }
       : {
           ok: false,
-          error: 'Some error'
+          errors: [{ path: [], message: 'Some error' }]
         };
   }
   openapi<T extends string>(_schema: T): SchemaObject {

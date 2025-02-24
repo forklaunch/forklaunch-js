@@ -1,5 +1,7 @@
-import { AnySchemaValidator } from '@forklaunch/validator';
-import { BaseEntity } from '../../database/mikro/models/entities/base.entity';
+import {
+  AnySchemaValidator,
+  prettyPrintParseErrors
+} from '@forklaunch/validator';
 import { DtoMapperConstructor } from '../interfaces/dtoMapper.interface';
 import { BaseDtoMapper, construct } from './baseDtoMapper.model';
 
@@ -11,7 +13,7 @@ import { BaseDtoMapper, construct } from './baseDtoMapper.model';
  * @extends {BaseDtoMapper<SV>}
  */
 export abstract class ResponseDtoMapper<
-  Entity extends BaseEntity,
+  Entity,
   SV extends AnySchemaValidator
 > extends BaseDtoMapper<SV> {
   /**
@@ -43,7 +45,7 @@ export abstract class ResponseDtoMapper<
       this.dto
     );
     if (!parsedSchema.ok) {
-      throw new Error(`Invalid DTO: ${parsedSchema.error}`);
+      throw new Error(prettyPrintParseErrors(parsedSchema.errors, 'DTO'));
     }
     return this.dto;
   }
@@ -72,7 +74,7 @@ export abstract class ResponseDtoMapper<
    * @returns {T} - An instance of the T.
    */
   static fromEntity<
-    T extends ResponseDtoMapper<BaseEntity, SV>,
+    T extends ResponseDtoMapper<unknown, SV>,
     SV extends AnySchemaValidator
   >(
     this: DtoMapperConstructor<T, SV>,
@@ -97,7 +99,7 @@ export abstract class ResponseDtoMapper<
    * @throws {Error} - Throws an error if the DTO is invalid.
    */
   static serializeEntityToDto<
-    T extends ResponseDtoMapper<BaseEntity, SV>,
+    T extends ResponseDtoMapper<unknown, SV>,
     SV extends AnySchemaValidator,
     DtoType extends T['_dto']
   >(

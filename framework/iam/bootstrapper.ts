@@ -1,4 +1,9 @@
-import { ConfigInjector, Lifetime } from '@forklaunch/core/services';
+import {
+  ConfigInjector,
+  getEnvVar,
+  Lifetime,
+  ValidConfigInjector
+} from '@forklaunch/core/services';
 import {
   number,
   optional,
@@ -6,6 +11,7 @@ import {
   string
 } from '@forklaunch/framework-core';
 import { EntityManager, ForkOptions, MikroORM } from '@mikro-orm/core';
+import dotenv from 'dotenv';
 import mikroOrmOptionsConfig from './mikro-orm.config';
 import BaseOrganizationService from './services/organization.service';
 import BasePermissionService from './services/permission.service';
@@ -16,7 +22,7 @@ export const configValidator = {
   host: string,
   port: number,
   version: optional(string),
-  swaggerPath: optional(string),
+  docsPath: optional(string),
   passwordEncryptionPublicKeyPath: string,
   entityManager: EntityManager,
   organizationService: BaseOrganizationService,
@@ -27,33 +33,35 @@ export const configValidator = {
 
 export function bootstrap(
   callback: (
-    ci: ConfigInjector<SchemaValidator, typeof configValidator>
+    ci: ValidConfigInjector<SchemaValidator, typeof configValidator>
   ) => void
 ) {
   MikroORM.init(mikroOrmOptionsConfig).then((orm) => {
+    dotenv.config({ path: getEnvVar('ENV_FILE_PATH') });
+
     const configInjector = new ConfigInjector(
       SchemaValidator(),
       configValidator,
       {
         host: {
           lifetime: Lifetime.Singleton,
-          value: process.env.HOST ?? 'localhost'
+          value: getEnvVar('HOST')
         },
         port: {
           lifetime: Lifetime.Singleton,
-          value: Number(process.env.PORT ?? '8000')
+          value: Number(getEnvVar('PORT'))
         },
         version: {
           lifetime: Lifetime.Singleton,
-          value: process.env.VERSION ?? '/v1'
+          value: getEnvVar('VERSION')
         },
-        swaggerPath: {
+        docsPath: {
           lifetime: Lifetime.Singleton,
-          value: process.env.SWAGGER_PATH ?? '/swagger'
+          value: getEnvVar('DOCS_PATH')
         },
         passwordEncryptionPublicKeyPath: {
           lifetime: Lifetime.Singleton,
-          value: process.env.PASSWORD_ENCRYPTION_PUBLIC_KEY_PATH ?? 'public.pem'
+          value: getEnvVar('PASSWORD_ENCRYPTION_PUBLIC_KEY_PATH')
         },
         entityManager: {
           lifetime: Lifetime.Scoped,
@@ -117,10 +125,8 @@ export function bootstrap(
         }
       }
     );
-    configInjector.validateConfigSingletons({
-      passwordEncryptionPublicKeyPath:
-        process.env.PASSWORD_ENCRYPTION_PUBLIC_KEY_PATH
-    });
-    callback(configInjector);
+    callback(
+      configInjector.validateConfigSingletons(getEnvVar('ENV_FILE_PATH'))
+    );
   });
 }

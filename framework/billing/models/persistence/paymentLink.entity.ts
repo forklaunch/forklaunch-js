@@ -1,4 +1,4 @@
-import { BaseEntity } from '@forklaunch/core/database';
+import { BaseEntity } from '@forklaunch/framework-core';
 import { Entity, Enum, Property } from '@mikro-orm/core';
 import { CurrencyEnum } from '../enum/currency.enum';
 
@@ -11,8 +11,8 @@ export class PaymentLink extends BaseEntity {
   @Enum(() => CurrencyEnum)
   currency!: CurrencyEnum;
 
-  @Property()
-  description!: string;
+  @Property({ nullable: true })
+  description?: string;
 
   @Property({ type: 'json', nullable: true })
   metadata?: unknown;

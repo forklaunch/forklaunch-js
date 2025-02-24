@@ -1,5 +1,7 @@
-import { AnySchemaValidator } from '@forklaunch/validator';
-import { BaseEntity } from '../../database/mikro/models/entities/base.entity';
+import {
+  AnySchemaValidator,
+  prettyPrintParseErrors
+} from '@forklaunch/validator';
 import { DtoMapperConstructor } from '../interfaces/dtoMapper.interface';
 import { BaseDtoMapper, construct } from './baseDtoMapper.model';
 
@@ -11,7 +13,7 @@ import { BaseDtoMapper, construct } from './baseDtoMapper.model';
  * @extends {BaseDtoMapper<SV>}
  */
 export abstract class RequestDtoMapper<
-  Entity extends BaseEntity,
+  Entity,
   SV extends AnySchemaValidator
 > extends BaseDtoMapper<SV> {
   /**
@@ -42,7 +44,7 @@ export abstract class RequestDtoMapper<
       json
     );
     if (!parsedSchema.ok) {
-      throw new Error(`Invalid DTO: ${parsedSchema.error}`);
+      throw new Error(prettyPrintParseErrors(parsedSchema.errors, 'DTO'));
     }
     this.dto = json;
     return this;
@@ -74,7 +76,7 @@ export abstract class RequestDtoMapper<
    * @returns {T} - An instance of the T.
    */
   static fromDto<
-    T extends RequestDtoMapper<BaseEntity, SV>,
+    T extends RequestDtoMapper<unknown, SV>,
     SV extends AnySchemaValidator,
     JsonType extends T['_dto']
   >(this: DtoMapperConstructor<T, SV>, schemaValidator: SV, json: JsonType): T {
@@ -94,7 +96,7 @@ export abstract class RequestDtoMapper<
    * @returns {T['_Entity']} - The entity.
    */
   static deserializeDtoToEntity<
-    T extends RequestDtoMapper<BaseEntity, SV>,
+    T extends RequestDtoMapper<unknown, SV>,
     SV extends AnySchemaValidator,
     JsonType extends T['_dto']
   >(

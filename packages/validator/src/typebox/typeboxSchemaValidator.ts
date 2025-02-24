@@ -174,8 +174,8 @@ export class TypeboxSchemaValidator
   )
     .Decode((value) => {
       if (typeof value === 'string') {
-        if ((value as string).toLowerCase() === 'true') return true;
-        if ((value as string).toLowerCase() === 'false') return false;
+        if (value.toLowerCase() === 'true') return true;
+        return false;
       } else {
         return value;
       }
@@ -230,25 +230,6 @@ export class TypeboxSchemaValidator
       return schema.const;
     }
     return schema[Kind].toLowerCase();
-  }
-
-  /**
-   * Pretty print TypeBox errors.
-   *
-   * @param {ValueError[]} errors
-   * @returns
-   */
-  private prettyPrintTypeBoxErrors(errors: ValueError[]): string | undefined {
-    if (!errors || errors.length === 0) return;
-
-    const errorMessages = errors.map((err, index) => {
-      const path =
-        err.path.length > 0 ? err.path.split('/').slice(1).join(' > ') : 'root';
-      return `${index + 1}. Path: ${path}\n   Message: ${err.message}`;
-    });
-    return `Validation failed with the following errors:\n${errorMessages.join(
-      '\n\n'
-    )}`;
   }
 
   /**
@@ -429,7 +410,10 @@ export class TypeboxSchemaValidator
         }
       : {
           ok: false,
-          error: this.prettyPrintTypeBoxErrors(errors)
+          errors: errors.map((error) => ({
+            path: error.path.split('/').slice(1),
+            message: error.message
+          }))
         };
   }
 

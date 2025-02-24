@@ -1,4 +1,7 @@
-import { AnySchemaValidator } from '@forklaunch/validator';
+import {
+  AnySchemaValidator,
+  prettyPrintParseErrors
+} from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
 import { isResponseShape } from '../../guards/isResponseShape';
 import {
@@ -56,10 +59,12 @@ export function parse<
     switch (req.contractDetails.options?.requestValidation) {
       default:
       case 'error':
-        next?.(new Error(`Invalid request: ${parsedRequest.error}`));
+        next?.(
+          new Error(prettyPrintParseErrors(parsedRequest.errors, 'Request'))
+        );
         break;
       case 'warning':
-        console.warn(`Invalid request: ${parsedRequest.error}`);
+        console.warn(prettyPrintParseErrors(parsedRequest.errors, 'Request'));
         break;
       case 'none':
         break;

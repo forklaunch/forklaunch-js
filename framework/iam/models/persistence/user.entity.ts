@@ -1,4 +1,4 @@
-import { BaseEntity } from '@forklaunch/core/database';
+import { BaseEntity } from '@forklaunch/framework-core';
 import {
   Collection,
   Entity,
@@ -28,8 +28,8 @@ export class User extends BaseEntity {
   @Property({ nullable: true })
   phoneNumber?: string;
 
-  @ManyToOne(() => Organization)
-  organization!: Organization;
+  @ManyToOne(() => Organization, { nullable: true })
+  organization?: Organization;
 
   @ManyToMany(() => Role)
   roles = new Collection<Role>(this);

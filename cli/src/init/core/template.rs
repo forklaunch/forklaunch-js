@@ -8,7 +8,7 @@ use crate::{
     constants::error_failed_to_create_dir,
     init::{
         application::ApplicationManifestData, library::LibraryManifestData,
-        service::ServiceManifestData, TEMPLATES_DIR,
+        router::RouterManifestData, service::ServiceManifestData, TEMPLATES_DIR,
     },
 };
 
@@ -21,10 +21,11 @@ pub(crate) struct PathIO {
 }
 
 #[derive(Debug)]
-pub(crate) enum TemplateManifestData {
-    Application(ApplicationManifestData),
-    Service(ServiceManifestData),
-    Library(LibraryManifestData),
+pub(crate) enum TemplateManifestData<'a> {
+    Application(&'a ApplicationManifestData),
+    Service(&'a ServiceManifestData),
+    Library(&'a LibraryManifestData),
+    Router(&'a RouterManifestData),
 }
 
 pub(crate) fn get_directory_filenames(path: &PathIO) -> Result<Vec<&File>> {
@@ -62,7 +63,7 @@ fn database_replacements(database: &String, template: String) -> String {
 }
 
 fn forklaunch_replacements(app_name: &String, template: String) -> String {
-    template.replace("@forklaunch/framework-", format!("@{}/", app_name).as_str())
+    template.replace("@forklaunch/framework-", format!("@{app_name}/").as_str())
 }
 
 pub(crate) fn generate_with_template(
@@ -79,7 +80,17 @@ pub(crate) fn generate_with_template(
     };
 
     for entry in get_directory_filenames(&template_dir)? {
-        let output_path = output_dir.join(&entry.path().file_name().unwrap());
+        let output_path_template =
+            Template::new(entry.path().file_name().unwrap().to_string_lossy())?;
+        let output_path = output_dir.join(match data {
+            TemplateManifestData::Application(config_data) => {
+                output_path_template.render(config_data)
+            }
+            TemplateManifestData::Service(config_data) => output_path_template.render(config_data),
+            TemplateManifestData::Library(config_data) => output_path_template.render(config_data),
+            TemplateManifestData::Router(config_data) => output_path_template.render(config_data),
+        });
+
         if !output_path.exists() {
             create_dir_all(output_path.parent().unwrap())
                 .with_context(|| error_failed_to_create_dir(&output_path.parent().unwrap()))?;
@@ -94,15 +105,18 @@ pub(crate) fn generate_with_template(
             },
         )?)?;
         let rendered = match data {
-            TemplateManifestData::Application(data) => {
-                forklaunch_replacements(&data.app_name, tpl.render(&data))
+            TemplateManifestData::Application(config_data) => {
+                forklaunch_replacements(&config_data.app_name, tpl.render(&config_data))
             }
-            TemplateManifestData::Service(data) => database_replacements(
-                &data.database,
-                forklaunch_replacements(&data.app_name, tpl.render(&data)),
+            TemplateManifestData::Service(config_data) => database_replacements(
+                &config_data.database,
+                forklaunch_replacements(&config_data.app_name, tpl.render(&config_data)),
             ),
-            TemplateManifestData::Library(data) => {
-                forklaunch_replacements(&data.app_name, tpl.render(&data))
+            TemplateManifestData::Library(config_data) => {
+                forklaunch_replacements(&config_data.app_name, tpl.render(&config_data))
+            }
+            TemplateManifestData::Router(config_data) => {
+                forklaunch_replacements(&config_data.app_name, tpl.render(&config_data))
             }
         };
         if !output_path.exists()
@@ -144,4 +158,23 @@ pub(crate) fn generate_with_template(
     }
 
     Ok(rendered_templates)
+}
+
+pub(crate) fn get_routers_from_standard_package(package: String) -> Option<Vec<String>> {
+    match package.as_str() {
+        "billing" => Some(vec![
+            String::from("billingPortal"),
+            String::from("checkoutSession"),
+            String::from("paymentLink"),
+            String::from("plan"),
+            String::from("subscription"),
+        ]),
+        "iam" => Some(vec![
+            String::from("organization"),
+            String::from("permission"),
+            String::from("role"),
+            String::from("user"),
+        ]),
+        _ => None,
+    }
 }

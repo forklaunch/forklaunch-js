@@ -1,4 +1,4 @@
-import { BaseEntity } from '@forklaunch/core/database';
+import { BaseEntity } from '@forklaunch/framework-core';
 import { ArrayType, Entity, Enum, Property, Unique } from '@mikro-orm/core';
 import { BillingProviderEnum } from '../enum/billingProvider.enum';
 import { PlanCadenceEnum } from '../enum/planCadence.enum';

@@ -1,5 +1,6 @@
 import {
   AnySchemaValidator,
+  prettyPrintParseErrors,
   Schema,
   SchemaValidator
 } from '@forklaunch/validator';
@@ -79,7 +80,7 @@ export abstract class BaseDtoMapper<SV extends AnySchemaValidator> {
       _dto
     );
     if (!parsedSchema.ok) {
-      throw new Error(`Invalid DTO: ${parsedSchema.error}`);
+      throw new Error(prettyPrintParseErrors(parsedSchema.errors, 'DTO'));
     }
     this._dto = _dto as unknown as Schema<this['schema'], SV>;
   }

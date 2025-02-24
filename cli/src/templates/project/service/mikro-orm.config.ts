@@ -1,9 +1,12 @@
-import { ConfigInjector, Lifetime } from '@forklaunch/core/services';
+import { ConfigInjector, getEnvVar, Lifetime } from '@forklaunch/core/services';
 import { Migrator } from '@mikro-orm/migrations{{#is_mongo}}-mongodb{{/is_mongo}}';
 import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
 import { number, SchemaValidator, string } from '@{{app_name}}/core';{{^is_mongo}}
 import { Platform, TextType, Type } from '@mikro-orm/core';{{/is_mongo}}
 import { {{db_driver}} } from '@mikro-orm/{{database}}';
+import dotenv from 'dotenv';
+
+dotenv.config({ path: getEnvVar('ENV_FILE_PATH') });
 
 const configInjector = new ConfigInjector(
   SchemaValidator(),
@@ -18,64 +21,55 @@ const configInjector = new ConfigInjector(
   {
     dbName: {
       lifetime: Lifetime.Singleton,
-      value: process.env.DB_NAME ?? '{{app_name}}-{{service_name}}-dev'
+      value: getEnvVar('DB_NAME')
     },
     host: {
       lifetime: Lifetime.Singleton,
-      value: process.env.DB_HOST ?? 'localhost'
+      value: getEnvVar('DB_HOST')
     },
     user: {
       lifetime: Lifetime.Singleton,
-      value: process.env.DB_USER ?? '{{database}}'
+      value: getEnvVar('DB_USER')
     },
     password: {
       lifetime: Lifetime.Singleton,
-      value: process.env.DB_PASSWORD ?? '{{database}}'
+      value: getEnvVar('DB_PASSWORD')
     },
     port: {
       lifetime: Lifetime.Singleton,
-      value: Number(process.env.DB_PORT ?? {{#is_postgres}}5432{{/is_postgres}}{{#is_mongo}}27017{{/is_mongo}})
+      value: Number(getEnvVar('DB_PORT'))
     },
     environment: {
       lifetime: Lifetime.Singleton,
-      value: process.env.NODE_ENV ?? 'development'
+      value: getEnvVar('ENV')
     }
   }
 );
 
-if (
-  !configInjector.validateConfigSingletons({
-    dbName: process.env.DB_NAME,
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    port: Number(process.env.DB_PORT),
-    environment: process.env.NODE_ENV
-  })
-) {
-  throw new Error('Invalid environment variables supplied.');
-}{{#is_mongo}}
+const validConfigInjector = configInjector.validateConfigSingletons(
+  getEnvVar('ENV_FILE_PATH')
+);{{#is_mongo}}
 
-const clientUrl = `mongodb://${configInjector.resolve(
+const clientUrl = `mongodb://${validConfigInjector.resolve(
     'user'
-  )}:${configInjector.resolve('password')}@${configInjector.resolve(
+  )}:${validConfigInjector.resolve('password')}@${validConfigInjector.resolve(
     'host'
-  )}:${configInjector.resolve('port')}/${configInjector.resolve(
+  )}:${validConfigInjector.resolve('port')}/${validConfigInjector.resolve(
     'dbName'
   )}?authSource=admin&directConnection=true&replicaSet=rs0`
 {{/is_mongo}}
 const mikroOrmOptionsConfig = {
   driver: {{db_driver}},{{#is_mongo}}
   clientUrl,{{/is_mongo}}{{^is_mongo}}
-  dbName: configInjector.resolve('dbName'),
-  host: configInjector.resolve('host'),
-  user: configInjector.resolve('user'),
-  password: configInjector.resolve('password'),
-  port: configInjector.resolve('port'),{{/is_mongo}}
+  dbName: validConfigInjector.resolve('dbName'),
+  host: validConfigInjector.resolve('host'),
+  user: validConfigInjector.resolve('user'),
+  password: validConfigInjector.resolve('password'),
+  port: validConfigInjector.resolve('port'),{{/is_mongo}}
   entities: ['dist/**/*.entity.js'],
   entitiesTs: ['models/persistence/**/*.entity.ts'],
   metadataProvider: TsMorphMetadataProvider,
-  debug: configInjector.resolve('environment') === 'development',
+  debug: validConfigInjector.resolve('environment') === 'development',
   extensions: [Migrator]{{^is_mongo}},
   discovery: {
     getMappedType(type: string, platform: Platform) {

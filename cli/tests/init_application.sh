@@ -17,7 +17,7 @@ for database in "${databases[@]}"; do
             continue
         fi
         for test_framework in "${test_frameworks[@]}"; do
-            app_name="application-${validator}-${framework}-${runtime}-${test_framework}"
+            app_name="application-${database}-${validator}-${framework}-${runtime}-${test_framework}"
 
             RUST_BACKTRACE=1 cargo run init application "$app_name" \
                 -d "$database" \

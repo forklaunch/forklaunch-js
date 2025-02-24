@@ -1,4 +1,4 @@
-import { ConfigInjector, Lifetime } from '@forklaunch/core/services';
+import { ConfigInjector, getEnvVar, Lifetime } from '@forklaunch/core/services';
 import { number, SchemaValidator, string } from '@forklaunch/framework-core';
 import { Migrator } from '@mikro-orm/migrations';
 // import { MongoDriver } from '@mikro-orm/mongodb';
@@ -6,7 +6,10 @@ import { Migrator } from '@mikro-orm/migrations';
 import { Platform, TextType, Type } from '@mikro-orm/core';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
+import dotenv from 'dotenv';
 // import { SqliteDriver } from '@mikro-orm/sqlite';
+
+dotenv.config({ path: getEnvVar('ENV_FILE_PATH') });
 
 const configInjector = new ConfigInjector(
   SchemaValidator(),
@@ -21,52 +24,43 @@ const configInjector = new ConfigInjector(
   {
     dbName: {
       lifetime: Lifetime.Singleton,
-      value: process.env.DB_NAME ?? 'forklaunch-dev-iam'
+      value: getEnvVar('DB_NAME')
     },
     host: {
       lifetime: Lifetime.Singleton,
-      value: process.env.DB_HOST ?? 'localhost'
+      value: getEnvVar('DB_HOST')
     },
     user: {
       lifetime: Lifetime.Singleton,
-      value: process.env.DB_USER ?? 'postgres'
+      value: getEnvVar('DB_USER')
     },
     password: {
       lifetime: Lifetime.Singleton,
-      value: process.env.DB_PASSWORD ?? 'postgres'
+      value: getEnvVar('DB_PASSWORD')
     },
     port: {
       lifetime: Lifetime.Singleton,
-      value: Number(process.env.DB_PORT ?? 5432)
+      value: Number(getEnvVar('DB_PORT'))
     },
     environment: {
       lifetime: Lifetime.Singleton,
-      value: process.env.NODE_ENV ?? 'development'
+      value: getEnvVar('ENV')
     }
   }
 );
 
-if (
-  !configInjector.validateConfigSingletons({
-    dbName: process.env.DB_NAME,
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    port: Number(process.env.DB_PORT),
-    environment: process.env.NODE_ENV
-  })
-) {
-  throw new Error('Invalid environment variables supplied.');
-}
+const validConfigInjector = configInjector.validateConfigSingletons(
+  getEnvVar('ENV_FILE_PATH') ?? '.env'
+);
 
 const mikroOrmOptionsConfig = {
   driver: PostgreSqlDriver,
-  dbName: configInjector.resolve('dbName'),
-  host: configInjector.resolve('host'),
-  user: configInjector.resolve('user'),
-  password: configInjector.resolve('password'),
-  port: configInjector.resolve('port'),
-  entities: ['dist/**/*.entity.js'],
+  dbName: validConfigInjector.resolve('dbName'),
+  host: validConfigInjector.resolve('host'),
+  user: validConfigInjector.resolve('user'),
+  password: validConfigInjector.resolve('password'),
+  port: validConfigInjector.resolve('port'),
+  entities: ['dist/**/*.entity.{js,mjs,cjs}'],
   entitiesTs: ['models/persistence/**/*.entity.ts'],
   metadataProvider: TsMorphMetadataProvider,
   debug: true,

@@ -1,9 +1,11 @@
 use anyhow::{Context, Result};
 use clap::{Arg, ArgMatches, Command};
+use convert_case::{Case, Casing};
 use ramhorns::Content;
 use rustyline::history::DefaultHistory;
 use rustyline::Editor;
 use serde::{Deserialize, Serialize};
+use serde_json::to_string_pretty;
 use std::fs::read_to_string;
 use std::io::Write;
 use std::path::Path;
@@ -15,16 +17,24 @@ use crate::constants::{
     ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
     ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON,
     ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE, ERROR_FAILED_TO_CREATE_GITIGNORE,
-    ERROR_FAILED_TO_CREATE_SYMLINKS, ERROR_FAILED_TO_CREATE_TSCONFIG,
-    ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST,
+    ERROR_FAILED_TO_CREATE_LIBRARY_PACKAGE_JSON, ERROR_FAILED_TO_CREATE_SYMLINKS,
+    ERROR_FAILED_TO_CREATE_TSCONFIG, ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST,
 };
-use crate::core::base_path::prompt_base_path;
-use crate::core::manifest::ProjectManifestConfig;
+use crate::core::base_path::{prompt_base_path, BasePathLocation};
+use crate::core::manifest::{ProjectManifestConfig, ProjectType};
 use crate::prompt::{prompt_with_validation, prompt_without_validation, ArrayCompleter};
 
 use super::core::gitignore::generate_gitignore;
 use super::core::manifest::add_project_definition_to_manifest;
 use super::core::package_json::add_project_definition_to_package_json;
+use super::core::package_json::package_json_constants::{
+    project_clean_script, project_test_script, ESLINT_VERSION, PROJECT_BUILD_SCRIPT,
+    PROJECT_DOCS_SCRIPT, PROJECT_FORMAT_SCRIPT, PROJECT_LINT_FIX_SCRIPT, PROJECT_LINT_SCRIPT,
+    TSX_VERSION, TYPESCRIPT_ESLINT_VERSION,
+};
+use super::core::package_json::project_package_json::{
+    ProjectDevDependencies, ProjectPackageJson, ProjectScripts,
+};
 use super::core::pnpm_workspace::add_project_definition_to_pnpm_workspace;
 use super::core::rendered_template::{write_rendered_templates, RenderedTemplate};
 use super::core::symlinks::generate_symlinks;
@@ -37,6 +47,8 @@ config_struct!(
     pub(crate) struct LibraryManifestData {
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) library_name: String,
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) camel_case_name: String,
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) description: String,
     }
@@ -88,11 +100,22 @@ impl CliCommand for LibraryCommand {
             matches,
             "Enter library name: ",
             None,
-            |input: &str| !input.is_empty(),
-            |_| "Library name cannot be empty. Please try again".to_string(),
+            |input: &str| {
+                !input.is_empty()
+                    && !input.contains(' ')
+                    && !input.contains('\t')
+                    && !input.contains('\n')
+                    && !input.contains('\r')
+            },
+            |_| "Library name cannot be empty or include spaces. Please try again".to_string(),
         )?;
 
-        let base_path = prompt_base_path(&mut line_editor, &mut stdout, matches)?;
+        let base_path = prompt_base_path(
+            &mut line_editor,
+            &mut stdout,
+            matches,
+            &BasePathLocation::Library,
+        )?;
 
         let description = prompt_without_validation(
             &mut line_editor,
@@ -108,6 +131,7 @@ impl CliCommand for LibraryCommand {
 
         let mut config_data: LibraryManifestData = LibraryManifestData {
             library_name: library_name.clone(),
+            camel_case_name: library_name.to_case(Case::Camel),
             description: description.clone(),
 
             ..from_str(&read_to_string(config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?)
@@ -148,9 +172,10 @@ fn generate_basic_library(
     let mut rendered_templates = generate_with_template(
         None,
         &template_dir,
-        &TemplateManifestData::Library(config_data.clone()),
+        &TemplateManifestData::Library(&config_data),
         &ignore_files,
     )?;
+    rendered_templates.push(generate_library_package_json(config_data, &output_path)?);
     rendered_templates
         .extend(generate_tsconfig(&output_path).with_context(|| ERROR_FAILED_TO_CREATE_TSCONFIG)?);
     rendered_templates.extend(
@@ -174,8 +199,9 @@ fn add_library_to_artifacts(
     config_data: &mut LibraryManifestData,
     base_path: &String,
 ) -> Result<Vec<RenderedTemplate>> {
-    let forklaunch_definition_buffer = add_project_definition_to_manifest(config_data, None, None)
-        .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
+    let forklaunch_definition_buffer =
+        add_project_definition_to_manifest(ProjectType::Library, config_data, None, None, None)
+            .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
     let mut package_json_buffer: Option<String> = None;
     if config_data.runtime == "bun" {
         package_json_buffer = Some(
@@ -215,4 +241,43 @@ fn add_library_to_artifacts(
     }
 
     Ok(rendered_templates)
+}
+
+fn generate_library_package_json(
+    config_data: &LibraryManifestData,
+    base_path: &String,
+) -> Result<RenderedTemplate> {
+    let package_json_buffer = ProjectPackageJson {
+        name: Some(format!(
+            "@{}/{}",
+            config_data.app_name, config_data.library_name
+        )),
+        version: Some("0.1.0".to_string()),
+        description: Some(config_data.description.clone()),
+        keywords: Some(vec![]),
+        license: Some(config_data.license.clone()),
+        author: Some(config_data.author.clone()),
+        scripts: Some(ProjectScripts {
+            build: Some(PROJECT_BUILD_SCRIPT.to_string()),
+            clean: Some(project_clean_script(&config_data.runtime).to_string()),
+            docs: Some(PROJECT_DOCS_SCRIPT.to_string()),
+            format: Some(PROJECT_FORMAT_SCRIPT.to_string()),
+            lint: Some(PROJECT_LINT_SCRIPT.to_string()),
+            lint_fix: Some(PROJECT_LINT_FIX_SCRIPT.to_string()),
+            test: Some(project_test_script(&config_data.test_framework).to_string()),
+            ..Default::default()
+        }),
+        dev_dependencies: Some(ProjectDevDependencies {
+            eslint: Some(ESLINT_VERSION.to_string()),
+            tsx: Some(TSX_VERSION.to_string()),
+            typescript_eslint: Some(TYPESCRIPT_ESLINT_VERSION.to_string()),
+            ..Default::default()
+        }),
+        ..Default::default()
+    };
+    Ok(RenderedTemplate {
+        path: Path::new(base_path).join("package.json"),
+        content: to_string_pretty(&package_json_buffer)?.to_string(),
+        context: Some(ERROR_FAILED_TO_CREATE_LIBRARY_PACKAGE_JSON.to_string()),
+    })
 }

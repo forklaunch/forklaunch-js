@@ -1,4 +1,7 @@
-import { AnySchemaValidator } from '@forklaunch/validator';
+import {
+  AnySchemaValidator,
+  prettyPrintParseErrors
+} from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
 import {
   ForklaunchNextFunction,
@@ -65,15 +68,20 @@ export function parse<
   );
   const parseErrors: string[] = [];
   if (!parsedHeaders.ok) {
-    parseErrors.push(
-      `${parsedHeaders.error ? `Header ${parsedHeaders.error}` : ''}`
-    );
+    const headerErrors = prettyPrintParseErrors(parsedHeaders.errors, 'Header');
+    if (headerErrors) {
+      parseErrors.push(headerErrors);
+    }
   }
 
   if (!parsedResponse.ok) {
-    parseErrors.push(
-      `${parsedResponse.error ? `Response ${parsedResponse.error}` : ''}`
+    const responseErrors = prettyPrintParseErrors(
+      parsedResponse.errors,
+      'Response'
     );
+    if (responseErrors) {
+      parseErrors.push(responseErrors);
+    }
   }
 
   if (parseErrors.length > 0) {

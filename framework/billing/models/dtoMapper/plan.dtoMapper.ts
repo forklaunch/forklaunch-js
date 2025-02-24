@@ -29,7 +29,7 @@ export class CreatePlanDtoMapper extends RequestDtoMapper<
     description: optional(string),
     price: number,
     cadence: enum_(PlanCadenceEnum),
-    features: optional(array(string)),
+    features: array(string),
     extraFields: optional(unknown),
     externalId: string,
     billingProvider: optional(enum_(BillingProviderEnum)),
@@ -37,25 +37,7 @@ export class CreatePlanDtoMapper extends RequestDtoMapper<
   };
 
   toEntity(): Plan {
-    const plan = new Plan();
-    plan.type = this.dto.type;
-    plan.name = this.dto.name;
-    if (this.dto.description) {
-      plan.description = this.dto.description;
-    }
-    plan.price = this.dto.price;
-    plan.cadence = this.dto.cadence;
-    plan.features = this.dto.features ?? [];
-    if (this.dto.extraFields) {
-      plan.extraFields = this.dto.extraFields;
-    }
-    plan.externalId = this.dto.externalId;
-    if (this.dto.billingProvider) {
-      plan.billingProvider = this.dto.billingProvider;
-    }
-    plan.active = this.dto.active ?? false;
-
-    return plan;
+    return Plan.create(this.dto);
   }
 }
 
@@ -79,39 +61,7 @@ export class UpdatePlanDtoMapper extends RequestDtoMapper<
   };
 
   toEntity(): Plan {
-    const plan = new Plan();
-    if (this.dto.type) {
-      plan.type = this.dto.type;
-    }
-    if (this.dto.name) {
-      plan.name = this.dto.name;
-    }
-    if (this.dto.description) {
-      plan.description = this.dto.description;
-    }
-    if (this.dto.price) {
-      plan.price = this.dto.price;
-    }
-    if (this.dto.cadence) {
-      plan.cadence = this.dto.cadence;
-    }
-    if (this.dto.features) {
-      plan.features = this.dto.features;
-    }
-    if (this.dto.extraFields) {
-      plan.extraFields = this.dto.extraFields;
-    }
-    if (this.dto.externalId) {
-      plan.externalId = this.dto.externalId;
-    }
-    if (this.dto.billingProvider) {
-      plan.billingProvider = this.dto.billingProvider;
-    }
-    if (this.dto.active) {
-      plan.active = this.dto.active;
-    }
-
-    return plan;
+    return Plan.update(this.dto);
   }
 }
 
@@ -134,28 +84,7 @@ export class PlanDtoMapper extends ResponseDtoMapper<Plan, SchemaValidator> {
   };
 
   fromEntity(plan: Plan): this {
-    this.dto = {
-      id: plan.name,
-      type: plan.type,
-      name: plan.name,
-      price: plan.price,
-      cadence: plan.cadence,
-      externalId: plan.externalId,
-      active: plan.active,
-      createdAt: plan.createdAt,
-      updatedAt: plan.updatedAt
-    };
-
-    if (plan.description) {
-      this.dto.description = plan.description;
-    }
-    if (plan.features) {
-      this.dto.features = plan.features;
-    }
-    if (plan.billingProvider) {
-      this.dto.billingProvider = plan.billingProvider;
-    }
-
+    this.dto = plan.read();
     return this;
   }
 }

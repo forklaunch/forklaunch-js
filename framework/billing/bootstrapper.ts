@@ -1,5 +1,5 @@
 import { RedisTtlCache } from '@forklaunch/core/cache';
-import { ConfigInjector, Lifetime } from '@forklaunch/core/services';
+import { ConfigInjector, getEnvVar, Lifetime } from '@forklaunch/core/services';
 import {
   number,
   optional,
@@ -7,18 +7,19 @@ import {
   string
 } from '@forklaunch/framework-core';
 import { EntityManager, ForkOptions, MikroORM } from '@mikro-orm/core';
+import dotenv from 'dotenv';
 import mikroOrmOptionsConfig from './mikro-orm.config';
 import { BaseCheckoutSessionService } from './services/checkoutSession.service';
 import { BasePaymentLinkService } from './services/paymentLink.service';
 import { BasePlanService } from './services/plan.service';
 import { BaseSubscriptionService } from './services/subscription.service';
-
+//! defines the configuration schema for the application
 export const configValidator = {
   redisUrl: string,
   host: string,
   port: number,
   version: optional(string),
-  swaggerPath: optional(string),
+  docsPath: optional(string),
   entityManager: EntityManager,
   ttlCache: RedisTtlCache,
   checkoutSessionService: BaseCheckoutSessionService,
@@ -26,36 +27,38 @@ export const configValidator = {
   planService: BasePlanService,
   subscriptionService: BaseSubscriptionService
 };
-
+//! bootstrap function that initializes the application
 export function bootstrap(
   callback: (
     ci: ConfigInjector<SchemaValidator, typeof configValidator>
   ) => void
 ) {
   MikroORM.init(mikroOrmOptionsConfig).then((orm) => {
+    dotenv.config({ path: getEnvVar('ENV_FILE_PATH') });
+
     const configInjector = new ConfigInjector(
       SchemaValidator(),
       configValidator,
       {
         redisUrl: {
           lifetime: Lifetime.Singleton,
-          value: process.env.REDIS_URL ?? ''
+          value: getEnvVar('REDIS_URL')
         },
         host: {
           lifetime: Lifetime.Singleton,
-          value: process.env.HOST ?? 'localhost'
+          value: getEnvVar('HOST')
         },
         port: {
           lifetime: Lifetime.Singleton,
-          value: Number(process.env.PORT ?? '8000')
+          value: Number(getEnvVar('PORT'))
         },
         version: {
           lifetime: Lifetime.Singleton,
-          value: process.env.VERSION ?? '/v1'
+          value: getEnvVar('VERSION')
         },
-        swaggerPath: {
+        docsPath: {
           lifetime: Lifetime.Singleton,
-          value: process.env.SWAGGER_PATH ?? '/swagger'
+          value: getEnvVar('DOCS_PATH')
         },
         entityManager: {
           lifetime: Lifetime.Scoped,
@@ -67,7 +70,7 @@ export function bootstrap(
         ttlCache: {
           lifetime: Lifetime.Singleton,
           value: new RedisTtlCache(60 * 60 * 1000, {
-            url: process.env.REDIS_URL ?? ''
+            url: getEnvVar('REDIS_URL')
           })
         },
         checkoutSessionService: {
@@ -89,15 +92,8 @@ export function bootstrap(
         }
       }
     );
-
-    if (
-      !configInjector.validateConfigSingletons({
-        redisUrl: process.env.REDIS_URL
-      })
-    ) {
-      throw new Error('Invalid environment variables supplied.');
-    }
-
-    callback(configInjector);
+    callback(
+      configInjector.validateConfigSingletons(getEnvVar('ENV_FILE_PATH'))
+    );
   });
 }

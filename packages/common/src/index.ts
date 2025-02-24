@@ -5,3 +5,4 @@ export * from './types/makePropertyOptionalIfChildrenOptional.types';
 export * from './types/prettify.types';
 export * from './types/removeTrailingSlash.types';
 export * from './utils/extractArgumentNames';
+export * from './utils/stripUndefinedProperties';

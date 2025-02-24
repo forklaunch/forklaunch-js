@@ -1,14 +1,20 @@
 import { extractArgumentNames, isNever } from '@forklaunch/common';
 import {
   AnySchemaValidator,
+  IdiomaticSchema,
   ParseResult,
+  prettyPrintParseErrors,
   SchemaValidator
 } from '@forklaunch/validator';
+import { isConstructed } from './guards/isConstructed';
+import { isConstructor } from './guards/isConstructor';
 import {
   ConfigValidator,
   Constructed,
   Lifetime,
   ResolvedConfigValidator,
+  SchemaConstructor,
+  SchemaFunction,
   Singleton
 } from './types/configInjector.types';
 
@@ -96,21 +102,118 @@ export class ConfigInjector<
     this.loadSingletons();
   }
 
-  validateConfigSingletons(
-    config: Partial<ResolvedConfigValidator<SV, CV>>
-  ): ParseResult<unknown> {
-    return (this.schemaValidator as SchemaValidator).parse(
-      (this.schemaValidator as SchemaValidator).schemify(
-        Object.fromEntries(
-          Object.entries(this.configShapes).filter(
-            ([key, value]) =>
-              this.dependenciesDefinition[key].lifetime ===
-                Lifetime.Singleton &&
-              (this.schemaValidator as SchemaValidator).isSchema(value)
+  safeValidateConfigSingletons(): ParseResult<ValidConfigInjector<SV, CV>> {
+    const validNonSchemaSingletons = Object.entries(this.configShapes).reduce<
+      ParseResult<ResolvedConfigValidator<SV, CV>>
+    >(
+      (acc, [key, value]) => {
+        if (
+          this.dependenciesDefinition[key].lifetime === Lifetime.Singleton &&
+          !(this.schemaValidator as SchemaValidator).isSchema<
+            SchemaFunction<SV> | SchemaConstructor<SV> | IdiomaticSchema<SV>
+          >(value) &&
+          isConstructor(value)
+        ) {
+          if (!(this.dependenciesDefinition[key].value instanceof value)) {
+            const expected = value.name;
+            const receivedValue: unknown =
+              this.dependenciesDefinition[key].value;
+            const received = isConstructed(receivedValue)
+              ? receivedValue.constructor.name
+              : typeof receivedValue;
+
+            if (acc.ok) {
+              acc = {
+                ok: false,
+                errors: []
+              };
+            }
+            acc.errors?.push({
+              message: `Expected ${expected}, received ${received}`,
+              path: [key]
+            });
+          } else {
+            if (acc.ok) {
+              acc = {
+                ok: true,
+                value: {
+                  ...acc.value,
+                  [key]: this.dependenciesDefinition[key].value
+                }
+              };
+            }
+          }
+          return acc;
+        }
+        return acc;
+      },
+      {
+        ok: true,
+        value: {} as ResolvedConfigValidator<SV, CV>
+      }
+    );
+
+    const singletons = Object.fromEntries(
+      Object.entries(this.configShapes).filter(
+        ([key, value]) =>
+          this.dependenciesDefinition[key].lifetime === Lifetime.Singleton &&
+          (this.schemaValidator as SchemaValidator).isSchema(value)
+      )
+    );
+    const schemaSingletonParseResult = (
+      this.schemaValidator as SchemaValidator
+    ).parse(
+      (this.schemaValidator as SchemaValidator).schemify(singletons),
+      Object.fromEntries(
+        Object.keys(singletons).map((key) => {
+          const dependency = this.dependenciesDefinition[key];
+          return [
+            key,
+            dependency.lifetime === Lifetime.Singleton
+              ? dependency.value
+              : undefined
+          ];
+        })
+      )
+    );
+
+    const configKeys = Object.keys(this.configShapes);
+
+    return validNonSchemaSingletons.ok && schemaSingletonParseResult.ok
+      ? {
+          ok: true as const,
+          value: new ValidConfigInjector<SV, CV>(
+            this.schemaValidator,
+            this.configShapes,
+            this.dependenciesDefinition
           )
-        )
-      ),
-      config
+        }
+      : {
+          ok: false as const,
+          errors: [
+            ...(!validNonSchemaSingletons.ok && validNonSchemaSingletons.errors
+              ? validNonSchemaSingletons.errors
+              : []),
+            ...(!schemaSingletonParseResult.ok &&
+            schemaSingletonParseResult.errors
+              ? schemaSingletonParseResult.errors
+              : [])
+          ].sort(
+            (a, b) =>
+              configKeys.indexOf(a.path[0]) - configKeys.indexOf(b.path[0])
+          )
+        };
+  }
+
+  validateConfigSingletons(configName: string): ValidConfigInjector<SV, CV> {
+    const safeValidateResult = this.safeValidateConfigSingletons();
+
+    if (safeValidateResult.ok) {
+      return safeValidateResult.value;
+    }
+
+    throw new Error(
+      prettyPrintParseErrors(safeValidateResult.errors, configName)
     );
   }
 
@@ -184,4 +287,11 @@ export class ConfigInjector<
     this.instances = {};
     this.loadSingletons();
   }
+}
+
+export class ValidConfigInjector<
+  SV extends AnySchemaValidator,
+  CV extends ConfigValidator<SV>
+> extends ConfigInjector<SV, CV> {
+  validConfigInjector!: void;
 }

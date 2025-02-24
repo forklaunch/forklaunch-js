@@ -1,5 +1,67 @@
 # @forklaunch/hyper-express
 
+## 0.2.9
+
+### Patch Changes
+
+- bump http frameworks to support docs path
+
+## 0.2.8
+
+### Patch Changes
+
+- Fixes issue with pathing for docs path
+
+## 0.2.7
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.4.4
+  - @forklaunch/core@0.3.6
+
+## 0.2.6
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/common@0.2.1
+  - @forklaunch/core@0.3.5
+  - @forklaunch/validator@0.4.3
+
+## 0.2.5
+
+### Patch Changes
+
+- fix config injector ergonomics to be much nicer
+- Updated dependencies
+  - @forklaunch/validator@0.4.2
+  - @forklaunch/core@0.3.4
+
+## 0.2.4
+
+### Patch Changes
+
+- Create an actual type from valid config injector since splay dropped methods
+- Updated dependencies
+  - @forklaunch/core@0.3.3
+
+## 0.2.3
+
+### Patch Changes
+
+- Change return type of validateConfigSingletons to ValidConfigInjector to ensure validity
+- Updated dependencies
+  - @forklaunch/core@0.3.2
+
+## 0.2.2
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.4.1
+  - @forklaunch/core@0.3.1
+
 ## 0.2.1
 
 ### Patch Changes

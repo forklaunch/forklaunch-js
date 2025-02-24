@@ -1,4 +1,4 @@
-import { BaseEntity } from '@forklaunch/core/database';
+import { BaseEntity } from '@forklaunch/framework-core';
 import { Entity, Enum, Property } from '@mikro-orm/core';
 import { PaymentMethodEnum } from '../enum/paymentMethod.enum';
 
