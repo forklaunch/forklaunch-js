@@ -100,3 +100,11 @@ pub(crate) const ERROR_FAILED_TO_CREATE_DATABASE_EXPORT_INDEX_TS: &str =
     "Failed to create database export index.ts in core/persistence.";
 pub(crate) const ERROR_FAILED_TO_CREATE_LIBRARY_PACKAGE_JSON: &str =
     "Failed to create library package.json.";
+pub(crate) const ERROR_FAILED_TO_ADD_SERVICE_METADATA_TO_ARTIFACTS: &str =
+    "Failed to add service metadata to artifacts.";
+pub(crate) const ERROR_FAILED_TO_UPDATE_APPLICATION_PACKAGE_JSON: &str =
+    "Failed to update application package.json.";
+pub(crate) const ERROR_FAILED_TO_ADD_BASE_ENTITY_TO_CORE: &str =
+    "Failed to add base entity to core.";
+pub(crate) const ERROR_FAILED_TO_WRITE_SERVICE_FILES: &str =
+    "Failed to write service files.";

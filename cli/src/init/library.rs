@@ -1,5 +1,6 @@
 use anyhow::{Context, Result};
 use clap::{Arg, ArgMatches, Command};
+use convert_case::{Case, Casing};
 use ramhorns::Content;
 use rustyline::history::DefaultHistory;
 use rustyline::Editor;
@@ -46,6 +47,8 @@ config_struct!(
     pub(crate) struct LibraryManifestData {
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) library_name: String,
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) camel_case_name: String,
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) description: String,
     }
@@ -97,8 +100,14 @@ impl CliCommand for LibraryCommand {
             matches,
             "Enter library name: ",
             None,
-            |input: &str| !input.is_empty(),
-            |_| "Library name cannot be empty. Please try again".to_string(),
+            |input: &str| {
+                !input.is_empty()
+                    && !input.contains(' ')
+                    && !input.contains('\t')
+                    && !input.contains('\n')
+                    && !input.contains('\r')
+            },
+            |_| "Library name cannot be empty or include spaces. Please try again".to_string(),
         )?;
 
         let base_path = prompt_base_path(
@@ -122,6 +131,7 @@ impl CliCommand for LibraryCommand {
 
         let mut config_data: LibraryManifestData = LibraryManifestData {
             library_name: library_name.clone(),
+            camel_case_name: library_name.to_case(Case::Camel),
             description: description.clone(),
 
             ..from_str(&read_to_string(config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?)

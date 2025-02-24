@@ -54,8 +54,8 @@ use super::{
                 MIKRO_ORM_MIGRATIONS_VERSION, MIKRO_ORM_REFLECTION_VERSION, PROJECT_BUILD_SCRIPT,
                 PROJECT_DOCS_SCRIPT, PROJECT_FORMAT_SCRIPT, PROJECT_LINT_FIX_SCRIPT,
                 PROJECT_LINT_SCRIPT, SORT_PACKAGE_JSON_VERSION, TSX_VERSION, TS_JEST_VERSION,
-                TYPEBOX_VERSION, TYPESCRIPT_ESLINT_VERSION, TYPESCRIPT_VERSION, UUID_VERSION,
-                VALIDATOR_VERSION, VITEST_VERSION, ZOD_VERSION,
+                TYPEBOX_VERSION, TYPESCRIPT_ESLINT_VERSION, TYPESCRIPT_VERSION, TYPES_UUID_VERSION,
+                UUID_VERSION, VALIDATOR_VERSION, VITEST_VERSION, ZOD_VERSION,
             },
             project_package_json::{ProjectDependencies, ProjectDevDependencies, ProjectScripts},
         },
@@ -188,8 +188,14 @@ impl CliCommand for ApplicationCommand {
             matches,
             "Enter application name: ",
             None,
-            |input: &str| !input.is_empty(),
-            |_| "Application name cannot be empty. Please try again".to_string(),
+            |input: &str| {
+                !input.is_empty()
+                    && !input.contains(' ')
+                    && !input.contains('\t')
+                    && !input.contains('\n')
+                    && !input.contains('\r')
+            },
+            |_| "Application name cannot be empty or include spaces. Please try again".to_string(),
         )?;
 
         let database = prompt_with_validation(
@@ -381,7 +387,7 @@ impl CliCommand for ApplicationCommand {
             validator: validator.to_string(),
             http_framework: match http_framework.as_str() {
                 "express" => "express".to_string(),
-                "hyper-express" => "@forklaunch/hyper-express-fork".to_string(),
+                "hyper-express" => "hyper-express".to_string(),
                 _ => bail!("Invalid HTTP framework: {}", http_framework),
             },
             runtime: runtime.to_string(),
@@ -526,11 +532,7 @@ impl CliCommand for ApplicationCommand {
                         },
                         ajv: Some(AJV_VERSION.to_string()),
                         dotenv: Some(DOTENV_VERSION.to_string()),
-                        uuid: if service_data.is_zod {
-                            Some(UUID_VERSION.to_string())
-                        } else {
-                            None
-                        },
+                        uuid: Some(UUID_VERSION.to_string()),
                         zod: if service_data.is_zod {
                             Some(ZOD_VERSION.to_string())
                         } else {
@@ -545,11 +547,7 @@ impl CliCommand for ApplicationCommand {
                     Some(ProjectDevDependencies {
                         eslint: Some(ESLINT_VERSION.to_string()),
                         typescript_eslint: Some(TYPESCRIPT_ESLINT_VERSION.to_string()),
-                        types_uuid: if service_data.is_zod {
-                            Some("^10.0.0".to_string())
-                        } else {
-                            None
-                        },
+                        types_uuid: Some(TYPES_UUID_VERSION.to_string()),
                         ..Default::default()
                     })
                 } else {
@@ -596,6 +594,7 @@ impl CliCommand for ApplicationCommand {
             generate_database_export_index_ts(
                 &Path::new(&name).to_string_lossy().to_string(),
                 Some(vec![database.to_string()]),
+                None,
             )
             .with_context(|| ERROR_FAILED_TO_CREATE_DATABASE_EXPORT_INDEX_TS)?,
         );

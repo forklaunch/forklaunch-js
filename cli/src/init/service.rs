@@ -14,13 +14,15 @@ use toml::from_str;
 use crate::{
     config_struct,
     constants::{
+        ERROR_FAILED_TO_ADD_BASE_ENTITY_TO_CORE,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON,
-        ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE, ERROR_FAILED_TO_CREATE_GITIGNORE,
+        ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE,
+        ERROR_FAILED_TO_ADD_SERVICE_METADATA_TO_ARTIFACTS, ERROR_FAILED_TO_CREATE_GITIGNORE,
         ERROR_FAILED_TO_CREATE_PACKAGE_JSON, ERROR_FAILED_TO_CREATE_SYMLINKS,
         ERROR_FAILED_TO_CREATE_TSCONFIG, ERROR_FAILED_TO_PARSE_MANIFEST,
-        ERROR_FAILED_TO_READ_MANIFEST, VALID_DATABASES,
+        ERROR_FAILED_TO_READ_MANIFEST, ERROR_FAILED_TO_WRITE_SERVICE_FILES, VALID_DATABASES,
     },
     core::{
         base_path::{prompt_base_path, BasePathLocation},
@@ -143,8 +145,14 @@ impl CliCommand for ServiceCommand {
             matches,
             "Enter service name: ",
             None,
-            |input: &str| !input.is_empty(),
-            |_| "Service name cannot be empty. Please try again".to_string(),
+            |input: &str| {
+                !input.is_empty()
+                    && !input.contains(' ')
+                    && !input.contains('\t')
+                    && !input.contains('\n')
+                    && !input.contains('\r')
+            },
+            |_| "Service name cannot be empty or include spaces. Please try again".to_string(),
         )?;
 
         let base_path = prompt_base_path(
@@ -243,19 +251,19 @@ fn generate_basic_service(
     );
     rendered_templates.extend(
         add_service_to_artifacts(config_data, base_path)
-            .with_context(|| "Failed to add service metadata to artifacts")?,
+            .with_context(|| ERROR_FAILED_TO_ADD_SERVICE_METADATA_TO_ARTIFACTS)?,
     );
-    rendered_templates.extend(
-        update_application_package_json(config_data, base_path)
-            .with_context(|| "Failed to update application package.json")?,
-    );
+    // rendered_templates.extend(
+    //     update_application_package_json(config_data, base_path)
+    //         .with_context(|| ERROR_FAILED_TO_UPDATE_APPLICATION_PACKAGE_JSON)?,
+    // );
     rendered_templates.extend(
         add_base_entity_to_core(config_data, base_path)
-            .with_context(|| "Failed to add base entity to core")?,
+            .with_context(|| ERROR_FAILED_TO_ADD_BASE_ENTITY_TO_CORE)?,
     );
 
     write_rendered_templates(&rendered_templates)
-        .with_context(|| "Failed to write service files")?;
+        .with_context(|| ERROR_FAILED_TO_WRITE_SERVICE_FILES)?;
 
     generate_symlinks(Some(base_path), &template_dir.output_path, config_data)
         .with_context(|| ERROR_FAILED_TO_CREATE_SYMLINKS)?;
@@ -270,7 +278,8 @@ fn add_service_to_artifacts(
     let (docker_compose_buffer, port_number) =
         add_service_definition_to_docker_compose(config_data, base_path, None)
             .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
-    let forklaunch_definition_buffer = add_project_definition_to_manifest(
+
+    let forklaunch_manifest_buffer = add_project_definition_to_manifest(
         ProjectType::Service,
         config_data,
         Some(port_number),
@@ -281,6 +290,7 @@ fn add_service_to_artifacts(
         Some(vec![config_data.service_name.clone()]),
     )
     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
+
     let mut package_json_buffer: Option<String> = None;
     if config_data.runtime == "bun" {
         package_json_buffer = Some(
@@ -308,17 +318,14 @@ fn add_service_to_artifacts(
         path: Path::new(base_path)
             .join(".forklaunch")
             .join("manifest.toml"),
-        content: forklaunch_definition_buffer,
+        content: forklaunch_manifest_buffer.clone(),
         context: Some(ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST.to_string()),
     });
 
-    if let Some(package_json_buffer) = package_json_buffer {
-        rendered_templates.push(RenderedTemplate {
-            path: Path::new(base_path).join("package.json"),
-            content: package_json_buffer,
-            context: Some(ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON.to_string()),
-        });
-    }
+    rendered_templates.push(
+        update_application_package_json(config_data, base_path, package_json_buffer)?.unwrap(),
+    );
+
     if let Some(pnpm_workspace_buffer) = pnpm_workspace_buffer {
         rendered_templates.push(RenderedTemplate {
             path: Path::new(base_path).join("pnpm-workspace.yaml"),
@@ -400,11 +407,7 @@ pub(crate) fn generate_project_package_json(
                 },
                 ajv: Some(AJV_VERSION.to_string()),
                 dotenv: Some(DOTENV_VERSION.to_string()),
-                uuid: if config_data.service_name == "billing" {
-                    Some(UUID_VERSION.to_string())
-                } else {
-                    None
-                },
+                uuid: Some(UUID_VERSION.to_string()),
                 zod: if config_data.is_zod {
                     Some(ZOD_VERSION.to_string())
                 } else {
@@ -422,11 +425,7 @@ pub(crate) fn generate_project_package_json(
                 tsx: Some(TSX_VERSION.to_string()),
                 typedoc: Some(TYPEDOC_VERSION.to_string()),
                 typescript_eslint: Some(TYPESCRIPT_ESLINT_VERSION.to_string()),
-                types_uuid: if config_data.service_name == "billing" {
-                    Some(TYPES_UUID_VERSION.to_string())
-                } else {
-                    None
-                },
+                types_uuid: Some(TYPES_UUID_VERSION.to_string()),
             }
         }),
         mikro_orm: Some(ProjectMikroOrm {

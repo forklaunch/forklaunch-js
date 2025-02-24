@@ -9,7 +9,7 @@ use crate::{
     constants::{
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON,
         ERROR_FAILED_TO_GENERATE_PACKAGE_JSON, ERROR_FAILED_TO_PARSE_PACKAGE_JSON,
-        ERROR_FAILED_TO_READ_PACKAGE_JSON,
+        ERROR_FAILED_TO_READ_PACKAGE_JSON, ERROR_FAILED_TO_UPDATE_APPLICATION_PACKAGE_JSON,
     },
     core::manifest::{ManifestConfig, ProjectManifestConfig},
     init::service::ServiceManifestData,
@@ -60,10 +60,13 @@ pub(crate) fn add_project_definition_to_package_json<
 pub(crate) fn update_application_package_json(
     config_data: &ServiceManifestData,
     base_path: &String,
+    existing_package_json: Option<String>,
 ) -> Result<Option<RenderedTemplate>> {
     let mut full_package_json: Value = from_str(
-        &read_to_string(Path::new(base_path).join("package.json"))
-            .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?,
+        &existing_package_json.unwrap_or(
+            read_to_string(Path::new(base_path).join("package.json"))
+                .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?,
+        ),
     )
     .with_context(|| ERROR_FAILED_TO_PARSE_PACKAGE_JSON)?;
 
@@ -143,7 +146,7 @@ pub(crate) fn update_application_package_json(
 
     Ok(Some(RenderedTemplate {
         path: Path::new(base_path).join("package.json"),
-        content: serde_json::to_string_pretty(&full_package_json)?,
-        context: None,
+        content: to_string_pretty(&full_package_json)?,
+        context: Some(ERROR_FAILED_TO_UPDATE_APPLICATION_PACKAGE_JSON.to_string()),
     }))
 }

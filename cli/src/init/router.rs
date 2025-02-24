@@ -92,8 +92,14 @@ impl CliCommand for RouterCommand {
             matches,
             "Enter router name: ",
             None,
-            |input: &str| !input.is_empty(),
-            |_| "Router name cannot be empty. Please try again".to_string(),
+            |input: &str| {
+                !input.is_empty()
+                    && !input.contains(' ')
+                    && !input.contains('\t')
+                    && !input.contains('\n')
+                    && !input.contains('\r')
+            },
+            |_| "Router name cannot be empty or include spaces. Please try again".to_string(),
         )?;
 
         let base_path = prompt_base_path(
@@ -114,7 +120,6 @@ impl CliCommand for RouterCommand {
             from_str(&read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?)
                 .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
 
-        println!("{:?} {:?}", path, config_path);
         let service_name = path.file_name().unwrap().to_str().unwrap();
         let service_data = manifest_data
             .projects

@@ -281,6 +281,7 @@ pub(crate) fn add_service_definition_to_docker_compose(
     let mut environment = IndexMap::new();
     environment.insert("ENV".to_string(), "development".to_string());
     environment.insert("HOST".to_string(), "0.0.0.0".to_string());
+    environment.insert("PROTOCOL".to_string(), "http".to_string());
     environment.insert("PORT".to_string(), format!("{}", port_number));
     environment.insert("VERSION".to_string(), "v1".to_string());
     environment.insert("DOCS_PATH".to_string(), "/docs".to_string());
