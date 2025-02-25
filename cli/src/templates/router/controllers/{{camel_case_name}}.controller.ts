@@ -38,7 +38,10 @@ export class {{pascal_case_name}}Controller
     },
     async (req, res) => {
       res.status(200).json({
-        message: '{{pascal_case_name}}'
+        message: '{{pascal_case_name}}'{{#is_worker}},
+        processed: false,
+        retryCount: 0
+        {{/is_worker}}
       });
     }
   );

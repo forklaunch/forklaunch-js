@@ -5,7 +5,7 @@
   "keywords": [],
   "license": "ISC",
   "author": "",
-  "workspaces": ["core", "iam", "billing"],
+  "workspaces": ["core", "iam", "billing", "sample-worker"],
   "scripts": {
     "build": "bun run -r build",
     "clean": "rm -rf node_modules bun.lockb && bun -r clean",

@@ -41,16 +41,15 @@ use super::{
         package_json::{
             add_project_definition_to_package_json,
             package_json_constants::{
-                project_clean_script, project_dev_local_script, project_dev_script,
-                project_migrate_script, project_test_script, AJV_VERSION, APP_CORE_VERSION,
-                COMMON_VERSION, CORE_VERSION, DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION,
-                HYPER_EXPRESS_VERSION, MIKRO_ORM_CLI_VERSION, MIKRO_ORM_CORE_VERSION,
-                MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
+                project_clean_script, project_dev_local_script, project_dev_server_script,
+                project_migrate_script, project_start_server_script, project_test_script,
+                AJV_VERSION, APP_CORE_VERSION, COMMON_VERSION, CORE_VERSION, DOTENV_VERSION,
+                ESLINT_VERSION, EXPRESS_VERSION, HYPER_EXPRESS_VERSION, MIKRO_ORM_CLI_VERSION,
+                MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
                 MIKRO_ORM_REFLECTION_VERSION, PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT,
-                PROJECT_FORMAT_SCRIPT, PROJECT_LINT_FIX_SCRIPT, PROJECT_LINT_SCRIPT,
-                PROJECT_START_SCRIPT, TSX_VERSION, TS_NODE_VERSION, TYPEBOX_VERSION,
-                TYPEDOC_VERSION, TYPESCRIPT_ESLINT_VERSION, TYPES_UUID_VERSION, UUID_VERSION,
-                VALIDATOR_VERSION, ZOD_VERSION,
+                PROJECT_FORMAT_SCRIPT, PROJECT_LINT_FIX_SCRIPT, PROJECT_LINT_SCRIPT, TSX_VERSION,
+                TS_NODE_VERSION, TYPEBOX_VERSION, TYPEDOC_VERSION, TYPESCRIPT_ESLINT_VERSION,
+                TYPES_UUID_VERSION, UUID_VERSION, VALIDATOR_VERSION, ZOD_VERSION,
             },
             project_package_json::{
                 ProjectDependencies, ProjectDevDependencies, ProjectMikroOrm, ProjectPackageJson,
@@ -236,7 +235,7 @@ fn generate_basic_service(
         &TemplateManifestData::Service(&config_data),
         &ignore_files,
     )?;
-    rendered_templates.push(generate_project_package_json(
+    rendered_templates.push(generate_service_package_json(
         config_data,
         &output_path,
         None,
@@ -253,12 +252,8 @@ fn generate_basic_service(
         add_service_to_artifacts(config_data, base_path)
             .with_context(|| ERROR_FAILED_TO_ADD_SERVICE_METADATA_TO_ARTIFACTS)?,
     );
-    // rendered_templates.extend(
-    //     update_application_package_json(config_data, base_path)
-    //         .with_context(|| ERROR_FAILED_TO_UPDATE_APPLICATION_PACKAGE_JSON)?,
-    // );
     rendered_templates.extend(
-        add_base_entity_to_core(config_data, base_path)
+        add_base_entity_to_core(&TemplateManifestData::Service(config_data), base_path)
             .with_context(|| ERROR_FAILED_TO_ADD_BASE_ENTITY_TO_CORE)?,
     );
 
@@ -275,14 +270,13 @@ fn add_service_to_artifacts(
     config_data: &mut ServiceManifestData,
     base_path: &String,
 ) -> Result<Vec<RenderedTemplate>> {
-    let (docker_compose_buffer, port_number) =
+    let docker_compose_buffer =
         add_service_definition_to_docker_compose(config_data, base_path, None)
             .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
 
     let forklaunch_manifest_buffer = add_project_definition_to_manifest(
         ProjectType::Service,
         config_data,
-        Some(port_number),
         Some(ResourceInventory {
             database: Some(config_data.database.to_owned()),
             cache: None,
@@ -323,7 +317,12 @@ fn add_service_to_artifacts(
     });
 
     rendered_templates.push(
-        update_application_package_json(config_data, base_path, package_json_buffer)?.unwrap(),
+        update_application_package_json(
+            &TemplateManifestData::Service(config_data),
+            base_path,
+            package_json_buffer,
+        )?
+        .unwrap(),
     );
 
     if let Some(pnpm_workspace_buffer) = pnpm_workspace_buffer {
@@ -337,7 +336,7 @@ fn add_service_to_artifacts(
     Ok(rendered_templates)
 }
 
-pub(crate) fn generate_project_package_json(
+pub(crate) fn generate_service_package_json(
     config_data: &ServiceManifestData,
     base_path: &String,
     dependencies_override: Option<ProjectDependencies>,
@@ -362,7 +361,7 @@ pub(crate) fn generate_project_package_json(
             ProjectScripts {
                 build: Some(PROJECT_BUILD_SCRIPT.to_string()),
                 clean: Some(project_clean_script(config_data.runtime.as_str()).to_string()),
-                dev: Some(project_dev_script(config_data.runtime.as_str()).to_string()),
+                dev: Some(project_dev_server_script(config_data.runtime.as_str()).to_string()),
                 dev_local: Some(project_dev_local_script(config_data.runtime.as_str()).to_string()),
                 test: Some(project_test_script(config_data.test_framework.as_str()).to_string()),
                 docs: Some(PROJECT_DOCS_SCRIPT.to_string()),
@@ -373,7 +372,8 @@ pub(crate) fn generate_project_package_json(
                 migrate_down: Some(project_migrate_script("down").to_string()),
                 migrate_init: Some(project_migrate_script("init").to_string()),
                 migrate_up: Some(project_migrate_script("up").to_string()),
-                start: Some(PROJECT_START_SCRIPT.to_string()),
+                start: Some(project_start_server_script().to_string()),
+                ..Default::default()
             }
         }),
         dependencies: Some(if let Some(dependencies) = dependencies_override {

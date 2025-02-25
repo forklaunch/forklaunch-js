@@ -35,7 +35,6 @@ pub(crate) struct ResourceInventory {
 pub(crate) struct ProjectEntry {
     pub(crate) r#type: ProjectType,
     pub(crate) name: String,
-    pub(crate) port: Option<i32>,
     pub(crate) resources: Option<ResourceInventory>,
     pub(crate) routers: Option<Vec<String>>,
 }

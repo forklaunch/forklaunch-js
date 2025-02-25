@@ -1,0 +1,52 @@
+{
+  "data": {
+    "_id": 2000,
+    "properties": {
+      "message": {
+        "name": "message",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "string",
+        "array": false,
+        "runtimeType": "string"
+      },
+      "processed": {
+        "name": "processed",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "boolean",
+        "array": false,
+        "runtimeType": "boolean"
+      },
+      "retryCount": {
+        "name": "retryCount",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "number",
+        "array": false,
+        "runtimeType": "number"
+      }
+    },
+    "primaryKeys": [],
+    "filters": {},
+    "hooks": {},
+    "indexes": [],
+    "uniques": [],
+    "className": "SampleWorkerRecord",
+    "path": "./models/persistence/sampleWorkerRecord.entity.ts",
+    "name": "SampleWorkerRecord",
+    "abstract": false,
+    "internal": true,
+    "constructorParams": [],
+    "toJsonParams": [],
+    "extends": "BaseEntity",
+    "useCache": true,
+    "collection": "sample_worker_record"
+  },
+  "origin": "./models/persistence/sampleWorkerRecord.entity.ts",
+  "hash": "d0b396b321e69494afba12018db31dd5",
+  "version": "6.4.6"
+}

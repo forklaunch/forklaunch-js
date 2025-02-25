@@ -8,6 +8,10 @@ pub struct ProjectScripts {
     pub clean: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dev: Option<String>,
+    #[serde(rename = "dev:server", skip_serializing_if = "Option::is_none")]
+    pub dev_server: Option<String>,
+    #[serde(rename = "dev:client", skip_serializing_if = "Option::is_none")]
+    pub dev_client: Option<String>,
     #[serde(rename = "dev:local", skip_serializing_if = "Option::is_none")]
     pub dev_local: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -28,6 +32,10 @@ pub struct ProjectScripts {
     pub migrate_up: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub start: Option<String>,
+    #[serde(rename = "start:server", skip_serializing_if = "Option::is_none")]
+    pub start_server: Option<String>,
+    #[serde(rename = "start:client", skip_serializing_if = "Option::is_none")]
+    pub start_client: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub test: Option<String>,
 }

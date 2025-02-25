@@ -81,8 +81,11 @@ export abstract class BaseEntity {
     return this;
   }
 
-  read(): EntityDTO<this> {
-    return wrap(this).toPOJO();
+  read(): EntityDTO<this> | this {
+    if (typeof wrap(this).toPOJO === 'function') {
+      return wrap(this).toPOJO();
+    }
+    return this;
   }
 
   map(data: Partial<EntityDTO<FromEntityType<this>>>): this {

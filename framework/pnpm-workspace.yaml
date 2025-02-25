@@ -4,3 +4,4 @@ packages:
   - 'billing'
   - 'core'
   - 'iam'
+  - 'sample-worker'
