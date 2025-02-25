@@ -5,6 +5,7 @@ use include_dir::{include_dir, Dir};
 use library::LibraryCommand;
 use router::RouterCommand;
 use service::ServiceCommand;
+use worker::WorkerCommand;
 
 use crate::{core::command::command, CliCommand};
 
@@ -13,6 +14,7 @@ pub(crate) mod core;
 pub(crate) mod library;
 pub(crate) mod router;
 pub(crate) mod service;
+pub(crate) mod worker;
 
 pub(crate) static TEMPLATES_DIR: Dir = include_dir!("src/templates");
 
@@ -23,6 +25,7 @@ pub(crate) struct InitCommand {
     library: LibraryCommand,
     service: ServiceCommand,
     router: RouterCommand,
+    worker: WorkerCommand,
 }
 
 impl InitCommand {
@@ -32,6 +35,7 @@ impl InitCommand {
             library: LibraryCommand::new(),
             service: ServiceCommand::new(),
             router: RouterCommand::new(),
+            worker: WorkerCommand::new(),
         }
     }
 }
@@ -45,6 +49,7 @@ impl CliCommand for InitCommand {
             .subcommand(self.library.command())
             .subcommand(self.service.command())
             .subcommand(self.router.command())
+            .subcommand(self.worker.command())
     }
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
@@ -53,6 +58,7 @@ impl CliCommand for InitCommand {
             Some(("library", sub_matches)) => self.library.handler(sub_matches),
             Some(("service", sub_matches)) => self.service.handler(sub_matches),
             Some(("router", sub_matches)) => self.router.handler(sub_matches),
+            Some(("worker", sub_matches)) => self.worker.handler(sub_matches),
             _ => unreachable!(),
         }
     }

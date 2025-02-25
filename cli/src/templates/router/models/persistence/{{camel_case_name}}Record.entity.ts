@@ -6,5 +6,11 @@ import { BaseEntity } from '@{{app_name}}/core';
 export class {{pascal_case_name}}Record extends BaseEntity {
   // message property that stores a message string
   @Property()
-  message!: string;
+  message!: string;{{#is_worker}}
+
+  @Property()
+  processed!: boolean;
+
+  @Property()
+  retryCount!: number;{{/is_worker}}
 }

@@ -2,7 +2,7 @@ import {
   RequestDtoMapper,
   ResponseDtoMapper
 } from '@forklaunch/core/dtoMapper';
-import { SchemaValidator, string } from '@{{app_name}}/core';
+import { SchemaValidator, string{{#is_worker}}, boolean, number{{/is_worker}} } from '@{{app_name}}/core';
 import { {{pascal_case_name}}Record } from '../persistence/{{camel_case_name}}Record.entity';
 
 // Exported type that matches the request schema
@@ -19,7 +19,11 @@ export class {{pascal_case_name}}RequestDtoMapper extends RequestDtoMapper<
 
   // toEntity method maps the request schema to the entity
   toEntity(): {{pascal_case_name}}Record {
-    return {{pascal_case_name}}Record.create(this.dto);
+    return {{pascal_case_name}}Record.create({{#is_worker}}{
+      ...this.dto,
+      processed: false,
+      retryCount: 0
+    }{{/is_worker}}{{^is_worker}}this.dto{{/is_worker}});
   }
 }
 
@@ -33,7 +37,9 @@ export class {{pascal_case_name}}ResponseDtoMapper extends ResponseDtoMapper<
 > {
   // idiomatic validator schema defines the response schema
   schema = {
-    message: string
+    message: string{{#is_worker}},
+    processed: boolean,
+    retryCount: number{{/is_worker}}
   };
 
   // fromEntity method maps the entity to the response schema

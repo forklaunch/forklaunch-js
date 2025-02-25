@@ -1,6 +1,6 @@
 use std::{fs::read_to_string, path::Path};
 
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use ramhorns::{Content, Template};
 use serde::{Deserialize, Serialize};
 use serde_json::{from_str, to_string_pretty, to_value, Value};
@@ -10,12 +10,12 @@ use crate::{
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON,
         ERROR_FAILED_TO_GENERATE_PACKAGE_JSON, ERROR_FAILED_TO_PARSE_PACKAGE_JSON,
         ERROR_FAILED_TO_READ_PACKAGE_JSON, ERROR_FAILED_TO_UPDATE_APPLICATION_PACKAGE_JSON,
+        ERROR_UNSUPPORTED_DATABASE,
     },
     core::manifest::{ManifestConfig, ProjectManifestConfig},
-    init::service::ServiceManifestData,
 };
 
-use super::rendered_template::RenderedTemplate;
+use super::{rendered_template::RenderedTemplate, template::TemplateManifestData};
 
 pub(crate) mod application_package_json;
 pub(crate) mod package_json_constants;
@@ -58,7 +58,7 @@ pub(crate) fn add_project_definition_to_package_json<
 }
 
 pub(crate) fn update_application_package_json(
-    config_data: &ServiceManifestData,
+    config_data: &TemplateManifestData,
     base_path: &String,
     existing_package_json: Option<String>,
 ) -> Result<Option<RenderedTemplate>> {
@@ -74,7 +74,17 @@ pub(crate) fn update_application_package_json(
         .as_object_mut()
         .with_context(|| ERROR_FAILED_TO_PARSE_PACKAGE_JSON)?;
 
-    let database = config_data.database.to_string();
+    let database = match config_data {
+        TemplateManifestData::Service(service_data) => service_data.database.to_string(),
+        TemplateManifestData::Worker(worker_data) => worker_data.database.to_string(),
+        _ => bail!(ERROR_UNSUPPORTED_DATABASE),
+    };
+
+    let is_mongo = match config_data {
+        TemplateManifestData::Service(service_data) => service_data.is_mongo,
+        TemplateManifestData::Worker(worker_data) => worker_data.is_mongo,
+        _ => false,
+    };
 
     let update_docker_cmd = |cmd: &str| {
         let (docker_cmd, rest_cmd) = match cmd.split_once("&&") {
@@ -92,7 +102,7 @@ pub(crate) fn update_application_package_json(
 
         if !services.contains(&database.as_str()) {
             services.push(&database);
-            if config_data.is_mongo {
+            if is_mongo {
                 services.push("mongo-init");
             }
         }

@@ -41,7 +41,6 @@ pub(crate) fn add_project_definition_to_manifest<
 >(
     r#type: ProjectType,
     config_data: &mut T,
-    port: Option<i32>,
     resources: Option<ResourceInventory>,
     routers: Option<Vec<String>>,
 ) -> Result<String> {
@@ -56,7 +55,6 @@ pub(crate) fn add_project_definition_to_manifest<
     config_data.projects_mut().push(ProjectEntry {
         r#type,
         name: name.clone(),
-        port,
         resources,
         routers,
     });

@@ -222,6 +222,64 @@ importers:
         specifier: ^0.27.7
         version: 0.27.7(typescript@5.7.3)
 
+  sample-worker:
+    dependencies:
+      '@forklaunch/common':
+        specifier: ^0.2.1
+        version: 0.2.1
+      '@forklaunch/core':
+        specifier: ^0.3.6
+        version: 0.3.6(socks@2.8.4)
+      '@forklaunch/express':
+        specifier: ^0.2.8
+        version: 0.2.8(openapi3-ts@4.4.0)(socks@2.8.4)
+      '@forklaunch/framework-core':
+        specifier: workspace:*
+        version: link:../core
+      '@forklaunch/validator':
+        specifier: ^0.4.4
+        version: 0.4.4(openapi3-ts@4.4.0)
+      '@mikro-orm/core':
+        specifier: ^6.4.6
+        version: 6.4.6
+      '@mikro-orm/migrations':
+        specifier: ^6.4.6
+        version: 6.4.6(@mikro-orm/core@6.4.6)(@types/node@22.13.4)(pg@8.13.2)
+      '@mikro-orm/postgresql':
+        specifier: ^6.4.6
+        version: 6.4.6(@mikro-orm/core@6.4.6)
+      '@mikro-orm/reflection':
+        specifier: ^6.4.6
+        version: 6.4.6(@mikro-orm/core@6.4.6)
+      '@sinclair/typebox':
+        specifier: ^0.34.25
+        version: 0.34.25
+      ajv:
+        specifier: ^8.17.1
+        version: 8.17.1
+      dotenv:
+        specifier: ^16.4.7
+        version: 16.4.7
+    devDependencies:
+      '@mikro-orm/cli':
+        specifier: ^6.4.6
+        version: 6.4.6(pg@8.13.2)
+      eslint:
+        specifier: ^9.17.0
+        version: 9.20.1
+      ts-node:
+        specifier: ^10.9.2
+        version: 10.9.2(@types/node@22.13.4)(typescript@5.7.3)
+      tsx:
+        specifier: ^4.19.2
+        version: 4.19.3
+      typedoc:
+        specifier: ^0.27.7
+        version: 0.27.7(typescript@5.7.3)
+      typescript-eslint:
+        specifier: ^8.24.1
+        version: 8.24.1(eslint@9.20.1)(typescript@5.7.3)
+
 packages:
 
   '@ampproject/remapping@2.3.0':

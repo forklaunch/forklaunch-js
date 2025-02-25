@@ -53,11 +53,11 @@ export function bootstrap(
         },
         version: {
           lifetime: Lifetime.Singleton,
-          value: getEnvVar('VERSION')
+          value: getEnvVar('VERSION') ?? 'v1'
         },
         docsPath: {
           lifetime: Lifetime.Singleton,
-          value: getEnvVar('DOCS_PATH')
+          value: getEnvVar('DOCS_PATH') ?? '/docs'
         },
         passwordEncryptionPublicKeyPath: {
           lifetime: Lifetime.Singleton,

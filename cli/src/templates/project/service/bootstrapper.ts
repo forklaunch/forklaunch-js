@@ -8,9 +8,9 @@ import { Base{{pascal_case_name}}Service } from './services/{{camel_case_name}}.
 //! configValidator object that defines the configuration schema for the application
 export const configValidator = {
   redisUrl: string,
-  protocol: optional(string),
-  host: optional(string),
-  port: optional(number),
+  protocol: string,
+  host: string,
+  port: number,
   version: optional(string),
   docsPath: optional(string),
   entityManager: EntityManager,
@@ -49,11 +49,11 @@ export function bootstrap(
         },
         version: {
           lifetime: Lifetime.Singleton,
-          value: getEnvVar('VERSION')
+          value: getEnvVar('VERSION') ?? 'v1'
         },
         docsPath: {
           lifetime: Lifetime.Singleton,
-          value: getEnvVar('DOCS_PATH')
+          value: getEnvVar('DOCS_PATH') ?? '/docs'
         },
         entityManager: {
           lifetime: Lifetime.Scoped,

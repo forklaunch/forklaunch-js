@@ -127,8 +127,8 @@ pub(crate) const PROJECT_FORMAT_SCRIPT: &str =
     "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write";
 pub(crate) const PROJECT_LINT_SCRIPT: &str = "eslint . -c eslint.config.mjs";
 pub(crate) const PROJECT_LINT_FIX_SCRIPT: &str = "eslint . -c eslint.config.mjs --fix";
-pub(crate) const PROJECT_START_SCRIPT: &str =
-    "ENV_FILE_PATH=.env.prod && pnpm migrate:up && node --import tsx dist/server.js";
+pub(crate) const PROJECT_START_WORKER_CLIENT_SCRIPT: &str =
+    "ENV_FILE_PATH=.env.prod node --import tsx dist/client.js";
 pub(crate) fn project_clean_script(runtime: &str) -> &'static str {
     match runtime {
         "bun" => "rm -rf dist bun.lockb node_modules",
@@ -136,17 +136,38 @@ pub(crate) fn project_clean_script(runtime: &str) -> &'static str {
         _ => panic!("Unsupported runtime"),
     }
 }
-pub(crate) fn project_dev_script(runtime: &str) -> &'static str {
+pub(crate) fn project_dev_server_script(runtime: &str) -> &str {
     match runtime {
         "bun" => "bun migrate:up && bun --watch server.ts",
-        "node" => "pnpm migrate:up && tsx watch server.ts",
+        "node" => "pnpm migrate:up && pnpm tsx watch server.ts",
+        _ => panic!("Unsupported runtime"),
+    }
+}
+pub(crate) fn project_dev_worker_script(runtime: &str, cache_backend: bool) -> String {
+    match runtime {
+        "bun" => format!(
+            "{}bun --watch worker.ts",
+            if !cache_backend {
+                "bun migrate:up && "
+            } else {
+                ""
+            }
+        ),
+        "node" => format!(
+            "{}pnpm tsx watch worker.ts",
+            if !cache_backend {
+                "pnpm migrate:up && "
+            } else {
+                ""
+            }
+        ),
         _ => panic!("Unsupported runtime"),
     }
 }
 pub(crate) fn project_dev_local_script(runtime: &str) -> &'static str {
     match runtime {
-        "bun" => "ENV_FILE_PATH=.env.local bun migrate:up && bun --watch server.ts",
-        "node" => "ENV_FILE_PATH=.env.local pnpm migrate:up && tsx watch server.ts",
+        "bun" => "ENV_FILE_PATH=.env.local bun migrate:up && ENV_FILE_PATH=.env.local bun --watch server.ts",
+        "node" => "ENV_FILE_PATH=.env.local pnpm migrate:up && ENV_FILE_PATH=.env.local pnpm tsx watch server.ts",
         _ => panic!("Unsupported runtime"),
     }
 }
@@ -159,12 +180,56 @@ pub(crate) fn project_test_script(test_framework: &str) -> &'static str {
 }
 pub(crate) fn project_migrate_script(command: &str) -> String {
     let base =
-        "ENV_FILE_PATH=.env.local NODE_OPTIONS='--require ts-node/register' mikro-orm migration:";
+        "[ -z $ENV_FILE_PATH ] && export ENV_FILE_PATH=.env.local; NODE_OPTIONS='--require ts-node/register' mikro-orm migration:";
     match command {
         "create" => format!("{}{}", base, "create"),
         "down" => format!("{}{}", base, "down"),
-        "init" => format!("{}{}", base, "create --initial"),
+        "init" => format!(
+            "if [ ! -f migrations/Migration* ]; then {}{}; fi",
+            base, "create --initial"
+        ),
         "up" => format!("{}{}", base, "up"),
         _ => panic!("Unsupported migration command"),
+    }
+}
+pub(crate) fn project_start_server_script() -> String {
+    "ENV_FILE_PATH=.env.prod pnpm migrate:up && ENV_FILE_PATH=.env.prod node --import tsx dist/server.js".to_string()
+}
+pub(crate) fn project_start_worker_script(cache_backend: bool) -> String {
+    format!(
+        "{}ENV_FILE_PATH=.env.prod node --import tsx dist/worker.js",
+        if !cache_backend {
+            "ENV_FILE_PATH=.env.prod pnpm migrate:up && "
+        } else {
+            ""
+        }
+    )
+}
+pub(crate) fn project_dev_client_script(runtime: &str) -> &str {
+    match runtime {
+        "bun" => "bun --watch client.ts",
+        "node" => "pnpm tsx watch client.ts",
+        _ => panic!("Unsupported runtime"),
+    }
+}
+pub(crate) fn project_dev_local_worker_script(runtime: &str, cache_backend: bool) -> String {
+    match runtime {
+        "bun" => format!(
+            "{}ENV_FILE_PATH=.env.local bun --watch worker.ts && ENV_FILE_PATH=.env.local bun --watch client.ts",
+            if !cache_backend {
+                "ENV_FILE_PATH=.env.local bun migrate:up && "
+            } else {
+                ""
+            }
+        ),
+        "node" => format!(
+            "{}ENV_FILE_PATH=.env.local pnpm tsx watch worker.ts && ENV_FILE_PATH=.env.local pnpm tsx watch client.ts",
+            if !cache_backend {
+                "ENV_FILE_PATH=.env.local pnpm migrate:up && "
+            } else {
+                ""
+            }
+        ),
+        _ => panic!("Unsupported runtime"),
     }
 }

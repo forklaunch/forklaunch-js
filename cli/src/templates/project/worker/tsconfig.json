@@ -1,12 +1,1 @@
-{
-  "extends": "../tsconfig.base.json",
-  "compilerOptions": {
-    "experimentalDecorators": true,
-    "outDir": "dist"
-  },
-  "exclude": [
-    "node_modules",
-    "dist",
-    "eslint.config.mjs"
-  ]
-}
+../service/tsconfig.json

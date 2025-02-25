@@ -3,6 +3,7 @@ use std::path::Path;
 pub(crate) const PROD_API_URL: &str = "https://api.forklaunch.com";
 
 pub(crate) const VALID_DATABASES: [&str; 2] = ["postgresql", "mongodb"];
+pub(crate) const VALID_WORKER_BACKENDS: [&str; 2] = ["database", "cache"];
 pub(crate) const VALID_VALIDATORS: [&str; 2] = ["zod", "typebox"];
 pub(crate) const VALID_FRAMEWORKS: [&str; 2] = ["express", "hyper-express"];
 pub(crate) const VALID_TEST_FRAMEWORKS: [&str; 2] = ["vitest", "jest"];

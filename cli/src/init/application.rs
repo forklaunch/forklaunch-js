@@ -66,7 +66,7 @@ use super::{
             generate_with_template, get_routers_from_standard_package, PathIO, TemplateManifestData,
         },
     },
-    service::{generate_project_package_json, ServiceManifestData},
+    service::{generate_service_package_json, ServiceManifestData},
     CliCommand,
 };
 
@@ -347,22 +347,17 @@ impl CliCommand for ApplicationCommand {
         let mut additional_projects = vec![ProjectEntry {
             r#type: ProjectType::Library,
             name: "core".to_string(),
-            port: None,
             resources: None,
             routers: None,
         }];
-        let port_number = 8000;
-        additional_projects.extend(services.into_iter().enumerate().map(|(i, package)| {
-            ProjectEntry {
-                r#type: ProjectType::Service,
-                name: package.to_string(),
-                port: Some((port_number + i).try_into().unwrap()),
-                resources: Some(ResourceInventory {
-                    database: Some(database.to_string()),
-                    cache: None,
-                }),
-                routers: get_routers_from_standard_package(package),
-            }
+        additional_projects.extend(services.into_iter().map(|package| ProjectEntry {
+            r#type: ProjectType::Service,
+            name: package.to_string(),
+            resources: Some(ResourceInventory {
+                database: Some(database.to_string()),
+                cache: None,
+            }),
+            routers: get_routers_from_standard_package(package),
         }));
 
         let additional_projects_names = additional_projects
@@ -479,14 +474,11 @@ impl CliCommand for ApplicationCommand {
             };
 
             if service_data.service_name != "core" {
-                docker_compose_string = Some(
-                    add_service_definition_to_docker_compose(
-                        &service_data,
-                        &Path::new(&name).to_string_lossy().to_string(),
-                        docker_compose_string,
-                    )?
-                    .0,
-                );
+                docker_compose_string = Some(add_service_definition_to_docker_compose(
+                    &service_data,
+                    &Path::new(&name).to_string_lossy().to_string(),
+                    docker_compose_string,
+                )?);
             }
 
             rendered_templates.extend(generate_with_template(
@@ -498,7 +490,7 @@ impl CliCommand for ApplicationCommand {
                     .map(|ignore_file| ignore_file.to_string())
                     .collect::<Vec<String>>(),
             )?);
-            rendered_templates.push(generate_project_package_json(
+            rendered_templates.push(generate_service_package_json(
                 &service_data,
                 &Path::new(&name)
                     .join(&template_dir.output_path)

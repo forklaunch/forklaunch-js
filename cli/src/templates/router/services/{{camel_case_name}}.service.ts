@@ -1,5 +1,5 @@
 import { TtlCache } from '@forklaunch/core/cache';
-import { EntityManager } from '@mikro-orm/core';
+{{^cache_backend}}import { EntityManager } from '@mikro-orm/core';{{/cache_backend}}
 import { SchemaValidator } from '@{{app_name}}/core';
 import { {{pascal_case_name}}Service } from '../interfaces/{{camel_case_name}}.interface';
 import {
@@ -7,11 +7,13 @@ import {
   {{pascal_case_name}}RequestDtoMapper,
   {{pascal_case_name}}ResponseDto,
   {{pascal_case_name}}ResponseDtoMapper
-} from '../models/dtoMapper/{{camel_case_name}}.dtoMapper';
+} from '../models/dtoMapper/{{camel_case_name}}.dtoMapper';{{#cache_backend}}
+import { CACHE_KEY_PREFIX } from '../consts';
+{{/cache_backend}}
 
 // Base{{pascal_case_name}}Service class that implements the {{pascal_case_name}}Service interface
 export class Base{{pascal_case_name}}Service implements {{pascal_case_name}}Service {
-  constructor(private entityManager: EntityManager, private cache: TtlCache) {}
+  constructor({{^cache_backend}}private entityManager: EntityManager{{^is_worker}}, private cache: TtlCache{{/is_worker}}{{/cache_backend}}{{#cache_backend}}private cache: TtlCache{{/cache_backend}}) {}
 
   // {{camel_case_name}}Post method that implements the {{pascal_case_name}}Service interface
   {{camel_case_name}}Post = async (
@@ -20,8 +22,13 @@ export class Base{{pascal_case_name}}Service implements {{pascal_case_name}}Serv
     const entity = {{pascal_case_name}}RequestDtoMapper.deserializeDtoToEntity(
       SchemaValidator(),
       dto
-    );
-    this.entityManager.persist(entity);
+    );{{^cache_backend}}
+    this.entityManager.persistAndFlush(entity);{{/cache_backend}}{{#cache_backend}}
+    this.cache.putRecord({
+      key: `${CACHE_KEY_PREFIX}:${entity.id}`,
+      value: entity,
+      ttlMilliseconds: 60000
+    });{{/cache_backend}}
     return {{pascal_case_name}}ResponseDtoMapper.serializeEntityToDto(
       SchemaValidator(),
       entity
