@@ -1,5 +1,16 @@
 # @forklaunch/express
 
+## 0.3.0
+
+### Minor Changes
+
+- Adds nascent support for OpenTelemetry (logs, metrics, traces)
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.4.0
+
 ## 0.2.8
 
 ### Patch Changes

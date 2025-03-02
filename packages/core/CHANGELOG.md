@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.4.0
+
+### Minor Changes
+
+- Adds nascent support for OpenTelemetry (logs, metrics, traces)
+
 ## 0.3.6
 
 ### Patch Changes
