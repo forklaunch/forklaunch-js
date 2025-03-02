@@ -30,7 +30,10 @@ export interface Request<
   ReqHeaders extends Record<string, string>,
   LocalsObj extends Record<string, unknown>
 > extends ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>,
-    Omit<ExpressRequest<LocalsObj>, 'method' | 'params' | 'query' | 'headers'> {
+    Omit<
+      ExpressRequest<LocalsObj>,
+      'method' | 'params' | 'query' | 'headers' | 'path'
+    > {
   /** The request body */
   body: ReqBody;
   /** The request query parameters */
