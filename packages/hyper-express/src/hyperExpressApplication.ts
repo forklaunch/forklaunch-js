@@ -1,4 +1,5 @@
 import {
+  emitLoggerError,
   ForklaunchExpressLikeApplication,
   generateSwaggerDocument
 } from '@forklaunch/core/http';
@@ -31,20 +32,20 @@ export class Application<
    * @param {...unknown[]} args - Additional arguments.
    * @returns {Promise<uWebsockets.us_listen_socket>} - A promise that resolves with the listening socket.
    */
-  listen(
+  async listen(
     port: number,
     callback?: (listen_socket: uWebsockets.us_listen_socket) => void
   ): Promise<uWebsockets.us_listen_socket>;
-  listen(
+  async listen(
     port: number,
     host?: string,
     callback?: (listen_socket: uWebsockets.us_listen_socket) => void
   ): Promise<uWebsockets.us_listen_socket>;
-  listen(
+  async listen(
     unix_path: string,
     callback?: (listen_socket: uWebsockets.us_listen_socket) => void
   ): Promise<uWebsockets.us_listen_socket>;
-  listen(
+  async listen(
     arg0: number | string,
     arg1?: string | ((listen_socket: uWebsockets.us_listen_socket) => void),
     arg2?: (listen_socket: uWebsockets.us_listen_socket) => void
@@ -52,19 +53,48 @@ export class Application<
     if (typeof arg0 === 'number') {
       const port = arg0 || Number(process.env.PORT);
 
-      this.internal.set_error_handler((_req, res, err) => {
+      this.internal.set_error_handler((req, res, err) => {
         res.locals.errorMessage = err.message;
-        // TODO: replace with logger
-        console.error(err);
         res
           .status(
             res.statusCode && res.statusCode >= 400 ? res.statusCode : 500
           )
           .send(`Internal server error:\n\n${err.message}`);
+        emitLoggerError(
+          {
+            contractDetails: { name: 'unknown' },
+            originalPath: req.path,
+            ...req,
+            method: req.method,
+            path: req.path
+          },
+          {
+            statusCode: res.statusCode ?? 500
+          },
+          err.stack ?? err.message
+        );
       });
 
+      const { apiReference } = await import('@scalar/express-api-reference');
+
+      this.internal.use(
+        `/api/${process.env.VERSION ?? 'v1'}${process.env.DOCS_PATH ?? '/docs'}`,
+        apiReference({
+          spec: {
+            content: generateSwaggerDocument<SV>(
+              this.schemaValidator,
+              port,
+              this.routers
+            )
+          },
+          theme: 'deepSpace',
+          layout: 'modern'
+        }) as unknown as MiddlewareHandler
+      );
+
       const swaggerPath = `/api/${process.env.VERSION ?? 'v1'}${
-        process.env.DOCS_PATH ?? '/docs'
+        // process.env.DOCS_PATH ?? '/docs'
+        '/swagger'
       }`;
       this.internal.use(swaggerPath, swaggerRedirect(swaggerPath));
       this.internal.get(

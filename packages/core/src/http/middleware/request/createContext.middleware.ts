@@ -40,8 +40,7 @@ export function createContext<
   ResHeaders,
   LocalsObj
 > {
-  return (req, res, next?) => {
-    console.debug('[MIDDLEWARE] createRequestContext started');
+  return function setContext(req, res, next?) {
     req.schemaValidator = schemaValidator as SchemaValidator;
 
     let correlationId = v4();

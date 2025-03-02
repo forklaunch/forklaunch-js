@@ -33,7 +33,7 @@ export interface Request<
 > extends ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>,
     Omit<
       ExpressRequest<P, ResBodyMap, ReqBody, ReqQuery, LocalsObj>,
-      'method' | 'body' | 'params' | 'query' | 'headers'
+      'method' | 'body' | 'params' | 'query' | 'headers' | 'path'
     > {}
 
 /**

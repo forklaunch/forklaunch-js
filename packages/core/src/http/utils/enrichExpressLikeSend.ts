@@ -1,6 +1,7 @@
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
 import { parse } from '../middleware/response/parse.middleware';
+import { emitLoggerError } from '../tracing/emitLoggerError';
 import {
   ForklaunchRequest,
   ForklaunchResHeaders,
@@ -53,7 +54,9 @@ export function enrichExpressLikeSend<
     ForklaunchResHeaders & ResHeaders,
     LocalsObj
   >,
-  originalSend: ForklaunchStatusResponse<ForklaunchSendableData>['send'],
+  originalSend:
+    | ForklaunchStatusResponse<ForklaunchSendableData>['send']
+    | ForklaunchStatusResponse<ForklaunchSendableData>['json'],
   data: ForklaunchSendableData,
   shouldEnrich: boolean
 ) {
@@ -61,6 +64,7 @@ export function enrichExpressLikeSend<
   if (shouldEnrich) {
     if (res.statusCode === 404) {
       res.status(404);
+      emitLoggerError(req, res, 'Not Found');
       originalSend.call(instance, 'Not Found');
     }
 
@@ -70,6 +74,7 @@ export function enrichExpressLikeSend<
         if (res.locals.errorMessage) {
           errorString += `\n------------------\n${res.locals.errorMessage}`;
         }
+        emitLoggerError(req, res, errorString);
         res.status(500);
         originalSend.call(instance, errorString);
         parseErrorSent = true;

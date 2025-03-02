@@ -1,5 +1,7 @@
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { ExpressLikeRouter } from '../interfaces/expressLikeRouter.interface';
+import { cors } from '../middleware/request/cors.middleware';
+import { createContext } from '../middleware/request/createContext.middleware';
 import { ForklaunchExpressLikeRouter } from '../router/expressLikeRouter';
 
 /**
@@ -23,6 +25,9 @@ export abstract class ForklaunchExpressLikeApplication<
     readonly internal: Server
   ) {
     super('/', schemaValidator, internal);
+
+    this.internal.use(createContext(this.schemaValidator) as RouterHandler);
+    this.internal.use(cors as RouterHandler);
   }
 
   abstract listen(...args: unknown[]): void;

@@ -36,7 +36,6 @@ export function parse<
   _res: ForklaunchResponse<ResBodyMap, ResHeaders, LocalsObj>,
   next?: ForklaunchNextFunction
 ) {
-  console.debug('[MIDDLEWARE] parseRequest started');
   const request = {
     params: req.params,
     query: req.query,

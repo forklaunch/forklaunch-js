@@ -56,6 +56,8 @@ describe('http middleware tests', () => {
     };
 
     req = {
+      path: '/test',
+      originalPath: '/test',
       method: 'POST',
       context: {} as RequestContext,
       contractDetails: {} as HttpContractDetails<MockSchemaValidator>,
@@ -112,7 +114,7 @@ describe('http middleware tests', () => {
 
   test('request enrich details', async () => {
     req.contractDetails = {} as HttpContractDetails<MockSchemaValidator>;
-    enrichDetails(contractDetails, testSchema, {
+    enrichDetails('/test', contractDetails, testSchema, {
       headers: { 'x-correlation-id': '123' },
       responses: {
         200: testSchema

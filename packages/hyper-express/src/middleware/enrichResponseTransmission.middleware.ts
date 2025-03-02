@@ -1,7 +1,8 @@
 import {
   enrichExpressLikeSend,
   ForklaunchNextFunction,
-  ParamsDictionary
+  ParamsDictionary,
+  recordMetric
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
@@ -31,7 +32,6 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
   >,
   next: ForklaunchNextFunction
 ) {
-  console.debug('[MIDDLEWARE] enrichResponseTransmission');
   const originalSend = res.send;
   const originalJson = res.json;
   const originalSetHeader = res.setHeader as (
@@ -47,8 +47,26 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
    */
   res.json = function <T extends Record<string, unknown>>(data: T) {
     res.bodyData = data;
-    const result = originalJson.call(this, data);
-    return result as boolean;
+    res.statusCode = res._status_code;
+    recordMetric(req, res);
+    enrichExpressLikeSend<
+      SV,
+      ParamsDictionary,
+      Record<number, unknown>,
+      Record<string, unknown>,
+      ParsedQs,
+      Record<string, string>,
+      Record<string, string>,
+      Record<string, unknown>
+    >(
+      this,
+      req,
+      res,
+      originalJson,
+      data,
+      !res.cors && ((res._cork && !res._corked) || !res._cork)
+    );
+    return data;
   };
 
   /**
@@ -62,6 +80,7 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
       res.bodyData = data;
       res.statusCode = res._status_code;
     }
+    recordMetric(req, res);
     return enrichExpressLikeSend<
       SV,
       ParamsDictionary,

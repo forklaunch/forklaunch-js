@@ -64,7 +64,7 @@ async function checkAuthorizationToken<
   authorizationMethod: AuthMethods<SV, P, ReqBody, ReqQuery, ReqHeaders>,
   authorizationToken?: string,
   req?: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>
-): Promise<readonly [401 | 403 | 500, string] | string | undefined> {
+): Promise<readonly [401 | 403 | 500, string] | undefined> {
   if (authorizationToken == null) {
     return [401, 'No Authorization token provided.'];
   }
@@ -227,7 +227,6 @@ export async function parseRequestAuth<
   >,
   next?: ForklaunchNextFunction
 ) {
-  console.debug('[MIDDLEWARE] parseRequest started');
   const auth = req.contractDetails.auth as AuthMethods<
     SV,
     MapParamsSchema<SV, P>,
@@ -237,17 +236,18 @@ export async function parseRequestAuth<
   >;
 
   if (auth) {
-    const errorAndMessage = await checkAuthorizationToken(
-      auth,
-      req.headers[
-        (auth.method === 'other' ? auth.headerName : undefined) ??
-          'Authorization'
-      ],
-      req
-    );
-    if (Array.isArray(errorAndMessage)) {
-      res.status(errorAndMessage[0]).send(errorAndMessage[1]);
-      next?.(new Error(errorAndMessage[1]));
+    const [error, message] =
+      (await checkAuthorizationToken(
+        auth,
+        req.headers[
+          (auth.method === 'other' ? auth.headerName : undefined) ??
+            'Authorization'
+        ],
+        req
+      )) ?? [];
+    if (error != null) {
+      res.status(error).send(message);
+      next?.(new Error(message));
     }
   }
 

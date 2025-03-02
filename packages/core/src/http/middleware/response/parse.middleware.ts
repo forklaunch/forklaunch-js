@@ -54,7 +54,6 @@ export function parse<
   >,
   next?: ForklaunchNextFunction
 ) {
-  console.debug('[MIDDLEWARE] parseResponse started');
   const { headers, responses } = res.responseSchemas;
 
   const parsedResponse = req.schemaValidator.parse(

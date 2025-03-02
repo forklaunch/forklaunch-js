@@ -80,8 +80,14 @@ export interface ForklaunchRequest<
     | 'CONNECT'
     | 'TRACE';
 
+  /** Request path */
+  path: string;
+
   /** Request schema, compiled */
   requestSchema: unknown;
+
+  /** Original path */
+  originalPath: string;
 }
 
 /**

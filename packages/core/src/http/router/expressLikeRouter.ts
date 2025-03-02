@@ -16,8 +16,6 @@ import {
   PathOrMiddlewareBasedHandler
 } from '../interfaces/expressLikeRouter.interface';
 import { parseRequestAuth } from '../middleware/request/auth.middleware';
-import { cors } from '../middleware/request/cors.middleware';
-import { createContext } from '../middleware/request/createContext.middleware';
 import { enrichDetails } from '../middleware/request/enrichDetails.middleware';
 import { parse } from '../middleware/request/parse.middleware';
 import {
@@ -72,9 +70,6 @@ export class ForklaunchExpressLikeRouter<
     readonly internal: Internal
   ) {
     this.basePath = basePath;
-
-    this.internal.use(createContext(this.schemaValidator) as RouterHandler);
-    this.internal.use(cors as RouterHandler);
   }
 
   /**
@@ -92,6 +87,7 @@ export class ForklaunchExpressLikeRouter<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>
   >(
+    path: string,
     contractDetails: HttpContractDetails<SV> | PathParamHttpContractDetails<SV>,
     requestSchema: unknown,
     responseSchemas: ResponseCompiledSchema
@@ -115,7 +111,12 @@ export class ForklaunchExpressLikeRouter<
         ReqHeaders,
         ResHeaders,
         LocalsObj
-      >(contractDetails, requestSchema, responseSchemas),
+      >(
+        `${this.basePath}${path}`,
+        contractDetails,
+        requestSchema,
+        responseSchemas
+      ),
       parse,
       parseRequestAuth<
         SV,
@@ -179,11 +180,10 @@ export class ForklaunchExpressLikeRouter<
       try {
         await requestHandler(req, res, next);
       } catch (error) {
-        next?.(error as Error);
-
-        console.error(error);
-        if (!res.headersSent) {
-          res.status(500).send('Internal Server Error');
+        if (next) {
+          next(error as Error);
+        } else {
+          throw error;
         }
       }
     };
@@ -648,7 +648,7 @@ export class ForklaunchExpressLikeRouter<
             ReqHeaders,
             ResHeaders,
             LocalsObj
-          >(contractDetails, requestSchema, responseSchemas).concat(
+          >(path, contractDetails, requestSchema, responseSchemas).concat(
             handlers
           ) as RouterHandler[]),
           this.#parseAndRunControllerHandler(controllerHandler) as RouterHandler

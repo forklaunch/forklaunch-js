@@ -16,7 +16,11 @@ import swaggerUi from 'swagger-ui-express';
  * @returns {MiddlewareHandler} - The middleware handler for redirecting requests.
  */
 export function swaggerRedirect(path: string): MiddlewareHandler {
-  return (req: Request, res: Response, next?: MiddlewareNext) => {
+  return function swaggerHosting(
+    req: Request,
+    res: Response,
+    next?: MiddlewareNext
+  ) {
     if (req.path === path) {
       res.redirect(`${path}/`);
     }

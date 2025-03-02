@@ -10,7 +10,6 @@ export function polyfillGetHeaders(
   res: Response,
   next?: MiddlewareNext
 ) {
-  console.debug('[MIDDLEWARE] polyfillGetHeaders started');
   res.getHeaders = () => {
     return (res as unknown as { _headers: Record<string, string[]> })._headers;
   };

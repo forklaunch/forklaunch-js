@@ -31,6 +31,7 @@ export function enrichDetails<
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>
 >(
+  path: string,
   contractDetails: HttpContractDetails<SV> | PathParamHttpContractDetails<SV>,
   requestSchema: unknown,
   responseSchemas: ResponseCompiledSchema
@@ -45,7 +46,7 @@ export function enrichDetails<
   LocalsObj
 > {
   return (req, res, next?) => {
-    console.debug('[MIDDLEWARE] enrichRequestDetails started');
+    req.originalPath = path;
     req.contractDetails = contractDetails;
     req.requestSchema = requestSchema;
     res.responseSchemas = responseSchemas;
