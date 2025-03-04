@@ -5,7 +5,7 @@ import {
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
-import { Request, Response } from '../types/hyperExpress.types';
+import { InternalRequest, InternalResponse } from '../types/hyperExpress.types';
 
 /**
  * Middleware to enrich the response transmission by intercepting and parsing responses before they are sent.
@@ -16,7 +16,7 @@ import { Request, Response } from '../types/hyperExpress.types';
  * @param {MiddlewareNext} next - The next middleware function.
  */
 export function enrichResponseTransmission<SV extends AnySchemaValidator>(
-  req: Request<
+  req: InternalRequest<
     SV,
     ParamsDictionary,
     Record<string, unknown>,
@@ -24,7 +24,7 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
     Record<string, string>,
     Record<string, unknown>
   >,
-  res: Response<
+  res: InternalResponse<
     Record<number, unknown>,
     Record<string, string>,
     Record<string, unknown>
