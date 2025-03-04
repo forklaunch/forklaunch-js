@@ -3,7 +3,7 @@ import {
   Prettify,
   RemoveTrailingSlash
 } from '@forklaunch/common';
-import { AnySchemaValidator, SchemaValidator } from '@forklaunch/validator';
+import { AnySchemaValidator } from '@forklaunch/validator';
 import { Span } from '@opentelemetry/api';
 import { ParsedQs } from 'qs';
 import {
@@ -69,7 +69,7 @@ export interface ForklaunchRequest<
   /** Contract details for the request */
   contractDetails: PathParamHttpContractDetails<SV> | HttpContractDetails<SV>;
   /** Schema validator */
-  schemaValidator: SchemaValidator;
+  schemaValidator: SV;
 
   /** Method */
   method:

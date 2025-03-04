@@ -1,4 +1,4 @@
-import { IdiomaticSchema, SchemaValidator } from '@forklaunch/validator';
+import { IdiomaticSchema } from '@forklaunch/validator';
 import {
   MockSchemaValidator,
   literal,
@@ -61,7 +61,7 @@ describe('http middleware tests', () => {
       method: 'POST',
       context: {} as RequestContext,
       contractDetails: {} as HttpContractDetails<MockSchemaValidator>,
-      schemaValidator: {} as SchemaValidator,
+      schemaValidator: {} as MockSchemaValidator,
       params: testSchema,
       headers: testSchema,
       body: testSchema,
@@ -106,7 +106,7 @@ describe('http middleware tests', () => {
 
   test('create request context', async () => {
     req.context = {} as RequestContext;
-    req.schemaValidator = {} as SchemaValidator;
+    req.schemaValidator = {} as MockSchemaValidator;
     createContext(mockSchemaValidator)(req, res, nextFunction);
     expect(req.context.correlationId).not.toBe('123');
     expect(req.schemaValidator).toBe(mockSchemaValidator);

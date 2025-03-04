@@ -1,6 +1,7 @@
 import {
   AnySchemaValidator,
-  prettyPrintParseErrors
+  prettyPrintParseErrors,
+  SchemaValidator
 } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
 import { isResponseShape } from '../../guards/isResponseShape';
@@ -43,7 +44,10 @@ export function parse<
     body: req.body
   };
 
-  const parsedRequest = req.schemaValidator.parse(req.requestSchema, request);
+  const parsedRequest = (req.schemaValidator as SchemaValidator).parse(
+    req.requestSchema,
+    request
+  );
 
   if (
     parsedRequest.ok &&

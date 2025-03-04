@@ -1,4 +1,4 @@
-import { AnySchemaValidator, SchemaValidator } from '@forklaunch/validator';
+import { AnySchemaValidator } from '@forklaunch/validator';
 import { trace } from '@opentelemetry/api';
 import { v4 } from 'uuid';
 import { ATTR_CORRELATION_ID } from '../../tracing/constants';
@@ -43,7 +43,7 @@ export function createContext<
   LocalsObj
 > {
   return function setContext(req, res, next?) {
-    req.schemaValidator = schemaValidator as SchemaValidator;
+    req.schemaValidator = schemaValidator;
 
     let correlationId = v4();
 

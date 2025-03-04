@@ -1,6 +1,7 @@
 import {
   AnySchemaValidator,
-  prettyPrintParseErrors
+  prettyPrintParseErrors,
+  SchemaValidator
 } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
 import {
@@ -56,12 +57,12 @@ export function parse<
 ) {
   const { headers, responses } = res.responseSchemas;
 
-  const parsedResponse = req.schemaValidator.parse(
+  const parsedResponse = (req.schemaValidator as SchemaValidator).parse(
     responses?.[res.statusCode],
     res.bodyData
   );
 
-  const parsedHeaders = req.schemaValidator.parse(
+  const parsedHeaders = (req.schemaValidator as SchemaValidator).parse(
     headers ?? req.schemaValidator.unknown,
     res.getHeaders()
   );
