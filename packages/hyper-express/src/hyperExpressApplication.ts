@@ -1,7 +1,9 @@
 import {
-  emitLoggerError,
+  ATTR_HTTP_RESPONSE_STATUS_CODE,
   ForklaunchExpressLikeApplication,
-  generateSwaggerDocument
+  generateSwaggerDocument,
+  isForklaunchRequest,
+  logger
 } from '@forklaunch/core/http';
 import { MiddlewareHandler, Server } from '@forklaunch/hyper-express-fork';
 import { AnySchemaValidator } from '@forklaunch/validator';
@@ -59,20 +61,16 @@ export class Application<
           .status(
             res.statusCode && res.statusCode >= 400 ? res.statusCode : 500
           )
-          .send(`Internal server error:\n\n${err.message}`);
-        emitLoggerError(
-          {
-            contractDetails: { name: 'unknown' },
-            originalPath: req.path,
-            ...req,
-            method: req.method,
-            path: req.path
-          },
-          {
-            statusCode: res.statusCode ?? 500
-          },
-          err.stack ?? err.message
-        );
+          .send(
+            `Internal server error:\n\n${
+              isForklaunchRequest(req)
+                ? req.context.correlationId
+                : 'No correlation ID'
+            }`
+          );
+        logger('error').error(err.stack ?? err.message, {
+          [ATTR_HTTP_RESPONSE_STATUS_CODE]: res.statusCode ?? 500
+        });
       });
 
       const { apiReference } = await import('@scalar/express-api-reference');
@@ -92,10 +90,7 @@ export class Application<
         }) as unknown as MiddlewareHandler
       );
 
-      const swaggerPath = `/api/${process.env.VERSION ?? 'v1'}${
-        // process.env.DOCS_PATH ?? '/docs'
-        '/swagger'
-      }`;
+      const swaggerPath = `/api/${process.env.VERSION ?? 'v1'}${'/swagger'}`;
       this.internal.use(swaggerPath, swaggerRedirect(swaggerPath));
       this.internal.get(
         `${swaggerPath}/*`,

@@ -27,13 +27,29 @@ bootstrap((ci) => {
   const scopedUserServiceFactory = ci.scopedResolver('userService');
   //! constructs the routes using the appropriate controllers
   const organizationRoutes = OrganizationRoutes(
-    new OrganizationController(scopedOrganizationServiceFactory)
+    new OrganizationController(
+      scopedOrganizationServiceFactory,
+      ci.resolve('openTelemetryCollector')
+    )
   );
   const permissionRoutes = PermissionRoutes(
-    new PermissionController(scopedPermissionServiceFactory)
+    new PermissionController(
+      scopedPermissionServiceFactory,
+      ci.resolve('openTelemetryCollector')
+    )
   );
-  const roleRoutes = RoleRoutes(new RoleController(scopedRoleServiceFactory));
-  const userRoutes = UserRoutes(new UserController(scopedUserServiceFactory));
+  const roleRoutes = RoleRoutes(
+    new RoleController(
+      scopedRoleServiceFactory,
+      ci.resolve('openTelemetryCollector')
+    )
+  );
+  const userRoutes = UserRoutes(
+    new UserController(
+      scopedUserServiceFactory,
+      ci.resolve('openTelemetryCollector')
+    )
+  );
   //! mounts the routes to the app
   app.use(organizationRoutes.router);
   app.use(permissionRoutes.router);

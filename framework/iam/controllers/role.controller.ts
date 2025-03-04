@@ -1,7 +1,14 @@
 import { Controller } from '@forklaunch/core/controllers';
-import { delete_, get, post, put } from '@forklaunch/core/http';
+import {
+  delete_,
+  get,
+  OpenTelemetryCollector,
+  post,
+  put
+} from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { array, SchemaValidator, string } from '@forklaunch/framework-core';
+import { ForklaunchMetrics } from '@forklaunch/framework-monitoring';
 import { configValidator } from '../bootstrapper';
 import { RoleService } from '../interfaces/role.service.interface';
 import {
@@ -16,7 +23,8 @@ export class RoleController implements Controller<RoleService> {
       SchemaValidator,
       typeof configValidator,
       'roleService'
-    >
+    >,
+    private readonly openTelemetryCollector: OpenTelemetryCollector<ForklaunchMetrics>
   ) {}
 
   createRole = post(

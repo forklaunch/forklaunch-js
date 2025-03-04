@@ -180,7 +180,7 @@ pub(crate) fn project_test_script(test_framework: &str) -> &'static str {
 }
 pub(crate) fn project_migrate_script(command: &str) -> String {
     let base =
-        "[ -z $ENV_FILE_PATH ] && export ENV_FILE_PATH=.env.local; NODE_OPTIONS='--require ts-node/register' mikro-orm migration:";
+        "[ -z $ENV_FILE_PATH ] && export ENV_FILE_PATH=.env.local; NODE_OPTIONS='--import=tsx' mikro-orm migration:";
     match command {
         "create" => format!("{}{}", base, "create"),
         "down" => format!("{}{}", base, "down"),

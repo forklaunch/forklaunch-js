@@ -1,4 +1,5 @@
 import { AnySchemaValidator } from '@forklaunch/validator';
+import { ATTR_API_NAME } from '../../tracing/constants';
 import { ExpressLikeSchemaHandler } from '../../types/apiDefinition.types';
 import {
   Body,
@@ -50,6 +51,8 @@ export function enrichDetails<
     req.contractDetails = contractDetails;
     req.requestSchema = requestSchema;
     res.responseSchemas = responseSchemas;
+
+    req.context.span?.setAttribute(ATTR_API_NAME, req.contractDetails?.name);
     next?.();
   };
 }

@@ -1,7 +1,14 @@
 import { Controller } from '@forklaunch/core/controllers';
-import { delete_, get, post, put } from '@forklaunch/core/http';
+import {
+  delete_,
+  get,
+  OpenTelemetryCollector,
+  post,
+  put
+} from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { array, SchemaValidator, string } from '@forklaunch/framework-core';
+import { ForklaunchMetrics } from '@forklaunch/framework-monitoring';
 import { configValidator } from '../bootstrapper';
 import { PermissionService } from '../interfaces/permission.service.interface';
 import {
@@ -16,7 +23,8 @@ export class PermissionController implements Controller<PermissionService> {
       SchemaValidator,
       typeof configValidator,
       'permissionService'
-    >
+    >,
+    private readonly openTelemetryCollector: OpenTelemetryCollector<ForklaunchMetrics>
   ) {}
 
   createPermission = post(

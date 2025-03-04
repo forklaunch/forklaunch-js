@@ -7,10 +7,9 @@ import {
   ObservableCounter,
   ObservableGauge,
   ObservableUpDownCounter,
-  trace,
   UpDownCounter
 } from '@opentelemetry/api';
-import { AnyValueMap, logs } from '@opentelemetry/api-logs';
+import { AnyValueMap } from '@opentelemetry/api-logs';
 import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http';
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
@@ -21,17 +20,21 @@ import { BatchLogRecordProcessor } from '@opentelemetry/sdk-logs';
 import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import {
-  ATTR_SERVICE_NAME,
-  SEMATTRS_HTTP_METHOD,
-  SEMATTRS_HTTP_ROUTE,
-  SEMATTRS_HTTP_STATUS_CODE
+  ATTR_HTTP_REQUEST_METHOD,
+  ATTR_HTTP_RESPONSE_STATUS_CODE,
+  ATTR_HTTP_ROUTE,
+  ATTR_SERVICE_NAME
 } from '@opentelemetry/semantic-conventions';
+import dotenv from 'dotenv';
 import { LevelWithSilent, LevelWithSilentOrString } from 'pino';
+import { getEnvVar } from '../../services/getEnvVar';
+import { isForklaunchRequest } from '../guards/isForklaunchRequest';
 import {
   MetricsDefinition,
   MetricType
 } from '../types/openTelemetryCollector.types';
-import { pinoLogger } from './pinoLogger';
+import { ATTR_API_NAME, ATTR_CORRELATION_ID } from './constants';
+import { logger } from './pinoLogger';
 
 export class OpenTelemetryCollector<
   AppliedMetricsDefinition extends MetricsDefinition
@@ -54,7 +57,7 @@ export class OpenTelemetryCollector<
     level?: LevelWithSilentOrString,
     metricDefinitions?: AppliedMetricsDefinition
   ) {
-    this.logger = pinoLogger(level ?? 'info');
+    this.logger = logger(level ?? 'info');
 
     this.metrics = {} as Record<
       keyof AppliedMetricsDefinition,
@@ -107,25 +110,7 @@ export class OpenTelemetryCollector<
   }
 
   log(level: LevelWithSilent, msg: string, meta: AnyValueMap = {}) {
-    const activeSpan = trace.getActiveSpan();
-    if (activeSpan) {
-      const activeSpanContext = activeSpan.spanContext();
-      meta.trace_id = activeSpanContext.traceId;
-      meta.span_id = activeSpanContext.spanId;
-      meta.trace_flags = activeSpanContext.traceFlags;
-    }
-
-    if (!meta.api_name) {
-      // @ts-expect-error accessing private property
-      meta.api_name = activeSpan?.attributes['api.name'] ?? 'undefined';
-    }
-
-    this.logger[level](msg);
-    logs.getLogger(this.serviceName).emit({
-      severityText: level,
-      body: msg,
-      attributes: meta
-    });
+    this.logger.log(level, msg, meta);
   }
 
   getMetric<T extends keyof AppliedMetricsDefinition>(
@@ -135,49 +120,54 @@ export class OpenTelemetryCollector<
   }
 }
 
+dotenv.config({ path: getEnvVar('ENV_FILE_PATH') });
+
 new NodeSDK({
   resource: new Resource({
-    [ATTR_SERVICE_NAME]: process.env.SERVICE_NAME
+    [ATTR_SERVICE_NAME]: getEnvVar('OTEL_SERVICE_NAME')
   }),
   traceExporter: new OTLPTraceExporter({
-    url: `${process.env.OTEL_EXPORTER_OTLP_ENDPOINT ?? 'http://localhost:4318'}/v1/traces`
+    url: `${getEnvVar('OTEL_EXPORTER_OTLP_ENDPOINT') ?? 'http://localhost:4318'}/v1/traces`
   }),
   metricReader: new PeriodicExportingMetricReader({
     exporter: new OTLPMetricExporter({
-      url: `${process.env.OTEL_EXPORTER_OTLP_ENDPOINT ?? 'http://localhost:4318'}/v1/metrics`
+      url: `${getEnvVar('OTEL_EXPORTER_OTLP_ENDPOINT') ?? 'http://localhost:4318'}/v1/metrics`
     }),
     exportIntervalMillis: 5000
   }),
   logRecordProcessors: [
     new BatchLogRecordProcessor(
       new OTLPLogExporter({
-        url: `${process.env.OTEL_EXPORTER_OTLP_ENDPOINT ?? 'http://localhost:4318'}/v1/logs`
+        url: `${getEnvVar('OTEL_EXPORTER_OTLP_ENDPOINT') ?? 'http://localhost:4318'}/v1/logs`
       })
     )
   ],
   instrumentations: [
-    new HttpInstrumentation(),
-    new ExpressInstrumentation({
-      requestHook: (span, info) => {
+    new HttpInstrumentation({
+      applyCustomAttributesOnSpan: (span, request) => {
         span.setAttribute(
           'service.name',
-          process.env.SERVICE_NAME ?? 'unknown'
+          getEnvVar('OTEL_SERVICE_NAME') ?? 'unknown'
         );
-        span.setAttribute('api.name', info.request.contractDetails?.name);
+        if (isForklaunchRequest(request)) {
+          span.setAttribute('api.name', request.contractDetails?.name);
+        }
       }
     }),
+    new ExpressInstrumentation(),
     new HyperExpressInstrumentation()
   ]
 }).start();
 
 export const httpRequestsTotalCounter = metrics
-  .getMeter(process.env.SERVICE_NAME || 'unknown')
+  .getMeter(getEnvVar('OTEL_SERVICE_NAME') || 'unknown')
   .createCounter<{
-    'service.name': string;
-    'api.name': string;
-    [SEMATTRS_HTTP_METHOD]: string;
-    [SEMATTRS_HTTP_ROUTE]: string;
-    [SEMATTRS_HTTP_STATUS_CODE]: number;
+    [ATTR_SERVICE_NAME]: string;
+    [ATTR_API_NAME]: string;
+    [ATTR_CORRELATION_ID]: string;
+    [ATTR_HTTP_REQUEST_METHOD]: string;
+    [ATTR_HTTP_ROUTE]: string;
+    [ATTR_HTTP_RESPONSE_STATUS_CODE]: number;
   }>('http_requests_total', {
     description: 'Number of HTTP requests'
   });

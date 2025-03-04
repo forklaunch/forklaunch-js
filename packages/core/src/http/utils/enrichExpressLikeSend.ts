@@ -1,7 +1,8 @@
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
 import { parse } from '../middleware/response/parse.middleware';
-import { emitLoggerError } from '../tracing/emitLoggerError';
+
+import { logger } from '../tracing/pinoLogger';
 import {
   ForklaunchRequest,
   ForklaunchResHeaders,
@@ -10,6 +11,7 @@ import {
   ForklaunchStatusResponse
 } from '../types/apiDefinition.types';
 import { ParamsDictionary } from '../types/contractDetails.types';
+import { recordMetric } from './recordMetric';
 
 /**
  * Enhances the Express-like `send` method with additional logic for response handling and validation.
@@ -62,9 +64,20 @@ export function enrichExpressLikeSend<
 ) {
   let parseErrorSent;
   if (shouldEnrich) {
+    recordMetric<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ResBodyMap,
+      ReqHeaders,
+      ForklaunchResHeaders & ResHeaders,
+      LocalsObj
+    >(req, res);
+
     if (res.statusCode === 404) {
       res.status(404);
-      emitLoggerError(req, res, 'Not Found');
+      logger('error').error('Not Found');
       originalSend.call(instance, 'Not Found');
     }
 
@@ -74,7 +87,7 @@ export function enrichExpressLikeSend<
         if (res.locals.errorMessage) {
           errorString += `\n------------------\n${res.locals.errorMessage}`;
         }
-        emitLoggerError(req, res, errorString);
+        logger('error').error(errorString);
         res.status(500);
         originalSend.call(instance, errorString);
         parseErrorSent = true;

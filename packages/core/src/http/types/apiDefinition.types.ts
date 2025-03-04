@@ -4,6 +4,7 @@ import {
   RemoveTrailingSlash
 } from '@forklaunch/common';
 import { AnySchemaValidator, SchemaValidator } from '@forklaunch/validator';
+import { Span } from '@opentelemetry/api';
 import { ParsedQs } from 'qs';
 import {
   Body,
@@ -26,6 +27,8 @@ export interface RequestContext {
   correlationId: string;
   /** Optional idempotency key for ensuring idempotent requests */
   idempotencyKey?: string;
+  /** Active OpenTelemetry Span */
+  span?: Span;
 }
 
 export interface ForklaunchBaseRequest<

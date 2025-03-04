@@ -1,5 +1,7 @@
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { BaseService } from '@forklaunch/core/services';
 import { SchemaValidator } from '@forklaunch/framework-core';
+import { ForklaunchMetrics } from '@forklaunch/framework-monitoring';
 import { EntityManager } from '@mikro-orm/core';
 import { OrganizationService } from '../interfaces/organization.service.interface';
 import {
@@ -15,12 +17,16 @@ import { Organization } from '../models/persistence/organization.entity';
 export default class BaseOrganizationService
   implements OrganizationService, BaseService
 {
-  constructor(public em: EntityManager) {}
+  constructor(
+    public em: EntityManager,
+    private readonly openTelemetryCollector: OpenTelemetryCollector<ForklaunchMetrics>
+  ) {}
 
   async createOrganization(
     organizationDto: CreateOrganizationDto,
     em?: EntityManager
   ): Promise<OrganizationDto> {
+    this.openTelemetryCollector.log('info', 'Creating organization');
     const organization = CreateOrganizationDtoMapper.deserializeDtoToEntity(
       SchemaValidator(),
       organizationDto

@@ -1,3 +1,4 @@
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import {
   ConfigInjector,
   getEnvVar,
@@ -24,6 +25,7 @@ export const configValidator = {
   version: optional(string),
   docsPath: optional(string),
   passwordEncryptionPublicKeyPath: string,
+  openTelemetryCollector: OpenTelemetryCollector,
   entityManager: EntityManager,
   organizationService: BaseOrganizationService,
   permissionService: BasePermissionService,
@@ -70,6 +72,16 @@ export function bootstrap(
               context?.entityManagerOptions as ForkOptions | undefined
             )
         },
+        openTelemetryCollector: {
+          lifetime: Lifetime.Singleton,
+          value: new OpenTelemetryCollector(
+            getEnvVar('OTEL_SERVICE_NAME'),
+            'info',
+            {
+              test: 'counter'
+            }
+          )
+        },
         organizationService: {
           lifetime: Lifetime.Scoped,
           factory: ({ entityManager }, resolve, context) => {
@@ -77,37 +89,56 @@ export function bootstrap(
             if (context.entityManagerOptions) {
               em = resolve('entityManager', context);
             }
-            return new BaseOrganizationService(em);
+            return new BaseOrganizationService(
+              em,
+              resolve('openTelemetryCollector', context)
+            );
           }
         },
         permissionService: {
           lifetime: Lifetime.Scoped,
-          factory: ({ entityManager }, resolve, context) => {
+          factory: (
+            { entityManager, openTelemetryCollector },
+            resolve,
+            context
+          ) => {
             let em = entityManager;
             if (context.entityManagerOptions) {
               em = resolve('entityManager', context);
             }
-            return new BasePermissionService(em, () =>
-              resolve('roleService', context)
+            return new BasePermissionService(
+              em,
+              () => resolve('roleService', context),
+              openTelemetryCollector
             );
           }
         },
         roleService: {
           lifetime: Lifetime.Scoped,
-          factory: ({ entityManager }, resolve, context) => {
+          factory: (
+            { entityManager, openTelemetryCollector },
+            resolve,
+            context
+          ) => {
             let em = entityManager;
             if (context.entityManagerOptions) {
               em = resolve('entityManager', context);
             }
-            return new BaseRoleService(em, () =>
-              resolve('permissionService', context)
+            return new BaseRoleService(
+              em,
+              () => resolve('permissionService', context),
+              openTelemetryCollector
             );
           }
         },
         userService: {
           lifetime: Lifetime.Scoped,
           factory: (
-            { entityManager, passwordEncryptionPublicKeyPath },
+            {
+              entityManager,
+              passwordEncryptionPublicKeyPath,
+              openTelemetryCollector
+            },
             resolve,
             context
           ) => {
@@ -119,7 +150,8 @@ export function bootstrap(
               em,
               passwordEncryptionPublicKeyPath,
               () => resolve('roleService', context),
-              () => resolve('organizationService', context)
+              () => resolve('organizationService', context),
+              openTelemetryCollector
             );
           }
         }

@@ -12,6 +12,7 @@ RUN apk update
 RUN apk add --no-cache libc6-compat
 RUN apk add --no-cache git
 RUN pnpm install{{/is_node}}{{#is_bun}}RUN bun install{{/is_bun}}
-{{#is_node}}
 # Build TypeScript code
-RUN pnpm build{{/is_node}}
+{{#is_node}}
+RUN pnpm build{{/is_node}}{{#is_bun}}
+RUN bun run build{{/is_bun}}

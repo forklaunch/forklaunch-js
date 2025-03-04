@@ -1,9 +1,12 @@
 import {
-  emitLoggerError,
+  ATTR_HTTP_RESPONSE_STATUS_CODE,
   ForklaunchExpressLikeApplication,
-  generateSwaggerDocument
+  generateSwaggerDocument,
+  isForklaunchRequest,
+  logger
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
+import { apiReference } from '@scalar/express-api-reference';
 import express, { ErrorRequestHandler, Express, RequestHandler } from 'express';
 import { Server } from 'http';
 import swaggerUi from 'swagger-ui-express';
@@ -53,40 +56,30 @@ export class Application<
       )
     );
 
-    import('@scalar/express-api-reference')
-      .then(({ apiReference }) => {
-        this.internal.use(
-          `/api/${process.env.VERSION ?? 'v1'}${process.env.DOCS_PATH ?? '/docs'}`,
-          apiReference({
-            spec: {
-              content: generateSwaggerDocument<SV>(
-                this.schemaValidator,
-                port,
-                this.routers
-              )
-            }
-          })
-        );
+    this.internal.use(
+      `/api/${process.env.VERSION ?? 'v1'}${process.env.DOCS_PATH ?? '/docs'}`,
+      apiReference({
+        spec: {
+          content: generateSwaggerDocument<SV>(
+            this.schemaValidator,
+            port,
+            this.routers
+          )
+        }
       })
-      .catch((error) => {
-        console.warn('Failed to load Scalar API reference:', error);
-      });
+    );
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
       res.locals.errorMessage = err.message;
       res
         .status(res.statusCode && res.statusCode >= 400 ? res.statusCode : 500)
-        .send(`Internal server error:\n\n${err.message}`);
-      emitLoggerError(
-        {
-          contractDetails: { name: 'unknown' },
-          originalPath: req.route?.path,
-          ...req
-        },
-        res,
-        err.stack ?? err.message
-      );
+        .send(
+          `Internal server error:\n\n${isForklaunchRequest(req) ? req.context.correlationId : 'No correlation ID'}`
+        );
+      logger('error').error(err.stack ?? err.message, {
+        [ATTR_HTTP_RESPONSE_STATUS_CODE]: res.statusCode ?? 500
+      });
     };
     this.internal.use(errorHandler);
     return this.internal.listen(...(args as (() => void)[]));

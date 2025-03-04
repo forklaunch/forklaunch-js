@@ -1,5 +1,7 @@
 import { AnySchemaValidator, SchemaValidator } from '@forklaunch/validator';
+import { trace } from '@opentelemetry/api';
 import { v4 } from 'uuid';
+import { ATTR_CORRELATION_ID } from '../../tracing/constants';
 import { ExpressLikeSchemaHandler } from '../../types/apiDefinition.types';
 import {
   Body,
@@ -54,6 +56,12 @@ export function createContext<
     req.context = {
       correlationId: correlationId
     };
+
+    const span = trace.getActiveSpan();
+    if (span != null) {
+      req.context.span = span;
+      req.context.span?.setAttribute(ATTR_CORRELATION_ID, correlationId);
+    }
 
     next?.();
   };

@@ -1,4 +1,6 @@
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { SchemaValidator } from '@forklaunch/framework-core';
+import { ForklaunchMetrics } from '@forklaunch/framework-monitoring';
 import { EntityManager } from '@mikro-orm/core';
 import { PermissionService } from '../interfaces/permission.service.interface';
 import { RoleService } from '../interfaces/role.service.interface';
@@ -17,7 +19,8 @@ import { Role } from '../models/persistence/role.entity';
 export default class BaseRoleService implements RoleService {
   constructor(
     public em: EntityManager,
-    private permissionServiceFactory: () => PermissionService
+    private permissionServiceFactory: () => PermissionService,
+    private openTelemetryCollector: OpenTelemetryCollector<ForklaunchMetrics>
   ) {}
 
   private async getBatchPermissions(

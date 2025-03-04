@@ -1,8 +1,7 @@
 import {
   enrichExpressLikeSend,
   ForklaunchNextFunction,
-  ParamsDictionary,
-  recordMetric
+  ParamsDictionary
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
@@ -48,7 +47,6 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
   res.json = function <T extends Record<string, unknown>>(data: T) {
     res.bodyData = data;
     res.statusCode = res._status_code;
-    recordMetric(req, res);
     enrichExpressLikeSend<
       SV,
       ParamsDictionary,
@@ -80,7 +78,6 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
       res.bodyData = data;
       res.statusCode = res._status_code;
     }
-    recordMetric(req, res);
     return enrichExpressLikeSend<
       SV,
       ParamsDictionary,

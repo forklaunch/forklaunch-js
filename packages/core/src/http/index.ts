@@ -1,4 +1,5 @@
 export * from './application/expressLikeApplication';
+export * from './guards/isForklaunchRequest';
 export * from './guards/isForklaunchRouter';
 export * from './handlers/delete';
 export * from './handlers/get';
@@ -13,8 +14,9 @@ export * from './handlers/typedHandler';
 export * from './interfaces/expressLikeRouter.interface';
 export * from './openApiV3Generator/openApiV3Generator';
 export * from './router/expressLikeRouter';
-export * from './tracing/emitLoggerError';
+export * from './tracing/constants';
 export * from './tracing/openTelemetryCollector';
+export * from './tracing/pinoLogger';
 export * from './types/apiDefinition.types';
 export * from './types/contractDetails.types';
 export * from './types/expressLikeRouter.types';

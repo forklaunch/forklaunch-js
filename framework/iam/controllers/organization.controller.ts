@@ -1,5 +1,11 @@
 import { Controller } from '@forklaunch/core/controllers';
-import { delete_, get, post, put } from '@forklaunch/core/http';
+import {
+  delete_,
+  get,
+  OpenTelemetryCollector,
+  post,
+  put
+} from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { SchemaValidator, string } from '@forklaunch/framework-core';
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
@@ -17,7 +23,10 @@ export class OrganizationController implements Controller<OrganizationService> {
       SchemaValidator,
       typeof configValidator,
       'organizationService'
-    >
+    >,
+    private readonly openTelemetryCollector: OpenTelemetryCollector<{
+      test: 'counter';
+    }>
   ) {}
 
   createOrganization = post(
@@ -39,6 +48,10 @@ export class OrganizationController implements Controller<OrganizationService> {
           .json(await this.serviceFactory().createOrganization(req.body));
       } catch (error: Error | unknown) {
         if (error instanceof UniqueConstraintViolationException) {
+          this.openTelemetryCollector.log(
+            'error',
+            'Organization already exists'
+          );
           res.status(409).send('Organization already exists');
         } else {
           throw error;
@@ -68,6 +81,7 @@ export class OrganizationController implements Controller<OrganizationService> {
       if (organizationDto) {
         res.status(200).json(organizationDto);
       } else {
+        this.openTelemetryCollector.log('error', 'Organization not found');
         res.status(404).send('Organization not found');
       }
     }
