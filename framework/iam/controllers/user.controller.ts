@@ -1,14 +1,16 @@
 import { Controller } from '@forklaunch/core/controllers';
-import {
-  delete_,
-  get,
-  OpenTelemetryCollector,
-  post,
-  put
-} from '@forklaunch/core/http';
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
-import { array, SchemaValidator, string } from '@forklaunch/framework-core';
+import {
+  array,
+  handlers,
+  NextFunction,
+  SchemaValidator,
+  string
+} from '@forklaunch/framework-core';
 import { ForklaunchMetrics } from '@forklaunch/framework-monitoring';
+import { Request, Response } from 'express';
+import { ParsedQs } from 'qs';
 import { configValidator } from '../bootstrapper';
 import { UserService } from '../interfaces/user.service.interface';
 import {
@@ -17,7 +19,9 @@ import {
   UserDtoMapper
 } from '../models/dtoMapper/user.dtoMapper';
 
-export class UserController implements Controller<UserService> {
+export class UserController
+  implements Controller<UserService, Request, Response, NextFunction, ParsedQs>
+{
   constructor(
     private readonly serviceFactory: ScopedDependencyFactory<
       SchemaValidator,
@@ -27,7 +31,7 @@ export class UserController implements Controller<UserService> {
     private readonly openTelemetryCollector: OpenTelemetryCollector<ForklaunchMetrics>
   ) {}
 
-  createUser = post(
+  createUser = handlers.post(
     SchemaValidator(),
     '/',
     {
@@ -46,7 +50,7 @@ export class UserController implements Controller<UserService> {
     }
   );
 
-  createBatchUsers = post(
+  createBatchUsers = handlers.post(
     SchemaValidator(),
     '/batch',
     {
@@ -64,7 +68,7 @@ export class UserController implements Controller<UserService> {
     }
   );
 
-  getUser = get(
+  getUser = handlers.get(
     SchemaValidator(),
     '/:id',
     {
@@ -83,7 +87,7 @@ export class UserController implements Controller<UserService> {
     }
   );
 
-  getBatchUsers = get(
+  getBatchUsers = handlers.get(
     SchemaValidator(),
     '/batch',
     {
@@ -106,7 +110,7 @@ export class UserController implements Controller<UserService> {
     }
   );
 
-  updateUser = put(
+  updateUser = handlers.put(
     SchemaValidator(),
     '/',
     {
@@ -124,7 +128,7 @@ export class UserController implements Controller<UserService> {
     }
   );
 
-  updateBatchUsers = put(
+  updateBatchUsers = handlers.put(
     SchemaValidator(),
     '/batch',
     {
@@ -142,7 +146,7 @@ export class UserController implements Controller<UserService> {
     }
   );
 
-  deleteUser = delete_(
+  deleteUser = handlers.delete(
     SchemaValidator(),
     '/:id',
     {
@@ -162,7 +166,7 @@ export class UserController implements Controller<UserService> {
     }
   );
 
-  deleteBatchUsers = delete_(
+  deleteBatchUsers = handlers.delete(
     SchemaValidator(),
     '/batch',
     {
@@ -182,7 +186,7 @@ export class UserController implements Controller<UserService> {
     }
   );
 
-  verifyHasRole = get(
+  verifyHasRole = handlers.get(
     SchemaValidator(),
     '/:id/verify-role/:roleId',
     {
@@ -204,7 +208,7 @@ export class UserController implements Controller<UserService> {
     }
   );
 
-  verifyHasPermission = get(
+  verifyHasPermission = handlers.get(
     SchemaValidator(),
     '/:id/verify-permission/:permissionId',
     {

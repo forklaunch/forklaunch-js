@@ -1,6 +1,9 @@
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { ATTR_API_NAME } from '../../tracing/constants';
-import { ExpressLikeSchemaHandler } from '../../types/apiDefinition.types';
+import {
+  ExpressLikeSchemaHandler,
+  ForklaunchNextFunction
+} from '../../types/apiDefinition.types';
 import {
   Body,
   HeadersObject,
@@ -44,7 +47,10 @@ export function enrichDetails<
   ReqQuery,
   ReqHeaders,
   ResHeaders,
-  LocalsObj
+  LocalsObj,
+  unknown,
+  unknown,
+  ForklaunchNextFunction
 > {
   return (req, res, next?) => {
     req.originalPath = path;

@@ -65,7 +65,19 @@ export interface ForklaunchRequest<
   ReqBody extends Record<string, unknown>,
   ReqQuery extends ParsedQs,
   ReqHeaders extends Record<string, string>
-> extends ForklaunchBaseRequest<P, ReqBody, ReqQuery, ReqHeaders> {
+> {
+  /** Context of the request */
+  context: Prettify<RequestContext>;
+
+  /** Request parameters */
+  params: P;
+  /** Request headers */
+  headers: ReqHeaders;
+  /** Request body */
+  body: ReqBody;
+  /** Request query */
+  query: ReqQuery;
+
   /** Contract details for the request */
   contractDetails: PathParamHttpContractDetails<SV> | HttpContractDetails<SV>;
   /** Schema validator */
@@ -221,6 +233,29 @@ export interface ForklaunchResponse<
  */
 export type ForklaunchNextFunction = (err?: unknown) => void;
 
+export type ResolvedForklaunchRequest<
+  SV extends AnySchemaValidator,
+  P extends ParamsDictionary,
+  ReqBody extends Record<string, unknown>,
+  ReqQuery extends ParsedQs,
+  ReqHeaders extends Record<string, string>,
+  BaseRequest
+> = unknown extends BaseRequest
+  ? ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>
+  : {
+      [key in keyof BaseRequest]: key extends keyof ForklaunchRequest<
+        SV,
+        P,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders
+      >
+        ? ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>[key]
+        : key extends keyof BaseRequest
+          ? BaseRequest[key]
+          : never;
+    };
+
 /**
  * Represents a middleware handler with schema validation.
  *
@@ -240,12 +275,34 @@ export interface ExpressLikeHandler<
   ReqQuery extends ParsedQs,
   ReqHeaders extends Record<string, string>,
   ResHeaders extends Record<string, string>,
-  LocalsObj extends Record<string, unknown>
+  LocalsObj extends Record<string, unknown>,
+  BaseRequest,
+  BaseResponse,
+  NextFunction
 > {
   (
-    req: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>,
-    res: ForklaunchResponse<ResBodyMap, ResHeaders, LocalsObj>,
-    next?: ForklaunchNextFunction
+    req: ResolvedForklaunchRequest<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      BaseRequest
+    >,
+    res: unknown extends BaseResponse
+      ? ForklaunchResponse<ResBodyMap, ResHeaders, LocalsObj>
+      : {
+          [key in keyof BaseResponse]: key extends keyof ForklaunchResponse<
+            ResBodyMap,
+            ResHeaders,
+            LocalsObj
+          >
+            ? ForklaunchResponse<ResBodyMap, ResHeaders, LocalsObj>[key]
+            : key extends keyof BaseResponse
+              ? BaseResponse[key]
+              : never;
+        },
+    next?: NextFunction
   ): void | Promise<void>;
 }
 
@@ -327,7 +384,10 @@ export type ExpressLikeSchemaHandler<
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
-  LocalsObj extends Record<string, unknown>
+  LocalsObj extends Record<string, unknown>,
+  BaseRequest,
+  BaseResponse,
+  NextFunction
 > = ExpressLikeHandler<
   SV,
   MapParamsSchema<SV, P>,
@@ -336,7 +396,10 @@ export type ExpressLikeSchemaHandler<
   MapReqQuerySchema<SV, ReqQuery>,
   MapReqHeadersSchema<SV, ReqHeaders>,
   MapResHeadersSchema<SV, ResHeaders>,
-  LocalsObj
+  LocalsObj,
+  BaseRequest,
+  BaseResponse,
+  NextFunction
 >;
 
 /**
@@ -357,13 +420,15 @@ export type ExpressLikeSchemaAuthMapper<
   P extends ParamsObject<SV>,
   ReqBody extends Body<SV>,
   ReqQuery extends QueryObject<SV>,
-  ReqHeaders extends HeadersObject<SV>
+  ReqHeaders extends HeadersObject<SV>,
+  BaseRequest
 > = ExpressLikeAuthMapper<
   SV,
   MapParamsSchema<SV, P>,
   MapReqBodySchema<SV, ReqBody>,
   MapReqQuerySchema<SV, ReqQuery>,
-  MapReqHeadersSchema<SV, ReqHeaders>
+  MapReqHeadersSchema<SV, ReqHeaders>,
+  BaseRequest
 >;
 
 export type ExpressLikeAuthMapper<
@@ -371,10 +436,18 @@ export type ExpressLikeAuthMapper<
   P extends ParamsDictionary,
   ReqBody extends Record<string, unknown>,
   ReqQuery extends ParsedQs,
-  ReqHeaders extends Record<string, string>
+  ReqHeaders extends Record<string, string>,
+  BaseRequest
 > = (
   sub: string,
-  req?: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>
+  req?: ResolvedForklaunchRequest<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    BaseRequest
+  >
 ) => Set<string> | Promise<Set<string>>;
 
 /**

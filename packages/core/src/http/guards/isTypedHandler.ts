@@ -20,7 +20,10 @@ export function isTypedHandler<
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
-  LocalsObj extends Record<string, unknown>
+  LocalsObj extends Record<string, unknown>,
+  BaseRequest,
+  BaseResponse,
+  NextFunction
 >(
   maybeTypedHandler: unknown
 ): maybeTypedHandler is TypedHandler<
@@ -33,7 +36,10 @@ export function isTypedHandler<
   ReqQuery,
   ReqHeaders,
   ResHeaders,
-  LocalsObj
+  LocalsObj,
+  BaseRequest,
+  BaseResponse,
+  NextFunction
 > {
   return (
     maybeTypedHandler != null &&

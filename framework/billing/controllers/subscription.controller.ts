@@ -1,9 +1,13 @@
 import { Controller } from '@forklaunch/core/controllers';
-import { delete_, get, post, put } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import {
   array,
+  handlers,
+  NextFunction,
   optional,
+  ParsedQs,
+  Request,
+  Response,
   SchemaValidator,
   string
 } from '@forklaunch/framework-core';
@@ -15,7 +19,10 @@ import {
   UpdateSubscriptionDtoMapper
 } from '../models/dtoMapper/subscription.dtoMapper';
 
-export class SubscriptionController implements Controller<SubscriptionService> {
+export class SubscriptionController
+  implements
+    Controller<SubscriptionService, Request, Response, NextFunction, ParsedQs>
+{
   constructor(
     private readonly serviceFactory: ScopedDependencyFactory<
       SchemaValidator,
@@ -24,7 +31,7 @@ export class SubscriptionController implements Controller<SubscriptionService> {
     >
   ) {}
 
-  createSubscription = post(
+  createSubscription = handlers.post(
     SchemaValidator(),
     '/',
     {
@@ -42,7 +49,7 @@ export class SubscriptionController implements Controller<SubscriptionService> {
     }
   );
 
-  getSubscription = get(
+  getSubscription = handlers.get(
     SchemaValidator(),
     '/:id',
     {
@@ -62,7 +69,7 @@ export class SubscriptionController implements Controller<SubscriptionService> {
     }
   );
 
-  getUserSubscription = get(
+  getUserSubscription = handlers.get(
     SchemaValidator(),
     '/user/:id',
     {
@@ -82,7 +89,7 @@ export class SubscriptionController implements Controller<SubscriptionService> {
     }
   );
 
-  getOrganizationSubscription = get(
+  getOrganizationSubscription = handlers.get(
     SchemaValidator(),
     '/organization/:id',
     {
@@ -104,7 +111,7 @@ export class SubscriptionController implements Controller<SubscriptionService> {
     }
   );
 
-  updateSubscription = put(
+  updateSubscription = handlers.put(
     SchemaValidator(),
     '/:id',
     {
@@ -125,7 +132,7 @@ export class SubscriptionController implements Controller<SubscriptionService> {
     }
   );
 
-  deleteSubscription = delete_(
+  deleteSubscription = handlers.delete(
     SchemaValidator(),
     '/:id',
     {
@@ -144,7 +151,7 @@ export class SubscriptionController implements Controller<SubscriptionService> {
     }
   );
 
-  listSubscriptions = get(
+  listSubscriptions = handlers.get(
     SchemaValidator(),
     '/',
     {
@@ -164,7 +171,7 @@ export class SubscriptionController implements Controller<SubscriptionService> {
     }
   );
 
-  cancelSubscription = get(
+  cancelSubscription = handlers.get(
     SchemaValidator(),
     '/:id/cancel',
     {
@@ -183,7 +190,7 @@ export class SubscriptionController implements Controller<SubscriptionService> {
     }
   );
 
-  resumeSubscription = get(
+  resumeSubscription = handlers.get(
     SchemaValidator(),
     '/:id/resume',
     {

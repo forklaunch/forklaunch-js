@@ -1,13 +1,15 @@
 import { Controller } from '@forklaunch/core/controllers';
-import {
-  delete_,
-  get,
-  OpenTelemetryCollector,
-  post,
-  put
-} from '@forklaunch/core/http';
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
-import { SchemaValidator, string } from '@forklaunch/framework-core';
+import {
+  handlers,
+  NextFunction,
+  ParsedQs,
+  Request,
+  Response,
+  SchemaValidator,
+  string
+} from '@forklaunch/framework-core';
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { configValidator } from '../bootstrapper';
 import { OrganizationService } from '../interfaces/organization.service.interface';
@@ -17,7 +19,10 @@ import {
   UpdateOrganizationDtoMapper
 } from '../models/dtoMapper/organization.dtoMapper';
 
-export class OrganizationController implements Controller<OrganizationService> {
+export class OrganizationController
+  implements
+    Controller<OrganizationService, Request, Response, NextFunction, ParsedQs>
+{
   constructor(
     private readonly serviceFactory: ScopedDependencyFactory<
       SchemaValidator,
@@ -29,7 +34,7 @@ export class OrganizationController implements Controller<OrganizationService> {
     }>
   ) {}
 
-  createOrganization = post(
+  createOrganization = handlers.post(
     SchemaValidator(),
     '/',
     {
@@ -60,7 +65,7 @@ export class OrganizationController implements Controller<OrganizationService> {
     }
   );
 
-  getOrganization = get(
+  getOrganization = handlers.get(
     SchemaValidator(),
     '/:id',
     {
@@ -87,7 +92,7 @@ export class OrganizationController implements Controller<OrganizationService> {
     }
   );
 
-  updateOrganization = put(
+  updateOrganization = handlers.put(
     SchemaValidator(),
     '/',
     {
@@ -106,7 +111,7 @@ export class OrganizationController implements Controller<OrganizationService> {
     }
   );
 
-  deleteOrganization = delete_(
+  deleteOrganization = handlers.delete(
     SchemaValidator(),
     '/:id',
     {

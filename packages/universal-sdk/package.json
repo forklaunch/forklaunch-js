@@ -41,7 +41,7 @@
     "test": "vitest --passWithNoTests"
   },
   "devDependencies": {
-    "fetch-mock": "^12.5.1",
+    "fetch-mock": "^12.5.2",
     "jest": "^29.7.0",
     "ts-jest": "^29.2.6",
     "tsup": "^8.4.0"

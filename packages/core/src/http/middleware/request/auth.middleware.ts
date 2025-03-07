@@ -3,14 +3,14 @@ import { jwtVerify } from 'jose';
 import { ParsedQs } from 'qs';
 import {
   ForklaunchNextFunction,
-  ForklaunchRequest,
   ForklaunchResponse,
   MapParamsSchema,
   MapReqBodySchema,
   MapReqHeadersSchema,
   MapReqQuerySchema,
   MapResBodyMapSchema,
-  MapResHeadersSchema
+  MapResHeadersSchema,
+  ResolvedForklaunchRequest
 } from '../../types/apiDefinition.types';
 import {
   AuthMethods,
@@ -59,11 +59,26 @@ async function checkAuthorizationToken<
   P extends ParamsDictionary,
   ReqBody extends Record<string, unknown>,
   ReqQuery extends ParsedQs,
-  ReqHeaders extends Record<string, string>
+  ReqHeaders extends Record<string, string>,
+  BaseRequest
 >(
-  authorizationMethod: AuthMethods<SV, P, ReqBody, ReqQuery, ReqHeaders>,
+  authorizationMethod: AuthMethods<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    BaseRequest
+  >,
   authorizationToken?: string,
-  req?: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>
+  req?: ResolvedForklaunchRequest<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    BaseRequest
+  >
 ): Promise<readonly [401 | 403 | 500, string] | undefined> {
   if (authorizationToken == null) {
     return [401, 'No Authorization token provided.'];
@@ -213,12 +228,13 @@ export async function parseRequestAuth<
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>
 >(
-  req: ForklaunchRequest<
+  req: ResolvedForklaunchRequest<
     SV,
     MapParamsSchema<SV, P>,
     MapReqBodySchema<SV, ReqBody>,
     MapReqQuerySchema<SV, ReqQuery>,
-    MapReqHeadersSchema<SV, ReqHeaders>
+    MapReqHeadersSchema<SV, ReqHeaders>,
+    unknown
   >,
   res: ForklaunchResponse<
     MapResBodyMapSchema<SV, ResBodyMap>,
@@ -232,12 +248,20 @@ export async function parseRequestAuth<
     MapParamsSchema<SV, P>,
     MapReqBodySchema<SV, ReqBody>,
     MapReqQuerySchema<SV, ReqQuery>,
-    MapReqHeadersSchema<SV, ReqHeaders>
+    MapReqHeadersSchema<SV, ReqHeaders>,
+    unknown
   >;
 
   if (auth) {
     const [error, message] =
-      (await checkAuthorizationToken(
+      (await checkAuthorizationToken<
+        SV,
+        MapParamsSchema<SV, P>,
+        MapReqBodySchema<SV, ReqBody>,
+        MapReqQuerySchema<SV, ReqQuery>,
+        MapReqHeadersSchema<SV, ReqHeaders>,
+        unknown
+      >(
         auth,
         req.headers[
           (auth.method === 'other' ? auth.headerName : undefined) ??

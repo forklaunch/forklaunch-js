@@ -1,15 +1,19 @@
 import {
   Body,
+  ContractDetails,
   ExpressLikeSchemaHandler,
   HeadersObject,
   get as innerGet,
   ParamsObject,
-  PathParamHttpContractDetails,
   QueryObject,
   ResponsesObject
 } from '@forklaunch/core/http';
+import {
+  MiddlewareNext,
+  Request,
+  Response
+} from '@forklaunch/hyper-express-fork';
 import { AnySchemaValidator } from '@forklaunch/validator';
-import { HyperExpressSchemaHandler } from '../types/hyperExpress.types';
 
 export const get = <
   SV extends AnySchemaValidator,
@@ -24,16 +28,19 @@ export const get = <
 >(
   schemaValidator: SV,
   path: Path,
-  contractDetails: PathParamHttpContractDetails<
+  contractDetails: ContractDetails<
     SV,
+    'get',
     Path,
     P,
     ResBodyMap,
+    ReqBody,
     ReqQuery,
     ReqHeaders,
-    ResHeaders
+    ResHeaders,
+    Request<LocalsObj>
   >,
-  ...handlers: HyperExpressSchemaHandler<
+  ...handlers: ExpressLikeSchemaHandler<
     SV,
     P,
     ResBodyMap,
@@ -41,7 +48,10 @@ export const get = <
     ReqQuery,
     ReqHeaders,
     ResHeaders,
-    LocalsObj
+    LocalsObj,
+    Request<LocalsObj>,
+    Response<LocalsObj>,
+    MiddlewareNext
   >[]
 ) => {
   return innerGet<
@@ -53,20 +63,9 @@ export const get = <
     ReqQuery,
     ReqHeaders,
     ResHeaders,
-    LocalsObj
-  >(
-    schemaValidator,
-    path,
-    contractDetails,
-    ...(handlers as unknown as ExpressLikeSchemaHandler<
-      SV,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders,
-      LocalsObj
-    >[])
-  );
+    LocalsObj,
+    Request<LocalsObj>,
+    Response<LocalsObj>,
+    MiddlewareNext
+  >(schemaValidator, path, contractDetails, ...handlers);
 };

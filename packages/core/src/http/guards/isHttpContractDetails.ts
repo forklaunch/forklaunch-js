@@ -21,7 +21,8 @@ export function isHttpContractDetails<
   BodySchema extends Body<SV>,
   QuerySchema extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
-  ResHeaders extends HeadersObject<SV>
+  ResHeaders extends HeadersObject<SV>,
+  BaseRequest
 >(
   maybeContractDetails: unknown
 ): maybeContractDetails is HttpContractDetails<
@@ -32,7 +33,8 @@ export function isHttpContractDetails<
   BodySchema,
   QuerySchema,
   ReqHeaders,
-  ResHeaders
+  ResHeaders,
+  BaseRequest
 > {
   return (
     isPathParamHttpContractDetails(maybeContractDetails) &&

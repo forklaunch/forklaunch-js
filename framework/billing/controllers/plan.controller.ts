@@ -1,9 +1,13 @@
 import { Controller } from '@forklaunch/core/controllers';
-import { delete_, get, post, put } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import {
   array,
+  handlers,
+  NextFunction,
   optional,
+  ParsedQs,
+  Request,
+  Response,
   SchemaValidator,
   string
 } from '@forklaunch/framework-core';
@@ -15,7 +19,9 @@ import {
   UpdatePlanDtoMapper
 } from '../models/dtoMapper/plan.dtoMapper';
 
-export class PlanController implements Controller<PlanService> {
+export class PlanController
+  implements Controller<PlanService, Request, Response, NextFunction, ParsedQs>
+{
   constructor(
     private readonly serviceFactory: ScopedDependencyFactory<
       SchemaValidator,
@@ -24,7 +30,7 @@ export class PlanController implements Controller<PlanService> {
     >
   ) {}
 
-  createPlan = post(
+  createPlan = handlers.post(
     SchemaValidator(),
     '/',
     {
@@ -40,7 +46,7 @@ export class PlanController implements Controller<PlanService> {
     }
   );
 
-  getPlan = get(
+  getPlan = handlers.get(
     SchemaValidator(),
     '/:id',
     {
@@ -58,7 +64,7 @@ export class PlanController implements Controller<PlanService> {
     }
   );
 
-  updatePlan = put(
+  updatePlan = handlers.put(
     SchemaValidator(),
     '/',
     {
@@ -74,7 +80,7 @@ export class PlanController implements Controller<PlanService> {
     }
   );
 
-  deletePlan = delete_(
+  deletePlan = handlers.delete(
     SchemaValidator(),
     '/:id',
     {
@@ -93,7 +99,7 @@ export class PlanController implements Controller<PlanService> {
     }
   );
 
-  listPlans = get(
+  listPlans = handlers.get(
     SchemaValidator(),
     '/',
     {

@@ -7,14 +7,20 @@ export function isForklaunchExpressLikeRouter<
   SV extends AnySchemaValidator,
   Path extends `/${string}`,
   RouterHandler,
-  Internal extends ExpressLikeRouter<RouterHandler, Internal>
+  Internal extends ExpressLikeRouter<RouterHandler, Internal>,
+  BaseRequest,
+  BaseResponse,
+  NextFunction
 >(
   maybeForklaunchExpressLikeRouter: unknown
 ): maybeForklaunchExpressLikeRouter is ForklaunchExpressLikeRouter<
   SV,
   Path,
   RouterHandler,
-  Internal
+  Internal,
+  BaseRequest,
+  BaseResponse,
+  NextFunction
 > {
   return (
     isConstrainedForklaunchRouter<SV, RouterHandler>(

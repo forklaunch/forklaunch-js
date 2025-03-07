@@ -1,26 +1,15 @@
-cd core
+# Define arrays of directories and packages
+DIRS=("core" "billing" "iam" "monitoring" "sample-worker")
+PACKAGES=("common" "validator" "core" "express" "hyper-express" "universal-sdk")
 
-pnpm link ../../packages/common
-pnpm link ../../packages/validator
-pnpm link ../../packages/core
-pnpm link ../../packages/express
-pnpm link ../../packages/hyper-express
-pnpm link ../../packages/universal-sdk
+# Loop through each directory
+for dir in "${DIRS[@]}"; do
+  cd $dir
 
-cd ../billing
+  # Loop through each package and create symlink
+  for package in "${PACKAGES[@]}"; do
+    pnpm link ../../packages/$package
+  done
 
-pnpm link ../../packages/common
-pnpm link ../../packages/validator
-pnpm link ../../packages/core
-pnpm link ../../packages/express
-pnpm link ../../packages/hyper-express
-pnpm link ../../packages/universal-sdk
-
-cd ../iam
-
-pnpm link ../../packages/common
-pnpm link ../../packages/validator
-pnpm link ../../packages/core
-pnpm link ../../packages/express
-pnpm link ../../packages/hyper-express
-pnpm link ../../packages/universal-sdk
+  cd ..
+done

@@ -2,7 +2,10 @@ import { AnySchemaValidator } from '@forklaunch/validator';
 import { trace } from '@opentelemetry/api';
 import { v4 } from 'uuid';
 import { ATTR_CORRELATION_ID } from '../../tracing/constants';
-import { ExpressLikeSchemaHandler } from '../../types/apiDefinition.types';
+import {
+  ExpressLikeSchemaHandler,
+  ForklaunchNextFunction
+} from '../../types/apiDefinition.types';
 import {
   Body,
   HeadersObject,
@@ -40,7 +43,10 @@ export function createContext<
   ReqQuery,
   ReqHeaders,
   ResHeaders,
-  LocalsObj
+  LocalsObj,
+  unknown,
+  unknown,
+  ForklaunchNextFunction
 > {
   return function setContext(req, res, next?) {
     req.schemaValidator = schemaValidator;

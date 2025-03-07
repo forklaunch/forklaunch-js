@@ -1,9 +1,13 @@
 import { Controller } from '@forklaunch/core/controllers';
-import { delete_, get, post, put } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import {
   array,
+  handlers,
+  NextFunction,
   optional,
+  ParsedQs,
+  Request,
+  Response,
   SchemaValidator,
   string
 } from '@forklaunch/framework-core';
@@ -15,7 +19,10 @@ import {
   UpdatePaymentLinkDtoMapper
 } from '../models/dtoMapper/paymentLink.dtoMapper';
 
-export class PaymentLinkController implements Controller<PaymentLinkService> {
+export class PaymentLinkController
+  implements
+    Controller<PaymentLinkService, Request, Response, NextFunction, ParsedQs>
+{
   constructor(
     private readonly serviceFactory: ScopedDependencyFactory<
       SchemaValidator,
@@ -24,7 +31,7 @@ export class PaymentLinkController implements Controller<PaymentLinkService> {
     >
   ) {}
 
-  createPaymentLink = post(
+  createPaymentLink = handlers.post(
     SchemaValidator(),
     '/',
     {
@@ -42,7 +49,7 @@ export class PaymentLinkController implements Controller<PaymentLinkService> {
     }
   );
 
-  getPaymentLink = get(
+  getPaymentLink = handlers.get(
     SchemaValidator(),
     '/:id',
     {
@@ -62,7 +69,7 @@ export class PaymentLinkController implements Controller<PaymentLinkService> {
     }
   );
 
-  updatePaymentLink = put(
+  updatePaymentLink = handlers.put(
     SchemaValidator(),
     '/:id',
     {
@@ -83,7 +90,7 @@ export class PaymentLinkController implements Controller<PaymentLinkService> {
     }
   );
 
-  expirePaymentLink = delete_(
+  expirePaymentLink = handlers.delete(
     SchemaValidator(),
     '/:id',
     {
@@ -102,7 +109,7 @@ export class PaymentLinkController implements Controller<PaymentLinkService> {
     }
   );
 
-  handlePaymentSuccess = get(
+  handlePaymentSuccess = handlers.get(
     SchemaValidator(),
     '/:id/success',
     {
@@ -121,7 +128,7 @@ export class PaymentLinkController implements Controller<PaymentLinkService> {
     }
   );
 
-  handlePaymentFailure = get(
+  handlePaymentFailure = handlers.get(
     SchemaValidator(),
     '/:id/failure',
     {
@@ -140,7 +147,7 @@ export class PaymentLinkController implements Controller<PaymentLinkService> {
     }
   );
 
-  listPaymentLinks = get(
+  listPaymentLinks = handlers.get(
     SchemaValidator(),
     '/',
     {

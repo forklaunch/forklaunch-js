@@ -19,7 +19,10 @@ export const middleware = <
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
-  LocalsObj extends Record<string, unknown>
+  LocalsObj extends Record<string, unknown>,
+  BaseRequest,
+  BaseResponse,
+  NextFunction
 >(
   _schemaValidator: SV,
   path: Path,
@@ -31,7 +34,8 @@ export const middleware = <
     ReqBody,
     ReqQuery,
     ReqHeaders,
-    ResHeaders
+    ResHeaders,
+    BaseRequest
   >,
   ...handlers: ExpressLikeSchemaHandler<
     SV,
@@ -41,7 +45,10 @@ export const middleware = <
     ReqQuery,
     ReqHeaders,
     ResHeaders,
-    LocalsObj
+    LocalsObj,
+    BaseRequest,
+    BaseResponse,
+    NextFunction
   >[]
 ) => {
   return typedHandler<
@@ -54,6 +61,9 @@ export const middleware = <
     ReqQuery,
     ReqHeaders,
     ResHeaders,
-    LocalsObj
+    LocalsObj,
+    BaseRequest,
+    BaseResponse,
+    NextFunction
   >(_schemaValidator, path, 'middleware', contractDetails, ...handlers);
 };

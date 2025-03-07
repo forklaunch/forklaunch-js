@@ -19,7 +19,10 @@ export const get = <
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
-  LocalsObj extends Record<string, unknown>
+  LocalsObj extends Record<string, unknown>,
+  BaseRequest,
+  BaseResponse,
+  NextFunction
 >(
   _schemaValidator: SV,
   path: Path,
@@ -30,7 +33,8 @@ export const get = <
     ResBodyMap,
     ReqQuery,
     ReqHeaders,
-    ResHeaders
+    ResHeaders,
+    BaseRequest
   >,
   ...handlers: ExpressLikeSchemaHandler<
     SV,
@@ -40,7 +44,10 @@ export const get = <
     ReqQuery,
     ReqHeaders,
     ResHeaders,
-    LocalsObj
+    LocalsObj,
+    BaseRequest,
+    BaseResponse,
+    NextFunction
   >[]
 ) => {
   return typedHandler<
@@ -53,6 +60,9 @@ export const get = <
     ReqQuery,
     ReqHeaders,
     ResHeaders,
-    LocalsObj
+    LocalsObj,
+    BaseRequest,
+    BaseResponse,
+    NextFunction
   >(_schemaValidator, path, 'get', contractDetails, ...handlers);
 };

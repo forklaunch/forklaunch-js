@@ -1,10 +1,16 @@
 import { Controller } from '@forklaunch/core/controllers';
-import { get, post } from '@forklaunch/core/http';
 import {
   ConfigInjector,
   ScopedDependencyFactory
 } from '@forklaunch/core/services';
-import { SchemaValidator } from '@forklaunch/framework-core';
+import {
+  handlers,
+  NextFunction,
+  ParsedQs,
+  Request,
+  Response,
+  SchemaValidator
+} from '@forklaunch/framework-core';
 import { configValidator } from '../bootstrapper';
 import { SampleWorkerService } from '../interfaces/sampleWorker.interface';
 import {
@@ -13,7 +19,10 @@ import {
 } from '../models/dtoMapper/sampleWorker.dtoMapper';
 
 // Controller class that implements the SampleWorkerService interface
-export class SampleWorkerController implements Controller<SampleWorkerService> {
+export class SampleWorkerController
+  implements
+    Controller<SampleWorkerService, Request, Response, NextFunction, ParsedQs>
+{
   constructor(
     // scopeFactory returns new scopes that can be used for joint transactions
     private readonly scopeFactory: () => ConfigInjector<
@@ -29,7 +38,7 @@ export class SampleWorkerController implements Controller<SampleWorkerService> {
   ) {}
 
   // GET endpoint handler that returns a simple message
-  sampleWorkerGet = get(
+  sampleWorkerGet = handlers.get(
     SchemaValidator(),
     '/',
     {
@@ -50,7 +59,7 @@ export class SampleWorkerController implements Controller<SampleWorkerService> {
   );
 
   // POST endpoint handler that processes request body and returns response from service
-  sampleWorkerPost = post(
+  sampleWorkerPost = handlers.post(
     SchemaValidator(),
     '/',
     {

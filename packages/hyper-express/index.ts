@@ -1,4 +1,14 @@
 import { AnySchemaValidator } from '@forklaunch/validator';
+import { any } from './src/handlers/any';
+import { delete_ } from './src/handlers/delete';
+import { get } from './src/handlers/get';
+import { head } from './src/handlers/head';
+import { middleware } from './src/handlers/middleware';
+import { options } from './src/handlers/options';
+import { patch } from './src/handlers/patch';
+import { post } from './src/handlers/post';
+import { put } from './src/handlers/put';
+import { trace } from './src/handlers/trace';
 import { Application } from './src/hyperExpressApplication';
 import { Router } from './src/hyperExpressRouter';
 
@@ -33,6 +43,23 @@ export function forklaunchRouter<
   return router;
 }
 
+export type {
+  MiddlewareNext as NextFunction,
+  Request,
+  Response
+} from '@forklaunch/hyper-express-fork';
+export type { ParsedQs } from 'qs';
 export type { Application } from './src/hyperExpressApplication';
 export type { Router } from './src/hyperExpressRouter';
-export { Request, Response } from './src/types/hyperExpress.types';
+export const handlers = {
+  any,
+  delete: delete_,
+  get,
+  head,
+  middleware,
+  options,
+  patch,
+  post,
+  put,
+  trace
+};

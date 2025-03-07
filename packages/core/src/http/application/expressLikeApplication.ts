@@ -13,8 +13,19 @@ import { ForklaunchExpressLikeRouter } from '../router/expressLikeRouter';
 export abstract class ForklaunchExpressLikeApplication<
   SV extends AnySchemaValidator,
   Server extends ExpressLikeRouter<RouterHandler, Server>,
-  RouterHandler
-> extends ForklaunchExpressLikeRouter<SV, '/', RouterHandler, Server> {
+  RouterHandler,
+  BaseRequest,
+  BaseResponse,
+  NextFunction
+> extends ForklaunchExpressLikeRouter<
+  SV,
+  '/',
+  RouterHandler,
+  Server,
+  BaseRequest,
+  BaseResponse,
+  NextFunction
+> {
   /**
    * Creates an instance of the Application class.
    *

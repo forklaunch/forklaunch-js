@@ -7,7 +7,14 @@ import {
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { apiReference } from '@scalar/express-api-reference';
-import express, { ErrorRequestHandler, Express, RequestHandler } from 'express';
+import express, {
+  ErrorRequestHandler,
+  Express,
+  NextFunction,
+  Request,
+  RequestHandler,
+  Response
+} from 'express';
 import { Server } from 'http';
 import swaggerUi from 'swagger-ui-express';
 
@@ -18,7 +25,14 @@ import swaggerUi from 'swagger-ui-express';
  */
 export class Application<
   SV extends AnySchemaValidator
-> extends ForklaunchExpressLikeApplication<SV, Express, RequestHandler> {
+> extends ForklaunchExpressLikeApplication<
+  SV,
+  Express,
+  RequestHandler,
+  Request,
+  Response,
+  NextFunction
+> {
   /**
    * Creates an instance of Application.
    *
@@ -66,7 +80,7 @@ export class Application<
             this.routers
           )
         }
-      })
+      }) as unknown as RequestHandler
     );
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

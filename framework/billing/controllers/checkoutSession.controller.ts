@@ -1,7 +1,14 @@
 import { Controller } from '@forklaunch/core/controllers';
-import { get, post } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
-import { SchemaValidator, string } from '@forklaunch/framework-core';
+import {
+  handlers,
+  NextFunction,
+  ParsedQs,
+  Request,
+  Response,
+  SchemaValidator,
+  string
+} from '@forklaunch/framework-core';
 import { configValidator } from '../bootstrapper';
 import { CheckoutSessionService } from '../interfaces/checkoutSession.service.interface';
 import {
@@ -10,7 +17,14 @@ import {
 } from '../models/dtoMapper/session.dtoMapper';
 
 export class CheckoutSessionController
-  implements Controller<CheckoutSessionService>
+  implements
+    Controller<
+      CheckoutSessionService,
+      Request,
+      Response,
+      NextFunction,
+      ParsedQs
+    >
 {
   constructor(
     private readonly serviceFactory: ScopedDependencyFactory<
@@ -20,7 +34,7 @@ export class CheckoutSessionController
     >
   ) {}
 
-  createCheckoutSession = post(
+  createCheckoutSession = handlers.post(
     SchemaValidator(),
     '/',
     {
@@ -38,7 +52,7 @@ export class CheckoutSessionController
     }
   );
 
-  getCheckoutSession = get(
+  getCheckoutSession = handlers.get(
     SchemaValidator(),
     '/:id',
     {
@@ -58,7 +72,7 @@ export class CheckoutSessionController
     }
   );
 
-  expireCheckoutSession = get(
+  expireCheckoutSession = handlers.get(
     SchemaValidator(),
     '/:id/expire',
     {
@@ -77,7 +91,7 @@ export class CheckoutSessionController
     }
   );
 
-  handleCheckoutSuccess = get(
+  handleCheckoutSuccess = handlers.get(
     SchemaValidator(),
     '/:id/success',
     {
@@ -98,7 +112,7 @@ export class CheckoutSessionController
     }
   );
 
-  handleCheckoutFailure = get(
+  handleCheckoutFailure = handlers.get(
     SchemaValidator(),
     '/:id/failure',
     {

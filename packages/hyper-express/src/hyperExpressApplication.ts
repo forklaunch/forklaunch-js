@@ -5,7 +5,13 @@ import {
   isForklaunchRequest,
   logger
 } from '@forklaunch/core/http';
-import { MiddlewareHandler, Server } from '@forklaunch/hyper-express-fork';
+import {
+  MiddlewareHandler,
+  MiddlewareNext,
+  Request,
+  Response,
+  Server
+} from '@forklaunch/hyper-express-fork';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import * as uWebsockets from 'uWebSockets.js';
 import { swagger, swaggerRedirect } from './middleware/swagger.middleware';
@@ -17,7 +23,14 @@ import { swagger, swaggerRedirect } from './middleware/swagger.middleware';
  */
 export class Application<
   SV extends AnySchemaValidator
-> extends ForklaunchExpressLikeApplication<SV, Server, MiddlewareHandler> {
+> extends ForklaunchExpressLikeApplication<
+  SV,
+  Server,
+  MiddlewareHandler,
+  Request<Record<string, unknown>>,
+  Response<Record<string, unknown>>,
+  MiddlewareNext
+> {
   /**
    * Creates an instance of the Application class.
    *

@@ -1,7 +1,12 @@
 import {
+  NextFunction,
+  ParsedQs,
   forklaunchExpress as registeredForklaunchExpress,
-  forklaunchRouter as registeredForklaunchRouter
-} from '@forklaunch/hyper-express';
+  forklaunchRouter as registeredForklaunchRouter,
+  handlers as registeredHandlers,
+  Request,
+  Response
+} from '@forklaunch/express';
 import {
   SchemaValidator as RegisteredSchemaValidator,
   any as schemaAny,
@@ -24,6 +29,7 @@ import {
   uuid as schemaUuid
 } from '@forklaunch/validator/typebox';
 
+export type { NextFunction, ParsedQs, Request, Response };
 export const SchemaValidator = RegisteredSchemaValidator;
 export type SchemaValidator = ReturnType<typeof RegisteredSchemaValidator>;
 export const forklaunchRouter = <BasePath extends `/${string}`>(
@@ -31,6 +37,7 @@ export const forklaunchRouter = <BasePath extends `/${string}`>(
 ) => registeredForklaunchRouter(basePath, SchemaValidator());
 export const forklaunchExpress = () =>
   registeredForklaunchExpress(SchemaValidator());
+export const handlers: typeof registeredHandlers = registeredHandlers;
 
 export const string: typeof schemaString = schemaString;
 export const uuid: typeof schemaUuid = schemaUuid;

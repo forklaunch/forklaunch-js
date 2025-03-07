@@ -38,21 +38,24 @@
     "@forklaunch/express": "^0.3.0",
     "@forklaunch/framework-core": "workspace:*",
     "@forklaunch/validator": "^0.4.4",
-    "@mikro-orm/core": "^6.4.7",
-    "@mikro-orm/migrations": "^6.4.7",
-    "@mikro-orm/postgresql": "^6.4.7",
-    "@mikro-orm/reflection": "^6.4.7",
+    "@mikro-orm/core": "^6.4.9",
+    "@mikro-orm/migrations": "^6.4.9",
+    "@mikro-orm/postgresql": "^6.4.9",
+    "@mikro-orm/reflection": "^6.4.9",
     "@sinclair/typebox": "^0.34.28",
     "ajv": "^8.17.1",
     "dotenv": "^16.4.7"
   },
   "devDependencies": {
-    "@mikro-orm/cli": "^6.4.7",
+    "@mikro-orm/cli": "^6.4.9",
+    "@types/express": "^5.0.0",
+    "@types/express-serve-static-core": "^5.0.6",
+    "@types/qs": "^6.9.18",
     "eslint": "^9.21.0",
     "ts-node": "^10.9.2",
     "tsx": "^4.19.3",
     "typedoc": "^0.27.9",
-    "typescript-eslint": "^8.25.0"
+    "typescript-eslint": "^8.26.0"
   },
   "mikro-orm": {
     "config_paths": [

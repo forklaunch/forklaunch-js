@@ -17,7 +17,10 @@ export function isExpressLikeSchemaHandler<
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
-  LocalsObj extends Record<string, unknown>
+  LocalsObj extends Record<string, unknown>,
+  BaseRequest,
+  BaseResponse,
+  NextFunction
 >(
   middleware: unknown
 ): middleware is ExpressLikeSchemaHandler<
@@ -28,7 +31,10 @@ export function isExpressLikeSchemaHandler<
   ReqQuery,
   ReqHeaders,
   ResHeaders,
-  LocalsObj
+  LocalsObj,
+  BaseRequest,
+  BaseResponse,
+  NextFunction
 > {
   const extractedArgumentNames =
     typeof middleware === 'function' &&

@@ -1,14 +1,15 @@
 import { Controller } from '@forklaunch/core/controllers';
-import {
-  delete_,
-  get,
-  OpenTelemetryCollector,
-  post,
-  put
-} from '@forklaunch/core/http';
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
-import { array, SchemaValidator, string } from '@forklaunch/framework-core';
+import {
+  array,
+  handlers,
+  SchemaValidator,
+  string
+} from '@forklaunch/framework-core';
 import { ForklaunchMetrics } from '@forklaunch/framework-monitoring';
+import { NextFunction, Request, Response } from 'express';
+import { ParsedQs } from 'qs';
 import { configValidator } from '../bootstrapper';
 import { RoleService } from '../interfaces/role.service.interface';
 import {
@@ -17,7 +18,9 @@ import {
   UpdateRoleDtoMapper
 } from '../models/dtoMapper/role.dtoMapper';
 
-export class RoleController implements Controller<RoleService> {
+export class RoleController
+  implements Controller<RoleService, Request, Response, NextFunction, ParsedQs>
+{
   constructor(
     private readonly serviceFactory: ScopedDependencyFactory<
       SchemaValidator,
@@ -27,7 +30,7 @@ export class RoleController implements Controller<RoleService> {
     private readonly openTelemetryCollector: OpenTelemetryCollector<ForklaunchMetrics>
   ) {}
 
-  createRole = post(
+  createRole = handlers.post(
     SchemaValidator(),
     '/',
     {
@@ -45,7 +48,7 @@ export class RoleController implements Controller<RoleService> {
     }
   );
 
-  createBatchRoles = post(
+  createBatchRoles = handlers.post(
     SchemaValidator(),
     '/batch',
     {
@@ -63,7 +66,7 @@ export class RoleController implements Controller<RoleService> {
     }
   );
 
-  getRole = get(
+  getRole = handlers.get(
     SchemaValidator(),
     '/:id',
     {
@@ -82,7 +85,7 @@ export class RoleController implements Controller<RoleService> {
     }
   );
 
-  getBatchRoles = get(
+  getBatchRoles = handlers.get(
     SchemaValidator(),
     '/batch',
     {
@@ -105,7 +108,7 @@ export class RoleController implements Controller<RoleService> {
     }
   );
 
-  updateRole = put(
+  updateRole = handlers.put(
     SchemaValidator(),
     '/',
     {
@@ -123,7 +126,7 @@ export class RoleController implements Controller<RoleService> {
     }
   );
 
-  updateBatchRoles = put(
+  updateBatchRoles = handlers.put(
     SchemaValidator(),
     '/batch',
     {
@@ -141,7 +144,7 @@ export class RoleController implements Controller<RoleService> {
     }
   );
 
-  deleteRole = delete_(
+  deleteRole = handlers.delete(
     SchemaValidator(),
     '/:id',
     {
@@ -161,7 +164,7 @@ export class RoleController implements Controller<RoleService> {
     }
   );
 
-  deleteBatchRoles = delete_(
+  deleteBatchRoles = handlers.delete(
     SchemaValidator(),
     '/batch',
     {
