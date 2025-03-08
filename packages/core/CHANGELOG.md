@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.5.0
+
+### Minor Changes
+
+- Add support for built in monitoring
+
 ## 0.4.0
 
 ### Minor Changes
