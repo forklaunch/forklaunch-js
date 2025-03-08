@@ -1,5 +1,11 @@
 # @forklaunch/universal-sdk
 
+## 0.2.1
+
+### Patch Changes
+
+- bump package versions
+
 ## 0.2.0
 
 ### Minor Changes
