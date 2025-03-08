@@ -18,6 +18,7 @@ bootstrap((ci) => {
   const port = ci.resolve('port');
   const version = ci.resolve('version');
   const docsPath = ci.resolve('docsPath');
+  const openTelemetryCollector = ci.resolve('openTelemetryCollector');
   //! resolves the necessary services from the configuration
   const scopedCheckoutSessionServiceFactory = ci.scopedResolver(
     'checkoutSessionService'
@@ -30,14 +31,25 @@ bootstrap((ci) => {
   );
   //! constructs the necessary routes using the appropriate Routes functions
   const checkoutSessionRoutes = CheckoutSessionRoutes(
-    new CheckoutSessionController(scopedCheckoutSessionServiceFactory)
+    new CheckoutSessionController(
+      scopedCheckoutSessionServiceFactory,
+      openTelemetryCollector
+    )
   );
   const paymentLinkRoutes = PaymentLinkRoutes(
-    new PaymentLinkController(scopedPaymentLinkServiceFactory)
+    new PaymentLinkController(
+      scopedPaymentLinkServiceFactory,
+      openTelemetryCollector
+    )
   );
-  const planRoutes = PlanRoutes(new PlanController(scopedPlanServiceFactory));
+  const planRoutes = PlanRoutes(
+    new PlanController(scopedPlanServiceFactory, openTelemetryCollector)
+  );
   const subscriptionRoutes = SubscriptionRoutes(
-    new SubscriptionController(scopedSubscriptionServiceFactory)
+    new SubscriptionController(
+      scopedSubscriptionServiceFactory,
+      openTelemetryCollector
+    )
   );
   //! mounts the routes to the app
   app.use(checkoutSessionRoutes.router);
@@ -46,7 +58,8 @@ bootstrap((ci) => {
   app.use(subscriptionRoutes.router);
   //! starts the server
   app.listen(port, host, () => {
-    console.log(
+    openTelemetryCollector.log(
+      'info',
       `🎉 Billing Server is running at http://${host}:${port} 🎉.\nAn API reference can be accessed at http://${host}:${port}/api/${version}${docsPath}`
     );
   });

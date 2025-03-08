@@ -19,7 +19,8 @@ bootstrap((ci) => {
   const {{camel_case_name}}Routes = {{pascal_case_name}}Routes(
     new {{pascal_case_name}}Controller(
       () => ci.createScope(),
-      scoped{{pascal_case_name}}ServiceFactory
+      scoped{{pascal_case_name}}ServiceFactory,
+      ci.resolve('openTelemetryCollector')
     )
   );
   //! mounts the routes to the app

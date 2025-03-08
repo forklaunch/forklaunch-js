@@ -113,6 +113,26 @@ export class OpenTelemetryCollector<
     this.logger.log(level, msg, meta);
   }
 
+  info(msg: string, meta: AnyValueMap = {}) {
+    this.logger.info(msg, meta);
+  }
+
+  error(msg: string, meta: AnyValueMap = {}) {
+    this.logger.error(msg, meta);
+  }
+
+  warn(msg: string, meta: AnyValueMap = {}) {
+    this.logger.warn(msg, meta);
+  }
+
+  debug(msg: string, meta: AnyValueMap = {}) {
+    this.logger.debug(msg, meta);
+  }
+
+  trace(msg: string, meta: AnyValueMap = {}) {
+    this.logger.trace(msg, meta);
+  }
+
   getMetric<T extends keyof AppliedMetricsDefinition>(
     metricId: T
   ): MetricType<AppliedMetricsDefinition[T]> {
@@ -159,6 +179,7 @@ new NodeSDK({
   ]
 }).start();
 
+// begin static metrics -- these have to be in here in order to instantiate these after the SDK is instantiated
 export const httpRequestsTotalCounter = metrics
   .getMeter(getEnvVar('OTEL_SERVICE_NAME') || 'unknown')
   .createCounter<{

@@ -18,6 +18,7 @@ bootstrap((ci) => {
   const port = ci.resolve('port');
   const version = ci.resolve('version');
   const docsPath = ci.resolve('docsPath');
+  const openTelemetryCollector = ci.resolve('openTelemetryCollector');
   //! resolves the necessary services from the configuration
   const scopedOrganizationServiceFactory = ci.scopedResolver(
     'organizationService'
@@ -29,26 +30,20 @@ bootstrap((ci) => {
   const organizationRoutes = OrganizationRoutes(
     new OrganizationController(
       scopedOrganizationServiceFactory,
-      ci.resolve('openTelemetryCollector')
+      openTelemetryCollector
     )
   );
   const permissionRoutes = PermissionRoutes(
     new PermissionController(
       scopedPermissionServiceFactory,
-      ci.resolve('openTelemetryCollector')
+      openTelemetryCollector
     )
   );
   const roleRoutes = RoleRoutes(
-    new RoleController(
-      scopedRoleServiceFactory,
-      ci.resolve('openTelemetryCollector')
-    )
+    new RoleController(scopedRoleServiceFactory, openTelemetryCollector)
   );
   const userRoutes = UserRoutes(
-    new UserController(
-      scopedUserServiceFactory,
-      ci.resolve('openTelemetryCollector')
-    )
+    new UserController(scopedUserServiceFactory, openTelemetryCollector)
   );
   //! mounts the routes to the app
   app.use(organizationRoutes.router);
@@ -57,7 +52,8 @@ bootstrap((ci) => {
   app.use(userRoutes.router);
   //! starts the server
   app.listen(port, host, () => {
-    console.log(
+    openTelemetryCollector.log(
+      'info',
       `🎉 IAM Server is running at http://${host}:${port} 🎉.\nAn API reference can be accessed at http://${host}:${port}/api/${version}${docsPath}`
     );
   });

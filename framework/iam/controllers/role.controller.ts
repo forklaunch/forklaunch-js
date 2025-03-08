@@ -7,7 +7,7 @@ import {
   SchemaValidator,
   string
 } from '@forklaunch/framework-core';
-import { ForklaunchMetrics } from '@forklaunch/framework-monitoring';
+import { Metrics } from '@forklaunch/framework-monitoring';
 import { NextFunction, Request, Response } from 'express';
 import { ParsedQs } from 'qs';
 import { configValidator } from '../bootstrapper';
@@ -27,7 +27,7 @@ export class RoleController
       typeof configValidator,
       'roleService'
     >,
-    private readonly openTelemetryCollector: OpenTelemetryCollector<ForklaunchMetrics>
+    private readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>
   ) {}
 
   createRole = handlers.post(

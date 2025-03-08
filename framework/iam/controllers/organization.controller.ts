@@ -18,6 +18,7 @@ import {
   OrganizationDtoMapper,
   UpdateOrganizationDtoMapper
 } from '../models/dtoMapper/organization.dtoMapper';
+import { Metrics } from '@forklaunch/framework-monitoring';
 
 export class OrganizationController
   implements
@@ -29,9 +30,7 @@ export class OrganizationController
       typeof configValidator,
       'organizationService'
     >,
-    private readonly openTelemetryCollector: OpenTelemetryCollector<{
-      test: 'counter';
-    }>
+    private readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>
   ) {}
 
   createOrganization = handlers.post(

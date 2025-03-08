@@ -1,7 +1,9 @@
 import { RedisTtlCache } from '@forklaunch/core/cache';
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ConfigInjector, getEnvVar, Lifetime } from '@forklaunch/core/services';
 import { EntityManager, ForkOptions, MikroORM } from '@mikro-orm/core';
 import { number, optional, SchemaValidator, string } from '@{{app_name}}/core';
+import { metrics } from '@{{app_name}}/monitoring';
 import dotenv from 'dotenv';
 import mikroOrmOptionsConfig from './mikro-orm.config';
 import { Base{{pascal_case_name}}Service } from './services/{{camel_case_name}}.service';
@@ -14,6 +16,7 @@ export const configValidator = {
   version: optional(string),
   docsPath: optional(string),
   entityManager: EntityManager,
+  openTelemetryCollector: OpenTelemetryCollector,
   ttlCache: RedisTtlCache,
   {{camel_case_name}}Service: Base{{pascal_case_name}}Service
 };
@@ -62,6 +65,14 @@ export function bootstrap(
               context?.entityManagerOptions as ForkOptions | undefined
             )
         },
+        openTelemetryCollector: {
+          lifetime: Lifetime.Singleton,
+          value: new OpenTelemetryCollector(
+            getEnvVar('OTEL_SERVICE_NAME'),
+            getEnvVar('OTEL_LEVEL') || 'info',
+            metrics
+          )
+        },
         ttlCache: {
           lifetime: Lifetime.Singleton,
           value: new RedisTtlCache(60 * 60 * 1000, {
@@ -70,8 +81,16 @@ export function bootstrap(
         },
         {{camel_case_name}}Service: {
           lifetime: Lifetime.Scoped,
-          factory: ({ entityManager, ttlCache }) =>
-            new Base{{pascal_case_name}}Service(entityManager, ttlCache)
+          factory: ({
+            entityManager,
+            ttlCache,
+            openTelemetryCollector
+          }) =>
+            new Base{{pascal_case_name}}Service(
+              entityManager,
+              ttlCache,
+              openTelemetryCollector
+            )
         }
       }
     );

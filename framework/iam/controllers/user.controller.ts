@@ -8,7 +8,7 @@ import {
   SchemaValidator,
   string
 } from '@forklaunch/framework-core';
-import { ForklaunchMetrics } from '@forklaunch/framework-monitoring';
+import { Metrics } from '@forklaunch/framework-monitoring';
 import { Request, Response } from 'express';
 import { ParsedQs } from 'qs';
 import { configValidator } from '../bootstrapper';
@@ -28,7 +28,7 @@ export class UserController
       typeof configValidator,
       'userService'
     >,
-    private readonly openTelemetryCollector: OpenTelemetryCollector<ForklaunchMetrics>
+    private readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>
   ) {}
 
   createUser = handlers.post(

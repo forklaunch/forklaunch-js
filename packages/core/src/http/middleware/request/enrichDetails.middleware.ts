@@ -1,5 +1,5 @@
 import { AnySchemaValidator } from '@forklaunch/validator';
-import { ATTR_API_NAME } from '../../tracing/constants';
+import { ATTR_API_NAME } from '../../telemetry/constants';
 import {
   ExpressLikeSchemaHandler,
   ForklaunchNextFunction

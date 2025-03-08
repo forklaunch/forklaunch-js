@@ -50,6 +50,9 @@ importers:
       '@forklaunch/framework-core':
         specifier: workspace:*
         version: link:../core
+      '@forklaunch/framework-monitoring':
+        specifier: 'workspace: *'
+        version: link:../monitoring
       '@forklaunch/hyper-express':
         specifier: ^0.3.0
         version: link:../../packages/hyper-express

@@ -1,4 +1,5 @@
 import { Controller } from '@forklaunch/core/controllers';
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import {
   array,
@@ -11,6 +12,7 @@ import {
   SchemaValidator,
   string
 } from '@forklaunch/framework-core';
+import { Metrics } from '@forklaunch/framework-monitoring';
 import { configValidator } from '../bootstrapper';
 import { PlanService } from '../interfaces/plan.service.interface';
 import {
@@ -27,7 +29,8 @@ export class PlanController
       SchemaValidator,
       typeof configValidator,
       'planService'
-    >
+    >,
+    private readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>
   ) {}
 
   createPlan = handlers.post(

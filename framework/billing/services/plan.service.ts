@@ -1,4 +1,6 @@
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { SchemaValidator } from '@forklaunch/framework-core';
+import { Metrics } from '@forklaunch/framework-monitoring';
 import { EntityManager } from '@mikro-orm/core';
 import { PlanService } from '../interfaces/plan.service.interface';
 import {
@@ -12,7 +14,10 @@ import {
 import { Plan } from '../models/persistence/plan.entity';
 
 export class BasePlanService implements PlanService {
-  constructor(private em: EntityManager) {}
+  constructor(
+    private em: EntityManager,
+    private readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>
+  ) {}
 
   async listPlans(ids?: string[], em?: EntityManager): Promise<PlanDto[]> {
     return await (em ?? this.em).getRepository(Plan).findAll({

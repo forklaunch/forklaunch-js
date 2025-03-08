@@ -35,6 +35,7 @@
     "@forklaunch/core": "^0.4.0",
     "@forklaunch/express": "^0.3.0",
     "@forklaunch/framework-core": "workspace:*",
+    "@forklaunch/framework-monitoring": "workspace: *",
     "@forklaunch/hyper-express": "^0.3.0",
     "@forklaunch/validator": "^0.4.4",
     "@mikro-orm/core": "^6.4.9",

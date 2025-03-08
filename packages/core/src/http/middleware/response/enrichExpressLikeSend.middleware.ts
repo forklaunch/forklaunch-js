@@ -1,17 +1,17 @@
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
-import { parse } from '../middleware/response/parse.middleware';
+import { parse } from './parse.middleware';
 
-import { logger } from '../tracing/pinoLogger';
+import { logger } from '../../telemetry/pinoLogger';
 import {
   ForklaunchRequest,
   ForklaunchResHeaders,
   ForklaunchResponse,
   ForklaunchSendableData,
   ForklaunchStatusResponse
-} from '../types/apiDefinition.types';
-import { ParamsDictionary } from '../types/contractDetails.types';
-import { recordMetric } from './recordMetric';
+} from '../../types/apiDefinition.types';
+import { ParamsDictionary } from '../../types/contractDetails.types';
+import { recordMetric } from '../../telemetry/recordMetric';
 
 /**
  * Enhances the Express-like `send` method with additional logic for response handling and validation.

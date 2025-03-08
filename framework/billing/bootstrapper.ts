@@ -1,4 +1,5 @@
 import { RedisTtlCache } from '@forklaunch/core/cache';
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ConfigInjector, getEnvVar, Lifetime } from '@forklaunch/core/services';
 import {
   number,
@@ -6,6 +7,7 @@ import {
   SchemaValidator,
   string
 } from '@forklaunch/framework-core';
+import { metrics } from '@forklaunch/framework-monitoring';
 import { EntityManager, ForkOptions, MikroORM } from '@mikro-orm/core';
 import dotenv from 'dotenv';
 import mikroOrmOptionsConfig from './mikro-orm.config';
@@ -21,6 +23,7 @@ export const configValidator = {
   version: optional(string),
   docsPath: optional(string),
   entityManager: EntityManager,
+  openTelemetryCollector: OpenTelemetryCollector,
   ttlCache: RedisTtlCache,
   checkoutSessionService: BaseCheckoutSessionService,
   paymentLinkService: BasePaymentLinkService,
@@ -67,6 +70,14 @@ export function bootstrap(
               context?.entityManagerOptions as ForkOptions | undefined
             )
         },
+        openTelemetryCollector: {
+          lifetime: Lifetime.Singleton,
+          value: new OpenTelemetryCollector(
+            getEnvVar('OTEL_SERVICE_NAME'),
+            getEnvVar('OTEL_LEVEL') || 'info',
+            metrics
+          )
+        },
         ttlCache: {
           lifetime: Lifetime.Singleton,
           value: new RedisTtlCache(60 * 60 * 1000, {
@@ -75,20 +86,23 @@ export function bootstrap(
         },
         checkoutSessionService: {
           lifetime: Lifetime.Scoped,
-          factory: ({ ttlCache }) => new BaseCheckoutSessionService(ttlCache)
+          factory: ({ ttlCache, openTelemetryCollector }) =>
+            new BaseCheckoutSessionService(ttlCache, openTelemetryCollector)
         },
         paymentLinkService: {
           lifetime: Lifetime.Scoped,
-          factory: ({ ttlCache }) => new BasePaymentLinkService(ttlCache)
+          factory: ({ ttlCache, openTelemetryCollector }) =>
+            new BasePaymentLinkService(ttlCache, openTelemetryCollector)
         },
         planService: {
           lifetime: Lifetime.Scoped,
-          factory: ({ entityManager }) => new BasePlanService(entityManager)
+          factory: ({ entityManager, openTelemetryCollector }) =>
+            new BasePlanService(entityManager, openTelemetryCollector)
         },
         subscriptionService: {
           lifetime: Lifetime.Scoped,
-          factory: ({ entityManager }) =>
-            new BaseSubscriptionService(entityManager)
+          factory: ({ entityManager, openTelemetryCollector }) =>
+            new BaseSubscriptionService(entityManager, openTelemetryCollector)
         }
       }
     );

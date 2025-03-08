@@ -1,6 +1,6 @@
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { SchemaValidator } from '@forklaunch/framework-core';
-import { ForklaunchMetrics } from '@forklaunch/framework-monitoring';
+import { Metrics } from '@forklaunch/framework-monitoring';
 import { Collection, EntityManager } from '@mikro-orm/core';
 import { OrganizationService } from '../interfaces/organization.service.interface';
 import { RoleService } from '../interfaces/role.service.interface';
@@ -24,7 +24,7 @@ export default class BaseUserService implements UserService {
     private passwordEncryptionPublicKeyPath: string,
     private roleServiceFactory: () => RoleService,
     private organizationServiceFactory: () => OrganizationService,
-    private openTelemetryCollector: OpenTelemetryCollector<ForklaunchMetrics>
+    private openTelemetryCollector: OpenTelemetryCollector<Metrics>
   ) {}
 
   private async getBatchRoles(

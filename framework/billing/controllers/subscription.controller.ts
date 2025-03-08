@@ -1,4 +1,5 @@
 import { Controller } from '@forklaunch/core/controllers';
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import {
   array,
@@ -11,6 +12,7 @@ import {
   SchemaValidator,
   string
 } from '@forklaunch/framework-core';
+import { Metrics } from '@forklaunch/framework-monitoring';
 import { configValidator } from '../bootstrapper';
 import { SubscriptionService } from '../interfaces/subscription.service.interface';
 import {
@@ -28,7 +30,8 @@ export class SubscriptionController
       SchemaValidator,
       typeof configValidator,
       'subscriptionService'
-    >
+    >,
+    private readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>
   ) {}
 
   createSubscription = handlers.post(

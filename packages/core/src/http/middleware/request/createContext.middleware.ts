@@ -1,7 +1,7 @@
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { trace } from '@opentelemetry/api';
 import { v4 } from 'uuid';
-import { ATTR_CORRELATION_ID } from '../../tracing/constants';
+import { ATTR_CORRELATION_ID } from '../../telemetry/constants';
 import {
   ExpressLikeSchemaHandler,
   ForklaunchNextFunction

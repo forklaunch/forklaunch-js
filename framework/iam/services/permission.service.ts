@@ -1,7 +1,7 @@
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { BaseService } from '@forklaunch/core/services';
 import { SchemaValidator } from '@forklaunch/framework-core';
-import { ForklaunchMetrics } from '@forklaunch/framework-monitoring';
+import { Metrics } from '@forklaunch/framework-monitoring';
 import { EntityManager } from '@mikro-orm/core';
 import { PermissionService } from '../interfaces/permission.service.interface';
 import { RoleService } from '../interfaces/role.service.interface';
@@ -28,7 +28,7 @@ export default class BasePermissionService
   constructor(
     public em: EntityManager,
     private roleServiceFactory: () => RoleService,
-    private openTelemetryCollector: OpenTelemetryCollector<ForklaunchMetrics>
+    private openTelemetryCollector: OpenTelemetryCollector<Metrics>
   ) {}
 
   // start: global helper functions

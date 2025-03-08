@@ -6,10 +6,10 @@ import {
   ATTR_SERVICE_NAME
 } from '@opentelemetry/semantic-conventions';
 import { ParsedQs } from 'qs';
-import { ForklaunchRequest, ForklaunchResponse, ParamsDictionary } from '../';
+import { ForklaunchRequest, ForklaunchResponse, ParamsDictionary } from '..';
 import { getEnvVar } from '../../services';
-import { ATTR_API_NAME, ATTR_CORRELATION_ID } from '../tracing/constants';
-import { httpRequestsTotalCounter } from '../tracing/openTelemetryCollector';
+import { ATTR_API_NAME, ATTR_CORRELATION_ID } from './constants';
+import { httpRequestsTotalCounter } from './openTelemetryCollector';
 
 export function recordMetric<
   SV extends AnySchemaValidator,

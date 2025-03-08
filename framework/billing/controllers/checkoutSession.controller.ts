@@ -1,4 +1,5 @@
 import { Controller } from '@forklaunch/core/controllers';
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import {
   handlers,
@@ -9,6 +10,7 @@ import {
   SchemaValidator,
   string
 } from '@forklaunch/framework-core';
+import { Metrics } from '@forklaunch/framework-monitoring';
 import { configValidator } from '../bootstrapper';
 import { CheckoutSessionService } from '../interfaces/checkoutSession.service.interface';
 import {
@@ -31,7 +33,8 @@ export class CheckoutSessionController
       SchemaValidator,
       typeof configValidator,
       'checkoutSessionService'
-    >
+    >,
+    private readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>
   ) {}
 
   createCheckoutSession = handlers.post(

@@ -1,4 +1,8 @@
-use std::{collections::HashMap, io::Write, path::Path};
+use std::{
+    collections::{HashMap, HashSet},
+    io::Write,
+    path::Path,
+};
 
 use anyhow::{bail, Context, Result};
 use clap::{Arg, ArgAction, ArgMatches, Command};
@@ -344,12 +348,20 @@ impl CliCommand for ApplicationCommand {
 
         // Inline specific perms checks here. Make remote calls to receive templates for specific services if needed here (premium only).
 
-        let mut additional_projects = vec![ProjectEntry {
-            r#type: ProjectType::Library,
-            name: "core".to_string(),
-            resources: None,
-            routers: None,
-        }];
+        let mut additional_projects = vec![
+            ProjectEntry {
+                r#type: ProjectType::Library,
+                name: "core".to_string(),
+                resources: None,
+                routers: None,
+            },
+            ProjectEntry {
+                r#type: ProjectType::Library,
+                name: "monitoring".to_string(),
+                resources: None,
+                routers: None,
+            },
+        ];
         additional_projects.extend(services.into_iter().map(|package| ProjectEntry {
             r#type: ProjectType::Service,
             name: package.to_string(),
@@ -473,7 +485,9 @@ impl CliCommand for ApplicationCommand {
                 db_driver: match_database(&database),
             };
 
-            if service_data.service_name != "core" {
+            if HashSet::from(["core".to_string(), "monitoring".to_string()])
+                .contains(&service_data.service_name)
+            {
                 docker_compose_string = Some(add_service_definition_to_docker_compose(
                     &service_data,
                     &Path::new(&name).to_string_lossy().to_string(),
@@ -496,8 +510,8 @@ impl CliCommand for ApplicationCommand {
                     .join(&template_dir.output_path)
                     .to_string_lossy()
                     .to_string(),
-                if service_data.service_name == "core" {
-                    Some(ProjectDependencies {
+                match service_data.service_name.as_str() {
+                    "core" => Some(ProjectDependencies {
                         app_name: service_data.app_name.clone(),
                         database: Some(service_data.database.clone()),
                         forklaunch_common: Some(COMMON_VERSION.to_string()),
@@ -531,22 +545,25 @@ impl CliCommand for ApplicationCommand {
                             None
                         },
                         ..Default::default()
-                    })
-                } else {
-                    None
+                    }),
+                    "monitoring" => Some(ProjectDependencies {
+                        forklaunch_core: Some(CORE_VERSION.to_string()),
+                        ..Default::default()
+                    }),
+                    _ => None,
                 },
-                if service_data.service_name == "core" {
-                    Some(ProjectDevDependencies {
+                match service_data.service_name.as_str() {
+                    "core" => Some(ProjectDevDependencies {
                         eslint: Some(ESLINT_VERSION.to_string()),
                         typescript_eslint: Some(TYPESCRIPT_ESLINT_VERSION.to_string()),
                         types_uuid: Some(TYPES_UUID_VERSION.to_string()),
                         ..Default::default()
-                    })
-                } else {
-                    None
+                    }),
+                    "monitoring" => None,
+                    _ => None,
                 },
-                if service_data.service_name == "core" {
-                    Some(ProjectScripts {
+                match service_data.service_name.as_str() {
+                    "core" => Some(ProjectScripts {
                         build: Some(PROJECT_BUILD_SCRIPT.to_string()),
                         clean: Some(
                             project_clean_script(service_data.runtime.as_str()).to_string(),
@@ -559,14 +576,27 @@ impl CliCommand for ApplicationCommand {
                             project_test_script(service_data.test_framework.as_str()).to_string(),
                         ),
                         ..Default::default()
-                    })
-                } else {
-                    None
+                    }),
+                    "monitoring" => Some(ProjectScripts {
+                        build: Some(PROJECT_BUILD_SCRIPT.to_string()),
+                        clean: Some(
+                            project_clean_script(service_data.runtime.as_str()).to_string(),
+                        ),
+                        docs: Some(PROJECT_DOCS_SCRIPT.to_string()),
+                        format: Some(PROJECT_FORMAT_SCRIPT.to_string()),
+                        lint: Some(PROJECT_LINT_SCRIPT.to_string()),
+                        lint_fix: Some(PROJECT_LINT_FIX_SCRIPT.to_string()),
+                        test: Some(
+                            project_test_script(service_data.test_framework.as_str()).to_string(),
+                        ),
+                        ..Default::default()
+                    }),
+                    _ => None,
                 },
-                if service_data.service_name == "core" && service_data.is_node {
-                    Some("lib/index.js".to_string())
-                } else {
-                    None
+                match service_data.service_name.as_str() {
+                    "core" => Some("lib/index.js".to_string()),
+                    "monitoring" => None,
+                    _ => None,
                 },
             )?);
         }

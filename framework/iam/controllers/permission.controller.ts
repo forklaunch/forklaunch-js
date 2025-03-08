@@ -11,7 +11,7 @@ import {
   SchemaValidator,
   string
 } from '@forklaunch/framework-core';
-import { ForklaunchMetrics } from '@forklaunch/framework-monitoring';
+import { Metrics } from '@forklaunch/framework-monitoring';
 import { configValidator } from '../bootstrapper';
 import { PermissionService } from '../interfaces/permission.service.interface';
 import {
@@ -30,7 +30,7 @@ export class PermissionController
       typeof configValidator,
       'permissionService'
     >,
-    private readonly openTelemetryCollector: OpenTelemetryCollector<ForklaunchMetrics>
+    private readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>
   ) {}
 
   createPermission = handlers.post(

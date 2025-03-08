@@ -1,7 +1,7 @@
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { BaseService } from '@forklaunch/core/services';
 import { SchemaValidator } from '@forklaunch/framework-core';
-import { ForklaunchMetrics } from '@forklaunch/framework-monitoring';
+import { Metrics } from '@forklaunch/framework-monitoring';
 import { EntityManager } from '@mikro-orm/core';
 import { OrganizationService } from '../interfaces/organization.service.interface';
 import {
@@ -19,7 +19,7 @@ export default class BaseOrganizationService
 {
   constructor(
     public em: EntityManager,
-    private readonly openTelemetryCollector: OpenTelemetryCollector<ForklaunchMetrics>
+    private readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>
   ) {}
 
   async createOrganization(

@@ -11,6 +11,7 @@ import {
   SchemaValidator,
   string
 } from '@forklaunch/framework-core';
+import { metrics } from '@forklaunch/framework-monitoring';
 import { EntityManager, ForkOptions, MikroORM } from '@mikro-orm/core';
 import dotenv from 'dotenv';
 import mikroOrmOptionsConfig from './mikro-orm.config';
@@ -25,8 +26,8 @@ export const configValidator = {
   version: optional(string),
   docsPath: optional(string),
   passwordEncryptionPublicKeyPath: string,
-  openTelemetryCollector: OpenTelemetryCollector,
   entityManager: EntityManager,
+  openTelemetryCollector: OpenTelemetryCollector,
   organizationService: BaseOrganizationService,
   permissionService: BasePermissionService,
   roleService: BaseRoleService,
@@ -76,23 +77,22 @@ export function bootstrap(
           lifetime: Lifetime.Singleton,
           value: new OpenTelemetryCollector(
             getEnvVar('OTEL_SERVICE_NAME'),
-            'info',
-            {
-              test: 'counter'
-            }
+            getEnvVar('OTEL_LEVEL') || 'info',
+            metrics
           )
         },
         organizationService: {
           lifetime: Lifetime.Scoped,
-          factory: ({ entityManager }, resolve, context) => {
+          factory: (
+            { entityManager, openTelemetryCollector },
+            resolve,
+            context
+          ) => {
             let em = entityManager;
             if (context.entityManagerOptions) {
               em = resolve('entityManager', context);
             }
-            return new BaseOrganizationService(
-              em,
-              resolve('openTelemetryCollector', context)
-            );
+            return new BaseOrganizationService(em, openTelemetryCollector);
           }
         },
         permissionService: {
