@@ -33,7 +33,8 @@ export const patch = <
     ReqBody,
     ReqQuery,
     ReqHeaders,
-    ResHeaders
+    ResHeaders,
+    Request
   >,
   ...handlers: ExpressLikeSchemaHandler<
     SV,

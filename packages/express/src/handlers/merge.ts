@@ -33,7 +33,8 @@ export const merge = <
     ReqBody,
     ReqQuery,
     ReqHeaders,
-    ResHeaders
+    ResHeaders,
+    Request
   >,
   ...handlers: ExpressLikeSchemaHandler<
     SV,

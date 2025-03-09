@@ -251,7 +251,7 @@ describe('handlers', () => {
         req.query.name;
       }
     );
-    // application.use(checkoutMiddleware);
-    // router.any(checkoutMiddleware);
+    application.use(checkoutMiddleware);
+    router.any('/', checkoutMiddleware);
   });
 });

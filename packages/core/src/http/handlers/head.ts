@@ -33,7 +33,8 @@ export const head = <
     ResBodyMap,
     ReqQuery,
     ReqHeaders,
-    ResHeaders
+    ResHeaders,
+    BaseRequest
   >,
   ...handlers: ExpressLikeSchemaHandler<
     SV,

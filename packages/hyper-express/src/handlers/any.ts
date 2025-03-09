@@ -3,10 +3,10 @@ import {
   ContractDetails,
   ExpressLikeSchemaHandler,
   HeadersObject,
+  middleware,
   ParamsObject,
   QueryObject,
-  ResponsesObject,
-  typedHandler
+  ResponsesObject
 } from '@forklaunch/core/http';
 import {
   MiddlewareNext,
@@ -37,7 +37,8 @@ export const any = <
     ReqBody,
     ReqQuery,
     ReqHeaders,
-    ResHeaders
+    ResHeaders,
+    Request<LocalsObj>
   >,
   ...handlers: ExpressLikeSchemaHandler<
     SV,
@@ -53,9 +54,8 @@ export const any = <
     MiddlewareNext
   >[]
 ) => {
-  return typedHandler<
+  return middleware<
     SV,
-    'middleware',
     Path,
     P,
     ResBodyMap,
@@ -67,5 +67,5 @@ export const any = <
     Request<LocalsObj>,
     Response<LocalsObj>,
     MiddlewareNext
-  >(schemaValidator, path, 'middleware', contractDetails, ...handlers);
+  >(schemaValidator, path, contractDetails, ...handlers);
 };

@@ -33,7 +33,8 @@ export const get = <
     ReqBody,
     ReqQuery,
     ReqHeaders,
-    ResHeaders
+    ResHeaders,
+    Request
   >,
   ...handlers: ExpressLikeSchemaHandler<
     SV,

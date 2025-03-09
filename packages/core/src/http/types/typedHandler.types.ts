@@ -63,7 +63,8 @@ export type TypedHandler<
     ReqBody,
     ReqQuery,
     ReqHeaders,
-    ResHeaders
+    ResHeaders,
+    BaseRequest
   >;
   // This is an alias hack to satisfy the type checker -- later ts versions may fix this
   handlers: ContractDetailsExpressLikeSchemaHandler<
@@ -108,7 +109,8 @@ export type ExpressLikeTypedHandler<
       ReqBody,
       ReqQuery,
       ReqHeaders,
-      ResHeaders
+      ResHeaders,
+      BaseRequest
     >,
     'auth'
   >;

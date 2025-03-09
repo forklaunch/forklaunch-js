@@ -33,7 +33,8 @@ export const purge = <
     ReqBody,
     ReqQuery,
     ReqHeaders,
-    ResHeaders
+    ResHeaders,
+    Request
   >,
   ...handlers: ExpressLikeSchemaHandler<
     SV,

@@ -37,7 +37,8 @@ export const put = <
     ReqBody,
     ReqQuery,
     ReqHeaders,
-    ResHeaders
+    ResHeaders,
+    Request<LocalsObj>
   >,
   ...handlers: ExpressLikeSchemaHandler<
     SV,

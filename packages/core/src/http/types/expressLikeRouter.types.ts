@@ -154,7 +154,8 @@ export interface LiveTypeRouteDefinition<
       ReqBody,
       ReqQuery,
       ReqHeaders,
-      ResHeaders
+      ResHeaders,
+      BaseRequest
     >,
     ...middleware: ExpressLikeSchemaHandler<
       SV,
@@ -378,7 +379,8 @@ export interface TypedMiddlewareDefinition<
       ReqBody,
       ReqQuery,
       ReqHeaders,
-      ResHeaders
+      ResHeaders,
+      BaseRequest
     >,
     middleware: ExpressLikeSchemaHandler<
       SV,
@@ -427,7 +429,8 @@ export interface TypedMiddlewareDefinition<
       ReqBody,
       ReqQuery,
       ReqHeaders,
-      ResHeaders
+      ResHeaders,
+      BaseRequest
     >,
     middleware: ExpressLikeSchemaHandler<
       SV,
@@ -622,7 +625,8 @@ export interface TypedNestableMiddlewareDefinition<
       ReqBody,
       ReqQuery,
       ReqHeaders,
-      ResHeaders
+      ResHeaders,
+      BaseRequest
     >,
     middleware:
       | ExpressLikeSchemaHandler<
@@ -676,7 +680,8 @@ export interface TypedNestableMiddlewareDefinition<
       ReqBody,
       ReqQuery,
       ReqHeaders,
-      ResHeaders
+      ResHeaders,
+      BaseRequest
     >,
     middleware:
       | ExpressLikeSchemaHandler<
@@ -736,7 +741,8 @@ export type ContractDetailsOrMiddlewareOrTypedHandler<
       ReqBody,
       ReqQuery,
       ReqHeaders,
-      ResHeaders
+      ResHeaders,
+      BaseRequest
     >
   | ExpressLikeSchemaHandler<
       SV,

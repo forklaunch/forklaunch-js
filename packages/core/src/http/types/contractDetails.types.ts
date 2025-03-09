@@ -141,7 +141,8 @@ export type SchemaAuthMethods<
   ParamsSchema extends ParamsObject<SV>,
   ReqBody extends Body<SV>,
   QuerySchema extends QueryObject<SV>,
-  ReqHeaders extends HeadersObject<SV>
+  ReqHeaders extends HeadersObject<SV>,
+  BaseRequest
 > = Prettify<
   AuthMethodsBase & {
     readonly mapPermissions?: ExpressLikeSchemaAuthMapper<
@@ -149,14 +150,16 @@ export type SchemaAuthMethods<
       ParamsSchema,
       ReqBody,
       QuerySchema,
-      ReqHeaders
+      ReqHeaders,
+      BaseRequest
     >;
     readonly mapRoles?: ExpressLikeSchemaAuthMapper<
       SV,
       ParamsSchema,
       ReqBody,
       QuerySchema,
-      ReqHeaders
+      ReqHeaders,
+      BaseRequest
     >;
   }
 >;
@@ -166,21 +169,24 @@ export type AuthMethods<
   P extends ParamsDictionary,
   ReqBody extends Record<string, unknown>,
   ReqQuery extends ParsedQs,
-  ReqHeaders extends Record<string, string>
+  ReqHeaders extends Record<string, string>,
+  BaseRequest
 > = AuthMethodsBase & {
   readonly mapPermissions?: ExpressLikeAuthMapper<
     SV,
     P,
     ReqBody,
     ReqQuery,
-    ReqHeaders
+    ReqHeaders,
+    BaseRequest
   >;
   readonly mapRoles?: ExpressLikeAuthMapper<
     SV,
     P,
     ReqBody,
     ReqQuery,
-    ReqHeaders
+    ReqHeaders,
+    BaseRequest
   >;
 };
 
@@ -253,7 +259,8 @@ export type PathParamHttpContractDetails<
   ResponseSchemas extends ResponsesObject<SV> = ResponsesObject<SV>,
   QuerySchema extends QueryObject<SV> = QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV> = HeadersObject<SV>,
-  ResHeaders extends HeadersObject<SV> = HeadersObject<SV>
+  ResHeaders extends HeadersObject<SV> = HeadersObject<SV>,
+  BaseRequest = unknown
 > = {
   /** Name of the contract */
   readonly name: string;
@@ -277,7 +284,8 @@ export type PathParamHttpContractDetails<
       : ParamsSchema,
     never,
     QuerySchema,
-    ReqHeaders
+    ReqHeaders,
+    BaseRequest
   >;
   readonly options?: {
     readonly requestValidation: 'error' | 'warning' | 'none';
@@ -312,7 +320,8 @@ export type HttpContractDetails<
   BodySchema extends Body<SV> = Body<SV>,
   QuerySchema extends QueryObject<SV> = QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV> = HeadersObject<SV>,
-  ResHeaders extends HeadersObject<SV> = HeadersObject<SV>
+  ResHeaders extends HeadersObject<SV> = HeadersObject<SV>,
+  BaseRequest = unknown
 > = PathParamHttpContractDetails<
   SV,
   Path,
@@ -320,7 +329,8 @@ export type HttpContractDetails<
   ResponseSchemas,
   QuerySchema,
   ReqHeaders,
-  ResHeaders
+  ResHeaders,
+  BaseRequest
 > & {
   /** Required body schema for the contract */
   readonly body: BodySchema;
@@ -339,7 +349,8 @@ export type HttpContractDetails<
       : ParamsSchema,
     BodySchema,
     QuerySchema,
-    ReqHeaders
+    ReqHeaders,
+    BaseRequest
   > & {};
 };
 
@@ -361,7 +372,8 @@ export type MiddlewareContractDetails<
   BodySchema extends Body<SV> = Body<SV>,
   QuerySchema extends QueryObject<SV> = QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV> = HeadersObject<SV>,
-  ResHeaders extends HeadersObject<SV> = HeadersObject<SV>
+  ResHeaders extends HeadersObject<SV> = HeadersObject<SV>,
+  BaseRequest = unknown
 > = Omit<
   Partial<
     HttpContractDetails<
@@ -372,7 +384,8 @@ export type MiddlewareContractDetails<
       BodySchema,
       QuerySchema,
       ReqHeaders,
-      ResHeaders
+      ResHeaders,
+      BaseRequest
     >
   >,
   'name' | 'summary' | 'responses'
@@ -390,7 +403,8 @@ export type ContractDetails<
   BodySchema extends Body<SV>,
   QuerySchema extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
-  ResHeaders extends HeadersObject<SV>
+  ResHeaders extends HeadersObject<SV>,
+  BaseRequest
 > = ContractMethod extends PathParamMethod
   ? PathParamHttpContractDetails<
       SV,
@@ -399,7 +413,8 @@ export type ContractDetails<
       ResponseSchemas,
       QuerySchema,
       ReqHeaders,
-      ResHeaders
+      ResHeaders,
+      BaseRequest
     >
   : ContractMethod extends HttpMethod
     ? HttpContractDetails<
@@ -410,7 +425,8 @@ export type ContractDetails<
         BodySchema,
         QuerySchema,
         ReqHeaders,
-        ResHeaders
+        ResHeaders,
+        BaseRequest
       >
     : ContractMethod extends 'middleware'
       ? MiddlewareContractDetails<
@@ -421,6 +437,7 @@ export type ContractDetails<
           BodySchema,
           QuerySchema,
           ReqHeaders,
-          ResHeaders
+          ResHeaders,
+          BaseRequest
         >
       : never;

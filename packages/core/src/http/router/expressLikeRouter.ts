@@ -290,7 +290,8 @@ export class ForklaunchExpressLikeRouter<
       ReqBody,
       ReqQuery,
       ReqHeaders,
-      ResHeaders
+      ResHeaders,
+      BaseRequest
     >
   ) {
     const schemaValidator = this.schemaValidator as SchemaValidator;
@@ -310,7 +311,8 @@ export class ForklaunchExpressLikeRouter<
           ReqBody,
           ReqQuery,
           ReqHeaders,
-          ResHeaders
+          ResHeaders,
+          BaseRequest
         >(contractDetails) && contractDetails.body != null
           ? { body: contractDetails.body }
           : {})
@@ -330,7 +332,8 @@ export class ForklaunchExpressLikeRouter<
         ResBodyMap,
         ReqQuery,
         ReqHeaders,
-        ResHeaders
+        ResHeaders,
+        BaseRequest
       >(contractDetails) ||
       isHttpContractDetails<
         SV,
@@ -340,7 +343,8 @@ export class ForklaunchExpressLikeRouter<
         ReqBody,
         ReqQuery,
         ReqHeaders,
-        ResHeaders
+        ResHeaders,
+        BaseRequest
       >(contractDetails)
         ? {
             ...contractDetails.responses
@@ -680,7 +684,8 @@ export class ForklaunchExpressLikeRouter<
             ReqBody,
             ReqQuery,
             ReqHeaders,
-            ResHeaders
+            ResHeaders,
+            BaseRequest
           >(contractDetails) &&
           !isPathParamHttpContractDetails<
             SV,
@@ -689,7 +694,8 @@ export class ForklaunchExpressLikeRouter<
             ResBodyMap,
             ReqQuery,
             ReqHeaders,
-            ResHeaders
+            ResHeaders,
+            BaseRequest
           >(contractDetails)
         ) {
           throw new Error(

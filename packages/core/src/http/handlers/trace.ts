@@ -33,7 +33,8 @@ export const trace = <
     ResBodyMap,
     ReqQuery,
     ReqHeaders,
-    ResHeaders
+    ResHeaders,
+    BaseRequest
   >,
   ...handlers: ExpressLikeSchemaHandler<
     SV,

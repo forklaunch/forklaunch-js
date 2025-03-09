@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.5.3
+
+### Patch Changes
+
+- Reintroduce request to auth and fix typing issues
+
 ## 0.5.2
 
 ### Patch Changes

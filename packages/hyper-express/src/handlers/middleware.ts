@@ -37,7 +37,8 @@ export const middleware = <
     ReqBody,
     ReqQuery,
     ReqHeaders,
-    ResHeaders
+    ResHeaders,
+    Request<LocalsObj>
   >,
   ...handlers: ExpressLikeSchemaHandler<
     SV,

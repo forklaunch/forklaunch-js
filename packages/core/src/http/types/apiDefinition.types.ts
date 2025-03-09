@@ -429,13 +429,15 @@ export type ExpressLikeSchemaAuthMapper<
   P extends ParamsObject<SV>,
   ReqBody extends Body<SV>,
   ReqQuery extends QueryObject<SV>,
-  ReqHeaders extends HeadersObject<SV>
+  ReqHeaders extends HeadersObject<SV>,
+  BaseRequest
 > = ExpressLikeAuthMapper<
   SV,
   MapParamsSchema<SV, P>,
   MapReqBodySchema<SV, ReqBody>,
   MapReqQuerySchema<SV, ReqQuery>,
-  MapReqHeadersSchema<SV, ReqHeaders>
+  MapReqHeadersSchema<SV, ReqHeaders>,
+  BaseRequest
 >;
 
 export type ExpressLikeAuthMapper<
@@ -443,10 +445,18 @@ export type ExpressLikeAuthMapper<
   P extends ParamsDictionary,
   ReqBody extends Record<string, unknown>,
   ReqQuery extends ParsedQs,
-  ReqHeaders extends Record<string, string>
+  ReqHeaders extends Record<string, string>,
+  BaseRequest
 > = (
   sub: string,
-  req?: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>
+  req?: ResolvedForklaunchRequest<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    BaseRequest
+  >
 ) => Set<string> | Promise<Set<string>>;
 
 /**

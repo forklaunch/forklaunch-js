@@ -33,7 +33,8 @@ export const delete_ = <
     ResBodyMap,
     ReqQuery,
     ReqHeaders,
-    ResHeaders
+    ResHeaders,
+    BaseRequest
   >,
   ...handlers: ExpressLikeSchemaHandler<
     SV,

@@ -10,7 +10,8 @@ import {
   MapReqHeadersSchema,
   MapReqQuerySchema,
   MapResBodyMapSchema,
-  MapResHeadersSchema
+  MapResHeadersSchema,
+  ResolvedForklaunchRequest
 } from '../../types/apiDefinition.types';
 import {
   AuthMethods,
@@ -59,11 +60,26 @@ async function checkAuthorizationToken<
   P extends ParamsDictionary,
   ReqBody extends Record<string, unknown>,
   ReqQuery extends ParsedQs,
-  ReqHeaders extends Record<string, string>
+  ReqHeaders extends Record<string, string>,
+  BaseRequest
 >(
-  authorizationMethod: AuthMethods<SV, P, ReqBody, ReqQuery, ReqHeaders>,
+  authorizationMethod: AuthMethods<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    BaseRequest
+  >,
   authorizationToken?: string,
-  req?: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>
+  req?: ResolvedForklaunchRequest<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    BaseRequest
+  >
 ): Promise<readonly [401 | 403 | 500, string] | undefined> {
   if (authorizationToken == null) {
     return [401, 'No Authorization token provided.'];
@@ -232,7 +248,8 @@ export async function parseRequestAuth<
     MapParamsSchema<SV, P>,
     MapReqBodySchema<SV, ReqBody>,
     MapReqQuerySchema<SV, ReqQuery>,
-    MapReqHeadersSchema<SV, ReqHeaders>
+    MapReqHeadersSchema<SV, ReqHeaders>,
+    unknown
   >;
 
   if (auth) {
@@ -242,7 +259,8 @@ export async function parseRequestAuth<
         MapParamsSchema<SV, P>,
         MapReqBodySchema<SV, ReqBody>,
         MapReqQuerySchema<SV, ReqQuery>,
-        MapReqHeadersSchema<SV, ReqHeaders>
+        MapReqHeadersSchema<SV, ReqHeaders>,
+        unknown
       >(
         auth,
         req.headers[

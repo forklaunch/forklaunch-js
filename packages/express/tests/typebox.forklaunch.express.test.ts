@@ -1,6 +1,6 @@
+import { number, SchemaValidator, string } from '@forklaunch/validator/typebox';
 import { Server } from 'http';
 import { forklaunchExpress, forklaunchRouter } from '../index';
-import { number, SchemaValidator, string } from '@forklaunch/validator/typebox';
 import { checkout } from '../src/handlers/checkout';
 import { get } from '../src/handlers/get';
 import { post } from '../src/handlers/post';
@@ -234,6 +234,6 @@ describe('handlers', () => {
       }
     );
     application.use(checkoutMiddleware);
-    router.checkout(checkoutMiddleware);
+    router.checkout('/', checkoutMiddleware);
   });
 });

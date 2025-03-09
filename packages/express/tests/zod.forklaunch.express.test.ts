@@ -1,9 +1,9 @@
+import { number, SchemaValidator, string } from '@forklaunch/validator/zod';
+import { Server } from 'http';
+import { forklaunchExpress, forklaunchRouter } from '../index';
 import { checkout } from '../src/handlers/checkout';
 import { get } from '../src/handlers/get';
 import { post } from '../src/handlers/post';
-import { SchemaValidator, string, number } from '@forklaunch/validator/zod';
-import { Server } from 'http';
-import { forklaunchExpress, forklaunchRouter } from '../index';
 
 const zodSchemaValidator = SchemaValidator();
 const forklaunchApplication = forklaunchExpress(zodSchemaValidator);
@@ -237,6 +237,6 @@ describe('handlers', () => {
       }
     );
     application.use(checkoutMiddleware);
-    router.checkout(checkoutMiddleware);
+    router.checkout('/', checkoutMiddleware);
   });
 });

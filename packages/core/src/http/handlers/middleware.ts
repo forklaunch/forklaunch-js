@@ -2,6 +2,7 @@ import { AnySchemaValidator } from '@forklaunch/validator';
 import { ExpressLikeSchemaHandler } from '../types/apiDefinition.types';
 import {
   Body,
+  ContractDetails,
   HeadersObject,
   MiddlewareContractDetails,
   ParamsObject,
@@ -34,7 +35,8 @@ export const middleware = <
     ReqBody,
     ReqQuery,
     ReqHeaders,
-    ResHeaders
+    ResHeaders,
+    BaseRequest
   >,
   ...handlers: ExpressLikeSchemaHandler<
     SV,
@@ -64,5 +66,33 @@ export const middleware = <
     BaseRequest,
     BaseResponse,
     NextFunction
-  >(_schemaValidator, path, 'middleware', contractDetails, ...handlers);
+  >(_schemaValidator, path, 'middleware', contractDetails, ...handlers) as {
+    _typedHandler: true;
+    _path: Path;
+    contractDetails: ContractDetails<
+      SV,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      BaseRequest
+    >;
+    handlers: ExpressLikeSchemaHandler<
+      SV,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
+    >[];
+  };
 };
