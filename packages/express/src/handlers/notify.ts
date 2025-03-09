@@ -33,8 +33,7 @@ export const notify = <
     ReqBody,
     ReqQuery,
     ReqHeaders,
-    ResHeaders,
-    Request
+    ResHeaders
   >,
   ...handlers: ExpressLikeSchemaHandler<
     SV,

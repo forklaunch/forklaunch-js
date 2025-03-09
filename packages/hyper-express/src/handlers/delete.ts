@@ -37,8 +37,7 @@ export const delete_ = <
     ReqBody,
     ReqQuery,
     ReqHeaders,
-    ResHeaders,
-    Request<LocalsObj>
+    ResHeaders
   >,
   ...handlers: ExpressLikeSchemaHandler<
     SV,

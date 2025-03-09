@@ -17,8 +17,7 @@ export function typedAuthHandler<
   ReqBody extends Body<SV>,
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
-  ResHeaders extends HeadersObject<SV>,
-  BaseRequest
+  ResHeaders extends HeadersObject<SV>
 >(
   _schemaValidator: SV,
   _contractDetails: ContractDetails<
@@ -30,17 +29,9 @@ export function typedAuthHandler<
     ReqBody,
     ReqQuery,
     ReqHeaders,
-    ResHeaders,
-    BaseRequest
+    ResHeaders
   >,
-  authHandler: ExpressLikeSchemaAuthMapper<
-    SV,
-    P,
-    ReqBody,
-    ReqQuery,
-    ReqHeaders,
-    BaseRequest
-  >
+  authHandler: ExpressLikeSchemaAuthMapper<SV, P, ReqBody, ReqQuery, ReqHeaders>
 ) {
   return authHandler;
 }

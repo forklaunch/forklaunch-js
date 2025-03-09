@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.2.3
+
+### Patch Changes
+
+- Constrain the auth request to only include discovered parameters for simplicity. Bump package versions.
+
 ## 0.2.2
 
 ### Patch Changes

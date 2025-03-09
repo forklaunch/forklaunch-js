@@ -37,8 +37,7 @@ export const post = <
     ReqBody,
     ReqQuery,
     ReqHeaders,
-    ResHeaders,
-    Request<LocalsObj>
+    ResHeaders
   >,
   ...handlers: ExpressLikeSchemaHandler<
     SV,

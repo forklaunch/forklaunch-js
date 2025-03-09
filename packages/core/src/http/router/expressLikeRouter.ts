@@ -290,8 +290,7 @@ export class ForklaunchExpressLikeRouter<
       ReqBody,
       ReqQuery,
       ReqHeaders,
-      ResHeaders,
-      BaseRequest
+      ResHeaders
     >
   ) {
     const schemaValidator = this.schemaValidator as SchemaValidator;
@@ -311,8 +310,7 @@ export class ForklaunchExpressLikeRouter<
           ReqBody,
           ReqQuery,
           ReqHeaders,
-          ResHeaders,
-          BaseRequest
+          ResHeaders
         >(contractDetails) && contractDetails.body != null
           ? { body: contractDetails.body }
           : {})
@@ -332,8 +330,7 @@ export class ForklaunchExpressLikeRouter<
         ResBodyMap,
         ReqQuery,
         ReqHeaders,
-        ResHeaders,
-        BaseRequest
+        ResHeaders
       >(contractDetails) ||
       isHttpContractDetails<
         SV,
@@ -343,8 +340,7 @@ export class ForklaunchExpressLikeRouter<
         ReqBody,
         ReqQuery,
         ReqHeaders,
-        ResHeaders,
-        BaseRequest
+        ResHeaders
       >(contractDetails)
         ? {
             ...contractDetails.responses
@@ -684,8 +680,7 @@ export class ForklaunchExpressLikeRouter<
             ReqBody,
             ReqQuery,
             ReqHeaders,
-            ResHeaders,
-            BaseRequest
+            ResHeaders
           >(contractDetails) &&
           !isPathParamHttpContractDetails<
             SV,
@@ -694,8 +689,7 @@ export class ForklaunchExpressLikeRouter<
             ResBodyMap,
             ReqQuery,
             ReqHeaders,
-            ResHeaders,
-            BaseRequest
+            ResHeaders
           >(contractDetails)
         ) {
           throw new Error(
@@ -707,7 +701,7 @@ export class ForklaunchExpressLikeRouter<
           basePath: this.basePath,
           path,
           method,
-          contractDetails: contractDetails as HttpContractDetails<SV>
+          contractDetails: contractDetails as PathParamHttpContractDetails<SV>
         });
 
         const { requestSchema, responseSchemas } = this.#compile<
@@ -735,7 +729,7 @@ export class ForklaunchExpressLikeRouter<
             LocalsObj
           >(
             path,
-            contractDetails as HttpContractDetails<SV>,
+            contractDetails as PathParamHttpContractDetails<SV>,
             requestSchema,
             responseSchemas
           ).concat(handlers) as RouterHandler[]),

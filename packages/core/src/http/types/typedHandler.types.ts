@@ -63,58 +63,9 @@ export type TypedHandler<
     ReqBody,
     ReqQuery,
     ReqHeaders,
-    ResHeaders,
-    BaseRequest
+    ResHeaders
   >;
   // This is an alias hack to satisfy the type checker -- later ts versions may fix this
-  handlers: ContractDetailsExpressLikeSchemaHandler<
-    SV,
-    P,
-    ResBodyMap,
-    ReqBody,
-    ReqQuery,
-    ReqHeaders,
-    ResHeaders,
-    LocalsObj,
-    BaseRequest,
-    BaseResponse,
-    NextFunction
-  >[];
-};
-
-// This is a hack to satisfy the type checker -- later ts versions may fix this
-export type TypedHandlerWithoutAuthArg<
-  SV extends AnySchemaValidator,
-  ContractMethod extends Method,
-  Path extends `/${string}`,
-  P extends ParamsObject<SV>,
-  ResBodyMap extends ResponsesObject<SV>,
-  ReqBody extends Body<SV>,
-  ReqQuery extends QueryObject<SV>,
-  ReqHeaders extends HeadersObject<SV>,
-  ResHeaders extends HeadersObject<SV>,
-  LocalsObj extends Record<string, unknown>,
-  BaseRequest,
-  BaseResponse,
-  NextFunction
-> = {
-  _typedHandler: true;
-  _path: Path | undefined;
-  contractDetails: Omit<
-    ContractDetails<
-      SV,
-      ContractMethod,
-      Path,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders,
-      BaseRequest
-    >,
-    'auth'
-  >;
   handlers: ContractDetailsExpressLikeSchemaHandler<
     SV,
     P,
@@ -156,8 +107,7 @@ export type ExpressLikeTypedHandler<
     ReqBody,
     ReqQuery,
     ReqHeaders,
-    ResHeaders,
-    BaseRequest
+    ResHeaders
   >;
   handlers: ExpressLikeSchemaHandler<
     SV,

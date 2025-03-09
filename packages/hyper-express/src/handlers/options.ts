@@ -37,8 +37,7 @@ export const options = <
     ReqBody,
     ReqQuery,
     ReqHeaders,
-    ResHeaders,
-    Request<LocalsObj>
+    ResHeaders
   >,
   ...handlers: ExpressLikeSchemaHandler<
     SV,

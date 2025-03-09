@@ -17,8 +17,7 @@ export function isMiddlewareContractDetails<
   BodySchema extends Body<SV>,
   QuerySchema extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
-  ResHeaders extends HeadersObject<SV>,
-  BaseRequest
+  ResHeaders extends HeadersObject<SV>
 >(
   contractDetails: unknown
 ): contractDetails is MiddlewareContractDetails<
@@ -29,8 +28,7 @@ export function isMiddlewareContractDetails<
   BodySchema,
   QuerySchema,
   ReqHeaders,
-  ResHeaders,
-  BaseRequest
+  ResHeaders
 > {
   return false;
 }

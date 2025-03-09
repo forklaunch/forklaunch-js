@@ -46,8 +46,7 @@ export function typedHandler<
     ReqBody,
     ReqQuery,
     ReqHeaders,
-    ResHeaders,
-    BaseRequest
+    ResHeaders
   >,
   ...handlers: ExpressLikeSchemaHandler<
     SV,
@@ -103,8 +102,7 @@ export function typedHandler<
     ReqBody,
     ReqQuery,
     ReqHeaders,
-    ResHeaders,
-    BaseRequest
+    ResHeaders
   >,
   ...handlers: ExpressLikeSchemaHandler<
     SV,
@@ -162,8 +160,7 @@ export function typedHandler<
         ReqBody,
         ReqQuery,
         ReqHeaders,
-        ResHeaders,
-        BaseRequest
+        ResHeaders
       >,
   contractDetailsOrHandler:
     | ContractDetails<
@@ -175,8 +172,7 @@ export function typedHandler<
         ReqBody,
         ReqQuery,
         ReqHeaders,
-        ResHeaders,
-        BaseRequest
+        ResHeaders
       >
     | ExpressLikeSchemaHandler<
         SV,
@@ -230,8 +226,7 @@ export function typedHandler<
     ReqBody,
     ReqQuery,
     ReqHeaders,
-    ResHeaders,
-    BaseRequest
+    ResHeaders
   >;
   let handlers: ExpressLikeSchemaHandler<
     SV,

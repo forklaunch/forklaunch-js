@@ -33,8 +33,7 @@ export const unsubscribe = <
     ReqBody,
     ReqQuery,
     ReqHeaders,
-    ResHeaders,
-    Request
+    ResHeaders
   >,
   ...handlers: ExpressLikeSchemaHandler<
     SV,

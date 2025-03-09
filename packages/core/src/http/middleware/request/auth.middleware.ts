@@ -59,26 +59,11 @@ async function checkAuthorizationToken<
   P extends ParamsDictionary,
   ReqBody extends Record<string, unknown>,
   ReqQuery extends ParsedQs,
-  ReqHeaders extends Record<string, string>,
-  BaseRequest
+  ReqHeaders extends Record<string, string>
 >(
-  authorizationMethod: AuthMethods<
-    SV,
-    P,
-    ReqBody,
-    ReqQuery,
-    ReqHeaders,
-    BaseRequest
-  >,
+  authorizationMethod: AuthMethods<SV, P, ReqBody, ReqQuery, ReqHeaders>,
   authorizationToken?: string,
-  req?: ResolvedForklaunchRequest<
-    SV,
-    P,
-    ReqBody,
-    ReqQuery,
-    ReqHeaders,
-    BaseRequest
-  >
+  req?: ResolvedForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders, unknown>
 ): Promise<readonly [401 | 403 | 500, string] | undefined> {
   if (authorizationToken == null) {
     return [401, 'No Authorization token provided.'];
@@ -248,8 +233,7 @@ export async function parseRequestAuth<
     MapParamsSchema<SV, P>,
     MapReqBodySchema<SV, ReqBody>,
     MapReqQuerySchema<SV, ReqQuery>,
-    MapReqHeadersSchema<SV, ReqHeaders>,
-    unknown
+    MapReqHeadersSchema<SV, ReqHeaders>
   >;
 
   if (auth) {
@@ -259,8 +243,7 @@ export async function parseRequestAuth<
         MapParamsSchema<SV, P>,
         MapReqBodySchema<SV, ReqBody>,
         MapReqQuerySchema<SV, ReqQuery>,
-        MapReqHeadersSchema<SV, ReqHeaders>,
-        unknown
+        MapReqHeadersSchema<SV, ReqHeaders>
       >(
         auth,
         req.headers[

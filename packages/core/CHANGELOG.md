@@ -1,5 +1,14 @@
 # @forklaunch/core
 
+## 0.5.2
+
+### Patch Changes
+
+- Constrain the auth request to only include discovered parameters for simplicity. Bump package versions.
+- Updated dependencies
+  - @forklaunch/validator@0.4.6
+  - @forklaunch/common@0.2.3
+
 ## 0.5.1
 
 ### Patch Changes

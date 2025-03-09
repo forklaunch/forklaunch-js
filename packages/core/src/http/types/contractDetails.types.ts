@@ -141,8 +141,7 @@ export type SchemaAuthMethods<
   ParamsSchema extends ParamsObject<SV>,
   ReqBody extends Body<SV>,
   QuerySchema extends QueryObject<SV>,
-  ReqHeaders extends HeadersObject<SV>,
-  BaseRequest
+  ReqHeaders extends HeadersObject<SV>
 > = Prettify<
   AuthMethodsBase & {
     readonly mapPermissions?: ExpressLikeSchemaAuthMapper<
@@ -150,16 +149,14 @@ export type SchemaAuthMethods<
       ParamsSchema,
       ReqBody,
       QuerySchema,
-      ReqHeaders,
-      BaseRequest
+      ReqHeaders
     >;
     readonly mapRoles?: ExpressLikeSchemaAuthMapper<
       SV,
       ParamsSchema,
       ReqBody,
       QuerySchema,
-      ReqHeaders,
-      BaseRequest
+      ReqHeaders
     >;
   }
 >;
@@ -169,24 +166,21 @@ export type AuthMethods<
   P extends ParamsDictionary,
   ReqBody extends Record<string, unknown>,
   ReqQuery extends ParsedQs,
-  ReqHeaders extends Record<string, string>,
-  BaseRequest
+  ReqHeaders extends Record<string, string>
 > = AuthMethodsBase & {
   readonly mapPermissions?: ExpressLikeAuthMapper<
     SV,
     P,
     ReqBody,
     ReqQuery,
-    ReqHeaders,
-    BaseRequest
+    ReqHeaders
   >;
   readonly mapRoles?: ExpressLikeAuthMapper<
     SV,
     P,
     ReqBody,
     ReqQuery,
-    ReqHeaders,
-    BaseRequest
+    ReqHeaders
   >;
 };
 
@@ -259,8 +253,7 @@ export type PathParamHttpContractDetails<
   ResponseSchemas extends ResponsesObject<SV> = ResponsesObject<SV>,
   QuerySchema extends QueryObject<SV> = QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV> = HeadersObject<SV>,
-  ResHeaders extends HeadersObject<SV> = HeadersObject<SV>,
-  BaseRequest = unknown
+  ResHeaders extends HeadersObject<SV> = HeadersObject<SV>
 > = {
   /** Name of the contract */
   readonly name: string;
@@ -284,15 +277,13 @@ export type PathParamHttpContractDetails<
       : ParamsSchema,
     never,
     QuerySchema,
-    ReqHeaders,
-    BaseRequest
-  > & {};
-
+    ReqHeaders
+  >;
   readonly options?: {
     readonly requestValidation: 'error' | 'warning' | 'none';
     readonly responseValidation: 'error' | 'warning' | 'none';
   };
-} & (string | number | symbol extends ExtractedParamsObject<Path> // TODO: think about optional parameters, this makes no sense
+} & (string | number | symbol extends ExtractedParamsObject<Path>
   ? {
       /** Optional parameters for the contract */
       readonly params?: ParamsSchema;
@@ -321,8 +312,7 @@ export type HttpContractDetails<
   BodySchema extends Body<SV> = Body<SV>,
   QuerySchema extends QueryObject<SV> = QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV> = HeadersObject<SV>,
-  ResHeaders extends HeadersObject<SV> = HeadersObject<SV>,
-  BaseRequest = unknown
+  ResHeaders extends HeadersObject<SV> = HeadersObject<SV>
 > = PathParamHttpContractDetails<
   SV,
   Path,
@@ -330,8 +320,7 @@ export type HttpContractDetails<
   ResponseSchemas,
   QuerySchema,
   ReqHeaders,
-  ResHeaders,
-  BaseRequest
+  ResHeaders
 > & {
   /** Required body schema for the contract */
   readonly body: BodySchema;
@@ -350,8 +339,7 @@ export type HttpContractDetails<
       : ParamsSchema,
     BodySchema,
     QuerySchema,
-    ReqHeaders,
-    BaseRequest
+    ReqHeaders
   > & {};
 };
 
@@ -373,8 +361,7 @@ export type MiddlewareContractDetails<
   BodySchema extends Body<SV> = Body<SV>,
   QuerySchema extends QueryObject<SV> = QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV> = HeadersObject<SV>,
-  ResHeaders extends HeadersObject<SV> = HeadersObject<SV>,
-  BaseRequest = unknown
+  ResHeaders extends HeadersObject<SV> = HeadersObject<SV>
 > = Omit<
   Partial<
     HttpContractDetails<
@@ -385,8 +372,7 @@ export type MiddlewareContractDetails<
       BodySchema,
       QuerySchema,
       ReqHeaders,
-      ResHeaders,
-      BaseRequest
+      ResHeaders
     >
   >,
   'name' | 'summary' | 'responses'
@@ -404,8 +390,7 @@ export type ContractDetails<
   BodySchema extends Body<SV>,
   QuerySchema extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
-  ResHeaders extends HeadersObject<SV>,
-  BaseRequest
+  ResHeaders extends HeadersObject<SV>
 > = ContractMethod extends PathParamMethod
   ? PathParamHttpContractDetails<
       SV,
@@ -414,8 +399,7 @@ export type ContractDetails<
       ResponseSchemas,
       QuerySchema,
       ReqHeaders,
-      ResHeaders,
-      BaseRequest
+      ResHeaders
     >
   : ContractMethod extends HttpMethod
     ? HttpContractDetails<
@@ -426,8 +410,7 @@ export type ContractDetails<
         BodySchema,
         QuerySchema,
         ReqHeaders,
-        ResHeaders,
-        BaseRequest
+        ResHeaders
       >
     : ContractMethod extends 'middleware'
       ? MiddlewareContractDetails<
@@ -438,7 +421,6 @@ export type ContractDetails<
           BodySchema,
           QuerySchema,
           ReqHeaders,
-          ResHeaders,
-          BaseRequest
+          ResHeaders
         >
       : never;

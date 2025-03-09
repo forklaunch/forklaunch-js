@@ -16,7 +16,7 @@ import {
   ResponsesObject
 } from './contractDetails.types';
 import { ConstrainedForklaunchRouter } from './router.types';
-import { TypedHandler, TypedHandlerWithoutAuthArg } from './typedHandler.types';
+import { TypedHandler } from './typedHandler.types';
 
 export interface LiveTypeRouteDefinition<
   SV extends AnySchemaValidator,
@@ -38,7 +38,7 @@ export interface LiveTypeRouteDefinition<
     LocalsObj extends Record<string, unknown>
   >(
     path: PathMatch<SuppliedPath, Path>,
-    typedHandler: TypedHandlerWithoutAuthArg<
+    typedHandler: TypedHandler<
       SV,
       ContractMethod,
       Path,
@@ -154,8 +154,7 @@ export interface LiveTypeRouteDefinition<
       ReqBody,
       ReqQuery,
       ReqHeaders,
-      ResHeaders,
-      BaseRequest
+      ResHeaders
     >,
     ...middleware: ExpressLikeSchemaHandler<
       SV,
@@ -379,8 +378,7 @@ export interface TypedMiddlewareDefinition<
       ReqBody,
       ReqQuery,
       ReqHeaders,
-      ResHeaders,
-      BaseRequest
+      ResHeaders
     >,
     middleware: ExpressLikeSchemaHandler<
       SV,
@@ -429,8 +427,7 @@ export interface TypedMiddlewareDefinition<
       ReqBody,
       ReqQuery,
       ReqHeaders,
-      ResHeaders,
-      BaseRequest
+      ResHeaders
     >,
     middleware: ExpressLikeSchemaHandler<
       SV,
@@ -625,8 +622,7 @@ export interface TypedNestableMiddlewareDefinition<
       ReqBody,
       ReqQuery,
       ReqHeaders,
-      ResHeaders,
-      BaseRequest
+      ResHeaders
     >,
     middleware:
       | ExpressLikeSchemaHandler<
@@ -680,8 +676,7 @@ export interface TypedNestableMiddlewareDefinition<
       ReqBody,
       ReqQuery,
       ReqHeaders,
-      ResHeaders,
-      BaseRequest
+      ResHeaders
     >,
     middleware:
       | ExpressLikeSchemaHandler<
@@ -741,8 +736,7 @@ export type ContractDetailsOrMiddlewareOrTypedHandler<
       ReqBody,
       ReqQuery,
       ReqHeaders,
-      ResHeaders,
-      BaseRequest
+      ResHeaders
     >
   | ExpressLikeSchemaHandler<
       SV,

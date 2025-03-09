@@ -233,6 +233,15 @@ export interface ForklaunchResponse<
  */
 export type ForklaunchNextFunction = (err?: unknown) => void;
 
+/**
+ * Type representing the resolved forklaunch request from a base request type.
+ * @template SV - A type that extends AnySchemaValidator.
+ * @template P - A type for request parameters, defaulting to ParamsDictionary.
+ * @template ReqBody - A type for the request body, defaulting to Record<string, unknown>.
+ * @template ReqQuery - A type for the request query, defaulting to ParsedQs.
+ * @template ReqHeaders - A type for the request headers, defaulting to Record<string, string>.
+ * @template BaseRequest - A type for the base request.
+ */
 export type ResolvedForklaunchRequest<
   SV extends AnySchemaValidator,
   P extends ParamsDictionary,
@@ -420,15 +429,13 @@ export type ExpressLikeSchemaAuthMapper<
   P extends ParamsObject<SV>,
   ReqBody extends Body<SV>,
   ReqQuery extends QueryObject<SV>,
-  ReqHeaders extends HeadersObject<SV>,
-  BaseRequest
+  ReqHeaders extends HeadersObject<SV>
 > = ExpressLikeAuthMapper<
   SV,
   MapParamsSchema<SV, P>,
   MapReqBodySchema<SV, ReqBody>,
   MapReqQuerySchema<SV, ReqQuery>,
-  MapReqHeadersSchema<SV, ReqHeaders>,
-  BaseRequest
+  MapReqHeadersSchema<SV, ReqHeaders>
 >;
 
 export type ExpressLikeAuthMapper<
@@ -436,18 +443,10 @@ export type ExpressLikeAuthMapper<
   P extends ParamsDictionary,
   ReqBody extends Record<string, unknown>,
   ReqQuery extends ParsedQs,
-  ReqHeaders extends Record<string, string>,
-  BaseRequest
+  ReqHeaders extends Record<string, string>
 > = (
   sub: string,
-  req?: ResolvedForklaunchRequest<
-    SV,
-    P,
-    ReqBody,
-    ReqQuery,
-    ReqHeaders,
-    BaseRequest
-  >
+  req?: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>
 ) => Set<string> | Promise<Set<string>>;
 
 /**
