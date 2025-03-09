@@ -3,14 +3,14 @@ import { jwtVerify } from 'jose';
 import { ParsedQs } from 'qs';
 import {
   ForklaunchNextFunction,
+  ForklaunchRequest,
   ForklaunchResponse,
   MapParamsSchema,
   MapReqBodySchema,
   MapReqHeadersSchema,
   MapReqQuerySchema,
   MapResBodyMapSchema,
-  MapResHeadersSchema,
-  ResolvedForklaunchRequest
+  MapResHeadersSchema
 } from '../../types/apiDefinition.types';
 import {
   AuthMethods,
@@ -63,7 +63,7 @@ async function checkAuthorizationToken<
 >(
   authorizationMethod: AuthMethods<SV, P, ReqBody, ReqQuery, ReqHeaders>,
   authorizationToken?: string,
-  req?: ResolvedForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders, unknown>
+  req?: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>
 ): Promise<readonly [401 | 403 | 500, string] | undefined> {
   if (authorizationToken == null) {
     return [401, 'No Authorization token provided.'];
@@ -213,13 +213,12 @@ export async function parseRequestAuth<
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>
 >(
-  req: ResolvedForklaunchRequest<
+  req: ForklaunchRequest<
     SV,
     MapParamsSchema<SV, P>,
     MapReqBodySchema<SV, ReqBody>,
     MapReqQuerySchema<SV, ReqQuery>,
-    MapReqHeadersSchema<SV, ReqHeaders>,
-    unknown
+    MapReqHeadersSchema<SV, ReqHeaders>
   >,
   res: ForklaunchResponse<
     MapResBodyMapSchema<SV, ResBodyMap>,

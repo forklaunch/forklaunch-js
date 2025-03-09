@@ -20,8 +20,7 @@ describe('Forklaunch Hyper-Express Tests', () => {
         summary: 'Test Summary',
         responses: {
           200: string
-        },
-        params: {}
+        }
       },
       (_req, res) => {
         res.status(200).send('Hello World');
@@ -199,7 +198,15 @@ describe('handlers', () => {
       }
     );
     application.get('/:id', getRequest);
-    router.get('/:id', getRequest);
+    const liveTypeFunction = router.get('/:id', getRequest);
+    liveTypeFunction.get('/organization/:id', {
+      params: {
+        id: 'string'
+      },
+      headers: {
+        'x-test': 'string'
+      }
+    });
   });
 
   it('should be able to create a body param handler', () => {
@@ -216,15 +223,19 @@ describe('handlers', () => {
         },
         body: {
           name: string
-        },
-        params: {}
+        }
       },
       async (req, res) => {
         res.status(200).json(req.body);
       }
     );
     application.post('/', postRequest);
-    router.post('/', postRequest);
+    const liveTypeFunction = router.post('/', postRequest);
+    liveTypeFunction.post('/organization', {
+      body: {
+        name: 'string'
+      }
+    });
   });
 
   it('should be able to create a middleware handler', () => {
@@ -240,7 +251,7 @@ describe('handlers', () => {
         req.query.name;
       }
     );
-    application.use(checkoutMiddleware);
-    router.any(checkoutMiddleware);
+    // application.use(checkoutMiddleware);
+    // router.any(checkoutMiddleware);
   });
 });

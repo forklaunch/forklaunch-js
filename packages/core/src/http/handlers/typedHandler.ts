@@ -261,9 +261,7 @@ export function typedHandler<
   }
   return {
     _typedHandler: true as const,
-    _path: isPath<Path>(pathOrContractMethod)
-      ? pathOrContractMethod
-      : undefined,
+    _path: isPath(pathOrContractMethod) ? pathOrContractMethod : undefined,
     contractDetails,
     handlers
   };

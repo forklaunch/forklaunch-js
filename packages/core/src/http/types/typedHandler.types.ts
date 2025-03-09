@@ -98,16 +98,19 @@ export type ExpressLikeTypedHandler<
 > = {
   _typedHandler: true;
   _path: Path | undefined;
-  contractDetails: ContractDetails<
-    SV,
-    ContractMethod,
-    Path,
-    P,
-    ResBodyMap,
-    ReqBody,
-    ReqQuery,
-    ReqHeaders,
-    ResHeaders
+  contractDetails: Omit<
+    ContractDetails<
+      SV,
+      ContractMethod,
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders
+    >,
+    'auth'
   >;
   handlers: ExpressLikeSchemaHandler<
     SV,
