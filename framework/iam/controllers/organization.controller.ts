@@ -10,6 +10,7 @@ import {
   SchemaValidator,
   string
 } from '@forklaunch/framework-core';
+import { Metrics } from '@forklaunch/framework-monitoring';
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { configValidator } from '../bootstrapper';
 import { OrganizationService } from '../interfaces/organization.service.interface';
@@ -18,7 +19,6 @@ import {
   OrganizationDtoMapper,
   UpdateOrganizationDtoMapper
 } from '../models/dtoMapper/organization.dtoMapper';
-import { Metrics } from '@forklaunch/framework-monitoring';
 
 export class OrganizationController
   implements

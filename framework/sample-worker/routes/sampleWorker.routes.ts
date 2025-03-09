@@ -8,6 +8,15 @@ export const router = forklaunchRouter('/sample-worker');
 export const SampleWorkerRoutes = (controller: SampleWorkerController) => ({
   router,
 
-  sampleWorkerGet: router.get('/', controller.sampleWorkerGet),
+  sampleWorkerGet: router.get('/:id', controller.sampleWorkerGet),
+
   sampleWorkerPost: router.post('/', controller.sampleWorkerPost)
 });
+
+router
+  .get('/:id', ({} as SampleWorkerController).sampleWorkerGet)
+  .get('/sample-worker/:id', {
+    params: {
+      id: 'string'
+    }
+  });

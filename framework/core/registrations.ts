@@ -27,7 +27,7 @@ import {
   unknown as schemaUnknown,
   uri as schemaUri,
   uuid as schemaUuid
-} from '@forklaunch/validator/typebox';
+} from '@forklaunch/validator/zod';
 
 export type { NextFunction, ParsedQs, Request, Response };
 export const SchemaValidator = RegisteredSchemaValidator;

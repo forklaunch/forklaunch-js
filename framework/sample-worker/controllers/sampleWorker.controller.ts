@@ -40,10 +40,13 @@ export class SampleWorkerController
   // GET endpoint handler that returns a simple message
   sampleWorkerGet = handlers.get(
     SchemaValidator(),
-    '/',
+    '/:id',
     {
       name: 'sampleWorker',
       summary: 'SampleWorker',
+      params: {
+        id: 'string'
+      },
       responses: {
         // specifies the success response schema using DtoMapper constructs
         200: SampleWorkerResponseDtoMapper.schema()

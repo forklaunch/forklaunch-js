@@ -2,7 +2,6 @@ import { forklaunchRouter } from '@forklaunch/framework-core';
 import { OrganizationController } from '../controllers/organization.controller';
 
 export const router = forklaunchRouter('/organization');
-
 export const OrganizationRoutes = (controller: OrganizationController) => ({
   router,
 

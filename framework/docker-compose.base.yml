@@ -16,8 +16,8 @@ services:
     ports:
       - '5432:5432'
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgresql
+      POSTGRES_PASSWORD: postgresql
       POSTGRES_HOST_AUTH_METHOD: 'trust'
     networks:
       - forklaunch-network
@@ -53,8 +53,8 @@ services:
       PORT: 8000
       DB_NAME: forklaunch-dev
       DB_HOST: postgres
-      DB_USER: postgres
-      DB_PASSWORD: postgres
+      DB_USER: postgresql
+      DB_PASSWORD: postgresql
       DB_PORT: 5432
       REDIS_URL: redis://redis:6379
     depends_on:
@@ -79,8 +79,8 @@ services:
       PORT: 8001
       DB_NAME: forklaunch-dev
       DB_HOST: postgres
-      DB_USER: postgres
-      DB_PASSWORD: postgres
+      DB_USER: postgresql
+      DB_PASSWORD: postgresql
       DB_PORT: 5432
       REDIS_URL: redis://redis:6379
     depends_on:
