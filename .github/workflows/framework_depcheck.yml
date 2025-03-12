@@ -3,8 +3,14 @@ name: Framework Dependency Check
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'framework/**/package.json'
+      - 'cli/src/init/core/package_json/package_json_constants.rs'
   pull_request:
     branches: [ main ]
+    paths:
+      - 'framework/**/package.json'
+      - 'cli/src/init/core/package_json/package_json_constants.rs'
 
 jobs:
   depcheck:
