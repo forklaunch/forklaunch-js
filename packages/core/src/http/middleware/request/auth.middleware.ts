@@ -10,7 +10,8 @@ import {
   MapReqHeadersSchema,
   MapReqQuerySchema,
   MapResBodyMapSchema,
-  MapResHeadersSchema
+  MapResHeadersSchema,
+  ResolvedForklaunchRequest
 } from '../../types/apiDefinition.types';
 import {
   AuthMethods,
@@ -59,12 +60,27 @@ async function checkAuthorizationToken<
   P extends ParamsDictionary,
   ReqBody extends Record<string, unknown>,
   ReqQuery extends ParsedQs,
-  ReqHeaders extends Record<string, string>
+  ReqHeaders extends Record<string, string>,
+  BaseRequest
 >(
-  authorizationMethod: AuthMethods<SV, P, ReqBody, ReqQuery, ReqHeaders>,
+  authorizationMethod: AuthMethods<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    BaseRequest
+  >,
   authorizationToken?: string,
-  req?: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>
-): Promise<readonly [401 | 403 | 500, string] | string | undefined> {
+  req?: ResolvedForklaunchRequest<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    BaseRequest
+  >
+): Promise<readonly [401 | 403 | 500, string] | undefined> {
   if (authorizationToken == null) {
     return [401, 'No Authorization token provided.'];
   }
@@ -94,8 +110,9 @@ async function checkAuthorizationToken<
 
         resourceId = decodedJwt.payload.sub;
       } catch (error) {
-        // TODO: Log error
-        console.error(error);
+        (
+          req as ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>
+        ).openTelemetryCollector.error(error);
         return invalidAuthorizationToken;
       }
 
@@ -227,27 +244,35 @@ export async function parseRequestAuth<
   >,
   next?: ForklaunchNextFunction
 ) {
-  console.debug('[MIDDLEWARE] parseRequest started');
   const auth = req.contractDetails.auth as AuthMethods<
     SV,
     MapParamsSchema<SV, P>,
     MapReqBodySchema<SV, ReqBody>,
     MapReqQuerySchema<SV, ReqQuery>,
-    MapReqHeadersSchema<SV, ReqHeaders>
+    MapReqHeadersSchema<SV, ReqHeaders>,
+    unknown
   >;
 
   if (auth) {
-    const errorAndMessage = await checkAuthorizationToken(
-      auth,
-      req.headers[
-        (auth.method === 'other' ? auth.headerName : undefined) ??
-          'Authorization'
-      ],
-      req
-    );
-    if (Array.isArray(errorAndMessage)) {
-      res.status(errorAndMessage[0]).send(errorAndMessage[1]);
-      next?.(new Error(errorAndMessage[1]));
+    const [error, message] =
+      (await checkAuthorizationToken<
+        SV,
+        MapParamsSchema<SV, P>,
+        MapReqBodySchema<SV, ReqBody>,
+        MapReqQuerySchema<SV, ReqQuery>,
+        MapReqHeadersSchema<SV, ReqHeaders>,
+        unknown
+      >(
+        auth,
+        req.headers[
+          (auth.method === 'other' ? auth.headerName : undefined) ??
+            'Authorization'
+        ],
+        req
+      )) ?? [];
+    if (error != null) {
+      res.status(error).send(message);
+      next?.(new Error(message));
     }
   }
 

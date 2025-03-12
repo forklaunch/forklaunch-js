@@ -1,5 +1,7 @@
 import { createCacheKey, TtlCache } from '@forklaunch/core/cache';
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { SchemaValidator } from '@forklaunch/framework-core';
+import { Metrics } from '@forklaunch/framework-monitoring';
 import { v4 } from 'uuid';
 import { PaymentLinkService } from '../interfaces/paymentLink.service.interface';
 import {
@@ -13,7 +15,10 @@ import {
 import { PaymentLink } from '../models/persistence/paymentLink.entity';
 
 export class BasePaymentLinkService implements PaymentLinkService {
-  constructor(private cache: TtlCache) {}
+  constructor(
+    private cache: TtlCache,
+    private readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>
+  ) {}
 
   private cacheKeyPrefix = 'payment_link';
   private createCacheKey = createCacheKey(this.cacheKeyPrefix);

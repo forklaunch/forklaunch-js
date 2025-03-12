@@ -73,6 +73,7 @@ pub(crate) fn generate_with_template(
     template_dir: &PathIO,
     data: &TemplateManifestData,
     ignore_files: &Vec<String>,
+    preserve_files: &Vec<String>,
 ) -> Result<Vec<RenderedTemplate>> {
     let mut rendered_templates = Vec::new();
 
@@ -99,14 +100,13 @@ pub(crate) fn generate_with_template(
                 .with_context(|| error_failed_to_create_dir(&output_path.parent().unwrap()))?;
         }
 
-        let tpl = Template::new(get_file_contents(&Path::new(&entry.path())).with_context(
-            || {
-                format!(
-                    "Failed to parse template file {}",
-                    &entry.path().to_string_lossy()
-                )
-            },
-        )?)?;
+        let file_contents = get_file_contents(&Path::new(&entry.path())).with_context(|| {
+            format!(
+                "Failed to parse template file {}",
+                &entry.path().to_string_lossy()
+            )
+        })?;
+        let tpl = Template::new(file_contents.clone())?;
         let rendered = match data {
             TemplateManifestData::Application(config_data) => {
                 forklaunch_replacements(&config_data.app_name, tpl.render(&config_data))
@@ -125,16 +125,30 @@ pub(crate) fn generate_with_template(
                 forklaunch_replacements(&config_data.app_name, tpl.render(&config_data))
             }
         };
-        if !output_path.exists()
-            && !ignore_files
+        if !output_path.exists() {
+            let output_path_str = output_path.to_str().unwrap();
+            let should_ignore = ignore_files
                 .iter()
-                .any(|ignore_file| output_path.to_str().unwrap().contains(ignore_file))
-        {
-            rendered_templates.push(RenderedTemplate {
-                path: output_path,
-                content: rendered,
-                context: None,
-            });
+                .any(|ignore_file| output_path_str.contains(ignore_file));
+            let should_preserve = preserve_files
+                .iter()
+                .any(|preserve_file| output_path_str.contains(preserve_file));
+
+            if !should_ignore {
+                if should_preserve {
+                    rendered_templates.push(RenderedTemplate {
+                        path: output_path,
+                        content: file_contents,
+                        context: None,
+                    });
+                } else {
+                    rendered_templates.push(RenderedTemplate {
+                        path: output_path,
+                        content: rendered,
+                        context: None,
+                    });
+                }
+            }
         }
     }
 
@@ -153,6 +167,7 @@ pub(crate) fn generate_with_template(
                 },
                 data,
                 ignore_files,
+                preserve_files,
             )
             .with_context(|| {
                 format!(

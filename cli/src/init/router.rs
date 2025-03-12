@@ -27,7 +27,7 @@ use self::database::match_database;
 use super::{
     command,
     core::{
-        ast::{transform_app_ts, transform_bootstrapper_ts},
+        ast::{transform_app_ts, transform_bootstrapper_ts, transform_entities_index_ts},
         database,
         manifest::add_router_definition_to_manifest,
         rendered_template::{write_rendered_templates, RenderedTemplate},
@@ -172,12 +172,14 @@ fn generate_basic_router(
     };
 
     let ignore_files = vec![];
+    let preserve_files = vec![];
 
     let mut rendered_templates = generate_with_template(
         None,
         &template_dir,
         &TemplateManifestData::Router(&config_data),
         &ignore_files,
+        &preserve_files,
     )?;
     rendered_templates.extend(
         // check if this also adds to app and bootstrapper
@@ -210,6 +212,15 @@ fn add_router_to_artifacts(
     rendered_templates.push(RenderedTemplate {
         path: Path::new(&base_path).join("bootstrapper.ts"),
         content: transform_bootstrapper_ts(config_data.router_name.as_str(), &base_path)?,
+        context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER.to_string()),
+    });
+
+    rendered_templates.push(RenderedTemplate {
+        path: Path::new(&base_path)
+            .join("models")
+            .join("persistence")
+            .join("index.ts"),
+        content: transform_entities_index_ts(config_data.router_name.as_str(), &base_path)?,
         context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER.to_string()),
     });
 

@@ -3,8 +3,11 @@ import {
   Prettify,
   RemoveTrailingSlash
 } from '@forklaunch/common';
-import { AnySchemaValidator, SchemaValidator } from '@forklaunch/validator';
+import { AnySchemaValidator } from '@forklaunch/validator';
+import { Span } from '@opentelemetry/api';
 import { ParsedQs } from 'qs';
+import { Readable } from 'stream';
+import { OpenTelemetryCollector } from '../telemetry/openTelemetryCollector';
 import {
   Body,
   HeadersObject,
@@ -17,6 +20,7 @@ import {
   ResponseCompiledSchema,
   ResponsesObject
 } from './contractDetails.types';
+import { MetricsDefinition } from './openTelemetryCollector.types';
 
 /**
  * Interface representing the context of a request.
@@ -26,6 +30,8 @@ export interface RequestContext {
   correlationId: string;
   /** Optional idempotency key for ensuring idempotent requests */
   idempotencyKey?: string;
+  /** Active OpenTelemetry Span */
+  span?: Span;
 }
 
 export interface ForklaunchBaseRequest<
@@ -62,11 +68,23 @@ export interface ForklaunchRequest<
   ReqBody extends Record<string, unknown>,
   ReqQuery extends ParsedQs,
   ReqHeaders extends Record<string, string>
-> extends ForklaunchBaseRequest<P, ReqBody, ReqQuery, ReqHeaders> {
+> {
+  /** Context of the request */
+  context: Prettify<RequestContext>;
+
+  /** Request parameters */
+  params: P;
+  /** Request headers */
+  headers: ReqHeaders;
+  /** Request body */
+  body: ReqBody;
+  /** Request query */
+  query: ReqQuery;
+
   /** Contract details for the request */
   contractDetails: PathParamHttpContractDetails<SV> | HttpContractDetails<SV>;
   /** Schema validator */
-  schemaValidator: SchemaValidator;
+  schemaValidator: SV;
 
   /** Method */
   method:
@@ -80,8 +98,17 @@ export interface ForklaunchRequest<
     | 'CONNECT'
     | 'TRACE';
 
+  /** Request path */
+  path: string;
+
   /** Request schema, compiled */
   requestSchema: unknown;
+
+  /** Original path */
+  originalPath: string;
+
+  /** OpenTelemetry Collector */
+  openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
 }
 
 /**
@@ -171,6 +198,19 @@ export interface ForklaunchResponse<
   ) => void;
 
   /**
+   * Adds an event listener to the response.
+   * @param {string} event - The event to listen for.
+   * @param {Function} listener - The listener function.
+   */
+  on(event: 'close', listener: () => void): this;
+  on(event: 'drain', listener: () => void): this;
+  on(event: 'error', listener: (err: Error) => void): this;
+  on(event: 'finish', listener: () => void): this;
+  on(event: 'pipe', listener: (src: Readable) => void): this;
+  on(event: 'unpipe', listener: (src: Readable) => void): this;
+  on(event: string | symbol, listener: (...args: unknown[]) => void): this;
+
+  /**
    * Sets the status of the response.
    * @param {U} code - The status code.
    * @param {string} [message] - Optional message.
@@ -196,6 +236,12 @@ export interface ForklaunchResponse<
    */
   end: (data?: string) => void;
 
+  /**
+   * Sets the content type of the response.
+   * @param {string} type - The content type.
+   */
+  type: (type: string) => void;
+
   /** Local variables */
   locals: LocalsObj;
 
@@ -211,6 +257,38 @@ export interface ForklaunchResponse<
  * @param {unknown} [err] - Optional error parameter.
  */
 export type ForklaunchNextFunction = (err?: unknown) => void;
+
+/**
+ * Type representing the resolved forklaunch request from a base request type.
+ * @template SV - A type that extends AnySchemaValidator.
+ * @template P - A type for request parameters, defaulting to ParamsDictionary.
+ * @template ReqBody - A type for the request body, defaulting to Record<string, unknown>.
+ * @template ReqQuery - A type for the request query, defaulting to ParsedQs.
+ * @template ReqHeaders - A type for the request headers, defaulting to Record<string, string>.
+ * @template BaseRequest - A type for the base request.
+ */
+export type ResolvedForklaunchRequest<
+  SV extends AnySchemaValidator,
+  P extends ParamsDictionary,
+  ReqBody extends Record<string, unknown>,
+  ReqQuery extends ParsedQs,
+  ReqHeaders extends Record<string, string>,
+  BaseRequest
+> = unknown extends BaseRequest
+  ? ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>
+  : {
+      [key in keyof BaseRequest]: key extends keyof ForklaunchRequest<
+        SV,
+        P,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders
+      >
+        ? ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>[key]
+        : key extends keyof BaseRequest
+          ? BaseRequest[key]
+          : never;
+    };
 
 /**
  * Represents a middleware handler with schema validation.
@@ -231,12 +309,34 @@ export interface ExpressLikeHandler<
   ReqQuery extends ParsedQs,
   ReqHeaders extends Record<string, string>,
   ResHeaders extends Record<string, string>,
-  LocalsObj extends Record<string, unknown>
+  LocalsObj extends Record<string, unknown>,
+  BaseRequest,
+  BaseResponse,
+  NextFunction
 > {
   (
-    req: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>,
-    res: ForklaunchResponse<ResBodyMap, ResHeaders, LocalsObj>,
-    next?: ForklaunchNextFunction
+    req: ResolvedForklaunchRequest<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      BaseRequest
+    >,
+    res: unknown extends BaseResponse
+      ? ForklaunchResponse<ResBodyMap, ResHeaders, LocalsObj>
+      : {
+          [key in keyof BaseResponse]: key extends keyof ForklaunchResponse<
+            ResBodyMap,
+            ResHeaders,
+            LocalsObj
+          >
+            ? ForklaunchResponse<ResBodyMap, ResHeaders, LocalsObj>[key]
+            : key extends keyof BaseResponse
+              ? BaseResponse[key]
+              : never;
+        },
+    next?: NextFunction
   ): void | Promise<void>;
 }
 
@@ -318,7 +418,10 @@ export type ExpressLikeSchemaHandler<
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
-  LocalsObj extends Record<string, unknown>
+  LocalsObj extends Record<string, unknown>,
+  BaseRequest,
+  BaseResponse,
+  NextFunction
 > = ExpressLikeHandler<
   SV,
   MapParamsSchema<SV, P>,
@@ -327,7 +430,10 @@ export type ExpressLikeSchemaHandler<
   MapReqQuerySchema<SV, ReqQuery>,
   MapReqHeadersSchema<SV, ReqHeaders>,
   MapResHeadersSchema<SV, ResHeaders>,
-  LocalsObj
+  LocalsObj,
+  BaseRequest,
+  BaseResponse,
+  NextFunction
 >;
 
 /**
@@ -348,13 +454,15 @@ export type ExpressLikeSchemaAuthMapper<
   P extends ParamsObject<SV>,
   ReqBody extends Body<SV>,
   ReqQuery extends QueryObject<SV>,
-  ReqHeaders extends HeadersObject<SV>
+  ReqHeaders extends HeadersObject<SV>,
+  BaseRequest
 > = ExpressLikeAuthMapper<
   SV,
   MapParamsSchema<SV, P>,
   MapReqBodySchema<SV, ReqBody>,
   MapReqQuerySchema<SV, ReqQuery>,
-  MapReqHeadersSchema<SV, ReqHeaders>
+  MapReqHeadersSchema<SV, ReqHeaders>,
+  BaseRequest
 >;
 
 export type ExpressLikeAuthMapper<
@@ -362,10 +470,18 @@ export type ExpressLikeAuthMapper<
   P extends ParamsDictionary,
   ReqBody extends Record<string, unknown>,
   ReqQuery extends ParsedQs,
-  ReqHeaders extends Record<string, string>
+  ReqHeaders extends Record<string, string>,
+  BaseRequest
 > = (
   sub: string,
-  req?: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>
+  req?: ResolvedForklaunchRequest<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    BaseRequest
+  >
 ) => Set<string> | Promise<Set<string>>;
 
 /**

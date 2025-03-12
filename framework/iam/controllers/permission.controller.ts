@@ -1,7 +1,17 @@
 import { Controller } from '@forklaunch/core/controllers';
-import { delete_, get, post, put } from '@forklaunch/core/http';
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
-import { array, SchemaValidator, string } from '@forklaunch/framework-core';
+import {
+  array,
+  handlers,
+  NextFunction,
+  ParsedQs,
+  Request,
+  Response,
+  SchemaValidator,
+  string
+} from '@forklaunch/framework-core';
+import { Metrics } from '@forklaunch/framework-monitoring';
 import { configValidator } from '../bootstrapper';
 import { PermissionService } from '../interfaces/permission.service.interface';
 import {
@@ -10,16 +20,20 @@ import {
   UpdatePermissionDtoMapper
 } from '../models/dtoMapper/permission.dtoMapper';
 
-export class PermissionController implements Controller<PermissionService> {
+export class PermissionController
+  implements
+    Controller<PermissionService, Request, Response, NextFunction, ParsedQs>
+{
   constructor(
     private readonly serviceFactory: ScopedDependencyFactory<
       SchemaValidator,
       typeof configValidator,
       'permissionService'
-    >
+    >,
+    private readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>
   ) {}
 
-  createPermission = post(
+  createPermission = handlers.post(
     SchemaValidator(),
     '/',
     {
@@ -37,7 +51,7 @@ export class PermissionController implements Controller<PermissionService> {
     }
   );
 
-  createBatchPermissions = post(
+  createBatchPermissions = handlers.post(
     SchemaValidator(),
     '/batch',
     {
@@ -55,7 +69,7 @@ export class PermissionController implements Controller<PermissionService> {
     }
   );
 
-  getPermission = get(
+  getPermission = handlers.get(
     SchemaValidator(),
     '/:id',
     {
@@ -76,7 +90,7 @@ export class PermissionController implements Controller<PermissionService> {
     }
   );
 
-  getBatchPermissions = get(
+  getBatchPermissions = handlers.get(
     SchemaValidator(),
     '/batch',
     {
@@ -101,7 +115,7 @@ export class PermissionController implements Controller<PermissionService> {
     }
   );
 
-  updatePermission = put(
+  updatePermission = handlers.put(
     SchemaValidator(),
     '/',
     {
@@ -119,7 +133,7 @@ export class PermissionController implements Controller<PermissionService> {
     }
   );
 
-  updateBatchPermissions = put(
+  updateBatchPermissions = handlers.put(
     SchemaValidator(),
     '/batch',
     {
@@ -137,7 +151,7 @@ export class PermissionController implements Controller<PermissionService> {
     }
   );
 
-  deletePermission = delete_(
+  deletePermission = handlers.delete(
     SchemaValidator(),
     '/:id',
     {
@@ -157,7 +171,7 @@ export class PermissionController implements Controller<PermissionService> {
     }
   );
 
-  deleteBatchPermissions = delete_(
+  deleteBatchPermissions = handlers.delete(
     SchemaValidator(),
     '/batch',
     {

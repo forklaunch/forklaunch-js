@@ -1,3 +1,4 @@
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import {
   ConfigInjector,
   getEnvVar,
@@ -10,6 +11,7 @@ import {
   SchemaValidator,
   string
 } from '@forklaunch/framework-core';
+import { metrics } from '@forklaunch/framework-monitoring';
 import { EntityManager, ForkOptions, MikroORM } from '@mikro-orm/core';
 import dotenv from 'dotenv';
 import mikroOrmOptionsConfig from './mikro-orm.config';
@@ -19,12 +21,16 @@ import BaseRoleService from './services/role.service';
 import BaseUserService from './services/user.service';
 
 export const configValidator = {
-  host: string,
-  port: number,
-  version: optional(string),
-  docsPath: optional(string),
-  passwordEncryptionPublicKeyPath: string,
+  HOST: string,
+  PORT: number,
+  VERSION: optional(string),
+  DOCS_PATH: optional(string),
+  PASSWORD_ENCRYPTION_PUBLIC_KEY_PATH: string,
+  OTEL_SERVICE_NAME: string,
+  OTEL_LEVEL: optional(string),
+  OTEL_EXPORTER_OTLP_ENDPOINT: string,
   entityManager: EntityManager,
+  openTelemetryCollector: OpenTelemetryCollector,
   organizationService: BaseOrganizationService,
   permissionService: BasePermissionService,
   roleService: BaseRoleService,
@@ -43,25 +49,37 @@ export function bootstrap(
       SchemaValidator(),
       configValidator,
       {
-        host: {
+        HOST: {
           lifetime: Lifetime.Singleton,
           value: getEnvVar('HOST')
         },
-        port: {
+        PORT: {
           lifetime: Lifetime.Singleton,
           value: Number(getEnvVar('PORT'))
         },
-        version: {
+        VERSION: {
           lifetime: Lifetime.Singleton,
           value: getEnvVar('VERSION') ?? 'v1'
         },
-        docsPath: {
+        DOCS_PATH: {
           lifetime: Lifetime.Singleton,
           value: getEnvVar('DOCS_PATH') ?? '/docs'
         },
-        passwordEncryptionPublicKeyPath: {
+        PASSWORD_ENCRYPTION_PUBLIC_KEY_PATH: {
           lifetime: Lifetime.Singleton,
           value: getEnvVar('PASSWORD_ENCRYPTION_PUBLIC_KEY_PATH')
+        },
+        OTEL_SERVICE_NAME: {
+          lifetime: Lifetime.Singleton,
+          value: getEnvVar('OTEL_SERVICE_NAME')
+        },
+        OTEL_LEVEL: {
+          lifetime: Lifetime.Singleton,
+          value: getEnvVar('OTEL_LEVEL') || 'info'
+        },
+        OTEL_EXPORTER_OTLP_ENDPOINT: {
+          lifetime: Lifetime.Singleton,
+          value: getEnvVar('OTEL_EXPORTER_OTLP_ENDPOINT')
         },
         entityManager: {
           lifetime: Lifetime.Scoped,
@@ -70,44 +88,73 @@ export function bootstrap(
               context?.entityManagerOptions as ForkOptions | undefined
             )
         },
+        openTelemetryCollector: {
+          lifetime: Lifetime.Singleton,
+          factory: ({ OTEL_SERVICE_NAME, OTEL_LEVEL }) =>
+            new OpenTelemetryCollector(
+              OTEL_SERVICE_NAME,
+              OTEL_LEVEL || 'info',
+              metrics
+            )
+        },
         organizationService: {
           lifetime: Lifetime.Scoped,
-          factory: ({ entityManager }, resolve, context) => {
+          factory: (
+            { entityManager, openTelemetryCollector },
+            resolve,
+            context
+          ) => {
             let em = entityManager;
             if (context.entityManagerOptions) {
               em = resolve('entityManager', context);
             }
-            return new BaseOrganizationService(em);
+            return new BaseOrganizationService(em, openTelemetryCollector);
           }
         },
         permissionService: {
           lifetime: Lifetime.Scoped,
-          factory: ({ entityManager }, resolve, context) => {
+          factory: (
+            { entityManager, openTelemetryCollector },
+            resolve,
+            context
+          ) => {
             let em = entityManager;
             if (context.entityManagerOptions) {
               em = resolve('entityManager', context);
             }
-            return new BasePermissionService(em, () =>
-              resolve('roleService', context)
+            return new BasePermissionService(
+              em,
+              () => resolve('roleService', context),
+              openTelemetryCollector
             );
           }
         },
         roleService: {
           lifetime: Lifetime.Scoped,
-          factory: ({ entityManager }, resolve, context) => {
+          factory: (
+            { entityManager, openTelemetryCollector },
+            resolve,
+            context
+          ) => {
             let em = entityManager;
             if (context.entityManagerOptions) {
               em = resolve('entityManager', context);
             }
-            return new BaseRoleService(em, () =>
-              resolve('permissionService', context)
+            return new BaseRoleService(
+              em,
+              () => resolve('permissionService', context),
+              openTelemetryCollector
             );
           }
         },
         userService: {
           lifetime: Lifetime.Scoped,
           factory: (
-            { entityManager, passwordEncryptionPublicKeyPath },
+            {
+              entityManager,
+              PASSWORD_ENCRYPTION_PUBLIC_KEY_PATH,
+              openTelemetryCollector
+            },
             resolve,
             context
           ) => {
@@ -117,9 +164,10 @@ export function bootstrap(
             }
             return new BaseUserService(
               em,
-              passwordEncryptionPublicKeyPath,
+              PASSWORD_ENCRYPTION_PUBLIC_KEY_PATH,
               () => resolve('roleService', context),
-              () => resolve('organizationService', context)
+              () => resolve('organizationService', context),
+              openTelemetryCollector
             );
           }
         }

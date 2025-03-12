@@ -1,4 +1,8 @@
-use std::{collections::HashMap, io::Write, path::Path};
+use std::{
+    collections::{HashMap, HashSet},
+    io::Write,
+    path::Path,
+};
 
 use anyhow::{bail, Context, Result};
 use clap::{Arg, ArgAction, ArgMatches, Command};
@@ -33,7 +37,9 @@ use super::{
     command,
     core::{
         database::{generate_database_export_index_ts, match_database},
-        docker::{add_service_definition_to_docker_compose, DockerCompose},
+        docker::{
+            add_otel_to_docker_compose, add_service_definition_to_docker_compose, DockerCompose,
+        },
         gitignore::generate_gitignore,
         iam::generate_iam_keys,
         license::{generate_license, match_license},
@@ -54,8 +60,9 @@ use super::{
                 MIKRO_ORM_MIGRATIONS_VERSION, MIKRO_ORM_REFLECTION_VERSION, PROJECT_BUILD_SCRIPT,
                 PROJECT_DOCS_SCRIPT, PROJECT_FORMAT_SCRIPT, PROJECT_LINT_FIX_SCRIPT,
                 PROJECT_LINT_SCRIPT, SORT_PACKAGE_JSON_VERSION, TSX_VERSION, TS_JEST_VERSION,
-                TYPEBOX_VERSION, TYPESCRIPT_ESLINT_VERSION, TYPESCRIPT_VERSION, TYPES_UUID_VERSION,
-                UUID_VERSION, VALIDATOR_VERSION, VITEST_VERSION, ZOD_VERSION,
+                TYPEBOX_VERSION, TYPESCRIPT_ESLINT_VERSION, TYPESCRIPT_VERSION,
+                TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION, TYPES_QS_VERSION,
+                TYPES_UUID_VERSION, UUID_VERSION, VALIDATOR_VERSION, VITEST_VERSION, ZOD_VERSION,
             },
             project_package_json::{ProjectDependencies, ProjectDevDependencies, ProjectScripts},
         },
@@ -315,6 +322,7 @@ impl CliCommand for ApplicationCommand {
         // let libraries = matches.get_many::<String>("libraries").unwrap_or_default();
 
         let mut ignore_files = vec!["pnpm-workspace.yaml", "pnpm-lock.yml"];
+        let preserve_files = vec!["application-overview.json"];
 
         // TODO: maybe abstract this into a function
         let all_test_framework_config_files = vec!["vitest.config.ts", "jest.config.ts"];
@@ -344,12 +352,20 @@ impl CliCommand for ApplicationCommand {
 
         // Inline specific perms checks here. Make remote calls to receive templates for specific services if needed here (premium only).
 
-        let mut additional_projects = vec![ProjectEntry {
-            r#type: ProjectType::Library,
-            name: "core".to_string(),
-            resources: None,
-            routers: None,
-        }];
+        let mut additional_projects = vec![
+            ProjectEntry {
+                r#type: ProjectType::Library,
+                name: "core".to_string(),
+                resources: None,
+                routers: None,
+            },
+            ProjectEntry {
+                r#type: ProjectType::Library,
+                name: "monitoring".to_string(),
+                resources: None,
+                routers: None,
+            },
+        ];
         additional_projects.extend(services.into_iter().map(|package| ProjectEntry {
             r#type: ProjectType::Service,
             name: package.to_string(),
@@ -436,9 +452,20 @@ impl CliCommand for ApplicationCommand {
                 .iter()
                 .map(|ignore_file| ignore_file.to_string())
                 .collect::<Vec<String>>(),
+            &preserve_files
+                .iter()
+                .map(|preserve_file| preserve_file.to_string())
+                .collect::<Vec<String>>(),
         )?);
 
-        let mut docker_compose_string = Some(to_string(&DockerCompose::default()).unwrap());
+        // TODO: think about refactoring this to use pure docker compose and instead use a deserialization function elsewhere
+        let mut docker_compose_string = Some(
+            to_string(add_otel_to_docker_compose(
+                &name,
+                &mut DockerCompose::default(),
+            )?)
+            .unwrap(),
+        );
         for template_dir in template_dirs {
             let service_data = ServiceManifestData {
                 id: data.id.clone(),
@@ -473,7 +500,9 @@ impl CliCommand for ApplicationCommand {
                 db_driver: match_database(&database),
             };
 
-            if service_data.service_name != "core" {
+            if !HashSet::from(["core".to_string(), "monitoring".to_string()])
+                .contains(&service_data.service_name)
+            {
                 docker_compose_string = Some(add_service_definition_to_docker_compose(
                     &service_data,
                     &Path::new(&name).to_string_lossy().to_string(),
@@ -489,6 +518,10 @@ impl CliCommand for ApplicationCommand {
                     .iter()
                     .map(|ignore_file| ignore_file.to_string())
                     .collect::<Vec<String>>(),
+                &preserve_files
+                    .iter()
+                    .map(|preserve_file| preserve_file.to_string())
+                    .collect::<Vec<String>>(),
             )?);
             rendered_templates.push(generate_service_package_json(
                 &service_data,
@@ -496,8 +529,8 @@ impl CliCommand for ApplicationCommand {
                     .join(&template_dir.output_path)
                     .to_string_lossy()
                     .to_string(),
-                if service_data.service_name == "core" {
-                    Some(ProjectDependencies {
+                match service_data.service_name.as_str() {
+                    "core" => Some(ProjectDependencies {
                         app_name: service_data.app_name.clone(),
                         database: Some(service_data.database.clone()),
                         forklaunch_common: Some(COMMON_VERSION.to_string()),
@@ -531,22 +564,32 @@ impl CliCommand for ApplicationCommand {
                             None
                         },
                         ..Default::default()
-                    })
-                } else {
-                    None
+                    }),
+                    "monitoring" => Some(ProjectDependencies {
+                        forklaunch_core: Some(CORE_VERSION.to_string()),
+                        ..Default::default()
+                    }),
+                    _ => None,
                 },
-                if service_data.service_name == "core" {
-                    Some(ProjectDevDependencies {
+                match service_data.service_name.as_str() {
+                    "core" => Some(ProjectDevDependencies {
                         eslint: Some(ESLINT_VERSION.to_string()),
                         typescript_eslint: Some(TYPESCRIPT_ESLINT_VERSION.to_string()),
                         types_uuid: Some(TYPES_UUID_VERSION.to_string()),
+                        types_express: Some(TYPES_EXPRESS_VERSION.to_string()),
+                        types_express_serve_static_core: Some(
+                            TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION.to_string(),
+                        ),
+                        types_qs: Some(TYPES_QS_VERSION.to_string()),
                         ..Default::default()
-                    })
-                } else {
-                    None
+                    }),
+                    "monitoring" => Some(ProjectDevDependencies {
+                        ..Default::default()
+                    }),
+                    _ => None,
                 },
-                if service_data.service_name == "core" {
-                    Some(ProjectScripts {
+                match service_data.service_name.as_str() {
+                    "core" => Some(ProjectScripts {
                         build: Some(PROJECT_BUILD_SCRIPT.to_string()),
                         clean: Some(
                             project_clean_script(service_data.runtime.as_str()).to_string(),
@@ -559,14 +602,27 @@ impl CliCommand for ApplicationCommand {
                             project_test_script(service_data.test_framework.as_str()).to_string(),
                         ),
                         ..Default::default()
-                    })
-                } else {
-                    None
+                    }),
+                    "monitoring" => Some(ProjectScripts {
+                        build: Some(PROJECT_BUILD_SCRIPT.to_string()),
+                        clean: Some(
+                            project_clean_script(service_data.runtime.as_str()).to_string(),
+                        ),
+                        docs: Some(PROJECT_DOCS_SCRIPT.to_string()),
+                        format: Some(PROJECT_FORMAT_SCRIPT.to_string()),
+                        lint: Some(PROJECT_LINT_SCRIPT.to_string()),
+                        lint_fix: Some(PROJECT_LINT_FIX_SCRIPT.to_string()),
+                        test: Some(
+                            project_test_script(service_data.test_framework.as_str()).to_string(),
+                        ),
+                        ..Default::default()
+                    }),
+                    _ => None,
                 },
-                if service_data.service_name == "core" && service_data.is_node {
-                    Some("lib/index.js".to_string())
-                } else {
-                    None
+                match service_data.service_name.as_str() {
+                    "core" => Some("lib/index.js".to_string()),
+                    "monitoring" => None,
+                    _ => None,
                 },
             )?);
         }

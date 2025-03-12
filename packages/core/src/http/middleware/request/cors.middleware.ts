@@ -34,7 +34,6 @@ export function cors<
   >,
   next?: ForklaunchNextFunction
 ) {
-  console.debug('[MIDDLEWARE] cors started');
   if (req.method === 'OPTIONS') {
     res.cors = true;
   }

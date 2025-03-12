@@ -52,6 +52,9 @@ impl Serialize for ProjectDependencies {
         if let Some(ref version) = self.app_core {
             map.serialize_entry(&format!("@{}/core", self.app_name), version)?;
         }
+        if let Some(ref version) = self.app_monitoring {
+            map.serialize_entry(&format!("@{}/monitoring", self.app_name), version)?;
+        }
         // Default serialization for all other dependencies
         if let Some(ref v) = self.forklaunch_common {
             map.serialize_entry("@forklaunch/common", v)?;
@@ -138,6 +141,10 @@ impl<'de> Deserialize<'de> for ProjectDependencies {
                         deps.app_core = Some(value);
                         continue;
                     }
+                    if key.starts_with('@') && key.ends_with("/monitoring") {
+                        deps.app_monitoring = Some(value);
+                        continue;
+                    }
                     if key.starts_with("@mikro-orm") && key.ends_with("mongodb") {
                         deps.database = if key.ends_with("mongodb") {
                             Some("mongodb".to_string())
@@ -187,6 +194,7 @@ pub struct ProjectDependencies {
     pub app_name: String,
     pub database: Option<String>,
     pub app_core: Option<String>,
+    pub app_monitoring: Option<String>,
     pub forklaunch_common: Option<String>,
     pub forklaunch_core: Option<String>,
     pub forklaunch_express: Option<String>,
@@ -207,6 +215,15 @@ pub struct ProjectDependencies {
 pub struct ProjectDevDependencies {
     #[serde(rename = "@mikro-orm/cli", skip_serializing_if = "Option::is_none")]
     pub mikro_orm_cli: Option<String>,
+    #[serde(rename = "@types/express", skip_serializing_if = "Option::is_none")]
+    pub types_express: Option<String>,
+    #[serde(
+        rename = "@types/express-serve-static-core",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub types_express_serve_static_core: Option<String>,
+    #[serde(rename = "@types/qs", skip_serializing_if = "Option::is_none")]
+    pub types_qs: Option<String>,
     #[serde(rename = "@types/uuid", skip_serializing_if = "Option::is_none")]
     pub types_uuid: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]

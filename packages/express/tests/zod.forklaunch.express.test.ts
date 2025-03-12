@@ -1,12 +1,22 @@
-import { SchemaValidator, string } from '@forklaunch/validator/zod';
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
+import { number, SchemaValidator, string } from '@forklaunch/validator/zod';
 import { Server } from 'http';
 import { forklaunchExpress, forklaunchRouter } from '../index';
+import { checkout } from '../src/handlers/checkout';
+import { get } from '../src/handlers/get';
+import { post } from '../src/handlers/post';
 
 const zodSchemaValidator = SchemaValidator();
-const forklaunchApplication = forklaunchExpress(zodSchemaValidator);
+const openTelemetryCollector = new OpenTelemetryCollector('test');
+
+const forklaunchApplication = forklaunchExpress(
+  zodSchemaValidator,
+  openTelemetryCollector
+);
 const forklaunchRouterInstance = forklaunchRouter(
   '/testpath',
-  zodSchemaValidator
+  zodSchemaValidator,
+  openTelemetryCollector
 );
 
 describe('Forklaunch Express Tests', () => {
@@ -150,5 +160,97 @@ describe('Forklaunch Express Tests', () => {
 
   afterAll(async () => {
     server.close();
+  });
+});
+
+describe('handlers', () => {
+  const application = forklaunchExpress(
+    zodSchemaValidator,
+    openTelemetryCollector
+  );
+  const router = forklaunchRouter(
+    '/organization',
+    zodSchemaValidator,
+    openTelemetryCollector
+  );
+
+  it('should be able to create a path param handler', () => {
+    const getRequest = get(
+      zodSchemaValidator,
+      '/:id',
+      {
+        name: 'Get Organization',
+        summary: 'Gets an organization by ID',
+        responses: {
+          200: {
+            ret: number
+          },
+          404: string
+        },
+        params: {
+          id: string
+        },
+        auth: {
+          method: 'jwt',
+          allowedRoles: new Set(['admin']),
+          mapRoles: (sub, req) => {
+            return new Set(['admin', sub, req?.params.id ?? '']);
+          }
+        }
+      },
+      async (req, res) => {
+        const organizationDto = Number(req.params.id);
+        if (organizationDto) {
+          res.status(200).json({
+            ret: organizationDto
+          });
+        } else {
+          res.status(404).send('Organization not found');
+        }
+      }
+    );
+    application.get('/:id', getRequest);
+    router.get('/:id', getRequest);
+  });
+
+  it('should be able to create a body param handler', () => {
+    const postRequest = post(
+      zodSchemaValidator,
+      '/',
+      {
+        name: 'Create Organization',
+        summary: 'Creates an organization',
+        responses: {
+          200: {
+            name: string
+          }
+        },
+        body: {
+          name: string
+        }
+      },
+      async (req, res) => {
+        res.status(200).json(req.body);
+      }
+    );
+    application.post('/', postRequest);
+    router.post('/', postRequest);
+  });
+
+  it('should be able to create a middleware handler', () => {
+    const checkoutMiddleware = checkout(
+      zodSchemaValidator,
+      '/',
+      {
+        query: {
+          name: string
+        }
+      },
+      async (req, res) => {
+        req.query.name;
+      }
+    );
+    application.use(checkoutMiddleware);
+    router.checkout('/', checkoutMiddleware);
   });
 });

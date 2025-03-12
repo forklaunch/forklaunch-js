@@ -1,14 +1,21 @@
 import { Controller } from '@forklaunch/core/controllers';
-import { get, post } from '@forklaunch/core/http';
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ConfigInjector, ScopedDependencyFactory } from '@forklaunch/core/services';
-import { SchemaValidator } from '@{{app_name}}/core';
+import { handlers, Request, Response, NextFunction, ParsedQs, SchemaValidator } from '@{{app_name}}/core';
+import { Metrics } from '@{{app_name}}/monitoring';
 import { configValidator } from '../bootstrapper';
 import { {{pascal_case_name}}Service } from '../interfaces/{{camel_case_name}}.interface';
 import { {{pascal_case_name}}RequestDtoMapper, {{pascal_case_name}}ResponseDtoMapper } from '../models/dtoMapper/{{camel_case_name}}.dtoMapper';
 
 // Controller class that implements the {{pascal_case_name}}Service interface 
 export class {{pascal_case_name}}Controller
-  implements Controller<{{pascal_case_name}}Service>
+  implements Controller<
+    {{pascal_case_name}}Service, 
+    Request, 
+    Response, 
+    NextFunction, 
+    ParsedQs
+  >
 {
   constructor(
     // scopeFactory returns new scopes that can be used for joint transactions
@@ -21,11 +28,13 @@ export class {{pascal_case_name}}Controller
       SchemaValidator,
       typeof configValidator,
       '{{camel_case_name}}Service'
-    >
+    >,
+    // openTelemetryCollector for collecting logs and metrics with appropriate context
+    private readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>
   ) {}
 
   // GET endpoint handler that returns a simple message
-  {{camel_case_name}}Get = get(
+  {{camel_case_name}}Get = handlers.get(
     SchemaValidator(),
     '/',
     {
@@ -47,7 +56,7 @@ export class {{pascal_case_name}}Controller
   );
 
   // POST endpoint handler that processes request body and returns response from service
-  {{camel_case_name}}Post = post(
+  {{camel_case_name}}Post = handlers.post(
     SchemaValidator(),
     '/',
     {

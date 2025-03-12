@@ -1,20 +1,38 @@
-import { forklaunchRouter } from '@forklaunch/framework-core';
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
+import { ScopedDependencyFactory } from '@forklaunch/core/services';
+import { forklaunchRouter, SchemaValidator } from '@forklaunch/framework-core';
+import { Metrics } from '@forklaunch/framework-monitoring';
+import { configValidator } from '../bootstrapper';
 import { OrganizationController } from '../controllers/organization.controller';
 
-export const router = forklaunchRouter('/organization');
+export const OrganizationRoutes = (
+  scopedServiceFactory: ScopedDependencyFactory<
+    SchemaValidator,
+    typeof configValidator,
+    'organizationService'
+  >,
+  openTelemetryCollector: OpenTelemetryCollector<Metrics>
+) => {
+  const router = forklaunchRouter('/organization', openTelemetryCollector);
 
-export const OrganizationRoutes = (controller: OrganizationController) => ({
-  router,
+  const controller = new OrganizationController(
+    scopedServiceFactory,
+    openTelemetryCollector
+  );
 
-  // Create organization
-  createOrganization: router.post('/', controller.createOrganization),
+  return {
+    router,
 
-  // Get organization by ID
-  getOrganization: router.get('/:id', controller.getOrganization),
+    // Create organization
+    createOrganization: router.post('/', controller.createOrganization),
 
-  // Update organization by ID
-  updateOrganization: router.put('/', controller.updateOrganization),
+    // Get organization by ID
+    getOrganization: router.get('/:id', controller.getOrganization),
 
-  // Delete organization by ID
-  deleteOrganization: router.delete('/:id', controller.deleteOrganization)
-});
+    // Update organization by ID
+    updateOrganization: router.put('/', controller.updateOrganization),
+
+    // Delete organization by ID
+    deleteOrganization: router.delete('/:id', controller.deleteOrganization)
+  };
+};

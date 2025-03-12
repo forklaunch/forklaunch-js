@@ -1,5 +1,7 @@
 import { GenericContainer, StartedTestContainer } from 'testcontainers';
 import { RedisTtlCache } from '../src/cache/redisTtlCache';
+import { OpenTelemetryCollector } from '../src/http/telemetry/openTelemetryCollector';
+import { MetricsDefinition } from '../src/http';
 
 describe('redisTtlCache', () => {
   let container: StartedTestContainer;
@@ -13,7 +15,7 @@ describe('redisTtlCache', () => {
       .withExposedPorts(6379)
       .start();
 
-    cache = new RedisTtlCache(5000, {
+    cache = new RedisTtlCache(5000, new OpenTelemetryCollector('test'), {
       url: `redis://${container.getHost()}:${container.getMappedPort(6379)}`
     });
 

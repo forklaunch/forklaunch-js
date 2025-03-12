@@ -5,7 +5,7 @@ import {
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
-import { Request, Response } from '../types/hyperExpress.types';
+import { InternalRequest, InternalResponse } from '../types/hyperExpress.types';
 
 /**
  * Middleware to enrich the response transmission by intercepting and parsing responses before they are sent.
@@ -16,7 +16,7 @@ import { Request, Response } from '../types/hyperExpress.types';
  * @param {MiddlewareNext} next - The next middleware function.
  */
 export function enrichResponseTransmission<SV extends AnySchemaValidator>(
-  req: Request<
+  req: InternalRequest<
     SV,
     ParamsDictionary,
     Record<string, unknown>,
@@ -24,14 +24,13 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
     Record<string, string>,
     Record<string, unknown>
   >,
-  res: Response<
+  res: InternalResponse<
     Record<number, unknown>,
     Record<string, string>,
     Record<string, unknown>
   >,
   next: ForklaunchNextFunction
 ) {
-  console.debug('[MIDDLEWARE] enrichResponseTransmission');
   const originalSend = res.send;
   const originalJson = res.json;
   const originalSetHeader = res.setHeader as (
@@ -47,8 +46,25 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
    */
   res.json = function <T extends Record<string, unknown>>(data: T) {
     res.bodyData = data;
-    const result = originalJson.call(this, data);
-    return result as boolean;
+    res.statusCode = res._status_code;
+    enrichExpressLikeSend<
+      SV,
+      ParamsDictionary,
+      Record<number, unknown>,
+      Record<string, unknown>,
+      ParsedQs,
+      Record<string, string>,
+      Record<string, string>,
+      Record<string, unknown>
+    >(
+      this,
+      req,
+      res,
+      originalJson,
+      data,
+      !res.cors && ((res._cork && !res._corked) || !res._cork)
+    );
+    return data;
   };
 
   /**

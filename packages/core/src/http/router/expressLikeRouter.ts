@@ -16,8 +16,6 @@ import {
   PathOrMiddlewareBasedHandler
 } from '../interfaces/expressLikeRouter.interface';
 import { parseRequestAuth } from '../middleware/request/auth.middleware';
-import { cors } from '../middleware/request/cors.middleware';
-import { createContext } from '../middleware/request/createContext.middleware';
 import { enrichDetails } from '../middleware/request/enrichDetails.middleware';
 import { parse } from '../middleware/request/parse.middleware';
 import {
@@ -50,6 +48,8 @@ import {
   ForklaunchRoute,
   ForklaunchRouter
 } from '../types/router.types';
+import { OpenTelemetryCollector } from '../telemetry/openTelemetryCollector';
+import { MetricsDefinition } from '../types/openTelemetryCollector.types';
 
 /**
  * A class that represents an Express-like router.
@@ -58,7 +58,10 @@ export class ForklaunchExpressLikeRouter<
   SV extends AnySchemaValidator,
   BasePath extends `/${string}`,
   RouterHandler,
-  Internal extends ExpressLikeRouter<RouterHandler, Internal>
+  Internal extends ExpressLikeRouter<RouterHandler, Internal>,
+  BaseRequest,
+  BaseResponse,
+  NextFunction
 > implements ConstrainedForklaunchRouter<SV, RouterHandler>
 {
   requestHandler!: RouterHandler;
@@ -69,12 +72,10 @@ export class ForklaunchExpressLikeRouter<
   constructor(
     basePath: BasePath,
     readonly schemaValidator: SV,
-    readonly internal: Internal
+    readonly internal: Internal,
+    readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
   ) {
     this.basePath = basePath;
-
-    this.internal.use(createContext(this.schemaValidator) as RouterHandler);
-    this.internal.use(cors as RouterHandler);
   }
 
   /**
@@ -92,6 +93,7 @@ export class ForklaunchExpressLikeRouter<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>
   >(
+    path: string,
     contractDetails: HttpContractDetails<SV> | PathParamHttpContractDetails<SV>,
     requestSchema: unknown,
     responseSchemas: ResponseCompiledSchema
@@ -103,7 +105,10 @@ export class ForklaunchExpressLikeRouter<
     ReqQuery,
     ReqHeaders,
     ResHeaders,
-    LocalsObj
+    LocalsObj,
+    BaseRequest,
+    BaseResponse,
+    NextFunction
   >[] {
     return [
       enrichDetails<
@@ -115,7 +120,13 @@ export class ForklaunchExpressLikeRouter<
         ReqHeaders,
         ResHeaders,
         LocalsObj
-      >(contractDetails, requestSchema, responseSchemas),
+      >(
+        `${this.basePath}${path}`,
+        contractDetails,
+        requestSchema,
+        responseSchemas,
+        this.openTelemetryCollector
+      ),
       parse,
       parseRequestAuth<
         SV,
@@ -127,7 +138,19 @@ export class ForklaunchExpressLikeRouter<
         ResHeaders,
         LocalsObj
       >
-    ];
+    ] as ExpressLikeSchemaHandler<
+      SV,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
+    >[];
   }
 
   /**
@@ -159,7 +182,10 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >
   ): ExpressLikeHandler<
     SV,
@@ -169,7 +195,10 @@ export class ForklaunchExpressLikeRouter<
     ReqQuery,
     ReqHeaders,
     ResHeaders,
-    LocalsObj
+    LocalsObj,
+    BaseRequest,
+    BaseResponse,
+    NextFunction
   > {
     return async (req, res, next) => {
       if (!requestHandler) {
@@ -179,11 +208,10 @@ export class ForklaunchExpressLikeRouter<
       try {
         await requestHandler(req, res, next);
       } catch (error) {
-        next?.(error as Error);
-
-        console.error(error);
-        if (!res.headersSent) {
-          res.status(500).send('Internal Server Error');
+        if (next && typeof next === 'function') {
+          next(error as Error);
+        } else {
+          throw error;
         }
       }
     };
@@ -218,7 +246,10 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >[]
   ): ExpressLikeHandler<
     SV,
@@ -228,7 +259,10 @@ export class ForklaunchExpressLikeRouter<
     ReqQuery,
     ReqHeaders,
     ResHeaders,
-    LocalsObj
+    LocalsObj,
+    BaseRequest,
+    BaseResponse,
+    NextFunction
   > {
     const controllerHandler = handlers.pop();
 
@@ -260,7 +294,8 @@ export class ForklaunchExpressLikeRouter<
       ReqBody,
       ReqQuery,
       ReqHeaders,
-      ResHeaders
+      ResHeaders,
+      BaseRequest
     >
   ) {
     const schemaValidator = this.schemaValidator as SchemaValidator;
@@ -272,7 +307,17 @@ export class ForklaunchExpressLikeRouter<
           ? { headers: contractDetails.requestHeaders }
           : {}),
         ...(contractDetails.query ? { query: contractDetails.query } : {}),
-        ...(isHttpContractDetails(contractDetails) && contractDetails.body
+        ...(isHttpContractDetails<
+          SV,
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          BaseRequest
+        >(contractDetails) && contractDetails.body != null
           ? { body: contractDetails.body }
           : {})
       })
@@ -284,9 +329,30 @@ export class ForklaunchExpressLikeRouter<
       403: schemaValidator.string,
       404: schemaValidator.string,
       500: schemaValidator.string,
-      ...(isPathParamHttpContractDetails(contractDetails) ||
-      isHttpContractDetails(contractDetails)
-        ? { ...contractDetails.responses }
+      ...(isPathParamHttpContractDetails<
+        SV,
+        Path,
+        P,
+        ResBodyMap,
+        ReqQuery,
+        ReqHeaders,
+        ResHeaders,
+        BaseRequest
+      >(contractDetails) ||
+      isHttpContractDetails<
+        SV,
+        Path,
+        P,
+        ResBodyMap,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders,
+        ResHeaders,
+        BaseRequest
+      >(contractDetails)
+        ? {
+            ...contractDetails.responses
+          }
         : {})
     };
 
@@ -433,7 +499,10 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >,
     ...middlewareOrMiddlewareAndTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -445,7 +514,10 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >[]
   ): LiveTypeFunction<
     SV,
@@ -469,7 +541,10 @@ export class ForklaunchExpressLikeRouter<
         ReqQuery,
         ReqHeaders,
         ResHeaders,
-        LocalsObj
+        LocalsObj,
+        BaseRequest,
+        BaseResponse,
+        NextFunction
       >(contractDetailsOrMiddlewareOrTypedHandler)
     ) {
       const { contractDetails, handlers } =
@@ -518,7 +593,10 @@ export class ForklaunchExpressLikeRouter<
           ReqQuery,
           ReqHeaders,
           ResHeaders,
-          LocalsObj
+          LocalsObj,
+          BaseRequest,
+          BaseResponse,
+          NextFunction
         >(maybeTypedHandler)
       ) {
         const { contractDetails, handlers } = maybeTypedHandler;
@@ -558,7 +636,10 @@ export class ForklaunchExpressLikeRouter<
             ReqQuery,
             ReqHeaders,
             ResHeaders,
-            LocalsObj
+            LocalsObj,
+            BaseRequest,
+            BaseResponse,
+            NextFunction
           >(contractDetailsOrMiddlewareOrTypedHandler) ||
           isTypedHandler<
             SV,
@@ -570,7 +651,10 @@ export class ForklaunchExpressLikeRouter<
             ReqQuery,
             ReqHeaders,
             ResHeaders,
-            LocalsObj
+            LocalsObj,
+            BaseRequest,
+            BaseResponse,
+            NextFunction
           >(contractDetailsOrMiddlewareOrTypedHandler)
         ) {
           throw new Error('Contract details are not defined');
@@ -588,7 +672,10 @@ export class ForklaunchExpressLikeRouter<
             ReqQuery,
             ReqHeaders,
             ResHeaders,
-            LocalsObj
+            LocalsObj,
+            BaseRequest,
+            BaseResponse,
+            NextFunction
           >(handler)
         );
 
@@ -601,7 +688,8 @@ export class ForklaunchExpressLikeRouter<
             ReqBody,
             ReqQuery,
             ReqHeaders,
-            ResHeaders
+            ResHeaders,
+            BaseRequest
           >(contractDetails) &&
           !isPathParamHttpContractDetails<
             SV,
@@ -610,7 +698,8 @@ export class ForklaunchExpressLikeRouter<
             ResBodyMap,
             ReqQuery,
             ReqHeaders,
-            ResHeaders
+            ResHeaders,
+            BaseRequest
           >(contractDetails)
         ) {
           throw new Error(
@@ -622,7 +711,7 @@ export class ForklaunchExpressLikeRouter<
           basePath: this.basePath,
           path,
           method,
-          contractDetails
+          contractDetails: contractDetails as PathParamHttpContractDetails<SV>
         });
 
         const { requestSchema, responseSchemas } = this.#compile<
@@ -648,9 +737,12 @@ export class ForklaunchExpressLikeRouter<
             ReqHeaders,
             ResHeaders,
             LocalsObj
-          >(contractDetails, requestSchema, responseSchemas).concat(
-            handlers
-          ) as RouterHandler[]),
+          >(
+            path,
+            contractDetails as PathParamHttpContractDetails<SV>,
+            requestSchema,
+            responseSchemas
+          ).concat(handlers) as RouterHandler[]),
           this.#parseAndRunControllerHandler(controllerHandler) as RouterHandler
         );
 
@@ -693,7 +785,10 @@ export class ForklaunchExpressLikeRouter<
           ReqQuery,
           ReqHeaders,
           ResHeaders,
-          LocalsObj
+          LocalsObj,
+          BaseRequest,
+          BaseResponse,
+          NextFunction
         >
       | ConstrainedForklaunchRouter<SV, RouterHandler>
     )[],
@@ -712,7 +807,10 @@ export class ForklaunchExpressLikeRouter<
         ReqQuery,
         ReqHeaders,
         ResHeaders,
-        LocalsObj
+        LocalsObj,
+        BaseRequest,
+        BaseResponse,
+        NextFunction
       >(last)
     ) {
       finalHandlers = last.handlers;
@@ -730,7 +828,10 @@ export class ForklaunchExpressLikeRouter<
           ReqQuery,
           ReqHeaders,
           ResHeaders,
-          LocalsObj
+          LocalsObj,
+          BaseRequest,
+          BaseResponse,
+          NextFunction
         >(handler)
       ) {
         throw new Error(
@@ -766,7 +867,10 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >[]
   ) {
     return this.#extractHandlers<
@@ -803,7 +907,10 @@ export class ForklaunchExpressLikeRouter<
           ReqQuery,
           ReqHeaders,
           ResHeaders,
-          LocalsObj
+          LocalsObj,
+          BaseRequest,
+          BaseResponse,
+          NextFunction
         >
       | ConstrainedForklaunchRouter<SV, RouterHandler>
     )[]
@@ -819,7 +926,15 @@ export class ForklaunchExpressLikeRouter<
       LocalsObj,
       RouterHandler | Internal
     >(handlers, (handler) =>
-      isForklaunchExpressLikeRouter<SV, Path, RouterHandler, Internal>(handler)
+      isForklaunchExpressLikeRouter<
+        SV,
+        Path,
+        RouterHandler,
+        Internal,
+        BaseRequest,
+        BaseResponse,
+        NextFunction
+      >(handler)
         ? handler.internal
         : (handler as RouterHandler)
     );
@@ -846,7 +961,10 @@ export class ForklaunchExpressLikeRouter<
           ReqQuery,
           ReqHeaders,
           ResHeaders,
-          LocalsObj
+          LocalsObj,
+          BaseRequest,
+          BaseResponse,
+          NextFunction
         >
       | undefined,
     middleware: RouterHandler[]
@@ -862,7 +980,10 @@ export class ForklaunchExpressLikeRouter<
         ReqQuery,
         ReqHeaders,
         ResHeaders,
-        LocalsObj
+        LocalsObj,
+        BaseRequest,
+        BaseResponse,
+        NextFunction
       >(handler)
     ) {
       middleware.push(...(handler.handlers as RouterHandler[]));
@@ -892,7 +1013,10 @@ export class ForklaunchExpressLikeRouter<
           ReqQuery,
           ReqHeaders,
           ResHeaders,
-          LocalsObj
+          LocalsObj,
+          BaseRequest,
+          BaseResponse,
+          NextFunction
         >
       | undefined,
     middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
@@ -905,7 +1029,10 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >[]
   ) {
     const middleware: RouterHandler[] = [];
@@ -958,7 +1085,10 @@ export class ForklaunchExpressLikeRouter<
           ReqQuery,
           ReqHeaders,
           ResHeaders,
-          LocalsObj
+          LocalsObj,
+          BaseRequest,
+          BaseResponse,
+          NextFunction
         >
       | ConstrainedForklaunchRouter<SV, RouterHandler>
       | undefined,
@@ -973,7 +1103,10 @@ export class ForklaunchExpressLikeRouter<
           ReqQuery,
           ReqHeaders,
           ResHeaders,
-          LocalsObj
+          LocalsObj,
+          BaseRequest,
+          BaseResponse,
+          NextFunction
         >
       | ConstrainedForklaunchRouter<SV, RouterHandler>
     )[]
@@ -1000,15 +1133,24 @@ export class ForklaunchExpressLikeRouter<
         ReqQuery,
         ReqHeaders,
         ResHeaders,
-        LocalsObj
+        LocalsObj,
+        BaseRequest,
+        BaseResponse,
+        NextFunction
       >,
       middleware as RouterHandler[]
     );
 
     if (
-      isForklaunchExpressLikeRouter<SV, Path, RouterHandler, Internal>(
-        contractDetailsOrMiddlewareOrTypedHandler
-      )
+      isForklaunchExpressLikeRouter<
+        SV,
+        Path,
+        RouterHandler,
+        Internal,
+        BaseRequest,
+        BaseResponse,
+        NextFunction
+      >(contractDetailsOrMiddlewareOrTypedHandler)
     ) {
       middleware.push(contractDetailsOrMiddlewareOrTypedHandler.internal);
     }
@@ -1052,7 +1194,10 @@ export class ForklaunchExpressLikeRouter<
           ReqQuery,
           ReqHeaders,
           ResHeaders,
-          LocalsObj
+          LocalsObj,
+          BaseRequest,
+          BaseResponse,
+          NextFunction
         >,
     contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
@@ -1064,7 +1209,10 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -1076,7 +1224,10 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >[]
   ): this {
     const middleware: RouterHandler[] = [];
@@ -1120,7 +1271,10 @@ export class ForklaunchExpressLikeRouter<
             ReqQuery,
             ReqHeaders,
             ResHeaders,
-            LocalsObj
+            LocalsObj,
+            BaseRequest,
+            BaseResponse,
+            NextFunction
           >(contractDetailsOrMiddlewareOrTypedHandler) ||
           isTypedHandler<
             SV,
@@ -1132,7 +1286,10 @@ export class ForklaunchExpressLikeRouter<
             ReqQuery,
             ReqHeaders,
             ResHeaders,
-            LocalsObj
+            LocalsObj,
+            BaseRequest,
+            BaseResponse,
+            NextFunction
           >(contractDetailsOrMiddlewareOrTypedHandler)
             ? [contractDetailsOrMiddlewareOrTypedHandler]
             : []
@@ -1167,7 +1324,10 @@ export class ForklaunchExpressLikeRouter<
           ReqQuery,
           ReqHeaders,
           ResHeaders,
-          LocalsObj
+          LocalsObj,
+          BaseRequest,
+          BaseResponse,
+          NextFunction
         >
       | ConstrainedForklaunchRouter<SV, RouterHandler>,
     contractDetailsOrMiddlewareOrTypedHandler?:
@@ -1181,7 +1341,10 @@ export class ForklaunchExpressLikeRouter<
           ReqQuery,
           ReqHeaders,
           ResHeaders,
-          LocalsObj
+          LocalsObj,
+          BaseRequest,
+          BaseResponse,
+          NextFunction
         >
       | ConstrainedForklaunchRouter<SV, RouterHandler>,
     ...middlewareOrMiddlewareWithTypedHandler: (
@@ -1195,7 +1358,10 @@ export class ForklaunchExpressLikeRouter<
           ReqQuery,
           ReqHeaders,
           ResHeaders,
-          LocalsObj
+          LocalsObj,
+          BaseRequest,
+          BaseResponse,
+          NextFunction
         >
       | ConstrainedForklaunchRouter<SV, RouterHandler>
     )[]
@@ -1248,7 +1414,10 @@ export class ForklaunchExpressLikeRouter<
             ReqQuery,
             ReqHeaders,
             ResHeaders,
-            LocalsObj
+            LocalsObj,
+            BaseRequest,
+            BaseResponse,
+            NextFunction
           >(contractDetailsOrMiddlewareOrTypedHandler) ||
           isTypedHandler<
             SV,
@@ -1260,7 +1429,10 @@ export class ForklaunchExpressLikeRouter<
             ReqQuery,
             ReqHeaders,
             ResHeaders,
-            LocalsObj
+            LocalsObj,
+            BaseRequest,
+            BaseResponse,
+            NextFunction
           >(contractDetailsOrMiddlewareOrTypedHandler) ||
           isConstrainedForklaunchRouter<SV, RouterHandler>(
             contractDetailsOrMiddlewareOrTypedHandler
@@ -1280,7 +1452,15 @@ export class ForklaunchExpressLikeRouter<
     return this;
   }
 
-  use: TypedNestableMiddlewareDefinition<this, RouterHandler, Internal, SV> = <
+  use: TypedNestableMiddlewareDefinition<
+    this,
+    RouterHandler,
+    Internal,
+    SV,
+    BaseRequest,
+    BaseResponse,
+    NextFunction
+  > = <
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -1294,7 +1474,10 @@ export class ForklaunchExpressLikeRouter<
       SV,
       Subpath,
       RouterHandler,
-      Internal
+      Internal,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >
   >(
     pathOrContractDetailsOrMiddlewareOrTypedHandler:
@@ -1309,7 +1492,10 @@ export class ForklaunchExpressLikeRouter<
           ReqQuery,
           ReqHeaders,
           ResHeaders,
-          LocalsObj
+          LocalsObj,
+          BaseRequest,
+          BaseResponse,
+          NextFunction
         >
       | Router,
     contractDetailsOrMiddlewareOrTypedHandler?:
@@ -1323,7 +1509,10 @@ export class ForklaunchExpressLikeRouter<
           ReqQuery,
           ReqHeaders,
           ResHeaders,
-          LocalsObj
+          LocalsObj,
+          BaseRequest,
+          BaseResponse,
+          NextFunction
         >
       | Router,
     ...middlewareOrMiddlewareWithTypedHandler: (
@@ -1337,7 +1526,10 @@ export class ForklaunchExpressLikeRouter<
           ReqQuery,
           ReqHeaders,
           ResHeaders,
-          LocalsObj
+          LocalsObj,
+          BaseRequest,
+          BaseResponse,
+          NextFunction
         >
       | Router
     )[]
@@ -1369,7 +1561,13 @@ export class ForklaunchExpressLikeRouter<
     );
   };
 
-  all: TypedMiddlewareDefinition<this, SV> = <
+  all: TypedMiddlewareDefinition<
+    this,
+    SV,
+    BaseRequest,
+    BaseResponse,
+    NextFunction
+  > = <
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -1391,7 +1589,10 @@ export class ForklaunchExpressLikeRouter<
           ReqQuery,
           ReqHeaders,
           ResHeaders,
-          LocalsObj
+          LocalsObj,
+          BaseRequest,
+          BaseResponse,
+          NextFunction
         >,
     contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
@@ -1403,7 +1604,10 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -1415,7 +1619,10 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >[]
   ) => {
     return this.registerMiddlewareHandler<
@@ -1435,7 +1642,13 @@ export class ForklaunchExpressLikeRouter<
     );
   };
 
-  connect: TypedMiddlewareDefinition<this, SV> = <
+  connect: TypedMiddlewareDefinition<
+    this,
+    SV,
+    BaseRequest,
+    BaseResponse,
+    NextFunction
+  > = <
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -1457,7 +1670,10 @@ export class ForklaunchExpressLikeRouter<
           ReqQuery,
           ReqHeaders,
           ResHeaders,
-          LocalsObj
+          LocalsObj,
+          BaseRequest,
+          BaseResponse,
+          NextFunction
         >,
     contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
@@ -1469,7 +1685,10 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -1481,7 +1700,10 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >[]
   ) => {
     return this.registerMiddlewareHandler<
@@ -1514,7 +1736,14 @@ export class ForklaunchExpressLikeRouter<
    * @param {...SchemaHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, LocalsObj>[]} handlers - The handler handlers.
    * @returns {ExpressRouter} - The Express router.
    */
-  get: LiveTypeRouteDefinition<SV, BasePath, 'get'> = <
+  get: LiveTypeRouteDefinition<
+    SV,
+    BasePath,
+    'get',
+    BaseRequest,
+    BaseResponse,
+    NextFunction
+  > = <
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -1535,7 +1764,10 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -1547,7 +1779,10 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >[]
   ) => {
     return {
@@ -1584,7 +1819,14 @@ export class ForklaunchExpressLikeRouter<
    * @param {...SchemaHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, LocalsObj>[]} handlers - The handler handlers.
    * @returns {ExpressRouter} - The Expxwress router.
    */
-  post: LiveTypeRouteDefinition<SV, BasePath, 'post'> = <
+  post: LiveTypeRouteDefinition<
+    SV,
+    BasePath,
+    'post',
+    BaseRequest,
+    BaseResponse,
+    NextFunction
+  > = <
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -1605,7 +1847,10 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -1617,7 +1862,10 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >[]
   ) => {
     return {
@@ -1654,7 +1902,14 @@ export class ForklaunchExpressLikeRouter<
    * @param {...SchemaHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, LocalsObj>[]} handlers - The handler handlers.
    * @returns {ExpressRouter} - The Express router.
    */
-  put: LiveTypeRouteDefinition<SV, BasePath, 'put'> = <
+  put: LiveTypeRouteDefinition<
+    SV,
+    BasePath,
+    'put',
+    BaseRequest,
+    BaseResponse,
+    NextFunction
+  > = <
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -1675,7 +1930,10 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -1687,7 +1945,10 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >[]
   ) => {
     return {
@@ -1724,7 +1985,14 @@ export class ForklaunchExpressLikeRouter<
    * @param {...SchemaHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, LocalsObj>[]} handlers - The handler handlers.
    * @returns {ExpressRouter} - The Express router.
    */
-  patch: LiveTypeRouteDefinition<SV, BasePath, 'patch'> = <
+  patch: LiveTypeRouteDefinition<
+    SV,
+    BasePath,
+    'patch',
+    BaseRequest,
+    BaseResponse,
+    NextFunction
+  > = <
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -1745,7 +2013,10 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -1757,7 +2028,10 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >[]
   ) => {
     return {
@@ -1794,7 +2068,14 @@ export class ForklaunchExpressLikeRouter<
    * @param {...SchemaHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, LocalsObj>[]} handlers - The handler handlers.
    * @returns {ExpressRouter} - The Express router.
    */
-  delete: LiveTypeRouteDefinition<SV, BasePath, 'delete'> = <
+  delete: LiveTypeRouteDefinition<
+    SV,
+    BasePath,
+    'delete',
+    BaseRequest,
+    BaseResponse,
+    NextFunction
+  > = <
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -1815,7 +2096,10 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -1827,7 +2111,10 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >[]
   ) => {
     return {
@@ -1864,7 +2151,14 @@ export class ForklaunchExpressLikeRouter<
    * @param {...SchemaHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, LocalsObj>[]} handlers - The handler handlers.
    * @returns {ExpressRouter} - The Express router.
    */
-  options: LiveTypeRouteDefinition<SV, BasePath, 'options'> = <
+  options: LiveTypeRouteDefinition<
+    SV,
+    BasePath,
+    'options',
+    BaseRequest,
+    BaseResponse,
+    NextFunction
+  > = <
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -1885,7 +2179,10 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -1897,7 +2194,10 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >[]
   ) => {
     return {
@@ -1934,7 +2234,14 @@ export class ForklaunchExpressLikeRouter<
    * @param {...SchemaHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, LocalsObj>[]} handlers - The handler handlers.
    * @returns {ExpressRouter} - The Express router.
    */
-  head: LiveTypeRouteDefinition<SV, BasePath, 'head'> = <
+  head: LiveTypeRouteDefinition<
+    SV,
+    BasePath,
+    'head',
+    BaseRequest,
+    BaseResponse,
+    NextFunction
+  > = <
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -1955,7 +2262,10 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -1967,7 +2277,10 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >[]
   ) => {
     return {
@@ -2004,7 +2317,14 @@ export class ForklaunchExpressLikeRouter<
    * @param {...SchemaHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, LocalsObj>[]} handlers - The handler handlers.
    * @returns {ExpressRouter} - The Express router.
    */
-  trace: LiveTypeRouteDefinition<SV, BasePath, 'trace'> = <
+  trace: LiveTypeRouteDefinition<
+    SV,
+    BasePath,
+    'trace',
+    BaseRequest,
+    BaseResponse,
+    NextFunction
+  > = <
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -2025,7 +2345,10 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -2037,7 +2360,10 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >[]
   ) => {
     return {

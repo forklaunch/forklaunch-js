@@ -1,5 +1,57 @@
 # @forklaunch/hyper-express
 
+## 0.3.5
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.5.4
+
+## 0.3.4
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.5.3
+
+## 0.3.3
+
+### Patch Changes
+
+- Constrain the auth request to only include discovered parameters for simplicity. Bump package versions.
+- Updated dependencies
+  - @forklaunch/validator@0.4.6
+  - @forklaunch/common@0.2.3
+  - @forklaunch/core@0.5.2
+
+## 0.3.2
+
+### Patch Changes
+
+- bump package versions
+- Updated dependencies
+  - @forklaunch/validator@0.4.5
+  - @forklaunch/common@0.2.2
+  - @forklaunch/core@0.5.1
+
+## 0.3.1
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.5.0
+
+## 0.3.0
+
+### Minor Changes
+
+- Adds nascent support for OpenTelemetry (logs, metrics, traces)
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.4.0
+
 ## 0.2.9
 
 ### Patch Changes

@@ -1,6 +1,7 @@
 import {
   AnySchemaValidator,
-  prettyPrintParseErrors
+  prettyPrintParseErrors,
+  SchemaValidator
 } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
 import {
@@ -54,15 +55,14 @@ export function parse<
   >,
   next?: ForklaunchNextFunction
 ) {
-  console.debug('[MIDDLEWARE] parseResponse started');
   const { headers, responses } = res.responseSchemas;
 
-  const parsedResponse = req.schemaValidator.parse(
+  const parsedResponse = (req.schemaValidator as SchemaValidator).parse(
     responses?.[res.statusCode],
     res.bodyData
   );
 
-  const parsedHeaders = req.schemaValidator.parse(
+  const parsedHeaders = (req.schemaValidator as SchemaValidator).parse(
     headers ?? req.schemaValidator.unknown,
     res.getHeaders()
   );
@@ -91,7 +91,9 @@ export function parse<
         next?.(new Error(`Invalid response:\n${parseErrors.join('\n\n')}`));
         break;
       case 'warning':
-        console.warn(`Invalid response:\n${parseErrors.join('\n\n')}`);
+        req.openTelemetryCollector.warn(
+          `Invalid response:\n${parseErrors.join('\n\n')}`
+        );
         break;
       case 'none':
         break;

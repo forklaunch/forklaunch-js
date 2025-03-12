@@ -33,15 +33,15 @@
     "!**/*package.json": ""
   },
   "devDependencies": {
-    "@changesets/cli": "^2.27.12",
+    "@changesets/cli": "^2.28.1",
     "@types/jest": "^29.5.14",
-    "globals": "^15.15.0",
+    "globals": "^16.0.0",
     "jest": "^29.7.0",
     "lint-staged": "^15.4.3",
-    "sort-package-json": "^2.14.0",
-    "ts-jest": "^29.2.5",
-    "tsx": "^4.19.2",
-    "typescript": "^5.7.3",
-    "vitest": "^3.0.5"
+    "sort-package-json": "^3.0.0",
+    "ts-jest": "^29.2.6",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2",
+    "vitest": "^3.0.8"
   }
 }

@@ -43,13 +43,15 @@ use super::{
             package_json_constants::{
                 project_clean_script, project_dev_client_script, project_dev_local_worker_script,
                 project_dev_worker_script, project_migrate_script, project_start_worker_script,
-                project_test_script, AJV_VERSION, APP_CORE_VERSION, COMMON_VERSION, CORE_VERSION,
-                DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION, HYPER_EXPRESS_VERSION,
-                MIKRO_ORM_CLI_VERSION, MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION,
-                MIKRO_ORM_MIGRATIONS_VERSION, MIKRO_ORM_REFLECTION_VERSION, PROJECT_BUILD_SCRIPT,
-                PROJECT_DOCS_SCRIPT, PROJECT_FORMAT_SCRIPT, PROJECT_LINT_FIX_SCRIPT,
-                PROJECT_LINT_SCRIPT, PROJECT_START_WORKER_CLIENT_SCRIPT, TSX_VERSION,
-                TS_NODE_VERSION, TYPEBOX_VERSION, TYPEDOC_VERSION, TYPESCRIPT_ESLINT_VERSION,
+                project_test_script, AJV_VERSION, APP_CORE_VERSION, APP_MONITORING_VERSION,
+                COMMON_VERSION, CORE_VERSION, DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION,
+                HYPER_EXPRESS_VERSION, MIKRO_ORM_CLI_VERSION, MIKRO_ORM_CORE_VERSION,
+                MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
+                MIKRO_ORM_REFLECTION_VERSION, PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT,
+                PROJECT_FORMAT_SCRIPT, PROJECT_LINT_FIX_SCRIPT, PROJECT_LINT_SCRIPT,
+                PROJECT_START_WORKER_CLIENT_SCRIPT, TSX_VERSION, TS_NODE_VERSION, TYPEBOX_VERSION,
+                TYPEDOC_VERSION, TYPESCRIPT_ESLINT_VERSION,
+                TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION, TYPES_QS_VERSION,
                 TYPES_UUID_VERSION, UUID_VERSION, VALIDATOR_VERSION, ZOD_VERSION,
             },
             project_package_json::{
@@ -237,12 +239,14 @@ fn generate_basic_worker(
     } else {
         vec!["consts.ts".to_string()]
     };
+    let preserve_files = vec![];
 
     let mut rendered_templates = generate_with_template(
         None,
         &template_dir,
         &TemplateManifestData::Worker(&config_data),
         &ignore_files,
+        &preserve_files,
     )?;
     rendered_templates.push(generate_project_package_json(
         config_data,
@@ -435,6 +439,7 @@ pub(crate) fn generate_project_package_json(
                 app_name: config_data.app_name.to_string(),
                 database: Some(config_data.database.to_string()),
                 app_core: Some(APP_CORE_VERSION.to_string()),
+                app_monitoring: Some(APP_MONITORING_VERSION.to_string()),
                 forklaunch_common: Some(COMMON_VERSION.to_string()),
                 forklaunch_core: Some(CORE_VERSION.to_string()),
                 forklaunch_express: if config_data.is_express {
@@ -494,6 +499,11 @@ pub(crate) fn generate_project_package_json(
                 typedoc: Some(TYPEDOC_VERSION.to_string()),
                 typescript_eslint: Some(TYPESCRIPT_ESLINT_VERSION.to_string()),
                 types_uuid: Some(TYPES_UUID_VERSION.to_string()),
+                types_express: Some(TYPES_EXPRESS_VERSION.to_string()),
+                types_express_serve_static_core: Some(
+                    TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION.to_string(),
+                ),
+                types_qs: Some(TYPES_QS_VERSION.to_string()),
             }
         }),
         mikro_orm: Some(ProjectMikroOrm {

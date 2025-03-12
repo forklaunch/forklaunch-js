@@ -19,6 +19,7 @@ RUST_BACKTRACE=1 cargo run init application compile-test-bun-application -d post
 cd compile-test-bun-application
 
 bun install
+bun run build
 bun migrate:init
 
 docker compose -p compile-test-bun-application down

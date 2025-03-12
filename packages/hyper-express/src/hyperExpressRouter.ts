@@ -4,7 +4,9 @@ import {
   ForklaunchExpressLikeRouter,
   ForklaunchRouter,
   HeadersObject,
+  MetricsDefinition,
   MiddlewareOrMiddlewareWithTypedHandler,
+  OpenTelemetryCollector,
   ParamsObject,
   QueryObject,
   ResponsesObject,
@@ -12,7 +14,10 @@ import {
 } from '@forklaunch/core/http';
 import {
   Router as ExpressRouter,
-  MiddlewareHandler
+  MiddlewareHandler,
+  MiddlewareNext,
+  Request,
+  Response
 } from '@forklaunch/hyper-express-fork';
 import { AnySchemaValidator } from '@forklaunch/validator';
 
@@ -28,15 +33,24 @@ export class Router<
     SV,
     BasePath,
     MiddlewareHandler,
-    ExpressRouter
+    ExpressRouter,
+    Request<Record<string, unknown>>,
+    Response<Record<string, unknown>>,
+    MiddlewareNext
   >
   implements ForklaunchRouter<SV>
 {
   constructor(
     public basePath: BasePath,
-    schemaValidator: SV
+    schemaValidator: SV,
+    openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
   ) {
-    super(basePath, schemaValidator, new ExpressRouter());
+    super(
+      basePath,
+      schemaValidator,
+      new ExpressRouter(),
+      openTelemetryCollector
+    );
 
     this.internal.use(polyfillGetHeaders);
     this.internal.use(contentParse);
@@ -50,7 +64,13 @@ export class Router<
     return this;
   }
 
-  any: TypedMiddlewareDefinition<this, SV> = <
+  any: TypedMiddlewareDefinition<
+    this,
+    SV,
+    Request<Record<string, unknown>>,
+    Response<Record<string, unknown>>,
+    MiddlewareNext
+  > = <
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -72,7 +92,10 @@ export class Router<
           ReqQuery,
           ReqHeaders,
           ResHeaders,
-          LocalsObj
+          LocalsObj,
+          Request<Record<string, unknown>>,
+          Response<Record<string, unknown>>,
+          MiddlewareNext
         >,
     contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
@@ -84,7 +107,10 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Request<Record<string, unknown>>,
+      Response<Record<string, unknown>>,
+      MiddlewareNext
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -96,7 +122,10 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Request<Record<string, unknown>>,
+      Response<Record<string, unknown>>,
+      MiddlewareNext
     >[]
   ) => {
     return this.registerMiddlewareHandler<

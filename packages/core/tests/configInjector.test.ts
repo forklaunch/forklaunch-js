@@ -25,7 +25,8 @@ const configValidator = {
   i: {
     j: string,
     k: number
-  }
+  },
+  j: string
 };
 
 describe('serviceFactory', () => {
@@ -76,6 +77,10 @@ describe('serviceFactory', () => {
       i: {
         lifetime: Lifetime.Singleton,
         value: staticI
+      },
+      j: {
+        lifetime: Lifetime.Singleton,
+        factory: ({ a }) => a
       }
     }
   );
@@ -84,7 +89,8 @@ describe('serviceFactory', () => {
     expect(configInjector.instances).toEqual({
       a: 'a',
       h: staticX,
-      i: staticI
+      i: staticI,
+      j: 'a'
     });
   });
 
@@ -98,7 +104,13 @@ describe('serviceFactory', () => {
         })
         .dummy()
     ).toBe('a20');
-    expect(Object.keys(configInjector.instances)).toEqual(['a', 'h', 'i', 'c']);
+    expect(Object.keys(configInjector.instances)).toEqual([
+      'a',
+      'h',
+      'i',
+      'j',
+      'c'
+    ]);
   });
 
   test('circular dependency', () => {
@@ -172,7 +184,8 @@ describe('serviceFactory', () => {
     expect(configInjector.instances).toEqual({
       a: 'a',
       h: staticX,
-      i: staticI
+      i: staticI,
+      j: 'a'
     });
   });
 });

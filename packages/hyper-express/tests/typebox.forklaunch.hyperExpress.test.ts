@@ -1,11 +1,21 @@
-import { SchemaValidator, string } from '@forklaunch/validator/typebox';
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
+import { number, SchemaValidator, string } from '@forklaunch/validator/typebox';
 import { forklaunchExpress, forklaunchRouter } from '../index';
+import { any } from '../src/handlers/any';
+import { get } from '../src/handlers/get';
+import { post } from '../src/handlers/post';
 
 const typeboxSchemaValidator = SchemaValidator();
-const forklaunchApplication = forklaunchExpress(typeboxSchemaValidator);
+const openTelemetryCollector = new OpenTelemetryCollector('test');
+
+const forklaunchApplication = forklaunchExpress(
+  typeboxSchemaValidator,
+  openTelemetryCollector
+);
 const forklaunchRouterInstance = forklaunchRouter(
   '/testpath',
-  typeboxSchemaValidator
+  typeboxSchemaValidator,
+  openTelemetryCollector
 );
 
 describe('Forklaunch Hyper-Express Tests', () => {
@@ -149,5 +159,113 @@ describe('Forklaunch Hyper-Express Tests', () => {
 
   afterAll(async () => {
     forklaunchApplication.internal.shutdown();
+  });
+});
+
+describe('handlers', () => {
+  const application = forklaunchExpress(
+    typeboxSchemaValidator,
+    openTelemetryCollector
+  );
+  const router = forklaunchRouter(
+    '/organization',
+    typeboxSchemaValidator,
+    openTelemetryCollector
+  );
+
+  it('should be able to create a path param handler', () => {
+    const getRequest = get(
+      typeboxSchemaValidator,
+      '/:id',
+      {
+        name: 'Get Organization',
+        summary: 'Gets an organization by ID',
+        responses: {
+          200: {
+            ret: number
+          },
+          404: string
+        },
+        params: {
+          id: string
+        },
+        requestHeaders: {
+          'x-test': string
+        },
+        auth: {
+          method: 'jwt',
+          allowedRoles: new Set(['admin']),
+          mapRoles: (sub, req) => {
+            return new Set(['admin', sub, req?.params.id ?? '']);
+          }
+        }
+      },
+      async (req, res) => {
+        const organizationDto = Number(req.params.id);
+        if (organizationDto) {
+          res.status(200).json({
+            ret: organizationDto
+          });
+        } else {
+          res.status(404).send('Organization not found');
+        }
+      }
+    );
+    application.get('/:id', getRequest);
+    const liveTypeFunction = router.get('/:id', getRequest);
+    liveTypeFunction.get('/organization/:id', {
+      params: {
+        id: 'string'
+      },
+      headers: {
+        'x-test': 'string'
+      }
+    });
+  });
+
+  it('should be able to create a body param handler', () => {
+    const postRequest = post(
+      typeboxSchemaValidator,
+      '/',
+      {
+        name: 'Create Organization',
+        summary: 'Creates an organization',
+        responses: {
+          200: {
+            name: string
+          }
+        },
+        body: {
+          name: string
+        }
+      },
+      async (req, res) => {
+        res.status(200).json(req.body);
+      }
+    );
+    application.post('/', postRequest);
+    const liveTypeFunction = router.post('/', postRequest);
+    liveTypeFunction.post('/organization', {
+      body: {
+        name: 'string'
+      }
+    });
+  });
+
+  it('should be able to create a middleware handler', () => {
+    const anyMiddleware = any(
+      typeboxSchemaValidator,
+      '/',
+      {
+        query: {
+          name: string
+        }
+      },
+      async (req, res) => {
+        req.query.name;
+      }
+    );
+    application.use(anyMiddleware);
+    router.any('/', anyMiddleware);
   });
 });

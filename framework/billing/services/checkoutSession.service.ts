@@ -9,9 +9,14 @@ import {
   SessionDtoMapper
 } from '../models/dtoMapper/session.dtoMapper';
 import { Session } from '../models/persistence/session.entity';
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
+import { Metrics } from '@forklaunch/framework-monitoring';
 
 export class BaseCheckoutSessionService implements CheckoutSessionService {
-  constructor(private cache: TtlCache) {}
+  constructor(
+    private cache: TtlCache,
+    private readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>
+  ) {}
 
   private createCacheKey = createCacheKey('checkout_session');
 

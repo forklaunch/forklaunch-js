@@ -1,6 +1,7 @@
 import {
   AnySchemaValidator,
-  prettyPrintParseErrors
+  prettyPrintParseErrors,
+  SchemaValidator
 } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
 import { isResponseShape } from '../../guards/isResponseShape';
@@ -36,7 +37,6 @@ export function parse<
   _res: ForklaunchResponse<ResBodyMap, ResHeaders, LocalsObj>,
   next?: ForklaunchNextFunction
 ) {
-  console.debug('[MIDDLEWARE] parseRequest started');
   const request = {
     params: req.params,
     query: req.query,
@@ -44,7 +44,10 @@ export function parse<
     body: req.body
   };
 
-  const parsedRequest = req.schemaValidator.parse(req.requestSchema, request);
+  const parsedRequest = (req.schemaValidator as SchemaValidator).parse(
+    req.requestSchema,
+    request
+  );
 
   if (
     parsedRequest.ok &&
@@ -64,7 +67,9 @@ export function parse<
         );
         break;
       case 'warning':
-        console.warn(prettyPrintParseErrors(parsedRequest.errors, 'Request'));
+        req.openTelemetryCollector.warn(
+          prettyPrintParseErrors(parsedRequest.errors, 'Request')
+        );
         break;
       case 'none':
         break;

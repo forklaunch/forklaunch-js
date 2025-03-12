@@ -1,10 +1,18 @@
 import { Controller } from '@forklaunch/core/controllers';
-import { get, post } from '@forklaunch/core/http';
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import {
   ConfigInjector,
   ScopedDependencyFactory
 } from '@forklaunch/core/services';
-import { SchemaValidator } from '@forklaunch/framework-core';
+import {
+  handlers,
+  NextFunction,
+  ParsedQs,
+  Request,
+  Response,
+  SchemaValidator
+} from '@forklaunch/framework-core';
+import { Metrics } from '@forklaunch/framework-monitoring';
 import { configValidator } from '../bootstrapper';
 import { SampleWorkerService } from '../interfaces/sampleWorker.interface';
 import {
@@ -13,7 +21,10 @@ import {
 } from '../models/dtoMapper/sampleWorker.dtoMapper';
 
 // Controller class that implements the SampleWorkerService interface
-export class SampleWorkerController implements Controller<SampleWorkerService> {
+export class SampleWorkerController
+  implements
+    Controller<SampleWorkerService, Request, Response, NextFunction, ParsedQs>
+{
   constructor(
     // scopeFactory returns new scopes that can be used for joint transactions
     private readonly scopeFactory: () => ConfigInjector<
@@ -25,16 +36,20 @@ export class SampleWorkerController implements Controller<SampleWorkerService> {
       SchemaValidator,
       typeof configValidator,
       'sampleWorkerService'
-    >
+    >,
+    private openTelemetryCollector: OpenTelemetryCollector<Metrics>
   ) {}
 
   // GET endpoint handler that returns a simple message
-  sampleWorkerGet = get(
+  sampleWorkerGet = handlers.get(
     SchemaValidator(),
-    '/',
+    '/:id',
     {
       name: 'sampleWorker',
       summary: 'SampleWorker',
+      params: {
+        id: 'string'
+      },
       responses: {
         // specifies the success response schema using DtoMapper constructs
         200: SampleWorkerResponseDtoMapper.schema()
@@ -50,7 +65,7 @@ export class SampleWorkerController implements Controller<SampleWorkerService> {
   );
 
   // POST endpoint handler that processes request body and returns response from service
-  sampleWorkerPost = post(
+  sampleWorkerPost = handlers.post(
     SchemaValidator(),
     '/',
     {

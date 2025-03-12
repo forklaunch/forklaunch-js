@@ -1,9 +1,23 @@
 import {
+  ATTR_HTTP_RESPONSE_STATUS_CODE,
   ForklaunchExpressLikeApplication,
-  generateSwaggerDocument
+  generateSwaggerDocument,
+  isForklaunchRequest,
+  logger,
+  meta,
+  MetricsDefinition,
+  OpenTelemetryCollector
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
-import express, { ErrorRequestHandler, Express, RequestHandler } from 'express';
+import { apiReference } from '@scalar/express-api-reference';
+import express, {
+  ErrorRequestHandler,
+  Express,
+  NextFunction,
+  Request,
+  RequestHandler,
+  Response
+} from 'express';
 import { Server } from 'http';
 import swaggerUi from 'swagger-ui-express';
 
@@ -14,14 +28,24 @@ import swaggerUi from 'swagger-ui-express';
  */
 export class Application<
   SV extends AnySchemaValidator
-> extends ForklaunchExpressLikeApplication<SV, Express, RequestHandler> {
+> extends ForklaunchExpressLikeApplication<
+  SV,
+  Express,
+  RequestHandler,
+  Request,
+  Response,
+  NextFunction
+> {
   /**
    * Creates an instance of Application.
    *
    * @param {SV} schemaValidator - The schema validator.
    */
-  constructor(schemaValidator: SV) {
-    super(schemaValidator, express());
+  constructor(
+    schemaValidator: SV,
+    openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
+  ) {
+    super(schemaValidator, express(), openTelemetryCollector);
   }
 
   /**
@@ -45,20 +69,41 @@ export class Application<
     const port =
       typeof args[0] === 'number' ? args[0] : Number(process.env.PORT);
     this.internal.use(
-      `/api/${process.env.VERSION ?? 'v1'}${process.env.DOCS_PATH ?? '/docs'}`,
+      `/api/${process.env.VERSION ?? 'v1'}/swagger`,
       swaggerUi.serve,
       swaggerUi.setup(
         generateSwaggerDocument<SV>(this.schemaValidator, port, this.routers)
       )
     );
 
+    this.internal.use(
+      `/api/${process.env.VERSION ?? 'v1'}${process.env.DOCS_PATH ?? '/docs'}`,
+      apiReference({
+        spec: {
+          content: generateSwaggerDocument<SV>(
+            this.schemaValidator,
+            port,
+            this.routers
+          )
+        }
+      }) as unknown as RequestHandler
+    );
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
-      console.error(err);
+    const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
       res.locals.errorMessage = err.message;
+      res.type('text/plain');
       res
         .status(res.statusCode && res.statusCode >= 400 ? res.statusCode : 500)
-        .send(`Internal server error:\n\n${err.message}`);
+        .send(
+          `Internal server error:\n\n${isForklaunchRequest(req) ? req.context.correlationId : 'No correlation ID'}`
+        );
+      logger('error').error(
+        err.stack ?? err.message,
+        meta({
+          [ATTR_HTTP_RESPONSE_STATUS_CODE]: res.statusCode ?? 500
+        })
+      );
     };
     this.internal.use(errorHandler);
     return this.internal.listen(...(args as (() => void)[]));

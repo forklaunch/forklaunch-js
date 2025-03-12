@@ -21,7 +21,10 @@ import { TypedHandler } from './typedHandler.types';
 export interface LiveTypeRouteDefinition<
   SV extends AnySchemaValidator,
   BasePath extends `/${string}`,
-  ContractMethod extends Method
+  ContractMethod extends Method,
+  BaseRequest,
+  BaseResponse,
+  NextFunction
 > {
   <
     Path extends `/${string}`,
@@ -45,7 +48,10 @@ export interface LiveTypeRouteDefinition<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >
   ): {
     [Key in ContractMethod]: LiveTypeFunction<
@@ -80,7 +86,10 @@ export interface LiveTypeRouteDefinition<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >,
     ...middlewareAndTypedHandler: [
       ...ExpressLikeSchemaHandler<
@@ -91,7 +100,10 @@ export interface LiveTypeRouteDefinition<
         ReqQuery,
         ReqHeaders,
         ResHeaders,
-        LocalsObj
+        LocalsObj,
+        BaseRequest,
+        BaseResponse,
+        NextFunction
       >[],
       TypedHandler<
         SV,
@@ -103,7 +115,10 @@ export interface LiveTypeRouteDefinition<
         ReqQuery,
         ReqHeaders,
         ResHeaders,
-        LocalsObj
+        LocalsObj,
+        BaseRequest,
+        BaseResponse,
+        NextFunction
       >
     ]
   ): {
@@ -139,7 +154,8 @@ export interface LiveTypeRouteDefinition<
       ReqBody,
       ReqQuery,
       ReqHeaders,
-      ResHeaders
+      ResHeaders,
+      BaseRequest
     >,
     ...middleware: ExpressLikeSchemaHandler<
       SV,
@@ -149,7 +165,10 @@ export interface LiveTypeRouteDefinition<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >[]
   ): {
     [Key in ContractMethod]: LiveTypeFunction<
@@ -167,7 +186,10 @@ export interface LiveTypeRouteDefinition<
 
 export interface TypedMiddlewareDefinition<
   ChainableRouter,
-  SV extends AnySchemaValidator
+  SV extends AnySchemaValidator,
+  BaseRequest,
+  BaseResponse,
+  NextFunction
 > {
   <
     Path extends `/${string}`,
@@ -191,7 +213,10 @@ export interface TypedMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >
   ): ChainableRouter;
 
@@ -215,7 +240,10 @@ export interface TypedMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >
   ): ChainableRouter;
 
@@ -239,7 +267,10 @@ export interface TypedMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >,
     ...middlewareAndTypedHandler: [
       ...ExpressLikeSchemaHandler<
@@ -250,7 +281,10 @@ export interface TypedMiddlewareDefinition<
         ReqQuery,
         ReqHeaders,
         ResHeaders,
-        LocalsObj
+        LocalsObj,
+        BaseRequest,
+        BaseResponse,
+        NextFunction
       >[],
       TypedHandler<
         SV,
@@ -262,7 +296,10 @@ export interface TypedMiddlewareDefinition<
         ReqQuery,
         ReqHeaders,
         ResHeaders,
-        LocalsObj
+        LocalsObj,
+        BaseRequest,
+        BaseResponse,
+        NextFunction
       >
     ]
   ): ChainableRouter;
@@ -285,7 +322,10 @@ export interface TypedMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >,
     ...middlewareAndTypedHandler: [
       ...ExpressLikeSchemaHandler<
@@ -296,7 +336,10 @@ export interface TypedMiddlewareDefinition<
         ReqQuery,
         ReqHeaders,
         ResHeaders,
-        LocalsObj
+        LocalsObj,
+        BaseRequest,
+        BaseResponse,
+        NextFunction
       >[],
       TypedHandler<
         SV,
@@ -308,7 +351,10 @@ export interface TypedMiddlewareDefinition<
         ReqQuery,
         ReqHeaders,
         ResHeaders,
-        LocalsObj
+        LocalsObj,
+        BaseRequest,
+        BaseResponse,
+        NextFunction
       >
     ]
   ): ChainableRouter;
@@ -333,7 +379,8 @@ export interface TypedMiddlewareDefinition<
       ReqBody,
       ReqQuery,
       ReqHeaders,
-      ResHeaders
+      ResHeaders,
+      BaseRequest
     >,
     middleware: ExpressLikeSchemaHandler<
       SV,
@@ -343,7 +390,10 @@ export interface TypedMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >,
     ...middlewares: ExpressLikeSchemaHandler<
       SV,
@@ -353,7 +403,10 @@ export interface TypedMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >[]
   ): ChainableRouter;
 
@@ -376,7 +429,8 @@ export interface TypedMiddlewareDefinition<
       ReqBody,
       ReqQuery,
       ReqHeaders,
-      ResHeaders
+      ResHeaders,
+      BaseRequest
     >,
     middleware: ExpressLikeSchemaHandler<
       SV,
@@ -386,7 +440,10 @@ export interface TypedMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >,
     ...middlewares: ExpressLikeSchemaHandler<
       SV,
@@ -396,7 +453,10 @@ export interface TypedMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >[]
   ): ChainableRouter;
 }
@@ -405,8 +465,17 @@ export interface TypedNestableMiddlewareDefinition<
   ChainableRouter,
   RouterHandler,
   Internal extends ExpressLikeRouter<RouterHandler, Internal>,
-  SV extends AnySchemaValidator
-> extends TypedMiddlewareDefinition<ChainableRouter, SV> {
+  SV extends AnySchemaValidator,
+  BaseRequest,
+  BaseResponse,
+  NextFunction
+> extends TypedMiddlewareDefinition<
+    ChainableRouter,
+    SV,
+    BaseRequest,
+    BaseResponse,
+    NextFunction
+  > {
   (router: ConstrainedForklaunchRouter<SV, RouterHandler>): ChainableRouter;
 
   <Path extends `/${string}`>(
@@ -435,7 +504,10 @@ export interface TypedNestableMiddlewareDefinition<
           ReqQuery,
           ReqHeaders,
           ResHeaders,
-          LocalsObj
+          LocalsObj,
+          BaseRequest,
+          BaseResponse,
+          NextFunction
         >
       | ConstrainedForklaunchRouter<SV, RouterHandler>,
     ...middlewareAndTypedHandler: [
@@ -448,7 +520,10 @@ export interface TypedNestableMiddlewareDefinition<
             ReqQuery,
             ReqHeaders,
             ResHeaders,
-            LocalsObj
+            LocalsObj,
+            BaseRequest,
+            BaseResponse,
+            NextFunction
           >
         | ConstrainedForklaunchRouter<SV, RouterHandler>
       )[],
@@ -462,7 +537,10 @@ export interface TypedNestableMiddlewareDefinition<
         ReqQuery,
         ReqHeaders,
         ResHeaders,
-        LocalsObj
+        LocalsObj,
+        BaseRequest,
+        BaseResponse,
+        NextFunction
       >
     ]
   ): ChainableRouter;
@@ -486,7 +564,10 @@ export interface TypedNestableMiddlewareDefinition<
           ReqQuery,
           ReqHeaders,
           ResHeaders,
-          LocalsObj
+          LocalsObj,
+          BaseRequest,
+          BaseResponse,
+          NextFunction
         >
       | ConstrainedForklaunchRouter<SV, RouterHandler>,
     ...middlewareAndTypedHandler: [
@@ -499,7 +580,10 @@ export interface TypedNestableMiddlewareDefinition<
             ReqQuery,
             ReqHeaders,
             ResHeaders,
-            LocalsObj
+            LocalsObj,
+            BaseRequest,
+            BaseResponse,
+            NextFunction
           >
         | ConstrainedForklaunchRouter<SV, RouterHandler>
       )[],
@@ -513,7 +597,10 @@ export interface TypedNestableMiddlewareDefinition<
         ReqQuery,
         ReqHeaders,
         ResHeaders,
-        LocalsObj
+        LocalsObj,
+        BaseRequest,
+        BaseResponse,
+        NextFunction
       >
     ]
   ): ChainableRouter;
@@ -538,7 +625,8 @@ export interface TypedNestableMiddlewareDefinition<
       ReqBody,
       ReqQuery,
       ReqHeaders,
-      ResHeaders
+      ResHeaders,
+      BaseRequest
     >,
     middleware:
       | ExpressLikeSchemaHandler<
@@ -549,7 +637,10 @@ export interface TypedNestableMiddlewareDefinition<
           ReqQuery,
           ReqHeaders,
           ResHeaders,
-          LocalsObj
+          LocalsObj,
+          BaseRequest,
+          BaseResponse,
+          NextFunction
         >
       | ConstrainedForklaunchRouter<SV, RouterHandler>,
     ...middlewares: (
@@ -561,7 +652,10 @@ export interface TypedNestableMiddlewareDefinition<
           ReqQuery,
           ReqHeaders,
           ResHeaders,
-          LocalsObj
+          LocalsObj,
+          BaseRequest,
+          BaseResponse,
+          NextFunction
         >
       | ConstrainedForklaunchRouter<SV, RouterHandler>
     )[]
@@ -586,7 +680,8 @@ export interface TypedNestableMiddlewareDefinition<
       ReqBody,
       ReqQuery,
       ReqHeaders,
-      ResHeaders
+      ResHeaders,
+      BaseRequest
     >,
     middleware:
       | ExpressLikeSchemaHandler<
@@ -597,7 +692,10 @@ export interface TypedNestableMiddlewareDefinition<
           ReqQuery,
           ReqHeaders,
           ResHeaders,
-          LocalsObj
+          LocalsObj,
+          BaseRequest,
+          BaseResponse,
+          NextFunction
         >
       | ConstrainedForklaunchRouter<SV, RouterHandler>,
     ...middlewares: (
@@ -609,7 +707,10 @@ export interface TypedNestableMiddlewareDefinition<
           ReqQuery,
           ReqHeaders,
           ResHeaders,
-          LocalsObj
+          LocalsObj,
+          BaseRequest,
+          BaseResponse,
+          NextFunction
         >
       | ConstrainedForklaunchRouter<SV, RouterHandler>
     )[]
@@ -626,7 +727,10 @@ export type ContractDetailsOrMiddlewareOrTypedHandler<
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
-  LocalsObj extends Record<string, unknown>
+  LocalsObj extends Record<string, unknown>,
+  BaseRequest,
+  BaseResponse,
+  NextFunction
 > =
   | ContractDetails<
       SV,
@@ -637,7 +741,8 @@ export type ContractDetailsOrMiddlewareOrTypedHandler<
       ReqBody,
       ReqQuery,
       ReqHeaders,
-      ResHeaders
+      ResHeaders,
+      BaseRequest
     >
   | ExpressLikeSchemaHandler<
       SV,
@@ -647,7 +752,10 @@ export type ContractDetailsOrMiddlewareOrTypedHandler<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >
   | TypedHandler<
       SV,
@@ -659,7 +767,10 @@ export type ContractDetailsOrMiddlewareOrTypedHandler<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >;
 
 export type MiddlewareOrMiddlewareWithTypedHandler<
@@ -672,7 +783,10 @@ export type MiddlewareOrMiddlewareWithTypedHandler<
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
-  LocalsObj extends Record<string, unknown>
+  LocalsObj extends Record<string, unknown>,
+  BaseRequest,
+  BaseResponse,
+  NextFunction
 > =
   | ExpressLikeSchemaHandler<
       SV,
@@ -682,7 +796,10 @@ export type MiddlewareOrMiddlewareWithTypedHandler<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >
   | TypedHandler<
       SV,
@@ -694,5 +811,8 @@ export type MiddlewareOrMiddlewareWithTypedHandler<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
     >;

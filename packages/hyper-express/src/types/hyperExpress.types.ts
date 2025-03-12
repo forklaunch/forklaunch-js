@@ -22,7 +22,7 @@ import { ParsedQs } from 'qs';
  * @template ReqQuery - A type for the request query, defaulting to ParsedQs.
  * @template LocalsObj - A type for local variables, defaulting to an empty object.
  */
-export interface Request<
+export interface InternalRequest<
   SV extends AnySchemaValidator,
   P extends ParamsDictionary,
   ReqBody extends Record<string, unknown>,
@@ -30,7 +30,10 @@ export interface Request<
   ReqHeaders extends Record<string, string>,
   LocalsObj extends Record<string, unknown>
 > extends ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>,
-    Omit<ExpressRequest<LocalsObj>, 'method' | 'params' | 'query' | 'headers'> {
+    Omit<
+      ExpressRequest<LocalsObj>,
+      'method' | 'params' | 'query' | 'headers' | 'path'
+    > {
   /** The request body */
   body: ReqBody;
   /** The request query parameters */
@@ -46,7 +49,7 @@ export interface Request<
  * @template LocalsObj - A type for local variables, defaulting to an empty object.
  * @template StatusCode - A type for the status code, defaulting to number.
  */
-export interface Response<
+export interface InternalResponse<
   ResBodyMap extends Record<number, unknown>,
   ResHeaders extends Record<string, string>,
   LocalsObj extends Record<string, unknown>
@@ -62,6 +65,8 @@ export interface Response<
       | 'json'
       | 'jsonp'
       | 'end'
+      | 'type'
+      | 'on'
     >,
     ForklaunchStatusResponse<ForklaunchSendableData> {
   /** The body data of the response */

@@ -1,2 +1,2 @@
-export * from './persistence';
+export * from './models';
 export * from './registrations';

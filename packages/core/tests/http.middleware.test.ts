@@ -1,4 +1,4 @@
-import { IdiomaticSchema, SchemaValidator } from '@forklaunch/validator';
+import { IdiomaticSchema } from '@forklaunch/validator';
 import {
   MockSchemaValidator,
   literal,
@@ -10,6 +10,8 @@ import {
   ForklaunchRequest,
   ForklaunchResponse,
   HttpContractDetails,
+  MetricsDefinition,
+  OpenTelemetryCollector,
   ParamsDictionary,
   RequestContext
 } from '../src/http';
@@ -56,10 +58,12 @@ describe('http middleware tests', () => {
     };
 
     req = {
+      path: '/test',
+      originalPath: '/test',
       method: 'POST',
       context: {} as RequestContext,
       contractDetails: {} as HttpContractDetails<MockSchemaValidator>,
-      schemaValidator: {} as SchemaValidator,
+      schemaValidator: {} as MockSchemaValidator,
       params: testSchema,
       headers: testSchema,
       body: testSchema,
@@ -69,7 +73,8 @@ describe('http middleware tests', () => {
         query: testSchema,
         headers: testSchema,
         body: testSchema
-      }
+      },
+      openTelemetryCollector: {} as OpenTelemetryCollector<MetricsDefinition>
     };
 
     res = {
@@ -83,6 +88,8 @@ describe('http middleware tests', () => {
         send: () => {}
       }),
       end: () => {},
+      type: () => {},
+      on: () => res,
       headersSent: false,
       locals: {},
       cors: true,
@@ -104,7 +111,7 @@ describe('http middleware tests', () => {
 
   test('create request context', async () => {
     req.context = {} as RequestContext;
-    req.schemaValidator = {} as SchemaValidator;
+    req.schemaValidator = {} as MockSchemaValidator;
     createContext(mockSchemaValidator)(req, res, nextFunction);
     expect(req.context.correlationId).not.toBe('123');
     expect(req.schemaValidator).toBe(mockSchemaValidator);
@@ -112,12 +119,18 @@ describe('http middleware tests', () => {
 
   test('request enrich details', async () => {
     req.contractDetails = {} as HttpContractDetails<MockSchemaValidator>;
-    enrichDetails(contractDetails, testSchema, {
-      headers: { 'x-correlation-id': '123' },
-      responses: {
-        200: testSchema
-      }
-    })(req, res, nextFunction);
+    enrichDetails(
+      '/test',
+      contractDetails,
+      testSchema,
+      {
+        headers: { 'x-correlation-id': '123' },
+        responses: {
+          200: testSchema
+        }
+      },
+      new OpenTelemetryCollector('test')
+    )(req, res, nextFunction);
     expect(req.contractDetails).toEqual(contractDetails);
   });
 

@@ -1,6 +1,11 @@
-import { AnySchemaValidator, SchemaValidator } from '@forklaunch/validator';
+import { AnySchemaValidator } from '@forklaunch/validator';
+import { trace } from '@opentelemetry/api';
 import { v4 } from 'uuid';
-import { ExpressLikeSchemaHandler } from '../../types/apiDefinition.types';
+import { ATTR_CORRELATION_ID } from '../../telemetry/constants';
+import {
+  ExpressLikeSchemaHandler,
+  ForklaunchNextFunction
+} from '../../types/apiDefinition.types';
 import {
   Body,
   HeadersObject,
@@ -38,11 +43,13 @@ export function createContext<
   ReqQuery,
   ReqHeaders,
   ResHeaders,
-  LocalsObj
+  LocalsObj,
+  unknown,
+  unknown,
+  ForklaunchNextFunction
 > {
-  return (req, res, next?) => {
-    console.debug('[MIDDLEWARE] createRequestContext started');
-    req.schemaValidator = schemaValidator as SchemaValidator;
+  return function setContext(req, res, next?) {
+    req.schemaValidator = schemaValidator;
 
     let correlationId = v4();
 
@@ -55,6 +62,12 @@ export function createContext<
     req.context = {
       correlationId: correlationId
     };
+
+    const span = trace.getActiveSpan();
+    if (span != null) {
+      req.context.span = span;
+      req.context.span?.setAttribute(ATTR_CORRELATION_ID, correlationId);
+    }
 
     next?.();
   };

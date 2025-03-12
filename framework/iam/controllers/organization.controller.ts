@@ -1,7 +1,16 @@
 import { Controller } from '@forklaunch/core/controllers';
-import { delete_, get, post, put } from '@forklaunch/core/http';
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
-import { SchemaValidator, string } from '@forklaunch/framework-core';
+import {
+  handlers,
+  NextFunction,
+  ParsedQs,
+  Request,
+  Response,
+  SchemaValidator,
+  string
+} from '@forklaunch/framework-core';
+import { Metrics } from '@forklaunch/framework-monitoring';
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { configValidator } from '../bootstrapper';
 import { OrganizationService } from '../interfaces/organization.service.interface';
@@ -11,16 +20,20 @@ import {
   UpdateOrganizationDtoMapper
 } from '../models/dtoMapper/organization.dtoMapper';
 
-export class OrganizationController implements Controller<OrganizationService> {
+export class OrganizationController
+  implements
+    Controller<OrganizationService, Request, Response, NextFunction, ParsedQs>
+{
   constructor(
     private readonly serviceFactory: ScopedDependencyFactory<
       SchemaValidator,
       typeof configValidator,
       'organizationService'
-    >
+    >,
+    private readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>
   ) {}
 
-  createOrganization = post(
+  createOrganization = handlers.post(
     SchemaValidator(),
     '/',
     {
@@ -39,6 +52,10 @@ export class OrganizationController implements Controller<OrganizationService> {
           .json(await this.serviceFactory().createOrganization(req.body));
       } catch (error: Error | unknown) {
         if (error instanceof UniqueConstraintViolationException) {
+          this.openTelemetryCollector.log(
+            'error',
+            'Organization already exists'
+          );
           res.status(409).send('Organization already exists');
         } else {
           throw error;
@@ -47,7 +64,7 @@ export class OrganizationController implements Controller<OrganizationService> {
     }
   );
 
-  getOrganization = get(
+  getOrganization = handlers.get(
     SchemaValidator(),
     '/:id',
     {
@@ -68,12 +85,13 @@ export class OrganizationController implements Controller<OrganizationService> {
       if (organizationDto) {
         res.status(200).json(organizationDto);
       } else {
+        this.openTelemetryCollector.log('error', 'Organization not found');
         res.status(404).send('Organization not found');
       }
     }
   );
 
-  updateOrganization = put(
+  updateOrganization = handlers.put(
     SchemaValidator(),
     '/',
     {
@@ -92,7 +110,7 @@ export class OrganizationController implements Controller<OrganizationService> {
     }
   );
 
-  deleteOrganization = delete_(
+  deleteOrganization = handlers.delete(
     SchemaValidator(),
     '/:id',
     {

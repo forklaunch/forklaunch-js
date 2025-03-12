@@ -1,4 +1,6 @@
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { SchemaValidator } from '@forklaunch/framework-core';
+import { Metrics } from '@forklaunch/framework-monitoring';
 import { EntityManager } from '@mikro-orm/core';
 import { SubscriptionService } from '../interfaces/subscription.service.interface';
 import {
@@ -13,7 +15,10 @@ import { PartyEnum } from '../models/enum/party.enum';
 import { Subscription } from '../models/persistence/subscription.entity';
 
 export class BaseSubscriptionService implements SubscriptionService {
-  constructor(private em: EntityManager) {}
+  constructor(
+    private em: EntityManager,
+    private readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>
+  ) {}
 
   async createSubscription(
     subscriptionDto: CreateSubscriptionDto,

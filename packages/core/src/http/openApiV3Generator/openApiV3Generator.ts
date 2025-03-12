@@ -13,7 +13,7 @@ import {
 } from 'openapi3-ts/oas31';
 import { HttpContractDetails } from '../types/contractDetails.types';
 import { ForklaunchRouter } from '../types/router.types';
-import HTTPStatuses from '../utils/httpStatusCodes';
+import HTTPStatuses from '../httpStatusCodes';
 
 /**
  * Capitalizes the first letter of a string.

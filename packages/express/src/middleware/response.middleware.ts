@@ -2,7 +2,7 @@ import { enrichExpressLikeSend, ParamsDictionary } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { NextFunction } from 'express';
 import { ParsedQs } from 'qs';
-import { Request, Response } from '../types/express.types';
+import { MiddlewareRequest, MiddlewareResponse } from '../types/express.types';
 
 /**
  * Middleware to enrich the response transmission by intercepting and parsing responses before they are sent.
@@ -13,7 +13,7 @@ import { Request, Response } from '../types/express.types';
  * @param {NextFunction} [next] - The next middleware function.
  */
 export function enrichResponseTransmission<SV extends AnySchemaValidator>(
-  req: Request<
+  req: MiddlewareRequest<
     SV,
     ParamsDictionary,
     Record<number, unknown>,
@@ -22,7 +22,7 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
     Record<string, string>,
     Record<string, unknown>
   >,
-  res: Response<
+  res: MiddlewareResponse<
     Record<number, unknown>,
     Record<string, string>,
     Record<string, unknown>
@@ -45,7 +45,17 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
    */
   res.json = function <T extends Record<number, unknown>>(data?: T) {
     res.bodyData = data;
-    return originalJson.call(this, data) as T;
+    enrichExpressLikeSend<
+      SV,
+      ParamsDictionary,
+      Record<number, unknown>,
+      Record<string, unknown>,
+      ParsedQs,
+      Record<string, string>,
+      Record<string, string>,
+      Record<string, unknown>
+    >(this, req, res, originalJson, data, !res.cors);
+    return data;
   };
 
   /**
@@ -58,7 +68,6 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
     if (!res.bodyData) {
       res.bodyData = data;
     }
-
     return enrichExpressLikeSend<
       SV,
       ParamsDictionary,

@@ -1,4 +1,5 @@
 import { AnySchemaValidator } from '@forklaunch/validator';
+import { isPath } from '../guards/isPath';
 import { ExpressLikeSchemaHandler } from '../types/apiDefinition.types';
 import {
   Body,
@@ -9,6 +10,7 @@ import {
   QueryObject,
   ResponsesObject
 } from '../types/contractDetails.types';
+import { ExpressLikeTypedHandler } from '../types/typedHandler.types';
 
 /**
  * Router class that sets up routes and middleware for an Express router, for use with controller/routes pattern.
@@ -27,10 +29,13 @@ export function typedHandler<
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
-  LocalsObj extends Record<string, unknown>
+  LocalsObj extends Record<string, unknown>,
+  BaseRequest,
+  BaseResponse,
+  NextFunction
 >(
   _schemaValidator: SV,
-  _path: Path,
+  _path: Path | undefined,
   _contractMethod: ContractMethod,
   contractDetails: ContractDetails<
     SV,
@@ -41,7 +46,8 @@ export function typedHandler<
     ReqBody,
     ReqQuery,
     ReqHeaders,
-    ResHeaders
+    ResHeaders,
+    BaseRequest
   >,
   ...handlers: ExpressLikeSchemaHandler<
     SV,
@@ -51,32 +57,26 @@ export function typedHandler<
     ReqQuery,
     ReqHeaders,
     ResHeaders,
-    LocalsObj
+    LocalsObj,
+    BaseRequest,
+    BaseResponse,
+    NextFunction
   >[]
-): {
-  _typedHandler: true;
-  contractDetails: ContractDetails<
-    SV,
-    ContractMethod,
-    Path,
-    P,
-    ResBodyMap,
-    ReqBody,
-    ReqQuery,
-    ReqHeaders,
-    ResHeaders
-  >;
-  handlers: ExpressLikeSchemaHandler<
-    SV,
-    P,
-    ResBodyMap,
-    ReqBody,
-    ReqQuery,
-    ReqHeaders,
-    ResHeaders,
-    LocalsObj
-  >[];
-};
+): ExpressLikeTypedHandler<
+  SV,
+  ContractMethod,
+  Path,
+  P,
+  ResBodyMap,
+  ReqBody,
+  ReqQuery,
+  ReqHeaders,
+  ResHeaders,
+  LocalsObj,
+  BaseRequest,
+  BaseResponse,
+  NextFunction
+>;
 export function typedHandler<
   SV extends AnySchemaValidator,
   ContractMethod extends Method,
@@ -87,7 +87,10 @@ export function typedHandler<
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
-  LocalsObj extends Record<string, unknown>
+  LocalsObj extends Record<string, unknown>,
+  BaseRequest,
+  BaseResponse,
+  NextFunction
 >(
   _schemaValidator: SV,
   _contractMethod: ContractMethod,
@@ -100,7 +103,8 @@ export function typedHandler<
     ReqBody,
     ReqQuery,
     ReqHeaders,
-    ResHeaders
+    ResHeaders,
+    BaseRequest
   >,
   ...handlers: ExpressLikeSchemaHandler<
     SV,
@@ -110,32 +114,26 @@ export function typedHandler<
     ReqQuery,
     ReqHeaders,
     ResHeaders,
-    LocalsObj
+    LocalsObj,
+    BaseRequest,
+    BaseResponse,
+    NextFunction
   >[]
-): {
-  _typedHandler: true;
-  contractDetails: ContractDetails<
-    SV,
-    ContractMethod,
-    Path,
-    P,
-    ResBodyMap,
-    ReqBody,
-    ReqQuery,
-    ReqHeaders,
-    ResHeaders
-  >;
-  handlers: ExpressLikeSchemaHandler<
-    SV,
-    P,
-    ResBodyMap,
-    ReqBody,
-    ReqQuery,
-    ReqHeaders,
-    ResHeaders,
-    LocalsObj
-  >[];
-};
+): ExpressLikeTypedHandler<
+  SV,
+  ContractMethod,
+  Path,
+  P,
+  ResBodyMap,
+  ReqBody,
+  ReqQuery,
+  ReqHeaders,
+  ResHeaders,
+  LocalsObj,
+  BaseRequest,
+  BaseResponse,
+  NextFunction
+>;
 export function typedHandler<
   SV extends AnySchemaValidator,
   ContractMethod extends Method,
@@ -146,10 +144,13 @@ export function typedHandler<
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
-  LocalsObj extends Record<string, unknown>
+  LocalsObj extends Record<string, unknown>,
+  BaseRequest,
+  BaseResponse,
+  NextFunction
 >(
   _schemaValidator: SV,
-  _pathOrContractDetails: Path | ContractMethod,
+  pathOrContractMethod: Path | ContractMethod,
   contractMethodOrContractDetails:
     | ContractMethod
     | ContractDetails<
@@ -161,7 +162,8 @@ export function typedHandler<
         ReqBody,
         ReqQuery,
         ReqHeaders,
-        ResHeaders
+        ResHeaders,
+        BaseRequest
       >,
   contractDetailsOrHandler:
     | ContractDetails<
@@ -173,7 +175,8 @@ export function typedHandler<
         ReqBody,
         ReqQuery,
         ReqHeaders,
-        ResHeaders
+        ResHeaders,
+        BaseRequest
       >
     | ExpressLikeSchemaHandler<
         SV,
@@ -183,7 +186,10 @@ export function typedHandler<
         ReqQuery,
         ReqHeaders,
         ResHeaders,
-        LocalsObj
+        LocalsObj,
+        BaseRequest,
+        BaseResponse,
+        NextFunction
       >,
   ...handlerArray: ExpressLikeSchemaHandler<
     SV,
@@ -193,32 +199,26 @@ export function typedHandler<
     ReqQuery,
     ReqHeaders,
     ResHeaders,
-    LocalsObj
+    LocalsObj,
+    BaseRequest,
+    BaseResponse,
+    NextFunction
   >[]
-): {
-  _typedHandler: true;
-  contractDetails: ContractDetails<
-    SV,
-    ContractMethod,
-    Path,
-    P,
-    ResBodyMap,
-    ReqBody,
-    ReqQuery,
-    ReqHeaders,
-    ResHeaders
-  >;
-  handlers: ExpressLikeSchemaHandler<
-    SV,
-    P,
-    ResBodyMap,
-    ReqBody,
-    ReqQuery,
-    ReqHeaders,
-    ResHeaders,
-    LocalsObj
-  >[];
-} {
+): ExpressLikeTypedHandler<
+  SV,
+  ContractMethod,
+  Path,
+  P,
+  ResBodyMap,
+  ReqBody,
+  ReqQuery,
+  ReqHeaders,
+  ResHeaders,
+  LocalsObj,
+  BaseRequest,
+  BaseResponse,
+  NextFunction
+> {
   // TODO: Clean this up with guards
 
   let contractDetails: ContractDetails<
@@ -230,7 +230,8 @@ export function typedHandler<
     ReqBody,
     ReqQuery,
     ReqHeaders,
-    ResHeaders
+    ResHeaders,
+    BaseRequest
   >;
   let handlers: ExpressLikeSchemaHandler<
     SV,
@@ -240,7 +241,10 @@ export function typedHandler<
     ReqQuery,
     ReqHeaders,
     ResHeaders,
-    LocalsObj
+    LocalsObj,
+    BaseRequest,
+    BaseResponse,
+    NextFunction
   >[];
   // If path is not provided
   if (typeof contractMethodOrContractDetails === 'string') {
@@ -262,6 +266,7 @@ export function typedHandler<
   }
   return {
     _typedHandler: true as const,
+    _path: isPath(pathOrContractMethod) ? pathOrContractMethod : undefined,
     contractDetails,
     handlers
   };

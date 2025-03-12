@@ -4,13 +4,13 @@ import {
 } from '@forklaunch/core/dtoMapper';
 import {
   array,
+  collection,
   date,
   optional,
   SchemaValidator,
   string,
   uuid
 } from '@forklaunch/framework-core';
-import { Collection } from '@mikro-orm/core';
 import { Permission } from '../persistence/permission.entity';
 import { Role } from '../persistence/role.entity';
 import { PermissionDtoMapper } from './permission.dtoMapper';
@@ -28,7 +28,7 @@ export class CreateRoleDtoMapper extends RequestDtoMapper<
   toEntity(permissions: Permission[]): Role {
     return Role.create({
       ...this.dto,
-      permissions: new Collection(permissions)
+      permissions: collection(permissions)
     });
   }
 }
@@ -47,7 +47,7 @@ export class UpdateRoleDtoMapper extends RequestDtoMapper<
   toEntity(permissions: Permission[]): Role {
     return Role.update({
       ...this.dto,
-      ...(permissions ? { permissions: new Collection(permissions) } : {})
+      ...(permissions ? { permissions: collection(permissions) } : {})
     });
   }
 }

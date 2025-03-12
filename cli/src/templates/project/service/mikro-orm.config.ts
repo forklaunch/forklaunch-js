@@ -5,41 +5,42 @@ import { number, SchemaValidator, string } from '@{{app_name}}/core';{{^is_mongo
 import { Platform, TextType, Type } from '@mikro-orm/core';{{/is_mongo}}
 import { {{db_driver}} } from '@mikro-orm/{{database}}';
 import dotenv from 'dotenv';
+import * as entities from './models/persistence';
 
 dotenv.config({ path: getEnvVar('ENV_FILE_PATH') });
 
 const configInjector = new ConfigInjector(
   SchemaValidator(),
   {
-    dbName: string,
-    host: string,
-    user: string,
-    password: string,
-    port: number,
-    environment: string
+    DB_NAME: string,
+    DB_HOST: string,
+    DB_USER: string,
+    DB_PASSWORD: string,
+    DB_PORT: number,
+    ENV: string
   },
   {
-    dbName: {
+    DB_NAME: {
       lifetime: Lifetime.Singleton,
       value: getEnvVar('DB_NAME')
     },
-    host: {
+    DB_HOST: {
       lifetime: Lifetime.Singleton,
       value: getEnvVar('DB_HOST')
     },
-    user: {
+    DB_USER: {
       lifetime: Lifetime.Singleton,
       value: getEnvVar('DB_USER')
     },
-    password: {
+    DB_PASSWORD: {
       lifetime: Lifetime.Singleton,
       value: getEnvVar('DB_PASSWORD')
     },
-    port: {
+    DB_PORT: {
       lifetime: Lifetime.Singleton,
       value: Number(getEnvVar('DB_PORT'))
     },
-    environment: {
+    ENV: {
       lifetime: Lifetime.Singleton,
       value: getEnvVar('ENV')
     }
@@ -51,25 +52,24 @@ const validConfigInjector = configInjector.validateConfigSingletons(
 );{{#is_mongo}}
 
 const clientUrl = `mongodb://${validConfigInjector.resolve(
-    'user'
-  )}:${validConfigInjector.resolve('password')}@${validConfigInjector.resolve(
-    'host'
-  )}:${validConfigInjector.resolve('port')}/${validConfigInjector.resolve(
-    'dbName'
+    'DB_USER'
+  )}:${validConfigInjector.resolve('DB_PASSWORD')}@${validConfigInjector.resolve(
+    'DB_HOST'
+  )}:${validConfigInjector.resolve('DB_PORT')}/${validConfigInjector.resolve(
+    'DB_NAME'
   )}?authSource=admin&directConnection=true&replicaSet=rs0`
 {{/is_mongo}}
 const mikroOrmOptionsConfig = {
   driver: {{db_driver}},{{#is_mongo}}
   clientUrl,{{/is_mongo}}{{^is_mongo}}
-  dbName: validConfigInjector.resolve('dbName'),
-  host: validConfigInjector.resolve('host'),
-  user: validConfigInjector.resolve('user'),
-  password: validConfigInjector.resolve('password'),
-  port: validConfigInjector.resolve('port'),{{/is_mongo}}
-  entities: ['dist/**/*.entity.js'],
-  entitiesTs: ['models/persistence/**/*.entity.ts'],
+  dbName: validConfigInjector.resolve('DB_NAME'),
+  host: validConfigInjector.resolve('DB_HOST'),
+  user: validConfigInjector.resolve('DB_USER'),
+  password: validConfigInjector.resolve('DB_PASSWORD'),
+  port: validConfigInjector.resolve('DB_PORT'),{{/is_mongo}}
+  entities: Object.values(entities),
   metadataProvider: TsMorphMetadataProvider,
-  debug: validConfigInjector.resolve('environment') === 'development',
+  debug: validConfigInjector.resolve('ENV') === 'development',
   extensions: [Migrator]{{^is_mongo}},
   discovery: {
     getMappedType(type: string, platform: Platform) {

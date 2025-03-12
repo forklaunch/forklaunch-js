@@ -105,6 +105,79 @@ struct DockerNetwork {
     driver: String,
 }
 
+pub(crate) fn add_otel_to_docker_compose<'a>(
+    app_name: &str,
+    docker_compose: &'a mut DockerCompose,
+) -> Result<&'a mut DockerCompose> {
+    docker_compose.services.insert(
+        "tempo".to_string(),
+        DockerService {
+            image: Some("grafana/tempo:latest".to_string()),
+            command: Some(Command::Simple("-config.file=/etc/tempo.yaml".to_string())),
+            ports: Some(vec!["3200:3200".to_string(), "4317:4317".to_string()]),
+            volumes: Some(vec!["./monitoring/tempo.yaml:/etc/tempo.yaml".to_string()]),
+            networks: Some(vec![format!("{}-network", app_name)]),
+            ..Default::default()
+        },
+    );
+
+    docker_compose.services.insert(
+        "loki".to_string(),
+        DockerService {
+            image: Some("grafana/loki:latest".to_string()),
+            ports: Some(vec!["3100:3100".to_string()]),
+            networks: Some(vec![format!("{}-network", app_name)]),
+            ..Default::default()
+        },
+    );
+
+    docker_compose.services.insert(
+        "prometheus".to_string(),
+        DockerService {
+            image: Some("prom/prometheus:latest".to_string()),
+            ports: Some(vec!["9090:9090".to_string()]),
+            volumes: Some(vec![
+                "./monitoring/prometheus.yaml:/etc/prometheus/prometheus.yml".to_string(),
+            ]),
+            networks: Some(vec![format!("{}-network", app_name)]),
+            ..Default::default()
+        },
+    );
+
+    docker_compose.services.insert(
+        "grafana".to_string(),
+        DockerService {
+            image: Some("grafana/grafana:latest".to_string()),
+            ports: Some(vec!["3000:3000".to_string()]),
+            volumes: Some(vec![
+                "./monitoring/grafana-provisioning/datasources:/etc/grafana/provisioning/datasources".to_string(),
+                "./monitoring/grafana-provisioning/dashboards:/etc/grafana/provisioning/dashboards".to_string()
+            ]),
+            networks: Some(vec![format!("{}-network", app_name)]),
+            ..Default::default()
+        },
+    );
+
+    docker_compose.services.insert(
+        "otel-collector".to_string(),
+        DockerService {
+            image: Some("otel/opentelemetry-collector:latest".to_string()),
+            command: Some(Command::Simple(
+                "--config=/etc/otel-collector-config.yaml".to_string(),
+            )),
+            ports: Some(vec!["4318:4318".to_string(), "8889:8889".to_string()]),
+            volumes: Some(vec![
+                "./monitoring/otel-collector-config.yaml:/etc/otel-collector-config.yaml"
+                    .to_string(),
+            ]),
+            networks: Some(vec![format!("{}-network", app_name)]),
+            ..Default::default()
+        },
+    );
+
+    Ok(docker_compose)
+}
+
 fn add_database_to_docker_compose(
     config_data: &TemplateManifestData,
     docker_compose: &mut DockerCompose,
@@ -234,6 +307,7 @@ fn add_database_to_docker_compose(
 
 fn add_base_definition_to_docker_compose(
     app_name: &str,
+    name: &str,
     base_path: &String,
     docker_compose_string: Option<String>,
 ) -> Result<(Value, DockerCompose, i32, IndexMap<String, String>)> {
@@ -269,7 +343,7 @@ fn add_base_definition_to_docker_compose(
             for port in ports {
                 if let Some(port_num) = port.split(':').next() {
                     if let Ok(num) = port_num.parse::<i32>() {
-                        if num >= 8000 && num <= 9000 && num > port_number {
+                        if num >= 8000 && num <= 9000 && num > port_number && num != 8889 {
                             port_number = num;
                         }
                     }
@@ -287,6 +361,14 @@ fn add_base_definition_to_docker_compose(
     environment.insert("PORT".to_string(), port_number.to_string());
     environment.insert("VERSION".to_string(), "v1".to_string());
     environment.insert("DOCS_PATH".to_string(), "/docs".to_string());
+    environment.insert(
+        "OTEL_EXPORTER_OTLP_ENDPOINT".to_string(),
+        "http://otel-collector:4318".to_string(),
+    );
+    environment.insert(
+        "OTEL_SERVICE_NAME".to_string(),
+        format!("{}-{}", app_name, name),
+    );
 
     Ok((
         full_docker_compose,
@@ -304,15 +386,18 @@ fn create_base_service(
     port_number: Option<i32>,
     environment: IndexMap<String, String>,
     volumes: Vec<String>,
-    container_name_suffix: &str,
+    container_name_suffix: Option<&str>,
     entrypoint_command: &str,
     depends_on: Vec<String>,
 ) -> DockerService {
     DockerService {
         hostname: Some(component_name.to_string()),
         container_name: Some(format!(
-            "{}-{}-{}-{}",
-            app_name, component_name, runtime, container_name_suffix
+            "{}-{}-{}{}",
+            app_name,
+            component_name,
+            runtime,
+            container_name_suffix.map_or_else(|| "".to_string(), |suffix| format!("-{}", suffix))
         )),
         restart: Some("always".to_string()),
         build: Some(DockerBuild {
@@ -359,6 +444,7 @@ pub(crate) fn add_service_definition_to_docker_compose(
     let (mut full_docker_compose, mut docker_compose, port_number, mut environment) =
         add_base_definition_to_docker_compose(
             &config_data.app_name,
+            &config_data.service_name,
             base_path,
             docker_compose_string,
         )?;
@@ -421,7 +507,7 @@ pub(crate) fn add_service_definition_to_docker_compose(
                 Some(port_number),
                 environment,
                 volumes,
-                "",
+                None,
                 "dev",
                 vec![],
             ),
@@ -444,6 +530,7 @@ pub(crate) fn add_worker_definition_to_docker_compose(
     let (mut full_docker_compose, mut docker_compose, port_number, mut environment) =
         add_base_definition_to_docker_compose(
             &config_data.app_name,
+            &config_data.worker_name,
             base_path,
             docker_compose_string,
         )?;
@@ -498,7 +585,7 @@ pub(crate) fn add_worker_definition_to_docker_compose(
                 Some(port_number),
                 environment.clone(),
                 volumes.clone(),
-                "server",
+                Some("server"),
                 "dev:server",
                 vec![],
             ),
@@ -517,7 +604,7 @@ pub(crate) fn add_worker_definition_to_docker_compose(
                 None,
                 environment,
                 volumes,
-                "client",
+                Some("client"),
                 "dev:client",
                 vec![server_service_name.clone()],
             ),

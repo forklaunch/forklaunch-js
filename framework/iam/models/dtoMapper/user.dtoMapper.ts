@@ -4,6 +4,7 @@ import {
 } from '@forklaunch/core/dtoMapper';
 import {
   array,
+  collection,
   date,
   email,
   optional,
@@ -17,7 +18,6 @@ import { Organization } from '../persistence/organization.entity';
 import { Role } from '../persistence/role.entity';
 import { User } from '../persistence/user.entity';
 import { RoleDtoMapper } from './role.dtoMapper';
-import { Collection } from '@mikro-orm/core';
 
 export type CreateUserDto = CreateUserDtoMapper['dto'];
 export class CreateUserDtoMapper extends RequestDtoMapper<
@@ -44,7 +44,7 @@ export class CreateUserDtoMapper extends RequestDtoMapper<
     return User.create({
       ...this.dto,
       organization,
-      roles: new Collection(roles),
+      roles: collection(roles),
       passwordHash: passwordEncrypt(
         this.dto.password,
         passwordEncryptionPublicKeyPath
@@ -78,7 +78,7 @@ export class UpdateUserDtoMapper extends RequestDtoMapper<
     return User.update({
       ...this.dto,
       ...(organization ? { organization } : {}),
-      ...(roles ? { roles: new Collection(roles) } : {}),
+      ...(roles ? { roles: collection(roles) } : {}),
       ...(passwordEncryptionPublicKeyPath && this.dto.password
         ? {
             passwordHash: passwordEncrypt(
