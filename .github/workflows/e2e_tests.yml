@@ -28,11 +28,13 @@ jobs:
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
     - name: Build project
+      working-directory: ./cli
       run: cargo build
 
     - name: Find and run all test scripts
+      working-directory: ./cli
       run: |
-        for test_script in cli/tests/*.sh; do
+        for test_script in tests/*.sh; do
           if [ -f "$test_script" ]; then
             echo "Running test: $test_script"
             chmod +x "$test_script"
