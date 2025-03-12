@@ -179,6 +179,13 @@ impl CliCommand for ApplicationCommand {
                     .help("The license of the application")
                     .value_parser(VALID_LICENSES),
             )
+            .arg(
+                Arg::new("dryrun")
+                    .short('n')
+                    .long("dryrun")
+                    .help("Dry run the application")
+                    .action(ArgAction::SetTrue),
+            )
     }
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
@@ -321,6 +328,7 @@ impl CliCommand for ApplicationCommand {
         // TODO: Add support for libraries
         // let libraries = matches.get_many::<String>("libraries").unwrap_or_default();
 
+        let dryrun = matches.get_flag("dryrun");
         let mut ignore_files = vec!["pnpm-workspace.yaml", "pnpm-lock.yml"];
         let preserve_files = vec!["application-overview.json"];
 
@@ -456,6 +464,7 @@ impl CliCommand for ApplicationCommand {
                 .iter()
                 .map(|preserve_file| preserve_file.to_string())
                 .collect::<Vec<String>>(),
+            dryrun,
         )?);
 
         // TODO: think about refactoring this to use pure docker compose and instead use a deserialization function elsewhere
@@ -522,6 +531,7 @@ impl CliCommand for ApplicationCommand {
                     .iter()
                     .map(|preserve_file| preserve_file.to_string())
                     .collect::<Vec<String>>(),
+                dryrun,
             )?);
             rendered_templates.push(generate_service_package_json(
                 &service_data,
@@ -670,8 +680,8 @@ impl CliCommand for ApplicationCommand {
             );
         }
 
-        create_forklaunch_dir(&Path::new(&name).to_string_lossy().to_string())?;
-        write_rendered_templates(&rendered_templates)
+        create_forklaunch_dir(&Path::new(&name).to_string_lossy().to_string(), dryrun)?;
+        write_rendered_templates(&rendered_templates, dryrun)
             .with_context(|| "Failed to write application files")?;
 
         additional_projects_dirs
@@ -684,12 +694,15 @@ impl CliCommand for ApplicationCommand {
                         .to_string_lossy()
                         .to_string(),
                     &mut data,
+                    dryrun,
                 )
             })?;
 
-        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-        writeln!(stdout, "{} initialized successfully!", name)?;
-        stdout.reset()?;
+        if !dryrun {
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+            writeln!(stdout, "{} initialized successfully!", name)?;
+            stdout.reset()?;
+        }
 
         Ok(())
     }

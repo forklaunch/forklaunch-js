@@ -1,3 +1,7 @@
+if [ -d "output/init-library" ]; then
+    rm -rf output/init-library
+fi
+
 mkdir -p output/init-library
 cd output/init-library
 

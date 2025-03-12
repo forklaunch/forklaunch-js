@@ -1,7 +1,7 @@
 use std::{fs::read_to_string, path::Path};
 
 use anyhow::{Context, Result};
-use clap::{Arg, ArgMatches, Command};
+use clap::{Arg, ArgAction, ArgMatches, Command};
 use convert_case::{Case, Casing};
 use ramhorns::Content;
 use rustyline::{history::DefaultHistory, Editor};
@@ -136,6 +136,13 @@ impl CliCommand for WorkerCommand {
                     .long("description")
                     .help("The description of the worker"),
             )
+            .arg(
+                Arg::new("dryrun")
+                    .short('n')
+                    .long("dryrun")
+                    .help("Dry run the command")
+                    .action(ArgAction::SetTrue),
+            )
     }
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
@@ -206,12 +213,20 @@ impl CliCommand for WorkerCommand {
                 .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
         };
 
-        generate_basic_worker(&worker_name, &base_path.to_string(), &mut config_data)
-            .with_context(|| "Failed to create worker")?;
+        let dryrun = matches.get_flag("dryrun");
+        generate_basic_worker(
+            &worker_name,
+            &base_path.to_string(),
+            &mut config_data,
+            dryrun,
+        )
+        .with_context(|| "Failed to create worker")?;
 
-        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-        writeln!(stdout, "{} initialized successfully!", worker_name)?;
-        stdout.reset()?;
+        if !dryrun {
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+            writeln!(stdout, "{} initialized successfully!", worker_name)?;
+            stdout.reset()?;
+        }
 
         Ok(())
     }
@@ -221,6 +236,7 @@ fn generate_basic_worker(
     worker_name: &String,
     base_path: &String,
     config_data: &mut WorkerManifestData,
+    dryrun: bool,
 ) -> Result<()> {
     let output_path = Path::new(base_path)
         .join(worker_name)
@@ -247,6 +263,7 @@ fn generate_basic_worker(
         &TemplateManifestData::Worker(&config_data),
         &ignore_files,
         &preserve_files,
+        dryrun,
     )?;
     rendered_templates.push(generate_project_package_json(
         config_data,
@@ -273,11 +290,16 @@ fn generate_basic_worker(
         );
     }
 
-    write_rendered_templates(&rendered_templates)
+    write_rendered_templates(&rendered_templates, dryrun)
         .with_context(|| ERROR_FAILED_TO_WRITE_SERVICE_FILES)?;
 
-    generate_symlinks(Some(base_path), &template_dir.output_path, config_data)
-        .with_context(|| ERROR_FAILED_TO_CREATE_SYMLINKS)?;
+    generate_symlinks(
+        Some(base_path),
+        &template_dir.output_path,
+        config_data,
+        dryrun,
+    )
+    .with_context(|| ERROR_FAILED_TO_CREATE_SYMLINKS)?;
 
     Ok(())
 }

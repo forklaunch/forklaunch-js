@@ -4,6 +4,7 @@ import {
   SchemaValidator
 } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
+import { hasSend } from '../../guards/hasSend';
 import { isResponseShape } from '../../guards/isResponseShape';
 import {
   ForklaunchNextFunction,
@@ -34,7 +35,7 @@ export function parse<
   LocalsObj extends Record<string, unknown>
 >(
   req: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>,
-  _res: ForklaunchResponse<ResBodyMap, ResHeaders, LocalsObj>,
+  res: ForklaunchResponse<ResBodyMap, ResHeaders, LocalsObj>,
   next?: ForklaunchNextFunction
 ) {
   const request = {
@@ -62,10 +63,18 @@ export function parse<
     switch (req.contractDetails.options?.requestValidation) {
       default:
       case 'error':
-        next?.(
-          new Error(prettyPrintParseErrors(parsedRequest.errors, 'Request'))
-        );
-        break;
+        res.type('application/json');
+        res.status(400);
+        if (hasSend(res)) {
+          res.send(
+            `${prettyPrintParseErrors(parsedRequest.errors, 'Request')}\n\nCorrelation id: ${
+              req.context.correlationId ?? 'No correlation ID'
+            }`
+          );
+        } else {
+          next?.(new Error('Request is not sendable.'));
+        }
+        return;
       case 'warning':
         req.openTelemetryCollector.warn(
           prettyPrintParseErrors(parsedRequest.errors, 'Request')

@@ -4,6 +4,7 @@ import {
   SchemaValidator
 } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
+import { hasSend } from '../../guards/hasSend';
 import {
   ForklaunchNextFunction,
   ForklaunchRequest,
@@ -88,8 +89,20 @@ export function parse<
     switch (req.contractDetails.options?.responseValidation) {
       default:
       case 'error':
-        next?.(new Error(`Invalid response:\n${parseErrors.join('\n\n')}`));
-        break;
+        res.type('text/plain');
+        res.status(400);
+        if (hasSend(res)) {
+          res.send(
+            `Invalid response:\n${parseErrors.join('\n\n')}\n\nCorrelation id: ${
+              req.context.correlationId ?? 'No correlation ID'
+            }`
+          );
+        } else {
+          next?.(new Error('Response is not sendable.'));
+        }
+        // next?.(new Error(`Invalid response:\n${parseErrors.join('\n\n')}`));
+        // break;
+        return;
       case 'warning':
         req.openTelemetryCollector.warn(
           `Invalid response:\n${parseErrors.join('\n\n')}`

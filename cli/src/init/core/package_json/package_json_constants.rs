@@ -111,15 +111,15 @@ pub(crate) const APP_CORE_VERSION: &str = "workspace:*";
 // @forklaunch/framework-monitoring
 pub(crate) const APP_MONITORING_VERSION: &str = "workspace:*";
 // @forklaunch/common
-pub(crate) const COMMON_VERSION: &str = "^0.2.3";
+pub(crate) const COMMON_VERSION: &str = "^0.2.4";
 // @forklaunch/core
-pub(crate) const CORE_VERSION: &str = "^0.5.4";
+pub(crate) const CORE_VERSION: &str = "^0.5.6";
 // @forklaunch/express
-pub(crate) const EXPRESS_VERSION: &str = "^0.3.5";
+pub(crate) const EXPRESS_VERSION: &str = "^0.3.7";
 // @forklaunch/hyper-express
-pub(crate) const HYPER_EXPRESS_VERSION: &str = "^0.3.5";
+pub(crate) const HYPER_EXPRESS_VERSION: &str = "^0.3.7";
 // @forklaunch/validator
-pub(crate) const VALIDATOR_VERSION: &str = "^0.4.6";
+pub(crate) const VALIDATOR_VERSION: &str = "^0.4.7";
 // @mikro-orm/core
 pub(crate) const MIKRO_ORM_CORE_VERSION: &str = "^6.4.9";
 // @mikro-orm/migrations
@@ -155,7 +155,7 @@ pub(crate) const TYPEDOC_VERSION: &str = "^0.27.9";
 // @types/uuid
 pub(crate) const TYPES_UUID_VERSION: &str = "^10.0.0";
 // typescript-eslint
-pub(crate) const TYPESCRIPT_ESLINT_VERSION: &str = "^8.26.0";
+pub(crate) const TYPESCRIPT_ESLINT_VERSION: &str = "^8.26.1";
 
 // Project package.json scripts constants
 pub(crate) const PROJECT_BUILD_SCRIPT: &str = "tsc";

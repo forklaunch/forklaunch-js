@@ -1,3 +1,8 @@
+import {
+  DocsConfiguration,
+  MetricsDefinition,
+  OpenTelemetryCollector
+} from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { any } from './src/handlers/any';
 import { delete_ } from './src/handlers/delete';
@@ -11,10 +16,6 @@ import { put } from './src/handlers/put';
 import { trace } from './src/handlers/trace';
 import { Application } from './src/hyperExpressApplication';
 import { Router } from './src/hyperExpressRouter';
-import {
-  MetricsDefinition,
-  OpenTelemetryCollector
-} from '@forklaunch/core/http';
 
 export type App<SV extends AnySchemaValidator> = Application<SV>;
 
@@ -27,9 +28,14 @@ export type App<SV extends AnySchemaValidator> = Application<SV>;
  */
 export function forklaunchExpress<SV extends AnySchemaValidator>(
   schemaValidator: SV,
-  openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
+  openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
+  docsConfiguration?: DocsConfiguration
 ) {
-  return new Application(schemaValidator, openTelemetryCollector);
+  return new Application(
+    schemaValidator,
+    openTelemetryCollector,
+    docsConfiguration
+  );
 }
 
 /**

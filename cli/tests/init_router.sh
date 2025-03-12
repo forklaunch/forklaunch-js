@@ -1,3 +1,7 @@
+if [ -d "output/init-router" ]; then
+    rm -rf output/init-router
+fi
+
 mkdir -p output/init-router
 cd output/init-router
 

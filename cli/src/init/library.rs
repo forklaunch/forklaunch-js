@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use clap::{Arg, ArgMatches, Command};
+use clap::{Arg, ArgAction, ArgMatches, Command};
 use convert_case::{Case, Casing};
 use ramhorns::Content;
 use rustyline::history::DefaultHistory;
@@ -86,6 +86,13 @@ impl CliCommand for LibraryCommand {
                     .long("description")
                     .help("The description of the service"),
             )
+            .arg(
+                Arg::new("dryrun")
+                    .short('n')
+                    .long("dryrun")
+                    .help("Dry run the command")
+                    .action(ArgAction::SetTrue),
+            )
     }
 
     // pass token in from parent and perform get token above?
@@ -138,12 +145,20 @@ impl CliCommand for LibraryCommand {
                 .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
         };
 
-        generate_basic_library(&library_name, &base_path.to_string(), &mut config_data)
-            .with_context(|| "Failed to create library")?;
+        let dryrun = matches.get_flag("dryrun");
+        generate_basic_library(
+            &library_name,
+            &base_path.to_string(),
+            &mut config_data,
+            dryrun,
+        )
+        .with_context(|| "Failed to create library")?;
 
-        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-        writeln!(stdout, "{} initialized successfully!", library_name)?;
-        stdout.reset()?;
+        if !dryrun {
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+            writeln!(stdout, "{} initialized successfully!", library_name)?;
+            stdout.reset()?;
+        }
 
         Ok(())
     }
@@ -153,6 +168,7 @@ fn generate_basic_library(
     library_name: &String,
     base_path: &String,
     config_data: &mut LibraryManifestData,
+    dryrun: bool,
 ) -> Result<()> {
     let output_path = Path::new(base_path)
         .join(library_name)
@@ -176,6 +192,7 @@ fn generate_basic_library(
         &TemplateManifestData::Library(&config_data),
         &ignore_files,
         &preserve_files,
+        dryrun,
     )?;
     rendered_templates.push(generate_library_package_json(config_data, &output_path)?);
     rendered_templates
@@ -188,11 +205,16 @@ fn generate_basic_library(
             .with_context(|| "Failed to add library metadata to artifacts")?,
     );
 
-    write_rendered_templates(&rendered_templates)
+    write_rendered_templates(&rendered_templates, dryrun)
         .with_context(|| "Failed to write library files")?;
 
-    generate_symlinks(Some(base_path), &template_dir.output_path, config_data)
-        .with_context(|| ERROR_FAILED_TO_CREATE_SYMLINKS)?;
+    generate_symlinks(
+        Some(base_path),
+        &template_dir.output_path,
+        config_data,
+        dryrun,
+    )
+    .with_context(|| ERROR_FAILED_TO_CREATE_SYMLINKS)?;
 
     Ok(())
 }

@@ -18,8 +18,8 @@ importers:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@22.13.10)(ts-node@10.9.2(@types/node@22.13.10)(typescript@5.8.2))
       lint-staged:
-        specifier: ^15.4.3
-        version: 15.4.3
+        specifier: ^15.5.0
+        version: 15.5.0
       sort-package-json:
         specifier: ^3.0.0
         version: 3.0.0
@@ -39,14 +39,14 @@ importers:
   billing:
     dependencies:
       '@forklaunch/common':
-        specifier: ^0.2.3
-        version: 0.2.3
+        specifier: ^0.2.4
+        version: 0.2.4
       '@forklaunch/core':
-        specifier: ^0.5.4
-        version: 0.5.4(socks@2.8.4)
+        specifier: ^0.5.6
+        version: 0.5.6(socks@2.8.4)
       '@forklaunch/express':
-        specifier: ^0.3.5
-        version: 0.3.5(openapi3-ts@4.4.0)(socks@2.8.4)
+        specifier: ^0.3.7
+        version: 0.3.7(openapi3-ts@4.4.0)(socks@2.8.4)
       '@forklaunch/framework-core':
         specifier: workspace:*
         version: link:../core
@@ -54,23 +54,23 @@ importers:
         specifier: workspace:*
         version: link:../monitoring
       '@forklaunch/hyper-express':
-        specifier: ^0.3.5
-        version: 0.3.5(express@4.21.2)(socks@2.8.4)
+        specifier: ^0.3.7
+        version: 0.3.7(express@4.21.2)(socks@2.8.4)
       '@forklaunch/validator':
-        specifier: ^0.4.6
-        version: 0.4.6(openapi3-ts@4.4.0)
+        specifier: ^0.4.7
+        version: 0.4.7(openapi3-ts@4.4.0)
       '@mikro-orm/core':
         specifier: ^6.4.9
         version: 6.4.9
       '@mikro-orm/migrations':
         specifier: ^6.4.9
-        version: 6.4.9(@mikro-orm/core@6.4.9)(@types/node@22.13.10)
+        version: 6.4.9(@mikro-orm/core@6.4.9)(@types/node@22.13.10)(pg@8.13.3)
       '@mikro-orm/mongodb':
         specifier: ^6.4.9
         version: 6.4.9(@mikro-orm/core@6.4.9)(socks@2.8.4)
       '@mikro-orm/mysql':
         specifier: ^6.4.9
-        version: 6.4.9(@mikro-orm/core@6.4.9)
+        version: 6.4.9(@mikro-orm/core@6.4.9)(pg@8.13.3)
       '@mikro-orm/postgresql':
         specifier: ^6.4.9
         version: 6.4.9(@mikro-orm/core@6.4.9)
@@ -79,9 +79,9 @@ importers:
         version: 6.4.9(@mikro-orm/core@6.4.9)
       '@mikro-orm/sqlite':
         specifier: ^6.4.9
-        version: 6.4.9(@mikro-orm/core@6.4.9)
+        version: 6.4.9(@mikro-orm/core@6.4.9)(pg@8.13.3)
       '@sinclair/typebox':
-        specifier: ^0.34.28
+        specifier: ^0.34.30
         version: 0.34.30
       ajv:
         specifier: ^8.17.1
@@ -98,7 +98,7 @@ importers:
     devDependencies:
       '@mikro-orm/cli':
         specifier: ^6.4.9
-        version: 6.4.9
+        version: 6.4.9(pg@8.13.3)
       '@types/express':
         specifier: ^5.0.0
         version: 5.0.0
@@ -127,20 +127,20 @@ importers:
   core:
     dependencies:
       '@forklaunch/common':
-        specifier: ^0.2.3
-        version: 0.2.3
+        specifier: ^0.2.4
+        version: 0.2.4
       '@forklaunch/core':
-        specifier: ^0.5.4
-        version: 0.5.4(socks@2.8.4)
+        specifier: ^0.5.6
+        version: 0.5.6(socks@2.8.4)
       '@forklaunch/express':
-        specifier: ^0.3.5
-        version: 0.3.5(openapi3-ts@4.4.0)(socks@2.8.4)
+        specifier: ^0.3.7
+        version: 0.3.7(openapi3-ts@4.4.0)(socks@2.8.4)
       '@forklaunch/hyper-express':
-        specifier: ^0.3.5
-        version: 0.3.5(express@4.21.2)(socks@2.8.4)
+        specifier: ^0.3.7
+        version: 0.3.7(express@4.21.2)(socks@2.8.4)
       '@forklaunch/validator':
-        specifier: ^0.4.6
-        version: 0.4.6(openapi3-ts@4.4.0)
+        specifier: ^0.4.7
+        version: 0.4.7(openapi3-ts@4.4.0)
       '@mikro-orm/core':
         specifier: ^6.4.9
         version: 6.4.9
@@ -148,7 +148,7 @@ importers:
         specifier: ^6.4.9
         version: 6.4.9(@mikro-orm/core@6.4.9)(socks@2.8.4)
       '@sinclair/typebox':
-        specifier: ^0.34.28
+        specifier: ^0.34.30
         version: 0.34.30
       uuid:
         specifier: ^11.1.0
@@ -173,14 +173,14 @@ importers:
         specifier: ^3.5.3
         version: 3.5.3
       typescript-eslint:
-        specifier: ^8.26.0
+        specifier: ^8.26.1
         version: 8.26.1(eslint@9.22.0)(typescript@5.8.2)
 
   iam:
     dependencies:
       '@forklaunch/core':
-        specifier: ^0.5.4
-        version: 0.5.4(socks@2.8.4)
+        specifier: ^0.5.6
+        version: 0.5.6(socks@2.8.4)
       '@forklaunch/framework-core':
         specifier: workspace:*
         version: link:../core
@@ -192,13 +192,13 @@ importers:
         version: 6.4.9
       '@mikro-orm/migrations':
         specifier: ^6.4.9
-        version: 6.4.9(@mikro-orm/core@6.4.9)(@types/node@22.13.10)
+        version: 6.4.9(@mikro-orm/core@6.4.9)(@types/node@22.13.10)(pg@8.13.3)
       '@mikro-orm/mongodb':
         specifier: ^6.4.9
         version: 6.4.9(@mikro-orm/core@6.4.9)(socks@2.8.4)
       '@mikro-orm/mysql':
         specifier: ^6.4.9
-        version: 6.4.9(@mikro-orm/core@6.4.9)
+        version: 6.4.9(@mikro-orm/core@6.4.9)(pg@8.13.3)
       '@mikro-orm/postgresql':
         specifier: ^6.4.9
         version: 6.4.9(@mikro-orm/core@6.4.9)
@@ -207,9 +207,9 @@ importers:
         version: 6.4.9(@mikro-orm/core@6.4.9)
       '@mikro-orm/sqlite':
         specifier: ^6.4.9
-        version: 6.4.9(@mikro-orm/core@6.4.9)
+        version: 6.4.9(@mikro-orm/core@6.4.9)(pg@8.13.3)
       '@sinclair/typebox':
-        specifier: ^0.34.28
+        specifier: ^0.34.30
         version: 0.34.30
       dotenv:
         specifier: ^16.4.7
@@ -220,7 +220,7 @@ importers:
     devDependencies:
       '@mikro-orm/cli':
         specifier: ^6.4.9
-        version: 6.4.9
+        version: 6.4.9(pg@8.13.3)
       '@types/express':
         specifier: ^5.0.0
         version: 5.0.0
@@ -243,29 +243,20 @@ importers:
   monitoring:
     dependencies:
       '@forklaunch/core':
-        specifier: ^0.5.4
-        version: 0.5.4(socks@2.8.4)
+        specifier: ^0.5.6
+        version: 0.5.6(socks@2.8.4)
 
   sample-worker:
     dependencies:
-      '@forklaunch/common':
-        specifier: ^0.2.3
-        version: 0.2.3
       '@forklaunch/core':
-        specifier: ^0.5.4
-        version: 0.5.4(socks@2.8.4)
-      '@forklaunch/express':
-        specifier: ^0.3.5
-        version: 0.3.5(openapi3-ts@4.4.0)(socks@2.8.4)
+        specifier: ^0.5.6
+        version: 0.5.6(socks@2.8.4)
       '@forklaunch/framework-core':
         specifier: workspace:*
         version: link:../core
       '@forklaunch/framework-monitoring':
         specifier: workspace:*
         version: link:../monitoring
-      '@forklaunch/validator':
-        specifier: ^0.4.6
-        version: 0.4.6(openapi3-ts@4.4.0)
       '@mikro-orm/core':
         specifier: ^6.4.9
         version: 6.4.9
@@ -279,7 +270,7 @@ importers:
         specifier: ^6.4.9
         version: 6.4.9(@mikro-orm/core@6.4.9)
       '@sinclair/typebox':
-        specifier: ^0.34.28
+        specifier: ^0.34.30
         version: 0.34.30
       ajv:
         specifier: ^8.17.1
@@ -309,9 +300,6 @@ importers:
       eslint:
         specifier: ^9.22.0
         version: 9.22.0
-      ts-node:
-        specifier: ^10.9.2
-        version: 10.9.2(@types/node@22.13.10)(typescript@5.8.2)
       tsx:
         specifier: ^4.19.3
         version: 4.19.3
@@ -319,7 +307,7 @@ importers:
         specifier: ^0.27.9
         version: 0.27.9(typescript@5.8.2)
       typescript-eslint:
-        specifier: ^8.26.0
+        specifier: ^8.26.1
         version: 8.26.1(eslint@9.22.0)(typescript@5.8.2)
 
 packages:
@@ -687,20 +675,20 @@ packages:
     resolution: {integrity: sha512-JubJ5B2pJ4k4yGxaNLdbjrnk9d/iDz6/q8wOilpIowd6PJPgaxCuHBnBszq7Ce2TyMrywm5r4PnKm6V3iiZF+g==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@forklaunch/common@0.2.3':
-    resolution: {integrity: sha512-1Zuk02EKSmstOZY0Nshq84PX1jE8kJBME0Wxw+nzZDB98IEl+fVPTmFOf6h0yDmvlbHMFckaI8Cx+AXdRdDxSw==}
+  '@forklaunch/common@0.2.4':
+    resolution: {integrity: sha512-h0UEtlh08+BV1llr8vSdCMKcsmsRpxQsbS5k6oD/BVbOhSll7yWqv8pO9CmE3VD3MypDsXba/hRYix5ny4d+Wg==}
 
-  '@forklaunch/core@0.5.4':
-    resolution: {integrity: sha512-+N+K7vJJJYqJR2sbfFDBh5nNvR8DvToq5sFaxZeg+QODfwyCQAa5ZoDreN72H592YU0U3hjeNQ4AS9LNxsGI/Q==}
+  '@forklaunch/core@0.5.6':
+    resolution: {integrity: sha512-fSo1PLVTx7RKb+REIxr9k8TIt8XuVrKEOGSVP7umu7k3OHmudJ+fe4kAncPej5WyANMVHPr0355hGh37rJK00Q==}
 
-  '@forklaunch/express@0.3.5':
-    resolution: {integrity: sha512-zh3/lCC9vms7JcFeIvOBXX3kjq3hcNMsxMCErL0FGManL9x4f3PDhuPZfLsy4f4n52FnLCtGV8VbxhLn7GKDAA==}
+  '@forklaunch/express@0.3.7':
+    resolution: {integrity: sha512-LebYAJQlD82m9byt0YWb8o6HM4stdkJrzXT6iSdfetHD+VbmHu8Y3yHxcq+x6+VXtFXXFJjCDM/yQLgf2vHYfg==}
 
   '@forklaunch/hyper-express-fork@6.17.30':
     resolution: {integrity: sha512-TToaBStDsodTNAHah5Ci1+9lY8c2iysYY6yW/Y6KD7scmIGZXwcDUZEA4ywKUrB4BRxQxkcbAMx4zsnOVIZfmQ==}
 
-  '@forklaunch/hyper-express@0.3.5':
-    resolution: {integrity: sha512-Y3kHZKzaVYLLQTp/guEoQVOt4di/VAPZaHMY4VaFQEf1SwoX66I7+/cZeHUYBhwnheOeMfVaNziYqv9f0a7jJA==}
+  '@forklaunch/hyper-express@0.3.7':
+    resolution: {integrity: sha512-+RuycDzhPcLAYwjKcT0LAt+RFXFGu3uxAGGfJvX6gZ4CDnHlMToEACbO9FYw7XfgSoR26rCsRv3XC2bpk4MFxA==}
 
   '@forklaunch/opentelemetry-instrumentation-hyper-express@0.0.5':
     resolution: {integrity: sha512-AwkA0ywzdZRz5p+kRMGWH0v0MH2aqxhlIBLV8SQDETKTbpN6G1BtptxPegC9QFFfCJSywDguXDNvVdmxX+VV0A==}
@@ -708,8 +696,8 @@ packages:
     peerDependencies:
       '@opentelemetry/api': ^1.3.0
 
-  '@forklaunch/validator@0.4.6':
-    resolution: {integrity: sha512-qr0Dp7Hw4o+txQ4cjGAFD2spGAB2J1nATW4vH1RB14V4FbfkI3HlGUiq+CiHkkaotQyvWVzEPyHAc/HUwqv4Kw==}
+  '@forklaunch/validator@0.4.7':
+    resolution: {integrity: sha512-tPUC9gRHTf/UGYaczHdvwe59B6Aqo7iW2qyGL3YSnofSlGkNVRFEtD9Tg0e55Bllg+IiSLsnF3EaXvVaxsSOrg==}
 
   '@gar/promisify@1.1.3':
     resolution: {integrity: sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==}
@@ -2079,8 +2067,8 @@ packages:
     engines: {node: '>=0.10.0'}
     hasBin: true
 
-  electron-to-chromium@1.5.114:
-    resolution: {integrity: sha512-DFptFef3iktoKlFQK/afbo274/XNWD00Am0xa7M8FZUepHlHT8PEuiNBoRfFHbH1okqN58AlhbJ4QTkcnXorjA==}
+  electron-to-chromium@1.5.115:
+    resolution: {integrity: sha512-MN1nahVHAQMOz6dz6bNZ7apgqc9InZy7Ja4DBEVCTdeiUcegbyOYE9bi/f2Z/z6ZxLi0RxLpyJ3EGe+4h3w73A==}
 
   emittery@0.13.1:
     resolution: {integrity: sha512-DeWwawk6r5yR9jFgnDKYt4sLS0LmHJJi3ZOnb5/JdbYwj3nW+FxQnHIjhBKz8YLC7oRNPVM9NQ47I3CVx34eqQ==}
@@ -2819,8 +2807,8 @@ packages:
   jju@1.4.0:
     resolution: {integrity: sha512-8wb9Yw966OSxApiCt0K3yNJL8pnNeIv+OEq2YMidz4FKP6nonSRoOXc80iXY4JaN2FC11B9qsNmDsm+ZOfMROA==}
 
-  jose@6.0.9:
-    resolution: {integrity: sha512-6HEy/G3IBiGwOeT0phvu19yt/zagFKSpQPpQ6YUIiCxBUPfThVkOv9wlwHGkatUqbHvkWHYPtJJil4U5jHwllw==}
+  jose@6.0.10:
+    resolution: {integrity: sha512-skIAxZqcMkOrSwjJvplIPYrlXGpxTPnro2/QWTDCxAdWQrSTV5/KqspMWmi5WAx5+ULswASJiZ0a+1B/Lxt9cw==}
 
   joycon@3.1.1:
     resolution: {integrity: sha512-34wB/Y7MW7bzjKRjUKTa46I2Z7eV62Rkhva+KkopW7Qvv/OSWBqvkSY7vusOPrNuZcUG3tApvdVgNB8POj3SPw==}
@@ -2921,8 +2909,8 @@ packages:
   linkify-it@5.0.0:
     resolution: {integrity: sha512-5aHCbzQRADcdP+ATqnDuhhJ/MRIqDkZX5pyjFHRRysS8vZ5AbqGEoFIb6pYHPZ+L/OC2Lc+xT8uHVVR5CAK/wQ==}
 
-  lint-staged@15.4.3:
-    resolution: {integrity: sha512-FoH1vOeouNh1pw+90S+cnuoFwRfUD9ijY2GKy5h7HS3OR7JVir2N2xrsa0+Twc1B7cW72L+88geG5cW4wIhn7g==}
+  lint-staged@15.5.0:
+    resolution: {integrity: sha512-WyCzSbfYGhK7cU+UuDDkzUiytbfbi0ZdPy2orwtM75P3WTtQBzmG40cCxIa8Ii2+XjfxzLH6Be46tUfWS85Xfg==}
     engines: {node: '>=18.12.0'}
     hasBin: true
 
@@ -4647,13 +4635,13 @@ snapshots:
       '@eslint/core': 0.12.0
       levn: 0.4.1
 
-  '@forklaunch/common@0.2.3': {}
+  '@forklaunch/common@0.2.4': {}
 
-  '@forklaunch/core@0.5.4(socks@2.8.4)':
+  '@forklaunch/core@0.5.6(socks@2.8.4)':
     dependencies:
-      '@forklaunch/common': 0.2.3
+      '@forklaunch/common': 0.2.4
       '@forklaunch/opentelemetry-instrumentation-hyper-express': 0.0.5(@opentelemetry/api@1.9.0)
-      '@forklaunch/validator': 0.4.6(openapi3-ts@4.4.0)
+      '@forklaunch/validator': 0.4.7(openapi3-ts@4.4.0)
       '@mikro-orm/core': 6.4.9
       '@mikro-orm/mongodb': 6.4.9(@mikro-orm/core@6.4.9)(socks@2.8.4)
       '@opentelemetry/api': 1.9.0
@@ -4672,7 +4660,7 @@ snapshots:
       '@opentelemetry/semantic-conventions': 1.30.0
       cors: 2.8.5
       dotenv: 16.4.7
-      jose: 6.0.9
+      jose: 6.0.10
       openapi3-ts: 4.4.0
       pino: 9.6.0
       pino-http: 10.4.0
@@ -4689,11 +4677,11 @@ snapshots:
       - socks
       - supports-color
 
-  '@forklaunch/express@0.3.5(openapi3-ts@4.4.0)(socks@2.8.4)':
+  '@forklaunch/express@0.3.7(openapi3-ts@4.4.0)(socks@2.8.4)':
     dependencies:
-      '@forklaunch/common': 0.2.3
-      '@forklaunch/core': 0.5.4(socks@2.8.4)
-      '@forklaunch/validator': 0.4.6(openapi3-ts@4.4.0)
+      '@forklaunch/common': 0.2.4
+      '@forklaunch/core': 0.5.6(socks@2.8.4)
+      '@forklaunch/validator': 0.4.7(openapi3-ts@4.4.0)
       '@scalar/express-api-reference': 0.4.193
       cors: 2.8.5
       express: 4.21.2
@@ -4722,12 +4710,12 @@ snapshots:
       typed-emitter: 2.1.0
       uWebSockets.js: https://codeload.github.com/uNetworking/uWebSockets.js/tar.gz/6609a88ffa9a16ac5158046761356ce03250a0df
 
-  '@forklaunch/hyper-express@0.3.5(express@4.21.2)(socks@2.8.4)':
+  '@forklaunch/hyper-express@0.3.7(express@4.21.2)(socks@2.8.4)':
     dependencies:
-      '@forklaunch/common': 0.2.3
-      '@forklaunch/core': 0.5.4(socks@2.8.4)
+      '@forklaunch/common': 0.2.4
+      '@forklaunch/core': 0.5.6(socks@2.8.4)
       '@forklaunch/hyper-express-fork': 6.17.30
-      '@forklaunch/validator': 0.4.6(openapi3-ts@4.4.0)
+      '@forklaunch/validator': 0.4.7(openapi3-ts@4.4.0)
       '@scalar/express-api-reference': 0.4.193
       cors: 2.8.5
       live-directory: 3.0.3
@@ -4757,10 +4745,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@forklaunch/validator@0.4.6(openapi3-ts@4.4.0)':
+  '@forklaunch/validator@0.4.7(openapi3-ts@4.4.0)':
     dependencies:
       '@anatine/zod-openapi': 2.2.7(openapi3-ts@4.4.0)(zod@3.24.2)
-      '@forklaunch/common': 0.2.3
+      '@forklaunch/common': 0.2.4
       '@sinclair/typebox': 0.34.30
       zod: 3.24.2
     transitivePeerDependencies:
@@ -5002,31 +4990,11 @@ snapshots:
 
   '@js-sdsl/ordered-map@4.4.2': {}
 
-  '@mikro-orm/cli@6.4.9':
-    dependencies:
-      '@jercle/yargonaut': 1.1.5
-      '@mikro-orm/core': 6.4.9
-      '@mikro-orm/knex': 6.4.9(@mikro-orm/core@6.4.9)(sqlite3@5.1.7)
-      fs-extra: 11.3.0
-      tsconfig-paths: 4.2.0
-      yargs: 17.7.2
-    transitivePeerDependencies:
-      - better-sqlite3
-      - libsql
-      - mariadb
-      - mysql
-      - mysql2
-      - pg
-      - pg-native
-      - sqlite3
-      - supports-color
-      - tedious
-
   '@mikro-orm/cli@6.4.9(pg@8.13.3)':
     dependencies:
       '@jercle/yargonaut': 1.1.5
       '@mikro-orm/core': 6.4.9
-      '@mikro-orm/knex': 6.4.9(@mikro-orm/core@6.4.9)(pg@8.13.3)
+      '@mikro-orm/knex': 6.4.9(@mikro-orm/core@6.4.9)(pg@8.13.3)(sqlite3@5.1.7)
       fs-extra: 11.3.0
       tsconfig-paths: 4.2.0
       yargs: 17.7.2
@@ -5052,11 +5020,11 @@ snapshots:
       mikro-orm: 6.4.9
       reflect-metadata: 0.2.2
 
-  '@mikro-orm/knex@6.4.9(@mikro-orm/core@6.4.9)(mysql2@3.13.0)':
+  '@mikro-orm/knex@6.4.9(@mikro-orm/core@6.4.9)(mysql2@3.13.0)(pg@8.13.3)':
     dependencies:
       '@mikro-orm/core': 6.4.9
       fs-extra: 11.3.0
-      knex: 3.1.0(mysql2@3.13.0)
+      knex: 3.1.0(mysql2@3.13.0)(pg@8.13.3)
       sqlstring: 2.3.3
     transitivePeerDependencies:
       - mysql
@@ -5067,47 +5035,13 @@ snapshots:
       - supports-color
       - tedious
 
-  '@mikro-orm/knex@6.4.9(@mikro-orm/core@6.4.9)(pg@8.13.3)':
+  '@mikro-orm/knex@6.4.9(@mikro-orm/core@6.4.9)(pg@8.13.3)(sqlite3@5.1.7)':
     dependencies:
       '@mikro-orm/core': 6.4.9
       fs-extra: 11.3.0
-      knex: 3.1.0(pg@8.13.3)
+      knex: 3.1.0(pg@8.13.3)(sqlite3@5.1.7)
       sqlstring: 2.3.3
     transitivePeerDependencies:
-      - mysql
-      - mysql2
-      - pg
-      - pg-native
-      - sqlite3
-      - supports-color
-      - tedious
-
-  '@mikro-orm/knex@6.4.9(@mikro-orm/core@6.4.9)(sqlite3@5.1.7)':
-    dependencies:
-      '@mikro-orm/core': 6.4.9
-      fs-extra: 11.3.0
-      knex: 3.1.0(sqlite3@5.1.7)
-      sqlstring: 2.3.3
-    transitivePeerDependencies:
-      - mysql
-      - mysql2
-      - pg
-      - pg-native
-      - sqlite3
-      - supports-color
-      - tedious
-
-  '@mikro-orm/migrations@6.4.9(@mikro-orm/core@6.4.9)(@types/node@22.13.10)':
-    dependencies:
-      '@mikro-orm/core': 6.4.9
-      '@mikro-orm/knex': 6.4.9(@mikro-orm/core@6.4.9)(sqlite3@5.1.7)
-      fs-extra: 11.3.0
-      umzug: 3.8.2(@types/node@22.13.10)
-    transitivePeerDependencies:
-      - '@types/node'
-      - better-sqlite3
-      - libsql
-      - mariadb
       - mysql
       - mysql2
       - pg
@@ -5119,7 +5053,7 @@ snapshots:
   '@mikro-orm/migrations@6.4.9(@mikro-orm/core@6.4.9)(@types/node@22.13.10)(pg@8.13.3)':
     dependencies:
       '@mikro-orm/core': 6.4.9
-      '@mikro-orm/knex': 6.4.9(@mikro-orm/core@6.4.9)(pg@8.13.3)
+      '@mikro-orm/knex': 6.4.9(@mikro-orm/core@6.4.9)(pg@8.13.3)(sqlite3@5.1.7)
       fs-extra: 11.3.0
       umzug: 3.8.2(@types/node@22.13.10)
     transitivePeerDependencies:
@@ -5149,10 +5083,10 @@ snapshots:
       - snappy
       - socks
 
-  '@mikro-orm/mysql@6.4.9(@mikro-orm/core@6.4.9)':
+  '@mikro-orm/mysql@6.4.9(@mikro-orm/core@6.4.9)(pg@8.13.3)':
     dependencies:
       '@mikro-orm/core': 6.4.9
-      '@mikro-orm/knex': 6.4.9(@mikro-orm/core@6.4.9)(mysql2@3.13.0)
+      '@mikro-orm/knex': 6.4.9(@mikro-orm/core@6.4.9)(mysql2@3.13.0)(pg@8.13.3)
       mysql2: 3.13.0
     transitivePeerDependencies:
       - better-sqlite3
@@ -5168,7 +5102,7 @@ snapshots:
   '@mikro-orm/postgresql@6.4.9(@mikro-orm/core@6.4.9)':
     dependencies:
       '@mikro-orm/core': 6.4.9
-      '@mikro-orm/knex': 6.4.9(@mikro-orm/core@6.4.9)(pg@8.13.3)
+      '@mikro-orm/knex': 6.4.9(@mikro-orm/core@6.4.9)(pg@8.13.3)(sqlite3@5.1.7)
       pg: 8.13.3
       postgres-array: 3.0.4
       postgres-date: 2.1.0
@@ -5190,10 +5124,10 @@ snapshots:
       globby: 11.1.0
       ts-morph: 25.0.1
 
-  '@mikro-orm/sqlite@6.4.9(@mikro-orm/core@6.4.9)':
+  '@mikro-orm/sqlite@6.4.9(@mikro-orm/core@6.4.9)(pg@8.13.3)':
     dependencies:
       '@mikro-orm/core': 6.4.9
-      '@mikro-orm/knex': 6.4.9(@mikro-orm/core@6.4.9)(sqlite3@5.1.7)
+      '@mikro-orm/knex': 6.4.9(@mikro-orm/core@6.4.9)(pg@8.13.3)(sqlite3@5.1.7)
       fs-extra: 11.3.0
       sqlite3: 5.1.7
       sqlstring-sqlite: 0.1.1
@@ -6193,7 +6127,7 @@ snapshots:
   browserslist@4.24.4:
     dependencies:
       caniuse-lite: 1.0.30001703
-      electron-to-chromium: 1.5.114
+      electron-to-chromium: 1.5.115
       node-releases: 2.0.19
       update-browserslist-db: 1.1.3(browserslist@4.24.4)
 
@@ -6512,7 +6446,7 @@ snapshots:
     dependencies:
       jake: 10.9.2
 
-  electron-to-chromium@1.5.114: {}
+  electron-to-chromium@1.5.115: {}
 
   emittery@0.13.1: {}
 
@@ -7493,7 +7427,7 @@ snapshots:
 
   jju@1.4.0: {}
 
-  jose@6.0.9: {}
+  jose@6.0.10: {}
 
   joycon@3.1.1: {}
 
@@ -7537,7 +7471,7 @@ snapshots:
 
   kleur@3.0.3: {}
 
-  knex@3.1.0(mysql2@3.13.0):
+  knex@3.1.0(mysql2@3.13.0)(pg@8.13.3):
     dependencies:
       colorette: 2.0.19
       commander: 10.0.1
@@ -7555,10 +7489,11 @@ snapshots:
       tildify: 2.0.0
     optionalDependencies:
       mysql2: 3.13.0
+      pg: 8.13.3
     transitivePeerDependencies:
       - supports-color
 
-  knex@3.1.0(pg@8.13.3):
+  knex@3.1.0(pg@8.13.3)(sqlite3@5.1.7):
     dependencies:
       colorette: 2.0.19
       commander: 10.0.1
@@ -7576,26 +7511,6 @@ snapshots:
       tildify: 2.0.0
     optionalDependencies:
       pg: 8.13.3
-    transitivePeerDependencies:
-      - supports-color
-
-  knex@3.1.0(sqlite3@5.1.7):
-    dependencies:
-      colorette: 2.0.19
-      commander: 10.0.1
-      debug: 4.3.4
-      escalade: 3.2.0
-      esm: 3.2.25
-      get-package-type: 0.1.0
-      getopts: 2.3.0
-      interpret: 2.2.0
-      lodash: 4.17.21
-      pg-connection-string: 2.6.2
-      rechoir: 0.8.0
-      resolve-from: 5.0.0
-      tarn: 3.0.2
-      tildify: 2.0.0
-    optionalDependencies:
       sqlite3: 5.1.7
     transitivePeerDependencies:
       - supports-color
@@ -7615,7 +7530,7 @@ snapshots:
     dependencies:
       uc.micro: 2.1.0
 
-  lint-staged@15.4.3:
+  lint-staged@15.5.0:
     dependencies:
       chalk: 5.4.1
       commander: 13.1.0

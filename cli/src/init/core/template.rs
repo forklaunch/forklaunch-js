@@ -74,6 +74,7 @@ pub(crate) fn generate_with_template(
     data: &TemplateManifestData,
     ignore_files: &Vec<String>,
     preserve_files: &Vec<String>,
+    dryrun: bool,
 ) -> Result<Vec<RenderedTemplate>> {
     let mut rendered_templates = Vec::new();
 
@@ -95,7 +96,7 @@ pub(crate) fn generate_with_template(
             TemplateManifestData::Worker(config_data) => output_path_template.render(config_data),
         });
 
-        if !output_path.exists() {
+        if !output_path.exists() && !dryrun {
             create_dir_all(output_path.parent().unwrap())
                 .with_context(|| error_failed_to_create_dir(&output_path.parent().unwrap()))?;
         }
@@ -168,6 +169,7 @@ pub(crate) fn generate_with_template(
                 data,
                 ignore_files,
                 preserve_files,
+                dryrun,
             )
             .with_context(|| {
                 format!(
