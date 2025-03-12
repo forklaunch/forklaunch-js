@@ -52,10 +52,10 @@ fn check_base_path(base_path: &PathBuf, base_path_location: &BasePathLocation) -
 fn find_base_path(base_path_location: &BasePathLocation) -> Option<PathBuf> {
     let mut base_path = current_dir().unwrap().to_path_buf();
     for _ in 0..base_path_parent_count(base_path_location) {
-        base_path = base_path.parent().unwrap().to_path_buf();
         if base_path.join(".forklaunch").join("manifest.toml").exists() {
             return Some(base_path);
         }
+        base_path = base_path.parent().unwrap().to_path_buf();
     }
     None
 }
@@ -68,14 +68,29 @@ pub(crate) fn prompt_base_path(
 ) -> Result<String> {
     let current_path = current_dir().with_context(|| ERROR_FAILED_TO_GET_CWD)?;
 
-    let base_path = if base_path_location == &BasePathLocation::Anywhere {
-        find_base_path(base_path_location)
-            .unwrap()
-            .to_string_lossy()
-            .to_string()
+    let maybe_defined_base_path = matches.get_one::<String>("base_path");
+    let base_path = if let Some(base_path) = maybe_defined_base_path {
+        base_path.to_string()
     } else {
-        if check_base_path(&current_path, base_path_location) {
-            current_path.to_string_lossy().to_string()
+        let maybe_correct_path = match base_path_location {
+            BasePathLocation::Anywhere => {
+                if let Some(base_path) = find_base_path(base_path_location) {
+                    Some(base_path.to_string_lossy().to_string())
+                } else {
+                    None
+                }
+            }
+            _ => {
+                if check_base_path(&current_path, base_path_location) {
+                    Some(current_path.to_string_lossy().to_string())
+                } else {
+                    None
+                }
+            }
+        };
+
+        if let Some(base_path) = maybe_correct_path {
+            base_path
         } else {
             prompt_with_validation(
                 line_editor,

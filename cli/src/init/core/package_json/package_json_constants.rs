@@ -1,13 +1,23 @@
 // Application package.json dependencies constants
+// globals
 pub(crate) const GLOBALS_VERSION: &str = "^16.0.0";
+// husky
 pub(crate) const HUSKY_VERSION: &str = "^9.1.7";
+// @types/jest
 pub(crate) const JEST_TYPES_VERSION: &str = "^29.5.14";
+// jest
 pub(crate) const JEST_VERSION: &str = "^29.7.0";
+// lint-staged
 pub(crate) const LINT_STAGED_VERSION: &str = "^15.4.3";
+// sort-package-json
 pub(crate) const SORT_PACKAGE_JSON_VERSION: &str = "^3.0.0";
+// ts-jest
 pub(crate) const TS_JEST_VERSION: &str = "^29.2.6";
+// tsx
 pub(crate) const TSX_VERSION: &str = "^4.19.3";
+// typescript
 pub(crate) const TYPESCRIPT_VERSION: &str = "^5.8.2";
+// vitest
 pub(crate) const VITEST_VERSION: &str = "^3.0.8";
 
 // Application package.json scripts constants
@@ -96,33 +106,56 @@ pub(crate) fn application_up_packages_script(runtime: &str) -> &str {
 }
 
 // Project package.json dependencies constants
+// @forklaunch/framework-core
 pub(crate) const APP_CORE_VERSION: &str = "workspace:*";
+// @forklaunch/framework-monitoring
 pub(crate) const APP_MONITORING_VERSION: &str = "workspace:*";
+// @forklaunch/common
 pub(crate) const COMMON_VERSION: &str = "^0.2.3";
+// @forklaunch/core
 pub(crate) const CORE_VERSION: &str = "^0.5.4";
+// @forklaunch/express
 pub(crate) const EXPRESS_VERSION: &str = "^0.3.5";
+// @forklaunch/hyper-express
 pub(crate) const HYPER_EXPRESS_VERSION: &str = "^0.3.5";
+// @forklaunch/validator
 pub(crate) const VALIDATOR_VERSION: &str = "^0.4.6";
+// @mikro-orm/core
 pub(crate) const MIKRO_ORM_CORE_VERSION: &str = "^6.4.9";
+// @mikro-orm/migrations
 pub(crate) const MIKRO_ORM_MIGRATIONS_VERSION: &str = "^6.4.9";
+// @mikro-orm/postgresql,@mikro-orm/mongodb
 pub(crate) const MIKRO_ORM_DATABASE_VERSION: &str = "^6.4.9";
+// @mikro-orm/reflection
 pub(crate) const MIKRO_ORM_REFLECTION_VERSION: &str = "^6.4.9";
+// typebox
 pub(crate) const TYPEBOX_VERSION: &str = "^0.34.28";
+// ajv
 pub(crate) const AJV_VERSION: &str = "^8.17.1";
+// dotenv
 pub(crate) const DOTENV_VERSION: &str = "^16.4.7";
-pub(crate) const UUID_VERSION: &str = "^10.0.0";
+// uuid
+pub(crate) const UUID_VERSION: &str = "^11.1.0";
+// zod
 pub(crate) const ZOD_VERSION: &str = "^3.24.2";
 
 // Project package.json devDependencies constants
-pub(crate) const ESLINT_VERSION: &str = "^9.17.0";
-pub(crate) const MIKRO_ORM_CLI_VERSION: &str = "^6.4.6";
+// eslint
+pub(crate) const ESLINT_VERSION: &str = "^9.22.0";
+// @mikro-orm/cli
+pub(crate) const MIKRO_ORM_CLI_VERSION: &str = "^6.4.9";
+// @types/express
 pub(crate) const TYPES_EXPRESS_VERSION: &str = "^5.0.0";
+// @types/express-serve-static-core
 pub(crate) const TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION: &str = "^5.0.6";
+// @types/qs
 pub(crate) const TYPES_QS_VERSION: &str = "^6.9.18";
-pub(crate) const TS_NODE_VERSION: &str = "^10.9.2";
-pub(crate) const TYPEDOC_VERSION: &str = "^0.27.7";
+// typedoc
+pub(crate) const TYPEDOC_VERSION: &str = "^0.27.9";
+// @types/uuid
 pub(crate) const TYPES_UUID_VERSION: &str = "^10.0.0";
-pub(crate) const TYPESCRIPT_ESLINT_VERSION: &str = "^8.24.1";
+// typescript-eslint
+pub(crate) const TYPESCRIPT_ESLINT_VERSION: &str = "^8.26.0";
 
 // Project package.json scripts constants
 pub(crate) const PROJECT_BUILD_SCRIPT: &str = "tsc";

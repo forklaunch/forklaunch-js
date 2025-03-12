@@ -1,0 +1,36 @@
+name: Build Framework
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'framework/**'
+  pull_request:
+    paths:
+      - 'framework/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - name: Install dependencies
+        working-directory: ./framework
+        run: pnpm install
+
+      - name: Build framework
+        working-directory: ./framework
+        run: pnpm build

@@ -31,11 +31,9 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/common": "^0.2.3",
     "@forklaunch/core": "^0.5.4",
     "@forklaunch/framework-core": "workspace:*",
     "@forklaunch/framework-monitoring": "workspace:*",
-    "@forklaunch/validator": "^0.4.6",
     "@mikro-orm/core": "^6.4.9",
     "@mikro-orm/migrations": "^6.4.9",
     "@mikro-orm/mongodb": "^6.4.9",
@@ -44,7 +42,6 @@
     "@mikro-orm/reflection": "^6.4.9",
     "@mikro-orm/sqlite": "^6.4.9",
     "@sinclair/typebox": "^0.34.28",
-    "ajv": "^8.17.1",
     "dotenv": "^16.4.7",
     "zod": "^3.24.2"
   },
@@ -53,8 +50,8 @@
     "@types/express": "^5.0.0",
     "@types/express-serve-static-core": "^5.0.6",
     "@types/qs": "^6.9.18",
+    "depcheck": "^1.4.7",
     "prettier": "^3.5.3",
-    "ts-node": "^10.9.2",
     "typedoc": "^0.27.9"
   },
   "mikro-orm": {

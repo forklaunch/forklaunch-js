@@ -49,7 +49,7 @@ use super::{
                 MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
                 MIKRO_ORM_REFLECTION_VERSION, PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT,
                 PROJECT_FORMAT_SCRIPT, PROJECT_LINT_FIX_SCRIPT, PROJECT_LINT_SCRIPT, TSX_VERSION,
-                TS_NODE_VERSION, TYPEBOX_VERSION, TYPEDOC_VERSION, TYPESCRIPT_ESLINT_VERSION,
+                TYPEBOX_VERSION, TYPEDOC_VERSION, TYPESCRIPT_ESLINT_VERSION,
                 TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION, TYPES_QS_VERSION,
                 TYPES_UUID_VERSION, UUID_VERSION, VALIDATOR_VERSION, ZOD_VERSION,
             },
@@ -426,7 +426,6 @@ pub(crate) fn generate_service_package_json(
             ProjectDevDependencies {
                 eslint: Some(ESLINT_VERSION.to_string()),
                 mikro_orm_cli: Some(MIKRO_ORM_CLI_VERSION.to_string()),
-                ts_node: Some(TS_NODE_VERSION.to_string()),
                 tsx: Some(TSX_VERSION.to_string()),
                 typedoc: Some(TYPEDOC_VERSION.to_string()),
                 typescript_eslint: Some(TYPESCRIPT_ESLINT_VERSION.to_string()),

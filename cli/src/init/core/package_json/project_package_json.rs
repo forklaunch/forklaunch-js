@@ -228,8 +228,6 @@ pub struct ProjectDevDependencies {
     pub types_uuid: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub eslint: Option<String>,
-    #[serde(rename = "ts-node", skip_serializing_if = "Option::is_none")]
-    pub ts_node: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tsx: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
