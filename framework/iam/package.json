@@ -31,7 +31,7 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/core": "^0.5.4",
+    "@forklaunch/core": "^0.5.6",
     "@forklaunch/framework-core": "workspace:*",
     "@forklaunch/framework-monitoring": "workspace:*",
     "@mikro-orm/core": "^6.4.9",
@@ -41,7 +41,7 @@
     "@mikro-orm/postgresql": "^6.4.9",
     "@mikro-orm/reflection": "^6.4.9",
     "@mikro-orm/sqlite": "^6.4.9",
-    "@sinclair/typebox": "^0.34.28",
+    "@sinclair/typebox": "^0.34.30",
     "dotenv": "^16.4.7",
     "zod": "^3.24.2"
   },
