@@ -1,4 +1,8 @@
 import {
+  MetricsDefinition,
+  OpenTelemetryCollector
+} from '@forklaunch/core/http';
+import {
   NextFunction,
   ParsedQs,
   forklaunchExpress as registeredForklaunchExpress,
@@ -33,10 +37,17 @@ export type { NextFunction, ParsedQs, Request, Response };
 export const SchemaValidator = RegisteredSchemaValidator;
 export type SchemaValidator = ReturnType<typeof RegisteredSchemaValidator>;
 export const forklaunchRouter = <BasePath extends `/${string}`>(
-  basePath: BasePath
-) => registeredForklaunchRouter(basePath, SchemaValidator());
-export const forklaunchExpress = () =>
-  registeredForklaunchExpress(SchemaValidator());
+  basePath: BasePath,
+  openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
+) =>
+  registeredForklaunchRouter(
+    basePath,
+    SchemaValidator(),
+    openTelemetryCollector
+  );
+export const forklaunchExpress = (
+  openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
+) => registeredForklaunchExpress(SchemaValidator(), openTelemetryCollector);
 export const handlers: typeof registeredHandlers = registeredHandlers;
 
 export const string: typeof schemaString = schemaString;

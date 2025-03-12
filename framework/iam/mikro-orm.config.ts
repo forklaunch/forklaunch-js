@@ -8,6 +8,7 @@ import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
 import dotenv from 'dotenv';
 // import { SqliteDriver } from '@mikro-orm/sqlite';
+import * as entities from './models/persistence';
 
 dotenv.config({ path: getEnvVar('ENV_FILE_PATH') });
 
@@ -60,18 +61,19 @@ const mikroOrmOptionsConfig = {
   user: validConfigInjector.resolve('user'),
   password: validConfigInjector.resolve('password'),
   port: validConfigInjector.resolve('port'),
-  entities: ['dist/**/*.entity.{js,mjs,cjs}'],
-  entitiesTs: ['models/persistence/**/*.entity.ts'],
+  entities: Object.values(entities),
   metadataProvider: TsMorphMetadataProvider,
   debug: true,
   extensions: [Migrator],
   discovery: {
     getMappedType(type: string, platform: Platform) {
-      if (type === 'string') {
-        return Type.getType(TextType);
+      switch (type.toLowerCase()) {
+        case 'string':
+        case 'text':
+          return Type.getType(TextType);
+        default:
+          return platform.getDefaultMappedType(type);
       }
-
-      return platform.getDefaultMappedType(type);
     }
   }
 };

@@ -1,4 +1,5 @@
 import { Controller } from '@forklaunch/core/controllers';
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import {
   ConfigInjector,
   ScopedDependencyFactory
@@ -11,6 +12,7 @@ import {
   Response,
   SchemaValidator
 } from '@forklaunch/framework-core';
+import { Metrics } from '@forklaunch/framework-monitoring';
 import { configValidator } from '../bootstrapper';
 import { SampleWorkerService } from '../interfaces/sampleWorker.interface';
 import {
@@ -34,7 +36,8 @@ export class SampleWorkerController
       SchemaValidator,
       typeof configValidator,
       'sampleWorkerService'
-    >
+    >,
+    private openTelemetryCollector: OpenTelemetryCollector<Metrics>
   ) {}
 
   // GET endpoint handler that returns a simple message

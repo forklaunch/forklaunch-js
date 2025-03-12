@@ -1,6 +1,6 @@
 import { Migration } from '@mikro-orm/migrations';
 
-export class MigrationInitial extends Migration {
+export class Migration20250311041303 extends Migration {
   override async up(): Promise<void> {
     this.addSql(
       `create table "organization" ("id" uuid not null, "created_at" timestamptz not null, "updated_at" timestamptz not null, "name" text not null, "domain" text not null, "logo_url" text null, "subscription" text not null, "status" text not null default 'active', constraint "organization_pkey" primary key ("id"));`
@@ -22,7 +22,7 @@ export class MigrationInitial extends Migration {
     );
 
     this.addSql(
-      `create table "user" ("id" uuid not null, "created_at" timestamptz not null, "updated_at" timestamptz not null, "email" text not null, "password_hash" text not null, "first_name" text not null, "last_name" text not null, "phone_number" text null, "organization_id" uuid not null, "subscription" text null, "extra_fields" jsonb null, constraint "user_pkey" primary key ("id"));`
+      `create table "user" ("id" uuid not null, "created_at" timestamptz not null, "updated_at" timestamptz not null, "email" text not null, "password_hash" text not null, "first_name" text not null, "last_name" text not null, "phone_number" text null, "organization_id" uuid null, "subscription" text null, "extra_fields" jsonb null, constraint "user_pkey" primary key ("id"));`
     );
     this.addSql(
       `alter table "user" add constraint "user_email_unique" unique ("email");`
@@ -43,7 +43,7 @@ export class MigrationInitial extends Migration {
     );
 
     this.addSql(
-      `alter table "user" add constraint "user_organization_id_foreign" foreign key ("organization_id") references "organization" ("id") on update cascade;`
+      `alter table "user" add constraint "user_organization_id_foreign" foreign key ("organization_id") references "organization" ("id") on update cascade on delete set null;`
     );
 
     this.addSql(

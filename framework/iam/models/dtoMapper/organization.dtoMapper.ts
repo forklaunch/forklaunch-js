@@ -4,6 +4,7 @@ import {
 } from '@forklaunch/core/dtoMapper';
 import {
   array,
+  collection,
   date,
   enum_,
   optional,
@@ -11,12 +12,10 @@ import {
   string,
   uuid
 } from '@forklaunch/framework-core';
-import { Collection } from '@mikro-orm/core';
 import {
   Organization,
   OrganizationStatus
 } from '../persistence/organization.entity';
-import { User } from '../persistence/user.entity';
 import { UserDtoMapper } from './user.dtoMapper';
 
 export type CreateOrganizationDto = CreateOrganizationDtoMapper['dto'];
@@ -34,7 +33,7 @@ export class CreateOrganizationDtoMapper extends RequestDtoMapper<
   toEntity() {
     return Organization.create({
       ...this.dto,
-      users: new Collection<User>([]),
+      users: collection([]),
       status: OrganizationStatus.ACTIVE
     });
   }

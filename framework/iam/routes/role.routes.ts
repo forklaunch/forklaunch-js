@@ -1,32 +1,50 @@
-import { forklaunchRouter } from '@forklaunch/framework-core';
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
+import { ScopedDependencyFactory } from '@forklaunch/core/services';
+import { forklaunchRouter, SchemaValidator } from '@forklaunch/framework-core';
+import { Metrics } from '@forklaunch/framework-monitoring';
+import { configValidator } from '../bootstrapper';
 import { RoleController } from '../controllers/role.controller';
 
-export const router = forklaunchRouter('/role');
+export const RoleRoutes = (
+  scopedServiceFactory: ScopedDependencyFactory<
+    SchemaValidator,
+    typeof configValidator,
+    'roleService'
+  >,
+  openTelemetryCollector: OpenTelemetryCollector<Metrics>
+) => {
+  const router = forklaunchRouter('/role', openTelemetryCollector);
 
-export const RoleRoutes = (controller: RoleController) => ({
-  router,
+  const controller = new RoleController(
+    scopedServiceFactory,
+    openTelemetryCollector
+  );
 
-  // Create role
-  createRole: router.post('/', controller.createRole),
+  return {
+    router,
 
-  // Create batch roles
-  createBatchRoles: router.post('/batch', controller.createBatchRoles),
+    // Create role
+    createRole: router.post('/', controller.createRole),
 
-  // Get role by ID
-  getRole: router.get('/:id', controller.getRole),
+    // Create batch roles
+    createBatchRoles: router.post('/batch', controller.createBatchRoles),
 
-  // Get batch roles by IDs
-  getBatchRoles: router.get('/batch', controller.getBatchRoles),
+    // Get role by ID
+    getRole: router.get('/:id', controller.getRole),
 
-  // Update role by ID
-  updateRole: router.put('/', controller.updateRole),
+    // Get batch roles by IDs
+    getBatchRoles: router.get('/batch', controller.getBatchRoles),
 
-  // Update batch roles by IDs
-  updateBatchRoles: router.put('/batch', controller.updateBatchRoles),
+    // Update role by ID
+    updateRole: router.put('/', controller.updateRole),
 
-  // Delete role by ID
-  deleteRole: router.delete('/:id', controller.deleteRole),
+    // Update batch roles by IDs
+    updateBatchRoles: router.put('/batch', controller.updateBatchRoles),
 
-  // Delete batch roles by IDs
-  deleteBatchRoles: router.delete('/batch', controller.deleteBatchRoles)
-});
+    // Delete role by ID
+    deleteRole: router.delete('/:id', controller.deleteRole),
+
+    // Delete batch roles by IDs
+    deleteBatchRoles: router.delete('/batch', controller.deleteBatchRoles)
+  };
+};

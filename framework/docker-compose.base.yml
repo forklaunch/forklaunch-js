@@ -8,6 +8,54 @@ networks:
     driver: bridge
 
 services:
+  tempo:
+    image: grafana/tempo:latest
+    ports:
+      - '3200:3200'
+      - '4317:4317'
+    networks:
+      - forklaunch-network
+    volumes:
+      - './monitoring/tempo.yaml:/etc/tempo.yaml'
+    command: '-config.file=/etc/tempo.yaml'
+
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - '3100:3100'
+    networks:
+      - forklaunch-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - '9090:9090'
+    networks:
+      - forklaunch-network
+    volumes:
+      - './monitoring/prometheus.yaml:/etc/prometheus/prometheus.yml'
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - '3000:3000'
+    networks:
+      - forklaunch-network
+    volumes:
+      - './monitoring/grafana-provisioning/datasources:/etc/grafana/provisioning/datasources'
+      - './monitoring/grafana-provisioning/dashboards:/etc/grafana/provisioning/dashboards'
+
+  otel-collector:
+    image: otel/opentelemetry-collector:latest
+    ports:
+      - '4318:4318'
+      - '8889:8889'
+    networks:
+      - forklaunch-network
+    volumes:
+      - './monitoring/otel-collector-config.yaml:/etc/otel-collector-config.yaml'
+    command: '--config=/etc/otel-collector-config.yaml'
+
   postgres:
     image: postgres:latest
     hostname: postgres

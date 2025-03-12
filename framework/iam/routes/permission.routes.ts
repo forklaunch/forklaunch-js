@@ -1,41 +1,59 @@
-import { forklaunchRouter } from '@forklaunch/framework-core';
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
+import { ScopedDependencyFactory } from '@forklaunch/core/services';
+import { forklaunchRouter, SchemaValidator } from '@forklaunch/framework-core';
+import { Metrics } from '@forklaunch/framework-monitoring';
+import { configValidator } from '../bootstrapper';
 import { PermissionController } from '../controllers/permission.controller';
 
-export const router = forklaunchRouter('/permission');
+export const PermissionRoutes = (
+  scopedServiceFactory: ScopedDependencyFactory<
+    SchemaValidator,
+    typeof configValidator,
+    'permissionService'
+  >,
+  openTelemetryCollector: OpenTelemetryCollector<Metrics>
+) => {
+  const router = forklaunchRouter('/permission', openTelemetryCollector);
 
-export const PermissionRoutes = (controller: PermissionController) => ({
-  router,
+  const controller = new PermissionController(
+    scopedServiceFactory,
+    openTelemetryCollector
+  );
 
-  // Create a permission
-  createPermission: router.post('/', controller.createPermission),
+  return {
+    router,
 
-  // Create batch permissions
-  createBatchPermissions: router.post(
-    '/batch',
-    controller.createBatchPermissions
-  ),
+    // Create a permission
+    createPermission: router.post('/', controller.createPermission),
 
-  // Get a permission by ID
-  getPermission: router.get('/:id', controller.getPermission),
+    // Create batch permissions
+    createBatchPermissions: router.post(
+      '/batch',
+      controller.createBatchPermissions
+    ),
 
-  // Get batch permissions by IDs
-  getBatchPermissions: router.get('/batch', controller.getBatchPermissions),
+    // Get a permission by ID
+    getPermission: router.get('/:id', controller.getPermission),
 
-  // Update a permission by ID
-  updatePermission: router.put('/', controller.updatePermission),
+    // Get batch permissions by IDs
+    getBatchPermissions: router.get('/batch', controller.getBatchPermissions),
 
-  // Update batch permissions by IDs
-  updateBatchPermissions: router.put(
-    '/batch',
-    controller.updateBatchPermissions
-  ),
+    // Update a permission by ID
+    updatePermission: router.put('/', controller.updatePermission),
 
-  // Delete a permission by ID
-  deletePermission: router.delete('/:id', controller.deletePermission),
+    // Update batch permissions by IDs
+    updateBatchPermissions: router.put(
+      '/batch',
+      controller.updateBatchPermissions
+    ),
 
-  // Delete batch permissions by IDs
-  deleteBatchPermissions: router.delete(
-    '/batch',
-    controller.deleteBatchPermissions
-  )
-});
+    // Delete a permission by ID
+    deletePermission: router.delete('/:id', controller.deletePermission),
+
+    // Delete batch permissions by IDs
+    deleteBatchPermissions: router.delete(
+      '/batch',
+      controller.deleteBatchPermissions
+    )
+  };
+};

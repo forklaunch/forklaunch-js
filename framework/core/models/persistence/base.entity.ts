@@ -1,5 +1,6 @@
 import { stripUndefinedProperties } from '@forklaunch/common';
 import {
+  Collection,
   Constructor,
   EntityDTO,
   FromEntityType,
@@ -70,13 +71,14 @@ export abstract class BaseEntity {
   }
 
   create(data: CreateShape<BaseEntity, this>): this {
-    Object.assign(this, data);
-    return this;
+    return Object.assign(this, transformRawDto(data, this));
   }
 
   update(data: UpdateShape<BaseEntity, this>): this {
     wrap(this).assign(
-      stripUndefinedProperties(data) as Partial<EntityDTO<FromEntityType<this>>>
+      stripUndefinedProperties(transformRawDto(data, this)) as Partial<
+        EntityDTO<FromEntityType<this>>
+      >
     );
     return this;
   }
@@ -92,4 +94,41 @@ export abstract class BaseEntity {
     wrap(this).assign(data);
     return this;
   }
+}
+
+function transformRawDto<
+  T extends Record<string, unknown>,
+  U extends BaseEntity
+>(data: T, entity: U): T {
+  const transformedObject: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (isMarkedCollection<object>(value)) {
+      transformedObject[key] = new Collection(entity, value.items);
+    } else {
+      transformedObject[key] = value;
+    }
+  }
+  return transformedObject as T;
+}
+
+function isMarkedCollection<T>(value: unknown): value is MarkedCollection<T> {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    '_collection' in value &&
+    typeof value._collection === 'boolean' &&
+    value._collection
+  );
+}
+
+export type MarkedCollection<T> = {
+  _collection: true;
+  items: T[];
+};
+
+export function collection<T>(items: T[]): MarkedCollection<T> {
+  return {
+    _collection: true,
+    items
+  };
 }

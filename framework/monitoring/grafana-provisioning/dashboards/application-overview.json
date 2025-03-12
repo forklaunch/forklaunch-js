@@ -31,39 +31,6 @@
           "color": {
             "mode": "palette-classic"
           },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "bars",
-            "fillOpacity": 100,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 0,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -86,17 +53,31 @@
       },
       "id": 1,
       "options": {
+        "displayMode": "gradient",
         "legend": {
           "calcs": [],
           "displayMode": "list",
           "placement": "bottom",
           "showLegend": true
         },
+        "maxVizHeight": 300,
+        "minVizHeight": 16,
+        "minVizWidth": 8,
+        "namePlacement": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
         "tooltip": {
           "hideZeros": false,
           "mode": "single",
           "sort": "none"
-        }
+        },
+        "valueMode": "color"
       },
       "pluginVersion": "11.5.2",
       "targets": [
@@ -106,7 +87,7 @@
             "uid": "DS_PROMETHEUS"
           },
           "editorMode": "code",
-          "expr": "(sum by(api_name, http_response_status_code) (http_requests_total{service_name=~\"$service\", api_name=~\"$api\", correlation_id=~\"$correlation_id\"})) - ((sum by(api_name, http_response_status_code) (http_requests_total{service_name=~\"$service\", api_name=~\"$api\", correlation_id=~\"$correlation_id\"} offset $__range)) or on(api_name, http_response_status_code) (sum by(api_name, http_response_status_code) (http_requests_total{service_name=~\"$service\", api_name=~\"$api\", correlation_id=~\"$correlation_id\"}) * 0))",
+          "expr": "(\n  sum by(api_name, http_response_status_code) (\n    http_requests_total{\n      service_name=~\"$service\",\n      api_name=~\"$api\",\n      correlation_id=~\"$correlation_id\"\n    }\n  )\n) - (\n  (\n    sum by(api_name, http_response_status_code) (\n      http_requests_total{\n        service_name=~\"$service\",\n        api_name=~\"$api\",\n        correlation_id=~\"$correlation_id\"\n      } offset $__range\n    )\n  ) or on(api_name, http_response_status_code) (\n    sum by(api_name, http_response_status_code) (\n      http_requests_total{\n        service_name=~\"$service\",\n        api_name=~\"$api\",\n        correlation_id=~\"$correlation_id\"\n      }\n    ) * 0\n  )\n)",
           "legendFormat": "{{api_name}} - {{http_response_status_code}}",
           "range": true,
           "refId": "A"
@@ -205,7 +186,13 @@
           "reducer": ["sum"],
           "show": false
         },
-        "showHeader": true
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Duration"
+          }
+        ]
       },
       "pluginVersion": "11.5.2",
       "targets": [
@@ -237,10 +224,11 @@
               "value": "\"$correlation_id\""
             }
           ],
-          "limit": 20,
+          "limit": 50,
           "query": "",
           "queryType": "traceqlSearch",
           "refId": "A",
+          "spss": 3,
           "tableType": "traces"
         }
       ],
@@ -255,8 +243,8 @@
   "templating": {
     "list": [
       {
+        "allValue": ".+",
         "current": {
-          "selected": false,
           "text": "All",
           "value": ".+"
         },
@@ -266,7 +254,6 @@
         },
         "definition": "label_values(service_name)",
         "includeAll": true,
-        "allValue": ".+",
         "label": "Service",
         "name": "service",
         "options": [],
@@ -277,8 +264,8 @@
         "type": "query"
       },
       {
+        "allValue": ".+",
         "current": {
-          "selected": false,
           "text": "All",
           "value": ".+"
         },
@@ -288,7 +275,6 @@
         },
         "definition": "label_values({service_name=~\"$service\"}, api_name)",
         "includeAll": true,
-        "allValue": ".+",
         "label": "API",
         "name": "api",
         "options": [],
@@ -299,8 +285,8 @@
         "type": "query"
       },
       {
+        "allValue": ".+",
         "current": {
-          "selected": false,
           "text": "All",
           "value": ".+"
         },
@@ -310,7 +296,6 @@
         },
         "definition": "label_values({service_name=~\"$service\", api_name=~\"$api\"}, correlation_id)",
         "includeAll": true,
-        "allValue": ".+",
         "label": "Correlation ID",
         "name": "correlation_id",
         "options": [],
@@ -330,6 +315,6 @@
   "timezone": "",
   "title": "Application Overview",
   "uid": "application-overview",
-  "version": 15,
+  "version": 1,
   "weekStart": ""
 }
