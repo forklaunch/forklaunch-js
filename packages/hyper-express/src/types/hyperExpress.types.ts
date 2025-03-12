@@ -65,6 +65,8 @@ export interface InternalResponse<
       | 'json'
       | 'jsonp'
       | 'end'
+      | 'type'
+      | 'on'
     >,
     ForklaunchStatusResponse<ForklaunchSendableData> {
   /** The body data of the response */

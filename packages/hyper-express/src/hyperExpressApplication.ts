@@ -3,7 +3,9 @@ import {
   ForklaunchExpressLikeApplication,
   generateSwaggerDocument,
   isForklaunchRequest,
-  logger
+  logger,
+  MetricsDefinition,
+  OpenTelemetryCollector
 } from '@forklaunch/core/http';
 import {
   MiddlewareHandler,
@@ -13,6 +15,7 @@ import {
   Server
 } from '@forklaunch/hyper-express-fork';
 import { AnySchemaValidator } from '@forklaunch/validator';
+import { apiReference } from '@scalar/express-api-reference';
 import * as uWebsockets from 'uWebSockets.js';
 import { swagger, swaggerRedirect } from './middleware/swagger.middleware';
 
@@ -36,8 +39,11 @@ export class Application<
    *
    * @param {SV} schemaValidator - The schema validator.
    */
-  constructor(schemaValidator: SV) {
-    super(schemaValidator, new Server());
+  constructor(
+    schemaValidator: SV,
+    openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
+  ) {
+    super(schemaValidator, new Server(), openTelemetryCollector);
   }
 
   /**
@@ -70,6 +76,7 @@ export class Application<
 
       this.internal.set_error_handler((req, res, err) => {
         res.locals.errorMessage = err.message;
+        res.type('text/plain');
         res
           .status(
             res.statusCode && res.statusCode >= 400 ? res.statusCode : 500
@@ -86,7 +93,7 @@ export class Application<
         });
       });
 
-      const { apiReference } = await import('@scalar/express-api-reference');
+      // const { apiReference } = await import('@scalar/express-api-reference');
 
       this.internal.use(
         `/api/${process.env.VERSION ?? 'v1'}${process.env.DOCS_PATH ?? '/docs'}`,

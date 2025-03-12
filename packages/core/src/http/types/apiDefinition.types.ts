@@ -6,6 +6,8 @@ import {
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { Span } from '@opentelemetry/api';
 import { ParsedQs } from 'qs';
+import { Readable } from 'stream';
+import { OpenTelemetryCollector } from '../telemetry/openTelemetryCollector';
 import {
   Body,
   HeadersObject,
@@ -18,6 +20,7 @@ import {
   ResponseCompiledSchema,
   ResponsesObject
 } from './contractDetails.types';
+import { MetricsDefinition } from './openTelemetryCollector.types';
 
 /**
  * Interface representing the context of a request.
@@ -103,6 +106,9 @@ export interface ForklaunchRequest<
 
   /** Original path */
   originalPath: string;
+
+  /** OpenTelemetry Collector */
+  openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
 }
 
 /**
@@ -192,6 +198,19 @@ export interface ForklaunchResponse<
   ) => void;
 
   /**
+   * Adds an event listener to the response.
+   * @param {string} event - The event to listen for.
+   * @param {Function} listener - The listener function.
+   */
+  on(event: 'close', listener: () => void): this;
+  on(event: 'drain', listener: () => void): this;
+  on(event: 'error', listener: (err: Error) => void): this;
+  on(event: 'finish', listener: () => void): this;
+  on(event: 'pipe', listener: (src: Readable) => void): this;
+  on(event: 'unpipe', listener: (src: Readable) => void): this;
+  on(event: string | symbol, listener: (...args: unknown[]) => void): this;
+
+  /**
    * Sets the status of the response.
    * @param {U} code - The status code.
    * @param {string} [message] - Optional message.
@@ -216,6 +235,12 @@ export interface ForklaunchResponse<
    * @param {string} [data] - Optional data to send.
    */
   end: (data?: string) => void;
+
+  /**
+   * Sets the content type of the response.
+   * @param {string} type - The content type.
+   */
+  type: (type: string) => void;
 
   /** Local variables */
   locals: LocalsObj;

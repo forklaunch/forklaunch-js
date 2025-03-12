@@ -3,6 +3,8 @@ import { ExpressLikeRouter } from '../interfaces/expressLikeRouter.interface';
 import { cors } from '../middleware/request/cors.middleware';
 import { createContext } from '../middleware/request/createContext.middleware';
 import { ForklaunchExpressLikeRouter } from '../router/expressLikeRouter';
+import { OpenTelemetryCollector } from '../telemetry/openTelemetryCollector';
+import { MetricsDefinition } from '../types/openTelemetryCollector.types';
 
 /**
  * ForklaunchExpressLikeApplication class that sets up routes and middleware for an Express-like application, for use with controller/routes pattern.
@@ -33,9 +35,10 @@ export abstract class ForklaunchExpressLikeApplication<
    */
   constructor(
     readonly schemaValidator: SV,
-    readonly internal: Server
+    readonly internal: Server,
+    readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
   ) {
-    super('/', schemaValidator, internal);
+    super('/', schemaValidator, internal, openTelemetryCollector);
 
     this.internal.use(createContext(this.schemaValidator) as RouterHandler);
     this.internal.use(cors as RouterHandler);

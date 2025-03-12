@@ -1,3 +1,4 @@
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { number, SchemaValidator, string } from '@forklaunch/validator/zod';
 import { Server } from 'http';
 import { forklaunchExpress, forklaunchRouter } from '../index';
@@ -6,10 +7,16 @@ import { get } from '../src/handlers/get';
 import { post } from '../src/handlers/post';
 
 const zodSchemaValidator = SchemaValidator();
-const forklaunchApplication = forklaunchExpress(zodSchemaValidator);
+const openTelemetryCollector = new OpenTelemetryCollector('test');
+
+const forklaunchApplication = forklaunchExpress(
+  zodSchemaValidator,
+  openTelemetryCollector
+);
 const forklaunchRouterInstance = forklaunchRouter(
   '/testpath',
-  zodSchemaValidator
+  zodSchemaValidator,
+  openTelemetryCollector
 );
 
 describe('Forklaunch Express Tests', () => {
@@ -157,12 +164,19 @@ describe('Forklaunch Express Tests', () => {
 });
 
 describe('handlers', () => {
-  const application = forklaunchExpress(SchemaValidator());
-  const router = forklaunchRouter('/organization', SchemaValidator());
+  const application = forklaunchExpress(
+    zodSchemaValidator,
+    openTelemetryCollector
+  );
+  const router = forklaunchRouter(
+    '/organization',
+    zodSchemaValidator,
+    openTelemetryCollector
+  );
 
   it('should be able to create a path param handler', () => {
     const getRequest = get(
-      SchemaValidator(),
+      zodSchemaValidator,
       '/:id',
       {
         name: 'Get Organization',
@@ -201,7 +215,7 @@ describe('handlers', () => {
 
   it('should be able to create a body param handler', () => {
     const postRequest = post(
-      SchemaValidator(),
+      zodSchemaValidator,
       '/',
       {
         name: 'Create Organization',
@@ -225,7 +239,7 @@ describe('handlers', () => {
 
   it('should be able to create a middleware handler', () => {
     const checkoutMiddleware = checkout(
-      SchemaValidator(),
+      zodSchemaValidator,
       '/',
       {
         query: {

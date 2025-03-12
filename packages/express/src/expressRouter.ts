@@ -3,7 +3,9 @@ import {
   ContractDetailsOrMiddlewareOrTypedHandler,
   ForklaunchExpressLikeRouter,
   HeadersObject,
+  MetricsDefinition,
   MiddlewareOrMiddlewareWithTypedHandler,
+  OpenTelemetryCollector,
   ParamsObject,
   QueryObject,
   ResponsesObject,
@@ -51,9 +53,10 @@ export class Router<
    */
   constructor(
     public basePath: BasePath,
-    schemaValidator: SV
+    schemaValidator: SV,
+    openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
   ) {
-    super(basePath, schemaValidator, express.Router());
+    super(basePath, schemaValidator, express.Router(), openTelemetryCollector);
 
     this.internal.use(express.json());
     this.internal.use(enrichResponseTransmission as unknown as RequestHandler);

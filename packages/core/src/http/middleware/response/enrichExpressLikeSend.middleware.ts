@@ -76,6 +76,7 @@ export function enrichExpressLikeSend<
     >(req, res);
 
     if (res.statusCode === 404) {
+      res.type('text/plain');
       res.status(404);
       logger('error').error('Not Found');
       originalSend.call(instance, 'Not Found');
@@ -88,6 +89,7 @@ export function enrichExpressLikeSend<
           errorString += `\n------------------\n${res.locals.errorMessage}`;
         }
         logger('error').error(errorString);
+        res.type('text/plain');
         res.status(500);
         originalSend.call(instance, errorString);
         parseErrorSent = true;

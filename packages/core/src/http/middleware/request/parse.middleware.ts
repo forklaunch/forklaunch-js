@@ -67,7 +67,9 @@ export function parse<
         );
         break;
       case 'warning':
-        console.warn(prettyPrintParseErrors(parsedRequest.errors, 'Request'));
+        req.openTelemetryCollector.warn(
+          prettyPrintParseErrors(parsedRequest.errors, 'Request')
+        );
         break;
       case 'none':
         break;

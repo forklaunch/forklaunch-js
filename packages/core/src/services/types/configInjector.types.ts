@@ -11,9 +11,23 @@ export enum Lifetime {
   Scoped
 }
 
-export type Singleton<Value> = {
+export type Singleton<Args, Value> =
+  | {
+      lifetime: Lifetime.Singleton;
+      value: Value;
+    }
+  | ConstructedSingleton<Args, Value>;
+
+export type ConstructedSingleton<Args, Return> = {
   lifetime: Lifetime.Singleton;
-  value: Value;
+  factory: (
+    args: Args,
+    resolve: <T extends keyof Args>(
+      token: T,
+      context?: Record<string, unknown>
+    ) => Args[T],
+    context: Record<string, unknown>
+  ) => Return;
 };
 
 export type Constructed<Args, Return> = {

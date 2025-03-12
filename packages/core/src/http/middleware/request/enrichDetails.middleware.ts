@@ -1,5 +1,16 @@
 import { AnySchemaValidator } from '@forklaunch/validator';
-import { ATTR_API_NAME } from '../../telemetry/constants';
+import { getEnvVar } from '../../../services/getEnvVar';
+import {
+  ATTR_API_NAME,
+  ATTR_HTTP_REQUEST_METHOD,
+  ATTR_HTTP_RESPONSE_STATUS_CODE,
+  ATTR_HTTP_ROUTE,
+  ATTR_SERVICE_NAME
+} from '../../telemetry/constants';
+import {
+  httpServerDurationHistogram,
+  OpenTelemetryCollector
+} from '../../telemetry/openTelemetryCollector';
 import {
   ExpressLikeSchemaHandler,
   ForklaunchNextFunction
@@ -14,6 +25,7 @@ import {
   ResponseCompiledSchema,
   ResponsesObject
 } from '../../types/contractDetails.types';
+import { MetricsDefinition } from '../../types/openTelemetryCollector.types';
 
 /**
  * Middleware to enrich the request details with contract details.
@@ -38,7 +50,8 @@ export function enrichDetails<
   path: string,
   contractDetails: HttpContractDetails<SV> | PathParamHttpContractDetails<SV>,
   requestSchema: unknown,
-  responseSchemas: ResponseCompiledSchema
+  responseSchemas: ResponseCompiledSchema,
+  openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
 ): ExpressLikeSchemaHandler<
   SV,
   P,
@@ -57,8 +70,24 @@ export function enrichDetails<
     req.contractDetails = contractDetails;
     req.requestSchema = requestSchema;
     res.responseSchemas = responseSchemas;
+    req.openTelemetryCollector = openTelemetryCollector;
 
     req.context.span?.setAttribute(ATTR_API_NAME, req.contractDetails?.name);
+    const startTime = process.hrtime();
+
+    res.on('finish', () => {
+      const [seconds, nanoseconds] = process.hrtime(startTime);
+      const durationMs = seconds + nanoseconds / 1000000000;
+
+      httpServerDurationHistogram.record(durationMs, {
+        [ATTR_SERVICE_NAME]: getEnvVar('OTEL_SERVICE_NAME') || 'unknown',
+        [ATTR_API_NAME]: req.contractDetails?.name || 'unknown',
+        [ATTR_HTTP_REQUEST_METHOD]: req.method,
+        [ATTR_HTTP_ROUTE]: req.originalPath || 'unknown',
+        [ATTR_HTTP_RESPONSE_STATUS_CODE]: res.statusCode
+      });
+    });
+
     next?.();
   };
 }

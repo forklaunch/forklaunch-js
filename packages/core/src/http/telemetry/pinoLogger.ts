@@ -2,6 +2,13 @@ import { isNever } from '@forklaunch/common';
 import { trace } from '@opentelemetry/api';
 import { AnyValueMap, logs } from '@opentelemetry/api-logs';
 import pino, { LevelWithSilent, LevelWithSilentOrString, Logger } from 'pino';
+import { LogFn, LoggerMeta } from '../types/openTelemetryCollector.types';
+import { isLoggerMeta } from '../guards/isLoggerMeta';
+import PinoPretty from 'pino-pretty';
+
+export function meta(meta: Record<string, unknown>) {
+  return meta as LoggerMeta;
+}
 
 function mapSeverity(level: LevelWithSilent) {
   switch (level) {
@@ -28,6 +35,10 @@ function mapSeverity(level: LevelWithSilent) {
 class PinoLogger {
   private pinoLogger: Logger;
   private meta: AnyValueMap;
+  private prettyPrinter = PinoPretty.prettyFactory({
+    colorize: true
+  });
+
   constructor(level: LevelWithSilentOrString, meta: AnyValueMap = {}) {
     this.pinoLogger = pino({
       level: level || 'info',
@@ -45,47 +56,68 @@ class PinoLogger {
     this.meta = meta;
   }
 
-  log(level: LevelWithSilent, msg: string, meta: AnyValueMap = {}) {
+  log(level: LevelWithSilent, ...args: (string | unknown | LoggerMeta)[]) {
+    let meta: AnyValueMap = {};
+
+    const filteredArgs = args.filter((arg) => {
+      if (isLoggerMeta(arg)) {
+        Object.assign(meta, arg);
+        return false;
+      }
+      return true;
+    }) as Parameters<pino.LogFn>;
+
     const activeSpan = trace.getActiveSpan();
     if (activeSpan) {
       const activeSpanContext = activeSpan.spanContext();
       meta.trace_id = activeSpanContext.traceId;
       meta.span_id = activeSpanContext.spanId;
       meta.trace_flags = activeSpanContext.traceFlags;
-      if (!meta.api_name) {
+      meta = {
         // @ts-expect-error accessing private property
-        meta = { ...meta, ...activeSpan?.attributes };
-      }
+        ...activeSpan.attributes,
+        ...meta
+      };
     }
 
-    this.pinoLogger[level](msg);
+    meta = {
+      'api.name': 'none',
+      'correlation.id': 'none',
+      ...meta
+    };
+
+    this.pinoLogger[level](...filteredArgs);
     logs.getLogger(process.env.OTEL_SERVICE_NAME ?? 'unknown').emit({
       severityText: level,
       severityNumber: mapSeverity(level),
-      body: msg,
+      body: this.prettyPrinter(filteredArgs),
       attributes: { ...this.meta, ...meta }
     });
   }
 
-  error(msg: string, meta: AnyValueMap = {}) {
-    this.log('error', msg, meta);
-  }
+  error: LogFn = (
+    msg: string | unknown | LoggerMeta,
+    ...args: (string | unknown | LoggerMeta)[]
+  ) => this.log('error', msg, ...args);
 
-  info(msg: string, meta: AnyValueMap = {}) {
-    this.log('info', msg, meta);
-  }
+  info: LogFn = (
+    msg: string | unknown | LoggerMeta,
+    ...args: (string | unknown | LoggerMeta)[]
+  ) => this.log('info', msg, ...args);
 
-  debug(msg: string, meta: AnyValueMap = {}) {
-    this.log('debug', msg, meta);
-  }
+  debug: LogFn = (
+    msg: string | unknown | LoggerMeta,
+    ...args: (string | unknown | LoggerMeta)[]
+  ) => this.log('debug', msg, ...args);
+  warn: LogFn = (
+    msg: string | unknown | LoggerMeta,
+    ...args: (string | unknown | LoggerMeta)[]
+  ) => this.log('warn', msg, ...args);
 
-  warn(msg: string, meta: AnyValueMap = {}) {
-    this.log('warn', msg, meta);
-  }
-
-  trace(msg: string, meta: AnyValueMap = {}) {
-    this.log('trace', msg, meta);
-  }
+  trace: LogFn = (
+    msg: string | unknown | LoggerMeta,
+    ...args: (string | unknown | LoggerMeta)[]
+  ) => this.log('trace', msg, ...args);
 
   child(meta: AnyValueMap = {}) {
     return new PinoLogger(this.pinoLogger.level, { ...this.meta, ...meta });

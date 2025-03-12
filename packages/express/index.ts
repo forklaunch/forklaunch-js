@@ -29,6 +29,10 @@ import { trace } from './src/handlers/trace';
 import { unlink } from './src/handlers/unlink';
 import { unlock } from './src/handlers/unlock';
 import { unsubscribe } from './src/handlers/unsubscribe';
+import {
+  MetricsDefinition,
+  OpenTelemetryCollector
+} from '@forklaunch/core/http';
 
 /**
  * Creates a new instance of Application with the given schema validator.
@@ -38,9 +42,10 @@ import { unsubscribe } from './src/handlers/unsubscribe';
  * @returns {Application<SV>} - The new application instance.
  */
 export function forklaunchExpress<SV extends AnySchemaValidator>(
-  schemaValidator: SV
+  schemaValidator: SV,
+  openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
 ) {
-  return new Application(schemaValidator);
+  return new Application(schemaValidator, openTelemetryCollector);
 }
 
 /**
@@ -54,8 +59,12 @@ export function forklaunchExpress<SV extends AnySchemaValidator>(
 export function forklaunchRouter<
   SV extends AnySchemaValidator,
   BasePath extends `/${string}`
->(basePath: BasePath, schemaValidator: SV): Router<SV, BasePath> {
-  const router = new Router(basePath, schemaValidator);
+>(
+  basePath: BasePath,
+  schemaValidator: SV,
+  openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
+): Router<SV, BasePath> {
+  const router = new Router(basePath, schemaValidator, openTelemetryCollector);
   return router;
 }
 

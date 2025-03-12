@@ -1,3 +1,4 @@
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { number, SchemaValidator, string } from '@forklaunch/validator/typebox';
 import { forklaunchExpress, forklaunchRouter } from '../index';
 import { any } from '../src/handlers/any';
@@ -5,10 +6,16 @@ import { get } from '../src/handlers/get';
 import { post } from '../src/handlers/post';
 
 const typeboxSchemaValidator = SchemaValidator();
-const forklaunchApplication = forklaunchExpress(typeboxSchemaValidator);
+const openTelemetryCollector = new OpenTelemetryCollector('test');
+
+const forklaunchApplication = forklaunchExpress(
+  typeboxSchemaValidator,
+  openTelemetryCollector
+);
 const forklaunchRouterInstance = forklaunchRouter(
   '/testpath',
-  typeboxSchemaValidator
+  typeboxSchemaValidator,
+  openTelemetryCollector
 );
 
 describe('Forklaunch Hyper-Express Tests', () => {
@@ -156,12 +163,19 @@ describe('Forklaunch Hyper-Express Tests', () => {
 });
 
 describe('handlers', () => {
-  const application = forklaunchExpress(SchemaValidator());
-  const router = forklaunchRouter('/organization', SchemaValidator());
+  const application = forklaunchExpress(
+    typeboxSchemaValidator,
+    openTelemetryCollector
+  );
+  const router = forklaunchRouter(
+    '/organization',
+    typeboxSchemaValidator,
+    openTelemetryCollector
+  );
 
   it('should be able to create a path param handler', () => {
     const getRequest = get(
-      SchemaValidator(),
+      typeboxSchemaValidator,
       '/:id',
       {
         name: 'Get Organization',
@@ -211,7 +225,7 @@ describe('handlers', () => {
 
   it('should be able to create a body param handler', () => {
     const postRequest = post(
-      SchemaValidator(),
+      typeboxSchemaValidator,
       '/',
       {
         name: 'Create Organization',
@@ -239,8 +253,8 @@ describe('handlers', () => {
   });
 
   it('should be able to create a middleware handler', () => {
-    const checkoutMiddleware = any(
-      SchemaValidator(),
+    const anyMiddleware = any(
+      typeboxSchemaValidator,
       '/',
       {
         query: {
@@ -251,7 +265,7 @@ describe('handlers', () => {
         req.query.name;
       }
     );
-    application.use(checkoutMiddleware);
-    router.any('/', checkoutMiddleware);
+    application.use(anyMiddleware);
+    router.any('/', anyMiddleware);
   });
 });

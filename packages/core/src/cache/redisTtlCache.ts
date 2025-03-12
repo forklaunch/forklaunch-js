@@ -1,6 +1,8 @@
 import { RedisClientOptions, createClient } from 'redis';
 import { TtlCache } from './interfaces/ttlCache.interface';
 import { TtlCacheRecord } from './types/ttlCacheRecord.types';
+import { OpenTelemetryCollector } from '../http/telemetry/openTelemetryCollector';
+import { MetricsDefinition } from '../http';
 
 /**
  * Class representing a Redis-based TTL (Time-To-Live) cache.
@@ -17,13 +19,14 @@ export class RedisTtlCache implements TtlCache {
    */
   constructor(
     private ttlMilliseconds: number,
+    private openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
     hostingOptions?: RedisClientOptions
   ) {
     // Connects to localhost:6379 by default
     // url usage: redis[s]://[[username][:password]@][host][:port][/db-number]
     this.client = createClient(hostingOptions);
-    this.client.on('error', (err) => console.error('Redis Client Error', err));
-    this.client.connect().catch(console.error);
+    this.client.on('error', (err) => openTelemetryCollector.error(err));
+    this.client.connect().catch(openTelemetryCollector.error);
   }
 
   /**

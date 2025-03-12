@@ -10,6 +10,8 @@ import {
   ForklaunchRequest,
   ForklaunchResponse,
   HttpContractDetails,
+  MetricsDefinition,
+  OpenTelemetryCollector,
   ParamsDictionary,
   RequestContext
 } from '../src/http';
@@ -71,7 +73,8 @@ describe('http middleware tests', () => {
         query: testSchema,
         headers: testSchema,
         body: testSchema
-      }
+      },
+      openTelemetryCollector: {} as OpenTelemetryCollector<MetricsDefinition>
     };
 
     res = {
@@ -85,6 +88,8 @@ describe('http middleware tests', () => {
         send: () => {}
       }),
       end: () => {},
+      type: () => {},
+      on: () => res,
       headersSent: false,
       locals: {},
       cors: true,
@@ -114,12 +119,18 @@ describe('http middleware tests', () => {
 
   test('request enrich details', async () => {
     req.contractDetails = {} as HttpContractDetails<MockSchemaValidator>;
-    enrichDetails('/test', contractDetails, testSchema, {
-      headers: { 'x-correlation-id': '123' },
-      responses: {
-        200: testSchema
-      }
-    })(req, res, nextFunction);
+    enrichDetails(
+      '/test',
+      contractDetails,
+      testSchema,
+      {
+        headers: { 'x-correlation-id': '123' },
+        responses: {
+          200: testSchema
+        }
+      },
+      new OpenTelemetryCollector('test')
+    )(req, res, nextFunction);
     expect(req.contractDetails).toEqual(contractDetails);
   });
 

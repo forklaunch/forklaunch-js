@@ -9,7 +9,6 @@ import {
   ObservableUpDownCounter,
   UpDownCounter
 } from '@opentelemetry/api';
-import { AnyValueMap } from '@opentelemetry/api-logs';
 import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http';
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
@@ -30,6 +29,8 @@ import { LevelWithSilent, LevelWithSilentOrString } from 'pino';
 import { getEnvVar } from '../../services/getEnvVar';
 import { isForklaunchRequest } from '../guards/isForklaunchRequest';
 import {
+  LogFn,
+  LoggerMeta,
   MetricsDefinition,
   MetricType
 } from '../types/openTelemetryCollector.types';
@@ -57,7 +58,7 @@ export class OpenTelemetryCollector<
     level?: LevelWithSilentOrString,
     metricDefinitions?: AppliedMetricsDefinition
   ) {
-    this.logger = logger(level ?? 'info');
+    this.logger = logger(level || 'info');
 
     this.metrics = {} as Record<
       keyof AppliedMetricsDefinition,
@@ -109,29 +110,44 @@ export class OpenTelemetryCollector<
     this.log('info', 'OpenTelemetry (Traces + Logs + Metrics) started');
   }
 
-  log(level: LevelWithSilent, msg: string, meta: AnyValueMap = {}) {
-    this.logger.log(level, msg, meta);
+  log(level: LevelWithSilent, ...args: (string | unknown | LoggerMeta)[]) {
+    this.logger.log(level, ...args);
   }
 
-  info(msg: string, meta: AnyValueMap = {}) {
-    this.logger.info(msg, meta);
-  }
+  info: LogFn = (
+    msg: string | unknown | LoggerMeta,
+    ...args: (string | unknown | LoggerMeta)[]
+  ) => {
+    this.logger.log('info', msg, ...args);
+  };
 
-  error(msg: string, meta: AnyValueMap = {}) {
-    this.logger.error(msg, meta);
-  }
+  error: LogFn = (
+    msg: string | unknown | LoggerMeta,
+    ...args: (string | unknown | LoggerMeta)[]
+  ) => {
+    this.logger.log('error', msg, ...args);
+  };
 
-  warn(msg: string, meta: AnyValueMap = {}) {
-    this.logger.warn(msg, meta);
-  }
+  warn: LogFn = (
+    msg: string | unknown | LoggerMeta,
+    ...args: (string | unknown | LoggerMeta)[]
+  ) => {
+    this.logger.log('warn', msg, ...args);
+  };
 
-  debug(msg: string, meta: AnyValueMap = {}) {
-    this.logger.debug(msg, meta);
-  }
+  debug: LogFn = (
+    msg: string | unknown | LoggerMeta,
+    ...args: (string | unknown | LoggerMeta)[]
+  ) => {
+    this.logger.log('debug', msg, ...args);
+  };
 
-  trace(msg: string, meta: AnyValueMap = {}) {
-    this.logger.trace(msg, meta);
-  }
+  trace: LogFn = (
+    msg: string | unknown | LoggerMeta,
+    ...args: (string | unknown | LoggerMeta)[]
+  ) => {
+    this.logger.log('trace', msg, ...args);
+  };
 
   getMetric<T extends keyof AppliedMetricsDefinition>(
     metricId: T
@@ -191,4 +207,17 @@ export const httpRequestsTotalCounter = metrics
     [ATTR_HTTP_RESPONSE_STATUS_CODE]: number;
   }>('http_requests_total', {
     description: 'Number of HTTP requests'
+  });
+
+export const httpServerDurationHistogram = metrics
+  .getMeter(getEnvVar('OTEL_SERVICE_NAME') || 'unknown')
+  .createHistogram<{
+    [ATTR_SERVICE_NAME]: string;
+    [ATTR_API_NAME]: string;
+    [ATTR_HTTP_REQUEST_METHOD]: string;
+    [ATTR_HTTP_ROUTE]: string;
+    [ATTR_HTTP_RESPONSE_STATUS_CODE]: number;
+  }>('http_server_duration', {
+    description: 'Duration of HTTP server requests',
+    unit: 's'
   });

@@ -60,47 +60,10 @@ export interface MiddlewareResponse<
       | 'jsonp'
       | 'end'
       | 'locals'
+      | 'type'
+      | 'on'
     >,
     ForklaunchStatusResponse<ForklaunchSendableData> {
   /** If cors are applied to the response */
   cors: boolean;
 }
-
-// export type Request = {
-//   [K in keyof ExpressRequest<
-//     unknown,
-//     unknown,
-//     unknown,
-//     unknown,
-//     Record<string, unknown>
-//   >]: K extends keyof ExpressRequest<
-//     unknown,
-//     unknown,
-//     unknown,
-//     unknown,
-//     Record<string, unknown>
-//   >
-//     ? ExpressRequest<
-//         unknown,
-//         unknown,
-//         unknown,
-//         unknown,
-//         Record<string, unknown>
-//       >[K]
-//     : never;
-// };
-
-// export type Response = {
-//   [K in keyof ExpressResponse<
-//     unknown,
-//     Record<string, unknown>
-//   >]: K extends keyof ExpressResponse<unknown, Record<string, unknown>>
-//     ? ExpressResponse<unknown, Record<string, unknown>>[K]
-//     : never;
-// };
-
-// export type NextFunction = {
-//   [K in keyof ExpressNextFunction]: K extends keyof ExpressNextFunction
-//     ? ExpressNextFunction[K]
-//     : never;
-// };

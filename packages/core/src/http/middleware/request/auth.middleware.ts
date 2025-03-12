@@ -110,8 +110,9 @@ async function checkAuthorizationToken<
 
         resourceId = decodedJwt.payload.sub;
       } catch (error) {
-        // TODO: Log error
-        console.error(error);
+        (
+          req as ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>
+        ).openTelemetryCollector.error(error);
         return invalidAuthorizationToken;
       }
 

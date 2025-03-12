@@ -11,6 +11,10 @@ import { put } from './src/handlers/put';
 import { trace } from './src/handlers/trace';
 import { Application } from './src/hyperExpressApplication';
 import { Router } from './src/hyperExpressRouter';
+import {
+  MetricsDefinition,
+  OpenTelemetryCollector
+} from '@forklaunch/core/http';
 
 export type App<SV extends AnySchemaValidator> = Application<SV>;
 
@@ -22,9 +26,10 @@ export type App<SV extends AnySchemaValidator> = Application<SV>;
  * @returns {Application<SV>} - The new application instance.
  */
 export function forklaunchExpress<SV extends AnySchemaValidator>(
-  schemaValidator: SV
+  schemaValidator: SV,
+  openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
 ) {
-  return new Application(schemaValidator);
+  return new Application(schemaValidator, openTelemetryCollector);
 }
 
 /**
@@ -38,8 +43,12 @@ export function forklaunchExpress<SV extends AnySchemaValidator>(
 export function forklaunchRouter<
   SV extends AnySchemaValidator,
   BasePath extends `/${string}`
->(basePath: BasePath, schemaValidator: SV): Router<SV, BasePath> {
-  const router = new Router(basePath, schemaValidator);
+>(
+  basePath: BasePath,
+  schemaValidator: SV,
+  openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
+): Router<SV, BasePath> {
+  const router = new Router(basePath, schemaValidator, openTelemetryCollector);
   return router;
 }
 

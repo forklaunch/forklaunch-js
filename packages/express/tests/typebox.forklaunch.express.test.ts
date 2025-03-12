@@ -1,3 +1,4 @@
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { number, SchemaValidator, string } from '@forklaunch/validator/typebox';
 import { Server } from 'http';
 import { forklaunchExpress, forklaunchRouter } from '../index';
@@ -6,11 +7,16 @@ import { get } from '../src/handlers/get';
 import { post } from '../src/handlers/post';
 
 const typeboxSchemaValidator = SchemaValidator();
+const openTelemetryCollector = new OpenTelemetryCollector('test');
 
-const forklaunchApplication = forklaunchExpress(typeboxSchemaValidator);
+const forklaunchApplication = forklaunchExpress(
+  typeboxSchemaValidator,
+  openTelemetryCollector
+);
 const forklaunchRouterInstance = forklaunchRouter(
   '/testpath',
-  typeboxSchemaValidator
+  typeboxSchemaValidator,
+  openTelemetryCollector
 );
 
 describe('Forklaunch Express Tests', () => {
@@ -158,12 +164,19 @@ describe('Forklaunch Express Tests', () => {
 });
 
 describe('handlers', () => {
-  const application = forklaunchExpress(SchemaValidator());
-  const router = forklaunchRouter('/organization', SchemaValidator());
+  const application = forklaunchExpress(
+    typeboxSchemaValidator,
+    openTelemetryCollector
+  );
+  const router = forklaunchRouter(
+    '/organization',
+    typeboxSchemaValidator,
+    openTelemetryCollector
+  );
 
   it('should be able to create a path param handler', () => {
     const getRequest = get(
-      SchemaValidator(),
+      typeboxSchemaValidator,
       '/:id',
       {
         name: 'Get Organization',
@@ -198,7 +211,7 @@ describe('handlers', () => {
 
   it('should be able to create a body param handler', () => {
     const postRequest = post(
-      SchemaValidator(),
+      typeboxSchemaValidator,
       '/',
       {
         name: 'Create Organization',
@@ -222,7 +235,7 @@ describe('handlers', () => {
 
   it('should be able to create a middleware handler', () => {
     const checkoutMiddleware = checkout(
-      SchemaValidator(),
+      typeboxSchemaValidator,
       '/',
       {
         query: {

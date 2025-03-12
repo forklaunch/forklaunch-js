@@ -91,7 +91,9 @@ export function parse<
         next?.(new Error(`Invalid response:\n${parseErrors.join('\n\n')}`));
         break;
       case 'warning':
-        console.warn(`Invalid response:\n${parseErrors.join('\n\n')}`);
+        req.openTelemetryCollector.warn(
+          `Invalid response:\n${parseErrors.join('\n\n')}`
+        );
         break;
       case 'none':
         break;

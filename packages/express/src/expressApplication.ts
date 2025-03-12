@@ -3,7 +3,10 @@ import {
   ForklaunchExpressLikeApplication,
   generateSwaggerDocument,
   isForklaunchRequest,
-  logger
+  logger,
+  meta,
+  MetricsDefinition,
+  OpenTelemetryCollector
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { apiReference } from '@scalar/express-api-reference';
@@ -38,8 +41,11 @@ export class Application<
    *
    * @param {SV} schemaValidator - The schema validator.
    */
-  constructor(schemaValidator: SV) {
-    super(schemaValidator, express());
+  constructor(
+    schemaValidator: SV,
+    openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
+  ) {
+    super(schemaValidator, express(), openTelemetryCollector);
   }
 
   /**
@@ -86,14 +92,18 @@ export class Application<
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
       res.locals.errorMessage = err.message;
+      res.type('text/plain');
       res
         .status(res.statusCode && res.statusCode >= 400 ? res.statusCode : 500)
         .send(
           `Internal server error:\n\n${isForklaunchRequest(req) ? req.context.correlationId : 'No correlation ID'}`
         );
-      logger('error').error(err.stack ?? err.message, {
-        [ATTR_HTTP_RESPONSE_STATUS_CODE]: res.statusCode ?? 500
-      });
+      logger('error').error(
+        err.stack ?? err.message,
+        meta({
+          [ATTR_HTTP_RESPONSE_STATUS_CODE]: res.statusCode ?? 500
+        })
+      );
     };
     this.internal.use(errorHandler);
     return this.internal.listen(...(args as (() => void)[]));

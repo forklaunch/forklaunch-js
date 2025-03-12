@@ -34,3 +34,19 @@ export type MetricsDefinition = Record<
   | 'observableGauge'
   | 'observableUpDownCounter'
 >;
+
+export type LoggerMeta = Record<string, unknown> & { _meta: true };
+
+export interface LogFn {
+  <T extends object>(
+    obj: T | LoggerMeta,
+    msg?: string | LoggerMeta,
+    ...args: unknown[]
+  ): void;
+  (
+    obj: unknown | LoggerMeta,
+    msg?: string | LoggerMeta,
+    ...args: unknown[]
+  ): void;
+  (msg: string | LoggerMeta, ...args: unknown[]): void;
+}

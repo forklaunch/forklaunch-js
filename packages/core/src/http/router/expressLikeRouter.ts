@@ -48,6 +48,8 @@ import {
   ForklaunchRoute,
   ForklaunchRouter
 } from '../types/router.types';
+import { OpenTelemetryCollector } from '../telemetry/openTelemetryCollector';
+import { MetricsDefinition } from '../types/openTelemetryCollector.types';
 
 /**
  * A class that represents an Express-like router.
@@ -70,7 +72,8 @@ export class ForklaunchExpressLikeRouter<
   constructor(
     basePath: BasePath,
     readonly schemaValidator: SV,
-    readonly internal: Internal
+    readonly internal: Internal,
+    readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
   ) {
     this.basePath = basePath;
   }
@@ -121,7 +124,8 @@ export class ForklaunchExpressLikeRouter<
         `${this.basePath}${path}`,
         contractDetails,
         requestSchema,
-        responseSchemas
+        responseSchemas,
+        this.openTelemetryCollector
       ),
       parse,
       parseRequestAuth<

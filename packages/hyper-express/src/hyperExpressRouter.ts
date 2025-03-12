@@ -4,7 +4,9 @@ import {
   ForklaunchExpressLikeRouter,
   ForklaunchRouter,
   HeadersObject,
+  MetricsDefinition,
   MiddlewareOrMiddlewareWithTypedHandler,
+  OpenTelemetryCollector,
   ParamsObject,
   QueryObject,
   ResponsesObject,
@@ -40,9 +42,15 @@ export class Router<
 {
   constructor(
     public basePath: BasePath,
-    schemaValidator: SV
+    schemaValidator: SV,
+    openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
   ) {
-    super(basePath, schemaValidator, new ExpressRouter());
+    super(
+      basePath,
+      schemaValidator,
+      new ExpressRouter(),
+      openTelemetryCollector
+    );
 
     this.internal.use(polyfillGetHeaders);
     this.internal.use(contentParse);
