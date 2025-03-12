@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.5.5
+
+### Patch Changes
+
+- Enables docs configuration to be set by caller and sends parsing error information to client if api parsing fails
+
 ## 0.5.4
 
 ### Patch Changes
