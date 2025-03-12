@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.5.4
+
+### Patch Changes
+
+- Allow for constructed singletons in config validation and add latency metric for OpenTelemetryCollector (+small tweaks)
+
 ## 0.5.3
 
 ### Patch Changes
