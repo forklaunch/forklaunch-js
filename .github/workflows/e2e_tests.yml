@@ -37,7 +37,7 @@ jobs:
         for test_script in *.sh; do
           if [ -f "$test_script" ]; then
             echo "Running test: $test_script"
-            chmod +x "$test_script"
-            "$test_script"
+            ./$test_script
           fi
         done
+
