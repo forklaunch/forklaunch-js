@@ -112,7 +112,6 @@ pub(crate) fn prompt_base_path(
         }
     };
 
-    println!("Base path: {}", base_path);
     Ok(Path::new(&base_path)
         .canonicalize()
         .unwrap()
