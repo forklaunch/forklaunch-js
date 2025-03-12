@@ -1,0 +1,62 @@
+# This is a dummy file to run the depcheck and other useful commands.
+id = "27e13038-212c-4989-99b0-d970cc30fe4e"
+cli_version = "0.1.0"
+app_name = "forklaunch-framework"
+validator = "none"
+http_framework = "none"
+runtime = "none"
+test_framework = "none"
+author = "Rohin Bhargava"
+license = "MIT"
+
+[[projects]]
+type = "Library"
+name = "core"
+
+[[projects]]
+type = "Library"
+name = "monitoring"
+
+[[projects]]
+type = "Service"
+name = "billing"
+routers = [
+    "billingPortal",
+    "checkoutSession",
+    "paymentLink",
+    "plan",
+    "subscription",
+]
+
+[projects.resources]
+database = "postgresql"
+
+[[projects]]
+type = "Service"
+name = "iam"
+routers = [
+    "organization",
+    "permission",
+    "role",
+    "user",
+]
+
+[projects.resources]
+database = "postgresql"
+
+[[projects]]
+type = "Worker"
+name = "sample-worker"
+routers = ["sample-worker"]
+
+[projects.resources]
+database = "postgresql"
+
+[project_peer_topology]
+forklaunch_framework = [
+    "core",
+    "monitoring",
+    "billing",
+    "iam",
+    "sample-worker",
+]

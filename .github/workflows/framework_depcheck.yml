@@ -1,0 +1,35 @@
+name: Framework Dependency Check
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  depcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build CLI
+        run: |
+          cd cli
+          cargo build --release
+          chmod +x ./target/release/forklaunch
+
+      - name: Run CLI in framework
+        run: |
+          cd framework
+          ../cli/target/release/forklaunch depcheck
+
+      - name: Run framework dependency version check
+        run: |
+          cd .github/workflows/scripts/check_framework_deps
+          cargo run --bin check_framework_deps
