@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "@forklaunch/common": "^0.2.3",
-    "@forklaunch/core": "^0.5.3",
+    "@forklaunch/core": "^0.5.4",
     "@forklaunch/framework-core": "workspace:*",
     "@forklaunch/framework-monitoring": "workspace:*",
     "@forklaunch/validator": "^0.4.6",
