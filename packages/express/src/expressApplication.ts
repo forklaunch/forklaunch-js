@@ -1,5 +1,6 @@
 import {
   ATTR_HTTP_RESPONSE_STATUS_CODE,
+  DocsConfiguration,
   ForklaunchExpressLikeApplication,
   generateSwaggerDocument,
   isForklaunchRequest,
@@ -43,7 +44,8 @@ export class Application<
    */
   constructor(
     schemaValidator: SV,
-    openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
+    openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
+    private readonly docsConfiguration?: DocsConfiguration
   ) {
     super(schemaValidator, express(), openTelemetryCollector);
   }
@@ -68,26 +70,33 @@ export class Application<
   listen(...args: unknown[]): Server {
     const port =
       typeof args[0] === 'number' ? args[0] : Number(process.env.PORT);
-    this.internal.use(
-      `/api/${process.env.VERSION ?? 'v1'}/swagger`,
-      swaggerUi.serve,
-      swaggerUi.setup(
-        generateSwaggerDocument<SV>(this.schemaValidator, port, this.routers)
-      )
-    );
 
-    this.internal.use(
-      `/api/${process.env.VERSION ?? 'v1'}${process.env.DOCS_PATH ?? '/docs'}`,
-      apiReference({
-        spec: {
-          content: generateSwaggerDocument<SV>(
-            this.schemaValidator,
-            port,
-            this.routers
-          )
-        }
-      }) as unknown as RequestHandler
-    );
+    if (
+      this.docsConfiguration == null ||
+      this.docsConfiguration.type === 'scalar'
+    ) {
+      this.internal.use(
+        `/api/${process.env.VERSION ?? 'v1'}${process.env.DOCS_PATH ?? '/docs'}`,
+        apiReference({
+          spec: {
+            content: generateSwaggerDocument<SV>(
+              this.schemaValidator,
+              port,
+              this.routers
+            )
+          },
+          ...this.docsConfiguration
+        }) as unknown as RequestHandler
+      );
+    } else if (this.docsConfiguration.type === 'swagger') {
+      this.internal.use(
+        `/api/${process.env.VERSION ?? 'v1'}${process.env.DOCS_PATH ?? '/docs'}`,
+        swaggerUi.serve,
+        swaggerUi.setup(
+          generateSwaggerDocument<SV>(this.schemaValidator, port, this.routers)
+        )
+      );
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {

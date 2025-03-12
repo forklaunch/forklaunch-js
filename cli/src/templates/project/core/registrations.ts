@@ -1,4 +1,5 @@
 import {
+  DocsConfiguration,
   MetricsDefinition,
   OpenTelemetryCollector,
 } from "@forklaunch/core/http";
@@ -47,8 +48,14 @@ export const forklaunchRouter = <BasePath extends `/${string}`>(
     openTelemetryCollector
   );
 export const forklaunchExpress = (
-  openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
-) => registeredForklaunchExpress(SchemaValidator(), openTelemetryCollector);
+  openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
+  docsConfiguration?: DocsConfiguration
+) =>
+  registeredForklaunchExpress(
+    SchemaValidator(),
+    openTelemetryCollector,
+    docsConfiguration
+  );
 export const handlers: typeof registeredHandlers = registeredHandlers;
 
 export const string: typeof schemaString = schemaString;

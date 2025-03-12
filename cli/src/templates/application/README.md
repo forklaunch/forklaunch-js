@@ -157,7 +157,7 @@ In order to make adjustments, config and code is located in the `monitoring` dir
 
 ### OpenAPI Configuration and API Reference documentation
 
-Contract aware OpenAPI is generated live when running `pnpm dev`. Depending on the docs provider supplied to the express or router instantiation, API references are available at `http://localhost:3000/api/v1/docs`. Note, the path can be overridden by supplying values for the following ENV variables:
+Contract aware OpenAPI is generated live when running `pnpm dev`. API references are available at `http://localhost:3000/api/v1/docs`. You have the option of using swagger or scalar. If using scalar (by default), customization options can be passed through additional configuration. Note, the path can be overridden by supplying values for the following ENV variables:
 
 - `VERSION` - The title of the OpenAPI documentation.
 - `DOCS_PATH` - The path to the OpenAPI documentation.

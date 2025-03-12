@@ -23,6 +23,7 @@ export * from './telemetry/pinoLogger';
 export * from './telemetry/recordMetric';
 export * from './types/apiDefinition.types';
 export * from './types/contractDetails.types';
+export * from './types/docsConfiguration.types';
 export * from './types/expressLikeRouter.types';
 export * from './types/openTelemetryCollector.types';
 export * from './types/router.types';

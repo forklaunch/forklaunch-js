@@ -1,5 +1,6 @@
 import {
   ATTR_HTTP_RESPONSE_STATUS_CODE,
+  DocsConfiguration,
   ForklaunchExpressLikeApplication,
   generateSwaggerDocument,
   isForklaunchRequest,
@@ -41,7 +42,8 @@ export class Application<
    */
   constructor(
     schemaValidator: SV,
-    openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
+    openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
+    private readonly docsConfiguration?: DocsConfiguration
   ) {
     super(schemaValidator, new Server(), openTelemetryCollector);
   }
@@ -93,32 +95,38 @@ export class Application<
         });
       });
 
-      // const { apiReference } = await import('@scalar/express-api-reference');
-
-      this.internal.use(
-        `/api/${process.env.VERSION ?? 'v1'}${process.env.DOCS_PATH ?? '/docs'}`,
-        apiReference({
-          spec: {
-            content: generateSwaggerDocument<SV>(
+      if (
+        this.docsConfiguration == null ||
+        this.docsConfiguration.type === 'scalar'
+      ) {
+        this.internal.use(
+          `/api/${process.env.VERSION ?? 'v1'}${process.env.DOCS_PATH ?? '/docs'}`,
+          apiReference({
+            spec: {
+              content: generateSwaggerDocument<SV>(
+                this.schemaValidator,
+                port,
+                this.routers
+              )
+            },
+            ...this.docsConfiguration
+          }) as unknown as MiddlewareHandler
+        );
+      } else if (this.docsConfiguration.type === 'swagger') {
+        const swaggerPath = `/api/${process.env.VERSION ?? 'v1'}${process.env.DOCS_PATH ?? '/docs'}`;
+        this.internal.use(swaggerPath, swaggerRedirect(swaggerPath));
+        this.internal.get(
+          `${swaggerPath}/*`,
+          swagger(
+            swaggerPath,
+            generateSwaggerDocument<SV>(
               this.schemaValidator,
               port,
               this.routers
             )
-          },
-          theme: 'deepSpace',
-          layout: 'modern'
-        }) as unknown as MiddlewareHandler
-      );
-
-      const swaggerPath = `/api/${process.env.VERSION ?? 'v1'}${'/swagger'}`;
-      this.internal.use(swaggerPath, swaggerRedirect(swaggerPath));
-      this.internal.get(
-        `${swaggerPath}/*`,
-        swagger(
-          swaggerPath,
-          generateSwaggerDocument<SV>(this.schemaValidator, port, this.routers)
-        )
-      );
+          )
+        );
+      }
 
       if (arg1 && typeof arg1 === 'string') {
         return this.internal.listen(port, arg1, arg2);

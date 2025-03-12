@@ -1,3 +1,8 @@
+import {
+  DocsConfiguration,
+  MetricsDefinition,
+  OpenTelemetryCollector
+} from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { Application } from './src/expressApplication';
 import { Router } from './src/expressRouter';
@@ -29,10 +34,6 @@ import { trace } from './src/handlers/trace';
 import { unlink } from './src/handlers/unlink';
 import { unlock } from './src/handlers/unlock';
 import { unsubscribe } from './src/handlers/unsubscribe';
-import {
-  MetricsDefinition,
-  OpenTelemetryCollector
-} from '@forklaunch/core/http';
 
 /**
  * Creates a new instance of Application with the given schema validator.
@@ -43,9 +44,14 @@ import {
  */
 export function forklaunchExpress<SV extends AnySchemaValidator>(
   schemaValidator: SV,
-  openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
+  openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
+  docsConfiguration?: DocsConfiguration
 ) {
-  return new Application(schemaValidator, openTelemetryCollector);
+  return new Application(
+    schemaValidator,
+    openTelemetryCollector,
+    docsConfiguration
+  );
 }
 
 /**
