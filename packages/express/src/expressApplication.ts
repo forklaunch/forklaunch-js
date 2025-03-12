@@ -105,7 +105,11 @@ export class Application<
       res
         .status(res.statusCode && res.statusCode >= 400 ? res.statusCode : 500)
         .send(
-          `Internal server error:\n\n${isForklaunchRequest(req) ? req.context.correlationId : 'No correlation ID'}`
+          `Internal server error:\n\nCorrelation id: ${
+            isForklaunchRequest(req)
+              ? req.context.correlationId
+              : 'No correlation ID'
+          }`
         );
       logger('error').error(
         err.stack ?? err.message,

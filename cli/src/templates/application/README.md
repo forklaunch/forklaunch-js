@@ -85,26 +85,26 @@ ForkLaunch uses MikroORM for database management with these commands:
 
 ```bash
 # Initialize the database
-pnpm migrate:init
+{{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun{{/is_bun}} migrate:init
 
 # Create a new migration
-pnpm migrate:create
+{{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun{{/is_bun}} migrate:create
 
 # Apply pending migrations
-pnpm migrate:up
+{{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun{{/is_bun}} migrate:up
 
 # Revert the last migration
-pnpm migrate:down
+{{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun{{/is_bun}} migrate:down
 ```
 
-To access the full MikroORM CLI, run `pnpm mikro-orm`. Note, you may have to supply necessary ENV arguments to interface correctly with the target database.
+To access the full MikroORM CLI, run `{{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun{{/is_bun}} mikro-orm`. Note, you may have to supply necessary ENV arguments to interface correctly with the target database.
 
 ## Development Workflow
 
 ### Starting the Development Server
 
 ```bash
-pnpm dev
+{{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun{{/is_bun}} dev
 ```
 
 This starts all services and workers defined in your manifest.
@@ -112,7 +112,7 @@ This starts all services and workers defined in your manifest.
 ### Building the Project
 
 ```bash
-pnpm build
+{{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun run{{/is_bun}} build
 ```
 
 Compiles all services, workers, and libraries.
@@ -131,7 +131,7 @@ ForkLaunch comes with pre-configured:
 To enable Husky Git hooks:
 
 ```bash
-npx husky install
+{{#is_node}}npx{{/is_node}}{{^is_bun}}bun{{/is_bun}} husky install
 ```
 
 This sets up pre-commit hooks for linting and formatting.
@@ -141,8 +141,60 @@ This sets up pre-commit hooks for linting and formatting.
 Run tests with:
 
 ```bash
-pnpm test
+{{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun{{/is_bun}} test
 ```
+
+### Adding API Metadata
+
+When defining APIs, you can add metadata to the API definition in an idiomatic manner. This achieves the following:
+
+- Serves as a typing specification when writing API handlers
+- Validates and coerces data to specified types when processed in handlers 
+- Used to generate OpenAPI specification
+- Used to generate API reference documentation
+
+The general format is defined by the REST method, but generally follows the following format:
+
+```json
+{
+  name: "My API",
+  summary: "My API that works! Probably a nice POST request",
+  headers: {
+    "x-header-name": string
+  },
+  params: {
+    id: number
+  },
+  body: {
+    message: string,
+    nestedObject: {
+        anotherNestedObject: {
+            sweet: boolean
+        },
+        justAString: string,
+        justANumber: number,
+    }
+  },
+  responses: {
+    200: {
+        returnMessage: string,
+        metadata: {
+            items: array(union(string, number, boolean)),
+            timestamp: date
+        }
+    },
+    301: string
+  },
+};
+```
+
+Auth can also be added to the API definition, but is not required. Supported auth types are:
+
+- `bearer` - Bearer token authentication
+- `jwt` - JWT authentication
+- `other` - Another auth method. You will need to supply a `decodeToken` callback
+
+When defining this, the smart typing will ask you to provide `permissions` and/or `roles` for the API. You will also be optionally supply a callback that maps `permissions` and/or `roles` given a `subject` and the original request, if the claims are not present in the token.
 
 ## Advanced Configuration
 

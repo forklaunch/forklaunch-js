@@ -18,6 +18,7 @@ import {
 import { parseRequestAuth } from '../middleware/request/auth.middleware';
 import { enrichDetails } from '../middleware/request/enrichDetails.middleware';
 import { parse } from '../middleware/request/parse.middleware';
+import { OpenTelemetryCollector } from '../telemetry/openTelemetryCollector';
 import {
   ExpressLikeHandler,
   ExpressLikeSchemaHandler,
@@ -43,13 +44,12 @@ import {
   TypedMiddlewareDefinition,
   TypedNestableMiddlewareDefinition
 } from '../types/expressLikeRouter.types';
+import { MetricsDefinition } from '../types/openTelemetryCollector.types';
 import {
   ConstrainedForklaunchRouter,
   ForklaunchRoute,
   ForklaunchRouter
 } from '../types/router.types';
-import { OpenTelemetryCollector } from '../telemetry/openTelemetryCollector';
-import { MetricsDefinition } from '../types/openTelemetryCollector.types';
 
 /**
  * A class that represents an Express-like router.

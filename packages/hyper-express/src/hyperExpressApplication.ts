@@ -84,7 +84,7 @@ export class Application<
             res.statusCode && res.statusCode >= 400 ? res.statusCode : 500
           )
           .send(
-            `Internal server error:\n\n${
+            `Internal server error:\n\nCorrelation id: ${
               isForklaunchRequest(req)
                 ? req.context.correlationId
                 : 'No correlation ID'
