@@ -2,6 +2,8 @@ name: Build Framework
 
 on:
   push:
+    branches:
+      - main
     paths:
       - 'framework/**'
   pull_request:
