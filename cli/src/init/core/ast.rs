@@ -338,6 +338,37 @@ fn inject_into_bootstrapper_config_injector<'a>(
     }
 }
 
+fn inject_into_entities_index_ts<'a>(
+    entities_index_program: &mut Program<'a>,
+    injection_program_ast: &mut Program<'a>,
+    router_name_camel_case: &str,
+) -> Result<()> {
+    let mut maybe_splice_pos = None;
+
+    entities_index_program
+        .body
+        .iter()
+        .enumerate()
+        .for_each(|(index, stmt)| {
+            let expr = match stmt {
+                Statement::ExportAllDeclaration(expr) => expr,
+                _ => return,
+            };
+
+            if expr.source.value.as_str() <= router_name_camel_case {
+                maybe_splice_pos = Some(index);
+            }
+        });
+
+    if let Some(splice_pos) = maybe_splice_pos {
+        for stmt in injection_program_ast.body.drain(..).rev() {
+            entities_index_program.body.insert(splice_pos, stmt);
+        }
+    }
+
+    Ok(())
+}
+
 pub(crate) fn transform_app_ts(router_name: &str, base_path: &String) -> Result<String> {
     let allocator = Allocator::default();
     let app_path = Path::new(base_path).join("server.ts");
@@ -347,21 +378,6 @@ pub(crate) fn transform_app_ts(router_name: &str, base_path: &String) -> Result<
     let router_name_pascal_case = router_name.to_case(Case::Pascal);
 
     let mut app_program = parse_ast_program(&allocator, &app_source_text, app_source_type);
-
-    let forklaunch_controller_import_text = format!(
-        "import {{ {router_name_pascal_case}Controller }} from './controllers/{router_name_camel_case}.controller';",
-    );
-    let mut forklaunch_controller_import_injection = parse_ast_program(
-        &allocator,
-        &forklaunch_controller_import_text,
-        app_source_type,
-    );
-    inject_into_import_statement(
-        &mut app_program,
-        &mut forklaunch_controller_import_injection,
-        "/controllers/",
-        format!("{router_name_pascal_case}Controller").as_str(),
-    )?;
 
     let scoped_service_factory_injection_text = format!(
         "const scoped{router_name_pascal_case}ServiceFactory = ci.scopedResolver('{router_name_camel_case}Service');",
@@ -406,7 +422,7 @@ pub(crate) fn transform_app_ts(router_name: &str, base_path: &String) -> Result<
     })?;
 
     let routes_injection_text = format!(
-        "const {router_name_camel_case}Routes = {router_name_pascal_case}Routes(new {router_name_pascal_case}Controller(() => ci.createScope(), scoped{router_name_pascal_case}ServiceFactory));",
+        "const {router_name_camel_case}Routes = {router_name_pascal_case}Routes(() => ci.createScope(), scoped{router_name_pascal_case}ServiceFactory, openTelemetryCollector);",
     );
     let mut injection_program_ast =
         parse_ast_program(&allocator, &routes_injection_text, SourceType::ts());
@@ -542,7 +558,7 @@ pub(crate) fn transform_bootstrapper_ts(router_name: &str, base_path: &String) -
             {router_name_camel_case}Service: {{
             lifetime: Lifetime.Scoped,
             factory: (
-                {{ entityManager, ttlCache }},
+                {{ entityManager, ttlCache, openTelemetryCollector }},
                 resolve,
                 context
             ) => {{
@@ -552,7 +568,8 @@ pub(crate) fn transform_bootstrapper_ts(router_name: &str, base_path: &String) -
                 }}
                 return new Base{router_name_pascal_case}Service(
                     em,
-                    ttlCache
+                    ttlCache,
+                    openTelemetryCollector
                 );
             }}
             }}
@@ -569,5 +586,37 @@ pub(crate) fn transform_bootstrapper_ts(router_name: &str, base_path: &String) -
     Ok(CodeGenerator::new()
         .with_options(CodegenOptions::default())
         .build(&bootstrapper_program)
+        .code)
+}
+
+pub(crate) fn transform_entities_index_ts(router_name: &str, base_path: &String) -> Result<String> {
+    let allocator = Allocator::default();
+    let entities_index_path = Path::new(base_path)
+        .join("models")
+        .join("persistence")
+        .join("index.ts");
+    let entities_index_source_text = read_to_string(&entities_index_path).unwrap();
+    let entities_index_source_type = SourceType::from_path(&entities_index_path).unwrap();
+    let router_name_camel_case = router_name.to_case(Case::Camel);
+
+    let mut entities_index_program = parse_ast_program(
+        &allocator,
+        &entities_index_source_text,
+        entities_index_source_type,
+    );
+
+    let entities_index_text = format!("export * from './{router_name_camel_case}Record.entity';",);
+    let mut injection_program_ast =
+        parse_ast_program(&allocator, &entities_index_text, SourceType::ts());
+
+    inject_into_entities_index_ts(
+        &mut entities_index_program,
+        &mut injection_program_ast,
+        &router_name_camel_case,
+    )?;
+
+    Ok(CodeGenerator::new()
+        .with_options(CodegenOptions::default())
+        .build(&entities_index_program)
         .code)
 }

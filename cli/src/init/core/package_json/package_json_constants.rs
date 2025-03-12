@@ -1,14 +1,14 @@
 // Application package.json dependencies constants
-pub(crate) const GLOBALS_VERSION: &str = "^15.14.0";
+pub(crate) const GLOBALS_VERSION: &str = "^16.0.0";
 pub(crate) const HUSKY_VERSION: &str = "^9.1.7";
 pub(crate) const JEST_TYPES_VERSION: &str = "^29.5.14";
 pub(crate) const JEST_VERSION: &str = "^29.7.0";
-pub(crate) const LINT_STAGED_VERSION: &str = "^15.3.0";
-pub(crate) const SORT_PACKAGE_JSON_VERSION: &str = "^2.12.0";
-pub(crate) const TS_JEST_VERSION: &str = "^29.2.5";
-pub(crate) const TSX_VERSION: &str = "^4.19.2";
-pub(crate) const TYPESCRIPT_VERSION: &str = "^5.7.3";
-pub(crate) const VITEST_VERSION: &str = "^2.1.8";
+pub(crate) const LINT_STAGED_VERSION: &str = "^15.4.3";
+pub(crate) const SORT_PACKAGE_JSON_VERSION: &str = "^3.0.0";
+pub(crate) const TS_JEST_VERSION: &str = "^29.2.6";
+pub(crate) const TSX_VERSION: &str = "^4.19.3";
+pub(crate) const TYPESCRIPT_VERSION: &str = "^5.8.2";
+pub(crate) const VITEST_VERSION: &str = "^3.0.8";
 
 // Application package.json scripts constants
 pub(crate) const APP_DEV_SCRIPT: &str = "docker compose up";
@@ -97,16 +97,17 @@ pub(crate) fn application_up_packages_script(runtime: &str) -> &str {
 
 // Project package.json dependencies constants
 pub(crate) const APP_CORE_VERSION: &str = "workspace:*";
-pub(crate) const COMMON_VERSION: &str = "^0.2.1";
-pub(crate) const CORE_VERSION: &str = "^0.3.6";
-pub(crate) const EXPRESS_VERSION: &str = "^0.2.8";
-pub(crate) const HYPER_EXPRESS_VERSION: &str = "^0.2.9";
-pub(crate) const VALIDATOR_VERSION: &str = "^0.4.4";
-pub(crate) const MIKRO_ORM_CORE_VERSION: &str = "^6.4.6";
-pub(crate) const MIKRO_ORM_MIGRATIONS_VERSION: &str = "^6.4.6";
-pub(crate) const MIKRO_ORM_DATABASE_VERSION: &str = "^6.4.6";
-pub(crate) const MIKRO_ORM_REFLECTION_VERSION: &str = "^6.4.6";
-pub(crate) const TYPEBOX_VERSION: &str = "^0.34.25";
+pub(crate) const APP_MONITORING_VERSION: &str = "workspace:*";
+pub(crate) const COMMON_VERSION: &str = "^0.2.3";
+pub(crate) const CORE_VERSION: &str = "^0.5.4";
+pub(crate) const EXPRESS_VERSION: &str = "^0.3.5";
+pub(crate) const HYPER_EXPRESS_VERSION: &str = "^0.3.5";
+pub(crate) const VALIDATOR_VERSION: &str = "^0.4.6";
+pub(crate) const MIKRO_ORM_CORE_VERSION: &str = "^6.4.9";
+pub(crate) const MIKRO_ORM_MIGRATIONS_VERSION: &str = "^6.4.9";
+pub(crate) const MIKRO_ORM_DATABASE_VERSION: &str = "^6.4.9";
+pub(crate) const MIKRO_ORM_REFLECTION_VERSION: &str = "^6.4.9";
+pub(crate) const TYPEBOX_VERSION: &str = "^0.34.28";
 pub(crate) const AJV_VERSION: &str = "^8.17.1";
 pub(crate) const DOTENV_VERSION: &str = "^16.4.7";
 pub(crate) const UUID_VERSION: &str = "^10.0.0";
@@ -115,6 +116,9 @@ pub(crate) const ZOD_VERSION: &str = "^3.24.2";
 // Project package.json devDependencies constants
 pub(crate) const ESLINT_VERSION: &str = "^9.17.0";
 pub(crate) const MIKRO_ORM_CLI_VERSION: &str = "^6.4.6";
+pub(crate) const TYPES_EXPRESS_VERSION: &str = "^5.0.0";
+pub(crate) const TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION: &str = "^5.0.6";
+pub(crate) const TYPES_QS_VERSION: &str = "^6.9.18";
 pub(crate) const TS_NODE_VERSION: &str = "^10.9.2";
 pub(crate) const TYPEDOC_VERSION: &str = "^0.27.7";
 pub(crate) const TYPES_UUID_VERSION: &str = "^10.0.0";

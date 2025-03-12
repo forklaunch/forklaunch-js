@@ -4,6 +4,7 @@ import { {{pascal_case_name}}Record } from './models/persistence/{{camel_case_na
 
 bootstrap((ci) => { {{^cache_backend}}
   const entityManager = ci.resolve('entityManager');
+  const openTelemetryCollector = ci.resolve('openTelemetryCollector');
 
   setInterval(async () => {
     const sampleRecordsToProcess = await entityManager
@@ -22,16 +23,17 @@ bootstrap((ci) => { {{^cache_backend}}
 
     for (const record of sampleRecordsToProcess) {
       try {
-        console.log('processing message:', record.message);
+        openTelemetryCollector.info(`processing message: ${record.message}`);
         record.processed = true;
       } catch (error) {
-        console.error(error);
+        openTelemetryCollector.error(error, 'error processing message');
         record.retryCount++;
       }
       await entityManager.flush();
     }
   }, 10000);{{/cache_backend}}{{#cache_backend}}
   const cache = ci.resolve('ttlCache');
+  const openTelemetryCollector = ci.resolve('openTelemetryCollector');
 
   setInterval(async () => {
     const cachedRecordIds = await cache.listKeys(
@@ -40,10 +42,10 @@ bootstrap((ci) => { {{^cache_backend}}
     for (const recordId of cachedRecordIds) {
       const record = await cache.readRecord<{{pascal_case_name}}Record>(recordId);
       try {
-        console.log('processing message:', record.value.message);
+        openTelemetryCollector.info(`processing message: ${record.value.message}`);
         cache.deleteRecord(recordId);
       } catch (error) {
-        console.error(error);
+        openTelemetryCollector.error(error, 'error processing message');
         if (record.value.retryCount < 3) {
           cache.putRecord({
             key: recordId,

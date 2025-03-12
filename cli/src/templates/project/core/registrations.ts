@@ -1,9 +1,8 @@
-// used for aligning exports across the monorepo
 import {
-  forklaunchExpress as registeredForklaunchExpress,
-  forklaunchRouter as registeredForklaunchRouter
-} from '@forklaunch/{{http_framework}}';
-
+  MetricsDefinition,
+  OpenTelemetryCollector,
+} from "@forklaunch/core/http";
+// used for aligning exports across the monorepo
 import {
   SchemaValidator as RegisteredSchemaValidator,
   any as schemaAny,
@@ -23,30 +22,48 @@ import {
   union as schemaUnion,
   unknown as schemaUnknown,
   uri as schemaUri,
-  uuid as schemaUuid
-} from '@forklaunch/validator/{{validator}}';
+  uuid as schemaUuid,
+} from "@forklaunch/validator/{{validator}}";
+import {
+  NextFunction,
+  ParsedQs,
+  forklaunchExpress as registeredForklaunchExpress,
+  forklaunchRouter as registeredForklaunchRouter,
+  handlers as registeredHandlers,
+  Request,
+  Response,
+} from "@forklaunch/{{http_framework}}";
 
+export type { NextFunction, ParsedQs, Request, Response };
 export const SchemaValidator = RegisteredSchemaValidator;
 export type SchemaValidator = ReturnType<typeof RegisteredSchemaValidator>;
 export const forklaunchRouter = <BasePath extends `/${string}`>(
-  basePath: BasePath
-) => registeredForklaunchRouter(basePath, SchemaValidator());
-export const forklaunchExpress = () =>
-  registeredForklaunchExpress(SchemaValidator());
+  basePath: BasePath,
+  openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
+) =>
+  registeredForklaunchRouter(
+    basePath,
+    SchemaValidator(),
+    openTelemetryCollector
+  );
+export const forklaunchExpress = (
+  openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
+) => registeredForklaunchExpress(SchemaValidator(), openTelemetryCollector);
+export const handlers: typeof registeredHandlers = registeredHandlers;
 
-export const string = schemaString;
-export const uuid = schemaUuid;
-export const uri = schemaUri;
-export const email = schemaEmail;
-export const number = schemaNumber;
-export const bigint = schemaBigint;
-export const boolean = schemaBoolean;
-export const date = schemaDate;
-export const symbol = schemaSymbol;
-export const nullish = schemaNullish;
-export const any = schemaAny;
-export const unknown = schemaUnknown;
-export const never = schemaNever;
+export const string: typeof schemaString = schemaString;
+export const uuid: typeof schemaUuid = schemaUuid;
+export const uri: typeof schemaUri = schemaUri;
+export const email: typeof schemaEmail = schemaEmail;
+export const number: typeof schemaNumber = schemaNumber;
+export const bigint: typeof schemaBigint = schemaBigint;
+export const boolean: typeof schemaBoolean = schemaBoolean;
+export const date: typeof schemaDate = schemaDate;
+export const symbol: typeof schemaSymbol = schemaSymbol;
+export const nullish: typeof schemaNullish = schemaNullish;
+export const any: typeof schemaAny = schemaAny;
+export const unknown: typeof schemaUnknown = schemaUnknown;
+export const never: typeof schemaNever = schemaNever;
 export const optional: typeof schemaOptional = schemaOptional;
 export const array: typeof schemaArray = schemaArray;
 export const union: typeof schemaUnion = schemaUnion;

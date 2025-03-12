@@ -168,12 +168,14 @@ fn generate_basic_library(
     };
 
     let ignore_files = vec![];
+    let preserve_files = vec![];
 
     let mut rendered_templates = generate_with_template(
         None,
         &template_dir,
         &TemplateManifestData::Library(&config_data),
         &ignore_files,
+        &preserve_files,
     )?;
     rendered_templates.push(generate_library_package_json(config_data, &output_path)?);
     rendered_templates

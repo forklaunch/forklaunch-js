@@ -37,7 +37,9 @@ use super::{
     command,
     core::{
         database::{generate_database_export_index_ts, match_database},
-        docker::{add_service_definition_to_docker_compose, DockerCompose},
+        docker::{
+            add_otel_to_docker_compose, add_service_definition_to_docker_compose, DockerCompose,
+        },
         gitignore::generate_gitignore,
         iam::generate_iam_keys,
         license::{generate_license, match_license},
@@ -58,8 +60,9 @@ use super::{
                 MIKRO_ORM_MIGRATIONS_VERSION, MIKRO_ORM_REFLECTION_VERSION, PROJECT_BUILD_SCRIPT,
                 PROJECT_DOCS_SCRIPT, PROJECT_FORMAT_SCRIPT, PROJECT_LINT_FIX_SCRIPT,
                 PROJECT_LINT_SCRIPT, SORT_PACKAGE_JSON_VERSION, TSX_VERSION, TS_JEST_VERSION,
-                TYPEBOX_VERSION, TYPESCRIPT_ESLINT_VERSION, TYPESCRIPT_VERSION, TYPES_UUID_VERSION,
-                UUID_VERSION, VALIDATOR_VERSION, VITEST_VERSION, ZOD_VERSION,
+                TYPEBOX_VERSION, TYPESCRIPT_ESLINT_VERSION, TYPESCRIPT_VERSION,
+                TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION, TYPES_QS_VERSION,
+                TYPES_UUID_VERSION, UUID_VERSION, VALIDATOR_VERSION, VITEST_VERSION, ZOD_VERSION,
             },
             project_package_json::{ProjectDependencies, ProjectDevDependencies, ProjectScripts},
         },
@@ -319,6 +322,7 @@ impl CliCommand for ApplicationCommand {
         // let libraries = matches.get_many::<String>("libraries").unwrap_or_default();
 
         let mut ignore_files = vec!["pnpm-workspace.yaml", "pnpm-lock.yml"];
+        let preserve_files = vec!["application-overview.json"];
 
         // TODO: maybe abstract this into a function
         let all_test_framework_config_files = vec!["vitest.config.ts", "jest.config.ts"];
@@ -448,9 +452,20 @@ impl CliCommand for ApplicationCommand {
                 .iter()
                 .map(|ignore_file| ignore_file.to_string())
                 .collect::<Vec<String>>(),
+            &preserve_files
+                .iter()
+                .map(|preserve_file| preserve_file.to_string())
+                .collect::<Vec<String>>(),
         )?);
 
-        let mut docker_compose_string = Some(to_string(&DockerCompose::default()).unwrap());
+        // TODO: think about refactoring this to use pure docker compose and instead use a deserialization function elsewhere
+        let mut docker_compose_string = Some(
+            to_string(add_otel_to_docker_compose(
+                &name,
+                &mut DockerCompose::default(),
+            )?)
+            .unwrap(),
+        );
         for template_dir in template_dirs {
             let service_data = ServiceManifestData {
                 id: data.id.clone(),
@@ -485,7 +500,7 @@ impl CliCommand for ApplicationCommand {
                 db_driver: match_database(&database),
             };
 
-            if HashSet::from(["core".to_string(), "monitoring".to_string()])
+            if !HashSet::from(["core".to_string(), "monitoring".to_string()])
                 .contains(&service_data.service_name)
             {
                 docker_compose_string = Some(add_service_definition_to_docker_compose(
@@ -502,6 +517,10 @@ impl CliCommand for ApplicationCommand {
                 &ignore_files
                     .iter()
                     .map(|ignore_file| ignore_file.to_string())
+                    .collect::<Vec<String>>(),
+                &preserve_files
+                    .iter()
+                    .map(|preserve_file| preserve_file.to_string())
                     .collect::<Vec<String>>(),
             )?);
             rendered_templates.push(generate_service_package_json(
@@ -557,9 +576,16 @@ impl CliCommand for ApplicationCommand {
                         eslint: Some(ESLINT_VERSION.to_string()),
                         typescript_eslint: Some(TYPESCRIPT_ESLINT_VERSION.to_string()),
                         types_uuid: Some(TYPES_UUID_VERSION.to_string()),
+                        types_express: Some(TYPES_EXPRESS_VERSION.to_string()),
+                        types_express_serve_static_core: Some(
+                            TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION.to_string(),
+                        ),
+                        types_qs: Some(TYPES_QS_VERSION.to_string()),
                         ..Default::default()
                     }),
-                    "monitoring" => None,
+                    "monitoring" => Some(ProjectDevDependencies {
+                        ..Default::default()
+                    }),
                     _ => None,
                 },
                 match service_data.service_name.as_str() {

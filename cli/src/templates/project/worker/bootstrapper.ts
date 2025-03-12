@@ -1,4 +1,4 @@
-import { RedisTtlCache } from '@forklaunch/core/cache';
+{{#cache_backend}}import { RedisTtlCache } from '@forklaunch/core/cache';{{/cache_backend}}
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ConfigInjector, getEnvVar, Lifetime } from '@forklaunch/core/services';
 {{^cache_backend}}import { EntityManager, ForkOptions, MikroORM } from '@mikro-orm/core';{{/cache_backend}}
@@ -9,14 +9,17 @@ import dotenv from 'dotenv';
 import { Base{{pascal_case_name}}Service } from './services/{{camel_case_name}}.service';
 //! configValidator object that defines the configuration schema for the application
 export const configValidator = {
-  {{#cache_backend}}redisUrl: string,{{/cache_backend}}
-  protocol: string,
-  host: string,
-  port: number,
-  version: optional(string),
-  docsPath: optional(string),{{^cache_backend}}
+  {{#cache_backend}}REDIS_URL: string,{{/cache_backend}}
+  PROTOCOL: string,
+  HOST: string,
+  PORT: number,
+  VERSION: optional(string),
+  DOCS_PATH: optional(string),
+  OTEL_SERVICE_NAME: string,
+  OTEL_LEVEL: optional(string),
+  OTEL_EXPORTER_OTLP_ENDPOINT: string,{{^cache_backend}}
   entityManager: EntityManager,{{/cache_backend}}
-  openTelemetryCollector: OpenTelemetryCollector{{#cache_backend}}
+  openTelemetryCollector: OpenTelemetryCollector,{{#cache_backend}}
   ttlCache: RedisTtlCache,{{/cache_backend}}
   {{camel_case_name}}Service: Base{{pascal_case_name}}Service
 };
@@ -34,29 +37,41 @@ export function bootstrap(
       SchemaValidator(),
       configValidator,
       {
-        {{#cache_backend}}redisUrl: {
+        {{#cache_backend}}REDIS_URL: {
           lifetime: Lifetime.Singleton,
           value: getEnvVar('REDIS_URL')
         },{{/cache_backend}}
-        protocol: {
+        PROTOCOL: {
           lifetime: Lifetime.Singleton,
           value: getEnvVar('PROTOCOL')
         },
-        host: {
+        HOST: {
           lifetime: Lifetime.Singleton,
           value: getEnvVar('HOST')
         },
-        port: {
+        PORT: {
           lifetime: Lifetime.Singleton,
           value: Number(getEnvVar('PORT'))
         },
-        version: {
+        VERSION: {
           lifetime: Lifetime.Singleton,
           value: getEnvVar('VERSION') ?? 'v1'
         },
-        docsPath: {
+        DOCS_PATH: {
           lifetime: Lifetime.Singleton,
           value: getEnvVar('DOCS_PATH') ?? '/docs'
+        },        
+        OTEL_SERVICE_NAME: {
+          lifetime: Lifetime.Singleton,
+          value: getEnvVar('OTEL_SERVICE_NAME')
+        },
+        OTEL_LEVEL: {
+          lifetime: Lifetime.Singleton,
+          value: getEnvVar('OTEL_LEVEL') ?? 'info'
+        },
+        OTEL_EXPORTER_OTLP_ENDPOINT: {
+          lifetime: Lifetime.Singleton,
+          value: getEnvVar('OTEL_EXPORTER_OTLP_ENDPOINT')
         },{{^cache_backend}}
         entityManager: {
           lifetime: Lifetime.Scoped,
@@ -67,17 +82,22 @@ export function bootstrap(
         },{{/cache_backend}}
         openTelemetryCollector: {
           lifetime: Lifetime.Singleton,
-          value: new OpenTelemetryCollector(
-            getEnvVar('OTEL_SERVICE_NAME'),
-            getEnvVar('OTEL_LEVEL') || 'info',
-            metrics
-          )
+          factory: ({
+            OTEL_SERVICE_NAME,
+            OTEL_LEVEL
+          }) =>
+            new OpenTelemetryCollector(
+              OTEL_SERVICE_NAME,
+              OTEL_LEVEL || 'info',
+              metrics
+            )
         },{{#cache_backend}}
         ttlCache: {
           lifetime: Lifetime.Singleton,
-          value: new RedisTtlCache(60 * 60 * 1000, {
-            url: getEnvVar('REDIS_URL')
-          })
+          factory: ({ openTelemetryCollector }) =>
+            new RedisTtlCache(60 * 60 * 1000, openTelemetryCollector, {
+              url: getEnvVar('REDIS_URL')
+            })
         },{{/cache_backend}}
         {{camel_case_name}}Service: {
           lifetime: Lifetime.Scoped,

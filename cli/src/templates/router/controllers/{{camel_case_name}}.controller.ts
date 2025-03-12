@@ -2,6 +2,7 @@ import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ConfigInjector, ScopedDependencyFactory } from '@forklaunch/core/services';
 import { handlers, Request, Response, NextFunction, ParsedQs, SchemaValidator } from '@{{app_name}}/core';
+import { Metrics } from '@{{app_name}}/monitoring';
 import { configValidator } from '../bootstrapper';
 import { {{pascal_case_name}}Service } from '../interfaces/{{camel_case_name}}.interface';
 import { {{pascal_case_name}}RequestDtoMapper, {{pascal_case_name}}ResponseDtoMapper } from '../models/dtoMapper/{{camel_case_name}}.dtoMapper';
