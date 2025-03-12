@@ -1,7 +1,7 @@
 use std::{fs::read_to_string, path::Path};
 
 use anyhow::{bail, Context, Result};
-use clap::{Arg, ArgMatches, Command};
+use clap::{Arg, ArgAction, ArgMatches, Command};
 use convert_case::{Case, Casing};
 use ramhorns::Content;
 use rustyline::{history::DefaultHistory, Editor};
@@ -79,6 +79,13 @@ impl CliCommand for RouterCommand {
                     .long("path")
                     .help("The service path to initialize the router in. This path must be in a service directory"),
             )
+            .arg(
+                Arg::new("dryrun")
+                    .short('n')
+                    .long("dryrun")
+                    .help("Dry run the command")
+                    .action(ArgAction::SetTrue),
+            )
     }
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
@@ -142,16 +149,20 @@ impl CliCommand for RouterCommand {
                 ..manifest_data
             };
 
+            let dryrun = matches.get_flag("dryrun");
             generate_basic_router(
                 &base_path.to_string(),
                 &mut config_data,
                 &service_name.to_string(),
+                dryrun,
             )
             .with_context(|| "Failed to create router")?;
 
-            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-            writeln!(stdout, "{} initialized successfully!", router_name)?;
-            stdout.reset()?;
+            if !dryrun {
+                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+                writeln!(stdout, "{} initialized successfully!", router_name)?;
+                stdout.reset()?;
+            }
 
             Ok(())
         } else {
@@ -164,6 +175,7 @@ fn generate_basic_router(
     base_path: &String,
     config_data: &mut RouterManifestData,
     service_name: &String,
+    dryrun: bool,
 ) -> Result<()> {
     let output_path = Path::new(base_path).to_string_lossy().to_string();
     let template_dir = PathIO {
@@ -180,6 +192,7 @@ fn generate_basic_router(
         &TemplateManifestData::Router(&config_data),
         &ignore_files,
         &preserve_files,
+        dryrun,
     )?;
     rendered_templates.extend(
         // check if this also adds to app and bootstrapper
@@ -187,7 +200,7 @@ fn generate_basic_router(
             .with_context(|| "Failed to add service metadata to artifacts")?,
     );
 
-    write_rendered_templates(&rendered_templates)
+    write_rendered_templates(&rendered_templates, dryrun)
         .with_context(|| "Failed to write service files")?;
 
     Ok(())

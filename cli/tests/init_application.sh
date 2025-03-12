@@ -1,3 +1,7 @@
+if [ -d "output/init-application" ]; then
+    rm -rf output/init-application
+fi
+
 mkdir -p output/init-application
 cd output/init-application
 

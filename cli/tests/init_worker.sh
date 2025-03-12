@@ -1,3 +1,7 @@
+if [ -d "output/init-worker" ]; then
+    rm -rf output/init-worker
+fi
+
 mkdir -p output/init-worker
 cd output/init-worker
 

@@ -1,3 +1,7 @@
+if [ -d "output/init-service" ]; then
+    rm -rf output/init-service
+fi
+
 mkdir -p output/init-service
 cd output/init-service
 

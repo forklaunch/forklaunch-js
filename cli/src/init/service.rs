@@ -1,7 +1,7 @@
 use std::{fs::read_to_string, path::Path};
 
 use anyhow::{Context, Result};
-use clap::{Arg, ArgMatches, Command};
+use clap::{Arg, ArgAction, ArgMatches, Command};
 use convert_case::{Case, Casing};
 use ramhorns::Content;
 use rustyline::{history::DefaultHistory, Editor};
@@ -133,6 +133,13 @@ impl CliCommand for ServiceCommand {
                     .long("description")
                     .help("The description of the service"),
             )
+            .arg(
+                Arg::new("dryrun")
+                    .short('n')
+                    .long("dryrun")
+                    .help("Dry run the command")
+                    .action(ArgAction::SetTrue),
+            )
     }
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
@@ -201,12 +208,20 @@ impl CliCommand for ServiceCommand {
                 .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
         };
 
-        generate_basic_service(&service_name, &base_path.to_string(), &mut config_data)
-            .with_context(|| "Failed to create service")?;
+        let dryrun = matches.get_flag("dryrun");
+        generate_basic_service(
+            &service_name,
+            &base_path.to_string(),
+            &mut config_data,
+            dryrun,
+        )
+        .with_context(|| "Failed to create service")?;
 
-        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-        writeln!(stdout, "{} initialized successfully!", service_name)?;
-        stdout.reset()?;
+        if !dryrun {
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+            writeln!(stdout, "{} initialized successfully!", service_name)?;
+            stdout.reset()?;
+        }
 
         Ok(())
     }
@@ -216,6 +231,7 @@ fn generate_basic_service(
     service_name: &String,
     base_path: &String,
     config_data: &mut ServiceManifestData,
+    dryrun: bool,
 ) -> Result<()> {
     let output_path = Path::new(base_path)
         .join(service_name)
@@ -238,6 +254,7 @@ fn generate_basic_service(
         &TemplateManifestData::Service(&config_data),
         &ignore_files,
         &preserve_files,
+        dryrun,
     )?;
     rendered_templates.push(generate_service_package_json(
         config_data,
@@ -261,11 +278,16 @@ fn generate_basic_service(
             .with_context(|| ERROR_FAILED_TO_ADD_BASE_ENTITY_TO_CORE)?,
     );
 
-    write_rendered_templates(&rendered_templates)
+    write_rendered_templates(&rendered_templates, dryrun)
         .with_context(|| ERROR_FAILED_TO_WRITE_SERVICE_FILES)?;
 
-    generate_symlinks(Some(base_path), &template_dir.output_path, config_data)
-        .with_context(|| ERROR_FAILED_TO_CREATE_SYMLINKS)?;
+    generate_symlinks(
+        Some(base_path),
+        &template_dir.output_path,
+        config_data,
+        dryrun,
+    )
+    .with_context(|| ERROR_FAILED_TO_CREATE_SYMLINKS)?;
 
     Ok(())
 }
