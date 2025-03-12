@@ -81,7 +81,7 @@ importers:
         specifier: ^6.4.9
         version: 6.4.9(@mikro-orm/core@6.4.9)(pg@8.13.3)
       '@sinclair/typebox':
-        specifier: ^0.34.30
+        specifier: ^0.34.28
         version: 0.34.30
       ajv:
         specifier: ^8.17.1
@@ -145,7 +145,7 @@ importers:
         specifier: ^6.4.9
         version: 6.4.9(@mikro-orm/core@6.4.9)(socks@2.8.4)
       '@sinclair/typebox':
-        specifier: ^0.34.30
+        specifier: ^0.34.28
         version: 0.34.30
       uuid:
         specifier: ^11.1.0
@@ -170,7 +170,7 @@ importers:
         specifier: ^3.5.3
         version: 3.5.3
       typescript-eslint:
-        specifier: ^8.26.1
+        specifier: ^8.26.0
         version: 8.26.1(eslint@9.22.0)(typescript@5.8.2)
 
   iam:
@@ -212,7 +212,7 @@ importers:
         specifier: ^6.4.9
         version: 6.4.9(@mikro-orm/core@6.4.9)(pg@8.13.3)
       '@sinclair/typebox':
-        specifier: ^0.34.30
+        specifier: ^0.34.28
         version: 0.34.30
       ajv:
         specifier: ^8.17.1
@@ -285,7 +285,7 @@ importers:
         specifier: ^6.4.9
         version: 6.4.9(@mikro-orm/core@6.4.9)
       '@sinclair/typebox':
-        specifier: ^0.34.30
+        specifier: ^0.34.28
         version: 0.34.30
       ajv:
         specifier: ^8.17.1
@@ -322,7 +322,7 @@ importers:
         specifier: ^0.27.9
         version: 0.27.9(typescript@5.8.2)
       typescript-eslint:
-        specifier: ^8.26.1
+        specifier: ^8.26.0
         version: 8.26.1(eslint@9.22.0)(typescript@5.8.2)
 
 packages:
