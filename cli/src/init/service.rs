@@ -47,9 +47,10 @@ use super::{
                 CORE_VERSION, DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION,
                 HYPER_EXPRESS_VERSION, MIKRO_ORM_CLI_VERSION, MIKRO_ORM_CORE_VERSION,
                 MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
-                MIKRO_ORM_REFLECTION_VERSION, PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT,
-                PROJECT_FORMAT_SCRIPT, PROJECT_LINT_FIX_SCRIPT, PROJECT_LINT_SCRIPT, TSX_VERSION,
-                TYPEBOX_VERSION, TYPEDOC_VERSION, TYPESCRIPT_ESLINT_VERSION,
+                MIKRO_ORM_REFLECTION_VERSION, MIKRO_ORM_SEEDER_VERSION, PROJECT_BUILD_SCRIPT,
+                PROJECT_DOCS_SCRIPT, PROJECT_FORMAT_SCRIPT, PROJECT_LINT_FIX_SCRIPT,
+                PROJECT_LINT_SCRIPT, PROJECT_SEED_SCRIPT, TSX_VERSION, TYPEBOX_VERSION,
+                TYPEDOC_VERSION, TYPESCRIPT_ESLINT_VERSION,
                 TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION, TYPES_QS_VERSION,
                 TYPES_UUID_VERSION, UUID_VERSION, VALIDATOR_VERSION, ZOD_VERSION,
             },
@@ -398,6 +399,7 @@ pub(crate) fn generate_service_package_json(
                 migrate_down: Some(project_migrate_script("down").to_string()),
                 migrate_init: Some(project_migrate_script("init").to_string()),
                 migrate_up: Some(project_migrate_script("up").to_string()),
+                seed: Some(PROJECT_SEED_SCRIPT.to_string()),
                 start: Some(project_start_server_script().to_string()),
                 ..Default::default()
             }
@@ -427,6 +429,7 @@ pub(crate) fn generate_service_package_json(
                 mikro_orm_migrations: Some(MIKRO_ORM_MIGRATIONS_VERSION.to_string()),
                 mikro_orm_database: Some(MIKRO_ORM_DATABASE_VERSION.to_string()),
                 mikro_orm_reflection: Some(MIKRO_ORM_REFLECTION_VERSION.to_string()),
+                mikro_orm_seeder: Some(MIKRO_ORM_SEEDER_VERSION.to_string()),
                 typebox: if config_data.is_typebox {
                     Some(TYPEBOX_VERSION.to_string())
                 } else {

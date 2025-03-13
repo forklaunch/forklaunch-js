@@ -338,7 +338,7 @@ fn inject_into_bootstrapper_config_injector<'a>(
     }
 }
 
-fn inject_into_entities_index_ts<'a>(
+fn inject_export_into_index_ts<'a>(
     entities_index_program: &mut Program<'a>,
     injection_program_ast: &mut Program<'a>,
     router_name_camel_case: &str,
@@ -609,7 +609,7 @@ pub(crate) fn transform_entities_index_ts(router_name: &str, base_path: &String)
     let mut injection_program_ast =
         parse_ast_program(&allocator, &entities_index_text, SourceType::ts());
 
-    inject_into_entities_index_ts(
+    inject_export_into_index_ts(
         &mut entities_index_program,
         &mut injection_program_ast,
         &router_name_camel_case,
@@ -618,5 +618,37 @@ pub(crate) fn transform_entities_index_ts(router_name: &str, base_path: &String)
     Ok(CodeGenerator::new()
         .with_options(CodegenOptions::default())
         .build(&entities_index_program)
+        .code)
+}
+
+pub(crate) fn transform_seeders_index_ts(router_name: &str, base_path: &String) -> Result<String> {
+    let allocator = Allocator::default();
+    let seeders_index_path = Path::new(base_path)
+        .join("models")
+        .join("seeders")
+        .join("index.ts");
+    let seeders_index_source_text = read_to_string(&seeders_index_path).unwrap();
+    let seeders_index_source_type = SourceType::from_path(&seeders_index_path).unwrap();
+    let router_name_camel_case = router_name.to_case(Case::Camel);
+
+    let mut seeders_index_program = parse_ast_program(
+        &allocator,
+        &seeders_index_source_text,
+        seeders_index_source_type,
+    );
+
+    let seeders_index_text = format!("export * from './{router_name_camel_case}Record.seeder';",);
+    let mut injection_program_ast =
+        parse_ast_program(&allocator, &seeders_index_text, SourceType::ts());
+
+    inject_export_into_index_ts(
+        &mut seeders_index_program,
+        &mut injection_program_ast,
+        &router_name_camel_case,
+    )?;
+
+    Ok(CodeGenerator::new()
+        .with_options(CodegenOptions::default())
+        .build(&seeders_index_program)
         .code)
 }

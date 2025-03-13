@@ -31,6 +31,8 @@ pub struct ProjectScripts {
     #[serde(rename = "migrate:up", skip_serializing_if = "Option::is_none")]
     pub migrate_up: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub seed: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub start: Option<String>,
     #[serde(rename = "start:server", skip_serializing_if = "Option::is_none")]
     pub start_server: Option<String>,
@@ -90,6 +92,9 @@ impl Serialize for ProjectDependencies {
         }
         if let Some(ref v) = self.mikro_orm_reflection {
             map.serialize_entry("@mikro-orm/reflection", v)?;
+        }
+        if let Some(ref v) = self.mikro_orm_seeder {
+            map.serialize_entry("@mikro-orm/seeder", v)?;
         }
         if let Some(ref v) = self.typebox {
             map.serialize_entry("@sinclair/typebox", v)?;
@@ -172,6 +177,7 @@ impl<'de> Deserialize<'de> for ProjectDependencies {
                         "@forklaunch/validator" => deps.forklaunch_validator = Some(value),
                         "@mikro-orm/core" => deps.mikro_orm_core = Some(value),
                         "@mikro-orm/reflection" => deps.mikro_orm_reflection = Some(value),
+                        "@mikro-orm/seeder" => deps.mikro_orm_seeder = Some(value),
                         "@sinclair/typebox" => deps.typebox = Some(value),
                         "ajv" => deps.ajv = Some(value),
                         "dotenv" => deps.dotenv = Some(value),
@@ -204,6 +210,7 @@ pub struct ProjectDependencies {
     pub mikro_orm_migrations: Option<String>,
     pub mikro_orm_database: Option<String>,
     pub mikro_orm_reflection: Option<String>,
+    pub mikro_orm_seeder: Option<String>,
     pub typebox: Option<String>,
     pub ajv: Option<String>,
     pub dotenv: Option<String>,

@@ -2,7 +2,7 @@ import { ConfigInjector, getEnvVar, Lifetime } from '@forklaunch/core/services';
 import { Migrator } from '@mikro-orm/migrations{{#is_mongo}}-mongodb{{/is_mongo}}';
 import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
 import { number, SchemaValidator, string } from '@{{app_name}}/core';{{^is_mongo}}
-import { Platform, TextType, Type } from '@mikro-orm/core';{{/is_mongo}}
+import { MikroORMOptions, Platform, TextType, Type } from '@mikro-orm/core';{{/is_mongo}}
 import { {{db_driver}} } from '@mikro-orm/{{database}}';
 import dotenv from 'dotenv';
 import * as entities from './models/persistence';
@@ -47,7 +47,7 @@ const configInjector = new ConfigInjector(
   }
 );
 
-const validConfigInjector = configInjector.validateConfigSingletons(
+export const validConfigInjector = configInjector.validateConfigSingletons(
   getEnvVar('ENV_FILE_PATH')
 );{{#is_mongo}}
 
@@ -59,7 +59,7 @@ const clientUrl = `mongodb://${validConfigInjector.resolve(
     'DB_NAME'
   )}?authSource=admin&directConnection=true&replicaSet=rs0`
 {{/is_mongo}}
-const mikroOrmOptionsConfig = {
+const mikroOrmOptionsConfig: Partial<MikroORMOptions> = {
   driver: {{db_driver}},{{#is_mongo}}
   clientUrl,{{/is_mongo}}{{^is_mongo}}
   dbName: validConfigInjector.resolve('DB_NAME'),
@@ -80,7 +80,11 @@ const mikroOrmOptionsConfig = {
 
       return platform.getDefaultMappedType(type);
     }
-  }{{/is_mongo}}
+  },{{/is_mongo}}
+  seeder: {
+    path: 'dist/models',
+    glob: 'seeder.js'
+  }
 };
 
 export default mikroOrmOptionsConfig;

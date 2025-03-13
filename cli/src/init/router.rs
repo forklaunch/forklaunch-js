@@ -27,7 +27,10 @@ use self::database::match_database;
 use super::{
     command,
     core::{
-        ast::{transform_app_ts, transform_bootstrapper_ts, transform_entities_index_ts},
+        ast::{
+            transform_app_ts, transform_bootstrapper_ts, transform_entities_index_ts,
+            transform_seeders_index_ts,
+        },
         database,
         manifest::add_router_definition_to_manifest,
         rendered_template::{write_rendered_templates, RenderedTemplate},
@@ -234,6 +237,15 @@ fn add_router_to_artifacts(
             .join("persistence")
             .join("index.ts"),
         content: transform_entities_index_ts(config_data.router_name.as_str(), &base_path)?,
+        context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER.to_string()),
+    });
+
+    rendered_templates.push(RenderedTemplate {
+        path: Path::new(base_path)
+            .join("models")
+            .join("seeders")
+            .join("index.ts"),
+        content: transform_seeders_index_ts(config_data.router_name.as_str(), &base_path)?,
         context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER.to_string()),
     });
 

@@ -92,7 +92,6 @@ pub(crate) fn update_application_package_json(
             None => (cmd.trim(), ""),
         };
 
-        // Extract existing database services
         let mut services: Vec<&str> = docker_cmd
             .split("-d")
             .skip(1) // Skip the "docker compose up" part
@@ -148,6 +147,13 @@ pub(crate) fn update_application_package_json(
         scripts.insert(
             "migrate:down".to_string(),
             Value::String(update_docker_cmd(down_script)),
+        );
+    }
+
+    if let Some(seed_script) = scripts.get("seed").and_then(Value::as_str) {
+        scripts.insert(
+            "seed".to_string(),
+            Value::String(update_docker_cmd(seed_script)),
         );
     }
 

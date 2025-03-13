@@ -31,6 +31,8 @@ pub struct ApplicationScripts {
     #[serde(rename = "migrate:up", skip_serializing_if = "Option::is_none")]
     pub migrate_up: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub seed: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub test: Option<String>,
     #[serde(rename = "up:packages", skip_serializing_if = "Option::is_none")]
     pub up_packages: Option<String>,

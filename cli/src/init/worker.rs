@@ -47,12 +47,12 @@ use super::{
                 COMMON_VERSION, CORE_VERSION, DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION,
                 HYPER_EXPRESS_VERSION, MIKRO_ORM_CLI_VERSION, MIKRO_ORM_CORE_VERSION,
                 MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
-                MIKRO_ORM_REFLECTION_VERSION, PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT,
-                PROJECT_FORMAT_SCRIPT, PROJECT_LINT_FIX_SCRIPT, PROJECT_LINT_SCRIPT,
-                PROJECT_START_WORKER_CLIENT_SCRIPT, TSX_VERSION, TYPEBOX_VERSION, TYPEDOC_VERSION,
-                TYPESCRIPT_ESLINT_VERSION, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION,
-                TYPES_EXPRESS_VERSION, TYPES_QS_VERSION, TYPES_UUID_VERSION, UUID_VERSION,
-                VALIDATOR_VERSION, ZOD_VERSION,
+                MIKRO_ORM_REFLECTION_VERSION, MIKRO_ORM_SEEDER_VERSION, PROJECT_BUILD_SCRIPT,
+                PROJECT_DOCS_SCRIPT, PROJECT_FORMAT_SCRIPT, PROJECT_LINT_FIX_SCRIPT,
+                PROJECT_LINT_SCRIPT, PROJECT_SEED_SCRIPT, PROJECT_START_WORKER_CLIENT_SCRIPT,
+                TSX_VERSION, TYPEBOX_VERSION, TYPEDOC_VERSION, TYPESCRIPT_ESLINT_VERSION,
+                TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION, TYPES_QS_VERSION,
+                TYPES_UUID_VERSION, UUID_VERSION, VALIDATOR_VERSION, ZOD_VERSION,
             },
             project_package_json::{
                 ProjectDependencies, ProjectDevDependencies, ProjectMikroOrm, ProjectPackageJson,
@@ -449,6 +449,11 @@ pub(crate) fn generate_project_package_json(
                 } else {
                     None
                 },
+                seed: if !config_data.cache_backend {
+                    Some(PROJECT_SEED_SCRIPT.to_string())
+                } else {
+                    None
+                },
                 start_server: Some(project_start_worker_script(config_data.cache_backend)),
                 start_client: Some(PROJECT_START_WORKER_CLIENT_SCRIPT.to_string()),
                 ..Default::default()
@@ -488,6 +493,11 @@ pub(crate) fn generate_project_package_json(
                 },
                 mikro_orm_reflection: if !config_data.cache_backend {
                     Some(MIKRO_ORM_REFLECTION_VERSION.to_string())
+                } else {
+                    None
+                },
+                mikro_orm_seeder: if !config_data.cache_backend {
+                    Some(MIKRO_ORM_SEEDER_VERSION.to_string())
                 } else {
                     None
                 },

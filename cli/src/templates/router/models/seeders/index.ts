@@ -1,0 +1,1 @@
+export { {{pascal_case_name}}RecordSeeder } from "./{{camel_case_name}}Record.seeder";

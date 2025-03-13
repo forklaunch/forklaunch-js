@@ -26,7 +26,7 @@ On first run, you'll need to run the following commands (also captured in `setup
 {{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun{{/is_bun}} install
 {{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun run {{/is_bun}}build
 {{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun {{/is_bun}}migrate:init
-{{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun {{/is_bun}}dev
+{{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun {{/is_bun}}seed
 ```
 
 ## Core Commands
@@ -67,7 +67,7 @@ Creates a shared library that can be used across services:
 - Package configuration
 - Automatic dependency linking
 
-### Router Management
+#### Add a Router (in workers and services)
 
 ```bash
 forklaunch add router my-controller
@@ -79,9 +79,17 @@ The `add router` command is particularly powerful as it:
 - Integrates with existing service or worker
 - Generates test files for the new controller
 
+#### Check dependencies
+
+```bash
+forklaunch depcheck
+```
+
+Checks dependency versions across projects. To define groups of projects that need the same dependencies, look at `.forklaunch/manifest.toml` > `[project_peer_dependencies]`.
+
 ## Database Migrations
 
-ForkLaunch uses MikroORM for database management with these commands:
+ForkLaunch uses `MikroORM` for database management with these commands:
 
 ```bash
 # Initialize the database
@@ -97,7 +105,7 @@ ForkLaunch uses MikroORM for database management with these commands:
 {{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun{{/is_bun}} migrate:down
 ```
 
-To access the full MikroORM CLI, run `{{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun{{/is_bun}} mikro-orm`. Note, you may have to supply necessary ENV arguments to interface correctly with the target database.
+To access the full `MikroORM` CLI, run `{{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun{{/is_bun}} mikro-orm`. Note, you may have to supply necessary ENV arguments to interface correctly with the target database.
 
 ## Development Workflow
 
@@ -144,6 +152,18 @@ Run tests with:
 {{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun{{/is_bun}} test
 ```
 
+### Definining Configuration
+
+Configuration can be defined via a ConfigInjector class. The behavior can be observed in `mikro-orm.config.ts` and `bootstrapper.ts` files.
+
+Dependencies can have one of three lifetimes:
+
+- `singleton` - A singleton dependency is created once and shared across the application.
+- `scoped` - A scoped dependency is created once per scoped session.
+- `transient` - A transient dependency is created each time it is requested.
+
+This abstraction is also powerful to validate that environment and expected constant variables are present at runtime.
+
 ### Adding API Metadata
 
 When defining APIs, you can add metadata to the API definition in an idiomatic manner. This achieves the following:
@@ -157,7 +177,7 @@ The general format is defined by the REST method, but generally follows the foll
 
 ```json
 {
-  name: "My API",
+  name: "A Random POST API",
   summary: "My API that works! Probably a nice POST request",
   headers: {
     "x-header-name": string
@@ -183,7 +203,7 @@ The general format is defined by the REST method, but generally follows the foll
             timestamp: date
         }
     },
-    301: string
+    301: union(string, number)
   },
 };
 ```
@@ -194,7 +214,7 @@ Auth can also be added to the API definition, but is not required. Supported aut
 - `jwt` - JWT authentication
 - `other` - Another auth method. You will need to supply a `decodeToken` callback
 
-When defining this, the smart typing will ask you to provide `permissions` and/or `roles` for the API. You will also be optionally supply a callback that maps `permissions` and/or `roles` given a `subject` and the original request, if the claims are not present in the token.
+When defining this, the smart typing will ask you to provide `permissions` and/or `roles` for the API. You can also supply optional callbacks that hook into the token based auth flow.
 
 ## Advanced Configuration
 
