@@ -47,6 +47,6 @@
     "collection": "sample_worker_record"
   },
   "origin": "./models/persistence/sampleWorkerRecord.entity.ts",
-  "hash": "d0b396b321e69494afba12018db31dd5",
-  "version": "6.4.6"
+  "hash": "eea0f7ea4e5d68ae39e3a7a6170b5ebf",
+  "version": "6.4.9"
 }
