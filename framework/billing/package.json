@@ -26,6 +26,7 @@
     "migrate:down": "ENV_FILE_PATH=.env.local NODE_OPTIONS='--import=tsx' mikro-orm migration:down",
     "migrate:init": "ENV_FILE_PATH=.env.local NODE_OPTIONS='--import=tsx' mikro-orm migration:create --initial",
     "migrate:up": "ENV_FILE_PATH=.env.local NODE_OPTIONS='--import=tsx' mikro-orm migration:up",
+    "seed": "ENV_FILE_PATH=.env.local NODE_OPTIONS='--import=tsx' mikro-orm seeder:run",
     "start": "ENV_FILE_PATH=.env.local NODE_OPTIONS='--import=tsx' node dist/server.js",
     "start:bun": "bun run migrate:up && bun dist/server.js",
     "test": "vitest --passWithNoTests"
@@ -44,6 +45,7 @@
     "@mikro-orm/mysql": "^6.4.9",
     "@mikro-orm/postgresql": "^6.4.9",
     "@mikro-orm/reflection": "^6.4.9",
+    "@mikro-orm/seeder": "^6.4.9",
     "@mikro-orm/sqlite": "^6.4.9",
     "@sinclair/typebox": "^0.34.30",
     "ajv": "^8.17.1",

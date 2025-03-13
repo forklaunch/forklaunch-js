@@ -24,6 +24,7 @@
     "migrate:down": "docker compose -f docker-compose.base.yml up -d postgres && pnpm -r run migrate:down",
     "migrate:init": "docker compose -f docker-compose.base.yml up -d postgres && pnpm -r run migrate:init",
     "migrate:up": "docker compose -f docker-compose.base.yml up -d postgres && pnpm -r run migrate:up",
+    "seed": "docker compose -f docker-compose.base.yml up -d postgres && pnpm -r run seed",
     "test": "pnpm vitest --passWithNoTests",
     "up:packages": "pnpm -r update --latest"
   },
