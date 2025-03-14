@@ -20,13 +20,18 @@ This creates a new project with the basic structure including:
 - Development environment setup
 - Pre-configured ESLint, Prettier, and Husky
 
-On first run, you'll need to run the following commands (also captured in `setup.sh`):
+On first run, you'll need to run the following commands:
 
 ```bash
-{{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun{{/is_bun}} install
-{{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun run {{/is_bun}}build
-{{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun {{/is_bun}}migrate:init
-{{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun {{/is_bun}}dev
+{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} install
+{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun run {{/is_bun}} build
+{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun {{/is_bun}} database:setup
+```
+
+Now, you can run the project with:
+
+```bash
+{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun {{/is_bun}} dev
 ```
 
 ## Core Commands
@@ -67,7 +72,7 @@ Creates a shared library that can be used across services:
 - Package configuration
 - Automatic dependency linking
 
-### Router Management
+#### Add a Router (in workers and services)
 
 ```bash
 forklaunch add router my-controller
@@ -79,32 +84,40 @@ The `add router` command is particularly powerful as it:
 - Integrates with existing service or worker
 - Generates test files for the new controller
 
+#### Check dependencies
+
+```bash
+forklaunch depcheck
+```
+
+Checks dependency versions across projects. To define groups of projects that need the same dependencies, look at `.forklaunch/manifest.toml` > `[project_peer_dependencies]`.
+
 ## Database Migrations
 
-ForkLaunch uses MikroORM for database management with these commands:
+ForkLaunch uses `MikroORM` for database management with these commands:
 
 ```bash
 # Initialize the database
-{{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun{{/is_bun}} migrate:init
+{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} migrate:init
 
 # Create a new migration
-{{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun{{/is_bun}} migrate:create
+{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} migrate:create
 
 # Apply pending migrations
-{{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun{{/is_bun}} migrate:up
+{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} migrate:up
 
 # Revert the last migration
-{{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun{{/is_bun}} migrate:down
+{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} migrate:down
 ```
 
-To access the full MikroORM CLI, run `{{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun{{/is_bun}} mikro-orm`. Note, you may have to supply necessary ENV arguments to interface correctly with the target database.
+To access the full `MikroORM` CLI, run `{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} mikro-orm`. Note, you may have to supply necessary ENV arguments to interface correctly with the target database.
 
 ## Development Workflow
 
 ### Starting the Development Server
 
 ```bash
-{{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun{{/is_bun}} dev
+{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} dev
 ```
 
 This starts all services and workers defined in your manifest.
@@ -112,7 +125,7 @@ This starts all services and workers defined in your manifest.
 ### Building the Project
 
 ```bash
-{{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun run{{/is_bun}} build
+{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun run{{/is_bun}} build
 ```
 
 Compiles all services, workers, and libraries.
@@ -131,7 +144,7 @@ ForkLaunch comes with pre-configured:
 To enable Husky Git hooks:
 
 ```bash
-{{#is_node}}npx{{/is_node}}{{^is_bun}}bun{{/is_bun}} husky install
+{{#is_node}}npx{{/is_node}}{{#is_bun}}bun{{/is_bun}} husky install
 ```
 
 This sets up pre-commit hooks for linting and formatting.
@@ -141,8 +154,20 @@ This sets up pre-commit hooks for linting and formatting.
 Run tests with:
 
 ```bash
-{{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun{{/is_bun}} test
+{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} test
 ```
+
+### Definining Configuration
+
+Configuration can be defined via a ConfigInjector class. The behavior can be observed in `mikro-orm.config.ts` and `bootstrapper.ts` files.
+
+Dependencies can have one of three lifetimes:
+
+- `singleton` - A singleton dependency is created once and shared across the application.
+- `scoped` - A scoped dependency is created once per scoped session.
+- `transient` - A transient dependency is created each time it is requested.
+
+This abstraction is also powerful to validate that environment and expected constant variables are present at runtime.
 
 ### Adding API Metadata
 
@@ -157,7 +182,7 @@ The general format is defined by the REST method, but generally follows the foll
 
 ```json
 {
-  name: "My API",
+  name: "A Random POST API",
   summary: "My API that works! Probably a nice POST request",
   headers: {
     "x-header-name": string
@@ -183,7 +208,7 @@ The general format is defined by the REST method, but generally follows the foll
             timestamp: date
         }
     },
-    301: string
+    301: union(string, number)
   },
 };
 ```
@@ -194,7 +219,7 @@ Auth can also be added to the API definition, but is not required. Supported aut
 - `jwt` - JWT authentication
 - `other` - Another auth method. You will need to supply a `decodeToken` callback
 
-When defining this, the smart typing will ask you to provide `permissions` and/or `roles` for the API. You will also be optionally supply a callback that maps `permissions` and/or `roles` given a `subject` and the original request, if the claims are not present in the token.
+When defining this, the smart typing will ask you to provide `permissions` and/or `roles` for the API. You can also supply optional callbacks that hook into the token based auth flow.
 
 ## Advanced Configuration
 

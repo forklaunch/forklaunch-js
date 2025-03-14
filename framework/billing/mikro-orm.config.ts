@@ -3,7 +3,7 @@ import { number, SchemaValidator, string } from '@forklaunch/framework-core';
 import { Migrator } from '@mikro-orm/migrations';
 // import { MongoDriver } from '@mikro-orm/mongodb';
 // import { MySqlDriver } from '@mikro-orm/mysql';
-import { Platform, TextType, Type } from '@mikro-orm/core';
+import { MikroORMOptions, Platform, TextType, Type } from '@mikro-orm/core';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
 // import { SqliteDriver } from '@mikro-orm/sqlite';
@@ -15,55 +15,55 @@ dotenv.config({ path: getEnvVar('ENV_FILE_PATH') });
 const configInjector = new ConfigInjector(
   SchemaValidator(),
   {
-    dbName: string,
-    host: string,
-    user: string,
-    password: string,
-    port: number,
-    environment: string
+    DB_NAME: string,
+    DB_HOST: string,
+    DB_USER: string,
+    DB_PASSWORD: string,
+    DB_PORT: number,
+    ENV: string
   },
   {
-    dbName: {
+    DB_NAME: {
       lifetime: Lifetime.Singleton,
       value: getEnvVar('DB_NAME')
     },
-    host: {
+    DB_HOST: {
       lifetime: Lifetime.Singleton,
       value: getEnvVar('DB_HOST')
     },
-    user: {
+    DB_USER: {
       lifetime: Lifetime.Singleton,
       value: getEnvVar('DB_USER')
     },
-    password: {
+    DB_PASSWORD: {
       lifetime: Lifetime.Singleton,
       value: getEnvVar('DB_PASSWORD')
     },
-    port: {
+    DB_PORT: {
       lifetime: Lifetime.Singleton,
       value: Number(getEnvVar('DB_PORT'))
     },
-    environment: {
+    ENV: {
       lifetime: Lifetime.Singleton,
       value: getEnvVar('ENV')
     }
   }
 );
 
-const validConfigInjector = configInjector.validateConfigSingletons(
+export const validConfigInjector = configInjector.validateConfigSingletons(
   getEnvVar('ENV_FILE_PATH')
 );
 
-const mikroOrmOptionsConfig = {
+const mikroOrmOptionsConfig: Partial<MikroORMOptions> = {
   driver: PostgreSqlDriver,
-  dbName: validConfigInjector.resolve('dbName'),
-  host: validConfigInjector.resolve('host'),
-  user: validConfigInjector.resolve('user'),
-  password: validConfigInjector.resolve('password'),
-  port: validConfigInjector.resolve('port'),
+  dbName: validConfigInjector.resolve('DB_NAME'),
+  host: validConfigInjector.resolve('DB_HOST'),
+  user: validConfigInjector.resolve('DB_USER'),
+  password: validConfigInjector.resolve('DB_PASSWORD'),
+  port: validConfigInjector.resolve('DB_PORT'),
   entities: Object.values(entities),
   metadataProvider: TsMorphMetadataProvider,
-  debug: validConfigInjector.resolve('environment') === 'development',
+  debug: validConfigInjector.resolve('ENV') === 'development',
   extensions: [Migrator],
   discovery: {
     getMappedType(type: string, platform: Platform) {
@@ -73,6 +73,10 @@ const mikroOrmOptionsConfig = {
 
       return platform.getDefaultMappedType(type);
     }
+  },
+  seeder: {
+    path: 'dist/models',
+    glob: 'seeder.js'
   }
 };
 

@@ -35,7 +35,7 @@
     "indexes": [],
     "uniques": [],
     "className": "BaseEntity",
-    "path": "../core/lib/persistence/entities/base.entity.js",
+    "path": "../core/lib/models/persistence/base.entity.js",
     "abstract": true,
     "internal": true,
     "constructorParams": [],
@@ -44,7 +44,7 @@
     "compositePK": false,
     "simplePK": true
   },
-  "origin": "../core/lib/persistence/entities/base.entity.js",
-  "hash": "473ab9cee1af14d191e84b4808dec215",
-  "version": "6.4.6"
+  "origin": "../core/lib/models/persistence/base.entity.js",
+  "hash": "1d0279a0cfbb971ba1c31079d4de6573",
+  "version": "6.4.9"
 }

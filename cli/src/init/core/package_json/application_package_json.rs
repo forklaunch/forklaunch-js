@@ -8,6 +8,8 @@ pub struct ApplicationScripts {
     pub clean: Option<String>,
     #[serde(rename = "clean:purge", skip_serializing_if = "Option::is_none")]
     pub clean_purge: Option<String>,
+    #[serde(rename = "database:setup", skip_serializing_if = "Option::is_none")]
+    pub database_setup: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dev: Option<String>,
     #[serde(rename = "dev:build", skip_serializing_if = "Option::is_none")]
@@ -30,6 +32,8 @@ pub struct ApplicationScripts {
     pub migrate_init: Option<String>,
     #[serde(rename = "migrate:up", skip_serializing_if = "Option::is_none")]
     pub migrate_up: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub seed: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub test: Option<String>,
     #[serde(rename = "up:packages", skip_serializing_if = "Option::is_none")]

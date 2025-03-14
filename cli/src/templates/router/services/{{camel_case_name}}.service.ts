@@ -1,4 +1,4 @@
-import { TtlCache } from '@forklaunch/core/cache';
+{{#cache_backend}}import { TtlCache } from '@forklaunch/core/cache';{{/cache_backend}}
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 {{^cache_backend}}import { EntityManager } from '@mikro-orm/core';{{/cache_backend}}
 import { SchemaValidator } from '@{{app_name}}/core';
@@ -15,7 +15,7 @@ import { CACHE_KEY_PREFIX } from '../consts';
 
 // Base{{pascal_case_name}}Service class that implements the {{pascal_case_name}}Service interface
 export class Base{{pascal_case_name}}Service implements {{pascal_case_name}}Service {
-  constructor({{^cache_backend}}private entityManager: EntityManager{{^is_worker}}, private cache: TtlCache{{/is_worker}}{{/cache_backend}}{{#cache_backend}}private cache: TtlCache{{/cache_backend}}, private readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>) {}
+  constructor({{^cache_backend}}private entityManager: EntityManager{{/cache_backend}}{{#cache_backend}}private cache: TtlCache{{/cache_backend}}, private readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>) {}
 
   // {{camel_case_name}}Post method that implements the {{pascal_case_name}}Service interface
   {{camel_case_name}}Post = async (

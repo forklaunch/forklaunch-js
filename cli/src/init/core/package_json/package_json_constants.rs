@@ -59,11 +59,7 @@ pub(crate) fn application_docs_script(runtime: &str) -> &str {
         _ => panic!("Unsupported runtime"),
     }
 }
-pub(crate) fn application_migrate_script(
-    runtime: &str,
-    database: &str,
-    migration_suffix: &str,
-) -> String {
+fn get_package_manager_and_db_init(runtime: &str, database: &str) -> (String, String) {
     let package_manager = match runtime {
         "bun" => "bun --filter='*'",
         "node" => "pnpm -r",
@@ -75,6 +71,16 @@ pub(crate) fn application_migrate_script(
         _ => "",
     };
 
+    (package_manager.to_string(), db_init.to_string())
+}
+
+pub(crate) fn application_migrate_script(
+    runtime: &str,
+    database: &str,
+    migration_suffix: &str,
+) -> String {
+    let (package_manager, db_init) = get_package_manager_and_db_init(runtime, database);
+
     let sleep = if migration_suffix == "init" {
         "sleep 5 && "
     } else {
@@ -85,6 +91,22 @@ pub(crate) fn application_migrate_script(
         "docker compose up -d {} {} && {}{} run migrate:{}",
         database, db_init, sleep, package_manager, migration_suffix
     )
+}
+
+pub(crate) fn application_seed_script(runtime: &str, database: &str) -> String {
+    let (package_manager, db_init) = get_package_manager_and_db_init(runtime, database);
+
+    format!(
+        "docker compose up -d {} {} && {} run seed",
+        database, db_init, package_manager
+    )
+}
+pub(crate) fn application_setup_script(runtime: &str) -> String {
+    match runtime {
+        "bun" => "bun migrate:init && bun migrate:up && bun seed".to_string(),
+        "node" => "pnpm migrate:init && pnpm migrate:up && pnpm seed".to_string(),
+        _ => panic!("Unsupported runtime"),
+    }
 }
 pub(crate) fn application_test_script<'a>(runtime: &'a str, test_framework: &'a str) -> &'a str {
     match runtime {
@@ -128,6 +150,8 @@ pub(crate) const MIKRO_ORM_MIGRATIONS_VERSION: &str = "^6.4.9";
 pub(crate) const MIKRO_ORM_DATABASE_VERSION: &str = "^6.4.9";
 // @mikro-orm/reflection
 pub(crate) const MIKRO_ORM_REFLECTION_VERSION: &str = "^6.4.9";
+// @mikro-orm/seeder
+pub(crate) const MIKRO_ORM_SEEDER_VERSION: &str = "^6.4.9";
 // typebox
 pub(crate) const TYPEBOX_VERSION: &str = "^0.34.28";
 // ajv
@@ -166,6 +190,7 @@ pub(crate) const PROJECT_LINT_SCRIPT: &str = "eslint . -c eslint.config.mjs";
 pub(crate) const PROJECT_LINT_FIX_SCRIPT: &str = "eslint . -c eslint.config.mjs --fix";
 pub(crate) const PROJECT_START_WORKER_CLIENT_SCRIPT: &str =
     "ENV_FILE_PATH=.env.prod node --import tsx dist/client.js";
+pub(crate) const PROJECT_SEED_SCRIPT: &str = "[ -z $ENV_FILE_PATH ] && export ENV_FILE_PATH=.env.local; NODE_OPTIONS='--import=tsx' mikro-orm seeder:run";
 pub(crate) fn project_clean_script(runtime: &str) -> &'static str {
     match runtime {
         "bun" => "rm -rf dist bun.lockb node_modules",

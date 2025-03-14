@@ -102,13 +102,13 @@ export function bootstrap(
         {{camel_case_name}}Service: {
           lifetime: Lifetime.Scoped,
           factory: ({
-            entityManager,
-            ttlCache,
+            {{^cache_backend}}entityManager,{{/cache_backend}}{{#cache_backend}}
+            ttlCache,{{/cache_backend}}
             openTelemetryCollector
           }) =>
             new Base{{pascal_case_name}}Service(
-              entityManager,
-              ttlCache,
+              {{^cache_backend}}entityManager,{{/cache_backend}}{{#cache_backend}}
+              ttlCache,{{/cache_backend}}
               openTelemetryCollector
             )
         }

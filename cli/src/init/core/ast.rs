@@ -1,3 +1,4 @@
+// TODO: Refactor this into a directory with separated functions
 use std::borrow::Cow;
 use std::{fs::read_to_string, path::Path};
 
@@ -338,7 +339,7 @@ fn inject_into_bootstrapper_config_injector<'a>(
     }
 }
 
-fn inject_into_entities_index_ts<'a>(
+fn inject_export_into_index_ts<'a>(
     entities_index_program: &mut Program<'a>,
     injection_program_ast: &mut Program<'a>,
     router_name_camel_case: &str,
@@ -351,12 +352,14 @@ fn inject_into_entities_index_ts<'a>(
         .enumerate()
         .for_each(|(index, stmt)| {
             let expr = match stmt {
-                Statement::ExportAllDeclaration(expr) => expr,
+                Statement::ExportNamedDeclaration(expr) => expr,
                 _ => return,
             };
 
-            if expr.source.value.as_str() <= router_name_camel_case {
-                maybe_splice_pos = Some(index);
+            if let Some(source) = &expr.source {
+                if source.value.as_str() <= router_name_camel_case {
+                    maybe_splice_pos = Some(index);
+                }
             }
         });
 
@@ -512,7 +515,12 @@ pub(crate) fn transform_app_ts(router_name: &str, base_path: &String) -> Result<
         .code)
 }
 
-pub(crate) fn transform_bootstrapper_ts(router_name: &str, base_path: &String) -> Result<String> {
+pub(crate) fn transform_bootstrapper_ts(
+    router_name: &str,
+    is_worker: bool,
+    is_cache_backend: bool,
+    base_path: &String,
+) -> Result<String> {
     let allocator = Allocator::default();
     let bootstrapper_path = Path::new(base_path).join("bootstrapper.ts");
     let bootstrapper_source_text = read_to_string(&bootstrapper_path).unwrap();
@@ -558,7 +566,7 @@ pub(crate) fn transform_bootstrapper_ts(router_name: &str, base_path: &String) -
             {router_name_camel_case}Service: {{
             lifetime: Lifetime.Scoped,
             factory: (
-                {{ entityManager, ttlCache, openTelemetryCollector }},
+                {{ {}, openTelemetryCollector }},
                 resolve,
                 context
             ) => {{
@@ -567,13 +575,22 @@ pub(crate) fn transform_bootstrapper_ts(router_name: &str, base_path: &String) -
                     em = resolve('entityManager', context);
                 }}
                 return new Base{router_name_pascal_case}Service(
-                    em,
-                    ttlCache,
+                    {},
                     openTelemetryCollector
                 );
             }}
             }}
-        }})"
+        }})",
+        if is_worker && is_cache_backend {
+            "ttlCache"
+        } else {
+            "entityManager"
+        },
+        if is_worker && is_cache_backend {
+            "ttlCache"
+        } else {
+            "em"
+        }
     );
 
     let mut config_injector_injection =
@@ -598,6 +615,7 @@ pub(crate) fn transform_entities_index_ts(router_name: &str, base_path: &String)
     let entities_index_source_text = read_to_string(&entities_index_path).unwrap();
     let entities_index_source_type = SourceType::from_path(&entities_index_path).unwrap();
     let router_name_camel_case = router_name.to_case(Case::Camel);
+    let router_name_pascal_case = router_name.to_case(Case::Pascal);
 
     let mut entities_index_program = parse_ast_program(
         &allocator,
@@ -605,11 +623,13 @@ pub(crate) fn transform_entities_index_ts(router_name: &str, base_path: &String)
         entities_index_source_type,
     );
 
-    let entities_index_text = format!("export * from './{router_name_camel_case}Record.entity';",);
+    let entities_index_text = format!(
+        "export {{ {router_name_pascal_case}Record }} from './{router_name_camel_case}Record.entity';",
+    );
     let mut injection_program_ast =
         parse_ast_program(&allocator, &entities_index_text, SourceType::ts());
 
-    inject_into_entities_index_ts(
+    inject_export_into_index_ts(
         &mut entities_index_program,
         &mut injection_program_ast,
         &router_name_camel_case,
@@ -618,5 +638,100 @@ pub(crate) fn transform_entities_index_ts(router_name: &str, base_path: &String)
     Ok(CodeGenerator::new()
         .with_options(CodegenOptions::default())
         .build(&entities_index_program)
+        .code)
+}
+
+pub(crate) fn transform_seeders_index_ts(router_name: &str, base_path: &String) -> Result<String> {
+    let allocator = Allocator::default();
+    let seeders_index_path = Path::new(base_path)
+        .join("models")
+        .join("seeders")
+        .join("index.ts");
+    let seeders_index_source_text = read_to_string(&seeders_index_path).unwrap();
+    let seeders_index_source_type = SourceType::from_path(&seeders_index_path).unwrap();
+    let router_name_camel_case = router_name.to_case(Case::Camel);
+    let router_name_pascal_case = router_name.to_case(Case::Pascal);
+
+    let mut seeders_index_program = parse_ast_program(
+        &allocator,
+        &seeders_index_source_text,
+        seeders_index_source_type,
+    );
+
+    let seeders_index_text = format!(
+        "export {{ {router_name_pascal_case}RecordSeeder }} from './{router_name_camel_case}Record.seeder';",
+    );
+    let mut injection_program_ast =
+        parse_ast_program(&allocator, &seeders_index_text, SourceType::ts());
+
+    inject_export_into_index_ts(
+        &mut seeders_index_program,
+        &mut injection_program_ast,
+        &router_name_camel_case,
+    )?;
+
+    Ok(CodeGenerator::new()
+        .with_options(CodegenOptions::default())
+        .build(&seeders_index_program)
+        .code)
+}
+
+pub(crate) fn transform_constants_data_ts(
+    router_name: &str,
+    is_worker: bool,
+    base_path: &String,
+) -> Result<String> {
+    let allocator = Allocator::default();
+    let constants_data_path = Path::new(base_path).join("constants").join("seed.data.ts");
+    let constants_data_source_text = read_to_string(&constants_data_path).unwrap();
+    let constants_data_source_type = SourceType::from_path(&constants_data_path).unwrap();
+    let router_name_camel_case = router_name.to_case(Case::Camel);
+    let router_name_pascal_case = router_name.to_case(Case::Pascal);
+
+    let mut constants_data_program = parse_ast_program(
+        &allocator,
+        &constants_data_source_text,
+        constants_data_source_type,
+    );
+
+    let constants_import_text = format!(
+        "import {{ {router_name_pascal_case}Record }} from '../models/persistence/{router_name_camel_case}Record.entity';",
+    );
+    let mut constants_import_injection = parse_ast_program(
+        &allocator,
+        &constants_import_text,
+        constants_data_source_type,
+    );
+    inject_into_import_statement(
+        &mut constants_data_program,
+        &mut constants_import_injection,
+        "/models/persistence/",
+        format!("{router_name_pascal_case}Record").as_str(),
+    )?;
+
+    let constants_data_text = format!(
+        "export const {router_name_camel_case}Record = {router_name_pascal_case}Record.create({{
+            message: 'Test message'{}
+        }})",
+        if is_worker {
+            ",
+            processed: false,
+            retryCount: 0
+            "
+        } else {
+            ""
+        }
+    );
+
+    let mut constants_data_injection =
+        parse_ast_program(&allocator, &constants_data_text, SourceType::ts());
+
+    constants_data_program
+        .body
+        .extend(constants_data_injection.body.drain(..));
+
+    Ok(CodeGenerator::new()
+        .with_options(CodegenOptions::default())
+        .build(&constants_data_program)
         .code)
 }

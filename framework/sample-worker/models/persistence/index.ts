@@ -1,1 +1,1 @@
-export * from './sampleWorkerRecord.entity';
+export { SampleWorkerRecord } from './sampleWorkerRecord.entity';
