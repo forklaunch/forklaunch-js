@@ -8,13 +8,12 @@ import { PaymentLink } from '../models/persistence/paymentLink.entity';
 import { Plan } from '../models/persistence/plan.entity';
 import { Session } from '../models/persistence/session.entity';
 import { Subscription } from '../models/persistence/subscription.entity';
-
+//! Begin seed data
 export const billingProvider = BillingProvider.create({
   billingProvider: BillingProviderEnum.STRIPE,
   externalId: '1234567890',
   extraFields: {}
 });
-
 export const paymentLink = PaymentLink.create({
   amount: 1000,
   currency: CurrencyEnum.USD,
@@ -22,7 +21,6 @@ export const paymentLink = PaymentLink.create({
   successRedirectUri: 'https://example.com/success',
   cancelRedirectUri: 'https://example.com/cancel'
 });
-
 export const plan = Plan.create({
   active: true,
   type: 'subscription',
@@ -35,7 +33,6 @@ export const plan = Plan.create({
   externalId: '1234567890',
   billingProvider: BillingProviderEnum.STRIPE
 });
-
 export const session = Session.create({
   customerEmail: 'test@example.com',
   paymentMethods: [PaymentMethodEnum.CREDIT_CARD],

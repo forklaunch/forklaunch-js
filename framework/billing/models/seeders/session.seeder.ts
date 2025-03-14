@@ -1,6 +1,6 @@
 import { EntityManager } from '@mikro-orm/core';
 import { Seeder } from '@mikro-orm/seeder';
-import { session } from '../../constants/data';
+import { session } from '../../constants/seed.data';
 import { Session } from '../persistence/session.entity';
 
 export class SessionSeeder extends Seeder {

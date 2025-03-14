@@ -1,6 +1,6 @@
 import { EntityManager } from '@mikro-orm/core';
 import { Seeder } from '@mikro-orm/seeder';
-import { billingProvider } from '../../constants/data';
+import { billingProvider } from '../../constants/seed.data';
 import { BillingProvider } from '../persistence/billingProvider.entity';
 
 export class BillingProviderSeeder extends Seeder {
