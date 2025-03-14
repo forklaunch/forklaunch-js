@@ -73,31 +73,37 @@ pub(crate) fn add_project_definition_to_manifest<
 pub(crate) fn add_router_definition_to_manifest(
     config_data: &mut RouterManifestData,
     serivce_name: &String,
-) -> Result<String> {
+) -> Result<(ProjectType, String)> {
     let name = config_data.router_name.clone();
     for project in config_data.projects().iter() {
         if let Some(routers) = &project.routers {
             for router in routers.iter() {
                 if router == &name {
-                    return Ok(to_string_pretty(&config_data)
-                        .with_context(|| ERROR_FAILED_TO_ADD_ROUTER_METADATA_TO_MANIFEST)?);
+                    return Ok((
+                        project.r#type.clone(),
+                        to_string_pretty(&config_data)
+                            .with_context(|| ERROR_FAILED_TO_ADD_ROUTER_METADATA_TO_MANIFEST)?,
+                    ));
                 }
             }
         }
     }
 
-    let service = config_data
+    let project = config_data
         .projects_mut()
         .iter_mut()
         .find(|project| &project.name == serivce_name)
         .unwrap();
 
-    if service.routers == None {
-        service.routers = Some(vec![])
+    if project.routers == None {
+        project.routers = Some(vec![])
     }
 
-    service.routers.as_mut().unwrap().push(name);
+    project.routers.as_mut().unwrap().push(name);
 
-    Ok(to_string_pretty(&config_data)
-        .with_context(|| ERROR_FAILED_TO_ADD_ROUTER_METADATA_TO_MANIFEST)?)
+    Ok((
+        project.r#type.clone(),
+        to_string_pretty(&config_data)
+            .with_context(|| ERROR_FAILED_TO_ADD_ROUTER_METADATA_TO_MANIFEST)?,
+    ))
 }

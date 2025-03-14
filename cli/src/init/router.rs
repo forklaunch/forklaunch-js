@@ -18,7 +18,10 @@ use crate::{
         ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER, ERROR_FAILED_TO_PARSE_MANIFEST,
         ERROR_FAILED_TO_READ_MANIFEST,
     },
-    core::base_path::{prompt_base_path, BasePathLocation},
+    core::{
+        base_path::{prompt_base_path, BasePathLocation},
+        manifest::ProjectType,
+    },
     prompt::{prompt_with_validation, ArrayCompleter},
 };
 
@@ -28,8 +31,8 @@ use super::{
     command,
     core::{
         ast::{
-            transform_app_ts, transform_bootstrapper_ts, transform_entities_index_ts,
-            transform_seeders_index_ts,
+            transform_app_ts, transform_bootstrapper_ts, transform_constants_data_ts,
+            transform_entities_index_ts, transform_seeders_index_ts,
         },
         database,
         manifest::add_router_definition_to_manifest,
@@ -214,8 +217,11 @@ fn add_router_to_artifacts(
     base_path: &String,
     service_name: &String,
 ) -> Result<Vec<RenderedTemplate>> {
-    let forklaunch_definition_buffer = add_router_definition_to_manifest(config_data, service_name)
-        .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
+    let (project_type, forklaunch_definition_buffer) =
+        add_router_definition_to_manifest(config_data, service_name)
+            .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
+
+    let is_worker = project_type == ProjectType::Worker;
 
     let mut rendered_templates = Vec::new();
 
@@ -225,9 +231,26 @@ fn add_router_to_artifacts(
         context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_APP.to_string()),
     });
 
+    let cache_backend = if is_worker {
+        config_data.projects.iter().any(|worker| {
+            if let Some(resources) = &worker.resources {
+                resources.cache.is_some()
+            } else {
+                false
+            }
+        })
+    } else {
+        false
+    };
+
     rendered_templates.push(RenderedTemplate {
         path: Path::new(&base_path).join("bootstrapper.ts"),
-        content: transform_bootstrapper_ts(config_data.router_name.as_str(), &base_path)?,
+        content: transform_bootstrapper_ts(
+            config_data.router_name.as_str(),
+            is_worker,
+            cache_backend,
+            &base_path,
+        )?,
         context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER.to_string()),
     });
 
@@ -246,6 +269,16 @@ fn add_router_to_artifacts(
             .join("seeders")
             .join("index.ts"),
         content: transform_seeders_index_ts(config_data.router_name.as_str(), &base_path)?,
+        context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER.to_string()),
+    });
+
+    rendered_templates.push(RenderedTemplate {
+        path: Path::new(base_path).join("constants").join("seed.data.ts"),
+        content: transform_constants_data_ts(
+            config_data.router_name.as_str(),
+            is_worker,
+            &base_path,
+        )?,
         context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER.to_string()),
     });
 

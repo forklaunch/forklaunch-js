@@ -16,7 +16,7 @@ pub(crate) trait ProjectManifestConfig {
     fn name(&self) -> &String;
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub(crate) enum ProjectType {
     Service,
     Library,
