@@ -284,6 +284,8 @@ fn add_router_to_artifacts(
 
     rendered_templates.push(RenderedTemplate {
         path: Path::new(base_path)
+            .parent()
+            .unwrap()
             .join(".forklaunch")
             .join("manifest.toml"),
         content: forklaunch_definition_buffer,

@@ -12,3 +12,4 @@ pub(crate) mod rendered_template;
 pub(crate) mod symlinks;
 pub(crate) mod template;
 pub(crate) mod tsconfig;
+pub(crate) mod watermark;
