@@ -20,13 +20,18 @@ This creates a new project with the basic structure including:
 - Development environment setup
 - Pre-configured ESLint, Prettier, and Husky
 
-On first run, you'll need to run the following commands (also captured in `setup.sh`):
+On first run, you'll need to run the following commands:
 
 ```bash
-{{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun{{/is_bun}} install
-{{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun run {{/is_bun}}build
-{{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun {{/is_bun}}migrate:init
-{{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun {{/is_bun}}seed
+{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} install
+{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun run {{/is_bun}} build
+{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun {{/is_bun}} database:setup
+```
+
+Now, you can run the project with:
+
+```bash
+{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun {{/is_bun}} dev
 ```
 
 ## Core Commands
@@ -93,26 +98,26 @@ ForkLaunch uses `MikroORM` for database management with these commands:
 
 ```bash
 # Initialize the database
-{{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun{{/is_bun}} migrate:init
+{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} migrate:init
 
 # Create a new migration
-{{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun{{/is_bun}} migrate:create
+{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} migrate:create
 
 # Apply pending migrations
-{{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun{{/is_bun}} migrate:up
+{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} migrate:up
 
 # Revert the last migration
-{{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun{{/is_bun}} migrate:down
+{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} migrate:down
 ```
 
-To access the full `MikroORM` CLI, run `{{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun{{/is_bun}} mikro-orm`. Note, you may have to supply necessary ENV arguments to interface correctly with the target database.
+To access the full `MikroORM` CLI, run `{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} mikro-orm`. Note, you may have to supply necessary ENV arguments to interface correctly with the target database.
 
 ## Development Workflow
 
 ### Starting the Development Server
 
 ```bash
-{{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun{{/is_bun}} dev
+{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} dev
 ```
 
 This starts all services and workers defined in your manifest.
@@ -120,7 +125,7 @@ This starts all services and workers defined in your manifest.
 ### Building the Project
 
 ```bash
-{{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun run{{/is_bun}} build
+{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun run{{/is_bun}} build
 ```
 
 Compiles all services, workers, and libraries.
@@ -139,7 +144,7 @@ ForkLaunch comes with pre-configured:
 To enable Husky Git hooks:
 
 ```bash
-{{#is_node}}npx{{/is_node}}{{^is_bun}}bun{{/is_bun}} husky install
+{{#is_node}}npx{{/is_node}}{{#is_bun}}bun{{/is_bun}} husky install
 ```
 
 This sets up pre-commit hooks for linting and formatting.
@@ -149,7 +154,7 @@ This sets up pre-commit hooks for linting and formatting.
 Run tests with:
 
 ```bash
-{{#is_node}}pnpm{{/is_node}}{{^is_bun}}bun{{/is_bun}} test
+{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} test
 ```
 
 ### Definining Configuration

@@ -101,6 +101,13 @@ pub(crate) fn application_seed_script(runtime: &str, database: &str) -> String {
         database, db_init, package_manager
     )
 }
+pub(crate) fn application_setup_script(runtime: &str) -> String {
+    match runtime {
+        "bun" => "bun migrate:init && bun migrate:up && bun seed".to_string(),
+        "node" => "pnpm migrate:init && pnpm migrate:up && pnpm seed".to_string(),
+        _ => panic!("Unsupported runtime"),
+    }
+}
 pub(crate) fn application_test_script<'a>(runtime: &'a str, test_framework: &'a str) -> &'a str {
     match runtime {
         "bun" => "bun test",
