@@ -331,6 +331,7 @@ impl CliCommand for ApplicationCommand {
 
         let dryrun = matches.get_flag("dryrun");
         let mut ignore_files = vec!["pnpm-workspace.yaml", "pnpm-lock.yml"];
+        let ignore_dirs = vec![];
         let preserve_files = vec!["application-overview.json"];
 
         // TODO: maybe abstract this into a function
@@ -461,6 +462,7 @@ impl CliCommand for ApplicationCommand {
                 .iter()
                 .map(|ignore_file| ignore_file.to_string())
                 .collect::<Vec<String>>(),
+            &ignore_dirs,
             &preserve_files
                 .iter()
                 .map(|preserve_file| preserve_file.to_string())
@@ -528,6 +530,7 @@ impl CliCommand for ApplicationCommand {
                     .iter()
                     .map(|ignore_file| ignore_file.to_string())
                     .collect::<Vec<String>>(),
+                &ignore_dirs,
                 &preserve_files
                     .iter()
                     .map(|preserve_file| preserve_file.to_string())

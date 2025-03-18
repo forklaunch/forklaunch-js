@@ -94,9 +94,9 @@ export function bootstrap(
         },{{#cache_backend}}
         ttlCache: {
           lifetime: Lifetime.Singleton,
-          factory: ({ openTelemetryCollector }) =>
+          factory: ({ REDIS_URL, openTelemetryCollector }) =>
             new RedisTtlCache(60 * 60 * 1000, openTelemetryCollector, {
-              url: getEnvVar('REDIS_URL')
+              url: REDIS_URL,
             })
         },{{/cache_backend}}
         {{camel_case_name}}Service: {

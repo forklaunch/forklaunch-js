@@ -73,6 +73,7 @@ pub(crate) fn generate_with_template(
     template_dir: &PathIO,
     data: &TemplateManifestData,
     ignore_files: &Vec<String>,
+    ignore_dirs: &Vec<String>,
     preserve_files: &Vec<String>,
     dryrun: bool,
 ) -> Result<Vec<RenderedTemplate>> {
@@ -154,30 +155,37 @@ pub(crate) fn generate_with_template(
     }
 
     for subdirectory in get_directory_subdirectory_names(&template_dir)? {
-        rendered_templates.extend(
-            generate_with_template(
-                output_prefix,
-                &PathIO {
-                    input_path: Path::new(&subdirectory.path())
-                        .to_string_lossy()
-                        .to_string(),
-                    output_path: Path::new(&template_dir.output_path)
-                        .join(&subdirectory.path().file_name().unwrap())
-                        .to_string_lossy()
-                        .to_string(),
-                },
-                data,
-                ignore_files,
-                preserve_files,
-                dryrun,
-            )
-            .with_context(|| {
-                format!(
-                    "Failed to create templates for {}",
-                    &subdirectory.path().to_string_lossy()
+        let should_ignore = ignore_dirs
+            .iter()
+            .any(|ignore_dir| subdirectory.path().to_string_lossy().contains(ignore_dir));
+
+        if !should_ignore {
+            rendered_templates.extend(
+                generate_with_template(
+                    output_prefix,
+                    &PathIO {
+                        input_path: Path::new(&subdirectory.path())
+                            .to_string_lossy()
+                            .to_string(),
+                        output_path: Path::new(&template_dir.output_path)
+                            .join(&subdirectory.path().file_name().unwrap())
+                            .to_string_lossy()
+                            .to_string(),
+                    },
+                    data,
+                    ignore_files,
+                    ignore_dirs,
+                    preserve_files,
+                    dryrun,
                 )
-            })?,
-        );
+                .with_context(|| {
+                    format!(
+                        "Failed to create templates for {}",
+                        &subdirectory.path().to_string_lossy()
+                    )
+                })?,
+            );
+        }
     }
 
     Ok(rendered_templates)

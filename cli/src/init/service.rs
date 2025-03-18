@@ -247,6 +247,7 @@ fn generate_basic_service(
     };
 
     let ignore_files = vec![];
+    let ignore_dirs = vec![];
     let preserve_files = vec![];
 
     let mut rendered_templates = generate_with_template(
@@ -254,6 +255,7 @@ fn generate_basic_service(
         &template_dir,
         &TemplateManifestData::Service(&config_data),
         &ignore_files,
+        &ignore_dirs,
         &preserve_files,
         dryrun,
     )?;

@@ -251,9 +251,14 @@ fn generate_basic_worker(
     };
 
     let ignore_files = if config_data.cache_backend {
-        vec!["mikro-orm.config.ts".to_string()]
+        vec!["mikro-orm.config.ts".to_string(), "seeder.ts".to_string()]
     } else {
         vec!["consts.ts".to_string()]
+    };
+    let ignore_dirs = if config_data.cache_backend {
+        vec!["seeder".to_string()]
+    } else {
+        vec![]
     };
     let preserve_files = vec![];
 
@@ -262,6 +267,7 @@ fn generate_basic_worker(
         &template_dir,
         &TemplateManifestData::Worker(&config_data),
         &ignore_files,
+        &ignore_dirs,
         &preserve_files,
         dryrun,
     )?;

@@ -191,12 +191,14 @@ fn generate_basic_router(
 
     let ignore_files = vec![];
     let preserve_files = vec![];
+    let ignore_dirs = vec![];
 
     let mut rendered_templates = generate_with_template(
         None,
         &template_dir,
         &TemplateManifestData::Router(&config_data),
         &ignore_files,
+        &ignore_dirs,
         &preserve_files,
         dryrun,
     )?;
