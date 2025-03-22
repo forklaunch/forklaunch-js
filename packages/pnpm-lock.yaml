@@ -32,6 +32,9 @@ importers:
       tsx:
         specifier: ^4.19.3
         version: 4.19.3
+      typedoc:
+        specifier: ^0.27.9
+        version: 0.27.9(typescript@5.8.2)
       typescript:
         specifier: ^5.8.2
         version: 5.8.2
@@ -271,6 +274,9 @@ importers:
       tsup:
         specifier: ^8.4.0
         version: 8.4.0(postcss@8.5.3)(tsx@4.19.3)(typescript@5.8.2)(yaml@2.7.0)
+      typedoc:
+        specifier: ^0.27.9
+        version: 0.27.9(typescript@5.8.2)
       typescript:
         specifier: ^5.8.2
         version: 5.8.2
@@ -356,6 +362,9 @@ importers:
       tsx:
         specifier: ^4.19.3
         version: 4.19.3
+      typedoc:
+        specifier: ^0.27.9
+        version: 0.27.9(typescript@5.8.2)
       typescript:
         specifier: ^5.8.2
         version: 5.8.2
@@ -377,6 +386,9 @@ importers:
       tsup:
         specifier: ^8.4.0
         version: 8.4.0(postcss@8.5.3)(tsx@4.19.3)(typescript@5.8.2)(yaml@2.7.0)
+      typedoc:
+        specifier: ^0.27.9
+        version: 0.27.9(typescript@5.8.2)
 
   validator:
     dependencies:
@@ -426,6 +438,9 @@ importers:
       tsup:
         specifier: ^8.4.0
         version: 8.4.0(postcss@8.5.3)(tsx@4.19.3)(typescript@5.8.2)(yaml@2.7.0)
+      typedoc:
+        specifier: ^0.27.9
+        version: 0.27.9(typescript@5.8.2)
       typescript-eslint:
         specifier: ^8.26.1
         version: 8.26.1(eslint@9.22.0)(typescript@5.8.2)
