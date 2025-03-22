@@ -87,10 +87,10 @@ forklaunch/forklaunch-js).
 
 Congratulations on creating your application! Here are some helpful resources:
 
-- [Adding Projects](/docs/adding-projects) - Add services and workers
-- [Local Development](/docs/local-development) - Run your application locally
-- [Framework Reference](/docs/framework) - Learn about framework features
-- [CLI Reference](/docs/cli) - Explore available commands
-- [Customizations](/docs/customizations) - Customize your application
+- [Adding Projects](/docs/adding-projects.md) - Add services and workers
+- [Local Development](/docs/local-development.md) - Run your application locally
+- [Framework Reference](/docs/framework.md) - Learn about framework features
+- [CLI Reference](/docs/cli.md) - Explore available commands
+- [Customizations](/docs/customizations.md) - Customize your application
 <!-- - [Deployment](/docs/deployment) - Deploy your application -->
 

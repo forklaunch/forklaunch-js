@@ -38,7 +38,7 @@ Have an idea for a new project type? We welcome feature requests! Please submit 
 ## Next Steps
 
 Learn more about each project type:
-- [Services](/docs/adding-projects/services)
-- [Workers](/docs/adding-projects/workers)
-- [Libraries](/docs/adding-projects/libraries)
-- [Routers](/docs/adding-projects/routers)
+- [Services](/docs/adding-projects/services.md)
+- [Workers](/docs/adding-projects/workers.md)
+- [Libraries](/docs/adding-projects/libraries.md)
+- [Routers](/docs/adding-projects/routers.md)

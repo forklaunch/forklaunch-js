@@ -24,14 +24,14 @@ The `ForkLaunch` framework collects a set of lightweight libraries and exposes u
 
 ## Framework Features
 
-- [HTTP Frameworks](/docs/framework/http)
-- [Validation](/docs/framework/validation) 
-- [Observability and OpenTelemetry](/docs/framework/telemetry)
-- [Configuration](/docs/framework/config)
-- [Authorization](/docs/framework/authorization)
-- [Documentation](/docs/framework/documentation)
-- [Error Handling](/docs/framework/error-handling)
-- [Universal SDK](/docs/framework/universal-sdk)
+- [HTTP Frameworks](/docs/framework/http.md)
+- [Validation](/docs/framework/validation.md) 
+- [Observability and OpenTelemetry](/docs/framework/telemetry.md)
+- [Configuration](/docs/framework/config.md)
+- [Authorization](/docs/framework/authorization.md)
+- [Documentation](/docs/framework/documentation.md)
+- [Error Handling](/docs/framework/error-handling.md)
+- [Universal SDK](/docs/framework/universal-sdk.md)
 
 ## API Reference
 

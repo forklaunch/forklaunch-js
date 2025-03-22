@@ -42,6 +42,6 @@ The ForkLaunch CLI provides commands for managing your application development.
 ## Detailed Documentation
 
 For detailed information about specific commands:
-- [init](/docs/cli/init) - Project initialization
-- [depcheck](/docs/cli/depcheck) - Dependency management
-- [config](/docs/cli/config) - Configuration options
+- [init](/docs/cli/init.md) - Project initialization
+- [depcheck](/docs/cli/depcheck.md) - Dependency management
+- [config](/docs/cli/config.md) - Configuration options
