@@ -9,7 +9,8 @@ export default [
       '**/*tests/**/*',
       '**/*dist/**/*',
       '**/*lib/**/*',
-      '**/*node_modules/**/*'
+      '**/*node_modules/**/*',
+      '**/*docs/**/*'
     ]
   },
   { languageOptions: { globals: globals.browser } },
