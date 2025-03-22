@@ -1,1 +1,1 @@
-../../../../../framework/core/index.ts
+../../../../../blueprint/core/index.ts

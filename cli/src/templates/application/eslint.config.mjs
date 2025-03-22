@@ -1,1 +1,1 @@
-../../../../framework/eslint.config.mjs
+../../../../blueprint/eslint.config.mjs

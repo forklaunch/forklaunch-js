@@ -1,1 +1,1 @@
-../../../../framework/jest.config.ts
+../../../../blueprint/jest.config.ts

@@ -1,8 +1,7 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "lib",
-    "experimentalDecorators": true
+    "outDir": "lib"
   },
   "exclude": ["node_modules", "lib", "eslint.config.mjs"]
 }

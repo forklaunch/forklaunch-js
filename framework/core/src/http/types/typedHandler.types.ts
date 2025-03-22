@@ -1,5 +1,5 @@
 import { AnySchemaValidator } from '@forklaunch/validator';
-import { ExpressLikeSchemaHandler } from '../types/apiDefinition.types';
+import { ExpressLikeSchemaHandler } from './apiDefinition.types';
 import {
   Body,
   ContractDetails,
@@ -8,7 +8,7 @@ import {
   ParamsObject,
   QueryObject,
   ResponsesObject
-} from '../types/contractDetails.types';
+} from './contractDetails.types';
 
 // This is a hack to satisfy the type checker -- later ts versions may fix this
 export type ContractDetailsExpressLikeSchemaHandler<

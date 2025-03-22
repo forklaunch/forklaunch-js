@@ -1,1 +1,1 @@
-../../../../framework/vitest.config.ts
+../../../../blueprint/vitest.config.ts

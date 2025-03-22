@@ -2,14 +2,9 @@ node_modules
 .idea
 .DS_Store
 
-ts-playground/
-
 lib
 
 .vscode
 
 *dist
 *lib
-
-docs
-*docs

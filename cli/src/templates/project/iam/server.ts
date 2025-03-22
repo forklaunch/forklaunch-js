@@ -1,1 +1,1 @@
-../../../../../framework/iam/server.ts
+../../../../../blueprint/iam/server.ts
