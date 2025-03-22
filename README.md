@@ -128,7 +128,7 @@ When defining APIs, you can add metadata to the API definition in an idiomatic m
 
 The general format is defined by the REST method, but generally follows the following format:
 
-```json
+```typescript
 {
   name: "A Random POST API",
   summary: "My API that works! Probably a nice POST request",
