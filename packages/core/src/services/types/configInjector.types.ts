@@ -67,12 +67,12 @@ export type ResolvedConfigValidator<
   [M in keyof CV]: CV[M] extends SchemaConstructor<SV>
     ? Schema<InstanceType<CV[M]>, SV>
     : CV[M] extends SchemaFunction<SV>
-      ? Schema<ReturnType<CV[M]>, SV>
-      : CV[M] extends Function
-        ? ReturnType<CV[M]>
-        : CV[M] extends Constructor
-          ? InstanceType<CV[M]>
-          : Schema<CV[M], SV>;
+    ? Schema<ReturnType<CV[M]>, SV>
+    : CV[M] extends Function
+    ? ReturnType<CV[M]>
+    : CV[M] extends Constructor
+    ? InstanceType<CV[M]>
+    : Schema<CV[M], SV>;
 };
 
 export type ScopedDependencyFactory<

@@ -372,9 +372,13 @@ fn inject_export_into_index_ts<'a>(
     Ok(())
 }
 
-pub(crate) fn transform_app_ts(router_name: &str, base_path: &String) -> Result<String> {
+pub(crate) fn transform_app_ts(
+    router_name: &str,
+    is_worker: bool,
+    base_path: &String,
+) -> Result<String> {
     let allocator = Allocator::default();
-    let app_path = Path::new(base_path).join("server.ts");
+    let app_path = Path::new(base_path).join(if is_worker { "worker.ts" } else { "server.ts" });
     let app_source_text = read_to_string(&app_path).unwrap();
     let app_source_type = SourceType::from_path(&app_path).unwrap();
     let router_name_camel_case = router_name.to_case(Case::Camel);

@@ -67,7 +67,10 @@ export function parse<
         res.status(400);
         if (hasSend(res)) {
           res.send(
-            `${prettyPrintParseErrors(parsedRequest.errors, 'Request')}\n\nCorrelation id: ${
+            `${prettyPrintParseErrors(
+              parsedRequest.errors,
+              'Request'
+            )}\n\nCorrelation id: ${
               req.context.correlationId ?? 'No correlation ID'
             }`
           );

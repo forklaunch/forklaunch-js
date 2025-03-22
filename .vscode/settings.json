@@ -1,7 +1,7 @@
 {
   // put this in your settings object
   "editor.codeActionsOnSave": {
-    "source.organizeImports": "explicit"
+    "source.organizeImports": "never"
   },
   // Default (format when you paste)
   "editor.formatOnPaste": true,

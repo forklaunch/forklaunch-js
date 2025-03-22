@@ -27,8 +27,9 @@ export type ZodCatchall = ZodTypeAny;
  *
  * @template T - The type to check and possibly convert to an array schema.
  */
-export type ZodOuterArray<T> =
-  T extends ZodObject<ZodObjectShape> ? ZodArray<T> : ZodNever;
+export type ZodOuterArray<T> = T extends ZodObject<ZodObjectShape>
+  ? ZodArray<T>
+  : ZodNever;
 
 /**
  * Represents the shape of a Zod object schema.
@@ -100,11 +101,11 @@ export type UnionZodResolve<T extends ZodUnionContainer> = T extends [
 export type ZodResolve<T, Depth extends number = 0> = Depth extends 31
   ? ZodUnknown
   : T extends LiteralSchema
-    ? ZodLiteral<T>
-    : T extends ZodType
-      ? T
-      : T extends ZodObjectSchema
-        ? ZodObject<{
-            [K in keyof T]: ZodResolve<T[K], Increment<Depth>>;
-          }>
-        : ZodNever;
+  ? ZodLiteral<T>
+  : T extends ZodType
+  ? T
+  : T extends ZodObjectSchema
+  ? ZodObject<{
+      [K in keyof T]: ZodResolve<T[K], Increment<Depth>>;
+    }>
+  : ZodNever;

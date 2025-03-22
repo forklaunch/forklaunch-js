@@ -21,8 +21,8 @@ pub(crate) const TYPESCRIPT_VERSION: &str = "^5.8.2";
 pub(crate) const VITEST_VERSION: &str = "^3.0.8";
 
 // Application package.json scripts constants
-pub(crate) const APP_DEV_SCRIPT: &str = "docker compose up";
-pub(crate) const APP_DEV_BUILD_SCRIPT: &str = "docker compose up --build";
+pub(crate) const APP_DEV_SCRIPT: &str = "docker compose up --watch";
+pub(crate) const APP_DEV_BUILD_SCRIPT: &str = "docker compose up --watch --build";
 pub(crate) const APP_FORMAT_SCRIPT: &str =
     "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write";
 pub(crate) const APP_LINT_SCRIPT: &str = "eslint . -c eslint.config.mjs";
@@ -38,7 +38,7 @@ pub(crate) fn application_build_script(runtime: &str) -> &str {
 }
 pub(crate) fn application_clean_script(runtime: &str) -> &str {
     match runtime {
-        "bun" => "rm -rf node_modules bun.lockb && bun -r clean",
+        "bun" => "rm -rf node_modules bun.lockb && bun --filter='*' clean",
         "node" => {
             "rm -rf node_modules pnpm-lock.yaml && pnpm --parallel -r clean && pnpm store prune"
         }
@@ -88,7 +88,7 @@ pub(crate) fn application_migrate_script(
     };
 
     format!(
-        "docker compose up -d {} {} && {}{} run migrate:{}",
+        "docker compose up --watch -d {} {} && {}{} run migrate:{}",
         database, db_init, sleep, package_manager, migration_suffix
     )
 }
@@ -97,7 +97,7 @@ pub(crate) fn application_seed_script(runtime: &str, database: &str) -> String {
     let (package_manager, db_init) = get_package_manager_and_db_init(runtime, database);
 
     format!(
-        "docker compose up -d {} {} && {} run seed",
+        "docker compose up --watch -d {} {} && {} run seed",
         database, db_init, package_manager
     )
 }

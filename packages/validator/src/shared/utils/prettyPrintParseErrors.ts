@@ -10,7 +10,9 @@ export function prettyPrintParseErrors(
   errors?: ParseError[],
   prefix?: string
 ): string | undefined {
-  const messageStart = `${prefix != null ? `${prefix} v` : 'V'}alidation failed`;
+  const messageStart = `${
+    prefix != null ? `${prefix} v` : 'V'
+  }alidation failed`;
   if (!errors || errors.length === 0) return messageStart;
 
   const errorMessages = errors.map((err, index) => {

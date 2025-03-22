@@ -163,18 +163,24 @@ new NodeSDK({
     [ATTR_SERVICE_NAME]: getEnvVar('OTEL_SERVICE_NAME')
   }),
   traceExporter: new OTLPTraceExporter({
-    url: `${getEnvVar('OTEL_EXPORTER_OTLP_ENDPOINT') ?? 'http://localhost:4318'}/v1/traces`
+    url: `${
+      getEnvVar('OTEL_EXPORTER_OTLP_ENDPOINT') ?? 'http://localhost:4318'
+    }/v1/traces`
   }),
   metricReader: new PeriodicExportingMetricReader({
     exporter: new OTLPMetricExporter({
-      url: `${getEnvVar('OTEL_EXPORTER_OTLP_ENDPOINT') ?? 'http://localhost:4318'}/v1/metrics`
+      url: `${
+        getEnvVar('OTEL_EXPORTER_OTLP_ENDPOINT') ?? 'http://localhost:4318'
+      }/v1/metrics`
     }),
     exportIntervalMillis: 5000
   }),
   logRecordProcessors: [
     new BatchLogRecordProcessor(
       new OTLPLogExporter({
-        url: `${getEnvVar('OTEL_EXPORTER_OTLP_ENDPOINT') ?? 'http://localhost:4318'}/v1/logs`
+        url: `${
+          getEnvVar('OTEL_EXPORTER_OTLP_ENDPOINT') ?? 'http://localhost:4318'
+        }/v1/logs`
       })
     )
   ],

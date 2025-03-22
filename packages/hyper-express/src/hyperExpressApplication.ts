@@ -100,7 +100,9 @@ export class Application<
         this.docsConfiguration.type === 'scalar'
       ) {
         this.internal.use(
-          `/api/${process.env.VERSION ?? 'v1'}${process.env.DOCS_PATH ?? '/docs'}`,
+          `/api/${process.env.VERSION ?? 'v1'}${
+            process.env.DOCS_PATH ?? '/docs'
+          }`,
           apiReference({
             spec: {
               content: generateSwaggerDocument<SV>(
@@ -113,7 +115,9 @@ export class Application<
           }) as unknown as MiddlewareHandler
         );
       } else if (this.docsConfiguration.type === 'swagger') {
-        const swaggerPath = `/api/${process.env.VERSION ?? 'v1'}${process.env.DOCS_PATH ?? '/docs'}`;
+        const swaggerPath = `/api/${process.env.VERSION ?? 'v1'}${
+          process.env.DOCS_PATH ?? '/docs'
+        }`;
         this.internal.use(swaggerPath, swaggerRedirect(swaggerPath));
         this.internal.get(
           `${swaggerPath}/*`,

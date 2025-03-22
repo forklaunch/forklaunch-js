@@ -210,8 +210,8 @@ type ExtractParams<Path extends `/${string}`> =
   Path extends `${string}/:${infer Param}/${infer Rest}`
     ? Param | ExtractParams<`/${Rest}`>
     : Path extends `${string}/:${infer Param}`
-      ? Param
-      : never;
+    ? Param
+    : never;
 
 /**
  * Type representing the parameters in a request.
@@ -417,27 +417,27 @@ export type ContractDetails<
       BaseRequest
     >
   : ContractMethod extends HttpMethod
-    ? HttpContractDetails<
-        SV,
-        Path,
-        ParamsSchema,
-        ResponseSchemas,
-        BodySchema,
-        QuerySchema,
-        ReqHeaders,
-        ResHeaders,
-        BaseRequest
-      >
-    : ContractMethod extends 'middleware'
-      ? MiddlewareContractDetails<
-          SV,
-          Path,
-          ParamsSchema,
-          ResponseSchemas,
-          BodySchema,
-          QuerySchema,
-          ReqHeaders,
-          ResHeaders,
-          BaseRequest
-        >
-      : never;
+  ? HttpContractDetails<
+      SV,
+      Path,
+      ParamsSchema,
+      ResponseSchemas,
+      BodySchema,
+      QuerySchema,
+      ReqHeaders,
+      ResHeaders,
+      BaseRequest
+    >
+  : ContractMethod extends 'middleware'
+  ? MiddlewareContractDetails<
+      SV,
+      Path,
+      ParamsSchema,
+      ResponseSchemas,
+      BodySchema,
+      QuerySchema,
+      ReqHeaders,
+      ResHeaders,
+      BaseRequest
+    >
+  : never;

@@ -94,7 +94,7 @@ pub(crate) fn update_application_package_json(
 
         let mut services: Vec<&str> = docker_cmd
             .split("-d")
-            .skip(1) // Skip the "docker compose up" part
+            .skip(1) // Skip the "docker compose up --watch" part
             .map(str::trim)
             .filter(|s| !s.is_empty())
             .collect();
@@ -107,7 +107,7 @@ pub(crate) fn update_application_package_json(
         }
 
         let new_docker_cmd = format!(
-            "docker compose up {}",
+            "docker compose up --watch {}",
             services
                 .iter()
                 .map(|svc| format!("-d {}", svc))

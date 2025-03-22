@@ -93,7 +93,9 @@ export function parse<
         res.status(400);
         if (hasSend(res)) {
           res.send(
-            `Invalid response:\n${parseErrors.join('\n\n')}\n\nCorrelation id: ${
+            `Invalid response:\n${parseErrors.join(
+              '\n\n'
+            )}\n\nCorrelation id: ${
               req.context.correlationId ?? 'No correlation ID'
             }`
           );

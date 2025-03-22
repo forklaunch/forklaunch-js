@@ -76,7 +76,9 @@ export class Application<
       this.docsConfiguration.type === 'scalar'
     ) {
       this.internal.use(
-        `/api/${process.env.VERSION ?? 'v1'}${process.env.DOCS_PATH ?? '/docs'}`,
+        `/api/${process.env.VERSION ?? 'v1'}${
+          process.env.DOCS_PATH ?? '/docs'
+        }`,
         apiReference({
           spec: {
             content: generateSwaggerDocument<SV>(
@@ -90,7 +92,9 @@ export class Application<
       );
     } else if (this.docsConfiguration.type === 'swagger') {
       this.internal.use(
-        `/api/${process.env.VERSION ?? 'v1'}${process.env.DOCS_PATH ?? '/docs'}`,
+        `/api/${process.env.VERSION ?? 'v1'}${
+          process.env.DOCS_PATH ?? '/docs'
+        }`,
         swaggerUi.serve,
         swaggerUi.setup(
           generateSwaggerDocument<SV>(this.schemaValidator, port, this.routers)
