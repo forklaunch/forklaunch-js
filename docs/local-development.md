@@ -14,28 +14,32 @@ Run these commands to set up your development environment:
 
 <CodeTabs type="terminal">
   <Tab title="pnpm">
-    ```bash
-    # Install dependencies
-    pnpm install
 
-    # Build the application
-    pnpm build
+  ```bash
+  # Install dependencies
+  pnpm install
 
-    # Set up database and initial migrations
-    forklaunch database:setup
-    ```
+  # Build the application
+  pnpm build
+
+  # Set up database and initial migrations
+  forklaunch database:setup
+  ```
+
   </Tab>
   <Tab title="bun">
-    ```bash
-    # Install dependencies
-    bun install
 
-    # Build the application
-    bun run build
+  ```bash
+  # Install dependencies
+  bun install
 
-    # Set up database and initial migrations
-    forklaunch database:setup
-    ```
+  # Build the application
+  bun run build
+
+  # Set up database and initial migrations
+  forklaunch database:setup
+  ```
+
   </Tab>
 </CodeTabs>
 
@@ -45,14 +49,18 @@ Run the application with hot reloading enabled:
 
 <CodeTabs type="terminal">
   <Tab title="pnpm">
-    ```bash
-    pnpm dev
-    ```
+
+  ```bash
+  pnpm dev
+  ```
+
   </Tab>
   <Tab title="bun">
-    ```bash
-    bun dev
-    ```
+
+  ```bash
+  bun dev
+  ```
+
   </Tab>
 </CodeTabs>
 
@@ -62,14 +70,18 @@ Run the application in production mode:
 
 <CodeTabs type="terminal">
   <Tab title="pnpm">
-    ```bash
-    pnpm start
-    ```
+
+  ```bash
+  pnpm start
+  ```
+
   </Tab>
   <Tab title="bun">
-    ```bash
-    bun start
-    ```
+
+  ```bash
+  bun start
+  ```
+
   </Tab>
 </CodeTabs>
 
@@ -79,20 +91,26 @@ When adding new services or workers, you might encounter initial setup errors. I
 
 <CodeTabs type="terminal">
   <Tab title="pnpm">
-    ```bash
-    # Create and run new migrations
-    pnpm migrate:init/create
-    # If errors persist, rebuild the development environment
-    pnpm dev:build
-    ```
+
+  ```bash
+  # Create and run new migrations
+  pnpm migrate:init/create
+
+  # If errors persist, rebuild the development environment
+  pnpm dev:build
+  ```
+
   </Tab>
   <Tab title="bun">
-    ```bash
-    # Create and run new migrations
-    bun migrate:init/create
-    # If errors persist, rebuild the development environment
-    bun dev:build
-    ```
+
+  ```bash
+  # Create and run new migrations
+  bun migrate:init/create
+  
+  # If errors persist, rebuild the development environment
+  bun dev:build
+  ```
+
   </Tab>
 </CodeTabs>
 

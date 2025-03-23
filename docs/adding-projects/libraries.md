@@ -10,14 +10,18 @@ To add a library to your application, run the following command:
 
 <CodeTabs type="instantiate">
   <Tab title="init">
-    ```bash
-    forklaunch init library
-    ```
+
+  ```bash
+  forklaunch init library
+  ```
+
   </Tab>
   <Tab title="add">
-    ```bash
-    forklaunch add library
-    ```
+
+  ```bash
+  forklaunch add library
+  ```
+  
   </Tab>
 </CodeTabs>
 

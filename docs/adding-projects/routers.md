@@ -8,9 +8,22 @@ description: Learn how to add and configure routers in your application.
 
 After you have added a service/worker, you can add a router to it by running the following command:
 
-```bash
-forklaunch add router
-```
+<CodeTabs type="instantiate">
+  <Tab title="init">
+
+  ```bash
+  forklaunch init library
+  ```
+
+  </Tab>
+  <Tab title="add">
+
+  ```bash
+  forklaunch add library
+  ```
+  
+  </Tab>
+</CodeTabs>
 
 This adds a new router to your application, with a `RCSIDES` (`route`, `controller`, `service`, `interface`, `dtoMapper`, `entity`, `seeder`) stack, only.
 

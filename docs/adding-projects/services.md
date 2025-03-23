@@ -10,14 +10,18 @@ To add a service to your application, run the following command:
 
 <CodeTabs type="instantiate">
   <Tab title="init">
-    ```bash
-    forklaunch init service
-    ```
+
+  ```bash
+  forklaunch init service
+  ```
+
   </Tab>
   <Tab title="add">
-    ```bash
-    forklaunch add service
-    ```
+
+  ```bash
+  forklaunch add service
+  ```
+
   </Tab>
 </CodeTabs>
 

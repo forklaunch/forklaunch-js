@@ -19,19 +19,25 @@ We're so glad you're here! Before you begin, make sure you have the following in
 
 <CodeTabs type="terminal">
   <Tab title="npm">
-    ```bash
-    npm install -g forklaunch
-    ```
+
+  ```bash
+  npm install -g forklaunch
+  ```
+
   </Tab>
   <Tab title="pnpm">
-    ```bash
-    pnpm install -g forklaunch
-    ```
+
+  ```bash
+  pnpm install -g forklaunch
+  ```
+
   </Tab>
   <Tab title="bun">
-    ```bash
-    bun install -g forklaunch
-    ```
+
+  ```bash
+  bun install -g forklaunch
+  ```
+
   </Tab>
 </CodeTabs>
 

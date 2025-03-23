@@ -10,14 +10,18 @@ To add a worker to your application, run the following command:
 
 <CodeTabs type="instantiate">
   <Tab title="init">
-    ```bash
-    forklaunch init worker
-    ```
+
+  ```bash
+  forklaunch init worker
+  ```
+
   </Tab>
   <Tab title="add">
-    ```bash
-    forklaunch add worker
-    ```
+
+  ```bash
+  forklaunch add worker
+  ```
+  
   </Tab>
 </CodeTabs>
 
