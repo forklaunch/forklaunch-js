@@ -1,14 +1,14 @@
-name: Build Packages
+name: Build Blueprint
 
 on:
   push:
     branches:
       - main
     paths:
-      - 'packages/**'
+      - 'blueprint/**'
   pull_request:
     paths:
-      - 'packages/**'
+      - 'blueprint/**'
 
 jobs:
   build:
@@ -27,11 +27,10 @@ jobs:
         uses: pnpm/action-setup@v2
         with:
           version: 8
-
       - name: Install dependencies
-        working-directory: ./packages
+        working-directory: ./blueprint
         run: pnpm install
 
-      - name: Build packages
-        working-directory: ./packages
+      - name: Build blueprint
+        working-directory: ./blueprint
         run: pnpm build

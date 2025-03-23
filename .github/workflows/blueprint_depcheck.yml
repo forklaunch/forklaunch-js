@@ -1,15 +1,15 @@
-name: Framework Dependency Check
+name: Blueprint Dependency Check
 
 on:
   push:
     branches:
       - main
     paths:
-      - 'framework/**/package.json'
+      - 'blueprint/**/package.json'
       - 'cli/src/init/core/package_json/package_json_constants.rs'
   pull_request:
     paths:
-      - 'framework/**/package.json'
+      - 'blueprint/**/package.json'
       - 'cli/src/init/core/package_json/package_json_constants.rs'
 
 jobs:
@@ -32,10 +32,10 @@ jobs:
 
       - name: Run CLI in framework
         run: |
-          cd framework
+          cd blueprint
           ../cli/target/release/forklaunch depcheck
 
-      - name: Run framework dependency version check
+      - name: Run blueprint dependency version check
         run: |
-          cd .github/workflows/scripts/check_framework_deps
-          cargo run --bin check_framework_deps
+          cd .github/workflows/scripts/check_blueprint_deps
+          cargo run --bin check_blueprint_deps
