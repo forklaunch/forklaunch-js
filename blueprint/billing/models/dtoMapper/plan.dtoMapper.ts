@@ -13,7 +13,7 @@ import {
   string,
   unknown,
   uuid
-} from '@forklaunch/framework-core';
+} from '@forklaunch/blueprint-core';
 import { BillingProviderEnum } from '../enum/billingProvider.enum';
 import { PlanCadenceEnum } from '../enum/planCadence.enum';
 import { Plan } from '../persistence/plan.entity';

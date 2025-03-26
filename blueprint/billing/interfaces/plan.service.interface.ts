@@ -1,15 +1,40 @@
+import { BaseDtoParameters } from '@forklaunch/blueprint-core';
 import { EntityManager } from '@mikro-orm/core';
 import {
-  CreatePlanDto,
-  PlanDto,
-  UpdatePlanDto
+  CreatePlanDtoMapper,
+  PlanDtoMapper,
+  UpdatePlanDtoMapper
 } from '../models/dtoMapper/plan.dtoMapper';
+import { IdDtoSchema, IdsDtoSchema } from '../registrations';
 
-export interface PlanService {
-  // This is for a single plan, store this in table
-  createPlan: (planDto: CreatePlanDto, em?: EntityManager) => Promise<PlanDto>;
-  getPlan: (id: string, em?: EntityManager) => Promise<PlanDto>;
-  updatePlan: (planDto: UpdatePlanDto, em?: EntityManager) => Promise<PlanDto>;
-  deletePlan: (id: string, em?: EntityManager) => Promise<void>;
-  listPlans: (ids?: string[], em?: EntityManager) => Promise<PlanDto[]>;
+export const PlanServiceName = 'PlanService';
+export const BasePlanServiceParameters = {
+  CreatePlanDto: CreatePlanDtoMapper.schema(),
+  UpdatePlanDto: UpdatePlanDtoMapper.schema(),
+  PlanDto: PlanDtoMapper.schema(),
+  IdDto: IdDtoSchema,
+  IdsDto: IdsDtoSchema
+};
+
+export interface PlanService<
+  Params extends BaseDtoParameters<typeof BasePlanServiceParameters>
+> {
+  name: typeof PlanServiceName;
+  createPlan: (
+    planDto: Params['CreatePlanDto'],
+    em?: EntityManager
+  ) => Promise<Params['PlanDto']>;
+  getPlan: (
+    idDto: Params['IdDto'],
+    em?: EntityManager
+  ) => Promise<Params['PlanDto']>;
+  updatePlan: (
+    planDto: Params['UpdatePlanDto'],
+    em?: EntityManager
+  ) => Promise<Params['PlanDto']>;
+  deletePlan: (idDto: Params['IdDto'], em?: EntityManager) => Promise<void>;
+  listPlans: (
+    idsDto: Params['IdsDto'],
+    em?: EntityManager
+  ) => Promise<Params['PlanDto'][]>;
 }

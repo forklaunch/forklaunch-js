@@ -1,5 +1,5 @@
+import { forklaunchExpress } from '@forklaunch/blueprint-core';
 import { ApiClient } from '@forklaunch/core/http';
-import { forklaunchExpress } from '@forklaunch/framework-core';
 import { bootstrap } from './bootstrapper';
 import { CheckoutSessionRoutes } from './routes/checkoutSession.routes';
 import { PaymentLinkRoutes } from './routes/paymentLink.routes';
@@ -8,7 +8,7 @@ import { SubscriptionRoutes } from './routes/subscription.routes';
 //! bootstrap function that initializes the service application
 bootstrap((ci) => {
   //! resolves the openTelemetryCollector from the configuration
-  const openTelemetryCollector = ci.resolve('openTelemetryCollector');
+  const openTelemetryCollector = ci.resolve('OpenTelemetryCollector');
   //! creates an instance of forklaunchExpress
   const app = forklaunchExpress(openTelemetryCollector);
   //! resolves the host, port, and version from the configuration
@@ -18,13 +18,13 @@ bootstrap((ci) => {
   const docsPath = ci.resolve('DOCS_PATH');
   //! resolves the necessary services from the configuration
   const scopedCheckoutSessionServiceFactory = ci.scopedResolver(
-    'checkoutSessionService'
+    'CheckoutSessionService'
   );
   const scopedPaymentLinkServiceFactory =
-    ci.scopedResolver('paymentLinkService');
-  const scopedPlanServiceFactory = ci.scopedResolver('planService');
+    ci.scopedResolver('PaymentLinkService');
+  const scopedPlanServiceFactory = ci.scopedResolver('PlanService');
   const scopedSubscriptionServiceFactory = ci.scopedResolver(
-    'subscriptionService'
+    'SubscriptionService'
   );
   //! constructs the necessary routes using the appropriate Routes functions
   const checkoutSessionRoutes = CheckoutSessionRoutes(

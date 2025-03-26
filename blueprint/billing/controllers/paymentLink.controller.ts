@@ -1,6 +1,3 @@
-import { Controller } from '@forklaunch/core/controllers';
-import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import {
   array,
   handlers,
@@ -11,25 +8,34 @@ import {
   Response,
   SchemaValidator,
   string
-} from '@forklaunch/framework-core';
-import { Metrics } from '@forklaunch/framework-monitoring';
-import { configValidator } from '../bootstrapper';
+} from '@forklaunch/blueprint-core';
+import { Metrics } from '@forklaunch/blueprint-monitoring';
+import { Controller } from '@forklaunch/core/controllers';
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
+import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { PaymentLinkService } from '../interfaces/paymentLink.service.interface';
+import { PaymentLinkDtoMapper } from '../models/dtoMapper/paymentLink.dtoMapper';
 import {
-  CreatePaymentLinkDtoMapper,
-  PaymentLinkDtoMapper,
-  UpdatePaymentLinkDtoMapper
-} from '../models/dtoMapper/paymentLink.dtoMapper';
+  ConfigShapes,
+  SchemaRegistrations,
+  SchemaRegistry
+} from '../registrations';
 
 export class PaymentLinkController
   implements
-    Controller<PaymentLinkService, Request, Response, NextFunction, ParsedQs>
+    Controller<
+      PaymentLinkService<SchemaRegistrations['PaymentLink']>,
+      Request,
+      Response,
+      NextFunction,
+      ParsedQs
+    >
 {
   constructor(
     private readonly serviceFactory: ScopedDependencyFactory<
       SchemaValidator,
-      typeof configValidator,
-      'paymentLinkService'
+      ConfigShapes,
+      'PaymentLinkService'
     >,
     private readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>
   ) {}
@@ -40,7 +46,7 @@ export class PaymentLinkController
     {
       name: 'createPaymentLink',
       summary: 'Create a payment link',
-      body: CreatePaymentLinkDtoMapper.schema(),
+      body: SchemaRegistry.PaymentLink.CreatePaymentLinkDto,
       responses: {
         200: PaymentLinkDtoMapper.schema()
       }
@@ -68,7 +74,7 @@ export class PaymentLinkController
     async (req, res) => {
       res
         .status(200)
-        .json(await this.serviceFactory().getPaymentLink(req.params.id));
+        .json(await this.serviceFactory().getPaymentLink(req.params));
     }
   );
 
@@ -78,7 +84,7 @@ export class PaymentLinkController
     {
       name: 'updatePaymentLink',
       summary: 'Update a payment link',
-      body: UpdatePaymentLinkDtoMapper.schema(),
+      body: SchemaRegistry.PaymentLink.UpdatePaymentLinkDto,
       params: {
         id: string
       },
@@ -107,7 +113,7 @@ export class PaymentLinkController
       }
     },
     async (req, res) => {
-      await this.serviceFactory().expirePaymentLink(req.params.id);
+      await this.serviceFactory().expirePaymentLink(req.params);
       res.status(200).send(`Expired payment link ${req.params.id}`);
     }
   );
@@ -126,7 +132,7 @@ export class PaymentLinkController
       }
     },
     async (req, res) => {
-      await this.serviceFactory().handlePaymentSuccess(req.params.id);
+      await this.serviceFactory().handlePaymentSuccess(req.params);
       res.status(200).send(`Handled payment success for ${req.params.id}`);
     }
   );
@@ -145,7 +151,7 @@ export class PaymentLinkController
       }
     },
     async (req, res) => {
-      await this.serviceFactory().handlePaymentFailure(req.params.id);
+      await this.serviceFactory().handlePaymentFailure(req.params);
       res.status(200).send(`Handled payment failure for ${req.params.id}`);
     }
   );
@@ -166,7 +172,7 @@ export class PaymentLinkController
     async (req, res) => {
       res
         .status(200)
-        .json(await this.serviceFactory().listPaymentLinks(req.query.ids));
+        .json(await this.serviceFactory().listPaymentLinks(req.query));
     }
   );
 }

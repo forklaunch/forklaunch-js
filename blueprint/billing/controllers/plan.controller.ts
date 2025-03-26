@@ -1,6 +1,3 @@
-import { Controller } from '@forklaunch/core/controllers';
-import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import {
   array,
   handlers,
@@ -11,24 +8,34 @@ import {
   Response,
   SchemaValidator,
   string
-} from '@forklaunch/framework-core';
-import { Metrics } from '@forklaunch/framework-monitoring';
-import { configValidator } from '../bootstrapper';
+} from '@forklaunch/blueprint-core';
+import { Metrics } from '@forklaunch/blueprint-monitoring';
+import { Controller } from '@forklaunch/core/controllers';
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
+import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { PlanService } from '../interfaces/plan.service.interface';
+import { PlanDtoMapper } from '../models/dtoMapper/plan.dtoMapper';
 import {
-  CreatePlanDtoMapper,
-  PlanDtoMapper,
-  UpdatePlanDtoMapper
-} from '../models/dtoMapper/plan.dtoMapper';
+  ConfigShapes,
+  SchemaRegistrations,
+  SchemaRegistry
+} from '../registrations';
 
 export class PlanController
-  implements Controller<PlanService, Request, Response, NextFunction, ParsedQs>
+  implements
+    Controller<
+      PlanService<SchemaRegistrations['Plan']>,
+      Request,
+      Response,
+      NextFunction,
+      ParsedQs
+    >
 {
   constructor(
     private readonly serviceFactory: ScopedDependencyFactory<
       SchemaValidator,
-      typeof configValidator,
-      'planService'
+      ConfigShapes,
+      'PlanService'
     >,
     private readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>
   ) {}
@@ -39,7 +46,7 @@ export class PlanController
     {
       name: 'createPlan',
       summary: 'Create a plan',
-      body: CreatePlanDtoMapper.schema(),
+      body: SchemaRegistry.Plan.CreatePlanDto,
       responses: {
         200: PlanDtoMapper.schema()
       }
@@ -63,7 +70,7 @@ export class PlanController
       }
     },
     async (req, res) => {
-      res.status(200).json(await this.serviceFactory().getPlan(req.params.id));
+      res.status(200).json(await this.serviceFactory().getPlan(req.params));
     }
   );
 
@@ -73,7 +80,7 @@ export class PlanController
     {
       name: 'updatePlan',
       summary: 'Update a plan',
-      body: UpdatePlanDtoMapper.schema(),
+      body: SchemaRegistry.Plan.UpdatePlanDto,
       responses: {
         200: PlanDtoMapper.schema()
       }
@@ -97,7 +104,7 @@ export class PlanController
       }
     },
     async (req, res) => {
-      await this.serviceFactory().deletePlan(req.params.id);
+      await this.serviceFactory().deletePlan(req.params);
       res.status(200).json(`Deleted plan ${req.params.id}`);
     }
   );
@@ -116,7 +123,7 @@ export class PlanController
       }
     },
     async (req, res) => {
-      res.status(200).json(await this.serviceFactory().listPlans());
+      res.status(200).json(await this.serviceFactory().listPlans(req.query));
     }
   );
 }

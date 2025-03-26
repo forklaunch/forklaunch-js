@@ -11,7 +11,7 @@ import {
   string,
   unknown,
   uuid
-} from '@forklaunch/framework-core';
+} from '@forklaunch/blueprint-core';
 import { BillingProviderEnum } from '../enum/billingProvider.enum';
 import { PartyEnum } from '../enum/party.enum';
 import { Subscription } from '../persistence/subscription.entity';

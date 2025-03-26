@@ -1,15 +1,15 @@
+import { forklaunchRouter, SchemaValidator } from '@forklaunch/blueprint-core';
+import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
-import { forklaunchRouter, SchemaValidator } from '@forklaunch/framework-core';
-import { Metrics } from '@forklaunch/framework-monitoring';
-import { configValidator } from '../bootstrapper';
 import { SubscriptionController } from '../controllers/subscription.controller';
+import { ConfigShapes } from '../registrations';
 
 export const SubscriptionRoutes = (
   scopedServiceFactory: ScopedDependencyFactory<
     SchemaValidator,
-    typeof configValidator,
-    'subscriptionService'
+    ConfigShapes,
+    'SubscriptionService'
   >,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) => {

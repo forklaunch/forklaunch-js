@@ -4,9 +4,9 @@ import { PartyEnum } from '../models/enum/party.enum';
 import { PaymentMethodEnum } from '../models/enum/paymentMethod.enum';
 import { PlanCadenceEnum } from '../models/enum/planCadence.enum';
 import { BillingProvider } from '../models/persistence/billingProvider.entity';
+import { CheckoutSession } from '../models/persistence/checkoutSession';
 import { PaymentLink } from '../models/persistence/paymentLink.entity';
 import { Plan } from '../models/persistence/plan.entity';
-import { Session } from '../models/persistence/session.entity';
 import { Subscription } from '../models/persistence/subscription.entity';
 //! Begin seed data
 export const billingProvider = BillingProvider.create({
@@ -33,8 +33,8 @@ export const plan = Plan.create({
   externalId: '1234567890',
   billingProvider: BillingProviderEnum.STRIPE
 });
-export const session = Session.create({
-  customerEmail: 'test@example.com',
+export const checkoutSession = CheckoutSession.create({
+  customerId: 'test@example.com',
   paymentMethods: [PaymentMethodEnum.CREDIT_CARD],
   metadata: {},
   successRedirectUri: 'https://example.com/success',

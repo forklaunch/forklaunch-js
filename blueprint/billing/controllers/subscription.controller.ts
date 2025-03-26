@@ -1,6 +1,3 @@
-import { Controller } from '@forklaunch/core/controllers';
-import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import {
   array,
   handlers,
@@ -11,25 +8,34 @@ import {
   Response,
   SchemaValidator,
   string
-} from '@forklaunch/framework-core';
-import { Metrics } from '@forklaunch/framework-monitoring';
-import { configValidator } from '../bootstrapper';
+} from '@forklaunch/blueprint-core';
+import { Metrics } from '@forklaunch/blueprint-monitoring';
+import { Controller } from '@forklaunch/core/controllers';
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
+import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { SubscriptionService } from '../interfaces/subscription.service.interface';
+import { SubscriptionDtoMapper } from '../models/dtoMapper/subscription.dtoMapper';
 import {
-  CreateSubscriptionDtoMapper,
-  SubscriptionDtoMapper,
-  UpdateSubscriptionDtoMapper
-} from '../models/dtoMapper/subscription.dtoMapper';
+  ConfigShapes,
+  SchemaRegistrations,
+  SchemaRegistry
+} from '../registrations';
 
 export class SubscriptionController
   implements
-    Controller<SubscriptionService, Request, Response, NextFunction, ParsedQs>
+    Controller<
+      SubscriptionService<SchemaRegistrations['Subscription']>,
+      Request,
+      Response,
+      NextFunction,
+      ParsedQs
+    >
 {
   constructor(
     private readonly serviceFactory: ScopedDependencyFactory<
       SchemaValidator,
-      typeof configValidator,
-      'subscriptionService'
+      ConfigShapes,
+      'SubscriptionService'
     >,
     private readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>
   ) {}
@@ -40,7 +46,7 @@ export class SubscriptionController
     {
       name: 'createSubscription',
       summary: 'Create a subscription',
-      body: CreateSubscriptionDtoMapper.schema(),
+      body: SchemaRegistry.Subscription.CreateSubscriptionDto,
       responses: {
         200: SubscriptionDtoMapper.schema()
       }
@@ -68,7 +74,7 @@ export class SubscriptionController
     async (req, res) => {
       res
         .status(200)
-        .json(await this.serviceFactory().getSubscription(req.params.id));
+        .json(await this.serviceFactory().getSubscription(req.params));
     }
   );
 
@@ -88,7 +94,7 @@ export class SubscriptionController
     async (req, res) => {
       res
         .status(200)
-        .json(await this.serviceFactory().getUserSubscription(req.params.id));
+        .json(await this.serviceFactory().getUserSubscription(req.params));
     }
   );
 
@@ -109,7 +115,7 @@ export class SubscriptionController
       res
         .status(200)
         .json(
-          await this.serviceFactory().getOrganizationSubscription(req.params.id)
+          await this.serviceFactory().getOrganizationSubscription(req.params)
         );
     }
   );
@@ -123,7 +129,7 @@ export class SubscriptionController
       params: {
         id: string
       },
-      body: UpdateSubscriptionDtoMapper.schema(),
+      body: SchemaRegistry.Subscription.UpdateSubscriptionDto,
       responses: {
         200: SubscriptionDtoMapper.schema()
       }
@@ -149,7 +155,7 @@ export class SubscriptionController
       }
     },
     async (req, res) => {
-      await this.serviceFactory().deleteSubscription(req.params.id);
+      await this.serviceFactory().deleteSubscription(req.params);
       res.status(200).send(`Deleted subscription ${req.params.id}`);
     }
   );
@@ -170,7 +176,7 @@ export class SubscriptionController
     async (req, res) => {
       res
         .status(200)
-        .json(await this.serviceFactory().listSubscriptions(req.query.ids));
+        .json(await this.serviceFactory().listSubscriptions(req.query));
     }
   );
 
@@ -188,7 +194,7 @@ export class SubscriptionController
       }
     },
     async (req, res) => {
-      await this.serviceFactory().cancelSubscription(req.params.id);
+      await this.serviceFactory().cancelSubscription(req.params);
       res.status(200).send(`Cancelled subscription ${req.params.id}`);
     }
   );
@@ -207,7 +213,7 @@ export class SubscriptionController
       }
     },
     async (req, res) => {
-      await this.serviceFactory().resumeSubscription(req.params.id);
+      await this.serviceFactory().resumeSubscription(req.params);
       res.status(200).send(`Resumed subscription ${req.params.id}`);
     }
   );

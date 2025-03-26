@@ -1,8 +1,12 @@
+import { BaseDtoParameters, SchemaValidator } from '@forklaunch/blueprint-core';
+import { Metrics } from '@forklaunch/blueprint-monitoring';
+import { Id } from '@forklaunch/common';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { SchemaValidator } from '@forklaunch/framework-core';
-import { Metrics } from '@forklaunch/framework-monitoring';
 import { EntityManager } from '@mikro-orm/core';
-import { SubscriptionService } from '../interfaces/subscription.service.interface';
+import {
+  BaseSubscriptionServiceParameters,
+  SubscriptionService
+} from '../interfaces/subscription.service.interface';
 import {
   CreateSubscriptionDto,
   CreateSubscriptionDtoMapper,
@@ -14,10 +18,15 @@ import {
 import { PartyEnum } from '../models/enum/party.enum';
 import { Subscription } from '../models/persistence/subscription.entity';
 
-export class BaseSubscriptionService implements SubscriptionService {
+export class BaseSubscriptionService
+  implements
+    SubscriptionService<
+      BaseDtoParameters<typeof BaseSubscriptionServiceParameters>
+    >
+{
   constructor(
-    private em: EntityManager,
-    private readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>
+    protected em: EntityManager,
+    protected readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>
   ) {}
 
   async createSubscription(
@@ -39,7 +48,7 @@ export class BaseSubscriptionService implements SubscriptionService {
   }
 
   async getSubscription(
-    id: string,
+    { id }: Id,
     em?: EntityManager
   ): Promise<SubscriptionDto> {
     const subscription = SubscriptionDtoMapper.serializeEntityToDto(
@@ -51,7 +60,7 @@ export class BaseSubscriptionService implements SubscriptionService {
   }
 
   async getUserSubscription(
-    id: string,
+    { id }: Id,
     em?: EntityManager
   ): Promise<SubscriptionDto> {
     const subscription = SubscriptionDtoMapper.serializeEntityToDto(
@@ -67,7 +76,7 @@ export class BaseSubscriptionService implements SubscriptionService {
   }
 
   async getOrganizationSubscription(
-    id: string,
+    { id }: Id,
     em?: EntityManager
   ): Promise<SubscriptionDto> {
     const subscription = SubscriptionDtoMapper.serializeEntityToDto(
@@ -102,8 +111,11 @@ export class BaseSubscriptionService implements SubscriptionService {
     return updatedSubscriptionDto;
   }
 
-  async deleteSubscription(id: string, em?: EntityManager): Promise<void> {
-    const subscription = await (em ?? this.em).findOne(Subscription, { id });
+  async deleteSubscription(
+    idDto: { id: string },
+    em?: EntityManager
+  ): Promise<void> {
+    const subscription = await (em ?? this.em).findOne(Subscription, idDto);
     if (!subscription) {
       throw new Error('Subscription not found');
     }
@@ -111,15 +123,17 @@ export class BaseSubscriptionService implements SubscriptionService {
   }
 
   async listSubscriptions(
-    ids?: string[],
+    idsDto: { ids?: string[] },
     em?: EntityManager
   ): Promise<SubscriptionDto[]> {
     const subscriptions = await (em ?? this.em).findAll(Subscription, {
-      where: {
-        id: {
-          $in: ids
-        }
-      }
+      where: idsDto.ids
+        ? {
+            id: {
+              $in: idsDto.ids
+            }
+          }
+        : undefined
     });
 
     return subscriptions.map((subscription) => {
@@ -131,7 +145,7 @@ export class BaseSubscriptionService implements SubscriptionService {
     });
   }
 
-  async cancelSubscription(id: string, em?: EntityManager): Promise<void> {
+  async cancelSubscription({ id }: Id, em?: EntityManager): Promise<void> {
     const subscription = await (em ?? this.em).findOne(Subscription, { id });
     if (!subscription) {
       throw new Error('Subscription not found');
@@ -141,8 +155,8 @@ export class BaseSubscriptionService implements SubscriptionService {
       await innerEm.persist(subscription);
     });
   }
-  async resumeSubscription(id: string, em?: EntityManager): Promise<void> {
-    const subscription = await (em ?? this.em).findOne(Subscription, { id });
+  async resumeSubscription(idDto: Id, em?: EntityManager): Promise<void> {
+    const subscription = await (em ?? this.em).findOne(Subscription, idDto);
     if (!subscription) {
       throw new Error('Subscription not found');
     }

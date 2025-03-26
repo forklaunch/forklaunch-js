@@ -1,34 +1,60 @@
+import { BaseDtoParameters } from '@forklaunch/blueprint-core';
 import { EntityManager } from '@mikro-orm/core';
 import {
-  CreateSubscriptionDto,
-  SubscriptionDto,
-  UpdateSubscriptionDto
+  CreateSubscriptionDtoMapper,
+  SubscriptionDtoMapper,
+  UpdateSubscriptionDtoMapper
 } from '../models/dtoMapper/subscription.dtoMapper';
+import { IdDtoSchema, IdsDtoSchema } from '../registrations';
 
-export interface SubscriptionService {
+export const SubscriptionServiceName = 'SubscriptionService';
+export const BaseSubscriptionServiceParameters = {
+  CreateSubscriptionDto: CreateSubscriptionDtoMapper.schema(),
+  SubscriptionDto: SubscriptionDtoMapper.schema(),
+  UpdateSubscriptionDto: UpdateSubscriptionDtoMapper.schema(),
+  IdDto: IdDtoSchema,
+  IdsDto: IdsDtoSchema
+};
+
+export interface SubscriptionService<
+  Params extends BaseDtoParameters<typeof BaseSubscriptionServiceParameters>
+> {
+  name: typeof SubscriptionServiceName;
   // store this in a table
   createSubscription: (
-    subscriptionDto: CreateSubscriptionDto,
+    subscriptionDto: Params['CreateSubscriptionDto'],
     em?: EntityManager
-  ) => Promise<SubscriptionDto>;
-  getSubscription: (id: string, em?: EntityManager) => Promise<SubscriptionDto>;
+  ) => Promise<Params['SubscriptionDto']>;
+  getSubscription: (
+    idDto: Params['IdDto'],
+    em?: EntityManager
+  ) => Promise<Params['SubscriptionDto']>;
   getUserSubscription: (
-    id: string,
+    idDto: Params['IdDto'],
     em?: EntityManager
-  ) => Promise<SubscriptionDto>;
+  ) => Promise<Params['SubscriptionDto']>;
   getOrganizationSubscription: (
-    id: string,
+    idDto: Params['IdDto'],
     em?: EntityManager
-  ) => Promise<SubscriptionDto>;
+  ) => Promise<Params['SubscriptionDto']>;
   updateSubscription: (
-    subscriptionDto: UpdateSubscriptionDto,
+    subscriptionDto: Params['UpdateSubscriptionDto'],
     em?: EntityManager
-  ) => Promise<SubscriptionDto>;
-  deleteSubscription: (id: string, em?: EntityManager) => Promise<void>;
+  ) => Promise<Params['SubscriptionDto']>;
+  deleteSubscription: (
+    id: Params['IdDto'],
+    em?: EntityManager
+  ) => Promise<void>;
   listSubscriptions: (
-    ids?: string[],
+    idsDto: Params['IdsDto'],
     em?: EntityManager
-  ) => Promise<SubscriptionDto[]>;
-  cancelSubscription: (id: string, em?: EntityManager) => Promise<void>;
-  resumeSubscription: (id: string, em?: EntityManager) => Promise<void>;
+  ) => Promise<Params['SubscriptionDto'][]>;
+  cancelSubscription: (
+    idDto: Params['IdDto'],
+    em?: EntityManager
+  ) => Promise<void>;
+  resumeSubscription: (
+    idDto: Params['IdDto'],
+    em?: EntityManager
+  ) => Promise<void>;
 }

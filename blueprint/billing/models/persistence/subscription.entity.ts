@@ -1,4 +1,4 @@
-import { BaseEntity } from '@forklaunch/framework-core';
+import { BaseEntity } from '@forklaunch/blueprint-core';
 import { Entity, Enum, Property, Unique } from '@mikro-orm/core';
 import { BillingProviderEnum } from '../enum/billingProvider.enum';
 import { PartyEnum } from '../enum/party.enum';

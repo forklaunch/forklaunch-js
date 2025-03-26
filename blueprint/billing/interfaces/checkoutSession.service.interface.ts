@@ -1,15 +1,31 @@
+import { BaseDtoParameters } from '@forklaunch/blueprint-core';
 import {
-  CreateSessionDto,
-  SessionDto
-} from '../models/dtoMapper/session.dtoMapper';
+  CheckoutSessionDtoMapper,
+  CreateCheckoutSessionDtoMapper
+} from '../models/dtoMapper/checkoutSession.dtoMapper';
+import { IdDtoSchema } from '../registrations';
 
-export interface CheckoutSessionService {
+export const CheckoutSessionServiceName = 'CheckoutSessionService';
+export const BaseCheckoutSessionServiceParameters = {
+  CreateCheckoutSessionDto: CreateCheckoutSessionDtoMapper.schema(),
+  CheckoutSessionDto: CheckoutSessionDtoMapper.schema(),
+  IdDto: IdDtoSchema
+};
+
+export interface CheckoutSessionService<
+  Params extends BaseDtoParameters<typeof BaseCheckoutSessionServiceParameters>
+> {
+  name: typeof CheckoutSessionServiceName;
   // for generating external links
   // store in cache, for permissions
-  createCheckoutSession: (sessionDto: CreateSessionDto) => Promise<SessionDto>;
-  getCheckoutSession: (id: string) => Promise<SessionDto>;
-  expireCheckoutSession: (id: string) => Promise<void>;
+  createCheckoutSession: (
+    checkoutSessionDto: Params['CreateCheckoutSessionDto']
+  ) => Promise<Params['CheckoutSessionDto']>;
+  getCheckoutSession: (
+    idDto: Params['IdDto']
+  ) => Promise<Params['CheckoutSessionDto']>;
+  expireCheckoutSession: (idDto: Params['IdDto']) => Promise<void>;
 
-  handleCheckoutSuccess: (id: string) => Promise<void>;
-  handleCheckoutFailure: (id: string) => Promise<void>;
+  handleCheckoutSuccess: (idDto: Params['IdDto']) => Promise<void>;
+  handleCheckoutFailure: (idDto: Params['IdDto']) => Promise<void>;
 }

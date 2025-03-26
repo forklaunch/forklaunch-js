@@ -1,6 +1,3 @@
-import { Controller } from '@forklaunch/core/controllers';
-import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import {
   handlers,
   NextFunction,
@@ -9,19 +6,23 @@ import {
   Response,
   SchemaValidator,
   string
-} from '@forklaunch/framework-core';
-import { Metrics } from '@forklaunch/framework-monitoring';
-import { configValidator } from '../bootstrapper';
+} from '@forklaunch/blueprint-core';
+import { Metrics } from '@forklaunch/blueprint-monitoring';
+import { Controller } from '@forklaunch/core/controllers';
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
+import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { CheckoutSessionService } from '../interfaces/checkoutSession.service.interface';
+import { CheckoutSessionDtoMapper } from '../models/dtoMapper/checkoutSession.dtoMapper';
 import {
-  CreateSessionDtoMapper,
-  SessionDtoMapper
-} from '../models/dtoMapper/session.dtoMapper';
+  ConfigShapes,
+  SchemaRegistrations,
+  SchemaRegistry
+} from '../registrations';
 
 export class CheckoutSessionController
   implements
     Controller<
-      CheckoutSessionService,
+      CheckoutSessionService<SchemaRegistrations['CheckoutSession']>,
       Request,
       Response,
       NextFunction,
@@ -31,8 +32,8 @@ export class CheckoutSessionController
   constructor(
     private readonly serviceFactory: ScopedDependencyFactory<
       SchemaValidator,
-      typeof configValidator,
-      'checkoutSessionService'
+      ConfigShapes,
+      'CheckoutSessionService'
     >,
     private readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>
   ) {}
@@ -43,9 +44,9 @@ export class CheckoutSessionController
     {
       name: 'createCheckoutSession',
       summary: 'Create a checkout session',
-      body: CreateSessionDtoMapper.schema(),
+      body: SchemaRegistry.CheckoutSession.CreateCheckoutSessionDto,
       responses: {
-        200: SessionDtoMapper.schema()
+        200: CheckoutSessionDtoMapper.schema()
       }
     },
     async (req, res) => {
@@ -65,13 +66,13 @@ export class CheckoutSessionController
         id: string
       },
       responses: {
-        200: SessionDtoMapper.schema()
+        200: CheckoutSessionDtoMapper.schema()
       }
     },
     async (req, res) => {
       res
         .status(200)
-        .json(await this.serviceFactory().getCheckoutSession(req.params.id));
+        .json(await this.serviceFactory().getCheckoutSession(req.params));
     }
   );
 
@@ -89,7 +90,7 @@ export class CheckoutSessionController
       }
     },
     async (req, res) => {
-      await this.serviceFactory().expireCheckoutSession(req.params.id);
+      await this.serviceFactory().expireCheckoutSession(req.params);
       res.status(200).send(`Expired checkout session ${req.params.id}`);
     }
   );
@@ -108,7 +109,7 @@ export class CheckoutSessionController
       }
     },
     async (req, res) => {
-      await this.serviceFactory().handleCheckoutSuccess(req.params.id);
+      await this.serviceFactory().handleCheckoutSuccess({ id: req.params.id });
       res
         .status(200)
         .send(`Handled checkout success for session ${req.params.id}`);
@@ -129,7 +130,7 @@ export class CheckoutSessionController
       }
     },
     async (req, res) => {
-      await this.serviceFactory().handleCheckoutFailure(req.params.id);
+      await this.serviceFactory().handleCheckoutFailure({ id: req.params.id });
       res
         .status(200)
         .send(`Handled checkout failure for session ${req.params.id}`);

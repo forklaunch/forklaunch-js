@@ -1,8 +1,4 @@
 import {
-  RequestDtoMapper,
-  ResponseDtoMapper
-} from '@forklaunch/core/dtoMapper';
-import {
   date,
   enum_,
   number,
@@ -11,7 +7,11 @@ import {
   string,
   unknown,
   uuid
-} from '@forklaunch/framework-core';
+} from '@forklaunch/blueprint-core';
+import {
+  RequestDtoMapper,
+  ResponseDtoMapper
+} from '@forklaunch/core/dtoMapper';
 import { CurrencyEnum } from '../enum/currency.enum';
 import { PaymentLink } from '../persistence/paymentLink.entity';
 

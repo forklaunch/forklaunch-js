@@ -1,75 +1,184 @@
+import { BaseDtoParameters, SchemaValidator } from '@forklaunch/blueprint-core';
+import { Metrics } from '@forklaunch/blueprint-monitoring';
+import { Id } from '@forklaunch/common';
 import { createCacheKey, TtlCache } from '@forklaunch/core/cache';
-import { SchemaValidator } from '@forklaunch/framework-core';
-import { v4 } from 'uuid';
-import { CheckoutSessionService } from '../interfaces/checkoutSession.service.interface';
-import {
-  CreateSessionDto,
-  CreateSessionDtoMapper,
-  SessionDto,
-  SessionDtoMapper
-} from '../models/dtoMapper/session.dtoMapper';
-import { Session } from '../models/persistence/session.entity';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { Metrics } from '@forklaunch/framework-monitoring';
+import {
+  BaseCheckoutSessionServiceParameters,
+  CheckoutSessionService
+} from '../interfaces/checkoutSession.service.interface';
+import {
+  CheckoutSessionDto,
+  CreateCheckoutSessionDto,
+  CreateCheckoutSessionDtoMapper
+} from '../models/dtoMapper/checkoutSession.dtoMapper';
+import { CheckoutSession } from '../models/persistence/checkoutSession';
 
-export class BaseCheckoutSessionService implements CheckoutSessionService {
+export class BaseCheckoutSessionService
+  implements
+    CheckoutSessionService<
+      BaseDtoParameters<typeof BaseCheckoutSessionServiceParameters>
+    >
+{
   constructor(
-    private cache: TtlCache,
-    private readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>
+    protected readonly cache: TtlCache,
+    protected readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>
   ) {}
 
-  private createCacheKey = createCacheKey('checkout_session');
+  protected createCacheKey = createCacheKey('checkout_session');
 
   async createCheckoutSession(
-    sessionDto: CreateSessionDto
-  ): Promise<SessionDto> {
-    const session = CreateSessionDtoMapper.deserializeDtoToEntity(
-      SchemaValidator(),
-      sessionDto
-    );
-    session.id = v4();
+    checkoutSessionDto: CreateCheckoutSessionDto
+  ): Promise<CheckoutSessionDto> {
+    const checkoutSession =
+      CreateCheckoutSessionDtoMapper.deserializeDtoToEntity(
+        SchemaValidator(),
+        checkoutSessionDto
+      );
 
-    // Store the session details in the cache
+    // Store the checkoutSession details in the cache
     await this.cache.putRecord({
-      key: this.createCacheKey(session.id),
-      value: session,
+      key: this.createCacheKey(checkoutSession.id),
+      value: checkoutSession,
       ttlMilliseconds: this.cache.getTtlMilliseconds()
     });
-    const cachedSessionDetails = await this.cache.readRecord<Session>(
-      this.createCacheKey(session.id)
-    );
-    const createdSessionDto = SessionDtoMapper.serializeEntityToDto(
-      SchemaValidator(),
-      cachedSessionDetails.value
-    );
-    return createdSessionDto;
+
+    return checkoutSession;
   }
 
-  async getCheckoutSession(id: string): Promise<SessionDto> {
-    const sessionDetails = await this.cache.readRecord<Session>(
+  async getCheckoutSession({ id }: Id): Promise<CheckoutSessionDto> {
+    const checkoutSessionDetails = await this.cache.readRecord<CheckoutSession>(
       this.createCacheKey(id)
     );
-    if (!sessionDetails) {
+    if (!checkoutSessionDetails) {
       throw new Error('Session not found');
     }
-    return sessionDetails.value;
+
+    return checkoutSessionDetails.value;
   }
 
-  async expireCheckoutSession(id: string): Promise<void> {
-    const sessionDetails = await this.cache.readRecord(this.createCacheKey(id));
-    if (!sessionDetails) {
+  async expireCheckoutSession({ id }: Id): Promise<void> {
+    const checkoutSessionDetails = await this.cache.readRecord(
+      this.createCacheKey(id)
+    );
+    if (!checkoutSessionDetails) {
       throw new Error('Session not found');
     }
     await this.cache.deleteRecord(this.createCacheKey(id));
   }
 
-  async handleCheckoutSuccess(id: string): Promise<void> {
+  async handleCheckoutSuccess({ id }: Id): Promise<void> {
     // TODO: add log here to make sure that this action is recorded
     await this.cache.deleteRecord(this.createCacheKey(id));
   }
 
-  async handleCheckoutFailure(id: string): Promise<void> {
+  async handleCheckoutFailure({ id }: Id): Promise<void> {
     // TODO: add log here to make sure that this action is recorded
     await this.cache.deleteRecord(this.createCacheKey(id));
   }
 }
+
+// class StripeSession extends CheckoutSession {
+//   payment2Methods!: PaymentMethodEnum[];
+// }
+
+// type StripeCreateSessionByInheritanceDto =
+//   StripeCreateSessionByInheritanceDtoMapper['dto'];
+// class StripeCreateSessionByInheritanceDtoMapper extends CreateCheckoutSessionDtoMapper {
+//   schema = {
+//     ...CreateCheckoutSessionDtoMapper.schema(),
+//     payment2Methods: array(enum_(PaymentMethodEnum))
+//   };
+
+//   toEntity(): StripeSession {
+//     return StripeSession.create(this.dto);
+//   }
+// }
+
+// type StripeCreateCheckoutSessionDto = StripeCreateCheckoutSessionDtoMapper['dto'];
+// export class StripeCreateCheckoutSessionDtoMapper extends RequestDtoMapper<
+//   StripeSession,
+//   SchemaValidator
+// > {
+//   schema = {
+//     ...CreateCheckoutSessionDtoMapper.schema(),
+//     payment2Methods: array(enum_(PaymentMethodEnum))
+//   };
+
+//   toEntity(): StripeSession {
+//     return StripeSession.create(this.dto);
+//   }
+// }
+
+// export class StripeCheckoutSessionService extends BaseCheckoutSessionService {
+//   constructor(
+//     cache: TtlCache,
+//     openTelemetryCollector: OpenTelemetryCollector<Metrics>
+//   ) {
+//     super(cache, openTelemetryCollector);
+//   }
+
+//   async createCheckoutSession(
+//     checkoutSessionDto: StripeCreateCheckoutSessionDto
+//   ): Promise<CheckoutSessionDto> {
+//     const checkoutSession = await super.createCheckoutSession(sessionDto);
+//     checkoutSessionDto.payment2Methods.concat([]);
+//     // const stripeSession = await this.stripe.createCheckoutSession(session);
+//     return checkoutSession;
+//   }
+
+//   async handleCheckoutFailure({
+//     id,
+//     message
+//   }: {
+//     id: string;
+//     message: string;
+//   }): Promise<void> {
+//     const checkoutSession = await super.getCheckoutSession(id);
+//     // const stripeSession = await this.stripe.getCheckoutSession(id);
+//     // return checkoutSession;
+//   }
+// }
+
+// const m = {
+//   CreateCheckoutSessionDto: StripeCreateCheckoutSessionDtoMapper.schema(),
+//   Id: {
+//     id: string
+//   },
+//   CheckoutSessionDto: CheckoutSessionDtoMapper.schema()
+// };
+
+// export class StripeSessionServiceByComposisition
+//   implements CheckoutSessionService<Schema<typeof m, SchemaValidator>>
+// {
+//   constructor(
+//     private readonly baseCheckoutSessionService: BaseCheckoutSessionService
+//   ) {}
+//   async createCheckoutSession(
+//     checkoutSessionDto: StripeCreateCheckoutSessionDto
+//   ): Promise<CheckoutSessionDto> {
+//     return this.baseCheckoutSessionService.createCheckoutSession(sessionDto);
+//   }
+//   getCheckoutSession = async ({ id }: { id: string }): Promise<CheckoutSessionDto> => {
+//     return this.baseCheckoutSessionService.getCheckoutSession({ id });
+//   };
+//   expireCheckoutSession = async ({ id }: { id: string }): Promise<void> => {
+//     return this.baseCheckoutSessionService.expireCheckoutSession({ id });
+//   };
+//   handleCheckoutSuccess = async ({ id }: { id: string }): Promise<void> => {
+//     return this.baseCheckoutSessionService.handleCheckoutSuccess({ id });
+//   };
+//   handleCheckoutFailure = async ({ id }: { id: string }): Promise<void> => {
+//     return this.baseCheckoutSessionService.handleCheckoutFailure({ id });
+//   };
+
+//   // async createCheckoutSession(
+//   //   checkoutSessionDto: StripeCreateSessionByInheritanceDto
+//   // ): Promise<CheckoutSessionDto> {
+//   //   return this.stripeSessionService.createCheckoutSession(sessionDto);
+//   // }
+// }
+
+// export const dtoMappers = {
+//   createCheckoutCheckoutSessionDtoMapper: StripeCreateCheckoutSessionDtoMapper.schema()
+// };

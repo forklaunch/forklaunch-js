@@ -1,5 +1,5 @@
+import { number, SchemaValidator, string } from '@forklaunch/blueprint-core';
 import { ConfigInjector, getEnvVar, Lifetime } from '@forklaunch/core/services';
-import { number, SchemaValidator, string } from '@forklaunch/framework-core';
 import { Migrator } from '@mikro-orm/migrations';
 // import { MongoDriver } from '@mikro-orm/mongodb';
 // import { MySqlDriver } from '@mikro-orm/mysql';
@@ -14,37 +14,43 @@ dotenv.config({ path: getEnvVar('ENV_FILE_PATH') });
 
 const configInjector = new ConfigInjector(
   SchemaValidator(),
-  {
-    DB_NAME: string,
-    DB_HOST: string,
-    DB_USER: string,
-    DB_PASSWORD: string,
-    DB_PORT: number,
-    ENV: string
-  },
+  // {
+  //   DB_NAME: string,
+  //   DB_HOST: string,
+  //   DB_USER: string,
+  //   DB_PASSWORD: string,
+  //   DB_PORT: number,
+  //   ENV: string
+  // },
   {
     DB_NAME: {
       lifetime: Lifetime.Singleton,
+      type: string,
       value: getEnvVar('DB_NAME')
     },
     DB_HOST: {
       lifetime: Lifetime.Singleton,
+      type: string,
       value: getEnvVar('DB_HOST')
     },
     DB_USER: {
       lifetime: Lifetime.Singleton,
+      type: string,
       value: getEnvVar('DB_USER')
     },
     DB_PASSWORD: {
       lifetime: Lifetime.Singleton,
+      type: string,
       value: getEnvVar('DB_PASSWORD')
     },
     DB_PORT: {
       lifetime: Lifetime.Singleton,
+      type: number,
       value: Number(getEnvVar('DB_PORT'))
     },
     ENV: {
       lifetime: Lifetime.Singleton,
+      type: string,
       value: getEnvVar('ENV')
     }
   }
