@@ -1,6 +1,9 @@
-import { BaseDtoParameters, SchemaValidator } from '@forklaunch/blueprint-core';
+import {
+  BaseDtoParameters,
+  IdDto,
+  SchemaValidator
+} from '@forklaunch/blueprint-core';
 import { Metrics } from '@forklaunch/blueprint-monitoring';
-import { Id } from '@forklaunch/common';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { EntityManager } from '@mikro-orm/core';
 import {
@@ -24,6 +27,8 @@ export class BaseSubscriptionService
       BaseDtoParameters<typeof BaseSubscriptionServiceParameters>
     >
 {
+  SchemaDefinition = BaseSubscriptionServiceParameters;
+
   constructor(
     protected em: EntityManager,
     protected readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>
@@ -48,7 +53,7 @@ export class BaseSubscriptionService
   }
 
   async getSubscription(
-    { id }: Id,
+    { id }: IdDto,
     em?: EntityManager
   ): Promise<SubscriptionDto> {
     const subscription = SubscriptionDtoMapper.serializeEntityToDto(
@@ -60,7 +65,7 @@ export class BaseSubscriptionService
   }
 
   async getUserSubscription(
-    { id }: Id,
+    { id }: IdDto,
     em?: EntityManager
   ): Promise<SubscriptionDto> {
     const subscription = SubscriptionDtoMapper.serializeEntityToDto(
@@ -76,7 +81,7 @@ export class BaseSubscriptionService
   }
 
   async getOrganizationSubscription(
-    { id }: Id,
+    { id }: IdDto,
     em?: EntityManager
   ): Promise<SubscriptionDto> {
     const subscription = SubscriptionDtoMapper.serializeEntityToDto(
@@ -145,7 +150,7 @@ export class BaseSubscriptionService
     });
   }
 
-  async cancelSubscription({ id }: Id, em?: EntityManager): Promise<void> {
+  async cancelSubscription({ id }: IdDto, em?: EntityManager): Promise<void> {
     const subscription = await (em ?? this.em).findOne(Subscription, { id });
     if (!subscription) {
       throw new Error('Subscription not found');
@@ -155,7 +160,7 @@ export class BaseSubscriptionService
       await innerEm.persist(subscription);
     });
   }
-  async resumeSubscription(idDto: Id, em?: EntityManager): Promise<void> {
+  async resumeSubscription(idDto: IdDto, em?: EntityManager): Promise<void> {
     const subscription = await (em ?? this.em).findOne(Subscription, idDto);
     if (!subscription) {
       throw new Error('Subscription not found');

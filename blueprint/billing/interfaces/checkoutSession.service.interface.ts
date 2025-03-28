@@ -1,10 +1,10 @@
-import { BaseDtoParameters } from '@forklaunch/blueprint-core';
+import { BaseDtoParameters, IdDtoSchema } from '@forklaunch/blueprint-core';
 import {
   CheckoutSessionDtoMapper,
   CreateCheckoutSessionDtoMapper
 } from '../models/dtoMapper/checkoutSession.dtoMapper';
-import { IdDtoSchema } from '../registrations';
 
+export type CheckoutSessionServiceName = typeof CheckoutSessionServiceName;
 export const CheckoutSessionServiceName = 'CheckoutSessionService';
 export const BaseCheckoutSessionServiceParameters = {
   CreateCheckoutSessionDto: CreateCheckoutSessionDtoMapper.schema(),
@@ -13,9 +13,11 @@ export const BaseCheckoutSessionServiceParameters = {
 };
 
 export interface CheckoutSessionService<
-  Params extends BaseDtoParameters<typeof BaseCheckoutSessionServiceParameters>
+  Params extends BaseDtoParameters<
+    typeof BaseCheckoutSessionServiceParameters
+  > = BaseDtoParameters<typeof BaseCheckoutSessionServiceParameters>
 > {
-  name: typeof CheckoutSessionServiceName;
+  SchemaDefinition: typeof BaseCheckoutSessionServiceParameters;
   // for generating external links
   // store in cache, for permissions
   createCheckoutSession: (

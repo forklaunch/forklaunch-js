@@ -1,13 +1,18 @@
-import { BaseDtoParameters } from '@forklaunch/blueprint-core';
+import {
+  BaseDtoParameters,
+  IdDtoSchema,
+  IdsDtoSchema
+} from '@forklaunch/blueprint-core';
 import { EntityManager } from '@mikro-orm/core';
 import {
   CreateSubscriptionDtoMapper,
   SubscriptionDtoMapper,
   UpdateSubscriptionDtoMapper
 } from '../models/dtoMapper/subscription.dtoMapper';
-import { IdDtoSchema, IdsDtoSchema } from '../registrations';
 
+export type SubscriptionServiceName = typeof SubscriptionServiceName;
 export const SubscriptionServiceName = 'SubscriptionService';
+
 export const BaseSubscriptionServiceParameters = {
   CreateSubscriptionDto: CreateSubscriptionDtoMapper.schema(),
   SubscriptionDto: SubscriptionDtoMapper.schema(),
@@ -17,9 +22,11 @@ export const BaseSubscriptionServiceParameters = {
 };
 
 export interface SubscriptionService<
-  Params extends BaseDtoParameters<typeof BaseSubscriptionServiceParameters>
+  Params extends BaseDtoParameters<
+    typeof BaseSubscriptionServiceParameters
+  > = BaseDtoParameters<typeof BaseSubscriptionServiceParameters>
 > {
-  name: typeof SubscriptionServiceName;
+  SchemaDefinition: typeof BaseSubscriptionServiceParameters;
   // store this in a table
   createSubscription: (
     subscriptionDto: Params['CreateSubscriptionDto'],

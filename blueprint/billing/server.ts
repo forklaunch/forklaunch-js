@@ -6,41 +6,46 @@ import { PaymentLinkRoutes } from './routes/paymentLink.routes';
 import { PlanRoutes } from './routes/plan.routes';
 import { SubscriptionRoutes } from './routes/subscription.routes';
 //! bootstrap function that initializes the service application
-bootstrap((ci) => {
+bootstrap((ci, tokens, serviceSchemas) => {
   //! resolves the openTelemetryCollector from the configuration
-  const openTelemetryCollector = ci.resolve('OpenTelemetryCollector');
+  const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
   //! creates an instance of forklaunchExpress
   const app = forklaunchExpress(openTelemetryCollector);
   //! resolves the host, port, and version from the configuration
-  const host = ci.resolve('HOST');
-  const port = ci.resolve('PORT');
-  const version = ci.resolve('VERSION');
-  const docsPath = ci.resolve('DOCS_PATH');
+  const host = ci.resolve(tokens.HOST);
+  const port = ci.resolve(tokens.PORT);
+  const version = ci.resolve(tokens.VERSION);
+  const docsPath = ci.resolve(tokens.DOCS_PATH);
   //! resolves the necessary services from the configuration
   const scopedCheckoutSessionServiceFactory = ci.scopedResolver(
-    'CheckoutSessionService'
+    tokens.CheckoutSessionService
   );
-  const scopedPaymentLinkServiceFactory =
-    ci.scopedResolver('PaymentLinkService');
-  const scopedPlanServiceFactory = ci.scopedResolver('PlanService');
+  const scopedPaymentLinkServiceFactory = ci.scopedResolver(
+    tokens.PaymentLinkService
+  );
+  const scopedPlanServiceFactory = ci.scopedResolver(tokens.PlanService);
   const scopedSubscriptionServiceFactory = ci.scopedResolver(
-    'SubscriptionService'
+    tokens.SubscriptionService
   );
   //! constructs the necessary routes using the appropriate Routes functions
   const checkoutSessionRoutes = CheckoutSessionRoutes(
     scopedCheckoutSessionServiceFactory,
+    serviceSchemas.CheckoutSessionService,
     openTelemetryCollector
   );
   const paymentLinkRoutes = PaymentLinkRoutes(
     scopedPaymentLinkServiceFactory,
+    serviceSchemas.PaymentLinkService,
     openTelemetryCollector
   );
   const planRoutes = PlanRoutes(
     scopedPlanServiceFactory,
+    serviceSchemas.PlanService,
     openTelemetryCollector
   );
   const subscriptionRoutes = SubscriptionRoutes(
     scopedSubscriptionServiceFactory,
+    serviceSchemas.SubscriptionService,
     openTelemetryCollector
   );
   //! mounts the routes to the app

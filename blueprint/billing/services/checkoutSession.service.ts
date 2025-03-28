@@ -1,6 +1,9 @@
-import { BaseDtoParameters, SchemaValidator } from '@forklaunch/blueprint-core';
+import {
+  BaseDtoParameters,
+  IdDto,
+  SchemaValidator
+} from '@forklaunch/blueprint-core';
 import { Metrics } from '@forklaunch/blueprint-monitoring';
-import { Id } from '@forklaunch/common';
 import { createCacheKey, TtlCache } from '@forklaunch/core/cache';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import {
@@ -20,6 +23,8 @@ export class BaseCheckoutSessionService
       BaseDtoParameters<typeof BaseCheckoutSessionServiceParameters>
     >
 {
+  SchemaDefinition = BaseCheckoutSessionServiceParameters;
+
   constructor(
     protected readonly cache: TtlCache,
     protected readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>
@@ -46,7 +51,7 @@ export class BaseCheckoutSessionService
     return checkoutSession;
   }
 
-  async getCheckoutSession({ id }: Id): Promise<CheckoutSessionDto> {
+  async getCheckoutSession({ id }: IdDto): Promise<CheckoutSessionDto> {
     const checkoutSessionDetails = await this.cache.readRecord<CheckoutSession>(
       this.createCacheKey(id)
     );
@@ -57,7 +62,7 @@ export class BaseCheckoutSessionService
     return checkoutSessionDetails.value;
   }
 
-  async expireCheckoutSession({ id }: Id): Promise<void> {
+  async expireCheckoutSession({ id }: IdDto): Promise<void> {
     const checkoutSessionDetails = await this.cache.readRecord(
       this.createCacheKey(id)
     );
@@ -67,12 +72,12 @@ export class BaseCheckoutSessionService
     await this.cache.deleteRecord(this.createCacheKey(id));
   }
 
-  async handleCheckoutSuccess({ id }: Id): Promise<void> {
+  async handleCheckoutSuccess({ id }: IdDto): Promise<void> {
     // TODO: add log here to make sure that this action is recorded
     await this.cache.deleteRecord(this.createCacheKey(id));
   }
 
-  async handleCheckoutFailure({ id }: Id): Promise<void> {
+  async handleCheckoutFailure({ id }: IdDto): Promise<void> {
     // TODO: add log here to make sure that this action is recorded
     await this.cache.deleteRecord(this.createCacheKey(id));
   }
@@ -95,7 +100,8 @@ export class BaseCheckoutSessionService
 //   }
 // }
 
-// type StripeCreateCheckoutSessionDto = StripeCreateCheckoutSessionDtoMapper['dto'];
+// type StripeCreateCheckoutSessionDto =
+//   StripeCreateCheckoutSessionDtoMapper['dto'];
 // export class StripeCreateCheckoutSessionDtoMapper extends RequestDtoMapper<
 //   StripeSession,
 //   SchemaValidator
@@ -159,7 +165,11 @@ export class BaseCheckoutSessionService
 //   ): Promise<CheckoutSessionDto> {
 //     return this.baseCheckoutSessionService.createCheckoutSession(sessionDto);
 //   }
-//   getCheckoutSession = async ({ id }: { id: string }): Promise<CheckoutSessionDto> => {
+//   getCheckoutSession = async ({
+//     id
+//   }: {
+//     id: string;
+//   }): Promise<CheckoutSessionDto> => {
 //     return this.baseCheckoutSessionService.getCheckoutSession({ id });
 //   };
 //   expireCheckoutSession = async ({ id }: { id: string }): Promise<void> => {
@@ -180,5 +190,6 @@ export class BaseCheckoutSessionService
 // }
 
 // export const dtoMappers = {
-//   createCheckoutCheckoutSessionDtoMapper: StripeCreateCheckoutSessionDtoMapper.schema()
+//   createCheckoutCheckoutSessionDtoMapper:
+//     StripeCreateCheckoutSessionDtoMapper.schema()
 // };

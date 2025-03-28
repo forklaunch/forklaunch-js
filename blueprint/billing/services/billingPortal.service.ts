@@ -1,4 +1,8 @@
-import { BaseDtoParameters, SchemaValidator } from '@forklaunch/blueprint-core';
+import {
+  BaseDtoParameters,
+  IdDto,
+  SchemaValidator
+} from '@forklaunch/blueprint-core';
 import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { createCacheKey, TtlCache } from '@forklaunch/core/cache';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
@@ -21,6 +25,8 @@ export class BaseBillingPortalService
       BaseDtoParameters<typeof BaseBillingPortalServiceParameters>
     >
 {
+  SchemaDefinition = BaseBillingPortalServiceParameters;
+
   constructor(
     private cache: TtlCache,
     private openTelemetryCollector: OpenTelemetryCollector<Metrics>
@@ -46,9 +52,7 @@ export class BaseBillingPortalService
     return billingPortalSession;
   }
 
-  async getBillingPortalSession(idDto: {
-    id: string;
-  }): Promise<BillingPortalDto> {
+  async getBillingPortalSession(idDto: IdDto): Promise<BillingPortalDto> {
     const billingPortalSessionDetails =
       await this.cache.readRecord<BillingPortal>(this.createCacheKey(idDto.id));
     if (!billingPortalSessionDetails) {
@@ -76,7 +80,7 @@ export class BaseBillingPortalService
     return billingPortalSession;
   }
 
-  async expireBillingPortalSession(idDto: { id: string }): Promise<void> {
+  async expireBillingPortalSession(idDto: IdDto): Promise<void> {
     const sessionExists = await this.cache.readRecord(
       this.createCacheKey(idDto.id)
     );

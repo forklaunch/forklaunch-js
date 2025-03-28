@@ -11,111 +11,97 @@ import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
+import { ServiceDependencies, ServiceSchemas } from '../dependencies';
 import { BillingPortalService } from '../interfaces/billingPortal.service.interface';
-import { BillingPortalDtoMapper } from '../models/dtoMapper/billingPortal.dtoMapper';
-import {
-  ConfigShapes,
-  SchemaRegistration,
-  SchemaRegistry
-} from '../registrations';
 
-export class BillingPortalController
-  implements
-    Controller<
-      BillingPortalService<SchemaRegistration<BillingPortalService>>,
-      Request,
-      Response,
-      NextFunction,
-      ParsedQs
-    >
-{
-  constructor(
-    private readonly serviceFactory: ScopedDependencyFactory<
-      SchemaValidator,
-      ConfigShapes,
-      'BillingPortalService'
-    >,
-    private readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>
-  ) {}
-
-  createBillingPortalSession = handlers.post(
-    SchemaValidator(),
-    '/',
-    {
-      name: 'createBillingPortalSession',
-      summary: 'Create a billing portal session',
-      body: SchemaRegistry.BillingPortal.CreateBillingPortalDto,
-      responses: {
-        200: BillingPortalDtoMapper.schema()
-      }
-    },
-    async (req, res) => {
-      res
-        .status(200)
-        .json(await this.serviceFactory().createBillingPortalSession(req.body));
-    }
-  );
-
-  getBillingPortalSession = handlers.get(
-    SchemaValidator(),
-    '/:id',
-    {
-      name: 'getBillingPortalSession',
-      summary: 'Get a billing portal session',
-      params: {
-        id: string
+export const BillingPortalController = (
+  serviceFactory: ScopedDependencyFactory<
+    SchemaValidator,
+    ServiceDependencies,
+    'BillingPortalService'
+  >,
+  serviceSchemas: ServiceSchemas['BillingPortalService'],
+  openTelemetryCollector: OpenTelemetryCollector<Metrics>
+) =>
+  ({
+    createBillingPortalSession: handlers.post(
+      SchemaValidator(),
+      '/',
+      {
+        name: 'createBillingPortalSession',
+        summary: 'Create a billing portal session',
+        body: serviceSchemas.CreateBillingPortalDto,
+        responses: {
+          200: serviceSchemas.BillingPortalDto
+        }
       },
-      responses: {
-        200: SchemaRegistry.BillingPortal.BillingPortalDto
+      async (req, res) => {
+        res
+          .status(200)
+          .json(await serviceFactory().createBillingPortalSession(req.body));
       }
-    },
-    async (req, res) => {
-      res
-        .status(200)
-        .json(await this.serviceFactory().getBillingPortalSession(req.params));
-    }
-  );
+    ),
 
-  updateBillingPortalSession = handlers.put(
-    SchemaValidator(),
-    '/:id',
-    {
-      name: 'updateBillingPortalSession',
-      summary: 'Update a billing portal session',
-      params: {
-        id: string
+    getBillingPortalSession: handlers.get(
+      SchemaValidator(),
+      '/:id',
+      {
+        name: 'getBillingPortalSession',
+        summary: 'Get a billing portal session',
+        params: serviceSchemas.IdDto,
+        responses: {
+          200: serviceSchemas.BillingPortalDto
+        }
       },
-      body: SchemaRegistry.BillingPortal.UpdateBillingPortalDto,
-      responses: {
-        200: SchemaRegistry.BillingPortal.BillingPortalDto
+      async (req, res) => {
+        res
+          .status(200)
+          .json(await serviceFactory().getBillingPortalSession(req.params));
       }
-    },
-    async (req, res) => {
-      res.status(200).json(
-        await this.serviceFactory().updateBillingPortalSession({
-          ...req.params,
-          ...req.body
-        })
-      );
-    }
-  );
+    ),
 
-  expireBillingPortalSession = handlers.get(
-    SchemaValidator(),
-    '/:id/expire',
-    {
-      name: 'expireBillingPortalSession',
-      summary: 'Expire a billing portal session',
-      params: {
-        id: string
+    updateBillingPortalSession: handlers.put(
+      SchemaValidator(),
+      '/:id',
+      {
+        name: 'updateBillingPortalSession',
+        summary: 'Update a billing portal session',
+        params: serviceSchemas.IdDto,
+        body: serviceSchemas.UpdateBillingPortalDto,
+        responses: {
+          200: serviceSchemas.BillingPortalDto
+        }
       },
-      responses: {
-        200: string
+      async (req, res) => {
+        res.status(200).json(
+          await serviceFactory().updateBillingPortalSession({
+            ...req.params,
+            ...req.body
+          })
+        );
       }
-    },
-    async (req, res) => {
-      await this.serviceFactory().expireBillingPortalSession(req.params);
-      res.status(200).send(`Expired billing portal session ${req.params.id}`);
-    }
-  );
-}
+    ),
+
+    expireBillingPortalSession: handlers.delete(
+      SchemaValidator(),
+      '/:id',
+      {
+        name: 'expireBillingPortalSession',
+        summary: 'Expire a billing portal session',
+        params: serviceSchemas.IdDto,
+        responses: {
+          200: string
+        }
+      },
+      async (req, res) => {
+        await serviceFactory().expireBillingPortalSession(req.params);
+        res.status(200).send(`Expired billing portal session ${req.params.id}`);
+      }
+    )
+  }) satisfies Controller<
+    BillingPortalService,
+    Request,
+    Response,
+    NextFunction,
+    ParsedQs
+  >;

@@ -1,4 +1,8 @@
-import { BaseDtoParameters, SchemaValidator } from '@forklaunch/blueprint-core';
+import {
+  BaseDtoParameters,
+  IdsDtoSchema,
+  SchemaValidator
+} from '@forklaunch/blueprint-core';
 import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { EntityManager } from '@mikro-orm/core';
@@ -19,17 +23,19 @@ import { Plan } from '../models/persistence/plan.entity';
 export class BasePlanService
   implements PlanService<BaseDtoParameters<typeof BasePlanServiceParameters>>
 {
+  SchemaDefinition = BasePlanServiceParameters;
+
   constructor(
     private em: EntityManager,
     private readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>
   ) {}
 
   async listPlans(
-    idsDto: { ids?: string[] },
+    idsDto?: IdsDtoSchema,
     em?: EntityManager
   ): Promise<PlanDto[]> {
     return await (em ?? this.em).getRepository(Plan).findAll({
-      filters: idsDto.ids ? { id: { $in: idsDto.ids } } : undefined
+      filters: idsDto?.ids ? { id: { $in: idsDto.ids } } : undefined
     });
   }
 

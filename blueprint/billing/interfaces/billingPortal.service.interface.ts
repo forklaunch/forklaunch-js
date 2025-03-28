@@ -1,12 +1,13 @@
-import { BaseDtoParameters } from '@forklaunch/blueprint-core';
+import { BaseDtoParameters, IdDtoSchema } from '@forklaunch/blueprint-core';
 import {
   BillingPortalDtoMapper,
   CreateBillingPortalDtoMapper,
   UpdateBillingPortalDtoMapper
 } from '../models/dtoMapper/billingPortal.dtoMapper';
-import { IdDtoSchema } from '../registrations';
 
+export type BillingPortalServiceName = typeof BillingPortalServiceName;
 export const BillingPortalServiceName = 'BillingPortalService';
+
 export const BaseBillingPortalServiceParameters = {
   CreateBillingPortalDto: CreateBillingPortalDtoMapper.schema(),
   UpdateBillingPortalDto: UpdateBillingPortalDtoMapper.schema(),
@@ -15,9 +16,11 @@ export const BaseBillingPortalServiceParameters = {
 };
 
 export interface BillingPortalService<
-  Params extends BaseDtoParameters<typeof BaseBillingPortalServiceParameters>
+  Params extends BaseDtoParameters<
+    typeof BaseBillingPortalServiceParameters
+  > = BaseDtoParameters<typeof BaseBillingPortalServiceParameters>
 > {
-  name: typeof BillingPortalServiceName;
+  SchemaDefinition: typeof BaseBillingPortalServiceParameters;
   // for generating external links
   // store in cache, for permissions
   createBillingPortalSession: (

@@ -1,13 +1,18 @@
-import { BaseDtoParameters } from '@forklaunch/blueprint-core';
+import {
+  BaseDtoParameters,
+  IdDtoSchema,
+  IdsDtoSchema
+} from '@forklaunch/blueprint-core';
 import { EntityManager } from '@mikro-orm/core';
 import {
   CreatePlanDtoMapper,
   PlanDtoMapper,
   UpdatePlanDtoMapper
 } from '../models/dtoMapper/plan.dtoMapper';
-import { IdDtoSchema, IdsDtoSchema } from '../registrations';
 
+export type PlanServiceName = typeof PlanServiceName;
 export const PlanServiceName = 'PlanService';
+
 export const BasePlanServiceParameters = {
   CreatePlanDto: CreatePlanDtoMapper.schema(),
   UpdatePlanDto: UpdatePlanDtoMapper.schema(),
@@ -17,9 +22,12 @@ export const BasePlanServiceParameters = {
 };
 
 export interface PlanService<
-  Params extends BaseDtoParameters<typeof BasePlanServiceParameters>
+  Params extends BaseDtoParameters<
+    typeof BasePlanServiceParameters
+  > = BaseDtoParameters<typeof BasePlanServiceParameters>
 > {
-  name: typeof PlanServiceName;
+  SchemaDefinition: typeof BasePlanServiceParameters;
+
   createPlan: (
     planDto: Params['CreatePlanDto'],
     em?: EntityManager
@@ -34,7 +42,7 @@ export interface PlanService<
   ) => Promise<Params['PlanDto']>;
   deletePlan: (idDto: Params['IdDto'], em?: EntityManager) => Promise<void>;
   listPlans: (
-    idsDto: Params['IdsDto'],
+    idsDto?: Params['IdsDto'],
     em?: EntityManager
   ) => Promise<Params['PlanDto'][]>;
 }

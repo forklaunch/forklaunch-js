@@ -32,11 +32,11 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
+    "@forklaunch/blueprint-core": "workspace:*",
+    "@forklaunch/blueprint-monitoring": "workspace:*",
     "@forklaunch/common": "^0.2.4",
     "@forklaunch/core": "^0.5.6",
     "@forklaunch/express": "^0.3.7",
-    "@forklaunch/blueprint-core": "workspace:*",
-    "@forklaunch/blueprint-monitoring": "workspace:*",
     "@forklaunch/hyper-express": "^0.3.7",
     "@forklaunch/validator": "^0.4.7",
     "@mikro-orm/core": "^6.4.9",

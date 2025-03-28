@@ -1,6 +1,10 @@
-import { BaseDtoParameters, SchemaValidator } from '@forklaunch/blueprint-core';
+import {
+  BaseDtoParameters,
+  IdDto,
+  IdsDtoSchema,
+  SchemaValidator
+} from '@forklaunch/blueprint-core';
 import { Metrics } from '@forklaunch/blueprint-monitoring';
-import { Id } from '@forklaunch/common';
 import { createCacheKey, TtlCache } from '@forklaunch/core/cache';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import {
@@ -23,6 +27,8 @@ export class BasePaymentLinkService
       BaseDtoParameters<typeof BasePaymentLinkServiceParameters>
     >
 {
+  SchemaDefinition = BasePaymentLinkServiceParameters;
+
   constructor(
     protected readonly cache: TtlCache,
     protected readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>
@@ -78,7 +84,7 @@ export class BasePaymentLinkService
     return updatedPaymentLinkDto;
   }
 
-  async getPaymentLink({ id }: Id): Promise<PaymentLinkDto> {
+  async getPaymentLink({ id }: IdDto): Promise<PaymentLinkDto> {
     const cacheKey = this.createCacheKey(id);
     const paymentLink = await this.cache.readRecord<PaymentLink>(cacheKey);
     if (!paymentLink) {
@@ -92,27 +98,25 @@ export class BasePaymentLinkService
     return retrievedPaymentLink;
   }
 
-  async expirePaymentLink({ id }: Id): Promise<void> {
+  async expirePaymentLink({ id }: IdDto): Promise<void> {
     // TODO: log payment link expiration, the payment system should keep a record, but we should too
     await this.cache.deleteRecord(this.createCacheKey(id));
   }
 
-  async handlePaymentSuccess({ id }: Id): Promise<void> {
+  async handlePaymentSuccess({ id }: IdDto): Promise<void> {
     // TODO: log payment link success, the payment system should keep a record, but we should too
     await this.cache.deleteRecord(this.createCacheKey(id));
   }
 
-  async handlePaymentFailure({ id }: Id): Promise<void> {
+  async handlePaymentFailure({ id }: IdDto): Promise<void> {
     // TODO: log payment link failure, the payment system should keep a record, but we should too
     await this.cache.deleteRecord(this.createCacheKey(id));
   }
 
-  async listPaymentLinks(idsDto: {
-    ids?: string[];
-  }): Promise<PaymentLinkDto[]> {
+  async listPaymentLinks(idsDto?: IdsDtoSchema): Promise<PaymentLinkDto[]> {
     // TODO: Perform admin permission checks here
     const keys =
-      idsDto.ids?.map((id) => this.createCacheKey(id)) ??
+      idsDto?.ids.map((id) => this.createCacheKey(id)) ??
       (await this.cache.listKeys(this.cacheKeyPrefix));
 
     return await Promise.all(

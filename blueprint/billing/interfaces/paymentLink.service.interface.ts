@@ -1,11 +1,15 @@
-import { BaseDtoParameters } from '@forklaunch/blueprint-core';
+import {
+  BaseDtoParameters,
+  IdDtoSchema,
+  IdsDtoSchema
+} from '@forklaunch/blueprint-core';
 import {
   CreatePaymentLinkDtoMapper,
   PaymentLinkDtoMapper,
   UpdatePaymentLinkDtoMapper
 } from '../models/dtoMapper/paymentLink.dtoMapper';
-import { IdDtoSchema, IdsDtoSchema } from '../registrations';
 
+export type PaymentLinkServiceName = typeof PaymentLinkServiceName;
 export const PaymentLinkServiceName = 'PaymentLinkService';
 export const BasePaymentLinkServiceParameters = {
   CreatePaymentLinkDto: CreatePaymentLinkDtoMapper.schema(),
@@ -16,9 +20,11 @@ export const BasePaymentLinkServiceParameters = {
 };
 
 export interface PaymentLinkService<
-  Params extends BaseDtoParameters<typeof BasePaymentLinkServiceParameters>
+  Params extends BaseDtoParameters<
+    typeof BasePaymentLinkServiceParameters
+  > = BaseDtoParameters<typeof BasePaymentLinkServiceParameters>
 > {
-  name: typeof PaymentLinkServiceName;
+  SchemaDefinition: typeof BasePaymentLinkServiceParameters;
   // for one off products that are not part of a subscription
   // think about how permissions work on payment links, but these should be ephemeral
   // store in cache, for permissions
@@ -36,6 +42,6 @@ export interface PaymentLinkService<
 
   // admin API, make sure that permissions are correct here
   listPaymentLinks: (
-    idsDto: Params['IdsDto']
+    idsDto?: Params['IdsDto']
   ) => Promise<Params['PaymentLinkDto'][]>;
 }
