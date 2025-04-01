@@ -1,5 +1,7 @@
+import { BillingPortalService } from '@forklaunch/blueprint-billing-interfaces';
 import {
   handlers,
+  IdSchema,
   NextFunction,
   ParsedQs,
   Request,
@@ -11,8 +13,7 @@ import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
-import { ServiceDependencies, ServiceSchemas } from '../dependencies';
-import { BillingPortalService } from '../interfaces/billingPortal.service.interface';
+import { BillingPortalSchemas, ServiceDependencies } from '../registrations';
 
 export const BillingPortalController = (
   serviceFactory: ScopedDependencyFactory<
@@ -20,7 +21,6 @@ export const BillingPortalController = (
     ServiceDependencies,
     'BillingPortalService'
   >,
-  serviceSchemas: ServiceSchemas['BillingPortalService'],
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) =>
   ({
@@ -30,9 +30,9 @@ export const BillingPortalController = (
       {
         name: 'createBillingPortalSession',
         summary: 'Create a billing portal session',
-        body: serviceSchemas.CreateBillingPortalDto,
+        body: BillingPortalSchemas.CreateBillingPortalSchema,
         responses: {
-          200: serviceSchemas.BillingPortalDto
+          200: BillingPortalSchemas.BillingPortalSchema
         }
       },
       async (req, res) => {
@@ -48,9 +48,9 @@ export const BillingPortalController = (
       {
         name: 'getBillingPortalSession',
         summary: 'Get a billing portal session',
-        params: serviceSchemas.IdDto,
+        params: IdSchema,
         responses: {
-          200: serviceSchemas.BillingPortalDto
+          200: BillingPortalSchemas.BillingPortalSchema
         }
       },
       async (req, res) => {
@@ -66,10 +66,10 @@ export const BillingPortalController = (
       {
         name: 'updateBillingPortalSession',
         summary: 'Update a billing portal session',
-        params: serviceSchemas.IdDto,
-        body: serviceSchemas.UpdateBillingPortalDto,
+        params: IdSchema,
+        body: BillingPortalSchemas.UpdateBillingPortalSchema,
         responses: {
-          200: serviceSchemas.BillingPortalDto
+          200: BillingPortalSchemas.BillingPortalSchema
         }
       },
       async (req, res) => {
@@ -88,7 +88,7 @@ export const BillingPortalController = (
       {
         name: 'expireBillingPortalSession',
         summary: 'Expire a billing portal session',
-        params: serviceSchemas.IdDto,
+        params: IdSchema,
         responses: {
           200: string
         }

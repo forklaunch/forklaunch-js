@@ -1,6 +1,9 @@
+import { SubscriptionService } from '@forklaunch/blueprint-billing-interfaces';
 import {
   array,
   handlers,
+  IdSchema,
+  IdsSchema,
   NextFunction,
   ParsedQs,
   Request,
@@ -12,8 +15,9 @@ import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
-import { ServiceDependencies, ServiceSchemas } from '../dependencies';
-import { SubscriptionService } from '../interfaces/subscription.service.interface';
+import { BillingProviderEnum } from '../models/enum/billingProvider.enum';
+import { PartyEnum } from '../models/enum/party.enum';
+import { ServiceDependencies, SubscriptionSchemas } from '../registrations';
 
 export const SubscriptionController = (
   serviceFactory: ScopedDependencyFactory<
@@ -21,7 +25,6 @@ export const SubscriptionController = (
     ServiceDependencies,
     'SubscriptionService'
   >,
-  schemaRegistry: ServiceSchemas['SubscriptionService'],
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) =>
   ({
@@ -31,9 +34,15 @@ export const SubscriptionController = (
       {
         name: 'createSubscription',
         summary: 'Create a subscription',
-        body: schemaRegistry.CreateSubscriptionDto,
+        body: SubscriptionSchemas.CreateSubscriptionSchema(
+          PartyEnum,
+          BillingProviderEnum
+        ),
         responses: {
-          200: schemaRegistry.SubscriptionDto
+          200: SubscriptionSchemas.SubscriptionSchema(
+            PartyEnum,
+            BillingProviderEnum
+          )
         }
       },
       async (req, res) => {
@@ -49,9 +58,12 @@ export const SubscriptionController = (
       {
         name: 'getSubscription',
         summary: 'Get a subscription',
-        params: schemaRegistry.IdDto,
+        params: IdSchema,
         responses: {
-          200: schemaRegistry.SubscriptionDto
+          200: SubscriptionSchemas.SubscriptionSchema(
+            PartyEnum,
+            BillingProviderEnum
+          )
         }
       },
       async (req, res) => {
@@ -67,9 +79,12 @@ export const SubscriptionController = (
       {
         name: 'getUserSubscription',
         summary: 'Get a user subscription',
-        params: schemaRegistry.IdDto,
+        params: IdSchema,
         responses: {
-          200: schemaRegistry.SubscriptionDto
+          200: SubscriptionSchemas.SubscriptionSchema(
+            PartyEnum,
+            BillingProviderEnum
+          )
         }
       },
       async (req, res) => {
@@ -85,9 +100,12 @@ export const SubscriptionController = (
       {
         name: 'getOrganizationSubscription',
         summary: 'Get an organization subscription',
-        params: schemaRegistry.IdDto,
+        params: IdSchema,
         responses: {
-          200: schemaRegistry.SubscriptionDto
+          200: SubscriptionSchemas.SubscriptionSchema(
+            PartyEnum,
+            BillingProviderEnum
+          )
         }
       },
       async (req, res) => {
@@ -103,10 +121,16 @@ export const SubscriptionController = (
       {
         name: 'updateSubscription',
         summary: 'Update a subscription',
-        params: schemaRegistry.IdDto,
-        body: schemaRegistry.UpdateSubscriptionDto,
+        params: IdSchema,
+        body: SubscriptionSchemas.UpdateSubscriptionSchema(
+          PartyEnum,
+          BillingProviderEnum
+        ),
         responses: {
-          200: schemaRegistry.SubscriptionDto
+          200: SubscriptionSchemas.SubscriptionSchema(
+            PartyEnum,
+            BillingProviderEnum
+          )
         }
       },
       async (req, res) => {
@@ -122,7 +146,7 @@ export const SubscriptionController = (
       {
         name: 'deleteSubscription',
         summary: 'Delete a subscription',
-        params: schemaRegistry.IdDto,
+        params: IdSchema,
         responses: {
           200: string
         }
@@ -139,9 +163,14 @@ export const SubscriptionController = (
       {
         name: 'listSubscriptions',
         summary: 'List subscriptions',
-        query: schemaRegistry.IdsDto,
+        query: IdsSchema,
         responses: {
-          200: array(schemaRegistry.SubscriptionDto)
+          200: array(
+            SubscriptionSchemas.SubscriptionSchema(
+              PartyEnum,
+              BillingProviderEnum
+            )
+          )
         }
       },
       async (req, res) => {
@@ -157,7 +186,7 @@ export const SubscriptionController = (
       {
         name: 'cancelSubscription',
         summary: 'Cancel a subscription',
-        params: schemaRegistry.IdDto,
+        params: IdSchema,
         responses: {
           200: string
         }
@@ -174,7 +203,7 @@ export const SubscriptionController = (
       {
         name: 'resumeSubscription',
         summary: 'Resume a subscription',
-        params: schemaRegistry.IdDto,
+        params: IdSchema,
         responses: {
           200: string
         }
@@ -185,7 +214,7 @@ export const SubscriptionController = (
       }
     )
   }) satisfies Controller<
-    SubscriptionService,
+    SubscriptionService<typeof PartyEnum, typeof BillingProviderEnum>,
     Request,
     Response,
     NextFunction,

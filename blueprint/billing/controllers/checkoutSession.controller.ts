@@ -1,5 +1,7 @@
+import { CheckoutSessionService } from '@forklaunch/blueprint-billing-interfaces';
 import {
   handlers,
+  IdSchema,
   NextFunction,
   ParsedQs,
   Request,
@@ -11,8 +13,8 @@ import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
-import { ServiceDependencies, ServiceSchemas } from '../dependencies';
-import { CheckoutSessionService } from '../interfaces/checkoutSession.service.interface';
+import { PaymentMethodEnum } from '../models/enum/paymentMethod.enum';
+import { CheckoutSessionSchemas, ServiceDependencies } from '../registrations';
 
 export const CheckoutSessionController = (
   serviceFactory: ScopedDependencyFactory<
@@ -20,7 +22,6 @@ export const CheckoutSessionController = (
     ServiceDependencies,
     'CheckoutSessionService'
   >,
-  schemaDefinitions: ServiceSchemas['CheckoutSessionService'],
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) =>
   ({
@@ -30,9 +31,11 @@ export const CheckoutSessionController = (
       {
         name: 'createCheckoutSession',
         summary: 'Create a checkout session',
-        body: schemaDefinitions.CreateCheckoutSessionDto,
+        body: CheckoutSessionSchemas.CreateCheckoutSessionSchema(
+          PaymentMethodEnum
+        ),
         responses: {
-          200: schemaDefinitions.CheckoutSessionDto
+          200: CheckoutSessionSchemas.CheckoutSessionSchema(PaymentMethodEnum)
         }
       },
       async (req, res) => {
@@ -48,9 +51,9 @@ export const CheckoutSessionController = (
       {
         name: 'getCheckoutSession',
         summary: 'Get a checkout session',
-        params: schemaDefinitions.IdDto,
+        params: IdSchema,
         responses: {
-          200: schemaDefinitions.CheckoutSessionDto
+          200: CheckoutSessionSchemas.CheckoutSessionSchema(PaymentMethodEnum)
         }
       },
       async (req, res) => {
@@ -66,7 +69,7 @@ export const CheckoutSessionController = (
       {
         name: 'expireCheckoutSession',
         summary: 'Expire a checkout session',
-        params: schemaDefinitions.IdDto,
+        params: IdSchema,
         responses: {
           200: string
         }
@@ -83,7 +86,7 @@ export const CheckoutSessionController = (
       {
         name: 'handleCheckoutSuccess',
         summary: 'Handle a checkout success',
-        params: schemaDefinitions.IdDto,
+        params: IdSchema,
         responses: {
           200: string
         }
@@ -102,7 +105,7 @@ export const CheckoutSessionController = (
       {
         name: 'handleCheckoutFailure',
         summary: 'Handle a checkout failure',
-        params: schemaDefinitions.IdDto,
+        params: IdSchema,
         responses: {
           200: string
         }
@@ -115,7 +118,7 @@ export const CheckoutSessionController = (
       }
     )
   }) satisfies Controller<
-    CheckoutSessionService,
+    CheckoutSessionService<typeof PaymentMethodEnum>,
     Request,
     Response,
     NextFunction,

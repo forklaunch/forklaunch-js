@@ -3,7 +3,7 @@ import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { PlanController } from '../controllers/plan.controller';
-import { ServiceDependencies, ServiceSchemas } from '../dependencies';
+import { ServiceDependencies } from '../registrations';
 
 export const PlanRoutes = (
   scopedServiceFactory: ScopedDependencyFactory<
@@ -11,14 +11,12 @@ export const PlanRoutes = (
     ServiceDependencies,
     'PlanService'
   >,
-  serviceSchemas: ServiceSchemas['PlanService'],
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) => {
   const router = forklaunchRouter('/plan', openTelemetryCollector);
 
   const controller = PlanController(
     scopedServiceFactory,
-    serviceSchemas,
     openTelemetryCollector
   );
 

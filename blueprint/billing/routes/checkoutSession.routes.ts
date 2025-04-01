@@ -3,7 +3,7 @@ import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { CheckoutSessionController } from '../controllers/checkoutSession.controller';
-import { ServiceDependencies, ServiceSchemas } from '../dependencies';
+import { ServiceDependencies } from '../registrations';
 
 export const CheckoutSessionRoutes = (
   scopedServiceFactory: ScopedDependencyFactory<
@@ -11,14 +11,12 @@ export const CheckoutSessionRoutes = (
     ServiceDependencies,
     'CheckoutSessionService'
   >,
-  serviceSchemas: ServiceSchemas['CheckoutSessionService'],
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) => {
   const router = forklaunchRouter('/checkout-session', openTelemetryCollector);
 
   const controller = CheckoutSessionController(
     scopedServiceFactory,
-    serviceSchemas,
     openTelemetryCollector
   );
 

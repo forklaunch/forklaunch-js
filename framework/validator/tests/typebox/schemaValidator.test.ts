@@ -207,7 +207,7 @@ describe('typebox schema validator tests', () => {
     compare(
       schemified,
       Type.Literal('world', {
-        errorType: 'any of world',
+        errorType: 'world',
         errorSuffix: true
       })
     );
@@ -220,10 +220,17 @@ describe('typebox schema validator tests', () => {
 
     compare(
       schemifiedMultiple,
-      Type.Union([Type.Literal('world'), Type.Literal('hello')], {
-        errorType: 'any of world, hello',
-        errorSuffix: true
-      })
+      Type.Union(
+        [
+          Type.Literal('world', {
+            errorType: 'world'
+          }),
+          Type.Literal('hello', {
+            errorType: 'hello'
+          })
+        ],
+        { errorType: 'any of world, hello', errorSuffix: true }
+      )
     );
   });
 

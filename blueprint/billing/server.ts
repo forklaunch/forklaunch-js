@@ -6,7 +6,7 @@ import { PaymentLinkRoutes } from './routes/paymentLink.routes';
 import { PlanRoutes } from './routes/plan.routes';
 import { SubscriptionRoutes } from './routes/subscription.routes';
 //! bootstrap function that initializes the service application
-bootstrap((ci, tokens, serviceSchemas) => {
+bootstrap((ci, tokens) => {
   //! resolves the openTelemetryCollector from the configuration
   const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
   //! creates an instance of forklaunchExpress
@@ -30,22 +30,18 @@ bootstrap((ci, tokens, serviceSchemas) => {
   //! constructs the necessary routes using the appropriate Routes functions
   const checkoutSessionRoutes = CheckoutSessionRoutes(
     scopedCheckoutSessionServiceFactory,
-    serviceSchemas.CheckoutSessionService,
     openTelemetryCollector
   );
   const paymentLinkRoutes = PaymentLinkRoutes(
     scopedPaymentLinkServiceFactory,
-    serviceSchemas.PaymentLinkService,
     openTelemetryCollector
   );
   const planRoutes = PlanRoutes(
     scopedPlanServiceFactory,
-    serviceSchemas.PlanService,
     openTelemetryCollector
   );
   const subscriptionRoutes = SubscriptionRoutes(
     scopedSubscriptionServiceFactory,
-    serviceSchemas.SubscriptionService,
     openTelemetryCollector
   );
   //! mounts the routes to the app

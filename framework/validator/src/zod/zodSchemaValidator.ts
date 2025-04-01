@@ -43,9 +43,15 @@ export class ZodSchemaValidator
       <T extends ZodIdiomaticSchema>(schema: T) => ZodArray<ZodResolve<T>>,
       <T extends ZodUnionContainer>(schemas: T) => ZodUnion<UnionZodResolve<T>>,
       <T extends LiteralSchema>(value: T) => ZodLiteral<ZodResolve<T>>,
-      <T extends LiteralSchema>(
-        schemaEnum: Record<string, T>
-      ) => ZodUnion<UnionZodResolve<[T, T, ...T[]]>>,
+      <T extends Record<string, LiteralSchema>>(
+        schemaEnum: T
+      ) => ZodUnion<
+        [
+          {
+            [K in keyof T]: ZodLiteral<T[K]>;
+          }[keyof T]
+        ]
+      >,
       (value: unknown) => value is ZodType,
       <T extends ZodCatchall>(schema: T, value: unknown) => boolean,
       <T extends ZodCatchall>(
@@ -88,7 +94,7 @@ export class ZodSchemaValidator
   boolean = z.preprocess((val) => {
     if (typeof val === 'string') {
       if (val.toLowerCase() === 'true') return true;
-      return false;
+      if (val.toLowerCase() === 'false') return false;
     }
     return val;
   }, z.boolean());
@@ -208,10 +214,24 @@ export class ZodSchemaValidator
    * @param {Record<string, LiteralSchema>} schemaEnum - The enum schema.
    * @returns {ZodUnion<UnionZodResolve<[T, T, ...T[]]>>} The enum schema.
    */
-  enum_<T extends LiteralSchema>(
-    schemaEnum: Record<string, T>
-  ): ZodUnion<UnionZodResolve<[T, T, ...T[]]>> {
-    return this.union(Object.values(schemaEnum) as [T, T, ...T[]]);
+  enum_<T extends Record<string, LiteralSchema>>(
+    schemaEnum: T
+  ): ZodUnion<
+    [
+      {
+        [K in keyof T]: ZodLiteral<T[K]>;
+      }[keyof T]
+    ]
+  > {
+    return this.union(
+      Object.values(schemaEnum) as unknown as ZodUnionContainer
+    ) as unknown as ZodUnion<
+      [
+        {
+          [K in keyof T]: ZodLiteral<T[K]>;
+        }[keyof T]
+      ]
+    >;
   }
 
   /**
@@ -249,10 +269,28 @@ export class ZodSchemaValidator
       ? { ok: true, value: result.data }
       : {
           ok: false,
-          errors: result.error.errors.map((error) => ({
-            path: error.path.map((p) => p.toString()),
-            message: error.message
-          }))
+          errors: result.error.errors.flatMap((error) => {
+            switch (error.code) {
+              case 'invalid_union':
+                return error.unionErrors.flatMap((unionError, idx) =>
+                  unionError.errors.map((e) => ({
+                    path: [
+                      `Union Schema Variant ${idx}`,
+                      ...error.path.map((p) => p.toString()),
+                      ...e.path.map((p) => p.toString())
+                    ],
+                    message: e.message
+                  }))
+                );
+              default:
+                return [
+                  {
+                    path: error.path.map((p) => p.toString()),
+                    message: error.message
+                  }
+                ];
+            }
+          })
         };
   }
 

@@ -4,7 +4,7 @@ import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { BillingPortalController } from '../controllers/billingPortal.controller';
-import { ServiceDependencies, ServiceSchemas } from '../dependencies';
+import { ServiceDependencies } from '../registrations';
 
 export const BillingPortalRoutes = (
   scopedServiceFactory: ScopedDependencyFactory<
@@ -12,14 +12,12 @@ export const BillingPortalRoutes = (
     ServiceDependencies,
     'BillingPortalService'
   >,
-  schemaDefinitions: ServiceSchemas['BillingPortalService'],
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) => {
   const router = forklaunchRouter('/billing-portal', openTelemetryCollector);
 
   const controller = BillingPortalController(
     scopedServiceFactory,
-    schemaDefinitions,
     openTelemetryCollector
   );
 

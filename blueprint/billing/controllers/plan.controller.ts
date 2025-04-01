@@ -1,6 +1,9 @@
+import { PlanService } from '@forklaunch/blueprint-billing-interfaces';
 import {
   array,
   handlers,
+  IdSchema,
+  IdsSchema,
   NextFunction,
   ParsedQs,
   Request,
@@ -12,8 +15,9 @@ import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
-import { ServiceDependencies, ServiceSchemas } from '../dependencies';
-import { PlanService } from '../interfaces/plan.service.interface';
+import { BillingProviderEnum } from '../models/enum/billingProvider.enum';
+import { PlanCadenceEnum } from '../models/enum/planCadence.enum';
+import { PlanSchemas, ServiceDependencies } from '../registrations';
 
 export const PlanController = (
   serviceFactory: ScopedDependencyFactory<
@@ -21,7 +25,6 @@ export const PlanController = (
     ServiceDependencies,
     'PlanService'
   >,
-  schemaRegistry: ServiceSchemas['PlanService'],
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) =>
   ({
@@ -31,9 +34,12 @@ export const PlanController = (
       {
         name: 'createPlan',
         summary: 'Create a plan',
-        body: schemaRegistry.CreatePlanDto,
+        body: PlanSchemas.CreatePlanSchema(
+          PlanCadenceEnum,
+          BillingProviderEnum
+        ),
         responses: {
-          200: schemaRegistry.PlanDto
+          200: PlanSchemas.PlanSchema(PlanCadenceEnum, BillingProviderEnum)
         }
       },
       async (req, res) => {
@@ -47,9 +53,9 @@ export const PlanController = (
       {
         name: 'getPlan',
         summary: 'Get a plan',
-        params: schemaRegistry.IdDto,
+        params: IdSchema,
         responses: {
-          200: schemaRegistry.PlanDto
+          200: PlanSchemas.PlanSchema(PlanCadenceEnum, BillingProviderEnum)
         }
       },
       async (req, res) => {
@@ -63,9 +69,12 @@ export const PlanController = (
       {
         name: 'updatePlan',
         summary: 'Update a plan',
-        body: schemaRegistry.UpdatePlanDto,
+        body: PlanSchemas.UpdatePlanSchema(
+          PlanCadenceEnum,
+          BillingProviderEnum
+        ),
         responses: {
-          200: schemaRegistry.PlanDto
+          200: PlanSchemas.PlanSchema(PlanCadenceEnum, BillingProviderEnum)
         }
       },
       async (req, res) => {
@@ -79,7 +88,7 @@ export const PlanController = (
       {
         name: 'deletePlan',
         summary: 'Delete a plan',
-        params: schemaRegistry.IdDto,
+        params: IdSchema,
         responses: {
           200: string
         }
@@ -96,9 +105,11 @@ export const PlanController = (
       {
         name: 'listPlans',
         summary: 'List plans',
-        query: schemaRegistry.IdsDto,
+        query: IdsSchema,
         responses: {
-          200: array(schemaRegistry.PlanDto)
+          200: array(
+            PlanSchemas.PlanSchema(PlanCadenceEnum, BillingProviderEnum)
+          )
         }
       },
       async (req, res) => {
@@ -106,7 +117,7 @@ export const PlanController = (
       }
     )
   }) satisfies Controller<
-    PlanService,
+    PlanService<typeof PlanCadenceEnum, typeof BillingProviderEnum>,
     Request,
     Response,
     NextFunction,

@@ -4,7 +4,7 @@ import { PartyEnum } from '../models/enum/party.enum';
 import { PaymentMethodEnum } from '../models/enum/paymentMethod.enum';
 import { PlanCadenceEnum } from '../models/enum/planCadence.enum';
 import { BillingProvider } from '../models/persistence/billingProvider.entity';
-import { CheckoutSession } from '../models/persistence/checkoutSession';
+import { CheckoutSession } from '../models/persistence/checkoutSession.entity';
 import { PaymentLink } from '../models/persistence/paymentLink.entity';
 import { Plan } from '../models/persistence/plan.entity';
 import { Subscription } from '../models/persistence/subscription.entity';

@@ -1,72 +1,52 @@
-import {
-  array,
-  date,
-  enum_,
-  optional,
-  SchemaValidator,
-  string,
-  unknown,
-  uuid
-} from '@forklaunch/blueprint-core';
+import { SchemaValidator } from '@forklaunch/blueprint-core';
 import {
   RequestDtoMapper,
   ResponseDtoMapper
 } from '@forklaunch/core/dtoMapper';
+import { CheckoutSessionSchemas } from '../../registrations';
 import { PaymentMethodEnum } from '../enum/paymentMethod.enum';
-import { CheckoutSession } from '../persistence/checkoutSession';
+import { CheckoutSession } from '../persistence/checkoutSession.entity';
 
-export type CreateCheckoutSessionDto = CreateCheckoutSessionDtoMapper['dto'];
-export class CreateCheckoutSessionDtoMapper extends RequestDtoMapper<
+export type CreateCheckoutSessionDto =
+  CreateCheckoutSessionDtoMapperDefinition['dto'];
+export const CreateCheckoutSessionDtoMapper = () =>
+  new CreateCheckoutSessionDtoMapperDefinition(SchemaValidator());
+export class CreateCheckoutSessionDtoMapperDefinition extends RequestDtoMapper<
   CheckoutSession,
   SchemaValidator
 > {
-  schema = {
-    customerId: string,
-    paymentMethods: array(enum_(PaymentMethodEnum)),
-    successRedirectUri: string,
-    cancelRedirectUri: string,
-    extraFields: optional(unknown)
-  };
+  schema =
+    CheckoutSessionSchemas.CreateCheckoutSessionSchema(PaymentMethodEnum);
 
   toEntity(): CheckoutSession {
     return CheckoutSession.create(this.dto);
   }
 }
 
-export type UpdateCheckoutSessionDto = UpdateCheckoutSessionDtoMapper['dto'];
-export class UpdateCheckoutSessionDtoMapper extends RequestDtoMapper<
+export type UpdateCheckoutSessionDto =
+  UpdateCheckoutSessionDtoMapperDefinition['dto'];
+export const UpdateCheckoutSessionDtoMapper = () =>
+  new UpdateCheckoutSessionDtoMapperDefinition(SchemaValidator());
+export class UpdateCheckoutSessionDtoMapperDefinition extends RequestDtoMapper<
   CheckoutSession,
   SchemaValidator
 > {
-  schema = {
-    id: uuid,
-    customerId: optional(string),
-    paymentMethods: optional(array(enum_(PaymentMethodEnum))),
-    successRedirectUri: optional(string),
-    cancelRedirectUri: optional(string),
-    extraFields: optional(unknown)
-  };
+  schema =
+    CheckoutSessionSchemas.UpdateCheckoutSessionSchema(PaymentMethodEnum);
 
   toEntity(): CheckoutSession {
     return CheckoutSession.update(this.dto);
   }
 }
 
-export type CheckoutSessionDto = CheckoutSessionDtoMapper['dto'];
-export class CheckoutSessionDtoMapper extends ResponseDtoMapper<
+export type CheckoutSessionDto = CheckoutSessionDtoMapperDefinition['dto'];
+export const CheckoutSessionDtoMapper = () =>
+  new CheckoutSessionDtoMapperDefinition(SchemaValidator());
+export class CheckoutSessionDtoMapperDefinition extends ResponseDtoMapper<
   CheckoutSession,
   SchemaValidator
 > {
-  schema = {
-    id: uuid,
-    customerId: string,
-    paymentMethods: array(enum_(PaymentMethodEnum)),
-    successRedirectUri: string,
-    cancelRedirectUri: string,
-    extraFields: optional(unknown),
-    createdAt: date,
-    updatedAt: date
-  };
+  schema = CheckoutSessionSchemas.CheckoutSessionSchema(PaymentMethodEnum);
 
   fromEntity(checkoutSession: CheckoutSession): this {
     this.dto = checkoutSession.read();

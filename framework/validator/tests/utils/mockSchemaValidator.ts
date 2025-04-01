@@ -97,7 +97,9 @@ export class MockSchemaValidator
         };
   }
   openapi<T extends string>(_schema: T): SchemaObject {
-    return {};
+    return {
+      type: 'string'
+    };
   }
 }
 

@@ -1,67 +1,49 @@
-import {
-  date,
-  optional,
-  SchemaValidator,
-  string,
-  unknown,
-  uuid
-} from '@forklaunch/blueprint-core';
+import { SchemaValidator } from '@forklaunch/blueprint-core';
 import {
   RequestDtoMapper,
   ResponseDtoMapper
 } from '@forklaunch/core/dtoMapper';
-import { BillingPortal } from '../persistence/billingPortal.dtoMapper';
+import { BillingPortalSchemas } from '../../registrations';
+import { BillingPortal } from '../persistence/billingPortal.entity';
 
-export type CreateBillingPortalDto = CreateBillingPortalDtoMapper['dto'];
-export class CreateBillingPortalDtoMapper extends RequestDtoMapper<
+export type CreateBillingPortalDto =
+  CreateBillingPortalDtoMapperDefinition['dto'];
+export const CreateBillingPortalDtoMapper = () =>
+  new CreateBillingPortalDtoMapperDefinition(SchemaValidator());
+export class CreateBillingPortalDtoMapperDefinition extends RequestDtoMapper<
   BillingPortal,
   SchemaValidator
 > {
-  schema = {
-    customerId: string,
-    uri: string,
-    expiresAt: date
-  };
+  schema = BillingPortalSchemas.CreateBillingPortalSchema;
 
   toEntity(): BillingPortal {
-    return BillingPortal.create({
-      customerId: this.dto.customerId,
-      uri: this.dto.uri,
-      expiresAt: this.dto.expiresAt
-    });
+    return BillingPortal.create(this.dto);
   }
 }
 
-export type UpdateBillingPortalDto = UpdateBillingPortalDtoMapper['dto'];
-export class UpdateBillingPortalDtoMapper extends RequestDtoMapper<
+export type UpdateBillingPortalDto =
+  UpdateBillingPortalDtoMapperDefinition['dto'];
+export const UpdateBillingPortalDtoMapper = () =>
+  new UpdateBillingPortalDtoMapperDefinition(SchemaValidator());
+export class UpdateBillingPortalDtoMapperDefinition extends RequestDtoMapper<
   BillingPortal,
   SchemaValidator
 > {
-  schema = {
-    uri: string,
-    expiresAt: date
-  };
+  schema = BillingPortalSchemas.UpdateBillingPortalSchema;
 
   toEntity(): BillingPortal {
-    return BillingPortal.update({
-      uri: this.dto.uri,
-      expiresAt: this.dto.expiresAt
-    });
+    return BillingPortal.update(this.dto);
   }
 }
 
-export type BillingPortalDto = BillingPortalDtoMapper['dto'];
-export class BillingPortalDtoMapper extends ResponseDtoMapper<
+export type BillingPortalDto = BillingPortalDtoMapperDefinition['dto'];
+export const BillingPortalDtoMapper = () =>
+  new BillingPortalDtoMapperDefinition(SchemaValidator());
+export class BillingPortalDtoMapperDefinition extends ResponseDtoMapper<
   BillingPortal,
   SchemaValidator
 > {
-  schema = {
-    id: uuid,
-    customerId: string,
-    uri: string,
-    expiresAt: date,
-    extraFields: optional(unknown)
-  };
+  schema = BillingPortalSchemas.BillingPortalSchema;
 
   fromEntity(entity: BillingPortal): this {
     this.dto = entity.read();

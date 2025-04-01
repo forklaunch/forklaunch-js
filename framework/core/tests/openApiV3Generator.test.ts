@@ -56,19 +56,19 @@ describe('openApiV3Generator tests', () => {
             tags: ['Api'],
             summary: 'Test Contract: Test Contract Summary',
             parameters: [
-              { name: 'test', in: 'path' },
-              { name: 'test', in: 'header' },
-              { name: 'test', in: 'query' }
+              { name: 'test', in: 'path', schema: { type: 'string' } },
+              { name: 'test', in: 'header', schema: { type: 'string' } },
+              { name: 'test', in: 'query', schema: { type: 'string' } }
             ],
             responses: {
               '200': {
                 description: 'OK',
-                content: { 'application/json': { schema: {} } }
+                content: { 'application/json': { schema: { type: 'string' } } }
               }
             },
             requestBody: {
               required: true,
-              content: { 'application/json': { schema: {} } }
+              content: { 'application/json': { schema: { type: 'string' } } }
             }
           }
         }

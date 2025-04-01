@@ -72,9 +72,15 @@ export class TypeboxSchemaValidator
       <T extends TIdiomaticSchema>(schema: T) => TArray<TResolve<T>>,
       <T extends TUnionContainer>(schemas: [...T]) => TUnion<UnionTResolve<T>>,
       <T extends LiteralSchema>(value: T) => TLiteral<T>,
-      <T extends LiteralSchema>(
-        schemaEnum: Record<string, T>
-      ) => TUnion<UnionTResolve<T[]>>,
+      <T extends Record<string, LiteralSchema>>(
+        schemaEnum: T
+      ) => TUnion<
+        [
+          {
+            [K in keyof T]: TLiteral<T[K]>;
+          }[keyof T]
+        ]
+      >,
       (value: unknown) => value is TSchema,
       <T extends TIdiomaticSchema>(schema: T, value: unknown) => boolean,
       <T extends TIdiomaticSchema>(
@@ -336,10 +342,24 @@ export class TypeboxSchemaValidator
    * @param {Record<string, LiteralSchema>} schemaEnum - The enum schema.
    * @returns {TUnion<UnionTResolve<T[]>>} The enum schema.
    */
-  enum_<T extends LiteralSchema>(
-    schemaEnum: Record<string, T>
-  ): TUnion<UnionTResolve<T[]>> {
-    return this.union(Object.values(schemaEnum));
+  enum_<T extends Record<string, LiteralSchema>>(
+    schemaEnum: T
+  ): TUnion<
+    [
+      {
+        [K in keyof T]: TLiteral<T[K]>;
+      }[keyof T]
+    ]
+  > {
+    return this.union(
+      Object.values(schemaEnum).map((value) => this.literal(value))
+    ) as unknown as TUnion<
+      [
+        {
+          [K in keyof T]: TLiteral<T[K]>;
+        }[keyof T]
+      ]
+    >;
   }
 
   /**
@@ -403,6 +423,19 @@ export class TypeboxSchemaValidator
       }
     }
 
+    errors.forEach((error) => {
+      if (
+        error.type === ValueErrorType.Union &&
+        error.schema.errorType === 'any of'
+      ) {
+        error.errors.forEach((e, idx) => {
+          console.log({
+            p: [`Union Schema Variant ${idx}`, error.path],
+            message: Array.from(e)
+          });
+        });
+      }
+    });
     return errors != null && errors.length === 0
       ? {
           ok: true,
@@ -410,10 +443,30 @@ export class TypeboxSchemaValidator
         }
       : {
           ok: false,
-          errors: errors.map((error) => ({
-            path: error.path.split('/').slice(1),
-            message: error.message
-          }))
+          errors: errors.flatMap((error) => {
+            if (
+              error.type === ValueErrorType.Union &&
+              error.schema.errorType.includes('any of')
+            ) {
+              return error.errors.flatMap((e, idx) =>
+                Array.from(e).map((e) => ({
+                  path: [
+                    `Union Schema Variant ${idx}`,
+                    ...error.path.split('/').slice(1),
+                    ...e.path.split('/').slice(1)
+                  ],
+                  message: e.message
+                }))
+              );
+            } else {
+              return [
+                {
+                  path: error.path.split('/').slice(1),
+                  message: error.message
+                }
+              ];
+            }
+          })
         };
   }
 

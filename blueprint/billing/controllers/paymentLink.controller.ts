@@ -1,7 +1,9 @@
+import { PaymentLinkService } from '@forklaunch/blueprint-billing-interfaces';
 import {
   array,
   handlers,
-  IdsDtoSchema,
+  IdSchema,
+  IdsSchema,
   NextFunction,
   ParsedQs,
   Request,
@@ -13,8 +15,8 @@ import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
-import { ServiceDependencies, ServiceSchemas } from '../dependencies';
-import { PaymentLinkService } from '../interfaces/paymentLink.service.interface';
+import { CurrencyEnum } from '../models/enum/currency.enum';
+import { PaymentLinkSchemas, ServiceDependencies } from '../registrations';
 
 export const PaymentLinkController = (
   serviceFactory: ScopedDependencyFactory<
@@ -22,7 +24,6 @@ export const PaymentLinkController = (
     ServiceDependencies,
     'PaymentLinkService'
   >,
-  schemaRegistry: ServiceSchemas['PaymentLinkService'],
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) =>
   ({
@@ -32,9 +33,9 @@ export const PaymentLinkController = (
       {
         name: 'createPaymentLink',
         summary: 'Create a payment link',
-        body: schemaRegistry.CreatePaymentLinkDto,
+        body: PaymentLinkSchemas.CreatePaymentLinkSchema(CurrencyEnum),
         responses: {
-          200: schemaRegistry.PaymentLinkDto
+          200: PaymentLinkSchemas.PaymentLinkSchema(CurrencyEnum)
         }
       },
       async (req, res) => {
@@ -50,9 +51,9 @@ export const PaymentLinkController = (
       {
         name: 'getPaymentLink',
         summary: 'Get a payment link',
-        params: schemaRegistry.IdDto,
+        params: IdSchema,
         responses: {
-          200: schemaRegistry.PaymentLinkDto
+          200: PaymentLinkSchemas.PaymentLinkSchema(CurrencyEnum)
         }
       },
       async (req, res) => {
@@ -66,10 +67,10 @@ export const PaymentLinkController = (
       {
         name: 'updatePaymentLink',
         summary: 'Update a payment link',
-        body: schemaRegistry.UpdatePaymentLinkDto,
-        params: schemaRegistry.IdDto,
+        body: PaymentLinkSchemas.UpdatePaymentLinkSchema(CurrencyEnum),
+        params: IdSchema,
         responses: {
-          200: schemaRegistry.PaymentLinkDto
+          200: PaymentLinkSchemas.PaymentLinkSchema(CurrencyEnum)
         }
       },
       async (req, res) => {
@@ -85,7 +86,7 @@ export const PaymentLinkController = (
       {
         name: 'expirePaymentLink',
         summary: 'Expire a payment link',
-        params: schemaRegistry.IdDto,
+        params: IdSchema,
         responses: {
           200: string
         }
@@ -102,7 +103,7 @@ export const PaymentLinkController = (
       {
         name: 'handlePaymentSuccess',
         summary: 'Handle a payment success',
-        params: schemaRegistry.IdDto,
+        params: IdSchema,
         responses: {
           200: string
         }
@@ -119,7 +120,7 @@ export const PaymentLinkController = (
       {
         name: 'handlePaymentFailure',
         summary: 'Handle a payment failure',
-        params: schemaRegistry.IdDto,
+        params: IdSchema,
         responses: {
           200: string
         }
@@ -136,9 +137,9 @@ export const PaymentLinkController = (
       {
         name: 'listPaymentLinks',
         summary: 'List payment links',
-        query: IdsDtoSchema,
+        query: IdsSchema,
         responses: {
-          200: array(schemaRegistry.PaymentLinkDto)
+          200: array(PaymentLinkSchemas.PaymentLinkSchema(CurrencyEnum))
         }
       },
       async (req, res) => {
@@ -148,7 +149,7 @@ export const PaymentLinkController = (
       }
     )
   }) satisfies Controller<
-    PaymentLinkService,
+    PaymentLinkService<typeof CurrencyEnum>,
     Request,
     Response,
     NextFunction,

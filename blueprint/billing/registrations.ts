@@ -1,29 +1,39 @@
 import {
-  array,
+  BaseBillingPortalService,
+  BaseBillingPortalServiceSchemas,
+  BaseCheckoutSessionService,
+  BaseCheckoutSessionServiceSchemas,
+  BasePaymentLinkService,
+  BasePaymentLinkServiceSchemas,
+  BasePlanService,
+  BasePlanServiceSchemas,
+  BaseSubscriptionService,
+  BaseSubscriptionServiceSchemas
+} from '@forklaunch/blueprint-billing-implementation-base';
+import {
+  number,
   optional,
   SchemaValidator,
   string
 } from '@forklaunch/blueprint-core';
-import { Schema, UnboxedObjectSchema } from '@forklaunch/validator';
+import { metrics } from '@forklaunch/blueprint-monitoring';
+import { RedisTtlCache } from '@forklaunch/core/cache';
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import {
-  BaseCheckoutSessionServiceParameters,
-  CheckoutSessionServiceName
-} from './interfaces/checkoutSession.service.interface';
+  createConfigInjector,
+  getEnvVar,
+  Lifetime
+} from '@forklaunch/core/services';
+import { EntityManager, ForkOptions, MikroORM } from '@mikro-orm/core';
 import {
-  BasePaymentLinkServiceParameters,
-  PaymentLinkServiceName
-} from './interfaces/paymentLink.service.interface';
-import {
-  BasePlanServiceParameters,
-  PlanServiceName
-} from './interfaces/plan.service.interface';
-import {
-  BaseSubscriptionServiceParameters,
-  SubscriptionServiceName
-} from './interfaces/subscription.service.interface';
+  BillingPortalDtoMapper,
+  CreateBillingPortalDtoMapper,
+  UpdateBillingPortalDtoMapper
+} from './models/dtoMapper/billingPortal.dtoMapper';
 import {
   CheckoutSessionDtoMapper,
-  CreateCheckoutSessionDtoMapper
+  CreateCheckoutSessionDtoMapper,
+  UpdateCheckoutSessionDtoMapper
 } from './models/dtoMapper/checkoutSession.dtoMapper';
 import {
   CreatePaymentLinkDtoMapper,
@@ -40,142 +50,32 @@ import {
   SubscriptionDtoMapper,
   UpdateSubscriptionDtoMapper
 } from './models/dtoMapper/subscription.dtoMapper';
+import { BillingProviderEnum } from './models/enum/billingProvider.enum';
+import { CurrencyEnum } from './models/enum/currency.enum';
+import { PartyEnum } from './models/enum/party.enum';
+import { PaymentMethodEnum } from './models/enum/paymentMethod.enum';
+import { PlanCadenceEnum } from './models/enum/planCadence.enum';
 
-import { number } from '@forklaunch/blueprint-core';
-import { metrics } from '@forklaunch/blueprint-monitoring';
-import { RedisTtlCache } from '@forklaunch/core/cache';
-import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { ConfigInjector, getEnvVar, Lifetime } from '@forklaunch/core/services';
-import { EntityManager, ForkOptions, MikroORM } from '@mikro-orm/core';
-import {
-  BaseBillingPortalServiceParameters,
-  BillingPortalServiceName
-} from './interfaces/billingPortal.service.interface';
-import {
-  BillingPortalDtoMapper,
-  CreateBillingPortalDtoMapper,
-  UpdateBillingPortalDtoMapper
-} from './models/dtoMapper/billingPortal.dtoMapper';
-import { BaseBillingPortalService } from './services/billingPortal.service';
-import { BaseCheckoutSessionService } from './services/checkoutSession.service';
-import { BasePaymentLinkService } from './services/paymentLink.service';
-import { BasePlanService } from './services/plan.service';
-import { BaseSubscriptionService } from './services/subscription.service';
-
-function validateSchemas<T extends UnboxedObjectSchema<SchemaValidator>>(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _baseSchema: T
-) {
-  return function <U extends UnboxedObjectSchema<SchemaValidator>>(
-    schemas: U extends T ? U : T
-  ) {
-    return schemas;
-  };
-}
-
-function isDtoRegistration(schema: unknown): schema is {
-  base: UnboxedObjectSchema<SchemaValidator>;
-  implementation: UnboxedObjectSchema<SchemaValidator>;
-} {
-  return (
-    typeof schema === 'object' &&
-    schema !== null &&
-    'base' in schema &&
-    'implementation' in schema
-  );
-}
-
-function schemaRegistrations<
-  T extends {
-    [K in keyof T]: {
-      base: T[K]['base'] extends UnboxedObjectSchema<SchemaValidator>
-        ? T[K]['base']
-        : never;
-      implementation: T[K]['implementation'] extends UnboxedObjectSchema<SchemaValidator>
-        ? T[K]['implementation'] extends T[K]['base']
-          ? T[K]['implementation']
-          : never
-        : never;
-    };
-  }
->(
-  schemas: T
-): {
-  [K in keyof T]: T[K]['implementation'];
-} {
-  return Object.fromEntries(
-    Object.entries(schemas).map(([key, schema]) => [
-      key,
-      isDtoRegistration(schema)
-        ? validateSchemas(schema.base)(schema.implementation)
-        : schema
-    ])
-  ) as {
-    [K in keyof T]: T[K]['implementation'];
-  };
-}
-
-export const IdDtoSchema = {
-  id: string
-};
-
-export const IdsDtoSchema = {
-  ids: optional(array(string))
-};
-
-export const SchemaRegistry = schemaRegistrations({
-  [BillingPortalServiceName]: {
-    base: BaseBillingPortalServiceParameters,
-    implementation: {
-      CreateBillingPortalDto: CreateBillingPortalDtoMapper.schema(),
-      UpdateBillingPortalDto: UpdateBillingPortalDtoMapper.schema(),
-      BillingPortalDto: BillingPortalDtoMapper.schema(),
-      IdDto: IdDtoSchema
-    }
-  },
-  [CheckoutSessionServiceName]: {
-    base: BaseCheckoutSessionServiceParameters,
-    implementation: {
-      CreateCheckoutSessionDto: CreateCheckoutSessionDtoMapper.schema(),
-      CheckoutSessionDto: CheckoutSessionDtoMapper.schema(),
-      IdDto: IdDtoSchema
-    }
-  },
-  [PaymentLinkServiceName]: {
-    base: BasePaymentLinkServiceParameters,
-    implementation: {
-      CreatePaymentLinkDto: CreatePaymentLinkDtoMapper.schema(),
-      UpdatePaymentLinkDto: UpdatePaymentLinkDtoMapper.schema(),
-      PaymentLinkDto: PaymentLinkDtoMapper.schema(),
-      IdDto: IdDtoSchema,
-      IdsDto: IdsDtoSchema
-    }
-  },
-  [PlanServiceName]: {
-    base: BasePlanServiceParameters,
-    implementation: {
-      CreatePlanDto: CreatePlanDtoMapper.schema(),
-      UpdatePlanDto: UpdatePlanDtoMapper.schema(),
-      PlanDto: PlanDtoMapper.schema(),
-      IdDto: IdDtoSchema,
-      IdsDto: IdsDtoSchema
-    }
-  },
-  [SubscriptionServiceName]: {
-    base: BaseSubscriptionServiceParameters,
-    implementation: {
-      CreateSubscriptionDto: CreateSubscriptionDtoMapper.schema(),
-      UpdateSubscriptionDto: UpdateSubscriptionDtoMapper.schema(),
-      SubscriptionDto: SubscriptionDtoMapper.schema(),
-      IdDto: IdDtoSchema,
-      IdsDto: IdsDtoSchema
-    }
-  }
-});
-
+export const BillingPortalSchemas = BaseBillingPortalServiceSchemas(
+  SchemaValidator(),
+  true
+);
+export const CheckoutSessionSchemas = BaseCheckoutSessionServiceSchemas(
+  SchemaValidator(),
+  true
+);
+export const PaymentLinkSchemas = BasePaymentLinkServiceSchemas(
+  SchemaValidator(),
+  true
+);
+export const PlanSchemas = BasePlanServiceSchemas(SchemaValidator(), true);
+export const SubscriptionSchemas = BaseSubscriptionServiceSchemas(
+  SchemaValidator(),
+  true
+);
 //! defines the configuration schema for the application
 export function createDepenencies({ orm }: { orm: MikroORM }) {
-  const runtimeDependencies = new ConfigInjector(SchemaValidator(), {
+  const environmentConfig = createConfigInjector(SchemaValidator(), {
     REDIS_URL: {
       lifetime: Lifetime.Singleton,
       type: string,
@@ -221,7 +121,10 @@ export function createDepenencies({ orm }: { orm: MikroORM }) {
       type: EntityManager,
       factory: (_args, _resolve, context) =>
         orm.em.fork(context?.entityManagerOptions as ForkOptions | undefined)
-    },
+    }
+  });
+
+  const runtimeDependencies = environmentConfig.chain({
     OpenTelemetryCollector: {
       lifetime: Lifetime.Singleton,
       type: OpenTelemetryCollector,
@@ -239,49 +142,78 @@ export function createDepenencies({ orm }: { orm: MikroORM }) {
         new RedisTtlCache(60 * 60 * 1000, OpenTelemetryCollector, {
           url: REDIS_URL
         })
-    },
-    [BillingPortalServiceName]: {
+    }
+  });
+
+  const serviceDependencies = runtimeDependencies.chain({
+    BillingPortalService: {
       lifetime: Lifetime.Scoped,
       type: BaseBillingPortalService,
       factory: ({ TtlCache, OpenTelemetryCollector }) =>
-        new BaseBillingPortalService(TtlCache, OpenTelemetryCollector)
+        new BaseBillingPortalService(TtlCache, OpenTelemetryCollector, {
+          BillingPortalDtoMapper,
+          CreateBillingPortalDtoMapper,
+          UpdateBillingPortalDtoMapper
+        })
     },
-    [CheckoutSessionServiceName]: {
+    CheckoutSessionService: {
       lifetime: Lifetime.Scoped,
-      type: BaseCheckoutSessionService,
+      type: BaseCheckoutSessionService<typeof PaymentMethodEnum>,
       factory: ({ TtlCache, OpenTelemetryCollector }) =>
-        new BaseCheckoutSessionService(TtlCache, OpenTelemetryCollector)
+        new BaseCheckoutSessionService(
+          TtlCache,
+          OpenTelemetryCollector,
+          PaymentMethodEnum,
+          {
+            CheckoutSessionDtoMapper,
+            CreateCheckoutSessionDtoMapper,
+            UpdateCheckoutSessionDtoMapper
+          }
+        )
     },
-    [PaymentLinkServiceName]: {
+    PaymentLinkService: {
       lifetime: Lifetime.Scoped,
-      type: BasePaymentLinkService,
+      type: BasePaymentLinkService<typeof CurrencyEnum>,
       factory: ({ TtlCache, OpenTelemetryCollector }) =>
-        new BasePaymentLinkService(TtlCache, OpenTelemetryCollector)
+        new BasePaymentLinkService(TtlCache, OpenTelemetryCollector, {
+          PaymentLinkDtoMapper,
+          CreatePaymentLinkDtoMapper,
+          UpdatePaymentLinkDtoMapper
+        })
     },
-    [PlanServiceName]: {
+    PlanService: {
       lifetime: Lifetime.Scoped,
-      type: BasePlanService,
+      type: BasePlanService<typeof PlanCadenceEnum, typeof BillingProviderEnum>,
       factory: ({ EntityManager, OpenTelemetryCollector }) =>
-        new BasePlanService(EntityManager, OpenTelemetryCollector)
+        new BasePlanService(EntityManager, OpenTelemetryCollector, {
+          PlanDtoMapper,
+          CreatePlanDtoMapper,
+          UpdatePlanDtoMapper
+        })
     },
-    [SubscriptionServiceName]: {
+    SubscriptionService: {
       lifetime: Lifetime.Scoped,
-      type: BaseSubscriptionService,
+      type: BaseSubscriptionService<
+        typeof PartyEnum,
+        typeof BillingProviderEnum
+      >,
       factory: ({ EntityManager, OpenTelemetryCollector }) =>
-        new BaseSubscriptionService(EntityManager, OpenTelemetryCollector)
+        new BaseSubscriptionService(EntityManager, OpenTelemetryCollector, {
+          SubscriptionDtoMapper,
+          CreateSubscriptionDtoMapper,
+          UpdateSubscriptionDtoMapper
+        })
     }
   });
+
   return {
-    configInjector: runtimeDependencies,
-    registeredSchemas: SchemaRegistry
+    environmentConfig,
+    runtimeDependencies,
+    serviceDependencies,
+    tokens: serviceDependencies.tokens()
   };
 }
 
-export type SchemaRegistration<T extends keyof typeof SchemaRegistry> = Schema<
-  (typeof SchemaRegistry)[T],
-  SchemaValidator
->;
-
-export type ConfigShapes = ReturnType<
+export type ServiceDependencies = ReturnType<
   typeof createDepenencies
->['configInjector']['configShapes'];
+>['serviceDependencies']['configShapes'];

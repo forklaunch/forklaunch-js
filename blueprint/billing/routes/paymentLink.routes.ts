@@ -3,7 +3,7 @@ import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { PaymentLinkController } from '../controllers/paymentLink.controller';
-import { ServiceDependencies, ServiceSchemas } from '../dependencies';
+import { ServiceDependencies } from '../registrations';
 
 export const PaymentLinkRoutes = (
   scopedServiceFactory: ScopedDependencyFactory<
@@ -11,14 +11,12 @@ export const PaymentLinkRoutes = (
     ServiceDependencies,
     'PaymentLinkService'
   >,
-  schemaDefinitions: ServiceSchemas['PaymentLinkService'],
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) => {
   const router = forklaunchRouter('/payment-link', openTelemetryCollector);
 
   const controller = PaymentLinkController(
     scopedServiceFactory,
-    schemaDefinitions,
     openTelemetryCollector
   );
 
