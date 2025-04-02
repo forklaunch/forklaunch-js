@@ -39,6 +39,7 @@ export const CheckoutSessionController = (
         }
       },
       async (req, res) => {
+        openTelemetryCollector.debug('Creating checkout session', req.body);
         res
           .status(200)
           .json(await serviceFactory().createCheckoutSession(req.body));
@@ -57,6 +58,7 @@ export const CheckoutSessionController = (
         }
       },
       async (req, res) => {
+        openTelemetryCollector.debug('Retrieving checkout session', req.params);
         res
           .status(200)
           .json(await serviceFactory().getCheckoutSession(req.params));
@@ -75,6 +77,7 @@ export const CheckoutSessionController = (
         }
       },
       async (req, res) => {
+        openTelemetryCollector.debug('Expiring checkout session', req.params);
         await serviceFactory().expireCheckoutSession(req.params);
         res.status(200).send(`Expired checkout session ${req.params.id}`);
       }
@@ -92,7 +95,8 @@ export const CheckoutSessionController = (
         }
       },
       async (req, res) => {
-        await serviceFactory().handleCheckoutSuccess({ id: req.params.id });
+        openTelemetryCollector.debug('Handling checkout success', req.params);
+        await serviceFactory().handleCheckoutSuccess(req.params);
         res
           .status(200)
           .send(`Handled checkout success for session ${req.params.id}`);
@@ -111,7 +115,8 @@ export const CheckoutSessionController = (
         }
       },
       async (req, res) => {
-        await serviceFactory().handleCheckoutFailure({ id: req.params.id });
+        openTelemetryCollector.debug('Handling checkout failure', req.params);
+        await serviceFactory().handleCheckoutFailure(req.params);
         res
           .status(200)
           .send(`Handled checkout failure for session ${req.params.id}`);

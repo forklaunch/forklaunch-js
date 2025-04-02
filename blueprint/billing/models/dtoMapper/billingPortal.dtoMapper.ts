@@ -6,11 +6,7 @@ import {
 import { BillingPortalSchemas } from '../../registrations';
 import { BillingPortal } from '../persistence/billingPortal.entity';
 
-export type CreateBillingPortalDto =
-  CreateBillingPortalDtoMapperDefinition['dto'];
-export const CreateBillingPortalDtoMapper = () =>
-  new CreateBillingPortalDtoMapperDefinition(SchemaValidator());
-export class CreateBillingPortalDtoMapperDefinition extends RequestDtoMapper<
+export class CreateBillingPortalDtoMapper extends RequestDtoMapper<
   BillingPortal,
   SchemaValidator
 > {
@@ -21,11 +17,7 @@ export class CreateBillingPortalDtoMapperDefinition extends RequestDtoMapper<
   }
 }
 
-export type UpdateBillingPortalDto =
-  UpdateBillingPortalDtoMapperDefinition['dto'];
-export const UpdateBillingPortalDtoMapper = () =>
-  new UpdateBillingPortalDtoMapperDefinition(SchemaValidator());
-export class UpdateBillingPortalDtoMapperDefinition extends RequestDtoMapper<
+export class UpdateBillingPortalDtoMapper extends RequestDtoMapper<
   BillingPortal,
   SchemaValidator
 > {
@@ -36,10 +28,7 @@ export class UpdateBillingPortalDtoMapperDefinition extends RequestDtoMapper<
   }
 }
 
-export type BillingPortalDto = BillingPortalDtoMapperDefinition['dto'];
-export const BillingPortalDtoMapper = () =>
-  new BillingPortalDtoMapperDefinition(SchemaValidator());
-export class BillingPortalDtoMapperDefinition extends ResponseDtoMapper<
+export class BillingPortalDtoMapper extends ResponseDtoMapper<
   BillingPortal,
   SchemaValidator
 > {

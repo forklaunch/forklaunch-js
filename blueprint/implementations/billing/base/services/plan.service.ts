@@ -2,21 +2,24 @@ import {
   CreatePlanDto,
   PlanDto,
   PlanService,
-  PlanServiceParameters,
   UpdatePlanDto
 } from '@forklaunch/blueprint-billing-interfaces';
-import { IdDto, IdsDto, ReturnTypeRecord } from '@forklaunch/common';
+import { IdDto, IdsDto, InstanceTypeRecord } from '@forklaunch/common';
 import {
   InternalDtoMapper,
+  RequestDtoMapperConstructor,
+  ResponseDtoMapperConstructor,
   transformIntoInternalDtoMapper
 } from '@forklaunch/core/dtoMapper';
 import {
   MetricsDefinition,
   OpenTelemetryCollector
 } from '@forklaunch/core/http';
+import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
 
 export class BasePlanService<
+  SchemaValidator extends AnySchemaValidator,
   PlanCadenceEnum,
   BillingProviderEnum,
   Metrics extends MetricsDefinition = MetricsDefinition,
@@ -40,12 +43,8 @@ export class BasePlanService<
   }
 > implements PlanService<PlanCadenceEnum, BillingProviderEnum>
 {
-  SchemaDefinition!: PlanServiceParameters<
-    PlanCadenceEnum,
-    BillingProviderEnum
-  >;
   #dtoMappers: InternalDtoMapper<
-    ReturnTypeRecord<typeof this.dtoMappers>,
+    InstanceTypeRecord<typeof this.dtoMappers>,
     Entities,
     Dto
   >;
@@ -53,25 +52,29 @@ export class BasePlanService<
   constructor(
     private em: EntityManager,
     private readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>,
+    private readonly schemaValidator: SchemaValidator,
     private readonly dtoMappers: {
-      PlanDtoMapper: () => {
-        dto: Dto['PlanDtoMapper'];
-        _Entity: Entities['PlanDtoMapper'];
-        serializeEntityToDto: unknown;
-      };
-      CreatePlanDtoMapper: () => {
-        dto: Dto['CreatePlanDtoMapper'];
-        _Entity: Entities['CreatePlanDtoMapper'];
-        deserializeDtoToEntity: unknown;
-      };
-      UpdatePlanDtoMapper: () => {
-        dto: Dto['UpdatePlanDtoMapper'];
-        _Entity: Entities['UpdatePlanDtoMapper'];
-        deserializeDtoToEntity: unknown;
-      };
+      PlanDtoMapper: ResponseDtoMapperConstructor<
+        SchemaValidator,
+        Dto['PlanDtoMapper'],
+        Entities['PlanDtoMapper']
+      >;
+      CreatePlanDtoMapper: RequestDtoMapperConstructor<
+        SchemaValidator,
+        Dto['CreatePlanDtoMapper'],
+        Entities['CreatePlanDtoMapper']
+      >;
+      UpdatePlanDtoMapper: RequestDtoMapperConstructor<
+        SchemaValidator,
+        Dto['UpdatePlanDtoMapper'],
+        Entities['UpdatePlanDtoMapper']
+      >;
     }
   ) {
-    this.#dtoMappers = transformIntoInternalDtoMapper(dtoMappers);
+    this.#dtoMappers = transformIntoInternalDtoMapper(
+      dtoMappers,
+      schemaValidator
+    );
   }
 
   async listPlans(

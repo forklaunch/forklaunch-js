@@ -21,6 +21,7 @@ import { RedisTtlCache } from '@forklaunch/core/cache';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import {
   createConfigInjector,
+  DependencyShapes,
   getEnvVar,
   Lifetime
 } from '@forklaunch/core/services';
@@ -75,7 +76,21 @@ export const SubscriptionSchemas = BaseSubscriptionServiceSchemas(
 );
 //! defines the configuration schema for the application
 export function createDepenencies({ orm }: { orm: MikroORM }) {
-  const environmentConfig = createConfigInjector(SchemaValidator(), {
+  const configInjector = createConfigInjector(SchemaValidator(), {
+    SERVICE_METADATA: {
+      lifetime: Lifetime.Singleton,
+      type: {
+        name: string,
+        version: string
+      },
+      value: {
+        name: 'billing',
+        version: '0.1.0'
+      }
+    }
+  });
+
+  const environmentConfig = configInjector.chain({
     REDIS_URL: {
       lifetime: Lifetime.Singleton,
       type: string,
@@ -148,21 +163,30 @@ export function createDepenencies({ orm }: { orm: MikroORM }) {
   const serviceDependencies = runtimeDependencies.chain({
     BillingPortalService: {
       lifetime: Lifetime.Scoped,
-      type: BaseBillingPortalService,
+      type: BaseBillingPortalService<SchemaValidator>,
       factory: ({ TtlCache, OpenTelemetryCollector }) =>
-        new BaseBillingPortalService(TtlCache, OpenTelemetryCollector, {
-          BillingPortalDtoMapper,
-          CreateBillingPortalDtoMapper,
-          UpdateBillingPortalDtoMapper
-        })
+        new BaseBillingPortalService(
+          TtlCache,
+          OpenTelemetryCollector,
+          SchemaValidator(),
+          {
+            BillingPortalDtoMapper,
+            CreateBillingPortalDtoMapper,
+            UpdateBillingPortalDtoMapper
+          }
+        )
     },
     CheckoutSessionService: {
       lifetime: Lifetime.Scoped,
-      type: BaseCheckoutSessionService<typeof PaymentMethodEnum>,
+      type: BaseCheckoutSessionService<
+        SchemaValidator,
+        typeof PaymentMethodEnum
+      >,
       factory: ({ TtlCache, OpenTelemetryCollector }) =>
         new BaseCheckoutSessionService(
           TtlCache,
           OpenTelemetryCollector,
+          SchemaValidator(),
           PaymentMethodEnum,
           {
             CheckoutSessionDtoMapper,
@@ -173,36 +197,56 @@ export function createDepenencies({ orm }: { orm: MikroORM }) {
     },
     PaymentLinkService: {
       lifetime: Lifetime.Scoped,
-      type: BasePaymentLinkService<typeof CurrencyEnum>,
+      type: BasePaymentLinkService<SchemaValidator, typeof CurrencyEnum>,
       factory: ({ TtlCache, OpenTelemetryCollector }) =>
-        new BasePaymentLinkService(TtlCache, OpenTelemetryCollector, {
-          PaymentLinkDtoMapper,
-          CreatePaymentLinkDtoMapper,
-          UpdatePaymentLinkDtoMapper
-        })
+        new BasePaymentLinkService(
+          TtlCache,
+          OpenTelemetryCollector,
+          SchemaValidator(),
+          {
+            PaymentLinkDtoMapper,
+            CreatePaymentLinkDtoMapper,
+            UpdatePaymentLinkDtoMapper
+          }
+        )
     },
     PlanService: {
       lifetime: Lifetime.Scoped,
-      type: BasePlanService<typeof PlanCadenceEnum, typeof BillingProviderEnum>,
+      type: BasePlanService<
+        SchemaValidator,
+        typeof PlanCadenceEnum,
+        typeof BillingProviderEnum
+      >,
       factory: ({ EntityManager, OpenTelemetryCollector }) =>
-        new BasePlanService(EntityManager, OpenTelemetryCollector, {
-          PlanDtoMapper,
-          CreatePlanDtoMapper,
-          UpdatePlanDtoMapper
-        })
+        new BasePlanService(
+          EntityManager,
+          OpenTelemetryCollector,
+          SchemaValidator(),
+          {
+            PlanDtoMapper,
+            CreatePlanDtoMapper,
+            UpdatePlanDtoMapper
+          }
+        )
     },
     SubscriptionService: {
       lifetime: Lifetime.Scoped,
       type: BaseSubscriptionService<
+        SchemaValidator,
         typeof PartyEnum,
         typeof BillingProviderEnum
       >,
       factory: ({ EntityManager, OpenTelemetryCollector }) =>
-        new BaseSubscriptionService(EntityManager, OpenTelemetryCollector, {
-          SubscriptionDtoMapper,
-          CreateSubscriptionDtoMapper,
-          UpdateSubscriptionDtoMapper
-        })
+        new BaseSubscriptionService(
+          EntityManager,
+          OpenTelemetryCollector,
+          SchemaValidator(),
+          {
+            SubscriptionDtoMapper,
+            CreateSubscriptionDtoMapper,
+            UpdateSubscriptionDtoMapper
+          }
+        )
     }
   });
 
@@ -214,6 +258,4 @@ export function createDepenencies({ orm }: { orm: MikroORM }) {
   };
 }
 
-export type ServiceDependencies = ReturnType<
-  typeof createDepenencies
->['serviceDependencies']['configShapes'];
+export type ServiceDependencies = DependencyShapes<typeof createDepenencies>;

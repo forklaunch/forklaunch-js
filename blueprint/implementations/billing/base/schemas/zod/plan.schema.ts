@@ -18,7 +18,6 @@ export const CreatePlanSchema = <
   PlanCadenceEnum: T,
   BillingProviderEnum: U
 ) => ({
-  type: string,
   name: string,
   description: optional(string),
   price: number,
@@ -40,7 +39,6 @@ export const UpdatePlanSchema =
     BillingProviderEnum: U
   ) => ({
     id: uuidId ? uuid : string,
-    type: optional(string),
     name: optional(string),
     description: optional(string),
     price: optional(number),
@@ -62,7 +60,6 @@ export const PlanSchema =
     BillingProviderEnum: U
   ) => ({
     id: uuidId ? uuid : string,
-    type: string,
     name: string,
     description: optional(string),
     price: number,

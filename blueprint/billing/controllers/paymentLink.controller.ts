@@ -39,6 +39,7 @@ export const PaymentLinkController = (
         }
       },
       async (req, res) => {
+        openTelemetryCollector.debug('Creating payment link', req.body);
         res
           .status(200)
           .json(await serviceFactory().createPaymentLink(req.body));
@@ -57,6 +58,7 @@ export const PaymentLinkController = (
         }
       },
       async (req, res) => {
+        openTelemetryCollector.debug('Retrieving payment link', req.params);
         res.status(200).json(await serviceFactory().getPaymentLink(req.params));
       }
     ),
@@ -74,6 +76,7 @@ export const PaymentLinkController = (
         }
       },
       async (req, res) => {
+        openTelemetryCollector.debug('Updating payment link', req.body);
         res
           .status(200)
           .json(await serviceFactory().updatePaymentLink(req.body));
@@ -92,6 +95,7 @@ export const PaymentLinkController = (
         }
       },
       async (req, res) => {
+        openTelemetryCollector.debug('Expiring payment link', req.params);
         await serviceFactory().expirePaymentLink(req.params);
         res.status(200).send(`Expired payment link ${req.params.id}`);
       }
@@ -109,6 +113,10 @@ export const PaymentLinkController = (
         }
       },
       async (req, res) => {
+        openTelemetryCollector.debug(
+          'Handling payment link success',
+          req.params
+        );
         await serviceFactory().handlePaymentSuccess(req.params);
         res.status(200).send(`Handled payment success for ${req.params.id}`);
       }
@@ -126,6 +134,10 @@ export const PaymentLinkController = (
         }
       },
       async (req, res) => {
+        openTelemetryCollector.debug(
+          'Handling payment link failure',
+          req.params
+        );
         await serviceFactory().handlePaymentFailure(req.params);
         res.status(200).send(`Handled payment failure for ${req.params.id}`);
       }
@@ -143,6 +155,7 @@ export const PaymentLinkController = (
         }
       },
       async (req, res) => {
+        openTelemetryCollector.debug('Listing payment links', req.query);
         res
           .status(200)
           .json(await serviceFactory().listPaymentLinks(req.query));

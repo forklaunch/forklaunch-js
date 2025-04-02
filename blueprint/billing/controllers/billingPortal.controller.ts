@@ -36,6 +36,10 @@ export const BillingPortalController = (
         }
       },
       async (req, res) => {
+        openTelemetryCollector.debug(
+          'Creating billing portal session',
+          req.body
+        );
         res
           .status(200)
           .json(await serviceFactory().createBillingPortalSession(req.body));
@@ -54,6 +58,10 @@ export const BillingPortalController = (
         }
       },
       async (req, res) => {
+        openTelemetryCollector.debug(
+          'Retrieving billing portal session',
+          req.params
+        );
         res
           .status(200)
           .json(await serviceFactory().getBillingPortalSession(req.params));
@@ -73,6 +81,10 @@ export const BillingPortalController = (
         }
       },
       async (req, res) => {
+        openTelemetryCollector.debug('Updating billing portal session', {
+          ...req.params,
+          ...req.body
+        });
         res.status(200).json(
           await serviceFactory().updateBillingPortalSession({
             ...req.params,
@@ -94,6 +106,10 @@ export const BillingPortalController = (
         }
       },
       async (req, res) => {
+        openTelemetryCollector.debug(
+          'Expiring billing portal session',
+          req.params
+        );
         await serviceFactory().expireBillingPortalSession(req.params);
         res.status(200).send(`Expired billing portal session ${req.params.id}`);
       }

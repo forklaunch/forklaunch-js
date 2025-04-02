@@ -43,6 +43,7 @@ export const PlanController = (
         }
       },
       async (req, res) => {
+        openTelemetryCollector.debug('Creating plan', req.body);
         res.status(200).json(await serviceFactory().createPlan(req.body));
       }
     ),
@@ -59,6 +60,7 @@ export const PlanController = (
         }
       },
       async (req, res) => {
+        openTelemetryCollector.debug('Retrieving plan', req.params);
         res.status(200).json(await serviceFactory().getPlan(req.params));
       }
     ),
@@ -78,6 +80,7 @@ export const PlanController = (
         }
       },
       async (req, res) => {
+        openTelemetryCollector.debug('Updating plan', req.body);
         res.status(200).json(await serviceFactory().updatePlan(req.body));
       }
     ),
@@ -94,6 +97,7 @@ export const PlanController = (
         }
       },
       async (req, res) => {
+        openTelemetryCollector.debug('Deleting plan', req.params);
         await serviceFactory().deletePlan(req.params);
         res.status(200).json(`Deleted plan ${req.params.id}`);
       }
@@ -113,6 +117,7 @@ export const PlanController = (
         }
       },
       async (req, res) => {
+        openTelemetryCollector.debug('Listing plans', req.query);
         res.status(200).json(await serviceFactory().listPlans(req.query));
       }
     )

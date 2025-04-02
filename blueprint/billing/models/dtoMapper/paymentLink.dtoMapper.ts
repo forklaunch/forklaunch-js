@@ -7,10 +7,7 @@ import { PaymentLinkSchemas } from '../../registrations';
 import { CurrencyEnum } from '../enum/currency.enum';
 import { PaymentLink } from '../persistence/paymentLink.entity';
 
-export type CreatePaymentLinkDto = CreatePaymentLinkDtoMapperDefinition['dto'];
-export const CreatePaymentLinkDtoMapper = () =>
-  new CreatePaymentLinkDtoMapperDefinition(SchemaValidator());
-export class CreatePaymentLinkDtoMapperDefinition extends RequestDtoMapper<
+export class CreatePaymentLinkDtoMapper extends RequestDtoMapper<
   PaymentLink,
   SchemaValidator
 > {
@@ -21,10 +18,7 @@ export class CreatePaymentLinkDtoMapperDefinition extends RequestDtoMapper<
   }
 }
 
-export type UpdatePaymentLinkDto = UpdatePaymentLinkDtoMapperDefinition['dto'];
-export const UpdatePaymentLinkDtoMapper = () =>
-  new UpdatePaymentLinkDtoMapperDefinition(SchemaValidator());
-export class UpdatePaymentLinkDtoMapperDefinition extends RequestDtoMapper<
+export class UpdatePaymentLinkDtoMapper extends RequestDtoMapper<
   PaymentLink,
   SchemaValidator
 > {
@@ -35,10 +29,7 @@ export class UpdatePaymentLinkDtoMapperDefinition extends RequestDtoMapper<
   }
 }
 
-export type PaymentLinkDto = PaymentLinkDtoMapperDefinition['dto'];
-export const PaymentLinkDtoMapper = () =>
-  new PaymentLinkDtoMapperDefinition(SchemaValidator());
-export class PaymentLinkDtoMapperDefinition extends ResponseDtoMapper<
+export class PaymentLinkDtoMapper extends ResponseDtoMapper<
   PaymentLink,
   SchemaValidator
 > {

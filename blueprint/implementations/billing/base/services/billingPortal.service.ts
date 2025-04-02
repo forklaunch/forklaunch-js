@@ -1,24 +1,31 @@
 import {
   BillingPortalDto,
   BillingPortalService,
-  BillingPortalServiceParameters,
   CreateBillingPortalDto,
   UpdateBillingPortalDto
 } from '@forklaunch/blueprint-billing-interfaces';
-import { IdDto, ReturnTypeRecord } from '@forklaunch/common';
+import { IdDto, InstanceTypeRecord } from '@forklaunch/common';
 import { createCacheKey, TtlCache } from '@forklaunch/core/cache';
 import {
   InternalDtoMapper,
+  RequestDtoMapperConstructor,
+  ResponseDtoMapperConstructor,
   transformIntoInternalDtoMapper
 } from '@forklaunch/core/dtoMapper';
 import {
   MetricsDefinition,
   OpenTelemetryCollector
 } from '@forklaunch/core/http';
+import { AnySchemaValidator } from '@forklaunch/validator';
 
 export class BaseBillingPortalService<
-  Metrics extends MetricsDefinition,
+  SchemaValidator extends AnySchemaValidator,
+  Metrics extends MetricsDefinition = MetricsDefinition,
   Dto extends {
+    BillingPortalDtoMapper: BillingPortalDto;
+    CreateBillingPortalDtoMapper: CreateBillingPortalDto;
+    UpdateBillingPortalDtoMapper: UpdateBillingPortalDto;
+  } = {
     BillingPortalDtoMapper: BillingPortalDto;
     CreateBillingPortalDtoMapper: CreateBillingPortalDto;
     UpdateBillingPortalDtoMapper: UpdateBillingPortalDto;
@@ -27,12 +34,15 @@ export class BaseBillingPortalService<
     BillingPortalDtoMapper: BillingPortalDto;
     CreateBillingPortalDtoMapper: BillingPortalDto;
     UpdateBillingPortalDtoMapper: BillingPortalDto;
+  } = {
+    BillingPortalDtoMapper: BillingPortalDto;
+    CreateBillingPortalDtoMapper: BillingPortalDto;
+    UpdateBillingPortalDtoMapper: BillingPortalDto;
   }
 > implements BillingPortalService
 {
-  SchemaDefinition!: BillingPortalServiceParameters;
   #dtoMappers: InternalDtoMapper<
-    ReturnTypeRecord<typeof this.dtoMappers>,
+    InstanceTypeRecord<typeof this.dtoMappers>,
     Entities,
     Dto
   >;
@@ -40,25 +50,29 @@ export class BaseBillingPortalService<
   constructor(
     protected cache: TtlCache,
     protected openTelemetryCollector: OpenTelemetryCollector<Metrics>,
+    protected schemaValidator: SchemaValidator,
     protected dtoMappers: {
-      BillingPortalDtoMapper: () => {
-        dto: Dto['BillingPortalDtoMapper'];
-        _Entity: Entities['BillingPortalDtoMapper'];
-        serializeEntityToDto: unknown;
-      };
-      CreateBillingPortalDtoMapper: () => {
-        dto: Dto['CreateBillingPortalDtoMapper'];
-        _Entity: Entities['CreateBillingPortalDtoMapper'];
-        deserializeDtoToEntity: unknown;
-      };
-      UpdateBillingPortalDtoMapper: () => {
-        dto: Dto['UpdateBillingPortalDtoMapper'];
-        _Entity: Entities['UpdateBillingPortalDtoMapper'];
-        deserializeDtoToEntity: unknown;
-      };
+      BillingPortalDtoMapper: ResponseDtoMapperConstructor<
+        SchemaValidator,
+        Dto['BillingPortalDtoMapper'],
+        Entities['BillingPortalDtoMapper']
+      >;
+      CreateBillingPortalDtoMapper: RequestDtoMapperConstructor<
+        SchemaValidator,
+        Dto['CreateBillingPortalDtoMapper'],
+        Entities['CreateBillingPortalDtoMapper']
+      >;
+      UpdateBillingPortalDtoMapper: RequestDtoMapperConstructor<
+        SchemaValidator,
+        Dto['UpdateBillingPortalDtoMapper'],
+        Entities['UpdateBillingPortalDtoMapper']
+      >;
     }
   ) {
-    this.#dtoMappers = transformIntoInternalDtoMapper(dtoMappers);
+    this.#dtoMappers = transformIntoInternalDtoMapper(
+      dtoMappers,
+      schemaValidator
+    );
   }
 
   protected createCacheKey = createCacheKey('billing_portal_session');

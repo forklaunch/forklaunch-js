@@ -1,22 +1,25 @@
 import {
   CheckoutSessionDto,
   CheckoutSessionService,
-  CheckoutSessionServiceParameters,
   CreateCheckoutSessionDto,
   UpdateCheckoutSessionDto
 } from '@forklaunch/blueprint-billing-interfaces';
-import { IdDto, ReturnTypeRecord } from '@forklaunch/common';
+import { IdDto, InstanceTypeRecord } from '@forklaunch/common';
 import { createCacheKey, TtlCache } from '@forklaunch/core/cache';
 import {
   InternalDtoMapper,
+  RequestDtoMapperConstructor,
+  ResponseDtoMapperConstructor,
   transformIntoInternalDtoMapper
 } from '@forklaunch/core/dtoMapper';
 import {
   MetricsDefinition,
   OpenTelemetryCollector
 } from '@forklaunch/core/http';
+import { AnySchemaValidator } from '@forklaunch/validator';
 
 export class BaseCheckoutSessionService<
+  SchemaValidator extends AnySchemaValidator,
   PaymentMethodEnum,
   Metrics extends MetricsDefinition = MetricsDefinition,
   Dto extends {
@@ -39,9 +42,8 @@ export class BaseCheckoutSessionService<
   }
 > implements CheckoutSessionService<PaymentMethodEnum>
 {
-  SchemaDefinition!: CheckoutSessionServiceParameters<PaymentMethodEnum>;
   #dtoMappers: InternalDtoMapper<
-    ReturnTypeRecord<typeof this.dtoMappers>,
+    InstanceTypeRecord<typeof this.dtoMappers>,
     Entities,
     Dto
   >;
@@ -49,26 +51,30 @@ export class BaseCheckoutSessionService<
   constructor(
     protected readonly cache: TtlCache,
     protected readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>,
+    protected readonly schemaValidator: SchemaValidator,
     protected readonly paymentMethodEnum: PaymentMethodEnum,
     protected readonly dtoMappers: {
-      CheckoutSessionDtoMapper: () => {
-        dto: Dto['CheckoutSessionDtoMapper'];
-        _Entity: Entities['CheckoutSessionDtoMapper'];
-        serializeEntityToDto: unknown;
-      };
-      CreateCheckoutSessionDtoMapper: () => {
-        dto: Dto['CreateCheckoutSessionDtoMapper'];
-        _Entity: Entities['CreateCheckoutSessionDtoMapper'];
-        deserializeDtoToEntity: unknown;
-      };
-      UpdateCheckoutSessionDtoMapper: () => {
-        dto: Dto['UpdateCheckoutSessionDtoMapper'];
-        _Entity: Entities['UpdateCheckoutSessionDtoMapper'];
-        deserializeDtoToEntity: unknown;
-      };
+      CheckoutSessionDtoMapper: ResponseDtoMapperConstructor<
+        SchemaValidator,
+        Dto['CheckoutSessionDtoMapper'],
+        Entities['CheckoutSessionDtoMapper']
+      >;
+      CreateCheckoutSessionDtoMapper: RequestDtoMapperConstructor<
+        SchemaValidator,
+        Dto['CreateCheckoutSessionDtoMapper'],
+        Entities['CreateCheckoutSessionDtoMapper']
+      >;
+      UpdateCheckoutSessionDtoMapper: RequestDtoMapperConstructor<
+        SchemaValidator,
+        Dto['UpdateCheckoutSessionDtoMapper'],
+        Entities['UpdateCheckoutSessionDtoMapper']
+      >;
     }
   ) {
-    this.#dtoMappers = transformIntoInternalDtoMapper(dtoMappers);
+    this.#dtoMappers = transformIntoInternalDtoMapper(
+      dtoMappers,
+      schemaValidator
+    );
   }
 
   protected createCacheKey = createCacheKey('checkout_session');

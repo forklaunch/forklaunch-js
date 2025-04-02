@@ -8,11 +8,7 @@ import { BillingProviderEnum } from '../enum/billingProvider.enum';
 import { PartyEnum } from '../enum/party.enum';
 import { Subscription } from '../persistence/subscription.entity';
 
-export type CreateSubscriptionDto =
-  CreateSubscriptionDtoMapperDefinition['dto'];
-export const CreateSubscriptionDtoMapper = () =>
-  new CreateSubscriptionDtoMapperDefinition(SchemaValidator());
-export class CreateSubscriptionDtoMapperDefinition extends RequestDtoMapper<
+export class CreateSubscriptionDtoMapper extends RequestDtoMapper<
   Subscription,
   SchemaValidator
 > {
@@ -26,11 +22,7 @@ export class CreateSubscriptionDtoMapperDefinition extends RequestDtoMapper<
   }
 }
 
-export type UpdateSubscriptionDto =
-  UpdateSubscriptionDtoMapperDefinition['dto'];
-export const UpdateSubscriptionDtoMapper = () =>
-  new UpdateSubscriptionDtoMapperDefinition(SchemaValidator());
-export class UpdateSubscriptionDtoMapperDefinition extends RequestDtoMapper<
+export class UpdateSubscriptionDtoMapper extends RequestDtoMapper<
   Subscription,
   SchemaValidator
 > {
@@ -44,10 +36,7 @@ export class UpdateSubscriptionDtoMapperDefinition extends RequestDtoMapper<
   }
 }
 
-export type SubscriptionDto = SubscriptionDtoMapperDefinition['dto'];
-export const SubscriptionDtoMapper = () =>
-  new SubscriptionDtoMapperDefinition(SchemaValidator());
-export class SubscriptionDtoMapperDefinition extends ResponseDtoMapper<
+export class SubscriptionDtoMapper extends ResponseDtoMapper<
   Subscription,
   SchemaValidator
 > {

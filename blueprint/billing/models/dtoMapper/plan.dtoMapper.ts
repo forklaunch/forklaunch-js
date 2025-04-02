@@ -8,10 +8,7 @@ import { BillingProviderEnum } from '../enum/billingProvider.enum';
 import { PlanCadenceEnum } from '../enum/planCadence.enum';
 import { Plan } from '../persistence/plan.entity';
 
-export type CreatePlanDto = CreatePlanDtoMapperDefinition['dto'];
-export const CreatePlanDtoMapper = () =>
-  new CreatePlanDtoMapperDefinition(SchemaValidator());
-export class CreatePlanDtoMapperDefinition extends RequestDtoMapper<
+export class CreatePlanDtoMapper extends RequestDtoMapper<
   Plan,
   SchemaValidator
 > {
@@ -22,10 +19,7 @@ export class CreatePlanDtoMapperDefinition extends RequestDtoMapper<
   }
 }
 
-export type UpdatePlanDto = UpdatePlanDtoMapperDefinition['dto'];
-export const UpdatePlanDtoMapper = () =>
-  new UpdatePlanDtoMapperDefinition(SchemaValidator());
-export class UpdatePlanDtoMapperDefinition extends RequestDtoMapper<
+export class UpdatePlanDtoMapper extends RequestDtoMapper<
   Plan,
   SchemaValidator
 > {
@@ -36,13 +30,7 @@ export class UpdatePlanDtoMapperDefinition extends RequestDtoMapper<
   }
 }
 
-export type PlanDto = PlanDtoMapperDefinition['dto'];
-export const PlanDtoMapper = () =>
-  new PlanDtoMapperDefinition(SchemaValidator());
-export class PlanDtoMapperDefinition extends ResponseDtoMapper<
-  Plan,
-  SchemaValidator
-> {
+export class PlanDtoMapper extends ResponseDtoMapper<Plan, SchemaValidator> {
   schema = PlanSchemas.PlanSchema(PlanCadenceEnum, BillingProviderEnum);
 
   fromEntity(plan: Plan): this {

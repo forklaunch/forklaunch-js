@@ -2,21 +2,24 @@ import {
   CreateSubscriptionDto,
   SubscriptionDto,
   SubscriptionService,
-  SubscriptionServiceParameters,
   UpdateSubscriptionDto
 } from '@forklaunch/blueprint-billing-interfaces';
-import { IdDto, ReturnTypeRecord } from '@forklaunch/common';
+import { IdDto, InstanceTypeRecord } from '@forklaunch/common';
 import {
   InternalDtoMapper,
+  RequestDtoMapperConstructor,
+  ResponseDtoMapperConstructor,
   transformIntoInternalDtoMapper
 } from '@forklaunch/core/dtoMapper';
 import {
   MetricsDefinition,
   OpenTelemetryCollector
 } from '@forklaunch/core/http';
+import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
 
 export class BaseSubscriptionService<
+  SchemaValidator extends AnySchemaValidator,
   PartyType,
   BillingProviderType,
   Metrics extends MetricsDefinition = MetricsDefinition,
@@ -64,12 +67,8 @@ export class BaseSubscriptionService<
   }
 > implements SubscriptionService<PartyType, BillingProviderType>
 {
-  SchemaDefinition!: SubscriptionServiceParameters<
-    PartyType,
-    BillingProviderType
-  >;
   #dtoMappers: InternalDtoMapper<
-    ReturnTypeRecord<typeof this.dtoMappers>,
+    InstanceTypeRecord<typeof this.dtoMappers>,
     Entities,
     Dto
   >;
@@ -77,25 +76,31 @@ export class BaseSubscriptionService<
   constructor(
     protected em: EntityManager,
     protected readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>,
+    protected readonly schemaValidator: SchemaValidator,
     protected readonly dtoMappers: {
-      SubscriptionDtoMapper: () => {
-        dto: Dto['SubscriptionDtoMapper'];
-        _Entity: Entities['SubscriptionDtoMapper'];
-        serializeEntityToDto: unknown;
-      };
-      CreateSubscriptionDtoMapper: () => {
-        dto: Dto['CreateSubscriptionDtoMapper'];
-        _Entity: Entities['CreateSubscriptionDtoMapper'];
-        deserializeDtoToEntity: unknown;
-      };
-      UpdateSubscriptionDtoMapper: () => {
-        dto: Dto['UpdateSubscriptionDtoMapper'];
-        _Entity: Entities['UpdateSubscriptionDtoMapper'];
-        deserializeDtoToEntity: unknown;
-      };
+      SubscriptionDtoMapper: ResponseDtoMapperConstructor<
+        SchemaValidator,
+        Dto['SubscriptionDtoMapper'],
+        Entities['SubscriptionDtoMapper']
+      >;
+      CreateSubscriptionDtoMapper: RequestDtoMapperConstructor<
+        SchemaValidator,
+        Dto['CreateSubscriptionDtoMapper'],
+        Entities['CreateSubscriptionDtoMapper']
+      >;
+      UpdateSubscriptionDtoMapper: RequestDtoMapperConstructor<
+        SchemaValidator,
+        Dto['UpdateSubscriptionDtoMapper'],
+        Entities['UpdateSubscriptionDtoMapper']
+      >;
     }
   ) {
-    this.#dtoMappers = transformIntoInternalDtoMapper(dtoMappers);
+    this.#dtoMappers = transformIntoInternalDtoMapper<
+      SchemaValidator,
+      typeof this.dtoMappers,
+      Entities,
+      Dto
+    >(dtoMappers, this.schemaValidator);
   }
 
   async createSubscription(

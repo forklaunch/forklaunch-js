@@ -46,6 +46,7 @@ export const SubscriptionController = (
         }
       },
       async (req, res) => {
+        openTelemetryCollector.debug('Creating subscription', req.body);
         res
           .status(200)
           .json(await serviceFactory().createSubscription(req.body));
@@ -67,6 +68,7 @@ export const SubscriptionController = (
         }
       },
       async (req, res) => {
+        openTelemetryCollector.debug('Retrieving subscription', req.params);
         res
           .status(200)
           .json(await serviceFactory().getSubscription(req.params));
@@ -88,6 +90,10 @@ export const SubscriptionController = (
         }
       },
       async (req, res) => {
+        openTelemetryCollector.debug(
+          'Retrieving user subscription',
+          req.params
+        );
         res
           .status(200)
           .json(await serviceFactory().getUserSubscription(req.params));
@@ -109,6 +115,10 @@ export const SubscriptionController = (
         }
       },
       async (req, res) => {
+        openTelemetryCollector.debug(
+          'Retrieving organization subscription',
+          req.params
+        );
         res
           .status(200)
           .json(await serviceFactory().getOrganizationSubscription(req.params));
@@ -134,6 +144,7 @@ export const SubscriptionController = (
         }
       },
       async (req, res) => {
+        openTelemetryCollector.debug('Update subscription', req.body);
         res
           .status(200)
           .json(await serviceFactory().updateSubscription(req.body));
@@ -152,6 +163,7 @@ export const SubscriptionController = (
         }
       },
       async (req, res) => {
+        openTelemetryCollector.debug('Deleting subscription', req.params);
         await serviceFactory().deleteSubscription(req.params);
         res.status(200).send(`Deleted subscription ${req.params.id}`);
       }
@@ -174,6 +186,7 @@ export const SubscriptionController = (
         }
       },
       async (req, res) => {
+        openTelemetryCollector.debug('Listing subscriptions', req.query);
         res
           .status(200)
           .json(await serviceFactory().listSubscriptions(req.query));
@@ -192,6 +205,7 @@ export const SubscriptionController = (
         }
       },
       async (req, res) => {
+        openTelemetryCollector.debug('Cancelling subscription', req.params);
         await serviceFactory().cancelSubscription(req.params);
         res.status(200).send(`Cancelled subscription ${req.params.id}`);
       }
@@ -209,6 +223,7 @@ export const SubscriptionController = (
         }
       },
       async (req, res) => {
+        openTelemetryCollector.debug('Resuming subscription', req.params);
         await serviceFactory().resumeSubscription(req.params);
         res.status(200).send(`Resumed subscription ${req.params.id}`);
       }

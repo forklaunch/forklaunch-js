@@ -2,21 +2,24 @@ import {
   CreatePaymentLinkDto,
   PaymentLinkDto,
   PaymentLinkService,
-  PaymentLinkServiceParameters,
   UpdatePaymentLinkDto
 } from '@forklaunch/blueprint-billing-interfaces';
-import { IdDto, IdsDto, ReturnTypeRecord } from '@forklaunch/common';
+import { IdDto, IdsDto, InstanceTypeRecord } from '@forklaunch/common';
 import { createCacheKey, TtlCache } from '@forklaunch/core/cache';
 import {
   InternalDtoMapper,
+  RequestDtoMapperConstructor,
+  ResponseDtoMapperConstructor,
   transformIntoInternalDtoMapper
 } from '@forklaunch/core/dtoMapper';
 import {
   MetricsDefinition,
   OpenTelemetryCollector
 } from '@forklaunch/core/http';
+import { AnySchemaValidator } from '@forklaunch/validator';
 
 export class BasePaymentLinkService<
+  SchemaValidator extends AnySchemaValidator,
   CurrencyEnum,
   Metrics extends MetricsDefinition = MetricsDefinition,
   Dto extends {
@@ -39,9 +42,8 @@ export class BasePaymentLinkService<
   }
 > implements PaymentLinkService<CurrencyEnum>
 {
-  SchemaDefinition!: PaymentLinkServiceParameters<CurrencyEnum>;
   #dtoMappers: InternalDtoMapper<
-    ReturnTypeRecord<typeof this.dtoMappers>,
+    InstanceTypeRecord<typeof this.dtoMappers>,
     Entities,
     Dto
   >;
@@ -49,25 +51,29 @@ export class BasePaymentLinkService<
   constructor(
     protected readonly cache: TtlCache,
     protected readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>,
+    protected readonly schemaValidator: SchemaValidator,
     protected readonly dtoMappers: {
-      PaymentLinkDtoMapper: () => {
-        dto: Dto['PaymentLinkDtoMapper'];
-        _Entity: Entities['PaymentLinkDtoMapper'];
-        serializeEntityToDto: unknown;
-      };
-      CreatePaymentLinkDtoMapper: () => {
-        dto: Dto['CreatePaymentLinkDtoMapper'];
-        _Entity: Entities['CreatePaymentLinkDtoMapper'];
-        deserializeDtoToEntity: unknown;
-      };
-      UpdatePaymentLinkDtoMapper: () => {
-        dto: Dto['UpdatePaymentLinkDtoMapper'];
-        _Entity: Entities['UpdatePaymentLinkDtoMapper'];
-        deserializeDtoToEntity: unknown;
-      };
+      PaymentLinkDtoMapper: ResponseDtoMapperConstructor<
+        SchemaValidator,
+        Dto['PaymentLinkDtoMapper'],
+        Entities['PaymentLinkDtoMapper']
+      >;
+      CreatePaymentLinkDtoMapper: RequestDtoMapperConstructor<
+        SchemaValidator,
+        Dto['CreatePaymentLinkDtoMapper'],
+        Entities['CreatePaymentLinkDtoMapper']
+      >;
+      UpdatePaymentLinkDtoMapper: RequestDtoMapperConstructor<
+        SchemaValidator,
+        Dto['UpdatePaymentLinkDtoMapper'],
+        Entities['UpdatePaymentLinkDtoMapper']
+      >;
     }
   ) {
-    this.#dtoMappers = transformIntoInternalDtoMapper(dtoMappers);
+    this.#dtoMappers = transformIntoInternalDtoMapper(
+      dtoMappers,
+      schemaValidator
+    );
   }
 
   protected cacheKeyPrefix = 'payment_link';

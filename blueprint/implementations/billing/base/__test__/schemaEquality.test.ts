@@ -1,173 +1,411 @@
-import { IdiomaticSchema, Schema } from '@forklaunch/validator';
-import { TypeboxSchemaValidator } from '@forklaunch/validator/typebox';
-import { ZodSchemaValidator } from '@forklaunch/validator/zod';
+import { isTrue } from '@forklaunch/common';
+import { DummyEnum, testSchemaEquality } from '@forklaunch/core/test';
 import {
   BillingPortalSchema as TypeboxBillingPortalSchema,
   CreateBillingPortalSchema as TypeboxCreateBillingPortalSchema,
   UpdateBillingPortalSchema as TypeboxUpdateBillingPortalSchema
-} from '../schemas/typebox/billingPortal.schemas';
+} from '../schemas/typebox/billingPortal.schema';
 import {
   CheckoutSessionSchema as TypeboxCheckoutSessionSchema,
   CreateCheckoutSessionSchema as TypeboxCreateCheckoutSessionSchema,
   UpdateCheckoutSessionSchema as TypeboxUpdateCheckoutSessionSchema
-} from '../schemas/typebox/checkoutSession.schemas';
+} from '../schemas/typebox/checkoutSession.schema';
 import {
   CreatePaymentLinkSchema as TypeboxCreatePaymentLinkSchema,
   PaymentLinkSchema as TypeboxPaymentLinkSchema,
   UpdatePaymentLinkSchema as TypeboxUpdatePaymentLinkSchema
-} from '../schemas/typebox/paymentLink.schemas';
+} from '../schemas/typebox/paymentLink.schema';
 import {
   CreatePlanSchema as TypeboxCreatePlanSchema,
   PlanSchema as TypeboxPlanSchema,
   UpdatePlanSchema as TypeboxUpdatePlanSchema
-} from '../schemas/typebox/plan.schemas';
+} from '../schemas/typebox/plan.schema';
 import {
   CreateSubscriptionSchema as TypeboxCreateSubscriptionSchema,
   SubscriptionSchema as TypeboxSubscriptionSchema,
   UpdateSubscriptionSchema as TypeboxUpdateSubscriptionSchema
-} from '../schemas/typebox/subscription.schemas';
+} from '../schemas/typebox/subscription.schema';
 import {
   BillingPortalSchema as ZodBillingPortalSchema,
   CreateBillingPortalSchema as ZodCreateBillingPortalSchema,
   UpdateBillingPortalSchema as ZodUpdateBillingPortalSchema
-} from '../schemas/zod/billingPortal.schemas';
+} from '../schemas/zod/billingPortal.schema';
 import {
   CheckoutSessionSchema as ZodCheckoutSessionSchema,
   CreateCheckoutSessionSchema as ZodCreateCheckoutSessionSchema,
   UpdateCheckoutSessionSchema as ZodUpdateCheckoutSessionSchema
-} from '../schemas/zod/checkoutSession.schemas';
+} from '../schemas/zod/checkoutSession.schema';
 import {
   CreatePaymentLinkSchema as ZodCreatePaymentLinkSchema,
   PaymentLinkSchema as ZodPaymentLinkSchema,
   UpdatePaymentLinkSchema as ZodUpdatePaymentLinkSchema
-} from '../schemas/zod/paymentLink.schemas';
+} from '../schemas/zod/paymentLink.schema';
 import {
   CreatePlanSchema as ZodCreatePlanSchema,
   PlanSchema as ZodPlanSchema,
   UpdatePlanSchema as ZodUpdatePlanSchema
-} from '../schemas/zod/plan.schemas';
+} from '../schemas/zod/plan.schema';
 import {
   CreateSubscriptionSchema as ZodCreateSubscriptionSchema,
   SubscriptionSchema as ZodSubscriptionSchema,
   UpdateSubscriptionSchema as ZodUpdateSubscriptionSchema
-} from '../schemas/zod/subscription.schemas';
+} from '../schemas/zod/subscription.schema';
 
-function testSchemaEquality<
-  Z extends IdiomaticSchema<ZodSchemaValidator>,
-  T extends IdiomaticSchema<TypeboxSchemaValidator>
->(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _zodSchema: Z,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _typeBoxSchema: T
-): Schema<Z, ZodSchemaValidator> extends Schema<T, TypeboxSchemaValidator>
-  ? Schema<T, TypeboxSchemaValidator> extends Schema<Z, ZodSchemaValidator>
-    ? true
-    : false
-  : false {
-  return {} as never;
-}
+const zodUpdateBillingPortalSchema = ZodUpdateBillingPortalSchema(false);
+const typeboxUpdateBillingPortalSchema =
+  TypeboxUpdateBillingPortalSchema(false);
+const zodBillingPortalSchema = ZodBillingPortalSchema(false);
+const typeboxBillingPortalSchema = TypeboxBillingPortalSchema(false);
 
-function isTrue(value: true) {
-  return value;
-}
+const zodCreateCheckoutSessionSchema =
+  ZodCreateCheckoutSessionSchema(DummyEnum);
+const typeboxCreateCheckoutSessionSchema =
+  TypeboxCreateCheckoutSessionSchema(DummyEnum);
+const zodUpdateCheckoutSessionSchema =
+  ZodUpdateCheckoutSessionSchema(false)(DummyEnum);
+const typeboxUpdateCheckoutSessionSchema =
+  TypeboxUpdateCheckoutSessionSchema(false)(DummyEnum);
+const zodCheckoutSessionSchema = ZodCheckoutSessionSchema(false)(DummyEnum);
+const typeboxCheckoutSessionSchema =
+  TypeboxCheckoutSessionSchema(false)(DummyEnum);
 
-enum DummyEnum {
-  A = 'A',
-  B = 'B'
-}
+const zodCreatePaymentLinkSchema = ZodCreatePaymentLinkSchema(DummyEnum);
+const typeboxCreatePaymentLinkSchema =
+  TypeboxCreatePaymentLinkSchema(DummyEnum);
+const zodUpdatePaymentLinkSchema = ZodUpdatePaymentLinkSchema(false)(DummyEnum);
+const typeboxUpdatePaymentLinkSchema =
+  TypeboxUpdatePaymentLinkSchema(false)(DummyEnum);
+const zodPaymentLinkSchema = ZodPaymentLinkSchema(false)(DummyEnum);
+const typeboxPaymentLinkSchema = TypeboxPaymentLinkSchema(false)(DummyEnum);
 
-isTrue(
-  testSchemaEquality(
-    ZodCreateBillingPortalSchema,
-    TypeboxCreateBillingPortalSchema
-  )
+const zodCreatePlanSchema = ZodCreatePlanSchema(DummyEnum, DummyEnum);
+const typeboxCreatePlanSchema = TypeboxCreatePlanSchema(DummyEnum, DummyEnum);
+const zodUpdatePlanSchema = ZodUpdatePlanSchema(false)(DummyEnum, DummyEnum);
+const typeboxUpdatePlanSchema = TypeboxUpdatePlanSchema(false)(
+  DummyEnum,
+  DummyEnum
 );
-isTrue(
-  testSchemaEquality(
-    ZodUpdateBillingPortalSchema(true),
-    TypeboxUpdateBillingPortalSchema(true)
-  )
-);
-isTrue(
-  testSchemaEquality(
-    ZodBillingPortalSchema(true),
-    TypeboxBillingPortalSchema(true)
-  )
-);
+const zodPlanSchema = ZodPlanSchema(false)(DummyEnum, DummyEnum);
+const typeboxPlanSchema = TypeboxPlanSchema(false)(DummyEnum, DummyEnum);
 
-isTrue(
-  testSchemaEquality(
-    ZodCreateCheckoutSessionSchema(DummyEnum),
-    TypeboxCreateCheckoutSessionSchema(DummyEnum)
-  )
+const zodCreateSubscriptionSchema = ZodCreateSubscriptionSchema(
+  DummyEnum,
+  DummyEnum
 );
-isTrue(
-  testSchemaEquality(
-    ZodUpdateCheckoutSessionSchema(true)(DummyEnum),
-    TypeboxUpdateCheckoutSessionSchema(true)(DummyEnum)
-  )
+const typeboxCreateSubscriptionSchema = TypeboxCreateSubscriptionSchema(
+  DummyEnum,
+  DummyEnum
 );
-isTrue(
-  testSchemaEquality(
-    ZodCheckoutSessionSchema(true)(DummyEnum),
-    TypeboxCheckoutSessionSchema(true)(DummyEnum)
-  )
+const zodUpdateSubscriptionSchema = ZodUpdateSubscriptionSchema(false)(
+  DummyEnum,
+  DummyEnum
 );
-
-isTrue(
-  testSchemaEquality(
-    ZodCreatePaymentLinkSchema(DummyEnum),
-    TypeboxCreatePaymentLinkSchema(DummyEnum)
-  )
+const typeboxUpdateSubscriptionSchema = TypeboxUpdateSubscriptionSchema(false)(
+  DummyEnum,
+  DummyEnum
 );
-isTrue(
-  testSchemaEquality(
-    ZodUpdatePaymentLinkSchema(true)(DummyEnum),
-    TypeboxUpdatePaymentLinkSchema(true)(DummyEnum)
-  )
+const zodSubscriptionSchema = ZodSubscriptionSchema(false)(
+  DummyEnum,
+  DummyEnum
 );
-isTrue(
-  testSchemaEquality(
-    ZodPaymentLinkSchema(true)(DummyEnum),
-    TypeboxPaymentLinkSchema(true)(DummyEnum)
-  )
+const typeboxSubscriptionSchema = TypeboxSubscriptionSchema(false)(
+  DummyEnum,
+  DummyEnum
 );
 
-isTrue(
-  testSchemaEquality(
-    ZodCreatePlanSchema(DummyEnum, DummyEnum),
-    TypeboxCreatePlanSchema(DummyEnum, DummyEnum)
-  )
-);
-isTrue(
-  testSchemaEquality(
-    ZodUpdatePlanSchema(true)(DummyEnum, DummyEnum),
-    TypeboxUpdatePlanSchema(true)(DummyEnum, DummyEnum)
-  )
-);
-isTrue(
-  testSchemaEquality(
-    ZodPlanSchema(true)(DummyEnum, DummyEnum),
-    TypeboxPlanSchema(true)(DummyEnum, DummyEnum)
-  )
-);
+describe('schema equality', () => {
+  it('should be equal for billing portal', () => {
+    expect(
+      isTrue(
+        testSchemaEquality(
+          ZodCreateBillingPortalSchema,
+          TypeboxCreateBillingPortalSchema,
+          {
+            customerId: 'test',
+            uri: 'https://example.com',
+            expiresAt: new Date()
+          }
+        )
+      )
+    ).toBeTruthy();
 
-isTrue(
-  testSchemaEquality(
-    ZodCreateSubscriptionSchema(DummyEnum, DummyEnum),
-    TypeboxCreateSubscriptionSchema(DummyEnum, DummyEnum)
-  )
-);
-isTrue(
-  testSchemaEquality(
-    ZodUpdateSubscriptionSchema(true)(DummyEnum, DummyEnum),
-    TypeboxUpdateSubscriptionSchema(true)(DummyEnum, DummyEnum)
-  )
-);
-isTrue(
-  testSchemaEquality(
-    ZodSubscriptionSchema(true)(DummyEnum, DummyEnum),
-    TypeboxSubscriptionSchema(true)(DummyEnum, DummyEnum)
-  )
-);
+    expect(
+      isTrue(
+        testSchemaEquality(
+          zodUpdateBillingPortalSchema,
+          typeboxUpdateBillingPortalSchema,
+          {
+            id: 'test',
+            uri: 'https://example.com',
+            expiresAt: new Date()
+          }
+        )
+      )
+    ).toBeTruthy();
+
+    expect(
+      isTrue(
+        testSchemaEquality(zodBillingPortalSchema, typeboxBillingPortalSchema, {
+          id: 'test',
+          customerId: 'test',
+          uri: 'https://example.com',
+          expiresAt: new Date(),
+          extraFields: {
+            test: 'test'
+          }
+        })
+      )
+    ).toBeTruthy();
+  });
+
+  it('should be equal for checkout session', () => {
+    expect(
+      isTrue(
+        testSchemaEquality(
+          zodCreateCheckoutSessionSchema,
+          typeboxCreateCheckoutSessionSchema,
+          {
+            customerId: 'test',
+            paymentMethods: [DummyEnum.A, DummyEnum.B],
+            successRedirectUri: 'https://example.com',
+            cancelRedirectUri: 'https://example.com',
+            extraFields: {
+              test: 'test'
+            }
+          }
+        )
+      )
+    ).toBeTruthy();
+
+    expect(
+      isTrue(
+        testSchemaEquality(
+          zodUpdateCheckoutSessionSchema,
+          typeboxUpdateCheckoutSessionSchema,
+          {
+            id: 'test',
+            customerId: 'test',
+            paymentMethods: [DummyEnum.A, DummyEnum.B],
+            successRedirectUri: 'https://example.com',
+            cancelRedirectUri: 'https://example.com',
+            extraFields: {
+              test: 'test'
+            }
+          }
+        )
+      )
+    ).toBeTruthy();
+
+    expect(
+      isTrue(
+        testSchemaEquality(
+          zodCheckoutSessionSchema,
+          typeboxCheckoutSessionSchema,
+          {
+            id: 'test',
+            customerId: 'test',
+            paymentMethods: [DummyEnum.A, DummyEnum.B],
+            successRedirectUri: 'https://example.com',
+            cancelRedirectUri: 'https://example.com',
+            extraFields: {
+              test: 'test'
+            }
+          }
+        )
+      )
+    ).toBeTruthy();
+  });
+
+  it('should be equal for payment link', () => {
+    expect(
+      isTrue(
+        testSchemaEquality(
+          zodCreatePaymentLinkSchema,
+          typeboxCreatePaymentLinkSchema,
+          {
+            amount: 100,
+            currency: DummyEnum.A,
+            successRedirectUri: 'https://example.com',
+            cancelRedirectUri: 'https://example.com',
+            description: 'test',
+            metadata: {
+              test: 'test'
+            },
+            extraFields: {
+              test: 'test'
+            }
+          }
+        )
+      )
+    ).toBeTruthy();
+
+    expect(
+      isTrue(
+        testSchemaEquality(
+          zodUpdatePaymentLinkSchema,
+          typeboxUpdatePaymentLinkSchema,
+          {
+            id: 'test',
+            amount: 100,
+            currency: DummyEnum.A,
+            successRedirectUri: 'https://example.com',
+            cancelRedirectUri: 'https://example.com',
+            description: 'test',
+            metadata: {
+              test: 'test'
+            },
+            extraFields: {
+              test: 'test'
+            }
+          }
+        )
+      )
+    );
+
+    expect(
+      isTrue(
+        testSchemaEquality(zodPaymentLinkSchema, typeboxPaymentLinkSchema, {
+          id: 'test',
+          amount: 100,
+          currency: DummyEnum.A,
+          successRedirectUri: 'https://example.com',
+          cancelRedirectUri: 'https://example.com',
+          description: 'test',
+          metadata: {
+            test: 'test'
+          },
+          extraFields: {
+            test: 'test'
+          }
+        })
+      )
+    ).toBeTruthy();
+  });
+
+  it('should be equal for plan', () => {
+    expect(
+      isTrue(
+        testSchemaEquality(zodCreatePlanSchema, typeboxCreatePlanSchema, {
+          name: 'test',
+          price: 100,
+          cadence: DummyEnum.A,
+          features: [DummyEnum.A, DummyEnum.B],
+          externalId: 'test',
+          active: true,
+          description: 'test',
+          extraFields: {
+            test: 'test'
+          }
+        })
+      )
+    ).toBeTruthy();
+
+    expect(
+      isTrue(
+        testSchemaEquality(zodUpdatePlanSchema, typeboxUpdatePlanSchema, {
+          id: 'test',
+          name: 'test',
+          price: 100,
+          cadence: DummyEnum.A,
+          features: [DummyEnum.A, DummyEnum.B],
+          externalId: 'test',
+          active: true,
+          description: 'test',
+          extraFields: {
+            test: 'test'
+          }
+        })
+      )
+    ).toBeTruthy();
+
+    expect(
+      isTrue(
+        testSchemaEquality(zodPlanSchema, typeboxPlanSchema, {
+          id: 'test',
+          name: 'test',
+          price: 100,
+          cadence: DummyEnum.A,
+          features: [DummyEnum.A, DummyEnum.B],
+          externalId: 'test',
+          active: true,
+          description: 'test',
+          extraFields: {
+            test: 'test'
+          }
+        })
+      )
+    ).toBeTruthy();
+  });
+
+  it('should be equal for subscription', () => {
+    expect(
+      isTrue(
+        testSchemaEquality(
+          zodCreateSubscriptionSchema,
+          typeboxCreateSubscriptionSchema,
+          {
+            partyId: 'test',
+            partyType: DummyEnum.A,
+            productId: 'test',
+            status: DummyEnum.A,
+            active: true,
+            externalId: 'test',
+            startDate: new Date(),
+            endDate: new Date(),
+            description: 'test',
+            extraFields: {
+              test: 'test'
+            },
+            billingProvider: DummyEnum.A
+          }
+        )
+      )
+    ).toBeTruthy();
+
+    expect(
+      isTrue(
+        testSchemaEquality(
+          zodUpdateSubscriptionSchema,
+          typeboxUpdateSubscriptionSchema,
+          {
+            id: 'test',
+            partyId: 'test',
+            partyType: DummyEnum.A,
+            productId: 'test',
+            status: DummyEnum.A,
+            active: true,
+            externalId: 'test',
+            startDate: new Date(),
+            endDate: new Date(),
+            description: 'test',
+            extraFields: {
+              test: 'test'
+            },
+            billingProvider: DummyEnum.A
+          }
+        )
+      )
+    ).toBeTruthy();
+
+    expect(
+      isTrue(
+        testSchemaEquality(zodSubscriptionSchema, typeboxSubscriptionSchema, {
+          id: 'test',
+          partyId: 'test',
+          partyType: DummyEnum.A,
+          productId: 'test',
+          status: DummyEnum.A,
+          active: true,
+          externalId: 'test',
+          startDate: new Date(),
+          endDate: new Date(),
+          description: 'test',
+          extraFields: {
+            test: 'test'
+          },
+          billingProvider: DummyEnum.A
+        })
+      )
+    ).toBeTruthy();
+  });
+});

@@ -7,11 +7,7 @@ import { CheckoutSessionSchemas } from '../../registrations';
 import { PaymentMethodEnum } from '../enum/paymentMethod.enum';
 import { CheckoutSession } from '../persistence/checkoutSession.entity';
 
-export type CreateCheckoutSessionDto =
-  CreateCheckoutSessionDtoMapperDefinition['dto'];
-export const CreateCheckoutSessionDtoMapper = () =>
-  new CreateCheckoutSessionDtoMapperDefinition(SchemaValidator());
-export class CreateCheckoutSessionDtoMapperDefinition extends RequestDtoMapper<
+export class CreateCheckoutSessionDtoMapper extends RequestDtoMapper<
   CheckoutSession,
   SchemaValidator
 > {
@@ -23,11 +19,7 @@ export class CreateCheckoutSessionDtoMapperDefinition extends RequestDtoMapper<
   }
 }
 
-export type UpdateCheckoutSessionDto =
-  UpdateCheckoutSessionDtoMapperDefinition['dto'];
-export const UpdateCheckoutSessionDtoMapper = () =>
-  new UpdateCheckoutSessionDtoMapperDefinition(SchemaValidator());
-export class UpdateCheckoutSessionDtoMapperDefinition extends RequestDtoMapper<
+export class UpdateCheckoutSessionDtoMapper extends RequestDtoMapper<
   CheckoutSession,
   SchemaValidator
 > {
@@ -39,10 +31,7 @@ export class UpdateCheckoutSessionDtoMapperDefinition extends RequestDtoMapper<
   }
 }
 
-export type CheckoutSessionDto = CheckoutSessionDtoMapperDefinition['dto'];
-export const CheckoutSessionDtoMapper = () =>
-  new CheckoutSessionDtoMapperDefinition(SchemaValidator());
-export class CheckoutSessionDtoMapperDefinition extends ResponseDtoMapper<
+export class CheckoutSessionDtoMapper extends ResponseDtoMapper<
   CheckoutSession,
   SchemaValidator
 > {
