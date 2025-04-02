@@ -15,9 +15,14 @@ import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
+import {
+  CreateSubscriptionDtoMapper,
+  SubscriptionDtoMapper,
+  UpdateSubscriptionDtoMapper
+} from '../models/dtoMapper/subscription.dtoMapper';
 import { BillingProviderEnum } from '../models/enum/billingProvider.enum';
 import { PartyEnum } from '../models/enum/party.enum';
-import { ServiceDependencies, SubscriptionSchemas } from '../registrations';
+import { ServiceDependencies } from '../registrations';
 
 export const SubscriptionController = (
   serviceFactory: ScopedDependencyFactory<
@@ -34,15 +39,9 @@ export const SubscriptionController = (
       {
         name: 'createSubscription',
         summary: 'Create a subscription',
-        body: SubscriptionSchemas.CreateSubscriptionSchema(
-          PartyEnum,
-          BillingProviderEnum
-        ),
+        body: CreateSubscriptionDtoMapper.schema(),
         responses: {
-          200: SubscriptionSchemas.SubscriptionSchema(
-            PartyEnum,
-            BillingProviderEnum
-          )
+          200: SubscriptionDtoMapper.schema()
         }
       },
       async (req, res) => {
@@ -61,10 +60,7 @@ export const SubscriptionController = (
         summary: 'Get a subscription',
         params: IdSchema,
         responses: {
-          200: SubscriptionSchemas.SubscriptionSchema(
-            PartyEnum,
-            BillingProviderEnum
-          )
+          200: SubscriptionDtoMapper.schema()
         }
       },
       async (req, res) => {
@@ -83,10 +79,7 @@ export const SubscriptionController = (
         summary: 'Get a user subscription',
         params: IdSchema,
         responses: {
-          200: SubscriptionSchemas.SubscriptionSchema(
-            PartyEnum,
-            BillingProviderEnum
-          )
+          200: SubscriptionDtoMapper.schema()
         }
       },
       async (req, res) => {
@@ -108,10 +101,7 @@ export const SubscriptionController = (
         summary: 'Get an organization subscription',
         params: IdSchema,
         responses: {
-          200: SubscriptionSchemas.SubscriptionSchema(
-            PartyEnum,
-            BillingProviderEnum
-          )
+          200: SubscriptionDtoMapper.schema()
         }
       },
       async (req, res) => {
@@ -132,15 +122,9 @@ export const SubscriptionController = (
         name: 'updateSubscription',
         summary: 'Update a subscription',
         params: IdSchema,
-        body: SubscriptionSchemas.UpdateSubscriptionSchema(
-          PartyEnum,
-          BillingProviderEnum
-        ),
+        body: UpdateSubscriptionDtoMapper.schema(),
         responses: {
-          200: SubscriptionSchemas.SubscriptionSchema(
-            PartyEnum,
-            BillingProviderEnum
-          )
+          200: SubscriptionDtoMapper.schema()
         }
       },
       async (req, res) => {
@@ -177,12 +161,7 @@ export const SubscriptionController = (
         summary: 'List subscriptions',
         query: IdsSchema,
         responses: {
-          200: array(
-            SubscriptionSchemas.SubscriptionSchema(
-              PartyEnum,
-              BillingProviderEnum
-            )
-          )
+          200: array(SubscriptionDtoMapper.schema())
         }
       },
       async (req, res) => {

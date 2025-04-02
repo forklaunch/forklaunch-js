@@ -1,21 +1,21 @@
+import { forklaunchRouter, SchemaValidator } from '@forklaunch/blueprint-core';
+import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
-import { forklaunchRouter, SchemaValidator } from '@forklaunch/framework-core';
-import { Metrics } from '@forklaunch/framework-monitoring';
-import { configValidator } from '../bootstrapper';
 import { OrganizationController } from '../controllers/organization.controller';
+import { ServiceDependencies } from '../registrations';
 
 export const OrganizationRoutes = (
   scopedServiceFactory: ScopedDependencyFactory<
     SchemaValidator,
-    typeof configValidator,
-    'organizationService'
+    ServiceDependencies,
+    'OrganizationService'
   >,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) => {
   const router = forklaunchRouter('/organization', openTelemetryCollector);
 
-  const controller = new OrganizationController(
+  const controller = OrganizationController(
     scopedServiceFactory,
     openTelemetryCollector
   );

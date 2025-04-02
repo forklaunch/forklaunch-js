@@ -11,8 +11,8 @@ import {
   Request,
   Response,
   SchemaValidator
-} from '@forklaunch/framework-core';
-import { Metrics } from '@forklaunch/framework-monitoring';
+} from '@forklaunch/blueprint-core';
+import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { configValidator } from '../bootstrapper';
 import { SampleWorkerService } from '../interfaces/sampleWorker.interface';
 import {

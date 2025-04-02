@@ -1,5 +1,5 @@
 import { TtlCache } from '@forklaunch/core/cache';
-import { SchemaValidator } from '@forklaunch/framework-core';
+import { SchemaValidator } from '@forklaunch/blueprint-core';
 import { EntityManager } from '@mikro-orm/core';
 import { SAMPLE_WORKER_CACHE_KEY_PREFIX } from '../consts';
 import { SampleWorkerService } from '../interfaces/sampleWorker.interface';

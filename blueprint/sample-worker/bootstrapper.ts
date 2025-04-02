@@ -6,8 +6,8 @@ import {
   optional,
   SchemaValidator,
   string
-} from '@forklaunch/framework-core';
-import { metrics } from '@forklaunch/framework-monitoring';
+} from '@forklaunch/blueprint-core';
+import { metrics } from '@forklaunch/blueprint-monitoring';
 import { EntityManager, ForkOptions, MikroORM } from '@mikro-orm/core';
 import dotenv from 'dotenv';
 import mikroOrmOptionsConfig from './mikro-orm.config';

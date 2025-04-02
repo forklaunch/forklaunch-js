@@ -1,5 +1,5 @@
 import { ApiClient } from '@forklaunch/core/http';
-import { forklaunchExpress } from '@forklaunch/framework-core';
+import { forklaunchExpress } from '@forklaunch/blueprint-core';
 import { bootstrap } from './bootstrapper';
 import { SampleWorkerRoutes } from './routes/sampleWorker.routes';
 //! bootstrap function that initializes the service application

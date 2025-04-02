@@ -6,3 +6,7 @@ packages:
   - 'billing'
   - 'iam'
   - 'sample-worker'
+  - 'implementations/billing/base'
+  - 'implementations/iam/base'
+  - 'interfaces/billing'
+  - 'interfaces/iam'

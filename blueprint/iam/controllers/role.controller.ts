@@ -1,186 +1,187 @@
-import { Controller } from '@forklaunch/core/controllers';
-import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import {
   array,
   handlers,
+  IdSchema,
+  IdsSchema,
   SchemaValidator,
   string
-} from '@forklaunch/framework-core';
-import { Metrics } from '@forklaunch/framework-monitoring';
+} from '@forklaunch/blueprint-core';
+import { RoleService } from '@forklaunch/blueprint-iam-interfaces';
+import { Metrics } from '@forklaunch/blueprint-monitoring';
+import { Controller } from '@forklaunch/core/controllers';
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
+import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { NextFunction, Request, Response } from 'express';
 import { ParsedQs } from 'qs';
-import { configValidator } from '../bootstrapper';
-import { RoleService } from '../interfaces/role.service.interface';
 import {
   CreateRoleDtoMapper,
   RoleDtoMapper,
   UpdateRoleDtoMapper
 } from '../models/dtoMapper/role.dtoMapper';
+import { ServiceDependencies } from '../registrations';
 
-export class RoleController
-  implements Controller<RoleService, Request, Response, NextFunction, ParsedQs>
-{
-  constructor(
-    private readonly serviceFactory: ScopedDependencyFactory<
-      SchemaValidator,
-      typeof configValidator,
-      'roleService'
-    >,
-    private readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>
-  ) {}
-
-  createRole = handlers.post(
-    SchemaValidator(),
-    '/',
-    {
-      name: 'Create Role',
-      summary: 'Creates a new role',
-      body: CreateRoleDtoMapper.schema(),
-      responses: {
-        201: string,
-        500: string
-      }
-    },
-    async (req, res) => {
-      await this.serviceFactory().createRole(req.body);
-      res.status(201).send('Role created successfully');
-    }
-  );
-
-  createBatchRoles = handlers.post(
-    SchemaValidator(),
-    '/batch',
-    {
-      name: 'Create Batch Roles',
-      summary: 'Creates multiple roles',
-      body: array(CreateRoleDtoMapper.schema()),
-      responses: {
-        201: string,
-        500: string
-      }
-    },
-    async (req, res) => {
-      await this.serviceFactory().createBatchRoles(req.body);
-      res.status(201).send('Batch roles created successfully');
-    }
-  );
-
-  getRole = handlers.get(
-    SchemaValidator(),
-    '/:id',
-    {
-      name: 'Get Role',
-      summary: 'Gets a role by ID',
-      responses: {
-        200: RoleDtoMapper.schema(),
-        500: string
+export const RoleController = (
+  serviceFactory: ScopedDependencyFactory<
+    SchemaValidator,
+    ServiceDependencies,
+    'RoleService'
+  >,
+  openTelemetryCollector: OpenTelemetryCollector<Metrics>
+) =>
+  ({
+    createRole: handlers.post(
+      SchemaValidator(),
+      '/',
+      {
+        name: 'Create Role',
+        summary: 'Creates a new role',
+        body: CreateRoleDtoMapper.schema(),
+        responses: {
+          201: string,
+          500: string
+        }
       },
-      params: {
-        id: string
+      async (req, res) => {
+        openTelemetryCollector.debug('Creating role', req.body);
+        await serviceFactory().createRole(req.body);
+        res.status(201).send('Role created successfully');
       }
-    },
-    async (req, res) => {
-      res.status(200).json(await this.serviceFactory().getRole(req.params.id));
-    }
-  );
+    ),
 
-  getBatchRoles = handlers.get(
-    SchemaValidator(),
-    '/batch',
-    {
-      name: 'Get Batch Roles',
-      summary: 'Gets multiple roles by IDs',
-      responses: {
-        200: array(RoleDtoMapper.schema()),
-        500: string
+    createBatchRoles: handlers.post(
+      SchemaValidator(),
+      '/batch',
+      {
+        name: 'Create Batch Roles',
+        summary: 'Creates multiple roles',
+        body: array(CreateRoleDtoMapper.schema()),
+        responses: {
+          201: string,
+          500: string
+        }
       },
-      query: {
-        ids: string
+      async (req, res) => {
+        openTelemetryCollector.debug('Creating batch roles', req.body);
+        await serviceFactory().createBatchRoles(req.body);
+        res.status(201).send('Batch roles created successfully');
       }
-    },
-    async (req, res) => {
-      res
-        .status(200)
-        .json(
-          await this.serviceFactory().getBatchRoles(req.query.ids.split(','))
-        );
-    }
-  );
+    ),
 
-  updateRole = handlers.put(
-    SchemaValidator(),
-    '/',
-    {
-      name: 'Update Role',
-      summary: 'Updates a role by ID',
-      body: UpdateRoleDtoMapper.schema(),
-      responses: {
-        200: string,
-        500: string
-      }
-    },
-    async (req, res) => {
-      await this.serviceFactory().updateRole(req.body);
-      res.status(200).send('Role updated successfully');
-    }
-  );
-
-  updateBatchRoles = handlers.put(
-    SchemaValidator(),
-    '/batch',
-    {
-      name: 'Update Batch Roles',
-      summary: 'Updates multiple roles by IDs',
-      body: array(UpdateRoleDtoMapper.schema()),
-      responses: {
-        200: string,
-        500: string
-      }
-    },
-    async (req, res) => {
-      await this.serviceFactory().updateBatchRoles(req.body);
-      res.status(200).send('Batch roles updated successfully');
-    }
-  );
-
-  deleteRole = handlers.delete(
-    SchemaValidator(),
-    '/:id',
-    {
-      name: 'Delete Role',
-      summary: 'Deletes a role by ID',
-      responses: {
-        200: string,
-        500: string
+    getRole: handlers.get(
+      SchemaValidator(),
+      '/:id',
+      {
+        name: 'Get Role',
+        summary: 'Gets a role by ID',
+        responses: {
+          200: RoleDtoMapper.schema(),
+          500: string
+        },
+        params: IdSchema
       },
-      params: {
-        id: string
+      async (req, res) => {
+        openTelemetryCollector.debug('Retrieving role', req.params);
+        res.status(200).json(await serviceFactory().getRole(req.params));
       }
-    },
-    async (req, res) => {
-      await this.serviceFactory().deleteRole(req.params.id);
-      res.status(200).send('Role deleted successfully');
-    }
-  );
+    ),
 
-  deleteBatchRoles = handlers.delete(
-    SchemaValidator(),
-    '/batch',
-    {
-      name: 'Delete Batch Roles',
-      summary: 'Deletes multiple roles by IDs',
-      responses: {
-        200: string,
-        500: string
+    getBatchRoles: handlers.get(
+      SchemaValidator(),
+      '/batch',
+      {
+        name: 'Get Batch Roles',
+        summary: 'Gets multiple roles by IDs',
+        responses: {
+          200: array(RoleDtoMapper.schema()),
+          500: string
+        },
+        query: IdsSchema
       },
-      query: {
-        ids: string
+      async (req, res) => {
+        openTelemetryCollector.debug('Retrieving batch roles', req.query);
+        res.status(200).json(await serviceFactory().getBatchRoles(req.query));
       }
-    },
-    async (req, res) => {
-      await this.serviceFactory().deleteBatchRoles(req.query.ids.split(','));
-      res.status(200).send('Batch roles deleted successfully');
-    }
-  );
-}
+    ),
+
+    updateRole: handlers.put(
+      SchemaValidator(),
+      '/',
+      {
+        name: 'Update Role',
+        summary: 'Updates a role by ID',
+        body: UpdateRoleDtoMapper.schema(),
+        responses: {
+          200: string,
+          500: string
+        }
+      },
+      async (req, res) => {
+        openTelemetryCollector.debug('Updating role', req.body);
+        await serviceFactory().updateRole(req.body);
+        res.status(200).send('Role updated successfully');
+      }
+    ),
+
+    updateBatchRoles: handlers.put(
+      SchemaValidator(),
+      '/batch',
+      {
+        name: 'Update Batch Roles',
+        summary: 'Updates multiple roles by IDs',
+        body: array(UpdateRoleDtoMapper.schema()),
+        responses: {
+          200: string,
+          500: string
+        }
+      },
+      async (req, res) => {
+        openTelemetryCollector.debug('Updating batch roles', req.body);
+        await serviceFactory().updateBatchRoles(req.body);
+        res.status(200).send('Batch roles updated successfully');
+      }
+    ),
+
+    deleteRole: handlers.delete(
+      SchemaValidator(),
+      '/:id',
+      {
+        name: 'Delete Role',
+        summary: 'Deletes a role by ID',
+        responses: {
+          200: string,
+          500: string
+        },
+        params: IdSchema
+      },
+      async (req, res) => {
+        openTelemetryCollector.debug('Deleting role', req.params);
+        await serviceFactory().deleteRole(req.params);
+        res.status(200).send('Role deleted successfully');
+      }
+    ),
+
+    deleteBatchRoles: handlers.delete(
+      SchemaValidator(),
+      '/batch',
+      {
+        name: 'Delete Batch Roles',
+        summary: 'Deletes multiple roles by IDs',
+        responses: {
+          200: string,
+          500: string
+        },
+        query: IdsSchema
+      },
+      async (req, res) => {
+        openTelemetryCollector.debug('Deleting batch roles', req.query);
+        await serviceFactory().deleteBatchRoles(req.query);
+        res.status(200).send('Batch roles deleted successfully');
+      }
+    )
+  }) satisfies Controller<
+    RoleService,
+    Request,
+    Response,
+    NextFunction,
+    ParsedQs
+  >;

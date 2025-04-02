@@ -15,6 +15,11 @@ import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
+import {
+  CreatePlanDtoMapper,
+  PlanDtoMapper,
+  UpdatePlanDtoMapper
+} from '../models/dtoMapper/plan.dtoMapper';
 import { BillingProviderEnum } from '../models/enum/billingProvider.enum';
 import { PlanCadenceEnum } from '../models/enum/planCadence.enum';
 import { PlanSchemas, ServiceDependencies } from '../registrations';
@@ -34,12 +39,9 @@ export const PlanController = (
       {
         name: 'createPlan',
         summary: 'Create a plan',
-        body: PlanSchemas.CreatePlanSchema(
-          PlanCadenceEnum,
-          BillingProviderEnum
-        ),
+        body: CreatePlanDtoMapper.schema(),
         responses: {
-          200: PlanSchemas.PlanSchema(PlanCadenceEnum, BillingProviderEnum)
+          200: PlanDtoMapper.schema()
         }
       },
       async (req, res) => {
@@ -71,12 +73,9 @@ export const PlanController = (
       {
         name: 'updatePlan',
         summary: 'Update a plan',
-        body: PlanSchemas.UpdatePlanSchema(
-          PlanCadenceEnum,
-          BillingProviderEnum
-        ),
+        body: UpdatePlanDtoMapper.schema(),
         responses: {
-          200: PlanSchemas.PlanSchema(PlanCadenceEnum, BillingProviderEnum)
+          200: PlanDtoMapper.schema()
         }
       },
       async (req, res) => {

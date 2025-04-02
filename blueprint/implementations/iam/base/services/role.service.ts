@@ -17,9 +17,10 @@ import {
   ResponseDtoMapperConstructor,
   transformIntoInternalDtoMapper
 } from '@forklaunch/core/dtoMapper';
+import { MapNestedDtoArraysToCollections } from '@forklaunch/core/services';
 import { AnySchemaValidator } from '@forklaunch/validator';
 
-export default class BaseRoleService<
+export class BaseRoleService<
   SchemaValidator extends AnySchemaValidator,
   Metrics extends MetricsDefinition = MetricsDefinition,
   Dto extends {
@@ -32,13 +33,25 @@ export default class BaseRoleService<
     UpdateRoleDtoMapper: UpdateRoleDto;
   },
   Entities extends {
-    RoleDtoMapper: RoleDto;
-    CreateRoleDtoMapper: CreateRoleDto;
-    UpdateRoleDtoMapper: UpdateRoleDto;
+    RoleDtoMapper: MapNestedDtoArraysToCollections<RoleDto, 'permissions'>;
+    CreateRoleDtoMapper: MapNestedDtoArraysToCollections<
+      RoleDto,
+      'permissions'
+    >;
+    UpdateRoleDtoMapper: MapNestedDtoArraysToCollections<
+      RoleDto,
+      'permissions'
+    >;
   } = {
-    RoleDtoMapper: RoleDto;
-    CreateRoleDtoMapper: CreateRoleDto;
-    UpdateRoleDtoMapper: UpdateRoleDto;
+    RoleDtoMapper: MapNestedDtoArraysToCollections<RoleDto, 'permissions'>;
+    CreateRoleDtoMapper: MapNestedDtoArraysToCollections<
+      RoleDto,
+      'permissions'
+    >;
+    UpdateRoleDtoMapper: MapNestedDtoArraysToCollections<
+      RoleDto,
+      'permissions'
+    >;
   }
 > implements RoleService
 {

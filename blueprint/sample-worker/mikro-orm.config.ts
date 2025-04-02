@@ -1,5 +1,5 @@
 import { ConfigInjector, getEnvVar, Lifetime } from '@forklaunch/core/services';
-import { number, SchemaValidator, string } from '@forklaunch/framework-core';
+import { number, SchemaValidator, string } from '@forklaunch/blueprint-core';
 import { MikroORMOptions, Platform, TextType, Type } from '@mikro-orm/core';
 import { Migrator } from '@mikro-orm/migrations';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';

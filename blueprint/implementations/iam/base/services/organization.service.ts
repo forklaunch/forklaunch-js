@@ -15,10 +15,11 @@ import {
   MetricsDefinition,
   OpenTelemetryCollector
 } from '@forklaunch/core/http';
+import { MapNestedDtoArraysToCollections } from '@forklaunch/core/services';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
 
-export default class BaseOrganizationService<
+export class BaseOrganizationService<
   SchemaValidator extends AnySchemaValidator,
   OrganizationStatus,
   Metrics extends MetricsDefinition = MetricsDefinition,
@@ -32,13 +33,31 @@ export default class BaseOrganizationService<
     UpdateOrganizationDtoMapper: UpdateOrganizationDto;
   },
   Entities extends {
-    OrganizationDtoMapper: OrganizationDto<OrganizationStatus>;
-    CreateOrganizationDtoMapper: OrganizationDto<OrganizationStatus>;
-    UpdateOrganizationDtoMapper: OrganizationDto<OrganizationStatus>;
+    OrganizationDtoMapper: MapNestedDtoArraysToCollections<
+      OrganizationDto<OrganizationStatus>,
+      'users'
+    >;
+    CreateOrganizationDtoMapper: MapNestedDtoArraysToCollections<
+      OrganizationDto<OrganizationStatus>,
+      'users'
+    >;
+    UpdateOrganizationDtoMapper: MapNestedDtoArraysToCollections<
+      OrganizationDto<OrganizationStatus>,
+      'users'
+    >;
   } = {
-    OrganizationDtoMapper: OrganizationDto<OrganizationStatus>;
-    CreateOrganizationDtoMapper: OrganizationDto<OrganizationStatus>;
-    UpdateOrganizationDtoMapper: OrganizationDto<OrganizationStatus>;
+    OrganizationDtoMapper: MapNestedDtoArraysToCollections<
+      OrganizationDto<OrganizationStatus>,
+      'users'
+    >;
+    CreateOrganizationDtoMapper: MapNestedDtoArraysToCollections<
+      OrganizationDto<OrganizationStatus>,
+      'users'
+    >;
+    UpdateOrganizationDtoMapper: MapNestedDtoArraysToCollections<
+      OrganizationDto<OrganizationStatus>,
+      'users'
+    >;
   }
 > implements OrganizationService<OrganizationStatus>
 {

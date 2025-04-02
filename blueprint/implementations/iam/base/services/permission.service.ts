@@ -17,10 +17,11 @@ import {
   MetricsDefinition,
   OpenTelemetryCollector
 } from '@forklaunch/core/http';
+import { MapNestedDtoArraysToCollections } from '@forklaunch/core/services';
 import { AnySchemaValidator } from '@forklaunch/validator';
-import { Collection, EntityManager } from '@mikro-orm/core';
+import { EntityManager } from '@mikro-orm/core';
 
-export default class BasePermissionService<
+export class BasePermissionService<
   SchemaValidator extends AnySchemaValidator,
   Metrics extends MetricsDefinition = MetricsDefinition,
   Dto extends {
@@ -38,12 +39,12 @@ export default class BasePermissionService<
     PermissionDtoMapper: PermissionDto;
     CreatePermissionDtoMapper: PermissionDto;
     UpdatePermissionDtoMapper: PermissionDto;
-    RoleDtoMapper: RoleDto & { permissions: Collection<PermissionDto> };
+    RoleDtoMapper: MapNestedDtoArraysToCollections<RoleDto, 'permissions'>;
   } = {
     PermissionDtoMapper: PermissionDto;
     CreatePermissionDtoMapper: PermissionDto;
     UpdatePermissionDtoMapper: PermissionDto;
-    RoleDtoMapper: RoleDto & { permissions: Collection<PermissionDto> };
+    RoleDtoMapper: MapNestedDtoArraysToCollections<RoleDto, 'permissions'>;
   }
 > implements PermissionService
 {

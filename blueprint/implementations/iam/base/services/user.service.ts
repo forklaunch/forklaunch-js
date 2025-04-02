@@ -18,10 +18,13 @@ import {
   ResponseDtoMapperConstructor,
   transformIntoInternalDtoMapper
 } from '@forklaunch/core/dtoMapper';
+import { MapNestedDtoArraysToCollections } from '@forklaunch/core/services';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
-export default class BaseUserService<
+
+export class BaseUserService<
   SchemaValidator extends AnySchemaValidator,
+  OrganizationStatus,
   Metrics extends MetricsDefinition = MetricsDefinition,
   Dto extends {
     UserDtoMapper: UserDto;
@@ -33,13 +36,13 @@ export default class BaseUserService<
     UpdateUserDtoMapper: UpdateUserDto;
   },
   Entities extends {
-    UserDtoMapper: UserDto;
-    CreateUserDtoMapper: UserDto;
-    UpdateUserDtoMapper: UserDto;
+    UserDtoMapper: MapNestedDtoArraysToCollections<UserDto, 'roles'>;
+    CreateUserDtoMapper: MapNestedDtoArraysToCollections<UserDto, 'roles'>;
+    UpdateUserDtoMapper: MapNestedDtoArraysToCollections<UserDto, 'roles'>;
   } = {
-    UserDtoMapper: UserDto;
-    CreateUserDtoMapper: UserDto;
-    UpdateUserDtoMapper: UserDto;
+    UserDtoMapper: MapNestedDtoArraysToCollections<UserDto, 'roles'>;
+    CreateUserDtoMapper: MapNestedDtoArraysToCollections<UserDto, 'roles'>;
+    UpdateUserDtoMapper: MapNestedDtoArraysToCollections<UserDto, 'roles'>;
   }
 > implements UserService
 {
@@ -53,7 +56,7 @@ export default class BaseUserService<
     public em: EntityManager,
     protected passwordEncryptionPublicKeyPath: string,
     protected roleServiceFactory: () => RoleService,
-    protected organizationServiceFactory: () => OrganizationService<unknown>,
+    protected organizationServiceFactory: () => OrganizationService<OrganizationStatus>,
     protected openTelemetryCollector: OpenTelemetryCollector<Metrics>,
     protected schemaValidator: SchemaValidator,
     protected dtoMappers: {
@@ -206,19 +209,16 @@ export default class BaseUserService<
     }
   }
 
-  async verifyHasPermission(
-    idDto: IdDto,
-    permissionIdDto: IdDto
-  ): Promise<void> {
+  async verifyHasPermission(idDto: IdDto, permissionId: string): Promise<void> {
     const user = await this.getUser(idDto);
     if (
       user.roles
         .map((role) => role.permissions.map((permission) => permission.id))
         .flat()
-        .filter((id) => id == permissionIdDto.id).length === 0
+        .filter((id) => id == permissionId).length === 0
     ) {
       throw new Error(
-        `User ${idDto.id} does not have permission ${permissionIdDto.id}`
+        `User ${idDto.id} does not have permission ${permissionId}`
       );
     }
   }

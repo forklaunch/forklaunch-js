@@ -13,7 +13,12 @@ import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
-import { BillingPortalSchemas, ServiceDependencies } from '../registrations';
+import {
+  BillingPortalDtoMapper,
+  CreateBillingPortalDtoMapper,
+  UpdateBillingPortalDtoMapper
+} from '../models/dtoMapper/billingPortal.dtoMapper';
+import { ServiceDependencies } from '../registrations';
 
 export const BillingPortalController = (
   serviceFactory: ScopedDependencyFactory<
@@ -30,9 +35,9 @@ export const BillingPortalController = (
       {
         name: 'createBillingPortalSession',
         summary: 'Create a billing portal session',
-        body: BillingPortalSchemas.CreateBillingPortalSchema,
+        body: CreateBillingPortalDtoMapper.schema(),
         responses: {
-          200: BillingPortalSchemas.BillingPortalSchema
+          200: BillingPortalDtoMapper.schema()
         }
       },
       async (req, res) => {
@@ -54,7 +59,7 @@ export const BillingPortalController = (
         summary: 'Get a billing portal session',
         params: IdSchema,
         responses: {
-          200: BillingPortalSchemas.BillingPortalSchema
+          200: BillingPortalDtoMapper.schema()
         }
       },
       async (req, res) => {
@@ -75,9 +80,9 @@ export const BillingPortalController = (
         name: 'updateBillingPortalSession',
         summary: 'Update a billing portal session',
         params: IdSchema,
-        body: BillingPortalSchemas.UpdateBillingPortalSchema,
+        body: UpdateBillingPortalDtoMapper.schema(),
         responses: {
-          200: BillingPortalSchemas.BillingPortalSchema
+          200: BillingPortalDtoMapper.schema()
         }
       },
       async (req, res) => {

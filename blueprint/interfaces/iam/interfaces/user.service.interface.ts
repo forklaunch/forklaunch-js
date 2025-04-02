@@ -67,7 +67,7 @@ export interface UserService<
   ): Promise<void>;
   verifyHasPermission(
     idDto: Params['IdDto'],
-    permissionIdDto: Params['IdDto'],
+    permissionId: string,
     em?: EntityManager
   ): Promise<void>;
 }

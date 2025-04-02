@@ -13,8 +13,12 @@ import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
+import {
+  CheckoutSessionDtoMapper,
+  CreateCheckoutSessionDtoMapper
+} from '../models/dtoMapper/checkoutSession.dtoMapper';
 import { PaymentMethodEnum } from '../models/enum/paymentMethod.enum';
-import { CheckoutSessionSchemas, ServiceDependencies } from '../registrations';
+import { ServiceDependencies } from '../registrations';
 
 export const CheckoutSessionController = (
   serviceFactory: ScopedDependencyFactory<
@@ -31,11 +35,9 @@ export const CheckoutSessionController = (
       {
         name: 'createCheckoutSession',
         summary: 'Create a checkout session',
-        body: CheckoutSessionSchemas.CreateCheckoutSessionSchema(
-          PaymentMethodEnum
-        ),
+        body: CreateCheckoutSessionDtoMapper.schema(),
         responses: {
-          200: CheckoutSessionSchemas.CheckoutSessionSchema(PaymentMethodEnum)
+          200: CheckoutSessionDtoMapper.schema()
         }
       },
       async (req, res) => {
@@ -54,7 +56,7 @@ export const CheckoutSessionController = (
         summary: 'Get a checkout session',
         params: IdSchema,
         responses: {
-          200: CheckoutSessionSchemas.CheckoutSessionSchema(PaymentMethodEnum)
+          200: CheckoutSessionDtoMapper.schema()
         }
       },
       async (req, res) => {

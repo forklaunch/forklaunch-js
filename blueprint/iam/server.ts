@@ -1,28 +1,30 @@
+import { forklaunchExpress } from '@forklaunch/blueprint-core';
 import { ApiClient } from '@forklaunch/core/http';
-import { forklaunchExpress } from '@forklaunch/framework-core';
 import { bootstrap } from './bootstrapper';
 import { OrganizationRoutes } from './routes/organization.routes';
 import { PermissionRoutes } from './routes/permission.routes';
 import { RoleRoutes } from './routes/role.routes';
 import { UserRoutes } from './routes/user.routes';
 //! bootstrap function that initializes the service application
-bootstrap((ci) => {
+bootstrap((ci, tokens) => {
   //! resolves the openTelemetryCollector from the configuration
-  const openTelemetryCollector = ci.resolve('openTelemetryCollector');
+  const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
   //! creates an instance of forklaunchExpress
   const app = forklaunchExpress(openTelemetryCollector);
   //! resolves the host, port, and version from the configuration
-  const host = ci.resolve('HOST');
-  const port = ci.resolve('PORT');
-  const version = ci.resolve('VERSION');
-  const docsPath = ci.resolve('DOCS_PATH');
+  const host = ci.resolve(tokens.HOST);
+  const port = ci.resolve(tokens.PORT);
+  const version = ci.resolve(tokens.VERSION);
+  const docsPath = ci.resolve(tokens.DOCS_PATH);
   //! resolves the necessary services from the configuration
   const scopedOrganizationServiceFactory = ci.scopedResolver(
-    'organizationService'
+    tokens.OrganizationService
   );
-  const scopedPermissionServiceFactory = ci.scopedResolver('permissionService');
-  const scopedRoleServiceFactory = ci.scopedResolver('roleService');
-  const scopedUserServiceFactory = ci.scopedResolver('userService');
+  const scopedPermissionServiceFactory = ci.scopedResolver(
+    tokens.PermissionService
+  );
+  const scopedRoleServiceFactory = ci.scopedResolver(tokens.RoleService);
+  const scopedUserServiceFactory = ci.scopedResolver(tokens.UserService);
   //! constructs the routes using the appropriate controllers
   const organizationRoutes = OrganizationRoutes(
     scopedOrganizationServiceFactory,

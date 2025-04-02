@@ -1,5 +1,5 @@
 {
-  "name": "@forklaunch/framework-core",
+  "name": "@forklaunch/blueprint-core",
   "version": "1.0.0",
   "description": "The common core lib for all monorepo services",
   "keywords": [],

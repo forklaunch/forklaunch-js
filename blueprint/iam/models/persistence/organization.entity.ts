@@ -1,4 +1,4 @@
-import { BaseEntity } from '@forklaunch/framework-core';
+import { BaseEntity } from '@forklaunch/blueprint-core';
 import {
   Collection,
   Entity,
@@ -6,13 +6,8 @@ import {
   Property,
   Unique
 } from '@mikro-orm/core';
+import { OrganizationStatus } from '../enum/organizationStatus.enum';
 import { User } from './user.entity';
-
-// Enum for Organization Status
-export enum OrganizationStatus {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive'
-}
 
 // Experiment with importing types from another service and see if it generates entity. The goal is to not generate an entity, but to have an object serialization
 @Entity()

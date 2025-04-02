@@ -7,7 +7,7 @@ import {
   number,
   SchemaValidator,
   string
-} from '@forklaunch/framework-core';
+} from '@forklaunch/blueprint-core';
 import { SampleWorkerRecord } from '../persistence/sampleWorkerRecord.entity';
 
 // Exported type that matches the request schema

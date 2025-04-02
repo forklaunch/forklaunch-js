@@ -187,7 +187,6 @@ export function createDepenencies({ orm }: { orm: MikroORM }) {
           TtlCache,
           OpenTelemetryCollector,
           SchemaValidator(),
-          PaymentMethodEnum,
           {
             CheckoutSessionDtoMapper,
             CreateCheckoutSessionDtoMapper,

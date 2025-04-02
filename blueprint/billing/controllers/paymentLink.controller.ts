@@ -15,6 +15,11 @@ import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
+import {
+  CreatePaymentLinkDtoMapper,
+  PaymentLinkDtoMapper,
+  UpdatePaymentLinkDtoMapper
+} from '../models/dtoMapper/paymentLink.dtoMapper';
 import { CurrencyEnum } from '../models/enum/currency.enum';
 import { PaymentLinkSchemas, ServiceDependencies } from '../registrations';
 
@@ -33,9 +38,9 @@ export const PaymentLinkController = (
       {
         name: 'createPaymentLink',
         summary: 'Create a payment link',
-        body: PaymentLinkSchemas.CreatePaymentLinkSchema(CurrencyEnum),
+        body: CreatePaymentLinkDtoMapper.schema(),
         responses: {
-          200: PaymentLinkSchemas.PaymentLinkSchema(CurrencyEnum)
+          200: PaymentLinkDtoMapper.schema()
         }
       },
       async (req, res) => {
@@ -54,7 +59,7 @@ export const PaymentLinkController = (
         summary: 'Get a payment link',
         params: IdSchema,
         responses: {
-          200: PaymentLinkSchemas.PaymentLinkSchema(CurrencyEnum)
+          200: PaymentLinkDtoMapper.schema()
         }
       },
       async (req, res) => {
@@ -69,10 +74,10 @@ export const PaymentLinkController = (
       {
         name: 'updatePaymentLink',
         summary: 'Update a payment link',
-        body: PaymentLinkSchemas.UpdatePaymentLinkSchema(CurrencyEnum),
+        body: UpdatePaymentLinkDtoMapper.schema(),
         params: IdSchema,
         responses: {
-          200: PaymentLinkSchemas.PaymentLinkSchema(CurrencyEnum)
+          200: PaymentLinkDtoMapper.schema()
         }
       },
       async (req, res) => {

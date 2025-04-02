@@ -3,8 +3,8 @@ import {
   ConfigInjector,
   ScopedDependencyFactory
 } from '@forklaunch/core/services';
-import { forklaunchRouter, SchemaValidator } from '@forklaunch/framework-core';
-import { Metrics } from '@forklaunch/framework-monitoring';
+import { forklaunchRouter, SchemaValidator } from '@forklaunch/blueprint-core';
+import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { configValidator } from '../bootstrapper';
 import { SampleWorkerController } from '../controllers/sampleWorker.controller';
 

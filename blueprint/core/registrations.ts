@@ -13,6 +13,11 @@ import {
   Response
 } from '@forklaunch/express';
 import {
+  IdiomaticSchema,
+  Schema,
+  UnboxedObjectSchema
+} from '@forklaunch/validator';
+import {
   SchemaValidator as RegisteredSchemaValidator,
   any as schemaAny,
   array as schemaArray,
@@ -35,8 +40,15 @@ import {
 } from '@forklaunch/validator/zod';
 
 export type { NextFunction, ParsedQs, Request, Response };
-export const SchemaValidator = RegisteredSchemaValidator;
 export type SchemaValidator = ReturnType<typeof RegisteredSchemaValidator>;
+export type SchemaType<T extends IdiomaticSchema<SchemaValidator>> = Schema<
+  T,
+  SchemaValidator
+>;
+export type BaseDtoParameters<T extends UnboxedObjectSchema<SchemaValidator>> =
+  Schema<T, SchemaValidator>;
+
+export const SchemaValidator = RegisteredSchemaValidator;
 export const forklaunchRouter = <BasePath extends `/${string}`>(
   basePath: BasePath,
   openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
@@ -55,6 +67,7 @@ export const forklaunchExpress = (
     openTelemetryCollector,
     docsConfiguration
   );
+
 export const handlers: typeof registeredHandlers = registeredHandlers;
 
 export const string: typeof schemaString = schemaString;
@@ -75,3 +88,10 @@ export const array: typeof schemaArray = schemaArray;
 export const union: typeof schemaUnion = schemaUnion;
 export const literal: typeof schemaLiteral = schemaLiteral;
 export const enum_: typeof schemaEnum = schemaEnum;
+
+export const IdSchema = {
+  id: string
+};
+export const IdsSchema = {
+  ids: array(string)
+};

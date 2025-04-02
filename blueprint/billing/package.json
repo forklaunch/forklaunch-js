@@ -32,10 +32,10 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/blueprint-core": "workspace:*",
-    "@forklaunch/blueprint-monitoring": "workspace:*",
     "@forklaunch/blueprint-billing-implementation-base": "workspace:*",
     "@forklaunch/blueprint-billing-interfaces": "workspace:*",
+    "@forklaunch/blueprint-core": "workspace:*",
+    "@forklaunch/blueprint-monitoring": "workspace:*",
     "@forklaunch/common": "^0.2.4",
     "@forklaunch/core": "^0.5.6",
     "@forklaunch/express": "^0.3.7",

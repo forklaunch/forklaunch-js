@@ -1,4 +1,4 @@
-import { BaseEntity } from '@forklaunch/framework-core';
+import { BaseEntity } from '@forklaunch/blueprint-core';
 import { Collection, Entity, ManyToMany, Property } from '@mikro-orm/core';
 import { Permission } from './permission.entity';
 

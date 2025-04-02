@@ -1,5 +1,5 @@
 {
-  "name": "@forklaunch/framework-iam",
+  "name": "@forklaunch/blueprint-iam",
   "version": "0.1.0",
   "description": "Forklaunch IAM Implementation",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
@@ -32,9 +32,11 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
+    "@forklaunch/blueprint-core": "workspace:*",
+    "@forklaunch/blueprint-iam-implementation-base": "workspace:*",
+    "@forklaunch/blueprint-iam-interfaces": "workspace:*",
+    "@forklaunch/blueprint-monitoring": "workspace:*",
     "@forklaunch/core": "^0.5.6",
-    "@forklaunch/framework-core": "workspace:*",
-    "@forklaunch/framework-monitoring": "workspace:*",
     "@mikro-orm/core": "^6.4.9",
     "@mikro-orm/migrations": "^6.4.9",
     "@mikro-orm/mongodb": "^6.4.9",
