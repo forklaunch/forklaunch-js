@@ -35,4 +35,4 @@ The `ForkLaunch` framework collects a set of lightweight libraries and exposes u
 
 ## API Reference
 
-For detailed API documentation, visit our [TypeDoc Reference](https://github.com/forklaunch/forklaunch-js/tree/main/packages/docs/index.html).
+For detailed API documentation, visit our [TypeDoc Reference](https://github.com/forklaunch/forklaunch-js/tree/main/framework/docs/index.html).
