@@ -22,7 +22,7 @@
   },
   "types": "lib/index.d.ts",
   "directories": {
-    "test": "tests"
+    "test": "__test__"
   },
   "files": [
     "lib/**"

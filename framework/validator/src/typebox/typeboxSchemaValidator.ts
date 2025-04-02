@@ -9,7 +9,6 @@ import {
   Kind,
   KindGuard,
   TArray,
-  TKind,
   TLiteral,
   TOptional,
   TProperties,
@@ -82,16 +81,19 @@ export class TypeboxSchemaValidator
         ]
       >,
       (value: unknown) => value is TSchema,
-      <T extends TIdiomaticSchema>(schema: T, value: unknown) => boolean,
-      <T extends TIdiomaticSchema>(
+      <T extends TIdiomaticSchema | TCatchall>(
+        schema: T,
+        value: unknown
+      ) => boolean,
+      <T extends TIdiomaticSchema | TCatchall>(
         schema: T,
         value: unknown
       ) => ParseResult<TResolve<T>>,
-      <T extends TIdiomaticSchema>(schema: T) => SchemaObject
+      <T extends TIdiomaticSchema | TCatchall>(schema: T) => SchemaObject
     >
 {
   _Type!: 'TypeBox';
-  _SchemaCatchall!: TKind;
+  _SchemaCatchall!: TSchema;
   _ValidSchemaObject!: TObject<TProperties> | TArray<TObject<TProperties>>;
 
   string = Type.String();

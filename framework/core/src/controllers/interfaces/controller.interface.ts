@@ -1,11 +1,11 @@
 export type Controller<
-  Service extends { SchemaDefinition: unknown },
+  Service,
   BaseRequest,
   BaseResponse,
   NextFunction,
   ParsedQs
 > = {
-  [K in keyof Omit<Service, 'SchemaDefinition'>]: unknown;
+  [K in keyof Service]: unknown;
 } & {
   readonly __request?: BaseRequest;
   readonly __response?: BaseResponse;

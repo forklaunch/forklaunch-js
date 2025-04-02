@@ -1,5 +1,5 @@
 # Define arrays of directories and packages
-DIRS=("billing/base")
+DIRS=("billing/base" "iam/base")
 PACKAGES=("common" "validator" "core" "express" "hyper-express" "universal-sdk")
 
 # Loop through each directory
@@ -11,5 +11,5 @@ for dir in "${DIRS[@]}"; do
     pnpm link ../../../../framework/$package
   done
 
-  cd ..
+  cd ../..
 done

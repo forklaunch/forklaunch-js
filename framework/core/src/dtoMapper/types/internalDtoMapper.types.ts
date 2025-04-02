@@ -1,4 +1,9 @@
-import { ReturnTypeRecord } from '@forklaunch/common';
+type AllAfterFirstParameters<T> = T extends (
+  first: never,
+  ...args: infer U
+) => unknown
+  ? U
+  : never[];
 
 export type InternalDtoMapper<
   DtoMapper extends Record<
@@ -23,7 +28,12 @@ export type InternalDtoMapper<
     serializeEntityToDto: unknown;
   }
     ? {
-        serializeEntityToDto: (entity: Entities[K]) => Dto[K];
+        serializeEntityToDto: (
+          entity: Entities[K],
+          ...additionalArgs: AllAfterFirstParameters<
+            DtoMapper[K]['serializeEntityToDto']
+          >
+        ) => Dto[K];
       }
     : DtoMapper[K] extends {
           dto: unknown;
@@ -31,32 +41,12 @@ export type InternalDtoMapper<
           deserializeDtoToEntity: unknown;
         }
       ? {
-          deserializeDtoToEntity: (dto: Dto[K]) => Entities[K];
+          deserializeDtoToEntity: (
+            dto: Dto[K],
+            ...additionalArgs: AllAfterFirstParameters<
+              DtoMapper[K]['deserializeDtoToEntity']
+            >
+          ) => Entities[K];
         }
       : never;
 };
-
-export function transformIntoInternalDtoMapper<
-  DtoMapper extends Record<
-    string,
-    () =>
-      | {
-          dto: unknown;
-          _Entity: unknown;
-          serializeEntityToDto: unknown;
-        }
-      | {
-          dto: unknown;
-          _Entity: unknown;
-          deserializeDtoToEntity: unknown;
-        }
-  >,
-  Entities extends Record<keyof DtoMapper, unknown>,
-  Dto extends Record<keyof DtoMapper, unknown>
->(
-  dtoMappers: DtoMapper
-): InternalDtoMapper<ReturnTypeRecord<DtoMapper>, Entities, Dto> {
-  return Object.fromEntries(
-    Object.entries(dtoMappers).map(([key, value]) => [key, value()])
-  ) as unknown as InternalDtoMapper<ReturnTypeRecord<DtoMapper>, Entities, Dto>;
-}

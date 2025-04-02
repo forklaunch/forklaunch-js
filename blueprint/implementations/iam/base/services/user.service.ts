@@ -1,7 +1,5 @@
 import {
   CreateUserDto,
-  OrganizationDto,
-  RoleDto,
   RoleService,
   UpdateUserDto,
   UserDto,
@@ -16,6 +14,8 @@ import { OrganizationService } from '@forklaunch/blueprint-iam-interfaces';
 import { IdDto, IdsDto, InstanceTypeRecord } from '@forklaunch/common';
 import {
   InternalDtoMapper,
+  RequestDtoMapperConstructor,
+  ResponseDtoMapperConstructor,
   transformIntoInternalDtoMapper
 } from '@forklaunch/core/dtoMapper';
 import { AnySchemaValidator } from '@forklaunch/validator';
@@ -27,27 +27,19 @@ export default class BaseUserService<
     UserDtoMapper: UserDto;
     CreateUserDtoMapper: CreateUserDto;
     UpdateUserDtoMapper: UpdateUserDto;
-    RoleDtoMapper: RoleDto;
-    OrganizationDtoMapper: OrganizationDto<unknown>;
   } = {
     UserDtoMapper: UserDto;
     CreateUserDtoMapper: CreateUserDto;
     UpdateUserDtoMapper: UpdateUserDto;
-    RoleDtoMapper: RoleDto;
-    OrganizationDtoMapper: OrganizationDto<unknown>;
   },
   Entities extends {
     UserDtoMapper: UserDto;
     CreateUserDtoMapper: UserDto;
     UpdateUserDtoMapper: UserDto;
-    RoleDtoMapper: RoleDto;
-    OrganizationDtoMapper: OrganizationDto<unknown>;
   } = {
     UserDtoMapper: UserDto;
     CreateUserDtoMapper: UserDto;
     UpdateUserDtoMapper: UserDto;
-    RoleDtoMapper: RoleDto;
-    OrganizationDtoMapper: OrganizationDto<unknown>;
   }
 > implements UserService
 {
@@ -65,61 +57,35 @@ export default class BaseUserService<
     protected openTelemetryCollector: OpenTelemetryCollector<Metrics>,
     protected schemaValidator: SchemaValidator,
     protected dtoMappers: {
-      UserDtoMapper: new (schemaValidator: SchemaValidator) => {
-        dto: Dto['UserDtoMapper'];
-        _Entity: Entities['UserDtoMapper'];
-        serializeEntityToDto: unknown;
-      };
-      CreateUserDtoMapper: new (schemaValidator: SchemaValidator) => {
-        dto: Dto['CreateUserDtoMapper'];
-        _Entity: Entities['CreateUserDtoMapper'];
-        deserializeDtoToEntity: (
-          // We do this, because this gets applied to the instantiated argument.
-          // The choices are any or never for universal mapping, but the internal
-          // transformation takes care of the proper typing.
+      UserDtoMapper: ResponseDtoMapperConstructor<
+        SchemaValidator,
+        Dto['UserDtoMapper'],
+        Entities['UserDtoMapper']
+      >;
+      CreateUserDtoMapper: RequestDtoMapperConstructor<
+        SchemaValidator,
+        Dto['CreateUserDtoMapper'],
+        Entities['CreateUserDtoMapper'],
+        (
           dto: never,
           passwordEncryptionPublicKeyPath: string
-        ) => Entities['CreateUserDtoMapper'];
-      };
-      UpdateUserDtoMapper: new (schemaValidator: SchemaValidator) => {
-        dto: Dto['UpdateUserDtoMapper'];
-        _Entity: Entities['UpdateUserDtoMapper'];
-        deserializeDtoToEntity: (
+        ) => Entities['UpdateUserDtoMapper']
+      >;
+      UpdateUserDtoMapper: RequestDtoMapperConstructor<
+        SchemaValidator,
+        Dto['UpdateUserDtoMapper'],
+        Entities['UpdateUserDtoMapper'],
+        (
           dto: never,
           passwordEncryptionPublicKeyPath: string
-        ) => Entities['UpdateUserDtoMapper'];
-      };
-      RoleDtoMapper: new (schemaValidator: SchemaValidator) => {
-        dto: Dto['RoleDtoMapper'];
-        _Entity: Entities['RoleDtoMapper'];
-        deserializeDtoToEntity: unknown;
-      };
-      OrganizationDtoMapper: new (schemaValidator: SchemaValidator) => {
-        dto: Dto['OrganizationDtoMapper'];
-        _Entity: Entities['OrganizationDtoMapper'];
-        deserializeDtoToEntity: unknown;
-      };
+        ) => Entities['UpdateUserDtoMapper']
+      >;
     }
   ) {
     this.#dtoMappers = transformIntoInternalDtoMapper(
       dtoMappers,
       schemaValidator
     );
-  }
-
-  private async getBatchRoles(
-    roleIds?: IdsDto,
-    em?: EntityManager
-  ): Promise<Entities['RoleDtoMapper'][]> {
-    return roleIds
-      ? (await this.roleServiceFactory().getBatchRoles(roleIds, em)).map(
-          (role) => {
-            return (em ?? this.em).merge(
-              this.#dtoMappers.RoleDtoMapper.deserializeDtoToEntity(role)
-            );
-          }
-        )
-      : [];
   }
 
   async createUser(

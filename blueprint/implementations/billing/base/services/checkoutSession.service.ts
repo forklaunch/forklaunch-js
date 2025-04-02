@@ -52,7 +52,6 @@ export class BaseCheckoutSessionService<
     protected readonly cache: TtlCache,
     protected readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>,
     protected readonly schemaValidator: SchemaValidator,
-    protected readonly paymentMethodEnum: PaymentMethodEnum,
     protected readonly dtoMappers: {
       CheckoutSessionDtoMapper: ResponseDtoMapperConstructor<
         SchemaValidator,

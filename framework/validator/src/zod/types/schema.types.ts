@@ -27,9 +27,8 @@ export type ZodCatchall = ZodTypeAny;
  *
  * @template T - The type to check and possibly convert to an array schema.
  */
-export type ZodOuterArray<T> = T extends ZodObject<ZodObjectShape>
-  ? ZodArray<T>
-  : ZodNever;
+export type ZodOuterArray<T> =
+  T extends ZodObject<ZodObjectShape> ? ZodArray<T> : ZodNever;
 
 /**
  * Represents the shape of a Zod object schema.
@@ -57,7 +56,7 @@ export type ZodSchemaTranslate<T> = T extends ZodCatchall
 /**
  * Represents an unboxed Zod object schema where each key can have an idiomatic schema.
  */
-export type ZodObjectSchema = UnboxedObjectSchema<ZodSchemaValidator>;
+export type UnboxedZodObjectSchema = UnboxedObjectSchema<ZodSchemaValidator>;
 
 /**
  * Represents an idiomatic schema for Zod which can be an unboxed object schema or a literal schema.
@@ -98,14 +97,14 @@ export type UnionZodResolve<T extends ZodUnionContainer> = T extends [
  * @template T - The Zod schema type to resolve.
  * @template Depth - The current depth of the resolution.
  */
-export type ZodResolve<T, Depth extends number = 0> = Depth extends 31
+export type ZodResolve<T, Depth extends number = 0> = Depth extends 30
   ? ZodUnknown
   : T extends LiteralSchema
-  ? ZodLiteral<T>
-  : T extends ZodType
-  ? T
-  : T extends ZodObjectSchema
-  ? ZodObject<{
-      [K in keyof T]: ZodResolve<T[K], Increment<Depth>>;
-    }>
-  : ZodNever;
+    ? ZodLiteral<T>
+    : T extends ZodType
+      ? T
+      : T extends UnboxedZodObjectSchema
+        ? ZodObject<{
+            [K in keyof T]: ZodResolve<T[K], Increment<Depth>>;
+          }>
+        : ZodNever;

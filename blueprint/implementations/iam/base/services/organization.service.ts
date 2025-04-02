@@ -7,6 +7,8 @@ import {
 import { IdDto, InstanceTypeRecord } from '@forklaunch/common';
 import {
   InternalDtoMapper,
+  RequestDtoMapperConstructor,
+  ResponseDtoMapperConstructor,
   transformIntoInternalDtoMapper
 } from '@forklaunch/core/dtoMapper';
 import {
@@ -48,24 +50,24 @@ export default class BaseOrganizationService<
 
   constructor(
     public em: EntityManager,
-    private readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>,
-    private readonly schemaValidator: SchemaValidator,
-    private readonly dtoMappers: {
-      OrganizationDtoMapper: new (schemaValidator: SchemaValidator) => {
-        dto: Dto['OrganizationDtoMapper'];
-        _Entity: Entities['OrganizationDtoMapper'];
-        serializeEntityToDto: unknown;
-      };
-      CreateOrganizationDtoMapper: new (schemaValidator: SchemaValidator) => {
-        dto: Dto['CreateOrganizationDtoMapper'];
-        _Entity: Entities['CreateOrganizationDtoMapper'];
-        deserializeDtoToEntity: unknown;
-      };
-      UpdateOrganizationDtoMapper: new (schemaValidator: SchemaValidator) => {
-        dto: Dto['UpdateOrganizationDtoMapper'];
-        _Entity: Entities['UpdateOrganizationDtoMapper'];
-        deserializeDtoToEntity: unknown;
-      };
+    protected openTelemetryCollector: OpenTelemetryCollector<Metrics>,
+    protected schemaValidator: SchemaValidator,
+    protected dtoMappers: {
+      OrganizationDtoMapper: ResponseDtoMapperConstructor<
+        SchemaValidator,
+        Dto['OrganizationDtoMapper'],
+        Entities['OrganizationDtoMapper']
+      >;
+      CreateOrganizationDtoMapper: RequestDtoMapperConstructor<
+        SchemaValidator,
+        Dto['CreateOrganizationDtoMapper'],
+        Entities['CreateOrganizationDtoMapper']
+      >;
+      UpdateOrganizationDtoMapper: RequestDtoMapperConstructor<
+        SchemaValidator,
+        Dto['UpdateOrganizationDtoMapper'],
+        Entities['UpdateOrganizationDtoMapper']
+      >;
     }
   ) {
     this.#dtoMappers = transformIntoInternalDtoMapper(

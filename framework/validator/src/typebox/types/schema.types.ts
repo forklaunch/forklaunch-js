@@ -26,9 +26,8 @@ export type TCatchall = TSchema;
  *
  * @template T - The type to check and possibly convert to an array schema.
  */
-export type TOuterArray<T> = T extends TObject<TObjectShape>
-  ? TArray<T>
-  : TNever;
+export type TOuterArray<T> =
+  T extends TObject<TObjectShape> ? TArray<T> : TNever;
 
 /**
  * Represents the shape of an object schema.
@@ -82,20 +81,20 @@ export type UnionTResolve<T extends TUnionContainer> =
  * @template T - The schema type to resolve.
  * @template Depth - The current depth of the resolution.
  */
-export type TResolve<T, Depth extends number = 0> = Depth extends 12
+export type TResolve<T, Depth extends number = 0> = Depth extends 10
   ? TUnknown
   : T extends LiteralSchema
-  ? TLiteral<T>
-  : T extends TSchema
-  ? T
-  : T extends TKind
-  ? T
-  : T extends TObject<TObjectShape>
-  ? T
-  : T extends UnboxedTObjectSchema
-  ? TObject<{
-      [K in keyof T]: TResolve<T[K], Increment<Depth>>;
-    }>
-  : T extends TypeCheck<infer Type>
-  ? TResolve<Type, Increment<Depth>>
-  : TNever;
+    ? TLiteral<T>
+    : T extends TSchema
+      ? T
+      : T extends TKind
+        ? T
+        : T extends TObject<TObjectShape>
+          ? T
+          : T extends UnboxedTObjectSchema
+            ? TObject<{
+                [K in keyof T]: TResolve<T[K], Increment<Depth>>;
+              }>
+            : T extends TypeCheck<infer Type>
+              ? TResolve<Type, Increment<Depth>>
+              : TNever;

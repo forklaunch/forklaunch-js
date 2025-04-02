@@ -9,6 +9,8 @@ import {
 import { IdDto, IdsDto, InstanceTypeRecord } from '@forklaunch/common';
 import {
   InternalDtoMapper,
+  RequestDtoMapperConstructor,
+  ResponseDtoMapperConstructor,
   transformIntoInternalDtoMapper
 } from '@forklaunch/core/dtoMapper';
 import {
@@ -57,26 +59,26 @@ export default class BasePermissionService<
     protected openTelemetryCollector: OpenTelemetryCollector<Metrics>,
     protected schemaValidator: SchemaValidator,
     protected dtoMappers: {
-      PermissionDtoMapper: new (schemaValidator: SchemaValidator) => {
-        dto: Dto['PermissionDtoMapper'];
-        _Entity: Entities['PermissionDtoMapper'];
-        serializeEntityToDto: unknown;
-      };
-      CreatePermissionDtoMapper: new (schemaValidator: SchemaValidator) => {
-        dto: Dto['CreatePermissionDtoMapper'];
-        _Entity: Entities['CreatePermissionDtoMapper'];
-        deserializeDtoToEntity: unknown;
-      };
-      UpdatePermissionDtoMapper: new (schemaValidator: SchemaValidator) => {
-        dto: Dto['UpdatePermissionDtoMapper'];
-        _Entity: Entities['UpdatePermissionDtoMapper'];
-        deserializeDtoToEntity: unknown;
-      };
-      RoleDtoMapper: new (schemaValidator: SchemaValidator) => {
-        dto: Dto['RoleDtoMapper'];
-        _Entity: Entities['RoleDtoMapper'];
-        deserializeDtoToEntity: unknown;
-      };
+      PermissionDtoMapper: ResponseDtoMapperConstructor<
+        SchemaValidator,
+        Dto['PermissionDtoMapper'],
+        Entities['PermissionDtoMapper']
+      >;
+      CreatePermissionDtoMapper: RequestDtoMapperConstructor<
+        SchemaValidator,
+        Dto['CreatePermissionDtoMapper'],
+        Entities['CreatePermissionDtoMapper']
+      >;
+      UpdatePermissionDtoMapper: RequestDtoMapperConstructor<
+        SchemaValidator,
+        Dto['UpdatePermissionDtoMapper'],
+        Entities['UpdatePermissionDtoMapper']
+      >;
+      RoleDtoMapper: RequestDtoMapperConstructor<
+        SchemaValidator,
+        Dto['RoleDtoMapper'],
+        Entities['RoleDtoMapper']
+      >;
     }
   ) {
     this.#dtoMappers = transformIntoInternalDtoMapper(

@@ -13,6 +13,8 @@ import { EntityManager } from '@mikro-orm/core';
 import { IdDto, IdsDto, InstanceTypeRecord } from '@forklaunch/common';
 import {
   InternalDtoMapper,
+  RequestDtoMapperConstructor,
+  ResponseDtoMapperConstructor,
   transformIntoInternalDtoMapper
 } from '@forklaunch/core/dtoMapper';
 import { AnySchemaValidator } from '@forklaunch/validator';
@@ -51,21 +53,21 @@ export default class BaseRoleService<
     protected openTelemetryCollector: OpenTelemetryCollector<Metrics>,
     protected schemaValidator: SchemaValidator,
     protected dtoMappers: {
-      RoleDtoMapper: new (schemaValidator: SchemaValidator) => {
-        dto: Dto['RoleDtoMapper'];
-        _Entity: Entities['RoleDtoMapper'];
-        serializeEntityToDto: unknown;
-      };
-      CreateRoleDtoMapper: new (schemaValidator: SchemaValidator) => {
-        dto: Dto['CreateRoleDtoMapper'];
-        _Entity: Entities['CreateRoleDtoMapper'];
-        deserializeDtoToEntity: unknown;
-      };
-      UpdateRoleDtoMapper: new (schemaValidator: SchemaValidator) => {
-        dto: Dto['UpdateRoleDtoMapper'];
-        _Entity: Entities['UpdateRoleDtoMapper'];
-        deserializeDtoToEntity: unknown;
-      };
+      RoleDtoMapper: ResponseDtoMapperConstructor<
+        SchemaValidator,
+        Dto['RoleDtoMapper'],
+        Entities['RoleDtoMapper']
+      >;
+      CreateRoleDtoMapper: RequestDtoMapperConstructor<
+        SchemaValidator,
+        Dto['CreateRoleDtoMapper'],
+        Entities['CreateRoleDtoMapper']
+      >;
+      UpdateRoleDtoMapper: RequestDtoMapperConstructor<
+        SchemaValidator,
+        Dto['UpdateRoleDtoMapper'],
+        Entities['UpdateRoleDtoMapper']
+      >;
     }
   ) {
     this.#dtoMappers = transformIntoInternalDtoMapper(

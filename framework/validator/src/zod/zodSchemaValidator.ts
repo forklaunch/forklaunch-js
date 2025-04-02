@@ -53,12 +53,15 @@ export class ZodSchemaValidator
         ]
       >,
       (value: unknown) => value is ZodType,
-      <T extends ZodCatchall>(schema: T, value: unknown) => boolean,
-      <T extends ZodCatchall>(
+      <T extends ZodIdiomaticSchema | ZodCatchall>(
+        schema: T,
+        value: unknown
+      ) => boolean,
+      <T extends ZodIdiomaticSchema | ZodCatchall>(
         schema: T,
         value: unknown
       ) => ParseResult<ZodResolve<T>>,
-      <T extends ZodIdiomaticSchema>(schema: T) => SchemaObject
+      <T extends ZodIdiomaticSchema | ZodCatchall>(schema: T) => SchemaObject
     >
 {
   _Type!: 'Zod';
@@ -249,8 +252,13 @@ export class ZodSchemaValidator
    * @param {unknown} value - The value to validate.
    * @returns {boolean} True if valid, otherwise false.
    */
-  validate<T extends ZodCatchall>(schema: T, value: unknown): boolean {
-    return schema.safeParse(value).success;
+  validate<T extends ZodIdiomaticSchema | ZodCatchall>(
+    schema: T,
+    value: unknown
+  ): boolean {
+    const resolvedSchema =
+      schema instanceof ZodType ? schema : this.schemify(schema);
+    return resolvedSchema.safeParse(value).success;
   }
 
   /**
@@ -260,11 +268,13 @@ export class ZodSchemaValidator
    * @param {unknown} value - The value to validate.
    * @returns {ParseResult} - The discrimintated parsed value if successful, the error if unsuccessful.
    */
-  parse<T extends ZodCatchall>(
+  parse<T extends ZodIdiomaticSchema | ZodCatchall>(
     schema: T,
     value: unknown
   ): ParseResult<ZodResolve<T>> {
-    const result = schema.safeParse(value);
+    const resolvedSchema =
+      schema instanceof ZodType ? schema : this.schemify(schema);
+    const result = resolvedSchema.safeParse(value);
     return result.success
       ? { ok: true, value: result.data }
       : {
@@ -299,7 +309,9 @@ export class ZodSchemaValidator
    * @param {ZodIdiomaticSchema} schema - The schema to convert.
    * @returns {SchemaObject} The OpenAPI schema object.
    */
-  openapi<T extends ZodIdiomaticSchema>(schema: T): SchemaObject {
-    return generateSchema(this.schemify(schema));
+  openapi<T extends ZodIdiomaticSchema | ZodCatchall>(schema: T): SchemaObject {
+    return generateSchema(
+      schema instanceof ZodType ? schema : this.schemify(schema)
+    );
   }
 }

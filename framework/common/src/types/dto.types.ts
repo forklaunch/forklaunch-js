@@ -16,3 +16,9 @@ export type ReturnTypeRecord<
 > = {
   [K in keyof T]: ReturnType<T[K]>;
 };
+
+export type InstanceTypeRecord<
+  T extends Record<string, new (...args: never[]) => unknown>
+> = {
+  [K in keyof T]: InstanceType<T[K]>;
+};
