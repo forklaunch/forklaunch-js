@@ -1,17 +1,21 @@
 use anyhow::Result;
+use change::ChangeCommand;
 use clap::{command, ArgMatches, Command};
 use config::ConfigCommand;
 use depcheck::DepcheckCommand;
+use eject::EjectCommand;
 use init::InitCommand;
 use login::LoginCommand;
 use logout::LogoutCommand;
 use version::VersionCommand;
 use whoami::WhoAmICommand;
 
+mod change;
 mod config;
 mod constants;
 mod core;
 mod depcheck;
+mod eject;
 mod init;
 mod login;
 mod logout;
@@ -27,6 +31,8 @@ pub(crate) trait CliCommand {
 fn main() -> anyhow::Result<()> {
     // inject token into init, config
     let init = InitCommand::new();
+    let change = ChangeCommand::new();
+    let eject = EjectCommand::new();
     let depcheck = DepcheckCommand::new();
     let config = ConfigCommand::new();
     let login = LoginCommand::new();
@@ -39,6 +45,8 @@ fn main() -> anyhow::Result<()> {
         .arg_required_else_help(true)
         .subcommand_required(true)
         .subcommand(init.command())
+        .subcommand(change.command())
+        .subcommand(eject.command())
         .subcommand(depcheck.command())
         .subcommand(config.command())
         .subcommand(login.command())
@@ -49,6 +57,8 @@ fn main() -> anyhow::Result<()> {
 
     let result = match matches.subcommand() {
         Some(("init", sub_matches)) => init.handler(sub_matches),
+        Some(("change", sub_matches)) => change.handler(sub_matches),
+        Some(("eject", sub_matches)) => eject.handler(sub_matches),
         Some(("depcheck", sub_matches)) => depcheck.handler(sub_matches),
         Some(("config", sub_matches)) => config.handler(sub_matches),
         Some(("login", sub_matches)) => login.handler(sub_matches),

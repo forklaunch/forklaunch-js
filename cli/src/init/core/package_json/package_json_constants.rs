@@ -128,9 +128,9 @@ pub(crate) fn application_up_packages_script(runtime: &str) -> &str {
 }
 
 // Project package.json dependencies constants
-// @forklaunch/framework-core
+// @forklaunch/blueprint-core
 pub(crate) const APP_CORE_VERSION: &str = "workspace:*";
-// @forklaunch/framework-monitoring
+// @forklaunch/blueprint-monitoring
 pub(crate) const APP_MONITORING_VERSION: &str = "workspace:*";
 // @forklaunch/common
 pub(crate) const COMMON_VERSION: &str = "^0.2.4";
