@@ -3,7 +3,6 @@ import { EntityManager } from '@mikro-orm/core';
 
 export type CreatePlanDto<PlanCadenceEnum, BillingProviderEnum> = {
   active: boolean;
-  type: string;
   name: string;
   description?: string;
   price: number;
@@ -35,8 +34,6 @@ export interface PlanService<
     BillingProviderEnum
   > = PlanServiceParameters<PlanCadenceEnum, BillingProviderEnum>
 > {
-  SchemaDefinition: PlanServiceParameters<PlanCadenceEnum, BillingProviderEnum>;
-
   createPlan: (
     planDto: Params['CreatePlanDto'],
     em?: EntityManager

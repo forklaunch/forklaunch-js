@@ -27,7 +27,6 @@ export interface PaymentLinkService<
   Params extends
     PaymentLinkServiceParameters<CurrencyEnum> = PaymentLinkServiceParameters<CurrencyEnum>
 > {
-  SchemaDefinition: PaymentLinkServiceParameters<CurrencyEnum>;
   // for one off products that are not part of a subscription
   // think about how permissions work on payment links, but these should be ephemeral
   // store in cache, for permissions

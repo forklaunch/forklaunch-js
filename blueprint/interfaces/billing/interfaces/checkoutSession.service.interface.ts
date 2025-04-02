@@ -25,7 +25,6 @@ export interface CheckoutSessionService<
   Params extends
     CheckoutSessionServiceParameters<PaymentMethodEnum> = CheckoutSessionServiceParameters<PaymentMethodEnum>
 > {
-  SchemaDefinition: CheckoutSessionServiceParameters<PaymentMethodEnum>;
   // for generating external links
   // store in cache, for permissions
   createCheckoutSession: (

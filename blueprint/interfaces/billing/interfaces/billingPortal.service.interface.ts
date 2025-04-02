@@ -21,7 +21,6 @@ export type BillingPortalServiceParameters = {
 export interface BillingPortalService<
   Params extends BillingPortalServiceParameters = BillingPortalServiceParameters
 > {
-  SchemaDefinition: BillingPortalServiceParameters;
   // for generating external links
   // store in cache, for permissions
   createBillingPortalSession: (

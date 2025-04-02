@@ -36,10 +36,6 @@ export interface SubscriptionService<
     BillingProviderType
   > = SubscriptionServiceParameters<PartyType, BillingProviderType>
 > {
-  SchemaDefinition: SubscriptionServiceParameters<
-    PartyType,
-    BillingProviderType
-  >;
   // store this in a table
   createSubscription: (
     subscriptionDto: Params['CreateSubscriptionDto'],
