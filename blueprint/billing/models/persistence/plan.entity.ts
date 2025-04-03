@@ -9,9 +9,6 @@ export class Plan extends BaseEntity {
   active!: boolean;
 
   @Property()
-  type!: string;
-
-  @Property()
   name!: string;
 
   @Property()

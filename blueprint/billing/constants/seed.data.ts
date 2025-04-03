@@ -23,7 +23,6 @@ export const paymentLink = PaymentLink.create({
 });
 export const plan = Plan.create({
   active: true,
-  type: 'subscription',
   name: 'Basic',
   description: 'Basic plan',
   price: 1000,

@@ -1,5 +1,5 @@
 {
-  "name": "@forklaunch/blueprint-billing-interfaces",
+  "name": "@forklaunch/interfaces-billing",
   "version": "0.1.0",
   "description": "Billing interfaces for forklaunch",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",

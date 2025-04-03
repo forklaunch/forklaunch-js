@@ -1,4 +1,4 @@
-import { PaymentLinkService } from '@forklaunch/blueprint-billing-interfaces';
+import { PaymentLinkService } from '@forklaunch/interfaces-billing';
 import {
   array,
   handlers,

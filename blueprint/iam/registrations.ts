@@ -13,7 +13,7 @@ import {
   BaseRoleServiceSchemas,
   BaseUserService,
   BaseUserServiceSchemas
-} from '@forklaunch/blueprint-iam-implementation-base';
+} from '@forklaunch/implementation-iam-base';
 import { metrics } from '@forklaunch/blueprint-monitoring';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import {
@@ -45,7 +45,7 @@ import {
   UserDtoMapper
 } from './models/dtoMapper/user.dtoMapper';
 import { OrganizationStatus } from './models/enum/organizationStatus.enum';
-
+//! defines the schemas for the organization service
 export const OrganizationSchemas = BaseOrganizationServiceSchemas(
   SchemaValidator(),
   true
@@ -56,7 +56,6 @@ export const PermissionSchemas = BasePermissionServiceSchemas(
 );
 export const RoleSchemas = BaseRoleServiceSchemas(SchemaValidator(), true);
 export const UserSchemas = BaseUserServiceSchemas(SchemaValidator(), true);
-
 //! defines the configuration schema for the application
 export function createDepenencies({ orm }: { orm: MikroORM }) {
   const configInjector = createConfigInjector(SchemaValidator(), {
@@ -72,7 +71,7 @@ export function createDepenencies({ orm }: { orm: MikroORM }) {
       }
     }
   });
-
+  //! defines the environment configuration for the application
   const environmentConfig = configInjector.chain({
     HOST: {
       lifetime: Lifetime.Singleton,
@@ -113,15 +112,9 @@ export function createDepenencies({ orm }: { orm: MikroORM }) {
       lifetime: Lifetime.Singleton,
       type: string,
       value: getEnvVar('PASSWORD_ENCRYPTION_PUBLIC_KEY_PATH')
-    },
-    EntityManager: {
-      lifetime: Lifetime.Scoped,
-      type: EntityManager,
-      factory: (_args, _resolve, context) =>
-        orm.em.fork(context?.entityManagerOptions as ForkOptions | undefined)
     }
   });
-
+  //! defines the runtime dependencies for the application
   const runtimeDependencies = environmentConfig.chain({
     OpenTelemetryCollector: {
       lifetime: Lifetime.Singleton,
@@ -132,9 +125,15 @@ export function createDepenencies({ orm }: { orm: MikroORM }) {
           OTEL_LEVEL || 'info',
           metrics
         )
+    },
+    EntityManager: {
+      lifetime: Lifetime.Scoped,
+      type: EntityManager,
+      factory: (_args, _resolve, context) =>
+        orm.em.fork(context?.entityManagerOptions as ForkOptions | undefined)
     }
   });
-
+  //! defines the service dependencies for the application
   const serviceDependencies = runtimeDependencies.chain({
     OrganizationService: {
       lifetime: Lifetime.Scoped,
@@ -217,7 +216,7 @@ export function createDepenencies({ orm }: { orm: MikroORM }) {
         )
     }
   });
-
+  //! returns the various dependencies for the application
   return {
     environmentConfig,
     runtimeDependencies,
@@ -225,5 +224,5 @@ export function createDepenencies({ orm }: { orm: MikroORM }) {
     tokens: serviceDependencies.tokens()
   };
 }
-
+//! defines the type for the service dependencies
 export type ServiceDependencies = DependencyShapes<typeof createDepenencies>;

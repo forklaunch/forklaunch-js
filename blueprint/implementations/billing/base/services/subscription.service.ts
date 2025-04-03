@@ -3,7 +3,7 @@ import {
   SubscriptionDto,
   SubscriptionService,
   UpdateSubscriptionDto
-} from '@forklaunch/blueprint-billing-interfaces';
+} from '@forklaunch/interfaces-billing';
 import { IdDto, InstanceTypeRecord } from '@forklaunch/common';
 import {
   InternalDtoMapper,

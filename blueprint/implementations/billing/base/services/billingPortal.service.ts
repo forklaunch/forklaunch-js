@@ -3,7 +3,7 @@ import {
   BillingPortalService,
   CreateBillingPortalDto,
   UpdateBillingPortalDto
-} from '@forklaunch/blueprint-billing-interfaces';
+} from '@forklaunch/interfaces-billing';
 import { IdDto, InstanceTypeRecord } from '@forklaunch/common';
 import { createCacheKey, TtlCache } from '@forklaunch/core/cache';
 import {

@@ -3,7 +3,7 @@ import {
   PaymentLinkDto,
   PaymentLinkService,
   UpdatePaymentLinkDto
-} from '@forklaunch/blueprint-billing-interfaces';
+} from '@forklaunch/interfaces-billing';
 import { IdDto, IdsDto, InstanceTypeRecord } from '@forklaunch/common';
 import { createCacheKey, TtlCache } from '@forklaunch/core/cache';
 import {

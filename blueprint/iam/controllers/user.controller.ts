@@ -7,7 +7,7 @@ import {
   SchemaValidator,
   string
 } from '@forklaunch/blueprint-core';
-import { UserService } from '@forklaunch/blueprint-iam-interfaces';
+import { UserService } from '@forklaunch/interfaces-iam';
 import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';

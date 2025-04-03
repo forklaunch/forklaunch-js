@@ -9,6 +9,7 @@ import {
   string
 } from '@forklaunch/blueprint-core';
 import { SampleWorkerRecord } from '../persistence/sampleWorkerRecord.entity';
+import { SampleWorkerSchema } from '../schemas/sampleWorker.schema';
 
 // Exported type that matches the request schema
 export type SampleWorkerRequestDto = SampleWorkerRequestDtoMapper['dto'];
@@ -18,9 +19,7 @@ export class SampleWorkerRequestDtoMapper extends RequestDtoMapper<
   SchemaValidator
 > {
   // idiomatic validator schema defines the request schema
-  schema = {
-    message: string
-  };
+  schema = SampleWorkerSchema;
 
   // toEntity method maps the request schema to the entity
   toEntity(): SampleWorkerRecord {

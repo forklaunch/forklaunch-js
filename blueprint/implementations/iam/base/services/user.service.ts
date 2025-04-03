@@ -4,13 +4,13 @@ import {
   UpdateUserDto,
   UserDto,
   UserService
-} from '@forklaunch/blueprint-iam-interfaces';
+} from '@forklaunch/interfaces-iam';
 import {
   MetricsDefinition,
   OpenTelemetryCollector
 } from '@forklaunch/core/http';
 
-import { OrganizationService } from '@forklaunch/blueprint-iam-interfaces';
+import { OrganizationService } from '@forklaunch/interfaces-iam';
 import { IdDto, IdsDto, InstanceTypeRecord } from '@forklaunch/common';
 import {
   InternalDtoMapper,

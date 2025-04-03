@@ -38,10 +38,10 @@ importers:
 
   billing:
     dependencies:
-      '@forklaunch/blueprint-billing-implementation-base':
+      '@forklaunch/implementation-billing-base':
         specifier: workspace:*
         version: link:../implementations/billing/base
-      '@forklaunch/blueprint-billing-interfaces':
+      '@forklaunch/interfaces-billing':
         specifier: workspace:*
         version: link:../interfaces/billing
       '@forklaunch/blueprint-core':
@@ -190,10 +190,10 @@ importers:
       '@forklaunch/blueprint-core':
         specifier: workspace:*
         version: link:../core
-      '@forklaunch/blueprint-iam-implementation-base':
+      '@forklaunch/implementation-iam-base':
         specifier: workspace:*
         version: link:../implementations/iam/base
-      '@forklaunch/blueprint-iam-interfaces':
+      '@forklaunch/interfaces-iam':
         specifier: workspace:*
         version: link:../interfaces/iam
       '@forklaunch/blueprint-monitoring':
@@ -260,7 +260,7 @@ importers:
 
   implementations/billing/base:
     dependencies:
-      '@forklaunch/blueprint-billing-interfaces':
+      '@forklaunch/interfaces-billing':
         specifier: workspace:*
         version: link:../../../interfaces/billing
       '@forklaunch/common':
@@ -297,7 +297,7 @@ importers:
 
   implementations/iam/base:
     dependencies:
-      '@forklaunch/blueprint-iam-interfaces':
+      '@forklaunch/interfaces-iam':
         specifier: workspace:*
         version: link:../../../interfaces/iam
       '@forklaunch/common':

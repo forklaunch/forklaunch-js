@@ -5,7 +5,7 @@ import {
   RoleDto,
   RoleService,
   UpdatePermissionDto
-} from '@forklaunch/blueprint-iam-interfaces';
+} from '@forklaunch/interfaces-iam';
 import { IdDto, IdsDto, InstanceTypeRecord } from '@forklaunch/common';
 import {
   InternalDtoMapper,

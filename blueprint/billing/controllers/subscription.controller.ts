@@ -1,4 +1,4 @@
-import { SubscriptionService } from '@forklaunch/blueprint-billing-interfaces';
+import { SubscriptionService } from '@forklaunch/interfaces-billing';
 import {
   array,
   handlers,

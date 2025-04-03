@@ -1,4 +1,4 @@
-import { PlanService } from '@forklaunch/blueprint-billing-interfaces';
+import { PlanService } from '@forklaunch/interfaces-billing';
 import {
   array,
   handlers,

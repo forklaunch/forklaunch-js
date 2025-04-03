@@ -3,7 +3,7 @@ import {
   RoleDto,
   RoleService,
   UpdateRoleDto
-} from '@forklaunch/blueprint-iam-interfaces';
+} from '@forklaunch/interfaces-iam';
 import {
   MetricsDefinition,
   OpenTelemetryCollector

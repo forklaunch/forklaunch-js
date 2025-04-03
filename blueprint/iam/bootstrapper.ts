@@ -4,7 +4,6 @@ import dotenv from 'dotenv';
 import mikroOrmOptionsConfig from './mikro-orm.config';
 import { createDepenencies } from './registrations';
 
-// ! bootstrap function that initializes the application
 export function bootstrap(
   callback: (
     ci: ReturnType<typeof createDepenencies>['serviceDependencies'],

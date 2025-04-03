@@ -3,7 +3,7 @@ import {
   OrganizationDto,
   OrganizationService,
   UpdateOrganizationDto
-} from '@forklaunch/blueprint-iam-interfaces';
+} from '@forklaunch/interfaces-iam';
 import { IdDto, InstanceTypeRecord } from '@forklaunch/common';
 import {
   InternalDtoMapper,

@@ -1,5 +1,5 @@
 {
-  "name": "@forklaunch/blueprint-billing-implementation-base",
+  "name": "@forklaunch/implementation-billing-base",
   "version": "0.1.0",
   "description": "Billing basic implementation for forklaunch",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
@@ -25,7 +25,7 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/blueprint-billing-interfaces": "workspace:*",
+    "@forklaunch/interfaces-billing": "workspace:*",
     "@forklaunch/common": "^0.2.4",
     "@forklaunch/core": "^0.5.6",
     "@forklaunch/validator": "^0.4.7",

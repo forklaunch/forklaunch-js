@@ -1,4 +1,4 @@
-import { CheckoutSessionService } from '@forklaunch/blueprint-billing-interfaces';
+import { CheckoutSessionService } from '@forklaunch/interfaces-billing';
 import {
   handlers,
   IdSchema,

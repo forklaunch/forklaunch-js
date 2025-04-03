@@ -3,7 +3,7 @@ import {
   PlanDto,
   PlanService,
   UpdatePlanDto
-} from '@forklaunch/blueprint-billing-interfaces';
+} from '@forklaunch/interfaces-billing';
 import { IdDto, IdsDto, InstanceTypeRecord } from '@forklaunch/common';
 import {
   InternalDtoMapper,

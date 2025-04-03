@@ -2,10 +2,10 @@ import { bootstrap } from './bootstrapper';
 import { SAMPLE_WORKER_CACHE_KEY_PREFIX } from './consts';
 import { SampleWorkerRecord } from './models/persistence/sampleWorkerRecord.entity';
 
-bootstrap((ci) => {
-  const entityManager = ci.resolve('entityManager');
-  const cache = ci.resolve('ttlCache');
-  const openTelemetryCollector = ci.resolve('openTelemetryCollector');
+bootstrap((ci, tokens) => {
+  const entityManager = ci.resolve(tokens.EntityManager);
+  const cache = ci.resolve(tokens.TtlCache);
+  const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
   //   Database driven worker
   setInterval(async () => {
     const sampleRecordsToProcess = await entityManager

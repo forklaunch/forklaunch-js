@@ -1,4 +1,4 @@
-import { BillingPortalService } from '@forklaunch/blueprint-billing-interfaces';
+import { BillingPortalService } from '@forklaunch/interfaces-billing';
 import {
   handlers,
   IdSchema,

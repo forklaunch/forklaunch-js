@@ -9,7 +9,7 @@ import {
   BasePlanServiceSchemas,
   BaseSubscriptionService,
   BaseSubscriptionServiceSchemas
-} from '@forklaunch/blueprint-billing-implementation-base';
+} from '@forklaunch/implementation-billing-base';
 import {
   number,
   optional,
@@ -56,7 +56,7 @@ import { CurrencyEnum } from './models/enum/currency.enum';
 import { PartyEnum } from './models/enum/party.enum';
 import { PaymentMethodEnum } from './models/enum/paymentMethod.enum';
 import { PlanCadenceEnum } from './models/enum/planCadence.enum';
-
+//! defines the schemas for the billing portal service
 export const BillingPortalSchemas = BaseBillingPortalServiceSchemas(
   SchemaValidator(),
   true
@@ -89,7 +89,7 @@ export function createDepenencies({ orm }: { orm: MikroORM }) {
       }
     }
   });
-
+  //! defines the environment configuration for the application
   const environmentConfig = configInjector.chain({
     REDIS_URL: {
       lifetime: Lifetime.Singleton,
@@ -130,15 +130,9 @@ export function createDepenencies({ orm }: { orm: MikroORM }) {
       lifetime: Lifetime.Singleton,
       type: string,
       value: getEnvVar('OTEL_EXPORTER_OTLP_ENDPOINT')
-    },
-    EntityManager: {
-      lifetime: Lifetime.Scoped,
-      type: EntityManager,
-      factory: (_args, _resolve, context) =>
-        orm.em.fork(context?.entityManagerOptions as ForkOptions | undefined)
     }
   });
-
+  //! defines the runtime dependencies for the application
   const runtimeDependencies = environmentConfig.chain({
     OpenTelemetryCollector: {
       lifetime: Lifetime.Singleton,
@@ -157,9 +151,15 @@ export function createDepenencies({ orm }: { orm: MikroORM }) {
         new RedisTtlCache(60 * 60 * 1000, OpenTelemetryCollector, {
           url: REDIS_URL
         })
+    },
+    EntityManager: {
+      lifetime: Lifetime.Scoped,
+      type: EntityManager,
+      factory: (_args, _resolve, context) =>
+        orm.em.fork(context?.entityManagerOptions as ForkOptions | undefined)
     }
   });
-
+  //! defines the service dependencies for the application
   const serviceDependencies = runtimeDependencies.chain({
     BillingPortalService: {
       lifetime: Lifetime.Scoped,
@@ -248,7 +248,7 @@ export function createDepenencies({ orm }: { orm: MikroORM }) {
         )
     }
   });
-
+  //! returns the various dependencies for the application
   return {
     environmentConfig,
     runtimeDependencies,
@@ -256,5 +256,5 @@ export function createDepenencies({ orm }: { orm: MikroORM }) {
     tokens: serviceDependencies.tokens()
   };
 }
-
+//! defines the type for the service dependencies
 export type ServiceDependencies = DependencyShapes<typeof createDepenencies>;

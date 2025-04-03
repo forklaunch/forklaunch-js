@@ -5,23 +5,23 @@ import {
 } from '@forklaunch/core/services';
 import { forklaunchRouter, SchemaValidator } from '@forklaunch/blueprint-core';
 import { Metrics } from '@forklaunch/blueprint-monitoring';
-import { configValidator } from '../bootstrapper';
 import { SampleWorkerController } from '../controllers/sampleWorker.controller';
+import { ServiceDependencies } from '../registrations';
 
 // returns an object with the router and the sampleWorkerGet and sampleWorkerPost methods for easy installation
 export const SampleWorkerRoutes = (
-  scopeFactory: () => ConfigInjector<SchemaValidator, typeof configValidator>,
+  scopeFactory: () => ConfigInjector<SchemaValidator, ServiceDependencies>,
   scopedServiceFactory: ScopedDependencyFactory<
     SchemaValidator,
-    typeof configValidator,
-    'sampleWorkerService'
+    ServiceDependencies,
+    'SampleWorkerService'
   >,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) => {
   // defines the router for the sampleWorker routes
   const router = forklaunchRouter('/sample-worker', openTelemetryCollector);
 
-  const controller = new SampleWorkerController(
+  const controller = SampleWorkerController(
     scopeFactory,
     scopedServiceFactory,
     openTelemetryCollector
