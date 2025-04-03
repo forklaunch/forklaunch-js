@@ -11,4 +11,6 @@ export type Controller<
   readonly __response?: BaseResponse;
   readonly __next?: NextFunction;
   readonly __qs?: ParsedQs;
+} & {
+  [K: string]: unknown;
 };
