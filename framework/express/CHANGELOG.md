@@ -1,5 +1,18 @@
 # @forklaunch/express
 
+## 0.4.0
+
+### Minor Changes
+
+- Syntactic QOL improvements (validator zod args, config injector, core utilities, test utilities, etc.)
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.6.0
+  - @forklaunch/validator@0.4.8
+  - @forklaunch/common@0.2.5
+
 ## 0.3.7
 
 ### Patch Changes

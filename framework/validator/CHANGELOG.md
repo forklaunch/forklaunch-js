@@ -1,5 +1,13 @@
 # @forklaunch/validator
 
+## 0.4.8
+
+### Patch Changes
+
+- Syntactic QOL improvements (validator zod args, config injector, core utilities, test utilities, etc.)
+- Updated dependencies
+  - @forklaunch/common@0.2.5
+
 ## 0.4.7
 
 ### Patch Changes

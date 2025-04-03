@@ -1,5 +1,11 @@
 # @forklaunch/universal-sdk
 
+## 0.2.3
+
+### Patch Changes
+
+- Syntactic QOL improvements (validator zod args, config injector, core utilities, test utilities, etc.)
+
 ## 0.2.2
 
 ### Patch Changes
