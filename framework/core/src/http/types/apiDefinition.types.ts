@@ -286,8 +286,8 @@ export type ResolvedForklaunchRequest<
       >
         ? ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>[key]
         : key extends keyof BaseRequest
-        ? BaseRequest[key]
-        : never;
+          ? BaseRequest[key]
+          : never;
     };
 
 /**
@@ -333,8 +333,8 @@ export interface ExpressLikeHandler<
           >
             ? ForklaunchResponse<ResBodyMap, ResHeaders, LocalsObj>[key]
             : key extends keyof BaseResponse
-            ? BaseResponse[key]
-            : never;
+              ? BaseResponse[key]
+              : never;
         },
     next?: NextFunction
   ): void | Promise<void>;
@@ -343,56 +343,62 @@ export interface ExpressLikeHandler<
 export type MapParamsSchema<
   SV extends AnySchemaValidator,
   P extends ParamsObject<SV>
-> = MapSchema<SV, P> extends infer Params
-  ? unknown extends Params
-    ? ParamsDictionary
-    : Params
-  : ParamsDictionary;
+> =
+  MapSchema<SV, P> extends infer Params
+    ? unknown extends Params
+      ? ParamsDictionary
+      : Params
+    : ParamsDictionary;
 
 export type MapResBodyMapSchema<
   SV extends AnySchemaValidator,
   ResBodyMap extends ResponsesObject<SV>
-> = MapSchema<SV, ResBodyMap> extends infer ResponseBodyMap
-  ? unknown extends ResponseBodyMap
-    ? ForklaunchResErrors
-    : ResponseBodyMap
-  : ForklaunchResErrors;
+> =
+  MapSchema<SV, ResBodyMap> extends infer ResponseBodyMap
+    ? unknown extends ResponseBodyMap
+      ? ForklaunchResErrors
+      : ResponseBodyMap
+    : ForklaunchResErrors;
 
 export type MapReqBodySchema<
   SV extends AnySchemaValidator,
   ReqBody extends Body<SV>
-> = MapSchema<SV, ReqBody> extends infer Body
-  ? unknown extends Body
-    ? Record<string, unknown>
-    : Body
-  : Record<string, unknown>;
+> =
+  MapSchema<SV, ReqBody> extends infer Body
+    ? unknown extends Body
+      ? Record<string, unknown>
+      : Body
+    : Record<string, unknown>;
 
 export type MapReqQuerySchema<
   SV extends AnySchemaValidator,
   ReqQuery extends QueryObject<SV>
-> = MapSchema<SV, ReqQuery> extends infer Query
-  ? unknown extends Query
-    ? ParsedQs
-    : Query
-  : ParsedQs;
+> =
+  MapSchema<SV, ReqQuery> extends infer Query
+    ? unknown extends Query
+      ? ParsedQs
+      : Query
+    : ParsedQs;
 
 export type MapReqHeadersSchema<
   SV extends AnySchemaValidator,
   ReqHeaders extends HeadersObject<SV>
-> = MapSchema<SV, ReqHeaders> extends infer RequestHeaders
-  ? unknown extends RequestHeaders
-    ? Record<string, string>
-    : RequestHeaders
-  : Record<string, string>;
+> =
+  MapSchema<SV, ReqHeaders> extends infer RequestHeaders
+    ? unknown extends RequestHeaders
+      ? Record<string, string>
+      : RequestHeaders
+    : Record<string, string>;
 
 export type MapResHeadersSchema<
   SV extends AnySchemaValidator,
   ResHeaders extends HeadersObject<SV>
-> = MapSchema<SV, ResHeaders> extends infer ResponseHeaders
-  ? unknown extends ResponseHeaders
-    ? ForklaunchResHeaders
-    : ResponseHeaders
-  : ForklaunchResHeaders;
+> =
+  MapSchema<SV, ResHeaders> extends infer ResponseHeaders
+    ? unknown extends ResponseHeaders
+      ? ForklaunchResHeaders
+      : ResponseHeaders
+    : ForklaunchResHeaders;
 
 /**
  * Represents a schema middleware handler with typed parameters, responses, body, and query.
