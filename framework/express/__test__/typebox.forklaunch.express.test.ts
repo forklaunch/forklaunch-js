@@ -242,8 +242,8 @@ describe('handlers', () => {
           name: string
         }
       },
-      async (req, res) => {
-        req.query.name;
+      async (req) => {
+        console.log(req.query.name);
       }
     );
     application.use(checkoutMiddleware);

@@ -1,5 +1,11 @@
 # @forklaunch/validator
 
+## 0.4.9
+
+### Patch Changes
+
+- Schema Validator types now have runtime typechecking as well
+
 ## 0.4.8
 
 ### Patch Changes

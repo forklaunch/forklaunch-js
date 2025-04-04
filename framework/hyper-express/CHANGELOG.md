@@ -1,5 +1,13 @@
 # @forklaunch/hyper-express
 
+## 0.4.1
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.4.9
+  - @forklaunch/core@0.6.1
+
 ## 0.4.0
 
 ### Minor Changes

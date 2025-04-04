@@ -1,5 +1,12 @@
 # @forklaunch/core
 
+## 0.6.1
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.4.9
+
 ## 0.6.0
 
 ### Minor Changes

@@ -64,7 +64,7 @@ export class ZodSchemaValidator
       <T extends ZodIdiomaticSchema | ZodCatchall>(schema: T) => SchemaObject
     >
 {
-  _Type!: 'Zod';
+  _Type = 'Zod' as const;
   _SchemaCatchall!: ZodType;
   _ValidSchemaObject!:
     | ZodObject<ZodRawShape>

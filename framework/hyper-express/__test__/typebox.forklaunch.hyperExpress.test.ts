@@ -261,8 +261,10 @@ describe('handlers', () => {
           name: string
         }
       },
-      async (req, res) => {
-        req.query.name;
+      async (req) => {
+        if (req.query.name) {
+          throw new Error('Name is required');
+        }
       }
     );
     application.use(anyMiddleware);

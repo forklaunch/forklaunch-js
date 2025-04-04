@@ -1,7 +1,6 @@
 import { GenericContainer, StartedTestContainer } from 'testcontainers';
 import { RedisTtlCache } from '../src/cache/redisTtlCache';
 import { OpenTelemetryCollector } from '../src/http/telemetry/openTelemetryCollector';
-import { MetricsDefinition } from '../src/http';
 
 describe('redisTtlCache', () => {
   let container: StartedTestContainer;

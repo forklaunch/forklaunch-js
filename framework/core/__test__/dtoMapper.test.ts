@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { SchemaValidator, number, string } from '@forklaunch/validator/typebox';
 import { PrimaryKey, Property } from '@mikro-orm/core';
 import { v4 } from 'uuid';
@@ -149,9 +150,9 @@ describe('request dtoMapper tests', () => {
       name: 'test'
     };
 
-    // @ts-expect-error
+    // @ts-expect-error - missing age
     expect(() => TestRequestDM.fromDto(json)).toThrow();
-    // @ts-expect-error
+    // @ts-expect-error - missing age
     expect(() => TestRequestDtoMapper.fromDto(SV, json)).toThrow();
   });
 });

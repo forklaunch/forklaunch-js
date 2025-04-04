@@ -40,7 +40,7 @@ export class MockSchemaValidator
       <T extends string>(schema: T) => SchemaObject
     >
 {
-  _Type!: 'Mock';
+  _Type = 'Mock' as const;
   _SchemaCatchall!: string;
   _ValidSchemaObject!: string;
 
@@ -96,7 +96,7 @@ export class MockSchemaValidator
           errors: [{ path: [], message: 'Some error' }]
         };
   }
-  openapi<T extends string>(_schema: T): SchemaObject {
+  openapi(): SchemaObject {
     return {
       type: 'string'
     };

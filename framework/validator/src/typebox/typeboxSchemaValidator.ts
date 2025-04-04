@@ -92,7 +92,7 @@ export class TypeboxSchemaValidator
       <T extends TIdiomaticSchema | TCatchall>(schema: T) => SchemaObject
     >
 {
-  _Type!: 'TypeBox';
+  _Type = 'TypeBox' as const;
   _SchemaCatchall!: TSchema;
   _ValidSchemaObject!: TObject<TProperties> | TArray<TObject<TProperties>>;
 
