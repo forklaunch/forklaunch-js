@@ -18,16 +18,16 @@ import {
   SampleWorkerRequestDtoMapper,
   SampleWorkerResponseDtoMapper
 } from '../models/dtoMapper/sampleWorker.dtoMapper';
-import { ServiceDependencies } from '../registrations';
+import { SchemaDependencies } from '../registrations';
 
 // Controller class that implements the SampleWorkerService interface
 export const SampleWorkerController = (
   // scopeFactory returns new scopes that can be used for joint transactions
-  scopeFactory: () => ConfigInjector<SchemaValidator, ServiceDependencies>,
+  scopeFactory: () => ConfigInjector<SchemaValidator, SchemaDependencies>,
   // serviceFactory returns a new service instance on demand
   serviceFactory: ScopedDependencyFactory<
     SchemaValidator,
-    ServiceDependencies,
+    SchemaDependencies,
     'SampleWorkerService'
   >,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>

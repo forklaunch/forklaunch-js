@@ -19,12 +19,12 @@ import {
   UpdateUserDtoMapper,
   UserDtoMapper
 } from '../models/dtoMapper/user.dtoMapper';
-import { ServiceDependencies } from '../registrations';
+import { SchemaDependencies } from '../registrations';
 
 export const UserController = (
   serviceFactory: ScopedDependencyFactory<
     SchemaValidator,
-    ServiceDependencies,
+    SchemaDependencies,
     'UserService'
   >,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>

@@ -3,12 +3,12 @@ import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { RoleController } from '../controllers/role.controller';
-import { ServiceDependencies } from '../registrations';
+import { SchemaDependencies } from '../registrations';
 
 export const RoleRoutes = (
   scopedServiceFactory: ScopedDependencyFactory<
     SchemaValidator,
-    ServiceDependencies,
+    SchemaDependencies,
     'RoleService'
   >,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>

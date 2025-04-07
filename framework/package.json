@@ -41,8 +41,8 @@
     "sort-package-json": "^3.0.0",
     "ts-jest": "^29.3.1",
     "tsx": "^4.19.3",
-    "typedoc": "^0.28.1",
-    "typescript": "^5.8.2",
+    "typedoc": "^0.28.2",
+    "typescript": "^5.8.3",
     "vitest": "^3.1.1"
   }
 }

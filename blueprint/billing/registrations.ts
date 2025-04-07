@@ -257,4 +257,4 @@ export function createDepenencies({ orm }: { orm: MikroORM }) {
   };
 }
 //! defines the type for the service dependencies
-export type ServiceDependencies = DependencyShapes<typeof createDepenencies>;
+export type SchemaDependencies = DependencyShapes<typeof createDepenencies>;

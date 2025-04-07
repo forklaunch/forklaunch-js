@@ -18,12 +18,12 @@ import {
   CreateBillingPortalDtoMapper,
   UpdateBillingPortalDtoMapper
 } from '../models/dtoMapper/billingPortal.dtoMapper';
-import { ServiceDependencies } from '../registrations';
+import { SchemaDependencies } from '../registrations';
 
 export const BillingPortalController = (
   serviceFactory: ScopedDependencyFactory<
     SchemaValidator,
-    ServiceDependencies,
+    SchemaDependencies,
     'BillingPortalService'
   >,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>

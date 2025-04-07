@@ -3,12 +3,12 @@ import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { PaymentLinkController } from '../controllers/paymentLink.controller';
-import { ServiceDependencies } from '../registrations';
+import { SchemaDependencies } from '../registrations';
 
 export const PaymentLinkRoutes = (
   scopedServiceFactory: ScopedDependencyFactory<
     SchemaValidator,
-    ServiceDependencies,
+    SchemaDependencies,
     'PaymentLinkService'
   >,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>

@@ -22,12 +22,12 @@ import {
 } from '../models/dtoMapper/plan.dtoMapper';
 import { BillingProviderEnum } from '../models/enum/billingProvider.enum';
 import { PlanCadenceEnum } from '../models/enum/planCadence.enum';
-import { PlanSchemas, ServiceDependencies } from '../registrations';
+import { PlanSchemas, SchemaDependencies } from '../registrations';
 
 export const PlanController = (
   serviceFactory: ScopedDependencyFactory<
     SchemaValidator,
-    ServiceDependencies,
+    SchemaDependencies,
     'PlanService'
   >,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>

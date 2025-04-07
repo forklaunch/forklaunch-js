@@ -3,12 +3,12 @@ import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { SubscriptionController } from '../controllers/subscription.controller';
-import { ServiceDependencies } from '../registrations';
+import { SchemaDependencies } from '../registrations';
 
 export const SubscriptionRoutes = (
   scopedServiceFactory: ScopedDependencyFactory<
     SchemaValidator,
-    ServiceDependencies,
+    SchemaDependencies,
     'SubscriptionService'
   >,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>

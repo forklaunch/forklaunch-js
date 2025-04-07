@@ -18,12 +18,12 @@ import {
   RoleDtoMapper,
   UpdateRoleDtoMapper
 } from '../models/dtoMapper/role.dtoMapper';
-import { ServiceDependencies } from '../registrations';
+import { SchemaDependencies } from '../registrations';
 
 export const RoleController = (
   serviceFactory: ScopedDependencyFactory<
     SchemaValidator,
-    ServiceDependencies,
+    SchemaDependencies,
     'RoleService'
   >,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>

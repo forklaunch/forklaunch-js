@@ -20,12 +20,12 @@ import {
   PermissionDtoMapper,
   UpdatePermissionDtoMapper
 } from '../models/dtoMapper/permission.dtoMapper';
-import { ServiceDependencies } from '../registrations';
+import { SchemaDependencies } from '../registrations';
 
 export const PermissionController = (
   serviceFactory: ScopedDependencyFactory<
     SchemaValidator,
-    ServiceDependencies,
+    SchemaDependencies,
     'PermissionService'
   >,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>

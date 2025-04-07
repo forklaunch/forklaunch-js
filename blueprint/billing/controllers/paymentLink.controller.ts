@@ -21,12 +21,12 @@ import {
   UpdatePaymentLinkDtoMapper
 } from '../models/dtoMapper/paymentLink.dtoMapper';
 import { CurrencyEnum } from '../models/enum/currency.enum';
-import { PaymentLinkSchemas, ServiceDependencies } from '../registrations';
+import { PaymentLinkSchemas, SchemaDependencies } from '../registrations';
 
 export const PaymentLinkController = (
   serviceFactory: ScopedDependencyFactory<
     SchemaValidator,
-    ServiceDependencies,
+    SchemaDependencies,
     'PaymentLinkService'
   >,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>

@@ -1,5 +1,11 @@
 # @forklaunch/universal-sdk
 
+## 0.2.4
+
+### Patch Changes
+
+- Update package versions
+
 ## 0.2.3
 
 ### Patch Changes

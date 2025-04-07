@@ -22,12 +22,12 @@ import {
 } from '../models/dtoMapper/subscription.dtoMapper';
 import { BillingProviderEnum } from '../models/enum/billingProvider.enum';
 import { PartyEnum } from '../models/enum/party.enum';
-import { ServiceDependencies } from '../registrations';
+import { SchemaDependencies } from '../registrations';
 
 export const SubscriptionController = (
   serviceFactory: ScopedDependencyFactory<
     SchemaValidator,
-    ServiceDependencies,
+    SchemaDependencies,
     'SubscriptionService'
   >,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>

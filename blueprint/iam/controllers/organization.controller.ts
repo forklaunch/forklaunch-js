@@ -20,12 +20,12 @@ import {
   UpdateOrganizationDtoMapper
 } from '../models/dtoMapper/organization.dtoMapper';
 import { OrganizationStatus } from '../models/enum/organizationStatus.enum';
-import { ServiceDependencies } from '../registrations';
+import { SchemaDependencies } from '../registrations';
 
 export const OrganizationController = (
   serviceFactory: ScopedDependencyFactory<
     SchemaValidator,
-    ServiceDependencies,
+    SchemaDependencies,
     'OrganizationService'
   >,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>

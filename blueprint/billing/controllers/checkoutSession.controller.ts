@@ -18,12 +18,12 @@ import {
   CreateCheckoutSessionDtoMapper
 } from '../models/dtoMapper/checkoutSession.dtoMapper';
 import { PaymentMethodEnum } from '../models/enum/paymentMethod.enum';
-import { ServiceDependencies } from '../registrations';
+import { SchemaDependencies } from '../registrations';
 
 export const CheckoutSessionController = (
   serviceFactory: ScopedDependencyFactory<
     SchemaValidator,
-    ServiceDependencies,
+    SchemaDependencies,
     'CheckoutSessionService'
   >,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
