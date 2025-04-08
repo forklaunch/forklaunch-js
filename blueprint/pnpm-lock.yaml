@@ -54,14 +54,14 @@ importers:
         specifier: ^0.2.6
         version: 0.2.6
       '@forklaunch/core':
-        specifier: ^0.6.2
-        version: 0.6.2(socks@2.8.4)
+        specifier: ^0.6.3
+        version: 0.6.3(socks@2.8.4)
       '@forklaunch/express':
-        specifier: ^0.4.0
-        version: 0.4.2(openapi3-ts@4.4.0)(socks@2.8.4)
+        specifier: ^0.4.3
+        version: 0.4.3(openapi3-ts@4.4.0)(socks@2.8.4)
       '@forklaunch/hyper-express':
-        specifier: ^0.4.0
-        version: 0.4.2(express@5.1.0)(socks@2.8.4)
+        specifier: ^0.4.3
+        version: 0.4.3(express@5.1.0)(socks@2.8.4)
       '@forklaunch/implementation-billing-base':
         specifier: workspace:*
         version: link:../implementations/billing/base
@@ -69,8 +69,8 @@ importers:
         specifier: workspace:*
         version: link:../interfaces/billing
       '@forklaunch/validator':
-        specifier: ^0.4.10
-        version: 0.4.10(openapi3-ts@4.4.0)
+        specifier: ^0.4.11
+        version: 0.4.11(openapi3-ts@4.4.0)
       '@mikro-orm/core':
         specifier: ^6.4.12
         version: 6.4.12
@@ -145,17 +145,17 @@ importers:
         specifier: ^0.2.6
         version: 0.2.6
       '@forklaunch/core':
-        specifier: ^0.6.2
-        version: 0.6.2(socks@2.8.4)
+        specifier: ^0.6.3
+        version: 0.6.3(socks@2.8.4)
       '@forklaunch/express':
-        specifier: ^0.4.0
-        version: 0.4.2(openapi3-ts@4.4.0)(socks@2.8.4)
+        specifier: ^0.4.3
+        version: 0.4.3(openapi3-ts@4.4.0)(socks@2.8.4)
       '@forklaunch/hyper-express':
-        specifier: ^0.4.0
-        version: 0.4.2(express@5.1.0)(socks@2.8.4)
+        specifier: ^0.4.3
+        version: 0.4.3(express@5.1.0)(socks@2.8.4)
       '@forklaunch/validator':
-        specifier: ^0.4.10
-        version: 0.4.10(openapi3-ts@4.4.0)
+        specifier: ^0.4.11
+        version: 0.4.11(openapi3-ts@4.4.0)
       '@mikro-orm/core':
         specifier: ^6.4.12
         version: 6.4.12
@@ -200,8 +200,8 @@ importers:
         specifier: workspace:*
         version: link:../monitoring
       '@forklaunch/core':
-        specifier: ^0.6.2
-        version: 0.6.2(socks@2.8.4)
+        specifier: ^0.6.3
+        version: 0.6.3(socks@2.8.4)
       '@forklaunch/implementation-iam-base':
         specifier: workspace:*
         version: link:../implementations/iam/base
@@ -270,14 +270,14 @@ importers:
         specifier: ^0.2.6
         version: 0.2.6
       '@forklaunch/core':
-        specifier: ^0.6.2
-        version: 0.6.2(socks@2.8.4)
+        specifier: ^0.6.3
+        version: 0.6.3(socks@2.8.4)
       '@forklaunch/interfaces-billing':
         specifier: workspace:*
         version: link:../../../interfaces/billing
       '@forklaunch/validator':
-        specifier: ^0.4.10
-        version: 0.4.10(openapi3-ts@4.4.0)
+        specifier: ^0.4.11
+        version: 0.4.11(openapi3-ts@4.4.0)
       '@mikro-orm/core':
         specifier: ^6.4.12
         version: 6.4.12
@@ -307,14 +307,14 @@ importers:
         specifier: ^0.2.6
         version: 0.2.6
       '@forklaunch/core':
-        specifier: ^0.6.2
-        version: 0.6.2(socks@2.8.4)
+        specifier: ^0.6.3
+        version: 0.6.3(socks@2.8.4)
       '@forklaunch/interfaces-iam':
         specifier: workspace:*
         version: link:../../../interfaces/iam
       '@forklaunch/validator':
-        specifier: ^0.4.10
-        version: 0.4.10(openapi3-ts@4.4.0)
+        specifier: ^0.4.11
+        version: 0.4.11(openapi3-ts@4.4.0)
       '@mikro-orm/core':
         specifier: ^6.4.12
         version: 6.4.12
@@ -379,8 +379,8 @@ importers:
   monitoring:
     dependencies:
       '@forklaunch/core':
-        specifier: ^0.6.2
-        version: 0.6.2(socks@2.8.4)
+        specifier: ^0.6.3
+        version: 0.6.3(socks@2.8.4)
 
   sample-worker:
     dependencies:
@@ -391,8 +391,8 @@ importers:
         specifier: workspace:*
         version: link:../monitoring
       '@forklaunch/core':
-        specifier: ^0.6.2
-        version: 0.6.2(socks@2.8.4)
+        specifier: ^0.6.3
+        version: 0.6.3(socks@2.8.4)
       '@mikro-orm/core':
         specifier: ^6.4.12
         version: 6.4.12
@@ -880,17 +880,17 @@ packages:
   '@forklaunch/common@0.2.6':
     resolution: {integrity: sha512-ShISOkH0i84nb5UIP1vc2Z7nL4U0U8fLiITm34WOxVtd0ZEm/PwSuyhjCWiR4f86AQOLyqv9APN52cVKDP6gMQ==}
 
-  '@forklaunch/core@0.6.2':
-    resolution: {integrity: sha512-a0Pn0X6SXjFoSzp0fOP84hv35vJIIN/l+2i8VTsZlgidMwCzqa/fUWsA4rQDIi6dn+N/6LX1dW3Ry0adQ44w2Q==}
+  '@forklaunch/core@0.6.3':
+    resolution: {integrity: sha512-NKy6xr8ab3DXcxy0vuelsd2gfwuNrOSRPgzCC+b6tkJADc1M5m7jc3mC+lmgU8+r0QmC9zPbYuIEIYiBo7/5yQ==}
 
-  '@forklaunch/express@0.4.2':
-    resolution: {integrity: sha512-ParzCPl/HUKTc9f0rr/nk9KWruN1zrr3zNHiN/uGNTk4ozqa3C437LRbDa9IBHvxYhhN3v6ED0qMWYPcJN5sLA==}
+  '@forklaunch/express@0.4.3':
+    resolution: {integrity: sha512-2RCYObgCccFljsAVa2ekew4kASGS64rpniVdyGsSD6C4LUDxRRx4dB5Sz+raqT+Sszpq8bsCYB8ip275df7t1g==}
 
   '@forklaunch/hyper-express-fork@6.17.30':
     resolution: {integrity: sha512-TToaBStDsodTNAHah5Ci1+9lY8c2iysYY6yW/Y6KD7scmIGZXwcDUZEA4ywKUrB4BRxQxkcbAMx4zsnOVIZfmQ==}
 
-  '@forklaunch/hyper-express@0.4.2':
-    resolution: {integrity: sha512-lgaZKy8KbaqF+YVT1+dIfLceeABWGxiP4SiwmVa+8WH3vtVdb11jLAFMslbbFiDg8xjzHOtdNDxep4HIdtLYng==}
+  '@forklaunch/hyper-express@0.4.3':
+    resolution: {integrity: sha512-m6Z7fh2mAG62IkSFRzb2MAjhhnXekRsxLUnXE7ELLMB5vrJ/jHPHG0LBgn6Fwl5WG6CWdYBjwxrrTYGw7EcISg==}
 
   '@forklaunch/opentelemetry-instrumentation-hyper-express@0.0.5':
     resolution: {integrity: sha512-AwkA0ywzdZRz5p+kRMGWH0v0MH2aqxhlIBLV8SQDETKTbpN6G1BtptxPegC9QFFfCJSywDguXDNvVdmxX+VV0A==}
@@ -898,8 +898,8 @@ packages:
     peerDependencies:
       '@opentelemetry/api': ^1.3.0
 
-  '@forklaunch/validator@0.4.10':
-    resolution: {integrity: sha512-fW0uiQdADmUZMzHjoFUoz794k9lVqbDS+Ovw0bY+n46zPq4nrh2s79d/TF05vE0eWCAeC/P1wX/irEr3ieyY5A==}
+  '@forklaunch/validator@0.4.11':
+    resolution: {integrity: sha512-Nyi3fe1g+H7NVuCcTaNfOrlQw9NlExrvMbQ5XxYIeHrTv80m9gUCoEQBGpcOCSmXzMTKacD28MHlMGqYl6UY1g==}
 
   '@gar/promisify@1.1.3':
     resolution: {integrity: sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==}
@@ -5270,11 +5270,11 @@ snapshots:
 
   '@forklaunch/common@0.2.6': {}
 
-  '@forklaunch/core@0.6.2(socks@2.8.4)':
+  '@forklaunch/core@0.6.3(socks@2.8.4)':
     dependencies:
       '@forklaunch/common': 0.2.6
       '@forklaunch/opentelemetry-instrumentation-hyper-express': 0.0.5(@opentelemetry/api@1.9.0)
-      '@forklaunch/validator': 0.4.10(openapi3-ts@4.4.0)
+      '@forklaunch/validator': 0.4.11(openapi3-ts@4.4.0)
       '@mikro-orm/core': 6.4.12
       '@mikro-orm/mongodb': 6.4.12(@mikro-orm/core@6.4.12)(socks@2.8.4)
       '@opentelemetry/api': 1.9.0
@@ -5310,11 +5310,11 @@ snapshots:
       - socks
       - supports-color
 
-  '@forklaunch/express@0.4.2(openapi3-ts@4.4.0)(socks@2.8.4)':
+  '@forklaunch/express@0.4.3(openapi3-ts@4.4.0)(socks@2.8.4)':
     dependencies:
       '@forklaunch/common': 0.2.6
-      '@forklaunch/core': 0.6.2(socks@2.8.4)
-      '@forklaunch/validator': 0.4.10(openapi3-ts@4.4.0)
+      '@forklaunch/core': 0.6.3(socks@2.8.4)
+      '@forklaunch/validator': 0.4.11(openapi3-ts@4.4.0)
       '@scalar/express-api-reference': 0.6.6
       cors: 2.8.5
       express: 5.1.0
@@ -5343,12 +5343,12 @@ snapshots:
       typed-emitter: 2.1.0
       uWebSockets.js: https://codeload.github.com/uNetworking/uWebSockets.js/tar.gz/6609a88ffa9a16ac5158046761356ce03250a0df
 
-  '@forklaunch/hyper-express@0.4.2(express@5.1.0)(socks@2.8.4)':
+  '@forklaunch/hyper-express@0.4.3(express@5.1.0)(socks@2.8.4)':
     dependencies:
       '@forklaunch/common': 0.2.6
-      '@forklaunch/core': 0.6.2(socks@2.8.4)
+      '@forklaunch/core': 0.6.3(socks@2.8.4)
       '@forklaunch/hyper-express-fork': 6.17.30
-      '@forklaunch/validator': 0.4.10(openapi3-ts@4.4.0)
+      '@forklaunch/validator': 0.4.11(openapi3-ts@4.4.0)
       '@scalar/express-api-reference': 0.6.6
       cors: 2.8.5
       live-directory: 3.0.3
@@ -5378,7 +5378,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@forklaunch/validator@0.4.10(openapi3-ts@4.4.0)':
+  '@forklaunch/validator@0.4.11(openapi3-ts@4.4.0)':
     dependencies:
       '@anatine/zod-openapi': 2.2.8(openapi3-ts@4.4.0)(zod@3.24.2)
       '@forklaunch/common': 0.2.6
