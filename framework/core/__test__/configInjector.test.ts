@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { number, SchemaValidator, string } from '@forklaunch/validator/zod';
+import { number, SchemaValidator, string } from '@forklaunch/validator/typebox';
 import { ConfigInjector } from '../src/services/configInjector';
 import { Lifetime } from '../src/services/types/configInjector.types';
 

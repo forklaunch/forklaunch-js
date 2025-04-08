@@ -1,5 +1,11 @@
 # @forklaunch/validator
 
+## 0.4.11
+
+### Patch Changes
+
+- Fix minor issue where typebox resolution was breaking
+
 ## 0.4.10
 
 ### Patch Changes

@@ -75,11 +75,13 @@ type ResolveConfigValue<SV extends AnySchemaValidator, T> =
         ? ReturnType<T>
         : T extends Constructor
           ? InstanceType<T>
-          : T extends Record<string, ConfigTypes<SV>>
-            ? {
-                [K in keyof T]: ResolveConfigValue<SV, T[K]>;
-              }
-            : Schema<T, SV>;
+          : T extends SV['_SchemaCatchall']
+            ? Schema<T, SV>
+            : T extends Record<string, ConfigTypes<SV>>
+              ? {
+                  [K in keyof T]: ResolveConfigValue<SV, T[K]>;
+                }
+              : Schema<T, SV>;
 
 export type ResolvedConfigValidator<
   SV extends AnySchemaValidator,
