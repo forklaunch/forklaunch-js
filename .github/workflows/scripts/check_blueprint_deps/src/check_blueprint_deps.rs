@@ -1,6 +1,6 @@
 use serde_json::Value;
 use std::collections::HashMap;
-use std::fs;
+use std::fs::read_to_string;
 use std::path::Path;
 
 pub fn verify_package_versions(package_dirs: &[&str]) -> Result<(), String> {
@@ -8,7 +8,7 @@ pub fn verify_package_versions(package_dirs: &[&str]) -> Result<(), String> {
     let mut last_comment = String::new();
 
     let contents =
-        fs::read_to_string("../../../../cli/src/init/core/package_json/package_json_constants.rs")
+        read_to_string("../../../../cli/src/init/core/package_json/package_json_constants.rs")
             .map_err(|e| e.to_string())?;
 
     for line in contents.lines() {
@@ -44,7 +44,7 @@ pub fn verify_package_versions(package_dirs: &[&str]) -> Result<(), String> {
 
     for dir in package_dirs {
         let path = Path::new(dir).join("package.json");
-        let contents = fs::read_to_string(&path)
+        let contents = read_to_string(&path)
             .map_err(|e| format!("Failed to read {}: {}", path.display(), e))?;
 
         let pkg_json: Value = serde_json::from_str(&contents)
@@ -58,7 +58,7 @@ pub fn verify_package_versions(package_dirs: &[&str]) -> Result<(), String> {
                         let actual = ver.as_str().ok_or_else(|| {
                             format!("Invalid version for {} in {}", pkg, path.display())
                         })?;
-                        if actual != expected {
+                        if actual != expected && !actual.contains("workspace:") {
                             return Err(format!(
                                 "Version mismatch for {} in {} {}: expected {}, got {}",
                                 pkg,
