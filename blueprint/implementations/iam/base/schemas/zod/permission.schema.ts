@@ -28,3 +28,9 @@ export const PermissionSchema = (uuidId: boolean) => ({
   createdAt: optional(date),
   updatedAt: optional(date)
 });
+
+export const BasePermissionServiceSchemas = (uuidId: boolean) => ({
+  CreatePermissionSchema,
+  UpdatePermissionSchema: UpdatePermissionSchema(uuidId),
+  PermissionSchema: PermissionSchema(uuidId)
+});

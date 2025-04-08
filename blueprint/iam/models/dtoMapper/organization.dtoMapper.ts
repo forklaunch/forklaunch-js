@@ -3,12 +3,7 @@ import {
   RequestDtoMapper,
   ResponseDtoMapper
 } from '@forklaunch/core/dtoMapper';
-import {
-  OrganizationSchemas,
-  PermissionSchemas,
-  RoleSchemas,
-  UserSchemas
-} from '../../registrations';
+import { OrganizationSchemas } from '../../registrations';
 import { OrganizationStatus } from '../enum/organizationStatus.enum';
 import { Organization } from '../persistence/organization.entity';
 import { UserDtoMapper } from './user.dtoMapper';
@@ -42,12 +37,7 @@ export class OrganizationDtoMapper extends ResponseDtoMapper<
   Organization,
   SchemaValidator
 > {
-  schema = OrganizationSchemas.OrganizationSchema(
-    UserSchemas.UserSchema(
-      RoleSchemas.RoleSchema(PermissionSchemas.PermissionSchema)
-    ),
-    OrganizationStatus
-  );
+  schema = OrganizationSchemas.OrganizationSchema(OrganizationStatus);
 
   fromEntity(entity: Organization): this {
     this.dto = {

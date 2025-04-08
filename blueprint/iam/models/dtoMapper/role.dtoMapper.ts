@@ -3,7 +3,7 @@ import {
   RequestDtoMapper,
   ResponseDtoMapper
 } from '@forklaunch/core/dtoMapper';
-import { PermissionSchemas, RoleSchemas } from '../../registrations';
+import { RoleSchemas } from '../../registrations';
 import { Permission } from '../persistence/permission.entity';
 import { Role } from '../persistence/role.entity';
 import { PermissionDtoMapper } from './permission.dtoMapper';
@@ -50,7 +50,7 @@ export class UpdateRoleDtoMapper extends RequestDtoMapper<
 }
 
 export class RoleDtoMapper extends ResponseDtoMapper<Role, SchemaValidator> {
-  schema = RoleSchemas.RoleSchema(PermissionSchemas.PermissionSchema);
+  schema = RoleSchemas.RoleSchema;
 
   fromEntity(entity: Role): this {
     this.dto = {
@@ -72,7 +72,7 @@ export class RoleDtoMapper extends ResponseDtoMapper<Role, SchemaValidator> {
 }
 
 export class RoleEntityMapper extends RequestDtoMapper<Role, SchemaValidator> {
-  schema = RoleSchemas.RoleSchema(PermissionDtoMapper.schema());
+  schema = RoleSchemas.RoleSchema;
 
   toEntity(): Role {
     return Role.map({

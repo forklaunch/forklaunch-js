@@ -1,14 +1,14 @@
-import { IdiomaticSchema, LiteralSchema } from '@forklaunch/validator';
+import { LiteralSchema } from '@forklaunch/validator';
 import {
   array,
   date,
   enum_,
   optional,
   string,
-  TypeboxSchemaValidator,
   unknown,
   uuid
 } from '@forklaunch/validator/typebox';
+import { UserSchema } from './user.schema';
 
 export const CreateOrganizationSchema = {
   name: string,
@@ -29,21 +29,23 @@ export const UpdateOrganizationSchema = (uuidId: boolean) => ({
 
 export const OrganizationSchema =
   (uuidId: boolean) =>
-  <
-    UserDtoSchema extends IdiomaticSchema<TypeboxSchemaValidator>,
-    OrganizationStatus extends Record<string, LiteralSchema>
-  >(
-    UserDtoSchema: UserDtoSchema,
-    OrganizationStatus: OrganizationStatus
+  <OrganizationStatus extends Record<string, LiteralSchema>>(
+    organizationStatus: OrganizationStatus
   ) => ({
     id: uuidId ? uuid : string,
     name: string,
-    users: array(UserDtoSchema),
+    users: array(UserSchema(uuidId)),
     domain: string,
     subscription: string,
-    status: enum_(OrganizationStatus),
+    status: enum_(organizationStatus),
     logoUrl: optional(string),
     extraFields: optional(unknown),
     createdAt: optional(date),
     updatedAt: optional(date)
   });
+
+export const BaseOrganizationServiceSchemas = (uuidId: boolean) => ({
+  CreateOrganizationSchema,
+  UpdateOrganizationSchema: UpdateOrganizationSchema(uuidId),
+  OrganizationSchema: OrganizationSchema(uuidId)
+});

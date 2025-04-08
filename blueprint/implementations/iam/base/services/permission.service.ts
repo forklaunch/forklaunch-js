@@ -1,11 +1,8 @@
 import {
-  CreatePermissionDto,
-  PermissionDto,
   PermissionService,
-  RoleDto,
-  RoleService,
-  UpdatePermissionDto
-} from '@forklaunch/interfaces-iam';
+  RoleService
+} from '@forklaunch/interfaces-iam/interfaces';
+
 import { IdDto, IdsDto, InstanceTypeRecord } from '@forklaunch/common';
 import {
   InternalDtoMapper,
@@ -18,6 +15,12 @@ import {
   OpenTelemetryCollector
 } from '@forklaunch/core/http';
 import { MapNestedDtoArraysToCollections } from '@forklaunch/core/services';
+import {
+  CreatePermissionDto,
+  PermissionDto,
+  RoleDto,
+  UpdatePermissionDto
+} from '@forklaunch/interfaces-iam/types';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
 

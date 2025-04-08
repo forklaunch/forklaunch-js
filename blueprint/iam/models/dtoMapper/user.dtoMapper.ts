@@ -3,11 +3,7 @@ import {
   RequestDtoMapper,
   ResponseDtoMapper
 } from '@forklaunch/core/dtoMapper';
-import {
-  PermissionSchemas,
-  RoleSchemas,
-  UserSchemas
-} from '../../registrations';
+import { UserSchemas } from '../../registrations';
 import { passwordEncrypt } from '../../utils/passwordEncrypt';
 import { Organization } from '../persistence/organization.entity';
 import { Role } from '../persistence/role.entity';
@@ -60,9 +56,7 @@ export class UpdateUserDtoMapper extends RequestDtoMapper<
 }
 
 export class UserDtoMapper extends ResponseDtoMapper<User, SchemaValidator> {
-  schema = UserSchemas.UserSchema(
-    RoleSchemas.RoleSchema(PermissionSchemas.PermissionSchema)
-  );
+  schema = UserSchemas.UserSchema;
 
   fromEntity(entity: User): this {
     this.dto = {

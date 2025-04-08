@@ -48,24 +48,18 @@ const typeboxPermissionSchema = TypeboxPermissionSchema(false);
 
 const zodUpdateRoleSchema = ZodUpdateRoleSchema(false);
 const typeboxUpdateRoleSchema = TypeboxUpdateRoleSchema(false);
-const zodRoleSchema = ZodRoleSchema(false)(zodPermissionSchema);
-const typeboxRoleSchema = TypeboxRoleSchema(false)(typeboxPermissionSchema);
+const zodRoleSchema = ZodRoleSchema(false);
+const typeboxRoleSchema = TypeboxRoleSchema(false);
 
 const zodUpdateUserSchema = ZodUpdateUserSchema(false);
 const typeboxUpdateUserSchema = TypeboxUpdateUserSchema(false);
-const zodUserSchema = ZodUserSchema(false)(zodRoleSchema);
-const typeboxUserSchema = TypeboxUserSchema(false)(typeboxRoleSchema);
+const zodUserSchema = ZodUserSchema(false);
+const typeboxUserSchema = TypeboxUserSchema(false);
 
 const zodUpdateOrganizationSchema = ZodUpdateOrganizationSchema(false);
 const typeboxUpdateOrganizationSchema = TypeboxUpdateOrganizationSchema(false);
-const zodOrganizationSchema = ZodOrganizationSchema(false)(
-  zodUserSchema,
-  DummyEnum
-);
-const typeboxOrganizationSchema = TypeboxOrganizationSchema(false)(
-  typeboxUserSchema,
-  DummyEnum
-);
+const zodOrganizationSchema = ZodOrganizationSchema(false)(DummyEnum);
+const typeboxOrganizationSchema = TypeboxOrganizationSchema(false)(DummyEnum);
 
 describe('schema equality', () => {
   it('should be equal for permission', () => {

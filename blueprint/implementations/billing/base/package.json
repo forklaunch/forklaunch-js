@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/implementation-billing-base",
-  "version": "0.1.0",
+  "version": "0.1.5",
   "description": "Billing basic implementation for forklaunch",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -12,24 +12,35 @@
   },
   "license": "MIT",
   "author": "Forklift Technologies, Inc.",
-  "main": "server.ts",
+  "exports": {
+    "./schemas": {
+      "types": "./lib/schemas/index.d.ts",
+      "import": "./lib/schemas/index.js"
+    },
+    "./services": {
+      "types": "./lib/services/index.d.ts",
+      "import": "./lib/services/index.js"
+    }
+  },
+  "files": [
+    "lib/**"
+  ],
   "scripts": {
-    "build": "tsc",
-    "clean": "rm -rf dist pnpm.lock.yaml node_modules",
+    "build": "tsc && pnpm package:eject",
+    "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
-    "start": "ENV_FILE_PATH=.env.local NODE_OPTIONS='--import=tsx' node dist/server.js",
-    "start:bun": "bun run migrate:up && bun dist/server.js",
+    "package:eject": "rm -rf lib/eject && mkdir -p lib/eject && cp -r schemas/zod lib/eject/schemas && cp schemas/index.ts lib/eject/schemas && cp -r services lib/eject/services && find lib/eject -type f -name '*.ts' -exec sed -i '' 's|@forklaunch/validator/zod|@{{app_name}}/core|g' {} +",
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/common": "^0.2.5",
-    "@forklaunch/core": "^0.6.0",
+    "@forklaunch/common": "^0.2.6",
+    "@forklaunch/core": "^0.6.2",
     "@forklaunch/interfaces-billing": "workspace:*",
-    "@forklaunch/validator": "^0.4.8",
-    "@mikro-orm/core": "^6.4.11",
+    "@forklaunch/validator": "^0.4.10",
+    "@mikro-orm/core": "^6.4.12",
     "@sinclair/typebox": "^0.34.33",
     "ajv": "^8.17.1",
     "zod": "^3.24.2"
@@ -37,12 +48,6 @@
   "devDependencies": {
     "depcheck": "^1.4.7",
     "prettier": "^3.5.3",
-    "typedoc": "^0.28.1"
-  },
-  "mikro-orm": {
-    "configPaths": [
-      "./mikro-orm.config.ts",
-      "./dist/mikro-orm.config.js"
-    ]
+    "typedoc": "^0.28.2"
   }
 }

@@ -1,9 +1,3 @@
-import {
-  CheckoutSessionDto,
-  CheckoutSessionService,
-  CreateCheckoutSessionDto,
-  UpdateCheckoutSessionDto
-} from '@forklaunch/interfaces-billing';
 import { IdDto, InstanceTypeRecord } from '@forklaunch/common';
 import { createCacheKey, TtlCache } from '@forklaunch/core/cache';
 import {
@@ -16,6 +10,12 @@ import {
   MetricsDefinition,
   OpenTelemetryCollector
 } from '@forklaunch/core/http';
+import { CheckoutSessionService } from '@forklaunch/interfaces-billing/interfaces';
+import {
+  CheckoutSessionDto,
+  CreateCheckoutSessionDto,
+  UpdateCheckoutSessionDto
+} from '@forklaunch/interfaces-billing/types';
 import { AnySchemaValidator } from '@forklaunch/validator';
 
 export class BaseCheckoutSessionService<

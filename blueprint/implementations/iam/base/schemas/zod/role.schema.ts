@@ -1,13 +1,12 @@
-import { IdiomaticSchema } from '@forklaunch/validator';
 import {
   array,
   date,
   optional,
   string,
   unknown,
-  uuid,
-  ZodSchemaValidator
+  uuid
 } from '@forklaunch/validator/zod';
+import { PermissionSchema } from './permission.schema';
 
 export const CreateRoleSchema = {
   name: string,
@@ -22,15 +21,17 @@ export const UpdateRoleSchema = (uuidId: boolean) => ({
   extraFields: optional(unknown)
 });
 
-export const RoleSchema =
-  (uuidId: boolean) =>
-  <PermissionSchema extends IdiomaticSchema<ZodSchemaValidator>>(
-    PermissionSchema: PermissionSchema
-  ) => ({
-    id: uuidId ? uuid : string,
-    name: string,
-    permissions: array(PermissionSchema),
-    extraFields: optional(unknown),
-    createdAt: optional(date),
-    updatedAt: optional(date)
-  });
+export const RoleSchema = (uuidId: boolean) => ({
+  id: uuidId ? uuid : string,
+  name: string,
+  permissions: array(PermissionSchema(uuidId)),
+  extraFields: optional(unknown),
+  createdAt: optional(date),
+  updatedAt: optional(date)
+});
+
+export const BaseRoleServiceSchemas = (uuidId: boolean) => ({
+  CreateRoleSchema,
+  UpdateRoleSchema: UpdateRoleSchema(uuidId),
+  RoleSchema: RoleSchema(uuidId)
+});

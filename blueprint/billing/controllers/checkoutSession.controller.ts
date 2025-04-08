@@ -1,4 +1,3 @@
-import { CheckoutSessionService } from '@forklaunch/interfaces-billing';
 import {
   handlers,
   IdSchema,
@@ -13,6 +12,7 @@ import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
+import { CheckoutSessionService } from '@forklaunch/interfaces-billing/interfaces';
 import {
   CheckoutSessionDtoMapper,
   CreateCheckoutSessionDtoMapper

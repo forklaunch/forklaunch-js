@@ -6,11 +6,11 @@ import {
   SchemaValidator,
   string
 } from '@forklaunch/blueprint-core';
-import { RoleService } from '@forklaunch/interfaces-iam';
 import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
+import { RoleService } from '@forklaunch/interfaces-iam/interfaces';
 import { NextFunction, Request, Response } from 'express';
 import { ParsedQs } from 'qs';
 import {

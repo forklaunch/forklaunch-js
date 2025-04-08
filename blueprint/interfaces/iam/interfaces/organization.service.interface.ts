@@ -1,28 +1,5 @@
-import { IdDto, RecordTimingDto } from '@forklaunch/common';
 import { EntityManager } from '@mikro-orm/core';
-import { UserDto } from './user.service.interface';
-
-export type CreateOrganizationDto = {
-  name: string;
-  domain: string;
-  subscription: string;
-  logoUrl?: string;
-  extraFields?: unknown;
-};
-export type UpdateOrganizationDto = IdDto & Partial<CreateOrganizationDto>;
-export type OrganizationDto<OrganizationStatus> = IdDto &
-  CreateOrganizationDto &
-  Partial<RecordTimingDto> & {
-    users: UserDto[];
-    status: OrganizationStatus[keyof OrganizationStatus];
-  };
-
-export type OrganizationServiceParameters<OrganizationStatus> = {
-  CreateOrganizationDto: CreateOrganizationDto;
-  OrganizationDto: OrganizationDto<OrganizationStatus>;
-  UpdateOrganizationDto: UpdateOrganizationDto;
-  IdDto: IdDto;
-};
+import { OrganizationServiceParameters } from '../types/organization.service.types';
 
 export interface OrganizationService<
   OrganizationStatus,

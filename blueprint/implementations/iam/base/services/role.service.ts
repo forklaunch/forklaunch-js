@@ -1,13 +1,8 @@
 import {
-  CreateRoleDto,
-  RoleDto,
-  RoleService,
-  UpdateRoleDto
-} from '@forklaunch/interfaces-iam';
-import {
   MetricsDefinition,
   OpenTelemetryCollector
 } from '@forklaunch/core/http';
+import { RoleService } from '@forklaunch/interfaces-iam/interfaces';
 import { EntityManager } from '@mikro-orm/core';
 
 import { IdDto, IdsDto, InstanceTypeRecord } from '@forklaunch/common';
@@ -18,6 +13,11 @@ import {
   transformIntoInternalDtoMapper
 } from '@forklaunch/core/dtoMapper';
 import { MapNestedDtoArraysToCollections } from '@forklaunch/core/services';
+import {
+  CreateRoleDto,
+  RoleDto,
+  UpdateRoleDto
+} from '@forklaunch/interfaces-iam/types';
 import { AnySchemaValidator } from '@forklaunch/validator';
 
 export class BaseRoleService<

@@ -1,9 +1,3 @@
-import {
-  CreateSubscriptionDto,
-  SubscriptionDto,
-  SubscriptionService,
-  UpdateSubscriptionDto
-} from '@forklaunch/interfaces-billing';
 import { IdDto, InstanceTypeRecord } from '@forklaunch/common';
 import {
   InternalDtoMapper,
@@ -15,6 +9,12 @@ import {
   MetricsDefinition,
   OpenTelemetryCollector
 } from '@forklaunch/core/http';
+import { SubscriptionService } from '@forklaunch/interfaces-billing/interfaces';
+import {
+  CreateSubscriptionDto,
+  SubscriptionDto,
+  UpdateSubscriptionDto
+} from '@forklaunch/interfaces-billing/types';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
 

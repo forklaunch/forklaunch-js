@@ -1,4 +1,3 @@
-import { SubscriptionService } from '@forklaunch/interfaces-billing';
 import {
   array,
   handlers,
@@ -15,6 +14,7 @@ import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
+import { SubscriptionService } from '@forklaunch/interfaces-billing/interfaces';
 import {
   CreateSubscriptionDtoMapper,
   SubscriptionDtoMapper,

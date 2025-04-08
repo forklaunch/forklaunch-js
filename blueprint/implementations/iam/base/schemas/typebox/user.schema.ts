@@ -1,14 +1,13 @@
-import { IdiomaticSchema } from '@forklaunch/validator';
 import {
   array,
   date,
   email,
   optional,
   string,
-  TypeboxSchemaValidator,
   unknown,
   uuid
 } from '@forklaunch/validator/typebox';
+import { RoleSchema } from './role.schema';
 
 export const CreateUserSchema = {
   email: email,
@@ -34,19 +33,21 @@ export const UpdateUserSchema = (uuidId: boolean) => ({
   extraFields: optional(unknown)
 });
 
-export const UserSchema =
-  (uuidId: boolean) =>
-  <RoleDtoSchema extends IdiomaticSchema<TypeboxSchemaValidator>>(
-    RoleDtoSchema: RoleDtoSchema
-  ) => ({
-    id: uuidId ? uuid : string,
-    email: email,
-    firstName: string,
-    lastName: string,
-    roles: array(RoleDtoSchema),
-    phoneNumber: optional(string),
-    subscription: optional(string),
-    extraFields: optional(unknown),
-    createdAt: optional(date),
-    updatedAt: optional(date)
-  });
+export const UserSchema = (uuidId: boolean) => ({
+  id: uuidId ? uuid : string,
+  email: email,
+  firstName: string,
+  lastName: string,
+  roles: array(RoleSchema(uuidId)),
+  phoneNumber: optional(string),
+  subscription: optional(string),
+  extraFields: optional(unknown),
+  createdAt: optional(date),
+  updatedAt: optional(date)
+});
+
+export const BaseUserServiceSchemas = (uuidId: boolean) => ({
+  CreateUserSchema,
+  UpdateUserSchema: UpdateUserSchema(uuidId),
+  UserSchema: UserSchema(uuidId)
+});

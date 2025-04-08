@@ -1,26 +1,5 @@
-import { IdDto, IdsDto, RecordTimingDto } from '@forklaunch/common';
 import { EntityManager } from '@mikro-orm/core';
-import { PermissionDto } from './permission.service.interface';
-
-export type CreateRoleDto = {
-  name: string;
-  permissionsIds?: PermissionDto[];
-  extraFields?: unknown;
-};
-export type UpdateRoleDto = IdDto & Partial<CreateRoleDto>;
-export type RoleDto = IdDto &
-  Omit<CreateRoleDto, 'permissionsIds'> &
-  Partial<RecordTimingDto> & {
-    permissions: PermissionDto[];
-  };
-
-export type RoleServiceParameters = {
-  CreateRoleDto: CreateRoleDto;
-  RoleDto: RoleDto;
-  UpdateRoleDto: UpdateRoleDto;
-  IdDto: IdDto;
-  IdsDto: IdsDto;
-};
+import { RoleServiceParameters } from '../types/role.service.types';
 
 export interface RoleService<
   Params extends RoleServiceParameters = RoleServiceParameters

@@ -10,11 +10,11 @@ import {
   SchemaValidator,
   string
 } from '@forklaunch/blueprint-core';
-import { PermissionService } from '@forklaunch/interfaces-iam';
 import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
+import { PermissionService } from '@forklaunch/interfaces-iam/interfaces';
 import {
   CreatePermissionDtoMapper,
   PermissionDtoMapper,

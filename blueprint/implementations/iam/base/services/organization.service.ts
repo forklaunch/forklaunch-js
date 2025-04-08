@@ -1,9 +1,3 @@
-import {
-  CreateOrganizationDto,
-  OrganizationDto,
-  OrganizationService,
-  UpdateOrganizationDto
-} from '@forklaunch/interfaces-iam';
 import { IdDto, InstanceTypeRecord } from '@forklaunch/common';
 import {
   InternalDtoMapper,
@@ -16,6 +10,12 @@ import {
   OpenTelemetryCollector
 } from '@forklaunch/core/http';
 import { MapNestedDtoArraysToCollections } from '@forklaunch/core/services';
+import { OrganizationService } from '@forklaunch/interfaces-iam/interfaces';
+import {
+  CreateOrganizationDto,
+  OrganizationDto,
+  UpdateOrganizationDto
+} from '@forklaunch/interfaces-iam/types';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
 
