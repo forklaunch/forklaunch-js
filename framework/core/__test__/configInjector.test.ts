@@ -1,5 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { number, SchemaValidator, string } from '@forklaunch/validator/typebox';
+import {
+  array,
+  number,
+  optional,
+  SchemaValidator,
+  string
+} from '@forklaunch/validator/typebox';
 import { ConfigInjector } from '../src/services/configInjector';
 import { Lifetime } from '../src/services/types/configInjector.types';
 
@@ -94,19 +100,27 @@ describe('serviceFactory', () => {
         }
       }),
       lifetime: Lifetime.Scoped,
-      factory: ({ i }) => ({
-        SchemaDefinition: {
-          j: '',
-          k: 4
-        },
-        ...i,
-        l: 'l'
-      })
+      factory:
+        ({ i }) =>
+        (a: string) => ({
+          SchemaDefinition: {
+            j: '',
+            k: 4
+          },
+          ...i,
+          m: i.l,
+          l: 'l'
+        })
     },
     m: {
-      type: number,
+      type: optional(number),
       lifetime: Lifetime.Singleton,
       value: 4
+    },
+    o: {
+      type: array(number),
+      lifetime: Lifetime.Singleton,
+      value: [1, 2, 3]
     }
   });
 
@@ -181,7 +195,7 @@ describe('serviceFactory', () => {
     const badResult = newConfigInjector.safeValidateConfigSingletons();
     expect(badResult.ok).toBe(false);
     expect(!badResult.ok && badResult.errors).toEqual([
-      { path: ['a'], message: 'Expected string, received number' },
+      { path: ['a'], message: 'Expected string' },
       { path: ['b'], message: 'Expected X, received string' },
       { path: ['c'], message: 'Expected X, received ConfigInjector' }
     ]);
@@ -218,20 +232,24 @@ describe('serviceFactory', () => {
   test('chained config injector', () => {
     expect({
       ...configInjector.instances,
-      m: 4
+      m: 4,
+      o: [1, 2, 3]
     }).toEqual(configInjector2.instances);
     expect(configInjector2.resolve('a')).toBe('a');
     expect(configInjector2.resolve('k')).toBe('b');
-    expect(configInjector2.resolve('l')).toEqual({
-      SchemaDefinition: { j: '', k: 4 },
-      j: 'a',
-      k: 'b',
-      l: 'l'
-    });
+    expect(configInjector2.resolve('l')('a')).toEqual(
+      expect.objectContaining({
+        SchemaDefinition: { j: '', k: 4 },
+        j: 'a',
+        k: 'b',
+        l: 'l'
+      })
+    );
     expect({
       ...configInjector.instances,
       l: configInjector2.instances.l,
-      m: 4
+      m: 4,
+      o: [1, 2, 3]
     }).toEqual(configInjector2.instances);
   });
 });

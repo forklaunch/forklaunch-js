@@ -54,7 +54,7 @@ export type SchemaFunction<SV extends AnySchemaValidator> = (
   args: unknown
 ) => IdiomaticSchema<SV>;
 
-type ConfigTypes<SV extends AnySchemaValidator> =
+export type ConfigTypes<SV extends AnySchemaValidator> =
   | Function
   | SchemaFunction<SV>
   | Constructor
@@ -70,12 +70,12 @@ type ResolveConfigValue<SV extends AnySchemaValidator, T> =
   T extends SchemaConstructor<SV>
     ? Schema<InstanceType<T>, SV>
     : T extends SchemaFunction<SV>
-      ? Schema<ReturnType<T>, SV>
+      ? (...args: Parameters<T>) => Schema<ReturnType<T>, SV>
       : T extends Function
-        ? ReturnType<T>
+        ? (...args: Parameters<T>) => ReturnType<T>
         : T extends Constructor
           ? InstanceType<T>
-          : T extends SV['_SchemaCatchall']
+          : T extends IdiomaticSchema<SV>
             ? Schema<T, SV>
             : T extends Record<string, ConfigTypes<SV>>
               ? {
