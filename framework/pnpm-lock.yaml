@@ -187,7 +187,7 @@ importers:
         specifier: ^3.5.3
         version: 3.5.3
       testcontainers:
-        specifier: ^10.24.0
+        specifier: ^10.24.1
         version: 10.24.1
       ts-jest:
         specifier: ^29.3.1
