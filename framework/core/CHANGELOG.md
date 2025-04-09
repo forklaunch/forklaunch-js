@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.6.5
+
+### Patch Changes
+
+- Service schema validators now accept keyword argument options for passing down to schemas
+
 ## 0.6.4
 
 ### Patch Changes
