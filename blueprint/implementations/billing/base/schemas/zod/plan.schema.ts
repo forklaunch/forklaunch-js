@@ -72,3 +72,9 @@ export const PlanSchema =
     createdAt: optional(date),
     updatedAt: optional(date)
   });
+
+export const BasePlanSchemas = (uuidId: boolean) => ({
+  CreatePlanSchema,
+  UpdatePlanSchema: UpdatePlanSchema(uuidId),
+  PlanSchema: PlanSchema(uuidId)
+});

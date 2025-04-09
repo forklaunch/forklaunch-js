@@ -27,3 +27,9 @@ export const BillingPortalSchema = (uuidId: boolean) => ({
   createdAt: optional(date),
   updatedAt: optional(date)
 });
+
+export const BaseBillingPortalSchemas = (uuidId: boolean) => ({
+  CreateBillingPortalSchema,
+  UpdateBillingPortalSchema: UpdateBillingPortalSchema(uuidId),
+  BillingPortalSchema: BillingPortalSchema(uuidId)
+});

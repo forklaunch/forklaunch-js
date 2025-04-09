@@ -76,3 +76,9 @@ export const SubscriptionSchema =
     createdAt: optional(date),
     updatedAt: optional(date)
   });
+
+export const BaseSubscriptionSchemas = (uuidId: boolean) => ({
+  CreateSubscriptionSchema,
+  UpdateSubscriptionSchema: UpdateSubscriptionSchema(uuidId),
+  SubscriptionSchema: SubscriptionSchema(uuidId)
+});

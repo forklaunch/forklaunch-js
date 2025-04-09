@@ -1,26 +1,6 @@
 import { serviceSchemaResolver } from '@forklaunch/core/dtoMapper';
-import {
-  CreatePaymentLinkSchema as TypeBoxCreatePaymentLinkSchema,
-  PaymentLinkSchema as TypeBoxPaymentLinkSchema,
-  UpdatePaymentLinkSchema as TypeBoxUpdatePaymentLinkSchema
-} from './typebox/paymentLink.schema';
-import {
-  CreatePaymentLinkSchema as ZodCreatePaymentLinkSchema,
-  PaymentLinkSchema as ZodPaymentLinkSchema,
-  UpdatePaymentLinkSchema as ZodUpdatePaymentLinkSchema
-} from './zod/paymentLink.schema';
-
-const TypeBoxSchemas = (uuidId: boolean) => ({
-  CreatePaymentLinkSchema: TypeBoxCreatePaymentLinkSchema,
-  UpdatePaymentLinkSchema: TypeBoxUpdatePaymentLinkSchema(uuidId),
-  PaymentLinkSchema: TypeBoxPaymentLinkSchema(uuidId)
-});
-
-const ZodSchemas = (uuidId: boolean) => ({
-  CreatePaymentLinkSchema: ZodCreatePaymentLinkSchema,
-  UpdatePaymentLinkSchema: ZodUpdatePaymentLinkSchema(uuidId),
-  PaymentLinkSchema: ZodPaymentLinkSchema(uuidId)
-});
+import { BasePaymentLinkSchemas as TypeBoxSchemas } from './typebox/paymentLink.schema';
+import { BasePaymentLinkSchemas as ZodSchemas } from './zod/paymentLink.schema';
 
 export const BasePaymentLinkServiceSchemas = serviceSchemaResolver(
   TypeBoxSchemas,

@@ -50,3 +50,9 @@ export const PaymentLinkSchema =
     createdAt: optional(date),
     updatedAt: optional(date)
   });
+
+export const BasePaymentLinkSchemas = (uuidId: boolean) => ({
+  CreatePaymentLinkSchema,
+  UpdatePaymentLinkSchema: UpdatePaymentLinkSchema(uuidId),
+  PaymentLinkSchema: PaymentLinkSchema(uuidId)
+});

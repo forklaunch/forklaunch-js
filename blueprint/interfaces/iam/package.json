@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/interfaces-iam",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "IAM interfaces for forklaunch",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -33,6 +33,7 @@
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
     "package:eject": "rm -rf lib/eject && mkdir -p lib/eject && cp -r interfaces lib/eject/interfaces && cp -r types lib/eject/types",
+    "publish:package": "./publish-package.bash",
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {

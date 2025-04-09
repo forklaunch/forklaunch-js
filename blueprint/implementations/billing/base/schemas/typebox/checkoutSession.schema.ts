@@ -45,3 +45,9 @@ export const CheckoutSessionSchema =
     createdAt: optional(date),
     updatedAt: optional(date)
   });
+
+export const BaseCheckoutSessionSchemas = (uuidId: boolean) => ({
+  CreateCheckoutSessionSchema,
+  UpdateCheckoutSessionSchema: UpdateCheckoutSessionSchema(uuidId),
+  CheckoutSessionSchema: CheckoutSessionSchema(uuidId)
+});
