@@ -1,5 +1,13 @@
 # @forklaunch/implementation-iam-base
 
+## 0.1.7
+
+### Patch Changes
+
+- Keyword argument schema validation for better ergonomics with options
+- Updated dependencies
+  - @forklaunch/interfaces-iam@0.1.7
+
 ## 0.1.6
 
 ### Patch Changes

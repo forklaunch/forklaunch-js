@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/blueprint-billing",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Billing basic implementation for forklaunch",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -35,9 +35,9 @@
     "@forklaunch/blueprint-core": "workspace:*",
     "@forklaunch/blueprint-monitoring": "workspace:*",
     "@forklaunch/common": "^0.2.6",
-    "@forklaunch/core": "^0.6.4",
-    "@forklaunch/express": "^0.4.3",
-    "@forklaunch/hyper-express": "^0.4.3",
+    "@forklaunch/core": "^0.6.5",
+    "@forklaunch/express": "^0.4.5",
+    "@forklaunch/hyper-express": "^0.4.5",
     "@forklaunch/implementation-billing-base": "workspace:*",
     "@forklaunch/interfaces-billing": "workspace:*",
     "@forklaunch/validator": "^0.4.12",

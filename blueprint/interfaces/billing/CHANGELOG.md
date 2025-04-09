@@ -1,5 +1,11 @@
 # @forklaunch/interfaces-billing
 
+## 0.1.7
+
+### Patch Changes
+
+- Keyword argument schema validation for better ergonomics with options
+
 ## 0.1.6
 
 ### Patch Changes
