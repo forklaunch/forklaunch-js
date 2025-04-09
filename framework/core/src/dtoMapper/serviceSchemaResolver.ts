@@ -3,32 +3,39 @@ import { AnySchemaValidator } from '@forklaunch/validator';
 import { SchemasByValidator } from './types/serviceSchemaResolver.types';
 
 export function serviceSchemaResolver<
-  TypeBoxSchemas extends (uuidId: boolean) => unknown,
-  ZodSchemas extends (uuidId: boolean) => unknown
->(TypeBoxSchemas: TypeBoxSchemas, ZodSchemas: ZodSchemas) {
+  Options extends Record<string, unknown>,
+  TypeBoxSchemas,
+  ZodSchemas
+>(
+  TypeBoxSchemas: (options: Options) => TypeBoxSchemas,
+  ZodSchemas: (options: Options) => ZodSchemas
+) {
   return <SchemaValidator extends AnySchemaValidator>(
-    schemaValidator: SchemaValidator,
-    uuidId: boolean
-  ): SchemasByValidator<SchemaValidator, TypeBoxSchemas, ZodSchemas> => {
-    switch (schemaValidator._Type) {
+    options: Options & { validator: SchemaValidator }
+  ): SchemasByValidator<
+    SchemaValidator,
+    (options: Options) => TypeBoxSchemas,
+    (options: Options) => ZodSchemas
+  > => {
+    switch (options.validator._Type) {
       case 'TypeBox':
-        return TypeBoxSchemas(uuidId) as SchemasByValidator<
+        return TypeBoxSchemas(options) as SchemasByValidator<
           SchemaValidator,
-          TypeBoxSchemas,
-          ZodSchemas
+          (options: Options) => TypeBoxSchemas,
+          (options: Options) => ZodSchemas
         >;
       case 'Zod':
-        return ZodSchemas(uuidId) as SchemasByValidator<
+        return ZodSchemas(options) as SchemasByValidator<
           SchemaValidator,
-          TypeBoxSchemas,
-          ZodSchemas
+          (options: Options) => TypeBoxSchemas,
+          (options: Options) => ZodSchemas
         >;
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       case 'Mock':
         throw new Error('Mock schema validator not supported');
       default:
-        isNever(schemaValidator._Type);
+        isNever(options.validator._Type);
         throw new Error('Invalid schema validator');
     }
   };
