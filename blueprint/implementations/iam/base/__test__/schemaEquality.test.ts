@@ -41,25 +41,37 @@ import {
   UserSchema as ZodUserSchema
 } from '../schemas/zod/user.schema';
 
-const zodUpdatePermissionSchema = ZodUpdatePermissionSchema(false);
-const typeboxUpdatePermissionSchema = TypeboxUpdatePermissionSchema(false);
-const zodPermissionSchema = ZodPermissionSchema(false);
-const typeboxPermissionSchema = TypeboxPermissionSchema(false);
+const zodUpdatePermissionSchema = ZodUpdatePermissionSchema({
+  uuidId: false
+});
+const typeboxUpdatePermissionSchema = TypeboxUpdatePermissionSchema({
+  uuidId: false
+});
+const zodPermissionSchema = ZodPermissionSchema({ uuidId: false });
+const typeboxPermissionSchema = TypeboxPermissionSchema({ uuidId: false });
 
-const zodUpdateRoleSchema = ZodUpdateRoleSchema(false);
-const typeboxUpdateRoleSchema = TypeboxUpdateRoleSchema(false);
-const zodRoleSchema = ZodRoleSchema(false);
-const typeboxRoleSchema = TypeboxRoleSchema(false);
+const zodUpdateRoleSchema = ZodUpdateRoleSchema({ uuidId: false });
+const typeboxUpdateRoleSchema = TypeboxUpdateRoleSchema({ uuidId: false });
+const zodRoleSchema = ZodRoleSchema({ uuidId: false });
+const typeboxRoleSchema = TypeboxRoleSchema({ uuidId: false });
 
-const zodUpdateUserSchema = ZodUpdateUserSchema(false);
-const typeboxUpdateUserSchema = TypeboxUpdateUserSchema(false);
-const zodUserSchema = ZodUserSchema(false);
-const typeboxUserSchema = TypeboxUserSchema(false);
+const zodUpdateUserSchema = ZodUpdateUserSchema({ uuidId: false });
+const typeboxUpdateUserSchema = TypeboxUpdateUserSchema({ uuidId: false });
+const zodUserSchema = ZodUserSchema({ uuidId: false });
+const typeboxUserSchema = TypeboxUserSchema({ uuidId: false });
 
-const zodUpdateOrganizationSchema = ZodUpdateOrganizationSchema(false);
-const typeboxUpdateOrganizationSchema = TypeboxUpdateOrganizationSchema(false);
-const zodOrganizationSchema = ZodOrganizationSchema(false)(DummyEnum);
-const typeboxOrganizationSchema = TypeboxOrganizationSchema(false)(DummyEnum);
+const zodUpdateOrganizationSchema = ZodUpdateOrganizationSchema({
+  uuidId: false
+});
+const typeboxUpdateOrganizationSchema = TypeboxUpdateOrganizationSchema({
+  uuidId: false
+});
+const zodOrganizationSchema = ZodOrganizationSchema({ uuidId: false })(
+  DummyEnum
+);
+const typeboxOrganizationSchema = TypeboxOrganizationSchema({ uuidId: false })(
+  DummyEnum
+);
 
 describe('schema equality', () => {
   it('should be equal for permission', () => {

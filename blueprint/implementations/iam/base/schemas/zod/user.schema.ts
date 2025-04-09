@@ -21,7 +21,7 @@ export const CreateUserSchema = {
   extraFields: optional(unknown)
 };
 
-export const UpdateUserSchema = (uuidId: boolean) => ({
+export const UpdateUserSchema = ({ uuidId }: { uuidId: boolean }) => ({
   id: uuidId ? uuid : string,
   email: optional(email),
   password: optional(string),
@@ -33,12 +33,12 @@ export const UpdateUserSchema = (uuidId: boolean) => ({
   extraFields: optional(unknown)
 });
 
-export const UserSchema = (uuidId: boolean) => ({
+export const UserSchema = ({ uuidId }: { uuidId: boolean }) => ({
   id: uuidId ? uuid : string,
   email: email,
   firstName: string,
   lastName: string,
-  roles: array(RoleSchema(uuidId)),
+  roles: array(RoleSchema({ uuidId })),
   phoneNumber: optional(string),
   subscription: optional(string),
   extraFields: optional(unknown),
@@ -46,8 +46,8 @@ export const UserSchema = (uuidId: boolean) => ({
   updatedAt: optional(date)
 });
 
-export const BaseUserServiceSchemas = (uuidId: boolean) => ({
+export const BaseUserServiceSchemas = (options: { uuidId: boolean }) => ({
   CreateUserSchema,
-  UpdateUserSchema: UpdateUserSchema(uuidId),
-  UserSchema: UserSchema(uuidId)
+  UpdateUserSchema: UpdateUserSchema(options),
+  UserSchema: UserSchema(options)
 });

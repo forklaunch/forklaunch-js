@@ -22,7 +22,7 @@ export const CreateCheckoutSessionSchema = <
 });
 
 export const UpdateCheckoutSessionSchema =
-  (uuidId: boolean) =>
+  ({ uuidId }: { uuidId: boolean }) =>
   <T extends Record<string, LiteralSchema>>(PaymentMethodEnum: T) => ({
     id: uuidId ? uuid : string,
     customerId: optional(string),
@@ -33,7 +33,7 @@ export const UpdateCheckoutSessionSchema =
   });
 
 export const CheckoutSessionSchema =
-  (uuidId: boolean) =>
+  ({ uuidId }: { uuidId: boolean }) =>
   <T extends Record<string, LiteralSchema>>(PaymentMethodEnum: T) => ({
     id: uuidId ? uuid : string,
     customerId: string,
@@ -45,8 +45,10 @@ export const CheckoutSessionSchema =
     updatedAt: optional(date)
   });
 
-export const BaseCheckoutSessionSchemas = (uuidId: boolean) => ({
+export const BaseCheckoutSessionServiceSchemas = (options: {
+  uuidId: boolean;
+}) => ({
   CreateCheckoutSessionSchema,
-  UpdateCheckoutSessionSchema: UpdateCheckoutSessionSchema(uuidId),
-  CheckoutSessionSchema: CheckoutSessionSchema(uuidId)
+  UpdateCheckoutSessionSchema: UpdateCheckoutSessionSchema(options),
+  CheckoutSessionSchema: CheckoutSessionSchema(options)
 });

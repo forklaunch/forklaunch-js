@@ -30,7 +30,7 @@ export const CreatePlanSchema = <
 });
 
 export const UpdatePlanSchema =
-  (uuidId: boolean) =>
+  ({ uuidId }: { uuidId: boolean }) =>
   <
     T extends Record<string, LiteralSchema>,
     U extends Record<string, LiteralSchema>
@@ -51,7 +51,7 @@ export const UpdatePlanSchema =
   });
 
 export const PlanSchema =
-  (uuidId: boolean) =>
+  ({ uuidId }: { uuidId: boolean }) =>
   <
     T extends Record<string, LiteralSchema>,
     U extends Record<string, LiteralSchema>
@@ -73,8 +73,8 @@ export const PlanSchema =
     updatedAt: optional(date)
   });
 
-export const BasePlanSchemas = (uuidId: boolean) => ({
+export const BasePlanServiceSchemas = (options: { uuidId: boolean }) => ({
   CreatePlanSchema,
-  UpdatePlanSchema: UpdatePlanSchema(uuidId),
-  PlanSchema: PlanSchema(uuidId)
+  UpdatePlanSchema: UpdatePlanSchema(options),
+  PlanSchema: PlanSchema(options)
 });

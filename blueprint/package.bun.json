@@ -19,6 +19,7 @@
     "migrate:down": "docker compose -f docker-compose.base.yml up -d postgres && bun --filter='*' run migrate:down",
     "migrate:init": "docker compose -f docker-compose.base.yml up -d postgres && bun --filter='*' run migrate:init",
     "migrate:up": "docker compose -f docker-compose.base.yml up -d postgres && bun --filter='*' run migrate:up",
+    "publish:packages": "bun --filter='*' run publish:package",
     "seed": "docker compose -f docker-compose.base.yml up -d postgres && bun --filter='*' run seed",
     "test": "bun test",
     "up:packages": "bun update --latest"

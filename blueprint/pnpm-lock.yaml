@@ -268,16 +268,16 @@ importers:
     dependencies:
       '@forklaunch/common':
         specifier: ^0.2.6
-        version: 0.2.6
+        version: link:../../../../framework/common
       '@forklaunch/core':
         specifier: ^0.6.4
-        version: 0.6.4(socks@2.8.4)
+        version: link:../../../../framework/core
       '@forklaunch/interfaces-billing':
         specifier: workspace:*
         version: link:../../../interfaces/billing
       '@forklaunch/validator':
         specifier: ^0.4.12
-        version: 0.4.12(openapi3-ts@4.4.0)
+        version: link:../../../../framework/validator
       '@mikro-orm/core':
         specifier: ^6.4.12
         version: 6.4.12
@@ -305,16 +305,16 @@ importers:
     dependencies:
       '@forklaunch/common':
         specifier: ^0.2.6
-        version: 0.2.6
+        version: link:../../../../framework/common
       '@forklaunch/core':
         specifier: ^0.6.4
-        version: 0.6.4(socks@2.8.4)
+        version: link:../../../../framework/core
       '@forklaunch/interfaces-iam':
         specifier: workspace:*
         version: link:../../../interfaces/iam
       '@forklaunch/validator':
         specifier: ^0.4.12
-        version: 0.4.12(openapi3-ts@4.4.0)
+        version: link:../../../../framework/validator
       '@mikro-orm/core':
         specifier: ^6.4.12
         version: 6.4.12

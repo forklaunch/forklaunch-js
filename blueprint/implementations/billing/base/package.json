@@ -14,12 +14,14 @@
   "author": "Forklift Technologies, Inc.",
   "exports": {
     "./schemas": {
-      "types": "./lib/schemas/index.d.ts",
-      "import": "./lib/schemas/index.js"
+      "import": "./lib/schemas/index.js",
+      "require": "./lib/schemas/index.js",
+      "types": "./lib/schemas/index.d.ts"
     },
     "./services": {
-      "types": "./lib/services/index.d.ts",
-      "import": "./lib/services/index.js"
+      "import": "./lib/services/index.js",
+      "require": "./lib/services/index.js",
+      "types": "./lib/services/index.d.ts"
     }
   },
   "files": [

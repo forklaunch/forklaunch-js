@@ -30,7 +30,7 @@ export const CreateSubscriptionSchema = <
 });
 
 export const UpdateSubscriptionSchema =
-  (uuidId: boolean) =>
+  ({ uuidId }: { uuidId: boolean }) =>
   <
     T extends Record<string, LiteralSchema>,
     U extends Record<string, LiteralSchema>
@@ -53,7 +53,7 @@ export const UpdateSubscriptionSchema =
   });
 
 export const SubscriptionSchema =
-  (uuidId: boolean) =>
+  ({ uuidId }: { uuidId: boolean }) =>
   <
     T extends Record<string, LiteralSchema>,
     U extends Record<string, LiteralSchema>
@@ -77,8 +77,10 @@ export const SubscriptionSchema =
     updatedAt: optional(date)
   });
 
-export const BaseSubscriptionSchemas = (uuidId: boolean) => ({
+export const BaseSubscriptionServiceSchemas = (options: {
+  uuidId: boolean;
+}) => ({
   CreateSubscriptionSchema,
-  UpdateSubscriptionSchema: UpdateSubscriptionSchema(uuidId),
-  SubscriptionSchema: SubscriptionSchema(uuidId)
+  UpdateSubscriptionSchema: UpdateSubscriptionSchema(options),
+  SubscriptionSchema: SubscriptionSchema(options)
 });

@@ -13,7 +13,7 @@ export const CreatePermissionSchema = {
   extraFields: optional(unknown)
 };
 
-export const UpdatePermissionSchema = (uuidId: boolean) => ({
+export const UpdatePermissionSchema = ({ uuidId }: { uuidId: boolean }) => ({
   id: uuidId ? uuid : string,
   slug: optional(string),
   extraFields: optional(unknown),
@@ -21,7 +21,7 @@ export const UpdatePermissionSchema = (uuidId: boolean) => ({
   removeFromRolesIds: optional(array(string))
 });
 
-export const PermissionSchema = (uuidId: boolean) => ({
+export const PermissionSchema = ({ uuidId }: { uuidId: boolean }) => ({
   id: uuidId ? uuid : string,
   slug: string,
   extraFields: optional(unknown),
@@ -29,8 +29,8 @@ export const PermissionSchema = (uuidId: boolean) => ({
   updatedAt: optional(date)
 });
 
-export const BasePermissionServiceSchemas = (uuidId: boolean) => ({
+export const BasePermissionServiceSchemas = (options: { uuidId: boolean }) => ({
   CreatePermissionSchema,
-  UpdatePermissionSchema: UpdatePermissionSchema(uuidId),
-  PermissionSchema: PermissionSchema(uuidId)
+  UpdatePermissionSchema: UpdatePermissionSchema(options),
+  PermissionSchema: PermissionSchema(options)
 });

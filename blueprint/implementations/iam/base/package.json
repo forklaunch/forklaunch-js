@@ -15,10 +15,12 @@
   "exports": {
     "./schemas": {
       "import": "./lib/schemas/index.js",
+      "require": "./lib/schemas/index.js",
       "types": "./lib/schemas/index.d.ts"
     },
     "./services": {
       "import": "./lib/services/index.js",
+      "require": "./lib/services/index.js",
       "types": "./lib/services/index.d.ts"
     }
   },

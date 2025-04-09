@@ -51,42 +51,63 @@ import {
   UpdateSubscriptionSchema as ZodUpdateSubscriptionSchema
 } from '../schemas/zod/subscription.schema';
 
-const zodUpdateBillingPortalSchema = ZodUpdateBillingPortalSchema(false);
-const typeboxUpdateBillingPortalSchema =
-  TypeboxUpdateBillingPortalSchema(false);
-const zodBillingPortalSchema = ZodBillingPortalSchema(false);
-const typeboxBillingPortalSchema = TypeboxBillingPortalSchema(false);
+const zodUpdateBillingPortalSchema = ZodUpdateBillingPortalSchema({
+  uuidId: false
+});
+const typeboxUpdateBillingPortalSchema = TypeboxUpdateBillingPortalSchema({
+  uuidId: false
+});
+const zodBillingPortalSchema = ZodBillingPortalSchema({ uuidId: false });
+const typeboxBillingPortalSchema = TypeboxBillingPortalSchema({
+  uuidId: false
+});
 
 const zodCreateCheckoutSessionSchema =
   ZodCreateCheckoutSessionSchema(DummyEnum);
 const typeboxCreateCheckoutSessionSchema =
   TypeboxCreateCheckoutSessionSchema(DummyEnum);
-const zodUpdateCheckoutSessionSchema =
-  ZodUpdateCheckoutSessionSchema(false)(DummyEnum);
-const typeboxUpdateCheckoutSessionSchema =
-  TypeboxUpdateCheckoutSessionSchema(false)(DummyEnum);
-const zodCheckoutSessionSchema = ZodCheckoutSessionSchema(false)(DummyEnum);
-const typeboxCheckoutSessionSchema =
-  TypeboxCheckoutSessionSchema(false)(DummyEnum);
+const zodUpdateCheckoutSessionSchema = ZodUpdateCheckoutSessionSchema({
+  uuidId: false
+})(DummyEnum);
+const typeboxUpdateCheckoutSessionSchema = TypeboxUpdateCheckoutSessionSchema({
+  uuidId: false
+})(DummyEnum);
+const zodCheckoutSessionSchema = ZodCheckoutSessionSchema({ uuidId: true })(
+  DummyEnum
+);
+const typeboxCheckoutSessionSchema = TypeboxCheckoutSessionSchema({
+  uuidId: true
+})(DummyEnum);
 
 const zodCreatePaymentLinkSchema = ZodCreatePaymentLinkSchema(DummyEnum);
 const typeboxCreatePaymentLinkSchema =
   TypeboxCreatePaymentLinkSchema(DummyEnum);
-const zodUpdatePaymentLinkSchema = ZodUpdatePaymentLinkSchema(false)(DummyEnum);
-const typeboxUpdatePaymentLinkSchema =
-  TypeboxUpdatePaymentLinkSchema(false)(DummyEnum);
-const zodPaymentLinkSchema = ZodPaymentLinkSchema(false)(DummyEnum);
-const typeboxPaymentLinkSchema = TypeboxPaymentLinkSchema(false)(DummyEnum);
+const zodUpdatePaymentLinkSchema = ZodUpdatePaymentLinkSchema({
+  uuidId: false
+})(DummyEnum);
+const typeboxUpdatePaymentLinkSchema = TypeboxUpdatePaymentLinkSchema({
+  uuidId: false
+})(DummyEnum);
+const zodPaymentLinkSchema = ZodPaymentLinkSchema({ uuidId: true })(DummyEnum);
+const typeboxPaymentLinkSchema = TypeboxPaymentLinkSchema({
+  uuidId: false
+})(DummyEnum);
 
 const zodCreatePlanSchema = ZodCreatePlanSchema(DummyEnum, DummyEnum);
 const typeboxCreatePlanSchema = TypeboxCreatePlanSchema(DummyEnum, DummyEnum);
-const zodUpdatePlanSchema = ZodUpdatePlanSchema(false)(DummyEnum, DummyEnum);
-const typeboxUpdatePlanSchema = TypeboxUpdatePlanSchema(false)(
+const zodUpdatePlanSchema = ZodUpdatePlanSchema({ uuidId: false })(
   DummyEnum,
   DummyEnum
 );
-const zodPlanSchema = ZodPlanSchema(false)(DummyEnum, DummyEnum);
-const typeboxPlanSchema = TypeboxPlanSchema(false)(DummyEnum, DummyEnum);
+const typeboxUpdatePlanSchema = TypeboxUpdatePlanSchema({ uuidId: false })(
+  DummyEnum,
+  DummyEnum
+);
+const zodPlanSchema = ZodPlanSchema({ uuidId: true })(DummyEnum, DummyEnum);
+const typeboxPlanSchema = TypeboxPlanSchema({ uuidId: true })(
+  DummyEnum,
+  DummyEnum
+);
 
 const zodCreateSubscriptionSchema = ZodCreateSubscriptionSchema(
   DummyEnum,
@@ -96,22 +117,19 @@ const typeboxCreateSubscriptionSchema = TypeboxCreateSubscriptionSchema(
   DummyEnum,
   DummyEnum
 );
-const zodUpdateSubscriptionSchema = ZodUpdateSubscriptionSchema(false)(
+const zodUpdateSubscriptionSchema = ZodUpdateSubscriptionSchema({
+  uuidId: false
+})(DummyEnum, DummyEnum);
+const typeboxUpdateSubscriptionSchema = TypeboxUpdateSubscriptionSchema({
+  uuidId: false
+})(DummyEnum, DummyEnum);
+const zodSubscriptionSchema = ZodSubscriptionSchema({ uuidId: true })(
   DummyEnum,
   DummyEnum
 );
-const typeboxUpdateSubscriptionSchema = TypeboxUpdateSubscriptionSchema(false)(
-  DummyEnum,
-  DummyEnum
-);
-const zodSubscriptionSchema = ZodSubscriptionSchema(false)(
-  DummyEnum,
-  DummyEnum
-);
-const typeboxSubscriptionSchema = TypeboxSubscriptionSchema(false)(
-  DummyEnum,
-  DummyEnum
-);
+const typeboxSubscriptionSchema = TypeboxSubscriptionSchema({
+  uuidId: true
+})(DummyEnum, DummyEnum);
 
 describe('schema equality', () => {
   it('should be equal for billing portal', () => {

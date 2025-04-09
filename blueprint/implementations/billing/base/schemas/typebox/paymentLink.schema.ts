@@ -24,7 +24,7 @@ export const CreatePaymentLinkSchema = <
 });
 
 export const UpdatePaymentLinkSchema =
-  (uuidId: boolean) =>
+  ({ uuidId }: { uuidId: boolean }) =>
   <T extends Record<string, LiteralSchema>>(CurrencyEnum: T) => ({
     id: uuidId ? uuid : string,
     amount: optional(number),
@@ -37,7 +37,7 @@ export const UpdatePaymentLinkSchema =
   });
 
 export const PaymentLinkSchema =
-  (uuidId: boolean) =>
+  ({ uuidId }: { uuidId: boolean }) =>
   <T extends Record<string, LiteralSchema>>(CurrencyEnum: T) => ({
     id: uuidId ? uuid : string,
     amount: number,
@@ -51,8 +51,10 @@ export const PaymentLinkSchema =
     updatedAt: optional(date)
   });
 
-export const BasePaymentLinkSchemas = (uuidId: boolean) => ({
+export const BasePaymentLinkServiceSchemas = (options: {
+  uuidId: boolean;
+}) => ({
   CreatePaymentLinkSchema,
-  UpdatePaymentLinkSchema: UpdatePaymentLinkSchema(uuidId),
-  PaymentLinkSchema: PaymentLinkSchema(uuidId)
+  UpdatePaymentLinkSchema: UpdatePaymentLinkSchema(options),
+  PaymentLinkSchema: PaymentLinkSchema(options)
 });

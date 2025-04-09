@@ -15,10 +15,12 @@
   "exports": {
     "./interfaces": {
       "import": "./lib/interfaces/index.js",
+      "require": "./lib/interfaces/index.js",
       "types": "./lib/interfaces/index.d.ts"
     },
     "./types": {
       "import": "./lib/types/index.js",
+      "require": "./lib/types/index.js",
       "types": "./lib/types/index.d.ts"
     }
   },

@@ -18,7 +18,7 @@ export const CreateOrganizationSchema = {
   extraFields: optional(unknown)
 };
 
-export const UpdateOrganizationSchema = (uuidId: boolean) => ({
+export const UpdateOrganizationSchema = ({ uuidId }: { uuidId: boolean }) => ({
   id: uuidId ? uuid : string,
   name: optional(string),
   domain: optional(string),
@@ -28,13 +28,13 @@ export const UpdateOrganizationSchema = (uuidId: boolean) => ({
 });
 
 export const OrganizationSchema =
-  (uuidId: boolean) =>
+  ({ uuidId }: { uuidId: boolean }) =>
   <OrganizationStatus extends Record<string, LiteralSchema>>(
     organizationStatus: OrganizationStatus
   ) => ({
     id: uuidId ? uuid : string,
     name: string,
-    users: array(UserSchema(uuidId)),
+    users: array(UserSchema({ uuidId })),
     domain: string,
     subscription: string,
     status: enum_(organizationStatus),
@@ -44,8 +44,10 @@ export const OrganizationSchema =
     updatedAt: optional(date)
   });
 
-export const BaseOrganizationServiceSchemas = (uuidId: boolean) => ({
+export const BaseOrganizationServiceSchemas = (options: {
+  uuidId: boolean;
+}) => ({
   CreateOrganizationSchema,
-  UpdateOrganizationSchema: UpdateOrganizationSchema(uuidId),
-  OrganizationSchema: OrganizationSchema(uuidId)
+  UpdateOrganizationSchema: UpdateOrganizationSchema(options),
+  OrganizationSchema: OrganizationSchema(options)
 });

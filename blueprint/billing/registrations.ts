@@ -59,23 +59,26 @@ import { PartyEnum } from './models/enum/party.enum';
 import { PaymentMethodEnum } from './models/enum/paymentMethod.enum';
 import { PlanCadenceEnum } from './models/enum/planCadence.enum';
 //! defines the schemas for the billing portal service
-export const BillingPortalSchemas = BaseBillingPortalServiceSchemas(
-  SchemaValidator(),
-  true
-);
-export const CheckoutSessionSchemas = BaseCheckoutSessionServiceSchemas(
-  SchemaValidator(),
-  true
-);
-export const PaymentLinkSchemas = BasePaymentLinkServiceSchemas(
-  SchemaValidator(),
-  true
-);
-export const PlanSchemas = BasePlanServiceSchemas(SchemaValidator(), true);
-export const SubscriptionSchemas = BaseSubscriptionServiceSchemas(
-  SchemaValidator(),
-  true
-);
+export const BillingPortalSchemas = BaseBillingPortalServiceSchemas({
+  uuidId: true,
+  validator: SchemaValidator()
+});
+export const CheckoutSessionSchemas = BaseCheckoutSessionServiceSchemas({
+  uuidId: true,
+  validator: SchemaValidator()
+});
+export const PaymentLinkSchemas = BasePaymentLinkServiceSchemas({
+  uuidId: true,
+  validator: SchemaValidator()
+});
+export const PlanSchemas = BasePlanServiceSchemas({
+  uuidId: true,
+  validator: SchemaValidator()
+});
+export const SubscriptionSchemas = BaseSubscriptionServiceSchemas({
+  uuidId: true,
+  validator: SchemaValidator()
+});
 //! defines the configuration schema for the application
 export function createDepenencies({ orm }: { orm: MikroORM }) {
   const configInjector = createConfigInjector(SchemaValidator(), {

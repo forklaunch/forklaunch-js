@@ -48,16 +48,22 @@ import {
 } from './models/dtoMapper/user.dtoMapper';
 import { OrganizationStatus } from './models/enum/organizationStatus.enum';
 //! defines the schemas for the organization service
-export const OrganizationSchemas = BaseOrganizationServiceSchemas(
-  SchemaValidator(),
-  true
-);
-export const PermissionSchemas = BasePermissionServiceSchemas(
-  SchemaValidator(),
-  true
-);
-export const RoleSchemas = BaseRoleServiceSchemas(SchemaValidator(), true);
-export const UserSchemas = BaseUserServiceSchemas(SchemaValidator(), true);
+export const OrganizationSchemas = BaseOrganizationServiceSchemas({
+  uuidId: true,
+  validator: SchemaValidator()
+});
+export const PermissionSchemas = BasePermissionServiceSchemas({
+  uuidId: true,
+  validator: SchemaValidator()
+});
+export const RoleSchemas = BaseRoleServiceSchemas({
+  uuidId: true,
+  validator: SchemaValidator()
+});
+export const UserSchemas = BaseUserServiceSchemas({
+  uuidId: true,
+  validator: SchemaValidator()
+});
 //! defines the configuration schema for the application
 export function createDepenencies({ orm }: { orm: MikroORM }) {
   const configInjector = createConfigInjector(SchemaValidator(), {

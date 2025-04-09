@@ -14,24 +14,24 @@ export const CreateRoleSchema = {
   extraFields: optional(unknown)
 };
 
-export const UpdateRoleSchema = (uuidId: boolean) => ({
+export const UpdateRoleSchema = ({ uuidId }: { uuidId: boolean }) => ({
   id: uuidId ? uuid : string,
   name: optional(string),
   permissionIds: optional(array(string)),
   extraFields: optional(unknown)
 });
 
-export const RoleSchema = (uuidId: boolean) => ({
+export const RoleSchema = ({ uuidId }: { uuidId: boolean }) => ({
   id: uuidId ? uuid : string,
   name: string,
-  permissions: array(PermissionSchema(uuidId)),
+  permissions: array(PermissionSchema({ uuidId })),
   extraFields: optional(unknown),
   createdAt: optional(date),
   updatedAt: optional(date)
 });
 
-export const BaseRoleServiceSchemas = (uuidId: boolean) => ({
+export const BaseRoleServiceSchemas = (options: { uuidId: boolean }) => ({
   CreateRoleSchema,
-  UpdateRoleSchema: UpdateRoleSchema(uuidId),
-  RoleSchema: RoleSchema(uuidId)
+  UpdateRoleSchema: UpdateRoleSchema(options),
+  RoleSchema: RoleSchema(options)
 });
