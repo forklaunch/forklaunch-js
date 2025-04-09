@@ -93,11 +93,10 @@ export class TypeboxSchemaValidator
     >
 {
   _Type = 'TypeBox' as const;
-  _SchemaCatchall!: TSchema;
+  _SchemaCatchall!: TCatchall;
   _ValidSchemaObject!: TObject<TProperties> | TArray<TObject<TProperties>>;
 
   string = Type.String();
-  // uuid = Type.String({ format: 'uuid' });
   uuid = Type.String({
     pattern:
       '^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$',
@@ -232,7 +231,7 @@ export class TypeboxSchemaValidator
    * @returns The type of the schema for error messages.
    */
   private errorType(schema: TCatchall) {
-    if (Object.hasOwn(schema, 'errorType')) {
+    if (KindGuard.IsSchema(schema) && Object.hasOwn(schema, 'errorType')) {
       return schema.errorType;
     } else if (KindGuard.IsLiteral(schema)) {
       return schema.const;
@@ -278,7 +277,7 @@ export class TypeboxSchemaValidator
       }
     });
 
-    return Type.Object(newSchema) as TResolve<T>;
+    return Type.Object(newSchema) as unknown as TResolve<T>;
   }
 
   /**
@@ -380,7 +379,7 @@ export class TypeboxSchemaValidator
    * @param {unknown} value - The value to validate.
    * @returns {boolean} True if valid, otherwise false.
    */
-  validate<T extends TIdiomaticSchema | TSchema>(
+  validate<T extends TIdiomaticSchema | TCatchall>(
     schema: T | TypeCheck<TResolve<T>>,
     value: unknown
   ): boolean {
@@ -401,7 +400,7 @@ export class TypeboxSchemaValidator
    * @param {unknown} value - The value to validate.
    * @returns {ParseResult<TResolve<T>>} The parsing result.
    */
-  parse<T extends TIdiomaticSchema | TSchema>(
+  parse<T extends TIdiomaticSchema | TCatchall>(
     schema: T | TypeCheck<TResolve<T>>,
     value: unknown
   ): ParseResult<TResolve<T>> {
@@ -474,10 +473,10 @@ export class TypeboxSchemaValidator
 
   /**
    * Convert a schema to an OpenAPI schema object.
-   * @param {TIdiomaticSchema | TSchema} schema - The schema to convert.
+   * @param {TIdiomaticSchema | TCatchall} schema - The schema to convert.
    * @returns {SchemaObject} The OpenAPI schema object.
    */
-  openapi<T extends TIdiomaticSchema | TSchema>(schema: T): SchemaObject {
+  openapi<T extends TIdiomaticSchema | TCatchall>(schema: T): SchemaObject {
     const schemified = KindGuard.IsSchema(schema)
       ? schema
       : this.schemify(schema);

@@ -1,5 +1,11 @@
 # @forklaunch/validator
 
+## 0.4.12
+
+### Patch Changes
+
+- Change Typebox catchall from TSchema => TKind for more permissive type matching
+
 ## 0.4.11
 
 ### Patch Changes
