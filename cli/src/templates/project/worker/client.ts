@@ -2,9 +2,9 @@ import { bootstrap } from './bootstrapper';
 {{#cache_backend}}import { CACHE_KEY_PREFIX } from './consts';{{/cache_backend}}
 import { {{pascal_case_name}}Record } from './models/persistence/{{camel_case_name}}Record.entity';
 
-bootstrap((ci) => { {{^cache_backend}}
-  const entityManager = ci.resolve('entityManager');
-  const openTelemetryCollector = ci.resolve('openTelemetryCollector');
+bootstrap((ci, tokens) => { {{^cache_backend}}
+  const entityManager = ci.resolve(tokens.EntityManager);
+  const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
 
   setInterval(async () => {
     const sampleRecordsToProcess = await entityManager
@@ -32,8 +32,8 @@ bootstrap((ci) => { {{^cache_backend}}
       await entityManager.flush();
     }
   }, 10000);{{/cache_backend}}{{#cache_backend}}
-  const cache = ci.resolve('ttlCache');
-  const openTelemetryCollector = ci.resolve('openTelemetryCollector');
+  const cache = ci.resolve(tokens.TtlCache);
+  const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
 
   setInterval(async () => {
     const cachedRecordIds = await cache.listKeys(

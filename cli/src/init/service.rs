@@ -43,9 +43,10 @@ use super::{
             package_json_constants::{
                 project_clean_script, project_dev_local_script, project_dev_server_script,
                 project_migrate_script, project_start_server_script, project_test_script,
-                AJV_VERSION, APP_CORE_VERSION, APP_MONITORING_VERSION, COMMON_VERSION,
-                CORE_VERSION, DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION,
-                HYPER_EXPRESS_VERSION, MIKRO_ORM_CLI_VERSION, MIKRO_ORM_CORE_VERSION,
+                AJV_VERSION, APP_CORE_VERSION, APP_MONITORING_VERSION, BILLING_BASE_VERSION,
+                BILLING_INTERFACES_VERSION, COMMON_VERSION, CORE_VERSION, DOTENV_VERSION,
+                ESLINT_VERSION, EXPRESS_VERSION, HYPER_EXPRESS_VERSION, IAM_BASE_VERSION,
+                IAM_INTERFACES_VERSION, MIKRO_ORM_CLI_VERSION, MIKRO_ORM_CORE_VERSION,
                 MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
                 MIKRO_ORM_REFLECTION_VERSION, MIKRO_ORM_SEEDER_VERSION, PROJECT_BUILD_SCRIPT,
                 PROJECT_DOCS_SCRIPT, PROJECT_FORMAT_SCRIPT, PROJECT_LINT_FIX_SCRIPT,
@@ -423,6 +424,26 @@ pub(crate) fn generate_service_package_json(
                 },
                 forklaunch_hyper_express: if config_data.is_hyper_express {
                     Some(HYPER_EXPRESS_VERSION.to_string())
+                } else {
+                    None
+                },
+                forklaunch_implementation_billing_base: if config_data.service_name == "billing" {
+                    Some(BILLING_BASE_VERSION.to_string())
+                } else {
+                    None
+                },
+                forklaunch_interfaces_billing: if config_data.service_name == "billing" {
+                    Some(BILLING_INTERFACES_VERSION.to_string())
+                } else {
+                    None
+                },
+                forklaunch_implementation_iam_base: if config_data.service_name == "iam" {
+                    Some(IAM_BASE_VERSION.to_string())
+                } else {
+                    None
+                },
+                forklaunch_interfaces_iam: if config_data.service_name == "iam" {
+                    Some(IAM_INTERFACES_VERSION.to_string())
                 } else {
                     None
                 },

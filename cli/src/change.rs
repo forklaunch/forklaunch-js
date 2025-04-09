@@ -28,5 +28,6 @@ impl CliCommand for ChangeCommand {
 
         // Perform in-place changes, trying to preserve changes
         // Do not hard fail if cannot perform action -- emit warning
+        Ok(())
     }
 }

@@ -4,6 +4,7 @@ import {
 } from '@forklaunch/core/dtoMapper';
 import { SchemaValidator, string{{#is_worker}}, boolean, number{{/is_worker}} } from '@{{app_name}}/core';
 import { {{pascal_case_name}}Record } from '../persistence/{{camel_case_name}}Record.entity';
+import { {{pascal_case_name}}Schema } from '../schemas/{{camel_case_name}}.schema';
 
 // Exported type that matches the request schema
 export type {{pascal_case_name}}RequestDto = {{pascal_case_name}}RequestDtoMapper['dto'];
@@ -13,9 +14,7 @@ export class {{pascal_case_name}}RequestDtoMapper extends RequestDtoMapper<
   SchemaValidator
 > {
   // idiomatic validator schema defines the request schema
-  schema = {
-    message: string
-  };
+  schema = {{pascal_case_name}}Schema;
 
   // toEntity method maps the request schema to the entity
   toEntity(): {{pascal_case_name}}Record {

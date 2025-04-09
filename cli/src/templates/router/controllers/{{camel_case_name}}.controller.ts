@@ -3,38 +3,28 @@ import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ConfigInjector, ScopedDependencyFactory } from '@forklaunch/core/services';
 import { handlers, Request, Response, NextFunction, ParsedQs, SchemaValidator } from '@{{app_name}}/core';
 import { Metrics } from '@{{app_name}}/monitoring';
-import { configValidator } from '../bootstrapper';
 import { {{pascal_case_name}}Service } from '../interfaces/{{camel_case_name}}.interface';
 import { {{pascal_case_name}}RequestDtoMapper, {{pascal_case_name}}ResponseDtoMapper } from '../models/dtoMapper/{{camel_case_name}}.dtoMapper';
+import { SchemaDependencies } from '../registrations';
 
 // Controller class that implements the {{pascal_case_name}}Service interface 
-export class {{pascal_case_name}}Controller
-  implements Controller<
-    {{pascal_case_name}}Service, 
-    Request, 
-    Response, 
-    NextFunction, 
-    ParsedQs
-  >
-{
-  constructor(
-    // scopeFactory returns new scopes that can be used for joint transactions
-    private readonly scopeFactory: () => ConfigInjector<
+export const {{pascal_case_name}}Controller = (
+  // scopeFactory returns new scopes that can be used for joint transactions
+    scopeFactory: () => ConfigInjector<
       SchemaValidator,
-      typeof configValidator
+      SchemaDependencies
     >,
     // serviceFactory returns a new service instance on demand
-    private serviceFactory: ScopedDependencyFactory<
+    serviceFactory: ScopedDependencyFactory<
       SchemaValidator,
-      typeof configValidator,
-      '{{camel_case_name}}Service'
+      SchemaDependencies,
+      '{{pascal_case_name}}Service'
     >,
     // openTelemetryCollector for collecting logs and metrics with appropriate context
-    private readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>
-  ) {}
-
+    openTelemetryCollector: OpenTelemetryCollector<Metrics>
+  ) => ({
   // GET endpoint handler that returns a simple message
-  {{camel_case_name}}Get = handlers.get(
+  {{camel_case_name}}Get: handlers.get(
     SchemaValidator(),
     '/',
     {
@@ -53,10 +43,10 @@ export class {{pascal_case_name}}Controller
         {{/is_worker}}
       });
     }
-  );
+  ),
 
   // POST endpoint handler that processes request body and returns response from service
-  {{camel_case_name}}Post = handlers.post(
+  {{camel_case_name}}Post: handlers.post(
     SchemaValidator(),
     '/',
     {
@@ -74,10 +64,10 @@ export class {{pascal_case_name}}Controller
         .status(200)
         .json(
           // constructs a new service instance using the scopeFactory and calls the {{camel_case_name}}Post method
-          await this.serviceFactory(
-            this.scopeFactory()
+          await serviceFactory(
+            scopeFactory()
           ).{{camel_case_name}}Post(req.body)
         );
     }
-  );
-}
+  )
+}) satisfies Controller<{{pascal_case_name}}Service, Request, Response, NextFunction, ParsedQs>

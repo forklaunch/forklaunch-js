@@ -485,6 +485,10 @@ pub(crate) fn generate_project_package_json(
                 } else {
                     None
                 },
+                forklaunch_implementation_billing_base: None,
+                forklaunch_interfaces_billing: None,
+                forklaunch_implementation_iam_base: None,
+                forklaunch_interfaces_iam: None,
                 forklaunch_validator: Some(VALIDATOR_VERSION.to_string()),
                 mikro_orm_core: Some(MIKRO_ORM_CORE_VERSION.to_string()),
                 mikro_orm_migrations: if !config_data.cache_backend {

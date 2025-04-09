@@ -70,6 +70,18 @@ impl Serialize for ProjectDependencies {
         if let Some(ref v) = self.forklaunch_hyper_express {
             map.serialize_entry("@forklaunch/hyper-express", v)?;
         }
+        if let Some(ref v) = self.forklaunch_implementation_billing_base {
+            map.serialize_entry("@forklaunch/implementation-billing-base", v)?;
+        }
+        if let Some(ref v) = self.forklaunch_interfaces_billing {
+            map.serialize_entry("@forklaunch/interfaces-billing", v)?;
+        }
+        if let Some(ref v) = self.forklaunch_implementation_iam_base {
+            map.serialize_entry("@forklaunch/implementation-iam-base", v)?;
+        }
+        if let Some(ref v) = self.forklaunch_interfaces_iam {
+            map.serialize_entry("@forklaunch/interfaces-iam", v)?;
+        }
         if let Some(ref v) = self.forklaunch_validator {
             map.serialize_entry("@forklaunch/validator", v)?;
         }
@@ -174,6 +186,18 @@ impl<'de> Deserialize<'de> for ProjectDependencies {
                         "@forklaunch/core" => deps.forklaunch_core = Some(value),
                         "@forklaunch/express" => deps.forklaunch_express = Some(value),
                         "@forklaunch/hyper-express" => deps.forklaunch_hyper_express = Some(value),
+                        "@forklaunch/implementation-billing-base" => {
+                            deps.forklaunch_implementation_billing_base = Some(value)
+                        }
+                        "@forklaunch/interfaces-billing" => {
+                            deps.forklaunch_interfaces_billing = Some(value)
+                        }
+                        "@forklaunch/implementation-iam-base" => {
+                            deps.forklaunch_implementation_iam_base = Some(value)
+                        }
+                        "@forklaunch/interfaces-iam" => {
+                            deps.forklaunch_interfaces_iam = Some(value)
+                        }
                         "@forklaunch/validator" => deps.forklaunch_validator = Some(value),
                         "@mikro-orm/core" => deps.mikro_orm_core = Some(value),
                         "@mikro-orm/reflection" => deps.mikro_orm_reflection = Some(value),
@@ -205,6 +229,10 @@ pub struct ProjectDependencies {
     pub forklaunch_core: Option<String>,
     pub forklaunch_express: Option<String>,
     pub forklaunch_hyper_express: Option<String>,
+    pub forklaunch_implementation_billing_base: Option<String>,
+    pub forklaunch_interfaces_billing: Option<String>,
+    pub forklaunch_implementation_iam_base: Option<String>,
+    pub forklaunch_interfaces_iam: Option<String>,
     pub forklaunch_validator: Option<String>,
     pub mikro_orm_core: Option<String>,
     pub mikro_orm_migrations: Option<String>,

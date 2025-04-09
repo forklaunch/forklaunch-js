@@ -109,3 +109,5 @@ pub(crate) const ERROR_FAILED_TO_ADD_BASE_ENTITY_TO_CORE: &str =
     "Failed to add base entity to core.";
 pub(crate) const ERROR_FAILED_TO_WRITE_SERVICE_FILES: &str =
     "Failed to write service files.";
+pub(crate) const ERROR_FAILED_TO_EJECT_DIRECTORY_NOT_EJECTABLE: &str =
+    "Failed to eject directory. Please check your target directory is a preconfigured forklaunch module.";

@@ -1,22 +1,21 @@
 import { ApiClient } from '@forklaunch/core/http';
 import { forklaunchExpress } from '@{{app_name}}/core';
 import { bootstrap } from './bootstrapper';
-import { {{pascal_case_name}}Controller } from './controllers/{{camel_case_name}}.controller';
 import { {{pascal_case_name}}Routes } from './routes/{{camel_case_name}}.routes';
 //! bootstrap function that initializes the service application
-bootstrap((ci) => {
+bootstrap((ci, tokens) => {
   //! creates an instance of forklaunchExpress
-  const openTelemetryCollector = ci.resolve('openTelemetryCollector');
+  const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
   //! creates an instance of forklaunchExpress
   const app = forklaunchExpress(openTelemetryCollector);
   //! resolves the protocol, host, port, and version from the configuration
-  const protocol = ci.resolve('PROTOCOL');
-  const host = ci.resolve('HOST');
-  const port = ci.resolve('PORT');
-  const version = ci.resolve('VERSION');
-  const docsPath = ci.resolve('DOCS_PATH');
+  const protocol = ci.resolve(tokens.PROTOCOL);
+  const host = ci.resolve(tokens.HOST);
+  const port = ci.resolve(tokens.PORT);
+  const version = ci.resolve(tokens.VERSION);
+  const docsPath = ci.resolve(tokens.DOCS_PATH);
   //! resolves the necessary services from the configuration
-  const scoped{{pascal_case_name}}ServiceFactory = ci.scopedResolver('{{camel_case_name}}Service');
+  const scoped{{pascal_case_name}}ServiceFactory = ci.scopedResolver(tokens.{{pascal_case_name}}Service);
   //! constructs the necessary routes using the appropriate Routes functions
   const {{camel_case_name}}Routes = {{pascal_case_name}}Routes(
     () => ci.createScope(),
