@@ -37,9 +37,9 @@
   },
   "dependencies": {
     "@forklaunch/common": "^0.2.6",
-    "@forklaunch/core": "^0.6.3",
+    "@forklaunch/core": "^0.6.4",
     "@forklaunch/interfaces-iam": "workspace:*",
-    "@forklaunch/validator": "^0.4.11",
+    "@forklaunch/validator": "^0.4.12",
     "@mikro-orm/core": "^6.4.12",
     "@sinclair/typebox": "^0.34.33",
     "ajv": "^8.17.1",
