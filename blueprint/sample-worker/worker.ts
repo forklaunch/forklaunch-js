@@ -1,22 +1,22 @@
 import { ApiClient } from '@forklaunch/core/http';
-import { forklaunchExpress } from '@forklaunch/framework-core';
+import { forklaunchExpress } from '@forklaunch/blueprint-core';
 import { bootstrap } from './bootstrapper';
 import { SampleWorkerRoutes } from './routes/sampleWorker.routes';
 //! bootstrap function that initializes the service application
-bootstrap((ci) => {
+bootstrap((ci, tokens) => {
   //! resolves the openTelemetryCollector from the configuration
-  const openTelemetryCollector = ci.resolve('openTelemetryCollector');
+  const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
   //! creates an instance of forklaunchExpress
   const app = forklaunchExpress(openTelemetryCollector);
   //! resolves the protocol, host, port, and version from the configuration
-  const protocol = ci.resolve('PROTOCOL');
-  const host = ci.resolve('HOST');
-  const port = ci.resolve('PORT');
-  const version = ci.resolve('VERSION');
-  const docsPath = ci.resolve('DOCS_PATH');
+  const protocol = ci.resolve(tokens.PROTOCOL);
+  const host = ci.resolve(tokens.HOST);
+  const port = ci.resolve(tokens.PORT);
+  const version = ci.resolve(tokens.VERSION);
+  const docsPath = ci.resolve(tokens.DOCS_PATH);
   //! resolves the necessary services from the configuration
   const scopedSampleWorkerServiceFactory = ci.scopedResolver(
-    'sampleWorkerService'
+    tokens.SampleWorkerService
   );
   //! constructs the necessary routes using the appropriate Routes functions
   const sampleWorkerRoutes = SampleWorkerRoutes(

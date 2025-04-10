@@ -76,3 +76,10 @@ export const array: typeof schemaArray = schemaArray;
 export const union: typeof schemaUnion = schemaUnion;
 export const literal: typeof schemaLiteral = schemaLiteral;
 export const enum_: typeof schemaEnum = schemaEnum;
+
+export const IdSchema = {
+  id: string,
+};
+export const IdsSchema = {
+  ids: array(string),
+};

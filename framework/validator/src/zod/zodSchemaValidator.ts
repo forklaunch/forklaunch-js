@@ -43,19 +43,28 @@ export class ZodSchemaValidator
       <T extends ZodIdiomaticSchema>(schema: T) => ZodArray<ZodResolve<T>>,
       <T extends ZodUnionContainer>(schemas: T) => ZodUnion<UnionZodResolve<T>>,
       <T extends LiteralSchema>(value: T) => ZodLiteral<ZodResolve<T>>,
-      <T extends LiteralSchema>(
-        schemaEnum: Record<string, T>
-      ) => ZodUnion<UnionZodResolve<[T, T, ...T[]]>>,
+      <T extends Record<string, LiteralSchema>>(
+        schemaEnum: T
+      ) => ZodUnion<
+        [
+          {
+            [K in keyof T]: ZodLiteral<T[K]>;
+          }[keyof T]
+        ]
+      >,
       (value: unknown) => value is ZodType,
-      <T extends ZodCatchall>(schema: T, value: unknown) => boolean,
-      <T extends ZodCatchall>(
+      <T extends ZodIdiomaticSchema | ZodCatchall>(
+        schema: T,
+        value: unknown
+      ) => boolean,
+      <T extends ZodIdiomaticSchema | ZodCatchall>(
         schema: T,
         value: unknown
       ) => ParseResult<ZodResolve<T>>,
-      <T extends ZodIdiomaticSchema>(schema: T) => SchemaObject
+      <T extends ZodIdiomaticSchema | ZodCatchall>(schema: T) => SchemaObject
     >
 {
-  _Type!: 'Zod';
+  _Type = 'Zod' as const;
   _SchemaCatchall!: ZodType;
   _ValidSchemaObject!:
     | ZodObject<ZodRawShape>
@@ -88,7 +97,7 @@ export class ZodSchemaValidator
   boolean = z.preprocess((val) => {
     if (typeof val === 'string') {
       if (val.toLowerCase() === 'true') return true;
-      return false;
+      if (val.toLowerCase() === 'false') return false;
     }
     return val;
   }, z.boolean());
@@ -208,10 +217,24 @@ export class ZodSchemaValidator
    * @param {Record<string, LiteralSchema>} schemaEnum - The enum schema.
    * @returns {ZodUnion<UnionZodResolve<[T, T, ...T[]]>>} The enum schema.
    */
-  enum_<T extends LiteralSchema>(
-    schemaEnum: Record<string, T>
-  ): ZodUnion<UnionZodResolve<[T, T, ...T[]]>> {
-    return this.union(Object.values(schemaEnum) as [T, T, ...T[]]);
+  enum_<T extends Record<string, LiteralSchema>>(
+    schemaEnum: T
+  ): ZodUnion<
+    [
+      {
+        [K in keyof T]: ZodLiteral<T[K]>;
+      }[keyof T]
+    ]
+  > {
+    return this.union(
+      Object.values(schemaEnum) as unknown as ZodUnionContainer
+    ) as unknown as ZodUnion<
+      [
+        {
+          [K in keyof T]: ZodLiteral<T[K]>;
+        }[keyof T]
+      ]
+    >;
   }
 
   /**
@@ -229,8 +252,13 @@ export class ZodSchemaValidator
    * @param {unknown} value - The value to validate.
    * @returns {boolean} True if valid, otherwise false.
    */
-  validate<T extends ZodCatchall>(schema: T, value: unknown): boolean {
-    return schema.safeParse(value).success;
+  validate<T extends ZodIdiomaticSchema | ZodCatchall>(
+    schema: T,
+    value: unknown
+  ): boolean {
+    const resolvedSchema =
+      schema instanceof ZodType ? schema : this.schemify(schema);
+    return resolvedSchema.safeParse(value).success;
   }
 
   /**
@@ -240,19 +268,39 @@ export class ZodSchemaValidator
    * @param {unknown} value - The value to validate.
    * @returns {ParseResult} - The discrimintated parsed value if successful, the error if unsuccessful.
    */
-  parse<T extends ZodCatchall>(
+  parse<T extends ZodIdiomaticSchema | ZodCatchall>(
     schema: T,
     value: unknown
   ): ParseResult<ZodResolve<T>> {
-    const result = schema.safeParse(value);
+    const resolvedSchema =
+      schema instanceof ZodType ? schema : this.schemify(schema);
+    const result = resolvedSchema.safeParse(value);
     return result.success
       ? { ok: true, value: result.data }
       : {
           ok: false,
-          errors: result.error.errors.map((error) => ({
-            path: error.path.map((p) => p.toString()),
-            message: error.message
-          }))
+          errors: result.error.errors.flatMap((error) => {
+            switch (error.code) {
+              case 'invalid_union':
+                return error.unionErrors.flatMap((unionError, idx) =>
+                  unionError.errors.map((e) => ({
+                    path: [
+                      `Union Schema Variant ${idx}`,
+                      ...error.path.map((p) => p.toString()),
+                      ...e.path.map((p) => p.toString())
+                    ],
+                    message: e.message
+                  }))
+                );
+              default:
+                return [
+                  {
+                    path: error.path.map((p) => p.toString()),
+                    message: error.message
+                  }
+                ];
+            }
+          })
         };
   }
 
@@ -261,7 +309,9 @@ export class ZodSchemaValidator
    * @param {ZodIdiomaticSchema} schema - The schema to convert.
    * @returns {SchemaObject} The OpenAPI schema object.
    */
-  openapi<T extends ZodIdiomaticSchema>(schema: T): SchemaObject {
-    return generateSchema(this.schemify(schema));
+  openapi<T extends ZodIdiomaticSchema | ZodCatchall>(schema: T): SchemaObject {
+    return generateSchema(
+      schema instanceof ZodType ? schema : this.schemify(schema)
+    );
   }
 }

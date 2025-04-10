@@ -65,7 +65,7 @@ fn database_replacements(database: &String, template: String) -> String {
 }
 
 fn forklaunch_replacements(app_name: &String, template: String) -> String {
-    template.replace("@forklaunch/framework-", format!("@{app_name}/").as_str())
+    template.replace("@forklaunch/blueprint-", format!("@{app_name}/").as_str())
 }
 
 pub(crate) fn generate_with_template(

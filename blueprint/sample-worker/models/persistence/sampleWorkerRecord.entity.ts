@@ -1,4 +1,4 @@
-import { BaseEntity } from '@forklaunch/framework-core';
+import { BaseEntity } from '@forklaunch/blueprint-core';
 import { Entity, Property } from '@mikro-orm/core';
 
 // Entity class that defines the structure of the SampleWorkerRecord table

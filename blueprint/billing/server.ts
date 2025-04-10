@@ -1,30 +1,31 @@
+import { forklaunchExpress } from '@forklaunch/blueprint-core';
 import { ApiClient } from '@forklaunch/core/http';
-import { forklaunchExpress } from '@forklaunch/framework-core';
 import { bootstrap } from './bootstrapper';
 import { CheckoutSessionRoutes } from './routes/checkoutSession.routes';
 import { PaymentLinkRoutes } from './routes/paymentLink.routes';
 import { PlanRoutes } from './routes/plan.routes';
 import { SubscriptionRoutes } from './routes/subscription.routes';
 //! bootstrap function that initializes the service application
-bootstrap((ci) => {
+bootstrap((ci, tokens) => {
   //! resolves the openTelemetryCollector from the configuration
-  const openTelemetryCollector = ci.resolve('openTelemetryCollector');
+  const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
   //! creates an instance of forklaunchExpress
   const app = forklaunchExpress(openTelemetryCollector);
   //! resolves the host, port, and version from the configuration
-  const host = ci.resolve('HOST');
-  const port = ci.resolve('PORT');
-  const version = ci.resolve('VERSION');
-  const docsPath = ci.resolve('DOCS_PATH');
+  const host = ci.resolve(tokens.HOST);
+  const port = ci.resolve(tokens.PORT);
+  const version = ci.resolve(tokens.VERSION);
+  const docsPath = ci.resolve(tokens.DOCS_PATH);
   //! resolves the necessary services from the configuration
   const scopedCheckoutSessionServiceFactory = ci.scopedResolver(
-    'checkoutSessionService'
+    tokens.CheckoutSessionService
   );
-  const scopedPaymentLinkServiceFactory =
-    ci.scopedResolver('paymentLinkService');
-  const scopedPlanServiceFactory = ci.scopedResolver('planService');
+  const scopedPaymentLinkServiceFactory = ci.scopedResolver(
+    tokens.PaymentLinkService
+  );
+  const scopedPlanServiceFactory = ci.scopedResolver(tokens.PlanService);
   const scopedSubscriptionServiceFactory = ci.scopedResolver(
-    'subscriptionService'
+    tokens.SubscriptionService
   );
   //! constructs the necessary routes using the appropriate Routes functions
   const checkoutSessionRoutes = CheckoutSessionRoutes(

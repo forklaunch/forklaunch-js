@@ -1,34 +1,18 @@
+import { collection, SchemaValidator } from '@forklaunch/blueprint-core';
 import {
   RequestDtoMapper,
   ResponseDtoMapper
 } from '@forklaunch/core/dtoMapper';
-import {
-  array,
-  collection,
-  date,
-  enum_,
-  optional,
-  SchemaValidator,
-  string,
-  uuid
-} from '@forklaunch/framework-core';
-import {
-  Organization,
-  OrganizationStatus
-} from '../persistence/organization.entity';
+import { OrganizationSchemas } from '../../registrations';
+import { OrganizationStatus } from '../enum/organizationStatus.enum';
+import { Organization } from '../persistence/organization.entity';
 import { UserDtoMapper } from './user.dtoMapper';
 
-export type CreateOrganizationDto = CreateOrganizationDtoMapper['dto'];
 export class CreateOrganizationDtoMapper extends RequestDtoMapper<
   Organization,
   SchemaValidator
 > {
-  schema = {
-    name: string,
-    domain: string,
-    subscription: string,
-    logoUrl: optional(string)
-  };
+  schema = OrganizationSchemas.CreateOrganizationSchema;
 
   toEntity() {
     return Organization.create({
@@ -39,42 +23,21 @@ export class CreateOrganizationDtoMapper extends RequestDtoMapper<
   }
 }
 
-export type UpdateOrganizationDto = UpdateOrganizationDtoMapper['dto'];
 export class UpdateOrganizationDtoMapper extends RequestDtoMapper<
   Organization,
   SchemaValidator
 > {
-  schema = {
-    id: uuid,
-    name: optional(string),
-    domain: optional(string),
-    subscription: optional(string),
-    logoUrl: optional(string)
-  };
+  schema = OrganizationSchemas.UpdateOrganizationSchema;
 
   toEntity(): Organization {
     return Organization.update(this.dto);
   }
 }
-
-const organizationSchema = {
-  id: uuid,
-  name: string,
-  users: array(UserDtoMapper.schema()),
-  domain: string,
-  subscription: string,
-  status: enum_(OrganizationStatus),
-  logoUrl: optional(string),
-  createdAt: date,
-  updatedAt: date
-};
-
-export type OrganizationDto = OrganizationDtoMapper['dto'];
 export class OrganizationDtoMapper extends ResponseDtoMapper<
   Organization,
   SchemaValidator
 > {
-  schema = organizationSchema;
+  schema = OrganizationSchemas.OrganizationSchema(OrganizationStatus);
 
   fromEntity(entity: Organization): this {
     this.dto = {
@@ -89,33 +52,5 @@ export class OrganizationDtoMapper extends ResponseDtoMapper<
     };
 
     return this;
-  }
-}
-
-export class OrganizationEntityMapper extends RequestDtoMapper<
-  Organization,
-  SchemaValidator
-> {
-  schema = organizationSchema;
-
-  toEntity(): Organization {
-    return Organization.map({
-      ...this.dto,
-      ...(this.dto.users
-        ? { users: this.dto.users.map((user) => user.id) }
-        : {})
-      // ...(this.dto.users
-      //   ? {
-      //       users: new Collection(
-      //         this.dto.users.map((user) =>
-      //           UserEntityMapper.deserializeDtoToEntity(
-      //             this.schemaValidator as SchemaValidator,
-      //             user
-      //           )
-      //         )
-      //       )
-      //     }
-      //   : {})
-    });
   }
 }

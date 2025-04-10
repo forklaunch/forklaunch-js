@@ -8,8 +8,16 @@ for dir in "${DIRS[@]}"; do
 
   # Loop through each package and create symlink
   for package in "${PACKAGES[@]}"; do
-    pnpm link ../../packages/$package
+    pnpm link ../../framework/$package
   done
 
   cd ..
 done
+
+cd interfaces
+
+./link.sh
+
+cd ../implementations
+
+./link.sh

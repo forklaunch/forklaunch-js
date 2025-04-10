@@ -80,13 +80,11 @@ export class Application<
           process.env.DOCS_PATH ?? '/docs'
         }`,
         apiReference({
-          spec: {
-            content: generateSwaggerDocument<SV>(
-              this.schemaValidator,
-              port,
-              this.routers
-            )
-          },
+          content: generateSwaggerDocument<SV>(
+            this.schemaValidator,
+            port,
+            this.routers
+          ),
           ...this.docsConfiguration
         }) as unknown as RequestHandler
       );

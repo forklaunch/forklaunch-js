@@ -1,5 +1,53 @@
 # @forklaunch/core
 
+## 0.6.5
+
+### Patch Changes
+
+- Service schema validators now accept keyword argument options for passing down to schemas
+
+## 0.6.4
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.4.12
+
+## 0.6.3
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.4.11
+
+## 0.6.2
+
+### Patch Changes
+
+- Update package versions
+- Updated dependencies
+  - @forklaunch/validator@0.4.10
+  - @forklaunch/common@0.2.6
+
+## 0.6.1
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.4.9
+
+## 0.6.0
+
+### Minor Changes
+
+- Syntactic QOL improvements (validator zod args, config injector, core utilities, test utilities, etc.)
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.4.8
+  - @forklaunch/common@0.2.5
+
 ## 0.5.6
 
 ### Patch Changes

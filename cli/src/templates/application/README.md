@@ -159,7 +159,7 @@ Run tests with:
 
 ### Definining Configuration
 
-Configuration can be defined via a ConfigInjector class. The behavior can be observed in `mikro-orm.config.ts` and `bootstrapper.ts` files.
+Configuration can be defined via a ConfigInjector class. The behavior can be observed in `mikro-orm.config.ts` and `registrations.ts` files.
 
 Dependencies can have one of three lifetimes:
 

@@ -1,0 +1,56 @@
+{
+  "name": "@forklaunch/implementation-iam-base",
+  "version": "0.1.7",
+  "description": "Billing basic implementation for forklaunch",
+  "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
+  "bugs": {
+    "url": "https://github.com/forklaunch/forklaunch-js/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/forklaunch/forklaunch-js.git"
+  },
+  "license": "MIT",
+  "author": "Forklift Technologies, Inc.",
+  "exports": {
+    "./schemas": {
+      "import": "./lib/schemas/index.js",
+      "require": "./lib/schemas/index.js",
+      "types": "./lib/schemas/index.d.ts"
+    },
+    "./services": {
+      "import": "./lib/services/index.js",
+      "require": "./lib/services/index.js",
+      "types": "./lib/services/index.d.ts"
+    }
+  },
+  "files": [
+    "lib/**"
+  ],
+  "scripts": {
+    "build": "tsc && pnpm package:eject",
+    "clean": "rm -rf lib pnpm.lock.yaml node_modules",
+    "docs": "typedoc --out docs *",
+    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
+    "lint": "eslint . -c eslint.config.mjs",
+    "lint:fix": "eslint . -c eslint.config.mjs --fix",
+    "package:eject": "./eject-package.bash",
+    "publish:package": "./publish-package.bash",
+    "test": "vitest --passWithNoTests"
+  },
+  "dependencies": {
+    "@forklaunch/common": "^0.2.6",
+    "@forklaunch/core": "^0.6.5",
+    "@forklaunch/interfaces-iam": "workspace:*",
+    "@forklaunch/validator": "^0.4.12",
+    "@mikro-orm/core": "^6.4.12",
+    "@sinclair/typebox": "^0.34.33",
+    "ajv": "^8.17.1",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "depcheck": "^1.4.7",
+    "prettier": "^3.5.3",
+    "typedoc": "^0.28.2"
+  }
+}

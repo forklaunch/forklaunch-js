@@ -1,68 +1,56 @@
+import { collection, SchemaValidator } from '@forklaunch/blueprint-core';
 import {
   RequestDtoMapper,
   ResponseDtoMapper
 } from '@forklaunch/core/dtoMapper';
-import {
-  array,
-  collection,
-  date,
-  optional,
-  SchemaValidator,
-  string,
-  uuid
-} from '@forklaunch/framework-core';
+import { RoleSchemas } from '../../registrations';
 import { Permission } from '../persistence/permission.entity';
 import { Role } from '../persistence/role.entity';
 import { PermissionDtoMapper } from './permission.dtoMapper';
-
-export type CreateRoleDto = CreateRoleDtoMapper['dto'];
 export class CreateRoleDtoMapper extends RequestDtoMapper<
   Role,
   SchemaValidator
 > {
-  schema = {
-    name: string,
-    permissionIds: optional(array(string))
-  };
+  schema = RoleSchemas.CreateRoleSchema;
 
-  toEntity(permissions: Permission[]): Role {
+  toEntity(): Role {
     return Role.create({
       ...this.dto,
-      permissions: collection(permissions)
+      permissions: collection(
+        this.dto.permissionIds
+          ? this.dto.permissionIds.map((id) =>
+              Permission.map({
+                id
+              })
+            )
+          : []
+      )
     });
   }
 }
 
-export type UpdateRoleDto = UpdateRoleDtoMapper['dto'];
 export class UpdateRoleDtoMapper extends RequestDtoMapper<
   Role,
   SchemaValidator
 > {
-  schema = {
-    id: uuid,
-    name: optional(string),
-    permissionIds: optional(array(string))
-  };
+  schema = RoleSchemas.UpdateRoleSchema;
 
-  toEntity(permissions: Permission[]): Role {
+  toEntity(): Role {
     return Role.update({
       ...this.dto,
-      ...(permissions ? { permissions: collection(permissions) } : {})
+      ...(this.dto.permissionIds
+        ? {
+            permissions: collection(
+              this.dto.permissionIds.map((id) => Permission.map({ id }))
+            )
+          }
+        : {})
     });
   }
 }
 
-const roleSchema = {
-  id: uuid,
-  name: string,
-  permissions: array(PermissionDtoMapper.schema()),
-  createdAt: date,
-  updatedAt: date
-};
-
-export type RoleDto = RoleDtoMapper['dto'];
 export class RoleDtoMapper extends ResponseDtoMapper<Role, SchemaValidator> {
-  schema = roleSchema;
+  schema = RoleSchemas.RoleSchema;
 
   fromEntity(entity: Role): this {
     this.dto = {
@@ -84,7 +72,7 @@ export class RoleDtoMapper extends ResponseDtoMapper<Role, SchemaValidator> {
 }
 
 export class RoleEntityMapper extends RequestDtoMapper<Role, SchemaValidator> {
-  schema = roleSchema;
+  schema = RoleSchemas.RoleSchema;
 
   toEntity(): Role {
     return Role.map({
@@ -94,14 +82,6 @@ export class RoleEntityMapper extends RequestDtoMapper<Role, SchemaValidator> {
             permissions: this.dto.permissions.map((permission) => permission.id)
           }
         : {})
-      // permissions: new Collection(
-      //   this.dto.permissions.map((permission) =>
-      //     PermissionEntityMapper.deserializeDtoToEntity(
-      //       this.schemaValidator as SchemaValidator,
-      //       permission
-      //     )
-      //   )
-      // )
     });
   }
 }

@@ -1,5 +1,59 @@
 # @forklaunch/hyper-express
 
+## 0.4.5
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.6.5
+
+## 0.4.4
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.4.12
+  - @forklaunch/core@0.6.4
+
+## 0.4.3
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.4.11
+  - @forklaunch/core@0.6.3
+
+## 0.4.2
+
+### Patch Changes
+
+- Update package versions
+- Updated dependencies
+  - @forklaunch/validator@0.4.10
+  - @forklaunch/common@0.2.6
+  - @forklaunch/core@0.6.2
+
+## 0.4.1
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.4.9
+  - @forklaunch/core@0.6.1
+
+## 0.4.0
+
+### Minor Changes
+
+- Syntactic QOL improvements (validator zod args, config injector, core utilities, test utilities, etc.)
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.6.0
+  - @forklaunch/validator@0.4.8
+  - @forklaunch/common@0.2.5
+
 ## 0.3.7
 
 ### Patch Changes

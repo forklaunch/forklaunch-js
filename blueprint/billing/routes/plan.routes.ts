@@ -1,21 +1,21 @@
+import { forklaunchRouter, SchemaValidator } from '@forklaunch/blueprint-core';
+import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
-import { forklaunchRouter, SchemaValidator } from '@forklaunch/framework-core';
-import { Metrics } from '@forklaunch/framework-monitoring';
-import { configValidator } from '../bootstrapper';
 import { PlanController } from '../controllers/plan.controller';
+import { SchemaDependencies } from '../registrations';
 
 export const PlanRoutes = (
   scopedServiceFactory: ScopedDependencyFactory<
     SchemaValidator,
-    typeof configValidator,
-    'planService'
+    SchemaDependencies,
+    'PlanService'
   >,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) => {
   const router = forklaunchRouter('/plan', openTelemetryCollector);
 
-  const controller = new PlanController(
+  const controller = PlanController(
     scopedServiceFactory,
     openTelemetryCollector
   );

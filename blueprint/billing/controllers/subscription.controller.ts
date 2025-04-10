@@ -1,214 +1,216 @@
-import { Controller } from '@forklaunch/core/controllers';
-import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import {
   array,
   handlers,
+  IdSchema,
+  IdsSchema,
   NextFunction,
-  optional,
   ParsedQs,
   Request,
   Response,
   SchemaValidator,
   string
-} from '@forklaunch/framework-core';
-import { Metrics } from '@forklaunch/framework-monitoring';
-import { configValidator } from '../bootstrapper';
-import { SubscriptionService } from '../interfaces/subscription.service.interface';
+} from '@forklaunch/blueprint-core';
+import { Metrics } from '@forklaunch/blueprint-monitoring';
+import { Controller } from '@forklaunch/core/controllers';
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
+import { ScopedDependencyFactory } from '@forklaunch/core/services';
+import { SubscriptionService } from '@forklaunch/interfaces-billing/interfaces';
 import {
   CreateSubscriptionDtoMapper,
   SubscriptionDtoMapper,
   UpdateSubscriptionDtoMapper
 } from '../models/dtoMapper/subscription.dtoMapper';
+import { BillingProviderEnum } from '../models/enum/billingProvider.enum';
+import { PartyEnum } from '../models/enum/party.enum';
+import { SchemaDependencies } from '../registrations';
 
-export class SubscriptionController
-  implements
-    Controller<SubscriptionService, Request, Response, NextFunction, ParsedQs>
-{
-  constructor(
-    private readonly serviceFactory: ScopedDependencyFactory<
-      SchemaValidator,
-      typeof configValidator,
-      'subscriptionService'
-    >,
-    private readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>
-  ) {}
-
-  createSubscription = handlers.post(
-    SchemaValidator(),
-    '/',
-    {
-      name: 'createSubscription',
-      summary: 'Create a subscription',
-      body: CreateSubscriptionDtoMapper.schema(),
-      responses: {
-        200: SubscriptionDtoMapper.schema()
-      }
-    },
-    async (req, res) => {
-      res
-        .status(200)
-        .json(await this.serviceFactory().createSubscription(req.body));
-    }
-  );
-
-  getSubscription = handlers.get(
-    SchemaValidator(),
-    '/:id',
-    {
-      name: 'getSubscription',
-      summary: 'Get a subscription',
-      params: {
-        id: string
+export const SubscriptionController = (
+  serviceFactory: ScopedDependencyFactory<
+    SchemaValidator,
+    SchemaDependencies,
+    'SubscriptionService'
+  >,
+  openTelemetryCollector: OpenTelemetryCollector<Metrics>
+) =>
+  ({
+    createSubscription: handlers.post(
+      SchemaValidator(),
+      '/',
+      {
+        name: 'createSubscription',
+        summary: 'Create a subscription',
+        body: CreateSubscriptionDtoMapper.schema(),
+        responses: {
+          200: SubscriptionDtoMapper.schema()
+        }
       },
-      responses: {
-        200: SubscriptionDtoMapper.schema()
+      async (req, res) => {
+        openTelemetryCollector.debug('Creating subscription', req.body);
+        res
+          .status(200)
+          .json(await serviceFactory().createSubscription(req.body));
       }
-    },
-    async (req, res) => {
-      res
-        .status(200)
-        .json(await this.serviceFactory().getSubscription(req.params.id));
-    }
-  );
+    ),
 
-  getUserSubscription = handlers.get(
-    SchemaValidator(),
-    '/user/:id',
-    {
-      name: 'getUserSubscription',
-      summary: 'Get a user subscription',
-      params: {
-        id: string
+    getSubscription: handlers.get(
+      SchemaValidator(),
+      '/:id',
+      {
+        name: 'getSubscription',
+        summary: 'Get a subscription',
+        params: IdSchema,
+        responses: {
+          200: SubscriptionDtoMapper.schema()
+        }
       },
-      responses: {
-        200: SubscriptionDtoMapper.schema()
+      async (req, res) => {
+        openTelemetryCollector.debug('Retrieving subscription', req.params);
+        res
+          .status(200)
+          .json(await serviceFactory().getSubscription(req.params));
       }
-    },
-    async (req, res) => {
-      res
-        .status(200)
-        .json(await this.serviceFactory().getUserSubscription(req.params.id));
-    }
-  );
+    ),
 
-  getOrganizationSubscription = handlers.get(
-    SchemaValidator(),
-    '/organization/:id',
-    {
-      name: 'getOrganizationSubscription',
-      summary: 'Get an organization subscription',
-      params: {
-        id: string
+    getUserSubscription: handlers.get(
+      SchemaValidator(),
+      '/user/:id',
+      {
+        name: 'getUserSubscription',
+        summary: 'Get a user subscription',
+        params: IdSchema,
+        responses: {
+          200: SubscriptionDtoMapper.schema()
+        }
       },
-      responses: {
-        200: SubscriptionDtoMapper.schema()
-      }
-    },
-    async (req, res) => {
-      res
-        .status(200)
-        .json(
-          await this.serviceFactory().getOrganizationSubscription(req.params.id)
+      async (req, res) => {
+        openTelemetryCollector.debug(
+          'Retrieving user subscription',
+          req.params
         );
-    }
-  );
-
-  updateSubscription = handlers.put(
-    SchemaValidator(),
-    '/:id',
-    {
-      name: 'updateSubscription',
-      summary: 'Update a subscription',
-      params: {
-        id: string
-      },
-      body: UpdateSubscriptionDtoMapper.schema(),
-      responses: {
-        200: SubscriptionDtoMapper.schema()
+        res
+          .status(200)
+          .json(await serviceFactory().getUserSubscription(req.params));
       }
-    },
-    async (req, res) => {
-      res
-        .status(200)
-        .json(await this.serviceFactory().updateSubscription(req.body));
-    }
-  );
+    ),
 
-  deleteSubscription = handlers.delete(
-    SchemaValidator(),
-    '/:id',
-    {
-      name: 'deleteSubscription',
-      summary: 'Delete a subscription',
-      params: {
-        id: string
+    getOrganizationSubscription: handlers.get(
+      SchemaValidator(),
+      '/organization/:id',
+      {
+        name: 'getOrganizationSubscription',
+        summary: 'Get an organization subscription',
+        params: IdSchema,
+        responses: {
+          200: SubscriptionDtoMapper.schema()
+        }
       },
-      responses: {
-        200: string
+      async (req, res) => {
+        openTelemetryCollector.debug(
+          'Retrieving organization subscription',
+          req.params
+        );
+        res
+          .status(200)
+          .json(await serviceFactory().getOrganizationSubscription(req.params));
       }
-    },
-    async (req, res) => {
-      await this.serviceFactory().deleteSubscription(req.params.id);
-      res.status(200).send(`Deleted subscription ${req.params.id}`);
-    }
-  );
+    ),
 
-  listSubscriptions = handlers.get(
-    SchemaValidator(),
-    '/',
-    {
-      name: 'listSubscriptions',
-      summary: 'List subscriptions',
-      query: {
-        ids: optional(array(string))
+    updateSubscription: handlers.put(
+      SchemaValidator(),
+      '/:id',
+      {
+        name: 'updateSubscription',
+        summary: 'Update a subscription',
+        params: IdSchema,
+        body: UpdateSubscriptionDtoMapper.schema(),
+        responses: {
+          200: SubscriptionDtoMapper.schema()
+        }
       },
-      responses: {
-        200: array(SubscriptionDtoMapper.schema())
+      async (req, res) => {
+        openTelemetryCollector.debug('Update subscription', req.body);
+        res
+          .status(200)
+          .json(await serviceFactory().updateSubscription(req.body));
       }
-    },
-    async (req, res) => {
-      res
-        .status(200)
-        .json(await this.serviceFactory().listSubscriptions(req.query.ids));
-    }
-  );
+    ),
 
-  cancelSubscription = handlers.get(
-    SchemaValidator(),
-    '/:id/cancel',
-    {
-      name: 'cancelSubscription',
-      summary: 'Cancel a subscription',
-      params: {
-        id: string
+    deleteSubscription: handlers.delete(
+      SchemaValidator(),
+      '/:id',
+      {
+        name: 'deleteSubscription',
+        summary: 'Delete a subscription',
+        params: IdSchema,
+        responses: {
+          200: string
+        }
       },
-      responses: {
-        200: string
+      async (req, res) => {
+        openTelemetryCollector.debug('Deleting subscription', req.params);
+        await serviceFactory().deleteSubscription(req.params);
+        res.status(200).send(`Deleted subscription ${req.params.id}`);
       }
-    },
-    async (req, res) => {
-      await this.serviceFactory().cancelSubscription(req.params.id);
-      res.status(200).send(`Cancelled subscription ${req.params.id}`);
-    }
-  );
+    ),
 
-  resumeSubscription = handlers.get(
-    SchemaValidator(),
-    '/:id/resume',
-    {
-      name: 'resumeSubscription',
-      summary: 'Resume a subscription',
-      params: {
-        id: string
+    listSubscriptions: handlers.get(
+      SchemaValidator(),
+      '/',
+      {
+        name: 'listSubscriptions',
+        summary: 'List subscriptions',
+        query: IdsSchema,
+        responses: {
+          200: array(SubscriptionDtoMapper.schema())
+        }
       },
-      responses: {
-        200: string
+      async (req, res) => {
+        openTelemetryCollector.debug('Listing subscriptions', req.query);
+        res
+          .status(200)
+          .json(await serviceFactory().listSubscriptions(req.query));
       }
-    },
-    async (req, res) => {
-      await this.serviceFactory().resumeSubscription(req.params.id);
-      res.status(200).send(`Resumed subscription ${req.params.id}`);
-    }
-  );
-}
+    ),
+
+    cancelSubscription: handlers.get(
+      SchemaValidator(),
+      '/:id/cancel',
+      {
+        name: 'cancelSubscription',
+        summary: 'Cancel a subscription',
+        params: IdSchema,
+        responses: {
+          200: string
+        }
+      },
+      async (req, res) => {
+        openTelemetryCollector.debug('Cancelling subscription', req.params);
+        await serviceFactory().cancelSubscription(req.params);
+        res.status(200).send(`Cancelled subscription ${req.params.id}`);
+      }
+    ),
+
+    resumeSubscription: handlers.get(
+      SchemaValidator(),
+      '/:id/resume',
+      {
+        name: 'resumeSubscription',
+        summary: 'Resume a subscription',
+        params: IdSchema,
+        responses: {
+          200: string
+        }
+      },
+      async (req, res) => {
+        openTelemetryCollector.debug('Resuming subscription', req.params);
+        await serviceFactory().resumeSubscription(req.params);
+        res.status(200).send(`Resumed subscription ${req.params.id}`);
+      }
+    )
+  }) satisfies Controller<
+    SubscriptionService<typeof PartyEnum, typeof BillingProviderEnum>,
+    Request,
+    Response,
+    NextFunction,
+    ParsedQs
+  >;

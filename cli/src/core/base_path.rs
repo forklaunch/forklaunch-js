@@ -20,6 +20,7 @@ pub(crate) enum BasePathLocation {
     Router,
     Anywhere,
     Library,
+    Eject,
 }
 
 fn base_path_parent_count(base_path_location: &BasePathLocation) -> usize {
@@ -27,6 +28,7 @@ fn base_path_parent_count(base_path_location: &BasePathLocation) -> usize {
         BasePathLocation::Service => 0,
         BasePathLocation::Worker => 0,
         BasePathLocation::Library => 0,
+        BasePathLocation::Eject => 1,
         BasePathLocation::Router => 1,
         BasePathLocation::Anywhere => 2,
     }
@@ -38,6 +40,7 @@ fn check_base_path(base_path: &PathBuf, base_path_location: &BasePathLocation) -
     for _ in 0..base_path_parent_count {
         base_path_to_test = base_path_to_test.parent().unwrap().to_path_buf();
     }
+
     if base_path_to_test
         .join(".forklaunch")
         .join("manifest.toml")

@@ -1,20 +1,20 @@
+import { forklaunchRouter, SchemaValidator } from '@forklaunch/blueprint-core';
+import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
-import { forklaunchRouter, SchemaValidator } from '@forklaunch/framework-core';
-import { Metrics } from '@forklaunch/framework-monitoring';
-import { configValidator } from '../bootstrapper';
 import { UserController } from '../controllers/user.controller';
+import { SchemaDependencies } from '../registrations';
 
 export const UserRoutes = (
   scopedUserServiceFactory: ScopedDependencyFactory<
     SchemaValidator,
-    typeof configValidator,
-    'userService'
+    SchemaDependencies,
+    'UserService'
   >,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) => {
   const router = forklaunchRouter('/user', openTelemetryCollector);
-  const controller = new UserController(
+  const controller = UserController(
     scopedUserServiceFactory,
     openTelemetryCollector
   );

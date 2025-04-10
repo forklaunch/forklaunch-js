@@ -9,7 +9,6 @@ import {
   Kind,
   KindGuard,
   TArray,
-  TKind,
   TLiteral,
   TOptional,
   TProperties,
@@ -72,24 +71,32 @@ export class TypeboxSchemaValidator
       <T extends TIdiomaticSchema>(schema: T) => TArray<TResolve<T>>,
       <T extends TUnionContainer>(schemas: [...T]) => TUnion<UnionTResolve<T>>,
       <T extends LiteralSchema>(value: T) => TLiteral<T>,
-      <T extends LiteralSchema>(
-        schemaEnum: Record<string, T>
-      ) => TUnion<UnionTResolve<T[]>>,
+      <T extends Record<string, LiteralSchema>>(
+        schemaEnum: T
+      ) => TUnion<
+        [
+          {
+            [K in keyof T]: TLiteral<T[K]>;
+          }[keyof T]
+        ]
+      >,
       (value: unknown) => value is TSchema,
-      <T extends TIdiomaticSchema>(schema: T, value: unknown) => boolean,
-      <T extends TIdiomaticSchema>(
+      <T extends TIdiomaticSchema | TCatchall>(
+        schema: T,
+        value: unknown
+      ) => boolean,
+      <T extends TIdiomaticSchema | TCatchall>(
         schema: T,
         value: unknown
       ) => ParseResult<TResolve<T>>,
-      <T extends TIdiomaticSchema>(schema: T) => SchemaObject
+      <T extends TIdiomaticSchema | TCatchall>(schema: T) => SchemaObject
     >
 {
-  _Type!: 'TypeBox';
-  _SchemaCatchall!: TKind;
+  _Type = 'TypeBox' as const;
+  _SchemaCatchall!: TCatchall;
   _ValidSchemaObject!: TObject<TProperties> | TArray<TObject<TProperties>>;
 
   string = Type.String();
-  // uuid = Type.String({ format: 'uuid' });
   uuid = Type.String({
     pattern:
       '^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$',
@@ -224,7 +231,7 @@ export class TypeboxSchemaValidator
    * @returns The type of the schema for error messages.
    */
   private errorType(schema: TCatchall) {
-    if (Object.hasOwn(schema, 'errorType')) {
+    if (KindGuard.IsSchema(schema) && Object.hasOwn(schema, 'errorType')) {
       return schema.errorType;
     } else if (KindGuard.IsLiteral(schema)) {
       return schema.const;
@@ -270,7 +277,7 @@ export class TypeboxSchemaValidator
       }
     });
 
-    return Type.Object(newSchema) as TResolve<T>;
+    return Type.Object(newSchema) as unknown as TResolve<T>;
   }
 
   /**
@@ -336,10 +343,24 @@ export class TypeboxSchemaValidator
    * @param {Record<string, LiteralSchema>} schemaEnum - The enum schema.
    * @returns {TUnion<UnionTResolve<T[]>>} The enum schema.
    */
-  enum_<T extends LiteralSchema>(
-    schemaEnum: Record<string, T>
-  ): TUnion<UnionTResolve<T[]>> {
-    return this.union(Object.values(schemaEnum));
+  enum_<T extends Record<string, LiteralSchema>>(
+    schemaEnum: T
+  ): TUnion<
+    [
+      {
+        [K in keyof T]: TLiteral<T[K]>;
+      }[keyof T]
+    ]
+  > {
+    return this.union(
+      Object.values(schemaEnum).map((value) => this.literal(value))
+    ) as unknown as TUnion<
+      [
+        {
+          [K in keyof T]: TLiteral<T[K]>;
+        }[keyof T]
+      ]
+    >;
   }
 
   /**
@@ -358,7 +379,7 @@ export class TypeboxSchemaValidator
    * @param {unknown} value - The value to validate.
    * @returns {boolean} True if valid, otherwise false.
    */
-  validate<T extends TIdiomaticSchema | TSchema>(
+  validate<T extends TIdiomaticSchema | TCatchall>(
     schema: T | TypeCheck<TResolve<T>>,
     value: unknown
   ): boolean {
@@ -379,7 +400,7 @@ export class TypeboxSchemaValidator
    * @param {unknown} value - The value to validate.
    * @returns {ParseResult<TResolve<T>>} The parsing result.
    */
-  parse<T extends TIdiomaticSchema | TSchema>(
+  parse<T extends TIdiomaticSchema | TCatchall>(
     schema: T | TypeCheck<TResolve<T>>,
     value: unknown
   ): ParseResult<TResolve<T>> {
@@ -403,6 +424,19 @@ export class TypeboxSchemaValidator
       }
     }
 
+    errors.forEach((error) => {
+      if (
+        error.type === ValueErrorType.Union &&
+        error.schema.errorType === 'any of'
+      ) {
+        error.errors.forEach((e, idx) => {
+          console.log({
+            p: [`Union Schema Variant ${idx}`, error.path],
+            message: Array.from(e)
+          });
+        });
+      }
+    });
     return errors != null && errors.length === 0
       ? {
           ok: true,
@@ -410,19 +444,39 @@ export class TypeboxSchemaValidator
         }
       : {
           ok: false,
-          errors: errors.map((error) => ({
-            path: error.path.split('/').slice(1),
-            message: error.message
-          }))
+          errors: errors.flatMap((error) => {
+            if (
+              error.type === ValueErrorType.Union &&
+              error.schema.errorType.includes('any of')
+            ) {
+              return error.errors.flatMap((e, idx) =>
+                Array.from(e).map((e) => ({
+                  path: [
+                    `Union Schema Variant ${idx}`,
+                    ...error.path.split('/').slice(1),
+                    ...e.path.split('/').slice(1)
+                  ],
+                  message: e.message
+                }))
+              );
+            } else {
+              return [
+                {
+                  path: error.path.split('/').slice(1),
+                  message: error.message
+                }
+              ];
+            }
+          })
         };
   }
 
   /**
    * Convert a schema to an OpenAPI schema object.
-   * @param {TIdiomaticSchema | TSchema} schema - The schema to convert.
+   * @param {TIdiomaticSchema | TCatchall} schema - The schema to convert.
    * @returns {SchemaObject} The OpenAPI schema object.
    */
-  openapi<T extends TIdiomaticSchema | TSchema>(schema: T): SchemaObject {
+  openapi<T extends TIdiomaticSchema | TCatchall>(schema: T): SchemaObject {
     const schemified = KindGuard.IsSchema(schema)
       ? schema
       : this.schemify(schema);

@@ -11,15 +11,17 @@ export enum Lifetime {
   Scoped
 }
 
-export type Singleton<Args, Value> =
+export type Singleton<Type, Args, Value> =
   | {
       lifetime: Lifetime.Singleton;
+      type: Type;
       value: Value;
     }
-  | ConstructedSingleton<Args, Value>;
+  | ConstructedSingleton<Type, Args, Value>;
 
-export type ConstructedSingleton<Args, Return> = {
+export type ConstructedSingleton<Type, Args, Return> = {
   lifetime: Lifetime.Singleton;
+  type: Type;
   factory: (
     args: Args,
     resolve: <T extends keyof Args>(
@@ -30,8 +32,9 @@ export type ConstructedSingleton<Args, Return> = {
   ) => Return;
 };
 
-export type Constructed<Args, Return> = {
+export type Constructed<Type, Args, Return> = {
   lifetime: Lifetime.Transient | Lifetime.Scoped;
+  type: Type;
   factory: (
     args: Args,
     resolve: <T extends keyof Args>(
@@ -51,28 +54,40 @@ export type SchemaFunction<SV extends AnySchemaValidator> = (
   args: unknown
 ) => IdiomaticSchema<SV>;
 
-export type ConfigValidator<SV extends AnySchemaValidator> = Record<
-  string,
+export type ConfigTypes<SV extends AnySchemaValidator> =
   | Function
   | SchemaFunction<SV>
   | Constructor
   | SchemaConstructor<SV>
-  | IdiomaticSchema<SV>
+  | IdiomaticSchema<SV>;
+
+export type ConfigValidator<SV extends AnySchemaValidator> = Record<
+  string,
+  ConfigTypes<SV> | Record<string, ConfigTypes<SV>>
 >;
+
+type ResolveConfigValue<SV extends AnySchemaValidator, T> =
+  T extends SchemaConstructor<SV>
+    ? Schema<InstanceType<T>, SV>
+    : T extends SchemaFunction<SV>
+      ? (...args: Parameters<T>) => Schema<ReturnType<T>, SV>
+      : T extends Function
+        ? (...args: Parameters<T>) => ReturnType<T>
+        : T extends Constructor
+          ? InstanceType<T>
+          : T extends IdiomaticSchema<SV>
+            ? Schema<T, SV>
+            : T extends Record<string, ConfigTypes<SV>>
+              ? {
+                  [K in keyof T]: ResolveConfigValue<SV, T[K]>;
+                }
+              : Schema<T, SV>;
 
 export type ResolvedConfigValidator<
   SV extends AnySchemaValidator,
   CV extends ConfigValidator<SV>
 > = {
-  [M in keyof CV]: CV[M] extends SchemaConstructor<SV>
-    ? Schema<InstanceType<CV[M]>, SV>
-    : CV[M] extends SchemaFunction<SV>
-    ? Schema<ReturnType<CV[M]>, SV>
-    : CV[M] extends Function
-    ? ReturnType<CV[M]>
-    : CV[M] extends Constructor
-    ? InstanceType<CV[M]>
-    : Schema<CV[M], SV>;
+  [M in keyof CV]: ResolveConfigValue<SV, CV[M]>;
 };
 
 export type ScopedDependencyFactory<

@@ -1,8 +1,8 @@
 import { ConstructedSingleton, Lifetime } from '../types/configInjector.types';
 
-export function isConstructedSingleton<Args, Return>(
+export function isConstructedSingleton<Type, Args, Return>(
   value: unknown
-): value is ConstructedSingleton<Args, Return> {
+): value is ConstructedSingleton<Type, Args, Return> {
   return (
     typeof value === 'object' &&
     value != null &&

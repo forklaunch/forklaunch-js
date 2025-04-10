@@ -1,172 +1,175 @@
-import { Controller } from '@forklaunch/core/controllers';
-import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import {
   array,
   handlers,
+  IdSchema,
+  IdsSchema,
   NextFunction,
-  optional,
   ParsedQs,
   Request,
   Response,
   SchemaValidator,
   string
-} from '@forklaunch/framework-core';
-import { Metrics } from '@forklaunch/framework-monitoring';
-import { configValidator } from '../bootstrapper';
-import { PaymentLinkService } from '../interfaces/paymentLink.service.interface';
+} from '@forklaunch/blueprint-core';
+import { Metrics } from '@forklaunch/blueprint-monitoring';
+import { Controller } from '@forklaunch/core/controllers';
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
+import { ScopedDependencyFactory } from '@forklaunch/core/services';
+import { PaymentLinkService } from '@forklaunch/interfaces-billing/interfaces';
 import {
   CreatePaymentLinkDtoMapper,
   PaymentLinkDtoMapper,
   UpdatePaymentLinkDtoMapper
 } from '../models/dtoMapper/paymentLink.dtoMapper';
+import { CurrencyEnum } from '../models/enum/currency.enum';
+import { PaymentLinkSchemas, SchemaDependencies } from '../registrations';
 
-export class PaymentLinkController
-  implements
-    Controller<PaymentLinkService, Request, Response, NextFunction, ParsedQs>
-{
-  constructor(
-    private readonly serviceFactory: ScopedDependencyFactory<
-      SchemaValidator,
-      typeof configValidator,
-      'paymentLinkService'
-    >,
-    private readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>
-  ) {}
-
-  createPaymentLink = handlers.post(
-    SchemaValidator(),
-    '/',
-    {
-      name: 'createPaymentLink',
-      summary: 'Create a payment link',
-      body: CreatePaymentLinkDtoMapper.schema(),
-      responses: {
-        200: PaymentLinkDtoMapper.schema()
-      }
-    },
-    async (req, res) => {
-      res
-        .status(200)
-        .json(await this.serviceFactory().createPaymentLink(req.body));
-    }
-  );
-
-  getPaymentLink = handlers.get(
-    SchemaValidator(),
-    '/:id',
-    {
-      name: 'getPaymentLink',
-      summary: 'Get a payment link',
-      params: {
-        id: string
+export const PaymentLinkController = (
+  serviceFactory: ScopedDependencyFactory<
+    SchemaValidator,
+    SchemaDependencies,
+    'PaymentLinkService'
+  >,
+  openTelemetryCollector: OpenTelemetryCollector<Metrics>
+) =>
+  ({
+    createPaymentLink: handlers.post(
+      SchemaValidator(),
+      '/',
+      {
+        name: 'createPaymentLink',
+        summary: 'Create a payment link',
+        body: CreatePaymentLinkDtoMapper.schema(),
+        responses: {
+          200: PaymentLinkDtoMapper.schema()
+        }
       },
-      responses: {
-        200: PaymentLinkDtoMapper.schema()
+      async (req, res) => {
+        openTelemetryCollector.debug('Creating payment link', req.body);
+        res
+          .status(200)
+          .json(await serviceFactory().createPaymentLink(req.body));
       }
-    },
-    async (req, res) => {
-      res
-        .status(200)
-        .json(await this.serviceFactory().getPaymentLink(req.params.id));
-    }
-  );
+    ),
 
-  updatePaymentLink = handlers.put(
-    SchemaValidator(),
-    '/:id',
-    {
-      name: 'updatePaymentLink',
-      summary: 'Update a payment link',
-      body: UpdatePaymentLinkDtoMapper.schema(),
-      params: {
-        id: string
+    getPaymentLink: handlers.get(
+      SchemaValidator(),
+      '/:id',
+      {
+        name: 'getPaymentLink',
+        summary: 'Get a payment link',
+        params: IdSchema,
+        responses: {
+          200: PaymentLinkDtoMapper.schema()
+        }
       },
-      responses: {
-        200: PaymentLinkDtoMapper.schema()
+      async (req, res) => {
+        openTelemetryCollector.debug('Retrieving payment link', req.params);
+        res.status(200).json(await serviceFactory().getPaymentLink(req.params));
       }
-    },
-    async (req, res) => {
-      res
-        .status(200)
-        .json(await this.serviceFactory().updatePaymentLink(req.body));
-    }
-  );
+    ),
 
-  expirePaymentLink = handlers.delete(
-    SchemaValidator(),
-    '/:id',
-    {
-      name: 'expirePaymentLink',
-      summary: 'Expire a payment link',
-      params: {
-        id: string
+    updatePaymentLink: handlers.put(
+      SchemaValidator(),
+      '/:id',
+      {
+        name: 'updatePaymentLink',
+        summary: 'Update a payment link',
+        body: UpdatePaymentLinkDtoMapper.schema(),
+        params: IdSchema,
+        responses: {
+          200: PaymentLinkDtoMapper.schema()
+        }
       },
-      responses: {
-        200: string
+      async (req, res) => {
+        openTelemetryCollector.debug('Updating payment link', req.body);
+        res
+          .status(200)
+          .json(await serviceFactory().updatePaymentLink(req.body));
       }
-    },
-    async (req, res) => {
-      await this.serviceFactory().expirePaymentLink(req.params.id);
-      res.status(200).send(`Expired payment link ${req.params.id}`);
-    }
-  );
+    ),
 
-  handlePaymentSuccess = handlers.get(
-    SchemaValidator(),
-    '/:id/success',
-    {
-      name: 'handlePaymentSuccess',
-      summary: 'Handle a payment success',
-      params: {
-        id: string
+    expirePaymentLink: handlers.delete(
+      SchemaValidator(),
+      '/:id',
+      {
+        name: 'expirePaymentLink',
+        summary: 'Expire a payment link',
+        params: IdSchema,
+        responses: {
+          200: string
+        }
       },
-      responses: {
-        200: string
+      async (req, res) => {
+        openTelemetryCollector.debug('Expiring payment link', req.params);
+        await serviceFactory().expirePaymentLink(req.params);
+        res.status(200).send(`Expired payment link ${req.params.id}`);
       }
-    },
-    async (req, res) => {
-      await this.serviceFactory().handlePaymentSuccess(req.params.id);
-      res.status(200).send(`Handled payment success for ${req.params.id}`);
-    }
-  );
+    ),
 
-  handlePaymentFailure = handlers.get(
-    SchemaValidator(),
-    '/:id/failure',
-    {
-      name: 'handlePaymentFailure',
-      summary: 'Handle a payment failure',
-      params: {
-        id: string
+    handlePaymentSuccess: handlers.get(
+      SchemaValidator(),
+      '/:id/success',
+      {
+        name: 'handlePaymentSuccess',
+        summary: 'Handle a payment success',
+        params: IdSchema,
+        responses: {
+          200: string
+        }
       },
-      responses: {
-        200: string
+      async (req, res) => {
+        openTelemetryCollector.debug(
+          'Handling payment link success',
+          req.params
+        );
+        await serviceFactory().handlePaymentSuccess(req.params);
+        res.status(200).send(`Handled payment success for ${req.params.id}`);
       }
-    },
-    async (req, res) => {
-      await this.serviceFactory().handlePaymentFailure(req.params.id);
-      res.status(200).send(`Handled payment failure for ${req.params.id}`);
-    }
-  );
+    ),
 
-  listPaymentLinks = handlers.get(
-    SchemaValidator(),
-    '/',
-    {
-      name: 'listPaymentLinks',
-      summary: 'List payment links',
-      query: {
-        ids: optional(array(string))
+    handlePaymentFailure: handlers.get(
+      SchemaValidator(),
+      '/:id/failure',
+      {
+        name: 'handlePaymentFailure',
+        summary: 'Handle a payment failure',
+        params: IdSchema,
+        responses: {
+          200: string
+        }
       },
-      responses: {
-        200: array(PaymentLinkDtoMapper.schema())
+      async (req, res) => {
+        openTelemetryCollector.debug(
+          'Handling payment link failure',
+          req.params
+        );
+        await serviceFactory().handlePaymentFailure(req.params);
+        res.status(200).send(`Handled payment failure for ${req.params.id}`);
       }
-    },
-    async (req, res) => {
-      res
-        .status(200)
-        .json(await this.serviceFactory().listPaymentLinks(req.query.ids));
-    }
-  );
-}
+    ),
+
+    listPaymentLinks: handlers.get(
+      SchemaValidator(),
+      '/',
+      {
+        name: 'listPaymentLinks',
+        summary: 'List payment links',
+        query: IdsSchema,
+        responses: {
+          200: array(PaymentLinkSchemas.PaymentLinkSchema(CurrencyEnum))
+        }
+      },
+      async (req, res) => {
+        openTelemetryCollector.debug('Listing payment links', req.query);
+        res
+          .status(200)
+          .json(await serviceFactory().listPaymentLinks(req.query));
+      }
+    )
+  }) satisfies Controller<
+    PaymentLinkService<typeof CurrencyEnum>,
+    Request,
+    Response,
+    NextFunction,
+    ParsedQs
+  >;

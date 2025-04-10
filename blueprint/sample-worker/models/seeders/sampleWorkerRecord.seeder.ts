@@ -1,4 +1,4 @@
-import { BaseEntity } from '@forklaunch/framework-core';
+import { BaseEntity } from '@forklaunch/blueprint-core';
 import { Entity, EntityManager, Property } from '@mikro-orm/core';
 import { Seeder } from '@mikro-orm/seeder';
 import { sampleWorkerRecord } from '../../constants/seed.data';

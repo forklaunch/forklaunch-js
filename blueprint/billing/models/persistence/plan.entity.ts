@@ -1,4 +1,4 @@
-import { BaseEntity } from '@forklaunch/framework-core';
+import { BaseEntity } from '@forklaunch/blueprint-core';
 import { ArrayType, Entity, Enum, Property, Unique } from '@mikro-orm/core';
 import { BillingProviderEnum } from '../enum/billingProvider.enum';
 import { PlanCadenceEnum } from '../enum/planCadence.enum';
@@ -7,9 +7,6 @@ import { PlanCadenceEnum } from '../enum/planCadence.enum';
 export class Plan extends BaseEntity {
   @Property()
   active!: boolean;
-
-  @Property()
-  type!: string;
 
   @Property()
   name!: string;

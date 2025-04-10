@@ -1,4 +1,4 @@
-import { BaseEntity } from '@forklaunch/framework-core';
+import { BaseEntity } from '@forklaunch/blueprint-core';
 import { Entity, Enum, Property } from '@mikro-orm/core';
 import { CurrencyEnum } from '../enum/currency.enum';
 

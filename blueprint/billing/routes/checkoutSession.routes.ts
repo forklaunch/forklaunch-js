@@ -1,21 +1,21 @@
+import { forklaunchRouter, SchemaValidator } from '@forklaunch/blueprint-core';
+import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
-import { forklaunchRouter, SchemaValidator } from '@forklaunch/framework-core';
-import { Metrics } from '@forklaunch/framework-monitoring';
-import { configValidator } from '../bootstrapper';
 import { CheckoutSessionController } from '../controllers/checkoutSession.controller';
+import { SchemaDependencies } from '../registrations';
 
 export const CheckoutSessionRoutes = (
   scopedServiceFactory: ScopedDependencyFactory<
     SchemaValidator,
-    typeof configValidator,
-    'checkoutSessionService'
+    SchemaDependencies,
+    'CheckoutSessionService'
   >,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) => {
   const router = forklaunchRouter('/checkout-session', openTelemetryCollector);
 
-  const controller = new CheckoutSessionController(
+  const controller = CheckoutSessionController(
     scopedServiceFactory,
     openTelemetryCollector
   );

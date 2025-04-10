@@ -1,122 +1,129 @@
-import { Controller } from '@forklaunch/core/controllers';
-import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import {
   array,
   handlers,
+  IdSchema,
+  IdsSchema,
   NextFunction,
-  optional,
   ParsedQs,
   Request,
   Response,
   SchemaValidator,
   string
-} from '@forklaunch/framework-core';
-import { Metrics } from '@forklaunch/framework-monitoring';
-import { configValidator } from '../bootstrapper';
-import { PlanService } from '../interfaces/plan.service.interface';
+} from '@forklaunch/blueprint-core';
+import { Metrics } from '@forklaunch/blueprint-monitoring';
+import { Controller } from '@forklaunch/core/controllers';
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
+import { ScopedDependencyFactory } from '@forklaunch/core/services';
+import { PlanService } from '@forklaunch/interfaces-billing/interfaces';
 import {
   CreatePlanDtoMapper,
   PlanDtoMapper,
   UpdatePlanDtoMapper
 } from '../models/dtoMapper/plan.dtoMapper';
+import { BillingProviderEnum } from '../models/enum/billingProvider.enum';
+import { PlanCadenceEnum } from '../models/enum/planCadence.enum';
+import { PlanSchemas, SchemaDependencies } from '../registrations';
 
-export class PlanController
-  implements Controller<PlanService, Request, Response, NextFunction, ParsedQs>
-{
-  constructor(
-    private readonly serviceFactory: ScopedDependencyFactory<
-      SchemaValidator,
-      typeof configValidator,
-      'planService'
-    >,
-    private readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>
-  ) {}
-
-  createPlan = handlers.post(
-    SchemaValidator(),
-    '/',
-    {
-      name: 'createPlan',
-      summary: 'Create a plan',
-      body: CreatePlanDtoMapper.schema(),
-      responses: {
-        200: PlanDtoMapper.schema()
-      }
-    },
-    async (req, res) => {
-      res.status(200).json(await this.serviceFactory().createPlan(req.body));
-    }
-  );
-
-  getPlan = handlers.get(
-    SchemaValidator(),
-    '/:id',
-    {
-      name: 'getPlan',
-      summary: 'Get a plan',
-      params: {
-        id: string
+export const PlanController = (
+  serviceFactory: ScopedDependencyFactory<
+    SchemaValidator,
+    SchemaDependencies,
+    'PlanService'
+  >,
+  openTelemetryCollector: OpenTelemetryCollector<Metrics>
+) =>
+  ({
+    createPlan: handlers.post(
+      SchemaValidator(),
+      '/',
+      {
+        name: 'createPlan',
+        summary: 'Create a plan',
+        body: CreatePlanDtoMapper.schema(),
+        responses: {
+          200: PlanDtoMapper.schema()
+        }
       },
-      responses: {
-        200: PlanDtoMapper.schema()
+      async (req, res) => {
+        openTelemetryCollector.debug('Creating plan', req.body);
+        res.status(200).json(await serviceFactory().createPlan(req.body));
       }
-    },
-    async (req, res) => {
-      res.status(200).json(await this.serviceFactory().getPlan(req.params.id));
-    }
-  );
+    ),
 
-  updatePlan = handlers.put(
-    SchemaValidator(),
-    '/',
-    {
-      name: 'updatePlan',
-      summary: 'Update a plan',
-      body: UpdatePlanDtoMapper.schema(),
-      responses: {
-        200: PlanDtoMapper.schema()
-      }
-    },
-    async (req, res) => {
-      res.status(200).json(await this.serviceFactory().updatePlan(req.body));
-    }
-  );
-
-  deletePlan = handlers.delete(
-    SchemaValidator(),
-    '/:id',
-    {
-      name: 'deletePlan',
-      summary: 'Delete a plan',
-      params: {
-        id: string
+    getPlan: handlers.get(
+      SchemaValidator(),
+      '/:id',
+      {
+        name: 'getPlan',
+        summary: 'Get a plan',
+        params: IdSchema,
+        responses: {
+          200: PlanSchemas.PlanSchema(PlanCadenceEnum, BillingProviderEnum)
+        }
       },
-      responses: {
-        200: string
+      async (req, res) => {
+        openTelemetryCollector.debug('Retrieving plan', req.params);
+        res.status(200).json(await serviceFactory().getPlan(req.params));
       }
-    },
-    async (req, res) => {
-      await this.serviceFactory().deletePlan(req.params.id);
-      res.status(200).json(`Deleted plan ${req.params.id}`);
-    }
-  );
+    ),
 
-  listPlans = handlers.get(
-    SchemaValidator(),
-    '/',
-    {
-      name: 'listPlans',
-      summary: 'List plans',
-      query: {
-        ids: optional(array(string))
+    updatePlan: handlers.put(
+      SchemaValidator(),
+      '/',
+      {
+        name: 'updatePlan',
+        summary: 'Update a plan',
+        body: UpdatePlanDtoMapper.schema(),
+        responses: {
+          200: PlanDtoMapper.schema()
+        }
       },
-      responses: {
-        200: array(PlanDtoMapper.schema())
+      async (req, res) => {
+        openTelemetryCollector.debug('Updating plan', req.body);
+        res.status(200).json(await serviceFactory().updatePlan(req.body));
       }
-    },
-    async (req, res) => {
-      res.status(200).json(await this.serviceFactory().listPlans());
-    }
-  );
-}
+    ),
+
+    deletePlan: handlers.delete(
+      SchemaValidator(),
+      '/:id',
+      {
+        name: 'deletePlan',
+        summary: 'Delete a plan',
+        params: IdSchema,
+        responses: {
+          200: string
+        }
+      },
+      async (req, res) => {
+        openTelemetryCollector.debug('Deleting plan', req.params);
+        await serviceFactory().deletePlan(req.params);
+        res.status(200).json(`Deleted plan ${req.params.id}`);
+      }
+    ),
+
+    listPlans: handlers.get(
+      SchemaValidator(),
+      '/',
+      {
+        name: 'listPlans',
+        summary: 'List plans',
+        query: IdsSchema,
+        responses: {
+          200: array(
+            PlanSchemas.PlanSchema(PlanCadenceEnum, BillingProviderEnum)
+          )
+        }
+      },
+      async (req, res) => {
+        openTelemetryCollector.debug('Listing plans', req.query);
+        res.status(200).json(await serviceFactory().listPlans(req.query));
+      }
+    )
+  }) satisfies Controller<
+    PlanService<typeof PlanCadenceEnum, typeof BillingProviderEnum>,
+    Request,
+    Response,
+    NextFunction,
+    ParsedQs
+  >;

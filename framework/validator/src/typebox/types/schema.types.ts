@@ -11,10 +11,12 @@ import {
 } from '@sinclair/typebox';
 import { TypeCheck } from '@sinclair/typebox/compiler';
 import {
+  IdiomaticSchema,
   Increment,
   KeyTypes,
   LiteralSchema
 } from '../../shared/types/schema.types';
+import { TypeboxSchemaValidator } from '../typeboxSchemaValidator';
 
 /**
  * Represents a catch-all schema type.
@@ -26,9 +28,8 @@ export type TCatchall = TSchema;
  *
  * @template T - The type to check and possibly convert to an array schema.
  */
-export type TOuterArray<T> = T extends TObject<TObjectShape>
-  ? TArray<T>
-  : TNever;
+export type TOuterArray<T> =
+  T extends TObject<TObjectShape> ? TArray<T> : TNever;
 
 /**
  * Represents the shape of an object schema.
@@ -47,9 +48,7 @@ export type TObject<T> = T extends TObjectShape ? OriginalTObject<T> : TNever;
  *
  * @template T - The schema type to translate.
  */
-export type TSchemaTranslate<T> = T extends TCatchall
-  ? StaticDecode<T>
-  : TNever;
+export type TSchemaTranslate<T> = T extends TSchema ? StaticDecode<T> : TNever;
 
 /**
  * Represents an unboxed object schema where each key can have an idiomatic schema.
@@ -61,7 +60,7 @@ export type UnboxedTObjectSchema = {
 /**
  * Represents an idiomatic schema which can be an unboxed object schema or a literal schema.
  */
-export type TIdiomaticSchema = UnboxedTObjectSchema | LiteralSchema;
+export type TIdiomaticSchema = IdiomaticSchema<TypeboxSchemaValidator>;
 
 /**
  * Represents a container for a union of idiomatic schemas.
@@ -73,8 +72,17 @@ export type TUnionContainer = [...TIdiomaticSchema[]];
  *
  * @template T - The union container to resolve.
  */
-export type UnionTResolve<T extends TUnionContainer> =
-  T extends (infer UnionTypes)[] ? [TResolve<UnionTypes>] : TNever;
+export type UnionTResolve<
+  T extends TUnionContainer,
+  Acc extends TIdiomaticSchema[] = []
+> = T extends [
+  infer Head extends TIdiomaticSchema,
+  ...infer Tail extends TUnionContainer
+]
+  ? UnionTResolve<Tail, [...Acc, TResolve<Head>]>
+  : T extends []
+    ? Acc
+    : TNever[];
 
 /**
  * Resolves a schema type T to its resolved type. The depth is limited to 12 to prevent infinite recursion, due to StaticDecode limitations.
@@ -85,17 +93,17 @@ export type UnionTResolve<T extends TUnionContainer> =
 export type TResolve<T, Depth extends number = 0> = Depth extends 12
   ? TUnknown
   : T extends LiteralSchema
-  ? TLiteral<T>
-  : T extends TSchema
-  ? T
-  : T extends TKind
-  ? T
-  : T extends TObject<TObjectShape>
-  ? T
-  : T extends UnboxedTObjectSchema
-  ? TObject<{
-      [K in keyof T]: TResolve<T[K], Increment<Depth>>;
-    }>
-  : T extends TypeCheck<infer Type>
-  ? TResolve<Type, Increment<Depth>>
-  : TNever;
+    ? TLiteral<T>
+    : T extends TSchema
+      ? T
+      : T extends TKind
+        ? T
+        : T extends UnboxedTObjectSchema
+          ? TObject<{
+              [K in keyof T]: TResolve<T[K], Increment<Depth>>;
+            }> extends infer R
+            ? R
+            : TNever
+          : T extends TypeCheck<infer Type>
+            ? TResolve<Type, Increment<Depth>>
+            : TNever;

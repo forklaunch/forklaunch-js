@@ -59,7 +59,7 @@ A minimal router will add the following files to your service/worker:
 ```
 
 Additionally, the router will edit the following files in the service:
-- `bootstrapper.ts`: Adds dependency injection configuration
+- `registrations.ts`: Adds dependency injection configuration
 - `server.ts`/`worker.ts`: Registers the router with the application
 
 ### Next Steps
@@ -75,7 +75,7 @@ After adding a router:
 
 1. **Route Conflicts**: Ensure your route paths don't conflict with existing routes
 2. **Middleware Order**: Check that middleware is registered in the correct order
-3. **Dependency Injection**: Verify all dependencies are properly registered in bootstrapper.ts
+3. **Dependency Injection**: Verify all dependencies are properly registered in registrations.ts
 
 ### Best Practices
 

@@ -11,80 +11,79 @@ import {
   Request,
   Response,
   SchemaValidator
-} from '@forklaunch/framework-core';
-import { Metrics } from '@forklaunch/framework-monitoring';
-import { configValidator } from '../bootstrapper';
+} from '@forklaunch/blueprint-core';
+import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { SampleWorkerService } from '../interfaces/sampleWorker.interface';
 import {
   SampleWorkerRequestDtoMapper,
   SampleWorkerResponseDtoMapper
 } from '../models/dtoMapper/sampleWorker.dtoMapper';
+import { SchemaDependencies } from '../registrations';
 
 // Controller class that implements the SampleWorkerService interface
-export class SampleWorkerController
-  implements
-    Controller<SampleWorkerService, Request, Response, NextFunction, ParsedQs>
-{
-  constructor(
-    // scopeFactory returns new scopes that can be used for joint transactions
-    private readonly scopeFactory: () => ConfigInjector<
-      SchemaValidator,
-      typeof configValidator
-    >,
-    // serviceFactory returns a new service instance on demand
-    private serviceFactory: ScopedDependencyFactory<
-      SchemaValidator,
-      typeof configValidator,
-      'sampleWorkerService'
-    >,
-    private openTelemetryCollector: OpenTelemetryCollector<Metrics>
-  ) {}
-
-  // GET endpoint handler that returns a simple message
-  sampleWorkerGet = handlers.get(
-    SchemaValidator(),
-    '/:id',
-    {
-      name: 'sampleWorker',
-      summary: 'SampleWorker',
-      params: {
-        id: 'string'
+export const SampleWorkerController = (
+  // scopeFactory returns new scopes that can be used for joint transactions
+  scopeFactory: () => ConfigInjector<SchemaValidator, SchemaDependencies>,
+  // serviceFactory returns a new service instance on demand
+  serviceFactory: ScopedDependencyFactory<
+    SchemaValidator,
+    SchemaDependencies,
+    'SampleWorkerService'
+  >,
+  openTelemetryCollector: OpenTelemetryCollector<Metrics>
+) =>
+  ({
+    // GET endpoint handler that returns a simple message
+    sampleWorkerGet: handlers.get(
+      SchemaValidator(),
+      '/:id',
+      {
+        name: 'sampleWorker',
+        summary: 'SampleWorker',
+        params: {
+          id: 'string'
+        },
+        responses: {
+          // specifies the success response schema using DtoMapper constructs
+          200: SampleWorkerResponseDtoMapper.schema()
+        }
       },
-      responses: {
-        // specifies the success response schema using DtoMapper constructs
-        200: SampleWorkerResponseDtoMapper.schema()
+      async (req, res) => {
+        openTelemetryCollector.debug('SampleWorkerGet', req.params);
+        res.status(200).json({
+          message: 'SampleWorker',
+          processed: false,
+          retryCount: 0
+        });
       }
-    },
-    async (req, res) => {
-      res.status(200).json({
-        message: 'SampleWorker',
-        processed: false,
-        retryCount: 0
-      });
-    }
-  );
+    ),
 
-  // POST endpoint handler that processes request body and returns response from service
-  sampleWorkerPost = handlers.post(
-    SchemaValidator(),
-    '/',
-    {
-      name: 'sampleWorker',
-      summary: 'SampleWorker',
-      // specifies the request body schema using DtoMapper constructs
-      body: SampleWorkerRequestDtoMapper.schema(),
-      responses: {
-        // specifies the success response schema using DtoMapper constructs
-        200: SampleWorkerResponseDtoMapper.schema()
+    // POST endpoint handler that processes request body and returns response from service
+    sampleWorkerPost: handlers.post(
+      SchemaValidator(),
+      '/',
+      {
+        name: 'sampleWorker',
+        summary: 'SampleWorker',
+        // specifies the request body schema using DtoMapper constructs
+        body: SampleWorkerRequestDtoMapper.schema(),
+        responses: {
+          // specifies the success response schema using DtoMapper constructs
+          200: SampleWorkerResponseDtoMapper.schema()
+        }
+      },
+      async (req, res) => {
+        openTelemetryCollector.debug('SampleWorkerPost', req.body);
+        res.status(200).json(
+          // constructs a new service instance using the scopeFactory and calls the sampleWorkerPost method
+          await serviceFactory(scopeFactory()).sampleWorkerPost(req.body)
+        );
       }
-    },
-    async (req, res) => {
-      res.status(200).json(
-        // constructs a new service instance using the scopeFactory and calls the sampleWorkerPost method
-        await this.serviceFactory(this.scopeFactory()).sampleWorkerPost(
-          req.body
-        )
-      );
-    }
-  );
-}
+    )
+  }) satisfies Controller<
+    SampleWorkerService,
+    Request,
+    Response,
+    NextFunction,
+    ParsedQs
+  >;

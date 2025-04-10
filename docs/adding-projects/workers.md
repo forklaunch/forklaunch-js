@@ -43,7 +43,7 @@ A minimal worker will have the following structure:
 
 ```bash
 .
-├── bootstrapper.ts # the dependency injector/configuration loader
+├── registrations.ts # the dependency injector/configuration loader
 ├── client.ts # the client for the worker, defining the event handlers
 ├── constants
 │   └── seed.data.ts # seed data for new entity types (only relevant for database workers)

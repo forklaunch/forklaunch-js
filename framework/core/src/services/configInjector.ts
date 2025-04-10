@@ -20,6 +20,28 @@ import {
   Singleton
 } from './types/configInjector.types';
 
+export function createConfigInjector<
+  SV extends AnySchemaValidator,
+  CV extends ConfigValidator<SV>
+>(
+  schemaValidator: SV,
+  dependenciesDefinition: {
+    [K in keyof CV]:
+      | Singleton<
+          CV[K],
+          Omit<ResolvedConfigValidator<SV, CV>, K>,
+          ResolvedConfigValidator<SV, CV>[K]
+        >
+      | Constructed<
+          CV[K],
+          Omit<ResolvedConfigValidator<SV, CV>, K>,
+          ResolvedConfigValidator<SV, CV>[K]
+        >;
+  }
+) {
+  return new ConfigInjector<SV, CV>(schemaValidator, dependenciesDefinition);
+}
+
 export class ConfigInjector<
   SV extends AnySchemaValidator,
   CV extends ConfigValidator<SV>
@@ -28,9 +50,20 @@ export class ConfigInjector<
     [K in keyof CV]?: ResolvedConfigValidator<SV, CV>[K];
   } = {};
 
+  readonly configShapes: CV;
+
+  load(inheritedScopeInstances?: {
+    [K in keyof CV]?: ResolvedConfigValidator<SV, CV>[K];
+  }): this {
+    for (const token in inheritedScopeInstances) {
+      this.instances[token] = inheritedScopeInstances[token];
+    }
+    return this;
+  }
+
   private loadSingletons(inheritedScopeInstances?: {
     [K in keyof CV]?: ResolvedConfigValidator<SV, CV>[K];
-  }): void {
+  }): this {
     for (const token in this.dependenciesDefinition) {
       const definition = this.dependenciesDefinition[token];
       if (definition.lifetime === Lifetime.Singleton) {
@@ -38,6 +71,7 @@ export class ConfigInjector<
           this.instances[token] = inheritedScopeInstances[token];
         } else if (
           isConstructedSingleton<
+            CV[typeof token],
             Omit<ResolvedConfigValidator<SV, CV>, typeof token>,
             ResolvedConfigValidator<SV, CV>[typeof token]
           >(definition)
@@ -51,16 +85,19 @@ export class ConfigInjector<
         }
       }
     }
+    return this;
   }
 
   private resolveInstance<T extends keyof CV>(
     token: T,
     definition:
       | ConstructedSingleton<
+          CV[T],
           Omit<ResolvedConfigValidator<SV, CV>, T>,
           ResolvedConfigValidator<SV, CV>[T]
         >
       | Constructed<
+          CV[T],
           Omit<ResolvedConfigValidator<SV, CV>, T>,
           ResolvedConfigValidator<SV, CV>[T]
         >,
@@ -69,7 +106,7 @@ export class ConfigInjector<
   ): ResolvedConfigValidator<SV, CV>[T] {
     const injectorArgument = extractArgumentNames(definition.factory)[0];
     // short circuit as no args
-    if (injectorArgument === '_args') {
+    if (!injectorArgument || injectorArgument === '_args') {
       return definition.factory(
         {} as Omit<ResolvedConfigValidator<SV, CV>, T>,
         this.resolve.bind(this),
@@ -112,23 +149,31 @@ export class ConfigInjector<
 
   constructor(
     private schemaValidator: SV,
-    private configShapes: CV,
     private dependenciesDefinition: {
-      [K in keyof CV]:
+      [K in keyof CV]: (
         | Singleton<
+            CV[K],
             Omit<ResolvedConfigValidator<SV, CV>, K>,
             ResolvedConfigValidator<SV, CV>[K]
           >
         | Constructed<
+            CV[K],
             Omit<ResolvedConfigValidator<SV, CV>, K>,
             ResolvedConfigValidator<SV, CV>[K]
-          >;
-    },
-    inheritedScopeInstances?: {
-      [K in keyof CV]?: ResolvedConfigValidator<SV, CV>[K];
+          >
+      ) & {
+        type: CV[K];
+      };
     }
   ) {
-    this.loadSingletons(inheritedScopeInstances);
+    this.configShapes = Object.entries(this.dependenciesDefinition).reduce(
+      (acc, [key, { type }]) => ({
+        ...acc,
+        [key]: type
+      }),
+      {} as Record<keyof CV, CV[keyof CV]>
+    ) as CV;
+    this.loadSingletons();
   }
 
   safeValidateConfigSingletons(): ParseResult<ValidConfigInjector<SV, CV>> {
@@ -212,10 +257,8 @@ export class ConfigInjector<
           ok: true as const,
           value: new ValidConfigInjector<SV, CV>(
             this.schemaValidator,
-            this.configShapes,
-            this.dependenciesDefinition,
-            this.instances
-          )
+            this.dependenciesDefinition
+          ).loadSingletons({ ...this.instances })
         }
       : {
           ok: false as const,
@@ -261,10 +304,36 @@ export class ConfigInjector<
 
       switch (definition.lifetime) {
         case Lifetime.Singleton: {
-          // return definition.value;
+          if (
+            isConstructedSingleton<
+              CV[T],
+              Omit<ResolvedConfigValidator<SV, CV>, T>,
+              ResolvedConfigValidator<SV, CV>[T]
+            >(definition) &&
+            !this.instances[token]
+          ) {
+            this.instances[token] = this.resolveInstance<T>(
+              token,
+              definition,
+              context,
+              resolutionPath
+            );
+          }
           return this.instances[token] as ResolvedConfigValidator<SV, CV>[T];
         }
         case Lifetime.Scoped: {
+          if (
+            !isConstructed<
+              CV[T],
+              Omit<ResolvedConfigValidator<SV, CV>, T>,
+              ResolvedConfigValidator<SV, CV>[T]
+            >(definition)
+          ) {
+            throw new Error(
+              `Invalid dependency definition for ${String(token)}`
+            );
+          }
+
           const scopedInstance = this.resolveInstance<T>(
             token,
             definition,
@@ -275,6 +344,18 @@ export class ConfigInjector<
           return scopedInstance;
         }
         case Lifetime.Transient: {
+          if (
+            !isConstructed<
+              CV[T],
+              Omit<ResolvedConfigValidator<SV, CV>, T>,
+              ResolvedConfigValidator<SV, CV>[T]
+            >(definition)
+          ) {
+            throw new Error(
+              `Invalid dependency definition for ${String(token)}`
+            );
+          }
+
           return this.resolveInstance<T>(
             token,
             definition,
@@ -308,15 +389,48 @@ export class ConfigInjector<
   createScope(): ConfigInjector<SV, CV> {
     return new ConfigInjector<SV, CV>(
       this.schemaValidator,
-      this.configShapes,
-      this.dependenciesDefinition,
-      this.instances
-    );
+      this.dependenciesDefinition
+    ).loadSingletons({ ...this.instances });
   }
 
   dispose(): void {
     this.instances = {};
     this.loadSingletons();
+  }
+
+  chain<ChainedCV extends ConfigValidator<SV>>(dependenciesDefinition: {
+    [K in keyof ChainedCV]: {
+      type: ChainedCV[K];
+    } & (
+      | Singleton<
+          ChainedCV[K],
+          Omit<ResolvedConfigValidator<SV, CV & ChainedCV>, K>,
+          ResolvedConfigValidator<SV, ChainedCV>[K]
+        >
+      | Constructed<
+          ChainedCV[K],
+          Omit<ResolvedConfigValidator<SV, CV & ChainedCV>, K>,
+          ResolvedConfigValidator<SV, ChainedCV>[K]
+        >
+    );
+  }): ConfigInjector<SV, CV & ChainedCV> {
+    return new ConfigInjector<SV, CV>(this.schemaValidator, {
+      ...this.dependenciesDefinition,
+      ...dependenciesDefinition
+    }).load({ ...this.instances }) as unknown as ConfigInjector<
+      SV,
+      CV & ChainedCV
+    >;
+  }
+
+  tokens(): {
+    [K in keyof CV]: K;
+  } {
+    return Object.fromEntries(
+      Object.keys(this.dependenciesDefinition).map((key) => [key, key])
+    ) as {
+      [K in keyof CV]: K;
+    };
   }
 }
 

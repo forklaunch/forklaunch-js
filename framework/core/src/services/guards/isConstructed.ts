@@ -1,8 +1,8 @@
 import { Constructed } from '../types/configInjector.types';
 
-export function isConstructed(
+export function isConstructed<Type, Args, Return>(
   value: unknown
-): value is Constructed<unknown, unknown> {
+): value is Constructed<Type, Args, Return> {
   return (
     typeof value === 'object' &&
     value != null &&

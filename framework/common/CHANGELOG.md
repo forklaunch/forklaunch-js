@@ -1,5 +1,17 @@
 # @forklaunch/common
 
+## 0.2.6
+
+### Patch Changes
+
+- Update package versions
+
+## 0.2.5
+
+### Patch Changes
+
+- Syntactic QOL improvements (validator zod args, config injector, core utilities, test utilities, etc.)
+
 ## 0.2.4
 
 ### Patch Changes

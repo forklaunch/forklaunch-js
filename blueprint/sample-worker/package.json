@@ -1,5 +1,5 @@
 {
-  "name": "@forklaunch/framework-sample-worker",
+  "name": "@forklaunch/blueprint-sample-worker",
   "version": "0.1.0",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -34,29 +34,29 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/core": "^0.5.6",
-    "@forklaunch/framework-core": "workspace:*",
-    "@forklaunch/framework-monitoring": "workspace:*",
-    "@mikro-orm/core": "^6.4.9",
-    "@mikro-orm/migrations": "^6.4.9",
-    "@mikro-orm/postgresql": "^6.4.9",
-    "@mikro-orm/reflection": "^6.4.9",
-    "@mikro-orm/seeder": "^6.4.9",
-    "@sinclair/typebox": "^0.34.30",
+    "@forklaunch/blueprint-core": "workspace:*",
+    "@forklaunch/blueprint-monitoring": "workspace:*",
+    "@forklaunch/core": "^0.6.5",
+    "@mikro-orm/core": "^6.4.12",
+    "@mikro-orm/migrations": "^6.4.12",
+    "@mikro-orm/postgresql": "^6.4.12",
+    "@mikro-orm/reflection": "^6.4.12",
+    "@mikro-orm/seeder": "^6.4.12",
+    "@sinclair/typebox": "^0.34.33",
     "ajv": "^8.17.1",
     "dotenv": "^16.4.7",
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@mikro-orm/cli": "^6.4.9",
-    "@types/express": "^5.0.0",
+    "@mikro-orm/cli": "^6.4.12",
+    "@types/express": "^5.0.1",
     "@types/express-serve-static-core": "^5.0.6",
     "@types/qs": "^6.9.18",
     "depcheck": "^1.4.7",
-    "eslint": "^9.22.0",
+    "eslint": "^9.24.0",
     "tsx": "^4.19.3",
-    "typedoc": "^0.27.9",
-    "typescript-eslint": "^8.26.1"
+    "typedoc": "^0.28.2",
+    "typescript-eslint": "^8.29.1"
   },
   "mikro-orm": {
     "config_paths": [

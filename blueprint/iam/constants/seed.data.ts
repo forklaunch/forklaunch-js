@@ -1,6 +1,6 @@
-import { collection } from '@forklaunch/framework-core';
+import { collection } from '@forklaunch/blueprint-core';
+import { OrganizationStatus } from '../models/enum/organizationStatus.enum';
 import { Organization, Permission, Role } from '../models/persistence';
-import { OrganizationStatus } from '../models/persistence/organization.entity';
 import { User } from '../models/persistence/user.entity';
 //! Begin seed data
 export const permission = Permission.create({

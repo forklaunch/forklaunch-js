@@ -1,4 +1,4 @@
-import { BaseEntity } from '@forklaunch/framework-core';
+import { BaseEntity } from '@forklaunch/blueprint-core';
 import {
   Collection,
   Entity,

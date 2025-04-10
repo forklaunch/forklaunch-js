@@ -1,5 +1,39 @@
 # @forklaunch/validator
 
+## 0.4.12
+
+### Patch Changes
+
+- Change Typebox catchall from TSchema => TKind for more permissive type matching
+
+## 0.4.11
+
+### Patch Changes
+
+- Fix minor issue where typebox resolution was breaking
+
+## 0.4.10
+
+### Patch Changes
+
+- Update package versions
+- Updated dependencies
+  - @forklaunch/common@0.2.6
+
+## 0.4.9
+
+### Patch Changes
+
+- Schema Validator types now have runtime typechecking as well
+
+## 0.4.8
+
+### Patch Changes
+
+- Syntactic QOL improvements (validator zod args, config injector, core utilities, test utilities, etc.)
+- Updated dependencies
+  - @forklaunch/common@0.2.5
+
 ## 0.4.7
 
 ### Patch Changes
