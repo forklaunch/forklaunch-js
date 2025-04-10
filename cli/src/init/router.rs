@@ -31,8 +31,8 @@ use super::{
     command,
     core::{
         ast::{
-            transform_app_ts, transform_bootstrapper_ts, transform_constants_data_ts,
-            transform_entities_index_ts, transform_seeders_index_ts,
+            transform_app_ts, transform_constants_data_ts, transform_entities_index_ts,
+            transform_registrations_ts, transform_seeders_index_ts,
         },
         database,
         manifest::add_router_definition_to_manifest,
@@ -246,8 +246,8 @@ fn add_router_to_artifacts(
     };
 
     rendered_templates.push(RenderedTemplate {
-        path: Path::new(&base_path).join("bootstrapper.ts"),
-        content: transform_bootstrapper_ts(
+        path: Path::new(&base_path).join("registrations.ts"),
+        content: transform_registrations_ts(
             config_data.router_name.as_str(),
             is_worker,
             cache_backend,

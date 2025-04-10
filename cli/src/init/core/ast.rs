@@ -5,8 +5,8 @@ use std::{fs::read_to_string, path::Path};
 use anyhow::{bail, Result};
 use convert_case::{Case, Casing};
 use oxc_allocator::Allocator;
-use oxc_ast::ast::SourceType;
 use oxc_ast::ast::{Argument, Declaration, Expression, TSType};
+use oxc_ast::ast::{ObjectProperty, PropertyDefinition, SourceType};
 use oxc_ast::ast::{Program, Statement};
 use oxc_codegen::CodeGenerator;
 use oxc_codegen::CodegenOptions;
@@ -178,70 +178,11 @@ fn inject_into_exported_api_client<'a>(
     bail!("Failed to inject into export declaration");
 }
 
-fn inject_into_bootstrapper_config_validator<'a>(
-    bootstrapper_program: &mut Program<'a>,
-    config_validator_injection: &mut Program<'a>,
-) -> Result<()> {
-    for stmt in bootstrapper_program.body.iter_mut() {
-        // Find the configValidator export
-        let export = match stmt {
-            Statement::ExportNamedDeclaration(export) => export,
-            _ => continue,
-        };
-
-        let variable_declaration = match &mut export.declaration {
-            Some(Declaration::VariableDeclaration(decl)) => decl,
-            _ => continue,
-        };
-
-        for declarator in variable_declaration.declarations.iter_mut() {
-            match declarator.id.kind.get_identifier_name() {
-                Some(name) if name == "configValidator" => name,
-                _ => continue,
-            };
-
-            let object_expression = match &mut declarator.init {
-                Some(Expression::ObjectExpression(obj)) => obj,
-                _ => continue,
-            };
-
-            // Get the injection object
-            for injected_stmt in config_validator_injection.body.iter_mut() {
-                let injected_export = match injected_stmt {
-                    Statement::ExportNamedDeclaration(export) => export,
-                    _ => continue,
-                };
-
-                let injected_decl = match &mut injected_export.declaration {
-                    Some(Declaration::VariableDeclaration(decl)) => decl,
-                    _ => continue,
-                };
-
-                for injected_declarator in injected_decl.declarations.iter_mut() {
-                    let injected_obj = match &mut injected_declarator.init {
-                        Some(Expression::ObjectExpression(obj)) => obj,
-                        _ => continue,
-                    };
-
-                    // Merge the properties
-                    object_expression
-                        .properties
-                        .extend(injected_obj.properties.drain(..));
-
-                    return Ok(());
-                }
-            }
-        }
-    }
-
-    bail!("Failed to inject into bootstrapper config validator");
-}
-
-fn inject_into_bootstrapper_config_injector<'a>(
-    bootstrapper_program: &mut Program<'a>,
+fn inject_into_registrations_config_injector<'a>(
+    registrations_program: &mut Program<'a>,
     config_injector_injection: &mut Program<'a>,
 ) {
-    for statement in &mut bootstrapper_program.body {
+    for statement in &mut registrations_program.body {
         // Find the export named declaration
         let export = match statement {
             Statement::ExportNamedDeclaration(export) => export,
@@ -263,74 +204,57 @@ fn inject_into_bootstrapper_config_injector<'a>(
         for statement in function_body.statements.iter_mut() {
             // Get the expression statement
             let expression = match statement {
-                Statement::ExpressionStatement(expr) => expr,
+                Statement::VariableDeclaration(expr) => expr,
                 _ => continue,
             };
 
+            match expression.declarations[0].id.get_identifier_name() {
+                Some(name) => {
+                    if name != "serviceDependencies" {
+                        continue;
+                    }
+                }
+                None => continue,
+            }
+
             // Get the call expression
-            let call_expression = match &mut expression.expression {
-                Expression::CallExpression(call) => call,
+            let call_expression = match &mut expression.declarations[0].init {
+                Some(Expression::CallExpression(call)) => call,
                 _ => continue,
             };
 
             for argument in &mut call_expression.arguments {
-                // Get the arrow function argument
-                let arrow_function = match argument {
-                    Argument::ArrowFunctionExpression(arrow) => arrow,
+                let object_expr = match argument {
+                    Argument::ObjectExpression(object_expr) => object_expr,
                     _ => continue,
                 };
 
-                for statement in arrow_function.body.statements.iter_mut() {
-                    // Get the variable declaration
-                    let var_decl = match statement {
+                // Process each statement in the injection
+                for injected_stmt in config_injector_injection.body.iter_mut() {
+                    let injected_var_decl = match injected_stmt {
                         Statement::VariableDeclaration(decl) => decl,
                         _ => continue,
                     };
 
-                    for declarator in var_decl.declarations.iter_mut() {
-                        // Get the new expression
-                        let new_expr = match &mut declarator.init {
+                    for injected_declarator in injected_var_decl.declarations.iter_mut() {
+                        let injected_new_expr = match &mut injected_declarator.init {
                             Some(Expression::NewExpression(new_expr)) => new_expr,
                             _ => continue,
                         };
 
-                        // For each argument in the new expression
-                        for argument in &mut new_expr.arguments {
-                            let object_expr = match argument {
+                        // For each argument in the injected new expression
+                        for injected_arg in &mut injected_new_expr.arguments {
+                            let injected_obj = match injected_arg {
                                 Argument::ObjectExpression(obj) => obj,
                                 _ => continue,
                             };
 
-                            // Process each statement in the injection
-                            for injected_stmt in config_injector_injection.body.iter_mut() {
-                                let injected_var_decl = match injected_stmt {
-                                    Statement::VariableDeclaration(decl) => decl,
-                                    _ => continue,
-                                };
+                            // Extend the properties
+                            object_expr
+                                .properties
+                                .extend(injected_obj.properties.drain(..));
 
-                                for injected_declarator in injected_var_decl.declarations.iter_mut()
-                                {
-                                    let injected_new_expr = match &mut injected_declarator.init {
-                                        Some(Expression::NewExpression(new_expr)) => new_expr,
-                                        _ => continue,
-                                    };
-
-                                    // For each argument in the injected new expression
-                                    for injected_arg in &mut injected_new_expr.arguments {
-                                        let injected_obj = match injected_arg {
-                                            Argument::ObjectExpression(obj) => obj,
-                                            _ => continue,
-                                        };
-
-                                        // Extend the properties
-                                        object_expr
-                                            .properties
-                                            .extend(injected_obj.properties.drain(..));
-
-                                        return;
-                                    }
-                                }
-                            }
+                            return;
                         }
                     }
                 }
@@ -387,7 +311,7 @@ pub(crate) fn transform_app_ts(
     let mut app_program = parse_ast_program(&allocator, &app_source_text, app_source_type);
 
     let scoped_service_factory_injection_text = format!(
-        "const scoped{router_name_pascal_case}ServiceFactory = ci.scopedResolver('{router_name_camel_case}Service');",
+        "const scoped{router_name_pascal_case}ServiceFactory = ci.scopedResolver(tokens.{router_name_pascal_case}Service);",
     );
     let mut injection_program_ast = parse_ast_program(
         &allocator,
@@ -519,23 +443,23 @@ pub(crate) fn transform_app_ts(
         .code)
 }
 
-pub(crate) fn transform_bootstrapper_ts(
+pub(crate) fn transform_registrations_ts(
     router_name: &str,
     is_worker: bool,
     is_cache_backend: bool,
     base_path: &String,
 ) -> Result<String> {
     let allocator = Allocator::default();
-    let bootstrapper_path = Path::new(base_path).join("bootstrapper.ts");
-    let bootstrapper_source_text = read_to_string(&bootstrapper_path).unwrap();
-    let bootstrapper_source_type = SourceType::from_path(&bootstrapper_path).unwrap();
+    let registrations_path = Path::new(base_path).join("registrations.ts");
+    let registrations_source_text = read_to_string(&registrations_path).unwrap();
+    let registrations_source_type = SourceType::from_path(&registrations_path).unwrap();
     let router_name_camel_case = router_name.to_case(Case::Camel);
     let router_name_pascal_case = router_name.to_case(Case::Pascal);
 
-    let mut bootstrapper_program = parse_ast_program(
+    let mut registrations_program = parse_ast_program(
         &allocator,
-        &bootstrapper_source_text,
-        bootstrapper_source_type,
+        &registrations_source_text,
+        registrations_source_type,
     );
 
     let forklaunch_routes_import_text = format!(
@@ -544,31 +468,20 @@ pub(crate) fn transform_bootstrapper_ts(
     let mut forklaunch_routes_import_injection = parse_ast_program(
         &allocator,
         &forklaunch_routes_import_text,
-        bootstrapper_source_type,
+        registrations_source_type,
     );
     inject_into_import_statement(
-        &mut bootstrapper_program,
+        &mut registrations_program,
         &mut forklaunch_routes_import_injection,
         "/services/",
-        format!("Base{router_name_pascal_case}Services").as_str(),
-    )?;
-
-    let config_validator_text = format!(
-        "export const configValidator = {{
-            {router_name_camel_case}Service: Base{router_name_pascal_case}Service
-        }}"
-    );
-    let mut config_validator_injection =
-        parse_ast_program(&allocator, &config_validator_text, bootstrapper_source_type);
-    inject_into_bootstrapper_config_validator(
-        &mut bootstrapper_program,
-        &mut config_validator_injection,
+        format!("Base{router_name_pascal_case}Service").as_str(),
     )?;
 
     let config_injector_text = format!(
         "const configInjector = new ConfigInjector(configValidator, SchemaValidator(), {{
             {router_name_camel_case}Service: {{
             lifetime: Lifetime.Scoped,
+            type: Base{router_name_pascal_case}Service,
             factory: (
                 {{ {}, openTelemetryCollector }},
                 resolve,
@@ -598,15 +511,15 @@ pub(crate) fn transform_bootstrapper_ts(
     );
 
     let mut config_injector_injection =
-        parse_ast_program(&allocator, &config_injector_text, bootstrapper_source_type);
-    inject_into_bootstrapper_config_injector(
-        &mut bootstrapper_program,
+        parse_ast_program(&allocator, &config_injector_text, registrations_source_type);
+    inject_into_registrations_config_injector(
+        &mut registrations_program,
         &mut config_injector_injection,
     );
 
     Ok(CodeGenerator::new()
         .with_options(CodegenOptions::default())
-        .build(&bootstrapper_program)
+        .build(&registrations_program)
         .code)
 }
 

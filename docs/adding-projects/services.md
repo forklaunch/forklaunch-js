@@ -43,7 +43,7 @@ A minimal service will have the following structure:
 
 ```bash
 .
-├── bootstrapper.ts # the dependency injector/configuration loader
+├── registrations.ts # the dependency injector/configuration loader
 ├── constants
 │   └── seed.data.ts # seed data for new entity types
 ├── controllers
