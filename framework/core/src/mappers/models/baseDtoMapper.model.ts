@@ -4,8 +4,8 @@ import {
   Schema,
   SchemaValidator
 } from '@forklaunch/validator';
-import { DtoMapperConstructor } from '../interfaces/dtoMapper.interface';
-import { DtoMapperSchemaValidatorObject } from '../types/dtoMapper.types';
+import { DtoMapperConstructor } from '../interfaces/mappers.interface';
+import { DtoMapperSchemaValidatorObject } from '../types/mappers.types';
 
 /**
  * Constructs an instance of a T.

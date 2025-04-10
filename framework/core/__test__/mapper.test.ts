@@ -2,8 +2,8 @@
 import { SchemaValidator, number, string } from '@forklaunch/validator/typebox';
 import { PrimaryKey, Property } from '@mikro-orm/core';
 import { v4 } from 'uuid';
-import { RequestDtoMapper } from '../src/dtoMapper/models/requestDtoMapper.model';
-import { ResponseDtoMapper } from '../src/dtoMapper/models/responseDtoMapper.model';
+import { RequestDtoMapper } from '../src/mappers/models/requestDtoMapper.model';
+import { ResponseDtoMapper } from '../src/mappers/models/responseDtoMapper.model';
 
 const SV = SchemaValidator();
 
@@ -81,7 +81,7 @@ function genericDtoWrapperFunction<T>(dto: T): T {
   return dto;
 }
 
-describe('request dtoMapper tests', () => {
+describe('request mappers tests', () => {
   let TestRequestDM: TestRequestDtoMapper;
 
   beforeAll(() => {
@@ -157,7 +157,7 @@ describe('request dtoMapper tests', () => {
   });
 });
 
-describe('response dtoMapper tests', () => {
+describe('response mappers tests', () => {
   let TestResponseDM: TestResponseDtoMapper;
 
   beforeAll(() => {

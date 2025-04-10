@@ -21,11 +21,11 @@ export function transformIntoInternalDtoMapper<
   Entities extends Record<keyof DtoMapper, unknown>,
   Dto extends Record<keyof DtoMapper, unknown>
 >(
-  dtoMappers: DtoMapper,
+  mapperss: DtoMapper,
   schemaValidator: SchemaValidator
 ): InternalDtoMapper<InstanceTypeRecord<DtoMapper>, Entities, Dto> {
   return Object.fromEntries(
-    Object.entries(dtoMappers).map(([key, value]) => [
+    Object.entries(mapperss).map(([key, value]) => [
       key,
       new value(schemaValidator)
     ])

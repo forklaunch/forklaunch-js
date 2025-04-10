@@ -2,7 +2,7 @@ import {
   AnySchemaValidator,
   prettyPrintParseErrors
 } from '@forklaunch/validator';
-import { DtoMapperConstructor } from '../interfaces/dtoMapper.interface';
+import { DtoMapperConstructor } from '../interfaces/mappers.interface';
 import { BaseDtoMapper, construct } from './baseDtoMapper.model';
 
 /**
