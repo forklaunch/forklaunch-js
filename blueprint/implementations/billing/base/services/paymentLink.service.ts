@@ -5,7 +5,7 @@ import {
   RequestDtoMapperConstructor,
   ResponseDtoMapperConstructor,
   transformIntoInternalDtoMapper
-} from '@forklaunch/core/dtoMapper';
+} from '@forklaunch/core/mappers';
 import {
   MetricsDefinition,
   OpenTelemetryCollector
@@ -42,8 +42,8 @@ export class BasePaymentLinkService<
   }
 > implements PaymentLinkService<CurrencyEnum>
 {
-  #dtoMappers: InternalDtoMapper<
-    InstanceTypeRecord<typeof this.dtoMappers>,
+  #mapperss: InternalDtoMapper<
+    InstanceTypeRecord<typeof this.mapperss>,
     Entities,
     Dto
   >;
@@ -52,7 +52,7 @@ export class BasePaymentLinkService<
     protected readonly cache: TtlCache,
     protected readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>,
     protected readonly schemaValidator: SchemaValidator,
-    protected readonly dtoMappers: {
+    protected readonly mapperss: {
       PaymentLinkDtoMapper: ResponseDtoMapperConstructor<
         SchemaValidator,
         Dto['PaymentLinkDtoMapper'],
@@ -70,10 +70,7 @@ export class BasePaymentLinkService<
       >;
     }
   ) {
-    this.#dtoMappers = transformIntoInternalDtoMapper(
-      dtoMappers,
-      schemaValidator
-    );
+    this.#mapperss = transformIntoInternalDtoMapper(mapperss, schemaValidator);
   }
 
   protected cacheKeyPrefix = 'payment_link';
@@ -84,7 +81,7 @@ export class BasePaymentLinkService<
   ): Promise<Dto['PaymentLinkDtoMapper']> {
     // TODO: Perform permission checks here
     const paymentLink =
-      this.#dtoMappers.CreatePaymentLinkDtoMapper.deserializeDtoToEntity(
+      this.#mapperss.CreatePaymentLinkDtoMapper.deserializeDtoToEntity(
         paymentLinkDto
       );
     await this.cache.putRecord({
@@ -93,7 +90,7 @@ export class BasePaymentLinkService<
       ttlMilliseconds: this.cache.getTtlMilliseconds()
     });
 
-    return this.#dtoMappers.PaymentLinkDtoMapper.serializeEntityToDto(
+    return this.#mapperss.PaymentLinkDtoMapper.serializeEntityToDto(
       paymentLink
     );
   }
@@ -108,7 +105,7 @@ export class BasePaymentLinkService<
       throw new Error('Payment link not found');
     }
     const paymentLink =
-      this.#dtoMappers.UpdatePaymentLinkDtoMapper.deserializeDtoToEntity(
+      this.#mapperss.UpdatePaymentLinkDtoMapper.deserializeDtoToEntity(
         paymentLinkDto
       );
     const updatedLink = { ...existingLink, ...paymentLink };
@@ -118,7 +115,7 @@ export class BasePaymentLinkService<
       ttlMilliseconds: this.cache.getTtlMilliseconds()
     });
 
-    return this.#dtoMappers.PaymentLinkDtoMapper.serializeEntityToDto(
+    return this.#mapperss.PaymentLinkDtoMapper.serializeEntityToDto(
       updatedLink
     );
   }
@@ -131,7 +128,7 @@ export class BasePaymentLinkService<
       throw new Error('Payment link not found');
     }
 
-    return this.#dtoMappers.PaymentLinkDtoMapper.serializeEntityToDto(
+    return this.#mapperss.PaymentLinkDtoMapper.serializeEntityToDto(
       paymentLink.value
     );
   }
@@ -163,7 +160,7 @@ export class BasePaymentLinkService<
         const paymentLink =
           await this.cache.readRecord<Entities['PaymentLinkDtoMapper']>(key);
         const paymentLinkDto =
-          this.#dtoMappers.PaymentLinkDtoMapper.serializeEntityToDto(
+          this.#mapperss.PaymentLinkDtoMapper.serializeEntityToDto(
             paymentLink.value
           );
         return paymentLinkDto;

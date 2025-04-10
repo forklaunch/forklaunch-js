@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.6.6
+
+### Patch Changes
+
+- Change name from dto mapper => mapper
+
 ## 0.6.5
 
 ### Patch Changes

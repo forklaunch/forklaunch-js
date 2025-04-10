@@ -4,7 +4,7 @@ import {
   RequestDtoMapperConstructor,
   ResponseDtoMapperConstructor,
   transformIntoInternalDtoMapper
-} from '@forklaunch/core/dtoMapper';
+} from '@forklaunch/core/mappers';
 import {
   MetricsDefinition,
   OpenTelemetryCollector
@@ -61,8 +61,8 @@ export class BaseOrganizationService<
   }
 > implements OrganizationService<OrganizationStatus>
 {
-  #dtoMappers: InternalDtoMapper<
-    InstanceTypeRecord<typeof this.dtoMappers>,
+  #mapperss: InternalDtoMapper<
+    InstanceTypeRecord<typeof this.mapperss>,
     Entities,
     Dto
   >;
@@ -71,7 +71,7 @@ export class BaseOrganizationService<
     public em: EntityManager,
     protected openTelemetryCollector: OpenTelemetryCollector<Metrics>,
     protected schemaValidator: SchemaValidator,
-    protected dtoMappers: {
+    protected mapperss: {
       OrganizationDtoMapper: ResponseDtoMapperConstructor<
         SchemaValidator,
         Dto['OrganizationDtoMapper'],
@@ -89,10 +89,7 @@ export class BaseOrganizationService<
       >;
     }
   ) {
-    this.#dtoMappers = transformIntoInternalDtoMapper(
-      dtoMappers,
-      schemaValidator
-    );
+    this.#mapperss = transformIntoInternalDtoMapper(mapperss, schemaValidator);
   }
 
   async createOrganization(
@@ -101,14 +98,14 @@ export class BaseOrganizationService<
   ): Promise<Dto['OrganizationDtoMapper']> {
     this.openTelemetryCollector.log('info', 'Creating organization');
     const organization =
-      this.#dtoMappers.CreateOrganizationDtoMapper.deserializeDtoToEntity(
+      this.#mapperss.CreateOrganizationDtoMapper.deserializeDtoToEntity(
         organizationDto
       );
     await (em ?? this.em).transactional(async (innerEm) => {
       await innerEm.persist(organization);
     });
 
-    return this.#dtoMappers.OrganizationDtoMapper.serializeEntityToDto(
+    return this.#mapperss.OrganizationDtoMapper.serializeEntityToDto(
       organization
     );
   }
@@ -121,7 +118,7 @@ export class BaseOrganizationService<
       'Organization',
       idDto
     );
-    return this.#dtoMappers.OrganizationDtoMapper.serializeEntityToDto(
+    return this.#mapperss.OrganizationDtoMapper.serializeEntityToDto(
       organization as Entities['OrganizationDtoMapper']
     );
   }
@@ -131,11 +128,11 @@ export class BaseOrganizationService<
     em?: EntityManager
   ): Promise<Dto['OrganizationDtoMapper']> {
     const updatedOrganization =
-      this.#dtoMappers.UpdateOrganizationDtoMapper.deserializeDtoToEntity(
+      this.#mapperss.UpdateOrganizationDtoMapper.deserializeDtoToEntity(
         organizationDto
       );
     await (em ?? this.em).upsert(updatedOrganization);
-    return this.#dtoMappers.OrganizationDtoMapper.serializeEntityToDto(
+    return this.#mapperss.OrganizationDtoMapper.serializeEntityToDto(
       updatedOrganization
     );
   }

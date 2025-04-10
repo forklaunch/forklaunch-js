@@ -1,10 +1,10 @@
 import { forklaunchExpress } from '@forklaunch/blueprint-core';
 import { ApiClient } from '@forklaunch/core/http';
 import { bootstrap } from './bootstrapper';
-import { CheckoutSessionRoutes } from './routes/checkoutSession.routes';
-import { PaymentLinkRoutes } from './routes/paymentLink.routes';
-import { PlanRoutes } from './routes/plan.routes';
-import { SubscriptionRoutes } from './routes/subscription.routes';
+import { CheckoutSessionRoutes } from './api/routes/checkoutSession.routes';
+import { PaymentLinkRoutes } from './api/routes/paymentLink.routes';
+import { PlanRoutes } from './api/routes/plan.routes';
+import { SubscriptionRoutes } from './api/routes/subscription.routes';
 //! bootstrap function that initializes the service application
 bootstrap((ci, tokens) => {
   //! resolves the openTelemetryCollector from the configuration

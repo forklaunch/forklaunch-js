@@ -11,7 +11,7 @@ import {
   RequestDtoMapperConstructor,
   ResponseDtoMapperConstructor,
   transformIntoInternalDtoMapper
-} from '@forklaunch/core/dtoMapper';
+} from '@forklaunch/core/mappers';
 import { MapNestedDtoArraysToCollections } from '@forklaunch/core/services';
 import {
   CreateRoleDto,
@@ -55,8 +55,8 @@ export class BaseRoleService<
   }
 > implements RoleService
 {
-  #dtoMappers: InternalDtoMapper<
-    InstanceTypeRecord<typeof this.dtoMappers>,
+  #mapperss: InternalDtoMapper<
+    InstanceTypeRecord<typeof this.mapperss>,
     Entities,
     Dto
   >;
@@ -65,7 +65,7 @@ export class BaseRoleService<
     public em: EntityManager,
     protected openTelemetryCollector: OpenTelemetryCollector<Metrics>,
     protected schemaValidator: SchemaValidator,
-    protected dtoMappers: {
+    protected mapperss: {
       RoleDtoMapper: ResponseDtoMapperConstructor<
         SchemaValidator,
         Dto['RoleDtoMapper'],
@@ -83,10 +83,7 @@ export class BaseRoleService<
       >;
     }
   ) {
-    this.#dtoMappers = transformIntoInternalDtoMapper(
-      dtoMappers,
-      schemaValidator
-    );
+    this.#mapperss = transformIntoInternalDtoMapper(mapperss, schemaValidator);
   }
 
   async createRole(
@@ -95,9 +92,9 @@ export class BaseRoleService<
   ): Promise<Dto['RoleDtoMapper']> {
     // TODO: Think about removing static method here, since we need specific args
     const role =
-      this.#dtoMappers.CreateRoleDtoMapper.deserializeDtoToEntity(roleDto);
+      this.#mapperss.CreateRoleDtoMapper.deserializeDtoToEntity(roleDto);
     await (em ?? this.em).transactional((em) => em.persist(role));
-    return this.#dtoMappers.RoleDtoMapper.serializeEntityToDto(
+    return this.#mapperss.RoleDtoMapper.serializeEntityToDto(
       role as Entities['RoleDtoMapper']
     );
   }
@@ -108,12 +105,12 @@ export class BaseRoleService<
   ): Promise<Dto['RoleDtoMapper'][]> {
     const roles = await Promise.all(
       roleDtos.map(async (roleDto) =>
-        this.#dtoMappers.CreateRoleDtoMapper.deserializeDtoToEntity(roleDto)
+        this.#mapperss.CreateRoleDtoMapper.deserializeDtoToEntity(roleDto)
       )
     );
     await (em ?? this.em).transactional((em) => em.persist(roles));
     return roles.map((role) =>
-      this.#dtoMappers.RoleDtoMapper.serializeEntityToDto(
+      this.#mapperss.RoleDtoMapper.serializeEntityToDto(
         role as Entities['RoleDtoMapper']
       )
     );
@@ -123,7 +120,7 @@ export class BaseRoleService<
     const role = await (em ?? this.em).findOneOrFail('Role', idDto, {
       populate: ['id', '*']
     });
-    return this.#dtoMappers.RoleDtoMapper.serializeEntityToDto(
+    return this.#mapperss.RoleDtoMapper.serializeEntityToDto(
       role as Entities['RoleDtoMapper']
     );
   }
@@ -134,7 +131,7 @@ export class BaseRoleService<
         populate: ['id', '*']
       })
     ).map((role) =>
-      this.#dtoMappers.RoleDtoMapper.serializeEntityToDto(
+      this.#mapperss.RoleDtoMapper.serializeEntityToDto(
         role as Entities['RoleDtoMapper']
       )
     );
@@ -144,13 +141,13 @@ export class BaseRoleService<
     roleDto: Dto['UpdateRoleDtoMapper'],
     em?: EntityManager
   ): Promise<Dto['RoleDtoMapper']> {
-    let role = this.#dtoMappers.UpdateRoleDtoMapper.deserializeDtoToEntity(
+    let role = this.#mapperss.UpdateRoleDtoMapper.deserializeDtoToEntity(
       roleDto
     ) as Entities['RoleDtoMapper'];
     await (em ?? this.em).transactional(async (em) => {
       role = (await em.upsert('Role', role)) as Entities['RoleDtoMapper'];
     });
-    return this.#dtoMappers.RoleDtoMapper.serializeEntityToDto(role);
+    return this.#mapperss.RoleDtoMapper.serializeEntityToDto(role);
   }
 
   async updateBatchRoles(
@@ -159,14 +156,14 @@ export class BaseRoleService<
   ): Promise<Dto['RoleDtoMapper'][]> {
     let roles = await Promise.all(
       roleDtos.map(async (roleDto) =>
-        this.#dtoMappers.UpdateRoleDtoMapper.deserializeDtoToEntity(roleDto)
+        this.#mapperss.UpdateRoleDtoMapper.deserializeDtoToEntity(roleDto)
       )
     );
     await (em ?? this.em).transactional(async (em) => {
       roles = await em.upsertMany('Role', roles);
     });
     return roles.map((role) =>
-      this.#dtoMappers.RoleDtoMapper.serializeEntityToDto(
+      this.#mapperss.RoleDtoMapper.serializeEntityToDto(
         role as Entities['RoleDtoMapper']
       )
     );

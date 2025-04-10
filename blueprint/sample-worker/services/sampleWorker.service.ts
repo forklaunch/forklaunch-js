@@ -2,13 +2,13 @@ import { TtlCache } from '@forklaunch/core/cache';
 import { SchemaValidator } from '@forklaunch/blueprint-core';
 import { EntityManager } from '@mikro-orm/core';
 import { SAMPLE_WORKER_CACHE_KEY_PREFIX } from '../consts';
-import { SampleWorkerService } from '../interfaces/sampleWorker.interface';
+import { SampleWorkerService } from '../domain/interfaces/sampleWorker.interface';
 import {
   SampleWorkerRequestDto,
   SampleWorkerRequestDtoMapper,
   SampleWorkerResponseDto,
   SampleWorkerResponseDtoMapper
-} from '../models/dtoMapper/sampleWorker.dtoMapper';
+} from '../domain/mappers/sampleWorker.mappers';
 
 // BaseSampleWorkerService class that implements the SampleWorkerService interface
 export class BaseSampleWorkerService implements SampleWorkerService {

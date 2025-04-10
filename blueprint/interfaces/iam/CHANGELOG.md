@@ -1,5 +1,11 @@
 # @forklaunch/interfaces-iam
 
+## 0.1.8
+
+### Patch Changes
+
+- bump core dependency version and change packaging scripts
+
 ## 0.1.7
 
 ### Patch Changes

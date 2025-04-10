@@ -1,6 +1,6 @@
 import { bootstrap } from './bootstrapper';
 import { SAMPLE_WORKER_CACHE_KEY_PREFIX } from './consts';
-import { SampleWorkerRecord } from './models/persistence/sampleWorkerRecord.entity';
+import { SampleWorkerRecord } from './persistence/entities/sampleWorkerRecord.entity';
 
 bootstrap((ci, tokens) => {
   const entityManager = ci.resolve(tokens.EntityManager);

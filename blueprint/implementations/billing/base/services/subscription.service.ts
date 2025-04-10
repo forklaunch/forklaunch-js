@@ -4,7 +4,7 @@ import {
   RequestDtoMapperConstructor,
   ResponseDtoMapperConstructor,
   transformIntoInternalDtoMapper
-} from '@forklaunch/core/dtoMapper';
+} from '@forklaunch/core/mappers';
 import {
   MetricsDefinition,
   OpenTelemetryCollector
@@ -67,8 +67,8 @@ export class BaseSubscriptionService<
   }
 > implements SubscriptionService<PartyType, BillingProviderType>
 {
-  #dtoMappers: InternalDtoMapper<
-    InstanceTypeRecord<typeof this.dtoMappers>,
+  #mapperss: InternalDtoMapper<
+    InstanceTypeRecord<typeof this.mapperss>,
     Entities,
     Dto
   >;
@@ -77,7 +77,7 @@ export class BaseSubscriptionService<
     protected em: EntityManager,
     protected readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>,
     protected readonly schemaValidator: SchemaValidator,
-    protected readonly dtoMappers: {
+    protected readonly mapperss: {
       SubscriptionDtoMapper: ResponseDtoMapperConstructor<
         SchemaValidator,
         Dto['SubscriptionDtoMapper'],
@@ -95,12 +95,12 @@ export class BaseSubscriptionService<
       >;
     }
   ) {
-    this.#dtoMappers = transformIntoInternalDtoMapper<
+    this.#mapperss = transformIntoInternalDtoMapper<
       SchemaValidator,
-      typeof this.dtoMappers,
+      typeof this.mapperss,
       Entities,
       Dto
-    >(dtoMappers, this.schemaValidator);
+    >(mapperss, this.schemaValidator);
   }
 
   async createSubscription(
@@ -108,14 +108,14 @@ export class BaseSubscriptionService<
     em?: EntityManager
   ): Promise<Dto['SubscriptionDtoMapper']> {
     const subscription =
-      this.#dtoMappers.CreateSubscriptionDtoMapper.deserializeDtoToEntity(
+      this.#mapperss.CreateSubscriptionDtoMapper.deserializeDtoToEntity(
         subscriptionDto
       );
     await (em ?? this.em).transactional(async (innerEm) => {
       await innerEm.persist(subscription);
     });
     const createdSubscriptionDto =
-      this.#dtoMappers.SubscriptionDtoMapper.serializeEntityToDto(subscription);
+      this.#mapperss.SubscriptionDtoMapper.serializeEntityToDto(subscription);
     return createdSubscriptionDto;
   }
 
@@ -127,7 +127,7 @@ export class BaseSubscriptionService<
       'Subscription',
       idDto
     );
-    return this.#dtoMappers.SubscriptionDtoMapper.serializeEntityToDto(
+    return this.#mapperss.SubscriptionDtoMapper.serializeEntityToDto(
       subscription as Entities['SubscriptionDtoMapper']
     );
   }
@@ -142,7 +142,7 @@ export class BaseSubscriptionService<
       active: true
     });
 
-    return this.#dtoMappers.SubscriptionDtoMapper.serializeEntityToDto(
+    return this.#mapperss.SubscriptionDtoMapper.serializeEntityToDto(
       subscription as Entities['SubscriptionDtoMapper']
     );
   }
@@ -156,7 +156,7 @@ export class BaseSubscriptionService<
       partyType: 'ORGANIZATION',
       active: true
     });
-    return this.#dtoMappers.SubscriptionDtoMapper.serializeEntityToDto(
+    return this.#mapperss.SubscriptionDtoMapper.serializeEntityToDto(
       subscription as Entities['SubscriptionDtoMapper']
     );
   }
@@ -166,7 +166,7 @@ export class BaseSubscriptionService<
     em?: EntityManager
   ): Promise<Dto['SubscriptionDtoMapper']> {
     const subscription =
-      this.#dtoMappers.UpdateSubscriptionDtoMapper.deserializeDtoToEntity(
+      this.#mapperss.UpdateSubscriptionDtoMapper.deserializeDtoToEntity(
         subscriptionDto
       );
     const updatedSubscription = await (em ?? this.em).upsert(subscription);
@@ -174,7 +174,7 @@ export class BaseSubscriptionService<
       await innerEm.persist(updatedSubscription);
     });
     const updatedSubscriptionDto =
-      this.#dtoMappers.SubscriptionDtoMapper.serializeEntityToDto(
+      this.#mapperss.SubscriptionDtoMapper.serializeEntityToDto(
         updatedSubscription
       );
 
@@ -208,7 +208,7 @@ export class BaseSubscriptionService<
 
     return subscriptions.map((subscription) => {
       const subscriptionDto =
-        this.#dtoMappers.SubscriptionDtoMapper.serializeEntityToDto(
+        this.#mapperss.SubscriptionDtoMapper.serializeEntityToDto(
           subscription as Entities['SubscriptionDtoMapper']
         );
       return subscriptionDto;

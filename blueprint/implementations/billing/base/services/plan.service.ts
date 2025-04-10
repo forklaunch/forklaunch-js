@@ -4,7 +4,7 @@ import {
   RequestDtoMapperConstructor,
   ResponseDtoMapperConstructor,
   transformIntoInternalDtoMapper
-} from '@forklaunch/core/dtoMapper';
+} from '@forklaunch/core/mappers';
 import {
   MetricsDefinition,
   OpenTelemetryCollector
@@ -43,8 +43,8 @@ export class BasePlanService<
   }
 > implements PlanService<PlanCadenceEnum, BillingProviderEnum>
 {
-  #dtoMappers: InternalDtoMapper<
-    InstanceTypeRecord<typeof this.dtoMappers>,
+  #mapperss: InternalDtoMapper<
+    InstanceTypeRecord<typeof this.mapperss>,
     Entities,
     Dto
   >;
@@ -53,7 +53,7 @@ export class BasePlanService<
     private em: EntityManager,
     private readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>,
     private readonly schemaValidator: SchemaValidator,
-    private readonly dtoMappers: {
+    private readonly mapperss: {
       PlanDtoMapper: ResponseDtoMapperConstructor<
         SchemaValidator,
         Dto['PlanDtoMapper'],
@@ -71,10 +71,7 @@ export class BasePlanService<
       >;
     }
   ) {
-    this.#dtoMappers = transformIntoInternalDtoMapper(
-      dtoMappers,
-      schemaValidator
-    );
+    this.#mapperss = transformIntoInternalDtoMapper(mapperss, schemaValidator);
   }
 
   async listPlans(
@@ -86,7 +83,7 @@ export class BasePlanService<
         filters: idsDto?.ids ? { id: { $in: idsDto.ids } } : undefined
       })
     ).map((plan) =>
-      this.#dtoMappers.PlanDtoMapper.serializeEntityToDto(
+      this.#mapperss.PlanDtoMapper.serializeEntityToDto(
         plan as Entities['PlanDtoMapper']
       )
     );
@@ -97,11 +94,11 @@ export class BasePlanService<
     em?: EntityManager
   ): Promise<Dto['PlanDtoMapper']> {
     const plan =
-      this.#dtoMappers.CreatePlanDtoMapper.deserializeDtoToEntity(planDto);
+      this.#mapperss.CreatePlanDtoMapper.deserializeDtoToEntity(planDto);
     await (em ?? this.em).transactional(async (innerEm) => {
       await innerEm.persist(plan);
     });
-    return this.#dtoMappers.PlanDtoMapper.serializeEntityToDto(plan);
+    return this.#mapperss.PlanDtoMapper.serializeEntityToDto(plan);
   }
 
   async getPlan(
@@ -109,7 +106,7 @@ export class BasePlanService<
     em?: EntityManager
   ): Promise<Dto['PlanDtoMapper']> {
     const plan = await (em ?? this.em).findOneOrFail('Plan', idDto);
-    return this.#dtoMappers.PlanDtoMapper.serializeEntityToDto(
+    return this.#mapperss.PlanDtoMapper.serializeEntityToDto(
       plan as Entities['PlanDtoMapper']
     );
   }
@@ -119,13 +116,13 @@ export class BasePlanService<
     em?: EntityManager
   ): Promise<Dto['PlanDtoMapper']> {
     const plan =
-      this.#dtoMappers.UpdatePlanDtoMapper.deserializeDtoToEntity(planDto);
+      this.#mapperss.UpdatePlanDtoMapper.deserializeDtoToEntity(planDto);
     const updatedPlan = await (em ?? this.em).upsert(plan);
     await (em ?? this.em).transactional(async (innerEm) => {
       await innerEm.persist(plan);
     });
     const updatedPlanDto =
-      this.#dtoMappers.PlanDtoMapper.serializeEntityToDto(updatedPlan);
+      this.#mapperss.PlanDtoMapper.serializeEntityToDto(updatedPlan);
     return updatedPlanDto;
   }
 
