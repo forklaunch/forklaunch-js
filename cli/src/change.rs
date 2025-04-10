@@ -21,7 +21,7 @@ impl CliCommand for ChangeCommand {
         command("change", "Change a forklaunch project").arg(Arg::new("base_path").short('b'))
     }
 
-    fn handler(&self, matches: &ArgMatches) -> Result<()> {
+    fn handler(&self, _matches: &ArgMatches) -> Result<()> {
         // detect where command is called from if base_path not supplied
 
         // based on base_path, ask for choices (application, service, worker, etc.)

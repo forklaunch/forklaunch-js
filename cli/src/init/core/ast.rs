@@ -5,8 +5,8 @@ use std::{fs::read_to_string, path::Path};
 use anyhow::{bail, Result};
 use convert_case::{Case, Casing};
 use oxc_allocator::Allocator;
+use oxc_ast::ast::SourceType;
 use oxc_ast::ast::{Argument, Declaration, Expression, TSType};
-use oxc_ast::ast::{ObjectProperty, PropertyDefinition, SourceType};
 use oxc_ast::ast::{Program, Statement};
 use oxc_codegen::CodeGenerator;
 use oxc_codegen::CodegenOptions;
@@ -473,7 +473,7 @@ pub(crate) fn transform_registrations_ts(
     inject_into_import_statement(
         &mut registrations_program,
         &mut forklaunch_routes_import_injection,
-        "/services/",
+        "/services",
         format!("Base{router_name_pascal_case}Service").as_str(),
     )?;
 
