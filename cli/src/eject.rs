@@ -1,15 +1,16 @@
 use std::{
     borrow::Cow,
     fs::{read_dir, read_to_string},
+    io::Write,
     path::Path,
 };
 
 use anyhow::{bail, Context, Result};
-use clap::{Arg, ArgMatches, Command};
+use clap::{Arg, ArgAction, ArgMatches, Command};
 use fs_extra::dir::{copy, CopyOptions};
 use rustyline::{history::DefaultHistory, Editor};
 use serde_json::{from_str, to_string_pretty, Map, Value};
-use termcolor::{ColorChoice, StandardStream};
+use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use walkdir::{DirEntry, WalkDir};
 
 use crate::{
@@ -26,7 +27,7 @@ use crate::{
         application::ApplicationManifestData,
         core::rendered_template::{write_rendered_templates, RenderedTemplate},
     },
-    prompt::{prompt_with_validation, prompt_without_validation, ArrayCompleter},
+    prompt::{prompt_with_validation, ArrayCompleter},
     CliCommand,
 };
 
@@ -129,13 +130,8 @@ fn perform_string_replacements(
             };
 
             for dependency in dependencies_to_eject {
-                println!("{}", dependency);
                 let module_types = ["/schemas", "/interfaces", "/types", "/services"];
                 for module_type in module_types {
-                    println!(
-                        "{}, {}{}",
-                        dependency, relative_path_difference_prefix, module_type
-                    );
                     new_content = new_content.replace(
                         format!("{}{}", dependency, module_type).as_str(),
                         format!("{}{}", relative_path_difference_prefix, module_type).as_str(),
@@ -171,31 +167,49 @@ impl CliCommand for EjectCommand {
         command("eject", "Eject a forklaunch project")
             .alias("ej")
             .arg(Arg::new("base_path").short('b'))
-            .arg(Arg::new("continue").short('c').long("continue"))
+            .arg(
+                Arg::new("continue")
+                    .short('c')
+                    .long("continue")
+                    .help("Continue the eject operation")
+                    .action(ArgAction::SetTrue),
+            )
+            .arg(
+                Arg::new("dryrun")
+                    .short('n')
+                    .long("dryrun")
+                    .help("Dry run the application")
+                    .action(ArgAction::SetTrue),
+            )
     }
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let continue_eject = prompt_with_validation(
-            &mut line_editor,
-            &mut stdout,
-            "continue",
-            matches,
-            "This operation is irreversible. Do you want to continue?",
-            Some(&["y", "yes", "n", "no"]),
-            |input| {
-                input.to_lowercase() == "y"
-                    || input.to_lowercase() == "yes"
-                    || input.to_lowercase() == "n"
-                    || input.to_lowercase() == "no"
-            },
-            |_| "Invalid input. Please try again.".to_string(),
-        )?;
+        let continue_eject_override = matches.get_flag("continue");
+        let dryrun = matches.get_flag("dryrun");
 
-        if continue_eject.to_lowercase() != "y" && continue_eject.to_lowercase() != "yes" {
-            return Ok(());
+        if !continue_eject_override && !dryrun {
+            let continue_eject = prompt_with_validation(
+                &mut line_editor,
+                &mut stdout,
+                "continue",
+                matches,
+                "This operation is irreversible. Do you want to continue?",
+                Some(&["y", "yes", "n", "no"]),
+                |input| {
+                    input.to_lowercase() == "y"
+                        || input.to_lowercase() == "yes"
+                        || input.to_lowercase() == "n"
+                        || input.to_lowercase() == "no"
+                },
+                |_| "Invalid input. Please try again.".to_string(),
+            )?;
+
+            if continue_eject.to_lowercase() != "y" && continue_eject.to_lowercase() != "yes" {
+                return Ok(());
+            }
         }
 
         let base_path = prompt_base_path(
@@ -254,7 +268,13 @@ impl CliCommand for EjectCommand {
             &mut templates_to_render,
         )?;
 
-        write_rendered_templates(&templates_to_render, false)?;
+        write_rendered_templates(&templates_to_render, dryrun)?;
+
+        if !dryrun {
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+            writeln!(stdout, "Ejected successfully!")?;
+            stdout.reset()?;
+        }
 
         Ok(())
     }
