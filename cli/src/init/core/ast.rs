@@ -479,32 +479,32 @@ pub(crate) fn transform_registrations_ts(
 
     let config_injector_text = format!(
         "const configInjector = new ConfigInjector(configValidator, SchemaValidator(), {{
-            {router_name_camel_case}Service: {{
+            {router_name_pascal_case}Service: {{
             lifetime: Lifetime.Scoped,
             type: Base{router_name_pascal_case}Service,
             factory: (
-                {{ {}, openTelemetryCollector }},
+                {{ {}, OpenTelemetryCollector }},
                 resolve,
                 context
             ) => {{
-                let em = entityManager;
+                let em = EntityManager;
                 if (context.entityManagerOptions) {{
-                    em = resolve('entityManager', context);
+                    em = resolve('EntityManager', context);
                 }}
                 return new Base{router_name_pascal_case}Service(
                     {},
-                    openTelemetryCollector
+                    OpenTelemetryCollector
                 );
             }}
             }}
         }})",
         if is_worker && is_cache_backend {
-            "ttlCache"
+            "TtlCache"
         } else {
-            "entityManager"
+            "EntityManager"
         },
         if is_worker && is_cache_backend {
-            "ttlCache"
+            "TtlCache"
         } else {
             "em"
         }
