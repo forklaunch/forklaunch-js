@@ -57,6 +57,14 @@ pub(crate) fn prompt_without_validation(
     )
 }
 
+pub(crate) fn prompt_for_confirmation(
+    line_editor: &mut Editor<ArrayCompleter, DefaultHistory>,
+    prompt: &str,
+) -> Result<bool> {
+    let confirmation = line_editor.readline(prompt)?;
+    Ok(confirmation.trim().to_lowercase().starts_with("y"))
+}
+
 pub(crate) fn prompt_with_validation<F, V>(
     line_editor: &mut Editor<ArrayCompleter, DefaultHistory>,
     stdout: &mut StandardStream,

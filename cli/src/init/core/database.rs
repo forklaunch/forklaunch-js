@@ -57,14 +57,15 @@ pub(crate) fn generate_database_export_index_ts(
         };
 
         if let Some(export_string) = export_string {
-            export_set.insert(format!("export * from './persistence/{}'", export_string));
+            export_set.insert(format!("export * from './{}'", export_string));
         }
+        export_set.insert(format!("export * from './collection'"));
     });
 
     Ok(RenderedTemplate {
         path: Path::new(&base_path)
             .join("core")
-            .join("models")
+            .join("persistence")
             .join("index.ts"),
         content: export_set.into_iter().collect::<Vec<String>>().join("\n"),
         context: None,
@@ -138,14 +139,12 @@ pub(crate) fn add_base_entity_to_core(
 
     let entity_path = Path::new(base_path)
         .join("core")
-        .join("models")
         .join("persistence")
         .join(filename);
 
     let template = TEMPLATES_DIR.get_file(
         Path::new("project")
             .join("core")
-            .join("models")
             .join("persistence")
             .join(template_path),
     );

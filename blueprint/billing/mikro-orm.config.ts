@@ -74,7 +74,7 @@ const mikroOrmOptionsConfig: Partial<MikroORMOptions> = {
     }
   },
   seeder: {
-    path: 'dist/models',
+    path: 'dist/persistence',
     glob: 'seeder.js'
   }
 };

@@ -27,7 +27,7 @@ use crate::{
         application::ApplicationManifestData,
         core::rendered_template::{write_rendered_templates, RenderedTemplate},
     },
-    prompt::{prompt_with_validation, ArrayCompleter},
+    prompt::{prompt_for_confirmation, ArrayCompleter},
     CliCommand,
 };
 
@@ -191,23 +191,12 @@ impl CliCommand for EjectCommand {
         let dryrun = matches.get_flag("dryrun");
 
         if !continue_eject_override && !dryrun {
-            let continue_eject = prompt_with_validation(
+            let continue_eject = prompt_for_confirmation(
                 &mut line_editor,
-                &mut stdout,
-                "continue",
-                matches,
                 "This operation is irreversible. Do you want to continue?",
-                Some(&["y", "yes", "n", "no"]),
-                |input| {
-                    input.to_lowercase() == "y"
-                        || input.to_lowercase() == "yes"
-                        || input.to_lowercase() == "n"
-                        || input.to_lowercase() == "no"
-                },
-                |_| "Invalid input. Please try again.".to_string(),
             )?;
 
-            if continue_eject.to_lowercase() != "y" && continue_eject.to_lowercase() != "yes" {
+            if !continue_eject {
                 return Ok(());
             }
         }

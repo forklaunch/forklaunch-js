@@ -107,7 +107,7 @@ pub(crate) fn update_application_package_json(
         }
 
         let new_docker_cmd = format!(
-            "docker compose up --watch {}",
+            "docker compose up {}",
             services
                 .iter()
                 .map(|svc| format!("-d {}", svc))

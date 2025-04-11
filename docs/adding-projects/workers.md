@@ -54,8 +54,8 @@ A minimal worker will have the following structure:
 │   └── newWorker.interface.ts
 ├── mikro-orm.config.ts
 ├── models
-│   ├── dtoMapper
-│   │   └── newWorker.dtoMapper.ts
+│   ├── mappers
+│   │   └── newWorker.mappers.ts
 │   ├── persistence
 │   │   ├── index.ts
 │   │   └── newWorkerRecord.entity.ts

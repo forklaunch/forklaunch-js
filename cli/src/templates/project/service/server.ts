@@ -1,7 +1,7 @@
 import { ApiClient } from '@forklaunch/core/http';
 import { forklaunchExpress } from '@{{app_name}}/core';
 import { bootstrap } from './bootstrapper';
-import { {{pascal_case_name}}Routes } from './routes/{{camel_case_name}}.routes';
+import { {{pascal_case_name}}Routes } from './api/routes/{{camel_case_name}}.routes';
 //! bootstrap function that initializes the service application
 bootstrap((ci, tokens) => {
   //! creates an instance of forklaunchExpress

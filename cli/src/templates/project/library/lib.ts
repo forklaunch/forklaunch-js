@@ -3,5 +3,5 @@
  * @returns A greeting string
  */
 export function {{camel_case_name}}(): string {
-  return 'Hello world, from forklaunch!';
+  return 'Hello world, from {{app_name}}!';
 }

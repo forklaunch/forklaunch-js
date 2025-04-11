@@ -3,13 +3,15 @@ import { OpenTelemetryCollector } from '@forklaunch/core/http';
 {{^cache_backend}}import { EntityManager } from '@mikro-orm/core';{{/cache_backend}}
 import { SchemaValidator } from '@{{app_name}}/core';
 import { Metrics } from '@{{app_name}}/monitoring';
-import { {{pascal_case_name}}Service } from '../interfaces/{{camel_case_name}}.interface';
+import { {{pascal_case_name}}Service } from '../domain/interfaces/{{camel_case_name}}.interface';
+import { 
+  {{pascal_case_name}}RequestDto, 
+  {{pascal_case_name}}ResponseDto 
+} from '../domain/types/{{camel_case_name}}.types';
 import {
-  {{pascal_case_name}}RequestDto,
   {{pascal_case_name}}RequestDtoMapper,
-  {{pascal_case_name}}ResponseDto,
   {{pascal_case_name}}ResponseDtoMapper
-} from '../models/dtoMapper/{{camel_case_name}}.dtoMapper';{{#cache_backend}}
+} from '../domain/mappers/{{camel_case_name}}.mappers';{{#cache_backend}}
 import { CACHE_KEY_PREFIX } from '../consts';
 {{/cache_backend}}
 

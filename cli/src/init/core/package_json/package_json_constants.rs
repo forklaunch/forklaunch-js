@@ -67,7 +67,7 @@ fn get_package_manager_and_db_init(runtime: &str, database: &str) -> (String, St
     };
 
     let db_init = match database {
-        "mongodb" => "-d mongo-init",
+        "mongodb" => " -d mongo-init",
         _ => "",
     };
 
@@ -88,7 +88,7 @@ pub(crate) fn application_migrate_script(
     };
 
     format!(
-        "docker compose up --watch -d {} {} && {}{} run migrate:{}",
+        "docker compose up -d {}{} && {}{} run migrate:{}",
         database, db_init, sleep, package_manager, migration_suffix
     )
 }
@@ -97,7 +97,7 @@ pub(crate) fn application_seed_script(runtime: &str, database: &str) -> String {
     let (package_manager, db_init) = get_package_manager_and_db_init(runtime, database);
 
     format!(
-        "docker compose up --watch -d {} {} && {} run seed",
+        "docker compose up -d {}{} && {} run seed",
         database, db_init, package_manager
     )
 }
@@ -135,19 +135,19 @@ pub(crate) const APP_MONITORING_VERSION: &str = "workspace:*";
 // @forklaunch/common
 pub(crate) const COMMON_VERSION: &str = "^0.2.6";
 // @forklaunch/core
-pub(crate) const CORE_VERSION: &str = "^0.6.5";
+pub(crate) const CORE_VERSION: &str = "^0.6.6";
 // @forklaunch/express
-pub(crate) const EXPRESS_VERSION: &str = "^0.4.5";
+pub(crate) const EXPRESS_VERSION: &str = "^0.4.6";
 // @forklaunch/hyper-express
-pub(crate) const HYPER_EXPRESS_VERSION: &str = "^0.4.5";
+pub(crate) const HYPER_EXPRESS_VERSION: &str = "^0.4.6";
 // @forklaunch/implementation-billing-base
-pub(crate) const BILLING_BASE_VERSION: &str = "^0.1.7";
+pub(crate) const BILLING_BASE_VERSION: &str = "^0.1.8";
 // @forklaunch/interfaces-billing
-pub(crate) const BILLING_INTERFACES_VERSION: &str = "^0.1.7";
+pub(crate) const BILLING_INTERFACES_VERSION: &str = "^0.1.8";
 // @forklaunch/implementation-iam-base
-pub(crate) const IAM_BASE_VERSION: &str = "^0.1.7";
+pub(crate) const IAM_BASE_VERSION: &str = "^0.1.8";
 // @forklaunch/interfaces-iam
-pub(crate) const IAM_INTERFACES_VERSION: &str = "^0.1.7";
+pub(crate) const IAM_INTERFACES_VERSION: &str = "^0.1.8";
 // @forklaunch/validator
 pub(crate) const VALIDATOR_VERSION: &str = "^0.4.12";
 // @mikro-orm/core
@@ -165,7 +165,7 @@ pub(crate) const TYPEBOX_VERSION: &str = "^0.34.33";
 // ajv
 pub(crate) const AJV_VERSION: &str = "^8.17.1";
 // dotenv
-pub(crate) const DOTENV_VERSION: &str = "^16.4.7";
+pub(crate) const DOTENV_VERSION: &str = "^16.5.0";
 // uuid
 pub(crate) const UUID_VERSION: &str = "^11.1.0";
 // zod

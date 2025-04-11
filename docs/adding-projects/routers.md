@@ -25,7 +25,7 @@ After you have added a service/worker, you can add a router to it by running the
   </Tab>
 </CodeTabs>
 
-This adds a new router to your application, with a `RCSIDES` (`route`, `controller`, `service`, `interface`, `dtoMapper`, `entity`, `seeder`) stack, only.
+This adds a new router to your application, with a `RCSIDES` (`route`, `controller`, `service`, `interface`, `mappers`, `entity`, `seeder`) stack, only.
 
 You will not need to run any new scripts.
 
@@ -43,8 +43,8 @@ A minimal router will add the following files to your service/worker:
 │   └── newRouter.interface.ts # the interface for the router, defining the business logic contract
 ├── middleware
 ├── models
-│   ├── dtoMapper
-│   │   └── newRouter.dtoMapper.ts # the data transfer object mapper for mapping between DTOs and entities
+│   ├── mappers
+│   │   └── newRouter.mappers.ts # the data transfer object mapper for mapping between DTOs and entities
 │   ├── persistence
 │   │   ├── index.ts
 │   │   └── newRouterRecord.entity.ts # the entity for the router, defining the database schema
