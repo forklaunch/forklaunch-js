@@ -14,6 +14,9 @@ rm -rf service-test
 
 RUST_BACKTRACE=1 cargo run init service service-test -d postgresql -D "Test service" -p .
 
+pnpm install
+pnpm build
+
 cd ..
 
 RUST_BACKTRACE=1 cargo run init application service-test-bun-application -d postgresql -v zod -f express -r bun -t vitest -s billing -s iam -D "Test service" -A "Rohin Bhargava" -L "mit"
@@ -24,3 +27,6 @@ cd service-test-bun-application
 rm -rf service-test
 
 RUST_BACKTRACE=1 cargo run init service service-test -d postgresql -D "Test service" -p .
+
+bun install
+bun run build

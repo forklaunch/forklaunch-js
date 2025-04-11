@@ -13,6 +13,7 @@ pnpm install
 
 cd iam
 
+RUST_BACKTRACE=1 cargo run eject -n
 RUST_BACKTRACE=1 cargo run eject -c
 
 pnpm build
@@ -27,6 +28,7 @@ bun install
 
 cd billing
 
+RUST_BACKTRACE=1 cargo run eject -n
 RUST_BACKTRACE=1 cargo run eject -c
 
 bun run build

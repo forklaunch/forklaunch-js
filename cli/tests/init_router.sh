@@ -12,6 +12,9 @@ cd router-test-node-application/billing
 
 RUST_BACKTRACE=1 cargo run init router router-test-2
 
+pnpm install
+pnpm build
+
 cd ../..
 
 RUST_BACKTRACE=1 cargo run init application router-test-bun-application -d postgresql -v zod -f express -r bun -t vitest -s billing -s iam -D "Test service" -A "Rohin Bhargava" -L "mit"
@@ -20,3 +23,6 @@ RUST_BACKTRACE=1 cargo run init router router-test -p router-test-bun-applicatio
 cd router-test-bun-application/iam
 
 RUST_BACKTRACE=1 cargo run init router router-test-2
+
+bun install
+bun run build
