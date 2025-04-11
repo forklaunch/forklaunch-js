@@ -1,6 +1,6 @@
 import { stripUndefinedProperties } from '@forklaunch/common';
 import {
-  BaseEntity as MikroORMBaseEntity,
+  BaseEntity,
   Constructor,
   EntityDTO,
   FromEntityType,
@@ -15,7 +15,7 @@ import { transformRawDto } from './transformRawDto';
 /**
  * Abstract class representing a base entity.
  */
-export abstract class BaseEntity extends MikroORMBaseEntity {
+export abstract class SqlBaseEntity extends BaseEntity {
   /**
    * The unique identifier for the entity.
    *
@@ -42,40 +42,40 @@ export abstract class BaseEntity extends MikroORMBaseEntity {
   @Property({ onUpdate: () => new Date() })
   updatedAt: Date = new Date();
 
-  static create<Entity extends BaseEntity>(
+  static create<Entity extends SqlBaseEntity>(
     this: Constructor<Entity>,
     ...args: Parameters<Entity['create']>
   ): Entity {
     const [data, ...additionalArgs] = args;
     return new this().create(
-      data as CreateShape<BaseEntity, Entity>,
+      data as CreateShape<SqlBaseEntity, Entity>,
       ...additionalArgs
     );
   }
 
-  static update<Entity extends BaseEntity>(
+  static update<Entity extends SqlBaseEntity>(
     this: Constructor<Entity>,
     ...args: Parameters<Entity['update']>
   ): Entity {
     const [data, ...additionalArgs] = args;
     return new this().update(
-      data as UpdateShape<BaseEntity, Entity>,
+      data as UpdateShape<SqlBaseEntity, Entity>,
       ...additionalArgs
     );
   }
 
-  static map<Entity extends BaseEntity>(
+  static map<Entity extends SqlBaseEntity>(
     this: Constructor<Entity>,
     data: Partial<EntityDTO<FromEntityType<Entity>>>
   ): Entity {
     return new this().map(data);
   }
 
-  create(data: CreateShape<BaseEntity, this>): this {
+  create(data: CreateShape<SqlBaseEntity, this>): this {
     return Object.assign(this, transformRawDto(data, this));
   }
 
-  update(data: UpdateShape<BaseEntity, this>): this {
+  update(data: UpdateShape<SqlBaseEntity, this>): this {
     wrap(this).assign(
       stripUndefinedProperties(transformRawDto(data, this)) as Partial<
         EntityDTO<FromEntityType<this>>

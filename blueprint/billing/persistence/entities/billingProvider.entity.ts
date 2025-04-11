@@ -1,10 +1,10 @@
-import { BaseEntity } from '@forklaunch/blueprint-core';
+import { SqlBaseEntity } from '@forklaunch/blueprint-core';
 import { Entity, Enum, Property, Unique } from '@mikro-orm/core';
 import { BillingProviderEnum } from '../../domain/enum/billingProvider.enum';
 
 // This is to represent connection information for a billing provider
 @Entity()
-export class BillingProvider extends BaseEntity {
+export class BillingProvider extends SqlBaseEntity {
   @Property({ nullable: true })
   @Unique()
   externalId?: string;

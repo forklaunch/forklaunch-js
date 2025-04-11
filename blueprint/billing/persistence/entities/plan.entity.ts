@@ -1,10 +1,10 @@
-import { BaseEntity } from '@forklaunch/blueprint-core';
+import { SqlBaseEntity } from '@forklaunch/blueprint-core';
 import { ArrayType, Entity, Enum, Property, Unique } from '@mikro-orm/core';
 import { BillingProviderEnum } from '../../domain/enum/billingProvider.enum';
 import { PlanCadenceEnum } from '../../domain/enum/planCadence.enum';
 
 @Entity()
-export class Plan extends BaseEntity {
+export class Plan extends SqlBaseEntity {
   @Property()
   active!: boolean;
 

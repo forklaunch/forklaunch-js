@@ -1,10 +1,10 @@
-import { BaseEntity } from '@forklaunch/blueprint-core';
+import { SqlBaseEntity } from '@forklaunch/blueprint-core';
 import { Entity, Enum, Property } from '@mikro-orm/core';
 import { PaymentMethodEnum } from '../../domain/enum/paymentMethod.enum';
 
 // This is to represent connection information for a billing provider
 @Entity()
-export class CheckoutSession extends BaseEntity {
+export class CheckoutSession extends SqlBaseEntity {
   @Property()
   customerId!: string;
 

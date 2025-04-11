@@ -1,6 +1,6 @@
 import { stripUndefinedProperties } from '@forklaunch/common';
 import {
-  BaseEntity as MikroORMBaseEntity,
+  BaseEntity,
   Constructor,
   EntityDTO,
   FromEntityType,
@@ -16,7 +16,7 @@ import { transformRawDto } from './transformRawDto';
 /**
  * Abstract class representing a base entity.
  */
-export abstract class MongoBaseEntity extends MikroORMBaseEntity {
+export abstract class NoSqlBaseEntity extends BaseEntity {
   /**
    * The serialized unique identifier for the entity.
    *
@@ -52,40 +52,40 @@ export abstract class MongoBaseEntity extends MikroORMBaseEntity {
   @Property({ onUpdate: () => new Date() })
   updatedAt: Date = new Date();
 
-  static create<Entity extends MongoBaseEntity>(
+  static create<Entity extends NoSqlBaseEntity>(
     this: Constructor<Entity>,
     ...args: Parameters<Entity['create']>
   ): Entity {
     const [data, ...additionalArgs] = args;
     return new this().create(
-      data as CreateShape<MongoBaseEntity, Entity>,
+      data as CreateShape<NoSqlBaseEntity, Entity>,
       ...additionalArgs
     );
   }
 
-  static update<Entity extends MongoBaseEntity>(
+  static update<Entity extends NoSqlBaseEntity>(
     this: Constructor<Entity>,
     ...args: Parameters<Entity['update']>
   ): Entity {
     const [data, ...additionalArgs] = args;
     return new this().update(
-      data as UpdateShape<MongoBaseEntity, Entity>,
+      data as UpdateShape<NoSqlBaseEntity, Entity>,
       ...additionalArgs
     );
   }
 
-  static map<Entity extends MongoBaseEntity>(
+  static map<Entity extends NoSqlBaseEntity>(
     this: Constructor<Entity>,
     data: Partial<EntityDTO<FromEntityType<Entity>>>
   ): Entity {
     return new this().map(data);
   }
 
-  create(data: CreateShape<MongoBaseEntity, this>): this {
+  create(data: CreateShape<NoSqlBaseEntity, this>): this {
     return Object.assign(this, transformRawDto(data, this));
   }
 
-  update(data: UpdateShape<MongoBaseEntity, this>): this {
+  update(data: UpdateShape<NoSqlBaseEntity, this>): this {
     wrap(this).assign(
       stripUndefinedProperties(transformRawDto(data, this)) as Partial<
         EntityDTO<FromEntityType<this>>

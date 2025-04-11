@@ -1,3 +1,4 @@
+use regex::Regex;
 use std::{fs::create_dir_all, path::Path};
 
 use anyhow::{Context, Result};
@@ -57,9 +58,11 @@ pub(crate) fn get_file_contents(filepath: &Path) -> Result<String> {
 
 fn database_replacements(database: &String, template: String) -> String {
     match database.as_str() {
-        "mongodb" => template
-            .replace("BaseEntity", "MongoBaseEntity")
-            .replace("id: uuid", "id: string"),
+        "mongodb" => {
+            let re = Regex::new(r"([^a-zA-Z0-9_$]|^)SqlBaseEntity").unwrap();
+            re.replace_all(&template, "${1}NoSqlBaseEntity")
+                .replace("id: uuid", "id: string")
+        }
         _ => template,
     }
 }
@@ -128,13 +131,13 @@ pub(crate) fn generate_with_template(
             }
         };
         if !output_path.exists() {
-            let output_path_str = output_path.to_str().unwrap();
+            let output_path_str = output_path.file_name().unwrap().to_str().unwrap();
             let should_ignore = ignore_files
                 .iter()
-                .any(|ignore_file| output_path_str.contains(ignore_file));
+                .any(|ignore_file| output_path_str == ignore_file);
             let should_preserve = preserve_files
                 .iter()
-                .any(|preserve_file| output_path_str.contains(preserve_file));
+                .any(|preserve_file| output_path_str == preserve_file);
 
             if !should_ignore {
                 if should_preserve {

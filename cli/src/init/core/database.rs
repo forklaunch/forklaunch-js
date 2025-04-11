@@ -49,10 +49,10 @@ pub(crate) fn generate_database_export_index_ts(
 
     database_set.iter().for_each(|database| {
         let export_string = match database.as_str() {
-            "mongodb" => Some("mongo.base.entity"),
-            "postgresql" => Some("base.entity"),
-            "sqlite" => Some("base.entity"),
-            "mysql" => Some("base.entity"),
+            "mongodb" => Some("nosql.base.entity"),
+            "postgresql" => Some("sql.base.entity"),
+            "sqlite" => Some("sql.base.entity"),
+            "mysql" => Some("sql.base.entity"),
             _ => None,
         };
 
@@ -132,8 +132,8 @@ pub(crate) fn add_base_entity_to_core(
     };
 
     let (filename, template_path) = match database.as_str() {
-        "mongodb" => ("mongo.base.entity.ts", "mongo.base.entity.ts"),
-        "postgresql" => ("base.entity.ts", "base.entity.ts"),
+        "mongodb" => ("nosql.base.entity.ts", "nosql.base.entity.ts"),
+        "postgresql" => ("sql.base.entity.ts", "sql.base.entity.ts"),
         _ => bail!(ERROR_UNSUPPORTED_DATABASE),
     };
 

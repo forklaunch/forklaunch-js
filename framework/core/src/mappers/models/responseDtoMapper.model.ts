@@ -8,7 +8,7 @@ import { BaseDtoMapper, construct } from './baseDtoMapper.model';
 /**
  * Abstract class representing a response entity mapper.
  *
- * @template Entity - A type that extends BaseEntity.
+ * @template Entity - A type that extends SqlBaseEntity.
  * @template SV - A type that extends AnySchemaValidator.
  * @extends {BaseDtoMapper<SV>}
  */

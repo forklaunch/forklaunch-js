@@ -1,3 +1,3 @@
-export * from './base.entity';
+export * from './sql.base.entity';
 export * from './collection';
-export * from './mongo.base.entity';
+export * from './nosql.base.entity';

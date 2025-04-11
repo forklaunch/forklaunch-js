@@ -1,10 +1,10 @@
-import { BaseEntity } from '@forklaunch/blueprint-core';
+import { SqlBaseEntity } from '@forklaunch/blueprint-core';
 import { Entity, Enum, Property, Unique } from '@mikro-orm/core';
 import { BillingProviderEnum } from '../../domain/enum/billingProvider.enum';
 import { PartyEnum } from '../../domain/enum/party.enum';
 
 @Entity()
-export class Subscription extends BaseEntity {
+export class Subscription extends SqlBaseEntity {
   // maybe have billing period here as well
   @Property()
   partyId!: string;

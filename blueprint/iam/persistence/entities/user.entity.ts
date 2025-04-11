@@ -1,4 +1,4 @@
-import { BaseEntity } from '@forklaunch/blueprint-core';
+import { SqlBaseEntity } from '@forklaunch/blueprint-core';
 import {
   Collection,
   Entity,
@@ -11,7 +11,7 @@ import { Organization } from './organization.entity';
 import { Role } from './role.entity';
 
 @Entity()
-export class User extends BaseEntity {
+export class User extends SqlBaseEntity {
   @Property()
   @Unique()
   email!: string;

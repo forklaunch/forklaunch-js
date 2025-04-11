@@ -34,7 +34,7 @@
     "hooks": {},
     "indexes": [],
     "uniques": [],
-    "className": "BaseEntity",
+    "className": "SqlBaseEntity",
     "path": "../core/persistence/entities/base.entity.ts",
     "abstract": true,
     "internal": true,

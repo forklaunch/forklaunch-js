@@ -1,4 +1,4 @@
-import { BaseEntity } from '@forklaunch/blueprint-core';
+import { SqlBaseEntity } from '@forklaunch/blueprint-core';
 import {
   Collection,
   Entity,
@@ -11,7 +11,7 @@ import { User } from './user.entity';
 
 // Experiment with importing types from another service and see if it generates entity. The goal is to not generate an entity, but to have an object serialization
 @Entity()
-export class Organization extends BaseEntity {
+export class Organization extends SqlBaseEntity {
   @Property()
   name!: string;
 
