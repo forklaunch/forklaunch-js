@@ -215,6 +215,7 @@ impl CliCommand for ServiceCommand {
             &service_name,
             &base_path.to_string(),
             &mut config_data,
+            &mut stdout,
             dryrun,
         )
         .with_context(|| "Failed to create service")?;
@@ -233,6 +234,7 @@ fn generate_basic_service(
     service_name: &String,
     base_path: &String,
     config_data: &mut ServiceManifestData,
+    stdout: &mut StandardStream,
     dryrun: bool,
 ) -> Result<()> {
     let output_path = Path::new(base_path)
@@ -282,7 +284,7 @@ fn generate_basic_service(
             .with_context(|| ERROR_FAILED_TO_ADD_BASE_ENTITY_TO_CORE)?,
     );
 
-    write_rendered_templates(&rendered_templates, dryrun)
+    write_rendered_templates(&rendered_templates, dryrun, stdout)
         .with_context(|| ERROR_FAILED_TO_WRITE_SERVICE_FILES)?;
 
     generate_symlinks(

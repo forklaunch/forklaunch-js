@@ -141,13 +141,13 @@ pub(crate) const EXPRESS_VERSION: &str = "^0.4.6";
 // @forklaunch/hyper-express
 pub(crate) const HYPER_EXPRESS_VERSION: &str = "^0.4.6";
 // @forklaunch/implementation-billing-base
-pub(crate) const BILLING_BASE_VERSION: &str = "^0.1.8";
+pub(crate) const BILLING_BASE_VERSION: &str = "^0.1.9";
 // @forklaunch/interfaces-billing
-pub(crate) const BILLING_INTERFACES_VERSION: &str = "^0.1.8";
+pub(crate) const BILLING_INTERFACES_VERSION: &str = "^0.1.9";
 // @forklaunch/implementation-iam-base
-pub(crate) const IAM_BASE_VERSION: &str = "^0.1.8";
+pub(crate) const IAM_BASE_VERSION: &str = "^0.1.9";
 // @forklaunch/interfaces-iam
-pub(crate) const IAM_INTERFACES_VERSION: &str = "^0.1.8";
+pub(crate) const IAM_INTERFACES_VERSION: &str = "^0.1.9";
 // @forklaunch/validator
 pub(crate) const VALIDATOR_VERSION: &str = "^0.4.12";
 // @mikro-orm/core

@@ -160,6 +160,7 @@ impl CliCommand for RouterCommand {
                 &base_path.to_string(),
                 &mut config_data,
                 &service_name.to_string(),
+                &mut stdout,
                 dryrun,
             )
             .with_context(|| "Failed to create router")?;
@@ -181,6 +182,7 @@ fn generate_basic_router(
     base_path: &String,
     config_data: &mut RouterManifestData,
     service_name: &String,
+    stdout: &mut StandardStream,
     dryrun: bool,
 ) -> Result<()> {
     let output_path = Path::new(base_path).to_string_lossy().to_string();
@@ -208,7 +210,7 @@ fn generate_basic_router(
             .with_context(|| "Failed to add service metadata to artifacts")?,
     );
 
-    write_rendered_templates(&rendered_templates, dryrun)
+    write_rendered_templates(&rendered_templates, dryrun, stdout)
         .with_context(|| "Failed to write service files")?;
 
     Ok(())

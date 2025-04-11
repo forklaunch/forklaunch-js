@@ -1,5 +1,11 @@
 # @forklaunch/interfaces-iam
 
+## 0.1.9
+
+### Patch Changes
+
+- minor build bug -- script was not being used
+
 ## 0.1.8
 
 ### Patch Changes

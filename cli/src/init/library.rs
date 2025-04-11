@@ -150,6 +150,7 @@ impl CliCommand for LibraryCommand {
             &library_name,
             &base_path.to_string(),
             &mut config_data,
+            &mut stdout,
             dryrun,
         )
         .with_context(|| "Failed to create library")?;
@@ -168,6 +169,7 @@ fn generate_basic_library(
     library_name: &String,
     base_path: &String,
     config_data: &mut LibraryManifestData,
+    stdout: &mut StandardStream,
     dryrun: bool,
 ) -> Result<()> {
     let output_path = Path::new(base_path)
@@ -207,7 +209,7 @@ fn generate_basic_library(
             .with_context(|| "Failed to add library metadata to artifacts")?,
     );
 
-    write_rendered_templates(&rendered_templates, dryrun)
+    write_rendered_templates(&rendered_templates, dryrun, stdout)
         .with_context(|| "Failed to write library files")?;
 
     generate_symlinks(

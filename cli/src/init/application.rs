@@ -685,7 +685,7 @@ impl CliCommand for ApplicationCommand {
         }
 
         create_forklaunch_dir(&Path::new(&name).to_string_lossy().to_string(), dryrun)?;
-        write_rendered_templates(&rendered_templates, dryrun)
+        write_rendered_templates(&rendered_templates, dryrun, &mut stdout)
             .with_context(|| "Failed to write application files")?;
 
         additional_projects_dirs

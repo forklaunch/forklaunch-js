@@ -1,5 +1,13 @@
 # @forklaunch/blueprint-billing
 
+## 0.1.5
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/implementation-billing-base@0.1.9
+  - @forklaunch/interfaces-billing@0.1.9
+
 ## 0.1.4
 
 ### Patch Changes

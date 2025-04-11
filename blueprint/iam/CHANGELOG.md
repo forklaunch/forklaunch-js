@@ -1,5 +1,13 @@
 # @forklaunch/blueprint-iam
 
+## 0.1.5
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/implementation-iam-base@0.1.9
+  - @forklaunch/interfaces-iam@0.1.9
+
 ## 0.1.4
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @forklaunch/implementation-billing-base
 
+## 0.1.9
+
+### Patch Changes
+
+- minor build bug -- script was not being used
+- Updated dependencies
+  - @forklaunch/interfaces-billing@0.1.9
+
 ## 0.1.8
 
 ### Patch Changes
