@@ -13,11 +13,11 @@ import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { CheckoutSessionService } from '@forklaunch/interfaces-billing/interfaces';
+import { PaymentMethodEnum } from '../../domain/enum/paymentMethod.enum';
 import {
   CheckoutSessionDtoMapper,
   CreateCheckoutSessionDtoMapper
 } from '../../domain/mappers/checkoutSession.mappers';
-import { PaymentMethodEnum } from '../../domain/enum/paymentMethod.enum';
 import { SchemaDependencies } from '../../registrations';
 
 export const CheckoutSessionController = (

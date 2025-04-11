@@ -15,12 +15,12 @@ import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { PaymentLinkService } from '@forklaunch/interfaces-billing/interfaces';
+import { CurrencyEnum } from '../../domain/enum/currency.enum';
 import {
   CreatePaymentLinkDtoMapper,
   PaymentLinkDtoMapper,
   UpdatePaymentLinkDtoMapper
 } from '../../domain/mappers/paymentLink.mappers';
-import { CurrencyEnum } from '../../domain/enum/currency.enum';
 import { PaymentLinkSchemas, SchemaDependencies } from '../../registrations';
 
 export const PaymentLinkController = (
