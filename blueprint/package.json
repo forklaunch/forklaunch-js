@@ -10,6 +10,7 @@
     "iam",
     "billing",
     "sample-worker",
+    "monitoring",
     "implementations/**/*",
     "interfaces/**/*"
   ],

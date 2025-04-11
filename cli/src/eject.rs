@@ -27,7 +27,7 @@ use crate::{
         application::ApplicationManifestData,
         core::rendered_template::{write_rendered_templates, RenderedTemplate},
     },
-    prompt::{prompt_with_validation, ArrayCompleter},
+    prompt::{prompt_for_confirmation, ArrayCompleter},
     CliCommand,
 };
 
@@ -44,6 +44,8 @@ impl EjectCommand {
 fn eject_dependencies(
     package_json: &mut Value,
     base_path: &Path,
+    stdout: &mut StandardStream,
+    dryrun: bool,
 ) -> Result<(Vec<String>, Map<String, Value>)> {
     let dependencies = package_json
         .get("dependencies")
@@ -91,14 +93,38 @@ fn eject_dependencies(
         for entry in read_dir(&dependency_path)? {
             let entry = entry?;
             let source_path = entry.path();
-            let target_path = base_path.join(entry.file_name());
+            let target_path = if source_path.is_dir() && base_path.join(entry.file_name()).is_dir()
+            {
+                base_path.to_path_buf()
+            } else {
+                base_path.join(entry.file_name())
+            };
 
-            copy(&source_path, &target_path, &options)
-                .with_context(|| format!("Failed to copy files from {}", source_path.display()))?;
+            if dryrun {
+                writeln!(
+                    stdout,
+                    "Would copy {} to {}",
+                    source_path.display(),
+                    target_path.display()
+                )?;
+            } else {
+                copy(&source_path, &target_path, &options).with_context(|| {
+                    format!("Failed to copy files from {}", source_path.display())
+                })?;
+            }
         }
     }
 
     Ok((dependencies_to_eject, filtered_dependencies))
+}
+
+fn domain_prefix(package_name: &str) -> &str {
+    match package_name {
+        "/schemas" => "/domain/schemas",
+        "/interfaces" => "/domain/interfaces",
+        "/types" => "/domain/types",
+        _ => package_name,
+    }
 }
 
 fn perform_string_replacements(
@@ -134,7 +160,12 @@ fn perform_string_replacements(
                 for module_type in module_types {
                     new_content = new_content.replace(
                         format!("{}{}", dependency, module_type).as_str(),
-                        format!("{}{}", relative_path_difference_prefix, module_type).as_str(),
+                        format!(
+                            "{}{}",
+                            relative_path_difference_prefix,
+                            domain_prefix(module_type)
+                        )
+                        .as_str(),
                     );
                 }
             }
@@ -191,23 +222,15 @@ impl CliCommand for EjectCommand {
         let dryrun = matches.get_flag("dryrun");
 
         if !continue_eject_override && !dryrun {
-            let continue_eject = prompt_with_validation(
+            let continue_eject = prompt_for_confirmation(
                 &mut line_editor,
-                &mut stdout,
-                "continue",
-                matches,
-                "This operation is irreversible. Do you want to continue?",
-                Some(&["y", "yes", "n", "no"]),
-                |input| {
-                    input.to_lowercase() == "y"
-                        || input.to_lowercase() == "yes"
-                        || input.to_lowercase() == "n"
-                        || input.to_lowercase() == "no"
-                },
-                |_| "Invalid input. Please try again.".to_string(),
+                "This operation is irreversible. Do you want to continue? (y/N) ",
             )?;
 
-            if continue_eject.to_lowercase() != "y" && continue_eject.to_lowercase() != "yes" {
+            if !continue_eject {
+                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
+                writeln!(stdout, "Ejection cancelled")?;
+                stdout.reset()?;
                 return Ok(());
             }
         }
@@ -241,7 +264,7 @@ impl CliCommand for EjectCommand {
             from_str(&package_data).with_context(|| ERROR_FAILED_TO_PARSE_PACKAGE_JSON)?;
 
         let (dependencies_to_eject, filtered_dependencies) =
-            eject_dependencies(&mut package_json, &base_path)?;
+            eject_dependencies(&mut package_json, &base_path, &mut stdout, dryrun)?;
 
         let app_files = WalkDir::new(base_path)
             .into_iter()
@@ -260,15 +283,17 @@ impl CliCommand for EjectCommand {
             context: None,
         }];
 
-        perform_string_replacements(
-            &app_files,
-            &base_path,
-            &config_data,
-            &dependencies_to_eject,
-            &mut templates_to_render,
-        )?;
+        if !dryrun {
+            perform_string_replacements(
+                &app_files,
+                &base_path,
+                &config_data,
+                &dependencies_to_eject,
+                &mut templates_to_render,
+            )?;
+        }
 
-        write_rendered_templates(&templates_to_render, dryrun)?;
+        write_rendered_templates(&templates_to_render, dryrun, &mut stdout)?;
 
         if !dryrun {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;

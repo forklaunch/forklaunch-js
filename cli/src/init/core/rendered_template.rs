@@ -1,9 +1,11 @@
 use std::{
     fs::{create_dir_all, write},
+    io::Write,
     path::{Path, PathBuf},
 };
 
 use anyhow::{Context, Result};
+use termcolor::StandardStream;
 
 use crate::constants::ERROR_FAILED_TO_CREATE_DIR;
 
@@ -26,6 +28,7 @@ pub(crate) fn create_forklaunch_dir(path_dir: &String, dryrun: bool) -> Result<(
 pub(crate) fn write_rendered_templates(
     rendered_templates: &Vec<RenderedTemplate>,
     dryrun: bool,
+    stdout: &mut StandardStream,
 ) -> Result<()> {
     for rendered_template in rendered_templates {
         if !dryrun {
@@ -72,7 +75,7 @@ pub(crate) fn write_rendered_templates(
                 ),
             })?;
         } else {
-            println!("Would write {}", rendered_template.path.display());
+            writeln!(stdout, "Would write {}", rendered_template.path.display())?;
         }
     }
     Ok(())

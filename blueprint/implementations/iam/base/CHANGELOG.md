@@ -1,5 +1,21 @@
 # @forklaunch/implementation-iam-base
 
+## 0.1.9
+
+### Patch Changes
+
+- minor build bug -- script was not being used
+- Updated dependencies
+  - @forklaunch/interfaces-iam@0.1.9
+
+## 0.1.8
+
+### Patch Changes
+
+- bump core dependency version and change packaging scripts
+- Updated dependencies
+  - @forklaunch/interfaces-iam@0.1.8
+
 ## 0.1.7
 
 ### Patch Changes

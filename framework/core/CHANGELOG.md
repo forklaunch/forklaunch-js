@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.6.6
+
+### Patch Changes
+
+- Change name from dto mapper => mapper
+
 ## 0.6.5
 
 ### Patch Changes
@@ -261,7 +267,7 @@
 
 ### Patch Changes
 
-- Made TtlCacheRecord generic and improved ergonomics for dtoMappers (inline and more appropriate names)
+- Made TtlCacheRecord generic and improved ergonomics for mapperss (inline and more appropriate names)
 
 ## 0.2.22
 

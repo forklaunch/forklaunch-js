@@ -29,24 +29,24 @@ import {
   CreateOrganizationDtoMapper,
   OrganizationDtoMapper,
   UpdateOrganizationDtoMapper
-} from './models/dtoMapper/organization.dtoMapper';
+} from './domain/mappers/organization.mappers';
 import {
   CreatePermissionDtoMapper,
   PermissionDtoMapper,
   UpdatePermissionDtoMapper
-} from './models/dtoMapper/permission.dtoMapper';
+} from './domain/mappers/permission.mappers';
 import {
   CreateRoleDtoMapper,
   RoleDtoMapper,
   RoleEntityMapper,
   UpdateRoleDtoMapper
-} from './models/dtoMapper/role.dtoMapper';
+} from './domain/mappers/role.mappers';
 import {
   CreateUserDtoMapper,
   UpdateUserDtoMapper,
   UserDtoMapper
-} from './models/dtoMapper/user.dtoMapper';
-import { OrganizationStatus } from './models/enum/organizationStatus.enum';
+} from './domain/mappers/user.mappers';
+import { OrganizationStatus } from './domain/enum/organizationStatus.enum';
 //! defines the schemas for the organization service
 export const OrganizationSchemas = BaseOrganizationServiceSchemas({
   uuidId: true,

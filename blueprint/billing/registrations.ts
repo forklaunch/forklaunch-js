@@ -32,32 +32,32 @@ import {
   BillingPortalDtoMapper,
   CreateBillingPortalDtoMapper,
   UpdateBillingPortalDtoMapper
-} from './models/dtoMapper/billingPortal.dtoMapper';
+} from './domain/mappers/billingPortal.mappers';
 import {
   CheckoutSessionDtoMapper,
   CreateCheckoutSessionDtoMapper,
   UpdateCheckoutSessionDtoMapper
-} from './models/dtoMapper/checkoutSession.dtoMapper';
+} from './domain/mappers/checkoutSession.mappers';
 import {
   CreatePaymentLinkDtoMapper,
   PaymentLinkDtoMapper,
   UpdatePaymentLinkDtoMapper
-} from './models/dtoMapper/paymentLink.dtoMapper';
+} from './domain/mappers/paymentLink.mappers';
 import {
   CreatePlanDtoMapper,
   PlanDtoMapper,
   UpdatePlanDtoMapper
-} from './models/dtoMapper/plan.dtoMapper';
+} from './domain/mappers/plan.mappers';
 import {
   CreateSubscriptionDtoMapper,
   SubscriptionDtoMapper,
   UpdateSubscriptionDtoMapper
-} from './models/dtoMapper/subscription.dtoMapper';
-import { BillingProviderEnum } from './models/enum/billingProvider.enum';
-import { CurrencyEnum } from './models/enum/currency.enum';
-import { PartyEnum } from './models/enum/party.enum';
-import { PaymentMethodEnum } from './models/enum/paymentMethod.enum';
-import { PlanCadenceEnum } from './models/enum/planCadence.enum';
+} from './domain/mappers/subscription.mappers';
+import { BillingProviderEnum } from './domain/enum/billingProvider.enum';
+import { CurrencyEnum } from './domain/enum/currency.enum';
+import { PartyEnum } from './domain/enum/party.enum';
+import { PaymentMethodEnum } from './domain/enum/paymentMethod.enum';
+import { PlanCadenceEnum } from './domain/enum/planCadence.enum';
 //! defines the schemas for the billing portal service
 export const BillingPortalSchemas = BaseBillingPortalServiceSchemas({
   uuidId: true,

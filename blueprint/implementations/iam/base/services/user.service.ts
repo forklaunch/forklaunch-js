@@ -10,7 +10,7 @@ import {
   RequestDtoMapperConstructor,
   ResponseDtoMapperConstructor,
   transformIntoInternalDtoMapper
-} from '@forklaunch/core/dtoMapper';
+} from '@forklaunch/core/mappers';
 import {
   MetricsDefinition,
   OpenTelemetryCollector
@@ -48,8 +48,8 @@ export class BaseUserService<
   }
 > implements UserService
 {
-  #dtoMappers: InternalDtoMapper<
-    InstanceTypeRecord<typeof this.dtoMappers>,
+  #mapperss: InternalDtoMapper<
+    InstanceTypeRecord<typeof this.mapperss>,
     Entities,
     Dto
   >;
@@ -61,7 +61,7 @@ export class BaseUserService<
     protected organizationServiceFactory: () => OrganizationService<OrganizationStatus>,
     protected openTelemetryCollector: OpenTelemetryCollector<Metrics>,
     protected schemaValidator: SchemaValidator,
-    protected dtoMappers: {
+    protected mapperss: {
       UserDtoMapper: ResponseDtoMapperConstructor<
         SchemaValidator,
         Dto['UserDtoMapper'],
@@ -87,10 +87,7 @@ export class BaseUserService<
       >;
     }
   ) {
-    this.#dtoMappers = transformIntoInternalDtoMapper(
-      dtoMappers,
-      schemaValidator
-    );
+    this.#mapperss = transformIntoInternalDtoMapper(mapperss, schemaValidator);
   }
 
   async createUser(
@@ -98,14 +95,14 @@ export class BaseUserService<
     em?: EntityManager
   ): Promise<Dto['UserDtoMapper']> {
     const user =
-      await this.#dtoMappers.CreateUserDtoMapper.deserializeDtoToEntity(
+      await this.#mapperss.CreateUserDtoMapper.deserializeDtoToEntity(
         userDto,
         this.passwordEncryptionPublicKeyPath
       );
     ((await em) ?? this.em).transactional(async (em) => {
       await em.persist(user);
     });
-    return this.#dtoMappers.UserDtoMapper.serializeEntityToDto(user);
+    return this.#mapperss.UserDtoMapper.serializeEntityToDto(user);
   }
 
   async createBatchUsers(
@@ -114,7 +111,7 @@ export class BaseUserService<
   ): Promise<Dto['UserDtoMapper'][]> {
     const users = await Promise.all(
       userDtos.map(async (createUserDto) =>
-        this.#dtoMappers.CreateUserDtoMapper.deserializeDtoToEntity(
+        this.#mapperss.CreateUserDtoMapper.deserializeDtoToEntity(
           createUserDto,
           this.passwordEncryptionPublicKeyPath
         )
@@ -125,7 +122,7 @@ export class BaseUserService<
     });
 
     return users.map((user) =>
-      this.#dtoMappers.UserDtoMapper.serializeEntityToDto(user)
+      this.#mapperss.UserDtoMapper.serializeEntityToDto(user)
     );
   }
 
@@ -136,7 +133,7 @@ export class BaseUserService<
     const user = await (em ?? this.em).findOneOrFail('User', idDto, {
       populate: ['id', '*']
     });
-    return this.#dtoMappers.UserDtoMapper.serializeEntityToDto(
+    return this.#mapperss.UserDtoMapper.serializeEntityToDto(
       user as Entities['UserDtoMapper']
     );
   }
@@ -150,7 +147,7 @@ export class BaseUserService<
         populate: ['id', '*']
       })
     ).map((user) =>
-      this.#dtoMappers.UserDtoMapper.serializeEntityToDto(
+      this.#mapperss.UserDtoMapper.serializeEntityToDto(
         user as Entities['UserDtoMapper']
       )
     );
@@ -160,14 +157,14 @@ export class BaseUserService<
     userDto: Dto['UpdateUserDtoMapper'],
     em?: EntityManager
   ): Promise<Dto['UserDtoMapper']> {
-    let user = this.#dtoMappers.UpdateUserDtoMapper.deserializeDtoToEntity(
+    let user = this.#mapperss.UpdateUserDtoMapper.deserializeDtoToEntity(
       userDto,
       this.passwordEncryptionPublicKeyPath
     );
     await (em ?? this.em).transactional(async (localEm) => {
       user = await localEm.upsert(user);
     });
-    return this.#dtoMappers.UserDtoMapper.serializeEntityToDto(user);
+    return this.#mapperss.UserDtoMapper.serializeEntityToDto(user);
   }
 
   async updateBatchUsers(
@@ -176,7 +173,7 @@ export class BaseUserService<
   ): Promise<Dto['UserDtoMapper'][]> {
     let users = await Promise.all(
       userDtos.map(async (updateUserDto) =>
-        this.#dtoMappers.UpdateUserDtoMapper.deserializeDtoToEntity(
+        this.#mapperss.UpdateUserDtoMapper.deserializeDtoToEntity(
           updateUserDto,
           this.passwordEncryptionPublicKeyPath
         )
@@ -186,7 +183,7 @@ export class BaseUserService<
       users = await localEm.upsertMany(users);
     });
     return users.map((user) =>
-      this.#dtoMappers.UserDtoMapper.serializeEntityToDto(user)
+      this.#mapperss.UserDtoMapper.serializeEntityToDto(user)
     );
   }
 

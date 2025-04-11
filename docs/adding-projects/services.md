@@ -25,7 +25,7 @@ To add a service to your application, run the following command:
   </Tab>
 </CodeTabs>
 
-This adds a new service to your application, with a `RCSIDES` (`route`, `controller`, `service`, `interface`, `dtoMapper`, `entity`, `seeder`) stack, along with other configuration needed for the service to run standalone.
+This adds a new service to your application, with a `RCSIDES` (`route`, `controller`, `service`, `interface`, `mappers`, `entity`, `seeder`) stack, along with other configuration needed for the service to run standalone.
 
 `ForkLaunch` will automatically add the project to your workspace, docker-compose, and register any necessary scripts.
 
@@ -53,8 +53,8 @@ A minimal service will have the following structure:
 │   └── newService.interface.ts # the interface for the service, defining the business logic contract
 ├── mikro-orm.config.ts # the configuration for the database
 ├── models
-│   ├── dtoMapper
-│   │   └── newService.dtoMapper.ts # the data transfer object mapper for mapping between DTOs and entities
+│   ├── mappers
+│   │   └── newService.mappers.ts # the data transfer object mapper for mapping between DTOs and entities
 │   ├── persistence
 │   │   ├── index.ts
 │   │   └── newServiceRecord.entity.ts # the entity for the service, defining the database schema

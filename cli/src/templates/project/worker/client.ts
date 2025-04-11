@@ -1,6 +1,6 @@
 import { bootstrap } from './bootstrapper';
 {{#cache_backend}}import { CACHE_KEY_PREFIX } from './consts';{{/cache_backend}}
-import { {{pascal_case_name}}Record } from './models/persistence/{{camel_case_name}}Record.entity';
+import { {{pascal_case_name}}Record } from './persistence/entities/{{camel_case_name}}Record.entity';
 
 bootstrap((ci, tokens) => { {{^cache_backend}}
   const entityManager = ci.resolve(tokens.EntityManager);

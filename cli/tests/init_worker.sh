@@ -14,6 +14,9 @@ rm -rf worker-test
 
 RUST_BACKTRACE=1 cargo run init worker worker-test -b database -D "Test worker" -p .
 
+pnpm install
+pnpm build
+
 cd ..
 
 RUST_BACKTRACE=1 cargo run init application worker-test-bun-application -d postgresql -v zod -f express -r bun -t vitest -s billing -s iam -D "Test worker" -A "Rohin Bhargava" -L "mit"
@@ -24,3 +27,6 @@ cd worker-test-bun-application
 rm -rf worker-test
 
 RUST_BACKTRACE=1 cargo run init worker worker-test -b database -D "Test worker" -p .
+
+bun install
+bun run build

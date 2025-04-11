@@ -42,7 +42,7 @@
     "internal": true,
     "constructorParams": [],
     "toJsonParams": [],
-    "extends": "BaseEntity",
+    "extends": "SqlBaseEntity",
     "useCache": true,
     "collection": "sample_worker_record"
   },

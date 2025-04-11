@@ -31,8 +31,8 @@ use super::{
     command,
     core::{
         ast::{
-            transform_app_ts, transform_constants_data_ts, transform_entities_index_ts,
-            transform_registrations_ts, transform_seeders_index_ts,
+            transform_app_ts, transform_entities_index_ts, transform_registrations_ts,
+            transform_seed_data_ts, transform_seeders_index_ts,
         },
         database,
         manifest::add_router_definition_to_manifest,
@@ -160,6 +160,7 @@ impl CliCommand for RouterCommand {
                 &base_path.to_string(),
                 &mut config_data,
                 &service_name.to_string(),
+                &mut stdout,
                 dryrun,
             )
             .with_context(|| "Failed to create router")?;
@@ -181,6 +182,7 @@ fn generate_basic_router(
     base_path: &String,
     config_data: &mut RouterManifestData,
     service_name: &String,
+    stdout: &mut StandardStream,
     dryrun: bool,
 ) -> Result<()> {
     let output_path = Path::new(base_path).to_string_lossy().to_string();
@@ -208,7 +210,7 @@ fn generate_basic_router(
             .with_context(|| "Failed to add service metadata to artifacts")?,
     );
 
-    write_rendered_templates(&rendered_templates, dryrun)
+    write_rendered_templates(&rendered_templates, dryrun, stdout)
         .with_context(|| "Failed to write service files")?;
 
     Ok(())
@@ -228,7 +230,10 @@ fn add_router_to_artifacts(
     let mut rendered_templates = Vec::new();
 
     rendered_templates.push(RenderedTemplate {
-        path: Path::new(&base_path).join("server.ts"),
+        path: Path::new(&base_path).join(match is_worker {
+            true => "worker.ts",
+            false => "server.ts",
+        }),
         content: transform_app_ts(config_data.router_name.as_str(), is_worker, &base_path)?,
         context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_APP.to_string()),
     });
@@ -258,8 +263,8 @@ fn add_router_to_artifacts(
 
     rendered_templates.push(RenderedTemplate {
         path: Path::new(&base_path)
-            .join("models")
             .join("persistence")
+            .join("entities")
             .join("index.ts"),
         content: transform_entities_index_ts(config_data.router_name.as_str(), &base_path)?,
         context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER.to_string()),
@@ -267,7 +272,7 @@ fn add_router_to_artifacts(
 
     rendered_templates.push(RenderedTemplate {
         path: Path::new(base_path)
-            .join("models")
+            .join("persistence")
             .join("seeders")
             .join("index.ts"),
         content: transform_seeders_index_ts(config_data.router_name.as_str(), &base_path)?,
@@ -275,12 +280,10 @@ fn add_router_to_artifacts(
     });
 
     rendered_templates.push(RenderedTemplate {
-        path: Path::new(base_path).join("constants").join("seed.data.ts"),
-        content: transform_constants_data_ts(
-            config_data.router_name.as_str(),
-            is_worker,
-            &base_path,
-        )?,
+        path: Path::new(base_path)
+            .join("persistence")
+            .join("seed.data.ts"),
+        content: transform_seed_data_ts(config_data.router_name.as_str(), is_worker, &base_path)?,
         context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER.to_string()),
     });
 

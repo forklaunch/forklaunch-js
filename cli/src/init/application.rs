@@ -348,10 +348,10 @@ impl CliCommand for ApplicationCommand {
         );
 
         // filter out database base entities if not used
-        let all_database_base_entities = vec!["base.entity.ts", "mongo.base.entity.ts"];
+        let all_database_base_entities = vec!["sql.base.entity.ts", "nosql.base.entity.ts"];
         let database_base_entity = match database.as_str() {
-            "mongodb" => "mongo.base.entity.ts",
-            "postgresql" => "base.entity.ts",
+            "mongodb" => "nosql.base.entity.ts",
+            "postgresql" => "sql.base.entity.ts",
             _ => bail!("Invalid database: {}", database),
         };
         ignore_files.extend(
@@ -685,7 +685,7 @@ impl CliCommand for ApplicationCommand {
         }
 
         create_forklaunch_dir(&Path::new(&name).to_string_lossy().to_string(), dryrun)?;
-        write_rendered_templates(&rendered_templates, dryrun)
+        write_rendered_templates(&rendered_templates, dryrun, &mut stdout)
             .with_context(|| "Failed to write application files")?;
 
         additional_projects_dirs

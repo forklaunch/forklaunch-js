@@ -5,7 +5,7 @@ import { number, SchemaValidator, string } from '@{{app_name}}/core';{{^is_mongo
 import { Platform, TextType, Type } from '@mikro-orm/core';{{/is_mongo}}
 import { MikroORMOptions, {{db_driver}} } from '@mikro-orm/{{database}}';
 import dotenv from 'dotenv';
-import * as entities from './models/persistence';
+import * as entities from './persistence/entities';
 
 dotenv.config({ path: getEnvVar('ENV_FILE_PATH') });
 
@@ -80,7 +80,7 @@ const mikroOrmOptionsConfig: Partial<MikroORMOptions> = {
     }
   },{{/is_mongo}}
   seeder: {
-    path: 'dist/models',
+    path: 'dist/persistence',
     glob: 'seeder.js'
   }
 };

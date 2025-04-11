@@ -49,22 +49,23 @@ pub(crate) fn generate_database_export_index_ts(
 
     database_set.iter().for_each(|database| {
         let export_string = match database.as_str() {
-            "mongodb" => Some("mongo.base.entity"),
-            "postgresql" => Some("base.entity"),
-            "sqlite" => Some("base.entity"),
-            "mysql" => Some("base.entity"),
+            "mongodb" => Some("nosql.base.entity"),
+            "postgresql" => Some("sql.base.entity"),
+            "sqlite" => Some("sql.base.entity"),
+            "mysql" => Some("sql.base.entity"),
             _ => None,
         };
 
         if let Some(export_string) = export_string {
-            export_set.insert(format!("export * from './persistence/{}'", export_string));
+            export_set.insert(format!("export * from './{}'", export_string));
         }
+        export_set.insert(format!("export * from './collection'"));
     });
 
     Ok(RenderedTemplate {
         path: Path::new(&base_path)
             .join("core")
-            .join("models")
+            .join("persistence")
             .join("index.ts"),
         content: export_set.into_iter().collect::<Vec<String>>().join("\n"),
         context: None,
@@ -131,21 +132,19 @@ pub(crate) fn add_base_entity_to_core(
     };
 
     let (filename, template_path) = match database.as_str() {
-        "mongodb" => ("mongo.base.entity.ts", "mongo.base.entity.ts"),
-        "postgresql" => ("base.entity.ts", "base.entity.ts"),
+        "mongodb" => ("nosql.base.entity.ts", "nosql.base.entity.ts"),
+        "postgresql" => ("sql.base.entity.ts", "sql.base.entity.ts"),
         _ => bail!(ERROR_UNSUPPORTED_DATABASE),
     };
 
     let entity_path = Path::new(base_path)
         .join("core")
-        .join("models")
         .join("persistence")
         .join(filename);
 
     let template = TEMPLATES_DIR.get_file(
         Path::new("project")
             .join("core")
-            .join("models")
             .join("persistence")
             .join(template_path),
     );

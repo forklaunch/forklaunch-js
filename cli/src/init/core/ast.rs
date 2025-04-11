@@ -420,14 +420,14 @@ pub(crate) fn transform_app_ts(
     })?;
 
     let forklaunch_routes_import_text = format!(
-        "import {{ {router_name_pascal_case}Routes }} from './routes/{router_name_camel_case}.routes';",
+        "import {{ {router_name_pascal_case}Routes }} from './api/routes/{router_name_camel_case}.routes';",
     );
     let mut forklaunch_routes_import_injection =
         parse_ast_program(&allocator, &forklaunch_routes_import_text, app_source_type);
     inject_into_import_statement(
         &mut app_program,
         &mut forklaunch_routes_import_injection,
-        "/routes/",
+        "/api/routes/",
         format!("{router_name_pascal_case}Routes").as_str(),
     )?;
 
@@ -526,8 +526,8 @@ pub(crate) fn transform_registrations_ts(
 pub(crate) fn transform_entities_index_ts(router_name: &str, base_path: &String) -> Result<String> {
     let allocator = Allocator::default();
     let entities_index_path = Path::new(base_path)
-        .join("models")
         .join("persistence")
+        .join("entities")
         .join("index.ts");
     let entities_index_source_text = read_to_string(&entities_index_path).unwrap();
     let entities_index_source_type = SourceType::from_path(&entities_index_path).unwrap();
@@ -561,7 +561,7 @@ pub(crate) fn transform_entities_index_ts(router_name: &str, base_path: &String)
 pub(crate) fn transform_seeders_index_ts(router_name: &str, base_path: &String) -> Result<String> {
     let allocator = Allocator::default();
     let seeders_index_path = Path::new(base_path)
-        .join("models")
+        .join("persistence")
         .join("seeders")
         .join("index.ts");
     let seeders_index_source_text = read_to_string(&seeders_index_path).unwrap();
@@ -593,40 +593,36 @@ pub(crate) fn transform_seeders_index_ts(router_name: &str, base_path: &String) 
         .code)
 }
 
-pub(crate) fn transform_constants_data_ts(
+pub(crate) fn transform_seed_data_ts(
     router_name: &str,
     is_worker: bool,
     base_path: &String,
 ) -> Result<String> {
     let allocator = Allocator::default();
-    let constants_data_path = Path::new(base_path).join("constants").join("seed.data.ts");
-    let constants_data_source_text = read_to_string(&constants_data_path).unwrap();
-    let constants_data_source_type = SourceType::from_path(&constants_data_path).unwrap();
+    let seed_data_path = Path::new(base_path)
+        .join("persistence")
+        .join("seed.data.ts");
+    let seed_data_source_text = read_to_string(&seed_data_path).unwrap();
+    let seed_data_source_type = SourceType::from_path(&seed_data_path).unwrap();
     let router_name_camel_case = router_name.to_case(Case::Camel);
     let router_name_pascal_case = router_name.to_case(Case::Pascal);
 
-    let mut constants_data_program = parse_ast_program(
-        &allocator,
-        &constants_data_source_text,
-        constants_data_source_type,
-    );
+    let mut seed_data_program =
+        parse_ast_program(&allocator, &seed_data_source_text, seed_data_source_type);
 
-    let constants_import_text = format!(
-        "import {{ {router_name_pascal_case}Record }} from '../models/persistence/{router_name_camel_case}Record.entity';",
+    let seed_data_import_text = format!(
+        "import {{ {router_name_pascal_case}Record }} from './entities/{router_name_camel_case}Record.entity';",
     );
-    let mut constants_import_injection = parse_ast_program(
-        &allocator,
-        &constants_import_text,
-        constants_data_source_type,
-    );
+    let mut seed_data_import_injection =
+        parse_ast_program(&allocator, &seed_data_import_text, seed_data_source_type);
     inject_into_import_statement(
-        &mut constants_data_program,
-        &mut constants_import_injection,
-        "/models/persistence/",
+        &mut seed_data_program,
+        &mut seed_data_import_injection,
+        "/entities/",
         format!("{router_name_pascal_case}Record").as_str(),
     )?;
 
-    let constants_data_text = format!(
+    let seed_data_text = format!(
         "export const {router_name_camel_case}Record = {router_name_pascal_case}Record.create({{
             message: 'Test message'{}
         }})",
@@ -640,15 +636,14 @@ pub(crate) fn transform_constants_data_ts(
         }
     );
 
-    let mut constants_data_injection =
-        parse_ast_program(&allocator, &constants_data_text, SourceType::ts());
+    let mut seed_data_injection = parse_ast_program(&allocator, &seed_data_text, SourceType::ts());
 
-    constants_data_program
+    seed_data_program
         .body
-        .extend(constants_data_injection.body.drain(..));
+        .extend(seed_data_injection.body.drain(..));
 
     Ok(CodeGenerator::new()
         .with_options(CodegenOptions::default())
-        .build(&constants_data_program)
+        .build(&seed_data_program)
         .code)
 }

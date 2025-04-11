@@ -8,7 +8,7 @@ import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
 import dotenv from 'dotenv';
 // import { SqliteDriver } from '@mikro-orm/sqlite';
-import * as entities from './models/persistence';
+import * as entities from './persistence/entities';
 
 dotenv.config({ path: getEnvVar('ENV_FILE_PATH') });
 
@@ -72,7 +72,7 @@ const mikroOrmOptionsConfig: Partial<MikroORMOptions> = {
     }
   },
   seeder: {
-    path: 'dist/models',
+    path: 'dist/persistence',
     glob: 'seeder.js'
   }
 };

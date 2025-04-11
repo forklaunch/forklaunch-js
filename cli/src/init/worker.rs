@@ -218,6 +218,7 @@ impl CliCommand for WorkerCommand {
             &worker_name,
             &base_path.to_string(),
             &mut config_data,
+            &mut stdout,
             dryrun,
         )
         .with_context(|| "Failed to create worker")?;
@@ -236,6 +237,7 @@ fn generate_basic_worker(
     worker_name: &String,
     base_path: &String,
     config_data: &mut WorkerManifestData,
+    stdout: &mut StandardStream,
     dryrun: bool,
 ) -> Result<()> {
     let output_path = Path::new(base_path)
@@ -296,7 +298,7 @@ fn generate_basic_worker(
         );
     }
 
-    write_rendered_templates(&rendered_templates, dryrun)
+    write_rendered_templates(&rendered_templates, dryrun, stdout)
         .with_context(|| ERROR_FAILED_TO_WRITE_SERVICE_FILES)?;
 
     generate_symlinks(

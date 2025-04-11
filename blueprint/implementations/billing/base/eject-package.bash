@@ -1,1 +1,1 @@
-../../../../scripts/eject-package.bash
+../../../../scripts/eject-implementation-package.bash

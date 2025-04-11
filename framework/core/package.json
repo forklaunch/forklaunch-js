@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/core",
-  "version": "0.6.5",
+  "version": "0.6.6",
   "description": "forklaunch-js core package. Contains useful building blocks.",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -25,11 +25,11 @@
       "require": "./lib/src/controllers/index.js",
       "default": "./lib/src/controllers/index.js"
     },
-    "./dtoMapper": {
-      "types": "./lib/src/dtoMapper/index.d.ts",
-      "import": "./lib/src/dtoMapper/index.mjs",
-      "require": "./lib/src/dtoMapper/index.js",
-      "default": "./lib/src/dtoMapper/index.js"
+    "./mappers": {
+      "types": "./lib/src/mappers/index.d.ts",
+      "import": "./lib/src/mappers/index.mjs",
+      "require": "./lib/src/mappers/index.js",
+      "default": "./lib/src/mappers/index.js"
     },
     "./http": {
       "types": "./lib/src/http/index.d.ts",
@@ -58,7 +58,7 @@
     "lib/**"
   ],
   "scripts": {
-    "build": "tsc --noEmit && tsup ./src/cache/index.ts ./src/controllers/index.ts ./src/database/mikro/models/entities/base.entity.ts ./src/database/mikro/models/entities/mongo.base.entity.ts ./src/database/mikro/models/entities/role.entity.ts ./src/database/mikro/models/entities/user.entity.ts ./src/dtoMapper/index.ts ./src/http/index.ts ./src/services/index.ts ./__test__/index.ts --format cjs,esm --no-splitting --dts --tsconfig tsconfig.json --out-dir lib --clean --sourcemap",
+    "build": "tsc --noEmit && tsup ./src/cache/index.ts ./src/controllers/index.ts ./src/mappers/index.ts ./src/http/index.ts ./src/services/index.ts ./__test__/index.ts --format cjs,esm --no-splitting --dts --tsconfig tsconfig.json --out-dir lib --clean --sourcemap",
     "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",

@@ -1,10 +1,10 @@
 import { forklaunchExpress } from '@forklaunch/blueprint-core';
 import { ApiClient } from '@forklaunch/core/http';
 import { bootstrap } from './bootstrapper';
-import { OrganizationRoutes } from './routes/organization.routes';
-import { PermissionRoutes } from './routes/permission.routes';
-import { RoleRoutes } from './routes/role.routes';
-import { UserRoutes } from './routes/user.routes';
+import { OrganizationRoutes } from './api/routes/organization.routes';
+import { PermissionRoutes } from './api/routes/permission.routes';
+import { RoleRoutes } from './api/routes/role.routes';
+import { UserRoutes } from './api/routes/user.routes';
 //! bootstrap function that initializes the service application
 bootstrap((ci, tokens) => {
   //! resolves the openTelemetryCollector from the configuration

@@ -7,11 +7,11 @@ import {
   DependencyShapes,
   getEnvVar,
   Lifetime,
-} from "@forklaunch/core/services";
-import { EntityManager, ForkOptions, MikroORM } from "@mikro-orm/core";
+} from "@forklaunch/core/services";{{^cache_backend}}
+import { EntityManager, ForkOptions, MikroORM } from "@mikro-orm/core";{{/cache_backend}}
 import { Base{{pascal_case_name}}Service } from "./services/{{camel_case_name}}.service";
 //! defines the configuration schema for the application
-export function createDepenencies({ orm }: { orm: MikroORM }) {
+export function createDepenencies({{^cache_backend}}{ orm }: { orm: MikroORM }{{/cache_backend}}) {
   const configInjector = createConfigInjector(SchemaValidator(), {
     SERVICE_METADATA: {
       lifetime: Lifetime.Singleton,
@@ -29,6 +29,7 @@ export function createDepenencies({ orm }: { orm: MikroORM }) {
   const environmentConfig = configInjector.chain({
     {{#cache_backend}}REDIS_URL: {
       lifetime: Lifetime.Singleton,
+      type: string,
       value: getEnvVar('REDIS_URL')
     },{{/cache_backend}}
     PROTOCOL: {
@@ -104,13 +105,13 @@ export function createDepenencies({ orm }: { orm: MikroORM }) {
     {{pascal_case_name}}Service: {
       lifetime: Lifetime.Scoped,
       type: Base{{pascal_case_name}}Service,
-      factory: ({
-        {{^cache_backend}}EntityManager,{{/cache_backend}}{{#cache_backend}}
+      factory: ({ {{^cache_backend}}
+        EntityManager,{{/cache_backend}}{{#cache_backend}}
         TtlCache,{{/cache_backend}}
         OpenTelemetryCollector
       }) =>
-        new Base{{pascal_case_name}}Service(
-          {{^cache_backend}}EntityManager,{{/cache_backend}}{{#cache_backend}}
+        new Base{{pascal_case_name}}Service({{^cache_backend}}
+          EntityManager,{{/cache_backend}}{{#cache_backend}}
           TtlCache,{{/cache_backend}}
           OpenTelemetryCollector
         )

@@ -34,7 +34,7 @@
     "hooks": {},
     "indexes": [],
     "uniques": [],
-    "className": "BaseEntity",
+    "className": "SqlBaseEntity",
     "path": "../core/lib/models/persistence/base.entity.js",
     "abstract": true,
     "internal": true,

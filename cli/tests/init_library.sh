@@ -13,6 +13,9 @@ rm -rf library-test
 
 RUST_BACKTRACE=1 cargo run init library library-test -D "Test service" -p .
 
+pnpm install
+pnpm build
+
 cd ..
 
 RUST_BACKTRACE=1 cargo run init application library-test-bun-application -d postgresql -v zod -f express -r bun -t vitest -s billing -s iam -D "Test library" -A "Rohin Bhargava" -L 'apgl'
@@ -22,4 +25,7 @@ cd library-test-bun-application
 rm -rf library-test
 
 RUST_BACKTRACE=1 cargo run init library library-test -D "Test library" -p .
+
+bun install
+bun run build
 
