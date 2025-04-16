@@ -56,7 +56,12 @@ export function parse<
   ) {
     req.body = parsedRequest.value.body;
     req.params = parsedRequest.value.params;
-    req.query = parsedRequest.value.query;
+    Object.defineProperty(req, 'query', {
+      value: parsedRequest.value.query,
+      writable: false,
+      enumerable: true,
+      configurable: false
+    });
     req.headers = parsedRequest.value.headers;
   }
   if (!parsedRequest.ok) {

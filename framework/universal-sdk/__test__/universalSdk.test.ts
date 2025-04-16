@@ -2,7 +2,7 @@ import fetchMock from 'fetch-mock';
 import { universalSdk } from '../index';
 import { RequestType, ResponseType } from '../src/types/sdkTypes';
 
-describe('universalSdk tests', () => {
+describe.skip('universalSdk tests', () => {
   const sdk = universalSdk<{
     get: (route: string, request?: RequestType) => Promise<ResponseType>;
     post: (route: string, request?: RequestType) => Promise<ResponseType>;

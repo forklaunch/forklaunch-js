@@ -1,6 +1,7 @@
 cache/
 controllers/
 database/
+persistence/
 mappers/
 http/
 services/
