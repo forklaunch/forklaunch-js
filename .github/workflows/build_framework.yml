@@ -35,3 +35,7 @@ jobs:
       - name: Build framework
         working-directory: ./framework
         run: pnpm build
+
+      - name: Run tests
+        working-directory: ./framework
+        run: pnpm test
