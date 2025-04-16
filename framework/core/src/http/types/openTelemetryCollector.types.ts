@@ -7,6 +7,7 @@ import {
   ObservableUpDownCounter,
   UpDownCounter
 } from '@opentelemetry/api';
+import { LevelWithSilentOrString } from 'pino';
 
 export type MetricType<T extends string> = T extends 'counter'
   ? Counter
@@ -49,4 +50,15 @@ export interface LogFn {
     ...args: unknown[]
   ): void;
   (msg: string | LoggerMeta, ...args: unknown[]): void;
+}
+
+export interface TelemetryOptions {
+  enabled:
+    | boolean
+    | {
+        metrics?: boolean;
+        tracing?: boolean;
+        logging?: boolean;
+      };
+  level: LevelWithSilentOrString;
 }

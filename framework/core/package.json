@@ -31,6 +31,12 @@
       "require": "./lib/src/mappers/index.js",
       "default": "./lib/src/mappers/index.js"
     },
+    "./persistence": {
+      "types": "./lib/src/persistence/index.d.ts",
+      "import": "./lib/src/persistence/index.mjs",
+      "require": "./lib/src/persistence/index.js",
+      "default": "./lib/src/persistence/index.js"
+    },
     "./http": {
       "types": "./lib/src/http/index.d.ts",
       "import": "./lib/src/http/index.mjs",

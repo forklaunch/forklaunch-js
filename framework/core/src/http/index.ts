@@ -17,6 +17,7 @@ export * from './middleware/response/enrichExpressLikeSend.middleware';
 export * from './openApiV3Generator/openApiV3Generator';
 export * from './router/expressLikeRouter';
 export * from './telemetry/constants';
+export * from './telemetry/evaluateTelemetryOptions';
 export * from './telemetry/metricsDefinition';
 export * from './telemetry/openTelemetryCollector';
 export * from './telemetry/pinoLogger';

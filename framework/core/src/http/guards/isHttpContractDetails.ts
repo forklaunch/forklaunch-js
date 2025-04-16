@@ -11,7 +11,29 @@ import {
 import { isPathParamHttpContractDetails } from './isPathParamContractDetails';
 
 /**
- * Type guard for HttpContractDetails
+ * Type guard that checks if an object is an HTTP contract details object.
+ * An HTTP contract details object contains the schema definitions for an HTTP endpoint,
+ * including path parameters, response schemas, body schema, query parameters, and headers.
+ *
+ * @template SV - A type that extends AnySchemaValidator
+ * @template Path - A type that extends `/${string}` representing the endpoint path
+ * @template ParamsSchema - The type of path parameters schema
+ * @template ResponseSchemas - The type of response schemas
+ * @template BodySchema - The type of request body schema
+ * @template QuerySchema - The type of query parameters schema
+ * @template ReqHeaders - The type of request headers schema
+ * @template ResHeaders - The type of response headers schema
+ * @template BaseRequest - The base request type
+ * @param {unknown} maybeContractDetails - The object to check
+ * @returns {boolean} A type predicate indicating whether the object is an HttpContractDetails
+ *
+ * @example
+ * ```ts
+ * if (isHttpContractDetails(contractDetails)) {
+ *   // contractDetails is now typed as HttpContractDetails
+ *   const { body, path, params } = contractDetails;
+ * }
+ * ```
  */
 export function isHttpContractDetails<
   SV extends AnySchemaValidator,
