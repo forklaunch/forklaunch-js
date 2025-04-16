@@ -6,11 +6,23 @@ import { MiddlewareRequest, MiddlewareResponse } from '../types/express.types';
 
 /**
  * Middleware to enrich the response transmission by intercepting and parsing responses before they are sent.
+ * This middleware enhances Express's response handling by adding additional functionality to the send, json,
+ * and setHeader methods.
  *
- * @template SV - A type that extends AnySchemaValidator.
- * @param {Request<SV>} req - The request object.
- * @param {Response} res - The response object.
- * @param {NextFunction} [next] - The next middleware function.
+ * @template SV - A type that extends AnySchemaValidator for schema validation
+ * @param {MiddlewareRequest} req - The Express request object with additional type information
+ * @param {MiddlewareResponse} res - The Express response object with additional type information
+ * @param {NextFunction} [next] - The next middleware function in the chain
+ *
+ * @example
+ * ```typescript
+ * app.use(enrichResponseTransmission);
+ *
+ * app.get('/users', (req, res) => {
+ *   // Response will be automatically enriched
+ *   res.json({ users: [] });
+ * });
+ * ```
  */
 export function enrichResponseTransmission<SV extends AnySchemaValidator>(
   req: MiddlewareRequest<
@@ -37,11 +49,17 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
   ) => void;
 
   /**
-   * Intercepts the JSON response to include additional processing.
+   * Intercepts and enhances the JSON response method.
+   * Adds additional processing and type validation before sending the response.
    *
-   * @template T - The type of the response data.
-   * @param {unknown} data - The data to send in the response.
-   * @returns {T} - The result of the original JSON method.
+   * @template T - The type of the response data, must be a record with numeric keys
+   * @param {T} [data] - The data to send in the response
+   * @returns {T} - The processed response data
+   *
+   * @example
+   * ```typescript
+   * res.json({ id: 1, name: 'John' });
+   * ```
    */
   res.json = function <T extends Record<number, unknown>>(data?: T) {
     res.bodyData = data;
@@ -59,10 +77,17 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
   };
 
   /**
-   * Intercepts the send response to include additional processing and error handling.
+   * Intercepts and enhances the send response method.
+   * Adds additional processing and error handling before sending the response.
+   * If bodyData is not set, uses the provided data as the body.
    *
-   * @param {unknown} data - The data to send in the response.
-   * @returns {Response} - The result of the original send method.
+   * @param {unknown} data - The data to send in the response
+   * @returns {Response} - The Express response object
+   *
+   * @example
+   * ```typescript
+   * res.send('Hello World');
+   * ```
    */
   res.send = function (data) {
     if (!res.bodyData) {
@@ -81,9 +106,18 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
   };
 
   /**
-   * Intercepts the setHeader method to stringify the value before setting the header.
+   * Intercepts and enhances the setHeader method.
+   * Automatically stringifies non-string values before setting the header.
    *
-   * @param {string}
+   * @param {string} name - The name of the header
+   * @param {unknown | unknown[]} value - The header value(s) to set
+   * @returns {void}
+   *
+   * @example
+   * ```typescript
+   * res.setHeader('X-Custom-Header', { value: 123 }); // Will be stringified
+   * res.setHeader('Accept', ['application/json', 'text/plain']);
+   * ```
    */
   res.setHeader = function (name: string, value: unknown | unknown[]) {
     let stringifiedValue;

@@ -62,6 +62,14 @@ export class UniversalSdk {
     };
   }
 
+  /**
+   * Executes a request with path parameters.
+   *
+   * @param {string} route - The route path for the request.
+   * @param {'GET' | 'DELETE'} method - The HTTP method.
+   * @param {RequestType} [request] - The request object.
+   * @returns {Promise<ResponseType>} - The response object.
+   */
   async pathParamRequest(
     route: string,
     method: 'GET' | 'DELETE',
@@ -70,6 +78,14 @@ export class UniversalSdk {
     return this.execute(route, method, request);
   }
 
+  /**
+   * Executes a request with a body.
+   *
+   * @param {string} route - The route path for the request.
+   * @param {'POST' | 'PUT' | 'PATCH'} method - The HTTP method.
+   * @param {RequestType} [request] - The request object.
+   * @returns {Promise<ResponseType>} - The response object.
+   */
   async bodyRequest(
     route: string,
     method: 'POST' | 'PUT' | 'PATCH',
@@ -78,22 +94,57 @@ export class UniversalSdk {
     return this.execute(route, method, request);
   }
 
+  /**
+   * Executes a GET request.
+   *
+   * @param {string} route - The route path for the request.
+   * @param {RequestType} [request] - The request object.
+   * @returns {Promise<ResponseType>} - The response object.
+   */
   async get(route: string, request?: RequestType) {
     return this.pathParamRequest(route, 'GET', request);
   }
 
+  /**
+   * Executes a POST request.
+   *
+   * @param {string} route - The route path for the request.
+   * @param {RequestType} [request] - The request object.
+   * @returns {Promise<ResponseType>} - The response object.
+   */
   async post(route: string, request?: RequestType) {
     return this.bodyRequest(route, 'POST', request);
   }
 
+  /**
+   * Executes a PUT request.
+   *
+   * @param {string} route - The route path for the request.
+   * @param {RequestType} [request] - The request object.
+   * @returns {Promise<ResponseType>} - The response object.
+   */
   async put(route: string, request?: RequestType) {
     return this.bodyRequest(route, 'PUT', request);
   }
 
+  /**
+   * Executes a PATCH request.
+   *
+   * @param {string} route - The route path for the request.
+   * @param {RequestType} [request] - The request object.
+   * @returns {Promise<ResponseType>} - The response object.
+   */
   async patch(route: string, request?: RequestType) {
     return this.bodyRequest(route, 'PATCH', request);
   }
 
+  /**
+   * Executes a DELETE request.
+   *
+   * @param {string} route - The route path for the request.
+   * @param {RequestType} [request] - The request object.
+   * @returns {Promise<ResponseType>} - The response object.
+   */
   async delete(route: string, request?: RequestType) {
     return this.pathParamRequest(route, 'DELETE', request);
   }
