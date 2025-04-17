@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.2.7
+
+### Patch Changes
+
+- Added persistence into core package, better documentation and more validator utilities
+
 ## 0.2.6
 
 ### Patch Changes

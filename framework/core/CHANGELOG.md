@@ -1,5 +1,17 @@
 # @forklaunch/core
 
+## 0.7.0
+
+### Minor Changes
+
+- Added persistence into core package, better documentation and more validator utilities
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.5.0
+  - @forklaunch/common@0.2.7
+
 ## 0.6.6
 
 ### Patch Changes
