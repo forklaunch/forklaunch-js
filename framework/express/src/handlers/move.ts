@@ -11,6 +11,70 @@ import {
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { NextFunction, Request, Response } from 'express';
 
+/**
+ * Creates a MOVE route handler with schema validation and type safety.
+ *
+ * @template SV - The schema validator type
+ * @template Path - The route path type (must start with '/')
+ * @template P - The path parameters type
+ * @template ResBodyMap - The response body map type
+ * @template ReqBody - The request body type
+ * @template ReqQuery - The request query parameters type
+ * @template ReqHeaders - The request headers type
+ * @template ResHeaders - The response headers type
+ * @template LocalsObj - The locals object type
+ *
+ * @param {SV} schemaValidator - The schema validator instance
+ * @param {Path} path - The route path
+ * @param {ContractDetails<SV, 'middleware', Path, P, ResBodyMap, ReqBody, ReqQuery, ReqHeaders, ResHeaders, Request>} contractDetails - The contract details for the route
+ * @param {...ExpressLikeSchemaHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, ReqHeaders, ResHeaders, LocalsObj, Request, Response, NextFunction>[]} handlers - The route handlers
+ *
+ * @returns {void} - Returns nothing, registers the route with Express
+ *
+ * @example
+ * ```typescript
+ * move(
+ *   schemaValidator,
+ *   '/resources/:id/move',
+ *   {
+ *     summary: 'Move resource',
+ *     description: 'Moves a resource to a new location',
+ *     tags: ['resources'],
+ *     pathParams: {
+ *       id: { type: 'string' }
+ *     },
+ *     body: {
+ *       type: 'object',
+ *       properties: {
+ *         destination: { type: 'string' }
+ *       }
+ *     },
+ *     responses: {
+ *       200: {
+ *         description: 'Resource moved successfully',
+ *         content: {
+ *           'application/json': {
+ *             schema: {
+ *               type: 'object',
+ *               properties: {
+ *                 id: { type: 'string' },
+ *                 location: { type: 'string' }
+ *               }
+ *             }
+ *           }
+ *         }
+ *       }
+ *     }
+ *   },
+ *   async (req, res) => {
+ *     const { id } = req.params;
+ *     const { destination } = req.body;
+ *     // Move logic
+ *     res.json({ id, location: destination });
+ *   }
+ * );
+ * ```
+ */
 export const move = <
   SV extends AnySchemaValidator,
   Path extends `/${string}`,

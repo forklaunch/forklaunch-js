@@ -11,6 +11,81 @@ import {
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { NextFunction, Request, Response } from 'express';
 
+/**
+ * Creates a COPY route handler with schema validation and type safety.
+ *
+ * @template SV - The schema validator type
+ * @template Path - The route path type (must start with '/')
+ * @template P - The path parameters type
+ * @template ResBodyMap - The response body map type
+ * @template ReqBody - The request body type
+ * @template ReqQuery - The request query parameters type
+ * @template ReqHeaders - The request headers type
+ * @template ResHeaders - The response headers type
+ * @template LocalsObj - The locals object type
+ *
+ * @param {SV} schemaValidator - The schema validator instance
+ * @param {Path} path - The route path
+ * @param {ContractDetails<SV, 'copy', Path, P, ResBodyMap, ReqBody, ReqQuery, ReqHeaders, ResHeaders, Request>} contractDetails - The contract details for the route
+ * @param {...ExpressLikeSchemaHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, ReqHeaders, ResHeaders, LocalsObj, Request, Response, NextFunction>[]} handlers - The route handlers
+ *
+ * @returns {void} - Returns nothing, registers the route with Express
+ *
+ * @example
+ * ```typescript
+ * copy(
+ *   schemaValidator,
+ *   '/files/:id',
+ *   {
+ *     summary: 'Copy file',
+ *     description: 'Creates a copy of a file at a new location',
+ *     tags: ['files'],
+ *     parameters: [
+ *       {
+ *         name: 'id',
+ *         in: 'path',
+ *         required: true,
+ *         schema: { type: 'string' }
+ *       }
+ *     ],
+ *     requestBody: {
+ *       content: {
+ *         'application/json': {
+ *           schema: {
+ *             type: 'object',
+ *             properties: {
+ *               destination: { type: 'string' }
+ *             }
+ *           }
+ *         }
+ *       }
+ *     },
+ *     responses: {
+ *       201: {
+ *         description: 'File copied successfully',
+ *         content: {
+ *           'application/json': {
+ *             schema: {
+ *               type: 'object',
+ *               properties: {
+ *                 id: { type: 'string' },
+ *                 location: { type: 'string' }
+ *               }
+ *             }
+ *           }
+ *         }
+ *       }
+ *     }
+ *   },
+ *   async (req, res) => {
+ *     const { id } = req.params;
+ *     const { destination } = req.body;
+ *     const result = await copyFile(id, destination);
+ *     res.status(201).json(result);
+ *   }
+ * );
+ * ```
+ */
 export const copy = <
   SV extends AnySchemaValidator,
   Path extends `/${string}`,

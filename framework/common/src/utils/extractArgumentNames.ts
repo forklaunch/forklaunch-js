@@ -1,3 +1,14 @@
+/**
+ * Extracts the names of arguments from a function's string representation.
+ * This is useful for reflection and debugging purposes.
+ *
+ * @param {Object} func - A function or object with a toString method that returns the function definition
+ * @returns {string[]} An array of argument names
+ * @example
+ * function example(a, b, { c, d }) {}
+ * const names = extractArgumentNames(example);
+ * // Result: ['a', 'b', '{c,d}']
+ */
 export function extractArgumentNames(func: { toString(): string }): string[] {
   const fnStr = func.toString();
   const args = fnStr.match(/\(([^)]*)\)/);

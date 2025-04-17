@@ -11,9 +11,17 @@ import swaggerUi from 'swagger-ui-express';
 
 /**
  * Middleware to redirect requests to the Swagger UI base path.
+ * Ensures that requests to the base path are redirected to include a trailing slash,
+ * which is required for proper Swagger UI functionality.
  *
- * @param {string} path - The base path for the Swagger UI.
- * @returns {MiddlewareHandler} - The middleware handler for redirecting requests.
+ * @param {string} path - The base path for the Swagger UI (e.g., '/api/v1/docs')
+ * @returns {MiddlewareHandler} The middleware handler for redirecting requests
+ *
+ * @example
+ * ```typescript
+ * const swaggerPath = '/api/v1/docs';
+ * app.use(swaggerPath, swaggerRedirect(swaggerPath));
+ * ```
  */
 export function swaggerRedirect(path: string): MiddlewareHandler {
   return function swaggerHosting(
@@ -30,16 +38,36 @@ export function swaggerRedirect(path: string): MiddlewareHandler {
 
 /**
  * Sets up the Swagger UI middleware for serving API documentation.
+ * This function configures and returns middleware handlers that serve the Swagger UI
+ * interface and its associated assets. It uses live-directory for efficient asset
+ * serving and caching.
  *
- * @param {string} path - The base path for the Swagger UI.
- * @param {OpenAPIObject} document - The OpenAPI document to display.
- * @param {swaggerUi.SwaggerUiOptions} [opts] - Optional Swagger UI options.
- * @param {swaggerUi.SwaggerOptions} [options] - Optional Swagger options.
- * @param {string} [customCss] - Custom CSS to apply to the Swagger UI.
- * @param {string} [customfavIcon] - Custom favicon to use in the Swagger UI.
- * @param {string} [swaggerUrl] - Custom Swagger URL.
- * @param {string} [customSiteTitle] - Custom site title for the Swagger UI.
- * @returns {MiddlewareHandler[]} - An array of middleware handlers for serving the Swagger UI.
+ * @param {string} path - The base path for the Swagger UI (e.g., '/api/v1/docs')
+ * @param {OpenAPIObject} document - The OpenAPI specification document to display
+ * @param {swaggerUi.SwaggerUiOptions} [opts] - Optional Swagger UI configuration options
+ * @param {swaggerUi.SwaggerOptions} [options] - Optional Swagger specification display options
+ * @param {string} [customCss] - Custom CSS to apply to the Swagger UI interface
+ * @param {string} [customfavIcon] - Custom favicon URL for the Swagger UI
+ * @param {string} [swaggerUrl] - Custom URL for loading the Swagger specification
+ * @param {string} [customSiteTitle] - Custom title for the Swagger UI page
+ * @returns {MiddlewareHandler[]} Array of middleware handlers: [serve, staticAssets, ui]
+ *
+ * @example
+ * ```typescript
+ * const swaggerPath = '/api/v1/docs';
+ * const swaggerSpec = generateSwaggerDocument(schemaValidator, 3000, routers);
+ *
+ * app.get(
+ *   `${swaggerPath}/*`,
+ *   swagger(
+ *     swaggerPath,
+ *     swaggerSpec,
+ *     { explorer: true },
+ *     undefined,
+ *     '.swagger-ui .topbar { background-color: #24292e; }'
+ *   )
+ * );
+ * ```
  */
 export function swagger(
   path: string,
@@ -74,10 +102,12 @@ export function swagger(
 
   /**
    * Middleware to serve static assets for the Swagger UI.
+   * Handles serving of JavaScript, CSS, and image files required by the Swagger UI.
+   * Uses live-directory for efficient caching and serving of assets.
    *
-   * @param {Request} req - The request object.
-   * @param {Response} res - The response object.
-   * @param {MiddlewareNext} [next] - The next middleware function.
+   * @param {Request} req - The Hyper-Express request object
+   * @param {Response} res - The Hyper-Express response object
+   * @param {MiddlewareNext} [next] - The next middleware function
    * @returns {void}
    */
   const staticAssets = (req: Request, res: Response, next?: MiddlewareNext) => {

@@ -13,6 +13,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container: ubuntu
 
     steps:
       - name: Checkout code
@@ -28,6 +29,9 @@ jobs:
         with:
           version: 8
 
+      - name: Install git
+        run: apt-get update && apt-get install -y git
+
       - name: Install dependencies
         working-directory: ./framework
         run: pnpm install
@@ -35,3 +39,7 @@ jobs:
       - name: Build framework
         working-directory: ./framework
         run: pnpm build
+
+      - name: Run tests
+        working-directory: ./framework
+        run: pnpm test

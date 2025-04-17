@@ -11,6 +11,68 @@ import {
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { NextFunction, Request, Response } from 'express';
 
+/**
+ * Creates an MKCOL route handler with schema validation and type safety.
+ *
+ * @template SV - The schema validator type
+ * @template Path - The route path type (must start with '/')
+ * @template P - The path parameters type
+ * @template ResBodyMap - The response body map type
+ * @template ReqBody - The request body type
+ * @template ReqQuery - The request query parameters type
+ * @template ReqHeaders - The request headers type
+ * @template ResHeaders - The response headers type
+ * @template LocalsObj - The locals object type
+ *
+ * @param {SV} schemaValidator - The schema validator instance
+ * @param {Path} path - The route path
+ * @param {ContractDetails<SV, 'middleware', Path, P, ResBodyMap, ReqBody, ReqQuery, ReqHeaders, ResHeaders, Request>} contractDetails - The contract details for the route
+ * @param {...ExpressLikeSchemaHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, ReqHeaders, ResHeaders, LocalsObj, Request, Response, NextFunction>[]} handlers - The route handlers
+ *
+ * @returns {void} - Returns nothing, registers the route with Express
+ *
+ * @example
+ * ```typescript
+ * mkcol(
+ *   schemaValidator,
+ *   '/collections',
+ *   {
+ *     summary: 'Create collection',
+ *     description: 'Creates a new collection',
+ *     tags: ['collections'],
+ *     body: {
+ *       type: 'object',
+ *       properties: {
+ *         name: { type: 'string' },
+ *         description: { type: 'string' }
+ *       }
+ *     },
+ *     responses: {
+ *       201: {
+ *         description: 'Collection created successfully',
+ *         content: {
+ *           'application/json': {
+ *             schema: {
+ *               type: 'object',
+ *               properties: {
+ *                 id: { type: 'string' },
+ *                 name: { type: 'string' },
+ *                 description: { type: 'string' }
+ *               }
+ *             }
+ *           }
+ *         }
+ *       }
+ *     }
+ *   },
+ *   async (req, res) => {
+ *     const { name, description } = req.body;
+ *     // Create collection logic
+ *     res.status(201).json({ id: 'col_123', name, description });
+ *   }
+ * );
+ * ```
+ */
 export const mkcol = <
   SV extends AnySchemaValidator,
   Path extends `/${string}`,

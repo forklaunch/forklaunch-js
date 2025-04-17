@@ -22,8 +22,25 @@ import { swagger, swaggerRedirect } from './middleware/swagger.middleware';
 
 /**
  * Represents an application built on top of Hyper-Express and Forklaunch.
+ * This class provides a high-performance web server implementation using uWebSockets.js
+ * with Forklaunch's schema validation and API documentation capabilities.
  *
- * @template SV - A type that extends AnySchemaValidator.
+ * @template SV - Schema validator type extending AnySchemaValidator
+ *
+ * @example
+ * ```typescript
+ * const app = new Application(schemaValidator, openTelemetryCollector);
+ *
+ * app.get('/users', {
+ *   responses: {
+ *     200: { type: 'array', items: { type: 'object' } }
+ *   }
+ * }, async (req, res) => {
+ *   res.json(await getUsers());
+ * });
+ *
+ * await app.listen(3000);
+ * ```
  */
 export class Application<
   SV extends AnySchemaValidator
@@ -38,7 +55,18 @@ export class Application<
   /**
    * Creates an instance of the Application class.
    *
-   * @param {SV} schemaValidator - The schema validator.
+   * @param {SV} schemaValidator - Schema validator for request/response validation
+   * @param {OpenTelemetryCollector<MetricsDefinition>} openTelemetryCollector - Collector for OpenTelemetry metrics
+   * @param {DocsConfiguration} [docsConfiguration] - Optional configuration for API documentation (Swagger/Scalar)
+   *
+   * @example
+   * ```typescript
+   * const app = new Application(
+   *   new SchemaValidator(),
+   *   new OpenTelemetryCollector(),
+   *   { type: 'swagger' }
+   * );
+   * ```
    */
   constructor(
     schemaValidator: SV,
@@ -49,11 +77,31 @@ export class Application<
   }
 
   /**
-   * Starts the server and sets up Swagger documentation.
+   * Starts the server and sets up API documentation.
+   * Supports multiple listening configurations including port, host, and UNIX socket path.
+   * Automatically sets up Swagger or Scalar documentation based on configuration.
    *
-   * @param {string | number} arg0 - The port number or UNIX path to listen on.
-   * @param {...unknown[]} args - Additional arguments.
-   * @returns {Promise<uWebsockets.us_listen_socket>} - A promise that resolves with the listening socket.
+   * @param {number | string} arg0 - Port number or UNIX socket path
+   * @param {string | Function} [arg1] - Host name or callback function
+   * @param {Function} [arg2] - Callback function when host is specified
+   * @returns {Promise<uWebsockets.us_listen_socket>} Promise resolving to the listening socket
+   *
+   * @example
+   * ```typescript
+   * // Listen on port 3000
+   * await app.listen(3000);
+   *
+   * // Listen on specific host and port
+   * await app.listen(3000, 'localhost');
+   *
+   * // Listen on UNIX socket
+   * await app.listen('/tmp/app.sock');
+   *
+   * // With callback
+   * await app.listen(3000, (socket) => {
+   *   console.log('Server started');
+   * });
+   * ```
    */
   async listen(
     port: number,

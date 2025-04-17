@@ -2,8 +2,32 @@ import { Request } from '@forklaunch/hyper-express-fork';
 
 /**
  * Middleware function to parse the request body based on the content type.
+ * Supports multiple content types including JSON, form data, text, binary, and multipart.
  *
- * @returns {Function} - The middleware function.
+ * Supported content types:
+ * - application/json: Parses body as JSON
+ * - application/x-www-form-urlencoded: Parses body as URL-encoded form data
+ * - text/plain: Parses body as plain text
+ * - application/octet-stream: Parses body as binary buffer
+ * - multipart/form-data: Parses body as multipart form data, handling both files and fields
+ *
+ * @param {Request} req - The Hyper-Express request object
+ * @returns {Promise<void>} - Promise that resolves when parsing is complete
+ *
+ * @example
+ * ```typescript
+ * // Use as middleware
+ * app.use(contentParse);
+ *
+ * // Access parsed body in route handler
+ * app.post('/upload', async (req, res) => {
+ *   if (req.headers['content-type'] === 'multipart/form-data') {
+ *     // Access uploaded file
+ *     const file = req.body.fileField;
+ *     console.log(file.name, file.type, file.buffer);
+ *   }
+ * });
+ * ```
  */
 export async function contentParse(req: Request) {
   switch (

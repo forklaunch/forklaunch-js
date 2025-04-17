@@ -15,6 +15,13 @@ declare module '@forklaunch/validator' {
   }
 }
 
+/**
+ * Creates a union type string from an array of string literals.
+ *
+ * @template T - Array of string literals
+ * @example
+ * type Result = RecursiveUnion<['a', 'b', 'c']>; // 'a | b | c'
+ */
 type RecursiveUnion<T extends readonly string[]> = T extends readonly [
   infer F extends string,
   ...infer R extends readonly string[]
@@ -24,6 +31,10 @@ type RecursiveUnion<T extends readonly string[]> = T extends readonly [
     : `${F} | ${RecursiveUnion<R>}`
   : '';
 
+/**
+ * A mock implementation of SchemaValidator for testing purposes.
+ * This validator represents schemas as strings and provides simple string-based operations.
+ */
 export class MockSchemaValidator
   implements
     SchemaValidator<
@@ -58,33 +69,104 @@ export class MockSchemaValidator
   unknown = 'unknown';
   never = 'never';
 
+  /**
+   * Compiles a schema string.
+   *
+   * @param {T} schema - The schema string to compile
+   * @returns {T} The same schema string
+   */
   compile<T extends string>(schema: T): T {
     return schema;
   }
+
+  /**
+   * Converts a schema string to its schemified form.
+   *
+   * @param {T} schema - The schema string to schemify
+   * @returns {T} The same schema string
+   */
   schemify<T extends string>(schema: T) {
     return schema;
   }
+
+  /**
+   * Makes a schema string optional.
+   *
+   * @param {T} schema - The schema string to make optional
+   * @returns {`optional ${T}`} The schema string prefixed with 'optional'
+   */
   optional<T extends string>(schema: T): `optional ${T}` {
     return `optional ${schema}` as `optional ${T}`;
   }
+
+  /**
+   * Creates an array schema string.
+   *
+   * @param {T} schema - The schema string to convert to an array
+   * @returns {`array ${T}`} The schema string prefixed with 'array'
+   */
   array<T extends string>(schema: T): `array ${T}` {
     return `array ${schema}` as `array ${T}`;
   }
+
+  /**
+   * Creates a union schema string from multiple schema strings.
+   *
+   * @param {T} schemas - Array of schema strings to union
+   * @returns {RecursiveUnion<T>} The schema strings joined with ' | '
+   */
   union<T extends readonly string[]>(schemas: T): RecursiveUnion<T> {
     return schemas.join(' | ') as RecursiveUnion<T>;
   }
+
+  /**
+   * Creates a literal schema string.
+   *
+   * @param {T} schema - The literal value
+   * @returns {`literal ${T}`} The schema string prefixed with 'literal'
+   */
   literal<T extends LiteralSchema>(schema: T): `literal ${T}` {
     return `literal ${schema}`;
   }
+
+  /**
+   * Creates an enum schema string.
+   *
+   * @param {Record<string, T>} schemaEnum - The enum values
+   * @returns {`enum ${T}`} The schema string prefixed with 'enum'
+   */
   enum_<T extends LiteralSchema>(schemaEnum: Record<string, T>): `enum ${T}` {
     return `enum ${Object.values(schemaEnum).join(' | ')}` as `enum ${T}`;
   }
+
+  /**
+   * Checks if a value is a schema string.
+   *
+   * @param {unknown} value - The value to check
+   * @returns {boolean} True if the value is a string
+   */
   isSchema(value: unknown): value is string {
     return typeof value === 'string';
   }
+
+  /**
+   * Validates a value against a schema string.
+   *
+   * @param {T} schema - The schema string to validate against
+   * @param {string} value - The value to validate
+   * @returns {boolean} True if the schema and value strings match
+   */
   validate<T extends string>(schema: T, value: string): boolean {
     return schema === value;
   }
+
+  /**
+   * Parses a value against a schema string.
+   *
+   * @param {T} schema - The schema string to parse against
+   * @param {string} value - The value to parse
+   * @returns {ParseResult<T>} Success if the schema and value strings match, error otherwise
+   */
   parse<T extends string>(schema: T, value: string): ParseResult<T> {
     return JSON.stringify(schema) === JSON.stringify(value)
       ? {
@@ -96,6 +178,12 @@ export class MockSchemaValidator
           errors: [{ path: [], message: 'Some error' }]
         };
   }
+
+  /**
+   * Generates a mock OpenAPI schema object.
+   *
+   * @returns {SchemaObject} A simple string type schema object
+   */
   openapi(): SchemaObject {
     return {
       type: 'string'

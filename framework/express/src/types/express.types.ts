@@ -14,13 +14,29 @@ import { ParsedQs } from 'qs';
 
 /**
  * Extends the Forklaunch request interface with properties from Express's request interface.
+ * This interface combines the functionality of both Forklaunch and Express request objects
+ * while avoiding property conflicts through strategic omission.
  *
- * @template SV - A type that extends AnySchemaValidator.
- * @template P - A type for request parameters, defaulting to ParamsDictionary.
- * @template ResBodyMap - A type for the response body, defaulting to unknown.
- * @template ReqBody - A type for the request body, defaulting to unknown.
- * @template ReqQuery - A type for the request query, defaulting to ParsedQs.
- * @template LocalsObj - A type for local variables, defaulting to an empty object.
+ * @template SV - Schema validator type extending AnySchemaValidator
+ * @template P - Request parameters type extending ParamsDictionary
+ * @template ResBodyMap - Response body map type as a record with numeric keys
+ * @template ReqBody - Request body type as a record with string keys
+ * @template ReqQuery - Request query type extending ParsedQs
+ * @template ReqHeaders - Request headers type as a record with string keys
+ * @template LocalsObj - Local variables type as a record with string keys
+ *
+ * @example
+ * ```typescript
+ * interface UserRequest extends MiddlewareRequest<
+ *   SchemaValidator,
+ *   { id: string },
+ *   { 200: { name: string } },
+ *   { name: string },
+ *   { filter: string },
+ *   { 'content-type': string },
+ *   { user: User }
+ * > {}
+ * ```
  */
 export interface MiddlewareRequest<
   SV extends AnySchemaValidator,
@@ -38,10 +54,30 @@ export interface MiddlewareRequest<
 
 /**
  * Extends the Forklaunch response interface with properties from Express's response interface.
+ * This interface combines the functionality of both Forklaunch and Express response objects
+ * while avoiding property conflicts through strategic omission. It also includes status response
+ * functionality and CORS support.
  *
- * @template ResBodyMap - A type for the response body, defaulting to unknown.
- * @template LocalsObj - A type for local variables, defaulting to an empty object.
- * @template StatusCode - A type for the status code, defaulting to number.
+ * @template ResBodyMap - Response body map type as a record with numeric keys
+ * @template ResHeaders - Response headers type as a record with string keys
+ * @template LocalsObj - Local variables type as a record with string keys
+ *
+ * @property {boolean} cors - Indicates whether CORS headers are applied to the response
+ *
+ * @example
+ * ```typescript
+ * interface UserResponse extends MiddlewareResponse<
+ *   { 200: { name: string }, 404: { error: string } },
+ *   { 'content-type': string },
+ *   { user: User }
+ * > {}
+ *
+ * // Usage in a route handler
+ * app.get('/users/:id', (req, res: UserResponse) => {
+ *   res.cors = true; // Enable CORS
+ *   res.json({ name: 'John' });
+ * });
+ * ```
  */
 export interface MiddlewareResponse<
   ResBodyMap extends Record<number, unknown>,
@@ -64,6 +100,6 @@ export interface MiddlewareResponse<
       | 'on'
     >,
     ForklaunchStatusResponse<ForklaunchSendableData> {
-  /** If cors are applied to the response */
+  /** Whether CORS headers are applied to the response */
   cors: boolean;
 }

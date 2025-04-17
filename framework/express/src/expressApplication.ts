@@ -24,8 +24,14 @@ import swaggerUi from 'swagger-ui-express';
 
 /**
  * Application class that sets up an Express server with Forklaunch routers and middleware.
+ * This class extends ForklaunchExpressLikeApplication to provide Express-specific functionality.
  *
- * @template SV - A type that extends AnySchemaValidator.
+ * @template SV - A type that extends AnySchemaValidator for schema validation.
+ * @example
+ * ```typescript
+ * const app = new Application(schemaValidator, openTelemetryCollector);
+ * app.listen(3000, () => console.log('Server running on port 3000'));
+ * ```
  */
 export class Application<
   SV extends AnySchemaValidator
@@ -40,7 +46,9 @@ export class Application<
   /**
    * Creates an instance of Application.
    *
-   * @param {SV} schemaValidator - The schema validator.
+   * @param {SV} schemaValidator - The schema validator for request/response validation.
+   * @param {OpenTelemetryCollector<MetricsDefinition>} openTelemetryCollector - Collector for OpenTelemetry metrics.
+   * @param {DocsConfiguration} [docsConfiguration] - Optional configuration for API documentation (Swagger/Scalar).
    */
   constructor(
     schemaValidator: SV,
@@ -51,10 +59,26 @@ export class Application<
   }
 
   /**
-   * Starts the server and sets up Swagger documentation.
+   * Starts the Express server and sets up API documentation (Swagger/Scalar).
+   * This method is overloaded to support various ways of starting the server.
    *
-   * @param {...unknown[]} args - The arguments to pass to the listen method.
-   * @returns {Server} - The HTTP server.
+   * @param {number} [port] - The port number to listen on. Defaults to process.env.PORT.
+   * @param {string} [hostname] - The hostname to bind to.
+   * @param {number} [backlog] - The maximum length of the queue of pending connections.
+   * @param {() => void} [callback] - Optional callback to execute when the server starts listening.
+   * @returns {Server} - The HTTP server instance.
+   *
+   * @example
+   * ```typescript
+   * // Start server on port 3000
+   * app.listen(3000);
+   *
+   * // Start server with callback
+   * app.listen(3000, () => console.log('Server started'));
+   *
+   * // Start server with hostname and port
+   * app.listen(3000, 'localhost');
+   * ```
    */
   listen(
     port: number,

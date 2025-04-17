@@ -9,11 +9,23 @@ import { InternalRequest, InternalResponse } from '../types/hyperExpress.types';
 
 /**
  * Middleware to enrich the response transmission by intercepting and parsing responses before they are sent.
+ * This middleware enhances Hyper-Express's response handling by adding additional functionality to the send, json,
+ * and setHeader methods. It also handles CORS and response status codes.
  *
- * @template SV - A type that extends AnySchemaValidator.
- * @param {Request<SV>} req - The request object.
- * @param {Response} res - The response object.
- * @param {MiddlewareNext} next - The next middleware function.
+ * @template SV - Schema validator type extending AnySchemaValidator
+ * @param {InternalRequest} req - The Hyper-Express request object with additional type information
+ * @param {InternalResponse} res - The Hyper-Express response object with additional type information
+ * @param {ForklaunchNextFunction} next - The next middleware function in the chain
+ *
+ * @example
+ * ```typescript
+ * app.use(enrichResponseTransmission);
+ *
+ * app.get('/users', (req, res) => {
+ *   // Response will be automatically enriched
+ *   res.json({ users: [] });
+ * });
+ * ```
  */
 export function enrichResponseTransmission<SV extends AnySchemaValidator>(
   req: InternalRequest<
@@ -39,10 +51,18 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
   ) => void;
 
   /**
-   * Intercepts the JSON response to include additional processing.
+   * Intercepts and enhances the JSON response method.
+   * Adds additional processing and type validation before sending the response.
+   * Handles CORS and response status codes.
    *
-   * @param {unknown} data - The data to send in the response.
-   * @returns {boolean} - The result of the original JSON method.
+   * @template T - The type of the response data, must be a record with string keys
+   * @param {T} data - The data to send in the response
+   * @returns {T} - The processed response data
+   *
+   * @example
+   * ```typescript
+   * res.json({ id: 1, name: 'John' });
+   * ```
    */
   res.json = function <T extends Record<string, unknown>>(data: T) {
     res.bodyData = data;
@@ -68,10 +88,18 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
   };
 
   /**
-   * Intercepts the send response to include additional processing and error handling.
+   * Intercepts and enhances the send response method.
+   * Adds additional processing and error handling before sending the response.
+   * If bodyData is not set, uses the provided data as the body.
+   * Handles CORS and response status codes.
    *
-   * @param {unknown} data - The data to send in the response.
-   * @returns {Response} - The result of the original send method.
+   * @param {unknown} data - The data to send in the response
+   * @returns {Response} - The Hyper-Express response object
+   *
+   * @example
+   * ```typescript
+   * res.send('Hello World');
+   * ```
    */
   res.send = function (data) {
     if (!res.bodyData) {
@@ -98,9 +126,18 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
   };
 
   /**
-   * Intercepts the setHeader method to stringify the value before setting the header.
+   * Intercepts and enhances the setHeader method.
+   * Automatically stringifies non-string values before setting the header.
    *
-   * @param {string}
+   * @param {string} name - The name of the header
+   * @param {unknown | unknown[]} value - The header value(s) to set
+   * @returns {void}
+   *
+   * @example
+   * ```typescript
+   * res.setHeader('X-Custom-Header', { value: 123 }); // Will be stringified
+   * res.setHeader('Accept', ['application/json', 'text/plain']);
+   * ```
    */
   res.setHeader = function (name: string, value: unknown | unknown[]) {
     let stringifiedValue;
