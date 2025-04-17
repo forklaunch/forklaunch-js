@@ -50,6 +50,9 @@ export type SchemaConstructor<SV extends AnySchemaValidator> = new (
   ...args: unknown[]
 ) => IdiomaticSchema<SV>;
 export type Function = (...args: never[]) => unknown;
+export type FunctionToConstructor = (
+  ...args: never[]
+) => new (...args: never[]) => unknown;
 export type SchemaFunction<SV extends AnySchemaValidator> = (
   args: unknown
 ) => IdiomaticSchema<SV>;
@@ -71,17 +74,19 @@ type ResolveConfigValue<SV extends AnySchemaValidator, T> =
     ? Schema<InstanceType<T>, SV>
     : T extends SchemaFunction<SV>
       ? (...args: Parameters<T>) => Schema<ReturnType<T>, SV>
-      : T extends Function
-        ? (...args: Parameters<T>) => ReturnType<T>
-        : T extends Constructor
-          ? InstanceType<T>
-          : T extends IdiomaticSchema<SV>
-            ? Schema<T, SV>
-            : T extends Record<string, ConfigTypes<SV>>
-              ? {
-                  [K in keyof T]: ResolveConfigValue<SV, T[K]>;
-                }
-              : Schema<T, SV>;
+      : T extends FunctionToConstructor
+        ? (...args: Parameters<T>) => InstanceType<ReturnType<T>>
+        : T extends Function
+          ? (...args: Parameters<T>) => ReturnType<T>
+          : T extends Constructor
+            ? InstanceType<T>
+            : T extends IdiomaticSchema<SV>
+              ? Schema<T, SV>
+              : T extends Record<string, ConfigTypes<SV>>
+                ? {
+                    [K in keyof T]: ResolveConfigValue<SV, T[K]>;
+                  }
+                : Schema<T, SV>;
 
 export type ResolvedConfigValidator<
   SV extends AnySchemaValidator,

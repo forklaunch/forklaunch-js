@@ -26,10 +26,7 @@ export interface TtlCache {
    * @param {string} cacheRecordKey - The key of the cache record to enqueue.
    * @returns {Promise<void>} - A promise that resolves when the record is enqueued into the cache.
    */
-  enqueueRecord<T>(
-    queueName: string,
-    cacheRecord: TtlCacheRecord<T>
-  ): Promise<void>;
+  enqueueRecord<T>(queueName: string, cacheRecord: T): Promise<void>;
 
   /**
    *
@@ -38,10 +35,7 @@ export interface TtlCache {
    * @param {string[]} cacheRecordKeys - The keys of the cache records to enqueue.
    * @returns {Promise<void>} - A promise that resolves when the records are enqueued into the cache.
    */
-  enqueueBatchRecords<T>(
-    queueName: string,
-    cacheRecords: TtlCacheRecord<T>[]
-  ): Promise<void>;
+  enqueueBatchRecords<T>(queueName: string, cacheRecords: T[]): Promise<void>;
 
   /**
    * Deletes a record from the cache.
@@ -110,6 +104,22 @@ export interface TtlCache {
   peekBatchRecords(
     cacheRecordKeysOrPrefix: string[] | string
   ): Promise<boolean[]>;
+
+  /**
+   * Peeks at a record in the cache to check if it exists.
+   *
+   * @param {string} queueName - The name of the queue to peek at.
+   * @returns {Promise<T>} - A promise that resolves with the record.
+   */
+  peekQueueRecord<T>(queueName: string): Promise<T>;
+
+  /**
+   * Peeks at a batch of records in the cache to check if they exist.
+   *
+   * @param {string} queueName - The name of the queue to peek at.
+   * @returns {Promise<T[]>} - A promise that resolves with the records.
+   */
+  peekQueueRecords<T>(queueName: string, pageSize: number): Promise<T[]>;
 
   /**
    * Gets the TTL (Time-To-Live) in milliseconds.

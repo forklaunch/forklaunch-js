@@ -31,6 +31,15 @@ type RecursiveUnion<T extends readonly string[]> = T extends readonly [
     : `${F} | ${RecursiveUnion<R>}`
   : '';
 
+type SerializeStringArray<T extends string[]> = T extends [
+  infer F extends string,
+  ...infer R extends string[]
+]
+  ? R extends []
+    ? F
+    : `${F}, ${SerializeStringArray<R>}`
+  : '';
+
 /**
  * A mock implementation of SchemaValidator for testing purposes.
  * This validator represents schemas as strings and provides simple string-based operations.
@@ -45,6 +54,15 @@ export class MockSchemaValidator
       <T extends readonly string[]>(schemas: T) => RecursiveUnion<T>,
       <T extends LiteralSchema>(schema: T) => `literal ${T}`,
       <T extends LiteralSchema>(schemaEnum: Record<string, T>) => `enum ${T}`,
+      <Args extends string[], ReturnType extends string>(
+        args: Args,
+        returnType: ReturnType
+      ) => `function(${SerializeStringArray<Args>}) => ${ReturnType}`,
+      <Key extends string, Value extends string>(
+        key: Key,
+        value: Value
+      ) => `{${Key}: ${Value}}`,
+      <T extends string>(schema: T) => `Promise<${T}>`,
       (value: unknown) => value is string,
       <T extends string>(schema: T, value: string) => boolean,
       <T extends string>(schema: T, value: string) => ParseResult<T>,
@@ -140,6 +158,44 @@ export class MockSchemaValidator
   }
 
   /**
+   * Creates a function schema string.
+   *
+   * @param {Args} args - The arguments of the function
+   * @param {ReturnType} returnType - The return type of the function
+   * @returns {`function(${SerializeStringArray<Args>}) => ${ReturnType}`} The schema string prefixed with 'function'
+   */
+  function_<Args extends string[], ReturnType extends string>(
+    args: Args,
+    returnType: ReturnType
+  ): `function(${SerializeStringArray<Args>}) => ${ReturnType}` {
+    return `function(${args.join(', ')}) => ${returnType}` as `function(${SerializeStringArray<Args>}) => ${ReturnType}`;
+  }
+
+  /**
+   * Creates a record schema string.
+   *
+   * @param {Key} key - The key schema string
+   * @param {Value} value - The value schema string
+   * @returns {`{${Key}: ${Value}}`} The schema string prefixed with 'record'
+   */
+  record<Key extends string, Value extends string>(
+    key: Key,
+    value: Value
+  ): `{${Key}: ${Value}}` {
+    return `{${key}: ${value}}` as `{${Key}: ${Value}}`;
+  }
+
+  /**
+   * Creates a promise schema string.
+   *
+   * @param {T} schema - The schema string to convert to a promise
+   * @returns {`Promise<${T}>`} The schema string prefixed with 'Promise'
+   */
+  promise<T extends string>(schema: T): `Promise<${T}>` {
+    return `Promise<${schema}>` as `Promise<${T}>`;
+  }
+
+  /**
    * Checks if a value is a schema string.
    *
    * @param {unknown} value - The value to check
@@ -209,5 +265,9 @@ export const array = mockSchemaValidator.array.bind(mockSchemaValidator);
 export const union = mockSchemaValidator.union.bind(mockSchemaValidator);
 export const literal = mockSchemaValidator.literal.bind(mockSchemaValidator);
 export const enum_ = mockSchemaValidator.enum_.bind(mockSchemaValidator);
+export const function_ =
+  mockSchemaValidator.function_.bind(mockSchemaValidator);
+export const record = mockSchemaValidator.record.bind(mockSchemaValidator);
+export const promise = mockSchemaValidator.promise.bind(mockSchemaValidator);
 export const validate = mockSchemaValidator.validate.bind(mockSchemaValidator);
 export const openapi = mockSchemaValidator.openapi.bind(mockSchemaValidator);

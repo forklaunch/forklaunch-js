@@ -9,9 +9,12 @@ import {
   Kind,
   KindGuard,
   TArray,
+  TFunction,
   TLiteral,
   TOptional,
+  TPromise,
   TProperties,
+  TRecord,
   TSchema,
   TUnion,
   Type
@@ -35,8 +38,8 @@ import {
   TObject,
   TObjectShape,
   TResolve,
-  TUnionContainer,
-  UnionTResolve
+  TUnionTupleContainer,
+  UnionTupleTResolve
 } from './types/schema.types';
 
 /**
@@ -69,7 +72,9 @@ export class TypeboxSchemaValidator
       <T extends TIdiomaticSchema>(schema: T) => TResolve<T>,
       <T extends TIdiomaticSchema>(schema: T) => TOptional<TResolve<T>>,
       <T extends TIdiomaticSchema>(schema: T) => TArray<TResolve<T>>,
-      <T extends TUnionContainer>(schemas: [...T]) => TUnion<UnionTResolve<T>>,
+      <T extends TUnionTupleContainer>(
+        schemas: [...T]
+      ) => TUnion<UnionTupleTResolve<T>>,
       <T extends LiteralSchema>(value: T) => TLiteral<T>,
       <T extends Record<string, LiteralSchema>>(
         schemaEnum: T
@@ -80,6 +85,15 @@ export class TypeboxSchemaValidator
           }[keyof T]
         ]
       >,
+      <Args extends TUnionTupleContainer, ReturnType extends TIdiomaticSchema>(
+        args: [...Args],
+        returnType: ReturnType
+      ) => TFunction<UnionTupleTResolve<Args>, TResolve<ReturnType>>,
+      <Key extends TIdiomaticSchema, Value extends TIdiomaticSchema>(
+        key: Key,
+        value: Value
+      ) => TRecord<TResolve<Key>, TResolve<Value>>,
+      <T extends TIdiomaticSchema>(schema: T) => TPromise<TResolve<T>>,
       (value: unknown) => value is TSchema,
       <T extends TIdiomaticSchema | TCatchall>(
         schema: T,
@@ -220,6 +234,9 @@ export class TypeboxSchemaValidator
   nullish = Type.Union([Type.Void(), Type.Null(), Type.Undefined()], {
     errorType: 'nullish'
   });
+  void = Type.Void();
+  null = Type.Null();
+  undefined = Type.Undefined();
   any = Type.Any();
   unknown = Type.Unknown();
   never = Type.Never();
@@ -286,9 +303,7 @@ export class TypeboxSchemaValidator
    * @returns {TOptional<TResolve<T>>} The optional schema.
    */
   optional<T extends TIdiomaticSchema>(schema: T): TOptional<TResolve<T>> {
-    const schemified = KindGuard.IsSchema(schema)
-      ? schema
-      : this.schemify(schema);
+    const schemified = this.schemify(schema);
     return Type.Optional(schemified) as TOptional<TResolve<T>>;
   }
 
@@ -298,9 +313,7 @@ export class TypeboxSchemaValidator
    * @returns {TArray<TResolve<T>>} The array schema.
    */
   array<T extends TIdiomaticSchema>(schema: T): TArray<TResolve<T>> {
-    const schemified = KindGuard.IsSchema(schema)
-      ? schema
-      : this.schemify(schema);
+    const schemified = this.schemify(schema);
     return Type.Array(schemified, {
       errorType: `array of ${this.errorType(schemified)}`
     }) as TArray<TResolve<T>>;
@@ -308,15 +321,17 @@ export class TypeboxSchemaValidator
 
   /**
    * Create a union schema.
-   * @param {TUnionContainer} schemas - The schemas to union.
-   * @returns {TUnion<UnionTResolve<T>>} The union schema.
+   * @param {TUnionTupleContainer} schemas - The schemas to union.
+   * @returns {TUnion<UnionTupleTResolve<T>>} The union schema.
    *
    * WARNING: If "nullish" or TUndefined is included in the union, the key will still be expected.
    * This is a limitation of TypeBox. Consider using "optional" instead.
    */
-  union<T extends TUnionContainer>(schemas: [...T]): TUnion<UnionTResolve<T>> {
+  union<T extends TUnionTupleContainer>(
+    schemas: [...T]
+  ): TUnion<UnionTupleTResolve<T>> {
     const unionTypes = schemas.map((schema) => {
-      return KindGuard.IsSchema(schema) ? schema : this.schemify(schema);
+      return this.schemify(schema);
     });
 
     return Type.Union(unionTypes, {
@@ -324,7 +339,7 @@ export class TypeboxSchemaValidator
         .map((s) => this.errorType(s))
         .join(', ')}`,
       errorSuffix: true
-    }) as TUnion<UnionTResolve<T>>;
+    }) as TUnion<UnionTupleTResolve<T>>;
   }
 
   /**
@@ -341,7 +356,7 @@ export class TypeboxSchemaValidator
   /**
    * Create an enum schema.
    * @param {Record<string, LiteralSchema>} schemaEnum - The enum schema.
-   * @returns {TUnion<UnionTResolve<T[]>>} The enum schema.
+   * @returns {TUnion<UnionTupleTResolve<T[]>>} The enum schema.
    */
   enum_<T extends Record<string, LiteralSchema>>(
     schemaEnum: T
@@ -361,6 +376,56 @@ export class TypeboxSchemaValidator
         }[keyof T]
       ]
     >;
+  }
+
+  /**
+   * Create a function schema.
+   * @param {TSchema[]} args - The arguments of the function.
+   * @param {TAny} returnType - The return type of the function.
+   * @returns {TFunction<Args, ReturnType>} The function schema.
+   */
+  function_<
+    Args extends TUnionTupleContainer,
+    ReturnType extends TIdiomaticSchema
+  >(
+    args: [...Args],
+    returnType: ReturnType
+  ): TFunction<UnionTupleTResolve<Args>, TResolve<ReturnType>> {
+    const schemaArgs = args.map((schema) => {
+      return this.schemify(schema);
+    });
+    const schemaReturnType = this.schemify(returnType);
+    return Type.Function(schemaArgs, schemaReturnType) as TFunction<
+      UnionTupleTResolve<Args>,
+      TResolve<ReturnType>
+    >;
+  }
+
+  /**
+   * Create a record schema.
+   * @param {TIdiomaticSchema} key - The key schema.
+   * @param {TIdiomaticSchema} value - The value schema.
+   * @returns {TRecord<TResolve<Key>, TResolve<Value>>} The record schema.
+   */
+  record<Key extends TIdiomaticSchema, Value extends TIdiomaticSchema>(
+    key: Key,
+    value: Value
+  ): TRecord<TResolve<Key>, TResolve<Value>> {
+    const keySchema = this.schemify(key);
+    const valueSchema = this.schemify(value);
+    return Type.Record(keySchema, valueSchema) as TRecord<
+      TResolve<Key>,
+      TResolve<Value>
+    >;
+  }
+
+  /**
+   * Create a promise schema.
+   * @param {TIdiomaticSchema} schema - The schema to use for the promise.
+   * @returns {TPromise<TResolve<T>>} The promise schema.
+   */
+  promise<T extends TIdiomaticSchema>(schema: T): TPromise<TResolve<T>> {
+    return Type.Promise(this.schemify(schema)) as TPromise<TResolve<T>>;
   }
 
   /**
@@ -386,9 +451,7 @@ export class TypeboxSchemaValidator
     if (schema instanceof TypeCheck) {
       return schema.Check(value);
     } else {
-      const schemified = KindGuard.IsSchema(schema)
-        ? schema
-        : this.schemify(schema);
+      const schemified = this.schemify(schema);
       return Value.Check(schemified, value);
     }
   }
@@ -413,9 +476,7 @@ export class TypeboxSchemaValidator
         errors = Array.from(schema.Errors(value));
       }
     } else {
-      const schemified = KindGuard.IsSchema(schema)
-        ? schema
-        : this.schemify(schema);
+      const schemified = this.schemify(schema);
 
       if (Value.Check(schemified, value)) {
         conversion = Value.Decode(schemified, value);
@@ -477,9 +538,7 @@ export class TypeboxSchemaValidator
    * @returns {SchemaObject} The OpenAPI schema object.
    */
   openapi<T extends TIdiomaticSchema | TCatchall>(schema: T): SchemaObject {
-    const schemified = KindGuard.IsSchema(schema)
-      ? schema
-      : this.schemify(schema);
+    const schemified = this.schemify(schema);
 
     if (
       Object.hasOwn(schemified, 'openapiType') ||

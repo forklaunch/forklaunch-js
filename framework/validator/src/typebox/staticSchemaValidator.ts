@@ -59,6 +59,21 @@ export const symbol = StaticSchemaValidator.symbol;
 export const nullish = StaticSchemaValidator.nullish;
 
 /**
+ * TypeBox schema definition for void type.
+ */
+export const void_ = StaticSchemaValidator.void;
+
+/**
+ * TypeBox schema definition for null type.
+ */
+export const null_ = StaticSchemaValidator.null;
+
+/**
+ * TypeBox schema definition for undefined type.
+ */
+export const undefined_ = StaticSchemaValidator.undefined;
+
+/**
  * TypeBox schema definition for any type.
  */
 export const any = StaticSchemaValidator.any;
@@ -108,6 +123,25 @@ export const literal = StaticSchemaValidator.literal.bind(
  * Defines an enum for a valid schema.
  */
 export const enum_ = StaticSchemaValidator.enum_.bind(StaticSchemaValidator);
+
+/**
+ * Defines a function for a valid schema.
+ */
+export const function_ = StaticSchemaValidator.function_.bind(
+  StaticSchemaValidator
+);
+
+/**
+ * Defines a record for a valid schema.
+ */
+export const record = StaticSchemaValidator.record.bind(StaticSchemaValidator);
+
+/**
+ * Defines a promise for a valid schema.
+ */
+export const promise = StaticSchemaValidator.promise.bind(
+  StaticSchemaValidator
+);
 
 /**
  * Checks if a value is a TypeBox schema.

@@ -65,21 +65,21 @@ export type TIdiomaticSchema = IdiomaticSchema<TypeboxSchemaValidator>;
 /**
  * Represents a container for a union of idiomatic schemas.
  */
-export type TUnionContainer = [...TIdiomaticSchema[]];
+export type TUnionTupleContainer = [...TIdiomaticSchema[]];
 
 /**
  * Resolves a union container to a tuple of resolved idiomatic schemas.
  *
  * @template T - The union container to resolve.
  */
-export type UnionTResolve<
-  T extends TUnionContainer,
+export type UnionTupleTResolve<
+  T extends TUnionTupleContainer,
   Acc extends TIdiomaticSchema[] = []
 > = T extends [
   infer Head extends TIdiomaticSchema,
-  ...infer Tail extends TUnionContainer
+  ...infer Tail extends TUnionTupleContainer
 ]
-  ? UnionTResolve<Tail, [...Acc, TResolve<Head>]>
+  ? UnionTupleTResolve<Tail, [...Acc, TResolve<Head>]>
   : T extends []
     ? Acc
     : TNever[];

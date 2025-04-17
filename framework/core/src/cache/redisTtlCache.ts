@@ -205,9 +205,7 @@ export class RedisTtlCache implements TtlCache {
       multiCommand = multiCommand.rPop(queueName);
     }
     const values = await multiCommand.exec();
-    return values
-      .map((value) => (typeof value === 'string' ? JSON.parse(value) : null))
-      .filter((value) => value !== null);
+    return values.map((value) => this.parseValue<T>(value));
   }
 
   /**
@@ -254,19 +252,16 @@ export class RedisTtlCache implements TtlCache {
       multiCommand = multiCommand.ttl(key);
     }
     const values = await multiCommand.exec();
-    return values
-      .map((value) => {
-        if (typeof value === 'string') {
-          return JSON.parse(value);
-        }
-        return null;
-      })
-      .filter((value) => value !== null)
-      .map((value, index) => ({
-        key: keys[index],
-        value: value,
-        ttlMilliseconds: value.ttlMilliseconds
-      }));
+    return values.reduce<TtlCacheRecord<T>[]>((acc, value, index) => {
+      if (index % 2 === 0) {
+        acc.push({
+          key: keys[index / 2],
+          value: this.parseValue<T>(value),
+          ttlMilliseconds: this.parseValue<number>(values[index + 1]) * 1000
+        });
+      }
+      return acc;
+    }, []);
   }
 
   /**
@@ -309,6 +304,31 @@ export class RedisTtlCache implements TtlCache {
     }
     const results = await multiCommand.exec();
     return results.map((result) => result === 1);
+  }
+
+  /**
+   * Peeks at a record in the Redis cache.
+   *
+   * @template T - The type of value being peeked at
+   * @param {string} queueName - The name of the Redis queue
+   * @returns {Promise<T>} A promise that resolves with the peeked value
+   */
+  async peekQueueRecord<T>(queueName: string): Promise<T> {
+    const value = await this.client.lRange(queueName, 0, 0);
+    return this.parseValue<T>(value[0]);
+  }
+
+  /**
+   * Peeks at multiple records in the Redis cache.
+   *
+   * @template T - The type of values being peeked at
+   * @param {string} queueName - The name of the Redis queue
+   * @param {number} pageSize - The number of records to peek at
+   * @returns {Promise<T[]>} A promise that resolves with an array of peeked values
+   */
+  async peekQueueRecords<T>(queueName: string, pageSize: number): Promise<T[]> {
+    const values = await this.client.lRange(queueName, 0, pageSize - 1);
+    return values.map((value) => this.parseValue<T>(value));
   }
 
   /**

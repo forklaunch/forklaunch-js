@@ -47,6 +47,12 @@ export interface SchemaValidator<
   EnumFunction = <T extends LiteralSchema>(
     schemaEnum: Record<string, T>
   ) => unknown,
+  FunctionFunction = <Args, ReturnType>(
+    args: Args,
+    returnType: ReturnType
+  ) => unknown,
+  RecordFunction = <Key, Value>(key: Key, value: Value) => unknown,
+  PromiseFunction = <T>(schema: T) => unknown,
   SchemaGuardFunction = <T>(value: unknown) => value is T,
   ValidationFunction = <T>(schema: T, value: unknown) => boolean,
   ParseFunction = <T>(
@@ -192,6 +198,32 @@ export interface SchemaValidator<
   enum_: EnumFunction;
 
   /**
+   * Creates a function schema from a tuple of arguments and a return type.
+   *
+   * @param {Args} args - The arguments of the function.
+   * @param {ReturnType} returnType - The return type of the function.
+   * @returns {unknown} - The function schema.
+   */
+  function_: FunctionFunction;
+
+  /**
+   * Creates a promise schema from a schema.
+   *
+   * @param {T} schema - The schema to use for the promise.
+   * @returns {unknown} - The promise schema.
+   */
+  promise: PromiseFunction;
+
+  /**
+   * Creates a record schema from a key and value schema.
+   *
+   * @param {Key} key - The key schema.
+   * @param {Value} value - The value schema.
+   * @returns {unknown} - The record schema.
+   */
+  record: RecordFunction;
+
+  /**
    * Checks if a value is a schema.
    *
    * @param {unknown} value - The value to check.
@@ -230,6 +262,9 @@ export interface SchemaValidator<
  * Type representing any schema validator.
  */
 export type AnySchemaValidator = SchemaValidator<
+  unknown,
+  unknown,
+  unknown,
   unknown,
   unknown,
   unknown,
@@ -301,7 +336,13 @@ type SchemaPrettify<T, SV extends AnySchemaValidator> = Prettify<
 export type Schema<
   T extends SV['_ValidSchemaObject'] | IdiomaticSchema<SV>,
   SV extends AnySchemaValidator
-> = SchemaPrettify<SchemaResolve<T>[SV['_Type']], SV>;
+> = SchemaTranslate<
+  SchemaResolve<T>[SV['_Type']]
+>[SV['_Type']] extends infer Schema
+  ? Schema extends (...args: infer Args) => infer Return
+    ? (...args: Args) => Return
+    : SchemaPrettify<SchemaResolve<T>[SV['_Type']], SV>
+  : never;
 
 /**
  * Represents a schema for an unboxed object where each key can have an idiomatic schema.
