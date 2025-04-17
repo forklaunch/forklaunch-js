@@ -20,16 +20,16 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/common": "^0.2.6",
-    "@forklaunch/core": "^0.6.6",
-    "@forklaunch/express": "^0.4.6",
-    "@forklaunch/hyper-express": "^0.4.6",
-    "@forklaunch/validator": "^0.4.12",
-    "@mikro-orm/core": "^6.4.12",
-    "@mikro-orm/mongodb": "^6.4.12",
+    "@forklaunch/common": "link:../../framework/common",
+    "@forklaunch/core": "link:../../framework/core",
+    "@forklaunch/express": "link:../../framework/express",
+    "@forklaunch/hyper-express": "link:../../framework/hyper-express",
+    "@forklaunch/validator": "link:../../framework/validator",
+    "@mikro-orm/core": "^6.4.13",
+    "@mikro-orm/mongodb": "^6.4.13",
     "@sinclair/typebox": "^0.34.33",
     "uuid": "^11.1.0",
-    "zod": "^3.24.2"
+    "zod": "^3.24.3"
   },
   "devDependencies": {
     "@types/express": "^5.0.1",
@@ -37,6 +37,6 @@
     "@types/uuid": "^10.0.0",
     "eslint": "^9.24.0",
     "prettier": "^3.5.3",
-    "typescript-eslint": "^8.29.1"
+    "typescript-eslint": "^8.30.1"
   }
 }

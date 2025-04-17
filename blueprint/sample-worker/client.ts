@@ -1,64 +1,49 @@
 import { bootstrap } from './bootstrapper';
-import { SAMPLE_WORKER_CACHE_KEY_PREFIX } from './consts';
-import { SampleWorkerRecord } from './persistence/entities/sampleWorkerRecord.entity';
+import {
+  SampleWorkerFailureHandler,
+  SampleWorkerProcessFunction
+} from './domain/interfaces/sampleWorkerClient.interface';
 
 bootstrap((ci, tokens) => {
-  const entityManager = ci.resolve(tokens.EntityManager);
-  const cache = ci.resolve(tokens.TtlCache);
   const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
-  //   Database driven worker
-  setInterval(async () => {
-    const sampleRecordsToProcess = await entityManager
-      .getRepository(SampleWorkerRecord)
-      .findAll({
-        where: {
-          processed: false,
-          retryCount: {
-            $lt: 3
-          }
-        },
-        orderBy: {
-          createdAt: 'ASC'
-        }
-      });
 
-    for (const record of sampleRecordsToProcess) {
-      try {
-        openTelemetryCollector.info(`processing message: ${record.message}`);
-        record.processed = true;
-      } catch (error) {
-        openTelemetryCollector.error(error, 'error processing message');
-        record.retryCount++;
-      }
-      await entityManager.flush();
-    }
-  }, 1000);
+  const processEvents: SampleWorkerProcessFunction = async (events) => {
+    const failedEvents = [];
 
-  // Cache driven worker
-  setInterval(async () => {
-    const cachedRecordIds = await cache.listKeys(
-      SAMPLE_WORKER_CACHE_KEY_PREFIX
-    );
-    for (const recordId of cachedRecordIds) {
-      const record = await cache.readRecord<SampleWorkerRecord>(recordId);
+    for (const event of events) {
       try {
-        openTelemetryCollector.info(
-          `processing message: ${record.value.message}`
-        );
-        cache.deleteRecord(recordId);
+        openTelemetryCollector.info(`processing message: ${event.message}`);
+        event.processed = true;
       } catch (error) {
-        openTelemetryCollector.error(error, 'error processing message');
-        if (record.value.retryCount < 3) {
-          cache.putRecord({
-            key: recordId,
-            value: {
-              ...record.value,
-              retryCount: record.value.retryCount + 1
-            },
-            ttlMilliseconds: 60000
-          });
-        }
+        failedEvents.push({
+          value: event,
+          error: error as Error
+        });
       }
     }
-  }, 1000);
+
+    return failedEvents;
+  };
+
+  const processErrors: SampleWorkerFailureHandler = async (records) => {
+    records.forEach((record) => {
+      openTelemetryCollector.error(
+        record.error,
+        'error processing message',
+        record.value
+      );
+    });
+  };
+
+  const databaseWorkerClient = ci.resolve(tokens.SampleWorkerDatabaseClient);
+  databaseWorkerClient(processEvents, processErrors);
+
+  const redisWorkerClient = ci.resolve(tokens.SampleWorkerRedisClient);
+  redisWorkerClient(processEvents, processErrors).start();
+
+  const bullMqWorkerClient = ci.resolve(tokens.SampleWorkerBullMqClient);
+  bullMqWorkerClient(processEvents, processErrors).start();
+
+  const kafkaWorkerClient = ci.resolve(tokens.SampleWorkerKafkaClient);
+  kafkaWorkerClient(processEvents, processErrors).start();
 });

@@ -1,1 +1,1 @@
-export { SampleWorkerRecord } from './sampleWorkerRecord.entity';
+export { SampleWorkerEvent } from './sampleWorkerEvent.entity';

@@ -34,16 +34,24 @@
     "up:packages": "pnpm -r update --latest"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.28.1",
+    "@changesets/cli": "^2.29.2",
     "@types/jest": "^29.5.14",
     "globals": "^16.0.0",
     "jest": "^29.7.0",
-    "lint-staged": "^15.5.0",
+    "lint-staged": "^15.5.1",
     "sort-package-json": "^3.0.0",
-    "ts-jest": "^29.3.1",
+    "ts-jest": "^29.3.2",
     "tsup": "^8.4.0",
     "tsx": "^4.19.3",
     "typescript": "^5.8.3",
     "vitest": "^3.1.1"
+  },
+  "dependencies": {
+    "@forklaunch/common": "link:../framework/common",
+    "@forklaunch/core": "link:../framework/core",
+    "@forklaunch/express": "link:../framework/express",
+    "@forklaunch/hyper-express": "link:../framework/hyper-express",
+    "@forklaunch/universal-sdk": "link:../framework/universal-sdk",
+    "@forklaunch/validator": "link:../framework/validator"
   }
 }

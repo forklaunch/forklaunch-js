@@ -1,8 +1,9 @@
-import { collection, SchemaValidator } from '@forklaunch/blueprint-core';
+import { SchemaValidator } from '@forklaunch/blueprint-core';
 import { RequestDtoMapper, ResponseDtoMapper } from '@forklaunch/core/mappers';
-import { OrganizationSchemas } from '../../registrations';
+import { collection } from '@forklaunch/core/persistence';
 import { OrganizationStatus } from '../../domain/enum/organizationStatus.enum';
 import { Organization } from '../../persistence/entities/organization.entity';
+import { OrganizationSchemas } from '../../registrations';
 import { UserDtoMapper } from './user.mappers';
 
 export class CreateOrganizationDtoMapper extends RequestDtoMapper<

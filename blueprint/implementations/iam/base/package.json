@@ -39,14 +39,14 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/common": "^0.2.6",
-    "@forklaunch/core": "^0.6.6",
+    "@forklaunch/common": "link:../../../../framework/common",
+    "@forklaunch/core": "link:../../../../framework/core",
     "@forklaunch/interfaces-iam": "workspace:*",
-    "@forklaunch/validator": "^0.4.12",
-    "@mikro-orm/core": "^6.4.12",
+    "@forklaunch/validator": "link:../../../../framework/validator",
+    "@mikro-orm/core": "^6.4.13",
     "@sinclair/typebox": "^0.34.33",
     "ajv": "^8.17.1",
-    "zod": "^3.24.2"
+    "zod": "^3.24.3"
   },
   "devDependencies": {
     "depcheck": "^1.4.7",

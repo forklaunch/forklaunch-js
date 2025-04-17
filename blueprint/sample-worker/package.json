@@ -14,12 +14,12 @@
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist bun.lockb node_modules",
-    "dev:bun:local": "ENV_FILE_PATH=.env.local bun run migrate:up && ENV_FILE_PATH=.env.local bun --watch worker.ts & ENV_FILE_PATH=.env.local bun --watch client.ts",
+    "dev:bun:local": "ENV_FILE_PATH=.env.local bun run migrate:up && ENV_FILE_PATH=.env.local bun --watch server.ts & ENV_FILE_PATH=.env.local bun --watch client.ts",
     "dev:client": "pnpm tsx watch client.ts",
     "dev:client:bun": "bun --watch client.ts",
-    "dev:local": "ENV_FILE_PATH=.env.local pnpm run migrate:up && ENV_FILE_PATH=.env.local pnpm tsx watch worker.ts & ENV_FILE_PATH=.env.local pnpm tsx watch client.ts",
-    "dev:server": "pnpm run migrate:up && pnpm tsx watch worker.ts",
-    "dev:server:bun": "bun run migrate:up && bun --watch worker.ts",
+    "dev:local": "ENV_FILE_PATH=.env.local pnpm run migrate:up && ENV_FILE_PATH=.env.local pnpm tsx watch server.ts & ENV_FILE_PATH=.env.local pnpm tsx watch client.ts",
+    "dev:server": "pnpm run migrate:up && pnpm tsx watch server.ts",
+    "dev:server:bun": "bun run migrate:up && bun --watch server.ts",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
     "lint": "eslint . -c eslint.config.mjs",
@@ -36,19 +36,21 @@
   "dependencies": {
     "@forklaunch/blueprint-core": "workspace:*",
     "@forklaunch/blueprint-monitoring": "workspace:*",
-    "@forklaunch/core": "^0.6.6",
-    "@mikro-orm/core": "^6.4.12",
-    "@mikro-orm/migrations": "^6.4.12",
-    "@mikro-orm/postgresql": "^6.4.12",
-    "@mikro-orm/reflection": "^6.4.12",
-    "@mikro-orm/seeder": "^6.4.12",
+    "@forklaunch/core": "link:../../framework/core",
+    "@mikro-orm/core": "^6.4.13",
+    "@mikro-orm/migrations": "^6.4.13",
+    "@mikro-orm/postgresql": "^6.4.13",
+    "@mikro-orm/reflection": "^6.4.13",
+    "@mikro-orm/seeder": "^6.4.13",
     "@sinclair/typebox": "^0.34.33",
     "ajv": "^8.17.1",
+    "bullmq": "^5.49.1",
     "dotenv": "^16.5.0",
-    "zod": "^3.24.2"
+    "kafkajs": "^2.2.4",
+    "zod": "^3.24.3"
   },
   "devDependencies": {
-    "@mikro-orm/cli": "^6.4.12",
+    "@mikro-orm/cli": "^6.4.13",
     "@types/express": "^5.0.1",
     "@types/express-serve-static-core": "^5.0.6",
     "@types/qs": "^6.9.18",
@@ -56,7 +58,7 @@
     "eslint": "^9.24.0",
     "tsx": "^4.19.3",
     "typedoc": "^0.28.2",
-    "typescript-eslint": "^8.29.1"
+    "typescript-eslint": "^8.30.1"
   },
   "mikro-orm": {
     "config_paths": [

@@ -1,6 +1,6 @@
-import { SampleWorkerRecord } from './seeders/sampleWorkerRecord.seeder';
+import { SampleWorkerEvent } from './seeders/sampleWorkerEvent.seeder';
 //! Begin seed data
-export const sampleWorkerRecord = SampleWorkerRecord.create({
+export const sampleWorkerEvent = SampleWorkerEvent.create({
   message: 'Hello, world!',
   processed: false,
   retryCount: 0

@@ -14,3 +14,19 @@ services:
       - /app/billing/node_modules
       - /app/billing/dist
     entrypoint: ['pnpm', 'run', 'dev']
+
+  sample-worker-client:
+    image: forklaunch_sample_worker_client_node:latest
+    volumes:
+      - ./sample-worker-client:/app/sample-worker-client
+      - /app/sample-worker-client/node_modules
+      - /app/sample-worker-client/dist
+    entrypoint: ['pnpm', 'run', 'dev']
+
+  sample-worker-server:
+    image: forklaunch_sample_worker_server_node:latest
+    volumes:
+      - ./sample-worker-server:/app/sample-worker-server
+      - /app/sample-worker-server/node_modules
+      - /app/sample-worker-server/dist
+    entrypoint: ['pnpm', 'run', 'dev']
