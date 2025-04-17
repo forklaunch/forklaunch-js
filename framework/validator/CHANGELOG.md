@@ -1,5 +1,13 @@
 # @forklaunch/validator
 
+## 0.5.1
+
+### Patch Changes
+
+- Upgrade package versions
+- Updated dependencies
+  - @forklaunch/common@0.2.8
+
 ## 0.5.0
 
 ### Minor Changes
