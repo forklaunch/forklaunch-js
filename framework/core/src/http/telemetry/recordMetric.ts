@@ -24,6 +24,10 @@ export function recordMetric<
   req: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>,
   res: ForklaunchResponse<ResBodyMap, ResHeaders, LocalsObj>
 ) {
+  if (res.metricRecorded) {
+    return;
+  }
+
   httpRequestsTotalCounter.add(1, {
     [ATTR_SERVICE_NAME]: getEnvVar('OTEL_SERVICE_NAME'),
     [ATTR_API_NAME]: req.contractDetails?.name,
@@ -32,4 +36,5 @@ export function recordMetric<
     [ATTR_HTTP_ROUTE]: req.originalPath,
     [ATTR_HTTP_RESPONSE_STATUS_CODE]: res.statusCode || 0
   });
+  res.metricRecorded = true;
 }

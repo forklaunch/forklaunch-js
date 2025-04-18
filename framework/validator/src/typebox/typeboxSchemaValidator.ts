@@ -485,19 +485,6 @@ export class TypeboxSchemaValidator
       }
     }
 
-    errors.forEach((error) => {
-      if (
-        error.type === ValueErrorType.Union &&
-        error.schema.errorType === 'any of'
-      ) {
-        error.errors.forEach((e, idx) => {
-          console.log({
-            p: [`Union Schema Variant ${idx}`, error.path],
-            message: Array.from(e)
-          });
-        });
-      }
-    });
     return errors != null && errors.length === 0
       ? {
           ok: true,

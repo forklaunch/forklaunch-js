@@ -250,6 +250,9 @@ export interface ForklaunchResponse<
 
   /** Response schema, compiled */
   responseSchemas: ResponseCompiledSchema;
+
+  /** Whether the metric has been recorded */
+  metricRecorded: boolean;
 }
 
 /**

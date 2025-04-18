@@ -80,6 +80,7 @@ describe('http middleware tests', () => {
     res = {
       bodyData: testSchema,
       statusCode: 200,
+      metricRecorded: false,
       getHeaders: () => ({ 'x-correlation-id': '123' }),
       setHeader: () => {},
       status: () => ({

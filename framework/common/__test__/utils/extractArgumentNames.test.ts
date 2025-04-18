@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { extractArgumentNames } from '../../src/utils/extractArgumentNames';
 import { describe, expect, it } from 'vitest';
+import { extractArgumentNames } from '../../src/extractArgumentNames';
 
 describe('extractArgumentNames', () => {
   it('should extract single argument name', () => {
