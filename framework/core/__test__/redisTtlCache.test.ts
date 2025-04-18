@@ -120,21 +120,31 @@ describe('redisTtlCache', () => {
     });
 
     test('enqueueRecord and dequeueRecord', async () => {
-      await cache.enqueueRecord(queueName + 'Atomic', 'newValue');
-      const value = await cache.dequeueRecord(queueName + 'Atomic');
-      expect(value).toBe('newValue');
+      await cache.enqueueRecord(queueName, 'newValue');
+      const value = await cache.dequeueRecord(queueName);
+      expect(value).toBe('value1');
     });
 
     test('enqueueBatchRecords and dequeueBatchRecords', async () => {
       const values = await cache.dequeueBatchRecords(queueName, 2);
-      expect(values).toEqual(['value1', 'value2']);
+      expect(values).toEqual(['value2', 'value3']);
     });
 
     test('dequeueRecord throws error on empty queue', async () => {
-      await cache.dequeueBatchRecords(queueName + 'Empty', 3);
-      await expect(cache.dequeueRecord(queueName + 'Empty')).rejects.toThrow(
+      const records = await cache.dequeueBatchRecords(queueName, 100);
+      expect(records).toEqual([
+        'newValue',
+        'value1',
+        'value2',
+        'value3',
+        'value1',
+        'value2',
+        'value3'
+      ]);
+      await expect(cache.dequeueRecord(queueName)).rejects.toThrow(
         'Queue is empty'
       );
+      expect(await cache.dequeueBatchRecords(queueName, 1000)).toEqual([]);
     });
   });
 

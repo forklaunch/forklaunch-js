@@ -205,7 +205,7 @@ export class RedisTtlCache implements TtlCache {
       multiCommand = multiCommand.rPop(queueName);
     }
     const values = await multiCommand.exec();
-    return values.map((value) => this.parseValue<T>(value));
+    return values.map((value) => this.parseValue<T>(value)).filter(Boolean);
   }
 
   /**
@@ -254,11 +254,15 @@ export class RedisTtlCache implements TtlCache {
     const values = await multiCommand.exec();
     return values.reduce<TtlCacheRecord<T>[]>((acc, value, index) => {
       if (index % 2 === 0) {
-        acc.push({
-          key: keys[index / 2],
-          value: this.parseValue<T>(value),
-          ttlMilliseconds: this.parseValue<number>(values[index + 1]) * 1000
-        });
+        const maybeValue = this.parseValue<T>(value);
+        const ttl = this.parseValue<number>(values[index + 1]);
+        if (maybeValue && ttl) {
+          acc.push({
+            key: keys[index / 2],
+            value: maybeValue,
+            ttlMilliseconds: ttl * 1000
+          });
+        }
       }
       return acc;
     }, []);
@@ -328,7 +332,7 @@ export class RedisTtlCache implements TtlCache {
    */
   async peekQueueRecords<T>(queueName: string, pageSize: number): Promise<T[]> {
     const values = await this.client.lRange(queueName, 0, pageSize - 1);
-    return values.map((value) => this.parseValue<T>(value));
+    return values.map((value) => this.parseValue<T>(value)).filter(Boolean);
   }
 
   /**
