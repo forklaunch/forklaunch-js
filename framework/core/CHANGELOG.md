@@ -1,5 +1,14 @@
 # @forklaunch/core
 
+## 0.7.3
+
+### Patch Changes
+
+- stringify logger arguments
+- Updated dependencies
+  - @forklaunch/validator@0.5.3
+  - @forklaunch/common@0.2.10
+
 ## 0.7.2
 
 ### Patch Changes

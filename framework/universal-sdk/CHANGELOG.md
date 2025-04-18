@@ -1,5 +1,11 @@
 # @forklaunch/universal-sdk
 
+## 0.2.7
+
+### Patch Changes
+
+- stringify logger arguments
+
 ## 0.2.6
 
 ### Patch Changes

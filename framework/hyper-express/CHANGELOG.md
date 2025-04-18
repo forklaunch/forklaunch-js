@@ -1,5 +1,15 @@
 # @forklaunch/hyper-express
 
+## 0.4.10
+
+### Patch Changes
+
+- stringify logger arguments
+- Updated dependencies
+  - @forklaunch/validator@0.5.3
+  - @forklaunch/common@0.2.10
+  - @forklaunch/core@0.7.3
+
 ## 0.4.9
 
 ### Patch Changes
