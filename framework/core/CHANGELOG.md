@@ -1,5 +1,14 @@
 # @forklaunch/core
 
+## 0.7.2
+
+### Patch Changes
+
+- Various bugfixes, including deduplicated http metrics, multiple constructed singleton loading and leaking empty enqueued redis records"
+- Updated dependencies
+  - @forklaunch/validator@0.5.2
+  - @forklaunch/common@0.2.9
+
 ## 0.7.1
 
 ### Patch Changes

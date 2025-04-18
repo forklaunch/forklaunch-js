@@ -1,5 +1,11 @@
 # @forklaunch/universal-sdk
 
+## 0.2.6
+
+### Patch Changes
+
+- Various bugfixes, including deduplicated http metrics, multiple constructed singleton loading and leaking empty enqueued redis records"
+
 ## 0.2.5
 
 ### Patch Changes

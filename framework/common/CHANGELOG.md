@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.2.9
+
+### Patch Changes
+
+- Various bugfixes, including deduplicated http metrics, multiple constructed singleton loading and leaking empty enqueued redis records"
+
 ## 0.2.8
 
 ### Patch Changes
