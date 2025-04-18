@@ -8,7 +8,7 @@ import {
 import { BullMqWorkerOptions } from '../types/bullMqWorker.types';
 export class BullMqWorkerClient implements SampleWorkerClient {
   private queue: Queue;
-  private worker: Worker;
+  private worker?: Worker;
 
   constructor(
     protected readonly queueName: string,
@@ -19,10 +19,18 @@ export class BullMqWorkerClient implements SampleWorkerClient {
     this.queue = new Queue(this.queueName, {
       connection: this.options.connection
     });
+  }
 
+  async peekEvents(): Promise<SampleWorkerEvent[]> {
+    const jobs = await this.queue.getJobs(['waiting', 'active']);
+    return jobs.map((job) => job.data as SampleWorkerEvent);
+  }
+
+  async start(): Promise<void> {
     this.worker = new Worker(
       this.queueName,
       async (job: Job) => {
+        console.log('starting worker');
         const event = job.data as SampleWorkerEvent;
         await this.processEvents([event]);
       },
@@ -41,17 +49,8 @@ export class BullMqWorkerClient implements SampleWorkerClient {
     });
   }
 
-  async peekEvents(): Promise<SampleWorkerEvent[]> {
-    const jobs = await this.queue.getJobs(['waiting', 'active']);
-    return jobs.map((job) => job.data as SampleWorkerEvent);
-  }
-
-  async start(): Promise<void> {
-    await this.worker.run();
-  }
-
   async close(): Promise<void> {
-    await this.worker.close();
+    await this.worker?.close();
     await this.queue.close();
   }
 }

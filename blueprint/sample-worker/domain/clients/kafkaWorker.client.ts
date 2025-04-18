@@ -28,8 +28,6 @@ export class KafkaWorkerClient implements SampleWorkerClient {
     this.consumer = this.kafka.consumer({
       groupId: this.options.groupId
     });
-
-    this.setupConsumer();
   }
 
   private async setupConsumer() {
@@ -95,55 +93,84 @@ export class KafkaWorkerClient implements SampleWorkerClient {
   }
 
   async peekEvents(): Promise<SampleWorkerEvent[]> {
-    const peekConsumer = this.kafka.consumer({
-      groupId: `${this.options.groupId}-peek`
-    });
-    await peekConsumer.connect();
-
     const events: SampleWorkerEvent[] = [];
-    let messageCount = 0;
-    const maxMessages = 10;
+
+    const admin = this.kafka.admin();
+    await admin.connect();
 
     try {
-      await peekConsumer.subscribe({
-        topic: this.queueName,
-        fromBeginning: false
+      // Get topic metadata to find partitions
+      const metadata = await admin.fetchTopicMetadata({
+        topics: [this.queueName]
       });
+      const topic = metadata.topics[0];
 
-      // Set up a promise that resolves when we have enough messages
-      const messagePromise = new Promise<void>((resolve) => {
-        peekConsumer.run({
-          eachMessage: async ({ message }) => {
-            if (message.value && messageCount < maxMessages) {
-              const messageEvents = JSON.parse(
-                message.value.toString()
-              ) as SampleWorkerEvent[];
-              events.push(...messageEvents);
-              messageCount += messageEvents.length;
+      if (!topic) {
+        return events;
+      }
 
-              if (messageCount >= maxMessages) {
-                resolve();
-              }
-            }
-          }
+      // For each partition, get the latest offset
+      for (const partition of topic.partitions) {
+        const offsets = await admin.fetchTopicOffsets(this.queueName);
+        const partitionOffset = offsets.find(
+          (o) => o.partition === partition.partitionId
+        );
+
+        if (!partitionOffset) {
+          continue;
+        }
+
+        // Create a temporary consumer to read messages
+        const peekConsumer = this.kafka.consumer({
+          groupId: `${this.options.groupId}-peek-${Date.now()}`
         });
-      });
 
-      // Wait for either 10 messages or 5 seconds
-      await Promise.race([
-        messagePromise,
-        new Promise((resolve) => setTimeout(resolve, 5000))
-      ]);
+        try {
+          await peekConsumer.connect();
+          await peekConsumer.subscribe({
+            topic: this.queueName,
+            fromBeginning: false
+          });
+
+          const messagePromise = new Promise<void>((resolve) => {
+            peekConsumer.run({
+              eachMessage: async ({ message }) => {
+                if (message.value && events.length < this.options.peekCount) {
+                  const messageEvents = JSON.parse(
+                    message.value.toString()
+                  ) as SampleWorkerEvent[];
+                  events.push(...messageEvents);
+
+                  if (events.length >= this.options.peekCount) {
+                    resolve();
+                  }
+                }
+              }
+            });
+          });
+
+          await Promise.race([
+            messagePromise,
+            new Promise((resolve) => setTimeout(resolve, 5000))
+          ]);
+
+          if (events.length >= this.options.peekCount) {
+            break;
+          }
+        } finally {
+          await peekConsumer.disconnect();
+        }
+      }
 
       return events;
     } finally {
-      await peekConsumer.disconnect();
+      await admin.disconnect();
     }
   }
 
   async start(): Promise<void> {
-    await this.producer.connect();
     await this.setupConsumer();
+    await this.producer.connect();
   }
 
   async close(): Promise<void> {

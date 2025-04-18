@@ -121,7 +121,7 @@ export function createDepenencies({ orm }: { orm: MikroORM }) {
       value: {
         pageSize: 100,
         retries: 3,
-        interval: 1000
+        interval: 5000
       }
     },
     BullMqWorkerOptions: {
@@ -133,7 +133,7 @@ export function createDepenencies({ orm }: { orm: MikroORM }) {
           url: REDIS_URL
         },
         retries: 3,
-        interval: 1000
+        interval: 5000
       })
     },
     KafkaWorkerOptions: {
@@ -144,7 +144,8 @@ export function createDepenencies({ orm }: { orm: MikroORM }) {
         clientId: KAFKA_CLIENT_ID,
         groupId: KAFKA_GROUP_ID,
         retries: 3,
-        interval: 1000
+        interval: 5000,
+        peekCount: 100
       })
     },
     DatabaseWorkerOptions: {
@@ -152,7 +153,7 @@ export function createDepenencies({ orm }: { orm: MikroORM }) {
       type: DatabaseWorkerOptionsSchema,
       value: {
         retries: 3,
-        interval: 1000
+        interval: 5000
       }
     }
   });
@@ -284,27 +285,14 @@ export function createDepenencies({ orm }: { orm: MikroORM }) {
     SampleWorkerKafkaProducer: {
       lifetime: Lifetime.Scoped,
       type: KafkaWorkerProducer,
-      factory: ({ SAMPLE_WORKER_QUEUE }) =>
-        new KafkaWorkerProducer(SAMPLE_WORKER_QUEUE, {
-          clientId: 'sample-worker',
-          brokers: ['localhost:9092'],
-          groupId: 'sample-worker',
-          retries: 3,
-          interval: 1000
-        })
+      factory: ({ SAMPLE_WORKER_QUEUE, KafkaWorkerOptions }) =>
+        new KafkaWorkerProducer(SAMPLE_WORKER_QUEUE, KafkaWorkerOptions)
     },
     SampleWorkerBullMqProducer: {
       lifetime: Lifetime.Scoped,
       type: BullMqWorkerProducer,
-      factory: ({ SAMPLE_WORKER_QUEUE, REDIS_URL }) =>
-        new BullMqWorkerProducer(SAMPLE_WORKER_QUEUE, {
-          connection: {
-            url: REDIS_URL
-          },
-          backoffType: 'exponential',
-          retries: 3,
-          interval: 1000
-        })
+      factory: ({ SAMPLE_WORKER_QUEUE, BullMqWorkerOptions }) =>
+        new BullMqWorkerProducer(SAMPLE_WORKER_QUEUE, BullMqWorkerOptions)
     },
 
     SampleWorkerService: {

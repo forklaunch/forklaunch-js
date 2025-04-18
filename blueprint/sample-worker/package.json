@@ -36,7 +36,7 @@
   "dependencies": {
     "@forklaunch/blueprint-core": "workspace:*",
     "@forklaunch/blueprint-monitoring": "workspace:*",
-    "@forklaunch/core": "link:../../framework/core",
+    "@forklaunch/core": "^0.7.1",
     "@mikro-orm/core": "^6.4.13",
     "@mikro-orm/migrations": "^6.4.13",
     "@mikro-orm/postgresql": "^6.4.13",

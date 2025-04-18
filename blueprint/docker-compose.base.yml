@@ -105,6 +105,12 @@ services:
       DB_PASSWORD: postgresql
       DB_PORT: 5432
       REDIS_URL: redis://redis:6379
+      HOST: 0.0.0.0
+      PROTOCOL: http
+      VERSION: v1
+      DOCS_PATH: /docs
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_SERVICE_NAME: forklaunch-iam
     depends_on:
       - postgres
       - redis
@@ -131,6 +137,12 @@ services:
       DB_PASSWORD: postgresql
       DB_PORT: 5432
       REDIS_URL: redis://redis:6379
+      HOST: 0.0.0.0
+      PROTOCOL: http
+      VERSION: v1
+      DOCS_PATH: /docs
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_SERVICE_NAME: forklaunch-billing
     depends_on:
       - postgres
       - redis
@@ -139,6 +151,82 @@ services:
     networks:
       - forklaunch-network
     working_dir: /app/billing
+
+  sample-worker-client:
+    hostname: sample-worker-client
+    container_name: forklaunch-sample-worker-client-${RUNTIME}
+    restart: always
+    build:
+      context: .
+      dockerfile: ./Dockerfile.${RUNTIME}.dev
+    environment:
+      ENV: development
+      PORT: 8002
+      DB_NAME: forklaunch-dev
+      DB_HOST: postgres
+      DB_USER: postgresql
+      DB_PASSWORD: postgresql
+      DB_PORT: 5432
+      REDIS_URL: redis://redis:6379
+      KAFKA_BROKERS: kafka:29092
+      KAFKA_CLIENT_ID: forklaunch-sample-worker
+      KAFKA_GROUP_ID: forklaunch-sample-worker-group
+      HOST: 0.0.0.0
+      PROTOCOL: http
+      VERSION: v1
+      DOCS_PATH: /docs
+      SAMPLE_WORKER_QUEUE: forklaunch-sample-worker-queue
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_SERVICE_NAME: forklaunch-sample-worker-client
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
+    networks:
+      - forklaunch-network
+    working_dir: /app/sample-worker
+
+  sample-worker-server:
+    hostname: sample-worker-server
+    container_name: forklaunch-sample-worker-server-${RUNTIME}
+    restart: always
+    build:
+      context: .
+      dockerfile: ./Dockerfile.${RUNTIME}.dev
+    environment:
+      ENV: development
+      PORT: 8002
+      DB_NAME: forklaunch-dev
+      DB_HOST: postgres
+      DB_USER: postgresql
+      DB_PASSWORD: postgresql
+      DB_PORT: 5432
+      REDIS_URL: redis://redis:6379
+      KAFKA_BROKERS: kafka:29092
+      KAFKA_CLIENT_ID: forklaunch-sample-worker
+      KAFKA_GROUP_ID: forklaunch-sample-worker-group
+      HOST: 0.0.0.0
+      PROTOCOL: http
+      VERSION: v1
+      DOCS_PATH: /docs
+      SAMPLE_WORKER_QUEUE: forklaunch-sample-worker-queue
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_SERVICE_NAME: forklaunch-sample-worker-server
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
+    ports:
+      - 8002:8002
+    networks:
+      - forklaunch-network
+    working_dir: /app/sample-worker
 
   redis:
     image: redis/redis-stack-server:latest
@@ -150,3 +238,50 @@ services:
       - '6379:6379'
     networks:
       - forklaunch-network
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: forklaunch-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - '2181:2181'
+    networks:
+      - forklaunch-network
+    healthcheck:
+      test: echo srvr | nc localhost 2181 || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka
+    container_name: forklaunch-kafka
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - '9092:9092'
+      - '29092:29092'
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_NUM_PARTITIONS: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    networks:
+      - forklaunch-network
+    healthcheck:
+      test: kafka-topics --bootstrap-server kafka:29092 --list >/dev/null 2>&1 || exit 1
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 15s

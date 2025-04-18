@@ -28,7 +28,7 @@
     "lib/**"
   ],
   "scripts": {
-    "build": "tsc && pnpm package:eject",
+    "build": "tsc && if [ -f eject-package.bash ]; then pnpm package:eject; fi",
     "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
@@ -39,10 +39,10 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/common": "link:../../../../framework/common",
-    "@forklaunch/core": "link:../../../../framework/core",
+    "@forklaunch/common": "^0.2.8",
+    "@forklaunch/core": "^0.7.1",
     "@forklaunch/interfaces-billing": "workspace:*",
-    "@forklaunch/validator": "link:../../../../framework/validator",
+    "@forklaunch/validator": "^0.5.1",
     "@mikro-orm/core": "^6.4.13",
     "@sinclair/typebox": "^0.34.33",
     "ajv": "^8.17.1",

@@ -16,7 +16,7 @@ export class BullMqWorkerProducer implements SampleWorkerProducer {
   }
 
   async enqueueJob(event: SampleWorkerEvent): Promise<void> {
-    await this.queue.add('process', event, {
+    await this.queue.add(event.id, event, {
       attempts: this.options.retries,
       backoff: {
         type: this.options.backoffType,
@@ -27,7 +27,7 @@ export class BullMqWorkerProducer implements SampleWorkerProducer {
   async enqueueBatchJobs(events: SampleWorkerEvent[]): Promise<void> {
     await this.queue.addBulk(
       events.map((event) => ({
-        name: 'process',
+        name: event.id,
         data: event,
         opts: {
           attempts: this.options.retries,

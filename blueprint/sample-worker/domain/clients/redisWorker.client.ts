@@ -17,10 +17,12 @@ export class RedisWorkerClient implements SampleWorkerClient {
   ) {}
 
   private async retrieveEvents(): Promise<SampleWorkerEvent[]> {
-    const events = await this.cache.dequeueBatchRecords<SampleWorkerEvent>(
-      this.queueName,
-      this.options.pageSize
-    );
+    const events = (
+      await this.cache.dequeueBatchRecords<SampleWorkerEvent>(
+        this.queueName,
+        this.options.pageSize
+      )
+    ).filter((event) => event != null);
     return events;
   }
 
@@ -28,7 +30,7 @@ export class RedisWorkerClient implements SampleWorkerClient {
     await this.cache.enqueueBatchRecords(
       this.queueName,
       events
-        .filter((event) => event.retryCount <= 3)
+        .filter((event) => event != null && event.retryCount <= 3)
         .map((event) => ({
           ...event,
           retryCount: event.retryCount + 1

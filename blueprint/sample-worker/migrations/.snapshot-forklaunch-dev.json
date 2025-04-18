@@ -61,11 +61,11 @@
           "mappedType": "integer"
         }
       },
-      "name": "sample_worker_record",
+      "name": "sample_worker_event",
       "schema": "public",
       "indexes": [
         {
-          "keyName": "sample_worker_record_pkey",
+          "keyName": "sample_worker_event_pkey",
           "columnNames": ["id"],
           "composite": false,
           "constraint": true,

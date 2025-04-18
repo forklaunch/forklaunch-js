@@ -1,7 +1,7 @@
-import { ApiClient } from '@forklaunch/core/http';
 import { forklaunchExpress } from '@forklaunch/blueprint-core';
-import { bootstrap } from './bootstrapper';
+import { ApiClient } from '@forklaunch/core/http';
 import { SampleWorkerRoutes } from './api/routes/sampleWorker.routes';
+import { bootstrap } from './bootstrapper';
 //! bootstrap function that initializes the service application
 bootstrap((ci, tokens) => {
   //! resolves the openTelemetryCollector from the configuration

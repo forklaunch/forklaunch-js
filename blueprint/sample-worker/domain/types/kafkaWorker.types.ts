@@ -4,4 +4,5 @@ export type KafkaWorkerOptions = {
   groupId: string;
   retries: number;
   interval: number;
+  peekCount: number;
 };

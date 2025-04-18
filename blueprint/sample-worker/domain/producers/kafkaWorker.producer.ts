@@ -15,6 +15,7 @@ export class KafkaWorkerProducer implements SampleWorkerProducer {
       brokers: this.options.brokers
     });
     this.producer = kafka.producer();
+    this.producer.connect();
   }
 
   async enqueueJob(event: SampleWorkerEvent): Promise<void> {

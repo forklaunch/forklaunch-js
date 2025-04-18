@@ -5,5 +5,6 @@ export const KafkaWorkerOptionsSchema = {
   clientId: string,
   groupId: string,
   retries: number,
-  interval: number
+  interval: number,
+  peekCount: number
 };

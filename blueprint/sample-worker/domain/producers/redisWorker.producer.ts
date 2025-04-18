@@ -13,6 +13,7 @@ export class RedisWorkerProducer implements SampleWorkerProducer {
   }
 
   async enqueueBatchJobs(events: SampleWorkerEvent[]): Promise<void> {
+    console.log('Enqueuing batch jobs', events);
     await this.cache.enqueueBatchRecords(this.queueName, events);
   }
 }

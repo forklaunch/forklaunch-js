@@ -4,46 +4,57 @@ import {
   SampleWorkerProcessFunction
 } from './domain/interfaces/sampleWorkerClient.interface';
 
-bootstrap((ci, tokens) => {
+bootstrap(async (ci, tokens) => {
   const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
 
-  const processEvents: SampleWorkerProcessFunction = async (events) => {
-    const failedEvents = [];
+  const processEvents: (name: string) => SampleWorkerProcessFunction =
+    (name: string) => async (events) => {
+      const failedEvents = [];
 
-    for (const event of events) {
-      try {
-        openTelemetryCollector.info(`processing message: ${event.message}`);
-        event.processed = true;
-      } catch (error) {
-        failedEvents.push({
-          value: event,
-          error: error as Error
-        });
+      for (const event of events) {
+        try {
+          openTelemetryCollector.info(
+            `processing message from ${name}: ${event.message}`
+          );
+          event.processed = true;
+        } catch (error) {
+          failedEvents.push({
+            value: event,
+            error: error as Error
+          });
+        }
       }
-    }
 
-    return failedEvents;
-  };
+      return failedEvents;
+    };
 
-  const processErrors: SampleWorkerFailureHandler = async (records) => {
-    records.forEach((record) => {
+  const processErrors: SampleWorkerFailureHandler = async (events) => {
+    events.forEach((event) => {
       openTelemetryCollector.error(
-        record.error,
+        event.error,
         'error processing message',
-        record.value
+        event.value
       );
     });
   };
 
+  const queues = [];
+
   const databaseWorkerClient = ci.resolve(tokens.SampleWorkerDatabaseClient);
-  databaseWorkerClient(processEvents, processErrors);
+  queues.push(
+    databaseWorkerClient(processEvents('database'), processErrors).start()
+  );
 
   const redisWorkerClient = ci.resolve(tokens.SampleWorkerRedisClient);
-  redisWorkerClient(processEvents, processErrors).start();
+  queues.push(redisWorkerClient(processEvents('redis'), processErrors).start());
 
   const bullMqWorkerClient = ci.resolve(tokens.SampleWorkerBullMqClient);
-  bullMqWorkerClient(processEvents, processErrors).start();
+  queues.push(
+    bullMqWorkerClient(processEvents('bullmq'), processErrors).start()
+  );
 
   const kafkaWorkerClient = ci.resolve(tokens.SampleWorkerKafkaClient);
-  kafkaWorkerClient(processEvents, processErrors).start();
+  queues.push(kafkaWorkerClient(processEvents('kafka'), processErrors).start());
+
+  await Promise.all(queues);
 });
