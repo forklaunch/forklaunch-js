@@ -3,6 +3,7 @@ export * from './guards/isNever';
 export * from './guards/isRecord';
 export * from './guards/isTrue';
 export * from './noop';
+export * from './safeStringify';
 export * from './sortObjectKeys';
 export * from './stripUndefinedProperties';
 export * from './types/dto.types';
