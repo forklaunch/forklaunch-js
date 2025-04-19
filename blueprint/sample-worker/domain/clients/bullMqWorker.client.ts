@@ -30,7 +30,6 @@ export class BullMqWorkerClient implements SampleWorkerClient {
     this.worker = new Worker(
       this.queueName,
       async (job: Job) => {
-        console.log('starting worker');
         const event = job.data as SampleWorkerEvent;
         await this.processEvents([event]);
       },

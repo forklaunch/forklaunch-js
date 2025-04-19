@@ -7,9 +7,7 @@
   "author": "",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
-  "files": [
-    "lib/**"
-  ],
+  "files": ["lib/**"],
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf lib pnpm.lock.yaml node_modules",
@@ -20,11 +18,11 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/common": "^0.2.8",
-    "@forklaunch/core": "^0.7.1",
-    "@forklaunch/express": "^0.4",
-    "@forklaunch/hyper-express": "^0.4.8",
-    "@forklaunch/validator": "^0.5.1",
+    "@forklaunch/common": "^0.2.10",
+    "@forklaunch/core": "^0.7.3",
+    "@forklaunch/express": "^0.4.10",
+    "@forklaunch/hyper-express": "^0.4.10",
+    "@forklaunch/validator": "^0.5.3",
     "@mikro-orm/core": "^6.4.13",
     "@mikro-orm/mongodb": "^6.4.13",
     "@sinclair/typebox": "^0.34.33",

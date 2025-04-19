@@ -22,10 +22,10 @@
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
-    "migrate:create": "ENV_FILE_PATH=.env.local NODE_OPTIONS='--import=tsx' mikro-orm migration:create",
-    "migrate:down": "ENV_FILE_PATH=.env.local NODE_OPTIONS='--import=tsx' mikro-orm migration:down",
-    "migrate:init": "ENV_FILE_PATH=.env.local NODE_OPTIONS='--import=tsx' mikro-orm migration:create --initial",
-    "migrate:up": "ENV_FILE_PATH=.env.local NODE_OPTIONS='--import=tsx' mikro-orm migration:up",
+    "migrate:create": "NODE_OPTIONS='--import=tsx' mikro-orm migration:create",
+    "migrate:down": "NODE_OPTIONS='--import=tsx' mikro-orm migration:down",
+    "migrate:init": "NODE_OPTIONS='--import=tsx' mikro-orm migration:create --initial",
+    "migrate:up": "NODE_OPTIONS='--import=tsx' mikro-orm migration:up",
     "seed": "ENV_FILE_PATH=.env.local NODE_OPTIONS='--import=tsx' mikro-orm seeder:run",
     "start": "ENV_FILE_PATH=.env.local NODE_OPTIONS='--import=tsx' node dist/server.js",
     "start:bun": "bun run migrate:up && bun dist/server.js",
@@ -34,13 +34,13 @@
   "dependencies": {
     "@forklaunch/blueprint-core": "workspace:*",
     "@forklaunch/blueprint-monitoring": "workspace:*",
-    "@forklaunch/common": "^0.2.8",
-    "@forklaunch/core": "^0.7.1",
-    "@forklaunch/express": "^0.4.8",
-    "@forklaunch/hyper-express": "^0.4.8",
+    "@forklaunch/common": "^0.2.10",
+    "@forklaunch/core": "^0.7.3",
+    "@forklaunch/express": "^0.4.10",
+    "@forklaunch/hyper-express": "^0.4.10",
     "@forklaunch/implementation-billing-base": "workspace:*",
     "@forklaunch/interfaces-billing": "workspace:*",
-    "@forklaunch/validator": "^0.5.1",
+    "@forklaunch/validator": "^0.5.3",
     "@mikro-orm/core": "^6.4.13",
     "@mikro-orm/migrations": "^6.4.13",
     "@mikro-orm/mongodb": "^6.4.13",
@@ -67,9 +67,6 @@
     "typedoc": "^0.28.2"
   },
   "mikro-orm": {
-    "configPaths": [
-      "./mikro-orm.config.ts",
-      "./dist/mikro-orm.config.js"
-    ]
+    "configPaths": ["./mikro-orm.config.ts", "./dist/mikro-orm.config.js"]
   }
 }

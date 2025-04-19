@@ -24,10 +24,10 @@
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
-    "migrate:create": "ENV_FILE_PATH=.env.local NODE_OPTIONS='--import=tsx' mikro-orm migration:create",
-    "migrate:down": "ENV_FILE_PATH=.env.local NODE_OPTIONS='--import=tsx' mikro-orm migration:down",
-    "migrate:init": "ENV_FILE_PATH=.env.local NODE_OPTIONS='--import=tsx' mikro-orm migration:create --initial",
-    "migrate:up": "ENV_FILE_PATH=.env.local NODE_OPTIONS='--import=tsx' mikro-orm migration:up",
+    "migrate:create": "NODE_OPTIONS='--import=tsx' mikro-orm migration:create",
+    "migrate:down": "NODE_OPTIONS='--import=tsx' mikro-orm migration:down",
+    "migrate:init": "NODE_OPTIONS='--import=tsx' mikro-orm migration:create --initial",
+    "migrate:up": "NODE_OPTIONS='--import=tsx' mikro-orm migration:up",
     "seed": "ENV_FILE_PATH=.env.local NODE_OPTIONS='--import=tsx' mikro-orm seeder:run",
     "start:client": "ENV_FILE_PATH=.env.prod && node --import tsx dist/client.js",
     "start:server": "ENV_FILE_PATH=.env.prod && pnpm migrate:up && node --import tsx dist/worker.js",
@@ -36,17 +36,27 @@
   "dependencies": {
     "@forklaunch/blueprint-core": "workspace:*",
     "@forklaunch/blueprint-monitoring": "workspace:*",
-    "@forklaunch/core": "^0.7.1",
+    "@forklaunch/core": "^0.7.3",
+    "@mikro-orm/better-sqlite": "^6.4.13",
     "@mikro-orm/core": "^6.4.13",
+    "@mikro-orm/libsql": "^6.4.13",
+    "@mikro-orm/mariadb": "^6.4.13",
     "@mikro-orm/migrations": "^6.4.13",
+    "@mikro-orm/mongodb": "^6.4.13",
+    "@mikro-orm/mssql": "^6.4.13",
+    "@mikro-orm/mysql": "^6.4.13",
     "@mikro-orm/postgresql": "^6.4.13",
     "@mikro-orm/reflection": "^6.4.13",
     "@mikro-orm/seeder": "^6.4.13",
+    "@mikro-orm/sqlite": "^6.4.13",
     "@sinclair/typebox": "^0.34.33",
     "ajv": "^8.17.1",
+    "better-sqlite3": "^11.9.1",
     "bullmq": "^5.49.1",
     "dotenv": "^16.5.0",
     "kafkajs": "^2.2.4",
+    "node-gyp": "^11.2.0",
+    "sqlite3": "^5.1.7",
     "zod": "^3.24.3"
   },
   "devDependencies": {
@@ -61,9 +71,6 @@
     "typescript-eslint": "^8.30.1"
   },
   "mikro-orm": {
-    "config_paths": [
-      "./mikro-orm.config.ts",
-      "./dist/mikro-orm.config.js"
-    ]
+    "config_paths": ["./mikro-orm.config.ts", "./dist/mikro-orm.config.js"]
   }
 }

@@ -1,6 +1,18 @@
 volumes:
   forklaunch-postgres-data:
     driver: local
+  forklaunch-mysql-data:
+    driver: local
+  forklaunch-mariadb-data:
+    driver: local
+  forklaunch-sqlite-data:
+    driver: local
+  forklaunch-better-sqlite-data:
+    driver: local
+  forklaunch-libsql-data:
+    driver: local
+  forklaunch-mssql-data:
+    driver: local
 
 networks:
   forklaunch-network:
@@ -72,6 +84,56 @@ services:
     volumes:
       - forklaunch-postgres-data:/var/lib/postgresql/forklaunch/data
 
+  mysql:
+    image: mysql:latest
+    hostname: mysql
+    container_name: forklaunch-mysql
+    restart: unless-stopped
+    ports:
+      - '3306:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: mysql
+      MYSQL_USER: mysql
+      MYSQL_PASSWORD: mysql
+      MYSQL_DATABASE: forklaunch-dev
+    networks:
+      - forklaunch-network
+    volumes:
+      - forklaunch-mysql-data:/var/lib/mysql
+
+  mariadb:
+    image: mariadb:latest
+    hostname: mariadb
+    container_name: forklaunch-mariadb
+    restart: unless-stopped
+    ports:
+      - '3307:3306'
+    environment:
+      MARIADB_ROOT_PASSWORD: mariadb
+      MARIADB_USER: mariadb
+      MARIADB_PASSWORD: mariadb
+      MARIADB_DATABASE: forklaunch-dev
+    networks:
+      - forklaunch-network
+    volumes:
+      - forklaunch-mariadb-data:/var/lib/mysql
+
+  mssql:
+    image: mcr.microsoft.com/mssql/server:latest
+    hostname: mssql
+    container_name: forklaunch-mssql
+    restart: unless-stopped
+    ports:
+      - '1433:1433'
+    environment:
+      ACCEPT_EULA: Y
+      SA_PASSWORD: Mssql123!
+      MSSQL_PID: Developer
+    networks:
+      - forklaunch-network
+    volumes:
+      - forklaunch-mssql-data:/var/opt/mssql
+
   # client:
   #   hostname: client
   #   container_name: forklaunch-client
@@ -100,10 +162,27 @@ services:
       ENV: development
       PORT: 8000
       DB_NAME: forklaunch-dev
+
       DB_HOST: postgres
       DB_USER: postgresql
       DB_PASSWORD: postgresql
       DB_PORT: 5432
+
+      # DB_HOST: mysql
+      # DB_USER: mysql
+      # DB_PASSWORD: mysql
+      # DB_PORT: 3306
+
+      # DB_HOST: mariadb
+      # DB_USER: mariadb
+      # DB_PASSWORD: mariadb
+      # DB_PORT: 3306
+
+      # DB_HOST: mssql
+      # DB_USER: sa
+      # DB_PASSWORD: Mssql123!
+      # DB_PORT: 1433
+
       REDIS_URL: redis://redis:6379
       HOST: 0.0.0.0
       PROTOCOL: http
@@ -118,7 +197,6 @@ services:
       - 8000:8000
     networks:
       - forklaunch-network
-
     working_dir: /app/iam
 
   billing:
@@ -132,10 +210,27 @@ services:
       ENV: development
       PORT: 8001
       DB_NAME: forklaunch-dev
+
       DB_HOST: postgres
       DB_USER: postgresql
       DB_PASSWORD: postgresql
       DB_PORT: 5432
+
+      # DB_HOST: mysql
+      # DB_USER: mysql
+      # DB_PASSWORD: mysql
+      # DB_PORT: 3306
+
+      # DB_HOST: mariadb
+      # DB_USER: mariadb
+      # DB_PASSWORD: mariadb
+      # DB_PORT: 3306
+
+      # DB_HOST: mssql
+      # DB_USER: sa
+      # DB_PASSWORD: Mssql123!
+      # DB_PORT: 1433
+
       REDIS_URL: redis://redis:6379
       HOST: 0.0.0.0
       PROTOCOL: http
@@ -163,10 +258,27 @@ services:
       ENV: development
       PORT: 8002
       DB_NAME: forklaunch-dev
+
       DB_HOST: postgres
       DB_USER: postgresql
       DB_PASSWORD: postgresql
       DB_PORT: 5432
+
+      # DB_HOST: mysql
+      # DB_USER: mysql
+      # DB_PASSWORD: mysql
+      # DB_PORT: 3306
+
+      # DB_HOST: mariadb
+      # DB_USER: mariadb
+      # DB_PASSWORD: mariadb
+      # DB_PORT: 3306
+
+      # DB_HOST: mssql
+      # DB_USER: sa
+      # DB_PASSWORD: Mssql123!
+      # DB_PORT: 1433
+
       REDIS_URL: redis://redis:6379
       KAFKA_BROKERS: kafka:29092
       KAFKA_CLIENT_ID: forklaunch-sample-worker
@@ -181,7 +293,11 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
-      postgres:
+      # postgres:
+      #   condition: service_started
+      # mysql:
+      #   condition: service_started
+      mariadb:
         condition: service_started
       redis:
         condition: service_started
@@ -200,10 +316,27 @@ services:
       ENV: development
       PORT: 8002
       DB_NAME: forklaunch-dev
+
       DB_HOST: postgres
       DB_USER: postgresql
       DB_PASSWORD: postgresql
       DB_PORT: 5432
+
+      # DB_HOST: mysql
+      # DB_USER: mysql
+      # DB_PASSWORD: mysql
+      # DB_PORT: 3306
+
+      # DB_HOST: mariadb
+      # DB_USER: mariadb
+      # DB_PASSWORD: mariadb
+      # DB_PORT: 3306
+
+      # DB_HOST: mssql
+      # DB_USER: mssql
+      # DB_PASSWORD: Mssql123!
+      # DB_PORT: 1433
+
       REDIS_URL: redis://redis:6379
       KAFKA_BROKERS: kafka:29092
       KAFKA_CLIENT_ID: forklaunch-sample-worker
@@ -218,7 +351,11 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
-      postgres:
+      # postgres:
+      #   condition: service_started
+      # mysql:
+      #   condition: service_started
+      mariadb:
         condition: service_started
       redis:
         condition: service_started

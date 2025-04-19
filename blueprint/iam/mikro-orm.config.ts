@@ -1,9 +1,13 @@
 import { number, SchemaValidator, string } from '@forklaunch/blueprint-core';
-import { ConfigInjector, getEnvVar, Lifetime } from '@forklaunch/core/services';
+import {
+  createConfigInjector,
+  getEnvVar,
+  Lifetime
+} from '@forklaunch/core/services';
 import { Migrator } from '@mikro-orm/migrations';
 // import { MongoDriver } from '@mikro-orm/mongodb';
 // import { MySqlDriver } from '@mikro-orm/mysql';
-import { MikroORMOptions, Platform, TextType, Type } from '@mikro-orm/core';
+import { Platform, TextType, Type } from '@mikro-orm/core';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
 import dotenv from 'dotenv';
@@ -12,7 +16,7 @@ import * as entities from './persistence/entities';
 
 dotenv.config({ path: getEnvVar('ENV_FILE_PATH') });
 
-const configInjector = new ConfigInjector(SchemaValidator(), {
+const configInjector = createConfigInjector(SchemaValidator(), {
   DB_NAME: {
     lifetime: Lifetime.Singleton,
     type: string,
@@ -49,7 +53,7 @@ export const validConfigInjector = configInjector.validateConfigSingletons(
   getEnvVar('ENV_FILE_PATH') ?? '.env'
 );
 
-const mikroOrmOptionsConfig: Partial<MikroORMOptions> = {
+const mikroOrmOptionsConfig = defineConfig({
   driver: PostgreSqlDriver,
   dbName: validConfigInjector.resolve('DB_NAME'),
   host: validConfigInjector.resolve('DB_HOST'),
@@ -75,6 +79,6 @@ const mikroOrmOptionsConfig: Partial<MikroORMOptions> = {
     path: 'dist/persistence',
     glob: 'seeder.js'
   }
-};
+});
 
 export default mikroOrmOptionsConfig;

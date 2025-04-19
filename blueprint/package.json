@@ -19,9 +19,11 @@
     "clean": "rm -rf node_modules pnpm-lock.yaml && pnpm --parallel -r clean && pnpm store prune",
     "clean:purge": "pnpm run clean && pnpm store clear",
     "dev": "RUNTIME=node docker compose -f docker-compose.base.yml -f docker-compose.node.yml up --watch",
+    "dev:build": "RUNTIME=node docker compose -f docker-compose.base.yml -f docker-compose.node.yml build",
     "dev:bun": "pnpm clean && RUNTIME=bun docker compose -f docker-compose.base.yml -f docker-compose.bun.yml up --watch",
     "docs": "pnpm --parallel -r run docs",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
+    "format:biome": "biome format --write .",
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
     "migrate:create": "docker compose -f docker-compose.base.yml up -d postgres && pnpm -r run migrate:create",
@@ -34,6 +36,7 @@
     "up:packages": "pnpm -r update --latest"
   },
   "devDependencies": {
+    "@biomejs/biome": "1.9.4",
     "@changesets/cli": "^2.29.2",
     "@eslint/js": "^9.24.0",
     "@types/jest": "^29.5.14",
@@ -41,6 +44,7 @@
     "globals": "^16.0.0",
     "jest": "^29.7.0",
     "lint-staged": "^15.5.1",
+    "oxlint": "^0.16.6",
     "prettier": "^3.5.3",
     "sort-package-json": "^3.0.0",
     "ts-jest": "^29.3.2",
@@ -51,11 +55,11 @@
     "vitest": "^3.1.1"
   },
   "dependencies": {
-    "@forklaunch/common": "^0.2.8",
-    "@forklaunch/core": "^0.7.1",
-    "@forklaunch/express": "^0.4",
-    "@forklaunch/hyper-express": "^0.4.8",
-    "@forklaunch/universal-sdk": "^0.2.5",
-    "@forklaunch/validator": "^0.5.1"
+    "@forklaunch/common": "^0.2.10",
+    "@forklaunch/core": "^0.7.3",
+    "@forklaunch/express": "^0.4.10",
+    "@forklaunch/hyper-express": "^0.4.10",
+    "@forklaunch/universal-sdk": "^0.2.7",
+    "@forklaunch/validator": "^0.5.3"
   }
 }

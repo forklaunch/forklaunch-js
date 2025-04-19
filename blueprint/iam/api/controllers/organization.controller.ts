@@ -14,12 +14,12 @@ import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { OrganizationService } from '@forklaunch/interfaces-iam/interfaces';
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
+import { OrganizationStatus } from '../../domain/enum/organizationStatus.enum';
 import {
   CreateOrganizationDtoMapper,
   OrganizationDtoMapper,
   UpdateOrganizationDtoMapper
 } from '../../domain/mappers/organization.mappers';
-import { OrganizationStatus } from '../../domain/enum/organizationStatus.enum';
 import { SchemaDependencies } from '../../registrations';
 
 export const OrganizationController = (
@@ -49,7 +49,7 @@ export const OrganizationController = (
           res
             .status(201)
             .json(await serviceFactory().createOrganization(req.body));
-        } catch (error: Error | unknown) {
+        } catch (error: unknown) {
           if (error instanceof UniqueConstraintViolationException) {
             openTelemetryCollector.error(
               'Organization already exists',
