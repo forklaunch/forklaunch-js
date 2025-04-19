@@ -1,4 +1,4 @@
 {
-  "**/*.{ts,tsx}": ["pnpm lint:fix"],
-  "**/*.{ts,tsx,json,ts}": ["pnpm format"]
+  "**/*.{ts,tsx}": ["pnpm oxlint --fix"],
+  "**/*.{ts,tsx,json,ts}": ["pnpm format:biome"]
 }
