@@ -1,5 +1,11 @@
 # @forklaunch/interfaces-iam
 
+## 0.1.10
+
+### Patch Changes
+
+- Minor bugfixes and package version increases
+
 ## 0.1.9
 
 ### Patch Changes
