@@ -7,7 +7,7 @@ import {
 import { Migrator } from '@mikro-orm/migrations';
 // import { MongoDriver } from '@mikro-orm/mongodb';
 // import { MySqlDriver } from '@mikro-orm/mysql';
-import { Platform, TextType, Type } from '@mikro-orm/core';
+import { defineConfig, Platform, TextType, Type } from '@mikro-orm/core';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
 // import { SqliteDriver } from '@mikro-orm/sqlite';

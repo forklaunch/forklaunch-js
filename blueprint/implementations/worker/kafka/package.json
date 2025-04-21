@@ -1,0 +1,63 @@
+{
+  "name": "@forklaunch/implementation-worker-kafka",
+  "version": "0.1.0",
+  "description": "Kafka implementation for forklaunch workers",
+  "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
+  "bugs": {
+    "url": "https://github.com/forklaunch/forklaunch-js/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/forklaunch/forklaunch-js.git"
+  },
+  "license": "MIT",
+  "author": "Forklift Technologies, Inc.",
+  "exports": {
+    "./consumers": {
+      "types": "./lib/consumers/index.d.ts",
+      "import": "./lib/consumers/index.js",
+      "require": "./lib/consumers/index.js"
+    },
+    "./producers": {
+      "types": "./lib/producers/index.d.ts",
+      "import": "./lib/producers/index.js",
+      "require": "./lib/producers/index.js"
+    },
+    "./schemas": {
+      "types": "./lib/schemas/index.d.ts",
+      "import": "./lib/schemas/index.js",
+      "require": "./lib/schemas/index.js"
+    },
+    "./types": {
+      "types": "./lib/types/index.d.ts",
+      "import": "./lib/types/index.js",
+      "require": "./lib/types/index.js"
+    }
+  },
+  "files": ["lib/**"],
+  "scripts": {
+    "build": "tsc && if [ -f eject-package.bash ]; then pnpm package:eject; fi",
+    "clean": "rm -rf lib pnpm.lock.yaml node_modules",
+    "docs": "typedoc --out docs *",
+    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
+    "lint": "eslint . -c eslint.config.mjs",
+    "lint:fix": "eslint . -c eslint.config.mjs --fix",
+    "package:eject": "./eject-package.bash",
+    "publish:package": "./publish-package.bash",
+    "test": "vitest --passWithNoTests"
+  },
+  "dependencies": {
+    "@forklaunch/core": "link:../../../../framework/core",
+    "@forklaunch/interfaces-worker": "workspace:*",
+    "@sinclair/typebox": "^0.34.33",
+    "kafkajs": "^2.2.4",
+    "zod": "^3.24.3"
+  },
+  "devDependencies": {
+    "depcheck": "^1.4.7",
+    "eslint": "^9.25.0",
+    "prettier": "^3.5.3",
+    "typedoc": "^0.28.3",
+    "typescript-eslint": "^8.30.1"
+  }
+}

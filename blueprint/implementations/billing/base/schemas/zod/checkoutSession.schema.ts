@@ -37,6 +37,7 @@ export const CheckoutSessionSchema =
   <T extends Record<string, LiteralSchema>>(PaymentMethodEnum: T) => ({
     id: uuidId ? uuid : string,
     customerId: string,
+    metadata: optional(unknown),
     paymentMethods: array(enum_(PaymentMethodEnum)),
     successRedirectUri: string,
     cancelRedirectUri: string,

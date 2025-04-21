@@ -14,24 +14,45 @@ import {
   getEnvVar,
   Lifetime
 } from '@forklaunch/core/services';
-import { EntityManager, ForkOptions, MikroORM } from '@mikro-orm/core';
-import { BullMqWorkerClient } from './domain/clients/bullMqWorker.client';
-import { DatabaseWorkerClient } from './domain/clients/databaseWorker.client';
-import { KafkaWorkerClient } from './domain/clients/kafkaWorker.client';
-import { RedisWorkerClient } from './domain/clients/redisWorker.client';
+import { BullMqWorkerConsumer } from '@forklaunch/implementation-worker-bullmq/consumers';
+import { BullMqWorkerProducer } from '@forklaunch/implementation-worker-bullmq/producers';
+import { BullMqWorkerSchemas } from '@forklaunch/implementation-worker-bullmq/schemas';
+import { DatabaseWorkerConsumer } from '@forklaunch/implementation-worker-database/consumers';
+import { DatabaseWorkerProducer } from '@forklaunch/implementation-worker-database/producers';
+import { DatabaseWorkerSchemas } from '@forklaunch/implementation-worker-database/schemas';
+import { KafkaWorkerConsumer } from '@forklaunch/implementation-worker-kafka/consumers';
+import { KafkaWorkerProducer } from '@forklaunch/implementation-worker-kafka/producers';
+import { KafkaWorkerSchemas } from '@forklaunch/implementation-worker-kafka/schemas';
+import { RedisWorkerConsumer } from '@forklaunch/implementation-worker-redis/consumers';
+import { RedisWorkerProducer } from '@forklaunch/implementation-worker-redis/producers';
+import { RedisWorkerSchemas } from '@forklaunch/implementation-worker-redis/schemas';
+import { RedisWorkerOptions } from '@forklaunch/implementation-worker-redis/types';
 import {
-  SampleWorkerFailureHandler,
-  SampleWorkerProcessFunction
-} from './domain/interfaces/sampleWorkerClient.interface';
-import { BullMqWorkerProducer } from './domain/producers/bullMqWorker.producer';
-import { DatabaseWorkerProducer } from './domain/producers/databaseWorker.producer';
-import { KafkaWorkerProducer } from './domain/producers/kafkaWorker.producer';
-import { RedisWorkerProducer } from './domain/producers/redisWorker.producer';
-import { BullMqWorkerOptionsSchema } from './domain/schemas/bullMqWorker.schema';
-import { DatabaseWorkerOptionsSchema } from './domain/schemas/databaseWorker.schema';
-import { KafkaWorkerOptionsSchema } from './domain/schemas/kafkaWorker.schema';
-import { RedisWorkerOptionsSchema } from './domain/schemas/redisWorker.schema';
+  WorkerFailureHandler,
+  WorkerProcessFunction
+} from '@forklaunch/interfaces-worker/types';
+import { EntityManager, ForkOptions, MikroORM } from '@mikro-orm/core';
+import { BullMqWorkerOptions } from '../implementations/worker/bullmq/lib/types/bullMqWorker.types';
+import { DatabaseWorkerOptions } from '../implementations/worker/database/lib/types/databaseWorker.types';
+import { KafkaWorkerOptions } from '../implementations/worker/kafka/lib/types/kafkaWorker.types';
 import { BaseSampleWorkerService } from './domain/services/sampleWorker.service';
+import { SampleWorkerEvent } from './persistence/entities';
+
+const BullMqWorkerOptionsSchema = BullMqWorkerSchemas({
+  validator: SchemaValidator()
+});
+
+const KafkaWorkerOptionsSchema = KafkaWorkerSchemas({
+  validator: SchemaValidator()
+});
+
+const RedisWorkerOptionsSchema = RedisWorkerSchemas({
+  validator: SchemaValidator()
+});
+
+const DatabaseWorkerOptionsSchema = DatabaseWorkerSchemas({
+  validator: SchemaValidator()
+});
 
 //! defines the configuration schema for the application
 export function createDependencies({ orm }: { orm: MikroORM }) {
@@ -194,38 +215,38 @@ export function createDependencies({ orm }: { orm: MikroORM }) {
   });
   //! defines the service dependencies for the application
   const serviceDependencies = runtimeDependencies.chain({
-    SampleWorkerBullMqClient: {
+    SampleWorkerBullMqConsumer: {
       lifetime: Lifetime.Scoped,
       type: (
-        processEventsFunction: SampleWorkerProcessFunction,
-        failureHandler: SampleWorkerFailureHandler
-      ) => BullMqWorkerClient,
+        processEventsFunction: WorkerProcessFunction<SampleWorkerEvent>,
+        failureHandler: WorkerFailureHandler<SampleWorkerEvent>
+      ) => BullMqWorkerConsumer<SampleWorkerEvent, BullMqWorkerOptions>,
       factory:
         ({ SAMPLE_WORKER_QUEUE, BullMqWorkerOptions }) =>
         (
-          processEventsFunction: SampleWorkerProcessFunction,
-          failureHandler: SampleWorkerFailureHandler
+          processEventsFunction: WorkerProcessFunction<SampleWorkerEvent>,
+          failureHandler: WorkerFailureHandler<SampleWorkerEvent>
         ) =>
-          new BullMqWorkerClient(
+          new BullMqWorkerConsumer(
             SAMPLE_WORKER_QUEUE,
             BullMqWorkerOptions,
             processEventsFunction,
             failureHandler
           )
     },
-    SampleWorkerRedisClient: {
+    SampleWorkerRedisConsumer: {
       lifetime: Lifetime.Scoped,
       type: (
-        processEventsFunction: SampleWorkerProcessFunction,
-        failureHandler: SampleWorkerFailureHandler
-      ) => RedisWorkerClient,
+        processEventsFunction: WorkerProcessFunction<SampleWorkerEvent>,
+        failureHandler: WorkerFailureHandler<SampleWorkerEvent>
+      ) => RedisWorkerConsumer<SampleWorkerEvent, RedisWorkerOptions>,
       factory:
         ({ TtlCache, SAMPLE_WORKER_QUEUE, RedisWorkerOptions }) =>
         (
-          processEventsFunction: SampleWorkerProcessFunction,
-          failureHandler: SampleWorkerFailureHandler
+          processEventsFunction: WorkerProcessFunction<SampleWorkerEvent>,
+          failureHandler: WorkerFailureHandler<SampleWorkerEvent>
         ) =>
-          new RedisWorkerClient(
+          new RedisWorkerConsumer(
             SAMPLE_WORKER_QUEUE,
             TtlCache,
             RedisWorkerOptions,
@@ -233,38 +254,39 @@ export function createDependencies({ orm }: { orm: MikroORM }) {
             failureHandler
           )
     },
-    SampleWorkerDatabaseClient: {
+    SampleWorkerDatabaseConsumer: {
       lifetime: Lifetime.Scoped,
       type: (
-        processEventsFunction: SampleWorkerProcessFunction,
-        failureHandler: SampleWorkerFailureHandler
-      ) => DatabaseWorkerClient,
+        processEventsFunction: WorkerProcessFunction<SampleWorkerEvent>,
+        failureHandler: WorkerFailureHandler<SampleWorkerEvent>
+      ) => DatabaseWorkerConsumer<SampleWorkerEvent, DatabaseWorkerOptions>,
       factory:
         ({ EntityManager, DatabaseWorkerOptions }) =>
         (
-          processEventsFunction: SampleWorkerProcessFunction,
-          failureHandler: SampleWorkerFailureHandler
+          processEventsFunction: WorkerProcessFunction<SampleWorkerEvent>,
+          failureHandler: WorkerFailureHandler<SampleWorkerEvent>
         ) =>
-          new DatabaseWorkerClient(
+          new DatabaseWorkerConsumer(
+            SampleWorkerEvent,
             EntityManager,
             DatabaseWorkerOptions,
             processEventsFunction,
             failureHandler
           )
     },
-    SampleWorkerKafkaClient: {
+    SampleWorkerKafkaConsumer: {
       lifetime: Lifetime.Scoped,
       type: (
-        processEventsFunction: SampleWorkerProcessFunction,
-        failureHandler: SampleWorkerFailureHandler
-      ) => KafkaWorkerClient,
+        processEventsFunction: WorkerProcessFunction<SampleWorkerEvent>,
+        failureHandler: WorkerFailureHandler<SampleWorkerEvent>
+      ) => KafkaWorkerConsumer<SampleWorkerEvent, KafkaWorkerOptions>,
       factory:
         ({ SAMPLE_WORKER_QUEUE, KafkaWorkerOptions }) =>
         (
-          processEventsFunction: SampleWorkerProcessFunction,
-          failureHandler: SampleWorkerFailureHandler
+          processEventsFunction: WorkerProcessFunction<SampleWorkerEvent>,
+          failureHandler: WorkerFailureHandler<SampleWorkerEvent>
         ) =>
-          new KafkaWorkerClient(
+          new KafkaWorkerConsumer(
             SAMPLE_WORKER_QUEUE,
             KafkaWorkerOptions,
             processEventsFunction,

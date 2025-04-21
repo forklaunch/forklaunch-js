@@ -14,14 +14,14 @@
   "author": "Forklift Technologies, Inc.",
   "exports": {
     "./schemas": {
+      "types": "./lib/schemas/index.d.ts",
       "import": "./lib/schemas/index.js",
-      "require": "./lib/schemas/index.js",
-      "types": "./lib/schemas/index.d.ts"
+      "require": "./lib/schemas/index.js"
     },
     "./services": {
+      "types": "./lib/services/index.d.ts",
       "import": "./lib/services/index.js",
-      "require": "./lib/services/index.js",
-      "types": "./lib/services/index.d.ts"
+      "require": "./lib/services/index.js"
     }
   },
   "files": ["lib/**"],
@@ -37,10 +37,10 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/common": "^0.2.10",
-    "@forklaunch/core": "^0.7.3",
+    "@forklaunch/common": "link:../../../../framework/common",
+    "@forklaunch/core": "link:../../../../framework/core",
     "@forklaunch/interfaces-billing": "workspace:*",
-    "@forklaunch/validator": "^0.5.3",
+    "@forklaunch/validator": "link:../../../../framework/validator",
     "@mikro-orm/core": "^6.4.13",
     "@sinclair/typebox": "^0.34.33",
     "ajv": "^8.17.1",
@@ -49,6 +49,6 @@
   "devDependencies": {
     "depcheck": "^1.4.7",
     "prettier": "^3.5.3",
-    "typedoc": "^0.28.2"
+    "typedoc": "^0.28.3"
   }
 }

@@ -6,5 +6,13 @@ packages:
   - sample-worker
   - interfaces/billing
   - interfaces/iam
+  - interfaces/worker
   - implementations/billing/base
   - implementations/iam/base
+  - implementations/worker/bullmq
+  - implementations/worker/database
+  - implementations/worker/kafka
+  - implementations/worker/redis
+
+onlyBuiltDependencies:
+  - '@biomejs/biome'

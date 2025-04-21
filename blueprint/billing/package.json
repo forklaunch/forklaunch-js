@@ -34,13 +34,13 @@
   "dependencies": {
     "@forklaunch/blueprint-core": "workspace:*",
     "@forklaunch/blueprint-monitoring": "workspace:*",
-    "@forklaunch/common": "^0.2.10",
-    "@forklaunch/core": "^0.7.3",
-    "@forklaunch/express": "^0.4.10",
-    "@forklaunch/hyper-express": "^0.4.10",
+    "@forklaunch/common": "link:../../framework/common",
+    "@forklaunch/core": "link:../../framework/core",
+    "@forklaunch/express": "link:../../framework/express",
+    "@forklaunch/hyper-express": "link:../../framework/hyper-express",
     "@forklaunch/implementation-billing-base": "workspace:*",
     "@forklaunch/interfaces-billing": "workspace:*",
-    "@forklaunch/validator": "^0.5.3",
+    "@forklaunch/validator": "link:../../framework/validator",
     "@mikro-orm/core": "^6.4.13",
     "@mikro-orm/migrations": "^6.4.13",
     "@mikro-orm/mongodb": "^6.4.13",
@@ -64,7 +64,7 @@
     "depcheck": "^1.4.7",
     "prettier": "^3.5.3",
     "ts-node": "^10.9.2",
-    "typedoc": "^0.28.2"
+    "typedoc": "^0.28.3"
   },
   "mikro-orm": {
     "configPaths": ["./mikro-orm.config.ts", "./dist/mikro-orm.config.js"]

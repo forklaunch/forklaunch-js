@@ -14,14 +14,14 @@
   "author": "Forklift Technologies, Inc.",
   "exports": {
     "./interfaces": {
+      "types": "./lib/interfaces/index.d.ts",
       "import": "./lib/interfaces/index.js",
-      "require": "./lib/interfaces/index.js",
-      "types": "./lib/interfaces/index.d.ts"
+      "require": "./lib/interfaces/index.js"
     },
     "./types": {
+      "types": "./lib/types/index.d.ts",
       "import": "./lib/types/index.js",
-      "require": "./lib/types/index.js",
-      "types": "./lib/types/index.d.ts"
+      "require": "./lib/types/index.js"
     }
   },
   "files": ["lib/**"],
@@ -37,12 +37,12 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/common": "^0.2.10",
+    "@forklaunch/common": "link:../../../framework/common",
     "@mikro-orm/core": "^6.4.13"
   },
   "devDependencies": {
     "depcheck": "^1.4.7",
     "prettier": "^3.5.3",
-    "typedoc": "^0.28.2"
+    "typedoc": "^0.28.3"
   }
 }

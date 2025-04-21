@@ -1,4 +1,11 @@
 import { SchemaValidator } from '@forklaunch/blueprint-core';
+import { BullMqWorkerProducer } from '@forklaunch/implementation-worker-bullmq/producers';
+import { DatabaseWorkerProducer } from '@forklaunch/implementation-worker-database/producers';
+import { KafkaWorkerProducer } from '@forklaunch/implementation-worker-kafka/producers';
+import { RedisWorkerProducer } from '@forklaunch/implementation-worker-redis/producers';
+import { BullMqWorkerOptions } from '../../../implementations/worker/bullmq/lib/types/bullMqWorker.types';
+import { KafkaWorkerOptions } from '../../../implementations/worker/kafka/lib/types/kafkaWorker.types';
+import { SampleWorkerEvent } from '../../persistence/entities';
 import { SampleWorkerService } from '../interfaces/sampleWorkerService.interface';
 import {
   SampleWorkerRequestDto,
@@ -6,18 +13,20 @@ import {
   SampleWorkerResponseDto,
   SampleWorkerResponseDtoMapper
 } from '../mappers/sampleWorker.mappers';
-import { BullMqWorkerProducer } from '../producers/bullMqWorker.producer';
-import { DatabaseWorkerProducer } from '../producers/databaseWorker.producer';
-import { KafkaWorkerProducer } from '../producers/kafkaWorker.producer';
-import { RedisWorkerProducer } from '../producers/redisWorker.producer';
 
 // BaseSampleWorkerService class that implements the SampleWorkerService interface
 export class BaseSampleWorkerService implements SampleWorkerService {
   constructor(
-    private databaseWorkerProducer: DatabaseWorkerProducer,
-    private bullMqWorkerProducer: BullMqWorkerProducer,
-    private redisWorkerProducer: RedisWorkerProducer,
-    private kafkaWorkerProducer: KafkaWorkerProducer
+    private databaseWorkerProducer: DatabaseWorkerProducer<SampleWorkerEvent>,
+    private bullMqWorkerProducer: BullMqWorkerProducer<
+      SampleWorkerEvent,
+      BullMqWorkerOptions
+    >,
+    private redisWorkerProducer: RedisWorkerProducer<SampleWorkerEvent>,
+    private kafkaWorkerProducer: KafkaWorkerProducer<
+      SampleWorkerEvent,
+      KafkaWorkerOptions
+    >
   ) {}
 
   // sampleWorkerPost method that implements the SampleWorkerService interface

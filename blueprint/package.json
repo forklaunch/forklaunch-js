@@ -22,10 +22,12 @@
     "dev:build": "RUNTIME=node docker compose -f docker-compose.base.yml -f docker-compose.node.yml build",
     "dev:bun": "pnpm clean && RUNTIME=bun docker compose -f docker-compose.base.yml -f docker-compose.bun.yml up --watch",
     "docs": "pnpm --parallel -r run docs",
-    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
-    "format:biome": "biome format --write .",
-    "lint": "eslint . -c eslint.config.mjs",
-    "lint:fix": "eslint . -c eslint.config.mjs --fix",
+    "format": "biome format --write .",
+    "format:prettier": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
+    "lint": "oxlint --config .oxlint.config.json",
+    "lint:fix": "oxlint --fix --config .oxlint.config.json",
+    "es:lint": "eslint . -c eslint.config.mjs",
+    "es:lint:fix": "eslint . -c eslint.config.mjs --fix",
     "migrate:create": "docker compose -f docker-compose.base.yml up -d postgres && pnpm -r run migrate:create",
     "migrate:down": "docker compose -f docker-compose.base.yml up -d postgres && pnpm -r run migrate:down",
     "migrate:init": "docker compose -f docker-compose.base.yml up -d postgres && pnpm -r run migrate:init",
@@ -38,9 +40,9 @@
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
     "@changesets/cli": "^2.29.2",
-    "@eslint/js": "^9.24.0",
+    "@eslint/js": "^9.25.0",
     "@types/jest": "^29.5.14",
-    "eslint": "^9.24.0",
+    "eslint": "^9.25.0",
     "globals": "^16.0.0",
     "jest": "^29.7.0",
     "lint-staged": "^15.5.1",
@@ -55,11 +57,11 @@
     "vitest": "^3.1.1"
   },
   "dependencies": {
-    "@forklaunch/common": "^0.2.10",
-    "@forklaunch/core": "^0.7.3",
-    "@forklaunch/express": "^0.4.10",
-    "@forklaunch/hyper-express": "^0.4.10",
-    "@forklaunch/universal-sdk": "^0.2.7",
-    "@forklaunch/validator": "^0.5.3"
+    "@forklaunch/common": "link:../framework/common",
+    "@forklaunch/core": "link:../framework/core",
+    "@forklaunch/express": "link:../framework/express",
+    "@forklaunch/hyper-express": "link:../framework/hyper-express",
+    "@forklaunch/universal-sdk": "link:../framework/universal-sdk",
+    "@forklaunch/validator": "link:../framework/validator"
   }
 }
