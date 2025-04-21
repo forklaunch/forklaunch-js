@@ -10,8 +10,11 @@ import { SchemaObject } from 'openapi3-ts/oas31';
 import {
   z,
   ZodArray,
+  ZodBigInt,
+  ZodDate,
   ZodFunction,
   ZodLiteral,
+  ZodNumber,
   ZodObject,
   ZodOptional,
   ZodPromise,
@@ -102,7 +105,7 @@ export class ZodSchemaValidator
         return value;
       }
     })
-    .pipe(z.number());
+    .pipe(z.number()) as unknown as ZodNumber;
   bigint = z
     .any()
     .transform((value) => {
@@ -112,7 +115,7 @@ export class ZodSchemaValidator
         return value;
       }
     })
-    .pipe(z.bigint());
+    .pipe(z.bigint()) as unknown as ZodBigInt;
   boolean = z.preprocess((val) => {
     if (typeof val === 'string') {
       if (val.toLowerCase() === 'true') return true;
@@ -129,7 +132,7 @@ export class ZodSchemaValidator
         return value;
       }
     })
-    .pipe(z.date());
+    .pipe(z.date()) as unknown as ZodDate;
   symbol = z.symbol();
   nullish = z.union([z.void(), z.null(), z.undefined()]);
   void = z.void();

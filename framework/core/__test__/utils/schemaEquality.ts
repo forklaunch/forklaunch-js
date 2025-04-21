@@ -30,15 +30,47 @@ export function testSchemaEquality<
       typeboxParseResult.ok ? sortObjectKeys(typeboxParseResult.value) : '1'
     );
 
-  return isEqual as Schema<Z, ZodSchemaValidator> extends Schema<
-    T,
-    TypeboxSchemaValidator
-  >
-    ? Schema<T, TypeboxSchemaValidator> extends Schema<Z, ZodSchemaValidator>
-      ? true
+  return isEqual as EqualityWithoutFunction<T, Z>;
+}
+
+type InjectiveWithoutFunction<O, T> = {
+  [K in keyof O]: K extends keyof T
+    ? O[K] extends object
+      ? T[K] extends object
+        ? InjectiveWithoutFunction<O[K], T[K]>
+        : false
+      : O[K] extends (...args: never[]) => unknown
+        ? T[K] extends (...args: never[]) => unknown
+          ? true
+          : false
+        : O[K] extends T[K]
+          ? T[K] extends O[K]
+            ? true
+            : false
+          : false
+    : false;
+} extends infer R
+  ? R extends {
+      [K in keyof R]: true;
+    }
+    ? true
+    : false
+  : false;
+
+type EqualityWithoutFunction<
+  T extends IdiomaticSchema<TypeboxSchemaValidator>,
+  Z extends IdiomaticSchema<ZodSchemaValidator>
+> =
+  Schema<T, TypeboxSchemaValidator> extends infer TypeboxSchema
+    ? Schema<Z, ZodSchemaValidator> extends infer ZodSchema
+      ? InjectiveWithoutFunction<
+          TypeboxSchema,
+          ZodSchema
+        > extends InjectiveWithoutFunction<ZodSchema, TypeboxSchema>
+        ? true
+        : false
       : false
     : false;
-}
 
 export enum DummyEnum {
   A = 'A',

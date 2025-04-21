@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.2.11
+
+### Patch Changes
+
+- Increase package versions
+
 ## 0.2.10
 
 ### Patch Changes
