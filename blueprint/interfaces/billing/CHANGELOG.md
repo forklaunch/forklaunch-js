@@ -1,5 +1,11 @@
 # @forklaunch/interfaces-billing
 
+## 0.1.11
+
+### Patch Changes
+
+- Package bump and minor syntax changes
+
 ## 0.1.10
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 import { QueueOptions } from 'bullmq';
 
-export type BullMqWorkerOptions = QueueOptions & {
+export type WorkerOptions = QueueOptions & {
   backoffType: 'exponential' | 'fixed';
   retries: number;
   interval: number;

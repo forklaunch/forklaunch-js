@@ -1,30 +1,38 @@
 import { SchemaValidator } from '@forklaunch/blueprint-core';
 import { BullMqWorkerProducer } from '@forklaunch/implementation-worker-bullmq/producers';
+import { WorkerOptions as BullMqWorkerOptions } from '@forklaunch/implementation-worker-bullmq/types';
 import { DatabaseWorkerProducer } from '@forklaunch/implementation-worker-database/producers';
+import { WorkerOptions as DatabaseWorkerOptions } from '@forklaunch/implementation-worker-database/types';
 import { KafkaWorkerProducer } from '@forklaunch/implementation-worker-kafka/producers';
 import { RedisWorkerProducer } from '@forklaunch/implementation-worker-redis/producers';
-import { BullMqWorkerOptions } from '../../../implementations/worker/bullmq/lib/types/bullMqWorker.types';
-import { KafkaWorkerOptions } from '../../../implementations/worker/kafka/lib/types/kafkaWorker.types';
-import { SampleWorkerEvent } from '../../persistence/entities';
-import { SampleWorkerService } from '../interfaces/sampleWorkerService.interface';
+import { WorkerOptions as RedisWorkerOptions } from '@forklaunch/implementation-worker-redis/types';
+import { WorkerOptions as KafkaWorkerOptions } from '../../implementations/worker/kafka/lib/types/kafkaWorker.types';
+import { SampleWorkerService } from '../domain/interfaces/sampleWorkerService.interface';
 import {
   SampleWorkerRequestDto,
   SampleWorkerRequestDtoMapper,
   SampleWorkerResponseDto,
   SampleWorkerResponseDtoMapper
-} from '../mappers/sampleWorker.mappers';
+} from '../domain/mappers/sampleWorker.mappers';
+import { SampleWorkerEventRecord } from '../persistence/entities';
 
 // BaseSampleWorkerService class that implements the SampleWorkerService interface
 export class BaseSampleWorkerService implements SampleWorkerService {
   constructor(
-    private databaseWorkerProducer: DatabaseWorkerProducer<SampleWorkerEvent>,
+    private databaseWorkerProducer: DatabaseWorkerProducer<
+      SampleWorkerEventRecord,
+      DatabaseWorkerOptions
+    >,
     private bullMqWorkerProducer: BullMqWorkerProducer<
-      SampleWorkerEvent,
+      SampleWorkerEventRecord,
       BullMqWorkerOptions
     >,
-    private redisWorkerProducer: RedisWorkerProducer<SampleWorkerEvent>,
+    private redisWorkerProducer: RedisWorkerProducer<
+      SampleWorkerEventRecord,
+      RedisWorkerOptions
+    >,
     private kafkaWorkerProducer: KafkaWorkerProducer<
-      SampleWorkerEvent,
+      SampleWorkerEventRecord,
       KafkaWorkerOptions
     >
   ) {}

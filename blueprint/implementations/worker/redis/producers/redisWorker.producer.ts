@@ -1,13 +1,16 @@
 import { TtlCache } from '@forklaunch/core/cache';
 import { WorkerProducer } from '@forklaunch/interfaces-worker/interfaces';
 import { WorkerEventEntity } from '@forklaunch/interfaces-worker/types';
-
-export class RedisWorkerProducer<EventEntity extends WorkerEventEntity>
-  implements WorkerProducer<EventEntity>
+import { WorkerOptions } from '../types/redisWorker.types';
+export class RedisWorkerProducer<
+  EventEntity extends WorkerEventEntity,
+  Options extends WorkerOptions
+> implements WorkerProducer<EventEntity>
 {
   constructor(
     private readonly queueName: string,
-    private readonly cache: TtlCache
+    private readonly cache: TtlCache,
+    private readonly options: Options
   ) {}
 
   async enqueueJob(event: EventEntity): Promise<void> {

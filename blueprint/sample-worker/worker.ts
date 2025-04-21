@@ -3,14 +3,14 @@ import {
   WorkerProcessFunction
 } from '@forklaunch/interfaces-worker/types';
 import { bootstrap } from './bootstrapper';
-import { SampleWorkerEvent } from './persistence/entities/sampleWorkerEvent.entity';
+import { SampleWorkerEventRecord } from './persistence/entities/sampleWorkerRecord.entity';
 
 bootstrap(async (ci, tokens) => {
   const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
 
   const processEvents: (
     name: string
-  ) => WorkerProcessFunction<SampleWorkerEvent> =
+  ) => WorkerProcessFunction<SampleWorkerEventRecord> =
     (name: string) => async (events) => {
       const failedEvents = [];
 
@@ -31,7 +31,7 @@ bootstrap(async (ci, tokens) => {
       return failedEvents;
     };
 
-  const processErrors: WorkerFailureHandler<SampleWorkerEvent> = async (
+  const processErrors: WorkerFailureHandler<SampleWorkerEventRecord> = async (
     events
   ) => {
     events.forEach((event) => {

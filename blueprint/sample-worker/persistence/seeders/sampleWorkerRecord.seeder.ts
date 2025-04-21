@@ -1,11 +1,11 @@
 import { SqlBaseEntity } from '@forklaunch/blueprint-core';
 import { Entity, EntityManager, Property } from '@mikro-orm/core';
 import { Seeder } from '@mikro-orm/seeder';
-import { sampleWorkerEvent } from '../seed.data';
+import { sampleWorkerEventRecord } from '../seed.data';
 
-// Entity class that defines the structure of the SampleWorkerEvent table
+// Entity class that defines the structure of the SampleWorkerEventRecord table
 @Entity()
-export class SampleWorkerEvent extends SqlBaseEntity {
+export class SampleWorkerEventRecord extends SqlBaseEntity {
   // message property that stores a message string
   @Property()
   message!: string;
@@ -17,9 +17,9 @@ export class SampleWorkerEvent extends SqlBaseEntity {
   retryCount!: number;
 }
 
-export class SampleWorkerEventSeeder extends Seeder {
+export class SampleWorkerEventRecordSeeder extends Seeder {
   run(em: EntityManager): Promise<void> {
-    em.create(SampleWorkerEvent, sampleWorkerEvent);
+    em.create(SampleWorkerEventRecord, sampleWorkerEventRecord);
     return Promise.resolve();
   }
 }

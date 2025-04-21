@@ -1,4 +1,4 @@
-export type KafkaWorkerOptions = {
+export type WorkerOptions = {
   brokers: string[];
   clientId: string;
   groupId: string;

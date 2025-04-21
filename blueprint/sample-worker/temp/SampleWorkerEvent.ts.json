@@ -35,9 +35,9 @@
     "hooks": {},
     "indexes": [],
     "uniques": [],
-    "className": "SampleWorkerEvent",
-    "path": "./persistence/entities/sampleWorkerEvent.entity.ts",
-    "name": "SampleWorkerEvent",
+    "className": "SampleWorkerEventRecord",
+    "path": "./persistence/entities/SampleWorkerEventRecord.entity.ts",
+    "name": "SampleWorkerEventRecord",
     "abstract": false,
     "internal": true,
     "constructorParams": [],
@@ -46,7 +46,7 @@
     "useCache": true,
     "collection": "sample_worker_event"
   },
-  "origin": "./persistence/entities/sampleWorkerEvent.entity.ts",
+  "origin": "./persistence/entities/SampleWorkerEventRecord.entity.ts",
   "hash": "c8c8b8c53e9f166b04480ee04194266c",
   "version": "6.4.13"
 }

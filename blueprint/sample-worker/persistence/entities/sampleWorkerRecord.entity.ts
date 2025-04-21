@@ -1,9 +1,9 @@
 import { SqlBaseEntity } from '@forklaunch/blueprint-core';
 import { Entity, Property } from '@mikro-orm/core';
 
-// Entity class that defines the structure of the SampleWorkerEvent table
+// Entity class that defines the structure of the SampleWorkerEventRecord table
 @Entity()
-export class SampleWorkerEvent extends SqlBaseEntity {
+export class SampleWorkerEventRecord extends SqlBaseEntity {
   // message property that stores a message string
   @Property()
   message!: string;

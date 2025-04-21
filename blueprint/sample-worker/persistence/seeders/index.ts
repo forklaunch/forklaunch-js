@@ -1,1 +1,1 @@
-export { SampleWorkerEventSeeder } from './sampleWorkerEvent.seeder';
+export { SampleWorkerEventRecordSeeder } from './sampleWorkerRecord.seeder';
