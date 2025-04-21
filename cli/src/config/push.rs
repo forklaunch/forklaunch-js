@@ -3,13 +3,11 @@ use std::fs::read;
 use anyhow::{Context, Result};
 use clap::{Arg, ArgMatches, Command};
 
+use super::{unwrap_id, CliCommand};
 use crate::{
     constants::{ERROR_FAILED_TO_SEND_REQUEST, PROD_API_URL},
-    core::command::command,
-    core::token::get_token,
+    core::{command::command, token::get_token},
 };
-
-use super::{unwrap_id, CliCommand};
 
 #[derive(Debug)]
 pub(crate) struct PushCommand;

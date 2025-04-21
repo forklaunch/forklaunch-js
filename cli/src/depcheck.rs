@@ -17,8 +17,8 @@ use crate::{
     core::{
         base_path::{prompt_base_path, BasePathLocation},
         command::command,
+        manifest::application::ApplicationManifestData,
     },
-    init::application::ApplicationManifestData,
     prompt::ArrayCompleter,
     CliCommand,
 };

@@ -1,0 +1,1 @@
+../../../service/persistence/seeders/{{camel_case_name}}Record.seeder.ts

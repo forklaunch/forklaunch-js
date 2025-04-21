@@ -1,0 +1,1 @@
+../../../service/persistence/entities/{{camel_case_name}}Record.entity.ts

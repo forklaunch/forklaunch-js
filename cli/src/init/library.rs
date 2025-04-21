@@ -1,169 +1,48 @@
+use std::{fs::read_to_string, io::Write, path::Path};
+
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use convert_case::{Case, Casing};
-use ramhorns::Content;
-use rustyline::history::DefaultHistory;
-use rustyline::Editor;
-use serde::{Deserialize, Serialize};
+use rustyline::{history::DefaultHistory, Editor};
 use serde_json::to_string_pretty;
-use std::fs::read_to_string;
-use std::io::Write;
-use std::path::Path;
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use toml::from_str;
 
-use crate::config_struct;
-use crate::constants::{
-    ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
-    ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON,
-    ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE, ERROR_FAILED_TO_CREATE_GITIGNORE,
-    ERROR_FAILED_TO_CREATE_LIBRARY_PACKAGE_JSON, ERROR_FAILED_TO_CREATE_SYMLINKS,
-    ERROR_FAILED_TO_CREATE_TSCONFIG, ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST,
-};
-use crate::core::base_path::{prompt_base_path, BasePathLocation};
-use crate::core::manifest::{ProjectManifestConfig, ProjectType};
-use crate::prompt::{prompt_with_validation, prompt_without_validation, ArrayCompleter};
-
-use super::core::gitignore::generate_gitignore;
-use super::core::manifest::add_project_definition_to_manifest;
-use super::core::package_json::add_project_definition_to_package_json;
-use super::core::package_json::package_json_constants::{
-    project_clean_script, project_test_script, ESLINT_VERSION, PROJECT_BUILD_SCRIPT,
-    PROJECT_DOCS_SCRIPT, PROJECT_FORMAT_SCRIPT, PROJECT_LINT_FIX_SCRIPT, PROJECT_LINT_SCRIPT,
-    TSX_VERSION, TYPESCRIPT_ESLINT_VERSION,
-};
-use super::core::package_json::project_package_json::{
-    ProjectDevDependencies, ProjectPackageJson, ProjectScripts,
-};
-use super::core::pnpm_workspace::add_project_definition_to_pnpm_workspace;
-use super::core::rendered_template::{write_rendered_templates, RenderedTemplate};
-use super::core::symlinks::generate_symlinks;
-use super::core::template::{generate_with_template, PathIO, TemplateManifestData};
-use super::core::tsconfig::generate_tsconfig;
-use super::{command, CliCommand};
-
-config_struct!(
-    #[derive(Debug, Content, Serialize, Clone)]
-    pub(crate) struct LibraryManifestData {
-        #[serde(skip_serializing, skip_deserializing)]
-        pub(crate) library_name: String,
-        #[serde(skip_serializing, skip_deserializing)]
-        pub(crate) camel_case_name: String,
-        #[serde(skip_serializing, skip_deserializing)]
-        pub(crate) description: String,
-    }
-);
-
-impl ProjectManifestConfig for LibraryManifestData {
-    fn name(&self) -> &String {
-        &self.library_name
-    }
-}
-
-#[derive(Debug)]
-pub(super) struct LibraryCommand;
-
-impl LibraryCommand {
-    pub(super) fn new() -> Self {
-        Self {}
-    }
-}
-
-impl CliCommand for LibraryCommand {
-    fn command(&self) -> Command {
-        command("library", "Initialize a new library")
-            .alias("lib")
-            .arg(Arg::new("name").help("The name of the library"))
-            .arg(
-                Arg::new("base_path")
-                    .short('p')
-                    .long("path")
-                    .help("The application path to initialize the library in"),
-            )
-            .arg(
-                Arg::new("description")
-                    .short('D')
-                    .long("description")
-                    .help("The description of the service"),
-            )
-            .arg(
-                Arg::new("dryrun")
-                    .short('n')
-                    .long("dryrun")
-                    .help("Dry run the command")
-                    .action(ArgAction::SetTrue),
-            )
-    }
-
-    // pass token in from parent and perform get token above?
-    fn handler(&self, matches: &ArgMatches) -> Result<()> {
-        let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
-        let mut stdout = StandardStream::stdout(ColorChoice::Always);
-
-        let library_name = prompt_with_validation(
-            &mut line_editor,
-            &mut stdout,
-            "name",
-            matches,
-            "Enter library name: ",
-            None,
-            |input: &str| {
-                !input.is_empty()
-                    && !input.contains(' ')
-                    && !input.contains('\t')
-                    && !input.contains('\n')
-                    && !input.contains('\r')
+use crate::{
+    constants::{
+        TestFramework, ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
+        ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON,
+        ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE, ERROR_FAILED_TO_CREATE_GITIGNORE,
+        ERROR_FAILED_TO_CREATE_LIBRARY_PACKAGE_JSON, ERROR_FAILED_TO_CREATE_SYMLINKS,
+        ERROR_FAILED_TO_CREATE_TSCONFIG, ERROR_FAILED_TO_PARSE_MANIFEST,
+        ERROR_FAILED_TO_READ_MANIFEST,
+    },
+    core::{
+        base_path::{prompt_base_path, BasePathLocation},
+        command::command,
+        gitignore::generate_gitignore,
+        manifest::{
+            add_project_definition_to_manifest, application::ApplicationManifestData,
+            library::LibraryManifestData, ManifestData, ProjectType,
+        },
+        package_json::{
+            add_project_definition_to_package_json,
+            package_json_constants::{
+                project_clean_script, project_format_script, project_test_script, ESLINT_VERSION,
+                PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT, PROJECT_LINT_FIX_SCRIPT,
+                PROJECT_LINT_SCRIPT, TSX_VERSION, TYPESCRIPT_ESLINT_VERSION,
             },
-            |_| "Library name cannot be empty or include spaces. Please try again".to_string(),
-        )?;
-
-        let base_path = prompt_base_path(
-            &mut line_editor,
-            &mut stdout,
-            matches,
-            &BasePathLocation::Library,
-        )?;
-
-        let description = prompt_without_validation(
-            &mut line_editor,
-            &mut stdout,
-            "description",
-            matches,
-            "Enter library description (optional): ",
-        )?;
-
-        let config_path = Path::new(&base_path)
-            .join(".forklaunch")
-            .join("manifest.toml");
-
-        let mut config_data: LibraryManifestData = LibraryManifestData {
-            library_name: library_name.clone(),
-            camel_case_name: library_name.to_case(Case::Camel),
-            description: description.clone(),
-
-            ..from_str(&read_to_string(config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?)
-                .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
-        };
-
-        let dryrun = matches.get_flag("dryrun");
-        generate_basic_library(
-            &library_name,
-            &base_path.to_string(),
-            &mut config_data,
-            &mut stdout,
-            dryrun,
-        )
-        .with_context(|| "Failed to create library")?;
-
-        if !dryrun {
-            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-            writeln!(stdout, "{} initialized successfully!", library_name)?;
-            stdout.reset()?;
-        }
-
-        Ok(())
-    }
-}
+            project_package_json::{ProjectDevDependencies, ProjectPackageJson, ProjectScripts},
+        },
+        pnpm_workspace::add_project_definition_to_pnpm_workspace,
+        rendered_template::{write_rendered_templates, RenderedTemplate},
+        symlinks::generate_symlinks,
+        template::{generate_with_template, PathIO},
+        tsconfig::generate_tsconfig,
+    },
+    prompt::{prompt_with_validation, prompt_without_validation, ArrayCompleter},
+    CliCommand,
+};
 
 fn generate_basic_library(
     library_name: &String,
@@ -192,7 +71,7 @@ fn generate_basic_library(
     let mut rendered_templates = generate_with_template(
         None,
         &template_dir,
-        &TemplateManifestData::Library(&config_data),
+        &ManifestData::Library(&config_data),
         &ignore_files,
         &ignore_dirs,
         &preserve_files,
@@ -275,6 +154,12 @@ fn generate_library_package_json(
     config_data: &LibraryManifestData,
     base_path: &String,
 ) -> Result<RenderedTemplate> {
+    let test_framework: Option<TestFramework> =
+        if let Some(test_framework) = &config_data.test_framework {
+            Some(test_framework.parse()?)
+        } else {
+            None
+        };
     let package_json_buffer = ProjectPackageJson {
         name: Some(format!(
             "@{}/{}",
@@ -287,12 +172,12 @@ fn generate_library_package_json(
         author: Some(config_data.author.clone()),
         scripts: Some(ProjectScripts {
             build: Some(PROJECT_BUILD_SCRIPT.to_string()),
-            clean: Some(project_clean_script(&config_data.runtime).to_string()),
+            clean: Some(project_clean_script(&config_data.runtime.parse()?)),
             docs: Some(PROJECT_DOCS_SCRIPT.to_string()),
-            format: Some(PROJECT_FORMAT_SCRIPT.to_string()),
+            format: Some(project_format_script(&config_data.formatter.parse()?)),
             lint: Some(PROJECT_LINT_SCRIPT.to_string()),
             lint_fix: Some(PROJECT_LINT_FIX_SCRIPT.to_string()),
-            test: Some(project_test_script(&config_data.test_framework).to_string()),
+            test: Some(project_test_script(&test_framework)),
             ..Default::default()
         }),
         dev_dependencies: Some(ProjectDevDependencies {
@@ -308,4 +193,138 @@ fn generate_library_package_json(
         content: to_string_pretty(&package_json_buffer)?.to_string(),
         context: Some(ERROR_FAILED_TO_CREATE_LIBRARY_PACKAGE_JSON.to_string()),
     })
+}
+
+#[derive(Debug)]
+pub(super) struct LibraryCommand;
+
+impl LibraryCommand {
+    pub(super) fn new() -> Self {
+        Self {}
+    }
+}
+
+impl CliCommand for LibraryCommand {
+    fn command(&self) -> Command {
+        command("library", "Initialize a new library")
+            .alias("lib")
+            .arg(Arg::new("name").help("The name of the library"))
+            .arg(
+                Arg::new("base_path")
+                    .short('p')
+                    .long("path")
+                    .help("The application path to initialize the library in"),
+            )
+            .arg(
+                Arg::new("description")
+                    .short('D')
+                    .long("description")
+                    .help("The description of the service"),
+            )
+            .arg(
+                Arg::new("dryrun")
+                    .short('n')
+                    .long("dryrun")
+                    .help("Dry run the command")
+                    .action(ArgAction::SetTrue),
+            )
+    }
+
+    // pass token in from parent and perform get token above?
+    fn handler(&self, matches: &ArgMatches) -> Result<()> {
+        let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
+        let mut stdout = StandardStream::stdout(ColorChoice::Always);
+
+        let library_name = prompt_with_validation(
+            &mut line_editor,
+            &mut stdout,
+            "name",
+            matches,
+            "Enter library name: ",
+            None,
+            |input: &str| {
+                !input.is_empty()
+                    && !input.contains(' ')
+                    && !input.contains('\t')
+                    && !input.contains('\n')
+                    && !input.contains('\r')
+            },
+            |_| "Library name cannot be empty or include spaces. Please try again".to_string(),
+        )?;
+
+        let base_path = prompt_base_path(
+            &mut line_editor,
+            &mut stdout,
+            matches,
+            &BasePathLocation::Library,
+        )?;
+
+        let description = prompt_without_validation(
+            &mut line_editor,
+            &mut stdout,
+            "description",
+            matches,
+            "Enter library description (optional): ",
+        )?;
+
+        let config_path = Path::new(&base_path)
+            .join(".forklaunch")
+            .join("manifest.toml");
+
+        let existing_manifest_data: ApplicationManifestData =
+            from_str(&read_to_string(config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?)
+                .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+
+        let mut config_data: LibraryManifestData = LibraryManifestData {
+            // Common fields from ApplicationManifestData
+            id: existing_manifest_data.id.clone(),
+            app_name: existing_manifest_data.app_name.clone(),
+            author: existing_manifest_data.author.clone(),
+            cli_version: existing_manifest_data.cli_version.clone(),
+            formatter: existing_manifest_data.formatter.clone(),
+            linter: existing_manifest_data.linter.clone(),
+            validator: existing_manifest_data.validator.clone(),
+            runtime: existing_manifest_data.runtime.clone(),
+            test_framework: existing_manifest_data.test_framework.clone(),
+            projects: existing_manifest_data.projects.clone(),
+            http_framework: existing_manifest_data.http_framework.clone(),
+            license: existing_manifest_data.license.clone(),
+            project_peer_topology: existing_manifest_data.project_peer_topology.clone(),
+            is_biome: existing_manifest_data.is_biome,
+            is_eslint: existing_manifest_data.is_eslint,
+            is_oxlint: existing_manifest_data.is_oxlint,
+            is_prettier: existing_manifest_data.is_prettier,
+            is_express: existing_manifest_data.is_express,
+            is_hyper_express: existing_manifest_data.is_hyper_express,
+            is_zod: existing_manifest_data.is_zod,
+            is_typebox: existing_manifest_data.is_typebox,
+            is_bun: existing_manifest_data.is_bun,
+            is_node: existing_manifest_data.is_node,
+            is_vitest: existing_manifest_data.is_vitest,
+            is_jest: existing_manifest_data.is_jest,
+
+            // Library-specific fields
+            library_name: library_name.clone(),
+            camel_case_name: library_name.to_case(Case::Camel),
+            description: description.clone(),
+        };
+
+        let dryrun = matches.get_flag("dryrun");
+        generate_basic_library(
+            &library_name,
+            &base_path.to_string(),
+            &mut config_data,
+            &mut stdout,
+            dryrun,
+        )
+        .with_context(|| "Failed to create library")?;
+
+        if !dryrun {
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+            writeln!(stdout, "{} initialized successfully!", library_name)?;
+            stdout.reset()?;
+        }
+
+        Ok(())
+    }
 }

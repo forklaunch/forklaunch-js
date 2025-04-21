@@ -1,12 +1,51 @@
-use serde::Serialize;
+use std::{collections::HashMap, path::Path};
 
+use anyhow::{Context, Result};
+use library::LibraryManifestData;
 use ramhorns::Content;
-use serde::Deserialize;
-use std::collections::HashMap;
+use serde::{Deserialize, Serialize};
+use service::ServiceManifestData;
+use toml::to_string_pretty;
+use worker::WorkerManifestData;
+
+use super::rendered_template::RenderedTemplate;
+use crate::{
+    constants::{
+        ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
+        ERROR_FAILED_TO_ADD_ROUTER_METADATA_TO_MANIFEST, ERROR_FAILED_TO_CREATE_MANIFEST,
+    },
+    core::manifest::{application::ApplicationManifestData, router::RouterManifestData},
+};
+
+pub(crate) mod application;
+pub(crate) mod library;
+pub(crate) mod router;
+pub(crate) mod service;
+pub(crate) mod worker;
+
+#[derive(Debug)]
+pub(crate) enum ManifestData<'a> {
+    Application(&'a ApplicationManifestData),
+    Service(&'a ServiceManifestData),
+    Library(&'a LibraryManifestData),
+    Router(&'a RouterManifestData),
+    Worker(&'a WorkerManifestData),
+}
+
+#[derive(Debug)]
+pub(crate) enum MutableManifestData<'a> {
+    Application(&'a mut ApplicationManifestData),
+    Service(&'a mut ServiceManifestData),
+    Library(&'a mut LibraryManifestData),
+    Router(&'a mut RouterManifestData),
+    Worker(&'a mut WorkerManifestData),
+}
 
 pub(crate) trait ManifestConfig {
     fn app_name(&self) -> &String;
-    fn test_framework(&self) -> &String;
+    fn formatter(&self) -> &String;
+    fn linter(&self) -> &String;
+    fn test_framework(&self) -> &Option<String>;
     fn projects(&self) -> &Vec<ProjectEntry>;
     fn projects_mut(&mut self) -> &mut Vec<ProjectEntry>;
     fn project_peer_topology_mut(&mut self) -> &mut HashMap<String, Vec<String>>;
@@ -29,6 +68,7 @@ impl Content for ProjectType {}
 pub(crate) struct ResourceInventory {
     pub(crate) database: Option<String>,
     pub(crate) cache: Option<String>,
+    pub(crate) queue: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Content, Clone)]
@@ -61,10 +101,12 @@ macro_rules! internal_config_struct {
             $vis id: String,
             $vis cli_version: String,
             $vis app_name: String,
+            $vis linter: String,
+            $vis formatter: String,
             $vis validator: String,
             $vis http_framework: String,
             $vis runtime: String,
-            $vis test_framework: String,
+            $vis test_framework: Option<String>,
             $vis projects: Vec<crate::core::manifest::ProjectEntry>,
             $vis project_peer_topology: std::collections::HashMap<String, Vec<String>>,
             $vis author: String,
@@ -92,6 +134,18 @@ macro_rules! config_struct {
                     $(#[$field_meta])*
                     $field_vis $field: $ty
                 ),*,
+
+                #[serde(skip_serializing)]
+                $vis is_eslint: bool,
+
+                #[serde(skip_serializing)]
+                $vis is_biome: bool,
+
+                #[serde(skip_serializing)]
+                $vis is_oxlint: bool,
+
+                #[serde(skip_serializing)]
+                $vis is_prettier: bool,
 
                 #[serde(skip_serializing)]
                 $vis is_express: bool,
@@ -137,6 +191,8 @@ macro_rules! config_struct {
                         id: shadow.id.clone(),
                         cli_version: shadow.cli_version.clone(),
                         app_name: shadow.app_name.clone(),
+                        linter: shadow.linter.clone(),
+                        formatter: shadow.formatter.clone(),
                         validator: shadow.validator.clone(),
                         http_framework: shadow.http_framework.clone(),
                         runtime: shadow.runtime.clone(),
@@ -145,14 +201,18 @@ macro_rules! config_struct {
                         project_peer_topology: shadow.project_peer_topology.clone(),
                         author: shadow.author.clone(),
                         license: shadow.license.clone(),
+                        is_eslint: shadow.linter == "eslint",
+                        is_biome: shadow.formatter == "biome",
+                        is_oxlint: shadow.linter == "oxlint",
+                        is_prettier: shadow.formatter == "prettier",
                         is_express: shadow.http_framework == "express",
                         is_hyper_express: shadow.http_framework == "hyper-express",
                         is_zod: shadow.validator == "zod",
                         is_typebox: shadow.validator == "typebox",
                         is_bun: shadow.runtime == "bun",
                         is_node: shadow.runtime == "node",
-                        is_vitest: shadow.test_framework == "vitest",
-                        is_jest: shadow.test_framework == "jest",
+                        is_vitest: if let Some(test_framework) = &shadow.test_framework { test_framework == "vitest" } else { false },
+                        is_jest: if let Some(test_framework) = &shadow.test_framework { test_framework == "jest" } else { false },
                         $(
                             $field: shadow.$field
                         ),*
@@ -174,7 +234,13 @@ macro_rules! config_struct {
             fn app_name(&self) -> &String {
                 &self.app_name
             }
-            fn test_framework(&self) -> &String {
+            fn formatter(&self) -> &String {
+                &self.formatter
+            }
+            fn linter(&self) -> &String {
+                &self.linter
+            }
+            fn test_framework(&self) -> &Option<String> {
                 &self.test_framework
             }
             fn projects(&self) -> &Vec<crate::core::manifest::ProjectEntry> {
@@ -188,4 +254,95 @@ macro_rules! config_struct {
             }
         }
     };
+}
+
+pub(crate) fn generate_manifest(
+    path_dir: &String,
+    data: &ApplicationManifestData,
+) -> Result<Option<RenderedTemplate>> {
+    let config_str = to_string_pretty(&data).with_context(|| ERROR_FAILED_TO_CREATE_MANIFEST)?;
+    let config_path = Path::new(path_dir)
+        .join(".forklaunch")
+        .join("manifest.toml");
+
+    if config_path.exists() {
+        return Ok(None);
+    }
+    Ok(Some(RenderedTemplate {
+        path: config_path,
+        content: config_str,
+        context: None,
+    }))
+}
+
+pub(crate) fn add_project_definition_to_manifest<
+    T: ManifestConfig + ProjectManifestConfig + Serialize,
+>(
+    r#type: ProjectType,
+    config_data: &mut T,
+    resources: Option<ResourceInventory>,
+    routers: Option<Vec<String>>,
+) -> Result<String> {
+    let name = config_data.name().to_owned();
+    for project in config_data.projects().iter() {
+        if project.name == name {
+            return Ok(to_string_pretty(&config_data)
+                .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?);
+        }
+    }
+
+    config_data.projects_mut().push(ProjectEntry {
+        r#type,
+        name: name.clone(),
+        resources,
+        routers,
+    });
+
+    let app_name = config_data.app_name().to_owned();
+    config_data
+        .project_peer_topology_mut()
+        .entry(app_name)
+        .or_insert_with(Vec::new)
+        .push(name.clone());
+
+    Ok(to_string_pretty(&config_data)
+        .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?)
+}
+
+pub(crate) fn add_router_definition_to_manifest(
+    config_data: &mut RouterManifestData,
+    serivce_name: &String,
+) -> Result<(ProjectType, String)> {
+    let name = config_data.router_name.clone();
+    for project in config_data.projects().iter() {
+        if let Some(routers) = &project.routers {
+            for router in routers.iter() {
+                if router == &name {
+                    return Ok((
+                        project.r#type.clone(),
+                        to_string_pretty(&config_data)
+                            .with_context(|| ERROR_FAILED_TO_ADD_ROUTER_METADATA_TO_MANIFEST)?,
+                    ));
+                }
+            }
+        }
+    }
+
+    let project = config_data
+        .projects_mut()
+        .iter_mut()
+        .find(|project| &project.name == serivce_name)
+        .unwrap();
+
+    if project.routers == None {
+        project.routers = Some(vec![])
+    }
+
+    project.routers.as_mut().unwrap().push(name);
+
+    Ok((
+        project.r#type.clone(),
+        to_string_pretty(&config_data)
+            .with_context(|| ERROR_FAILED_TO_ADD_ROUTER_METADATA_TO_MANIFEST)?,
+    ))
 }

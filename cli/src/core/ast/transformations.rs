@@ -1,0 +1,7 @@
+pub(crate) mod transform_app_ts;
+pub(crate) mod transform_core_registration_http_framework_ts;
+pub(crate) mod transform_core_registration_validator_ts;
+pub(crate) mod transform_entities_index_ts;
+pub(crate) mod transform_registrations_ts;
+pub(crate) mod transform_seed_data_ts;
+pub(crate) mod transform_seeders_index_ts;

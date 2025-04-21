@@ -15,6 +15,7 @@ use crate::{
 
 #[derive(PartialEq)]
 pub(crate) enum BasePathLocation {
+    Application,
     Service,
     Worker,
     Router,
@@ -25,6 +26,7 @@ pub(crate) enum BasePathLocation {
 
 fn base_path_parent_count(base_path_location: &BasePathLocation) -> usize {
     match base_path_location {
+        BasePathLocation::Application => 0,
         BasePathLocation::Service => 0,
         BasePathLocation::Worker => 0,
         BasePathLocation::Library => 0,

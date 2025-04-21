@@ -2,8 +2,8 @@ import {
   RequestDtoMapper,
   ResponseDtoMapper
 } from '@forklaunch/core/mappers';
-import { SchemaValidator, string{{#is_worker}}, boolean, number{{/is_worker}} } from '@{{app_name}}/core';
-import { {{pascal_case_name}}Record } from '../../persistence/entities/{{camel_case_name}}Record.entity';
+import { {{#is_worker}}, boolean, number, {{/is_worker}}SchemaValidator, string } from '@{{app_name}}/core';
+import { {{pascal_case_name}}{{#is_worker}}Event{{/is_worker}}Record} from '../../persistence/entities/{{camel_case_name}}Record.entity';
 import { {{pascal_case_name}}RequestSchema, {{pascal_case_name}}ResponseSchema } from '../schemas/{{camel_case_name}}.schema';
 
 // Exported type that matches the request schema
@@ -17,7 +17,7 @@ export class {{pascal_case_name}}RequestDtoMapper extends RequestDtoMapper<
   schema = {{pascal_case_name}}RequestSchema;
 
   // toEntity method maps the request schema to the entity
-  toEntity(): {{pascal_case_name}}Record {
+  toEntity(): {{pascal_case_name}}{{#is_worker}}Event{{/is_worker}}Record{
     return {{pascal_case_name}}Record.create({{#is_worker}}{
       ...this.dto,
       processed: false,

@@ -1,5 +1,22 @@
+#[macro_use]
+pub(crate) mod ast;
 pub(crate) mod base_path;
+pub(crate) mod choices;
 pub(crate) mod command;
+pub(crate) mod database;
+pub(crate) mod docker;
+pub(crate) mod gitignore;
+pub(crate) mod iam;
+pub(crate) mod license;
 pub(crate) mod manifest;
+pub(crate) mod package_json;
+pub(crate) mod pnpm_workspace;
 pub(crate) mod relative_path;
+pub(crate) mod removal_template;
+pub(crate) mod rendered_template;
+pub(crate) mod symlinks;
+pub(crate) mod template;
 pub(crate) mod token;
+pub(crate) mod tsconfig;
+pub(crate) mod watermark;
+pub(crate) mod worker_backend;

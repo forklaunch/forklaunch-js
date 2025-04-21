@@ -21,11 +21,9 @@ use crate::{
     core::{
         base_path::{prompt_base_path, BasePathLocation},
         command::command,
+        manifest::application::ApplicationManifestData,
         relative_path::get_relative_path,
-    },
-    init::{
-        application::ApplicationManifestData,
-        core::rendered_template::{write_rendered_templates, RenderedTemplate},
+        rendered_template::{write_rendered_templates, RenderedTemplate},
     },
     prompt::{prompt_for_confirmation, ArrayCompleter},
     CliCommand,

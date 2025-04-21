@@ -1,6 +1,7 @@
+use std::io::Write;
+
 use anyhow::Result;
 use clap::{ArgMatches, Command};
-use std::io::Write;
 use termcolor::{ColorChoice, StandardStream};
 
 use crate::{core::command::command, CliCommand};

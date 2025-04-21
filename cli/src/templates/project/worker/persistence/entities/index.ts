@@ -1,0 +1,1 @@
+../../../service/persistence/entities/index.ts

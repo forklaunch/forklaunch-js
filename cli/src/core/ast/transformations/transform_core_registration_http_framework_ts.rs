@@ -1,0 +1,53 @@
+use std::{fs::read_to_string, path::Path};
+
+use anyhow::Result;
+use oxc_allocator::Allocator;
+use oxc_ast::ast::{SourceType, Statement};
+use oxc_codegen::{CodeGenerator, CodegenOptions};
+
+use crate::{constants::HttpFramework, core::ast::parse_ast_program::parse_ast_program};
+
+pub(crate) fn transform_core_registration_http_framework_ts(
+    http_framework_name: &str,
+    base_path: &Path,
+) -> Result<String> {
+    let allocator = Allocator::default();
+    let core_registration_http_framework_path = base_path.join("core").join("registration.ts");
+    let core_registration_http_framework_text =
+        read_to_string(&core_registration_http_framework_path)?;
+    let core_registration_http_framework_type =
+        SourceType::from_path(&core_registration_http_framework_path)?;
+
+    let mut core_registration_http_framework_program = parse_ast_program(
+        &allocator,
+        &core_registration_http_framework_text,
+        core_registration_http_framework_type,
+    );
+
+    core_registration_http_framework_program
+        .body
+        .iter_mut()
+        .enumerate()
+        .for_each(|(_, stmt)| {
+            let import = match stmt {
+                Statement::ImportDeclaration(import) => import,
+                _ => return,
+            };
+            if HttpFramework::VARIANTS.iter().any(|framework| {
+                import
+                    .source
+                    .value
+                    .contains(format!("@forklaunch/{}", framework).as_str())
+            }) {
+                let _ = import.source.value.replace(
+                    r".*",
+                    format!("@forklaunch/{}", http_framework_name).as_str(),
+                );
+            }
+        });
+
+    Ok(CodeGenerator::new()
+        .with_options(CodegenOptions::default())
+        .build(&core_registration_http_framework_program)
+        .code)
+}

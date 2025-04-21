@@ -1,1 +1,50 @@
-../service/server.ts
+import {
+  WorkerFailureHandler,
+  WorkerProcessFunction
+} from '@forklaunch/interfaces-worker/types';
+import { bootstrap } from './bootstrapper';
+import { {{pascal_case_name}}EventRecord} from './persistence/entities/{{camel_case_name}}Record.entity';
+
+bootstrap((ci, tokens) => {
+  const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
+
+  const processEvents: (
+    name: string
+  ) => WorkerProcessFunction<{{pascal_case_name}}EventRecord> =
+    async (events) => {
+      const failedEvents = [];
+
+      for (const event of events) {
+        try {
+          openTelemetryCollector.info(
+            `processing message from ${name}: ${event.message}`
+          );
+          event.processed = true;
+        } catch (error) {
+          failedEvents.push({
+            value: event,
+            error: error as Error
+          });
+        }
+      }
+
+      return failedEvents;
+    };
+
+  const processErrors: WorkerFailureHandler<{{pascal_case_name}}EventRecord> = async (
+    events
+  ) => {
+    events.forEach((event) => {
+      openTelemetryCollector.error(
+        event.error,
+        'error processing message',
+        event.value
+      );
+    });
+  };
+
+  const workerConsumer = ci.resolve(
+    tokens.{{pascal_case_name}}WorkerConsumer
+  );
+  await workerConsumer(processEvents, processErrors).start()
+});

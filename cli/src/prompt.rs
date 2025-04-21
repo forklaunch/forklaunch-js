@@ -152,3 +152,31 @@ pub(crate) fn prompt_comma_separated_list(
         }
     }
 }
+
+pub(crate) fn prompt_field_from_selections_with_validation(
+    field_name: &str,
+    current_value: Option<&String>,
+    selected_options: &[&str],
+    line_editor: &mut Editor<ArrayCompleter, DefaultHistory>,
+    stdout: &mut StandardStream,
+    matches: &clap::ArgMatches,
+    prompt: &str,
+    valid_values: Option<&[&str]>,
+    validator: impl Fn(&str) -> bool,
+    error_msg: impl Fn(&str) -> String,
+) -> Result<Option<String>> {
+    if current_value.is_none() && selected_options.contains(&field_name) {
+        Ok(Some(prompt_with_validation(
+            line_editor,
+            stdout,
+            field_name,
+            matches,
+            prompt,
+            valid_values,
+            validator,
+            error_msg,
+        )?))
+    } else {
+        Ok(current_value.map(|v| v.to_string()))
+    }
+}

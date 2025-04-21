@@ -1,17 +1,17 @@
 import { number, SchemaValidator, string } from "@{{app_name}}/core";
 import { metrics } from "@{{app_name}}/monitoring";
-{{#cache_backend}}import { RedisTtlCache } from "@forklaunch/core/cache";{{/cache_backend}}
+{{#is_cache_enabled}}import { RedisTtlCache } from "@forklaunch/core/cache";{{/is_cache_enabled}}
 import { OpenTelemetryCollector } from "@forklaunch/core/http";
 import {
   createConfigInjector,
   DependencyShapes,
   getEnvVar,
   Lifetime,
-} from "@forklaunch/core/services";{{^cache_backend}}
-import { EntityManager, ForkOptions, MikroORM } from "@mikro-orm/core";{{/cache_backend}}
+} from "@forklaunch/core/services";{{#is_database_enabled}}
+import { EntityManager, ForkOptions, MikroORM } from "@mikro-orm/core";{{/is_database_enabled}}
 import { Base{{pascal_case_name}}Service } from "./services/{{camel_case_name}}.service";
 //! defines the configuration schema for the application
-export function createDepenencies({{^cache_backend}}{ orm }: { orm: MikroORM }{{/cache_backend}}) {
+export function createDependencies({{#is_database_enabled}}{ orm }: { orm: MikroORM }{{/is_database_enabled}}) {
   const configInjector = createConfigInjector(SchemaValidator(), {
     SERVICE_METADATA: {
       lifetime: Lifetime.Singleton,
@@ -20,18 +20,18 @@ export function createDepenencies({{^cache_backend}}{ orm }: { orm: MikroORM }{{
         version: string,
       },
       value: {
-        name: "{{service_name}}{{worker_name}}",
+        name: "{{app_name}}-{{service_name}}{{worker_name}}",
         version: "0.1.0",
       },
     },
   });
   //! defines the environment configuration for the application
   const environmentConfig = configInjector.chain({
-    {{#cache_backend}}REDIS_URL: {
+    {{#is_cache_enabled}}REDIS_URL: {
       lifetime: Lifetime.Singleton,
       type: string,
       value: getEnvVar('REDIS_URL')
-    },{{/cache_backend}}
+    },{{/is_cache_enabled}}
     PROTOCOL: {
       lifetime: Lifetime.Singleton,
       type: string,
@@ -71,11 +71,36 @@ export function createDepenencies({{^cache_backend}}{ orm }: { orm: MikroORM }{{
       lifetime: Lifetime.Singleton,
       type: string,
       value: getEnvVar("OTEL_EXPORTER_OTLP_ENDPOINT"),
+    },{{#is_kafka_enabled}}
+    KAFKA_BROKERS: {
+      lifetime: Lifetime.Singleton,
+      type: array(string),
+      value: getEnvVar('KAFKA_BROKERS').split(',')
     },
+    KAFKA_CLIENT_ID: {
+      lifetime: Lifetime.Singleton,
+      type: string,
+      value: getEnvVar('KAFKA_CLIENT_ID')
+    },
+    KAFKA_GROUP_ID: {
+      lifetime: Lifetime.Singleton,
+      type: string,
+      value: getEnvVar('KAFKA_GROUP_ID')
+    },{{/is_kafka_enabled}}{{#is_worker}}
+    QUEUE_NAME: {
+      lifetime: Lifetime.Singleton,
+      type: string,
+      value: getEnvVar('QUEUE_NAME')
+    },{{/is_worker}}
   });
   //! defines the runtime dependencies for the application
   const runtimeDependencies = environmentConfig.chain({
-    OpenTelemetryCollector: {
+    {{#is_worker}}WorkerOptions: {
+      lifetime: Lifetime.Singleton,
+      type: WorkerOptions,
+      value: {{default_worker_options}}
+    },
+    {{/is_worker}}OpenTelemetryCollector: {
       lifetime: Lifetime.Singleton,
       type: OpenTelemetryCollector,
       factory: ({ OTEL_SERVICE_NAME, OTEL_LEVEL }) =>
@@ -84,7 +109,7 @@ export function createDepenencies({{^cache_backend}}{ orm }: { orm: MikroORM }{{
           OTEL_LEVEL || "info",
           metrics
         ),
-    },{{#cache_backend}}
+    },{{#is_cache_enabled}}
     TtlCache: {
       lifetime: Lifetime.Singleton,
       type: RedisTtlCache,
@@ -92,27 +117,41 @@ export function createDepenencies({{^cache_backend}}{ orm }: { orm: MikroORM }{{
         new RedisTtlCache(60 * 60 * 1000, OpenTelemetryCollector, {
           url: REDIS_URL,
         }),
-    },{{/cache_backend}}{{^cache_backend}}
+    },{{/is_cache_enabled}}{{#is_database_enabled}}
     EntityManager: {
       lifetime: Lifetime.Scoped,
       type: EntityManager,
       factory: (_args, _resolve, context) =>
         orm.em.fork(context?.entityManagerOptions as ForkOptions | undefined),
-    },{{/cache_backend}}
+    },{{/is_database_enabled}}
   });
   //! defines the service dependencies for the application
-  const serviceDependencies = runtimeDependencies.chain({
-    {{pascal_case_name}}Service: {
+  const serviceDependencies = runtimeDependencies.chain({ {{#is_worker}}
+    WorkerConsumer: {
+      lifetime: Lifetime.Scoped,
+      type: (
+        processEventsFunction: WorkerProcessFunction<{{worker_type}}EventRecord>,
+        failureHandler: WorkerFailureHandler<{{worker_type}}EventRecord>
+      ) => {{worker_type}}WorkerConsumer<{{worker_type}}EventRecord, WorkerOptions>,
+      factory: 
+        {{worker_consumer_factory}}
+    },
+    WorkerProducer: {
+      lifetime: Lifetime.Scoped,
+      type: {{worker_type}}WorkerProducer,
+      factory: {{worker_producer_factory}}
+    },
+    {{/is_worker}}{{pascal_case_name}}Service: {
       lifetime: Lifetime.Scoped,
       type: Base{{pascal_case_name}}Service,
-      factory: ({ {{^cache_backend}}
-        EntityManager,{{/cache_backend}}{{#cache_backend}}
-        TtlCache,{{/cache_backend}}
+      factory: ({ {{^is_worker}}
+        EntityManager,{{/is_worker}}{{#is_worker}}
+        WorkerProducer,{{/is_worker}}
         OpenTelemetryCollector
       }) =>
-        new Base{{pascal_case_name}}Service({{^cache_backend}}
-          EntityManager,{{/cache_backend}}{{#cache_backend}}
-          TtlCache,{{/cache_backend}}
+        new Base{{pascal_case_name}}Service({{^is_worker}}
+          EntityManager,{{/is_worker}}{{#is_worker}}
+          WorkerProducer,{{/is_worker}}
           OpenTelemetryCollector
         )
     }
@@ -126,4 +165,4 @@ export function createDepenencies({{^cache_backend}}{ orm }: { orm: MikroORM }{{
   };
 }
 //! defines the type for the service dependencies
-export type SchemaDependencies = DependencyShapes<typeof createDepenencies>;
+export type SchemaDependencies = DependencyShapes<typeof createDependencies>;

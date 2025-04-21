@@ -1,26 +1,201 @@
 use std::path::Path;
 
+use crate::{choice, core::choices::Choice};
+
 pub(crate) const PROD_API_URL: &str = "https://api.forklaunch.com";
 
-pub(crate) const VALID_DATABASES: [&str; 2] = ["postgresql", "mongodb"];
-pub(crate) const VALID_WORKER_BACKENDS: [&str; 2] = ["database", "cache"];
-pub(crate) const VALID_VALIDATORS: [&str; 2] = ["zod", "typebox"];
-pub(crate) const VALID_FRAMEWORKS: [&str; 2] = ["express", "hyper-express"];
-pub(crate) const VALID_TEST_FRAMEWORKS: [&str; 2] = ["vitest", "jest"];
-pub(crate) const VALID_SERVICES: [&str; 2] = ["billing", "iam"];
-// pub(crate) const VALID_LIBRARIES: [&str; 1] = ["monitoring"];
-pub(crate) const VALID_RUNTIMES: [&str; 2] = ["node", "bun"];
-pub(crate) const VALID_LICENSES: [&str; 9] = [
-    "apgl",
-    "gpl",
-    "lgpl",
-    "mozilla",
-    "apache",
-    "mit",
-    "boost",
-    "unlicense",
-    "none",
-];
+choice! {
+    pub(crate) enum Database {
+        PostgreSQL = Choice {
+            id: "postgresql",
+            exclusive_files:Some(&["sql.base.entity.ts"]),
+        },
+        MySQL = Choice {
+            id: "mysql",
+            exclusive_files:Some(&["sql.base.entity.ts"]),
+        },
+        MariaDB = Choice {
+            id: "mariadb",
+            exclusive_files:Some(&["sql.base.entity.ts"]),
+        },
+        SQLite = Choice {
+            id: "sqlite",
+            exclusive_files:Some(&["sql.base.entity.ts"]),
+        },
+        BetterSQLite = Choice {
+            id: "better-sqlite",
+            exclusive_files:Some(&["sql.base.entity.ts"]),
+        },
+        LibSQL = Choice {
+            id: "libsql",
+            exclusive_files:Some(&["sql.base.entity.ts"]),
+        },
+        MsSQL = Choice {
+            id: "mssql",
+            exclusive_files:Some(&["sql.base.entity.ts"]),
+        },
+        MongoDB = Choice {
+            id: "mongodb",
+            exclusive_files:Some(&["nosql.base.entity.ts"]),
+        },
+    }
+
+    pub(crate) enum Infrastructure {
+        Redis = Choice {
+            id: "redis",
+            exclusive_files: None,
+        },
+    }
+
+    pub(crate) enum WorkerBackend {
+        Database = Choice {
+            id: "database",
+            exclusive_files: None,
+        },
+        RedisCache = Choice {
+            id: "redis",
+            exclusive_files: None,
+        },
+        Kafka = Choice {
+            id: "kafka",
+            exclusive_files: None,
+        },
+        BullMQCache = Choice {
+            id: "bullmq",
+            exclusive_files: None,
+        },
+    }
+
+    pub(crate) enum Validator {
+        Zod = Choice {
+            id: "zod",
+            exclusive_files: None,
+        },
+        Typebox = Choice {
+            id: "typebox",
+            exclusive_files: None,
+        },
+    }
+
+    pub(crate) enum Formatter {
+        Prettier = Choice {
+            id: "prettier",
+            exclusive_files:Some(&[".prettierignore", ".prettierrc"]),
+        },
+        Biome = Choice {
+            id: "biome",
+            exclusive_files:Some(&["biome.json"]),
+        },
+    }
+
+    pub(crate) enum Linter {
+        Eslint = Choice {
+            id: "eslint",
+            exclusive_files:Some(&["eslint.config.mjs"])  ,
+        },
+        Oxlint = Choice {
+            id: "oxlint",
+            exclusive_files:Some(&[".oxlint.config.json"]),
+        },
+    }
+
+    pub(crate) enum Framework {
+        Express = Choice {
+            id: "express",
+            exclusive_files: None,
+        },
+        HyperExpress = Choice {
+            id: "hyper-express",
+            exclusive_files: None,
+        },
+    }
+
+    pub(crate) enum HttpFramework {
+        Express = Choice {
+            id: "express",
+            exclusive_files: None,
+        },
+        HyperExpress = Choice {
+            id: "hyper-express",
+            exclusive_files: None,
+        },
+    }
+
+    pub(crate) enum TestFramework {
+        Vitest = Choice {
+            id: "vitest",
+            exclusive_files:Some(&["vitest.config.ts"]),
+        },
+        Jest = Choice {
+            id: "jest",
+            exclusive_files:Some(&["jest.config.ts"]),
+        },
+    }
+
+    pub(crate) enum Service {
+        Billing = Choice {
+            id: "billing",
+            exclusive_files: None,
+        },
+        Iam = Choice {
+            id: "iam",
+            exclusive_files: None,
+        },
+    }
+
+    // #[derive(Debug, Clone, PartialEq)]
+    // pub(crate) enum Library {}
+
+    pub(crate) enum Runtime {
+        Node = Choice {
+            id: "node",
+            exclusive_files: None,
+        },
+        Bun = Choice {
+            id: "bun",
+            exclusive_files: None,
+        },
+    }
+
+    pub(crate) enum License {
+        Apgl = Choice {
+            id: "apgl",
+            exclusive_files: None,
+        },
+        Gpl = Choice {
+            id: "gpl",
+            exclusive_files: None,
+        },
+        Lgpl = Choice {
+            id: "lgpl",
+            exclusive_files: None,
+        },
+        Apache = Choice {
+            id: "apache",
+            exclusive_files: None,
+        },
+        Mit = Choice {
+            id: "mit",
+            exclusive_files: None,
+        },
+        Mozilla = Choice {
+            id: "mozilla",
+            exclusive_files: None,
+        },
+        Boost = Choice {
+            id: "boost",
+            exclusive_files: None,
+        },
+        Unlicense = Choice {
+            id: "unlicense",
+            exclusive_files: None,
+        },
+        None = Choice {
+            id: "none",
+            exclusive_files: None,
+        },
+    }
+}
 
 // ERRORS
 pub(crate) fn error_failed_to_write_file(path: &Path) -> String {
@@ -90,8 +265,7 @@ pub(crate) const ERROR_FAILED_TO_SETUP_IAM: &str =
     "Failed to create private and public keys needed for iam service.";
 pub(crate) const ERROR_UNSUPPORTED_DATABASE: &str =
     "Unsupported database. Failed to create base entity.";
-pub(crate) const ERROR_DATABASE_INFORMATION: &str = 
-    "Database information not found, please ensure your service defines a database in your manifest.";
+pub(crate) const ERROR_DATABASE_INFORMATION: &str = "Database information not found, please ensure your service defines a database in your manifest.";
 pub(crate) const ERROR_FAILED_TO_ADD_ROUTER_TO_APP: &str = "Failed to add router metadata to app.";
 pub(crate) const ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER: &str =
     "Failed to add router metadata to bootstrapper.";
@@ -107,7 +281,6 @@ pub(crate) const ERROR_FAILED_TO_UPDATE_APPLICATION_PACKAGE_JSON: &str =
     "Failed to update application package.json.";
 pub(crate) const ERROR_FAILED_TO_ADD_BASE_ENTITY_TO_CORE: &str =
     "Failed to add base entity to core.";
-pub(crate) const ERROR_FAILED_TO_WRITE_SERVICE_FILES: &str =
-    "Failed to write service files.";
+pub(crate) const ERROR_FAILED_TO_WRITE_SERVICE_FILES: &str = "Failed to write service files.";
 pub(crate) const ERROR_FAILED_TO_EJECT_DIRECTORY_NOT_EJECTABLE: &str =
     "Failed to eject directory. Please check your target directory is a preconfigured forklaunch module.";

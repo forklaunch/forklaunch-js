@@ -1,182 +1,42 @@
-use std::{fs::read_to_string, path::Path};
+use std::{fs::read_to_string, io::Write, path::Path};
 
 use anyhow::{bail, Context, Result};
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use convert_case::{Case, Casing};
-use ramhorns::Content;
 use rustyline::{history::DefaultHistory, Editor};
-use serde::{Deserialize, Serialize};
-use std::io::Write;
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use toml::from_str;
 
+use self::database::match_database;
 use crate::{
-    config_struct,
     constants::{
-        ERROR_DATABASE_INFORMATION, ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
+        Database, Infrastructure, ERROR_DATABASE_INFORMATION,
+        ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
         ERROR_FAILED_TO_ADD_ROUTER_METADATA_TO_MANIFEST, ERROR_FAILED_TO_ADD_ROUTER_TO_APP,
         ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER, ERROR_FAILED_TO_PARSE_MANIFEST,
         ERROR_FAILED_TO_READ_MANIFEST,
     },
     core::{
-        base_path::{prompt_base_path, BasePathLocation},
-        manifest::ProjectType,
-    },
-    prompt::{prompt_with_validation, ArrayCompleter},
-};
-
-use self::database::match_database;
-
-use super::{
-    command,
-    core::{
-        ast::{
-            transform_app_ts, transform_entities_index_ts, transform_registrations_ts,
-            transform_seed_data_ts, transform_seeders_index_ts,
+        ast::transformations::{
+            transform_app_ts::transform_app_ts,
+            transform_entities_index_ts::transform_entities_index_ts,
+            transform_registrations_ts::transform_registrations_ts,
+            transform_seed_data_ts::transform_seed_data_ts,
+            transform_seeders_index_ts::transform_seeders_index_ts,
         },
+        base_path::{prompt_base_path, BasePathLocation},
+        command::command,
         database,
-        manifest::add_router_definition_to_manifest,
+        manifest::{
+            add_router_definition_to_manifest, router::RouterManifestData, ManifestData,
+            ProjectType,
+        },
         rendered_template::{write_rendered_templates, RenderedTemplate},
-        template::{generate_with_template, PathIO, TemplateManifestData},
+        template::{generate_with_template, PathIO},
     },
+    prompt::{prompt_comma_separated_list, prompt_with_validation, ArrayCompleter},
     CliCommand,
 };
-
-config_struct!(
-    #[derive(Debug, Content, Serialize, Clone)]
-    pub(crate) struct RouterManifestData {
-        #[serde(skip_serializing, skip_deserializing)]
-        pub(crate) router_name: String,
-        #[serde(skip_serializing, skip_deserializing)]
-        pub(crate) camel_case_name: String,
-        #[serde(skip_serializing, skip_deserializing)]
-        pub(crate) pascal_case_name: String,
-        #[serde(skip_serializing, skip_deserializing)]
-        pub(crate) kebab_case_name: String,
-        #[serde(skip_serializing, skip_deserializing)]
-        pub(crate) database: String,
-        #[serde(skip_serializing, skip_deserializing)]
-        pub(crate) db_driver: String,
-        #[serde(skip_serializing, skip_deserializing)]
-        pub(crate) is_postgres: bool,
-        #[serde(skip_serializing, skip_deserializing)]
-        pub(crate) is_mongo: bool,
-    }
-);
-
-#[derive(Debug)]
-pub(super) struct RouterCommand;
-
-impl RouterCommand {
-    pub(super) fn new() -> Self {
-        Self {}
-    }
-}
-
-impl CliCommand for RouterCommand {
-    fn command(&self) -> Command {
-        command("router", "Initialize a new router")
-            .alias("controller")
-            .alias("routes")
-            .arg(Arg::new("name").help("The name of the router"))
-            .arg(
-                Arg::new("base_path")
-                    .short('p')
-                    .long("path")
-                    .help("The service path to initialize the router in. This path must be in a service directory"),
-            )
-            .arg(
-                Arg::new("dryrun")
-                    .short('n')
-                    .long("dryrun")
-                    .help("Dry run the command")
-                    .action(ArgAction::SetTrue),
-            )
-    }
-
-    fn handler(&self, matches: &ArgMatches) -> Result<()> {
-        let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
-        let mut stdout = StandardStream::stdout(ColorChoice::Always);
-
-        let router_name = prompt_with_validation(
-            &mut line_editor,
-            &mut stdout,
-            "name",
-            matches,
-            "Enter router name: ",
-            None,
-            |input: &str| {
-                !input.is_empty()
-                    && !input.contains(' ')
-                    && !input.contains('\t')
-                    && !input.contains('\n')
-                    && !input.contains('\r')
-            },
-            |_| "Router name cannot be empty or include spaces. Please try again".to_string(),
-        )?;
-
-        let base_path = prompt_base_path(
-            &mut line_editor,
-            &mut stdout,
-            matches,
-            &BasePathLocation::Router,
-        )?;
-
-        let path = Path::new(&base_path);
-        let config_path = path
-            .parent()
-            .unwrap_or_else(|| path)
-            .join(".forklaunch")
-            .join("manifest.toml");
-
-        let manifest_data: RouterManifestData =
-            from_str(&read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?)
-                .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
-
-        let service_name = path.file_name().unwrap().to_str().unwrap();
-        let service_data = manifest_data
-            .projects
-            .iter()
-            .find(|project| service_name == project.name)
-            .unwrap();
-
-        if let Some(database) = service_data.resources.as_ref().unwrap().database.clone() {
-            let mut config_data: RouterManifestData = RouterManifestData {
-                router_name: router_name.clone(),
-                camel_case_name: router_name.to_case(Case::Camel),
-                pascal_case_name: router_name.to_case(Case::Pascal),
-                kebab_case_name: router_name.to_case(Case::Kebab),
-
-                database: database.clone(),
-                db_driver: match_database(&database),
-                is_mongo: database == "mongodb",
-                is_postgres: database == "postgresql",
-
-                ..manifest_data
-            };
-
-            let dryrun = matches.get_flag("dryrun");
-            generate_basic_router(
-                &base_path.to_string(),
-                &mut config_data,
-                &service_name.to_string(),
-                &mut stdout,
-                dryrun,
-            )
-            .with_context(|| "Failed to create router")?;
-
-            if !dryrun {
-                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-                writeln!(stdout, "{} initialized successfully!", router_name)?;
-                stdout.reset()?;
-            }
-
-            Ok(())
-        } else {
-            bail!(ERROR_DATABASE_INFORMATION)
-        }
-    }
-}
 
 fn generate_basic_router(
     base_path: &String,
@@ -198,7 +58,7 @@ fn generate_basic_router(
     let mut rendered_templates = generate_with_template(
         None,
         &template_dir,
-        &TemplateManifestData::Router(&config_data),
+        &ManifestData::Router(&config_data),
         &ignore_files,
         &ignore_dirs,
         &preserve_files,
@@ -230,15 +90,12 @@ fn add_router_to_artifacts(
     let mut rendered_templates = Vec::new();
 
     rendered_templates.push(RenderedTemplate {
-        path: Path::new(&base_path).join(match is_worker {
-            true => "worker.ts",
-            false => "server.ts",
-        }),
+        path: Path::new(&base_path).join("server.ts"),
         content: transform_app_ts(config_data.router_name.as_str(), is_worker, &base_path)?,
         context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_APP.to_string()),
     });
 
-    let cache_backend = if is_worker {
+    let is_cache_enabled = if is_worker {
         config_data.projects.iter().any(|worker| {
             if let Some(resources) = &worker.resources {
                 resources.cache.is_some()
@@ -255,7 +112,7 @@ fn add_router_to_artifacts(
         content: transform_registrations_ts(
             config_data.router_name.as_str(),
             is_worker,
-            cache_backend,
+            is_cache_enabled,
             &base_path,
         )?,
         context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER.to_string()),
@@ -298,4 +155,150 @@ fn add_router_to_artifacts(
     });
 
     Ok(rendered_templates)
+}
+
+#[derive(Debug)]
+pub(super) struct RouterCommand;
+
+impl RouterCommand {
+    pub(super) fn new() -> Self {
+        Self {}
+    }
+}
+
+impl CliCommand for RouterCommand {
+    fn command(&self) -> Command {
+        command("router", "Initialize a new router")
+            .alias("controller")
+            .alias("routes")
+            .arg(Arg::new("name").help("The name of the router"))
+            .arg(Arg::new("base_path").short('p').long("path").help(
+                "The service path to initialize the router. This path must be a service directory",
+            ))
+            .arg(
+                Arg::new("infrastructure")
+                    .short('i')
+                    .long("infrastructure")
+                    .help("Add optional infrastructure to the service")
+                    .value_parser(Infrastructure::VARIANTS)
+                    .num_args(0..)
+                    .action(ArgAction::Append),
+            )
+            .arg(
+                Arg::new("dryrun")
+                    .short('n')
+                    .long("dryrun")
+                    .help("Dry run the command")
+                    .action(ArgAction::SetTrue),
+            )
+    }
+
+    fn handler(&self, matches: &ArgMatches) -> Result<()> {
+        let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
+        let mut stdout = StandardStream::stdout(ColorChoice::Always);
+
+        let router_name = prompt_with_validation(
+            &mut line_editor,
+            &mut stdout,
+            "name",
+            matches,
+            "Enter router name: ",
+            None,
+            |input: &str| {
+                !input.is_empty()
+                    && !input.contains(' ')
+                    && !input.contains('\t')
+                    && !input.contains('\n')
+                    && !input.contains('\r')
+            },
+            |_| "Router name cannot be empty or include spaces. Please try again".to_string(),
+        )?;
+
+        let base_path = prompt_base_path(
+            &mut line_editor,
+            &mut stdout,
+            matches,
+            &BasePathLocation::Router,
+        )?;
+
+        let infrastructure: Vec<Infrastructure> = prompt_comma_separated_list(
+            &mut line_editor,
+            "infrastructure",
+            matches,
+            &Infrastructure::VARIANTS,
+            "Enter additional infrastructure components (optional): ",
+            true,
+        )?
+        .iter()
+        .map(|s| s.parse().unwrap())
+        .collect();
+
+        let path = Path::new(&base_path);
+        let config_path = path
+            .parent()
+            .unwrap_or_else(|| path)
+            .join(".forklaunch")
+            .join("manifest.toml");
+
+        let manifest_data: RouterManifestData =
+            from_str(&read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?)
+                .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+
+        let service_name = path.file_name().unwrap().to_str().unwrap();
+        let service_data = manifest_data
+            .projects
+            .iter()
+            .find(|project| service_name == project.name)
+            .unwrap();
+
+        // this needs to handle non database router cases -- for workers
+        if let Some(database) = service_data.resources.as_ref().unwrap().database.clone() {
+            let database: Database = database.parse()?;
+            let mut config_data: RouterManifestData = RouterManifestData {
+                router_name: router_name.clone(),
+                camel_case_name: router_name.to_case(Case::Camel),
+                pascal_case_name: router_name.to_case(Case::Pascal),
+                kebab_case_name: router_name.to_case(Case::Kebab),
+
+                database: database.to_string(),
+                db_driver: match_database(&database),
+
+                is_mongo: database == Database::MongoDB,
+                is_postgres: database == Database::PostgreSQL,
+                is_mysql: database == Database::MySQL,
+                is_mariadb: database == Database::MariaDB,
+                is_mssql: database == Database::MsSQL,
+                is_sqlite: database == Database::SQLite,
+                is_better_sqlite: database == Database::BetterSQLite,
+                is_libsql: database == Database::LibSQL,
+                is_in_memory_database: database == Database::BetterSQLite
+                    || database == Database::LibSQL
+                    || database == Database::SQLite,
+
+                is_cache_enabled: infrastructure.contains(&Infrastructure::Redis),
+
+                ..manifest_data
+            };
+
+            let dryrun = matches.get_flag("dryrun");
+            generate_basic_router(
+                &base_path.to_string(),
+                &mut config_data,
+                &service_name.to_string(),
+                &mut stdout,
+                dryrun,
+            )
+            .with_context(|| "Failed to create router")?;
+
+            if !dryrun {
+                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+                writeln!(stdout, "{} initialized successfully!", router_name)?;
+                stdout.reset()?;
+            }
+
+            Ok(())
+        } else {
+            bail!(ERROR_DATABASE_INFORMATION)
+        }
+    }
 }
