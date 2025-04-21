@@ -23,6 +23,6 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/core": "link:../../framework/core"
+    "@forklaunch/core": "0.7.4"
   }
 }

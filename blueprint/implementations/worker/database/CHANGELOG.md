@@ -1,5 +1,13 @@
 # @forklaunch/implementation-billing-base
 
+## 0.1.3
+
+### Patch Changes
+
+- Replace link dependencies, hotfix
+- Updated dependencies
+  - @forklaunch/interfaces-worker@0.1.3
+
 ## 0.1.2
 
 ### Patch Changes

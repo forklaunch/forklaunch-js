@@ -1,5 +1,11 @@
 # @forklaunch/interfaces-iam
 
+## 0.1.12
+
+### Patch Changes
+
+- Replace link dependencies, hotfix
+
 ## 0.1.11
 
 ### Patch Changes
