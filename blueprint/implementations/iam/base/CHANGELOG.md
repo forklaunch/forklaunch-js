@@ -1,5 +1,13 @@
 # @forklaunch/implementation-iam-base
 
+## 0.1.13
+
+### Patch Changes
+
+- Fix bug where files not uploading to npm
+- Updated dependencies
+  - @forklaunch/interfaces-iam@0.1.13
+
 ## 0.1.12
 
 ### Patch Changes

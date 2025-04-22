@@ -1,5 +1,13 @@
 # @forklaunch/implementation-billing-base
 
+## 0.1.4
+
+### Patch Changes
+
+- Fix bug where files not uploading to npm
+- Updated dependencies
+  - @forklaunch/interfaces-worker@0.1.4
+
 ## 0.1.3
 
 ### Patch Changes
