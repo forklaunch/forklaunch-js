@@ -8,7 +8,7 @@ pub fn verify_package_versions(package_dirs: &[&str]) -> Result<(), String> {
     let mut last_comment = String::new();
 
     let contents =
-        read_to_string("../../../../cli/src/init/core/package_json/package_json_constants.rs")
+        read_to_string("../../../../cli/src/core/package_json/package_json_constants.rs")
             .map_err(|e| e.to_string())?;
 
     for line in contents.lines() {
