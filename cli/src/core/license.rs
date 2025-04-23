@@ -1,7 +1,6 @@
 use std::path::Path;
 
 use anyhow::Result;
-use log::warn;
 use ramhorns::Template;
 
 use super::rendered_template::{RenderedTemplate, TEMPLATES_DIR};
@@ -25,16 +24,17 @@ pub(crate) fn generate_license(
     app_path: &str,
     data: &ApplicationManifestData,
 ) -> Result<Option<RenderedTemplate>> {
-    let license_file = match data.license.parse()? {
-        License::Apgl => Some("agpl-3.0"),
-        License::Apache => Some("apache-2.0"),
-        License::Mit => Some("mit"),
-        License::Boost => Some("boost-1.0"),
-        License::Gpl => Some("gpl-3.0"),
-        License::Lgpl => Some("lgpl-3.0"),
-        License::Mozilla => Some("mpl-2.0"),
-        License::Unlicense => Some("unlicense"),
-        License::None => None,
+    let license_file = match data.license.as_str() {
+        "APGL-3.0" => Some("agpl-3.0"),
+        "GPL-3.0" => Some("gpl-3.0"),
+        "LGPL-3.0" => Some("lgpl-3.0"),
+        "MPL-2.0" => Some("mpl-2.0"),
+        "Apache-2.0" => Some("apache-2.0"),
+        "MIT" => Some("mit"),
+        "Boost-1.0" => Some("boost-1.0"),
+        "Unlicense" => Some("unlicense"),
+        "UNLICENSED" => None,
+        _ => None,
     };
 
     if license_file.is_none() {

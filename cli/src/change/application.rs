@@ -28,7 +28,8 @@ use crate::{
         license::{generate_license, match_license},
         manifest::{application::ApplicationManifestData, MutableManifestData},
         package_json::package_json_constants::{JEST_VERSION, TS_JEST_VERSION, VITEST_VERSION},
-        rendered_template::{write_rendered_templates, RenderedTemplate},
+        removal_template::{self, RemovalTemplate},
+        rendered_template::{write_rendered_templates, RenderedTemplate, TEMPLATES_DIR},
     },
     prompt::{prompt_field_from_selections_with_validation, ArrayCompleter},
     CliCommand,
@@ -52,60 +53,123 @@ impl ApplicationCommand {
 
 fn change_formatter(
     base_path: &Path,
-    formatter: &str,
+    formatter: &Formatter,
     manifest_data: &mut ApplicationManifestData,
-) -> Result<RenderedTemplate> {
+) -> Result<(Vec<RenderedTemplate>, Vec<RemovalTemplate>)> {
     manifest_data.formatter = formatter.to_string();
 
-    // change the config files -- if edited, do not delete, print a warning
+    let mut rendered_templates = vec![];
 
-    Ok(RenderedTemplate {
-        path: base_path.join("core").join("registration.ts"),
-        content: transform_core_registration_formatter_ts(formatter, base_path)?,
-        context: None,
-    })
+    for file in formatter.metadata().exclusive_files.unwrap() {
+        // add config files,
+        let formatter_config_file_contents = TEMPLATES_DIR
+            .get_file(Path::new("application").join(file.to_string()))
+            .unwrap()
+            .contents_utf8()
+            .unwrap();
+
+        rendered_templates.push(RenderedTemplate {
+            path: base_path.join(file),
+            content: formatter_config_file_contents.to_string(),
+            context: None,
+        });
+    }
+
+    let mut removal_templates = vec![];
+
+    let existing_files = Formatter::all_other_files(formatter);
+
+    for file in existing_files {
+        let file_path = base_path.join(file);
+        if exists(&file_path)? {
+            let file_content = read_to_string(&file_path)?;
+            let file_content_template = TEMPLATES_DIR
+                .get_file(Path::new("application").join(file.to_string()))
+                .unwrap()
+                .contents_utf8()
+                .unwrap();
+            if file_content == file_content_template {
+                removal_templates.push(RemovalTemplate { path: file_path });
+            }
+        }
+    }
+
+    Ok((rendered_templates, removal_templates))
 }
 
 fn change_linter(
     base_path: &Path,
-    linter: &str,
+    linter: &Linter,
     manifest_data: &mut ApplicationManifestData,
-) -> Result<RenderedTemplate> {
+) -> Result<(Vec<RenderedTemplate>, Vec<RemovalTemplate>)> {
     manifest_data.linter = linter.to_string();
 
-    // change the config files -- if edited, do not delete, print a warning
+    let mut rendered_templates = vec![];
 
-    Ok(RenderedTemplate {
-        path: base_path.join("core").join("registration.ts"),
-        content: transform_core_registration_linter_ts(linter, base_path)?,
-        context: None,
-    })
+    for file in linter.metadata().exclusive_files.unwrap() {
+        // add config files,
+        let linter_config_file_contents = TEMPLATES_DIR
+            .get_file(Path::new("application").join(file.to_string()))
+            .unwrap()
+            .contents_utf8()
+            .unwrap();
+
+        rendered_templates.push(RenderedTemplate {
+            path: base_path.join(file),
+            content: linter_config_file_contents.to_string(),
+            context: None,
+        });
+    }
+
+    let mut removal_templates = vec![];
+
+    let existing_files = Linter::all_other_files(linter);
+
+    for file in existing_files {
+        let file_path = base_path.join(file);
+        if exists(&file_path)? {
+            let file_content = read_to_string(&file_path)?;
+            let file_content_template = TEMPLATES_DIR
+                .get_file(Path::new("application").join(file.to_string()))
+                .unwrap()
+                .contents_utf8()
+                .unwrap();
+            if file_content == file_content_template {
+                removal_templates.push(RemovalTemplate { path: file_path });
+            }
+        }
+    }
+
+    Ok((rendered_templates, removal_templates))
 }
 
 fn change_validator(
     base_path: &Path,
-    validator: &str,
+    validator: &Validator,
     manifest_data: &mut ApplicationManifestData,
 ) -> Result<RenderedTemplate> {
     manifest_data.validator = validator.to_string();
 
     Ok(RenderedTemplate {
         path: base_path.join("core").join("registration.ts"),
-        content: transform_core_registration_validator_ts(validator, base_path)?,
+        content: transform_core_registration_validator_ts(&validator.to_string(), base_path)?,
         context: None,
     })
 }
 
 fn change_http_framework(
     base_path: &Path,
-    http_framework: &str,
+    http_framework: &HttpFramework,
     manifest_data: &mut ApplicationManifestData,
 ) -> Result<RenderedTemplate> {
     manifest_data.http_framework = http_framework.to_string();
 
     Ok(RenderedTemplate {
         path: base_path.join("core").join("registration.ts"),
-        content: transform_core_registration_http_framework_ts(http_framework, base_path)?,
+        content: transform_core_registration_http_framework_ts(
+            &http_framework.to_string(),
+            base_path,
+        )?,
         context: None,
     })
 }
@@ -142,26 +206,25 @@ fn replace_dockerfile_contents(runtime: &str, dockerfile: &str) -> String {
 
 fn change_runtime(
     base_path: &Path,
-    runtime: &str,
+    runtime: &Runtime,
     manifest_data: &mut ApplicationManifestData,
     application_json_to_write: &mut Value,
 ) -> Result<Vec<RenderedTemplate>> {
-    manifest_data.runtime = runtime.to_string();
-
     let mut rendered_templates = vec![];
 
-    let existing_workspaces: Vec<String> = match manifest_data.runtime.as_str() {
-        "bun" => application_json_to_write
+    let existing_workspaces: Vec<String> = match manifest_data.runtime.parse()? {
+        Runtime::Bun => application_json_to_write
             .get("scripts")
             .as_slice()
             .iter()
             .map(|s| s.to_string())
             .collect::<Vec<String>>(),
-        "pnpm" => serde_yml::from_str::<Vec<String>>(&read_to_string(
+        Runtime::Node => serde_yml::from_str::<Vec<String>>(&read_to_string(
             &base_path.join("pnpm-workspace.yaml"),
         )?)?,
-        _ => unreachable!(),
     };
+
+    manifest_data.runtime = runtime.to_string();
 
     let application_package_json_unbounded_scripts = application_json_to_write
         .get("scripts")
@@ -174,15 +237,15 @@ fn change_runtime(
         .iter()
         .for_each(|(key, script)| {
             let script_replacement_function =
-                get_replacement_mapping((&manifest_data.runtime, &runtime));
+                get_replacement_mapping((&manifest_data.runtime, &runtime.to_string()));
             new_application_package_json_unbounded_scripts[key] =
                 script_replacement_function(script.to_string()).into();
         });
 
     application_json_to_write["scripts"] = new_application_package_json_unbounded_scripts.into();
-    if runtime == "bun" {
+    if runtime == &Runtime::Bun {
         application_json_to_write["workspaces"] = existing_workspaces.into();
-    } else if runtime == "pnpm" {
+    } else if runtime == &Runtime::Node {
         rendered_templates.push(RenderedTemplate {
             path: base_path.join("pnpm-workspace.yaml"),
             content: serde_yml::to_string(&existing_workspaces)?,
@@ -190,8 +253,10 @@ fn change_runtime(
         });
     }
 
-    let dockerfile_contents =
-        replace_dockerfile_contents(runtime, &read_to_string(base_path.join("Dockerfile"))?);
+    let dockerfile_contents = replace_dockerfile_contents(
+        &runtime.to_string(),
+        &read_to_string(base_path.join("Dockerfile"))?,
+    );
 
     rendered_templates.push(RenderedTemplate {
         path: base_path.join("Dockerfile"),
@@ -204,57 +269,75 @@ fn change_runtime(
 
 fn change_test_framework(
     base_path: &Path,
-    test_framework: &str,
+    test_framework: &TestFramework,
     manifest_data: &mut ApplicationManifestData,
     application_json_to_write: &mut Value,
-) -> Result<Option<RenderedTemplate>> {
+) -> Result<(Option<RenderedTemplate>, Vec<RemovalTemplate>)> {
     manifest_data.test_framework = Some(test_framework.to_string());
 
+    let mut removal_templates = vec![];
     application_json_to_write["devDependencies"] = application_json_to_write
         .get("devDependencies")
-        .filter(|dep| !(dep.to_string().contains("vitest") || dep.to_string().contains("jest")))
+        .filter(|dep| {
+            !(TestFramework::VARIANTS
+                .iter()
+                .any(|tf| dep.to_string().contains(tf)))
+        })
         .unwrap()
         .to_owned();
 
-    if manifest_data.runtime == "bun" {
-        for file in ["vitest.config.ts", "jest.config.ts"] {
+    if manifest_data.runtime.parse::<Runtime>()? == Runtime::Bun {
+        for file in TestFramework::ALL_FILES {
             let config_file = base_path.join(file);
             if exists(&config_file)? {
-                remove_file(config_file)?;
+                removal_templates.push(RemovalTemplate { path: config_file });
             }
         }
 
-        return Ok(None);
+        return Ok((None, removal_templates));
     }
 
-    Ok(Some(match test_framework {
-        "vitest" => {
-            application_json_to_write["devDependencies"]
-                .as_object_mut()
-                .unwrap()["vitest"] = Value::String(VITEST_VERSION.to_string());
-            RenderedTemplate {
-                path: base_path.join("vitest.config.ts"),
-                content: "".to_string(),
-                context: None,
+    Ok((
+        Some(match test_framework {
+            TestFramework::Vitest => {
+                application_json_to_write["devDependencies"]
+                    .as_object_mut()
+                    .unwrap()["vitest"] = Value::String(VITEST_VERSION.to_string());
+                let vitest_config_file_contents = TEMPLATES_DIR
+                    .get_file(Path::new("application").join("vitest.config.ts"))
+                    .unwrap()
+                    .contents_utf8()
+                    .unwrap();
+                RenderedTemplate {
+                    path: base_path.join("vitest.config.ts"),
+                    content: vitest_config_file_contents.to_string(),
+                    context: None,
+                }
             }
-        }
-        "jest" => {
-            let dependencies = application_json_to_write["devDependencies"]
-                .as_object_mut()
-                .unwrap();
+            TestFramework::Jest => {
+                let dependencies = application_json_to_write["devDependencies"]
+                    .as_object_mut()
+                    .unwrap();
 
-            dependencies["jest"] = Value::String(JEST_VERSION.to_string());
-            dependencies["ts-jest"] = Value::String(TS_JEST_VERSION.to_string());
-            dependencies["@types/jest"] = Value::String(TS_JEST_VERSION.to_string());
+                dependencies["jest"] = Value::String(JEST_VERSION.to_string());
+                dependencies["ts-jest"] = Value::String(TS_JEST_VERSION.to_string());
+                dependencies["@types/jest"] = Value::String(TS_JEST_VERSION.to_string());
 
-            RenderedTemplate {
-                path: base_path.join("jest.config.ts"),
-                content: "".to_string(),
-                context: None,
+                let jest_config_file_contents = TEMPLATES_DIR
+                    .get_file(Path::new("application").join("jest.config.ts"))
+                    .unwrap()
+                    .contents_utf8()
+                    .unwrap();
+
+                RenderedTemplate {
+                    path: base_path.join("jest.config.ts"),
+                    content: jest_config_file_contents.to_string(),
+                    context: None,
+                }
             }
-        }
-        _ => unreachable!(),
-    }))
+        }),
+        removal_templates,
+    ))
 }
 
 fn change_author(
@@ -268,23 +351,24 @@ fn change_author(
 
 fn change_license(
     base_path: &Path,
-    license: &str,
+    license: &License,
     manifest_data: &mut ApplicationManifestData,
     application_json_to_write: &mut Value,
-) -> Result<Option<RenderedTemplate>> {
+) -> Result<(Option<RenderedTemplate>, Option<RemovalTemplate>)> {
     manifest_data.license = license.to_string();
     let license_path = base_path.join("LICENSE");
 
+    let mut removal_template = None;
     if exists(&license_path)? {
-        remove_file(&license_path)?;
+        removal_template = Some(RemovalTemplate { path: license_path });
     }
 
     application_json_to_write["license"] = Value::String(license.to_string());
 
-    Ok(generate_license(
-        base_path.to_str().unwrap(),
-        &manifest_data,
-    )?)
+    Ok((
+        generate_license(base_path.to_str().unwrap(), &manifest_data)?,
+        removal_template,
+    ))
 }
 
 impl CliCommand for ApplicationCommand {
@@ -325,7 +409,7 @@ impl CliCommand for ApplicationCommand {
             )
             .arg(
                 Arg::new("http-framework")
-                    .short('f')
+                    .short('F')
                     .long("http-framework")
                     .help("The http framework to use")
                     .value_parser(HttpFramework::VARIANTS),
@@ -577,6 +661,7 @@ impl CliCommand for ApplicationCommand {
         )?;
 
         let mut rendered_templates = vec![];
+        let mut removal_templates = vec![];
 
         let application_package_json_path = base_path.join("package.json");
         let application_package_json_data = read_to_string(&application_package_json_path)
@@ -594,21 +679,23 @@ impl CliCommand for ApplicationCommand {
         }
 
         if let Some(formatter) = formatter {
-            rendered_templates.push(change_formatter(
-                &base_path,
-                &formatter,
-                &mut manifest_data,
-            )?);
+            let (formatter_rendered_templates, formatter_removal_templates) =
+                change_formatter(&base_path, &formatter.parse()?, &mut manifest_data)?;
+            rendered_templates.extend(formatter_rendered_templates);
+            removal_templates.extend(formatter_removal_templates);
         }
 
         if let Some(linter) = linter {
-            rendered_templates.push(change_linter(&base_path, &linter, &mut manifest_data)?);
+            let (linter_rendered_templates, linter_removal_templates) =
+                change_linter(&base_path, &linter.parse()?, &mut manifest_data)?;
+            rendered_templates.extend(linter_rendered_templates);
+            removal_templates.extend(linter_removal_templates);
         }
 
         if let Some(validator) = validator {
             rendered_templates.push(change_validator(
                 &base_path,
-                &validator,
+                &validator.parse()?,
                 &mut manifest_data,
             )?);
         }
@@ -616,7 +703,7 @@ impl CliCommand for ApplicationCommand {
         if let Some(http_framework) = http_framework {
             rendered_templates.push(change_http_framework(
                 &base_path,
-                &http_framework,
+                &http_framework.parse()?,
                 &mut manifest_data,
             )?);
         }
@@ -624,21 +711,24 @@ impl CliCommand for ApplicationCommand {
         if let Some(runtime) = runtime {
             rendered_templates.extend(change_runtime(
                 &base_path,
-                &runtime,
+                &runtime.parse()?,
                 &mut manifest_data,
                 &mut application_json_to_write,
             )?);
         }
 
         if let Some(test_framework) = test_framework {
-            if let Some(test_framework_template) = change_test_framework(
-                &base_path,
-                &test_framework,
-                &mut manifest_data,
-                &mut application_json_to_write,
-            )? {
+            let (test_framework_template_option, test_framework_removal_templates) =
+                change_test_framework(
+                    &base_path,
+                    &test_framework.parse()?,
+                    &mut manifest_data,
+                    &mut application_json_to_write,
+                )?;
+            if let Some(test_framework_template) = test_framework_template_option {
                 rendered_templates.push(test_framework_template);
             }
+            removal_templates.extend(test_framework_removal_templates);
         }
 
         if let Some(description) = description {
@@ -650,13 +740,18 @@ impl CliCommand for ApplicationCommand {
         }
 
         if let Some(license) = license {
-            if let Some(license) = change_license(
+            let (license, removal_template) = change_license(
                 &base_path,
-                &license,
+                &license.parse()?,
                 &mut manifest_data,
                 &mut application_json_to_write,
-            )? {
+            )?;
+
+            if let Some(license) = license {
                 rendered_templates.push(license);
+            }
+            if let Some(removal_template) = removal_template {
+                removal_templates.push(removal_template);
             }
         }
 

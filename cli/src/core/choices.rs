@@ -4,6 +4,7 @@ macro_rules! count {
     ($x:tt $($xs:tt)*) => (1usize + crate::count!($($xs)*));
 }
 
+#[derive(Debug, Clone, PartialEq)]
 pub(crate) struct Choice {
     pub id: &'static str,
     pub exclusive_files: Option<&'static [&'static str]>,
@@ -22,7 +23,8 @@ macro_rules! choice {
         )+
     ) => {
         $(
-            #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+            #[repr(usize)]
+            #[derive(Debug, Copy, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
             $(#[$meta_attr])*
             $vis enum $name {
                 $(
@@ -35,6 +37,35 @@ macro_rules! choice {
                     $($meta.id),*
                 ];
 
+                $vis const ALL_FILES: &'static [&'static str] = {
+                    const fn count_files() -> usize {
+                        let mut count = 0;
+                        $(
+                            if let Some(files) = $meta.exclusive_files {
+                                count += files.len();
+                            }
+                        )*
+                        count
+                    }
+                    const LEN: usize = count_files();
+                    const fn collect_files() -> [&'static str; LEN] {
+                        let mut result = [""; LEN];
+                        let mut i = 0;
+                        $(
+                            if let Some(files) = $meta.exclusive_files {
+                                let mut j = 0;
+                                while j < files.len() {
+                                    result[i] = files[j];
+                                    i += 1;
+                                    j += 1;
+                                }
+                            }
+                        )*
+                        result
+                    }
+                    &collect_files()
+                };
+
                 const METADATA: &'static [Choice] = &[
                     $($meta),*
                 ];
@@ -42,7 +73,7 @@ macro_rules! choice {
                 $vis fn metadata(&self) -> &'static Choice {
                     match self {
                         $(
-                            Self::$variant => &Self::METADATA[crate::count!($variant*)],
+                           Self::$variant => &Self::METADATA[*self as usize],
                         )*
                     }
                 }

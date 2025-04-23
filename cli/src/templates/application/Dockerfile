@@ -5,7 +5,11 @@ WORKDIR /{{app_name}}
 
 # Copy source code
 COPY . .
-
+{{#is_node}}{{#is_in_memory_database}}
+# Install sqlite dependencies
+RUN apk add --no-cache python3 py3-pip make build-base sqlite-dev
+RUN pip install setuptools --break-system-packages
+{{/is_in_memory_database}}{{/is_node}}
 # Install dependencies
 {{#is_node}}RUN npm install -g pnpm
 RUN apk update

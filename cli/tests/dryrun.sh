@@ -5,14 +5,14 @@ fi
 mkdir -p output/dryrun
 cd output/dryrun
 
-RUST_BACKTRACE=1 cargo run init application dryrun-test-node-application -d postgresql -v zod -f express -r node -t vitest -s billing -s iam -D "Test service" -A "Rohin Bhargava" -L 'apgl' -n
+RUST_BACKTRACE=1 cargo run init application dryrun-test-node-application -d postgresql -v zod -F express -r node -t vitest -s billing -s iam -D "Test service" -A "Rohin Bhargava" -L 'apgl' -n
 
 if [ "$(ls -A)" ]; then
      echo "Error: Directory not empty" >&2
      exit 1
 fi
 
-RUST_BACKTRACE=1 cargo run init application dryrun-test-node-application -d postgresql -v zod -f express -r node -t vitest -s billing -s iam -D "Test service" -A "Rohin Bhargava" -L 'apgl'
+RUST_BACKTRACE=1 cargo run init application dryrun-test-node-application -d postgresql -v zod -F express -r node -t vitest -s billing -s iam -D "Test service" -A "Rohin Bhargava" -L 'apgl'
 
 cd dryrun-test-node-application
 

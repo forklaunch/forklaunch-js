@@ -660,13 +660,26 @@ fn create_base_service(
     component_name: &str,
     runtime: &str,
     database: &Option<String>,
+    is_cache_enabled: bool,
+    is_in_memory_database: bool,
     port_number: Option<i32>,
     environment: IndexMap<String, String>,
     volumes: Vec<String>,
     container_name_suffix: Option<&str>,
     entrypoint_command: &str,
-    depends_on: Vec<String>,
+    additional_depends_on: Vec<String>,
 ) -> DockerService {
+    let mut depends_on = vec![];
+
+    if is_cache_enabled {
+        depends_on.push("redis".to_string());
+    }
+    if !is_in_memory_database && database.is_some() {
+        depends_on.push(database.clone().unwrap());
+    }
+
+    depends_on.extend(additional_depends_on);
+
     DockerService {
         hostname: Some(component_name.to_string()),
         container_name: Some(format!(
@@ -686,20 +699,23 @@ fn create_base_service(
             app_name, component_name, runtime
         )),
         environment: Some(environment),
-        depends_on: Some(
-            vec![database.clone().unwrap(), "redis".to_string()]
-                .into_iter()
-                .chain(depends_on)
-                .map(|service_name| {
-                    (
-                        service_name,
-                        DependsOn {
-                            condition: DependencyCondition::ServiceStarted,
-                        },
-                    )
-                })
-                .collect(),
-        ),
+        depends_on: if depends_on.len() > 0 {
+            Some(
+                depends_on
+                    .into_iter()
+                    .map(|service_name| {
+                        (
+                            service_name,
+                            DependsOn {
+                                condition: DependencyCondition::ServiceStarted,
+                            },
+                        )
+                    })
+                    .collect(),
+            )
+        } else {
+            None
+        },
         ports: if let Some(port_number) = port_number {
             Some(vec![format!("{}:{}", port_number, port_number)])
         } else {
@@ -779,6 +795,8 @@ pub(crate) fn add_service_definition_to_docker_compose(
                 &config_data.service_name,
                 &config_data.runtime,
                 &Some(config_data.database.clone()),
+                config_data.is_cache_enabled,
+                config_data.is_in_memory_database,
                 Some(port_number),
                 environment,
                 volumes,
@@ -853,6 +871,8 @@ pub(crate) fn add_worker_definition_to_docker_compose(
                 &config_data.worker_name,
                 &config_data.runtime,
                 &config_data.database,
+                config_data.is_cache_enabled,
+                config_data.is_in_memory_database,
                 Some(port_number),
                 environment.clone(),
                 volumes.clone(),
@@ -872,6 +892,8 @@ pub(crate) fn add_worker_definition_to_docker_compose(
                 &config_data.worker_name,
                 &config_data.runtime,
                 &config_data.database,
+                config_data.is_cache_enabled,
+                config_data.is_in_memory_database,
                 None,
                 environment,
                 volumes,

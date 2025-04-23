@@ -116,6 +116,9 @@ export function createDependencies({{#is_database_enabled}}{ orm }: { orm: Mikro
       factory: ({ REDIS_URL, OpenTelemetryCollector }) =>
         new RedisTtlCache(60 * 60 * 1000, OpenTelemetryCollector, {
           url: REDIS_URL,
+        }, {
+          enabled: true,
+          level: "info",
         }),
     },{{/is_cache_enabled}}{{#is_database_enabled}}
     EntityManager: {

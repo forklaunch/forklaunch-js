@@ -62,20 +62,27 @@ pub(crate) fn generate_database_export_index_ts(
 
     database_set.extend(databases.unwrap_or_default());
 
-    database_set.iter().for_each(|database| {
-        let export_string = match database.as_str() {
-            "mongodb" => Some("nosql.base.entity"),
-            "postgresql" => Some("sql.base.entity"),
-            "sqlite" => Some("sql.base.entity"),
-            "mysql" => Some("sql.base.entity"),
-            _ => None,
-        };
+    database_set
+        .iter()
+        .map(|database| {
+            let export_string = match database.parse::<Database>()? {
+                Database::MongoDB => Some("nosql.base.entity"),
+                Database::PostgreSQL => Some("sql.base.entity"),
+                Database::SQLite => Some("sql.base.entity"),
+                Database::MySQL => Some("sql.base.entity"),
+                Database::MariaDB => Some("sql.base.entity"),
+                Database::MsSQL => Some("sql.base.entity"),
+                Database::BetterSQLite => Some("sql.base.entity"),
+                Database::LibSQL => Some("sql.base.entity"),
+            };
 
-        if let Some(export_string) = export_string {
-            export_set.insert(format!("export * from './{}'", export_string));
-        }
-        export_set.insert(format!("export * from './collection'"));
-    });
+            if let Some(export_string) = export_string {
+                export_set.insert(format!("export * from './{}'", export_string));
+            }
+
+            Ok(())
+        })
+        .collect::<Result<Vec<()>>>()?;
 
     Ok(RenderedTemplate {
         path: Path::new(&base_path)
@@ -136,11 +143,16 @@ pub(crate) fn update_core_package_json(
     })
 }
 
-pub(crate) fn get_base_entity_filename(database: &str) -> Result<&str> {
+pub(crate) fn get_base_entity_filename(database: &Database) -> Result<&str> {
     match database {
-        "mongodb" => Ok("nosql.base.entity.ts"),
-        "postgresql" => Ok("sql.base.entity.ts"),
-        _ => bail!(ERROR_UNSUPPORTED_DATABASE),
+        Database::MongoDB => Ok("nosql.base.entity.ts"),
+        Database::PostgreSQL => Ok("sql.base.entity.ts"),
+        Database::SQLite => Ok("sql.base.entity.ts"),
+        Database::MySQL => Ok("sql.base.entity.ts"),
+        Database::MariaDB => Ok("sql.base.entity.ts"),
+        Database::BetterSQLite => Ok("sql.base.entity.ts"),
+        Database::LibSQL => Ok("sql.base.entity.ts"),
+        Database::MsSQL => Ok("sql.base.entity.ts"),
     }
 }
 
@@ -154,6 +166,7 @@ pub(crate) fn add_base_entity_to_core(
         _ => bail!(ERROR_UNSUPPORTED_DATABASE),
     };
 
+    let database = database.parse::<Database>()?;
     let filename = get_base_entity_filename(&database)?;
 
     let entity_path = Path::new(base_path)
@@ -176,7 +189,7 @@ pub(crate) fn add_base_entity_to_core(
         },
         generate_database_export_index_ts(
             base_path,
-            Some(vec![database.clone()]),
+            Some(vec![database.to_string()]),
             Some(config_data),
         )
         .with_context(|| ERROR_FAILED_TO_CREATE_DATABASE_EXPORT_INDEX_TS)?,

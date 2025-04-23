@@ -18,18 +18,6 @@ choice! {
             id: "mariadb",
             exclusive_files:Some(&["sql.base.entity.ts"]),
         },
-        SQLite = Choice {
-            id: "sqlite",
-            exclusive_files:Some(&["sql.base.entity.ts"]),
-        },
-        BetterSQLite = Choice {
-            id: "better-sqlite",
-            exclusive_files:Some(&["sql.base.entity.ts"]),
-        },
-        LibSQL = Choice {
-            id: "libsql",
-            exclusive_files:Some(&["sql.base.entity.ts"]),
-        },
         MsSQL = Choice {
             id: "mssql",
             exclusive_files:Some(&["sql.base.entity.ts"]),
@@ -37,6 +25,18 @@ choice! {
         MongoDB = Choice {
             id: "mongodb",
             exclusive_files:Some(&["nosql.base.entity.ts"]),
+        },
+        LibSQL = Choice {
+            id: "libsql",
+            exclusive_files:Some(&["sql.base.entity.ts"]),
+        },
+        SQLite = Choice {
+            id: "sqlite",
+            exclusive_files:Some(&["sql.base.entity.ts"]),
+        },
+        BetterSQLite = Choice {
+            id: "better-sqlite",
+            exclusive_files:Some(&["sql.base.entity.ts"]),
         },
     }
 

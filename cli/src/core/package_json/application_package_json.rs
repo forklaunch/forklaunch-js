@@ -23,6 +23,8 @@ pub struct ApplicationScripts {
     #[serde(rename = "lint:fix", skip_serializing_if = "Option::is_none")]
     pub lint_fix: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub postinstall: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub prepare: Option<String>,
     #[serde(rename = "migrate:create", skip_serializing_if = "Option::is_none")]
     pub migrate_create: Option<String>,
@@ -48,6 +50,8 @@ pub struct ApplicationDevDependencies {
     pub eslint_js: Option<String>,
     #[serde(rename = "@types/jest", skip_serializing_if = "Option::is_none")]
     pub types_jest: Option<String>,
+    #[serde(rename = "better-sqlite3", skip_serializing_if = "Option::is_none")]
+    pub better_sqlite3: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub eslint: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -58,19 +62,23 @@ pub struct ApplicationDevDependencies {
     pub jest: Option<String>,
     #[serde(rename = "lint-staged", skip_serializing_if = "Option::is_none")]
     pub lint_staged: Option<String>,
+    #[serde(rename = "node-gyp", skip_serializing_if = "Option::is_none")]
+    pub node_gyp: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub oxlint: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub prettier: Option<String>,
     #[serde(rename = "sort-package-json", skip_serializing_if = "Option::is_none")]
     pub sort_package_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sqlite3: Option<String>,
     #[serde(rename = "ts-jest", skip_serializing_if = "Option::is_none")]
     pub ts_jest: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tsx: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub typescript: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "typescript-eslint", skip_serializing_if = "Option::is_none")]
     pub typescript_eslint: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub vitest: Option<String>,

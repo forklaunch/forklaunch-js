@@ -177,7 +177,7 @@ fn generate_library_package_json(
             format: Some(project_format_script(&config_data.formatter.parse()?)),
             lint: Some(PROJECT_LINT_SCRIPT.to_string()),
             lint_fix: Some(PROJECT_LINT_FIX_SCRIPT.to_string()),
-            test: Some(project_test_script(&test_framework)),
+            test: project_test_script(&test_framework, &config_data.runtime.parse()?),
             ..Default::default()
         }),
         dev_dependencies: Some(ProjectDevDependencies {

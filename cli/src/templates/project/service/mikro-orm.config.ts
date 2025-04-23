@@ -3,7 +3,7 @@ import { Migrator } from '@mikro-orm/migrations{{#is_mongo}}-mongodb{{/is_mongo}
 import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
 import { number, SchemaValidator, string } from '@{{app_name}}/core';{{^is_mongo}}
 import { defineConfig, Platform, TextType, Type } from '@mikro-orm/core';{{/is_mongo}}
-import { MikroORMOptions, {{db_driver}} } from '@mikro-orm/{{database}}';
+import { {{db_driver}} } from '@mikro-orm/{{database}}';
 import dotenv from 'dotenv';
 import * as entities from './persistence/entities';
 
@@ -16,7 +16,7 @@ const configInjector = createConfigInjector(
       lifetime: Lifetime.Singleton,
       type: string,
       value: getEnvVar('DB_NAME')
-    },
+    }, {{^is_in_memory_database}}
     DB_HOST: {
       lifetime: Lifetime.Singleton,
       type: string,
@@ -36,7 +36,7 @@ const configInjector = createConfigInjector(
       lifetime: Lifetime.Singleton,
       type: number,
       value: Number(getEnvVar('DB_PORT'))
-    },
+    }, {{/is_in_memory_database}}
     ENV: {
       lifetime: Lifetime.Singleton,
       type: string,

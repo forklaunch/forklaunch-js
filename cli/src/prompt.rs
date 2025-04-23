@@ -2,6 +2,7 @@ use std::io::Write;
 
 use anyhow::Result;
 use clap::ArgMatches;
+use dialoguer::{theme::ColorfulTheme, FuzzySelect, Input, MultiSelect};
 use rustyline::{
     completion::{Completer, Pair},
     history::DefaultHistory,
@@ -65,19 +66,19 @@ pub(crate) fn prompt_for_confirmation(
     Ok(confirmation.trim().to_lowercase().starts_with("y"))
 }
 
-pub(crate) fn prompt_with_validation<F, V>(
+pub(crate) fn prompt_with_validation<ErrorFunction, ValidatorFunction>(
     line_editor: &mut Editor<ArrayCompleter, DefaultHistory>,
     stdout: &mut StandardStream,
     matches_key: &str,
     matches: &ArgMatches,
     prompt: &str,
     valid_options: Option<&[&str]>,
-    validator: V,
-    error_message: F,
+    validator: ValidatorFunction,
+    error_message: ErrorFunction,
 ) -> Result<String>
 where
-    F: Fn(&str) -> String,
-    V: Fn(&str) -> bool,
+    ErrorFunction: Fn(&str) -> String,
+    ValidatorFunction: Fn(&str) -> bool,
 {
     loop {
         let input = match matches.get_one::<String>(matches_key) {
@@ -89,13 +90,31 @@ where
                     };
                     line_editor.set_helper(Some(completer));
                     let prompt = if options.is_empty() {
-                        prompt.to_string()
+                        format!("Enter {}: ", prompt)
                     } else {
-                        format!("{} [{}]: ", prompt, options.join(", "))
+                        format!("Enter {} [{}]: ", prompt, options.join(", "))
                     };
-                    line_editor.readline(&prompt)?.trim().to_string()
+                    options[FuzzySelect::with_theme(&ColorfulTheme::default())
+                        .with_prompt(prompt)
+                        .items(options)
+                        .default(0)
+                        .interact()
+                        .unwrap()]
+                    .to_string()
                 } else {
-                    line_editor.readline(prompt)?.trim().to_string()
+                    Input::with_theme(&ColorfulTheme::default())
+                        .with_prompt(prompt)
+                        .validate_with({
+                            |input: &String| -> Result<(), String> {
+                                if validator(input) {
+                                    Ok(())
+                                } else {
+                                    Err(error_message(input))
+                                }
+                            }
+                        })
+                        .interact_text()
+                        .unwrap()
                 }
             }
         };
@@ -134,21 +153,16 @@ pub(crate) fn prompt_comma_separated_list(
                 valid_options.join(", "),
                 optional_text
             );
-            let input = line_editor.readline(&prompt)?;
-            if input.trim().is_empty() {
-                line_editor.set_helper(None);
-                Ok(vec![])
-            } else {
-                Ok(input
-                    .split(',')
-                    .map(|s| s.trim().to_string())
-                    .filter(|s| valid_options.contains(&s.as_str()))
-                    .collect::<Vec<String>>()
-                    .into_iter()
-                    .collect::<std::collections::HashSet<_>>()
-                    .into_iter()
-                    .collect())
-            }
+            let input: Vec<String> = MultiSelect::with_theme(&ColorfulTheme::default())
+                .with_prompt(prompt)
+                .items(valid_options)
+                .interact()
+                .unwrap()
+                .into_iter()
+                .map(|index| valid_options[index].to_string())
+                .collect();
+
+            Ok(input)
         }
     }
 }

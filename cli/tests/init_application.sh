@@ -33,7 +33,7 @@ for database in "${databases[@]}"; do
             RUST_BACKTRACE=1 cargo run init application "$app_name" \
                 -d "$database" \
                 -v "$validator" \
-                -f "$framework" \
+                -F "$framework" \
                 -r "$runtime" \
                 -t "$test_framework" \
                 -s "billing" \

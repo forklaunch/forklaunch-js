@@ -7,6 +7,7 @@ use std::{
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use convert_case::{Case, Casing};
+use dialoguer::{theme::ColorfulTheme, FuzzySelect, Input, InputValidator, MultiSelect, Select};
 use rustyline::{history::DefaultHistory, Editor};
 use serde_json::to_string_pretty;
 use serde_yml::to_string;
@@ -44,15 +45,16 @@ use crate::{
                 application_lint_script, application_migrate_script, application_seed_script,
                 application_setup_script, application_test_script, application_up_packages_script,
                 project_clean_script, project_format_script, project_test_script, AJV_VERSION,
-                APP_DEV_BUILD_SCRIPT, APP_DEV_SCRIPT, APP_PREPARE_SCRIPT, BIOME_VERSION,
-                COMMON_VERSION, CORE_VERSION, DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION,
-                GLOBALS_VERSION, HUSKY_VERSION, HYPER_EXPRESS_VERSION, JEST_TYPES_VERSION,
-                JEST_VERSION, LINT_STAGED_VERSION, MIKRO_ORM_CORE_VERSION,
-                MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
-                MIKRO_ORM_REFLECTION_VERSION, OXLINT_VERSION, PRETTIER_VERSION,
+                APP_DEV_BUILD_SCRIPT, APP_DEV_SCRIPT, APP_PREPARE_SCRIPT, BETTER_SQLITE3_VERSION,
+                BETTER_SQLITE_POSTINSTALL_SCRIPT, BIOME_VERSION, COMMON_VERSION, CORE_VERSION,
+                DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION, GLOBALS_VERSION, HUSKY_VERSION,
+                HYPER_EXPRESS_VERSION, JEST_TYPES_VERSION, JEST_VERSION, LINT_STAGED_VERSION,
+                MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
+                MIKRO_ORM_REFLECTION_VERSION, NODE_GYP_VERSION, OXLINT_VERSION, PRETTIER_VERSION,
                 PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT, PROJECT_LINT_FIX_SCRIPT,
-                PROJECT_LINT_SCRIPT, SORT_PACKAGE_JSON_VERSION, TSX_VERSION, TS_JEST_VERSION,
-                TYPEBOX_VERSION, TYPESCRIPT_ESLINT_VERSION, TYPESCRIPT_VERSION,
+                PROJECT_LINT_SCRIPT, SORT_PACKAGE_JSON_VERSION, SQLITE3_VERSION,
+                SQLITE_POSTINSTALL_SCRIPT, TSX_VERSION, TS_JEST_VERSION, TYPEBOX_VERSION,
+                TYPESCRIPT_ESLINT_VERSION, TYPESCRIPT_VERSION,
                 TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION, TYPES_QS_VERSION,
                 TYPES_UUID_VERSION, UUID_VERSION, VALIDATOR_VERSION, VITEST_VERSION, ZOD_VERSION,
             },
@@ -99,7 +101,6 @@ fn generate_application_package_json(
             format: Some(application_format_script(&data.formatter.parse()?)),
             lint: Some(application_lint_script(&data.linter.parse()?)),
             lint_fix: Some(application_lint_fix_script(&data.linter.parse()?)),
-            prepare: Some(APP_PREPARE_SCRIPT.to_string()),
             migrate_create: Some(application_migrate_script(
                 &data.runtime.parse()?,
                 &data.database.parse()?,
@@ -120,6 +121,16 @@ fn generate_application_package_json(
                 &data.database.parse()?,
                 "up",
             )),
+            postinstall: if data.is_sqlite || data.is_better_sqlite {
+                match data.database.parse()? {
+                    Database::SQLite => Some(SQLITE_POSTINSTALL_SCRIPT.to_string()),
+                    Database::BetterSQLite => Some(BETTER_SQLITE_POSTINSTALL_SCRIPT.to_string()),
+                    _ => None,
+                }
+            } else {
+                None
+            },
+            prepare: Some(APP_PREPARE_SCRIPT.to_string()),
             seed: Some(application_seed_script(
                 &data.runtime.parse()?,
                 &data.database.parse()?,
@@ -161,6 +172,11 @@ fn generate_application_package_json(
             } else {
                 None
             },
+            better_sqlite3: if data.is_node && (data.is_sqlite || data.is_better_sqlite) {
+                Some(BETTER_SQLITE3_VERSION.to_string())
+            } else {
+                None
+            },
             globals: Some(GLOBALS_VERSION.to_string()),
             husky: Some(HUSKY_VERSION.to_string()),
             jest: if data.is_jest {
@@ -169,6 +185,16 @@ fn generate_application_package_json(
                 None
             },
             lint_staged: Some(LINT_STAGED_VERSION.to_string()),
+            node_gyp: if data.is_node && (data.is_sqlite || data.is_better_sqlite) {
+                Some(NODE_GYP_VERSION.to_string())
+            } else {
+                None
+            },
+            sqlite3: if data.is_node && data.is_sqlite {
+                Some(SQLITE3_VERSION.to_string())
+            } else {
+                None
+            },
             sort_package_json: Some(SORT_PACKAGE_JSON_VERSION.to_string()),
             ts_jest: if data.is_jest {
                 Some(TS_JEST_VERSION.to_string())
@@ -241,7 +267,7 @@ impl CliCommand for ApplicationCommand {
             )
             .arg(
                 Arg::new("http-framework")
-                    .short('f')
+                    .short('F')
                     .long("http-framework")
                     .help("The framework to use")
                     .value_parser(HttpFramework::VARIANTS),
@@ -318,7 +344,7 @@ impl CliCommand for ApplicationCommand {
             &mut stdout,
             "name",
             matches,
-            "Enter application name: ",
+            "application",
             None,
             |input: &str| {
                 !input.is_empty()
@@ -330,14 +356,31 @@ impl CliCommand for ApplicationCommand {
             |_| "Application name cannot be empty or include spaces. Please try again".to_string(),
         )?;
 
+        let runtime: Runtime = prompt_with_validation(
+            &mut line_editor,
+            &mut stdout,
+            "runtime",
+            matches,
+            "runtime",
+            Some(&crate::constants::Runtime::VARIANTS),
+            |input| Runtime::VARIANTS.contains(&input),
+            |_| "Invalid runtime. Please try again".to_string(),
+        )?
+        .parse()?;
+
+        let database_variants: &[&str] = match runtime {
+            Runtime::Bun => &Database::VARIANTS[..Database::VARIANTS.len() - 1],
+            Runtime::Node => &Database::VARIANTS[..],
+        };
+
         let database: Database = prompt_with_validation(
             &mut line_editor,
             &mut stdout,
             "database",
             matches,
-            "Enter database type",
-            Some(&Database::VARIANTS),
-            |input| Database::VARIANTS.contains(&input),
+            "database",
+            Some(database_variants),
+            |input| database_variants.contains(&input),
             |_| "Invalid database type. Please try again".to_string(),
         )?
         .parse()?;
@@ -347,7 +390,7 @@ impl CliCommand for ApplicationCommand {
             &mut stdout,
             "validator",
             matches,
-            "Enter validator type",
+            "validator",
             Some(&Validator::VARIANTS),
             |input| Validator::VARIANTS.contains(&input),
             |_| "Invalid validator type. Please try again".to_string(),
@@ -359,7 +402,7 @@ impl CliCommand for ApplicationCommand {
             &mut stdout,
             "formatter",
             matches,
-            "Enter formatter type",
+            "formatter",
             Some(&Formatter::VARIANTS),
             |input| Formatter::VARIANTS.contains(&input),
             |_| "Invalid formatter type. Please try again".to_string(),
@@ -371,22 +414,10 @@ impl CliCommand for ApplicationCommand {
             &mut stdout,
             "linter",
             matches,
-            "Enter linter type",
+            "linter",
             Some(&Linter::VARIANTS),
             |input| Linter::VARIANTS.contains(&input),
             |_| "Invalid linter type. Please try again".to_string(),
-        )?
-        .parse()?;
-
-        let runtime: Runtime = prompt_with_validation(
-            &mut line_editor,
-            &mut stdout,
-            "runtime",
-            matches,
-            "Enter runtime",
-            Some(&crate::constants::Runtime::VARIANTS),
-            |input| Runtime::VARIANTS.contains(&input),
-            |_| "Invalid runtime. Please try again".to_string(),
         )?
         .parse()?;
 
@@ -398,7 +429,7 @@ impl CliCommand for ApplicationCommand {
                 &mut stdout,
                 "http-framework",
                 matches,
-                "Enter HTTP framework",
+                "HTTP framework",
                 Some(&HttpFramework::VARIANTS),
                 |input| HttpFramework::VARIANTS.contains(&input),
                 |_| "Invalid HTTP framework. Please try again".to_string(),
@@ -415,7 +446,7 @@ impl CliCommand for ApplicationCommand {
                     &mut stdout,
                     "test-framework",
                     matches,
-                    "Enter test framework",
+                    "test framework",
                     Some(&TestFramework::VARIANTS),
                     |input| TestFramework::VARIANTS.contains(&input),
                     |_| "Invalid test framework. Please try again".to_string(),
@@ -436,15 +467,6 @@ impl CliCommand for ApplicationCommand {
         .map(|service| service.parse().unwrap())
         .collect();
 
-        // let _libraries = prompt_comma_separated_list(
-        //     &mut line_editor,
-        //     "libraries",
-        //     matches,
-        //     &VALID_LIBRARIES,
-        //     "libraries",
-        //     true,
-        // )?;
-
         let description = prompt_without_validation(
             &mut line_editor,
             &mut stdout,
@@ -458,7 +480,7 @@ impl CliCommand for ApplicationCommand {
             &mut stdout,
             "author",
             matches,
-            "Enter author name: ",
+            "author name",
             None,
             |input: &str| !input.is_empty(),
             |_| "Author name cannot be empty. Please try again".to_string(),
@@ -469,7 +491,7 @@ impl CliCommand for ApplicationCommand {
             &mut stdout,
             "license",
             matches,
-            "Enter license",
+            "license",
             Some(&License::VARIANTS),
             |input: &str| License::VARIANTS.contains(&input),
             |_| "Invalid license. Please try again".to_string(),
@@ -788,7 +810,7 @@ impl CliCommand for ApplicationCommand {
                         format: Some(project_format_script(&service_data.formatter.parse()?)),
                         lint: Some(PROJECT_LINT_SCRIPT.to_string()),
                         lint_fix: Some(PROJECT_LINT_FIX_SCRIPT.to_string()),
-                        test: Some(project_test_script(&test_framework)),
+                        test: project_test_script(&test_framework, &service_data.runtime.parse()?),
                         ..Default::default()
                     }),
                     "monitoring" => Some(ProjectScripts {
@@ -798,7 +820,7 @@ impl CliCommand for ApplicationCommand {
                         format: Some(project_format_script(&service_data.formatter.parse()?)),
                         lint: Some(PROJECT_LINT_SCRIPT.to_string()),
                         lint_fix: Some(PROJECT_LINT_FIX_SCRIPT.to_string()),
-                        test: Some(project_test_script(&test_framework)),
+                        test: project_test_script(&test_framework, &service_data.runtime.parse()?),
                         ..Default::default()
                     }),
                     _ => None,

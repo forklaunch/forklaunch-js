@@ -10,7 +10,7 @@ use toml::from_str;
 
 use crate::{
     constants::{
-        Database, Infrastructure, TestFramework, ERROR_FAILED_TO_ADD_BASE_ENTITY_TO_CORE,
+        Database, Infrastructure, Runtime, TestFramework, ERROR_FAILED_TO_ADD_BASE_ENTITY_TO_CORE,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON,
@@ -36,14 +36,15 @@ use crate::{
                 project_clean_script, project_dev_local_script, project_dev_server_script,
                 project_format_script, project_migrate_script, project_start_server_script,
                 project_test_script, AJV_VERSION, APP_CORE_VERSION, APP_MONITORING_VERSION,
-                BILLING_BASE_VERSION, BILLING_INTERFACES_VERSION, BIOME_VERSION, COMMON_VERSION,
-                CORE_VERSION, DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION,
-                HYPER_EXPRESS_VERSION, IAM_BASE_VERSION, IAM_INTERFACES_VERSION,
-                MIKRO_ORM_CLI_VERSION, MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION,
-                MIKRO_ORM_MIGRATIONS_VERSION, MIKRO_ORM_REFLECTION_VERSION,
-                MIKRO_ORM_SEEDER_VERSION, OXLINT_VERSION, PRETTIER_VERSION, PROJECT_BUILD_SCRIPT,
-                PROJECT_DOCS_SCRIPT, PROJECT_LINT_FIX_SCRIPT, PROJECT_LINT_SCRIPT,
-                PROJECT_SEED_SCRIPT, TSX_VERSION, TYPEBOX_VERSION, TYPEDOC_VERSION,
+                BETTER_SQLITE3_VERSION, BETTER_SQLITE_POSTINSTALL_SCRIPT, BILLING_BASE_VERSION,
+                BILLING_INTERFACES_VERSION, BIOME_VERSION, COMMON_VERSION, CORE_VERSION,
+                DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION, HYPER_EXPRESS_VERSION,
+                IAM_BASE_VERSION, IAM_INTERFACES_VERSION, MIKRO_ORM_CLI_VERSION,
+                MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
+                MIKRO_ORM_REFLECTION_VERSION, MIKRO_ORM_SEEDER_VERSION, NODE_GYP_VERSION,
+                OXLINT_VERSION, PRETTIER_VERSION, PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT,
+                PROJECT_LINT_FIX_SCRIPT, PROJECT_LINT_SCRIPT, PROJECT_SEED_SCRIPT, SQLITE3_VERSION,
+                SQLITE_POSTINSTALL_SCRIPT, TSX_VERSION, TYPEBOX_VERSION, TYPEDOC_VERSION,
                 TYPESCRIPT_ESLINT_VERSION, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION,
                 TYPES_EXPRESS_VERSION, TYPES_QS_VERSION, TYPES_UUID_VERSION, UUID_VERSION,
                 VALIDATOR_VERSION, ZOD_VERSION,
@@ -239,7 +240,7 @@ pub(crate) fn generate_service_package_json(
                 clean: Some(project_clean_script(&config_data.runtime.parse()?)),
                 dev: Some(project_dev_server_script(&config_data.runtime.parse()?)),
                 dev_local: Some(project_dev_local_script(&config_data.runtime.parse()?)),
-                test: Some(project_test_script(&test_framework)),
+                test: project_test_script(&test_framework, &config_data.runtime.parse()?),
                 docs: Some(PROJECT_DOCS_SCRIPT.to_string()),
                 format: Some(project_format_script(&config_data.formatter.parse()?)),
                 lint: Some(PROJECT_LINT_SCRIPT.to_string()),
@@ -310,7 +311,23 @@ pub(crate) fn generate_service_package_json(
                     None
                 },
                 ajv: Some(AJV_VERSION.to_string()),
+                better_sqlite3: if config_data.is_node
+                    && config_data.is_database_enabled
+                    && config_data.is_better_sqlite
+                {
+                    Some(BETTER_SQLITE3_VERSION.to_string())
+                } else {
+                    None
+                },
                 dotenv: Some(DOTENV_VERSION.to_string()),
+                sqlite3: if config_data.is_node
+                    && config_data.is_database_enabled
+                    && config_data.is_sqlite
+                {
+                    Some(SQLITE3_VERSION.to_string())
+                } else {
+                    None
+                },
                 uuid: Some(UUID_VERSION.to_string()),
                 zod: if config_data.is_zod {
                     Some(ZOD_VERSION.to_string())
@@ -474,7 +491,7 @@ impl CliCommand for ServiceCommand {
             "infrastructure",
             matches,
             &Infrastructure::VARIANTS,
-            "Enter additional infrastructure components (optional): ",
+            "additional infrastructure components",
             true,
         )?
         .iter()

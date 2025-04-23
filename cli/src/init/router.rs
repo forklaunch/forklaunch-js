@@ -226,7 +226,7 @@ impl CliCommand for RouterCommand {
             "infrastructure",
             matches,
             &Infrastructure::VARIANTS,
-            "Enter additional infrastructure components (optional): ",
+            "additional infrastructure components",
             true,
         )?
         .iter()

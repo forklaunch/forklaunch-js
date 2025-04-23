@@ -1,6 +1,6 @@
 use std::{fs::read_to_string, io::Write, path::Path};
 
-use anyhow::Context;
+use anyhow::{Context, Result};
 use clap::{Arg, Command};
 use dialoguer::{theme::ColorfulTheme, MultiSelect};
 use rustyline::{history::DefaultHistory, Editor};
@@ -23,17 +23,17 @@ use crate::{
     CliCommand,
 };
 
-fn change_database(
-    base_path: &Path,
-    database: &str,
-    manifest_data: &mut MutableManifestData,
-) -> anyhow::Result<RenderedTemplate> {
-    Ok(RenderedTemplate {
-        path: base_path.join("database.rs"),
-        content: toml::to_string_pretty(&manifest_data)?,
-        context: None,
-    })
-}
+// fn change_database(
+//     base_path: &Path,
+//     database: &str,
+//     manifest_data: &mut MutableManifestData,
+// ) -> Result<RenderedTemplate> {
+// Ok(RenderedTemplate {
+//     path: base_path.join("database.rs"),
+//     content: toml::to_string_pretty(&manifest_data)?,
+//     context: None,
+// })
+// }
 
 #[derive(Debug)]
 pub(super) struct ServiceCommand;
@@ -177,11 +177,11 @@ impl CliCommand for ServiceCommand {
             )?);
         }
         if let Some(database) = database {
-            rendered_templates.push(change_database(
-                &base_path,
-                &database,
-                &mut MutableManifestData::Service(&mut manifest_data),
-            )?);
+            // rendered_templates.push(change_database(
+            //     &base_path,
+            //     &database,
+            //     &mut MutableManifestData::Service(&mut manifest_data),
+            // )?);
         }
         if let Some(description) = description {
             change_description(&description, &mut application_json_to_write);

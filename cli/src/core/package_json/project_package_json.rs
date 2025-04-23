@@ -82,6 +82,21 @@ impl Serialize for ProjectDependencies {
         if let Some(ref v) = self.forklaunch_interfaces_iam {
             map.serialize_entry("@forklaunch/interfaces-iam", v)?;
         }
+        if let Some(ref v) = self.forklaunch_implementation_worker_bullmq {
+            map.serialize_entry("@forklaunch/implementation-worker-bullmq", v)?;
+        }
+        if let Some(ref v) = self.forklaunch_implementation_worker_redis {
+            map.serialize_entry("@forklaunch/implementation-worker-redis", v)?;
+        }
+        if let Some(ref v) = self.forklaunch_implementation_worker_database {
+            map.serialize_entry("@forklaunch/implementation-worker-database", v)?;
+        }
+        if let Some(ref v) = self.forklaunch_implementation_worker_kafka {
+            map.serialize_entry("@forklaunch/implementation-worker-kafka", v)?;
+        }
+        if let Some(ref v) = self.forklaunch_interfaces_worker {
+            map.serialize_entry("@forklaunch/interfaces-worker", v)?;
+        }
         if let Some(ref v) = self.forklaunch_validator {
             map.serialize_entry("@forklaunch/validator", v)?;
         }
@@ -114,8 +129,14 @@ impl Serialize for ProjectDependencies {
         if let Some(ref v) = self.ajv {
             map.serialize_entry("ajv", v)?;
         }
+        if let Some(ref v) = self.better_sqlite3 {
+            map.serialize_entry("better-sqlite3", v)?;
+        }
         if let Some(ref v) = self.dotenv {
             map.serialize_entry("dotenv", v)?;
+        }
+        if let Some(ref v) = self.sqlite3 {
+            map.serialize_entry("sqlite3", v)?;
         }
         if let Some(ref v) = self.uuid {
             map.serialize_entry("uuid", v)?;
@@ -199,13 +220,30 @@ impl<'de> Deserialize<'de> for ProjectDependencies {
                         "@forklaunch/interfaces-iam" => {
                             deps.forklaunch_interfaces_iam = Some(value)
                         }
+                        "@forklaunch/implementation-worker-bullmq" => {
+                            deps.forklaunch_implementation_worker_bullmq = Some(value)
+                        }
+                        "@forklaunch/implementation-worker-redis" => {
+                            deps.forklaunch_implementation_worker_redis = Some(value)
+                        }
+                        "@forklaunch/implementation-worker-database" => {
+                            deps.forklaunch_implementation_worker_database = Some(value)
+                        }
+                        "@forklaunch/implementation-worker-kafka" => {
+                            deps.forklaunch_implementation_worker_kafka = Some(value)
+                        }
+                        "@forklaunch/interfaces-worker" => {
+                            deps.forklaunch_interfaces_worker = Some(value)
+                        }
                         "@forklaunch/validator" => deps.forklaunch_validator = Some(value),
                         "@mikro-orm/core" => deps.mikro_orm_core = Some(value),
                         "@mikro-orm/reflection" => deps.mikro_orm_reflection = Some(value),
                         "@mikro-orm/seeder" => deps.mikro_orm_seeder = Some(value),
                         "@sinclair/typebox" => deps.typebox = Some(value),
                         "ajv" => deps.ajv = Some(value),
+                        "better-sqlite3" => deps.better_sqlite3 = Some(value),
                         "dotenv" => deps.dotenv = Some(value),
+                        "sqlite3" => deps.sqlite3 = Some(value),
                         "uuid" => deps.uuid = Some(value),
                         "zod" => deps.zod = Some(value),
                         _ => {}
@@ -247,7 +285,9 @@ pub struct ProjectDependencies {
     pub mikro_orm_seeder: Option<String>,
     pub typebox: Option<String>,
     pub ajv: Option<String>,
+    pub better_sqlite3: Option<String>,
     pub dotenv: Option<String>,
+    pub sqlite3: Option<String>,
     pub uuid: Option<String>,
     pub zod: Option<String>,
 }
@@ -260,10 +300,6 @@ pub struct ProjectDevDependencies {
     pub eslint_js: Option<String>,
     #[serde(rename = "@mikro-orm/cli", skip_serializing_if = "Option::is_none")]
     pub mikro_orm_cli: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub oxlint: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub prettier: Option<String>,
     #[serde(rename = "@types/express", skip_serializing_if = "Option::is_none")]
     pub types_express: Option<String>,
     #[serde(
@@ -277,6 +313,10 @@ pub struct ProjectDevDependencies {
     pub types_uuid: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub eslint: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub oxlint: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub prettier: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tsx: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
