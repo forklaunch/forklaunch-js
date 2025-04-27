@@ -11,7 +11,7 @@ use worker::WorkerManifestData;
 use super::rendered_template::RenderedTemplate;
 use crate::{
     constants::{
-        ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
+        WorkerBackend, ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
         ERROR_FAILED_TO_ADD_ROUTER_METADATA_TO_MANIFEST, ERROR_FAILED_TO_CREATE_MANIFEST,
     },
     core::manifest::{application::ApplicationManifestData, router::RouterManifestData},
@@ -30,15 +30,6 @@ pub(crate) enum ManifestData<'a> {
     Library(&'a LibraryManifestData),
     Router(&'a RouterManifestData),
     Worker(&'a WorkerManifestData),
-}
-
-#[derive(Debug)]
-pub(crate) enum MutableManifestData<'a> {
-    Application(&'a mut ApplicationManifestData),
-    Service(&'a mut ServiceManifestData),
-    Library(&'a mut LibraryManifestData),
-    Router(&'a mut RouterManifestData),
-    Worker(&'a mut WorkerManifestData),
 }
 
 pub(crate) trait ManifestConfig {
@@ -72,11 +63,17 @@ pub(crate) struct ResourceInventory {
 }
 
 #[derive(Debug, Serialize, Deserialize, Content, Clone)]
+pub(crate) struct ProjectMetadata {
+    pub(crate) backend: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Content, Clone)]
 pub(crate) struct ProjectEntry {
     pub(crate) r#type: ProjectType,
     pub(crate) name: String,
     pub(crate) resources: Option<ResourceInventory>,
     pub(crate) routers: Option<Vec<String>>,
+    pub(crate) metadata: Option<ProjectMetadata>,
 }
 
 #[macro_export]
@@ -282,6 +279,7 @@ pub(crate) fn add_project_definition_to_manifest<
     config_data: &mut T,
     resources: Option<ResourceInventory>,
     routers: Option<Vec<String>>,
+    metadata: Option<ProjectMetadata>,
 ) -> Result<String> {
     let name = config_data.name().to_owned();
     for project in config_data.projects().iter() {
@@ -296,6 +294,7 @@ pub(crate) fn add_project_definition_to_manifest<
         name: name.clone(),
         resources,
         routers,
+        metadata,
     });
 
     let app_name = config_data.app_name().to_owned();

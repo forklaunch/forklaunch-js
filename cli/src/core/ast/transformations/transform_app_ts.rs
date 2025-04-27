@@ -148,8 +148,9 @@ pub(crate) fn transform_app_ts(
     inject_into_import_statement(
         &mut app_program,
         &mut forklaunch_routes_import_injection,
-        "/api/routes/",
-        format!("{router_name_pascal_case}Routes").as_str(),
+        format!("./api/routes/{router_name_camel_case}.routes").as_str(),
+        // "/api/routes/",
+        // format!("{router_name_pascal_case}Routes").as_str(),
     )?;
 
     let api_client_skeleton_text =

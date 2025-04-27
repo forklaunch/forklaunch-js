@@ -9,13 +9,7 @@ use super::{
     manifest::ManifestData,
     rendered_template::{RenderedTemplate, TEMPLATES_DIR},
 };
-use crate::{
-    constants::error_failed_to_create_dir,
-    core::manifest::{
-        application::ApplicationManifestData, library::LibraryManifestData,
-        router::RouterManifestData, service::ServiceManifestData, worker::WorkerManifestData,
-    },
-};
+use crate::constants::error_failed_to_create_dir;
 
 #[derive(Debug)]
 pub(crate) struct PathIO {

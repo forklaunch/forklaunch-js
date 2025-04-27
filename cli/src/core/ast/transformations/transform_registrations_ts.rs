@@ -45,8 +45,9 @@ pub(crate) fn transform_registrations_ts(
     inject_into_import_statement(
         &mut registrations_program,
         &mut forklaunch_routes_import_injection,
-        "/services",
-        format!("Base{router_name_pascal_case}Service").as_str(),
+        format!("./services/{router_name_camel_case}.service").as_str(),
+        // "/services",
+        // format!("Base{router_name_pascal_case}Service").as_str(),
     )?;
 
     let config_injector_text = format!(
@@ -88,6 +89,7 @@ pub(crate) fn transform_registrations_ts(
     inject_into_registrations_config_injector(
         &mut registrations_program,
         &mut config_injector_injection,
+        "serviceDependencies",
     );
 
     Ok(CodeGenerator::new()

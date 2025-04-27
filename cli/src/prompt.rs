@@ -136,6 +136,7 @@ pub(crate) fn prompt_comma_separated_list(
     matches_key: &str,
     matches: &ArgMatches,
     valid_options: &[&str],
+    active_options: Option<&[&str]>,
     prompt_text: &str,
     is_optional: bool,
 ) -> Result<Vec<String>> {
@@ -153,9 +154,22 @@ pub(crate) fn prompt_comma_separated_list(
                 valid_options.join(", "),
                 optional_text
             );
-            let input: Vec<String> = MultiSelect::with_theme(&ColorfulTheme::default())
+
+            let multi_select_theme = &ColorfulTheme::default();
+            let mut multi_select = MultiSelect::with_theme(multi_select_theme)
                 .with_prompt(prompt)
-                .items(valid_options)
+                .items(valid_options);
+
+            if let Some(active_options) = active_options {
+                multi_select = multi_select.items_checked(
+                    &active_options
+                        .iter()
+                        .map(|v| (*v, true))
+                        .collect::<Vec<_>>(),
+                );
+            }
+
+            let input = multi_select
                 .interact()
                 .unwrap()
                 .into_iter()
@@ -179,18 +193,51 @@ pub(crate) fn prompt_field_from_selections_with_validation(
     validator: impl Fn(&str) -> bool,
     error_msg: impl Fn(&str) -> String,
 ) -> Result<Option<String>> {
-    if current_value.is_none() && selected_options.contains(&field_name) {
-        Ok(Some(prompt_with_validation(
-            line_editor,
-            stdout,
-            field_name,
-            matches,
-            prompt,
-            valid_values,
-            validator,
-            error_msg,
-        )?))
+    if selected_options.contains(&field_name) {
+        if current_value.is_none() {
+            Ok(Some(prompt_with_validation(
+                line_editor,
+                stdout,
+                field_name,
+                matches,
+                prompt,
+                valid_values,
+                validator,
+                error_msg,
+            )?))
+        } else {
+            Ok(current_value.map(|v| v.to_string()))
+        }
     } else {
-        Ok(current_value.map(|v| v.to_string()))
+        Ok(None)
+    }
+}
+
+pub(crate) fn prompt_comma_separated_list_from_selections(
+    field_name: &str,
+    current_value: Option<&Vec<String>>,
+    selected_options: &[&str],
+    line_editor: &mut Editor<ArrayCompleter, DefaultHistory>,
+    matches: &clap::ArgMatches,
+    prompt: &str,
+    valid_values: &[&str],
+    active_values: Option<&[&str]>,
+) -> Result<Option<Vec<String>>> {
+    if selected_options.contains(&field_name) {
+        if current_value.is_none() {
+            Ok(Some(prompt_comma_separated_list(
+                line_editor,
+                field_name,
+                matches,
+                valid_values,
+                active_values,
+                prompt,
+                false,
+            )?))
+        } else {
+            Ok(current_value.map(|v| v.clone()))
+        }
+    } else {
+        Ok(None)
     }
 }

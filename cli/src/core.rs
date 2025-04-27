@@ -14,6 +14,7 @@ pub(crate) mod pnpm_workspace;
 pub(crate) mod relative_path;
 pub(crate) mod removal_template;
 pub(crate) mod rendered_template;
+pub(crate) mod symlink_template;
 pub(crate) mod symlinks;
 pub(crate) mod template;
 pub(crate) mod token;

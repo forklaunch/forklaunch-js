@@ -10,10 +10,16 @@ use crate::core::ast::parse_ast_program::parse_ast_program;
 pub(crate) fn transform_core_registration_validator_ts(
     validator_name: &str,
     base_path: &Path,
+    core_registration_validator_text: Option<&str>,
 ) -> Result<String> {
     let allocator = Allocator::default();
     let core_registration_validator_path = base_path.join("core").join("registration.ts");
-    let core_registration_validator_text = read_to_string(&core_registration_validator_path)?;
+    let core_registration_validator_text =
+        if let Some(core_registration_validator_text) = core_registration_validator_text {
+            core_registration_validator_text
+        } else {
+            &read_to_string(&core_registration_validator_path)?
+        };
     let core_registration_validator_type =
         SourceType::from_path(&core_registration_validator_path)?;
 

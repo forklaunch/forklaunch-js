@@ -1,4 +1,4 @@
-use std::{fs::read_to_string, io::Write, path::Path};
+use std::{collections::HashMap, fs::read_to_string, io::Write, path::Path};
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, ArgMatches, Command};
@@ -10,7 +10,7 @@ use toml::from_str;
 
 use crate::{
     constants::{
-        Database, Runtime, TestFramework, WorkerBackend, ERROR_FAILED_TO_ADD_BASE_ENTITY_TO_CORE,
+        Database, TestFramework, WorkerBackend, ERROR_FAILED_TO_ADD_BASE_ENTITY_TO_CORE,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON,
@@ -23,32 +23,34 @@ use crate::{
     core::{
         base_path::{prompt_base_path, BasePathLocation},
         command::command,
-        database::{add_base_entity_to_core, get_database_port, match_database},
+        database::{
+            add_base_entity_to_core, get_database_port, is_in_memory_database, match_database,
+        },
         docker::add_worker_definition_to_docker_compose,
         gitignore::generate_gitignore,
         manifest::{
             add_project_definition_to_manifest, application::ApplicationManifestData,
-            worker::WorkerManifestData, ManifestData, ProjectType, ResourceInventory,
+            worker::WorkerManifestData, ManifestData, ProjectMetadata, ProjectType,
+            ResourceInventory,
         },
         package_json::{
             add_project_definition_to_package_json,
             package_json_constants::{
-                project_clean_script, project_dev_client_script, project_dev_local_worker_script,
-                project_dev_worker_script, project_format_script, project_migrate_script,
-                project_start_worker_script, project_test_script, AJV_VERSION, APP_CORE_VERSION,
-                APP_MONITORING_VERSION, BETTER_SQLITE3_VERSION, BETTER_SQLITE_POSTINSTALL_SCRIPT,
-                BIOME_VERSION, COMMON_VERSION, CORE_VERSION, DOTENV_VERSION, ESLINT_VERSION,
-                EXPRESS_VERSION, HYPER_EXPRESS_VERSION, MIKRO_ORM_CLI_VERSION,
-                MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
-                MIKRO_ORM_REFLECTION_VERSION, MIKRO_ORM_SEEDER_VERSION, NODE_GYP_VERSION,
-                OXLINT_VERSION, PRETTIER_VERSION, PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT,
-                PROJECT_LINT_FIX_SCRIPT, PROJECT_LINT_SCRIPT, PROJECT_SEED_SCRIPT,
-                PROJECT_START_WORKER_CLIENT_SCRIPT, SQLITE3_VERSION, SQLITE_POSTINSTALL_SCRIPT,
-                TSX_VERSION, TYPEBOX_VERSION, TYPEDOC_VERSION, TYPESCRIPT_ESLINT_VERSION,
-                TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION, TYPES_QS_VERSION,
-                TYPES_UUID_VERSION, UUID_VERSION, VALIDATOR_VERSION, WORKER_BULLMQ_VERSION,
-                WORKER_DATABASE_VERSION, WORKER_INTERFACES_VERSION, WORKER_KAFKA_VERSION,
-                WORKER_REDIS_VERSION, ZOD_VERSION,
+                project_clean_script, project_dev_local_worker_script, project_dev_server_script,
+                project_dev_worker_client_script, project_format_script, project_lint_fix_script,
+                project_lint_script, project_migrate_script, project_start_worker_script,
+                project_test_script, AJV_VERSION, APP_CORE_VERSION, APP_MONITORING_VERSION,
+                BETTER_SQLITE3_VERSION, BIOME_VERSION, COMMON_VERSION, CORE_VERSION,
+                DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION, HYPER_EXPRESS_VERSION,
+                MIKRO_ORM_CLI_VERSION, MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION,
+                MIKRO_ORM_MIGRATIONS_VERSION, MIKRO_ORM_REFLECTION_VERSION,
+                MIKRO_ORM_SEEDER_VERSION, OXLINT_VERSION, PRETTIER_VERSION, PROJECT_BUILD_SCRIPT,
+                PROJECT_DOCS_SCRIPT, PROJECT_SEED_SCRIPT, PROJECT_START_WORKER_CLIENT_SCRIPT,
+                SQLITE3_VERSION, TSX_VERSION, TYPEBOX_VERSION, TYPEDOC_VERSION,
+                TYPESCRIPT_ESLINT_VERSION, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION,
+                TYPES_EXPRESS_VERSION, TYPES_QS_VERSION, TYPES_UUID_VERSION, UUID_VERSION,
+                VALIDATOR_VERSION, WORKER_BULLMQ_VERSION, WORKER_DATABASE_VERSION,
+                WORKER_INTERFACES_VERSION, WORKER_KAFKA_VERSION, WORKER_REDIS_VERSION, ZOD_VERSION,
             },
             project_package_json::{
                 ProjectDependencies, ProjectDevDependencies, ProjectMikroOrm, ProjectPackageJson,
@@ -187,6 +189,9 @@ fn add_worker_to_artifacts(
             },
         }),
         Some(vec![config_data.worker_name.clone()]),
+        Some(ProjectMetadata {
+            backend: Some(config_data.worker_type_lowercase.clone()),
+        }),
     )
     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
 
@@ -274,20 +279,22 @@ pub(crate) fn generate_worker_package_json(
             ProjectScripts {
                 build: Some(PROJECT_BUILD_SCRIPT.to_string()),
                 clean: Some(project_clean_script(&config_data.runtime.parse()?)),
-                dev_server: Some(project_dev_worker_script(
+                dev_server: Some(project_dev_server_script(
                     &config_data.runtime.parse()?,
                     config_data.is_database_enabled,
                 )),
-                dev_client: Some(project_dev_client_script(&config_data.runtime.parse()?)),
+                dev_worker: Some(project_dev_worker_client_script(
+                    &config_data.runtime.parse()?,
+                )),
                 dev_local: Some(project_dev_local_worker_script(
                     &config_data.runtime.parse()?,
                     config_data.is_database_enabled,
                 )),
-                test: project_test_script(&test_framework, &config_data.runtime.parse()?),
+                test: project_test_script(&config_data.runtime.parse()?, &test_framework),
                 docs: Some(PROJECT_DOCS_SCRIPT.to_string()),
                 format: Some(project_format_script(&config_data.formatter.parse()?)),
-                lint: Some(PROJECT_LINT_SCRIPT.to_string()),
-                lint_fix: Some(PROJECT_LINT_FIX_SCRIPT.to_string()),
+                lint: Some(project_lint_script(&config_data.linter.parse()?)),
+                lint_fix: Some(project_lint_fix_script(&config_data.linter.parse()?)),
                 migrate_create: if config_data.is_database_enabled {
                     Some(project_migrate_script("create").to_string())
                 } else {
@@ -313,8 +320,11 @@ pub(crate) fn generate_worker_package_json(
                 } else {
                     None
                 },
-                start_server: Some(project_start_worker_script(config_data.is_database_enabled)),
-                start_client: Some(PROJECT_START_WORKER_CLIENT_SCRIPT.to_string()),
+                start_server: Some(project_start_worker_script(
+                    &config_data.runtime.parse()?,
+                    config_data.is_database_enabled,
+                )),
+                start_worker: Some(PROJECT_START_WORKER_CLIENT_SCRIPT.to_string()),
                 ..Default::default()
             }
         }),
@@ -434,6 +444,7 @@ pub(crate) fn generate_worker_package_json(
                 } else {
                     None
                 },
+                additional_deps: HashMap::new(),
             }
         }),
         dev_dependencies: Some(if let Some(dev_dependencies) = dev_dependencies_override {
@@ -483,6 +494,7 @@ pub(crate) fn generate_worker_package_json(
                 } else {
                     None
                 },
+                additional_deps: HashMap::new(),
             }
         }),
         mikro_orm: Some(ProjectMikroOrm {
@@ -493,6 +505,7 @@ pub(crate) fn generate_worker_package_json(
                     .collect(),
             ),
         }),
+        additional_entries: HashMap::new(),
     };
     Ok(RenderedTemplate {
         path: Path::new(base_path).join("package.json"),
@@ -710,9 +723,7 @@ impl CliCommand for WorkerCommand {
                 false
             },
             is_in_memory_database: if let Some(database) = &database {
-                database == &Database::BetterSQLite
-                    || database == &Database::LibSQL
-                    || database == &Database::SQLite
+                is_in_memory_database(database)
             } else {
                 false
             },

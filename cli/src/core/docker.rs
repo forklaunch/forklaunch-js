@@ -8,7 +8,7 @@ use serde_yml::{from_str, to_string, to_value, Value};
 use super::manifest::ManifestData;
 use crate::{
     constants::{
-        Database, ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE,
+        Database, Runtime, ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE,
         ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE, ERROR_FAILED_TO_READ_DOCKER_COMPOSE,
     },
     core::manifest::{service::ServiceManifestData, worker::WorkerManifestData},
@@ -37,7 +37,7 @@ db.getSiblingDB(\"admin\").createUser({
 pub(crate) struct DockerCompose {
     volumes: IndexMap<String, DockerVolume>,
     networks: IndexMap<String, DockerNetwork>,
-    services: IndexMap<String, DockerService>,
+    pub(crate) services: IndexMap<String, DockerService>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]
@@ -82,7 +82,7 @@ struct DependsOn {
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]
-struct DockerService {
+pub(crate) struct DockerService {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     hostname: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -94,7 +94,7 @@ struct DockerService {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     build: Option<DockerBuild>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    environment: Option<IndexMap<String, String>>,
+    pub(crate) environment: Option<IndexMap<String, String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     depends_on: Option<IndexMap<String, DependsOn>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -203,7 +203,7 @@ pub(crate) fn add_otel_to_docker_compose<'a>(
     Ok(docker_compose)
 }
 
-fn add_redis_to_docker_compose<'a>(
+pub(crate) fn add_redis_to_docker_compose<'a>(
     app_name: &str,
     docker_compose: &'a mut DockerCompose,
     environment: &mut IndexMap<String, String>,
@@ -328,7 +328,7 @@ fn add_kafka_to_docker_compose<'a>(
     Ok(docker_compose)
 }
 
-fn add_database_to_docker_compose(
+pub(crate) fn add_database_to_docker_compose(
     config_data: &ManifestData,
     docker_compose: &mut DockerCompose,
     environment: &mut IndexMap<String, String>,
@@ -577,6 +577,21 @@ fn add_database_to_docker_compose(
                 environment.shift_remove("DB_PORT");
             }
         }
+    }
+
+    Ok(())
+}
+
+// TODO: extend this to other infrastructure services
+pub(crate) fn clean_up_unused_database_services(
+    docker_compose: &mut DockerCompose,
+    databases_in_use: &HashSet<String>,
+) -> Result<()> {
+    let all_database_set = HashSet::from(Database::VARIANTS.map(|db| db.to_string()));
+    let unused_databases = all_database_set.difference(databases_in_use);
+
+    for database in unused_databases {
+        docker_compose.services.shift_remove(&database.to_string());
     }
 
     Ok(())
@@ -895,8 +910,8 @@ pub(crate) fn add_worker_definition_to_docker_compose(
                 config_data.is_cache_enabled,
                 config_data.is_in_memory_database,
                 None,
-                environment,
-                volumes,
+                environment.clone(),
+                volumes.clone(),
                 Some("worker"),
                 "dev:worker",
                 vec![server_service_name.clone()],
@@ -910,4 +925,34 @@ pub(crate) fn add_worker_definition_to_docker_compose(
 
     Ok(to_string(&full_docker_compose)
         .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?)
+}
+
+const IN_MEMORY_DATABASE_DOCKERFILE_ADDENDUM: &str = "
+
+# Install sqlite dependencies
+RUN apk add --no-cache python3 py3-pip make build-base sqlite-dev
+RUN pip install setuptools --break-system-packages
+
+";
+
+pub(crate) fn update_dockerfile_contents(
+    dockerfile_contents: &str,
+    config_data: &ServiceManifestData,
+) -> Result<String> {
+    let mut final_copy_line = 0;
+    if config_data.runtime.parse::<Runtime>()? == Runtime::Node
+        && config_data.is_in_memory_database
+        && !dockerfile_contents.contains(IN_MEMORY_DATABASE_DOCKERFILE_ADDENDUM)
+    {
+        for (index, line) in dockerfile_contents.lines().enumerate() {
+            if line.contains("COPY") {
+                final_copy_line = index;
+            }
+        }
+    }
+
+    let mut new_dockerfile_contents = dockerfile_contents.lines().collect::<Vec<&str>>();
+    new_dockerfile_contents.insert(final_copy_line, IN_MEMORY_DATABASE_DOCKERFILE_ADDENDUM);
+
+    Ok(new_dockerfile_contents.join("\n"))
 }

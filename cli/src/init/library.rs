@@ -28,9 +28,9 @@ use crate::{
         package_json::{
             add_project_definition_to_package_json,
             package_json_constants::{
-                project_clean_script, project_format_script, project_test_script, ESLINT_VERSION,
-                PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT, PROJECT_LINT_FIX_SCRIPT,
-                PROJECT_LINT_SCRIPT, TSX_VERSION, TYPESCRIPT_ESLINT_VERSION,
+                project_clean_script, project_format_script, project_lint_fix_script,
+                project_lint_script, project_test_script, ESLINT_VERSION, PROJECT_BUILD_SCRIPT,
+                PROJECT_DOCS_SCRIPT, TSX_VERSION, TYPESCRIPT_ESLINT_VERSION,
             },
             project_package_json::{ProjectDevDependencies, ProjectPackageJson, ProjectScripts},
         },
@@ -107,7 +107,7 @@ fn add_library_to_artifacts(
     base_path: &String,
 ) -> Result<Vec<RenderedTemplate>> {
     let forklaunch_definition_buffer =
-        add_project_definition_to_manifest(ProjectType::Library, config_data, None, None)
+        add_project_definition_to_manifest(ProjectType::Library, config_data, None, None, None)
             .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
     let mut package_json_buffer: Option<String> = None;
     if config_data.runtime == "bun" {
@@ -175,9 +175,9 @@ fn generate_library_package_json(
             clean: Some(project_clean_script(&config_data.runtime.parse()?)),
             docs: Some(PROJECT_DOCS_SCRIPT.to_string()),
             format: Some(project_format_script(&config_data.formatter.parse()?)),
-            lint: Some(PROJECT_LINT_SCRIPT.to_string()),
-            lint_fix: Some(PROJECT_LINT_FIX_SCRIPT.to_string()),
-            test: project_test_script(&test_framework, &config_data.runtime.parse()?),
+            lint: Some(project_lint_script(&config_data.linter.parse()?)),
+            lint_fix: Some(project_lint_fix_script(&config_data.linter.parse()?)),
+            test: project_test_script(&config_data.runtime.parse()?, &test_framework),
             ..Default::default()
         }),
         dev_dependencies: Some(ProjectDevDependencies {

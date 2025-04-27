@@ -24,7 +24,10 @@ use crate::{
     },
     core::{
         command::command,
-        database::{generate_database_export_index_ts, get_database_port, match_database},
+        database::{
+            generate_database_export_index_ts, get_database_port, is_in_memory_database,
+            match_database,
+        },
         docker::{
             add_otel_to_docker_compose, add_service_definition_to_docker_compose, DockerCompose,
         },
@@ -44,17 +47,17 @@ use crate::{
                 application_docs_script, application_format_script, application_lint_fix_script,
                 application_lint_script, application_migrate_script, application_seed_script,
                 application_setup_script, application_test_script, application_up_packages_script,
-                project_clean_script, project_format_script, project_test_script, AJV_VERSION,
-                APP_DEV_BUILD_SCRIPT, APP_DEV_SCRIPT, APP_PREPARE_SCRIPT, BETTER_SQLITE3_VERSION,
+                project_clean_script, project_format_script, project_lint_fix_script,
+                project_lint_script, project_test_script, AJV_VERSION, APP_DEV_BUILD_SCRIPT,
+                APP_DEV_SCRIPT, APP_PREPARE_SCRIPT, BETTER_SQLITE3_VERSION,
                 BETTER_SQLITE_POSTINSTALL_SCRIPT, BIOME_VERSION, COMMON_VERSION, CORE_VERSION,
                 DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION, GLOBALS_VERSION, HUSKY_VERSION,
                 HYPER_EXPRESS_VERSION, JEST_TYPES_VERSION, JEST_VERSION, LINT_STAGED_VERSION,
                 MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
                 MIKRO_ORM_REFLECTION_VERSION, NODE_GYP_VERSION, OXLINT_VERSION, PRETTIER_VERSION,
-                PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT, PROJECT_LINT_FIX_SCRIPT,
-                PROJECT_LINT_SCRIPT, SORT_PACKAGE_JSON_VERSION, SQLITE3_VERSION,
-                SQLITE_POSTINSTALL_SCRIPT, TSX_VERSION, TS_JEST_VERSION, TYPEBOX_VERSION,
-                TYPESCRIPT_ESLINT_VERSION, TYPESCRIPT_VERSION,
+                PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT, SORT_PACKAGE_JSON_VERSION,
+                SQLITE3_VERSION, SQLITE_POSTINSTALL_SCRIPT, TSX_VERSION, TS_JEST_VERSION,
+                TYPEBOX_VERSION, TYPESCRIPT_ESLINT_VERSION, TYPESCRIPT_VERSION,
                 TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION, TYPES_QS_VERSION,
                 TYPES_UUID_VERSION, UUID_VERSION, VALIDATOR_VERSION, VITEST_VERSION, ZOD_VERSION,
             },
@@ -140,6 +143,7 @@ fn generate_application_package_json(
                 &test_framework,
             )),
             up_packages: Some(application_up_packages_script(&data.runtime.parse()?)),
+            additional_scripts: HashMap::new(),
         }),
         dev_dependencies: Some(ApplicationDevDependencies {
             biome: if data.is_biome {
@@ -213,7 +217,9 @@ fn generate_application_package_json(
             } else {
                 None
             },
+            additional_deps: HashMap::new(),
         }),
+        additional_entries: HashMap::new(),
     };
 
     Ok(RenderedTemplate {
@@ -460,6 +466,7 @@ impl CliCommand for ApplicationCommand {
             "services",
             matches,
             &Service::VARIANTS,
+            None,
             "services",
             false,
         )?
@@ -505,14 +512,12 @@ impl CliCommand for ApplicationCommand {
         let ignore_dirs = vec![];
         let preserve_files = vec!["application-overview.json"];
 
-        ignore_files.extend(Formatter::all_other_files(&formatter));
-        ignore_files.extend(Linter::all_other_files(&linter));
+        ignore_files.extend(formatter.all_other_files());
+        ignore_files.extend(linter.all_other_files());
         if test_framework.is_some() {
-            ignore_files.extend(TestFramework::all_other_files(
-                &test_framework.clone().unwrap(),
-            ));
+            ignore_files.extend(test_framework.unwrap().all_other_files());
         }
-        ignore_files.extend(Database::all_other_files(&database));
+        ignore_files.extend(database.all_other_files());
 
         // Inline specific perms checks here. Make remote calls to receive templates for specific services if needed here (premium only).
 
@@ -522,12 +527,14 @@ impl CliCommand for ApplicationCommand {
                 name: "core".to_string(),
                 resources: None,
                 routers: None,
+                metadata: None,
             },
             ProjectEntry {
                 r#type: ProjectType::Library,
                 name: "monitoring".to_string(),
                 resources: None,
                 routers: None,
+                metadata: None,
             },
         ];
         additional_projects.extend(services.into_iter().map(|package| ProjectEntry {
@@ -539,6 +546,7 @@ impl CliCommand for ApplicationCommand {
                 queue: None,
             }),
             routers: get_routers_from_standard_package(package.to_string()),
+            metadata: None,
         }));
 
         let additional_projects_names = additional_projects
@@ -600,9 +608,7 @@ impl CliCommand for ApplicationCommand {
             is_libsql: database == Database::LibSQL,
             is_mssql: database == Database::MsSQL,
             is_mongo: database == Database::MongoDB,
-            is_in_memory_database: database == Database::BetterSQLite
-                || database == Database::LibSQL
-                || database == Database::SQLite,
+            is_in_memory_database: is_in_memory_database(&database),
         };
 
         let mut rendered_templates = Vec::new();
@@ -808,9 +814,9 @@ impl CliCommand for ApplicationCommand {
                         clean: Some(project_clean_script(&service_data.runtime.parse()?)),
                         docs: Some(PROJECT_DOCS_SCRIPT.to_string()),
                         format: Some(project_format_script(&service_data.formatter.parse()?)),
-                        lint: Some(PROJECT_LINT_SCRIPT.to_string()),
-                        lint_fix: Some(PROJECT_LINT_FIX_SCRIPT.to_string()),
-                        test: project_test_script(&test_framework, &service_data.runtime.parse()?),
+                        lint: Some(project_lint_script(&service_data.linter.parse()?)),
+                        lint_fix: Some(project_lint_fix_script(&service_data.linter.parse()?)),
+                        test: project_test_script(&service_data.runtime.parse()?, &test_framework),
                         ..Default::default()
                     }),
                     "monitoring" => Some(ProjectScripts {
@@ -818,9 +824,9 @@ impl CliCommand for ApplicationCommand {
                         clean: Some(project_clean_script(&service_data.runtime.parse()?)),
                         docs: Some(PROJECT_DOCS_SCRIPT.to_string()),
                         format: Some(project_format_script(&service_data.formatter.parse()?)),
-                        lint: Some(PROJECT_LINT_SCRIPT.to_string()),
-                        lint_fix: Some(PROJECT_LINT_FIX_SCRIPT.to_string()),
-                        test: project_test_script(&test_framework, &service_data.runtime.parse()?),
+                        lint: Some(project_lint_script(&service_data.linter.parse()?)),
+                        lint_fix: Some(project_lint_fix_script(&service_data.linter.parse()?)),
+                        test: project_test_script(&service_data.runtime.parse()?, &test_framework),
                         ..Default::default()
                     }),
                     _ => None,

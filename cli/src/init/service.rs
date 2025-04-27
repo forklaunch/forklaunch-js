@@ -1,4 +1,4 @@
-use std::{fs::read_to_string, io::Write, path::Path};
+use std::{collections::HashMap, fs::read_to_string, io::Write, path::Path};
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, ArgMatches, Command};
@@ -10,7 +10,7 @@ use toml::from_str;
 
 use crate::{
     constants::{
-        Database, Infrastructure, Runtime, TestFramework, ERROR_FAILED_TO_ADD_BASE_ENTITY_TO_CORE,
+        Database, Infrastructure, TestFramework, ERROR_FAILED_TO_ADD_BASE_ENTITY_TO_CORE,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON,
@@ -18,13 +18,16 @@ use crate::{
         ERROR_FAILED_TO_ADD_SERVICE_METADATA_TO_ARTIFACTS, ERROR_FAILED_TO_CREATE_GITIGNORE,
         ERROR_FAILED_TO_CREATE_PACKAGE_JSON, ERROR_FAILED_TO_CREATE_SYMLINKS,
         ERROR_FAILED_TO_CREATE_TSCONFIG, ERROR_FAILED_TO_PARSE_MANIFEST,
-        ERROR_FAILED_TO_READ_MANIFEST, ERROR_FAILED_TO_WRITE_SERVICE_FILES,
+        ERROR_FAILED_TO_READ_MANIFEST, ERROR_FAILED_TO_UPDATE_DOCKERFILE,
+        ERROR_FAILED_TO_WRITE_SERVICE_FILES,
     },
     core::{
         base_path::{prompt_base_path, BasePathLocation},
         command::command,
-        database::{add_base_entity_to_core, get_database_port, match_database},
-        docker::add_service_definition_to_docker_compose,
+        database::{
+            add_base_entity_to_core, get_database_port, is_in_memory_database, match_database,
+        },
+        docker::{add_service_definition_to_docker_compose, update_dockerfile_contents},
         gitignore::generate_gitignore,
         manifest::{
             add_project_definition_to_manifest, application::ApplicationManifestData,
@@ -34,20 +37,19 @@ use crate::{
             add_project_definition_to_package_json,
             package_json_constants::{
                 project_clean_script, project_dev_local_script, project_dev_server_script,
-                project_format_script, project_migrate_script, project_start_server_script,
-                project_test_script, AJV_VERSION, APP_CORE_VERSION, APP_MONITORING_VERSION,
-                BETTER_SQLITE3_VERSION, BETTER_SQLITE_POSTINSTALL_SCRIPT, BILLING_BASE_VERSION,
-                BILLING_INTERFACES_VERSION, BIOME_VERSION, COMMON_VERSION, CORE_VERSION,
-                DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION, HYPER_EXPRESS_VERSION,
-                IAM_BASE_VERSION, IAM_INTERFACES_VERSION, MIKRO_ORM_CLI_VERSION,
-                MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
-                MIKRO_ORM_REFLECTION_VERSION, MIKRO_ORM_SEEDER_VERSION, NODE_GYP_VERSION,
-                OXLINT_VERSION, PRETTIER_VERSION, PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT,
-                PROJECT_LINT_FIX_SCRIPT, PROJECT_LINT_SCRIPT, PROJECT_SEED_SCRIPT, SQLITE3_VERSION,
-                SQLITE_POSTINSTALL_SCRIPT, TSX_VERSION, TYPEBOX_VERSION, TYPEDOC_VERSION,
-                TYPESCRIPT_ESLINT_VERSION, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION,
-                TYPES_EXPRESS_VERSION, TYPES_QS_VERSION, TYPES_UUID_VERSION, UUID_VERSION,
-                VALIDATOR_VERSION, ZOD_VERSION,
+                project_format_script, project_lint_fix_script, project_lint_script,
+                project_migrate_script, project_start_server_script, project_test_script,
+                AJV_VERSION, APP_CORE_VERSION, APP_MONITORING_VERSION, BETTER_SQLITE3_VERSION,
+                BILLING_BASE_VERSION, BILLING_INTERFACES_VERSION, BIOME_VERSION, COMMON_VERSION,
+                CORE_VERSION, DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION,
+                HYPER_EXPRESS_VERSION, IAM_BASE_VERSION, IAM_INTERFACES_VERSION,
+                MIKRO_ORM_CLI_VERSION, MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION,
+                MIKRO_ORM_MIGRATIONS_VERSION, MIKRO_ORM_REFLECTION_VERSION,
+                MIKRO_ORM_SEEDER_VERSION, OXLINT_VERSION, PRETTIER_VERSION, PROJECT_BUILD_SCRIPT,
+                PROJECT_DOCS_SCRIPT, PROJECT_SEED_SCRIPT, SQLITE3_VERSION, TSX_VERSION,
+                TYPEBOX_VERSION, TYPEDOC_VERSION, TYPESCRIPT_ESLINT_VERSION,
+                TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION, TYPES_QS_VERSION,
+                TYPES_UUID_VERSION, UUID_VERSION, VALIDATOR_VERSION, ZOD_VERSION,
             },
             project_package_json::{
                 ProjectDependencies, ProjectDevDependencies, ProjectMikroOrm, ProjectPackageJson,
@@ -122,6 +124,17 @@ fn generate_basic_service(
             .with_context(|| ERROR_FAILED_TO_ADD_BASE_ENTITY_TO_CORE)?,
     );
 
+    if config_data.is_in_memory_database {
+        rendered_templates.push(RenderedTemplate {
+            path: Path::new(base_path).join("Dockerfile"),
+            content: update_dockerfile_contents(
+                &read_to_string(Path::new(base_path).join("Dockerfile"))?,
+                &config_data,
+            )?,
+            context: Some(ERROR_FAILED_TO_UPDATE_DOCKERFILE.to_string()),
+        });
+    }
+
     write_rendered_templates(&rendered_templates, dryrun, stdout)
         .with_context(|| ERROR_FAILED_TO_WRITE_SERVICE_FILES)?;
 
@@ -153,6 +166,7 @@ fn add_service_to_artifacts(
             queue: None,
         }),
         Some(vec![config_data.service_name.clone()]),
+        None,
     )
     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
 
@@ -238,19 +252,25 @@ pub(crate) fn generate_service_package_json(
             ProjectScripts {
                 build: Some(PROJECT_BUILD_SCRIPT.to_string()),
                 clean: Some(project_clean_script(&config_data.runtime.parse()?)),
-                dev: Some(project_dev_server_script(&config_data.runtime.parse()?)),
+                dev: Some(project_dev_server_script(
+                    &config_data.runtime.parse()?,
+                    config_data.is_database_enabled,
+                )),
                 dev_local: Some(project_dev_local_script(&config_data.runtime.parse()?)),
-                test: project_test_script(&test_framework, &config_data.runtime.parse()?),
+                test: project_test_script(&config_data.runtime.parse()?, &test_framework),
                 docs: Some(PROJECT_DOCS_SCRIPT.to_string()),
                 format: Some(project_format_script(&config_data.formatter.parse()?)),
-                lint: Some(PROJECT_LINT_SCRIPT.to_string()),
-                lint_fix: Some(PROJECT_LINT_FIX_SCRIPT.to_string()),
+                lint: Some(project_lint_script(&config_data.linter.parse()?)),
+                lint_fix: Some(project_lint_fix_script(&config_data.linter.parse()?)),
                 migrate_create: Some(project_migrate_script("create")),
                 migrate_down: Some(project_migrate_script("down")),
                 migrate_init: Some(project_migrate_script("init")),
                 migrate_up: Some(project_migrate_script("up")),
                 seed: Some(PROJECT_SEED_SCRIPT.to_string()),
-                start: Some(project_start_server_script()),
+                start: Some(project_start_server_script(
+                    &config_data.runtime.parse()?,
+                    config_data.is_database_enabled,
+                )),
                 ..Default::default()
             }
         }),
@@ -334,6 +354,7 @@ pub(crate) fn generate_service_package_json(
                 } else {
                     None
                 },
+                additional_deps: HashMap::new(),
             }
         }),
         dev_dependencies: Some(if let Some(dev_dependencies) = dev_dependencies_override {
@@ -375,6 +396,7 @@ pub(crate) fn generate_service_package_json(
                     TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION.to_string(),
                 ),
                 types_qs: Some(TYPES_QS_VERSION.to_string()),
+                additional_deps: HashMap::new(),
             }
         }),
         mikro_orm: Some(ProjectMikroOrm {
@@ -385,6 +407,7 @@ pub(crate) fn generate_service_package_json(
                     .collect(),
             ),
         }),
+        additional_entries: HashMap::new(),
     };
     Ok(RenderedTemplate {
         path: Path::new(base_path).join("package.json"),
@@ -491,6 +514,7 @@ impl CliCommand for ServiceCommand {
             "infrastructure",
             matches,
             &Infrastructure::VARIANTS,
+            None,
             "additional infrastructure components",
             true,
         )?
@@ -559,9 +583,7 @@ impl CliCommand for ServiceCommand {
             is_better_sqlite: database == Database::BetterSQLite,
             is_libsql: database == Database::LibSQL,
             is_mssql: database == Database::MsSQL,
-            is_in_memory_database: database == Database::BetterSQLite
-                || database == Database::LibSQL
-                || database == Database::SQLite,
+            is_in_memory_database: is_in_memory_database(&database),
 
             is_iam: false,
             is_cache_enabled: infrastructure.contains(&Infrastructure::Redis),

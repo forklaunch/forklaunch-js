@@ -8,7 +8,7 @@ use worker::WorkerCommand;
 use crate::{core::command::command, CliCommand};
 
 pub(crate) mod application;
-pub(crate) mod common;
+pub(crate) mod library;
 pub(crate) mod router;
 pub(crate) mod service;
 pub(crate) mod worker;

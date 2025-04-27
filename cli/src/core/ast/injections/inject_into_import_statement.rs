@@ -7,7 +7,7 @@ pub(crate) fn inject_into_import_statement<'a>(
     app_program_ast: &mut Program<'a>,
     injection_program_ast: &mut Program<'a>,
     import_source_identifier: &str,
-    import_name_identifier: &str,
+    // import_name_identifier: &str,
 ) -> Result<()> {
     let mut injection_pos = None;
     let mut found_import = false;
@@ -22,23 +22,35 @@ pub(crate) fn inject_into_import_statement<'a>(
                 _ => return,
             };
 
-            if !import.source.value.contains(import_source_identifier) {
-                return;
-            }
+            // if !import.source.value.contains(import_source_identifier) {
+            //     return;
+            // }
 
-            let specifiers = match &import.specifiers {
-                Some(specifiers) => specifiers,
-                None => return,
-            };
-
-            if specifiers.len() == 1
-                && specifiers.first().unwrap().name() > Cow::Borrowed(import_name_identifier)
+            if Cow::Borrowed(import.source.value.as_str()) > Cow::Borrowed(import_source_identifier)
             {
                 found_import = true;
                 if injection_pos.is_none() {
                     injection_pos = Some(index);
                 }
                 return;
+
+                // let specifiers = match &import.specifiers {
+                //     Some(specifiers) => specifiers,
+                //     None => return,
+                // };
+
+                // if specifiers.len() == 1
+                //     && specifiers.first().unwrap().name() > Cow::Borrowed(import_name_identifier)
+                // {
+                //     if injection_pos.is_none() {
+                //         injection_pos = Some(index);
+                //     }
+                //     return;
+                // } else {
+                //     if injection_pos.is_none() {
+                //         injection_pos = Some(index + 1);
+                //     }
+                // }
             }
 
             if !found_import {

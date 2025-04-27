@@ -3,6 +3,7 @@ use oxc_ast::ast::{Argument, Declaration, Expression, Program, Statement};
 pub(crate) fn inject_into_registrations_config_injector<'a>(
     registrations_program: &mut Program<'a>,
     config_injector_injection: &mut Program<'a>,
+    declaration_name: &str,
 ) {
     for statement in &mut registrations_program.body {
         // Find the export named declaration
@@ -32,6 +33,9 @@ pub(crate) fn inject_into_registrations_config_injector<'a>(
 
             match expression.declarations[0].id.get_identifier_name() {
                 Some(name) => {
+                    if name != declaration_name {
+                        continue;
+                    }
                     if name != "serviceDependencies" {
                         continue;
                     }

@@ -26,7 +26,7 @@ use crate::{
         },
         base_path::{prompt_base_path, BasePathLocation},
         command::command,
-        database,
+        database::{self, is_in_memory_database},
         manifest::{
             add_router_definition_to_manifest, router::RouterManifestData, ManifestData,
             ProjectType,
@@ -226,6 +226,7 @@ impl CliCommand for RouterCommand {
             "infrastructure",
             matches,
             &Infrastructure::VARIANTS,
+            None,
             "additional infrastructure components",
             true,
         )?
@@ -271,9 +272,7 @@ impl CliCommand for RouterCommand {
                 is_sqlite: database == Database::SQLite,
                 is_better_sqlite: database == Database::BetterSQLite,
                 is_libsql: database == Database::LibSQL,
-                is_in_memory_database: database == Database::BetterSQLite
-                    || database == Database::LibSQL
-                    || database == Database::SQLite,
+                is_in_memory_database: is_in_memory_database(&database),
 
                 is_cache_enabled: infrastructure.contains(&Infrastructure::Redis),
 

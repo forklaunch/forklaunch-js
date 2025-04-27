@@ -196,3 +196,12 @@ pub(crate) fn add_base_entity_to_core(
         update_core_package_json(config_data, base_path)?,
     ])
 }
+
+pub(crate) fn is_in_memory_database(database: &Database) -> bool {
+    match database {
+        Database::SQLite => true,
+        Database::BetterSQLite => true,
+        Database::LibSQL => true,
+        _ => false,
+    }
+}

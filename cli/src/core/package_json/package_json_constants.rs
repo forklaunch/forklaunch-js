@@ -245,8 +245,6 @@ pub(crate) const TYPES_UUID_VERSION: &str = "^10.0.0";
 // Project package.json scripts constants
 pub(crate) const PROJECT_BUILD_SCRIPT: &str = "tsc";
 pub(crate) const PROJECT_DOCS_SCRIPT: &str = "typedoc --out docs *";
-pub(crate) const PROJECT_LINT_SCRIPT: &str = "eslint . -c eslint.config.mjs";
-pub(crate) const PROJECT_LINT_FIX_SCRIPT: &str = "eslint . -c eslint.config.mjs --fix";
 pub(crate) const PROJECT_START_WORKER_CLIENT_SCRIPT: &str =
     "ENV_FILE_PATH=.env.prod node --import tsx dist/client.js";
 pub(crate) const PROJECT_SEED_SCRIPT: &str = "[ -z $ENV_FILE_PATH ] && export ENV_FILE_PATH=.env.local; NODE_OPTIONS='--import=tsx' mikro-orm seeder:run";
@@ -265,6 +263,13 @@ pub(crate) fn project_lint_script(linter: &Linter) -> String {
     })
 }
 
+pub(crate) fn project_lint_fix_script(linter: &Linter) -> String {
+    String::from(match linter {
+        Linter::Eslint => "eslint . -c eslint.config.mjs --fix",
+        Linter::Oxlint => "oxlint --fix --config .oxlint.config.json",
+    })
+}
+
 pub(crate) fn project_clean_script(runtime: &Runtime) -> String {
     String::from(match runtime {
         Runtime::Bun => "rm -rf dist bun.lockb node_modules",
@@ -272,14 +277,7 @@ pub(crate) fn project_clean_script(runtime: &Runtime) -> String {
     })
 }
 
-pub(crate) fn project_dev_server_script(runtime: &Runtime) -> String {
-    String::from(match runtime {
-        Runtime::Bun => "bun migrate:up && bun --watch server.ts",
-        Runtime::Node => "pnpm migrate:up && pnpm tsx watch server.ts",
-    })
-}
-
-pub(crate) fn project_dev_worker_script(runtime: &Runtime, is_database_enabled: bool) -> String {
+pub(crate) fn project_dev_server_script(runtime: &Runtime, is_database_enabled: bool) -> String {
     String::from(match runtime {
         Runtime::Bun => format!(
             "{}bun --watch server.ts",
@@ -308,8 +306,8 @@ pub(crate) fn project_dev_local_script(runtime: &Runtime) -> String {
 }
 
 pub(crate) fn project_test_script(
-    test_framework: &Option<TestFramework>,
     runtime: &Runtime,
+    test_framework: &Option<TestFramework>,
 ) -> Option<String> {
     match test_framework {
         Some(test_framework_definition) => match test_framework_definition {
@@ -338,22 +336,42 @@ pub(crate) fn project_migrate_script(command: &str) -> String {
     }
 }
 
-pub(crate) fn project_start_server_script() -> String {
-    "ENV_FILE_PATH=.env.prod pnpm migrate:up && ENV_FILE_PATH=.env.prod node --import tsx dist/server.js".to_string()
+pub(crate) fn project_start_server_script(runtime: &Runtime, is_database_enabled: bool) -> String {
+    format!(
+        "{}ENV_FILE_PATH=.env.prod node --import tsx dist/server.js",
+        if is_database_enabled {
+            format!(
+                "ENV_FILE_PATH=.env.prod {} migrate:up && ",
+                if runtime == &Runtime::Node {
+                    "pnpm"
+                } else {
+                    "bun"
+                }
+            )
+        } else {
+            "".to_string()
+        }
+    )
 }
-
-pub(crate) fn project_start_worker_script(is_database_enabled: bool) -> String {
+pub(crate) fn project_start_worker_script(runtime: &Runtime, is_database_enabled: bool) -> String {
     format!(
         "{}ENV_FILE_PATH=.env.prod node --import tsx dist/worker.js",
         if is_database_enabled {
-            "ENV_FILE_PATH=.env.prod pnpm migrate:up && "
+            format!(
+                "{} migrate:up && ",
+                if runtime == &Runtime::Node {
+                    "pnpm"
+                } else {
+                    "bun"
+                }
+            )
         } else {
-            ""
+            "".to_string()
         }
     )
 }
 
-pub(crate) fn project_dev_client_script(runtime: &Runtime) -> String {
+pub(crate) fn project_dev_worker_client_script(runtime: &Runtime) -> String {
     String::from(match runtime {
         Runtime::Bun => "bun --watch worker.ts",
         Runtime::Node => "pnpm tsx watch worker.ts",

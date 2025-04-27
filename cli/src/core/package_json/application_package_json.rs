@@ -1,6 +1,8 @@
+use std::{collections::HashMap, fmt};
+
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Default)]
 pub struct ApplicationScripts {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub build: Option<String>,
@@ -40,9 +42,90 @@ pub struct ApplicationScripts {
     pub test: Option<String>,
     #[serde(rename = "up:packages", skip_serializing_if = "Option::is_none")]
     pub up_packages: Option<String>,
+
+    #[serde(flatten)]
+    pub additional_scripts: HashMap<String, String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+impl<'de> Deserialize<'de> for ApplicationScripts {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::de::{MapAccess, Visitor};
+
+        struct ApplicationScriptsVisitor;
+
+        impl<'de> Visitor<'de> for ApplicationScriptsVisitor {
+            type Value = ApplicationScripts;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("a map of script names to commands")
+            }
+
+            fn visit_map<M>(self, mut access: M) -> Result<Self::Value, M::Error>
+            where
+                M: MapAccess<'de>,
+            {
+                let mut scripts = ApplicationScripts {
+                    build: None,
+                    clean: None,
+                    clean_purge: None,
+                    database_setup: None,
+                    dev: None,
+                    dev_build: None,
+                    docs: None,
+                    format: None,
+                    lint: None,
+                    lint_fix: None,
+                    postinstall: None,
+                    prepare: None,
+                    migrate_create: None,
+                    migrate_down: None,
+                    migrate_init: None,
+                    migrate_up: None,
+                    seed: None,
+                    test: None,
+                    up_packages: None,
+                    additional_scripts: HashMap::new(),
+                };
+
+                while let Some((key, value)) = access.next_entry::<String, String>()? {
+                    match key.as_str() {
+                        "build" => scripts.build = Some(value),
+                        "clean" => scripts.clean = Some(value),
+                        "clean:purge" => scripts.clean_purge = Some(value),
+                        "database:setup" => scripts.database_setup = Some(value),
+                        "dev" => scripts.dev = Some(value),
+                        "dev:build" => scripts.dev_build = Some(value),
+                        "docs" => scripts.docs = Some(value),
+                        "format" => scripts.format = Some(value),
+                        "lint" => scripts.lint = Some(value),
+                        "lint:fix" => scripts.lint_fix = Some(value),
+                        "postinstall" => scripts.postinstall = Some(value),
+                        "prepare" => scripts.prepare = Some(value),
+                        "migrate:create" => scripts.migrate_create = Some(value),
+                        "migrate:down" => scripts.migrate_down = Some(value),
+                        "migrate:init" => scripts.migrate_init = Some(value),
+                        "migrate:up" => scripts.migrate_up = Some(value),
+                        "seed" => scripts.seed = Some(value),
+                        "test" => scripts.test = Some(value),
+                        "up:packages" => scripts.up_packages = Some(value),
+                        _ => {
+                            scripts.additional_scripts.insert(key, value);
+                        }
+                    }
+                }
+
+                Ok(scripts)
+            }
+        }
+
+        deserializer.deserialize_map(ApplicationScriptsVisitor)
+    }
+}
+
+#[derive(Debug, Serialize, Default)]
 pub struct ApplicationDevDependencies {
     #[serde(rename = "@biomejs/biome", skip_serializing_if = "Option::is_none")]
     pub biome: Option<String>,
@@ -82,9 +165,90 @@ pub struct ApplicationDevDependencies {
     pub typescript_eslint: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub vitest: Option<String>,
+
+    #[serde(flatten)]
+    pub additional_deps: HashMap<String, String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+impl<'de> Deserialize<'de> for ApplicationDevDependencies {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::de::{MapAccess, Visitor};
+
+        struct ApplicationDevDependenciesVisitor;
+
+        impl<'de> Visitor<'de> for ApplicationDevDependenciesVisitor {
+            type Value = ApplicationDevDependencies;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("a map of dependency names to versions")
+            }
+
+            fn visit_map<M>(self, mut access: M) -> Result<Self::Value, M::Error>
+            where
+                M: MapAccess<'de>,
+            {
+                let mut deps = ApplicationDevDependencies {
+                    biome: None,
+                    eslint_js: None,
+                    types_jest: None,
+                    better_sqlite3: None,
+                    eslint: None,
+                    globals: None,
+                    husky: None,
+                    jest: None,
+                    lint_staged: None,
+                    node_gyp: None,
+                    oxlint: None,
+                    prettier: None,
+                    sort_package_json: None,
+                    sqlite3: None,
+                    ts_jest: None,
+                    tsx: None,
+                    typescript: None,
+                    typescript_eslint: None,
+                    vitest: None,
+                    additional_deps: HashMap::new(),
+                };
+
+                while let Some((key, value)) = access.next_entry::<String, String>()? {
+                    match key.as_str() {
+                        "@biomejs/biome" => deps.biome = Some(value),
+                        "@eslint/js" => deps.eslint_js = Some(value),
+                        "@types/jest" => deps.types_jest = Some(value),
+                        "better-sqlite3" => deps.better_sqlite3 = Some(value),
+                        "eslint" => deps.eslint = Some(value),
+                        "globals" => deps.globals = Some(value),
+                        "husky" => deps.husky = Some(value),
+                        "jest" => deps.jest = Some(value),
+                        "lint-staged" => deps.lint_staged = Some(value),
+                        "node-gyp" => deps.node_gyp = Some(value),
+                        "oxlint" => deps.oxlint = Some(value),
+                        "prettier" => deps.prettier = Some(value),
+                        "sort-package-json" => deps.sort_package_json = Some(value),
+                        "sqlite3" => deps.sqlite3 = Some(value),
+                        "ts-jest" => deps.ts_jest = Some(value),
+                        "tsx" => deps.tsx = Some(value),
+                        "typescript" => deps.typescript = Some(value),
+                        "typescript-eslint" => deps.typescript_eslint = Some(value),
+                        "vitest" => deps.vitest = Some(value),
+                        _ => {
+                            deps.additional_deps.insert(key, value);
+                        }
+                    }
+                }
+
+                Ok(deps)
+            }
+        }
+
+        deserializer.deserialize_map(ApplicationDevDependenciesVisitor)
+    }
+}
+
+#[derive(Debug, Serialize, Default)]
 pub struct ApplicationPackageJson {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
@@ -104,4 +268,101 @@ pub struct ApplicationPackageJson {
     pub scripts: Option<ApplicationScripts>,
     #[serde(rename = "devDependencies", skip_serializing_if = "Option::is_none")]
     pub dev_dependencies: Option<ApplicationDevDependencies>,
+
+    #[serde(flatten)]
+    pub additional_entries: HashMap<String, serde_json::Value>,
+}
+
+impl<'de> Deserialize<'de> for ApplicationPackageJson {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::de::{MapAccess, Visitor};
+
+        struct ApplicationPackageJsonVisitor;
+
+        impl<'de> Visitor<'de> for ApplicationPackageJsonVisitor {
+            type Value = ApplicationPackageJson;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("a package.json object")
+            }
+
+            fn visit_map<M>(self, mut access: M) -> Result<Self::Value, M::Error>
+            where
+                M: MapAccess<'de>,
+            {
+                let mut package = ApplicationPackageJson {
+                    name: None,
+                    version: None,
+                    description: None,
+                    keywords: None,
+                    license: None,
+                    author: None,
+                    workspaces: None,
+                    scripts: None,
+                    dev_dependencies: None,
+                    additional_entries: HashMap::new(),
+                };
+
+                while let Some((key, value)) = access.next_entry::<String, serde_json::Value>()? {
+                    match key.as_str() {
+                        "name" => {
+                            package.name = Some(
+                                serde_json::from_value(value).map_err(serde::de::Error::custom)?,
+                            )
+                        }
+                        "version" => {
+                            package.version = Some(
+                                serde_json::from_value(value).map_err(serde::de::Error::custom)?,
+                            )
+                        }
+                        "description" => {
+                            package.description = Some(
+                                serde_json::from_value(value).map_err(serde::de::Error::custom)?,
+                            )
+                        }
+                        "keywords" => {
+                            package.keywords = Some(
+                                serde_json::from_value(value).map_err(serde::de::Error::custom)?,
+                            )
+                        }
+                        "license" => {
+                            package.license = Some(
+                                serde_json::from_value(value).map_err(serde::de::Error::custom)?,
+                            )
+                        }
+                        "author" => {
+                            package.author = Some(
+                                serde_json::from_value(value).map_err(serde::de::Error::custom)?,
+                            )
+                        }
+                        "workspaces" => {
+                            package.workspaces = Some(
+                                serde_json::from_value(value).map_err(serde::de::Error::custom)?,
+                            )
+                        }
+                        "scripts" => {
+                            package.scripts = Some(
+                                serde_json::from_value(value).map_err(serde::de::Error::custom)?,
+                            )
+                        }
+                        "devDependencies" => {
+                            package.dev_dependencies = Some(
+                                serde_json::from_value(value).map_err(serde::de::Error::custom)?,
+                            )
+                        }
+                        _ => {
+                            package.additional_entries.insert(key, value);
+                        }
+                    }
+                }
+
+                Ok(package)
+            }
+        }
+
+        deserializer.deserialize_map(ApplicationPackageJsonVisitor)
+    }
 }
