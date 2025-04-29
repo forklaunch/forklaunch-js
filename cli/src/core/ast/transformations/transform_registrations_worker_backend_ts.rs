@@ -52,7 +52,7 @@ pub(crate) fn transform_registrations_worker_backend(
     );
     let mut worker_consumer_import =
         parse_ast_program(&allocator, &worker_consumer_text, SourceType::ts());
-    replace_import_statment(
+    let _ = replace_import_statment(
         &mut registration_program,
         &mut worker_consumer_import,
         &format!(
@@ -68,7 +68,7 @@ pub(crate) fn transform_registrations_worker_backend(
     );
     let mut worker_producer_import =
         parse_ast_program(&allocator, &worker_producer_text, SourceType::ts());
-    replace_import_statment(
+    let _ = replace_import_statment(
         &mut registration_program,
         &mut worker_producer_import,
         &format!(
@@ -84,7 +84,7 @@ pub(crate) fn transform_registrations_worker_backend(
     );
     let mut worker_schema_import =
         parse_ast_program(&allocator, &worker_schema_text, SourceType::ts());
-    replace_import_statment(
+    let _ = replace_import_statment(
         &mut registration_program,
         &mut worker_schema_import,
         &format!(
@@ -100,7 +100,7 @@ pub(crate) fn transform_registrations_worker_backend(
     );
     let mut worker_option_import =
         parse_ast_program(&allocator, &worker_option_text, SourceType::ts());
-    replace_import_statment(
+    let _ = replace_import_statment(
         &mut registration_program,
         &mut worker_option_import,
         &format!(

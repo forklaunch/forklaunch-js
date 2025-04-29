@@ -100,18 +100,6 @@ impl RenderedTemplatesCache {
         self.internal_cache.insert(key.to_string(), value);
     }
 
-    pub fn keys(&self) -> Vec<&String> {
-        self.internal_cache.keys().collect()
-    }
-
-    pub fn values(&self) -> Vec<&RenderedTemplate> {
-        self.internal_cache.values().collect()
-    }
-
-    pub fn values_mut(&mut self) -> Vec<&mut RenderedTemplate> {
-        self.internal_cache.values_mut().collect()
-    }
-
     pub fn drain(&mut self) -> Drain<'_, std::string::String, RenderedTemplate> {
         self.internal_cache.drain()
     }

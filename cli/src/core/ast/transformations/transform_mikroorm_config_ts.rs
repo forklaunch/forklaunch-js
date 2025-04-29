@@ -37,7 +37,7 @@ pub(crate) fn transform_mikroorm_config_ts(
     );
     let mut database_driver_import_program =
         parse_ast_program(&allocator, &database_driver_import_text, SourceType::ts());
-    replace_import_statment(
+    let _ = replace_import_statment(
         &mut mikro_orm_config_program,
         &mut database_driver_import_program,
         &format!(

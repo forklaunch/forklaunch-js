@@ -164,7 +164,7 @@ fn change_backend(
                 Some(WORKER_BULLMQ_VERSION.to_string());
             project_entry.unwrap().resources.as_mut().unwrap().cache =
                 Some(WorkerBackend::RedisCache.to_string());
-            add_redis_to_docker_compose(
+            let _ = add_redis_to_docker_compose(
                 &manifest_data.app_name,
                 docker_compose_data,
                 &mut environment,
@@ -178,7 +178,7 @@ fn change_backend(
             project_entry.unwrap().resources.as_mut().unwrap().database =
                 Some(Database::PostgreSQL.to_string());
             manifest_data.database = Some(database.unwrap().to_string());
-            add_database_to_docker_compose(
+            let _ = add_database_to_docker_compose(
                 &ManifestData::Worker(&manifest_data),
                 docker_compose_data,
                 &mut environment,
@@ -201,7 +201,7 @@ fn change_backend(
                 Some(WORKER_REDIS_VERSION.to_string());
             project_entry.unwrap().resources.as_mut().unwrap().cache =
                 Some(WorkerBackend::RedisCache.to_string());
-            add_redis_to_docker_compose(
+            let _ = add_redis_to_docker_compose(
                 &manifest_data.app_name,
                 docker_compose_data,
                 &mut environment,
@@ -213,12 +213,12 @@ fn change_backend(
                 Some(WORKER_KAFKA_VERSION.to_string());
             project_entry.unwrap().resources.as_mut().unwrap().queue =
                 Some(WorkerBackend::Kafka.to_string());
-            add_kafka_to_docker_compose(
+            let _ = add_kafka_to_docker_compose(
                 &manifest_data.app_name,
                 &manifest_data.worker_name,
                 docker_compose_data,
                 &mut environment,
-            )?;
+            );
             env_local_content.kafka_brokers = Some("localhost:9092".to_string());
             env_local_content.kafka_client_id = Some(format!(
                 "{}-{}-client",
@@ -246,7 +246,10 @@ fn change_backend(
         .unwrap()
         .environment = Some(environment);
 
-    clean_up_unused_infrastructure_services(docker_compose_data, manifest_data.projects.clone());
+    let _ = clean_up_unused_infrastructure_services(
+        docker_compose_data,
+        manifest_data.projects.clone(),
+    );
 
     Ok(())
 }

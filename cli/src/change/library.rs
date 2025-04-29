@@ -28,9 +28,9 @@ use crate::{
 };
 
 #[derive(Debug)]
-pub(super) struct WorkerCommand;
+pub(super) struct LibraryCommand;
 
-impl WorkerCommand {
+impl LibraryCommand {
     pub(super) fn new() -> Self {
         Self {}
     }
@@ -122,9 +122,7 @@ fn change_description(
     Ok(())
 }
 
-fn change_backend() {}
-
-impl CliCommand for WorkerCommand {
+impl CliCommand for LibraryCommand {
     fn command(&self) -> Command {
         command("library", "Change a forklaunch library")
             .alias("lib")
@@ -132,14 +130,14 @@ impl CliCommand for WorkerCommand {
                 Arg::new("base_path")
                     .short('p')
                     .long("path")
-                    .help("The service path"),
+                    .help("The library path"),
             )
-            .arg(Arg::new("name").short('N').help("The name of the service"))
+            .arg(Arg::new("name").short('N').help("The name of the library"))
             .arg(
                 Arg::new("description")
                     .short('D')
                     .long("description")
-                    .help("The description of the service"),
+                    .help("The description of the library"),
             )
             .arg(
                 Arg::new("dryrun")
@@ -158,7 +156,7 @@ impl CliCommand for WorkerCommand {
             &mut line_editor,
             &mut stdout,
             matches,
-            &BasePathLocation::Worker,
+            &BasePathLocation::Library,
         )?;
         let base_path = Path::new(&base_path_input);
 

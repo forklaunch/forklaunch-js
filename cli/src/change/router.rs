@@ -13,7 +13,7 @@ use crate::{
     core::{
         base_path::{prompt_base_path, BasePathLocation},
         command::command,
-        manifest::{router::RouterManifestData, ManifestData, ProjectEntry},
+        manifest::{router::RouterManifestData, ProjectEntry},
         removal_template::{remove_template_files, RemovalTemplate},
         rendered_template::{write_rendered_templates, RenderedTemplate, RenderedTemplatesCache},
     },

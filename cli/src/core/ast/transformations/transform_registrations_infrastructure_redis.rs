@@ -35,7 +35,7 @@ pub(crate) fn transform_registrations_infrastructure_redis_ts(
 
         let mut import_program = parse_ast_program(&allocator, import_text, SourceType::ts());
 
-        inject_into_import_statement(
+        let _ = inject_into_import_statement(
             &mut registrations_program,
             &mut import_program,
             "@forklaunch/core/cache",

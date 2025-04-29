@@ -33,10 +33,12 @@ macro_rules! choice {
             }
 
             impl $name {
+                #[allow(dead_code)]
                 $vis const VARIANTS: [&'static str; crate::count!($($variant)*)] = [
                     $($meta.id),*
                 ];
 
+                #[allow(dead_code)]
                 $vis const ALL_FILES: &'static [&'static str] = {
                     const fn count_files() -> usize {
                         let mut count = 0;
@@ -78,6 +80,7 @@ macro_rules! choice {
                     }
                 }
 
+                #[allow(dead_code)]
                 $vis fn all_other_files(&self) -> Vec<&'static str> {
                     let self_files = self.metadata().exclusive_files.unwrap_or_default();
 
