@@ -5,11 +5,11 @@ import {
   WorkerFailureHandler,
   WorkerProcessFunction
 } from '@forklaunch/interfaces-worker/types';
-import { WorkerOptions } from '../types/redisWorker.types';
+import { RedisWorkerOptions } from '../types/redisWorker.types';
 
 export class RedisWorkerConsumer<
   EventEntity extends WorkerEventEntity,
-  Options extends WorkerOptions
+  Options extends RedisWorkerOptions
 > implements WorkerConsumer<EventEntity>
 {
   constructor(

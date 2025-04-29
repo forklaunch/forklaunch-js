@@ -1,12 +1,12 @@
 import { SchemaValidator } from '@forklaunch/blueprint-core';
 import { BullMqWorkerProducer } from '@forklaunch/implementation-worker-bullmq/producers';
-import { WorkerOptions as BullMqWorkerOptions } from '@forklaunch/implementation-worker-bullmq/types';
+import { BullMqWorkerOptions } from '@forklaunch/implementation-worker-bullmq/types';
 import { DatabaseWorkerProducer } from '@forklaunch/implementation-worker-database/producers';
-import { WorkerOptions as DatabaseWorkerOptions } from '@forklaunch/implementation-worker-database/types';
+import { DatabaseWorkerOptions } from '@forklaunch/implementation-worker-database/types';
 import { KafkaWorkerProducer } from '@forklaunch/implementation-worker-kafka/producers';
 import { RedisWorkerProducer } from '@forklaunch/implementation-worker-redis/producers';
-import { WorkerOptions as RedisWorkerOptions } from '@forklaunch/implementation-worker-redis/types';
-import { WorkerOptions as KafkaWorkerOptions } from '../../implementations/worker/kafka/lib/types/kafkaWorker.types';
+import { RedisWorkerOptions } from '@forklaunch/implementation-worker-redis/types';
+import { KafkaWorkerOptions } from '../../implementations/worker/kafka/lib/types/kafkaWorker.types';
 import { SampleWorkerService } from '../domain/interfaces/sampleWorkerService.interface';
 import {
   SampleWorkerRequestDto,

@@ -1,9 +1,9 @@
 import { WorkerEventEntity } from '@forklaunch/interfaces-worker/types';
 import { Kafka } from 'kafkajs';
-import { WorkerOptions } from '../types/kafkaWorker.types';
+import { KafkaWorkerOptions } from '../types/kafkaWorker.types';
 export class KafkaWorkerProducer<
   EventEntity extends WorkerEventEntity,
-  Options extends WorkerOptions
+  Options extends KafkaWorkerOptions
 > {
   private producer;
 

@@ -1,4 +1,4 @@
-export type WorkerOptions = {
+export type DatabaseWorkerOptions = {
   retries: number;
   interval: number;
 };

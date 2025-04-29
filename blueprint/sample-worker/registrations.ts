@@ -17,19 +17,19 @@ import {
 import { BullMqWorkerConsumer } from '@forklaunch/implementation-worker-bullmq/consumers';
 import { BullMqWorkerProducer } from '@forklaunch/implementation-worker-bullmq/producers';
 import { BullMqWorkerSchemas } from '@forklaunch/implementation-worker-bullmq/schemas';
-import { WorkerOptions as BullMqWorkerOptions } from '@forklaunch/implementation-worker-bullmq/types';
+import { BullMqWorkerOptions } from '@forklaunch/implementation-worker-bullmq/types';
 import { DatabaseWorkerConsumer } from '@forklaunch/implementation-worker-database/consumers';
 import { DatabaseWorkerProducer } from '@forklaunch/implementation-worker-database/producers';
 import { DatabaseWorkerSchemas } from '@forklaunch/implementation-worker-database/schemas';
-import { WorkerOptions as DatabaseWorkerOptions } from '@forklaunch/implementation-worker-database/types';
+import { DatabaseWorkerOptions } from '@forklaunch/implementation-worker-database/types';
 import { KafkaWorkerConsumer } from '@forklaunch/implementation-worker-kafka/consumers';
 import { KafkaWorkerProducer } from '@forklaunch/implementation-worker-kafka/producers';
 import { KafkaWorkerSchemas } from '@forklaunch/implementation-worker-kafka/schemas';
-import { WorkerOptions as KafkaWorkerOptions } from '@forklaunch/implementation-worker-kafka/types';
+import { KafkaWorkerOptions } from '@forklaunch/implementation-worker-kafka/types';
 import { RedisWorkerConsumer } from '@forklaunch/implementation-worker-redis/consumers';
 import { RedisWorkerProducer } from '@forklaunch/implementation-worker-redis/producers';
 import { RedisWorkerSchemas } from '@forklaunch/implementation-worker-redis/schemas';
-import { WorkerOptions as RedisWorkerOptions } from '@forklaunch/implementation-worker-redis/types';
+import { RedisWorkerOptions } from '@forklaunch/implementation-worker-redis/types';
 import {
   WorkerFailureHandler,
   WorkerProcessFunction

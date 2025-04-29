@@ -5,11 +5,11 @@ import {
   WorkerProcessFunction
 } from '@forklaunch/interfaces-worker/types';
 import { Consumer, Kafka, Producer } from 'kafkajs';
-import { WorkerOptions } from '../types/kafkaWorker.types';
+import { KafkaWorkerOptions } from '../types/kafkaWorker.types';
 
 export class KafkaWorkerConsumer<
   EventEntity extends WorkerEventEntity,
-  Options extends WorkerOptions
+  Options extends KafkaWorkerOptions
 > implements WorkerConsumer<EventEntity>
 {
   private kafka: Kafka;
