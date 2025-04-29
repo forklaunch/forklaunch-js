@@ -25,6 +25,7 @@ use crate::{
         },
         env::Env,
         manifest::{worker::WorkerManifestData, ManifestData},
+        name::validate_name,
         package_json::{
             package_json_constants::{
                 WORKER_BULLMQ_VERSION, WORKER_DATABASE_VERSION, WORKER_KAFKA_VERSION,
@@ -350,16 +351,7 @@ impl CliCommand for WorkerCommand {
             matches,
             "Enter worker name: ",
             None,
-            |input: &str| {
-                !input.is_empty()
-                    && !input.contains(' ')
-                    && !input.contains('\t')
-                    && !input.contains('\n')
-                    && !input.contains('\r')
-                    && !input
-                        .chars()
-                        .any(|c| !c.is_ascii_alphanumeric() && c != '_' && c != '-')
-            },
+            |input: &str| validate_name(input),
             |_| "Worker name cannot be empty or include spaces. Please try again".to_string(),
         )?;
 

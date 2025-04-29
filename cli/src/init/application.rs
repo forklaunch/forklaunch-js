@@ -37,6 +37,7 @@ use crate::{
             application::ApplicationManifestData, generate_manifest, service::ServiceManifestData,
             ManifestData, ProjectEntry, ProjectType, ResourceInventory,
         },
+        name::validate_name,
         package_json::{
             application_package_json::{
                 ApplicationDevDependencies, ApplicationPackageJson, ApplicationScripts,
@@ -351,13 +352,7 @@ impl CliCommand for ApplicationCommand {
             matches,
             "application",
             None,
-            |input: &str| {
-                !input.is_empty()
-                    && !input.contains(' ')
-                    && !input.contains('\t')
-                    && !input.contains('\n')
-                    && !input.contains('\r')
-            },
+            |input: &str| validate_name(input),
             |_| "Application name cannot be empty or include spaces. Please try again".to_string(),
         )?;
 

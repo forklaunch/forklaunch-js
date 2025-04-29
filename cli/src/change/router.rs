@@ -14,6 +14,7 @@ use crate::{
         base_path::{prompt_base_path, BasePathLocation},
         command::command,
         manifest::{router::RouterManifestData, ProjectEntry},
+        name::validate_name,
         removal_template::{remove_template_files, RemovalTemplate},
         rendered_template::{write_rendered_templates, RenderedTemplate, RenderedTemplatesCache},
     },
@@ -170,13 +171,7 @@ impl CliCommand for RouterCommand {
             matches,
             "Enter router name: ",
             None,
-            |input: &str| {
-                !input.is_empty()
-                    && !input.contains(' ')
-                    && !input.contains('\t')
-                    && !input.contains('\n')
-                    && !input.contains('\r')
-            },
+            |input: &str| validate_name(input),
             |_| "Router name cannot be empty or include spaces. Please try again".to_string(),
         )?;
 

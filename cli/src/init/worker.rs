@@ -33,6 +33,7 @@ use crate::{
             worker::WorkerManifestData, ManifestData, ProjectMetadata, ProjectType,
             ResourceInventory,
         },
+        name::validate_name,
         package_json::{
             add_project_definition_to_package_json,
             package_json_constants::{
@@ -565,13 +566,7 @@ impl CliCommand for WorkerCommand {
             matches,
             "Enter worker name: ",
             None,
-            |input: &str| {
-                !input.is_empty()
-                    && !input.contains(' ')
-                    && !input.contains('\t')
-                    && !input.contains('\n')
-                    && !input.contains('\r')
-            },
+            |input: &str| validate_name(input),
             |_| "Worker name cannot be empty or include spaces. Please try again".to_string(),
         )?;
 

@@ -33,6 +33,7 @@ use crate::{
             add_project_definition_to_manifest, application::ApplicationManifestData,
             service::ServiceManifestData, ManifestData, ProjectType, ResourceInventory,
         },
+        name::validate_name,
         package_json::{
             add_project_definition_to_package_json,
             package_json_constants::{
@@ -480,13 +481,7 @@ impl CliCommand for ServiceCommand {
             matches,
             "Enter service name: ",
             None,
-            |input: &str| {
-                !input.is_empty()
-                    && !input.contains(' ')
-                    && !input.contains('\t')
-                    && !input.contains('\n')
-                    && !input.contains('\r')
-            },
+            |input: &str| validate_name(input),
             |_| "Service name cannot be empty or include spaces. Please try again".to_string(),
         )?;
 

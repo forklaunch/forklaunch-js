@@ -29,6 +29,7 @@ use crate::{
             clean_up_unused_infrastructure_services, DockerCompose,
         },
         manifest::{service::ServiceManifestData, ManifestData},
+        name::validate_name,
         package_json::project_package_json::ProjectPackageJson,
         removal_template::{remove_template_files, RemovalTemplate},
         rendered_template::{
@@ -426,13 +427,7 @@ impl CliCommand for ServiceCommand {
             matches,
             "Enter service name: ",
             None,
-            |input: &str| {
-                !input.is_empty()
-                    && !input.contains(' ')
-                    && !input.contains('\t')
-                    && !input.contains('\n')
-                    && !input.contains('\r')
-            },
+            |input: &str| validate_name(input),
             |_| "Service name cannot be empty or include spaces. Please try again".to_string(),
         )?;
 

@@ -17,6 +17,7 @@ use crate::{
         base_path::{prompt_base_path, BasePathLocation},
         command::command,
         manifest::library::LibraryManifestData,
+        name::validate_name,
         package_json::project_package_json::ProjectPackageJson,
         removal_template::{remove_template_files, RemovalTemplate},
         rendered_template::{
@@ -199,13 +200,7 @@ impl CliCommand for LibraryCommand {
             matches,
             "Enter library name: ",
             None,
-            |input: &str| {
-                !input.is_empty()
-                    && !input.contains(' ')
-                    && !input.contains('\t')
-                    && !input.contains('\n')
-                    && !input.contains('\r')
-            },
+            |input: &str| validate_name(input),
             |_| "Library name cannot be empty or include spaces. Please try again".to_string(),
         )?;
 

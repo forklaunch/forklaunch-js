@@ -25,6 +25,7 @@ use crate::{
             add_project_definition_to_manifest, application::ApplicationManifestData,
             library::LibraryManifestData, ManifestData, ProjectType,
         },
+        name::validate_name,
         package_json::{
             add_project_definition_to_package_json,
             package_json_constants::{
@@ -242,13 +243,7 @@ impl CliCommand for LibraryCommand {
             matches,
             "Enter library name: ",
             None,
-            |input: &str| {
-                !input.is_empty()
-                    && !input.contains(' ')
-                    && !input.contains('\t')
-                    && !input.contains('\n')
-                    && !input.contains('\r')
-            },
+            |input: &str| validate_name(input),
             |_| "Library name cannot be empty or include spaces. Please try again".to_string(),
         )?;
 
