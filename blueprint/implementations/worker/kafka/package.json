@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/implementation-worker-kafka",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Kafka implementation for forklaunch workers",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
