@@ -7,7 +7,6 @@ use std::{
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use convert_case::{Case, Casing};
-use dialoguer::{theme::ColorfulTheme, FuzzySelect, Input, InputValidator, MultiSelect, Select};
 use rustyline::{history::DefaultHistory, Editor};
 use serde_json::to_string_pretty;
 use serde_yml::to_string;

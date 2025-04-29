@@ -20,9 +20,8 @@ use crate::{
         package_json::project_package_json::ProjectPackageJson,
         removal_template::{remove_template_files, RemovalTemplate},
         rendered_template::{
-            self, write_rendered_templates, RenderedTemplate, RenderedTemplatesCache, TEMPLATES_DIR,
+            write_rendered_templates, RenderedTemplate, RenderedTemplatesCache, TEMPLATES_DIR,
         },
-        template,
     },
     prompt::{prompt_field_from_selections_with_validation, ArrayCompleter},
     CliCommand,
@@ -169,6 +168,7 @@ impl CliCommand for WorkerCommand {
             &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+        manifest_data.library_name = base_path.file_name().unwrap().to_string_lossy().to_string();
 
         let name = matches.get_one::<String>("name");
         let description = matches.get_one::<String>("description");

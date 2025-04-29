@@ -385,6 +385,7 @@ impl CliCommand for ServiceCommand {
                 .content,
         )
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+        manifest_data.service_name = base_path.file_name().unwrap().to_string_lossy().to_string();
 
         let project = manifest_data
             .projects

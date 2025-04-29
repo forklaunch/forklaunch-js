@@ -11,7 +11,7 @@ use worker::WorkerManifestData;
 use super::rendered_template::RenderedTemplate;
 use crate::{
     constants::{
-        WorkerBackend, ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
+        ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
         ERROR_FAILED_TO_ADD_ROUTER_METADATA_TO_MANIFEST, ERROR_FAILED_TO_CREATE_MANIFEST,
     },
     core::manifest::{application::ApplicationManifestData, router::RouterManifestData},

@@ -1,17 +1,23 @@
-use std::path::Path;
+use std::{io::Write, path::Path};
 
-use anyhow::Result;
-use clap::{Arg, Command};
+use anyhow::{Context, Result};
+use clap::{Arg, ArgAction, Command};
 use convert_case::{Case, Casing};
+use dialoguer::{theme::ColorfulTheme, MultiSelect};
+use rustyline::{history::DefaultHistory, Editor};
+use termcolor::{ColorChoice, StandardStream};
 use walkdir::WalkDir;
 
 use crate::{
+    constants::{ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST},
     core::{
+        base_path::{prompt_base_path, BasePathLocation},
         command::command,
-        manifest::ProjectEntry,
-        removal_template::RemovalTemplate,
-        rendered_template::{RenderedTemplate, RenderedTemplatesCache},
+        manifest::{router::RouterManifestData, ManifestData, ProjectEntry},
+        removal_template::{remove_template_files, RemovalTemplate},
+        rendered_template::{write_rendered_templates, RenderedTemplate, RenderedTemplatesCache},
     },
+    prompt::{prompt_field_from_selections_with_validation, ArrayCompleter},
     CliCommand,
 };
 
@@ -100,9 +106,113 @@ impl CliCommand for RouterCommand {
     fn command(&self) -> Command {
         command("router", "Change a forklaunch router")
             .arg(Arg::new("name").short('N').help("The name of the router"))
+            .arg(
+                Arg::new("dryrun")
+                    .short('n')
+                    .long("dryrun")
+                    .help("Dry run the command")
+                    .action(ArgAction::SetTrue),
+            )
     }
 
     fn handler(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
-        todo!()
+        let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
+        let mut stdout = StandardStream::stdout(ColorChoice::Always);
+        let mut rendered_templates_cache = RenderedTemplatesCache::new();
+
+        let base_path_input = prompt_base_path(
+            &mut line_editor,
+            &mut stdout,
+            matches,
+            &BasePathLocation::Service,
+        )?;
+        let base_path = Path::new(&base_path_input);
+
+        let config_path = &base_path.join(".forklaunch").join("manifest.toml");
+
+        let mut manifest_data: RouterManifestData = toml::from_str(
+            &rendered_templates_cache
+                .get(&config_path)
+                .with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?
+                .unwrap()
+                .content,
+        )
+        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+        manifest_data.router_name = base_path.file_name().unwrap().to_string_lossy().to_string();
+
+        let name = matches.get_one::<String>("name");
+        let dryrun = matches.get_flag("dryrun");
+
+        let selected_options = if !matches.args_present() {
+            let options = vec!["name"];
+
+            let selections = MultiSelect::with_theme(&ColorfulTheme::default())
+                .with_prompt("What would you like to change?")
+                .items(&options)
+                .interact()?;
+
+            if selections.is_empty() {
+                writeln!(stdout, "No changes selected")?;
+                return Ok(());
+            }
+
+            selections.iter().map(|i| options[*i]).collect()
+        } else {
+            vec![]
+        };
+
+        let name = prompt_field_from_selections_with_validation(
+            "name",
+            name,
+            &selected_options,
+            &mut line_editor,
+            &mut stdout,
+            matches,
+            "Enter router name: ",
+            None,
+            |input: &str| {
+                !input.is_empty()
+                    && !input.contains(' ')
+                    && !input.contains('\t')
+                    && !input.contains('\n')
+                    && !input.contains('\r')
+            },
+            |_| "Router name cannot be empty or include spaces. Please try again".to_string(),
+        )?;
+
+        let mut removal_templates = vec![];
+
+        if let Some(name) = name {
+            removal_templates.extend(change_name(
+                &base_path,
+                &manifest_data.router_name,
+                &name,
+                &mut manifest_data
+                    .projects
+                    .iter_mut()
+                    .find(|project| project.name == manifest_data.router_name)
+                    .unwrap(),
+                &mut rendered_templates_cache,
+            )?);
+        }
+
+        rendered_templates_cache.insert(
+            config_path.clone().to_string_lossy(),
+            RenderedTemplate {
+                path: config_path.to_path_buf(),
+                content: toml::to_string_pretty(&manifest_data)?,
+                context: None,
+            },
+        );
+
+        let rendered_templates: Vec<RenderedTemplate> = rendered_templates_cache
+            .drain()
+            .map(|(_, template)| template)
+            .collect();
+
+        write_rendered_templates(&rendered_templates, dryrun, &mut stdout)?;
+        remove_template_files(&removal_templates, dryrun, &mut stdout)?;
+
+        Ok(())
     }
 }

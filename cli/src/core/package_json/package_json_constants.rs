@@ -192,13 +192,13 @@ pub(crate) const IAM_BASE_VERSION: &str = "^0.1.13";
 // @forklaunch/interfaces-iam
 pub(crate) const IAM_INTERFACES_VERSION: &str = "^0.1.13";
 // @forklaunch/implementation-worker-bullmq
-pub(crate) const WORKER_BULLMQ_VERSION: &str = "^0.1.4";
+pub(crate) const WORKER_BULLMQ_VERSION: &str = "^0.1.5";
 // @forklaunch/implementation-worker-redis
-pub(crate) const WORKER_REDIS_VERSION: &str = "^0.1.4";
+pub(crate) const WORKER_REDIS_VERSION: &str = "^0.1.5";
 // @forklaunch/implementation-worker-database
-pub(crate) const WORKER_DATABASE_VERSION: &str = "^0.1.4";
+pub(crate) const WORKER_DATABASE_VERSION: &str = "^0.1.5";
 // @forklaunch/implementation-worker-kafka
-pub(crate) const WORKER_KAFKA_VERSION: &str = "^0.1.4";
+pub(crate) const WORKER_KAFKA_VERSION: &str = "^0.1.5";
 // @forklaunch/interfaces-worker
 pub(crate) const WORKER_INTERFACES_VERSION: &str = "^0.1.4";
 // @forklaunch/validator

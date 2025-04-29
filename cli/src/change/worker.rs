@@ -33,9 +33,7 @@ use crate::{
             project_package_json::ProjectPackageJson,
         },
         removal_template::{remove_template_files, RemovalTemplate},
-        rendered_template::{
-            write_rendered_templates, RenderedTemplate, RenderedTemplatesCache, TEMPLATES_DIR,
-        },
+        rendered_template::{write_rendered_templates, RenderedTemplate, RenderedTemplatesCache},
     },
     prompt::{prompt_field_from_selections_with_validation, ArrayCompleter},
     CliCommand,
@@ -314,6 +312,7 @@ impl CliCommand for WorkerCommand {
                 .content,
         )
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+        manifest_data.worker_name = base_path.file_name().unwrap().to_string_lossy().to_string();
 
         let name = matches.get_one::<String>("name");
         let backend = matches.get_one::<String>("backend");
@@ -346,7 +345,7 @@ impl CliCommand for WorkerCommand {
             &mut line_editor,
             &mut stdout,
             matches,
-            "Enter application name: ",
+            "Enter worker name: ",
             None,
             |input: &str| {
                 !input.is_empty()
@@ -354,8 +353,11 @@ impl CliCommand for WorkerCommand {
                     && !input.contains('\t')
                     && !input.contains('\n')
                     && !input.contains('\r')
+                    && !input
+                        .chars()
+                        .any(|c| !c.is_ascii_alphanumeric() && c != '_' && c != '-')
             },
-            |_| "Application name cannot be empty or include spaces. Please try again".to_string(),
+            |_| "Worker name cannot be empty or include spaces. Please try again".to_string(),
         )?;
 
         let backend = prompt_field_from_selections_with_validation(

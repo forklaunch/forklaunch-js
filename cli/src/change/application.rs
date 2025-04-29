@@ -55,7 +55,7 @@ use crate::{
         },
         removal_template::{remove_template_files, RemovalTemplate},
         rendered_template::{
-            self, write_rendered_templates, RenderedTemplate, RenderedTemplatesCache, TEMPLATES_DIR,
+            write_rendered_templates, RenderedTemplate, RenderedTemplatesCache, TEMPLATES_DIR,
         },
         symlink_template::{create_symlinks, SymlinkTemplate},
         watermark::apply_watermark,
@@ -628,7 +628,7 @@ fn change_runtime(
     application_json_to_write: &mut ApplicationPackageJson,
     project_jsons_to_write: &mut HashMap<String, ProjectPackageJson>,
     rendered_templates_cache: &mut RenderedTemplatesCache,
-) -> Result<(Vec<RemovalTemplate>)> {
+) -> Result<Vec<RemovalTemplate>> {
     let existing_runtime = manifest_data.runtime.parse::<Runtime>()?;
     let existing_database = manifest_data.database.parse::<Database>()?;
 
