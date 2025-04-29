@@ -25,7 +25,7 @@ const configShapes = {
 } as const;
 
 // Create the injector with definitions
-const configInjector = new ConfigInjector(
+const configInjector = createConfigInjector(
     schemaValidator,
     configShapes,
     {

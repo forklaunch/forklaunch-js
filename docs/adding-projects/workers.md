@@ -70,7 +70,7 @@ A minimal worker will have the following structure:
 │   └── newWorker.service.ts
 ├── tsconfig.json
 ├── vitest.config.ts -> ../vitest.config.ts
-└── worker.ts
+└── server.ts
 ```
 
 ### Next Steps
