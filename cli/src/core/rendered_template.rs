@@ -1,5 +1,5 @@
 use std::{
-    collections::HashMap,
+    collections::{hash_map::Drain, HashMap},
     fs::{create_dir_all, write},
     io::Write,
     path::{Path, PathBuf},
@@ -62,24 +62,32 @@ pub(crate) fn write_rendered_templates(
     Ok(())
 }
 
-struct RenderedTemplateCache {
+pub(crate) struct RenderedTemplatesCache {
     internal_cache: HashMap<String, RenderedTemplate>,
 }
 
-impl RenderedTemplateCache {
+impl RenderedTemplatesCache {
     pub fn new() -> Self {
         Self {
             internal_cache: HashMap::new(),
         }
     }
 
-    pub fn get(&self, key: &str) -> Result<Option<RenderedTemplate>> {
-        if self.internal_cache.contains_key(key) {
-            Ok(Some(self.internal_cache.get(key).unwrap().clone()))
+    pub fn get<P: AsRef<Path>>(&self, key: P) -> Result<Option<RenderedTemplate>> {
+        if self
+            .internal_cache
+            .contains_key(&key.as_ref().to_string_lossy().to_string())
+        {
+            Ok(Some(
+                self.internal_cache
+                    .get(&key.as_ref().to_string_lossy().to_string())
+                    .unwrap()
+                    .clone(),
+            ))
         } else {
-            read_to_string(key).map_or(Ok(None), |content| {
+            read_to_string(&key).map_or(Ok(None), |content| {
                 let template = RenderedTemplate {
-                    path: PathBuf::from(key),
+                    path: key.as_ref().to_path_buf(),
                     content,
                     context: None,
                 };
@@ -88,8 +96,8 @@ impl RenderedTemplateCache {
         }
     }
 
-    pub fn insert(&mut self, key: String, value: RenderedTemplate) {
-        self.internal_cache.insert(key, value);
+    pub fn insert<K: ToString>(&mut self, key: K, value: RenderedTemplate) {
+        self.internal_cache.insert(key.to_string(), value);
     }
 
     pub fn keys(&self) -> Vec<&String> {
@@ -102,5 +110,9 @@ impl RenderedTemplateCache {
 
     pub fn values_mut(&mut self) -> Vec<&mut RenderedTemplate> {
         self.internal_cache.values_mut().collect()
+    }
+
+    pub fn drain(&mut self) -> Drain<'_, std::string::String, RenderedTemplate> {
+        self.internal_cache.drain()
     }
 }

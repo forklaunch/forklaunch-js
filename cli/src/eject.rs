@@ -154,7 +154,14 @@ fn perform_string_replacements(
             };
 
             for dependency in dependencies_to_eject {
-                let module_types = ["/schemas", "/interfaces", "/types", "/services"];
+                let module_types = [
+                    "/schemas",
+                    "/interfaces",
+                    "/types",
+                    "/services",
+                    "/consumers",
+                    "/producers",
+                ];
                 for module_type in module_types {
                     new_content = new_content.replace(
                         format!("{}{}", dependency, module_type).as_str(),

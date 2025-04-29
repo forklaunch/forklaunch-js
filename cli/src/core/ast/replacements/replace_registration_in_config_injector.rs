@@ -1,6 +1,10 @@
-use oxc_ast::ast::{Argument, Declaration, Expression, Program, Statement};
+use oxc_allocator::{Allocator, CloneIn, Vec};
+use oxc_ast::ast::{
+    Argument, Declaration, Expression, ObjectPropertyKind, Program, PropertyKey, Statement,
+};
 
-pub(crate) fn inject_into_registrations_config_injector<'a>(
+pub(crate) fn replace_registration_in_config_injector<'a>(
+    allocator: &'a Allocator,
     registrations_program: &mut Program<'a>,
     config_injector_injection: &mut Program<'a>,
     declaration_name: &str,
@@ -65,11 +69,44 @@ pub(crate) fn inject_into_registrations_config_injector<'a>(
                                 _ => continue,
                             };
 
-                            object_expr
-                                .properties
-                                .extend(injected_obj.properties.drain(..));
+                            let mut new_object_properties = Vec::new_in(allocator);
+                            for object_property in object_expr.properties.iter_mut() {
+                                let mut found = false;
+                                let property = match object_property {
+                                    ObjectPropertyKind::ObjectProperty(property) => property,
+                                    _ => continue,
+                                };
 
-                            return;
+                                let property_id = match &property.key {
+                                    PropertyKey::Identifier(property_id) => property_id,
+                                    _ => continue,
+                                };
+
+                                for injected_object_property in injected_obj.properties.iter_mut() {
+                                    let injected_property = match injected_object_property {
+                                        ObjectPropertyKind::ObjectProperty(property) => property,
+                                        _ => continue,
+                                    };
+
+                                    let injected_property_id = match &injected_property.key {
+                                        PropertyKey::Identifier(property_id) => property_id,
+                                        _ => continue,
+                                    };
+
+                                    if property_id.name == injected_property_id.name {
+                                        found = true;
+                                    }
+                                }
+
+                                if !found {
+                                    new_object_properties.push(ObjectPropertyKind::ObjectProperty(
+                                        property.clone_in(allocator),
+                                    ));
+                                }
+                            }
+
+                            new_object_properties.extend(injected_obj.properties.drain(..));
+                            object_expr.properties = new_object_properties;
                         }
                     }
                 }

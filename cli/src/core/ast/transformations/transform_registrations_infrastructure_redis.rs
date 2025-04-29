@@ -15,14 +15,14 @@ use crate::core::ast::{
 
 pub(crate) fn transform_registrations_infrastructure_redis_ts(
     base_path: &Path,
-    registrations_text: Option<&str>,
+    registrations_text: Option<String>,
 ) -> Result<String> {
     let allocator = Allocator::default();
     let registrations_path = base_path.join("registration.ts");
     let registrations_text = if let Some(registrations_text) = registrations_text {
         registrations_text
     } else {
-        &read_to_string(&registrations_path)?
+        read_to_string(&registrations_path)?
     };
 
     let registrations_type = SourceType::from_path(&registrations_path)?;

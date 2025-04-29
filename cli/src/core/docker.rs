@@ -5,10 +5,11 @@ use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use serde_yml::{from_str, to_string, to_value, Value};
 
-use super::manifest::ManifestData;
+use super::manifest::{ManifestData, ProjectEntry};
 use crate::{
     constants::{
-        Database, Runtime, ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE,
+        Database, Infrastructure, Runtime, WorkerBackend,
+        ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE,
         ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE, ERROR_FAILED_TO_READ_DOCKER_COMPOSE,
     },
     core::manifest::{service::ServiceManifestData, worker::WorkerManifestData},
@@ -225,7 +226,7 @@ pub(crate) fn add_redis_to_docker_compose<'a>(
     Ok(docker_compose)
 }
 
-fn add_kafka_to_docker_compose<'a>(
+pub(crate) fn add_kafka_to_docker_compose<'a>(
     app_name: &str,
     project_name: &str,
     docker_compose: &'a mut DockerCompose,
@@ -582,16 +583,46 @@ pub(crate) fn add_database_to_docker_compose(
     Ok(())
 }
 
-// TODO: extend this to other infrastructure services
-pub(crate) fn clean_up_unused_database_services(
+pub(crate) fn clean_up_unused_infrastructure_services(
     docker_compose: &mut DockerCompose,
-    databases_in_use: &HashSet<String>,
+    projects: Vec<ProjectEntry>,
 ) -> Result<()> {
-    let all_database_set = HashSet::from(Database::VARIANTS.map(|db| db.to_string()));
-    let unused_databases = all_database_set.difference(databases_in_use);
+    let mut infrastructure_in_use = HashSet::new();
 
-    for database in unused_databases {
-        docker_compose.services.shift_remove(&database.to_string());
+    for project in projects {
+        if let Some(resources) = project.resources {
+            if let Some(database) = resources.database {
+                infrastructure_in_use.insert(database);
+            }
+            if let Some(cache) = resources.cache {
+                infrastructure_in_use.insert(cache);
+            }
+            if let Some(queue) = resources.queue {
+                let queue = queue.clone();
+                infrastructure_in_use.insert(queue);
+            }
+        }
+    }
+
+    let mut all_infrastructure_set = HashSet::from(Database::VARIANTS);
+    all_infrastructure_set.extend(Infrastructure::VARIANTS);
+    all_infrastructure_set.extend(
+        WorkerBackend::VARIANTS.iter().filter(|backend| {
+            backend.parse::<WorkerBackend>().ok() != Some(WorkerBackend::Database)
+        }),
+    );
+
+    let all_infrastructure_set = all_infrastructure_set
+        .iter()
+        .map(|infrastructure| infrastructure.to_string())
+        .collect::<HashSet<String>>();
+
+    let unused_infrastructure = all_infrastructure_set.difference(&infrastructure_in_use);
+
+    for infrastructure in unused_infrastructure {
+        docker_compose
+            .services
+            .shift_remove(&infrastructure.to_string());
     }
 
     Ok(())

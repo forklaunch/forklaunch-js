@@ -8,13 +8,17 @@ use oxc_codegen::{CodeGenerator, CodegenOptions};
 use crate::{
     constants::Database,
     core::{
-        ast::parse_ast_program::{parse_ast_expression, parse_ast_program},
+        ast::{
+            parse_ast_program::{parse_ast_expression, parse_ast_program},
+            replacements::replace_import_statment::replace_import_statment,
+        },
         database::match_database,
     },
 };
 
 pub(crate) fn transform_mikroorm_config_ts(
     base_path: &Path,
+    existing_database: &Database,
     database: &Database,
     in_memory: bool,
 ) -> Result<String> {
@@ -26,6 +30,22 @@ pub(crate) fn transform_mikroorm_config_ts(
     let mut mikro_orm_config_program =
         parse_ast_program(&allocator, &mikro_orm_config_text, mikro_orm_config_type);
 
+    let database_driver_import_text = format!(
+        "import {{ {} }} from \"@mikro-orm/{}\";",
+        match_database(database),
+        database.to_string().to_lowercase()
+    );
+    let mut database_driver_import_program =
+        parse_ast_program(&allocator, &database_driver_import_text, SourceType::ts());
+    replace_import_statment(
+        &mut mikro_orm_config_program,
+        &mut database_driver_import_program,
+        &format!(
+            "@mikro-orm/{}",
+            existing_database.to_string().to_lowercase()
+        ),
+    );
+
     let driver_text = format!("let driver = {};", match_database(database));
     let migrations_text = format!(
         "let migrations = {{
@@ -35,30 +55,6 @@ pub(crate) fn transform_mikroorm_config_ts(
         database.to_string().to_lowercase(),
         database.to_string().to_lowercase()
     );
-
-    let mut driver_import_index = None;
-    for (index, stmt) in mikro_orm_config_program.body.iter_mut().enumerate() {
-        let import = match stmt {
-            Statement::ImportDeclaration(import) => import,
-            _ => continue,
-        };
-
-        if let Some(specifiers) = &import.specifiers {
-            if specifiers.iter().any(|spec| spec.name().contains("Driver")) {
-                driver_import_index = Some(index);
-            }
-        }
-    }
-    if let Some(driver_import_index) = driver_import_index {
-        let driver_text = format!(
-            "import {{ {} }} from \"mikro-orm/{}\";",
-            match_database(database),
-            database.to_string().to_lowercase()
-        );
-        let new_import = parse_ast_program(&allocator, &driver_text, SourceType::ts());
-        mikro_orm_config_program.body[driver_import_index] =
-            new_import.body[0].clone_in(&allocator);
-    }
 
     for stmt in mikro_orm_config_program.body.iter_mut() {
         let declaration = match stmt {

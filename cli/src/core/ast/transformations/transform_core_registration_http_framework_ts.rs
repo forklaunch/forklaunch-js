@@ -10,7 +10,7 @@ use crate::{constants::HttpFramework, core::ast::parse_ast_program::parse_ast_pr
 pub(crate) fn transform_core_registration_http_framework_ts(
     http_framework_name: &str,
     base_path: &Path,
-    core_registration_http_framework_text: Option<&str>,
+    core_registration_http_framework_text: Option<String>,
 ) -> Result<String> {
     let allocator = Allocator::default();
     let core_registration_http_framework_path = base_path.join("core").join("registration.ts");
@@ -19,7 +19,7 @@ pub(crate) fn transform_core_registration_http_framework_ts(
     {
         core_registration_http_framework_text
     } else {
-        &read_to_string(&core_registration_http_framework_path)?
+        read_to_string(&core_registration_http_framework_path)?
     };
     let core_registration_http_framework_type =
         SourceType::from_path(&core_registration_http_framework_path)?;

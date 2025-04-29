@@ -54,7 +54,9 @@ use crate::{
             },
         },
         removal_template::{remove_template_files, RemovalTemplate},
-        rendered_template::{write_rendered_templates, RenderedTemplate, TEMPLATES_DIR},
+        rendered_template::{
+            self, write_rendered_templates, RenderedTemplate, RenderedTemplatesCache, TEMPLATES_DIR,
+        },
         symlink_template::{create_symlinks, SymlinkTemplate},
         watermark::apply_watermark,
     },
@@ -87,7 +89,7 @@ fn change_name(
     name: &str,
     application_json_to_write: &mut ApplicationPackageJson,
     project_jsons_to_write: &mut HashMap<String, ProjectPackageJson>,
-    rendered_templates_cache: &mut HashMap<String, RenderedTemplate>,
+    rendered_templates_cache: &mut RenderedTemplatesCache,
 ) -> Result<()> {
     let existing_name = manifest_data.app_name.clone();
 
@@ -136,17 +138,8 @@ fn change_name(
                 continue;
             }
 
-            let contents = if rendered_templates_cache
-                .contains_key(path.to_string_lossy().to_string().as_str())
-            {
-                rendered_templates_cache
-                    .get(path.to_string_lossy().to_string().as_str())
-                    .unwrap()
-                    .content
-                    .clone()
-            } else {
-                read_to_string(path)?
-            };
+            let contents = rendered_templates_cache.get(path)?.unwrap().content.clone();
+
             let new_contents = contents
                 .replace(
                     format!("@{}", &existing_name).as_str(),
@@ -162,7 +155,7 @@ fn change_name(
                 );
             if contents != new_contents {
                 rendered_templates_cache.insert(
-                    path.to_string_lossy().to_string(),
+                    path.to_string_lossy(),
                     RenderedTemplate {
                         path: path.to_path_buf(),
                         content: new_contents,
@@ -216,7 +209,7 @@ fn update_config_files(
     exclusive_files: &[&str],
     existing_files: Vec<&str>,
     project_jsons_to_write: &mut HashMap<String, ProjectPackageJson>,
-    rendered_templates_cache: &mut HashMap<String, RenderedTemplate>,
+    rendered_templates_cache: &mut RenderedTemplatesCache,
 ) -> Result<(Vec<RemovalTemplate>, Vec<SymlinkTemplate>)> {
     let mut removal_templates = vec![];
     let mut symlink_templates = vec![];
@@ -230,7 +223,7 @@ fn update_config_files(
             .unwrap();
 
         rendered_templates_cache.insert(
-            base_path.join(file).to_string_lossy().to_string(),
+            base_path.join(file).to_string_lossy(),
             RenderedTemplate {
                 path: base_path.join(file),
                 content: linter_config_file_contents.to_string(),
@@ -353,7 +346,7 @@ fn change_formatter(
     manifest_data: &mut ApplicationManifestData,
     application_json_to_write: &mut ApplicationPackageJson,
     project_jsons_to_write: &mut HashMap<String, ProjectPackageJson>,
-    rendered_templates_cache: &mut HashMap<String, RenderedTemplate>,
+    rendered_templates_cache: &mut RenderedTemplatesCache,
 ) -> Result<(Vec<RemovalTemplate>, Vec<SymlinkTemplate>)> {
     let existing_formatter = manifest_data.formatter.parse::<Formatter>()?;
 
@@ -433,7 +426,7 @@ fn change_linter(
     manifest_data: &mut ApplicationManifestData,
     application_json_to_write: &mut ApplicationPackageJson,
     project_jsons_to_write: &mut HashMap<String, ProjectPackageJson>,
-    rendered_templates_cache: &mut HashMap<String, RenderedTemplate>,
+    rendered_templates_cache: &mut RenderedTemplatesCache,
 ) -> Result<(Vec<RemovalTemplate>, Vec<SymlinkTemplate>)> {
     let existing_linter = manifest_data.linter.parse::<Linter>()?;
 
@@ -542,15 +535,11 @@ fn change_validator(
     validator: &Validator,
     manifest_data: &mut ApplicationManifestData,
     project_jsons_to_write: &mut HashMap<String, ProjectPackageJson>,
-    rendered_templates_cache: &mut HashMap<String, RenderedTemplate>,
+    rendered_templates_cache: &mut RenderedTemplatesCache,
 ) -> Result<()> {
     manifest_data.validator = validator.to_string();
 
-    let validator_file_key = base_path
-        .join("core")
-        .join("registration.ts")
-        .to_string_lossy()
-        .to_string();
+    let validator_file_key = base_path.join("core").join("registration.ts");
 
     for project in project_jsons_to_write.values_mut() {
         let dependencies = project.dependencies.as_mut().unwrap();
@@ -568,22 +557,15 @@ fn change_validator(
     }
 
     rendered_templates_cache.insert(
-        validator_file_key.clone(),
+        validator_file_key.to_string_lossy(),
         RenderedTemplate {
             path: base_path.join("core").join("registration.ts"),
             content: transform_core_registration_validator_ts(
                 &validator.to_string(),
                 base_path,
-                if rendered_templates_cache.contains_key(&validator_file_key) {
-                    Some(
-                        &rendered_templates_cache
-                            .get(&validator_file_key)
-                            .unwrap()
-                            .content,
-                    )
-                } else {
-                    None
-                },
+                rendered_templates_cache
+                    .get(&validator_file_key)?
+                    .and_then(|v| Some(v.content.clone())),
             )?,
             context: None,
         },
@@ -597,15 +579,11 @@ fn change_http_framework(
     http_framework: &HttpFramework,
     manifest_data: &mut ApplicationManifestData,
     project_jsons_to_write: &mut HashMap<String, ProjectPackageJson>,
-    rendered_templates_cache: &mut HashMap<String, RenderedTemplate>,
+    rendered_templates_cache: &mut RenderedTemplatesCache,
 ) -> Result<()> {
     manifest_data.http_framework = http_framework.to_string();
 
-    let http_framework_file_key = base_path
-        .join("core")
-        .join("registration.ts")
-        .to_string_lossy()
-        .to_string();
+    let http_framework_file_key = base_path.join("core").join("registration.ts");
 
     for project in project_jsons_to_write.values_mut() {
         let dependencies = project.dependencies.as_mut().unwrap();
@@ -623,22 +601,15 @@ fn change_http_framework(
     }
 
     rendered_templates_cache.insert(
-        http_framework_file_key.clone(),
+        http_framework_file_key.to_string_lossy(),
         RenderedTemplate {
             path: base_path.join("core").join("registration.ts"),
             content: transform_core_registration_http_framework_ts(
                 &http_framework.to_string(),
                 base_path,
-                if rendered_templates_cache.contains_key(&http_framework_file_key) {
-                    Some(
-                        &rendered_templates_cache
-                            .get(&http_framework_file_key)
-                            .unwrap()
-                            .content,
-                    )
-                } else {
-                    None
-                },
+                rendered_templates_cache
+                    .get(&http_framework_file_key)?
+                    .and_then(|v| Some(v.content.clone())),
             )?,
             context: None,
         },
@@ -656,7 +627,7 @@ fn change_runtime(
     manifest_data: &mut ApplicationManifestData,
     application_json_to_write: &mut ApplicationPackageJson,
     project_jsons_to_write: &mut HashMap<String, ProjectPackageJson>,
-    rendered_templates_cache: &mut HashMap<String, RenderedTemplate>,
+    rendered_templates_cache: &mut RenderedTemplatesCache,
 ) -> Result<(Vec<RemovalTemplate>)> {
     let existing_runtime = manifest_data.runtime.parse::<Runtime>()?;
     let existing_database = manifest_data.database.parse::<Database>()?;
@@ -971,7 +942,7 @@ fn change_runtime(
 
     if existing_dockerfile_contents != watermarked_dockerfile_contents {
         rendered_templates_cache.insert(
-            base_path.join("Dockerfile").to_string_lossy().to_string(),
+            base_path.join("Dockerfile").to_string_lossy(),
             RenderedTemplate {
                 path: base_path.join(format!("Dockerfile.{}", runtime.to_string())),
                 content: existing_dockerfile_contents,
@@ -980,9 +951,9 @@ fn change_runtime(
         );
     }
 
-    let dockerfile_cache_key = base_path.join("Dockerfile").to_string_lossy().to_string();
+    let dockerfile_cache_key = base_path.join("Dockerfile");
     rendered_templates_cache.insert(
-        dockerfile_cache_key.clone(),
+        dockerfile_cache_key.to_string_lossy(),
         RenderedTemplate {
             path: base_path.join("Dockerfile"),
             content: if exists(base_path.join(format!("Dockerfile.{}", runtime.to_string())))? {
@@ -995,18 +966,14 @@ fn change_runtime(
                     ..serde_json::from_value(serde_json::to_value(&manifest_data)?)?
                 };
 
-                let dockerfile_contents =
-                    if rendered_templates_cache.contains_key(&dockerfile_cache_key) {
-                        rendered_templates_cache
-                            .get(&dockerfile_cache_key)
-                            .unwrap()
-                            .content
-                            .clone()
-                    } else {
-                        dockerfile_template.render(&service_manifest_data)
-                    };
+                let dockerfile_contents = rendered_templates_cache
+                    .get(&dockerfile_cache_key)?
+                    .unwrap();
 
-                update_dockerfile_contents(&dockerfile_contents, &service_manifest_data)?
+                update_dockerfile_contents(
+                    dockerfile_contents.content.as_str(),
+                    &service_manifest_data,
+                )?
             },
             context: None,
         },
@@ -1021,7 +988,7 @@ fn change_test_framework(
     manifest_data: &mut ApplicationManifestData,
     application_json_to_write: &mut ApplicationPackageJson,
     project_jsons_to_write: &mut HashMap<String, ProjectPackageJson>,
-    rendered_templates_cache: &mut HashMap<String, RenderedTemplate>,
+    rendered_templates_cache: &mut RenderedTemplatesCache,
 ) -> Result<Vec<RemovalTemplate>> {
     let existing_test_framework =
         if let Some(manifest_test_framework) = manifest_data.test_framework.clone() {
@@ -1137,10 +1104,7 @@ fn change_test_framework(
                 .unwrap();
 
             rendered_templates_cache.insert(
-                base_path
-                    .join("vitest.config.ts")
-                    .to_string_lossy()
-                    .to_string(),
+                base_path.join("vitest.config.ts").to_string_lossy(),
                 RenderedTemplate {
                     path: base_path.join("vitest.config.ts"),
                     content: vitest_config_file_contents.to_string(),
@@ -1160,10 +1124,7 @@ fn change_test_framework(
                 .unwrap();
 
             rendered_templates_cache.insert(
-                base_path
-                    .join("jest.config.ts")
-                    .to_string_lossy()
-                    .to_string(),
+                base_path.join("jest.config.ts").to_string_lossy(),
                 RenderedTemplate {
                     path: base_path.join("jest.config.ts"),
                     content: jest_config_file_contents.to_string(),
@@ -1191,7 +1152,7 @@ fn change_license(
     license: &License,
     manifest_data: &mut ApplicationManifestData,
     application_json_to_write: &mut ApplicationPackageJson,
-    rendered_templates_cache: &mut HashMap<String, RenderedTemplate>,
+    rendered_templates_cache: &mut RenderedTemplatesCache,
 ) -> Result<Option<RemovalTemplate>> {
     manifest_data.license = license.to_string();
     let license_path = base_path.join("LICENSE");
@@ -1202,12 +1163,12 @@ fn change_license(
     }
 
     application_json_to_write.license = Some(license.to_string());
-    let license_file_key = base_path.join("LICENSE").to_string_lossy().to_string();
+    let license_file_key = base_path.join("LICENSE");
 
     if let Some(license_file_contents) =
         generate_license(base_path.to_str().unwrap(), &manifest_data)?
     {
-        rendered_templates_cache.insert(license_file_key.clone(), license_file_contents);
+        rendered_templates_cache.insert(license_file_key.to_string_lossy(), license_file_contents);
     }
 
     Ok(removal_template)
@@ -1301,6 +1262,7 @@ impl CliCommand for ApplicationCommand {
     fn handler(&self, matches: &clap::ArgMatches) -> Result<()> {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
+        let mut rendered_templates_cache = RenderedTemplatesCache::new();
 
         let base_path_input = prompt_base_path(
             &mut line_editor,
@@ -1503,7 +1465,6 @@ impl CliCommand for ApplicationCommand {
             |_| "Invalid license. Please try again".to_string(),
         )?;
 
-        let mut rendered_templates_cache = HashMap::new();
         let mut removal_templates = vec![];
         let mut symlink_templates = vec![];
 
@@ -1670,22 +1631,29 @@ impl CliCommand for ApplicationCommand {
                 removal_templates.push(removal_template);
             }
         }
-        let mut rendered_templates: Vec<RenderedTemplate> = rendered_templates_cache
+
+        rendered_templates_cache.insert(
+            config_path.to_string_lossy(),
+            RenderedTemplate {
+                path: config_path.to_path_buf(),
+                content: toml::to_string_pretty(&manifest_data)?,
+                context: None,
+            },
+        );
+
+        rendered_templates_cache.insert(
+            base_path.join("package.json").to_string_lossy(),
+            RenderedTemplate {
+                path: base_path.join("package.json"),
+                content: serde_json::to_string_pretty(&application_json_to_write)?,
+                context: None,
+            },
+        );
+
+        let rendered_templates: Vec<RenderedTemplate> = rendered_templates_cache
             .drain()
             .map(|(_, template)| template)
             .collect();
-
-        rendered_templates.push(RenderedTemplate {
-            path: config_path.to_path_buf(),
-            content: toml::to_string_pretty(&manifest_data)?,
-            context: None,
-        });
-
-        rendered_templates.push(RenderedTemplate {
-            path: base_path.join("package.json"),
-            content: serde_json::to_string_pretty(&application_json_to_write)?,
-            context: None,
-        });
 
         write_rendered_templates(&rendered_templates, dryrun, &mut stdout)?;
         remove_template_files(&removal_templates, dryrun, &mut stdout)?;

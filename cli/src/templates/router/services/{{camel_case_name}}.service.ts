@@ -1,5 +1,5 @@
 import { OpenTelemetryCollector } from '@forklaunch/core/http';{{#is_worker}}
-import { WorkerOptions } from '@forklaunch/implementation-worker-{{worker_type_lowercase}}/types';{{/is_worker}}{{^is_worker}}
+import { WorkerProducer } from '@forklaunch/interfaces-worker';{{/is_worker}}{{^is_worker}}
 import { EntityManager } from '@mikro-orm/core';{{/is_worker}}
 import { SchemaValidator } from '@{{app_name}}/core';
 import { Metrics } from '@{{app_name}}/monitoring';
@@ -18,7 +18,7 @@ import { {{pascal_case_name}}EventRecord } from '../persistence/entities';{{/is_
 export class Base{{pascal_case_name}}Service implements {{pascal_case_name}}Service {
   constructor({{^is_worker}}
     private entityManager: EntityManager{{/is_worker}}{{#is_worker}}
-    private workerProducer: {{worker_type}}<{{pascal_case_name}}EventRecord, WorkerOptions>{{/is_worker}}, 
+    private workerProducer: WorkerProducer<{{pascal_case_name}}EventRecord>{{/is_worker}}, 
     private readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>
   ) {}
 

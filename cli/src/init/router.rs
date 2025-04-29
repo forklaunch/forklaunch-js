@@ -91,7 +91,7 @@ fn add_router_to_artifacts(
 
     rendered_templates.push(RenderedTemplate {
         path: Path::new(&base_path).join("server.ts"),
-        content: transform_app_ts(config_data.router_name.as_str(), is_worker, &base_path)?,
+        content: transform_app_ts(config_data.router_name.as_str(), &base_path)?,
         context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_APP.to_string()),
     });
 

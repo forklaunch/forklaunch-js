@@ -1,19 +1,14 @@
-use std::{
-    collections::{HashMap, HashSet},
-    fs::read_to_string,
-    io::Write,
-    path::Path,
-};
+use std::{io::Write, path::Path};
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, Command};
-use convert_case::{Case, Casing};
 use dialoguer::{theme::ColorfulTheme, MultiSelect};
 use rustyline::{history::DefaultHistory, Editor};
 use serde_json::from_str;
 use termcolor::{ColorChoice, StandardStream};
 use walkdir::WalkDir;
 
+use super::router::change_name as change_router_name;
 use crate::{
     constants::{
         Database, Infrastructure, ERROR_FAILED_TO_PARSE_MANIFEST,
@@ -31,17 +26,19 @@ use crate::{
         database::is_in_memory_database,
         docker::{
             add_database_to_docker_compose, add_redis_to_docker_compose,
-            clean_up_unused_database_services, DockerCompose,
+            clean_up_unused_infrastructure_services, DockerCompose,
         },
         manifest::{service::ServiceManifestData, ManifestData},
         package_json::project_package_json::ProjectPackageJson,
         removal_template::{remove_template_files, RemovalTemplate},
-        rendered_template::{write_rendered_templates, RenderedTemplate, TEMPLATES_DIR},
+        rendered_template::{
+            write_rendered_templates, RenderedTemplate, RenderedTemplatesCache, TEMPLATES_DIR,
+        },
         watermark::apply_watermark,
     },
     prompt::{
-        prompt_comma_separated_list, prompt_comma_separated_list_from_selections,
-        prompt_field_from_selections_with_validation, ArrayCompleter,
+        prompt_comma_separated_list_from_selections, prompt_field_from_selections_with_validation,
+        ArrayCompleter,
     },
     CliCommand,
 };
@@ -60,71 +57,29 @@ fn change_name(
     name: &str,
     manifest_data: &mut ServiceManifestData,
     project_package_json: &mut ProjectPackageJson,
-    rendered_templates_cache: &mut HashMap<String, RenderedTemplate>,
+    rendered_templates_cache: &mut RenderedTemplatesCache,
 ) -> Result<Vec<RemovalTemplate>> {
     let existing_name = base_path.file_name().unwrap().to_string_lossy().to_string();
 
     let mut removal_templates = vec![];
 
     manifest_data.service_name = name.to_string();
-    manifest_data
+    let project_entry = manifest_data
         .projects
         .iter_mut()
         .find(|project| project.name == existing_name)
-        .unwrap()
-        .name = name.to_string();
+        .unwrap();
+    project_entry.name = name.to_string();
 
     project_package_json.name = Some(format!("@{}/{}", manifest_data.app_name, name.to_string()));
 
-    let existing_camel_case_name = existing_name.to_case(Case::Camel);
-    let existing_kebab_case_name = existing_name.to_case(Case::Kebab);
-    let existing_pascal_case_name = existing_name.to_case(Case::Pascal);
-
-    // #TODO: move this into router change name function
-    let camel_case_name = name.to_case(Case::Camel);
-    let kebab_case_name = name.to_case(Case::Kebab);
-    let pascal_case_name = name.to_case(Case::Pascal);
-
-    TEMPLATES_DIR
-        .get_dir("router")
-        .unwrap()
-        .entries()
-        .into_iter()
-        .for_each(|top_level_folder| {
-            for entry in WalkDir::new(base_path.join(&top_level_folder.path().file_name().unwrap()))
-            {
-                let entry = entry.unwrap();
-                if entry.file_type().is_file() {
-                    let path = entry.path();
-                    if let Some(content) = read_to_string(path).ok() {
-                        let new_content = content
-                            .replace(&existing_pascal_case_name, &pascal_case_name)
-                            .replace(&existing_kebab_case_name, &kebab_case_name)
-                            .replace(&existing_camel_case_name, &camel_case_name)
-                            .replace(&existing_name, &name);
-                        let new_path = path
-                            .to_string_lossy()
-                            .replace(&existing_pascal_case_name, &pascal_case_name)
-                            .replace(&existing_kebab_case_name, &kebab_case_name)
-                            .replace(&existing_camel_case_name, &camel_case_name)
-                            .replace(&existing_name, &name);
-                        if content != new_content {
-                            rendered_templates_cache.insert(
-                                new_path.clone(),
-                                RenderedTemplate {
-                                    path: new_path.clone().into(),
-                                    content: new_content,
-                                    context: None,
-                                },
-                            );
-                            if path.to_string_lossy().to_string() != new_path {
-                                removal_templates.push(RemovalTemplate { path: path.into() })
-                            }
-                        }
-                    }
-                }
-            }
-        });
+    removal_templates.extend(change_router_name(
+        base_path,
+        &existing_name,
+        name,
+        project_entry,
+        rendered_templates_cache,
+    )?);
 
     Ok(removal_templates)
 }
@@ -135,7 +90,7 @@ fn change_database(
     manifest_data: &mut ServiceManifestData,
     project_package_json: &mut ProjectPackageJson,
     docker_compose_data: &mut DockerCompose,
-    rendered_templates_cache: &mut HashMap<String, RenderedTemplate>,
+    rendered_templates_cache: &mut RenderedTemplatesCache,
 ) -> Result<Option<RemovalTemplate>> {
     if manifest_data.database == database.to_string() {
         return Ok(None);
@@ -150,7 +105,7 @@ fn change_database(
         .projects
         .iter_mut()
         .find(|project_entry| {
-            project_entry.name == base_path.file_name().unwrap().to_string_lossy().to_string()
+            project_entry.name == base_path.file_name().unwrap().to_string_lossy()
         })
         .unwrap();
     project.resources.as_mut().unwrap().database = Some(database.to_string());
@@ -176,22 +131,17 @@ fn change_database(
         .unwrap()
         .environment = Some(existing_docker_service_environment);
 
-    clean_up_unused_database_services(
-        docker_compose_data,
-        &manifest_data
-            .projects
-            .iter()
-            .map(|p| p.resources.as_ref().unwrap().database.clone().unwrap())
-            .collect::<HashSet<String>>(),
-    )?;
+    let projects = manifest_data.projects.clone();
+    clean_up_unused_infrastructure_services(docker_compose_data, projects)?;
 
     let mikro_orm_config_path = base_path.join("mikro-orm.config.ts");
     rendered_templates_cache.insert(
-        mikro_orm_config_path.to_string_lossy().to_string(),
+        mikro_orm_config_path.to_string_lossy(),
         RenderedTemplate {
-            path: mikro_orm_config_path,
+            path: mikro_orm_config_path.clone(),
             content: transform_mikroorm_config_ts(
                 &base_path,
+                &existing_database,
                 database,
                 is_in_memory_database(&database),
             )?,
@@ -207,9 +157,9 @@ fn change_database(
             .join("persistence")
             .join("entity.ts");
         rendered_templates_cache.insert(
-            entity_path.to_string_lossy().to_string(),
+            entity_path.to_string_lossy(),
             RenderedTemplate {
-                path: entity_path,
+                path: entity_path.clone(),
                 content: base_entity_ts_content,
                 context: None,
             },
@@ -238,13 +188,14 @@ fn change_database(
         let entry = entry?;
         if entry.file_type().is_file() {
             let path = entry.path();
-            if let Some(content) = read_to_string(path).ok() {
+            if let Some(template) = rendered_templates_cache.get(&path)? {
+                let content = template.content;
                 let new_content = content
                     .replace(base_entity_from, base_entity_to)
                     .replace(import_source_from, import_source_to);
                 if content != new_content {
                     rendered_templates_cache.insert(
-                        path.to_string_lossy().to_string(),
+                        path.to_string_lossy(),
                         RenderedTemplate {
                             path: path.to_path_buf(),
                             content: new_content,
@@ -274,7 +225,10 @@ fn change_database(
             .unwrap()
             .to_string(),
         context: None,
-    })? == read_to_string(&existing_base_entity_path)?
+    })? == rendered_templates_cache
+        .get(&existing_base_entity_path)?
+        .unwrap()
+        .content
     {
         return Ok(Some(RemovalTemplate {
             path: existing_base_entity_path,
@@ -300,7 +254,7 @@ fn change_infrastructure(
     infrastructure_to_add: Vec<Infrastructure>,
     manifest_data: &mut ServiceManifestData,
     docker_compose: &mut DockerCompose,
-    rendered_templates_cache: &mut HashMap<String, RenderedTemplate>,
+    rendered_templates_cache: &mut RenderedTemplatesCache,
 ) -> Result<()> {
     for infrastructure in infrastructure_to_add {
         match infrastructure {
@@ -325,7 +279,10 @@ fn change_infrastructure(
                     .environment = Some(environment);
 
                 let env_local_path = base_path.join(".env.local");
-                let mut env_local_content = read_to_string(&env_local_path)?;
+                let mut env_local_content = rendered_templates_cache
+                    .get(&env_local_path)?
+                    .unwrap()
+                    .content;
 
                 if !env_local_content.contains("REDIS_URL") {
                     env_local_content = format!(
@@ -335,9 +292,9 @@ fn change_infrastructure(
                 }
 
                 rendered_templates_cache.insert(
-                    env_local_path.to_string_lossy().to_string(),
+                    env_local_path.to_string_lossy(),
                     RenderedTemplate {
-                        path: env_local_path,
+                        path: env_local_path.clone(),
                         content: env_local_content,
                         context: None,
                     },
@@ -345,12 +302,14 @@ fn change_infrastructure(
 
                 let registrations_path = base_path.join("registrations.ts");
                 rendered_templates_cache.insert(
-                    registrations_path.to_string_lossy().to_string(),
+                    registrations_path.to_string_lossy(),
                     RenderedTemplate {
                         path: registrations_path.clone(),
                         content: transform_registrations_infrastructure_redis_ts(
                             &base_path,
-                            Some(&read_to_string(&registrations_path)?),
+                            rendered_templates_cache
+                                .get(&registrations_path)?
+                                .and_then(|v| Some(v.content.clone())),
                         )?,
                         context: None,
                     },
@@ -370,13 +329,9 @@ impl CliCommand for ServiceCommand {
                 Arg::new("base_path")
                     .short('p')
                     .long("path")
-                    .help("The application root path"),
+                    .help("The service path"),
             )
-            .arg(
-                Arg::new("name")
-                    .short('N')
-                    .help("The name of the application"),
-            )
+            .arg(Arg::new("name").short('N').help("The name of the service"))
             .arg(
                 Arg::new("database")
                     .short('d')
@@ -407,22 +362,27 @@ impl CliCommand for ServiceCommand {
             )
     }
 
-    fn handler(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+    fn handler(&self, matches: &clap::ArgMatches) -> Result<()> {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
+        let mut rendered_templates_cache = RenderedTemplatesCache::new();
 
         let base_path_input = prompt_base_path(
             &mut line_editor,
             &mut stdout,
             matches,
-            &BasePathLocation::Application,
+            &BasePathLocation::Service,
         )?;
         let base_path = Path::new(&base_path_input);
 
         let config_path = &base_path.join(".forklaunch").join("manifest.toml");
 
         let mut manifest_data: ServiceManifestData = toml::from_str(
-            &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
+            &rendered_templates_cache
+                .get(&config_path)
+                .with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?
+                .unwrap()
+                .content,
         )
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
 
@@ -463,7 +423,7 @@ impl CliCommand for ServiceCommand {
             &mut line_editor,
             &mut stdout,
             matches,
-            "Enter application name: ",
+            "Enter service name: ",
             None,
             |input: &str| {
                 !input.is_empty()
@@ -472,7 +432,7 @@ impl CliCommand for ServiceCommand {
                     && !input.contains('\n')
                     && !input.contains('\r')
             },
-            |_| "Application name cannot be empty or include spaces. Please try again".to_string(),
+            |_| "Service name cannot be empty or include spaces. Please try again".to_string(),
         )?;
 
         let database = prompt_field_from_selections_with_validation(
@@ -533,19 +493,23 @@ impl CliCommand for ServiceCommand {
         let mut removal_templates = vec![];
 
         let project_package_json_path = base_path.join("package.json");
-        let project_package_json_data = read_to_string(&project_package_json_path)
-            .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?;
+        let project_package_json_data = rendered_templates_cache
+            .get(&project_package_json_path)
+            .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?
+            .unwrap()
+            .content;
 
         let mut project_json_to_write =
             serde_json::from_str::<ProjectPackageJson>(&project_package_json_data)?;
 
         let docker_compose_path = base_path.parent().unwrap().join("docker-compose.yaml");
         let mut docker_compose_data = from_str::<DockerCompose>(
-            &read_to_string(docker_compose_path.clone())
-                .with_context(|| ERROR_FAILED_TO_READ_DOCKER_COMPOSE)?,
+            &rendered_templates_cache
+                .get(&docker_compose_path)
+                .with_context(|| ERROR_FAILED_TO_READ_DOCKER_COMPOSE)?
+                .unwrap()
+                .content,
         )?;
-
-        let mut rendered_templates_cache = HashMap::new();
 
         if let Some(name) = name {
             removal_templates.extend(change_name(
@@ -569,7 +533,7 @@ impl CliCommand for ServiceCommand {
             };
         }
         if let Some(description) = description {
-            change_description(&description, &mut manifest_data, &mut project_json_to_write);
+            change_description(&description, &mut manifest_data, &mut project_json_to_write)?;
         }
 
         if let Some(infrastructure) = infrastructure {
@@ -582,11 +546,11 @@ impl CliCommand for ServiceCommand {
                 &mut manifest_data,
                 &mut docker_compose_data,
                 &mut rendered_templates_cache,
-            );
+            )?;
         }
 
         rendered_templates_cache.insert(
-            config_path.clone().to_string_lossy().to_string(),
+            config_path.clone().to_string_lossy(),
             RenderedTemplate {
                 path: config_path.to_path_buf(),
                 content: toml::to_string_pretty(&manifest_data)?,
@@ -595,7 +559,7 @@ impl CliCommand for ServiceCommand {
         );
 
         rendered_templates_cache.insert(
-            docker_compose_path.clone().to_string_lossy().to_string(),
+            docker_compose_path.clone().to_string_lossy(),
             RenderedTemplate {
                 path: docker_compose_path.into(),
                 content: serde_yml::to_string(&docker_compose_data)?,
@@ -615,11 +579,12 @@ impl CliCommand for ServiceCommand {
             },
         );
 
-        write_rendered_templates(
-            &rendered_templates_cache.into_values().collect(),
-            dryrun,
-            &mut stdout,
-        )?;
+        let rendered_templates: Vec<RenderedTemplate> = rendered_templates_cache
+            .drain()
+            .map(|(_, template)| template)
+            .collect();
+
+        write_rendered_templates(&rendered_templates, dryrun, &mut stdout)?;
         remove_template_files(&removal_templates, dryrun, &mut stdout)?;
 
         Ok(())

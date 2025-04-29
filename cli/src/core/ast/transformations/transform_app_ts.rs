@@ -15,11 +15,7 @@ use crate::core::ast::{
     parse_ast_program::parse_ast_program,
 };
 
-pub(crate) fn transform_app_ts(
-    router_name: &str,
-    is_worker: bool,
-    base_path: &String,
-) -> Result<String> {
+pub(crate) fn transform_app_ts(router_name: &str, base_path: &String) -> Result<String> {
     let allocator = Allocator::default();
     let app_path = Path::new(base_path).join("server.ts");
     let app_source_text = read_to_string(&app_path).unwrap();

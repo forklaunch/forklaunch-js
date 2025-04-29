@@ -7,7 +7,11 @@ import {
   DependencyShapes,
   getEnvVar,
   Lifetime,
-} from "@forklaunch/core/services";{{#is_database_enabled}}
+} from "@forklaunch/core/services";{{#is_database_enabled}}{{#is_worker}}
+import { {{worker_type}}WorkerConsumer } from '@forklaunch/implementation-worker-{{worker_type_lowercase}}/consumers';
+import { {{worker_type}}WorkerProducer } from '@forklaunch/implementation-worker-{{worker_type_lowercase}}/producers';
+import { {{worker_type}}WorkerSchemas } from '@forklaunch/implementation-worker-{{worker_type_lowercase}}/schemas';
+import { {{worker_type}}WorkerOptions } from '@forklaunch/implementation-worker-{{worker_type_lowercase}}/types';{{/is_worker}}
 import { EntityManager, ForkOptions, MikroORM } from "@mikro-orm/core";{{/is_database_enabled}}
 import { Base{{pascal_case_name}}Service } from "./services/{{camel_case_name}}.service";
 //! defines the configuration schema for the application
@@ -97,7 +101,9 @@ export function createDependencies({{#is_database_enabled}}{ orm }: { orm: Mikro
   const runtimeDependencies = environmentConfig.chain({
     {{#is_worker}}WorkerOptions: {
       lifetime: Lifetime.Singleton,
-      type: WorkerOptions,
+      type: {{worker_type}}WorkerSchemas({
+        validator: SchemaValidator()
+      }),
       value: {{default_worker_options}}
     },
     {{/is_worker}}OpenTelemetryCollector: {
@@ -135,7 +141,7 @@ export function createDependencies({{#is_database_enabled}}{ orm }: { orm: Mikro
       type: (
         processEventsFunction: WorkerProcessFunction<{{worker_type}}EventRecord>,
         failureHandler: WorkerFailureHandler<{{worker_type}}EventRecord>
-      ) => {{worker_type}}WorkerConsumer<{{worker_type}}EventRecord, WorkerOptions>,
+      ) => {{worker_type}}WorkerConsumer<{{worker_type}}EventRecord, {{worker_type}}WorkerOptions>,
       factory: 
         {{worker_consumer_factory}}
     },
