@@ -1,6 +1,6 @@
 use anyhow::Result;
 use change::ChangeCommand;
-use clap::{command, ArgMatches, Command};
+use clap::{ArgMatches, Command, command};
 use config::ConfigCommand;
 use depcheck::DepcheckCommand;
 use eject::EjectCommand;
@@ -28,7 +28,7 @@ pub(crate) trait CliCommand {
     fn handler(&self, matches: &ArgMatches) -> Result<()>;
 }
 
-fn main() -> anyhow::Result<()> {
+fn main() -> Result<()> {
     // inject token into init, config
     let init = InitCommand::new();
     let change = ChangeCommand::new();

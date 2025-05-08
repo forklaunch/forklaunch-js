@@ -1,18 +1,20 @@
-import { number, SchemaValidator, string } from "@{{app_name}}/core";
-import { metrics } from "@{{app_name}}/monitoring";
-{{#is_cache_enabled}}import { RedisTtlCache } from "@forklaunch/core/cache";{{/is_cache_enabled}}
+import { {{#is_kafka_enabled}}array,{{/is_kafka_enabled}} number, SchemaValidator, string } from "@{{app_name}}/core";
+import { metrics } from "@{{app_name}}/monitoring";{{#is_cache_enabled}}
+import { RedisTtlCache } from "@forklaunch/core/cache";{{/is_cache_enabled}}
 import { OpenTelemetryCollector } from "@forklaunch/core/http";
 import {
   createConfigInjector,
   DependencyShapes,
   getEnvVar,
   Lifetime,
-} from "@forklaunch/core/services";{{#is_database_enabled}}{{#is_worker}}
+} from "@forklaunch/core/services";{{#is_worker}}
 import { {{worker_type}}WorkerConsumer } from '@forklaunch/implementation-worker-{{worker_type_lowercase}}/consumers';
 import { {{worker_type}}WorkerProducer } from '@forklaunch/implementation-worker-{{worker_type_lowercase}}/producers';
 import { {{worker_type}}WorkerSchemas } from '@forklaunch/implementation-worker-{{worker_type_lowercase}}/schemas';
-import { {{worker_type}}WorkerOptions } from '@forklaunch/implementation-worker-{{worker_type_lowercase}}/types';{{/is_worker}}
-import { EntityManager, ForkOptions, MikroORM } from "@mikro-orm/core";{{/is_database_enabled}}
+import { {{worker_type}}WorkerOptions } from '@forklaunch/implementation-worker-{{worker_type_lowercase}}/types';
+import { WorkerProcessFunction, WorkerFailureHandler } from '@forklaunch/interfaces-worker/types';{{/is_worker}}{{#is_database_enabled}}
+import { EntityManager, ForkOptions, MikroORM } from "@mikro-orm/core";{{/is_database_enabled}}{{#is_worker}}
+import { {{pascal_case_name}}EventRecord } from "./persistence/entities/{{camel_case_name}}EventRecord.entity";{{/is_worker}}
 import { Base{{pascal_case_name}}Service } from "./services/{{camel_case_name}}.service";
 //! defines the configuration schema for the application
 export function createDependencies({{#is_database_enabled}}{ orm }: { orm: MikroORM }{{/is_database_enabled}}) {
@@ -104,7 +106,7 @@ export function createDependencies({{#is_database_enabled}}{ orm }: { orm: Mikro
       type: {{worker_type}}WorkerSchemas({
         validator: SchemaValidator()
       }),
-      value: {{default_worker_options}}
+      {{{default_worker_options}}}
     },
     {{/is_worker}}OpenTelemetryCollector: {
       lifetime: Lifetime.Singleton,
@@ -139,16 +141,16 @@ export function createDependencies({{#is_database_enabled}}{ orm }: { orm: Mikro
     WorkerConsumer: {
       lifetime: Lifetime.Scoped,
       type: (
-        processEventsFunction: WorkerProcessFunction<{{worker_type}}EventRecord>,
-        failureHandler: WorkerFailureHandler<{{worker_type}}EventRecord>
-      ) => {{worker_type}}WorkerConsumer<{{worker_type}}EventRecord, {{worker_type}}WorkerOptions>,
+        processEventsFunction: WorkerProcessFunction<{{pascal_case_name}}EventRecord>,
+        failureHandler: WorkerFailureHandler<{{pascal_case_name}}EventRecord>
+      ) => {{worker_type}}WorkerConsumer<{{pascal_case_name}}EventRecord, {{worker_type}}WorkerOptions>,
       factory: 
-        {{worker_consumer_factory}}
+        {{{worker_consumer_factory}}}
     },
     WorkerProducer: {
       lifetime: Lifetime.Scoped,
       type: {{worker_type}}WorkerProducer,
-      factory: {{worker_producer_factory}}
+      factory: {{{worker_producer_factory}}}
     },
     {{/is_worker}}{{pascal_case_name}}Service: {
       lifetime: Lifetime.Scoped,

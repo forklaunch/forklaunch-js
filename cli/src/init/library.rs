@@ -10,7 +10,7 @@ use toml::from_str;
 
 use crate::{
     constants::{
-        TestFramework, ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
+        Runtime, TestFramework, ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE, ERROR_FAILED_TO_CREATE_GITIGNORE,
         ERROR_FAILED_TO_CREATE_LIBRARY_PACKAGE_JSON, ERROR_FAILED_TO_CREATE_SYMLINKS,
@@ -18,7 +18,7 @@ use crate::{
         ERROR_FAILED_TO_READ_MANIFEST,
     },
     core::{
-        base_path::{prompt_base_path, BasePathLocation},
+        base_path::{prompt_base_path, BasePathLocation, BasePathType},
         command::command,
         gitignore::generate_gitignore,
         manifest::{
@@ -110,19 +110,25 @@ fn add_library_to_artifacts(
     let forklaunch_definition_buffer =
         add_project_definition_to_manifest(ProjectType::Library, config_data, None, None, None)
             .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
+
+    let runtime = config_data.runtime.parse()?;
+
     let mut package_json_buffer: Option<String> = None;
-    if config_data.runtime == "bun" {
-        package_json_buffer = Some(
-            add_project_definition_to_package_json(config_data, base_path)
-                .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON)?,
-        );
-    }
     let mut pnpm_workspace_buffer: Option<String> = None;
-    if config_data.runtime == "node" {
-        pnpm_workspace_buffer = Some(
-            add_project_definition_to_pnpm_workspace(base_path, config_data)
-                .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?,
-        );
+
+    match runtime {
+        Runtime::Bun => {
+            package_json_buffer = Some(
+                add_project_definition_to_package_json(config_data, base_path)
+                    .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON)?,
+            );
+        }
+        Runtime::Node => {
+            pnpm_workspace_buffer = Some(
+                add_project_definition_to_pnpm_workspace(base_path, config_data)
+                    .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?,
+            );
+        }
     }
 
     let mut rendered_templates = Vec::new();
@@ -241,7 +247,7 @@ impl CliCommand for LibraryCommand {
             &mut stdout,
             "name",
             matches,
-            "Enter library name: ",
+            "library name",
             None,
             |input: &str| validate_name(input),
             |_| "Library name cannot be empty or include spaces. Please try again".to_string(),
@@ -252,6 +258,7 @@ impl CliCommand for LibraryCommand {
             &mut stdout,
             matches,
             &BasePathLocation::Library,
+            &BasePathType::Init,
         )?;
 
         let description = prompt_without_validation(
@@ -259,7 +266,7 @@ impl CliCommand for LibraryCommand {
             &mut stdout,
             "description",
             matches,
-            "Enter library description (optional): ",
+            "library description (optional)",
         )?;
 
         let config_path = Path::new(&base_path)

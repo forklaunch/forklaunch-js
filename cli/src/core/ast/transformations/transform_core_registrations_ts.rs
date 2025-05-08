@@ -7,7 +7,7 @@ use oxc_codegen::{CodeGenerator, CodegenOptions};
 
 use crate::{constants::HttpFramework, core::ast::parse_ast_program::parse_ast_program};
 
-pub(crate) fn transform_core_registration_http_framework_ts(
+pub(crate) fn transform_core_registrations_ts_http_framework(
     http_framework_name: &str,
     base_path: &Path,
     core_registration_http_framework_text: Option<String>,
@@ -55,5 +55,50 @@ pub(crate) fn transform_core_registration_http_framework_ts(
     Ok(CodeGenerator::new()
         .with_options(CodegenOptions::default())
         .build(&core_registration_http_framework_program)
+        .code)
+}
+
+pub(crate) fn transform_core_registrations_ts_validator(
+    validator_name: &str,
+    base_path: &Path,
+    core_registration_validator_text: Option<String>,
+) -> Result<String> {
+    let allocator = Allocator::default();
+    let core_registration_validator_path = base_path.join("core").join("registration.ts");
+    let core_registration_validator_text =
+        if let Some(core_registration_validator_text) = core_registration_validator_text {
+            core_registration_validator_text
+        } else {
+            read_to_string(&core_registration_validator_path)?
+        };
+    let core_registration_validator_type =
+        SourceType::from_path(&core_registration_validator_path)?;
+
+    let mut core_registration_validator_program = parse_ast_program(
+        &allocator,
+        &core_registration_validator_text,
+        core_registration_validator_type,
+    );
+
+    core_registration_validator_program
+        .body
+        .iter_mut()
+        .enumerate()
+        .for_each(|(_, stmt)| {
+            let import = match stmt {
+                Statement::ImportDeclaration(import) => import,
+                _ => return,
+            };
+            if !import.source.value.contains("@forklaunch/validator/") {
+                let _ = import.source.value.replace(
+                    r".*",
+                    format!("@forklaunch/validator/{}", validator_name).as_str(),
+                );
+            }
+        });
+
+    Ok(CodeGenerator::new()
+        .with_options(CodegenOptions::default())
+        .build(&core_registration_validator_program)
         .code)
 }

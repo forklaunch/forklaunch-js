@@ -1,42 +1,38 @@
 use std::{fs::read_to_string, io::Write, path::Path};
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use convert_case::{Case, Casing};
-use rustyline::{history::DefaultHistory, Editor};
+use rustyline::{Editor, history::DefaultHistory};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use toml::from_str;
 
-use self::database::match_database;
+use self::database::get_db_driver;
 use crate::{
+    CliCommand,
     constants::{
-        Database, Infrastructure, ERROR_DATABASE_INFORMATION,
-        ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
+        Database, ERROR_DATABASE_INFORMATION, ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
         ERROR_FAILED_TO_ADD_ROUTER_METADATA_TO_MANIFEST, ERROR_FAILED_TO_ADD_ROUTER_TO_APP,
         ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER, ERROR_FAILED_TO_PARSE_MANIFEST,
-        ERROR_FAILED_TO_READ_MANIFEST,
+        ERROR_FAILED_TO_READ_MANIFEST, Infrastructure,
     },
     core::{
         ast::transformations::{
             transform_app_ts::transform_app_ts,
             transform_entities_index_ts::transform_entities_index_ts,
-            transform_registrations_ts::transform_registrations_ts,
+            transform_registrations_ts::transform_registrations_ts_add_router,
             transform_seed_data_ts::transform_seed_data_ts,
             transform_seeders_index_ts::transform_seeders_index_ts,
         },
-        base_path::{prompt_base_path, BasePathLocation},
+        base_path::{BasePathLocation, BasePathType, prompt_base_path},
         command::command,
         database::{self, is_in_memory_database},
-        manifest::{
-            add_router_definition_to_manifest, router::RouterManifestData, ManifestData,
-            ProjectType,
-        },
+        manifest::{ManifestData, add_router_definition_to_manifest, router::RouterManifestData},
         name::validate_name,
-        rendered_template::{write_rendered_templates, RenderedTemplate},
-        template::{generate_with_template, PathIO},
+        rendered_template::{RenderedTemplate, write_rendered_templates},
+        template::{PathIO, generate_with_template},
     },
-    prompt::{prompt_comma_separated_list, prompt_with_validation, ArrayCompleter},
-    CliCommand,
+    prompt::{ArrayCompleter, prompt_comma_separated_list, prompt_with_validation},
 };
 
 fn generate_basic_router(
@@ -86,8 +82,6 @@ fn add_router_to_artifacts(
         add_router_definition_to_manifest(config_data, service_name)
             .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
 
-    let is_worker = project_type == ProjectType::Worker;
-
     let mut rendered_templates = Vec::new();
 
     rendered_templates.push(RenderedTemplate {
@@ -96,24 +90,11 @@ fn add_router_to_artifacts(
         context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_APP.to_string()),
     });
 
-    let is_cache_enabled = if is_worker {
-        config_data.projects.iter().any(|worker| {
-            if let Some(resources) = &worker.resources {
-                resources.cache.is_some()
-            } else {
-                false
-            }
-        })
-    } else {
-        false
-    };
-
     rendered_templates.push(RenderedTemplate {
         path: Path::new(&base_path).join("registrations.ts"),
-        content: transform_registrations_ts(
+        content: transform_registrations_ts_add_router(
             config_data.router_name.as_str(),
-            is_worker,
-            is_cache_enabled,
+            &project_type,
             &base_path,
         )?,
         context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER.to_string()),
@@ -141,7 +122,11 @@ fn add_router_to_artifacts(
         path: Path::new(base_path)
             .join("persistence")
             .join("seed.data.ts"),
-        content: transform_seed_data_ts(config_data.router_name.as_str(), is_worker, &base_path)?,
+        content: transform_seed_data_ts(
+            config_data.router_name.as_str(),
+            &project_type,
+            &base_path,
+        )?,
         context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER.to_string()),
     });
 
@@ -203,7 +188,7 @@ impl CliCommand for RouterCommand {
             &mut stdout,
             "name",
             matches,
-            "Enter router name: ",
+            "router name",
             None,
             |input: &str| validate_name(input),
             |_| "Router name cannot be empty or include spaces. Please try again".to_string(),
@@ -214,6 +199,7 @@ impl CliCommand for RouterCommand {
             &mut stdout,
             matches,
             &BasePathLocation::Router,
+            &BasePathType::Init,
         )?;
 
         let infrastructure: Vec<Infrastructure> = prompt_comma_separated_list(
@@ -257,7 +243,7 @@ impl CliCommand for RouterCommand {
                 kebab_case_name: router_name.to_case(Case::Kebab),
 
                 database: database.to_string(),
-                db_driver: match_database(&database),
+                db_driver: get_db_driver(&database),
 
                 is_mongo: database == Database::MongoDB,
                 is_postgres: database == Database::PostgreSQL,

@@ -1,16 +1,20 @@
-use std::{collections::HashSet, fs::read_to_string, path::Path};
+use std::{
+    collections::{HashMap, HashSet},
+    fs::read_to_string,
+    path::Path,
+};
 
 use anyhow::{Context, Result};
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
-use serde_yml::{from_str, to_string, to_value, Value};
+use serde_yml::{Value, from_str, from_value, to_string};
 
 use super::manifest::{ManifestData, ProjectEntry};
 use crate::{
     constants::{
-        Database, Infrastructure, Runtime, WorkerBackend,
-        ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE,
-        ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE, ERROR_FAILED_TO_READ_DOCKER_COMPOSE,
+        Database, ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE,
+        ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE, ERROR_FAILED_TO_READ_DOCKER_COMPOSE, Infrastructure,
+        Runtime, WorkerType,
     },
     core::manifest::{service::ServiceManifestData, worker::WorkerManifestData},
 };
@@ -34,31 +38,147 @@ db.getSiblingDB(\"admin\").createUser({
 });
 '""#;
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Serialize, Default)]
 pub(crate) struct DockerCompose {
-    volumes: IndexMap<String, DockerVolume>,
-    networks: IndexMap<String, DockerNetwork>,
+    pub(crate) volumes: IndexMap<String, DockerVolume>,
+    pub(crate) networks: IndexMap<String, DockerNetwork>,
     pub(crate) services: IndexMap<String, DockerService>,
+
+    #[serde(flatten)]
+    pub(crate) additional_entries: HashMap<String, Value>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Default)]
-struct Healthcheck {
-    test: String,
-    interval: String,
-    timeout: String,
-    retries: i32,
-    start_period: String,
+impl<'de> Deserialize<'de> for DockerCompose {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::de::{MapAccess, Visitor};
+
+        struct DockerComposeVisitor;
+
+        impl<'de> Visitor<'de> for DockerComposeVisitor {
+            type Value = DockerCompose;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                formatter.write_str("a docker-compose object")
+            }
+
+            fn visit_map<M>(self, mut access: M) -> Result<Self::Value, M::Error>
+            where
+                M: MapAccess<'de>,
+            {
+                let mut compose = DockerCompose::default();
+
+                while let Some((key, value)) = access.next_entry::<String, Value>()? {
+                    match key.as_str() {
+                        "volumes" => {
+                            compose.volumes =
+                                from_value(value).map_err(serde::de::Error::custom)?;
+                        }
+                        "networks" => {
+                            compose.networks =
+                                from_value(value).map_err(serde::de::Error::custom)?;
+                        }
+                        "services" => {
+                            compose.services =
+                                from_value(value).map_err(serde::de::Error::custom)?;
+                        }
+                        _ => {
+                            compose.additional_entries.insert(key, value);
+                        }
+                    }
+                }
+
+                Ok(compose)
+            }
+        }
+
+        deserializer.deserialize_map(DockerComposeVisitor)
+    }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Default, Clone)]
+pub(crate) struct Healthcheck {
+    pub(crate) test: String,
+    pub(crate) interval: String,
+    pub(crate) timeout: String,
+    pub(crate) retries: i32,
+    pub(crate) start_period: String,
+
+    #[serde(flatten)]
+    pub(crate) additional_properties: HashMap<String, Value>,
+}
+
+impl<'de> Deserialize<'de> for Healthcheck {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::de::{MapAccess, Visitor};
+
+        struct HealthcheckVisitor;
+
+        impl<'de> Visitor<'de> for HealthcheckVisitor {
+            type Value = Healthcheck;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                formatter.write_str("a healthcheck object")
+            }
+
+            fn visit_map<M>(self, mut access: M) -> Result<Self::Value, M::Error>
+            where
+                M: MapAccess<'de>,
+            {
+                let mut healthcheck = Healthcheck::default();
+                let mut additional_properties = HashMap::new();
+
+                while let Some((key, value)) = access.next_entry::<String, Value>()? {
+                    match key.as_str() {
+                        "test" => {
+                            healthcheck.test =
+                                from_value(value).map_err(serde::de::Error::custom)?
+                        }
+                        "interval" => {
+                            healthcheck.interval =
+                                from_value(value).map_err(serde::de::Error::custom)?
+                        }
+                        "timeout" => {
+                            healthcheck.timeout =
+                                from_value(value).map_err(serde::de::Error::custom)?
+                        }
+                        "retries" => {
+                            healthcheck.retries =
+                                from_value(value).map_err(serde::de::Error::custom)?
+                        }
+                        "start_period" => {
+                            healthcheck.start_period =
+                                from_value(value).map_err(serde::de::Error::custom)?
+                        }
+                        _ => {
+                            additional_properties.insert(key, value);
+                        }
+                    }
+                }
+
+                healthcheck.additional_properties = additional_properties;
+                Ok(healthcheck)
+            }
+        }
+
+        deserializer.deserialize_map(HealthcheckVisitor)
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(untagged)]
-enum Command {
+pub(crate) enum Command {
     Simple(String),
     Multiple(Vec<String>),
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-enum Restart {
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub(crate) enum Restart {
     #[serde(rename = "always")]
     Always,
     #[serde(rename = "unless-stopped")]
@@ -67,8 +187,8 @@ enum Restart {
     No,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-enum DependencyCondition {
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub(crate) enum DependencyCondition {
     #[serde(rename = "service_started")]
     ServiceStarted,
     #[serde(rename = "service_healthy")]
@@ -77,58 +197,151 @@ enum DependencyCondition {
     ServiceCompletedSuccessfully,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct DependsOn {
-    condition: DependencyCondition,
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub(crate) struct DependsOn {
+    pub(crate) condition: DependencyCondition,
 }
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Serialize, Default, Clone)]
 pub(crate) struct DockerService {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    hostname: Option<String>,
+    pub(crate) hostname: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    container_name: Option<String>,
+    pub(crate) container_name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    image: Option<String>,
+    pub(crate) image: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    restart: Option<Restart>,
+    pub(crate) restart: Option<Restart>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    build: Option<DockerBuild>,
+    pub(crate) build: Option<DockerBuild>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) environment: Option<IndexMap<String, String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    depends_on: Option<IndexMap<String, DependsOn>>,
+    pub(crate) depends_on: Option<IndexMap<String, DependsOn>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    ports: Option<Vec<String>>,
+    pub(crate) ports: Option<Vec<String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    networks: Option<Vec<String>>,
+    pub(crate) networks: Option<Vec<String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    volumes: Option<Vec<String>>,
+    pub(crate) volumes: Option<Vec<String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    working_dir: Option<String>,
+    pub(crate) working_dir: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    entrypoint: Option<Vec<String>>,
+    pub(crate) entrypoint: Option<Vec<String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    command: Option<Command>,
+    pub(crate) command: Option<Command>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    healthcheck: Option<Healthcheck>,
+    pub(crate) healthcheck: Option<Healthcheck>,
+
+    #[serde(flatten)]
+    pub(crate) additional_properties: HashMap<String, Value>,
+}
+
+impl<'de> Deserialize<'de> for DockerService {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::de::{MapAccess, Visitor};
+
+        struct DockerServiceVisitor;
+
+        impl<'de> Visitor<'de> for DockerServiceVisitor {
+            type Value = DockerService;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                formatter.write_str("a docker service object")
+            }
+
+            fn visit_map<M>(self, mut access: M) -> Result<Self::Value, M::Error>
+            where
+                M: MapAccess<'de>,
+            {
+                let mut service = DockerService::default();
+                let mut additional_properties = HashMap::new();
+
+                while let Some((key, value)) = access.next_entry::<String, Value>()? {
+                    match key.as_str() {
+                        "hostname" => {
+                            service.hostname =
+                                from_value(value).map_err(serde::de::Error::custom)?
+                        }
+                        "container_name" => {
+                            service.container_name =
+                                from_value(value).map_err(serde::de::Error::custom)?
+                        }
+                        "image" => {
+                            service.image = from_value(value).map_err(serde::de::Error::custom)?
+                        }
+                        "restart" => {
+                            service.restart = from_value(value).map_err(serde::de::Error::custom)?
+                        }
+                        "build" => {
+                            service.build = from_value(value).map_err(serde::de::Error::custom)?
+                        }
+                        "environment" => {
+                            service.environment =
+                                from_value(value).map_err(serde::de::Error::custom)?
+                        }
+                        "depends_on" => {
+                            service.depends_on =
+                                from_value(value).map_err(serde::de::Error::custom)?
+                        }
+                        "ports" => {
+                            service.ports = from_value(value).map_err(serde::de::Error::custom)?
+                        }
+                        "networks" => {
+                            service.networks =
+                                from_value(value).map_err(serde::de::Error::custom)?
+                        }
+                        "volumes" => {
+                            service.volumes = from_value(value).map_err(serde::de::Error::custom)?
+                        }
+                        "working_dir" => {
+                            service.working_dir =
+                                from_value(value).map_err(serde::de::Error::custom)?
+                        }
+                        "entrypoint" => {
+                            service.entrypoint =
+                                from_value(value).map_err(serde::de::Error::custom)?
+                        }
+                        "command" => {
+                            service.command = from_value(value).map_err(serde::de::Error::custom)?
+                        }
+                        "healthcheck" => {
+                            service.healthcheck =
+                                from_value(value).map_err(serde::de::Error::custom)?
+                        }
+                        _ => {
+                            additional_properties.insert(key, value);
+                        }
+                    }
+                }
+
+                service.additional_properties = additional_properties;
+                Ok(service)
+            }
+        }
+
+        deserializer.deserialize_map(DockerServiceVisitor)
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]
-struct DockerVolume {
-    driver: String,
+pub(crate) struct DockerVolume {
+    pub(crate) driver: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct DockerBuild {
-    context: String,
-    dockerfile: String,
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub(crate) struct DockerBuild {
+    pub(crate) context: String,
+    pub(crate) dockerfile: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct DockerNetwork {
-    name: String,
-    driver: String,
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub(crate) struct DockerNetwork {
+    pub(crate) name: String,
+    pub(crate) driver: String,
 }
 
 pub(crate) fn add_otel_to_docker_compose<'a>(
@@ -258,6 +471,7 @@ pub(crate) fn add_kafka_to_docker_compose<'a>(
                 timeout: "5s".to_string(),
                 retries: 5,
                 start_period: "10s".to_string(),
+                additional_properties: HashMap::new(),
             }),
             ..Default::default()
         },
@@ -321,6 +535,7 @@ pub(crate) fn add_kafka_to_docker_compose<'a>(
                 timeout: "10s".to_string(),
                 retries: 5,
                 start_period: "15s".to_string(),
+                additional_properties: HashMap::new(),
             }),
             ..Default::default()
         },
@@ -430,6 +645,7 @@ pub(crate) fn add_database_to_docker_compose(
                             timeout: "3s".to_string(),
                             retries: 5,
                             start_period: "3s".to_string(),
+                            additional_properties: HashMap::new(),
                         }),
                         ..Default::default()
                     },
@@ -592,6 +808,9 @@ pub(crate) fn clean_up_unused_infrastructure_services(
     for project in projects {
         if let Some(resources) = project.resources {
             if let Some(database) = resources.database {
+                if database == "mongodb" {
+                    infrastructure_in_use.insert("mongo-init".to_string());
+                }
                 infrastructure_in_use.insert(database);
             }
             if let Some(cache) = resources.cache {
@@ -607,9 +826,9 @@ pub(crate) fn clean_up_unused_infrastructure_services(
     let mut all_infrastructure_set = HashSet::from(Database::VARIANTS);
     all_infrastructure_set.extend(Infrastructure::VARIANTS);
     all_infrastructure_set.extend(
-        WorkerBackend::VARIANTS.iter().filter(|backend| {
-            backend.parse::<WorkerBackend>().ok() != Some(WorkerBackend::Database)
-        }),
+        WorkerType::VARIANTS
+            .iter()
+            .filter(|r#type| r#type.parse::<WorkerType>().ok() != Some(WorkerType::Database)),
     );
 
     let all_infrastructure_set = all_infrastructure_set
@@ -633,8 +852,8 @@ fn add_base_definition_to_docker_compose(
     name: &str,
     base_path: &String,
     docker_compose_string: Option<String>,
-) -> Result<(Value, DockerCompose, i32, IndexMap<String, String>)> {
-    let full_docker_compose: Value =
+) -> Result<(DockerCompose, i32, IndexMap<String, String>)> {
+    let mut docker_compose: DockerCompose =
         if let Some(inner_docker_compose_string) = docker_compose_string {
             from_str(&inner_docker_compose_string)
                 .with_context(|| ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE)?
@@ -645,9 +864,6 @@ fn add_base_definition_to_docker_compose(
             )
             .with_context(|| ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE)?
         };
-
-    let mut docker_compose: DockerCompose = Deserialize::deserialize(&full_docker_compose)
-        .with_context(|| ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE)?;
 
     let network_name = format!("{}-network", app_name);
     if !docker_compose.networks.contains_key(&network_name) {
@@ -693,12 +909,7 @@ fn add_base_definition_to_docker_compose(
         format!("{}-{}", app_name, name),
     );
 
-    Ok((
-        full_docker_compose,
-        docker_compose,
-        port_number,
-        environment,
-    ))
+    Ok((docker_compose, port_number, environment))
 }
 
 fn create_base_service(
@@ -788,13 +999,12 @@ pub(crate) fn add_service_definition_to_docker_compose(
     base_path: &String,
     docker_compose_string: Option<String>,
 ) -> Result<String> {
-    let (mut full_docker_compose, mut docker_compose, port_number, mut environment) =
-        add_base_definition_to_docker_compose(
-            &config_data.app_name,
-            &config_data.service_name,
-            base_path,
-            docker_compose_string,
-        )?;
+    let (mut docker_compose, port_number, mut environment) = add_base_definition_to_docker_compose(
+        &config_data.app_name,
+        &config_data.service_name,
+        base_path,
+        docker_compose_string,
+    )?;
 
     if config_data.service_name == "iam" {
         environment.insert(
@@ -853,11 +1063,7 @@ pub(crate) fn add_service_definition_to_docker_compose(
         );
     }
 
-    full_docker_compose["volumes"] = to_value(docker_compose.volumes)?;
-    full_docker_compose["services"] = to_value(docker_compose.services)?;
-    full_docker_compose["networks"] = to_value(docker_compose.networks)?;
-
-    Ok(to_string(&full_docker_compose)
+    Ok(to_string(&docker_compose)
         .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?)
 }
 
@@ -866,13 +1072,12 @@ pub(crate) fn add_worker_definition_to_docker_compose(
     base_path: &String,
     docker_compose_string: Option<String>,
 ) -> Result<String> {
-    let (mut full_docker_compose, mut docker_compose, port_number, mut environment) =
-        add_base_definition_to_docker_compose(
-            &config_data.app_name,
-            &config_data.worker_name,
-            base_path,
-            docker_compose_string,
-        )?;
+    let (mut docker_compose, port_number, mut environment) = add_base_definition_to_docker_compose(
+        &config_data.app_name,
+        &config_data.worker_name,
+        base_path,
+        docker_compose_string,
+    )?;
 
     if config_data.is_cache_enabled {
         add_redis_to_docker_compose(&config_data.app_name, &mut docker_compose, &mut environment)
@@ -950,11 +1155,7 @@ pub(crate) fn add_worker_definition_to_docker_compose(
         );
     }
 
-    full_docker_compose["volumes"] = to_value(docker_compose.volumes)?;
-    full_docker_compose["services"] = to_value(docker_compose.services)?;
-    full_docker_compose["networks"] = to_value(docker_compose.networks)?;
-
-    Ok(to_string(&full_docker_compose)
+    Ok(to_string(&docker_compose)
         .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?)
 }
 

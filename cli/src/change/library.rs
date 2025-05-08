@@ -2,27 +2,27 @@ use std::{fs::read_to_string, io::Write, path::Path};
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, Command};
-use convert_case::{Case, Casing};
 use dialoguer::{theme::ColorfulTheme, MultiSelect};
 use rustyline::{history::DefaultHistory, Editor};
 use termcolor::{ColorChoice, StandardStream};
-use walkdir::WalkDir;
 
+use super::core::{
+    change_description::change_description as change_description_core,
+    change_name::change_name as change_name_core,
+};
 use crate::{
     constants::{
         ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST,
         ERROR_FAILED_TO_READ_PACKAGE_JSON,
     },
     core::{
-        base_path::{prompt_base_path, BasePathLocation},
+        base_path::{prompt_base_path, BasePathLocation, BasePathType},
         command::command,
-        manifest::library::LibraryManifestData,
+        manifest::{library::LibraryManifestData, MutableManifestData},
         name::validate_name,
         package_json::project_package_json::ProjectPackageJson,
         removal_template::{remove_template_files, RemovalTemplate},
-        rendered_template::{
-            write_rendered_templates, RenderedTemplate, RenderedTemplatesCache, TEMPLATES_DIR,
-        },
+        rendered_template::{write_rendered_templates, RenderedTemplate, RenderedTemplatesCache},
     },
     prompt::{prompt_field_from_selections_with_validation, ArrayCompleter},
     CliCommand,
@@ -43,73 +43,84 @@ fn change_name(
     manifest_data: &mut LibraryManifestData,
     project_package_json: &mut ProjectPackageJson,
     rendered_templates_cache: &mut RenderedTemplatesCache,
-) -> Result<Vec<RemovalTemplate>> {
-    let existing_name = base_path.file_name().unwrap().to_string_lossy().to_string();
+) -> Result<RemovalTemplate> {
+    change_name_core(
+        base_path,
+        name,
+        MutableManifestData::Library(manifest_data),
+        project_package_json,
+        None,
+        rendered_templates_cache,
+    )
+    // let existing_name = base_path.file_name().unwrap().to_string_lossy().to_string();
 
-    let mut removal_templates = vec![];
+    // let mut removal_templates = vec![];
 
-    manifest_data.library_name = name.to_string();
-    manifest_data
-        .projects
-        .iter_mut()
-        .find(|project| project.name == existing_name)
-        .unwrap()
-        .name = name.to_string();
+    // manifest_data.library_name = name.to_string();
+    // manifest_data
+    //     .projects
+    //     .iter_mut()
+    //     .find(|project| project.name == existing_name)
+    //     .unwrap()
+    //     .name = name.to_string();
 
-    project_package_json.name = Some(format!("@{}/{}", manifest_data.app_name, name.to_string()));
+    // project_package_json.name = Some(format!("@{}/{}", manifest_data.app_name, name.to_string()));
 
-    let existing_camel_case_name = existing_name.to_case(Case::Camel);
-    let existing_kebab_case_name = existing_name.to_case(Case::Kebab);
-    let existing_pascal_case_name = existing_name.to_case(Case::Pascal);
+    // let existing_camel_case_name = existing_name.to_case(Case::Camel);
+    // let existing_kebab_case_name = existing_name.to_case(Case::Kebab);
+    // let existing_pascal_case_name = existing_name.to_case(Case::Pascal);
 
-    // #TODO: move this into router change name function
-    let camel_case_name = name.to_case(Case::Camel);
-    let kebab_case_name = name.to_case(Case::Kebab);
-    let pascal_case_name = name.to_case(Case::Pascal);
+    // // #TODO: move this into router change name function
+    // let camel_case_name = name.to_case(Case::Camel);
+    // let kebab_case_name = name.to_case(Case::Kebab);
+    // let pascal_case_name = name.to_case(Case::Pascal);
 
-    TEMPLATES_DIR
-        .get_dir("router")
-        .unwrap()
-        .entries()
-        .into_iter()
-        .for_each(|top_level_folder| {
-            for entry in WalkDir::new(base_path.join(&top_level_folder.path().file_name().unwrap()))
-            {
-                let entry = entry.unwrap();
-                if entry.file_type().is_file() {
-                    let path = entry.path();
-                    if let Some(template) = rendered_templates_cache.get(path).ok().unwrap() {
-                        let content = template.content;
-                        let new_content = content
-                            .replace(&existing_pascal_case_name, &pascal_case_name)
-                            .replace(&existing_kebab_case_name, &kebab_case_name)
-                            .replace(&existing_camel_case_name, &camel_case_name)
-                            .replace(&existing_name, &name);
-                        let new_path = path
-                            .to_string_lossy()
-                            .replace(&existing_pascal_case_name, &pascal_case_name)
-                            .replace(&existing_kebab_case_name, &kebab_case_name)
-                            .replace(&existing_camel_case_name, &camel_case_name)
-                            .replace(&existing_name, &name);
-                        if content != new_content {
-                            rendered_templates_cache.insert(
-                                new_path.clone(),
-                                RenderedTemplate {
-                                    path: new_path.clone().into(),
-                                    content: new_content,
-                                    context: None,
-                                },
-                            );
-                            if path.to_string_lossy() != new_path {
-                                removal_templates.push(RemovalTemplate { path: path.into() })
-                            }
-                        }
-                    }
-                }
-            }
-        });
+    // TEMPLATES_DIR
+    //     .get_dir("router")
+    //     .unwrap()
+    //     .entries()
+    //     .into_iter()
+    //     .for_each(|top_level_folder| {
+    //         for entry in WalkDir::new(base_path.join(&top_level_folder.path().file_name().unwrap()))
+    //         {
+    //             let entry = entry.unwrap();
+    //             if entry.file_type().is_file() {
+    //                 let path = entry.path();
+    //                 if let Some(template) = rendered_templates_cache.get(path).ok().unwrap() {
+    //                     let content = template.content;
+    //                     let new_content = content
+    //                         .replace(&existing_pascal_case_name, &pascal_case_name)
+    //                         .replace(&existing_kebab_case_name, &kebab_case_name)
+    //                         .replace(&existing_camel_case_name, &camel_case_name)
+    //                         .replace(&existing_name, &name);
+    //                     let new_path = path
+    //                         .to_string_lossy()
+    //                         .replace(&existing_pascal_case_name, &pascal_case_name)
+    //                         .replace(&existing_kebab_case_name, &kebab_case_name)
+    //                         .replace(&existing_camel_case_name, &camel_case_name)
+    //                         .replace(&existing_name, &name);
+    //                     if content != new_content {
+    //                         rendered_templates_cache.insert(
+    //                             new_path.clone(),
+    //                             RenderedTemplate {
+    //                                 path: new_path.clone().into(),
+    //                                 content: new_content,
+    //                                 context: None,
+    //                             },
+    //                         );
+    //                         if path.to_string_lossy() != new_path {
+    //                             removal_templates.push(RemovalTemplate {
+    //                                 path: path.into(),
+    //                                 r#type: RemovalTemplateType::File,
+    //                             });
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     });
 
-    Ok(removal_templates)
+    // Ok(removal_templates)
 }
 
 fn change_description(
@@ -117,10 +128,15 @@ fn change_description(
     manifest_data: &mut LibraryManifestData,
     project_package_json: &mut ProjectPackageJson,
 ) -> Result<()> {
-    manifest_data.description = description.to_string();
-    project_package_json.description = Some(description.to_string());
+    // manifest_data.description = description.to_string();
+    // project_package_json.description = Some(description.to_string());
 
-    Ok(())
+    // Ok(())
+    change_description_core(
+        description,
+        MutableManifestData::Library(manifest_data),
+        project_package_json,
+    )
 }
 
 impl CliCommand for LibraryCommand {
@@ -158,10 +174,15 @@ impl CliCommand for LibraryCommand {
             &mut stdout,
             matches,
             &BasePathLocation::Library,
+            &BasePathType::Change,
         )?;
         let base_path = Path::new(&base_path_input);
 
-        let config_path = &base_path.join(".forklaunch").join("manifest.toml");
+        let config_path = &base_path
+            .join(".forklaunch")
+            .parent()
+            .unwrap()
+            .join("manifest.toml");
 
         let mut manifest_data: LibraryManifestData = toml::from_str(
             &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
@@ -173,7 +194,7 @@ impl CliCommand for LibraryCommand {
         let description = matches.get_one::<String>("description");
         let dryrun = matches.get_flag("dryrun");
 
-        let selected_options = if !matches.args_present() {
+        let selected_options = if matches.ids().all(|id| id == "dryrun") {
             let options = vec!["name", "database", "description", "infrastructure"];
 
             let selections = MultiSelect::with_theme(&ColorfulTheme::default())
@@ -198,7 +219,7 @@ impl CliCommand for LibraryCommand {
             &mut line_editor,
             &mut stdout,
             matches,
-            "Enter library name: ",
+            "library name",
             None,
             |input: &str| validate_name(input),
             |_| "Library name cannot be empty or include spaces. Please try again".to_string(),
@@ -211,7 +232,7 @@ impl CliCommand for LibraryCommand {
             &mut line_editor,
             &mut stdout,
             matches,
-            "Enter project description (optional): ",
+            "project description (optional)",
             None,
             |_input: &str| true,
             |_| "Invalid description. Please try again".to_string(),
@@ -229,7 +250,7 @@ impl CliCommand for LibraryCommand {
         let mut rendered_templates_cache = RenderedTemplatesCache::new();
 
         if let Some(name) = name {
-            removal_templates.extend(change_name(
+            removal_templates.push(change_name(
                 &base_path,
                 &name,
                 &mut manifest_data,

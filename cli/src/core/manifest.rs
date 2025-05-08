@@ -23,13 +23,16 @@ pub(crate) mod router;
 pub(crate) mod service;
 pub(crate) mod worker;
 
-#[derive(Debug)]
-pub(crate) enum ManifestData<'a> {
-    Application(&'a ApplicationManifestData),
-    Service(&'a ServiceManifestData),
-    Library(&'a LibraryManifestData),
-    Router(&'a RouterManifestData),
-    Worker(&'a WorkerManifestData),
+crate::mutable_enum! {
+    #[allow(dead_code)]
+    #[derive(Debug)]
+    pub(crate) enum ManifestData<'a> {
+        Application(ApplicationManifestData),
+        Service(ServiceManifestData),
+        Library(LibraryManifestData),
+        Router(RouterManifestData),
+        Worker(WorkerManifestData),
+    }
 }
 
 pub(crate) trait ManifestConfig {
@@ -44,6 +47,24 @@ pub(crate) trait ManifestConfig {
 
 pub(crate) trait ProjectManifestConfig {
     fn name(&self) -> &String;
+    fn description(&self) -> &String;
+}
+
+pub(crate) struct ProjectInitializationMetadata {
+    pub(crate) project_name: String,
+}
+
+pub(crate) struct RouterInitializationMetadata {
+    pub(crate) project_name: String,
+    pub(crate) router_name: String,
+}
+
+pub(crate) enum InitializableManifestConfigMetadata {
+    Project(ProjectInitializationMetadata),
+    Router(RouterInitializationMetadata),
+}
+pub(crate) trait InitializableManifestConfig {
+    fn initialize(&self, metadata: InitializableManifestConfigMetadata) -> Self;
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
@@ -64,13 +85,14 @@ pub(crate) struct ResourceInventory {
 
 #[derive(Debug, Serialize, Deserialize, Content, Clone)]
 pub(crate) struct ProjectMetadata {
-    pub(crate) backend: Option<String>,
+    pub(crate) r#type: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Content, Clone)]
 pub(crate) struct ProjectEntry {
     pub(crate) r#type: ProjectType,
     pub(crate) name: String,
+    pub(crate) description: String,
     pub(crate) resources: Option<ResourceInventory>,
     pub(crate) routers: Option<Vec<String>>,
     pub(crate) metadata: Option<ProjectMetadata>,
@@ -225,8 +247,6 @@ macro_rules! config_struct {
             }
         }
 
-
-
         impl crate::core::manifest::ManifestConfig for $name {
             fn app_name(&self) -> &String {
                 &self.app_name
@@ -273,7 +293,7 @@ pub(crate) fn generate_manifest(
 }
 
 pub(crate) fn add_project_definition_to_manifest<
-    T: ManifestConfig + ProjectManifestConfig + Serialize,
+    T: ManifestConfig + ProjectManifestConfig + InitializableManifestConfig + Serialize,
 >(
     r#type: ProjectType,
     config_data: &mut T,
@@ -282,6 +302,7 @@ pub(crate) fn add_project_definition_to_manifest<
     metadata: Option<ProjectMetadata>,
 ) -> Result<String> {
     let name = config_data.name().to_owned();
+    let description = config_data.description().to_owned();
     for project in config_data.projects().iter() {
         if project.name == name {
             return Ok(to_string_pretty(&config_data)
@@ -292,6 +313,7 @@ pub(crate) fn add_project_definition_to_manifest<
     config_data.projects_mut().push(ProjectEntry {
         r#type,
         name: name.clone(),
+        description,
         resources,
         routers,
         metadata,

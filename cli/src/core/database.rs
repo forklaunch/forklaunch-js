@@ -1,18 +1,21 @@
 use std::{collections::HashSet, fs::read_to_string, path::Path};
 
-use anyhow::{bail, Context, Result};
-use serde_json::{from_str, to_string_pretty, to_value, Value};
+use anyhow::{Context, Result, bail};
+use serde_json::{from_str, to_string_pretty};
 
 use super::{
     manifest::ManifestData,
-    package_json::package_json_constants::MIKRO_ORM_DATABASE_VERSION,
+    package_json::{
+        package_json_constants::MIKRO_ORM_DATABASE_VERSION,
+        project_package_json::ProjectPackageJson,
+    },
     rendered_template::{RenderedTemplate, TEMPLATES_DIR},
 };
 use crate::constants::{
     Database, ERROR_FAILED_TO_CREATE_DATABASE_EXPORT_INDEX_TS, ERROR_UNSUPPORTED_DATABASE,
 };
 
-pub(crate) fn match_database(database: &Database) -> String {
+pub(crate) fn get_db_driver(database: &Database) -> String {
     match database {
         Database::MongoDB => "MongoDriver".to_string(),
         Database::PostgreSQL => "PostgreSqlDriver".to_string(),
@@ -38,7 +41,7 @@ pub(crate) fn get_database_port(database: &Database) -> Option<String> {
     }
 }
 
-pub(crate) fn generate_database_export_index_ts(
+pub(crate) fn generate_index_ts_database_export(
     base_path: &String,
     databases: Option<Vec<String>>,
     config_data: Option<&ManifestData>,
@@ -100,41 +103,22 @@ pub(crate) fn update_core_package_json(
 ) -> Result<RenderedTemplate> {
     let package_json_path = Path::new(base_path).join("core").join("package.json");
     let package_json_content = read_to_string(&package_json_path)?;
-    let mut full_package_json: Value = from_str(&package_json_content)?;
+    let mut full_package_json: ProjectPackageJson = from_str(&package_json_content)?;
 
-    let is_postgres = match config_data {
-        ManifestData::Service(service) => service.is_postgres,
-        ManifestData::Worker(worker) => worker.is_database_enabled,
+    let database = match config_data {
+        ManifestData::Service(service) => Some(service.database.clone()),
+        ManifestData::Worker(worker) => worker.database.clone(),
         _ => bail!(ERROR_UNSUPPORTED_DATABASE),
     };
 
-    let is_mongo = match config_data {
-        ManifestData::Service(service) => service.is_mongo,
-        ManifestData::Worker(_) => false,
-        _ => bail!(ERROR_UNSUPPORTED_DATABASE),
-    };
-
-    let dependencies = full_package_json["dependencies"].as_object_mut().unwrap();
-
-    if is_postgres {
-        if !dependencies.contains_key("@mikro-orm/postgresql") {
-            dependencies.insert(
-                "@mikro-orm/postgresql".to_string(),
-                Value::String(MIKRO_ORM_DATABASE_VERSION.to_string()),
-            );
-        }
+    full_package_json.dependencies.as_mut().unwrap().database = database.clone();
+    if database.is_some() {
+        full_package_json
+            .dependencies
+            .as_mut()
+            .unwrap()
+            .mikro_orm_database = Some(MIKRO_ORM_DATABASE_VERSION.to_string());
     }
-
-    if is_mongo {
-        if !dependencies.contains_key("@mikro-orm/mongodb") {
-            dependencies.insert(
-                "@mikro-orm/mongodb".to_string(),
-                Value::String(MIKRO_ORM_DATABASE_VERSION.to_string()),
-            );
-        }
-    }
-
-    full_package_json["dependencies"] = to_value(dependencies)?;
 
     Ok(RenderedTemplate {
         path: package_json_path,
@@ -187,7 +171,7 @@ pub(crate) fn add_base_entity_to_core(
             content: template.unwrap().contents_utf8().unwrap().to_string(),
             context: None,
         },
-        generate_database_export_index_ts(
+        generate_index_ts_database_export(
             base_path,
             Some(vec![database.to_string()]),
             Some(config_data),

@@ -1,6 +1,8 @@
-use std::{collections::HashMap, fmt};
+use std::{collections::HashMap, fmt, fs::read_to_string};
 
 use serde::{de::Visitor, Deserialize, Serialize, Serializer};
+
+use crate::core::manifest::application::ApplicationManifestData;
 
 #[derive(Debug, Serialize, Default)]
 pub struct ProjectScripts {
@@ -292,33 +294,74 @@ impl<'de> Deserialize<'de> for ProjectDependencies {
             {
                 let mut deps = ProjectDependencies::default();
 
+                let mut manifest_path = std::env::current_dir().unwrap();
+                while !manifest_path.join(".forklaunch").exists() {
+                    manifest_path = manifest_path.parent().unwrap().to_path_buf();
+                }
+
+                let manifest_data: ApplicationManifestData = toml::from_str(
+                    &read_to_string(manifest_path.join(".forklaunch").join("manifest.toml"))
+                        .unwrap(),
+                )
+                .unwrap();
+                let app_name = manifest_data.app_name;
+                deps.app_name = app_name.to_string();
+
                 while let Some((key, value)) = access.next_entry::<String, String>()? {
-                    // Extract app name from any "@{app_name}/core" pattern
-                    if key.starts_with('@') && key.ends_with("/core") {
-                        deps.app_name = key[1..key.len() - 5].to_string();
+                    if key.starts_with(&format!("@{}", app_name)) && key.ends_with("core") {
                         deps.app_core = Some(value);
                         continue;
                     }
-                    if key.starts_with('@') && key.ends_with("/monitoring") {
+                    if key.starts_with(&format!("@{}", app_name)) && key.ends_with("monitoring") {
                         deps.app_monitoring = Some(value);
                         continue;
                     }
                     if key.starts_with("@mikro-orm") && key.ends_with("mongodb") {
-                        deps.database = if key.ends_with("mongodb") {
-                            Some("mongodb".to_string())
-                        } else {
-                            Some("postgresql".to_string())
-                        };
-                        deps.mikro_orm_migrations = Some(value);
-                        continue;
-                    }
-                    if key.starts_with("@mikro-orm") && key.ends_with("postgresql") {
-                        deps.database = Some("postgresql".to_string());
+                        deps.database = Some("mongodb".to_string());
                         if key.contains("migrations") {
                             deps.mikro_orm_migrations = Some(value);
                         } else {
                             deps.mikro_orm_database = Some(value);
                         }
+                        continue;
+                    }
+                    if key.starts_with("@mikro-orm") && key.ends_with("postgresql") {
+                        deps.database = Some("postgresql".to_string());
+                        deps.mikro_orm_database = Some(value);
+                        continue;
+                    }
+                    if key.starts_with("@mikro-orm") && key.ends_with("mysql") {
+                        deps.database = Some("mysql".to_string());
+                        deps.mikro_orm_database = Some(value);
+                        continue;
+                    }
+                    if key.starts_with("@mikro-orm") && key.ends_with("mariadb") {
+                        deps.database = Some("mariadb".to_string());
+                        deps.mikro_orm_database = Some(value);
+                        continue;
+                    }
+                    if key.starts_with("@mikro-orm") && key.ends_with("sqlite") {
+                        deps.database = Some("sqlite".to_string());
+                        deps.mikro_orm_database = Some(value);
+                        continue;
+                    }
+                    if key.starts_with("@mikro-orm") && key.ends_with("better-sqlite") {
+                        deps.database = Some("better-sqlite".to_string());
+                        deps.better_sqlite3 = Some(value);
+                        continue;
+                    }
+                    if key.starts_with("@mikro-orm") && key.ends_with("libsql") {
+                        deps.database = Some("libsql".to_string());
+                        deps.mikro_orm_database = Some(value);
+                        continue;
+                    }
+                    if key.starts_with("@mikro-orm") && key.ends_with("mssql") {
+                        deps.database = Some("mssql".to_string());
+                        deps.mikro_orm_database = Some(value);
+                        continue;
+                    }
+                    if key.starts_with("@mikro-orm") && key.ends_with("migrations") {
+                        deps.mikro_orm_migrations = Some(value);
                         continue;
                     }
 

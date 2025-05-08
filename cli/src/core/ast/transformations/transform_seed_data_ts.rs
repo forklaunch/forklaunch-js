@@ -6,14 +6,17 @@ use oxc_allocator::Allocator;
 use oxc_ast::ast::SourceType;
 use oxc_codegen::{CodeGenerator, CodegenOptions};
 
-use crate::core::ast::{
-    injections::inject_into_import_statement::inject_into_import_statement,
-    parse_ast_program::parse_ast_program,
+use crate::core::{
+    ast::{
+        injections::inject_into_import_statement::inject_into_import_statement,
+        parse_ast_program::parse_ast_program,
+    },
+    manifest::ProjectType,
 };
 
 pub(crate) fn transform_seed_data_ts(
     router_name: &str,
-    is_worker: bool,
+    project_type: &ProjectType,
     base_path: &String,
 ) -> Result<String> {
     let allocator = Allocator::default();
@@ -46,7 +49,7 @@ pub(crate) fn transform_seed_data_ts(
         "export const {router_name_camel_case}Record = {router_name_pascal_case}Record.create({{
             message: 'Test message'{}
         }})",
-        if is_worker {
+        if project_type == &ProjectType::Worker {
             ",
             processed: false,
             retryCount: 0

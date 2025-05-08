@@ -7,30 +7,31 @@ use std::{
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, Command};
-use dialoguer::{theme::ColorfulTheme, Confirm, MultiSelect};
+use dialoguer::{Confirm, MultiSelect, theme::ColorfulTheme};
 use glob::Pattern;
 use ramhorns::Template;
-use rustyline::{history::DefaultHistory, Editor};
+use rustyline::{Editor, history::DefaultHistory};
 use termcolor::{ColorChoice, StandardStream};
 use walkdir::WalkDir;
 
 use crate::{
+    CliCommand,
     constants::{
-        Database, Formatter, HttpFramework, License, Linter, Runtime, TestFramework, Validator,
-        ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST,
-        ERROR_FAILED_TO_READ_PACKAGE_JSON,
+        Database, ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST,
+        ERROR_FAILED_TO_READ_PACKAGE_JSON, Formatter, HttpFramework, License, Linter, Runtime,
+        TestFramework, Validator,
     },
     core::{
-        ast::transformations::{
-            transform_core_registration_http_framework_ts::transform_core_registration_http_framework_ts,
-            transform_core_registration_validator_ts::transform_core_registration_validator_ts,
+        ast::transformations::transform_core_registrations_ts::{
+            transform_core_registrations_ts_http_framework,
+            transform_core_registrations_ts_validator,
         },
-        base_path::{prompt_base_path, BasePathLocation},
+        base_path::{BasePathLocation, BasePathType, prompt_base_path},
         command::command,
         docker::update_dockerfile_contents,
         license::{generate_license, match_license},
         manifest::{
-            application::ApplicationManifestData, service::ServiceManifestData, ProjectType,
+            ProjectType, application::ApplicationManifestData, service::ServiceManifestData,
         },
         name::validate_name,
         package_json::{
@@ -38,31 +39,30 @@ use crate::{
                 ApplicationDevDependencies, ApplicationPackageJson, ApplicationScripts,
             },
             package_json_constants::{
-                application_build_script, application_clean_purge_script, application_clean_script,
-                application_docs_script, application_format_script, application_lint_fix_script,
-                application_lint_script, application_migrate_script, application_seed_script,
-                application_setup_script, application_test_script, application_up_packages_script,
-                project_clean_script, project_dev_local_script, project_dev_server_script,
+                BIOME_VERSION, ESLINT_VERSION, EXPRESS_VERSION, HYPER_EXPRESS_VERSION,
+                JEST_VERSION, OXLINT_VERSION, PRETTIER_VERSION, TS_JEST_VERSION, TYPEBOX_VERSION,
+                TYPESCRIPT_ESLINT_VERSION, VITEST_VERSION, ZOD_VERSION, application_build_script,
+                application_clean_purge_script, application_clean_script, application_docs_script,
+                application_format_script, application_lint_fix_script, application_lint_script,
+                application_migrate_script, application_seed_script, application_setup_script,
+                application_test_script, application_up_packages_script, project_clean_script,
+                project_dev_local_script, project_dev_server_script,
                 project_dev_worker_client_script, project_format_script, project_lint_fix_script,
                 project_lint_script, project_start_server_script, project_start_worker_script,
-                project_test_script, BIOME_VERSION, ESLINT_VERSION, EXPRESS_VERSION,
-                HYPER_EXPRESS_VERSION, JEST_VERSION, OXLINT_VERSION, PRETTIER_VERSION,
-                TS_JEST_VERSION, TYPEBOX_VERSION, TYPESCRIPT_ESLINT_VERSION, VITEST_VERSION,
-                ZOD_VERSION,
+                project_test_script,
             },
             project_package_json::{
                 ProjectDependencies, ProjectDevDependencies, ProjectPackageJson, ProjectScripts,
             },
         },
-        removal_template::{remove_template_files, RemovalTemplate},
+        removal_template::{RemovalTemplate, RemovalTemplateType, remove_template_files},
         rendered_template::{
-            write_rendered_templates, RenderedTemplate, RenderedTemplatesCache, TEMPLATES_DIR,
+            RenderedTemplate, RenderedTemplatesCache, TEMPLATES_DIR, write_rendered_templates,
         },
-        symlink_template::{create_symlinks, SymlinkTemplate},
+        symlink_template::{SymlinkTemplate, create_symlinks},
         watermark::apply_watermark,
     },
-    prompt::{prompt_field_from_selections_with_validation, ArrayCompleter},
-    CliCommand,
+    prompt::{ArrayCompleter, prompt_field_from_selections_with_validation},
 };
 
 #[derive(Debug)]
@@ -170,7 +170,12 @@ fn change_name(
     Ok(())
 }
 
-fn change_description(description: &str, application_json_to_write: &mut ApplicationPackageJson) {
+fn change_description(
+    description: &str,
+    manifest_data: &mut ApplicationManifestData,
+    application_json_to_write: &mut ApplicationPackageJson,
+) {
+    manifest_data.description = description.to_string();
     application_json_to_write.description = Some(description.to_string());
 }
 
@@ -259,9 +264,13 @@ fn update_config_files(
                 for project in project_jsons_to_write.keys() {
                     removal_templates.push(RemovalTemplate {
                         path: base_path.join(project).join(file),
+                        r#type: RemovalTemplateType::File,
                     });
                 }
-                removal_templates.push(RemovalTemplate { path: file_path });
+                removal_templates.push(RemovalTemplate {
+                    path: file_path,
+                    r#type: RemovalTemplateType::File,
+                });
             }
         }
     }
@@ -561,7 +570,7 @@ fn change_validator(
         validator_file_key.to_string_lossy(),
         RenderedTemplate {
             path: base_path.join("core").join("registration.ts"),
-            content: transform_core_registration_validator_ts(
+            content: transform_core_registrations_ts_validator(
                 &validator.to_string(),
                 base_path,
                 rendered_templates_cache
@@ -605,7 +614,7 @@ fn change_http_framework(
         http_framework_file_key.to_string_lossy(),
         RenderedTemplate {
             path: base_path.join("core").join("registration.ts"),
-            content: transform_core_registration_http_framework_ts(
+            content: transform_core_registrations_ts_http_framework(
                 &http_framework.to_string(),
                 base_path,
                 rendered_templates_cache
@@ -662,7 +671,7 @@ fn change_runtime(
                     line_editor,
                     stdout,
                     matches,
-                    "Enter test framework: ",
+                    "test framework",
                     None,
                     |input: &str| TestFramework::VARIANTS.contains(&input),
                     |_| "Invalid test framework. Please try again".to_string(),
@@ -902,30 +911,27 @@ fn change_runtime(
         }
     }
 
-    if runtime == &Runtime::Bun {
-        application_json_to_write.workspaces = Some(existing_workspaces);
-    } else if runtime == &Runtime::Node {
-        rendered_templates_cache.insert(
-            "pnpm-workspace.yaml".to_string(),
-            RenderedTemplate {
-                path: base_path.join("pnpm-workspace.yaml"),
-                content: serde_yml::to_string(&existing_workspaces)?,
-                context: None,
-            },
-        );
+    match runtime {
+        Runtime::Bun => {
+            application_json_to_write.workspaces = Some(existing_workspaces);
+        }
+        Runtime::Node => {
+            rendered_templates_cache.insert(
+                "pnpm-workspace.yaml".to_string(),
+                RenderedTemplate {
+                    path: base_path.join("pnpm-workspace.yaml"),
+                    content: serde_yml::to_string(&existing_workspaces)?,
+                    context: None,
+                },
+            );
+        }
     }
 
     let dockerfile_template_path = TEMPLATES_DIR
         .get_file(Path::new("application").join("Dockerfile"))
         .unwrap();
 
-    let dockerfile_template = Template::new(
-        dockerfile_template_path
-            .path()
-            .file_name()
-            .unwrap()
-            .to_string_lossy(),
-    )?;
+    let dockerfile_template = Template::new(dockerfile_template_path.contents_utf8().unwrap())?;
 
     let existing_service_manifest_data = ServiceManifestData {
         is_in_memory_database: is_in_memory_database,
@@ -1039,7 +1045,10 @@ fn change_test_framework(
                 context: None,
             })?;
             if exists(&config_file)? && config_file_contents == watermarked_config_file_contents {
-                removal_templates.push(RemovalTemplate { path: config_file });
+                removal_templates.push(RemovalTemplate {
+                    path: config_file,
+                    r#type: RemovalTemplateType::File,
+                });
             }
         }
 
@@ -1160,7 +1169,10 @@ fn change_license(
 
     let mut removal_template = None;
     if exists(&license_path)? {
-        removal_template = Some(RemovalTemplate { path: license_path });
+        removal_template = Some(RemovalTemplate {
+            path: license_path,
+            r#type: RemovalTemplateType::File,
+        });
     }
 
     application_json_to_write.license = Some(license.to_string());
@@ -1270,6 +1282,7 @@ impl CliCommand for ApplicationCommand {
             &mut stdout,
             matches,
             &BasePathLocation::Application,
+            &BasePathType::Change,
         )?;
         let base_path = Path::new(&base_path_input);
 
@@ -1328,7 +1341,7 @@ impl CliCommand for ApplicationCommand {
             &mut line_editor,
             &mut stdout,
             matches,
-            "Enter application name: ",
+            "application name",
             None,
             |input: &str| validate_name(input),
             |_| "Application name cannot be empty or include spaces. Please try again".to_string(),
@@ -1341,7 +1354,7 @@ impl CliCommand for ApplicationCommand {
             &mut line_editor,
             &mut stdout,
             matches,
-            "Enter runtime: ",
+            "runtime",
             Some(&Runtime::VARIANTS),
             |input| Runtime::VARIANTS.contains(&input),
             |_| "Invalid runtime. Please try again".to_string(),
@@ -1354,7 +1367,7 @@ impl CliCommand for ApplicationCommand {
             &mut line_editor,
             &mut stdout,
             matches,
-            "Enter HTTP framework: ",
+            "HTTP framework",
             Some(&HttpFramework::VARIANTS),
             |input| {
                 HttpFramework::VARIANTS.contains(&input)
@@ -1376,7 +1389,7 @@ impl CliCommand for ApplicationCommand {
             &mut line_editor,
             &mut stdout,
             matches,
-            "Enter formatter: ",
+            "formatter",
             Some(&Formatter::VARIANTS),
             |input| Formatter::VARIANTS.contains(&input),
             |_| "Invalid formatter. Please try again".to_string(),
@@ -1389,7 +1402,7 @@ impl CliCommand for ApplicationCommand {
             &mut line_editor,
             &mut stdout,
             matches,
-            "Enter linter: ",
+            "linter",
             Some(&Linter::VARIANTS),
             |input| Linter::VARIANTS.contains(&input),
             |_| "Invalid linter. Please try again".to_string(),
@@ -1402,7 +1415,7 @@ impl CliCommand for ApplicationCommand {
             &mut line_editor,
             &mut stdout,
             matches,
-            "Enter validator: ",
+            "validator",
             Some(&Validator::VARIANTS),
             |input| Validator::VARIANTS.contains(&input),
             |_| "Invalid validator. Please try again".to_string(),
@@ -1415,7 +1428,7 @@ impl CliCommand for ApplicationCommand {
             &mut line_editor,
             &mut stdout,
             matches,
-            "Enter test framework: ",
+            "test framework",
             Some(&TestFramework::VARIANTS),
             |input| TestFramework::VARIANTS.contains(&input),
             |_| "Invalid test framework. Please try again".to_string(),
@@ -1428,7 +1441,7 @@ impl CliCommand for ApplicationCommand {
             &mut line_editor,
             &mut stdout,
             matches,
-            "Enter project description (optional): ",
+            "project description (optional)",
             None,
             |_input: &str| true,
             |_| "Invalid description. Please try again".to_string(),
@@ -1441,7 +1454,7 @@ impl CliCommand for ApplicationCommand {
             &mut line_editor,
             &mut stdout,
             matches,
-            "Enter author name: ",
+            "author name",
             None,
             |input: &str| !input.is_empty(),
             |_| "Author name cannot be empty. Please try again".to_string(),
@@ -1454,7 +1467,7 @@ impl CliCommand for ApplicationCommand {
             &mut line_editor,
             &mut stdout,
             matches,
-            "Enter license: ",
+            "license",
             Some(&License::VARIANTS),
             |input: &str| match_license(input.parse().unwrap()).is_ok(),
             |_| "Invalid license. Please try again".to_string(),
@@ -1606,7 +1619,11 @@ impl CliCommand for ApplicationCommand {
         }
 
         if let Some(description) = description {
-            change_description(&description, &mut application_json_to_write);
+            change_description(
+                &description,
+                &mut manifest_data,
+                &mut application_json_to_write,
+            );
         }
 
         if let Some(author) = author {

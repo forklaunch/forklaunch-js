@@ -103,7 +103,7 @@ where
                     .to_string()
                 } else {
                     Input::with_theme(&ColorfulTheme::default())
-                        .with_prompt(prompt)
+                        .with_prompt(format!("Enter {}: ", prompt))
                         .validate_with({
                             |input: &String| -> Result<(), String> {
                                 if validator(input) {

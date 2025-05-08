@@ -4,7 +4,7 @@ use anyhow::{Context, Ok, Result};
 use serde::{Deserialize, Serialize};
 use serde_yml::{from_str, to_string};
 
-use super::rendered_template::RenderedTemplate;
+use super::{manifest::InitializableManifestConfig, rendered_template::RenderedTemplate};
 use crate::{
     constants::{
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE,
@@ -16,7 +16,7 @@ use crate::{
 
 #[derive(Debug, Deserialize, Serialize)]
 pub(crate) struct PnpmWorkspace {
-    packages: Vec<String>,
+    pub(crate) packages: Vec<String>,
 }
 
 pub(crate) fn generate_pnpm_workspace(
@@ -39,7 +39,7 @@ pub(crate) fn generate_pnpm_workspace(
 }
 
 pub(crate) fn add_project_definition_to_pnpm_workspace<
-    T: ManifestConfig + ProjectManifestConfig + Serialize,
+    T: ManifestConfig + ProjectManifestConfig + InitializableManifestConfig + Serialize,
 >(
     base_path: &str,
     config_data: &T,

@@ -3,14 +3,15 @@ use std::{collections::HashMap, fs::read_to_string, io::Write, path::Path};
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use convert_case::{Case, Casing};
-use rustyline::{history::DefaultHistory, Editor};
+use rustyline::{Editor, history::DefaultHistory};
 use serde_json::to_string_pretty;
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use toml::from_str;
 
 use crate::{
+    CliCommand,
     constants::{
-        Database, TestFramework, WorkerBackend, ERROR_FAILED_TO_ADD_BASE_ENTITY_TO_CORE,
+        Database, ERROR_FAILED_TO_ADD_BASE_ENTITY_TO_CORE,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON,
@@ -18,59 +19,59 @@ use crate::{
         ERROR_FAILED_TO_ADD_SERVICE_METADATA_TO_ARTIFACTS, ERROR_FAILED_TO_CREATE_GITIGNORE,
         ERROR_FAILED_TO_CREATE_PACKAGE_JSON, ERROR_FAILED_TO_CREATE_SYMLINKS,
         ERROR_FAILED_TO_CREATE_TSCONFIG, ERROR_FAILED_TO_PARSE_MANIFEST,
-        ERROR_FAILED_TO_READ_MANIFEST, ERROR_FAILED_TO_WRITE_SERVICE_FILES,
+        ERROR_FAILED_TO_READ_MANIFEST, ERROR_FAILED_TO_WRITE_SERVICE_FILES, Runtime, TestFramework,
+        WorkerType,
     },
     core::{
-        base_path::{prompt_base_path, BasePathLocation},
+        base_path::{BasePathLocation, BasePathType, prompt_base_path},
         command::command,
         database::{
-            add_base_entity_to_core, get_database_port, is_in_memory_database, match_database,
+            add_base_entity_to_core, get_database_port, get_db_driver, is_in_memory_database,
         },
         docker::add_worker_definition_to_docker_compose,
         gitignore::generate_gitignore,
         manifest::{
+            ManifestData, ProjectMetadata, ProjectType, ResourceInventory,
             add_project_definition_to_manifest, application::ApplicationManifestData,
-            worker::WorkerManifestData, ManifestData, ProjectMetadata, ProjectType,
-            ResourceInventory,
+            worker::WorkerManifestData,
         },
         name::validate_name,
         package_json::{
             add_project_definition_to_package_json,
             package_json_constants::{
+                AJV_VERSION, APP_CORE_VERSION, APP_MONITORING_VERSION, BETTER_SQLITE3_VERSION,
+                BIOME_VERSION, COMMON_VERSION, CORE_VERSION, DOTENV_VERSION, ESLINT_VERSION,
+                EXPRESS_VERSION, HYPER_EXPRESS_VERSION, MIKRO_ORM_CLI_VERSION,
+                MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
+                MIKRO_ORM_REFLECTION_VERSION, MIKRO_ORM_SEEDER_VERSION, OXLINT_VERSION,
+                PRETTIER_VERSION, PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT, PROJECT_SEED_SCRIPT,
+                PROJECT_START_WORKER_CLIENT_SCRIPT, SQLITE3_VERSION, TSX_VERSION, TYPEBOX_VERSION,
+                TYPEDOC_VERSION, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION,
+                TYPES_QS_VERSION, TYPES_UUID_VERSION, TYPESCRIPT_ESLINT_VERSION, UUID_VERSION,
+                VALIDATOR_VERSION, WORKER_BULLMQ_VERSION, WORKER_DATABASE_VERSION,
+                WORKER_INTERFACES_VERSION, WORKER_KAFKA_VERSION, WORKER_REDIS_VERSION, ZOD_VERSION,
                 project_clean_script, project_dev_local_worker_script, project_dev_server_script,
                 project_dev_worker_client_script, project_format_script, project_lint_fix_script,
                 project_lint_script, project_migrate_script, project_start_worker_script,
-                project_test_script, AJV_VERSION, APP_CORE_VERSION, APP_MONITORING_VERSION,
-                BETTER_SQLITE3_VERSION, BIOME_VERSION, COMMON_VERSION, CORE_VERSION,
-                DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION, HYPER_EXPRESS_VERSION,
-                MIKRO_ORM_CLI_VERSION, MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION,
-                MIKRO_ORM_MIGRATIONS_VERSION, MIKRO_ORM_REFLECTION_VERSION,
-                MIKRO_ORM_SEEDER_VERSION, OXLINT_VERSION, PRETTIER_VERSION, PROJECT_BUILD_SCRIPT,
-                PROJECT_DOCS_SCRIPT, PROJECT_SEED_SCRIPT, PROJECT_START_WORKER_CLIENT_SCRIPT,
-                SQLITE3_VERSION, TSX_VERSION, TYPEBOX_VERSION, TYPEDOC_VERSION,
-                TYPESCRIPT_ESLINT_VERSION, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION,
-                TYPES_EXPRESS_VERSION, TYPES_QS_VERSION, TYPES_UUID_VERSION, UUID_VERSION,
-                VALIDATOR_VERSION, WORKER_BULLMQ_VERSION, WORKER_DATABASE_VERSION,
-                WORKER_INTERFACES_VERSION, WORKER_KAFKA_VERSION, WORKER_REDIS_VERSION, ZOD_VERSION,
+                project_test_script,
             },
             project_package_json::{
-                ProjectDependencies, ProjectDevDependencies, ProjectMikroOrm, ProjectPackageJson,
-                ProjectScripts, MIKRO_ORM_CONFIG_PATHS,
+                MIKRO_ORM_CONFIG_PATHS, ProjectDependencies, ProjectDevDependencies,
+                ProjectMikroOrm, ProjectPackageJson, ProjectScripts,
             },
             update_application_package_json,
         },
         pnpm_workspace::add_project_definition_to_pnpm_workspace,
-        rendered_template::{write_rendered_templates, RenderedTemplate},
+        rendered_template::{RenderedTemplate, write_rendered_templates},
         symlinks::generate_symlinks,
-        template::{generate_with_template, PathIO},
+        template::{PathIO, generate_with_template},
         tsconfig::generate_tsconfig,
-        worker_backend::{
-            get_default_worker_options, get_worker_backend_name, get_worker_consumer_factory,
-            get_worker_producer_factory,
+        worker_type::{
+            get_default_worker_options, get_worker_consumer_factory, get_worker_producer_factory,
+            get_worker_type_name,
         },
     },
-    prompt::{prompt_with_validation, prompt_without_validation, ArrayCompleter},
-    CliCommand,
+    prompt::{ArrayCompleter, prompt_with_validation, prompt_without_validation},
 };
 
 #[derive(Debug)]
@@ -101,13 +102,13 @@ fn generate_basic_worker(
         output_path: output_path.clone(),
     };
 
-    let ignore_files = if config_data.is_cache_enabled {
+    let ignore_files = if !config_data.is_database_enabled {
         vec!["mikro-orm.config.ts".to_string(), "seeder.ts".to_string()]
     } else {
         vec!["consts.ts".to_string()]
     };
-    let ignore_dirs = if config_data.is_cache_enabled {
-        vec!["seeder".to_string()]
+    let ignore_dirs = if !config_data.is_database_enabled {
+        vec!["seeder".to_string(), "seed.data.ts".to_string()]
     } else {
         vec![]
     };
@@ -191,24 +192,29 @@ fn add_worker_to_artifacts(
         }),
         Some(vec![config_data.worker_name.clone()]),
         Some(ProjectMetadata {
-            backend: Some(config_data.worker_type_lowercase.clone()),
+            r#type: Some(config_data.worker_type_lowercase.clone()),
         }),
     )
     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
 
+    let runtime = config_data.runtime.parse()?;
+
     let mut package_json_buffer: Option<String> = None;
-    if config_data.runtime == "bun" {
-        package_json_buffer = Some(
-            add_project_definition_to_package_json(config_data, base_path)
-                .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON)?,
-        );
-    }
     let mut pnpm_workspace_buffer: Option<String> = None;
-    if config_data.runtime == "node" {
-        pnpm_workspace_buffer = Some(
-            add_project_definition_to_pnpm_workspace(base_path, config_data)
-                .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?,
-        );
+
+    match runtime {
+        Runtime::Bun => {
+            package_json_buffer = Some(
+                add_project_definition_to_package_json(config_data, base_path)
+                    .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON)?,
+            );
+        }
+        Runtime::Node => {
+            pnpm_workspace_buffer = Some(
+                add_project_definition_to_pnpm_workspace(base_path, config_data)
+                    .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?,
+            );
+        }
     }
 
     let mut rendered_templates = Vec::new();
@@ -227,16 +233,14 @@ fn add_worker_to_artifacts(
         context: Some(ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST.to_string()),
     });
 
-    if config_data.is_database_enabled {
-        rendered_templates.push(
-            update_application_package_json(
-                &ManifestData::Worker(config_data),
-                base_path,
-                package_json_buffer,
-            )?
-            .unwrap(),
-        );
-    }
+    rendered_templates.push(
+        update_application_package_json(
+            &ManifestData::Worker(config_data),
+            base_path,
+            package_json_buffer,
+        )?
+        .unwrap(),
+    );
 
     if let Some(pnpm_workspace_buffer) = pnpm_workspace_buffer {
         rendered_templates.push(RenderedTemplate {
@@ -359,8 +363,8 @@ pub(crate) fn generate_worker_package_json(
                 forklaunch_interfaces_iam: None,
                 forklaunch_implementation_worker_bullmq: if config_data
                     .worker_type_lowercase
-                    .parse::<WorkerBackend>()?
-                    == WorkerBackend::BullMQCache
+                    .parse::<WorkerType>()?
+                    == WorkerType::BullMQCache
                 {
                     Some(WORKER_BULLMQ_VERSION.to_string())
                 } else {
@@ -368,8 +372,8 @@ pub(crate) fn generate_worker_package_json(
                 },
                 forklaunch_implementation_worker_redis: if config_data
                     .worker_type_lowercase
-                    .parse::<WorkerBackend>()?
-                    == WorkerBackend::RedisCache
+                    .parse::<WorkerType>()?
+                    == WorkerType::RedisCache
                 {
                     Some(WORKER_REDIS_VERSION.to_string())
                 } else {
@@ -377,8 +381,8 @@ pub(crate) fn generate_worker_package_json(
                 },
                 forklaunch_implementation_worker_database: if config_data
                     .worker_type_lowercase
-                    .parse::<WorkerBackend>()?
-                    == WorkerBackend::Database
+                    .parse::<WorkerType>()?
+                    == WorkerType::Database
                 {
                     Some(WORKER_DATABASE_VERSION.to_string())
                 } else {
@@ -386,8 +390,8 @@ pub(crate) fn generate_worker_package_json(
                 },
                 forklaunch_implementation_worker_kafka: if config_data
                     .worker_type_lowercase
-                    .parse::<WorkerBackend>()?
-                    == WorkerBackend::Kafka
+                    .parse::<WorkerType>()?
+                    == WorkerType::Kafka
                 {
                     Some(WORKER_KAFKA_VERSION.to_string())
                 } else {
@@ -527,11 +531,11 @@ impl CliCommand for WorkerCommand {
                     .help("The application path to initialize the worker in"),
             )
             .arg(
-                Arg::new("backend")
+                Arg::new("type")
                     .short('b')
-                    .long("backend")
-                    .help("The backend to use")
-                    .value_parser(WorkerBackend::VARIANTS),
+                    .long("type")
+                    .help("The type to use")
+                    .value_parser(WorkerType::VARIANTS),
             )
             .arg(
                 Arg::new("database")
@@ -564,7 +568,7 @@ impl CliCommand for WorkerCommand {
             &mut stdout,
             "name",
             matches,
-            "Enter worker name: ",
+            "worker name",
             None,
             |input: &str| validate_name(input),
             |_| "Worker name cannot be empty or include spaces. Please try again".to_string(),
@@ -575,29 +579,30 @@ impl CliCommand for WorkerCommand {
             &mut stdout,
             matches,
             &BasePathLocation::Worker,
+            &BasePathType::Init,
         )?;
 
-        let backend: WorkerBackend = prompt_with_validation(
+        let r#type: WorkerType = prompt_with_validation(
             &mut line_editor,
             &mut stdout,
-            "backend",
+            "type",
             matches,
-            "Enter worker backend type",
-            Some(&WorkerBackend::VARIANTS),
-            |input| WorkerBackend::VARIANTS.contains(&input),
-            |_| "Invalid worker backend type. Please try again".to_string(),
+            "worker type",
+            Some(&WorkerType::VARIANTS),
+            |input| WorkerType::VARIANTS.contains(&input),
+            |_| "Invalid worker type. Please try again".to_string(),
         )?
         .parse()?;
 
         let mut database: Option<Database> = None;
-        if backend == WorkerBackend::Database {
+        if r#type == WorkerType::Database {
             database = Some(
                 prompt_with_validation(
                     &mut line_editor,
                     &mut stdout,
                     "database",
                     matches,
-                    "Enter worker database type",
+                    "worker database type",
                     Some(&Database::VARIANTS),
                     |input| Database::VARIANTS.contains(&input),
                     |_| "Invalid worker database type. Please try again".to_string(),
@@ -611,7 +616,7 @@ impl CliCommand for WorkerCommand {
             &mut stdout,
             "description",
             matches,
-            "Enter worker description (optional): ",
+            "worker description (optional)",
         )?;
 
         let config_path = Path::new(&base_path)
@@ -662,7 +667,7 @@ impl CliCommand for WorkerCommand {
                 None
             },
             db_driver: if let Some(database) = &database {
-                Some(match_database(&database))
+                Some(get_db_driver(&database))
             } else {
                 None
             },
@@ -672,10 +677,9 @@ impl CliCommand for WorkerCommand {
                 None
             },
             is_worker: true,
-            is_cache_enabled: backend == WorkerBackend::BullMQCache
-                || backend == WorkerBackend::RedisCache,
-            is_database_enabled: backend == WorkerBackend::Database,
-            is_kafka_enabled: backend == WorkerBackend::Kafka,
+            is_cache_enabled: r#type == WorkerType::BullMQCache || r#type == WorkerType::RedisCache,
+            is_database_enabled: r#type == WorkerType::Database,
+            is_kafka_enabled: r#type == WorkerType::Kafka,
 
             is_postgres: if let Some(database) = &database {
                 database == &Database::PostgreSQL
@@ -723,14 +727,14 @@ impl CliCommand for WorkerCommand {
                 false
             },
 
-            worker_type: get_worker_backend_name(&backend),
-            worker_type_lowercase: get_worker_backend_name(&backend).to_lowercase(),
-            default_worker_options: get_default_worker_options(&backend),
+            worker_type: get_worker_type_name(&r#type),
+            worker_type_lowercase: get_worker_type_name(&r#type).to_lowercase(),
+            default_worker_options: get_default_worker_options(&r#type),
             worker_consumer_factory: get_worker_consumer_factory(
-                &backend,
+                &r#type,
                 &worker_name.to_case(Case::Pascal),
             ),
-            worker_producer_factory: get_worker_producer_factory(&backend),
+            worker_producer_factory: get_worker_producer_factory(&r#type),
         };
 
         let dryrun = matches.get_flag("dryrun");

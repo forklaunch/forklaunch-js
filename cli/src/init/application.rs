@@ -7,7 +7,7 @@ use std::{
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use convert_case::{Case, Casing};
-use rustyline::{history::DefaultHistory, Editor};
+use rustyline::{Editor, history::DefaultHistory};
 use serde_json::to_string_pretty;
 use serde_yml::to_string;
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
@@ -15,27 +15,28 @@ use uuid::Uuid;
 
 use super::service::generate_service_package_json;
 use crate::{
+    CliCommand,
     constants::{
-        Database, Formatter, HttpFramework, License, Linter, Runtime, Service, TestFramework,
-        Validator, ERROR_FAILED_TO_CREATE_DATABASE_EXPORT_INDEX_TS,
+        Database, ERROR_FAILED_TO_CREATE_DATABASE_EXPORT_INDEX_TS,
         ERROR_FAILED_TO_CREATE_GITIGNORE, ERROR_FAILED_TO_CREATE_LICENSE,
-        ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE, ERROR_FAILED_TO_SETUP_IAM,
+        ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE, ERROR_FAILED_TO_SETUP_IAM, Formatter,
+        HttpFramework, License, Linter, Runtime, Service, TestFramework, Validator,
     },
     core::{
         command::command,
         database::{
-            generate_database_export_index_ts, get_database_port, is_in_memory_database,
-            match_database,
+            generate_index_ts_database_export, get_database_port, get_db_driver,
+            is_in_memory_database,
         },
         docker::{
-            add_otel_to_docker_compose, add_service_definition_to_docker_compose, DockerCompose,
+            DockerCompose, add_otel_to_docker_compose, add_service_definition_to_docker_compose,
         },
         gitignore::generate_gitignore,
         iam::generate_iam_keys,
         license::{generate_license, match_license},
         manifest::{
-            application::ApplicationManifestData, generate_manifest, service::ServiceManifestData,
             ManifestData, ProjectEntry, ProjectType, ResourceInventory,
+            application::ApplicationManifestData, generate_manifest, service::ServiceManifestData,
         },
         name::validate_name,
         package_json::{
@@ -43,37 +44,37 @@ use crate::{
                 ApplicationDevDependencies, ApplicationPackageJson, ApplicationScripts,
             },
             package_json_constants::{
+                AJV_VERSION, APP_DEV_BUILD_SCRIPT, APP_DEV_SCRIPT, APP_PREPARE_SCRIPT,
+                BETTER_SQLITE_POSTINSTALL_SCRIPT, BETTER_SQLITE3_VERSION, BIOME_VERSION,
+                COMMON_VERSION, CORE_VERSION, DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION,
+                GLOBALS_VERSION, HUSKY_VERSION, HYPER_EXPRESS_VERSION, JEST_TYPES_VERSION,
+                JEST_VERSION, LINT_STAGED_VERSION, MIKRO_ORM_CORE_VERSION,
+                MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
+                MIKRO_ORM_REFLECTION_VERSION, NODE_GYP_VERSION, OXLINT_VERSION, PRETTIER_VERSION,
+                PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT, SORT_PACKAGE_JSON_VERSION,
+                SQLITE_POSTINSTALL_SCRIPT, SQLITE3_VERSION, TS_JEST_VERSION, TSX_VERSION,
+                TYPEBOX_VERSION, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION,
+                TYPES_QS_VERSION, TYPES_UUID_VERSION, TYPESCRIPT_ESLINT_VERSION,
+                TYPESCRIPT_VERSION, UUID_VERSION, VALIDATOR_VERSION, VITEST_VERSION, ZOD_VERSION,
                 application_build_script, application_clean_purge_script, application_clean_script,
                 application_docs_script, application_format_script, application_lint_fix_script,
                 application_lint_script, application_migrate_script, application_seed_script,
                 application_setup_script, application_test_script, application_up_packages_script,
                 project_clean_script, project_format_script, project_lint_fix_script,
-                project_lint_script, project_test_script, AJV_VERSION, APP_DEV_BUILD_SCRIPT,
-                APP_DEV_SCRIPT, APP_PREPARE_SCRIPT, BETTER_SQLITE3_VERSION,
-                BETTER_SQLITE_POSTINSTALL_SCRIPT, BIOME_VERSION, COMMON_VERSION, CORE_VERSION,
-                DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION, GLOBALS_VERSION, HUSKY_VERSION,
-                HYPER_EXPRESS_VERSION, JEST_TYPES_VERSION, JEST_VERSION, LINT_STAGED_VERSION,
-                MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
-                MIKRO_ORM_REFLECTION_VERSION, NODE_GYP_VERSION, OXLINT_VERSION, PRETTIER_VERSION,
-                PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT, SORT_PACKAGE_JSON_VERSION,
-                SQLITE3_VERSION, SQLITE_POSTINSTALL_SCRIPT, TSX_VERSION, TS_JEST_VERSION,
-                TYPEBOX_VERSION, TYPESCRIPT_ESLINT_VERSION, TYPESCRIPT_VERSION,
-                TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION, TYPES_QS_VERSION,
-                TYPES_UUID_VERSION, UUID_VERSION, VALIDATOR_VERSION, VITEST_VERSION, ZOD_VERSION,
+                project_lint_script, project_test_script,
             },
             project_package_json::{ProjectDependencies, ProjectDevDependencies, ProjectScripts},
         },
         pnpm_workspace::generate_pnpm_workspace,
-        rendered_template::{create_forklaunch_dir, write_rendered_templates, RenderedTemplate},
+        rendered_template::{RenderedTemplate, create_forklaunch_dir, write_rendered_templates},
         symlinks::generate_symlinks,
-        template::{generate_with_template, get_routers_from_standard_package, PathIO},
+        template::{PathIO, generate_with_template, get_routers_from_standard_package},
         token::get_token,
     },
     prompt::{
-        prompt_comma_separated_list, prompt_with_validation, prompt_without_validation,
-        ArrayCompleter,
+        ArrayCompleter, prompt_comma_separated_list, prompt_with_validation,
+        prompt_without_validation,
     },
-    CliCommand,
 };
 
 fn generate_application_package_json(
@@ -350,7 +351,7 @@ impl CliCommand for ApplicationCommand {
             &mut stdout,
             "name",
             matches,
-            "application",
+            "application name",
             None,
             |input: &str| validate_name(input),
             |_| "Application name cannot be empty or include spaces. Please try again".to_string(),
@@ -473,7 +474,7 @@ impl CliCommand for ApplicationCommand {
             &mut stdout,
             "description",
             matches,
-            "Enter project description (optional): ",
+            "project description (optional)",
         )?;
 
         let author = prompt_with_validation(
@@ -519,6 +520,7 @@ impl CliCommand for ApplicationCommand {
             ProjectEntry {
                 r#type: ProjectType::Library,
                 name: "core".to_string(),
+                description: format!("{} core library", name),
                 resources: None,
                 routers: None,
                 metadata: None,
@@ -526,6 +528,7 @@ impl CliCommand for ApplicationCommand {
             ProjectEntry {
                 r#type: ProjectType::Library,
                 name: "monitoring".to_string(),
+                description: format!("{} monitoring library", name),
                 resources: None,
                 routers: None,
                 metadata: None,
@@ -534,6 +537,7 @@ impl CliCommand for ApplicationCommand {
         additional_projects.extend(services.into_iter().map(|package| ProjectEntry {
             r#type: ProjectType::Service,
             name: package.to_string(),
+            description: format!("{} service", package.to_string()),
             resources: Some(ResourceInventory {
                 database: Some(database.to_string()),
                 cache: None,
@@ -697,7 +701,7 @@ impl CliCommand for ApplicationCommand {
 
                 database: data.database.clone(),
                 database_port: get_database_port(&data.database.parse()?),
-                db_driver: match_database(&data.database.parse()?),
+                db_driver: get_db_driver(&data.database.parse()?),
 
                 is_iam: template_dir.output_path == "iam",
                 is_cache_enabled: template_dir.output_path == "billing",
@@ -845,7 +849,7 @@ impl CliCommand for ApplicationCommand {
         )?);
 
         rendered_templates.push(
-            generate_database_export_index_ts(
+            generate_index_ts_database_export(
                 &Path::new(&name).to_string_lossy().to_string(),
                 Some(vec![database.to_string()]),
                 None,

@@ -1,9 +1,11 @@
-use oxc_allocator::{Allocator, CloneIn, Vec};
+use std::collections::HashSet;
+
+use oxc_allocator::{Allocator, CloneIn};
 use oxc_ast::ast::{
     Argument, Declaration, Expression, ObjectPropertyKind, Program, PropertyKey, Statement,
 };
 
-pub(crate) fn replace_registration_in_config_injector<'a>(
+pub(crate) fn inject_into_registrations_config_injector<'a>(
     allocator: &'a Allocator,
     registrations_program: &mut Program<'a>,
     config_injector_injection: &mut Program<'a>,
@@ -51,6 +53,20 @@ pub(crate) fn replace_registration_in_config_injector<'a>(
                     _ => continue,
                 };
 
+                let mut property_keys = HashSet::new();
+                object_expr.properties.iter().for_each(|prop| {
+                    let prop = match prop {
+                        ObjectPropertyKind::ObjectProperty(prop) => prop,
+                        _ => return,
+                    };
+                    let key = match &prop.key {
+                        PropertyKey::StaticIdentifier(identifier) => identifier,
+                        _ => return,
+                    };
+
+                    property_keys.insert(key.name.to_string());
+                });
+
                 for injected_stmt in config_injector_injection.body.iter_mut() {
                     let injected_var_decl = match injected_stmt {
                         Statement::VariableDeclaration(decl) => decl,
@@ -58,55 +74,42 @@ pub(crate) fn replace_registration_in_config_injector<'a>(
                     };
 
                     for injected_declarator in injected_var_decl.declarations.iter_mut() {
-                        let injected_new_expr = match &mut injected_declarator.init {
-                            Some(Expression::NewExpression(new_expr)) => new_expr,
+                        // let injected_new_expr = match &mut injected_declarator.init {
+                        //     Some(Expression::NewExpression(new_expr)) => new_expr,
+                        //     _ => continue,
+                        // };
+                        let injected_call_expr = match &mut injected_declarator.init {
+                            Some(Expression::CallExpression(call_expr)) => call_expr,
                             _ => continue,
                         };
 
-                        for injected_arg in &mut injected_new_expr.arguments {
+                        for injected_arg in &mut injected_call_expr.arguments {
                             let injected_obj = match injected_arg {
                                 Argument::ObjectExpression(obj) => obj,
                                 _ => continue,
                             };
 
-                            let mut new_object_properties = Vec::new_in(allocator);
-                            for object_property in object_expr.properties.iter_mut() {
-                                let mut found = false;
-                                let property = match object_property {
-                                    ObjectPropertyKind::ObjectProperty(property) => property,
+                            for injected_prop in injected_obj.properties.iter() {
+                                let prop = match injected_prop {
+                                    ObjectPropertyKind::ObjectProperty(prop) => prop,
                                     _ => continue,
                                 };
 
-                                let property_id = match &property.key {
-                                    PropertyKey::Identifier(property_id) => property_id,
+                                let key = match &prop.key {
+                                    PropertyKey::StaticIdentifier(identifier) => identifier,
                                     _ => continue,
                                 };
 
-                                for injected_object_property in injected_obj.properties.iter_mut() {
-                                    let injected_property = match injected_object_property {
-                                        ObjectPropertyKind::ObjectProperty(property) => property,
-                                        _ => continue,
-                                    };
-
-                                    let injected_property_id = match &injected_property.key {
-                                        PropertyKey::Identifier(property_id) => property_id,
-                                        _ => continue,
-                                    };
-
-                                    if property_id.name == injected_property_id.name {
-                                        found = true;
-                                    }
-                                }
-
-                                if !found {
-                                    new_object_properties.push(ObjectPropertyKind::ObjectProperty(
-                                        property.clone_in(allocator),
-                                    ));
+                                if !property_keys.contains(&key.name.to_string()) {
+                                    object_expr.properties.push(
+                                        ObjectPropertyKind::ObjectProperty(
+                                            prop.clone_in(&allocator),
+                                        ),
+                                    );
                                 }
                             }
 
-                            new_object_properties.extend(injected_obj.properties.drain(..));
-                            object_expr.properties = new_object_properties;
+                            return;
                         }
                     }
                 }

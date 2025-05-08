@@ -2,46 +2,46 @@ use std::{io::Write, path::Path};
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, Command};
-use dialoguer::{theme::ColorfulTheme, MultiSelect};
-use rustyline::{history::DefaultHistory, Editor};
-use serde_json::from_str;
+use dialoguer::{MultiSelect, theme::ColorfulTheme};
+use rustyline::{Editor, history::DefaultHistory};
 use termcolor::{ColorChoice, StandardStream};
 use walkdir::WalkDir;
 
-use super::router::change_name as change_router_name;
+use super::core::{
+    change_description::change_description as change_description_core,
+    change_name::change_name as change_name_core,
+};
 use crate::{
+    CliCommand,
     constants::{
-        Database, Infrastructure, ERROR_FAILED_TO_PARSE_MANIFEST,
-        ERROR_FAILED_TO_READ_DOCKER_COMPOSE, ERROR_FAILED_TO_READ_MANIFEST,
-        ERROR_FAILED_TO_READ_PACKAGE_JSON,
+        Database, ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_DOCKER_COMPOSE,
+        ERROR_FAILED_TO_READ_MANIFEST, ERROR_FAILED_TO_READ_PACKAGE_JSON, Infrastructure,
     },
     core::{
         ast::transformations::{
             transform_base_entity_ts::transform_base_entity_ts,
             transform_mikroorm_config_ts::transform_mikroorm_config_ts,
-            transform_registrations_infrastructure_redis::transform_registrations_infrastructure_redis_ts,
+            transform_registrations_ts::transform_registrations_ts_infrastructure_redis,
         },
-        base_path::{prompt_base_path, BasePathLocation},
+        base_path::{BasePathLocation, BasePathType, prompt_base_path},
         command::command,
-        database::is_in_memory_database,
         docker::{
-            add_database_to_docker_compose, add_redis_to_docker_compose,
-            clean_up_unused_infrastructure_services, DockerCompose,
+            DockerCompose, add_database_to_docker_compose, add_redis_to_docker_compose,
+            clean_up_unused_infrastructure_services,
         },
-        manifest::{service::ServiceManifestData, ManifestData},
+        manifest::{ManifestData, MutableManifestData, service::ServiceManifestData},
         name::validate_name,
         package_json::project_package_json::ProjectPackageJson,
-        removal_template::{remove_template_files, RemovalTemplate},
+        removal_template::{RemovalTemplate, RemovalTemplateType, remove_template_files},
         rendered_template::{
-            write_rendered_templates, RenderedTemplate, RenderedTemplatesCache, TEMPLATES_DIR,
+            RenderedTemplate, RenderedTemplatesCache, TEMPLATES_DIR, write_rendered_templates,
         },
         watermark::apply_watermark,
     },
     prompt::{
-        prompt_comma_separated_list_from_selections, prompt_field_from_selections_with_validation,
-        ArrayCompleter,
+        ArrayCompleter, prompt_comma_separated_list_from_selections,
+        prompt_field_from_selections_with_validation,
     },
-    CliCommand,
 };
 
 #[derive(Debug)]
@@ -58,31 +58,17 @@ fn change_name(
     name: &str,
     manifest_data: &mut ServiceManifestData,
     project_package_json: &mut ProjectPackageJson,
+    docker_compose: &mut DockerCompose,
     rendered_templates_cache: &mut RenderedTemplatesCache,
-) -> Result<Vec<RemovalTemplate>> {
-    let existing_name = base_path.file_name().unwrap().to_string_lossy().to_string();
-
-    let mut removal_templates = vec![];
-
-    manifest_data.service_name = name.to_string();
-    let project_entry = manifest_data
-        .projects
-        .iter_mut()
-        .find(|project| project.name == existing_name)
-        .unwrap();
-    project_entry.name = name.to_string();
-
-    project_package_json.name = Some(format!("@{}/{}", manifest_data.app_name, name.to_string()));
-
-    removal_templates.extend(change_router_name(
+) -> Result<RemovalTemplate> {
+    change_name_core(
         base_path,
-        &existing_name,
         name,
-        project_entry,
+        MutableManifestData::Service(manifest_data),
+        project_package_json,
+        Some(docker_compose),
         rendered_templates_cache,
-    )?);
-
-    Ok(removal_templates)
+    )
 }
 
 fn change_database(
@@ -97,7 +83,8 @@ fn change_database(
         return Ok(None);
     }
 
-    let existing_database = manifest_data.database.parse()?;
+    println!("database: {}", manifest_data.database);
+    let existing_database = Some(manifest_data.database.parse()?);
 
     manifest_data.database = database.to_string();
 
@@ -140,12 +127,7 @@ fn change_database(
         mikro_orm_config_path.to_string_lossy(),
         RenderedTemplate {
             path: mikro_orm_config_path.clone(),
-            content: transform_mikroorm_config_ts(
-                &base_path,
-                &existing_database,
-                database,
-                is_in_memory_database(&database),
-            )?,
+            content: transform_mikroorm_config_ts(&base_path, &existing_database, database)?,
             context: None,
         },
     );
@@ -167,7 +149,7 @@ fn change_database(
         );
     }
 
-    let import_source_from = match existing_database {
+    let import_source_from = match existing_database.unwrap() {
         Database::MongoDB => "sql.base.entity.ts",
         _ => "nosql.base.entity.ts",
     };
@@ -176,7 +158,7 @@ fn change_database(
         _ => "sql.base.entity.ts",
     };
 
-    let base_entity_from = match existing_database {
+    let base_entity_from = match existing_database.unwrap() {
         Database::MongoDB => "SqlBaseEntity",
         _ => "NoSqlBaseEntity",
     };
@@ -233,6 +215,7 @@ fn change_database(
     {
         return Ok(Some(RemovalTemplate {
             path: existing_base_entity_path,
+            r#type: RemovalTemplateType::File,
         }));
     }
 
@@ -244,10 +227,11 @@ fn change_description(
     manifest_data: &mut ServiceManifestData,
     project_package_json: &mut ProjectPackageJson,
 ) -> Result<()> {
-    manifest_data.description = description.to_string();
-    project_package_json.description = Some(description.to_string());
-
-    Ok(())
+    change_description_core(
+        description,
+        MutableManifestData::Service(manifest_data),
+        project_package_json,
+    )
 }
 
 fn change_infrastructure(
@@ -306,7 +290,7 @@ fn change_infrastructure(
                     registrations_path.to_string_lossy(),
                     RenderedTemplate {
                         path: registrations_path.clone(),
-                        content: transform_registrations_infrastructure_redis_ts(
+                        content: transform_registrations_ts_infrastructure_redis(
                             &base_path,
                             rendered_templates_cache
                                 .get(&registrations_path)?
@@ -373,10 +357,15 @@ impl CliCommand for ServiceCommand {
             &mut stdout,
             matches,
             &BasePathLocation::Service,
+            &BasePathType::Change,
         )?;
         let base_path = Path::new(&base_path_input);
 
-        let config_path = &base_path.join(".forklaunch").join("manifest.toml");
+        let config_path = &base_path
+            .parent()
+            .unwrap()
+            .join(".forklaunch")
+            .join("manifest.toml");
 
         let mut manifest_data: ServiceManifestData = toml::from_str(
             &rendered_templates_cache
@@ -400,7 +389,7 @@ impl CliCommand for ServiceCommand {
         let infrastructure = matches.get_one::<Vec<String>>("infrastructure");
         let dryrun = matches.get_flag("dryrun");
 
-        let selected_options = if !matches.args_present() {
+        let selected_options = if matches.ids().all(|id| id == "dryrun") {
             let options = vec!["name", "database", "description", "infrastructure"];
 
             let selections = MultiSelect::with_theme(&ColorfulTheme::default())
@@ -425,7 +414,7 @@ impl CliCommand for ServiceCommand {
             &mut line_editor,
             &mut stdout,
             matches,
-            "Enter service name: ",
+            "service name",
             None,
             |input: &str| validate_name(input),
             |_| "Service name cannot be empty or include spaces. Please try again".to_string(),
@@ -438,7 +427,7 @@ impl CliCommand for ServiceCommand {
             &mut line_editor,
             &mut stdout,
             matches,
-            "Enter database: ",
+            "database",
             Some(&Database::VARIANTS),
             |_input: &str| true,
             |_| "Invalid database. Please try again".to_string(),
@@ -451,7 +440,7 @@ impl CliCommand for ServiceCommand {
             &mut line_editor,
             &mut stdout,
             matches,
-            "Enter project description (optional): ",
+            "project description (optional)",
             None,
             |_input: &str| true,
             |_| "Invalid description. Please try again".to_string(),
@@ -475,7 +464,7 @@ impl CliCommand for ServiceCommand {
             &selected_options,
             &mut line_editor,
             matches,
-            "Enter infrastructure: ",
+            "infrastructure",
             &Infrastructure::VARIANTS,
             Some(
                 active_infrastructure
@@ -499,7 +488,7 @@ impl CliCommand for ServiceCommand {
             serde_json::from_str::<ProjectPackageJson>(&project_package_json_data)?;
 
         let docker_compose_path = base_path.parent().unwrap().join("docker-compose.yaml");
-        let mut docker_compose_data = from_str::<DockerCompose>(
+        let mut docker_compose_data = serde_yml::from_str::<DockerCompose>(
             &rendered_templates_cache
                 .get(&docker_compose_path)
                 .with_context(|| ERROR_FAILED_TO_READ_DOCKER_COMPOSE)?
@@ -508,11 +497,12 @@ impl CliCommand for ServiceCommand {
         )?;
 
         if let Some(name) = name {
-            removal_templates.extend(change_name(
+            removal_templates.push(change_name(
                 &base_path,
                 &name,
                 &mut manifest_data,
                 &mut project_json_to_write,
+                &mut docker_compose_data,
                 &mut rendered_templates_cache,
             )?);
         }

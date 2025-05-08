@@ -1,4 +1,4 @@
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use oxc_ast::ast::{Program, Statement};
 
 pub(crate) fn replace_import_statment<'a>(
@@ -33,11 +33,27 @@ pub(crate) fn replace_import_statment<'a>(
         });
 
     if let Some(index) = injection_pos {
-        let splice_values = injection_program_ast.body.drain(..);
-        app_program_ast
-            .body
-            .splice(index..index + splice_values.len(), splice_values);
-
+        if found_import {
+            let splice_values = injection_program_ast.body.drain(..);
+            let splice_len = splice_values.len();
+            let app_program_ast_body_len = app_program_ast.body.len();
+            if index + splice_len > app_program_ast_body_len {
+                let mut values = splice_values.collect::<Vec<_>>();
+                let excess = values.split_off(app_program_ast_body_len - index);
+                app_program_ast
+                    .body
+                    .splice(index..app_program_ast_body_len, values);
+                app_program_ast.body.extend(excess);
+            } else {
+                app_program_ast
+                    .body
+                    .splice(index..index + splice_len, splice_values);
+            }
+        } else {
+            for import in injection_program_ast.body.drain(..).rev() {
+                app_program_ast.body.insert(index, import);
+            }
+        }
         Ok(())
     } else {
         bail!("Failed to inject into import statement")

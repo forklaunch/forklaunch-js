@@ -2,24 +2,23 @@ use std::{io::Write, path::Path};
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, Command};
-use convert_case::{Case, Casing};
-use dialoguer::{theme::ColorfulTheme, MultiSelect};
-use rustyline::{history::DefaultHistory, Editor};
+use dialoguer::{MultiSelect, theme::ColorfulTheme};
+use rustyline::{Editor, history::DefaultHistory};
 use termcolor::{ColorChoice, StandardStream};
-use walkdir::WalkDir;
 
+use super::core::change_name::change_name_in_files;
 use crate::{
+    CliCommand,
     constants::{ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST},
     core::{
-        base_path::{prompt_base_path, BasePathLocation},
+        base_path::{BasePathLocation, BasePathType, prompt_base_path},
         command::command,
-        manifest::{router::RouterManifestData, ProjectEntry},
+        manifest::{ProjectEntry, router::RouterManifestData},
         name::validate_name,
-        removal_template::{remove_template_files, RemovalTemplate},
-        rendered_template::{write_rendered_templates, RenderedTemplate, RenderedTemplatesCache},
+        removal_template::{RemovalTemplate, remove_template_files},
+        rendered_template::{RenderedTemplate, RenderedTemplatesCache, write_rendered_templates},
     },
-    prompt::{prompt_field_from_selections_with_validation, ArrayCompleter},
-    CliCommand,
+    prompt::{ArrayCompleter, prompt_field_from_selections_with_validation},
 };
 
 #[derive(Debug)]
@@ -38,69 +37,13 @@ pub(crate) fn change_name(
     project_entry: &mut ProjectEntry,
     rendered_templates_cache: &mut RenderedTemplatesCache,
 ) -> Result<Vec<RemovalTemplate>> {
-    let mut removal_templates = Vec::new();
-
-    project_entry.routers = Some(
-        project_entry
-            .routers
-            .as_ref()
-            .unwrap()
-            .iter()
-            .map(|router| {
-                if router == existing_name {
-                    return name.to_string();
-                }
-                router.clone()
-            })
-            .collect(),
-    );
-
-    let existing_name = base_path.file_name().unwrap().to_string_lossy().to_string();
-
-    let existing_camel_case_name = existing_name.to_case(Case::Camel);
-    let existing_kebab_case_name = existing_name.to_case(Case::Kebab);
-    let existing_pascal_case_name = existing_name.to_case(Case::Pascal);
-
-    // #TODO: move this into router change name function
-    let camel_case_name = name.to_case(Case::Camel);
-    let kebab_case_name = name.to_case(Case::Kebab);
-    let pascal_case_name = name.to_case(Case::Pascal);
-
-    for entry in WalkDir::new(base_path) {
-        let entry = entry.unwrap();
-        if entry.file_type().is_file() {
-            let path = entry.path();
-            if let Some(template) = rendered_templates_cache.get(path).ok().unwrap() {
-                let content = template.content;
-                let new_content = content
-                    .replace(&existing_pascal_case_name, &pascal_case_name)
-                    .replace(&existing_kebab_case_name, &kebab_case_name)
-                    .replace(&existing_camel_case_name, &camel_case_name)
-                    .replace(&existing_name, &name);
-                let new_path = path
-                    .to_string_lossy()
-                    .replace(&existing_pascal_case_name, &pascal_case_name)
-                    .replace(&existing_kebab_case_name, &kebab_case_name)
-                    .replace(&existing_camel_case_name, &camel_case_name)
-                    .replace(&existing_name, &name);
-                if content != new_content {
-                    rendered_templates_cache.insert(
-                        new_path.clone(),
-                        RenderedTemplate {
-                            path: new_path.clone().into(),
-                            content: new_content,
-                            context: None,
-                        },
-                    );
-                    if path.to_string_lossy() != new_path {
-                        removal_templates.push(RemovalTemplate { path: path.into() })
-                    }
-                }
-            }
-        }
-    }
-
-    Ok(removal_templates)
+    change_name_in_files(
+        base_path,
+        existing_name,
+        name,
+        project_entry,
+        rendered_templates_cache,
+    )
 }
 
 impl CliCommand for RouterCommand {
@@ -116,7 +59,7 @@ impl CliCommand for RouterCommand {
             )
     }
 
-    fn handler(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+    fn handler(&self, matches: &clap::ArgMatches) -> Result<()> {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
         let mut rendered_templates_cache = RenderedTemplatesCache::new();
@@ -126,10 +69,15 @@ impl CliCommand for RouterCommand {
             &mut stdout,
             matches,
             &BasePathLocation::Service,
+            &BasePathType::Change,
         )?;
         let base_path = Path::new(&base_path_input);
 
-        let config_path = &base_path.join(".forklaunch").join("manifest.toml");
+        let config_path = &base_path
+            .parent()
+            .unwrap()
+            .join(".forklaunch")
+            .join("manifest.toml");
 
         let mut manifest_data: RouterManifestData = toml::from_str(
             &rendered_templates_cache
@@ -169,7 +117,7 @@ impl CliCommand for RouterCommand {
             &mut line_editor,
             &mut stdout,
             matches,
-            "Enter router name: ",
+            "router name",
             None,
             |input: &str| validate_name(input),
             |_| "Router name cannot be empty or include spaces. Please try again".to_string(),

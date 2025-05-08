@@ -15,7 +15,7 @@ use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use crate::{
     constants::{ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST},
     core::{
-        base_path::{prompt_base_path, BasePathLocation},
+        base_path::{prompt_base_path, BasePathLocation, BasePathType},
         command::command,
         manifest::application::ApplicationManifestData,
     },
@@ -69,6 +69,7 @@ impl CliCommand for DepcheckCommand {
             &mut stdout,
             matches,
             &BasePathLocation::Anywhere,
+            &BasePathType::Depcheck,
         )?;
 
         let config_path = Path::new(&base_path)

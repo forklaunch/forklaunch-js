@@ -3,14 +3,12 @@ import {
   WorkerProcessFunction
 } from '@forklaunch/interfaces-worker/types';
 import { bootstrap } from './bootstrapper';
-import { {{pascal_case_name}}EventRecord} from './persistence/entities/{{camel_case_name}}Record.entity';
+import { {{pascal_case_name}}EventRecord} from './persistence/entities/{{camel_case_name}}EventRecord.entity';
 
-bootstrap((ci, tokens) => {
+bootstrap(async (ci, tokens) => {
   const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
 
-  const processEvents: (
-    name: string
-  ) => WorkerProcessFunction<{{pascal_case_name}}EventRecord> =
+  const processEvents: WorkerProcessFunction<{{pascal_case_name}}EventRecord> =
     async (events) => {
       const failedEvents = [];
 
@@ -44,7 +42,7 @@ bootstrap((ci, tokens) => {
   };
 
   const workerConsumer = ci.resolve(
-    tokens.{{pascal_case_name}}WorkerConsumer
+    tokens.WorkerConsumer
   );
   await workerConsumer(processEvents, processErrors).start()
 });

@@ -1,17 +1,21 @@
 use std::{fs::read_to_string, path::Path};
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
+use application_package_json::ApplicationPackageJson;
 use ramhorns::{Content, Template};
 use serde::{Deserialize, Serialize};
-use serde_json::{from_str, to_string_pretty, to_value, Value};
+use serde_json::{from_str, to_string_pretty};
 
-use super::{manifest::ManifestData, rendered_template::RenderedTemplate};
+use super::{
+    manifest::{InitializableManifestConfig, ManifestData},
+    pnpm_workspace::PnpmWorkspace,
+    rendered_template::{RenderedTemplate, RenderedTemplatesCache},
+};
 use crate::{
     constants::{
-        ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON,
-        ERROR_FAILED_TO_GENERATE_PACKAGE_JSON, ERROR_FAILED_TO_PARSE_PACKAGE_JSON,
+        ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON, ERROR_FAILED_TO_PARSE_PACKAGE_JSON,
         ERROR_FAILED_TO_READ_PACKAGE_JSON, ERROR_FAILED_TO_UPDATE_APPLICATION_PACKAGE_JSON,
-        ERROR_UNSUPPORTED_DATABASE,
+        ERROR_UNSUPPORTED_DATABASE, Runtime,
     },
     core::manifest::{ManifestConfig, ProjectManifestConfig},
 };
@@ -27,24 +31,20 @@ struct PackageJson {
 }
 
 pub(crate) fn add_project_definition_to_package_json<
-    T: Content + ManifestConfig + ProjectManifestConfig + Serialize,
+    T: Content + ManifestConfig + ProjectManifestConfig + InitializableManifestConfig + Serialize,
 >(
     config_data: &T,
     base_path: &String,
 ) -> Result<String> {
-    let mut full_package_json: Value = from_str(
+    let mut full_package_json: ApplicationPackageJson = from_str(
         &read_to_string(Path::new(base_path).join("package.json"))
             .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?,
     )
     .with_context(|| ERROR_FAILED_TO_PARSE_PACKAGE_JSON)?;
-    let mut package_json: PackageJson = Deserialize::deserialize(&full_package_json)
-        .with_context(|| ERROR_FAILED_TO_PARSE_PACKAGE_JSON)?;
 
-    if let Some(workspaces) = &mut package_json.workspaces {
+    if let Some(workspaces) = full_package_json.workspaces.as_mut() {
         if !workspaces.contains(&config_data.name()) {
             workspaces.push(config_data.name().clone());
-            full_package_json["workspaces"] = to_value(workspaces)
-                .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON)?;
         }
     }
 
@@ -61,7 +61,7 @@ pub(crate) fn update_application_package_json(
     base_path: &String,
     existing_package_json: Option<String>,
 ) -> Result<Option<RenderedTemplate>> {
-    let mut full_package_json: Value = from_str(
+    let mut full_package_json: ApplicationPackageJson = from_str(
         &existing_package_json.unwrap_or(
             read_to_string(Path::new(base_path).join("package.json"))
                 .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?,
@@ -71,13 +71,15 @@ pub(crate) fn update_application_package_json(
 
     if let ManifestData::Worker(worker_data) = config_data {
         if !worker_data.is_database_enabled {
-            return Ok(None);
+            return Ok(Some(RenderedTemplate {
+                path: Path::new(base_path).join("package.json"),
+                content: to_string_pretty(&full_package_json)?,
+                context: Some(ERROR_FAILED_TO_UPDATE_APPLICATION_PACKAGE_JSON.to_string()),
+            }));
         }
     }
 
-    let scripts = full_package_json["scripts"]
-        .as_object_mut()
-        .with_context(|| ERROR_FAILED_TO_PARSE_PACKAGE_JSON)?;
+    let scripts = full_package_json.scripts.as_mut().unwrap();
 
     let database = match config_data {
         ManifestData::Service(service_data) => service_data.database.to_string(),
@@ -127,47 +129,101 @@ pub(crate) fn update_application_package_json(
         }
     };
 
-    if let Some(init_script) = scripts.get("migrate:init").and_then(Value::as_str) {
-        scripts.insert(
-            "migrate:init".to_string(),
-            Value::String(update_docker_cmd(init_script)),
-        );
+    if let Some(init_script) = &scripts.migrate_init {
+        scripts.migrate_init = Some(update_docker_cmd(&init_script));
     }
 
-    if let Some(create_script) = scripts.get("migrate:create").and_then(Value::as_str) {
-        scripts.insert(
-            "migrate:create".to_string(),
-            Value::String(update_docker_cmd(create_script)),
-        );
+    if let Some(create_script) = &scripts.migrate_create {
+        scripts.migrate_create = Some(update_docker_cmd(&create_script));
     }
 
-    if let Some(up_script) = scripts.get("migrate:up").and_then(Value::as_str) {
-        scripts.insert(
-            "migrate:up".to_string(),
-            Value::String(update_docker_cmd(up_script)),
-        );
+    if let Some(up_script) = &scripts.migrate_up {
+        scripts.migrate_up = Some(update_docker_cmd(&up_script));
     }
 
-    if let Some(down_script) = scripts.get("migrate:down").and_then(Value::as_str) {
-        scripts.insert(
-            "migrate:down".to_string(),
-            Value::String(update_docker_cmd(down_script)),
-        );
+    if let Some(down_script) = &scripts.migrate_down {
+        scripts.migrate_down = Some(update_docker_cmd(&down_script));
     }
 
-    if let Some(seed_script) = scripts.get("seed").and_then(Value::as_str) {
-        scripts.insert(
-            "seed".to_string(),
-            Value::String(update_docker_cmd(seed_script)),
-        );
+    if let Some(seed_script) = &scripts.seed {
+        scripts.seed = Some(update_docker_cmd(&seed_script));
     }
-
-    full_package_json["scripts"] =
-        to_value(scripts).with_context(|| ERROR_FAILED_TO_GENERATE_PACKAGE_JSON)?;
 
     Ok(Some(RenderedTemplate {
         path: Path::new(base_path).join("package.json"),
         content: to_string_pretty(&full_package_json)?,
         context: Some(ERROR_FAILED_TO_UPDATE_APPLICATION_PACKAGE_JSON.to_string()),
     }))
+}
+
+pub(crate) fn replace_project_in_workspace_definition(
+    application_base_path: &Path,
+    runtime: &Runtime,
+    existing_project_name: &str,
+    new_project_name: &str,
+    rendered_template_cache: &mut RenderedTemplatesCache,
+) -> Result<()> {
+    match runtime {
+        Runtime::Bun => {
+            let mut application_package_json: ApplicationPackageJson = from_str(
+                &rendered_template_cache
+                    .get(Path::new(application_base_path).join("package.json"))?
+                    .unwrap()
+                    .content,
+            )
+            .with_context(|| ERROR_FAILED_TO_PARSE_PACKAGE_JSON)?;
+
+            if let Some(workspaces) = application_package_json.workspaces.as_mut() {
+                workspaces.remove(
+                    workspaces
+                        .iter()
+                        .position(|name| name == existing_project_name)
+                        .unwrap(),
+                );
+                workspaces.push(new_project_name.to_string());
+            }
+
+            rendered_template_cache.insert(
+                "package.json".to_string(),
+                RenderedTemplate {
+                    path: Path::new(application_base_path).join("package.json"),
+                    content: to_string_pretty(&application_package_json)?,
+                    context: None,
+                },
+            );
+        }
+        Runtime::Node => {
+            let workspace_definition = rendered_template_cache
+                .get(Path::new(application_base_path).join("pnpm-workspace.yaml"))?
+                .unwrap()
+                .content;
+
+            let mut workspace_definition: PnpmWorkspace =
+                serde_yml::from_str(&workspace_definition)
+                    .with_context(|| ERROR_FAILED_TO_PARSE_PACKAGE_JSON)?;
+
+            workspace_definition.packages.remove(
+                workspace_definition
+                    .packages
+                    .iter()
+                    .position(|name| name == existing_project_name)
+                    .unwrap(),
+            );
+
+            workspace_definition
+                .packages
+                .push(new_project_name.to_string());
+
+            rendered_template_cache.insert(
+                "pnpm-workspace.yaml".to_string(),
+                RenderedTemplate {
+                    path: Path::new(application_base_path).join("pnpm-workspace.yaml"),
+                    content: serde_yml::to_string(&workspace_definition)?,
+                    context: None,
+                },
+            );
+        }
+    }
+
+    Ok(())
 }

@@ -20,24 +20,27 @@ pub(crate) struct Env {
     pub kafka_client_id: Option<String>,
     #[serde(rename = "KAFKA_GROUP_ID", skip_serializing_if = "Option::is_none")]
     pub kafka_group_id: Option<String>,
-    #[serde(rename = "ENV")]
-    pub env: String,
-    #[serde(rename = "OTEL_EXPORTER_OTLP_ENDPOINT")]
-    pub otel_exporter_otlp_endpoint: String,
-    #[serde(rename = "OTEL_SERVICE_NAME")]
-    pub otel_service_name: String,
+    #[serde(rename = "ENV", skip_serializing_if = "Option::is_none")]
+    pub env: Option<String>,
+    #[serde(
+        rename = "OTEL_EXPORTER_OTLP_ENDPOINT",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub otel_exporter_otlp_endpoint: Option<String>,
+    #[serde(rename = "OTEL_SERVICE_NAME", skip_serializing_if = "Option::is_none")]
+    pub otel_service_name: Option<String>,
     #[serde(rename = "QUEUE_NAME", skip_serializing_if = "Option::is_none")]
     pub queue_name: Option<String>,
-    #[serde(rename = "HOST")]
-    pub host: String,
-    #[serde(rename = "PROTOCOL")]
-    pub protocol: String,
-    #[serde(rename = "PORT")]
-    pub port: String,
-    #[serde(rename = "VERSION")]
-    pub version: String,
-    #[serde(rename = "DOCS_PATH")]
-    pub docs_path: String,
+    #[serde(rename = "HOST", skip_serializing_if = "Option::is_none")]
+    pub host: Option<String>,
+    #[serde(rename = "PROTOCOL", skip_serializing_if = "Option::is_none")]
+    pub protocol: Option<String>,
+    #[serde(rename = "PORT", skip_serializing_if = "Option::is_none")]
+    pub port: Option<String>,
+    #[serde(rename = "VERSION", skip_serializing_if = "Option::is_none")]
+    pub version: Option<String>,
+    #[serde(rename = "DOCS_PATH", skip_serializing_if = "Option::is_none")]
+    pub docs_path: Option<String>,
     #[serde(
         rename = "PASSWORD_ENCRYPTION_PUBLIC_KEY_PATH",
         skip_serializing_if = "Option::is_none"

@@ -6,17 +6,17 @@ import { defineConfig, Platform, TextType, Type } from '@mikro-orm/core';{{/is_m
 import { {{db_driver}} } from '@mikro-orm/{{database}}';
 import dotenv from 'dotenv';
 import * as entities from './persistence/entities';
-
+//! Load the environment variables
 dotenv.config({ path: getEnvVar('ENV_FILE_PATH') });
-
+//! Create the config injector
 const configInjector = createConfigInjector(
   SchemaValidator(),
   {
-    DB_NAME: {
+    {{^is_mongo}}DB_NAME: {
       lifetime: Lifetime.Singleton,
       type: string,
       value: getEnvVar('DB_NAME')
-    }, {{^is_in_memory_database}}
+    },{{/is_mongo}}{{^is_in_memory_database}}
     DB_HOST: {
       lifetime: Lifetime.Singleton,
       type: string,
@@ -44,22 +44,20 @@ const configInjector = createConfigInjector(
     }
   }
 );
-
+//! Validate the config injector
 export const validConfigInjector = configInjector.validateConfigSingletons(
   getEnvVar('ENV_FILE_PATH')
-);{{#is_mongo}}
-
-const clientUrl = `mongodb://${validConfigInjector.resolve(
+);
+//! Define the mikro-orm options config
+const mikroOrmOptionsConfig = defineConfig({
+  driver: {{db_driver}},{{#is_mongo}}
+  clientUrl: `mongodb://${validConfigInjector.resolve(
     'DB_USER'
   )}:${validConfigInjector.resolve('DB_PASSWORD')}@${validConfigInjector.resolve(
     'DB_HOST'
   )}:${validConfigInjector.resolve('DB_PORT')}/${validConfigInjector.resolve(
     'DB_NAME'
-  )}?authSource=admin&directConnection=true&replicaSet=rs0`
-{{/is_mongo}}
-const mikroOrmOptionsConfig = defineConfig({
-  driver: {{db_driver}},{{#is_mongo}}
-  clientUrl,{{/is_mongo}}{{^is_mongo}}
+  )}?authSource=admin&directConnection=true&replicaSet=rs0`,{{/is_mongo}}{{^is_mongo}}
   dbName: validConfigInjector.resolve('DB_NAME'),{{^is_in_memory_database}}
   host: validConfigInjector.resolve('DB_HOST'),
   user: validConfigInjector.resolve('DB_USER'),
@@ -88,6 +86,6 @@ const mikroOrmOptionsConfig = defineConfig({
     glob: 'seeder.js'
   }
 });
-
+//! Export the mikro-orm options config
 export default mikroOrmOptionsConfig;
 

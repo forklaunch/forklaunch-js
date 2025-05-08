@@ -1,11 +1,11 @@
-use crate::constants::WorkerBackend;
+use crate::constants::WorkerType;
 
-pub(crate) fn get_worker_backend_name(backend: &WorkerBackend) -> String {
-    match backend {
-        WorkerBackend::BullMQCache => "BullMq".to_string(),
-        WorkerBackend::Database => "Database".to_string(),
-        WorkerBackend::Kafka => "Kafka".to_string(),
-        WorkerBackend::RedisCache => "Redis".to_string(),
+pub(crate) fn get_worker_type_name(r#type: &WorkerType) -> String {
+    match r#type {
+        WorkerType::BullMQCache => "BullMq".to_string(),
+        WorkerType::Database => "Database".to_string(),
+        WorkerType::Kafka => "Kafka".to_string(),
+        WorkerType::RedisCache => "Redis".to_string(),
     }
 }
 
@@ -36,15 +36,16 @@ const DEFAULT_REDIS_WORKER_OPTIONS: &str = "factory: ({ REDIS_URL }) => ({
     url: REDIS_URL
   },
   retries: 3,
-  interval: 5000
+  interval: 5000,
+  pageSize: 100
 })";
 
-pub(crate) fn get_default_worker_options(backend: &WorkerBackend) -> String {
-    match backend {
-        WorkerBackend::BullMQCache => DEFAULT_BULLMQ_WORKER_OPTIONS.to_string(),
-        WorkerBackend::Database => DEFAULT_DATABASE_WORKER_OPTIONS.to_string(),
-        WorkerBackend::Kafka => DEFAULT_KAFKA_WORKER_OPTIONS.to_string(),
-        WorkerBackend::RedisCache => DEFAULT_REDIS_WORKER_OPTIONS.to_string(),
+pub(crate) fn get_default_worker_options(r#type: &WorkerType) -> String {
+    match r#type {
+        WorkerType::BullMQCache => DEFAULT_BULLMQ_WORKER_OPTIONS.to_string(),
+        WorkerType::Database => DEFAULT_DATABASE_WORKER_OPTIONS.to_string(),
+        WorkerType::Kafka => DEFAULT_KAFKA_WORKER_OPTIONS.to_string(),
+        WorkerType::RedisCache => DEFAULT_REDIS_WORKER_OPTIONS.to_string(),
     }
 }
 
@@ -57,13 +58,13 @@ fn get_database_worker_consumer_factory(pascal_case_name: &str) -> String {
     failureHandler: WorkerFailureHandler<{}EventRecord>
   ) =>
     new DatabaseWorkerConsumer(
-      {{pascal_case_name}}EventRecord,
+      {}EventRecord,
       EntityManager,
       WorkerOptions,
       processEventsFunction,
       failureHandler
     )",
-        pascal_case_name, pascal_case_name
+        pascal_case_name, pascal_case_name, pascal_case_name
     )
 }
 fn get_bullmq_worker_consumer_factory(pascal_case_name: &str) -> String {
@@ -100,7 +101,7 @@ fn get_kafka_worker_consumer_factory(pascal_case_name: &str) -> String {
 }
 fn get_redis_worker_consumer_factory(pascal_case_name: &str) -> String {
     format!(
-        "({{ TtlCache, QUEUE_NAME, WorkerOptions }}) =>(
+        "({{ TtlCache, QUEUE_NAME, WorkerOptions }}) =>
   (
     processEventsFunction: WorkerProcessFunction<{}EventRecord>,
     failureHandler: WorkerFailureHandler<{}EventRecord>
@@ -116,23 +117,17 @@ fn get_redis_worker_consumer_factory(pascal_case_name: &str) -> String {
     )
 }
 
-pub(crate) fn get_worker_consumer_factory(
-    backend: &WorkerBackend,
-    pascal_case_name: &str,
-) -> String {
-    match backend {
-        WorkerBackend::BullMQCache => get_bullmq_worker_consumer_factory(pascal_case_name),
-        WorkerBackend::Database => get_database_worker_consumer_factory(pascal_case_name),
-        WorkerBackend::Kafka => get_kafka_worker_consumer_factory(pascal_case_name),
-        WorkerBackend::RedisCache => get_redis_worker_consumer_factory(pascal_case_name),
+pub(crate) fn get_worker_consumer_factory(r#type: &WorkerType, pascal_case_name: &str) -> String {
+    match r#type {
+        WorkerType::BullMQCache => get_bullmq_worker_consumer_factory(pascal_case_name),
+        WorkerType::Database => get_database_worker_consumer_factory(pascal_case_name),
+        WorkerType::Kafka => get_kafka_worker_consumer_factory(pascal_case_name),
+        WorkerType::RedisCache => get_redis_worker_consumer_factory(pascal_case_name),
     }
 }
 
 const BULLMQ_WORKER_PRODUCER_FACTORY: &str = "({ QUEUE_NAME, WorkerOptions }) =>
-  new DatabaseWorkerProducer(
-    EntityManager,
-    WorkerOptions
-  )";
+   new BullMqWorkerProducer(QUEUE_NAME, WorkerOptions)";
 const DATABASE_WORKER_PRODUCER_FACTORY: &str = "({ EntityManager, WorkerOptions }) =>
   new DatabaseWorkerProducer(
     EntityManager,
@@ -150,11 +145,11 @@ const REDIS_WORKER_PRODUCER_FACTORY: &str = "({ TtlCache, QUEUE_NAME, WorkerOpti
     WorkerOptions
   )";
 
-pub(crate) fn get_worker_producer_factory(backend: &WorkerBackend) -> String {
-    match backend {
-        WorkerBackend::BullMQCache => BULLMQ_WORKER_PRODUCER_FACTORY.to_string(),
-        WorkerBackend::Database => DATABASE_WORKER_PRODUCER_FACTORY.to_string(),
-        WorkerBackend::Kafka => KAFKA_WORKER_PRODUCER_FACTORY.to_string(),
-        WorkerBackend::RedisCache => REDIS_WORKER_PRODUCER_FACTORY.to_string(),
+pub(crate) fn get_worker_producer_factory(r#type: &WorkerType) -> String {
+    match r#type {
+        WorkerType::BullMQCache => BULLMQ_WORKER_PRODUCER_FACTORY.to_string(),
+        WorkerType::Database => DATABASE_WORKER_PRODUCER_FACTORY.to_string(),
+        WorkerType::Kafka => KAFKA_WORKER_PRODUCER_FACTORY.to_string(),
+        WorkerType::RedisCache => REDIS_WORKER_PRODUCER_FACTORY.to_string(),
     }
 }

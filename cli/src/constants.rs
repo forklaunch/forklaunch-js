@@ -47,7 +47,7 @@ choice! {
         },
     }
 
-    pub(crate) enum WorkerBackend {
+    pub(crate) enum WorkerType {
         Database = Choice {
             id: "database",
             exclusive_files: None,
@@ -224,8 +224,7 @@ pub(crate) const ERROR_FAILED_TO_READ_MANIFEST: &str =
     "Failed to read manifest file. Please check your target directory is a forklaunch application.";
 pub(crate) const ERROR_FAILED_TO_PARSE_MANIFEST: &str =
     "Failed to parse manifest file. Please verify the file is valid toml.";
-pub(crate) const ERROR_FAILED_TO_READ_DOCKER_COMPOSE: &str =
-    "Failed to read docker_compose.yaml. Please check your target directory is a forklaunch application.";
+pub(crate) const ERROR_FAILED_TO_READ_DOCKER_COMPOSE: &str = "Failed to read docker_compose.yaml. Please check your target directory is a forklaunch application.";
 pub(crate) const ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE: &str =
     "Failed to parse docker_compose.yaml. Please verify the file is valid yaml.";
 pub(crate) const ERROR_FAILED_TO_CREATE_PACKAGE_JSON: &str =
@@ -234,9 +233,7 @@ pub(crate) const ERROR_FAILED_TO_READ_PACKAGE_JSON: &str =
     "Failed to read package.json. Please check your target directory is a forklaunch application.";
 pub(crate) const ERROR_FAILED_TO_PARSE_PACKAGE_JSON: &str =
     "Failed to parse package.json. Please verify the file is valid json.";
-pub(crate) const ERROR_FAILED_TO_GENERATE_PACKAGE_JSON: &str = "Failed to generate package.json.";
-pub(crate) const ERROR_FAILED_TO_READ_PNPM_WORKSPACE: &str =
-    "Failed to read pnpm-workspace.yaml. Please check your target directory is a forklaunch application.";
+pub(crate) const ERROR_FAILED_TO_READ_PNPM_WORKSPACE: &str = "Failed to read pnpm-workspace.yaml. Please check your target directory is a forklaunch application.";
 pub(crate) const ERROR_FAILED_TO_PARSE_PNPM_WORKSPACE: &str =
     "Failed to parse pnpm-workspace.yaml. Please verify the file is valid yaml.";
 pub(crate) const ERROR_FAILED_TO_CREATE_SYMLINKS: &str =
@@ -282,6 +279,5 @@ pub(crate) const ERROR_FAILED_TO_UPDATE_APPLICATION_PACKAGE_JSON: &str =
 pub(crate) const ERROR_FAILED_TO_ADD_BASE_ENTITY_TO_CORE: &str =
     "Failed to add base entity to core.";
 pub(crate) const ERROR_FAILED_TO_WRITE_SERVICE_FILES: &str = "Failed to write service files.";
-pub(crate) const ERROR_FAILED_TO_EJECT_DIRECTORY_NOT_EJECTABLE: &str =
-    "Failed to eject directory. Please check your target directory is a preconfigured forklaunch module.";
+pub(crate) const ERROR_FAILED_TO_EJECT_DIRECTORY_NOT_EJECTABLE: &str = "Failed to eject directory. Please check your target directory is a preconfigured forklaunch module.";
 pub(crate) const ERROR_FAILED_TO_UPDATE_DOCKERFILE: &str = "Failed to update Dockerfile.";

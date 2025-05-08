@@ -10,7 +10,7 @@ use toml::from_str;
 
 use crate::{
     constants::{
-        Database, Infrastructure, TestFramework, ERROR_FAILED_TO_ADD_BASE_ENTITY_TO_CORE,
+        Database, Infrastructure, Runtime, TestFramework, ERROR_FAILED_TO_ADD_BASE_ENTITY_TO_CORE,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON,
@@ -22,10 +22,10 @@ use crate::{
         ERROR_FAILED_TO_WRITE_SERVICE_FILES,
     },
     core::{
-        base_path::{prompt_base_path, BasePathLocation},
+        base_path::{prompt_base_path, BasePathLocation, BasePathType},
         command::command,
         database::{
-            add_base_entity_to_core, get_database_port, is_in_memory_database, match_database,
+            add_base_entity_to_core, get_database_port, is_in_memory_database, get_db_driver,
         },
         docker::{add_service_definition_to_docker_compose, update_dockerfile_contents},
         gitignore::generate_gitignore,
@@ -171,19 +171,24 @@ fn add_service_to_artifacts(
     )
     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
 
+    let runtime = config_data.runtime.parse()?;
+
     let mut package_json_buffer: Option<String> = None;
-    if config_data.runtime == "bun" {
-        package_json_buffer = Some(
-            add_project_definition_to_package_json(config_data, base_path)
-                .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON)?,
-        );
-    }
     let mut pnpm_workspace_buffer: Option<String> = None;
-    if config_data.runtime == "node" {
-        pnpm_workspace_buffer = Some(
-            add_project_definition_to_pnpm_workspace(base_path, config_data)
-                .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?,
-        );
+
+    match runtime {
+        Runtime::Bun => {
+            package_json_buffer = Some(
+                add_project_definition_to_package_json(config_data, base_path)
+                    .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON)?,
+            );
+        }
+        Runtime::Node => {
+            pnpm_workspace_buffer = Some(
+                add_project_definition_to_pnpm_workspace(base_path, config_data)
+                    .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?,
+            );
+        }
     }
 
     let mut rendered_templates = Vec::new();
@@ -479,7 +484,7 @@ impl CliCommand for ServiceCommand {
             &mut stdout,
             "name",
             matches,
-            "Enter service name: ",
+            "service name",
             None,
             |input: &str| validate_name(input),
             |_| "Service name cannot be empty or include spaces. Please try again".to_string(),
@@ -490,6 +495,7 @@ impl CliCommand for ServiceCommand {
             &mut stdout,
             matches,
             &BasePathLocation::Service,
+            &BasePathType::Init,
         )?;
 
         let database: Database = prompt_with_validation(
@@ -497,7 +503,7 @@ impl CliCommand for ServiceCommand {
             &mut stdout,
             "database",
             matches,
-            "Enter database type",
+            "database type",
             Some(&Database::VARIANTS),
             |input| Database::VARIANTS.contains(&input),
             |_| "Invalid database type. Please try again".to_string(),
@@ -522,7 +528,7 @@ impl CliCommand for ServiceCommand {
             &mut stdout,
             "description",
             matches,
-            "Enter service description (optional): ",
+            "service description (optional)",
         )?;
 
         let config_path = Path::new(&base_path)
@@ -568,7 +574,7 @@ impl CliCommand for ServiceCommand {
             description: description.clone(),
             database: database.to_string(),
             database_port: get_database_port(&database),
-            db_driver: match_database(&database),
+            db_driver: get_db_driver(&database),
 
             is_mongo: database == Database::MongoDB,
             is_postgres: database == Database::PostgreSQL,

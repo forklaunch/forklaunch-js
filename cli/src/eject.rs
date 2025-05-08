@@ -19,7 +19,7 @@ use crate::{
         ERROR_FAILED_TO_PARSE_PACKAGE_JSON, ERROR_FAILED_TO_READ_MANIFEST,
     },
     core::{
-        base_path::{prompt_base_path, BasePathLocation},
+        base_path::{prompt_base_path, BasePathLocation, BasePathType},
         command::command,
         manifest::application::ApplicationManifestData,
         relative_path::get_relative_path,
@@ -244,7 +244,8 @@ impl CliCommand for EjectCommand {
             &mut line_editor,
             &mut stdout,
             matches,
-            &BasePathLocation::Eject,
+            &BasePathLocation::DeferToType,
+            &BasePathType::Eject,
         )?;
 
         let base_path = Path::new(&base_path);
