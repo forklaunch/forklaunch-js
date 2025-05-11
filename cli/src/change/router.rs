@@ -4,7 +4,7 @@ use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, Command};
 use dialoguer::{MultiSelect, theme::ColorfulTheme};
 use rustyline::{Editor, history::DefaultHistory};
-use termcolor::{ColorChoice, StandardStream};
+use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 use super::core::change_name::change_name_in_files;
 use crate::{
@@ -13,7 +13,10 @@ use crate::{
     core::{
         base_path::{BasePathLocation, BasePathType, prompt_base_path},
         command::command,
-        manifest::{ProjectEntry, router::RouterManifestData},
+        manifest::{
+            InitializableManifestConfig, InitializableManifestConfigMetadata, ProjectEntry,
+            RouterInitializationMetadata, router::RouterManifestData,
+        },
         name::validate_name,
         removal_template::{RemovalTemplate, remove_template_files},
         rendered_template::{RenderedTemplate, RenderedTemplatesCache, write_rendered_templates},
@@ -79,15 +82,26 @@ impl CliCommand for RouterCommand {
             .join(".forklaunch")
             .join("manifest.toml");
 
-        let mut manifest_data: RouterManifestData = toml::from_str(
+        let mut manifest_data = toml::from_str::<RouterManifestData>(
             &rendered_templates_cache
                 .get(&config_path)
                 .with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?
                 .unwrap()
                 .content,
         )
-        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
-        manifest_data.router_name = base_path.file_name().unwrap().to_string_lossy().to_string();
+        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
+        .initialize(InitializableManifestConfigMetadata::Router(
+            RouterInitializationMetadata {
+                router_name: base_path.file_name().unwrap().to_string_lossy().to_string(),
+                project_name: base_path
+                    .parent()
+                    .unwrap()
+                    .file_name()
+                    .unwrap()
+                    .to_string_lossy()
+                    .to_string(),
+            },
+        ));
 
         let name = matches.get_one::<String>("name");
         let dryrun = matches.get_flag("dryrun");
@@ -153,8 +167,18 @@ impl CliCommand for RouterCommand {
             .map(|(_, template)| template)
             .collect();
 
-        write_rendered_templates(&rendered_templates, dryrun, &mut stdout)?;
         remove_template_files(&removal_templates, dryrun, &mut stdout)?;
+        write_rendered_templates(&rendered_templates, dryrun, &mut stdout)?;
+
+        if !dryrun {
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+            writeln!(
+                stdout,
+                "{} changed successfully!",
+                &manifest_data.router_name
+            )?;
+            stdout.reset()?;
+        }
 
         Ok(())
     }

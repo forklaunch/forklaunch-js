@@ -6,9 +6,13 @@ use convert_case::{Case, Casing};
 use dialoguer::{MultiSelect, theme::ColorfulTheme};
 use ramhorns::Template;
 use rustyline::{Editor, history::DefaultHistory};
-use termcolor::{ColorChoice, StandardStream};
+use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 use super::core::{
+    change_database::{
+        change_database_base_entity, change_database_env_variables,
+        change_database_postinstall_script,
+    },
     change_description::change_description as change_description_core,
     change_name::change_name as change_name_core,
 };
@@ -26,19 +30,24 @@ use crate::{
         },
         base_path::{BasePathLocation, BasePathType, prompt_base_path},
         command::command,
-        database::{get_database_port, get_db_driver, is_in_memory_database},
+        database::{get_database_variants, get_db_driver, is_in_memory_database},
         docker::{
             DockerCompose, add_database_to_docker_compose, add_kafka_to_docker_compose,
             add_redis_to_docker_compose, clean_up_unused_infrastructure_services,
         },
         env::Env,
-        manifest::{ManifestData, MutableManifestData, worker::WorkerManifestData},
+        manifest::{
+            InitializableManifestConfig, InitializableManifestConfigMetadata, ManifestData,
+            MutableManifestData, ProjectInitializationMetadata, worker::WorkerManifestData,
+        },
+        move_template::{MoveTemplate, move_template_files},
         name::validate_name,
         package_json::{
+            application_package_json::ApplicationPackageJson,
             package_json_constants::{
-                MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
-                MIKRO_ORM_REFLECTION_VERSION, WORKER_BULLMQ_VERSION, WORKER_DATABASE_VERSION,
-                WORKER_KAFKA_VERSION, WORKER_REDIS_VERSION,
+                BULLMQ_VERSION, MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION,
+                MIKRO_ORM_MIGRATIONS_VERSION, MIKRO_ORM_REFLECTION_VERSION, WORKER_BULLMQ_VERSION,
+                WORKER_DATABASE_VERSION, WORKER_KAFKA_VERSION, WORKER_REDIS_VERSION,
             },
             project_package_json::ProjectPackageJson,
         },
@@ -66,7 +75,7 @@ fn change_name(
     project_package_json: &mut ProjectPackageJson,
     docker_compose: &mut DockerCompose,
     rendered_templates_cache: &mut RenderedTemplatesCache,
-) -> Result<RemovalTemplate> {
+) -> Result<MoveTemplate> {
     change_name_core(
         base_path,
         name,
@@ -94,9 +103,11 @@ fn change_type(
     r#type: &WorkerType,
     database: Option<Database>,
     manifest_data: &mut WorkerManifestData,
+    application_package_json: &mut ApplicationPackageJson,
     project_package_json: &mut ProjectPackageJson,
     docker_compose_data: &mut DockerCompose,
     rendered_templates_cache: &mut RenderedTemplatesCache,
+    removal_templates: &mut Vec<RemovalTemplate>,
 ) -> Result<()> {
     let project_entry = manifest_data
         .projects
@@ -104,29 +115,12 @@ fn change_type(
         .find(|project| project.name == manifest_data.worker_name)
         .unwrap();
 
-    let existing_type = project_entry
-        .metadata
-        .as_ref()
-        .unwrap()
-        .r#type
-        .as_ref()
-        .unwrap()
-        .parse::<WorkerType>()?;
+    let existing_type = manifest_data.worker_type.parse::<WorkerType>()?;
 
-    let existing_database = if existing_type == WorkerType::Database {
-        Some(
-            project_entry
-                .resources
-                .as_ref()
-                .unwrap()
-                .database
-                .as_ref()
-                .unwrap()
-                .parse::<Database>()?,
-        )
-    } else {
-        None
-    };
+    let existing_database = manifest_data
+        .database
+        .as_ref()
+        .map(|db| db.parse::<Database>().unwrap());
 
     project_entry.metadata.as_mut().unwrap().r#type = Some(r#type.to_string());
     let resources = project_entry.resources.as_mut().unwrap();
@@ -191,6 +185,7 @@ fn change_type(
 
     match r#type {
         WorkerType::BullMQCache => {
+            dependencies.bullmq = Some(BULLMQ_VERSION.to_string());
             dependencies.forklaunch_implementation_worker_bullmq =
                 Some(WORKER_BULLMQ_VERSION.to_string());
             resources.cache = Some(WorkerType::RedisCache.to_string());
@@ -217,25 +212,66 @@ fn change_type(
             manifest_data.database = Some(database.unwrap().to_string());
             manifest_data.db_driver = Some(get_db_driver(&db));
             manifest_data.is_mongo = db == Database::MongoDB;
+            manifest_data.is_in_memory_database = is_in_memory_database(&db);
 
             let _ = add_database_to_docker_compose(
                 &ManifestData::Worker(&manifest_data),
                 docker_compose_data,
                 &mut environment,
             );
-            env_local_content.db_name = Some(format!(
-                "{}-{}-dev",
-                manifest_data.app_name, manifest_data.worker_name
-            ));
-            if is_in_memory_database(&db) {
-                env_local_content.db_host = Some("localhost".to_string());
-                env_local_content.db_user = Some(format!("{}", db.to_string()));
-                env_local_content.db_password = Some(format!("{}", db.to_string()));
-                if let Some(port) = get_database_port(&db) {
-                    env_local_content.db_port = Some(format!("{}", port));
+
+            if let Some(existing_database) = existing_database {
+                let removal_template = change_database_base_entity(
+                    base_path,
+                    &db,
+                    &existing_database,
+                    manifest_data.projects.clone(),
+                    &manifest_data.app_name,
+                    rendered_templates_cache,
+                )?;
+
+                if let Some(removal_template) = removal_template {
+                    removal_templates.push(removal_template);
                 }
-                manifest_data.is_in_memory_database = true;
+            } else {
+                let database_entity = match db {
+                    Database::MongoDB => "nosql.base.entity.ts",
+                    _ => "sql.base.entity.ts",
+                };
+                let entity_template_path = TEMPLATES_DIR
+                    .get_file(
+                        Path::new("project")
+                            .join("core")
+                            .join("persistence")
+                            .join(database_entity),
+                    )
+                    .unwrap();
+                let base_entity_ts_content =
+                    Template::new(entity_template_path.contents_utf8().unwrap())?
+                        .render(&manifest_data.clone());
+                rendered_templates_cache.insert(
+                    database_entity,
+                    RenderedTemplate {
+                        path: base_path
+                            .parent()
+                            .unwrap()
+                            .join("core")
+                            .join("persistence")
+                            .join(database_entity),
+                        content: base_entity_ts_content,
+                        context: None,
+                    },
+                );
             }
+
+            change_database_env_variables(
+                &mut env_local_content,
+                &manifest_data.app_name,
+                &manifest_data.worker_name,
+                &db,
+            );
+
+            change_database_postinstall_script(application_package_json, &db);
 
             rendered_templates_cache.insert(
                 base_path.join("mikro-orm.config.ts").to_string_lossy(),
@@ -390,15 +426,21 @@ impl CliCommand for WorkerCommand {
             .join(".forklaunch")
             .join("manifest.toml");
 
-        let mut manifest_data: WorkerManifestData = toml::from_str(
+        let mut manifest_data: WorkerManifestData = toml::from_str::<WorkerManifestData>(
             &rendered_templates_cache
                 .get(&config_path)
                 .with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?
                 .unwrap()
                 .content,
         )
-        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
-        manifest_data.worker_name = base_path.file_name().unwrap().to_string_lossy().to_string();
+        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
+        .initialize(InitializableManifestConfigMetadata::Project(
+            ProjectInitializationMetadata {
+                project_name: base_path.file_name().unwrap().to_string_lossy().to_string(),
+            },
+        ));
+
+        let runtime = manifest_data.runtime.parse()?;
 
         let name = matches.get_one::<String>("name");
         let r#type = matches.get_one::<String>("type");
@@ -455,6 +497,7 @@ impl CliCommand for WorkerCommand {
             .map(|r#type| r#type.parse::<WorkerType>().unwrap() == WorkerType::Database)
             .unwrap_or(false)
         {
+            let database_variants = get_database_variants(&runtime);
             prompt_field_from_selections_with_validation(
                 "database",
                 database,
@@ -463,8 +506,8 @@ impl CliCommand for WorkerCommand {
                 &mut stdout,
                 matches,
                 "database",
-                Some(&Database::VARIANTS),
-                |_input: &str| true,
+                Some(database_variants),
+                |input: &str| database_variants.contains(&input),
                 |_| "Invalid database. Please try again".to_string(),
             )?
             .and_then(|database| database.parse::<Database>().ok())
@@ -486,6 +529,17 @@ impl CliCommand for WorkerCommand {
         )?;
 
         let mut removal_templates = vec![];
+        let mut move_templates = vec![];
+
+        let application_package_json_path = base_path.parent().unwrap().join("package.json");
+        let application_package_json_data = rendered_templates_cache
+            .get(&application_package_json_path)
+            .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?
+            .unwrap()
+            .content;
+
+        let mut application_package_json_to_write =
+            serde_json::from_str::<ApplicationPackageJson>(&application_package_json_data)?;
 
         let project_package_json_path = base_path.join("package.json");
         let project_package_json_data = rendered_templates_cache
@@ -507,7 +561,7 @@ impl CliCommand for WorkerCommand {
         )?;
 
         if let Some(name) = name {
-            removal_templates.push(change_name(
+            move_templates.push(change_name(
                 &base_path,
                 &name,
                 &mut manifest_data,
@@ -522,9 +576,11 @@ impl CliCommand for WorkerCommand {
                 &r#type.parse()?,
                 database,
                 &mut manifest_data,
+                &mut application_package_json_to_write,
                 &mut project_json_to_write,
                 &mut docker_compose_data,
                 &mut rendered_templates_cache,
+                &mut removal_templates,
             )?
         }
         if let Some(description) = description {
@@ -550,6 +606,15 @@ impl CliCommand for WorkerCommand {
         );
 
         rendered_templates_cache.insert(
+            application_package_json_path.clone().to_string_lossy(),
+            RenderedTemplate {
+                path: application_package_json_path.into(),
+                content: serde_json::to_string_pretty(&application_package_json_to_write)?,
+                context: None,
+            },
+        );
+
+        rendered_templates_cache.insert(
             project_package_json_path
                 .clone()
                 .to_string_lossy()
@@ -566,8 +631,16 @@ impl CliCommand for WorkerCommand {
             .map(|(_, template)| template)
             .collect();
 
-        write_rendered_templates(&rendered_templates, dryrun, &mut stdout)?;
         remove_template_files(&removal_templates, dryrun, &mut stdout)?;
+        write_rendered_templates(&rendered_templates, dryrun, &mut stdout)?;
+
+        move_template_files(&move_templates, dryrun, &mut stdout)?;
+
+        if !dryrun {
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+            writeln!(stdout, "{} changed successfully!", &manifest_data.app_name)?;
+            stdout.reset()?;
+        }
 
         Ok(())
     }

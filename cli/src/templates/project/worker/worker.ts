@@ -15,7 +15,7 @@ bootstrap(async (ci, tokens) => {
       for (const event of events) {
         try {
           openTelemetryCollector.info(
-            `processing message from ${name}: ${event.message}`
+            `processing message from ${ci.resolve(tokens.QUEUE_NAME)}: ${event.message}`
           );
           event.processed = true;
         } catch (error) {

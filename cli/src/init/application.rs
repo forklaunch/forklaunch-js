@@ -21,12 +21,14 @@ use crate::{
         ERROR_FAILED_TO_CREATE_GITIGNORE, ERROR_FAILED_TO_CREATE_LICENSE,
         ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE, ERROR_FAILED_TO_SETUP_IAM, Formatter,
         HttpFramework, License, Linter, Runtime, Service, TestFramework, Validator,
+        get_core_module_description, get_monitoring_module_description,
+        get_service_module_description,
     },
     core::{
         command::command,
         database::{
-            generate_index_ts_database_export, get_database_port, get_db_driver,
-            is_in_memory_database,
+            generate_index_ts_database_export, get_database_port, get_database_variants,
+            get_db_driver, get_postinstall_script, is_in_memory_database,
         },
         docker::{
             DockerCompose, add_otel_to_docker_compose, add_service_definition_to_docker_compose,
@@ -45,23 +47,22 @@ use crate::{
             },
             package_json_constants::{
                 AJV_VERSION, APP_DEV_BUILD_SCRIPT, APP_DEV_SCRIPT, APP_PREPARE_SCRIPT,
-                BETTER_SQLITE_POSTINSTALL_SCRIPT, BETTER_SQLITE3_VERSION, BIOME_VERSION,
-                COMMON_VERSION, CORE_VERSION, DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION,
-                GLOBALS_VERSION, HUSKY_VERSION, HYPER_EXPRESS_VERSION, JEST_TYPES_VERSION,
-                JEST_VERSION, LINT_STAGED_VERSION, MIKRO_ORM_CORE_VERSION,
-                MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
+                BETTER_SQLITE3_VERSION, BIOME_VERSION, COMMON_VERSION, CORE_VERSION,
+                DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION, GLOBALS_VERSION, HUSKY_VERSION,
+                HYPER_EXPRESS_VERSION, JEST_TYPES_VERSION, JEST_VERSION, LINT_STAGED_VERSION,
+                MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
                 MIKRO_ORM_REFLECTION_VERSION, NODE_GYP_VERSION, OXLINT_VERSION, PRETTIER_VERSION,
                 PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT, SORT_PACKAGE_JSON_VERSION,
-                SQLITE_POSTINSTALL_SCRIPT, SQLITE3_VERSION, TS_JEST_VERSION, TSX_VERSION,
-                TYPEBOX_VERSION, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION,
-                TYPES_QS_VERSION, TYPES_UUID_VERSION, TYPESCRIPT_ESLINT_VERSION,
-                TYPESCRIPT_VERSION, UUID_VERSION, VALIDATOR_VERSION, VITEST_VERSION, ZOD_VERSION,
-                application_build_script, application_clean_purge_script, application_clean_script,
-                application_docs_script, application_format_script, application_lint_fix_script,
-                application_lint_script, application_migrate_script, application_seed_script,
-                application_setup_script, application_test_script, application_up_packages_script,
-                project_clean_script, project_format_script, project_lint_fix_script,
-                project_lint_script, project_test_script,
+                SQLITE3_VERSION, TS_JEST_VERSION, TSX_VERSION, TYPEBOX_VERSION,
+                TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION, TYPES_QS_VERSION,
+                TYPES_UUID_VERSION, TYPESCRIPT_ESLINT_VERSION, TYPESCRIPT_VERSION, UUID_VERSION,
+                VALIDATOR_VERSION, VITEST_VERSION, ZOD_VERSION, application_build_script,
+                application_clean_purge_script, application_clean_script, application_docs_script,
+                application_format_script, application_lint_fix_script, application_lint_script,
+                application_migrate_script, application_seed_script, application_setup_script,
+                application_test_script, application_up_packages_script, project_clean_script,
+                project_format_script, project_lint_fix_script, project_lint_script,
+                project_test_script,
             },
             project_package_json::{ProjectDependencies, ProjectDevDependencies, ProjectScripts},
         },
@@ -89,7 +90,7 @@ fn generate_application_package_json(
     let package_json_contents = ApplicationPackageJson {
         name: Some(data.app_name.clone()),
         version: Some("0.0.1".to_string()),
-        description: Some(data.description.clone()),
+        description: Some(data.app_description.clone()),
         keywords: Some(vec![]),
         license: Some(data.license.clone()),
         author: Some(data.author.clone()),
@@ -107,42 +108,31 @@ fn generate_application_package_json(
             lint_fix: Some(application_lint_fix_script(&data.linter.parse()?)),
             migrate_create: Some(application_migrate_script(
                 &data.runtime.parse()?,
-                &data.database.parse()?,
+                &HashSet::from([data.database.parse()?]),
                 "create",
             )),
             migrate_down: Some(application_migrate_script(
                 &data.runtime.parse()?,
-                &data.database.parse()?,
+                &HashSet::from([data.database.parse()?]),
                 "down",
             )),
             migrate_init: Some(application_migrate_script(
                 &data.runtime.parse()?,
-                &data.database.parse()?,
+                &HashSet::from([data.database.parse()?]),
                 "init",
             )),
             migrate_up: Some(application_migrate_script(
                 &data.runtime.parse()?,
-                &data.database.parse()?,
+                &HashSet::from([data.database.parse()?]),
                 "up",
             )),
-            postinstall: if data.is_sqlite || data.is_better_sqlite {
-                match data.database.parse()? {
-                    Database::SQLite => Some(SQLITE_POSTINSTALL_SCRIPT.to_string()),
-                    Database::BetterSQLite => Some(BETTER_SQLITE_POSTINSTALL_SCRIPT.to_string()),
-                    _ => None,
-                }
-            } else {
-                None
-            },
+            postinstall: get_postinstall_script(&data.database.parse()?),
             prepare: Some(APP_PREPARE_SCRIPT.to_string()),
             seed: Some(application_seed_script(
                 &data.runtime.parse()?,
-                &data.database.parse()?,
+                &HashSet::from([data.database.parse()?]),
             )),
-            test: Some(application_test_script(
-                &data.runtime.parse()?,
-                &test_framework,
-            )),
+            test: application_test_script(&data.runtime.parse()?, &test_framework),
             up_packages: Some(application_up_packages_script(&data.runtime.parse()?)),
             additional_scripts: HashMap::new(),
         }),
@@ -369,10 +359,7 @@ impl CliCommand for ApplicationCommand {
         )?
         .parse()?;
 
-        let database_variants: &[&str] = match runtime {
-            Runtime::Bun => &Database::VARIANTS[..Database::VARIANTS.len() - 1],
-            Runtime::Node => &Database::VARIANTS[..],
-        };
+        let database_variants = get_database_variants(&runtime);
 
         let database: Database = prompt_with_validation(
             &mut line_editor,
@@ -520,7 +507,7 @@ impl CliCommand for ApplicationCommand {
             ProjectEntry {
                 r#type: ProjectType::Library,
                 name: "core".to_string(),
-                description: format!("{} core library", name),
+                description: get_core_module_description(&name),
                 resources: None,
                 routers: None,
                 metadata: None,
@@ -528,7 +515,7 @@ impl CliCommand for ApplicationCommand {
             ProjectEntry {
                 r#type: ProjectType::Library,
                 name: "monitoring".to_string(),
-                description: format!("{} monitoring library", name),
+                description: get_monitoring_module_description(&name),
                 resources: None,
                 routers: None,
                 metadata: None,
@@ -537,7 +524,7 @@ impl CliCommand for ApplicationCommand {
         additional_projects.extend(services.into_iter().map(|package| ProjectEntry {
             r#type: ProjectType::Service,
             name: package.to_string(),
-            description: format!("{} service", package.to_string()),
+            description: get_service_module_description(&name, &package.to_string()),
             resources: Some(ResourceInventory {
                 database: Some(database.to_string()),
                 cache: None,
@@ -581,7 +568,7 @@ impl CliCommand for ApplicationCommand {
             },
             projects: additional_projects.clone(),
             project_peer_topology,
-            description: description.to_string(),
+            app_description: description.to_string(),
             author: author.to_string(),
             license: match_license(license)?,
 
@@ -673,8 +660,13 @@ impl CliCommand for ApplicationCommand {
                 projects: data.projects.clone(),
                 project_peer_topology: data.project_peer_topology.clone(),
                 author: data.author.clone(),
-                description: data.description.clone(),
+                app_description: data.app_description.clone(),
                 license: data.license.clone(),
+                description: match template_dir.output_path.as_str() {
+                    "core" => get_core_module_description(&name),
+                    "monitoring" => get_monitoring_module_description(&name),
+                    _ => get_service_module_description(&name, &template_dir.output_path),
+                },
 
                 is_eslint: data.is_eslint,
                 is_biome: data.is_biome,

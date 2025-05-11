@@ -50,6 +50,10 @@ pub(crate) trait ProjectManifestConfig {
     fn description(&self) -> &String;
 }
 
+pub(crate) struct ApplicationInitializationMetadata {
+    pub(crate) database: Option<String>,
+}
+
 pub(crate) struct ProjectInitializationMetadata {
     pub(crate) project_name: String,
 }
@@ -60,6 +64,8 @@ pub(crate) struct RouterInitializationMetadata {
 }
 
 pub(crate) enum InitializableManifestConfigMetadata {
+    #[allow(dead_code)]
+    Application(ApplicationInitializationMetadata),
     Project(ProjectInitializationMetadata),
     Router(RouterInitializationMetadata),
 }
@@ -120,6 +126,7 @@ macro_rules! internal_config_struct {
             $vis id: String,
             $vis cli_version: String,
             $vis app_name: String,
+            $vis app_description: String,
             $vis linter: String,
             $vis formatter: String,
             $vis validator: String,
@@ -210,6 +217,7 @@ macro_rules! config_struct {
                         id: shadow.id.clone(),
                         cli_version: shadow.cli_version.clone(),
                         app_name: shadow.app_name.clone(),
+                        app_description: shadow.app_description.clone(),
                         linter: shadow.linter.clone(),
                         formatter: shadow.formatter.clone(),
                         validator: shadow.validator.clone(),

@@ -2,11 +2,11 @@ use std::io::Write;
 
 use anyhow::Result;
 use clap::ArgMatches;
-use dialoguer::{theme::ColorfulTheme, FuzzySelect, Input, MultiSelect};
+use dialoguer::{FuzzySelect, Input, MultiSelect, theme::ColorfulTheme};
 use rustyline::{
+    Editor,
     completion::{Completer, Pair},
     history::DefaultHistory,
-    Editor,
 };
 use rustyline_derive::{Helper, Highlighter, Hinter, Validator};
 use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
@@ -156,17 +156,24 @@ pub(crate) fn prompt_comma_separated_list(
             );
 
             let multi_select_theme = &ColorfulTheme::default();
-            let mut multi_select = MultiSelect::with_theme(multi_select_theme)
-                .with_prompt(prompt)
-                .items(valid_options);
+            let mut multi_select = MultiSelect::with_theme(multi_select_theme).with_prompt(prompt);
 
             if let Some(active_options) = active_options {
+                multi_select = multi_select.items(
+                    valid_options
+                        .iter()
+                        .filter(|s| !active_options.contains(s))
+                        .collect::<Vec<&&str>>()
+                        .as_slice(),
+                );
                 multi_select = multi_select.items_checked(
                     &active_options
                         .iter()
                         .map(|v| (*v, true))
                         .collect::<Vec<_>>(),
                 );
+            } else {
+                multi_select = multi_select.items(valid_options);
             }
 
             let input = multi_select

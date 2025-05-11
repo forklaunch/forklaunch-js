@@ -2,6 +2,10 @@ use oxc_allocator::Allocator;
 use oxc_ast::ast::{Program, SourceType};
 
 use crate::core::ast::{
+    deletions::{
+        delete_from_registrations_ts::delete_from_registrations_ts_config_injector,
+        delete_import_statement::delete_import_statement,
+    },
     injections::inject_into_registrations_ts::inject_into_registrations_config_injector,
     parse_ast_program::parse_ast_program,
     replacements::replace_import_statment::replace_import_statment,
@@ -73,6 +77,37 @@ pub(crate) fn redis_ttl_cache_runtime_dependency<'a>(
         &allocator,
         registrations_program,
         &mut redis_registration_program,
+        "runtimeDependencies",
+    );
+}
+
+pub(crate) fn delete_redis_import<'a>(
+    allocator: &'a Allocator,
+    registrations_program: &mut Program<'a>,
+) {
+    let _ = delete_import_statement(&allocator, registrations_program, "@forklaunch/core/cache");
+}
+
+pub(crate) fn delete_redis_url_environment_variable<'a>(
+    allocator: &'a Allocator,
+    registrations_program: &mut Program<'a>,
+) {
+    delete_from_registrations_ts_config_injector(
+        &allocator,
+        registrations_program,
+        "REDIS_URL",
+        "environmentConfig",
+    );
+}
+
+pub(crate) fn delete_redis_ttl_cache_runtime_dependency<'a>(
+    allocator: &'a Allocator,
+    registrations_program: &mut Program<'a>,
+) {
+    delete_from_registrations_ts_config_injector(
+        &allocator,
+        registrations_program,
+        "TtlCache",
         "runtimeDependencies",
     );
 }

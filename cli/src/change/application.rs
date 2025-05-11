@@ -1,19 +1,22 @@
 use std::{
-    collections::HashMap,
+    cell::RefCell,
+    collections::{HashMap, HashSet},
     fs::{exists, read_to_string},
     io::Write,
     path::Path,
+    rc::Rc,
 };
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, Command};
-use dialoguer::{Confirm, MultiSelect, theme::ColorfulTheme};
+use dialoguer::{MultiSelect, theme::ColorfulTheme};
 use glob::Pattern;
 use ramhorns::Template;
 use rustyline::{Editor, history::DefaultHistory};
-use termcolor::{ColorChoice, StandardStream};
+use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use walkdir::WalkDir;
 
+use super::core::clean_application::clean_application;
 use crate::{
     CliCommand,
     constants::{
@@ -33,6 +36,7 @@ use crate::{
         manifest::{
             ProjectType, application::ApplicationManifestData, service::ServiceManifestData,
         },
+        move_template::{MoveTemplate, MoveTemplateType, move_template_files},
         name::validate_name,
         package_json::{
             application_package_json::{
@@ -40,21 +44,22 @@ use crate::{
             },
             package_json_constants::{
                 BIOME_VERSION, ESLINT_VERSION, EXPRESS_VERSION, HYPER_EXPRESS_VERSION,
-                JEST_VERSION, OXLINT_VERSION, PRETTIER_VERSION, TS_JEST_VERSION, TYPEBOX_VERSION,
-                TYPESCRIPT_ESLINT_VERSION, VITEST_VERSION, ZOD_VERSION, application_build_script,
-                application_clean_purge_script, application_clean_script, application_docs_script,
-                application_format_script, application_lint_fix_script, application_lint_script,
-                application_migrate_script, application_seed_script, application_setup_script,
-                application_test_script, application_up_packages_script, project_clean_script,
-                project_dev_local_script, project_dev_server_script,
-                project_dev_worker_client_script, project_format_script, project_lint_fix_script,
-                project_lint_script, project_start_server_script, project_start_worker_script,
-                project_test_script,
+                JEST_TYPES_VERSION, JEST_VERSION, OXLINT_VERSION, PRETTIER_VERSION,
+                TS_JEST_VERSION, TYPEBOX_VERSION, TYPESCRIPT_ESLINT_VERSION, VITEST_VERSION,
+                ZOD_VERSION, application_build_script, application_clean_purge_script,
+                application_clean_script, application_docs_script, application_format_script,
+                application_lint_fix_script, application_lint_script, application_migrate_script,
+                application_seed_script, application_setup_script, application_test_script,
+                application_up_packages_script, project_clean_script, project_dev_local_script,
+                project_dev_server_script, project_dev_worker_client_script, project_format_script,
+                project_lint_fix_script, project_lint_script, project_start_server_script,
+                project_start_worker_script, project_test_script,
             },
             project_package_json::{
                 ProjectDependencies, ProjectDevDependencies, ProjectPackageJson, ProjectScripts,
             },
         },
+        pnpm_workspace::PnpmWorkspace,
         removal_template::{RemovalTemplate, RemovalTemplateType, remove_template_files},
         rendered_template::{
             RenderedTemplate, RenderedTemplatesCache, TEMPLATES_DIR, write_rendered_templates,
@@ -108,6 +113,7 @@ fn change_name(
     }
 
     let mut ignore_pattern_stack: Vec<Vec<String>> = Vec::new();
+    ignore_pattern_stack.push(vec!["**/node_modules/**/*".to_string()]);
     for entry in WalkDir::new(base_path).contents_first(false) {
         let entry = entry?;
         let path = entry.path();
@@ -134,35 +140,40 @@ fn change_name(
                 }
             }
         } else if entry.file_type().is_file() {
-            // Skip if the file matches any ignore pattern from any level
             if should_ignore(relative_path, &ignore_pattern_stack) {
                 continue;
             }
 
-            let contents = rendered_templates_cache.get(path)?.unwrap().content.clone();
+            if let Some(rendered_template) = rendered_templates_cache.get(path)? {
+                let contents = rendered_template.content.clone();
 
-            let new_contents = contents
-                .replace(
-                    format!("@{}", &existing_name).as_str(),
-                    format!("@{}", name).as_str(),
-                )
-                .replace(
-                    format!("{}-", &existing_name).as_str(),
-                    format!("{}-", name).as_str(),
-                )
-                .replace(
-                    format!("/{}", &existing_name).as_str(),
-                    format!("/{}", name).as_str(),
-                );
-            if contents != new_contents {
-                rendered_templates_cache.insert(
-                    path.to_string_lossy(),
-                    RenderedTemplate {
-                        path: path.to_path_buf(),
-                        content: new_contents,
-                        context: None,
-                    },
-                );
+                let new_contents = contents
+                    .replace(
+                        format!("@{}", &existing_name).as_str(),
+                        format!("@{}", name).as_str(),
+                    )
+                    .replace(
+                        format!("{}-", &existing_name).as_str(),
+                        format!("{}-", name).as_str(),
+                    )
+                    .replace(
+                        format!("/{}", &existing_name).as_str(),
+                        format!("/{}", name).as_str(),
+                    );
+                if contents != new_contents {
+                    let relative_path = path.strip_prefix(base_path)?;
+                    let new_path =
+                        Path::new(&base_path.to_string_lossy().replace(&existing_name, &name))
+                            .join(relative_path);
+                    rendered_templates_cache.insert(
+                        path.to_string_lossy(),
+                        RenderedTemplate {
+                            path: new_path.to_path_buf(),
+                            content: new_contents,
+                            context: None,
+                        },
+                    );
+                }
             }
         }
     }
@@ -175,25 +186,32 @@ fn change_description(
     manifest_data: &mut ApplicationManifestData,
     application_json_to_write: &mut ApplicationPackageJson,
 ) {
-    manifest_data.description = description.to_string();
+    manifest_data.app_description = description.to_string();
     application_json_to_write.description = Some(description.to_string());
 }
 
 fn attempt_replacement(
     additional_scripts: &mut HashMap<String, String>,
-    existing_script: Option<&String>,
-    existing_script_choice: &str,
-    existing_script_generation: &str,
+    existing_script: Option<String>,
+    existing_script_choice: Option<String>,
+    existing_script_generation: Option<String>,
     script_key: &str,
     script_choice: &str,
     script_replacement: &str,
+    choices_to_preserve: Option<&mut HashSet<String>>,
 ) -> String {
-    if let Some(existing_script) = existing_script {
+    if let Some(existing_script) = existing_script
+        && let Some(existing_script_generation) = existing_script_generation
+        && let Some(existing_script_choice) = existing_script_choice
+    {
         if existing_script != existing_script_generation {
             additional_scripts.insert(
                 format!("{}:{}", script_key, existing_script_choice),
                 existing_script.to_owned(),
             );
+            if let Some(choices_to_preserve) = choices_to_preserve {
+                choices_to_preserve.insert(existing_script_choice.clone());
+            }
         }
     }
 
@@ -212,36 +230,39 @@ fn attempt_replacement(
 
 fn update_config_files(
     base_path: &Path,
-    exclusive_files: &[&str],
+    exclusive_files: Option<&[&str]>,
     existing_files: Vec<&str>,
     project_jsons_to_write: &mut HashMap<String, ProjectPackageJson>,
     rendered_templates_cache: &mut RenderedTemplatesCache,
-) -> Result<(Vec<RemovalTemplate>, Vec<SymlinkTemplate>)> {
+) -> Result<(Vec<RemovalTemplate>, Vec<SymlinkTemplate>, Vec<String>)> {
     let mut removal_templates = vec![];
     let mut symlink_templates = vec![];
+    let mut preserved_files = vec![];
 
-    for file in exclusive_files {
-        // add config files,
-        let linter_config_file_contents = TEMPLATES_DIR
-            .get_file(Path::new("application").join(file.to_string()))
-            .unwrap()
-            .contents_utf8()
-            .unwrap();
+    if let Some(exclusive_files) = exclusive_files {
+        for file in exclusive_files {
+            // add config files,
+            let linter_config_file_contents = TEMPLATES_DIR
+                .get_file(Path::new("application").join(file.to_string()))
+                .unwrap()
+                .contents_utf8()
+                .unwrap();
 
-        rendered_templates_cache.insert(
-            base_path.join(file).to_string_lossy(),
-            RenderedTemplate {
-                path: base_path.join(file),
-                content: linter_config_file_contents.to_string(),
-                context: None,
-            },
-        );
+            rendered_templates_cache.insert(
+                base_path.join(file).to_string_lossy(),
+                RenderedTemplate {
+                    path: base_path.join(file),
+                    content: linter_config_file_contents.to_string(),
+                    context: None,
+                },
+            );
 
-        for project in project_jsons_to_write.keys() {
-            symlink_templates.push(SymlinkTemplate {
-                path: base_path.join(file),
-                target: base_path.join(project).join(file),
-            });
+            for project in project_jsons_to_write.keys() {
+                symlink_templates.push(SymlinkTemplate {
+                    path: base_path.join(file),
+                    target: base_path.join(project).join(file),
+                });
+            }
         }
     }
 
@@ -271,11 +292,13 @@ fn update_config_files(
                     path: file_path,
                     r#type: RemovalTemplateType::File,
                 });
+            } else {
+                preserved_files.push(file_path.to_string_lossy().to_string());
             }
         }
     }
 
-    Ok((removal_templates, symlink_templates))
+    Ok((removal_templates, symlink_templates, preserved_files))
 }
 
 fn update_project_package_json<
@@ -284,14 +307,14 @@ fn update_project_package_json<
     ProjectDevDependenciesUpdateFunction,
 >(
     project_json_to_write: &mut ProjectPackageJson,
-    project_package_json_script_setters: &ProjectScriptsUpdateFunction,
-    project_package_json_dependencies_setters: &ProjectDependenciesUpdateFunction,
-    project_package_json_dev_dependencies_setters: &ProjectDevDependenciesUpdateFunction,
+    project_package_json_script_setters: &mut ProjectScriptsUpdateFunction,
+    project_package_json_dependencies_setters: &mut ProjectDependenciesUpdateFunction,
+    project_package_json_dev_dependencies_setters: &mut ProjectDevDependenciesUpdateFunction,
 ) -> Result<()>
 where
-    ProjectScriptsUpdateFunction: Fn(&mut ProjectScripts),
-    ProjectDependenciesUpdateFunction: Fn(&mut ProjectDependencies),
-    ProjectDevDependenciesUpdateFunction: Fn(&mut ProjectDevDependencies),
+    ProjectScriptsUpdateFunction: FnMut(&mut ProjectScripts),
+    ProjectDependenciesUpdateFunction: FnMut(&mut ProjectDependencies),
+    ProjectDevDependenciesUpdateFunction: FnMut(&mut ProjectDevDependencies),
 {
     if let Some(scripts) = project_json_to_write.scripts.as_mut() {
         project_package_json_script_setters(scripts);
@@ -317,18 +340,18 @@ fn update_application_and_project_package_jsons<
 >(
     application_json_to_write: &mut ApplicationPackageJson,
     project_jsons_to_write: Vec<&mut ProjectPackageJson>,
-    application_package_json_script_setters: &ApplicationScriptsUpdateFunction,
-    project_package_json_script_setters: &ProjectScriptsUpdateFunction,
-    project_package_json_dependencies_setters: &ProjectDependenciesUpdateFunction,
-    application_package_json_dev_dependencies_setters: &ApplicationDevDependenciesUpdateFunction,
-    project_package_json_dev_dependencies_setters: &ProjectDevDependenciesUpdateFunction,
+    application_package_json_script_setters: &mut ApplicationScriptsUpdateFunction,
+    project_package_json_script_setters: &mut ProjectScriptsUpdateFunction,
+    project_package_json_dependencies_setters: &mut ProjectDependenciesUpdateFunction,
+    application_package_json_dev_dependencies_setters: &mut ApplicationDevDependenciesUpdateFunction,
+    project_package_json_dev_dependencies_setters: &mut ProjectDevDependenciesUpdateFunction,
 ) -> Result<()>
 where
-    ApplicationScriptsUpdateFunction: Fn(&mut ApplicationScripts),
-    ProjectScriptsUpdateFunction: Fn(&mut ProjectScripts),
-    ProjectDependenciesUpdateFunction: Fn(&mut ProjectDependencies),
-    ApplicationDevDependenciesUpdateFunction: Fn(&mut ApplicationDevDependencies),
-    ProjectDevDependenciesUpdateFunction: Fn(&mut ProjectDevDependencies),
+    ApplicationScriptsUpdateFunction: FnMut(&mut ApplicationScripts),
+    ProjectScriptsUpdateFunction: FnMut(&mut ProjectScripts),
+    ProjectDependenciesUpdateFunction: FnMut(&mut ProjectDependencies),
+    ApplicationDevDependenciesUpdateFunction: FnMut(&mut ApplicationDevDependencies),
+    ProjectDevDependenciesUpdateFunction: FnMut(&mut ProjectDevDependencies),
 {
     if let Some(scripts) = application_json_to_write.scripts.as_mut() {
         application_package_json_script_setters(scripts);
@@ -362,10 +385,10 @@ fn change_formatter(
 
     manifest_data.formatter = formatter.to_string();
 
-    let exclusive_files = formatter.metadata().exclusive_files.unwrap();
+    let exclusive_files = formatter.metadata().exclusive_files;
     let existing_files = formatter.all_other_files();
 
-    let (removal_templates, symlink_templates) = update_config_files(
+    let (removal_templates, symlink_templates, preserved_files) = update_config_files(
         base_path,
         exclusive_files,
         existing_files,
@@ -373,55 +396,71 @@ fn change_formatter(
         rendered_templates_cache,
     )?;
 
+    let mut formatters_to_preserve = HashSet::new();
+    formatters_to_preserve.insert(formatter.to_string());
+    for file in preserved_files {
+        if let Some(formatter_file) = Formatter::get_variant_from_exclusive_file(&file) {
+            formatters_to_preserve.insert(formatter_file.to_string());
+        }
+    }
+
+    let rc_formatters_to_preserve = Rc::new(RefCell::new(formatters_to_preserve));
+
     update_application_and_project_package_jsons(
         application_json_to_write,
         project_jsons_to_write.values_mut().collect(),
-        &|scripts| {
+        &mut |scripts| {
             scripts.format = Some(attempt_replacement(
                 &mut scripts.additional_scripts,
-                scripts.format.as_ref(),
-                &existing_formatter.to_string(),
-                &application_format_script(&existing_formatter),
+                scripts.format.clone(),
+                Some(existing_formatter.to_string()),
+                Some(application_format_script(&existing_formatter)),
                 "format",
                 &formatter.to_string(),
                 &application_format_script(formatter),
+                Some(&mut rc_formatters_to_preserve.borrow_mut()),
             ));
         },
-        &|scripts| {
+        &mut |scripts| {
             scripts.format = Some(attempt_replacement(
                 &mut scripts.additional_scripts,
-                scripts.format.as_ref(),
-                &existing_formatter.to_string(),
-                &project_format_script(&existing_formatter),
+                scripts.format.clone(),
+                Some(existing_formatter.to_string()),
+                Some(project_format_script(&existing_formatter)),
                 "format",
                 &formatter.to_string(),
                 &project_format_script(formatter),
+                Some(&mut rc_formatters_to_preserve.borrow_mut()),
             ));
         },
-        &|_| {},
-        &|dev_dependencies| {
+        &mut |_| {},
+        &mut |dev_dependencies| {
             dev_dependencies.prettier = None;
             dev_dependencies.biome = None;
 
-            match formatter {
-                Formatter::Prettier => {
-                    dev_dependencies.prettier = Some(PRETTIER_VERSION.to_string());
-                }
-                Formatter::Biome => {
-                    dev_dependencies.biome = Some(BIOME_VERSION.to_string());
+            for formatter in rc_formatters_to_preserve.borrow().iter() {
+                match formatter.parse().unwrap() {
+                    Formatter::Prettier => {
+                        dev_dependencies.prettier = Some(PRETTIER_VERSION.to_string());
+                    }
+                    Formatter::Biome => {
+                        dev_dependencies.biome = Some(BIOME_VERSION.to_string());
+                    }
                 }
             }
         },
-        &|dev_dependencies| {
+        &mut |dev_dependencies| {
             dev_dependencies.prettier = None;
             dev_dependencies.biome = None;
 
-            match formatter {
-                Formatter::Prettier => {
-                    dev_dependencies.prettier = Some(PRETTIER_VERSION.to_string());
-                }
-                Formatter::Biome => {
-                    dev_dependencies.biome = Some(BIOME_VERSION.to_string());
+            for formatter in rc_formatters_to_preserve.borrow().iter() {
+                match formatter.parse().unwrap() {
+                    Formatter::Prettier => {
+                        dev_dependencies.prettier = Some(PRETTIER_VERSION.to_string());
+                    }
+                    Formatter::Biome => {
+                        dev_dependencies.biome = Some(BIOME_VERSION.to_string());
+                    }
                 }
             }
         },
@@ -442,10 +481,10 @@ fn change_linter(
 
     manifest_data.linter = linter.to_string();
 
-    let exclusive_files = linter.metadata().exclusive_files.unwrap();
+    let exclusive_files = linter.metadata().exclusive_files;
     let existing_files = linter.all_other_files();
 
-    let (removal_templates, symlink_templates) = update_config_files(
+    let (removal_templates, symlink_templates, preserved_files) = update_config_files(
         base_path,
         exclusive_files,
         existing_files,
@@ -453,85 +492,103 @@ fn change_linter(
         rendered_templates_cache,
     )?;
 
+    let mut linters_to_preserve = HashSet::new();
+    linters_to_preserve.insert(linter.to_string());
+    for file in preserved_files {
+        if let Some(linter_file) = Linter::get_variant_from_exclusive_file(&file) {
+            linters_to_preserve.insert(linter_file.to_string());
+        }
+    }
+
+    let rc_linters_to_preserve = Rc::new(RefCell::new(linters_to_preserve));
+
     update_application_and_project_package_jsons(
         application_json_to_write,
         project_jsons_to_write.values_mut().collect(),
-        &|scripts| {
+        &mut |scripts| {
             scripts.lint = Some(attempt_replacement(
                 &mut scripts.additional_scripts,
-                scripts.lint.as_ref(),
-                &existing_linter.to_string(),
-                &application_lint_script(&existing_linter),
+                scripts.lint.clone(),
+                Some(existing_linter.to_string()),
+                Some(application_lint_script(&existing_linter)),
                 "lint",
                 &linter.to_string(),
                 &application_lint_script(linter),
+                Some(&mut rc_linters_to_preserve.borrow_mut()),
             ));
 
             scripts.lint_fix = Some(attempt_replacement(
                 &mut scripts.additional_scripts,
-                scripts.lint_fix.as_ref(),
-                &existing_linter.to_string(),
-                &application_lint_fix_script(&existing_linter),
+                scripts.lint_fix.clone(),
+                Some(existing_linter.to_string()),
+                Some(application_lint_fix_script(&existing_linter)),
                 "lint-fix",
                 &linter.to_string(),
                 &application_lint_fix_script(linter),
+                Some(&mut rc_linters_to_preserve.borrow_mut()),
             ));
         },
-        &|scripts| {
+        &mut |scripts| {
             scripts.lint = Some(attempt_replacement(
                 &mut scripts.additional_scripts,
-                scripts.lint.as_ref(),
-                &existing_linter.to_string(),
-                &project_lint_script(&existing_linter),
+                scripts.lint.clone(),
+                Some(existing_linter.to_string()),
+                Some(project_lint_script(&existing_linter)),
                 "lint",
                 &linter.to_string(),
                 &project_lint_script(linter),
+                Some(&mut rc_linters_to_preserve.borrow_mut()),
             ));
 
             scripts.lint_fix = Some(attempt_replacement(
                 &mut scripts.additional_scripts,
-                scripts.lint_fix.as_ref(),
-                &existing_linter.to_string(),
-                &project_lint_fix_script(&existing_linter),
+                scripts.lint_fix.clone(),
+                Some(existing_linter.to_string()),
+                Some(project_lint_fix_script(&existing_linter)),
                 "lint-fix",
                 &linter.to_string(),
                 &project_lint_fix_script(linter),
+                Some(&mut rc_linters_to_preserve.borrow_mut()),
             ));
         },
-        &|_| {},
-        &|dev_dependencies| {
+        &mut |_| {},
+        &mut |dev_dependencies| {
             dev_dependencies.eslint = None;
             dev_dependencies.eslint_js = None;
             dev_dependencies.typescript_eslint = None;
             dev_dependencies.oxlint = None;
 
-            match linter {
-                Linter::Eslint => {
-                    dev_dependencies.eslint = Some(ESLINT_VERSION.to_string());
-                    dev_dependencies.eslint_js = Some(ESLINT_VERSION.to_string());
-                    dev_dependencies.typescript_eslint =
-                        Some(TYPESCRIPT_ESLINT_VERSION.to_string());
-                }
-                Linter::Oxlint => {
-                    dev_dependencies.oxlint = Some(OXLINT_VERSION.to_string());
+            for linter in rc_linters_to_preserve.borrow().iter() {
+                match linter.parse().unwrap() {
+                    Linter::Eslint => {
+                        dev_dependencies.eslint = Some(ESLINT_VERSION.to_string());
+                        dev_dependencies.eslint_js = Some(ESLINT_VERSION.to_string());
+                        dev_dependencies.typescript_eslint =
+                            Some(TYPESCRIPT_ESLINT_VERSION.to_string());
+                    }
+                    Linter::Oxlint => {
+                        dev_dependencies.oxlint = Some(OXLINT_VERSION.to_string());
+                    }
                 }
             }
         },
-        &|dev_dependencies| {
+        &mut |dev_dependencies| {
             dev_dependencies.eslint = None;
             dev_dependencies.eslint_js = None;
             dev_dependencies.typescript_eslint = None;
             dev_dependencies.oxlint = None;
 
-            match linter {
-                Linter::Eslint => {
-                    dev_dependencies.eslint = Some(ESLINT_VERSION.to_string());
-                    dev_dependencies.eslint_js = Some(ESLINT_VERSION.to_string());
-                    dev_dependencies.typescript_eslint =
-                        Some(TYPESCRIPT_ESLINT_VERSION.to_string());
-                }
-                Linter::Oxlint => {
-                    dev_dependencies.oxlint = Some(OXLINT_VERSION.to_string());
+            for linter in rc_linters_to_preserve.borrow().iter() {
+                match linter.parse().unwrap() {
+                    Linter::Eslint => {
+                        dev_dependencies.eslint = Some(ESLINT_VERSION.to_string());
+                        dev_dependencies.eslint_js = Some(ESLINT_VERSION.to_string());
+                        dev_dependencies.typescript_eslint =
+                            Some(TYPESCRIPT_ESLINT_VERSION.to_string());
+                    }
+                    Linter::Oxlint => {
+                        dev_dependencies.oxlint = Some(OXLINT_VERSION.to_string());
+                    }
                 }
             }
         },
@@ -638,11 +695,20 @@ fn change_runtime(
     application_json_to_write: &mut ApplicationPackageJson,
     project_jsons_to_write: &mut HashMap<String, ProjectPackageJson>,
     rendered_templates_cache: &mut RenderedTemplatesCache,
-) -> Result<Vec<RemovalTemplate>> {
+) -> Result<(Vec<RemovalTemplate>, Vec<SymlinkTemplate>)> {
     let existing_runtime = manifest_data.runtime.parse::<Runtime>()?;
-    let existing_database = manifest_data.database.parse::<Database>()?;
+    let mut existing_databases = HashSet::new();
+
+    for project in manifest_data.projects.iter() {
+        if let Some(resources) = &project.resources {
+            if let Some(database) = &resources.database {
+                existing_databases.insert(database.parse()?);
+            }
+        }
+    }
 
     let mut removal_templates = vec![];
+    let mut symlink_templates = vec![];
 
     let existing_workspaces: Vec<String> = match manifest_data.runtime.parse()? {
         Runtime::Bun => application_json_to_write
@@ -650,9 +716,16 @@ fn change_runtime(
             .as_ref()
             .unwrap()
             .clone(),
-        Runtime::Node => serde_yml::from_str::<Vec<String>>(&read_to_string(
-            &base_path.join("pnpm-workspace.yaml"),
-        )?)?,
+        Runtime::Node => {
+            removal_templates.push(RemovalTemplate {
+                path: base_path.join("pnpm-workspace.yaml"),
+                r#type: RemovalTemplateType::File,
+            });
+            serde_yml::from_str::<PnpmWorkspace>(&read_to_string(
+                &base_path.join("pnpm-workspace.yaml"),
+            )?)?
+            .packages
+        }
     };
 
     manifest_data.runtime = runtime.to_string();
@@ -667,12 +740,12 @@ fn change_runtime(
                 let test_framework = prompt_field_from_selections_with_validation(
                     "test-framework",
                     None,
-                    &["vitest", "jest"],
+                    &["test-framework"],
                     line_editor,
                     stdout,
                     matches,
                     "test framework",
-                    None,
+                    Some(&TestFramework::VARIANTS),
                     |input: &str| TestFramework::VARIANTS.contains(&input),
                     |_| "Invalid test framework. Please try again".to_string(),
                 )?
@@ -692,115 +765,151 @@ fn change_runtime(
         }
     };
 
-    removal_templates.extend(change_test_framework(
-        base_path,
-        &test_framework,
-        manifest_data,
-        application_json_to_write,
-        project_jsons_to_write,
-        rendered_templates_cache,
-    )?);
+    if let Some(test_framework) = test_framework {
+        let (test_framework_removal_templates, test_framework_symlink_templates) =
+            change_test_framework(
+                base_path,
+                &test_framework,
+                manifest_data,
+                application_json_to_write,
+                project_jsons_to_write,
+                rendered_templates_cache,
+            )?;
+
+        removal_templates.extend(test_framework_removal_templates);
+        symlink_templates.extend(test_framework_symlink_templates);
+    }
 
     let application_package_json_scripts = application_json_to_write.scripts.as_mut().unwrap();
 
     application_package_json_scripts.build = Some(attempt_replacement(
         &mut application_package_json_scripts.additional_scripts,
-        application_package_json_scripts.build.as_ref(),
-        &existing_runtime.to_string(),
-        &application_build_script(&existing_runtime),
+        application_package_json_scripts.build.clone(),
+        Some(existing_runtime.to_string()),
+        Some(application_build_script(&existing_runtime)),
         "build",
         &runtime.to_string(),
         &application_build_script(runtime),
+        None,
     ));
     application_package_json_scripts.clean = Some(attempt_replacement(
         &mut application_package_json_scripts.additional_scripts,
-        application_package_json_scripts.clean.as_ref(),
-        &existing_runtime.to_string(),
-        &application_clean_script(&existing_runtime),
+        application_package_json_scripts.clean.clone(),
+        Some(existing_runtime.to_string()),
+        Some(application_clean_script(&existing_runtime)),
         "clean",
         &runtime.to_string(),
         &application_clean_script(runtime),
+        None,
     ));
     application_package_json_scripts.clean_purge = Some(attempt_replacement(
         &mut application_package_json_scripts.additional_scripts,
-        application_package_json_scripts.clean_purge.as_ref(),
-        &existing_runtime.to_string(),
-        &application_clean_purge_script(&existing_runtime),
+        application_package_json_scripts.clean_purge.clone(),
+        Some(existing_runtime.to_string()),
+        Some(application_clean_purge_script(&existing_runtime)),
         "clean-purge",
         &runtime.to_string(),
         &application_clean_purge_script(runtime),
+        None,
     ));
     application_package_json_scripts.database_setup = Some(attempt_replacement(
         &mut application_package_json_scripts.additional_scripts,
-        application_package_json_scripts.database_setup.as_ref(),
-        &existing_runtime.to_string(),
-        &application_setup_script(&existing_runtime),
+        application_package_json_scripts.database_setup.clone(),
+        Some(existing_runtime.to_string()),
+        Some(application_setup_script(&existing_runtime)),
         "database-setup",
         &runtime.to_string(),
         &application_setup_script(runtime),
+        None,
     ));
     application_package_json_scripts.docs = Some(attempt_replacement(
         &mut application_package_json_scripts.additional_scripts,
-        application_package_json_scripts.docs.as_ref(),
-        &existing_runtime.to_string(),
-        &application_docs_script(&existing_runtime),
+        application_package_json_scripts.docs.clone(),
+        Some(existing_runtime.to_string()),
+        Some(application_docs_script(&existing_runtime)),
         "docs",
         &runtime.to_string(),
         &application_docs_script(runtime),
+        None,
     ));
     application_package_json_scripts.migrate_create = Some(attempt_replacement(
         &mut application_package_json_scripts.additional_scripts,
-        application_package_json_scripts.migrate_create.as_ref(),
-        &existing_runtime.to_string(),
-        &application_migrate_script(&existing_runtime, &existing_database, "create"),
+        application_package_json_scripts.migrate_create.clone(),
+        Some(existing_runtime.to_string()),
+        Some(application_migrate_script(
+            &existing_runtime,
+            &existing_databases,
+            "create",
+        )),
         "migrate-create",
         &runtime.to_string(),
-        &application_migrate_script(runtime, &existing_database, "create"),
+        &application_migrate_script(runtime, &existing_databases, "create"),
+        None,
     ));
     application_package_json_scripts.migrate_down = Some(attempt_replacement(
         &mut application_package_json_scripts.additional_scripts,
-        application_package_json_scripts.migrate_down.as_ref(),
-        &existing_runtime.to_string(),
-        &application_migrate_script(&existing_runtime, &existing_database, "down"),
+        application_package_json_scripts.migrate_down.clone(),
+        Some(existing_runtime.to_string()),
+        Some(application_migrate_script(
+            &existing_runtime,
+            &existing_databases,
+            "down",
+        )),
         "migrate-down",
         &runtime.to_string(),
-        &application_migrate_script(runtime, &existing_database, "down"),
+        &application_migrate_script(runtime, &existing_databases, "down"),
+        None,
     ));
     application_package_json_scripts.migrate_init = Some(attempt_replacement(
         &mut application_package_json_scripts.additional_scripts,
-        application_package_json_scripts.migrate_init.as_ref(),
-        &existing_runtime.to_string(),
-        &application_migrate_script(&existing_runtime, &existing_database, "init"),
+        application_package_json_scripts.migrate_init.clone(),
+        Some(existing_runtime.to_string()),
+        Some(application_migrate_script(
+            &existing_runtime,
+            &existing_databases,
+            "init",
+        )),
         "migrate-init",
         &runtime.to_string(),
-        &application_migrate_script(runtime, &existing_database, "init"),
+        &application_migrate_script(runtime, &existing_databases, "init"),
+        None,
     ));
     application_package_json_scripts.migrate_up = Some(attempt_replacement(
         &mut application_package_json_scripts.additional_scripts,
-        application_package_json_scripts.migrate_up.as_ref(),
-        &existing_runtime.to_string(),
-        &application_migrate_script(&existing_runtime, &existing_database, "up"),
+        application_package_json_scripts.migrate_up.clone(),
+        Some(existing_runtime.to_string()),
+        Some(application_migrate_script(
+            &existing_runtime,
+            &existing_databases,
+            "up",
+        )),
         "migrate-up",
         &runtime.to_string(),
-        &application_migrate_script(runtime, &existing_database, "up"),
+        &application_migrate_script(runtime, &existing_databases, "up"),
+        None,
     ));
     application_package_json_scripts.seed = Some(attempt_replacement(
         &mut application_package_json_scripts.additional_scripts,
-        application_package_json_scripts.seed.as_ref(),
-        &existing_runtime.to_string(),
-        &application_seed_script(&existing_runtime, &existing_database),
+        application_package_json_scripts.seed.clone(),
+        Some(existing_runtime.to_string()),
+        Some(application_seed_script(
+            &existing_runtime,
+            &existing_databases,
+        )),
         "seed",
         &runtime.to_string(),
-        &application_seed_script(runtime, &existing_database),
+        &application_seed_script(runtime, &existing_databases),
+        None,
     ));
     application_package_json_scripts.up_packages = Some(attempt_replacement(
         &mut application_package_json_scripts.additional_scripts,
-        application_package_json_scripts.up_packages.as_ref(),
-        &existing_runtime.to_string(),
-        &application_up_packages_script(&existing_runtime),
+        application_package_json_scripts.up_packages.clone(),
+        Some(existing_runtime.to_string()),
+        Some(application_up_packages_script(&existing_runtime)),
         "up-packages",
         &runtime.to_string(),
         &application_up_packages_script(runtime),
+        None,
     ));
 
     let mut is_in_memory_database = manifest_data.is_in_memory_database;
@@ -828,82 +937,99 @@ fn change_runtime(
         if let Some(project_scripts) = &mut project.scripts {
             project_scripts.clean = Some(attempt_replacement(
                 &mut project_scripts.additional_scripts,
-                project_scripts.clean.as_ref(),
-                &existing_runtime.to_string(),
-                &project_clean_script(&existing_runtime),
+                project_scripts.clean.clone(),
+                Some(existing_runtime.to_string()),
+                Some(project_clean_script(&existing_runtime)),
                 "clean",
                 &runtime.to_string(),
                 &project_clean_script(runtime),
+                None,
             ));
             match project_type {
                 ProjectType::Service => {
                     project_scripts.dev = Some(attempt_replacement(
                         &mut project_scripts.additional_scripts,
-                        project_scripts.dev.as_ref(),
-                        &existing_runtime.to_string(),
-                        &project_dev_server_script(&existing_runtime, true),
+                        project_scripts.dev.clone(),
+                        Some(existing_runtime.to_string()),
+                        Some(project_dev_server_script(&existing_runtime, true)),
                         "dev",
                         &runtime.to_string(),
                         &project_dev_server_script(runtime, true),
+                        None,
                     ));
                     project_scripts.dev_local = Some(attempt_replacement(
                         &mut project_scripts.additional_scripts,
-                        project_scripts.dev_local.as_ref(),
-                        &existing_runtime.to_string(),
-                        &project_dev_local_script(&existing_runtime),
+                        project_scripts.dev_local.clone(),
+                        Some(existing_runtime.to_string()),
+                        Some(project_dev_local_script(&existing_runtime)),
                         "dev-local",
                         &runtime.to_string(),
                         &project_dev_local_script(runtime),
+                        None,
                     ));
                     project_scripts.start = Some(attempt_replacement(
                         &mut project_scripts.additional_scripts,
-                        project_scripts.start.as_ref(),
-                        &existing_runtime.to_string(),
-                        &project_start_server_script(&existing_runtime, true),
+                        project_scripts.start.clone(),
+                        Some(existing_runtime.to_string()),
+                        Some(project_start_server_script(&existing_runtime, true)),
                         "start",
                         &runtime.to_string(),
                         &project_start_server_script(runtime, true),
+                        None,
                     ));
                 }
                 ProjectType::Worker => {
                     project_scripts.dev_server = Some(attempt_replacement(
                         &mut project_scripts.additional_scripts,
-                        project_scripts.dev_server.as_ref(),
-                        &existing_runtime.to_string(),
-                        &project_dev_server_script(&existing_runtime, is_database_enabled),
+                        project_scripts.dev_server.clone(),
+                        Some(existing_runtime.to_string()),
+                        Some(project_dev_server_script(
+                            &existing_runtime,
+                            is_database_enabled,
+                        )),
                         "dev-server",
                         &runtime.to_string(),
                         &project_dev_server_script(runtime, is_database_enabled),
+                        None,
                     ));
 
                     project_scripts.dev_worker = Some(attempt_replacement(
                         &mut project_scripts.additional_scripts,
-                        project_scripts.dev_worker.as_ref(),
-                        &existing_runtime.to_string(),
-                        &project_dev_worker_client_script(&existing_runtime),
+                        project_scripts.dev_worker.clone(),
+                        Some(existing_runtime.to_string()),
+                        Some(project_dev_worker_client_script(&existing_runtime)),
                         "dev-client",
                         &runtime.to_string(),
                         &project_dev_worker_client_script(runtime),
+                        None,
                     ));
 
                     project_scripts.start_server = Some(attempt_replacement(
                         &mut project_scripts.additional_scripts,
-                        project_scripts.start_server.as_ref(),
-                        &existing_runtime.to_string(),
-                        &project_start_server_script(&existing_runtime, is_database_enabled),
+                        project_scripts.start_server.clone(),
+                        Some(existing_runtime.to_string()),
+                        Some(project_start_server_script(
+                            &existing_runtime,
+                            is_database_enabled,
+                        )),
                         "start-server",
                         &runtime.to_string(),
                         &project_start_server_script(runtime, is_database_enabled),
+                        None,
                     ));
 
                     project_scripts.start_worker = Some(attempt_replacement(
                         &mut project_scripts.additional_scripts,
-                        project_scripts.start_worker.as_ref(),
-                        &existing_runtime.to_string(),
-                        &project_start_worker_script(&existing_runtime, is_database_enabled),
+                        project_scripts.start_worker.clone(),
+                        Some(existing_runtime.to_string()),
+                        Some(project_start_worker_script(
+                            &existing_runtime,
+                            is_database_enabled,
+                        )),
                         "start-worker",
                         &runtime.to_string(),
                         &project_start_worker_script(runtime, is_database_enabled),
+                        None,
                     ));
                 }
                 ProjectType::Library => {}
@@ -920,7 +1046,9 @@ fn change_runtime(
                 "pnpm-workspace.yaml".to_string(),
                 RenderedTemplate {
                     path: base_path.join("pnpm-workspace.yaml"),
-                    content: serde_yml::to_string(&existing_workspaces)?,
+                    content: serde_yml::to_string(&PnpmWorkspace {
+                        packages: existing_workspaces,
+                    })?,
                     context: None,
                 },
             );
@@ -986,17 +1114,17 @@ fn change_runtime(
         },
     );
 
-    Ok(removal_templates)
+    Ok((removal_templates, symlink_templates))
 }
 
 fn change_test_framework(
     base_path: &Path,
-    test_framework: &Option<TestFramework>,
+    test_framework: &TestFramework,
     manifest_data: &mut ApplicationManifestData,
     application_json_to_write: &mut ApplicationPackageJson,
     project_jsons_to_write: &mut HashMap<String, ProjectPackageJson>,
     rendered_templates_cache: &mut RenderedTemplatesCache,
-) -> Result<Vec<RemovalTemplate>> {
+) -> Result<(Vec<RemovalTemplate>, Vec<SymlinkTemplate>)> {
     let existing_test_framework =
         if let Some(manifest_test_framework) = manifest_data.test_framework.clone() {
             Some(manifest_test_framework.parse::<TestFramework>()?)
@@ -1004,148 +1132,130 @@ fn change_test_framework(
             None
         };
 
-    manifest_data.test_framework = if let Some(test_framework) = test_framework {
-        Some(test_framework.to_string())
-    } else {
-        None
-    };
-
-    let mut removal_templates = vec![];
-
-    let dev_dependencies = application_json_to_write.dev_dependencies.as_mut().unwrap();
-
-    dev_dependencies.jest = None;
-    dev_dependencies.ts_jest = None;
-    dev_dependencies.vitest = None;
-    dev_dependencies.types_jest = None;
-
-    let scripts = application_json_to_write.scripts.as_mut().unwrap();
-
-    scripts.test = None;
-
-    for project in project_jsons_to_write.values_mut() {
-        let project_scripts = project.scripts.as_mut().unwrap();
-        project_scripts.test = None;
-    }
+    manifest_data.test_framework = Some(test_framework.to_string());
 
     let runtime = manifest_data.runtime.parse::<Runtime>()?;
 
-    if runtime == Runtime::Bun {
-        for file in TestFramework::ALL_FILES {
-            let config_file = base_path.join(file);
-            let config_file_contents = read_to_string(&config_file)?;
-            let watermarked_config_file_contents = apply_watermark(&RenderedTemplate {
-                path: config_file.clone(),
-                content: TEMPLATES_DIR
-                    .get_file(Path::new("application").join(file))
-                    .unwrap()
-                    .contents_utf8()
-                    .unwrap()
-                    .to_string(),
-                context: None,
-            })?;
-            if exists(&config_file)? && config_file_contents == watermarked_config_file_contents {
-                removal_templates.push(RemovalTemplate {
-                    path: config_file,
-                    r#type: RemovalTemplateType::File,
-                });
+    let exclusive_files = test_framework.metadata().exclusive_files;
+    let existing_files = test_framework.all_other_files();
+
+    let (removal_templates, symlink_templates, preserved_files) = update_config_files(
+        base_path,
+        exclusive_files,
+        existing_files,
+        project_jsons_to_write,
+        rendered_templates_cache,
+    )?;
+
+    let mut test_frameworks_to_preserve = HashSet::new();
+    // linters_to_preserve.insert(test_framework.to_string());
+    test_frameworks_to_preserve.insert(test_framework.to_string());
+
+    for file in preserved_files {
+        if let Some(linter_file) = Linter::get_variant_from_exclusive_file(&file) {
+            test_frameworks_to_preserve.insert(linter_file.to_string());
+        }
+    }
+
+    let rc_test_frameworks_to_preserve = Rc::new(RefCell::new(test_frameworks_to_preserve));
+
+    update_application_and_project_package_jsons(
+        application_json_to_write,
+        project_jsons_to_write.values_mut().collect(),
+        &mut |scripts| {
+            let modified_test_script_key = format!("test:{}", test_framework.to_string());
+
+            scripts.test = if let Some(test_script) =
+                application_test_script(&runtime, &Some(test_framework.clone()))
+            {
+                Some(attempt_replacement(
+                    &mut scripts.additional_scripts,
+                    scripts.test.clone(),
+                    existing_test_framework.map(|test_framework| test_framework.to_string()),
+                    application_test_script(&runtime, &existing_test_framework),
+                    &modified_test_script_key,
+                    &test_framework.to_string(),
+                    &test_script,
+                    Some(&mut rc_test_frameworks_to_preserve.borrow_mut()),
+                ))
+            } else {
+                None
             }
-        }
+        },
+        &mut |scripts| {
+            let modified_test_script_key = format!("test:{}", test_framework.to_string());
+            scripts.test = if let Some(test_script) =
+                project_test_script(&runtime, &Some(test_framework.clone()))
+            {
+                Some(attempt_replacement(
+                    &mut scripts.additional_scripts,
+                    scripts.test.clone(),
+                    existing_test_framework.map(|test_framework| test_framework.to_string()),
+                    project_test_script(&runtime, &existing_test_framework),
+                    &modified_test_script_key,
+                    &test_framework.to_string(),
+                    &test_script,
+                    Some(&mut rc_test_frameworks_to_preserve.borrow_mut()),
+                ))
+            } else {
+                None
+            }
+        },
+        &mut |_| {},
+        &mut |dev_dependencies| {
+            dev_dependencies.jest = None;
+            dev_dependencies.ts_jest = None;
+            dev_dependencies.vitest = None;
+            dev_dependencies.types_jest = None;
 
-        return Ok(removal_templates);
-    }
+            for test_framework in rc_test_frameworks_to_preserve.borrow().iter() {
+                let test_framework = test_framework.parse::<TestFramework>().unwrap();
+                match test_framework {
+                    TestFramework::Vitest => {
+                        dev_dependencies.vitest = Some(VITEST_VERSION.to_string());
 
-    if scripts.test == Some(application_test_script(&runtime, &existing_test_framework)) {
-        scripts.additional_scripts.insert(
-            format!("test:{}", existing_test_framework.unwrap().to_string()),
-            scripts.test.as_ref().unwrap().to_owned(),
-        );
-    }
+                        let vitest_config_file_contents = TEMPLATES_DIR
+                            .get_file(Path::new("application").join("vitest.config.ts"))
+                            .unwrap()
+                            .contents_utf8()
+                            .unwrap();
 
-    let modified_test_script_key = format!("test:{}", test_framework.unwrap().to_string());
-    scripts.test = if scripts
-        .additional_scripts
-        .contains_key(&modified_test_script_key)
-    {
-        Some(
-            scripts
-                .additional_scripts
-                .get(&modified_test_script_key)
-                .unwrap()
-                .to_owned(),
-        )
-    } else {
-        Some(application_test_script(&runtime, test_framework))
-    };
+                        rendered_templates_cache.insert(
+                            base_path.join("vitest.config.ts").to_string_lossy(),
+                            RenderedTemplate {
+                                path: base_path.join("vitest.config.ts"),
+                                content: vitest_config_file_contents.to_string(),
+                                context: None,
+                            },
+                        );
+                    }
+                    TestFramework::Jest => {
+                        dev_dependencies.jest = Some(JEST_VERSION.to_string());
+                        dev_dependencies.ts_jest = Some(TS_JEST_VERSION.to_string());
+                        dev_dependencies.types_jest = Some(JEST_TYPES_VERSION.to_string());
 
-    for project in project_jsons_to_write.values_mut() {
-        let project_scripts = project.scripts.as_mut().unwrap();
-        if project_scripts.test == project_test_script(&runtime, &existing_test_framework) {
-            project_scripts.additional_scripts.insert(
-                format!("test:{}", existing_test_framework.unwrap().to_string()),
-                project_scripts.test.as_ref().unwrap().to_owned(),
-            );
-        }
-        let modified_test_script_key = format!("test:{}", test_framework.unwrap().to_string());
-        project_scripts.test = if project_scripts
-            .additional_scripts
-            .contains_key(&modified_test_script_key)
-        {
-            Some(
-                project_scripts
-                    .additional_scripts
-                    .get(&modified_test_script_key)
-                    .unwrap()
-                    .to_owned(),
-            )
-        } else {
-            project_test_script(&runtime, test_framework)
-        };
-    }
+                        let jest_config_file_contents = TEMPLATES_DIR
+                            .get_file(Path::new("application").join("jest.config.ts"))
+                            .unwrap()
+                            .contents_utf8()
+                            .unwrap();
 
-    match test_framework {
-        Some(TestFramework::Vitest) => {
-            dev_dependencies.vitest = Some(VITEST_VERSION.to_string());
+                        rendered_templates_cache.insert(
+                            base_path.join("jest.config.ts").to_string_lossy(),
+                            RenderedTemplate {
+                                path: base_path.join("jest.config.ts"),
+                                content: jest_config_file_contents.to_string(),
+                                context: None,
+                            },
+                        );
+                    }
+                };
+            }
+        },
+        &mut |_dev_dependencies| {},
+    )?;
 
-            let vitest_config_file_contents = TEMPLATES_DIR
-                .get_file(Path::new("application").join("vitest.config.ts"))
-                .unwrap()
-                .contents_utf8()
-                .unwrap();
-
-            rendered_templates_cache.insert(
-                base_path.join("vitest.config.ts").to_string_lossy(),
-                RenderedTemplate {
-                    path: base_path.join("vitest.config.ts"),
-                    content: vitest_config_file_contents.to_string(),
-                    context: None,
-                },
-            );
-        }
-        Some(TestFramework::Jest) => {
-            dev_dependencies.jest = Some(JEST_VERSION.to_string());
-            dev_dependencies.ts_jest = Some(TS_JEST_VERSION.to_string());
-            dev_dependencies.types_jest = Some(TS_JEST_VERSION.to_string());
-
-            let jest_config_file_contents = TEMPLATES_DIR
-                .get_file(Path::new("application").join("jest.config.ts"))
-                .unwrap()
-                .contents_utf8()
-                .unwrap();
-
-            rendered_templates_cache.insert(
-                base_path.join("jest.config.ts").to_string_lossy(),
-                RenderedTemplate {
-                    path: base_path.join("jest.config.ts"),
-                    content: jest_config_file_contents.to_string(),
-                    context: None,
-                },
-            );
-        }
-        None => (),
-    };
-
-    Ok(removal_templates)
+    Ok((removal_templates, symlink_templates))
 }
 
 fn change_author(
@@ -1164,24 +1274,23 @@ fn change_license(
     application_json_to_write: &mut ApplicationPackageJson,
     rendered_templates_cache: &mut RenderedTemplatesCache,
 ) -> Result<Option<RemovalTemplate>> {
-    manifest_data.license = license.to_string();
+    manifest_data.license = match_license(license.clone())?;
     let license_path = base_path.join("LICENSE");
 
     let mut removal_template = None;
     if exists(&license_path)? {
         removal_template = Some(RemovalTemplate {
-            path: license_path,
+            path: license_path.clone(),
             r#type: RemovalTemplateType::File,
         });
     }
 
-    application_json_to_write.license = Some(license.to_string());
-    let license_file_key = base_path.join("LICENSE");
+    application_json_to_write.license = Some(match_license(license.clone())?);
 
     if let Some(license_file_contents) =
         generate_license(base_path.to_str().unwrap(), &manifest_data)?
     {
-        rendered_templates_cache.insert(license_file_key.to_string_lossy(), license_file_contents);
+        rendered_templates_cache.insert(license_path.to_string_lossy(), license_file_contents);
     }
 
     Ok(removal_template)
@@ -1474,6 +1583,7 @@ impl CliCommand for ApplicationCommand {
         )?;
 
         let mut removal_templates = vec![];
+        let mut move_templates = vec![];
         let mut symlink_templates = vec![];
 
         let application_package_json_path = base_path.join("package.json");
@@ -1500,6 +1610,8 @@ impl CliCommand for ApplicationCommand {
             .collect();
 
         if let Some(name) = name {
+            clean_application(&base_path, &manifest_data)?;
+
             change_name(
                 &mut manifest_data,
                 &base_path,
@@ -1509,23 +1621,11 @@ impl CliCommand for ApplicationCommand {
                 &mut rendered_templates_cache,
             )?;
 
-            let confirm = Confirm::new()
-                .with_prompt("Would you like to rename the application path? (You will be directed if it is the current working directory)")
-                .interact()?;
-
-            if confirm {
-                let cwd = std::env::current_dir()?;
-
-                std::process::Command::new("mv")
-                    .current_dir(&base_path.parent().unwrap())
-                    .arg(&base_path)
-                    .arg(&name)
-                    .output()?;
-
-                if cwd == base_path {
-                    std::env::set_current_dir(Path::new(&name))?;
-                }
-            }
+            move_templates.push(MoveTemplate {
+                path: base_path.to_path_buf(),
+                target: base_path.parent().unwrap().join(&name),
+                r#type: MoveTemplateType::Directory,
+            });
         }
 
         if let Some(formatter) = formatter {
@@ -1575,23 +1675,9 @@ impl CliCommand for ApplicationCommand {
         }
 
         if let Some(runtime) = runtime {
-            let confirm = Confirm::new()
-                .with_prompt("Changing the runtime will remove existing runtime files (clean). Are you sure you want to continue?")
-                .interact()?;
+            clean_application(&base_path, &manifest_data)?;
 
-            if confirm {
-                let command = match runtime.parse()? {
-                    Runtime::Node => "pnpm clean:purge",
-                    Runtime::Bun => "bun clean:purge",
-                };
-                let _ = std::process::Command::new(command)
-                    .current_dir(base_path)
-                    .output()?;
-            } else {
-                return Ok(());
-            }
-
-            let runtime_removal_templates = change_runtime(
+            let (runtime_removal_templates, runtime_symlink_templates) = change_runtime(
                 &mut line_editor,
                 &mut stdout,
                 matches,
@@ -1603,19 +1689,22 @@ impl CliCommand for ApplicationCommand {
                 &mut rendered_templates_cache,
             )?;
             removal_templates.extend(runtime_removal_templates);
+            symlink_templates.extend(runtime_symlink_templates);
         }
 
         if let Some(test_framework) = test_framework {
-            let test_framework_removal_templates = change_test_framework(
-                &base_path,
-                &Some(test_framework.parse::<TestFramework>()?),
-                &mut manifest_data,
-                &mut application_json_to_write,
-                &mut project_jsons_to_write,
-                &mut rendered_templates_cache,
-            )?;
+            let (test_framework_removal_templates, test_framework_symlink_templates) =
+                change_test_framework(
+                    &base_path,
+                    &test_framework.parse()?,
+                    &mut manifest_data,
+                    &mut application_json_to_write,
+                    &mut project_jsons_to_write,
+                    &mut rendered_templates_cache,
+                )?;
 
             removal_templates.extend(test_framework_removal_templates);
+            symlink_templates.extend(test_framework_symlink_templates);
         }
 
         if let Some(description) = description {
@@ -1667,9 +1756,16 @@ impl CliCommand for ApplicationCommand {
             .map(|(_, template)| template)
             .collect();
 
-        write_rendered_templates(&rendered_templates, dryrun, &mut stdout)?;
         remove_template_files(&removal_templates, dryrun, &mut stdout)?;
+        write_rendered_templates(&rendered_templates, dryrun, &mut stdout)?;
         create_symlinks(&symlink_templates, dryrun, &mut stdout)?;
+        move_template_files(&move_templates, dryrun, &mut stdout)?;
+
+        if !dryrun {
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+            writeln!(stdout, "{} changed successfully!", &manifest_data.app_name)?;
+            stdout.reset()?;
+        }
 
         Ok(())
     }

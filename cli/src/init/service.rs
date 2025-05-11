@@ -3,14 +3,15 @@ use std::{collections::HashMap, fs::read_to_string, io::Write, path::Path};
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use convert_case::{Case, Casing};
-use rustyline::{history::DefaultHistory, Editor};
+use rustyline::{Editor, history::DefaultHistory};
 use serde_json::to_string_pretty;
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use toml::from_str;
 
 use crate::{
+    CliCommand,
     constants::{
-        Database, Infrastructure, Runtime, TestFramework, ERROR_FAILED_TO_ADD_BASE_ENTITY_TO_CORE,
+        Database, ERROR_FAILED_TO_ADD_BASE_ENTITY_TO_CORE,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON,
@@ -19,27 +20,24 @@ use crate::{
         ERROR_FAILED_TO_CREATE_PACKAGE_JSON, ERROR_FAILED_TO_CREATE_SYMLINKS,
         ERROR_FAILED_TO_CREATE_TSCONFIG, ERROR_FAILED_TO_PARSE_MANIFEST,
         ERROR_FAILED_TO_READ_MANIFEST, ERROR_FAILED_TO_UPDATE_DOCKERFILE,
-        ERROR_FAILED_TO_WRITE_SERVICE_FILES,
+        ERROR_FAILED_TO_WRITE_SERVICE_FILES, Infrastructure, Runtime, TestFramework,
     },
     core::{
-        base_path::{prompt_base_path, BasePathLocation, BasePathType},
+        base_path::{BasePathLocation, BasePathType, prompt_base_path},
         command::command,
         database::{
-            add_base_entity_to_core, get_database_port, is_in_memory_database, get_db_driver,
+            add_base_entity_to_core, get_database_port, get_db_driver, is_in_memory_database,
         },
         docker::{add_service_definition_to_docker_compose, update_dockerfile_contents},
         gitignore::generate_gitignore,
         manifest::{
-            add_project_definition_to_manifest, application::ApplicationManifestData,
-            service::ServiceManifestData, ManifestData, ProjectType, ResourceInventory,
+            ManifestData, ProjectType, ResourceInventory, add_project_definition_to_manifest,
+            application::ApplicationManifestData, service::ServiceManifestData,
         },
         name::validate_name,
         package_json::{
             add_project_definition_to_package_json,
             package_json_constants::{
-                project_clean_script, project_dev_local_script, project_dev_server_script,
-                project_format_script, project_lint_fix_script, project_lint_script,
-                project_migrate_script, project_start_server_script, project_test_script,
                 AJV_VERSION, APP_CORE_VERSION, APP_MONITORING_VERSION, BETTER_SQLITE3_VERSION,
                 BILLING_BASE_VERSION, BILLING_INTERFACES_VERSION, BIOME_VERSION, COMMON_VERSION,
                 CORE_VERSION, DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION,
@@ -48,27 +46,29 @@ use crate::{
                 MIKRO_ORM_MIGRATIONS_VERSION, MIKRO_ORM_REFLECTION_VERSION,
                 MIKRO_ORM_SEEDER_VERSION, OXLINT_VERSION, PRETTIER_VERSION, PROJECT_BUILD_SCRIPT,
                 PROJECT_DOCS_SCRIPT, PROJECT_SEED_SCRIPT, SQLITE3_VERSION, TSX_VERSION,
-                TYPEBOX_VERSION, TYPEDOC_VERSION, TYPESCRIPT_ESLINT_VERSION,
-                TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION, TYPES_QS_VERSION,
-                TYPES_UUID_VERSION, UUID_VERSION, VALIDATOR_VERSION, ZOD_VERSION,
+                TYPEBOX_VERSION, TYPEDOC_VERSION, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION,
+                TYPES_EXPRESS_VERSION, TYPES_QS_VERSION, TYPES_UUID_VERSION,
+                TYPESCRIPT_ESLINT_VERSION, UUID_VERSION, VALIDATOR_VERSION, ZOD_VERSION,
+                project_clean_script, project_dev_local_script, project_dev_server_script,
+                project_format_script, project_lint_fix_script, project_lint_script,
+                project_migrate_script, project_start_server_script, project_test_script,
             },
             project_package_json::{
-                ProjectDependencies, ProjectDevDependencies, ProjectMikroOrm, ProjectPackageJson,
-                ProjectScripts, MIKRO_ORM_CONFIG_PATHS,
+                MIKRO_ORM_CONFIG_PATHS, ProjectDependencies, ProjectDevDependencies,
+                ProjectMikroOrm, ProjectPackageJson, ProjectScripts,
             },
             update_application_package_json,
         },
         pnpm_workspace::add_project_definition_to_pnpm_workspace,
-        rendered_template::{write_rendered_templates, RenderedTemplate},
+        rendered_template::{RenderedTemplate, write_rendered_templates},
         symlinks::generate_symlinks,
-        template::{generate_with_template, PathIO},
+        template::{PathIO, generate_with_template},
         tsconfig::generate_tsconfig,
     },
     prompt::{
-        prompt_comma_separated_list, prompt_with_validation, prompt_without_validation,
-        ArrayCompleter,
+        ArrayCompleter, prompt_comma_separated_list, prompt_with_validation,
+        prompt_without_validation,
     },
-    CliCommand,
 };
 
 fn generate_basic_service(
@@ -337,6 +337,7 @@ pub(crate) fn generate_service_package_json(
                     None
                 },
                 ajv: Some(AJV_VERSION.to_string()),
+                bullmq: None,
                 better_sqlite3: if config_data.is_node
                     && config_data.is_database_enabled
                     && config_data.is_better_sqlite
@@ -543,6 +544,7 @@ impl CliCommand for ServiceCommand {
             // Common fields from ApplicationManifestData
             id: existing_manifest_data.id.clone(),
             app_name: existing_manifest_data.app_name.clone(),
+            app_description: existing_manifest_data.app_description.clone(),
             author: existing_manifest_data.author.clone(),
             cli_version: existing_manifest_data.cli_version.clone(),
             formatter: existing_manifest_data.formatter.clone(),

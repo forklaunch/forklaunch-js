@@ -40,8 +40,8 @@ use crate::{
             add_project_definition_to_package_json,
             package_json_constants::{
                 AJV_VERSION, APP_CORE_VERSION, APP_MONITORING_VERSION, BETTER_SQLITE3_VERSION,
-                BIOME_VERSION, COMMON_VERSION, CORE_VERSION, DOTENV_VERSION, ESLINT_VERSION,
-                EXPRESS_VERSION, HYPER_EXPRESS_VERSION, MIKRO_ORM_CLI_VERSION,
+                BIOME_VERSION, BULLMQ_VERSION, COMMON_VERSION, CORE_VERSION, DOTENV_VERSION,
+                ESLINT_VERSION, EXPRESS_VERSION, HYPER_EXPRESS_VERSION, MIKRO_ORM_CLI_VERSION,
                 MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
                 MIKRO_ORM_REFLECTION_VERSION, MIKRO_ORM_SEEDER_VERSION, OXLINT_VERSION,
                 PRETTIER_VERSION, PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT, PROJECT_SEED_SCRIPT,
@@ -426,6 +426,13 @@ pub(crate) fn generate_worker_package_json(
                     None
                 },
                 ajv: Some(AJV_VERSION.to_string()),
+                bullmq: if config_data.worker_type_lowercase.parse::<WorkerType>()?
+                    == WorkerType::BullMQCache
+                {
+                    Some(BULLMQ_VERSION.to_string())
+                } else {
+                    None
+                },
                 better_sqlite3: if config_data.is_node
                     && config_data.is_database_enabled
                     && config_data.is_better_sqlite
@@ -631,6 +638,7 @@ impl CliCommand for WorkerCommand {
             // Common fields from ApplicationManifestData
             id: existing_manifest_data.id.clone(),
             app_name: existing_manifest_data.app_name.clone(),
+            app_description: existing_manifest_data.app_description.clone(),
             author: existing_manifest_data.author.clone(),
             cli_version: existing_manifest_data.cli_version.clone(),
             formatter: existing_manifest_data.formatter.clone(),

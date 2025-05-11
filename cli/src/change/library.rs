@@ -2,30 +2,33 @@ use std::{fs::read_to_string, io::Write, path::Path};
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, Command};
-use dialoguer::{theme::ColorfulTheme, MultiSelect};
-use rustyline::{history::DefaultHistory, Editor};
-use termcolor::{ColorChoice, StandardStream};
+use dialoguer::{MultiSelect, theme::ColorfulTheme};
+use rustyline::{Editor, history::DefaultHistory};
+use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 use super::core::{
     change_description::change_description as change_description_core,
     change_name::change_name as change_name_core,
 };
 use crate::{
+    CliCommand,
     constants::{
         ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST,
         ERROR_FAILED_TO_READ_PACKAGE_JSON,
     },
     core::{
-        base_path::{prompt_base_path, BasePathLocation, BasePathType},
+        base_path::{BasePathLocation, BasePathType, prompt_base_path},
         command::command,
-        manifest::{library::LibraryManifestData, MutableManifestData},
+        manifest::{
+            InitializableManifestConfig, InitializableManifestConfigMetadata, MutableManifestData,
+            ProjectInitializationMetadata, library::LibraryManifestData,
+        },
+        move_template::{MoveTemplate, move_template_files},
         name::validate_name,
         package_json::project_package_json::ProjectPackageJson,
-        removal_template::{remove_template_files, RemovalTemplate},
-        rendered_template::{write_rendered_templates, RenderedTemplate, RenderedTemplatesCache},
+        rendered_template::{RenderedTemplate, RenderedTemplatesCache, write_rendered_templates},
     },
-    prompt::{prompt_field_from_selections_with_validation, ArrayCompleter},
-    CliCommand,
+    prompt::{ArrayCompleter, prompt_field_from_selections_with_validation},
 };
 
 #[derive(Debug)]
@@ -43,7 +46,7 @@ fn change_name(
     manifest_data: &mut LibraryManifestData,
     project_package_json: &mut ProjectPackageJson,
     rendered_templates_cache: &mut RenderedTemplatesCache,
-) -> Result<RemovalTemplate> {
+) -> Result<MoveTemplate> {
     change_name_core(
         base_path,
         name,
@@ -52,75 +55,6 @@ fn change_name(
         None,
         rendered_templates_cache,
     )
-    // let existing_name = base_path.file_name().unwrap().to_string_lossy().to_string();
-
-    // let mut removal_templates = vec![];
-
-    // manifest_data.library_name = name.to_string();
-    // manifest_data
-    //     .projects
-    //     .iter_mut()
-    //     .find(|project| project.name == existing_name)
-    //     .unwrap()
-    //     .name = name.to_string();
-
-    // project_package_json.name = Some(format!("@{}/{}", manifest_data.app_name, name.to_string()));
-
-    // let existing_camel_case_name = existing_name.to_case(Case::Camel);
-    // let existing_kebab_case_name = existing_name.to_case(Case::Kebab);
-    // let existing_pascal_case_name = existing_name.to_case(Case::Pascal);
-
-    // // #TODO: move this into router change name function
-    // let camel_case_name = name.to_case(Case::Camel);
-    // let kebab_case_name = name.to_case(Case::Kebab);
-    // let pascal_case_name = name.to_case(Case::Pascal);
-
-    // TEMPLATES_DIR
-    //     .get_dir("router")
-    //     .unwrap()
-    //     .entries()
-    //     .into_iter()
-    //     .for_each(|top_level_folder| {
-    //         for entry in WalkDir::new(base_path.join(&top_level_folder.path().file_name().unwrap()))
-    //         {
-    //             let entry = entry.unwrap();
-    //             if entry.file_type().is_file() {
-    //                 let path = entry.path();
-    //                 if let Some(template) = rendered_templates_cache.get(path).ok().unwrap() {
-    //                     let content = template.content;
-    //                     let new_content = content
-    //                         .replace(&existing_pascal_case_name, &pascal_case_name)
-    //                         .replace(&existing_kebab_case_name, &kebab_case_name)
-    //                         .replace(&existing_camel_case_name, &camel_case_name)
-    //                         .replace(&existing_name, &name);
-    //                     let new_path = path
-    //                         .to_string_lossy()
-    //                         .replace(&existing_pascal_case_name, &pascal_case_name)
-    //                         .replace(&existing_kebab_case_name, &kebab_case_name)
-    //                         .replace(&existing_camel_case_name, &camel_case_name)
-    //                         .replace(&existing_name, &name);
-    //                     if content != new_content {
-    //                         rendered_templates_cache.insert(
-    //                             new_path.clone(),
-    //                             RenderedTemplate {
-    //                                 path: new_path.clone().into(),
-    //                                 content: new_content,
-    //                                 context: None,
-    //                             },
-    //                         );
-    //                         if path.to_string_lossy() != new_path {
-    //                             removal_templates.push(RemovalTemplate {
-    //                                 path: path.into(),
-    //                                 r#type: RemovalTemplateType::File,
-    //                             });
-    //                         }
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     });
-
-    // Ok(removal_templates)
 }
 
 fn change_description(
@@ -184,11 +118,15 @@ impl CliCommand for LibraryCommand {
             .unwrap()
             .join("manifest.toml");
 
-        let mut manifest_data: LibraryManifestData = toml::from_str(
+        let mut manifest_data: LibraryManifestData = toml::from_str::<LibraryManifestData>(
             &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
-        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
-        manifest_data.library_name = base_path.file_name().unwrap().to_string_lossy().to_string();
+        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
+        .initialize(InitializableManifestConfigMetadata::Project(
+            ProjectInitializationMetadata {
+                project_name: base_path.file_name().unwrap().to_string_lossy().to_string(),
+            },
+        ));
 
         let name = matches.get_one::<String>("name");
         let description = matches.get_one::<String>("description");
@@ -238,7 +176,7 @@ impl CliCommand for LibraryCommand {
             |_| "Invalid description. Please try again".to_string(),
         )?;
 
-        let mut removal_templates = vec![];
+        let mut move_templates = vec![];
 
         let project_package_json_path = base_path.join("package.json");
         let project_package_json_data = read_to_string(&project_package_json_path)
@@ -250,7 +188,7 @@ impl CliCommand for LibraryCommand {
         let mut rendered_templates_cache = RenderedTemplatesCache::new();
 
         if let Some(name) = name {
-            removal_templates.push(change_name(
+            move_templates.push(change_name(
                 &base_path,
                 &name,
                 &mut manifest_data,
@@ -289,7 +227,17 @@ impl CliCommand for LibraryCommand {
             .collect();
 
         write_rendered_templates(&rendered_templates, dryrun, &mut stdout)?;
-        remove_template_files(&removal_templates, dryrun, &mut stdout)?;
+        move_template_files(&move_templates, dryrun, &mut stdout)?;
+
+        if !dryrun {
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+            writeln!(
+                stdout,
+                "{} changed successfully!",
+                &manifest_data.library_name
+            )?;
+            stdout.reset()?;
+        }
 
         Ok(())
     }

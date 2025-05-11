@@ -20,7 +20,7 @@ pub(crate) fn change_description(
             manifest_data.description = description.to_string();
         }
         MutableManifestData::Application(manifest_data) => {
-            manifest_data.description = description.to_string();
+            manifest_data.app_description = description.to_string();
         }
         _ => {}
     }

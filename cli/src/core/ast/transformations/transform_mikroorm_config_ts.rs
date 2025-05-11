@@ -36,6 +36,18 @@ pub(crate) fn transform_mikroorm_config_ts(
     let mut mikro_orm_config_program =
         parse_ast_program(&allocator, &mikro_orm_config_text, mikro_orm_config_type);
 
+    if database == &Database::MongoDB {
+        let _ = replace_import_statment(
+            &mut mikro_orm_config_program,
+            &mut parse_ast_program(
+                &allocator,
+                &"import { Migrator } from '@mikro-orm/migrations';",
+                SourceType::ts(),
+            ),
+            "@mikro-orm/migrations",
+        );
+    }
+
     let database_driver_import_text = format!(
         "import {{ {} }} from \"@mikro-orm/{}\";",
         get_db_driver(database),
@@ -43,7 +55,6 @@ pub(crate) fn transform_mikroorm_config_ts(
     );
     let mut database_driver_import_program =
         parse_ast_program(&allocator, &database_driver_import_text, SourceType::ts());
-    println!("{}", database_driver_import_text);
     if let Some(existing_database) = existing_database {
         let _ = replace_import_statment(
             &mut mikro_orm_config_program,

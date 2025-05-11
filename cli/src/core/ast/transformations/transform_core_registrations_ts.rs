@@ -64,7 +64,7 @@ pub(crate) fn transform_core_registrations_ts_validator(
     core_registration_validator_text: Option<String>,
 ) -> Result<String> {
     let allocator = Allocator::default();
-    let core_registration_validator_path = base_path.join("core").join("registration.ts");
+    let core_registration_validator_path = base_path.join("core").join("registrations.ts");
     let core_registration_validator_text =
         if let Some(core_registration_validator_text) = core_registration_validator_text {
             core_registration_validator_text

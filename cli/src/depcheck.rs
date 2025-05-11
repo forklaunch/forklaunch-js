@@ -7,20 +7,20 @@ use std::{
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgMatches, Command};
-use rustyline::{history::DefaultHistory, Editor};
+use rustyline::{Editor, history::DefaultHistory};
 use serde::{Deserialize, Serialize};
-use serde_json::{from_str, json, Value};
+use serde_json::{Value, from_str, json};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 use crate::{
+    CliCommand,
     constants::{ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST},
     core::{
-        base_path::{prompt_base_path, BasePathLocation, BasePathType},
+        base_path::{BasePathLocation, BasePathType, prompt_base_path},
         command::command,
         manifest::application::ApplicationManifestData,
     },
     prompt::ArrayCompleter,
-    CliCommand,
 };
 
 #[derive(Default, Serialize, Deserialize)]

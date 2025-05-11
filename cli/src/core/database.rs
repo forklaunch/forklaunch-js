@@ -6,13 +6,15 @@ use serde_json::{from_str, to_string_pretty};
 use super::{
     manifest::ManifestData,
     package_json::{
-        package_json_constants::MIKRO_ORM_DATABASE_VERSION,
+        package_json_constants::{
+            BETTER_SQLITE_POSTINSTALL_SCRIPT, MIKRO_ORM_DATABASE_VERSION, SQLITE_POSTINSTALL_SCRIPT,
+        },
         project_package_json::ProjectPackageJson,
     },
     rendered_template::{RenderedTemplate, TEMPLATES_DIR},
 };
 use crate::constants::{
-    Database, ERROR_FAILED_TO_CREATE_DATABASE_EXPORT_INDEX_TS, ERROR_UNSUPPORTED_DATABASE,
+    Database, ERROR_FAILED_TO_CREATE_DATABASE_EXPORT_INDEX_TS, ERROR_UNSUPPORTED_DATABASE, Runtime,
 };
 
 pub(crate) fn get_db_driver(database: &Database) -> String {
@@ -187,5 +189,20 @@ pub(crate) fn is_in_memory_database(database: &Database) -> bool {
         Database::BetterSQLite => true,
         Database::LibSQL => true,
         _ => false,
+    }
+}
+
+pub(crate) fn get_postinstall_script(database: &Database) -> Option<String> {
+    match database {
+        Database::SQLite => Some(SQLITE_POSTINSTALL_SCRIPT.to_string()),
+        Database::BetterSQLite => Some(BETTER_SQLITE_POSTINSTALL_SCRIPT.to_string()),
+        _ => None,
+    }
+}
+
+pub(crate) fn get_database_variants(runtime: &Runtime) -> &[&str] {
+    match runtime {
+        Runtime::Bun => &Database::VARIANTS[..Database::VARIANTS.len() - 1],
+        Runtime::Node => &Database::VARIANTS[..],
     }
 }

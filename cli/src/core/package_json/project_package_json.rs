@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fmt, fs::read_to_string};
 
-use serde::{de::Visitor, Deserialize, Serialize, Serializer};
+use serde::{Deserialize, Serialize, Serializer, de::Visitor};
 
 use crate::core::manifest::application::ApplicationManifestData;
 
@@ -128,6 +128,7 @@ impl<'de> Deserialize<'de> for ProjectScripts {
 #[derive(Debug, Default)]
 pub struct ProjectDependencies {
     pub app_name: String,
+    pub bullmq: Option<String>,
     pub database: Option<String>,
     pub app_core: Option<String>,
     pub app_monitoring: Option<String>,
@@ -245,6 +246,9 @@ impl Serialize for ProjectDependencies {
         }
         if let Some(ref v) = self.ajv {
             map.serialize_entry("ajv", v)?;
+        }
+        if let Some(ref v) = self.bullmq {
+            map.serialize_entry("bullmq", v)?;
         }
         if let Some(ref v) = self.better_sqlite3 {
             map.serialize_entry("better-sqlite3", v)?;
@@ -403,6 +407,7 @@ impl<'de> Deserialize<'de> for ProjectDependencies {
                         "@mikro-orm/seeder" => deps.mikro_orm_seeder = Some(value),
                         "@sinclair/typebox" => deps.typebox = Some(value),
                         "ajv" => deps.ajv = Some(value),
+                        "bullmq" => deps.bullmq = Some(value),
                         "better-sqlite3" => deps.better_sqlite3 = Some(value),
                         "dotenv" => deps.dotenv = Some(value),
                         "sqlite3" => deps.sqlite3 = Some(value),

@@ -10,6 +10,7 @@ use termcolor::StandardStream;
 #[derive(Debug)]
 pub(crate) enum RemovalTemplateType {
     File,
+    #[allow(dead_code)]
     Directory,
 }
 

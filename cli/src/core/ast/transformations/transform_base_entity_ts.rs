@@ -25,8 +25,8 @@ pub(crate) fn transform_base_entity_ts(
     };
 
     let base_entity_file_name_to_copy = match database {
-        Database::MongoDB => "nosql.base.entity.ts",
-        _ => "sql.base.entity.ts",
+        Database::MongoDB => "sql.base.entity.ts",
+        _ => "nosql.base.entity.ts",
     };
 
     if exists(
@@ -97,7 +97,8 @@ pub(crate) fn transform_base_entity_ts(
 
     let base_entity_to_create_text = TEMPLATES_DIR
         .get_file(
-            Path::new("core")
+            Path::new("project")
+                .join("core")
                 .join("persistence")
                 .join(base_entity_file_name_to_create),
         )

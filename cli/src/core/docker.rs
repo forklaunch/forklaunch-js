@@ -439,6 +439,17 @@ pub(crate) fn add_redis_to_docker_compose<'a>(
     Ok(docker_compose)
 }
 
+pub(crate) fn remove_redis_from_docker_compose<'a>(
+    docker_compose: &'a mut DockerCompose,
+    environment: &mut IndexMap<String, String>,
+) -> Result<&'a mut DockerCompose> {
+    environment.shift_remove("REDIS_URL");
+    if docker_compose.services.contains_key("redis") {
+        docker_compose.services.shift_remove("redis");
+    }
+    Ok(docker_compose)
+}
+
 pub(crate) fn add_kafka_to_docker_compose<'a>(
     app_name: &str,
     project_name: &str,
@@ -808,9 +819,6 @@ pub(crate) fn clean_up_unused_infrastructure_services(
     for project in projects {
         if let Some(resources) = project.resources {
             if let Some(database) = resources.database {
-                if database == "mongodb" {
-                    infrastructure_in_use.insert("mongo-init".to_string());
-                }
                 infrastructure_in_use.insert(database);
             }
             if let Some(cache) = resources.cache {
@@ -836,7 +844,15 @@ pub(crate) fn clean_up_unused_infrastructure_services(
         .map(|infrastructure| infrastructure.to_string())
         .collect::<HashSet<String>>();
 
-    let unused_infrastructure = all_infrastructure_set.difference(&infrastructure_in_use);
+    let unused_infrastructure = all_infrastructure_set
+        .difference(&infrastructure_in_use)
+        .flat_map(|component| match component.parse::<Infrastructure>() {
+            Ok(Infrastructure::Redis) => vec!["redis".to_string()],
+            _ => match component.parse::<Database>() {
+                Ok(Database::MongoDB) => vec!["mongodb".to_string(), "mongo-init".to_string()],
+                _ => vec![component.to_string()],
+            },
+        });
 
     for infrastructure in unused_infrastructure {
         docker_compose

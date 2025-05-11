@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use convert_case::{Case, Casing};
 use indexmap::IndexMap;
 use serde_yml::{from_value, to_value};
@@ -9,6 +9,7 @@ use walkdir::WalkDir;
 use crate::core::{
     docker::{Command, DependsOn, DockerBuild, DockerCompose, DockerService, Healthcheck},
     manifest::{MutableManifestData, ProjectEntry},
+    move_template::{MoveTemplate, MoveTemplateType},
     package_json::{
         project_package_json::ProjectPackageJson, replace_project_in_workspace_definition,
     },
@@ -46,32 +47,37 @@ pub(crate) fn change_name_in_files(
     for entry in WalkDir::new(base_path) {
         let entry = entry.unwrap();
         if entry.file_type().is_file() {
-            let path = entry.path();
-            if let Some(template) = rendered_templates_cache.get(path).ok().unwrap() {
+            if entry.path().to_string_lossy().contains("node_modules") {
+                continue;
+            }
+            let relative_path = entry.path().strip_prefix(base_path)?;
+            if let Some(template) = rendered_templates_cache.get(entry.path()).ok().unwrap() {
                 let content = template.content;
                 let new_content = content
                     .replace(&existing_pascal_case_name, &pascal_case_name)
                     .replace(&existing_kebab_case_name, &kebab_case_name)
                     .replace(&existing_camel_case_name, &camel_case_name)
                     .replace(&existing_name, &name);
-                let new_path = path
+                let new_file_name = relative_path
                     .to_string_lossy()
                     .replace(&existing_pascal_case_name, &pascal_case_name)
                     .replace(&existing_kebab_case_name, &kebab_case_name)
                     .replace(&existing_camel_case_name, &camel_case_name)
                     .replace(&existing_name, &name);
 
+                let new_path = base_path.join(new_file_name.clone());
                 rendered_templates_cache.insert(
-                    new_path.clone(),
+                    entry.path().to_string_lossy(),
                     RenderedTemplate {
                         path: new_path.clone().into(),
                         content: new_content,
                         context: None,
                     },
                 );
-                if path.to_string_lossy() != new_path {
+                if relative_path.to_string_lossy().to_string() != new_file_name.clone() {
+                    println!("{}", entry.path().to_string_lossy());
                     removal_templates.push(RemovalTemplate {
-                        path: path.into(),
+                        path: entry.path().to_path_buf(),
                         r#type: RemovalTemplateType::File,
                     })
                 }
@@ -89,7 +95,7 @@ pub(crate) fn change_name(
     project_package_json: &mut ProjectPackageJson,
     docker_compose: Option<&mut DockerCompose>,
     rendered_templates_cache: &mut RenderedTemplatesCache,
-) -> Result<RemovalTemplate> {
+) -> Result<MoveTemplate> {
     let existing_name = base_path.file_name().unwrap().to_string_lossy().to_string();
 
     let (runtime, app_name, mut project_entries, project_peer_topology) = match manifest_data {
@@ -304,8 +310,10 @@ pub(crate) fn change_name(
         rendered_templates_cache,
     )?;
 
-    Ok(RemovalTemplate {
+    println!("{}", base_path.to_string_lossy());
+    Ok(MoveTemplate {
         path: base_path.to_path_buf(),
-        r#type: RemovalTemplateType::Directory,
+        target: base_path.parent().unwrap().join(name),
+        r#type: MoveTemplateType::Directory,
     })
 }

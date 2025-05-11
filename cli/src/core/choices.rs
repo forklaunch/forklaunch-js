@@ -24,7 +24,7 @@ macro_rules! choice {
     ) => {
         $(
             #[repr(usize)]
-            #[derive(Debug, Copy, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+            #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
             $(#[$meta_attr])*
             $vis enum $name {
                 $(
@@ -95,6 +95,18 @@ macro_rules! choice {
                         }
                     }
                     all_files
+                }
+
+                #[allow(dead_code)]
+                $vis fn get_variant_from_exclusive_file(file_name: &str) -> Option<&'static str> {
+                    for metadata in Self::METADATA.iter() {
+                        if let Some(files) = &metadata.exclusive_files {
+                            if files.contains(&file_name) {
+                                return Some(metadata.id);
+                            }
+                        }
+                    }
+                    None
                 }
             }
 

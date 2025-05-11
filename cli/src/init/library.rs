@@ -3,46 +3,46 @@ use std::{fs::read_to_string, io::Write, path::Path};
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use convert_case::{Case, Casing};
-use rustyline::{history::DefaultHistory, Editor};
+use rustyline::{Editor, history::DefaultHistory};
 use serde_json::to_string_pretty;
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use toml::from_str;
 
 use crate::{
+    CliCommand,
     constants::{
-        Runtime, TestFramework, ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
+        ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE, ERROR_FAILED_TO_CREATE_GITIGNORE,
         ERROR_FAILED_TO_CREATE_LIBRARY_PACKAGE_JSON, ERROR_FAILED_TO_CREATE_SYMLINKS,
         ERROR_FAILED_TO_CREATE_TSCONFIG, ERROR_FAILED_TO_PARSE_MANIFEST,
-        ERROR_FAILED_TO_READ_MANIFEST,
+        ERROR_FAILED_TO_READ_MANIFEST, Runtime, TestFramework,
     },
     core::{
-        base_path::{prompt_base_path, BasePathLocation, BasePathType},
+        base_path::{BasePathLocation, BasePathType, prompt_base_path},
         command::command,
         gitignore::generate_gitignore,
         manifest::{
-            add_project_definition_to_manifest, application::ApplicationManifestData,
-            library::LibraryManifestData, ManifestData, ProjectType,
+            ManifestData, ProjectType, add_project_definition_to_manifest,
+            application::ApplicationManifestData, library::LibraryManifestData,
         },
         name::validate_name,
         package_json::{
             add_project_definition_to_package_json,
             package_json_constants::{
-                project_clean_script, project_format_script, project_lint_fix_script,
-                project_lint_script, project_test_script, ESLINT_VERSION, PROJECT_BUILD_SCRIPT,
-                PROJECT_DOCS_SCRIPT, TSX_VERSION, TYPESCRIPT_ESLINT_VERSION,
+                ESLINT_VERSION, PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT, TSX_VERSION,
+                TYPESCRIPT_ESLINT_VERSION, project_clean_script, project_format_script,
+                project_lint_fix_script, project_lint_script, project_test_script,
             },
             project_package_json::{ProjectDevDependencies, ProjectPackageJson, ProjectScripts},
         },
         pnpm_workspace::add_project_definition_to_pnpm_workspace,
-        rendered_template::{write_rendered_templates, RenderedTemplate},
+        rendered_template::{RenderedTemplate, write_rendered_templates},
         symlinks::generate_symlinks,
-        template::{generate_with_template, PathIO},
+        template::{PathIO, generate_with_template},
         tsconfig::generate_tsconfig,
     },
-    prompt::{prompt_with_validation, prompt_without_validation, ArrayCompleter},
-    CliCommand,
+    prompt::{ArrayCompleter, prompt_with_validation, prompt_without_validation},
 };
 
 fn generate_basic_library(
@@ -281,6 +281,7 @@ impl CliCommand for LibraryCommand {
             // Common fields from ApplicationManifestData
             id: existing_manifest_data.id.clone(),
             app_name: existing_manifest_data.app_name.clone(),
+            app_description: existing_manifest_data.app_description.clone(),
             author: existing_manifest_data.author.clone(),
             cli_version: existing_manifest_data.cli_version.clone(),
             formatter: existing_manifest_data.formatter.clone(),

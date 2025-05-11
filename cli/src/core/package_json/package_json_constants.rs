@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use crate::constants::{Database, Formatter, Linter, Runtime, TestFramework};
 
 // Shared package.json devDpendencies constants
@@ -38,12 +40,14 @@ pub(crate) const TYPESCRIPT_VERSION: &str = "^5.8.2";
 
 // Application package.json scripts constants
 pub(crate) const APP_DEV_SCRIPT: &str = "docker compose up --watch";
-pub(crate) const APP_DEV_BUILD_SCRIPT: &str = "docker compose up --watch --build";
+pub(crate) const APP_DEV_BUILD_SCRIPT: &str = "docker compose build --no-cache";
 pub(crate) const APP_PREPARE_SCRIPT: &str = "husky";
 
 pub(crate) fn application_format_script(formatter: &Formatter) -> String {
     String::from(match formatter {
-        Formatter::Prettier => "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
+        Formatter::Prettier => {
+            "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write"
+        }
         Formatter::Biome => "biome format --write .",
     })
 }
@@ -92,26 +96,29 @@ pub(crate) fn application_docs_script(runtime: &Runtime) -> String {
     })
 }
 
-fn get_package_manager_and_db_init(runtime: &Runtime, database: &Database) -> (String, String) {
+fn get_package_manager(runtime: &Runtime) -> String {
     let package_manager = match runtime {
         Runtime::Bun => "bun --filter='*'",
         Runtime::Node => "pnpm -r",
     };
 
-    let db_init = match database {
-        Database::MongoDB => " -d mongo-init",
-        _ => "",
-    };
+    String::from(package_manager)
+}
 
-    (String::from(package_manager), String::from(db_init))
+fn get_db_init(databases: &HashSet<Database>) -> Option<String> {
+    match databases.contains(&Database::MongoDB) {
+        true => Some("mongo-init".to_string()),
+        false => None,
+    }
 }
 
 pub(crate) fn application_migrate_script<'a>(
     runtime: &Runtime,
-    database: &Database,
+    databases: &HashSet<Database>,
     migration_suffix: &'a str,
 ) -> String {
-    let (package_manager, db_init) = get_package_manager_and_db_init(runtime, database);
+    let package_manager = get_package_manager(runtime);
+    let db_init = get_db_init(databases);
 
     let sleep = if migration_suffix == "init" {
         "sleep 5 && "
@@ -119,23 +126,41 @@ pub(crate) fn application_migrate_script<'a>(
         ""
     };
 
+    let mut databases = databases
+        .iter()
+        .map(|db| db.to_string())
+        .collect::<Vec<String>>();
+    if let Some(db_init) = db_init {
+        databases.push(db_init);
+    }
+
     format!(
-        "docker compose up -d {}{} && {}{} run migrate:{}",
-        database.to_string(),
-        db_init,
+        "docker compose up -d {} && {}{} run migrate:{}",
+        databases.join(" -d "),
         sleep,
         package_manager,
         migration_suffix
     )
 }
 
-pub(crate) fn application_seed_script<'a>(runtime: &Runtime, database: &Database) -> String {
-    let (package_manager, db_init) = get_package_manager_and_db_init(runtime, database);
+pub(crate) fn application_seed_script<'a>(
+    runtime: &Runtime,
+    databases: &HashSet<Database>,
+) -> String {
+    let package_manager = get_package_manager(runtime);
+    let db_init = get_db_init(databases);
+
+    let mut databases = databases
+        .iter()
+        .map(|db| db.to_string())
+        .collect::<Vec<String>>();
+    if let Some(db_init) = db_init {
+        databases.push(db_init);
+    }
 
     format!(
-        "docker compose up -d {}{} && {} run seed",
-        database.to_string(),
-        db_init,
+        "docker compose up -d {} && {} run seed",
+        databases.join(" -d "),
         package_manager
     )
 }
@@ -150,17 +175,17 @@ pub(crate) fn application_setup_script(runtime: &Runtime) -> String {
 pub(crate) fn application_test_script<'a>(
     runtime: &Runtime,
     test_framework: &Option<TestFramework>,
-) -> String {
-    String::from(match runtime {
-        Runtime::Bun => "bun test",
+) -> Option<String> {
+    match runtime {
+        Runtime::Bun => None,
         Runtime::Node => match test_framework {
             Some(test_framework_definition) => match test_framework_definition {
-                TestFramework::Jest => "pnpm jest --passWithNoTests",
-                TestFramework::Vitest => "pnpm vitest --passWithNoTests",
+                TestFramework::Jest => Some("pnpm jest --passWithNoTests".to_string()),
+                TestFramework::Vitest => Some("pnpm vitest --passWithNoTests".to_string()),
             },
-            None => panic!("Test framework not defined"),
+            None => None,
         },
-    })
+    }
 }
 
 pub(crate) fn application_up_packages_script(runtime: &Runtime) -> String {
@@ -217,6 +242,8 @@ pub(crate) const MIKRO_ORM_SEEDER_VERSION: &str = "^6.4.13";
 pub(crate) const TYPEBOX_VERSION: &str = "^0.34.33";
 // ajv
 pub(crate) const AJV_VERSION: &str = "^8.17.1";
+// bullmq
+pub(crate) const BULLMQ_VERSION: &str = "^5.52.2";
 // better-sqlite3
 pub(crate) const BETTER_SQLITE3_VERSION: &str = "^11.9.1";
 // dotenv
@@ -251,7 +278,9 @@ pub(crate) const PROJECT_SEED_SCRIPT: &str = "[ -z $ENV_FILE_PATH ] && export EN
 
 pub(crate) fn project_format_script(formatter: &Formatter) -> String {
     String::from(match formatter {
-        Formatter::Prettier => "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
+        Formatter::Prettier => {
+            "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write"
+        }
         Formatter::Biome => "biome format --write .",
     })
 }
@@ -300,8 +329,12 @@ pub(crate) fn project_dev_server_script(runtime: &Runtime, is_database_enabled: 
 
 pub(crate) fn project_dev_local_script(runtime: &Runtime) -> String {
     String::from(match runtime {
-        Runtime::Bun => "ENV_FILE_PATH=.env.local bun migrate:up && ENV_FILE_PATH=.env.local bun --watch server.ts",
-        Runtime::Node => "ENV_FILE_PATH=.env.local pnpm migrate:up && ENV_FILE_PATH=.env.local pnpm tsx watch server.ts",
+        Runtime::Bun => {
+            "ENV_FILE_PATH=.env.local bun migrate:up && ENV_FILE_PATH=.env.local bun --watch server.ts"
+        }
+        Runtime::Node => {
+            "ENV_FILE_PATH=.env.local pnpm migrate:up && ENV_FILE_PATH=.env.local pnpm tsx watch server.ts"
+        }
     })
 }
 
@@ -309,21 +342,20 @@ pub(crate) fn project_test_script(
     runtime: &Runtime,
     test_framework: &Option<TestFramework>,
 ) -> Option<String> {
-    match test_framework {
-        Some(test_framework_definition) => match test_framework_definition {
-            TestFramework::Vitest => Some("vitest --passWithNoTests".to_string()),
-            TestFramework::Jest => Some("jest --passWithNoTests".to_string()),
-        },
-        None => match runtime {
-            Runtime::Bun => None,
-            Runtime::Node => panic!("Test framework not defined"),
+    match runtime {
+        Runtime::Bun => None,
+        Runtime::Node => match test_framework {
+            Some(test_framework_definition) => match test_framework_definition {
+                TestFramework::Jest => Some("pnpm jest --passWithNoTests".to_string()),
+                TestFramework::Vitest => Some("pnpm vitest --passWithNoTests".to_string()),
+            },
+            None => None,
         },
     }
 }
 
 pub(crate) fn project_migrate_script(command: &str) -> String {
-    let base =
-        "[ -z $ENV_FILE_PATH ] && export ENV_FILE_PATH=.env.local; NODE_OPTIONS='--import=tsx' mikro-orm migration:";
+    let base = "[ -z $ENV_FILE_PATH ] && export ENV_FILE_PATH=.env.local; NODE_OPTIONS='--import=tsx' mikro-orm migration:";
     match command {
         "create" => format!("{}{}", base, "create"),
         "down" => format!("{}{}", base, "down"),

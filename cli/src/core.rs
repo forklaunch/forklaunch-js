@@ -10,6 +10,7 @@ pub(crate) mod gitignore;
 pub(crate) mod iam;
 pub(crate) mod license;
 pub(crate) mod manifest;
+pub(crate) mod move_template;
 pub(crate) mod mutable_enum;
 pub(crate) mod name;
 pub(crate) mod package_json;

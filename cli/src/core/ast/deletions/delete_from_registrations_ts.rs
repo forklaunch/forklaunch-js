@@ -1,13 +1,23 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, fs::read_to_string, path::Path};
 
+use anyhow::Result;
 use oxc_allocator::{Allocator, CloneIn, Vec};
 use oxc_ast::ast::{
     Argument, BindingPatternKind, Declaration, Expression, ObjectPropertyKind, Program,
-    PropertyKey, Statement,
+    PropertyKey, SourceType, Statement,
+};
+use oxc_codegen::{CodeGenerator, CodegenOptions};
+
+use crate::core::ast::{
+    infrastructure::redis::{
+        delete_redis_import, delete_redis_ttl_cache_runtime_dependency,
+        delete_redis_url_environment_variable,
+    },
+    parse_ast_program::parse_ast_program,
 };
 
-const worker_type_SERVICES: &[&str] = &["WorkerProducer", "WorkerConsumer", "WorkerService"];
-const worker_type_PROPERTY_KEYS: &[&str] = &[
+const WORKER_TYPE_SERVICES: &[&str] = &["WorkerProducer", "WorkerConsumer", "WorkerService"];
+const WORKER_TYPE_PROPERTY_KEYS: &[&str] = &[
     "REDIS_URL",
     "TtlCache",
     "KAFKA_BROKERS",
@@ -98,7 +108,7 @@ pub(crate) fn delete_from_registrations_ts_worker_type<'a>(
                                 _ => return,
                             };
 
-                            if worker_type_SERVICES.contains(&key.name.as_str()) {
+                            if WORKER_TYPE_SERVICES.contains(&key.name.as_str()) {
                                 return;
                             }
 
@@ -115,7 +125,7 @@ pub(crate) fn delete_from_registrations_ts_worker_type<'a>(
                                                         _ => return,
                                                     };
 
-                                                    if worker_type_PROPERTY_KEYS
+                                                    if WORKER_TYPE_PROPERTY_KEYS
                                                         .contains(&key.name.as_str())
                                                     {
                                                         used_property_keys
@@ -150,7 +160,7 @@ pub(crate) fn delete_from_registrations_ts_worker_type<'a>(
                                 _ => return true,
                             };
 
-                            if worker_type_PROPERTY_KEYS.contains(&key.name.as_str()) {
+                            if WORKER_TYPE_PROPERTY_KEYS.contains(&key.name.as_str()) {
                                 used_property_keys.contains(&key.name.as_str())
                             } else {
                                 true
@@ -158,6 +168,104 @@ pub(crate) fn delete_from_registrations_ts_worker_type<'a>(
                         }),
                     allocator,
                 );
+            }
+        }
+    }
+}
+
+pub(crate) fn delete_from_registrations_ts_infrastructure_redis(
+    base_path: &Path,
+    registrations_text: Option<String>,
+) -> Result<String> {
+    let allocator = Allocator::default();
+    let registrations_path = base_path.join("registration.ts");
+    let registrations_text = if let Some(registrations_text) = registrations_text {
+        registrations_text
+    } else {
+        read_to_string(&registrations_path)?
+    };
+
+    let registrations_type = SourceType::from_path(&registrations_path)?;
+
+    let mut registrations_program =
+        parse_ast_program(&allocator, &registrations_text, registrations_type);
+
+    delete_redis_import(&allocator, &mut registrations_program);
+    delete_redis_url_environment_variable(&allocator, &mut registrations_program);
+    delete_redis_ttl_cache_runtime_dependency(&allocator, &mut registrations_program);
+
+    Ok(CodeGenerator::new()
+        .with_options(CodegenOptions::default())
+        .build(&registrations_program)
+        .code)
+}
+
+pub(crate) fn delete_from_registrations_ts_config_injector<'a>(
+    allocator: &'a Allocator,
+    registrations_program: &mut Program<'a>,
+    key_name: &str,
+    declaration_name: &str,
+) {
+    for statement in &mut registrations_program.body {
+        let export = match statement {
+            Statement::ExportNamedDeclaration(export) => export,
+            _ => continue,
+        };
+
+        let function = match &mut export.declaration {
+            Some(Declaration::FunctionDeclaration(function)) => function,
+            _ => continue,
+        };
+
+        let function_body = match &mut function.body {
+            Some(body) => body,
+            None => continue,
+        };
+
+        for statement in function_body.statements.iter_mut() {
+            let expression = match statement {
+                Statement::VariableDeclaration(expr) => expr,
+                _ => continue,
+            };
+
+            match expression.declarations[0].id.get_identifier_name() {
+                Some(name) => {
+                    if name != declaration_name {
+                        continue;
+                    }
+                }
+                None => continue,
+            }
+
+            let call_expression = match &mut expression.declarations[0].init {
+                Some(Expression::CallExpression(call)) => call,
+                _ => continue,
+            };
+
+            for argument in &mut call_expression.arguments {
+                let object_expr = match argument {
+                    Argument::ObjectExpression(object_expr) => object_expr,
+                    _ => continue,
+                };
+
+                let mut new_properties = Vec::new_in(allocator);
+                object_expr.properties.iter().for_each(|prop| {
+                    let prop = match prop {
+                        ObjectPropertyKind::ObjectProperty(prop) => prop,
+                        _ => return,
+                    };
+                    let key = match &prop.key {
+                        PropertyKey::StaticIdentifier(identifier) => identifier,
+                        _ => return,
+                    };
+
+                    if key.name.as_str() != key_name {
+                        new_properties.push(ObjectPropertyKind::ObjectProperty(
+                            prop.clone_in(&allocator),
+                        ));
+                    }
+                });
+                object_expr.properties = new_properties;
             }
         }
     }

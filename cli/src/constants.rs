@@ -281,3 +281,28 @@ pub(crate) const ERROR_FAILED_TO_ADD_BASE_ENTITY_TO_CORE: &str =
 pub(crate) const ERROR_FAILED_TO_WRITE_SERVICE_FILES: &str = "Failed to write service files.";
 pub(crate) const ERROR_FAILED_TO_EJECT_DIRECTORY_NOT_EJECTABLE: &str = "Failed to eject directory. Please check your target directory is a preconfigured forklaunch module.";
 pub(crate) const ERROR_FAILED_TO_UPDATE_DOCKERFILE: &str = "Failed to update Dockerfile.";
+
+pub(crate) fn get_core_module_description(name: &str) -> String {
+    format!(
+        "Core library for {}, containing shared foundational infrastrucuture and utilities",
+        name
+    )
+}
+pub(crate) fn get_monitoring_module_description(name: &str) -> String {
+    format!(
+        "Monitoring library for {}, defining metrics, logs, and trace building blocks",
+        name
+    )
+}
+pub(crate) fn get_service_module_description(name: &str, service_type: &str) -> String {
+    format!(
+        "{} service implementation for {}, providing {}",
+        name,
+        service_type,
+        match service_type {
+            "billing" => "billing service APIs",
+            "iam" => "identity and access management APIs",
+            _ => "unknown services",
+        }
+    )
+}
