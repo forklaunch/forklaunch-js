@@ -23,15 +23,15 @@ use crate::{
                 inject_into_import_statement::{
                     inject_into_import_statement, inject_specifier_into_import_statement,
                 },
-                inject_into_registrations_ts::inject_into_registrations_config_injector,
+                inject_into_registrations_ts::{
+                    inject_in_registrations_ts_create_dependencies_args,
+                    inject_into_registrations_config_injector,
+                },
             },
             parse_ast_program::parse_ast_program,
             replacements::{
                 replace_import_statment::replace_import_statment,
-                replace_in_registrations_ts::{
-                    replace_in_registrations_ts_create_dependencies_args,
-                    replace_registration_in_config_injector,
-                },
+                replace_in_registrations_ts::replace_registration_in_config_injector,
             },
         },
         manifest::ProjectType,
@@ -130,7 +130,7 @@ pub(crate) fn transform_registrations_ts_infrastructure_redis(
     registrations_text: Option<String>,
 ) -> Result<String> {
     let allocator = Allocator::default();
-    let registrations_path = base_path.join("registration.ts");
+    let registrations_path = base_path.join("registrations.ts");
     let registrations_text = if let Some(registrations_text) = registrations_text {
         registrations_text
     } else {
@@ -161,7 +161,7 @@ pub(crate) fn transform_registrations_ts_worker_type(
     registrations_text: Option<String>,
 ) -> Result<String> {
     let allocator = Allocator::default();
-    let registrations_path = base_path.join("registration.ts");
+    let registrations_path = base_path.join("registrations.ts");
     let registrations_text = if let Some(registrations_text) = registrations_text {
         registrations_text
     } else {
@@ -266,19 +266,15 @@ pub(crate) fn transform_registrations_ts_worker_type(
             )?;
             let mut create_dependencies_program = parse_ast_program(
                 &allocator,
-                "export function createDependencies({ orm }: { orm: MikroORM }) {}",
+                "export function createDependencies(orm: MikroORM) {}",
                 SourceType::ts(),
             );
-            replace_in_registrations_ts_create_dependencies_args(
+            inject_in_registrations_ts_create_dependencies_args(
                 &allocator,
                 &mut create_dependencies_program,
                 &mut registration_program,
             );
-            database_entity_manager_runtime_dependency(
-                &allocator,
-                &registrations_text,
-                &mut registration_program,
-            );
+            database_entity_manager_runtime_dependency(&allocator, &mut registration_program);
         }
         WorkerType::Kafka => {
             inject_specifier_into_import_statement(

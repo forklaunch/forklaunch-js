@@ -75,6 +75,7 @@ fn change_name(
     project_package_json: &mut ProjectPackageJson,
     docker_compose: &mut DockerCompose,
     rendered_templates_cache: &mut RenderedTemplatesCache,
+    removal_templates: &mut Vec<RemovalTemplate>,
 ) -> Result<MoveTemplate> {
     change_name_core(
         base_path,
@@ -83,6 +84,7 @@ fn change_name(
         project_package_json,
         Some(docker_compose),
         rendered_templates_cache,
+        removal_templates,
     )
 }
 
@@ -560,16 +562,6 @@ impl CliCommand for WorkerCommand {
                 .content,
         )?;
 
-        if let Some(name) = name {
-            move_templates.push(change_name(
-                &base_path,
-                &name,
-                &mut manifest_data,
-                &mut project_json_to_write,
-                &mut docker_compose_data,
-                &mut rendered_templates_cache,
-            )?);
-        }
         if let Some(r#type) = r#type {
             change_type(
                 &base_path,
@@ -583,8 +575,21 @@ impl CliCommand for WorkerCommand {
                 &mut removal_templates,
             )?
         }
+
         if let Some(description) = description {
             change_description(&description, &mut manifest_data, &mut project_json_to_write)?;
+        }
+
+        if let Some(name) = name {
+            move_templates.push(change_name(
+                &base_path,
+                &name,
+                &mut manifest_data,
+                &mut project_json_to_write,
+                &mut docker_compose_data,
+                &mut rendered_templates_cache,
+                &mut removal_templates,
+            )?);
         }
 
         rendered_templates_cache.insert(

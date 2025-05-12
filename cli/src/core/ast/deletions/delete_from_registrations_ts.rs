@@ -178,7 +178,7 @@ pub(crate) fn delete_from_registrations_ts_infrastructure_redis(
     registrations_text: Option<String>,
 ) -> Result<String> {
     let allocator = Allocator::default();
-    let registrations_path = base_path.join("registration.ts");
+    let registrations_path = base_path.join("registrations.ts");
     let registrations_text = if let Some(registrations_text) = registrations_text {
         registrations_text
     } else {

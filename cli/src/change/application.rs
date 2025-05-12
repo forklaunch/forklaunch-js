@@ -606,7 +606,7 @@ fn change_validator(
 ) -> Result<()> {
     manifest_data.validator = validator.to_string();
 
-    let validator_file_key = base_path.join("core").join("registration.ts");
+    let validator_file_key = base_path.join("core").join("registrations.ts");
 
     for project in project_jsons_to_write.values_mut() {
         let dependencies = project.dependencies.as_mut().unwrap();
@@ -626,7 +626,7 @@ fn change_validator(
     rendered_templates_cache.insert(
         validator_file_key.to_string_lossy(),
         RenderedTemplate {
-            path: base_path.join("core").join("registration.ts"),
+            path: base_path.join("core").join("registrations.ts"),
             content: transform_core_registrations_ts_validator(
                 &validator.to_string(),
                 base_path,
@@ -650,7 +650,7 @@ fn change_http_framework(
 ) -> Result<()> {
     manifest_data.http_framework = http_framework.to_string();
 
-    let http_framework_file_key = base_path.join("core").join("registration.ts");
+    let http_framework_file_key = base_path.join("core").join("registrations.ts");
 
     for project in project_jsons_to_write.values_mut() {
         let dependencies = project.dependencies.as_mut().unwrap();
@@ -670,7 +670,7 @@ fn change_http_framework(
     rendered_templates_cache.insert(
         http_framework_file_key.to_string_lossy(),
         RenderedTemplate {
-            path: base_path.join("core").join("registration.ts"),
+            path: base_path.join("core").join("registrations.ts"),
             content: transform_core_registrations_ts_http_framework(
                 &http_framework.to_string(),
                 base_path,
@@ -1610,7 +1610,7 @@ impl CliCommand for ApplicationCommand {
             .collect();
 
         if let Some(name) = name {
-            clean_application(&base_path, &manifest_data)?;
+            clean_application(&base_path, &manifest_data.runtime.parse()?)?;
 
             change_name(
                 &mut manifest_data,
@@ -1675,7 +1675,7 @@ impl CliCommand for ApplicationCommand {
         }
 
         if let Some(runtime) = runtime {
-            clean_application(&base_path, &manifest_data)?;
+            clean_application(&base_path, &manifest_data.runtime.parse()?)?;
 
             let (runtime_removal_templates, runtime_symlink_templates) = change_runtime(
                 &mut line_editor,

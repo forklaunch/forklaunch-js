@@ -6,24 +6,31 @@ use indexmap::IndexMap;
 use serde_yml::{from_value, to_value};
 use walkdir::WalkDir;
 
-use crate::core::{
-    docker::{Command, DependsOn, DockerBuild, DockerCompose, DockerService, Healthcheck},
-    manifest::{MutableManifestData, ProjectEntry},
-    move_template::{MoveTemplate, MoveTemplateType},
-    package_json::{
-        project_package_json::ProjectPackageJson, replace_project_in_workspace_definition,
+use super::clean_application::clean_application;
+use crate::{
+    constants::Runtime,
+    core::{
+        docker::{Command, DependsOn, DockerBuild, DockerCompose, DockerService, Healthcheck},
+        manifest::{MutableManifestData, ProjectEntry},
+        move_template::{MoveTemplate, MoveTemplateType},
+        package_json::{
+            project_package_json::ProjectPackageJson, replace_project_in_workspace_definition,
+        },
+        removal_template::{RemovalTemplate, RemovalTemplateType},
+        rendered_template::{RenderedTemplate, RenderedTemplatesCache},
     },
-    removal_template::{RemovalTemplate, RemovalTemplateType},
-    rendered_template::{RenderedTemplate, RenderedTemplatesCache},
 };
 
 pub(crate) fn change_name_in_files(
     base_path: &Path,
     existing_name: &str,
     name: &str,
+    runtime: &Runtime,
     project_entry: &mut ProjectEntry,
     rendered_templates_cache: &mut RenderedTemplatesCache,
 ) -> Result<Vec<RemovalTemplate>> {
+    clean_application(base_path.parent().unwrap(), runtime)?;
+
     let mut removal_templates = Vec::new();
 
     if let Some(routers) = &mut project_entry.routers {
@@ -47,7 +54,10 @@ pub(crate) fn change_name_in_files(
     for entry in WalkDir::new(base_path) {
         let entry = entry.unwrap();
         if entry.file_type().is_file() {
-            if entry.path().to_string_lossy().contains("node_modules") {
+            if entry.path().to_string_lossy().contains("node_modules")
+                || entry.path().to_string_lossy().contains("dist")
+                || entry.path().to_string_lossy().contains("lib")
+            {
                 continue;
             }
             let relative_path = entry.path().strip_prefix(base_path)?;
@@ -75,7 +85,6 @@ pub(crate) fn change_name_in_files(
                     },
                 );
                 if relative_path.to_string_lossy().to_string() != new_file_name.clone() {
-                    println!("{}", entry.path().to_string_lossy());
                     removal_templates.push(RemovalTemplate {
                         path: entry.path().to_path_buf(),
                         r#type: RemovalTemplateType::File,
@@ -95,6 +104,7 @@ pub(crate) fn change_name(
     project_package_json: &mut ProjectPackageJson,
     docker_compose: Option<&mut DockerCompose>,
     rendered_templates_cache: &mut RenderedTemplatesCache,
+    removal_templates: &mut Vec<RemovalTemplate>,
 ) -> Result<MoveTemplate> {
     let existing_name = base_path.file_name().unwrap().to_string_lossy().to_string();
 
@@ -302,15 +312,15 @@ pub(crate) fn change_name(
         docker_compose.services = new_services;
     }
 
-    let _ = change_name_in_files(
+    removal_templates.extend(change_name_in_files(
         base_path,
         &existing_name,
         name,
+        &runtime.parse()?,
         project_entry,
         rendered_templates_cache,
-    )?;
+    )?);
 
-    println!("{}", base_path.to_string_lossy());
     Ok(MoveTemplate {
         path: base_path.to_path_buf(),
         target: base_path.parent().unwrap().join(name),

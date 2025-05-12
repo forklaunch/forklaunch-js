@@ -80,7 +80,7 @@ export const SubscriptionSchemas = BaseSubscriptionServiceSchemas({
   validator: SchemaValidator()
 });
 //! defines the configuration schema for the application
-export function createDependencies({ orm }: { orm: MikroORM }) {
+export function createDependencies(orm: MikroORM) {
   const configInjector = createConfigInjector(SchemaValidator(), {
     SERVICE_METADATA: {
       lifetime: Lifetime.Singleton,

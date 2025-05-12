@@ -118,36 +118,3 @@ pub(crate) fn replace_registration_in_config_injector<'a>(
         }
     }
 }
-
-pub(crate) fn replace_in_registrations_ts_create_dependencies_args<'a>(
-    allocator: &'a Allocator,
-    create_dependencies_program: &mut Program<'a>,
-    registrations_program: &mut Program<'a>,
-) {
-    let new_function = create_dependencies_program
-        .body
-        .first_mut()
-        .map(|statement| match statement {
-            Statement::ExportNamedDeclaration(export) => match &mut export.declaration {
-                Some(Declaration::FunctionDeclaration(function)) => function,
-                _ => unreachable!(),
-            },
-            _ => unreachable!(),
-        })
-        .unwrap();
-
-    for statement in &mut registrations_program.body {
-        let export = match statement {
-            Statement::ExportNamedDeclaration(export) => export,
-            _ => continue,
-        };
-
-        let function = match &mut export.declaration {
-            Some(Declaration::FunctionDeclaration(function)) => function,
-            _ => continue,
-        };
-
-        function.type_parameters = new_function.type_parameters.clone_in(allocator);
-        function.params = new_function.params.clone_in(allocator);
-    }
-}

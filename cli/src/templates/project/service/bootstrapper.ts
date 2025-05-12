@@ -14,9 +14,7 @@ export function bootstrap(
   const envFilePath = getEnvVar("ENV_FILE_PATH");      
   dotenv.config({ path: envFilePath });{{#is_database_enabled}}
   MikroORM.init(mikroOrmOptionsConfig).then((orm) => {
-    const { serviceDependencies, tokens } = createDependencies({
-      orm,
-    });
+    const { serviceDependencies, tokens } = createDependencies(orm);
     callback(serviceDependencies.validateConfigSingletons(envFilePath), tokens);
   });{{/is_database_enabled}}{{^is_database_enabled}}
   const { serviceDependencies, tokens } = createDependencies();

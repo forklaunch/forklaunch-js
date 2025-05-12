@@ -1,7 +1,7 @@
 use std::{collections::HashSet, path::Path};
 
 use anyhow::Result;
-use serde_json::{from_str, to_string};
+use serde_json::{from_str, to_string, to_string_pretty};
 use walkdir::WalkDir;
 
 use crate::{
@@ -97,6 +97,11 @@ pub(crate) fn change_database_base_entity(
 
     let mut all_projects_scan = HashSet::new();
 
+    all_projects_scan.insert(match database {
+        Database::MongoDB => "nosql.base.entity.ts",
+        _ => "sql.base.entity.ts",
+    });
+
     for project in projects.iter() {
         if project.name != project_name {
             if let Some(resources) = &project.resources {
@@ -113,14 +118,16 @@ pub(crate) fn change_database_base_entity(
         }
     }
 
-    let entities_index_path = persistence_path.join("entities_index.ts");
+    let entities_index_path = persistence_path.join("index.ts");
     rendered_templates_cache.insert(
         entities_index_path.to_string_lossy(),
         RenderedTemplate {
             path: entities_index_path.clone(),
             content: all_projects_scan
                 .iter()
-                .map(|export_source| format!("export * from '{}';", export_source))
+                .map(|export_source| {
+                    format!("export * from './{}';", export_source.replace(".ts", ""))
+                })
                 .collect::<Vec<String>>()
                 .join("\n"),
             context: None,
@@ -143,7 +150,7 @@ pub(crate) fn change_database_base_entity(
             core_path.join("package.json").to_string_lossy(),
             RenderedTemplate {
                 path: core_path.join("package.json").to_path_buf(),
-                content: to_string(&core_package_json)?,
+                content: to_string_pretty(&core_package_json)?,
                 context: None,
             },
         );

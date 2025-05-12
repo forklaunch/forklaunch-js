@@ -8,12 +8,10 @@ use crate::core::ast::{
 
 pub(crate) fn database_entity_manager_runtime_dependency<'a>(
     allocator: &'a Allocator,
-    registrations_text: &str,
     registrations_program: &mut Program<'a>,
 ) {
-    if !registrations_text.contains("EntityManager:") {
-        let entity_manager_registration_text =
-            "const configInjector = createConfigInjector(SchemaValidator(), {
+    let entity_manager_registration_text =
+        "const configInjector = createConfigInjector(SchemaValidator(), {
                 EntityManager: {
                   lifetime: Lifetime.Scoped,
                   type: EntityManager,
@@ -22,17 +20,16 @@ pub(crate) fn database_entity_manager_runtime_dependency<'a>(
                 },
             })";
 
-        let mut entity_manager_registration_program = parse_ast_program(
-            &allocator,
-            &entity_manager_registration_text,
-            SourceType::ts(),
-        );
+    let mut entity_manager_registration_program = parse_ast_program(
+        &allocator,
+        &entity_manager_registration_text,
+        SourceType::ts(),
+    );
 
-        inject_into_registrations_config_injector(
-            &allocator,
-            registrations_program,
-            &mut entity_manager_registration_program,
-            "runtimeDependencies",
-        );
-    }
+    inject_into_registrations_config_injector(
+        &allocator,
+        registrations_program,
+        &mut entity_manager_registration_program,
+        "runtimeDependencies",
+    );
 }

@@ -17,7 +17,7 @@ import { EntityManager, ForkOptions, MikroORM } from "@mikro-orm/core";{{/is_dat
 import { {{pascal_case_name}}EventRecord } from "./persistence/entities/{{camel_case_name}}EventRecord.entity";{{/is_worker}}
 import { Base{{pascal_case_name}}Service } from "./services/{{camel_case_name}}.service";
 //! defines the configuration schema for the application
-export function createDependencies({{#is_database_enabled}}{ orm }: { orm: MikroORM }{{/is_database_enabled}}) {
+export function createDependencies({{#is_database_enabled}}orm: MikroORM{{/is_database_enabled}}) {
   const configInjector = createConfigInjector(SchemaValidator(), {
     SERVICE_METADATA: {
       lifetime: Lifetime.Singleton,

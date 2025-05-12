@@ -36,17 +36,25 @@ pub(crate) fn transform_mikroorm_config_ts(
     let mut mikro_orm_config_program =
         parse_ast_program(&allocator, &mikro_orm_config_text, mikro_orm_config_type);
 
-    if database == &Database::MongoDB {
-        let _ = replace_import_statment(
-            &mut mikro_orm_config_program,
-            &mut parse_ast_program(
-                &allocator,
-                &"import { Migrator } from '@mikro-orm/migrations';",
-                SourceType::ts(),
-            ),
-            "@mikro-orm/migrations",
-        );
-    }
+    let migrator_import_text = format!(
+        "import {{ Migrator }} from '@mikro-orm/migrations{}';",
+        match database {
+            Database::MongoDB => "-mongodb",
+            _ => "",
+        }
+    );
+    let import_source_identifier = format!(
+        "@mikro-orm/migrations{}",
+        match existing_database {
+            Some(Database::MongoDB) => "-mongodb",
+            _ => "",
+        }
+    );
+    let _ = replace_import_statment(
+        &mut mikro_orm_config_program,
+        &mut parse_ast_program(&allocator, &migrator_import_text, SourceType::ts()),
+        &import_source_identifier,
+    )?;
 
     let database_driver_import_text = format!(
         "import {{ {} }} from \"@mikro-orm/{}\";",

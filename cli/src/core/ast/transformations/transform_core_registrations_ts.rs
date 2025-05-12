@@ -13,7 +13,7 @@ pub(crate) fn transform_core_registrations_ts_http_framework(
     core_registration_http_framework_text: Option<String>,
 ) -> Result<String> {
     let allocator = Allocator::default();
-    let core_registration_http_framework_path = base_path.join("core").join("registration.ts");
+    let core_registration_http_framework_path = base_path.join("core").join("registrations.ts");
     let core_registration_http_framework_text = if let Some(core_registration_http_framework_text) =
         core_registration_http_framework_text
     {

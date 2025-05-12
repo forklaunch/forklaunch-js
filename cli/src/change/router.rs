@@ -9,7 +9,7 @@ use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use super::core::change_name::change_name_in_files;
 use crate::{
     CliCommand,
-    constants::{ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST},
+    constants::{ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST, Runtime},
     core::{
         base_path::{BasePathLocation, BasePathType, prompt_base_path},
         command::command,
@@ -37,6 +37,7 @@ pub(crate) fn change_name(
     base_path: &Path,
     existing_name: &str,
     name: &str,
+    runtime: &Runtime,
     project_entry: &mut ProjectEntry,
     rendered_templates_cache: &mut RenderedTemplatesCache,
 ) -> Result<Vec<RemovalTemplate>> {
@@ -44,6 +45,7 @@ pub(crate) fn change_name(
         base_path,
         existing_name,
         name,
+        runtime,
         project_entry,
         rendered_templates_cache,
     )
@@ -144,6 +146,7 @@ impl CliCommand for RouterCommand {
                 &base_path,
                 &manifest_data.router_name,
                 &name,
+                &manifest_data.runtime.parse()?,
                 &mut manifest_data
                     .projects
                     .iter_mut()

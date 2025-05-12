@@ -26,6 +26,7 @@ use crate::{
         move_template::{MoveTemplate, move_template_files},
         name::validate_name,
         package_json::project_package_json::ProjectPackageJson,
+        removal_template::{RemovalTemplate, remove_template_files},
         rendered_template::{RenderedTemplate, RenderedTemplatesCache, write_rendered_templates},
     },
     prompt::{ArrayCompleter, prompt_field_from_selections_with_validation},
@@ -46,6 +47,7 @@ fn change_name(
     manifest_data: &mut LibraryManifestData,
     project_package_json: &mut ProjectPackageJson,
     rendered_templates_cache: &mut RenderedTemplatesCache,
+    removal_templates: &mut Vec<RemovalTemplate>,
 ) -> Result<MoveTemplate> {
     change_name_core(
         base_path,
@@ -54,6 +56,7 @@ fn change_name(
         project_package_json,
         None,
         rendered_templates_cache,
+        removal_templates,
     )
 }
 
@@ -62,10 +65,6 @@ fn change_description(
     manifest_data: &mut LibraryManifestData,
     project_package_json: &mut ProjectPackageJson,
 ) -> Result<()> {
-    // manifest_data.description = description.to_string();
-    // project_package_json.description = Some(description.to_string());
-
-    // Ok(())
     change_description_core(
         description,
         MutableManifestData::Library(manifest_data),
@@ -176,6 +175,7 @@ impl CliCommand for LibraryCommand {
             |_| "Invalid description. Please try again".to_string(),
         )?;
 
+        let mut removal_templates = vec![];
         let mut move_templates = vec![];
 
         let project_package_json_path = base_path.join("package.json");
@@ -187,6 +187,10 @@ impl CliCommand for LibraryCommand {
 
         let mut rendered_templates_cache = RenderedTemplatesCache::new();
 
+        if let Some(description) = description {
+            change_description(&description, &mut manifest_data, &mut project_json_to_write)?;
+        }
+
         if let Some(name) = name {
             move_templates.push(change_name(
                 &base_path,
@@ -194,10 +198,8 @@ impl CliCommand for LibraryCommand {
                 &mut manifest_data,
                 &mut project_json_to_write,
                 &mut rendered_templates_cache,
+                &mut removal_templates,
             )?);
-        }
-        if let Some(description) = description {
-            change_description(&description, &mut manifest_data, &mut project_json_to_write)?;
         }
 
         rendered_templates_cache.insert(
@@ -226,6 +228,7 @@ impl CliCommand for LibraryCommand {
             .map(|(_, template)| template)
             .collect();
 
+        remove_template_files(&removal_templates, dryrun, &mut stdout)?;
         write_rendered_templates(&rendered_templates, dryrun, &mut stdout)?;
         move_template_files(&move_templates, dryrun, &mut stdout)?;
 

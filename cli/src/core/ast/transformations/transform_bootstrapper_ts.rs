@@ -1,9 +1,12 @@
-use std::path::Path;
+use std::{cell::Cell, path::Path};
 
 use anyhow::Result;
 use fs_extra::file::read_to_string;
-use oxc_allocator::{Allocator, CloneIn, Vec};
-use oxc_ast::ast::{Argument, Declaration, Expression, SourceType, Statement};
+use oxc_allocator::{Allocator, Box, CloneIn, Vec};
+use oxc_ast::ast::{
+    Argument, Declaration, Expression, IdentifierName, IdentifierReference, SourceType, Span,
+    Statement,
+};
 use oxc_codegen::{CodeGenerator, CodegenOptions};
 
 use crate::core::ast::{
@@ -68,9 +71,42 @@ pub(crate) fn transform_bootstrapper_ts_database_dependency_injection(
         let mut inner_statements = Vec::new_in(&allocator);
         let mut is_inner = false;
 
-        for statement in export_function.body.as_ref().unwrap().statements.iter() {
+        for statement in export_function.body.as_mut().unwrap().statements.iter_mut() {
             let mut set_inner_after_add = false;
             match statement {
+                Statement::VariableDeclaration(variable_declaration) => {
+                    for declaration in variable_declaration.declarations.iter_mut() {
+                        if let Some(init) = &mut declaration.init {
+                            if let Expression::CallExpression(call_expression) = init {
+                                match &mut call_expression.callee {
+                                    Expression::Identifier(identifier) => {
+                                        if identifier.name == "createDependencies" {
+                                            if !call_expression.arguments.iter().any(|argument| {
+                                                if let Argument::Identifier(identifier) = argument {
+                                                    identifier.name.to_string() == "orm"
+                                                } else {
+                                                    false
+                                                }
+                                            }) {
+                                                call_expression.arguments.push(
+                                                    Argument::Identifier(Box::new_in(
+                                                        IdentifierReference {
+                                                            span: Span::default(),
+                                                            name: "orm".into(),
+                                                            reference_id: Cell::new(None),
+                                                        },
+                                                        &allocator,
+                                                    )),
+                                                );
+                                            };
+                                        }
+                                    }
+                                    _ => continue,
+                                }
+                            }
+                        }
+                    }
+                }
                 Statement::ExpressionStatement(expression) => match &expression.expression {
                     Expression::CallExpression(call_expression) => match &call_expression.callee {
                         Expression::StaticMemberExpression(static_member_expression) => {
