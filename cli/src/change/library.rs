@@ -19,6 +19,7 @@ use crate::{
     core::{
         base_path::{BasePathLocation, BasePathType, prompt_base_path},
         command::command,
+        format::format_code,
         manifest::{
             InitializableManifestConfig, InitializableManifestConfigMetadata, MutableManifestData,
             ProjectInitializationMetadata, library::LibraryManifestData,
@@ -240,6 +241,7 @@ impl CliCommand for LibraryCommand {
                 &manifest_data.library_name
             )?;
             stdout.reset()?;
+            format_code(&base_path, &manifest_data.runtime.parse()?);
         }
 
         Ok(())

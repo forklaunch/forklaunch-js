@@ -36,6 +36,7 @@ use crate::{
             add_redis_to_docker_compose, clean_up_unused_infrastructure_services,
         },
         env::Env,
+        format::format_code,
         manifest::{
             InitializableManifestConfig, InitializableManifestConfigMetadata, ManifestData,
             MutableManifestData, ProjectInitializationMetadata, worker::WorkerManifestData,
@@ -645,6 +646,7 @@ impl CliCommand for WorkerCommand {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
             writeln!(stdout, "{} changed successfully!", &manifest_data.app_name)?;
             stdout.reset()?;
+            format_code(&base_path, &manifest_data.runtime.parse()?);
         }
 
         Ok(())

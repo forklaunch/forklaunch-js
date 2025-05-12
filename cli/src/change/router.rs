@@ -13,6 +13,7 @@ use crate::{
     core::{
         base_path::{BasePathLocation, BasePathType, prompt_base_path},
         command::command,
+        format::format_code,
         manifest::{
             InitializableManifestConfig, InitializableManifestConfigMetadata, ProjectEntry,
             RouterInitializationMetadata, router::RouterManifestData,
@@ -181,6 +182,7 @@ impl CliCommand for RouterCommand {
                 &manifest_data.router_name
             )?;
             stdout.reset()?;
+            format_code(&base_path, &manifest_data.runtime.parse()?);
         }
 
         Ok(())

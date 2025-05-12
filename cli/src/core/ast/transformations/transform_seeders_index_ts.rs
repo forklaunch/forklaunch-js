@@ -11,9 +11,9 @@ use crate::core::ast::{
     parse_ast_program::parse_ast_program,
 };
 
-pub(crate) fn transform_seeders_index_ts(router_name: &str, base_path: &String) -> Result<String> {
+pub(crate) fn transform_seeders_index_ts(router_name: &str, base_path: &Path) -> Result<String> {
     let allocator = Allocator::default();
-    let seeders_index_path = Path::new(base_path)
+    let seeders_index_path = base_path
         .join("persistence")
         .join("seeders")
         .join("index.ts");

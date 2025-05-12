@@ -85,21 +85,18 @@ impl WorkerCommand {
 
 fn generate_basic_worker(
     worker_name: &String,
-    base_path: &String,
+    base_path: &Path,
     config_data: &mut WorkerManifestData,
     stdout: &mut StandardStream,
     dryrun: bool,
 ) -> Result<()> {
-    let output_path = Path::new(base_path)
-        .join(worker_name)
-        .to_string_lossy()
-        .to_string();
+    let output_path = base_path.join(worker_name);
     let template_dir = PathIO {
         input_path: Path::new("project")
             .join("worker")
             .to_string_lossy()
             .to_string(),
-        output_path: output_path.clone(),
+        output_path: output_path.to_string_lossy().to_string(),
     };
 
     let ignore_files = if !config_data.is_database_enabled {
@@ -153,7 +150,7 @@ fn generate_basic_worker(
 
     generate_symlinks(
         Some(base_path),
-        &template_dir.output_path,
+        &Path::new(&template_dir.output_path),
         config_data,
         dryrun,
     )
@@ -164,7 +161,7 @@ fn generate_basic_worker(
 
 fn add_worker_to_artifacts(
     config_data: &mut WorkerManifestData,
-    base_path: &String,
+    base_path: &Path,
 ) -> Result<Vec<RenderedTemplate>> {
     let docker_compose_buffer =
         add_worker_definition_to_docker_compose(config_data, base_path, None)
@@ -205,7 +202,7 @@ fn add_worker_to_artifacts(
     match runtime {
         Runtime::Bun => {
             package_json_buffer = Some(
-                add_project_definition_to_package_json(config_data, base_path)
+                add_project_definition_to_package_json(base_path, config_data)
                     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON)?,
             );
         }
@@ -220,15 +217,13 @@ fn add_worker_to_artifacts(
     let mut rendered_templates = Vec::new();
 
     rendered_templates.push(RenderedTemplate {
-        path: Path::new(base_path).join("docker-compose.yaml"),
+        path: base_path.join("docker-compose.yaml"),
         content: docker_compose_buffer,
         context: Some(ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE.to_string()),
     });
 
     rendered_templates.push(RenderedTemplate {
-        path: Path::new(base_path)
-            .join(".forklaunch")
-            .join("manifest.toml"),
+        path: base_path.join(".forklaunch").join("manifest.toml"),
         content: forklaunch_manifest_buffer.clone(),
         context: Some(ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST.to_string()),
     });
@@ -244,7 +239,7 @@ fn add_worker_to_artifacts(
 
     if let Some(pnpm_workspace_buffer) = pnpm_workspace_buffer {
         rendered_templates.push(RenderedTemplate {
-            path: Path::new(base_path).join("pnpm-workspace.yaml"),
+            path: base_path.join("pnpm-workspace.yaml"),
             content: pnpm_workspace_buffer,
             context: Some(ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE.to_string()),
         });
@@ -255,7 +250,7 @@ fn add_worker_to_artifacts(
 
 pub(crate) fn generate_worker_package_json(
     config_data: &WorkerManifestData,
-    base_path: &String,
+    base_path: &Path,
     dependencies_override: Option<ProjectDependencies>,
     dev_dependencies_override: Option<ProjectDevDependencies>,
     scripts_override: Option<ProjectScripts>,
@@ -520,7 +515,7 @@ pub(crate) fn generate_worker_package_json(
         additional_entries: HashMap::new(),
     };
     Ok(RenderedTemplate {
-        path: Path::new(base_path).join("package.json"),
+        path: base_path.join("package.json"),
         content: to_string_pretty(&package_json_contents)?,
         context: Some(ERROR_FAILED_TO_CREATE_PACKAGE_JSON.to_string()),
     })
@@ -581,13 +576,14 @@ impl CliCommand for WorkerCommand {
             |_| "Worker name cannot be empty or include spaces. Please try again".to_string(),
         )?;
 
-        let base_path = prompt_base_path(
+        let base_path_input = prompt_base_path(
             &mut line_editor,
             &mut stdout,
             matches,
             &BasePathLocation::Worker,
             &BasePathType::Init,
         )?;
+        let base_path = Path::new(&base_path_input);
 
         let r#type: WorkerType = prompt_with_validation(
             &mut line_editor,
@@ -748,7 +744,7 @@ impl CliCommand for WorkerCommand {
         let dryrun = matches.get_flag("dryrun");
         generate_basic_worker(
             &worker_name,
-            &base_path.to_string(),
+            &base_path,
             &mut config_data,
             &mut stdout,
             dryrun,

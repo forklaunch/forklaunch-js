@@ -45,10 +45,10 @@ use crate::{
 pub(crate) fn transform_registrations_ts_add_router(
     router_name: &str,
     project_type: &ProjectType,
-    base_path: &String,
+    base_path: &Path,
 ) -> Result<String> {
     let allocator = Allocator::default();
-    let registrations_path = Path::new(base_path).join("registrations.ts");
+    let registrations_path = base_path.join("registrations.ts");
     let registrations_source_text = read_to_string(&registrations_path).unwrap();
     let registrations_source_type = SourceType::from_path(&registrations_path).unwrap();
     let router_name_camel_case = router_name.to_case(Case::Camel);

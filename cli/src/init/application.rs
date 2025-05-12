@@ -33,6 +33,7 @@ use crate::{
         docker::{
             DockerCompose, add_otel_to_docker_compose, add_service_definition_to_docker_compose,
         },
+        format::format_code,
         gitignore::generate_gitignore,
         iam::generate_iam_keys,
         license::{generate_license, match_license},
@@ -705,7 +706,7 @@ impl CliCommand for ApplicationCommand {
             {
                 docker_compose_string = Some(add_service_definition_to_docker_compose(
                     &service_data,
-                    &Path::new(&name).to_string_lossy().to_string(),
+                    &Path::new(&name),
                     docker_compose_string,
                 )?);
             }
@@ -735,10 +736,7 @@ impl CliCommand for ApplicationCommand {
 
             rendered_templates.push(generate_service_package_json(
                 &service_data,
-                &Path::new(&name)
-                    .join(&template_dir.output_path)
-                    .to_string_lossy()
-                    .to_string(),
+                &Path::new(&name).join(&template_dir.output_path),
                 match service_data.service_name.as_str() {
                     "core" => Some(ProjectDependencies {
                         app_name: service_data.app_name.clone(),
@@ -842,7 +840,7 @@ impl CliCommand for ApplicationCommand {
 
         rendered_templates.push(
             generate_index_ts_database_export(
-                &Path::new(&name).to_string_lossy().to_string(),
+                &Path::new(&name),
                 Some(vec![database.to_string()]),
                 None,
             )
@@ -850,12 +848,12 @@ impl CliCommand for ApplicationCommand {
         );
 
         rendered_templates.extend(
-            generate_license(&Path::new(&name).to_string_lossy().to_string(), &data)
+            generate_license(&Path::new(&name), &data)
                 .with_context(|| ERROR_FAILED_TO_CREATE_LICENSE)?,
         );
 
         rendered_templates.extend(
-            generate_gitignore(&Path::new(&name).to_string_lossy().to_string())
+            generate_gitignore(&Path::new(&name))
                 .with_context(|| ERROR_FAILED_TO_CREATE_GITIGNORE)?,
         );
 
@@ -880,11 +878,8 @@ impl CliCommand for ApplicationCommand {
             .into_iter()
             .try_for_each(|template_dir| {
                 generate_symlinks(
-                    Some(&name),
-                    &Path::new(&name)
-                        .join(&template_dir.output_path)
-                        .to_string_lossy()
-                        .to_string(),
+                    Some(&Path::new(&name)),
+                    &Path::new(&name).join(&template_dir.output_path),
                     &mut data,
                     dryrun,
                 )
@@ -894,6 +889,7 @@ impl CliCommand for ApplicationCommand {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
             writeln!(stdout, "{} initialized successfully!", name)?;
             stdout.reset()?;
+            format_code(&Path::new(&name), &data.runtime.parse()?);
         }
 
         Ok(())

@@ -32,6 +32,7 @@ use crate::{
         base_path::{BasePathLocation, BasePathType, prompt_base_path},
         command::command,
         docker::update_dockerfile_contents,
+        format::format_code,
         license::{generate_license, match_license},
         manifest::{
             ProjectType, application::ApplicationManifestData, service::ServiceManifestData,
@@ -1287,9 +1288,7 @@ fn change_license(
 
     application_json_to_write.license = Some(match_license(license.clone())?);
 
-    if let Some(license_file_contents) =
-        generate_license(base_path.to_str().unwrap(), &manifest_data)?
-    {
+    if let Some(license_file_contents) = generate_license(base_path, &manifest_data)? {
         rendered_templates_cache.insert(license_path.to_string_lossy(), license_file_contents);
     }
 
@@ -1765,6 +1764,7 @@ impl CliCommand for ApplicationCommand {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
             writeln!(stdout, "{} changed successfully!", &manifest_data.app_name)?;
             stdout.reset()?;
+            format_code(&base_path, &manifest_data.runtime.parse()?);
         }
 
         Ok(())

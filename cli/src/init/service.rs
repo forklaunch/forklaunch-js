@@ -29,6 +29,7 @@ use crate::{
             add_base_entity_to_core, get_database_port, get_db_driver, is_in_memory_database,
         },
         docker::{add_service_definition_to_docker_compose, update_dockerfile_contents},
+        format::format_code,
         gitignore::generate_gitignore,
         manifest::{
             ManifestData, ProjectType, ResourceInventory, add_project_definition_to_manifest,
@@ -73,21 +74,18 @@ use crate::{
 
 fn generate_basic_service(
     service_name: &String,
-    base_path: &String,
+    base_path: &Path,
     config_data: &mut ServiceManifestData,
     stdout: &mut StandardStream,
     dryrun: bool,
 ) -> Result<()> {
-    let output_path = Path::new(base_path)
-        .join(service_name)
-        .to_string_lossy()
-        .to_string();
+    let output_path = base_path.join(service_name);
     let template_dir = PathIO {
         input_path: Path::new("project")
             .join("service")
             .to_string_lossy()
             .to_string(),
-        output_path: output_path.clone(),
+        output_path: output_path.to_string_lossy().to_string(),
     };
 
     let ignore_files = vec![];
@@ -127,9 +125,9 @@ fn generate_basic_service(
 
     if config_data.is_in_memory_database {
         rendered_templates.push(RenderedTemplate {
-            path: Path::new(base_path).join("Dockerfile"),
+            path: base_path.join("Dockerfile"),
             content: update_dockerfile_contents(
-                &read_to_string(Path::new(base_path).join("Dockerfile"))?,
+                &read_to_string(base_path.join("Dockerfile"))?,
                 &config_data,
             )?,
             context: Some(ERROR_FAILED_TO_UPDATE_DOCKERFILE.to_string()),
@@ -141,7 +139,7 @@ fn generate_basic_service(
 
     generate_symlinks(
         Some(base_path),
-        &template_dir.output_path,
+        &Path::new(&template_dir.output_path),
         config_data,
         dryrun,
     )
@@ -152,7 +150,7 @@ fn generate_basic_service(
 
 fn add_service_to_artifacts(
     config_data: &mut ServiceManifestData,
-    base_path: &String,
+    base_path: &Path,
 ) -> Result<Vec<RenderedTemplate>> {
     let docker_compose_buffer =
         add_service_definition_to_docker_compose(config_data, base_path, None)
@@ -179,7 +177,7 @@ fn add_service_to_artifacts(
     match runtime {
         Runtime::Bun => {
             package_json_buffer = Some(
-                add_project_definition_to_package_json(config_data, base_path)
+                add_project_definition_to_package_json(base_path, config_data)
                     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON)?,
             );
         }
@@ -194,15 +192,13 @@ fn add_service_to_artifacts(
     let mut rendered_templates = Vec::new();
 
     rendered_templates.push(RenderedTemplate {
-        path: Path::new(base_path).join("docker-compose.yaml"),
+        path: base_path.join("docker-compose.yaml"),
         content: docker_compose_buffer,
         context: Some(ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE.to_string()),
     });
 
     rendered_templates.push(RenderedTemplate {
-        path: Path::new(base_path)
-            .join(".forklaunch")
-            .join("manifest.toml"),
+        path: base_path.join(".forklaunch").join("manifest.toml"),
         content: forklaunch_manifest_buffer.clone(),
         context: Some(ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST.to_string()),
     });
@@ -218,7 +214,7 @@ fn add_service_to_artifacts(
 
     if let Some(pnpm_workspace_buffer) = pnpm_workspace_buffer {
         rendered_templates.push(RenderedTemplate {
-            path: Path::new(base_path).join("pnpm-workspace.yaml"),
+            path: base_path.join("pnpm-workspace.yaml"),
             content: pnpm_workspace_buffer,
             context: Some(ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE.to_string()),
         });
@@ -229,7 +225,7 @@ fn add_service_to_artifacts(
 
 pub(crate) fn generate_service_package_json(
     config_data: &ServiceManifestData,
-    base_path: &String,
+    base_path: &Path,
     dependencies_override: Option<ProjectDependencies>,
     dev_dependencies_override: Option<ProjectDevDependencies>,
     scripts_override: Option<ProjectScripts>,
@@ -417,7 +413,7 @@ pub(crate) fn generate_service_package_json(
         additional_entries: HashMap::new(),
     };
     Ok(RenderedTemplate {
-        path: Path::new(base_path).join("package.json"),
+        path: base_path.join("package.json"),
         content: to_string_pretty(&package_json_contents)?,
         context: Some(ERROR_FAILED_TO_CREATE_PACKAGE_JSON.to_string()),
     })
@@ -491,13 +487,14 @@ impl CliCommand for ServiceCommand {
             |_| "Service name cannot be empty or include spaces. Please try again".to_string(),
         )?;
 
-        let base_path = prompt_base_path(
+        let base_path_input = prompt_base_path(
             &mut line_editor,
             &mut stdout,
             matches,
             &BasePathLocation::Service,
             &BasePathType::Init,
         )?;
+        let base_path = Path::new(&base_path_input);
 
         let database: Database = prompt_with_validation(
             &mut line_editor,
@@ -596,7 +593,7 @@ impl CliCommand for ServiceCommand {
         let dryrun = matches.get_flag("dryrun");
         generate_basic_service(
             &service_name,
-            &base_path.to_string(),
+            &base_path,
             &mut config_data,
             &mut stdout,
             dryrun,
@@ -607,6 +604,7 @@ impl CliCommand for ServiceCommand {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
             writeln!(stdout, "{} initialized successfully!", service_name)?;
             stdout.reset()?;
+            format_code(&base_path, &config_data.runtime.parse()?);
         }
 
         Ok(())

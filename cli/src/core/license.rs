@@ -21,7 +21,7 @@ pub(crate) fn match_license(license: License) -> Result<String> {
 }
 
 pub(crate) fn generate_license(
-    app_path: &str,
+    app_path: &Path,
     data: &ApplicationManifestData,
 ) -> Result<Option<RenderedTemplate>> {
     let license_file = match data.license.as_str() {
@@ -50,7 +50,7 @@ pub(crate) fn generate_license(
     )?;
 
     Ok(Some(RenderedTemplate {
-        path: Path::new(app_path).join("LICENSE"),
+        path: app_path.join("LICENSE"),
         content: license_template.render(data),
         context: None,
     }))

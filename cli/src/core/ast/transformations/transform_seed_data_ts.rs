@@ -17,12 +17,10 @@ use crate::core::{
 pub(crate) fn transform_seed_data_ts(
     router_name: &str,
     project_type: &ProjectType,
-    base_path: &String,
+    base_path: &Path,
 ) -> Result<String> {
     let allocator = Allocator::default();
-    let seed_data_path = Path::new(base_path)
-        .join("persistence")
-        .join("seed.data.ts");
+    let seed_data_path = base_path.join("persistence").join("seed.data.ts");
     let seed_data_source_text = read_to_string(&seed_data_path).unwrap();
     let seed_data_source_type = SourceType::from_path(&seed_data_path).unwrap();
     let router_name_camel_case = router_name.to_case(Case::Camel);

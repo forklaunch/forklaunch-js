@@ -4,8 +4,8 @@ use anyhow::Result;
 
 use super::rendered_template::RenderedTemplate;
 
-pub(crate) fn generate_gitignore(path_dir: &String) -> Result<Option<RenderedTemplate>> {
-    let path = Path::new(path_dir).join(".gitignore");
+pub(crate) fn generate_gitignore(path_dir: &Path) -> Result<Option<RenderedTemplate>> {
+    let path = path_dir.join(".gitignore");
 
     if path.exists() {
         return Ok(None);

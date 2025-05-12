@@ -866,7 +866,7 @@ pub(crate) fn clean_up_unused_infrastructure_services(
 fn add_base_definition_to_docker_compose(
     app_name: &str,
     name: &str,
-    base_path: &String,
+    base_path: &Path,
     docker_compose_string: Option<String>,
 ) -> Result<(DockerCompose, i32, IndexMap<String, String>)> {
     let mut docker_compose: DockerCompose =
@@ -875,7 +875,7 @@ fn add_base_definition_to_docker_compose(
                 .with_context(|| ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE)?
         } else {
             from_str(
-                &read_to_string(Path::new(base_path).join("docker-compose.yaml"))
+                &read_to_string(base_path.join("docker-compose.yaml"))
                     .with_context(|| ERROR_FAILED_TO_READ_DOCKER_COMPOSE)?,
             )
             .with_context(|| ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE)?
@@ -1012,7 +1012,7 @@ fn create_base_service(
 
 pub(crate) fn add_service_definition_to_docker_compose(
     config_data: &ServiceManifestData,
-    base_path: &String,
+    base_path: &Path,
     docker_compose_string: Option<String>,
 ) -> Result<String> {
     let (mut docker_compose, port_number, mut environment) = add_base_definition_to_docker_compose(
@@ -1085,7 +1085,7 @@ pub(crate) fn add_service_definition_to_docker_compose(
 
 pub(crate) fn add_worker_definition_to_docker_compose(
     config_data: &WorkerManifestData,
-    base_path: &String,
+    base_path: &Path,
     docker_compose_string: Option<String>,
 ) -> Result<String> {
     let (mut docker_compose, port_number, mut environment) = add_base_definition_to_docker_compose(

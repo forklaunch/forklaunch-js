@@ -27,6 +27,7 @@ use crate::{
         base_path::{BasePathLocation, BasePathType, prompt_base_path},
         command::command,
         database::{self, is_in_memory_database},
+        format::format_code,
         manifest::{ManifestData, add_router_definition_to_manifest, router::RouterManifestData},
         name::validate_name,
         rendered_template::{RenderedTemplate, write_rendered_templates},
@@ -36,13 +37,13 @@ use crate::{
 };
 
 fn generate_basic_router(
-    base_path: &String,
+    base_path: &Path,
     config_data: &mut RouterManifestData,
     service_name: &String,
     stdout: &mut StandardStream,
     dryrun: bool,
 ) -> Result<()> {
-    let output_path = Path::new(base_path).to_string_lossy().to_string();
+    let output_path = base_path.to_string_lossy().to_string();
     let template_dir = PathIO {
         input_path: Path::new("router").to_string_lossy().to_string(),
         output_path: output_path.clone(),
@@ -75,7 +76,7 @@ fn generate_basic_router(
 
 fn add_router_to_artifacts(
     config_data: &mut RouterManifestData,
-    base_path: &String,
+    base_path: &Path,
     service_name: &String,
 ) -> Result<Vec<RenderedTemplate>> {
     let (project_type, forklaunch_definition_buffer) =
@@ -85,13 +86,13 @@ fn add_router_to_artifacts(
     let mut rendered_templates = Vec::new();
 
     rendered_templates.push(RenderedTemplate {
-        path: Path::new(&base_path).join("server.ts"),
+        path: base_path.join("server.ts"),
         content: transform_app_ts(config_data.router_name.as_str(), &base_path)?,
         context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_APP.to_string()),
     });
 
     rendered_templates.push(RenderedTemplate {
-        path: Path::new(&base_path).join("registrations.ts"),
+        path: base_path.join("registrations.ts"),
         content: transform_registrations_ts_add_router(
             config_data.router_name.as_str(),
             &project_type,
@@ -110,7 +111,7 @@ fn add_router_to_artifacts(
     });
 
     rendered_templates.push(RenderedTemplate {
-        path: Path::new(base_path)
+        path: base_path
             .join("persistence")
             .join("seeders")
             .join("index.ts"),
@@ -119,9 +120,7 @@ fn add_router_to_artifacts(
     });
 
     rendered_templates.push(RenderedTemplate {
-        path: Path::new(base_path)
-            .join("persistence")
-            .join("seed.data.ts"),
+        path: base_path.join("persistence").join("seed.data.ts"),
         content: transform_seed_data_ts(
             config_data.router_name.as_str(),
             &project_type,
@@ -131,7 +130,7 @@ fn add_router_to_artifacts(
     });
 
     rendered_templates.push(RenderedTemplate {
-        path: Path::new(base_path)
+        path: base_path
             .parent()
             .unwrap()
             .join(".forklaunch")
@@ -194,13 +193,14 @@ impl CliCommand for RouterCommand {
             |_| "Router name cannot be empty or include spaces. Please try again".to_string(),
         )?;
 
-        let base_path = prompt_base_path(
+        let base_path_input = &prompt_base_path(
             &mut line_editor,
             &mut stdout,
             matches,
             &BasePathLocation::Router,
             &BasePathType::Init,
         )?;
+        let base_path = Path::new(&base_path_input);
 
         let infrastructure: Vec<Infrastructure> = prompt_comma_separated_list(
             &mut line_editor,
@@ -262,7 +262,7 @@ impl CliCommand for RouterCommand {
 
             let dryrun = matches.get_flag("dryrun");
             generate_basic_router(
-                &base_path.to_string(),
+                &base_path,
                 &mut config_data,
                 &service_name.to_string(),
                 &mut stdout,
@@ -274,6 +274,7 @@ impl CliCommand for RouterCommand {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
                 writeln!(stdout, "{} initialized successfully!", router_name)?;
                 stdout.reset()?;
+                format_code(&base_path, &config_data.runtime.parse()?);
             }
 
             Ok(())

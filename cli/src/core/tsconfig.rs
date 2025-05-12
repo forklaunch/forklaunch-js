@@ -5,8 +5,8 @@ use serde_json::{json, to_string_pretty};
 
 use super::rendered_template::RenderedTemplate;
 
-pub(crate) fn generate_tsconfig(path_dir: &String) -> Result<Option<RenderedTemplate>> {
-    let path = Path::new(path_dir).join("tsconfig.json");
+pub(crate) fn generate_tsconfig(path_dir: &Path) -> Result<Option<RenderedTemplate>> {
+    let path = path_dir.join("tsconfig.json");
     if path.exists() {
         return Ok(None);
     }

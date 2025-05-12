@@ -33,11 +33,11 @@ struct PackageJson {
 pub(crate) fn add_project_definition_to_package_json<
     T: Content + ManifestConfig + ProjectManifestConfig + InitializableManifestConfig + Serialize,
 >(
+    base_path: &Path,
     config_data: &T,
-    base_path: &String,
 ) -> Result<String> {
     let mut full_package_json: ApplicationPackageJson = from_str(
-        &read_to_string(Path::new(base_path).join("package.json"))
+        &read_to_string(base_path.join("package.json"))
             .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?,
     )
     .with_context(|| ERROR_FAILED_TO_PARSE_PACKAGE_JSON)?;
@@ -58,12 +58,12 @@ pub(crate) fn add_project_definition_to_package_json<
 
 pub(crate) fn update_application_package_json(
     config_data: &ManifestData,
-    base_path: &String,
+    base_path: &Path,
     existing_package_json: Option<String>,
 ) -> Result<Option<RenderedTemplate>> {
     let mut full_package_json: ApplicationPackageJson = from_str(
         &existing_package_json.unwrap_or(
-            read_to_string(Path::new(base_path).join("package.json"))
+            read_to_string(base_path.join("package.json"))
                 .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?,
         ),
     )
@@ -72,7 +72,7 @@ pub(crate) fn update_application_package_json(
     if let ManifestData::Worker(worker_data) = config_data {
         if !worker_data.is_database_enabled {
             return Ok(Some(RenderedTemplate {
-                path: Path::new(base_path).join("package.json"),
+                path: base_path.join("package.json"),
                 content: to_string_pretty(&full_package_json)?,
                 context: Some(ERROR_FAILED_TO_UPDATE_APPLICATION_PACKAGE_JSON.to_string()),
             }));
@@ -150,7 +150,7 @@ pub(crate) fn update_application_package_json(
     }
 
     Ok(Some(RenderedTemplate {
-        path: Path::new(base_path).join("package.json"),
+        path: base_path.join("package.json"),
         content: to_string_pretty(&full_package_json)?,
         context: Some(ERROR_FAILED_TO_UPDATE_APPLICATION_PACKAGE_JSON.to_string()),
     }))

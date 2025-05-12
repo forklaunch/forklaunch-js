@@ -44,7 +44,7 @@ pub(crate) fn get_database_port(database: &Database) -> Option<String> {
 }
 
 pub(crate) fn generate_index_ts_database_export(
-    base_path: &String,
+    base_path: &Path,
     databases: Option<Vec<String>>,
     config_data: Option<&ManifestData>,
 ) -> Result<RenderedTemplate> {
@@ -101,9 +101,9 @@ pub(crate) fn generate_index_ts_database_export(
 
 pub(crate) fn update_core_package_json(
     config_data: &ManifestData,
-    base_path: &String,
+    base_path: &Path,
 ) -> Result<RenderedTemplate> {
-    let package_json_path = Path::new(base_path).join("core").join("package.json");
+    let package_json_path = base_path.join("core").join("package.json");
     let package_json_content = read_to_string(&package_json_path)?;
     let mut full_package_json: ProjectPackageJson = from_str(&package_json_content)?;
 
@@ -144,7 +144,7 @@ pub(crate) fn get_base_entity_filename(database: &Database) -> Result<&str> {
 
 pub(crate) fn add_base_entity_to_core(
     config_data: &ManifestData,
-    base_path: &String,
+    base_path: &Path,
 ) -> Result<Vec<RenderedTemplate>> {
     let database = match config_data {
         ManifestData::Service(service) => service.database.clone(),
@@ -155,7 +155,7 @@ pub(crate) fn add_base_entity_to_core(
     let database = database.parse::<Database>()?;
     let filename = get_base_entity_filename(&database)?;
 
-    let entity_path = Path::new(base_path)
+    let entity_path = base_path
         .join("core")
         .join("persistence")
         .join(filename);

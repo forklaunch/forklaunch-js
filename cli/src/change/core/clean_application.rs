@@ -7,7 +7,7 @@ use crate::constants::Runtime;
 
 pub(crate) fn clean_application(base_path: &Path, runtime: &Runtime) -> Result<()> {
     let confirm = Confirm::new()
-                .with_prompt("Changing the runtime will remove existing runtime files (clean). Are you sure you want to continue?")
+                .with_prompt("Performing changes will remove existing runtime files (clean:purge). Are you sure you want to continue?")
                 .interact()?;
 
     if confirm {

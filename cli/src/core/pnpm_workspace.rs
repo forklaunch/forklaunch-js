@@ -41,10 +41,10 @@ pub(crate) fn generate_pnpm_workspace(
 pub(crate) fn add_project_definition_to_pnpm_workspace<
     T: ManifestConfig + ProjectManifestConfig + InitializableManifestConfig + Serialize,
 >(
-    base_path: &str,
+    base_path: &Path,
     config_data: &T,
 ) -> Result<String> {
-    let pnpm_workspace_path = Path::new(base_path).join("pnpm-workspace.yaml");
+    let pnpm_workspace_path = base_path.join("pnpm-workspace.yaml");
     let mut pnpm_workspace: PnpmWorkspace = from_str(
         &read_to_string(&pnpm_workspace_path)
             .with_context(|| ERROR_FAILED_TO_READ_PNPM_WORKSPACE)?,

@@ -6,7 +6,7 @@ use ramhorns::Content;
 
 use crate::{
     constants::{
-        error_failed_to_create_symlink, Formatter, Linter, TestFramework, ERROR_FAILED_TO_GET_CWD,
+        ERROR_FAILED_TO_GET_CWD, Formatter, Linter, TestFramework, error_failed_to_create_symlink,
     },
     core::manifest::ManifestConfig,
 };
@@ -31,14 +31,14 @@ fn create_symlink(
 }
 
 pub(crate) fn generate_symlinks<T: Content + ManifestConfig>(
-    base_path_dir: Option<&String>,
-    path_dir: &String,
+    base_path_dir: Option<&Path>,
+    path_dir: &Path,
     config_data: &mut T,
     dryrun: bool,
 ) -> Result<()> {
     let current_path_dir = current_dir().context(ERROR_FAILED_TO_GET_CWD)?;
     let source_path = match base_path_dir {
-        Some(base_path) => Path::new(base_path),
+        Some(base_path) => base_path,
         None => current_path_dir.as_path(),
     };
 

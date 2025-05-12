@@ -11,9 +11,9 @@ use crate::core::ast::{
     parse_ast_program::parse_ast_program,
 };
 
-pub(crate) fn transform_entities_index_ts(router_name: &str, base_path: &String) -> Result<String> {
+pub(crate) fn transform_entities_index_ts(router_name: &str, base_path: &Path) -> Result<String> {
     let allocator = Allocator::default();
-    let entities_index_path = Path::new(base_path)
+    let entities_index_path = base_path
         .join("persistence")
         .join("entities")
         .join("index.ts");

@@ -21,6 +21,7 @@ use crate::{
     core::{
         base_path::{BasePathLocation, BasePathType, prompt_base_path},
         command::command,
+        format::format_code,
         gitignore::generate_gitignore,
         manifest::{
             ManifestData, ProjectType, add_project_definition_to_manifest,
@@ -47,22 +48,19 @@ use crate::{
 
 fn generate_basic_library(
     library_name: &String,
-    base_path: &String,
+    base_path: &Path,
     config_data: &mut LibraryManifestData,
     stdout: &mut StandardStream,
     dryrun: bool,
 ) -> Result<()> {
-    let output_path = Path::new(base_path)
-        .join(library_name)
-        .to_string_lossy()
-        .to_string();
+    let output_path = base_path.join(library_name);
 
     let template_dir = PathIO {
         input_path: Path::new("project")
             .join("library")
             .to_string_lossy()
             .to_string(),
-        output_path: output_path.clone(),
+        output_path: output_path.to_string_lossy().to_string(),
     };
 
     let ignore_files = vec![];
@@ -94,7 +92,7 @@ fn generate_basic_library(
 
     generate_symlinks(
         Some(base_path),
-        &template_dir.output_path,
+        &Path::new(&template_dir.output_path),
         config_data,
         dryrun,
     )
@@ -105,7 +103,7 @@ fn generate_basic_library(
 
 fn add_library_to_artifacts(
     config_data: &mut LibraryManifestData,
-    base_path: &String,
+    base_path: &Path,
 ) -> Result<Vec<RenderedTemplate>> {
     let forklaunch_definition_buffer =
         add_project_definition_to_manifest(ProjectType::Library, config_data, None, None, None)
@@ -119,7 +117,7 @@ fn add_library_to_artifacts(
     match runtime {
         Runtime::Bun => {
             package_json_buffer = Some(
-                add_project_definition_to_package_json(config_data, base_path)
+                add_project_definition_to_package_json(base_path, config_data)
                     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON)?,
             );
         }
@@ -133,22 +131,20 @@ fn add_library_to_artifacts(
 
     let mut rendered_templates = Vec::new();
     rendered_templates.push(RenderedTemplate {
-        path: Path::new(base_path)
-            .join(".forklaunch")
-            .join("manifest.toml"),
+        path: base_path.join(".forklaunch").join("manifest.toml"),
         content: forklaunch_definition_buffer,
         context: Some(ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST.to_string()),
     });
     if let Some(package_json_buffer) = package_json_buffer {
         rendered_templates.push(RenderedTemplate {
-            path: Path::new(base_path).join("package.json"),
+            path: base_path.join("package.json"),
             content: package_json_buffer,
             context: Some(ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON.to_string()),
         });
     }
     if let Some(pnpm_workspace_buffer) = pnpm_workspace_buffer {
         rendered_templates.push(RenderedTemplate {
-            path: Path::new(base_path).join("pnpm-workspace.yaml"),
+            path: base_path.join("pnpm-workspace.yaml"),
             content: pnpm_workspace_buffer,
             context: Some(ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE.to_string()),
         });
@@ -159,7 +155,7 @@ fn add_library_to_artifacts(
 
 fn generate_library_package_json(
     config_data: &LibraryManifestData,
-    base_path: &String,
+    base_path: &Path,
 ) -> Result<RenderedTemplate> {
     let test_framework: Option<TestFramework> =
         if let Some(test_framework) = &config_data.test_framework {
@@ -196,7 +192,7 @@ fn generate_library_package_json(
         ..Default::default()
     };
     Ok(RenderedTemplate {
-        path: Path::new(base_path).join("package.json"),
+        path: base_path.join("package.json"),
         content: to_string_pretty(&package_json_buffer)?.to_string(),
         context: Some(ERROR_FAILED_TO_CREATE_LIBRARY_PACKAGE_JSON.to_string()),
     })
@@ -253,13 +249,14 @@ impl CliCommand for LibraryCommand {
             |_| "Library name cannot be empty or include spaces. Please try again".to_string(),
         )?;
 
-        let base_path = prompt_base_path(
+        let base_path_input = prompt_base_path(
             &mut line_editor,
             &mut stdout,
             matches,
             &BasePathLocation::Library,
             &BasePathType::Init,
         )?;
+        let base_path = Path::new(&base_path_input);
 
         let description = prompt_without_validation(
             &mut line_editor,
@@ -315,7 +312,7 @@ impl CliCommand for LibraryCommand {
         let dryrun = matches.get_flag("dryrun");
         generate_basic_library(
             &library_name,
-            &base_path.to_string(),
+            &base_path,
             &mut config_data,
             &mut stdout,
             dryrun,
@@ -326,6 +323,7 @@ impl CliCommand for LibraryCommand {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
             writeln!(stdout, "{} initialized successfully!", library_name)?;
             stdout.reset()?;
+            format_code(&base_path, &config_data.runtime.parse()?);
         }
 
         Ok(())

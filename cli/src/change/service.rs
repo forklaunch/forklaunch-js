@@ -38,6 +38,7 @@ use crate::{
             remove_redis_from_docker_compose,
         },
         env::Env,
+        format::format_code,
         manifest::{
             InitializableManifestConfig, InitializableManifestConfigMetadata, ManifestData,
             MutableManifestData, ProjectInitializationMetadata, service::ServiceManifestData,
@@ -669,6 +670,7 @@ impl CliCommand for ServiceCommand {
                 &manifest_data.service_name
             )?;
             stdout.reset()?;
+            format_code(&base_path, &manifest_data.runtime.parse()?);
         }
 
         Ok(())
