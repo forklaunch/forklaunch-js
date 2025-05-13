@@ -162,7 +162,7 @@ pub(crate) fn replace_project_in_workspace_definition(
     runtime: &Runtime,
     existing_project_name: &str,
     new_project_name: &str,
-    rendered_template_cache: &mut RenderedTemplatesCache,
+    rendered_templates_cache: &mut RenderedTemplatesCache,
 ) -> Result<()> {
     match runtime {
         Runtime::Bun => {
@@ -177,7 +177,7 @@ pub(crate) fn replace_project_in_workspace_definition(
             }
         }
         Runtime::Node => {
-            let workspace_definition = rendered_template_cache
+            let workspace_definition = rendered_templates_cache
                 .get(Path::new(application_base_path).join("pnpm-workspace.yaml"))?
                 .unwrap()
                 .content;
@@ -198,7 +198,7 @@ pub(crate) fn replace_project_in_workspace_definition(
                 .packages
                 .push(new_project_name.to_string());
 
-            rendered_template_cache.insert(
+            rendered_templates_cache.insert(
                 application_base_path
                     .join("pnpm-workspace.yaml")
                     .to_string_lossy(),
