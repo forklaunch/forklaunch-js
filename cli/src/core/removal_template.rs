@@ -14,6 +14,7 @@ pub(crate) enum RemovalTemplateType {
     Directory,
 }
 
+#[derive(Debug)]
 pub(crate) struct RemovalTemplate {
     pub(crate) path: PathBuf,
     pub(crate) r#type: RemovalTemplateType,

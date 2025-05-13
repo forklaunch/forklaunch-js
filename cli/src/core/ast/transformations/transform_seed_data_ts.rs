@@ -39,8 +39,6 @@ pub(crate) fn transform_seed_data_ts(
         &mut seed_data_program,
         &mut seed_data_import_injection,
         format!("./entities/{router_name_camel_case}Record.entity").as_str(),
-        // "/entities/",
-        // format!("{router_name_pascal_case}Record").as_str(),
     )?;
 
     let seed_data_text = format!(

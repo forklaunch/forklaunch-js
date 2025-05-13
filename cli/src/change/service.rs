@@ -1,4 +1,4 @@
-use std::{io::Write, path::Path};
+use std::{collections::HashSet, io::Write, path::Path};
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, Command};
@@ -70,6 +70,7 @@ impl ServiceCommand {
 fn change_name(
     base_path: &Path,
     name: &str,
+    confirm: bool,
     manifest_data: &mut ServiceManifestData,
     project_package_json: &mut ProjectPackageJson,
     docker_compose: &mut DockerCompose,
@@ -79,6 +80,7 @@ fn change_name(
     change_name_core(
         base_path,
         name,
+        confirm,
         MutableManifestData::Service(manifest_data),
         project_package_json,
         Some(docker_compose),
@@ -114,7 +116,11 @@ fn change_database(
         .unwrap();
     project.resources.as_mut().unwrap().database = Some(database.to_string());
 
-    project_package_json.dependencies.as_mut().unwrap().database = Some(database.to_string());
+    project_package_json
+        .dependencies
+        .as_mut()
+        .unwrap()
+        .databases = HashSet::from([database.clone()]);
 
     let existing_docker_service = docker_compose_data.services.get(&project.name).unwrap();
     let mut existing_docker_service_environment = existing_docker_service
@@ -395,6 +401,13 @@ impl CliCommand for ServiceCommand {
                     .help("Dry run the command")
                     .action(ArgAction::SetTrue),
             )
+            .arg(
+                Arg::new("confirm")
+                    .short('c')
+                    .long("confirm")
+                    .help("Flag to confirm any prompts")
+                    .action(ArgAction::SetTrue),
+            )
     }
 
     fn handler(&self, matches: &clap::ArgMatches) -> Result<()> {
@@ -442,10 +455,13 @@ impl CliCommand for ServiceCommand {
         let name = matches.get_one::<String>("name");
         let database = matches.get_one::<String>("database");
         let description = matches.get_one::<String>("description");
-        let infrastructure = matches.get_one::<Vec<String>>("infrastructure");
+        let infrastructure = matches
+            .get_many::<String>("infrastructure")
+            .map(|v| v.map(|s| s.to_string()).collect());
         let dryrun = matches.get_flag("dryrun");
+        let confirm = matches.get_flag("confirm");
 
-        let selected_options = if matches.ids().all(|id| id == "dryrun") {
+        let selected_options = if matches.ids().all(|id| id == "dryrun" || id == "confirm") {
             let options = vec!["name", "database", "description", "infrastructure"];
 
             let selections = MultiSelect::with_theme(&ColorfulTheme::default())
@@ -606,6 +622,7 @@ impl CliCommand for ServiceCommand {
             move_templates.push(change_name(
                 &base_path,
                 &name,
+                confirm,
                 &mut manifest_data,
                 &mut project_json_to_write,
                 &mut docker_compose_data,

@@ -36,7 +36,7 @@ use crate::{
         format::format_code,
         gitignore::generate_gitignore,
         iam::generate_iam_keys,
-        license::{generate_license, match_license},
+        license::generate_license,
         manifest::{
             ManifestData, ProjectEntry, ProjectType, ResourceInventory,
             application::ApplicationManifestData, generate_manifest, service::ServiceManifestData,
@@ -89,7 +89,7 @@ fn generate_application_package_json(
         None
     };
     let package_json_contents = ApplicationPackageJson {
-        name: Some(data.app_name.clone()),
+        name: Some(format!("@{}", data.app_name)),
         version: Some("0.0.1".to_string()),
         description: Some(data.app_description.clone()),
         keywords: Some(vec![]),
@@ -571,7 +571,7 @@ impl CliCommand for ApplicationCommand {
             project_peer_topology,
             app_description: description.to_string(),
             author: author.to_string(),
-            license: match_license(license)?,
+            license: license.to_string(),
 
             is_eslint: linter == Linter::Eslint,
             is_oxlint: linter == Linter::Oxlint,
@@ -740,7 +740,7 @@ impl CliCommand for ApplicationCommand {
                 match service_data.service_name.as_str() {
                     "core" => Some(ProjectDependencies {
                         app_name: service_data.app_name.clone(),
-                        database: Some(service_data.database.clone()),
+                        databases: HashSet::from([service_data.database.parse()?]),
                         forklaunch_common: Some(COMMON_VERSION.to_string()),
                         forklaunch_core: Some(CORE_VERSION.to_string()),
                         forklaunch_express: if service_data.is_express {

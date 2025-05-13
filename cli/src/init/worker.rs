@@ -1,4 +1,9 @@
-use std::{collections::HashMap, fs::read_to_string, io::Write, path::Path};
+use std::{
+    collections::{HashMap, HashSet},
+    fs::read_to_string,
+    io::Write,
+    path::Path,
+};
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, ArgMatches, Command};
@@ -333,10 +338,10 @@ pub(crate) fn generate_worker_package_json(
         } else {
             ProjectDependencies {
                 app_name: config_data.app_name.to_string(),
-                database: if let Some(database) = &config_data.database {
-                    Some(database.to_string())
+                databases: if let Some(database) = &config_data.database {
+                    HashSet::from([database.parse()?])
                 } else {
-                    None
+                    HashSet::new()
                 },
                 app_core: Some(APP_CORE_VERSION.to_string()),
                 app_monitoring: Some(APP_MONITORING_VERSION.to_string()),
@@ -534,7 +539,7 @@ impl CliCommand for WorkerCommand {
             )
             .arg(
                 Arg::new("type")
-                    .short('b')
+                    .short('t')
                     .long("type")
                     .help("The type to use")
                     .value_parser(WorkerType::VARIANTS),

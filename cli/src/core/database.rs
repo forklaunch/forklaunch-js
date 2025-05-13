@@ -113,8 +113,14 @@ pub(crate) fn update_core_package_json(
         _ => bail!(ERROR_UNSUPPORTED_DATABASE),
     };
 
-    full_package_json.dependencies.as_mut().unwrap().database = database.clone();
-    if database.is_some() {
+    if let Some(database) = database {
+        full_package_json
+            .dependencies
+            .as_mut()
+            .unwrap()
+            .databases
+            .insert(database.parse::<Database>()?);
+
         full_package_json
             .dependencies
             .as_mut()
@@ -155,10 +161,7 @@ pub(crate) fn add_base_entity_to_core(
     let database = database.parse::<Database>()?;
     let filename = get_base_entity_filename(&database)?;
 
-    let entity_path = base_path
-        .join("core")
-        .join("persistence")
-        .join(filename);
+    let entity_path = base_path.join("core").join("persistence").join(filename);
 
     let template = TEMPLATES_DIR.get_file(
         Path::new("project")

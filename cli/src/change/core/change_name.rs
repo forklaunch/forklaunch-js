@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{collections::HashSet, path::Path};
 
 use anyhow::{Result, bail};
 use convert_case::{Case, Casing};
@@ -18,6 +18,7 @@ use crate::{
         },
         removal_template::{RemovalTemplate, RemovalTemplateType},
         rendered_template::{RenderedTemplate, RenderedTemplatesCache},
+        string::short_circuit_replacement,
     },
 };
 
@@ -26,10 +27,11 @@ pub(crate) fn change_name_in_files(
     existing_name: &str,
     name: &str,
     runtime: &Runtime,
+    confirm: bool,
     project_entry: &mut ProjectEntry,
     rendered_templates_cache: &mut RenderedTemplatesCache,
 ) -> Result<Vec<RemovalTemplate>> {
-    clean_application(base_path.parent().unwrap(), runtime)?;
+    clean_application(base_path.parent().unwrap(), runtime, confirm)?;
 
     let mut removal_templates = Vec::new();
 
@@ -41,8 +43,6 @@ pub(crate) fn change_name_in_files(
         });
     }
 
-    let existing_name = base_path.file_name().unwrap().to_string_lossy().to_string();
-
     let existing_camel_case_name = existing_name.to_case(Case::Camel);
     let existing_kebab_case_name = existing_name.to_case(Case::Kebab);
     let existing_pascal_case_name = existing_name.to_case(Case::Pascal);
@@ -50,6 +50,21 @@ pub(crate) fn change_name_in_files(
     let camel_case_name = name.to_case(Case::Camel);
     let kebab_case_name = name.to_case(Case::Kebab);
     let pascal_case_name = name.to_case(Case::Pascal);
+
+    let mut seen_existing_names = HashSet::new();
+    let mut replacements = vec![(existing_pascal_case_name.clone(), pascal_case_name.clone())];
+    seen_existing_names.insert(existing_pascal_case_name.clone());
+
+    for (existing_replacement, new_replacement) in [
+        (existing_camel_case_name.clone(), camel_case_name.clone()),
+        (existing_kebab_case_name.clone(), kebab_case_name.clone()),
+        (existing_name.to_string(), name.to_string()),
+    ] {
+        if !seen_existing_names.contains(&existing_replacement) {
+            replacements.push((existing_replacement.clone(), new_replacement.clone()));
+            seen_existing_names.insert(existing_replacement.clone());
+        }
+    }
 
     for entry in WalkDir::new(base_path) {
         let entry = entry.unwrap();
@@ -63,17 +78,12 @@ pub(crate) fn change_name_in_files(
             let relative_path = entry.path().strip_prefix(base_path)?;
             if let Some(template) = rendered_templates_cache.get(entry.path()).ok().unwrap() {
                 let content = template.content;
-                let new_content = content
-                    .replace(&existing_pascal_case_name, &pascal_case_name)
-                    .replace(&existing_kebab_case_name, &kebab_case_name)
-                    .replace(&existing_camel_case_name, &camel_case_name)
-                    .replace(&existing_name, &name);
-                let new_file_name = relative_path
-                    .to_string_lossy()
-                    .replace(&existing_pascal_case_name, &pascal_case_name)
-                    .replace(&existing_kebab_case_name, &kebab_case_name)
-                    .replace(&existing_camel_case_name, &camel_case_name)
-                    .replace(&existing_name, &name);
+
+                let new_content = short_circuit_replacement(&content, &replacements);
+                let new_file_name = short_circuit_replacement(
+                    &relative_path.to_string_lossy().to_string(),
+                    &replacements,
+                );
 
                 let new_path = base_path.join(new_file_name.clone());
                 rendered_templates_cache.insert(
@@ -84,6 +94,7 @@ pub(crate) fn change_name_in_files(
                         context: None,
                     },
                 );
+
                 if relative_path.to_string_lossy().to_string() != new_file_name.clone() {
                     removal_templates.push(RemovalTemplate {
                         path: entry.path().to_path_buf(),
@@ -100,6 +111,7 @@ pub(crate) fn change_name_in_files(
 pub(crate) fn change_name(
     base_path: &Path,
     name: &str,
+    confirm: bool,
     manifest_data: MutableManifestData,
     project_package_json: &mut ProjectPackageJson,
     docker_compose: Option<&mut DockerCompose>,
@@ -317,6 +329,7 @@ pub(crate) fn change_name(
         &existing_name,
         name,
         &runtime.parse()?,
+        confirm,
         project_entry,
         rendered_templates_cache,
     )?);

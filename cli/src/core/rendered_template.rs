@@ -1,5 +1,5 @@
 use std::{
-    collections::{hash_map::Drain, HashMap},
+    collections::{HashMap, hash_map::Drain},
     fs::{create_dir_all, write},
     io::Write,
     path::{Path, PathBuf},
@@ -7,7 +7,7 @@ use std::{
 
 use anyhow::{Context, Result};
 use fs_extra::file::read_to_string;
-use include_dir::{include_dir, Dir};
+use include_dir::{Dir, include_dir};
 use termcolor::StandardStream;
 
 use super::watermark::apply_watermark;
@@ -15,7 +15,7 @@ use crate::constants::ERROR_FAILED_TO_CREATE_DIR;
 
 pub(crate) static TEMPLATES_DIR: Dir = include_dir!("src/templates");
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub(crate) struct RenderedTemplate {
     pub(crate) path: PathBuf,
     pub(crate) content: String,

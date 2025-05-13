@@ -50,14 +50,19 @@ pub(crate) trait ProjectManifestConfig {
     fn description(&self) -> &String;
 }
 
+#[derive(Debug)]
+
 pub(crate) struct ApplicationInitializationMetadata {
     pub(crate) database: Option<String>,
 }
+
+#[derive(Debug)]
 
 pub(crate) struct ProjectInitializationMetadata {
     pub(crate) project_name: String,
 }
 
+#[derive(Debug)]
 pub(crate) struct RouterInitializationMetadata {
     pub(crate) project_name: String,
     pub(crate) router_name: String,

@@ -1,4 +1,9 @@
-use std::{collections::HashMap, fs::read_to_string, io::Write, path::Path};
+use std::{
+    collections::{HashMap, HashSet},
+    fs::read_to_string,
+    io::Write,
+    path::Path,
+};
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, ArgMatches, Command};
@@ -281,7 +286,7 @@ pub(crate) fn generate_service_package_json(
         } else {
             ProjectDependencies {
                 app_name: config_data.app_name.to_string(),
-                database: Some(config_data.database.to_string()),
+                databases: HashSet::from([config_data.database.parse()?]),
                 app_core: Some(APP_CORE_VERSION.to_string()),
                 app_monitoring: Some(APP_MONITORING_VERSION.to_string()),
                 forklaunch_common: Some(COMMON_VERSION.to_string()),
@@ -508,18 +513,22 @@ impl CliCommand for ServiceCommand {
         )?
         .parse()?;
 
-        let infrastructure: Vec<Infrastructure> = prompt_comma_separated_list(
-            &mut line_editor,
-            "infrastructure",
-            matches,
-            &Infrastructure::VARIANTS,
-            None,
-            "additional infrastructure components",
-            true,
-        )?
-        .iter()
-        .map(|s| s.parse().unwrap())
-        .collect();
+        let infrastructure: Vec<Infrastructure> = if matches.ids().all(|id| id == "dryrun") {
+            prompt_comma_separated_list(
+                &mut line_editor,
+                "infrastructure",
+                matches,
+                &Infrastructure::VARIANTS,
+                None,
+                "additional infrastructure components",
+                true,
+            )?
+            .iter()
+            .map(|s| s.parse().unwrap())
+            .collect()
+        } else {
+            vec![]
+        };
 
         let description = prompt_without_validation(
             &mut line_editor,

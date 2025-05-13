@@ -1,8 +1,29 @@
-use std::{collections::HashMap, fmt, fs::read_to_string};
+use std::{
+    collections::{HashMap, HashSet},
+    fmt,
+};
 
 use serde::{Deserialize, Serialize, Serializer, de::Visitor};
+use serde_json::Value;
 
-use crate::core::manifest::application::ApplicationManifestData;
+use crate::constants::Database;
+
+#[derive(Debug)]
+struct ProjectDependenciesWithProjectName {
+    project_dependencies_value: Value,
+    app_name: String,
+}
+
+impl Serialize for ProjectDependenciesWithProjectName {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut deps = self.project_dependencies_value.clone();
+        deps["app_name"] = serde_json::to_value(self.app_name.clone()).unwrap();
+        deps.serialize(serializer)
+    }
+}
 
 #[derive(Debug, Serialize, Default)]
 pub struct ProjectScripts {
@@ -125,11 +146,11 @@ impl<'de> Deserialize<'de> for ProjectScripts {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct ProjectDependencies {
     pub app_name: String,
     pub bullmq: Option<String>,
-    pub database: Option<String>,
+    pub databases: HashSet<Database>,
     pub app_core: Option<String>,
     pub app_monitoring: Option<String>,
     pub forklaunch_common: Option<String>,
@@ -170,11 +191,11 @@ impl Serialize for ProjectDependencies {
         use serde::ser::SerializeMap;
         let mut map = serializer.serialize_map(None)?;
 
-        if let Some(ref version) = self.app_core {
-            map.serialize_entry(&format!("@{}/core", self.app_name), version)?;
+        if let Some(ref v) = self.app_core {
+            map.serialize_entry(&format!("@{}/core", self.app_name), v)?;
         }
-        if let Some(ref version) = self.app_monitoring {
-            map.serialize_entry(&format!("@{}/monitoring", self.app_name), version)?;
+        if let Some(ref v) = self.app_monitoring {
+            map.serialize_entry(&format!("@{}/monitoring", self.app_name), v)?;
         }
         if let Some(ref v) = self.forklaunch_common {
             map.serialize_entry("@forklaunch/common", v)?;
@@ -222,8 +243,8 @@ impl Serialize for ProjectDependencies {
             map.serialize_entry("@mikro-orm/core", v)?;
         }
         if let Some(ref v) = self.mikro_orm_migrations {
-            if let Some(ref database) = self.database {
-                if database == "mongodb" {
+            for database in &self.databases {
+                if database == &Database::MongoDB {
                     map.serialize_entry("@mikro-orm/migrations-mongodb", v)?;
                 } else {
                     map.serialize_entry("@mikro-orm/migrations", v)?;
@@ -231,8 +252,8 @@ impl Serialize for ProjectDependencies {
             }
         }
         if let Some(ref v) = self.mikro_orm_database {
-            if let Some(ref database) = self.database {
-                map.serialize_entry(&format!("@mikro-orm/{}", database), v)?;
+            for database in &self.databases {
+                map.serialize_entry(&format!("@mikro-orm/{}", database.to_string()), v)?;
             }
         }
         if let Some(ref v) = self.mikro_orm_reflection {
@@ -298,30 +319,26 @@ impl<'de> Deserialize<'de> for ProjectDependencies {
             {
                 let mut deps = ProjectDependencies::default();
 
-                let mut manifest_path = std::env::current_dir().unwrap();
-                while !manifest_path.join(".forklaunch").exists() {
-                    manifest_path = manifest_path.parent().unwrap().to_path_buf();
-                }
-
-                let manifest_data: ApplicationManifestData = toml::from_str(
-                    &read_to_string(manifest_path.join(".forklaunch").join("manifest.toml"))
-                        .unwrap(),
-                )
-                .unwrap();
-                let app_name = manifest_data.app_name;
-                deps.app_name = app_name.to_string();
-
                 while let Some((key, value)) = access.next_entry::<String, String>()? {
-                    if key.starts_with(&format!("@{}", app_name)) && key.ends_with("core") {
+                    if key == "app_name" {
+                        continue;
+                    }
+                    if deps.app_name.len() > 0
+                        && key.starts_with(&format!("{}", deps.app_name))
+                        && key.ends_with("core")
+                    {
                         deps.app_core = Some(value);
                         continue;
                     }
-                    if key.starts_with(&format!("@{}", app_name)) && key.ends_with("monitoring") {
+                    if deps.app_name.len() > 0
+                        && key.starts_with(&format!("{}", deps.app_name))
+                        && key.ends_with("monitoring")
+                    {
                         deps.app_monitoring = Some(value);
                         continue;
                     }
                     if key.starts_with("@mikro-orm") && key.ends_with("mongodb") {
-                        deps.database = Some("mongodb".to_string());
+                        deps.databases.insert(Database::MongoDB);
                         if key.contains("migrations") {
                             deps.mikro_orm_migrations = Some(value);
                         } else {
@@ -330,37 +347,49 @@ impl<'de> Deserialize<'de> for ProjectDependencies {
                         continue;
                     }
                     if key.starts_with("@mikro-orm") && key.ends_with("postgresql") {
-                        deps.database = Some("postgresql".to_string());
-                        deps.mikro_orm_database = Some(value);
+                        deps.databases.insert(Database::PostgreSQL);
+                        if key.contains("migrations") {
+                            deps.mikro_orm_migrations = Some(value);
+                        } else {
+                            deps.mikro_orm_database = Some(value);
+                        }
                         continue;
                     }
                     if key.starts_with("@mikro-orm") && key.ends_with("mysql") {
-                        deps.database = Some("mysql".to_string());
-                        deps.mikro_orm_database = Some(value);
+                        deps.databases.insert(Database::MySQL);
+                        if key.contains("migrations") {
+                            deps.mikro_orm_migrations = Some(value);
+                        } else {
+                            deps.mikro_orm_database = Some(value);
+                        }
                         continue;
                     }
                     if key.starts_with("@mikro-orm") && key.ends_with("mariadb") {
-                        deps.database = Some("mariadb".to_string());
-                        deps.mikro_orm_database = Some(value);
+                        deps.databases.insert(Database::MariaDB);
+                        if key.contains("migrations") {
+                            deps.mikro_orm_migrations = Some(value);
+                        } else {
+                            deps.mikro_orm_database = Some(value);
+                        }
                         continue;
                     }
                     if key.starts_with("@mikro-orm") && key.ends_with("sqlite") {
-                        deps.database = Some("sqlite".to_string());
+                        deps.databases.insert(Database::SQLite);
                         deps.mikro_orm_database = Some(value);
                         continue;
                     }
                     if key.starts_with("@mikro-orm") && key.ends_with("better-sqlite") {
-                        deps.database = Some("better-sqlite".to_string());
+                        deps.databases.insert(Database::BetterSQLite);
                         deps.better_sqlite3 = Some(value);
                         continue;
                     }
                     if key.starts_with("@mikro-orm") && key.ends_with("libsql") {
-                        deps.database = Some("libsql".to_string());
+                        deps.databases.insert(Database::LibSQL);
                         deps.mikro_orm_database = Some(value);
                         continue;
                     }
                     if key.starts_with("@mikro-orm") && key.ends_with("mssql") {
-                        deps.database = Some("mssql".to_string());
+                        deps.databases.insert(Database::MsSQL);
                         deps.mikro_orm_database = Some(value);
                         continue;
                     }
@@ -644,7 +673,20 @@ impl<'de> Deserialize<'de> for ProjectPackageJson {
                         }
                         "dependencies" => {
                             package.dependencies = Some(
-                                serde_json::from_value(value).map_err(serde::de::Error::custom)?,
+                                serde_json::from_value::<ProjectDependencies>(
+                                    serde_json::to_value(ProjectDependenciesWithProjectName {
+                                        project_dependencies_value: value,
+                                        app_name: package
+                                            .name
+                                            .clone()
+                                            .unwrap()
+                                            .split('/')
+                                            .collect::<Vec<&str>>()[0]
+                                            .to_string(),
+                                    })
+                                    .map_err(serde::de::Error::custom)?,
+                                )
+                                .map_err(serde::de::Error::custom)?,
                             )
                         }
                         "devDependencies" => {

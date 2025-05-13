@@ -8,35 +8,35 @@ choice! {
     pub(crate) enum Database {
         PostgreSQL = Choice {
             id: "postgresql",
-            exclusive_files:Some(&["sql.base.entity.ts"]),
+            exclusive_files: Some(&["sql.base.entity.ts"]),
         },
         MySQL = Choice {
             id: "mysql",
-            exclusive_files:Some(&["sql.base.entity.ts"]),
+            exclusive_files: Some(&["sql.base.entity.ts"]),
         },
         MariaDB = Choice {
             id: "mariadb",
-            exclusive_files:Some(&["sql.base.entity.ts"]),
+            exclusive_files: Some(&["sql.base.entity.ts"]),
         },
         MsSQL = Choice {
             id: "mssql",
-            exclusive_files:Some(&["sql.base.entity.ts"]),
+            exclusive_files: Some(&["sql.base.entity.ts"]),
         },
         MongoDB = Choice {
             id: "mongodb",
-            exclusive_files:Some(&["nosql.base.entity.ts"]),
+            exclusive_files: Some(&["nosql.base.entity.ts"]),
         },
         LibSQL = Choice {
             id: "libsql",
-            exclusive_files:Some(&["sql.base.entity.ts"]),
+            exclusive_files: Some(&["sql.base.entity.ts"]),
         },
         SQLite = Choice {
             id: "sqlite",
-            exclusive_files:Some(&["sql.base.entity.ts"]),
+            exclusive_files: Some(&["sql.base.entity.ts"]),
         },
         BetterSQLite = Choice {
             id: "better-sqlite",
-            exclusive_files:Some(&["sql.base.entity.ts"]),
+            exclusive_files: Some(&["sql.base.entity.ts"]),
         },
     }
 
@@ -80,22 +80,22 @@ choice! {
     pub(crate) enum Formatter {
         Prettier = Choice {
             id: "prettier",
-            exclusive_files:Some(&[".prettierignore", ".prettierrc"]),
+            exclusive_files: Some(&[".prettierignore", ".prettierrc"]),
         },
         Biome = Choice {
             id: "biome",
-            exclusive_files:Some(&["biome.json"]),
+            exclusive_files: Some(&["biome.json"]),
         },
     }
 
     pub(crate) enum Linter {
         Eslint = Choice {
             id: "eslint",
-            exclusive_files:Some(&["eslint.config.mjs"])  ,
+            exclusive_files: Some(&["eslint.config.mjs"])  ,
         },
         Oxlint = Choice {
             id: "oxlint",
-            exclusive_files:Some(&[".oxlint.config.json"]),
+            exclusive_files: Some(&[".oxlint.config.json"]),
         },
     }
 
@@ -124,11 +124,11 @@ choice! {
     pub(crate) enum TestFramework {
         Vitest = Choice {
             id: "vitest",
-            exclusive_files:Some(&["vitest.config.ts"]),
+            exclusive_files: Some(&["vitest.config.ts"]),
         },
         Jest = Choice {
             id: "jest",
-            exclusive_files:Some(&["jest.config.ts"]),
+            exclusive_files: Some(&["jest.config.ts"]),
         },
     }
 
@@ -143,9 +143,6 @@ choice! {
         },
     }
 
-    // #[derive(Debug, Clone, PartialEq)]
-    // pub(crate) enum Library {}
-
     pub(crate) enum Runtime {
         Node = Choice {
             id: "node",
@@ -159,36 +156,36 @@ choice! {
 
     pub(crate) enum License {
         Apgl = Choice {
-            id: "apgl",
-            exclusive_files: None,
+            id: "AGPL-3.0",
+            exclusive_files: Some(&["agpl-3.0"]),
         },
         Gpl = Choice {
-            id: "gpl",
-            exclusive_files: None,
+            id: "GPL-3.0",
+            exclusive_files: Some(&["gpl-3.0"]),
         },
         Lgpl = Choice {
-            id: "lgpl",
-            exclusive_files: None,
+            id: "LGPL-3.0",
+            exclusive_files: Some(&["lgpl-3.0"]),
         },
         Apache = Choice {
-            id: "apache",
-            exclusive_files: None,
+            id: "Apache-2.0",
+            exclusive_files: Some(&["apache-2.0"]),
         },
         Mit = Choice {
-            id: "mit",
-            exclusive_files: None,
+            id: "MIT",
+            exclusive_files: Some(&["mit"]),
         },
         Mozilla = Choice {
-            id: "mozilla",
-            exclusive_files: None,
+            id: "Mozilla-2.0",
+            exclusive_files: Some(&["mozilla-2.0"]),
         },
         Boost = Choice {
-            id: "boost",
-            exclusive_files: None,
+            id: "Boost-1.0",
+            exclusive_files: Some(&["boost-1.0"]),
         },
         Unlicense = Choice {
-            id: "unlicense",
-            exclusive_files: None,
+            id: "Unlicense",
+            exclusive_files: Some(&["unlicense"]),
         },
         None = Choice {
             id: "none",

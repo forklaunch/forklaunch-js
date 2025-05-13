@@ -37,7 +37,8 @@ impl RouterCommand {
 pub(crate) fn change_name(
     base_path: &Path,
     existing_name: &str,
-    name: &str,
+    new_name: &str,
+    confirm: bool,
     runtime: &Runtime,
     project_entry: &mut ProjectEntry,
     rendered_templates_cache: &mut RenderedTemplatesCache,
@@ -45,8 +46,9 @@ pub(crate) fn change_name(
     change_name_in_files(
         base_path,
         existing_name,
-        name,
+        new_name,
         runtime,
+        confirm,
         project_entry,
         rendered_templates_cache,
     )
@@ -55,12 +57,36 @@ pub(crate) fn change_name(
 impl CliCommand for RouterCommand {
     fn command(&self) -> Command {
         command("router", "Change a forklaunch router")
-            .arg(Arg::new("name").short('N').help("The name of the router"))
+            .alias("controller")
+            .alias("routes")
+            .arg(
+                Arg::new("base_path")
+                    .short('p')
+                    .long("path")
+                    .help("The service path"),
+            )
+            .arg(
+                Arg::new("existing-name")
+                    .short('e')
+                    .help("The original name of the router"),
+            )
+            .arg(
+                Arg::new("new-name")
+                    .short('N')
+                    .help("The new name of the router"),
+            )
             .arg(
                 Arg::new("dryrun")
                     .short('n')
                     .long("dryrun")
                     .help("Dry run the command")
+                    .action(ArgAction::SetTrue),
+            )
+            .arg(
+                Arg::new("confirm")
+                    .short('c')
+                    .long("confirm")
+                    .help("Flag to confirm any prompts")
                     .action(ArgAction::SetTrue),
             )
     }
@@ -74,7 +100,7 @@ impl CliCommand for RouterCommand {
             &mut line_editor,
             &mut stdout,
             matches,
-            &BasePathLocation::Service,
+            &BasePathLocation::Router,
             &BasePathType::Change,
         )?;
         let base_path = Path::new(&base_path_input);
@@ -85,6 +111,12 @@ impl CliCommand for RouterCommand {
             .join(".forklaunch")
             .join("manifest.toml");
 
+        let existing_name = matches.get_one::<String>("existing-name");
+        let new_name = matches.get_one::<String>("new-name");
+        let dryrun = matches.get_flag("dryrun");
+        let confirm = matches.get_flag("confirm");
+
+        let project_name = base_path.file_name().unwrap().to_string_lossy().to_string();
         let mut manifest_data = toml::from_str::<RouterManifestData>(
             &rendered_templates_cache
                 .get(&config_path)
@@ -95,21 +127,12 @@ impl CliCommand for RouterCommand {
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
         .initialize(InitializableManifestConfigMetadata::Router(
             RouterInitializationMetadata {
-                router_name: base_path.file_name().unwrap().to_string_lossy().to_string(),
-                project_name: base_path
-                    .parent()
-                    .unwrap()
-                    .file_name()
-                    .unwrap()
-                    .to_string_lossy()
-                    .to_string(),
+                router_name: existing_name.unwrap().clone(),
+                project_name: project_name.clone(),
             },
         ));
 
-        let name = matches.get_one::<String>("name");
-        let dryrun = matches.get_flag("dryrun");
-
-        let selected_options = if !matches.args_present() {
+        let selected_options = if matches.ids().all(|id| id == "dryrun" || id == "confirm") {
             let options = vec!["name"];
 
             let selections = MultiSelect::with_theme(&ColorfulTheme::default())
@@ -127,9 +150,9 @@ impl CliCommand for RouterCommand {
             vec![]
         };
 
-        let name = prompt_field_from_selections_with_validation(
-            "name",
-            name,
+        let new_name = prompt_field_from_selections_with_validation(
+            "new-name",
+            new_name,
             &selected_options,
             &mut line_editor,
             &mut stdout,
@@ -142,16 +165,17 @@ impl CliCommand for RouterCommand {
 
         let mut removal_templates = vec![];
 
-        if let Some(name) = name {
+        if let Some(new_name) = new_name {
             removal_templates.extend(change_name(
                 &base_path,
-                &manifest_data.router_name,
-                &name,
+                &existing_name.unwrap(),
+                &new_name,
+                confirm,
                 &manifest_data.runtime.parse()?,
                 &mut manifest_data
                     .projects
                     .iter_mut()
-                    .find(|project| project.name == manifest_data.router_name)
+                    .find(|project| project.name == project_name)
                     .unwrap(),
                 &mut rendered_templates_cache,
             )?);
@@ -176,11 +200,6 @@ impl CliCommand for RouterCommand {
 
         if !dryrun {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-            writeln!(
-                stdout,
-                "{} changed successfully!",
-                &manifest_data.router_name
-            )?;
             stdout.reset()?;
             format_code(&base_path, &manifest_data.runtime.parse()?);
         }

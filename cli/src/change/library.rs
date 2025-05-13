@@ -45,6 +45,7 @@ impl LibraryCommand {
 fn change_name(
     base_path: &Path,
     name: &str,
+    confirm: bool,
     manifest_data: &mut LibraryManifestData,
     project_package_json: &mut ProjectPackageJson,
     rendered_templates_cache: &mut RenderedTemplatesCache,
@@ -53,6 +54,7 @@ fn change_name(
     change_name_core(
         base_path,
         name,
+        confirm,
         MutableManifestData::Library(manifest_data),
         project_package_json,
         None,
@@ -97,6 +99,13 @@ impl CliCommand for LibraryCommand {
                     .help("Dry run the command")
                     .action(ArgAction::SetTrue),
             )
+            .arg(
+                Arg::new("confirm")
+                    .short('c')
+                    .long("confirm")
+                    .help("Flag to confirm any prompts")
+                    .action(ArgAction::SetTrue),
+            )
     }
 
     fn handler(&self, matches: &clap::ArgMatches) -> Result<()> {
@@ -113,9 +122,9 @@ impl CliCommand for LibraryCommand {
         let base_path = Path::new(&base_path_input);
 
         let config_path = &base_path
-            .join(".forklaunch")
             .parent()
             .unwrap()
+            .join(".forklaunch")
             .join("manifest.toml");
 
         let mut manifest_data: LibraryManifestData = toml::from_str::<LibraryManifestData>(
@@ -131,8 +140,9 @@ impl CliCommand for LibraryCommand {
         let name = matches.get_one::<String>("name");
         let description = matches.get_one::<String>("description");
         let dryrun = matches.get_flag("dryrun");
+        let confirm = matches.get_flag("confirm");
 
-        let selected_options = if matches.ids().all(|id| id == "dryrun") {
+        let selected_options = if matches.ids().all(|id| id == "dryrun" || id == "confirm") {
             let options = vec!["name", "database", "description", "infrastructure"];
 
             let selections = MultiSelect::with_theme(&ColorfulTheme::default())
@@ -196,6 +206,7 @@ impl CliCommand for LibraryCommand {
             move_templates.push(change_name(
                 &base_path,
                 &name,
+                confirm,
                 &mut manifest_data,
                 &mut project_json_to_write,
                 &mut rendered_templates_cache,

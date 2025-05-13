@@ -1,8 +1,8 @@
 import { createConfigInjector, getEnvVar, Lifetime } from '@forklaunch/core/services';
 import { Migrator } from '@mikro-orm/migrations{{#is_mongo}}-mongodb{{/is_mongo}}';
 import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
-import { number, SchemaValidator, string } from '@{{app_name}}/core';{{^is_mongo}}
-import { defineConfig, Platform, TextType, Type } from '@mikro-orm/core';{{/is_mongo}}
+import { number, SchemaValidator, string } from '@{{app_name}}/core';
+import { defineConfig{{^is_mongo}}, Platform, TextType, Type{{/is_mongo}} } from '@mikro-orm/core';
 import { {{db_driver}} } from '@mikro-orm/{{database}}';
 import dotenv from 'dotenv';
 import * as entities from './persistence/entities';
@@ -12,11 +12,11 @@ dotenv.config({ path: getEnvVar('ENV_FILE_PATH') });
 const configInjector = createConfigInjector(
   SchemaValidator(),
   {
-    {{^is_mongo}}DB_NAME: {
+    DB_NAME: {
       lifetime: Lifetime.Singleton,
       type: string,
       value: getEnvVar('DB_NAME')
-    },{{/is_mongo}}{{^is_in_memory_database}}
+    },{{^is_in_memory_database}}
     DB_HOST: {
       lifetime: Lifetime.Singleton,
       type: string,
@@ -48,24 +48,41 @@ const configInjector = createConfigInjector(
 export const validConfigInjector = configInjector.validateConfigSingletons(
   getEnvVar('ENV_FILE_PATH')
 );
+const tokens = validConfigInjector.tokens();
 //! Define the mikro-orm options config
 const mikroOrmOptionsConfig = defineConfig({
   driver: {{db_driver}},{{#is_mongo}}
   clientUrl: `mongodb://${validConfigInjector.resolve(
-    'DB_USER'
-  )}:${validConfigInjector.resolve('DB_PASSWORD')}@${validConfigInjector.resolve(
-    'DB_HOST'
-  )}:${validConfigInjector.resolve('DB_PORT')}/${validConfigInjector.resolve(
-    'DB_NAME'
+    tokens.DB_USER
+  )}:${validConfigInjector.resolve(
+    tokens.DB_PASSWORD
+  )}@${validConfigInjector.resolve(
+    tokens.DB_HOST
+  )}:${validConfigInjector.resolve(
+    tokens.DB_PORT
+  )}/${validConfigInjector.resolve(
+    tokens.DB_NAME
   )}?authSource=admin&directConnection=true&replicaSet=rs0`,{{/is_mongo}}{{^is_mongo}}
-  dbName: validConfigInjector.resolve('DB_NAME'),{{^is_in_memory_database}}
-  host: validConfigInjector.resolve('DB_HOST'),
-  user: validConfigInjector.resolve('DB_USER'),
-  password: validConfigInjector.resolve('DB_PASSWORD'),
-  port: validConfigInjector.resolve('DB_PORT'),{{/is_in_memory_database}}{{/is_mongo}}
+  dbName: validConfigInjector.resolve(
+    tokens.DB_NAME
+  ),{{^is_in_memory_database}}
+  host: validConfigInjector.resolve(
+    tokens.DB_HOST
+  ),
+  user: validConfigInjector.resolve(
+    tokens.DB_USER
+  ),
+  password: validConfigInjector.resolve(
+    tokens.DB_PASSWORD
+  ),
+  port: validConfigInjector.resolve(
+    tokens.DB_PORT
+  ),{{/is_in_memory_database}}{{/is_mongo}}
   entities: Object.values(entities),
   metadataProvider: TsMorphMetadataProvider,
-  debug: validConfigInjector.resolve('ENV') === 'development',
+  debug: validConfigInjector.resolve(
+    tokens.ENV
+  ) === 'development',
   extensions: [Migrator],{{^is_mongo}}
   discovery: {
     getMappedType(type: string, platform: Platform) {

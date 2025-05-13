@@ -4,8 +4,7 @@ use anyhow::Result;
 use fs_extra::file::read_to_string;
 use oxc_allocator::{Allocator, Box, CloneIn, Vec};
 use oxc_ast::ast::{
-    Argument, Declaration, Expression, IdentifierName, IdentifierReference, SourceType, Span,
-    Statement,
+    Argument, Declaration, Expression, IdentifierReference, SourceType, Span, Statement,
 };
 use oxc_codegen::{CodeGenerator, CodegenOptions};
 

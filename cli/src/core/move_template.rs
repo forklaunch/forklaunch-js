@@ -1,9 +1,13 @@
-use std::{fs::exists, io::Write, path::PathBuf};
+use std::{
+    fs::{exists, rename},
+    io::Write,
+    path::PathBuf,
+};
 
 use anyhow::{Context, Result};
 use fs_extra::{
-    dir::{self, move_dir},
-    file::{self, move_file},
+    dir::{self},
+    file::{self},
 };
 use termcolor::StandardStream;
 
@@ -26,32 +30,23 @@ pub(crate) fn move_template_files(
     stdout: &mut StandardStream,
 ) -> Result<()> {
     let mut file_copy_options = file::CopyOptions::new();
-    file_copy_options.overwrite = true;
+    file_copy_options.overwrite = false;
     let mut dir_copy_options = dir::CopyOptions::new();
-    dir_copy_options.overwrite = true;
+    dir_copy_options.overwrite = false;
     dir_copy_options.copy_inside = true;
+    dir_copy_options.content_only = false;
 
     for move_template in move_templates {
         if !dryrun {
             if exists(&move_template.path)? {
                 match move_template.r#type {
                     MoveTemplateType::File => {
-                        move_file(
-                            &move_template.path,
-                            &move_template.target,
-                            &file_copy_options,
-                        )
-                        .with_context(|| {
+                        rename(&move_template.path, &move_template.target).with_context(|| {
                             format!("Failed to move {}", move_template.path.display())
                         })?;
                     }
                     MoveTemplateType::Directory => {
-                        move_dir(
-                            &move_template.path,
-                            &move_template.target,
-                            &dir_copy_options,
-                        )
-                        .with_context(|| {
+                        rename(&move_template.path, &move_template.target).with_context(|| {
                             format!("Failed to move {}", move_template.path.display())
                         })?;
                     }

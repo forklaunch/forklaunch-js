@@ -33,7 +33,7 @@ use crate::{
         command::command,
         docker::update_dockerfile_contents,
         format::format_code,
-        license::{generate_license, match_license},
+        license::generate_license,
         manifest::{
             ProjectType, application::ApplicationManifestData, service::ServiceManifestData,
         },
@@ -100,7 +100,7 @@ fn change_name(
 ) -> Result<()> {
     let existing_name = manifest_data.app_name.clone();
 
-    manifest_data.app_name = name.to_string();
+    manifest_data.app_name = format!("@{}", name);
 
     application_json_to_write.name = Some(name.to_string());
     for project in project_jsons_to_write.values_mut() {
@@ -162,14 +162,10 @@ fn change_name(
                         format!("/{}", name).as_str(),
                     );
                 if contents != new_contents {
-                    let relative_path = path.strip_prefix(base_path)?;
-                    let new_path =
-                        Path::new(&base_path.to_string_lossy().replace(&existing_name, &name))
-                            .join(relative_path);
                     rendered_templates_cache.insert(
                         path.to_string_lossy(),
                         RenderedTemplate {
-                            path: new_path.to_path_buf(),
+                            path: path.to_path_buf(),
                             content: new_contents,
                             context: None,
                         },
@@ -282,7 +278,7 @@ fn update_config_files(
                 context: None,
             })?;
 
-            if file_content == watermarked_file_content {
+            if file_content.trim() == watermarked_file_content.trim() {
                 for project in project_jsons_to_write.keys() {
                     removal_templates.push(RemovalTemplate {
                         path: base_path.join(project).join(file),
@@ -1076,7 +1072,7 @@ fn change_runtime(
         context: None,
     })?;
 
-    if existing_dockerfile_contents != watermarked_dockerfile_contents {
+    if existing_dockerfile_contents.trim() != watermarked_dockerfile_contents.trim() {
         rendered_templates_cache.insert(
             base_path.join("Dockerfile").to_string_lossy(),
             RenderedTemplate {
@@ -1149,7 +1145,6 @@ fn change_test_framework(
     )?;
 
     let mut test_frameworks_to_preserve = HashSet::new();
-    // linters_to_preserve.insert(test_framework.to_string());
     test_frameworks_to_preserve.insert(test_framework.to_string());
 
     for file in preserved_files {
@@ -1275,7 +1270,7 @@ fn change_license(
     application_json_to_write: &mut ApplicationPackageJson,
     rendered_templates_cache: &mut RenderedTemplatesCache,
 ) -> Result<Option<RemovalTemplate>> {
-    manifest_data.license = match_license(license.clone())?;
+    manifest_data.license = license.to_string();
     let license_path = base_path.join("LICENSE");
 
     let mut removal_template = None;
@@ -1286,7 +1281,7 @@ fn change_license(
         });
     }
 
-    application_json_to_write.license = Some(match_license(license.clone())?);
+    application_json_to_write.license = Some(license.to_string());
 
     if let Some(license_file_contents) = generate_license(base_path, &manifest_data)? {
         rendered_templates_cache.insert(license_path.to_string_lossy(), license_file_contents);
@@ -1378,6 +1373,13 @@ impl CliCommand for ApplicationCommand {
                     .help("Dry run the command")
                     .action(ArgAction::SetTrue),
             )
+            .arg(
+                Arg::new("confirm")
+                    .short('c')
+                    .long("confirm")
+                    .help("Flag to confirm any prompts")
+                    .action(ArgAction::SetTrue),
+            )
     }
 
     fn handler(&self, matches: &clap::ArgMatches) -> Result<()> {
@@ -1412,8 +1414,9 @@ impl CliCommand for ApplicationCommand {
         let author = matches.get_one::<String>("author");
         let license = matches.get_one::<String>("license");
         let dryrun = matches.get_flag("dryrun");
+        let confirm = matches.get_flag("confirm");
 
-        let selected_options = if matches.ids().all(|id| id == "dryrun") {
+        let selected_options = if matches.ids().all(|id| id == "dryrun" || id == "confirm") {
             let options = vec![
                 "name",
                 "formatter",
@@ -1577,7 +1580,7 @@ impl CliCommand for ApplicationCommand {
             matches,
             "license",
             Some(&License::VARIANTS),
-            |input: &str| match_license(input.parse().unwrap()).is_ok(),
+            |input: &str| input.parse::<License>().is_ok(),
             |_| "Invalid license. Please try again".to_string(),
         )?;
 
@@ -1609,7 +1612,7 @@ impl CliCommand for ApplicationCommand {
             .collect();
 
         if let Some(name) = name {
-            clean_application(&base_path, &manifest_data.runtime.parse()?)?;
+            clean_application(&base_path, &manifest_data.runtime.parse()?, confirm)?;
 
             change_name(
                 &mut manifest_data,
@@ -1674,7 +1677,7 @@ impl CliCommand for ApplicationCommand {
         }
 
         if let Some(runtime) = runtime {
-            clean_application(&base_path, &manifest_data.runtime.parse()?)?;
+            clean_application(&base_path, &manifest_data.runtime.parse()?, confirm)?;
 
             let (runtime_removal_templates, runtime_symlink_templates) = change_runtime(
                 &mut line_editor,

@@ -216,13 +216,13 @@ pub(crate) fn prompt_field_from_selections_with_validation(
             Ok(current_value.map(|v| v.to_string()))
         }
     } else {
-        Ok(None)
+        Ok(current_value.map(|v| v.to_string()))
     }
 }
 
 pub(crate) fn prompt_comma_separated_list_from_selections(
     field_name: &str,
-    current_value: Option<&Vec<String>>,
+    current_value: Option<Vec<String>>,
     selected_options: &[&str],
     line_editor: &mut Editor<ArrayCompleter, DefaultHistory>,
     matches: &clap::ArgMatches,

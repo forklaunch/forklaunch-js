@@ -1,7 +1,7 @@
 use std::{collections::HashSet, path::Path};
 
 use anyhow::Result;
-use serde_json::{from_str, to_string, to_string_pretty};
+use serde_json::{from_str, to_string_pretty};
 use walkdir::WalkDir;
 
 use crate::{
@@ -97,21 +97,13 @@ pub(crate) fn change_database_base_entity(
 
     let mut all_projects_scan = HashSet::new();
 
-    all_projects_scan.insert(match database {
-        Database::MongoDB => "nosql.base.entity.ts",
-        _ => "sql.base.entity.ts",
-    });
+    all_projects_scan.insert(database.clone());
 
     for project in projects.iter() {
         if project.name != project_name {
             if let Some(resources) = &project.resources {
                 match &resources.database {
-                    Some(database) => {
-                        all_projects_scan.insert(match database.parse::<Database>()? {
-                            Database::MongoDB => "nosql.base.entity.ts",
-                            _ => "sql.base.entity.ts",
-                        })
-                    }
+                    Some(database) => all_projects_scan.insert(database.parse::<Database>()?),
                     None => false,
                 };
             }
@@ -126,7 +118,17 @@ pub(crate) fn change_database_base_entity(
             content: all_projects_scan
                 .iter()
                 .map(|export_source| {
-                    format!("export * from './{}';", export_source.replace(".ts", ""))
+                    let mut database_exports = String::new();
+                    let exclusive_files = export_source.metadata().exclusive_files;
+                    if let Some(export_sources) = exclusive_files {
+                        for export_source in export_sources {
+                            database_exports.push_str(&format!(
+                                "export * from './{}';",
+                                export_source.replace(".ts", "").to_string()
+                            ));
+                        }
+                    }
+                    database_exports
                 })
                 .collect::<Vec<String>>()
                 .join("\n"),
@@ -142,7 +144,7 @@ pub(crate) fn change_database_base_entity(
                 .content,
         )?;
         let mut core_package_json_dependencies = core_package_json.dependencies.unwrap();
-        core_package_json_dependencies.database = Some(Database::MongoDB.to_string());
+        core_package_json_dependencies.databases = all_projects_scan.clone();
         core_package_json_dependencies.mikro_orm_database =
             Some(MIKRO_ORM_DATABASE_VERSION.to_string());
         core_package_json.dependencies = Some(core_package_json_dependencies);
@@ -156,30 +158,28 @@ pub(crate) fn change_database_base_entity(
         );
     }
 
-    if !all_projects_scan.contains(
-        &existing_base_entity_path
-            .file_name()
-            .unwrap()
-            .to_str()
-            .unwrap(),
-    ) && apply_watermark(&RenderedTemplate {
-        path: existing_base_entity_path.clone().into(),
-        content: TEMPLATES_DIR
-            .get_file(
-                Path::new("project")
-                    .join("core")
-                    .join("persistence")
-                    .join(import_source_from),
-            )
-            .unwrap()
-            .contents_utf8()
-            .unwrap()
-            .to_string(),
-        context: None,
-    })? == rendered_templates_cache
-        .get(&existing_base_entity_path)?
-        .unwrap()
-        .content
+    if !all_projects_scan.contains(&existing_database)
+        && apply_watermark(&RenderedTemplate {
+            path: existing_base_entity_path.clone().into(),
+            content: TEMPLATES_DIR
+                .get_file(
+                    Path::new("project")
+                        .join("core")
+                        .join("persistence")
+                        .join(import_source_from),
+                )
+                .unwrap()
+                .contents_utf8()
+                .unwrap()
+                .to_string(),
+            context: None,
+        })?
+        .trim()
+            == rendered_templates_cache
+                .get(&existing_base_entity_path)?
+                .unwrap()
+                .content
+                .trim()
     {
         return Ok(Some(RemovalTemplate {
             path: existing_base_entity_path,

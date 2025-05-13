@@ -202,18 +202,22 @@ impl CliCommand for RouterCommand {
         )?;
         let base_path = Path::new(&base_path_input);
 
-        let infrastructure: Vec<Infrastructure> = prompt_comma_separated_list(
-            &mut line_editor,
-            "infrastructure",
-            matches,
-            &Infrastructure::VARIANTS,
-            None,
-            "additional infrastructure components",
-            true,
-        )?
-        .iter()
-        .map(|s| s.parse().unwrap())
-        .collect();
+        let infrastructure: Vec<Infrastructure> = if matches.ids().all(|id| id == "dryrun") {
+            prompt_comma_separated_list(
+                &mut line_editor,
+                "infrastructure",
+                matches,
+                &Infrastructure::VARIANTS,
+                None,
+                "additional infrastructure components",
+                true,
+            )?
+            .iter()
+            .map(|s| s.parse().unwrap())
+            .collect()
+        } else {
+            vec![]
+        };
 
         let path = Path::new(&base_path);
         let config_path = path

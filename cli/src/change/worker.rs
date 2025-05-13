@@ -1,4 +1,4 @@
-use std::{io::Write, path::Path};
+use std::{collections::HashSet, io::Write, path::Path};
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, Command};
@@ -72,6 +72,7 @@ impl WorkerCommand {
 fn change_name(
     base_path: &Path,
     name: &str,
+    confirm: bool,
     manifest_data: &mut WorkerManifestData,
     project_package_json: &mut ProjectPackageJson,
     docker_compose: &mut DockerCompose,
@@ -81,6 +82,7 @@ fn change_name(
     change_name_core(
         base_path,
         name,
+        confirm,
         MutableManifestData::Worker(manifest_data),
         project_package_json,
         Some(docker_compose),
@@ -202,7 +204,7 @@ fn change_type(
         WorkerType::Database => {
             let db = database.unwrap();
 
-            dependencies.database = Some(db.to_string());
+            dependencies.databases = HashSet::from([db.clone()]);
             dependencies.mikro_orm_core = Some(MIKRO_ORM_CORE_VERSION.to_string());
             dependencies.mikro_orm_migrations = Some(MIKRO_ORM_MIGRATIONS_VERSION.to_string());
             dependencies.mikro_orm_reflection = Some(MIKRO_ORM_REFLECTION_VERSION.to_string());
@@ -384,7 +386,7 @@ impl CliCommand for WorkerCommand {
             .arg(Arg::new("name").short('N').help("The name of the service"))
             .arg(
                 Arg::new("type")
-                    .short('b')
+                    .short('t')
                     .long("type")
                     .help("The type to use"),
             )
@@ -405,6 +407,13 @@ impl CliCommand for WorkerCommand {
                     .short('n')
                     .long("dryrun")
                     .help("Dry run the command")
+                    .action(ArgAction::SetTrue),
+            )
+            .arg(
+                Arg::new("confirm")
+                    .short('c')
+                    .long("confirm")
+                    .help("Flag to confirm any prompts")
                     .action(ArgAction::SetTrue),
             )
     }
@@ -450,8 +459,8 @@ impl CliCommand for WorkerCommand {
         let database = matches.get_one::<String>("database");
         let description = matches.get_one::<String>("description");
         let dryrun = matches.get_flag("dryrun");
-
-        let selected_options = if matches.ids().all(|id| id == "dryrun") {
+        let confirm = matches.get_flag("confirm");
+        let selected_options = if matches.ids().all(|id| id == "dryrun" || id == "confirm") {
             let options = vec!["name", "type", "description"];
 
             let selections = MultiSelect::with_theme(&ColorfulTheme::default())
@@ -585,6 +594,7 @@ impl CliCommand for WorkerCommand {
             move_templates.push(change_name(
                 &base_path,
                 &name,
+                confirm,
                 &mut manifest_data,
                 &mut project_json_to_write,
                 &mut docker_compose_data,

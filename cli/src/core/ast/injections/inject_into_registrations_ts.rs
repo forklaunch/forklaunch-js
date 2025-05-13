@@ -74,10 +74,6 @@ pub(crate) fn inject_into_registrations_config_injector<'a>(
                     };
 
                     for injected_declarator in injected_var_decl.declarations.iter_mut() {
-                        // let injected_new_expr = match &mut injected_declarator.init {
-                        //     Some(Expression::NewExpression(new_expr)) => new_expr,
-                        //     _ => continue,
-                        // };
                         let injected_call_expr = match &mut injected_declarator.init {
                             Some(Expression::CallExpression(call_expr)) => call_expr,
                             _ => continue,

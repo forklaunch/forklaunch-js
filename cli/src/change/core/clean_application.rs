@@ -5,10 +5,15 @@ use dialoguer::Confirm;
 
 use crate::constants::Runtime;
 
-pub(crate) fn clean_application(base_path: &Path, runtime: &Runtime) -> Result<()> {
-    let confirm = Confirm::new()
+pub(crate) fn clean_application(base_path: &Path, runtime: &Runtime, confirm: bool) -> Result<()> {
+    let confirm = if confirm {
+        true
+    } else {
+        Confirm::new()
+                .default(true)
                 .with_prompt("Performing changes will remove existing runtime files (clean:purge). Are you sure you want to continue?")
-                .interact()?;
+                .interact()?
+    };
 
     if confirm {
         let command = match runtime {
