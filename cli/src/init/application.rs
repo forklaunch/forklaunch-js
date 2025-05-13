@@ -444,18 +444,22 @@ impl CliCommand for ApplicationCommand {
             )
         };
 
-        let services: Vec<Service> = prompt_comma_separated_list(
-            &mut line_editor,
-            "services",
-            matches,
-            &Service::VARIANTS,
-            None,
-            "services",
-            false,
-        )?
-        .iter()
-        .map(|service| service.parse().unwrap())
-        .collect();
+        let services: Vec<Service> = if matches.ids().all(|id| id == "dryrun") {
+            prompt_comma_separated_list(
+                &mut line_editor,
+                "services",
+                matches,
+                &Service::VARIANTS,
+                None,
+                "services",
+                false,
+            )?
+            .iter()
+            .map(|service| service.parse().unwrap())
+            .collect()
+        } else {
+            vec![]
+        };
 
         let description = prompt_without_validation(
             &mut line_editor,
