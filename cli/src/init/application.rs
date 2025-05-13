@@ -458,7 +458,10 @@ impl CliCommand for ApplicationCommand {
             .map(|service| service.parse().unwrap())
             .collect()
         } else {
-            vec![]
+            match matches.get_many::<String>("services") {
+                Some(values) => values.map(|service| service.parse().unwrap()).collect(),
+                None => vec![],
+            }
         };
 
         let description = prompt_without_validation(

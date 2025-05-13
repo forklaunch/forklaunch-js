@@ -6,8 +6,6 @@ import { SchemaValidator } from '@{{app_name}}/core';
 import { {{pascal_case_name}}{{#is_worker}}Event{{/is_worker}}Record} from '../../persistence/entities/{{camel_case_name}}{{#is_worker}}Event{{/is_worker}}Record.entity';
 import { {{pascal_case_name}}RequestSchema, {{pascal_case_name}}ResponseSchema } from '../schemas/{{camel_case_name}}.schema';
 
-// Exported type that matches the request schema
-export type {{pascal_case_name}}RequestDto = {{pascal_case_name}}RequestDtoMapper['dto'];
 // RequestDtoMapper class that maps the request schema to the entity
 export class {{pascal_case_name}}RequestDtoMapper extends RequestDtoMapper<
   {{pascal_case_name}}{{#is_worker}}Event{{/is_worker}}Record,
@@ -26,9 +24,6 @@ export class {{pascal_case_name}}RequestDtoMapper extends RequestDtoMapper<
   }
 }
 
-// Exported type that matches the response schema
-export type {{pascal_case_name}}ResponseDto =
-  {{pascal_case_name}}ResponseDtoMapper['dto'];
 // ResponseDtoMapper class that maps the response schema to the entity
 export class {{pascal_case_name}}ResponseDtoMapper extends ResponseDtoMapper<
   {{pascal_case_name}}{{#is_worker}}Event{{/is_worker}}Record,
