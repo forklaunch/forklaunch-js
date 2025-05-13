@@ -198,17 +198,18 @@ fn attempt_replacement(
     script_replacement: &str,
     choices_to_preserve: Option<&mut HashSet<String>>,
 ) -> String {
-    if let Some(existing_script) = existing_script
-        && let Some(existing_script_generation) = existing_script_generation
-        && let Some(existing_script_choice) = existing_script_choice
-    {
-        if existing_script != existing_script_generation {
-            additional_scripts.insert(
-                format!("{}:{}", script_key, existing_script_choice),
-                existing_script.to_owned(),
-            );
-            if let Some(choices_to_preserve) = choices_to_preserve {
-                choices_to_preserve.insert(existing_script_choice.clone());
+    if let Some(existing_script) = existing_script {
+        if let Some(existing_script_generation) = existing_script_generation {
+            if let Some(existing_script_choice) = existing_script_choice {
+                if existing_script != existing_script_generation {
+                    additional_scripts.insert(
+                        format!("{}:{}", script_key, existing_script_choice),
+                        existing_script.to_owned(),
+                    );
+                    if let Some(choices_to_preserve) = choices_to_preserve {
+                        choices_to_preserve.insert(existing_script_choice.clone());
+                    }
+                }
             }
         }
     }

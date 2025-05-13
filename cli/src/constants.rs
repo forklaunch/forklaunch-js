@@ -177,7 +177,7 @@ choice! {
         },
         Mozilla = Choice {
             id: "Mozilla-2.0",
-            exclusive_files: Some(&["mozilla-2.0"]),
+            exclusive_files: Some(&["mpl-2.0"]),
         },
         Boost = Choice {
             id: "Boost-1.0",
