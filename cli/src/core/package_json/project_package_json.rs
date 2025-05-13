@@ -324,14 +324,14 @@ impl<'de> Deserialize<'de> for ProjectDependencies {
                         continue;
                     }
                     if deps.app_name.len() > 0
-                        && key.starts_with(&format!("{}", deps.app_name))
+                        && key.starts_with(&format!("@{}", deps.app_name))
                         && key.ends_with("core")
                     {
                         deps.app_core = Some(value);
                         continue;
                     }
                     if deps.app_name.len() > 0
-                        && key.starts_with(&format!("{}", deps.app_name))
+                        && key.starts_with(&format!("@{}", deps.app_name))
                         && key.ends_with("monitoring")
                     {
                         deps.app_monitoring = Some(value);

@@ -101,7 +101,7 @@ fn change_name(
 ) -> Result<()> {
     let existing_name = manifest_data.app_name.clone();
 
-    manifest_data.app_name = format!("@{}", name);
+    manifest_data.app_name = name.to_string();
 
     application_json_to_write.name = Some(name.to_string());
     for project in project_jsons_to_write.values_mut() {

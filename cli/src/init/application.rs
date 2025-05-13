@@ -89,7 +89,7 @@ fn generate_application_package_json(
         None
     };
     let package_json_contents = ApplicationPackageJson {
-        name: Some(format!("@{}", data.app_name)),
+        name: Some(data.app_name.clone()),
         version: Some("0.0.1".to_string()),
         description: Some(data.app_description.clone()),
         keywords: Some(vec![]),
