@@ -26,6 +26,7 @@ import {
 } from '@opentelemetry/semantic-conventions';
 import dotenv from 'dotenv';
 import { LevelWithSilent, LevelWithSilentOrString } from 'pino';
+import { v4 } from 'uuid';
 import { getEnvVar } from '../../services/getEnvVar';
 import { isForklaunchRequest } from '../guards/isForklaunchRequest';
 import {
@@ -40,6 +41,7 @@ import { logger } from './pinoLogger';
 export class OpenTelemetryCollector<
   AppliedMetricsDefinition extends MetricsDefinition
 > {
+  private readonly uuid = v4();
   private readonly logger;
   private readonly metrics: Record<
     keyof AppliedMetricsDefinition,
@@ -107,7 +109,10 @@ export class OpenTelemetryCollector<
       }
     }
 
-    this.log('info', 'OpenTelemetry (Traces + Logs + Metrics) started');
+    this.log(
+      'info',
+      'OpenTelemetry Collector (Traces + Logs + Metrics) started'
+    );
   }
 
   log(level: LevelWithSilent, ...args: (string | unknown | LoggerMeta)[]) {

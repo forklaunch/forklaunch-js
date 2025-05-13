@@ -3,6 +3,7 @@ import { ParsedQs } from 'qs';
 import { parse } from './parse.middleware';
 
 import { logger } from '../../telemetry/pinoLogger';
+import { recordMetric } from '../../telemetry/recordMetric';
 import {
   ForklaunchRequest,
   ForklaunchResHeaders,
@@ -11,7 +12,6 @@ import {
   ForklaunchStatusResponse
 } from '../../types/apiDefinition.types';
 import { ParamsDictionary } from '../../types/contractDetails.types';
-import { recordMetric } from '../../telemetry/recordMetric';
 
 /**
  * Enhances the Express-like `send` method with additional logic for response handling and validation.

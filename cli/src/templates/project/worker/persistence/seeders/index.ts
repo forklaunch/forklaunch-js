@@ -1,0 +1,1 @@
+../../../service/persistence/seeders/index.ts

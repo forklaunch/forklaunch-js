@@ -7,9 +7,7 @@
   "author": "",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
-  "files": [
-    "lib/**"
-  ],
+  "files": ["lib/**"],
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf lib pnpm.lock.yaml node_modules",
@@ -20,23 +18,23 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/common": "^0.2.6",
-    "@forklaunch/core": "^0.6.6",
-    "@forklaunch/express": "^0.4.6",
-    "@forklaunch/hyper-express": "^0.4.6",
-    "@forklaunch/validator": "^0.4.12",
-    "@mikro-orm/core": "^6.4.12",
-    "@mikro-orm/mongodb": "^6.4.12",
+    "@forklaunch/common": "^0.2.11",
+    "@forklaunch/core": "^0.7.4",
+    "@forklaunch/express": "^0.4.11",
+    "@forklaunch/hyper-express": "^0.4.11",
+    "@forklaunch/validator": "^0.5.4",
+    "@mikro-orm/core": "^6.4.13",
+    "@mikro-orm/mongodb": "^6.4.13",
     "@sinclair/typebox": "^0.34.33",
     "uuid": "^11.1.0",
-    "zod": "^3.24.2"
+    "zod": "^3.24.3"
   },
   "devDependencies": {
     "@types/express": "^5.0.1",
     "@types/qs": "^6.9.18",
     "@types/uuid": "^10.0.0",
-    "eslint": "^9.24.0",
+    "eslint": "^9.25.0",
     "prettier": "^3.5.3",
-    "typescript-eslint": "^8.29.1"
+    "typescript-eslint": "^8.30.1"
   }
 }

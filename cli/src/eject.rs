@@ -19,13 +19,11 @@ use crate::{
         ERROR_FAILED_TO_PARSE_PACKAGE_JSON, ERROR_FAILED_TO_READ_MANIFEST,
     },
     core::{
-        base_path::{prompt_base_path, BasePathLocation},
+        base_path::{prompt_base_path, BasePathLocation, BasePathType},
         command::command,
+        manifest::application::ApplicationManifestData,
         relative_path::get_relative_path,
-    },
-    init::{
-        application::ApplicationManifestData,
-        core::rendered_template::{write_rendered_templates, RenderedTemplate},
+        rendered_template::{write_rendered_templates, RenderedTemplate},
     },
     prompt::{prompt_for_confirmation, ArrayCompleter},
     CliCommand,
@@ -156,7 +154,14 @@ fn perform_string_replacements(
             };
 
             for dependency in dependencies_to_eject {
-                let module_types = ["/schemas", "/interfaces", "/types", "/services"];
+                let module_types = [
+                    "/schemas",
+                    "/interfaces",
+                    "/types",
+                    "/services",
+                    "/consumers",
+                    "/producers",
+                ];
                 for module_type in module_types {
                     new_content = new_content.replace(
                         format!("{}{}", dependency, module_type).as_str(),
@@ -239,7 +244,8 @@ impl CliCommand for EjectCommand {
             &mut line_editor,
             &mut stdout,
             matches,
-            &BasePathLocation::Eject,
+            &BasePathLocation::DeferToType,
+            &BasePathType::Eject,
         )?;
 
         let base_path = Path::new(&base_path);

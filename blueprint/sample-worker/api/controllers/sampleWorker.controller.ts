@@ -1,9 +1,3 @@
-import { Controller } from '@forklaunch/core/controllers';
-import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import {
-  ConfigInjector,
-  ScopedDependencyFactory
-} from '@forklaunch/core/services';
 import {
   handlers,
   NextFunction,
@@ -13,7 +7,13 @@ import {
   SchemaValidator
 } from '@forklaunch/blueprint-core';
 import { Metrics } from '@forklaunch/blueprint-monitoring';
-import { SampleWorkerService } from '../../domain/interfaces/sampleWorker.interface';
+import { Controller } from '@forklaunch/core/controllers';
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
+import {
+  ConfigInjector,
+  ScopedDependencyFactory
+} from '@forklaunch/core/services';
+import { SampleWorkerService } from '../../domain/interfaces/sampleWorkerService.interface';
 import {
   SampleWorkerRequestDtoMapper,
   SampleWorkerResponseDtoMapper

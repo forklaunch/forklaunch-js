@@ -1,0 +1,9 @@
+# Group imports by module
+group_imports = "StdExternalCrate"
+
+# Sort imports alphabetically
+imports_granularity = "Crate"
+
+# Other useful formatting options
+reorder_imports = true
+reorder_modules = true 

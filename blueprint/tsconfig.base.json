@@ -1,4 +1,3 @@
-// thank you @colinhacks: https://github.com/colinhacks/live-typescript-monorepo/blob/main/custom-conditions
 {
   "compilerOptions": {
     "composite": true,

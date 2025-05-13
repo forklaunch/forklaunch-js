@@ -124,7 +124,7 @@ describe('serviceFactory', () => {
     }
   });
 
-  test('loadSingletons', () => {
+  test('load', () => {
     expect(configInjector.instances).toEqual({
       a: 'a',
       h: staticX,

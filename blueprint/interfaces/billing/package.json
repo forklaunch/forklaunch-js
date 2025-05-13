@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/interfaces-billing",
-  "version": "0.1.9",
+  "version": "0.1.13",
   "description": "Billing interfaces for forklaunch",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -14,21 +14,19 @@
   "author": "Forklift Technologies, Inc.",
   "exports": {
     "./interfaces": {
+      "types": "./lib/interfaces/index.d.ts",
       "import": "./lib/interfaces/index.js",
-      "require": "./lib/interfaces/index.js",
-      "types": "./lib/interfaces/index.d.ts"
+      "require": "./lib/interfaces/index.js"
     },
     "./types": {
+      "types": "./lib/types/index.d.ts",
       "import": "./lib/types/index.js",
-      "require": "./lib/types/index.js",
-      "types": "./lib/types/index.d.ts"
+      "require": "./lib/types/index.js"
     }
   },
-  "files": [
-    "lib/**"
-  ],
+  "files": ["lib/**"],
   "scripts": {
-    "build": "tsc && pnpm package:eject",
+    "build": "tsc && if [ -f eject-package.bash ]; then pnpm package:eject; fi",
     "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
@@ -39,12 +37,12 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/common": "^0.2.6",
-    "@mikro-orm/core": "^6.4.12"
+    "@forklaunch/common": "^0.2.11",
+    "@mikro-orm/core": "^6.4.13"
   },
   "devDependencies": {
     "depcheck": "^1.4.7",
     "prettier": "^3.5.3",
-    "typedoc": "^0.28.2"
+    "typedoc": "^0.28.3"
   }
 }

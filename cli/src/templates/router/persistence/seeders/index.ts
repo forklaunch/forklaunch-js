@@ -1,1 +1,1 @@
-export { {{pascal_case_name}}RecordSeeder } from "./{{camel_case_name}}Record.seeder";
+export { {{pascal_case_name}}{{#is_worker}}Event{{/is_worker}}RecordSeeder } from "./{{camel_case_name}}{{#is_worker}}Event{{/is_worker}}Record.seeder";

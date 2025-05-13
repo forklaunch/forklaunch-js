@@ -66,6 +66,30 @@ export type ZodIdiomaticSchema = IdiomaticSchema<ZodSchemaValidator>;
 /**
  * Represents a container for a union of Zod idiomatic schemas.
  */
+export type ZodTupleContainer =
+  | readonly []
+  | readonly [ZodIdiomaticSchema, ...ZodIdiomaticSchema[]];
+
+/**
+ * Resolves a union container to a tuple of resolved Zod idiomatic schemas.
+ *
+ * @template T - The union container to resolve.
+ */
+export type TupleZodResolve<T extends ZodTupleContainer> = T extends [
+  infer A extends ZodIdiomaticSchema,
+  ...infer B extends ZodIdiomaticSchema[]
+]
+  ? [
+      ZodResolve<A>,
+      ...{
+        [K in keyof B]: ZodResolve<B[K]>;
+      }
+    ]
+  : [];
+
+/**
+ * Represents a container for a union of Zod idiomatic schemas.
+ */
 export type ZodUnionContainer = readonly [
   ZodIdiomaticSchema,
   ZodIdiomaticSchema,
@@ -110,3 +134,17 @@ export type ZodResolve<T, Depth extends number = 0> = Depth extends 29
           ? R
           : ZodNever
         : ZodNever;
+
+/**
+ * Represents the key type of a Zod record schema.
+ *
+ * @template T - The Zod idiomatic schema to get the key type from.
+ */
+export type ZodRecordKey<T extends ZodIdiomaticSchema> =
+  ZodResolve<T> extends infer R
+    ? R extends boolean
+      ? never
+      : unknown extends R
+        ? never
+        : R
+    : never;

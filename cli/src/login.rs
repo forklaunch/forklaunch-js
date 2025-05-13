@@ -4,7 +4,10 @@ use anyhow::Result;
 use clap::{ArgMatches, Command};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
-use crate::{core::command::command, core::token::get_token_path, CliCommand};
+use crate::{
+    core::{command::command, token::get_token_path},
+    CliCommand,
+};
 
 pub(super) struct LoginCommand;
 

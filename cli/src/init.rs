@@ -1,7 +1,6 @@
 use anyhow::Result;
 use application::ApplicationCommand;
 use clap::{ArgMatches, Command};
-use include_dir::{include_dir, Dir};
 use library::LibraryCommand;
 use router::RouterCommand;
 use service::ServiceCommand;
@@ -10,13 +9,10 @@ use worker::WorkerCommand;
 use crate::{core::command::command, CliCommand};
 
 pub(crate) mod application;
-pub(crate) mod core;
 pub(crate) mod library;
 pub(crate) mod router;
 pub(crate) mod service;
 pub(crate) mod worker;
-
-pub(crate) static TEMPLATES_DIR: Dir = include_dir!("src/templates");
 
 // TODO: add injected token into struct
 #[derive(Debug)]

@@ -1,5 +1,29 @@
 # @forklaunch/interfaces-billing
 
+## 0.1.13
+
+### Patch Changes
+
+- Fix bug where files not uploading to npm
+
+## 0.1.12
+
+### Patch Changes
+
+- Replace link dependencies, hotfix
+
+## 0.1.11
+
+### Patch Changes
+
+- Package bump and minor syntax changes
+
+## 0.1.10
+
+### Patch Changes
+
+- Minor bugfixes and package version increases
+
 ## 0.1.9
 
 ### Patch Changes

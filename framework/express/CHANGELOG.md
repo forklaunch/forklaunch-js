@@ -1,5 +1,54 @@
 # @forklaunch/express
 
+## 0.4.11
+
+### Patch Changes
+
+- Increase package versions
+- Updated dependencies
+  - @forklaunch/validator@0.5.4
+  - @forklaunch/common@0.2.11
+  - @forklaunch/core@0.7.4
+
+## 0.4.10
+
+### Patch Changes
+
+- stringify logger arguments
+- Updated dependencies
+  - @forklaunch/validator@0.5.3
+  - @forklaunch/common@0.2.10
+  - @forklaunch/core@0.7.3
+
+## 0.4.9
+
+### Patch Changes
+
+- Various bugfixes, including deduplicated http metrics, multiple constructed singleton loading and leaking empty enqueued redis records"
+- Updated dependencies
+  - @forklaunch/validator@0.5.2
+  - @forklaunch/common@0.2.9
+  - @forklaunch/core@0.7.2
+
+## 0.4.8
+
+### Patch Changes
+
+- Upgrade package versions
+- Updated dependencies
+  - @forklaunch/validator@0.5.1
+  - @forklaunch/common@0.2.8
+  - @forklaunch/core@0.7.1
+
+## 0.4.7
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.5.0
+  - @forklaunch/core@0.7.0
+  - @forklaunch/common@0.2.7
+
 ## 0.4.6
 
 ### Patch Changes

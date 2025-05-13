@@ -1,6 +1,10 @@
 import { number, SchemaValidator, string } from '@forklaunch/blueprint-core';
-import { ConfigInjector, getEnvVar, Lifetime } from '@forklaunch/core/services';
-import { MikroORMOptions, Platform, TextType, Type } from '@mikro-orm/core';
+import {
+  createConfigInjector,
+  getEnvVar,
+  Lifetime
+} from '@forklaunch/core/services';
+import { defineConfig, Platform, TextType, Type } from '@mikro-orm/core';
 import { Migrator } from '@mikro-orm/migrations';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
@@ -9,7 +13,7 @@ import * as entities from './persistence/entities';
 
 dotenv.config({ path: getEnvVar('ENV_FILE_PATH') });
 
-const configInjector = new ConfigInjector(SchemaValidator(), {
+const configInjector = createConfigInjector(SchemaValidator(), {
   DB_NAME: {
     lifetime: Lifetime.Singleton,
     type: string,
@@ -45,7 +49,7 @@ const configInjector = new ConfigInjector(SchemaValidator(), {
 export const validConfigInjector = configInjector.validateConfigSingletons(
   getEnvVar('ENV_FILE_PATH')
 );
-const mikroOrmOptionsConfig: Partial<MikroORMOptions> = {
+const mikroOrmOptionsConfig = defineConfig({
   driver: PostgreSqlDriver,
   dbName: validConfigInjector.resolve('DB_NAME'),
   host: validConfigInjector.resolve('DB_HOST'),
@@ -66,10 +70,14 @@ const mikroOrmOptionsConfig: Partial<MikroORMOptions> = {
       return platform.getDefaultMappedType(type);
     }
   },
+  migrations: {
+    path: 'dist/migrations-postgresql',
+    pathTs: 'migrations-postgresql'
+  },
   seeder: {
     path: 'dist/persistence',
     glob: 'seeder.js'
   }
-};
+});
 
 export default mikroOrmOptionsConfig;

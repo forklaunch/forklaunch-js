@@ -14,5 +14,6 @@
     "editor.codeActionsOnSave": {
       "source.organizeImports": "never"
     }
-  }
+  },
+  "rust-analyzer.checkOnSave": true
 }

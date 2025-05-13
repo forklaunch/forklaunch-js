@@ -1,14 +1,14 @@
-use crate::{
-    constants::{error_failed_to_write_file, ERROR_FAILED_TO_SEND_REQUEST, PROD_API_URL},
-    core::command::command,
-    core::token::get_token,
-};
+use std::{fs::write, path::Path};
+
 use anyhow::{bail, Context, Result};
 use clap::{Arg, ArgMatches, Command};
 use reqwest::{blocking::Client, StatusCode};
-use std::{fs::write, path::Path};
 
 use super::{unwrap_id, CliCommand};
+use crate::{
+    constants::{error_failed_to_write_file, ERROR_FAILED_TO_SEND_REQUEST, PROD_API_URL},
+    core::{command::command, token::get_token},
+};
 
 #[derive(Debug)]
 pub(crate) struct PullCommand;

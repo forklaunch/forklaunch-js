@@ -1,20 +1,22 @@
-use std::{fs::read_to_string, path::Path};
+use std::{
+    collections::{HashMap, HashSet},
+    fs::read_to_string,
+    io::Write,
+    path::Path,
+};
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use convert_case::{Case, Casing};
-use ramhorns::Content;
-use rustyline::{history::DefaultHistory, Editor};
-use serde::{Deserialize, Serialize};
+use rustyline::{Editor, history::DefaultHistory};
 use serde_json::to_string_pretty;
-use std::io::Write;
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use toml::from_str;
 
 use crate::{
-    config_struct,
+    CliCommand,
     constants::{
-        ERROR_FAILED_TO_ADD_BASE_ENTITY_TO_CORE,
+        Database, ERROR_FAILED_TO_ADD_BASE_ENTITY_TO_CORE,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON,
@@ -22,231 +24,73 @@ use crate::{
         ERROR_FAILED_TO_ADD_SERVICE_METADATA_TO_ARTIFACTS, ERROR_FAILED_TO_CREATE_GITIGNORE,
         ERROR_FAILED_TO_CREATE_PACKAGE_JSON, ERROR_FAILED_TO_CREATE_SYMLINKS,
         ERROR_FAILED_TO_CREATE_TSCONFIG, ERROR_FAILED_TO_PARSE_MANIFEST,
-        ERROR_FAILED_TO_READ_MANIFEST, ERROR_FAILED_TO_WRITE_SERVICE_FILES, VALID_DATABASES,
+        ERROR_FAILED_TO_READ_MANIFEST, ERROR_FAILED_TO_UPDATE_DOCKERFILE,
+        ERROR_FAILED_TO_WRITE_SERVICE_FILES, Infrastructure, Runtime, TestFramework,
     },
     core::{
-        base_path::{prompt_base_path, BasePathLocation},
-        manifest::{ProjectManifestConfig, ProjectType, ResourceInventory},
-    },
-    prompt::{prompt_with_validation, prompt_without_validation, ArrayCompleter},
-};
-
-use super::{
-    command,
-    core::{
-        database::{add_base_entity_to_core, match_database},
-        docker::add_service_definition_to_docker_compose,
+        base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        command::command,
+        database::{
+            add_base_entity_to_core, get_database_port, get_db_driver, is_in_memory_database,
+        },
+        docker::{add_service_definition_to_docker_compose, update_dockerfile_contents},
+        format::format_code,
         gitignore::generate_gitignore,
-        manifest::add_project_definition_to_manifest,
+        manifest::{
+            ManifestData, ProjectType, ResourceInventory, add_project_definition_to_manifest,
+            application::ApplicationManifestData, service::ServiceManifestData,
+        },
+        name::validate_name,
         package_json::{
             add_project_definition_to_package_json,
             package_json_constants::{
+                AJV_VERSION, APP_CORE_VERSION, APP_MONITORING_VERSION, BETTER_SQLITE3_VERSION,
+                BILLING_BASE_VERSION, BILLING_INTERFACES_VERSION, BIOME_VERSION, COMMON_VERSION,
+                CORE_VERSION, DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION,
+                HYPER_EXPRESS_VERSION, IAM_BASE_VERSION, IAM_INTERFACES_VERSION,
+                MIKRO_ORM_CLI_VERSION, MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION,
+                MIKRO_ORM_MIGRATIONS_VERSION, MIKRO_ORM_REFLECTION_VERSION,
+                MIKRO_ORM_SEEDER_VERSION, OXLINT_VERSION, PRETTIER_VERSION, PROJECT_BUILD_SCRIPT,
+                PROJECT_DOCS_SCRIPT, PROJECT_SEED_SCRIPT, SQLITE3_VERSION, TSX_VERSION,
+                TYPEBOX_VERSION, TYPEDOC_VERSION, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION,
+                TYPES_EXPRESS_VERSION, TYPES_QS_VERSION, TYPES_UUID_VERSION,
+                TYPESCRIPT_ESLINT_VERSION, UUID_VERSION, VALIDATOR_VERSION, ZOD_VERSION,
                 project_clean_script, project_dev_local_script, project_dev_server_script,
+                project_format_script, project_lint_fix_script, project_lint_script,
                 project_migrate_script, project_start_server_script, project_test_script,
-                AJV_VERSION, APP_CORE_VERSION, APP_MONITORING_VERSION, BILLING_BASE_VERSION,
-                BILLING_INTERFACES_VERSION, COMMON_VERSION, CORE_VERSION, DOTENV_VERSION,
-                ESLINT_VERSION, EXPRESS_VERSION, HYPER_EXPRESS_VERSION, IAM_BASE_VERSION,
-                IAM_INTERFACES_VERSION, MIKRO_ORM_CLI_VERSION, MIKRO_ORM_CORE_VERSION,
-                MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
-                MIKRO_ORM_REFLECTION_VERSION, MIKRO_ORM_SEEDER_VERSION, PROJECT_BUILD_SCRIPT,
-                PROJECT_DOCS_SCRIPT, PROJECT_FORMAT_SCRIPT, PROJECT_LINT_FIX_SCRIPT,
-                PROJECT_LINT_SCRIPT, PROJECT_SEED_SCRIPT, TSX_VERSION, TYPEBOX_VERSION,
-                TYPEDOC_VERSION, TYPESCRIPT_ESLINT_VERSION,
-                TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION, TYPES_QS_VERSION,
-                TYPES_UUID_VERSION, UUID_VERSION, VALIDATOR_VERSION, ZOD_VERSION,
             },
             project_package_json::{
-                ProjectDependencies, ProjectDevDependencies, ProjectMikroOrm, ProjectPackageJson,
-                ProjectScripts, MIKRO_ORM_CONFIG_PATHS,
+                MIKRO_ORM_CONFIG_PATHS, ProjectDependencies, ProjectDevDependencies,
+                ProjectMikroOrm, ProjectPackageJson, ProjectScripts,
             },
             update_application_package_json,
         },
         pnpm_workspace::add_project_definition_to_pnpm_workspace,
-        rendered_template::{write_rendered_templates, RenderedTemplate},
+        rendered_template::{RenderedTemplate, write_rendered_templates},
         symlinks::generate_symlinks,
-        template::{generate_with_template, PathIO, TemplateManifestData},
+        template::{PathIO, generate_with_template},
         tsconfig::generate_tsconfig,
     },
-    CliCommand,
+    prompt::{
+        ArrayCompleter, prompt_comma_separated_list, prompt_with_validation,
+        prompt_without_validation,
+    },
 };
-
-config_struct!(
-    #[derive(Debug, Content, Serialize, Clone)]
-    pub(crate) struct ServiceManifestData {
-        #[serde(skip_serializing, skip_deserializing)]
-        pub(crate) service_name: String,
-        #[serde(skip_serializing, skip_deserializing)]
-        pub(crate) camel_case_name: String,
-        #[serde(skip_serializing, skip_deserializing)]
-        pub(crate) pascal_case_name: String,
-        #[serde(skip_serializing, skip_deserializing)]
-        pub(crate) kebab_case_name: String,
-        #[serde(skip_serializing, skip_deserializing)]
-        pub(crate) database: String,
-        #[serde(skip_serializing, skip_deserializing)]
-        pub(crate) description: String,
-        #[serde(skip_serializing, skip_deserializing)]
-        pub(crate) db_driver: String,
-        #[serde(skip_serializing, skip_deserializing)]
-        pub(crate) is_postgres: bool,
-        #[serde(skip_serializing, skip_deserializing)]
-        pub(crate) is_mongo: bool,
-    }
-);
-
-impl ProjectManifestConfig for ServiceManifestData {
-    fn name(&self) -> &String {
-        &self.service_name
-    }
-}
-
-#[derive(Debug)]
-pub(super) struct ServiceCommand;
-
-impl ServiceCommand {
-    pub(super) fn new() -> Self {
-        Self {}
-    }
-}
-
-impl CliCommand for ServiceCommand {
-    fn command(&self) -> Command {
-        command("service", "Initialize a new service")
-            .alias("svc")
-            .alias("project")
-            .alias("proj")
-            .arg(Arg::new("name").help("The name of the service"))
-            .arg(
-                Arg::new("base_path")
-                    .short('p')
-                    .long("path")
-                    .help("The application path to initialize the service in"),
-            )
-            .arg(
-                Arg::new("database")
-                    .short('d')
-                    .long("database")
-                    .help("The database to use")
-                    .value_parser(VALID_DATABASES),
-            )
-            .arg(
-                Arg::new("description")
-                    .short('D')
-                    .long("description")
-                    .help("The description of the service"),
-            )
-            .arg(
-                Arg::new("dryrun")
-                    .short('n')
-                    .long("dryrun")
-                    .help("Dry run the command")
-                    .action(ArgAction::SetTrue),
-            )
-    }
-
-    fn handler(&self, matches: &ArgMatches) -> Result<()> {
-        let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
-        let mut stdout = StandardStream::stdout(ColorChoice::Always);
-
-        let service_name = prompt_with_validation(
-            &mut line_editor,
-            &mut stdout,
-            "name",
-            matches,
-            "Enter service name: ",
-            None,
-            |input: &str| {
-                !input.is_empty()
-                    && !input.contains(' ')
-                    && !input.contains('\t')
-                    && !input.contains('\n')
-                    && !input.contains('\r')
-            },
-            |_| "Service name cannot be empty or include spaces. Please try again".to_string(),
-        )?;
-
-        let base_path = prompt_base_path(
-            &mut line_editor,
-            &mut stdout,
-            matches,
-            &BasePathLocation::Service,
-        )?;
-
-        let database = prompt_with_validation(
-            &mut line_editor,
-            &mut stdout,
-            "database",
-            matches,
-            "Enter database type",
-            Some(&VALID_DATABASES),
-            |input| VALID_DATABASES.contains(&input),
-            |_| "Invalid database type. Please try again".to_string(),
-        )?;
-
-        let description = prompt_without_validation(
-            &mut line_editor,
-            &mut stdout,
-            "description",
-            matches,
-            "Enter service description (optional): ",
-        )?;
-
-        let config_path = Path::new(&base_path)
-            .join(".forklaunch")
-            .join("manifest.toml");
-
-        let mut config_data: ServiceManifestData = ServiceManifestData {
-            service_name: service_name.clone(),
-            camel_case_name: service_name.to_case(Case::Camel),
-            pascal_case_name: service_name.to_case(Case::Pascal),
-            kebab_case_name: service_name.to_case(Case::Kebab),
-            description: description.clone(),
-            database: database.clone(),
-            db_driver: match_database(&database),
-            is_mongo: database == "mongodb",
-            is_postgres: database == "postgresql",
-
-            ..from_str(&read_to_string(config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?)
-                .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
-        };
-
-        let dryrun = matches.get_flag("dryrun");
-        generate_basic_service(
-            &service_name,
-            &base_path.to_string(),
-            &mut config_data,
-            &mut stdout,
-            dryrun,
-        )
-        .with_context(|| "Failed to create service")?;
-
-        if !dryrun {
-            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-            writeln!(stdout, "{} initialized successfully!", service_name)?;
-            stdout.reset()?;
-        }
-
-        Ok(())
-    }
-}
 
 fn generate_basic_service(
     service_name: &String,
-    base_path: &String,
+    base_path: &Path,
     config_data: &mut ServiceManifestData,
     stdout: &mut StandardStream,
     dryrun: bool,
 ) -> Result<()> {
-    let output_path = Path::new(base_path)
-        .join(service_name)
-        .to_string_lossy()
-        .to_string();
+    let output_path = base_path.join(service_name);
     let template_dir = PathIO {
         input_path: Path::new("project")
             .join("service")
             .to_string_lossy()
             .to_string(),
-        output_path: output_path.clone(),
+        output_path: output_path.to_string_lossy().to_string(),
     };
 
     let ignore_files = vec![];
@@ -256,7 +100,7 @@ fn generate_basic_service(
     let mut rendered_templates = generate_with_template(
         None,
         &template_dir,
-        &TemplateManifestData::Service(&config_data),
+        &ManifestData::Service(&config_data),
         &ignore_files,
         &ignore_dirs,
         &preserve_files,
@@ -280,16 +124,27 @@ fn generate_basic_service(
             .with_context(|| ERROR_FAILED_TO_ADD_SERVICE_METADATA_TO_ARTIFACTS)?,
     );
     rendered_templates.extend(
-        add_base_entity_to_core(&TemplateManifestData::Service(config_data), base_path)
+        add_base_entity_to_core(&ManifestData::Service(config_data), base_path)
             .with_context(|| ERROR_FAILED_TO_ADD_BASE_ENTITY_TO_CORE)?,
     );
+
+    if config_data.is_in_memory_database {
+        rendered_templates.push(RenderedTemplate {
+            path: base_path.join("Dockerfile"),
+            content: update_dockerfile_contents(
+                &read_to_string(base_path.join("Dockerfile"))?,
+                &config_data,
+            )?,
+            context: Some(ERROR_FAILED_TO_UPDATE_DOCKERFILE.to_string()),
+        });
+    }
 
     write_rendered_templates(&rendered_templates, dryrun, stdout)
         .with_context(|| ERROR_FAILED_TO_WRITE_SERVICE_FILES)?;
 
     generate_symlinks(
         Some(base_path),
-        &template_dir.output_path,
+        &Path::new(&template_dir.output_path),
         config_data,
         dryrun,
     )
@@ -300,7 +155,7 @@ fn generate_basic_service(
 
 fn add_service_to_artifacts(
     config_data: &mut ServiceManifestData,
-    base_path: &String,
+    base_path: &Path,
 ) -> Result<Vec<RenderedTemplate>> {
     let docker_compose_buffer =
         add_service_definition_to_docker_compose(config_data, base_path, None)
@@ -312,45 +167,50 @@ fn add_service_to_artifacts(
         Some(ResourceInventory {
             database: Some(config_data.database.to_owned()),
             cache: None,
+            queue: None,
         }),
         Some(vec![config_data.service_name.clone()]),
+        None,
     )
     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
 
+    let runtime = config_data.runtime.parse()?;
+
     let mut package_json_buffer: Option<String> = None;
-    if config_data.runtime == "bun" {
-        package_json_buffer = Some(
-            add_project_definition_to_package_json(config_data, base_path)
-                .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON)?,
-        );
-    }
     let mut pnpm_workspace_buffer: Option<String> = None;
-    if config_data.runtime == "node" {
-        pnpm_workspace_buffer = Some(
-            add_project_definition_to_pnpm_workspace(base_path, config_data)
-                .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?,
-        );
+
+    match runtime {
+        Runtime::Bun => {
+            package_json_buffer = Some(
+                add_project_definition_to_package_json(base_path, config_data)
+                    .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON)?,
+            );
+        }
+        Runtime::Node => {
+            pnpm_workspace_buffer = Some(
+                add_project_definition_to_pnpm_workspace(base_path, config_data)
+                    .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?,
+            );
+        }
     }
 
     let mut rendered_templates = Vec::new();
 
     rendered_templates.push(RenderedTemplate {
-        path: Path::new(base_path).join("docker-compose.yaml"),
+        path: base_path.join("docker-compose.yaml"),
         content: docker_compose_buffer,
         context: Some(ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE.to_string()),
     });
 
     rendered_templates.push(RenderedTemplate {
-        path: Path::new(base_path)
-            .join(".forklaunch")
-            .join("manifest.toml"),
+        path: base_path.join(".forklaunch").join("manifest.toml"),
         content: forklaunch_manifest_buffer.clone(),
         context: Some(ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST.to_string()),
     });
 
     rendered_templates.push(
         update_application_package_json(
-            &TemplateManifestData::Service(config_data),
+            &ManifestData::Service(config_data),
             base_path,
             package_json_buffer,
         )?
@@ -359,7 +219,7 @@ fn add_service_to_artifacts(
 
     if let Some(pnpm_workspace_buffer) = pnpm_workspace_buffer {
         rendered_templates.push(RenderedTemplate {
-            path: Path::new(base_path).join("pnpm-workspace.yaml"),
+            path: base_path.join("pnpm-workspace.yaml"),
             content: pnpm_workspace_buffer,
             context: Some(ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE.to_string()),
         });
@@ -370,12 +230,18 @@ fn add_service_to_artifacts(
 
 pub(crate) fn generate_service_package_json(
     config_data: &ServiceManifestData,
-    base_path: &String,
+    base_path: &Path,
     dependencies_override: Option<ProjectDependencies>,
     dev_dependencies_override: Option<ProjectDevDependencies>,
     scripts_override: Option<ProjectScripts>,
     main_override: Option<String>,
 ) -> Result<RenderedTemplate> {
+    let test_framework: Option<TestFramework> =
+        if let Some(test_framework) = &config_data.test_framework {
+            Some(test_framework.parse()?)
+        } else {
+            None
+        };
     let package_json_contents = ProjectPackageJson {
         name: Some(format!(
             "@{}/{}",
@@ -392,20 +258,26 @@ pub(crate) fn generate_service_package_json(
         } else {
             ProjectScripts {
                 build: Some(PROJECT_BUILD_SCRIPT.to_string()),
-                clean: Some(project_clean_script(config_data.runtime.as_str()).to_string()),
-                dev: Some(project_dev_server_script(config_data.runtime.as_str()).to_string()),
-                dev_local: Some(project_dev_local_script(config_data.runtime.as_str()).to_string()),
-                test: Some(project_test_script(config_data.test_framework.as_str()).to_string()),
+                clean: Some(project_clean_script(&config_data.runtime.parse()?)),
+                dev: Some(project_dev_server_script(
+                    &config_data.runtime.parse()?,
+                    config_data.is_database_enabled,
+                )),
+                dev_local: Some(project_dev_local_script(&config_data.runtime.parse()?)),
+                test: project_test_script(&config_data.runtime.parse()?, &test_framework),
                 docs: Some(PROJECT_DOCS_SCRIPT.to_string()),
-                format: Some(PROJECT_FORMAT_SCRIPT.to_string()),
-                lint: Some(PROJECT_LINT_SCRIPT.to_string()),
-                lint_fix: Some(PROJECT_LINT_FIX_SCRIPT.to_string()),
-                migrate_create: Some(project_migrate_script("create").to_string()),
-                migrate_down: Some(project_migrate_script("down").to_string()),
-                migrate_init: Some(project_migrate_script("init").to_string()),
-                migrate_up: Some(project_migrate_script("up").to_string()),
+                format: Some(project_format_script(&config_data.formatter.parse()?)),
+                lint: Some(project_lint_script(&config_data.linter.parse()?)),
+                lint_fix: Some(project_lint_fix_script(&config_data.linter.parse()?)),
+                migrate_create: Some(project_migrate_script("create")),
+                migrate_down: Some(project_migrate_script("down")),
+                migrate_init: Some(project_migrate_script("init")),
+                migrate_up: Some(project_migrate_script("up")),
                 seed: Some(PROJECT_SEED_SCRIPT.to_string()),
-                start: Some(project_start_server_script().to_string()),
+                start: Some(project_start_server_script(
+                    &config_data.runtime.parse()?,
+                    config_data.is_database_enabled,
+                )),
                 ..Default::default()
             }
         }),
@@ -414,7 +286,7 @@ pub(crate) fn generate_service_package_json(
         } else {
             ProjectDependencies {
                 app_name: config_data.app_name.to_string(),
-                database: Some(config_data.database.to_string()),
+                databases: HashSet::from([config_data.database.parse()?]),
                 app_core: Some(APP_CORE_VERSION.to_string()),
                 app_monitoring: Some(APP_MONITORING_VERSION.to_string()),
                 forklaunch_common: Some(COMMON_VERSION.to_string()),
@@ -449,6 +321,11 @@ pub(crate) fn generate_service_package_json(
                 } else {
                     None
                 },
+                forklaunch_implementation_worker_bullmq: None,
+                forklaunch_implementation_worker_database: None,
+                forklaunch_implementation_worker_kafka: None,
+                forklaunch_implementation_worker_redis: None,
+                forklaunch_interfaces_worker: None,
                 forklaunch_validator: Some(VALIDATOR_VERSION.to_string()),
                 mikro_orm_core: Some(MIKRO_ORM_CORE_VERSION.to_string()),
                 mikro_orm_migrations: Some(MIKRO_ORM_MIGRATIONS_VERSION.to_string()),
@@ -461,21 +338,63 @@ pub(crate) fn generate_service_package_json(
                     None
                 },
                 ajv: Some(AJV_VERSION.to_string()),
+                bullmq: None,
+                better_sqlite3: if config_data.is_node
+                    && config_data.is_database_enabled
+                    && config_data.is_better_sqlite
+                {
+                    Some(BETTER_SQLITE3_VERSION.to_string())
+                } else {
+                    None
+                },
                 dotenv: Some(DOTENV_VERSION.to_string()),
+                sqlite3: if config_data.is_node
+                    && config_data.is_database_enabled
+                    && config_data.is_sqlite
+                {
+                    Some(SQLITE3_VERSION.to_string())
+                } else {
+                    None
+                },
                 uuid: Some(UUID_VERSION.to_string()),
                 zod: if config_data.is_zod {
                     Some(ZOD_VERSION.to_string())
                 } else {
                     None
                 },
+                additional_deps: HashMap::new(),
             }
         }),
         dev_dependencies: Some(if let Some(dev_dependencies) = dev_dependencies_override {
             dev_dependencies
         } else {
             ProjectDevDependencies {
-                eslint: Some(ESLINT_VERSION.to_string()),
+                biome: if config_data.is_biome {
+                    Some(BIOME_VERSION.to_string())
+                } else {
+                    None
+                },
+                eslint: if config_data.is_eslint {
+                    Some(ESLINT_VERSION.to_string())
+                } else {
+                    None
+                },
+                eslint_js: if config_data.is_eslint {
+                    Some(ESLINT_VERSION.to_string())
+                } else {
+                    None
+                },
                 mikro_orm_cli: Some(MIKRO_ORM_CLI_VERSION.to_string()),
+                oxlint: if config_data.is_oxlint {
+                    Some(OXLINT_VERSION.to_string())
+                } else {
+                    None
+                },
+                prettier: if config_data.is_prettier {
+                    Some(PRETTIER_VERSION.to_string())
+                } else {
+                    None
+                },
                 tsx: Some(TSX_VERSION.to_string()),
                 typedoc: Some(TYPEDOC_VERSION.to_string()),
                 typescript_eslint: Some(TYPESCRIPT_ESLINT_VERSION.to_string()),
@@ -485,6 +404,7 @@ pub(crate) fn generate_service_package_json(
                     TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION.to_string(),
                 ),
                 types_qs: Some(TYPES_QS_VERSION.to_string()),
+                additional_deps: HashMap::new(),
             }
         }),
         mikro_orm: Some(ProjectMikroOrm {
@@ -495,10 +415,207 @@ pub(crate) fn generate_service_package_json(
                     .collect(),
             ),
         }),
+        additional_entries: HashMap::new(),
     };
     Ok(RenderedTemplate {
-        path: Path::new(base_path).join("package.json"),
+        path: base_path.join("package.json"),
         content: to_string_pretty(&package_json_contents)?,
         context: Some(ERROR_FAILED_TO_CREATE_PACKAGE_JSON.to_string()),
     })
+}
+
+#[derive(Debug)]
+pub(super) struct ServiceCommand;
+
+impl ServiceCommand {
+    pub(super) fn new() -> Self {
+        Self {}
+    }
+}
+
+impl CliCommand for ServiceCommand {
+    fn command(&self) -> Command {
+        command("service", "Initialize a new service")
+            .alias("svc")
+            .alias("project")
+            .alias("proj")
+            .arg(Arg::new("name").help("The name of the service"))
+            .arg(
+                Arg::new("base_path")
+                    .short('p')
+                    .long("path")
+                    .help("The application path to initialize the service in"),
+            )
+            .arg(
+                Arg::new("database")
+                    .short('d')
+                    .long("database")
+                    .help("The database to use")
+                    .value_parser(Database::VARIANTS),
+            )
+            .arg(
+                Arg::new("infrastructure")
+                    .short('i')
+                    .long("infrastructure")
+                    .help("Add optional infrastructure to the service")
+                    .value_parser(Infrastructure::VARIANTS)
+                    .num_args(0..)
+                    .action(ArgAction::Append),
+            )
+            .arg(
+                Arg::new("description")
+                    .short('D')
+                    .long("description")
+                    .help("The description of the service"),
+            )
+            .arg(
+                Arg::new("dryrun")
+                    .short('n')
+                    .long("dryrun")
+                    .help("Dry run the command")
+                    .action(ArgAction::SetTrue),
+            )
+    }
+
+    fn handler(&self, matches: &ArgMatches) -> Result<()> {
+        let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
+        let mut stdout = StandardStream::stdout(ColorChoice::Always);
+
+        let service_name = prompt_with_validation(
+            &mut line_editor,
+            &mut stdout,
+            "name",
+            matches,
+            "service name",
+            None,
+            |input: &str| validate_name(input),
+            |_| "Service name cannot be empty or include spaces. Please try again".to_string(),
+        )?;
+
+        let base_path_input = prompt_base_path(
+            &mut line_editor,
+            &mut stdout,
+            matches,
+            &BasePathLocation::Service,
+            &BasePathType::Init,
+        )?;
+        let base_path = Path::new(&base_path_input);
+
+        let database: Database = prompt_with_validation(
+            &mut line_editor,
+            &mut stdout,
+            "database",
+            matches,
+            "database type",
+            Some(&Database::VARIANTS),
+            |input| Database::VARIANTS.contains(&input),
+            |_| "Invalid database type. Please try again".to_string(),
+        )?
+        .parse()?;
+
+        let infrastructure: Vec<Infrastructure> = if matches.ids().all(|id| id == "dryrun") {
+            prompt_comma_separated_list(
+                &mut line_editor,
+                "infrastructure",
+                matches,
+                &Infrastructure::VARIANTS,
+                None,
+                "additional infrastructure components",
+                true,
+            )?
+            .iter()
+            .map(|s| s.parse().unwrap())
+            .collect()
+        } else {
+            vec![]
+        };
+
+        let description = prompt_without_validation(
+            &mut line_editor,
+            &mut stdout,
+            "description",
+            matches,
+            "service description (optional)",
+        )?;
+
+        let config_path = Path::new(&base_path)
+            .join(".forklaunch")
+            .join("manifest.toml");
+
+        let existing_manifest_data: ApplicationManifestData =
+            from_str(&read_to_string(config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?)
+                .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+
+        let mut config_data: ServiceManifestData = ServiceManifestData {
+            // Common fields from ApplicationManifestData
+            id: existing_manifest_data.id.clone(),
+            app_name: existing_manifest_data.app_name.clone(),
+            app_description: existing_manifest_data.app_description.clone(),
+            author: existing_manifest_data.author.clone(),
+            cli_version: existing_manifest_data.cli_version.clone(),
+            formatter: existing_manifest_data.formatter.clone(),
+            linter: existing_manifest_data.linter.clone(),
+            validator: existing_manifest_data.validator.clone(),
+            runtime: existing_manifest_data.runtime.clone(),
+            test_framework: existing_manifest_data.test_framework.clone(),
+            projects: existing_manifest_data.projects.clone(),
+            http_framework: existing_manifest_data.http_framework.clone(),
+            license: existing_manifest_data.license.clone(),
+            project_peer_topology: existing_manifest_data.project_peer_topology.clone(),
+            is_biome: existing_manifest_data.is_biome,
+            is_eslint: existing_manifest_data.is_eslint,
+            is_oxlint: existing_manifest_data.is_oxlint,
+            is_prettier: existing_manifest_data.is_prettier,
+            is_express: existing_manifest_data.is_express,
+            is_hyper_express: existing_manifest_data.is_hyper_express,
+            is_zod: existing_manifest_data.is_zod,
+            is_typebox: existing_manifest_data.is_typebox,
+            is_bun: existing_manifest_data.is_bun,
+            is_node: existing_manifest_data.is_node,
+            is_vitest: existing_manifest_data.is_vitest,
+            is_jest: existing_manifest_data.is_jest,
+
+            service_name: service_name.clone(),
+            camel_case_name: service_name.to_case(Case::Camel),
+            pascal_case_name: service_name.to_case(Case::Pascal),
+            kebab_case_name: service_name.to_case(Case::Kebab),
+            description: description.clone(),
+            database: database.to_string(),
+            database_port: get_database_port(&database),
+            db_driver: get_db_driver(&database),
+
+            is_mongo: database == Database::MongoDB,
+            is_postgres: database == Database::PostgreSQL,
+            is_sqlite: database == Database::SQLite,
+            is_mysql: database == Database::MySQL,
+            is_mariadb: database == Database::MariaDB,
+            is_better_sqlite: database == Database::BetterSQLite,
+            is_libsql: database == Database::LibSQL,
+            is_mssql: database == Database::MsSQL,
+            is_in_memory_database: is_in_memory_database(&database),
+
+            is_iam: false,
+            is_cache_enabled: infrastructure.contains(&Infrastructure::Redis),
+            is_database_enabled: true,
+        };
+
+        let dryrun = matches.get_flag("dryrun");
+        generate_basic_service(
+            &service_name,
+            &base_path,
+            &mut config_data,
+            &mut stdout,
+            dryrun,
+        )
+        .with_context(|| "Failed to create service")?;
+
+        if !dryrun {
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+            writeln!(stdout, "{} initialized successfully!", service_name)?;
+            stdout.reset()?;
+            format_code(&base_path, &config_data.runtime.parse()?);
+        }
+
+        Ok(())
+    }
 }

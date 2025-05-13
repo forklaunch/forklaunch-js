@@ -5,13 +5,18 @@ WORKDIR /{{app_name}}
 
 # Copy source code
 COPY . .
-
+{{#is_node}}{{#is_in_memory_database}}
+# Install sqlite dependencies
+RUN apk add --no-cache python3 py3-pip make build-base sqlite-dev
+RUN pip install setuptools --break-system-packages
+{{/is_in_memory_database}}{{/is_node}}
 # Install dependencies
 {{#is_node}}RUN npm install -g pnpm
 RUN apk update
 RUN apk add --no-cache libc6-compat
 RUN apk add --no-cache git
 RUN pnpm install{{/is_node}}{{#is_bun}}RUN bun install{{/is_bun}}
+
 # Build TypeScript code
 {{#is_node}}
 RUN pnpm build{{/is_node}}{{#is_bun}}

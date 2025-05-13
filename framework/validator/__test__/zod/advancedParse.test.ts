@@ -5,14 +5,17 @@ import {
   date,
   email,
   never,
+  null_,
   nullish,
   number,
   SchemaValidator,
   string,
   symbol,
+  undefined_,
   unknown,
   uri,
-  uuid
+  uuid,
+  void_
 } from '../../src/zod';
 import { compare } from '../utils/compare';
 
@@ -440,6 +443,145 @@ describe('zod advanced parse', () => {
 
     test('invalid nullish with date', () => {
       expect(schemaValidator.parse(nullish, new Date()).ok).toBe(false);
+    });
+  });
+
+  describe('null', () => {
+    test('valid null with null', () => {
+      compare(schemaValidator.parse(null_, null), {
+        ok: true,
+        value: null
+      });
+    });
+
+    test('invalid null with undefined', () => {
+      expect(schemaValidator.parse(null_, undefined).ok).toBe(false);
+    });
+
+    test('invalid null with string', () => {
+      expect(schemaValidator.parse(null_, 'hello').ok).toBe(false);
+    });
+
+    test('invalid null with number', () => {
+      expect(schemaValidator.parse(null_, 123).ok).toBe(false);
+    });
+
+    test('invalid null with boolean', () => {
+      expect(schemaValidator.parse(null_, true).ok).toBe(false);
+    });
+
+    test('invalid null with object', () => {
+      expect(schemaValidator.parse(null_, { hello: 'world' }).ok).toBe(false);
+    });
+
+    test('invalid null with array', () => {
+      expect(schemaValidator.parse(null_, ['hello', 'world']).ok).toBe(false);
+    });
+
+    test('invalid null with symbol', () => {
+      expect(schemaValidator.parse(null_, Symbol('hello')).ok).toBe(false);
+    });
+
+    test('invalid null with bigint', () => {
+      expect(schemaValidator.parse(null_, BigInt(123)).ok).toBe(false);
+    });
+
+    test('invalid null with date', () => {
+      expect(schemaValidator.parse(null_, new Date()).ok).toBe(false);
+    });
+  });
+
+  describe('void', () => {
+    test('invalid void with null', () => {
+      expect(schemaValidator.parse(void_, null).ok).toBe(false);
+    });
+
+    test('valid void with undefined', () => {
+      compare(schemaValidator.parse(void_, undefined), {
+        ok: true,
+        value: undefined
+      });
+    });
+
+    test('invalid void with string', () => {
+      expect(schemaValidator.parse(void_, 'hello').ok).toBe(false);
+    });
+
+    test('invalid void with number', () => {
+      expect(schemaValidator.parse(void_, 123).ok).toBe(false);
+    });
+
+    test('invalid void with boolean', () => {
+      expect(schemaValidator.parse(void_, true).ok).toBe(false);
+    });
+
+    test('invalid void with object', () => {
+      expect(schemaValidator.parse(void_, { hello: 'world' }).ok).toBe(false);
+    });
+
+    test('invalid void with array', () => {
+      expect(schemaValidator.parse(void_, ['hello', 'world']).ok).toBe(false);
+    });
+
+    test('invalid void with symbol', () => {
+      expect(schemaValidator.parse(void_, Symbol('hello')).ok).toBe(false);
+    });
+
+    test('invalid void with bigint', () => {
+      expect(schemaValidator.parse(void_, BigInt(123)).ok).toBe(false);
+    });
+
+    test('invalid void with date', () => {
+      expect(schemaValidator.parse(void_, new Date()).ok).toBe(false);
+    });
+  });
+
+  describe('undefined', () => {
+    test('invalid undefined with null', () => {
+      expect(schemaValidator.parse(undefined_, null).ok).toBe(false);
+    });
+
+    test('valid undefined with undefined', () => {
+      compare(schemaValidator.parse(undefined_, undefined), {
+        ok: true,
+        value: undefined
+      });
+    });
+
+    test('invalid undefined with string', () => {
+      expect(schemaValidator.parse(undefined_, 'hello').ok).toBe(false);
+    });
+
+    test('invalid undefined with number', () => {
+      expect(schemaValidator.parse(undefined_, 123).ok).toBe(false);
+    });
+
+    test('invalid undefined with boolean', () => {
+      expect(schemaValidator.parse(undefined_, true).ok).toBe(false);
+    });
+
+    test('invalid undefined with object', () => {
+      expect(schemaValidator.parse(undefined_, { hello: 'world' }).ok).toBe(
+        false
+      );
+    });
+
+    test('invalid undefined with array', () => {
+      expect(schemaValidator.parse(undefined_, ['hello', 'world']).ok).toBe(
+        false
+      );
+    });
+
+    test('invalid undefined with symbol', () => {
+      expect(schemaValidator.parse(undefined_, Symbol('hello')).ok).toBe(false);
+    });
+
+    test('invalid undefined with bigint', () => {
+      expect(schemaValidator.parse(undefined_, BigInt(123)).ok).toBe(false);
+    });
+
+    test('invalid undefined with date', () => {
+      expect(schemaValidator.parse(undefined_, new Date()).ok).toBe(false);
     });
   });
 

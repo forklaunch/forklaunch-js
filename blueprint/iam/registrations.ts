@@ -25,6 +25,7 @@ import {
   BaseUserService
 } from '@forklaunch/implementation-iam-base/services';
 import { EntityManager, ForkOptions, MikroORM } from '@mikro-orm/core';
+import { OrganizationStatus } from './domain/enum/organizationStatus.enum';
 import {
   CreateOrganizationDtoMapper,
   OrganizationDtoMapper,
@@ -46,7 +47,6 @@ import {
   UpdateUserDtoMapper,
   UserDtoMapper
 } from './domain/mappers/user.mappers';
-import { OrganizationStatus } from './domain/enum/organizationStatus.enum';
 //! defines the schemas for the organization service
 export const OrganizationSchemas = BaseOrganizationServiceSchemas({
   uuidId: true,
@@ -65,7 +65,7 @@ export const UserSchemas = BaseUserServiceSchemas({
   validator: SchemaValidator()
 });
 //! defines the configuration schema for the application
-export function createDepenencies({ orm }: { orm: MikroORM }) {
+export function createDependencies(orm: MikroORM) {
   const configInjector = createConfigInjector(SchemaValidator(), {
     SERVICE_METADATA: {
       lifetime: Lifetime.Singleton,
@@ -233,4 +233,4 @@ export function createDepenencies({ orm }: { orm: MikroORM }) {
   };
 }
 //! defines the type for the service dependencies
-export type SchemaDependencies = DependencyShapes<typeof createDepenencies>;
+export type SchemaDependencies = DependencyShapes<typeof createDependencies>;

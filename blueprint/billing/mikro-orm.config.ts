@@ -7,7 +7,7 @@ import {
 import { Migrator } from '@mikro-orm/migrations';
 // import { MongoDriver } from '@mikro-orm/mongodb';
 // import { MySqlDriver } from '@mikro-orm/mysql';
-import { MikroORMOptions, Platform, TextType, Type } from '@mikro-orm/core';
+import { defineConfig, Platform, TextType, Type } from '@mikro-orm/core';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
 // import { SqliteDriver } from '@mikro-orm/sqlite';
@@ -53,7 +53,7 @@ export const validConfigInjector = configInjector.validateConfigSingletons(
   getEnvVar('ENV_FILE_PATH')
 );
 
-const mikroOrmOptionsConfig: Partial<MikroORMOptions> = {
+const mikroOrmOptionsConfig = defineConfig({
   driver: PostgreSqlDriver,
   dbName: validConfigInjector.resolve('DB_NAME'),
   host: validConfigInjector.resolve('DB_HOST'),
@@ -77,6 +77,6 @@ const mikroOrmOptionsConfig: Partial<MikroORMOptions> = {
     path: 'dist/persistence',
     glob: 'seeder.js'
   }
-};
+});
 
 export default mikroOrmOptionsConfig;

@@ -1,0 +1,52 @@
+{
+  "data": {
+    "_id": 2000,
+    "properties": {
+      "message": {
+        "name": "message",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "string",
+        "array": false,
+        "runtimeType": "string"
+      },
+      "processed": {
+        "name": "processed",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "boolean",
+        "array": false,
+        "runtimeType": "boolean"
+      },
+      "retryCount": {
+        "name": "retryCount",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "number",
+        "array": false,
+        "runtimeType": "number"
+      }
+    },
+    "primaryKeys": [],
+    "filters": {},
+    "hooks": {},
+    "indexes": [],
+    "uniques": [],
+    "className": "SampleWorkerEventRecord",
+    "path": "./persistence/entities/sampleWorkerRecord.entity.ts",
+    "name": "SampleWorkerEventRecord",
+    "abstract": false,
+    "internal": true,
+    "constructorParams": [],
+    "toJsonParams": [],
+    "extends": "SqlBaseEntity",
+    "useCache": true,
+    "collection": "sample_worker_event_record"
+  },
+  "origin": "./persistence/entities/sampleWorkerRecord.entity.ts",
+  "hash": "4fb1fceb9c1dcf2c12c2eddf24997eaf",
+  "version": "6.4.13"
+}

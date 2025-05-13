@@ -1,10 +1,10 @@
-import { isNever } from '@forklaunch/common';
+import { isNever, safeStringify } from '@forklaunch/common';
 import { trace } from '@opentelemetry/api';
 import { AnyValueMap, logs } from '@opentelemetry/api-logs';
 import pino, { LevelWithSilent, LevelWithSilentOrString, Logger } from 'pino';
-import { LogFn, LoggerMeta } from '../types/openTelemetryCollector.types';
-import { isLoggerMeta } from '../guards/isLoggerMeta';
 import PinoPretty from 'pino-pretty';
+import { isLoggerMeta } from '../guards/isLoggerMeta';
+import { LogFn, LoggerMeta } from '../types/openTelemetryCollector.types';
 
 export function meta(meta: Record<string, unknown>) {
   return meta as LoggerMeta;
@@ -59,13 +59,15 @@ class PinoLogger {
   log(level: LevelWithSilent, ...args: (string | unknown | LoggerMeta)[]) {
     let meta: AnyValueMap = {};
 
-    const filteredArgs = args.filter((arg) => {
-      if (isLoggerMeta(arg)) {
-        Object.assign(meta, arg);
-        return false;
-      }
-      return true;
-    }) as Parameters<pino.LogFn>;
+    const filteredArgs = args
+      .filter((arg) => {
+        if (isLoggerMeta(arg)) {
+          Object.assign(meta, arg);
+          return false;
+        }
+        return true;
+      })
+      .map(safeStringify) as Parameters<pino.LogFn>;
 
     const activeSpan = trace.getActiveSpan();
     if (activeSpan) {

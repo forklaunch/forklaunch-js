@@ -1,12 +1,12 @@
+import { forklaunchRouter, SchemaValidator } from '@forklaunch/blueprint-core';
+import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import {
   ConfigInjector,
   ScopedDependencyFactory
 } from '@forklaunch/core/services';
-import { forklaunchRouter, SchemaValidator } from '@forklaunch/blueprint-core';
-import { Metrics } from '@forklaunch/blueprint-monitoring';
-import { SampleWorkerController } from '../controllers/sampleWorker.controller';
 import { SchemaDependencies } from '../../registrations';
+import { SampleWorkerController } from '../controllers/sampleWorker.controller';
 
 // returns an object with the router and the sampleWorkerGet and sampleWorkerPost methods for easy installation
 export const SampleWorkerRoutes = (
@@ -31,7 +31,6 @@ export const SampleWorkerRoutes = (
     router,
 
     sampleWorkerGet: router.get('/:id', controller.sampleWorkerGet),
-
     sampleWorkerPost: router.post('/', controller.sampleWorkerPost)
   };
 };

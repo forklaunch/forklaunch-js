@@ -39,7 +39,10 @@ export function createConfigInjector<
         >;
   }
 ) {
-  return new ConfigInjector<SV, CV>(schemaValidator, dependenciesDefinition);
+  return new ConfigInjector<SV, CV>(
+    schemaValidator,
+    dependenciesDefinition
+  ).load();
 }
 
 export class ConfigInjector<
@@ -58,18 +61,14 @@ export class ConfigInjector<
     for (const token in inheritedScopeInstances) {
       this.instances[token] = inheritedScopeInstances[token];
     }
-    return this;
-  }
 
-  private loadSingletons(inheritedScopeInstances?: {
-    [K in keyof CV]?: ResolvedConfigValidator<SV, CV>[K];
-  }): this {
     for (const token in this.dependenciesDefinition) {
       const definition = this.dependenciesDefinition[token];
-      if (definition.lifetime === Lifetime.Singleton) {
-        if (inheritedScopeInstances && inheritedScopeInstances[token]) {
-          this.instances[token] = inheritedScopeInstances[token];
-        } else if (
+      if (
+        definition.lifetime === Lifetime.Singleton &&
+        !this.instances[token]
+      ) {
+        if (
           isConstructedSingleton<
             CV[typeof token],
             Omit<ResolvedConfigValidator<SV, CV>, typeof token>,
@@ -173,7 +172,6 @@ export class ConfigInjector<
       }),
       {} as Record<keyof CV, CV[keyof CV]>
     ) as CV;
-    this.loadSingletons();
   }
 
   safeValidateConfigSingletons(): ParseResult<ValidConfigInjector<SV, CV>> {
@@ -258,7 +256,7 @@ export class ConfigInjector<
           value: new ValidConfigInjector<SV, CV>(
             this.schemaValidator,
             this.dependenciesDefinition
-          ).loadSingletons({ ...this.instances })
+          ).load({ ...this.instances })
         }
       : {
           ok: false as const,
@@ -390,12 +388,12 @@ export class ConfigInjector<
     return new ConfigInjector<SV, CV>(
       this.schemaValidator,
       this.dependenciesDefinition
-    ).loadSingletons({ ...this.instances });
+    ).load({ ...this.instances });
   }
 
   dispose(): void {
     this.instances = {};
-    this.loadSingletons();
+    this.load();
   }
 
   chain<ChainedCV extends ConfigValidator<SV>>(dependenciesDefinition: {

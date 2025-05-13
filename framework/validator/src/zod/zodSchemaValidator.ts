@@ -8,14 +8,21 @@
 import { generateSchema } from '@anatine/zod-openapi';
 import { SchemaObject } from 'openapi3-ts/oas31';
 import {
+  z,
   ZodArray,
+  ZodBigInt,
+  ZodDate,
+  ZodFunction,
   ZodLiteral,
+  ZodNumber,
   ZodObject,
   ZodOptional,
+  ZodPromise,
   ZodRawShape,
+  ZodRecord,
+  ZodTuple,
   ZodType,
-  ZodUnion,
-  z
+  ZodUnion
 } from 'zod';
 import {
   LiteralSchema,
@@ -23,10 +30,13 @@ import {
   SchemaValidator as SV
 } from '../shared/types/schema.types';
 import {
+  TupleZodResolve,
   UnionZodResolve,
   ZodCatchall,
   ZodIdiomaticSchema,
+  ZodRecordKey,
   ZodResolve,
+  ZodTupleContainer,
   ZodUnionContainer
 } from './types/schema.types';
 
@@ -42,7 +52,7 @@ export class ZodSchemaValidator
       <T extends ZodIdiomaticSchema>(schema: T) => ZodOptional<ZodResolve<T>>,
       <T extends ZodIdiomaticSchema>(schema: T) => ZodArray<ZodResolve<T>>,
       <T extends ZodUnionContainer>(schemas: T) => ZodUnion<UnionZodResolve<T>>,
-      <T extends LiteralSchema>(value: T) => ZodLiteral<ZodResolve<T>>,
+      <T extends LiteralSchema>(value: T) => ZodLiteral<T>,
       <T extends Record<string, LiteralSchema>>(
         schemaEnum: T
       ) => ZodUnion<
@@ -52,6 +62,18 @@ export class ZodSchemaValidator
           }[keyof T]
         ]
       >,
+      <Args extends ZodTupleContainer, ReturnType extends ZodIdiomaticSchema>(
+        args: Args,
+        returnType: ReturnType
+      ) => ZodFunction<
+        ZodTuple<TupleZodResolve<Args>, null>,
+        ZodResolve<ReturnType>
+      >,
+      <Key extends ZodIdiomaticSchema, Value extends ZodIdiomaticSchema>(
+        key: Key,
+        value: Value
+      ) => ZodRecord<ZodRecordKey<Key>, ZodResolve<Value>>,
+      <T extends ZodIdiomaticSchema>(schema: T) => ZodPromise<ZodResolve<T>>,
       (value: unknown) => value is ZodType,
       <T extends ZodIdiomaticSchema | ZodCatchall>(
         schema: T,
@@ -83,7 +105,7 @@ export class ZodSchemaValidator
         return value;
       }
     })
-    .pipe(z.number());
+    .pipe(z.number()) as unknown as ZodNumber;
   bigint = z
     .any()
     .transform((value) => {
@@ -93,7 +115,7 @@ export class ZodSchemaValidator
         return value;
       }
     })
-    .pipe(z.bigint());
+    .pipe(z.bigint()) as unknown as ZodBigInt;
   boolean = z.preprocess((val) => {
     if (typeof val === 'string') {
       if (val.toLowerCase() === 'true') return true;
@@ -110,9 +132,12 @@ export class ZodSchemaValidator
         return value;
       }
     })
-    .pipe(z.date());
+    .pipe(z.date()) as unknown as ZodDate;
   symbol = z.symbol();
   nullish = z.union([z.void(), z.null(), z.undefined()]);
+  void = z.void();
+  null = z.null();
+  undefined = z.undefined();
   any = z.any();
   unknown = z.unknown();
   never = z.never();
@@ -165,11 +190,8 @@ export class ZodSchemaValidator
   optional<T extends ZodIdiomaticSchema>(
     schema: T
   ): ZodOptional<ZodResolve<T>> {
-    if (schema instanceof ZodType) {
-      return schema.optional() as ZodOptional<ZodResolve<T>>;
-    } else {
-      return this.schemify(schema).optional() as ZodOptional<ZodResolve<T>>;
-    }
+    const resolvedSchema = this.schemify(schema);
+    return resolvedSchema.optional() as ZodOptional<ZodResolve<T>>;
   }
 
   /**
@@ -178,11 +200,8 @@ export class ZodSchemaValidator
    * @returns {ZodArray<ZodResolve<T>>} The array schema.
    */
   array<T extends ZodIdiomaticSchema>(schema: T): ZodArray<ZodResolve<T>> {
-    if (schema instanceof ZodType) {
-      return schema.array() as ZodArray<ZodResolve<T>>;
-    } else {
-      return this.schemify(schema).array() as ZodArray<ZodResolve<T>>;
-    }
+    const resolvedSchema = this.schemify(schema);
+    return resolvedSchema.array() as ZodArray<ZodResolve<T>>;
   }
 
   /**
@@ -191,12 +210,7 @@ export class ZodSchemaValidator
    * @returns {ZodUnion<UnionZodResolve<T>>} The union schema.
    */
   union<T extends ZodUnionContainer>(schemas: T): ZodUnion<UnionZodResolve<T>> {
-    const resolvedSchemas = schemas.map((schema) => {
-      if (schema instanceof ZodType) {
-        return schema;
-      }
-      return this.schemify(schema);
-    });
+    const resolvedSchemas = schemas.map((schema) => this.schemify(schema));
 
     return z.union(
       resolvedSchemas as [ZodType, ZodType, ...ZodType[]]
@@ -208,8 +222,8 @@ export class ZodSchemaValidator
    * @param {LiteralSchema} value - The literal value.
    * @returns {ZodLiteral<ZodResolve<T>>} The literal schema.
    */
-  literal<T extends LiteralSchema>(value: T): ZodLiteral<ZodResolve<T>> {
-    return z.literal(value) as ZodLiteral<ZodResolve<T>>;
+  literal<T extends LiteralSchema>(value: T): ZodLiteral<T> {
+    return z.literal(value) as ZodLiteral<T>;
   }
 
   /**
@@ -238,6 +252,60 @@ export class ZodSchemaValidator
   }
 
   /**
+   * Create a function schema.
+   * @param {ZodTuple} args - The arguments of the function.
+   * @param {ZodAny} returnType - The return type of the function.
+   * @returns {ZodFunction<Args, ReturnType>} The function schema.
+   */
+  function_<
+    Args extends ZodTupleContainer,
+    ReturnType extends ZodIdiomaticSchema
+  >(
+    args: Args,
+    returnType: ReturnType
+  ): ZodFunction<
+    ZodTuple<TupleZodResolve<Args>, null>,
+    ZodResolve<ReturnType>
+  > {
+    const schemaArgs = args.map((schema) => this.schemify(schema)) as [
+      ZodType,
+      ...ZodType[]
+    ];
+    const schemaReturnType = this.schemify(returnType);
+    return z.function(z.tuple(schemaArgs), schemaReturnType) as ZodFunction<
+      ZodTuple<TupleZodResolve<Args>, null>,
+      ZodResolve<ReturnType>
+    >;
+  }
+
+  /**
+   * Create a record schema.
+   * @param {ZodIdiomaticSchema} key - The key schema.
+   * @param {ZodIdiomaticSchema} value - The value schema.
+   * @returns {ZodRecord<ZodResolve<Key>, ZodResolve<Value>>} The record schema.
+   */
+  record<Key extends ZodIdiomaticSchema, Value extends ZodIdiomaticSchema>(
+    key: Key,
+    value: Value
+  ): ZodRecord<ZodRecordKey<Key>, ZodResolve<Value>> {
+    const keySchema = this.schemify(key);
+    const valueSchema = this.schemify(value);
+    return z.record(keySchema, valueSchema) as ZodRecord<
+      ZodRecordKey<Key>,
+      ZodResolve<Value>
+    >;
+  }
+
+  /**
+   * Create a promise schema.
+   * @param {ZodIdiomaticSchema} schema - The schema to use for the promise.
+   * @returns {ZodPromise<ZodResolve<T>>} The promise schema.
+   */
+  promise<T extends ZodIdiomaticSchema>(schema: T): ZodPromise<ZodResolve<T>> {
+    return z.promise(this.schemify(schema)) as ZodPromise<ZodResolve<T>>;
+  }
+
+  /**
    * Checks if a value is a Zod schema.
    * @param {unknown} value - The value to check.
    * @returns {boolean} True if the value is a Zod schema.
@@ -256,8 +324,7 @@ export class ZodSchemaValidator
     schema: T,
     value: unknown
   ): boolean {
-    const resolvedSchema =
-      schema instanceof ZodType ? schema : this.schemify(schema);
+    const resolvedSchema = this.schemify(schema);
     return resolvedSchema.safeParse(value).success;
   }
 
@@ -272,8 +339,7 @@ export class ZodSchemaValidator
     schema: T,
     value: unknown
   ): ParseResult<ZodResolve<T>> {
-    const resolvedSchema =
-      schema instanceof ZodType ? schema : this.schemify(schema);
+    const resolvedSchema = this.schemify(schema);
     const result = resolvedSchema.safeParse(value);
     return result.success
       ? { ok: true, value: result.data }
@@ -310,8 +376,6 @@ export class ZodSchemaValidator
    * @returns {SchemaObject} The OpenAPI schema object.
    */
   openapi<T extends ZodIdiomaticSchema | ZodCatchall>(schema: T): SchemaObject {
-    return generateSchema(
-      schema instanceof ZodType ? schema : this.schemify(schema)
-    );
+    return generateSchema(this.schemify(schema));
   }
 }

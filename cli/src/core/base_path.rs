@@ -5,37 +5,62 @@ use std::{
 
 use anyhow::{Context, Result};
 use clap::ArgMatches;
-use rustyline::{history::DefaultHistory, Editor};
+use rustyline::{Editor, history::DefaultHistory};
 use termcolor::StandardStream;
 
 use crate::{
     constants::ERROR_FAILED_TO_GET_CWD,
-    prompt::{prompt_with_validation, ArrayCompleter},
+    prompt::{ArrayCompleter, prompt_with_validation},
 };
+
+pub(crate) enum BasePathType {
+    Init,
+    Change,
+    #[allow(dead_code)]
+    Delete,
+    Eject,
+    Depcheck,
+}
 
 #[derive(PartialEq)]
 pub(crate) enum BasePathLocation {
+    Application,
     Service,
     Worker,
     Router,
     Anywhere,
     Library,
-    Eject,
+    DeferToType,
 }
 
-fn base_path_parent_count(base_path_location: &BasePathLocation) -> usize {
-    match base_path_location {
+fn base_path_parent_count(
+    base_path_location: &BasePathLocation,
+    base_path_type: &BasePathType,
+) -> i32 {
+    let count = match base_path_location {
+        BasePathLocation::Application => -1,
         BasePathLocation::Service => 0,
         BasePathLocation::Worker => 0,
         BasePathLocation::Library => 0,
-        BasePathLocation::Eject => 1,
+        BasePathLocation::DeferToType => 0,
         BasePathLocation::Router => 1,
         BasePathLocation::Anywhere => 2,
-    }
+    } + match base_path_type {
+        BasePathType::Init => 0,
+        BasePathType::Change => 1,
+        BasePathType::Delete => 0,
+        BasePathType::Eject => 1,
+        BasePathType::Depcheck => 0,
+    };
+    count
 }
 
-fn check_base_path(base_path: &PathBuf, base_path_location: &BasePathLocation) -> bool {
-    let base_path_parent_count = base_path_parent_count(base_path_location);
+fn check_base_path(
+    base_path: &PathBuf,
+    base_path_location: &BasePathLocation,
+    base_path_type: &BasePathType,
+) -> bool {
+    let base_path_parent_count = base_path_parent_count(base_path_location, base_path_type);
     let mut base_path_to_test = base_path.to_path_buf();
     for _ in 0..base_path_parent_count {
         base_path_to_test = base_path_to_test.parent().unwrap().to_path_buf();
@@ -52,9 +77,12 @@ fn check_base_path(base_path: &PathBuf, base_path_location: &BasePathLocation) -
     }
 }
 
-fn find_base_path(base_path_location: &BasePathLocation) -> Option<PathBuf> {
+fn find_base_path(
+    base_path_location: &BasePathLocation,
+    base_path_type: &BasePathType,
+) -> Option<PathBuf> {
     let mut base_path = current_dir().unwrap().to_path_buf();
-    for _ in 0..base_path_parent_count(base_path_location) {
+    for _ in 0..base_path_parent_count(base_path_location, base_path_type) {
         if base_path.join(".forklaunch").join("manifest.toml").exists() {
             return Some(base_path);
         }
@@ -68,6 +96,7 @@ pub(crate) fn prompt_base_path(
     stdout: &mut StandardStream,
     matches: &ArgMatches,
     base_path_location: &BasePathLocation,
+    base_path_type: &BasePathType,
 ) -> Result<String> {
     let current_path = current_dir().with_context(|| ERROR_FAILED_TO_GET_CWD)?;
 
@@ -77,14 +106,14 @@ pub(crate) fn prompt_base_path(
     } else {
         let maybe_correct_path = match base_path_location {
             BasePathLocation::Anywhere => {
-                if let Some(base_path) = find_base_path(base_path_location) {
+                if let Some(base_path) = find_base_path(base_path_location, base_path_type) {
                     Some(base_path.to_string_lossy().to_string())
                 } else {
                     None
                 }
             }
             _ => {
-                if check_base_path(&current_path, base_path_location) {
+                if check_base_path(&current_path, base_path_location, base_path_type) {
                     Some(current_path.to_string_lossy().to_string())
                 } else {
                     None
@@ -100,7 +129,7 @@ pub(crate) fn prompt_base_path(
                 stdout,
                 "base_path",
                 matches,
-                "Enter base path (optional, press enter for current directory): ",
+                "base path (optional, press enter for current directory)",
                 None,
                 |input: &str| {
                     let base_path = if input.trim().is_empty() {
@@ -108,7 +137,7 @@ pub(crate) fn prompt_base_path(
                     } else {
                         &Path::new(input).to_path_buf()
                     };
-                    check_base_path(base_path, base_path_location)
+                    check_base_path(base_path, base_path_location, base_path_type)
                 },
                 |_| "Base path is not correct. Please try again".to_string(),
             )?

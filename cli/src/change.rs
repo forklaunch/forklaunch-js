@@ -1,33 +1,63 @@
 use anyhow::Result;
-use clap::{Arg, ArgMatches, Command};
+use application::ApplicationCommand;
+use clap::{ArgMatches, Command};
+use library::LibraryCommand;
+use router::RouterCommand;
+use service::ServiceCommand;
+use worker::WorkerCommand;
 
 use crate::{core::command::command, CliCommand};
 
 pub(crate) mod application;
-pub(crate) mod project;
+pub(crate) mod core;
+pub(crate) mod library;
+pub(crate) mod router;
+pub(crate) mod service;
+pub(crate) mod worker;
 
 // TODO: add injected token into struct
 #[derive(Debug)]
-pub(crate) struct ChangeCommand;
+pub(crate) struct ChangeCommand {
+    application: ApplicationCommand,
+    library: LibraryCommand,
+    service: ServiceCommand,
+    router: RouterCommand,
+    worker: WorkerCommand,
+}
 
 impl ChangeCommand {
     pub(crate) fn new() -> Self {
-        Self {}
+        Self {
+            application: ApplicationCommand::new(),
+            library: LibraryCommand::new(),
+            service: ServiceCommand::new(),
+            router: RouterCommand::new(),
+            worker: WorkerCommand::new(),
+        }
     }
 }
 
 impl CliCommand for ChangeCommand {
     fn command(&self) -> Command {
-        command("change", "Change a forklaunch project").arg(Arg::new("base_path").short('b'))
+        command("change", "Change a forklaunch project")
+            .alias("modify")
+            .alias("alter")
+            .subcommand_required(true)
+            .subcommand(self.application.command())
+            .subcommand(self.library.command())
+            .subcommand(self.service.command())
+            .subcommand(self.router.command())
+            .subcommand(self.worker.command())
     }
 
-    fn handler(&self, _matches: &ArgMatches) -> Result<()> {
-        // detect where command is called from if base_path not supplied
-
-        // based on base_path, ask for choices (application, service, worker, etc.)
-
-        // Perform in-place changes, trying to preserve changes
-        // Do not hard fail if cannot perform action -- emit warning
-        Ok(())
+    fn handler(&self, matches: &ArgMatches) -> Result<()> {
+        match matches.subcommand() {
+            Some(("application", sub_matches)) => self.application.handler(sub_matches),
+            Some(("library", sub_matches)) => self.library.handler(sub_matches),
+            Some(("service", sub_matches)) => self.service.handler(sub_matches),
+            Some(("router", sub_matches)) => self.router.handler(sub_matches),
+            Some(("worker", sub_matches)) => self.worker.handler(sub_matches),
+            _ => unreachable!(),
+        }
     }
 }

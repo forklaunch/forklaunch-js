@@ -1,5 +1,29 @@
 # @forklaunch/universal-sdk
 
+## 0.2.8
+
+### Patch Changes
+
+- Increase package versions
+
+## 0.2.7
+
+### Patch Changes
+
+- stringify logger arguments
+
+## 0.2.6
+
+### Patch Changes
+
+- Various bugfixes, including deduplicated http metrics, multiple constructed singleton loading and leaking empty enqueued redis records"
+
+## 0.2.5
+
+### Patch Changes
+
+- Upgrade package versions
+
 ## 0.2.4
 
 ### Patch Changes

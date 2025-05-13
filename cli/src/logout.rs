@@ -1,13 +1,13 @@
-use std::fs::remove_file;
-use std::io::Write;
+use std::{fs::remove_file, io::Write};
 
 use anyhow::Result;
 use clap::{ArgMatches, Command};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
-use crate::core::command::command;
-use crate::core::token::get_token_path;
-use crate::CliCommand;
+use crate::{
+    core::{command::command, token::get_token_path},
+    CliCommand,
+};
 
 pub(super) struct LogoutCommand;
 

@@ -1,5 +1,48 @@
 # @forklaunch/validator
 
+## 0.5.4
+
+### Patch Changes
+
+- Increase package versions
+- Updated dependencies
+  - @forklaunch/common@0.2.11
+
+## 0.5.3
+
+### Patch Changes
+
+- stringify logger arguments
+- Updated dependencies
+  - @forklaunch/common@0.2.10
+
+## 0.5.2
+
+### Patch Changes
+
+- Various bugfixes, including deduplicated http metrics, multiple constructed singleton loading and leaking empty enqueued redis records"
+- Updated dependencies
+  - @forklaunch/common@0.2.9
+
+## 0.5.1
+
+### Patch Changes
+
+- Upgrade package versions
+- Updated dependencies
+  - @forklaunch/common@0.2.8
+
+## 0.5.0
+
+### Minor Changes
+
+- Added persistence into core package, better documentation and more validator utilities
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/common@0.2.7
+
 ## 0.4.12
 
 ### Patch Changes

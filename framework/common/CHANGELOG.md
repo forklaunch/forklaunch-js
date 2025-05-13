@@ -1,5 +1,35 @@
 # @forklaunch/common
 
+## 0.2.11
+
+### Patch Changes
+
+- Increase package versions
+
+## 0.2.10
+
+### Patch Changes
+
+- stringify logger arguments
+
+## 0.2.9
+
+### Patch Changes
+
+- Various bugfixes, including deduplicated http metrics, multiple constructed singleton loading and leaking empty enqueued redis records"
+
+## 0.2.8
+
+### Patch Changes
+
+- Upgrade package versions
+
+## 0.2.7
+
+### Patch Changes
+
+- Added persistence into core package, better documentation and more validator utilities
+
 ## 0.2.6
 
 ### Patch Changes

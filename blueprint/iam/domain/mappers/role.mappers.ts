@@ -1,8 +1,9 @@
-import { collection, SchemaValidator } from '@forklaunch/blueprint-core';
+import { SchemaValidator } from '@forklaunch/blueprint-core';
 import { RequestDtoMapper, ResponseDtoMapper } from '@forklaunch/core/mappers';
-import { RoleSchemas } from '../../registrations';
+import { collection } from '@forklaunch/core/persistence';
 import { Permission } from '../../persistence/entities/permission.entity';
 import { Role } from '../../persistence/entities/role.entity';
+import { RoleSchemas } from '../../registrations';
 import { PermissionDtoMapper } from './permission.mappers';
 export class CreateRoleDtoMapper extends RequestDtoMapper<
   Role,

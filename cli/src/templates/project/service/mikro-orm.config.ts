@@ -1,22 +1,22 @@
-import { ConfigInjector, getEnvVar, Lifetime } from '@forklaunch/core/services';
+import { createConfigInjector, getEnvVar, Lifetime } from '@forklaunch/core/services';
 import { Migrator } from '@mikro-orm/migrations{{#is_mongo}}-mongodb{{/is_mongo}}';
 import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
-import { number, SchemaValidator, string } from '@{{app_name}}/core';{{^is_mongo}}
-import { Platform, TextType, Type } from '@mikro-orm/core';{{/is_mongo}}
-import { MikroORMOptions, {{db_driver}} } from '@mikro-orm/{{database}}';
+import { number, SchemaValidator, string } from '@{{app_name}}/core';
+import { defineConfig{{^is_mongo}}, Platform, TextType, Type{{/is_mongo}} } from '@mikro-orm/core';
+import { {{db_driver}} } from '@mikro-orm/{{database}}';
 import dotenv from 'dotenv';
 import * as entities from './persistence/entities';
-
+//! Load the environment variables
 dotenv.config({ path: getEnvVar('ENV_FILE_PATH') });
-
-const configInjector = new ConfigInjector(
+//! Create the config injector
+const configInjector = createConfigInjector(
   SchemaValidator(),
   {
     DB_NAME: {
       lifetime: Lifetime.Singleton,
       type: string,
       value: getEnvVar('DB_NAME')
-    },
+    },{{^is_in_memory_database}}
     DB_HOST: {
       lifetime: Lifetime.Singleton,
       type: string,
@@ -36,7 +36,7 @@ const configInjector = new ConfigInjector(
       lifetime: Lifetime.Singleton,
       type: number,
       value: Number(getEnvVar('DB_PORT'))
-    },
+    }, {{/is_in_memory_database}}
     ENV: {
       lifetime: Lifetime.Singleton,
       type: string,
@@ -44,30 +44,45 @@ const configInjector = new ConfigInjector(
     }
   }
 );
-
+//! Validate the config injector
 export const validConfigInjector = configInjector.validateConfigSingletons(
   getEnvVar('ENV_FILE_PATH')
-);{{#is_mongo}}
-
-const clientUrl = `mongodb://${validConfigInjector.resolve(
-    'DB_USER'
-  )}:${validConfigInjector.resolve('DB_PASSWORD')}@${validConfigInjector.resolve(
-    'DB_HOST'
-  )}:${validConfigInjector.resolve('DB_PORT')}/${validConfigInjector.resolve(
-    'DB_NAME'
-  )}?authSource=admin&directConnection=true&replicaSet=rs0`
-{{/is_mongo}}
-const mikroOrmOptionsConfig: Partial<MikroORMOptions> = {
+);
+const tokens = validConfigInjector.tokens();
+//! Define the mikro-orm options config
+const mikroOrmOptionsConfig = defineConfig({
   driver: {{db_driver}},{{#is_mongo}}
-  clientUrl,{{/is_mongo}}{{^is_mongo}}
-  dbName: validConfigInjector.resolve('DB_NAME'),
-  host: validConfigInjector.resolve('DB_HOST'),
-  user: validConfigInjector.resolve('DB_USER'),
-  password: validConfigInjector.resolve('DB_PASSWORD'),
-  port: validConfigInjector.resolve('DB_PORT'),{{/is_mongo}}
+  clientUrl: `mongodb://${validConfigInjector.resolve(
+    tokens.DB_USER
+  )}:${validConfigInjector.resolve(
+    tokens.DB_PASSWORD
+  )}@${validConfigInjector.resolve(
+    tokens.DB_HOST
+  )}:${validConfigInjector.resolve(
+    tokens.DB_PORT
+  )}/${validConfigInjector.resolve(
+    tokens.DB_NAME
+  )}?authSource=admin&directConnection=true&replicaSet=rs0`,{{/is_mongo}}{{^is_mongo}}
+  dbName: validConfigInjector.resolve(
+    tokens.DB_NAME
+  ),{{^is_in_memory_database}}
+  host: validConfigInjector.resolve(
+    tokens.DB_HOST
+  ),
+  user: validConfigInjector.resolve(
+    tokens.DB_USER
+  ),
+  password: validConfigInjector.resolve(
+    tokens.DB_PASSWORD
+  ),
+  port: validConfigInjector.resolve(
+    tokens.DB_PORT
+  ),{{/is_in_memory_database}}{{/is_mongo}}
   entities: Object.values(entities),
   metadataProvider: TsMorphMetadataProvider,
-  debug: validConfigInjector.resolve('ENV') === 'development',
+  debug: validConfigInjector.resolve(
+    tokens.ENV
+  ) === 'development',
   extensions: [Migrator],{{^is_mongo}}
   discovery: {
     getMappedType(type: string, platform: Platform) {
@@ -79,11 +94,15 @@ const mikroOrmOptionsConfig: Partial<MikroORMOptions> = {
       return platform.getDefaultMappedType(type);
     }
   },{{/is_mongo}}
+  migrations: {
+    path: 'dist/migrations-{{database}}',
+    pathTs: 'migrations-{{database}}'
+  },
   seeder: {
     path: 'dist/persistence',
     glob: 'seeder.js'
   }
-};
-
+});
+//! Export the mikro-orm options config
 export default mikroOrmOptionsConfig;
 

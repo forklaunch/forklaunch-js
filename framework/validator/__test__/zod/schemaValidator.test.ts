@@ -1,15 +1,17 @@
 import { generateSchema } from '@anatine/zod-openapi';
-import { ZodLiteral, ZodObject, ZodTypeAny, z } from 'zod';
+import { ZodLiteral, ZodObject, ZodTypeAny, record, z } from 'zod';
 import { UnboxedObjectSchema } from '../../src/shared/types/schema.types';
 import { prettyPrintParseErrors } from '../../src/shared/utils/prettyPrintParseErrors';
 import {
   array,
   enum_,
+  function_,
   isSchema,
   number,
   openapi,
   optional,
   parse,
+  promise,
   schemify,
   string,
   union,
@@ -188,6 +190,24 @@ describe('zod schema validator tests', () => {
       schemifiedMultiple,
       z.union([z.literal('world'), z.literal('hello')])
     );
+  });
+
+  test('function', async () => {
+    const schemified = function_([z.string(), z.number()], z.string());
+    compare(
+      schemified,
+      z.function(z.tuple([z.string(), z.number()]), z.string())
+    );
+  });
+
+  test('record', async () => {
+    const schemified = record(z.string(), z.number());
+    compare(schemified, z.record(z.string(), z.number()));
+  });
+
+  test('promise', async () => {
+    const schemified = promise(z.string());
+    compare(schemified, z.promise(z.string()));
   });
 
   test('isSchema', () => {

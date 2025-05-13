@@ -1,4 +1,4 @@
-import { collection } from '@forklaunch/blueprint-core';
+import { collection } from '@forklaunch/core/persistence';
 import { OrganizationStatus } from '../domain/enum/organizationStatus.enum';
 import { Organization, Permission, Role } from '../persistence/entities';
 import { User } from '../persistence/entities/user.entity';

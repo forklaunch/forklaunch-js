@@ -1,39 +1,71 @@
-import { ApiClient } from '@forklaunch/core/http';
-import { forklaunchExpress } from '@forklaunch/blueprint-core';
+import {
+  WorkerFailureHandler,
+  WorkerProcessFunction
+} from '@forklaunch/interfaces-worker/types';
 import { bootstrap } from './bootstrapper';
-import { SampleWorkerRoutes } from './api/routes/sampleWorker.routes';
-//! bootstrap function that initializes the service application
-bootstrap((ci, tokens) => {
-  //! resolves the openTelemetryCollector from the configuration
+import { SampleWorkerEventRecord } from './persistence/entities/sampleWorkerRecord.entity';
+
+bootstrap(async (ci, tokens) => {
   const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
-  //! creates an instance of forklaunchExpress
-  const app = forklaunchExpress(openTelemetryCollector);
-  //! resolves the protocol, host, port, and version from the configuration
-  const protocol = ci.resolve(tokens.PROTOCOL);
-  const host = ci.resolve(tokens.HOST);
-  const port = ci.resolve(tokens.PORT);
-  const version = ci.resolve(tokens.VERSION);
-  const docsPath = ci.resolve(tokens.DOCS_PATH);
-  //! resolves the necessary services from the configuration
-  const scopedSampleWorkerServiceFactory = ci.scopedResolver(
-    tokens.SampleWorkerService
+
+  const processEvents: (
+    name: string
+  ) => WorkerProcessFunction<SampleWorkerEventRecord> =
+    (name: string) => async (events) => {
+      const failedEvents = [];
+
+      for (const event of events) {
+        try {
+          openTelemetryCollector.info(
+            `processing message from ${name}: ${event.message}`
+          );
+          event.processed = true;
+        } catch (error) {
+          failedEvents.push({
+            value: event,
+            error: error as Error
+          });
+        }
+      }
+
+      return failedEvents;
+    };
+
+  const processErrors: WorkerFailureHandler<SampleWorkerEventRecord> = async (
+    events
+  ) => {
+    events.forEach((event) => {
+      openTelemetryCollector.error(
+        event.error,
+        'error processing message',
+        event.value
+      );
+    });
+  };
+
+  const queues = [];
+
+  const databaseWorkerConsumer = ci.resolve(
+    tokens.SampleWorkerDatabaseConsumer
   );
-  //! constructs the necessary routes using the appropriate Routes functions
-  const sampleWorkerRoutes = SampleWorkerRoutes(
-    () => ci.createScope(),
-    scopedSampleWorkerServiceFactory,
-    openTelemetryCollector
+  queues.push(
+    databaseWorkerConsumer(processEvents('database'), processErrors).start()
   );
-  //! mounts the routes to the app
-  app.use(sampleWorkerRoutes.router);
-  //! starts the server
-  app.listen(port, host, () => {
-    openTelemetryCollector.info(
-      `🎉 SampleWorker Server is running at ${protocol}://${host}:${port} 🎉.\nAn API reference can be accessed at ${protocol}://${host}:${port}/api/${version}${docsPath}`
-    );
-  });
+
+  const redisWorkerConsumer = ci.resolve(tokens.SampleWorkerRedisConsumer);
+  queues.push(
+    redisWorkerConsumer(processEvents('redis'), processErrors).start()
+  );
+
+  const bullMqWorkerConsumer = ci.resolve(tokens.SampleWorkerBullMqConsumer);
+  queues.push(
+    bullMqWorkerConsumer(processEvents('bullmq'), processErrors).start()
+  );
+
+  const kafkaWorkerConsumer = ci.resolve(tokens.SampleWorkerKafkaConsumer);
+  queues.push(
+    kafkaWorkerConsumer(processEvents('kafka'), processErrors).start()
+  );
+
+  await Promise.all(queues);
 });
-//! defines the ApiClient for use with the UniversalSDK client
-export type SampleWorkerApiClient = ApiClient<{
-  sampleWorker: typeof SampleWorkerRoutes;
-}>;

@@ -3,11 +3,14 @@ import { prettyPrintParseErrors } from '../../src/shared/utils/prettyPrintParseE
 import {
   array,
   enum_,
+  function_,
   isSchema,
   number,
   openapi,
   optional,
   parse,
+  promise,
+  record,
   schemify,
   string,
   union,
@@ -232,6 +235,27 @@ describe('typebox schema validator tests', () => {
         { errorType: 'any of world, hello', errorSuffix: true }
       )
     );
+  });
+
+  test('function', async () => {
+    const schemified = function_([Type.String(), Type.Number()], Type.String());
+
+    compare(
+      schemified,
+      Type.Function([Type.String(), Type.Number()], Type.String())
+    );
+  });
+
+  test('record', async () => {
+    const schemified = record(Type.String(), Type.Number());
+
+    compare(schemified, Type.Record(Type.String(), Type.Number()));
+  });
+
+  test('promise', async () => {
+    const schemified = promise(Type.String());
+
+    compare(schemified, Type.Promise(Type.String()));
   });
 
   test('isSchema', () => {

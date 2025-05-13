@@ -28,6 +28,11 @@ import {
   BaseSubscriptionService
 } from '@forklaunch/implementation-billing-base/services';
 import { EntityManager, ForkOptions, MikroORM } from '@mikro-orm/core';
+import { BillingProviderEnum } from './domain/enum/billingProvider.enum';
+import { CurrencyEnum } from './domain/enum/currency.enum';
+import { PartyEnum } from './domain/enum/party.enum';
+import { PaymentMethodEnum } from './domain/enum/paymentMethod.enum';
+import { PlanCadenceEnum } from './domain/enum/planCadence.enum';
 import {
   BillingPortalDtoMapper,
   CreateBillingPortalDtoMapper,
@@ -53,11 +58,6 @@ import {
   SubscriptionDtoMapper,
   UpdateSubscriptionDtoMapper
 } from './domain/mappers/subscription.mappers';
-import { BillingProviderEnum } from './domain/enum/billingProvider.enum';
-import { CurrencyEnum } from './domain/enum/currency.enum';
-import { PartyEnum } from './domain/enum/party.enum';
-import { PaymentMethodEnum } from './domain/enum/paymentMethod.enum';
-import { PlanCadenceEnum } from './domain/enum/planCadence.enum';
 //! defines the schemas for the billing portal service
 export const BillingPortalSchemas = BaseBillingPortalServiceSchemas({
   uuidId: true,
@@ -80,7 +80,7 @@ export const SubscriptionSchemas = BaseSubscriptionServiceSchemas({
   validator: SchemaValidator()
 });
 //! defines the configuration schema for the application
-export function createDepenencies({ orm }: { orm: MikroORM }) {
+export function createDependencies(orm: MikroORM) {
   const configInjector = createConfigInjector(SchemaValidator(), {
     SERVICE_METADATA: {
       lifetime: Lifetime.Singleton,
@@ -152,10 +152,18 @@ export function createDepenencies({ orm }: { orm: MikroORM }) {
     TtlCache: {
       lifetime: Lifetime.Singleton,
       type: RedisTtlCache,
-      factory: ({ REDIS_URL, OpenTelemetryCollector }) =>
-        new RedisTtlCache(60 * 60 * 1000, OpenTelemetryCollector, {
-          url: REDIS_URL
-        })
+      factory: ({ REDIS_URL, OpenTelemetryCollector, OTEL_LEVEL }) =>
+        new RedisTtlCache(
+          60 * 60 * 1000,
+          OpenTelemetryCollector,
+          {
+            url: REDIS_URL
+          },
+          {
+            enabled: true,
+            level: OTEL_LEVEL || 'info'
+          }
+        )
     },
     EntityManager: {
       lifetime: Lifetime.Scoped,
@@ -262,4 +270,4 @@ export function createDepenencies({ orm }: { orm: MikroORM }) {
   };
 }
 //! defines the type for the service dependencies
-export type SchemaDependencies = DependencyShapes<typeof createDepenencies>;
+export type SchemaDependencies = DependencyShapes<typeof createDependencies>;

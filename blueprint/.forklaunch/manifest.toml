@@ -2,6 +2,9 @@
 id = "27e13038-212c-4989-99b0-d970cc30fe4e"
 cli_version = "0.1.0"
 app_name = "forklaunch-framework"
+app_description = "Blueprint for forklaunch services"
+linter="eslint"
+formatter="prettier"
 validator = "none"
 http_framework = "none"
 runtime = "none"
@@ -12,14 +15,17 @@ license = "MIT"
 [[projects]]
 type = "Library"
 name = "core"
+description = ""
 
 [[projects]]
 type = "Library"
 name = "monitoring"
+description = ""
 
 [[projects]]
 type = "Service"
 name = "billing"
+description = ""
 routers = [
     "billingPortal",
     "checkoutSession",
@@ -34,6 +40,7 @@ database = "postgresql"
 [[projects]]
 type = "Service"
 name = "iam"
+description = ""
 routers = [
     "organization",
     "permission",
@@ -47,6 +54,7 @@ database = "postgresql"
 [[projects]]
 type = "Worker"
 name = "sample-worker"
+description = ""
 routers = ["sample-worker"]
 
 [projects.resources]

@@ -1,0 +1,14 @@
+{
+  "deny": {
+    "lint": "recommended"
+  },
+  "exclude": [
+    "**/tests/**/*",
+    "**/dist/**/*",
+    "**/lib/**/*",
+    "**/node_modules/**/*"
+  ],
+  "files": {
+    "include": ["**/*.ts", "**/*.tsx"]
+  }
+}
