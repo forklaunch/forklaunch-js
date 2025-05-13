@@ -14,9 +14,7 @@ cd compile-test-node-application
 
 pnpm install
 pnpm build
-pnpm migrate:init
-pnpm migrate:up
-pnpm seed
+pnpm database:setup
 
 docker compose -p compile-test-node-application down
 
@@ -30,8 +28,6 @@ cd compile-test-bun-application
 
 bun install
 bun run build
-bun migrate:init
-bun migrate:up
-bun seed
+bun database:setup
 
 docker compose -p compile-test-bun-application down
