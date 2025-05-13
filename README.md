@@ -24,6 +24,7 @@ The best part? If you don't like it, you can easily change it.
 | [CLI Documentation](/docs/cli.md) | Detailed guide for CLI commands and usage |
 | [Framework Guide](/docs/framework.md) | Core concepts and framework features |
 | [Adding Projects](/docs/adding-projects.md) | Guide to adding new projects and components |
+| [Changing Projects](/docs/changing-projects.md) | Guide to adding new projects and components |
 | [Customization](/docs/customization.md) | Customizing your application |
 | [Preconfigured Services](/docs/preconfigured-services.md) | Available pre-built services |
 | [Contributing](/docs/CONTRIBUTING.md) | Guidelines for contributing to ForkLaunch |

@@ -3,6 +3,7 @@ use std::{
     collections::{HashMap, HashSet},
     fs::{exists, read_to_string},
     io::Write,
+    iter::zip,
     path::Path,
     rc::Rc,
 };
@@ -1110,6 +1111,35 @@ fn change_runtime(
             context: None,
         },
     );
+
+    let readme = rendered_templates_cache.get(&base_path.join("README.md"))?;
+    if let Some(readme) = readme {
+        let bun_replacements = ["bun run build".to_string(), "bun".to_string()];
+        let pnpm_replacements = ["pnpm build".to_string(), "pnpm".to_string()];
+        let mut replaced_content = readme.content.clone();
+
+        for (existing, new) in zip(
+            match existing_runtime {
+                Runtime::Bun => &bun_replacements,
+                Runtime::Node => &pnpm_replacements,
+            },
+            match runtime {
+                Runtime::Bun => &bun_replacements,
+                Runtime::Node => &pnpm_replacements,
+            },
+        ) {
+            replaced_content = replaced_content.replace(existing, new);
+        }
+
+        rendered_templates_cache.insert(
+            base_path.join("README.md").to_string_lossy(),
+            RenderedTemplate {
+                path: base_path.join("README.md"),
+                content: replaced_content,
+                context: None,
+            },
+        );
+    }
 
     Ok((removal_templates, symlink_templates))
 }

@@ -23,7 +23,7 @@ pub(crate) fn split_preserve_spaces(input: &str) -> Vec<String> {
 
 pub(crate) fn short_circuit_replacement(
     content: &str,
-    replacements: &[(String, String)],
+    replacements: &Vec<(String, String)>,
 ) -> String {
     split_preserve_spaces(content)
         .iter()

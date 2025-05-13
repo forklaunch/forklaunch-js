@@ -18,20 +18,20 @@ This creates a new project with the basic structure including:
 - Docker Compose configuration
 - Basic project structure
 - Development environment setup
-- Pre-configured ESLint, Prettier, and Husky
+- Pre-configured linter, formatter, and Husky
 
 On first run, you'll need to run the following commands:
 
 ```bash
 {{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} install
-{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun run {{/is_bun}} build
-{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun {{/is_bun}} database:setup
+{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun run{{/is_bun}} build
+{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} database:setup
 ```
 
 Now, you can run the project with:
 
 ```bash
-{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun {{/is_bun}} dev
+{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} dev
 ```
 
 ## Core Commands
@@ -83,6 +83,14 @@ The `add router` command is particularly powerful as it:
 - Automatically wires up routes, in code
 - Integrates with existing service or worker
 - Generates test files for the new controller
+
+### Making changes
+
+```
+forklaunch change [application,service,worker,library,router]
+```
+
+Changes can be made at any time using the above command. This allows you to change configuration selected during creation. Note: it is highly recommended to revision your code before attempting to perform changes in case of failure.
 
 #### Check dependencies
 
@@ -251,8 +259,8 @@ If you encounter service specific issues, you can run `dev:local` within any ser
 
 If you encounter issues:
 
-1. Ensure all dependencies are installed: `pnpm install`
-2. Rebuild the project: `pnpm build`
+1. Ensure all dependencies are installed: `{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} install`
+2. Rebuild the project: `{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun run{{/is_bun}} build`
 3. Check Docker services: `docker-compose ps`
 4. Review logs: `docker-compose logs -f`
 
