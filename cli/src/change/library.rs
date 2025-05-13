@@ -26,7 +26,10 @@ use crate::{
         },
         move_template::{MoveTemplate, move_template_files},
         name::validate_name,
-        package_json::project_package_json::ProjectPackageJson,
+        package_json::{
+            application_package_json::ApplicationPackageJson,
+            project_package_json::ProjectPackageJson,
+        },
         removal_template::{RemovalTemplate, remove_template_files},
         rendered_template::{RenderedTemplate, RenderedTemplatesCache, write_rendered_templates},
     },
@@ -47,6 +50,7 @@ fn change_name(
     name: &str,
     confirm: bool,
     manifest_data: &mut LibraryManifestData,
+    application_package_json: &mut ApplicationPackageJson,
     project_package_json: &mut ProjectPackageJson,
     rendered_templates_cache: &mut RenderedTemplatesCache,
     removal_templates: &mut Vec<RemovalTemplate>,
@@ -56,6 +60,7 @@ fn change_name(
         name,
         confirm,
         MutableManifestData::Library(manifest_data),
+        application_package_json,
         project_package_json,
         None,
         rendered_templates_cache,
@@ -189,14 +194,27 @@ impl CliCommand for LibraryCommand {
         let mut removal_templates = vec![];
         let mut move_templates = vec![];
 
+        let mut rendered_templates_cache = RenderedTemplatesCache::new();
+
+        let application_package_json_path = base_path.parent().unwrap().join("package.json");
+        let application_package_json_data = rendered_templates_cache
+            .get(&application_package_json_path)
+            .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?
+            .unwrap()
+            .content;
+
+        let mut application_package_json_to_write =
+            serde_json::from_str::<ApplicationPackageJson>(&application_package_json_data)?;
+
         let project_package_json_path = base_path.join("package.json");
-        let project_package_json_data = read_to_string(&project_package_json_path)
-            .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?;
+        let project_package_json_data = rendered_templates_cache
+            .get(&project_package_json_path)
+            .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?
+            .unwrap()
+            .content;
 
         let mut project_json_to_write =
             serde_json::from_str::<ProjectPackageJson>(&project_package_json_data)?;
-
-        let mut rendered_templates_cache = RenderedTemplatesCache::new();
 
         if let Some(description) = description {
             change_description(&description, &mut manifest_data, &mut project_json_to_write)?;
@@ -208,11 +226,21 @@ impl CliCommand for LibraryCommand {
                 &name,
                 confirm,
                 &mut manifest_data,
+                &mut application_package_json_to_write,
                 &mut project_json_to_write,
                 &mut rendered_templates_cache,
                 &mut removal_templates,
             )?);
         }
+
+        rendered_templates_cache.insert(
+            application_package_json_path.to_string_lossy(),
+            RenderedTemplate {
+                path: application_package_json_path.to_path_buf(),
+                content: serde_json::to_string_pretty(&application_package_json_to_write)?,
+                context: None,
+            },
+        );
 
         rendered_templates_cache.insert(
             config_path.clone().to_string_lossy(),

@@ -158,6 +158,7 @@ pub(crate) fn update_application_package_json(
 
 pub(crate) fn replace_project_in_workspace_definition(
     application_base_path: &Path,
+    application_package_json: &mut ApplicationPackageJson,
     runtime: &Runtime,
     existing_project_name: &str,
     new_project_name: &str,
@@ -165,14 +166,6 @@ pub(crate) fn replace_project_in_workspace_definition(
 ) -> Result<()> {
     match runtime {
         Runtime::Bun => {
-            let mut application_package_json: ApplicationPackageJson = from_str(
-                &rendered_template_cache
-                    .get(Path::new(application_base_path).join("package.json"))?
-                    .unwrap()
-                    .content,
-            )
-            .with_context(|| ERROR_FAILED_TO_PARSE_PACKAGE_JSON)?;
-
             if let Some(workspaces) = application_package_json.workspaces.as_mut() {
                 workspaces.remove(
                     workspaces
@@ -182,15 +175,6 @@ pub(crate) fn replace_project_in_workspace_definition(
                 );
                 workspaces.push(new_project_name.to_string());
             }
-
-            rendered_template_cache.insert(
-                "package.json".to_string(),
-                RenderedTemplate {
-                    path: Path::new(application_base_path).join("package.json"),
-                    content: to_string_pretty(&application_package_json)?,
-                    context: None,
-                },
-            );
         }
         Runtime::Node => {
             let workspace_definition = rendered_template_cache
@@ -215,9 +199,11 @@ pub(crate) fn replace_project_in_workspace_definition(
                 .push(new_project_name.to_string());
 
             rendered_template_cache.insert(
-                "pnpm-workspace.yaml".to_string(),
+                application_base_path
+                    .join("pnpm-workspace.yaml")
+                    .to_string_lossy(),
                 RenderedTemplate {
-                    path: Path::new(application_base_path).join("pnpm-workspace.yaml"),
+                    path: application_base_path.join("pnpm-workspace.yaml"),
                     content: serde_yml::to_string(&workspace_definition)?,
                     context: None,
                 },

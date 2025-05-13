@@ -14,6 +14,7 @@ use crate::{
         manifest::{MutableManifestData, ProjectEntry},
         move_template::{MoveTemplate, MoveTemplateType},
         package_json::{
+            application_package_json::ApplicationPackageJson,
             project_package_json::ProjectPackageJson, replace_project_in_workspace_definition,
         },
         removal_template::{RemovalTemplate, RemovalTemplateType},
@@ -113,6 +114,7 @@ pub(crate) fn change_name(
     name: &str,
     confirm: bool,
     manifest_data: MutableManifestData,
+    application_package_json: &mut ApplicationPackageJson,
     project_package_json: &mut ProjectPackageJson,
     docker_compose: Option<&mut DockerCompose>,
     rendered_templates_cache: &mut RenderedTemplatesCache,
@@ -162,6 +164,7 @@ pub(crate) fn change_name(
 
     let _ = replace_project_in_workspace_definition(
         base_path.parent().unwrap(),
+        application_package_json,
         &runtime.parse()?,
         &existing_name,
         name,

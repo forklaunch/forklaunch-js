@@ -42,7 +42,7 @@ jobs:
 
     - name: Build project
       working-directory: ./cli
-      run: cargo build
+      run: cargo build --release
 
     - name: Create .forklaunch directory
       run: mkdir -p ~/.forklaunch
