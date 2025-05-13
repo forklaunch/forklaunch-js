@@ -9,7 +9,7 @@ cd output/init-application
 CACHE_FILE="processed_apps.cache"
 touch "$CACHE_FILE"
 
-RUST_BACKTRACE=1 cargo run login
+RUST_BACKTRACE=1 cargo run --release login
 
 # databases=("postgresql" "mongodb" "sqlite" "mysql" "mssql" "libsql" "better-sqlite")
 databases=("postgresql" "mongodb" "sqlite")

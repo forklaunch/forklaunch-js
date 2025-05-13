@@ -5,7 +5,7 @@ fi
 mkdir -p output/eject
 cd output/eject
 
-RUST_BACKTRACE=1 cargo run init application service-test-node-application -d postgresql -f prettier -l eslint -v zod -F express -r node -t vitest -s billing -s iam -D "Test service" -A "Rohin Bhargava" -L 'AGPL-3.0'
+RUST_BACKTRACE=1 cargo run --release init application service-test-node-application -d postgresql -f prettier -l eslint -v zod -F express -r node -t vitest -s billing -s iam -D "Test service" -A "Rohin Bhargava" -L 'AGPL-3.0'
 
 cd service-test-node-application
 
@@ -13,14 +13,14 @@ pnpm install
 
 cd iam
 
-RUST_BACKTRACE=1 cargo run eject -n
-RUST_BACKTRACE=1 cargo run eject -c
+RUST_BACKTRACE=1 cargo run --release eject -n
+RUST_BACKTRACE=1 cargo run --release eject -c
 
 pnpm build
 
 cd ../..
 
-RUST_BACKTRACE=1 cargo run init application service-test-bun-application -d postgresql -f biome -l oxlint -v zod -F express -r bun -t vitest -s billing -s iam -D "Test service" -A "Rohin Bhargava" -L "MIT"
+RUST_BACKTRACE=1 cargo run --release init application service-test-bun-application -d postgresql -f biome -l oxlint -v zod -F express -r bun -t vitest -s billing -s iam -D "Test service" -A "Rohin Bhargava" -L "MIT"
 
 cd service-test-bun-application
 
@@ -28,8 +28,8 @@ bun install
 
 cd billing
 
-RUST_BACKTRACE=1 cargo run eject -n
-RUST_BACKTRACE=1 cargo run eject -c
+RUST_BACKTRACE=1 cargo run --release eject -n
+RUST_BACKTRACE=1 cargo run --release eject -c
 
 bun run build
 
