@@ -238,6 +238,7 @@ export async function parseRequestAuth<
     MapReqHeadersSchema<SV, ReqHeaders>
   >,
   res: ForklaunchResponse<
+    unknown,
     MapResBodyMapSchema<SV, ResBodyMap>,
     MapResHeadersSchema<SV, ResHeaders>,
     LocalsObj

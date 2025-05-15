@@ -31,6 +31,7 @@ describe('http middleware tests', () => {
     Record<string, string>
   >;
   let res: ForklaunchResponse<
+    unknown,
     Record<number, unknown>,
     Record<string, string>,
     Record<string, unknown>

@@ -50,6 +50,7 @@ export function parse<
 >(
   req: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>,
   res: ForklaunchResponse<
+    unknown,
     ResBodyMap,
     ForklaunchResHeaders & ResHeaders,
     LocalsObj

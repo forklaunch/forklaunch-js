@@ -307,6 +307,7 @@ export class ForklaunchExpressLikeRouter<
           ? { headers: contractDetails.requestHeaders }
           : {}),
         ...(contractDetails.query ? { query: contractDetails.query } : {}),
+        // TODO: UPDATE THIS TO INCLUDE DIFFERENT CONTENT_TYPES
         ...(isHttpContractDetails<
           SV,
           Path,
@@ -317,7 +318,9 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           BaseRequest
-        >(contractDetails) && contractDetails.body != null
+        >(contractDetails) &&
+        'body' in contractDetails &&
+        contractDetails.body != null
           ? { body: contractDetails.body }
           : {})
       })

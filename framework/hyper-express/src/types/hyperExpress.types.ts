@@ -53,7 +53,12 @@ export interface InternalResponse<
   ResBodyMap extends Record<number, unknown>,
   ResHeaders extends Record<string, string>,
   LocalsObj extends Record<string, unknown>
-> extends ForklaunchResponse<ResBodyMap, ResHeaders, LocalsObj>,
+> extends ForklaunchResponse<
+      ExpressResponse,
+      ResBodyMap,
+      ResHeaders,
+      LocalsObj
+    >,
     Omit<
       ExpressResponse<LocalsObj>,
       | 'getHeaders'

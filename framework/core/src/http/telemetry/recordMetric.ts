@@ -22,7 +22,7 @@ export function recordMetric<
   LocalsObj extends Record<string, unknown>
 >(
   req: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>,
-  res: ForklaunchResponse<ResBodyMap, ResHeaders, LocalsObj>
+  res: ForklaunchResponse<unknown, ResBodyMap, ResHeaders, LocalsObj>
 ) {
   if (res.metricRecorded) {
     return;

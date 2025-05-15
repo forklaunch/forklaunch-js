@@ -164,9 +164,11 @@ export function generateSwaggerDocument<SV extends AnySchemaValidator>(
         }
       }
 
-      const body = (
-        route.contractDetails as HttpContractDetails<typeof schemaValidator>
-      ).body;
+      // TODO: UPDATE THIS TO INCLUDE DIFFERENT CONTENT_TYPES
+      const contractDetails = route.contractDetails as HttpContractDetails<
+        typeof schemaValidator
+      >;
+      const body = 'body' in contractDetails ? contractDetails.body : undefined;
       if (body) {
         pathItemObject.requestBody = {
           required: true,

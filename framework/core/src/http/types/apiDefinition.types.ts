@@ -167,6 +167,7 @@ export interface ForklaunchStatusResponse<ResBody> {
  * @template StatusCode - A type for the status code, defaulting to number.
  */
 export interface ForklaunchResponse<
+  BaseResponse,
   ResBodyMap extends Record<number, unknown>,
   ResHeaders extends Record<string, string>,
   LocalsObj extends Record<string, unknown>
@@ -219,15 +220,17 @@ export interface ForklaunchResponse<
   status: {
     <U extends keyof (ResBodyMap & ForklaunchResErrors)>(
       code: U
-    ): ForklaunchStatusResponse<
-      (Omit<ForklaunchResErrors, keyof ResBodyMap> & ResBodyMap)[U]
-    >;
+    ): BaseResponse &
+      ForklaunchStatusResponse<
+        (Omit<ForklaunchResErrors, keyof ResBodyMap> & ResBodyMap)[U]
+      >;
     <U extends keyof (ResBodyMap & ForklaunchResErrors)>(
       code: U,
       message?: string
-    ): ForklaunchStatusResponse<
-      (Omit<ForklaunchResErrors, keyof ResBodyMap> & ResBodyMap)[U]
-    >;
+    ): BaseResponse &
+      ForklaunchStatusResponse<
+        (Omit<ForklaunchResErrors, keyof ResBodyMap> & ResBodyMap)[U]
+      >;
   };
 
   /**
@@ -327,14 +330,20 @@ export interface ExpressLikeHandler<
       BaseRequest
     >,
     res: unknown extends BaseResponse
-      ? ForklaunchResponse<ResBodyMap, ResHeaders, LocalsObj>
+      ? ForklaunchResponse<BaseResponse, ResBodyMap, ResHeaders, LocalsObj>
       : {
           [key in keyof BaseResponse]: key extends keyof ForklaunchResponse<
+            BaseResponse,
             ResBodyMap,
             ResHeaders,
             LocalsObj
           >
-            ? ForklaunchResponse<ResBodyMap, ResHeaders, LocalsObj>[key]
+            ? ForklaunchResponse<
+                BaseResponse,
+                ResBodyMap,
+                ResHeaders,
+                LocalsObj
+              >[key]
             : key extends keyof BaseResponse
               ? BaseResponse[key]
               : never;

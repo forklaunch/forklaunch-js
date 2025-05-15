@@ -28,6 +28,7 @@ export function cors<
 >(
   req: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>,
   res: ForklaunchResponse<
+    unknown,
     ResBodyMap,
     ForklaunchResHeaders & ResHeaders,
     LocalsObj
