@@ -365,9 +365,7 @@ export type HttpContractDetails<
 > & {
   /** Required body schema for body-based methods for the contract */
   readonly body: BodySchema;
-} & //     /** Required form schema for form-based methods for the contract */ // | {
-//     readonly multipartForm: BodySchema;
-//   }
+} & //   } //     readonly multipartForm: BodySchema; //     /** Required form schema for form-based methods for the contract */ // | {
 // | {
 //     /** Required form schema for form-based methods for the contract */
 //     readonly urlEncodedForm: BodySchema;
