@@ -1,10 +1,24 @@
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { number, SchemaValidator, string } from '@forklaunch/validator/zod';
+import {
+  NextFunction as ExpressNextFunction,
+  Request as ExpressRequest,
+  Response as ExpressResponse
+} from 'express';
 import { Server } from 'http';
 import { forklaunchExpress, forklaunchRouter } from '../index';
 import { checkout } from '../src/handlers/checkout';
 import { get } from '../src/handlers/get';
 import { post } from '../src/handlers/post';
+
+const expressMiddleware = (
+  req: ExpressRequest,
+  res: ExpressResponse,
+  next: ExpressNextFunction
+) => {
+  console.log(req, res, next);
+  next();
+};
 
 const zodSchemaValidator = SchemaValidator();
 const openTelemetryCollector = new OpenTelemetryCollector('test');
@@ -32,6 +46,7 @@ describe('Forklaunch Express Tests', () => {
           200: string
         }
       },
+      expressMiddleware,
       (_req, res) => {
         res.status(200).send('Hello World');
       }
@@ -49,6 +64,7 @@ describe('Forklaunch Express Tests', () => {
           200: string
         }
       },
+      expressMiddleware,
       (req, res) => {
         res.status(200).send(req.body.test);
       }
@@ -190,6 +206,9 @@ describe('handlers', () => {
         params: {
           id: string
         },
+        requestHeaders: {
+          'x-test': string
+        },
         auth: {
           method: 'jwt',
           allowedRoles: new Set(['admin']),
@@ -210,7 +229,15 @@ describe('handlers', () => {
       }
     );
     application.get('/:id', getRequest);
-    router.get('/:id', getRequest);
+    const liveTypeFunction = router.get('/:id', getRequest);
+    liveTypeFunction.get('/organization/:id', {
+      params: {
+        id: 'string'
+      },
+      headers: {
+        'x-test': 'string'
+      }
+    });
   });
 
   it('should be able to create a body param handler', () => {
@@ -234,7 +261,12 @@ describe('handlers', () => {
       }
     );
     application.post('/', postRequest);
-    router.post('/', postRequest);
+    const liveTypeFunction = router.post('/', postRequest);
+    liveTypeFunction.post('/organization', {
+      body: {
+        name: 'string'
+      }
+    });
   });
 
   it('should be able to create a middleware handler', () => {

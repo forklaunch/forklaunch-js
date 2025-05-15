@@ -5,6 +5,21 @@ import { any } from '../src/handlers/any';
 import { get } from '../src/handlers/get';
 import { post } from '../src/handlers/post';
 
+import {
+  MiddlewareNext as ExpressNextFunction,
+  Request as ExpressRequest,
+  Response as ExpressResponse
+} from '@forklaunch/hyper-express-fork';
+
+const expressMiddleware = (
+  req: ExpressRequest,
+  res: ExpressResponse,
+  next: ExpressNextFunction
+) => {
+  console.log(req, res, next);
+  next();
+};
+
 const typeboxSchemaValidator = SchemaValidator();
 const openTelemetryCollector = new OpenTelemetryCollector('test');
 
@@ -29,6 +44,7 @@ describe('Forklaunch Hyper-Express Tests', () => {
           200: string
         }
       },
+      expressMiddleware,
       (_req, res) => {
         res.status(200).send('Hello World');
       }
@@ -46,6 +62,7 @@ describe('Forklaunch Hyper-Express Tests', () => {
           200: string
         }
       },
+      expressMiddleware,
       (req, res) => {
         res.status(200).send(req.body.test);
       }

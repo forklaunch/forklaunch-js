@@ -4,9 +4,11 @@ import {
   ExpressLikeSchemaHandler,
   HeadersObject,
   middleware,
+  MultipartForm,
   ParamsObject,
   QueryObject,
-  ResponsesObject
+  ResponsesObject,
+  UrlEncodedForm
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { NextFunction, Request, Response } from 'express';
@@ -77,7 +79,7 @@ export const notify = <
   Path extends `/${string}`,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
-  ReqBody extends Body<SV>,
+  ReqBody extends Body<SV> | MultipartForm<SV> | UrlEncodedForm<SV>,
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,

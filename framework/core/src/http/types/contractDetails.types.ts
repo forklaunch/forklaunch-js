@@ -105,16 +105,9 @@ export type MultipartFile = {
  *
  * @template SV - A type that extends AnySchemaValidator.
  */
-export type MultipartForm<SV extends AnySchemaValidator> =
-  | BodyObject<SV>
-  | (SV['_ValidSchemaObject'] & {
-      [key: string]:
-        | IdiomaticSchema<SV>
-        | StringOnlyObject<SV>
-        | MultipartFile
-        | MultipartFile[];
-    })
-  | SV['_SchemaCatchall'];
+export type MultipartForm<SV extends AnySchemaValidator> = {
+  [key: string]: IdiomaticSchema<SV> | MultipartFile | MultipartFile[];
+};
 
 /**
  * Type representing the body in a request.
@@ -174,7 +167,7 @@ export type AuthMethodsBase = (
 export type SchemaAuthMethods<
   SV extends AnySchemaValidator,
   ParamsSchema extends ParamsObject<SV>,
-  ReqBody extends Body<SV>,
+  ReqBody extends Body<SV> | MultipartForm<SV> | UrlEncodedForm<SV>,
   QuerySchema extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   BaseRequest
@@ -369,40 +362,36 @@ export type HttpContractDetails<
   ReqHeaders,
   ResHeaders,
   BaseRequest
-> &
-  (
-    | {
-        /** Required body schema for body-based methods for the contract */
-        readonly body: BodySchema;
-      }
-    | {
-        /** Required form schema for form-based methods for the contract */
-        readonly multipartForm: BodySchema;
-      }
-    | {
-        /** Required form schema for form-based methods for the contract */
-        readonly urlEncodedForm: BodySchema;
-      }
-  ) & {
-    // TODO: Add support for content type
-    /** Optional content type for the contract */
-    readonly contentType?:
-      | 'application/json'
-      | 'multipart/form-data'
-      | 'application/x-www-form-urlencoded';
-    readonly auth?: SchemaAuthMethods<
-      SV,
-      string | number | symbol extends ExtractedParamsObject<Path>
-        ? {
-            [K in keyof ExtractedParamsObject<Path>]: ParamsSchema[K];
-          }
-        : ParamsSchema,
-      BodySchema,
-      QuerySchema,
-      ReqHeaders,
-      BaseRequest
-    > & {};
-  };
+> & {
+  /** Required body schema for body-based methods for the contract */
+  readonly body: BodySchema;
+} & //     /** Required form schema for form-based methods for the contract */ // | {
+//     readonly multipartForm: BodySchema;
+//   }
+// | {
+//     /** Required form schema for form-based methods for the contract */
+//     readonly urlEncodedForm: BodySchema;
+//   }
+{
+  // TODO: Add support for content type
+  /** Optional content type for the contract */
+  readonly contentType?:
+    | 'application/json'
+    | 'multipart/form-data'
+    | 'application/x-www-form-urlencoded';
+  readonly auth?: SchemaAuthMethods<
+    SV,
+    string | number | symbol extends ExtractedParamsObject<Path>
+      ? {
+          [K in keyof ExtractedParamsObject<Path>]: ParamsSchema[K];
+        }
+      : ParamsSchema,
+    BodySchema,
+    QuerySchema,
+    ReqHeaders,
+    BaseRequest
+  > & {};
+};
 
 /**
  * Interface representing HTTP contract details for middleware.

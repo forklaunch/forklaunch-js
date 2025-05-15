@@ -37,7 +37,7 @@
   "dependencies": {
     "@forklaunch/common": "workspace:*",
     "@forklaunch/core": "workspace:*",
-    "@forklaunch/hyper-express-fork": "^6.17.30",
+    "@forklaunch/hyper-express-fork": "^6.17.32",
     "@forklaunch/validator": "workspace:*",
     "@scalar/express-api-reference": "^0.6.8",
     "cors": "^2.8.5",

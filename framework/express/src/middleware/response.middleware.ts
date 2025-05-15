@@ -43,10 +43,7 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
 ) {
   const originalSend = res.send;
   const originalJson = res.json;
-  const originalSetHeader = res.setHeader as (
-    key: string,
-    value: string | string[]
-  ) => void;
+  const originalSetHeader = res.setHeader;
 
   /**
    * Intercepts and enhances the JSON response method.
@@ -122,9 +119,9 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
   res.setHeader = function (name: string, value: unknown | unknown[]) {
     let stringifiedValue;
     if (Array.isArray(value)) {
-      stringifiedValue = value.map((v) =>
-        typeof v !== 'string' ? JSON.stringify(v) : v
-      );
+      stringifiedValue = value
+        .map((v) => (typeof v !== 'string' ? JSON.stringify(v) : v))
+        .join('\n');
     } else {
       stringifiedValue =
         typeof value !== 'string' ? JSON.stringify(value) : value;

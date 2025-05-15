@@ -13,12 +13,14 @@ import {
   HeadersObject,
   HttpContractDetails,
   MapSchema,
+  MultipartForm,
   ParamsDictionary,
   ParamsObject,
   PathParamHttpContractDetails,
   QueryObject,
   ResponseCompiledSchema,
-  ResponsesObject
+  ResponsesObject,
+  UrlEncodedForm
 } from './contractDetails.types';
 import { MetricsDefinition } from './openTelemetryCollector.types';
 
@@ -191,25 +193,36 @@ export interface ForklaunchResponse<
    * @param {string} key - The header key.
    * @param {string} value - The header value.
    */
-  setHeader: <K extends keyof (ResHeaders & ForklaunchResHeaders)>(
-    key: K,
-    value: K extends keyof ForklaunchResHeaders
-      ? ForklaunchResHeaders[K]
-      : ResHeaders[K]
-  ) => void;
+  setHeader: {
+    <K extends keyof (ResHeaders & ForklaunchResHeaders)>(
+      key: K,
+      value: K extends keyof ForklaunchResHeaders
+        ? ForklaunchResHeaders[K]
+        : ResHeaders[K]
+    ): void;
+    <K extends keyof (ResHeaders & ForklaunchResHeaders)>(
+      key: K,
+      value: K extends keyof ForklaunchResHeaders
+        ? ForklaunchResHeaders[K]
+        : ResHeaders[K]
+    ): BaseResponse;
+  };
 
   /**
    * Adds an event listener to the response.
    * @param {string} event - The event to listen for.
    * @param {Function} listener - The listener function.
    */
-  on(event: 'close', listener: () => void): this;
-  on(event: 'drain', listener: () => void): this;
-  on(event: 'error', listener: (err: Error) => void): this;
-  on(event: 'finish', listener: () => void): this;
-  on(event: 'pipe', listener: (src: Readable) => void): this;
-  on(event: 'unpipe', listener: (src: Readable) => void): this;
-  on(event: string | symbol, listener: (...args: unknown[]) => void): this;
+  on(event: 'close', listener: () => void): BaseResponse & this;
+  on(event: 'drain', listener: () => void): BaseResponse & this;
+  on(event: 'error', listener: (err: Error) => void): BaseResponse & this;
+  on(event: 'finish', listener: () => void): BaseResponse & this;
+  on(event: 'pipe', listener: (src: Readable) => void): BaseResponse & this;
+  on(event: 'unpipe', listener: (src: Readable) => void): BaseResponse & this;
+  on(
+    event: string | symbol,
+    listener: (...args: unknown[]) => void
+  ): BaseResponse & this;
 
   /**
    * Sets the status of the response.
@@ -220,14 +233,24 @@ export interface ForklaunchResponse<
   status: {
     <U extends keyof (ResBodyMap & ForklaunchResErrors)>(
       code: U
-    ): BaseResponse &
+    ): Omit<
+      BaseResponse,
+      keyof ForklaunchStatusResponse<
+        (Omit<ForklaunchResErrors, keyof ResBodyMap> & ResBodyMap)[U]
+      >
+    > &
       ForklaunchStatusResponse<
         (Omit<ForklaunchResErrors, keyof ResBodyMap> & ResBodyMap)[U]
       >;
     <U extends keyof (ResBodyMap & ForklaunchResErrors)>(
       code: U,
       message?: string
-    ): BaseResponse &
+    ): Omit<
+      BaseResponse,
+      keyof ForklaunchStatusResponse<
+        (Omit<ForklaunchResErrors, keyof ResBodyMap> & ResBodyMap)[U]
+      >
+    > &
       ForklaunchStatusResponse<
         (Omit<ForklaunchResErrors, keyof ResBodyMap> & ResBodyMap)[U]
       >;
@@ -237,13 +260,19 @@ export interface ForklaunchResponse<
    * Ends the response.
    * @param {string} [data] - Optional data to send.
    */
-  end: (data?: string) => void;
+  end: {
+    (data?: string): void;
+    (cb?: (() => void) | undefined): BaseResponse;
+  };
 
   /**
    * Sets the content type of the response.
    * @param {string} type - The content type.
    */
-  type: (type: string) => void;
+  type: {
+    (type: string): void;
+    (type: string): BaseResponse;
+  };
 
   /** Local variables */
   locals: LocalsObj;
@@ -348,7 +377,7 @@ export interface ExpressLikeHandler<
               ? BaseResponse[key]
               : never;
         },
-    next?: NextFunction
+    next: NextFunction
   ): void | Promise<void>;
 }
 
@@ -374,7 +403,7 @@ export type MapResBodyMapSchema<
 
 export type MapReqBodySchema<
   SV extends AnySchemaValidator,
-  ReqBody extends Body<SV>
+  ReqBody extends Body<SV> | MultipartForm<SV> | UrlEncodedForm<SV>
 > =
   MapSchema<SV, ReqBody> extends infer Body
     ? unknown extends Body
@@ -426,7 +455,7 @@ export type ExpressLikeSchemaHandler<
   SV extends AnySchemaValidator,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
-  ReqBody extends Body<SV>,
+  ReqBody extends Body<SV> | MultipartForm<SV> | UrlEncodedForm<SV>,
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
@@ -464,7 +493,7 @@ export type ExpressLikeSchemaHandler<
 export type ExpressLikeSchemaAuthMapper<
   SV extends AnySchemaValidator,
   P extends ParamsObject<SV>,
-  ReqBody extends Body<SV>,
+  ReqBody extends Body<SV> | MultipartForm<SV> | UrlEncodedForm<SV>,
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   BaseRequest
@@ -514,7 +543,7 @@ export type LiveTypeFunction<
   Route extends string,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
-  ReqBody extends Body<SV>,
+  ReqBody extends Body<SV> | MultipartForm<SV> | UrlEncodedForm<SV>,
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>
