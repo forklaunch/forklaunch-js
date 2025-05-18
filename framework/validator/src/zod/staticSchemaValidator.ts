@@ -89,6 +89,16 @@ export const unknown = StaticSchemaValidator.unknown;
 export const never = StaticSchemaValidator.never;
 
 /**
+ * Zod schema definition for blob type.
+ */
+export const binary = StaticSchemaValidator.binary;
+
+/**
+ * Zod schema definition for file type.
+ */
+export const file = StaticSchemaValidator.file;
+
+/**
  * Transforms valid schema into Zod schema.
  */
 export const schemify = StaticSchemaValidator.schemify.bind(

@@ -1,4 +1,5 @@
 export * from './extractArgumentNames';
+export * from './File';
 export * from './guards/isNever';
 export * from './guards/isRecord';
 export * from './guards/isTrue';
@@ -9,5 +10,6 @@ export * from './stripUndefinedProperties';
 export * from './types/dto.types';
 export * from './types/flatten.types';
 export * from './types/makePropertyOptionalIfChildrenOptional.types';
+export * from './types/mime.types';
 export * from './types/prettify.types';
 export * from './types/removeTrailingSlash.types';

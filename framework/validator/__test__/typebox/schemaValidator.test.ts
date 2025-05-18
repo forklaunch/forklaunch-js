@@ -36,7 +36,9 @@ describe('typebox schema validator tests', () => {
     schemified = schemify(schema);
     expectedSchema = Type.Object({
       hello: Type.Object({
-        world: Type.String()
+        world: Type.String({
+          examples: ['a string']
+        })
       }),
       foo: Type.Object({
         bar: Type.Transform(
@@ -46,12 +48,13 @@ describe('typebox schema validator tests', () => {
               Type.String({ pattern: '^[0-9]+$' }),
               Type.Boolean(),
               Type.Null(),
-              Type.Date(),
-              Type.BigInt()
+              Type.BigInt(),
+              Type.Date()
             ],
             {
               errorType: 'number-like',
-              openapiType: Type.Number()
+              openapiType: Type.Number(),
+              examples: [123]
             }
           )
         )
@@ -173,7 +176,7 @@ describe('typebox schema validator tests', () => {
       [
         expectedSchema,
         Type.Object({
-          test: Type.String()
+          test: Type.String({ examples: ['a string'] })
         })
       ],
       {
@@ -347,7 +350,7 @@ describe('typebox schema validator tests', () => {
       openapi(schema),
       Type.Object({
         hello: Type.Object({
-          world: Type.String()
+          world: Type.String({ examples: ['a string'] })
         }),
         foo: Type.Object({
           bar: Type.Number()

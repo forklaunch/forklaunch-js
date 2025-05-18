@@ -86,18 +86,53 @@ export type ResponsesObject<SV extends AnySchemaValidator> = {
  *
  * @template SV - A type that extends AnySchemaValidator.
  */
-export type Body<SV extends AnySchemaValidator> =
+export type TextBody<SV extends AnySchemaValidator> =
+  | {
+      contentType?:
+        | 'application/json'
+        | 'application/xml'
+        | 'text/plain'
+        | 'text/html'
+        | 'text/css'
+        | 'text/javascript'
+        | 'text/csv'
+        | 'text/markdown'
+        | 'text/xml'
+        | 'text/rtf'
+        | 'text/x-yaml'
+        | 'text/yaml';
+      schema: BodyObject<SV> | SV['_ValidSchemaObject'] | SV['_SchemaCatchall'];
+    }
   | BodyObject<SV>
   | SV['_ValidSchemaObject']
   | SV['_SchemaCatchall'];
 
-/**
- * Type representing a file in a multipart form.
- */
-export type MultipartFile = {
-  filename: string;
-  data: Buffer;
-  contentType: string;
+export type FileBody<SV extends AnySchemaValidator> = {
+  contentType?:
+    | 'application/octet-stream'
+
+    // Document formats
+    | 'application/pdf'
+    | 'application/vnd.ms-excel'
+    | 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    | 'application/msword'
+    | 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+
+    // Archive format
+    | 'application/zip'
+
+    // Image formats
+    | 'image/jpeg'
+    | 'image/png'
+    | 'image/gif'
+
+    // Audio formats
+    | 'audio/mpeg'
+    | 'audio/wav'
+
+    // Video format
+    | 'video/mp4';
+  file: SV['file'];
 };
 
 /**
@@ -106,7 +141,16 @@ export type MultipartFile = {
  * @template SV - A type that extends AnySchemaValidator.
  */
 export type MultipartForm<SV extends AnySchemaValidator> = {
-  [key: string]: IdiomaticSchema<SV> | MultipartFile | MultipartFile[];
+  contentType?:
+    | 'multipart/form-data'
+    | 'multipart/mixed'
+    | 'multipart/alternative'
+    | 'multipart/related'
+    | 'multipart/signed'
+    | 'multipart/encrypted';
+  form: {
+    [key: string]: IdiomaticSchema<SV> | MulterFile | MulterFile[];
+  };
 };
 
 /**
@@ -114,10 +158,19 @@ export type MultipartForm<SV extends AnySchemaValidator> = {
  *
  * @template SV - A type that extends AnySchemaValidator.
  */
-export type UrlEncodedForm<SV extends AnySchemaValidator> =
-  | BodyObject<SV>
-  | SV['_ValidSchemaObject']
-  | SV['_SchemaCatchall'];
+export type UrlEncodedForm<SV extends AnySchemaValidator> = {
+  contentType?:
+    | 'application/x-www-form-urlencoded'
+    | 'application/x-url-encoded'
+    | 'application/x-www-url-encoded'
+    | 'application/x-urlencode';
+  form: StringOnlyObject<SV>;
+};
+
+export type UnknownBody<SV extends AnySchemaValidator> = Partial<TextBody<SV>> &
+  Partial<FileBody<SV>> &
+  Partial<MultipartForm<SV>> &
+  Partial<UrlEncodedForm<SV>> & { contentType?: string };
 
 export type AuthMethodsBase = (
   | {
@@ -362,34 +415,43 @@ export type HttpContractDetails<
   ReqHeaders,
   ResHeaders,
   BaseRequest
-> & {
-  /** Required body schema for body-based methods for the contract */
-  readonly body: BodySchema;
-} & //   } //     readonly multipartForm: BodySchema; //     /** Required form schema for form-based methods for the contract */ // | {
-// | {
-//     /** Required form schema for form-based methods for the contract */
-//     readonly urlEncodedForm: BodySchema;
-//   }
-{
-  // TODO: Add support for content type
-  /** Optional content type for the contract */
-  readonly contentType?:
-    | 'application/json'
-    | 'multipart/form-data'
-    | 'application/x-www-form-urlencoded';
-  readonly auth?: SchemaAuthMethods<
-    SV,
-    string | number | symbol extends ExtractedParamsObject<Path>
+> &
+  (BodySchema extends Body<SV>
+    ? {
+        readonly contentType?:
+          | 'text/plain'
+          | 'application/octet-stream'
+          | 'application/json';
+        /** Required body schema for body-based methods for the contract */
+        readonly body: BodySchema;
+      }
+    : BodySchema extends MultipartForm<SV>
       ? {
-          [K in keyof ExtractedParamsObject<Path>]: ParamsSchema[K];
+          readonly contentType?: 'multipart/form-data';
+
+          /** Required body schema for body-based methods for the contract */
+          readonly multipartForm: BodySchema;
         }
-      : ParamsSchema,
-    BodySchema,
-    QuerySchema,
-    ReqHeaders,
-    BaseRequest
-  > & {};
-};
+      : BodySchema extends UrlEncodedForm<SV>
+        ? {
+            readonly contentType?: 'application/x-www-form-urlencoded';
+            /** Required body schema for body-based methods for the contract */
+            readonly urlEncodedForm: BodySchema;
+          }
+        : never) & {
+    readonly auth?: SchemaAuthMethods<
+      SV,
+      string | number | symbol extends ExtractedParamsObject<Path>
+        ? {
+            [K in keyof ExtractedParamsObject<Path>]: ParamsSchema[K];
+          }
+        : ParamsSchema,
+      BodySchema,
+      QuerySchema,
+      ReqHeaders,
+      BaseRequest
+    > & {};
+  };
 
 /**
  * Interface representing HTTP contract details for middleware.

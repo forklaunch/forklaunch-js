@@ -57,6 +57,7 @@ describe('Forklaunch Express Tests', () => {
       {
         name: 'Test',
         summary: 'Test Summary',
+        contentType: 'application/json',
         body: {
           test: string
         },
@@ -75,6 +76,7 @@ describe('Forklaunch Express Tests', () => {
       {
         name: 'Test',
         summary: 'Test Summary',
+        contentType: 'application/json',
         body: {
           test: string
         },
@@ -92,6 +94,7 @@ describe('Forklaunch Express Tests', () => {
       {
         name: 'Test',
         summary: 'Test Summary',
+        contentType: 'application/json',
         body: {
           test: string
         },
@@ -252,8 +255,17 @@ describe('handlers', () => {
             name: string
           }
         },
+        // body: {
+        //   contentType: 'application/json',
+        //   schema: {
+        //     name: string
+        //   }
+        // },
         body: {
-          name: string
+          contentType: 'multipart/form-data',
+          schema: {
+            name: string
+          }
         }
       },
       async (req, res) => {

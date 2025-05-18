@@ -49,6 +49,7 @@ describe('http middleware tests', () => {
     contractDetails = {
       name: 'Test Contract',
       summary: 'Test Contract Summary',
+      contentType: 'application/json',
       body: testSchema,
       params: testSchema,
       requestHeaders: testSchema,

@@ -5,16 +5,14 @@
  * @module ZodSchemaValidator
  */
 
-import { generateSchema } from '@anatine/zod-openapi';
+import { extendZodWithOpenApi, generateSchema } from '@anatine/zod-openapi';
+import { MimeType } from '@forklaunch/common';
 import { SchemaObject } from 'openapi3-ts/oas31';
 import {
   z,
   ZodArray,
-  ZodBigInt,
-  ZodDate,
   ZodFunction,
   ZodLiteral,
-  ZodNumber,
   ZodObject,
   ZodOptional,
   ZodPromise,
@@ -36,9 +34,12 @@ import {
   ZodIdiomaticSchema,
   ZodRecordKey,
   ZodResolve,
+  ZodSchemaTranslate,
   ZodTupleContainer,
   ZodUnionContainer
 } from './types/schema.types';
+
+extendZodWithOpenApi(z);
 
 /**
  * Class representing a Zod schema definition.
@@ -82,7 +83,7 @@ export class ZodSchemaValidator
       <T extends ZodIdiomaticSchema | ZodCatchall>(
         schema: T,
         value: unknown
-      ) => ParseResult<ZodResolve<T>>,
+      ) => ParseResult<ZodSchemaTranslate<ZodResolve<T>>>,
       <T extends ZodIdiomaticSchema | ZodCatchall>(schema: T) => SchemaObject
     >
 {
@@ -92,55 +93,154 @@ export class ZodSchemaValidator
     | ZodObject<ZodRawShape>
     | ZodArray<ZodObject<ZodRawShape>>;
 
-  string = z.string();
-  uuid = z.string().uuid();
-  email = z.string().email();
-  uri = z.string().url();
+  string = z.string().openapi({
+    title: 'String',
+    example: 'a string'
+  });
+  uuid = z.string().uuid().openapi({
+    title: 'UUID',
+    pattern:
+      '^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$',
+    example: 'a8b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6'
+  });
+  email = z.string().email().openapi({
+    title: 'Email',
+    pattern:
+      '(?:[a-z0-9!#$%&\'*+/=?^_{|}~-]+(?:\\.[a-z0-9!#$%&\'*+/=?^_{|}~-]+)*|"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)])',
+    example: 'a@b.com'
+  });
+  uri = z.string().url().openapi({
+    title: 'URI',
+    pattern: '^[a-zA-Z][a-zA-Z\\d+-.]*:[^\\s]*$',
+    example: 'https://forklaunch.com'
+  });
   number = z
-    .any()
-    .transform((value) => {
+    .preprocess((value) => {
       try {
         return Number(value);
       } catch {
         return value;
       }
-    })
-    .pipe(z.number()) as unknown as ZodNumber;
+    }, z.number())
+    .openapi({
+      title: 'Number',
+      example: 123
+    });
   bigint = z
-    .any()
-    .transform((value) => {
+    .preprocess((value) => {
       try {
-        return BigInt(value);
+        if (value instanceof Date) {
+          return BigInt(value.getTime());
+        }
+        switch (typeof value) {
+          case 'number':
+          case 'string':
+            return BigInt(value);
+          case 'boolean':
+            return BigInt(value ? 1 : 0);
+          default:
+            return value;
+        }
       } catch {
         return value;
       }
-    })
-    .pipe(z.bigint()) as unknown as ZodBigInt;
-  boolean = z.preprocess((val) => {
-    if (typeof val === 'string') {
-      if (val.toLowerCase() === 'true') return true;
-      if (val.toLowerCase() === 'false') return false;
-    }
-    return val;
-  }, z.boolean());
+    }, z.bigint())
+    .openapi({
+      title: 'BigInt',
+      example: 123n
+    });
+  boolean = z
+    .preprocess((val) => {
+      if (typeof val === 'string') {
+        if (val.toLowerCase() === 'true') return true;
+        if (val.toLowerCase() === 'false') return false;
+      }
+      return val;
+    }, z.boolean())
+    .openapi({
+      title: 'Boolean',
+      example: true
+    });
   date = z
-    .any()
-    .transform((value) => {
+    .preprocess((value) => {
       try {
-        return new Date(value);
+        switch (typeof value) {
+          case 'string':
+            return new Date(value);
+          case 'number':
+            return new Date(value);
+          default:
+            return value;
+        }
       } catch {
         return value;
       }
+    }, z.date())
+    .openapi({
+      title: 'Date',
+      example: '2025-05-16T21:13:04.123Z'
+    });
+  symbol = z.symbol().openapi({
+    title: 'Symbol',
+    example: Symbol('symbol')
+  });
+  nullish = z.union([z.void(), z.null(), z.undefined()]).openapi({
+    title: 'Nullish',
+    example: null
+  });
+  void = z.void().openapi({
+    title: 'Void',
+    example: undefined
+  });
+  null = z.null().openapi({
+    title: 'Null',
+    example: null
+  });
+  undefined = z.undefined().openapi({
+    title: 'Undefined',
+    example: undefined
+  });
+  any = z.any().openapi({
+    title: 'Any',
+    example: 'any'
+  });
+  unknown = z.unknown().openapi({
+    title: 'Unknown',
+    example: 'unknown'
+  });
+  never = z.never().openapi({
+    title: 'Never',
+    example: 'never'
+  });
+  binary = z
+    .string()
+    .openapi({
+      title: 'Binary',
+      format: 'binary',
+      example: 'a utf-8 encodable string'
     })
-    .pipe(z.date()) as unknown as ZodDate;
-  symbol = z.symbol();
-  nullish = z.union([z.void(), z.null(), z.undefined()]);
-  void = z.void();
-  null = z.null();
-  undefined = z.undefined();
-  any = z.any();
-  unknown = z.unknown();
-  never = z.never();
+    .transform(Buffer.from)
+    .pipe(z.instanceof(Buffer));
+  file = (name: string, type: MimeType) =>
+    z
+      .string()
+      .openapi({
+        title: 'File',
+        format: 'binary',
+        contentMediaType: type,
+        example: 'a utf-8 encodable string'
+      })
+      .transform((val) => {
+        try {
+          return new File([Buffer.from(val)], name, {
+            type,
+            lastModified: Date.now()
+          });
+        } catch {
+          return val;
+        }
+      })
+      .pipe(z.instanceof(File));
 
   /**
    * Compiles schema if this exists, for optimal performance.
@@ -338,7 +438,7 @@ export class ZodSchemaValidator
   parse<T extends ZodIdiomaticSchema | ZodCatchall>(
     schema: T,
     value: unknown
-  ): ParseResult<ZodResolve<T>> {
+  ): ParseResult<ZodSchemaTranslate<ZodResolve<T>>> {
     const resolvedSchema = this.schemify(schema);
     const result = resolvedSchema.safeParse(value);
     return result.success

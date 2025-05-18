@@ -5,6 +5,7 @@
  * @module TypeboxSchemaValidator
  */
 
+import { File, MimeType } from '@forklaunch/common';
 import {
   Kind,
   KindGuard,
@@ -26,6 +27,7 @@ import {
   ValueErrorType
 } from '@sinclair/typebox/errors';
 import { Value, ValueError } from '@sinclair/typebox/value';
+import { File as InternalFile } from 'node:buffer';
 import { SchemaObject } from 'openapi3-ts/oas31';
 import {
   LiteralSchema,
@@ -38,6 +40,7 @@ import {
   TObject,
   TObjectShape,
   TResolve,
+  TSchemaTranslate,
   TUnionTupleContainer,
   UnionTupleTResolve
 } from './types/schema.types';
@@ -102,7 +105,7 @@ export class TypeboxSchemaValidator
       <T extends TIdiomaticSchema | TCatchall>(
         schema: T,
         value: unknown
-      ) => ParseResult<TResolve<T>>,
+      ) => ParseResult<TSchemaTranslate<TResolve<T>>>,
       <T extends TIdiomaticSchema | TCatchall>(schema: T) => SchemaObject
     >
 {
@@ -110,20 +113,25 @@ export class TypeboxSchemaValidator
   _SchemaCatchall!: TCatchall;
   _ValidSchemaObject!: TObject<TProperties> | TArray<TObject<TProperties>>;
 
-  string = Type.String();
+  string = Type.String({
+    examples: ['a string']
+  });
   uuid = Type.String({
     pattern:
       '^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$',
-    errorType: 'uuid'
-  });
-  uri = Type.String({
-    pattern: '^[a-zA-Z][a-zA-Z\\d+-.]*:[^\\s]*$',
-    errorType: 'uri'
+    errorType: 'uuid',
+    examples: ['a8b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6']
   });
   email = Type.String({
     pattern:
       '(?:[a-z0-9!#$%&\'*+/=?^_{|}~-]+(?:\\.[a-z0-9!#$%&\'*+/=?^_{|}~-]+)*|"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)])',
-    errorType: 'email'
+    errorType: 'email',
+    examples: ['a@b.com']
+  });
+  uri = Type.String({
+    pattern: '^[a-zA-Z][a-zA-Z\\d+-.]*:[^\\s]*$',
+    errorType: 'uri',
+    examples: ['https://forklaunch.com']
   });
   number = Type.Transform(
     Type.Union(
@@ -132,12 +140,13 @@ export class TypeboxSchemaValidator
         Type.String({ pattern: '^[0-9]+$' }),
         Type.Boolean(),
         Type.Null(),
-        Type.Date(),
-        Type.BigInt()
+        Type.BigInt(),
+        Type.Date()
       ],
       {
         errorType: 'number-like',
-        openapiType: Type.Number()
+        openapiType: Type.Number(),
+        examples: [123]
       }
     )
   )
@@ -158,20 +167,24 @@ export class TypeboxSchemaValidator
       [
         Type.BigInt(),
         Type.Number(),
-        Type.String({ pattern: '^[0-9]+$' }),
+        Type.String({ pattern: '^[0-9]+n?$' }),
         Type.Boolean(),
         Type.Date()
       ],
       {
         errorType: 'BigInt-like',
-        openapiType: Type.BigInt()
+        openapiType: Type.BigInt(),
+        examples: [123n]
       }
     )
   )
     .Decode((value) => {
       if (typeof value !== 'bigint') {
         try {
-          return BigInt(value instanceof Date ? value.getTime() : value);
+          if (value instanceof Date) {
+            return BigInt(value.getTime());
+          }
+          return BigInt(value);
         } catch {
           throw new Error('Invalid bigint');
         }
@@ -189,7 +202,8 @@ export class TypeboxSchemaValidator
       ],
       {
         errorType: 'boolean-like',
-        openapiType: Type.Boolean()
+        openapiType: Type.Boolean(),
+        examples: [true, false]
       }
     )
   )
@@ -210,13 +224,12 @@ export class TypeboxSchemaValidator
         Type.String({
           pattern:
             '^\\d{4}(-\\d{2}){0,2}(T\\d{2}:\\d{2}(:\\d{2}(\\.\\d{1,3})?)?(Z|([+-]\\d{2}:\\d{2}))?)?$|^\\d{1,2}\\/\\d{1,2}\\/\\d{4}$|^\\d{4}\\/\\d{1,2}\\/\\d{1,2}$|^\\d+$'
-        }),
-        Type.Boolean(),
-        Type.Null()
+        })
       ],
       {
         errorType: 'date',
-        openapiType: Type.Date()
+        openapiType: Type.Date(),
+        examples: ['2025-05-16T21:13:04.123Z']
       }
     )
   )
@@ -232,14 +245,51 @@ export class TypeboxSchemaValidator
     .Encode((value) => new Date(value));
   symbol = Type.Symbol();
   nullish = Type.Union([Type.Void(), Type.Null(), Type.Undefined()], {
-    errorType: 'nullish'
+    errorType: 'nullish',
+    examples: ['null', 'undefined', 'void']
   });
-  void = Type.Void();
-  null = Type.Null();
-  undefined = Type.Undefined();
-  any = Type.Any();
-  unknown = Type.Unknown();
-  never = Type.Never();
+  void = Type.Void({
+    examples: ['void']
+  });
+  null = Type.Null({
+    examples: ['null']
+  });
+  undefined = Type.Undefined({
+    examples: ['undefined']
+  });
+  any = Type.Any({
+    examples: ['any']
+  });
+  unknown = Type.Unknown({
+    examples: ['unknown']
+  });
+  never = Type.Never({
+    examples: ['never']
+  });
+  binary = Type.Transform(
+    Type.String({
+      errorType: 'binary',
+      openapiType: Type.String({
+        format: 'binary'
+      }),
+      examples: ['a utf-8 encodable string']
+    })
+  )
+    .Decode(Buffer.from)
+    .Encode((value) => value.toString());
+  file = (name: string, type: MimeType) =>
+    Type.Transform(
+      Type.String({
+        errorType: 'binary',
+        openapiType: Type.String({
+          format: 'binary'
+        }),
+        contentMediaType: type,
+        examples: ['a utf-8 encodable string']
+      })
+    )
+      .Decode((value) => new File(value, name, { type }) as InternalFile)
+      .Encode((value) => (value as File).content);
 
   /**
    * Extracts the error type of a schema for error messages.
@@ -466,7 +516,7 @@ export class TypeboxSchemaValidator
   parse<T extends TIdiomaticSchema | TCatchall>(
     schema: T | TypeCheck<TResolve<T>>,
     value: unknown
-  ): ParseResult<TResolve<T>> {
+  ): ParseResult<TSchemaTranslate<TResolve<T>>> {
     let errors: ValueError[] = [];
     let conversion: unknown;
     if (schema instanceof TypeCheck) {
@@ -488,7 +538,7 @@ export class TypeboxSchemaValidator
     return errors != null && errors.length === 0
       ? {
           ok: true,
-          value: conversion as TResolve<T>
+          value: conversion as TSchemaTranslate<TResolve<T>>
         }
       : {
           ok: false,
