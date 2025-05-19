@@ -5,13 +5,17 @@ import {
 } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
 import { hasSend } from '../../guards/hasSend';
+import { discriminateResponseBodies } from '../../router/discriminateBody';
 import {
   ForklaunchNextFunction,
   ForklaunchRequest,
   ForklaunchResHeaders,
   ForklaunchResponse
 } from '../../types/apiDefinition.types';
-import { ParamsDictionary } from '../../types/contractDetails.types';
+import {
+  ParamsDictionary,
+  PathParamHttpContractDetails
+} from '../../types/contractDetails.types';
 
 /**
  * Middleware to parse and validate the response according to the provided schema.
@@ -58,6 +62,30 @@ export function parse<
   next?: ForklaunchNextFunction
 ) {
   const { headers, responses } = res.responseSchemas;
+
+  const responseBodies = discriminateResponseBodies<
+    SV,
+    `/${string}`,
+    ResBodyMap,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    ResHeaders
+  >(
+    req.contractDetails as PathParamHttpContractDetails<
+      SV,
+      `/${string}`,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders
+    >
+  );
+
+  if (responseBodies != null) {
+    res.type(responseBodies[res.statusCode].contentType);
+  }
 
   const parsedResponse = (req.schemaValidator as SchemaValidator).parse(
     responses?.[res.statusCode],
