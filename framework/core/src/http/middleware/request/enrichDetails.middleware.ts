@@ -19,13 +19,11 @@ import {
   Body,
   HeadersObject,
   HttpContractDetails,
-  MultipartForm,
   ParamsObject,
   PathParamHttpContractDetails,
   QueryObject,
   ResponseCompiledSchema,
-  ResponsesObject,
-  UrlEncodedForm
+  ResponsesObject
 } from '../../types/contractDetails.types';
 import { MetricsDefinition } from '../../types/openTelemetryCollector.types';
 
@@ -43,7 +41,7 @@ export function enrichDetails<
   SV extends AnySchemaValidator,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
-  ReqBody extends Body<SV> | MultipartForm<SV> | UrlEncodedForm<SV>,
+  ReqBody extends Body<SV>,
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,

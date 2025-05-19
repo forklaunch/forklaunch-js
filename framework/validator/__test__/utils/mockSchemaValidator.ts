@@ -86,6 +86,8 @@ export class MockSchemaValidator
   any = 'any';
   unknown = 'unknown';
   never = 'never';
+  binary = 'binary';
+  file = 'file';
 
   /**
    * Compiles a schema string.

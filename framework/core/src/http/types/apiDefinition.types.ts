@@ -10,6 +10,7 @@ import { Readable } from 'stream';
 import { OpenTelemetryCollector } from '../telemetry/openTelemetryCollector';
 import {
   Body,
+  FileBody,
   HeadersObject,
   HttpContractDetails,
   MapSchema,
@@ -20,6 +21,10 @@ import {
   QueryObject,
   ResponseCompiledSchema,
   ResponsesObject,
+  ServerSentEventBody,
+  TextBody,
+  UnknownBody,
+  UnknownResponseBody,
   UrlEncodedForm
 } from './contractDetails.types';
 import { MetricsDefinition } from './openTelemetryCollector.types';
@@ -391,6 +396,20 @@ export type MapParamsSchema<
       : Params
     : ParamsDictionary;
 
+export type ExtractResponseBody<
+  SV extends AnySchemaValidator,
+  T extends Body<SV>
+> =
+  T extends TextBody<SV>
+    ? T['schema']
+    : T extends FileBody<SV>
+      ? T['file']
+      : T extends ServerSentEventBody<SV>
+        ? T['event']
+        : T extends UnknownResponseBody<SV>
+          ? NonNullable<T['schema'] | T['file'] | T['event']>
+          : T;
+
 export type MapResBodyMapSchema<
   SV extends AnySchemaValidator,
   ResBodyMap extends ResponsesObject<SV>
@@ -398,14 +417,32 @@ export type MapResBodyMapSchema<
   MapSchema<SV, ResBodyMap> extends infer ResponseBodyMap
     ? unknown extends ResponseBodyMap
       ? ForklaunchResErrors
-      : ResponseBodyMap
+      : {
+          [K in keyof ResponseBodyMap]: ExtractResponseBody<
+            SV,
+            ResponseBodyMap[K]
+          >;
+        }
     : ForklaunchResErrors;
+
+export type ExtractBody<SV extends AnySchemaValidator, T extends Body<SV>> =
+  T extends TextBody<SV>
+    ? T['schema']
+    : T extends FileBody<SV>
+      ? T['file']
+      : T extends MultipartForm<SV>
+        ? T['form']
+        : T extends UrlEncodedForm<SV>
+          ? T['form']
+          : T extends UnknownBody<SV>
+            ? NonNullable<T['schema'] | T['file'] | T['form']>
+            : T;
 
 export type MapReqBodySchema<
   SV extends AnySchemaValidator,
-  ReqBody extends Body<SV> | MultipartForm<SV> | UrlEncodedForm<SV>
+  ReqBody extends Body<SV>
 > =
-  MapSchema<SV, ReqBody> extends infer Body
+  MapSchema<SV, ExtractBody<SV, ReqBody>> extends infer Body
     ? unknown extends Body
       ? Record<string, unknown>
       : Body
@@ -455,7 +492,7 @@ export type ExpressLikeSchemaHandler<
   SV extends AnySchemaValidator,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
-  ReqBody extends Body<SV> | MultipartForm<SV> | UrlEncodedForm<SV>,
+  ReqBody extends Body<SV>,
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
@@ -493,7 +530,7 @@ export type ExpressLikeSchemaHandler<
 export type ExpressLikeSchemaAuthMapper<
   SV extends AnySchemaValidator,
   P extends ParamsObject<SV>,
-  ReqBody extends Body<SV> | MultipartForm<SV> | UrlEncodedForm<SV>,
+  ReqBody extends Body<SV>,
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   BaseRequest
@@ -543,7 +580,7 @@ export type LiveTypeFunction<
   Route extends string,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
-  ReqBody extends Body<SV> | MultipartForm<SV> | UrlEncodedForm<SV>,
+  ReqBody extends Body<SV>,
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>

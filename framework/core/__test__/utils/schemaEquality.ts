@@ -20,14 +20,12 @@ export function testSchemaEquality<
 
   const isEqual =
     JSON.stringify(
-      zodParseResult.ok
-        ? sortObjectKeys(
-            zodParseResult.value as unknown as Record<string, unknown>
-          )
-        : '-1'
+      zodParseResult.ok ? sortObjectKeys(zodParseResult.value) : '-1'
     ) ===
     JSON.stringify(
-      typeboxParseResult.ok ? sortObjectKeys(typeboxParseResult.value) : '1'
+      typeboxParseResult.ok
+        ? sortObjectKeys(typeboxParseResult.value as Record<string, unknown>)
+        : '1'
     );
 
   return isEqual as EqualityWithoutFunction<T, Z>;

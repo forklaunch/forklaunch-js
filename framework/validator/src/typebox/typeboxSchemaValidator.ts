@@ -5,7 +5,7 @@
  * @module TypeboxSchemaValidator
  */
 
-import { File, MimeType } from '@forklaunch/common';
+import { InMemoryFile, MimeType } from '@forklaunch/common';
 import {
   Kind,
   KindGuard,
@@ -27,7 +27,6 @@ import {
   ValueErrorType
 } from '@sinclair/typebox/errors';
 import { Value, ValueError } from '@sinclair/typebox/value';
-import { File as InternalFile } from 'node:buffer';
 import { SchemaObject } from 'openapi3-ts/oas31';
 import {
   LiteralSchema,
@@ -288,8 +287,8 @@ export class TypeboxSchemaValidator
         examples: ['a utf-8 encodable string']
       })
     )
-      .Decode((value) => new File(value, name, { type }) as InternalFile)
-      .Encode((value) => (value as File).content);
+      .Decode((value) => new InMemoryFile(value, name, { type }) as File)
+      .Encode((value) => (value as InMemoryFile).content);
 
   /**
    * Extracts the error type of a schema for error messages.

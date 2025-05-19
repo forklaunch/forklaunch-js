@@ -6,11 +6,9 @@ import {
   ContractDetails,
   HeadersObject,
   Method,
-  MultipartForm,
   ParamsObject,
   QueryObject,
-  ResponsesObject,
-  UrlEncodedForm
+  ResponsesObject
 } from '../types/contractDetails.types';
 import { ExpressLikeTypedHandler } from '../types/typedHandler.types';
 
@@ -27,7 +25,7 @@ export function typedHandler<
   Path extends `/${string}`,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
-  ReqBody extends Body<SV> | MultipartForm<SV> | UrlEncodedForm<SV>,
+  ReqBody extends Body<SV>,
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
@@ -85,7 +83,7 @@ export function typedHandler<
   Path extends `/${string}`,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
-  ReqBody extends Body<SV> | MultipartForm<SV> | UrlEncodedForm<SV>,
+  ReqBody extends Body<SV>,
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
@@ -142,7 +140,7 @@ export function typedHandler<
   Path extends `/${string}`,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
-  ReqBody extends Body<SV> | MultipartForm<SV> | UrlEncodedForm<SV>,
+  ReqBody extends Body<SV>,
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,

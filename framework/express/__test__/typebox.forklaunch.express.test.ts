@@ -58,7 +58,6 @@ describe('Forklaunch Express Tests', () => {
       {
         name: 'Test',
         summary: 'Test Summary',
-        contentType: 'application/json',
         body: {
           test: string
         },
@@ -77,7 +76,6 @@ describe('Forklaunch Express Tests', () => {
       {
         name: 'Test',
         summary: 'Test Summary',
-        contentType: 'application/json',
         body: {
           test: string
         },
@@ -95,7 +93,6 @@ describe('Forklaunch Express Tests', () => {
       {
         name: 'Test',
         summary: 'Test Summary',
-        contentType: 'application/json',
         body: {
           test: string
         },
@@ -247,7 +244,6 @@ describe('handlers', () => {
       {
         name: 'Create Organization',
         body: {
-          contentType: 'application/json',
           name: string
         },
         summary: 'Creates an organization',

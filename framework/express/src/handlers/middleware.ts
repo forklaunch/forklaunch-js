@@ -3,11 +3,9 @@ import {
   ContractDetails,
   ExpressLikeSchemaHandler,
   HeadersObject,
-  MultipartForm,
   ParamsObject,
   QueryObject,
   ResponsesObject,
-  UrlEncodedForm,
   middleware as innerMiddleware
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
@@ -70,7 +68,7 @@ export const middleware = <
   Path extends `/${string}`,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
-  ReqBody extends Body<SV> | MultipartForm<SV> | UrlEncodedForm<SV>,
+  ReqBody extends Body<SV>,
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,

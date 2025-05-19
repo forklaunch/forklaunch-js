@@ -220,7 +220,7 @@ export class ZodSchemaValidator
       example: 'a utf-8 encodable string'
     })
     .transform(Buffer.from)
-    .pipe(z.instanceof(Buffer));
+    .pipe(z.instanceof(Buffer<ArrayBuffer>));
   file = (name: string, type: MimeType) =>
     z
       .string()

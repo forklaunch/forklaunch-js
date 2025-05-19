@@ -1,6 +1,4 @@
-import { File as InternalFile } from 'node:buffer';
-
-export class File extends InternalFile {
+export class InMemoryFile extends File {
   constructor(
     public content: string,
     name: string,

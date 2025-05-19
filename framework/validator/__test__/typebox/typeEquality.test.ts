@@ -165,22 +165,23 @@ const shortOne = {
   s: string,
   non: number,
   b: binary,
-  f: file
+  f: file('test.txt', 'text/plain')
 };
 
 const shortTwo = schemify({
   s: string,
   non: number,
   b: binary,
-  f: file
+  f: file('test.txt', 'text/plain')
 });
 
 type ShortExpected = {
   s: string;
   non: number;
-  b: Blob;
+  b: Buffer<ArrayBuffer>;
   f: File;
 };
+
 assert<
   Equality<Schema<typeof shortOne, TypeboxSchemaValidator>, ShortExpected>
 >();

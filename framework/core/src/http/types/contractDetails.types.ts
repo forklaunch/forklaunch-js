@@ -68,17 +68,23 @@ export type QueryObject<SV extends AnySchemaValidator> = StringOnlyObject<SV> &
 export type HeadersObject<SV extends AnySchemaValidator> =
   StringOnlyObject<SV> & unknown;
 
+export type ResponseBody<SV extends AnySchemaValidator> =
+  | TextBody<SV>
+  | FileBody<SV>
+  | ServerSentEventBody<SV>
+  | UnknownResponseBody<SV>
+  | SV['_ValidSchemaObject']
+  | UnboxedObjectSchema<SV>
+  | string
+  | SV['string'];
+
 /**
  * Type representing the responses object in a request.
  *
  * @template SV - A type that extends AnySchemaValidator.
  */
 export type ResponsesObject<SV extends AnySchemaValidator> = {
-  [key: number]:
-    | SV['_ValidSchemaObject']
-    | UnboxedObjectSchema<SV>
-    | string
-    | SV['string'];
+  [key: number]: ResponseBody<SV>;
 } & unknown;
 
 /**
@@ -86,26 +92,22 @@ export type ResponsesObject<SV extends AnySchemaValidator> = {
  *
  * @template SV - A type that extends AnySchemaValidator.
  */
-export type TextBody<SV extends AnySchemaValidator> =
-  | {
-      contentType?:
-        | 'application/json'
-        | 'application/xml'
-        | 'text/plain'
-        | 'text/html'
-        | 'text/css'
-        | 'text/javascript'
-        | 'text/csv'
-        | 'text/markdown'
-        | 'text/xml'
-        | 'text/rtf'
-        | 'text/x-yaml'
-        | 'text/yaml';
-      schema: BodyObject<SV> | SV['_ValidSchemaObject'] | SV['_SchemaCatchall'];
-    }
-  | BodyObject<SV>
-  | SV['_ValidSchemaObject']
-  | SV['_SchemaCatchall'];
+export type TextBody<SV extends AnySchemaValidator> = {
+  contentType?:
+    | 'application/json'
+    | 'application/xml'
+    | 'text/plain'
+    | 'text/html'
+    | 'text/css'
+    | 'text/javascript'
+    | 'text/csv'
+    | 'text/markdown'
+    | 'text/xml'
+    | 'text/rtf'
+    | 'text/x-yaml'
+    | 'text/yaml';
+  schema: BodyObject<SV> | SV['_ValidSchemaObject'] | SV['_SchemaCatchall'];
+};
 
 export type FileBody<SV extends AnySchemaValidator> = {
   contentType?:
@@ -132,7 +134,7 @@ export type FileBody<SV extends AnySchemaValidator> = {
 
     // Video format
     | 'video/mp4';
-  file: SV['file'];
+  file: SV['file'] extends (...args: unknown[]) => infer R ? R : SV['file'];
 };
 
 /**
@@ -148,9 +150,7 @@ export type MultipartForm<SV extends AnySchemaValidator> = {
     | 'multipart/related'
     | 'multipart/signed'
     | 'multipart/encrypted';
-  form: {
-    [key: string]: IdiomaticSchema<SV> | MulterFile | MulterFile[];
-  };
+  form: StringOnlyObject<SV>;
 };
 
 /**
@@ -167,10 +167,31 @@ export type UrlEncodedForm<SV extends AnySchemaValidator> = {
   form: StringOnlyObject<SV>;
 };
 
+export type ServerSentEventBody<SV extends AnySchemaValidator> = {
+  contentType?: 'text/event-stream';
+  event: StringOnlyObject<SV>;
+};
+
 export type UnknownBody<SV extends AnySchemaValidator> = Partial<TextBody<SV>> &
   Partial<FileBody<SV>> &
   Partial<MultipartForm<SV>> &
   Partial<UrlEncodedForm<SV>> & { contentType?: string };
+
+export type UnknownResponseBody<SV extends AnySchemaValidator> = Partial<
+  TextBody<SV>
+> &
+  Partial<FileBody<SV>> &
+  Partial<ServerSentEventBody<SV>> & { contentType?: string };
+
+export type Body<SV extends AnySchemaValidator> =
+  | TextBody<SV>
+  | FileBody<SV>
+  | MultipartForm<SV>
+  | UrlEncodedForm<SV>
+  | UnknownBody<SV>
+  | BodyObject<SV>
+  | SV['_ValidSchemaObject']
+  | SV['_SchemaCatchall'];
 
 export type AuthMethodsBase = (
   | {
@@ -220,7 +241,7 @@ export type AuthMethodsBase = (
 export type SchemaAuthMethods<
   SV extends AnySchemaValidator,
   ParamsSchema extends ParamsObject<SV>,
-  ReqBody extends Body<SV> | MultipartForm<SV> | UrlEncodedForm<SV>,
+  ReqBody extends Body<SV>,
   QuerySchema extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   BaseRequest
@@ -398,10 +419,7 @@ export type HttpContractDetails<
   Path extends `/${string}` = `/${string}`,
   ParamsSchema extends ParamsObject<SV> = ParamsObject<SV>,
   ResponseSchemas extends ResponsesObject<SV> = ResponsesObject<SV>,
-  BodySchema extends Body<SV> | MultipartForm<SV> | UrlEncodedForm<SV> =
-    | Body<SV>
-    | MultipartForm<SV>
-    | UrlEncodedForm<SV>,
+  BodySchema extends Body<SV> = Body<SV>,
   QuerySchema extends QueryObject<SV> = QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV> = HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV> = HeadersObject<SV>,
@@ -416,29 +434,30 @@ export type HttpContractDetails<
   ResHeaders,
   BaseRequest
 > &
-  (BodySchema extends Body<SV>
+  (BodySchema extends TextBody<SV>
     ? {
-        readonly contentType?:
-          | 'text/plain'
-          | 'application/octet-stream'
-          | 'application/json';
         /** Required body schema for body-based methods for the contract */
         readonly body: BodySchema;
       }
     : BodySchema extends MultipartForm<SV>
       ? {
-          readonly contentType?: 'multipart/form-data';
-
           /** Required body schema for body-based methods for the contract */
           readonly multipartForm: BodySchema;
         }
       : BodySchema extends UrlEncodedForm<SV>
         ? {
-            readonly contentType?: 'application/x-www-form-urlencoded';
             /** Required body schema for body-based methods for the contract */
             readonly urlEncodedForm: BodySchema;
           }
-        : never) & {
+        : BodySchema extends ServerSentEventBody<SV>
+          ? {
+              /** Required body schema for body-based methods for the contract */
+              readonly ServerSentEvent: BodySchema;
+            }
+          : {
+              /** Required body schema for body-based methods for the contract */
+              readonly body: BodySchema;
+            }) & {
     readonly auth?: SchemaAuthMethods<
       SV,
       string | number | symbol extends ExtractedParamsObject<Path>
@@ -468,10 +487,7 @@ export type MiddlewareContractDetails<
   Path extends `/${string}` = `/${string}`,
   ParamsSchema extends ParamsObject<SV> = ParamsObject<SV>,
   ResponseSchemas extends ResponsesObject<SV> = ResponsesObject<SV>,
-  BodySchema extends Body<SV> | MultipartForm<SV> | UrlEncodedForm<SV> =
-    | Body<SV>
-    | MultipartForm<SV>
-    | UrlEncodedForm<SV>,
+  BodySchema extends Body<SV> = Body<SV>,
   QuerySchema extends QueryObject<SV> = QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV> = HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV> = HeadersObject<SV>,

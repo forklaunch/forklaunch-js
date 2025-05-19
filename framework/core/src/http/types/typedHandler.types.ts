@@ -5,11 +5,9 @@ import {
   ContractDetails,
   HeadersObject,
   Method,
-  MultipartForm,
   ParamsObject,
   QueryObject,
-  ResponsesObject,
-  UrlEncodedForm
+  ResponsesObject
 } from './contractDetails.types';
 
 // This is a hack to satisfy the type checker -- later ts versions may fix this
@@ -17,7 +15,7 @@ export type ContractDetailsExpressLikeSchemaHandler<
   SV extends AnySchemaValidator,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
-  ReqBody extends Body<SV> | MultipartForm<SV> | UrlEncodedForm<SV>,
+  ReqBody extends Body<SV>,
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
@@ -45,7 +43,7 @@ export type TypedHandler<
   Path extends `/${string}`,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
-  ReqBody extends Body<SV> | MultipartForm<SV> | UrlEncodedForm<SV>,
+  ReqBody extends Body<SV>,
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
@@ -90,7 +88,7 @@ export type ExpressLikeTypedHandler<
   Path extends `/${string}`,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
-  ReqBody extends Body<SV> | MultipartForm<SV> | UrlEncodedForm<SV>,
+  ReqBody extends Body<SV>,
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,

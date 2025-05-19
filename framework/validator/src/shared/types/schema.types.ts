@@ -142,6 +142,16 @@ export interface SchemaValidator<
   never: unknown;
 
   /**
+   * Validator for binary type
+   */
+  binary: unknown;
+
+  /**
+   * Validator for file type
+   */
+  file: unknown;
+
+  /**
    * Compiles schema if this exists, for optimal performance.
    *
    * @param {T} schema - The schema to compile.
