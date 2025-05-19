@@ -50,6 +50,10 @@ import {
   ForklaunchRoute,
   ForklaunchRouter
 } from '../types/router.types';
+import {
+  discriminateBody,
+  discriminateResponseBodies
+} from './discriminateBody';
 
 /**
  * A class that represents an Express-like router.
@@ -94,7 +98,7 @@ export class ForklaunchExpressLikeRouter<
     LocalsObj extends Record<string, unknown>
   >(
     path: string,
-    contractDetails: HttpContractDetails<SV> | PathParamHttpContractDetails<SV>,
+    contractDetails: PathParamHttpContractDetails<SV>,
     requestSchema: unknown,
     responseSchemas: ResponseCompiledSchema
   ): ExpressLikeSchemaHandler<
@@ -122,7 +126,7 @@ export class ForklaunchExpressLikeRouter<
         LocalsObj
       >(
         `${this.basePath}${path}`,
-        contractDetails,
+        contractDetails as PathParamHttpContractDetails<SV>,
         requestSchema,
         responseSchemas,
         this.openTelemetryCollector
@@ -300,15 +304,31 @@ export class ForklaunchExpressLikeRouter<
   ) {
     const schemaValidator = this.schemaValidator as SchemaValidator;
 
-    const requestSchema = schemaValidator.compile(
-      schemaValidator.schemify({
-        ...(contractDetails.params ? { params: contractDetails.params } : {}),
-        ...(contractDetails.requestHeaders
-          ? { headers: contractDetails.requestHeaders }
-          : {}),
-        ...(contractDetails.query ? { query: contractDetails.query } : {}),
-        // TODO: UPDATE THIS TO INCLUDE DIFFERENT CONTENT_TYPES
-        ...(isHttpContractDetails<
+    let body = null;
+    if (
+      isHttpContractDetails<
+        SV,
+        Path,
+        P,
+        ResBodyMap,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders,
+        ResHeaders,
+        BaseRequest
+      >(contractDetails)
+    ) {
+      body = discriminateBody<
+        SV,
+        Path,
+        P,
+        ResBodyMap,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders,
+        ResHeaders
+      >(
+        contractDetails as HttpContractDetails<
           SV,
           Path,
           P,
@@ -316,13 +336,19 @@ export class ForklaunchExpressLikeRouter<
           ReqBody,
           ReqQuery,
           ReqHeaders,
-          ResHeaders,
-          BaseRequest
-        >(contractDetails) &&
-        'body' in contractDetails &&
-        contractDetails.body != null
-          ? { body: contractDetails.body }
-          : {})
+          ResHeaders
+        >
+      );
+    }
+
+    const requestSchema = schemaValidator.compile(
+      schemaValidator.schemify({
+        ...(contractDetails.params ? { params: contractDetails.params } : {}),
+        ...(contractDetails.requestHeaders
+          ? { headers: contractDetails.requestHeaders }
+          : {}),
+        ...(contractDetails.query ? { query: contractDetails.query } : {}),
+        ...(body != null ? { body } : {})
       })
     );
 
@@ -353,9 +379,31 @@ export class ForklaunchExpressLikeRouter<
         ResHeaders,
         BaseRequest
       >(contractDetails)
-        ? {
-            ...contractDetails.responses
-          }
+        ? Object.fromEntries(
+            Object.entries(
+              discriminateResponseBodies<
+                SV,
+                Path,
+                P,
+                ResBodyMap,
+                ReqQuery,
+                ReqHeaders,
+                ResHeaders
+              >(
+                contractDetails as PathParamHttpContractDetails<
+                  SV,
+                  Path,
+                  P,
+                  ResBodyMap,
+                  ReqQuery,
+                  ReqHeaders,
+                  ResHeaders
+                >
+              )
+            ).map(([key, value]) => {
+              return [key, value.schema];
+            })
+          )
         : {})
     };
 

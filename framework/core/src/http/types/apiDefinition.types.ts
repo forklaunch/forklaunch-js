@@ -13,6 +13,7 @@ import {
   FileBody,
   HeadersObject,
   HttpContractDetails,
+  JsonBody,
   MapSchema,
   MultipartForm,
   ParamsDictionary,
@@ -400,15 +401,17 @@ export type ExtractResponseBody<
   SV extends AnySchemaValidator,
   T extends Body<SV>
 > =
-  T extends TextBody<SV>
-    ? T['schema']
-    : T extends FileBody<SV>
-      ? T['file']
-      : T extends ServerSentEventBody<SV>
-        ? T['event']
-        : T extends UnknownResponseBody<SV>
-          ? NonNullable<T['schema'] | T['file'] | T['event']>
-          : T;
+  T extends JsonBody<SV>
+    ? T['json']
+    : T extends TextBody<SV>
+      ? T['text']
+      : T extends FileBody<SV>
+        ? T['file']
+        : T extends ServerSentEventBody<SV>
+          ? T['event']
+          : T extends UnknownResponseBody<SV>
+            ? T['schema']
+            : T;
 
 export type MapResBodyMapSchema<
   SV extends AnySchemaValidator,
@@ -426,17 +429,19 @@ export type MapResBodyMapSchema<
     : ForklaunchResErrors;
 
 export type ExtractBody<SV extends AnySchemaValidator, T extends Body<SV>> =
-  T extends TextBody<SV>
-    ? T['schema']
-    : T extends FileBody<SV>
-      ? T['file']
-      : T extends MultipartForm<SV>
-        ? T['form']
-        : T extends UrlEncodedForm<SV>
-          ? T['form']
-          : T extends UnknownBody<SV>
-            ? NonNullable<T['schema'] | T['file'] | T['form']>
-            : T;
+  T extends JsonBody<SV>
+    ? T['json']
+    : T extends TextBody<SV>
+      ? T['text']
+      : T extends FileBody<SV>
+        ? T['file']
+        : T extends MultipartForm<SV>
+          ? T['multipartForm']
+          : T extends UrlEncodedForm<SV>
+            ? T['urlEncodedForm']
+            : T extends UnknownBody<SV>
+              ? T['schema']
+              : T;
 
 export type MapReqBodySchema<
   SV extends AnySchemaValidator,

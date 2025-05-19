@@ -265,9 +265,9 @@ describe('handlers', () => {
         //     name: string
         //   }
         // }
-        multipartForm: {
+        body: {
           contentType: 'multipart/form-data',
-          form: {
+          multipartForm: {
             name: string
           }
         }
@@ -281,7 +281,7 @@ describe('handlers', () => {
     liveTypeFunction.post('/organization', {
       body: {
         contentType: 'multipart/form-data',
-        form: {
+        multipartForm: {
           name: 'string'
         }
       }

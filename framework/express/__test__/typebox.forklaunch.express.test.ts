@@ -243,9 +243,7 @@ describe('handlers', () => {
       '/',
       {
         name: 'Create Organization',
-        body: {
-          name: string
-        },
+        body: { name: string },
         summary: 'Creates an organization',
         responses: {
           200: {

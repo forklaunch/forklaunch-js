@@ -15,6 +15,7 @@ export * from './httpStatusCodes';
 export * from './interfaces/expressLikeRouter.interface';
 export * from './middleware/response/enrichExpressLikeSend.middleware';
 export * from './openApiV3Generator/openApiV3Generator';
+export * from './router/discriminateBody';
 export * from './router/expressLikeRouter';
 export * from './telemetry/constants';
 export * from './telemetry/evaluateTelemetryOptions';

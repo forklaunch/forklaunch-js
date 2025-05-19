@@ -4,6 +4,7 @@ import {
   OpenTelemetryCollector
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
+import { OptionsJson, OptionsText, OptionsUrlencoded } from 'body-parser';
 import { Application } from './src/expressApplication';
 import { Router } from './src/expressRouter';
 import { checkout } from './src/handlers/checkout';
@@ -68,9 +69,15 @@ export function forklaunchRouter<
 >(
   basePath: BasePath,
   schemaValidator: SV,
-  openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
+  openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
+  options?: OptionsText & OptionsJson & OptionsUrlencoded
 ): Router<SV, BasePath> {
-  const router = new Router(basePath, schemaValidator, openTelemetryCollector);
+  const router = new Router(
+    basePath,
+    schemaValidator,
+    openTelemetryCollector,
+    options
+  );
   return router;
 }
 

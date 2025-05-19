@@ -68,14 +68,16 @@ export type QueryObject<SV extends AnySchemaValidator> = StringOnlyObject<SV> &
 export type HeadersObject<SV extends AnySchemaValidator> =
   StringOnlyObject<SV> & unknown;
 
-export type ResponseBody<SV extends AnySchemaValidator> =
+export type TypedResponseBody<SV extends AnySchemaValidator> =
   | TextBody<SV>
   | FileBody<SV>
   | ServerSentEventBody<SV>
-  | UnknownResponseBody<SV>
+  | UnknownResponseBody<SV>;
+
+export type ResponseBody<SV extends AnySchemaValidator> =
+  | TypedResponseBody<SV>
   | SV['_ValidSchemaObject']
   | UnboxedObjectSchema<SV>
-  | string
   | SV['string'];
 
 /**
@@ -87,6 +89,11 @@ export type ResponsesObject<SV extends AnySchemaValidator> = {
   [key: number]: ResponseBody<SV>;
 } & unknown;
 
+export type JsonBody<SV extends AnySchemaValidator> = {
+  contentType?: 'application/json' | string;
+  json: BodyObject<SV> | SV['_ValidSchemaObject'] | SV['_SchemaCatchall'];
+};
+
 /**
  * Type representing the body in a request.
  *
@@ -94,7 +101,6 @@ export type ResponsesObject<SV extends AnySchemaValidator> = {
  */
 export type TextBody<SV extends AnySchemaValidator> = {
   contentType?:
-    | 'application/json'
     | 'application/xml'
     | 'text/plain'
     | 'text/html'
@@ -105,8 +111,9 @@ export type TextBody<SV extends AnySchemaValidator> = {
     | 'text/xml'
     | 'text/rtf'
     | 'text/x-yaml'
-    | 'text/yaml';
-  schema: BodyObject<SV> | SV['_ValidSchemaObject'] | SV['_SchemaCatchall'];
+    | 'text/yaml'
+    | string;
+  text: SV['string'];
 };
 
 export type FileBody<SV extends AnySchemaValidator> = {
@@ -133,7 +140,8 @@ export type FileBody<SV extends AnySchemaValidator> = {
     | 'audio/wav'
 
     // Video format
-    | 'video/mp4';
+    | 'video/mp4'
+    | string;
   file: SV['file'] extends (...args: unknown[]) => infer R ? R : SV['file'];
 };
 
@@ -149,8 +157,9 @@ export type MultipartForm<SV extends AnySchemaValidator> = {
     | 'multipart/alternative'
     | 'multipart/related'
     | 'multipart/signed'
-    | 'multipart/encrypted';
-  form: StringOnlyObject<SV>;
+    | 'multipart/encrypted'
+    | string;
+  multipartForm: BodyObject<SV>;
 };
 
 /**
@@ -163,32 +172,36 @@ export type UrlEncodedForm<SV extends AnySchemaValidator> = {
     | 'application/x-www-form-urlencoded'
     | 'application/x-url-encoded'
     | 'application/x-www-url-encoded'
-    | 'application/x-urlencode';
-  form: StringOnlyObject<SV>;
+    | 'application/x-urlencode'
+    | string;
+  urlEncodedForm: BodyObject<SV>;
 };
 
 export type ServerSentEventBody<SV extends AnySchemaValidator> = {
   contentType?: 'text/event-stream';
-  event: StringOnlyObject<SV>;
+  event: BodyObject<SV>;
 };
 
-export type UnknownBody<SV extends AnySchemaValidator> = Partial<TextBody<SV>> &
-  Partial<FileBody<SV>> &
-  Partial<MultipartForm<SV>> &
-  Partial<UrlEncodedForm<SV>> & { contentType?: string };
+export type UnknownBody<SV extends AnySchemaValidator> = {
+  contentType?: string;
+  schema: BodyObject<SV> | SV['_ValidSchemaObject'] | SV['_SchemaCatchall'];
+};
 
-export type UnknownResponseBody<SV extends AnySchemaValidator> = Partial<
-  TextBody<SV>
-> &
-  Partial<FileBody<SV>> &
-  Partial<ServerSentEventBody<SV>> & { contentType?: string };
+export type UnknownResponseBody<SV extends AnySchemaValidator> = {
+  contentType?: string;
+  schema: BodyObject<SV> | SV['_ValidSchemaObject'] | SV['_SchemaCatchall'];
+};
 
-export type Body<SV extends AnySchemaValidator> =
+export type TypedBody<SV extends AnySchemaValidator> =
+  | JsonBody<SV>
   | TextBody<SV>
   | FileBody<SV>
   | MultipartForm<SV>
   | UrlEncodedForm<SV>
-  | UnknownBody<SV>
+  | UnknownBody<SV>;
+
+export type Body<SV extends AnySchemaValidator> =
+  | TypedBody<SV>
   | BodyObject<SV>
   | SV['_ValidSchemaObject']
   | SV['_SchemaCatchall'];
@@ -434,30 +447,35 @@ export type HttpContractDetails<
   ResHeaders,
   BaseRequest
 > &
-  (BodySchema extends TextBody<SV>
+  (BodySchema extends JsonBody<SV>
     ? {
         /** Required body schema for body-based methods for the contract */
         readonly body: BodySchema;
       }
-    : BodySchema extends MultipartForm<SV>
+    : BodySchema extends TextBody<SV>
       ? {
           /** Required body schema for body-based methods for the contract */
-          readonly multipartForm: BodySchema;
+          readonly body: BodySchema;
         }
-      : BodySchema extends UrlEncodedForm<SV>
+      : BodySchema extends MultipartForm<SV>
         ? {
             /** Required body schema for body-based methods for the contract */
-            readonly urlEncodedForm: BodySchema;
+            readonly body: BodySchema;
           }
-        : BodySchema extends ServerSentEventBody<SV>
+        : BodySchema extends UrlEncodedForm<SV>
           ? {
               /** Required body schema for body-based methods for the contract */
-              readonly ServerSentEvent: BodySchema;
-            }
-          : {
-              /** Required body schema for body-based methods for the contract */
               readonly body: BodySchema;
-            }) & {
+            }
+          : BodySchema extends FileBody<SV>
+            ? {
+                /** Required body schema for body-based methods for the contract */
+                readonly body: BodySchema;
+              }
+            : {
+                /** Required body schema for body-based methods for the contract */
+                readonly body: BodySchema;
+              }) & {
     readonly auth?: SchemaAuthMethods<
       SV,
       string | number | symbol extends ExtractedParamsObject<Path>

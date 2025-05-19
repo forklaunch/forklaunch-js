@@ -17,6 +17,7 @@ import {
   LiteralSchema,
   SchemaResolve
 } from '@forklaunch/validator';
+import { OptionsJson, OptionsText, OptionsUrlencoded } from 'body-parser';
 import express, {
   Router as ExpressRouter,
   NextFunction,
@@ -24,6 +25,7 @@ import express, {
   RequestHandler,
   Response
 } from 'express';
+import { contentParse } from './middleware/content.parse.middleware';
 import { enrichResponseTransmission } from './middleware/response.middleware';
 
 /**
@@ -54,11 +56,12 @@ export class Router<
   constructor(
     public basePath: BasePath,
     schemaValidator: SV,
-    openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
+    openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
+    options?: OptionsText & OptionsJson & OptionsUrlencoded
   ) {
     super(basePath, schemaValidator, express.Router(), openTelemetryCollector);
 
-    this.internal.use(express.json());
+    this.internal.use(contentParse(options));
     this.internal.use(enrichResponseTransmission as unknown as RequestHandler);
   }
 
