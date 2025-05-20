@@ -1,5 +1,5 @@
 import { discriminateBody, HttpContractDetails } from '@forklaunch/core/http';
-import { ParamsDictionary, Request } from '@forklaunch/hyper-express-fork';
+import { Request } from '@forklaunch/hyper-express-fork';
 import { AnySchemaValidator } from '@forklaunch/validator';
 
 /**
@@ -31,30 +31,13 @@ import { AnySchemaValidator } from '@forklaunch/validator';
  * });
  * ```
  */
-export async function contentParse(req: Request) {
-  const discriminatedBody = discriminateBody<
-    AnySchemaValidator,
-    `/${string}`,
-    ParamsDictionary,
-    Record<number, unknown>,
-    Record<string, unknown>,
-    Record<string, string>,
-    Record<string, string>,
-    Record<string, unknown>
-  >(
+export async function contentParse<SV extends AnySchemaValidator>(
+  req: Request
+) {
+  const discriminatedBody = discriminateBody<SV>(
     (
       req as unknown as {
-        contractDetails: HttpContractDetails<
-          AnySchemaValidator,
-          `/${string}`,
-          ParamsDictionary,
-          Record<number, unknown>,
-          Record<string, unknown>,
-          Record<string, string>,
-          Record<string, string>,
-          Record<string, unknown>,
-          unknown
-        >;
+        contractDetails: HttpContractDetails<SV>;
       }
     ).contractDetails
   );

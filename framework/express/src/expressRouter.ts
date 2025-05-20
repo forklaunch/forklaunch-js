@@ -61,7 +61,7 @@ export class Router<
   ) {
     super(basePath, schemaValidator, express.Router(), openTelemetryCollector);
 
-    this.internal.use(contentParse(options));
+    this.internal.use(contentParse<SV>(options));
     this.internal.use(enrichResponseTransmission as unknown as RequestHandler);
   }
 

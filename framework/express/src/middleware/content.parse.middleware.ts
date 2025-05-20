@@ -13,17 +13,13 @@
  * @param {number} options.limit - Size limit for the request body (default: '10mb')
  * @returns {Function} Express middleware function
  */
-import {
-  discriminateBody,
-  HttpContractDetails,
-  ParamsDictionary
-} from '@forklaunch/core/http';
+import { discriminateBody, HttpContractDetails } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { OptionsJson, OptionsText, OptionsUrlencoded } from 'body-parser';
 import Busboy from 'busboy';
 import express, { NextFunction, Request, Response } from 'express';
 
-function contentParse(
+function contentParse<SV extends AnySchemaValidator>(
   options: OptionsText & OptionsJson & OptionsUrlencoded = {}
 ) {
   const jsonParser = express.json(options);
@@ -36,29 +32,10 @@ function contentParse(
 
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const discriminatedBody = discriminateBody<
-        AnySchemaValidator,
-        `/${string}`,
-        ParamsDictionary,
-        Record<number, unknown>,
-        Record<string, unknown>,
-        Record<string, string>,
-        Record<string, string>,
-        Record<string, unknown>
-      >(
+      const discriminatedBody = discriminateBody<SV>(
         (
           req as unknown as {
-            contractDetails: HttpContractDetails<
-              AnySchemaValidator,
-              `/${string}`,
-              ParamsDictionary,
-              Record<number, unknown>,
-              Record<string, unknown>,
-              Record<string, string>,
-              Record<string, string>,
-              Record<string, unknown>,
-              unknown
-            >;
+            contractDetails: HttpContractDetails<SV>;
           }
         ).contractDetails
       );

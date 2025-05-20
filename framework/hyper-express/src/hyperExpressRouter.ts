@@ -53,7 +53,7 @@ export class Router<
     );
 
     this.internal.use(polyfillGetHeaders);
-    this.internal.use(contentParse);
+    this.internal.use(contentParse<SV>);
     this.internal.use(
       enrichResponseTransmission as unknown as MiddlewareHandler
     );

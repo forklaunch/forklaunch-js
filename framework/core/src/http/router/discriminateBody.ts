@@ -28,13 +28,13 @@ import {
  */
 export function discriminateBody<
   SV extends AnySchemaValidator,
-  Path extends `/${string}`,
-  P extends ParamsObject<SV>,
-  ResBodyMap extends ResponsesObject<SV>,
-  ReqBody extends Body<SV>,
-  ReqQuery extends QueryObject<SV>,
-  ReqHeaders extends HeadersObject<SV>,
-  ResHeaders extends HeadersObject<SV>
+  Path extends `/${string}` = `/${string}`,
+  P extends ParamsObject<SV> = ParamsObject<SV>,
+  ResBodyMap extends ResponsesObject<SV> = ResponsesObject<SV>,
+  ReqBody extends Body<SV> = Body<SV>,
+  ReqQuery extends QueryObject<SV> = QueryObject<SV>,
+  ReqHeaders extends HeadersObject<SV> = HeadersObject<SV>,
+  ResHeaders extends HeadersObject<SV> = HeadersObject<SV>
 >(
   contractDetails: HttpContractDetails<
     SV,
@@ -118,12 +118,12 @@ export function discriminateBody<
  */
 export function discriminateResponseBodies<
   SV extends AnySchemaValidator,
-  Path extends `/${string}`,
-  P extends ParamsObject<SV>,
-  ResBodyMap extends ResponsesObject<SV>,
-  ReqQuery extends QueryObject<SV>,
-  ReqHeaders extends HeadersObject<SV>,
-  ResHeaders extends HeadersObject<SV>
+  Path extends `/${string}` = `/${string}`,
+  P extends ParamsObject<SV> = ParamsObject<SV>,
+  ResBodyMap extends ResponsesObject<SV> = ResponsesObject<SV>,
+  ReqQuery extends QueryObject<SV> = QueryObject<SV>,
+  ReqHeaders extends HeadersObject<SV> = HeadersObject<SV>,
+  ResHeaders extends HeadersObject<SV> = HeadersObject<SV>
 >(
   contractDetails: PathParamHttpContractDetails<
     SV,
