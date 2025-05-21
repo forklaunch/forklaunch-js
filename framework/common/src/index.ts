@@ -14,4 +14,5 @@ export * from './types/makePropertyOptionalIfChildrenOptional.types';
 export * from './types/mime.types';
 export * from './types/prettify.types';
 export * from './types/removeTrailingSlash.types';
+export * from './types/typesafeFunction.types';
 export * from './types/unionToIntersection.types';

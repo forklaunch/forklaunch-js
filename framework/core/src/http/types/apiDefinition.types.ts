@@ -137,7 +137,7 @@ export type ForklaunchSendableData =
  * Interface representing a Forklaunch response status.
  * @template ResBody - A type for the response body.
  */
-export interface ForklaunchStatusResponse<ResBody> {
+export type ForklaunchStatusResponse<ResBody> = {
   /**
    * Sends the response.
    * @param {ResBodyMap} [body] - The response body.
@@ -158,8 +158,12 @@ export interface ForklaunchStatusResponse<ResBody> {
    * @returns {boolean|T} - The JSON response.
    */
   json: {
-    <T extends ResBody>(body?: ExclusiveRecord<T, ResBody> | null): boolean;
-    <T extends ResBody, U>(body?: ExclusiveRecord<T, ResBody> | null): U;
+    <T extends ResBody>(
+      body: ResBody extends string ? never : ExclusiveRecord<T, ResBody> | null
+    ): boolean;
+    <T extends ResBody, U>(
+      body: ResBody extends string ? never : ExclusiveRecord<T, ResBody> | null
+    ): U;
   };
 
   /**
@@ -168,10 +172,14 @@ export interface ForklaunchStatusResponse<ResBody> {
    * @returns {boolean|T} - The JSONP response.
    */
   jsonp: {
-    <T extends ResBody>(body?: ExclusiveRecord<T, ResBody> | null): boolean;
-    <T extends ResBody, U>(body?: ExclusiveRecord<T, ResBody> | null): U;
+    <T extends ResBody>(
+      body: ResBody extends string ? never : ExclusiveRecord<T, ResBody> | null
+    ): boolean;
+    <T extends ResBody, U>(
+      body: ResBody extends string ? never : ExclusiveRecord<T, ResBody> | null
+    ): U;
   };
-}
+};
 
 type ToNumber<T extends string | number | symbol> = T extends number
   ? T

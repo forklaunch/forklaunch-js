@@ -66,12 +66,6 @@ export function parse<
     req.contractDetails.responses
   );
 
-  console.log(
-    req.contractDetails.responses[200] === req.schemaValidator.string,
-    req.contractDetails.responses[200],
-    req.schemaValidator.string,
-    responseBodies
-  );
   if (responseBodies != null && responseBodies[statusCode] != null) {
     res.type(responseBodies[statusCode].contentType);
   }

@@ -68,7 +68,7 @@ describe('Forklaunch Express Tests', () => {
       },
       expressMiddleware,
       (req, res) => {
-        res.status(200).json(req.body.test);
+        res.status(200).send(req.body.test);
       }
     );
 

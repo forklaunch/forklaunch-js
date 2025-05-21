@@ -181,7 +181,12 @@ export function discriminateResponseBodies<SV extends AnySchemaValidator>(
           parserType: 'serverSentEvent',
           schema: response.event
         };
-      } else if (response == schemaValidator.string) {
+      } else if (
+        (schemaValidator as SchemaValidator).isInstanceOf(
+          response,
+          schemaValidator.string
+        )
+      ) {
         discriminatedResponses[Number(statusCode)] = {
           contentType: 'text/plain',
           parserType: 'text',

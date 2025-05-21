@@ -422,7 +422,11 @@ export class ZodSchemaValidator
    * @returns {boolean} True if the value is an instance of the schema.
    */
   isInstanceOf<T extends ZodType>(value: unknown, type: T): value is T {
-    return typeof type === 'function' && value instanceof type;
+    return (
+      this.isSchema(value) &&
+      (type._def as { typeName: string }).typeName ===
+        (value._def as { typeName: string }).typeName
+    );
   }
 
   /**

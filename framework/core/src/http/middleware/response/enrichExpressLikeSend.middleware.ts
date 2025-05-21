@@ -80,7 +80,7 @@ export function enrichExpressLikeSend<
       res.type('text/plain');
       res.status(404);
       logger('error').error('Not Found');
-      originalSend.call(instance, 'Not Found');
+      originalSend?.call(instance, 'Not Found');
     }
 
     parse(req, res, (err?: unknown) => {
@@ -92,13 +92,13 @@ export function enrichExpressLikeSend<
         logger('error').error(errorString);
         res.type('text/plain');
         res.status(500);
-        originalSend.call(instance, errorString);
+        originalSend?.call(instance, errorString);
         parseErrorSent = true;
       }
     });
   }
 
   if (!parseErrorSent) {
-    originalSend.call(instance, data);
+    originalSend?.call(instance, data);
   }
 }

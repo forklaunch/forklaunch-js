@@ -1,6 +1,6 @@
 import { noop } from '@forklaunch/common';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { SchemaValidator, string } from '@forklaunch/validator/zod';
+import { SchemaValidator, string } from '@forklaunch/validator/typebox';
 import { NextFunction, Request, Response } from 'express';
 import { forklaunchExpress, forklaunchRouter } from './index';
 
@@ -56,7 +56,7 @@ forklaunchRouterInstance.post(
   },
   expressMiddleware,
   (req, res) => {
-    res.status(200).json(req.body.test);
+    res.status(200).send(req.body.test);
   }
 );
 
