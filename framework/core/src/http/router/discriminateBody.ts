@@ -1,11 +1,6 @@
 import { AnySchemaValidator } from '@forklaunch/validator';
 import {
   Body,
-  HeadersObject,
-  HttpContractDetails,
-  ParamsObject,
-  PathParamHttpContractDetails,
-  QueryObject,
   ResponsesObject,
   TypedBody
 } from '../types/contractDetails.types';
@@ -26,26 +21,8 @@ import {
  * @returns An object containing the content type, parser type, and schema.
  * @throws If no body-related information is found in the contract details.
  */
-export function discriminateBody<
-  SV extends AnySchemaValidator,
-  Path extends `/${string}` = `/${string}`,
-  P extends ParamsObject<SV> = ParamsObject<SV>,
-  ResBodyMap extends ResponsesObject<SV> = ResponsesObject<SV>,
-  ReqBody extends Body<SV> = Body<SV>,
-  ReqQuery extends QueryObject<SV> = QueryObject<SV>,
-  ReqHeaders extends HeadersObject<SV> = HeadersObject<SV>,
-  ResHeaders extends HeadersObject<SV> = HeadersObject<SV>
->(
-  contractDetails: HttpContractDetails<
-    SV,
-    Path,
-    P,
-    ResBodyMap,
-    ReqBody,
-    ReqQuery,
-    ReqHeaders,
-    ResHeaders
-  >
+export function discriminateBody<SV extends AnySchemaValidator>(
+  body: Body<SV> | undefined
 ):
   | {
       contentType: string;
@@ -53,52 +30,61 @@ export function discriminateBody<
       schema: SV['_ValidSchemaObject'];
     }
   | undefined {
-  if (contractDetails.body != null) {
-    const body = contractDetails.body as TypedBody<SV>;
+  if (body == null) {
+    return undefined;
+  }
 
-    if ('text' in body && body.text != null) {
-      return {
-        contentType: body.contentType ?? 'text/plain',
-        parserType: 'text',
-        schema: body.text
-      };
-    } else if ('json' in body && body.json != null) {
-      return {
-        contentType: body.contentType ?? 'application/json',
-        parserType: 'json',
-        schema: body.json
-      };
-    } else if ('file' in body && body.file != null) {
-      return {
-        contentType: body.contentType ?? 'application/octet-stream',
-        parserType: 'file',
-        schema: body.file
-      };
-    } else if ('multipartForm' in body && body.multipartForm != null) {
-      return {
-        contentType: body.contentType ?? 'multipart/form-data',
-        parserType: 'multipart',
-        schema: body.multipartForm
-      };
-    } else if ('urlEncodedForm' in body && body.urlEncodedForm != null) {
-      return {
-        contentType: body.contentType ?? 'application/x-www-form-urlencoded',
-        parserType: 'urlEncoded',
-        schema: body.urlEncodedForm
-      };
-    } else if ('schema' in body && body.schema != null) {
-      return {
-        contentType: body.contentType ?? 'application/json',
-        parserType: 'text',
-        schema: body.schema
-      };
-    } else {
-      return {
-        contentType: 'application/json',
-        parserType: 'json',
-        schema: body
-      };
-    }
+  const maybeTypedBody = body as TypedBody<SV>;
+
+  if ('text' in maybeTypedBody && maybeTypedBody.text != null) {
+    return {
+      contentType: maybeTypedBody.contentType ?? 'text/plain',
+      parserType: 'text',
+      schema: maybeTypedBody.text
+    };
+  } else if ('json' in maybeTypedBody && maybeTypedBody.json != null) {
+    return {
+      contentType: maybeTypedBody.contentType ?? 'application/json',
+      parserType: 'json',
+      schema: maybeTypedBody.json
+    };
+  } else if ('file' in maybeTypedBody && maybeTypedBody.file != null) {
+    return {
+      contentType: maybeTypedBody.contentType ?? 'application/octet-stream',
+      parserType: 'file',
+      schema: maybeTypedBody.file
+    };
+  } else if (
+    'multipartForm' in maybeTypedBody &&
+    maybeTypedBody.multipartForm != null
+  ) {
+    return {
+      contentType: maybeTypedBody.contentType ?? 'multipart/form-data',
+      parserType: 'multipart',
+      schema: maybeTypedBody.multipartForm
+    };
+  } else if (
+    'urlEncodedForm' in maybeTypedBody &&
+    maybeTypedBody.urlEncodedForm != null
+  ) {
+    return {
+      contentType:
+        maybeTypedBody.contentType ?? 'application/x-www-form-urlencoded',
+      parserType: 'urlEncoded',
+      schema: maybeTypedBody.urlEncodedForm
+    };
+  } else if ('schema' in maybeTypedBody && maybeTypedBody.schema != null) {
+    return {
+      contentType: maybeTypedBody.contentType ?? 'application/json',
+      parserType: 'text',
+      schema: maybeTypedBody.schema
+    };
+  } else {
+    return {
+      contentType: 'application/json',
+      parserType: 'json',
+      schema: body
+    };
   }
 }
 
@@ -116,26 +102,10 @@ export function discriminateBody<
  * @param contractDetails - The contract details containing response schemas.
  * @returns A record mapping status codes to content type, parser type, and schema info.
  */
-export function discriminateResponseBodies<
-  SV extends AnySchemaValidator,
-  Path extends `/${string}` = `/${string}`,
-  P extends ParamsObject<SV> = ParamsObject<SV>,
-  ResBodyMap extends ResponsesObject<SV> = ResponsesObject<SV>,
-  ReqQuery extends QueryObject<SV> = QueryObject<SV>,
-  ReqHeaders extends HeadersObject<SV> = HeadersObject<SV>,
-  ResHeaders extends HeadersObject<SV> = HeadersObject<SV>
->(
-  contractDetails: PathParamHttpContractDetails<
-    SV,
-    Path,
-    P,
-    ResBodyMap,
-    ReqQuery,
-    ReqHeaders,
-    ResHeaders
-  >
+export function discriminateResponseBodies<SV extends AnySchemaValidator>(
+  responses: ResponsesObject<SV>
 ) {
-  const responses: Record<
+  const discriminatedResponses: Record<
     number,
     {
       contentType: string;
@@ -143,37 +113,46 @@ export function discriminateResponseBodies<
       schema: SV['_ValidSchemaObject'];
     }
   > = {};
-  for (const [statusCode, response] of Object.entries(
-    contractDetails.responses
-  )) {
+  for (const [statusCode, response] of Object.entries(responses)) {
     if (response != null && typeof response === 'object') {
       if ('schema' in response && response.schema != null) {
-        responses[Number(statusCode)] = {
-          contentType: (response.contentType as string) ?? 'application/json',
+        discriminatedResponses[Number(statusCode)] = {
+          contentType:
+            ('contentType' in response &&
+            typeof response.contentType === 'string'
+              ? response.contentType
+              : 'application/json') ?? 'application/json',
           parserType: 'text',
           schema: response.schema
         };
-      } else if ('buffer' in response && response.buffer != null) {
-        responses[Number(statusCode)] = {
+      } else if ('file' in response && response.file != null) {
+        discriminatedResponses[Number(statusCode)] = {
           contentType:
-            (response.contentType as string) ?? 'application/octet-stream',
+            ('contentType' in response &&
+            typeof response.contentType === 'string'
+              ? response.contentType
+              : 'application/octet-stream') ?? 'application/octet-stream',
           parserType: 'file',
-          schema: response.buffer
+          schema: response.file
         };
       } else if ('event' in response && response.event != null) {
-        responses[Number(statusCode)] = {
-          contentType: (response.contentType as string) ?? 'text/event-stream',
+        discriminatedResponses[Number(statusCode)] = {
+          contentType:
+            ('contentType' in response &&
+            typeof response.contentType === 'string'
+              ? response.contentType
+              : 'text/event-stream') ?? 'text/event-stream',
           parserType: 'serverSentEvent',
           schema: response.event
         };
       }
     } else {
-      responses[Number(statusCode)] = {
+      discriminatedResponses[Number(statusCode)] = {
         contentType: 'application/json',
         parserType: 'text',
         schema: response
       };
     }
   }
-  return responses;
+  return discriminatedResponses;
 }

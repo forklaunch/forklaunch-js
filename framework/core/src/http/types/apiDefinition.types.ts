@@ -1,4 +1,5 @@
 import {
+  ExclusiveRecord,
   MakePropertyOptionalIfChildrenOptional,
   Prettify,
   RemoveTrailingSlash
@@ -20,6 +21,7 @@ import {
   ParamsObject,
   PathParamHttpContractDetails,
   QueryObject,
+  ResponseBody,
   ResponseCompiledSchema,
   ResponsesObject,
   ServerSentEventBody,
@@ -143,8 +145,11 @@ export interface ForklaunchStatusResponse<ResBody> {
    * @returns {T} - The sent response.
    */
   send: {
-    <T>(body?: ResBody, close_connection?: boolean): T;
-    <T>(body?: ResBody): T;
+    <T extends ResBody, U>(
+      body?: ExclusiveRecord<T, ResBody> | null,
+      close_connection?: boolean
+    ): U;
+    <T extends ResBody, U>(body?: ExclusiveRecord<T, ResBody> | null): U;
   };
 
   /**
@@ -153,8 +158,8 @@ export interface ForklaunchStatusResponse<ResBody> {
    * @returns {boolean|T} - The JSON response.
    */
   json: {
-    (body?: ResBody): boolean;
-    <T>(body?: ResBody): T;
+    <T extends ResBody>(body?: ExclusiveRecord<T, ResBody> | null): boolean;
+    <T extends ResBody, U>(body?: ExclusiveRecord<T, ResBody> | null): U;
   };
 
   /**
@@ -163,10 +168,16 @@ export interface ForklaunchStatusResponse<ResBody> {
    * @returns {boolean|T} - The JSONP response.
    */
   jsonp: {
-    (body?: ResBody): boolean;
-    <T>(body?: ResBody): T;
+    <T extends ResBody>(body?: ExclusiveRecord<T, ResBody> | null): boolean;
+    <T extends ResBody, U>(body?: ExclusiveRecord<T, ResBody> | null): U;
   };
 }
+
+type ToNumber<T extends string | number | symbol> = T extends number
+  ? T
+  : T extends `${infer N extends number}`
+    ? N
+    : never;
 
 /**
  * Interface representing a Forklaunch response.
@@ -237,7 +248,7 @@ export interface ForklaunchResponse<
    * @returns {ForklaunchResponse<(ResBodyMap)[U], ResHeaders, U, LocalsObj>} - The response with the given status.
    */
   status: {
-    <U extends keyof (ResBodyMap & ForklaunchResErrors)>(
+    <U extends ToNumber<keyof (ResBodyMap & ForklaunchResErrors)>>(
       code: U
     ): Omit<
       BaseResponse,
@@ -248,7 +259,7 @@ export interface ForklaunchResponse<
       ForklaunchStatusResponse<
         (Omit<ForklaunchResErrors, keyof ResBodyMap> & ResBodyMap)[U]
       >;
-    <U extends keyof (ResBodyMap & ForklaunchResErrors)>(
+    <U extends ToNumber<keyof (ResBodyMap & ForklaunchResErrors)>>(
       code: U,
       message?: string
     ): Omit<
@@ -397,9 +408,28 @@ export type MapParamsSchema<
       : Params
     : ParamsDictionary;
 
+export type ExtractContentType<
+  SV extends AnySchemaValidator,
+  T extends ResponseBody<SV> | unknown
+> = T extends { contentType: string }
+  ? T['contentType']
+  : T extends JsonBody<SV>
+    ? 'application/json'
+    : T extends TextBody<SV>
+      ? 'text/plain'
+      : T extends FileBody<SV>
+        ? 'application/octet-stream'
+        : T extends ServerSentEventBody<SV>
+          ? 'text/event-stream'
+          : T extends UnknownResponseBody<SV>
+            ? 'application/json'
+            : T extends SV['string']
+              ? 'text/plain'
+              : 'application/json';
+
 export type ExtractResponseBody<
   SV extends AnySchemaValidator,
-  T extends Body<SV>
+  T extends ResponseBody<SV> | unknown
 > =
   T extends JsonBody<SV>
     ? T['json']
@@ -413,18 +443,25 @@ export type ExtractResponseBody<
             ? T['schema']
             : T;
 
+export type ExtractResponseBodies<
+  SV extends AnySchemaValidator,
+  T extends ResponsesObject<SV>
+> = {
+  [K in keyof T]: ExtractResponseBody<SV, T[ToNumber<K>]>;
+};
+
 export type MapResBodyMapSchema<
   SV extends AnySchemaValidator,
   ResBodyMap extends ResponsesObject<SV>
 > =
-  MapSchema<SV, ResBodyMap> extends infer ResponseBodyMap
+  MapSchema<
+    SV,
+    ExtractResponseBodies<SV, ResBodyMap>
+  > extends infer ResponseBodyMap
     ? unknown extends ResponseBodyMap
       ? ForklaunchResErrors
       : {
-          [K in keyof ResponseBodyMap]: ExtractResponseBody<
-            SV,
-            ResponseBodyMap[K]
-          >;
+          [K in keyof ResponseBodyMap]: ResponseBodyMap[K];
         }
     : ForklaunchResErrors;
 
@@ -610,8 +647,9 @@ export type LiveTypeFunction<
         headers: MapSchema<SV, ReqHeaders>;
       }) extends infer Request
   ? SdkResponse<
+      SV,
       ForklaunchResErrors &
-        (HeadersObject<SV> extends ResBodyMap
+        (ResponsesObject<SV> extends ResBodyMap
           ? unknown
           : MapSchema<SV, ResBodyMap>),
       ForklaunchResHeaders extends ResHeaders
@@ -634,13 +672,15 @@ export type LiveTypeFunction<
  * @template ResHeaders - A type for the response headers.
  */
 type SdkResponse<
+  SV extends AnySchemaValidator,
   ResBodyMap extends Record<number, unknown>,
   ResHeaders extends Record<string, string> | unknown
 > = Prettify<
   {
     [K in keyof ResBodyMap]: {
       code: K;
-      response: ResBodyMap[K];
+      contentType: ExtractContentType<SV, ResBodyMap[K]>;
+      response: ExtractResponseBody<SV, ResBodyMap[K]>;
     } & (unknown extends ResHeaders ? unknown : { headers: ResHeaders });
   }[keyof ResBodyMap]
 >;
@@ -651,11 +691,13 @@ type SdkResponse<
 export type ForklaunchResErrors<
   BadRequest = string,
   Unauthorized = string,
+  NotFound = string,
   Forbidden = string,
   InternalServerErrorType = string
 > = {
   400: BadRequest;
   401: Unauthorized;
+  404: NotFound;
   403: Forbidden;
   500: InternalServerErrorType;
 };

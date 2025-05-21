@@ -37,7 +37,7 @@ function contentParse<SV extends AnySchemaValidator>(
           req as unknown as {
             contractDetails: HttpContractDetails<SV>;
           }
-        ).contractDetails
+        ).contractDetails.body
       );
 
       if (!discriminatedBody) {
@@ -65,30 +65,18 @@ function contentParse<SV extends AnySchemaValidator>(
           });
           const body: Record<string, unknown> = {};
 
-          bb.on(
-            'file',
-            (
-              fieldname: string,
-              file: NodeJS.ReadableStream,
-              info: { filename: string; encoding: string; mimeType: string }
-            ) => {
-              const { filename, mimeType } = info;
-              const chunks: Buffer[] = [];
+          bb.on('file', (fieldname: string, file: NodeJS.ReadableStream) => {
+            const chunks: Buffer[] = [];
 
-              file.on('data', (chunk: Buffer) => {
-                chunks.push(chunk);
-              });
+            file.on('data', (chunk: Buffer) => {
+              chunks.push(chunk);
+            });
 
-              file.on('end', () => {
-                const fileBuffer = Buffer.concat(chunks);
-                body[fieldname] = {
-                  buffer: fileBuffer,
-                  name: filename || fieldname,
-                  type: mimeType
-                };
-              });
-            }
-          );
+            file.on('end', () => {
+              const fileBuffer = Buffer.concat(chunks);
+              body[fieldname] = fileBuffer.toString();
+            });
+          });
 
           bb.on('field', (fieldname: string, value: string) => {
             body[fieldname] = value;

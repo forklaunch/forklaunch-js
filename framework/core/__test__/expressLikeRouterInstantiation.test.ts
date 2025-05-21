@@ -112,7 +112,11 @@ const bl = xa.trace(
       'x-test': number
     },
     responses: {
-      200: date,
+      200: {
+        json: {
+          n: date
+        }
+      },
       400: string
     },
     auth: {
@@ -129,7 +133,7 @@ const bl = xa.trace(
   async (req, res) => {
     const i = req.headers['x-test'] * 7;
     const l = res.getHeaders()['x-correlation-id'];
-    res.status(200).send(new Date());
+    res.status(200).send({ n: new Date() });
   }
 );
 

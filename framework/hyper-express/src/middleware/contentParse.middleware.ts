@@ -39,7 +39,7 @@ export async function contentParse<SV extends AnySchemaValidator>(
       req as unknown as {
         contractDetails: HttpContractDetails<SV>;
       }
-    ).contractDetails
+    ).contractDetails.body
   );
 
   if (discriminatedBody != null) {
@@ -58,11 +58,7 @@ export async function contentParse<SV extends AnySchemaValidator>(
               await field.file.stream.read(),
               field.encoding as BufferEncoding
             );
-            body[field.name] = {
-              buffer: fileBuffer,
-              name: field.file.name ?? field.name,
-              type: field.mime_type
-            };
+            body[field.name] = fileBuffer.toString();
           } else {
             body[field.name] = field.value;
           }

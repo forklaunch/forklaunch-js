@@ -12,10 +12,7 @@ import {
   ForklaunchResHeaders,
   ForklaunchResponse
 } from '../../types/apiDefinition.types';
-import {
-  ParamsDictionary,
-  PathParamHttpContractDetails
-} from '../../types/contractDetails.types';
+import { ParamsDictionary } from '../../types/contractDetails.types';
 
 /**
  * Middleware to parse and validate the response according to the provided schema.
@@ -63,24 +60,8 @@ export function parse<
 ) {
   const { headers, responses } = res.responseSchemas;
 
-  const responseBodies = discriminateResponseBodies<
-    SV,
-    `/${string}`,
-    ResBodyMap,
-    ReqBody,
-    ReqQuery,
-    ReqHeaders,
-    ResHeaders
-  >(
-    req.contractDetails as PathParamHttpContractDetails<
-      SV,
-      `/${string}`,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders
-    >
+  const responseBodies = discriminateResponseBodies<SV>(
+    req.contractDetails.responses
   );
 
   if (responseBodies != null) {

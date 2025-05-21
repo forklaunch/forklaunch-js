@@ -10,7 +10,13 @@ export class UniversalSdk {
    *
    * @param {string} host - The host URL for the SDK.
    */
-  constructor(private host: string) {}
+  constructor(
+    private host: string,
+    private contentTypeParserMap?: Record<
+      string,
+      'json' | 'file' | 'text' | 'bytes' | 'arrayBuffer'
+    >
+  ) {}
 
   /**
    * Executes an HTTP request.
@@ -41,19 +47,91 @@ export class UniversalSdk {
       url += queryString ? `?${queryString}` : '';
     }
 
+    let defaultContentType = 'application/json';
+    let parsedBody;
+    if (body != null) {
+      if ('schema' in body && body.schema != null) {
+        defaultContentType = 'application/json';
+        parsedBody = JSON.stringify(body.schema);
+      } else if ('json' in body && body.json != null) {
+        defaultContentType = 'application/json';
+        parsedBody = JSON.stringify(body.json);
+      } else if ('text' in body && body.text != null) {
+        defaultContentType = 'text/plain';
+        parsedBody = body.text;
+      } else if ('file' in body && body.file != null) {
+        defaultContentType = 'application/octet-stream';
+        parsedBody = await body.file.text();
+      } else if ('multipartForm' in body && body.multipartForm != null) {
+        defaultContentType = 'multipart/form-data';
+        const formData = new FormData();
+        for (const key in body.multipartForm) {
+          if (Object.prototype.hasOwnProperty.call(body.multipartForm, key)) {
+            const value = body.multipartForm[key];
+            if (value instanceof Blob || value instanceof File) {
+              formData.append(key, value);
+            } else if (Array.isArray(value)) {
+              for (const item of value) {
+                formData.append(
+                  key,
+                  item instanceof Blob || item instanceof File
+                    ? item
+                    : String(item)
+                );
+              }
+            } else {
+              formData.append(key, String(value));
+            }
+          }
+        }
+        parsedBody = formData;
+      } else if ('urlEncodedForm' in body && body.urlEncodedForm != null) {
+        defaultContentType = 'application/x-www-form-urlencoded';
+        parsedBody = new URLSearchParams(JSON.stringify(body.urlEncodedForm));
+      }
+    }
+
     const response = await fetch(encodeURI(url), {
       method,
       headers: headers
-        ? { ...headers, 'Content-Type': 'application/json' }
+        ? {
+            ...headers,
+            ...(defaultContentType != 'multipart/form-data'
+              ? { 'Content-Type': body?.contentType ?? defaultContentType }
+              : {})
+          }
         : undefined,
-      body: body ? JSON.stringify(body) : undefined
+      body: parsedBody
     });
 
-    const contentType = response.headers.get('content-type');
-    const responseBody =
-      contentType && contentType.includes('application/json')
-        ? await response.json()
-        : await response.text();
+    const contentType =
+      response.headers.get('content-type') ||
+      response.headers.get('Content-Type');
+
+    let responseBody;
+
+    try {
+      // if (this.contentTypeParserMap?.includes(contentType)) {
+      switch (contentType) {
+        case 'application/json':
+          responseBody = await response.json();
+          break;
+        case 'application/octet-stream':
+          responseBody = await response.blob();
+          break;
+        case 'text/event-stream':
+          responseBody = await response.json();
+          break;
+        case 'text/plain':
+          responseBody = await response.text();
+          break;
+        default:
+          responseBody = await response.json();
+          break;
+      }
+    } catch {
+      responseBody = await response.text();
+    }
 
     return {
       code: response.status,

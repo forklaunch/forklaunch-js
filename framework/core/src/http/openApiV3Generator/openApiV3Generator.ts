@@ -16,10 +16,6 @@ import {
   discriminateBody,
   discriminateResponseBodies
 } from '../router/discriminateBody';
-import {
-  HttpContractDetails,
-  PathParamHttpContractDetails
-} from '../types/contractDetails.types';
 import { ForklaunchRouter } from '../types/router.types';
 
 /**
@@ -150,16 +146,17 @@ export function generateSwaggerDocument<SV extends AnySchemaValidator>(
 
       const responses: ResponsesObject = {};
 
-      const discriminateResponseBodiesResult = discriminateResponseBodies<SV>(
-        route.contractDetails as PathParamHttpContractDetails<SV>
+      const discriminatedResponseBodiesResult = discriminateResponseBodies<SV>(
+        route.contractDetails.responses
       );
-      for (const key in discriminateResponseBodiesResult) {
+
+      for (const key in discriminatedResponseBodiesResult) {
         responses[key] = {
           description: HTTPStatuses[key],
           content: contentResolver(
             schemaValidator,
-            discriminateResponseBodiesResult[key].schema,
-            discriminateResponseBodiesResult[key].contentType
+            discriminatedResponseBodiesResult[key].schema,
+            discriminatedResponseBodiesResult[key].contentType
           )
         };
       }
@@ -182,16 +179,18 @@ export function generateSwaggerDocument<SV extends AnySchemaValidator>(
         }
       }
 
-      const contractDetails = discriminateBody<SV>(
-        route.contractDetails as HttpContractDetails<SV>
-      );
-      if (contractDetails) {
+      const discriminatedBodyResult =
+        'body' in route.contractDetails
+          ? discriminateBody<SV>(route.contractDetails.body)
+          : null;
+
+      if (discriminatedBodyResult) {
         pathItemObject.requestBody = {
           required: true,
           content: contentResolver(
             schemaValidator,
-            contractDetails.schema,
-            contractDetails.contentType
+            discriminatedBodyResult.schema,
+            discriminatedBodyResult.contentType
           )
         };
       }

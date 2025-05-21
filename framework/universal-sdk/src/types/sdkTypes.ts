@@ -14,7 +14,30 @@
  */
 export interface RequestType {
   params?: Record<string, string | number | boolean>;
-  body?: Record<string, unknown>;
+  body?:
+    | Record<string, unknown>
+    | ({
+        contentType?: string;
+      } & (
+        | {
+            json: Record<string, unknown>;
+          }
+        | {
+            text: string;
+          }
+        | {
+            file: File | Blob;
+          }
+        | {
+            multipartForm: Record<string, unknown>;
+          }
+        | {
+            urlEncodedForm: Record<string, unknown>;
+          }
+        | {
+            schema: Record<string, unknown>;
+          }
+      ));
   query?: Record<string, string | number | boolean>;
   headers?: Record<string, string>;
 }
@@ -24,3 +47,7 @@ export interface ResponseType {
   content: unknown;
   headers: Headers;
 }
+
+export type ScrubUnsupportedContentTypes<T, U> = {
+  [K in keyof T]: T[K] extends U ? T[K] : never;
+};

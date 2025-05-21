@@ -201,7 +201,10 @@ describe('handlers', () => {
         summary: 'Gets an organization by ID',
         responses: {
           200: {
-            ret: number
+            json: {
+              ret: number
+            }
+            // text: string
           },
           404: string
         },
@@ -251,22 +254,12 @@ describe('handlers', () => {
         summary: 'Creates an organization',
         responses: {
           200: {
-            name: string
+            json: {
+              name: string
+            }
           }
         },
-        // urlEncodedForm: {
-        //   contentType: 'application/x-www-form-urlencoded',
-        //   form: {
-        //     name: string
-        //   }
-        // }
-        // body: {
-        //   schema: {
-        //     name: string
-        //   }
-        // }
         body: {
-          contentType: 'multipart/form-data',
           multipartForm: {
             name: string
           }
@@ -280,7 +273,6 @@ describe('handlers', () => {
     const liveTypeFunction = router.post('/', postRequest);
     liveTypeFunction.post('/organization', {
       body: {
-        contentType: 'multipart/form-data',
         multipartForm: {
           name: 'string'
         }

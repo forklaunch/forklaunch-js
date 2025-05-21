@@ -28,7 +28,6 @@ import {
   Body,
   ContractDetails,
   HeadersObject,
-  HttpContractDetails,
   Method,
   ParamsDictionary,
   ParamsObject,
@@ -318,27 +317,7 @@ export class ForklaunchExpressLikeRouter<
         BaseRequest
       >(contractDetails)
     ) {
-      body = discriminateBody<
-        SV,
-        Path,
-        P,
-        ResBodyMap,
-        ReqBody,
-        ReqQuery,
-        ReqHeaders,
-        ResHeaders
-      >(
-        contractDetails as HttpContractDetails<
-          SV,
-          Path,
-          P,
-          ResBodyMap,
-          ReqBody,
-          ReqQuery,
-          ReqHeaders,
-          ResHeaders
-        >
-      );
+      body = discriminateBody<SV>(contractDetails.body);
     }
 
     const requestSchema = schemaValidator.compile(
@@ -381,25 +360,7 @@ export class ForklaunchExpressLikeRouter<
       >(contractDetails)
         ? Object.fromEntries(
             Object.entries(
-              discriminateResponseBodies<
-                SV,
-                Path,
-                P,
-                ResBodyMap,
-                ReqQuery,
-                ReqHeaders,
-                ResHeaders
-              >(
-                contractDetails as PathParamHttpContractDetails<
-                  SV,
-                  Path,
-                  P,
-                  ResBodyMap,
-                  ReqQuery,
-                  ReqHeaders,
-                  ResHeaders
-                >
-              )
+              discriminateResponseBodies<SV>(contractDetails.responses)
             ).map(([key, value]) => {
               return [key, value.schema];
             })

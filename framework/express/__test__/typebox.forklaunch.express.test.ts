@@ -243,12 +243,19 @@ describe('handlers', () => {
       '/',
       {
         name: 'Create Organization',
-        body: { name: string },
+        body: {
+          json: {
+            name: string
+          }
+        },
         summary: 'Creates an organization',
         responses: {
           200: {
-            name: string
-          }
+            json: {
+              name: string
+            }
+          },
+          400: string
         }
       },
       async (req, res) => {
@@ -259,7 +266,9 @@ describe('handlers', () => {
     const liveTypeFunction = router.post('/', postRequest);
     liveTypeFunction.post('/organization', {
       body: {
-        name: 'string'
+        json: {
+          name: 'string'
+        }
       }
     });
   });

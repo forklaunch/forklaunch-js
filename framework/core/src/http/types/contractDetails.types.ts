@@ -1,4 +1,8 @@
-import { Prettify } from '@forklaunch/common';
+import {
+  ExclusiveRecord,
+  Prettify,
+  UnionToIntersection
+} from '@forklaunch/common';
 import {
   AnySchemaValidator,
   IdiomaticSchema,
@@ -68,17 +72,64 @@ export type QueryObject<SV extends AnySchemaValidator> = StringOnlyObject<SV> &
 export type HeadersObject<SV extends AnySchemaValidator> =
   StringOnlyObject<SV> & unknown;
 
-export type TypedResponseBody<SV extends AnySchemaValidator> =
+export type RawTypedResponseBody<SV extends AnySchemaValidator> =
   | TextBody<SV>
+  | JsonBody<SV>
   | FileBody<SV>
   | ServerSentEventBody<SV>
   | UnknownResponseBody<SV>;
 
+type ExclusiveResponseBodyBase<SV extends AnySchemaValidator> = {
+  [K in keyof UnionToIntersection<RawTypedResponseBody<SV>>]?: undefined;
+};
+
+type ExclusiveSchemaCatchall<SV extends AnySchemaValidator> = {
+  [K in keyof SV['_SchemaCatchall'] as string extends K
+    ? never
+    : number extends K
+      ? never
+      : symbol extends K
+        ? never
+        : K]?: undefined;
+};
+
+export type TypedResponseBody<SV extends AnySchemaValidator> =
+  | {
+      [K in keyof (ExclusiveSchemaCatchall<SV> &
+        ExclusiveResponseBodyBase<SV>)]?: K extends keyof TextBody<SV> // > //   SV['_SchemaCatchall'] // keyof OnlyNamedKeys< // &
+        ? TextBody<SV>[K]
+        : undefined;
+    }
+  | {
+      [K in keyof (ExclusiveSchemaCatchall<SV> &
+        ExclusiveResponseBodyBase<SV>)]?: K extends keyof JsonBody<SV> // > //   SV['_SchemaCatchall'] // keyof OnlyNamedKeys< // &
+        ? JsonBody<SV>[K]
+        : undefined;
+    }
+  | {
+      [K in keyof (ExclusiveSchemaCatchall<SV> &
+        ExclusiveResponseBodyBase<SV>)]?: K extends keyof FileBody<SV> // > //   SV['_SchemaCatchall'] // keyof OnlyNamedKeys< // &
+        ? FileBody<SV>[K]
+        : undefined;
+    }
+  | {
+      [K in keyof (ExclusiveSchemaCatchall<SV> &
+        ExclusiveResponseBodyBase<SV>)]?: K extends keyof ServerSentEventBody<SV> // > //   SV['_SchemaCatchall'] // keyof OnlyNamedKeys< // &
+        ? ServerSentEventBody<SV>[K]
+        : undefined;
+    }
+  | {
+      [K in keyof (ExclusiveSchemaCatchall<SV> &
+        ExclusiveResponseBodyBase<SV>)]?: K extends keyof UnknownResponseBody<SV> // > //   SV['_SchemaCatchall'] // keyof OnlyNamedKeys< // &
+        ? UnknownResponseBody<SV>[K]
+        : undefined;
+    };
+
 export type ResponseBody<SV extends AnySchemaValidator> =
   | TypedResponseBody<SV>
-  | SV['_ValidSchemaObject']
-  | UnboxedObjectSchema<SV>
-  | SV['string'];
+  | (ExclusiveResponseBodyBase<SV> & SV['_ValidSchemaObject'])
+  | (ExclusiveResponseBodyBase<SV> & UnboxedObjectSchema<SV>)
+  | (ExclusiveResponseBodyBase<SV> & SV['string']);
 
 /**
  * Type representing the responses object in a request.
@@ -86,8 +137,8 @@ export type ResponseBody<SV extends AnySchemaValidator> =
  * @template SV - A type that extends AnySchemaValidator.
  */
 export type ResponsesObject<SV extends AnySchemaValidator> = {
-  [key: number]: ResponseBody<SV>;
-} & unknown;
+  [K in number]: ResponseBody<SV>;
+};
 
 export type JsonBody<SV extends AnySchemaValidator> = {
   contentType?: 'application/json' | string;
@@ -178,7 +229,7 @@ export type UrlEncodedForm<SV extends AnySchemaValidator> = {
 };
 
 export type ServerSentEventBody<SV extends AnySchemaValidator> = {
-  contentType?: 'text/event-stream';
+  contentType?: 'text/event-stream' | string;
   event: BodyObject<SV>;
 };
 
@@ -447,35 +498,40 @@ export type HttpContractDetails<
   ResHeaders,
   BaseRequest
 > &
-  (BodySchema extends JsonBody<SV>
+  (BodySchema extends SV['_SchemaCatchall']
     ? {
         /** Required body schema for body-based methods for the contract */
         readonly body: BodySchema;
       }
-    : BodySchema extends TextBody<SV>
+    : BodySchema extends JsonBody<SV>
       ? {
           /** Required body schema for body-based methods for the contract */
-          readonly body: BodySchema;
+          readonly body: ExclusiveRecord<BodySchema, TypedBody<SV>>;
         }
-      : BodySchema extends MultipartForm<SV>
+      : BodySchema extends TextBody<SV>
         ? {
             /** Required body schema for body-based methods for the contract */
-            readonly body: BodySchema;
+            readonly body: ExclusiveRecord<BodySchema, TypedBody<SV>>;
           }
-        : BodySchema extends UrlEncodedForm<SV>
+        : BodySchema extends MultipartForm<SV>
           ? {
               /** Required body schema for body-based methods for the contract */
-              readonly body: BodySchema;
+              readonly body: ExclusiveRecord<BodySchema, TypedBody<SV>>;
             }
-          : BodySchema extends FileBody<SV>
+          : BodySchema extends UrlEncodedForm<SV>
             ? {
                 /** Required body schema for body-based methods for the contract */
-                readonly body: BodySchema;
+                readonly body: ExclusiveRecord<BodySchema, TypedBody<SV>>;
               }
-            : {
-                /** Required body schema for body-based methods for the contract */
-                readonly body: BodySchema;
-              }) & {
+            : BodySchema extends FileBody<SV>
+              ? {
+                  /** Required body schema for body-based methods for the contract */
+                  readonly body: ExclusiveRecord<BodySchema, TypedBody<SV>>;
+                }
+              : {
+                  /** Required body schema for body-based methods for the contract */
+                  readonly body: BodySchema;
+                }) & {
     readonly auth?: SchemaAuthMethods<
       SV,
       string | number | symbol extends ExtractedParamsObject<Path>

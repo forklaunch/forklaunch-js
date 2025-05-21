@@ -94,7 +94,10 @@ describe('Forklaunch Hyper-Express Tests', () => {
           test: string
         },
         responses: {
-          200: string
+          200: {
+            contentType: 'text/plain',
+            text: string
+          }
         }
       },
       (req, res) => {
