@@ -40,6 +40,9 @@
     "publish:package": "./publish-package.bash",
     "test": "vitest --passWithNoTests"
   },
+  "dependencies": {
+    "@forklaunch/common": "workspace:*"
+  },
   "devDependencies": {
     "fetch-mock": "^12.5.2",
     "jest": "^29.7.0",

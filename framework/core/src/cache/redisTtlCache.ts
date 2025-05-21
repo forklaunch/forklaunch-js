@@ -1,3 +1,4 @@
+import { safeStringify } from '@forklaunch/common';
 import { createClient, RedisClientOptions } from 'redis';
 import {
   evaluateTelemetryOptions,
@@ -98,7 +99,7 @@ export class RedisTtlCache implements TtlCache {
     if (this.telemetryOptions.enabled.logging) {
       this.openTelemetryCollector.info(`Putting record into cache: ${key}`);
     }
-    await this.client.set(key, JSON.stringify(value), {
+    await this.client.set(key, safeStringify(value), {
       PX: ttlMilliseconds
     });
   }
@@ -113,7 +114,7 @@ export class RedisTtlCache implements TtlCache {
   async putBatchRecords<T>(cacheRecords: TtlCacheRecord<T>[]): Promise<void> {
     let multiCommand = this.client.multi();
     for (const { key, value, ttlMilliseconds } of cacheRecords) {
-      multiCommand = multiCommand.set(key, JSON.stringify(value), {
+      multiCommand = multiCommand.set(key, safeStringify(value), {
         PX: ttlMilliseconds || this.ttlMilliseconds
       });
     }
@@ -129,7 +130,7 @@ export class RedisTtlCache implements TtlCache {
    * @returns {Promise<void>} A promise that resolves when the value is enqueued
    */
   async enqueueRecord<T>(queueName: string, value: T): Promise<void> {
-    await this.client.lPush(queueName, JSON.stringify(value));
+    await this.client.lPush(queueName, safeStringify(value));
   }
 
   /**
@@ -143,7 +144,7 @@ export class RedisTtlCache implements TtlCache {
   async enqueueBatchRecords<T>(queueName: string, values: T[]): Promise<void> {
     let multiCommand = this.client.multi();
     for (const value of values) {
-      multiCommand = multiCommand.lPush(queueName, JSON.stringify(value));
+      multiCommand = multiCommand.lPush(queueName, safeStringify(value));
     }
     await multiCommand.exec();
   }

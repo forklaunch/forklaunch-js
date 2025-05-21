@@ -1,3 +1,4 @@
+import { noop } from '@forklaunch/common';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { number, SchemaValidator, string } from '@forklaunch/validator/zod';
 import {
@@ -16,7 +17,7 @@ const expressMiddleware = (
   res: ExpressResponse,
   next: ExpressNextFunction
 ) => {
-  console.log(req, res, next);
+  noop(req, res, next);
   next();
 };
 
@@ -192,7 +193,7 @@ describe('handlers', () => {
     openTelemetryCollector
   );
 
-  it('should be able to create a path param handler', () => {
+  it('should be able to create a path param handler', async () => {
     const getRequest = get(
       zodSchemaValidator,
       '/:id',
@@ -235,7 +236,7 @@ describe('handlers', () => {
     );
     application.get('/:id', getRequest);
     const liveTypeFunction = router.get('/:id', getRequest);
-    liveTypeFunction.get('/organization/:id', {
+    await liveTypeFunction.get('/organization/:id', {
       params: {
         id: 'string'
       },
@@ -245,7 +246,7 @@ describe('handlers', () => {
     });
   });
 
-  it('should be able to create a body param handler', () => {
+  it('should be able to create a body param handler', async () => {
     const postRequest = post(
       zodSchemaValidator,
       '/',
@@ -271,7 +272,7 @@ describe('handlers', () => {
     );
     application.post('/', postRequest);
     const liveTypeFunction = router.post('/', postRequest);
-    liveTypeFunction.post('/organization', {
+    await liveTypeFunction.post('/organization', {
       body: {
         multipartForm: {
           name: 'string'

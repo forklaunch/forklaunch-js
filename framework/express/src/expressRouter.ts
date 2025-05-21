@@ -59,10 +59,16 @@ export class Router<
     openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
     options?: OptionsText & OptionsJson & OptionsUrlencoded
   ) {
-    super(basePath, schemaValidator, express.Router(), openTelemetryCollector);
-
-    this.internal.use(contentParse<SV>(options));
-    this.internal.use(enrichResponseTransmission as unknown as RequestHandler);
+    super(
+      basePath,
+      schemaValidator,
+      express.Router(),
+      [
+        enrichResponseTransmission as unknown as RequestHandler,
+        contentParse<SV>(options)
+      ],
+      openTelemetryCollector
+    );
   }
 
   route(path: string): this {

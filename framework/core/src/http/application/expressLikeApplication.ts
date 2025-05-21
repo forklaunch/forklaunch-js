@@ -36,9 +36,16 @@ export abstract class ForklaunchExpressLikeApplication<
   constructor(
     readonly schemaValidator: SV,
     readonly internal: Server,
+    readonly postEnrichMiddleware: RouterHandler[],
     readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
   ) {
-    super('/', schemaValidator, internal, openTelemetryCollector);
+    super(
+      '/',
+      schemaValidator,
+      internal,
+      postEnrichMiddleware,
+      openTelemetryCollector
+    );
 
     this.internal.use(createContext(this.schemaValidator) as RouterHandler);
     this.internal.use(cors as RouterHandler);

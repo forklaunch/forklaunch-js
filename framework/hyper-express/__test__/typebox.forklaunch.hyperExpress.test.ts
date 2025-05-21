@@ -5,6 +5,7 @@ import { any } from '../src/handlers/any';
 import { get } from '../src/handlers/get';
 import { post } from '../src/handlers/post';
 
+import { noop } from '@forklaunch/common';
 import {
   MiddlewareNext as ExpressNextFunction,
   Request as ExpressRequest,
@@ -16,7 +17,7 @@ const expressMiddleware = (
   res: ExpressResponse,
   next: ExpressNextFunction
 ) => {
-  console.log(req, res, next);
+  noop(req, res, next);
   next();
 };
 
@@ -193,7 +194,7 @@ describe('handlers', () => {
     openTelemetryCollector
   );
 
-  it('should be able to create a path param handler', () => {
+  it('should be able to create a path param handler', async () => {
     const getRequest = get(
       typeboxSchemaValidator,
       '/:id',
@@ -233,7 +234,7 @@ describe('handlers', () => {
     );
     application.get('/:id', getRequest);
     const liveTypeFunction = router.get('/:id', getRequest);
-    liveTypeFunction.get('/organization/:id', {
+    await liveTypeFunction.get('/organization/:id', {
       params: {
         id: 'string'
       },
@@ -243,7 +244,7 @@ describe('handlers', () => {
     });
   });
 
-  it('should be able to create a body param handler', () => {
+  it('should be able to create a body param handler', async () => {
     const postRequest = post(
       typeboxSchemaValidator,
       '/',
@@ -265,7 +266,7 @@ describe('handlers', () => {
     );
     application.post('/', postRequest);
     const liveTypeFunction = router.post('/', postRequest);
-    liveTypeFunction.post('/organization', {
+    await liveTypeFunction.post('/organization', {
       body: {
         name: 'string'
       }

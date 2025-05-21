@@ -1,4 +1,4 @@
-import { AnySchemaValidator } from '@forklaunch/validator';
+import { AnySchemaValidator, SchemaValidator } from '@forklaunch/validator';
 import {
   Body,
   ResponsesObject,
@@ -22,6 +22,7 @@ import {
  * @throws If no body-related information is found in the contract details.
  */
 export function discriminateBody<SV extends AnySchemaValidator>(
+  schemaValidator: SV,
   body: Body<SV> | undefined
 ):
   | {
@@ -79,11 +80,22 @@ export function discriminateBody<SV extends AnySchemaValidator>(
       parserType: 'text',
       schema: maybeTypedBody.schema
     };
+  } else if (
+    (schemaValidator as SchemaValidator).isInstanceOf(
+      maybeTypedBody,
+      schemaValidator.string
+    )
+  ) {
+    return {
+      contentType: 'text/plain',
+      parserType: 'text',
+      schema: maybeTypedBody
+    };
   } else {
     return {
       contentType: 'application/json',
       parserType: 'json',
-      schema: body
+      schema: maybeTypedBody
     };
   }
 }
@@ -103,13 +115,14 @@ export function discriminateBody<SV extends AnySchemaValidator>(
  * @returns A record mapping status codes to content type, parser type, and schema info.
  */
 export function discriminateResponseBodies<SV extends AnySchemaValidator>(
+  schemaValidator: SV,
   responses: ResponsesObject<SV>
 ) {
   const discriminatedResponses: Record<
     number,
     {
       contentType: string;
-      parserType: 'json' | 'text' | 'serverSentEvent' | 'file';
+      parserType: 'json' | 'text' | 'serverSentEvent' | 'file' | 'multipart';
       schema: SV['_ValidSchemaObject'];
     }
   > = {};
@@ -124,6 +137,29 @@ export function discriminateResponseBodies<SV extends AnySchemaValidator>(
               : 'application/json') ?? 'application/json',
           parserType: 'text',
           schema: response.schema
+        };
+      } else if ('text' in response && response.text != null) {
+        discriminatedResponses[Number(statusCode)] = {
+          contentType:
+            ('contentType' in response &&
+            typeof response.contentType === 'string'
+              ? response.contentType
+              : 'text/plain') ?? 'text/plain',
+          parserType: 'text',
+          schema: response.text
+        };
+      } else if (
+        'multipartForm' in response &&
+        response.multipartForm != null
+      ) {
+        discriminatedResponses[Number(statusCode)] = {
+          contentType:
+            ('contentType' in response &&
+            typeof response.contentType === 'string'
+              ? response.contentType
+              : 'multipart/form-data') ?? 'multipart/form-data',
+          parserType: 'multipart',
+          schema: response.multipartForm
         };
       } else if ('file' in response && response.file != null) {
         discriminatedResponses[Number(statusCode)] = {
@@ -145,11 +181,23 @@ export function discriminateResponseBodies<SV extends AnySchemaValidator>(
           parserType: 'serverSentEvent',
           schema: response.event
         };
+      } else if (response == schemaValidator.string) {
+        discriminatedResponses[Number(statusCode)] = {
+          contentType: 'text/plain',
+          parserType: 'text',
+          schema: response
+        };
+      } else {
+        discriminatedResponses[Number(statusCode)] = {
+          contentType: 'application/json',
+          parserType: 'json',
+          schema: response
+        };
       }
     } else {
       discriminatedResponses[Number(statusCode)] = {
         contentType: 'application/json',
-        parserType: 'text',
+        parserType: 'json',
         schema: response
       };
     }

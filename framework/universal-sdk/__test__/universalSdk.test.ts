@@ -1,6 +1,6 @@
 import fetchMock from 'fetch-mock';
 import { universalSdk } from '../index';
-import { RequestType, ResponseType } from '../src/types/sdkTypes';
+import { RequestType, ResponseType } from '../src/types/sdk.types';
 
 describe.skip('universalSdk tests', () => {
   const sdk = universalSdk<{

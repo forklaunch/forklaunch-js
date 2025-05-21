@@ -400,6 +400,10 @@ importers:
         version: 8.32.1(eslint@9.27.0)(typescript@5.8.3)
 
   universal-sdk:
+    dependencies:
+      '@forklaunch/common':
+        specifier: workspace:*
+        version: link:../common
     devDependencies:
       fetch-mock:
         specifier: ^12.5.2

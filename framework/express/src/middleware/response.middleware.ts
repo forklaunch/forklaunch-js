@@ -1,3 +1,4 @@
+import { safeStringify } from '@forklaunch/common';
 import { enrichExpressLikeSend, ParamsDictionary } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { NextFunction } from 'express';
@@ -119,12 +120,9 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
   res.setHeader = function (name: string, value: unknown | unknown[]) {
     let stringifiedValue;
     if (Array.isArray(value)) {
-      stringifiedValue = value
-        .map((v) => (typeof v !== 'string' ? JSON.stringify(v) : v))
-        .join('\n');
+      stringifiedValue = value.map((v) => safeStringify(v)).join('\n');
     } else {
-      stringifiedValue =
-        typeof value !== 'string' ? JSON.stringify(value) : value;
+      stringifiedValue = safeStringify(value);
     }
     return originalSetHeader.call(this, name, stringifiedValue);
   };

@@ -76,6 +76,7 @@ export class ForklaunchExpressLikeRouter<
     basePath: BasePath,
     readonly schemaValidator: SV,
     readonly internal: Internal,
+    readonly postEnrichMiddleware: RouterHandler[],
     readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
   ) {
     this.basePath = basePath;
@@ -130,6 +131,7 @@ export class ForklaunchExpressLikeRouter<
         responseSchemas,
         this.openTelemetryCollector
       ),
+      ...this.postEnrichMiddleware,
       parse,
       parseRequestAuth<
         SV,
@@ -317,7 +319,7 @@ export class ForklaunchExpressLikeRouter<
         BaseRequest
       >(contractDetails)
     ) {
-      body = discriminateBody<SV>(contractDetails.body);
+      body = discriminateBody(this.schemaValidator, contractDetails.body);
     }
 
     const requestSchema = schemaValidator.compile(
@@ -327,7 +329,7 @@ export class ForklaunchExpressLikeRouter<
           ? { headers: contractDetails.requestHeaders }
           : {}),
         ...(contractDetails.query ? { query: contractDetails.query } : {}),
-        ...(body != null ? { body } : {})
+        ...(body != null ? { body: body.schema } : {})
       })
     );
 
@@ -360,7 +362,10 @@ export class ForklaunchExpressLikeRouter<
       >(contractDetails)
         ? Object.fromEntries(
             Object.entries(
-              discriminateResponseBodies<SV>(contractDetails.responses)
+              discriminateResponseBodies(
+                this.schemaValidator,
+                contractDetails.responses
+              )
             ).map(([key, value]) => {
               return [key, value.schema];
             })
@@ -418,7 +423,8 @@ export class ForklaunchExpressLikeRouter<
         params: request?.params ?? {},
         query: request?.query ?? {},
         headers: request?.headers ?? {},
-        body: request?.body ?? {},
+        body:
+          discriminateBody(this.schemaValidator, request?.body)?.schema ?? {},
         path: route
       };
 
@@ -480,7 +486,7 @@ export class ForklaunchExpressLikeRouter<
       });
 
       return {
-        code: statusCode,
+        code: Number(statusCode),
         response: responseMessage,
         headers: responseHeaders
       };

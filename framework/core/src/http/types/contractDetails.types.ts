@@ -76,6 +76,7 @@ export type RawTypedResponseBody<SV extends AnySchemaValidator> =
   | TextBody<SV>
   | JsonBody<SV>
   | FileBody<SV>
+  | MultipartForm<SV>
   | ServerSentEventBody<SV>
   | UnknownResponseBody<SV>;
 
@@ -96,31 +97,37 @@ type ExclusiveSchemaCatchall<SV extends AnySchemaValidator> = {
 export type TypedResponseBody<SV extends AnySchemaValidator> =
   | {
       [K in keyof (ExclusiveSchemaCatchall<SV> &
-        ExclusiveResponseBodyBase<SV>)]?: K extends keyof TextBody<SV> // > //   SV['_SchemaCatchall'] // keyof OnlyNamedKeys< // &
+        ExclusiveResponseBodyBase<SV>)]?: K extends keyof TextBody<SV>
         ? TextBody<SV>[K]
         : undefined;
     }
   | {
       [K in keyof (ExclusiveSchemaCatchall<SV> &
-        ExclusiveResponseBodyBase<SV>)]?: K extends keyof JsonBody<SV> // > //   SV['_SchemaCatchall'] // keyof OnlyNamedKeys< // &
+        ExclusiveResponseBodyBase<SV>)]?: K extends keyof JsonBody<SV>
         ? JsonBody<SV>[K]
         : undefined;
     }
   | {
       [K in keyof (ExclusiveSchemaCatchall<SV> &
-        ExclusiveResponseBodyBase<SV>)]?: K extends keyof FileBody<SV> // > //   SV['_SchemaCatchall'] // keyof OnlyNamedKeys< // &
+        ExclusiveResponseBodyBase<SV>)]?: K extends keyof MultipartForm<SV>
+        ? MultipartForm<SV>[K]
+        : undefined;
+    }
+  | {
+      [K in keyof (ExclusiveSchemaCatchall<SV> &
+        ExclusiveResponseBodyBase<SV>)]?: K extends keyof FileBody<SV>
         ? FileBody<SV>[K]
         : undefined;
     }
   | {
       [K in keyof (ExclusiveSchemaCatchall<SV> &
-        ExclusiveResponseBodyBase<SV>)]?: K extends keyof ServerSentEventBody<SV> // > //   SV['_SchemaCatchall'] // keyof OnlyNamedKeys< // &
+        ExclusiveResponseBodyBase<SV>)]?: K extends keyof ServerSentEventBody<SV>
         ? ServerSentEventBody<SV>[K]
         : undefined;
     }
   | {
       [K in keyof (ExclusiveSchemaCatchall<SV> &
-        ExclusiveResponseBodyBase<SV>)]?: K extends keyof UnknownResponseBody<SV> // > //   SV['_SchemaCatchall'] // keyof OnlyNamedKeys< // &
+        ExclusiveResponseBodyBase<SV>)]?: K extends keyof UnknownResponseBody<SV>
         ? UnknownResponseBody<SV>[K]
         : undefined;
     };
@@ -170,27 +177,17 @@ export type TextBody<SV extends AnySchemaValidator> = {
 export type FileBody<SV extends AnySchemaValidator> = {
   contentType?:
     | 'application/octet-stream'
-
-    // Document formats
     | 'application/pdf'
     | 'application/vnd.ms-excel'
     | 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     | 'application/msword'
     | 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-
-    // Archive format
     | 'application/zip'
-
-    // Image formats
     | 'image/jpeg'
     | 'image/png'
     | 'image/gif'
-
-    // Audio formats
     | 'audio/mpeg'
     | 'audio/wav'
-
-    // Video format
     | 'video/mp4'
     | string;
   file: SV['file'] extends (...args: unknown[]) => infer R ? R : SV['file'];

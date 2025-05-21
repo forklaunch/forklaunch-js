@@ -13,6 +13,7 @@
  * @param {number} options.limit - Size limit for the request body (default: '10mb')
  * @returns {Function} Express middleware function
  */
+import { isNever } from '@forklaunch/common';
 import { discriminateBody, HttpContractDetails } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { OptionsJson, OptionsText, OptionsUrlencoded } from 'body-parser';
@@ -32,12 +33,14 @@ function contentParse<SV extends AnySchemaValidator>(
 
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const discriminatedBody = discriminateBody<SV>(
-        (
-          req as unknown as {
-            contractDetails: HttpContractDetails<SV>;
-          }
-        ).contractDetails.body
+      const coercedRequest = req as unknown as {
+        schemaValidator: SV;
+        contractDetails: HttpContractDetails<SV>;
+      };
+
+      const discriminatedBody = discriminateBody(
+        coercedRequest.schemaValidator,
+        coercedRequest.contractDetails.body
       );
 
       if (!discriminatedBody) {
@@ -92,6 +95,8 @@ function contentParse<SV extends AnySchemaValidator>(
           });
           break;
         }
+        default:
+          isNever(discriminatedBody.parserType);
       }
     } catch (error) {
       next(error);

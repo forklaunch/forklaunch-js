@@ -1,5 +1,25 @@
-import { RequestType, ResponseType } from './types/sdkTypes';
+import { isNever, safeStringify } from '@forklaunch/common';
+import { ResponseContentParserType } from './types/contentTypes.types';
+import { RequestType, ResponseType } from './types/sdk.types';
 import { getSdkPath } from './utils/resolvePath';
+
+function mapContentType(contentType: ResponseContentParserType) {
+  switch (contentType) {
+    case 'json':
+      return 'application/json';
+    case 'file':
+      return 'application/octet-stream';
+    case 'multipartForm':
+      return 'multipart/form-data';
+    case 'text':
+      return 'text/plain';
+    case 'stream':
+      return 'text/event-stream';
+    default:
+      isNever(contentType);
+      return 'application/json';
+  }
+}
 
 /**
  * A class representing the Forklaunch SDK.
@@ -12,10 +32,7 @@ export class UniversalSdk {
    */
   constructor(
     private host: string,
-    private contentTypeParserMap?: Record<
-      string,
-      'json' | 'file' | 'text' | 'bytes' | 'arrayBuffer'
-    >
+    private contentTypeParserMap?: Record<string, ResponseContentParserType>
   ) {}
 
   /**
@@ -52,10 +69,10 @@ export class UniversalSdk {
     if (body != null) {
       if ('schema' in body && body.schema != null) {
         defaultContentType = 'application/json';
-        parsedBody = JSON.stringify(body.schema);
+        parsedBody = safeStringify(body.schema);
       } else if ('json' in body && body.json != null) {
         defaultContentType = 'application/json';
-        parsedBody = JSON.stringify(body.json);
+        parsedBody = safeStringify(body.json);
       } else if ('text' in body && body.text != null) {
         defaultContentType = 'text/plain';
         parsedBody = body.text;
@@ -87,7 +104,7 @@ export class UniversalSdk {
         parsedBody = formData;
       } else if ('urlEncodedForm' in body && body.urlEncodedForm != null) {
         defaultContentType = 'application/x-www-form-urlencoded';
-        parsedBody = new URLSearchParams(JSON.stringify(body.urlEncodedForm));
+        parsedBody = new URLSearchParams(safeStringify(body.urlEncodedForm));
       }
     }
 
@@ -108,10 +125,14 @@ export class UniversalSdk {
       response.headers.get('content-type') ||
       response.headers.get('Content-Type');
 
+    const mappedContentType =
+      contentType != null
+        ? mapContentType(this.contentTypeParserMap?.[contentType])
+        : 'application/json';
+
     let responseBody;
 
     try {
-      // if (this.contentTypeParserMap?.includes(contentType)) {
       switch (contentType) {
         case 'application/json':
           responseBody = await response.json();
@@ -119,8 +140,14 @@ export class UniversalSdk {
         case 'application/octet-stream':
           responseBody = await response.blob();
           break;
+        case 'multipart/form-data':
+          responseBody = {};
+          (await response.formData()).forEach((value, key) => {
+            responseBody[key] = value;
+          });
+          break;
         case 'text/event-stream':
-          responseBody = await response.json();
+          responseBody = await response.body?.pipeThrough();
           break;
         case 'text/plain':
           responseBody = await response.text();

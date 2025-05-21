@@ -97,6 +97,7 @@ export class TypeboxSchemaValidator
       ) => TRecord<TResolve<Key>, TResolve<Value>>,
       <T extends TIdiomaticSchema>(schema: T) => TPromise<TResolve<T>>,
       (value: unknown) => value is TSchema,
+      <T extends TCatchall>(value: object, type: T) => value is T,
       <T extends TIdiomaticSchema | TCatchall>(
         schema: T,
         value: unknown
@@ -484,6 +485,21 @@ export class TypeboxSchemaValidator
    */
   isSchema(value: unknown): value is TSchema {
     return KindGuard.IsSchema(value);
+  }
+
+  /**
+   * Check if a value is an instance of a TypeBox schema.
+   * @param {object} value - The value to check.
+   * @param {TCatchall} type - The schema to check against.
+   * @returns {boolean} True if the value is an instance of the schema.
+   */
+  isInstanceOf<T extends TCatchall>(value: unknown, type: T): value is T {
+    return (
+      typeof value === 'object' &&
+      value != null &&
+      Kind in value &&
+      value[Kind] === type[Kind]
+    );
   }
 
   /**

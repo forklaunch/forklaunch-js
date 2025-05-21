@@ -146,7 +146,8 @@ export function generateSwaggerDocument<SV extends AnySchemaValidator>(
 
       const responses: ResponsesObject = {};
 
-      const discriminatedResponseBodiesResult = discriminateResponseBodies<SV>(
+      const discriminatedResponseBodiesResult = discriminateResponseBodies(
+        schemaValidator,
         route.contractDetails.responses
       );
 
@@ -181,7 +182,7 @@ export function generateSwaggerDocument<SV extends AnySchemaValidator>(
 
       const discriminatedBodyResult =
         'body' in route.contractDetails
-          ? discriminateBody<SV>(route.contractDetails.body)
+          ? discriminateBody(schemaValidator, route.contractDetails.body)
           : null;
 
       if (discriminatedBodyResult) {

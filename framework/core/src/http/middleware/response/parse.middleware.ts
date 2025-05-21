@@ -60,16 +60,24 @@ export function parse<
 ) {
   const { headers, responses } = res.responseSchemas;
 
-  const responseBodies = discriminateResponseBodies<SV>(
+  const statusCode = Number(res.statusCode);
+  const responseBodies = discriminateResponseBodies(
+    req.schemaValidator,
     req.contractDetails.responses
   );
 
-  if (responseBodies != null) {
-    res.type(responseBodies[res.statusCode].contentType);
+  console.log(
+    req.contractDetails.responses[200] === req.schemaValidator.string,
+    req.contractDetails.responses[200],
+    req.schemaValidator.string,
+    responseBodies
+  );
+  if (responseBodies != null && responseBodies[statusCode] != null) {
+    res.type(responseBodies[statusCode].contentType);
   }
 
   const parsedResponse = (req.schemaValidator as SchemaValidator).parse(
-    responses?.[res.statusCode],
+    responses?.[statusCode],
     res.bodyData
   );
 
@@ -112,8 +120,6 @@ export function parse<
         } else {
           next?.(new Error('Response is not sendable.'));
         }
-        // next?.(new Error(`Invalid response:\n${parseErrors.join('\n\n')}`));
-        // break;
         return;
       case 'warning':
         req.openTelemetryCollector.warn(

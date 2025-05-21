@@ -5,28 +5,21 @@
  * @param {string} host - The host URL for the SDK.
  * @returns {TypedController} - The SDK proxy with methods for HTTP requests.
  */
+import {
+  ExistingContentTypes,
+  FlattenResponseContentTypes,
+  ResponseContentParserType
+} from './src/types/contentTypes.types';
 import { UniversalSdk } from './src/universalSdk';
-
-// type FlattenResponseContentTypes<T> = T extends {
-//   [key: string]: {
-//     [key: string]: {
-//       [key: string]: infer X;
-//     };
-//   };
-// }
-//   ? X extends (...args: never[]) => infer P
-//     ? P extends Promise<{ contentType: infer PC }>
-//       ? PC
-//       : P extends { contentType: infer C }
-//         ? C
-//         : never
-//     : never
-//   : never;
 
 export const universalSdkBuilder =
   <TypedController>() =>
   <
-    T extends Record<string, 'json' | 'file' | 'text' | 'bytes' | 'arrayBuffer'>
+    T extends {
+      [K in FlattenResponseContentTypes<TypedController> as ExistingContentTypes extends K
+        ? never
+        : K]: ResponseContentParserType;
+    }
   >({
     host,
     contentTypeParserMap

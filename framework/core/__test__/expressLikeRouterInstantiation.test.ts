@@ -95,6 +95,7 @@ const xa = new ForklaunchExpressLikeRouter(
     head: () => {},
     trace: () => {}
   },
+  [],
   {} as OpenTelemetryCollector<MetricsDefinition>
 );
 

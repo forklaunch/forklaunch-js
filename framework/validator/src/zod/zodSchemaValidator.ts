@@ -76,6 +76,7 @@ export class ZodSchemaValidator
       ) => ZodRecord<ZodRecordKey<Key>, ZodResolve<Value>>,
       <T extends ZodIdiomaticSchema>(schema: T) => ZodPromise<ZodResolve<T>>,
       (value: unknown) => value is ZodType,
+      <T extends ZodType>(value: object, type: T) => value is T,
       <T extends ZodIdiomaticSchema | ZodCatchall>(
         schema: T,
         value: unknown
@@ -412,6 +413,16 @@ export class ZodSchemaValidator
    */
   isSchema(value: unknown): value is ZodType {
     return value instanceof ZodType;
+  }
+
+  /**
+   * Checks if a value is an instance of a Zod schema.
+   * @param {object} value - The value to check.
+   * @param {ZodType} type - The schema to check against.
+   * @returns {boolean} True if the value is an instance of the schema.
+   */
+  isInstanceOf<T extends ZodType>(value: unknown, type: T): value is T {
+    return typeof type === 'function' && value instanceof type;
   }
 
   /**

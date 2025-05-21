@@ -15,7 +15,16 @@
 export interface RequestType {
   params?: Record<string, string | number | boolean>;
   body?:
-    | Record<string, unknown>
+    | {
+        [K: string]: unknown;
+        contentType?: never;
+        json?: never;
+        text?: never;
+        file?: never;
+        multipartForm?: never;
+        urlEncodedForm?: never;
+        schema?: never;
+      }
     | ({
         contentType?: string;
       } & (
@@ -47,7 +56,3 @@ export interface ResponseType {
   content: unknown;
   headers: Headers;
 }
-
-export type ScrubUnsupportedContentTypes<T, U> = {
-  [K in keyof T]: T[K] extends U ? T[K] : never;
-};

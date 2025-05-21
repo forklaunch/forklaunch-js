@@ -1,3 +1,4 @@
+import { isNever } from '@forklaunch/common';
 import { discriminateBody, HttpContractDetails } from '@forklaunch/core/http';
 import { Request } from '@forklaunch/hyper-express-fork';
 import { AnySchemaValidator } from '@forklaunch/validator';
@@ -34,12 +35,14 @@ import { AnySchemaValidator } from '@forklaunch/validator';
 export async function contentParse<SV extends AnySchemaValidator>(
   req: Request
 ) {
-  const discriminatedBody = discriminateBody<SV>(
-    (
-      req as unknown as {
-        contractDetails: HttpContractDetails<SV>;
-      }
-    ).contractDetails.body
+  const coercedRequest = req as unknown as {
+    schemaValidator: SV;
+    contractDetails: HttpContractDetails<SV>;
+  };
+
+  const discriminatedBody = discriminateBody(
+    coercedRequest.schemaValidator,
+    coercedRequest.contractDetails.body
   );
 
   if (discriminatedBody != null) {
@@ -72,6 +75,8 @@ export async function contentParse<SV extends AnySchemaValidator>(
       case 'urlEncoded':
         req.body = await req.urlencoded();
         break;
+      default:
+        isNever(discriminatedBody.parserType);
     }
   }
 }

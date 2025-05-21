@@ -84,7 +84,7 @@ export function enrichDetails<
         [ATTR_API_NAME]: req.contractDetails?.name || 'unknown',
         [ATTR_HTTP_REQUEST_METHOD]: req.method,
         [ATTR_HTTP_ROUTE]: req.originalPath || 'unknown',
-        [ATTR_HTTP_RESPONSE_STATUS_CODE]: res.statusCode
+        [ATTR_HTTP_RESPONSE_STATUS_CODE]: Number(res.statusCode)
       });
     });
 

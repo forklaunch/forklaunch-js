@@ -419,13 +419,15 @@ export type ExtractContentType<
       ? 'text/plain'
       : T extends FileBody<SV>
         ? 'application/octet-stream'
-        : T extends ServerSentEventBody<SV>
-          ? 'text/event-stream'
-          : T extends UnknownResponseBody<SV>
-            ? 'application/json'
-            : T extends SV['string']
-              ? 'text/plain'
-              : 'application/json';
+        : T extends MultipartForm<SV>
+          ? 'multipart/form-data'
+          : T extends ServerSentEventBody<SV>
+            ? 'text/event-stream'
+            : T extends UnknownResponseBody<SV>
+              ? 'application/json'
+              : T extends SV['string']
+                ? 'text/plain'
+                : 'application/json';
 
 export type ExtractResponseBody<
   SV extends AnySchemaValidator,
@@ -436,12 +438,14 @@ export type ExtractResponseBody<
     : T extends TextBody<SV>
       ? T['text']
       : T extends FileBody<SV>
-        ? T['file']
-        : T extends ServerSentEventBody<SV>
-          ? T['event']
-          : T extends UnknownResponseBody<SV>
-            ? T['schema']
-            : T;
+        ? Blob
+        : T extends MultipartForm<SV>
+          ? T['multipartForm']
+          : T extends ServerSentEventBody<SV>
+            ? ReadableStream<T['event']>
+            : T extends UnknownResponseBody<SV>
+              ? T['schema']
+              : T;
 
 export type ExtractResponseBodies<
   SV extends AnySchemaValidator,
