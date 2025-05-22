@@ -87,7 +87,8 @@ describe('http middleware tests', () => {
       status: () => ({
         json: () => true,
         jsonp: () => true,
-        send: () => true
+        send: () => true,
+        sseEmitter: () => undefined
       }),
       end: () => {},
       type: () => {},

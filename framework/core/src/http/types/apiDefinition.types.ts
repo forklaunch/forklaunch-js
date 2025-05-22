@@ -1,5 +1,4 @@
 import {
-  ExclusiveRecord,
   MakePropertyOptionalIfChildrenOptional,
   Prettify,
   RemoveTrailingSlash
@@ -137,7 +136,7 @@ export type ForklaunchSendableData =
  * Interface representing a Forklaunch response status.
  * @template ResBody - A type for the response body.
  */
-export type ForklaunchStatusResponse<ResBody> = {
+export interface ForklaunchStatusResponse<ResBody> {
   /**
    * Sends the response.
    * @param {ResBodyMap} [body] - The response body.
@@ -145,11 +144,14 @@ export type ForklaunchStatusResponse<ResBody> = {
    * @returns {T} - The sent response.
    */
   send: {
-    <T extends ResBody, U>(
-      body?: ExclusiveRecord<T, ResBody> | null,
+    (
+      body?: ResBody extends AsyncGenerator<unknown> ? never : ResBody | null,
+      close_connection?: boolean
+    ): boolean;
+    <U>(
+      body?: ResBody extends AsyncGenerator<unknown> ? never : ResBody | null,
       close_connection?: boolean
     ): U;
-    <T extends ResBody, U>(body?: ExclusiveRecord<T, ResBody> | null): U;
   };
 
   /**
@@ -158,11 +160,15 @@ export type ForklaunchStatusResponse<ResBody> = {
    * @returns {boolean|T} - The JSON response.
    */
   json: {
-    <T extends ResBody>(
-      body: ResBody extends string ? never : ExclusiveRecord<T, ResBody> | null
+    (
+      body: ResBody extends string | AsyncGenerator<unknown>
+        ? never
+        : ResBody | null
     ): boolean;
-    <T extends ResBody, U>(
-      body: ResBody extends string ? never : ExclusiveRecord<T, ResBody> | null
+    <U>(
+      body: ResBody extends string | AsyncGenerator<unknown>
+        ? never
+        : ResBody | null
     ): U;
   };
 
@@ -172,20 +178,39 @@ export type ForklaunchStatusResponse<ResBody> = {
    * @returns {boolean|T} - The JSONP response.
    */
   jsonp: {
-    <T extends ResBody>(
-      body: ResBody extends string ? never : ExclusiveRecord<T, ResBody> | null
+    (
+      body: ResBody extends string | AsyncGenerator<unknown>
+        ? never
+        : ResBody | null
     ): boolean;
-    <T extends ResBody, U>(
-      body: ResBody extends string ? never : ExclusiveRecord<T, ResBody> | null
+    <U>(
+      body: ResBody extends string | AsyncGenerator<unknown>
+        ? never
+        : ResBody | null
     ): U;
   };
-};
+
+  /**
+   * Sends a Server-Sent Event (SSE) response.
+   * @param {ResBodyMap} [body] - The response body.
+   * @param {number} interval - The interval between events.
+   */
+  sseEmitter: (
+    typedWrite: (
+      write: (
+        chunk: ResBody extends AsyncGenerator<infer T> ? T : never,
+        encoding?: BufferEncoding,
+        callback?: (error: Error | null | undefined) => void
+      ) => void
+    ) => void
+  ) => void;
+}
 
 type ToNumber<T extends string | number | symbol> = T extends number
   ? T
   : T extends `${infer N extends number}`
-    ? N
-    : never;
+  ? N
+  : never;
 
 /**
  * Interface representing a Forklaunch response.
@@ -346,8 +371,8 @@ export type ResolvedForklaunchRequest<
       >
         ? ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>[key]
         : key extends keyof BaseRequest
-          ? BaseRequest[key]
-          : never;
+        ? BaseRequest[key]
+        : never;
     };
 
 /**
@@ -399,8 +424,8 @@ export interface ExpressLikeHandler<
                 LocalsObj
               >[key]
             : key extends keyof BaseResponse
-              ? BaseResponse[key]
-              : never;
+            ? BaseResponse[key]
+            : never;
         },
     next: NextFunction
   ): void | Promise<void>;
@@ -409,12 +434,11 @@ export interface ExpressLikeHandler<
 export type MapParamsSchema<
   SV extends AnySchemaValidator,
   P extends ParamsObject<SV>
-> =
-  MapSchema<SV, P> extends infer Params
-    ? unknown extends Params
-      ? ParamsDictionary
-      : Params
-    : ParamsDictionary;
+> = MapSchema<SV, P> extends infer Params
+  ? unknown extends Params
+    ? ParamsDictionary
+    : Params
+  : ParamsDictionary;
 
 export type ExtractContentType<
   SV extends AnySchemaValidator,
@@ -422,115 +446,99 @@ export type ExtractContentType<
 > = T extends { contentType: string }
   ? T['contentType']
   : T extends JsonBody<SV>
-    ? 'application/json'
-    : T extends TextBody<SV>
-      ? 'text/plain'
-      : T extends FileBody<SV>
-        ? 'application/octet-stream'
-        : T extends MultipartForm<SV>
-          ? 'multipart/form-data'
-          : T extends ServerSentEventBody<SV>
-            ? 'text/event-stream'
-            : T extends UnknownResponseBody<SV>
-              ? 'application/json'
-              : T extends SV['string']
-                ? 'text/plain'
-                : 'application/json';
+  ? 'application/json'
+  : T extends TextBody<SV>
+  ? 'text/plain'
+  : T extends FileBody<SV>
+  ? 'application/octet-stream'
+  : T extends MultipartForm<SV>
+  ? 'multipart/form-data'
+  : T extends ServerSentEventBody<SV>
+  ? 'text/event-stream'
+  : T extends UnknownResponseBody<SV>
+  ? 'application/json'
+  : T extends SV['string']
+  ? 'text/plain'
+  : 'text/plain';
 
 export type ExtractResponseBody<
   SV extends AnySchemaValidator,
   T extends ResponseBody<SV> | unknown
-> =
-  T extends JsonBody<SV>
-    ? T['json']
-    : T extends TextBody<SV>
-      ? T['text']
-      : T extends FileBody<SV>
-        ? Blob
-        : T extends MultipartForm<SV>
-          ? T['multipartForm']
-          : T extends ServerSentEventBody<SV>
-            ? ReadableStream<T['event']>
-            : T extends UnknownResponseBody<SV>
-              ? T['schema']
-              : T;
-
-export type ExtractResponseBodies<
-  SV extends AnySchemaValidator,
-  T extends ResponsesObject<SV>
-> = {
-  [K in keyof T]: ExtractResponseBody<SV, T[ToNumber<K>]>;
-};
+> = T extends JsonBody<SV>
+  ? MapSchema<SV, T['json']>
+  : T extends TextBody<SV>
+  ? MapSchema<SV, T['text']>
+  : T extends FileBody<SV>
+  ? File
+  : T extends MultipartForm<SV>
+  ? MapSchema<SV, T['multipartForm']>
+  : T extends ServerSentEventBody<SV>
+  ? AsyncGenerator<MapSchema<SV, T['event']>, string, string>
+  : T extends UnknownResponseBody<SV>
+  ? MapSchema<SV, T['schema']>
+  : MapSchema<SV, T>;
 
 export type MapResBodyMapSchema<
   SV extends AnySchemaValidator,
   ResBodyMap extends ResponsesObject<SV>
-> =
-  MapSchema<
-    SV,
-    ExtractResponseBodies<SV, ResBodyMap>
-  > extends infer ResponseBodyMap
-    ? unknown extends ResponseBodyMap
-      ? ForklaunchResErrors
-      : {
-          [K in keyof ResponseBodyMap]: ResponseBodyMap[K];
-        }
-    : ForklaunchResErrors;
+> = unknown extends ResBodyMap
+  ? ForklaunchResErrors
+  : {
+      [K in keyof ResBodyMap]: ExtractResponseBody<SV, ResBodyMap[K]>;
+    };
 
-export type ExtractBody<SV extends AnySchemaValidator, T extends Body<SV>> =
-  T extends JsonBody<SV>
-    ? T['json']
-    : T extends TextBody<SV>
-      ? T['text']
-      : T extends FileBody<SV>
-        ? T['file']
-        : T extends MultipartForm<SV>
-          ? T['multipartForm']
-          : T extends UrlEncodedForm<SV>
-            ? T['urlEncodedForm']
-            : T extends UnknownBody<SV>
-              ? T['schema']
-              : T;
+export type ExtractBody<
+  SV extends AnySchemaValidator,
+  T extends Body<SV>
+> = T extends JsonBody<SV>
+  ? T['json']
+  : T extends TextBody<SV>
+  ? T['text']
+  : T extends FileBody<SV>
+  ? T['file']
+  : T extends MultipartForm<SV>
+  ? T['multipartForm']
+  : T extends UrlEncodedForm<SV>
+  ? T['urlEncodedForm']
+  : T extends UnknownBody<SV>
+  ? T['schema']
+  : T;
 
 export type MapReqBodySchema<
   SV extends AnySchemaValidator,
   ReqBody extends Body<SV>
-> =
-  MapSchema<SV, ExtractBody<SV, ReqBody>> extends infer Body
-    ? unknown extends Body
-      ? Record<string, unknown>
-      : Body
-    : Record<string, unknown>;
+> = MapSchema<SV, ExtractBody<SV, ReqBody>> extends infer Body
+  ? unknown extends Body
+    ? Record<string, unknown>
+    : Body
+  : Record<string, unknown>;
 
 export type MapReqQuerySchema<
   SV extends AnySchemaValidator,
   ReqQuery extends QueryObject<SV>
-> =
-  MapSchema<SV, ReqQuery> extends infer Query
-    ? unknown extends Query
-      ? ParsedQs
-      : Query
-    : ParsedQs;
+> = MapSchema<SV, ReqQuery> extends infer Query
+  ? unknown extends Query
+    ? ParsedQs
+    : Query
+  : ParsedQs;
 
 export type MapReqHeadersSchema<
   SV extends AnySchemaValidator,
   ReqHeaders extends HeadersObject<SV>
-> =
-  MapSchema<SV, ReqHeaders> extends infer RequestHeaders
-    ? unknown extends RequestHeaders
-      ? Record<string, string>
-      : RequestHeaders
-    : Record<string, string>;
+> = MapSchema<SV, ReqHeaders> extends infer RequestHeaders
+  ? unknown extends RequestHeaders
+    ? Record<string, string>
+    : RequestHeaders
+  : Record<string, string>;
 
 export type MapResHeadersSchema<
   SV extends AnySchemaValidator,
   ResHeaders extends HeadersObject<SV>
-> =
-  MapSchema<SV, ResHeaders> extends infer ResponseHeaders
-    ? unknown extends ResponseHeaders
-      ? ForklaunchResHeaders
-      : ResponseHeaders
-    : ForklaunchResHeaders;
+> = MapSchema<SV, ResHeaders> extends infer ResponseHeaders
+  ? unknown extends ResponseHeaders
+    ? ForklaunchResHeaders
+    : ResponseHeaders
+  : ForklaunchResHeaders;
 
 /**
  * Represents a schema middleware handler with typed parameters, responses, body, and query.
@@ -660,10 +668,9 @@ export type LiveTypeFunction<
       }) extends infer Request
   ? SdkResponse<
       SV,
-      ForklaunchResErrors &
-        (ResponsesObject<SV> extends ResBodyMap
-          ? unknown
-          : MapSchema<SV, ResBodyMap>),
+      ResponsesObject<SV> extends ResBodyMap
+        ? Record<number, unknown>
+        : ResBodyMap,
       ForklaunchResHeaders extends ResHeaders
         ? unknown
         : MapSchema<SV, ResHeaders>
@@ -672,7 +679,7 @@ export type LiveTypeFunction<
       ? (route: RemoveTrailingSlash<Route>) => Promise<Return>
       : (
           route: RemoveTrailingSlash<Route>,
-          request: MakePropertyOptionalIfChildrenOptional<Request> & unknown
+          request: Prettify<MakePropertyOptionalIfChildrenOptional<Request>>
         ) => Promise<Return>
     : never
   : never;
@@ -688,13 +695,19 @@ type SdkResponse<
   ResBodyMap extends Record<number, unknown>,
   ResHeaders extends Record<string, string> | unknown
 > = Prettify<
-  {
+  ({
+    [K in keyof ForklaunchResErrors]: {
+      code: K;
+      contentType: 'text/plain';
+      response: ForklaunchResErrors[K];
+    };
+  } & {
     [K in keyof ResBodyMap]: {
       code: K;
       contentType: ExtractContentType<SV, ResBodyMap[K]>;
       response: ExtractResponseBody<SV, ResBodyMap[K]>;
     } & (unknown extends ResHeaders ? unknown : { headers: ResHeaders });
-  }[keyof ResBodyMap]
+  })[keyof (ForklaunchResErrors & ResBodyMap)]
 >;
 
 /**

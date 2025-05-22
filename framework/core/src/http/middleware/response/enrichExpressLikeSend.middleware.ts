@@ -57,9 +57,10 @@ export function enrichExpressLikeSend<
     ForklaunchResHeaders & ResHeaders,
     LocalsObj
   >,
-  originalSend:
-    | ForklaunchStatusResponse<ForklaunchSendableData>['send']
-    | ForklaunchStatusResponse<ForklaunchSendableData>['json'],
+  originalOperation:
+    | ForklaunchStatusResponse<ForklaunchSendableData>['json']
+    | ForklaunchStatusResponse<ForklaunchSendableData>['jsonp'],
+  originalSend: ForklaunchStatusResponse<ForklaunchSendableData>['send'],
   data: ForklaunchSendableData,
   shouldEnrich: boolean
 ) {
@@ -80,7 +81,7 @@ export function enrichExpressLikeSend<
       res.type('text/plain');
       res.status(404);
       logger('error').error('Not Found');
-      originalSend?.call(instance, 'Not Found');
+      originalSend.call(instance, 'Not Found');
     }
 
     parse(req, res, (err?: unknown) => {
@@ -92,13 +93,18 @@ export function enrichExpressLikeSend<
         logger('error').error(errorString);
         res.type('text/plain');
         res.status(500);
-        originalSend?.call(instance, errorString);
+        originalSend.call(instance, errorString);
         parseErrorSent = true;
       }
     });
   }
 
   if (!parseErrorSent) {
-    originalSend?.call(instance, data);
+    if (typeof data === 'string') {
+      res.type('text/plain');
+      originalSend.call(instance, data);
+    } else {
+      originalOperation.call(instance, data);
+    }
   }
 }

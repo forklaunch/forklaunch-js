@@ -272,7 +272,8 @@ export async function parseRequestAuth<
         req
       )) ?? [];
     if (error != null) {
-      res.status(error).send(message);
+      res.type('text/plain');
+      res.status(error).send(message as never);
       next?.(new Error(message));
     }
   }
