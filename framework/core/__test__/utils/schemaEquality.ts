@@ -38,14 +38,14 @@ type InjectiveWithoutFunction<O, T> = {
         ? InjectiveWithoutFunction<O[K], T[K]>
         : false
       : O[K] extends (...args: never[]) => unknown
-        ? T[K] extends (...args: never[]) => unknown
-          ? true
-          : false
-        : O[K] extends T[K]
-          ? T[K] extends O[K]
-            ? true
-            : false
-          : false
+      ? T[K] extends (...args: never[]) => unknown
+        ? true
+        : false
+      : O[K] extends T[K]
+      ? T[K] extends O[K]
+        ? true
+        : false
+      : false
     : false;
 } extends infer R
   ? R extends {
@@ -58,17 +58,16 @@ type InjectiveWithoutFunction<O, T> = {
 type EqualityWithoutFunction<
   T extends IdiomaticSchema<TypeboxSchemaValidator>,
   Z extends IdiomaticSchema<ZodSchemaValidator>
-> =
-  Schema<T, TypeboxSchemaValidator> extends infer TypeboxSchema
-    ? Schema<Z, ZodSchemaValidator> extends infer ZodSchema
-      ? InjectiveWithoutFunction<
-          TypeboxSchema,
-          ZodSchema
-        > extends InjectiveWithoutFunction<ZodSchema, TypeboxSchema>
-        ? true
-        : false
+> = Schema<T, TypeboxSchemaValidator> extends infer TypeboxSchema
+  ? Schema<Z, ZodSchemaValidator> extends infer ZodSchema
+    ? InjectiveWithoutFunction<
+        TypeboxSchema,
+        ZodSchema
+      > extends InjectiveWithoutFunction<ZodSchema, TypeboxSchema>
+      ? true
       : false
-    : false;
+    : false
+  : false;
 
 export enum DummyEnum {
   A = 'A',

@@ -9,5 +9,5 @@ export type SchemasByValidator<
 > = T extends TypeboxSchemaValidator
   ? ReturnType<TypeBoxSchemas>
   : T extends ZodSchemaValidator
-    ? ReturnType<ZodSchemas>
-    : never;
+  ? ReturnType<ZodSchemas>
+  : never;

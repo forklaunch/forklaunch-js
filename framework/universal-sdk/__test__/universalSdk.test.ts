@@ -1,15 +1,17 @@
 import fetchMock from 'fetch-mock';
-import { universalSdk } from '../index';
+import { universalSdkBuilder } from '../index';
 import { RequestType, ResponseType } from '../src/types/sdk.types';
 
-describe.skip('universalSdk tests', () => {
-  const sdk = universalSdk<{
+describe.skip('universalSdk tests', async () => {
+  const sdk = await universalSdkBuilder<{
     get: (route: string, request?: RequestType) => Promise<ResponseType>;
     post: (route: string, request?: RequestType) => Promise<ResponseType>;
     put: (route: string, request?: RequestType) => Promise<ResponseType>;
     patch: (route: string, request?: RequestType) => Promise<ResponseType>;
     delete: (route: string) => Promise<ResponseType>;
-  }>('https://api.example.com');
+  }>()({
+    host: 'https://api.example.com'
+  });
 
   beforeEach(() => {
     fetchMock.clearHistory();

@@ -172,7 +172,9 @@ export class MockSchemaValidator
     args: Args,
     returnType: ReturnType
   ): `function(${SerializeStringArray<Args>}) => ${ReturnType}` {
-    return `function(${args.join(', ')}) => ${returnType}` as `function(${SerializeStringArray<Args>}) => ${ReturnType}`;
+    return `function(${args.join(
+      ', '
+    )}) => ${returnType}` as `function(${SerializeStringArray<Args>}) => ${ReturnType}`;
   }
 
   /**

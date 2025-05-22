@@ -2,6 +2,7 @@ import { safeStringify } from '@forklaunch/common';
 import {
   enrichExpressLikeSend,
   ForklaunchNextFunction,
+  ForklaunchSendableData,
   ParamsDictionary
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
@@ -79,6 +80,7 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
       req,
       res,
       originalJson,
+      originalSend,
       data,
       !res.cors && ((res._cork && !res._corked) || !res._cork)
     );
@@ -99,12 +101,12 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
    * res.send('Hello World');
    * ```
    */
-  res.send = function (data) {
+  res.send = function (data: ForklaunchSendableData) {
     if (!res.bodyData) {
       res.bodyData = data;
       res.statusCode = Number(res._status_code);
     }
-    return enrichExpressLikeSend<
+    enrichExpressLikeSend<
       SV,
       ParamsDictionary,
       Record<number, unknown>,
@@ -118,9 +120,11 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
       req,
       res,
       originalSend,
+      originalSend,
       data,
       !res.cors && ((res._cork && !res._corked) || !res._cork)
     );
+    return true;
   };
 
   /**

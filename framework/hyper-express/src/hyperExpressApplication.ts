@@ -1,4 +1,3 @@
-import { safeStringify } from '@forklaunch/common';
 import {
   ATTR_HTTP_RESPONSE_STATUS_CODE,
   DocsConfiguration,
@@ -185,7 +184,7 @@ export class Application<
           process.env.DOCS_PATH ?? '/openapi'
         }`,
         (_, res) => {
-          res.send(safeStringify(openApi));
+          res.json(openApi);
         }
       );
 

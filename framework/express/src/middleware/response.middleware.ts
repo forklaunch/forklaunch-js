@@ -1,5 +1,9 @@
 import { safeStringify } from '@forklaunch/common';
-import { enrichExpressLikeSend, ParamsDictionary } from '@forklaunch/core/http';
+import {
+  enrichExpressLikeSend,
+  ForklaunchSendableData,
+  ParamsDictionary
+} from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { NextFunction } from 'express';
 import { ParsedQs } from 'qs';
@@ -70,7 +74,7 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
       Record<string, string>,
       Record<string, string>,
       Record<string, unknown>
-    >(this, req, res, originalJson, data, !res.cors);
+    >(this, req, res, originalJson, originalSend, data, !res.cors);
     return data;
   };
 
@@ -87,11 +91,11 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
    * res.send('Hello World');
    * ```
    */
-  res.send = function (data) {
+  res.send = function (data: ForklaunchSendableData) {
     if (!res.bodyData) {
       res.bodyData = data;
     }
-    return enrichExpressLikeSend<
+    enrichExpressLikeSend<
       SV,
       ParamsDictionary,
       Record<number, unknown>,
@@ -100,7 +104,8 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
       Record<string, string>,
       Record<string, string>,
       Record<string, unknown>
-    >(this, req, res, originalSend, data, !res.cors);
+    >(this, req, res, originalSend, originalSend, data, !res.cors);
+    return true;
   };
 
   /**

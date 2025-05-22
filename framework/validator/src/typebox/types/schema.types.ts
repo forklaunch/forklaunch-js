@@ -28,8 +28,9 @@ export type TCatchall = TSchema;
  *
  * @template T - The type to check and possibly convert to an array schema.
  */
-export type TOuterArray<T> =
-  T extends TObject<TObjectShape> ? TArray<T> : TNever;
+export type TOuterArray<T> = T extends TObject<TObjectShape>
+  ? TArray<T>
+  : TNever;
 
 /**
  * Represents the shape of an object schema.
@@ -81,8 +82,8 @@ export type UnionTupleTResolve<
 ]
   ? UnionTupleTResolve<Tail, [...Acc, TResolve<Head>]>
   : T extends []
-    ? Acc
-    : TNever[];
+  ? Acc
+  : TNever[];
 
 /**
  * Resolves a schema type T to its resolved type. The depth is limited to 12 to prevent infinite recursion, due to StaticDecode limitations.
@@ -93,17 +94,17 @@ export type UnionTupleTResolve<
 export type TResolve<T, Depth extends number = 0> = Depth extends 12
   ? TUnknown
   : T extends LiteralSchema
-    ? TLiteral<T>
-    : T extends TSchema
-      ? T
-      : T extends TKind
-        ? T
-        : T extends UnboxedTObjectSchema
-          ? TObject<{
-              [K in keyof T]: TResolve<T[K], Increment<Depth>>;
-            }> extends infer R
-            ? R
-            : TNever
-          : T extends TypeCheck<infer Type>
-            ? TResolve<Type, Increment<Depth>>
-            : TNever;
+  ? TLiteral<T>
+  : T extends TSchema
+  ? T
+  : T extends TKind
+  ? T
+  : T extends UnboxedTObjectSchema
+  ? TObject<{
+      [K in keyof T]: TResolve<T[K], Increment<Depth>>;
+    }> extends infer R
+    ? R
+    : TNever
+  : T extends TypeCheck<infer Type>
+  ? TResolve<Type, Increment<Depth>>
+  : TNever;

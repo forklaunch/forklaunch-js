@@ -114,24 +114,24 @@ export class TypeboxSchemaValidator
   _ValidSchemaObject!: TObject<TProperties> | TArray<TObject<TProperties>>;
 
   string = Type.String({
-    examples: ['a string']
+    example: 'a string'
   });
   uuid = Type.String({
     pattern:
       '^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$',
     errorType: 'uuid',
-    examples: ['a8b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6']
+    example: 'a8b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6'
   });
   email = Type.String({
     pattern:
       '(?:[a-z0-9!#$%&\'*+/=?^_{|}~-]+(?:\\.[a-z0-9!#$%&\'*+/=?^_{|}~-]+)*|"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)])',
     errorType: 'email',
-    examples: ['a@b.com']
+    example: 'a@b.com'
   });
   uri = Type.String({
     pattern: '^[a-zA-Z][a-zA-Z\\d+-.]*:[^\\s]*$',
     errorType: 'uri',
-    examples: ['https://forklaunch.com']
+    example: 'https://forklaunch.com'
   });
   number = Type.Transform(
     Type.Union(
@@ -146,7 +146,7 @@ export class TypeboxSchemaValidator
       {
         errorType: 'number-like',
         openapiType: Type.Number(),
-        examples: [123]
+        example: 123
       }
     )
   )
@@ -174,7 +174,7 @@ export class TypeboxSchemaValidator
       {
         errorType: 'BigInt-like',
         openapiType: Type.BigInt(),
-        examples: [123n]
+        example: 123n
       }
     )
   )
@@ -203,7 +203,7 @@ export class TypeboxSchemaValidator
       {
         errorType: 'boolean-like',
         openapiType: Type.Boolean(),
-        examples: [true, false]
+        example: true
       }
     )
   )
@@ -229,7 +229,7 @@ export class TypeboxSchemaValidator
       {
         errorType: 'date',
         openapiType: Type.Date(),
-        examples: ['2025-05-16T21:13:04.123Z']
+        example: '2025-05-16T21:13:04.123Z'
       }
     )
   )
@@ -246,25 +246,25 @@ export class TypeboxSchemaValidator
   symbol = Type.Symbol();
   nullish = Type.Union([Type.Void(), Type.Null(), Type.Undefined()], {
     errorType: 'nullish',
-    examples: ['null', 'undefined', 'void']
+    example: 'null'
   });
   void = Type.Void({
-    examples: ['void']
+    example: 'void'
   });
   null = Type.Null({
-    examples: ['null']
+    example: 'null'
   });
   undefined = Type.Undefined({
-    examples: ['undefined']
+    example: 'undefined'
   });
   any = Type.Any({
-    examples: ['any']
+    example: 'any'
   });
   unknown = Type.Unknown({
-    examples: ['unknown']
+    example: 'unknown'
   });
   never = Type.Never({
-    examples: ['never']
+    example: 'never'
   });
   binary = Type.Transform(
     Type.String({
@@ -272,7 +272,7 @@ export class TypeboxSchemaValidator
       openapiType: Type.String({
         format: 'binary'
       }),
-      examples: ['a utf-8 encodable string']
+      example: 'a utf-8 encodable string'
     })
   )
     .Decode(Buffer.from)
@@ -285,7 +285,7 @@ export class TypeboxSchemaValidator
           format: 'binary'
         }),
         contentMediaType: type,
-        examples: ['a utf-8 encodable string']
+        example: 'a utf-8 encodable string'
       })
     )
       .Decode((value) => new InMemoryFile(value, name, { type }) as File)

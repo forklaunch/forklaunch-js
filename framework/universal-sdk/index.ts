@@ -14,7 +14,7 @@ import { UniversalSdk } from './src/universalSdk';
 
 export const universalSdkBuilder =
   <TypedController>() =>
-  <
+  async <
     T extends {
       [K in FlattenResponseContentTypes<TypedController> as ExistingContentTypes extends K
         ? never
@@ -22,12 +22,24 @@ export const universalSdkBuilder =
     }
   >({
     host,
+    registryOptions,
     contentTypeParserMap
   }: {
     host: string;
+    registryOptions?:
+      | {
+          path: string;
+        }
+      | {
+          url: string;
+        };
     contentTypeParserMap?: T;
   }) => {
-    const sdkInternal = new UniversalSdk(host, contentTypeParserMap);
+    const sdkInternal = await UniversalSdk.create(
+      host,
+      registryOptions,
+      contentTypeParserMap
+    );
 
     const proxyInternal = new Proxy(sdkInternal, {
       get(target, prop: keyof UniversalSdk) {

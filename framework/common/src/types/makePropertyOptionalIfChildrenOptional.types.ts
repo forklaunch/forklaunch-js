@@ -3,8 +3,11 @@
  *
  * @template T - The type to check
  */
-type AllPropertiesOptional<T> =
-  T extends Partial<T> ? (Partial<T> extends T ? true : false) : false;
+type AllPropertiesOptional<T> = T extends Partial<T>
+  ? Partial<T> extends T
+    ? true
+    : false
+  : false;
 
 /**
  * Type that makes properties optional if all their children are optional.

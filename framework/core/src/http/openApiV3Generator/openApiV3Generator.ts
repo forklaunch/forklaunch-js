@@ -100,16 +100,16 @@ function contentResolver<SV extends AnySchemaValidator>(
         }
       }
     : body === schemaValidator.string
-      ? {
-          'plain/text': {
-            schema: bodySpec
-          }
+    ? {
+        'plain/text': {
+          schema: bodySpec
         }
-      : {
-          'application/json': {
-            schema: bodySpec
-          }
-        };
+      }
+    : {
+        'application/json': {
+          schema: bodySpec
+        }
+      };
 }
 
 /**
