@@ -219,6 +219,12 @@ forklaunchApplication.listen(6935, () => {
   console.log('server started on 6935');
 });
 
+export function start() {
+  return forklaunchApplication.listen(6935, () => {
+    console.log('server started on 6935');
+  });
+}
+
 export type SDK = {
   getTest: typeof getTest;
   postTest: typeof postTest;

@@ -1,9 +1,19 @@
 import { universalSdk } from '@forklaunch/universal-sdk';
-import { SDK } from '../servers/express-zod';
+import { Server } from 'http';
+import { SDK, start } from '../servers/express-zod';
 
-console.log('universalSdkBasic');
-(async () => {
-  try {
+describe('universalSdkBasic', async () => {
+  let server: Server;
+
+  beforeAll(() => {
+    server = start();
+  });
+
+  afterAll(() => {
+    server.close();
+  });
+
+  it('should build and call SDK', async () => {
     console.log('universalSdkBasic');
     console.log('Building SDK...');
     const sdk = await universalSdk<{ m: SDK }>({
@@ -91,8 +101,5 @@ console.log('universalSdkBasic');
       console.log('urlEncodedFormTest error:', urlEncodedFormTest.response);
     }
     console.log('All tests completed.');
-  } catch (err) {
-    console.error('Caught error:', err);
-    process.exit(1);
-  }
-})();
+  });
+});
