@@ -14,9 +14,49 @@ function handleSpecialString(v: unknown, format: string | undefined): unknown {
   return v;
 }
 
-function getType(type: string | string[]): string | undefined {
+function getType(type: string | string[] | undefined): string | undefined {
   if (Array.isArray(type)) return type[0];
   return type;
+}
+
+function getFormatsFromSchema(def: Record<string, string>): Set<string> {
+  const formats = new Set<string>();
+  if (!def) return formats;
+  if (def.format) formats.add(def.format);
+
+  for (const keyword of ['anyOf', 'oneOf']) {
+    if (Array.isArray(def[keyword])) {
+      for (const sub of def[keyword]) {
+        if (sub && typeof sub === 'object') {
+          if (sub.format) formats.add(sub.format);
+        }
+      }
+    }
+  }
+  return formats;
+}
+
+function getTypeFromSchema(def: Record<string, string>): string | undefined {
+  if (!def) return undefined;
+  const t = getType(def.type);
+  if (!t) {
+    for (const keyword of ['anyOf', 'oneOf']) {
+      if (Array.isArray(def[keyword])) {
+        for (const sub of def[keyword]) {
+          const subType = getType(sub.type);
+          if (subType) return subType;
+        }
+      }
+    }
+  }
+  return t;
+}
+
+function getSpecialFormat(def: Record<string, string>): string | undefined {
+  const formats = getFormatsFromSchema(def);
+  if (formats.has('date-time')) return 'date-time';
+  if (formats.has('binary')) return 'binary';
+  return undefined;
 }
 
 export function coerceSpecialTypes(
@@ -27,7 +67,7 @@ export function coerceSpecialTypes(
   for (const [key, def] of Object.entries(props)) {
     if (!def) continue;
     const value = input[key];
-    const type = getType(def.type);
+    const type = getTypeFromSchema(def);
 
     if (
       type === 'object' &&
@@ -45,7 +85,7 @@ export function coerceSpecialTypes(
     if (type === 'array' && def.items && Array.isArray(value)) {
       input[key] = (value as unknown[]).map((item) => {
         const itemDef = def.items;
-        const itemType = getType(itemDef.type);
+        const itemType = getTypeFromSchema(itemDef);
         if (
           itemType === 'object' &&
           itemDef.properties &&
@@ -58,7 +98,8 @@ export function coerceSpecialTypes(
           );
         }
         if (itemType === 'string') {
-          return handleSpecialString(item, itemDef.format);
+          const format = getSpecialFormat(itemDef);
+          return handleSpecialString(item, format);
         }
         return item;
       });
@@ -66,7 +107,8 @@ export function coerceSpecialTypes(
     }
 
     if (type === 'string') {
-      input[key] = handleSpecialString(value, def.format);
+      const format = getSpecialFormat(def);
+      input[key] = handleSpecialString(value, format);
     }
   }
   return input;
