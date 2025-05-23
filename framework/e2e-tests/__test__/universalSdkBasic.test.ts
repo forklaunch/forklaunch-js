@@ -1,4 +1,4 @@
-import { universalSdkBuilder } from '@forklaunch/universal-sdk';
+import { universalSdk } from '@forklaunch/universal-sdk';
 import { SDK } from '../servers/express-zod';
 
 console.log('universalSdkBasic');
@@ -6,18 +6,19 @@ console.log('universalSdkBasic');
   try {
     console.log('universalSdkBasic');
     console.log('Building SDK...');
-    const sdkBuilder = universalSdkBuilder<SDK>();
-    const sdk = await sdkBuilder({
+    const sdk = await universalSdk<{ m: SDK }>({
       host: 'http://localhost:6935',
       registryOptions: {
         path: 'api/v1/openapi'
       },
-      contentTypeParserMap: {}
+      contentTypeParserMap: {
+        'custom/content': 'json'
+      }
     });
     console.log('SDK built:', !!sdk);
 
     console.log('Calling getTest...');
-    const getTest = await sdk.getTest.get('/testpath/test');
+    const getTest = await sdk.m.getTest.get('/testpath/test');
     if (getTest.code === 200) {
       console.log('getTest response:', getTest.response);
     } else {
@@ -25,7 +26,7 @@ console.log('universalSdkBasic');
     }
 
     console.log('Calling postTest...');
-    const postTest = await sdk.postTest.post('/testpath/test', {
+    const postTest = await sdk.m.postTest.post('/testpath/test', {
       body: {
         f: '!',
         m: [1, 2, 3]
@@ -42,7 +43,7 @@ console.log('universalSdkBasic');
     }
 
     console.log('Calling jsonPatchTest...');
-    const jsonPatchTest = await sdk.jsonPatchTest.patch('/testpath/test', {
+    const jsonPatchTest = await sdk.m.jsonPatchTest.patch('/testpath/test', {
       body: {
         f: 'ok',
         h: 'b658f7e0-9b8a-4e1f-b6d8-1c0b7d8b3f59'
@@ -55,7 +56,7 @@ console.log('universalSdkBasic');
     }
 
     console.log('Calling multipartTest...');
-    const multipartTest = await sdk.multipartTest.post(
+    const multipartTest = await sdk.m.multipartTest.post(
       '/testpath/test/multipart',
       {
         body: {
@@ -73,7 +74,7 @@ console.log('universalSdkBasic');
     }
 
     console.log('Calling urlEncodedFormTest...');
-    const urlEncodedFormTest = await sdk.urlEncodedFormTest.post(
+    const urlEncodedFormTest = await sdk.m.urlEncodedFormTest.post(
       '/testpath/test/url-encoded-form',
       {
         body: {

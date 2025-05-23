@@ -1,20 +1,19 @@
 import fetchMock from 'fetch-mock';
-import { universalSdkBuilder } from '../index';
+import { universalSdk } from '../index';
 import { RequestType, ResponseType } from '../src/types/sdk.types';
 
 describe.skip('universalSdk tests', async () => {
-  const sdk = await universalSdkBuilder<{
+  const sdk = await universalSdk<{
     get: (route: string, request?: RequestType) => Promise<ResponseType>;
     post: (route: string, request?: RequestType) => Promise<ResponseType>;
     put: (route: string, request?: RequestType) => Promise<ResponseType>;
     patch: (route: string, request?: RequestType) => Promise<ResponseType>;
     delete: (route: string) => Promise<ResponseType>;
-  }>()({
+  }>({
     host: 'https://api.example.com',
     registryOptions: {
       path: 'api/v1/openapi'
-    },
-    contentTypeParserMap: {}
+    }
   });
 
   beforeEach(() => {

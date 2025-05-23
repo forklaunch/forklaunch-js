@@ -188,7 +188,7 @@ const urlEncodedFormHandler = handlers.post(
     },
     responses: {
       200: {
-        contentType: 'custom/content',
+        contentType: 'custom/content' as const,
         schema: {
           a: string
         }
