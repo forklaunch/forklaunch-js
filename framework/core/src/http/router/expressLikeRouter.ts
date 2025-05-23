@@ -444,6 +444,9 @@ export class ForklaunchExpressLikeRouter<
         },
         setHeader: (key: string, value: string) => {
           responseHeaders[key] = value;
+        },
+        sseEmiter: (generator: AsyncGenerator<Record<string, unknown>>) => {
+          responseMessage = generator;
         }
       };
 
