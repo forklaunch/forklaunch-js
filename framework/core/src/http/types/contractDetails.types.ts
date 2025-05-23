@@ -1,5 +1,6 @@
 import {
   ExclusiveRecord,
+  MimeType,
   Prettify,
   UnionToIntersection
 } from '@forklaunch/common';
@@ -76,7 +77,6 @@ export type RawTypedResponseBody<SV extends AnySchemaValidator> =
   | TextBody<SV>
   | JsonBody<SV>
   | FileBody<SV>
-  | MultipartForm<SV>
   | ServerSentEventBody<SV>
   | UnknownResponseBody<SV>;
 
@@ -105,12 +105,6 @@ export type TypedResponseBody<SV extends AnySchemaValidator> =
       [K in keyof (ExclusiveSchemaCatchall<SV> &
         ExclusiveResponseBodyBase<SV>)]?: K extends keyof JsonBody<SV>
         ? JsonBody<SV>[K]
-        : undefined;
-    }
-  | {
-      [K in keyof (ExclusiveSchemaCatchall<SV> &
-        ExclusiveResponseBodyBase<SV>)]?: K extends keyof MultipartForm<SV>
-        ? MultipartForm<SV>[K]
         : undefined;
     }
   | {
@@ -190,7 +184,9 @@ export type FileBody<SV extends AnySchemaValidator> = {
     | 'audio/wav'
     | 'video/mp4'
     | string;
-  file: SV['file'] extends (...args: unknown[]) => infer R ? R : SV['file'];
+  file: SV['file'] extends (name: string, mimeType: MimeType) => infer R
+    ? R
+    : SV['file'];
 };
 
 /**

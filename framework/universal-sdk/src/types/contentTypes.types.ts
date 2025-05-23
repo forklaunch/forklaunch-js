@@ -42,9 +42,4 @@ export type FlattenResponseContentTypes<T> = T extends {
     : never
   : never;
 
-export type ResponseContentParserType =
-  | 'json'
-  | 'file'
-  | 'text'
-  | 'stream'
-  | 'multipartForm';
+export type ResponseContentParserType = 'json' | 'file' | 'text' | 'stream';

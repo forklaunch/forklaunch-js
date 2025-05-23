@@ -150,5 +150,30 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
     }
     return originalSetHeader.call(this, name, stringifiedValue);
   };
+
+  res.sseEmitter = function (
+    emitter: () => AsyncGenerator<Record<string, unknown>>
+  ) {
+    const generator = emitter();
+    enrichExpressLikeSend<
+      SV,
+      ParamsDictionary,
+      Record<number, unknown>,
+      Record<string, unknown>,
+      ParsedQs,
+      Record<string, string>,
+      Record<string, string>,
+      Record<string, unknown>
+    >(
+      this,
+      req,
+      res,
+      originalSend,
+      originalSend,
+      generator,
+      !res.cors && ((res._cork && !res._corked) || !res._cork)
+    );
+  };
+
   next();
 }

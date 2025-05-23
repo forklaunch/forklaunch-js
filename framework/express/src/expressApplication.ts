@@ -23,7 +23,7 @@ import express, {
 import { Server } from 'http';
 import swaggerUi from 'swagger-ui-express';
 import { contentParse } from './middleware/content.parse.middleware';
-import { enrichResponseTransmission } from './middleware/response.middleware';
+import { enrichResponseTransmission } from './middleware/enrichResponseTransmission.middleware';
 
 /**
  * Application class that sets up an Express server with Forklaunch routers and middleware.
@@ -63,8 +63,8 @@ export class Application<
       schemaValidator,
       express(),
       [
-        enrichResponseTransmission as unknown as RequestHandler,
-        contentParse<SV>(options)
+        contentParse<SV>(options),
+        enrichResponseTransmission as unknown as RequestHandler
       ],
       openTelemetryCollector
     );

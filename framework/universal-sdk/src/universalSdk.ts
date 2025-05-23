@@ -12,8 +12,6 @@ function mapContentType(contentType: ResponseContentParserType | undefined) {
       return 'application/json';
     case 'file':
       return 'application/octet-stream';
-    case 'multipartForm':
-      return 'multipart/form-data';
     case 'text':
       return 'text/plain';
     case 'stream':
@@ -197,23 +195,6 @@ export class UniversalSdk {
         } else {
           responseBody = new File([blob], fileName);
         }
-        break;
-      }
-      case 'multipart/form-data': {
-        const parsedFormData: Record<string, unknown> = {};
-        (await response.formData()).forEach((value, key) => {
-          const schema = responseOpenApi?.schema?.properties?.[key];
-          if (value instanceof File) {
-            parsedFormData[key] = value;
-          } else {
-            const isValid = this.ajv.validate(schema, value);
-            if (!isValid) {
-              throw new Error('Response does not match OpenAPI spec');
-            }
-            parsedFormData[key] = value;
-          }
-        });
-        responseBody = parsedFormData;
         break;
       }
       case 'text/event-stream': {

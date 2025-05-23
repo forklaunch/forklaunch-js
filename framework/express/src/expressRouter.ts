@@ -26,7 +26,7 @@ import express, {
   Response
 } from 'express';
 import { contentParse } from './middleware/content.parse.middleware';
-import { enrichResponseTransmission } from './middleware/response.middleware';
+import { enrichResponseTransmission } from './middleware/enrichResponseTransmission.middleware';
 
 /**
  * Router class that sets up routes and middleware for an Express router.

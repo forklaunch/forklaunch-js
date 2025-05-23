@@ -88,7 +88,7 @@ describe('http middleware tests', () => {
         json: () => true,
         jsonp: () => true,
         send: () => true,
-        sseEmitter: () => undefined
+        sseEmitter: () => Promise.resolve()
       }),
       end: () => {},
       type: () => {},

@@ -50,8 +50,8 @@ export class Router<
       schemaValidator,
       new ExpressRouter(),
       [
-        enrichResponseTransmission as unknown as MiddlewareHandler,
-        contentParse<SV>
+        contentParse<SV>,
+        enrichResponseTransmission as unknown as MiddlewareHandler
       ],
       openTelemetryCollector
     );

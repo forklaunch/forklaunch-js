@@ -196,13 +196,11 @@ export interface ForklaunchStatusResponse<ResBody> {
    * @param {number} interval - The interval between events.
    */
   sseEmitter: (
-    typedWrite: (
-      write: (
-        chunk: ResBody extends AsyncGenerator<infer T> ? T : never,
-        encoding?: BufferEncoding,
-        callback?: (error: Error | null | undefined) => void
-      ) => void
-    ) => void
+    generator: () => AsyncGenerator<
+      ResBody extends AsyncGenerator<infer T> ? T : never,
+      void,
+      unknown
+    >
   ) => void;
 }
 
@@ -451,8 +449,6 @@ export type ExtractContentType<
   ? 'text/plain'
   : T extends FileBody<SV>
   ? 'application/octet-stream'
-  : T extends MultipartForm<SV>
-  ? 'multipart/form-data'
   : T extends ServerSentEventBody<SV>
   ? 'text/event-stream'
   : T extends UnknownResponseBody<SV>
@@ -470,8 +466,6 @@ export type ExtractResponseBody<
   ? MapSchema<SV, T['text']>
   : T extends FileBody<SV>
   ? File
-  : T extends MultipartForm<SV>
-  ? MapSchema<SV, T['multipartForm']>
   : T extends ServerSentEventBody<SV>
   ? AsyncGenerator<MapSchema<SV, T['event']>, string, string>
   : T extends UnknownResponseBody<SV>

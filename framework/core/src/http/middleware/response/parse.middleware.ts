@@ -5,7 +5,6 @@ import {
 } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
 import { hasSend } from '../../guards/hasSend';
-import { discriminateResponseBodies } from '../../router/discriminateBody';
 import {
   ForklaunchNextFunction,
   ForklaunchRequest,
@@ -61,14 +60,6 @@ export function parse<
   const { headers, responses } = res.responseSchemas;
 
   const statusCode = Number(res.statusCode);
-  const responseBodies = discriminateResponseBodies(
-    req.schemaValidator,
-    req.contractDetails.responses
-  );
-
-  if (responseBodies != null && responseBodies[statusCode] != null) {
-    res.type(responseBodies[statusCode].contentType);
-  }
 
   const parsedResponse = (req.schemaValidator as SchemaValidator).parse(
     responses?.[statusCode],

@@ -148,19 +148,6 @@ export function discriminateResponseBodies<SV extends AnySchemaValidator>(
           parserType: 'text',
           schema: response.text
         };
-      } else if (
-        'multipartForm' in response &&
-        response.multipartForm != null
-      ) {
-        discriminatedResponses[Number(statusCode)] = {
-          contentType:
-            ('contentType' in response &&
-            typeof response.contentType === 'string'
-              ? response.contentType
-              : 'multipart/form-data') ?? 'multipart/form-data',
-          parserType: 'multipart',
-          schema: response.multipartForm
-        };
       } else if ('file' in response && response.file != null) {
         discriminatedResponses[Number(statusCode)] = {
           contentType:
