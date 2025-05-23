@@ -7,6 +7,7 @@
 
 import { InMemoryFile, MimeType } from '@forklaunch/common';
 import {
+  FormatRegistry,
   Kind,
   KindGuard,
   TArray,
@@ -43,6 +44,8 @@ import {
   TUnionTupleContainer,
   UnionTupleTResolve
 } from './types/schema.types';
+
+FormatRegistry.Set('binary', (value) => typeof value === 'string');
 
 /**
  * Typebox custom error function
@@ -114,33 +117,28 @@ export class TypeboxSchemaValidator
   _ValidSchemaObject!: TObject<TProperties> | TArray<TObject<TProperties>>;
 
   string = Type.String({
-    example: 'a string'
+    example: 'a string',
+    title: 'String'
   });
   uuid = Type.String({
     pattern:
       '^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$',
     errorType: 'uuid',
-    openapiType: Type.String({
-      format: 'uuid'
-    }),
-    example: 'a8b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6'
+    example: 'a8b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6',
+    title: 'UUID'
   });
   email = Type.String({
     pattern:
       '(?:[a-z0-9!#$%&\'*+/=?^_{|}~-]+(?:\\.[a-z0-9!#$%&\'*+/=?^_{|}~-]+)*|"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)])',
     errorType: 'email',
-    openapiType: Type.String({
-      format: 'email'
-    }),
-    example: 'a@b.com'
+    example: 'a@b.com',
+    title: 'Email'
   });
   uri = Type.String({
     pattern: '^[a-zA-Z][a-zA-Z\\d+-.]*:[^\\s]*$',
     errorType: 'uri',
-    openapiType: Type.String({
-      format: 'uri'
-    }),
-    example: 'https://forklaunch.com'
+    example: 'https://forklaunch.com',
+    title: 'URI'
   });
   number = Type.Transform(
     Type.Union(
@@ -154,8 +152,8 @@ export class TypeboxSchemaValidator
       ],
       {
         errorType: 'number-like',
-        openapiType: Type.Number(),
-        example: 123
+        example: 123,
+        title: 'Number'
       }
     )
   )
@@ -182,10 +180,8 @@ export class TypeboxSchemaValidator
       ],
       {
         errorType: 'BigInt-like',
-        openapiType: Type.Integer({
-          format: 'int64'
-        }),
-        example: 123n
+        example: 123n,
+        title: 'BigInt'
       }
     )
   )
@@ -213,8 +209,8 @@ export class TypeboxSchemaValidator
       ],
       {
         errorType: 'boolean-like',
-        openapiType: Type.Boolean(),
-        example: true
+        example: true,
+        title: 'Boolean'
       }
     )
   )
@@ -230,69 +226,72 @@ export class TypeboxSchemaValidator
   date = Type.Transform(
     Type.Union(
       [
-        Type.Date(),
-        Type.Number(),
         Type.String({
           pattern:
             '^\\d{4}(-\\d{2}){0,2}(T\\d{2}:\\d{2}(:\\d{2}(\\.\\d{1,3})?)?(Z|([+-]\\d{2}:\\d{2}))?)?$|^\\d{1,2}\\/\\d{1,2}\\/\\d{4}$|^\\d{4}\\/\\d{1,2}\\/\\d{1,2}$|^\\d+$'
-        })
+        }),
+        Type.Number(),
+        Type.Date()
       ],
       {
         errorType: 'date',
-        openapiType: Type.String({
-          format: 'date-time'
-        }),
-        example: '2025-05-16T21:13:04.123Z'
+        example: '2025-05-16T21:13:04.123Z',
+        title: 'Date'
       }
     )
   )
     .Decode((value) => {
-      if (!(value instanceof Date)) {
-        if (value === null || typeof value === 'boolean') {
-          return new Date(value ? 1 : 0);
-        }
-        return new Date(value);
+      if (value === null || typeof value === 'boolean') {
+        return new Date(value ? 1 : 0);
       }
-      return value;
+      return new Date(value);
     })
-    .Encode((value) => new Date(value));
-  symbol = Type.Symbol();
+    .Encode((value) => new Date(value).toISOString());
+  symbol = Type.Symbol({
+    title: 'Symbol'
+  });
   nullish = Type.Union([Type.Void(), Type.Null(), Type.Undefined()], {
     errorType: 'nullish',
-    openapiType: Type.Null(),
-    example: 'null'
+    type: 'null',
+    example: 'null',
+    title: 'Nullish'
   });
   void = Type.Void({
-    openapiType: Type.Null(),
-    example: 'void'
+    type: 'null',
+    example: 'void',
+    title: 'Void'
   });
   null = Type.Null({
-    openapiType: Type.Null(),
-    example: 'null'
+    type: 'null',
+    example: 'null',
+    title: 'Null'
   });
   undefined = Type.Undefined({
-    openapiType: Type.Null(),
-    example: 'undefined'
+    type: 'null',
+    example: 'undefined',
+    title: 'Undefined'
   });
   any = Type.Any({
-    openapiType: 'object',
-    example: 'any'
+    type: 'object',
+    example: 'any',
+    title: 'Any'
   });
   unknown = Type.Unknown({
-    openapiType: 'object',
-    example: 'unknown'
+    type: 'object',
+    example: 'unknown',
+    title: 'Unknown'
   });
   never = Type.Never({
-    openapiType: Type.Null(),
-    example: 'never'
+    type: 'null',
+    example: 'never',
+    title: 'Never'
   });
   binary = Type.Transform(
     Type.String({
       errorType: 'binary',
-      openapiType: Type.String({
-        format: 'binary'
-      }),
-      example: 'a utf-8 encodable string'
+      format: 'binary',
+      example: 'a utf-8 encodable string',
+      title: 'Binary'
     })
   )
     .Decode(Buffer.from)
@@ -301,11 +300,10 @@ export class TypeboxSchemaValidator
     Type.Transform(
       Type.String({
         errorType: 'binary',
-        openapiType: Type.String({
-          format: 'binary'
-        }),
+        format: 'binary',
         contentMediaType: type,
-        example: 'a utf-8 encodable string'
+        example: 'a utf-8 encodable string',
+        title: 'File'
       })
     )
       .Decode((value) => new InMemoryFile(value, name, { type }) as File)
@@ -342,16 +340,16 @@ export class TypeboxSchemaValidator
    * @returns {TResolve<T>} The resolved schema.
    */
   schemify<T extends TIdiomaticSchema>(schema: T): TResolve<T> {
+    if (KindGuard.IsSchema(schema) || schema instanceof TypeCheck) {
+      return schema as TResolve<T>;
+    }
+
     if (
       typeof schema === 'string' ||
       typeof schema === 'number' ||
       typeof schema === 'boolean'
     ) {
       return Type.Literal(schema) as TResolve<T>;
-    }
-
-    if (KindGuard.IsSchema(schema) || schema instanceof TypeCheck) {
-      return schema as TResolve<T>;
     }
 
     const newSchema: TObjectShape = {};
@@ -610,25 +608,41 @@ export class TypeboxSchemaValidator
    * @returns {SchemaObject} The OpenAPI schema object.
    */
   openapi<T extends TIdiomaticSchema | TCatchall>(schema: T): SchemaObject {
-    const schemified = this.schemify(schema);
+    let schemified: TCatchall = this.schemify(schema);
 
-    if (
-      Object.hasOwn(schemified, 'openapiType') ||
-      KindGuard.IsLiteral(schemified)
-    ) {
-      return schemified.openapiType as SchemaObject;
+    if (KindGuard.IsDate(schemified)) {
+      schemified = Type.String({
+        format: 'date-time'
+      });
     }
 
     const newSchema: SchemaObject = Object.assign({}, schemified);
+
     if (Object.hasOwn(newSchema, 'properties')) {
-      newSchema.properties = { ...schemified.properties };
       if (newSchema.properties) {
-        Object.entries(newSchema.properties).forEach(([key, value]) => {
+        Object.entries({ ...schemified.properties }).forEach(([key, value]) => {
           if (KindGuard.IsSchema(value) && newSchema.properties) {
             newSchema.properties[key] = this.openapi(value);
           }
         });
       }
+    }
+    if (Object.hasOwn(newSchema, 'items')) {
+      newSchema.items = this.openapi(newSchema.items as TIdiomaticSchema);
+    }
+    if (Array.isArray(newSchema.anyOf)) {
+      newSchema.anyOf = newSchema.anyOf.map((item) =>
+        this.openapi(item as TIdiomaticSchema)
+      );
+    }
+    if (Array.isArray(newSchema.oneOf)) {
+      newSchema.oneOf = newSchema.oneOf.map((item) =>
+        this.openapi(item as TIdiomaticSchema)
+      );
+    }
+
+    if ('errorType' in newSchema) {
+      delete newSchema['errorType'];
     }
 
     return newSchema;

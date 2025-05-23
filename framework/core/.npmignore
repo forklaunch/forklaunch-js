@@ -1,11 +1,5 @@
-cache/
-controllers/
-database/
-persistence/
-mappers/
-http/
-services/
-tests/
+src/
+__test__/
 
 docs/
 jest.config.js

@@ -36,17 +36,17 @@ export type InternalDtoMapper<
         ) => Dto[K];
       }
     : DtoMapper[K] extends {
-        dto: unknown;
-        _Entity: unknown;
-        deserializeDtoToEntity: unknown;
-      }
-    ? {
-        deserializeDtoToEntity: (
-          dto: Dto[K],
-          ...additionalArgs: AllAfterFirstParameters<
-            DtoMapper[K]['deserializeDtoToEntity']
-          >
-        ) => Entities[K];
-      }
-    : never;
+          dto: unknown;
+          _Entity: unknown;
+          deserializeDtoToEntity: unknown;
+        }
+      ? {
+          deserializeDtoToEntity: (
+            dto: Dto[K],
+            ...additionalArgs: AllAfterFirstParameters<
+              DtoMapper[K]['deserializeDtoToEntity']
+            >
+          ) => Entities[K];
+        }
+      : never;
 };

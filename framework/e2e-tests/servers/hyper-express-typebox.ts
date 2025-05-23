@@ -1,5 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { noop } from '@forklaunch/common';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
+import {
+  forklaunchExpress,
+  forklaunchRouter,
+  handlers
+} from '@forklaunch/hyper-express';
 import {
   MiddlewareNext,
   Request,
@@ -15,11 +21,7 @@ import {
   string,
   union,
   uuid
-} from '@forklaunch/validator/zod';
-import { forklaunchExpress, forklaunchRouter } from './index';
-import { get } from './src/handlers/get';
-import { patch } from './src/handlers/patch';
-import { post } from './src/handlers/post';
+} from '@forklaunch/validator/typebox';
 
 const typeboxSchemaValidator = SchemaValidator();
 const openTelemetryCollector = new OpenTelemetryCollector('test');
@@ -44,7 +46,7 @@ const expressMiddleware = (
   next();
 };
 
-const getHandler = get(
+const getHandler = handlers.get(
   typeboxSchemaValidator,
   '/test',
   {
@@ -85,7 +87,7 @@ End of file.`
   }
 );
 
-const postHandler = post(
+const postHandler = handlers.post(
   typeboxSchemaValidator,
   '/test',
   {
@@ -130,7 +132,7 @@ const postHandler = post(
   }
 );
 
-const jsonPatchHandler = patch(
+const jsonPatchHandler = handlers.patch(
   typeboxSchemaValidator,
   '/test',
   {
@@ -143,18 +145,20 @@ const jsonPatchHandler = patch(
     responses: {
       200: {
         json: {
-          f: date
+          f: {
+            g: array(date)
+          }
         }
       }
     }
   },
   expressMiddleware,
   (req, res) => {
-    res.status(200).json({ f: new Date() });
+    res.status(200).json({ f: { g: [new Date(), new Date()] } });
   }
 );
 
-const multipartHandler = post(
+const multipartHandler = handlers.post(
   typeboxSchemaValidator,
   '/test/multipart',
   {
@@ -178,7 +182,7 @@ const multipartHandler = post(
   }
 );
 
-const urlEncodedFormHandler = post(
+const urlEncodedFormHandler = handlers.post(
   typeboxSchemaValidator,
   '/test/url-encoded-form',
   {

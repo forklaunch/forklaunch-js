@@ -10,7 +10,10 @@ import { ConfigInjector } from '../src/services/configInjector';
 import { Lifetime } from '../src/services/types/configInjector.types';
 
 class X {
-  constructor(public a: string, public b: () => number) {}
+  constructor(
+    public a: string,
+    public b: () => number
+  ) {}
 
   dummy() {
     return `${this.a}${this.b()}`;

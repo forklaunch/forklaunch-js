@@ -5,3 +5,4 @@ packages:
   - 'hyper-express'
   - 'universal-sdk'
   - 'validator'
+  - 'e2e-tests'

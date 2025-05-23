@@ -1,119 +1,13 @@
-import { isNever, safeParse, safeStringify } from '@forklaunch/common';
+import { safeParse, safeStringify } from '@forklaunch/common';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 import { OpenAPIObject } from 'openapi3-ts/oas31';
+import { coerceSpecialTypes } from './core/coerceSpecialTypes';
+import { mapContentType } from './core/mapContentType';
+import { refreshOpenApi } from './core/refreshOpenApi';
+import { getSdkPath } from './core/resolvePath';
 import { ResponseContentParserType } from './types/contentTypes.types';
 import { RegistryOptions, RequestType, ResponseType } from './types/sdk.types';
-import { getSdkPath } from './utils/resolvePath';
-
-function mapContentType(contentType: ResponseContentParserType | undefined) {
-  switch (contentType) {
-    case 'json':
-      return 'application/json';
-    case 'file':
-      return 'application/octet-stream';
-    case 'text':
-      return 'text/plain';
-    case 'stream':
-      return 'text/event-stream';
-    case undefined:
-      return 'application/json';
-    default:
-      isNever(contentType);
-      return 'application/json';
-  }
-}
-
-function coerceSpecialTypes(
-  input: Record<string, unknown>,
-  schema: Record<string, unknown>
-): unknown {
-  const props = schema.properties || {};
-  for (const [key, def] of Object.entries(props)) {
-    if (def && typeof def === 'object') {
-      if (def.type === 'string' && def.format === 'date-time') {
-        if (typeof input[key] === 'string') {
-          const d = new Date(input[key] as string);
-          if (!isNaN(d.getTime())) input[key] = d;
-        }
-      }
-      if (def.type === 'string' && def.format === 'binary') {
-        if (typeof input[key] === 'string') {
-          try {
-            input[key] = Buffer.from(input[key] as string, 'base64');
-          } catch {
-            // do nothing, leave as is if not valid base64
-          }
-        }
-      }
-    }
-  }
-  return input;
-}
-
-async function refreshOpenApi(
-  host: string,
-  registryOptions: RegistryOptions,
-  existingRegistryOpenApiHash?: string
-): Promise<
-  | {
-      updateRequired: true;
-      registryOpenApiJson: OpenAPIObject;
-      registryOpenApiHash: string;
-    }
-  | {
-      updateRequired: false;
-    }
-> {
-  if (
-    existingRegistryOpenApiHash === 'static' ||
-    ('static' in registryOptions && registryOptions.static)
-  ) {
-    return {
-      updateRequired: false
-    };
-  }
-
-  if ('raw' in registryOptions) {
-    return {
-      updateRequired: true,
-      registryOpenApiJson: registryOptions.raw,
-      registryOpenApiHash: 'static'
-    };
-  }
-
-  const registry =
-    'path' in registryOptions
-      ? `${host}/${registryOptions.path}`
-      : 'url' in registryOptions
-        ? registryOptions.url
-        : null;
-
-  if (registry == null) {
-    throw new Error('Raw OpenAPI JSON or registry information not provided');
-  }
-
-  const registryOpenApiHashFetch = await fetch(`${registry}-hash`);
-  const registryOpenApiHash = await registryOpenApiHashFetch.text();
-
-  if (
-    existingRegistryOpenApiHash == null ||
-    existingRegistryOpenApiHash !== registryOpenApiHash
-  ) {
-    const registryOpenApiFetch = await fetch(registry);
-    const registryOpenApiJson = await registryOpenApiFetch.json();
-
-    return {
-      updateRequired: true,
-      registryOpenApiJson,
-      registryOpenApiHash
-    };
-  }
-
-  return {
-    updateRequired: false
-  };
-}
 
 /**
  * A class representing the Forklaunch SDK.

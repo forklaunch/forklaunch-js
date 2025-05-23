@@ -1,6 +1,5 @@
 /**
  * Safely stringifies any JavaScript value, handling special cases like:
- * - Circular references
  * - Error objects
  * - BigInt
  * - Functions
@@ -15,11 +14,6 @@
  *
  * @example
  * ```typescript
- * // Handle circular references
- * const circular = { a: 1 };
- * circular.self = circular;
- * safeStringify(circular); // '{"a":1,"self":"[Circular Reference]"}'
- *
  * // Handle Error objects
  * safeStringify(new Error("test")); // '{"name":"Error","message":"test","stack":"..."}'
  *
@@ -40,18 +34,7 @@ export function safeStringify(arg: unknown): string {
     return String(arg);
   }
 
-  // Track seen objects for circular reference detection
-  const seen = new WeakSet();
-
   const replacer = (key: string, value: unknown): unknown => {
-    // Handle circular references
-    if (value && typeof value === 'object') {
-      if (seen.has(value)) {
-        return '[Circular Reference]';
-      }
-      seen.add(value);
-    }
-
     // Handle Error objects
     if (value instanceof Error) {
       return {

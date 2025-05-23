@@ -10,7 +10,11 @@ describe.skip('universalSdk tests', async () => {
     patch: (route: string, request?: RequestType) => Promise<ResponseType>;
     delete: (route: string) => Promise<ResponseType>;
   }>()({
-    host: 'https://api.example.com'
+    host: 'https://api.example.com',
+    registryOptions: {
+      path: 'api/v1/openapi'
+    },
+    contentTypeParserMap: {}
   });
 
   beforeEach(() => {
@@ -34,7 +38,8 @@ describe.skip('universalSdk tests', async () => {
     expect(fetchMock.callHistory.called('https://api.example.com/test')).toBe(
       true
     );
-    expect(await response.content).toEqual({ message: 'Success' });
+    expect(response.code).toBe(200);
+    expect(response.response).toEqual({ message: 'Success' });
   });
 
   test('POST request should be called with correct URL, method, headers, and body', async () => {
@@ -62,7 +67,8 @@ describe.skip('universalSdk tests', async () => {
       Authorization: 'Bearer token'
     });
     expect(lastCall?.request?.body).toBe(JSON.stringify({ key: 'value' }));
-    expect(await response.content).toEqual({ message: 'Created' });
+    expect(response.code).toBe(201);
+    expect(response.response).toEqual({ message: 'Created' });
   });
 
   test('PUT request should be called with correct URL and method', async () => {
@@ -91,7 +97,8 @@ describe.skip('universalSdk tests', async () => {
     expect(lastCall?.request?.body).toBe(
       JSON.stringify({ key: 'updatedValue' })
     );
-    expect(await response.content).toEqual({ message: 'Updated' });
+    expect(response.code).toBe(200);
+    expect(response.response).toEqual({ message: 'Updated' });
   });
 
   test('PATCH request should be called with correct URL and method', async () => {
@@ -120,7 +127,8 @@ describe.skip('universalSdk tests', async () => {
     expect(lastCall?.request?.body).toBe(
       JSON.stringify({ key: 'patchedValue' })
     );
-    expect(await response.content).toEqual({ message: 'Patched' });
+    expect(response.code).toBe(200);
+    expect(response.response).toEqual({ message: 'Patched' });
   });
 
   test('DELETE request should be called with correct URL and method', async () => {

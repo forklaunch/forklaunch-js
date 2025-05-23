@@ -29,9 +29,8 @@ export type ZodCatchall = ZodTypeAny;
  *
  * @template T - The type to check and possibly convert to an array schema.
  */
-export type ZodOuterArray<T> = T extends ZodObject<ZodObjectShape>
-  ? ZodArray<T>
-  : ZodNever;
+export type ZodOuterArray<T> =
+  T extends ZodObject<ZodObjectShape> ? ZodArray<T> : ZodNever;
 
 /**
  * Represents the shape of a Zod object schema.
@@ -127,20 +126,20 @@ export type UnionZodResolve<T extends ZodUnionContainer> = T extends [
 export type ZodResolve<T, Depth extends number = 0> = Depth extends 29
   ? ZodUnknown
   : T extends ZodPipeline<ZodTypeAny, infer R>
-  ? R
-  : T extends ZodEffects<infer R>
-  ? R
-  : T extends LiteralSchema
-  ? ZodLiteral<T>
-  : T extends ZodType
-  ? T
-  : T extends UnboxedZodObjectSchema
-  ? ZodObject<{
-      [K in keyof T]: ZodResolve<T[K], Increment<Depth>>;
-    }> extends infer R
     ? R
-    : ZodNever
-  : ZodNever;
+    : T extends ZodEffects<infer R>
+      ? R
+      : T extends LiteralSchema
+        ? ZodLiteral<T>
+        : T extends ZodType
+          ? T
+          : T extends UnboxedZodObjectSchema
+            ? ZodObject<{
+                [K in keyof T]: ZodResolve<T[K], Increment<Depth>>;
+              }> extends infer R
+              ? R
+              : ZodNever
+            : ZodNever;
 
 /**
  * Represents the key type of a Zod record schema.
@@ -152,6 +151,6 @@ export type ZodRecordKey<T extends ZodIdiomaticSchema> =
     ? R extends boolean
       ? never
       : unknown extends R
-      ? never
-      : R
+        ? never
+        : R
     : never;

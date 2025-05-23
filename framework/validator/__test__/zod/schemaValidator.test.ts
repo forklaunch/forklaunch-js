@@ -101,7 +101,7 @@ describe('zod schema validator tests', () => {
     const unboxSchemified = optional(schema);
     const boxSchemified = optional(schemified);
 
-    const schemifiedExpected = z.optional(expectedSchema);
+    const schemifiedExpected = expectedSchema.optional();
     compare(unboxSchemified, schemifiedExpected);
     compare(boxSchemified, schemifiedExpected);
   });
