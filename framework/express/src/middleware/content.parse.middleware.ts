@@ -93,6 +93,8 @@ function contentParse<SV extends AnySchemaValidator>(
           bb.on('error', (err: Error) => {
             next(err);
           });
+
+          req.pipe(bb);
           break;
         }
         default:

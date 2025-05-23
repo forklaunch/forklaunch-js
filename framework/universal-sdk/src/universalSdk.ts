@@ -1,9 +1,9 @@
-import { isNever, safeStringify } from '@forklaunch/common';
+import { isNever, safeParse, safeStringify } from '@forklaunch/common';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 import { OpenAPIObject } from 'openapi3-ts/oas31';
 import { ResponseContentParserType } from './types/contentTypes.types';
-import { RequestType, ResponseType } from './types/sdk.types';
+import { RegistryOptions, RequestType, ResponseType } from './types/sdk.types';
 import { getSdkPath } from './utils/resolvePath';
 
 function mapContentType(contentType: ResponseContentParserType | undefined) {
@@ -24,6 +24,97 @@ function mapContentType(contentType: ResponseContentParserType | undefined) {
   }
 }
 
+function coerceSpecialTypes(
+  input: Record<string, unknown>,
+  schema: Record<string, unknown>
+): unknown {
+  const props = schema.properties || {};
+  for (const [key, def] of Object.entries(props)) {
+    if (def && typeof def === 'object') {
+      if (def.type === 'string' && def.format === 'date-time') {
+        if (typeof input[key] === 'string') {
+          const d = new Date(input[key] as string);
+          if (!isNaN(d.getTime())) input[key] = d;
+        }
+      }
+      if (def.type === 'string' && def.format === 'binary') {
+        if (typeof input[key] === 'string') {
+          try {
+            input[key] = Buffer.from(input[key] as string, 'base64');
+          } catch {
+            // do nothing, leave as is if not valid base64
+          }
+        }
+      }
+    }
+  }
+  return input;
+}
+
+async function refreshOpenApi(
+  host: string,
+  registryOptions: RegistryOptions,
+  existingRegistryOpenApiHash?: string
+): Promise<
+  | {
+      updateRequired: true;
+      registryOpenApiJson: OpenAPIObject;
+      registryOpenApiHash: string;
+    }
+  | {
+      updateRequired: false;
+    }
+> {
+  if (
+    existingRegistryOpenApiHash === 'static' ||
+    ('static' in registryOptions && registryOptions.static)
+  ) {
+    return {
+      updateRequired: false
+    };
+  }
+
+  if ('raw' in registryOptions) {
+    return {
+      updateRequired: true,
+      registryOpenApiJson: registryOptions.raw,
+      registryOpenApiHash: 'static'
+    };
+  }
+
+  const registry =
+    'path' in registryOptions
+      ? `${host}/${registryOptions.path}`
+      : 'url' in registryOptions
+        ? registryOptions.url
+        : null;
+
+  if (registry == null) {
+    throw new Error('Raw OpenAPI JSON or registry information not provided');
+  }
+
+  const registryOpenApiHashFetch = await fetch(`${registry}-hash`);
+  const registryOpenApiHash = await registryOpenApiHashFetch.text();
+
+  if (
+    existingRegistryOpenApiHash == null ||
+    existingRegistryOpenApiHash !== registryOpenApiHash
+  ) {
+    const registryOpenApiFetch = await fetch(registry);
+    const registryOpenApiJson = await registryOpenApiFetch.json();
+
+    return {
+      updateRequired: true,
+      registryOpenApiJson,
+      registryOpenApiHash
+    };
+  }
+
+  return {
+    updateRequired: false
+  };
+}
+
 /**
  * A class representing the Forklaunch SDK.
  */
@@ -31,8 +122,12 @@ export class UniversalSdk {
   constructor(
     private host: string,
     private ajv: Ajv,
-    private contentTypeParserMap?: Record<string, ResponseContentParserType>,
-    private registryOpenApiJson?: OpenAPIObject
+    private registryOptions: RegistryOptions,
+    private contentTypeParserMap:
+      | Record<string, ResponseContentParserType>
+      | undefined,
+    private registryOpenApiJson: OpenAPIObject | undefined,
+    private registryOpenApiHash: string | undefined
   ) {}
 
   /**
@@ -42,31 +137,34 @@ export class UniversalSdk {
    */
   static async create(
     host: string,
-    registryOptions?:
-      | {
-          path: string;
-        }
-      | {
-          url: string;
-        },
+    registryOptions: RegistryOptions,
     contentTypeParserMap?: Record<string, ResponseContentParserType>
   ) {
-    const registry = registryOptions
-      ? 'path' in registryOptions
-        ? `${host}/${registryOptions.path}`
-        : registryOptions.url
-      : host;
+    const refreshResult = await refreshOpenApi(host, registryOptions);
 
-    const registryOpenApiFetch = await fetch(registry);
-    const registryOpenApiJson = JSON.parse(await registryOpenApiFetch.text());
+    let registryOpenApiJson;
+    let registryOpenApiHash;
+
+    if (refreshResult.updateRequired) {
+      registryOpenApiJson = refreshResult.registryOpenApiJson;
+      registryOpenApiHash = refreshResult.registryOpenApiHash;
+    }
 
     const ajv = new Ajv({
       coerceTypes: true,
-      allErrors: true
+      allErrors: true,
+      strict: false
     });
     addFormats(ajv);
 
-    return new this(host, ajv, contentTypeParserMap, registryOpenApiJson);
+    return new UniversalSdk(
+      host,
+      ajv,
+      registryOptions,
+      contentTypeParserMap,
+      registryOpenApiJson,
+      registryOpenApiHash
+    );
   }
 
   /**
@@ -84,6 +182,17 @@ export class UniversalSdk {
   ): Promise<ResponseType> {
     if (!this.host) {
       throw new Error('Host not initialized, please run .create(..) first');
+    }
+
+    const refreshResult = await refreshOpenApi(
+      this.host,
+      this.registryOptions,
+      this.registryOpenApiHash
+    );
+
+    if (refreshResult.updateRequired) {
+      this.registryOpenApiJson = refreshResult.registryOpenApiJson;
+      this.registryOpenApiHash = refreshResult.registryOpenApiHash;
     }
 
     const { params, body, query, headers } = request || {};
@@ -124,11 +233,11 @@ export class UniversalSdk {
                   key,
                   item instanceof Blob || item instanceof File
                     ? item
-                    : String(item)
+                    : safeStringify(item)
                 );
               }
             } else {
-              formData.append(key, String(value));
+              formData.append(key, safeStringify(value));
             }
           }
         }
@@ -141,6 +250,8 @@ export class UniversalSdk {
             safeStringify(value)
           ])
         );
+      } else {
+        parsedBody = safeStringify(body);
       }
     }
 
@@ -153,14 +264,12 @@ export class UniversalSdk {
 
     const response = await fetch(encodeURI(url), {
       method: method.toUpperCase(),
-      headers: headers
-        ? {
-            ...headers,
-            ...(defaultContentType != 'multipart/form-data'
-              ? { 'Content-Type': body?.contentType ?? defaultContentType }
-              : {})
-          }
-        : undefined,
+      headers: {
+        ...headers,
+        ...(defaultContentType != 'multipart/form-data'
+          ? { 'Content-Type': body?.contentType ?? defaultContentType }
+          : {})
+      },
       body: parsedBody
     });
 
@@ -175,20 +284,34 @@ export class UniversalSdk {
       );
     }
 
-    const contentType =
+    const contentType = (
       response.headers.get('content-type') ||
-      response.headers.get('Content-Type');
+      response.headers.get('Content-Type')
+    )?.split(';')[0];
 
-    const mappedContentType =
+    const mappedContentType = (
       contentType != null
-        ? mapContentType(this.contentTypeParserMap?.[contentType])
-        : 'application/json';
+        ? this.contentTypeParserMap != null &&
+          contentType in this.contentTypeParserMap
+          ? mapContentType(this.contentTypeParserMap[contentType])
+          : contentType
+        : 'application/json'
+    ).split(';')[0];
 
     let responseBody;
 
     switch (mappedContentType) {
       case 'application/octet-stream': {
-        const fileName = response.headers.get('x-fl-file-name');
+        const contentDisposition = response.headers.get('content-disposition');
+        let fileName: string | null = null;
+        if (contentDisposition) {
+          const match = /filename\*?=(?:UTF-8''|")?([^;\r\n"]+)/i.exec(
+            contentDisposition
+          );
+          if (match) {
+            fileName = decodeURIComponent(match[1].replace(/['"]/g, ''));
+          }
+        }
         const blob = await response.blob();
         if (fileName == null) {
           responseBody = blob;
@@ -198,32 +321,108 @@ export class UniversalSdk {
         break;
       }
       case 'text/event-stream': {
+        const ajv = this.ajv;
+        async function* streamEvents(
+          reader: ReadableStreamDefaultReader<Uint8Array>
+        ) {
+          const decoder = new TextDecoder();
+          let buffer = '';
+          let lastEventId: string | undefined;
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            let newlineIndex;
+            while ((newlineIndex = buffer.indexOf('\n')) >= 0) {
+              const line = buffer.slice(0, newlineIndex).trim();
+              buffer = buffer.slice(newlineIndex + 1);
+              if (line.startsWith('id:')) {
+                lastEventId = line.slice(3).trim();
+              } else if (line.startsWith('data:')) {
+                const data = line.slice(5).trim();
+                const json = {
+                  data: safeParse(data),
+                  id: lastEventId
+                };
+                const isValidJson = ajv.validate(
+                  responseOpenApi.content?.[contentType || mappedContentType]
+                    .schema,
+                  json
+                );
+                if (!isValidJson) {
+                  throw new Error('Response does not match OpenAPI spec');
+                }
+                yield coerceSpecialTypes(
+                  json,
+                  responseOpenApi.content?.[contentType || mappedContentType]
+                    .schema
+                );
+              }
+            }
+          }
+          if (buffer.length > 0) {
+            let id: string | undefined;
+            let data: string | undefined;
+            const lines = buffer.trim().split('\n');
+            for (const l of lines) {
+              const line = l.trim();
+              if (line.startsWith('id:')) {
+                id = line.slice(3).trim();
+              } else if (line.startsWith('data:')) {
+                data = line.slice(5).trim();
+              }
+            }
+            if (data !== undefined) {
+              const json: Record<string, unknown> = {
+                data: safeParse(data),
+                id: id ?? lastEventId
+              };
+              const isValidJson = ajv.validate(
+                responseOpenApi.content?.[contentType || mappedContentType]
+                  .schema,
+                json
+              );
+              if (!isValidJson) {
+                throw new Error('Response does not match OpenAPI spec');
+              }
+              yield coerceSpecialTypes(
+                json,
+                responseOpenApi.content?.[contentType || mappedContentType]
+                  .schema
+              );
+            }
+          }
+        }
+        if (!response.body) {
+          throw new Error('No response body for event stream');
+        }
+        responseBody = streamEvents(response.body.getReader());
         break;
       }
       case 'text/plain':
         responseBody = await response.text();
         break;
-      case 'application/json': {
-        const json = await response.json();
+      case 'application/json':
+      default: {
+        const json: Record<string, unknown> = await response.json();
         const isValidJson = this.ajv.validate(
-          responseOpenApi.content?.[mappedContentType],
+          responseOpenApi.content?.[contentType || mappedContentType].schema,
           json
         );
         if (!isValidJson) {
           throw new Error('Response does not match OpenAPI spec');
         }
-        responseBody = json;
+        responseBody = coerceSpecialTypes(
+          json,
+          responseOpenApi.content?.[contentType || mappedContentType].schema
+        );
         break;
       }
-      default:
-        isNever(mappedContentType);
-        responseBody = await response.text();
-        break;
     }
 
     return {
       code: response.status,
-      content: responseBody,
+      response: responseBody,
       headers: response.headers
     };
   }

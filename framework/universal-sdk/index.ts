@@ -10,6 +10,7 @@ import {
   FlattenResponseContentTypes,
   ResponseContentParserType
 } from './src/types/contentTypes.types';
+import { RegistryOptions } from './src/types/sdk.types';
 import { UniversalSdk } from './src/universalSdk';
 
 export const universalSdkBuilder =
@@ -20,33 +21,50 @@ export const universalSdkBuilder =
         ? never
         : K]: ResponseContentParserType;
     }
-  >({
-    host,
-    registryOptions,
-    contentTypeParserMap
-  }: {
-    host: string;
-    registryOptions?:
-      | {
-          path: string;
+  >(
+    options: unknown extends T
+      ? {
+          host: string;
+          registryOptions: RegistryOptions;
         }
-      | {
-          url: string;
-        };
-    contentTypeParserMap?: T;
-  }) => {
+      : {
+          host: string;
+          registryOptions: RegistryOptions;
+          contentTypeParserMap: T;
+        }
+  ) => {
     const sdkInternal = await UniversalSdk.create(
-      host,
-      registryOptions,
-      contentTypeParserMap
+      options.host,
+      options.registryOptions,
+      'contentTypeParserMap' in options
+        ? options.contentTypeParserMap
+        : undefined
     );
 
     const proxyInternal = new Proxy(sdkInternal, {
-      get(target, prop: keyof UniversalSdk) {
-        if (typeof prop === 'string' && prop in target) {
-          return target[prop].bind(target);
+      get(target, prop) {
+        if (prop === 'then' || prop === 'catch' || prop === 'finally') {
+          return undefined;
         }
-        throw new Error(`Method ${String(prop)} not found`);
+        if (typeof prop === 'string' && prop in target) {
+          const value = target[prop as keyof UniversalSdk];
+          if (typeof value === 'function') {
+            return value.bind(target);
+          }
+          return value;
+        }
+        return new Proxy(() => {}, {
+          get(_innerTarget, innerProp) {
+            if (typeof innerProp === 'string' && innerProp in target) {
+              const value = target[innerProp as keyof UniversalSdk];
+              if (typeof value === 'function') {
+                return value.bind(target);
+              }
+              return value;
+            }
+            return undefined;
+          }
+        });
       }
     });
 

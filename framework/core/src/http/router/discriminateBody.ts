@@ -128,7 +128,17 @@ export function discriminateResponseBodies<SV extends AnySchemaValidator>(
   > = {};
   for (const [statusCode, response] of Object.entries(responses)) {
     if (response != null && typeof response === 'object') {
-      if ('schema' in response && response.schema != null) {
+      if ('json' in response && response.json != null) {
+        discriminatedResponses[Number(statusCode)] = {
+          contentType:
+            ('contentType' in response &&
+            typeof response.contentType === 'string'
+              ? response.contentType
+              : 'application/json') ?? 'application/json',
+          parserType: 'json',
+          schema: response.json
+        };
+      } else if ('schema' in response && response.schema != null) {
         discriminatedResponses[Number(statusCode)] = {
           contentType:
             ('contentType' in response &&

@@ -7,6 +7,7 @@ export * from './guards/isTrue';
 export * from './InMemoryFile';
 export * from './noop';
 export * from './readableStreamToAsyncIterable';
+export * from './safeParse';
 export * from './safeStringify';
 export * from './sortObjectKeys';
 export * from './stripUndefinedProperties';

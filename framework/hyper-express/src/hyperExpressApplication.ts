@@ -17,6 +17,7 @@ import {
 } from '@forklaunch/hyper-express-fork';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { apiReference } from '@scalar/express-api-reference';
+import crypto from 'crypto';
 import * as uWebsockets from 'uWebSockets.js';
 import { contentParse } from './middleware/contentParse.middleware';
 import { enrichResponseTransmission } from './middleware/enrichResponseTransmission.middleware';
@@ -180,11 +181,21 @@ export class Application<
       }
 
       this.internal.get(
-        `/api/${process.env.VERSION ?? 'v1'}${
-          process.env.DOCS_PATH ?? '/openapi'
-        }`,
+        `/api/${process.env.VERSION ?? 'v1'}/openapi`,
         (_, res) => {
+          res.type('application/json');
           res.json(openApi);
+        }
+      );
+
+      this.internal.get(
+        `/api/${process.env.VERSION ?? 'v1'}/openapi-hash`,
+        async (_, res) => {
+          const hash = await crypto
+            .createHash('sha256')
+            .update(JSON.stringify(openApi))
+            .digest('hex');
+          res.send(hash);
         }
       );
 

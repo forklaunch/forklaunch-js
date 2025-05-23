@@ -57,10 +57,11 @@ export async function contentParse<SV extends AnySchemaValidator>(
         const body: Record<string, unknown> = {};
         await req.multipart(async (field) => {
           if (field.file) {
-            const fileBuffer = Buffer.from(
-              await field.file.stream.read(),
-              field.encoding as BufferEncoding
-            );
+            let buffer = '';
+            for await (const chunk of field.file.stream) {
+              buffer += chunk;
+            }
+            const fileBuffer = Buffer.from(buffer);
             body[field.name] = fileBuffer.toString();
           } else {
             body[field.name] = field.value;

@@ -103,7 +103,8 @@ describe('http middleware tests', () => {
         responses: {
           200: testSchema
         }
-      }
+      },
+      sent: false
     };
   });
 

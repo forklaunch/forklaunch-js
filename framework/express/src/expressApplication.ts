@@ -12,6 +12,7 @@ import {
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { apiReference } from '@scalar/express-api-reference';
 import { OptionsJson, OptionsText, OptionsUrlencoded } from 'body-parser';
+import crypto from 'crypto';
 import express, {
   ErrorRequestHandler,
   Express,
@@ -137,11 +138,21 @@ export class Application<
     }
 
     this.internal.get(
-      `/api/${process.env.VERSION ?? 'v1'}${
-        process.env.DOCS_PATH ?? '/openapi'
-      }`,
+      `/api/${process.env.VERSION ?? 'v1'}/openapi`,
       (_, res) => {
+        res.type('application/json');
         res.json(openApi);
+      }
+    );
+
+    this.internal.get(
+      `/api/${process.env.VERSION ?? 'v1'}/openapi-hash`,
+      async (_, res) => {
+        const hash = await crypto
+          .createHash('sha256')
+          .update(JSON.stringify(openApi))
+          .digest('hex');
+        res.send(hash);
       }
     );
 
@@ -149,6 +160,7 @@ export class Application<
     const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
       const statusCode = Number(res.statusCode);
       res.locals.errorMessage = err.message;
+      console.log(err);
       res.type('text/plain');
       res
         .status(statusCode >= 400 ? statusCode : 500)

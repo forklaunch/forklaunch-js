@@ -100,18 +100,21 @@ export class ZodSchemaValidator
   });
   uuid = z.string().uuid().openapi({
     title: 'UUID',
+    format: 'uuid',
     pattern:
       '^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$',
     example: 'a8b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6'
   });
   email = z.string().email().openapi({
     title: 'Email',
+    format: 'email',
     pattern:
       '(?:[a-z0-9!#$%&\'*+/=?^_{|}~-]+(?:\\.[a-z0-9!#$%&\'*+/=?^_{|}~-]+)*|"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)])',
     example: 'a@b.com'
   });
   uri = z.string().url().openapi({
     title: 'URI',
+    format: 'uri',
     pattern: '^[a-zA-Z][a-zA-Z\\d+-.]*:[^\\s]*$',
     example: 'https://forklaunch.com'
   });
@@ -148,6 +151,8 @@ export class ZodSchemaValidator
     }, z.bigint())
     .openapi({
       title: 'BigInt',
+      type: 'integer',
+      format: 'int64',
       example: 123n
     });
   boolean = z
@@ -179,6 +184,8 @@ export class ZodSchemaValidator
     }, z.date())
     .openapi({
       title: 'Date',
+      type: 'string',
+      format: 'date-time',
       example: '2025-05-16T21:13:04.123Z'
     });
   symbol = z.symbol().openapi({
@@ -187,61 +194,61 @@ export class ZodSchemaValidator
   });
   nullish = z.union([z.void(), z.null(), z.undefined()]).openapi({
     title: 'Nullish',
+    type: 'null',
     example: null
   });
   void = z.void().openapi({
     title: 'Void',
+    type: 'null',
     example: undefined
   });
   null = z.null().openapi({
     title: 'Null',
+    type: 'null',
     example: null
   });
   undefined = z.undefined().openapi({
     title: 'Undefined',
+    type: 'null',
     example: undefined
   });
   any = z.any().openapi({
     title: 'Any',
+    type: 'object',
     example: 'any'
   });
   unknown = z.unknown().openapi({
     title: 'Unknown',
+    type: 'object',
     example: 'unknown'
   });
   never = z.never().openapi({
     title: 'Never',
+    type: 'null',
     example: 'never'
   });
-  binary = z
-    .string()
-    .openapi({
-      title: 'Binary',
-      format: 'binary',
-      example: 'a utf-8 encodable string'
-    })
-    .transform(Buffer.from)
-    .pipe(z.instanceof(Buffer<ArrayBuffer>));
+  binary = z.string().transform(Buffer.from).openapi({
+    title: 'Binary',
+    type: 'string',
+    format: 'binary',
+    example: 'a utf-8 encodable string'
+  });
   file = (name: string, type: MimeType) =>
     z
       .string()
+      .transform((val) => {
+        return new File([val], name, {
+          type,
+          lastModified: Date.now()
+        });
+      })
       .openapi({
         title: 'File',
+        type: 'string',
         format: 'binary',
         contentMediaType: type,
         example: 'a utf-8 encodable string'
-      })
-      .transform((val) => {
-        try {
-          return new File([Buffer.from(val)], name, {
-            type,
-            lastModified: Date.now()
-          });
-        } catch {
-          return val;
-        }
-      })
-      .pipe(z.instanceof(File));
+      });
 
   /**
    * Compiles schema if this exists, for optimal performance.

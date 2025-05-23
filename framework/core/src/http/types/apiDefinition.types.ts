@@ -207,8 +207,8 @@ export interface ForklaunchStatusResponse<ResBody> {
 type ToNumber<T extends string | number | symbol> = T extends number
   ? T
   : T extends `${infer N extends number}`
-  ? N
-  : never;
+    ? N
+    : never;
 
 /**
  * Interface representing a Forklaunch response.
@@ -333,6 +333,9 @@ export interface ForklaunchResponse<
 
   /** Whether the metric has been recorded */
   metricRecorded: boolean;
+
+  /** Whether the response has been sent */
+  sent: boolean;
 }
 
 /**
@@ -369,8 +372,8 @@ export type ResolvedForklaunchRequest<
       >
         ? ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>[key]
         : key extends keyof BaseRequest
-        ? BaseRequest[key]
-        : never;
+          ? BaseRequest[key]
+          : never;
     };
 
 /**
@@ -422,8 +425,8 @@ export interface ExpressLikeHandler<
                 LocalsObj
               >[key]
             : key extends keyof BaseResponse
-            ? BaseResponse[key]
-            : never;
+              ? BaseResponse[key]
+              : never;
         },
     next: NextFunction
   ): void | Promise<void>;
@@ -432,11 +435,12 @@ export interface ExpressLikeHandler<
 export type MapParamsSchema<
   SV extends AnySchemaValidator,
   P extends ParamsObject<SV>
-> = MapSchema<SV, P> extends infer Params
-  ? unknown extends Params
-    ? ParamsDictionary
-    : Params
-  : ParamsDictionary;
+> =
+  MapSchema<SV, P> extends infer Params
+    ? unknown extends Params
+      ? ParamsDictionary
+      : Params
+    : ParamsDictionary;
 
 export type ExtractContentType<
   SV extends AnySchemaValidator,
@@ -444,33 +448,34 @@ export type ExtractContentType<
 > = T extends { contentType: string }
   ? T['contentType']
   : T extends JsonBody<SV>
-  ? 'application/json'
-  : T extends TextBody<SV>
-  ? 'text/plain'
-  : T extends FileBody<SV>
-  ? 'application/octet-stream'
-  : T extends ServerSentEventBody<SV>
-  ? 'text/event-stream'
-  : T extends UnknownResponseBody<SV>
-  ? 'application/json'
-  : T extends SV['string']
-  ? 'text/plain'
-  : 'text/plain';
+    ? 'application/json'
+    : T extends TextBody<SV>
+      ? 'text/plain'
+      : T extends FileBody<SV>
+        ? 'application/octet-stream'
+        : T extends ServerSentEventBody<SV>
+          ? 'text/event-stream'
+          : T extends UnknownResponseBody<SV>
+            ? 'application/json'
+            : T extends SV['string']
+              ? 'text/plain'
+              : 'text/plain';
 
 export type ExtractResponseBody<
   SV extends AnySchemaValidator,
   T extends ResponseBody<SV> | unknown
-> = T extends JsonBody<SV>
-  ? MapSchema<SV, T['json']>
-  : T extends TextBody<SV>
-  ? MapSchema<SV, T['text']>
-  : T extends FileBody<SV>
-  ? File
-  : T extends ServerSentEventBody<SV>
-  ? AsyncGenerator<MapSchema<SV, T['event']>, string, string>
-  : T extends UnknownResponseBody<SV>
-  ? MapSchema<SV, T['schema']>
-  : MapSchema<SV, T>;
+> =
+  T extends JsonBody<SV>
+    ? MapSchema<SV, T['json']>
+    : T extends TextBody<SV>
+      ? MapSchema<SV, T['text']>
+      : T extends FileBody<SV>
+        ? File | Blob
+        : T extends ServerSentEventBody<SV>
+          ? AsyncGenerator<MapSchema<SV, T['event']>>
+          : T extends UnknownResponseBody<SV>
+            ? MapSchema<SV, T['schema']>
+            : MapSchema<SV, T>;
 
 export type MapResBodyMapSchema<
   SV extends AnySchemaValidator,
@@ -481,58 +486,60 @@ export type MapResBodyMapSchema<
       [K in keyof ResBodyMap]: ExtractResponseBody<SV, ResBodyMap[K]>;
     };
 
-export type ExtractBody<
-  SV extends AnySchemaValidator,
-  T extends Body<SV>
-> = T extends JsonBody<SV>
-  ? T['json']
-  : T extends TextBody<SV>
-  ? T['text']
-  : T extends FileBody<SV>
-  ? T['file']
-  : T extends MultipartForm<SV>
-  ? T['multipartForm']
-  : T extends UrlEncodedForm<SV>
-  ? T['urlEncodedForm']
-  : T extends UnknownBody<SV>
-  ? T['schema']
-  : T;
+export type ExtractBody<SV extends AnySchemaValidator, T extends Body<SV>> =
+  T extends JsonBody<SV>
+    ? T['json']
+    : T extends TextBody<SV>
+      ? T['text']
+      : T extends FileBody<SV>
+        ? T['file']
+        : T extends MultipartForm<SV>
+          ? T['multipartForm']
+          : T extends UrlEncodedForm<SV>
+            ? T['urlEncodedForm']
+            : T extends UnknownBody<SV>
+              ? T['schema']
+              : T;
 
 export type MapReqBodySchema<
   SV extends AnySchemaValidator,
   ReqBody extends Body<SV>
-> = MapSchema<SV, ExtractBody<SV, ReqBody>> extends infer Body
-  ? unknown extends Body
-    ? Record<string, unknown>
-    : Body
-  : Record<string, unknown>;
+> =
+  MapSchema<SV, ExtractBody<SV, ReqBody>> extends infer Body
+    ? unknown extends Body
+      ? Record<string, unknown>
+      : Body
+    : Record<string, unknown>;
 
 export type MapReqQuerySchema<
   SV extends AnySchemaValidator,
   ReqQuery extends QueryObject<SV>
-> = MapSchema<SV, ReqQuery> extends infer Query
-  ? unknown extends Query
-    ? ParsedQs
-    : Query
-  : ParsedQs;
+> =
+  MapSchema<SV, ReqQuery> extends infer Query
+    ? unknown extends Query
+      ? ParsedQs
+      : Query
+    : ParsedQs;
 
 export type MapReqHeadersSchema<
   SV extends AnySchemaValidator,
   ReqHeaders extends HeadersObject<SV>
-> = MapSchema<SV, ReqHeaders> extends infer RequestHeaders
-  ? unknown extends RequestHeaders
-    ? Record<string, string>
-    : RequestHeaders
-  : Record<string, string>;
+> =
+  MapSchema<SV, ReqHeaders> extends infer RequestHeaders
+    ? unknown extends RequestHeaders
+      ? Record<string, string>
+      : RequestHeaders
+    : Record<string, string>;
 
 export type MapResHeadersSchema<
   SV extends AnySchemaValidator,
   ResHeaders extends HeadersObject<SV>
-> = MapSchema<SV, ResHeaders> extends infer ResponseHeaders
-  ? unknown extends ResponseHeaders
-    ? ForklaunchResHeaders
-    : ResponseHeaders
-  : ForklaunchResHeaders;
+> =
+  MapSchema<SV, ResHeaders> extends infer ResponseHeaders
+    ? unknown extends ResponseHeaders
+      ? ForklaunchResHeaders
+      : ResponseHeaders
+    : ForklaunchResHeaders;
 
 /**
  * Represents a schema middleware handler with typed parameters, responses, body, and query.

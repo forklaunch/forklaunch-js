@@ -4,8 +4,11 @@ import { parse } from './parse.middleware';
 
 import {
   isAsyncGenerator,
+  isNever,
   isNodeJsWriteableStream,
-  readableStreamToAsyncIterable
+  isRecord,
+  readableStreamToAsyncIterable,
+  safeStringify
 } from '@forklaunch/common';
 import { Readable, Transform } from 'stream';
 import { discriminateResponseBodies } from '../../router/discriminateBody';
@@ -71,6 +74,7 @@ export function enrichExpressLikeSend<
   data:
     | ForklaunchSendableData
     | File
+    | Blob
     | AsyncGenerator<Record<string, unknown>>
     | null
     | undefined,
@@ -103,11 +107,13 @@ export function enrichExpressLikeSend<
     res.type(responseBodies[Number(res.statusCode)].contentType);
   }
 
-  if (data instanceof File) {
-    res.setHeader(
-      'Content-Disposition',
-      `attachment; filename="${data.name}"` as ResHeaders['Content-Disposition']
-    );
+  if (data instanceof File || data instanceof Blob) {
+    if (data instanceof File) {
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${data.name}"` as ResHeaders['Content-Disposition']
+      );
+    }
     if (isNodeJsWriteableStream(res)) {
       Readable.from(readableStreamToAsyncIterable(data.stream())).pipe(
         res as unknown as NodeJS.WritableStream
@@ -148,7 +154,7 @@ export function enrichExpressLikeSend<
         if (!errorSent) {
           let data = '';
           for (const [key, value] of Object.entries(chunk)) {
-            data += `${key}: ${value}\n`;
+            data += `${key}: ${typeof value === 'string' ? value : safeStringify(value)}\n`;
           }
           data += '\n';
           callback(null, data);
@@ -164,6 +170,36 @@ export function enrichExpressLikeSend<
       errorSent = true;
     }
   } else {
+    const parserType = responseBodies?.[Number(res.statusCode)]?.parserType;
+
+    res.bodyData = data;
+    if (isRecord(data)) {
+      switch (parserType) {
+        case 'json':
+          res.bodyData = 'json' in data ? data.json : data;
+          break;
+        case 'text':
+          res.bodyData = 'text' in data ? data.text : data;
+          break;
+        case 'file':
+          res.bodyData = 'file' in data ? data.file : data;
+          break;
+        case 'serverSentEvent':
+          res.bodyData = 'event' in data ? data.event : data;
+          break;
+        case 'multipart':
+          res.bodyData = 'multipart' in data ? data.multipart : data;
+          break;
+        case undefined:
+          res.bodyData = data;
+          break;
+        default:
+          isNever(parserType);
+          res.bodyData = data;
+          break;
+      }
+    }
+
     parse(req, res, (err?: unknown) => {
       if (err) {
         let errorString = (err as Error).message;
@@ -183,6 +219,7 @@ export function enrichExpressLikeSend<
         res.type('text/plain');
         originalSend.call(instance, data);
       } else if (!(data instanceof File)) {
+        res.sent = true;
         originalOperation.call(instance, data);
       }
     }

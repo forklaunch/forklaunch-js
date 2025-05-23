@@ -120,17 +120,26 @@ export class TypeboxSchemaValidator
     pattern:
       '^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$',
     errorType: 'uuid',
+    openapiType: Type.String({
+      format: 'uuid'
+    }),
     example: 'a8b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6'
   });
   email = Type.String({
     pattern:
       '(?:[a-z0-9!#$%&\'*+/=?^_{|}~-]+(?:\\.[a-z0-9!#$%&\'*+/=?^_{|}~-]+)*|"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)])',
     errorType: 'email',
+    openapiType: Type.String({
+      format: 'email'
+    }),
     example: 'a@b.com'
   });
   uri = Type.String({
     pattern: '^[a-zA-Z][a-zA-Z\\d+-.]*:[^\\s]*$',
     errorType: 'uri',
+    openapiType: Type.String({
+      format: 'uri'
+    }),
     example: 'https://forklaunch.com'
   });
   number = Type.Transform(
@@ -173,7 +182,9 @@ export class TypeboxSchemaValidator
       ],
       {
         errorType: 'BigInt-like',
-        openapiType: Type.BigInt(),
+        openapiType: Type.Integer({
+          format: 'int64'
+        }),
         example: 123n
       }
     )
@@ -228,7 +239,9 @@ export class TypeboxSchemaValidator
       ],
       {
         errorType: 'date',
-        openapiType: Type.Date(),
+        openapiType: Type.String({
+          format: 'date-time'
+        }),
         example: '2025-05-16T21:13:04.123Z'
       }
     )
@@ -246,24 +259,31 @@ export class TypeboxSchemaValidator
   symbol = Type.Symbol();
   nullish = Type.Union([Type.Void(), Type.Null(), Type.Undefined()], {
     errorType: 'nullish',
+    openapiType: Type.Null(),
     example: 'null'
   });
   void = Type.Void({
+    openapiType: Type.Null(),
     example: 'void'
   });
   null = Type.Null({
+    openapiType: Type.Null(),
     example: 'null'
   });
   undefined = Type.Undefined({
+    openapiType: Type.Null(),
     example: 'undefined'
   });
   any = Type.Any({
+    openapiType: 'object',
     example: 'any'
   });
   unknown = Type.Unknown({
+    openapiType: 'object',
     example: 'unknown'
   });
   never = Type.Never({
+    openapiType: Type.Null(),
     example: 'never'
   });
   binary = Type.Transform(

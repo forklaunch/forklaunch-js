@@ -100,16 +100,16 @@ function contentResolver<SV extends AnySchemaValidator>(
         }
       }
     : body === schemaValidator.string
-    ? {
-        'plain/text': {
-          schema: bodySpec
+      ? {
+          'plain/text': {
+            schema: bodySpec
+          }
         }
-      }
-    : {
-        'application/json': {
-          schema: bodySpec
-        }
-      };
+      : {
+          'application/json': {
+            schema: bodySpec
+          }
+        };
 }
 
 /**
@@ -160,6 +160,16 @@ export function generateSwaggerDocument<SV extends AnySchemaValidator>(
             discriminatedResponseBodiesResult[key].contentType
           )
         };
+      }
+
+      const commonErrors = [400, 404, 500];
+      for (const error of commonErrors) {
+        if (!(error in responses)) {
+          responses[error] = {
+            description: HTTPStatuses[error],
+            content: contentResolver(schemaValidator, schemaValidator.string)
+          };
+        }
       }
 
       const pathItemObject: OperationObject = {

@@ -6,6 +6,8 @@
  * @property {Record<string, string>} [headers] - Request headers.
  */
 
+import { OpenAPIObject } from 'openapi3-ts/oas31';
+
 /**
  * @typedef {Object} ResponseType
  * @property {number} code - The HTTP response code.
@@ -53,6 +55,19 @@ export interface RequestType {
 
 export interface ResponseType {
   code: number;
-  content: unknown;
+  response: unknown;
   headers: Headers;
 }
+
+export type RegistryOptions =
+  | {
+      path: string;
+      static?: boolean;
+    }
+  | {
+      url: string;
+      static?: boolean;
+    }
+  | {
+      raw: OpenAPIObject;
+    };

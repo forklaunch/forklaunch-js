@@ -5,7 +5,7 @@ import {
 } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
 import { hasSend } from '../../guards/hasSend';
-import { isResponseShape } from '../../guards/isResponseShape';
+import { isRequestShape } from '../../guards/isRequestShape';
 import {
   ForklaunchNextFunction,
   ForklaunchRequest,
@@ -52,7 +52,7 @@ export function parse<
 
   if (
     parsedRequest.ok &&
-    isResponseShape<P, ReqHeaders, ReqQuery, ReqBody>(parsedRequest.value)
+    isRequestShape<P, ReqHeaders, ReqQuery, ReqBody>(parsedRequest.value)
   ) {
     req.body = parsedRequest.value.body;
     req.params = parsedRequest.value.params;
@@ -62,7 +62,7 @@ export function parse<
       enumerable: true,
       configurable: false
     });
-    req.headers = parsedRequest.value.headers;
+    req.headers = parsedRequest.value.headers ?? {};
   }
   if (!parsedRequest.ok) {
     switch (req.contractDetails.options?.requestValidation) {

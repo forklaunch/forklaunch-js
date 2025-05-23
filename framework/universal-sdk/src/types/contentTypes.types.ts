@@ -37,8 +37,8 @@ export type FlattenResponseContentTypes<T> = T extends {
     ? R extends Promise<{ contentType: infer PC }>
       ? PC
       : R extends { contentType: infer C }
-      ? C
-      : never
+        ? C
+        : never
     : never
   : never;
 

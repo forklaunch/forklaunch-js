@@ -5,9 +5,20 @@ import {
   Request,
   Response
 } from '@forklaunch/hyper-express-fork';
-import { file, SchemaValidator, string } from '@forklaunch/validator/typebox';
+import {
+  array,
+  date,
+  file,
+  number,
+  optional,
+  SchemaValidator,
+  string,
+  union,
+  uuid
+} from '@forklaunch/validator/zod';
 import { forklaunchExpress, forklaunchRouter } from './index';
 import { get } from './src/handlers/get';
+import { patch } from './src/handlers/patch';
 import { post } from './src/handlers/post';
 
 const typeboxSchemaValidator = SchemaValidator();
@@ -46,7 +57,7 @@ const getHandler = get(
     }
   },
   expressMiddleware,
-  async (_req, res) => {
+  (_req, res) => {
     res.status(200).send(
       new File(
         [
@@ -65,8 +76,7 @@ Nulla facilisi. Proin facilisis, justo nec porttitor ullamcorper, nisi nibh dict
 
 Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Suspendisse potenti.
 
-End of file.
-`
+End of file.`
         ],
         'test.txt',
         { type: 'text/plain' }
@@ -82,50 +92,141 @@ const postHandler = post(
     name: 'Test',
     summary: 'Test Summary',
     body: {
-      f: string
+      f: string,
+      m: union([array(number), string])
     },
     responses: {
       200: {
         contentType: 'text/event-stream',
         event: {
           id: string,
-          data: string
+          data: {
+            message: string
+          }
         }
       }
     }
   },
   expressMiddleware,
-  async (req, res) => {
-    // res.status(200).send(req.body.f.name);
-    // res.status(200).send(req.body.test);
+  (req, res) => {
     res.status(200).sseEmitter(async function* () {
-      for (let i = 0; i < 100; i++) {
-        yield {
-          id: i.toString(),
-          data: `Hello World ${req.body.f}`
-        };
-        await new Promise((resolve) => setTimeout(resolve, 100));
+      try {
+        for (let i = 0; i < 100; i++) {
+          yield {
+            id: i.toString(),
+            data: {
+              message: `Hello World ${req.body.f}`
+            }
+          };
+          await new Promise((resolve) => setTimeout(resolve, 10));
+        }
+      } catch (e: unknown) {
+        if (e instanceof Error) {
+          res.status(500).send('There was an error');
+        }
       }
       return;
     });
   }
 );
 
-forklaunchRouterInstance.get('/test', getHandler);
-forklaunchRouterInstance.post('/test', postHandler);
-// const r = await m.post('/testpath/test', {
-//   body: {
-//     f: 'test'
-//   }
-// });
-// if (r.code === 200) {
-//   console.log(r.response);
-// }
+const jsonPatchHandler = patch(
+  typeboxSchemaValidator,
+  '/test',
+  {
+    name: 'Test',
+    summary: 'Test Summary',
+    body: {
+      f: string,
+      h: uuid
+    },
+    responses: {
+      200: {
+        json: {
+          f: date
+        }
+      }
+    }
+  },
+  expressMiddleware,
+  (req, res) => {
+    res.status(200).json({ f: new Date() });
+  }
+);
 
-// console.log(r);
+const multipartHandler = post(
+  typeboxSchemaValidator,
+  '/test/multipart',
+  {
+    name: 'Test',
+    summary: 'Test Summary',
+    body: {
+      multipartForm: {
+        f: string,
+        g: file('test.txt', 'text/plain')
+      }
+    },
+    responses: {
+      200: {
+        text: string
+      }
+    }
+  },
+  expressMiddleware,
+  async (req, res) => {
+    res.status(200).send(`${req.body.f} ${await req.body.g.text()}`);
+  }
+);
+
+const urlEncodedFormHandler = post(
+  typeboxSchemaValidator,
+  '/test/url-encoded-form',
+  {
+    name: 'Test',
+    summary: 'Test Summary',
+    body: {
+      urlEncodedForm: {
+        f: string,
+        h: optional(number)
+      }
+    },
+    responses: {
+      200: {
+        contentType: 'custom/content',
+        schema: {
+          a: string
+        }
+      }
+    }
+  },
+  expressMiddleware,
+  (req, res) => {
+    res.status(200).json({ a: `${req.body.f}` });
+  }
+);
+
+const getTest = forklaunchRouterInstance.get('/test', getHandler);
+const postTest = forklaunchRouterInstance.post('/test', postHandler);
+const jsonPatchTest = forklaunchRouterInstance.patch('/test', jsonPatchHandler);
+const multipartTest = forklaunchRouterInstance.post(
+  '/test/multipart',
+  multipartHandler
+);
+const urlEncodedFormTest = forklaunchRouterInstance.post(
+  '/test/url-encoded-form',
+  urlEncodedFormHandler
+);
 
 forklaunchApplication.use(forklaunchRouterInstance);
 
 forklaunchApplication.listen(6935, () => {
   console.log('server started on 6935');
 });
+
+export type SDK = {
+  getTest: typeof getTest;
+  postTest: typeof postTest;
+  jsonPatchTest: typeof jsonPatchTest;
+  multipartTest: typeof multipartTest;
+  urlEncodedFormTest: typeof urlEncodedFormTest;
+};

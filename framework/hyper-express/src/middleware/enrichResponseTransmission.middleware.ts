@@ -64,7 +64,6 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
    * ```
    */
   res.json = function <T extends Record<string, unknown>>(data: T) {
-    res.bodyData = data;
     res.statusCode = Number(res._status_code);
     enrichExpressLikeSend<
       SV,
@@ -102,9 +101,10 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
    * ```
    */
   res.send = function (data: ForklaunchSendableData) {
-    if (!res.bodyData) {
-      res.bodyData = data;
-      res.statusCode = Number(res._status_code);
+    res.statusCode = Number(res._status_code);
+    if (res.sent) {
+      originalSend.call(this, data);
+      return true;
     }
     enrichExpressLikeSend<
       SV,
@@ -124,6 +124,7 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
       data,
       !res.cors && ((res._cork && !res._corked) || !res._cork)
     );
+    res.sent = true;
     return true;
   };
 

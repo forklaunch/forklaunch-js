@@ -93,7 +93,7 @@ export function parse<
       default:
       case 'error':
         res.type('text/plain');
-        res.status(400);
+        res.status(500);
         if (hasSend(res)) {
           res.send(
             `Invalid response:\n${parseErrors.join(

@@ -88,10 +88,10 @@ type ExclusiveSchemaCatchall<SV extends AnySchemaValidator> = {
   [K in keyof SV['_SchemaCatchall'] as string extends K
     ? never
     : number extends K
-    ? never
-    : symbol extends K
-    ? never
-    : K]?: undefined;
+      ? never
+      : symbol extends K
+        ? never
+        : K]?: undefined;
 };
 
 export type TypedResponseBody<SV extends AnySchemaValidator> =
@@ -225,7 +225,7 @@ export type ServerSentEventBody<SV extends AnySchemaValidator> = {
   contentType?: 'text/event-stream' | string;
   event: {
     id: SV['string'];
-    data: BodyObject<SV>;
+    data: SV['string'] | BodyObject<SV>;
   };
 };
 
@@ -372,8 +372,8 @@ type ExtractParams<Path extends `/${string}`> =
   Path extends `${string}/:${infer Param}/${infer Rest}`
     ? Param | ExtractParams<`/${Rest}`>
     : Path extends `${string}/:${infer Param}`
-    ? Param
-    : never;
+      ? Param
+      : never;
 
 /**
  * Type representing the parameters in a request.
@@ -500,34 +500,34 @@ export type HttpContractDetails<
         readonly body: BodySchema;
       }
     : BodySchema extends JsonBody<SV>
-    ? {
-        /** Required body schema for body-based methods for the contract */
-        readonly body: ExclusiveRecord<BodySchema, TypedBody<SV>>;
-      }
-    : BodySchema extends TextBody<SV>
-    ? {
-        /** Required body schema for body-based methods for the contract */
-        readonly body: ExclusiveRecord<BodySchema, TypedBody<SV>>;
-      }
-    : BodySchema extends MultipartForm<SV>
-    ? {
-        /** Required body schema for body-based methods for the contract */
-        readonly body: ExclusiveRecord<BodySchema, TypedBody<SV>>;
-      }
-    : BodySchema extends UrlEncodedForm<SV>
-    ? {
-        /** Required body schema for body-based methods for the contract */
-        readonly body: ExclusiveRecord<BodySchema, TypedBody<SV>>;
-      }
-    : BodySchema extends FileBody<SV>
-    ? {
-        /** Required body schema for body-based methods for the contract */
-        readonly body: ExclusiveRecord<BodySchema, TypedBody<SV>>;
-      }
-    : {
-        /** Required body schema for body-based methods for the contract */
-        readonly body: BodySchema;
-      }) & {
+      ? {
+          /** Required body schema for body-based methods for the contract */
+          readonly body: ExclusiveRecord<BodySchema, TypedBody<SV>>;
+        }
+      : BodySchema extends TextBody<SV>
+        ? {
+            /** Required body schema for body-based methods for the contract */
+            readonly body: ExclusiveRecord<BodySchema, TypedBody<SV>>;
+          }
+        : BodySchema extends MultipartForm<SV>
+          ? {
+              /** Required body schema for body-based methods for the contract */
+              readonly body: ExclusiveRecord<BodySchema, TypedBody<SV>>;
+            }
+          : BodySchema extends UrlEncodedForm<SV>
+            ? {
+                /** Required body schema for body-based methods for the contract */
+                readonly body: ExclusiveRecord<BodySchema, TypedBody<SV>>;
+              }
+            : BodySchema extends FileBody<SV>
+              ? {
+                  /** Required body schema for body-based methods for the contract */
+                  readonly body: ExclusiveRecord<BodySchema, TypedBody<SV>>;
+                }
+              : {
+                  /** Required body schema for body-based methods for the contract */
+                  readonly body: BodySchema;
+                }) & {
     readonly auth?: SchemaAuthMethods<
       SV,
       string | number | symbol extends ExtractedParamsObject<Path>
@@ -605,27 +605,27 @@ export type ContractDetails<
       BaseRequest
     >
   : ContractMethod extends HttpMethod
-  ? HttpContractDetails<
-      SV,
-      Path,
-      ParamsSchema,
-      ResponseSchemas,
-      BodySchema,
-      QuerySchema,
-      ReqHeaders,
-      ResHeaders,
-      BaseRequest
-    >
-  : ContractMethod extends 'middleware'
-  ? MiddlewareContractDetails<
-      SV,
-      Path,
-      ParamsSchema,
-      ResponseSchemas,
-      BodySchema,
-      QuerySchema,
-      ReqHeaders,
-      ResHeaders,
-      BaseRequest
-    >
-  : never;
+    ? HttpContractDetails<
+        SV,
+        Path,
+        ParamsSchema,
+        ResponseSchemas,
+        BodySchema,
+        QuerySchema,
+        ReqHeaders,
+        ResHeaders,
+        BaseRequest
+      >
+    : ContractMethod extends 'middleware'
+      ? MiddlewareContractDetails<
+          SV,
+          Path,
+          ParamsSchema,
+          ResponseSchemas,
+          BodySchema,
+          QuerySchema,
+          ReqHeaders,
+          ResHeaders,
+          BaseRequest
+        >
+      : never;
