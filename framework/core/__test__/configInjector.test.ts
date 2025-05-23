@@ -6,7 +6,10 @@ import {
   SchemaValidator,
   string
 } from '@forklaunch/validator/typebox';
-import { ConfigInjector } from '../src/services/configInjector';
+import {
+  ConfigInjector,
+  createConfigInjector
+} from '../src/services/configInjector';
 import { Lifetime } from '../src/services/types/configInjector.types';
 
 class X {
@@ -26,7 +29,7 @@ describe('serviceFactory', () => {
     j: 'a',
     k: 'b' as unknown as number
   };
-  const configInjector = new ConfigInjector(SchemaValidator(), {
+  const configInjector = createConfigInjector(SchemaValidator(), {
     a: {
       type: string,
       lifetime: Lifetime.Singleton,
@@ -175,7 +178,7 @@ describe('serviceFactory', () => {
 
   test('validateConfigSingletons', () => {
     expect(configInjector.safeValidateConfigSingletons().ok).toBe(true);
-    const newConfigInjector = new ConfigInjector(SchemaValidator(), {
+    const newConfigInjector = createConfigInjector(SchemaValidator(), {
       a: {
         type: string,
         lifetime: Lifetime.Singleton,

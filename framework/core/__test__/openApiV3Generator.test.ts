@@ -64,6 +64,18 @@ describe('openApiV3Generator tests', () => {
               '200': {
                 description: 'OK',
                 content: { 'application/json': { schema: { type: 'string' } } }
+              },
+              '400': {
+                description: 'Bad Request',
+                content: { 'text/plain': { schema: { type: 'string' } } }
+              },
+              '404': {
+                description: 'Not Found',
+                content: { 'text/plain': { schema: { type: 'string' } } }
+              },
+              '500': {
+                description: 'Internal Server Error',
+                content: { 'text/plain': { schema: { type: 'string' } } }
               }
             },
             requestBody: {

@@ -1,4 +1,4 @@
-import { safeStringify } from '@forklaunch/common';
+import { safeParse, safeStringify } from '@forklaunch/common';
 import { createClient, RedisClientOptions } from 'redis';
 import {
   evaluateTelemetryOptions,
@@ -75,7 +75,7 @@ export class RedisTtlCache implements TtlCache {
     switch (typeof value) {
       case 'object':
       case 'string':
-        return JSON.parse(value);
+        return safeParse(value) as T;
       case 'number':
         return value as T;
     }
@@ -186,7 +186,7 @@ export class RedisTtlCache implements TtlCache {
     if (value === null) {
       throw new Error(`Queue is empty: ${queueName}`);
     }
-    return JSON.parse(value);
+    return safeParse(value) as T;
   }
 
   /**

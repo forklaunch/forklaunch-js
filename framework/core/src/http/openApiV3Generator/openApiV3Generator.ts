@@ -101,7 +101,7 @@ function contentResolver<SV extends AnySchemaValidator>(
       }
     : body === schemaValidator.string
       ? {
-          'plain/text': {
+          'text/plain': {
             schema: bodySpec
           }
         }

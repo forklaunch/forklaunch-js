@@ -1,7 +1,7 @@
-export function safeParse<T = unknown>(input: string): T | string {
+export function safeParse<T>(input: unknown): T {
   try {
-    return JSON.parse(input) as T;
+    return JSON.parse(input as string) as T;
   } catch {
-    return input;
+    return input as T;
   }
 }

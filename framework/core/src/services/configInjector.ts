@@ -385,10 +385,18 @@ export class ConfigInjector<
   }
 
   createScope(): ConfigInjector<SV, CV> {
+    const singletons: Record<string, unknown> = {};
+    for (const dependency in this.dependenciesDefinition) {
+      if (
+        this.dependenciesDefinition[dependency].lifetime === Lifetime.Singleton
+      ) {
+        singletons[dependency] = this.instances[dependency];
+      }
+    }
     return new ConfigInjector<SV, CV>(
       this.schemaValidator,
       this.dependenciesDefinition
-    ).load({ ...this.instances });
+    ).load(singletons as ResolvedConfigValidator<SV, CV>);
   }
 
   dispose(): void {

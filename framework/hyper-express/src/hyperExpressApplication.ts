@@ -1,3 +1,4 @@
+import { safeStringify } from '@forklaunch/common';
 import {
   ATTR_HTTP_RESPONSE_STATUS_CODE,
   DocsConfiguration,
@@ -193,7 +194,7 @@ export class Application<
         async (_, res) => {
           const hash = await crypto
             .createHash('sha256')
-            .update(JSON.stringify(openApi))
+            .update(safeStringify(openApi))
             .digest('hex');
           res.send(hash);
         }

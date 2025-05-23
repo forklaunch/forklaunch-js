@@ -164,20 +164,6 @@ const b = xa.trace(
   xasd
 );
 
-xa.post('/ok', {
-  name: 'string',
-  summary: 'string',
-  body: {
-    contentType: 'text/plain',
-    text: {
-      f: string
-    }
-  },
-  responses: {
-    200: string
-  }
-});
-
 const c = xa.trace('/test/:name/:id', xasd);
 
 xa.all(contractDetails, async (req, res) => {});

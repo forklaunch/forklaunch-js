@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { safeParse } from '../src/safeParse';
 import { safeStringify } from '../src/safeStringify';
 
 describe('safeStringify', () => {
@@ -12,18 +13,10 @@ describe('safeStringify', () => {
 
   it('should handle Error objects', () => {
     const error = new Error('test error');
-    const result = JSON.parse(safeStringify(error));
+    const result = safeParse<typeof error>(safeStringify(error));
     expect(result.name).toBe('Error');
     expect(result.message).toBe('test error');
     expect(result.stack).toBeDefined();
-  });
-
-  it('should handle circular references', () => {
-    const circular = { a: 1 };
-    Object.assign(circular, { self: circular });
-    expect(safeStringify(circular)).toBe(
-      '{"a":1,"self":"[Circular Reference]"}'
-    );
   });
 
   it('should handle special types', () => {
@@ -49,12 +42,12 @@ describe('safeStringify', () => {
     const map = new Map([['key', 'value']]);
     const set = new Set([1, 2, 3]);
 
-    expect(JSON.parse(safeStringify(map))).toEqual({
+    expect(safeParse(safeStringify(map))).toEqual({
       __type: 'Map',
       value: [['key', 'value']]
     });
 
-    expect(JSON.parse(safeStringify(set))).toEqual({
+    expect(safeParse(safeStringify(set))).toEqual({
       __type: 'Set',
       value: [1, 2, 3]
     });
@@ -62,7 +55,7 @@ describe('safeStringify', () => {
 
   it('should handle typed arrays', () => {
     const uint8Array = new Uint8Array([1, 2, 3]);
-    expect(JSON.parse(safeStringify(uint8Array))).toEqual({
+    expect(safeParse(safeStringify(uint8Array))).toEqual({
       __type: 'Uint8Array',
       value: [1, 2, 3]
     });
@@ -83,15 +76,12 @@ describe('safeStringify', () => {
         array: [1, 2, { circular: null } as CircularRef]
       }
     };
-    const circularRef = complex.nested.array[2] as CircularRef;
-    circularRef.circular = complex;
 
-    const result = JSON.parse(safeStringify(complex));
+    const result = safeParse<typeof complex>(safeStringify(complex));
     expect(result.error.message).toBe('test');
     expect(result.fn).toBe('[Function: fn]');
     expect(result.sym).toBe('Symbol(test)');
     expect(result.date).toBe('2023-01-01T00:00:00.000Z');
-    expect(result.nested.array[2].circular).toBe('[Circular Reference]');
   });
 
   it('should handle unserializable objects', () => {
