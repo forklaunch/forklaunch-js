@@ -6,6 +6,22 @@ import { checkout } from '../src/handlers/checkout';
 import { get } from '../src/handlers/get';
 import { post } from '../src/handlers/post';
 
+import { noop, safeStringify } from '@forklaunch/common';
+import {
+  NextFunction as ExpressNextFunction,
+  Request as ExpressRequest,
+  Response as ExpressResponse
+} from 'express';
+
+const expressMiddleware = (
+  req: ExpressRequest,
+  res: ExpressResponse,
+  next: ExpressNextFunction
+) => {
+  noop(req, res, next);
+  next();
+};
+
 const typeboxSchemaValidator = SchemaValidator();
 const openTelemetryCollector = new OpenTelemetryCollector('test');
 
@@ -32,6 +48,7 @@ describe('Forklaunch Express Tests', () => {
           200: string
         }
       },
+      expressMiddleware,
       async (_req, res) => {
         res.status(200).send('Hello World');
       }
@@ -49,6 +66,7 @@ describe('Forklaunch Express Tests', () => {
           200: string
         }
       },
+      expressMiddleware,
       (req, res) => {
         res.status(200).send(req.body.test);
       }
@@ -119,7 +137,7 @@ describe('Forklaunch Express Tests', () => {
   test('Post', async () => {
     const testPost = await fetch('http://localhost:6934/testpath/test', {
       method: 'POST',
-      body: JSON.stringify({ test: 'Hello World' }),
+      body: safeStringify({ test: 'Hello World' }),
       headers: { 'Content-Type': 'application/json' }
     });
 
@@ -174,7 +192,7 @@ describe('handlers', () => {
     openTelemetryCollector
   );
 
-  it('should be able to create a path param handler', () => {
+  it('should be able to create a path param handler', async () => {
     const getRequest = get(
       typeboxSchemaValidator,
       '/:id',
@@ -187,6 +205,9 @@ describe('handlers', () => {
         },
         params: {
           id: string
+        },
+        requestHeaders: {
+          'x-test': string
         },
         auth: {
           method: 'jwt',
@@ -206,23 +227,36 @@ describe('handlers', () => {
       }
     );
     application.get('/:id', getRequest);
-    router.get('/:id', getRequest);
+    const liveTypeFunction = router.get('/:id', getRequest);
+    await liveTypeFunction.get('/organization/:id', {
+      params: {
+        id: 'string'
+      },
+      headers: {
+        'x-test': 'string'
+      }
+    });
   });
 
-  it('should be able to create a body param handler', () => {
+  it('should be able to create a body param handler', async () => {
     const postRequest = post(
       typeboxSchemaValidator,
       '/',
       {
         name: 'Create Organization',
-        summary: 'Creates an organization',
-        responses: {
-          200: {
+        body: {
+          json: {
             name: string
           }
         },
-        body: {
-          name: string
+        summary: 'Creates an organization',
+        responses: {
+          200: {
+            json: {
+              name: string
+            }
+          },
+          400: string
         }
       },
       async (req, res) => {
@@ -230,7 +264,14 @@ describe('handlers', () => {
       }
     );
     application.post('/', postRequest);
-    router.post('/', postRequest);
+    const liveTypeFunction = router.post('/', postRequest);
+    await liveTypeFunction.post('/organization', {
+      body: {
+        json: {
+          name: 'string'
+        }
+      }
+    });
   });
 
   it('should be able to create a middleware handler', () => {
@@ -243,7 +284,7 @@ describe('handlers', () => {
         }
       },
       async (req) => {
-        console.log(req.query.name);
+        noop(req.query.name);
       }
     );
     application.use(checkoutMiddleware);

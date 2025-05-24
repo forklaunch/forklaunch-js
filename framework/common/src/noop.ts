@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /**
  * A no-operation function that does nothing when called.
  * This is commonly used as a default or placeholder function
@@ -11,4 +12,4 @@
  * }
  * ```
  */
-export function noop() {}
+export function noop(..._args: unknown[]) {}

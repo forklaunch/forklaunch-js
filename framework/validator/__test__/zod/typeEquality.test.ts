@@ -3,8 +3,10 @@ import { Schema } from '../../index';
 import {
   array,
   bigint,
+  binary,
   boolean,
   date,
+  file,
   never,
   nullish,
   number,
@@ -160,18 +162,25 @@ assert<Equality<SchemaTwo, SchemaThree>>();
 
 const shortOne = {
   s: string,
-  non: number
+  non: number,
+  b: binary,
+  f: file('test.txt', 'text/plain')
 };
 
 const shortTwo = schemify({
   s: string,
-  non: number
+  non: number,
+  b: binary,
+  f: file('test.txt', 'text/plain')
 });
 
 type ShortExpected = {
   s: string;
   non: number;
+  b: Buffer<ArrayBuffer>;
+  f: File;
 };
+
 assert<Equality<Schema<typeof shortOne, ZodSchemaValidator>, ShortExpected>>();
 assert<
   Equality<

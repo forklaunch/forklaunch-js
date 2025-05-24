@@ -54,6 +54,7 @@ export interface SchemaValidator<
   RecordFunction = <Key, Value>(key: Key, value: Value) => unknown,
   PromiseFunction = <T>(schema: T) => unknown,
   SchemaGuardFunction = <T>(value: unknown) => value is T,
+  InstanceOfFunction = <T>(value: unknown, type: T) => value is T,
   ValidationFunction = <T>(schema: T, value: unknown) => boolean,
   ParseFunction = <T>(
     schema: T,
@@ -140,6 +141,16 @@ export interface SchemaValidator<
    * Validator for never type.
    */
   never: unknown;
+
+  /**
+   * Validator for binary type
+   */
+  binary: unknown;
+
+  /**
+   * Validator for file type
+   */
+  file: unknown;
 
   /**
    * Compiles schema if this exists, for optimal performance.
@@ -232,6 +243,15 @@ export interface SchemaValidator<
   isSchema: SchemaGuardFunction;
 
   /**
+   * Checks if a value is an instance of a schema.
+   *
+   * @param {object} value - The value to check.
+   * @param {TCatchall} type - The schema to check against.
+   * @returns {boolean} - Whether the value is an instance of the schema.
+   */
+  isInstanceOf: InstanceOfFunction;
+
+  /**
    * Validates a value against a schema.
    *
    * @param {T} schema - The schema to validate against.
@@ -262,6 +282,7 @@ export interface SchemaValidator<
  * Type representing any schema validator.
  */
 export type AnySchemaValidator = SchemaValidator<
+  unknown,
   unknown,
   unknown,
   unknown,

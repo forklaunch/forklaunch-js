@@ -1,6 +1,5 @@
-types/
-tests/
-interfaces/
+src/
+__test__/
 
 docs/
 jest.config.js

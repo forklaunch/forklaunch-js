@@ -1,3 +1,5 @@
+import { safeStringify } from '@forklaunch/common';
+
 /**
  * Compares two values for equality, handling special cases like BigInt.
  * For BigInt values, it uses direct equality comparison.
@@ -15,6 +17,6 @@ export const compare = (received: unknown, expected: unknown) => {
     case 'bigint':
       return expect(expected).toEqual(received);
     default:
-      return expect(JSON.stringify(expected)).toEqual(JSON.stringify(received));
+      return expect(safeStringify(expected)).toEqual(safeStringify(received));
   }
 };

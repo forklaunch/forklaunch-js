@@ -1,8 +1,10 @@
 import {
   ZodObject as OriginalZodObject,
   ZodArray,
+  ZodEffects,
   ZodLiteral,
   ZodNever,
+  ZodPipeline,
   ZodRawShape,
   ZodType,
   ZodTypeAny,
@@ -123,17 +125,21 @@ export type UnionZodResolve<T extends ZodUnionContainer> = T extends [
  */
 export type ZodResolve<T, Depth extends number = 0> = Depth extends 29
   ? ZodUnknown
-  : T extends LiteralSchema
-    ? ZodLiteral<T>
-    : T extends ZodType
-      ? T
-      : T extends UnboxedZodObjectSchema
-        ? ZodObject<{
-            [K in keyof T]: ZodResolve<T[K], Increment<Depth>>;
-          }> extends infer R
-          ? R
-          : ZodNever
-        : ZodNever;
+  : T extends ZodPipeline<ZodTypeAny, infer R>
+    ? R
+    : T extends ZodEffects<infer R>
+      ? R
+      : T extends LiteralSchema
+        ? ZodLiteral<T>
+        : T extends ZodType
+          ? T
+          : T extends UnboxedZodObjectSchema
+            ? ZodObject<{
+                [K in keyof T]: ZodResolve<T[K], Increment<Depth>>;
+              }> extends infer R
+              ? R
+              : ZodNever
+            : ZodNever;
 
 /**
  * Represents the key type of a Zod record schema.

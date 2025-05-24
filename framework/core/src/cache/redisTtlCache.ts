@@ -1,3 +1,4 @@
+import { safeParse, safeStringify } from '@forklaunch/common';
 import { createClient, RedisClientOptions } from 'redis';
 import {
   evaluateTelemetryOptions,
@@ -74,7 +75,7 @@ export class RedisTtlCache implements TtlCache {
     switch (typeof value) {
       case 'object':
       case 'string':
-        return JSON.parse(value);
+        return safeParse(value) as T;
       case 'number':
         return value as T;
     }
@@ -98,7 +99,7 @@ export class RedisTtlCache implements TtlCache {
     if (this.telemetryOptions.enabled.logging) {
       this.openTelemetryCollector.info(`Putting record into cache: ${key}`);
     }
-    await this.client.set(key, JSON.stringify(value), {
+    await this.client.set(key, safeStringify(value), {
       PX: ttlMilliseconds
     });
   }
@@ -111,9 +112,9 @@ export class RedisTtlCache implements TtlCache {
    * @returns {Promise<void>} A promise that resolves when all values are cached
    */
   async putBatchRecords<T>(cacheRecords: TtlCacheRecord<T>[]): Promise<void> {
-    let multiCommand = this.client.multi();
+    const multiCommand = this.client.multi();
     for (const { key, value, ttlMilliseconds } of cacheRecords) {
-      multiCommand = multiCommand.set(key, JSON.stringify(value), {
+      multiCommand.set(key, safeStringify(value), {
         PX: ttlMilliseconds || this.ttlMilliseconds
       });
     }
@@ -129,7 +130,7 @@ export class RedisTtlCache implements TtlCache {
    * @returns {Promise<void>} A promise that resolves when the value is enqueued
    */
   async enqueueRecord<T>(queueName: string, value: T): Promise<void> {
-    await this.client.lPush(queueName, JSON.stringify(value));
+    await this.client.lPush(queueName, safeStringify(value));
   }
 
   /**
@@ -141,9 +142,9 @@ export class RedisTtlCache implements TtlCache {
    * @returns {Promise<void>} A promise that resolves when all values are enqueued
    */
   async enqueueBatchRecords<T>(queueName: string, values: T[]): Promise<void> {
-    let multiCommand = this.client.multi();
+    const multiCommand = this.client.multi();
     for (const value of values) {
-      multiCommand = multiCommand.lPush(queueName, JSON.stringify(value));
+      multiCommand.lPush(queueName, safeStringify(value));
     }
     await multiCommand.exec();
   }
@@ -165,9 +166,9 @@ export class RedisTtlCache implements TtlCache {
    * @returns {Promise<void>} A promise that resolves when all records are deleted
    */
   async deleteBatchRecords(cacheRecordKeys: string[]): Promise<void> {
-    let multiCommand = this.client.multi();
+    const multiCommand = this.client.multi();
     for (const key of cacheRecordKeys) {
-      multiCommand = multiCommand.del(key);
+      multiCommand.del(key);
     }
     await multiCommand.exec();
   }
@@ -185,7 +186,7 @@ export class RedisTtlCache implements TtlCache {
     if (value === null) {
       throw new Error(`Queue is empty: ${queueName}`);
     }
-    return JSON.parse(value);
+    return safeParse(value) as T;
   }
 
   /**
@@ -200,12 +201,16 @@ export class RedisTtlCache implements TtlCache {
     queueName: string,
     pageSize: number
   ): Promise<T[]> {
-    let multiCommand = this.client.multi();
+    const multiCommand = this.client.multi();
     for (let i = 0; i < pageSize; i++) {
-      multiCommand = multiCommand.rPop(queueName);
+      multiCommand.rPop(queueName);
     }
     const values = await multiCommand.exec();
-    return values.map((value) => this.parseValue<T>(value)).filter(Boolean);
+    return values
+      .map((value) =>
+        this.parseValue<T>(value as unknown as RedisCommandRawReply)
+      )
+      .filter(Boolean);
   }
 
   /**
@@ -228,8 +233,9 @@ export class RedisTtlCache implements TtlCache {
 
     return {
       key: cacheRecordKey,
-      value: this.parseValue<T>(value),
-      ttlMilliseconds: this.parseValue<number>(ttl) * 1000
+      value: this.parseValue<T>(value as unknown as RedisCommandRawReply),
+      ttlMilliseconds:
+        this.parseValue<number>(ttl as unknown as RedisCommandRawReply) * 1000
     };
   }
 
@@ -246,16 +252,20 @@ export class RedisTtlCache implements TtlCache {
     const keys = Array.isArray(cacheRecordKeysOrPrefix)
       ? cacheRecordKeysOrPrefix
       : await this.client.keys(cacheRecordKeysOrPrefix + '*');
-    let multiCommand = this.client.multi();
+    const multiCommand = this.client.multi();
     for (const key of keys) {
-      multiCommand = multiCommand.get(key);
-      multiCommand = multiCommand.ttl(key);
+      multiCommand.get(key);
+      multiCommand.ttl(key);
     }
     const values = await multiCommand.exec();
     return values.reduce<TtlCacheRecord<T>[]>((acc, value, index) => {
       if (index % 2 === 0) {
-        const maybeValue = this.parseValue<T>(value);
-        const ttl = this.parseValue<number>(values[index + 1]);
+        const maybeValue = this.parseValue<T>(
+          value as unknown as RedisCommandRawReply
+        );
+        const ttl = this.parseValue<number>(
+          values[index + 1] as unknown as RedisCommandRawReply
+        );
         if (maybeValue && ttl) {
           acc.push({
             key: keys[index / 2],
@@ -302,12 +312,12 @@ export class RedisTtlCache implements TtlCache {
     const keys = Array.isArray(cacheRecordKeysOrPrefix)
       ? cacheRecordKeysOrPrefix
       : await this.client.keys(cacheRecordKeysOrPrefix + '*');
-    let multiCommand = this.client.multi();
+    const multiCommand = this.client.multi();
     for (const key of keys) {
-      multiCommand = multiCommand.exists(key);
+      multiCommand.exists(key);
     }
     const results = await multiCommand.exec();
-    return results.map((result) => result === 1);
+    return results.map((result) => (result as unknown as number) === 1);
   }
 
   /**

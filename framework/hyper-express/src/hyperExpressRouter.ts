@@ -49,14 +49,14 @@ export class Router<
       basePath,
       schemaValidator,
       new ExpressRouter(),
+      [
+        contentParse<SV>,
+        enrichResponseTransmission as unknown as MiddlewareHandler
+      ],
       openTelemetryCollector
     );
 
     this.internal.use(polyfillGetHeaders);
-    this.internal.use(contentParse);
-    this.internal.use(
-      enrichResponseTransmission as unknown as MiddlewareHandler
-    );
   }
 
   route(path: string): this {

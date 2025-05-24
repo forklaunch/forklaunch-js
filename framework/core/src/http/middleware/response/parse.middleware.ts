@@ -50,6 +50,7 @@ export function parse<
 >(
   req: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>,
   res: ForklaunchResponse<
+    unknown,
     ResBodyMap,
     ForklaunchResHeaders & ResHeaders,
     LocalsObj
@@ -58,8 +59,10 @@ export function parse<
 ) {
   const { headers, responses } = res.responseSchemas;
 
+  const statusCode = Number(res.statusCode);
+
   const parsedResponse = (req.schemaValidator as SchemaValidator).parse(
-    responses?.[res.statusCode],
+    responses?.[statusCode],
     res.bodyData
   );
 
@@ -90,7 +93,7 @@ export function parse<
       default:
       case 'error':
         res.type('text/plain');
-        res.status(400);
+        res.status(500);
         if (hasSend(res)) {
           res.send(
             `Invalid response:\n${parseErrors.join(
@@ -102,8 +105,6 @@ export function parse<
         } else {
           next?.(new Error('Response is not sendable.'));
         }
-        // next?.(new Error(`Invalid response:\n${parseErrors.join('\n\n')}`));
-        // break;
         return;
       case 'warning':
         req.openTelemetryCollector.warn(

@@ -12,7 +12,10 @@ import {
   TagObject
 } from 'openapi3-ts/oas31';
 import HTTPStatuses from '../httpStatusCodes';
-import { HttpContractDetails } from '../types/contractDetails.types';
+import {
+  discriminateBody,
+  discriminateResponseBodies
+} from '../router/discriminateBody';
 import { ForklaunchRouter } from '../types/router.types';
 
 /**
@@ -86,20 +89,27 @@ function generateOpenApiDocument(
  */
 function contentResolver<SV extends AnySchemaValidator>(
   schemaValidator: SV,
-  body: IdiomaticSchema<SV>
+  body: IdiomaticSchema<SV>,
+  contentType?: string
 ): ContentObject {
   const bodySpec = (schemaValidator as SchemaValidator).openapi(body);
-  return body === schemaValidator.string
+  return contentType != null
     ? {
-        'plain/text': {
+        [contentType]: {
           schema: bodySpec
         }
       }
-    : {
-        'application/json': {
-          schema: bodySpec
+    : body === schemaValidator.string
+      ? {
+          'text/plain': {
+            schema: bodySpec
+          }
         }
-      };
+      : {
+          'application/json': {
+            schema: bodySpec
+          }
+        };
 }
 
 /**
@@ -136,14 +146,30 @@ export function generateSwaggerDocument<SV extends AnySchemaValidator>(
 
       const responses: ResponsesObject = {};
 
-      for (const key in route.contractDetails.responses) {
+      const discriminatedResponseBodiesResult = discriminateResponseBodies(
+        schemaValidator,
+        route.contractDetails.responses
+      );
+
+      for (const key in discriminatedResponseBodiesResult) {
         responses[key] = {
           description: HTTPStatuses[key],
           content: contentResolver(
             schemaValidator,
-            route.contractDetails.responses[key]
+            discriminatedResponseBodiesResult[key].schema,
+            discriminatedResponseBodiesResult[key].contentType
           )
         };
+      }
+
+      const commonErrors = [400, 404, 500];
+      for (const error of commonErrors) {
+        if (!(error in responses)) {
+          responses[error] = {
+            description: HTTPStatuses[error],
+            content: contentResolver(schemaValidator, schemaValidator.string)
+          };
+        }
       }
 
       const pathItemObject: OperationObject = {
@@ -164,13 +190,19 @@ export function generateSwaggerDocument<SV extends AnySchemaValidator>(
         }
       }
 
-      const body = (
-        route.contractDetails as HttpContractDetails<typeof schemaValidator>
-      ).body;
-      if (body) {
+      const discriminatedBodyResult =
+        'body' in route.contractDetails
+          ? discriminateBody(schemaValidator, route.contractDetails.body)
+          : null;
+
+      if (discriminatedBodyResult) {
         pathItemObject.requestBody = {
           required: true,
-          content: contentResolver(schemaValidator, body)
+          content: contentResolver(
+            schemaValidator,
+            discriminatedBodyResult.schema,
+            discriminatedBodyResult.contentType
+          )
         };
       }
 

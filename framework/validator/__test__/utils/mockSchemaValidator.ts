@@ -1,3 +1,4 @@
+import { safeStringify } from '@forklaunch/common';
 import { SchemaObject } from 'openapi3-ts/oas31';
 import { SchemaValidator } from '../../index';
 import {
@@ -64,6 +65,7 @@ export class MockSchemaValidator
       ) => `{${Key}: ${Value}}`,
       <T extends string>(schema: T) => `Promise<${T}>`,
       (value: unknown) => value is string,
+      <T extends string>(value: unknown, type: T) => value is T,
       <T extends string>(schema: T, value: string) => boolean,
       <T extends string>(schema: T, value: string) => ParseResult<T>,
       <T extends string>(schema: T) => SchemaObject
@@ -86,6 +88,8 @@ export class MockSchemaValidator
   any = 'any';
   unknown = 'unknown';
   never = 'never';
+  binary = 'binary';
+  file = 'file';
 
   /**
    * Compiles a schema string.
@@ -168,7 +172,9 @@ export class MockSchemaValidator
     args: Args,
     returnType: ReturnType
   ): `function(${SerializeStringArray<Args>}) => ${ReturnType}` {
-    return `function(${args.join(', ')}) => ${returnType}` as `function(${SerializeStringArray<Args>}) => ${ReturnType}`;
+    return `function(${args.join(
+      ', '
+    )}) => ${returnType}` as `function(${SerializeStringArray<Args>}) => ${ReturnType}`;
   }
 
   /**
@@ -206,6 +212,17 @@ export class MockSchemaValidator
   }
 
   /**
+   * Checks if a value is an instance of a schema string.
+   *
+   * @param {unknown} value - The value to check
+   * @param {string} type - The schema string to check against
+   * @returns {boolean} True if the value is an instance of the schema string
+   */
+  isInstanceOf<T extends string>(value: unknown, type: T): value is T {
+    return typeof type === 'string' && value === type;
+  }
+
+  /**
    * Validates a value against a schema string.
    *
    * @param {T} schema - The schema string to validate against
@@ -224,7 +241,7 @@ export class MockSchemaValidator
    * @returns {ParseResult<T>} Success if the schema and value strings match, error otherwise
    */
   parse<T extends string>(schema: T, value: string): ParseResult<T> {
-    return JSON.stringify(schema) === JSON.stringify(value)
+    return safeStringify(schema) === safeStringify(value)
       ? {
           ok: true,
           value: schema

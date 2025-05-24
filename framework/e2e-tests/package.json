@@ -1,0 +1,37 @@
+{
+  "name": "@forklaunch/e2e-tests",
+  "version": "0.0.1",
+  "description": "Internal E2E tests for Forklaunch framework.",
+  "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
+  "bugs": {
+    "url": "https://github.com/forklaunch/forklaunch-js/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/forklaunch/forklaunch-js.git"
+  },
+  "license": "MIT",
+  "author": "Rohin Bhargava",
+  "scripts": {
+    "build": "tsc --noEmit",
+    "clean": "rm -rf lib pnpm.lock.yaml node_modules",
+    "docs": "typedoc --out docs *",
+    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
+    "lint": "eslint . -c eslint.config.mjs",
+    "lint:fix": "eslint . -c eslint.config.mjs --fix",
+    "test": "vitest --passWithNoTests"
+  },
+  "dependencies": {
+    "@forklaunch/common": "workspace:*",
+    "@forklaunch/core": "workspace:*",
+    "@forklaunch/express": "workspace:*",
+    "@forklaunch/hyper-express": "workspace:*",
+    "@forklaunch/hyper-express-fork": "^6.17.34",
+    "@forklaunch/universal-sdk": "workspace:*",
+    "@forklaunch/validator": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.2",
+    "tsup": "^8.5.0"
+  }
+}

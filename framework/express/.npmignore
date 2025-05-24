@@ -1,5 +1,5 @@
-middleware/
-types/
+src/
+__test__/
 
 docs/
 jest.config.js

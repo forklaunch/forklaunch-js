@@ -238,6 +238,7 @@ export async function parseRequestAuth<
     MapReqHeadersSchema<SV, ReqHeaders>
   >,
   res: ForklaunchResponse<
+    unknown,
     MapResBodyMapSchema<SV, ResBodyMap>,
     MapResHeadersSchema<SV, ResHeaders>,
     LocalsObj
@@ -271,7 +272,8 @@ export async function parseRequestAuth<
         req
       )) ?? [];
     if (error != null) {
-      res.status(error).send(message);
+      res.type('text/plain');
+      res.status(error).send(message as never);
       next?.(new Error(message));
     }
   }

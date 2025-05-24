@@ -1,9 +1,9 @@
 cd blueprint
-pnpm lint-staged --relative
 pnpm sort-package-json */package.json
+pnpm lint-staged --relative
 cd ..
 cd framework
-pnpm lint-staged --relative
 pnpm sort-package-json */package.json
+pnpm lint-staged --relative
 cd ..
 

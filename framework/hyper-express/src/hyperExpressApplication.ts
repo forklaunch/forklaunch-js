@@ -1,3 +1,4 @@
+import { safeStringify } from '@forklaunch/common';
 import {
   ATTR_HTTP_RESPONSE_STATUS_CODE,
   DocsConfiguration,
@@ -17,7 +18,10 @@ import {
 } from '@forklaunch/hyper-express-fork';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { apiReference } from '@scalar/express-api-reference';
+import crypto from 'crypto';
 import * as uWebsockets from 'uWebSockets.js';
+import { contentParse } from './middleware/contentParse.middleware';
+import { enrichResponseTransmission } from './middleware/enrichResponseTransmission.middleware';
 import { swagger, swaggerRedirect } from './middleware/swagger.middleware';
 
 /**
@@ -73,7 +77,15 @@ export class Application<
     openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
     private readonly docsConfiguration?: DocsConfiguration
   ) {
-    super(schemaValidator, new Server(), openTelemetryCollector);
+    super(
+      schemaValidator,
+      new Server(),
+      [
+        enrichResponseTransmission as unknown as MiddlewareHandler,
+        contentParse<SV>
+      ],
+      openTelemetryCollector
+    );
   }
 
   /**
@@ -125,12 +137,11 @@ export class Application<
       const port = arg0 || Number(process.env.PORT);
 
       this.internal.set_error_handler((req, res, err) => {
+        const statusCode = Number(res.statusCode);
         res.locals.errorMessage = err.message;
         res.type('text/plain');
         res
-          .status(
-            res.statusCode && res.statusCode >= 400 ? res.statusCode : 500
-          )
+          .status(statusCode && statusCode >= 400 ? statusCode : 500)
           .send(
             `Internal server error:\n\nCorrelation id: ${
               isForklaunchRequest(req)
@@ -139,9 +150,15 @@ export class Application<
             }`
           );
         logger('error').error(err.stack ?? err.message, {
-          [ATTR_HTTP_RESPONSE_STATUS_CODE]: res.statusCode ?? 500
+          [ATTR_HTTP_RESPONSE_STATUS_CODE]: statusCode ?? 500
         });
       });
+
+      const openApi = generateSwaggerDocument<SV>(
+        this.schemaValidator,
+        port,
+        this.routers
+      );
 
       if (
         this.docsConfiguration == null ||
@@ -152,11 +169,7 @@ export class Application<
             process.env.DOCS_PATH ?? '/docs'
           }`,
           apiReference({
-            content: generateSwaggerDocument<SV>(
-              this.schemaValidator,
-              port,
-              this.routers
-            ),
+            content: openApi,
             ...this.docsConfiguration
           }) as unknown as MiddlewareHandler
         );
@@ -165,18 +178,27 @@ export class Application<
           process.env.DOCS_PATH ?? '/docs'
         }`;
         this.internal.use(swaggerPath, swaggerRedirect(swaggerPath));
-        this.internal.get(
-          `${swaggerPath}/*`,
-          swagger(
-            swaggerPath,
-            generateSwaggerDocument<SV>(
-              this.schemaValidator,
-              port,
-              this.routers
-            )
-          )
-        );
+        this.internal.get(`${swaggerPath}/*`, swagger(swaggerPath, openApi));
       }
+
+      this.internal.get(
+        `/api/${process.env.VERSION ?? 'v1'}/openapi`,
+        (_, res) => {
+          res.type('application/json');
+          res.json(openApi);
+        }
+      );
+
+      this.internal.get(
+        `/api/${process.env.VERSION ?? 'v1'}/openapi-hash`,
+        async (_, res) => {
+          const hash = await crypto
+            .createHash('sha256')
+            .update(safeStringify(openApi))
+            .digest('hex');
+          res.send(hash);
+        }
+      );
 
       if (arg1 && typeof arg1 === 'string') {
         return this.internal.listen(port, arg1, arg2);

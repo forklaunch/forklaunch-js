@@ -10,15 +10,24 @@ import { Readable } from 'stream';
 import { OpenTelemetryCollector } from '../telemetry/openTelemetryCollector';
 import {
   Body,
+  FileBody,
   HeadersObject,
   HttpContractDetails,
+  JsonBody,
   MapSchema,
+  MultipartForm,
   ParamsDictionary,
   ParamsObject,
   PathParamHttpContractDetails,
   QueryObject,
+  ResponseBody,
   ResponseCompiledSchema,
-  ResponsesObject
+  ResponsesObject,
+  ServerSentEventBody,
+  TextBody,
+  UnknownBody,
+  UnknownResponseBody,
+  UrlEncodedForm
 } from './contractDetails.types';
 import { MetricsDefinition } from './openTelemetryCollector.types';
 
@@ -135,8 +144,14 @@ export interface ForklaunchStatusResponse<ResBody> {
    * @returns {T} - The sent response.
    */
   send: {
-    <T>(body?: ResBody, close_connection?: boolean): T;
-    <T>(body?: ResBody): T;
+    (
+      body?: ResBody extends AsyncGenerator<unknown> ? never : ResBody | null,
+      close_connection?: boolean
+    ): boolean;
+    <U>(
+      body?: ResBody extends AsyncGenerator<unknown> ? never : ResBody | null,
+      close_connection?: boolean
+    ): U;
   };
 
   /**
@@ -145,8 +160,16 @@ export interface ForklaunchStatusResponse<ResBody> {
    * @returns {boolean|T} - The JSON response.
    */
   json: {
-    (body?: ResBody): boolean;
-    <T>(body?: ResBody): T;
+    (
+      body: ResBody extends string | AsyncGenerator<unknown>
+        ? never
+        : ResBody | null
+    ): boolean;
+    <U>(
+      body: ResBody extends string | AsyncGenerator<unknown>
+        ? never
+        : ResBody | null
+    ): U;
   };
 
   /**
@@ -155,10 +178,37 @@ export interface ForklaunchStatusResponse<ResBody> {
    * @returns {boolean|T} - The JSONP response.
    */
   jsonp: {
-    (body?: ResBody): boolean;
-    <T>(body?: ResBody): T;
+    (
+      body: ResBody extends string | AsyncGenerator<unknown>
+        ? never
+        : ResBody | null
+    ): boolean;
+    <U>(
+      body: ResBody extends string | AsyncGenerator<unknown>
+        ? never
+        : ResBody | null
+    ): U;
   };
+
+  /**
+   * Sends a Server-Sent Event (SSE) response.
+   * @param {ResBodyMap} [body] - The response body.
+   * @param {number} interval - The interval between events.
+   */
+  sseEmitter: (
+    generator: () => AsyncGenerator<
+      ResBody extends AsyncGenerator<infer T> ? T : never,
+      void,
+      unknown
+    >
+  ) => void;
 }
+
+type ToNumber<T extends string | number | symbol> = T extends number
+  ? T
+  : T extends `${infer N extends number}`
+    ? N
+    : never;
 
 /**
  * Interface representing a Forklaunch response.
@@ -167,6 +217,7 @@ export interface ForklaunchStatusResponse<ResBody> {
  * @template StatusCode - A type for the status code, defaulting to number.
  */
 export interface ForklaunchResponse<
+  BaseResponse,
   ResBodyMap extends Record<number, unknown>,
   ResHeaders extends Record<string, string>,
   LocalsObj extends Record<string, unknown>
@@ -190,25 +241,36 @@ export interface ForklaunchResponse<
    * @param {string} key - The header key.
    * @param {string} value - The header value.
    */
-  setHeader: <K extends keyof (ResHeaders & ForklaunchResHeaders)>(
-    key: K,
-    value: K extends keyof ForklaunchResHeaders
-      ? ForklaunchResHeaders[K]
-      : ResHeaders[K]
-  ) => void;
+  setHeader: {
+    <K extends keyof (ResHeaders & ForklaunchResHeaders)>(
+      key: K,
+      value: K extends keyof ForklaunchResHeaders
+        ? ForklaunchResHeaders[K]
+        : ResHeaders[K]
+    ): void;
+    <K extends keyof (ResHeaders & ForklaunchResHeaders)>(
+      key: K,
+      value: K extends keyof ForklaunchResHeaders
+        ? ForklaunchResHeaders[K]
+        : ResHeaders[K]
+    ): BaseResponse;
+  };
 
   /**
    * Adds an event listener to the response.
    * @param {string} event - The event to listen for.
    * @param {Function} listener - The listener function.
    */
-  on(event: 'close', listener: () => void): this;
-  on(event: 'drain', listener: () => void): this;
-  on(event: 'error', listener: (err: Error) => void): this;
-  on(event: 'finish', listener: () => void): this;
-  on(event: 'pipe', listener: (src: Readable) => void): this;
-  on(event: 'unpipe', listener: (src: Readable) => void): this;
-  on(event: string | symbol, listener: (...args: unknown[]) => void): this;
+  on(event: 'close', listener: () => void): BaseResponse & this;
+  on(event: 'drain', listener: () => void): BaseResponse & this;
+  on(event: 'error', listener: (err: Error) => void): BaseResponse & this;
+  on(event: 'finish', listener: () => void): BaseResponse & this;
+  on(event: 'pipe', listener: (src: Readable) => void): BaseResponse & this;
+  on(event: 'unpipe', listener: (src: Readable) => void): BaseResponse & this;
+  on(
+    event: string | symbol,
+    listener: (...args: unknown[]) => void
+  ): BaseResponse & this;
 
   /**
    * Sets the status of the response.
@@ -217,30 +279,48 @@ export interface ForklaunchResponse<
    * @returns {ForklaunchResponse<(ResBodyMap)[U], ResHeaders, U, LocalsObj>} - The response with the given status.
    */
   status: {
-    <U extends keyof (ResBodyMap & ForklaunchResErrors)>(
+    <U extends ToNumber<keyof (ResBodyMap & ForklaunchResErrors)>>(
       code: U
-    ): ForklaunchStatusResponse<
-      (Omit<ForklaunchResErrors, keyof ResBodyMap> & ResBodyMap)[U]
-    >;
-    <U extends keyof (ResBodyMap & ForklaunchResErrors)>(
+    ): Omit<
+      BaseResponse,
+      keyof ForklaunchStatusResponse<
+        (Omit<ForklaunchResErrors, keyof ResBodyMap> & ResBodyMap)[U]
+      >
+    > &
+      ForklaunchStatusResponse<
+        (Omit<ForklaunchResErrors, keyof ResBodyMap> & ResBodyMap)[U]
+      >;
+    <U extends ToNumber<keyof (ResBodyMap & ForklaunchResErrors)>>(
       code: U,
       message?: string
-    ): ForklaunchStatusResponse<
-      (Omit<ForklaunchResErrors, keyof ResBodyMap> & ResBodyMap)[U]
-    >;
+    ): Omit<
+      BaseResponse,
+      keyof ForklaunchStatusResponse<
+        (Omit<ForklaunchResErrors, keyof ResBodyMap> & ResBodyMap)[U]
+      >
+    > &
+      ForklaunchStatusResponse<
+        (Omit<ForklaunchResErrors, keyof ResBodyMap> & ResBodyMap)[U]
+      >;
   };
 
   /**
    * Ends the response.
    * @param {string} [data] - Optional data to send.
    */
-  end: (data?: string) => void;
+  end: {
+    (data?: string): void;
+    (cb?: (() => void) | undefined): BaseResponse;
+  };
 
   /**
    * Sets the content type of the response.
    * @param {string} type - The content type.
    */
-  type: (type: string) => void;
+  type: {
+    (type: string): void;
+    (type: string): BaseResponse;
+  };
 
   /** Local variables */
   locals: LocalsObj;
@@ -253,6 +333,9 @@ export interface ForklaunchResponse<
 
   /** Whether the metric has been recorded */
   metricRecorded: boolean;
+
+  /** Whether the response has been sent */
+  sent: boolean;
 }
 
 /**
@@ -327,19 +410,25 @@ export interface ExpressLikeHandler<
       BaseRequest
     >,
     res: unknown extends BaseResponse
-      ? ForklaunchResponse<ResBodyMap, ResHeaders, LocalsObj>
+      ? ForklaunchResponse<BaseResponse, ResBodyMap, ResHeaders, LocalsObj>
       : {
           [key in keyof BaseResponse]: key extends keyof ForklaunchResponse<
+            BaseResponse,
             ResBodyMap,
             ResHeaders,
             LocalsObj
           >
-            ? ForklaunchResponse<ResBodyMap, ResHeaders, LocalsObj>[key]
+            ? ForklaunchResponse<
+                BaseResponse,
+                ResBodyMap,
+                ResHeaders,
+                LocalsObj
+              >[key]
             : key extends keyof BaseResponse
               ? BaseResponse[key]
               : never;
         },
-    next?: NextFunction
+    next: NextFunction
   ): void | Promise<void>;
 }
 
@@ -353,21 +442,70 @@ export type MapParamsSchema<
       : Params
     : ParamsDictionary;
 
+export type ExtractContentType<
+  SV extends AnySchemaValidator,
+  T extends ResponseBody<SV> | unknown
+> = T extends { contentType: string }
+  ? T['contentType']
+  : T extends JsonBody<SV>
+    ? 'application/json'
+    : T extends TextBody<SV>
+      ? 'text/plain'
+      : T extends FileBody<SV>
+        ? 'application/octet-stream'
+        : T extends ServerSentEventBody<SV>
+          ? 'text/event-stream'
+          : T extends UnknownResponseBody<SV>
+            ? 'application/json'
+            : T extends SV['string']
+              ? 'text/plain'
+              : 'text/plain';
+
+export type ExtractResponseBody<
+  SV extends AnySchemaValidator,
+  T extends ResponseBody<SV> | unknown
+> =
+  T extends JsonBody<SV>
+    ? MapSchema<SV, T['json']>
+    : T extends TextBody<SV>
+      ? MapSchema<SV, T['text']>
+      : T extends FileBody<SV>
+        ? File | Blob
+        : T extends ServerSentEventBody<SV>
+          ? AsyncGenerator<MapSchema<SV, T['event']>>
+          : T extends UnknownResponseBody<SV>
+            ? MapSchema<SV, T['schema']>
+            : MapSchema<SV, T>;
+
 export type MapResBodyMapSchema<
   SV extends AnySchemaValidator,
   ResBodyMap extends ResponsesObject<SV>
-> =
-  MapSchema<SV, ResBodyMap> extends infer ResponseBodyMap
-    ? unknown extends ResponseBodyMap
-      ? ForklaunchResErrors
-      : ResponseBodyMap
-    : ForklaunchResErrors;
+> = unknown extends ResBodyMap
+  ? ForklaunchResErrors
+  : {
+      [K in keyof ResBodyMap]: ExtractResponseBody<SV, ResBodyMap[K]>;
+    };
+
+export type ExtractBody<SV extends AnySchemaValidator, T extends Body<SV>> =
+  T extends JsonBody<SV>
+    ? T['json']
+    : T extends TextBody<SV>
+      ? T['text']
+      : T extends FileBody<SV>
+        ? T['file']
+        : T extends MultipartForm<SV>
+          ? T['multipartForm']
+          : T extends UrlEncodedForm<SV>
+            ? T['urlEncodedForm']
+            : T extends UnknownBody<SV>
+              ? T['schema']
+              : T;
 
 export type MapReqBodySchema<
   SV extends AnySchemaValidator,
   ReqBody extends Body<SV>
 > =
-  MapSchema<SV, ReqBody> extends infer Body
+  MapSchema<SV, ExtractBody<SV, ReqBody>> extends infer Body
     ? unknown extends Body
       ? Record<string, unknown>
       : Body
@@ -530,10 +668,10 @@ export type LiveTypeFunction<
         headers: MapSchema<SV, ReqHeaders>;
       }) extends infer Request
   ? SdkResponse<
-      ForklaunchResErrors &
-        (HeadersObject<SV> extends ResBodyMap
-          ? unknown
-          : MapSchema<SV, ResBodyMap>),
+      SV,
+      ResponsesObject<SV> extends ResBodyMap
+        ? Record<number, unknown>
+        : ResBodyMap,
       ForklaunchResHeaders extends ResHeaders
         ? unknown
         : MapSchema<SV, ResHeaders>
@@ -542,7 +680,7 @@ export type LiveTypeFunction<
       ? (route: RemoveTrailingSlash<Route>) => Promise<Return>
       : (
           route: RemoveTrailingSlash<Route>,
-          request: MakePropertyOptionalIfChildrenOptional<Request> & unknown
+          request: Prettify<MakePropertyOptionalIfChildrenOptional<Request>>
         ) => Promise<Return>
     : never
   : never;
@@ -554,15 +692,23 @@ export type LiveTypeFunction<
  * @template ResHeaders - A type for the response headers.
  */
 type SdkResponse<
+  SV extends AnySchemaValidator,
   ResBodyMap extends Record<number, unknown>,
   ResHeaders extends Record<string, string> | unknown
 > = Prettify<
-  {
+  ({
+    [K in keyof ForklaunchResErrors]: {
+      code: K;
+      contentType: 'text/plain';
+      response: ForklaunchResErrors[K];
+    };
+  } & {
     [K in keyof ResBodyMap]: {
       code: K;
-      response: ResBodyMap[K];
+      contentType: ExtractContentType<SV, ResBodyMap[K]>;
+      response: ExtractResponseBody<SV, ResBodyMap[K]>;
     } & (unknown extends ResHeaders ? unknown : { headers: ResHeaders });
-  }[keyof ResBodyMap]
+  })[keyof (ForklaunchResErrors & ResBodyMap)]
 >;
 
 /**
@@ -571,11 +717,13 @@ type SdkResponse<
 export type ForklaunchResErrors<
   BadRequest = string,
   Unauthorized = string,
+  NotFound = string,
   Forbidden = string,
   InternalServerErrorType = string
 > = {
   400: BadRequest;
   401: Unauthorized;
+  404: NotFound;
   403: Forbidden;
   500: InternalServerErrorType;
 };

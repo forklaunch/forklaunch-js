@@ -22,7 +22,7 @@ export function recordMetric<
   LocalsObj extends Record<string, unknown>
 >(
   req: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>,
-  res: ForklaunchResponse<ResBodyMap, ResHeaders, LocalsObj>
+  res: ForklaunchResponse<unknown, ResBodyMap, ResHeaders, LocalsObj>
 ) {
   if (res.metricRecorded) {
     return;
@@ -34,7 +34,7 @@ export function recordMetric<
     [ATTR_CORRELATION_ID]: req.context.correlationId,
     [ATTR_HTTP_REQUEST_METHOD]: req.method,
     [ATTR_HTTP_ROUTE]: req.originalPath,
-    [ATTR_HTTP_RESPONSE_STATUS_CODE]: res.statusCode || 0
+    [ATTR_HTTP_RESPONSE_STATUS_CODE]: Number(res.statusCode) || 0
   });
   res.metricRecorded = true;
 }

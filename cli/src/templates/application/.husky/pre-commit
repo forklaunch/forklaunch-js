@@ -1,2 +1,2 @@
-pnpm lint-staged --relative 
 pnpm sort-package-json */package.json
+pnpm lint-staged --relative 

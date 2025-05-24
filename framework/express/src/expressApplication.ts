@@ -1,3 +1,4 @@
+import { safeStringify } from '@forklaunch/common';
 import {
   ATTR_HTTP_RESPONSE_STATUS_CODE,
   DocsConfiguration,
@@ -11,6 +12,8 @@ import {
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { apiReference } from '@scalar/express-api-reference';
+import { OptionsJson, OptionsText, OptionsUrlencoded } from 'body-parser';
+import crypto from 'crypto';
 import express, {
   ErrorRequestHandler,
   Express,
@@ -21,6 +24,8 @@ import express, {
 } from 'express';
 import { Server } from 'http';
 import swaggerUi from 'swagger-ui-express';
+import { contentParse } from './middleware/content.parse.middleware';
+import { enrichResponseTransmission } from './middleware/enrichResponseTransmission.middleware';
 
 /**
  * Application class that sets up an Express server with Forklaunch routers and middleware.
@@ -53,9 +58,18 @@ export class Application<
   constructor(
     schemaValidator: SV,
     openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-    private readonly docsConfiguration?: DocsConfiguration
+    private readonly docsConfiguration?: DocsConfiguration,
+    options?: OptionsText & OptionsJson & OptionsUrlencoded
   ) {
-    super(schemaValidator, express(), openTelemetryCollector);
+    super(
+      schemaValidator,
+      express(),
+      [
+        contentParse<SV>(options),
+        enrichResponseTransmission as unknown as RequestHandler
+      ],
+      openTelemetryCollector
+    );
   }
 
   /**
@@ -95,6 +109,12 @@ export class Application<
     const port =
       typeof args[0] === 'number' ? args[0] : Number(process.env.PORT);
 
+    const openApi = generateSwaggerDocument<SV>(
+      this.schemaValidator,
+      port,
+      this.routers
+    );
+
     if (
       this.docsConfiguration == null ||
       this.docsConfiguration.type === 'scalar'
@@ -104,11 +124,7 @@ export class Application<
           process.env.DOCS_PATH ?? '/docs'
         }`,
         apiReference({
-          content: generateSwaggerDocument<SV>(
-            this.schemaValidator,
-            port,
-            this.routers
-          ),
+          content: openApi,
           ...this.docsConfiguration
         }) as unknown as RequestHandler
       );
@@ -118,18 +134,37 @@ export class Application<
           process.env.DOCS_PATH ?? '/docs'
         }`,
         swaggerUi.serve,
-        swaggerUi.setup(
-          generateSwaggerDocument<SV>(this.schemaValidator, port, this.routers)
-        )
+        swaggerUi.setup(openApi)
       );
     }
 
+    this.internal.get(
+      `/api/${process.env.VERSION ?? 'v1'}/openapi`,
+      (_, res) => {
+        res.type('application/json');
+        res.json(openApi);
+      }
+    );
+
+    this.internal.get(
+      `/api/${process.env.VERSION ?? 'v1'}/openapi-hash`,
+      async (_, res) => {
+        const hash = await crypto
+          .createHash('sha256')
+          .update(safeStringify(openApi))
+          .digest('hex');
+        res.send(hash);
+      }
+    );
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
+      const statusCode = Number(res.statusCode);
       res.locals.errorMessage = err.message;
+      console.log(err);
       res.type('text/plain');
       res
-        .status(res.statusCode && res.statusCode >= 400 ? res.statusCode : 500)
+        .status(statusCode >= 400 ? statusCode : 500)
         .send(
           `Internal server error:\n\nCorrelation id: ${
             isForklaunchRequest(req)
@@ -140,7 +175,7 @@ export class Application<
       logger('error').error(
         err.stack ?? err.message,
         meta({
-          [ATTR_HTTP_RESPONSE_STATUS_CODE]: res.statusCode ?? 500
+          [ATTR_HTTP_RESPONSE_STATUS_CODE]: statusCode
         })
       );
     };

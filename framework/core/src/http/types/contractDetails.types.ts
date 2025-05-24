@@ -1,4 +1,9 @@
-import { Prettify } from '@forklaunch/common';
+import {
+  ExclusiveRecord,
+  MimeType,
+  Prettify,
+  UnionToIntersection
+} from '@forklaunch/common';
 import {
   AnySchemaValidator,
   IdiomaticSchema,
@@ -68,25 +73,182 @@ export type QueryObject<SV extends AnySchemaValidator> = StringOnlyObject<SV> &
 export type HeadersObject<SV extends AnySchemaValidator> =
   StringOnlyObject<SV> & unknown;
 
+export type RawTypedResponseBody<SV extends AnySchemaValidator> =
+  | TextBody<SV>
+  | JsonBody<SV>
+  | FileBody<SV>
+  | ServerSentEventBody<SV>
+  | UnknownResponseBody<SV>;
+
+type ExclusiveResponseBodyBase<SV extends AnySchemaValidator> = {
+  [K in keyof UnionToIntersection<RawTypedResponseBody<SV>>]?: undefined;
+};
+
+type ExclusiveSchemaCatchall<SV extends AnySchemaValidator> = {
+  [K in keyof SV['_SchemaCatchall'] as string extends K
+    ? never
+    : number extends K
+      ? never
+      : symbol extends K
+        ? never
+        : K]?: undefined;
+};
+
+export type TypedResponseBody<SV extends AnySchemaValidator> =
+  | {
+      [K in keyof (ExclusiveSchemaCatchall<SV> &
+        ExclusiveResponseBodyBase<SV>)]?: K extends keyof TextBody<SV>
+        ? TextBody<SV>[K]
+        : undefined;
+    }
+  | {
+      [K in keyof (ExclusiveSchemaCatchall<SV> &
+        ExclusiveResponseBodyBase<SV>)]?: K extends keyof JsonBody<SV>
+        ? JsonBody<SV>[K]
+        : undefined;
+    }
+  | {
+      [K in keyof (ExclusiveSchemaCatchall<SV> &
+        ExclusiveResponseBodyBase<SV>)]?: K extends keyof FileBody<SV>
+        ? FileBody<SV>[K]
+        : undefined;
+    }
+  | {
+      [K in keyof (ExclusiveSchemaCatchall<SV> &
+        ExclusiveResponseBodyBase<SV>)]?: K extends keyof ServerSentEventBody<SV>
+        ? ServerSentEventBody<SV>[K]
+        : undefined;
+    }
+  | {
+      [K in keyof (ExclusiveSchemaCatchall<SV> &
+        ExclusiveResponseBodyBase<SV>)]?: K extends keyof UnknownResponseBody<SV>
+        ? UnknownResponseBody<SV>[K]
+        : undefined;
+    };
+
+export type ResponseBody<SV extends AnySchemaValidator> =
+  | TypedResponseBody<SV>
+  | (ExclusiveResponseBodyBase<SV> & SV['_ValidSchemaObject'])
+  | (ExclusiveResponseBodyBase<SV> & UnboxedObjectSchema<SV>)
+  | (ExclusiveResponseBodyBase<SV> & SV['string']);
+
 /**
  * Type representing the responses object in a request.
  *
  * @template SV - A type that extends AnySchemaValidator.
  */
 export type ResponsesObject<SV extends AnySchemaValidator> = {
-  [key: number]:
-    | SV['_ValidSchemaObject']
-    | UnboxedObjectSchema<SV>
-    | string
-    | SV['string'];
-} & unknown;
+  [K: number]: ResponseBody<SV>;
+};
+
+export type JsonBody<SV extends AnySchemaValidator> = {
+  contentType?: 'application/json' | string;
+  json: BodyObject<SV> | SV['_ValidSchemaObject'] | SV['_SchemaCatchall'];
+};
 
 /**
  * Type representing the body in a request.
  *
  * @template SV - A type that extends AnySchemaValidator.
  */
+export type TextBody<SV extends AnySchemaValidator> = {
+  contentType?:
+    | 'application/xml'
+    | 'text/plain'
+    | 'text/html'
+    | 'text/css'
+    | 'text/javascript'
+    | 'text/csv'
+    | 'text/markdown'
+    | 'text/xml'
+    | 'text/rtf'
+    | 'text/x-yaml'
+    | 'text/yaml'
+    | string;
+  text: SV['string'];
+};
+
+export type FileBody<SV extends AnySchemaValidator> = {
+  contentType?:
+    | 'application/octet-stream'
+    | 'application/pdf'
+    | 'application/vnd.ms-excel'
+    | 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    | 'application/msword'
+    | 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    | 'application/zip'
+    | 'image/jpeg'
+    | 'image/png'
+    | 'image/gif'
+    | 'audio/mpeg'
+    | 'audio/wav'
+    | 'video/mp4'
+    | string;
+  file: SV['file'] extends (name: string, mimeType: MimeType) => infer R
+    ? R
+    : SV['file'];
+};
+
+/**
+ * Type representing the body in a request.
+ *
+ * @template SV - A type that extends AnySchemaValidator.
+ */
+export type MultipartForm<SV extends AnySchemaValidator> = {
+  contentType?:
+    | 'multipart/form-data'
+    | 'multipart/mixed'
+    | 'multipart/alternative'
+    | 'multipart/related'
+    | 'multipart/signed'
+    | 'multipart/encrypted'
+    | string;
+  multipartForm: BodyObject<SV>;
+};
+
+/**
+ * Type representing the body in a request.
+ *
+ * @template SV - A type that extends AnySchemaValidator.
+ */
+export type UrlEncodedForm<SV extends AnySchemaValidator> = {
+  contentType?:
+    | 'application/x-www-form-urlencoded'
+    | 'application/x-url-encoded'
+    | 'application/x-www-url-encoded'
+    | 'application/x-urlencode'
+    | string;
+  urlEncodedForm: BodyObject<SV>;
+};
+
+export type ServerSentEventBody<SV extends AnySchemaValidator> = {
+  contentType?: 'text/event-stream' | string;
+  event: {
+    id: SV['string'];
+    data: SV['string'] | BodyObject<SV>;
+  };
+};
+
+export type UnknownBody<SV extends AnySchemaValidator> = {
+  contentType?: string;
+  schema: BodyObject<SV> | SV['_ValidSchemaObject'] | SV['_SchemaCatchall'];
+};
+
+export type UnknownResponseBody<SV extends AnySchemaValidator> = {
+  contentType?: string;
+  schema: BodyObject<SV> | SV['_ValidSchemaObject'] | SV['_SchemaCatchall'];
+};
+
+export type TypedBody<SV extends AnySchemaValidator> =
+  | JsonBody<SV>
+  | TextBody<SV>
+  | FileBody<SV>
+  | MultipartForm<SV>
+  | UrlEncodedForm<SV>
+  | UnknownBody<SV>;
+
 export type Body<SV extends AnySchemaValidator> =
+  | TypedBody<SV>
   | BodyObject<SV>
   | SV['_ValidSchemaObject']
   | SV['_SchemaCatchall'];
@@ -331,28 +493,54 @@ export type HttpContractDetails<
   ReqHeaders,
   ResHeaders,
   BaseRequest
-> & {
-  /** Required body schema for the contract */
-  readonly body: BodySchema;
-  // TODO: Add support for content type
-  /** Optional content type for the contract */
-  readonly contentType?:
-    | 'application/json'
-    | 'multipart/form-data'
-    | 'application/x-www-form-urlencoded';
-  readonly auth?: SchemaAuthMethods<
-    SV,
-    string | number | symbol extends ExtractedParamsObject<Path>
+> &
+  (BodySchema extends SV['_SchemaCatchall']
+    ? {
+        /** Required body schema for body-based methods for the contract */
+        readonly body: BodySchema;
+      }
+    : BodySchema extends JsonBody<SV>
       ? {
-          [K in keyof ExtractedParamsObject<Path>]: ParamsSchema[K];
+          /** Required body schema for body-based methods for the contract */
+          readonly body: ExclusiveRecord<BodySchema, TypedBody<SV>>;
         }
-      : ParamsSchema,
-    BodySchema,
-    QuerySchema,
-    ReqHeaders,
-    BaseRequest
-  > & {};
-};
+      : BodySchema extends TextBody<SV>
+        ? {
+            /** Required body schema for body-based methods for the contract */
+            readonly body: ExclusiveRecord<BodySchema, TypedBody<SV>>;
+          }
+        : BodySchema extends MultipartForm<SV>
+          ? {
+              /** Required body schema for body-based methods for the contract */
+              readonly body: ExclusiveRecord<BodySchema, TypedBody<SV>>;
+            }
+          : BodySchema extends UrlEncodedForm<SV>
+            ? {
+                /** Required body schema for body-based methods for the contract */
+                readonly body: ExclusiveRecord<BodySchema, TypedBody<SV>>;
+              }
+            : BodySchema extends FileBody<SV>
+              ? {
+                  /** Required body schema for body-based methods for the contract */
+                  readonly body: ExclusiveRecord<BodySchema, TypedBody<SV>>;
+                }
+              : {
+                  /** Required body schema for body-based methods for the contract */
+                  readonly body: BodySchema;
+                }) & {
+    readonly auth?: SchemaAuthMethods<
+      SV,
+      string | number | symbol extends ExtractedParamsObject<Path>
+        ? {
+            [K in keyof ExtractedParamsObject<Path>]: ParamsSchema[K];
+          }
+        : ParamsSchema,
+      BodySchema,
+      QuerySchema,
+      ReqHeaders,
+      BaseRequest
+    >;
+  };
 
 /**
  * Interface representing HTTP contract details for middleware.

@@ -1,4 +1,9 @@
-import { enrichExpressLikeSend, ParamsDictionary } from '@forklaunch/core/http';
+import { safeStringify } from '@forklaunch/common';
+import {
+  enrichExpressLikeSend,
+  ForklaunchSendableData,
+  ParamsDictionary
+} from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { NextFunction } from 'express';
 import { ParsedQs } from 'qs';
@@ -43,10 +48,7 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
 ) {
   const originalSend = res.send;
   const originalJson = res.json;
-  const originalSetHeader = res.setHeader as (
-    key: string,
-    value: string | string[]
-  ) => void;
+  const originalSetHeader = res.setHeader;
 
   /**
    * Intercepts and enhances the JSON response method.
@@ -62,7 +64,6 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
    * ```
    */
   res.json = function <T extends Record<number, unknown>>(data?: T) {
-    res.bodyData = data;
     enrichExpressLikeSend<
       SV,
       ParamsDictionary,
@@ -72,7 +73,7 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
       Record<string, string>,
       Record<string, string>,
       Record<string, unknown>
-    >(this, req, res, originalJson, data, !res.cors);
+    >(this, req, res, originalJson, originalSend, data, !res.cors);
     return data;
   };
 
@@ -89,11 +90,12 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
    * res.send('Hello World');
    * ```
    */
-  res.send = function (data) {
-    if (!res.bodyData) {
-      res.bodyData = data;
+  res.send = function (data: ForklaunchSendableData) {
+    if (res.sent) {
+      originalSend.call(this, data);
+      return true;
     }
-    return enrichExpressLikeSend<
+    enrichExpressLikeSend<
       SV,
       ParamsDictionary,
       Record<number, unknown>,
@@ -102,7 +104,9 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
       Record<string, string>,
       Record<string, string>,
       Record<string, unknown>
-    >(this, req, res, originalSend, data, !res.cors);
+    >(this, req, res, originalSend, originalSend, data, !res.cors);
+    res.sent = true;
+    return true;
   };
 
   /**
@@ -122,14 +126,27 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
   res.setHeader = function (name: string, value: unknown | unknown[]) {
     let stringifiedValue;
     if (Array.isArray(value)) {
-      stringifiedValue = value.map((v) =>
-        typeof v !== 'string' ? JSON.stringify(v) : v
-      );
+      stringifiedValue = value.map((v) => safeStringify(v)).join('\n');
     } else {
-      stringifiedValue =
-        typeof value !== 'string' ? JSON.stringify(value) : value;
+      stringifiedValue = safeStringify(value);
     }
     return originalSetHeader.call(this, name, stringifiedValue);
+  };
+
+  res.sseEmitter = async function (
+    emitter: () => AsyncGenerator<Record<string, unknown>>
+  ) {
+    const generator = emitter();
+    enrichExpressLikeSend<
+      SV,
+      ParamsDictionary,
+      Record<number, unknown>,
+      Record<string, unknown>,
+      ParsedQs,
+      Record<string, string>,
+      Record<string, string>,
+      Record<string, unknown>
+    >(this, req, res, originalSend, originalSend, generator, !res.cors);
   };
 
   next?.();

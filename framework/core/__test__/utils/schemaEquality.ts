@@ -1,4 +1,4 @@
-import { sortObjectKeys } from '@forklaunch/common';
+import { safeStringify, sortObjectKeys } from '@forklaunch/common';
 import { IdiomaticSchema } from '@forklaunch/validator';
 
 import { Schema } from '@forklaunch/validator';
@@ -19,15 +19,13 @@ export function testSchemaEquality<
   const typeboxParseResult = typeboxParse(typeBoxSchema, testData);
 
   const isEqual =
-    JSON.stringify(
-      zodParseResult.ok
-        ? sortObjectKeys(
-            zodParseResult.value as unknown as Record<string, unknown>
-          )
-        : '-1'
+    safeStringify(
+      zodParseResult.ok ? sortObjectKeys(zodParseResult.value) : '-1'
     ) ===
-    JSON.stringify(
-      typeboxParseResult.ok ? sortObjectKeys(typeboxParseResult.value) : '1'
+    safeStringify(
+      typeboxParseResult.ok
+        ? sortObjectKeys(typeboxParseResult.value as Record<string, unknown>)
+        : '1'
     );
 
   return isEqual as EqualityWithoutFunction<T, Z>;

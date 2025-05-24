@@ -1,0 +1,15 @@
+export type MimeType =
+  | 'application/json'
+  | 'application/xml'
+  | 'application/x-www-form-urlencoded'
+  | 'multipart/form-data'
+  | 'text/html'
+  | 'text/plain'
+  | 'image/jpeg'
+  | 'image/png'
+  | 'video/mp4'
+  | 'audio/mpeg'
+  | 'application/pdf'
+  | 'application/zip'
+  | 'application/octet-stream'
+  | string;

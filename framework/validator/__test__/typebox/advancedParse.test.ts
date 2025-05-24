@@ -1,9 +1,11 @@
 import {
   any,
   bigint,
+  binary,
   boolean,
   date,
   email,
+  file,
   never,
   null_,
   nullish,
@@ -313,18 +315,12 @@ describe('typebox advanced parse', () => {
       });
     });
 
-    test('valid date with boolean', () => {
-      compare(schemaValidator.parse(date, true), {
-        ok: true,
-        value: new Date(1)
-      });
+    test('invalid date with boolean', () => {
+      expect(schemaValidator.parse(date, true).ok).toBe(false);
     });
 
-    test('valid date with null', () => {
-      compare(schemaValidator.parse(date, null), {
-        ok: true,
-        value: new Date(0)
-      });
+    test('invalid date with null', () => {
+      expect(schemaValidator.parse(date, null).ok).toBe(false);
     });
 
     test('invalid date with string', () => {
@@ -776,6 +772,124 @@ describe('typebox advanced parse', () => {
 
     test('invalid never with date', () => {
       expect(schemaValidator.parse(never, new Date()).ok).toBe(false);
+    });
+  });
+
+  describe('binary', () => {
+    test('valid binary with string', () => {
+      compare(schemaValidator.parse(binary, 'Hello World'), {
+        ok: true,
+        value: Buffer.from('Hello World')
+      });
+    });
+
+    test('invalid binary with number', () => {
+      expect(schemaValidator.parse(binary, 123).ok).toBe(false);
+    });
+
+    test('invalid binary with boolean', () => {
+      expect(schemaValidator.parse(binary, true).ok).toBe(false);
+    });
+
+    test('invalid binary with object', () => {
+      expect(schemaValidator.parse(binary, { hello: 'world' }).ok).toBe(false);
+    });
+
+    test('invalid binary with array', () => {
+      expect(schemaValidator.parse(binary, ['hello', 'world']).ok).toBe(false);
+    });
+
+    test('invalid binary with null', () => {
+      expect(schemaValidator.parse(binary, null).ok).toBe(false);
+    });
+
+    test('invalid binary with undefined', () => {
+      expect(schemaValidator.parse(binary, undefined).ok).toBe(false);
+    });
+
+    test('invalid binary with symbol', () => {
+      expect(schemaValidator.parse(binary, Symbol('hello')).ok).toBe(false);
+    });
+
+    test('invalid binary with bigint', () => {
+      expect(schemaValidator.parse(binary, BigInt(123)).ok).toBe(false);
+    });
+
+    test('invalid binary with date', () => {
+      expect(schemaValidator.parse(binary, new Date()).ok).toBe(false);
+    });
+  });
+
+  describe('file', () => {
+    test('valid file with string', async () => {
+      const parsed = schemaValidator.parse(
+        file('test.txt', 'text/plain'),
+        'Hello World'
+      );
+      expect(parsed.ok).toBe(true);
+      if (parsed.ok) {
+        expect(await parsed.value.text()).toBe('Hello World');
+      }
+    });
+
+    test('invalid file with number', () => {
+      expect(
+        schemaValidator.parse(file('test.txt', 'text/plain'), 123).ok
+      ).toBe(false);
+    });
+
+    test('invalid file with boolean', () => {
+      expect(
+        schemaValidator.parse(file('test.txt', 'text/plain'), true).ok
+      ).toBe(false);
+    });
+
+    test('invalid file with object', () => {
+      expect(
+        schemaValidator.parse(file('test.txt', 'text/plain'), {
+          hello: 'world'
+        }).ok
+      ).toBe(false);
+    });
+
+    test('invalid file with array', () => {
+      expect(
+        schemaValidator.parse(file('test.txt', 'text/plain'), [
+          'hello',
+          'world'
+        ]).ok
+      ).toBe(false);
+    });
+
+    test('invalid file with null', () => {
+      expect(
+        schemaValidator.parse(file('test.txt', 'text/plain'), null).ok
+      ).toBe(false);
+    });
+
+    test('invalid file with undefined', () => {
+      expect(
+        schemaValidator.parse(file('test.txt', 'text/plain'), undefined).ok
+      ).toBe(false);
+    });
+
+    test('invalid file with symbol', () => {
+      expect(
+        schemaValidator.parse(file('test.txt', 'text/plain'), Symbol('hello'))
+          .ok
+      ).toBe(false);
+    });
+
+    test('invalid file with bigint', () => {
+      expect(
+        schemaValidator.parse(file('test.txt', 'text/plain'), BigInt(123)).ok
+      ).toBe(false);
+    });
+
+    test('invalid file with date', () => {
+      expect(
+        schemaValidator.parse(file('test.txt', 'text/plain'), new Date()).ok
+      ).toBe(false);
     });
   });
 });

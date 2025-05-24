@@ -31,6 +31,7 @@ describe('http middleware tests', () => {
     Record<string, string>
   >;
   let res: ForklaunchResponse<
+    unknown,
     Record<number, unknown>,
     Record<string, string>,
     Record<string, unknown>
@@ -86,7 +87,8 @@ describe('http middleware tests', () => {
       status: () => ({
         json: () => true,
         jsonp: () => true,
-        send: () => {}
+        send: () => true,
+        sseEmitter: () => Promise.resolve()
       }),
       end: () => {},
       type: () => {},
@@ -101,7 +103,8 @@ describe('http middleware tests', () => {
         responses: {
           200: testSchema
         }
-      }
+      },
+      sent: false
     };
   });
 

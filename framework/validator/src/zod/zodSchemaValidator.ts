@@ -5,16 +5,14 @@
  * @module ZodSchemaValidator
  */
 
-import { generateSchema } from '@anatine/zod-openapi';
+import { extendZodWithOpenApi, generateSchema } from '@anatine/zod-openapi';
+import { MimeType } from '@forklaunch/common';
 import { SchemaObject } from 'openapi3-ts/oas31';
 import {
   z,
   ZodArray,
-  ZodBigInt,
-  ZodDate,
   ZodFunction,
   ZodLiteral,
-  ZodNumber,
   ZodObject,
   ZodOptional,
   ZodPromise,
@@ -36,9 +34,12 @@ import {
   ZodIdiomaticSchema,
   ZodRecordKey,
   ZodResolve,
+  ZodSchemaTranslate,
   ZodTupleContainer,
   ZodUnionContainer
 } from './types/schema.types';
+
+extendZodWithOpenApi(z);
 
 /**
  * Class representing a Zod schema definition.
@@ -75,6 +76,7 @@ export class ZodSchemaValidator
       ) => ZodRecord<ZodRecordKey<Key>, ZodResolve<Value>>,
       <T extends ZodIdiomaticSchema>(schema: T) => ZodPromise<ZodResolve<T>>,
       (value: unknown) => value is ZodType,
+      <T extends ZodType>(value: object, type: T) => value is T,
       <T extends ZodIdiomaticSchema | ZodCatchall>(
         schema: T,
         value: unknown
@@ -82,7 +84,7 @@ export class ZodSchemaValidator
       <T extends ZodIdiomaticSchema | ZodCatchall>(
         schema: T,
         value: unknown
-      ) => ParseResult<ZodResolve<T>>,
+      ) => ParseResult<ZodSchemaTranslate<ZodResolve<T>>>,
       <T extends ZodIdiomaticSchema | ZodCatchall>(schema: T) => SchemaObject
     >
 {
@@ -92,55 +94,161 @@ export class ZodSchemaValidator
     | ZodObject<ZodRawShape>
     | ZodArray<ZodObject<ZodRawShape>>;
 
-  string = z.string();
-  uuid = z.string().uuid();
-  email = z.string().email();
-  uri = z.string().url();
+  string = z.string().openapi({
+    title: 'String',
+    example: 'a string'
+  });
+  uuid = z.string().uuid().openapi({
+    title: 'UUID',
+    format: 'uuid',
+    pattern:
+      '^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$',
+    example: 'a8b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6'
+  });
+  email = z.string().email().openapi({
+    title: 'Email',
+    format: 'email',
+    pattern:
+      '(?:[a-z0-9!#$%&\'*+/=?^_{|}~-]+(?:\\.[a-z0-9!#$%&\'*+/=?^_{|}~-]+)*|"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)])',
+    example: 'a@b.com'
+  });
+  uri = z.string().url().openapi({
+    title: 'URI',
+    format: 'uri',
+    pattern: '^[a-zA-Z][a-zA-Z\\d+-.]*:[^\\s]*$',
+    example: 'https://forklaunch.com'
+  });
   number = z
-    .any()
-    .transform((value) => {
+    .preprocess((value) => {
       try {
         return Number(value);
       } catch {
         return value;
       }
-    })
-    .pipe(z.number()) as unknown as ZodNumber;
+    }, z.number())
+    .openapi({
+      title: 'Number',
+      example: 123
+    });
   bigint = z
-    .any()
-    .transform((value) => {
+    .preprocess((value) => {
       try {
-        return BigInt(value);
+        if (value instanceof Date) {
+          return BigInt(value.getTime());
+        }
+        switch (typeof value) {
+          case 'number':
+          case 'string':
+            return BigInt(value);
+          case 'boolean':
+            return BigInt(value ? 1 : 0);
+          default:
+            return value;
+        }
       } catch {
         return value;
       }
-    })
-    .pipe(z.bigint()) as unknown as ZodBigInt;
-  boolean = z.preprocess((val) => {
-    if (typeof val === 'string') {
-      if (val.toLowerCase() === 'true') return true;
-      if (val.toLowerCase() === 'false') return false;
-    }
-    return val;
-  }, z.boolean());
+    }, z.bigint())
+    .openapi({
+      title: 'BigInt',
+      type: 'integer',
+      format: 'int64',
+      example: 123n
+    });
+  boolean = z
+    .preprocess((val) => {
+      if (typeof val === 'string') {
+        if (val.toLowerCase() === 'true') return true;
+        if (val.toLowerCase() === 'false') return false;
+      }
+      return val;
+    }, z.boolean())
+    .openapi({
+      title: 'Boolean',
+      example: true
+    });
   date = z
-    .any()
-    .transform((value) => {
+    .preprocess((value) => {
       try {
-        return new Date(value);
+        switch (typeof value) {
+          case 'string':
+            return new Date(value);
+          case 'number':
+            return new Date(value);
+          default:
+            return value;
+        }
       } catch {
         return value;
       }
-    })
-    .pipe(z.date()) as unknown as ZodDate;
-  symbol = z.symbol();
-  nullish = z.union([z.void(), z.null(), z.undefined()]);
-  void = z.void();
-  null = z.null();
-  undefined = z.undefined();
-  any = z.any();
-  unknown = z.unknown();
-  never = z.never();
+    }, z.date())
+    .openapi({
+      title: 'Date',
+      type: 'string',
+      format: 'date-time',
+      example: '2025-05-16T21:13:04.123Z'
+    });
+  symbol = z.symbol().openapi({
+    title: 'Symbol',
+    example: Symbol('symbol')
+  });
+  nullish = z.union([z.void(), z.null(), z.undefined()]).openapi({
+    title: 'Nullish',
+    type: 'null',
+    example: null
+  });
+  void = z.void().openapi({
+    title: 'Void',
+    type: 'null',
+    example: undefined
+  });
+  null = z.null().openapi({
+    title: 'Null',
+    type: 'null',
+    example: null
+  });
+  undefined = z.undefined().openapi({
+    title: 'Undefined',
+    type: 'null',
+    example: undefined
+  });
+  any = z.any().openapi({
+    title: 'Any',
+    type: 'object',
+    example: 'any'
+  });
+  unknown = z.unknown().openapi({
+    title: 'Unknown',
+    type: 'object',
+    example: 'unknown'
+  });
+  never = z.never().openapi({
+    title: 'Never',
+    type: 'null',
+    example: 'never'
+  });
+  binary = z.string().transform(Buffer.from).openapi({
+    title: 'Binary',
+    type: 'string',
+    format: 'binary',
+    example: 'a utf-8 encodable string'
+  });
+  file = (name: string, type: MimeType) =>
+    z
+      .string()
+      .transform((val) => {
+        return new File([val], name, {
+          type,
+          lastModified: Date.now()
+        });
+      })
+      .openapi({
+        title: 'File',
+        type: 'string',
+        format: 'binary',
+        contentMediaType: type,
+        example: 'a utf-8 encodable string'
+      });
 
   /**
    * Compiles schema if this exists, for optimal performance.
@@ -315,6 +423,20 @@ export class ZodSchemaValidator
   }
 
   /**
+   * Checks if a value is an instance of a Zod schema.
+   * @param {object} value - The value to check.
+   * @param {ZodType} type - The schema to check against.
+   * @returns {boolean} True if the value is an instance of the schema.
+   */
+  isInstanceOf<T extends ZodType>(value: unknown, type: T): value is T {
+    return (
+      this.isSchema(value) &&
+      (type._def as { typeName: string }).typeName ===
+        (value._def as { typeName: string }).typeName
+    );
+  }
+
+  /**
    * Validate a value against a schema.
    * @param {ZodCatchall} schema - The schema to validate against.
    * @param {unknown} value - The value to validate.
@@ -338,7 +460,7 @@ export class ZodSchemaValidator
   parse<T extends ZodIdiomaticSchema | ZodCatchall>(
     schema: T,
     value: unknown
-  ): ParseResult<ZodResolve<T>> {
+  ): ParseResult<ZodSchemaTranslate<ZodResolve<T>>> {
     const resolvedSchema = this.schemify(schema);
     const result = resolvedSchema.safeParse(value);
     return result.success

@@ -2,6 +2,16 @@ import { AnySchemaValidator } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
 import { parse } from './parse.middleware';
 
+import {
+  isAsyncGenerator,
+  isNever,
+  isNodeJsWriteableStream,
+  isRecord,
+  readableStreamToAsyncIterable,
+  safeStringify
+} from '@forklaunch/common';
+import { Readable, Transform } from 'stream';
+import { discriminateResponseBodies } from '../../router/discriminateBody';
 import { logger } from '../../telemetry/pinoLogger';
 import { recordMetric } from '../../telemetry/recordMetric';
 import {
@@ -52,34 +62,142 @@ export function enrichExpressLikeSend<
   instance: unknown,
   req: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>,
   res: ForklaunchResponse<
+    unknown,
     ResBodyMap,
     ForklaunchResHeaders & ResHeaders,
     LocalsObj
   >,
-  originalSend:
-    | ForklaunchStatusResponse<ForklaunchSendableData>['send']
-    | ForklaunchStatusResponse<ForklaunchSendableData>['json'],
-  data: ForklaunchSendableData,
+  originalOperation:
+    | ForklaunchStatusResponse<ForklaunchSendableData>['json']
+    | ForklaunchStatusResponse<ForklaunchSendableData>['jsonp'],
+  originalSend: ForklaunchStatusResponse<ForklaunchSendableData>['send'],
+  data:
+    | ForklaunchSendableData
+    | File
+    | Blob
+    | AsyncGenerator<Record<string, unknown>>
+    | null
+    | undefined,
   shouldEnrich: boolean
 ) {
-  let parseErrorSent;
-  if (shouldEnrich) {
-    recordMetric<
-      SV,
-      P,
-      ReqBody,
-      ReqQuery,
-      ResBodyMap,
-      ReqHeaders,
-      ForklaunchResHeaders & ResHeaders,
-      LocalsObj
-    >(req, res);
+  let errorSent = false;
 
-    if (res.statusCode === 404) {
+  if (data == null) {
+    originalSend.call(instance, data);
+    return;
+  }
+
+  if (res.statusCode === 404) {
+    res.type('text/plain');
+    res.status(404);
+    logger('error').error('Not Found');
+    originalSend.call(instance, 'Not Found');
+    errorSent = true;
+  }
+
+  const responseBodies = discriminateResponseBodies(
+    req.schemaValidator,
+    req.contractDetails.responses
+  );
+
+  if (
+    responseBodies != null &&
+    responseBodies[Number(res.statusCode)] != null
+  ) {
+    res.type(responseBodies[Number(res.statusCode)].contentType);
+  }
+
+  if (data instanceof File || data instanceof Blob) {
+    if (data instanceof File) {
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${data.name}"` as ResHeaders['Content-Disposition']
+      );
+    }
+    if (isNodeJsWriteableStream(res)) {
+      Readable.from(readableStreamToAsyncIterable(data.stream())).pipe(
+        res as unknown as NodeJS.WritableStream
+      );
+    } else {
       res.type('text/plain');
-      res.status(404);
-      logger('error').error('Not Found');
-      originalSend.call(instance, 'Not Found');
+      res.status(500);
+      originalSend.call(instance, 'Not a NodeJS WritableStream');
+      errorSent = true;
+    }
+  } else if (isAsyncGenerator(data)) {
+    let firstPass = true;
+    const transformer = new Transform({
+      objectMode: true,
+      transform(
+        chunk: Record<string, unknown>,
+        _encoding: unknown,
+        callback: (error?: Error | null, data?: unknown) => void
+      ) {
+        if (firstPass) {
+          res.bodyData = chunk;
+          parse(req, res, (err?: unknown) => {
+            if (err) {
+              let errorString = (err as Error).message;
+              if (res.locals.errorMessage) {
+                errorString += `\n------------------\n${res.locals.errorMessage}`;
+              }
+              logger('error').error(errorString);
+              res.type('text/plain');
+              res.status(500);
+              originalSend.call(instance, errorString);
+              errorSent = true;
+              callback(new Error(errorString));
+            }
+          });
+          firstPass = false;
+        }
+        if (!errorSent) {
+          let data = '';
+          for (const [key, value] of Object.entries(chunk)) {
+            data += `${key}: ${typeof value === 'string' ? value : safeStringify(value)}\n`;
+          }
+          data += '\n';
+          callback(null, data);
+        }
+      }
+    });
+    if (isNodeJsWriteableStream(res)) {
+      Readable.from(data).pipe(transformer).pipe(res);
+    } else {
+      res.type('text/plain');
+      res.status(500);
+      originalSend.call(instance, 'Not a NodeJS WritableStream');
+      errorSent = true;
+    }
+  } else {
+    const parserType = responseBodies?.[Number(res.statusCode)]?.parserType;
+
+    res.bodyData = data;
+    if (isRecord(data)) {
+      switch (parserType) {
+        case 'json':
+          res.bodyData = 'json' in data ? data.json : data;
+          break;
+        case 'text':
+          res.bodyData = 'text' in data ? data.text : data;
+          break;
+        case 'file':
+          res.bodyData = 'file' in data ? data.file : data;
+          break;
+        case 'serverSentEvent':
+          res.bodyData = 'event' in data ? data.event : data;
+          break;
+        case 'multipart':
+          res.bodyData = 'multipart' in data ? data.multipart : data;
+          break;
+        case undefined:
+          res.bodyData = data;
+          break;
+        default:
+          isNever(parserType);
+          res.bodyData = data;
+          break;
+      }
     }
 
     parse(req, res, (err?: unknown) => {
@@ -92,12 +210,31 @@ export function enrichExpressLikeSend<
         res.type('text/plain');
         res.status(500);
         originalSend.call(instance, errorString);
-        parseErrorSent = true;
+        errorSent = true;
       }
     });
+
+    if (!errorSent) {
+      if (typeof data === 'string') {
+        res.type('text/plain');
+        originalSend.call(instance, data);
+      } else if (!(data instanceof File)) {
+        res.sent = true;
+        originalOperation.call(instance, data);
+      }
+    }
   }
 
-  if (!parseErrorSent) {
-    originalSend.call(instance, data);
+  if (shouldEnrich) {
+    recordMetric<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ResBodyMap,
+      ReqHeaders,
+      ForklaunchResHeaders & ResHeaders,
+      LocalsObj
+    >(req, res);
   }
 }

@@ -17,6 +17,7 @@ import {
   LiteralSchema,
   SchemaResolve
 } from '@forklaunch/validator';
+import { OptionsJson, OptionsText, OptionsUrlencoded } from 'body-parser';
 import express, {
   Router as ExpressRouter,
   NextFunction,
@@ -24,7 +25,8 @@ import express, {
   RequestHandler,
   Response
 } from 'express';
-import { enrichResponseTransmission } from './middleware/response.middleware';
+import { contentParse } from './middleware/content.parse.middleware';
+import { enrichResponseTransmission } from './middleware/enrichResponseTransmission.middleware';
 
 /**
  * Router class that sets up routes and middleware for an Express router.
@@ -54,12 +56,19 @@ export class Router<
   constructor(
     public basePath: BasePath,
     schemaValidator: SV,
-    openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
+    openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
+    options?: OptionsText & OptionsJson & OptionsUrlencoded
   ) {
-    super(basePath, schemaValidator, express.Router(), openTelemetryCollector);
-
-    this.internal.use(express.json());
-    this.internal.use(enrichResponseTransmission as unknown as RequestHandler);
+    super(
+      basePath,
+      schemaValidator,
+      express.Router(),
+      [
+        enrichResponseTransmission as unknown as RequestHandler,
+        contentParse<SV>(options)
+      ],
+      openTelemetryCollector
+    );
   }
 
   route(path: string): this {

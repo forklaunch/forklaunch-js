@@ -28,7 +28,6 @@ import {
   Body,
   ContractDetails,
   HeadersObject,
-  HttpContractDetails,
   Method,
   ParamsDictionary,
   ParamsObject,
@@ -50,6 +49,10 @@ import {
   ForklaunchRoute,
   ForklaunchRouter
 } from '../types/router.types';
+import {
+  discriminateBody,
+  discriminateResponseBodies
+} from './discriminateBody';
 
 /**
  * A class that represents an Express-like router.
@@ -73,6 +76,7 @@ export class ForklaunchExpressLikeRouter<
     basePath: BasePath,
     readonly schemaValidator: SV,
     readonly internal: Internal,
+    readonly postEnrichMiddleware: RouterHandler[],
     readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
   ) {
     this.basePath = basePath;
@@ -94,7 +98,7 @@ export class ForklaunchExpressLikeRouter<
     LocalsObj extends Record<string, unknown>
   >(
     path: string,
-    contractDetails: HttpContractDetails<SV> | PathParamHttpContractDetails<SV>,
+    contractDetails: PathParamHttpContractDetails<SV>,
     requestSchema: unknown,
     responseSchemas: ResponseCompiledSchema
   ): ExpressLikeSchemaHandler<
@@ -122,11 +126,12 @@ export class ForklaunchExpressLikeRouter<
         LocalsObj
       >(
         `${this.basePath}${path}`,
-        contractDetails,
+        contractDetails as PathParamHttpContractDetails<SV>,
         requestSchema,
         responseSchemas,
         this.openTelemetryCollector
       ),
+      ...this.postEnrichMiddleware,
       parse,
       parseRequestAuth<
         SV,
@@ -300,6 +305,23 @@ export class ForklaunchExpressLikeRouter<
   ) {
     const schemaValidator = this.schemaValidator as SchemaValidator;
 
+    let body = null;
+    if (
+      isHttpContractDetails<
+        SV,
+        Path,
+        P,
+        ResBodyMap,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders,
+        ResHeaders,
+        BaseRequest
+      >(contractDetails)
+    ) {
+      body = discriminateBody(this.schemaValidator, contractDetails.body);
+    }
+
     const requestSchema = schemaValidator.compile(
       schemaValidator.schemify({
         ...(contractDetails.params ? { params: contractDetails.params } : {}),
@@ -307,19 +329,7 @@ export class ForklaunchExpressLikeRouter<
           ? { headers: contractDetails.requestHeaders }
           : {}),
         ...(contractDetails.query ? { query: contractDetails.query } : {}),
-        ...(isHttpContractDetails<
-          SV,
-          Path,
-          P,
-          ResBodyMap,
-          ReqBody,
-          ReqQuery,
-          ReqHeaders,
-          ResHeaders,
-          BaseRequest
-        >(contractDetails) && contractDetails.body != null
-          ? { body: contractDetails.body }
-          : {})
+        ...(body != null ? { body: body.schema } : {})
       })
     );
 
@@ -350,9 +360,16 @@ export class ForklaunchExpressLikeRouter<
         ResHeaders,
         BaseRequest
       >(contractDetails)
-        ? {
-            ...contractDetails.responses
-          }
+        ? Object.fromEntries(
+            Object.entries(
+              discriminateResponseBodies(
+                this.schemaValidator,
+                contractDetails.responses
+              )
+            ).map(([key, value]) => {
+              return [key, value.schema];
+            })
+          )
         : {})
     };
 
@@ -406,7 +423,8 @@ export class ForklaunchExpressLikeRouter<
         params: request?.params ?? {},
         query: request?.query ?? {},
         headers: request?.headers ?? {},
-        body: request?.body ?? {},
+        body:
+          discriminateBody(this.schemaValidator, request?.body)?.schema ?? {},
         path: route
       };
 
@@ -426,6 +444,9 @@ export class ForklaunchExpressLikeRouter<
         },
         setHeader: (key: string, value: string) => {
           responseHeaders[key] = value;
+        },
+        sseEmiter: (generator: AsyncGenerator<Record<string, unknown>>) => {
+          responseMessage = generator;
         }
       };
 
@@ -468,7 +489,7 @@ export class ForklaunchExpressLikeRouter<
       });
 
       return {
-        code: statusCode,
+        code: Number(statusCode),
         response: responseMessage,
         headers: responseHeaders
       };
