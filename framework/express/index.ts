@@ -5,6 +5,7 @@ import {
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { OptionsJson, OptionsText, OptionsUrlencoded } from 'body-parser';
+import { BusboyConfig } from 'busboy';
 import { Application } from './src/expressApplication';
 import { Router } from './src/expressRouter';
 import { checkout } from './src/handlers/checkout';
@@ -46,12 +47,19 @@ import { unsubscribe } from './src/handlers/unsubscribe';
 export function forklaunchExpress<SV extends AnySchemaValidator>(
   schemaValidator: SV,
   openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-  docsConfiguration?: DocsConfiguration
+  docsConfiguration?: DocsConfiguration,
+  options?: {
+    busboy?: BusboyConfig;
+    text?: OptionsText;
+    json?: OptionsJson;
+    urlencoded?: OptionsUrlencoded;
+  }
 ) {
   return new Application(
     schemaValidator,
     openTelemetryCollector,
-    docsConfiguration
+    docsConfiguration,
+    options
   );
 }
 
@@ -70,7 +78,12 @@ export function forklaunchRouter<
   basePath: BasePath,
   schemaValidator: SV,
   openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-  options?: OptionsText & OptionsJson & OptionsUrlencoded
+  options?: {
+    busboy?: BusboyConfig;
+    text?: OptionsText;
+    json?: OptionsJson;
+    urlencoded?: OptionsUrlencoded;
+  }
 ): Router<SV, BasePath> {
   const router = new Router(
     basePath,

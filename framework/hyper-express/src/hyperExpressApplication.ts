@@ -14,10 +14,12 @@ import {
   MiddlewareNext,
   Request,
   Response,
-  Server
+  Server,
+  ServerConstructorOptions
 } from '@forklaunch/hyper-express-fork';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { apiReference } from '@scalar/express-api-reference';
+import { BusboyConfig } from 'busboy';
 import crypto from 'crypto';
 import * as uWebsockets from 'uWebSockets.js';
 import { contentParse } from './middleware/contentParse.middleware';
@@ -75,14 +77,18 @@ export class Application<
   constructor(
     schemaValidator: SV,
     openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-    private readonly docsConfiguration?: DocsConfiguration
+    private readonly configurationOptions?: {
+      docs?: DocsConfiguration;
+      busboy?: BusboyConfig;
+      server?: ServerConstructorOptions;
+    }
   ) {
     super(
       schemaValidator,
-      new Server(),
+      new Server(configurationOptions?.server),
       [
-        enrichResponseTransmission as unknown as MiddlewareHandler,
-        contentParse<SV>
+        contentParse<SV>(configurationOptions),
+        enrichResponseTransmission as unknown as MiddlewareHandler
       ],
       openTelemetryCollector
     );
@@ -161,8 +167,8 @@ export class Application<
       );
 
       if (
-        this.docsConfiguration == null ||
-        this.docsConfiguration.type === 'scalar'
+        this.configurationOptions?.docs == null ||
+        this.configurationOptions?.docs.type === 'scalar'
       ) {
         this.internal.use(
           `/api/${process.env.VERSION ?? 'v1'}${
@@ -170,10 +176,10 @@ export class Application<
           }`,
           apiReference({
             content: openApi,
-            ...this.docsConfiguration
+            ...this.configurationOptions?.docs
           }) as unknown as MiddlewareHandler
         );
-      } else if (this.docsConfiguration.type === 'swagger') {
+      } else if (this.configurationOptions?.docs.type === 'swagger') {
         const swaggerPath = `/api/${process.env.VERSION ?? 'v1'}${
           process.env.DOCS_PATH ?? '/docs'
         }`;

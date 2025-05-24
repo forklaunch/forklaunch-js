@@ -18,6 +18,7 @@ import {
   SchemaResolve
 } from '@forklaunch/validator';
 import { OptionsJson, OptionsText, OptionsUrlencoded } from 'body-parser';
+import { BusboyConfig } from 'busboy';
 import express, {
   Router as ExpressRouter,
   NextFunction,
@@ -57,15 +58,20 @@ export class Router<
     public basePath: BasePath,
     schemaValidator: SV,
     openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-    options?: OptionsText & OptionsJson & OptionsUrlencoded
+    options?: {
+      busboy?: BusboyConfig;
+      text?: OptionsText;
+      json?: OptionsJson;
+      urlencoded?: OptionsUrlencoded;
+    }
   ) {
     super(
       basePath,
       schemaValidator,
       express.Router(),
       [
-        enrichResponseTransmission as unknown as RequestHandler,
-        contentParse<SV>(options)
+        contentParse<SV>(options),
+        enrichResponseTransmission as unknown as RequestHandler
       ],
       openTelemetryCollector
     );

@@ -3,7 +3,9 @@ import {
   MetricsDefinition,
   OpenTelemetryCollector
 } from '@forklaunch/core/http';
+import { ServerConstructorOptions } from '@forklaunch/hyper-express-fork';
 import { AnySchemaValidator } from '@forklaunch/validator';
+import { BusboyConfig } from 'busboy';
 import { any } from './src/handlers/any';
 import { delete_ } from './src/handlers/delete';
 import { get } from './src/handlers/get';
@@ -29,13 +31,13 @@ export type App<SV extends AnySchemaValidator> = Application<SV>;
 export function forklaunchExpress<SV extends AnySchemaValidator>(
   schemaValidator: SV,
   openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-  docsConfiguration?: DocsConfiguration
+  options?: {
+    docs?: DocsConfiguration;
+    busboy?: BusboyConfig;
+    server?: ServerConstructorOptions;
+  }
 ) {
-  return new Application(
-    schemaValidator,
-    openTelemetryCollector,
-    docsConfiguration
-  );
+  return new Application(schemaValidator, openTelemetryCollector, options);
 }
 
 /**
@@ -52,9 +54,17 @@ export function forklaunchRouter<
 >(
   basePath: BasePath,
   schemaValidator: SV,
-  openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
+  openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
+  options?: {
+    busboy?: BusboyConfig;
+  }
 ): Router<SV, BasePath> {
-  const router = new Router(basePath, schemaValidator, openTelemetryCollector);
+  const router = new Router(
+    basePath,
+    schemaValidator,
+    openTelemetryCollector,
+    options
+  );
   return router;
 }
 

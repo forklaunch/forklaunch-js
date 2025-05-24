@@ -21,6 +21,7 @@ import {
 } from '@forklaunch/hyper-express-fork';
 import { AnySchemaValidator } from '@forklaunch/validator';
 
+import { BusboyConfig } from 'busboy';
 import { contentParse } from './middleware/contentParse.middleware';
 import { enrichResponseTransmission } from './middleware/enrichResponseTransmission.middleware';
 import { polyfillGetHeaders } from './middleware/polyfillGetHeaders.middleware';
@@ -43,14 +44,17 @@ export class Router<
   constructor(
     public basePath: BasePath,
     schemaValidator: SV,
-    openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
+    openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
+    options?: {
+      busboy?: BusboyConfig;
+    }
   ) {
     super(
       basePath,
       schemaValidator,
       new ExpressRouter(),
       [
-        contentParse<SV>,
+        contentParse<SV>(options),
         enrichResponseTransmission as unknown as MiddlewareHandler
       ],
       openTelemetryCollector

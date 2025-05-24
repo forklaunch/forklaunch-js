@@ -16,20 +16,29 @@
 import { isNever } from '@forklaunch/common';
 import { discriminateBody, HttpContractDetails } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
-import { OptionsJson, OptionsText, OptionsUrlencoded } from 'body-parser';
-import Busboy from 'busboy';
+import {
+  Options,
+  OptionsJson,
+  OptionsText,
+  OptionsUrlencoded
+} from 'body-parser';
+import Busboy, { BusboyConfig } from 'busboy';
 import express, { NextFunction, Request, Response } from 'express';
 
-function contentParse<SV extends AnySchemaValidator>(
-  options: OptionsText & OptionsJson & OptionsUrlencoded = {}
-) {
-  const jsonParser = express.json(options);
+function contentParse<SV extends AnySchemaValidator>(options?: {
+  busboy?: BusboyConfig;
+  text?: OptionsText;
+  json?: OptionsJson;
+  urlencoded?: OptionsUrlencoded;
+  raw?: Options;
+}) {
+  const jsonParser = express.json(options?.json);
   const urlencodedParser = express.urlencoded({
     extended: true,
-    ...options
+    ...options?.urlencoded
   });
-  const textParser = express.text(options);
-  const rawParser = express.raw(options);
+  const textParser = express.text(options?.text);
+  const rawParser = express.raw(options?.raw);
 
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -58,13 +67,8 @@ function contentParse<SV extends AnySchemaValidator>(
           return rawParser(req, res, next);
         case 'multipart': {
           const bb = Busboy({
-            headers: req.headers as Record<string, string>,
-            limits: {
-              fileSize:
-                typeof options.limit === 'string'
-                  ? parseInt(options.limit)
-                  : options.limit
-            }
+            headers: req.headers,
+            ...options?.busboy
           });
           const body: Record<string, unknown> = {};
 
