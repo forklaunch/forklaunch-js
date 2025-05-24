@@ -13,6 +13,7 @@ import {
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { apiReference } from '@scalar/express-api-reference';
 import { OptionsJson, OptionsText, OptionsUrlencoded } from 'body-parser';
+import { BusboyConfig } from 'busboy';
 import crypto from 'crypto';
 import express, {
   ErrorRequestHandler,
@@ -59,7 +60,12 @@ export class Application<
     schemaValidator: SV,
     openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
     private readonly docsConfiguration?: DocsConfiguration,
-    options?: OptionsText & OptionsJson & OptionsUrlencoded
+    options?: {
+      busboy?: BusboyConfig;
+      text?: OptionsText;
+      json?: OptionsJson;
+      urlencoded?: OptionsUrlencoded;
+    }
   ) {
     super(
       schemaValidator,

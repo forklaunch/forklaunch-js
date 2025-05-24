@@ -29,6 +29,7 @@ describe('universalSdkBasic', async () => {
 
     console.log('Calling getTest...');
     const getTest = await sdk.m.getTest.get('/testpath/test');
+    expect(getTest.code).toBe(200);
     if (getTest.code === 200) {
       console.log('getTest response:', getTest.response);
     } else {
@@ -42,6 +43,7 @@ describe('universalSdkBasic', async () => {
         m: [1, 2, 3]
       }
     });
+    expect(postTest.code).toBe(200);
     if (postTest.code === 200) {
       for await (const chunk of postTest.response) {
         console.log(
@@ -59,6 +61,7 @@ describe('universalSdkBasic', async () => {
         h: 'b658f7e0-9b8a-4e1f-b6d8-1c0b7d8b3f59'
       }
     });
+    expect(jsonPatchTest.code).toBe(200);
     if (jsonPatchTest.code === 200) {
       console.log('jsonPatchTest response:', jsonPatchTest.response);
     } else {
@@ -77,6 +80,7 @@ describe('universalSdkBasic', async () => {
         }
       }
     );
+    expect(multipartTest.code).toBe(200);
     if (multipartTest.code === 200) {
       console.log('multipartTest response:', multipartTest.response);
     } else {
@@ -95,6 +99,7 @@ describe('universalSdkBasic', async () => {
         }
       }
     );
+    expect(urlEncodedFormTest.code).toBe(200);
     if (urlEncodedFormTest.code === 200) {
       console.log('urlEncodedFormTest response:', urlEncodedFormTest.response);
     } else {

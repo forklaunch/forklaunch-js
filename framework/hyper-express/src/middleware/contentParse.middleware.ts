@@ -2,6 +2,7 @@ import { isNever } from '@forklaunch/common';
 import { discriminateBody, HttpContractDetails } from '@forklaunch/core/http';
 import { Request } from '@forklaunch/hyper-express-fork';
 import { AnySchemaValidator } from '@forklaunch/validator';
+import { BusboyConfig } from 'busboy';
 
 /**
  * Middleware function to parse the request body based on the content type.
@@ -32,52 +33,54 @@ import { AnySchemaValidator } from '@forklaunch/validator';
  * });
  * ```
  */
-export async function contentParse<SV extends AnySchemaValidator>(
-  req: Request
-) {
-  const coercedRequest = req as unknown as {
-    schemaValidator: SV;
-    contractDetails: HttpContractDetails<SV>;
-  };
+export function contentParse<SV extends AnySchemaValidator>(options?: {
+  busboy?: BusboyConfig;
+}) {
+  return async (req: Request) => {
+    const coercedRequest = req as unknown as {
+      schemaValidator: SV;
+      contractDetails: HttpContractDetails<SV>;
+    };
 
-  const discriminatedBody = discriminateBody(
-    coercedRequest.schemaValidator,
-    coercedRequest.contractDetails.body
-  );
+    const discriminatedBody = discriminateBody(
+      coercedRequest.schemaValidator,
+      coercedRequest.contractDetails.body
+    );
 
-  if (discriminatedBody != null) {
-    switch (discriminatedBody.parserType) {
-      case 'file':
-        req.body = await req.buffer();
-        break;
-      case 'json':
-        req.body = await req.json();
-        break;
-      case 'multipart': {
-        const body: Record<string, unknown> = {};
-        await req.multipart(async (field) => {
-          if (field.file) {
-            let buffer = '';
-            for await (const chunk of field.file.stream) {
-              buffer += chunk;
+    if (discriminatedBody != null) {
+      switch (discriminatedBody.parserType) {
+        case 'file':
+          req.body = await req.buffer();
+          break;
+        case 'json':
+          req.body = await req.json();
+          break;
+        case 'multipart': {
+          const body: Record<string, unknown> = {};
+          await req.multipart(options?.busboy ?? {}, async (field) => {
+            if (field.file) {
+              let buffer = '';
+              for await (const chunk of field.file.stream) {
+                buffer += chunk;
+              }
+              const fileBuffer = Buffer.from(buffer);
+              body[field.name] = fileBuffer.toString();
+            } else {
+              body[field.name] = field.value;
             }
-            const fileBuffer = Buffer.from(buffer);
-            body[field.name] = fileBuffer.toString();
-          } else {
-            body[field.name] = field.value;
-          }
-        });
-        req.body = body;
-        break;
+          });
+          req.body = body;
+          break;
+        }
+        case 'text':
+          req.body = await req.text();
+          break;
+        case 'urlEncoded':
+          req.body = await req.urlencoded();
+          break;
+        default:
+          isNever(discriminatedBody.parserType);
       }
-      case 'text':
-        req.body = await req.text();
-        break;
-      case 'urlEncoded':
-        req.body = await req.urlencoded();
-        break;
-      default:
-        isNever(discriminatedBody.parserType);
     }
-  }
+  };
 }
