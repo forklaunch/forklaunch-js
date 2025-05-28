@@ -112,7 +112,7 @@ const postHandler = handlers.post(
               message: `Hello World ${req.body.f}`
             }
           };
-          await new Promise((resolve) => setTimeout(resolve, 10));
+          await new Promise((resolve) => setTimeout(resolve, 1000));
         }
       } catch (e: unknown) {
         if (e instanceof Error) {

@@ -1,5 +1,16 @@
 # @forklaunch/universal-sdk
 
+## 0.3.0
+
+### Minor Changes
+
+- Added support for content types in request/response and fixed edge cases in validator
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/common@0.3.0
+
 ## 0.2.8
 
 ### Patch Changes

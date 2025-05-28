@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.3.0
+
+### Minor Changes
+
+- Added support for content types in request/response and fixed edge cases in validator
+
 ## 0.2.11
 
 ### Patch Changes

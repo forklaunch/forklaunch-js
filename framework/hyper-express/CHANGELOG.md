@@ -1,5 +1,18 @@
 # @forklaunch/hyper-express
 
+## 0.5.0
+
+### Minor Changes
+
+- Added support for content types in request/response and fixed edge cases in validator
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/common@0.3.0
+  - @forklaunch/core@0.8.0
+  - @forklaunch/validator@0.6.0
+
 ## 0.4.11
 
 ### Patch Changes
