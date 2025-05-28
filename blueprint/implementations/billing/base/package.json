@@ -37,10 +37,10 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/common": "^0.2.11",
-    "@forklaunch/core": "^0.7.4",
+    "@forklaunch/common": "^0.3.0",
+    "@forklaunch/core": "^0.8.0",
     "@forklaunch/interfaces-billing": "workspace:*",
-    "@forklaunch/validator": "^0.5.4",
+    "@forklaunch/validator": "^0.6.0",
     "@mikro-orm/core": "^6.4.15",
     "@sinclair/typebox": "^0.34.33",
     "ajv": "^8.17.1",
