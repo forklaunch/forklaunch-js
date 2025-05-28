@@ -1,5 +1,13 @@
 # @forklaunch/implementation-iam-base
 
+## 0.1.14
+
+### Patch Changes
+
+- Upgrade dependencies
+- Updated dependencies
+  - @forklaunch/interfaces-iam@0.1.14
+
 ## 0.1.13
 
 ### Patch Changes

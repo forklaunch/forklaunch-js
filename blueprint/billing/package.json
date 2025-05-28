@@ -41,30 +41,30 @@
     "@forklaunch/implementation-billing-base": "workspace:*",
     "@forklaunch/interfaces-billing": "workspace:*",
     "@forklaunch/validator": "^0.5.4",
-    "@mikro-orm/core": "^6.4.13",
-    "@mikro-orm/migrations": "^6.4.13",
-    "@mikro-orm/mongodb": "^6.4.13",
-    "@mikro-orm/mysql": "^6.4.13",
-    "@mikro-orm/postgresql": "^6.4.13",
-    "@mikro-orm/reflection": "^6.4.13",
-    "@mikro-orm/seeder": "^6.4.13",
-    "@mikro-orm/sqlite": "^6.4.13",
+    "@mikro-orm/core": "^6.4.15",
+    "@mikro-orm/migrations": "^6.4.15",
+    "@mikro-orm/mongodb": "^6.4.15",
+    "@mikro-orm/mysql": "^6.4.15",
+    "@mikro-orm/postgresql": "^6.4.15",
+    "@mikro-orm/reflection": "^6.4.15",
+    "@mikro-orm/seeder": "^6.4.15",
+    "@mikro-orm/sqlite": "^6.4.15",
     "@sinclair/typebox": "^0.34.33",
     "ajv": "^8.17.1",
     "dotenv": "^16.5.0",
     "uuid": "^11.1.0",
-    "zod": "^3.24.3"
+    "zod": "^3.25.32"
   },
   "devDependencies": {
-    "@mikro-orm/cli": "^6.4.13",
-    "@types/express": "^5.0.1",
+    "@mikro-orm/cli": "^6.4.15",
+    "@types/express": "^5.0.2",
     "@types/express-serve-static-core": "^5.0.6",
-    "@types/qs": "^6.9.18",
+    "@types/qs": "^6.14.0",
     "@types/uuid": "^10.0.0",
     "depcheck": "^1.4.7",
     "prettier": "^3.5.3",
     "ts-node": "^10.9.2",
-    "typedoc": "^0.28.3"
+    "typedoc": "^0.28.5"
   },
   "mikro-orm": {
     "configPaths": ["./mikro-orm.config.ts", "./dist/mikro-orm.config.js"]

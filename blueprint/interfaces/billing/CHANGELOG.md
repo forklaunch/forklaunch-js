@@ -1,5 +1,11 @@
 # @forklaunch/interfaces-billing
 
+## 0.1.14
+
+### Patch Changes
+
+- Upgrade dependencies
+
 ## 0.1.13
 
 ### Patch Changes

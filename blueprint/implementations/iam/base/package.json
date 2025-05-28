@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/implementation-iam-base",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "description": "Billing basic implementation for forklaunch",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -41,14 +41,14 @@
     "@forklaunch/core": "^0.7.4",
     "@forklaunch/interfaces-iam": "workspace:*",
     "@forklaunch/validator": "^0.5.4",
-    "@mikro-orm/core": "^6.4.13",
+    "@mikro-orm/core": "^6.4.15",
     "@sinclair/typebox": "^0.34.33",
     "ajv": "^8.17.1",
-    "zod": "^3.24.3"
+    "zod": "^3.25.32"
   },
   "devDependencies": {
     "depcheck": "^1.4.7",
     "prettier": "^3.5.3",
-    "typedoc": "^0.28.3"
+    "typedoc": "^0.28.5"
   }
 }
