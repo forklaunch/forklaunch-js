@@ -7,7 +7,9 @@
   "author": "",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
-  "files": ["lib/**"],
+  "files": [
+    "lib/**"
+  ],
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf lib pnpm.lock.yaml node_modules",

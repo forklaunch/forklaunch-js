@@ -67,6 +67,9 @@
     "typedoc": "^0.28.5"
   },
   "mikro-orm": {
-    "configPaths": ["./mikro-orm.config.ts", "./dist/mikro-orm.config.js"]
+    "configPaths": [
+      "./mikro-orm.config.ts",
+      "./dist/mikro-orm.config.js"
+    ]
   }
 }
