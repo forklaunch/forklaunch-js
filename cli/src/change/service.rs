@@ -507,8 +507,11 @@ impl CliCommand for ServiceCommand {
             matches,
             "service name",
             None,
-            |input: &str| validate_name(input),
-            |_| "Service name cannot be empty or include spaces. Please try again".to_string(),
+            |input: &str| validate_name(input) && !manifest_data.app_name.contains(input),
+            |_| {
+                "Service name cannot be a substring of the application name, empty or include numbers or spaces. Please try again"
+                    .to_string()
+            },
         )?;
 
         let database_variants = get_database_variants(&runtime);

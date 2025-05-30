@@ -159,9 +159,9 @@ impl CliCommand for RouterCommand {
             matches,
             "router name",
             None,
-            |input: &str| validate_name(input),
+            |input: &str| validate_name(input) && !manifest_data.app_name.contains(input),
             |_| {
-                "Router name cannot be empty or include numbers or spaces. Please try again"
+                "Router name cannot be a substring of the application name, empty or include numbers or spaces. Please try again"
                     .to_string()
             },
         )?;

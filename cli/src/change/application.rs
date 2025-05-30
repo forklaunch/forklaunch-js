@@ -1496,7 +1496,7 @@ impl CliCommand for ApplicationCommand {
             "application name",
             None,
             |input: &str| validate_name(input),
-            |_| "Application name cannot be empty or include spaces. Please try again".to_string(),
+            |_| "Application name cannot be empty or include numbers or spaces. Please try again".to_string(),
         )?;
 
         let runtime = prompt_field_from_selections_with_validation(

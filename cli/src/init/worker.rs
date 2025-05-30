@@ -570,17 +570,6 @@ impl CliCommand for WorkerCommand {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let worker_name = prompt_with_validation(
-            &mut line_editor,
-            &mut stdout,
-            "name",
-            matches,
-            "worker name",
-            None,
-            |input: &str| validate_name(input),
-            |_| "Worker name cannot be empty or include spaces. Please try again".to_string(),
-        )?;
-
         let base_path_input = prompt_base_path(
             &mut line_editor,
             &mut stdout,
@@ -589,6 +578,28 @@ impl CliCommand for WorkerCommand {
             &BasePathType::Init,
         )?;
         let base_path = Path::new(&base_path_input);
+
+        let config_path = Path::new(&base_path)
+            .join(".forklaunch")
+            .join("manifest.toml");
+
+        let existing_manifest_data: ApplicationManifestData =
+            from_str(&read_to_string(config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?)
+                .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+
+        let worker_name = prompt_with_validation(
+            &mut line_editor,
+            &mut stdout,
+            "name",
+            matches,
+            "worker name",
+            None,
+            |input: &str| validate_name(input) && !existing_manifest_data.app_name.contains(input),
+            |_| {
+                "Worker name cannot be a substring of the application name, empty or include numbers or spaces. Please try again"
+                    .to_string()
+            },
+        )?;
 
         let r#type: WorkerType = prompt_with_validation(
             &mut line_editor,
@@ -626,14 +637,6 @@ impl CliCommand for WorkerCommand {
             matches,
             "worker description (optional)",
         )?;
-
-        let config_path = Path::new(&base_path)
-            .join(".forklaunch")
-            .join("manifest.toml");
-
-        let existing_manifest_data: ApplicationManifestData =
-            from_str(&read_to_string(config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?)
-                .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
 
         let mut config_data = WorkerManifestData {
             // Common fields from ApplicationManifestData

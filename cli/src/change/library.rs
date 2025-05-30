@@ -174,8 +174,11 @@ impl CliCommand for LibraryCommand {
             matches,
             "library name",
             None,
-            |input: &str| validate_name(input),
-            |_| "Library name cannot be empty or include spaces. Please try again".to_string(),
+            |input: &str| validate_name(input) && !manifest_data.app_name.contains(input),
+            |_| {
+                "Library name cannot be a substring of the application name, empty or include numbers or spaces. Please try again"
+                    .to_string()
+            },
         )?;
 
         let description = prompt_field_from_selections_with_validation(
