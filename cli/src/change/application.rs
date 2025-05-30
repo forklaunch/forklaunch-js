@@ -35,9 +35,7 @@ use crate::{
         docker::update_dockerfile_contents,
         format::format_code,
         license::generate_license,
-        manifest::{
-            ProjectType, application::ApplicationManifestData, service::ServiceManifestData,
-        },
+        manifest::{ProjectType, application::ApplicationManifestData},
         move_template::{MoveTemplate, MoveTemplateType, move_template_files},
         name::validate_name,
         package_json::{
@@ -921,11 +919,15 @@ fn change_runtime(
         let project_type = &project_entry.r#type;
         let is_database_enabled = if let Some(resources) = &project_entry.resources {
             if let Some(database) = &resources.database {
-                is_in_memory_database = match database.parse::<Database>()? {
-                    Database::SQLite => true,
-                    Database::LibSQL => true,
-                    Database::BetterSQLite => true,
-                    _ => false,
+                is_in_memory_database = if !is_in_memory_database {
+                    match database.parse::<Database>()? {
+                        Database::SQLite => true,
+                        Database::LibSQL => true,
+                        Database::BetterSQLite => true,
+                        _ => false,
+                    }
+                } else {
+                    true
                 };
             }
             resources.database.is_some()
@@ -1060,11 +1062,11 @@ fn change_runtime(
 
     let dockerfile_template = Template::new(dockerfile_template_path.contents_utf8().unwrap())?;
 
-    let existing_service_manifest_data = ServiceManifestData {
-        is_in_memory_database: is_in_memory_database,
+    let existing_service_manifest_data = ApplicationManifestData {
+        is_in_memory_database,
         is_node: existing_runtime == Runtime::Node,
         is_bun: existing_runtime == Runtime::Bun,
-        ..serde_json::from_value(serde_json::to_value(&manifest_data)?)?
+        ..manifest_data.clone()
     };
 
     let existing_dockerfile_contents = read_to_string(base_path.join("Dockerfile"))?;
@@ -1075,8 +1077,17 @@ fn change_runtime(
     })?;
 
     if existing_dockerfile_contents.trim() != watermarked_dockerfile_contents.trim() {
+        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+        writeln!(
+            stdout,
+            "Warning: Dockerfile is generating from template, you may need to manually migrate changes from Dockerfile.{}",
+            runtime.to_string()
+        )?;
+        stdout.reset()?;
         rendered_templates_cache.insert(
-            base_path.join("Dockerfile").to_string_lossy(),
+            base_path
+                .join(format!("Dockerfile.{}", runtime.to_string()))
+                .to_string_lossy(),
             RenderedTemplate {
                 path: base_path.join(format!("Dockerfile.{}", runtime.to_string())),
                 content: existing_dockerfile_contents,
@@ -1093,12 +1104,17 @@ fn change_runtime(
             content: if exists(base_path.join(format!("Dockerfile.{}", runtime.to_string())))? {
                 read_to_string(base_path.join(format!("Dockerfile.{}", runtime.to_string())))?
             } else {
-                let dockerfile_contents = rendered_templates_cache
-                    .get(&dockerfile_cache_key)?
-                    .unwrap();
-
                 update_dockerfile_contents(
-                    dockerfile_contents.content.as_str(),
+                    &apply_watermark(&RenderedTemplate {
+                        path: base_path.join("Dockerfile"),
+                        content: dockerfile_template.render(&ApplicationManifestData {
+                            is_in_memory_database,
+                            is_node: runtime == &Runtime::Node,
+                            is_bun: runtime == &Runtime::Bun,
+                            ..manifest_data.clone()
+                        }),
+                        context: None,
+                    })?,
                     &runtime,
                     is_in_memory_database,
                 )?
