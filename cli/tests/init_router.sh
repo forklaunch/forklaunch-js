@@ -10,7 +10,7 @@ RUST_BACKTRACE=1 cargo run --release init router router-test -p router-test-node
 
 cd router-test-node-application/billing
 
-RUST_BACKTRACE=1 cargo run --release init router router-test-2
+RUST_BACKTRACE=1 cargo run --release init router router-test-two
 
 pnpm install
 pnpm build
@@ -22,7 +22,7 @@ RUST_BACKTRACE=1 cargo run --release init router router-test -p router-test-bun-
 
 cd router-test-bun-application/iam
 
-RUST_BACKTRACE=1 cargo run --release init router router-test-2
+RUST_BACKTRACE=1 cargo run --release init router router-test-two
 
 bun install
 bun run build

@@ -190,7 +190,10 @@ impl CliCommand for RouterCommand {
             "router name",
             None,
             |input: &str| validate_name(input),
-            |_| "Router name cannot be empty or include spaces. Please try again".to_string(),
+            |_| {
+                "Router name cannot be empty or include numbers or spaces. Please try again"
+                    .to_string()
+            },
         )?;
 
         let base_path_input = &prompt_base_path(
