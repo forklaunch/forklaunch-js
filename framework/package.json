@@ -11,7 +11,9 @@
     "express",
     "hyper-express",
     "universal-sdk",
-    "validator"
+    "validator",
+    "infrastructure-s3",
+    "infrastructure-redis"
   ],
   "scripts": {
     "build": "pnpm -r run build",

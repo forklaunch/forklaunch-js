@@ -6,3 +6,4 @@ packages:
   - 'universal-sdk'
   - 'validator'
   - 'e2e-tests'
+  - 'infrastructure/*'
