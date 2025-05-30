@@ -1,5 +1,31 @@
 # @forklaunch/validator
 
+## 0.6.2
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/common@0.3.2
+
+## 0.6.1
+
+### Patch Changes
+
+- Add additional options to framework to instantiate applications and routers
+- Updated dependencies
+  - @forklaunch/common@0.3.1
+
+## 0.6.0
+
+### Minor Changes
+
+- Added support for content types in request/response and fixed edge cases in validator
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/common@0.3.0
+
 ## 0.5.4
 
 ### Patch Changes

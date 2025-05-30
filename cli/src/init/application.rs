@@ -345,7 +345,7 @@ impl CliCommand for ApplicationCommand {
             "application name",
             None,
             |input: &str| validate_name(input),
-            |_| "Application name cannot be empty or include spaces. Please try again".to_string(),
+            |_| "Application name cannot be empty or include numbers or spaces. Please try again".to_string(),
         )?;
 
         let runtime: Runtime = prompt_with_validation(
@@ -411,6 +411,20 @@ impl CliCommand for ApplicationCommand {
         .parse()?;
 
         let http_framework: HttpFramework = if runtime == Runtime::Bun {
+            if let Some(command_line_http_framework) = matches.get_one::<String>("http_framework") {
+                if command_line_http_framework
+                    .clone()
+                    .parse::<HttpFramework>()?
+                    == HttpFramework::HyperExpress
+                {
+                    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+                    writeln!(
+                        stdout,
+                        "Incompatible choices: Bun + hyper-express, defaulting to Bun + express.",
+                    )?;
+                    stdout.reset()?;
+                }
+            }
             HttpFramework::Express
         } else {
             prompt_with_validation(
@@ -427,6 +441,14 @@ impl CliCommand for ApplicationCommand {
         };
 
         let test_framework: Option<TestFramework> = if runtime == Runtime::Bun {
+            if matches.get_one::<String>("test-framework").is_some() {
+                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+                writeln!(
+                    stdout,
+                    "Ignoring test-framework choice, defaulting to Bun built-in test runner.",
+                )?;
+                stdout.reset()?;
+            }
             None
         } else {
             Some(

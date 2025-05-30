@@ -1,5 +1,4 @@
 import {
-  DocsConfiguration,
   MetricsDefinition,
   OpenTelemetryCollector
 } from '@forklaunch/core/http';
@@ -22,10 +21,12 @@ import {
   any as schemaAny,
   array as schemaArray,
   bigint as schemaBigint,
+  binary as schemaBinary,
   boolean as schemaBoolean,
   date as schemaDate,
   email as schemaEmail,
   enum_ as schemaEnum,
+  file as schemaFile,
   function_ as schemaFunction,
   literal as schemaLiteral,
   never as schemaNever,
@@ -66,12 +67,12 @@ export const forklaunchRouter = <BasePath extends `/${string}`>(
   );
 export const forklaunchExpress = (
   openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-  docsConfiguration?: DocsConfiguration
+  options?: Parameters<typeof registeredForklaunchExpress>[2]
 ) =>
   registeredForklaunchExpress(
     SchemaValidator(),
     openTelemetryCollector,
-    docsConfiguration
+    options
   );
 
 export const handlers: typeof registeredHandlers = registeredHandlers;
@@ -92,6 +93,8 @@ export const void_: typeof schemaVoid = schemaVoid;
 export const any: typeof schemaAny = schemaAny;
 export const unknown: typeof schemaUnknown = schemaUnknown;
 export const never: typeof schemaNever = schemaNever;
+export const binary: typeof schemaBinary = schemaBinary;
+export const file: typeof schemaFile = schemaFile;
 export const optional: typeof schemaOptional = schemaOptional;
 export const array: typeof schemaArray = schemaArray;
 export const union: typeof schemaUnion = schemaUnion;

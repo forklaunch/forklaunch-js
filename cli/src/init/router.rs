@@ -182,17 +182,6 @@ impl CliCommand for RouterCommand {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let router_name = prompt_with_validation(
-            &mut line_editor,
-            &mut stdout,
-            "name",
-            matches,
-            "router name",
-            None,
-            |input: &str| validate_name(input),
-            |_| "Router name cannot be empty or include spaces. Please try again".to_string(),
-        )?;
-
         let base_path_input = &prompt_base_path(
             &mut line_editor,
             &mut stdout,
@@ -201,6 +190,31 @@ impl CliCommand for RouterCommand {
             &BasePathType::Init,
         )?;
         let base_path = Path::new(&base_path_input);
+
+        let path = Path::new(&base_path);
+        let config_path = path
+            .parent()
+            .unwrap_or_else(|| path)
+            .join(".forklaunch")
+            .join("manifest.toml");
+
+        let manifest_data: RouterManifestData =
+            from_str(&read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?)
+                .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+
+        let router_name = prompt_with_validation(
+            &mut line_editor,
+            &mut stdout,
+            "name",
+            matches,
+            "router name",
+            None,
+            |input: &str| validate_name(input) && !manifest_data.app_name.contains(input),
+            |_| {
+                "Router name cannot be a substring of the application name, empty or include numbers or spaces. Please try again"
+                    .to_string()
+            },
+        )?;
 
         let infrastructure: Vec<Infrastructure> = if matches.ids().all(|id| id == "dryrun") {
             prompt_comma_separated_list(
@@ -218,17 +232,6 @@ impl CliCommand for RouterCommand {
         } else {
             vec![]
         };
-
-        let path = Path::new(&base_path);
-        let config_path = path
-            .parent()
-            .unwrap_or_else(|| path)
-            .join(".forklaunch")
-            .join("manifest.toml");
-
-        let manifest_data: RouterManifestData =
-            from_str(&read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?)
-                .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
 
         let service_name = path.file_name().unwrap().to_str().unwrap();
         let service_data = manifest_data

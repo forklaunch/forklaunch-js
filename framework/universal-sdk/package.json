@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/universal-sdk",
-  "version": "0.2.8",
+  "version": "0.3.2",
   "description": "Cross runtime fetch library for forklaunch router sdks",
   "keywords": [
     "fetch",
@@ -52,6 +52,6 @@
     "prettier": "^3.5.3",
     "ts-jest": "^29.3.4",
     "tsup": "^8.5.0",
-    "typedoc": "^0.28.4"
+    "typedoc": "^0.28.5"
   }
 }

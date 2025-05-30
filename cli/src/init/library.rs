@@ -238,17 +238,6 @@ impl CliCommand for LibraryCommand {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let library_name = prompt_with_validation(
-            &mut line_editor,
-            &mut stdout,
-            "name",
-            matches,
-            "library name",
-            None,
-            |input: &str| validate_name(input),
-            |_| "Library name cannot be empty or include spaces. Please try again".to_string(),
-        )?;
-
         let base_path_input = prompt_base_path(
             &mut line_editor,
             &mut stdout,
@@ -258,14 +247,6 @@ impl CliCommand for LibraryCommand {
         )?;
         let base_path = Path::new(&base_path_input);
 
-        let description = prompt_without_validation(
-            &mut line_editor,
-            &mut stdout,
-            "description",
-            matches,
-            "library description (optional)",
-        )?;
-
         let config_path = Path::new(&base_path)
             .join(".forklaunch")
             .join("manifest.toml");
@@ -273,6 +254,28 @@ impl CliCommand for LibraryCommand {
         let existing_manifest_data: ApplicationManifestData =
             from_str(&read_to_string(config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?)
                 .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+
+        let library_name = prompt_with_validation(
+            &mut line_editor,
+            &mut stdout,
+            "name",
+            matches,
+            "library name",
+            None,
+            |input: &str| validate_name(input) && !existing_manifest_data.app_name.contains(input),
+            |_| {
+                "Library name cannot be a substring of the application name, empty or include numbers or spaces. Please try again"
+                    .to_string()
+            },
+        )?;
+
+        let description = prompt_without_validation(
+            &mut line_editor,
+            &mut stdout,
+            "description",
+            matches,
+            "library description (optional)",
+        )?;
 
         let mut config_data: LibraryManifestData = LibraryManifestData {
             // Common fields from ApplicationManifestData

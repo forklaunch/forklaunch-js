@@ -77,9 +77,7 @@ describe('Forklaunch Express Tests', () => {
         name: 'Test',
         summary: 'Test Summary',
         body: {
-          // schema: {
           test: string
-          // }
         },
         responses: {
           200: string

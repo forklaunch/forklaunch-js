@@ -1,5 +1,23 @@
 # @forklaunch/common
 
+## 0.3.2
+
+### Patch Changes
+
+- update package versions
+
+## 0.3.1
+
+### Patch Changes
+
+- Add additional options to framework to instantiate applications and routers
+
+## 0.3.0
+
+### Minor Changes
+
+- Added support for content types in request/response and fixed edge cases in validator
+
 ## 0.2.11
 
 ### Patch Changes

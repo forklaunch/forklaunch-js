@@ -1,5 +1,37 @@
 # @forklaunch/hyper-express
 
+## 0.5.2
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/common@0.3.2
+  - @forklaunch/core@0.8.2
+  - @forklaunch/validator@0.6.2
+
+## 0.5.1
+
+### Patch Changes
+
+- Add additional options to framework to instantiate applications and routers
+- Updated dependencies
+  - @forklaunch/validator@0.6.1
+  - @forklaunch/common@0.3.1
+  - @forklaunch/core@0.8.1
+
+## 0.5.0
+
+### Minor Changes
+
+- Added support for content types in request/response and fixed edge cases in validator
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/common@0.3.0
+  - @forklaunch/core@0.8.0
+  - @forklaunch/validator@0.6.0
+
 ## 0.4.11
 
 ### Patch Changes

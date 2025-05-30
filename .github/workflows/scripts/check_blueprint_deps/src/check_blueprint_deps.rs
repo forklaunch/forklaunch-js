@@ -1,9 +1,12 @@
 use serde_json::Value;
 use std::collections::HashMap;
 use std::fs::read_to_string;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-pub fn verify_package_versions(package_dirs: &[&str]) -> Result<(), String> {
+pub fn verify_package_versions(
+    package_dirs: &[&str],
+    implementation_refs: &Vec<PathBuf>,
+) -> Result<(), String> {
     let mut inventory: HashMap<String, String> = HashMap::new();
     let mut last_comment = String::new();
 
@@ -42,6 +45,61 @@ pub fn verify_package_versions(package_dirs: &[&str]) -> Result<(), String> {
         }
     }
 
+    for implementation in implementation_refs {
+        fn check_package_json(
+            path: &Path,
+            inventory: &HashMap<String, String>,
+        ) -> Result<(), String> {
+            let package_json_string = read_to_string(path)
+                .map_err(|e| format!("Failed to read {}: {}", path.display(), e))?;
+            let package_json: Value = serde_json::from_str(&package_json_string).map_err(|e| {
+                format!(
+                    "Failed to parse package.json for {}: {}",
+                    package_json_string, e
+                )
+            })?;
+            let name: &str = package_json["name"].as_str().ok_or_else(|| {
+                format!(
+                    "Package.json for {} does not contain a name",
+                    package_json_string
+                )
+            })?;
+            let version: &str = package_json["version"].as_str().ok_or_else(|| {
+                format!(
+                    "Package.json for {} does not contain a version",
+                    package_json_string
+                )
+            })?;
+            if let Some(expected) = inventory.get(name) {
+                println!("Checking {} in {}", name, path.display());
+                if format!("^{}", version) != expected.clone() {
+                    return Err(format!(
+                        "Version mismatch for {} in {}: expected {}, got {}",
+                        name,
+                        path.display(),
+                        expected,
+                        format!("^{}", version)
+                    ));
+                }
+            } else {
+                println!(
+                    "Warning: Package not found in package_json_consts: {}",
+                    name
+                );
+            }
+            Ok(())
+        }
+
+        // Walk through subdirectories looking for package.json files
+        for entry in walkdir::WalkDir::new(implementation)
+            .into_iter()
+            .filter_map(|e| e.ok())
+            .filter(|e| e.file_name() == "package.json")
+        {
+            check_package_json(entry.path(), &inventory)?;
+        }
+    }
+
     for dir in package_dirs {
         let path = Path::new(dir).join("package.json");
         let contents = read_to_string(&path)
@@ -68,6 +126,8 @@ pub fn verify_package_versions(package_dirs: &[&str]) -> Result<(), String> {
                                 actual
                             ));
                         }
+                    } else {
+                        println!("Warning: Package not found in package_json_consts: {}", pkg);
                     }
                 }
             }

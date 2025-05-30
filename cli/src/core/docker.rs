@@ -1095,6 +1095,11 @@ pub(crate) fn add_worker_definition_to_docker_compose(
         docker_compose_string,
     )?;
 
+    environment.insert(
+        "QUEUE_NAME".to_string(),
+        format!("{}-{}-dev", &config_data.app_name, &config_data.worker_name),
+    );
+
     if config_data.is_cache_enabled {
         add_redis_to_docker_compose(&config_data.app_name, &mut docker_compose, &mut environment)
             .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
@@ -1176,31 +1181,65 @@ pub(crate) fn add_worker_definition_to_docker_compose(
 }
 
 const IN_MEMORY_DATABASE_DOCKERFILE_ADDENDUM: &str = "
-
 # Install sqlite dependencies
 RUN apk add --no-cache python3 py3-pip make build-base sqlite-dev
 RUN pip install setuptools --break-system-packages
-
 ";
 
 pub(crate) fn update_dockerfile_contents(
     dockerfile_contents: &str,
-    config_data: &ServiceManifestData,
+    runtime: &Runtime,
+    is_in_memory_database: bool,
 ) -> Result<String> {
-    let mut final_copy_line = 0;
-    if config_data.runtime.parse::<Runtime>()? == Runtime::Node
-        && config_data.is_in_memory_database
+    let mut final_copy_line: i32 = -1;
+    if runtime == &Runtime::Node
+        && is_in_memory_database
         && !dockerfile_contents.contains(IN_MEMORY_DATABASE_DOCKERFILE_ADDENDUM)
     {
         for (index, line) in dockerfile_contents.lines().enumerate() {
             if line.contains("COPY") {
-                final_copy_line = index;
+                final_copy_line = index.try_into().unwrap();
+                break;
             }
         }
     }
 
     let mut new_dockerfile_contents = dockerfile_contents.lines().collect::<Vec<&str>>();
-    new_dockerfile_contents.insert(final_copy_line, IN_MEMORY_DATABASE_DOCKERFILE_ADDENDUM);
+    if final_copy_line != -1 {
+        new_dockerfile_contents.insert(
+            final_copy_line.try_into().unwrap(),
+            IN_MEMORY_DATABASE_DOCKERFILE_ADDENDUM,
+        );
+    }
 
     Ok(new_dockerfile_contents.join("\n"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::constants::Runtime;
+
+    #[test]
+    fn test_update_dockerfile_contents_inserts_addendum_after_last_copy() {
+        let dockerfile =
+            "FROM node:18-alpine\nCOPY . .\nRUN npm install\nCOPY extra .\nRUN npm run build";
+        let runtime = Runtime::Node;
+        let is_in_memory_database = true;
+        let result =
+            update_dockerfile_contents(dockerfile, &runtime, is_in_memory_database).unwrap();
+        let lines: Vec<&str> = result.lines().collect();
+        assert_eq!(
+            lines[2],
+            IN_MEMORY_DATABASE_DOCKERFILE_ADDENDUM
+                .split('\n')
+                .collect::<Vec<&str>>()[1]
+                .trim()
+        );
+        assert_eq!(lines[0], "FROM node:18-alpine");
+        assert_eq!(lines[6], "COPY . .");
+        assert_eq!(lines[7], "RUN npm install");
+        assert_eq!(lines[8], "COPY extra .");
+        assert_eq!(lines[9], "RUN npm run build");
+    }
 }

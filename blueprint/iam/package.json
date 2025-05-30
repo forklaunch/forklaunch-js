@@ -34,29 +34,29 @@
   "dependencies": {
     "@forklaunch/blueprint-core": "workspace:*",
     "@forklaunch/blueprint-monitoring": "workspace:*",
-    "@forklaunch/core": "^0.7.4",
+    "@forklaunch/core": "^0.8.2",
     "@forklaunch/implementation-iam-base": "workspace:*",
     "@forklaunch/interfaces-iam": "workspace:*",
-    "@mikro-orm/core": "^6.4.13",
-    "@mikro-orm/migrations": "^6.4.13",
-    "@mikro-orm/mongodb": "^6.4.13",
-    "@mikro-orm/mysql": "^6.4.13",
-    "@mikro-orm/postgresql": "^6.4.13",
-    "@mikro-orm/reflection": "^6.4.13",
-    "@mikro-orm/seeder": "^6.4.13",
-    "@mikro-orm/sqlite": "^6.4.13",
+    "@mikro-orm/core": "^6.4.16",
+    "@mikro-orm/migrations": "^6.4.16",
+    "@mikro-orm/mongodb": "^6.4.16",
+    "@mikro-orm/mysql": "^6.4.16",
+    "@mikro-orm/postgresql": "^6.4.16",
+    "@mikro-orm/reflection": "^6.4.16",
+    "@mikro-orm/seeder": "^6.4.16",
+    "@mikro-orm/sqlite": "^6.4.16",
     "@sinclair/typebox": "^0.34.33",
     "dotenv": "^16.5.0",
-    "zod": "^3.24.3"
+    "zod": "^3.25.42"
   },
   "devDependencies": {
-    "@mikro-orm/cli": "^6.4.13",
-    "@types/express": "^5.0.1",
+    "@mikro-orm/cli": "^6.4.16",
+    "@types/express": "^5.0.2",
     "@types/express-serve-static-core": "^5.0.6",
-    "@types/qs": "^6.9.18",
+    "@types/qs": "^6.14.0",
     "depcheck": "^1.4.7",
     "prettier": "^3.5.3",
-    "typedoc": "^0.28.3"
+    "typedoc": "^0.28.5"
   },
   "mikro-orm": {
     "configPaths": ["./mikro-orm.config.ts", "./dist/mikro-orm.config.js"]

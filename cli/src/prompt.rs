@@ -1,6 +1,6 @@
 use std::io::Write;
 
-use anyhow::Result;
+use anyhow::{Result, bail};
 use clap::ArgMatches;
 use dialoguer::{FuzzySelect, Input, MultiSelect, theme::ColorfulTheme};
 use rustyline::{
@@ -81,8 +81,12 @@ where
     ValidatorFunction: Fn(&str) -> bool,
 {
     loop {
+        let mut continue_loop = true;
         let input = match matches.get_one::<String>(matches_key) {
-            Some(val) => val.to_string(),
+            Some(val) => {
+                continue_loop = false;
+                val.to_string()
+            }
             None => {
                 if let Some(options) = valid_options {
                     let completer = ArrayCompleter {
@@ -128,6 +132,10 @@ where
         write!(stdout, "{}", error_message(&input))?;
         stdout.reset()?;
         writeln!(stdout)?;
+
+        if !continue_loop {
+            bail!(error_message(&input));
+        }
     }
 }
 

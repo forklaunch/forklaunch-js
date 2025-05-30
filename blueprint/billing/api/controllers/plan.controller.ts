@@ -15,13 +15,13 @@ import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { PlanService } from '@forklaunch/interfaces-billing/interfaces';
+import { BillingProviderEnum } from '../../domain/enum/billingProvider.enum';
+import { PlanCadenceEnum } from '../../domain/enum/planCadence.enum';
 import {
   CreatePlanDtoMapper,
   PlanDtoMapper,
   UpdatePlanDtoMapper
 } from '../../domain/mappers/plan.mappers';
-import { BillingProviderEnum } from '../../domain/enum/billingProvider.enum';
-import { PlanCadenceEnum } from '../../domain/enum/planCadence.enum';
 import { PlanSchemas, SchemaDependencies } from '../../registrations';
 
 export const PlanController = (
@@ -98,7 +98,7 @@ export const PlanController = (
       async (req, res) => {
         openTelemetryCollector.debug('Deleting plan', req.params);
         await serviceFactory().deletePlan(req.params);
-        res.status(200).json(`Deleted plan ${req.params.id}`);
+        res.status(200).send(`Deleted plan ${req.params.id}`);
       }
     ),
 
