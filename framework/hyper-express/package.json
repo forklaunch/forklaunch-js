@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/hyper-express",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Forklaunch framework for hyper-express.",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -63,8 +63,8 @@
     "ts-node": "^10.9.2",
     "tsup": "^8.5.0",
     "tsx": "^4.19.4",
-    "typedoc": "^0.28.4",
+    "typedoc": "^0.28.5",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.32.1"
+    "typescript-eslint": "^8.33.0"
   }
 }
