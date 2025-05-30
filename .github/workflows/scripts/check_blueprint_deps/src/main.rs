@@ -1,4 +1,4 @@
-use std::fs;
+use std::fs::{self, read_dir};
 use toml;
 
 mod check_blueprint_deps;
@@ -19,8 +19,21 @@ fn main() {
         .iter()
         .map(|project| format!("../../../../blueprint/{}", project.as_str().unwrap()))
         .collect();
+    let mut implementation_refs = vec![];
+    for folder in ["implementations", "interfaces"] {
+        implementation_refs.push(
+            read_dir(format!("../../../../blueprint/{}", folder))
+                .unwrap()
+                .map(|entry| entry.unwrap().path())
+                .filter(|entry| entry.is_dir())
+                .collect::<Vec<_>>(),
+        );
+    }
     let project_refs: Vec<&str> = projects.iter().map(|s| s.as_str()).collect();
-    match check_blueprint_deps::verify_package_versions(&project_refs) {
+    match check_blueprint_deps::verify_package_versions(
+        &project_refs,
+        &implementation_refs.concat(),
+    ) {
         Ok(_) => println!("All package versions are correct"),
         Err(e) => println!("Error: {}", e),
     }
