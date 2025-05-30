@@ -8,21 +8,29 @@ import {
   any as schemaAny,
   array as schemaArray,
   bigint as schemaBigint,
+  binary as schemaBinary,
   boolean as schemaBoolean,
   date as schemaDate,
   email as schemaEmail,
   enum_ as schemaEnum,
+  file as schemaFile,
+  function_ as schemaFunction,
   literal as schemaLiteral,
   never as schemaNever,
+  null_ as schemaNull,
   nullish as schemaNullish,
   number as schemaNumber,
   optional as schemaOptional,
+  promise as schemaPromise,
+  record as schemaRecord,
   string as schemaString,
   symbol as schemaSymbol,
+  undefined_ as schemaUndefined,
   union as schemaUnion,
   unknown as schemaUnknown,
   uri as schemaUri,
   uuid as schemaUuid,
+  void_ as schemaVoid,
 } from "@forklaunch/validator/{{validator}}";
 import {
   NextFunction,
@@ -67,14 +75,22 @@ export const boolean: typeof schemaBoolean = schemaBoolean;
 export const date: typeof schemaDate = schemaDate;
 export const symbol: typeof schemaSymbol = schemaSymbol;
 export const nullish: typeof schemaNullish = schemaNullish;
+export const undefined_: typeof schemaUndefined = schemaUndefined;
+export const null_: typeof schemaNull = schemaNull;
+export const void_: typeof schemaVoid = schemaVoid;
 export const any: typeof schemaAny = schemaAny;
 export const unknown: typeof schemaUnknown = schemaUnknown;
 export const never: typeof schemaNever = schemaNever;
+export const binary: typeof schemaBinary = schemaBinary;
+export const file: typeof schemaFile = schemaFile;
 export const optional: typeof schemaOptional = schemaOptional;
 export const array: typeof schemaArray = schemaArray;
 export const union: typeof schemaUnion = schemaUnion;
 export const literal: typeof schemaLiteral = schemaLiteral;
 export const enum_: typeof schemaEnum = schemaEnum;
+export const function_: typeof schemaFunction = schemaFunction;
+export const record: typeof schemaRecord = schemaRecord;
+export const promise: typeof schemaPromise = schemaPromise;
 
 export const IdSchema = {
   id: string,
