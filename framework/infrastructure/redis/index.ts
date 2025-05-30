@@ -1,13 +1,12 @@
 import { safeParse, safeStringify } from '@forklaunch/common';
-import { createClient, RedisClientOptions } from 'redis';
-import { TtlCache } from '../../core/src/cache/interfaces/ttlCache.interface';
-import { TtlCacheRecord } from '../../core/src/cache/types/ttlCacheRecord.types';
+import { TtlCache, TtlCacheRecord } from '@forklaunch/core/cache';
 import {
   evaluateTelemetryOptions,
   MetricsDefinition,
+  OpenTelemetryCollector,
   TelemetryOptions
-} from '../../core/src/http';
-import { OpenTelemetryCollector } from '../../core/src/http/telemetry/openTelemetryCollector';
+} from '@forklaunch/core/http';
+import { createClient, RedisClientOptions } from 'redis';
 
 /**
  * Type representing a raw reply from Redis commands.

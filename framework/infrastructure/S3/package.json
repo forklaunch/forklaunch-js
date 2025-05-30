@@ -28,12 +28,13 @@
     "lib/**"
   ],
   "scripts": {
-    "build": "tsc --noEmit && tsup ./index.ts --format cjs,esm --no-splitting --dts --tsconfig tsconfig.json --out-dir lib --clean --sourcemap",
+    "build": "tsc --noEmit && tsup ./index.ts --format cjs,esm --no-splitting --dts --tsconfig tsconfig.json --out-dir lib --clean --sourcemap && if [ -f eject-infrastructure-package.bash ]; then pnpm package:eject; fi",
     "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
+    "package:eject": "./eject-infrastructure-package.bash s3",
     "publish:package": "./publish-package.bash",
     "test": "vitest --passWithNoTests"
   },

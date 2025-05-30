@@ -5,16 +5,6 @@
   "keywords": [],
   "license": "ISC",
   "author": "",
-  "workspaces": [
-    "common",
-    "core",
-    "express",
-    "hyper-express",
-    "universal-sdk",
-    "validator",
-    "infrastructure-s3",
-    "infrastructure-redis"
-  ],
   "scripts": {
     "build": "pnpm -r run build",
     "clean": "rm -rf node_modules pnpm-lock.yaml && pnpm --parallel -r clean && pnpm store prune",
