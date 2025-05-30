@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.3.1
+
+### Patch Changes
+
+- Add additional options to framework to instantiate applications and routers
+
 ## 0.3.0
 
 ### Minor Changes

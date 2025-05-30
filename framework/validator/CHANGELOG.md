@@ -1,5 +1,13 @@
 # @forklaunch/validator
 
+## 0.6.1
+
+### Patch Changes
+
+- Add additional options to framework to instantiate applications and routers
+- Updated dependencies
+  - @forklaunch/common@0.3.1
+
 ## 0.6.0
 
 ### Minor Changes

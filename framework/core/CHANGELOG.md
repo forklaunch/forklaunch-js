@@ -1,5 +1,14 @@
 # @forklaunch/core
 
+## 0.8.1
+
+### Patch Changes
+
+- Add additional options to framework to instantiate applications and routers
+- Updated dependencies
+  - @forklaunch/validator@0.6.1
+  - @forklaunch/common@0.3.1
+
 ## 0.8.0
 
 ### Minor Changes
