@@ -133,7 +133,8 @@ fn generate_basic_service(
             path: base_path.join("Dockerfile"),
             content: update_dockerfile_contents(
                 &read_to_string(base_path.join("Dockerfile"))?,
-                &config_data,
+                &config_data.runtime.parse()?,
+                config_data.is_in_memory_database,
             )?,
             context: Some(ERROR_FAILED_TO_UPDATE_DOCKERFILE.to_string()),
         });

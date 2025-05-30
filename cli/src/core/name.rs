@@ -6,5 +6,5 @@ pub(crate) fn validate_name(name: &str) -> bool {
         && !name.contains('\r')
         && !name
             .chars()
-            .any(|c| !c.is_ascii_alphanumeric() && c != '_' && c != '-');
+            .any(|c| !c.is_alphabetic() && c != '_' && c != '-');
 }

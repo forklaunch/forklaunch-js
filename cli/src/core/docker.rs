@@ -1185,11 +1185,12 @@ RUN pip install setuptools --break-system-packages
 
 pub(crate) fn update_dockerfile_contents(
     dockerfile_contents: &str,
-    config_data: &ServiceManifestData,
+    runtime: &Runtime,
+    is_in_memory_database: bool,
 ) -> Result<String> {
     let mut final_copy_line = 0;
-    if config_data.runtime.parse::<Runtime>()? == Runtime::Node
-        && config_data.is_in_memory_database
+    if runtime == &Runtime::Node
+        && is_in_memory_database
         && !dockerfile_contents.contains(IN_MEMORY_DATABASE_DOCKERFILE_ADDENDUM)
     {
         for (index, line) in dockerfile_contents.lines().enumerate() {

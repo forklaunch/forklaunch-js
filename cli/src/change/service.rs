@@ -31,11 +31,11 @@ use crate::{
         },
         base_path::{BasePathLocation, BasePathType, prompt_base_path},
         command::command,
-        database::get_database_variants,
+        database::{get_database_variants, is_in_memory_database},
         docker::{
             DependencyCondition, DependsOn, DockerCompose, add_database_to_docker_compose,
             add_redis_to_docker_compose, clean_up_unused_infrastructure_services,
-            remove_redis_from_docker_compose,
+            remove_redis_from_docker_compose, update_dockerfile_contents,
         },
         env::Env,
         format::format_code,
@@ -136,6 +136,23 @@ fn change_database(
         docker_compose_data,
         &mut existing_docker_service_environment,
     )?;
+
+    let dockerfile_key = base_path.parent().unwrap().join("Dockerfile");
+    let dockerfile = rendered_templates_cache.get(&dockerfile_key)?;
+    if let Some(dockerfile_template) = dockerfile {
+        rendered_templates_cache.insert(
+            dockerfile_key.to_string_lossy(),
+            RenderedTemplate {
+                path: dockerfile_key.clone(),
+                content: update_dockerfile_contents(
+                    &dockerfile_template.content,
+                    &manifest_data.runtime.parse()?,
+                    is_in_memory_database(database),
+                )?,
+                context: None,
+            },
+        );
+    }
 
     let docker_service = docker_compose_data.services.get_mut(&project.name).unwrap();
 

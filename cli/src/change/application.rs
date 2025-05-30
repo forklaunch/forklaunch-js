@@ -1093,20 +1093,14 @@ fn change_runtime(
             content: if exists(base_path.join(format!("Dockerfile.{}", runtime.to_string())))? {
                 read_to_string(base_path.join(format!("Dockerfile.{}", runtime.to_string())))?
             } else {
-                let service_manifest_data = ServiceManifestData {
-                    is_in_memory_database,
-                    is_node: runtime == &Runtime::Node,
-                    is_bun: runtime == &Runtime::Bun,
-                    ..serde_json::from_value(serde_json::to_value(&manifest_data)?)?
-                };
-
                 let dockerfile_contents = rendered_templates_cache
                     .get(&dockerfile_cache_key)?
                     .unwrap();
 
                 update_dockerfile_contents(
                     dockerfile_contents.content.as_str(),
-                    &service_manifest_data,
+                    &runtime,
+                    is_in_memory_database,
                 )?
             },
             context: None,
