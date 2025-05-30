@@ -36,36 +36,36 @@
   "dependencies": {
     "@forklaunch/blueprint-core": "workspace:*",
     "@forklaunch/blueprint-monitoring": "workspace:*",
-    "@forklaunch/core": "^0.8.0",
+    "@forklaunch/core": "^0.8.2",
     "@forklaunch/implementation-worker-bullmq": "workspace:*",
     "@forklaunch/implementation-worker-database": "workspace:*",
     "@forklaunch/implementation-worker-kafka": "workspace:*",
     "@forklaunch/implementation-worker-redis": "workspace:*",
     "@forklaunch/interfaces-worker": "workspace:*",
-    "@mikro-orm/better-sqlite": "^6.4.15",
-    "@mikro-orm/core": "^6.4.15",
-    "@mikro-orm/libsql": "^6.4.15",
-    "@mikro-orm/mariadb": "^6.4.15",
-    "@mikro-orm/migrations": "^6.4.15",
-    "@mikro-orm/mongodb": "^6.4.15",
-    "@mikro-orm/mssql": "^6.4.15",
-    "@mikro-orm/mysql": "^6.4.15",
-    "@mikro-orm/postgresql": "^6.4.15",
-    "@mikro-orm/reflection": "^6.4.15",
-    "@mikro-orm/seeder": "^6.4.15",
-    "@mikro-orm/sqlite": "^6.4.15",
+    "@mikro-orm/better-sqlite": "^6.4.16",
+    "@mikro-orm/core": "^6.4.16",
+    "@mikro-orm/libsql": "^6.4.16",
+    "@mikro-orm/mariadb": "^6.4.16",
+    "@mikro-orm/migrations": "^6.4.16",
+    "@mikro-orm/mongodb": "^6.4.16",
+    "@mikro-orm/mssql": "^6.4.16",
+    "@mikro-orm/mysql": "^6.4.16",
+    "@mikro-orm/postgresql": "^6.4.16",
+    "@mikro-orm/reflection": "^6.4.16",
+    "@mikro-orm/seeder": "^6.4.16",
+    "@mikro-orm/sqlite": "^6.4.16",
     "@sinclair/typebox": "^0.34.33",
     "ajv": "^8.17.1",
     "better-sqlite3": "^11.10.0",
-    "bullmq": "^5.53.0",
+    "bullmq": "^5.53.1",
     "dotenv": "^16.5.0",
     "kafkajs": "^2.2.4",
     "node-gyp": "^11.2.0",
     "sqlite3": "^5.1.7",
-    "zod": "^3.25.32"
+    "zod": "^3.25.42"
   },
   "devDependencies": {
-    "@mikro-orm/cli": "^6.4.15",
+    "@mikro-orm/cli": "^6.4.16",
     "@types/express": "^5.0.2",
     "@types/express-serve-static-core": "^5.0.6",
     "@types/qs": "^6.14.0",
@@ -76,9 +76,6 @@
     "typescript-eslint": "^8.33.0"
   },
   "mikro-orm": {
-    "config_paths": [
-      "./mikro-orm.config.ts",
-      "./dist/mikro-orm.config.js"
-    ]
+    "config_paths": ["./mikro-orm.config.ts", "./dist/mikro-orm.config.js"]
   }
 }
