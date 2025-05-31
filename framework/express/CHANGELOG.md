@@ -1,5 +1,13 @@
 # @forklaunch/express
 
+## 0.5.6
+
+### Patch Changes
+
+- simplify controller types
+- Updated dependencies
+  - @forklaunch/core@0.8.6
+
 ## 0.5.5
 
 ### Patch Changes

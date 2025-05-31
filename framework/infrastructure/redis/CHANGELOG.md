@@ -1,5 +1,13 @@
 # @forklaunch/infrastructure-redis
 
+## 0.0.5
+
+### Patch Changes
+
+- simplify controller types
+- Updated dependencies
+  - @forklaunch/core@0.8.6
+
 ## 0.0.4
 
 ### Patch Changes

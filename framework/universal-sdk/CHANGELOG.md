@@ -1,5 +1,11 @@
 # @forklaunch/universal-sdk
 
+## 0.3.5
+
+### Patch Changes
+
+- simplify controller types
+
 ## 0.3.4
 
 ### Patch Changes

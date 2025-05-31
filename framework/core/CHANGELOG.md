@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.8.6
+
+### Patch Changes
+
+- simplify controller types
+
 ## 0.8.5
 
 ### Patch Changes
