@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/express",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "description": "Forklaunch framework for express.",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -49,7 +49,7 @@
     "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
-    "@eslint/js": "^9.27.0",
+    "@eslint/js": "^9.28.0",
     "@types/body-parser": "^1.19.5",
     "@types/busboy": "^1.5.4",
     "@types/cors": "^2.8.18",
