@@ -6,7 +6,6 @@ import {
   string
 } from '@forklaunch/blueprint-core';
 import { metrics } from '@forklaunch/blueprint-monitoring';
-import { RedisTtlCache } from '@forklaunch/core/cache';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import {
   createConfigInjector,
@@ -30,6 +29,7 @@ import { RedisWorkerConsumer } from '@forklaunch/implementation-worker-redis/con
 import { RedisWorkerProducer } from '@forklaunch/implementation-worker-redis/producers';
 import { RedisWorkerSchemas } from '@forklaunch/implementation-worker-redis/schemas';
 import { RedisWorkerOptions } from '@forklaunch/implementation-worker-redis/types';
+import { RedisTtlCache } from '@forklaunch/infrastructure-redis';
 import {
   WorkerFailureHandler,
   WorkerProcessFunction

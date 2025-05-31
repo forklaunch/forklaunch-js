@@ -5,7 +5,6 @@ import {
   string
 } from '@forklaunch/blueprint-core';
 import { metrics } from '@forklaunch/blueprint-monitoring';
-import { RedisTtlCache } from '@forklaunch/core/cache';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import {
   createConfigInjector,
@@ -27,6 +26,7 @@ import {
   BasePlanService,
   BaseSubscriptionService
 } from '@forklaunch/implementation-billing-base/services';
+import { RedisTtlCache } from '@forklaunch/infrastructure-redis';
 import { EntityManager, ForkOptions, MikroORM } from '@mikro-orm/core';
 import { BillingProviderEnum } from './domain/enum/billingProvider.enum';
 import { CurrencyEnum } from './domain/enum/currency.enum';
