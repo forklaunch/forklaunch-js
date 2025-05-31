@@ -1,5 +1,11 @@
 # @forklaunch/infrastructure-redis
 
+## 0.0.3
+
+### Patch Changes
+
+- update package exports
+
 ## 0.0.2
 
 ### Patch Changes
