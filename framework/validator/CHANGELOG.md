@@ -1,5 +1,13 @@
 # @forklaunch/validator
 
+## 0.6.4
+
+### Patch Changes
+
+- Better file based ergonomics in validator, simplification of types and all but validator is checked by tsgo
+- Updated dependencies
+  - @forklaunch/common@0.3.4
+
 ## 0.6.3
 
 ### Patch Changes

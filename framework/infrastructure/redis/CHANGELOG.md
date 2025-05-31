@@ -1,5 +1,14 @@
 # @forklaunch/infrastructure-redis
 
+## 0.0.4
+
+### Patch Changes
+
+- Better file based ergonomics in validator, simplification of types and all but validator is checked by tsgo
+- Updated dependencies
+  - @forklaunch/common@0.3.4
+  - @forklaunch/core@0.8.5
+
 ## 0.0.3
 
 ### Patch Changes

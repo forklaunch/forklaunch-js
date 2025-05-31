@@ -2,6 +2,18 @@ import { universalSdk } from '@forklaunch/universal-sdk';
 import { Server } from 'http';
 import { SDK, start } from '../servers/express-zod';
 
+async function instantiateSdk() {
+  return await universalSdk<{ m: SDK }>({
+    host: 'http://localhost:6935',
+    registryOptions: {
+      path: 'api/v1/openapi'
+    },
+    contentTypeParserMap: {
+      'custom/content': 'json'
+    }
+  });
+}
+
 describe('universalSdkBasic', async () => {
   const server: Server = start();
   let sdk: { m: SDK };
@@ -15,42 +27,24 @@ describe('universalSdkBasic', async () => {
   });
 
   it('should build and call SDK', async () => {
-    sdk = await universalSdk<{ m: SDK }>({
-      host: 'http://localhost:6935',
-      registryOptions: {
-        path: 'api/v1/openapi'
-      },
-      contentTypeParserMap: {
-        'custom/content': 'json'
-      }
-    });
+    if (!sdk) {
+      sdk = await instantiateSdk();
+    }
     expect(sdk).toBeDefined();
   });
 
   it('should call getTest', async () => {
-    sdk = await universalSdk<{ m: SDK }>({
-      host: 'http://localhost:6935',
-      registryOptions: {
-        path: 'api/v1/openapi'
-      },
-      contentTypeParserMap: {
-        'custom/content': 'json'
-      }
-    });
+    if (!sdk) {
+      sdk = await instantiateSdk();
+    }
     const getTest = await sdk.m.getTest.get('/testpath/test');
     expect(getTest.code).toBe(200);
   });
 
   it('should call postTest', async () => {
-    sdk = await universalSdk<{ m: SDK }>({
-      host: 'http://localhost:6935',
-      registryOptions: {
-        path: 'api/v1/openapi'
-      },
-      contentTypeParserMap: {
-        'custom/content': 'json'
-      }
-    });
+    if (!sdk) {
+      sdk = await instantiateSdk();
+    }
     const postTest = await sdk.m.postTest.post('/testpath/test', {
       body: {
         f: '!',
@@ -61,15 +55,9 @@ describe('universalSdkBasic', async () => {
   });
 
   it('should call jsonPatchTest', async () => {
-    sdk = await universalSdk<{ m: SDK }>({
-      host: 'http://localhost:6935',
-      registryOptions: {
-        path: 'api/v1/openapi'
-      },
-      contentTypeParserMap: {
-        'custom/content': 'json'
-      }
-    });
+    if (!sdk) {
+      sdk = await instantiateSdk();
+    }
     const jsonPatchTest = await sdk.m.jsonPatchTest.patch('/testpath/test', {
       body: {
         f: 'ok',
@@ -80,15 +68,9 @@ describe('universalSdkBasic', async () => {
   });
 
   it('should call multipartTest', async () => {
-    sdk = await universalSdk<{ m: SDK }>({
-      host: 'http://localhost:6935',
-      registryOptions: {
-        path: 'api/v1/openapi'
-      },
-      contentTypeParserMap: {
-        'custom/content': 'json'
-      }
-    });
+    if (!sdk) {
+      sdk = await instantiateSdk();
+    }
     const multipartTest = await sdk.m.multipartTest.post(
       '/testpath/test/multipart',
       {
@@ -104,15 +86,9 @@ describe('universalSdkBasic', async () => {
   });
 
   it('should call urlEncodedFormTest', async () => {
-    sdk = await universalSdk<{ m: SDK }>({
-      host: 'http://localhost:6935',
-      registryOptions: {
-        path: 'api/v1/openapi'
-      },
-      contentTypeParserMap: {
-        'custom/content': 'json'
-      }
-    });
+    if (!sdk) {
+      sdk = await instantiateSdk();
+    }
     const urlEncodedFormTest = await sdk.m.urlEncodedFormTest.post(
       '/testpath/test/url-encoded-form',
       {
