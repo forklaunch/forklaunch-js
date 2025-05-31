@@ -779,7 +779,7 @@ describe('typebox advanced parse', () => {
     test('valid binary with string', () => {
       compare(schemaValidator.parse(binary, 'Hello World'), {
         ok: true,
-        value: Buffer.from('Hello World')
+        value: new TextEncoder().encode('Hello World')
       });
     });
 
@@ -822,74 +822,53 @@ describe('typebox advanced parse', () => {
 
   describe('file', () => {
     test('valid file with string', async () => {
-      const parsed = schemaValidator.parse(
-        file('test.txt', 'text/plain'),
-        'Hello World'
-      );
+      const parsed = schemaValidator.parse(file, 'Hello World');
       expect(parsed.ok).toBe(true);
       if (parsed.ok) {
-        expect(await parsed.value.text()).toBe('Hello World');
+        expect(await parsed.value('test.txt', 'text/plain').text()).toBe(
+          'Hello World'
+        );
       }
     });
 
     test('invalid file with number', () => {
-      expect(
-        schemaValidator.parse(file('test.txt', 'text/plain'), 123).ok
-      ).toBe(false);
+      expect(schemaValidator.parse(file, 123).ok).toBe(false);
     });
 
     test('invalid file with boolean', () => {
-      expect(
-        schemaValidator.parse(file('test.txt', 'text/plain'), true).ok
-      ).toBe(false);
+      expect(schemaValidator.parse(file, true).ok).toBe(false);
     });
 
     test('invalid file with object', () => {
       expect(
-        schemaValidator.parse(file('test.txt', 'text/plain'), {
+        schemaValidator.parse(file, {
           hello: 'world'
         }).ok
       ).toBe(false);
     });
 
     test('invalid file with array', () => {
-      expect(
-        schemaValidator.parse(file('test.txt', 'text/plain'), [
-          'hello',
-          'world'
-        ]).ok
-      ).toBe(false);
+      expect(schemaValidator.parse(file, ['hello', 'world']).ok).toBe(false);
     });
 
     test('invalid file with null', () => {
-      expect(
-        schemaValidator.parse(file('test.txt', 'text/plain'), null).ok
-      ).toBe(false);
+      expect(schemaValidator.parse(file, null).ok).toBe(false);
     });
 
     test('invalid file with undefined', () => {
-      expect(
-        schemaValidator.parse(file('test.txt', 'text/plain'), undefined).ok
-      ).toBe(false);
+      expect(schemaValidator.parse(file, undefined).ok).toBe(false);
     });
 
     test('invalid file with symbol', () => {
-      expect(
-        schemaValidator.parse(file('test.txt', 'text/plain'), Symbol('hello'))
-          .ok
-      ).toBe(false);
+      expect(schemaValidator.parse(file, Symbol('hello')).ok).toBe(false);
     });
 
     test('invalid file with bigint', () => {
-      expect(
-        schemaValidator.parse(file('test.txt', 'text/plain'), BigInt(123)).ok
-      ).toBe(false);
+      expect(schemaValidator.parse(file, BigInt(123)).ok).toBe(false);
     });
 
     test('invalid file with date', () => {
-      expect(
-        schemaValidator.parse(file('test.txt', 'text/plain'), new Date()).ok
-      ).toBe(false);
+      expect(schemaValidator.parse(file, new Date()).ok).toBe(false);
     });
   });
 });

@@ -11,170 +11,183 @@ const StaticSchemaValidator = SchemaValidator();
 /**
  * TypeBox schema definition for string type.
  */
-export const string = StaticSchemaValidator.string;
+export const string: typeof StaticSchemaValidator.string =
+  StaticSchemaValidator.string;
 
 /**
  * TypeBox schema definition for UUID type.
  */
-export const uuid = StaticSchemaValidator.uuid;
+export const uuid: typeof StaticSchemaValidator.uuid =
+  StaticSchemaValidator.uuid;
 
 /**
  * TypeBox schema definition for URI type.
  */
-export const uri = StaticSchemaValidator.uri;
+export const uri: typeof StaticSchemaValidator.uri = StaticSchemaValidator.uri;
 
 /**
  * TypeBox schema definition for email type.
  */
-export const email = StaticSchemaValidator.email;
+export const email: typeof StaticSchemaValidator.email =
+  StaticSchemaValidator.email;
 
 /**
  * TypeBox schema definition for number type.
  */
-export const number = StaticSchemaValidator.number;
+export const number: typeof StaticSchemaValidator.number =
+  StaticSchemaValidator.number;
 
 /**
  * TypeBox schema definition for bigint type.
  */
-export const bigint = StaticSchemaValidator.bigint;
+export const bigint: typeof StaticSchemaValidator.bigint =
+  StaticSchemaValidator.bigint;
 
 /**
  * TypeBox schema definition for boolean type.
  */
-export const boolean = StaticSchemaValidator.boolean;
+export const boolean: typeof StaticSchemaValidator.boolean =
+  StaticSchemaValidator.boolean;
 
 /**
  * TypeBox schema definition for date type.
  */
-export const date = StaticSchemaValidator.date;
+export const date: typeof StaticSchemaValidator.date =
+  StaticSchemaValidator.date;
 
 /**
  * TypeBox schema definition for symbol type.
  */
-export const symbol = StaticSchemaValidator.symbol;
+export const symbol: typeof StaticSchemaValidator.symbol =
+  StaticSchemaValidator.symbol;
 
 /**
  * TypeBox schema definition for undefined, null, void types.
  */
-export const nullish = StaticSchemaValidator.nullish;
+export const nullish: typeof StaticSchemaValidator.nullish =
+  StaticSchemaValidator.nullish;
 
 /**
  * TypeBox schema definition for void type.
  */
-export const void_ = StaticSchemaValidator.void;
+export const void_: typeof StaticSchemaValidator.void =
+  StaticSchemaValidator.void;
 
 /**
  * TypeBox schema definition for null type.
  */
-export const null_ = StaticSchemaValidator.null;
+export const null_: typeof StaticSchemaValidator.null =
+  StaticSchemaValidator.null;
 
 /**
  * TypeBox schema definition for undefined type.
  */
-export const undefined_ = StaticSchemaValidator.undefined;
+export const undefined_: typeof StaticSchemaValidator.undefined =
+  StaticSchemaValidator.undefined;
 
 /**
  * TypeBox schema definition for any type.
  */
-export const any = StaticSchemaValidator.any;
+export const any: typeof StaticSchemaValidator.any = StaticSchemaValidator.any;
 
 /**
  * TypeBox schema definition for unknown type.
  */
-export const unknown = StaticSchemaValidator.unknown;
+export const unknown: typeof StaticSchemaValidator.unknown =
+  StaticSchemaValidator.unknown;
 
 /**
  * TypeBox schema definition for never type.
  */
-export const never = StaticSchemaValidator.never;
+export const never: typeof StaticSchemaValidator.never =
+  StaticSchemaValidator.never;
 
 /**
  * TypeBox schema definition for blob type.
  */
-export const binary = StaticSchemaValidator.binary;
+export const binary: typeof StaticSchemaValidator.binary =
+  StaticSchemaValidator.binary;
 
 /**
  * TypeBox schema definition for file type.
  */
-export const file = StaticSchemaValidator.file;
+export const file: typeof StaticSchemaValidator.file =
+  StaticSchemaValidator.file;
 
 /**
  * Transforms valid schema into TypeBox schema.
  */
-export const schemify = StaticSchemaValidator.schemify.bind(
-  StaticSchemaValidator
-);
+export const schemify: typeof StaticSchemaValidator.schemify =
+  StaticSchemaValidator.schemify.bind(StaticSchemaValidator);
 
 /**
  * Makes a valid schema optional.
  */
-export const optional = StaticSchemaValidator.optional.bind(
-  StaticSchemaValidator
-);
+export const optional: typeof StaticSchemaValidator.optional =
+  StaticSchemaValidator.optional.bind(StaticSchemaValidator);
 
 /**
  * Defines an array for a valid schema.
  */
-export const array = StaticSchemaValidator.array.bind(StaticSchemaValidator);
+export const array: typeof StaticSchemaValidator.array =
+  StaticSchemaValidator.array.bind(StaticSchemaValidator);
 
 /**
  * Defines a union for a valid schema.
  */
-export const union = StaticSchemaValidator.union.bind(StaticSchemaValidator);
+export const union: typeof StaticSchemaValidator.union =
+  StaticSchemaValidator.union.bind(StaticSchemaValidator);
 
 /**
  * Defines a literal for a valid schema.
  */
-export const literal = StaticSchemaValidator.literal.bind(
-  StaticSchemaValidator
-);
+export const literal: typeof StaticSchemaValidator.literal =
+  StaticSchemaValidator.literal.bind(StaticSchemaValidator);
 
 /**
  * Defines an enum for a valid schema.
  */
-export const enum_ = StaticSchemaValidator.enum_.bind(StaticSchemaValidator);
+export const enum_: typeof StaticSchemaValidator.enum_ =
+  StaticSchemaValidator.enum_.bind(StaticSchemaValidator);
 
 /**
  * Defines a function for a valid schema.
  */
-export const function_ = StaticSchemaValidator.function_.bind(
-  StaticSchemaValidator
-);
+export const function_: typeof StaticSchemaValidator.function_ =
+  StaticSchemaValidator.function_.bind(StaticSchemaValidator);
 
 /**
  * Defines a record for a valid schema.
  */
-export const record = StaticSchemaValidator.record.bind(StaticSchemaValidator);
+export const record: typeof StaticSchemaValidator.record =
+  StaticSchemaValidator.record.bind(StaticSchemaValidator);
 
 /**
  * Defines a promise for a valid schema.
  */
-export const promise = StaticSchemaValidator.promise.bind(
-  StaticSchemaValidator
-);
+export const promise: typeof StaticSchemaValidator.promise =
+  StaticSchemaValidator.promise.bind(StaticSchemaValidator);
 
 /**
  * Checks if a value is a TypeBox schema.
  */
-export const isSchema = StaticSchemaValidator.isSchema.bind(
-  StaticSchemaValidator
-);
+export const isSchema: typeof StaticSchemaValidator.isSchema =
+  StaticSchemaValidator.isSchema.bind(StaticSchemaValidator);
 
 /**
  * Validates a value against a valid schema.
  */
-export const validate = StaticSchemaValidator.validate.bind(
-  StaticSchemaValidator
-);
+export const validate: typeof StaticSchemaValidator.validate =
+  StaticSchemaValidator.validate.bind(StaticSchemaValidator);
 
 /**
  * Parses a value against a valid schema.
  */
-export const parse = StaticSchemaValidator.parse.bind(StaticSchemaValidator);
+export const parse: typeof StaticSchemaValidator.parse =
+  StaticSchemaValidator.parse.bind(StaticSchemaValidator);
 
 /**
  * Generates an OpenAPI schema object from a valid schema.
  */
-export const openapi = StaticSchemaValidator.openapi.bind(
-  StaticSchemaValidator
-);
+export const openapi: typeof StaticSchemaValidator.openapi =
+  StaticSchemaValidator.openapi.bind(StaticSchemaValidator);

@@ -76,7 +76,18 @@ export type {
 export type { ParsedQs } from 'qs';
 export type { Application } from './src/hyperExpressApplication';
 export type { Router } from './src/hyperExpressRouter';
-export const handlers = {
+export const handlers: {
+  any: typeof any;
+  delete: typeof delete_;
+  get: typeof get;
+  head: typeof head;
+  middleware: typeof middleware;
+  options: typeof options;
+  patch: typeof patch;
+  post: typeof post;
+  put: typeof put;
+  trace: typeof trace;
+} = {
   any,
   delete: delete_,
   get,

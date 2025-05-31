@@ -1,6 +1,14 @@
+import { LevelWithSilentOrString } from 'pino';
 import { TelemetryOptions } from '../types/openTelemetryCollector.types';
 
-export function evaluateTelemetryOptions(telemetryOptions: TelemetryOptions) {
+export function evaluateTelemetryOptions(telemetryOptions: TelemetryOptions): {
+  enabled: {
+    metrics?: boolean;
+    tracing?: boolean;
+    logging?: boolean;
+  };
+  level: LevelWithSilentOrString;
+} {
   return {
     enabled:
       typeof telemetryOptions.enabled === 'boolean'

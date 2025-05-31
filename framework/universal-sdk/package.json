@@ -31,7 +31,7 @@
     "lib/**"
   ],
   "scripts": {
-    "build": "tsc --noEmit && tsup index.ts --format cjs,esm --no-splitting --dts --tsconfig tsconfig.json --out-dir lib --clean",
+    "build": "tsgo --noEmit && tsup index.ts --format cjs,esm --no-splitting --dts --tsconfig tsconfig.json --out-dir lib --clean",
     "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
@@ -46,6 +46,8 @@
     "ajv-formats": "^3.0.1"
   },
   "devDependencies": {
+    "@types/node": "^22.15.29",
+    "@typescript/native-preview": "7.0.0-dev.20250531.1",
     "fetch-mock": "^12.5.2",
     "jest": "^29.7.0",
     "openapi3-ts": "^4.4.0",

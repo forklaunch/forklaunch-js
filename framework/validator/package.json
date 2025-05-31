@@ -78,6 +78,7 @@
     "@eslint/js": "^9.28.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.15.29",
+    "@typescript/native-preview": "7.0.0-dev.20250531.1",
     "@vitest/coverage-v8": "^3.1.4",
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-prettier": "^5.4.1",

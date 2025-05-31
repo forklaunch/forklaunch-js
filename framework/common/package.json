@@ -28,7 +28,7 @@
     "lib/**"
   ],
   "scripts": {
-    "build": "tsc --noEmit && tsup index.ts --format cjs,esm --no-splitting --tsconfig tsconfig.json --outDir lib --dts --clean",
+    "build": "tsgo --noEmit && tsup index.ts --format cjs,esm --no-splitting --tsconfig tsconfig.json --outDir lib --dts --clean",
     "check": "depcheck",
     "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
@@ -41,6 +41,7 @@
   "devDependencies": {
     "@eslint/js": "^9.28.0",
     "@types/node": "^22.15.29",
+    "@typescript/native-preview": "7.0.0-dev.20250531.1",
     "depcheck": "^1.4.7",
     "eslint": "^9.28.0",
     "globals": "^16.2.0",

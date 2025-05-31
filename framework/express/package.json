@@ -25,7 +25,7 @@
     "lib/**"
   ],
   "scripts": {
-    "build": "tsc --noEmit && tsup index.ts --format cjs,esm --no-splitting --tsconfig tsconfig.json --outDir lib --dts --clean",
+    "build": "tsgo --noEmit && tsup index.ts --format cjs,esm --no-splitting --tsconfig tsconfig.json --outDir lib --dts --clean",
     "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
@@ -58,6 +58,7 @@
     "@types/jest": "^29.5.14",
     "@types/qs": "^6.14.0",
     "@types/swagger-ui-express": "^4.1.8",
+    "@typescript/native-preview": "7.0.0-dev.20250531.1",
     "jest": "^29.7.0",
     "kill-port-process": "^3.2.1",
     "prettier": "^3.5.3",

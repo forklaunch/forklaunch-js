@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { MimeType } from '@forklaunch/common';
 import { Schema } from '../../index';
 import {
   array,
@@ -165,21 +166,21 @@ const shortOne = {
   s: string,
   non: number,
   b: binary,
-  f: file('test.txt', 'text/plain')
+  f: file
 };
 
 const shortTwo = schemify({
   s: string,
   non: number,
   b: binary,
-  f: file('test.txt', 'text/plain')
+  f: file
 });
 
 type ShortExpected = {
   s: string;
   non: number;
-  b: Buffer<ArrayBuffer>;
-  f: File;
+  b: Uint8Array;
+  f: (name: string, type: MimeType) => File;
 };
 
 assert<

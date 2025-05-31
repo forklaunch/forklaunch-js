@@ -1,3 +1,22 @@
+function base64ToArrayBuffer(base64: string): ArrayBuffer {
+  if (typeof atob === 'function') {
+    // Browser environment
+    const binaryString = atob(base64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; ++i) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes.buffer;
+  } else if (typeof Buffer !== 'undefined') {
+    // Node.js environment
+    const buf = Buffer.from(base64, 'base64');
+    return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+  } else {
+    throw new Error('No base64 decoder available in this environment');
+  }
+}
+
 function handleSpecialString(v: unknown, format: string | undefined): unknown {
   if (typeof v !== 'string') return v;
   if (format === 'date-time') {
@@ -6,7 +25,7 @@ function handleSpecialString(v: unknown, format: string | undefined): unknown {
   }
   if (format === 'binary') {
     try {
-      return Buffer.from(v, 'base64');
+      return base64ToArrayBuffer(v);
     } catch {
       throw new Error('Invalid base64 string');
     }
@@ -63,7 +82,7 @@ export function coerceSpecialTypes(
   input: Record<string, unknown>,
   schema: Record<string, unknown>
 ): unknown {
-  const props = schema.properties || {};
+  const props = schema.properties || ({} as Record<string, unknown>);
   for (const [key, def] of Object.entries(props)) {
     if (!def) continue;
     const value = input[key];
