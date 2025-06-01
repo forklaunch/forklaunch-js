@@ -3,10 +3,6 @@ import {
   handlers,
   IdSchema,
   IdsSchema,
-  NextFunction,
-  ParsedQs,
-  Request,
-  Response,
   SchemaValidator,
   string
 } from '@forklaunch/blueprint-core';
@@ -182,10 +178,4 @@ export const PermissionController = (
         res.status(200).send('Batch permissions deleted successfully');
       }
     )
-  }) satisfies Controller<
-    PermissionService,
-    Request,
-    Response,
-    NextFunction,
-    ParsedQs
-  >;
+  }) satisfies Controller<PermissionService>;

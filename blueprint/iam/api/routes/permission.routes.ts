@@ -2,8 +2,8 @@ import { forklaunchRouter, SchemaValidator } from '@forklaunch/blueprint-core';
 import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
-import { PermissionController } from '../controllers/permission.controller';
 import { SchemaDependencies } from '../../registrations';
+import { PermissionController } from '../controllers/permission.controller';
 
 export const PermissionRoutes = (
   scopedServiceFactory: ScopedDependencyFactory<
@@ -13,7 +13,11 @@ export const PermissionRoutes = (
   >,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) => {
-  const router = forklaunchRouter('/permission', openTelemetryCollector);
+  const router = forklaunchRouter(
+    '/permission',
+    SchemaValidator(),
+    openTelemetryCollector
+  );
 
   const controller = PermissionController(
     scopedServiceFactory,

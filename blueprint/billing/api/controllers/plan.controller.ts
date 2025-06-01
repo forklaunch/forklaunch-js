@@ -3,10 +3,6 @@ import {
   handlers,
   IdSchema,
   IdsSchema,
-  NextFunction,
-  ParsedQs,
-  Request,
-  Response,
   SchemaValidator,
   string
 } from '@forklaunch/blueprint-core';
@@ -121,9 +117,5 @@ export const PlanController = (
       }
     )
   }) satisfies Controller<
-    PlanService<typeof PlanCadenceEnum, typeof BillingProviderEnum>,
-    Request,
-    Response,
-    NextFunction,
-    ParsedQs
+    PlanService<typeof PlanCadenceEnum, typeof BillingProviderEnum>
   >;

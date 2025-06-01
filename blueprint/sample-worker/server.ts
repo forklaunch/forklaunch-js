@@ -1,4 +1,4 @@
-import { forklaunchExpress } from '@forklaunch/blueprint-core';
+import { forklaunchExpress, SchemaValidator } from '@forklaunch/blueprint-core';
 import { ApiClient } from '@forklaunch/core/http';
 import { SampleWorkerRoutes } from './api/routes/sampleWorker.routes';
 import { bootstrap } from './bootstrapper';
@@ -7,7 +7,7 @@ bootstrap((ci, tokens) => {
   //! resolves the openTelemetryCollector from the configuration
   const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
   //! creates an instance of forklaunchExpress
-  const app = forklaunchExpress(openTelemetryCollector);
+  const app = forklaunchExpress(SchemaValidator(), openTelemetryCollector);
   //! resolves the protocol, host, port, and version from the configuration
   const protocol = ci.resolve(tokens.PROTOCOL);
   const host = ci.resolve(tokens.HOST);

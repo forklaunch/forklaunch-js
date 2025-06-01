@@ -11,8 +11,6 @@ import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { RoleService } from '@forklaunch/interfaces-iam/interfaces';
-import { NextFunction, Request, Response } from 'express';
-import { ParsedQs } from 'qs';
 import {
   CreateRoleDtoMapper,
   RoleDtoMapper,
@@ -178,10 +176,4 @@ export const RoleController = (
         res.status(200).send('Batch roles deleted successfully');
       }
     )
-  }) satisfies Controller<
-    RoleService,
-    Request,
-    Response,
-    NextFunction,
-    ParsedQs
-  >;
+  }) satisfies Controller<RoleService>;

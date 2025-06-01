@@ -1,10 +1,6 @@
 import {
   handlers,
   IdSchema,
-  NextFunction,
-  ParsedQs,
-  Request,
-  Response,
   SchemaValidator,
   string
 } from '@forklaunch/blueprint-core';
@@ -124,10 +120,4 @@ export const CheckoutSessionController = (
           .send(`Handled checkout failure for session ${req.params.id}`);
       }
     )
-  }) satisfies Controller<
-    CheckoutSessionService<typeof PaymentMethodEnum>,
-    Request,
-    Response,
-    NextFunction,
-    ParsedQs
-  >;
+  }) satisfies Controller<CheckoutSessionService<typeof PaymentMethodEnum>>;

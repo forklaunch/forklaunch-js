@@ -47,6 +47,6 @@
     "collection": "sample_worker_event_record"
   },
   "origin": "./persistence/entities/sampleWorkerRecord.entity.ts",
-  "hash": "4fb1fceb9c1dcf2c12c2eddf24997eaf",
-  "version": "6.4.13"
+  "hash": "d26a4ce55b97ef502aeca278b5483a3f",
+  "version": "6.4.16"
 }

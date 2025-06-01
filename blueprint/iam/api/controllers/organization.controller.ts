@@ -1,10 +1,6 @@
 import {
   handlers,
   IdSchema,
-  NextFunction,
-  ParsedQs,
-  Request,
-  Response,
   SchemaValidator,
   string
 } from '@forklaunch/blueprint-core';
@@ -127,10 +123,4 @@ export const OrganizationController = (
         res.status(200).send('Organization deleted successfully');
       }
     )
-  }) satisfies Controller<
-    OrganizationService<typeof OrganizationStatus>,
-    Request,
-    Response,
-    NextFunction,
-    ParsedQs
-  >;
+  }) satisfies Controller<OrganizationService<typeof OrganizationStatus>>;

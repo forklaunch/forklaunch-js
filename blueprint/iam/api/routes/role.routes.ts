@@ -2,8 +2,8 @@ import { forklaunchRouter, SchemaValidator } from '@forklaunch/blueprint-core';
 import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
-import { RoleController } from '../controllers/role.controller';
 import { SchemaDependencies } from '../../registrations';
+import { RoleController } from '../controllers/role.controller';
 
 export const RoleRoutes = (
   scopedServiceFactory: ScopedDependencyFactory<
@@ -13,7 +13,11 @@ export const RoleRoutes = (
   >,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) => {
-  const router = forklaunchRouter('/role', openTelemetryCollector);
+  const router = forklaunchRouter(
+    '/role',
+    SchemaValidator(),
+    openTelemetryCollector
+  );
 
   const controller = RoleController(
     scopedServiceFactory,

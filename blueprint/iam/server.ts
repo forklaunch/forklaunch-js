@@ -1,16 +1,16 @@
-import { forklaunchExpress } from '@forklaunch/blueprint-core';
+import { forklaunchExpress, SchemaValidator } from '@forklaunch/blueprint-core';
 import { ApiClient } from '@forklaunch/core/http';
-import { bootstrap } from './bootstrapper';
 import { OrganizationRoutes } from './api/routes/organization.routes';
 import { PermissionRoutes } from './api/routes/permission.routes';
 import { RoleRoutes } from './api/routes/role.routes';
 import { UserRoutes } from './api/routes/user.routes';
+import { bootstrap } from './bootstrapper';
 //! bootstrap function that initializes the service application
 bootstrap((ci, tokens) => {
   //! resolves the openTelemetryCollector from the configuration
   const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
   //! creates an instance of forklaunchExpress
-  const app = forklaunchExpress(openTelemetryCollector);
+  const app = forklaunchExpress(SchemaValidator(), openTelemetryCollector);
   //! resolves the host, port, and version from the configuration
   const host = ci.resolve(tokens.HOST);
   const port = ci.resolve(tokens.PORT);

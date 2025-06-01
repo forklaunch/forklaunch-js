@@ -3,10 +3,6 @@ import {
   handlers,
   IdSchema,
   IdsSchema,
-  NextFunction,
-  ParsedQs,
-  Request,
-  Response,
   SchemaValidator,
   string
 } from '@forklaunch/blueprint-core';
@@ -15,13 +11,13 @@ import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { SubscriptionService } from '@forklaunch/interfaces-billing/interfaces';
+import { BillingProviderEnum } from '../../domain/enum/billingProvider.enum';
+import { PartyEnum } from '../../domain/enum/party.enum';
 import {
   CreateSubscriptionDtoMapper,
   SubscriptionDtoMapper,
   UpdateSubscriptionDtoMapper
 } from '../../domain/mappers/subscription.mappers';
-import { BillingProviderEnum } from '../../domain/enum/billingProvider.enum';
-import { PartyEnum } from '../../domain/enum/party.enum';
 import { SchemaDependencies } from '../../registrations';
 
 export const SubscriptionController = (
@@ -208,9 +204,5 @@ export const SubscriptionController = (
       }
     )
   }) satisfies Controller<
-    SubscriptionService<typeof PartyEnum, typeof BillingProviderEnum>,
-    Request,
-    Response,
-    NextFunction,
-    ParsedQs
+    SubscriptionService<typeof PartyEnum, typeof BillingProviderEnum>
   >;
