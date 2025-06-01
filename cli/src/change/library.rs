@@ -148,7 +148,7 @@ impl CliCommand for LibraryCommand {
         let confirm = matches.get_flag("confirm");
 
         let selected_options = if matches.ids().all(|id| id == "dryrun" || id == "confirm") {
-            let options = vec!["name", "database", "description", "infrastructure"];
+            let options = vec!["name", "description"];
 
             let selections = MultiSelect::with_theme(&ColorfulTheme::default())
                 .with_prompt("What would you like to change?")

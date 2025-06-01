@@ -18,6 +18,7 @@ use crate::{
                     redis_import, redis_ttl_cache_runtime_dependency,
                     redis_url_environment_variable,
                 },
+                s3::{s3_import, s3_object_store_runtime_dependency, s3_url_environment_variable},
             },
             injections::{
                 inject_into_import_statement::{
@@ -145,6 +146,33 @@ pub(crate) fn transform_registrations_ts_infrastructure_redis(
     redis_import(&allocator, &registrations_text, &mut registrations_program);
     redis_url_environment_variable(&allocator, &mut registrations_program);
     redis_ttl_cache_runtime_dependency(&allocator, &mut registrations_program);
+
+    Ok(CodeGenerator::new()
+        .with_options(CodegenOptions::default())
+        .build(&registrations_program)
+        .code)
+}
+
+pub(crate) fn transform_registrations_ts_infrastructure_s3(
+    base_path: &Path,
+    registrations_text: Option<String>,
+) -> Result<String> {
+    let allocator = Allocator::default();
+    let registrations_path = base_path.join("registrations.ts");
+    let registrations_text = if let Some(registrations_text) = registrations_text {
+        registrations_text
+    } else {
+        read_to_string(&registrations_path)?
+    };
+
+    let registrations_type = SourceType::from_path(&registrations_path)?;
+
+    let mut registrations_program =
+        parse_ast_program(&allocator, &registrations_text, registrations_type);
+
+    s3_import(&allocator, &registrations_text, &mut registrations_program);
+    s3_url_environment_variable(&allocator, &mut registrations_program);
+    s3_object_store_runtime_dependency(&allocator, &mut registrations_program);
 
     Ok(CodeGenerator::new()
         .with_options(CodegenOptions::default())

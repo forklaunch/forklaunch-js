@@ -1,5 +1,5 @@
 import { ApiClient } from '@forklaunch/core/http';
-import { forklaunchExpress } from '@{{app_name}}/core';
+import { forklaunchExpress, SchemaValidator } from '@{{app_name}}/core';
 import { bootstrap } from './bootstrapper';
 import { {{pascal_case_name}}Routes } from './api/routes/{{camel_case_name}}.routes';
 //! bootstrap function that initializes the service application
@@ -7,7 +7,7 @@ bootstrap((ci, tokens) => {
   //! creates an instance of forklaunchExpress
   const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
   //! creates an instance of forklaunchExpress
-  const app = forklaunchExpress(openTelemetryCollector);
+  const app = forklaunchExpress(SchemaValidator(), openTelemetryCollector);
   //! resolves the protocol, host, port, and version from the configuration
   const protocol = ci.resolve(tokens.PROTOCOL);
   const host = ci.resolve(tokens.HOST);

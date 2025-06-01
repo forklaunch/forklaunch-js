@@ -16,6 +16,16 @@ pub(crate) struct Env {
     pub(crate) db_port: Option<String>,
     #[serde(rename = "REDIS_URL", skip_serializing_if = "Option::is_none")]
     pub(crate) redis_url: Option<String>,
+    #[serde(rename = "S3_URL", skip_serializing_if = "Option::is_none")]
+    pub(crate) s3_url: Option<String>,
+    #[serde(rename = "S3_BUCKET", skip_serializing_if = "Option::is_none")]
+    pub(crate) s3_bucket: Option<String>,
+    #[serde(rename = "S3_REGION", skip_serializing_if = "Option::is_none")]
+    pub(crate) s3_region: Option<String>,
+    #[serde(rename = "S3_ACCESS_KEY", skip_serializing_if = "Option::is_none")]
+    pub(crate) s3_access_key: Option<String>,
+    #[serde(rename = "S3_SECRET_KEY", skip_serializing_if = "Option::is_none")]
+    pub(crate) s3_secret_key: Option<String>,
     #[serde(rename = "KAFKA_BROKERS", skip_serializing_if = "Option::is_none")]
     pub(crate) kafka_brokers: Option<String>,
     #[serde(rename = "KAFKA_CLIENT_ID", skip_serializing_if = "Option::is_none")]
@@ -102,6 +112,11 @@ impl<'de> Deserialize<'de> for Env {
                     db_password: None,
                     db_port: None,
                     redis_url: None,
+                    s3_url: None,
+                    s3_bucket: None,
+                    s3_region: None,
+                    s3_access_key: None,
+                    s3_secret_key: None,
                     kafka_brokers: None,
                     kafka_client_id: None,
                     kafka_group_id: None,

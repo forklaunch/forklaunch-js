@@ -1,6 +1,7 @@
 import { {{#is_kafka_enabled}}array,{{/is_kafka_enabled}} number, SchemaValidator, string } from "@{{app_name}}/core";
 import { metrics } from "@{{app_name}}/monitoring";{{#is_cache_enabled}}
-import { RedisTtlCache } from "@forklaunch/core/cache";{{/is_cache_enabled}}
+import { RedisTtlCache } from "@forklaunch/infrastructure-redis";{{/is_cache_enabled}}{{#is_s3_enabled}}
+import { S3ObjectStore } from "@forklaunch/infrastructure-s3";{{/is_s3_enabled}}
 import { OpenTelemetryCollector } from "@forklaunch/core/http";
 import {
   createConfigInjector,
@@ -97,7 +98,32 @@ export function createDependencies({{#is_database_enabled}}orm: MikroORM{{/is_da
       lifetime: Lifetime.Singleton,
       type: string,
       value: getEnvVar('QUEUE_NAME')
-    },{{/is_worker}}
+    },{{/is_worker}}{{#is_s3_enabled}}
+    S3_REGION: {
+      lifetime: Lifetime.Singleton,
+      type: string,
+      value: getEnvVar('S3_REGION')
+    },
+    S3_ACCESS_KEY_ID: {
+      lifetime: Lifetime.Singleton,
+      type: string,
+      value: getEnvVar('S3_ACCESS_KEY_ID')
+    },
+    S3_SECRET_ACCESS_KEY: {
+      lifetime: Lifetime.Singleton,
+      type: string,
+      value: getEnvVar('S3_SECRET_ACCESS_KEY')
+    },
+    S3_URL: {
+      lifetime: Lifetime.Singleton,
+      type: string,
+      value: getEnvVar('S3_URL')
+    },
+    S3_BUCKET: {
+      lifetime: Lifetime.Singleton,
+      type: string,
+      value: getEnvVar('S3_BUCKET')
+    },{{/is_s3_enabled}}
   });
   //! defines the runtime dependencies for the application
   const runtimeDependencies = environmentConfig.chain({
@@ -128,7 +154,39 @@ export function createDependencies({{#is_database_enabled}}orm: MikroORM{{/is_da
           enabled: true,
           level: "info",
         }),
-    },{{/is_cache_enabled}}{{#is_database_enabled}}
+    },{{/is_cache_enabled}}{{#is_s3_enabled}}
+    S3ObjectStore: {
+      lifetime: Lifetime.Singleton,
+      type: S3ObjectStore,
+      factory: ({
+        OpenTelemetryCollector,
+        OTEL_LEVEL,
+        S3_REGION,
+        S3_ACCESS_KEY_ID,
+        S3_SECRET_ACCESS_KEY,
+        S3_URL,
+        S3_BUCKET
+      }) =>
+        new S3ObjectStore(
+          OpenTelemetryCollector,
+          {
+            bucket: S3_BUCKET,
+            clientConfig: {
+              endpoint: S3_URL,
+              region: S3_REGION,
+              credentials: {
+                accessKeyId: S3_ACCESS_KEY_ID,
+                secretAccessKey: S3_SECRET_ACCESS_KEY
+              }
+            }
+          },
+          {
+            enabled: true,
+            level: OTEL_LEVEL || 'info'
+          }
+        )
+    },
+    {{/is_s3_enabled}}{{#is_database_enabled}}
     EntityManager: {
       lifetime: Lifetime.Scoped,
       type: EntityManager,

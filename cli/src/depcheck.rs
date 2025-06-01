@@ -90,55 +90,65 @@ impl CliCommand for DepcheckCommand {
                 group_projects
                     .iter()
                     .try_for_each(|project| -> Result<()> {
-                        let package_json: Value = from_str(
-                            &read_to_string(
-                                Path::new(&base_path).join(project).join("package.json"),
-                            )
-                            .with_context(|| {
-                                format!("Failed to read package.json for {}", project)
-                            })?,
+                        if let Some(package_json_contents) = &read_to_string(
+                            Path::new(&base_path).join(project).join("package.json"),
                         )
-                        .with_context(|| format!("Failed to parse package.json for {}", project))?;
+                        .with_context(|| format!("Failed to read package.json for {}", project))
+                        .ok()
+                        {
+                            if let Some(package_json) =
+                                from_str::<Value>(package_json_contents).ok()
+                            {
+                                let empty_dependencies = json!({});
+                                let dependencies = package_json
+                                    .get("dependencies")
+                                    .unwrap_or(&empty_dependencies);
+                                let empty_dev_dependencies = json!({});
+                                let dev_dependencies = package_json
+                                    .get("devDependencies")
+                                    .unwrap_or(&empty_dev_dependencies);
 
-                        let empty_dependencies = json!({});
-                        let dependencies = package_json
-                            .get("dependencies")
-                            .unwrap_or(&empty_dependencies);
-                        let empty_dev_dependencies = json!({});
-                        let dev_dependencies = package_json
-                            .get("devDependencies")
-                            .unwrap_or(&empty_dev_dependencies);
-
-                        dependencies
-                            .as_object()
-                            .unwrap()
-                            .iter()
-                            .chain(dev_dependencies.as_object().unwrap().iter())
-                            .for_each(|(package_name, version)| {
-                                if let Some(existing_version) =
-                                    package_version_inventory.get(package_name)
-                                {
-                                    if existing_version[0].version != version.to_string() {
-                                        conflicting_packages.insert(package_name.to_string());
-                                    }
-                                }
-                                if let Some(dependency_versions) =
-                                    package_version_inventory.get_mut(package_name)
-                                {
-                                    dependency_versions.push(ProjectDependencyVersion {
-                                        project_name: project.to_string(),
-                                        version: version.to_string(),
+                                dependencies
+                                    .as_object()
+                                    .unwrap()
+                                    .iter()
+                                    .chain(dev_dependencies.as_object().unwrap().iter())
+                                    .for_each(|(package_name, version)| {
+                                        if let Some(existing_version) =
+                                            package_version_inventory.get(package_name)
+                                        {
+                                            if existing_version[0].version != version.to_string() {
+                                                conflicting_packages
+                                                    .insert(package_name.to_string());
+                                            }
+                                        }
+                                        if let Some(dependency_versions) =
+                                            package_version_inventory.get_mut(package_name)
+                                        {
+                                            dependency_versions.push(ProjectDependencyVersion {
+                                                project_name: project.to_string(),
+                                                version: version.to_string(),
+                                            });
+                                        } else {
+                                            package_version_inventory.insert(
+                                                package_name.to_string(),
+                                                vec![ProjectDependencyVersion {
+                                                    project_name: project.to_string(),
+                                                    version: version.to_string(),
+                                                }],
+                                            );
+                                        }
                                     });
-                                } else {
-                                    package_version_inventory.insert(
-                                        package_name.to_string(),
-                                        vec![ProjectDependencyVersion {
-                                            project_name: project.to_string(),
-                                            version: version.to_string(),
-                                        }],
-                                    );
-                                }
-                            });
+                            } else {
+                                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+                                writeln!(stdout, "Failed to parse package.json for {}. If the package has been removed, update .forklaunch/manifest.toml.", project)?;
+                                stdout.reset()?;
+                            }
+                        } else {
+                            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+                            writeln!(stdout, "Failed to read package.json for {}. If the package has been removed, update .forklaunch/manifest.toml.", project)?;
+                            stdout.reset()?;
+                        }
 
                         Ok(())
                     })?;
@@ -176,6 +186,7 @@ impl CliCommand for DepcheckCommand {
                 } else {
                     stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
                     writeln!(stdout, "No conflicting packages in group {}!", group_name)?;
+                    stdout.reset()?;
                 }
 
                 Ok(())

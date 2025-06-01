@@ -9,9 +9,15 @@ use oxc_ast::ast::{
 use oxc_codegen::{CodeGenerator, CodegenOptions};
 
 use crate::core::ast::{
-    infrastructure::redis::{
-        delete_redis_import, delete_redis_ttl_cache_runtime_dependency,
-        delete_redis_url_environment_variable,
+    infrastructure::{
+        redis::{
+            delete_redis_import, delete_redis_ttl_cache_runtime_dependency,
+            delete_redis_url_environment_variable,
+        },
+        s3::{
+            delete_s3_import, delete_s3_object_store_runtime_dependency,
+            delete_s3_url_environment_variable,
+        },
     },
     parse_ast_program::parse_ast_program,
 };
@@ -193,6 +199,33 @@ pub(crate) fn delete_from_registrations_ts_infrastructure_redis(
     delete_redis_import(&allocator, &mut registrations_program);
     delete_redis_url_environment_variable(&allocator, &mut registrations_program);
     delete_redis_ttl_cache_runtime_dependency(&allocator, &mut registrations_program);
+
+    Ok(CodeGenerator::new()
+        .with_options(CodegenOptions::default())
+        .build(&registrations_program)
+        .code)
+}
+
+pub(crate) fn delete_from_registrations_ts_infrastructure_s3(
+    base_path: &Path,
+    registrations_text: Option<String>,
+) -> Result<String> {
+    let allocator = Allocator::default();
+    let registrations_path = base_path.join("registrations.ts");
+    let registrations_text = if let Some(registrations_text) = registrations_text {
+        registrations_text
+    } else {
+        read_to_string(&registrations_path)?
+    };
+
+    let registrations_type = SourceType::from_path(&registrations_path)?;
+
+    let mut registrations_program =
+        parse_ast_program(&allocator, &registrations_text, registrations_type);
+
+    delete_s3_import(&allocator, &mut registrations_program);
+    delete_s3_url_environment_variable(&allocator, &mut registrations_program);
+    delete_s3_object_store_runtime_dependency(&allocator, &mut registrations_program);
 
     Ok(CodeGenerator::new()
         .with_options(CodegenOptions::default())

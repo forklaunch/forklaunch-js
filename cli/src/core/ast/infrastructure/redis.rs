@@ -16,15 +16,17 @@ pub(crate) fn redis_import<'a>(
     registrations_text: &str,
     registrations_program: &mut Program<'a>,
 ) {
-    if !registrations_text.contains("import { RedisTtlCache } from \"@forklaunch/core/cache\";") {
-        let import_text = "import { RedisTtlCache } from \"@forklaunch/core/cache\";";
+    if !registrations_text
+        .contains("import { RedisTtlCache } from \"@forklaunch/infrastructure-redis\";")
+    {
+        let import_text = "import { RedisTtlCache } from \"@forklaunch/infrastructure-redis\";";
 
         let mut import_program = parse_ast_program(&allocator, import_text, SourceType::ts());
 
         let _ = replace_import_statment(
             registrations_program,
             &mut import_program,
-            "@forklaunch/core/cache",
+            "@forklaunch/infrastructure-redis",
         );
     }
 }
@@ -85,7 +87,11 @@ pub(crate) fn delete_redis_import<'a>(
     allocator: &'a Allocator,
     registrations_program: &mut Program<'a>,
 ) {
-    let _ = delete_import_statement(&allocator, registrations_program, "@forklaunch/core/cache");
+    let _ = delete_import_statement(
+        &allocator,
+        registrations_program,
+        "@forklaunch/infrastructure-redis",
+    );
 }
 
 pub(crate) fn delete_redis_url_environment_variable<'a>(

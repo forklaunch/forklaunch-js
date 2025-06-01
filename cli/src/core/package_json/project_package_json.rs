@@ -166,6 +166,8 @@ pub struct ProjectDependencies {
     pub forklaunch_implementation_worker_database: Option<String>,
     pub forklaunch_implementation_worker_kafka: Option<String>,
     pub forklaunch_interfaces_worker: Option<String>,
+    pub forklaunch_infrastructure_redis: Option<String>,
+    pub forklaunch_infrastructure_s3: Option<String>,
     pub forklaunch_validator: Option<String>,
     pub mikro_orm_core: Option<String>,
     pub mikro_orm_migrations: Option<String>,
@@ -232,6 +234,12 @@ impl Serialize for ProjectDependencies {
         }
         if let Some(ref v) = self.forklaunch_implementation_worker_kafka {
             map.serialize_entry("@forklaunch/implementation-worker-kafka", v)?;
+        }
+        if let Some(ref v) = self.forklaunch_infrastructure_redis {
+            map.serialize_entry("@forklaunch/infrastructure-redis", v)?;
+        }
+        if let Some(ref v) = self.forklaunch_infrastructure_s3 {
+            map.serialize_entry("@forklaunch/infrastructure-s3", v)?;
         }
         if let Some(ref v) = self.forklaunch_interfaces_worker {
             map.serialize_entry("@forklaunch/interfaces-worker", v)?;
@@ -426,6 +434,12 @@ impl<'de> Deserialize<'de> for ProjectDependencies {
                         }
                         "@forklaunch/implementation-worker-kafka" => {
                             deps.forklaunch_implementation_worker_kafka = Some(value)
+                        }
+                        "@forklaunch/infrastructure-redis" => {
+                            deps.forklaunch_infrastructure_redis = Some(value)
+                        }
+                        "@forklaunch/infrastructure-s3" => {
+                            deps.forklaunch_infrastructure_s3 = Some(value)
                         }
                         "@forklaunch/interfaces-worker" => {
                             deps.forklaunch_interfaces_worker = Some(value)
