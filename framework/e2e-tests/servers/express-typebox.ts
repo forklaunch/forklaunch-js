@@ -46,7 +46,7 @@ const getHandler = handlers.get(
     summary: 'Test Summary',
     responses: {
       200: {
-        file: file('test.txt', 'text/plain')
+        file: file
       }
     }
   },
@@ -159,7 +159,7 @@ const multipartHandler = handlers.post(
     body: {
       multipartForm: {
         f: string,
-        g: file('test.txt', 'text/plain')
+        g: file
       }
     },
     responses: {
@@ -170,7 +170,11 @@ const multipartHandler = handlers.post(
   },
   expressMiddleware,
   async (req, res) => {
-    res.status(200).send(`${req.body.f} ${await req.body.g.text()}`);
+    res
+      .status(200)
+      .send(
+        `${req.body.f} ${await req.body.g('test.txt', 'text/plain').text()}`
+      );
   }
 );
 

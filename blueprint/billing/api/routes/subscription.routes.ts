@@ -2,8 +2,8 @@ import { forklaunchRouter, SchemaValidator } from '@forklaunch/blueprint-core';
 import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
-import { SubscriptionController } from '../controllers/subscription.controller';
 import { SchemaDependencies } from '../../registrations';
+import { SubscriptionController } from '../controllers/subscription.controller';
 
 export const SubscriptionRoutes = (
   scopedServiceFactory: ScopedDependencyFactory<
@@ -13,7 +13,11 @@ export const SubscriptionRoutes = (
   >,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) => {
-  const router = forklaunchRouter('/subscription', openTelemetryCollector);
+  const router = forklaunchRouter(
+    '/subscription',
+    SchemaValidator(),
+    openTelemetryCollector
+  );
 
   const controller = SubscriptionController(
     scopedServiceFactory,

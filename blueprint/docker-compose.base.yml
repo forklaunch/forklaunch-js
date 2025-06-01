@@ -247,9 +247,9 @@ services:
       - forklaunch-network
     working_dir: /app/billing
 
-  sample-worker-client:
-    hostname: sample-worker-client
-    container_name: forklaunch-sample-worker-client-${RUNTIME}
+  sample-worker-worker:
+    hostname: sample-worker-worker
+    container_name: forklaunch-sample-worker-worker-${RUNTIME}
     restart: always
     build:
       context: .
@@ -293,12 +293,12 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
-      # postgres:
-      #   condition: service_started
+      postgres:
+        condition: service_started
       # mysql:
       #   condition: service_started
-      mariadb:
-        condition: service_started
+      # mariadb:
+      #   condition: service_started
       redis:
         condition: service_started
     networks:

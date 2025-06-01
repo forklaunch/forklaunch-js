@@ -1,10 +1,6 @@
 import {
   handlers,
   IdSchema,
-  NextFunction,
-  ParsedQs,
-  Request,
-  Response,
   SchemaValidator,
   string
 } from '@forklaunch/blueprint-core';
@@ -119,10 +115,4 @@ export const BillingPortalController = (
         res.status(200).send(`Expired billing portal session ${req.params.id}`);
       }
     )
-  }) satisfies Controller<
-    BillingPortalService,
-    Request,
-    Response,
-    NextFunction,
-    ParsedQs
-  >;
+  }) satisfies Controller<BillingPortalService>;

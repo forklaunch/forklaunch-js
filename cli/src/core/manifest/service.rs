@@ -55,6 +55,8 @@ config_struct!(
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) is_cache_enabled: bool,
         #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) is_s3_enabled: bool,
+        #[serde(skip_serializing, skip_deserializing)]
         pub(crate) is_database_enabled: bool,
     }
 );
@@ -112,6 +114,12 @@ impl InitializableManifestConfig for ServiceManifestData {
 
             is_iam: service_name == "iam",
             is_cache_enabled: project_entry.resources.as_ref().unwrap().cache.is_some(),
+            is_s3_enabled: project_entry
+                .resources
+                .as_ref()
+                .unwrap()
+                .object_store
+                .is_some(),
             is_database_enabled: project_entry.resources.as_ref().unwrap().database.is_some(),
 
             ..self.clone()

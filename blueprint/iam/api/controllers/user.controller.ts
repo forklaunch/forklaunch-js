@@ -3,7 +3,6 @@ import {
   handlers,
   IdSchema,
   IdsSchema,
-  NextFunction,
   SchemaValidator,
   string
 } from '@forklaunch/blueprint-core';
@@ -12,8 +11,6 @@ import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { UserService } from '@forklaunch/interfaces-iam/interfaces';
-import { Request, Response } from 'express';
-import { ParsedQs } from 'qs';
 import {
   CreateUserDtoMapper,
   UpdateUserDtoMapper,
@@ -231,10 +228,4 @@ export const UserController = (
         res.status(200).send('User has the specified permission');
       }
     )
-  }) satisfies Controller<
-    UserService,
-    Request,
-    Response,
-    NextFunction,
-    ParsedQs
-  >;
+  }) satisfies Controller<UserService>;

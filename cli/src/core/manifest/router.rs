@@ -42,6 +42,8 @@ config_struct!(
 
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) is_cache_enabled: bool,
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) is_s3_enabled: bool,
     }
 );
 
@@ -88,6 +90,12 @@ impl InitializableManifestConfig for RouterManifestData {
                 || parsed_database == Database::LibSQL,
 
             is_cache_enabled: project_entry.resources.as_ref().unwrap().cache.is_some(),
+            is_s3_enabled: project_entry
+                .resources
+                .as_ref()
+                .unwrap()
+                .object_store
+                .is_some(),
 
             ..self.clone()
         }

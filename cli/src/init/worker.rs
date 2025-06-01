@@ -46,8 +46,9 @@ use crate::{
             package_json_constants::{
                 AJV_VERSION, APP_CORE_VERSION, APP_MONITORING_VERSION, BETTER_SQLITE3_VERSION,
                 BIOME_VERSION, BULLMQ_VERSION, COMMON_VERSION, CORE_VERSION, DOTENV_VERSION,
-                ESLINT_VERSION, EXPRESS_VERSION, HYPER_EXPRESS_VERSION, MIKRO_ORM_CLI_VERSION,
-                MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
+                ESLINT_VERSION, EXPRESS_VERSION, HYPER_EXPRESS_VERSION,
+                INFRASTRUCTURE_REDIS_VERSION, MIKRO_ORM_CLI_VERSION, MIKRO_ORM_CORE_VERSION,
+                MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
                 MIKRO_ORM_REFLECTION_VERSION, MIKRO_ORM_SEEDER_VERSION, OXLINT_VERSION,
                 PRETTIER_VERSION, PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT, PROJECT_SEED_SCRIPT,
                 PROJECT_START_WORKER_CLIENT_SCRIPT, SQLITE3_VERSION, TSX_VERSION, TYPEBOX_VERSION,
@@ -191,6 +192,7 @@ fn add_worker_to_artifacts(
             } else {
                 None
             },
+            object_store: None,
         }),
         Some(vec![config_data.worker_name.clone()]),
         Some(ProjectMetadata {
@@ -397,6 +399,12 @@ pub(crate) fn generate_worker_package_json(
                 } else {
                     None
                 },
+                forklaunch_infrastructure_redis: if config_data.is_cache_enabled {
+                    Some(INFRASTRUCTURE_REDIS_VERSION.to_string())
+                } else {
+                    None
+                },
+                forklaunch_infrastructure_s3: None,
                 forklaunch_interfaces_worker: Some(WORKER_INTERFACES_VERSION.to_string()),
                 forklaunch_validator: Some(VALIDATOR_VERSION.to_string()),
                 mikro_orm_core: Some(MIKRO_ORM_CORE_VERSION.to_string()),

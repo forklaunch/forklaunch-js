@@ -13,7 +13,7 @@
   "license": "MIT",
   "author": "Rohin Bhargava",
   "scripts": {
-    "build": "tsc --noEmit",
+    "build": "tsgo --noEmit",
     "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
@@ -32,6 +32,7 @@
   },
   "devDependencies": {
     "@types/express": "^5.0.2",
+    "@typescript/native-preview": "7.0.0-dev.20250601.1",
     "tsup": "^8.5.0"
   }
 }

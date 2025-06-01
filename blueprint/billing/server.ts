@@ -1,4 +1,4 @@
-import { forklaunchExpress } from '@forklaunch/blueprint-core';
+import { forklaunchExpress, SchemaValidator } from '@forklaunch/blueprint-core';
 import { ApiClient } from '@forklaunch/core/http';
 import { CheckoutSessionRoutes } from './api/routes/checkoutSession.routes';
 import { PaymentLinkRoutes } from './api/routes/paymentLink.routes';
@@ -10,7 +10,7 @@ bootstrap((ci, tokens) => {
   //! resolves the openTelemetryCollector from the configuration
   const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
   //! creates an instance of forklaunchExpress
-  const app = forklaunchExpress(openTelemetryCollector);
+  const app = forklaunchExpress(SchemaValidator(), openTelemetryCollector);
   //! resolves the host, port, and version from the configuration
   const host = ci.resolve(tokens.HOST);
   const port = ci.resolve(tokens.PORT);

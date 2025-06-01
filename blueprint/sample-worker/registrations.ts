@@ -6,7 +6,6 @@ import {
   string
 } from '@forklaunch/blueprint-core';
 import { metrics } from '@forklaunch/blueprint-monitoring';
-import { RedisTtlCache } from '@forklaunch/core/cache';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import {
   createConfigInjector,
@@ -30,6 +29,8 @@ import { RedisWorkerConsumer } from '@forklaunch/implementation-worker-redis/con
 import { RedisWorkerProducer } from '@forklaunch/implementation-worker-redis/producers';
 import { RedisWorkerSchemas } from '@forklaunch/implementation-worker-redis/schemas';
 import { RedisWorkerOptions } from '@forklaunch/implementation-worker-redis/types';
+import { RedisTtlCache } from '@forklaunch/infrastructure-redis';
+import { S3ObjectStore } from '@forklaunch/infrastructure-s3';
 import {
   WorkerFailureHandler,
   WorkerProcessFunction
@@ -135,6 +136,31 @@ export function createDependencies(orm: MikroORM) {
       lifetime: Lifetime.Singleton,
       type: string,
       value: getEnvVar('SAMPLE_WORKER_QUEUE')
+    },
+    S3_REGION: {
+      lifetime: Lifetime.Singleton,
+      type: string,
+      value: getEnvVar('S3_REGION')
+    },
+    S3_ACCESS_KEY_ID: {
+      lifetime: Lifetime.Singleton,
+      type: string,
+      value: getEnvVar('S3_ACCESS_KEY_ID')
+    },
+    S3_SECRET_ACCESS_KEY: {
+      lifetime: Lifetime.Singleton,
+      type: string,
+      value: getEnvVar('S3_SECRET_ACCESS_KEY')
+    },
+    S3_BUCKET: {
+      lifetime: Lifetime.Singleton,
+      type: string,
+      value: getEnvVar('S3_BUCKET')
+    },
+    S3_URL: {
+      lifetime: Lifetime.Singleton,
+      type: string,
+      value: getEnvVar('S3_URL')
     }
   });
   //! defines the runtime dependencies for the application
@@ -199,6 +225,37 @@ export function createDependencies(orm: MikroORM) {
           OpenTelemetryCollector,
           {
             url: REDIS_URL
+          },
+          {
+            enabled: true,
+            level: OTEL_LEVEL || 'info'
+          }
+        )
+    },
+    S3ObjectStore: {
+      lifetime: Lifetime.Singleton,
+      type: S3ObjectStore,
+      factory: ({
+        OpenTelemetryCollector,
+        OTEL_LEVEL,
+        S3_REGION,
+        S3_ACCESS_KEY_ID,
+        S3_SECRET_ACCESS_KEY,
+        S3_BUCKET,
+        S3_URL
+      }) =>
+        new S3ObjectStore(
+          OpenTelemetryCollector,
+          {
+            bucket: S3_BUCKET,
+            clientConfig: {
+              endpoint: S3_URL,
+              region: S3_REGION,
+              credentials: {
+                accessKeyId: S3_ACCESS_KEY_ID,
+                secretAccessKey: S3_SECRET_ACCESS_KEY
+              }
+            }
           },
           {
             enabled: true,

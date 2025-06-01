@@ -7,6 +7,7 @@ import { SampleWorkerEventRecord } from './persistence/entities/sampleWorkerReco
 
 bootstrap(async (ci, tokens) => {
   const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
+  const s3 = ci.resolve(tokens.S3ObjectStore);
 
   const processEvents: (
     name: string
@@ -19,6 +20,10 @@ bootstrap(async (ci, tokens) => {
           openTelemetryCollector.info(
             `processing message from ${name}: ${event.message}`
           );
+          s3.putObject({
+            key: event.id,
+            value: event
+          });
           event.processed = true;
         } catch (error) {
           failedEvents.push({

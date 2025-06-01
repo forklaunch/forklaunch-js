@@ -92,6 +92,7 @@ pub(crate) struct ResourceInventory {
     pub(crate) database: Option<String>,
     pub(crate) cache: Option<String>,
     pub(crate) queue: Option<String>,
+    pub(crate) object_store: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Content, Clone)]

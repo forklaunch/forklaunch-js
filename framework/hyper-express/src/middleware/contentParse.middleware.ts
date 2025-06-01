@@ -1,6 +1,6 @@
 import { isNever } from '@forklaunch/common';
 import { discriminateBody, HttpContractDetails } from '@forklaunch/core/http';
-import { Request } from '@forklaunch/hyper-express-fork';
+import { MiddlewareHandler, Request } from '@forklaunch/hyper-express-fork';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { BusboyConfig } from 'busboy';
 
@@ -35,7 +35,7 @@ import { BusboyConfig } from 'busboy';
  */
 export function contentParse<SV extends AnySchemaValidator>(options?: {
   busboy?: BusboyConfig;
-}) {
+}): MiddlewareHandler {
   return async (req: Request) => {
     const coercedRequest = req as unknown as {
       schemaValidator: SV;

@@ -5,14 +5,6 @@
   "keywords": [],
   "license": "ISC",
   "author": "",
-  "workspaces": [
-    "common",
-    "core",
-    "express",
-    "hyper-express",
-    "universal-sdk",
-    "validator"
-  ],
   "scripts": {
     "build": "pnpm -r run build",
     "clean": "rm -rf node_modules pnpm-lock.yaml && pnpm --parallel -r clean && pnpm store prune",
@@ -35,7 +27,7 @@
   "devDependencies": {
     "@changesets/cli": "^2.29.4",
     "@types/jest": "^29.5.14",
-    "eslint": "^9.27.0",
+    "eslint": "^9.28.0",
     "globals": "^16.2.0",
     "jest": "^29.7.0",
     "lint-staged": "^16.1.0",

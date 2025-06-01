@@ -1,32 +1,33 @@
 use std::{
     borrow::Cow,
+    collections::HashMap,
     fs::{read_dir, read_to_string},
     io::Write,
-    path::Path,
+    path::{Path, PathBuf},
 };
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use clap::{Arg, ArgAction, ArgMatches, Command};
-use fs_extra::dir::{copy, CopyOptions};
-use rustyline::{history::DefaultHistory, Editor};
-use serde_json::{from_str, to_string_pretty, Map, Value};
+use fs_extra::dir::{CopyOptions, copy};
+use rustyline::{Editor, history::DefaultHistory};
+use serde_json::{Map, Value, from_str, to_string_pretty};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use walkdir::{DirEntry, WalkDir};
 
 use crate::{
+    CliCommand,
     constants::{
         ERROR_FAILED_TO_EJECT_DIRECTORY_NOT_EJECTABLE, ERROR_FAILED_TO_PARSE_MANIFEST,
         ERROR_FAILED_TO_PARSE_PACKAGE_JSON, ERROR_FAILED_TO_READ_MANIFEST,
     },
     core::{
-        base_path::{prompt_base_path, BasePathLocation, BasePathType},
+        base_path::{BasePathLocation, BasePathType, prompt_base_path},
         command::command,
         manifest::application::ApplicationManifestData,
         relative_path::get_relative_path,
-        rendered_template::{write_rendered_templates, RenderedTemplate},
+        rendered_template::{RenderedTemplate, write_rendered_templates},
     },
-    prompt::{prompt_for_confirmation, ArrayCompleter},
-    CliCommand,
+    prompt::{ArrayCompleter, prompt_comma_separated_list, prompt_for_confirmation},
 };
 
 // TODO: add injected token into struct
@@ -41,6 +42,8 @@ impl EjectCommand {
 
 fn eject_dependencies(
     package_json: &mut Value,
+    matches: &ArgMatches,
+    line_editor: &mut Editor<ArrayCompleter, DefaultHistory>,
     base_path: &Path,
     stdout: &mut StandardStream,
     dryrun: bool,
@@ -50,15 +53,42 @@ fn eject_dependencies(
         .and_then(|deps| deps.as_object())
         .unwrap();
 
-    let mut dependencies_to_eject = Vec::new();
+    let mut ejection_candidates = Vec::new();
     for dependency in dependencies {
         let dependency_name = dependency.0;
         if dependency_name.starts_with("@forklaunch/implementation-")
             || dependency_name.starts_with("@forklaunch/interfaces-")
+            || dependency_name.starts_with("@forklaunch/infrastructure-")
         {
-            dependencies_to_eject.push(dependency_name.to_string());
+            ejection_candidates.push(dependency_name.to_string());
         }
     }
+
+    let dependencies_to_eject: Vec<String> = prompt_comma_separated_list(
+        line_editor,
+        "dependencies",
+        matches,
+        &ejection_candidates
+            .iter()
+            .map(|s| s.as_str())
+            .collect::<Vec<_>>(),
+        None,
+        "dependencies to eject",
+        true,
+    )?
+    .iter()
+    .filter(|dependency| {
+        if ejection_candidates.contains(dependency) {
+            true
+        } else {
+            let _ = stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)));
+            let _ = writeln!(stdout, "Ignoring {} ejection", &dependency);
+            let _ = stdout.reset();
+            false
+        }
+    })
+    .map(|dependency| dependency.to_string())
+    .collect();
 
     let filtered_dependencies: Map<String, Value> = dependencies
         .iter()
@@ -132,6 +162,7 @@ fn perform_string_replacements(
     dependencies_to_eject: &Vec<String>,
     templates_to_render: &mut Vec<RenderedTemplate>,
 ) -> Result<()> {
+    let mut file_cache: HashMap<PathBuf, String> = HashMap::new();
     for file in app_files {
         if file.file_name() != "package.json" {
             let file_path = &file.path();
@@ -154,6 +185,22 @@ fn perform_string_replacements(
             };
 
             for dependency in dependencies_to_eject {
+                // This may need AST treatment if multiple implementations are included
+                // in the same file, but this should never be the case
+                if new_content.contains(format!("{}/schemas", dependency).as_str()) {
+                    new_content = new_content
+                        .lines()
+                        .filter(|line| {
+                            if line.contains("validator: SchemaValidator()") {
+                                false
+                            } else {
+                                true
+                            }
+                        })
+                        .collect::<Vec<_>>()
+                        .join("\n");
+                }
+
                 let module_types = [
                     "/schemas",
                     "/interfaces",
@@ -175,24 +222,26 @@ fn perform_string_replacements(
                 }
             }
 
-            new_content = new_content
-                .lines()
-                .filter(|line| {
-                    if line.contains("validator: SchemaValidator()") {
-                        false
-                    } else {
-                        true
-                    }
-                })
-                .collect::<Vec<_>>()
-                .join("\n");
-
-            templates_to_render.push(RenderedTemplate {
-                path: file_path.to_path_buf(),
-                content: new_content,
-                context: Some(format!("Failed to write file {}", file_path.display())),
-            });
+            if file_cache.contains_key(&file_path.to_path_buf()) {
+                file_cache
+                    .get_mut(&file_path.to_path_buf())
+                    .unwrap()
+                    .push_str(&new_content);
+            } else {
+                file_cache.insert(file_path.to_path_buf(), new_content);
+            }
         }
+    }
+
+    for (file_path, new_content) in file_cache {
+        templates_to_render.push(RenderedTemplate {
+            path: file_path.clone(),
+            content: new_content,
+            context: Some(format!(
+                "Failed to write file {}",
+                file_path.clone().to_string_lossy()
+            )),
+        });
     }
 
     Ok(())
@@ -209,6 +258,14 @@ impl CliCommand for EjectCommand {
                     .long("continue")
                     .help("Continue the eject operation")
                     .action(ArgAction::SetTrue),
+            )
+            .arg(
+                Arg::new("dependencies")
+                    .short('d')
+                    .long("dependencies")
+                    .help("The dependencies to eject")
+                    .num_args(0..)
+                    .action(ArgAction::Append),
             )
             .arg(
                 Arg::new("dryrun")
@@ -269,8 +326,14 @@ impl CliCommand for EjectCommand {
         let mut package_json: Value =
             from_str(&package_data).with_context(|| ERROR_FAILED_TO_PARSE_PACKAGE_JSON)?;
 
-        let (dependencies_to_eject, filtered_dependencies) =
-            eject_dependencies(&mut package_json, &base_path, &mut stdout, dryrun)?;
+        let (dependencies_to_eject, filtered_dependencies) = eject_dependencies(
+            &mut package_json,
+            matches,
+            &mut line_editor,
+            &base_path,
+            &mut stdout,
+            dryrun,
+        )?;
 
         let app_files = WalkDir::new(base_path)
             .into_iter()

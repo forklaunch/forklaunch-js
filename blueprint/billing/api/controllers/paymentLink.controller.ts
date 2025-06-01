@@ -3,10 +3,6 @@ import {
   handlers,
   IdSchema,
   IdsSchema,
-  NextFunction,
-  ParsedQs,
-  Request,
-  Response,
   SchemaValidator,
   string
 } from '@forklaunch/blueprint-core';
@@ -166,10 +162,4 @@ export const PaymentLinkController = (
           .json(await serviceFactory().listPaymentLinks(req.query));
       }
     )
-  }) satisfies Controller<
-    PaymentLinkService<typeof CurrencyEnum>,
-    Request,
-    Response,
-    NextFunction,
-    ParsedQs
-  >;
+  }) satisfies Controller<PaymentLinkService<typeof CurrencyEnum>>;

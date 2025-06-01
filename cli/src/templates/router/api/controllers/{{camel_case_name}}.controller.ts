@@ -1,7 +1,7 @@
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ConfigInjector, ScopedDependencyFactory } from '@forklaunch/core/services';
-import { handlers, NextFunction, ParsedQs, Request, Response, SchemaValidator } from '@{{app_name}}/core';
+import { handlers, SchemaValidator } from '@{{app_name}}/core';
 import { Metrics } from '@{{app_name}}/monitoring';
 import { {{pascal_case_name}}Service } from '../../domain/interfaces/{{camel_case_name}}.interface';
 import { {{pascal_case_name}}RequestDtoMapper, {{pascal_case_name}}ResponseDtoMapper } from '../../domain/mappers/{{camel_case_name}}.mappers';
@@ -70,10 +70,4 @@ export const {{pascal_case_name}}Controller = (
         );
     }
   )
-}) satisfies Controller<
-  {{pascal_case_name}}Service,
-  Request,
-  Response,
-  NextFunction,
-  ParsedQs
->;
+}) satisfies Controller<{{pascal_case_name}}Service>;

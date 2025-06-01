@@ -13,8 +13,8 @@ pnpm install
 
 cd iam
 
-RUST_BACKTRACE=1 cargo run --release eject -n
-RUST_BACKTRACE=1 cargo run --release eject -c
+RUST_BACKTRACE=1 cargo run --release eject -d @forklaunch/implementation-iam-base -d @forklaunch/interfaces-iam -n
+RUST_BACKTRACE=1 cargo run --release eject -d @forklaunch/implementation-iam-base -d @forklaunch/interfaces-iam -c
 
 pnpm build
 
@@ -28,8 +28,8 @@ bun install
 
 cd billing
 
-RUST_BACKTRACE=1 cargo run --release eject -n
-RUST_BACKTRACE=1 cargo run --release eject -c
+RUST_BACKTRACE=1 cargo run --release eject -d @forklaunch/implementation-billing-base -d @forklaunch/interfaces-billing -d @forklaunch/infrastructure-redis -n
+RUST_BACKTRACE=1 cargo run --release eject -d @forklaunch/implementation-billing-base -d @forklaunch/interfaces-billing -d @forklaunch/infrastructure-redis -c
 
 bun run build
 

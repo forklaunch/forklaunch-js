@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/interfaces-worker",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Worker interfaces for forklaunch",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -38,7 +38,7 @@
   },
   "devDependencies": {
     "depcheck": "^1.4.7",
-    "eslint": "^9.27.0",
+    "eslint": "^9.28.0",
     "prettier": "^3.5.3",
     "typedoc": "^0.28.5",
     "typescript-eslint": "^8.33.0"

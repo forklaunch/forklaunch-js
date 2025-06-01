@@ -227,28 +227,30 @@ export class ZodSchemaValidator
     type: 'null',
     example: 'never'
   });
-  binary = z.string().transform(Buffer.from).openapi({
-    title: 'Binary',
-    type: 'string',
-    format: 'binary',
-    example: 'a utf-8 encodable string'
-  });
-  file = (name: string, type: MimeType) =>
-    z
-      .string()
-      .transform((val) => {
-        return new File([val], name, {
+  binary = z
+    .string()
+    .transform((v) => new TextEncoder().encode(v))
+    .openapi({
+      title: 'Binary',
+      type: 'string',
+      format: 'binary',
+      example: 'a utf-8 encodable string'
+    });
+  file = z
+    .string()
+    .transform((val) => {
+      return (name: string, type: MimeType) =>
+        new File([val], name, {
           type,
           lastModified: Date.now()
         });
-      })
-      .openapi({
-        title: 'File',
-        type: 'string',
-        format: 'binary',
-        contentMediaType: type,
-        example: 'a utf-8 encodable string'
-      });
+    })
+    .openapi({
+      title: 'File',
+      type: 'string',
+      format: 'binary',
+      example: 'a utf-8 encodable string'
+    });
 
   /**
    * Compiles schema if this exists, for optimal performance.

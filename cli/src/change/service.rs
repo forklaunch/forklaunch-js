@@ -23,10 +23,16 @@ use crate::{
     },
     core::{
         ast::{
-            deletions::delete_from_registrations_ts::delete_from_registrations_ts_infrastructure_redis,
+            deletions::delete_from_registrations_ts::{
+                delete_from_registrations_ts_infrastructure_redis,
+                delete_from_registrations_ts_infrastructure_s3,
+            },
             transformations::{
                 transform_mikroorm_config_ts::transform_mikroorm_config_ts,
-                transform_registrations_ts::transform_registrations_ts_infrastructure_redis,
+                transform_registrations_ts::{
+                    transform_registrations_ts_infrastructure_redis,
+                    transform_registrations_ts_infrastructure_s3,
+                },
             },
         },
         base_path::{BasePathLocation, BasePathType, prompt_base_path},
@@ -34,8 +40,9 @@ use crate::{
         database::{get_database_variants, is_in_memory_database},
         docker::{
             DependencyCondition, DependsOn, DockerCompose, add_database_to_docker_compose,
-            add_redis_to_docker_compose, clean_up_unused_infrastructure_services,
-            remove_redis_from_docker_compose, update_dockerfile_contents,
+            add_redis_to_docker_compose, add_s3_to_docker_compose,
+            clean_up_unused_infrastructure_services, remove_redis_from_docker_compose,
+            remove_s3_from_docker_compose, update_dockerfile_contents,
         },
         env::Env,
         format::format_code,
@@ -47,6 +54,7 @@ use crate::{
         name::validate_name,
         package_json::{
             application_package_json::ApplicationPackageJson,
+            package_json_constants::{INFRASTRUCTURE_REDIS_VERSION, INFRASTRUCTURE_S3_VERSION},
             project_package_json::ProjectPackageJson,
         },
         removal_template::{RemovalTemplate, remove_template_files},
@@ -233,6 +241,7 @@ fn change_infrastructure(
     base_path: &Path,
     infrastructure_to_add: Vec<Infrastructure>,
     infrastructure_to_remove: Vec<Infrastructure>,
+    project_package_json: &mut ProjectPackageJson,
     manifest_data: &mut ServiceManifestData,
     docker_compose: &mut DockerCompose,
     rendered_templates_cache: &mut RenderedTemplatesCache,
@@ -293,10 +302,92 @@ fn change_infrastructure(
                     },
                 );
 
+                project_package_json
+                    .dependencies
+                    .as_mut()
+                    .unwrap()
+                    .forklaunch_infrastructure_redis =
+                    Some(INFRASTRUCTURE_REDIS_VERSION.to_string());
+
                 manifest_data.projects.iter_mut().for_each(|project| {
                     if project.name == manifest_data.service_name {
                         project.resources.as_mut().unwrap().cache =
                             Some(Infrastructure::Redis.to_string());
+                    }
+                });
+            }
+            Infrastructure::S3 => {
+                let mut environment = docker_compose
+                    .services
+                    .get_mut(&manifest_data.service_name)
+                    .unwrap()
+                    .environment
+                    .as_ref()
+                    .unwrap()
+                    .clone();
+                add_s3_to_docker_compose(
+                    &manifest_data.app_name,
+                    &manifest_data.service_name,
+                    docker_compose,
+                    &mut environment,
+                )?;
+                docker_compose
+                    .services
+                    .get_mut(&manifest_data.service_name)
+                    .unwrap()
+                    .environment = Some(environment);
+
+                let env_local_path = base_path.join(".env.local");
+                let mut env_local_content = serde_envfile::from_str::<Env>(
+                    &rendered_templates_cache
+                        .get(&env_local_path)?
+                        .unwrap()
+                        .content,
+                )?;
+
+                env_local_content.s3_url = Some("http://localhost:9000".to_string());
+                env_local_content.s3_bucket = Some(format!(
+                    "{}-{}-dev",
+                    manifest_data.app_name, manifest_data.service_name
+                ));
+                env_local_content.s3_region = Some("us-east-1".to_string());
+                env_local_content.s3_access_key = Some("minioadmin".to_string());
+                env_local_content.s3_secret_key = Some("minioadmin".to_string());
+
+                rendered_templates_cache.insert(
+                    env_local_path.to_string_lossy(),
+                    RenderedTemplate {
+                        path: env_local_path.clone(),
+                        content: serde_envfile::to_string(&env_local_content)?,
+                        context: None,
+                    },
+                );
+
+                let registrations_path = base_path.join("registrations.ts");
+                rendered_templates_cache.insert(
+                    registrations_path.to_string_lossy(),
+                    RenderedTemplate {
+                        path: registrations_path.clone(),
+                        content: transform_registrations_ts_infrastructure_s3(
+                            &base_path,
+                            rendered_templates_cache
+                                .get(&registrations_path)?
+                                .and_then(|v| Some(v.content.clone())),
+                        )?,
+                        context: None,
+                    },
+                );
+
+                project_package_json
+                    .dependencies
+                    .as_mut()
+                    .unwrap()
+                    .forklaunch_infrastructure_s3 = Some(INFRASTRUCTURE_S3_VERSION.to_string());
+
+                manifest_data.projects.iter_mut().for_each(|project| {
+                    if project.name == manifest_data.service_name {
+                        project.resources.as_mut().unwrap().object_store =
+                            Some(Infrastructure::S3.to_string());
                     }
                 });
             }
@@ -367,9 +458,93 @@ fn change_infrastructure(
                     },
                 );
 
+                project_package_json
+                    .dependencies
+                    .as_mut()
+                    .unwrap()
+                    .forklaunch_infrastructure_redis = None;
+
                 manifest_data.projects.iter_mut().for_each(|project| {
                     if project.name == manifest_data.service_name {
                         project.resources.as_mut().unwrap().cache = None;
+                    }
+                });
+            }
+            Infrastructure::S3 => {
+                if !manifest_data.projects.iter_mut().any(|project| {
+                    if let Some(resources) = &mut project.resources {
+                        if let Some(object_store) = &mut resources.object_store {
+                            object_store == &Infrastructure::S3.to_string()
+                        } else {
+                            false
+                        }
+                    } else {
+                        false
+                    }
+                }) {
+                    let mut environment = docker_compose
+                        .services
+                        .get_mut(&manifest_data.service_name)
+                        .unwrap()
+                        .environment
+                        .as_ref()
+                        .unwrap()
+                        .clone();
+                    remove_s3_from_docker_compose(docker_compose, &mut environment)?;
+                    docker_compose
+                        .services
+                        .get_mut(&manifest_data.service_name)
+                        .unwrap()
+                        .environment = Some(environment);
+                }
+
+                let env_local_path = base_path.join(".env.local");
+                let mut env_local_content = serde_envfile::from_str::<Env>(
+                    &rendered_templates_cache
+                        .get(&env_local_path)?
+                        .unwrap()
+                        .content,
+                )?;
+
+                env_local_content.s3_bucket = None;
+                env_local_content.s3_url = None;
+                env_local_content.s3_region = None;
+                env_local_content.s3_access_key = None;
+                env_local_content.s3_secret_key = None;
+
+                rendered_templates_cache.insert(
+                    env_local_path.to_string_lossy(),
+                    RenderedTemplate {
+                        path: env_local_path.clone(),
+                        content: serde_envfile::to_string(&env_local_content)?,
+                        context: None,
+                    },
+                );
+
+                let registrations_path = base_path.join("registrations.ts");
+                rendered_templates_cache.insert(
+                    registrations_path.to_string_lossy(),
+                    RenderedTemplate {
+                        path: registrations_path.clone(),
+                        content: delete_from_registrations_ts_infrastructure_s3(
+                            &base_path,
+                            rendered_templates_cache
+                                .get(&registrations_path)?
+                                .and_then(|v| Some(v.content.clone())),
+                        )?,
+                        context: None,
+                    },
+                );
+
+                project_package_json
+                    .dependencies
+                    .as_mut()
+                    .unwrap()
+                    .forklaunch_infrastructure_s3 = None;
+
+                manifest_data.projects.iter_mut().for_each(|project| {
+                    if project.name == manifest_data.service_name {
+                        project.resources.as_mut().unwrap().object_store = None;
                     }
                 });
             }
@@ -611,6 +786,9 @@ impl CliCommand for ServiceCommand {
                 &mut rendered_templates_cache,
                 &mut removal_templates,
             )?;
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+            writeln!(stdout, "migrate:init or migrate:create will need to be run")?;
+            stdout.reset()?;
         }
 
         if let Some(description) = description {
@@ -634,6 +812,7 @@ impl CliCommand for ServiceCommand {
                 &base_path,
                 infrastructure_to_add,
                 infrastructure_to_remove,
+                &mut project_json_to_write,
                 &mut manifest_data,
                 &mut docker_compose_data,
                 &mut rendered_templates_cache,

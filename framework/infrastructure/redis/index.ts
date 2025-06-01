@@ -1,13 +1,12 @@
 import { safeParse, safeStringify } from '@forklaunch/common';
-import { createClient, RedisClientOptions } from 'redis';
+import { TtlCache, TtlCacheRecord } from '@forklaunch/core/cache';
 import {
   evaluateTelemetryOptions,
   MetricsDefinition,
+  OpenTelemetryCollector,
   TelemetryOptions
-} from '../http';
-import { OpenTelemetryCollector } from '../http/telemetry/openTelemetryCollector';
-import { TtlCache } from './interfaces/ttlCache.interface';
-import { TtlCacheRecord } from './types/ttlCacheRecord.types';
+} from '@forklaunch/core/http';
+import { createClient, RedisClientOptions } from 'redis';
 
 /**
  * Type representing a raw reply from Redis commands.
@@ -40,11 +39,11 @@ export class RedisTtlCache implements TtlCache {
   constructor(
     private ttlMilliseconds: number,
     private openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-    hostingOptions: RedisClientOptions,
+    options: RedisClientOptions,
     telemetryOptions: TelemetryOptions
   ) {
     this.telemetryOptions = evaluateTelemetryOptions(telemetryOptions);
-    this.client = createClient(hostingOptions);
+    this.client = createClient(options);
     if (this.telemetryOptions.enabled.logging) {
       this.client.on('error', (err) => this.openTelemetryCollector.error(err));
       this.client.connect().catch(this.openTelemetryCollector.error);

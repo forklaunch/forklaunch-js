@@ -1,6 +1,6 @@
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { GenericContainer, StartedTestContainer } from 'testcontainers';
-import { RedisTtlCache } from '../src/cache/redisTtlCache';
-import { OpenTelemetryCollector } from '../src/http/telemetry/openTelemetryCollector';
+import { RedisTtlCache } from '../index';
 
 describe('redisTtlCache', () => {
   let container: StartedTestContainer;

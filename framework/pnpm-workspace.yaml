@@ -1,8 +1,10 @@
 packages:
-  - 'common'
-  - 'core'
-  - 'express'
-  - 'hyper-express'
-  - 'universal-sdk'
-  - 'validator'
-  - 'e2e-tests'
+  - common
+  - core
+  - express
+  - hyper-express
+  - universal-sdk
+  - validator
+  - e2e-tests
+  - infrastructure/redis
+  - infrastructure/S3

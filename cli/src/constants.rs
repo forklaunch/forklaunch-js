@@ -45,6 +45,10 @@ choice! {
             id: "redis",
             exclusive_files: None,
         },
+        S3 = Choice {
+            id: "s3",
+            exclusive_files: None,
+        },
     }
 
     pub(crate) enum WorkerType {

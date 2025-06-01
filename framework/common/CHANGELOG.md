@@ -1,5 +1,23 @@
 # @forklaunch/common
 
+## 0.3.5
+
+### Patch Changes
+
+- increase package dependency versions
+
+## 0.3.4
+
+### Patch Changes
+
+- Better file based ergonomics in validator, simplification of types and all but validator is checked by tsgo
+
+## 0.3.3
+
+### Patch Changes
+
+- increase package versions
+
 ## 0.3.2
 
 ### Patch Changes

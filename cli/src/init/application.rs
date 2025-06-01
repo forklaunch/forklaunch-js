@@ -345,7 +345,10 @@ impl CliCommand for ApplicationCommand {
             "application name",
             None,
             |input: &str| validate_name(input),
-            |_| "Application name cannot be empty or include numbers or spaces. Please try again".to_string(),
+            |_| {
+                "Application name cannot be empty or include numbers or spaces. Please try again"
+                    .to_string()
+            },
         )?;
 
         let runtime: Runtime = prompt_with_validation(
@@ -559,6 +562,7 @@ impl CliCommand for ApplicationCommand {
                 database: Some(database.to_string()),
                 cache: None,
                 queue: None,
+                object_store: None,
             }),
             routers: get_routers_from_standard_package(package.to_string()),
             metadata: None,
@@ -727,6 +731,7 @@ impl CliCommand for ApplicationCommand {
 
                 is_iam: template_dir.output_path == "iam",
                 is_cache_enabled: template_dir.output_path == "billing",
+                is_s3_enabled: false,
                 is_database_enabled: true,
             };
 

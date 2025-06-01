@@ -10,15 +10,28 @@ import {
   FormatRegistry,
   Kind,
   KindGuard,
+  TAny,
   TArray,
+  TBigInt,
+  TBoolean,
+  TDate,
   TFunction,
   TLiteral,
+  TNever,
+  TNull,
+  TNumber,
   TOptional,
   TPromise,
   TProperties,
   TRecord,
   TSchema,
+  TString,
+  TSymbol,
+  TTransform,
+  TUndefined,
   TUnion,
+  TUnknown,
+  TVoid,
   Type
 } from '@sinclair/typebox';
 import { TypeCheck, TypeCompiler } from '@sinclair/typebox/compiler';
@@ -116,31 +129,34 @@ export class TypeboxSchemaValidator
   _SchemaCatchall!: TCatchall;
   _ValidSchemaObject!: TObject<TProperties> | TArray<TObject<TProperties>>;
 
-  string = Type.String({
+  string: TString = Type.String({
     example: 'a string',
     title: 'String'
   });
-  uuid = Type.String({
+  uuid: TString = Type.String({
     pattern:
       '^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$',
     errorType: 'uuid',
     example: 'a8b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6',
     title: 'UUID'
   });
-  email = Type.String({
+  email: TString = Type.String({
     pattern:
       '(?:[a-z0-9!#$%&\'*+/=?^_{|}~-]+(?:\\.[a-z0-9!#$%&\'*+/=?^_{|}~-]+)*|"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)])',
     errorType: 'email',
     example: 'a@b.com',
     title: 'Email'
   });
-  uri = Type.String({
+  uri: TString = Type.String({
     pattern: '^[a-zA-Z][a-zA-Z\\d+-.]*:[^\\s]*$',
     errorType: 'uri',
     example: 'https://forklaunch.com',
     title: 'URI'
   });
-  number = Type.Transform(
+  number: TTransform<
+    TUnion<[TNumber, TString, TBoolean, TNull, TBigInt, TDate]>,
+    number
+  > = Type.Transform(
     Type.Union(
       [
         Type.Number(),
@@ -169,7 +185,10 @@ export class TypeboxSchemaValidator
       return value;
     })
     .Encode(Number);
-  bigint = Type.Transform(
+  bigint: TTransform<
+    TUnion<[TBigInt, TNumber, TString, TBoolean, TDate]>,
+    bigint
+  > = Type.Transform(
     Type.Union(
       [
         Type.BigInt(),
@@ -199,7 +218,7 @@ export class TypeboxSchemaValidator
       return value;
     })
     .Encode(BigInt);
-  boolean = Type.Transform(
+  boolean: TTransform<TUnion<[TBoolean, TString]>, boolean> = Type.Transform(
     Type.Union(
       [
         Type.Boolean(),
@@ -223,7 +242,7 @@ export class TypeboxSchemaValidator
       }
     })
     .Encode(Boolean);
-  date = Type.Transform(
+  date: TTransform<TUnion<[TString, TNumber, TDate]>, Date> = Type.Transform(
     Type.Union(
       [
         Type.String({
@@ -247,46 +266,49 @@ export class TypeboxSchemaValidator
       return new Date(value);
     })
     .Encode((value) => new Date(value).toISOString());
-  symbol = Type.Symbol({
+  symbol: TSymbol = Type.Symbol({
     title: 'Symbol'
   });
-  nullish = Type.Union([Type.Void(), Type.Null(), Type.Undefined()], {
-    errorType: 'nullish',
-    type: 'null',
-    example: 'null',
-    title: 'Nullish'
-  });
-  void = Type.Void({
+  nullish: TUnion<[TVoid, TNull, TUndefined]> = Type.Union(
+    [Type.Void(), Type.Null(), Type.Undefined()],
+    {
+      errorType: 'nullish',
+      type: 'null',
+      example: 'null',
+      title: 'Nullish'
+    }
+  );
+  void: TVoid = Type.Void({
     type: 'null',
     example: 'void',
     title: 'Void'
   });
-  null = Type.Null({
+  null: TNull = Type.Null({
     type: 'null',
     example: 'null',
     title: 'Null'
   });
-  undefined = Type.Undefined({
+  undefined: TUndefined = Type.Undefined({
     type: 'null',
     example: 'undefined',
     title: 'Undefined'
   });
-  any = Type.Any({
+  any: TAny = Type.Any({
     type: 'object',
     example: 'any',
     title: 'Any'
   });
-  unknown = Type.Unknown({
+  unknown: TUnknown = Type.Unknown({
     type: 'object',
     example: 'unknown',
     title: 'Unknown'
   });
-  never = Type.Never({
+  never: TNever = Type.Never({
     type: 'null',
     example: 'never',
     title: 'Never'
   });
-  binary = Type.Transform(
+  binary: TTransform<TString, Uint8Array> = Type.Transform(
     Type.String({
       errorType: 'binary',
       format: 'binary',
@@ -294,20 +316,27 @@ export class TypeboxSchemaValidator
       title: 'Binary'
     })
   )
-    .Decode(Buffer.from)
-    .Encode((value) => value.toString());
-  file = (name: string, type: MimeType) =>
+    .Decode((value) => new TextEncoder().encode(value))
+    .Encode((value) => {
+      if (value instanceof ArrayBuffer) {
+        return String.fromCharCode(...new Uint8Array(value));
+      }
+      return '';
+    });
+  file: TTransform<TString, (name: string, type: MimeType) => File> =
     Type.Transform(
       Type.String({
         errorType: 'binary',
         format: 'binary',
-        contentMediaType: type,
         example: 'a utf-8 encodable string',
         title: 'File'
       })
     )
-      .Decode((value) => new InMemoryFile(value, name, { type }) as File)
-      .Encode((value) => (value as InMemoryFile).content);
+      .Decode(
+        (value) => (name: string, type: MimeType) =>
+          new InMemoryFile(value, name, { type }) as File
+      )
+      .Encode((value) => (value('name', 'type') as InMemoryFile).content);
 
   /**
    * Extracts the error type of a schema for error messages.

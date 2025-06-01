@@ -1,5 +1,50 @@
 # @forklaunch/hyper-express
 
+## 0.5.7
+
+### Patch Changes
+
+- increase package dependency versions
+- Updated dependencies
+  - @forklaunch/validator@0.6.5
+  - @forklaunch/common@0.3.5
+  - @forklaunch/core@0.8.7
+
+## 0.5.6
+
+### Patch Changes
+
+- simplify controller types
+- Updated dependencies
+  - @forklaunch/core@0.8.6
+
+## 0.5.5
+
+### Patch Changes
+
+- Better file based ergonomics in validator, simplification of types and all but validator is checked by tsgo
+- Updated dependencies
+  - @forklaunch/validator@0.6.4
+  - @forklaunch/common@0.3.4
+  - @forklaunch/core@0.8.5
+
+## 0.5.4
+
+### Patch Changes
+
+- increase package versions
+- Updated dependencies
+  - @forklaunch/validator@0.6.3
+  - @forklaunch/common@0.3.3
+  - @forklaunch/core@0.8.4
+
+## 0.5.3
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.8.3
+
 ## 0.5.2
 
 ### Patch Changes

@@ -1,11 +1,4 @@
-import {
-  handlers,
-  NextFunction,
-  ParsedQs,
-  Request,
-  Response,
-  SchemaValidator
-} from '@forklaunch/blueprint-core';
+import { handlers, SchemaValidator } from '@forklaunch/blueprint-core';
 import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
@@ -80,10 +73,4 @@ export const SampleWorkerController = (
         );
       }
     )
-  }) satisfies Controller<
-    SampleWorkerService,
-    Request,
-    Response,
-    NextFunction,
-    ParsedQs
-  >;
+  }) satisfies Controller<SampleWorkerService>;

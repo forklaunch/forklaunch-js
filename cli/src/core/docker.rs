@@ -450,6 +450,51 @@ pub(crate) fn remove_redis_from_docker_compose<'a>(
     Ok(docker_compose)
 }
 
+pub(crate) fn add_s3_to_docker_compose<'a>(
+    app_name: &str,
+    service_name: &str,
+    docker_compose: &'a mut DockerCompose,
+    environment: &mut IndexMap<String, String>,
+) -> Result<&'a mut DockerCompose> {
+    environment.insert("S3_URL".to_string(), "http://minio:9000".to_string());
+    environment.insert(
+        "S3_BUCKET".to_string(),
+        format!("{}-{}-dev", app_name, service_name).to_string(),
+    );
+    environment.insert("S3_REGION".to_string(), "us-east-1".to_string());
+    environment.insert("S3_ACCESS_KEY".to_string(), "minioadmin".to_string());
+    environment.insert("S3_SECRET_KEY".to_string(), "minioadmin".to_string());
+    if !docker_compose.services.contains_key("minio") {
+        docker_compose.services.insert(
+            "minio".to_string(),
+            DockerService {
+                image: Some("minio/minio".to_string()),
+                container_name: Some(format!("{}-minio", app_name)),
+                restart: Some(Restart::Always),
+                ports: Some(vec!["9000:9000".to_string()]),
+                networks: Some(vec![format!("{}-network", app_name)]),
+                ..Default::default()
+            },
+        );
+    }
+    Ok(docker_compose)
+}
+
+pub(crate) fn remove_s3_from_docker_compose<'a>(
+    docker_compose: &'a mut DockerCompose,
+    environment: &mut IndexMap<String, String>,
+) -> Result<&'a mut DockerCompose> {
+    environment.shift_remove("S3_URL");
+    environment.shift_remove("S3_REGION");
+    environment.shift_remove("S3_ACCESS_KEY");
+    environment.shift_remove("S3_SECRET_KEY");
+    environment.shift_remove("S3_BUCKET");
+    if docker_compose.services.contains_key("minio") {
+        docker_compose.services.shift_remove("minio");
+    }
+    Ok(docker_compose)
+}
+
 pub(crate) fn add_kafka_to_docker_compose<'a>(
     app_name: &str,
     project_name: &str,
@@ -898,7 +943,7 @@ fn add_base_definition_to_docker_compose(
             for port in ports {
                 if let Some(port_num) = port.split(':').next() {
                     if let Ok(num) = port_num.parse::<i32>() {
-                        if num >= 8000 && num <= 9000 && num > port_number && num != 8889 {
+                        if num >= 8000 && num < 9000 && num > port_number && num != 8889 {
                             port_number = num;
                         }
                     }
@@ -934,6 +979,7 @@ fn create_base_service(
     runtime: &str,
     database: &Option<String>,
     is_cache_enabled: bool,
+    is_s3_enabled: bool,
     is_in_memory_database: bool,
     port_number: Option<i32>,
     environment: IndexMap<String, String>,
@@ -946,6 +992,9 @@ fn create_base_service(
 
     if is_cache_enabled {
         depends_on.push("redis".to_string());
+    }
+    if is_s3_enabled {
+        depends_on.push("minio".to_string());
     }
     if !is_in_memory_database && database.is_some() {
         depends_on.push(database.clone().unwrap());
@@ -1034,6 +1083,16 @@ pub(crate) fn add_service_definition_to_docker_compose(
             .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
     }
 
+    if config_data.is_s3_enabled {
+        add_s3_to_docker_compose(
+            &config_data.app_name,
+            &config_data.service_name,
+            &mut docker_compose,
+            &mut environment,
+        )
+        .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
+    }
+
     add_database_to_docker_compose(
         &ManifestData::Service(config_data),
         &mut docker_compose,
@@ -1068,6 +1127,7 @@ pub(crate) fn add_service_definition_to_docker_compose(
                 &config_data.runtime,
                 &Some(config_data.database.clone()),
                 config_data.is_cache_enabled,
+                config_data.is_s3_enabled,
                 config_data.is_in_memory_database,
                 Some(port_number),
                 environment,
@@ -1144,6 +1204,7 @@ pub(crate) fn add_worker_definition_to_docker_compose(
                 &config_data.runtime,
                 &config_data.database,
                 config_data.is_cache_enabled,
+                false,
                 config_data.is_in_memory_database,
                 Some(port_number),
                 environment.clone(),
@@ -1165,6 +1226,7 @@ pub(crate) fn add_worker_definition_to_docker_compose(
                 &config_data.runtime,
                 &config_data.database,
                 config_data.is_cache_enabled,
+                false,
                 config_data.is_in_memory_database,
                 None,
                 environment.clone(),

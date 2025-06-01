@@ -48,16 +48,17 @@ use crate::{
                 BILLING_BASE_VERSION, BILLING_INTERFACES_VERSION, BIOME_VERSION, COMMON_VERSION,
                 CORE_VERSION, DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION,
                 HYPER_EXPRESS_VERSION, IAM_BASE_VERSION, IAM_INTERFACES_VERSION,
-                MIKRO_ORM_CLI_VERSION, MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION,
-                MIKRO_ORM_MIGRATIONS_VERSION, MIKRO_ORM_REFLECTION_VERSION,
-                MIKRO_ORM_SEEDER_VERSION, OXLINT_VERSION, PRETTIER_VERSION, PROJECT_BUILD_SCRIPT,
-                PROJECT_DOCS_SCRIPT, PROJECT_SEED_SCRIPT, SQLITE3_VERSION, TSX_VERSION,
-                TYPEBOX_VERSION, TYPEDOC_VERSION, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION,
-                TYPES_EXPRESS_VERSION, TYPES_QS_VERSION, TYPES_UUID_VERSION,
-                TYPESCRIPT_ESLINT_VERSION, UUID_VERSION, VALIDATOR_VERSION, ZOD_VERSION,
-                project_clean_script, project_dev_local_script, project_dev_server_script,
-                project_format_script, project_lint_fix_script, project_lint_script,
-                project_migrate_script, project_start_server_script, project_test_script,
+                INFRASTRUCTURE_REDIS_VERSION, INFRASTRUCTURE_S3_VERSION, MIKRO_ORM_CLI_VERSION,
+                MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
+                MIKRO_ORM_REFLECTION_VERSION, MIKRO_ORM_SEEDER_VERSION, OXLINT_VERSION,
+                PRETTIER_VERSION, PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT, PROJECT_SEED_SCRIPT,
+                SQLITE3_VERSION, TSX_VERSION, TYPEBOX_VERSION, TYPEDOC_VERSION,
+                TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION, TYPES_QS_VERSION,
+                TYPES_UUID_VERSION, TYPESCRIPT_ESLINT_VERSION, UUID_VERSION, VALIDATOR_VERSION,
+                ZOD_VERSION, project_clean_script, project_dev_local_script,
+                project_dev_server_script, project_format_script, project_lint_fix_script,
+                project_lint_script, project_migrate_script, project_start_server_script,
+                project_test_script,
             },
             project_package_json::{
                 MIKRO_ORM_CONFIG_PATHS, ProjectDependencies, ProjectDevDependencies,
@@ -169,6 +170,7 @@ fn add_service_to_artifacts(
             database: Some(config_data.database.to_owned()),
             cache: None,
             queue: None,
+            object_store: None,
         }),
         Some(vec![config_data.service_name.clone()]),
         None,
@@ -314,6 +316,16 @@ pub(crate) fn generate_service_package_json(
                 },
                 forklaunch_implementation_iam_base: if config_data.service_name == "iam" {
                     Some(IAM_BASE_VERSION.to_string())
+                } else {
+                    None
+                },
+                forklaunch_infrastructure_redis: if config_data.is_cache_enabled {
+                    Some(INFRASTRUCTURE_REDIS_VERSION.to_string())
+                } else {
+                    None
+                },
+                forklaunch_infrastructure_s3: if config_data.is_s3_enabled {
+                    Some(INFRASTRUCTURE_S3_VERSION.to_string())
                 } else {
                     None
                 },
@@ -600,6 +612,7 @@ impl CliCommand for ServiceCommand {
 
             is_iam: false,
             is_cache_enabled: infrastructure.contains(&Infrastructure::Redis),
+            is_s3_enabled: infrastructure.contains(&Infrastructure::S3),
             is_database_enabled: true,
         };
 

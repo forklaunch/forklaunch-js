@@ -19,7 +19,11 @@ export const SampleWorkerRoutes = (
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) => {
   // defines the router for the sampleWorker routes
-  const router = forklaunchRouter('/sample-worker', openTelemetryCollector);
+  const router = forklaunchRouter(
+    '/sample-worker',
+    SchemaValidator(),
+    openTelemetryCollector
+  );
 
   const controller = SampleWorkerController(
     scopeFactory,

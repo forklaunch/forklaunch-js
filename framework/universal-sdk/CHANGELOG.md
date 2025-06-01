@@ -1,5 +1,34 @@
 # @forklaunch/universal-sdk
 
+## 0.3.6
+
+### Patch Changes
+
+- increase package dependency versions
+- Updated dependencies
+  - @forklaunch/common@0.3.5
+
+## 0.3.5
+
+### Patch Changes
+
+- simplify controller types
+
+## 0.3.4
+
+### Patch Changes
+
+- Better file based ergonomics in validator, simplification of types and all but validator is checked by tsgo
+- Updated dependencies
+  - @forklaunch/common@0.3.4
+
+## 0.3.3
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/common@0.3.3
+
 ## 0.3.2
 
 ### Patch Changes

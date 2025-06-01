@@ -10,6 +10,9 @@ import {
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { NextFunction, Request, Response } from 'express';
+import express from 'express-serve-static-core';
+import { ParsedQs } from 'qs';
+import { SetQsAndStaticTypes } from '../types/export.types';
 
 /**
  * Creates an UNLINK route handler with schema validation and type safety.
@@ -122,3 +125,6 @@ export const unlink = <
     NextFunction
   >(schemaValidator, path, contractDetails, ...handlers);
 };
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type Dummy = SetQsAndStaticTypes<ParsedQs, express.Express>;

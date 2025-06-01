@@ -625,6 +625,19 @@ export type ExpressLikeAuthMapper<
   >
 ) => Set<string> | Promise<Set<string>>;
 
+type RemapFileBody<T> =
+  T extends Record<string, unknown>
+    ? {
+        [K in keyof T]: T[K] extends (name: string, type: string) => infer R
+          ? R
+          : T[K] extends Record<string, unknown>
+            ? RemapFileBody<T[K]>
+            : T[K];
+      }
+    : T extends (name: string, type: string) => infer R
+      ? R
+      : T;
+
 /**
  * Represents a live type function for the SDK.
  *
@@ -655,7 +668,7 @@ export type LiveTypeFunction<
   (Body<SV> extends ReqBody
     ? unknown
     : {
-        body: MapSchema<SV, ReqBody>;
+        body: RemapFileBody<MapSchema<SV, ReqBody>>;
       }) &
   (QueryObject<SV> extends ReqQuery
     ? unknown
