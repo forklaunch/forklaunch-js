@@ -18,11 +18,11 @@ use crate::{
     },
     core::{
         ast::transformations::{
-            transform_app_ts::transform_app_ts,
             transform_entities_index_ts::transform_entities_index_ts,
             transform_registrations_ts::transform_registrations_ts_add_router,
             transform_seed_data_ts::transform_seed_data_ts,
             transform_seeders_index_ts::transform_seeders_index_ts,
+            transform_server_ts::transform_server_ts,
         },
         base_path::{BasePathLocation, BasePathType, prompt_base_path},
         command::command,
@@ -87,7 +87,7 @@ fn add_router_to_artifacts(
 
     rendered_templates.push(RenderedTemplate {
         path: base_path.join("server.ts"),
-        content: transform_app_ts(config_data.router_name.as_str(), &base_path)?,
+        content: transform_server_ts(config_data.router_name.as_str(), &base_path)?,
         context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_APP.to_string()),
     });
 
@@ -263,6 +263,7 @@ impl CliCommand for RouterCommand {
                 is_in_memory_database: is_in_memory_database(&database),
 
                 is_cache_enabled: infrastructure.contains(&Infrastructure::Redis),
+                is_s3_enabled: infrastructure.contains(&Infrastructure::S3),
 
                 ..manifest_data
             };

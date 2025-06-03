@@ -2,14 +2,16 @@ use anyhow::Result;
 use application::ApplicationCommand;
 use clap::{ArgMatches, Command};
 use library::LibraryCommand;
+use module::ModuleCommand;
 use router::RouterCommand;
 use service::ServiceCommand;
 use worker::WorkerCommand;
 
-use crate::{core::command::command, CliCommand};
+use crate::{CliCommand, core::command::command};
 
 pub(crate) mod application;
 pub(crate) mod library;
+pub(crate) mod module;
 pub(crate) mod router;
 pub(crate) mod service;
 pub(crate) mod worker;
@@ -19,8 +21,9 @@ pub(crate) mod worker;
 pub(crate) struct InitCommand {
     application: ApplicationCommand,
     library: LibraryCommand,
-    service: ServiceCommand,
+    module: ModuleCommand,
     router: RouterCommand,
+    service: ServiceCommand,
     worker: WorkerCommand,
 }
 
@@ -29,8 +32,9 @@ impl InitCommand {
         Self {
             application: ApplicationCommand::new(),
             library: LibraryCommand::new(),
-            service: ServiceCommand::new(),
+            module: ModuleCommand::new(),
             router: RouterCommand::new(),
+            service: ServiceCommand::new(),
             worker: WorkerCommand::new(),
         }
     }
@@ -43,8 +47,9 @@ impl CliCommand for InitCommand {
             .subcommand_required(true)
             .subcommand(self.application.command())
             .subcommand(self.library.command())
-            .subcommand(self.service.command())
+            .subcommand(self.module.command())
             .subcommand(self.router.command())
+            .subcommand(self.service.command())
             .subcommand(self.worker.command())
     }
 
@@ -52,6 +57,7 @@ impl CliCommand for InitCommand {
         match matches.subcommand() {
             Some(("application", sub_matches)) => self.application.handler(sub_matches),
             Some(("library", sub_matches)) => self.library.handler(sub_matches),
+            Some(("module", sub_matches)) => self.module.handler(sub_matches),
             Some(("service", sub_matches)) => self.service.handler(sub_matches),
             Some(("router", sub_matches)) => self.router.handler(sub_matches),
             Some(("worker", sub_matches)) => self.worker.handler(sub_matches),

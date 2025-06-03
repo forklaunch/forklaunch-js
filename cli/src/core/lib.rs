@@ -1,4 +1,4 @@
-pub mod manifest;
-pub mod mutable_enum;
-pub mod rendered_template;
-pub mod template;
+pub(crate) mod manifest;
+pub(crate) mod mutable_enum;
+pub(crate) mod rendered_template;
+pub(crate) mod template;

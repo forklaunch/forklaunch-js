@@ -67,13 +67,13 @@ pub(crate) struct RenderedTemplatesCache {
 }
 
 impl RenderedTemplatesCache {
-    pub fn new() -> Self {
+    pub(crate)fn new() -> Self {
         Self {
             internal_cache: HashMap::new(),
         }
     }
 
-    pub fn get<P: AsRef<Path>>(&self, key: P) -> Result<Option<RenderedTemplate>> {
+    pub(crate)fn get<P: AsRef<Path>>(&self, key: P) -> Result<Option<RenderedTemplate>> {
         if self
             .internal_cache
             .contains_key(&key.as_ref().to_string_lossy().to_string())
@@ -96,11 +96,11 @@ impl RenderedTemplatesCache {
         }
     }
 
-    pub fn insert<K: ToString>(&mut self, key: K, value: RenderedTemplate) {
+    pub(crate)fn insert<K: ToString>(&mut self, key: K, value: RenderedTemplate) {
         self.internal_cache.insert(key.to_string(), value);
     }
 
-    pub fn drain(&mut self) -> Drain<'_, std::string::String, RenderedTemplate> {
+    pub(crate)fn drain(&mut self) -> Drain<'_, std::string::String, RenderedTemplate> {
         self.internal_cache.drain()
     }
 }

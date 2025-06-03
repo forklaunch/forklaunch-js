@@ -56,3 +56,24 @@ pub(crate) fn add_project_definition_to_pnpm_workspace<
     Ok(to_string(&pnpm_workspace)
         .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?)
 }
+
+pub(crate) fn remove_project_definition_to_pnpm_workspace(
+    base_path: &Path,
+    project_name: &str,
+) -> Result<String> {
+    let pnpm_workspace_path = base_path.join("pnpm-workspace.yaml");
+    let mut pnpm_workspace: PnpmWorkspace = from_str(
+        &read_to_string(&pnpm_workspace_path)
+            .with_context(|| ERROR_FAILED_TO_READ_PNPM_WORKSPACE)?,
+    )
+    .with_context(|| ERROR_FAILED_TO_PARSE_PNPM_WORKSPACE)?;
+    if let Some(position) = pnpm_workspace
+        .packages
+        .iter()
+        .position(|name| name == project_name)
+    {
+        pnpm_workspace.packages.remove(position);
+    }
+    Ok(to_string(&pnpm_workspace)
+        .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?)
+}

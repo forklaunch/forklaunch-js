@@ -560,6 +560,7 @@ impl CliCommand for ServiceCommand {
             "description",
             matches,
             "service description (optional)",
+            None,
         )?;
 
         let mut config_data: ServiceManifestData = ServiceManifestData {

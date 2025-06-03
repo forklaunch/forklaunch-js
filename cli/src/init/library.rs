@@ -275,6 +275,7 @@ impl CliCommand for LibraryCommand {
             "description",
             matches,
             "library description (optional)",
+            None,
         )?;
 
         let mut config_data: LibraryManifestData = LibraryManifestData {
