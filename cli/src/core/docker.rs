@@ -495,6 +495,16 @@ pub(crate) fn remove_s3_from_docker_compose<'a>(
     Ok(docker_compose)
 }
 
+pub(crate) fn remove_service_from_docker_compose<'a>(
+    docker_compose: &'a mut DockerCompose,
+    service_name: &str,
+) -> Result<&'a mut DockerCompose> {
+    if docker_compose.services.contains_key(service_name) {
+        docker_compose.services.shift_remove(service_name);
+    }
+    Ok(docker_compose)
+}
+
 pub(crate) fn add_kafka_to_docker_compose<'a>(
     app_name: &str,
     project_name: &str,

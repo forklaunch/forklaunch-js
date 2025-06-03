@@ -3,48 +3,48 @@ use std::{collections::HashMap, fmt};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Default)]
-pub struct ApplicationScripts {
+pub(crate) struct ApplicationScripts {
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub build: Option<String>,
+    pub(crate) build: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub clean: Option<String>,
+    pub(crate) clean: Option<String>,
     #[serde(rename = "clean:purge", skip_serializing_if = "Option::is_none")]
-    pub clean_purge: Option<String>,
+    pub(crate) clean_purge: Option<String>,
     #[serde(rename = "database:setup", skip_serializing_if = "Option::is_none")]
-    pub database_setup: Option<String>,
+    pub(crate) database_setup: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub dev: Option<String>,
+    pub(crate) dev: Option<String>,
     #[serde(rename = "dev:build", skip_serializing_if = "Option::is_none")]
-    pub dev_build: Option<String>,
+    pub(crate) dev_build: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub docs: Option<String>,
+    pub(crate) docs: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub format: Option<String>,
+    pub(crate) format: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub lint: Option<String>,
+    pub(crate) lint: Option<String>,
     #[serde(rename = "lint:fix", skip_serializing_if = "Option::is_none")]
-    pub lint_fix: Option<String>,
+    pub(crate) lint_fix: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub postinstall: Option<String>,
+    pub(crate) postinstall: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub prepare: Option<String>,
+    pub(crate) prepare: Option<String>,
     #[serde(rename = "migrate:create", skip_serializing_if = "Option::is_none")]
-    pub migrate_create: Option<String>,
+    pub(crate) migrate_create: Option<String>,
     #[serde(rename = "migrate:down", skip_serializing_if = "Option::is_none")]
-    pub migrate_down: Option<String>,
+    pub(crate) migrate_down: Option<String>,
     #[serde(rename = "migrate:init", skip_serializing_if = "Option::is_none")]
-    pub migrate_init: Option<String>,
+    pub(crate) migrate_init: Option<String>,
     #[serde(rename = "migrate:up", skip_serializing_if = "Option::is_none")]
-    pub migrate_up: Option<String>,
+    pub(crate) migrate_up: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub seed: Option<String>,
+    pub(crate) seed: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub test: Option<String>,
+    pub(crate) test: Option<String>,
     #[serde(rename = "up:packages", skip_serializing_if = "Option::is_none")]
-    pub up_packages: Option<String>,
+    pub(crate) up_packages: Option<String>,
 
     #[serde(flatten)]
-    pub additional_scripts: HashMap<String, String>,
+    pub(crate) additional_scripts: HashMap<String, String>,
 }
 
 impl<'de> Deserialize<'de> for ApplicationScripts {
@@ -126,48 +126,48 @@ impl<'de> Deserialize<'de> for ApplicationScripts {
 }
 
 #[derive(Debug, Serialize, Default)]
-pub struct ApplicationDevDependencies {
+pub(crate) struct ApplicationDevDependencies {
     #[serde(rename = "@biomejs/biome", skip_serializing_if = "Option::is_none")]
-    pub biome: Option<String>,
+    pub(crate) biome: Option<String>,
     #[serde(rename = "@eslint/js", skip_serializing_if = "Option::is_none")]
-    pub eslint_js: Option<String>,
+    pub(crate) eslint_js: Option<String>,
     #[serde(rename = "@types/jest", skip_serializing_if = "Option::is_none")]
-    pub types_jest: Option<String>,
+    pub(crate) types_jest: Option<String>,
     #[serde(rename = "better-sqlite3", skip_serializing_if = "Option::is_none")]
-    pub better_sqlite3: Option<String>,
+    pub(crate) better_sqlite3: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub eslint: Option<String>,
+    pub(crate) eslint: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub globals: Option<String>,
+    pub(crate) globals: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub husky: Option<String>,
+    pub(crate) husky: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub jest: Option<String>,
+    pub(crate) jest: Option<String>,
     #[serde(rename = "lint-staged", skip_serializing_if = "Option::is_none")]
-    pub lint_staged: Option<String>,
+    pub(crate) lint_staged: Option<String>,
     #[serde(rename = "node-gyp", skip_serializing_if = "Option::is_none")]
-    pub node_gyp: Option<String>,
+    pub(crate) node_gyp: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub oxlint: Option<String>,
+    pub(crate) oxlint: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub prettier: Option<String>,
+    pub(crate) prettier: Option<String>,
     #[serde(rename = "sort-package-json", skip_serializing_if = "Option::is_none")]
-    pub sort_package_json: Option<String>,
+    pub(crate) sort_package_json: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub sqlite3: Option<String>,
+    pub(crate) sqlite3: Option<String>,
     #[serde(rename = "ts-jest", skip_serializing_if = "Option::is_none")]
-    pub ts_jest: Option<String>,
+    pub(crate) ts_jest: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub tsx: Option<String>,
+    pub(crate) tsx: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub typescript: Option<String>,
+    pub(crate) typescript: Option<String>,
     #[serde(rename = "typescript-eslint", skip_serializing_if = "Option::is_none")]
-    pub typescript_eslint: Option<String>,
+    pub(crate) typescript_eslint: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub vitest: Option<String>,
+    pub(crate) vitest: Option<String>,
 
     #[serde(flatten)]
-    pub additional_deps: HashMap<String, String>,
+    pub(crate) additional_deps: HashMap<String, String>,
 }
 
 impl<'de> Deserialize<'de> for ApplicationDevDependencies {
@@ -249,28 +249,28 @@ impl<'de> Deserialize<'de> for ApplicationDevDependencies {
 }
 
 #[derive(Debug, Serialize, Default)]
-pub struct ApplicationPackageJson {
+pub(crate) struct ApplicationPackageJson {
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
+    pub(crate) name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub version: Option<String>,
+    pub(crate) version: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
+    pub(crate) description: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub keywords: Option<Vec<String>>,
+    pub(crate) keywords: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub license: Option<String>,
+    pub(crate) license: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub author: Option<String>,
+    pub(crate) author: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub workspaces: Option<Vec<String>>,
+    pub(crate) workspaces: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub scripts: Option<ApplicationScripts>,
+    pub(crate) scripts: Option<ApplicationScripts>,
     #[serde(rename = "devDependencies", skip_serializing_if = "Option::is_none")]
-    pub dev_dependencies: Option<ApplicationDevDependencies>,
+    pub(crate) dev_dependencies: Option<ApplicationDevDependencies>,
 
     #[serde(flatten)]
-    pub additional_entries: HashMap<String, serde_json::Value>,
+    pub(crate) additional_entries: HashMap<String, serde_json::Value>,
 }
 
 impl<'de> Deserialize<'de> for ApplicationPackageJson {

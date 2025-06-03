@@ -136,31 +136,31 @@ pub(crate) fn delete_s3_url_environment_variable<'a>(
     allocator: &'a Allocator,
     registrations_program: &mut Program<'a>,
 ) {
-    delete_from_registrations_ts_config_injector(
+    let _ = delete_from_registrations_ts_config_injector(
         &allocator,
         registrations_program,
         "S3_REGION",
         "environmentConfig",
     );
-    delete_from_registrations_ts_config_injector(
+    let _ = delete_from_registrations_ts_config_injector(
         &allocator,
         registrations_program,
         "S3_ACCESS_KEY_ID",
         "environmentConfig",
     );
-    delete_from_registrations_ts_config_injector(
+    let _ = delete_from_registrations_ts_config_injector(
         &allocator,
         registrations_program,
         "S3_SECRET_ACCESS_KEY",
         "environmentConfig",
     );
-    delete_from_registrations_ts_config_injector(
+    let _ = delete_from_registrations_ts_config_injector(
         &allocator,
         registrations_program,
         "S3_BUCKET",
         "environmentConfig",
     );
-    delete_from_registrations_ts_config_injector(
+    let _ = delete_from_registrations_ts_config_injector(
         &allocator,
         registrations_program,
         "S3_URL",
@@ -172,7 +172,7 @@ pub(crate) fn delete_s3_object_store_runtime_dependency<'a>(
     allocator: &'a Allocator,
     registrations_program: &mut Program<'a>,
 ) {
-    delete_from_registrations_ts_config_injector(
+    let _ = delete_from_registrations_ts_config_injector(
         &allocator,
         registrations_program,
         "S3ObjectStore",

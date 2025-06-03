@@ -45,6 +45,7 @@ pub(crate) fn prompt_without_validation(
     matches_key: &str,
     matches: &ArgMatches,
     prompt: &str,
+    valid_options: Option<&[&str]>,
 ) -> Result<String> {
     prompt_with_validation(
         line_editor,
@@ -52,7 +53,7 @@ pub(crate) fn prompt_without_validation(
         matches_key,
         matches,
         prompt,
-        None,
+        valid_options,
         |_| true,
         |_| "".to_string(),
     )

@@ -21,7 +21,7 @@ use crate::{
         ERROR_FAILED_TO_CREATE_GITIGNORE, ERROR_FAILED_TO_CREATE_LICENSE,
         ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE, ERROR_FAILED_TO_SETUP_IAM, Formatter,
         HttpFramework, License, Linter, Runtime, Service, TestFramework, Validator,
-        get_core_module_description, get_monitoring_module_description,
+        get_core_module_description, get_monitoring_module_description, get_service_module_cache,
         get_service_module_description,
     },
     core::{
@@ -495,6 +495,7 @@ impl CliCommand for ApplicationCommand {
             "description",
             matches,
             "project description (optional)",
+            None,
         )?;
 
         let author = prompt_with_validation(
@@ -560,7 +561,7 @@ impl CliCommand for ApplicationCommand {
             description: get_service_module_description(&name, &package.to_string()),
             resources: Some(ResourceInventory {
                 database: Some(database.to_string()),
-                cache: None,
+                cache: get_service_module_cache(&package.to_string()),
                 queue: None,
                 object_store: None,
             }),

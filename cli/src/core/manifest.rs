@@ -13,6 +13,7 @@ use crate::{
     constants::{
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
         ERROR_FAILED_TO_ADD_ROUTER_METADATA_TO_MANIFEST, ERROR_FAILED_TO_CREATE_MANIFEST,
+        ERROR_FAILED_TO_REMOVE_PROJECT_METADATA_FROM_MANIFEST,
     },
     core::manifest::{application::ApplicationManifestData, router::RouterManifestData},
 };
@@ -380,4 +381,50 @@ pub(crate) fn add_router_definition_to_manifest(
         to_string_pretty(&config_data)
             .with_context(|| ERROR_FAILED_TO_ADD_ROUTER_METADATA_TO_MANIFEST)?,
     ))
+}
+
+pub(crate) fn remove_project_definition_from_manifest(
+    config_data: &mut ApplicationManifestData,
+    project_name: &String,
+) -> Result<String> {
+    let project = config_data
+        .projects_mut()
+        .iter_mut()
+        .position(|project| &project.name == project_name)
+        .unwrap();
+
+    config_data.projects_mut().remove(project);
+
+    config_data
+        .project_peer_topology
+        .iter_mut()
+        .for_each(|(_, values)| {
+            if values.contains(&project_name) {
+                values.remove(values.iter().position(|x| x == project_name).unwrap());
+            }
+        });
+
+    Ok(to_string_pretty(&config_data)
+        .with_context(|| ERROR_FAILED_TO_REMOVE_PROJECT_METADATA_FROM_MANIFEST)?)
+}
+
+pub(crate) fn remove_router_definition_from_manifest(
+    config_data: &mut ApplicationManifestData,
+    project_name: &String,
+    router_name: &String,
+) -> Result<String> {
+    config_data.projects.iter_mut().for_each(|project| {
+        if &project.name == project_name {
+            let routers = project.routers.clone().unwrap();
+            project.routers.as_mut().unwrap().remove(
+                routers
+                    .iter()
+                    .position(|router| router == router_name)
+                    .unwrap(),
+            );
+        }
+    });
+
+    Ok(to_string_pretty(&config_data)
+        .with_context(|| ERROR_FAILED_TO_REMOVE_PROJECT_METADATA_FROM_MANIFEST)?)
 }

@@ -238,7 +238,7 @@ pub(crate) fn delete_from_registrations_ts_config_injector<'a>(
     registrations_program: &mut Program<'a>,
     key_name: &str,
     declaration_name: &str,
-) {
+) -> Result<String> {
     for statement in &mut registrations_program.body {
         let export = match statement {
             Statement::ExportNamedDeclaration(export) => export,
@@ -302,4 +302,9 @@ pub(crate) fn delete_from_registrations_ts_config_injector<'a>(
             }
         }
     }
+
+    Ok(CodeGenerator::new()
+        .with_options(CodegenOptions::default())
+        .build(&registrations_program)
+        .code)
 }

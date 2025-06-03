@@ -98,7 +98,7 @@ pub(crate) fn delete_redis_url_environment_variable<'a>(
     allocator: &'a Allocator,
     registrations_program: &mut Program<'a>,
 ) {
-    delete_from_registrations_ts_config_injector(
+    let _ = delete_from_registrations_ts_config_injector(
         &allocator,
         registrations_program,
         "REDIS_URL",
@@ -110,7 +110,7 @@ pub(crate) fn delete_redis_ttl_cache_runtime_dependency<'a>(
     allocator: &'a Allocator,
     registrations_program: &mut Program<'a>,
 ) {
-    delete_from_registrations_ts_config_injector(
+    let _ = delete_from_registrations_ts_config_injector(
         &allocator,
         registrations_program,
         "TtlCache",

@@ -1,12 +1,13 @@
 use anyhow::Result;
 use oxc_allocator::{Allocator, CloneIn, Vec};
 use oxc_ast::ast::{Program, Statement};
+use oxc_codegen::{CodeGenerator, CodegenOptions};
 
 pub(crate) fn delete_import_statement<'a>(
     allocator: &'a Allocator,
     app_program_ast: &mut Program<'a>,
     import_source_identifier: &str,
-) -> Result<()> {
+) -> Result<String> {
     let mut new_body = Vec::new_in(allocator);
     app_program_ast.body.iter().for_each(|stmt| {
         let import = match stmt {
@@ -24,5 +25,8 @@ pub(crate) fn delete_import_statement<'a>(
 
     app_program_ast.body = new_body;
 
-    Ok(())
+    Ok(CodeGenerator::new()
+        .with_options(CodegenOptions::default())
+        .build(app_program_ast)
+        .code)
 }

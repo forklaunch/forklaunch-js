@@ -644,6 +644,7 @@ impl CliCommand for WorkerCommand {
             "description",
             matches,
             "worker description (optional)",
+            None,
         )?;
 
         let mut config_data = WorkerManifestData {

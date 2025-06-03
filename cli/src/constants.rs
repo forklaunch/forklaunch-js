@@ -196,6 +196,17 @@ choice! {
             exclusive_files: None,
         },
     }
+
+    pub(crate) enum Module {
+        Auth = Choice {
+            id: "iam",
+            exclusive_files: None,
+        },
+        Billing = Choice {
+            id: "billing",
+            exclusive_files: None,
+        }
+    }
 }
 
 // ERRORS
@@ -225,9 +236,13 @@ pub(crate) const ERROR_FAILED_TO_READ_MANIFEST: &str =
     "Failed to read manifest file. Please check your target directory is a forklaunch application.";
 pub(crate) const ERROR_FAILED_TO_PARSE_MANIFEST: &str =
     "Failed to parse manifest file. Please verify the file is valid toml.";
+pub(crate) const ERROR_FAILED_TO_WRITE_MANIFEST: &str =
+    "Failed to write manifest file. Please check your target directory is writable.";
 pub(crate) const ERROR_FAILED_TO_READ_DOCKER_COMPOSE: &str = "Failed to read docker_compose.yaml. Please check your target directory is a forklaunch application.";
 pub(crate) const ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE: &str =
     "Failed to parse docker_compose.yaml. Please verify the file is valid yaml.";
+pub(crate) const ERROR_FAILED_TO_WRITE_DOCKER_COMPOSE: &str =
+    "Failed to write docker_compose.yaml. Please check your target directory is writable.";
 pub(crate) const ERROR_FAILED_TO_CREATE_PACKAGE_JSON: &str =
     "Failed to create package.json. Please check your target directory is writable.";
 pub(crate) const ERROR_FAILED_TO_READ_PACKAGE_JSON: &str =
@@ -269,6 +284,8 @@ pub(crate) const ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER: &str =
     "Failed to add router metadata to bootstrapper.";
 pub(crate) const ERROR_FAILED_TO_ADD_ROUTER_METADATA_TO_MANIFEST: &str =
     "Failed to add router metadata to manifest.";
+pub(crate) const ERROR_FAILED_TO_REMOVE_PROJECT_METADATA_FROM_MANIFEST: &str =
+    "Failed to remove project metadata from manifest.";
 pub(crate) const ERROR_FAILED_TO_CREATE_DATABASE_EXPORT_INDEX_TS: &str =
     "Failed to create database export index.ts in core/persistence.";
 pub(crate) const ERROR_FAILED_TO_CREATE_LIBRARY_PACKAGE_JSON: &str =
@@ -306,4 +323,10 @@ pub(crate) fn get_service_module_description(name: &str, service_type: &str) -> 
             _ => "unknown services",
         }
     )
+}
+pub(crate) fn get_service_module_cache(service_type: &str) -> Option<String> {
+    match service_type {
+        "billing" => Some(Infrastructure::Redis.to_string()),
+        _ => None,
+    }
 }

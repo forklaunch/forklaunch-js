@@ -213,3 +213,23 @@ pub(crate) fn replace_project_in_workspace_definition(
 
     Ok(())
 }
+
+pub(crate) fn remove_project_definition_to_package_json(
+    base_path: &Path,
+    project_name: &str,
+) -> Result<String> {
+    let mut full_package_json: ApplicationPackageJson = from_str(
+        &read_to_string(base_path.join("package.json"))
+            .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?,
+    )
+    .with_context(|| ERROR_FAILED_TO_PARSE_PACKAGE_JSON)?;
+
+    if let Some(workspaces) = full_package_json.workspaces.as_mut() {
+        if let Some(position) = workspaces.iter().position(|name| name == project_name) {
+            workspaces.remove(position);
+        }
+    }
+
+    Ok(to_string_pretty(&full_package_json)
+        .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON)?)
+}

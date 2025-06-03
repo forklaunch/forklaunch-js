@@ -1,7 +1,7 @@
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use oxc_ast::ast::{Expression, Program, Statement};
 
-pub(crate) fn inject_into_app_ts<'a, F>(
+pub(crate) fn inject_into_server_ts<'a, F>(
     app_program_ast: &mut Program<'a>,
     injection_program_ast: &mut Program<'a>,
     app_ts_injection_pos: F,
@@ -39,5 +39,5 @@ where
         }
     }
 
-    bail!("Failed to inject into app.ts")
+    bail!("Failed to inject into server.ts")
 }
