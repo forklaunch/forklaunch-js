@@ -1,4 +1,4 @@
-import { getEnvVar } from '@forklaunch/core/services';
+import { getEnvVar } from '@forklaunch/common';
 import { MikroORM } from '@mikro-orm/core';
 import dotenv from 'dotenv';
 import mikroOrmOptionsConfig from './mikro-orm.config';

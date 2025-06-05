@@ -1,5 +1,13 @@
 # @forklaunch/implementation-billing-base
 
+## 0.1.9
+
+### Patch Changes
+
+- Get env var movement
+- Updated dependencies
+  - @forklaunch/interfaces-worker@0.1.8
+
 ## 0.1.8
 
 ### Patch Changes
