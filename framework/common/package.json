@@ -41,14 +41,14 @@
   "devDependencies": {
     "@eslint/js": "^9.28.0",
     "@types/node": "^22.15.29",
-    "@typescript/native-preview": "7.0.0-dev.20250601.1",
+    "@typescript/native-preview": "7.0.0-dev.20250605.1",
     "depcheck": "^1.4.7",
     "eslint": "^9.28.0",
     "globals": "^16.2.0",
     "tsup": "^8.5.0",
     "typedoc": "^0.28.5",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.33.0",
-    "vitest": "^3.1.4"
+    "typescript-eslint": "^8.33.1",
+    "vitest": "^3.2.2"
   }
 }
