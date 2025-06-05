@@ -20,6 +20,7 @@ import {
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { apiReference } from '@scalar/express-api-reference';
 import { BusboyConfig } from 'busboy';
+import { CorsOptions } from 'cors';
 import crypto from 'crypto';
 import * as uWebsockets from 'uWebSockets.js';
 import { contentParse } from './middleware/contentParse.middleware';
@@ -58,6 +59,7 @@ export class Application<
   Response<Record<string, unknown>>,
   MiddlewareNext
 > {
+  private docsConfiguration: DocsConfiguration | undefined;
   /**
    * Creates an instance of the Application class.
    *
@@ -77,10 +79,11 @@ export class Application<
   constructor(
     schemaValidator: SV,
     openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-    private readonly configurationOptions?: {
+    configurationOptions?: {
       docs?: DocsConfiguration;
       busboy?: BusboyConfig;
       server?: ServerConstructorOptions;
+      cors?: CorsOptions;
     }
   ) {
     super(
@@ -90,8 +93,11 @@ export class Application<
         contentParse<SV>(configurationOptions),
         enrichResponseTransmission as unknown as MiddlewareHandler
       ],
-      openTelemetryCollector
+      openTelemetryCollector,
+      configurationOptions
     );
+
+    this.docsConfiguration = configurationOptions?.docs;
   }
 
   /**
@@ -167,8 +173,8 @@ export class Application<
       );
 
       if (
-        this.configurationOptions?.docs == null ||
-        this.configurationOptions?.docs.type === 'scalar'
+        this.docsConfiguration == null ||
+        this.docsConfiguration.type === 'scalar'
       ) {
         this.internal.use(
           `/api/${process.env.VERSION ?? 'v1'}${
@@ -176,10 +182,10 @@ export class Application<
           }`,
           apiReference({
             content: openApi,
-            ...this.configurationOptions?.docs
+            ...this.docsConfiguration
           }) as unknown as MiddlewareHandler
         );
-      } else if (this.configurationOptions?.docs.type === 'swagger') {
+      } else if (this.docsConfiguration?.type === 'swagger') {
         const swaggerPath = `/api/${process.env.VERSION ?? 'v1'}${
           process.env.DOCS_PATH ?? '/docs'
         }`;

@@ -1,5 +1,5 @@
 import { AnySchemaValidator } from '@forklaunch/validator';
-import corsMiddleware from 'cors';
+import corsMiddleware, { CorsOptions } from 'cors';
 import { ParsedQs } from 'qs';
 import {
   ForklaunchNextFunction,
@@ -25,18 +25,25 @@ export function cors<
   ReqHeaders extends Record<string, string>,
   ResHeaders extends Record<string, string>,
   LocalsObj extends Record<string, unknown>
->(
-  req: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>,
-  res: ForklaunchResponse<
-    unknown,
-    ResBodyMap,
-    ForklaunchResHeaders & ResHeaders,
-    LocalsObj
-  >,
-  next?: ForklaunchNextFunction
-) {
-  if (req.method === 'OPTIONS') {
-    res.cors = true;
-  }
-  corsMiddleware()(req, res, next ?? (() => {}));
+>(corsOptions: CorsOptions) {
+  return (
+    req: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>,
+    res: ForklaunchResponse<
+      unknown,
+      ResBodyMap,
+      ForklaunchResHeaders & ResHeaders,
+      LocalsObj
+    >,
+    next?: ForklaunchNextFunction
+  ) => {
+    if (req.method === 'OPTIONS') {
+      res.cors = true;
+    }
+    if (!res.getHeader) {
+      res.getHeader = (key: string) => {
+        return res.getHeaders()[key];
+      };
+    }
+    corsMiddleware(corsOptions)(req, res, next ?? (() => {}));
+  };
 }

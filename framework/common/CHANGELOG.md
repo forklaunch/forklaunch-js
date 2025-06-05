@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.3.6
+
+### Patch Changes
+
+- Move getEnvVar into common package and allow for cors options during application instantiation
+
 ## 0.3.5
 
 ### Patch Changes

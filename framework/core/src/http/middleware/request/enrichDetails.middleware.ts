@@ -1,5 +1,5 @@
+import { getEnvVar } from '@forklaunch/common';
 import { AnySchemaValidator } from '@forklaunch/validator';
-import { getEnvVar } from '../../../services/getEnvVar';
 import {
   ATTR_API_NAME,
   ATTR_HTTP_REQUEST_METHOD,

@@ -95,6 +95,7 @@ export interface MiddlewareResponse<
       | 'statusCode'
       | 'sendStatus'
       | 'getHeaders'
+      | 'getHeader'
       | 'setHeader'
       | 'send'
       | 'json'

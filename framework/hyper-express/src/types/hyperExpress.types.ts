@@ -61,6 +61,7 @@ export interface InternalResponse<
     >,
     Omit<
       ExpressResponse<LocalsObj>,
+      | 'getHeader'
       | 'getHeaders'
       | 'setHeader'
       | 'headersSent'

@@ -1,5 +1,14 @@
 # @forklaunch/core
 
+## 0.8.8
+
+### Patch Changes
+
+- Move getEnvVar into common package and allow for cors options during application instantiation
+- Updated dependencies
+  - @forklaunch/common@0.3.6
+  - @forklaunch/validator@0.6.6
+
 ## 0.8.7
 
 ### Patch Changes

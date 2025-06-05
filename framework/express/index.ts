@@ -6,6 +6,7 @@ import {
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { OptionsJson, OptionsText, OptionsUrlencoded } from 'body-parser';
 import { BusboyConfig } from 'busboy';
+import { CorsOptions } from 'cors';
 import { Application } from './src/expressApplication';
 import { Router } from './src/expressRouter';
 import { checkout } from './src/handlers/checkout';
@@ -47,20 +48,16 @@ import { unsubscribe } from './src/handlers/unsubscribe';
 export function forklaunchExpress<SV extends AnySchemaValidator>(
   schemaValidator: SV,
   openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-  docsConfiguration?: DocsConfiguration,
   options?: {
+    docs?: DocsConfiguration;
     busboy?: BusboyConfig;
     text?: OptionsText;
     json?: OptionsJson;
     urlencoded?: OptionsUrlencoded;
+    cors?: CorsOptions;
   }
 ) {
-  return new Application(
-    schemaValidator,
-    openTelemetryCollector,
-    docsConfiguration,
-    options
-  );
+  return new Application(schemaValidator, openTelemetryCollector, options);
 }
 
 /**

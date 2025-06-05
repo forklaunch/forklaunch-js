@@ -6,6 +6,7 @@ import {
 import { ServerConstructorOptions } from '@forklaunch/hyper-express-fork';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { BusboyConfig } from 'busboy';
+import { CorsOptions } from 'cors';
 import { any } from './src/handlers/any';
 import { delete_ } from './src/handlers/delete';
 import { get } from './src/handlers/get';
@@ -35,6 +36,7 @@ export function forklaunchExpress<SV extends AnySchemaValidator>(
     docs?: DocsConfiguration;
     busboy?: BusboyConfig;
     server?: ServerConstructorOptions;
+    cors?: CorsOptions;
   }
 ) {
   return new Application(schemaValidator, openTelemetryCollector, options);

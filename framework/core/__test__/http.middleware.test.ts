@@ -83,6 +83,7 @@ describe('http middleware tests', () => {
       statusCode: 200,
       metricRecorded: false,
       getHeaders: () => ({ 'x-correlation-id': '123' }),
+      getHeader: () => '123',
       setHeader: () => {},
       status: () => ({
         json: () => true,
@@ -95,7 +96,7 @@ describe('http middleware tests', () => {
       on: () => res,
       headersSent: false,
       locals: {},
-      cors: true,
+      cors: false,
       responseSchemas: {
         headers: {
           'x-correlation-id': '123'
@@ -109,8 +110,10 @@ describe('http middleware tests', () => {
   });
 
   test('cors middleware', async () => {
-    cors(req, res, nextFunction);
+    req.method = 'OPTIONS';
+    cors({ origin: true })(req, res, nextFunction);
     expect(res.cors).toBe(true);
+    req.method = 'POST';
   });
 
   test('create request context', async () => {

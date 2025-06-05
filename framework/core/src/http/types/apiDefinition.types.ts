@@ -237,6 +237,13 @@ export interface ForklaunchResponse<
     ForklaunchResHeaders;
 
   /**
+   * Gets a header for the response.
+   * @param {string} key - The header key.
+   * @returns {string | string[] | undefined} The header value.
+   */
+  getHeader: (key: string) => string | string[] | undefined;
+
+  /**
    * Sets a header for the response.
    * @param {string} key - The header key.
    * @param {string} value - The header value.

@@ -1,4 +1,5 @@
 import { AnySchemaValidator } from '@forklaunch/validator';
+import { CorsOptions } from 'cors';
 import { ExpressLikeRouter } from '../interfaces/expressLikeRouter.interface';
 import { cors } from '../middleware/request/cors.middleware';
 import { createContext } from '../middleware/request/createContext.middleware';
@@ -37,7 +38,10 @@ export abstract class ForklaunchExpressLikeApplication<
     readonly schemaValidator: SV,
     readonly internal: Server,
     readonly postEnrichMiddleware: RouterHandler[],
-    readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
+    readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
+    readonly appOptions?: {
+      cors?: CorsOptions;
+    }
   ) {
     super(
       '/',
@@ -48,7 +52,7 @@ export abstract class ForklaunchExpressLikeApplication<
     );
 
     this.internal.use(createContext(this.schemaValidator) as RouterHandler);
-    this.internal.use(cors as RouterHandler);
+    this.internal.use(cors(this.appOptions?.cors ?? {}) as RouterHandler);
   }
 
   abstract listen(...args: unknown[]): void;

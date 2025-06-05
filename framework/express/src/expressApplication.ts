@@ -14,6 +14,7 @@ import { AnySchemaValidator } from '@forklaunch/validator';
 import { apiReference } from '@scalar/express-api-reference';
 import { OptionsJson, OptionsText, OptionsUrlencoded } from 'body-parser';
 import { BusboyConfig } from 'busboy';
+import { CorsOptions } from 'cors';
 import crypto from 'crypto';
 import express, {
   ErrorRequestHandler,
@@ -49,6 +50,7 @@ export class Application<
   Response,
   NextFunction
 > {
+  private docsConfiguration: DocsConfiguration | undefined;
   /**
    * Creates an instance of Application.
    *
@@ -59,12 +61,13 @@ export class Application<
   constructor(
     schemaValidator: SV,
     openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-    private readonly docsConfiguration?: DocsConfiguration,
     options?: {
+      docs?: DocsConfiguration;
       busboy?: BusboyConfig;
       text?: OptionsText;
       json?: OptionsJson;
       urlencoded?: OptionsUrlencoded;
+      cors?: CorsOptions;
     }
   ) {
     super(
@@ -74,8 +77,11 @@ export class Application<
         contentParse<SV>(options),
         enrichResponseTransmission as unknown as RequestHandler
       ],
-      openTelemetryCollector
+      openTelemetryCollector,
+      options
     );
+
+    this.docsConfiguration = options?.docs;
   }
 
   /**

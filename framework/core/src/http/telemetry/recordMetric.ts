@@ -1,3 +1,4 @@
+import { getEnvVar } from '@forklaunch/common';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import {
   ATTR_HTTP_REQUEST_METHOD,
@@ -7,7 +8,6 @@ import {
 } from '@opentelemetry/semantic-conventions';
 import { ParsedQs } from 'qs';
 import { ForklaunchRequest, ForklaunchResponse, ParamsDictionary } from '..';
-import { getEnvVar } from '../../services';
 import { ATTR_API_NAME, ATTR_CORRELATION_ID } from './constants';
 import { httpRequestsTotalCounter } from './openTelemetryCollector';
 
