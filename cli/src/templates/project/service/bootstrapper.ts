@@ -1,4 +1,4 @@
-import { getEnvVar } from '@forklaunch/core/services';{{#is_database_enabled}}
+import { getEnvVar } from '@forklaunch/common';{{#is_database_enabled}}
 import { MikroORM } from '@mikro-orm/core';{{/is_database_enabled}}
 import dotenv from 'dotenv';{{#is_database_enabled}}
 import mikroOrmOptionsConfig from './mikro-orm.config';{{/is_database_enabled}}
