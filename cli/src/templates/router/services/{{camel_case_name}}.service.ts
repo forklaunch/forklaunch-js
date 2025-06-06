@@ -26,7 +26,7 @@ export class Base{{pascal_case_name}}Service implements {{pascal_case_name}}Serv
   {{camel_case_name}}Post = async (
     dto: {{pascal_case_name}}RequestDto
   ): Promise<{{pascal_case_name}}ResponseDto> => {
-    const entity = {{pascal_case_name}}RequestDtoMapper.deserializeDtoToEntity(
+    const entity = await {{pascal_case_name}}RequestDtoMapper.deserializeDtoToEntity(
       SchemaValidator(),
       dto
     );
