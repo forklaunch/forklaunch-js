@@ -19,7 +19,7 @@ export class SampleWorkerRequestDtoMapper extends RequestDtoMapper<
   schema = SampleWorkerSchema;
 
   // toEntity method maps the request schema to the entity
-  toEntity(): SampleWorkerEventRecord {
+  async toEntity(): Promise<SampleWorkerEventRecord> {
     return SampleWorkerEventRecord.create({
       ...this.dto,
       processed: false,
@@ -43,8 +43,8 @@ export class SampleWorkerResponseDtoMapper extends ResponseDtoMapper<
   };
 
   // fromEntity method maps the entity to the response schema
-  fromEntity(entity: SampleWorkerEventRecord): this {
-    this.dto = entity.read();
+  async fromEntity(entity: SampleWorkerEventRecord): Promise<this> {
+    this.dto = await entity.read();
     return this;
   }
 }

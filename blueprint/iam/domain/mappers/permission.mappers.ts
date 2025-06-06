@@ -1,7 +1,7 @@
 import { SchemaValidator } from '@forklaunch/blueprint-core';
 import { RequestDtoMapper, ResponseDtoMapper } from '@forklaunch/core/mappers';
-import { PermissionSchemas } from '../../registrations';
 import { Permission } from '../../persistence/entities/permission.entity';
+import { PermissionSchemas } from '../../registrations';
 
 export class CreatePermissionDtoMapper extends RequestDtoMapper<
   Permission,
@@ -9,7 +9,7 @@ export class CreatePermissionDtoMapper extends RequestDtoMapper<
 > {
   schema = PermissionSchemas.CreatePermissionSchema;
 
-  toEntity(): Permission {
+  async toEntity(): Promise<Permission> {
     return Permission.create(this.dto);
   }
 }
@@ -20,7 +20,7 @@ export class UpdatePermissionDtoMapper extends RequestDtoMapper<
 > {
   schema = PermissionSchemas.UpdatePermissionSchema;
 
-  toEntity(): Permission {
+  async toEntity(): Promise<Permission> {
     return Permission.update(this.dto);
   }
 }
@@ -31,8 +31,8 @@ export class PermissionDtoMapper extends ResponseDtoMapper<
 > {
   schema = PermissionSchemas.PermissionSchema;
 
-  fromEntity(entity: Permission): this {
-    this.dto = entity.read();
+  async fromEntity(entity: Permission): Promise<this> {
+    this.dto = await entity.read();
     return this;
   }
 }

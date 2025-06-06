@@ -1,15 +1,15 @@
 import { IdDto, IdsDto, InstanceTypeRecord } from '@forklaunch/common';
 import { createCacheKey, TtlCache } from '@forklaunch/core/cache';
 import {
+  MetricsDefinition,
+  OpenTelemetryCollector
+} from '@forklaunch/core/http';
+import {
   InternalDtoMapper,
   RequestDtoMapperConstructor,
   ResponseDtoMapperConstructor,
   transformIntoInternalDtoMapper
 } from '@forklaunch/core/mappers';
-import {
-  MetricsDefinition,
-  OpenTelemetryCollector
-} from '@forklaunch/core/http';
 import { PaymentLinkService } from '@forklaunch/interfaces-billing/interfaces';
 import {
   CreatePaymentLinkDto,
@@ -42,8 +42,8 @@ export class BasePaymentLinkService<
   }
 > implements PaymentLinkService<CurrencyEnum>
 {
-  #mapperss: InternalDtoMapper<
-    InstanceTypeRecord<typeof this.mapperss>,
+  #mappers: InternalDtoMapper<
+    InstanceTypeRecord<typeof this.mappers>,
     Entities,
     Dto
   >;
@@ -52,7 +52,7 @@ export class BasePaymentLinkService<
     protected readonly cache: TtlCache,
     protected readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>,
     protected readonly schemaValidator: SchemaValidator,
-    protected readonly mapperss: {
+    protected readonly mappers: {
       PaymentLinkDtoMapper: ResponseDtoMapperConstructor<
         SchemaValidator,
         Dto['PaymentLinkDtoMapper'],
@@ -70,7 +70,7 @@ export class BasePaymentLinkService<
       >;
     }
   ) {
-    this.#mapperss = transformIntoInternalDtoMapper(mapperss, schemaValidator);
+    this.#mappers = transformIntoInternalDtoMapper(mappers, schemaValidator);
   }
 
   protected cacheKeyPrefix = 'payment_link';
@@ -81,7 +81,7 @@ export class BasePaymentLinkService<
   ): Promise<Dto['PaymentLinkDtoMapper']> {
     // TODO: Perform permission checks here
     const paymentLink =
-      this.#mapperss.CreatePaymentLinkDtoMapper.deserializeDtoToEntity(
+      await this.#mappers.CreatePaymentLinkDtoMapper.deserializeDtoToEntity(
         paymentLinkDto
       );
     await this.cache.putRecord({
@@ -90,9 +90,7 @@ export class BasePaymentLinkService<
       ttlMilliseconds: this.cache.getTtlMilliseconds()
     });
 
-    return this.#mapperss.PaymentLinkDtoMapper.serializeEntityToDto(
-      paymentLink
-    );
+    return this.#mappers.PaymentLinkDtoMapper.serializeEntityToDto(paymentLink);
   }
 
   async updatePaymentLink(
@@ -105,7 +103,7 @@ export class BasePaymentLinkService<
       throw new Error('Payment link not found');
     }
     const paymentLink =
-      this.#mapperss.UpdatePaymentLinkDtoMapper.deserializeDtoToEntity(
+      await this.#mappers.UpdatePaymentLinkDtoMapper.deserializeDtoToEntity(
         paymentLinkDto
       );
     const updatedLink = { ...existingLink, ...paymentLink };
@@ -115,9 +113,7 @@ export class BasePaymentLinkService<
       ttlMilliseconds: this.cache.getTtlMilliseconds()
     });
 
-    return this.#mapperss.PaymentLinkDtoMapper.serializeEntityToDto(
-      updatedLink
-    );
+    return this.#mappers.PaymentLinkDtoMapper.serializeEntityToDto(updatedLink);
   }
 
   async getPaymentLink({ id }: IdDto): Promise<Dto['PaymentLinkDtoMapper']> {
@@ -128,7 +124,7 @@ export class BasePaymentLinkService<
       throw new Error('Payment link not found');
     }
 
-    return this.#mapperss.PaymentLinkDtoMapper.serializeEntityToDto(
+    return this.#mappers.PaymentLinkDtoMapper.serializeEntityToDto(
       paymentLink.value
     );
   }
@@ -155,12 +151,12 @@ export class BasePaymentLinkService<
       idsDto?.ids.map((id) => this.createCacheKey(id)) ??
       (await this.cache.listKeys(this.cacheKeyPrefix));
 
-    return await Promise.all(
+    return Promise.all(
       keys.map(async (key) => {
         const paymentLink =
           await this.cache.readRecord<Entities['PaymentLinkDtoMapper']>(key);
         const paymentLinkDto =
-          this.#mapperss.PaymentLinkDtoMapper.serializeEntityToDto(
+          this.#mappers.PaymentLinkDtoMapper.serializeEntityToDto(
             paymentLink.value
           );
         return paymentLinkDto;

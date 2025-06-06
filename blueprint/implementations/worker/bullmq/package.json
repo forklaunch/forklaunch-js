@@ -47,11 +47,11 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/core": "^0.8.8",
+    "@forklaunch/core": "^0.9.2",
     "@forklaunch/interfaces-worker": "workspace:*",
     "@sinclair/typebox": "^0.34.33",
     "bullmq": "^5.53.2",
-    "zod": "^3.25.51"
+    "zod": "^3.25.53"
   },
   "devDependencies": {
     "depcheck": "^1.4.7",

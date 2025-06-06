@@ -27,7 +27,7 @@ export class UpdateOrganizationDtoMapper extends RequestDtoMapper<
 > {
   schema = OrganizationSchemas.UpdateOrganizationSchema;
 
-  toEntity(): Organization {
+  async toEntity(): Promise<Organization> {
     return Organization.update(this.dto);
   }
 }
@@ -37,15 +37,19 @@ export class OrganizationDtoMapper extends ResponseDtoMapper<
 > {
   schema = OrganizationSchemas.OrganizationSchema(OrganizationStatus);
 
-  fromEntity(entity: Organization): this {
+  async fromEntity(entity: Organization): Promise<this> {
     this.dto = {
-      ...entity.read(),
+      ...(await entity.read()),
       users: entity.users.isInitialized()
-        ? entity.users
-            .getItems()
-            .map((user) =>
-              UserDtoMapper.fromEntity(SchemaValidator(), user).toDto()
-            )
+        ? await Promise.all(
+            entity.users
+              .getItems()
+              .map(async (user) =>
+                (
+                  await UserDtoMapper.fromEntity(SchemaValidator(), user)
+                ).toDto()
+              )
+          )
         : []
     };
 

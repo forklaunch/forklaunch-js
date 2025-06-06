@@ -14,13 +14,15 @@ export class CreateUserDtoMapper extends RequestDtoMapper<
 > {
   schema = UserSchemas.CreateUserSchema;
 
-  toEntity(passwordEncryptionPublicKeyPath: string): User {
+  async toEntity(passwordEncryptionPublicKeyPath: string): Promise<User> {
     return User.create({
       ...this.dto,
-      organization: Organization.map({
+      organization: await Organization.map({
         id: this.dto.organizationId
       }),
-      roles: collection(this.dto.roleIds.map((id) => Role.map({ id }))),
+      roles: collection(
+        await Promise.all(this.dto.roleIds.map((id) => Role.map({ id })))
+      ),
       passwordHash: passwordEncrypt(
         this.dto.password,
         passwordEncryptionPublicKeyPath
@@ -35,11 +37,15 @@ export class UpdateUserDtoMapper extends RequestDtoMapper<
 > {
   schema = UserSchemas.UpdateUserSchema;
 
-  toEntity(passwordEncryptionPublicKeyPath: string): User {
+  async toEntity(passwordEncryptionPublicKeyPath: string): Promise<User> {
     return User.update({
       ...this.dto,
       ...(this.dto.roleIds
-        ? { roles: collection(this.dto.roleIds.map((id) => Role.map({ id }))) }
+        ? {
+            roles: collection(
+              await Promise.all(this.dto.roleIds.map((id) => Role.map({ id })))
+            )
+          }
         : {}),
       ...(passwordEncryptionPublicKeyPath && this.dto.password
         ? {
@@ -56,15 +62,19 @@ export class UpdateUserDtoMapper extends RequestDtoMapper<
 export class UserDtoMapper extends ResponseDtoMapper<User, SchemaValidator> {
   schema = UserSchemas.UserSchema;
 
-  fromEntity(entity: User): this {
+  async fromEntity(entity: User): Promise<this> {
     this.dto = {
-      ...entity.read(),
+      ...(await entity.read()),
       roles: entity.roles.isInitialized()
-        ? entity.roles
-            .getItems()
-            .map((role) =>
-              RoleDtoMapper.fromEntity(SchemaValidator(), role).toDto()
-            )
+        ? await Promise.all(
+            entity.roles
+              .getItems()
+              .map(async (role) =>
+                (
+                  await RoleDtoMapper.fromEntity(SchemaValidator(), role)
+                ).toDto()
+              )
+          )
         : []
     };
 

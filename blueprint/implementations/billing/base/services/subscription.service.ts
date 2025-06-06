@@ -1,14 +1,14 @@
 import { IdDto, InstanceTypeRecord } from '@forklaunch/common';
 import {
+  MetricsDefinition,
+  OpenTelemetryCollector
+} from '@forklaunch/core/http';
+import {
   InternalDtoMapper,
   RequestDtoMapperConstructor,
   ResponseDtoMapperConstructor,
   transformIntoInternalDtoMapper
 } from '@forklaunch/core/mappers';
-import {
-  MetricsDefinition,
-  OpenTelemetryCollector
-} from '@forklaunch/core/http';
 import { SubscriptionService } from '@forklaunch/interfaces-billing/interfaces';
 import {
   CreateSubscriptionDto,
@@ -67,8 +67,8 @@ export class BaseSubscriptionService<
   }
 > implements SubscriptionService<PartyType, BillingProviderType>
 {
-  #mapperss: InternalDtoMapper<
-    InstanceTypeRecord<typeof this.mapperss>,
+  #mappers: InternalDtoMapper<
+    InstanceTypeRecord<typeof this.mappers>,
     Entities,
     Dto
   >;
@@ -77,7 +77,7 @@ export class BaseSubscriptionService<
     protected em: EntityManager,
     protected readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>,
     protected readonly schemaValidator: SchemaValidator,
-    protected readonly mapperss: {
+    protected readonly mappers: {
       SubscriptionDtoMapper: ResponseDtoMapperConstructor<
         SchemaValidator,
         Dto['SubscriptionDtoMapper'],
@@ -95,12 +95,12 @@ export class BaseSubscriptionService<
       >;
     }
   ) {
-    this.#mapperss = transformIntoInternalDtoMapper<
+    this.#mappers = transformIntoInternalDtoMapper<
       SchemaValidator,
-      typeof this.mapperss,
+      typeof this.mappers,
       Entities,
       Dto
-    >(mapperss, this.schemaValidator);
+    >(mappers, this.schemaValidator);
   }
 
   async createSubscription(
@@ -108,14 +108,16 @@ export class BaseSubscriptionService<
     em?: EntityManager
   ): Promise<Dto['SubscriptionDtoMapper']> {
     const subscription =
-      this.#mapperss.CreateSubscriptionDtoMapper.deserializeDtoToEntity(
+      await this.#mappers.CreateSubscriptionDtoMapper.deserializeDtoToEntity(
         subscriptionDto
       );
     await (em ?? this.em).transactional(async (innerEm) => {
       await innerEm.persist(subscription);
     });
     const createdSubscriptionDto =
-      this.#mapperss.SubscriptionDtoMapper.serializeEntityToDto(subscription);
+      await this.#mappers.SubscriptionDtoMapper.serializeEntityToDto(
+        subscription
+      );
     return createdSubscriptionDto;
   }
 
@@ -127,7 +129,7 @@ export class BaseSubscriptionService<
       'Subscription',
       idDto
     );
-    return this.#mapperss.SubscriptionDtoMapper.serializeEntityToDto(
+    return this.#mappers.SubscriptionDtoMapper.serializeEntityToDto(
       subscription as Entities['SubscriptionDtoMapper']
     );
   }
@@ -142,7 +144,7 @@ export class BaseSubscriptionService<
       active: true
     });
 
-    return this.#mapperss.SubscriptionDtoMapper.serializeEntityToDto(
+    return this.#mappers.SubscriptionDtoMapper.serializeEntityToDto(
       subscription as Entities['SubscriptionDtoMapper']
     );
   }
@@ -156,7 +158,7 @@ export class BaseSubscriptionService<
       partyType: 'ORGANIZATION',
       active: true
     });
-    return this.#mapperss.SubscriptionDtoMapper.serializeEntityToDto(
+    return this.#mappers.SubscriptionDtoMapper.serializeEntityToDto(
       subscription as Entities['SubscriptionDtoMapper']
     );
   }
@@ -166,7 +168,7 @@ export class BaseSubscriptionService<
     em?: EntityManager
   ): Promise<Dto['SubscriptionDtoMapper']> {
     const subscription =
-      this.#mapperss.UpdateSubscriptionDtoMapper.deserializeDtoToEntity(
+      this.#mappers.UpdateSubscriptionDtoMapper.deserializeDtoToEntity(
         subscriptionDto
       );
     const updatedSubscription = await (em ?? this.em).upsert(subscription);
@@ -174,7 +176,7 @@ export class BaseSubscriptionService<
       await innerEm.persist(updatedSubscription);
     });
     const updatedSubscriptionDto =
-      this.#mapperss.SubscriptionDtoMapper.serializeEntityToDto(
+      await this.#mappers.SubscriptionDtoMapper.serializeEntityToDto(
         updatedSubscription
       );
 
@@ -206,13 +208,15 @@ export class BaseSubscriptionService<
         : undefined
     });
 
-    return subscriptions.map((subscription) => {
-      const subscriptionDto =
-        this.#mapperss.SubscriptionDtoMapper.serializeEntityToDto(
-          subscription as Entities['SubscriptionDtoMapper']
-        );
-      return subscriptionDto;
-    });
+    return Promise.all(
+      subscriptions.map((subscription) => {
+        const subscriptionDto =
+          this.#mappers.SubscriptionDtoMapper.serializeEntityToDto(
+            subscription as Entities['SubscriptionDtoMapper']
+          );
+        return subscriptionDto;
+      })
+    );
   }
 
   async cancelSubscription(idDto: IdDto, em?: EntityManager): Promise<void> {

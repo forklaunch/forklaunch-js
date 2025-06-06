@@ -1,8 +1,8 @@
 import { SchemaValidator } from '@forklaunch/blueprint-core';
 import { RequestDtoMapper, ResponseDtoMapper } from '@forklaunch/core/mappers';
+import { CheckoutSession } from '../../persistence/entities/checkoutSession.entity';
 import { CheckoutSessionSchemas } from '../../registrations';
 import { PaymentMethodEnum } from '../enum/paymentMethod.enum';
-import { CheckoutSession } from '../../persistence/entities/checkoutSession.entity';
 
 export class CreateCheckoutSessionDtoMapper extends RequestDtoMapper<
   CheckoutSession,
@@ -11,7 +11,7 @@ export class CreateCheckoutSessionDtoMapper extends RequestDtoMapper<
   schema =
     CheckoutSessionSchemas.CreateCheckoutSessionSchema(PaymentMethodEnum);
 
-  toEntity(): CheckoutSession {
+  async toEntity(): Promise<CheckoutSession> {
     return CheckoutSession.create(this.dto);
   }
 }
@@ -23,7 +23,7 @@ export class UpdateCheckoutSessionDtoMapper extends RequestDtoMapper<
   schema =
     CheckoutSessionSchemas.UpdateCheckoutSessionSchema(PaymentMethodEnum);
 
-  toEntity(): CheckoutSession {
+  async toEntity(): Promise<CheckoutSession> {
     return CheckoutSession.update(this.dto);
   }
 }
@@ -34,8 +34,8 @@ export class CheckoutSessionDtoMapper extends ResponseDtoMapper<
 > {
   schema = CheckoutSessionSchemas.CheckoutSessionSchema(PaymentMethodEnum);
 
-  fromEntity(checkoutSession: CheckoutSession): this {
-    this.dto = checkoutSession.read();
+  async fromEntity(checkoutSession: CheckoutSession): Promise<this> {
+    this.dto = await checkoutSession.read();
     return this;
   }
 }

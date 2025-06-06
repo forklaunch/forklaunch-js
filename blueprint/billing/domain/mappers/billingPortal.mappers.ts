@@ -1,7 +1,7 @@
 import { SchemaValidator } from '@forklaunch/blueprint-core';
 import { RequestDtoMapper, ResponseDtoMapper } from '@forklaunch/core/mappers';
-import { BillingPortalSchemas } from '../../registrations';
 import { BillingPortal } from '../../persistence/entities/billingPortal.entity';
+import { BillingPortalSchemas } from '../../registrations';
 
 export class CreateBillingPortalDtoMapper extends RequestDtoMapper<
   BillingPortal,
@@ -9,7 +9,7 @@ export class CreateBillingPortalDtoMapper extends RequestDtoMapper<
 > {
   schema = BillingPortalSchemas.CreateBillingPortalSchema;
 
-  toEntity(): BillingPortal {
+  async toEntity(): Promise<BillingPortal> {
     return BillingPortal.create(this.dto);
   }
 }
@@ -20,7 +20,7 @@ export class UpdateBillingPortalDtoMapper extends RequestDtoMapper<
 > {
   schema = BillingPortalSchemas.UpdateBillingPortalSchema;
 
-  toEntity(): BillingPortal {
+  async toEntity(): Promise<BillingPortal> {
     return BillingPortal.update(this.dto);
   }
 }
@@ -31,8 +31,8 @@ export class BillingPortalDtoMapper extends ResponseDtoMapper<
 > {
   schema = BillingPortalSchemas.BillingPortalSchema;
 
-  fromEntity(entity: BillingPortal): this {
-    this.dto = entity.read();
+  async fromEntity(entity: BillingPortal): Promise<this> {
+    this.dto = await entity.read();
     return this;
   }
 }

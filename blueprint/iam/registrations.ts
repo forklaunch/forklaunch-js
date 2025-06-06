@@ -214,7 +214,6 @@ export function createDependencies(orm: MikroORM) {
           () => resolve('RoleService', context),
           () => resolve('OrganizationService', context),
           OpenTelemetryCollector,
-
           SchemaValidator(),
           {
             UserDtoMapper,

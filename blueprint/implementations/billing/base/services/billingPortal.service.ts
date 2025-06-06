@@ -1,15 +1,15 @@
 import { IdDto, InstanceTypeRecord } from '@forklaunch/common';
 import { createCacheKey, TtlCache } from '@forklaunch/core/cache';
 import {
+  MetricsDefinition,
+  OpenTelemetryCollector
+} from '@forklaunch/core/http';
+import {
   InternalDtoMapper,
   RequestDtoMapperConstructor,
   ResponseDtoMapperConstructor,
   transformIntoInternalDtoMapper
 } from '@forklaunch/core/mappers';
-import {
-  MetricsDefinition,
-  OpenTelemetryCollector
-} from '@forklaunch/core/http';
 import { BillingPortalService } from '@forklaunch/interfaces-billing/interfaces';
 import {
   BillingPortalDto,
@@ -41,8 +41,8 @@ export class BaseBillingPortalService<
   }
 > implements BillingPortalService
 {
-  #mapperss: InternalDtoMapper<
-    InstanceTypeRecord<typeof this.mapperss>,
+  #mappers: InternalDtoMapper<
+    InstanceTypeRecord<typeof this.mappers>,
     Entities,
     Dto
   >;
@@ -51,7 +51,7 @@ export class BaseBillingPortalService<
     protected cache: TtlCache,
     protected openTelemetryCollector: OpenTelemetryCollector<Metrics>,
     protected schemaValidator: SchemaValidator,
-    protected mapperss: {
+    protected mappers: {
       BillingPortalDtoMapper: ResponseDtoMapperConstructor<
         SchemaValidator,
         Dto['BillingPortalDtoMapper'],
@@ -69,7 +69,7 @@ export class BaseBillingPortalService<
       >;
     }
   ) {
-    this.#mapperss = transformIntoInternalDtoMapper(mapperss, schemaValidator);
+    this.#mappers = transformIntoInternalDtoMapper(mappers, schemaValidator);
   }
 
   protected createCacheKey = createCacheKey('billing_portal_session');
@@ -78,7 +78,7 @@ export class BaseBillingPortalService<
     billingPortalDto: Dto['CreateBillingPortalDtoMapper']
   ): Promise<Dto['BillingPortalDtoMapper']> {
     const billingPortalSession =
-      this.#mapperss.CreateBillingPortalDtoMapper.deserializeDtoToEntity(
+      await this.#mappers.CreateBillingPortalDtoMapper.deserializeDtoToEntity(
         billingPortalDto
       );
 
@@ -93,7 +93,7 @@ export class BaseBillingPortalService<
       ttlMilliseconds: this.cache.getTtlMilliseconds()
     });
 
-    return this.#mapperss.BillingPortalDtoMapper.serializeEntityToDto(
+    return this.#mappers.BillingPortalDtoMapper.serializeEntityToDto(
       billingPortalSession
     );
   }
@@ -108,7 +108,7 @@ export class BaseBillingPortalService<
       throw new Error('Session not found');
     }
 
-    return this.#mapperss.BillingPortalDtoMapper.serializeEntityToDto(
+    return this.#mappers.BillingPortalDtoMapper.serializeEntityToDto(
       billingPortalSessionDetails.value
     );
   }
@@ -117,7 +117,7 @@ export class BaseBillingPortalService<
     billingPortalDto: UpdateBillingPortalDto
   ): Promise<Dto['BillingPortalDtoMapper']> {
     const billingPortalSession =
-      this.#mapperss.UpdateBillingPortalDtoMapper.deserializeDtoToEntity(
+      await this.#mappers.UpdateBillingPortalDtoMapper.deserializeDtoToEntity(
         billingPortalDto
       );
     // Save the updated session to your database or external service
@@ -127,7 +127,7 @@ export class BaseBillingPortalService<
       ttlMilliseconds: this.cache.getTtlMilliseconds()
     });
 
-    return this.#mapperss.BillingPortalDtoMapper.serializeEntityToDto(
+    return this.#mappers.BillingPortalDtoMapper.serializeEntityToDto(
       billingPortalSession
     );
   }
