@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.9.2
+
+### Patch Changes
+
+- Internal type adjustment
+
 ## 0.9.1
 
 ### Patch Changes
