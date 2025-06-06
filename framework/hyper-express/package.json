@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/hyper-express",
-  "version": "0.5.8",
+  "version": "0.5.10",
   "description": "Forklaunch framework for hyper-express.",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -39,7 +39,7 @@
     "@forklaunch/core": "workspace:*",
     "@forklaunch/hyper-express-fork": "^6.17.34",
     "@forklaunch/validator": "workspace:*",
-    "@scalar/express-api-reference": "^0.8.2",
+    "@scalar/express-api-reference": "^0.8.3",
     "cors": "^2.8.5",
     "live-directory": "^3.0.3",
     "openapi3-ts": "^4.4.0",

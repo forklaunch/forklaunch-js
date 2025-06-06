@@ -36,7 +36,7 @@ class TestRequestDtoMapper extends RequestDtoMapper<
     age: number
   };
 
-  toEntity(arg1: string, arg2?: string): TestEntity {
+  async toEntity(arg1: string, arg2?: string): Promise<TestEntity> {
     const entity = new TestEntity();
     entity.id = this.dto.id;
     entity.name = this.dto.name;
@@ -55,7 +55,11 @@ class TestResponseDtoMapper extends ResponseDtoMapper<
     age: number
   };
 
-  fromEntity(entity: TestEntity, arg1: string, arg2?: string): this {
+  async fromEntity(
+    entity: TestEntity,
+    arg1: string,
+    arg2?: string
+  ): Promise<this> {
     this.dto = {
       id: entity.id,
       name: entity.name,
@@ -99,8 +103,8 @@ describe('request mappers tests', () => {
       age: 1
     };
 
-    const responseDM = TestRequestDM.fromDto(json);
-    const staticDM = TestRequestDtoMapper.fromDto(SV, json);
+    const responseDM = await TestRequestDM.fromDto(json);
+    const staticDM = await TestRequestDtoMapper.fromDto(SV, json);
     const expectedDto = {
       id: '123',
       name: 'test',
@@ -120,13 +124,18 @@ describe('request mappers tests', () => {
     };
 
     const entity = extractNonTimeBasedEntityFields(
-      TestRequestDM.deserializeDtoToEntity(json, 'arg1')
+      await TestRequestDM.deserializeDtoToEntity(json, 'arg1')
     );
     const objectEntity = extractNonTimeBasedEntityFields(
-      TestRequestDM.fromDto(json).toEntity('arg1')
+      await (await TestRequestDM.fromDto(json)).toEntity('arg1')
     );
     const staticEntity = extractNonTimeBasedEntityFields(
-      TestRequestDtoMapper.deserializeDtoToEntity(SV, json, 'arg1', 'arg2')
+      await TestRequestDtoMapper.deserializeDtoToEntity(
+        SV,
+        json,
+        'arg1',
+        'arg2'
+      )
     );
     let expectedEntity = new TestEntity();
     expectedEntity.id = '123';
@@ -150,10 +159,22 @@ describe('request mappers tests', () => {
       name: 'test'
     };
 
-    // @ts-expect-error - missing age
-    expect(() => TestRequestDM.fromDto(json)).toThrow();
-    // @ts-expect-error - missing age
-    expect(() => TestRequestDtoMapper.fromDto(SV, json)).toThrow();
+    await expect(
+      async () =>
+        await TestRequestDM.fromDto(
+          // @ts-expect-error - missing age
+          json
+        )
+    ).rejects.toThrow();
+
+    await expect(
+      async () =>
+        await TestRequestDtoMapper.fromDto(
+          SV,
+          // @ts-expect-error - missing age
+          json
+        )
+    ).rejects.toThrow();
   });
 });
 
@@ -174,8 +195,8 @@ describe('response mappers tests', () => {
     entity.name = 'test';
     entity.age = 1;
 
-    const responseDM = TestResponseDM.fromEntity(entity, 'arg1');
-    const staticDM = TestResponseDtoMapper.fromEntity(SV, entity, 'arg1');
+    const responseDM = await TestResponseDM.fromEntity(entity, 'arg1');
+    const staticDM = await TestResponseDtoMapper.fromEntity(SV, entity, 'arg1');
     const expectedDto = {
       id: '123',
       name: 'test',
@@ -194,13 +215,18 @@ describe('response mappers tests', () => {
     entity.age = 1;
 
     const json = genericDtoWrapperFunction(
-      TestResponseDM.serializeEntityToDto(entity, 'arg1')
+      await TestResponseDM.serializeEntityToDto(entity, 'arg1')
     );
     const objectJson = genericDtoWrapperFunction(
-      TestResponseDM.fromEntity(entity, 'arg1').toDto()
+      await (await TestResponseDM.fromEntity(entity, 'arg1')).toDto()
     );
     const staticJson = genericDtoWrapperFunction(
-      TestResponseDtoMapper.serializeEntityToDto(SV, entity, 'arg1', 'arg2')
+      await TestResponseDtoMapper.serializeEntityToDto(
+        SV,
+        entity,
+        'arg1',
+        'arg2'
+      )
     );
     const expectedJson = {
       id: '123',
@@ -222,9 +248,15 @@ describe('response mappers tests', () => {
     entity.id = '123';
     entity.name = 'test';
 
-    expect(() => TestResponseDM.fromEntity(entity, 'arg1').toDto()).toThrow();
-    expect(() =>
-      TestResponseDtoMapper.fromEntity(SV, entity, 'arg1', 'arg2').toDto()
-    ).toThrow();
+    await expect(
+      async () =>
+        await (await TestResponseDM.fromEntity(entity, 'arg1')).toDto()
+    ).rejects.toThrow();
+    await expect(
+      async () =>
+        await (
+          await TestResponseDtoMapper.fromEntity(SV, entity, 'arg1', 'arg2')
+        ).toDto()
+    ).rejects.toThrow();
   });
 });

@@ -33,15 +33,17 @@ export abstract class BaseEntity extends MikroOrmBaseEntity {
    * @param {...Parameters<Entity['create']>} args - Arguments for entity creation
    * @returns {Entity} A new entity instance
    */
-  static create<Entity extends BaseEntityWithId>(
+  static async create<Entity extends BaseEntityWithId>(
     this: Constructor<Entity>,
     ...args: Parameters<Entity['create']>
-  ): Entity {
+  ): Promise<Entity> {
     const [data, ...additionalArgs] = args;
-    return new this().create(
+    const entity = new this();
+    await entity.create(
       data as CreateShape<BaseEntityWithId, Entity>,
       ...additionalArgs
     );
+    return entity;
   }
 
   /**
@@ -52,15 +54,17 @@ export abstract class BaseEntity extends MikroOrmBaseEntity {
    * @param {...Parameters<Entity['update']>} args - Arguments for entity update
    * @returns {Entity} The updated entity instance
    */
-  static update<Entity extends BaseEntityWithId>(
+  static async update<Entity extends BaseEntityWithId>(
     this: Constructor<Entity>,
     ...args: Parameters<Entity['update']>
-  ): Entity {
+  ): Promise<Entity> {
     const [data, ...additionalArgs] = args;
-    return new this().update(
+    const entity = new this();
+    await entity.update(
       data as UpdateShape<BaseEntity, Entity>,
       ...additionalArgs
     );
+    return entity;
   }
 
   /**
@@ -71,11 +75,13 @@ export abstract class BaseEntity extends MikroOrmBaseEntity {
    * @param {Partial<EntityDTO<FromEntityType<Entity>>>} data - The data to map
    * @returns {Entity} A new entity instance with mapped data
    */
-  static map<Entity extends BaseEntity>(
+  static async map<Entity extends BaseEntity>(
     this: Constructor<Entity>,
     data: Partial<EntityDTO<FromEntityType<Entity>>>
-  ): Entity {
-    return new this().map(data);
+  ): Promise<Entity> {
+    const entity = new this();
+    await entity.map(data);
+    return entity;
   }
 
   /**
@@ -84,8 +90,15 @@ export abstract class BaseEntity extends MikroOrmBaseEntity {
    * @param {CreateShape<BaseEntityWithId, this>} data - The data to create the entity with
    * @returns {this} The created entity instance
    */
-  create(data: CreateShape<BaseEntityWithId, this>): this {
-    return Object.assign(this, transformRawDto(data, this));
+  async create(
+    data: CreateShape<BaseEntityWithId, this>
+  ): Promise<EntityDTO<this>> {
+    Object.assign(this, transformRawDto(data, this));
+    const entity = await wrap(this).init();
+    if (!entity) {
+      throw new Error('Entity not initialized');
+    }
+    return entity.toObject();
   }
 
   /**
@@ -94,13 +107,16 @@ export abstract class BaseEntity extends MikroOrmBaseEntity {
    * @param {UpdateShape<BaseEntityWithId, this>} data - The data to update the entity with
    * @returns {this} The updated entity instance
    */
-  update(data: UpdateShape<BaseEntityWithId, this>): this {
-    wrap(this).assign(
+  async update(
+    data: UpdateShape<BaseEntityWithId, this>
+  ): Promise<EntityDTO<this>> {
+    const entity = wrap(this);
+    entity.assign(
       stripUndefinedProperties(transformRawDto(data, this)) as Partial<
         EntityDTO<FromEntityType<this>>
       >
     );
-    return this;
+    return entity.toObject();
   }
 
   /**
@@ -108,11 +124,12 @@ export abstract class BaseEntity extends MikroOrmBaseEntity {
    *
    * @returns {EntityDTO<this> | this} The entity data as a plain object
    */
-  read(): EntityDTO<this> | this {
-    if (typeof wrap(this).toPOJO === 'function') {
-      return wrap(this).toPOJO();
+  async read(): Promise<EntityDTO<this>> {
+    const entity = await wrap(this).init();
+    if (!entity) {
+      throw new Error('Entity not initialized');
     }
-    return this;
+    return entity.toObject();
   }
 
   /**
@@ -121,8 +138,13 @@ export abstract class BaseEntity extends MikroOrmBaseEntity {
    * @param {Partial<EntityDTO<FromEntityType<this>>>} data - The data to map
    * @returns {this} The entity instance with mapped data
    */
-  map(data: Partial<EntityDTO<FromEntityType<this>>>): this {
-    wrap(this).assign(data);
-    return this;
+  async map(data: Partial<EntityDTO<FromEntityType<this>>>): Promise<this> {
+    const entity = await wrap(this).init();
+
+    if (!entity) {
+      throw new Error('Entity not initialized');
+    }
+    entity.assign(data);
+    return entity;
   }
 }

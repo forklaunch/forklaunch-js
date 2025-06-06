@@ -1,5 +1,19 @@
 # @forklaunch/core
 
+## 0.9.1
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.6.7
+  - @forklaunch/common@0.3.7
+
+## 0.9.0
+
+### Minor Changes
+
+- Mapper now only accepts async mapping methods, due to nature of entity retrieval
+
 ## 0.8.8
 
 ### Patch Changes
