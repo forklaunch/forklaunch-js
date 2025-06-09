@@ -1,3 +1,5 @@
+import { EntityManager } from '@mikro-orm/core';
+
 type AllAfterFirstParameters<T> = T extends (
   first: never,
   ...args: infer U
@@ -43,6 +45,7 @@ export type InternalDtoMapper<
       ? {
           deserializeDtoToEntity: (
             dto: Dto[K],
+            em: EntityManager,
             ...additionalArgs: AllAfterFirstParameters<
               DtoMapper[K]['deserializeDtoToEntity']
             >
