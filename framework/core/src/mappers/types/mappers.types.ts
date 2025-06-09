@@ -1,5 +1,4 @@
 import { AnySchemaValidator, UnboxedObjectSchema } from '@forklaunch/validator';
-import { EntityManager } from '@mikro-orm/core';
 
 /**
  * Type representing a schema validator object for an entity mapper.
@@ -41,10 +40,7 @@ export type RequestDtoMapperConstructor<
   Dto,
   Entity,
   DeserializeDtoToEntity = unknown
-> = new (
-  schemaValidator: SchemaValidator,
-  em: EntityManager
-) => {
+> = new (schemaValidator: SchemaValidator) => {
   dto: Dto;
   _Entity: Entity;
   deserializeDtoToEntity: DeserializeDtoToEntity;

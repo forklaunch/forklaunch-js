@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.9.6
+
+### Patch Changes
+
+- fix internal type
+
 ## 0.9.5
 
 ### Patch Changes
