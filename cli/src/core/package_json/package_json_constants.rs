@@ -20,6 +20,8 @@ pub(crate) const OXLINT_VERSION: &str = "^0.16.6";
 pub(crate) const PRETTIER_VERSION: &str = "^3.5.3";
 // ts-jest
 pub(crate) const TS_JEST_VERSION: &str = "^29.2.6";
+// ts-node
+pub(crate) const TS_NODE_VERSION: &str = "^10.9.2";
 // typescript-eslint
 pub(crate) const TYPESCRIPT_ESLINT_VERSION: &str = "^8.33.1";
 // vitest

@@ -54,7 +54,7 @@ use crate::{
                 MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
                 MIKRO_ORM_REFLECTION_VERSION, NODE_GYP_VERSION, OXLINT_VERSION, PRETTIER_VERSION,
                 PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT, SORT_PACKAGE_JSON_VERSION,
-                SQLITE3_VERSION, TS_JEST_VERSION, TSX_VERSION, TYPEBOX_VERSION,
+                SQLITE3_VERSION, TS_JEST_VERSION, TS_NODE_VERSION, TSX_VERSION, TYPEBOX_VERSION,
                 TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION, TYPES_QS_VERSION,
                 TYPES_UUID_VERSION, TYPESCRIPT_ESLINT_VERSION, TYPESCRIPT_VERSION, UUID_VERSION,
                 VALIDATOR_VERSION, VITEST_VERSION, ZOD_VERSION, application_build_script,
@@ -197,6 +197,7 @@ fn generate_application_package_json(
             } else {
                 None
             },
+            ts_node: Some(TS_NODE_VERSION.to_string()),
             tsx: Some(TSX_VERSION.to_string()),
             typescript: Some(TYPESCRIPT_VERSION.to_string()),
             typescript_eslint: if data.is_eslint {

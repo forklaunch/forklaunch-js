@@ -1,5 +1,16 @@
 # @forklaunch/core
 
+## 0.9.3
+
+### Patch Changes
+
+- package conflict resolution
+- fix minor buffer bugs and update subdependencies
+- Updated dependencies
+- Updated dependencies
+  - @forklaunch/common@0.3.8
+  - @forklaunch/validator@0.6.8
+
 ## 0.9.2
 
 ### Patch Changes

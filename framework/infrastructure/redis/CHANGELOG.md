@@ -1,5 +1,16 @@
 # @forklaunch/infrastructure-redis
 
+## 0.0.11
+
+### Patch Changes
+
+- package conflict resolution
+- fix minor buffer bugs and update subdependencies
+- Updated dependencies
+- Updated dependencies
+  - @forklaunch/core@0.9.3
+  - @forklaunch/common@0.3.8
+
 ## 0.0.10
 
 ### Patch Changes

@@ -157,6 +157,8 @@ pub(crate) struct ApplicationDevDependencies {
     pub(crate) sqlite3: Option<String>,
     #[serde(rename = "ts-jest", skip_serializing_if = "Option::is_none")]
     pub(crate) ts_jest: Option<String>,
+    #[serde(rename = "ts-node", skip_serializing_if = "Option::is_none")]
+    pub(crate) ts_node: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) tsx: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -206,6 +208,7 @@ impl<'de> Deserialize<'de> for ApplicationDevDependencies {
                     sort_package_json: None,
                     sqlite3: None,
                     ts_jest: None,
+                    ts_node: None,
                     tsx: None,
                     typescript: None,
                     typescript_eslint: None,

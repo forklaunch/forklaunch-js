@@ -163,12 +163,12 @@ export class S3ObjectStore implements ObjectStore<S3Client> {
     const resp = await this.s3.send(
       new GetObjectCommand({ Bucket: this.bucket, Key: objectKey })
     );
-    const body = resp.Body as Readable;
-    const chunks: Buffer[] = [];
-    for await (const chunk of body) {
-      chunks.push(chunk);
+
+    if (!resp.Body) {
+      throw new Error('S3 did not return a body');
     }
-    return JSON.parse(Buffer.concat(chunks).toString()) as T;
+
+    return JSON.parse(await resp.Body.transformToString()) as T;
   }
 
   /**
@@ -198,10 +198,28 @@ export class S3ObjectStore implements ObjectStore<S3Client> {
     const resp = await this.s3.send(
       new GetObjectCommand({ Bucket: this.bucket, Key: objectKey })
     );
-    if (!resp.Body || !(resp.Body instanceof Readable)) {
+    const webStream = resp.Body?.transformToWebStream();
+    if (!webStream) {
       throw new Error('S3 did not return a stream');
     }
-    return resp.Body;
+
+    const reader = webStream.getReader();
+    const nodeStream = new Readable({
+      async read() {
+        try {
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            this.push(value);
+          }
+          this.push(null);
+        } catch (err) {
+          this.destroy(err as Error);
+        }
+      }
+    });
+
+    return nodeStream;
   }
 
   /**

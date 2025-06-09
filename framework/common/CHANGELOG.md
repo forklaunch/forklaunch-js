@@ -1,5 +1,12 @@
 # @forklaunch/common
 
+## 0.3.8
+
+### Patch Changes
+
+- package conflict resolution
+- fix minor buffer bugs and update subdependencies
+
 ## 0.3.7
 
 ### Patch Changes

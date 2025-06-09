@@ -1,5 +1,17 @@
 # @forklaunch/hyper-express
 
+## 0.5.12
+
+### Patch Changes
+
+- package conflict resolution
+- fix minor buffer bugs and update subdependencies
+- Updated dependencies
+- Updated dependencies
+  - @forklaunch/core@0.9.3
+  - @forklaunch/common@0.3.8
+  - @forklaunch/validator@0.6.8
+
 ## 0.5.11
 
 ### Patch Changes

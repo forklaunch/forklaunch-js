@@ -1,5 +1,15 @@
 # @forklaunch/universal-sdk
 
+## 0.3.9
+
+### Patch Changes
+
+- package conflict resolution
+- fix minor buffer bugs and update subdependencies
+- Updated dependencies
+- Updated dependencies
+  - @forklaunch/common@0.3.8
+
 ## 0.3.8
 
 ### Patch Changes
