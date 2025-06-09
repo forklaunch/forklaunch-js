@@ -1,8 +1,8 @@
 import { SchemaValidator } from '@forklaunch/blueprint-core';
 import { RequestDtoMapper, ResponseDtoMapper } from '@forklaunch/core/mappers';
+import { PaymentLink } from '../../persistence/entities/paymentLink.entity';
 import { PaymentLinkSchemas } from '../../registrations';
 import { CurrencyEnum } from '../enum/currency.enum';
-import { PaymentLink } from '../../persistence/entities/paymentLink.entity';
 
 export class CreatePaymentLinkDtoMapper extends RequestDtoMapper<
   PaymentLink,
@@ -10,7 +10,7 @@ export class CreatePaymentLinkDtoMapper extends RequestDtoMapper<
 > {
   schema = PaymentLinkSchemas.CreatePaymentLinkSchema(CurrencyEnum);
 
-  toEntity(): PaymentLink {
+  async toEntity(): Promise<PaymentLink> {
     return PaymentLink.create(this.dto);
   }
 }
@@ -21,7 +21,7 @@ export class UpdatePaymentLinkDtoMapper extends RequestDtoMapper<
 > {
   schema = PaymentLinkSchemas.UpdatePaymentLinkSchema(CurrencyEnum);
 
-  toEntity(): PaymentLink {
+  async toEntity(): Promise<PaymentLink> {
     return PaymentLink.update(this.dto);
   }
 }
@@ -32,8 +32,8 @@ export class PaymentLinkDtoMapper extends ResponseDtoMapper<
 > {
   schema = PaymentLinkSchemas.PaymentLinkSchema(CurrencyEnum);
 
-  fromEntity(paymentLink: PaymentLink): this {
-    this.dto = paymentLink.read();
+  async fromEntity(paymentLink: PaymentLink): Promise<this> {
+    this.dto = await paymentLink.read();
     return this;
   }
 }

@@ -15,7 +15,7 @@ export class {{pascal_case_name}}RequestDtoMapper extends RequestDtoMapper<
   schema = {{pascal_case_name}}RequestSchema;
 
   // toEntity method maps the request schema to the entity
-  toEntity(): {{pascal_case_name}}{{#is_worker}}Event{{/is_worker}}Record{
+  async toEntity(): Promise<{{pascal_case_name}}{{#is_worker}}Event{{/is_worker}}Record> {
     return {{pascal_case_name}}{{#is_worker}}Event{{/is_worker}}Record.create({{#is_worker}}{
       ...this.dto,
       processed: false,
@@ -33,8 +33,8 @@ export class {{pascal_case_name}}ResponseDtoMapper extends ResponseDtoMapper<
   schema = {{pascal_case_name}}ResponseSchema;
 
   // fromEntity method maps the entity to the response schema
-  fromEntity(entity: {{pascal_case_name}}{{#is_worker}}Event{{/is_worker}}Record): this {
-    this.dto = entity.read();
+  async fromEntity(entity: {{pascal_case_name}}{{#is_worker}}Event{{/is_worker}}Record): Promise<this> {
+    this.dto = await entity.read();
     return this;
   }
 }

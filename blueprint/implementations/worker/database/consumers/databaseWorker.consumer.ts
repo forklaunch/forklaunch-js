@@ -22,7 +22,7 @@ export class DatabaseWorkerConsumer<
   ) {}
 
   private async retrieveEvents(): Promise<EventEntity[]> {
-    return await this.em.getRepository(this.entityName).find({
+    return this.em.getRepository(this.entityName).find({
       where: {
         processed: false,
         retryCount: { $lt: this.options.retries }
@@ -41,7 +41,7 @@ export class DatabaseWorkerConsumer<
   }
 
   async peekEvents(): Promise<EventEntity[]> {
-    return await this.retrieveEvents();
+    return this.retrieveEvents();
   }
 
   async start(): Promise<void> {

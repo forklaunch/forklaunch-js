@@ -1,15 +1,15 @@
 import { IdDto, InstanceTypeRecord } from '@forklaunch/common';
 import { createCacheKey, TtlCache } from '@forklaunch/core/cache';
 import {
+  MetricsDefinition,
+  OpenTelemetryCollector
+} from '@forklaunch/core/http';
+import {
   InternalDtoMapper,
   RequestDtoMapperConstructor,
   ResponseDtoMapperConstructor,
   transformIntoInternalDtoMapper
 } from '@forklaunch/core/mappers';
-import {
-  MetricsDefinition,
-  OpenTelemetryCollector
-} from '@forklaunch/core/http';
 import { CheckoutSessionService } from '@forklaunch/interfaces-billing/interfaces';
 import {
   CheckoutSessionDto,
@@ -42,8 +42,8 @@ export class BaseCheckoutSessionService<
   }
 > implements CheckoutSessionService<PaymentMethodEnum>
 {
-  #mapperss: InternalDtoMapper<
-    InstanceTypeRecord<typeof this.mapperss>,
+  #mappers: InternalDtoMapper<
+    InstanceTypeRecord<typeof this.mappers>,
     Entities,
     Dto
   >;
@@ -52,7 +52,7 @@ export class BaseCheckoutSessionService<
     protected readonly cache: TtlCache,
     protected readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>,
     protected readonly schemaValidator: SchemaValidator,
-    protected readonly mapperss: {
+    protected readonly mappers: {
       CheckoutSessionDtoMapper: ResponseDtoMapperConstructor<
         SchemaValidator,
         Dto['CheckoutSessionDtoMapper'],
@@ -70,7 +70,7 @@ export class BaseCheckoutSessionService<
       >;
     }
   ) {
-    this.#mapperss = transformIntoInternalDtoMapper(mapperss, schemaValidator);
+    this.#mappers = transformIntoInternalDtoMapper(mappers, schemaValidator);
   }
 
   protected createCacheKey = createCacheKey('checkout_session');
@@ -79,7 +79,7 @@ export class BaseCheckoutSessionService<
     checkoutSessionDto: Dto['CreateCheckoutSessionDtoMapper']
   ): Promise<Dto['CheckoutSessionDtoMapper']> {
     const checkoutSession =
-      this.#mapperss.CreateCheckoutSessionDtoMapper.deserializeDtoToEntity(
+      await this.#mappers.CreateCheckoutSessionDtoMapper.deserializeDtoToEntity(
         checkoutSessionDto
       );
 
@@ -90,7 +90,7 @@ export class BaseCheckoutSessionService<
       ttlMilliseconds: this.cache.getTtlMilliseconds()
     });
 
-    return this.#mapperss.CheckoutSessionDtoMapper.serializeEntityToDto(
+    return this.#mappers.CheckoutSessionDtoMapper.serializeEntityToDto(
       checkoutSession
     );
   }
@@ -105,7 +105,7 @@ export class BaseCheckoutSessionService<
       throw new Error('Session not found');
     }
 
-    return this.#mapperss.CheckoutSessionDtoMapper.serializeEntityToDto(
+    return this.#mappers.CheckoutSessionDtoMapper.serializeEntityToDto(
       checkoutSessionDetails.value
     );
   }

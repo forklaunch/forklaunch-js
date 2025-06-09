@@ -33,7 +33,7 @@ export type InternalDtoMapper<
           ...additionalArgs: AllAfterFirstParameters<
             DtoMapper[K]['serializeEntityToDto']
           >
-        ) => Dto[K];
+        ) => Promise<Dto[K]>;
       }
     : DtoMapper[K] extends {
           dto: unknown;
@@ -46,7 +46,7 @@ export type InternalDtoMapper<
             ...additionalArgs: AllAfterFirstParameters<
               DtoMapper[K]['deserializeDtoToEntity']
             >
-          ) => Entities[K];
+          ) => Promise<Entities[K]>;
         }
       : never;
 };

@@ -11,15 +11,17 @@ export class CreateRoleDtoMapper extends RequestDtoMapper<
 > {
   schema = RoleSchemas.CreateRoleSchema;
 
-  toEntity(): Role {
+  async toEntity(): Promise<Role> {
     return Role.create({
       ...this.dto,
       permissions: collection(
         this.dto.permissionIds
-          ? this.dto.permissionIds.map((id) =>
-              Permission.map({
-                id
-              })
+          ? await Promise.all(
+              this.dto.permissionIds.map(async (id) =>
+                Permission.map({
+                  id
+                })
+              )
             )
           : []
       )
@@ -33,13 +35,19 @@ export class UpdateRoleDtoMapper extends RequestDtoMapper<
 > {
   schema = RoleSchemas.UpdateRoleSchema;
 
-  toEntity(): Role {
+  async toEntity(): Promise<Role> {
     return Role.update({
       ...this.dto,
       ...(this.dto.permissionIds
         ? {
             permissions: collection(
-              this.dto.permissionIds.map((id) => Permission.map({ id }))
+              await Promise.all(
+                this.dto.permissionIds.map(async (id) =>
+                  Permission.map({
+                    id
+                  })
+                )
+              )
             )
           }
         : {})
@@ -50,18 +58,22 @@ export class UpdateRoleDtoMapper extends RequestDtoMapper<
 export class RoleDtoMapper extends ResponseDtoMapper<Role, SchemaValidator> {
   schema = RoleSchemas.RoleSchema;
 
-  fromEntity(entity: Role): this {
+  async fromEntity(entity: Role): Promise<this> {
     this.dto = {
-      ...entity.read(),
+      ...(await entity.read()),
       permissions: entity.permissions.isInitialized()
-        ? entity.permissions
-            .getItems()
-            .map((permission) =>
-              PermissionDtoMapper.fromEntity(
-                SchemaValidator(),
-                permission
-              ).toDto()
-            )
+        ? await Promise.all(
+            entity.permissions
+              .getItems()
+              .map(async (permission) =>
+                (
+                  await PermissionDtoMapper.fromEntity(
+                    SchemaValidator(),
+                    permission
+                  )
+                ).toDto()
+              )
+          )
         : []
     };
 
@@ -72,7 +84,7 @@ export class RoleDtoMapper extends ResponseDtoMapper<Role, SchemaValidator> {
 export class RoleEntityMapper extends RequestDtoMapper<Role, SchemaValidator> {
   schema = RoleSchemas.RoleSchema;
 
-  toEntity(): Role {
+  async toEntity(): Promise<Role> {
     return Role.map({
       ...this.dto,
       ...(this.dto.permissions

@@ -54,10 +54,7 @@ export abstract class BaseDtoMapper<SV extends AnySchemaValidator> {
    * The Data Transfer Object (DTO).
    * @type {Schema<this['schema'], SV>}
    */
-  _dto: Schema<this['schema'], SV> = {} as unknown as Schema<
-    this['schema'],
-    SV
-  >;
+  _dto!: Schema<this['schema'], SV>;
 
   /**
    * Creates an instance of BaseDtoMapper.

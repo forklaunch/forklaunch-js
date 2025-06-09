@@ -1,11 +1,11 @@
 import { EntityManager } from '@mikro-orm/core';
 import { Seeder } from '@mikro-orm/seeder';
-import { permission } from '../seed.data';
 import { Permission } from '../entities/permission.entity';
+import { permission } from '../seed.data';
 
 export class PermissionSeeder extends Seeder {
-  run(em: EntityManager): Promise<void> {
-    em.create(Permission, permission);
+  async run(em: EntityManager): Promise<void> {
+    em.create(Permission, await permission());
     return Promise.resolve();
   }
 }

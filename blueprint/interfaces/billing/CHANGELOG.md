@@ -1,5 +1,11 @@
 # @forklaunch/interfaces-billing
 
+## 0.2.0
+
+### Minor Changes
+
+- consume async mappers now
+
 ## 0.1.17
 
 ### Patch Changes

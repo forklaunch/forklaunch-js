@@ -31,7 +31,10 @@ export abstract class ResponseDtoMapper<
    * @param {...unknown[]} additionalArgs - Additional arguments.
    * @returns {this} - The instance of the ResponseDtoMapper.
    */
-  abstract fromEntity(entity: Entity, ...additionalArgs: unknown[]): this;
+  abstract fromEntity(
+    entity: Entity,
+    ...additionalArgs: unknown[]
+  ): Promise<this>;
 
   /**
    * Converts the underlying DTO to a JSON object.
@@ -39,7 +42,7 @@ export abstract class ResponseDtoMapper<
    * @returns {this['_dto']} - The JSON object.
    * @throws {Error} - Throws an error if the DTO is invalid.
    */
-  toDto(): this['_dto'] {
+  toDto(): Promise<this['_dto']> {
     const parsedSchema = this.schemaValidator.parse(
       this.schemaValidator.schemify(this.schema),
       this.dto
@@ -47,7 +50,7 @@ export abstract class ResponseDtoMapper<
     if (!parsedSchema.ok) {
       throw new Error(prettyPrintParseErrors(parsedSchema.errors, 'DTO'));
     }
-    return this.dto;
+    return Promise.resolve(this.dto) as unknown as Promise<this['_dto']>;
   }
 
   /**
@@ -59,8 +62,9 @@ export abstract class ResponseDtoMapper<
    */
   serializeEntityToDto(
     ...[entity, ...additionalArgs]: Parameters<this['fromEntity']>
-  ): this['_dto'] {
-    return this.fromEntity(entity, ...additionalArgs).toDto();
+  ): Promise<this['_dto']> {
+    const result = this.fromEntity(entity, ...additionalArgs);
+    return result.then((r) => r.toDto());
   }
 
   /**
@@ -80,7 +84,7 @@ export abstract class ResponseDtoMapper<
     this: DtoMapperConstructor<T, SV>,
     schemaValidator: SV,
     ...[entity, ...additionalArgs]: Parameters<T['fromEntity']>
-  ): T {
+  ): Promise<T> {
     return construct(this, schemaValidator).fromEntity(
       entity,
       ...additionalArgs
@@ -106,9 +110,11 @@ export abstract class ResponseDtoMapper<
     this: DtoMapperConstructor<T, SV>,
     schemaValidator: SV,
     ...[entity, ...additionalArgs]: Parameters<T['fromEntity']>
-  ): DtoType {
-    return construct(this, schemaValidator)
-      .fromEntity(entity, ...additionalArgs)
-      .toDto() as DtoType;
+  ): Promise<DtoType> {
+    const result = construct(this, schemaValidator).fromEntity(
+      entity,
+      ...additionalArgs
+    );
+    return result.then((r) => r.toDto()) as Promise<DtoType>;
   }
 }

@@ -41,7 +41,7 @@ export class BaseSampleWorkerService implements SampleWorkerService {
   sampleWorkerPost = async (
     dto: SampleWorkerRequestDto
   ): Promise<SampleWorkerResponseDto> => {
-    const entity = SampleWorkerRequestDtoMapper.deserializeDtoToEntity(
+    const entity = await SampleWorkerRequestDtoMapper.deserializeDtoToEntity(
       SchemaValidator(),
       dto
     );
