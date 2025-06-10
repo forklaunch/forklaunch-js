@@ -1,7 +1,7 @@
-import { BaseEntity } from '@forklaunch/core/persistence';
 import { WorkerEventEntity } from '@forklaunch/interfaces-worker/types';
-import { EntityManager } from '@mikro-orm/core';
+import { BaseEntity, EntityManager } from '@mikro-orm/core';
 import { DatabaseWorkerOptions } from '../types/databaseWorker.types';
+
 export class DatabaseWorkerProducer<
   EventEntity extends WorkerEventEntity & BaseEntity,
   Options extends DatabaseWorkerOptions

@@ -33,6 +33,7 @@ import { CurrencyEnum } from './domain/enum/currency.enum';
 import { PartyEnum } from './domain/enum/party.enum';
 import { PaymentMethodEnum } from './domain/enum/paymentMethod.enum';
 import { PlanCadenceEnum } from './domain/enum/planCadence.enum';
+import { StatusEnum } from './domain/enum/status.enum';
 import {
   BillingPortalDtoMapper,
   CreateBillingPortalDtoMapper,
@@ -177,8 +178,9 @@ export function createDependencies(orm: MikroORM) {
     BillingPortalService: {
       lifetime: Lifetime.Scoped,
       type: BaseBillingPortalService<SchemaValidator>,
-      factory: ({ TtlCache, OpenTelemetryCollector }) =>
+      factory: ({ EntityManager, TtlCache, OpenTelemetryCollector }) =>
         new BaseBillingPortalService(
+          EntityManager,
           TtlCache,
           OpenTelemetryCollector,
           SchemaValidator(),
@@ -193,10 +195,12 @@ export function createDependencies(orm: MikroORM) {
       lifetime: Lifetime.Scoped,
       type: BaseCheckoutSessionService<
         SchemaValidator,
-        typeof PaymentMethodEnum
+        typeof PaymentMethodEnum,
+        typeof StatusEnum
       >,
-      factory: ({ TtlCache, OpenTelemetryCollector }) =>
+      factory: ({ EntityManager, TtlCache, OpenTelemetryCollector }) =>
         new BaseCheckoutSessionService(
+          EntityManager,
           TtlCache,
           OpenTelemetryCollector,
           SchemaValidator(),
@@ -209,9 +213,14 @@ export function createDependencies(orm: MikroORM) {
     },
     PaymentLinkService: {
       lifetime: Lifetime.Scoped,
-      type: BasePaymentLinkService<SchemaValidator, typeof CurrencyEnum>,
-      factory: ({ TtlCache, OpenTelemetryCollector }) =>
+      type: BasePaymentLinkService<
+        SchemaValidator,
+        typeof CurrencyEnum,
+        typeof StatusEnum
+      >,
+      factory: ({ EntityManager, TtlCache, OpenTelemetryCollector }) =>
         new BasePaymentLinkService(
+          EntityManager,
           TtlCache,
           OpenTelemetryCollector,
           SchemaValidator(),

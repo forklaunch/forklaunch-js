@@ -1,8 +1,10 @@
 import { IdDto, InstanceTypeRecord } from '@forklaunch/common';
 import { createCacheKey, TtlCache } from '@forklaunch/core/cache';
 import {
+  evaluateTelemetryOptions,
   MetricsDefinition,
-  OpenTelemetryCollector
+  OpenTelemetryCollector,
+  TelemetryOptions
 } from '@forklaunch/core/http';
 import {
   InternalDtoMapper,
@@ -17,6 +19,7 @@ import {
   UpdateBillingPortalDto
 } from '@forklaunch/interfaces-billing/types';
 import { AnySchemaValidator } from '@forklaunch/validator';
+import { EntityManager } from '@mikro-orm/core';
 
 export class BaseBillingPortalService<
   SchemaValidator extends AnySchemaValidator,
@@ -46,8 +49,15 @@ export class BaseBillingPortalService<
     Entities,
     Dto
   >;
+  private evaluatedTelemetryOptions: {
+    logging?: boolean;
+    metrics?: boolean;
+    tracing?: boolean;
+  };
+  private enableDatabaseBackup: boolean;
 
   constructor(
+    protected em: EntityManager,
     protected cache: TtlCache,
     protected openTelemetryCollector: OpenTelemetryCollector<Metrics>,
     protected schemaValidator: SchemaValidator,
@@ -67,9 +77,21 @@ export class BaseBillingPortalService<
         Dto['UpdateBillingPortalDtoMapper'],
         Entities['UpdateBillingPortalDtoMapper']
       >;
+    },
+    readonly options?: {
+      telemetry?: TelemetryOptions;
+      enableDatabaseBackup?: boolean;
     }
   ) {
     this.#mappers = transformIntoInternalDtoMapper(mappers, schemaValidator);
+    this.enableDatabaseBackup = options?.enableDatabaseBackup ?? false;
+    this.evaluatedTelemetryOptions = options?.telemetry
+      ? evaluateTelemetryOptions(options.telemetry).enabled
+      : {
+          logging: false,
+          metrics: false,
+          tracing: false
+        };
   }
 
   protected createCacheKey = createCacheKey('billing_portal_session');
@@ -77,65 +99,115 @@ export class BaseBillingPortalService<
   async createBillingPortalSession(
     billingPortalDto: Dto['CreateBillingPortalDtoMapper']
   ): Promise<Dto['BillingPortalDtoMapper']> {
-    const billingPortalSession =
-      await this.#mappers.CreateBillingPortalDtoMapper.deserializeDtoToEntity(
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info(
+        'Creating billing portal session',
         billingPortalDto
       );
+    }
 
-    this.openTelemetryCollector.debug(
-      'Create billing portal session',
-      billingPortalSession
-    );
+    const billingPortal =
+      await this.#mappers.CreateBillingPortalDtoMapper.deserializeDtoToEntity(
+        billingPortalDto,
+        this.em
+      );
+
+    if (this.enableDatabaseBackup) {
+      await this.em.persistAndFlush(billingPortal);
+    }
+
+    const createdBillingPortalDto =
+      await this.#mappers.BillingPortalDtoMapper.serializeEntityToDto(
+        billingPortal
+      );
 
     await this.cache.putRecord({
-      key: this.createCacheKey(billingPortalSession.id),
-      value: billingPortalSession,
+      key: this.createCacheKey(createdBillingPortalDto.id),
+      value: createdBillingPortalDto,
       ttlMilliseconds: this.cache.getTtlMilliseconds()
     });
 
-    return this.#mappers.BillingPortalDtoMapper.serializeEntityToDto(
-      billingPortalSession
-    );
+    return createdBillingPortalDto;
   }
 
   async getBillingPortalSession(
     idDto: IdDto
   ): Promise<Dto['BillingPortalDtoMapper']> {
-    const billingPortalSessionDetails = await this.cache.readRecord<
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info('Getting billing portal session', idDto);
+    }
+
+    const billingPortalDetails = await this.cache.readRecord<
       Entities['BillingPortalDtoMapper']
     >(this.createCacheKey(idDto.id));
-    if (!billingPortalSessionDetails) {
+
+    if (!billingPortalDetails) {
       throw new Error('Session not found');
     }
 
-    return this.#mappers.BillingPortalDtoMapper.serializeEntityToDto(
-      billingPortalSessionDetails.value
-    );
+    return billingPortalDetails.value;
   }
 
   async updateBillingPortalSession(
     billingPortalDto: UpdateBillingPortalDto
   ): Promise<Dto['BillingPortalDtoMapper']> {
-    const billingPortalSession =
-      await this.#mappers.UpdateBillingPortalDtoMapper.deserializeDtoToEntity(
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info(
+        'Updating billing portal session',
         billingPortalDto
       );
-    // Save the updated session to your database or external service
+    }
+
+    const existingBillingPortal = (
+      await this.cache.readRecord<Entities['BillingPortalDtoMapper']>(
+        this.createCacheKey(billingPortalDto.id)
+      )
+    )?.value;
+
+    if (!existingBillingPortal) {
+      throw new Error('Session not found');
+    }
+
+    const billingPortal =
+      await this.#mappers.UpdateBillingPortalDtoMapper.deserializeDtoToEntity(
+        billingPortalDto,
+        this.em
+      );
+
+    if (this.enableDatabaseBackup) {
+      await this.em.persistAndFlush({
+        billingPortal
+      });
+    }
+
+    const updatedBillingPortalDto = {
+      ...existingBillingPortal,
+      ...(await this.#mappers.BillingPortalDtoMapper.serializeEntityToDto(
+        billingPortal
+      ))
+    };
+
     await this.cache.putRecord({
-      key: this.createCacheKey(billingPortalSession.id),
-      value: billingPortalSession,
+      key: this.createCacheKey(updatedBillingPortalDto.id),
+      value: updatedBillingPortalDto,
       ttlMilliseconds: this.cache.getTtlMilliseconds()
     });
 
-    return this.#mappers.BillingPortalDtoMapper.serializeEntityToDto(
-      billingPortalSession
-    );
+    return updatedBillingPortalDto;
   }
 
   async expireBillingPortalSession(idDto: IdDto): Promise<void> {
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info(
+        'Expiring billing portal session',
+        idDto
+      );
+    }
+
     const sessionExists = await this.cache.readRecord(
       this.createCacheKey(idDto.id)
     );
+
     if (!sessionExists) {
       throw new Error('Session not found');
     }

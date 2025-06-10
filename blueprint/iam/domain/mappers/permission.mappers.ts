@@ -1,5 +1,6 @@
 import { SchemaValidator } from '@forklaunch/blueprint-core';
 import { RequestDtoMapper, ResponseDtoMapper } from '@forklaunch/core/mappers';
+import { EntityManager } from '@mikro-orm/core';
 import { Permission } from '../../persistence/entities/permission.entity';
 import { PermissionSchemas } from '../../registrations';
 
@@ -9,8 +10,15 @@ export class CreatePermissionDtoMapper extends RequestDtoMapper<
 > {
   schema = PermissionSchemas.CreatePermissionSchema;
 
-  async toEntity(): Promise<Permission> {
-    return Permission.create(this.dto);
+  async toEntity(em: EntityManager): Promise<Permission> {
+    return Permission.create(
+      {
+        ...this.dto,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      em
+    );
   }
 }
 
@@ -20,8 +28,8 @@ export class UpdatePermissionDtoMapper extends RequestDtoMapper<
 > {
   schema = PermissionSchemas.UpdatePermissionSchema;
 
-  async toEntity(): Promise<Permission> {
-    return Permission.update(this.dto);
+  async toEntity(em: EntityManager): Promise<Permission> {
+    return Permission.update(this.dto, em);
   }
 }
 

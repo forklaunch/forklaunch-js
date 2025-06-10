@@ -1,31 +1,25 @@
 import { SchemaValidator } from '@forklaunch/blueprint-core';
 import { RequestDtoMapper, ResponseDtoMapper } from '@forklaunch/core/mappers';
-import { collection } from '@forklaunch/core/persistence';
-import { Permission } from '../../persistence/entities/permission.entity';
+import { EntityManager } from '@mikro-orm/core';
 import { Role } from '../../persistence/entities/role.entity';
 import { RoleSchemas } from '../../registrations';
 import { PermissionDtoMapper } from './permission.mappers';
+
 export class CreateRoleDtoMapper extends RequestDtoMapper<
   Role,
   SchemaValidator
 > {
   schema = RoleSchemas.CreateRoleSchema;
 
-  async toEntity(): Promise<Role> {
-    return Role.create({
-      ...this.dto,
-      permissions: collection(
-        this.dto.permissionIds
-          ? await Promise.all(
-              this.dto.permissionIds.map(async (id) =>
-                Permission.map({
-                  id
-                })
-              )
-            )
-          : []
-      )
-    });
+  async toEntity(em: EntityManager): Promise<Role> {
+    return Role.create(
+      {
+        ...this.dto,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      em
+    );
   }
 }
 
@@ -35,23 +29,8 @@ export class UpdateRoleDtoMapper extends RequestDtoMapper<
 > {
   schema = RoleSchemas.UpdateRoleSchema;
 
-  async toEntity(): Promise<Role> {
-    return Role.update({
-      ...this.dto,
-      ...(this.dto.permissionIds
-        ? {
-            permissions: collection(
-              await Promise.all(
-                this.dto.permissionIds.map(async (id) =>
-                  Permission.map({
-                    id
-                  })
-                )
-              )
-            )
-          }
-        : {})
-    });
+  async toEntity(em: EntityManager): Promise<Role> {
+    return Role.update(this.dto, em);
   }
 }
 
@@ -59,39 +38,35 @@ export class RoleDtoMapper extends ResponseDtoMapper<Role, SchemaValidator> {
   schema = RoleSchemas.RoleSchema;
 
   async fromEntity(entity: Role): Promise<this> {
+    if (!entity.isInitialized()) {
+      throw new Error('Role is not initialized');
+    }
+
     this.dto = {
       ...(await entity.read()),
-      permissions: entity.permissions.isInitialized()
-        ? await Promise.all(
-            entity.permissions
-              .getItems()
-              .map(async (permission) =>
-                (
-                  await PermissionDtoMapper.fromEntity(
-                    SchemaValidator(),
-                    permission
-                  )
-                ).toDto()
-              )
-          )
-        : []
+      permissions: await Promise.all(
+        entity.permissions.map(async (permission) =>
+          (
+            await PermissionDtoMapper.fromEntity(
+              this.schemaValidator as SchemaValidator,
+              permission
+            )
+          ).toDto()
+        )
+      )
     };
-
     return this;
   }
 }
 
 export class RoleEntityMapper extends RequestDtoMapper<Role, SchemaValidator> {
-  schema = RoleSchemas.RoleSchema;
+  schema = RoleSchemas.UpdateRoleSchema;
 
-  async toEntity(): Promise<Role> {
-    return Role.map({
-      ...this.dto,
-      ...(this.dto.permissions
-        ? {
-            permissions: this.dto.permissions.map((permission) => permission.id)
-          }
-        : {})
-    });
+  async toEntity(em: EntityManager): Promise<Role> {
+    const role = await em.findOne(Role, this.dto.id);
+    if (!role) {
+      throw new Error('Role not found');
+    }
+    return role;
   }
 }

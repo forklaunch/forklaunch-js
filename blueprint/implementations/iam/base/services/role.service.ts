@@ -1,6 +1,8 @@
 import {
+  evaluateTelemetryOptions,
   MetricsDefinition,
-  OpenTelemetryCollector
+  OpenTelemetryCollector,
+  TelemetryOptions
 } from '@forklaunch/core/http';
 import { RoleService } from '@forklaunch/interfaces-iam/interfaces';
 import { EntityManager } from '@mikro-orm/core';
@@ -60,6 +62,11 @@ export class BaseRoleService<
     Entities,
     Dto
   >;
+  private evaluatedTelemetryOptions: {
+    logging?: boolean;
+    metrics?: boolean;
+    tracing?: boolean;
+  };
 
   constructor(
     public em: EntityManager,
@@ -81,18 +88,39 @@ export class BaseRoleService<
         Dto['UpdateRoleDtoMapper'],
         Entities['UpdateRoleDtoMapper']
       >;
+    },
+    options?: {
+      telemetry?: TelemetryOptions;
     }
   ) {
     this.#mappers = transformIntoInternalDtoMapper(mappers, schemaValidator);
+    this.evaluatedTelemetryOptions = options?.telemetry
+      ? evaluateTelemetryOptions(options.telemetry).enabled
+      : {
+          logging: false,
+          metrics: false,
+          tracing: false
+        };
   }
 
   async createRole(
     roleDto: Dto['CreateRoleDtoMapper'],
     em?: EntityManager
   ): Promise<Dto['RoleDtoMapper']> {
-    const role =
-      await this.#mappers.CreateRoleDtoMapper.deserializeDtoToEntity(roleDto);
-    await (em ?? this.em).transactional((em) => em.persist(role));
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info('Creating role', roleDto);
+    }
+    const role = await this.#mappers.CreateRoleDtoMapper.deserializeDtoToEntity(
+      roleDto,
+      em ?? this.em
+    );
+
+    if (em) {
+      await em.persist(role);
+    } else {
+      await this.em.persistAndFlush(role);
+    }
+
     return this.#mappers.RoleDtoMapper.serializeEntityToDto(role);
   }
 
@@ -100,12 +128,25 @@ export class BaseRoleService<
     roleDtos: Dto['CreateRoleDtoMapper'][],
     em?: EntityManager
   ): Promise<Dto['RoleDtoMapper'][]> {
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info('Creating batch roles', roleDtos);
+    }
+
     const roles = await Promise.all(
       roleDtos.map(async (roleDto) =>
-        this.#mappers.CreateRoleDtoMapper.deserializeDtoToEntity(roleDto)
+        this.#mappers.CreateRoleDtoMapper.deserializeDtoToEntity(
+          roleDto,
+          em ?? this.em
+        )
       )
     );
-    await (em ?? this.em).transactional((em) => em.persist(roles));
+
+    if (em) {
+      await em.persist(roles);
+    } else {
+      await this.em.persistAndFlush(roles);
+    }
+
     return Promise.all(
       roles.map((role) =>
         this.#mappers.RoleDtoMapper.serializeEntityToDto(role)
@@ -113,21 +154,36 @@ export class BaseRoleService<
     );
   }
 
-  async getRole(idDto: IdDto, em?: EntityManager): Promise<RoleDto> {
-    const role = await (em ?? this.em).findOneOrFail('Role', idDto, {
+  async getRole({ id }: IdDto, em?: EntityManager): Promise<RoleDto> {
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info('Getting role', { id });
+    }
+
+    const role = await (em ?? this.em).findOneOrFail('Role', id, {
       populate: ['id', '*']
     });
+
     return this.#mappers.RoleDtoMapper.serializeEntityToDto(
       role as Entities['RoleDtoMapper']
     );
   }
 
-  async getBatchRoles(idsDto: IdsDto, em?: EntityManager): Promise<RoleDto[]> {
+  async getBatchRoles({ ids }: IdsDto, em?: EntityManager): Promise<RoleDto[]> {
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info('Getting batch roles', { ids });
+    }
+
     return Promise.all(
       (
-        await (em ?? this.em).find('Role', idsDto, {
-          populate: ['id', '*']
-        })
+        await (em ?? this.em).find(
+          'Role',
+          {
+            id: { $in: ids }
+          },
+          {
+            populate: ['id', '*']
+          }
+        )
       ).map((role) =>
         this.#mappers.RoleDtoMapper.serializeEntityToDto(
           role as Entities['RoleDtoMapper']
@@ -140,11 +196,21 @@ export class BaseRoleService<
     roleDto: Dto['UpdateRoleDtoMapper'],
     em?: EntityManager
   ): Promise<Dto['RoleDtoMapper']> {
-    let role =
-      await this.#mappers.UpdateRoleDtoMapper.deserializeDtoToEntity(roleDto);
-    await (em ?? this.em).transactional(async (em) => {
-      role = (await em.upsert('Role', role)) as Entities['RoleDtoMapper'];
-    });
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info('Updating role', roleDto);
+    }
+
+    const role = await this.#mappers.UpdateRoleDtoMapper.deserializeDtoToEntity(
+      roleDto,
+      em ?? this.em
+    );
+
+    if (em) {
+      await em.persist(role);
+    } else {
+      await this.em.persistAndFlush(role);
+    }
+
     return this.#mappers.RoleDtoMapper.serializeEntityToDto(role);
   }
 
@@ -152,14 +218,24 @@ export class BaseRoleService<
     roleDtos: Dto['UpdateRoleDtoMapper'][],
     em?: EntityManager
   ): Promise<Dto['RoleDtoMapper'][]> {
-    let roles = await Promise.all(
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info('Updating batch roles', roleDtos);
+    }
+
+    const roles = await Promise.all(
       roleDtos.map(async (roleDto) =>
-        this.#mappers.UpdateRoleDtoMapper.deserializeDtoToEntity(roleDto)
+        this.#mappers.UpdateRoleDtoMapper.deserializeDtoToEntity(
+          roleDto,
+          em ?? this.em
+        )
       )
     );
-    await (em ?? this.em).transactional(async (em) => {
-      roles = await em.upsertMany('Role', roles);
-    });
+
+    if (em) {
+      await em.persist(roles);
+    } else {
+      await this.em.persistAndFlush(roles);
+    }
     return Promise.all(
       roles.map((role) =>
         this.#mappers.RoleDtoMapper.serializeEntityToDto(
@@ -170,10 +246,18 @@ export class BaseRoleService<
   }
 
   async deleteRole(idDto: IdDto, em?: EntityManager): Promise<void> {
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info('Deleting role', idDto);
+    }
+
     await (em ?? this.em).nativeDelete('Role', idDto);
   }
 
   async deleteBatchRoles(idsDto: IdsDto, em?: EntityManager): Promise<void> {
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info('Deleting batch roles', idsDto);
+    }
+
     await (em ?? this.em).nativeDelete('Role', { id: { $in: idsDto.ids } });
   }
 }

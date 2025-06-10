@@ -1,5 +1,6 @@
 import { SchemaValidator } from '@forklaunch/blueprint-core';
 import { RequestDtoMapper, ResponseDtoMapper } from '@forklaunch/core/mappers';
+import { EntityManager } from '@mikro-orm/core';
 import { Subscription } from '../../persistence/entities/subscription.entity';
 import { SubscriptionSchemas } from '../../registrations';
 import { BillingProviderEnum } from '../enum/billingProvider.enum';
@@ -14,8 +15,15 @@ export class CreateSubscriptionDtoMapper extends RequestDtoMapper<
     BillingProviderEnum
   );
 
-  async toEntity(): Promise<Subscription> {
-    return Subscription.create(this.dto);
+  async toEntity(em: EntityManager): Promise<Subscription> {
+    return Subscription.create(
+      {
+        ...this.dto,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      em
+    );
   }
 }
 
@@ -28,8 +36,8 @@ export class UpdateSubscriptionDtoMapper extends RequestDtoMapper<
     BillingProviderEnum
   );
 
-  async toEntity(): Promise<Subscription> {
-    return Subscription.update(this.dto);
+  async toEntity(em: EntityManager): Promise<Subscription> {
+    return Subscription.update(this.dto, em);
   }
 }
 

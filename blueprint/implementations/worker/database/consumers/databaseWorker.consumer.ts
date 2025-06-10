@@ -1,11 +1,10 @@
-import { BaseEntity } from '@forklaunch/core/persistence';
 import { WorkerConsumer } from '@forklaunch/interfaces-worker/interfaces';
 import {
   WorkerEventEntity,
   WorkerFailureHandler,
   WorkerProcessFunction
 } from '@forklaunch/interfaces-worker/types';
-import { EntityManager, EntityName } from '@mikro-orm/core';
+import { BaseEntity, EntityManager, EntityName } from '@mikro-orm/core';
 import { DatabaseWorkerOptions } from '../types/databaseWorker.types';
 
 export class DatabaseWorkerConsumer<

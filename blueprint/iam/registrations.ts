@@ -175,7 +175,7 @@ export function createDependencies(orm: MikroORM) {
             PermissionDtoMapper,
             CreatePermissionDtoMapper,
             UpdatePermissionDtoMapper,
-            RoleDtoMapper: RoleEntityMapper
+            RoleEntityMapper
           }
         )
     },

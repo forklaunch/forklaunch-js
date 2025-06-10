@@ -5,7 +5,7 @@ import { checkoutSession } from '../seed.data';
 
 export class CheckoutSessionSeeder extends Seeder {
   async run(em: EntityManager): Promise<void> {
-    em.create(CheckoutSession, await checkoutSession());
+    em.create(CheckoutSession, await checkoutSession(em));
     return Promise.resolve();
   }
 }

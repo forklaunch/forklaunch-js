@@ -10,6 +10,7 @@ import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { CheckoutSessionService } from '@forklaunch/interfaces-billing/interfaces';
 import { PaymentMethodEnum } from '../../domain/enum/paymentMethod.enum';
+import { StatusEnum } from '../../domain/enum/status.enum';
 import {
   CheckoutSessionDtoMapper,
   CreateCheckoutSessionDtoMapper
@@ -120,4 +121,6 @@ export const CheckoutSessionController = (
           .send(`Handled checkout failure for session ${req.params.id}`);
       }
     )
-  }) satisfies Controller<CheckoutSessionService<typeof PaymentMethodEnum>>;
+  }) satisfies Controller<
+    CheckoutSessionService<typeof PaymentMethodEnum, typeof StatusEnum>
+  >;

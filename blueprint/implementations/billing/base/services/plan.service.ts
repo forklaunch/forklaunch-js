@@ -1,7 +1,9 @@
 import { IdDto, IdsDto, InstanceTypeRecord } from '@forklaunch/common';
 import {
+  evaluateTelemetryOptions,
   MetricsDefinition,
-  OpenTelemetryCollector
+  OpenTelemetryCollector,
+  TelemetryOptions
 } from '@forklaunch/core/http';
 import {
   InternalDtoMapper,
@@ -48,6 +50,11 @@ export class BasePlanService<
     Entities,
     Dto
   >;
+  private evaluatedTelemetryOptions: {
+    logging?: boolean;
+    metrics?: boolean;
+    tracing?: boolean;
+  };
 
   constructor(
     private em: EntityManager,
@@ -69,15 +76,28 @@ export class BasePlanService<
         Dto['UpdatePlanDtoMapper'],
         Entities['UpdatePlanDtoMapper']
       >;
+    },
+    readonly options?: {
+      telemetry?: TelemetryOptions;
     }
   ) {
     this.#mappers = transformIntoInternalDtoMapper(mappers, schemaValidator);
+    this.evaluatedTelemetryOptions = options?.telemetry
+      ? evaluateTelemetryOptions(options.telemetry).enabled
+      : {
+          logging: false,
+          metrics: false,
+          tracing: false
+        };
   }
 
   async listPlans(
     idsDto?: IdsDto,
     em?: EntityManager
   ): Promise<Dto['PlanDtoMapper'][]> {
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info('Listing plans', idsDto);
+    }
     return Promise.all(
       (
         await (em ?? this.em).findAll('Plan', {
@@ -95,8 +115,13 @@ export class BasePlanService<
     planDto: Dto['CreatePlanDtoMapper'],
     em?: EntityManager
   ): Promise<Dto['PlanDtoMapper']> {
-    const plan =
-      await this.#mappers.CreatePlanDtoMapper.deserializeDtoToEntity(planDto);
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info('Creating plan', planDto);
+    }
+    const plan = await this.#mappers.CreatePlanDtoMapper.deserializeDtoToEntity(
+      planDto,
+      em ?? this.em
+    );
     await (em ?? this.em).transactional(async (innerEm) => {
       await innerEm.persist(plan);
     });
@@ -107,6 +132,9 @@ export class BasePlanService<
     idDto: IdDto,
     em?: EntityManager
   ): Promise<Dto['PlanDtoMapper']> {
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info('Getting plan', idDto);
+    }
     const plan = await (em ?? this.em).findOneOrFail('Plan', idDto);
     return this.#mappers.PlanDtoMapper.serializeEntityToDto(
       plan as Entities['PlanDtoMapper']
@@ -117,8 +145,13 @@ export class BasePlanService<
     planDto: Dto['UpdatePlanDtoMapper'],
     em?: EntityManager
   ): Promise<Dto['PlanDtoMapper']> {
-    const plan =
-      await this.#mappers.UpdatePlanDtoMapper.deserializeDtoToEntity(planDto);
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info('Updating plan', planDto);
+    }
+    const plan = await this.#mappers.UpdatePlanDtoMapper.deserializeDtoToEntity(
+      planDto,
+      em ?? this.em
+    );
     const updatedPlan = await (em ?? this.em).upsert(plan);
     await (em ?? this.em).transactional(async (innerEm) => {
       await innerEm.persist(plan);
@@ -129,6 +162,9 @@ export class BasePlanService<
   }
 
   async deletePlan(idDto: { id: string }, em?: EntityManager): Promise<void> {
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info('Deleting plan', idDto);
+    }
     await (em ?? this.em).nativeDelete('Plan', idDto);
   }
 }

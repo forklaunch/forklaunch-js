@@ -6,8 +6,10 @@ import {
 
 import { IdDto, IdsDto, InstanceTypeRecord } from '@forklaunch/common';
 import {
+  evaluateTelemetryOptions,
   MetricsDefinition,
-  OpenTelemetryCollector
+  OpenTelemetryCollector,
+  TelemetryOptions
 } from '@forklaunch/core/http';
 import {
   InternalDtoMapper,
@@ -53,6 +55,11 @@ export class BaseUserService<
     Entities,
     Dto
   >;
+  private evaluatedTelemetryOptions: {
+    logging?: boolean;
+    metrics?: boolean;
+    tracing?: boolean;
+  };
 
   constructor(
     public em: EntityManager,
@@ -70,37 +77,47 @@ export class BaseUserService<
       CreateUserDtoMapper: RequestDtoMapperConstructor<
         SchemaValidator,
         Dto['CreateUserDtoMapper'],
-        Entities['CreateUserDtoMapper'],
-        (
-          dto: never,
-          passwordEncryptionPublicKeyPath: string
-        ) => Promise<Entities['UpdateUserDtoMapper']>
+        Entities['CreateUserDtoMapper']
       >;
       UpdateUserDtoMapper: RequestDtoMapperConstructor<
         SchemaValidator,
         Dto['UpdateUserDtoMapper'],
-        Entities['UpdateUserDtoMapper'],
-        (
-          dto: never,
-          passwordEncryptionPublicKeyPath: string
-        ) => Promise<Entities['UpdateUserDtoMapper']>
+        Entities['UpdateUserDtoMapper']
       >;
+    },
+    readonly options?: {
+      telemetry?: TelemetryOptions;
     }
   ) {
     this.#mappers = transformIntoInternalDtoMapper(mappers, schemaValidator);
+    this.evaluatedTelemetryOptions = options?.telemetry
+      ? evaluateTelemetryOptions(options.telemetry).enabled
+      : {
+          logging: false,
+          metrics: false,
+          tracing: false
+        };
   }
 
   async createUser(
     userDto: Dto['CreateUserDtoMapper'],
     em?: EntityManager
   ): Promise<Dto['UserDtoMapper']> {
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info('Creating user', userDto);
+    }
+
     const user = await this.#mappers.CreateUserDtoMapper.deserializeDtoToEntity(
       userDto,
-      this.passwordEncryptionPublicKeyPath
+      em ?? this.em
     );
-    ((await em) ?? this.em).transactional(async (em) => {
+
+    if (em) {
       await em.persist(user);
-    });
+    } else {
+      await this.em.persistAndFlush(user);
+    }
+
     return this.#mappers.UserDtoMapper.serializeEntityToDto(user);
   }
 
@@ -108,17 +125,24 @@ export class BaseUserService<
     userDtos: Dto['CreateUserDtoMapper'][],
     em?: EntityManager
   ): Promise<Dto['UserDtoMapper'][]> {
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info('Creating batch users', userDtos);
+    }
+
     const users = await Promise.all(
       userDtos.map(async (createUserDto) =>
         this.#mappers.CreateUserDtoMapper.deserializeDtoToEntity(
           createUserDto,
-          this.passwordEncryptionPublicKeyPath
+          em ?? this.em
         )
       )
     );
-    await (em ?? this.em).transactional(async (em) => {
+
+    if (em) {
       await em.persist(users);
-    });
+    } else {
+      await this.em.persistAndFlush(users);
+    }
 
     return Promise.all(
       users.map((user) =>
@@ -131,9 +155,14 @@ export class BaseUserService<
     idDto: IdDto,
     em?: EntityManager
   ): Promise<Dto['UserDtoMapper']> {
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info('Getting user', idDto);
+    }
+
     const user = await (em ?? this.em).findOneOrFail('User', idDto, {
       populate: ['id', '*']
     });
+
     return this.#mappers.UserDtoMapper.serializeEntityToDto(
       user as Entities['UserDtoMapper']
     );
@@ -143,6 +172,10 @@ export class BaseUserService<
     idsDto: IdsDto,
     em?: EntityManager
   ): Promise<Dto['UserDtoMapper'][]> {
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info('Getting batch users', idsDto);
+    }
+
     return Promise.all(
       (
         await (em ?? this.em).find('User', idsDto, {
@@ -160,13 +193,21 @@ export class BaseUserService<
     userDto: Dto['UpdateUserDtoMapper'],
     em?: EntityManager
   ): Promise<Dto['UserDtoMapper']> {
-    let user = await this.#mappers.UpdateUserDtoMapper.deserializeDtoToEntity(
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info('Updating user', userDto);
+    }
+
+    const user = await this.#mappers.UpdateUserDtoMapper.deserializeDtoToEntity(
       userDto,
-      this.passwordEncryptionPublicKeyPath
+      em ?? this.em
     );
-    await (em ?? this.em).transactional(async (localEm) => {
-      user = await localEm.upsert(user);
-    });
+
+    if (em) {
+      await em.persist(user);
+    } else {
+      await this.em.persistAndFlush(user);
+    }
+
     return this.#mappers.UserDtoMapper.serializeEntityToDto(user);
   }
 
@@ -174,17 +215,25 @@ export class BaseUserService<
     userDtos: UpdateUserDto[],
     em?: EntityManager
   ): Promise<Dto['UserDtoMapper'][]> {
-    let users = await Promise.all(
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info('Updating batch users', userDtos);
+    }
+
+    const users = await Promise.all(
       userDtos.map(async (updateUserDto) =>
         this.#mappers.UpdateUserDtoMapper.deserializeDtoToEntity(
           updateUserDto,
-          this.passwordEncryptionPublicKeyPath
+          em ?? this.em
         )
       )
     );
-    await (em ?? this.em).transactional(async (localEm) => {
-      users = await localEm.upsertMany(users);
-    });
+
+    if (em) {
+      await em.persist(users);
+    } else {
+      await this.em.persistAndFlush(users);
+    }
+
     return Promise.all(
       users.map((user) =>
         this.#mappers.UserDtoMapper.serializeEntityToDto(user)
@@ -193,16 +242,26 @@ export class BaseUserService<
   }
 
   async deleteUser(idDto: IdDto, em?: EntityManager): Promise<void> {
-    const entityManager = em || this.em;
-    await entityManager.nativeDelete('User', idDto);
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info('Deleting user', idDto);
+    }
+    await (em ?? this.em).nativeDelete('User', idDto);
   }
 
   async deleteBatchUsers(idsDto: IdsDto, em?: EntityManager): Promise<void> {
-    const entityManager = em || this.em;
-    await entityManager.nativeDelete('User', idsDto);
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info('Deleting batch users', idsDto);
+    }
+    await (em ?? this.em).nativeDelete('User', idsDto);
   }
 
   async verifyHasRole(idDto: IdDto, roleId: string): Promise<void> {
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info('Verifying user has role', {
+        idDto,
+        roleId
+      });
+    }
     const user = await this.getUser(idDto);
     if (
       user.roles.filter((role) => {
@@ -214,6 +273,12 @@ export class BaseUserService<
   }
 
   async verifyHasPermission(idDto: IdDto, permissionId: string): Promise<void> {
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info('Verifying user has permission', {
+        idDto,
+        permissionId
+      });
+    }
     const user = await this.getUser(idDto);
     if (
       user.roles

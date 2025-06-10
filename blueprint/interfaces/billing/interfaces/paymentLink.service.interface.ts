@@ -2,8 +2,11 @@ import { PaymentLinkServiceParameters } from '../types/paymentLink.service.types
 
 export interface PaymentLinkService<
   CurrencyEnum,
-  Params extends
-    PaymentLinkServiceParameters<CurrencyEnum> = PaymentLinkServiceParameters<CurrencyEnum>
+  StatusEnum,
+  Params extends PaymentLinkServiceParameters<
+    CurrencyEnum,
+    StatusEnum
+  > = PaymentLinkServiceParameters<CurrencyEnum, StatusEnum>
 > {
   // for one off products that are not part of a subscription
   // think about how permissions work on payment links, but these should be ephemeral

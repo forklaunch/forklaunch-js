@@ -17,9 +17,6 @@ export class User extends SqlBaseEntity {
   email!: string;
 
   @Property()
-  passwordHash!: string;
-
-  @Property()
   firstName!: string;
 
   @Property()

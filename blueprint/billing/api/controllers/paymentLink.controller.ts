@@ -12,12 +12,13 @@ import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { PaymentLinkService } from '@forklaunch/interfaces-billing/interfaces';
 import { CurrencyEnum } from '../../domain/enum/currency.enum';
+import { StatusEnum } from '../../domain/enum/status.enum';
 import {
   CreatePaymentLinkDtoMapper,
   PaymentLinkDtoMapper,
   UpdatePaymentLinkDtoMapper
 } from '../../domain/mappers/paymentLink.mappers';
-import { PaymentLinkSchemas, SchemaDependencies } from '../../registrations';
+import { SchemaDependencies } from '../../registrations';
 
 export const PaymentLinkController = (
   serviceFactory: ScopedDependencyFactory<
@@ -152,7 +153,7 @@ export const PaymentLinkController = (
         summary: 'List payment links',
         query: IdsSchema,
         responses: {
-          200: array(PaymentLinkSchemas.PaymentLinkSchema(CurrencyEnum))
+          200: array(PaymentLinkDtoMapper.schema())
         }
       },
       async (req, res) => {
@@ -162,4 +163,6 @@ export const PaymentLinkController = (
           .json(await serviceFactory().listPaymentLinks(req.query));
       }
     )
-  }) satisfies Controller<PaymentLinkService<typeof CurrencyEnum>>;
+  }) satisfies Controller<
+    PaymentLinkService<typeof CurrencyEnum, typeof StatusEnum>
+  >;

@@ -5,6 +5,7 @@ import {
   string
 } from '@forklaunch/blueprint-core';
 import { RequestDtoMapper, ResponseDtoMapper } from '@forklaunch/core/mappers';
+import { wrap } from '@mikro-orm/core';
 import { SampleWorkerEventRecord } from '../../persistence/entities/sampleWorkerRecord.entity';
 import { SampleWorkerSchema } from '../schemas/sampleWorker.schema';
 
@@ -23,7 +24,9 @@ export class SampleWorkerRequestDtoMapper extends RequestDtoMapper<
     return SampleWorkerEventRecord.create({
       ...this.dto,
       processed: false,
-      retryCount: 0
+      retryCount: 0,
+      createdAt: new Date(),
+      updatedAt: new Date()
     });
   }
 }
@@ -44,7 +47,10 @@ export class SampleWorkerResponseDtoMapper extends ResponseDtoMapper<
 
   // fromEntity method maps the entity to the response schema
   async fromEntity(entity: SampleWorkerEventRecord): Promise<this> {
-    this.dto = await entity.read();
+    if (!entity.isInitialized()) {
+      throw new Error('SampleWorkerEventRecord is not initialized');
+    }
+    this.dto = wrap(entity).toPOJO();
     return this;
   }
 }

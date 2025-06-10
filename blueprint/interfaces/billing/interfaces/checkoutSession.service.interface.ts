@@ -1,8 +1,11 @@
 import { CheckoutSessionServiceParameters } from '../types/checkoutSession.service.types';
 export interface CheckoutSessionService<
   PaymentMethodEnum,
-  Params extends
-    CheckoutSessionServiceParameters<PaymentMethodEnum> = CheckoutSessionServiceParameters<PaymentMethodEnum>
+  StatusEnum,
+  Params extends CheckoutSessionServiceParameters<
+    PaymentMethodEnum,
+    StatusEnum
+  > = CheckoutSessionServiceParameters<PaymentMethodEnum, StatusEnum>
 > {
   // for generating external links
   // store in cache, for permissions

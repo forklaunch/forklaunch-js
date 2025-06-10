@@ -5,7 +5,7 @@ import { organization } from '../seed.data';
 
 export class OrganizationSeeder extends Seeder {
   async run(em: EntityManager): Promise<void> {
-    em.create(Organization, await organization());
+    em.create(Organization, await organization(em));
     return Promise.resolve();
   }
 }
