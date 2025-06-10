@@ -25,14 +25,16 @@ export class BaseEntity extends MikroORMBaseEntity {
   static async create<T extends BaseEntity>(
     this: Constructor<T>,
     data: RequiredEntityData<T>,
-    em?: EntityManager
-  ): Promise<typeof this> {
+    em?: EntityManager,
+    ...constructorArgs: ConstructorParameters<Constructor<T>>
+  ): Promise<T> {
+    const instance = new this(...constructorArgs);
     if (em) {
       return em.create(this, data);
     } else {
-      Object.assign(this, data);
+      Object.assign(instance, data);
     }
-    return this;
+    return instance;
   }
 
   /**
@@ -47,32 +49,28 @@ export class BaseEntity extends MikroORMBaseEntity {
   static async update<T extends BaseEntity>(
     this: Constructor<T>,
     data: EntityData<T>,
-    em?: EntityManager
-  ): Promise<typeof this> {
+    em?: EntityManager,
+    ...constructorArgs: ConstructorParameters<Constructor<T>>
+  ): Promise<T> {
+    const instance = new this(...constructorArgs);
     if (em) {
-      return em.upsert(this, data);
+      return em.upsert(instance, data);
     } else {
-      Object.assign(this, data);
+      Object.assign(instance, data);
     }
-    return this;
+    return instance;
   }
 
   /**
    * Reads the entity, initializing it if necessary, and returns its DTO representation.
    *
-   * @param em - Optional MikroORM EntityManager for initialization
+   * @param em - Optional MikroORM EntityManager for initialization. If passed, entity will synchronize with database
    * @returns A promise resolving to the entity's DTO (plain object representation)
    * @throws Error if the entity is not initialized and no EntityManager is provided
    */
   async read(em?: EntityManager): Promise<EntityDTO<this>> {
-    if (!this.isInitialized()) {
-      if (em) {
-        await this.init({ em });
-      } else {
-        throw new Error(
-          'Not connected to MikroORM backend, read() will not work'
-        );
-      }
+    if (em && !this.isInitialized()) {
+      await this.init({ em });
     }
     return wrap(this).toPOJO();
   }

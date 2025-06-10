@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.9.8
+
+### Patch Changes
+
+- patch return types for create and update static methods
+
 ## 0.9.7
 
 ### Patch Changes
