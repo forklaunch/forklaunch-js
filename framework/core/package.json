@@ -43,6 +43,12 @@
       "require": "./lib/src/http/index.js",
       "default": "./lib/src/http/index.js"
     },
+    "./persistence": {
+      "types": "./lib/src/persistence/index.d.ts",
+      "import": "./lib/src/persistence/index.mjs",
+      "require": "./lib/src/persistence/index.js",
+      "default": "./lib/src/persistence/index.js"
+    },
     "./services": {
       "types": "./lib/src/services/index.d.ts",
       "import": "./lib/src/services/index.mjs",

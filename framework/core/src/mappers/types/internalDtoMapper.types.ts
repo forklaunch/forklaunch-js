@@ -45,7 +45,7 @@ export type InternalDtoMapper<
       ? {
           deserializeDtoToEntity: (
             dto: Dto[K],
-            em: EntityManager,
+            em?: EntityManager,
             ...additionalArgs: AllAfterFirstParameters<
               DtoMapper[K]['deserializeDtoToEntity']
             >
