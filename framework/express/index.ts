@@ -91,8 +91,10 @@ export function forklaunchRouter<
   return router;
 }
 
+export type { NextFunction, Request, Response } from 'express';
 export type { Application } from './src/expressApplication';
 export type { Router } from './src/expressRouter';
+
 export const handlers: {
   checkout: typeof checkout;
   copy: typeof copy;
