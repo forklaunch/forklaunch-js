@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.9.7
+
+### Patch Changes
+
+- Add back sensible entity utilities
+
 ## 0.9.6
 
 ### Patch Changes
