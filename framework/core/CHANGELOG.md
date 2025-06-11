@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.9.11
+
+### Patch Changes
+
+- Export pino types for type safety
+
 ## 0.9.10
 
 ### Patch Changes
