@@ -9,23 +9,23 @@ importers:
   .:
     dependencies:
       '@forklaunch/common':
-        specifier: ^0.3.8
-        version: 0.3.8
-      '@forklaunch/core':
-        specifier: ^0.9.8
-        version: 0.9.8(socks@2.8.5)
-      '@forklaunch/express':
-        specifier: ^0.5.18
-        version: 0.5.18(openapi3-ts@4.4.0)(socks@2.8.5)
-      '@forklaunch/hyper-express':
-        specifier: ^0.5.18
-        version: 0.5.18(express@5.1.0)(socks@2.8.5)
-      '@forklaunch/universal-sdk':
-        specifier: 0.3.9
+        specifier: ^0.3.9
         version: 0.3.9
+      '@forklaunch/core':
+        specifier: ^0.9.9
+        version: 0.9.9(socks@2.8.5)
+      '@forklaunch/express':
+        specifier: ^0.5.19
+        version: 0.5.19(openapi3-ts@4.4.0)(socks@2.8.5)
+      '@forklaunch/hyper-express':
+        specifier: ^0.5.19
+        version: 0.5.19(express@5.1.0)(socks@2.8.5)
+      '@forklaunch/universal-sdk':
+        specifier: 0.3.10
+        version: 0.3.10
       '@forklaunch/validator':
-        specifier: ^0.6.8
-        version: 0.6.8(openapi3-ts@4.4.0)
+        specifier: ^0.6.9
+        version: 0.6.9(openapi3-ts@4.4.0)
     devDependencies:
       '@biomejs/biome':
         specifier: 1.9.4
@@ -88,29 +88,29 @@ importers:
         specifier: workspace:*
         version: link:../monitoring
       '@forklaunch/common':
-        specifier: ^0.3.8
-        version: 0.3.8
+        specifier: ^0.3.9
+        version: 0.3.9
       '@forklaunch/core':
-        specifier: ^0.9.8
-        version: 0.9.8(socks@2.8.5)
+        specifier: ^0.9.9
+        version: 0.9.9(socks@2.8.5)
       '@forklaunch/express':
-        specifier: ^0.5.18
-        version: 0.5.18(openapi3-ts@4.4.0)(socks@2.8.5)
+        specifier: ^0.5.19
+        version: 0.5.19(openapi3-ts@4.4.0)(socks@2.8.5)
       '@forklaunch/hyper-express':
-        specifier: ^0.5.18
-        version: 0.5.18(express@5.1.0)(socks@2.8.5)
+        specifier: ^0.5.19
+        version: 0.5.19(express@5.1.0)(socks@2.8.5)
       '@forklaunch/implementation-billing-base':
         specifier: workspace:*
         version: link:../implementations/billing/base
       '@forklaunch/infrastructure-redis':
-        specifier: ^0.0.16
-        version: 0.0.16(socks@2.8.5)
+        specifier: ^0.0.17
+        version: 0.0.17(socks@2.8.5)
       '@forklaunch/interfaces-billing':
         specifier: workspace:*
         version: link:../interfaces/billing
       '@forklaunch/validator':
-        specifier: ^0.6.8
-        version: 0.6.8(openapi3-ts@4.4.0)
+        specifier: ^0.6.9
+        version: 0.6.9(openapi3-ts@4.4.0)
       '@mikro-orm/core':
         specifier: ^6.4.16
         version: 6.4.16
@@ -182,20 +182,20 @@ importers:
   core:
     dependencies:
       '@forklaunch/common':
-        specifier: ^0.3.8
-        version: 0.3.8
+        specifier: ^0.3.9
+        version: 0.3.9
       '@forklaunch/core':
-        specifier: ^0.9.8
-        version: 0.9.8(socks@2.8.5)
+        specifier: ^0.9.9
+        version: 0.9.9(socks@2.8.5)
       '@forklaunch/express':
-        specifier: ^0.5.18
-        version: 0.5.18(openapi3-ts@4.4.0)(socks@2.8.5)
+        specifier: ^0.5.19
+        version: 0.5.19(openapi3-ts@4.4.0)(socks@2.8.5)
       '@forklaunch/hyper-express':
-        specifier: ^0.5.18
-        version: 0.5.18(express@5.1.0)(socks@2.8.5)
+        specifier: ^0.5.19
+        version: 0.5.19(express@5.1.0)(socks@2.8.5)
       '@forklaunch/validator':
-        specifier: ^0.6.8
-        version: 0.6.8(openapi3-ts@4.4.0)
+        specifier: ^0.6.9
+        version: 0.6.9(openapi3-ts@4.4.0)
       '@mikro-orm/core':
         specifier: ^6.4.16
         version: 6.4.16
@@ -209,7 +209,7 @@ importers:
         specifier: ^11.1.0
         version: 11.1.0
       zod:
-        specifier: ^3.25.57
+        specifier: ^3.25.58
         version: 3.25.58
     devDependencies:
       '@types/express':
@@ -240,8 +240,8 @@ importers:
         specifier: workspace:*
         version: link:../monitoring
       '@forklaunch/core':
-        specifier: ^0.9.8
-        version: 0.9.8(socks@2.8.5)
+        specifier: ^0.9.9
+        version: 0.9.9(socks@2.8.5)
       '@forklaunch/hyper-express-fork':
         specifier: ^6.17.34
         version: 6.17.34
@@ -319,8 +319,8 @@ importers:
         specifier: workspace:*
         version: link:../monitoring
       '@forklaunch/core':
-        specifier: ^0.9.8
-        version: 0.9.8(socks@2.8.5)
+        specifier: ^0.9.9
+        version: 0.9.9(socks@2.8.5)
       '@forklaunch/implementation-iam-base':
         specifier: workspace:*
         version: link:../implementations/iam/base
@@ -398,17 +398,17 @@ importers:
   implementations/billing/base:
     dependencies:
       '@forklaunch/common':
-        specifier: ^0.3.8
-        version: 0.3.8
+        specifier: ^0.3.9
+        version: 0.3.9
       '@forklaunch/core':
-        specifier: ^0.9.8
-        version: 0.9.8(socks@2.8.5)
+        specifier: ^0.9.9
+        version: 0.9.9(socks@2.8.5)
       '@forklaunch/interfaces-billing':
         specifier: workspace:*
         version: link:../../../interfaces/billing
       '@forklaunch/validator':
-        specifier: ^0.6.8
-        version: 0.6.8(openapi3-ts@4.4.0)
+        specifier: ^0.6.9
+        version: 0.6.9(openapi3-ts@4.4.0)
       '@mikro-orm/core':
         specifier: ^6.4.16
         version: 6.4.16
@@ -435,17 +435,17 @@ importers:
   implementations/iam/base:
     dependencies:
       '@forklaunch/common':
-        specifier: ^0.3.8
-        version: 0.3.8
+        specifier: ^0.3.9
+        version: 0.3.9
       '@forklaunch/core':
-        specifier: ^0.9.8
-        version: 0.9.8(socks@2.8.5)
+        specifier: ^0.9.9
+        version: 0.9.9(socks@2.8.5)
       '@forklaunch/interfaces-iam':
         specifier: workspace:*
         version: link:../../../interfaces/iam
       '@forklaunch/validator':
-        specifier: ^0.6.8
-        version: 0.6.8(openapi3-ts@4.4.0)
+        specifier: ^0.6.9
+        version: 0.6.9(openapi3-ts@4.4.0)
       '@mikro-orm/core':
         specifier: ^6.4.16
         version: 6.4.16
@@ -472,8 +472,8 @@ importers:
   implementations/worker/bullmq:
     dependencies:
       '@forklaunch/core':
-        specifier: ^0.9.8
-        version: 0.9.8(socks@2.8.5)
+        specifier: ^0.9.9
+        version: 0.9.9(socks@2.8.5)
       '@forklaunch/interfaces-worker':
         specifier: workspace:*
         version: link:../../../interfaces/worker
@@ -506,8 +506,8 @@ importers:
   implementations/worker/database:
     dependencies:
       '@forklaunch/core':
-        specifier: ^0.9.8
-        version: 0.9.8(socks@2.8.5)
+        specifier: ^0.9.9
+        version: 0.9.9(socks@2.8.5)
       '@forklaunch/interfaces-worker':
         specifier: workspace:*
         version: link:../../../interfaces/worker
@@ -540,8 +540,8 @@ importers:
   implementations/worker/kafka:
     dependencies:
       '@forklaunch/core':
-        specifier: ^0.9.8
-        version: 0.9.8(socks@2.8.5)
+        specifier: ^0.9.9
+        version: 0.9.9(socks@2.8.5)
       '@forklaunch/interfaces-worker':
         specifier: workspace:*
         version: link:../../../interfaces/worker
@@ -574,8 +574,8 @@ importers:
   implementations/worker/redis:
     dependencies:
       '@forklaunch/core':
-        specifier: ^0.9.8
-        version: 0.9.8(socks@2.8.5)
+        specifier: ^0.9.9
+        version: 0.9.9(socks@2.8.5)
       '@forklaunch/interfaces-worker':
         specifier: workspace:*
         version: link:../../../interfaces/worker
@@ -605,8 +605,8 @@ importers:
   interfaces/billing:
     dependencies:
       '@forklaunch/common':
-        specifier: ^0.3.8
-        version: 0.3.8
+        specifier: ^0.3.9
+        version: 0.3.9
       '@mikro-orm/core':
         specifier: ^6.4.16
         version: 6.4.16
@@ -624,8 +624,8 @@ importers:
   interfaces/iam:
     dependencies:
       '@forklaunch/common':
-        specifier: ^0.3.8
-        version: 0.3.8
+        specifier: ^0.3.9
+        version: 0.3.9
       '@mikro-orm/core':
         specifier: ^6.4.16
         version: 6.4.16
@@ -661,8 +661,8 @@ importers:
   monitoring:
     dependencies:
       '@forklaunch/core':
-        specifier: ^0.9.8
-        version: 0.9.8(socks@2.8.5)
+        specifier: ^0.9.9
+        version: 0.9.9(socks@2.8.5)
 
   sample-worker:
     dependencies:
@@ -673,8 +673,8 @@ importers:
         specifier: workspace:*
         version: link:../monitoring
       '@forklaunch/core':
-        specifier: ^0.9.8
-        version: 0.9.8(socks@2.8.5)
+        specifier: ^0.9.9
+        version: 0.9.9(socks@2.8.5)
       '@forklaunch/implementation-worker-bullmq':
         specifier: workspace:*
         version: link:../implementations/worker/bullmq
@@ -688,11 +688,11 @@ importers:
         specifier: workspace:*
         version: link:../implementations/worker/redis
       '@forklaunch/infrastructure-redis':
-        specifier: ^0.0.16
-        version: 0.0.16(socks@2.8.5)
+        specifier: ^0.0.17
+        version: 0.0.17(socks@2.8.5)
       '@forklaunch/infrastructure-s3':
-        specifier: ^0.0.16
-        version: 0.0.16(socks@2.8.5)
+        specifier: ^0.0.17
+        version: 0.0.17(socks@2.8.5)
       '@forklaunch/interfaces-worker':
         specifier: workspace:*
         version: link:../interfaces/worker
@@ -1506,26 +1506,26 @@ packages:
       '@mikro-orm/core': ^6.0.0
       better-auth: ^1.0.0
 
-  '@forklaunch/common@0.3.8':
-    resolution: {integrity: sha512-5iNj1mQ+FpwYN7JtbZEH8J+WRDRqTffa/mWZ3scRsXv7SLE2JBmE75u+6ipqQ0yvEyW5Y1pyYGeMtyBvdeg/1A==}
+  '@forklaunch/common@0.3.9':
+    resolution: {integrity: sha512-Qr2+NihqKXWLgr6mUuPBn3KrQLHZhNtMuOsUnHXXqntswd/Gk0KkDyJ+phMWUoJXqfJqXIcYivALLaAidH3F1Q==}
 
-  '@forklaunch/core@0.9.8':
-    resolution: {integrity: sha512-VLuN+SJQ9thtNPggnA037z0J/9Yr14bEE8dMYl/M0Fh2z2ypCYChXgtDxDwLhfpU3FW2WjKr82+bjuDTXPALdQ==}
+  '@forklaunch/core@0.9.9':
+    resolution: {integrity: sha512-kfUoMRsO34MXzAr1RUf6mAlOUsIxhheKlHoVzxrp8XydtZVdS+EjInkPccX+OG+poBfSp7/fohhrKFyGCevQqw==}
 
-  '@forklaunch/express@0.5.18':
-    resolution: {integrity: sha512-veMouz4MTw9DzKCVwO/RYFbqDgxljlIulF2CcABU8Zzqykwanm6zKQ4RqLrLHJ35aYCoHm7MVP35GXKins/y2Q==}
+  '@forklaunch/express@0.5.19':
+    resolution: {integrity: sha512-mgh4WdR7gsoN3Kgrz2fpdvSd0B/rNuOu2FmfHsXMJb8cs49zz9eIIID/3r9oSlUkwXlG7OW5RbeKHeyl8xIJGQ==}
 
   '@forklaunch/hyper-express-fork@6.17.34':
     resolution: {integrity: sha512-ftLBbQgrqAjHVaDWlJ/0UEIxMAmAF5TYZmjTVUni92lxv/aJeDofYNCyEb2FM8cy4lbaGqsYnTf3WiKnekTLeg==}
 
-  '@forklaunch/hyper-express@0.5.18':
-    resolution: {integrity: sha512-imt6J7YzRmwnTNAFdOXpT+osnOJ3ICh/K4AQYpWT2pboca2ln+NwlKCgCSkcK3jT3st8j13bzivfpZ+omYguEw==}
+  '@forklaunch/hyper-express@0.5.19':
+    resolution: {integrity: sha512-U1qDifIa20Te1bHbYa5GbCrIPrRFdHdqNEkBw+Xj4+jZvz7ioCyXcDSbXJkcLCRJnihMTJNybvNhrElC6yN9LA==}
 
-  '@forklaunch/infrastructure-redis@0.0.16':
-    resolution: {integrity: sha512-emizh7l/aZO/7Sf6mpztIkvMcjxbnkQmA18m9sFF9h2H2QFRVbCIWOhFeEklZU0OrJLEDcMZ+kWJW22hOnsrtQ==}
+  '@forklaunch/infrastructure-redis@0.0.17':
+    resolution: {integrity: sha512-CyDj/EtKdAZO/KYbAicBai1oHZwbSCKC5U378e6jEIdkxnhn8UiUJS5i6wGbbwE4nPv9gcchswjolSFAaQCYUA==}
 
-  '@forklaunch/infrastructure-s3@0.0.16':
-    resolution: {integrity: sha512-84Vmae3kxHNqd3ICeqaqxiFWDsdUkOXcdsQUlNnzLVDx/3nPVoeyRa3Lr+EZ6ZlVwNBskS71iQLg+DZO7zNVTA==}
+  '@forklaunch/infrastructure-s3@0.0.17':
+    resolution: {integrity: sha512-igNSVkphLoN2uQCDJS+zq3SJPsegf/jFVMGtV09Ggci89yQD5lLJ1I3Q7PwlpbAnPlKiRf8Eo8cB2qnqtXYazg==}
 
   '@forklaunch/opentelemetry-instrumentation-hyper-express@0.0.5':
     resolution: {integrity: sha512-AwkA0ywzdZRz5p+kRMGWH0v0MH2aqxhlIBLV8SQDETKTbpN6G1BtptxPegC9QFFfCJSywDguXDNvVdmxX+VV0A==}
@@ -1533,11 +1533,11 @@ packages:
     peerDependencies:
       '@opentelemetry/api': ^1.3.0
 
-  '@forklaunch/universal-sdk@0.3.9':
-    resolution: {integrity: sha512-EkIGVA+59eiQM37PufYCcgu3koFX+Rai/g2Wd2VwUqM5sptDbNQFYelqgC7LcOn3960ATnHzxXUDD9DZujG9qQ==}
+  '@forklaunch/universal-sdk@0.3.10':
+    resolution: {integrity: sha512-cp2QbFORFvc681EPZ4bARh09OSYDqscBihwwmn3mFWkfqY0t58ekXRtVmR5gD3V9YzYAJMrRVe05zoxWEDw1gQ==}
 
-  '@forklaunch/validator@0.6.8':
-    resolution: {integrity: sha512-5DWo4a8EcIWX6tItS0jSKbWRKQiS/eWBWXCwx3Jy2rn54PvK7u09pxwk8qAJYwa5Mlq9fUVWED2j6nMfBpJ1EQ==}
+  '@forklaunch/validator@0.6.9':
+    resolution: {integrity: sha512-YYY5O6mlg8GsO8zBuNs2HjQXZjrl3zVXf9JaEu+ve8hLOk3O5sjibJ9pb9EQv2xvznq9mq0+27HqoXwP/tYXwA==}
 
   '@gar/promisify@1.1.3':
     resolution: {integrity: sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==}
@@ -7614,13 +7614,13 @@ snapshots:
       better-auth: 1.2.9
       dset: 3.1.4
 
-  '@forklaunch/common@0.3.8': {}
+  '@forklaunch/common@0.3.9': {}
 
-  '@forklaunch/core@0.9.8(socks@2.8.5)':
+  '@forklaunch/core@0.9.9(socks@2.8.5)':
     dependencies:
-      '@forklaunch/common': 0.3.8
+      '@forklaunch/common': 0.3.9
       '@forklaunch/opentelemetry-instrumentation-hyper-express': 0.0.5(@opentelemetry/api@1.9.0)
-      '@forklaunch/validator': 0.6.8(openapi3-ts@4.4.0)
+      '@forklaunch/validator': 0.6.9(openapi3-ts@4.4.0)
       '@mikro-orm/core': 6.4.16
       '@mikro-orm/mongodb': 6.4.16(@mikro-orm/core@6.4.16)(socks@2.8.5)
       '@opentelemetry/api': 1.9.0
@@ -7656,11 +7656,11 @@ snapshots:
       - socks
       - supports-color
 
-  '@forklaunch/express@0.5.18(openapi3-ts@4.4.0)(socks@2.8.5)':
+  '@forklaunch/express@0.5.19(openapi3-ts@4.4.0)(socks@2.8.5)':
     dependencies:
-      '@forklaunch/common': 0.3.8
-      '@forklaunch/core': 0.9.8(socks@2.8.5)
-      '@forklaunch/validator': 0.6.8(openapi3-ts@4.4.0)
+      '@forklaunch/common': 0.3.9
+      '@forklaunch/core': 0.9.9(socks@2.8.5)
+      '@forklaunch/validator': 0.6.9(openapi3-ts@4.4.0)
       '@scalar/express-api-reference': 0.8.3
       '@types/multer': 1.4.13
       body-parser: 2.2.0
@@ -7694,12 +7694,12 @@ snapshots:
       typed-emitter: 2.1.0
       uWebSockets.js: https://codeload.github.com/uNetworking/uWebSockets.js/tar.gz/6609a88ffa9a16ac5158046761356ce03250a0df
 
-  '@forklaunch/hyper-express@0.5.18(express@5.1.0)(socks@2.8.5)':
+  '@forklaunch/hyper-express@0.5.19(express@5.1.0)(socks@2.8.5)':
     dependencies:
-      '@forklaunch/common': 0.3.8
-      '@forklaunch/core': 0.9.8(socks@2.8.5)
+      '@forklaunch/common': 0.3.9
+      '@forklaunch/core': 0.9.9(socks@2.8.5)
       '@forklaunch/hyper-express-fork': 6.17.34
-      '@forklaunch/validator': 0.6.8(openapi3-ts@4.4.0)
+      '@forklaunch/validator': 0.6.9(openapi3-ts@4.4.0)
       '@scalar/express-api-reference': 0.8.3
       cors: 2.8.5
       live-directory: 3.0.3
@@ -7719,10 +7719,10 @@ snapshots:
       - socks
       - supports-color
 
-  '@forklaunch/infrastructure-redis@0.0.16(socks@2.8.5)':
+  '@forklaunch/infrastructure-redis@0.0.17(socks@2.8.5)':
     dependencies:
-      '@forklaunch/common': 0.3.8
-      '@forklaunch/core': 0.9.8(socks@2.8.5)
+      '@forklaunch/common': 0.3.9
+      '@forklaunch/core': 0.9.9(socks@2.8.5)
       redis: 5.5.6
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
@@ -7734,11 +7734,11 @@ snapshots:
       - socks
       - supports-color
 
-  '@forklaunch/infrastructure-s3@0.0.16(socks@2.8.5)':
+  '@forklaunch/infrastructure-s3@0.0.17(socks@2.8.5)':
     dependencies:
       '@aws-sdk/client-s3': 3.826.0
-      '@forklaunch/common': 0.3.8
-      '@forklaunch/core': 0.9.8(socks@2.8.5)
+      '@forklaunch/common': 0.3.9
+      '@forklaunch/core': 0.9.9(socks@2.8.5)
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
       - '@mongodb-js/zstd'
@@ -7760,16 +7760,16 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@forklaunch/universal-sdk@0.3.9':
+  '@forklaunch/universal-sdk@0.3.10':
     dependencies:
-      '@forklaunch/common': 0.3.8
+      '@forklaunch/common': 0.3.9
       ajv: 8.17.1
       ajv-formats: 3.0.1(ajv@8.17.1)
 
-  '@forklaunch/validator@0.6.8(openapi3-ts@4.4.0)':
+  '@forklaunch/validator@0.6.9(openapi3-ts@4.4.0)':
     dependencies:
       '@anatine/zod-openapi': 2.2.8(openapi3-ts@4.4.0)(zod@3.25.58)
-      '@forklaunch/common': 0.3.8
+      '@forklaunch/common': 0.3.9
       '@sinclair/typebox': 0.34.33
       zod: 3.25.58
     transitivePeerDependencies:
