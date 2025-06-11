@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.3.9
+
+### Patch Changes
+
+- update package dependencies
+
 ## 0.3.8
 
 ### Patch Changes
