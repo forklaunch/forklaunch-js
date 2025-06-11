@@ -131,6 +131,11 @@ export function createDependencies(orm: MikroORM) {
       type: string,
       value: getEnvVar('PASSWORD_ENCRYPTION_SECRET_PATH')
     },
+    BETTER_AUTH_BASE_PATH: {
+      lifetime: Lifetime.Singleton,
+      type: string,
+      value: getEnvVar('BETTER_AUTH_BASE_PATH') ?? '/api/auth'
+    },
     CORS_ORIGINS: {
       lifetime: Lifetime.Singleton,
       type: array(string),
@@ -159,12 +164,14 @@ export function createDependencies(orm: MikroORM) {
       lifetime: Lifetime.Singleton,
       type: type<ReturnType<typeof betterAuth<BetterAuthConfig>>>(),
       factory: ({
+        BETTER_AUTH_BASE_PATH,
         OpenTelemetryCollector,
         PASSWORD_ENCRYPTION_SECRET_PATH,
         CORS_ORIGINS
       }) =>
         betterAuth(
           betterAuthConfig({
+            BETTER_AUTH_BASE_PATH,
             PASSWORD_ENCRYPTION_SECRET_PATH,
             CORS_ORIGINS,
             orm,
@@ -175,22 +182,37 @@ export function createDependencies(orm: MikroORM) {
     ExpressOptions: {
       lifetime: Lifetime.Singleton,
       type: promise(type<ExpressOptions>()),
-      factory: async ({ CORS_ORIGINS, BetterAuth }) => ({
-        cors: {
-          origin: CORS_ORIGINS,
-          methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-          credentials: true
-        },
-        docs: {
-          type: 'scalar' as const,
-          sources: [
-            {
-              name: 'BetterAuth',
-              content: await BetterAuth.api.generateOpenAPISchema()
-            }
-          ]
-        }
-      })
+      factory: async ({ BETTER_AUTH_BASE_PATH, CORS_ORIGINS, BetterAuth }) => {
+        const betterAuthOpenAPIContent =
+          await BetterAuth.api.generateOpenAPISchema();
+
+        return {
+          cors: {
+            origin: CORS_ORIGINS,
+            methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+            credentials: true
+          },
+          docs: {
+            type: 'scalar' as const,
+            sources: [
+              {
+                name: 'BetterAuth',
+                content: {
+                  ...betterAuthOpenAPIContent,
+                  paths: Object.fromEntries(
+                    Object.entries(betterAuthOpenAPIContent.paths).map(
+                      ([key, value]) => [
+                        `${BETTER_AUTH_BASE_PATH}${key}`,
+                        value
+                      ]
+                    )
+                  )
+                }
+              }
+            ]
+          }
+        };
+      }
     }
   });
   //! defines the service dependencies for the application

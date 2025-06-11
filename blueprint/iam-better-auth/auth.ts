@@ -8,17 +8,20 @@ import { readFileSync } from 'fs';
 
 export type BetterAuthConfig = ReturnType<typeof betterAuthConfig>;
 export const betterAuthConfig = ({
+  BETTER_AUTH_BASE_PATH,
   PASSWORD_ENCRYPTION_SECRET_PATH,
   CORS_ORIGINS,
   orm,
   openTelemetryCollector
 }: {
+  BETTER_AUTH_BASE_PATH: string;
   PASSWORD_ENCRYPTION_SECRET_PATH: string;
   CORS_ORIGINS: string[];
   orm: MikroORM;
   openTelemetryCollector: OpenTelemetryCollector<Metrics>;
 }) =>
   ({
+    basePath: BETTER_AUTH_BASE_PATH,
     secret: readFileSync(PASSWORD_ENCRYPTION_SECRET_PATH, 'utf8').split(
       '\n'
     )[1],
