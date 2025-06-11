@@ -34,14 +34,14 @@
   "dependencies": {
     "@forklaunch/blueprint-core": "workspace:*",
     "@forklaunch/blueprint-monitoring": "workspace:*",
-    "@forklaunch/common": "^0.3.10",
-    "@forklaunch/core": "^0.9.10",
-    "@forklaunch/express": "^0.5.22",
-    "@forklaunch/hyper-express": "^0.5.21",
+    "@forklaunch/common": "^0.3.11",
+    "@forklaunch/core": "^0.9.12",
+    "@forklaunch/express": "^0.5.24",
+    "@forklaunch/hyper-express": "^0.5.23",
     "@forklaunch/implementation-billing-base": "workspace:*",
-    "@forklaunch/infrastructure-redis": "^0.0.18",
+    "@forklaunch/infrastructure-redis": "^0.0.20",
     "@forklaunch/interfaces-billing": "workspace:*",
-    "@forklaunch/validator": "^0.6.10",
+    "@forklaunch/validator": "^0.6.11",
     "@mikro-orm/core": "^6.4.16",
     "@mikro-orm/migrations": "^6.4.16",
     "@mikro-orm/mongodb": "^6.4.16",
@@ -54,7 +54,7 @@
     "ajv": "^8.17.1",
     "dotenv": "^16.5.0",
     "uuid": "^11.1.0",
-    "zod": "^3.25.61"
+    "zod": "^3.25.62"
   },
   "devDependencies": {
     "@mikro-orm/cli": "^6.4.16",

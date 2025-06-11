@@ -4,7 +4,7 @@ import {
   SchemaValidator,
   string
 } from '@forklaunch/blueprint-core';
-import { metrics } from '@forklaunch/blueprint-monitoring';
+import { Metrics, metrics } from '@forklaunch/blueprint-monitoring';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import {
   createConfigInjector,
@@ -126,7 +126,7 @@ export function createDependencies(orm: MikroORM) {
   const runtimeDependencies = environmentConfig.chain({
     OpenTelemetryCollector: {
       lifetime: Lifetime.Singleton,
-      type: OpenTelemetryCollector,
+      type: OpenTelemetryCollector<Metrics>,
       factory: ({ OTEL_SERVICE_NAME, OTEL_LEVEL }) =>
         new OpenTelemetryCollector(
           OTEL_SERVICE_NAME,

@@ -7,8 +7,9 @@
   "author": "",
   "workspaces": [
     "core",
-    "iam",
-    "billing",
+    "iam-base",
+    "iam-better-auth",
+    "billing-base",
     "sample-worker",
     "monitoring",
     "implementations/**/*",
@@ -57,11 +58,11 @@
     "vitest": "^3.2.3"
   },
   "dependencies": {
-    "@forklaunch/common": "^0.3.10",
-    "@forklaunch/core": "^0.9.10",
-    "@forklaunch/express": "^0.5.22",
-    "@forklaunch/hyper-express": "^0.5.21",
-    "@forklaunch/universal-sdk": "0.3.11",
-    "@forklaunch/validator": "^0.6.10"
+    "@forklaunch/common": "^0.3.11",
+    "@forklaunch/core": "^0.9.12",
+    "@forklaunch/express": "^0.5.24",
+    "@forklaunch/hyper-express": "^0.5.23",
+    "@forklaunch/universal-sdk": "0.3.12",
+    "@forklaunch/validator": "^0.6.11"
   }
 }

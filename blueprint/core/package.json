@@ -18,16 +18,16 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/common": "^0.3.10",
-    "@forklaunch/core": "^0.9.10",
-    "@forklaunch/express": "^0.5.22",
-    "@forklaunch/hyper-express": "^0.5.21",
-    "@forklaunch/validator": "^0.6.10",
+    "@forklaunch/common": "^0.3.11",
+    "@forklaunch/core": "^0.9.12",
+    "@forklaunch/express": "^0.5.24",
+    "@forklaunch/hyper-express": "^0.5.23",
+    "@forklaunch/validator": "^0.6.11",
     "@mikro-orm/core": "^6.4.16",
     "@mikro-orm/mongodb": "^6.4.16",
     "@sinclair/typebox": "^0.34.33",
     "uuid": "^11.1.0",
-    "zod": "^3.25.61"
+    "zod": "^3.25.62"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",
