@@ -1,0 +1,1 @@
+../../../../../blueprint/billing-base/registrations.ts

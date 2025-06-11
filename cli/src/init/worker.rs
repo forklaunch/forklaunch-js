@@ -98,6 +98,7 @@ fn generate_basic_worker(
 ) -> Result<()> {
     let output_path = base_path.join(worker_name);
     let template_dir = PathIO {
+        id: Some(worker_name.clone()),
         input_path: Path::new("project")
             .join("worker")
             .to_string_lossy()
@@ -176,6 +177,7 @@ fn add_worker_to_artifacts(
     let forklaunch_manifest_buffer = add_project_definition_to_manifest(
         ProjectType::Worker,
         config_data,
+        Some(config_data.worker_type.clone()),
         Some(ResourceInventory {
             database: if config_data.is_database_enabled {
                 Some(config_data.database.clone().unwrap())

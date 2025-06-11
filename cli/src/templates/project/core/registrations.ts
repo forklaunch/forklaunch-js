@@ -1,6 +1,5 @@
 // used for aligning exports across the monorepo
 import {
-  SchemaValidator,
   any,
   array,
   bigint,
@@ -19,8 +18,10 @@ import {
   optional,
   promise,
   record,
+  SchemaValidator,
   string,
   symbol,
+  type,
   undefined_,
   union,
   unknown,
@@ -29,15 +30,18 @@ import {
   void_,
 } from "@forklaunch/validator/{{validator}}";
 import {
+  ExpressOptions,
   forklaunchExpress,
   forklaunchRouter,
   handlers,
+  NextFunction,
+  Request,
+  Response,
 } from "@forklaunch/{{http_framework}}";
 
 export type SchemaValidator = ReturnType<typeof SchemaValidator>;
 
 export {
-  SchemaValidator,
   any,
   array,
   bigint,
@@ -46,6 +50,7 @@ export {
   date,
   email,
   enum_,
+  ExpressOptions,
   file,
   forklaunchExpress,
   forklaunchRouter,
@@ -53,14 +58,19 @@ export {
   handlers,
   literal,
   never,
+  NextFunction,
   null_,
   nullish,
   number,
   optional,
   promise,
   record,
+  Request,
+  Response,
+  SchemaValidator,
   string,
   symbol,
+  type,
   undefined_,
   union,
   unknown,

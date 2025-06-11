@@ -9,10 +9,11 @@ use super::{
     manifest::ManifestData,
     rendered_template::{RenderedTemplate, TEMPLATES_DIR},
 };
-use crate::constants::error_failed_to_create_dir;
+use crate::constants::{Module, error_failed_to_create_dir};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct PathIO {
+    pub(crate) id: Option<String>,
     pub(crate) input_path: String,
     pub(crate) output_path: String,
 }
@@ -151,6 +152,7 @@ pub(crate) fn generate_with_template(
                 generate_with_template(
                     output_prefix,
                     &PathIO {
+                        id: None,
                         input_path: Path::new(&subdirectory.path())
                             .to_string_lossy()
                             .to_string(),
@@ -178,21 +180,20 @@ pub(crate) fn generate_with_template(
     Ok(rendered_templates)
 }
 
-pub(crate) fn get_routers_from_standard_package(package: String) -> Option<Vec<String>> {
-    match package.as_str() {
-        "billing" => Some(vec![
+pub(crate) fn get_routers_from_standard_package(package: Module) -> Option<Vec<String>> {
+    match package {
+        Module::BaseBilling => Some(vec![
             String::from("billingPortal"),
             String::from("checkoutSession"),
             String::from("paymentLink"),
             String::from("plan"),
             String::from("subscription"),
         ]),
-        "iam" => Some(vec![
+        Module::BaseIam | Module::BetterAuthIam => Some(vec![
             String::from("organization"),
             String::from("permission"),
             String::from("role"),
             String::from("user"),
         ]),
-        _ => None,
     }
 }

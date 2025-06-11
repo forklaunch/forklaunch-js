@@ -20,9 +20,9 @@ use crate::{
         Database, ERROR_FAILED_TO_CREATE_DATABASE_EXPORT_INDEX_TS,
         ERROR_FAILED_TO_CREATE_GITIGNORE, ERROR_FAILED_TO_CREATE_LICENSE,
         ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE, ERROR_FAILED_TO_SETUP_IAM, Formatter,
-        HttpFramework, License, Linter, Runtime, Service, TestFramework, Validator,
+        HttpFramework, License, Linter, Module, Runtime, TestFramework, Validator,
         get_core_module_description, get_monitoring_module_description, get_service_module_cache,
-        get_service_module_description,
+        get_service_module_description, get_service_module_name,
     },
     core::{
         command::command,
@@ -290,7 +290,7 @@ impl CliCommand for ApplicationCommand {
                     .short('s')
                     .long("services")
                     .help("Additional services to include")
-                    .value_parser(Service::VARIANTS)
+                    .value_parser(Module::VARIANTS)
                     .num_args(0..)
                     .action(ArgAction::Append),
             )
@@ -470,12 +470,12 @@ impl CliCommand for ApplicationCommand {
             )
         };
 
-        let services: Vec<Service> = if matches.ids().all(|id| id == "dryrun") {
+        let services: Vec<Module> = if matches.ids().all(|id| id == "dryrun") {
             prompt_comma_separated_list(
                 &mut line_editor,
                 "services",
                 matches,
-                &Service::VARIANTS,
+                &Module::VARIANTS,
                 None,
                 "services",
                 false,
@@ -543,6 +543,7 @@ impl CliCommand for ApplicationCommand {
                 r#type: ProjectType::Library,
                 name: "core".to_string(),
                 description: get_core_module_description(&name),
+                variant: None,
                 resources: None,
                 routers: None,
                 metadata: None,
@@ -551,22 +552,24 @@ impl CliCommand for ApplicationCommand {
                 r#type: ProjectType::Library,
                 name: "monitoring".to_string(),
                 description: get_monitoring_module_description(&name),
+                variant: None,
                 resources: None,
                 routers: None,
                 metadata: None,
             },
         ];
-        additional_projects.extend(services.into_iter().map(|package| ProjectEntry {
+        additional_projects.extend(services.clone().into_iter().map(|package| ProjectEntry {
             r#type: ProjectType::Service,
-            name: package.to_string(),
-            description: get_service_module_description(&name, &package.to_string()),
+            name: get_service_module_name(&package),
+            description: get_service_module_description(&name, &package),
+            variant: Some(package.to_string()),
             resources: Some(ResourceInventory {
                 database: Some(database.to_string()),
-                cache: get_service_module_cache(&package.to_string()),
+                cache: get_service_module_cache(&package),
                 queue: None,
                 object_store: None,
             }),
-            routers: get_routers_from_standard_package(package.to_string()),
+            routers: get_routers_from_standard_package(package),
             metadata: None,
         }));
 
@@ -642,18 +645,29 @@ impl CliCommand for ApplicationCommand {
         // TODO: support different path delimiters
         let mut template_dirs = vec![];
 
-        let additional_projects_dirs = additional_projects.clone().into_iter().map(|path| PathIO {
-            input_path: Path::new("project")
-                .join(&path.name)
-                .to_string_lossy()
-                .to_string(),
-            output_path: path.name,
+        let additional_projects_dirs = additional_projects.clone().into_iter().map(|path| {
+            let path_id = if path.variant.is_some() {
+                path.variant.clone().unwrap()
+            } else {
+                path.name.clone()
+            };
+
+            PathIO {
+                id: Some(path_id.clone()),
+                input_path: Path::new("project")
+                    .join(path_id.clone())
+                    .to_string_lossy()
+                    .to_string(),
+                output_path: path.name.split("-").next().unwrap().to_string(),
+            }
         });
+
         template_dirs.extend(additional_projects_dirs.clone());
 
         rendered_templates.extend(generate_with_template(
             Some(&name),
             &PathIO {
+                id: Some(name.clone()),
                 input_path: Path::new("application").to_string_lossy().to_string(),
                 output_path: "".to_string(),
             },
@@ -701,7 +715,10 @@ impl CliCommand for ApplicationCommand {
                 description: match template_dir.output_path.as_str() {
                     "core" => get_core_module_description(&name),
                     "monitoring" => get_monitoring_module_description(&name),
-                    _ => get_service_module_description(&name, &template_dir.output_path),
+                    _ => get_service_module_description(
+                        &name,
+                        &template_dir.id.clone().unwrap().parse()?,
+                    ),
                 },
 
                 is_eslint: data.is_eslint,

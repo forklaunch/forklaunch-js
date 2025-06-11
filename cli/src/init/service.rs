@@ -87,6 +87,7 @@ fn generate_basic_service(
 ) -> Result<()> {
     let output_path = base_path.join(service_name);
     let template_dir = PathIO {
+        id: Some(service_name.clone()),
         input_path: Path::new("project")
             .join("service")
             .to_string_lossy()
@@ -166,6 +167,7 @@ fn add_service_to_artifacts(
     let forklaunch_manifest_buffer = add_project_definition_to_manifest(
         ProjectType::Service,
         config_data,
+        None,
         Some(ResourceInventory {
             database: Some(config_data.database.to_owned()),
             cache: None,

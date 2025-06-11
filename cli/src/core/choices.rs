@@ -6,8 +6,9 @@ macro_rules! count {
 
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct Choice {
-    pub(crate)id: &'static str,
-    pub(crate)exclusive_files: Option<&'static [&'static str]>,
+    pub(crate) id: &'static str,
+    pub(crate) description: Option<&'static str>,
+    pub(crate) exclusive_files: Option<&'static [&'static str]>,
 }
 
 #[macro_export]

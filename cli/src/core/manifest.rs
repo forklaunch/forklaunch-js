@@ -106,6 +106,7 @@ pub(crate) struct ProjectEntry {
     pub(crate) r#type: ProjectType,
     pub(crate) name: String,
     pub(crate) description: String,
+    pub(crate) variant: Option<String>,
     pub(crate) resources: Option<ResourceInventory>,
     pub(crate) routers: Option<Vec<String>>,
     pub(crate) metadata: Option<ProjectMetadata>,
@@ -312,6 +313,7 @@ pub(crate) fn add_project_definition_to_manifest<
 >(
     r#type: ProjectType,
     config_data: &mut T,
+    variant: Option<String>,
     resources: Option<ResourceInventory>,
     routers: Option<Vec<String>>,
     metadata: Option<ProjectMetadata>,
@@ -329,6 +331,7 @@ pub(crate) fn add_project_definition_to_manifest<
         r#type,
         name: name.clone(),
         description,
+        variant,
         resources,
         routers,
         metadata,

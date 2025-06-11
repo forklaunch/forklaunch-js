@@ -5,7 +5,7 @@ import { {{pascal_case_name}}{{#is_worker}}Event{{/is_worker}}Record } from "../
 
 export class {{pascal_case_name}}{{#is_worker}}Event{{/is_worker}}RecordSeeder extends Seeder {
   async run(em: EntityManager): Promise<void> {
-    em.create({{pascal_case_name}}{{#is_worker}}Event{{/is_worker}}Record, await {{camel_case_name}}{{#is_worker}}Event{{/is_worker}}Record());
-    return Promise.resolve();
+    const record = em.create({{pascal_case_name}}{{#is_worker}}Event{{/is_worker}}Record, await {{camel_case_name}}{{#is_worker}}Event{{/is_worker}}Record(em));
+    return em.persistAndFlush(record);
   }
 }

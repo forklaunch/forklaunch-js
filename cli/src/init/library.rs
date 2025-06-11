@@ -56,6 +56,7 @@ fn generate_basic_library(
     let output_path = base_path.join(library_name);
 
     let template_dir = PathIO {
+        id: Some(library_name.clone()),
         input_path: Path::new("project")
             .join("library")
             .to_string_lossy()
@@ -105,9 +106,15 @@ fn add_library_to_artifacts(
     config_data: &mut LibraryManifestData,
     base_path: &Path,
 ) -> Result<Vec<RenderedTemplate>> {
-    let forklaunch_definition_buffer =
-        add_project_definition_to_manifest(ProjectType::Library, config_data, None, None, None)
-            .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
+    let forklaunch_definition_buffer = add_project_definition_to_manifest(
+        ProjectType::Library,
+        config_data,
+        None,
+        None,
+        None,
+        None,
+    )
+    .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
 
     let runtime = config_data.runtime.parse()?;
 
