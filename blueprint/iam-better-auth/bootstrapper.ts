@@ -12,8 +12,11 @@ export function bootstrap(
 ) {
   const envFilePath = getEnvVar('ENV_FILE_PATH');
   dotenv.config({ path: envFilePath });
-  MikroORM.init(mikroOrmOptionsConfig).then((orm) => {
+  MikroORM.init(mikroOrmOptionsConfig).then(async (orm) => {
     const { serviceDependencies, tokens } = createDependencies(orm);
-    callback(serviceDependencies.validateConfigSingletons(envFilePath), tokens);
+    await callback(
+      serviceDependencies.validateConfigSingletons(envFilePath),
+      tokens
+    );
   });
 }

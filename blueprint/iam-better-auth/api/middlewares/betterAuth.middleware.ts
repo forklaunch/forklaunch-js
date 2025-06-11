@@ -10,14 +10,13 @@ import {
   httpRequestsTotalCounter
 } from '@forklaunch/core/http';
 import { trace } from '@opentelemetry/api';
-import { BetterAuthOptions } from 'better-auth';
+import { betterAuth, BetterAuthOptions } from 'better-auth';
 import { toNodeHandler } from 'better-auth/node';
 import {
   Request as ExpressRequest,
   Response as ExpressResponse
 } from 'express';
 import { v4 } from 'uuid';
-import { BetterAuth } from '../../domain/betterAuth.class';
 import { isBetterAuthRequest } from '../../domain/guards/isBetterAuthRequest.guard';
 
 export function betterAuthTelemetryHookMiddleware(
@@ -44,13 +43,13 @@ export function betterAuthTelemetryHookMiddleware(
 }
 
 export function enrichBetterAuthApi<T extends BetterAuthOptions>(
-  auth: BetterAuth<T>
+  auth: ReturnType<typeof betterAuth<T>>
 ) {
   return async (req: Request, res: Response) => {
     if (!isBetterAuthRequest(req)) {
       throw new Error('Invalid request');
     }
-    await toNodeHandler(auth.betterAuthConfig)(
+    await toNodeHandler(auth)(
       req as unknown as ExpressRequest,
       res as unknown as ExpressResponse
     );

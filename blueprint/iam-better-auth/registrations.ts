@@ -1,12 +1,13 @@
-import { mikroOrmAdapter } from '@forklaunch/better-auth-mikro-orm-fork';
 import {
-  boolean,
+  ExpressOptions,
   number,
   optional,
+  promise,
   SchemaValidator,
-  string
+  string,
+  type
 } from '@forklaunch/blueprint-core';
-import { metrics } from '@forklaunch/blueprint-monitoring';
+import { Metrics, metrics } from '@forklaunch/blueprint-monitoring';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import {
   createConfigInjector,
@@ -27,10 +28,8 @@ import {
   BaseUserService
 } from '@forklaunch/implementation-iam-base/services';
 import { EntityManager, ForkOptions, MikroORM } from '@mikro-orm/core';
-import { array } from 'better-auth';
-import { openAPI } from 'better-auth/plugins';
-import { readFileSync } from 'fs';
-import { BetterAuth } from './domain/betterAuth.class';
+import { array, betterAuth } from 'better-auth';
+import { BetterAuthConfig, betterAuthConfig } from './auth';
 import { OrganizationStatus } from './domain/enum/organizationStatus.enum';
 import {
   CreateOrganizationDtoMapper,
@@ -140,26 +139,9 @@ export function createDependencies(orm: MikroORM) {
   });
   //! defines the runtime dependencies for the application
   const runtimeDependencies = environmentConfig.chain({
-    ExpressOptions: {
-      lifetime: Lifetime.Singleton,
-      type: {
-        cors: {
-          origin: string,
-          methods: array(string),
-          credentials: boolean
-        }
-      },
-      value: {
-        cors: {
-          origin: 'http://localhost:3001',
-          methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-          credentials: true
-        }
-      }
-    },
     OpenTelemetryCollector: {
       lifetime: Lifetime.Singleton,
-      type: OpenTelemetryCollector,
+      type: OpenTelemetryCollector<Metrics>,
       factory: ({ OTEL_SERVICE_NAME, OTEL_LEVEL }) =>
         new OpenTelemetryCollector(
           OTEL_SERVICE_NAME,
@@ -175,78 +157,40 @@ export function createDependencies(orm: MikroORM) {
     },
     BetterAuth: {
       lifetime: Lifetime.Singleton,
-      type: BetterAuth,
+      type: type<ReturnType<typeof betterAuth<BetterAuthConfig>>>(),
       factory: ({
         OpenTelemetryCollector,
         PASSWORD_ENCRYPTION_SECRET_PATH,
         CORS_ORIGINS
       }) =>
-        new BetterAuth({
-          secret: readFileSync(PASSWORD_ENCRYPTION_SECRET_PATH, 'utf8').split(
-            '\n'
-          )[1],
-          trustedOrigins: CORS_ORIGINS,
-          database: mikroOrmAdapter(orm),
-          emailAndPassword: {
-            enabled: true
-          },
-          plugins: [
-            openAPI({
-              disableDefaultReference: true
-            })
-          ],
-          user: {
-            additionalFields: {
-              firstName: {
-                type: 'string',
-                required: true
-              },
-              lastName: {
-                type: 'string',
-                required: true
-              },
-              phoneNumber: {
-                type: 'string',
-                required: false
-              },
-              roleIds: {
-                type: 'string[]',
-                required: false,
-                input: false
-              },
-              organizationId: {
-                type: 'string',
-                required: false,
-                input: false
-              }
+        betterAuth(
+          betterAuthConfig({
+            PASSWORD_ENCRYPTION_SECRET_PATH,
+            CORS_ORIGINS,
+            orm,
+            openTelemetryCollector: OpenTelemetryCollector
+          })
+        )
+    },
+    ExpressOptions: {
+      lifetime: Lifetime.Singleton,
+      type: promise(type<ExpressOptions>()),
+      factory: async ({ CORS_ORIGINS, BetterAuth }) => ({
+        cors: {
+          origin: CORS_ORIGINS,
+          methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+          credentials: true
+        },
+        docs: {
+          type: 'scalar' as const,
+          sources: [
+            {
+              name: 'BetterAuth',
+              content: await BetterAuth.api.generateOpenAPISchema()
             }
-          },
-          databaseHooks: {
-            user: {
-              create: {
-                before: async (user, ctx) => {
-                  return {
-                    data: {
-                      ...user,
-                      organization: {
-                        $in: ctx?.body.organizationId
-                          ? [ctx?.body.organizationId]
-                          : []
-                      },
-                      roles: {
-                        $in: ctx?.body.roleIds ? ctx?.body.roleIds : []
-                      }
-                    }
-                  };
-                }
-              }
-            }
-          },
-          advanced: {
-            generateId: false
-          },
-          logger: OpenTelemetryCollector
-        })
+          ]
+        }
+      })
     }
   });
   //! defines the service dependencies for the application

@@ -10,19 +10,18 @@ import { RoleRoutes } from './api/routes/role.routes';
 import { UserRoutes } from './api/routes/user.routes';
 import { bootstrap } from './bootstrapper';
 //! bootstrap function that initializes the service application
-bootstrap((ci, tokens) => {
+bootstrap(async (ci, tokens) => {
   //! resolves the openTelemetryCollector from the configuration
   const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
   //! creates an instance of forklaunchExpress
   const app = forklaunchExpress(
     SchemaValidator(),
     openTelemetryCollector,
-    ci.resolve(tokens.ExpressOptions)
+    await ci.resolve(tokens.ExpressOptions)
   );
   //! registers the betterAuth middleware
-  app.all(
+  app.internal.all(
     '/api/auth/{*any}',
-    {},
     betterAuthTelemetryHookMiddleware,
     enrichBetterAuthApi(ci.resolve(tokens.BetterAuth))
   );
