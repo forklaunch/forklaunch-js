@@ -36,8 +36,8 @@
     "@forklaunch/blueprint-monitoring": "workspace:*",
     "@forklaunch/common": "^0.3.8",
     "@forklaunch/core": "^0.9.8",
-    "@forklaunch/express": "^0.5.17",
-    "@forklaunch/hyper-express": "^0.5.17",
+    "@forklaunch/express": "^0.5.18",
+    "@forklaunch/hyper-express": "^0.5.18",
     "@forklaunch/implementation-billing-base": "workspace:*",
     "@forklaunch/infrastructure-redis": "^0.0.16",
     "@forklaunch/interfaces-billing": "workspace:*",
@@ -54,7 +54,7 @@
     "ajv": "^8.17.1",
     "dotenv": "^16.5.0",
     "uuid": "^11.1.0",
-    "zod": "^3.25.57"
+    "zod": "^3.25.58"
   },
   "devDependencies": {
     "@mikro-orm/cli": "^6.4.16",

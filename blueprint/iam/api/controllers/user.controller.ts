@@ -41,7 +41,7 @@ export const UserController = (
       },
       async (req, res) => {
         openTelemetryCollector.debug('Creating user', req.body);
-        // use req context to prepopulate organizationId from AuthToken in future
+
         await serviceFactory().createUser(req.body);
         res.status(201).send('User created successfully');
       }

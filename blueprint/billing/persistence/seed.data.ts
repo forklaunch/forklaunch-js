@@ -21,57 +21,69 @@ export const billingProvider = async (em: EntityManager) =>
     updatedAt: new Date()
   });
 export const paymentLink = async (em: EntityManager) =>
-  em.create(PaymentLink, {
-    amount: 1000,
-    currency: CurrencyEnum.USD,
-    description: 'Test payment link',
-    successRedirectUri: 'https://example.com/success',
-    cancelRedirectUri: 'https://example.com/cancel',
-    expiresAt: new Date(),
-    status: StatusEnum.EXPIRED,
-    createdAt: new Date(),
-    updatedAt: new Date()
-  });
+  PaymentLink.create(
+    {
+      amount: 1000,
+      currency: CurrencyEnum.USD,
+      description: 'Test payment link',
+      successRedirectUri: 'https://example.com/success',
+      cancelRedirectUri: 'https://example.com/cancel',
+      expiresAt: new Date(),
+      status: StatusEnum.EXPIRED,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    em
+  );
 export const plan = async (em: EntityManager) =>
-  em.create(Plan, {
-    active: true,
-    name: 'Basic',
-    description: 'Basic plan',
-    price: 1000,
-    cadence: PlanCadenceEnum.MONTHLY,
-    features: ['feature1', 'feature2'],
-    extraFields: {},
-    externalId: '1234567890',
-    billingProvider: BillingProviderEnum.STRIPE,
-    createdAt: new Date(),
-    updatedAt: new Date()
-  });
+  Plan.create(
+    {
+      active: true,
+      name: 'Basic',
+      description: 'Basic plan',
+      price: 1000,
+      cadence: PlanCadenceEnum.MONTHLY,
+      features: ['feature1', 'feature2'],
+      extraFields: {},
+      externalId: '1234567890',
+      billingProvider: BillingProviderEnum.STRIPE,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    em
+  );
 export const checkoutSession = async (em: EntityManager) =>
-  em.create(CheckoutSession, {
-    customerId: 'test@example.com',
-    paymentMethods: [PaymentMethodEnum.CREDIT_CARD],
-    metadata: {},
-    successRedirectUri: 'https://example.com/success',
-    cancelRedirectUri: 'https://example.com/cancel',
-    expiresAt: new Date(),
-    status: StatusEnum.EXPIRED,
-    createdAt: new Date(),
-    updatedAt: new Date()
-  });
+  CheckoutSession.create(
+    {
+      customerId: 'test@example.com',
+      paymentMethods: [PaymentMethodEnum.CREDIT_CARD],
+      metadata: {},
+      successRedirectUri: 'https://example.com/success',
+      cancelRedirectUri: 'https://example.com/cancel',
+      expiresAt: new Date(),
+      status: StatusEnum.EXPIRED,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    em
+  );
 
 export const subscription = async (em: EntityManager) =>
-  em.create(Subscription, {
-    partyId: '1234567890',
-    partyType: PartyEnum.USER,
-    description: 'Test subscription',
-    active: true,
-    productId: '1234567890',
-    extraFields: {},
-    externalId: '1234567890',
-    billingProvider: BillingProviderEnum.STRIPE,
-    startDate: new Date(),
-    endDate: new Date(),
-    status: 'active',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  });
+  Subscription.create(
+    {
+      partyId: '1234567890',
+      partyType: PartyEnum.USER,
+      description: 'Test subscription',
+      active: true,
+      productId: '1234567890',
+      extraFields: {},
+      externalId: '1234567890',
+      billingProvider: BillingProviderEnum.STRIPE,
+      startDate: new Date(),
+      endDate: new Date(),
+      status: 'active',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    em
+  );

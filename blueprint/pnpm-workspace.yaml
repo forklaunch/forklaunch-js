@@ -3,6 +3,7 @@ packages:
   - monitoring
   - billing
   - iam
+  - iam-better-auth
   - sample-worker
   - interfaces/billing
   - interfaces/iam

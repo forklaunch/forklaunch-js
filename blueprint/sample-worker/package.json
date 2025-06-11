@@ -64,7 +64,7 @@
     "kafkajs": "^2.2.4",
     "node-gyp": "^11.2.0",
     "sqlite3": "^5.1.7",
-    "zod": "^3.25.57"
+    "zod": "^3.25.58"
   },
   "devDependencies": {
     "@mikro-orm/cli": "^6.4.16",

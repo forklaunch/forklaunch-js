@@ -50,7 +50,7 @@
     "@forklaunch/core": "^0.9.8",
     "@forklaunch/interfaces-worker": "workspace:*",
     "@sinclair/typebox": "^0.34.33",
-    "zod": "^3.25.57"
+    "zod": "^3.25.58"
   },
   "devDependencies": {
     "depcheck": "^1.4.7",

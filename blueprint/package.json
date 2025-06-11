@@ -59,8 +59,8 @@
   "dependencies": {
     "@forklaunch/common": "^0.3.8",
     "@forklaunch/core": "^0.9.8",
-    "@forklaunch/express": "^0.5.17",
-    "@forklaunch/hyper-express": "^0.5.17",
+    "@forklaunch/express": "^0.5.18",
+    "@forklaunch/hyper-express": "^0.5.18",
     "@forklaunch/universal-sdk": "0.3.9",
     "@forklaunch/validator": "^0.6.8"
   }

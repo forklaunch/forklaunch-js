@@ -15,11 +15,11 @@ importers:
         specifier: ^0.9.8
         version: 0.9.8(socks@2.8.5)
       '@forklaunch/express':
-        specifier: ^0.5.17
-        version: 0.5.17(openapi3-ts@4.4.0)(socks@2.8.5)
+        specifier: ^0.5.18
+        version: 0.5.18(openapi3-ts@4.4.0)(socks@2.8.5)
       '@forklaunch/hyper-express':
-        specifier: ^0.5.17
-        version: 0.5.17(express@5.1.0)(socks@2.8.5)
+        specifier: ^0.5.18
+        version: 0.5.18(express@5.1.0)(socks@2.8.5)
       '@forklaunch/universal-sdk':
         specifier: 0.3.9
         version: 0.3.9
@@ -94,11 +94,11 @@ importers:
         specifier: ^0.9.8
         version: 0.9.8(socks@2.8.5)
       '@forklaunch/express':
-        specifier: ^0.5.17
-        version: 0.5.17(openapi3-ts@4.4.0)(socks@2.8.5)
+        specifier: ^0.5.18
+        version: 0.5.18(openapi3-ts@4.4.0)(socks@2.8.5)
       '@forklaunch/hyper-express':
-        specifier: ^0.5.17
-        version: 0.5.17(express@5.1.0)(socks@2.8.5)
+        specifier: ^0.5.18
+        version: 0.5.18(express@5.1.0)(socks@2.8.5)
       '@forklaunch/implementation-billing-base':
         specifier: workspace:*
         version: link:../implementations/billing/base
@@ -148,8 +148,8 @@ importers:
         specifier: ^11.1.0
         version: 11.1.0
       zod:
-        specifier: ^3.25.57
-        version: 3.25.57
+        specifier: ^3.25.58
+        version: 3.25.58
     devDependencies:
       '@mikro-orm/cli':
         specifier: ^6.4.16
@@ -188,11 +188,11 @@ importers:
         specifier: ^0.9.8
         version: 0.9.8(socks@2.8.5)
       '@forklaunch/express':
-        specifier: ^0.5.17
-        version: 0.5.17(openapi3-ts@4.4.0)(socks@2.8.5)
+        specifier: ^0.5.18
+        version: 0.5.18(openapi3-ts@4.4.0)(socks@2.8.5)
       '@forklaunch/hyper-express':
-        specifier: ^0.5.17
-        version: 0.5.17(express@5.1.0)(socks@2.8.5)
+        specifier: ^0.5.18
+        version: 0.5.18(express@5.1.0)(socks@2.8.5)
       '@forklaunch/validator':
         specifier: ^0.6.8
         version: 0.6.8(openapi3-ts@4.4.0)
@@ -210,7 +210,7 @@ importers:
         version: 11.1.0
       zod:
         specifier: ^3.25.57
-        version: 3.25.57
+        version: 3.25.58
     devDependencies:
       '@types/express':
         specifier: ^5.0.3
@@ -233,6 +233,85 @@ importers:
 
   iam:
     dependencies:
+      '@forklaunch/blueprint-core':
+        specifier: workspace:*
+        version: link:../core
+      '@forklaunch/blueprint-monitoring':
+        specifier: workspace:*
+        version: link:../monitoring
+      '@forklaunch/core':
+        specifier: ^0.9.8
+        version: 0.9.8(socks@2.8.5)
+      '@forklaunch/hyper-express-fork':
+        specifier: ^6.17.34
+        version: 6.17.34
+      '@forklaunch/implementation-iam-base':
+        specifier: workspace:*
+        version: link:../implementations/iam/base
+      '@forklaunch/interfaces-iam':
+        specifier: workspace:*
+        version: link:../interfaces/iam
+      '@mikro-orm/core':
+        specifier: ^6.4.16
+        version: 6.4.16
+      '@mikro-orm/migrations':
+        specifier: ^6.4.16
+        version: 6.4.16(@mikro-orm/core@6.4.16)(@types/node@24.0.0)(better-sqlite3@11.10.0)(libsql@0.5.12)(mariadb@3.4.2)
+      '@mikro-orm/mongodb':
+        specifier: ^6.4.16
+        version: 6.4.16(@mikro-orm/core@6.4.16)(socks@2.8.5)
+      '@mikro-orm/mysql':
+        specifier: ^6.4.16
+        version: 6.4.16(@mikro-orm/core@6.4.16)(better-sqlite3@11.10.0)(libsql@0.5.12)(mariadb@3.4.2)
+      '@mikro-orm/postgresql':
+        specifier: ^6.4.16
+        version: 6.4.16(@mikro-orm/core@6.4.16)(better-sqlite3@11.10.0)(libsql@0.5.12)(mariadb@3.4.2)
+      '@mikro-orm/reflection':
+        specifier: ^6.4.16
+        version: 6.4.16(@mikro-orm/core@6.4.16)
+      '@mikro-orm/seeder':
+        specifier: ^6.4.16
+        version: 6.4.16(@mikro-orm/core@6.4.16)
+      '@mikro-orm/sqlite':
+        specifier: ^6.4.16
+        version: 6.4.16(@mikro-orm/core@6.4.16)(better-sqlite3@11.10.0)(libsql@0.5.12)(mariadb@3.4.2)
+      '@sinclair/typebox':
+        specifier: ^0.34.33
+        version: 0.34.33
+      dotenv:
+        specifier: ^16.5.0
+        version: 16.5.0
+      zod:
+        specifier: ^3.25.58
+        version: 3.25.58
+    devDependencies:
+      '@mikro-orm/cli':
+        specifier: ^6.4.16
+        version: 6.4.16(better-sqlite3@11.10.0)(libsql@0.5.12)(mariadb@3.4.2)
+      '@types/express':
+        specifier: ^5.0.3
+        version: 5.0.3
+      '@types/express-serve-static-core':
+        specifier: ^5.0.6
+        version: 5.0.6
+      '@types/qs':
+        specifier: ^6.14.0
+        version: 6.14.0
+      depcheck:
+        specifier: ^1.4.7
+        version: 1.4.7
+      prettier:
+        specifier: ^3.5.3
+        version: 3.5.3
+      typedoc:
+        specifier: ^0.28.5
+        version: 0.28.5(typescript@5.8.3)
+
+  iam-better-auth:
+    dependencies:
+      '@forklaunch/better-auth-mikro-orm-fork':
+        specifier: ^0.3.0
+        version: 0.3.0(@mikro-orm/core@6.4.16)(better-auth@1.2.9)
       '@forklaunch/blueprint-core':
         specifier: workspace:*
         version: link:../core
@@ -272,15 +351,24 @@ importers:
       '@mikro-orm/sqlite':
         specifier: ^6.4.16
         version: 6.4.16(@mikro-orm/core@6.4.16)(better-sqlite3@11.10.0)(libsql@0.5.12)(mariadb@3.4.2)
+      '@opentelemetry/api':
+        specifier: ^1.9.0
+        version: 1.9.0
       '@sinclair/typebox':
         specifier: ^0.34.33
         version: 0.34.33
+      better-auth:
+        specifier: ^1.2.9
+        version: 1.2.9
       dotenv:
         specifier: ^16.5.0
         version: 16.5.0
+      uuid:
+        specifier: ^11.1.0
+        version: 11.1.0
       zod:
-        specifier: ^3.25.57
-        version: 3.25.57
+        specifier: ^3.25.58
+        version: 3.25.58
     devDependencies:
       '@mikro-orm/cli':
         specifier: ^6.4.16
@@ -294,6 +382,9 @@ importers:
       '@types/qs':
         specifier: ^6.14.0
         version: 6.14.0
+      '@types/uuid':
+        specifier: ^10.0.0
+        version: 10.0.0
       depcheck:
         specifier: ^1.4.7
         version: 1.4.7
@@ -328,8 +419,8 @@ importers:
         specifier: ^8.17.1
         version: 8.17.1
       zod:
-        specifier: ^3.25.57
-        version: 3.25.57
+        specifier: ^3.25.58
+        version: 3.25.58
     devDependencies:
       depcheck:
         specifier: ^1.4.7
@@ -365,8 +456,8 @@ importers:
         specifier: ^8.17.1
         version: 8.17.1
       zod:
-        specifier: ^3.25.57
-        version: 3.25.57
+        specifier: ^3.25.58
+        version: 3.25.58
     devDependencies:
       depcheck:
         specifier: ^1.4.7
@@ -393,8 +484,8 @@ importers:
         specifier: ^5.53.2
         version: 5.53.2
       zod:
-        specifier: ^3.25.57
-        version: 3.25.57
+        specifier: ^3.25.58
+        version: 3.25.58
     devDependencies:
       depcheck:
         specifier: ^1.4.7
@@ -427,8 +518,8 @@ importers:
         specifier: ^0.34.33
         version: 0.34.33
       zod:
-        specifier: ^3.25.57
-        version: 3.25.57
+        specifier: ^3.25.58
+        version: 3.25.58
     devDependencies:
       depcheck:
         specifier: ^1.4.7
@@ -461,8 +552,8 @@ importers:
         specifier: ^2.2.4
         version: 2.2.4
       zod:
-        specifier: ^3.25.57
-        version: 3.25.57
+        specifier: ^3.25.58
+        version: 3.25.58
     devDependencies:
       depcheck:
         specifier: ^1.4.7
@@ -492,8 +583,8 @@ importers:
         specifier: ^0.34.33
         version: 0.34.33
       zod:
-        specifier: ^3.25.57
-        version: 3.25.57
+        specifier: ^3.25.58
+        version: 3.25.58
     devDependencies:
       depcheck:
         specifier: ^1.4.7
@@ -666,8 +757,8 @@ importers:
         specifier: ^5.1.7
         version: 5.1.7
       zod:
-        specifier: ^3.25.57
-        version: 3.25.57
+        specifier: ^3.25.58
+        version: 3.25.58
     devDependencies:
       '@mikro-orm/cli':
         specifier: ^6.4.16
@@ -860,6 +951,10 @@ packages:
     resolution: {integrity: sha512-DIIotRnefVL6DiaHtO6/21DhJ4JZnnIwdNbpwiAhdt/AVbttcE4yw925gsjur0OGv5BTYXQXU3YnANBYnZjuQA==}
     engines: {node: '>=18.0.0'}
 
+  '@azure-rest/core-client@2.4.0':
+    resolution: {integrity: sha512-CjMFBcmnt0YNdRcxSSoZbtZNXudLlicdml7UrPsV03nHiWB+Bq5cu5ctieyaCuRtU7jm7+SOFtiE/g4pBFPKKA==}
+    engines: {node: '>=18.0.0'}
+
   '@azure/abort-controller@2.1.2':
     resolution: {integrity: sha512-nBrLsEWm4J2u5LpAPjxADTlq3trDgVZZXHNKabeXZtpq3d3AbN/KGO82R87rdDz5/lYB024rtEf10/q0urNgsA==}
     engines: {node: '>=18.0.0'}
@@ -904,16 +999,16 @@ packages:
     resolution: {integrity: sha512-wRLVaroQtOqfg60cxkzUkGKrKMsCP6uYXAOomOIysSMyt1/YM0eUn9LqieAWM8DLcU4+07Fio2YGpPeqUbpP9w==}
     engines: {node: '>=18.0.0'}
 
-  '@azure/keyvault-keys@4.9.0':
-    resolution: {integrity: sha512-ZBP07+K4Pj3kS4TF4XdkqFcspWwBHry3vJSOFM5k5ZABvf7JfiMonvaFk2nBF6xjlEbMpz5PE1g45iTMme0raQ==}
+  '@azure/keyvault-keys@4.10.0':
+    resolution: {integrity: sha512-eDT7iXoBTRZ2n3fLiftuGJFD+yjkiB1GNqzU2KbY1TLYeXeSPVTVgn2eJ5vmRTZ11978jy2Kg2wI7xa9Tyr8ag==}
     engines: {node: '>=18.0.0'}
 
   '@azure/logger@1.2.0':
     resolution: {integrity: sha512-0hKEzLhpw+ZTAfNJyRrn6s+V0nDWzXk9OjBr2TiGIu0OfMr5s2V4FpKLTAK3Ca5r5OKLbf4hkOGDPyiRjie/jA==}
     engines: {node: '>=18.0.0'}
 
-  '@azure/msal-browser@4.13.0':
-    resolution: {integrity: sha512-n2ySryLd+wHmm/0Y1mwFI4J9UXVCu2DeWKtoWNWLVcpvK2k0Ez1qIigKleUm2ZfTbfAXdue+V8htmFft0qgyGQ==}
+  '@azure/msal-browser@4.13.1':
+    resolution: {integrity: sha512-oTp2zhVljB2CRp87swOTsBcqLDrvZq9In+yDMBzuuMN4z2wrIU6ITHBZlLfs+FaAVmM1zY3k7ITekXaJ2bsDKA==}
     engines: {node: '>=0.8.0'}
 
   '@azure/msal-common@15.7.0':
@@ -1088,6 +1183,12 @@ packages:
 
   '@bcoe/v8-coverage@0.2.3':
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
+
+  '@better-auth/utils@0.2.5':
+    resolution: {integrity: sha512-uI2+/8h/zVsH8RrYdG8eUErbuGBk16rZKQfz8CjxQOyCE6v7BqFYEbFwvOkvl1KbUdxhqOnXp78+uE5h8qVEgQ==}
+
+  '@better-fetch/fetch@1.1.18':
+    resolution: {integrity: sha512-rEFOE1MYIsBmoMJtQbl32PGHHXuG2hDxvEd7rUHE0vCBoFQVSDqaVs9hkZEtHCxRoY+CljXKFCOuJ8uxqw1LcA==}
 
   '@biomejs/biome@1.9.4':
     resolution: {integrity: sha512-1rkd7G70+o9KkTn5KLmDYXihGoTaIGO9PIIN2ZB7UJxFrWw04CZHPYiMRjYsaDvVV7hP1dYNRLxSANLaBFGpog==}
@@ -1398,20 +1499,27 @@ packages:
     resolution: {integrity: sha512-0J+zgWxHN+xXONWIyPWKFMgVuJoZuGiIFu8yxk7RJjxkzpGmyja5wRFqZIVtjDVOQpV+Rw0iOAjYPE2eQyjr0w==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
+  '@forklaunch/better-auth-mikro-orm-fork@0.3.0':
+    resolution: {integrity: sha512-cI5XwA+/QhKJGQGJElNU7ARH3dnx5IXI/hLxbSAdYvXP53wRqxAp1noQVqHxIcuNdujmV3qQiM2OcVaUZu3xyQ==}
+    engines: {node: '>= 18'}
+    peerDependencies:
+      '@mikro-orm/core': ^6.0.0
+      better-auth: ^1.0.0
+
   '@forklaunch/common@0.3.8':
     resolution: {integrity: sha512-5iNj1mQ+FpwYN7JtbZEH8J+WRDRqTffa/mWZ3scRsXv7SLE2JBmE75u+6ipqQ0yvEyW5Y1pyYGeMtyBvdeg/1A==}
 
   '@forklaunch/core@0.9.8':
     resolution: {integrity: sha512-VLuN+SJQ9thtNPggnA037z0J/9Yr14bEE8dMYl/M0Fh2z2ypCYChXgtDxDwLhfpU3FW2WjKr82+bjuDTXPALdQ==}
 
-  '@forklaunch/express@0.5.17':
-    resolution: {integrity: sha512-5mCFJ7A6nktg5lRz7CYtnB85xIK49U0Avm+6NuPO+OSU6UEY1G9kiVCOsOe2HRlFxbo8DxWweVnhCxTAW8UGZg==}
+  '@forklaunch/express@0.5.18':
+    resolution: {integrity: sha512-veMouz4MTw9DzKCVwO/RYFbqDgxljlIulF2CcABU8Zzqykwanm6zKQ4RqLrLHJ35aYCoHm7MVP35GXKins/y2Q==}
 
   '@forklaunch/hyper-express-fork@6.17.34':
     resolution: {integrity: sha512-ftLBbQgrqAjHVaDWlJ/0UEIxMAmAF5TYZmjTVUni92lxv/aJeDofYNCyEb2FM8cy4lbaGqsYnTf3WiKnekTLeg==}
 
-  '@forklaunch/hyper-express@0.5.17':
-    resolution: {integrity: sha512-Ka5i/L0O/gdneAah8okjMKimXxOddSN0ZGCgglm8JceE0FnaCDZKcOovSFZfVuFE2DjfAwTUnr7BBW9mDqtIHg==}
+  '@forklaunch/hyper-express@0.5.18':
+    resolution: {integrity: sha512-imt6J7YzRmwnTNAFdOXpT+osnOJ3ICh/K4AQYpWT2pboca2ln+NwlKCgCSkcK3jT3st8j13bzivfpZ+omYguEw==}
 
   '@forklaunch/infrastructure-redis@0.0.16':
     resolution: {integrity: sha512-emizh7l/aZO/7Sf6mpztIkvMcjxbnkQmA18m9sFF9h2H2QFRVbCIWOhFeEklZU0OrJLEDcMZ+kWJW22hOnsrtQ==}
@@ -1445,6 +1553,9 @@ packages:
     resolution: {integrity: sha512-tMXdRCfYVixjuFK+Hk0Q1s38gV9zDiDJfWL3h1rv4Qc39oILCu1TRTDt7+fGUI8K4G1Fj125Hx/ru3azECWTyQ==}
     engines: {node: '>=6'}
     hasBin: true
+
+  '@hexagon/base64@1.1.28':
+    resolution: {integrity: sha512-lhqDEAvWixy3bZ+UOYbPwUbBkwBq5C1LAJ/xPC8Oi+lL54oyakv/npbA0aU2hgCsx/1NUd4IBvV03+aUBWxerw==}
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -1612,6 +1723,9 @@ packages:
 
   '@js-sdsl/ordered-map@4.4.2':
     resolution: {integrity: sha512-iUKgm52T8HOE/makSxjqoWhe95ZJA1/G1sYsGev2JDKUSS14KAgg1LHb+Ba+IPow0xflbnSkOsZcO08C7w1gYw==}
+
+  '@levischuck/tiny-cbor@0.2.11':
+    resolution: {integrity: sha512-llBRm4dT4Z89aRsm6u2oEZ8tfwL/2l6BwpZ7JcyieouniDECM5AqNgr/y08zalEIvW3RSK4upYyybDcmjXqAow==}
 
   '@libsql/darwin-arm64@0.5.11':
     resolution: {integrity: sha512-Av4+H8VypNZdbRbDKu5ogoCBHOdYh2Vx6iO7+0SACjcgnpqjnGL59lJUuX3fmV48VI6al1xORYJVApo//B5iqA==}
@@ -1838,6 +1952,13 @@ packages:
 
   '@neon-rs/load@0.0.4':
     resolution: {integrity: sha512-kTPhdZyTQxB+2wpiRcFWrDcejc4JI6tkPuS7UZCG4l6Zvc5kU/gGQ/ozvHTh1XR5tS+UlfAfGuPajjzQjCiHCw==}
+
+  '@noble/ciphers@0.6.0':
+    resolution: {integrity: sha512-mIbq/R9QXk5/cTfESb1OKtyFnk7oc1Om/8onA1158K9/OZUQFDEVy55jVTato+xmp3XX6F6Qh0zz0Nc1AxAlRQ==}
+
+  '@noble/hashes@1.8.0':
+    resolution: {integrity: sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A==}
+    engines: {node: ^14.21.3 || >=16}
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -2101,6 +2222,21 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@peculiar/asn1-android@2.3.16':
+    resolution: {integrity: sha512-a1viIv3bIahXNssrOIkXZIlI2ePpZaNmR30d4aBL99mu2rO+mT9D6zBsp7H6eROWGtmwv0Ionp5olJurIo09dw==}
+
+  '@peculiar/asn1-ecc@2.3.15':
+    resolution: {integrity: sha512-/HtR91dvgog7z/WhCVdxZJ/jitJuIu8iTqiyWVgRE9Ac5imt2sT/E4obqIVGKQw7PIy+X6i8lVBoT6wC73XUgA==}
+
+  '@peculiar/asn1-rsa@2.3.15':
+    resolution: {integrity: sha512-p6hsanvPhexRtYSOHihLvUUgrJ8y0FtOM97N5UEpC+VifFYyZa0iZ5cXjTkZoDwxJ/TTJ1IJo3HVTB2JJTpXvg==}
+
+  '@peculiar/asn1-schema@2.3.15':
+    resolution: {integrity: sha512-QPeD8UA8axQREpgR5UTAfu2mqQmm97oUqahDtNdBcfj3qAnoXzFdQW+aNf/tD2WVXF8Fhmftxoj0eMIT++gX2w==}
+
+  '@peculiar/asn1-x509@2.3.15':
+    resolution: {integrity: sha512-0dK5xqTqSLaxv1FHXIcd4Q/BZNuopg+u1l23hT9rOmQ1g4dNtw0g/RnEi+TboB0gOwGtrWn269v27cMgchFIIg==}
+
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
@@ -2319,6 +2455,13 @@ packages:
 
   '@shikijs/vscode-textmate@10.0.2':
     resolution: {integrity: sha512-83yeghZ2xxin3Nj8z1NMd/NCuca+gsYXswywDy5bHvwlWL8tpTQmzGeUuHd9FC3E/SBEMvzJRwWEOz5gGes9Qg==}
+
+  '@simplewebauthn/browser@13.1.0':
+    resolution: {integrity: sha512-WuHZ/PYvyPJ9nxSzgHtOEjogBhwJfC8xzYkPC+rR/+8chl/ft4ngjiK8kSU5HtRJfczupyOh33b25TjYbvwAcg==}
+
+  '@simplewebauthn/server@13.1.1':
+    resolution: {integrity: sha512-1hsLpRHfSuMB9ee2aAdh0Htza/X3f4djhYISrggqGe3xopNjOcePiSDkDDoPzDYaaMCrbqGP1H2TYU7bgL9PmA==}
+    engines: {node: '>=20.0.0'}
 
   '@sinclair/typebox@0.27.8':
     resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
@@ -3036,6 +3179,10 @@ packages:
     resolution: {integrity: sha512-3duEwti880xqi4eAMN8AyR4a0ByT90zoYdLlevfrvU43vb0YZwZVfxOgxWrLXXXpyugL0hNZc9G6BiB5B3nUug==}
     engines: {node: '>=8'}
 
+  asn1js@3.0.6:
+    resolution: {integrity: sha512-UOCGPYbl0tv8+006qks/dTgV9ajs97X2p0FAbyS2iyCRrmLSRolDaHdp+v/CLgnzHc3fVB+CwYiUmei7ndFcgA==}
+    engines: {node: '>=12.0.0'}
+
   assertion-error@2.0.1:
     resolution: {integrity: sha512-Izi8RQcffqCeNVgFigKli1ssklIbpHnCYc6AknXGYoB6grJqyeby7jv12JUQgmTAnIDnbck1uxksT4dzN3PWBA==}
     engines: {node: '>=12'}
@@ -3101,6 +3248,12 @@ packages:
 
   base64-js@1.5.1:
     resolution: {integrity: sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA==}
+
+  better-auth@1.2.9:
+    resolution: {integrity: sha512-WLqBXDzuaCQetQctLGC5oTfGmL32zUvxnM4Y+LZkhwseMaZWq5EKI+c/ZATgz2YkFt7726q659PF8CfB9P1VuA==}
+
+  better-call@1.0.9:
+    resolution: {integrity: sha512-Qfm0gjk0XQz0oI7qvTK1hbqTsBY4xV2hsHAxF8LZfUYl3RaECCIifXuVqtPpZJWvlCCMlQSvkvhhyuApGUba6g==}
 
   better-path-resolve@1.0.0:
     resolution: {integrity: sha512-pbnl5XzGBdrFU/wT4jqmJVPn2B6UHPBOhzMQkY/SPUPB6QtUXtmBHBIwCbXJol93mOpGMnQyP/+BB19q04xj7g==}
@@ -3466,6 +3619,9 @@ packages:
     resolution: {integrity: sha512-N+MeXYoqr3pOgn8xfyRPREN7gHakLYjhsHhWGT3fWAiL4IkAt0iDw14QiiEm2bE30c5XX5q0FtAA3CK5f9/BUg==}
     engines: {node: '>=12'}
 
+  defu@6.1.4:
+    resolution: {integrity: sha512-mEQCMmwJu317oSz8CwdIOdwf3xMif1ttiM8LTufzc3g6kR+9Pe236twL8j3IYT1F7GfRgGcW6MWxzZjLIkuHIg==}
+
   delegates@1.0.0:
     resolution: {integrity: sha512-bd2L678uiWATM6m5Z1VzNCErI3jiGzt6HGY8OVICs40JQq/HALfbyNJmp0UDakEY4pMMaN0Ly5om/B1VI/+xfQ==}
 
@@ -3528,6 +3684,10 @@ packages:
   dotenv@16.5.0:
     resolution: {integrity: sha512-m/C+AwOAr9/W1UOIZUo232ejMNnJAJtYQjUbHoNTBNTJSvqzzDh7vnrei3o3r3m9blf6ZoDkvcw0VmozNRFJxg==}
     engines: {node: '>=12'}
+
+  dset@3.1.4:
+    resolution: {integrity: sha512-2QF/g9/zTaPDc3BjNcVTGoBbXBgYfMTTceLaYcFJ/W9kggFUkhxD/hMEeuLKbugyef9SqAx8cpgwlIP/jinUTA==}
+    engines: {node: '>=4'}
 
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
@@ -4391,6 +4551,9 @@ packages:
   jju@1.4.0:
     resolution: {integrity: sha512-8wb9Yw966OSxApiCt0K3yNJL8pnNeIv+OEq2YMidz4FKP6nonSRoOXc80iXY4JaN2FC11B9qsNmDsm+ZOfMROA==}
 
+  jose@5.10.0:
+    resolution: {integrity: sha512-s+3Al/p9g32Iq+oqXxkW//7jk2Vig6FF1CFqzVXoTUXt2qz89YWbL+OwS17NFYEvxC35n0FKeGO2LGYSxeM2Gg==}
+
   jose@6.0.11:
     resolution: {integrity: sha512-QxG7EaliDARm1O1S8BGakqncGT9s25bKL1WSf6/oa17Tkqwi8D2ZNglqCF+DsYF88/rV66Q/Q2mFAy697E1DUg==}
 
@@ -4493,6 +4656,10 @@ packages:
         optional: true
       tedious:
         optional: true
+
+  kysely@0.28.2:
+    resolution: {integrity: sha512-4YAVLoF0Sf0UTqlhgQMFU9iQECdah7n+13ANkiuVfRvlK+uI0Etbgd7bVP36dKlG+NXWbhGua8vnGt+sdhvT7A==}
+    engines: {node: '>=18.0.0'}
 
   leven@3.1.0:
     resolution: {integrity: sha512-qsda+H8jTaUaN/x5vzW2rzc+8Rw4TAQ/4KjB46IwK5VH+IlVeeeje/EoZRpiXvIqjFgK84QffqPztGI3VBLG1A==}
@@ -4892,6 +5059,10 @@ packages:
     resolution: {integrity: sha512-Ir/+ZpE9fDsNH0hQ3C68uyThDXzYcim2EqcZ8zn8Chtt1iylPT9xXJB0kPCnqzgcEGikO9RxSrh63MsmVCU7Fw==}
     engines: {node: ^18 || >=20}
     hasBin: true
+
+  nanostores@0.11.4:
+    resolution: {integrity: sha512-k1oiVNN4hDK8NcNERSZLQiMfRzEGtfnvZvdBvey3SQbgn8Dcrk0h1I6vpxApjb10PFUflZrgJ2WEZyJQ+5v7YQ==}
+    engines: {node: ^18.0.0 || >=20.0.0}
 
   napi-build-utils@2.0.0:
     resolution: {integrity: sha512-GEbrYkbfF7MoNaoh2iGG84Mnf/WZfB0GdGEsM8wz7Expx/LlWf5U8t9nvJKXSp3qr5IsEbK04cBGhol/KwOsWA==}
@@ -5331,6 +5502,13 @@ packages:
   pure-rand@7.0.1:
     resolution: {integrity: sha512-oTUZM/NAZS8p7ANR3SHh30kXB+zK2r2BPcEn/awJIbOvq82WoMN4p62AWWp3Hhw50G0xMsw1mhIBLqHw64EcNQ==}
 
+  pvtsutils@1.3.6:
+    resolution: {integrity: sha512-PLgQXQ6H2FWCaeRak8vvk1GW462lMxB5s3Jm673N82zI4vqtVUPuZdffdZbPDFRoU8kAhItWFtPCWiPpp4/EDg==}
+
+  pvutils@1.1.3:
+    resolution: {integrity: sha512-pMpnA0qRdFp32b1sJl1wOJNxZLQ2cbQx+k6tjNtZ8CpvVhNqEPRgivZ2WOUev2YMajecdH7ctUPDvEe87nariQ==}
+    engines: {node: '>=6.0.0'}
+
   qs@6.14.0:
     resolution: {integrity: sha512-YWWTjgABSKcvs/nWBi9PycY/JiPJqOD4JA6o9Sej2AtvSGarXxKC3OQSk4pAarbdQlKAh5D4FCQkJNkW+GAn3w==}
     engines: {node: '>=0.6'}
@@ -5466,6 +5644,9 @@ packages:
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
+  rou3@0.5.1:
+    resolution: {integrity: sha512-OXMmJ3zRk2xeXFGfA3K+EOPHC5u7RDFG7lIOx0X1pdnhUkI8MdVrbV+sNsD80ElpUZ+MRHdyxPnFthq9VHs8uQ==}
+
   router@2.2.0:
     resolution: {integrity: sha512-nLTrUKm2UyiL7rlhapu/Zl45FwNgkZGaCpZbIHajDYgwlJCOzLSk+cIPAnsEqV955GjILJnKbdQC1nVPz+gAYQ==}
     engines: {node: '>= 18'}
@@ -5523,6 +5704,9 @@ packages:
 
   set-blocking@2.0.0:
     resolution: {integrity: sha512-KiKBS8AnWGEyLzofFfmvKwpdPzqiy16LvQfK3yv/fVH7Bj13/wl3JSR1J+rfgRE9q7xUJK4qvgS8raSOeLUehw==}
+
+  set-cookie-parser@2.7.1:
+    resolution: {integrity: sha512-IOc8uWeOZgnb3ptbCURJWNjWUPcO3ZnTTdzsurqERrP6nPyv+paC55vJM0LpOlT2ne+Ix+9+CRG1MNLlyZ4GjQ==}
 
   setprototypeof@1.2.0:
     resolution: {integrity: sha512-E5LDX7Wrp85Kil5bhZv46j8jOeboKq5JMmYM3gVGdGH8xFpPWXUMsNrlODCrkoxMEeNi/XZIwuRvY4XNwYMJpw==}
@@ -6022,6 +6206,9 @@ packages:
     resolution: {integrity: sha512-BEWEF8OJjTYVC56GjELeHl/1XjFejrD7aHzn+HldRJTx+pL1siBrKHZC8n4K/xL3bEzVA9o++qD1tK2CpZu4KA==}
     engines: {node: '>=12'}
 
+  uncrypto@0.1.3:
+    resolution: {integrity: sha512-Ql87qFHB3s/De2ClA9e0gsnS6zXG27SkTiSJwjCc9MebbfapQfuPzumMIUMi38ezPZVNFcHI9sUIepeQfw8J8Q==}
+
   undici-types@6.21.0:
     resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
 
@@ -6285,8 +6472,8 @@ packages:
   zod@3.24.1:
     resolution: {integrity: sha512-muH7gBL9sI1nciMZV67X5fTKKBLtwpZ5VBp1vsOQzj1MhrBZ4wlVCm3gedKZWLp0Oyel8sIGfeiz54Su+OVT+A==}
 
-  zod@3.25.57:
-    resolution: {integrity: sha512-6tgzLuwVST5oLUxXTmBqoinKMd3JeesgbgseXeFasKKj8Q1FCZrHnbqJOyiEvr4cVAlbug+CgIsmJ8cl/pU5FA==}
+  zod@3.25.58:
+    resolution: {integrity: sha512-DVLmMQzSZwNYzQoMaM3MQWnxr2eq+AtM9Hx3w1/Yl0pH8sLTSjN4jGP7w6f7uand6Hw44tsnSu1hz1AOA6qI2Q==}
 
 snapshots:
 
@@ -6295,11 +6482,11 @@ snapshots:
       '@jridgewell/gen-mapping': 0.3.8
       '@jridgewell/trace-mapping': 0.3.25
 
-  '@anatine/zod-openapi@2.2.8(openapi3-ts@4.4.0)(zod@3.25.57)':
+  '@anatine/zod-openapi@2.2.8(openapi3-ts@4.4.0)(zod@3.25.58)':
     dependencies:
       openapi3-ts: 4.4.0
       ts-deepmerge: 6.2.1
-      zod: 3.25.57
+      zod: 3.25.58
 
   '@aws-crypto/crc32@5.2.0':
     dependencies:
@@ -6764,6 +6951,17 @@ snapshots:
       '@smithy/types': 4.3.1
       tslib: 2.8.1
 
+  '@azure-rest/core-client@2.4.0':
+    dependencies:
+      '@azure/abort-controller': 2.1.2
+      '@azure/core-auth': 1.9.0
+      '@azure/core-rest-pipeline': 1.21.0
+      '@azure/core-tracing': 1.2.0
+      '@typespec/ts-http-runtime': 0.2.3
+      tslib: 2.8.1
+    transitivePeerDependencies:
+      - supports-color
+
   '@azure/abort-controller@2.1.2':
     dependencies:
       tslib: 2.8.1
@@ -6842,7 +7040,7 @@ snapshots:
       '@azure/core-tracing': 1.2.0
       '@azure/core-util': 1.12.0
       '@azure/logger': 1.2.0
-      '@azure/msal-browser': 4.13.0
+      '@azure/msal-browser': 4.13.1
       '@azure/msal-node': 3.6.0
       open: 10.1.2
       tslib: 2.8.1
@@ -6862,11 +7060,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@azure/keyvault-keys@4.9.0':
+  '@azure/keyvault-keys@4.10.0':
     dependencies:
+      '@azure-rest/core-client': 2.4.0
       '@azure/abort-controller': 2.1.2
       '@azure/core-auth': 1.9.0
-      '@azure/core-client': 1.9.4
       '@azure/core-http-compat': 2.3.0
       '@azure/core-lro': 2.7.2
       '@azure/core-paging': 1.6.2
@@ -6886,7 +7084,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@azure/msal-browser@4.13.0':
+  '@azure/msal-browser@4.13.1':
     dependencies:
       '@azure/msal-common': 15.7.0
 
@@ -7086,6 +7284,13 @@ snapshots:
       '@babel/helper-validator-identifier': 7.27.1
 
   '@bcoe/v8-coverage@0.2.3': {}
+
+  '@better-auth/utils@0.2.5':
+    dependencies:
+      typescript: 5.8.3
+      uncrypto: 0.1.3
+
+  '@better-fetch/fetch@1.1.18': {}
 
   '@biomejs/biome@1.9.4':
     optionalDependencies:
@@ -7403,6 +7608,12 @@ snapshots:
       '@eslint/core': 0.14.0
       levn: 0.4.1
 
+  '@forklaunch/better-auth-mikro-orm-fork@0.3.0(@mikro-orm/core@6.4.16)(better-auth@1.2.9)':
+    dependencies:
+      '@mikro-orm/core': 6.4.16
+      better-auth: 1.2.9
+      dset: 3.1.4
+
   '@forklaunch/common@0.3.8': {}
 
   '@forklaunch/core@0.9.8(socks@2.8.5)':
@@ -7445,7 +7656,7 @@ snapshots:
       - socks
       - supports-color
 
-  '@forklaunch/express@0.5.17(openapi3-ts@4.4.0)(socks@2.8.5)':
+  '@forklaunch/express@0.5.18(openapi3-ts@4.4.0)(socks@2.8.5)':
     dependencies:
       '@forklaunch/common': 0.3.8
       '@forklaunch/core': 0.9.8(socks@2.8.5)
@@ -7483,7 +7694,7 @@ snapshots:
       typed-emitter: 2.1.0
       uWebSockets.js: https://codeload.github.com/uNetworking/uWebSockets.js/tar.gz/6609a88ffa9a16ac5158046761356ce03250a0df
 
-  '@forklaunch/hyper-express@0.5.17(express@5.1.0)(socks@2.8.5)':
+  '@forklaunch/hyper-express@0.5.18(express@5.1.0)(socks@2.8.5)':
     dependencies:
       '@forklaunch/common': 0.3.8
       '@forklaunch/core': 0.9.8(socks@2.8.5)
@@ -7557,10 +7768,10 @@ snapshots:
 
   '@forklaunch/validator@0.6.8(openapi3-ts@4.4.0)':
     dependencies:
-      '@anatine/zod-openapi': 2.2.8(openapi3-ts@4.4.0)(zod@3.25.57)
+      '@anatine/zod-openapi': 2.2.8(openapi3-ts@4.4.0)(zod@3.25.58)
       '@forklaunch/common': 0.3.8
       '@sinclair/typebox': 0.34.33
-      zod: 3.25.57
+      zod: 3.25.58
     transitivePeerDependencies:
       - openapi3-ts
 
@@ -7586,6 +7797,8 @@ snapshots:
       long: 5.3.2
       protobufjs: 7.5.3
       yargs: 17.7.2
+
+  '@hexagon/base64@1.1.28': {}
 
   '@humanfs/core@0.19.1': {}
 
@@ -7873,6 +8086,8 @@ snapshots:
   '@js-joda/core@5.6.5': {}
 
   '@js-sdsl/ordered-map@4.4.2': {}
+
+  '@levischuck/tiny-cbor@0.2.11': {}
 
   '@libsql/darwin-arm64@0.5.11':
     optional: true
@@ -8473,6 +8688,10 @@ snapshots:
 
   '@neon-rs/load@0.0.4': {}
 
+  '@noble/ciphers@0.6.0': {}
+
+  '@noble/hashes@1.8.0': {}
+
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
       '@nodelib/fs.stat': 2.0.5
@@ -8804,6 +9023,39 @@ snapshots:
   '@oxlint/win32-x64@1.0.0':
     optional: true
 
+  '@peculiar/asn1-android@2.3.16':
+    dependencies:
+      '@peculiar/asn1-schema': 2.3.15
+      asn1js: 3.0.6
+      tslib: 2.8.1
+
+  '@peculiar/asn1-ecc@2.3.15':
+    dependencies:
+      '@peculiar/asn1-schema': 2.3.15
+      '@peculiar/asn1-x509': 2.3.15
+      asn1js: 3.0.6
+      tslib: 2.8.1
+
+  '@peculiar/asn1-rsa@2.3.15':
+    dependencies:
+      '@peculiar/asn1-schema': 2.3.15
+      '@peculiar/asn1-x509': 2.3.15
+      asn1js: 3.0.6
+      tslib: 2.8.1
+
+  '@peculiar/asn1-schema@2.3.15':
+    dependencies:
+      asn1js: 3.0.6
+      pvtsutils: 1.3.6
+      tslib: 2.8.1
+
+  '@peculiar/asn1-x509@2.3.15':
+    dependencies:
+      '@peculiar/asn1-schema': 2.3.15
+      asn1js: 3.0.6
+      pvtsutils: 1.3.6
+      tslib: 2.8.1
+
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
@@ -8980,6 +9232,18 @@ snapshots:
       '@types/hast': 3.0.4
 
   '@shikijs/vscode-textmate@10.0.2': {}
+
+  '@simplewebauthn/browser@13.1.0': {}
+
+  '@simplewebauthn/server@13.1.1':
+    dependencies:
+      '@hexagon/base64': 1.1.28
+      '@levischuck/tiny-cbor': 0.2.11
+      '@peculiar/asn1-android': 2.3.16
+      '@peculiar/asn1-ecc': 2.3.15
+      '@peculiar/asn1-rsa': 2.3.15
+      '@peculiar/asn1-schema': 2.3.15
+      '@peculiar/asn1-x509': 2.3.15
 
   '@sinclair/typebox@0.27.8': {}
 
@@ -9860,6 +10124,12 @@ snapshots:
 
   arrify@2.0.1: {}
 
+  asn1js@3.0.6:
+    dependencies:
+      pvtsutils: 1.3.6
+      pvutils: 1.1.3
+      tslib: 2.8.1
+
   assertion-error@2.0.1: {}
 
   async@3.2.6: {}
@@ -9965,6 +10235,28 @@ snapshots:
   balanced-match@1.0.2: {}
 
   base64-js@1.5.1: {}
+
+  better-auth@1.2.9:
+    dependencies:
+      '@better-auth/utils': 0.2.5
+      '@better-fetch/fetch': 1.1.18
+      '@noble/ciphers': 0.6.0
+      '@noble/hashes': 1.8.0
+      '@simplewebauthn/browser': 13.1.0
+      '@simplewebauthn/server': 13.1.1
+      better-call: 1.0.9
+      defu: 6.1.4
+      jose: 5.10.0
+      kysely: 0.28.2
+      nanostores: 0.11.4
+      zod: 3.25.58
+
+  better-call@1.0.9:
+    dependencies:
+      '@better-fetch/fetch': 1.1.18
+      rou3: 0.5.1
+      set-cookie-parser: 2.7.1
+      uncrypto: 0.1.3
 
   better-path-resolve@1.0.0:
     dependencies:
@@ -10334,6 +10626,8 @@ snapshots:
 
   define-lazy-prop@3.0.0: {}
 
+  defu@6.1.4: {}
+
   delegates@1.0.0:
     optional: true
 
@@ -10394,6 +10688,8 @@ snapshots:
       path-type: 4.0.0
 
   dotenv@16.5.0: {}
+
+  dset@3.1.4: {}
 
   dunder-proto@1.0.1:
     dependencies:
@@ -11554,6 +11850,8 @@ snapshots:
 
   jju@1.4.0: {}
 
+  jose@5.10.0: {}
+
   jose@6.0.11: {}
 
   joycon@3.1.1: {}
@@ -11720,6 +12018,8 @@ snapshots:
       tedious: 19.0.0
     transitivePeerDependencies:
       - supports-color
+
+  kysely@0.28.2: {}
 
   leven@3.1.0: {}
 
@@ -12152,6 +12452,8 @@ snapshots:
   nanoid@3.3.11: {}
 
   nanoid@5.1.5: {}
+
+  nanostores@0.11.4: {}
 
   napi-build-utils@2.0.0: {}
 
@@ -12588,6 +12890,12 @@ snapshots:
 
   pure-rand@7.0.1: {}
 
+  pvtsutils@1.3.6:
+    dependencies:
+      tslib: 2.8.1
+
+  pvutils@1.1.3: {}
+
   qs@6.14.0:
     dependencies:
       side-channel: 1.1.0
@@ -12742,6 +13050,8 @@ snapshots:
       '@rollup/rollup-win32-x64-msvc': 4.42.0
       fsevents: 2.3.3
 
+  rou3@0.5.1: {}
+
   router@2.2.0:
     dependencies:
       debug: 4.4.1
@@ -12810,6 +13120,8 @@ snapshots:
 
   set-blocking@2.0.0:
     optional: true
+
+  set-cookie-parser@2.7.1: {}
 
   setprototypeof@1.2.0: {}
 
@@ -13109,7 +13421,7 @@ snapshots:
     dependencies:
       '@azure/core-auth': 1.9.0
       '@azure/identity': 4.10.0
-      '@azure/keyvault-keys': 4.9.0
+      '@azure/keyvault-keys': 4.10.0
       '@js-joda/core': 5.6.5
       '@types/node': 24.0.0
       bl: 6.1.0
@@ -13345,6 +13657,8 @@ snapshots:
       type-fest: 4.41.0
     transitivePeerDependencies:
       - '@types/node'
+
+  uncrypto@0.1.3: {}
 
   undici-types@6.21.0: {}
 
@@ -13618,4 +13932,4 @@ snapshots:
 
   zod@3.24.1: {}
 
-  zod@3.25.57: {}
+  zod@3.25.58: {}
