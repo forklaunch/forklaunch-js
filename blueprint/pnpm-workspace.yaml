@@ -1,8 +1,8 @@
 packages:
   - core
   - monitoring
-  - billing
-  - iam
+  - billing-base
+  - iam-base
   - iam-better-auth
   - sample-worker
   - interfaces/billing
