@@ -91,6 +91,10 @@ export function forklaunchRouter<
   return router;
 }
 
+export type { DocsConfiguration } from '@forklaunch/core/http';
+export type { OptionsJson, OptionsText, OptionsUrlencoded } from 'body-parser';
+export type { BusboyConfig } from 'busboy';
+export type { CorsOptions } from 'cors';
 export type { NextFunction, Request, Response } from 'express';
 export type { Application } from './src/expressApplication';
 export type { Router } from './src/expressRouter';

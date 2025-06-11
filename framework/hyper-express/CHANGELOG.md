@@ -1,5 +1,11 @@
 # @forklaunch/hyper-express
 
+## 0.5.21
+
+### Patch Changes
+
+- export internal types for inference
+
 ## 0.5.20
 
 ### Patch Changes

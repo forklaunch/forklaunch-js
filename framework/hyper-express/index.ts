@@ -73,8 +73,11 @@ export function forklaunchRouter<
 export type {
   MiddlewareNext as NextFunction,
   Request,
-  Response
+  Response,
+  ServerConstructorOptions
 } from '@forklaunch/hyper-express-fork';
+export type { BusboyConfig } from 'busboy';
+export type { CorsOptions } from 'cors';
 export type { Application } from './src/hyperExpressApplication';
 export type { Router } from './src/hyperExpressRouter';
 export type { ExpressOptions } from './src/types/hyperExpressOptions.types';

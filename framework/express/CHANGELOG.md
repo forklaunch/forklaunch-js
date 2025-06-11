@@ -1,5 +1,11 @@
 # @forklaunch/express
 
+## 0.5.22
+
+### Patch Changes
+
+- export internal types for inference
+
 ## 0.5.21
 
 ### Patch Changes
