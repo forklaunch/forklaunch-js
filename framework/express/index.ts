@@ -94,6 +94,7 @@ export function forklaunchRouter<
 export type { NextFunction, Request, Response } from 'express';
 export type { Application } from './src/expressApplication';
 export type { Router } from './src/expressRouter';
+export type { ExpressOptions } from './src/types/expressOptions.types';
 
 export const handlers: {
   checkout: typeof checkout;

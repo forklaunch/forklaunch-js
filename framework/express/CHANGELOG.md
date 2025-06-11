@@ -1,5 +1,11 @@
 # @forklaunch/express
 
+## 0.5.21
+
+### Patch Changes
+
+- Export express options
+
 ## 0.5.20
 
 ### Patch Changes
