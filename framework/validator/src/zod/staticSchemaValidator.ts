@@ -115,6 +115,12 @@ export const file: typeof StaticSchemaValidator.file =
   StaticSchemaValidator.file;
 
 /**
+ * Zod schema definition for type type.
+ */
+export const type: typeof StaticSchemaValidator.type =
+  StaticSchemaValidator.type;
+
+/**
  * Transforms valid schema into Zod schema.
  */
 export const schemify: typeof StaticSchemaValidator.schemify =

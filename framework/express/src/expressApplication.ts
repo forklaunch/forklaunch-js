@@ -12,9 +12,6 @@ import {
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { apiReference } from '@scalar/express-api-reference';
-import { OptionsJson, OptionsText, OptionsUrlencoded } from 'body-parser';
-import { BusboyConfig } from 'busboy';
-import { CorsOptions } from 'cors';
 import crypto from 'crypto';
 import express, {
   ErrorRequestHandler,
@@ -28,6 +25,7 @@ import { Server } from 'http';
 import swaggerUi from 'swagger-ui-express';
 import { contentParse } from './middleware/content.parse.middleware';
 import { enrichResponseTransmission } from './middleware/enrichResponseTransmission.middleware';
+import { ExpressOptions } from './types/expressOptions.types';
 
 /**
  * Application class that sets up an Express server with Forklaunch routers and middleware.
@@ -61,14 +59,7 @@ export class Application<
   constructor(
     schemaValidator: SV,
     openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-    options?: {
-      docs?: DocsConfiguration;
-      busboy?: BusboyConfig;
-      text?: OptionsText;
-      json?: OptionsJson;
-      urlencoded?: OptionsUrlencoded;
-      cors?: CorsOptions;
-    }
+    options?: ExpressOptions
   ) {
     super(
       schemaValidator,
@@ -136,9 +127,15 @@ export class Application<
           process.env.DOCS_PATH ?? '/docs'
         }`,
         apiReference({
-          content: openApi,
-          ...this.docsConfiguration
-        }) as unknown as RequestHandler
+          ...this.docsConfiguration,
+          sources: [
+            {
+              content: openApi,
+              title: 'API Reference'
+            },
+            ...(this.docsConfiguration?.sources ?? [])
+          ]
+        })
       );
     } else if (this.docsConfiguration.type === 'swagger') {
       this.internal.use(

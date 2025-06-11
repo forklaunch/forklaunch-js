@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.3.10
+
+### Patch Changes
+
+- bump package versions, allow for validator custom types that resolve as any, export http framework options type
+
 ## 0.3.9
 
 ### Patch Changes

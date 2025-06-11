@@ -13,6 +13,7 @@ import {
   SchemaValidator,
   string,
   symbol,
+  type,
   undefined_,
   unknown,
   uri,
@@ -869,6 +870,15 @@ describe('zod advanced parse', () => {
 
     test('invalid file with date', () => {
       expect(schemaValidator.parse(file, new Date()).ok).toBe(false);
+    });
+  });
+
+  describe('type', () => {
+    test('valid type', () => {
+      compare(schemaValidator.parse(type<string>(), 'hello'), {
+        ok: true,
+        value: 'hello'
+      });
     });
   });
 });

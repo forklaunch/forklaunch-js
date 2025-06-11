@@ -1,5 +1,15 @@
 # @forklaunch/express
 
+## 0.5.20
+
+### Patch Changes
+
+- bump package versions, allow for validator custom types that resolve as any, export http framework options type
+- Updated dependencies
+  - @forklaunch/validator@0.6.10
+  - @forklaunch/common@0.3.10
+  - @forklaunch/core@0.9.10
+
 ## 0.5.19
 
 ### Patch Changes

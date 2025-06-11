@@ -14,18 +14,16 @@ import {
   MiddlewareNext,
   Request,
   Response,
-  Server,
-  ServerConstructorOptions
+  Server
 } from '@forklaunch/hyper-express-fork';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { apiReference } from '@scalar/express-api-reference';
-import { BusboyConfig } from 'busboy';
-import { CorsOptions } from 'cors';
 import crypto from 'crypto';
 import * as uWebsockets from 'uWebSockets.js';
 import { contentParse } from './middleware/contentParse.middleware';
 import { enrichResponseTransmission } from './middleware/enrichResponseTransmission.middleware';
 import { swagger, swaggerRedirect } from './middleware/swagger.middleware';
+import { ExpressOptions } from './types/hyperExpressOptions.types';
 
 /**
  * Represents an application built on top of Hyper-Express and Forklaunch.
@@ -79,12 +77,7 @@ export class Application<
   constructor(
     schemaValidator: SV,
     openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-    configurationOptions?: {
-      docs?: DocsConfiguration;
-      busboy?: BusboyConfig;
-      server?: ServerConstructorOptions;
-      cors?: CorsOptions;
-    }
+    configurationOptions?: ExpressOptions
   ) {
     super(
       schemaValidator,
@@ -181,8 +174,14 @@ export class Application<
             process.env.DOCS_PATH ?? '/docs'
           }`,
           apiReference({
-            content: openApi,
-            ...this.docsConfiguration
+            ...this.docsConfiguration,
+            sources: [
+              {
+                content: openApi,
+                title: 'API Reference'
+              },
+              ...(this.docsConfiguration?.sources ?? [])
+            ]
           }) as unknown as MiddlewareHandler
         );
       } else if (this.docsConfiguration?.type === 'swagger') {

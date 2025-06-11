@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/express",
-  "version": "0.5.19",
+  "version": "0.5.20",
   "description": "Forklaunch framework for express.",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -58,7 +58,7 @@
     "@types/jest": "^29.5.14",
     "@types/qs": "^6.14.0",
     "@types/swagger-ui-express": "^4.1.8",
-    "@typescript/native-preview": "7.0.0-dev.20250610.1",
+    "@typescript/native-preview": "7.0.0-dev.20250611.1",
     "jest": "^30.0.0",
     "kill-port-process": "^3.2.1",
     "prettier": "^3.5.3",
