@@ -39,6 +39,20 @@ import {
   ZodUnionContainer
 } from './types/schema.types';
 
+export type {
+  ZodArray,
+  ZodFunction,
+  ZodLiteral,
+  ZodObject,
+  ZodOptional,
+  ZodPromise,
+  ZodRawShape,
+  ZodRecord,
+  ZodTuple,
+  ZodType,
+  ZodUnion
+};
+
 extendZodWithOpenApi(z);
 
 /**

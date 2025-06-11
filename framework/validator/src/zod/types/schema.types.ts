@@ -19,6 +19,19 @@ import {
 } from '../../shared/types/schema.types';
 import { ZodSchemaValidator } from '../zodSchemaValidator';
 
+export type {
+  ZodObject as OriginalZodObject,
+  ZodArray,
+  ZodEffects,
+  ZodLiteral,
+  ZodNever,
+  ZodPipeline,
+  ZodRawShape,
+  ZodType,
+  ZodTypeAny,
+  ZodUnknown
+};
+
 /**
  * Represents a catch-all Zod schema type.
  */

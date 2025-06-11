@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/validator",
-  "version": "0.6.10",
+  "version": "0.6.12",
   "description": "Schema validator for ForkLaunch components.",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -58,7 +58,7 @@
     "lib/**"
   ],
   "scripts": {
-    "build": "tsc --noEmit && tsup index.ts src/typebox/index.ts src/zod/index.ts __test__/utils/mockSchemaValidator.ts --format cjs,esm --no-splitting --tsconfig tsconfig.json --outDir lib --dts --clean",
+    "build": "tsgo --noEmit && tsup index.ts src/typebox/index.ts src/zod/index.ts __test__/utils/mockSchemaValidator.ts --format cjs,esm --no-splitting --tsconfig tsconfig.json --outDir lib --dts --clean",
     "check": "depcheck",
     "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
@@ -72,12 +72,12 @@
     "@anatine/zod-openapi": "^2.2.8",
     "@forklaunch/common": "workspace:*",
     "@sinclair/typebox": "^0.34.33",
-    "zod": "^3.25.61"
+    "zod": "^3.25.62"
   },
   "devDependencies": {
     "@eslint/js": "^9.28.0",
     "@types/jest": "^29.5.14",
-    "@types/node": "^24.0.0",
+    "@types/node": "^24.0.1",
     "@typescript/native-preview": "7.0.0-dev.20250611.1",
     "@vitest/coverage-v8": "^3.2.3",
     "eslint-config-prettier": "^10.1.5",

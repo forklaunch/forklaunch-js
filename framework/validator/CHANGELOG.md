@@ -1,5 +1,19 @@
 # @forklaunch/validator
 
+## 0.6.12
+
+### Patch Changes
+
+- use tsgo and export zod types
+
+## 0.6.11
+
+### Patch Changes
+
+- update package versions
+- Updated dependencies
+  - @forklaunch/common@0.3.11
+
 ## 0.6.10
 
 ### Patch Changes
