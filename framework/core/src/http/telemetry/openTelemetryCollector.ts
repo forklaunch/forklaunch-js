@@ -161,7 +161,7 @@ export class OpenTelemetryCollector<
   }
 }
 
-dotenv.config({ path: getEnvVar('ENV_FILE_PATH') });
+dotenv.config({ path: getEnvVar('DOTENV_FILE_PATH') });
 
 new NodeSDK({
   resource: resourceFromAttributes({

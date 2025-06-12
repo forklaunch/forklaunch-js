@@ -52,15 +52,14 @@ export abstract class ForklaunchExpressLikeApplication<
     );
 
     process.on('uncaughtException', (err) => {
-      this.openTelemetryCollector.log('error', 'Uncaught exception', {
-        err
-      });
+      this.openTelemetryCollector.log('error', `Uncaught exception: ${err}`);
       process.exit(1);
     });
     process.on('unhandledRejection', (reason) => {
-      this.openTelemetryCollector.log('error', 'Unhandled rejection', {
-        reason
-      });
+      this.openTelemetryCollector.log(
+        'error',
+        `Unhandled rejection: ${reason}`
+      );
       process.exit(1);
     });
     process.on('exit', () => {

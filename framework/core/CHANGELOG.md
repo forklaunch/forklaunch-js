@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.9.14
+
+### Patch Changes
+
+- Surface error as string in OpenTelemetry Logs
+
 ## 0.9.13
 
 ### Patch Changes
