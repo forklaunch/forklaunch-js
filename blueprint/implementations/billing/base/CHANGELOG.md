@@ -1,5 +1,16 @@
 # @forklaunch/implementation-billing-base
 
+## 0.3.0
+
+### Minor Changes
+
+- create mjs and cjs artifacts for blueprint items
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/interfaces-billing@0.3.0
+
 ## 0.2.3
 
 ### Patch Changes

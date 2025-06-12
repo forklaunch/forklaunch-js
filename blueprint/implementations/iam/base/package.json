@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/implementation-iam-base",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "description": "Billing basic implementation for forklaunch",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -26,7 +26,7 @@
   },
   "files": ["lib/**"],
   "scripts": {
-    "build": "tsc && if [ -f eject-package.bash ]; then pnpm package:eject; fi",
+    "build": "tsc --noEmit && tsup schemas/index.ts services/index.ts --format cjs,esm --no-splitting --dts --tsconfig tsconfig.json --out-dir lib --clean && if [ -f eject-package.bash ]; then pnpm package:eject; fi",
     "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
@@ -38,15 +38,16 @@
   },
   "dependencies": {
     "@forklaunch/common": "^0.3.11",
-    "@forklaunch/core": "^0.9.12",
+    "@forklaunch/core": "^0.9.13",
     "@forklaunch/interfaces-iam": "workspace:*",
-    "@forklaunch/validator": "^0.6.11",
+    "@forklaunch/validator": "^0.6.12",
     "@mikro-orm/core": "^6.4.16",
     "@sinclair/typebox": "^0.34.33",
     "ajv": "^8.17.1",
     "zod": "^3.25.62"
   },
   "devDependencies": {
+    "@typescript/native-preview": "7.0.0-dev.20250611.1",
     "depcheck": "^1.4.7",
     "prettier": "^3.5.3",
     "typedoc": "^0.28.5"
