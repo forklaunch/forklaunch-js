@@ -10,10 +10,11 @@ import {
 } from '@forklaunch/validator/typebox';
 
 export const CreateCheckoutSessionSchema = <
-  T extends Record<string, LiteralSchema>
+  T extends Record<string, LiteralSchema>,
+  U extends Record<string, LiteralSchema>
 >(
   PaymentMethodEnum: T,
-  StatusEnum: T
+  StatusEnum: U
 ) => ({
   customerId: string,
   paymentMethods: array(enum_(PaymentMethodEnum)),

@@ -222,7 +222,7 @@ pub(crate) const EXPRESS_VERSION: &str = "^0.5.25";
 // @forklaunch/hyper-express
 pub(crate) const HYPER_EXPRESS_VERSION: &str = "^0.5.24";
 // @forklaunch/implementation-billing-base
-pub(crate) const BILLING_BASE_VERSION: &str = "^0.3.0";
+pub(crate) const BILLING_BASE_VERSION: &str = "^0.3.1";
 // @forklaunch/interfaces-billing
 pub(crate) const BILLING_INTERFACES_VERSION: &str = "^0.3.0";
 // @forklaunch/implementation-iam-base

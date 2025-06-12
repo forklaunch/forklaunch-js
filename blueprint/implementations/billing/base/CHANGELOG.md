@@ -1,5 +1,11 @@
 # @forklaunch/implementation-billing-base
 
+## 0.3.1
+
+### Patch Changes
+
+- patch CreateSubscriptionSchema type issue
+
 ## 0.3.0
 
 ### Minor Changes
