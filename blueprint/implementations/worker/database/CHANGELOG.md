@@ -1,5 +1,13 @@
 # @forklaunch/implementation-billing-base
 
+## 0.3.1
+
+### Patch Changes
+
+- export mjs and bump packages
+- Updated dependencies
+  - @forklaunch/interfaces-worker@0.2.1
+
 ## 0.3.0
 
 ### Minor Changes

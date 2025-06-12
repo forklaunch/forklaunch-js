@@ -14,7 +14,7 @@ import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
 import dotenv from 'dotenv';
 import * as entities from './persistence/entities';
 
-dotenv.config({ path: getEnvVar('ENV_FILE_PATH') });
+dotenv.config({ path: getEnvVar('DOTENV_FILE_PATH') });
 
 const configInjector = createConfigInjector(SchemaValidator(), {
   DB_NAME: {
@@ -42,15 +42,15 @@ const configInjector = createConfigInjector(SchemaValidator(), {
     type: number,
     value: Number(getEnvVar('DB_PORT'))
   },
-  ENV: {
+  NODE_ENV: {
     lifetime: Lifetime.Singleton,
     type: string,
-    value: getEnvVar('ENV')
+    value: getEnvVar('NODE_ENV')
   }
 });
 
 export const validConfigInjector = configInjector.validateConfigSingletons(
-  getEnvVar('ENV_FILE_PATH')
+  getEnvVar('DOTENV_FILE_PATH')
 );
 
 const mikroOrmOptionsConfig = defineConfig({
@@ -62,7 +62,7 @@ const mikroOrmOptionsConfig = defineConfig({
   port: validConfigInjector.resolve('DB_PORT'),
   entities: Object.values(entities),
   metadataProvider: TsMorphMetadataProvider,
-  debug: validConfigInjector.resolve('ENV') === 'development',
+  debug: validConfigInjector.resolve('NODE_ENV') === 'development',
   extensions: [Migrator],
   discovery: {
     getMappedType(type: string, platform: Platform) {

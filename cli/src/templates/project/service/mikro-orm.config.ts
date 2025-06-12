@@ -7,7 +7,7 @@ import { {{db_driver}} } from '@mikro-orm/{{database}}';
 import dotenv from 'dotenv';
 import * as entities from './persistence/entities';
 //! Load the environment variables
-dotenv.config({ path: getEnvVar('ENV_FILE_PATH') });
+dotenv.config({ path: getEnvVar('DOTENV_FILE_PATH') });
 //! Create the config injector
 const configInjector = createConfigInjector(
   SchemaValidator(),
@@ -37,16 +37,16 @@ const configInjector = createConfigInjector(
       type: number,
       value: Number(getEnvVar('DB_PORT'))
     }, {{/is_in_memory_database}}
-    ENV: {
+    NODE_ENV: {
       lifetime: Lifetime.Singleton,
       type: string,
-      value: getEnvVar('ENV')
+      value: getEnvVar('NODE_ENV')
     }
   }
 );
 //! Validate the config injector
 export const validConfigInjector = configInjector.validateConfigSingletons(
-  getEnvVar('ENV_FILE_PATH')
+  getEnvVar('DOTENV_FILE_PATH')
 );
 const tokens = validConfigInjector.tokens();
 //! Define the mikro-orm options config
@@ -81,7 +81,7 @@ const mikroOrmOptionsConfig = defineConfig({
   entities: Object.values(entities),
   metadataProvider: TsMorphMetadataProvider,
   debug: validConfigInjector.resolve(
-    tokens.ENV
+    tokens.NODE_ENV
   ) === 'development',
   extensions: [Migrator],{{^is_mongo}}
   discovery: {
@@ -101,7 +101,8 @@ const mikroOrmOptionsConfig = defineConfig({
   seeder: {
     path: 'dist/persistence',
     glob: 'seeder.js'
-  }
+  }{{#is_better_auth}},
+  allowGlobalContext: true{{/is_better_auth}}
 });
 //! Export the mikro-orm options config
 export default mikroOrmOptionsConfig;

@@ -965,7 +965,7 @@ fn add_base_definition_to_docker_compose(
     port_number += 1;
 
     let mut environment = IndexMap::new();
-    environment.insert("ENV".to_string(), "development".to_string());
+    environment.insert("NODE_ENV".to_string(), "development".to_string());
     environment.insert("HOST".to_string(), "0.0.0.0".to_string());
     environment.insert("PROTOCOL".to_string(), "http".to_string());
     environment.insert("PORT".to_string(), port_number.to_string());
@@ -1085,6 +1085,17 @@ pub(crate) fn add_service_definition_to_docker_compose(
         environment.insert(
             "PASSWORD_ENCRYPTION_PUBLIC_KEY_PATH".to_string(),
             "./public.pem".to_string(),
+        );
+    }
+    if config_data.is_better_auth {
+        environment.insert(
+            "PASSWORD_ENCRYPTION_SECRET_PATH".to_string(),
+            "./private.pem".to_string(),
+        );
+        environment.insert("BETTER_AUTH_BASE_PATH".to_string(), "/api/auth".to_string());
+        environment.insert(
+            "CORS_ORIGINS".to_string(),
+            "http://localhost:3001".to_string(),
         );
     }
 

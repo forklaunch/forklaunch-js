@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/implementation-iam-base",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Billing basic implementation for forklaunch",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -15,13 +15,15 @@
   "exports": {
     "./schemas": {
       "types": "./lib/schemas/index.d.ts",
-      "import": "./lib/schemas/index.js",
-      "require": "./lib/schemas/index.js"
+      "import": "./lib/schemas/index.mjs",
+      "require": "./lib/schemas/index.js",
+      "default": "./lib/schemas/index.js"
     },
     "./services": {
       "types": "./lib/services/index.d.ts",
-      "import": "./lib/services/index.js",
-      "require": "./lib/services/index.js"
+      "import": "./lib/services/index.mjs",
+      "require": "./lib/services/index.js",
+      "default": "./lib/services/index.js"
     }
   },
   "files": ["lib/**"],
@@ -38,13 +40,13 @@
   },
   "dependencies": {
     "@forklaunch/common": "^0.3.11",
-    "@forklaunch/core": "^0.9.13",
+    "@forklaunch/core": "^0.9.15",
     "@forklaunch/interfaces-iam": "workspace:*",
-    "@forklaunch/validator": "^0.6.12",
+    "@forklaunch/validator": "^0.6.13",
     "@mikro-orm/core": "^6.4.16",
     "@sinclair/typebox": "^0.34.33",
     "ajv": "^8.17.1",
-    "zod": "^3.25.62"
+    "zod": "^3.25.63"
   },
   "devDependencies": {
     "@typescript/native-preview": "7.0.0-dev.20250611.1",

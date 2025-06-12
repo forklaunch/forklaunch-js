@@ -1,5 +1,11 @@
 # @forklaunch/interfaces-billing
 
+## 0.2.1
+
+### Patch Changes
+
+- export mjs and bump packages
+
 ## 0.2.0
 
 ### Minor Changes

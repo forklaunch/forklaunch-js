@@ -1,5 +1,11 @@
 # @forklaunch/validator
 
+## 0.6.13
+
+### Patch Changes
+
+- update package deps
+
 ## 0.6.12
 
 ### Patch Changes

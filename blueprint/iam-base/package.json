@@ -16,8 +16,8 @@
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist pnpm.lock.yaml node_modules",
-    "dev": "ENV_FILE_PATH=.env.local pnpm run migrate:up && ENV_FILE_PATH=.env.local pnpm tsx watch server.ts",
-    "dev:bun": "ENV_FILE_PATH=.env.local bun run migrate:up && ENV_FILE_PATH=.env.local bun --watch server.ts",
+    "dev": "DOTENV_FILE_PATH=.env.local pnpm run migrate:up && DOTENV_FILE_PATH=.env.local pnpm tsx watch server.ts",
+    "dev:bun": "DOTENV_FILE_PATH=.env.local bun run migrate:up && DOTENV_FILE_PATH=.env.local bun tsx watch server.ts",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
     "lint": "eslint . -c eslint.config.mjs",
@@ -26,7 +26,7 @@
     "migrate:down": "NODE_OPTIONS='--import=tsx' mikro-orm migration:down",
     "migrate:init": "NODE_OPTIONS='--import=tsx' mikro-orm migration:create --initial",
     "migrate:up": "NODE_OPTIONS='--import=tsx' mikro-orm migration:up",
-    "seed": "ENV_FILE_PATH=.env.local NODE_OPTIONS='--import=tsx' mikro-orm seeder:run",
+    "seed": "DOTENV_FILE_PATH=.env.local NODE_OPTIONS='--import=tsx' mikro-orm seeder:run",
     "start": "node --import=tsx dist/server.js",
     "start:bun": "bun run migrate:up && bun dist/server.js",
     "test": "vitest --passWithNoTests"
@@ -34,7 +34,7 @@
   "dependencies": {
     "@forklaunch/blueprint-core": "workspace:*",
     "@forklaunch/blueprint-monitoring": "workspace:*",
-    "@forklaunch/core": "^0.9.13",
+    "@forklaunch/core": "^0.9.15",
     "@forklaunch/hyper-express-fork": "^6.17.34",
     "@forklaunch/implementation-iam-base": "workspace:*",
     "@forklaunch/interfaces-iam": "workspace:*",
@@ -48,7 +48,7 @@
     "@mikro-orm/sqlite": "^6.4.16",
     "@sinclair/typebox": "^0.34.33",
     "dotenv": "^16.5.0",
-    "zod": "^3.25.62"
+    "zod": "^3.25.63"
   },
   "devDependencies": {
     "@mikro-orm/cli": "^6.4.16",

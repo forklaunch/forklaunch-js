@@ -40,7 +40,8 @@ use crate::{
         name::validate_name,
         package_json::{
             application_package_json::{
-                ApplicationDevDependencies, ApplicationPackageJson, ApplicationScripts,
+                ApplicationDevDependencies, ApplicationPackageJson, ApplicationPnpm,
+                ApplicationScripts,
             },
             package_json_constants::{
                 BIOME_VERSION, ESLINT_VERSION, EXPRESS_VERSION, HYPER_EXPRESS_VERSION,
@@ -670,6 +671,7 @@ fn change_http_framework(
             path: base_path.join("core").join("registrations.ts"),
             content: transform_core_registrations_ts_http_framework(
                 &http_framework.to_string(),
+                &manifest_data.http_framework,
                 base_path,
                 rendered_templates_cache
                     .get(&http_framework_file_key)?
@@ -908,6 +910,26 @@ fn change_runtime(
         &application_up_packages_script(runtime),
         None,
     ));
+
+    application_json_to_write.pnpm = if runtime == &Runtime::Node {
+        Some(ApplicationPnpm {
+            // TODO: Remove -- temporary patches for MikroORM CLI
+            patched_dependencies: Some(HashMap::from([(
+                "@jercle/yargonaut".to_string(),
+                "./patches/@jercle__yargonaut.patch".to_string(),
+            )])),
+        })
+    } else {
+        None
+    };
+    application_json_to_write.patched_dependencies = if runtime == &Runtime::Bun {
+        Some(HashMap::from([(
+            "@jercle/yargonaut@1.1.5".to_string(),
+            "./patches/@jercle__yargonaut.patch".to_string(),
+        )]))
+    } else {
+        None
+    };
 
     let mut is_in_memory_database = manifest_data.is_in_memory_database;
     for (project_name, project) in project_jsons_to_write {
@@ -1496,7 +1518,10 @@ impl CliCommand for ApplicationCommand {
             "application name",
             None,
             |input: &str| validate_name(input),
-            |_| "Application name cannot be empty or include numbers or spaces. Please try again".to_string(),
+            |_| {
+                "Application name cannot be empty or include numbers or spaces. Please try again"
+                    .to_string()
+            },
         )?;
 
         let runtime = prompt_field_from_selections_with_validation(

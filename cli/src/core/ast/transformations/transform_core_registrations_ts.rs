@@ -5,10 +5,14 @@ use oxc_allocator::Allocator;
 use oxc_ast::ast::{SourceType, Statement};
 use oxc_codegen::{CodeGenerator, CodegenOptions};
 
-use crate::{constants::HttpFramework, core::ast::parse_ast_program::parse_ast_program};
+use crate::core::ast::{
+    parse_ast_program::parse_ast_program,
+    replacements::replace_import_statment::replace_import_statment,
+};
 
-pub(crate) fn transform_core_registrations_ts_http_framework(
+pub(crate) fn transform_core_registrations_ts_http_framework<'a>(
     http_framework_name: &str,
+    existing_http_framework_name: &str,
     base_path: &Path,
     core_registration_http_framework_text: Option<String>,
 ) -> Result<String> {
@@ -30,28 +34,79 @@ pub(crate) fn transform_core_registrations_ts_http_framework(
         core_registration_http_framework_type,
     );
 
-    core_registration_http_framework_program
+    let import_to_replace = core_registration_http_framework_program
         .body
         .iter_mut()
         .enumerate()
-        .for_each(|(_, stmt)| {
+        .find_map(|(_, stmt)| {
             let import = match stmt {
                 Statement::ImportDeclaration(import) => import,
-                _ => return,
+                _ => return None,
             };
-            if HttpFramework::VARIANTS.iter().any(|framework| {
-                import
-                    .source
-                    .value
-                    .contains(format!("@forklaunch/{}", framework).as_str())
-            }) {
-                let _ = import.source.value.replace(
-                    r".*",
-                    format!("@forklaunch/{}", http_framework_name).as_str(),
-                );
-            }
-        });
 
+            if import
+                .source
+                .value
+                .contains(&format!("@forklaunch/{}", existing_http_framework_name).as_str())
+            {
+                println!("{:?}", import);
+                return Some(import.source.value.clone());
+            }
+
+            None
+            // if HttpFramework::VARIANTS.iter().any(|framework| {
+            //     import
+            //         .source
+            //         .value
+            //         .contains(format!("@forklaunch/{}", framework).as_str())
+            // }) {
+            //     return Some((
+            //         import.source.to_string(),
+            //         import
+            //             .source
+            //             .value
+            //             .to_string()
+            //             .replace(&import.source.to_string(), http_framework_name),
+            //     ));
+            // } else {
+            //     None
+            // }
+        })
+        .unwrap();
+    println!("import_to_replace: {:?}", import_to_replace);
+    replace_import_statment(
+        &mut core_registration_http_framework_program,
+        &mut parse_ast_program(
+            &allocator,
+            allocator.alloc_str(
+                &import_to_replace.replace(existing_http_framework_name, http_framework_name),
+            ),
+            SourceType::ts(),
+        ),
+        &format!("@forklaunch/{}", existing_http_framework_name),
+    )?;
+
+    // println!("{:?}", http_frameworks_to_replace);
+    // http_frameworks_to_replace.for_each(|framework: (String, String)| {
+    //     let cursor = &mut cursor.clone_in(&allocator);
+    //     let _ = replace_import_statment(
+    //         cursor,
+    //         &mut parse_ast_program(
+    //             &allocator,
+    //             allocator.alloc_str(&framework.1),
+    //             SourceType::ts(),
+    //         ),
+    //         &framework.0,
+    //     );
+    // });
+
+    println!(
+        "{:?}",
+        CodeGenerator::new()
+            .with_options(CodegenOptions::default())
+            .build(&core_registration_http_framework_program)
+            .code
+    );
     Ok(CodeGenerator::new()
         .with_options(CodegenOptions::default())
         .build(&core_registration_http_framework_program)

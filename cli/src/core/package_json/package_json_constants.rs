@@ -216,35 +216,35 @@ pub(crate) const APP_MONITORING_VERSION: &str = "workspace:*";
 // @forklaunch/common
 pub(crate) const COMMON_VERSION: &str = "^0.3.11";
 // @forklaunch/core
-pub(crate) const CORE_VERSION: &str = "^0.9.13";
+pub(crate) const CORE_VERSION: &str = "^0.9.15";
 // @forklaunch/express
-pub(crate) const EXPRESS_VERSION: &str = "^0.5.25";
+pub(crate) const EXPRESS_VERSION: &str = "^0.5.27";
 // @forklaunch/hyper-express
-pub(crate) const HYPER_EXPRESS_VERSION: &str = "^0.5.24";
+pub(crate) const HYPER_EXPRESS_VERSION: &str = "^0.5.26";
 // @forklaunch/implementation-billing-base
-pub(crate) const BILLING_BASE_VERSION: &str = "^0.3.1";
+pub(crate) const BILLING_BASE_VERSION: &str = "^0.3.2";
 // @forklaunch/interfaces-billing
 pub(crate) const BILLING_INTERFACES_VERSION: &str = "^0.3.0";
 // @forklaunch/implementation-iam-base
-pub(crate) const IAM_BASE_VERSION: &str = "^0.3.0";
+pub(crate) const IAM_BASE_VERSION: &str = "^0.3.1";
 // @forklaunch/interfaces-iam
-pub(crate) const IAM_INTERFACES_VERSION: &str = "^0.3.0";
+pub(crate) const IAM_INTERFACES_VERSION: &str = "^0.3.1";
 // @forklaunch/implementation-worker-bullmq
-pub(crate) const WORKER_BULLMQ_VERSION: &str = "^0.3.0";
+pub(crate) const WORKER_BULLMQ_VERSION: &str = "^0.3.1";
 // @forklaunch/implementation-worker-redis
-pub(crate) const WORKER_REDIS_VERSION: &str = "^0.3.0";
+pub(crate) const WORKER_REDIS_VERSION: &str = "^0.3.1";
 // @forklaunch/implementation-worker-database
-pub(crate) const WORKER_DATABASE_VERSION: &str = "^0.3.0";
+pub(crate) const WORKER_DATABASE_VERSION: &str = "^0.3.1";
 // @forklaunch/implementation-worker-kafka
-pub(crate) const WORKER_KAFKA_VERSION: &str = "^0.3.0";
+pub(crate) const WORKER_KAFKA_VERSION: &str = "^0.3.1";
 // @forklaunch/interfaces-worker
-pub(crate) const WORKER_INTERFACES_VERSION: &str = "^0.2.0";
+pub(crate) const WORKER_INTERFACES_VERSION: &str = "^0.2.1";
 // @forklaunch/infrastructure-redis
-pub(crate) const INFRASTRUCTURE_REDIS_VERSION: &str = "^0.0.21";
+pub(crate) const INFRASTRUCTURE_REDIS_VERSION: &str = "^0.0.23";
 // @forklaunch/infrastructure-s3
-pub(crate) const INFRASTRUCTURE_S3_VERSION: &str = "^0.0.21";
+pub(crate) const INFRASTRUCTURE_S3_VERSION: &str = "^0.0.23";
 // @forklaunch/validator
-pub(crate) const VALIDATOR_VERSION: &str = "^0.6.12";
+pub(crate) const VALIDATOR_VERSION: &str = "^0.6.13";
 // @mikro-orm/core
 pub(crate) const MIKRO_ORM_CORE_VERSION: &str = "^6.4.16";
 // @mikro-orm/migrations
@@ -274,7 +274,7 @@ pub(crate) const SQLITE3_VERSION: &str = "^5.1.7";
 // uuid
 pub(crate) const UUID_VERSION: &str = "^11.1.0";
 // zod
-pub(crate) const ZOD_VERSION: &str = "^3.25.62";
+pub(crate) const ZOD_VERSION: &str = "^3.25.63";
 
 // Project package.json devDependencies constants
 // @mikro-orm/cli
@@ -294,8 +294,8 @@ pub(crate) const TYPES_UUID_VERSION: &str = "^10.0.0";
 pub(crate) const PROJECT_BUILD_SCRIPT: &str = "tsc";
 pub(crate) const PROJECT_DOCS_SCRIPT: &str = "typedoc --out docs *";
 pub(crate) const PROJECT_START_WORKER_CLIENT_SCRIPT: &str =
-    "ENV_FILE_PATH=.env.prod node --import tsx dist/client.js";
-pub(crate) const PROJECT_SEED_SCRIPT: &str = "[ -z $ENV_FILE_PATH ] && export ENV_FILE_PATH=.env.local; NODE_OPTIONS='--import=tsx' mikro-orm seeder:run";
+    "DOTENV_FILE_PATH=.env.prod node --import tsx dist/client.js";
+pub(crate) const PROJECT_SEED_SCRIPT: &str = "[ -z $DOTENV_FILE_PATH ] && export DOTENV_FILE_PATH=.env.local; NODE_OPTIONS='--import=tsx' mikro-orm seeder:run";
 
 pub(crate) fn project_format_script(formatter: &Formatter) -> String {
     String::from(match formatter {
@@ -330,7 +330,7 @@ pub(crate) fn project_clean_script(runtime: &Runtime) -> String {
 pub(crate) fn project_dev_server_script(runtime: &Runtime, is_database_enabled: bool) -> String {
     String::from(match runtime {
         Runtime::Bun => format!(
-            "{}bun --watch server.ts",
+            "{}bun tsx watch server.ts",
             if is_database_enabled {
                 "bun migrate:up && "
             } else {
@@ -351,10 +351,10 @@ pub(crate) fn project_dev_server_script(runtime: &Runtime, is_database_enabled: 
 pub(crate) fn project_dev_local_script(runtime: &Runtime) -> String {
     String::from(match runtime {
         Runtime::Bun => {
-            "ENV_FILE_PATH=.env.local bun migrate:up && ENV_FILE_PATH=.env.local bun --watch server.ts"
+            "DOTENV_FILE_PATH=.env.local bun migrate:up && DOTENV_FILE_PATH=.env.local bun tsx watch server.ts"
         }
         Runtime::Node => {
-            "ENV_FILE_PATH=.env.local pnpm migrate:up && ENV_FILE_PATH=.env.local pnpm tsx watch server.ts"
+            "DOTENV_FILE_PATH=.env.local pnpm migrate:up && DOTENV_FILE_PATH=.env.local pnpm tsx watch server.ts"
         }
     })
 }
@@ -376,7 +376,7 @@ pub(crate) fn project_test_script(
 }
 
 pub(crate) fn project_migrate_script(command: &str) -> String {
-    let base = "[ -z $ENV_FILE_PATH ] && export ENV_FILE_PATH=.env.local; NODE_OPTIONS='--import=tsx' mikro-orm migration:";
+    let base = "[ -z $DOTENV_FILE_PATH ] && export DOTENV_FILE_PATH=.env.local; NODE_OPTIONS='--import=tsx' mikro-orm migration:";
     match command {
         "create" => format!("{}{}", base, "create"),
         "down" => format!("{}{}", base, "down"),
@@ -391,10 +391,10 @@ pub(crate) fn project_migrate_script(command: &str) -> String {
 
 pub(crate) fn project_start_server_script(runtime: &Runtime, is_database_enabled: bool) -> String {
     format!(
-        "{}ENV_FILE_PATH=.env.prod node --import tsx dist/server.js",
+        "{}DOTENV_FILE_PATH=.env.prod node --import tsx dist/server.js",
         if is_database_enabled {
             format!(
-                "ENV_FILE_PATH=.env.prod {} migrate:up && ",
+                "DOTENV_FILE_PATH=.env.prod {} migrate:up && ",
                 if runtime == &Runtime::Node {
                     "pnpm"
                 } else {
@@ -408,7 +408,7 @@ pub(crate) fn project_start_server_script(runtime: &Runtime, is_database_enabled
 }
 pub(crate) fn project_start_worker_script(runtime: &Runtime, is_database_enabled: bool) -> String {
     format!(
-        "{}ENV_FILE_PATH=.env.prod node --import tsx dist/worker.js",
+        "{}DOTENV_FILE_PATH=.env.prod node --import tsx dist/worker.js",
         if is_database_enabled {
             format!(
                 "{} migrate:up && ",
@@ -426,7 +426,7 @@ pub(crate) fn project_start_worker_script(runtime: &Runtime, is_database_enabled
 
 pub(crate) fn project_dev_worker_client_script(runtime: &Runtime) -> String {
     String::from(match runtime {
-        Runtime::Bun => "bun --watch worker.ts",
+        Runtime::Bun => "bun tsx watch worker.ts",
         Runtime::Node => "pnpm tsx watch worker.ts",
     })
 }
@@ -437,17 +437,17 @@ pub(crate) fn project_dev_local_worker_script(
 ) -> String {
     String::from(match runtime {
         Runtime::Bun => format!(
-            "{}ENV_FILE_PATH=.env.local bun --watch server.ts && ENV_FILE_PATH=.env.local bun --watch worker.ts",
+            "{}DOTENV_FILE_PATH=.env.local bun tsx watch server.ts && DOTENV_FILE_PATH=.env.local bun tsx watch worker.ts",
             if is_database_enabled {
-                "ENV_FILE_PATH=.env.local bun migrate:up && "
+                "DOTENV_FILE_PATH=.env.local bun migrate:up && "
             } else {
                 ""
             }
         ),
         Runtime::Node => format!(
-            "{}ENV_FILE_PATH=.env.local pnpm tsx watch server.ts && ENV_FILE_PATH=.env.local pnpm tsx watch worker.ts",
+            "{}DOTENV_FILE_PATH=.env.local pnpm tsx watch server.ts && DOTENV_FILE_PATH=.env.local pnpm tsx watch worker.ts",
             if is_database_enabled {
-                "ENV_FILE_PATH=.env.local pnpm migrate:up && "
+                "DOTENV_FILE_PATH=.env.local pnpm migrate:up && "
             } else {
                 ""
             }

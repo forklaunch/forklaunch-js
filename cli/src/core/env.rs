@@ -32,7 +32,7 @@ pub(crate) struct Env {
     pub(crate) kafka_client_id: Option<String>,
     #[serde(rename = "KAFKA_GROUP_ID", skip_serializing_if = "Option::is_none")]
     pub(crate) kafka_group_id: Option<String>,
-    #[serde(rename = "ENV", skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "NODE_ENV", skip_serializing_if = "Option::is_none")]
     pub(crate) env: Option<String>,
     #[serde(
         rename = "OTEL_EXPORTER_OTLP_ENDPOINT",

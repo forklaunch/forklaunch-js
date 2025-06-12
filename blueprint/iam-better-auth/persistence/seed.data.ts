@@ -4,7 +4,7 @@
  * This is an auto-generated file. Modifications are encouraged but may inhibit automated upgrades.
  */
 
-import { EntityManager } from '@mikro-orm/core';
+import { RequiredEntityData } from '@mikro-orm/core';
 import { OrganizationStatus } from '../domain/enum/organizationStatus.enum';
 import { Organization, Permission, Role } from '../persistence/entities';
 import { User } from '../persistence/entities/user.entity';
@@ -12,88 +12,69 @@ import { Account } from './entities/account.entity';
 import { Session } from './entities/session.entity';
 import { Verification } from './entities/verification.entity';
 //! Begin seed data
-export const permission = async (em: EntityManager) =>
-  Permission.create(
-    {
-      slug: 'test',
-      createdAt: new Date(),
-      updatedAt: new Date()
-    },
-    em
-  );
-export const role = async (em: EntityManager) =>
-  Role.create(
-    {
-      name: 'test',
-      permissions: [await permission(em)],
-      createdAt: new Date(),
-      updatedAt: new Date()
-    },
-    em
-  );
-export const user = async (em: EntityManager) =>
-  User.create(
-    {
-      email: 'test@test.com',
-      emailVerified: true,
-      name: 'test',
-      firstName: 'Test',
-      lastName: 'User',
-      roles: [await role(em)],
-      createdAt: new Date(),
-      updatedAt: new Date()
-    },
-    em
-  );
-export const organization = async (em: EntityManager) =>
-  Organization.create(
-    {
-      name: 'Test',
-      users: [await user(em)],
-      subscription: 'test',
-      domain: 'test.com',
-      status: OrganizationStatus.ACTIVE,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    },
-    em
-  );
-export const account = async (em: EntityManager) =>
-  Account.create(
-    {
-      user: await user(em),
-      providerId: 'test',
-      accountId: 'test',
-      accessToken: 'test',
-      refreshToken: 'test',
-      accessTokenExpiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
-      refreshTokenExpiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
-      createdAt: new Date(),
-      updatedAt: new Date()
-    },
-    em
-  );
-export const session = async (em: EntityManager) =>
-  Session.create(
-    {
-      user: await user(em),
-      token: 'test',
-      expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
-      ipAddress: '127.0.0.1',
-      userAgent: 'test',
-      createdAt: new Date(),
-      updatedAt: new Date()
-    },
-    em
-  );
-export const verification = async (em: EntityManager) =>
-  Verification.create(
-    {
-      identifier: 'test',
-      value: 'test',
-      expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
-      createdAt: new Date(),
-      updatedAt: new Date()
-    },
-    em
-  );
+export const permission = {
+  id: 'e7e2d2da-1f6a-4657-bb7d-221b1a5f3f6a',
+  slug: 'test',
+  createdAt: new Date(),
+  updatedAt: new Date()
+} satisfies RequiredEntityData<Permission>;
+
+export const role = {
+  id: 'e7e2d2da-1f6a-4657-bb7d-221b1a5f3f6a',
+  name: 'test',
+  permissions: [permission.id],
+  createdAt: new Date(),
+  updatedAt: new Date()
+} satisfies RequiredEntityData<Role>;
+
+export const user = {
+  id: 'e7e2d2da-1f6a-4657-bb7d-221b1a5f3f6a',
+  email: 'test@test.com',
+  emailVerified: true,
+  name: 'test',
+  firstName: 'Test',
+  lastName: 'User',
+  roles: [role.id],
+  createdAt: new Date(),
+  updatedAt: new Date()
+} satisfies RequiredEntityData<User>;
+
+export const organization = {
+  name: 'Test',
+  users: [user.id],
+  subscription: 'test',
+  domain: 'test.com',
+  status: OrganizationStatus.ACTIVE,
+  createdAt: new Date(),
+  updatedAt: new Date()
+} satisfies RequiredEntityData<Organization>;
+
+export const account = {
+  user: user.id,
+  providerId: 'test',
+  accountId: 'test',
+  accessToken: 'test',
+  refreshToken: 'test',
+  accessTokenExpiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
+  refreshTokenExpiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
+  createdAt: new Date(),
+  updatedAt: new Date()
+} satisfies RequiredEntityData<Account>;
+
+export const session = {
+  user: user.id,
+  token: 'test',
+  expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
+  ipAddress: '127.0.0.1',
+  userAgent: 'test',
+  createdAt: new Date(),
+  updatedAt: new Date()
+} satisfies RequiredEntityData<Session>;
+
+export const verification = {
+  identifier: 'test',
+  value: 'test',
+  expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
+  createdAt: new Date(),
+  updatedAt: new Date()
+} satisfies RequiredEntityData<Verification>;

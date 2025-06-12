@@ -1,5 +1,11 @@
 # @forklaunch/universal-sdk
 
+## 0.3.13
+
+### Patch Changes
+
+- update package deps
+
 ## 0.3.12
 
 ### Patch Changes

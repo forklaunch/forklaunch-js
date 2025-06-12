@@ -180,7 +180,7 @@ fn generate_library_package_json(
         keywords: Some(vec![]),
         license: Some(config_data.license.clone()),
         author: Some(config_data.author.clone()),
-        r#type: Some("module".to_string()),
+        types: None,
         scripts: Some(ProjectScripts {
             build: Some(PROJECT_BUILD_SCRIPT.to_string()),
             clean: Some(project_clean_script(&config_data.runtime.parse()?)),

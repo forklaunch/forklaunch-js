@@ -1,5 +1,14 @@
 # @forklaunch/express
 
+## 0.5.27
+
+### Patch Changes
+
+- update package deps
+- Updated dependencies
+  - @forklaunch/validator@0.6.13
+  - @forklaunch/core@0.9.15
+
 ## 0.5.26
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/core",
-  "version": "0.9.14",
+  "version": "0.9.15",
   "description": "forklaunch-js core package. Contains useful building blocks.",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -121,7 +121,7 @@
     "jest": "^30.0.0",
     "prettier": "^3.5.3",
     "testcontainers": "^11.0.3",
-    "ts-jest": "^29.3.4",
+    "ts-jest": "^29.4.0",
     "ts-node": "^10.9.2",
     "tsup": "^8.5.0",
     "typedoc": "^0.28.5",

@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/hyper-express",
-  "version": "0.5.25",
+  "version": "0.5.26",
   "description": "Forklaunch framework for hyper-express.",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -60,7 +60,7 @@
     "jest": "^30.0.0",
     "kill-port-process": "^3.2.1",
     "prettier": "^3.5.3",
-    "ts-jest": "^29.3.4",
+    "ts-jest": "^29.4.0",
     "ts-node": "^10.9.2",
     "tsup": "^8.5.0",
     "tsx": "^4.20.1",

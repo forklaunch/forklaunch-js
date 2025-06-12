@@ -5,7 +5,7 @@ import { billingProvider } from '../seed.data';
 
 export class BillingProviderSeeder extends Seeder {
   async run(em: EntityManager): Promise<void> {
-    em.create(BillingProvider, await billingProvider(em));
-    return Promise.resolve();
+    const createdBillingProvider = em.create(BillingProvider, billingProvider);
+    return em.persistAndFlush(createdBillingProvider);
   }
 }

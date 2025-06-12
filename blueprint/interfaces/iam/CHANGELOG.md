@@ -1,5 +1,11 @@
 # @forklaunch/interfaces-iam
 
+## 0.3.1
+
+### Patch Changes
+
+- export mjs and bump packages
+
 ## 0.3.0
 
 ### Minor Changes

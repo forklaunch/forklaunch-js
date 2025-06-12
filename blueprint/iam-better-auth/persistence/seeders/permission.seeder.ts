@@ -5,7 +5,7 @@ import { permission } from '../seed.data';
 
 export class PermissionSeeder extends Seeder {
   async run(em: EntityManager): Promise<void> {
-    em.create(Permission, await permission(em));
-    return Promise.resolve();
+    const createdPermission = em.create(Permission, permission);
+    return em.persistAndFlush(createdPermission);
   }
 }

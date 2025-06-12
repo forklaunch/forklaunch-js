@@ -5,7 +5,7 @@ import { user } from '../seed.data';
 
 export class UserSeeder extends Seeder {
   async run(em: EntityManager): Promise<void> {
-    em.create(User, await user(em));
-    return Promise.resolve();
+    const createdUser = em.create(User, user);
+    return em.persistAndFlush(createdUser);
   }
 }

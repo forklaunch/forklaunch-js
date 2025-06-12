@@ -118,7 +118,7 @@ ForkLaunch uses `MikroORM` for database management with these commands:
 {{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} migrate:down
 ```
 
-To access the full `MikroORM` CLI, run `{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} mikro-orm`. Note, you may have to supply necessary ENV arguments to interface correctly with the target database.
+To access the full `MikroORM` CLI, run `{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} mikro-orm`. Note, you may have to supply necessary NODE_ENV arguments to interface correctly with the target database.
 
 ## Development Workflow
 
@@ -235,14 +235,14 @@ When defining this, the smart typing will ask you to provide `permissions` and/o
 
 By default, ForkLaunch will configure OpenTelemetry to send traces to an OpenTelemetry collector service running in docker. The LGTM stack is pre-configured to receive metrics, logs, and traces, and a pre-configured `grafana` dashboard is available at `http://localhost:3000`.
 
-In order to make adjustments, config and code is located in the `monitoring` directory. Custom metrics can be added to `monitoring/metrics.ts`, and used virtually anywhere in code. Context aware instrumentation will deliver logs, metrics and traces. Supported override ENV variables are:
+In order to make adjustments, config and code is located in the `monitoring` directory. Custom metrics can be added to `monitoring/metrics.ts`, and used virtually anywhere in code. Context aware instrumentation will deliver logs, metrics and traces. Supported override NODE_ENV variables are:
 
 - `OTEL_EXPORTER_OTLP_ENDPOINT` - The endpoint to send traces to.
 - `OTEL_SERVICE_NAME` - The name of the service.
 
 ### OpenAPI Configuration and API Reference documentation
 
-Contract aware OpenAPI is generated live when running `pnpm dev`. API references are available at `http://localhost:3000/api/v1/docs`. You have the option of using swagger or scalar. If using scalar (by default), customization options can be passed through additional configuration. Note, the path can be overridden by supplying values for the following ENV variables:
+Contract aware OpenAPI is generated live when running `pnpm dev`. API references are available at `http://localhost:3000/api/v1/docs`. You have the option of using swagger or scalar. If using scalar (by default), customization options can be passed through additional configuration. Note, the path can be overridden by supplying values for the following NODE_ENV variables:
 
 - `VERSION` - The title of the OpenAPI documentation.
 - `DOCS_PATH` - The path to the OpenAPI documentation.

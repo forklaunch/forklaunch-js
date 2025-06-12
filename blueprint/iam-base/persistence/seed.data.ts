@@ -1,49 +1,39 @@
-import { EntityManager } from '@mikro-orm/core';
+import { RequiredEntityData } from '@mikro-orm/core';
 import { OrganizationStatus } from '../domain/enum/organizationStatus.enum';
 import { Organization, Permission, Role } from './entities';
 import { User } from './entities/user.entity';
 //! Begin seed data
-export const permission = async (em: EntityManager) =>
-  Permission.create(
-    {
-      slug: 'test',
-      createdAt: new Date(),
-      updatedAt: new Date()
-    },
-    em
-  );
-export const role = async (em: EntityManager) =>
-  Role.create(
-    {
-      name: 'test',
-      permissions: [await permission(em)],
-      createdAt: new Date(),
-      updatedAt: new Date()
-    },
-    em
-  );
-export const user = async (em: EntityManager) =>
-  User.create(
-    {
-      email: 'test@test.com',
-      firstName: 'Test',
-      lastName: 'User',
-      roles: [await role(em)],
-      createdAt: new Date(),
-      updatedAt: new Date()
-    },
-    em
-  );
-export const organization = async (em: EntityManager) =>
-  Organization.create(
-    {
-      name: 'Test',
-      users: [await user(em)],
-      subscription: 'test',
-      domain: 'test.com',
-      status: OrganizationStatus.ACTIVE,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    },
-    em
-  );
+export const permission = {
+  id: 'e7e2d2da-1f6a-4657-bb7d-221b1a5f3f6a',
+  slug: 'test',
+  createdAt: new Date(),
+  updatedAt: new Date()
+} satisfies RequiredEntityData<Permission>;
+
+export const role = {
+  id: 'e7e2d2da-1f6a-4657-bb7d-221b1a5f3f6a',
+  name: 'test',
+  permissions: [permission.id],
+  createdAt: new Date(),
+  updatedAt: new Date()
+} satisfies RequiredEntityData<Role>;
+
+export const user = {
+  id: 'e7e2d2da-1f6a-4657-bb7d-221b1a5f3f6a',
+  email: 'test@test.com',
+  firstName: 'Test',
+  lastName: 'User',
+  roles: [role.id],
+  createdAt: new Date(),
+  updatedAt: new Date()
+} satisfies RequiredEntityData<User>;
+
+export const organization = {
+  name: 'Test',
+  users: [user.id],
+  subscription: 'test',
+  domain: 'test.com',
+  status: OrganizationStatus.ACTIVE,
+  createdAt: new Date(),
+  updatedAt: new Date()
+} satisfies RequiredEntityData<Organization>;

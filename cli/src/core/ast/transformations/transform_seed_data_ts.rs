@@ -42,11 +42,11 @@ pub(crate) fn transform_seed_data_ts(
     )?;
 
     let seed_data_text = format!(
-        "export const {router_name_camel_case}Record = async (em: EntityManager) => {router_name_pascal_case}Record.create({{
+        "export const {router_name_camel_case}Record = {{
             message: 'Test message'{},
             createdAt: new Date(),
             updatedAt: new Date(),
-        }}, em)",
+        }} satisfies RequiredEntityData<{router_name_pascal_case}Record>;",
         if project_type == &ProjectType::Worker {
             ",
             processed: false,

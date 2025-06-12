@@ -68,11 +68,13 @@ export const betterAuthConfig = ({
             return {
               data: {
                 ...user,
-                organization: {
-                  $in: ctx?.body.organizationId
-                    ? [ctx?.body.organizationId]
-                    : []
-                },
+                ...(ctx?.body.organizationId
+                  ? {
+                      organization: {
+                        $in: [ctx?.body.organizationId]
+                      }
+                    }
+                  : {}),
                 roles: {
                   $in: ctx?.body.roleIds ? ctx?.body.roleIds : []
                 }

@@ -1,5 +1,11 @@
 # @forklaunch/implementation-billing-base
 
+## 0.3.2
+
+### Patch Changes
+
+- export mjs and bump packages
+
 ## 0.3.1
 
 ### Patch Changes

@@ -615,7 +615,7 @@ pub(crate) struct ProjectPackageJson {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) main: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) r#type: Option<String>,
+    pub(crate) types: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) scripts: Option<ProjectScripts>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -655,7 +655,7 @@ impl<'de> Deserialize<'de> for ProjectPackageJson {
                     license: None,
                     author: None,
                     main: None,
-                    r#type: None,
+                    types: None,
                     scripts: None,
                     dependencies: None,
                     dev_dependencies: None,
@@ -700,8 +700,8 @@ impl<'de> Deserialize<'de> for ProjectPackageJson {
                                 serde_json::from_value(value).map_err(serde::de::Error::custom)?,
                             )
                         }
-                        "type" => {
-                            package.r#type = Some(
+                        "types" => {
+                            package.types = Some(
                                 serde_json::from_value(value).map_err(serde::de::Error::custom)?,
                             )
                         }

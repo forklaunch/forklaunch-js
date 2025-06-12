@@ -143,7 +143,7 @@ services:
   #     dockerfile: ./Dockerfile.dev
   #   image: forklaunch_client:latest
   #   environment:
-  #     ENV: development
+  #     NODE_ENV: development
   #   ports:
   #     - 3000:3000
   #   networks:
@@ -159,7 +159,7 @@ services:
       context: .
       dockerfile: ./Dockerfile.${RUNTIME}.dev
     environment:
-      ENV: development
+      NODE_ENV: development
       PORT: 8000
       DB_NAME: forklaunch-dev
 
@@ -207,7 +207,7 @@ services:
       context: .
       dockerfile: ./Dockerfile.${RUNTIME}.dev
     environment:
-      ENV: development
+      NODE_ENV: development
       PORT: 8001
       DB_NAME: forklaunch-dev
 
@@ -255,7 +255,7 @@ services:
       context: .
       dockerfile: ./Dockerfile.${RUNTIME}.dev
     environment:
-      ENV: development
+      NODE_ENV: development
       PORT: 8002
       DB_NAME: forklaunch-dev
 
@@ -313,7 +313,7 @@ services:
       context: .
       dockerfile: ./Dockerfile.${RUNTIME}.dev
     environment:
-      ENV: development
+      NODE_ENV: development
       PORT: 8002
       DB_NAME: forklaunch-dev
 

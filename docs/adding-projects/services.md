@@ -78,7 +78,7 @@ Required environment variables:
 ```bash
 DATABASE_URL=your_database_connection_string
 PORT=service_port_number
-NODE_ENV=development|production
+NODE_NODE_ENV=development|production
 ```
 
 ### Next Steps

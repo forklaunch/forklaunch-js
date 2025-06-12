@@ -282,7 +282,7 @@ pub(crate) fn generate_worker_package_json(
         license: Some(config_data.license.to_string()),
         author: Some(config_data.author.to_string()),
         main: main_override,
-        r#type: Some("module".to_string()),
+        types: Some("./dist/server.d.ts".to_string()),
         scripts: Some(if let Some(scripts) = scripts_override {
             scripts
         } else {

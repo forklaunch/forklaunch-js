@@ -5,7 +5,7 @@ import { paymentLink } from '../seed.data';
 
 export class PaymentLinkSeeder extends Seeder {
   async run(em: EntityManager): Promise<void> {
-    em.create(PaymentLink, await paymentLink(em));
-    return Promise.resolve();
+    const createdPaymentLink = em.create(PaymentLink, paymentLink);
+    return em.persistAndFlush(createdPaymentLink);
   }
 }

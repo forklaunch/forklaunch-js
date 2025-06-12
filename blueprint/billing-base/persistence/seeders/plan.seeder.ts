@@ -5,7 +5,7 @@ import { plan } from '../seed.data';
 
 export class PlanSeeder extends Seeder {
   async run(em: EntityManager): Promise<void> {
-    em.create(Plan, await plan(em));
-    return Promise.resolve();
+    const createdPlan = em.create(Plan, plan);
+    return em.persistAndFlush(createdPlan);
   }
 }

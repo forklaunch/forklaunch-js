@@ -19,7 +19,7 @@ export class SampleWorkerEventRecord extends SqlBaseEntity {
 
 export class SampleWorkerEventRecordSeeder extends Seeder {
   async run(em: EntityManager): Promise<void> {
-    em.create(SampleWorkerEventRecord, await sampleWorkerEventRecord(em));
+    em.create(SampleWorkerEventRecord, sampleWorkerEventRecord);
     return Promise.resolve();
   }
 }

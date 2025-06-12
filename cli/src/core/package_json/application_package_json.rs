@@ -251,6 +251,15 @@ impl<'de> Deserialize<'de> for ApplicationDevDependencies {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize, Default)]
+pub(crate) struct ApplicationPnpm {
+    #[serde(
+        rename = "patchedDependencies",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub(crate) patched_dependencies: Option<HashMap<String, String>>,
+}
+
 #[derive(Debug, Serialize, Default)]
 pub(crate) struct ApplicationPackageJson {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -271,6 +280,14 @@ pub(crate) struct ApplicationPackageJson {
     pub(crate) scripts: Option<ApplicationScripts>,
     #[serde(rename = "devDependencies", skip_serializing_if = "Option::is_none")]
     pub(crate) dev_dependencies: Option<ApplicationDevDependencies>,
+    // TODO: remove this, as this is a temporary patch
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) pnpm: Option<ApplicationPnpm>,
+    #[serde(
+        rename = "patchedDependencies",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub(crate) patched_dependencies: Option<HashMap<String, String>>,
 
     #[serde(flatten)]
     pub(crate) additional_entries: HashMap<String, serde_json::Value>,
@@ -306,6 +323,8 @@ impl<'de> Deserialize<'de> for ApplicationPackageJson {
                     workspaces: None,
                     scripts: None,
                     dev_dependencies: None,
+                    pnpm: None,
+                    patched_dependencies: None,
                     additional_entries: HashMap::new(),
                 };
 
@@ -353,6 +372,16 @@ impl<'de> Deserialize<'de> for ApplicationPackageJson {
                         }
                         "devDependencies" => {
                             package.dev_dependencies = Some(
+                                serde_json::from_value(value).map_err(serde::de::Error::custom)?,
+                            )
+                        }
+                        "pnpm" => {
+                            package.pnpm = Some(
+                                serde_json::from_value(value).map_err(serde::de::Error::custom)?,
+                            )
+                        }
+                        "patchedDependencies" => {
+                            package.patched_dependencies = Some(
                                 serde_json::from_value(value).map_err(serde::de::Error::custom)?,
                             )
                         }

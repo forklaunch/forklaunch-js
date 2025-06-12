@@ -10,7 +10,7 @@ export function bootstrap(
     tokens: ReturnType<typeof createDependencies>['tokens']
   ) => void | Promise<void>
 ) {
-  const envFilePath = getEnvVar('ENV_FILE_PATH');
+  const envFilePath = getEnvVar('DOTENV_FILE_PATH');
   dotenv.config({ path: envFilePath });
   MikroORM.init(mikroOrmOptionsConfig).then((orm) => {
     const { serviceDependencies, tokens } = createDependencies(orm);

@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/implementation-worker-kafka",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Kafka implementation for forklaunch workers",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -15,23 +15,27 @@
   "exports": {
     "./consumers": {
       "types": "./lib/consumers/index.d.ts",
-      "import": "./lib/consumers/index.js",
-      "require": "./lib/consumers/index.js"
+      "import": "./lib/consumers/index.mjs",
+      "require": "./lib/consumers/index.js",
+      "default": "./lib/consumers/index.js"
     },
     "./producers": {
       "types": "./lib/producers/index.d.ts",
-      "import": "./lib/producers/index.js",
-      "require": "./lib/producers/index.js"
+      "import": "./lib/producers/index.mjs",
+      "require": "./lib/producers/index.js",
+      "default": "./lib/producers/index.js"
     },
     "./schemas": {
       "types": "./lib/schemas/index.d.ts",
-      "import": "./lib/schemas/index.js",
-      "require": "./lib/schemas/index.js"
+      "import": "./lib/schemas/index.mjs",
+      "require": "./lib/schemas/index.js",
+      "default": "./lib/schemas/index.js"
     },
     "./types": {
       "types": "./lib/types/index.d.ts",
-      "import": "./lib/types/index.js",
-      "require": "./lib/types/index.js"
+      "import": "./lib/types/index.mjs",
+      "require": "./lib/types/index.js",
+      "default": "./lib/types/index.js"
     }
   },
   "files": ["lib/**"],
@@ -47,11 +51,11 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/core": "^0.9.13",
+    "@forklaunch/core": "^0.9.15",
     "@forklaunch/interfaces-worker": "workspace:*",
     "@sinclair/typebox": "^0.34.33",
     "kafkajs": "^2.2.4",
-    "zod": "^3.25.62"
+    "zod": "^3.25.63"
   },
   "devDependencies": {
     "@typescript/native-preview": "7.0.0-dev.20250611.1",

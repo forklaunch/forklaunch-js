@@ -1,4 +1,5 @@
 import {
+  array,
   ExpressOptions,
   number,
   optional,
@@ -28,7 +29,7 @@ import {
   BaseUserService
 } from '@forklaunch/implementation-iam-base/services';
 import { EntityManager, ForkOptions, MikroORM } from '@mikro-orm/core';
-import { array, betterAuth } from 'better-auth';
+import { betterAuth } from 'better-auth';
 import { BetterAuthConfig, betterAuthConfig } from './auth';
 import { OrganizationStatus } from './domain/enum/organizationStatus.enum';
 import {
