@@ -180,9 +180,12 @@ impl CliCommand for ModuleCommand {
             db_driver: get_db_driver(&database),
 
             is_iam: module.clone() == Module::BaseIam || module.clone() == Module::BetterAuthIam,
+            is_billing: module.clone() == Module::BaseBilling,
             is_cache_enabled: module.clone() == Module::BaseBilling,
             is_s3_enabled: false,
             is_database_enabled: true,
+
+            is_better_auth: module.clone() == Module::BetterAuthIam,
         };
 
         let manifest_data = add_project_definition_to_manifest(
@@ -200,7 +203,6 @@ impl CliCommand for ModuleCommand {
         )?;
 
         let template_dir = PathIO {
-            id: Some(module.clone().to_string()),
             input_path: Path::new("project")
                 .join(&module.metadata().exclusive_files.unwrap().first().unwrap())
                 .to_string_lossy()
@@ -209,6 +211,7 @@ impl CliCommand for ModuleCommand {
                 .join(get_service_module_name(&module))
                 .to_string_lossy()
                 .to_string(),
+            module_id: Some(module.clone()),
         };
 
         let mut rendered_templates = vec![];

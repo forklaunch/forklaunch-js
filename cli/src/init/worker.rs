@@ -98,12 +98,12 @@ fn generate_basic_worker(
 ) -> Result<()> {
     let output_path = base_path.join(worker_name);
     let template_dir = PathIO {
-        id: Some(worker_name.clone()),
         input_path: Path::new("project")
             .join("worker")
             .to_string_lossy()
             .to_string(),
         output_path: output_path.to_string_lossy().to_string(),
+        module_id: None,
     };
 
     let ignore_files = if !config_data.is_database_enabled {
@@ -282,6 +282,7 @@ pub(crate) fn generate_worker_package_json(
         license: Some(config_data.license.to_string()),
         author: Some(config_data.author.to_string()),
         main: main_override,
+        r#type: Some("module".to_string()),
         scripts: Some(if let Some(scripts) = scripts_override {
             scripts
         } else {
@@ -349,6 +350,7 @@ pub(crate) fn generate_worker_package_json(
                 },
                 app_core: Some(APP_CORE_VERSION.to_string()),
                 app_monitoring: Some(APP_MONITORING_VERSION.to_string()),
+                forklaunch_better_auth_mikro_orm_fork: None,
                 forklaunch_common: Some(COMMON_VERSION.to_string()),
                 forklaunch_core: Some(CORE_VERSION.to_string()),
                 forklaunch_express: if config_data.is_express {
@@ -430,12 +432,14 @@ pub(crate) fn generate_worker_package_json(
                 } else {
                     None
                 },
+                opentelemetry_api: None,
                 typebox: if config_data.is_typebox {
                     Some(TYPEBOX_VERSION.to_string())
                 } else {
                     None
                 },
                 ajv: Some(AJV_VERSION.to_string()),
+                better_auth: None,
                 bullmq: if config_data.worker_type_lowercase.parse::<WorkerType>()?
                     == WorkerType::BullMQCache
                 {

@@ -56,12 +56,12 @@ fn generate_basic_library(
     let output_path = base_path.join(library_name);
 
     let template_dir = PathIO {
-        id: Some(library_name.clone()),
         input_path: Path::new("project")
             .join("library")
             .to_string_lossy()
             .to_string(),
         output_path: output_path.to_string_lossy().to_string(),
+        module_id: None,
     };
 
     let ignore_files = vec![];
@@ -180,6 +180,7 @@ fn generate_library_package_json(
         keywords: Some(vec![]),
         license: Some(config_data.license.clone()),
         author: Some(config_data.author.clone()),
+        r#type: Some("module".to_string()),
         scripts: Some(ProjectScripts {
             build: Some(PROJECT_BUILD_SCRIPT.to_string()),
             clean: Some(project_clean_script(&config_data.runtime.parse()?)),

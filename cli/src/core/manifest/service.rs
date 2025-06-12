@@ -7,7 +7,7 @@ use super::{
 };
 use crate::{
     config_struct,
-    constants::Database,
+    constants::{Database, Module, get_service_module_name},
     core::database::{get_database_port, get_db_driver},
 };
 
@@ -53,11 +53,16 @@ config_struct!(
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) is_iam: bool,
         #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) is_billing: bool,
+        #[serde(skip_serializing, skip_deserializing)]
         pub(crate) is_cache_enabled: bool,
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) is_s3_enabled: bool,
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) is_database_enabled: bool,
+
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) is_better_auth: bool,
     }
 );
 
@@ -112,7 +117,9 @@ impl InitializableManifestConfig for ServiceManifestData {
                 || parsed_database == Database::SQLite
                 || parsed_database == Database::BetterSQLite,
 
-            is_iam: service_name == "iam",
+            is_iam: service_name == get_service_module_name(&Module::BaseIam)
+                || service_name == get_service_module_name(&Module::BetterAuthIam),
+            is_billing: service_name == get_service_module_name(&Module::BaseBilling),
             is_cache_enabled: project_entry.resources.as_ref().unwrap().cache.is_some(),
             is_s3_enabled: project_entry
                 .resources
@@ -122,6 +129,14 @@ impl InitializableManifestConfig for ServiceManifestData {
                 .is_some(),
             is_database_enabled: project_entry.resources.as_ref().unwrap().database.is_some(),
 
+            is_better_auth: project_entry.variant.is_some()
+                && project_entry
+                    .variant
+                    .as_ref()
+                    .unwrap()
+                    .parse::<Module>()
+                    .unwrap()
+                    == Module::BetterAuthIam,
             ..self.clone()
         }
     }

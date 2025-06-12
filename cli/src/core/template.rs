@@ -13,9 +13,9 @@ use crate::constants::{Module, error_failed_to_create_dir};
 
 #[derive(Debug, Clone)]
 pub(crate) struct PathIO {
-    pub(crate) id: Option<String>,
     pub(crate) input_path: String,
     pub(crate) output_path: String,
+    pub(crate) module_id: Option<Module>,
 }
 
 pub(crate) fn get_directory_filenames(path: &PathIO) -> Result<Vec<&File>> {
@@ -152,7 +152,6 @@ pub(crate) fn generate_with_template(
                 generate_with_template(
                     output_prefix,
                     &PathIO {
-                        id: None,
                         input_path: Path::new(&subdirectory.path())
                             .to_string_lossy()
                             .to_string(),
@@ -160,6 +159,7 @@ pub(crate) fn generate_with_template(
                             .join(&subdirectory.path().file_name().unwrap())
                             .to_string_lossy()
                             .to_string(),
+                        module_id: None,
                     },
                     data,
                     ignore_files,

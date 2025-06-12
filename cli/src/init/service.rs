@@ -44,18 +44,19 @@ use crate::{
         package_json::{
             add_project_definition_to_package_json,
             package_json_constants::{
-                AJV_VERSION, APP_CORE_VERSION, APP_MONITORING_VERSION, BETTER_SQLITE3_VERSION,
+                AJV_VERSION, APP_CORE_VERSION, APP_MONITORING_VERSION,
+                BETTER_AUTH_MIKRO_ORM_VERSION, BETTER_AUTH_VERSION, BETTER_SQLITE3_VERSION,
                 BILLING_BASE_VERSION, BILLING_INTERFACES_VERSION, BIOME_VERSION, COMMON_VERSION,
                 CORE_VERSION, DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION,
                 HYPER_EXPRESS_VERSION, IAM_BASE_VERSION, IAM_INTERFACES_VERSION,
                 INFRASTRUCTURE_REDIS_VERSION, INFRASTRUCTURE_S3_VERSION, MIKRO_ORM_CLI_VERSION,
                 MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
-                MIKRO_ORM_REFLECTION_VERSION, MIKRO_ORM_SEEDER_VERSION, OXLINT_VERSION,
-                PRETTIER_VERSION, PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT, PROJECT_SEED_SCRIPT,
-                SQLITE3_VERSION, TSX_VERSION, TYPEBOX_VERSION, TYPEDOC_VERSION,
-                TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION, TYPES_QS_VERSION,
-                TYPES_UUID_VERSION, TYPESCRIPT_ESLINT_VERSION, UUID_VERSION, VALIDATOR_VERSION,
-                ZOD_VERSION, project_clean_script, project_dev_local_script,
+                MIKRO_ORM_REFLECTION_VERSION, MIKRO_ORM_SEEDER_VERSION, OPENTELEMETRY_API_VERSION,
+                OXLINT_VERSION, PRETTIER_VERSION, PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT,
+                PROJECT_SEED_SCRIPT, SQLITE3_VERSION, TSX_VERSION, TYPEBOX_VERSION,
+                TYPEDOC_VERSION, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION,
+                TYPES_QS_VERSION, TYPES_UUID_VERSION, TYPESCRIPT_ESLINT_VERSION, UUID_VERSION,
+                VALIDATOR_VERSION, ZOD_VERSION, project_clean_script, project_dev_local_script,
                 project_dev_server_script, project_format_script, project_lint_fix_script,
                 project_lint_script, project_migrate_script, project_start_server_script,
                 project_test_script,
@@ -87,12 +88,12 @@ fn generate_basic_service(
 ) -> Result<()> {
     let output_path = base_path.join(service_name);
     let template_dir = PathIO {
-        id: Some(service_name.clone()),
         input_path: Path::new("project")
             .join("service")
             .to_string_lossy()
             .to_string(),
         output_path: output_path.to_string_lossy().to_string(),
+        module_id: None,
     };
 
     let ignore_files = vec![];
@@ -258,6 +259,7 @@ pub(crate) fn generate_service_package_json(
         license: Some(config_data.license.to_string()),
         author: Some(config_data.author.to_string()),
         main: main_override,
+        r#type: Some("module".to_string()),
         scripts: Some(if let Some(scripts) = scripts_override {
             scripts
         } else {
@@ -294,6 +296,11 @@ pub(crate) fn generate_service_package_json(
                 databases: HashSet::from([config_data.database.parse()?]),
                 app_core: Some(APP_CORE_VERSION.to_string()),
                 app_monitoring: Some(APP_MONITORING_VERSION.to_string()),
+                forklaunch_better_auth_mikro_orm_fork: if config_data.is_better_auth {
+                    Some(BETTER_AUTH_MIKRO_ORM_VERSION.to_string())
+                } else {
+                    None
+                },
                 forklaunch_common: Some(COMMON_VERSION.to_string()),
                 forklaunch_core: Some(CORE_VERSION.to_string()),
                 forklaunch_express: if config_data.is_express {
@@ -306,17 +313,17 @@ pub(crate) fn generate_service_package_json(
                 } else {
                     None
                 },
-                forklaunch_implementation_billing_base: if config_data.service_name == "billing" {
+                forklaunch_implementation_billing_base: if config_data.is_billing {
                     Some(BILLING_BASE_VERSION.to_string())
                 } else {
                     None
                 },
-                forklaunch_interfaces_billing: if config_data.service_name == "billing" {
+                forklaunch_interfaces_billing: if config_data.is_billing {
                     Some(BILLING_INTERFACES_VERSION.to_string())
                 } else {
                     None
                 },
-                forklaunch_implementation_iam_base: if config_data.service_name == "iam" {
+                forklaunch_implementation_iam_base: if config_data.is_iam {
                     Some(IAM_BASE_VERSION.to_string())
                 } else {
                     None
@@ -347,12 +354,22 @@ pub(crate) fn generate_service_package_json(
                 mikro_orm_database: Some(MIKRO_ORM_DATABASE_VERSION.to_string()),
                 mikro_orm_reflection: Some(MIKRO_ORM_REFLECTION_VERSION.to_string()),
                 mikro_orm_seeder: Some(MIKRO_ORM_SEEDER_VERSION.to_string()),
+                opentelemetry_api: if config_data.is_better_auth {
+                    Some(OPENTELEMETRY_API_VERSION.to_string())
+                } else {
+                    None
+                },
                 typebox: if config_data.is_typebox {
                     Some(TYPEBOX_VERSION.to_string())
                 } else {
                     None
                 },
                 ajv: Some(AJV_VERSION.to_string()),
+                better_auth: if config_data.is_better_auth {
+                    Some(BETTER_AUTH_VERSION.to_string())
+                } else {
+                    None
+                },
                 bullmq: None,
                 better_sqlite3: if config_data.is_node
                     && config_data.is_database_enabled
@@ -614,9 +631,12 @@ impl CliCommand for ServiceCommand {
             is_in_memory_database: is_in_memory_database(&database),
 
             is_iam: false,
+            is_billing: false,
             is_cache_enabled: infrastructure.contains(&Infrastructure::Redis),
             is_s3_enabled: infrastructure.contains(&Infrastructure::S3),
             is_database_enabled: true,
+
+            is_better_auth: false,
         };
 
         let dryrun = matches.get_flag("dryrun");

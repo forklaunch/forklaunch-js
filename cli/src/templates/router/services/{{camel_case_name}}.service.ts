@@ -28,7 +28,8 @@ export class Base{{pascal_case_name}}Service implements {{pascal_case_name}}Serv
   ): Promise<{{pascal_case_name}}ResponseDto> => {
     const entity = await {{pascal_case_name}}RequestDtoMapper.deserializeDtoToEntity(
       SchemaValidator(),
-      dto
+      dto{{^is_worker}},
+      this.entityManager{{/is_worker}}
     );
     {{#is_worker}}
     await this.workerProducer.enqueueJob(entity);{{/is_worker}}{{^is_worker}}

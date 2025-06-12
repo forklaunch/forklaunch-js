@@ -646,19 +646,22 @@ impl CliCommand for ApplicationCommand {
         let mut template_dirs = vec![];
 
         let additional_projects_dirs = additional_projects.clone().into_iter().map(|path| {
-            let path_id = if path.variant.is_some() {
-                path.variant.clone().unwrap()
+            let (module_id, path_id) = if path.variant.is_some() {
+                (
+                    Some(path.variant.clone().unwrap().parse::<Module>().unwrap()),
+                    path.variant.clone().unwrap(),
+                )
             } else {
-                path.name.clone()
+                (None, path.name.clone())
             };
 
             PathIO {
-                id: Some(path_id.clone()),
+                module_id,
                 input_path: Path::new("project")
                     .join(path_id.clone())
                     .to_string_lossy()
                     .to_string(),
-                output_path: path.name.split("-").next().unwrap().to_string(),
+                output_path: path.name,
             }
         });
 
@@ -667,9 +670,9 @@ impl CliCommand for ApplicationCommand {
         rendered_templates.extend(generate_with_template(
             Some(&name),
             &PathIO {
-                id: Some(name.clone()),
                 input_path: Path::new("application").to_string_lossy().to_string(),
                 output_path: "".to_string(),
+                module_id: None,
             },
             &ManifestData::Application(&data),
             &ignore_files
@@ -717,7 +720,7 @@ impl CliCommand for ApplicationCommand {
                     "monitoring" => get_monitoring_module_description(&name),
                     _ => get_service_module_description(
                         &name,
-                        &template_dir.id.clone().unwrap().parse()?,
+                        &template_dir.module_id.clone().unwrap(),
                     ),
                 },
 
@@ -748,10 +751,14 @@ impl CliCommand for ApplicationCommand {
                 database_port: get_database_port(&data.database.parse()?),
                 db_driver: get_db_driver(&data.database.parse()?),
 
-                is_iam: template_dir.output_path == "iam",
-                is_cache_enabled: template_dir.output_path == "billing",
+                is_iam: template_dir.module_id == Some(Module::BaseIam)
+                    || template_dir.module_id == Some(Module::BetterAuthIam),
+                is_billing: template_dir.module_id == Some(Module::BaseBilling),
+                is_cache_enabled: template_dir.module_id == Some(Module::BaseBilling),
                 is_s3_enabled: false,
                 is_database_enabled: true,
+
+                is_better_auth: template_dir.module_id == Some(Module::BetterAuthIam),
             };
 
             if !HashSet::from(["core".to_string(), "monitoring".to_string()])
@@ -794,6 +801,7 @@ impl CliCommand for ApplicationCommand {
                     "core" => Some(ProjectDependencies {
                         app_name: service_data.app_name.clone(),
                         databases: HashSet::from([service_data.database.parse()?]),
+                        forklaunch_better_auth_mikro_orm_fork: None,
                         forklaunch_common: Some(COMMON_VERSION.to_string()),
                         forklaunch_core: Some(CORE_VERSION.to_string()),
                         forklaunch_express: if service_data.is_express {
@@ -811,6 +819,7 @@ impl CliCommand for ApplicationCommand {
                         mikro_orm_migrations: Some(MIKRO_ORM_MIGRATIONS_VERSION.to_string()),
                         mikro_orm_database: Some(MIKRO_ORM_DATABASE_VERSION.to_string()),
                         mikro_orm_reflection: Some(MIKRO_ORM_REFLECTION_VERSION.to_string()),
+                        opentelemetry_api: None,
                         typebox: if service_data.is_typebox {
                             Some(TYPEBOX_VERSION.to_string())
                         } else {
