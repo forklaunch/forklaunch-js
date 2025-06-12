@@ -602,6 +602,7 @@ fn change_validator(
     project_jsons_to_write: &mut HashMap<String, ProjectPackageJson>,
     rendered_templates_cache: &mut RenderedTemplatesCache,
 ) -> Result<()> {
+    let existing_validator = manifest_data.validator.clone().parse::<Validator>()?;
     manifest_data.validator = validator.to_string();
 
     let validator_file_key = base_path.join("core").join("registrations.ts");
@@ -627,6 +628,7 @@ fn change_validator(
             path: base_path.join("core").join("registrations.ts"),
             content: transform_core_registrations_ts_validator(
                 &validator.to_string(),
+                &existing_validator.to_string(),
                 base_path,
                 rendered_templates_cache
                     .get(&validator_file_key)?
@@ -646,6 +648,10 @@ fn change_http_framework(
     project_jsons_to_write: &mut HashMap<String, ProjectPackageJson>,
     rendered_templates_cache: &mut RenderedTemplatesCache,
 ) -> Result<()> {
+    let existing_http_framework = manifest_data
+        .http_framework
+        .clone()
+        .parse::<HttpFramework>()?;
     manifest_data.http_framework = http_framework.to_string();
 
     let http_framework_file_key = base_path.join("core").join("registrations.ts");
@@ -671,7 +677,7 @@ fn change_http_framework(
             path: base_path.join("core").join("registrations.ts"),
             content: transform_core_registrations_ts_http_framework(
                 &http_framework.to_string(),
-                &manifest_data.http_framework,
+                &existing_http_framework.to_string(),
                 base_path,
                 rendered_templates_cache
                     .get(&http_framework_file_key)?
@@ -1818,6 +1824,22 @@ impl CliCommand for ApplicationCommand {
                 context: None,
             },
         );
+
+        project_jsons_to_write
+            .iter()
+            .for_each(|(project_name, project_json)| {
+                rendered_templates_cache.insert(
+                    base_path
+                        .join(project_name)
+                        .join("package.json")
+                        .to_string_lossy(),
+                    RenderedTemplate {
+                        path: base_path.join(project_name).join("package.json"),
+                        content: serde_json::to_string_pretty(&project_json).unwrap(),
+                        context: None,
+                    },
+                );
+            });
 
         let rendered_templates: Vec<RenderedTemplate> = rendered_templates_cache
             .drain()
