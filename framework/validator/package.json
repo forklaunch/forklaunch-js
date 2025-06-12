@@ -58,7 +58,7 @@
     "lib/**"
   ],
   "scripts": {
-    "build": "tsgo --noEmit && tsup index.ts src/typebox/index.ts src/zod/index.ts __test__/utils/mockSchemaValidator.ts --format cjs,esm --no-splitting --tsconfig tsconfig.json --outDir lib --dts --clean",
+    "build": "tsc --noEmit && tsup index.ts src/typebox/index.ts src/zod/index.ts __test__/utils/mockSchemaValidator.ts --format cjs,esm --no-splitting --tsconfig tsconfig.json --outDir lib --dts --clean",
     "check": "depcheck",
     "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
