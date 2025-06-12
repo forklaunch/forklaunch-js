@@ -20,9 +20,9 @@ use crate::{
         Database, ERROR_FAILED_TO_CREATE_DATABASE_EXPORT_INDEX_TS,
         ERROR_FAILED_TO_CREATE_GITIGNORE, ERROR_FAILED_TO_CREATE_LICENSE,
         ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE, ERROR_FAILED_TO_SETUP_IAM, Formatter,
-        HttpFramework, License, Linter, Runtime, Service, TestFramework, Validator,
+        HttpFramework, License, Linter, Module, Runtime, TestFramework, Validator,
         get_core_module_description, get_monitoring_module_description, get_service_module_cache,
-        get_service_module_description,
+        get_service_module_description, get_service_module_name,
     },
     core::{
         command::command,
@@ -54,7 +54,7 @@ use crate::{
                 MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
                 MIKRO_ORM_REFLECTION_VERSION, NODE_GYP_VERSION, OXLINT_VERSION, PRETTIER_VERSION,
                 PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT, SORT_PACKAGE_JSON_VERSION,
-                SQLITE3_VERSION, TS_JEST_VERSION, TSX_VERSION, TYPEBOX_VERSION,
+                SQLITE3_VERSION, TS_JEST_VERSION, TS_NODE_VERSION, TSX_VERSION, TYPEBOX_VERSION,
                 TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION, TYPES_QS_VERSION,
                 TYPES_UUID_VERSION, TYPESCRIPT_ESLINT_VERSION, TYPESCRIPT_VERSION, UUID_VERSION,
                 VALIDATOR_VERSION, VITEST_VERSION, ZOD_VERSION, application_build_script,
@@ -197,6 +197,7 @@ fn generate_application_package_json(
             } else {
                 None
             },
+            ts_node: Some(TS_NODE_VERSION.to_string()),
             tsx: Some(TSX_VERSION.to_string()),
             typescript: Some(TYPESCRIPT_VERSION.to_string()),
             typescript_eslint: if data.is_eslint {
@@ -289,7 +290,7 @@ impl CliCommand for ApplicationCommand {
                     .short('s')
                     .long("services")
                     .help("Additional services to include")
-                    .value_parser(Service::VARIANTS)
+                    .value_parser(Module::VARIANTS)
                     .num_args(0..)
                     .action(ArgAction::Append),
             )
@@ -469,12 +470,12 @@ impl CliCommand for ApplicationCommand {
             )
         };
 
-        let services: Vec<Service> = if matches.ids().all(|id| id == "dryrun") {
+        let services: Vec<Module> = if matches.ids().all(|id| id == "dryrun") {
             prompt_comma_separated_list(
                 &mut line_editor,
                 "services",
                 matches,
-                &Service::VARIANTS,
+                &Module::VARIANTS,
                 None,
                 "services",
                 false,
@@ -542,6 +543,7 @@ impl CliCommand for ApplicationCommand {
                 r#type: ProjectType::Library,
                 name: "core".to_string(),
                 description: get_core_module_description(&name),
+                variant: None,
                 resources: None,
                 routers: None,
                 metadata: None,
@@ -550,22 +552,24 @@ impl CliCommand for ApplicationCommand {
                 r#type: ProjectType::Library,
                 name: "monitoring".to_string(),
                 description: get_monitoring_module_description(&name),
+                variant: None,
                 resources: None,
                 routers: None,
                 metadata: None,
             },
         ];
-        additional_projects.extend(services.into_iter().map(|package| ProjectEntry {
+        additional_projects.extend(services.clone().into_iter().map(|package| ProjectEntry {
             r#type: ProjectType::Service,
-            name: package.to_string(),
-            description: get_service_module_description(&name, &package.to_string()),
+            name: get_service_module_name(&package),
+            description: get_service_module_description(&name, &package),
+            variant: Some(package.to_string()),
             resources: Some(ResourceInventory {
                 database: Some(database.to_string()),
-                cache: get_service_module_cache(&package.to_string()),
+                cache: get_service_module_cache(&package),
                 queue: None,
                 object_store: None,
             }),
-            routers: get_routers_from_standard_package(package.to_string()),
+            routers: get_routers_from_standard_package(package),
             metadata: None,
         }));
 
@@ -641,13 +645,26 @@ impl CliCommand for ApplicationCommand {
         // TODO: support different path delimiters
         let mut template_dirs = vec![];
 
-        let additional_projects_dirs = additional_projects.clone().into_iter().map(|path| PathIO {
-            input_path: Path::new("project")
-                .join(&path.name)
-                .to_string_lossy()
-                .to_string(),
-            output_path: path.name,
+        let additional_projects_dirs = additional_projects.clone().into_iter().map(|path| {
+            let (module_id, path_id) = if path.variant.is_some() {
+                (
+                    Some(path.variant.clone().unwrap().parse::<Module>().unwrap()),
+                    path.variant.clone().unwrap(),
+                )
+            } else {
+                (None, path.name.clone())
+            };
+
+            PathIO {
+                module_id,
+                input_path: Path::new("project")
+                    .join(path_id.clone())
+                    .to_string_lossy()
+                    .to_string(),
+                output_path: path.name,
+            }
         });
+
         template_dirs.extend(additional_projects_dirs.clone());
 
         rendered_templates.extend(generate_with_template(
@@ -655,6 +672,7 @@ impl CliCommand for ApplicationCommand {
             &PathIO {
                 input_path: Path::new("application").to_string_lossy().to_string(),
                 output_path: "".to_string(),
+                module_id: None,
             },
             &ManifestData::Application(&data),
             &ignore_files
@@ -700,7 +718,10 @@ impl CliCommand for ApplicationCommand {
                 description: match template_dir.output_path.as_str() {
                     "core" => get_core_module_description(&name),
                     "monitoring" => get_monitoring_module_description(&name),
-                    _ => get_service_module_description(&name, &template_dir.output_path),
+                    _ => get_service_module_description(
+                        &name,
+                        &template_dir.module_id.clone().unwrap(),
+                    ),
                 },
 
                 is_eslint: data.is_eslint,
@@ -730,10 +751,14 @@ impl CliCommand for ApplicationCommand {
                 database_port: get_database_port(&data.database.parse()?),
                 db_driver: get_db_driver(&data.database.parse()?),
 
-                is_iam: template_dir.output_path == "iam",
-                is_cache_enabled: template_dir.output_path == "billing",
+                is_iam: template_dir.module_id == Some(Module::BaseIam)
+                    || template_dir.module_id == Some(Module::BetterAuthIam),
+                is_billing: template_dir.module_id == Some(Module::BaseBilling),
+                is_cache_enabled: template_dir.module_id == Some(Module::BaseBilling),
                 is_s3_enabled: false,
                 is_database_enabled: true,
+
+                is_better_auth: template_dir.module_id == Some(Module::BetterAuthIam),
             };
 
             if !HashSet::from(["core".to_string(), "monitoring".to_string()])
@@ -776,6 +801,7 @@ impl CliCommand for ApplicationCommand {
                     "core" => Some(ProjectDependencies {
                         app_name: service_data.app_name.clone(),
                         databases: HashSet::from([service_data.database.parse()?]),
+                        forklaunch_better_auth_mikro_orm_fork: None,
                         forklaunch_common: Some(COMMON_VERSION.to_string()),
                         forklaunch_core: Some(CORE_VERSION.to_string()),
                         forklaunch_express: if service_data.is_express {
@@ -793,6 +819,7 @@ impl CliCommand for ApplicationCommand {
                         mikro_orm_migrations: Some(MIKRO_ORM_MIGRATIONS_VERSION.to_string()),
                         mikro_orm_database: Some(MIKRO_ORM_DATABASE_VERSION.to_string()),
                         mikro_orm_reflection: Some(MIKRO_ORM_REFLECTION_VERSION.to_string()),
+                        opentelemetry_api: None,
                         typebox: if service_data.is_typebox {
                             Some(TYPEBOX_VERSION.to_string())
                         } else {

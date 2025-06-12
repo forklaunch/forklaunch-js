@@ -1,7 +1,9 @@
 import { IdDto, InstanceTypeRecord } from '@forklaunch/common';
 import {
+  evaluateTelemetryOptions,
   MetricsDefinition,
-  OpenTelemetryCollector
+  OpenTelemetryCollector,
+  TelemetryOptions
 } from '@forklaunch/core/http';
 import {
   InternalDtoMapper,
@@ -72,6 +74,11 @@ export class BaseSubscriptionService<
     Entities,
     Dto
   >;
+  private evaluatedTelemetryOptions: {
+    logging?: boolean;
+    metrics?: boolean;
+    tracing?: boolean;
+  };
 
   constructor(
     protected em: EntityManager,
@@ -93,6 +100,10 @@ export class BaseSubscriptionService<
         Dto['UpdateSubscriptionDtoMapper'],
         Entities['UpdateSubscriptionDtoMapper']
       >;
+    },
+    readonly options?: {
+      enableDatabaseBackup?: boolean;
+      telemetry?: TelemetryOptions;
     }
   ) {
     this.#mappers = transformIntoInternalDtoMapper<
@@ -101,15 +112,29 @@ export class BaseSubscriptionService<
       Entities,
       Dto
     >(mappers, this.schemaValidator);
+    this.evaluatedTelemetryOptions = options?.telemetry
+      ? evaluateTelemetryOptions(options.telemetry).enabled
+      : {
+          logging: false,
+          metrics: false,
+          tracing: false
+        };
   }
 
   async createSubscription(
     subscriptionDto: Dto['CreateSubscriptionDtoMapper'],
     em?: EntityManager
   ): Promise<Dto['SubscriptionDtoMapper']> {
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info(
+        'Creating subscription',
+        subscriptionDto
+      );
+    }
     const subscription =
       await this.#mappers.CreateSubscriptionDtoMapper.deserializeDtoToEntity(
-        subscriptionDto
+        subscriptionDto,
+        em ?? this.em
       );
     await (em ?? this.em).transactional(async (innerEm) => {
       await innerEm.persist(subscription);
@@ -125,6 +150,9 @@ export class BaseSubscriptionService<
     idDto: IdDto,
     em?: EntityManager
   ): Promise<Dto['SubscriptionDtoMapper']> {
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info('Getting subscription', idDto);
+    }
     const subscription = await (em ?? this.em).findOneOrFail(
       'Subscription',
       idDto
@@ -138,6 +166,9 @@ export class BaseSubscriptionService<
     { id }: IdDto,
     em?: EntityManager
   ): Promise<Dto['SubscriptionDtoMapper']> {
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info('Getting user subscription', id);
+    }
     const subscription = await (em ?? this.em).findOneOrFail('Subscription', {
       partyId: id,
       partyType: 'USER',
@@ -153,6 +184,9 @@ export class BaseSubscriptionService<
     { id }: IdDto,
     em?: EntityManager
   ): Promise<Dto['SubscriptionDtoMapper']> {
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info('Getting organization subscription', id);
+    }
     const subscription = await (em ?? this.em).findOneOrFail('Subscription', {
       partyId: id,
       partyType: 'ORGANIZATION',
@@ -167,9 +201,16 @@ export class BaseSubscriptionService<
     subscriptionDto: Dto['UpdateSubscriptionDtoMapper'],
     em?: EntityManager
   ): Promise<Dto['SubscriptionDtoMapper']> {
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info(
+        'Updating subscription',
+        subscriptionDto
+      );
+    }
     const subscription =
       this.#mappers.UpdateSubscriptionDtoMapper.deserializeDtoToEntity(
-        subscriptionDto
+        subscriptionDto,
+        em ?? this.em
       );
     const updatedSubscription = await (em ?? this.em).upsert(subscription);
     await (em ?? this.em).transactional(async (innerEm) => {
@@ -187,6 +228,9 @@ export class BaseSubscriptionService<
     idDto: { id: string },
     em?: EntityManager
   ): Promise<void> {
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info('Deleting subscription', idDto);
+    }
     const subscription = await (em ?? this.em).findOne('Subscription', idDto);
     if (!subscription) {
       throw new Error('Subscription not found');
@@ -198,6 +242,9 @@ export class BaseSubscriptionService<
     idsDto: { ids?: string[] },
     em?: EntityManager
   ): Promise<Dto['SubscriptionDtoMapper'][]> {
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info('Listing subscriptions', idsDto);
+    }
     const subscriptions = await (em ?? this.em).findAll('Subscription', {
       where: idsDto.ids
         ? {
@@ -220,6 +267,9 @@ export class BaseSubscriptionService<
   }
 
   async cancelSubscription(idDto: IdDto, em?: EntityManager): Promise<void> {
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info('Canceling subscription', idDto);
+    }
     const subscription = await (em ?? this.em).findOne('Subscription', idDto);
     if (!subscription) {
       throw new Error('Subscription not found');
@@ -231,6 +281,9 @@ export class BaseSubscriptionService<
   }
 
   async resumeSubscription(idDto: IdDto, em?: EntityManager): Promise<void> {
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info('Resuming subscription', idDto);
+    }
     const subscription = await (em ?? this.em).findOne('Subscription', idDto);
     if (!subscription) {
       throw new Error('Subscription not found');

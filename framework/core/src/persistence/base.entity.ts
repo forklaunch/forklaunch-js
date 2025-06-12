@@ -1,150 +1,77 @@
-import { stripUndefinedProperties } from '@forklaunch/common';
 import {
   Constructor,
+  EntityData,
   EntityDTO,
-  FromEntityType,
-  BaseEntity as MikroOrmBaseEntity,
+  EntityManager,
+  BaseEntity as MikroORMBaseEntity,
+  RequiredEntityData,
   wrap
 } from '@mikro-orm/core';
-import { transformRawDto } from './transformRawDto';
-import { CreateShape, UpdateShape } from './types/shapes.types';
 
 /**
- * Type representing a base entity with common fields.
- * Extends BaseEntity with optional id, _id, createdAt, and updatedAt fields.
+ * BaseEntity class extending MikroORM's BaseEntity to provide
+ * convenience static methods for entity creation, updating, and reading.
  */
-type BaseEntityWithId = BaseEntity & {
-  id?: unknown;
-  _id?: unknown;
-  createdAt?: unknown;
-  updatedAt?: unknown;
-};
-
-/**
- * Abstract base class for all entities in the system.
- * Extends MikroORM's BaseEntity and provides common CRUD operations.
- */
-export abstract class BaseEntity extends MikroOrmBaseEntity {
+export class BaseEntity extends MikroORMBaseEntity {
   /**
-   * Static factory method to create a new entity instance.
+   * Create a new entity instance with the given data.
    *
-   * @template Entity - The type of entity being created
-   * @param {Constructor<Entity>} this - The entity constructor
-   * @param {...Parameters<Entity['create']>} args - Arguments for entity creation
-   * @returns {Entity} A new entity instance
+   * @template T - Entity type extending BaseEntity
+   * @param this - The constructor of the entity
+   * @param data - Data required to create the entity
+   * @param em - Optional MikroORM EntityManager. If passed, this will call em.create()
+   * @returns A promise resolving to the created entity
    */
-  static async create<Entity extends BaseEntityWithId>(
-    this: Constructor<Entity>,
-    ...args: Parameters<Entity['create']>
-  ): Promise<Entity> {
-    const [data, ...additionalArgs] = args;
-    const entity = new this();
-    await entity.create(
-      data as CreateShape<BaseEntityWithId, Entity>,
-      ...additionalArgs
-    );
-    return entity;
-  }
-
-  /**
-   * Static method to update an entity instance.
-   *
-   * @template Entity - The type of entity being updated
-   * @param {Constructor<Entity>} this - The entity constructor
-   * @param {...Parameters<Entity['update']>} args - Arguments for entity update
-   * @returns {Entity} The updated entity instance
-   */
-  static async update<Entity extends BaseEntityWithId>(
-    this: Constructor<Entity>,
-    ...args: Parameters<Entity['update']>
-  ): Promise<Entity> {
-    const [data, ...additionalArgs] = args;
-    const entity = new this();
-    await entity.update(
-      data as UpdateShape<BaseEntity, Entity>,
-      ...additionalArgs
-    );
-    return entity;
-  }
-
-  /**
-   * Static method to map data to an entity instance.
-   *
-   * @template Entity - The type of entity being mapped
-   * @param {Constructor<Entity>} this - The entity constructor
-   * @param {Partial<EntityDTO<FromEntityType<Entity>>>} data - The data to map
-   * @returns {Entity} A new entity instance with mapped data
-   */
-  static async map<Entity extends BaseEntity>(
-    this: Constructor<Entity>,
-    data: Partial<EntityDTO<FromEntityType<Entity>>>
-  ): Promise<Entity> {
-    const entity = new this();
-    await entity.map(data);
-    return entity;
-  }
-
-  /**
-   * Creates a new entity instance with the provided data.
-   *
-   * @param {CreateShape<BaseEntityWithId, this>} data - The data to create the entity with
-   * @returns {this} The created entity instance
-   */
-  async create(
-    data: CreateShape<BaseEntityWithId, this>
-  ): Promise<EntityDTO<this>> {
-    Object.assign(this, transformRawDto(data, this));
-    const entity = await wrap(this).init();
-    if (!entity) {
-      throw new Error('Entity not initialized');
+  static async create<T extends BaseEntity>(
+    this: Constructor<T>,
+    data: RequiredEntityData<T>,
+    em?: EntityManager,
+    ...constructorArgs: ConstructorParameters<Constructor<T>>
+  ): Promise<T> {
+    const instance = new this(...constructorArgs);
+    if (em) {
+      return em.create(this, data);
+    } else {
+      Object.assign(instance, data);
     }
-    return entity.toObject();
+    return instance;
   }
 
   /**
-   * Updates the entity instance with the provided data.
+   * Update an existing entity instance with the given data.
    *
-   * @param {UpdateShape<BaseEntityWithId, this>} data - The data to update the entity with
-   * @returns {this} The updated entity instance
+   * @template T - Entity type extending BaseEntity
+   * @param this - The constructor of the entity
+   * @param data - Partial data to update the entity
+   * @param em - Optional MikroORM EntityManager. If passed, this will call em.upsert()
+   * @returns A promise resolving to the updated entity
    */
-  async update(
-    data: UpdateShape<BaseEntityWithId, this>
-  ): Promise<EntityDTO<this>> {
-    const entity = wrap(this);
-    entity.assign(
-      stripUndefinedProperties(transformRawDto(data, this)) as Partial<
-        EntityDTO<FromEntityType<this>>
-      >
-    );
-    return entity.toObject();
-  }
-
-  /**
-   * Reads the entity data as a plain object.
-   *
-   * @returns {EntityDTO<this> | this} The entity data as a plain object
-   */
-  async read(): Promise<EntityDTO<this>> {
-    const entity = await wrap(this).init();
-    if (!entity) {
-      throw new Error('Entity not initialized');
+  static async update<T extends BaseEntity>(
+    this: Constructor<T>,
+    data: EntityData<T>,
+    em?: EntityManager,
+    ...constructorArgs: ConstructorParameters<Constructor<T>>
+  ): Promise<T> {
+    const instance = new this(...constructorArgs);
+    if (em) {
+      return em.upsert(instance, data);
+    } else {
+      Object.assign(instance, data);
     }
-    return entity.toObject();
+    return instance;
   }
 
   /**
-   * Maps data to the entity instance.
+   * Reads the entity, initializing it if necessary, and returns its DTO representation.
    *
-   * @param {Partial<EntityDTO<FromEntityType<this>>>} data - The data to map
-   * @returns {this} The entity instance with mapped data
+   * @param em - Optional MikroORM EntityManager for initialization. If passed, entity will synchronize with database
+   * @returns A promise resolving to the entity's DTO (plain object representation)
+   * @throws Error if the entity is not initialized and no EntityManager is provided
    */
-  async map(data: Partial<EntityDTO<FromEntityType<this>>>): Promise<this> {
-    const entity = await wrap(this).init();
-
-    if (!entity) {
-      throw new Error('Entity not initialized');
+  async read(em?: EntityManager): Promise<EntityDTO<this>> {
+    if (em && !this.isInitialized()) {
+      await this.init({ em });
     }
-    entity.assign(data);
-    return entity;
+    return wrap(this).toPOJO();
   }
 }

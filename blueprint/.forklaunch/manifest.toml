@@ -24,7 +24,7 @@ description = ""
 
 [[projects]]
 type = "Service"
-name = "billing"
+name = "billing-base"
 description = ""
 routers = [
     "billingPortal",
@@ -39,7 +39,7 @@ database = "postgresql"
 
 [[projects]]
 type = "Service"
-name = "iam"
+name = "iam-base"
 description = ""
 routers = [
     "organization",
@@ -50,6 +50,21 @@ routers = [
 
 [projects.resources]
 database = "postgresql"
+
+[[projects]]
+type = "Service"
+name = "iam-better-auth"
+description = ""
+routers = [
+    "organization",
+    "permission",
+    "role",
+    "user",
+]
+
+[projects.resources]
+database = "postgresql"
+
 
 [[projects]]
 type = "Worker"
@@ -64,7 +79,8 @@ database = "postgresql"
 forklaunch_framework = [
     "core",
     "monitoring",
-    "billing",
-    "iam",
+    "billing-base",
+    "iam-base",
+    "iam-better-auth",
     "sample-worker",
 ]

@@ -1,7 +1,9 @@
 import { IdDto, InstanceTypeRecord } from '@forklaunch/common';
 import {
+  evaluateTelemetryOptions,
   MetricsDefinition,
-  OpenTelemetryCollector
+  OpenTelemetryCollector,
+  TelemetryOptions
 } from '@forklaunch/core/http';
 import {
   InternalDtoMapper,
@@ -66,6 +68,11 @@ export class BaseOrganizationService<
     Entities,
     Dto
   >;
+  private evaluatedTelemetryOptions: {
+    logging?: boolean;
+    metrics?: boolean;
+    tracing?: boolean;
+  };
 
   constructor(
     public em: EntityManager,
@@ -87,23 +94,43 @@ export class BaseOrganizationService<
         Dto['UpdateOrganizationDtoMapper'],
         Entities['UpdateOrganizationDtoMapper']
       >;
+    },
+    options?: {
+      telemetry?: TelemetryOptions;
     }
   ) {
     this.#mappers = transformIntoInternalDtoMapper(mappers, schemaValidator);
+    this.evaluatedTelemetryOptions = options?.telemetry
+      ? evaluateTelemetryOptions(options.telemetry).enabled
+      : {
+          logging: false,
+          metrics: false,
+          tracing: false
+        };
   }
 
   async createOrganization(
     organizationDto: Dto['CreateOrganizationDtoMapper'],
     em?: EntityManager
   ): Promise<Dto['OrganizationDtoMapper']> {
-    this.openTelemetryCollector.log('info', 'Creating organization');
-    const organization =
-      await this.#mappers.CreateOrganizationDtoMapper.deserializeDtoToEntity(
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info(
+        'Creating organization',
         organizationDto
       );
-    await (em ?? this.em).transactional(async (innerEm) => {
-      await innerEm.persist(organization);
-    });
+    }
+
+    const organization =
+      await this.#mappers.CreateOrganizationDtoMapper.deserializeDtoToEntity(
+        organizationDto,
+        em ?? this.em
+      );
+
+    if (em) {
+      await em.persist(organization);
+    } else {
+      await this.em.persistAndFlush(organization);
+    }
 
     return this.#mappers.OrganizationDtoMapper.serializeEntityToDto(
       organization
@@ -114,10 +141,15 @@ export class BaseOrganizationService<
     idDto: IdDto,
     em?: EntityManager
   ): Promise<Dto['OrganizationDtoMapper']> {
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info('Getting organization', idDto);
+    }
+
     const organization = await (em ?? this.em).findOneOrFail(
       'Organization',
       idDto
     );
+
     return this.#mappers.OrganizationDtoMapper.serializeEntityToDto(
       organization as Entities['OrganizationDtoMapper']
     );
@@ -127,17 +159,39 @@ export class BaseOrganizationService<
     organizationDto: Dto['UpdateOrganizationDtoMapper'],
     em?: EntityManager
   ): Promise<Dto['OrganizationDtoMapper']> {
-    const updatedOrganization =
-      await this.#mappers.UpdateOrganizationDtoMapper.deserializeDtoToEntity(
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info(
+        'Updating organization',
         organizationDto
       );
-    await (em ?? this.em).upsert(updatedOrganization);
+    }
+
+    const updatedOrganization =
+      await this.#mappers.UpdateOrganizationDtoMapper.deserializeDtoToEntity(
+        organizationDto,
+        em ?? this.em
+      );
+
+    if (em) {
+      await em.persist(updatedOrganization);
+    } else {
+      await this.em.persistAndFlush(updatedOrganization);
+    }
+
     return this.#mappers.OrganizationDtoMapper.serializeEntityToDto(
       updatedOrganization
     );
   }
 
   async deleteOrganization(idDto: IdDto, em?: EntityManager): Promise<void> {
-    await (em ?? this.em).nativeDelete('Organization', idDto);
+    if (this.evaluatedTelemetryOptions.logging) {
+      this.openTelemetryCollector.info('Deleting organization', idDto);
+    }
+
+    if (em) {
+      await em.nativeDelete('Organization', idDto);
+    } else {
+      await this.em.nativeDelete('Organization', idDto);
+    }
   }
 }

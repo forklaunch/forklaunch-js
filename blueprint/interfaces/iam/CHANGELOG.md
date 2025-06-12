@@ -1,5 +1,29 @@
 # @forklaunch/interfaces-iam
 
+## 0.3.0
+
+### Minor Changes
+
+- create mjs and cjs artifacts for blueprint items
+
+## 0.2.3
+
+### Patch Changes
+
+- package version bump
+
+## 0.2.2
+
+### Patch Changes
+
+- update package version
+
+## 0.2.1
+
+### Patch Changes
+
+- increase package dependencies version
+
 ## 0.2.0
 
 ### Minor Changes

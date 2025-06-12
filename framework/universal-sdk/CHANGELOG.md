@@ -1,5 +1,39 @@
 # @forklaunch/universal-sdk
 
+## 0.3.12
+
+### Patch Changes
+
+- update package versions
+- Updated dependencies
+  - @forklaunch/common@0.3.11
+
+## 0.3.11
+
+### Patch Changes
+
+- bump package versions, allow for validator custom types that resolve as any, export http framework options type
+- Updated dependencies
+  - @forklaunch/common@0.3.10
+
+## 0.3.10
+
+### Patch Changes
+
+- update package dependencies
+- Updated dependencies
+  - @forklaunch/common@0.3.9
+
+## 0.3.9
+
+### Patch Changes
+
+- package conflict resolution
+- fix minor buffer bugs and update subdependencies
+- Updated dependencies
+- Updated dependencies
+  - @forklaunch/common@0.3.8
+
 ## 0.3.8
 
 ### Patch Changes

@@ -1,5 +1,86 @@
 # @forklaunch/core
 
+## 0.9.13
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.6.12
+
+## 0.9.12
+
+### Patch Changes
+
+- update package versions
+- Updated dependencies
+  - @forklaunch/validator@0.6.11
+  - @forklaunch/common@0.3.11
+
+## 0.9.11
+
+### Patch Changes
+
+- Export pino types for type safety
+
+## 0.9.10
+
+### Patch Changes
+
+- bump package versions, allow for validator custom types that resolve as any, export http framework options type
+- Updated dependencies
+  - @forklaunch/validator@0.6.10
+  - @forklaunch/common@0.3.10
+
+## 0.9.9
+
+### Patch Changes
+
+- update package dependencies
+- Updated dependencies
+  - @forklaunch/validator@0.6.9
+  - @forklaunch/common@0.3.9
+
+## 0.9.8
+
+### Patch Changes
+
+- patch return types for create and update static methods
+
+## 0.9.7
+
+### Patch Changes
+
+- Add back sensible entity utilities
+
+## 0.9.6
+
+### Patch Changes
+
+- fix internal type
+
+## 0.9.5
+
+### Patch Changes
+
+- Update internaldtomapper type
+
+## 0.9.4
+
+### Patch Changes
+
+- Update request mapper signature types
+
+## 0.9.3
+
+### Patch Changes
+
+- package conflict resolution
+- fix minor buffer bugs and update subdependencies
+- Updated dependencies
+- Updated dependencies
+  - @forklaunch/common@0.3.8
+  - @forklaunch/validator@0.6.8
+
 ## 0.9.2
 
 ### Patch Changes

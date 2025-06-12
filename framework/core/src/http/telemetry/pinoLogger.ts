@@ -6,6 +6,8 @@ import PinoPretty from 'pino-pretty';
 import { isLoggerMeta } from '../guards/isLoggerMeta';
 import { LogFn, LoggerMeta } from '../types/openTelemetryCollector.types';
 
+export type { LevelWithSilent, LevelWithSilentOrString, Logger };
+
 export function meta(meta: Record<string, unknown>) {
   return meta as LoggerMeta;
 }

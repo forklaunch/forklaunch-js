@@ -8,34 +8,42 @@ choice! {
     pub(crate) enum Database {
         PostgreSQL = Choice {
             id: "postgresql",
+            description: None,
             exclusive_files: Some(&["sql.base.entity.ts"]),
         },
         MySQL = Choice {
             id: "mysql",
+            description: None,
             exclusive_files: Some(&["sql.base.entity.ts"]),
         },
         MariaDB = Choice {
             id: "mariadb",
+            description: None,
             exclusive_files: Some(&["sql.base.entity.ts"]),
         },
         MsSQL = Choice {
             id: "mssql",
+            description: None,
             exclusive_files: Some(&["sql.base.entity.ts"]),
         },
         MongoDB = Choice {
             id: "mongodb",
+            description: None,
             exclusive_files: Some(&["nosql.base.entity.ts"]),
         },
         LibSQL = Choice {
             id: "libsql",
+            description: None,
             exclusive_files: Some(&["sql.base.entity.ts"]),
         },
         SQLite = Choice {
             id: "sqlite",
+            description: None,
             exclusive_files: Some(&["sql.base.entity.ts"]),
         },
         BetterSQLite = Choice {
             id: "better-sqlite",
+            description: None,
             exclusive_files: Some(&["sql.base.entity.ts"]),
         },
     }
@@ -43,10 +51,12 @@ choice! {
     pub(crate) enum Infrastructure {
         Redis = Choice {
             id: "redis",
+            description: None,
             exclusive_files: None,
         },
         S3 = Choice {
             id: "s3",
+            description: None,
             exclusive_files: None,
         },
     }
@@ -54,18 +64,22 @@ choice! {
     pub(crate) enum WorkerType {
         Database = Choice {
             id: "database",
+            description: None,
             exclusive_files: None,
         },
         RedisCache = Choice {
             id: "redis",
+            description: None,
             exclusive_files: None,
         },
         Kafka = Choice {
             id: "kafka",
+            description: None,
             exclusive_files: None,
         },
         BullMQCache = Choice {
             id: "bullmq",
+            description: None,
             exclusive_files: None,
         },
     }
@@ -73,10 +87,12 @@ choice! {
     pub(crate) enum Validator {
         Zod = Choice {
             id: "zod",
+            description: None,
             exclusive_files: None,
         },
         Typebox = Choice {
             id: "typebox",
+            description: None,
             exclusive_files: None,
         },
     }
@@ -84,10 +100,12 @@ choice! {
     pub(crate) enum Formatter {
         Prettier = Choice {
             id: "prettier",
+            description: None,
             exclusive_files: Some(&[".prettierignore", ".prettierrc"]),
         },
         Biome = Choice {
             id: "biome",
+            description: None,
             exclusive_files: Some(&["biome.json"]),
         },
     }
@@ -95,10 +113,12 @@ choice! {
     pub(crate) enum Linter {
         Eslint = Choice {
             id: "eslint",
+            description: None,
             exclusive_files: Some(&["eslint.config.mjs"])  ,
         },
         Oxlint = Choice {
             id: "oxlint",
+            description: None,
             exclusive_files: Some(&[".oxlint.config.json"]),
         },
     }
@@ -106,10 +126,12 @@ choice! {
     pub(crate) enum Framework {
         Express = Choice {
             id: "express",
+            description: None,
             exclusive_files: None,
         },
         HyperExpress = Choice {
             id: "hyper-express",
+            description: None,
             exclusive_files: None,
         },
     }
@@ -117,10 +139,12 @@ choice! {
     pub(crate) enum HttpFramework {
         Express = Choice {
             id: "express",
+            description: None,
             exclusive_files: None,
         },
         HyperExpress = Choice {
             id: "hyper-express",
+            description: None,
             exclusive_files: None,
         },
     }
@@ -128,32 +152,25 @@ choice! {
     pub(crate) enum TestFramework {
         Vitest = Choice {
             id: "vitest",
+            description: None,
             exclusive_files: Some(&["vitest.config.ts"]),
         },
         Jest = Choice {
             id: "jest",
+            description: None,
             exclusive_files: Some(&["jest.config.ts"]),
-        },
-    }
-
-    pub(crate) enum Service {
-        Billing = Choice {
-            id: "billing",
-            exclusive_files: None,
-        },
-        Iam = Choice {
-            id: "iam",
-            exclusive_files: None,
         },
     }
 
     pub(crate) enum Runtime {
         Node = Choice {
             id: "node",
+            description: None,
             exclusive_files: None,
         },
         Bun = Choice {
             id: "bun",
+            description: None,
             exclusive_files: None,
         },
     }
@@ -161,50 +178,66 @@ choice! {
     pub(crate) enum License {
         Apgl = Choice {
             id: "AGPL-3.0",
+            description: None,
             exclusive_files: Some(&["agpl-3.0"]),
         },
         Gpl = Choice {
             id: "GPL-3.0",
+            description: None,
             exclusive_files: Some(&["gpl-3.0"]),
         },
         Lgpl = Choice {
             id: "LGPL-3.0",
+            description: None,
             exclusive_files: Some(&["lgpl-3.0"]),
         },
         Apache = Choice {
             id: "Apache-2.0",
+            description: None,
             exclusive_files: Some(&["apache-2.0"]),
         },
         Mit = Choice {
             id: "MIT",
+            description: None,
             exclusive_files: Some(&["mit"]),
         },
         Mozilla = Choice {
             id: "Mozilla-2.0",
+            description: None,
             exclusive_files: Some(&["mpl-2.0"]),
         },
         Boost = Choice {
             id: "Boost-1.0",
+            description: None,
             exclusive_files: Some(&["boost-1.0"]),
         },
         Unlicense = Choice {
             id: "Unlicense",
+            description: None,
             exclusive_files: Some(&["unlicense"]),
         },
         None = Choice {
             id: "none",
+            description: None,
             exclusive_files: None,
         },
     }
 
     pub(crate) enum Module {
-        Auth = Choice {
-            id: "iam",
-            exclusive_files: None,
+        BaseBilling = Choice {
+            id: "billing-base",
+            description: Some("app hooks only"),
+            exclusive_files: Some(&["billing-base"]),
         },
-        Billing = Choice {
-            id: "billing",
-            exclusive_files: None,
+        BaseIam = Choice {
+            id: "iam-base",
+            description: Some("authorization only"),
+            exclusive_files: Some(&["iam-base"]),
+        },
+        BetterAuthIam = Choice {
+            id: "iam-better-auth",
+            description: None,
+            exclusive_files: Some(&["iam-better-auth"])
         }
     }
 }
@@ -312,21 +345,27 @@ pub(crate) fn get_monitoring_module_description(name: &str) -> String {
         name
     )
 }
-pub(crate) fn get_service_module_description(name: &str, service_type: &str) -> String {
+pub(crate) fn get_service_module_name(service_type: &Module) -> String {
+    match service_type {
+        Module::BaseBilling => "billing".to_string(),
+        Module::BaseIam | Module::BetterAuthIam => "iam".to_string(),
+    }
+}
+
+pub(crate) fn get_service_module_description(name: &str, service_type: &Module) -> String {
     format!(
         "{} service implementation for {}, providing {}",
         name,
-        service_type,
+        get_service_module_name(service_type),
         match service_type {
-            "billing" => "billing service APIs",
-            "iam" => "identity and access management APIs",
-            _ => "unknown services",
+            Module::BaseBilling => "billing service APIs",
+            Module::BaseIam | Module::BetterAuthIam => "identity and access management APIs",
         }
     )
 }
-pub(crate) fn get_service_module_cache(service_type: &str) -> Option<String> {
+pub(crate) fn get_service_module_cache(service_type: &Module) -> Option<String> {
     match service_type {
-        "billing" => Some(Infrastructure::Redis.to_string()),
+        Module::BaseBilling => Some(Infrastructure::Redis.to_string()),
         _ => None,
     }
 }

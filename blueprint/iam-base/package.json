@@ -1,0 +1,65 @@
+{
+  "name": "@forklaunch/blueprint-iam",
+  "version": "0.1.5",
+  "description": "Forklaunch IAM Implementation",
+  "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
+  "bugs": {
+    "url": "https://github.com/forklaunch/forklaunch-js/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/forklaunch/forklaunch-js.git"
+  },
+  "license": "MIT",
+  "author": "Forklift Technologies, Inc.",
+  "main": "server.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist pnpm.lock.yaml node_modules",
+    "dev": "ENV_FILE_PATH=.env.local pnpm run migrate:up && ENV_FILE_PATH=.env.local pnpm tsx watch server.ts",
+    "dev:bun": "ENV_FILE_PATH=.env.local bun run migrate:up && ENV_FILE_PATH=.env.local bun --watch server.ts",
+    "docs": "typedoc --out docs *",
+    "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
+    "lint": "eslint . -c eslint.config.mjs",
+    "lint:fix": "eslint . -c eslint.config.mjs --fix",
+    "migrate:create": "NODE_OPTIONS='--import=tsx' mikro-orm migration:create",
+    "migrate:down": "NODE_OPTIONS='--import=tsx' mikro-orm migration:down",
+    "migrate:init": "NODE_OPTIONS='--import=tsx' mikro-orm migration:create --initial",
+    "migrate:up": "NODE_OPTIONS='--import=tsx' mikro-orm migration:up",
+    "seed": "ENV_FILE_PATH=.env.local NODE_OPTIONS='--import=tsx' mikro-orm seeder:run",
+    "start": "node --import=tsx dist/server.js",
+    "start:bun": "bun run migrate:up && bun dist/server.js",
+    "test": "vitest --passWithNoTests"
+  },
+  "dependencies": {
+    "@forklaunch/blueprint-core": "workspace:*",
+    "@forklaunch/blueprint-monitoring": "workspace:*",
+    "@forklaunch/core": "^0.9.13",
+    "@forklaunch/hyper-express-fork": "^6.17.34",
+    "@forklaunch/implementation-iam-base": "workspace:*",
+    "@forklaunch/interfaces-iam": "workspace:*",
+    "@mikro-orm/core": "^6.4.16",
+    "@mikro-orm/migrations": "^6.4.16",
+    "@mikro-orm/mongodb": "^6.4.16",
+    "@mikro-orm/mysql": "^6.4.16",
+    "@mikro-orm/postgresql": "^6.4.16",
+    "@mikro-orm/reflection": "^6.4.16",
+    "@mikro-orm/seeder": "^6.4.16",
+    "@mikro-orm/sqlite": "^6.4.16",
+    "@sinclair/typebox": "^0.34.33",
+    "dotenv": "^16.5.0",
+    "zod": "^3.25.62"
+  },
+  "devDependencies": {
+    "@mikro-orm/cli": "^6.4.16",
+    "@types/express": "^5.0.3",
+    "@types/express-serve-static-core": "^5.0.6",
+    "@types/qs": "^6.14.0",
+    "depcheck": "^1.4.7",
+    "prettier": "^3.5.3",
+    "typedoc": "^0.28.5"
+  },
+  "mikro-orm": {
+    "configPaths": ["./mikro-orm.config.ts", "./dist/mikro-orm.config.js"]
+  }
+}

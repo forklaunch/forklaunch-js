@@ -1,5 +1,91 @@
 # @forklaunch/infrastructure-s3
 
+## 0.0.21
+
+### Patch Changes
+
+- @forklaunch/core@0.9.13
+
+## 0.0.20
+
+### Patch Changes
+
+- update package versions
+- Updated dependencies
+  - @forklaunch/common@0.3.11
+  - @forklaunch/core@0.9.12
+
+## 0.0.19
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.9.11
+
+## 0.0.18
+
+### Patch Changes
+
+- bump package versions, allow for validator custom types that resolve as any, export http framework options type
+- Updated dependencies
+  - @forklaunch/common@0.3.10
+  - @forklaunch/core@0.9.10
+
+## 0.0.17
+
+### Patch Changes
+
+- update package dependencies
+- Updated dependencies
+  - @forklaunch/common@0.3.9
+  - @forklaunch/core@0.9.9
+
+## 0.0.16
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.9.8
+
+## 0.0.15
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.9.7
+
+## 0.0.14
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.9.6
+
+## 0.0.13
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.9.5
+
+## 0.0.12
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.9.4
+
+## 0.0.11
+
+### Patch Changes
+
+- package conflict resolution
+- fix minor buffer bugs and update subdependencies
+- Updated dependencies
+- Updated dependencies
+  - @forklaunch/core@0.9.3
+  - @forklaunch/common@0.3.8
+
 ## 0.0.10
 
 ### Patch Changes

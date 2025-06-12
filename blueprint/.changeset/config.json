@@ -11,6 +11,7 @@
     "@forklaunch/blueprint-sample-worker",
     "@forklaunch/blueprint-billing",
     "@forklaunch/blueprint-iam",
+    "@forklaunch/blueprint-iam-better-auth",
     "@forklaunch/blueprint-core",
     "@forklaunch/blueprint-monitoring"
   ]

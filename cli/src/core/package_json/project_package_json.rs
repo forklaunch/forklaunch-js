@@ -26,48 +26,48 @@ impl Serialize for ProjectDependenciesWithProjectName {
 }
 
 #[derive(Debug, Serialize, Default)]
-pub(crate)struct ProjectScripts {
+pub(crate) struct ProjectScripts {
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate)build: Option<String>,
+    pub(crate) build: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate)clean: Option<String>,
+    pub(crate) clean: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate)dev: Option<String>,
+    pub(crate) dev: Option<String>,
     #[serde(rename = "dev:server", skip_serializing_if = "Option::is_none")]
-    pub(crate)dev_server: Option<String>,
+    pub(crate) dev_server: Option<String>,
     #[serde(rename = "dev:worker", skip_serializing_if = "Option::is_none")]
-    pub(crate)dev_worker: Option<String>,
+    pub(crate) dev_worker: Option<String>,
     #[serde(rename = "dev:local", skip_serializing_if = "Option::is_none")]
-    pub(crate)dev_local: Option<String>,
+    pub(crate) dev_local: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate)docs: Option<String>,
+    pub(crate) docs: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate)format: Option<String>,
+    pub(crate) format: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate)lint: Option<String>,
+    pub(crate) lint: Option<String>,
     #[serde(rename = "lint:fix", skip_serializing_if = "Option::is_none")]
-    pub(crate)lint_fix: Option<String>,
+    pub(crate) lint_fix: Option<String>,
     #[serde(rename = "migrate:create", skip_serializing_if = "Option::is_none")]
-    pub(crate)migrate_create: Option<String>,
+    pub(crate) migrate_create: Option<String>,
     #[serde(rename = "migrate:down", skip_serializing_if = "Option::is_none")]
-    pub(crate)migrate_down: Option<String>,
+    pub(crate) migrate_down: Option<String>,
     #[serde(rename = "migrate:init", skip_serializing_if = "Option::is_none")]
-    pub(crate)migrate_init: Option<String>,
+    pub(crate) migrate_init: Option<String>,
     #[serde(rename = "migrate:up", skip_serializing_if = "Option::is_none")]
-    pub(crate)migrate_up: Option<String>,
+    pub(crate) migrate_up: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate)seed: Option<String>,
+    pub(crate) seed: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate)start: Option<String>,
+    pub(crate) start: Option<String>,
     #[serde(rename = "start:server", skip_serializing_if = "Option::is_none")]
-    pub(crate)start_server: Option<String>,
+    pub(crate) start_server: Option<String>,
     #[serde(rename = "start:worker", skip_serializing_if = "Option::is_none")]
-    pub(crate)start_worker: Option<String>,
+    pub(crate) start_worker: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate)test: Option<String>,
+    pub(crate) test: Option<String>,
 
     #[serde(flatten)]
-    pub(crate)additional_scripts: HashMap<String, String>,
+    pub(crate) additional_scripts: HashMap<String, String>,
 }
 
 impl<'de> Deserialize<'de> for ProjectScripts {
@@ -147,42 +147,45 @@ impl<'de> Deserialize<'de> for ProjectScripts {
 }
 
 #[derive(Debug, Default, Clone)]
-pub(crate)struct ProjectDependencies {
-    pub(crate)app_name: String,
-    pub(crate)bullmq: Option<String>,
-    pub(crate)databases: HashSet<Database>,
-    pub(crate)app_core: Option<String>,
-    pub(crate)app_monitoring: Option<String>,
-    pub(crate)forklaunch_common: Option<String>,
-    pub(crate)forklaunch_core: Option<String>,
-    pub(crate)forklaunch_express: Option<String>,
-    pub(crate)forklaunch_hyper_express: Option<String>,
-    pub(crate)forklaunch_implementation_billing_base: Option<String>,
-    pub(crate)forklaunch_interfaces_billing: Option<String>,
-    pub(crate)forklaunch_implementation_iam_base: Option<String>,
-    pub(crate)forklaunch_interfaces_iam: Option<String>,
-    pub(crate)forklaunch_implementation_worker_bullmq: Option<String>,
-    pub(crate)forklaunch_implementation_worker_redis: Option<String>,
-    pub(crate)forklaunch_implementation_worker_database: Option<String>,
-    pub(crate)forklaunch_implementation_worker_kafka: Option<String>,
-    pub(crate)forklaunch_interfaces_worker: Option<String>,
-    pub(crate)forklaunch_infrastructure_redis: Option<String>,
-    pub(crate)forklaunch_infrastructure_s3: Option<String>,
-    pub(crate)forklaunch_validator: Option<String>,
-    pub(crate)mikro_orm_core: Option<String>,
-    pub(crate)mikro_orm_migrations: Option<String>,
-    pub(crate)mikro_orm_database: Option<String>,
-    pub(crate)mikro_orm_reflection: Option<String>,
-    pub(crate)mikro_orm_seeder: Option<String>,
-    pub(crate)typebox: Option<String>,
-    pub(crate)ajv: Option<String>,
-    pub(crate)better_sqlite3: Option<String>,
-    pub(crate)dotenv: Option<String>,
-    pub(crate)sqlite3: Option<String>,
-    pub(crate)uuid: Option<String>,
-    pub(crate)zod: Option<String>,
+pub(crate) struct ProjectDependencies {
+    pub(crate) app_name: String,
+    pub(crate) databases: HashSet<Database>,
+    pub(crate) app_core: Option<String>,
+    pub(crate) app_monitoring: Option<String>,
+    pub(crate) forklaunch_better_auth_mikro_orm_fork: Option<String>,
+    pub(crate) forklaunch_common: Option<String>,
+    pub(crate) forklaunch_core: Option<String>,
+    pub(crate) forklaunch_express: Option<String>,
+    pub(crate) forklaunch_hyper_express: Option<String>,
+    pub(crate) forklaunch_implementation_billing_base: Option<String>,
+    pub(crate) forklaunch_interfaces_billing: Option<String>,
+    pub(crate) forklaunch_implementation_iam_base: Option<String>,
+    pub(crate) forklaunch_interfaces_iam: Option<String>,
+    pub(crate) forklaunch_implementation_worker_bullmq: Option<String>,
+    pub(crate) forklaunch_implementation_worker_redis: Option<String>,
+    pub(crate) forklaunch_implementation_worker_database: Option<String>,
+    pub(crate) forklaunch_implementation_worker_kafka: Option<String>,
+    pub(crate) forklaunch_interfaces_worker: Option<String>,
+    pub(crate) forklaunch_infrastructure_redis: Option<String>,
+    pub(crate) forklaunch_infrastructure_s3: Option<String>,
+    pub(crate) forklaunch_validator: Option<String>,
+    pub(crate) mikro_orm_core: Option<String>,
+    pub(crate) mikro_orm_migrations: Option<String>,
+    pub(crate) mikro_orm_database: Option<String>,
+    pub(crate) mikro_orm_reflection: Option<String>,
+    pub(crate) mikro_orm_seeder: Option<String>,
+    pub(crate) opentelemetry_api: Option<String>,
+    pub(crate) typebox: Option<String>,
+    pub(crate) ajv: Option<String>,
+    pub(crate) better_auth: Option<String>,
+    pub(crate) better_sqlite3: Option<String>,
+    pub(crate) bullmq: Option<String>,
+    pub(crate) dotenv: Option<String>,
+    pub(crate) sqlite3: Option<String>,
+    pub(crate) uuid: Option<String>,
+    pub(crate) zod: Option<String>,
 
-    pub(crate)additional_deps: HashMap<String, String>,
+    pub(crate) additional_deps: HashMap<String, String>,
 }
 
 impl Serialize for ProjectDependencies {
@@ -198,6 +201,9 @@ impl Serialize for ProjectDependencies {
         }
         if let Some(ref v) = self.app_monitoring {
             map.serialize_entry(&format!("@{}/monitoring", self.app_name), v)?;
+        }
+        if let Some(ref v) = self.forklaunch_better_auth_mikro_orm_fork {
+            map.serialize_entry("@forklaunch/better-auth-mikro-orm-fork", v)?;
         }
         if let Some(ref v) = self.forklaunch_common {
             map.serialize_entry("@forklaunch/common", v)?;
@@ -270,11 +276,17 @@ impl Serialize for ProjectDependencies {
         if let Some(ref v) = self.mikro_orm_seeder {
             map.serialize_entry("@mikro-orm/seeder", v)?;
         }
+        if let Some(ref v) = self.opentelemetry_api {
+            map.serialize_entry("@opentelemetry/api", v)?;
+        }
         if let Some(ref v) = self.typebox {
             map.serialize_entry("@sinclair/typebox", v)?;
         }
         if let Some(ref v) = self.ajv {
             map.serialize_entry("ajv", v)?;
+        }
+        if let Some(ref v) = self.better_auth {
+            map.serialize_entry("better-auth", v)?;
         }
         if let Some(ref v) = self.bullmq {
             map.serialize_entry("bullmq", v)?;
@@ -407,6 +419,9 @@ impl<'de> Deserialize<'de> for ProjectDependencies {
                     }
 
                     match key.as_str() {
+                        "@forklaunch/better-auth-mikro-orm-fork" => {
+                            deps.forklaunch_better_auth_mikro_orm_fork = Some(value);
+                        }
                         "@forklaunch/common" => deps.forklaunch_common = Some(value),
                         "@forklaunch/core" => deps.forklaunch_core = Some(value),
                         "@forklaunch/express" => deps.forklaunch_express = Some(value),
@@ -448,8 +463,10 @@ impl<'de> Deserialize<'de> for ProjectDependencies {
                         "@mikro-orm/core" => deps.mikro_orm_core = Some(value),
                         "@mikro-orm/reflection" => deps.mikro_orm_reflection = Some(value),
                         "@mikro-orm/seeder" => deps.mikro_orm_seeder = Some(value),
+                        "@opentelemetry/api" => deps.opentelemetry_api = Some(value),
                         "@sinclair/typebox" => deps.typebox = Some(value),
                         "ajv" => deps.ajv = Some(value),
+                        "better-auth" => deps.better_auth = Some(value),
                         "bullmq" => deps.bullmq = Some(value),
                         "better-sqlite3" => deps.better_sqlite3 = Some(value),
                         "dotenv" => deps.dotenv = Some(value),
@@ -471,39 +488,39 @@ impl<'de> Deserialize<'de> for ProjectDependencies {
 }
 
 #[derive(Debug, Serialize, Default)]
-pub(crate)struct ProjectDevDependencies {
+pub(crate) struct ProjectDevDependencies {
     #[serde(rename = "@biomejs/biome", skip_serializing_if = "Option::is_none")]
-    pub(crate)biome: Option<String>,
+    pub(crate) biome: Option<String>,
     #[serde(rename = "@eslint/js", skip_serializing_if = "Option::is_none")]
-    pub(crate)eslint_js: Option<String>,
+    pub(crate) eslint_js: Option<String>,
     #[serde(rename = "@mikro-orm/cli", skip_serializing_if = "Option::is_none")]
-    pub(crate)mikro_orm_cli: Option<String>,
+    pub(crate) mikro_orm_cli: Option<String>,
     #[serde(rename = "@types/express", skip_serializing_if = "Option::is_none")]
-    pub(crate)types_express: Option<String>,
+    pub(crate) types_express: Option<String>,
     #[serde(
         rename = "@types/express-serve-static-core",
         skip_serializing_if = "Option::is_none"
     )]
-    pub(crate)types_express_serve_static_core: Option<String>,
+    pub(crate) types_express_serve_static_core: Option<String>,
     #[serde(rename = "@types/qs", skip_serializing_if = "Option::is_none")]
-    pub(crate)types_qs: Option<String>,
+    pub(crate) types_qs: Option<String>,
     #[serde(rename = "@types/uuid", skip_serializing_if = "Option::is_none")]
-    pub(crate)types_uuid: Option<String>,
+    pub(crate) types_uuid: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate)eslint: Option<String>,
+    pub(crate) eslint: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate)oxlint: Option<String>,
+    pub(crate) oxlint: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate)prettier: Option<String>,
+    pub(crate) prettier: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate)tsx: Option<String>,
+    pub(crate) tsx: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate)typedoc: Option<String>,
+    pub(crate) typedoc: Option<String>,
     #[serde(rename = "typescript-eslint", skip_serializing_if = "Option::is_none")]
-    pub(crate)typescript_eslint: Option<String>,
+    pub(crate) typescript_eslint: Option<String>,
 
     #[serde(flatten)]
-    pub(crate)additional_deps: HashMap<String, String>,
+    pub(crate) additional_deps: HashMap<String, String>,
 }
 
 impl<'de> Deserialize<'de> for ProjectDevDependencies {
@@ -576,38 +593,40 @@ pub(crate) static MIKRO_ORM_CONFIG_PATHS: &[&str] =
     &["./mikro-orm.config.ts", "./dist/mikro-orm.config.js"];
 
 #[derive(Debug, Serialize, Deserialize, Default)]
-pub(crate)struct ProjectMikroOrm {
+pub(crate) struct ProjectMikroOrm {
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate)config_paths: Option<Vec<String>>,
+    pub(crate) config_paths: Option<Vec<String>>,
 }
 
 #[derive(Debug, Serialize, Default)]
-pub(crate)struct ProjectPackageJson {
+pub(crate) struct ProjectPackageJson {
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate)name: Option<String>,
+    pub(crate) name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate)version: Option<String>,
+    pub(crate) version: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate)description: Option<String>,
+    pub(crate) description: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate)keywords: Option<Vec<String>>,
+    pub(crate) keywords: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate)license: Option<String>,
+    pub(crate) license: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate)author: Option<String>,
+    pub(crate) author: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate)main: Option<String>,
+    pub(crate) main: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate)scripts: Option<ProjectScripts>,
+    pub(crate) r#type: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate)dependencies: Option<ProjectDependencies>,
+    pub(crate) scripts: Option<ProjectScripts>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) dependencies: Option<ProjectDependencies>,
     #[serde(rename = "devDependencies", skip_serializing_if = "Option::is_none")]
-    pub(crate)dev_dependencies: Option<ProjectDevDependencies>,
+    pub(crate) dev_dependencies: Option<ProjectDevDependencies>,
     #[serde(rename = "mikro-orm", skip_serializing_if = "Option::is_none")]
-    pub(crate)mikro_orm: Option<ProjectMikroOrm>,
+    pub(crate) mikro_orm: Option<ProjectMikroOrm>,
 
     #[serde(flatten)]
-    pub(crate)additional_entries: HashMap<String, serde_json::Value>,
+    pub(crate) additional_entries: HashMap<String, serde_json::Value>,
 }
 
 impl<'de> Deserialize<'de> for ProjectPackageJson {
@@ -636,6 +655,7 @@ impl<'de> Deserialize<'de> for ProjectPackageJson {
                     license: None,
                     author: None,
                     main: None,
+                    r#type: None,
                     scripts: None,
                     dependencies: None,
                     dev_dependencies: None,
@@ -677,6 +697,11 @@ impl<'de> Deserialize<'de> for ProjectPackageJson {
                         }
                         "main" => {
                             package.main = Some(
+                                serde_json::from_value(value).map_err(serde::de::Error::custom)?,
+                            )
+                        }
+                        "type" => {
+                            package.r#type = Some(
                                 serde_json::from_value(value).map_err(serde::de::Error::custom)?,
                             )
                         }

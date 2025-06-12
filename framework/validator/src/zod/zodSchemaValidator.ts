@@ -39,6 +39,20 @@ import {
   ZodUnionContainer
 } from './types/schema.types';
 
+export type {
+  ZodArray,
+  ZodFunction,
+  ZodLiteral,
+  ZodObject,
+  ZodOptional,
+  ZodPromise,
+  ZodRawShape,
+  ZodRecord,
+  ZodTuple,
+  ZodType,
+  ZodUnion
+};
+
 extendZodWithOpenApi(z);
 
 /**
@@ -251,6 +265,7 @@ export class ZodSchemaValidator
       format: 'binary',
       example: 'a utf-8 encodable string'
     });
+  type = <T>() => this.any as ZodType<T>;
 
   /**
    * Compiles schema if this exists, for optimal performance.

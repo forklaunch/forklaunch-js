@@ -1081,7 +1081,7 @@ pub(crate) fn add_service_definition_to_docker_compose(
         docker_compose_string,
     )?;
 
-    if config_data.service_name == "iam" {
+    if config_data.is_iam {
         environment.insert(
             "PASSWORD_ENCRYPTION_PUBLIC_KEY_PATH".to_string(),
             "./public.pem".to_string(),

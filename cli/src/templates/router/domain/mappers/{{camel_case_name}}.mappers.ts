@@ -2,7 +2,8 @@ import {
   RequestDtoMapper,
   ResponseDtoMapper
 } from '@forklaunch/core/mappers';
-import { SchemaValidator } from '@{{app_name}}/core';
+import { SchemaValidator } from '@{{app_name}}/core';{{^is_worker}}
+import { EntityManager } from '@mikro-orm/core';{{/is_worker}}
 import { {{pascal_case_name}}{{#is_worker}}Event{{/is_worker}}Record} from '../../persistence/entities/{{camel_case_name}}{{#is_worker}}Event{{/is_worker}}Record.entity';
 import { {{pascal_case_name}}RequestSchema, {{pascal_case_name}}ResponseSchema } from '../schemas/{{camel_case_name}}.schema';
 
@@ -15,12 +16,14 @@ export class {{pascal_case_name}}RequestDtoMapper extends RequestDtoMapper<
   schema = {{pascal_case_name}}RequestSchema;
 
   // toEntity method maps the request schema to the entity
-  async toEntity(): Promise<{{pascal_case_name}}{{#is_worker}}Event{{/is_worker}}Record> {
-    return {{pascal_case_name}}{{#is_worker}}Event{{/is_worker}}Record.create({{#is_worker}}{
-      ...this.dto,
+  async toEntity({{^is_worker}}em: EntityManager{{/is_worker}}): Promise<{{pascal_case_name}}{{#is_worker}}Event{{/is_worker}}Record> {
+    return {{pascal_case_name}}{{#is_worker}}Event{{/is_worker}}Record.create({
+      ...this.dto,{{#is_worker}}
       processed: false,
-      retryCount: 0
-    }{{/is_worker}}{{^is_worker}}this.dto{{/is_worker}});
+      retryCount: 0,{{/is_worker}}
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }{{^is_worker}}, em{{/is_worker}});
   }
 }
 

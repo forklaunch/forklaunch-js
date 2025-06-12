@@ -4,9 +4,9 @@ import { BullMqWorkerOptions } from '@forklaunch/implementation-worker-bullmq/ty
 import { DatabaseWorkerProducer } from '@forklaunch/implementation-worker-database/producers';
 import { DatabaseWorkerOptions } from '@forklaunch/implementation-worker-database/types';
 import { KafkaWorkerProducer } from '@forklaunch/implementation-worker-kafka/producers';
+import { KafkaWorkerOptions } from '@forklaunch/implementation-worker-kafka/types';
 import { RedisWorkerProducer } from '@forklaunch/implementation-worker-redis/producers';
 import { RedisWorkerOptions } from '@forklaunch/implementation-worker-redis/types';
-import { KafkaWorkerOptions } from '../../implementations/worker/kafka/lib/types/kafkaWorker.types';
 import { SampleWorkerService } from '../domain/interfaces/sampleWorkerService.interface';
 import {
   SampleWorkerRequestDto,

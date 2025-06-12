@@ -62,36 +62,49 @@ const typeboxBillingPortalSchema = TypeboxBillingPortalSchema({
   uuidId: false
 });
 
-const zodCreateCheckoutSessionSchema =
-  ZodCreateCheckoutSessionSchema(DummyEnum);
-const typeboxCreateCheckoutSessionSchema =
-  TypeboxCreateCheckoutSessionSchema(DummyEnum);
+const zodCreateCheckoutSessionSchema = ZodCreateCheckoutSessionSchema(
+  DummyEnum,
+  DummyEnum
+);
+const typeboxCreateCheckoutSessionSchema = TypeboxCreateCheckoutSessionSchema(
+  DummyEnum,
+  DummyEnum
+);
 const zodUpdateCheckoutSessionSchema = ZodUpdateCheckoutSessionSchema({
   uuidId: false
-})(DummyEnum);
+})(DummyEnum, DummyEnum);
 const typeboxUpdateCheckoutSessionSchema = TypeboxUpdateCheckoutSessionSchema({
   uuidId: false
-})(DummyEnum);
+})(DummyEnum, DummyEnum);
 const zodCheckoutSessionSchema = ZodCheckoutSessionSchema({ uuidId: true })(
+  DummyEnum,
   DummyEnum
 );
 const typeboxCheckoutSessionSchema = TypeboxCheckoutSessionSchema({
   uuidId: true
-})(DummyEnum);
+})(DummyEnum, DummyEnum);
 
-const zodCreatePaymentLinkSchema = ZodCreatePaymentLinkSchema(DummyEnum);
-const typeboxCreatePaymentLinkSchema =
-  TypeboxCreatePaymentLinkSchema(DummyEnum);
+const zodCreatePaymentLinkSchema = ZodCreatePaymentLinkSchema(
+  DummyEnum,
+  DummyEnum
+);
+const typeboxCreatePaymentLinkSchema = TypeboxCreatePaymentLinkSchema(
+  DummyEnum,
+  DummyEnum
+);
 const zodUpdatePaymentLinkSchema = ZodUpdatePaymentLinkSchema({
   uuidId: false
-})(DummyEnum);
+})(DummyEnum, DummyEnum);
 const typeboxUpdatePaymentLinkSchema = TypeboxUpdatePaymentLinkSchema({
   uuidId: false
-})(DummyEnum);
-const zodPaymentLinkSchema = ZodPaymentLinkSchema({ uuidId: true })(DummyEnum);
+})(DummyEnum, DummyEnum);
+const zodPaymentLinkSchema = ZodPaymentLinkSchema({ uuidId: true })(
+  DummyEnum,
+  DummyEnum
+);
 const typeboxPaymentLinkSchema = TypeboxPaymentLinkSchema({
   uuidId: false
-})(DummyEnum);
+})(DummyEnum, DummyEnum);
 
 const zodCreatePlanSchema = ZodCreatePlanSchema(DummyEnum, DummyEnum);
 const typeboxCreatePlanSchema = TypeboxCreatePlanSchema(DummyEnum, DummyEnum);
@@ -187,6 +200,8 @@ describe('schema equality', () => {
             paymentMethods: [DummyEnum.A, DummyEnum.B],
             successRedirectUri: 'https://example.com',
             cancelRedirectUri: 'https://example.com',
+            expiresAt: new Date(),
+            status: DummyEnum.A,
             extraFields: {
               test: 'test'
             }
@@ -225,6 +240,8 @@ describe('schema equality', () => {
             paymentMethods: [DummyEnum.A, DummyEnum.B],
             successRedirectUri: 'https://example.com',
             cancelRedirectUri: 'https://example.com',
+            expiresAt: new Date(),
+            status: DummyEnum.A,
             extraFields: {
               test: 'test'
             }
@@ -249,6 +266,8 @@ describe('schema equality', () => {
             metadata: {
               test: 'test'
             },
+            expiresAt: new Date(),
+            status: DummyEnum.A,
             extraFields: {
               test: 'test'
             }
@@ -292,6 +311,8 @@ describe('schema equality', () => {
           metadata: {
             test: 'test'
           },
+          expiresAt: new Date(),
+          status: DummyEnum.A,
           extraFields: {
             test: 'test'
           }

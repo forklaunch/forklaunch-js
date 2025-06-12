@@ -61,6 +61,7 @@ fn generate_basic_library(
             .to_string_lossy()
             .to_string(),
         output_path: output_path.to_string_lossy().to_string(),
+        module_id: None,
     };
 
     let ignore_files = vec![];
@@ -105,9 +106,15 @@ fn add_library_to_artifacts(
     config_data: &mut LibraryManifestData,
     base_path: &Path,
 ) -> Result<Vec<RenderedTemplate>> {
-    let forklaunch_definition_buffer =
-        add_project_definition_to_manifest(ProjectType::Library, config_data, None, None, None)
-            .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
+    let forklaunch_definition_buffer = add_project_definition_to_manifest(
+        ProjectType::Library,
+        config_data,
+        None,
+        None,
+        None,
+        None,
+    )
+    .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
 
     let runtime = config_data.runtime.parse()?;
 
@@ -173,6 +180,7 @@ fn generate_library_package_json(
         keywords: Some(vec![]),
         license: Some(config_data.license.clone()),
         author: Some(config_data.author.clone()),
+        r#type: Some("module".to_string()),
         scripts: Some(ProjectScripts {
             build: Some(PROJECT_BUILD_SCRIPT.to_string()),
             clean: Some(project_clean_script(&config_data.runtime.parse()?)),

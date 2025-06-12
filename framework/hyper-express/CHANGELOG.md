@@ -1,5 +1,109 @@
 # @forklaunch/hyper-express
 
+## 0.5.24
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.6.12
+  - @forklaunch/core@0.9.13
+
+## 0.5.23
+
+### Patch Changes
+
+- update package versions
+- Updated dependencies
+  - @forklaunch/validator@0.6.11
+  - @forklaunch/common@0.3.11
+  - @forklaunch/core@0.9.12
+
+## 0.5.22
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.9.11
+
+## 0.5.21
+
+### Patch Changes
+
+- export internal types for inference
+
+## 0.5.20
+
+### Patch Changes
+
+- bump package versions, allow for validator custom types that resolve as any, export http framework options type
+- Updated dependencies
+  - @forklaunch/validator@0.6.10
+  - @forklaunch/common@0.3.10
+  - @forklaunch/core@0.9.10
+
+## 0.5.19
+
+### Patch Changes
+
+- update package dependencies
+- Updated dependencies
+  - @forklaunch/validator@0.6.9
+  - @forklaunch/common@0.3.9
+  - @forklaunch/core@0.9.9
+
+## 0.5.18
+
+### Patch Changes
+
+- export internal request, response and next types
+
+## 0.5.17
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.9.8
+
+## 0.5.16
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.9.7
+
+## 0.5.15
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.9.6
+
+## 0.5.14
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.9.5
+
+## 0.5.13
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.9.4
+
+## 0.5.12
+
+### Patch Changes
+
+- package conflict resolution
+- fix minor buffer bugs and update subdependencies
+- Updated dependencies
+- Updated dependencies
+  - @forklaunch/core@0.9.3
+  - @forklaunch/common@0.3.8
+  - @forklaunch/validator@0.6.8
+
 ## 0.5.11
 
 ### Patch Changes

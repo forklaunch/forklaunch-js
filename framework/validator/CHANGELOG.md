@@ -1,5 +1,45 @@
 # @forklaunch/validator
 
+## 0.6.12
+
+### Patch Changes
+
+- use tsgo and export zod types
+
+## 0.6.11
+
+### Patch Changes
+
+- update package versions
+- Updated dependencies
+  - @forklaunch/common@0.3.11
+
+## 0.6.10
+
+### Patch Changes
+
+- bump package versions, allow for validator custom types that resolve as any, export http framework options type
+- Updated dependencies
+  - @forklaunch/common@0.3.10
+
+## 0.6.9
+
+### Patch Changes
+
+- update package dependencies
+- Updated dependencies
+  - @forklaunch/common@0.3.9
+
+## 0.6.8
+
+### Patch Changes
+
+- package conflict resolution
+- fix minor buffer bugs and update subdependencies
+- Updated dependencies
+- Updated dependencies
+  - @forklaunch/common@0.3.8
+
 ## 0.6.7
 
 ### Patch Changes

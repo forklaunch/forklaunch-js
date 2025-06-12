@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/interfaces-iam",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "IAM interfaces for forklaunch",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -26,7 +26,7 @@
   },
   "files": ["lib/**"],
   "scripts": {
-    "build": "tsc && if [ -f eject-package.bash ]; then pnpm package:eject; fi",
+    "build": "tsgo --noEmit && tsup interfaces/index.ts types/index.ts --format cjs,esm --no-splitting --dts --tsconfig tsconfig.json --out-dir lib --clean && if [ -f eject-package.bash ]; then pnpm package:eject; fi",
     "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
@@ -37,10 +37,11 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/common": "^0.3.7",
+    "@forklaunch/common": "^0.3.11",
     "@mikro-orm/core": "^6.4.16"
   },
   "devDependencies": {
+    "@typescript/native-preview": "7.0.0-dev.20250611.1",
     "depcheck": "^1.4.7",
     "prettier": "^3.5.3",
     "typedoc": "^0.28.5"

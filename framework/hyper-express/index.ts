@@ -70,8 +70,18 @@ export function forklaunchRouter<
   return router;
 }
 
+export type {
+  MiddlewareNext as NextFunction,
+  Request,
+  Response,
+  ServerConstructorOptions
+} from '@forklaunch/hyper-express-fork';
+export type { BusboyConfig } from 'busboy';
+export type { CorsOptions } from 'cors';
 export type { Application } from './src/hyperExpressApplication';
 export type { Router } from './src/hyperExpressRouter';
+export type { ExpressOptions } from './src/types/hyperExpressOptions.types';
+
 export const handlers: {
   any: typeof any;
   delete: typeof delete_;

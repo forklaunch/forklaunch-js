@@ -13,7 +13,7 @@ use crate::{
         Database, ERROR_FAILED_TO_CREATE_PACKAGE_JSON, ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE,
         ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST,
         ERROR_FAILED_TO_WRITE_DOCKER_COMPOSE, ERROR_FAILED_TO_WRITE_MANIFEST, Module, Runtime,
-        get_service_module_cache, get_service_module_description,
+        get_service_module_cache, get_service_module_description, get_service_module_name,
     },
     core::{
         base_path::{BasePathLocation, BasePathType, prompt_base_path},
@@ -102,14 +102,15 @@ impl CliCommand for ModuleCommand {
         )
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
 
-        let module = prompt_without_validation(
+        let module: Module = prompt_without_validation(
             &mut line_editor,
             &mut stdout,
             "module",
             matches,
             "module",
             Some(&Module::VARIANTS),
-        )?;
+        )?
+        .parse()?;
 
         let runtime = existing_manifest_data.runtime.parse()?;
         let database_variants = get_database_variants(&runtime);
@@ -134,10 +135,10 @@ impl CliCommand for ModuleCommand {
             id: existing_manifest_data.id.clone(),
             cli_version: existing_manifest_data.cli_version.clone(),
             app_name: name.clone(),
-            service_name: module.clone(),
-            camel_case_name: module.clone().to_case(Case::Camel),
-            pascal_case_name: module.clone().to_case(Case::Pascal),
-            kebab_case_name: module.clone().to_case(Case::Kebab),
+            service_name: get_service_module_name(&module),
+            camel_case_name: get_service_module_name(&module).to_case(Case::Camel),
+            pascal_case_name: get_service_module_name(&module).to_case(Case::Pascal),
+            kebab_case_name: get_service_module_name(&module).to_case(Case::Kebab),
             formatter: existing_manifest_data.formatter.clone(),
             linter: existing_manifest_data.linter.clone(),
             validator: existing_manifest_data.validator.clone(),
@@ -178,15 +179,19 @@ impl CliCommand for ModuleCommand {
             database_port: get_database_port(&database),
             db_driver: get_db_driver(&database),
 
-            is_iam: module.clone() == "iam",
-            is_cache_enabled: module.clone() == "billing",
+            is_iam: module.clone() == Module::BaseIam || module.clone() == Module::BetterAuthIam,
+            is_billing: module.clone() == Module::BaseBilling,
+            is_cache_enabled: module.clone() == Module::BaseBilling,
             is_s3_enabled: false,
             is_database_enabled: true,
+
+            is_better_auth: module.clone() == Module::BetterAuthIam,
         };
 
         let manifest_data = add_project_definition_to_manifest(
             ProjectType::Service,
             &mut service_data,
+            Some(module.clone().to_string()),
             Some(ResourceInventory {
                 database: Some(database.to_string()),
                 cache: get_service_module_cache(&module),
@@ -199,10 +204,14 @@ impl CliCommand for ModuleCommand {
 
         let template_dir = PathIO {
             input_path: Path::new("project")
-                .join(&module)
+                .join(&module.metadata().exclusive_files.unwrap().first().unwrap())
                 .to_string_lossy()
                 .to_string(),
-            output_path: base_path.join(&module).to_string_lossy().to_string(),
+            output_path: base_path
+                .join(get_service_module_name(&module))
+                .to_string_lossy()
+                .to_string(),
+            module_id: Some(module.clone()),
         };
 
         let mut rendered_templates = vec![];
@@ -231,7 +240,7 @@ impl CliCommand for ModuleCommand {
 
         rendered_templates.push(generate_service_package_json(
             &service_data,
-            &base_path.join(&module),
+            &base_path.join(get_service_module_name(&module)),
             None,
             None,
             None,
@@ -260,12 +269,16 @@ impl CliCommand for ModuleCommand {
         if !dryrun {
             generate_symlinks(
                 Some(base_path),
-                &base_path.join(&module),
+                &base_path.join(get_service_module_name(&module)),
                 &mut service_data,
                 dryrun,
             )?;
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-            writeln!(stdout, "{} initialized successfully!", module)?;
+            writeln!(
+                stdout,
+                "{} initialized successfully!",
+                get_service_module_name(&module)
+            )?;
             stdout.reset()?;
             format_code(&base_path, &service_data.runtime.parse()?);
         }

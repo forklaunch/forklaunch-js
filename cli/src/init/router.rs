@@ -47,6 +47,7 @@ fn generate_basic_router(
     let template_dir = PathIO {
         input_path: Path::new("router").to_string_lossy().to_string(),
         output_path: output_path.clone(),
+        module_id: None,
     };
 
     let ignore_files = vec![];
