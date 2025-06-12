@@ -46,8 +46,8 @@ for database in "${databases[@]}"; do
                     -F "$framework" \
                     -r "$runtime" \
                     -t "$test_framework" \
-                    -s "billing" \
-                    -s "iam" \
+                    -s "billing-base" \
+                    -s "iam-base" \
                     -D "Test application" \
                     -A "Rohin Bhargava" \
                     -L "$license" 
