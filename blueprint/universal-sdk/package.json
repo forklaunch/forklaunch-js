@@ -22,9 +22,6 @@
     "@forklaunch/blueprint-billing-base": "workspace:*",
     "@forklaunch/blueprint-iam-base": "workspace:*",
     "@forklaunch/blueprint-iam-better-auth": "workspace:*",
-    "@forklaunch/blueprint-sample-worker": "workspace:*",
-    "eslint": "^9.24.0",
-    "tsx": "^4.20.1",
-    "typescript-eslint": "^8.34.0"
+    "@forklaunch/blueprint-sample-worker": "workspace:*"
   }
 }
