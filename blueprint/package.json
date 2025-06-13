@@ -67,7 +67,7 @@
   },
   "pnpm": {
     "patchedDependencies": {
-      "@jercle/yargonaut": "./patches/@jercle__yargonaut.patch"
+      "@jercle/yargonaut@1.1.5": "./patches/@jercle__yargonaut.patch"
     }
   }
 }

@@ -1,5 +1,5 @@
 {
-  "name": "@forklaunch/blueprint-iam",
+  "name": "@forklaunch/blueprint-iam-base",
   "version": "0.1.5",
   "description": "Forklaunch IAM Implementation",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
