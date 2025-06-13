@@ -173,7 +173,7 @@ fn generate_library_package_json(
     let package_json_buffer = ProjectPackageJson {
         name: Some(format!(
             "@{}/{}",
-            config_data.app_name, config_data.library_name
+            config_data.kebab_case_app_name, config_data.kebab_case_name
         )),
         version: Some("0.1.0".to_string()),
         description: Some(config_data.description.clone()),
@@ -287,6 +287,9 @@ impl CliCommand for LibraryCommand {
             // Common fields from ApplicationManifestData
             id: existing_manifest_data.id.clone(),
             app_name: existing_manifest_data.app_name.clone(),
+            camel_case_app_name: existing_manifest_data.camel_case_app_name.clone(),
+            pascal_case_app_name: existing_manifest_data.pascal_case_app_name.clone(),
+            kebab_case_app_name: existing_manifest_data.kebab_case_app_name.clone(),
             app_description: existing_manifest_data.app_description.clone(),
             author: existing_manifest_data.author.clone(),
             cli_version: existing_manifest_data.cli_version.clone(),
@@ -315,6 +318,7 @@ impl CliCommand for LibraryCommand {
             // Library-specific fields
             library_name: library_name.clone(),
             camel_case_name: library_name.to_case(Case::Camel),
+            kebab_case_name: library_name.to_case(Case::Kebab),
             description: description.clone(),
         };
 

@@ -26,5 +26,6 @@ pub(crate) mod symlinks;
 pub(crate) mod template;
 pub(crate) mod token;
 pub(crate) mod tsconfig;
+pub(crate) mod universal_sdk;
 pub(crate) mod watermark;
 pub(crate) mod worker_type;

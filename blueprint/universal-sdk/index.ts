@@ -4,4 +4,4 @@
  * This is an auto-generated file. Modifications are encouraged but may inhibit automated upgrades.
  */
 
-export * from './lib';
+export * from './universalSdk';

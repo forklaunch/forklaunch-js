@@ -251,7 +251,7 @@ pub(crate) fn generate_service_package_json(
     let package_json_contents = ProjectPackageJson {
         name: Some(format!(
             "@{}/{}",
-            config_data.app_name, config_data.service_name
+            config_data.kebab_case_app_name, config_data.kebab_case_name
         )),
         version: Some("0.1.0".to_string()),
         description: Some(config_data.description.to_string()),
@@ -348,6 +348,7 @@ pub(crate) fn generate_service_package_json(
                 forklaunch_implementation_worker_kafka: None,
                 forklaunch_implementation_worker_redis: None,
                 forklaunch_interfaces_worker: None,
+                forklaunch_universal_sdk: None,
                 forklaunch_validator: Some(VALIDATOR_VERSION.to_string()),
                 mikro_orm_core: Some(MIKRO_ORM_CORE_VERSION.to_string()),
                 mikro_orm_migrations: Some(MIKRO_ORM_MIGRATIONS_VERSION.to_string()),
@@ -586,6 +587,9 @@ impl CliCommand for ServiceCommand {
             // Common fields from ApplicationManifestData
             id: existing_manifest_data.id.clone(),
             app_name: existing_manifest_data.app_name.clone(),
+            camel_case_app_name: existing_manifest_data.camel_case_app_name.clone(),
+            pascal_case_app_name: existing_manifest_data.pascal_case_app_name.clone(),
+            kebab_case_app_name: existing_manifest_data.kebab_case_app_name.clone(),
             app_description: existing_manifest_data.app_description.clone(),
             author: existing_manifest_data.author.clone(),
             cli_version: existing_manifest_data.cli_version.clone(),

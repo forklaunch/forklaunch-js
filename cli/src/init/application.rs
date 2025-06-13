@@ -60,8 +60,8 @@ use crate::{
                 SORT_PACKAGE_JSON_VERSION, SQLITE3_VERSION, TS_JEST_VERSION, TS_NODE_VERSION,
                 TSX_VERSION, TYPEBOX_VERSION, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION,
                 TYPES_EXPRESS_VERSION, TYPES_QS_VERSION, TYPES_UUID_VERSION,
-                TYPESCRIPT_ESLINT_VERSION, TYPESCRIPT_VERSION, UUID_VERSION, VALIDATOR_VERSION,
-                VITEST_VERSION, ZOD_VERSION, application_build_script,
+                TYPESCRIPT_ESLINT_VERSION, TYPESCRIPT_VERSION, UNIVERSAL_SDK_VERSION, UUID_VERSION,
+                VALIDATOR_VERSION, VITEST_VERSION, ZOD_VERSION, application_build_script,
                 application_clean_purge_script, application_clean_script, application_docs_script,
                 application_format_script, application_lint_fix_script, application_lint_script,
                 application_migrate_script, application_seed_script, application_setup_script,
@@ -76,6 +76,7 @@ use crate::{
         symlinks::generate_symlinks,
         template::{PathIO, generate_with_template, get_routers_from_standard_package},
         token::get_token,
+        universal_sdk::get_universal_sdk_additional_deps,
     },
     prompt::{
         ArrayCompleter, prompt_comma_separated_list, prompt_with_validation,
@@ -93,7 +94,7 @@ fn generate_application_package_json(
         None
     };
     let package_json_contents = ApplicationPackageJson {
-        name: Some(data.app_name.clone()),
+        name: Some(data.kebab_case_app_name.clone()),
         version: Some("0.0.1".to_string()),
         description: Some(data.app_description.clone()),
         keywords: Some(vec![]),
@@ -101,7 +102,10 @@ fn generate_application_package_json(
         author: Some(data.author.clone()),
         workspaces: bun_workspace_projects,
         scripts: Some(ApplicationScripts {
-            build: Some(application_build_script(&data.runtime.parse()?)),
+            build: Some(application_build_script(
+                &data.runtime.parse()?,
+                &data.kebab_case_app_name,
+            )),
             clean: Some(application_clean_script(&data.runtime.parse()?)),
             clean_purge: Some(application_clean_purge_script(&data.runtime.parse()?)),
             database_setup: Some(application_setup_script(&data.runtime.parse()?)),
@@ -749,10 +753,13 @@ impl CliCommand for ApplicationCommand {
             .unwrap(),
         );
         for template_dir in template_dirs {
-            let service_data = ServiceManifestData {
+            let mut service_data = ServiceManifestData {
                 id: data.id.clone(),
                 cli_version: data.cli_version.clone(),
                 app_name: data.app_name.clone(),
+                camel_case_app_name: data.camel_case_app_name.clone(),
+                pascal_case_app_name: data.pascal_case_app_name.clone(),
+                kebab_case_app_name: data.kebab_case_app_name.clone(),
                 service_name: template_dir.output_path.to_string(),
                 camel_case_name: template_dir.output_path.to_case(Case::Camel),
                 pascal_case_name: template_dir.output_path.to_case(Case::Pascal),
@@ -815,6 +822,11 @@ impl CliCommand for ApplicationCommand {
                 is_better_auth: template_dir.module_id == Some(Module::BetterAuthIam),
             };
 
+            if service_data.service_name == "universal-sdk" {
+                service_data.is_iam = global_module_config.iam.is_some();
+                service_data.is_billing = global_module_config.billing.is_some();
+            }
+
             if !HashSet::from([
                 "core".to_string(),
                 "monitoring".to_string(),
@@ -851,22 +863,6 @@ impl CliCommand for ApplicationCommand {
                 } else {
                     None
                 };
-
-            fn get_universal_sdk_additional_deps(
-                app_name: &String,
-                is_billing_enabled: bool,
-                is_iam_enabled: bool,
-            ) -> HashMap<String, String> {
-                let mut additional_deps = HashMap::new();
-                if is_billing_enabled {
-                    additional_deps
-                        .insert(format!("{app_name}/billing"), "workspace:*".to_string());
-                }
-                if is_iam_enabled {
-                    additional_deps.insert(format!("{app_name}/iam"), "workspace:*".to_string());
-                }
-                additional_deps
-            }
 
             rendered_templates.push(generate_service_package_json(
                 &service_data,
@@ -915,6 +911,7 @@ impl CliCommand for ApplicationCommand {
                     }),
                     "universal-sdk" => Some(ProjectDependencies {
                         forklaunch_common: Some(COMMON_VERSION.to_string()),
+                        forklaunch_universal_sdk: Some(UNIVERSAL_SDK_VERSION.to_string()),
                         better_auth: if global_module_config
                             .iam
                             .as_ref()

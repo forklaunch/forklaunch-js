@@ -71,11 +71,14 @@ pub(crate) fn application_lint_fix_script(linter: &Linter) -> String {
     })
 }
 
-pub(crate) fn application_build_script(runtime: &Runtime) -> String {
-    String::from(match runtime {
-        Runtime::Bun => "bun --filter='*' run build",
-        Runtime::Node => "pnpm -r run build",
-    })
+pub(crate) fn application_build_script(runtime: &Runtime, app_name: &str) -> String {
+    match runtime {
+        Runtime::Bun => format!(
+            "bun --filter='!@{}/universal-sdk' run build && bun --filter='@{}/universal-sdk' run build",
+            app_name, app_name
+        ),
+        Runtime::Node => "pnpm -r run build".to_string(),
+    }
 }
 
 pub(crate) fn application_clean_script(runtime: &Runtime) -> String {
@@ -243,6 +246,8 @@ pub(crate) const WORKER_INTERFACES_VERSION: &str = "^0.2.1";
 pub(crate) const INFRASTRUCTURE_REDIS_VERSION: &str = "^0.0.23";
 // @forklaunch/infrastructure-s3
 pub(crate) const INFRASTRUCTURE_S3_VERSION: &str = "^0.0.23";
+// @forklaunch/universal-sdk
+pub(crate) const UNIVERSAL_SDK_VERSION: &str = "^0.3.13";
 // @forklaunch/validator
 pub(crate) const VALIDATOR_VERSION: &str = "^0.6.13";
 // @mikro-orm/core
