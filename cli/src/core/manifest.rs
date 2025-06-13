@@ -54,6 +54,7 @@ pub(crate) trait ProjectManifestConfig {
 #[derive(Debug)]
 
 pub(crate) struct ApplicationInitializationMetadata {
+    pub(crate) app_name: String,
     pub(crate) database: Option<String>,
 }
 
@@ -134,6 +135,12 @@ macro_rules! internal_config_struct {
             $vis id: String,
             $vis cli_version: String,
             $vis app_name: String,
+            #[serde(skip_serializing, skip_deserializing)]
+            $vis camel_case_app_name: String,
+            #[serde(skip_serializing, skip_deserializing)]
+            $vis pascal_case_app_name: String,
+            #[serde(skip_serializing, skip_deserializing)]
+            $vis kebab_case_app_name: String,
             $vis app_description: String,
             $vis linter: String,
             $vis formatter: String,
@@ -225,6 +232,9 @@ macro_rules! config_struct {
                         id: shadow.id.clone(),
                         cli_version: shadow.cli_version.clone(),
                         app_name: shadow.app_name.clone(),
+                        camel_case_app_name: shadow.camel_case_app_name.clone(),
+                        pascal_case_app_name: shadow.pascal_case_app_name.clone(),
+                        kebab_case_app_name: shadow.kebab_case_app_name.clone(),
                         app_description: shadow.app_description.clone(),
                         linter: shadow.linter.clone(),
                         formatter: shadow.formatter.clone(),

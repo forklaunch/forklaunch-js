@@ -16,7 +16,7 @@ pnpm build
 
 cd ..
 
-RUST_BACKTRACE=1 cargo run --release init application service-test-bun-application -d postgresql -f biome -l oxlint -v zod -F express -r bun -t vitest -s billing-base -s iam-base -D "Test service" -A "Rohin Bhargava" -L "MIT"
+RUST_BACKTRACE=1 cargo run --release init application service-test-bun-application -d postgresql -f biome -l oxlint -v zod -F express -r bun -t vitest -m billing-base -m iam-base -D "Test service" -A "Rohin Bhargava" -L "MIT"
 RUST_BACKTRACE=1 cargo run --release init module -m iam -d postgresql -p service-test-bun-application
 RUST_BACKTRACE=1 cargo run --release init module -m billing -d postgresql -p service-test-bun-application
 

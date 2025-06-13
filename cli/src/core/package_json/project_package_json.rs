@@ -168,6 +168,7 @@ pub(crate) struct ProjectDependencies {
     pub(crate) forklaunch_interfaces_worker: Option<String>,
     pub(crate) forklaunch_infrastructure_redis: Option<String>,
     pub(crate) forklaunch_infrastructure_s3: Option<String>,
+    pub(crate) forklaunch_universal_sdk: Option<String>,
     pub(crate) forklaunch_validator: Option<String>,
     pub(crate) mikro_orm_core: Option<String>,
     pub(crate) mikro_orm_migrations: Option<String>,
@@ -249,6 +250,9 @@ impl Serialize for ProjectDependencies {
         }
         if let Some(ref v) = self.forklaunch_interfaces_worker {
             map.serialize_entry("@forklaunch/interfaces-worker", v)?;
+        }
+        if let Some(ref v) = self.forklaunch_universal_sdk {
+            map.serialize_entry("@forklaunch/universal-sdk", v)?;
         }
         if let Some(ref v) = self.forklaunch_validator {
             map.serialize_entry("@forklaunch/validator", v)?;
@@ -459,6 +463,7 @@ impl<'de> Deserialize<'de> for ProjectDependencies {
                         "@forklaunch/interfaces-worker" => {
                             deps.forklaunch_interfaces_worker = Some(value)
                         }
+                        "@forklaunch/universal-sdk" => deps.forklaunch_universal_sdk = Some(value),
                         "@forklaunch/validator" => deps.forklaunch_validator = Some(value),
                         "@mikro-orm/core" => deps.mikro_orm_core = Some(value),
                         "@mikro-orm/reflection" => deps.mikro_orm_reflection = Some(value),
@@ -487,7 +492,7 @@ impl<'de> Deserialize<'de> for ProjectDependencies {
     }
 }
 
-#[derive(Debug, Serialize, Default)]
+#[derive(Debug, Serialize, Default, Clone)]
 pub(crate) struct ProjectDevDependencies {
     #[serde(rename = "@biomejs/biome", skip_serializing_if = "Option::is_none")]
     pub(crate) biome: Option<String>,

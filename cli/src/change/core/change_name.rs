@@ -4,6 +4,7 @@ use anyhow::{Result, bail};
 use convert_case::{Case, Casing};
 use indexmap::IndexMap;
 use serde_yml::{from_value, to_value};
+use termcolor::StandardStream;
 use walkdir::WalkDir;
 
 use super::clean_application::clean_application;
@@ -31,8 +32,9 @@ pub(crate) fn change_name_in_files(
     confirm: bool,
     project_entry: &mut ProjectEntry,
     rendered_templates_cache: &mut RenderedTemplatesCache,
+    stdout: &mut StandardStream,
 ) -> Result<Vec<RemovalTemplate>> {
-    clean_application(base_path.parent().unwrap(), runtime, confirm)?;
+    clean_application(base_path.parent().unwrap(), runtime, confirm, stdout)?;
 
     let mut removal_templates = Vec::new();
 
@@ -119,6 +121,7 @@ pub(crate) fn change_name(
     docker_compose: Option<&mut DockerCompose>,
     rendered_templates_cache: &mut RenderedTemplatesCache,
     removal_templates: &mut Vec<RemovalTemplate>,
+    stdout: &mut StandardStream,
 ) -> Result<MoveTemplate> {
     let existing_name = base_path.file_name().unwrap().to_string_lossy().to_string();
 
@@ -335,6 +338,7 @@ pub(crate) fn change_name(
         confirm,
         project_entry,
         rendered_templates_cache,
+        stdout,
     )?);
 
     Ok(MoveTemplate {

@@ -54,6 +54,7 @@ fn change_name(
     project_package_json: &mut ProjectPackageJson,
     rendered_templates_cache: &mut RenderedTemplatesCache,
     removal_templates: &mut Vec<RemovalTemplate>,
+    stdout: &mut StandardStream,
 ) -> Result<MoveTemplate> {
     change_name_core(
         base_path,
@@ -65,6 +66,7 @@ fn change_name(
         None,
         rendered_templates_cache,
         removal_templates,
+        stdout,
     )
 }
 
@@ -233,6 +235,7 @@ impl CliCommand for LibraryCommand {
                 &mut project_json_to_write,
                 &mut rendered_templates_cache,
                 &mut removal_templates,
+                &mut stdout,
             )?);
         }
 

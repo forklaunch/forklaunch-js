@@ -85,6 +85,7 @@ fn change_name(
     docker_compose: &mut DockerCompose,
     rendered_templates_cache: &mut RenderedTemplatesCache,
     removal_templates: &mut Vec<RemovalTemplate>,
+    stdout: &mut StandardStream,
 ) -> Result<MoveTemplate> {
     change_name_core(
         base_path,
@@ -96,6 +97,7 @@ fn change_name(
         Some(docker_compose),
         rendered_templates_cache,
         removal_templates,
+        stdout,
     )
 }
 
@@ -830,6 +832,7 @@ impl CliCommand for ServiceCommand {
                 &mut docker_compose_data,
                 &mut rendered_templates_cache,
                 &mut removal_templates,
+                &mut stdout,
             )?);
         }
 

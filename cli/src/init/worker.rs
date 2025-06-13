@@ -274,7 +274,7 @@ pub(crate) fn generate_worker_package_json(
     let package_json_contents = ProjectPackageJson {
         name: Some(format!(
             "@{}/{}",
-            config_data.app_name, config_data.worker_name
+            config_data.kebab_case_app_name, config_data.kebab_case_name
         )),
         version: Some("0.1.0".to_string()),
         description: Some(config_data.description.to_string()),
@@ -410,6 +410,7 @@ pub(crate) fn generate_worker_package_json(
                 },
                 forklaunch_infrastructure_s3: None,
                 forklaunch_interfaces_worker: Some(WORKER_INTERFACES_VERSION.to_string()),
+                forklaunch_universal_sdk: None,
                 forklaunch_validator: Some(VALIDATOR_VERSION.to_string()),
                 mikro_orm_core: Some(MIKRO_ORM_CORE_VERSION.to_string()),
                 mikro_orm_migrations: if config_data.is_database_enabled {
@@ -657,6 +658,9 @@ impl CliCommand for WorkerCommand {
             // Common fields from ApplicationManifestData
             id: existing_manifest_data.id.clone(),
             app_name: existing_manifest_data.app_name.clone(),
+            camel_case_app_name: existing_manifest_data.camel_case_app_name.clone(),
+            pascal_case_app_name: existing_manifest_data.pascal_case_app_name.clone(),
+            kebab_case_app_name: existing_manifest_data.kebab_case_app_name.clone(),
             app_description: existing_manifest_data.app_description.clone(),
             author: existing_manifest_data.author.clone(),
             cli_version: existing_manifest_data.cli_version.clone(),
