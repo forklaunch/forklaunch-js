@@ -492,7 +492,7 @@ impl<'de> Deserialize<'de> for ProjectDependencies {
     }
 }
 
-#[derive(Debug, Serialize, Default)]
+#[derive(Debug, Serialize, Default, Clone)]
 pub(crate) struct ProjectDevDependencies {
     #[serde(rename = "@biomejs/biome", skip_serializing_if = "Option::is_none")]
     pub(crate) biome: Option<String>,

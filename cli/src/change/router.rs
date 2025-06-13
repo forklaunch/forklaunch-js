@@ -42,6 +42,7 @@ pub(crate) fn change_name(
     runtime: &Runtime,
     project_entry: &mut ProjectEntry,
     rendered_templates_cache: &mut RenderedTemplatesCache,
+    stdout: &mut StandardStream,
 ) -> Result<Vec<RemovalTemplate>> {
     change_name_in_files(
         base_path,
@@ -51,6 +52,7 @@ pub(crate) fn change_name(
         confirm,
         project_entry,
         rendered_templates_cache,
+        stdout,
     )
 }
 
@@ -181,6 +183,7 @@ impl CliCommand for RouterCommand {
                     .find(|project| project.name == project_name)
                     .unwrap(),
                 &mut rendered_templates_cache,
+                &mut stdout,
             )?);
         }
 

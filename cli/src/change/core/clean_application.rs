@@ -1,11 +1,17 @@
-use std::path::Path;
+use std::{io::Write, path::Path, process::Command};
 
 use anyhow::{Result, anyhow};
 use dialoguer::Confirm;
+use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
 
 use crate::constants::Runtime;
 
-pub(crate) fn clean_application(base_path: &Path, runtime: &Runtime, confirm: bool) -> Result<()> {
+pub(crate) fn clean_application(
+    base_path: &Path,
+    runtime: &Runtime,
+    confirm: bool,
+    stdout: &mut StandardStream,
+) -> Result<()> {
     let confirm = if confirm {
         true
     } else {
@@ -20,8 +26,10 @@ pub(crate) fn clean_application(base_path: &Path, runtime: &Runtime, confirm: bo
             Runtime::Node => "pnpm",
             Runtime::Bun => "bun",
         };
-        println!("Running {} clean:purge...", command);
-        let _ = std::process::Command::new(command)
+        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+        writeln!(stdout, "Running {} clean:purge...", command)?;
+        stdout.reset()?;
+        let _ = Command::new(command)
             .arg("clean:purge")
             .current_dir(base_path)
             .output()?;

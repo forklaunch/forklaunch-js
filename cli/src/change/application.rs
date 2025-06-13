@@ -36,7 +36,10 @@ use crate::{
         docker::update_dockerfile_contents,
         format::format_code,
         license::generate_license,
-        manifest::{ProjectType, application::ApplicationManifestData},
+        manifest::{
+            ApplicationInitializationMetadata, InitializableManifestConfig,
+            InitializableManifestConfigMetadata, ProjectType, application::ApplicationManifestData,
+        },
         move_template::{MoveTemplate, MoveTemplateType, move_template_files},
         name::validate_name,
         package_json::{
@@ -100,18 +103,78 @@ fn change_name(
     rendered_templates_cache: &mut RenderedTemplatesCache,
 ) -> Result<()> {
     let existing_name = manifest_data.app_name.clone();
+    let existing_kebab_name = manifest_data.kebab_case_app_name.clone();
 
     manifest_data.app_name = name.to_string();
     manifest_data.kebab_case_app_name = name.to_case(Case::Kebab);
     manifest_data.camel_case_app_name = name.to_case(Case::Camel);
     manifest_data.pascal_case_app_name = name.to_case(Case::Pascal);
 
-    application_json_to_write.name = Some(name.to_case(Case::Kebab));
+    application_json_to_write.name = Some(
+        application_json_to_write
+            .name
+            .as_ref()
+            .unwrap()
+            .replace(&existing_kebab_name, &manifest_data.kebab_case_app_name),
+    );
+    application_json_to_write.description = Some(
+        application_json_to_write
+            .description
+            .as_ref()
+            .unwrap()
+            .replace(&existing_kebab_name, &manifest_data.kebab_case_app_name),
+    );
     for project in project_jsons_to_write.values_mut() {
-        project.name = Some(project.name.as_ref().unwrap().replace(
-            &manifest_data.kebab_case_app_name,
-            &name.to_case(Case::Kebab),
-        ));
+        project.name = Some(
+            project
+                .name
+                .as_ref()
+                .unwrap()
+                .replace(&existing_kebab_name, &manifest_data.kebab_case_app_name),
+        );
+        project.description = Some(
+            project
+                .description
+                .as_ref()
+                .unwrap()
+                .replace(&existing_name, &manifest_data.app_name),
+        );
+        project.dependencies = Some(ProjectDependencies {
+            additional_deps: project
+                .dependencies
+                .as_ref()
+                .unwrap()
+                .additional_deps
+                .iter()
+                .map(|(key, value)| {
+                    (
+                        key.clone()
+                            .replace(&existing_kebab_name, &manifest_data.kebab_case_app_name)
+                            .replace(&existing_name, &manifest_data.app_name),
+                        value.clone(),
+                    )
+                })
+                .collect(),
+            ..project.dependencies.as_ref().unwrap().clone()
+        });
+        project.dev_dependencies = Some(ProjectDevDependencies {
+            additional_deps: project
+                .dev_dependencies
+                .as_ref()
+                .unwrap()
+                .additional_deps
+                .iter()
+                .map(|(key, value)| {
+                    (
+                        key.clone()
+                            .replace(&existing_kebab_name, &manifest_data.kebab_case_app_name)
+                            .replace(&existing_name, &manifest_data.app_name),
+                        value.clone(),
+                    )
+                })
+                .collect(),
+            ..project.dev_dependencies.as_ref().unwrap().clone()
+        });
     }
 
     let mut ignore_pattern_stack: Vec<Vec<String>> = Vec::new();
@@ -141,7 +204,9 @@ fn change_name(
                     ignore_pattern_stack.pop();
                 }
             }
-        } else if entry.file_type().is_file() {
+        } else if entry.file_type().is_file()
+            && entry.file_name().to_str().unwrap() != "package.json"
+        {
             if should_ignore(relative_path, &ignore_pattern_stack) {
                 continue;
             }
@@ -149,7 +214,7 @@ fn change_name(
             if let Some(rendered_template) = rendered_templates_cache.get(path)? {
                 let contents = rendered_template.content.clone();
 
-                let new_contents = contents
+                let mut new_contents = contents
                     .replace(
                         format!("@{}", &existing_name).as_str(),
                         format!("@{}", name).as_str(),
@@ -162,6 +227,23 @@ fn change_name(
                         format!("/{}", &existing_name).as_str(),
                         format!("/{}", name).as_str(),
                     );
+
+                for case in [Case::Kebab, Case::Camel, Case::Pascal] {
+                    new_contents = new_contents
+                        .replace(
+                            format!("@{}", &existing_name.to_case(case)).as_str(),
+                            format!("@{}", name.to_case(case)).as_str(),
+                        )
+                        .replace(
+                            format!("{}-", &existing_name.to_case(case)).as_str(),
+                            format!("{}-", name.to_case(case)).as_str(),
+                        )
+                        .replace(
+                            format!("/{}", &existing_name.to_case(case)).as_str(),
+                            format!("/{}", name.to_case(case)).as_str(),
+                        );
+                }
+
                 if contents != new_contents {
                     rendered_templates_cache.insert(
                         path.to_string_lossy(),
@@ -1471,10 +1553,16 @@ impl CliCommand for ApplicationCommand {
 
         let config_path = &base_path.join(".forklaunch").join("manifest.toml");
 
-        let mut manifest_data: ApplicationManifestData = toml::from_str(
+        let mut manifest_data = toml::from_str::<ApplicationManifestData>(
             &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
-        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
+        .initialize(InitializableManifestConfigMetadata::Application(
+            ApplicationInitializationMetadata {
+                app_name: base_path.file_name().unwrap().to_string_lossy().to_string(),
+                database: None,
+            },
+        ));
 
         let name = matches.get_one::<String>("name");
         let formatter = matches.get_one::<String>("formatter");
@@ -1688,7 +1776,12 @@ impl CliCommand for ApplicationCommand {
             .collect();
 
         if let Some(name) = name {
-            clean_application(&base_path, &manifest_data.runtime.parse()?, confirm)?;
+            clean_application(
+                &base_path,
+                &manifest_data.runtime.parse()?,
+                confirm,
+                &mut stdout,
+            )?;
 
             change_name(
                 &mut manifest_data,
@@ -1753,7 +1846,12 @@ impl CliCommand for ApplicationCommand {
         }
 
         if let Some(runtime) = runtime {
-            clean_application(&base_path, &manifest_data.runtime.parse()?, confirm)?;
+            clean_application(
+                &base_path,
+                &manifest_data.runtime.parse()?,
+                confirm,
+                &mut stdout,
+            )?;
 
             let (runtime_removal_templates, runtime_symlink_templates) = change_runtime(
                 &mut line_editor,

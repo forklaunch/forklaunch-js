@@ -39,12 +39,16 @@ impl InitializableManifestConfig for ApplicationManifestData {
             _ => unreachable!(),
         };
 
+        let initialized_application_manifest_data = Self {
+            camel_case_app_name: metadata.app_name.clone().to_case(Case::Camel),
+            pascal_case_app_name: metadata.app_name.clone().to_case(Case::Pascal),
+            kebab_case_app_name: metadata.app_name.clone().to_case(Case::Kebab),
+            ..self.clone()
+        };
+
         if let Some(database) = metadata.database {
             let parsed_database = database.parse::<Database>().unwrap();
             return Self {
-                camel_case_app_name: metadata.app_name.clone().to_case(Case::Camel),
-                pascal_case_app_name: metadata.app_name.clone().to_case(Case::Pascal),
-                kebab_case_app_name: metadata.app_name.clone().to_case(Case::Kebab),
                 database: parsed_database.to_string(),
 
                 is_postgres: parsed_database == Database::PostgreSQL,
@@ -59,9 +63,9 @@ impl InitializableManifestConfig for ApplicationManifestData {
                     || parsed_database == Database::BetterSQLite
                     || parsed_database == Database::LibSQL,
 
-                ..self.clone()
+                ..initialized_application_manifest_data
             };
         }
-        self.clone()
+        initialized_application_manifest_data
     }
 }
