@@ -135,8 +135,11 @@ macro_rules! internal_config_struct {
             $vis id: String,
             $vis cli_version: String,
             $vis app_name: String,
+            #[serde(skip_serializing, skip_deserializing)]
             $vis camel_case_app_name: String,
+            #[serde(skip_serializing, skip_deserializing)]
             $vis pascal_case_app_name: String,
+            #[serde(skip_serializing, skip_deserializing)]
             $vis kebab_case_app_name: String,
             $vis app_description: String,
             $vis linter: String,

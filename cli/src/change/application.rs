@@ -10,6 +10,7 @@ use std::{
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, Command};
+use convert_case::{Case, Casing};
 use dialoguer::{MultiSelect, theme::ColorfulTheme};
 use glob::Pattern;
 use ramhorns::Template;
@@ -101,16 +102,16 @@ fn change_name(
     let existing_name = manifest_data.app_name.clone();
 
     manifest_data.app_name = name.to_string();
+    manifest_data.kebab_case_app_name = name.to_case(Case::Kebab);
+    manifest_data.camel_case_app_name = name.to_case(Case::Camel);
+    manifest_data.pascal_case_app_name = name.to_case(Case::Pascal);
 
-    application_json_to_write.name = Some(name.to_string());
+    application_json_to_write.name = Some(name.to_case(Case::Kebab));
     for project in project_jsons_to_write.values_mut() {
-        project.name = Some(
-            project
-                .name
-                .as_ref()
-                .unwrap()
-                .replace(&manifest_data.app_name, name),
-        );
+        project.name = Some(project.name.as_ref().unwrap().replace(
+            &manifest_data.kebab_case_app_name,
+            &name.to_case(Case::Kebab),
+        ));
     }
 
     let mut ignore_pattern_stack: Vec<Vec<String>> = Vec::new();
