@@ -27,13 +27,14 @@ use crate::{
             ManifestData, ProjectType, ResourceInventory, add_project_definition_to_manifest,
             application::ApplicationManifestData, service::ServiceManifestData,
         },
+        modules::{ModuleConfig, validate_modules},
         package_json::add_project_definition_to_package_json,
         pnpm_workspace::add_project_definition_to_pnpm_workspace,
         rendered_template::{RenderedTemplate, write_rendered_templates},
         symlinks::generate_symlinks,
         template::{PathIO, generate_with_template, get_routers_from_standard_package},
     },
-    prompt::{ArrayCompleter, prompt_with_validation, prompt_without_validation},
+    prompt::{ArrayCompleter, prompt_with_validation},
 };
 
 #[derive(Debug)]
@@ -102,13 +103,24 @@ impl CliCommand for ModuleCommand {
         )
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
 
-        let module: Module = prompt_without_validation(
+        let module: Module = prompt_with_validation(
             &mut line_editor,
             &mut stdout,
             "module",
             matches,
             "module",
             Some(&Module::VARIANTS),
+            |input| {
+                let mut modules = existing_manifest_data.projects.iter().filter_map(|project| {
+                    if let Some(variant) = &project.variant {
+                        return variant.parse::<Module>().ok()
+                    }
+                    None
+                }).collect::<Vec<Module>>();
+                modules.push(input.parse().unwrap());
+                validate_modules(&modules, &mut ModuleConfig::default()).is_ok()
+            },
+            |input| format!("Conflicting module type selected. You will not be able to add this module without deleting the existing module, {}", get_service_module_name(&input.parse().unwrap())),
         )?
         .parse()?;
 

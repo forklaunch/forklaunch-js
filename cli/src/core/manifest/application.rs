@@ -1,3 +1,4 @@
+use convert_case::{Case, Casing};
 use ramhorns::Content;
 use serde::{Deserialize, Serialize};
 
@@ -7,6 +8,13 @@ use crate::{config_struct, constants::Database};
 config_struct!(
     #[derive(Debug, Serialize, Content, Clone)]
     pub(crate) struct ApplicationManifestData {
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) camel_case_app_name: String,
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) pascal_case_app_name: String,
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) kebab_case_app_name: String,
+
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) database: String,
 
@@ -41,6 +49,9 @@ impl InitializableManifestConfig for ApplicationManifestData {
         if let Some(database) = metadata.database {
             let parsed_database = database.parse::<Database>().unwrap();
             return Self {
+                camel_case_app_name: metadata.app_name.clone().to_case(Case::Camel),
+                pascal_case_app_name: metadata.app_name.clone().to_case(Case::Pascal),
+                kebab_case_app_name: metadata.app_name.clone().to_case(Case::Kebab),
                 database: parsed_database.to_string(),
 
                 is_postgres: parsed_database == Database::PostgreSQL,

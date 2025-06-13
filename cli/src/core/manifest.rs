@@ -54,6 +54,7 @@ pub(crate) trait ProjectManifestConfig {
 #[derive(Debug)]
 
 pub(crate) struct ApplicationInitializationMetadata {
+    pub(crate) app_name: String,
     pub(crate) database: Option<String>,
 }
 

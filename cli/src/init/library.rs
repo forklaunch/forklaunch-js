@@ -31,9 +31,9 @@ use crate::{
         package_json::{
             add_project_definition_to_package_json,
             package_json_constants::{
-                ESLINT_VERSION, PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT, TSX_VERSION,
-                TYPESCRIPT_ESLINT_VERSION, project_clean_script, project_format_script,
-                project_lint_fix_script, project_lint_script, project_test_script,
+                PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT, project_clean_script,
+                project_format_script, project_lint_fix_script, project_lint_script,
+                project_test_script,
             },
             project_package_json::{ProjectDevDependencies, ProjectPackageJson, ProjectScripts},
         },
@@ -192,9 +192,6 @@ fn generate_library_package_json(
             ..Default::default()
         }),
         dev_dependencies: Some(ProjectDevDependencies {
-            eslint: Some(ESLINT_VERSION.to_string()),
-            tsx: Some(TSX_VERSION.to_string()),
-            typescript_eslint: Some(TYPESCRIPT_ESLINT_VERSION.to_string()),
             ..Default::default()
         }),
         ..Default::default()
