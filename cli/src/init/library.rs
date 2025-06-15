@@ -51,7 +51,7 @@ use crate::{
 fn generate_basic_library(
     library_name: &String,
     base_path: &Path,
-    config_data: &mut LibraryManifestData,
+    manifest_data: &mut LibraryManifestData,
     stdout: &mut StandardStream,
     dryrun: bool,
 ) -> Result<()> {
@@ -73,20 +73,20 @@ fn generate_basic_library(
     let mut rendered_templates = generate_with_template(
         None,
         &template_dir,
-        &ManifestData::Library(&config_data),
+        &ManifestData::Library(&manifest_data),
         &ignore_files,
         &ignore_dirs,
         &preserve_files,
         dryrun,
     )?;
-    rendered_templates.push(generate_library_package_json(config_data, &output_path)?);
+    rendered_templates.push(generate_library_package_json(manifest_data, &output_path)?);
     rendered_templates
         .extend(generate_tsconfig(&output_path).with_context(|| ERROR_FAILED_TO_CREATE_TSCONFIG)?);
     rendered_templates.extend(
         generate_gitignore(&output_path).with_context(|| ERROR_FAILED_TO_CREATE_GITIGNORE)?,
     );
     rendered_templates.extend(
-        add_library_to_artifacts(config_data, base_path)
+        add_library_to_artifacts(manifest_data, base_path)
             .with_context(|| "Failed to add library metadata to artifacts")?,
     );
 
@@ -96,7 +96,7 @@ fn generate_basic_library(
     generate_symlinks(
         Some(base_path),
         &Path::new(&template_dir.output_path),
-        config_data,
+        manifest_data,
         dryrun,
     )
     .with_context(|| ERROR_FAILED_TO_CREATE_SYMLINKS)?;
@@ -105,12 +105,12 @@ fn generate_basic_library(
 }
 
 fn add_library_to_artifacts(
-    config_data: &mut LibraryManifestData,
+    manifest_data: &mut LibraryManifestData,
     base_path: &Path,
 ) -> Result<Vec<RenderedTemplate>> {
     let forklaunch_definition_buffer = add_project_definition_to_manifest(
         ProjectType::Library,
-        config_data,
+        manifest_data,
         None,
         None,
         None,
@@ -118,7 +118,7 @@ fn add_library_to_artifacts(
     )
     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
 
-    let runtime = config_data.runtime.parse()?;
+    let runtime = manifest_data.runtime.parse()?;
 
     let mut package_json_buffer: Option<String> = None;
     let mut pnpm_workspace_buffer: Option<String> = None;
@@ -126,13 +126,13 @@ fn add_library_to_artifacts(
     match runtime {
         Runtime::Bun => {
             package_json_buffer = Some(
-                add_project_definition_to_package_json(base_path, config_data)
+                add_project_definition_to_package_json(base_path, manifest_data)
                     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON)?,
             );
         }
         Runtime::Node => {
             pnpm_workspace_buffer = Some(
-                add_project_definition_to_pnpm_workspace(base_path, config_data)
+                add_project_definition_to_pnpm_workspace(base_path, manifest_data)
                     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?,
             );
         }
@@ -163,11 +163,11 @@ fn add_library_to_artifacts(
 }
 
 fn generate_library_package_json(
-    config_data: &LibraryManifestData,
+    manifest_data: &LibraryManifestData,
     base_path: &Path,
 ) -> Result<RenderedTemplate> {
     let test_framework: Option<TestFramework> =
-        if let Some(test_framework) = &config_data.test_framework {
+        if let Some(test_framework) = &manifest_data.test_framework {
             Some(test_framework.parse()?)
         } else {
             None
@@ -175,22 +175,22 @@ fn generate_library_package_json(
     let package_json_buffer = ProjectPackageJson {
         name: Some(format!(
             "@{}/{}",
-            config_data.kebab_case_app_name, config_data.kebab_case_name
+            manifest_data.kebab_case_app_name, manifest_data.kebab_case_name
         )),
         version: Some("0.1.0".to_string()),
-        description: Some(config_data.description.clone()),
+        description: Some(manifest_data.description.clone()),
         keywords: Some(vec![]),
-        license: Some(config_data.license.clone()),
-        author: Some(config_data.author.clone()),
+        license: Some(manifest_data.license.clone()),
+        author: Some(manifest_data.author.clone()),
         types: None,
         scripts: Some(ProjectScripts {
             build: Some(PROJECT_BUILD_SCRIPT.to_string()),
-            clean: Some(project_clean_script(&config_data.runtime.parse()?)),
+            clean: Some(project_clean_script(&manifest_data.runtime.parse()?)),
             docs: Some(PROJECT_DOCS_SCRIPT.to_string()),
-            format: Some(project_format_script(&config_data.formatter.parse()?)),
-            lint: Some(project_lint_script(&config_data.linter.parse()?)),
-            lint_fix: Some(project_lint_fix_script(&config_data.linter.parse()?)),
-            test: project_test_script(&config_data.runtime.parse()?, &test_framework),
+            format: Some(project_format_script(&manifest_data.formatter.parse()?)),
+            lint: Some(project_lint_script(&manifest_data.linter.parse()?)),
+            lint_fix: Some(project_lint_fix_script(&manifest_data.linter.parse()?)),
+            test: project_test_script(&manifest_data.runtime.parse()?, &test_framework),
             ..Default::default()
         }),
         dev_dependencies: Some(ProjectDevDependencies {
@@ -292,7 +292,7 @@ impl CliCommand for LibraryCommand {
             None,
         )?;
 
-        let mut config_data: LibraryManifestData = LibraryManifestData {
+        let mut manifest_data: LibraryManifestData = LibraryManifestData {
             // Common fields from ApplicationManifestData
             id: existing_manifest_data.id.clone(),
             app_name: existing_manifest_data.app_name.clone(),
@@ -335,7 +335,7 @@ impl CliCommand for LibraryCommand {
         generate_basic_library(
             &library_name,
             &base_path,
-            &mut config_data,
+            &mut manifest_data,
             &mut stdout,
             dryrun,
         )
@@ -345,7 +345,7 @@ impl CliCommand for LibraryCommand {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
             writeln!(stdout, "{} initialized successfully!", library_name)?;
             stdout.reset()?;
-            format_code(&base_path, &config_data.runtime.parse()?);
+            format_code(&base_path, &manifest_data.runtime.parse()?);
         }
 
         Ok(())

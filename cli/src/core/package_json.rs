@@ -34,7 +34,7 @@ pub(crate) fn add_project_definition_to_package_json<
     T: Content + ManifestConfig + ProjectManifestConfig + InitializableManifestConfig + Serialize,
 >(
     base_path: &Path,
-    config_data: &T,
+    manifest_data: &T,
 ) -> Result<String> {
     let mut full_package_json: ApplicationPackageJson = from_str(
         &read_to_string(base_path.join("package.json"))
@@ -43,8 +43,8 @@ pub(crate) fn add_project_definition_to_package_json<
     .with_context(|| ERROR_FAILED_TO_PARSE_PACKAGE_JSON)?;
 
     if let Some(workspaces) = full_package_json.workspaces.as_mut() {
-        if !workspaces.contains(&config_data.name()) {
-            workspaces.push(config_data.name().clone());
+        if !workspaces.contains(&manifest_data.name()) {
+            workspaces.push(manifest_data.name().clone());
         }
     }
 
@@ -53,11 +53,11 @@ pub(crate) fn add_project_definition_to_package_json<
             .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON)?
             .as_str(),
     )?
-    .render(&config_data))
+    .render(&manifest_data))
 }
 
 pub(crate) fn update_application_package_json(
-    config_data: &ManifestData,
+    manifest_data: &ManifestData,
     base_path: &Path,
     existing_package_json: Option<String>,
 ) -> Result<Option<RenderedTemplate>> {
@@ -69,7 +69,7 @@ pub(crate) fn update_application_package_json(
     )
     .with_context(|| ERROR_FAILED_TO_PARSE_PACKAGE_JSON)?;
 
-    if let ManifestData::Worker(worker_data) = config_data {
+    if let ManifestData::Worker(worker_data) = manifest_data {
         if !worker_data.is_database_enabled {
             return Ok(Some(RenderedTemplate {
                 path: base_path.join("package.json"),
@@ -81,13 +81,13 @@ pub(crate) fn update_application_package_json(
 
     let scripts = full_package_json.scripts.as_mut().unwrap();
 
-    let database = match config_data {
+    let database = match manifest_data {
         ManifestData::Service(service_data) => service_data.database.to_string(),
         ManifestData::Worker(worker_data) => worker_data.database.clone().unwrap(),
         _ => bail!(ERROR_UNSUPPORTED_DATABASE),
     };
 
-    let is_mongo = match config_data {
+    let is_mongo = match manifest_data {
         ManifestData::Service(service_data) => service_data.is_mongo,
         ManifestData::Worker(worker_data) => worker_data.is_mongo,
         _ => false,

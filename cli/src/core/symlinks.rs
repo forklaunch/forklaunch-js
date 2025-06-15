@@ -33,7 +33,7 @@ fn create_symlink(
 pub(crate) fn generate_symlinks<T: Content + ManifestConfig>(
     base_path_dir: Option<&Path>,
     path_dir: &Path,
-    config_data: &mut T,
+    manifest_data: &mut T,
     dryrun: bool,
 ) -> Result<()> {
     let current_path_dir = current_dir().context(ERROR_FAILED_TO_GET_CWD)?;
@@ -47,7 +47,7 @@ pub(crate) fn generate_symlinks<T: Content + ManifestConfig>(
     let relative_path =
         diff_paths(source_path, current_path).expect("Failed to compute relative path");
 
-    match config_data.formatter().parse()? {
+    match manifest_data.formatter().parse()? {
         Formatter::Prettier => {
             if !current_path.join(".prettierignore").exists() {
                 create_symlink(".prettierignore", &relative_path, &current_path, dryrun)?;
@@ -64,7 +64,7 @@ pub(crate) fn generate_symlinks<T: Content + ManifestConfig>(
         }
     }
 
-    match config_data.linter().parse()? {
+    match manifest_data.linter().parse()? {
         Linter::Eslint => {
             if !current_path.join("eslint.config.mjs").exists() {
                 create_symlink("eslint.config.mjs", &relative_path, &current_path, dryrun)?;
@@ -77,7 +77,7 @@ pub(crate) fn generate_symlinks<T: Content + ManifestConfig>(
         }
     }
 
-    match config_data.test_framework() {
+    match manifest_data.test_framework() {
         Some(test_framework) => match test_framework.parse()? {
             TestFramework::Vitest => {
                 if !current_path.join("vitest.config.ts").exists() {

@@ -611,29 +611,29 @@ pub(crate) fn add_kafka_to_docker_compose<'a>(
 }
 
 pub(crate) fn add_database_to_docker_compose(
-    config_data: &ManifestData,
+    manifest_data: &ManifestData,
     docker_compose: &mut DockerCompose,
     environment: &mut IndexMap<String, String>,
 ) -> Result<()> {
-    if let ManifestData::Worker(worker_data) = config_data {
+    if let ManifestData::Worker(worker_data) = manifest_data {
         if !worker_data.is_database_enabled {
             return Ok(());
         }
     }
 
-    let app_name = match config_data {
+    let app_name = match manifest_data {
         ManifestData::Service(service_data) => &service_data.app_name,
         ManifestData::Worker(worker_data) => &worker_data.app_name,
         _ => unreachable!(),
     };
 
-    let database = match config_data {
+    let database = match manifest_data {
         ManifestData::Service(service_data) => &service_data.database,
         ManifestData::Worker(worker_data) => &worker_data.database.as_ref().unwrap(),
         _ => unreachable!(),
     };
 
-    let name = match config_data {
+    let name = match manifest_data {
         ManifestData::Service(service_data) => &service_data.service_name,
         ManifestData::Worker(worker_data) => &worker_data.worker_name,
         _ => unreachable!(),
@@ -1070,24 +1070,24 @@ fn create_base_service(
 }
 
 pub(crate) fn add_service_definition_to_docker_compose(
-    config_data: &ServiceManifestData,
+    manifest_data: &ServiceManifestData,
     base_path: &Path,
     docker_compose_string: Option<String>,
 ) -> Result<String> {
     let (mut docker_compose, port_number, mut environment) = add_base_definition_to_docker_compose(
-        &config_data.app_name,
-        &config_data.service_name,
+        &manifest_data.app_name,
+        &manifest_data.service_name,
         base_path,
         docker_compose_string,
     )?;
 
-    if config_data.is_iam {
+    if manifest_data.is_iam {
         environment.insert(
             "PASSWORD_ENCRYPTION_PUBLIC_KEY_PATH".to_string(),
             "./public.pem".to_string(),
         );
     }
-    if config_data.is_better_auth {
+    if manifest_data.is_better_auth {
         environment.insert(
             "PASSWORD_ENCRYPTION_SECRET_PATH".to_string(),
             "./private.pem".to_string(),
@@ -1099,15 +1099,19 @@ pub(crate) fn add_service_definition_to_docker_compose(
         );
     }
 
-    if config_data.is_cache_enabled {
-        add_redis_to_docker_compose(&config_data.app_name, &mut docker_compose, &mut environment)
-            .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
+    if manifest_data.is_cache_enabled {
+        add_redis_to_docker_compose(
+            &manifest_data.app_name,
+            &mut docker_compose,
+            &mut environment,
+        )
+        .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
     }
 
-    if config_data.is_s3_enabled {
+    if manifest_data.is_s3_enabled {
         add_s3_to_docker_compose(
-            &config_data.app_name,
-            &config_data.service_name,
+            &manifest_data.app_name,
+            &manifest_data.service_name,
             &mut docker_compose,
             &mut environment,
         )
@@ -1115,7 +1119,7 @@ pub(crate) fn add_service_definition_to_docker_compose(
     }
 
     add_database_to_docker_compose(
-        &ManifestData::Service(config_data),
+        &ManifestData::Service(manifest_data),
         &mut docker_compose,
         &mut environment,
     )
@@ -1124,32 +1128,32 @@ pub(crate) fn add_service_definition_to_docker_compose(
     let volumes = vec![
         format!(
             "./{}:/{}/{}",
-            config_data.service_name, config_data.app_name, config_data.service_name
+            manifest_data.service_name, manifest_data.app_name, manifest_data.service_name
         ),
         format!(
             "/{}/{}/dist",
-            config_data.app_name, config_data.service_name
+            manifest_data.app_name, manifest_data.service_name
         ),
         format!(
             "/{}/{}/node_modules",
-            config_data.app_name, config_data.service_name
+            manifest_data.app_name, manifest_data.service_name
         ),
-        format!("/{}/core/node_modules", config_data.app_name),
-        format!("/{}/node_modules", config_data.app_name),
+        format!("/{}/core/node_modules", manifest_data.app_name),
+        format!("/{}/node_modules", manifest_data.app_name),
     ];
 
-    let service_name = config_data.service_name.clone();
+    let service_name = manifest_data.service_name.clone();
     if !docker_compose.services.contains_key(&service_name) {
         docker_compose.services.insert(
             service_name,
             create_base_service(
-                &config_data.app_name,
-                &config_data.service_name,
-                &config_data.runtime,
-                &Some(config_data.database.clone()),
-                config_data.is_cache_enabled,
-                config_data.is_s3_enabled,
-                config_data.is_in_memory_database,
+                &manifest_data.app_name,
+                &manifest_data.service_name,
+                &manifest_data.runtime,
+                &Some(manifest_data.database.clone()),
+                manifest_data.is_cache_enabled,
+                manifest_data.is_s3_enabled,
+                manifest_data.is_in_memory_database,
                 Some(port_number),
                 environment,
                 volumes,
@@ -1165,36 +1169,43 @@ pub(crate) fn add_service_definition_to_docker_compose(
 }
 
 pub(crate) fn add_worker_definition_to_docker_compose(
-    config_data: &WorkerManifestData,
+    manifest_data: &WorkerManifestData,
     base_path: &Path,
     docker_compose_string: Option<String>,
 ) -> Result<String> {
     let (mut docker_compose, port_number, mut environment) = add_base_definition_to_docker_compose(
-        &config_data.app_name,
-        &config_data.worker_name,
+        &manifest_data.app_name,
+        &manifest_data.worker_name,
         base_path,
         docker_compose_string,
     )?;
 
     environment.insert(
         "QUEUE_NAME".to_string(),
-        format!("{}-{}-dev", &config_data.app_name, &config_data.worker_name),
+        format!(
+            "{}-{}-dev",
+            &manifest_data.app_name, &manifest_data.worker_name
+        ),
     );
 
-    if config_data.is_cache_enabled {
-        add_redis_to_docker_compose(&config_data.app_name, &mut docker_compose, &mut environment)
-            .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
-    } else if config_data.is_database_enabled {
-        add_database_to_docker_compose(
-            &ManifestData::Worker(config_data),
+    if manifest_data.is_cache_enabled {
+        add_redis_to_docker_compose(
+            &manifest_data.app_name,
             &mut docker_compose,
             &mut environment,
         )
         .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
-    } else if config_data.is_kafka_enabled {
+    } else if manifest_data.is_database_enabled {
+        add_database_to_docker_compose(
+            &ManifestData::Worker(manifest_data),
+            &mut docker_compose,
+            &mut environment,
+        )
+        .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
+    } else if manifest_data.is_kafka_enabled {
         add_kafka_to_docker_compose(
-            &config_data.app_name,
-            &config_data.worker_name,
+            &manifest_data.app_name,
+            &manifest_data.worker_name,
             &mut docker_compose,
             &mut environment,
         )
@@ -1204,29 +1215,32 @@ pub(crate) fn add_worker_definition_to_docker_compose(
     let volumes = vec![
         format!(
             "./{}:/{}/{}",
-            config_data.worker_name, config_data.app_name, config_data.worker_name
+            manifest_data.worker_name, manifest_data.app_name, manifest_data.worker_name
         ),
-        format!("/{}/{}/dist", config_data.app_name, config_data.worker_name),
+        format!(
+            "/{}/{}/dist",
+            manifest_data.app_name, manifest_data.worker_name
+        ),
         format!(
             "/{}/{}/node_modules",
-            config_data.app_name, config_data.worker_name
+            manifest_data.app_name, manifest_data.worker_name
         ),
-        format!("/{}/core/node_modules", config_data.app_name),
-        format!("/{}/node_modules", config_data.app_name),
+        format!("/{}/core/node_modules", manifest_data.app_name),
+        format!("/{}/node_modules", manifest_data.app_name),
     ];
 
-    let server_service_name = format!("{}-server", config_data.worker_name);
+    let server_service_name = format!("{}-server", manifest_data.worker_name);
     if !docker_compose.services.contains_key(&server_service_name) {
         docker_compose.services.insert(
             server_service_name.clone(),
             create_base_service(
-                &config_data.app_name,
-                &config_data.worker_name,
-                &config_data.runtime,
-                &config_data.database,
-                config_data.is_cache_enabled,
+                &manifest_data.app_name,
+                &manifest_data.worker_name,
+                &manifest_data.runtime,
+                &manifest_data.database,
+                manifest_data.is_cache_enabled,
                 false,
-                config_data.is_in_memory_database,
+                manifest_data.is_in_memory_database,
                 Some(port_number),
                 environment.clone(),
                 volumes.clone(),
@@ -1237,18 +1251,18 @@ pub(crate) fn add_worker_definition_to_docker_compose(
         );
     }
 
-    let worker_service_name = format!("{}-worker", config_data.worker_name);
+    let worker_service_name = format!("{}-worker", manifest_data.worker_name);
     if !docker_compose.services.contains_key(&worker_service_name) {
         docker_compose.services.insert(
             worker_service_name.clone(),
             create_base_service(
-                &config_data.app_name,
-                &config_data.worker_name,
-                &config_data.runtime,
-                &config_data.database,
-                config_data.is_cache_enabled,
+                &manifest_data.app_name,
+                &manifest_data.worker_name,
+                &manifest_data.runtime,
+                &manifest_data.database,
+                manifest_data.is_cache_enabled,
                 false,
-                config_data.is_in_memory_database,
+                manifest_data.is_in_memory_database,
                 None,
                 environment.clone(),
                 volumes.clone(),

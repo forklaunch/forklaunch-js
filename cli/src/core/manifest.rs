@@ -322,22 +322,22 @@ pub(crate) fn add_project_definition_to_manifest<
     T: ManifestConfig + ProjectManifestConfig + InitializableManifestConfig + Serialize,
 >(
     r#type: ProjectType,
-    config_data: &mut T,
+    manifest_data: &mut T,
     variant: Option<String>,
     resources: Option<ResourceInventory>,
     routers: Option<Vec<String>>,
     metadata: Option<ProjectMetadata>,
 ) -> Result<String> {
-    let name = config_data.name().to_owned();
-    let description = config_data.description().to_owned();
-    for project in config_data.projects().iter() {
+    let name = manifest_data.name().to_owned();
+    let description = manifest_data.description().to_owned();
+    for project in manifest_data.projects().iter() {
         if project.name == name {
-            return Ok(to_string_pretty(&config_data)
+            return Ok(to_string_pretty(&manifest_data)
                 .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?);
         }
     }
 
-    config_data.projects_mut().push(ProjectEntry {
+    manifest_data.projects_mut().push(ProjectEntry {
         r#type,
         name: name.clone(),
         description,
@@ -347,29 +347,29 @@ pub(crate) fn add_project_definition_to_manifest<
         metadata,
     });
 
-    let app_name = config_data.app_name().to_owned();
-    config_data
+    let app_name = manifest_data.app_name().to_owned();
+    manifest_data
         .project_peer_topology_mut()
         .entry(app_name)
         .or_insert_with(Vec::new)
         .push(name.clone());
 
-    Ok(to_string_pretty(&config_data)
+    Ok(to_string_pretty(&manifest_data)
         .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?)
 }
 
 pub(crate) fn add_router_definition_to_manifest(
-    config_data: &mut RouterManifestData,
+    manifest_data: &mut RouterManifestData,
     serivce_name: &String,
 ) -> Result<(ProjectType, String)> {
-    let name = config_data.router_name.clone();
-    for project in config_data.projects().iter() {
+    let name = manifest_data.router_name.clone();
+    for project in manifest_data.projects().iter() {
         if let Some(routers) = &project.routers {
             for router in routers.iter() {
                 if router == &name {
                     return Ok((
                         project.r#type.clone(),
-                        to_string_pretty(&config_data)
+                        to_string_pretty(&manifest_data)
                             .with_context(|| ERROR_FAILED_TO_ADD_ROUTER_METADATA_TO_MANIFEST)?,
                     ));
                 }
@@ -377,7 +377,7 @@ pub(crate) fn add_router_definition_to_manifest(
         }
     }
 
-    let project = config_data
+    let project = manifest_data
         .projects_mut()
         .iter_mut()
         .find(|project| &project.name == serivce_name)
@@ -391,24 +391,24 @@ pub(crate) fn add_router_definition_to_manifest(
 
     Ok((
         project.r#type.clone(),
-        to_string_pretty(&config_data)
+        to_string_pretty(&manifest_data)
             .with_context(|| ERROR_FAILED_TO_ADD_ROUTER_METADATA_TO_MANIFEST)?,
     ))
 }
 
 pub(crate) fn remove_project_definition_from_manifest(
-    config_data: &mut ApplicationManifestData,
+    manifest_data: &mut ApplicationManifestData,
     project_name: &String,
 ) -> Result<String> {
-    let project = config_data
+    let project = manifest_data
         .projects_mut()
         .iter_mut()
         .position(|project| &project.name == project_name)
         .unwrap();
 
-    config_data.projects_mut().remove(project);
+    manifest_data.projects_mut().remove(project);
 
-    config_data
+    manifest_data
         .project_peer_topology
         .iter_mut()
         .for_each(|(_, values)| {
@@ -417,16 +417,16 @@ pub(crate) fn remove_project_definition_from_manifest(
             }
         });
 
-    Ok(to_string_pretty(&config_data)
+    Ok(to_string_pretty(&manifest_data)
         .with_context(|| ERROR_FAILED_TO_REMOVE_PROJECT_METADATA_FROM_MANIFEST)?)
 }
 
 pub(crate) fn remove_router_definition_from_manifest(
-    config_data: &mut ApplicationManifestData,
+    manifest_data: &mut ApplicationManifestData,
     project_name: &String,
     router_name: &String,
 ) -> Result<String> {
-    config_data.projects.iter_mut().for_each(|project| {
+    manifest_data.projects.iter_mut().for_each(|project| {
         if &project.name == project_name {
             let routers = project.routers.clone().unwrap();
             project.routers.as_mut().unwrap().remove(
@@ -438,6 +438,6 @@ pub(crate) fn remove_router_definition_from_manifest(
         }
     });
 
-    Ok(to_string_pretty(&config_data)
+    Ok(to_string_pretty(&manifest_data)
         .with_context(|| ERROR_FAILED_TO_REMOVE_PROJECT_METADATA_FROM_MANIFEST)?)
 }
