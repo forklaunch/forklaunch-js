@@ -346,7 +346,7 @@ pub(crate) fn change_name(
     if project_entry.r#type == ProjectType::Service || project_entry.r#type == ProjectType::Worker {
         change_project_in_universal_sdk(
             rendered_templates_cache,
-            base_path,
+            base_path.parent().unwrap(),
             &app_name,
             &existing_name,
             &name,
