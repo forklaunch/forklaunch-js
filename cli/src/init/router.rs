@@ -203,16 +203,10 @@ impl CliCommand for RouterCommand {
             .join(".forklaunch")
             .join("manifest.toml");
 
-        let manifest_data = from_str::<RouterManifestData>(
+        let mut manifest_data = from_str::<RouterManifestData>(
             &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
-        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
-        .initialize(InitializableManifestConfigMetadata::Router(
-            RouterInitializationMetadata {
-                project_name: base_path.file_name().unwrap().to_string_lossy().to_string(),
-                router_name: None,
-            },
-        ));
+        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
 
         let router_name = prompt_with_validation(
             &mut line_editor,
@@ -227,6 +221,13 @@ impl CliCommand for RouterCommand {
                     .to_string()
             },
         )?;
+
+        manifest_data = manifest_data.initialize(InitializableManifestConfigMetadata::Router(
+            RouterInitializationMetadata {
+                project_name: base_path.file_name().unwrap().to_string_lossy().to_string(),
+                router_name: Some(router_name.clone()),
+            },
+        ));
 
         let infrastructure: Vec<Infrastructure> = if matches.ids().all(|id| id == "dryrun") {
             prompt_comma_separated_list(
