@@ -23,7 +23,10 @@ use crate::{
     core::{
         base_path::{BasePathLocation, BasePathType, prompt_base_path},
         command::command,
-        manifest::application::ApplicationManifestData,
+        manifest::{
+            ApplicationInitializationMetadata, InitializableManifestConfig,
+            InitializableManifestConfigMetadata, application::ApplicationManifestData,
+        },
         relative_path::get_relative_path,
         rendered_template::{RenderedTemplate, write_rendered_templates},
     },
@@ -158,7 +161,7 @@ fn domain_prefix(package_name: &str) -> &str {
 fn perform_string_replacements(
     app_files: &Vec<DirEntry>,
     base_path: &Path,
-    config_data: &ApplicationManifestData,
+    manifest_data: &ApplicationManifestData,
     dependencies_to_eject: &Vec<String>,
     templates_to_render: &mut Vec<RenderedTemplate>,
 ) -> Result<()> {
@@ -175,7 +178,7 @@ fn perform_string_replacements(
 
             new_content = new_content.replace(
                 "@{{app_name}}/core",
-                format!("@{}/core", config_data.app_name).as_str(),
+                format!("@{}/core", manifest_data.app_name).as_str(),
             );
 
             let relative_path_difference_prefix = match relative_path_difference.to_string_lossy() {
@@ -313,10 +316,17 @@ impl CliCommand for EjectCommand {
             .join(".forklaunch")
             .join("manifest.toml");
 
-        let config_data: ApplicationManifestData = toml::from_str(
+        let mut manifest_data = toml::from_str::<ApplicationManifestData>(
             &read_to_string(config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+
+        manifest_data = manifest_data.initialize(InitializableManifestConfigMetadata::Application(
+            ApplicationInitializationMetadata {
+                app_name: manifest_data.app_name.clone(),
+                database: None,
+            },
+        ));
 
         let package_path = base_path.join("package.json");
 
@@ -356,7 +366,7 @@ impl CliCommand for EjectCommand {
             perform_string_replacements(
                 &app_files,
                 &base_path,
-                &config_data,
+                &manifest_data,
                 &dependencies_to_eject,
                 &mut templates_to_render,
             )?;

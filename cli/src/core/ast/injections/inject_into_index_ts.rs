@@ -1,7 +1,7 @@
 use anyhow::Result;
 use oxc_ast::ast::{Program, Statement};
 
-pub(crate) fn inject_export_into_index_ts<'a>(
+pub(crate) fn inject_into_index_ts_export<'a>(
     index_program: &mut Program<'a>,
     injection_program_ast: &mut Program<'a>,
     router_name_camel_case: &str,

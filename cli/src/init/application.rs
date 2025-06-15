@@ -23,6 +23,7 @@ use crate::{
         HttpFramework, License, Linter, Module, Runtime, TestFramework, Validator,
         get_core_module_description, get_monitoring_module_description, get_service_module_cache,
         get_service_module_description, get_service_module_name,
+        get_universal_sdk_module_description,
     },
     core::{
         command::command,
@@ -41,6 +42,7 @@ use crate::{
             ManifestData, ProjectEntry, ProjectType, ResourceInventory,
             application::ApplicationManifestData, generate_manifest, service::ServiceManifestData,
         },
+        modules::{IamConfig, ModuleConfig, validate_modules},
         name::validate_name,
         package_json::{
             application_package_json::{
@@ -49,15 +51,16 @@ use crate::{
             },
             package_json_constants::{
                 AJV_VERSION, APP_DEV_BUILD_SCRIPT, APP_DEV_SCRIPT, APP_PREPARE_SCRIPT,
-                BETTER_SQLITE3_VERSION, BIOME_VERSION, COMMON_VERSION, CORE_VERSION,
-                DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION, GLOBALS_VERSION, HUSKY_VERSION,
-                HYPER_EXPRESS_VERSION, JEST_TYPES_VERSION, JEST_VERSION, LINT_STAGED_VERSION,
-                MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
-                MIKRO_ORM_REFLECTION_VERSION, NODE_GYP_VERSION, OXLINT_VERSION, PRETTIER_VERSION,
-                PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT, SORT_PACKAGE_JSON_VERSION,
-                SQLITE3_VERSION, TS_JEST_VERSION, TS_NODE_VERSION, TSX_VERSION, TYPEBOX_VERSION,
-                TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION, TYPES_QS_VERSION,
-                TYPES_UUID_VERSION, TYPESCRIPT_ESLINT_VERSION, TYPESCRIPT_VERSION, UUID_VERSION,
+                BETTER_AUTH_VERSION, BETTER_SQLITE3_VERSION, BIOME_VERSION, COMMON_VERSION,
+                CORE_VERSION, DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION, GLOBALS_VERSION,
+                HUSKY_VERSION, HYPER_EXPRESS_VERSION, JEST_TYPES_VERSION, JEST_VERSION,
+                LINT_STAGED_VERSION, MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION,
+                MIKRO_ORM_MIGRATIONS_VERSION, MIKRO_ORM_REFLECTION_VERSION, NODE_GYP_VERSION,
+                OXLINT_VERSION, PRETTIER_VERSION, PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT,
+                SORT_PACKAGE_JSON_VERSION, SQLITE3_VERSION, TS_JEST_VERSION, TS_NODE_VERSION,
+                TSX_VERSION, TYPEBOX_VERSION, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION,
+                TYPES_EXPRESS_VERSION, TYPES_QS_VERSION, TYPES_UUID_VERSION,
+                TYPESCRIPT_ESLINT_VERSION, TYPESCRIPT_VERSION, UNIVERSAL_SDK_VERSION, UUID_VERSION,
                 VALIDATOR_VERSION, VITEST_VERSION, ZOD_VERSION, application_build_script,
                 application_clean_purge_script, application_clean_script, application_docs_script,
                 application_format_script, application_lint_fix_script, application_lint_script,
@@ -73,6 +76,7 @@ use crate::{
         symlinks::generate_symlinks,
         template::{PathIO, generate_with_template, get_routers_from_standard_package},
         token::get_token,
+        universal_sdk::get_universal_sdk_additional_deps,
     },
     prompt::{
         ArrayCompleter, prompt_comma_separated_list, prompt_with_validation,
@@ -90,7 +94,7 @@ fn generate_application_package_json(
         None
     };
     let package_json_contents = ApplicationPackageJson {
-        name: Some(data.app_name.clone()),
+        name: Some(data.kebab_case_app_name.clone()),
         version: Some("0.0.1".to_string()),
         description: Some(data.app_description.clone()),
         keywords: Some(vec![]),
@@ -98,7 +102,10 @@ fn generate_application_package_json(
         author: Some(data.author.clone()),
         workspaces: bun_workspace_projects,
         scripts: Some(ApplicationScripts {
-            build: Some(application_build_script(&data.runtime.parse()?)),
+            build: Some(application_build_script(
+                &data.runtime.parse()?,
+                &data.kebab_case_app_name,
+            )),
             clean: Some(application_clean_script(&data.runtime.parse()?)),
             clean_purge: Some(application_clean_purge_script(&data.runtime.parse()?)),
             database_setup: Some(application_setup_script(&data.runtime.parse()?)),
@@ -306,10 +313,10 @@ impl CliCommand for ApplicationCommand {
                     .value_parser(TestFramework::VARIANTS),
             )
             .arg(
-                Arg::new("services")
-                    .short('s')
-                    .long("services")
-                    .help("Additional services to include")
+                Arg::new("modules")
+                    .short('m')
+                    .long("modules")
+                    .help("Additional modules to include")
                     .value_parser(Module::VARIANTS)
                     .num_args(0..)
                     .action(ArgAction::Append),
@@ -490,24 +497,42 @@ impl CliCommand for ApplicationCommand {
             )
         };
 
-        let services: Vec<Module> = if matches.ids().all(|id| id == "dryrun") {
-            prompt_comma_separated_list(
-                &mut line_editor,
-                "services",
-                matches,
-                &Module::VARIANTS,
-                None,
-                "services",
-                false,
-            )?
-            .iter()
-            .map(|service| service.parse().unwrap())
-            .collect()
-        } else {
-            match matches.get_many::<String>("services") {
-                Some(values) => values.map(|service| service.parse().unwrap()).collect(),
-                None => vec![],
+        let mut global_module_config = ModuleConfig {
+            iam: None,
+            billing: None,
+        };
+        let modules: Vec<Module> = if matches.ids().all(|id| id == "dryrun") {
+            let mut modules_to_test;
+            loop {
+                global_module_config = ModuleConfig {
+                    iam: None,
+                    billing: None,
+                };
+                modules_to_test = prompt_comma_separated_list(
+                    &mut line_editor,
+                    "modules",
+                    matches,
+                    &Module::VARIANTS,
+                    None,
+                    "modules",
+                    false,
+                )?
+                .iter()
+                .map(|module| module.parse().unwrap())
+                .collect();
+
+                if validate_modules(&modules_to_test, &mut global_module_config).is_ok() {
+                    break;
+                }
             }
+            modules_to_test
+        } else {
+            let modules_to_test = match matches.get_many::<String>("modules") {
+                Some(values) => values.map(|module| module.parse().unwrap()).collect(),
+                None => vec![],
+            };
+            validate_modules(&modules_to_test, &mut global_module_config)?;
+            modules_to_test
         };
 
         let description = prompt_without_validation(
@@ -577,8 +602,17 @@ impl CliCommand for ApplicationCommand {
                 routers: None,
                 metadata: None,
             },
+            ProjectEntry {
+                r#type: ProjectType::Library,
+                name: "universal-sdk".to_string(),
+                description: get_universal_sdk_module_description(&name),
+                variant: None,
+                resources: None,
+                routers: None,
+                metadata: None,
+            },
         ];
-        additional_projects.extend(services.clone().into_iter().map(|package| ProjectEntry {
+        additional_projects.extend(modules.clone().into_iter().map(|package| ProjectEntry {
             r#type: ProjectType::Service,
             name: get_service_module_name(&package),
             description: get_service_module_description(&name, &package),
@@ -612,6 +646,9 @@ impl CliCommand for ApplicationCommand {
             cli_version: env!("CARGO_PKG_VERSION").to_string(),
             database: database.to_string(),
             app_name: name.to_string(),
+            camel_case_app_name: name.to_string().to_case(Case::Camel),
+            pascal_case_app_name: name.to_string().to_case(Case::Pascal),
+            kebab_case_app_name: name.to_string().to_case(Case::Kebab),
             formatter: formatter.to_string(),
             linter: linter.to_string(),
             validator: validator.to_string(),
@@ -716,10 +753,13 @@ impl CliCommand for ApplicationCommand {
             .unwrap(),
         );
         for template_dir in template_dirs {
-            let service_data = ServiceManifestData {
+            let mut service_data = ServiceManifestData {
                 id: data.id.clone(),
                 cli_version: data.cli_version.clone(),
                 app_name: data.app_name.clone(),
+                camel_case_app_name: data.camel_case_app_name.clone(),
+                pascal_case_app_name: data.pascal_case_app_name.clone(),
+                kebab_case_app_name: data.kebab_case_app_name.clone(),
                 service_name: template_dir.output_path.to_string(),
                 camel_case_name: template_dir.output_path.to_case(Case::Camel),
                 pascal_case_name: template_dir.output_path.to_case(Case::Pascal),
@@ -738,6 +778,7 @@ impl CliCommand for ApplicationCommand {
                 description: match template_dir.output_path.as_str() {
                     "core" => get_core_module_description(&name),
                     "monitoring" => get_monitoring_module_description(&name),
+                    "universal-sdk" => get_universal_sdk_module_description(&name),
                     _ => get_service_module_description(
                         &name,
                         &template_dir.module_id.clone().unwrap(),
@@ -781,8 +822,17 @@ impl CliCommand for ApplicationCommand {
                 is_better_auth: template_dir.module_id == Some(Module::BetterAuthIam),
             };
 
-            if !HashSet::from(["core".to_string(), "monitoring".to_string()])
-                .contains(&service_data.service_name)
+            if service_data.service_name == "universal-sdk" {
+                service_data.is_iam = global_module_config.iam.is_some();
+                service_data.is_billing = global_module_config.billing.is_some();
+            }
+
+            if !HashSet::from([
+                "core".to_string(),
+                "monitoring".to_string(),
+                "universal-sdk".to_string(),
+            ])
+            .contains(&service_data.service_name)
             {
                 docker_compose_string = Some(add_service_definition_to_docker_compose(
                     &service_data,
@@ -859,12 +909,24 @@ impl CliCommand for ApplicationCommand {
                         forklaunch_core: Some(CORE_VERSION.to_string()),
                         ..Default::default()
                     }),
+                    "universal-sdk" => Some(ProjectDependencies {
+                        forklaunch_common: Some(COMMON_VERSION.to_string()),
+                        forklaunch_universal_sdk: Some(UNIVERSAL_SDK_VERSION.to_string()),
+                        better_auth: if global_module_config
+                            .iam
+                            .as_ref()
+                            .is_some_and(|iam| iam == &IamConfig::BetterAuthIam)
+                        {
+                            Some(BETTER_AUTH_VERSION.to_string())
+                        } else {
+                            None
+                        },
+                        ..Default::default()
+                    }),
                     _ => None,
                 },
                 match service_data.service_name.as_str() {
                     "core" => Some(ProjectDevDependencies {
-                        eslint: Some(ESLINT_VERSION.to_string()),
-                        typescript_eslint: Some(TYPESCRIPT_ESLINT_VERSION.to_string()),
                         types_uuid: Some(TYPES_UUID_VERSION.to_string()),
                         types_express: Some(TYPES_EXPRESS_VERSION.to_string()),
                         types_express_serve_static_core: Some(
@@ -874,6 +936,14 @@ impl CliCommand for ApplicationCommand {
                         ..Default::default()
                     }),
                     "monitoring" => Some(ProjectDevDependencies {
+                        ..Default::default()
+                    }),
+                    "universal-sdk" => Some(ProjectDevDependencies {
+                        additional_deps: get_universal_sdk_additional_deps(
+                            &service_data.app_name,
+                            global_module_config.billing.is_some(),
+                            global_module_config.iam.is_some(),
+                        ),
                         ..Default::default()
                     }),
                     _ => None,
@@ -899,11 +969,22 @@ impl CliCommand for ApplicationCommand {
                         test: project_test_script(&service_data.runtime.parse()?, &test_framework),
                         ..Default::default()
                     }),
+                    "universal-sdk" => Some(ProjectScripts {
+                        build: Some(PROJECT_BUILD_SCRIPT.to_string()),
+                        clean: Some(project_clean_script(&service_data.runtime.parse()?)),
+                        docs: Some(PROJECT_DOCS_SCRIPT.to_string()),
+                        format: Some(project_format_script(&service_data.formatter.parse()?)),
+                        lint: Some(project_lint_script(&service_data.linter.parse()?)),
+                        lint_fix: Some(project_lint_fix_script(&service_data.linter.parse()?)),
+                        test: project_test_script(&service_data.runtime.parse()?, &test_framework),
+                        ..Default::default()
+                    }),
                     _ => None,
                 },
                 match service_data.service_name.as_str() {
                     "core" => Some("lib/index.js".to_string()),
                     "monitoring" => None,
+                    "universal-sdk" => None,
                     _ => None,
                 },
             )?);

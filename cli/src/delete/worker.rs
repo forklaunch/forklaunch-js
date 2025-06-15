@@ -22,12 +22,14 @@ use crate::{
         command::command,
         docker::remove_service_from_docker_compose,
         manifest::{
-            ProjectType, application::ApplicationManifestData,
+            ApplicationInitializationMetadata, InitializableManifestConfig,
+            InitializableManifestConfigMetadata, ProjectType, application::ApplicationManifestData,
             remove_project_definition_from_manifest,
         },
         package_json::remove_project_definition_to_package_json,
         pnpm_workspace::remove_project_definition_to_pnpm_workspace,
         rendered_template::{RenderedTemplate, write_rendered_templates},
+        universal_sdk::remove_project_from_universal_sdk,
     },
     prompt::{ArrayCompleter, prompt_for_confirmation, prompt_with_validation},
 };
@@ -79,7 +81,7 @@ impl CliCommand for WorkerCommand {
             .join(".forklaunch")
             .join("manifest.toml");
 
-        let mut manifest_data: ApplicationManifestData = toml::from_str(
+        let mut manifest_data = toml::from_str::<ApplicationManifestData>(
             &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
@@ -99,6 +101,23 @@ impl CliCommand for WorkerCommand {
             },
             |_| "Worker not found".to_string(),
         )?;
+
+        manifest_data = manifest_data.initialize(InitializableManifestConfigMetadata::Application(
+            ApplicationInitializationMetadata {
+                app_name: base_path.file_name().unwrap().to_string_lossy().to_string(),
+                database: match manifest_data
+                    .projects
+                    .iter()
+                    .find(|project| {
+                        project.name == worker_name && project.r#type == ProjectType::Worker
+                    })
+                    .map(|project| project.resources.as_ref().unwrap())
+                {
+                    Some(resource_inventory) => resource_inventory.database.clone(),
+                    None => None,
+                },
+            },
+        ));
 
         let continue_delete_override = matches.get_flag("continue");
 
@@ -158,6 +177,13 @@ impl CliCommand for WorkerCommand {
                 });
             }
         }
+
+        remove_project_from_universal_sdk(
+            &mut rendered_templates,
+            base_path,
+            &manifest_data.app_name,
+            &worker_name,
+        )?;
 
         write_rendered_templates(&rendered_templates, false, &mut stdout)?;
 

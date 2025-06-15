@@ -4,6 +4,7 @@ use anyhow::{Result, bail};
 use convert_case::{Case, Casing};
 use indexmap::IndexMap;
 use serde_yml::{from_value, to_value};
+use termcolor::StandardStream;
 use walkdir::WalkDir;
 
 use super::clean_application::clean_application;
@@ -11,7 +12,7 @@ use crate::{
     constants::Runtime,
     core::{
         docker::{Command, DependsOn, DockerBuild, DockerCompose, DockerService, Healthcheck},
-        manifest::{MutableManifestData, ProjectEntry},
+        manifest::{MutableManifestData, ProjectEntry, ProjectType},
         move_template::{MoveTemplate, MoveTemplateType},
         package_json::{
             application_package_json::ApplicationPackageJson,
@@ -20,6 +21,7 @@ use crate::{
         removal_template::{RemovalTemplate, RemovalTemplateType},
         rendered_template::{RenderedTemplate, RenderedTemplatesCache},
         string::short_circuit_replacement,
+        universal_sdk::change_project_in_universal_sdk,
     },
 };
 
@@ -31,8 +33,9 @@ pub(crate) fn change_name_in_files(
     confirm: bool,
     project_entry: &mut ProjectEntry,
     rendered_templates_cache: &mut RenderedTemplatesCache,
+    stdout: &mut StandardStream,
 ) -> Result<Vec<RemovalTemplate>> {
-    clean_application(base_path.parent().unwrap(), runtime, confirm)?;
+    clean_application(base_path.parent().unwrap(), runtime, confirm, stdout)?;
 
     let mut removal_templates = Vec::new();
 
@@ -119,9 +122,11 @@ pub(crate) fn change_name(
     docker_compose: Option<&mut DockerCompose>,
     rendered_templates_cache: &mut RenderedTemplatesCache,
     removal_templates: &mut Vec<RemovalTemplate>,
+    stdout: &mut StandardStream,
 ) -> Result<MoveTemplate> {
     let existing_name = base_path.file_name().unwrap().to_string_lossy().to_string();
 
+    // TODO: change the name of the package in universal-sdk if service or worker (could just be simple find/replace)
     let (runtime, app_name, mut project_entries, project_peer_topology) = match manifest_data {
         MutableManifestData::Service(manifest_data) => {
             manifest_data.service_name = name.to_string();
@@ -335,7 +340,18 @@ pub(crate) fn change_name(
         confirm,
         project_entry,
         rendered_templates_cache,
+        stdout,
     )?);
+
+    if project_entry.r#type == ProjectType::Service || project_entry.r#type == ProjectType::Worker {
+        change_project_in_universal_sdk(
+            rendered_templates_cache,
+            base_path.parent().unwrap(),
+            &app_name,
+            &existing_name,
+            &name,
+        )?;
+    }
 
     Ok(MoveTemplate {
         path: base_path.to_path_buf(),

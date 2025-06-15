@@ -1,3 +1,4 @@
+use anyhow::Result;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{Program, SourceType};
 
@@ -9,7 +10,7 @@ use crate::core::ast::{
 pub(crate) fn kafka_url_environment_variable<'a>(
     allocator: &'a Allocator,
     registrations_program: &mut Program<'a>,
-) {
+) -> Result<()> {
     let kafka_env_var_text = "const configInjector = createConfigInjector(SchemaValidator(), {
             KAFKA_BROKERS: {
                 lifetime: Lifetime.Singleton,
@@ -36,5 +37,7 @@ pub(crate) fn kafka_url_environment_variable<'a>(
         registrations_program,
         &mut kafka_env_var_program,
         "environmentConfig",
-    );
+    )?;
+
+    Ok(())
 }

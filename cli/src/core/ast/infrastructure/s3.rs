@@ -1,3 +1,4 @@
+use anyhow::Result;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{Program, SourceType};
 
@@ -15,7 +16,7 @@ pub(crate) fn s3_import<'a>(
     allocator: &'a Allocator,
     registrations_text: &str,
     registrations_program: &mut Program<'a>,
-) {
+) -> Result<()> {
     if !registrations_text
         .contains("import { S3ObjectStore } from \"@forklaunch/infrastructure-s3\";")
     {
@@ -29,12 +30,14 @@ pub(crate) fn s3_import<'a>(
             "@forklaunch/infrastructure-s3",
         );
     }
+
+    Ok(())
 }
 
 pub(crate) fn s3_url_environment_variable<'a>(
     allocator: &'a Allocator,
     registrations_program: &mut Program<'a>,
-) {
+) -> Result<()> {
     let s3_env_var_text = "const configInjector = createConfigInjector(SchemaValidator(), {
         S3_REGION: {
             lifetime: Lifetime.Singleton,
@@ -70,13 +73,15 @@ pub(crate) fn s3_url_environment_variable<'a>(
         registrations_program,
         &mut s3_env_var_program,
         "environmentConfig",
-    );
+    )?;
+
+    Ok(())
 }
 
 pub(crate) fn s3_object_store_runtime_dependency<'a>(
     allocator: &'a Allocator,
     registrations_program: &mut Program<'a>,
-) {
+) -> Result<()> {
     let s3_registration_text = "const configInjector = createConfigInjector(SchemaValidator(), {
         S3ObjectStore: {
             lifetime: Lifetime.Singleton,
@@ -118,7 +123,9 @@ pub(crate) fn s3_object_store_runtime_dependency<'a>(
         registrations_program,
         &mut s3_registration_program,
         "runtimeDependencies",
-    );
+    )?;
+
+    Ok(())
 }
 
 pub(crate) fn delete_s3_import<'a>(

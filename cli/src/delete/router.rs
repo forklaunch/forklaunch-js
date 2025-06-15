@@ -31,7 +31,11 @@ use crate::{
         },
         base_path::{BasePathLocation, BasePathType, prompt_base_path},
         command::command,
-        manifest::{application::ApplicationManifestData, remove_router_definition_from_manifest},
+        manifest::{
+            InitializableManifestConfig, InitializableManifestConfigMetadata,
+            RouterInitializationMetadata, application::ApplicationManifestData,
+            remove_router_definition_from_manifest,
+        },
         rendered_template::{RenderedTemplate, write_rendered_templates},
     },
     prompt::{ArrayCompleter, prompt_for_confirmation, prompt_with_validation},
@@ -109,6 +113,19 @@ impl CliCommand for RouterCommand {
             },
             |_| "Router not found".to_string(),
         )?;
+
+        manifest_data = manifest_data.initialize(InitializableManifestConfigMetadata::Router(
+            RouterInitializationMetadata {
+                project_name: base_path
+                    .parent()
+                    .unwrap()
+                    .file_name()
+                    .unwrap()
+                    .to_string_lossy()
+                    .to_string(),
+                router_name: Some(router_name.clone()),
+            },
+        ));
 
         let project_name = manifest_data
             .clone()

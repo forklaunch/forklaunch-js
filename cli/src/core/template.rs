@@ -78,11 +78,11 @@ pub(crate) fn generate_with_template(
         let output_path_template =
             Template::new(entry.path().file_name().unwrap().to_string_lossy())?;
         let output_path = output_dir.join(match data {
-            ManifestData::Application(config_data) => output_path_template.render(config_data),
-            ManifestData::Service(config_data) => output_path_template.render(config_data),
-            ManifestData::Library(config_data) => output_path_template.render(config_data),
-            ManifestData::Router(config_data) => output_path_template.render(config_data),
-            ManifestData::Worker(config_data) => output_path_template.render(config_data),
+            ManifestData::Application(manifest_data) => output_path_template.render(manifest_data),
+            ManifestData::Service(manifest_data) => output_path_template.render(manifest_data),
+            ManifestData::Library(manifest_data) => output_path_template.render(manifest_data),
+            ManifestData::Router(manifest_data) => output_path_template.render(manifest_data),
+            ManifestData::Worker(manifest_data) => output_path_template.render(manifest_data),
         });
 
         if !output_path.exists() && !dryrun {
@@ -98,21 +98,21 @@ pub(crate) fn generate_with_template(
         })?;
         let tpl = Template::new(file_contents.clone())?;
         let rendered = match data {
-            ManifestData::Application(config_data) => {
-                forklaunch_replacements(&config_data.app_name, tpl.render(&config_data))
+            ManifestData::Application(manifest_data) => {
+                forklaunch_replacements(&manifest_data.app_name, tpl.render(&manifest_data))
             }
-            ManifestData::Service(config_data) => database_replacements(
-                &config_data.database,
-                forklaunch_replacements(&config_data.app_name, tpl.render(&config_data)),
+            ManifestData::Service(manifest_data) => database_replacements(
+                &manifest_data.database,
+                forklaunch_replacements(&manifest_data.app_name, tpl.render(&manifest_data)),
             ),
-            ManifestData::Library(config_data) => {
-                forklaunch_replacements(&config_data.app_name, tpl.render(&config_data))
+            ManifestData::Library(manifest_data) => {
+                forklaunch_replacements(&manifest_data.app_name, tpl.render(&manifest_data))
             }
-            ManifestData::Router(config_data) => {
-                forklaunch_replacements(&config_data.app_name, tpl.render(&config_data))
+            ManifestData::Router(manifest_data) => {
+                forklaunch_replacements(&manifest_data.app_name, tpl.render(&manifest_data))
             }
-            ManifestData::Worker(config_data) => {
-                forklaunch_replacements(&config_data.app_name, tpl.render(&config_data))
+            ManifestData::Worker(manifest_data) => {
+                forklaunch_replacements(&manifest_data.app_name, tpl.render(&manifest_data))
             }
         };
         if !output_path.exists() {

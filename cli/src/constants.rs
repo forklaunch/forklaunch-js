@@ -345,6 +345,12 @@ pub(crate) fn get_monitoring_module_description(name: &str) -> String {
         name
     )
 }
+pub(crate) fn get_universal_sdk_module_description(name: &str) -> String {
+    format!(
+        "Universal SDK for {}, containing shared foundational infrastrucuture and utilities",
+        name
+    )
+}
 pub(crate) fn get_service_module_name(service_type: &Module) -> String {
     match service_type {
         Module::BaseBilling => "billing".to_string(),

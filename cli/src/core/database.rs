@@ -46,12 +46,12 @@ pub(crate) fn get_database_port(database: &Database) -> Option<String> {
 pub(crate) fn generate_index_ts_database_export(
     base_path: &Path,
     databases: Option<Vec<String>>,
-    config_data: Option<&ManifestData>,
+    manifest_data: Option<&ManifestData>,
 ) -> Result<RenderedTemplate> {
     let mut export_set = HashSet::new();
     let mut database_set = HashSet::new();
 
-    let projects = match config_data {
+    let projects = match manifest_data {
         Some(ManifestData::Service(service)) => service.projects.clone(),
         Some(ManifestData::Worker(worker)) => worker.projects.clone(),
         _ => vec![],
@@ -100,14 +100,14 @@ pub(crate) fn generate_index_ts_database_export(
 }
 
 pub(crate) fn update_core_package_json(
-    config_data: &ManifestData,
+    manifest_data: &ManifestData,
     base_path: &Path,
 ) -> Result<RenderedTemplate> {
     let package_json_path = base_path.join("core").join("package.json");
     let package_json_content = read_to_string(&package_json_path)?;
     let mut full_package_json: ProjectPackageJson = from_str(&package_json_content)?;
 
-    let database = match config_data {
+    let database = match manifest_data {
         ManifestData::Service(service) => Some(service.database.clone()),
         ManifestData::Worker(worker) => worker.database.clone(),
         _ => bail!(ERROR_UNSUPPORTED_DATABASE),
@@ -149,10 +149,10 @@ pub(crate) fn get_base_entity_filename(database: &Database) -> Result<&str> {
 }
 
 pub(crate) fn add_base_entity_to_core(
-    config_data: &ManifestData,
+    manifest_data: &ManifestData,
     base_path: &Path,
 ) -> Result<Vec<RenderedTemplate>> {
-    let database = match config_data {
+    let database = match manifest_data {
         ManifestData::Service(service) => service.database.clone(),
         ManifestData::Worker(worker) => worker.database.clone().unwrap(),
         _ => bail!(ERROR_UNSUPPORTED_DATABASE),
@@ -179,10 +179,10 @@ pub(crate) fn add_base_entity_to_core(
         generate_index_ts_database_export(
             base_path,
             Some(vec![database.to_string()]),
-            Some(config_data),
+            Some(manifest_data),
         )
         .with_context(|| ERROR_FAILED_TO_CREATE_DATABASE_EXPORT_INDEX_TS)?,
-        update_core_package_json(config_data, base_path)?,
+        update_core_package_json(manifest_data, base_path)?,
     ])
 }
 

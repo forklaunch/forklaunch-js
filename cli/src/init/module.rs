@@ -24,16 +24,19 @@ use crate::{
         docker::add_service_definition_to_docker_compose,
         format::format_code,
         manifest::{
-            ManifestData, ProjectType, ResourceInventory, add_project_definition_to_manifest,
-            application::ApplicationManifestData, service::ServiceManifestData,
+            ApplicationInitializationMetadata, InitializableManifestConfig,
+            InitializableManifestConfigMetadata, ManifestData, ProjectType, ResourceInventory,
+            add_project_definition_to_manifest, application::ApplicationManifestData,
+            service::ServiceManifestData,
         },
+        modules::{ModuleConfig, validate_modules},
         package_json::add_project_definition_to_package_json,
         pnpm_workspace::add_project_definition_to_pnpm_workspace,
         rendered_template::{RenderedTemplate, write_rendered_templates},
         symlinks::generate_symlinks,
         template::{PathIO, generate_with_template, get_routers_from_standard_package},
     },
-    prompt::{ArrayCompleter, prompt_with_validation, prompt_without_validation},
+    prompt::{ArrayCompleter, prompt_with_validation},
 };
 
 #[derive(Debug)]
@@ -97,18 +100,35 @@ impl CliCommand for ModuleCommand {
             .join(".forklaunch")
             .join("manifest.toml");
 
-        let existing_manifest_data: ApplicationManifestData = toml::from_str(
+        let existing_manifest_data = toml::from_str::<ApplicationManifestData>(
             &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
-        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
+        .initialize(InitializableManifestConfigMetadata::Application(
+            ApplicationInitializationMetadata {
+                app_name: base_path.file_name().unwrap().to_string_lossy().to_string(),
+                database: None,
+            },
+        ));
 
-        let module: Module = prompt_without_validation(
+        let module: Module = prompt_with_validation(
             &mut line_editor,
             &mut stdout,
             "module",
             matches,
             "module",
             Some(&Module::VARIANTS),
+            |input| {
+                let mut modules = existing_manifest_data.projects.iter().filter_map(|project| {
+                    if let Some(variant) = &project.variant {
+                        return variant.parse::<Module>().ok()
+                    }
+                    None
+                }).collect::<Vec<Module>>();
+                modules.push(input.parse().unwrap());
+                validate_modules(&modules, &mut ModuleConfig::default()).is_ok()
+            },
+            |input| format!("Conflicting module type selected. You will not be able to add this module without deleting the existing module, {}", get_service_module_name(&input.parse().unwrap())),
         )?
         .parse()?;
 
@@ -135,6 +155,9 @@ impl CliCommand for ModuleCommand {
             id: existing_manifest_data.id.clone(),
             cli_version: existing_manifest_data.cli_version.clone(),
             app_name: name.clone(),
+            camel_case_app_name: existing_manifest_data.camel_case_app_name.clone(),
+            pascal_case_app_name: existing_manifest_data.pascal_case_app_name.clone(),
+            kebab_case_app_name: existing_manifest_data.kebab_case_app_name.clone(),
             service_name: get_service_module_name(&module),
             camel_case_name: get_service_module_name(&module).to_case(Case::Camel),
             pascal_case_name: get_service_module_name(&module).to_case(Case::Pascal),

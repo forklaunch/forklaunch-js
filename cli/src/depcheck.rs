@@ -76,12 +76,12 @@ impl CliCommand for DepcheckCommand {
             .join(".forklaunch")
             .join("manifest.toml");
 
-        let config_data: ApplicationManifestData = toml::from_str(
+        let manifest_data: ApplicationManifestData = toml::from_str(
             &read_to_string(config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
 
-        config_data.project_peer_topology.iter().try_for_each(
+        manifest_data.project_peer_topology.iter().try_for_each(
             |(group_name, group_projects)| -> Result<()> {
                 let mut package_version_inventory: HashMap<String, Vec<ProjectDependencyVersion>> =
                     HashMap::new();

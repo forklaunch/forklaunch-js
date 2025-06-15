@@ -7,7 +7,7 @@ use oxc_ast::ast::SourceType;
 use oxc_codegen::{CodeGenerator, CodegenOptions};
 
 use crate::core::ast::{
-    injections::inject_export_into_index_ts::inject_export_into_index_ts,
+    injections::inject_into_index_ts::inject_into_index_ts_export,
     parse_ast_program::parse_ast_program,
 };
 
@@ -34,7 +34,7 @@ pub(crate) fn transform_entities_index_ts(router_name: &str, base_path: &Path) -
     let mut injection_program_ast =
         parse_ast_program(&allocator, &entities_index_text, SourceType::ts());
 
-    inject_export_into_index_ts(
+    inject_into_index_ts_export(
         &mut entities_index_program,
         &mut injection_program_ast,
         &router_name_camel_case,

@@ -1,3 +1,4 @@
+use anyhow::Result;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{Program, SourceType};
 
@@ -9,7 +10,7 @@ use crate::core::ast::{
 pub(crate) fn database_entity_manager_runtime_dependency<'a>(
     allocator: &'a Allocator,
     registrations_program: &mut Program<'a>,
-) {
+) -> Result<()> {
     let entity_manager_registration_text =
         "const configInjector = createConfigInjector(SchemaValidator(), {
                 EntityManager: {
@@ -31,5 +32,7 @@ pub(crate) fn database_entity_manager_runtime_dependency<'a>(
         registrations_program,
         &mut entity_manager_registration_program,
         "runtimeDependencies",
-    );
+    )?;
+
+    Ok(())
 }

@@ -1,3 +1,4 @@
+use convert_case::{Case, Casing};
 use ramhorns::Content;
 use serde::{Deserialize, Serialize};
 
@@ -38,6 +39,14 @@ impl InitializableManifestConfig for ApplicationManifestData {
             _ => unreachable!(),
         };
 
+        let initialized_application_manifest_data = Self {
+            app_name: metadata.app_name.clone(),
+            camel_case_app_name: metadata.app_name.clone().to_case(Case::Camel),
+            pascal_case_app_name: metadata.app_name.clone().to_case(Case::Pascal),
+            kebab_case_app_name: metadata.app_name.clone().to_case(Case::Kebab),
+            ..self.clone()
+        };
+
         if let Some(database) = metadata.database {
             let parsed_database = database.parse::<Database>().unwrap();
             return Self {
@@ -55,9 +64,10 @@ impl InitializableManifestConfig for ApplicationManifestData {
                     || parsed_database == Database::BetterSQLite
                     || parsed_database == Database::LibSQL,
 
-                ..self.clone()
+                ..initialized_application_manifest_data
             };
         }
-        self.clone()
+
+        initialized_application_manifest_data
     }
 }

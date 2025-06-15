@@ -28,7 +28,11 @@ use crate::{
         command::command,
         database::{self, is_in_memory_database},
         format::format_code,
-        manifest::{ManifestData, add_router_definition_to_manifest, router::RouterManifestData},
+        manifest::{
+            InitializableManifestConfig, InitializableManifestConfigMetadata, ManifestData,
+            RouterInitializationMetadata, add_router_definition_to_manifest,
+            router::RouterManifestData,
+        },
         name::validate_name,
         rendered_template::{RenderedTemplate, write_rendered_templates},
         template::{PathIO, generate_with_template},
@@ -38,7 +42,7 @@ use crate::{
 
 fn generate_basic_router(
     base_path: &Path,
-    config_data: &mut RouterManifestData,
+    manifest_data: &mut RouterManifestData,
     service_name: &String,
     stdout: &mut StandardStream,
     dryrun: bool,
@@ -57,7 +61,7 @@ fn generate_basic_router(
     let mut rendered_templates = generate_with_template(
         None,
         &template_dir,
-        &ManifestData::Router(&config_data),
+        &ManifestData::Router(&manifest_data),
         &ignore_files,
         &ignore_dirs,
         &preserve_files,
@@ -65,7 +69,7 @@ fn generate_basic_router(
     )?;
     rendered_templates.extend(
         // check if this also adds to app and bootstrapper
-        add_router_to_artifacts(config_data, base_path, service_name)
+        add_router_to_artifacts(manifest_data, base_path, service_name)
             .with_context(|| "Failed to add service metadata to artifacts")?,
     );
 
@@ -76,26 +80,26 @@ fn generate_basic_router(
 }
 
 fn add_router_to_artifacts(
-    config_data: &mut RouterManifestData,
+    manifest_data: &mut RouterManifestData,
     base_path: &Path,
     service_name: &String,
 ) -> Result<Vec<RenderedTemplate>> {
     let (project_type, forklaunch_definition_buffer) =
-        add_router_definition_to_manifest(config_data, service_name)
+        add_router_definition_to_manifest(manifest_data, service_name)
             .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
 
     let mut rendered_templates = Vec::new();
 
     rendered_templates.push(RenderedTemplate {
         path: base_path.join("server.ts"),
-        content: transform_server_ts(config_data.router_name.as_str(), &base_path)?,
+        content: transform_server_ts(manifest_data.router_name.as_str(), &base_path)?,
         context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_APP.to_string()),
     });
 
     rendered_templates.push(RenderedTemplate {
         path: base_path.join("registrations.ts"),
         content: transform_registrations_ts_add_router(
-            config_data.router_name.as_str(),
+            manifest_data.router_name.as_str(),
             &project_type,
             &base_path,
         )?,
@@ -107,7 +111,7 @@ fn add_router_to_artifacts(
             .join("persistence")
             .join("entities")
             .join("index.ts"),
-        content: transform_entities_index_ts(config_data.router_name.as_str(), &base_path)?,
+        content: transform_entities_index_ts(manifest_data.router_name.as_str(), &base_path)?,
         context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER.to_string()),
     });
 
@@ -116,14 +120,14 @@ fn add_router_to_artifacts(
             .join("persistence")
             .join("seeders")
             .join("index.ts"),
-        content: transform_seeders_index_ts(config_data.router_name.as_str(), &base_path)?,
+        content: transform_seeders_index_ts(manifest_data.router_name.as_str(), &base_path)?,
         context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER.to_string()),
     });
 
     rendered_templates.push(RenderedTemplate {
         path: base_path.join("persistence").join("seed.data.ts"),
         content: transform_seed_data_ts(
-            config_data.router_name.as_str(),
+            manifest_data.router_name.as_str(),
             &project_type,
             &base_path,
         )?,
@@ -199,9 +203,10 @@ impl CliCommand for RouterCommand {
             .join(".forklaunch")
             .join("manifest.toml");
 
-        let manifest_data: RouterManifestData =
-            from_str(&read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?)
-                .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+        let mut manifest_data = from_str::<RouterManifestData>(
+            &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
+        )
+        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
 
         let router_name = prompt_with_validation(
             &mut line_editor,
@@ -216,6 +221,13 @@ impl CliCommand for RouterCommand {
                     .to_string()
             },
         )?;
+
+        manifest_data = manifest_data.initialize(InitializableManifestConfigMetadata::Router(
+            RouterInitializationMetadata {
+                project_name: base_path.file_name().unwrap().to_string_lossy().to_string(),
+                router_name: Some(router_name.clone()),
+            },
+        ));
 
         let infrastructure: Vec<Infrastructure> = if matches.ids().all(|id| id == "dryrun") {
             prompt_comma_separated_list(
@@ -244,7 +256,7 @@ impl CliCommand for RouterCommand {
         // this needs to handle non database router cases -- for workers
         if let Some(database) = service_data.resources.as_ref().unwrap().database.clone() {
             let database: Database = database.parse()?;
-            let mut config_data: RouterManifestData = RouterManifestData {
+            let mut manifest_data: RouterManifestData = RouterManifestData {
                 router_name: router_name.clone(),
                 camel_case_name: router_name.to_case(Case::Camel),
                 pascal_case_name: router_name.to_case(Case::Pascal),
@@ -272,7 +284,7 @@ impl CliCommand for RouterCommand {
             let dryrun = matches.get_flag("dryrun");
             generate_basic_router(
                 &base_path,
-                &mut config_data,
+                &mut manifest_data,
                 &service_name.to_string(),
                 &mut stdout,
                 dryrun,
@@ -283,7 +295,7 @@ impl CliCommand for RouterCommand {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
                 writeln!(stdout, "{} initialized successfully!", router_name)?;
                 stdout.reset()?;
-                format_code(&base_path, &config_data.runtime.parse()?);
+                format_code(&base_path, &manifest_data.runtime.parse()?);
             }
 
             Ok(())

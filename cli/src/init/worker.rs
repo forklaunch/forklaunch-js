@@ -36,9 +36,10 @@ use crate::{
         docker::add_worker_definition_to_docker_compose,
         gitignore::generate_gitignore,
         manifest::{
-            ManifestData, ProjectMetadata, ProjectType, ResourceInventory,
-            add_project_definition_to_manifest, application::ApplicationManifestData,
-            worker::WorkerManifestData,
+            ApplicationInitializationMetadata, InitializableManifestConfig,
+            InitializableManifestConfigMetadata, ManifestData, ProjectMetadata, ProjectType,
+            ResourceInventory, add_project_definition_to_manifest,
+            application::ApplicationManifestData, worker::WorkerManifestData,
         },
         name::validate_name,
         package_json::{
@@ -72,6 +73,7 @@ use crate::{
         symlinks::generate_symlinks,
         template::{PathIO, generate_with_template},
         tsconfig::generate_tsconfig,
+        universal_sdk::add_project_to_universal_sdk,
         worker_type::{
             get_default_worker_options, get_worker_consumer_factory, get_worker_producer_factory,
             get_worker_type_name,
@@ -92,7 +94,7 @@ impl WorkerCommand {
 fn generate_basic_worker(
     worker_name: &String,
     base_path: &Path,
-    config_data: &mut WorkerManifestData,
+    manifest_data: &mut WorkerManifestData,
     stdout: &mut StandardStream,
     dryrun: bool,
 ) -> Result<()> {
@@ -106,12 +108,12 @@ fn generate_basic_worker(
         module_id: None,
     };
 
-    let ignore_files = if !config_data.is_database_enabled {
+    let ignore_files = if !manifest_data.is_database_enabled {
         vec!["mikro-orm.config.ts".to_string(), "seeder.ts".to_string()]
     } else {
         vec!["consts.ts".to_string()]
     };
-    let ignore_dirs = if !config_data.is_database_enabled {
+    let ignore_dirs = if !manifest_data.is_database_enabled {
         vec!["seeder".to_string(), "seed.data.ts".to_string()]
     } else {
         vec![]
@@ -121,14 +123,14 @@ fn generate_basic_worker(
     let mut rendered_templates = generate_with_template(
         None,
         &template_dir,
-        &ManifestData::Worker(&config_data),
+        &ManifestData::Worker(&manifest_data),
         &ignore_files,
         &ignore_dirs,
         &preserve_files,
         dryrun,
     )?;
     rendered_templates.push(generate_worker_package_json(
-        config_data,
+        manifest_data,
         &output_path,
         None,
         None,
@@ -141,16 +143,23 @@ fn generate_basic_worker(
         generate_gitignore(&output_path).with_context(|| ERROR_FAILED_TO_CREATE_GITIGNORE)?,
     );
     rendered_templates.extend(
-        add_worker_to_artifacts(config_data, base_path)
+        add_worker_to_artifacts(manifest_data, base_path)
             .with_context(|| ERROR_FAILED_TO_ADD_SERVICE_METADATA_TO_ARTIFACTS)?,
     );
 
-    if config_data.is_database_enabled {
+    if manifest_data.is_database_enabled {
         rendered_templates.extend(
-            add_base_entity_to_core(&ManifestData::Worker(config_data), base_path)
+            add_base_entity_to_core(&ManifestData::Worker(manifest_data), base_path)
                 .with_context(|| ERROR_FAILED_TO_ADD_BASE_ENTITY_TO_CORE)?,
         );
     }
+
+    add_project_to_universal_sdk(
+        &mut rendered_templates,
+        base_path,
+        &manifest_data.app_name,
+        &manifest_data.worker_name,
+    )?;
 
     write_rendered_templates(&rendered_templates, dryrun, stdout)
         .with_context(|| ERROR_FAILED_TO_WRITE_SERVICE_FILES)?;
@@ -158,7 +167,7 @@ fn generate_basic_worker(
     generate_symlinks(
         Some(base_path),
         &Path::new(&template_dir.output_path),
-        config_data,
+        manifest_data,
         dryrun,
     )
     .with_context(|| ERROR_FAILED_TO_CREATE_SYMLINKS)?;
@@ -167,43 +176,43 @@ fn generate_basic_worker(
 }
 
 fn add_worker_to_artifacts(
-    config_data: &mut WorkerManifestData,
+    manifest_data: &mut WorkerManifestData,
     base_path: &Path,
 ) -> Result<Vec<RenderedTemplate>> {
     let docker_compose_buffer =
-        add_worker_definition_to_docker_compose(config_data, base_path, None)
+        add_worker_definition_to_docker_compose(manifest_data, base_path, None)
             .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
 
     let forklaunch_manifest_buffer = add_project_definition_to_manifest(
         ProjectType::Worker,
-        config_data,
-        Some(config_data.worker_type.clone()),
+        manifest_data,
+        Some(manifest_data.worker_type.clone()),
         Some(ResourceInventory {
-            database: if config_data.is_database_enabled {
-                Some(config_data.database.clone().unwrap())
+            database: if manifest_data.is_database_enabled {
+                Some(manifest_data.database.clone().unwrap())
             } else {
                 None
             },
-            cache: if config_data.is_cache_enabled {
-                Some(config_data.worker_type_lowercase.clone())
+            cache: if manifest_data.is_cache_enabled {
+                Some(manifest_data.worker_type_lowercase.clone())
             } else {
                 None
             },
-            queue: if config_data.is_kafka_enabled {
-                Some(config_data.worker_type_lowercase.clone())
+            queue: if manifest_data.is_kafka_enabled {
+                Some(manifest_data.worker_type_lowercase.clone())
             } else {
                 None
             },
             object_store: None,
         }),
-        Some(vec![config_data.worker_name.clone()]),
+        Some(vec![manifest_data.worker_name.clone()]),
         Some(ProjectMetadata {
-            r#type: Some(config_data.worker_type_lowercase.clone()),
+            r#type: Some(manifest_data.worker_type_lowercase.clone()),
         }),
     )
     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
 
-    let runtime = config_data.runtime.parse()?;
+    let runtime = manifest_data.runtime.parse()?;
 
     let mut package_json_buffer: Option<String> = None;
     let mut pnpm_workspace_buffer: Option<String> = None;
@@ -211,13 +220,13 @@ fn add_worker_to_artifacts(
     match runtime {
         Runtime::Bun => {
             package_json_buffer = Some(
-                add_project_definition_to_package_json(base_path, config_data)
+                add_project_definition_to_package_json(base_path, manifest_data)
                     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON)?,
             );
         }
         Runtime::Node => {
             pnpm_workspace_buffer = Some(
-                add_project_definition_to_pnpm_workspace(base_path, config_data)
+                add_project_definition_to_pnpm_workspace(base_path, manifest_data)
                     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?,
             );
         }
@@ -239,7 +248,7 @@ fn add_worker_to_artifacts(
 
     rendered_templates.push(
         update_application_package_json(
-            &ManifestData::Worker(config_data),
+            &ManifestData::Worker(manifest_data),
             base_path,
             package_json_buffer,
         )?
@@ -258,7 +267,7 @@ fn add_worker_to_artifacts(
 }
 
 pub(crate) fn generate_worker_package_json(
-    config_data: &WorkerManifestData,
+    manifest_data: &WorkerManifestData,
     base_path: &Path,
     dependencies_override: Option<ProjectDependencies>,
     dev_dependencies_override: Option<ProjectDevDependencies>,
@@ -266,7 +275,7 @@ pub(crate) fn generate_worker_package_json(
     main_override: Option<String>,
 ) -> Result<RenderedTemplate> {
     let test_framework: Option<TestFramework> =
-        if let Some(test_framework) = &config_data.test_framework {
+        if let Some(test_framework) = &manifest_data.test_framework {
             Some(test_framework.parse()?)
         } else {
             None
@@ -274,13 +283,13 @@ pub(crate) fn generate_worker_package_json(
     let package_json_contents = ProjectPackageJson {
         name: Some(format!(
             "@{}/{}",
-            config_data.app_name, config_data.worker_name
+            manifest_data.kebab_case_app_name, manifest_data.kebab_case_name
         )),
         version: Some("0.1.0".to_string()),
-        description: Some(config_data.description.to_string()),
+        description: Some(manifest_data.description.to_string()),
         keywords: Some(vec![]),
-        license: Some(config_data.license.to_string()),
-        author: Some(config_data.author.to_string()),
+        license: Some(manifest_data.license.to_string()),
+        author: Some(manifest_data.author.to_string()),
         main: main_override,
         types: Some("./dist/server.d.ts".to_string()),
         scripts: Some(if let Some(scripts) = scripts_override {
@@ -288,51 +297,51 @@ pub(crate) fn generate_worker_package_json(
         } else {
             ProjectScripts {
                 build: Some(PROJECT_BUILD_SCRIPT.to_string()),
-                clean: Some(project_clean_script(&config_data.runtime.parse()?)),
+                clean: Some(project_clean_script(&manifest_data.runtime.parse()?)),
                 dev_server: Some(project_dev_server_script(
-                    &config_data.runtime.parse()?,
-                    config_data.is_database_enabled,
+                    &manifest_data.runtime.parse()?,
+                    manifest_data.is_database_enabled,
                 )),
                 dev_worker: Some(project_dev_worker_client_script(
-                    &config_data.runtime.parse()?,
+                    &manifest_data.runtime.parse()?,
                 )),
                 dev_local: Some(project_dev_local_worker_script(
-                    &config_data.runtime.parse()?,
-                    config_data.is_database_enabled,
+                    &manifest_data.runtime.parse()?,
+                    manifest_data.is_database_enabled,
                 )),
-                test: project_test_script(&config_data.runtime.parse()?, &test_framework),
+                test: project_test_script(&manifest_data.runtime.parse()?, &test_framework),
                 docs: Some(PROJECT_DOCS_SCRIPT.to_string()),
-                format: Some(project_format_script(&config_data.formatter.parse()?)),
-                lint: Some(project_lint_script(&config_data.linter.parse()?)),
-                lint_fix: Some(project_lint_fix_script(&config_data.linter.parse()?)),
-                migrate_create: if config_data.is_database_enabled {
+                format: Some(project_format_script(&manifest_data.formatter.parse()?)),
+                lint: Some(project_lint_script(&manifest_data.linter.parse()?)),
+                lint_fix: Some(project_lint_fix_script(&manifest_data.linter.parse()?)),
+                migrate_create: if manifest_data.is_database_enabled {
                     Some(project_migrate_script("create").to_string())
                 } else {
                     None
                 },
-                migrate_down: if config_data.is_database_enabled {
+                migrate_down: if manifest_data.is_database_enabled {
                     Some(project_migrate_script("down").to_string())
                 } else {
                     None
                 },
-                migrate_init: if config_data.is_database_enabled {
+                migrate_init: if manifest_data.is_database_enabled {
                     Some(project_migrate_script("init").to_string())
                 } else {
                     None
                 },
-                migrate_up: if config_data.is_database_enabled {
+                migrate_up: if manifest_data.is_database_enabled {
                     Some(project_migrate_script("up").to_string())
                 } else {
                     None
                 },
-                seed: if config_data.is_database_enabled {
+                seed: if manifest_data.is_database_enabled {
                     Some(PROJECT_SEED_SCRIPT.to_string())
                 } else {
                     None
                 },
                 start_server: Some(project_start_worker_script(
-                    &config_data.runtime.parse()?,
-                    config_data.is_database_enabled,
+                    &manifest_data.runtime.parse()?,
+                    manifest_data.is_database_enabled,
                 )),
                 start_worker: Some(PROJECT_START_WORKER_CLIENT_SCRIPT.to_string()),
                 ..Default::default()
@@ -342,8 +351,8 @@ pub(crate) fn generate_worker_package_json(
             dependencies
         } else {
             ProjectDependencies {
-                app_name: config_data.app_name.to_string(),
-                databases: if let Some(database) = &config_data.database {
+                app_name: manifest_data.app_name.to_string(),
+                databases: if let Some(database) = &manifest_data.database {
                     HashSet::from([database.parse()?])
                 } else {
                     HashSet::new()
@@ -353,12 +362,12 @@ pub(crate) fn generate_worker_package_json(
                 forklaunch_better_auth_mikro_orm_fork: None,
                 forklaunch_common: Some(COMMON_VERSION.to_string()),
                 forklaunch_core: Some(CORE_VERSION.to_string()),
-                forklaunch_express: if config_data.is_express {
+                forklaunch_express: if manifest_data.is_express {
                     Some(EXPRESS_VERSION.to_string())
                 } else {
                     None
                 },
-                forklaunch_hyper_express: if config_data.is_hyper_express {
+                forklaunch_hyper_express: if manifest_data.is_hyper_express {
                     Some(HYPER_EXPRESS_VERSION.to_string())
                 } else {
                     None
@@ -367,7 +376,7 @@ pub(crate) fn generate_worker_package_json(
                 forklaunch_interfaces_billing: None,
                 forklaunch_implementation_iam_base: None,
                 forklaunch_interfaces_iam: None,
-                forklaunch_implementation_worker_bullmq: if config_data
+                forklaunch_implementation_worker_bullmq: if manifest_data
                     .worker_type_lowercase
                     .parse::<WorkerType>()?
                     == WorkerType::BullMQCache
@@ -376,7 +385,7 @@ pub(crate) fn generate_worker_package_json(
                 } else {
                     None
                 },
-                forklaunch_implementation_worker_redis: if config_data
+                forklaunch_implementation_worker_redis: if manifest_data
                     .worker_type_lowercase
                     .parse::<WorkerType>()?
                     == WorkerType::RedisCache
@@ -385,7 +394,7 @@ pub(crate) fn generate_worker_package_json(
                 } else {
                     None
                 },
-                forklaunch_implementation_worker_database: if config_data
+                forklaunch_implementation_worker_database: if manifest_data
                     .worker_type_lowercase
                     .parse::<WorkerType>()?
                     == WorkerType::Database
@@ -394,7 +403,7 @@ pub(crate) fn generate_worker_package_json(
                 } else {
                     None
                 },
-                forklaunch_implementation_worker_kafka: if config_data
+                forklaunch_implementation_worker_kafka: if manifest_data
                     .worker_type_lowercase
                     .parse::<WorkerType>()?
                     == WorkerType::Kafka
@@ -403,69 +412,70 @@ pub(crate) fn generate_worker_package_json(
                 } else {
                     None
                 },
-                forklaunch_infrastructure_redis: if config_data.is_cache_enabled {
+                forklaunch_infrastructure_redis: if manifest_data.is_cache_enabled {
                     Some(INFRASTRUCTURE_REDIS_VERSION.to_string())
                 } else {
                     None
                 },
                 forklaunch_infrastructure_s3: None,
                 forklaunch_interfaces_worker: Some(WORKER_INTERFACES_VERSION.to_string()),
+                forklaunch_universal_sdk: None,
                 forklaunch_validator: Some(VALIDATOR_VERSION.to_string()),
                 mikro_orm_core: Some(MIKRO_ORM_CORE_VERSION.to_string()),
-                mikro_orm_migrations: if config_data.is_database_enabled {
+                mikro_orm_migrations: if manifest_data.is_database_enabled {
                     Some(MIKRO_ORM_MIGRATIONS_VERSION.to_string())
                 } else {
                     None
                 },
-                mikro_orm_database: if config_data.is_database_enabled {
+                mikro_orm_database: if manifest_data.is_database_enabled {
                     Some(MIKRO_ORM_DATABASE_VERSION.to_string())
                 } else {
                     None
                 },
-                mikro_orm_reflection: if config_data.is_database_enabled {
+                mikro_orm_reflection: if manifest_data.is_database_enabled {
                     Some(MIKRO_ORM_REFLECTION_VERSION.to_string())
                 } else {
                     None
                 },
-                mikro_orm_seeder: if config_data.is_database_enabled {
+                mikro_orm_seeder: if manifest_data.is_database_enabled {
                     Some(MIKRO_ORM_SEEDER_VERSION.to_string())
                 } else {
                     None
                 },
                 opentelemetry_api: None,
-                typebox: if config_data.is_typebox {
+                typebox: if manifest_data.is_typebox {
                     Some(TYPEBOX_VERSION.to_string())
                 } else {
                     None
                 },
                 ajv: Some(AJV_VERSION.to_string()),
                 better_auth: None,
-                bullmq: if config_data.worker_type_lowercase.parse::<WorkerType>()?
+                bullmq: if manifest_data.worker_type_lowercase.parse::<WorkerType>()?
                     == WorkerType::BullMQCache
                 {
                     Some(BULLMQ_VERSION.to_string())
                 } else {
                     None
                 },
-                better_sqlite3: if config_data.is_node
-                    && config_data.is_database_enabled
-                    && config_data.is_better_sqlite
+                better_sqlite3: if manifest_data.is_node
+                    && manifest_data.is_database_enabled
+                    && manifest_data.is_better_sqlite
                 {
                     Some(BETTER_SQLITE3_VERSION.to_string())
                 } else {
                     None
                 },
                 dotenv: Some(DOTENV_VERSION.to_string()),
-                sqlite3: if config_data.is_node
-                    && config_data.is_database_enabled
-                    && config_data.is_sqlite
+                sqlite3: if manifest_data.is_node
+                    && manifest_data.is_database_enabled
+                    && manifest_data.is_sqlite
                 {
                     Some(SQLITE3_VERSION.to_string())
                 } else {
                     None
                 },
                 uuid: Some(UUID_VERSION.to_string()),
-                zod: if config_data.is_zod {
+                zod: if manifest_data.is_zod {
                     Some(ZOD_VERSION.to_string())
                 } else {
                     None
@@ -477,32 +487,32 @@ pub(crate) fn generate_worker_package_json(
             dev_dependencies
         } else {
             ProjectDevDependencies {
-                biome: if config_data.is_biome {
+                biome: if manifest_data.is_biome {
                     Some(BIOME_VERSION.to_string())
                 } else {
                     None
                 },
-                eslint: if config_data.is_eslint {
+                eslint: if manifest_data.is_eslint {
                     Some(ESLINT_VERSION.to_string())
                 } else {
                     None
                 },
-                eslint_js: if config_data.is_eslint {
+                eslint_js: if manifest_data.is_eslint {
                     Some(ESLINT_VERSION.to_string())
                 } else {
                     None
                 },
-                mikro_orm_cli: if config_data.is_database_enabled {
+                mikro_orm_cli: if manifest_data.is_database_enabled {
                     Some(MIKRO_ORM_CLI_VERSION.to_string())
                 } else {
                     None
                 },
-                oxlint: if config_data.is_oxlint {
+                oxlint: if manifest_data.is_oxlint {
                     Some(OXLINT_VERSION.to_string())
                 } else {
                     None
                 },
-                prettier: if config_data.is_prettier {
+                prettier: if manifest_data.is_prettier {
                     Some(PRETTIER_VERSION.to_string())
                 } else {
                     None
@@ -515,7 +525,7 @@ pub(crate) fn generate_worker_package_json(
                     TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION.to_string(),
                 ),
                 types_qs: Some(TYPES_QS_VERSION.to_string()),
-                types_uuid: if config_data.is_database_enabled {
+                types_uuid: if manifest_data.is_database_enabled {
                     Some(TYPES_UUID_VERSION.to_string())
                 } else {
                     None
@@ -597,9 +607,16 @@ impl CliCommand for WorkerCommand {
             .join(".forklaunch")
             .join("manifest.toml");
 
-        let existing_manifest_data: ApplicationManifestData =
-            from_str(&read_to_string(config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?)
-                .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+        let existing_manifest_data = from_str::<ApplicationManifestData>(
+            &read_to_string(config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
+        )
+        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
+        .initialize(InitializableManifestConfigMetadata::Application(
+            ApplicationInitializationMetadata {
+                app_name: base_path.file_name().unwrap().to_string_lossy().to_string(),
+                database: None,
+            },
+        ));
 
         let worker_name = prompt_with_validation(
             &mut line_editor,
@@ -653,10 +670,13 @@ impl CliCommand for WorkerCommand {
             None,
         )?;
 
-        let mut config_data = WorkerManifestData {
+        let mut manifest_data = WorkerManifestData {
             // Common fields from ApplicationManifestData
             id: existing_manifest_data.id.clone(),
             app_name: existing_manifest_data.app_name.clone(),
+            camel_case_app_name: existing_manifest_data.camel_case_app_name.clone(),
+            pascal_case_app_name: existing_manifest_data.pascal_case_app_name.clone(),
+            kebab_case_app_name: existing_manifest_data.kebab_case_app_name.clone(),
             app_description: existing_manifest_data.app_description.clone(),
             author: existing_manifest_data.author.clone(),
             cli_version: existing_manifest_data.cli_version.clone(),
@@ -768,7 +788,7 @@ impl CliCommand for WorkerCommand {
         generate_basic_worker(
             &worker_name,
             &base_path,
-            &mut config_data,
+            &mut manifest_data,
             &mut stdout,
             dryrun,
         )

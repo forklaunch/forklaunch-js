@@ -1,3 +1,4 @@
+use anyhow::Result;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{Program, SourceType};
 
@@ -15,7 +16,7 @@ pub(crate) fn redis_import<'a>(
     allocator: &'a Allocator,
     registrations_text: &str,
     registrations_program: &mut Program<'a>,
-) {
+) -> Result<()> {
     if !registrations_text
         .contains("import { RedisTtlCache } from \"@forklaunch/infrastructure-redis\";")
     {
@@ -29,12 +30,14 @@ pub(crate) fn redis_import<'a>(
             "@forklaunch/infrastructure-redis",
         );
     }
+
+    Ok(())
 }
 
 pub(crate) fn redis_url_environment_variable<'a>(
     allocator: &'a Allocator,
     registrations_program: &mut Program<'a>,
-) {
+) -> Result<()> {
     let redis_env_var_text = "const configInjector = createConfigInjector(SchemaValidator(), {
                 REDIS_URL: {
                     lifetime: Lifetime.Singleton,
@@ -51,13 +54,15 @@ pub(crate) fn redis_url_environment_variable<'a>(
         registrations_program,
         &mut redis_env_var_program,
         "environmentConfig",
-    );
+    )?;
+
+    Ok(())
 }
 
 pub(crate) fn redis_ttl_cache_runtime_dependency<'a>(
     allocator: &'a Allocator,
     registrations_program: &mut Program<'a>,
-) {
+) -> Result<()> {
     let redis_registration_text = "const configInjector = createConfigInjector(SchemaValidator(), {
                 TtlCache: {
                     lifetime: Lifetime.Singleton,
@@ -80,7 +85,9 @@ pub(crate) fn redis_ttl_cache_runtime_dependency<'a>(
         registrations_program,
         &mut redis_registration_program,
         "runtimeDependencies",
-    );
+    )?;
+
+    Ok(())
 }
 
 pub(crate) fn delete_redis_import<'a>(
