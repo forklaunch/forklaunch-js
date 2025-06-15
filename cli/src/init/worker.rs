@@ -36,9 +36,10 @@ use crate::{
         docker::add_worker_definition_to_docker_compose,
         gitignore::generate_gitignore,
         manifest::{
-            ManifestData, ProjectMetadata, ProjectType, ResourceInventory,
-            add_project_definition_to_manifest, application::ApplicationManifestData,
-            worker::WorkerManifestData,
+            ApplicationInitializationMetadata, InitializableManifestConfig,
+            InitializableManifestConfigMetadata, ManifestData, ProjectMetadata, ProjectType,
+            ResourceInventory, add_project_definition_to_manifest,
+            application::ApplicationManifestData, worker::WorkerManifestData,
         },
         name::validate_name,
         package_json::{
@@ -72,6 +73,7 @@ use crate::{
         symlinks::generate_symlinks,
         template::{PathIO, generate_with_template},
         tsconfig::generate_tsconfig,
+        universal_sdk::add_project_to_universal_sdk,
         worker_type::{
             get_default_worker_options, get_worker_consumer_factory, get_worker_producer_factory,
             get_worker_type_name,
@@ -151,6 +153,15 @@ fn generate_basic_worker(
                 .with_context(|| ERROR_FAILED_TO_ADD_BASE_ENTITY_TO_CORE)?,
         );
     }
+
+    add_project_to_universal_sdk(
+        &mut rendered_templates,
+        base_path,
+        &config_data.kebab_case_app_name,
+        &config_data.camel_case_name,
+        &config_data.pascal_case_name,
+        &config_data.kebab_case_name,
+    )?;
 
     write_rendered_templates(&rendered_templates, dryrun, stdout)
         .with_context(|| ERROR_FAILED_TO_WRITE_SERVICE_FILES)?;
@@ -598,9 +609,16 @@ impl CliCommand for WorkerCommand {
             .join(".forklaunch")
             .join("manifest.toml");
 
-        let existing_manifest_data: ApplicationManifestData =
-            from_str(&read_to_string(config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?)
-                .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+        let existing_manifest_data = from_str::<ApplicationManifestData>(
+            &read_to_string(config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
+        )
+        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
+        .initialize(InitializableManifestConfigMetadata::Application(
+            ApplicationInitializationMetadata {
+                app_name: base_path.file_name().unwrap().to_string_lossy().to_string(),
+                database: None,
+            },
+        ));
 
         let worker_name = prompt_with_validation(
             &mut line_editor,

@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 
+use anyhow::Result;
 use oxc_allocator::{Allocator, CloneIn};
 use oxc_ast::ast::{
     Argument, Declaration, Expression, ObjectPropertyKind, Program, PropertyKey, Statement,
@@ -10,7 +11,7 @@ pub(crate) fn inject_into_registrations_config_injector<'a>(
     registrations_program: &mut Program<'a>,
     config_injector_injection: &mut Program<'a>,
     declaration_name: &str,
-) {
+) -> Result<()> {
     for statement in &mut registrations_program.body {
         let export = match statement {
             Statement::ExportNamedDeclaration(export) => export,
@@ -105,20 +106,22 @@ pub(crate) fn inject_into_registrations_config_injector<'a>(
                                 }
                             }
 
-                            return;
+                            return Ok(());
                         }
                     }
                 }
             }
         }
     }
+
+    Ok(())
 }
 
 pub(crate) fn inject_in_registrations_ts_create_dependencies_args<'a>(
     allocator: &'a Allocator,
     create_dependencies_program: &mut Program<'a>,
     registrations_program: &mut Program<'a>,
-) {
+) -> Result<()> {
     let new_function = create_dependencies_program
         .body
         .first_mut()
@@ -182,4 +185,6 @@ pub(crate) fn inject_in_registrations_ts_create_dependencies_args<'a>(
             }
         }
     }
+
+    Ok(())
 }

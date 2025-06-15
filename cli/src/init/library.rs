@@ -24,8 +24,10 @@ use crate::{
         format::format_code,
         gitignore::generate_gitignore,
         manifest::{
-            ManifestData, ProjectType, add_project_definition_to_manifest,
-            application::ApplicationManifestData, library::LibraryManifestData,
+            ApplicationInitializationMetadata, InitializableManifestConfig,
+            InitializableManifestConfigMetadata, ManifestData, ProjectType,
+            add_project_definition_to_manifest, application::ApplicationManifestData,
+            library::LibraryManifestData,
         },
         name::validate_name,
         package_json::{
@@ -256,9 +258,16 @@ impl CliCommand for LibraryCommand {
             .join(".forklaunch")
             .join("manifest.toml");
 
-        let existing_manifest_data: ApplicationManifestData =
-            from_str(&read_to_string(config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?)
-                .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+        let existing_manifest_data = from_str::<ApplicationManifestData>(
+            &read_to_string(config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
+        )
+        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
+        .initialize(InitializableManifestConfigMetadata::Application(
+            ApplicationInitializationMetadata {
+                app_name: base_path.file_name().unwrap().to_string_lossy().to_string(),
+                database: None,
+            },
+        ));
 
         let library_name = prompt_with_validation(
             &mut line_editor,

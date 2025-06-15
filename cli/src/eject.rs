@@ -23,7 +23,10 @@ use crate::{
     core::{
         base_path::{BasePathLocation, BasePathType, prompt_base_path},
         command::command,
-        manifest::application::ApplicationManifestData,
+        manifest::{
+            ApplicationInitializationMetadata, InitializableManifestConfig,
+            InitializableManifestConfigMetadata, application::ApplicationManifestData,
+        },
         relative_path::get_relative_path,
         rendered_template::{RenderedTemplate, write_rendered_templates},
     },
@@ -313,10 +316,17 @@ impl CliCommand for EjectCommand {
             .join(".forklaunch")
             .join("manifest.toml");
 
-        let config_data: ApplicationManifestData = toml::from_str(
+        let mut config_data = toml::from_str::<ApplicationManifestData>(
             &read_to_string(config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+
+        config_data = config_data.initialize(InitializableManifestConfigMetadata::Application(
+            ApplicationInitializationMetadata {
+                app_name: config_data.app_name.clone(),
+                database: None,
+            },
+        ));
 
         let package_path = base_path.join("package.json");
 

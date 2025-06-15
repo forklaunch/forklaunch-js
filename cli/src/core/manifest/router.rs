@@ -54,7 +54,7 @@ impl InitializableManifestConfig for RouterManifestData {
             _ => unreachable!(),
         };
         let project_name = router_metadata.project_name.clone();
-        let router_name = router_metadata.router_name.clone();
+        let router_name = router_metadata.router_name.unwrap().clone();
         let project_entry = self
             .projects
             .iter()

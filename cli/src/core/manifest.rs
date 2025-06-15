@@ -67,7 +67,7 @@ pub(crate) struct ProjectInitializationMetadata {
 #[derive(Debug)]
 pub(crate) struct RouterInitializationMetadata {
     pub(crate) project_name: String,
-    pub(crate) router_name: String,
+    pub(crate) router_name: Option<String>,
 }
 
 pub(crate) enum InitializableManifestConfigMetadata {

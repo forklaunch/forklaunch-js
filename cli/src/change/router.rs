@@ -129,8 +129,8 @@ impl CliCommand for RouterCommand {
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
         .initialize(InitializableManifestConfigMetadata::Router(
             RouterInitializationMetadata {
-                router_name: existing_name.unwrap().clone(),
                 project_name: project_name.clone(),
+                router_name: Some(existing_name.unwrap().clone()),
             },
         ));
 

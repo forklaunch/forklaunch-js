@@ -10,7 +10,7 @@ RUST_BACKTRACE=1 cargo run --release init service svc-test -d postgresql -p serv
 RUST_BACKTRACE=1 cargo run --release init service svc-test-mongodb -d mongodb -p service-test-node-application -D "Test service"
 
 cd service-test-node-application
-rm -rf svc-test
+RUST_BACKTRACE=1 cargo run --release delete service svc-test -c
 
 RUST_BACKTRACE=1 cargo run --release init service svc-test -d postgresql -D "Test service" -p .
 
@@ -24,7 +24,7 @@ RUST_BACKTRACE=1 cargo run --release init service svc-test -d postgresql -p serv
 RUST_BACKTRACE=1 cargo run --release init service svc-test-mongodb -d mongodb -p service-test-bun-application -D "Test service"
 
 cd service-test-bun-application
-rm -rf svc-test
+RUST_BACKTRACE=1 cargo run --release delete service svc-test -c
 
 RUST_BACKTRACE=1 cargo run --release init service svc-test -d postgresql -D "Test service" -p .
 

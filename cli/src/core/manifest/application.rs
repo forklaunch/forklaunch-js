@@ -40,6 +40,7 @@ impl InitializableManifestConfig for ApplicationManifestData {
         };
 
         let initialized_application_manifest_data = Self {
+            app_name: metadata.app_name.clone(),
             camel_case_app_name: metadata.app_name.clone().to_case(Case::Camel),
             pascal_case_app_name: metadata.app_name.clone().to_case(Case::Pascal),
             kebab_case_app_name: metadata.app_name.clone().to_case(Case::Kebab),
@@ -66,6 +67,7 @@ impl InitializableManifestConfig for ApplicationManifestData {
                 ..initialized_application_manifest_data
             };
         }
+
         initialized_application_manifest_data
     }
 }

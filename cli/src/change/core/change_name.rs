@@ -11,6 +11,7 @@ use super::clean_application::clean_application;
 use crate::{
     constants::Runtime,
     core::{
+        ast::transformations::transform_universal_sdk::transform_universal_sdk_change_sdk,
         docker::{Command, DependsOn, DockerBuild, DockerCompose, DockerService, Healthcheck},
         manifest::{MutableManifestData, ProjectEntry},
         move_template::{MoveTemplate, MoveTemplateType},
@@ -125,6 +126,7 @@ pub(crate) fn change_name(
 ) -> Result<MoveTemplate> {
     let existing_name = base_path.file_name().unwrap().to_string_lossy().to_string();
 
+    // TODO: change the name of the package in universal-sdk if service or worker (could just be simple find/replace)
     let (runtime, app_name, mut project_entries, project_peer_topology) = match manifest_data {
         MutableManifestData::Service(manifest_data) => {
             manifest_data.service_name = name.to_string();
@@ -340,6 +342,26 @@ pub(crate) fn change_name(
         rendered_templates_cache,
         stdout,
     )?);
+
+    let universal_sdk_path = base_path
+        .parent()
+        .unwrap()
+        .join("universal-sdk")
+        .join("universalSdk.ts");
+    rendered_templates_cache.insert(
+        universal_sdk_path.clone().to_string_lossy(),
+        RenderedTemplate {
+            path: universal_sdk_path.clone(),
+            content: transform_universal_sdk_change_sdk(
+                base_path.parent().unwrap(),
+                &app_name.to_case(Case::Kebab),
+                &name.to_case(Case::Camel),
+                &name.to_case(Case::Pascal),
+                &name.to_case(Case::Kebab),
+            )?,
+            context: None,
+        },
+    );
 
     Ok(MoveTemplate {
         path: base_path.to_path_buf(),

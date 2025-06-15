@@ -118,7 +118,7 @@ pub(crate) fn transform_registrations_ts_add_router(
         &mut registrations_program,
         &mut config_injector_injection,
         "serviceDependencies",
-    );
+    )?;
 
     Ok(CodeGenerator::new()
         .with_options(CodegenOptions::default())
@@ -143,9 +143,9 @@ pub(crate) fn transform_registrations_ts_infrastructure_redis(
     let mut registrations_program =
         parse_ast_program(&allocator, &registrations_text, registrations_type);
 
-    redis_import(&allocator, &registrations_text, &mut registrations_program);
-    redis_url_environment_variable(&allocator, &mut registrations_program);
-    redis_ttl_cache_runtime_dependency(&allocator, &mut registrations_program);
+    redis_import(&allocator, &registrations_text, &mut registrations_program)?;
+    redis_url_environment_variable(&allocator, &mut registrations_program)?;
+    redis_ttl_cache_runtime_dependency(&allocator, &mut registrations_program)?;
 
     Ok(CodeGenerator::new()
         .with_options(CodegenOptions::default())
@@ -170,9 +170,9 @@ pub(crate) fn transform_registrations_ts_infrastructure_s3(
     let mut registrations_program =
         parse_ast_program(&allocator, &registrations_text, registrations_type);
 
-    s3_import(&allocator, &registrations_text, &mut registrations_program);
-    s3_url_environment_variable(&allocator, &mut registrations_program);
-    s3_object_store_runtime_dependency(&allocator, &mut registrations_program);
+    s3_import(&allocator, &registrations_text, &mut registrations_program)?;
+    s3_url_environment_variable(&allocator, &mut registrations_program)?;
+    s3_object_store_runtime_dependency(&allocator, &mut registrations_program)?;
 
     Ok(CodeGenerator::new()
         .with_options(CodegenOptions::default())
@@ -273,13 +273,13 @@ pub(crate) fn transform_registrations_ts_worker_type(
 
     match r#type {
         WorkerType::BullMQCache => {
-            redis_import(&allocator, &registrations_text, &mut registration_program);
-            redis_url_environment_variable(&allocator, &mut registration_program);
+            redis_import(&allocator, &registrations_text, &mut registration_program)?;
+            redis_url_environment_variable(&allocator, &mut registration_program)?;
         }
         WorkerType::RedisCache => {
-            redis_import(&allocator, &registrations_text, &mut registration_program);
-            redis_url_environment_variable(&allocator, &mut registration_program);
-            redis_ttl_cache_runtime_dependency(&allocator, &mut registration_program);
+            redis_import(&allocator, &registrations_text, &mut registration_program)?;
+            redis_url_environment_variable(&allocator, &mut registration_program)?;
+            redis_ttl_cache_runtime_dependency(&allocator, &mut registration_program)?;
         }
         WorkerType::Database => {
             let mut mikro_orm_import_program = parse_ast_program(
@@ -301,8 +301,8 @@ pub(crate) fn transform_registrations_ts_worker_type(
                 &allocator,
                 &mut create_dependencies_program,
                 &mut registration_program,
-            );
-            database_entity_manager_runtime_dependency(&allocator, &mut registration_program);
+            )?;
+            database_entity_manager_runtime_dependency(&allocator, &mut registration_program)?;
         }
         WorkerType::Kafka => {
             inject_specifier_into_import_statement(
@@ -311,7 +311,7 @@ pub(crate) fn transform_registrations_ts_worker_type(
                 "array",
                 &format!("@{app_name}/core"),
             )?;
-            kafka_url_environment_variable(&allocator, &mut registration_program);
+            kafka_url_environment_variable(&allocator, &mut registration_program)?;
         }
     }
 

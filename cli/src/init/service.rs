@@ -37,8 +37,10 @@ use crate::{
         format::format_code,
         gitignore::generate_gitignore,
         manifest::{
-            ManifestData, ProjectType, ResourceInventory, add_project_definition_to_manifest,
-            application::ApplicationManifestData, service::ServiceManifestData,
+            ApplicationInitializationMetadata, InitializableManifestConfig,
+            InitializableManifestConfigMetadata, ManifestData, ProjectType, ResourceInventory,
+            add_project_definition_to_manifest, application::ApplicationManifestData,
+            service::ServiceManifestData,
         },
         name::validate_name,
         package_json::{
@@ -72,6 +74,7 @@ use crate::{
         symlinks::generate_symlinks,
         template::{PathIO, generate_with_template},
         tsconfig::generate_tsconfig,
+        universal_sdk::add_project_to_universal_sdk,
     },
     prompt::{
         ArrayCompleter, prompt_comma_separated_list, prompt_with_validation,
@@ -142,6 +145,15 @@ fn generate_basic_service(
             context: Some(ERROR_FAILED_TO_UPDATE_DOCKERFILE.to_string()),
         });
     }
+
+    add_project_to_universal_sdk(
+        &mut rendered_templates,
+        base_path,
+        &config_data.kebab_case_app_name,
+        &config_data.camel_case_name,
+        &config_data.pascal_case_name,
+        &config_data.kebab_case_name,
+    )?;
 
     write_rendered_templates(&rendered_templates, dryrun, stdout)
         .with_context(|| ERROR_FAILED_TO_WRITE_SERVICE_FILES)?;
@@ -527,9 +539,16 @@ impl CliCommand for ServiceCommand {
             .join(".forklaunch")
             .join("manifest.toml");
 
-        let existing_manifest_data: ApplicationManifestData =
-            from_str(&read_to_string(config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?)
-                .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+        let existing_manifest_data = from_str::<ApplicationManifestData>(
+            &read_to_string(config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
+        )
+        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
+        .initialize(InitializableManifestConfigMetadata::Application(
+            ApplicationInitializationMetadata {
+                app_name: base_path.file_name().unwrap().to_string_lossy().to_string(),
+                database: None,
+            },
+        ));
 
         let service_name = prompt_with_validation(
             &mut line_editor,

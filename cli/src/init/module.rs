@@ -24,8 +24,10 @@ use crate::{
         docker::add_service_definition_to_docker_compose,
         format::format_code,
         manifest::{
-            ManifestData, ProjectType, ResourceInventory, add_project_definition_to_manifest,
-            application::ApplicationManifestData, service::ServiceManifestData,
+            ApplicationInitializationMetadata, InitializableManifestConfig,
+            InitializableManifestConfigMetadata, ManifestData, ProjectType, ResourceInventory,
+            add_project_definition_to_manifest, application::ApplicationManifestData,
+            service::ServiceManifestData,
         },
         modules::{ModuleConfig, validate_modules},
         package_json::add_project_definition_to_package_json,
@@ -98,10 +100,16 @@ impl CliCommand for ModuleCommand {
             .join(".forklaunch")
             .join("manifest.toml");
 
-        let existing_manifest_data: ApplicationManifestData = toml::from_str(
+        let existing_manifest_data = toml::from_str::<ApplicationManifestData>(
             &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
-        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
+        .initialize(InitializableManifestConfigMetadata::Application(
+            ApplicationInitializationMetadata {
+                app_name: base_path.file_name().unwrap().to_string_lossy().to_string(),
+                database: None,
+            },
+        ));
 
         let module: Module = prompt_with_validation(
             &mut line_editor,

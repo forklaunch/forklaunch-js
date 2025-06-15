@@ -28,7 +28,11 @@ use crate::{
         command::command,
         database::{self, is_in_memory_database},
         format::format_code,
-        manifest::{ManifestData, add_router_definition_to_manifest, router::RouterManifestData},
+        manifest::{
+            InitializableManifestConfig, InitializableManifestConfigMetadata, ManifestData,
+            RouterInitializationMetadata, add_router_definition_to_manifest,
+            router::RouterManifestData,
+        },
         name::validate_name,
         rendered_template::{RenderedTemplate, write_rendered_templates},
         template::{PathIO, generate_with_template},
@@ -199,9 +203,16 @@ impl CliCommand for RouterCommand {
             .join(".forklaunch")
             .join("manifest.toml");
 
-        let manifest_data: RouterManifestData =
-            from_str(&read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?)
-                .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+        let manifest_data = from_str::<RouterManifestData>(
+            &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
+        )
+        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
+        .initialize(InitializableManifestConfigMetadata::Router(
+            RouterInitializationMetadata {
+                project_name: base_path.file_name().unwrap().to_string_lossy().to_string(),
+                router_name: None,
+            },
+        ));
 
         let router_name = prompt_with_validation(
             &mut line_editor,

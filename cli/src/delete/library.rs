@@ -20,7 +20,8 @@ use crate::{
         base_path::{BasePathLocation, BasePathType, prompt_base_path},
         command::command,
         manifest::{
-            ProjectType, application::ApplicationManifestData,
+            ApplicationInitializationMetadata, InitializableManifestConfig,
+            InitializableManifestConfigMetadata, ProjectType, application::ApplicationManifestData,
             remove_project_definition_from_manifest,
         },
         package_json::remove_project_definition_to_package_json,
@@ -77,7 +78,7 @@ impl CliCommand for LibraryCommand {
             .join(".forklaunch")
             .join("manifest.toml");
 
-        let mut manifest_data: ApplicationManifestData = toml::from_str(
+        let mut manifest_data = toml::from_str::<ApplicationManifestData>(
             &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
@@ -97,6 +98,23 @@ impl CliCommand for LibraryCommand {
             },
             |_| "Library not found".to_string(),
         )?;
+
+        manifest_data = manifest_data.initialize(InitializableManifestConfigMetadata::Application(
+            ApplicationInitializationMetadata {
+                app_name: base_path.file_name().unwrap().to_string_lossy().to_string(),
+                database: match manifest_data
+                    .projects
+                    .iter()
+                    .find(|project| {
+                        project.name == library_name && project.r#type == ProjectType::Library
+                    })
+                    .map(|project| project.resources.as_ref().unwrap())
+                {
+                    Some(resource_inventory) => resource_inventory.database.clone(),
+                    None => None,
+                },
+            },
+        ));
 
         let continue_delete_override = matches.get_flag("continue");
 
