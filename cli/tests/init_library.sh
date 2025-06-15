@@ -9,7 +9,7 @@ RUST_BACKTRACE=1 cargo run --release init application library-test-node-applicat
 RUST_BACKTRACE=1 cargo run --release init library lib-test -p library-test-node-application -D "Test library"
 
 cd library-test-node-application
-rm -rf lib-test
+RUST_BACKTRACE=1 cargo run --release delete library lib-test -c
 
 RUST_BACKTRACE=1 cargo run --release init library lib-test -D "Test service" -p .
 
@@ -22,7 +22,7 @@ RUST_BACKTRACE=1 cargo run --release init application library-test-bun-applicati
 RUST_BACKTRACE=1 cargo run --release init library lib-test -p library-test-bun-application -D "Test library"
 
 cd library-test-bun-application
-rm -rf lib-test
+RUST_BACKTRACE=1 cargo run --release delete library lib-test -c
 
 RUST_BACKTRACE=1 cargo run --release init library lib-test -D "Test library" -p .
 

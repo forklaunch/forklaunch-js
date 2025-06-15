@@ -12,7 +12,7 @@ RUST_BACKTRACE=1 cargo run --release init worker wrk-test-bullmq -t bullmq -p wo
 RUST_BACKTRACE=1 cargo run --release init worker wrk-test-kafka -t kafka -p worker-test-node-application -D "Test worker"
 
 cd worker-test-node-application
-rm -rf wrk-test
+RUST_BACKTRACE=1 cargo run --release delete worker wrk-test -c
 
 RUST_BACKTRACE=1 cargo run --release init worker wrk-test -t database -d postgresql -D "Test worker" -p .
 
@@ -28,7 +28,7 @@ RUST_BACKTRACE=1 cargo run --release init worker wrk-test-bullmq -t bullmq -p wo
 RUST_BACKTRACE=1 cargo run --release init worker wrk-test-kafka -t kafka -p worker-test-bun-application -D "Test worker"
 
 cd worker-test-bun-application
-rm -rf wrk-test
+RUST_BACKTRACE=1 cargo run --release delete worker wrk-test -c
 
 RUST_BACKTRACE=1 cargo run --release init worker wrk-test -t database -d postgresql -D "Test worker" -p .
 
