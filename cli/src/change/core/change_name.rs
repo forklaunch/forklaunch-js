@@ -11,9 +11,8 @@ use super::clean_application::clean_application;
 use crate::{
     constants::Runtime,
     core::{
-        ast::transformations::transform_universal_sdk::transform_universal_sdk_change_sdk,
         docker::{Command, DependsOn, DockerBuild, DockerCompose, DockerService, Healthcheck},
-        manifest::{MutableManifestData, ProjectEntry},
+        manifest::{MutableManifestData, ProjectEntry, ProjectType},
         move_template::{MoveTemplate, MoveTemplateType},
         package_json::{
             application_package_json::ApplicationPackageJson,
@@ -22,6 +21,7 @@ use crate::{
         removal_template::{RemovalTemplate, RemovalTemplateType},
         rendered_template::{RenderedTemplate, RenderedTemplatesCache},
         string::short_circuit_replacement,
+        universal_sdk::change_project_in_universal_sdk,
     },
 };
 
@@ -343,25 +343,15 @@ pub(crate) fn change_name(
         stdout,
     )?);
 
-    let universal_sdk_path = base_path
-        .parent()
-        .unwrap()
-        .join("universal-sdk")
-        .join("universalSdk.ts");
-    rendered_templates_cache.insert(
-        universal_sdk_path.clone().to_string_lossy(),
-        RenderedTemplate {
-            path: universal_sdk_path.clone(),
-            content: transform_universal_sdk_change_sdk(
-                base_path.parent().unwrap(),
-                &app_name.to_case(Case::Kebab),
-                &name.to_case(Case::Camel),
-                &name.to_case(Case::Pascal),
-                &name.to_case(Case::Kebab),
-            )?,
-            context: None,
-        },
-    );
+    if project_entry.r#type == ProjectType::Service || project_entry.r#type == ProjectType::Worker {
+        change_project_in_universal_sdk(
+            rendered_templates_cache,
+            base_path,
+            &app_name,
+            &existing_name,
+            &name,
+        )?;
+    }
 
     Ok(MoveTemplate {
         path: base_path.to_path_buf(),

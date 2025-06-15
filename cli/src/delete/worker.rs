@@ -6,7 +6,6 @@ use std::{
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, ArgMatches, Command};
-use convert_case::{Case, Casing};
 use rustyline::{Editor, history::DefaultHistory};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
@@ -182,9 +181,8 @@ impl CliCommand for WorkerCommand {
         remove_project_from_universal_sdk(
             &mut rendered_templates,
             base_path,
-            &manifest_data.kebab_case_app_name,
-            &worker_name.to_case(Case::Camel),
-            &worker_name.to_case(Case::Kebab),
+            &manifest_data.app_name,
+            &worker_name,
         )?;
 
         write_rendered_templates(&rendered_templates, false, &mut stdout)?;

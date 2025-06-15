@@ -1,4 +1,5 @@
 use anyhow::Result;
+use convert_case::{Case, Casing};
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
     BindingPatternKind, Declaration, Expression, Program, SourceType, Statement, TSType,
@@ -136,11 +137,14 @@ fn inject_into_universal_sdk_function<'a>(
 pub(crate) fn inject_into_universal_sdk<'a>(
     allocator: &'a Allocator,
     app_program_ast: &mut Program<'a>,
-    kebab_app_name: &str,
-    camel_case_name: &str,
-    pascal_case_name: &str,
-    kebab_case_name: &str,
+    app_name: &str,
+    name: &str,
 ) -> Result<()> {
+    let kebab_app_name = &app_name.to_case(Case::Kebab);
+    let camel_case_name = &name.to_case(Case::Camel);
+    let pascal_case_name = &name.to_case(Case::Pascal);
+    let kebab_case_name = &name.to_case(Case::Kebab);
+
     let import_text = format!(
         "import type {{ {}ApiClient }} from \"@{}/{}\";",
         pascal_case_name, kebab_app_name, kebab_case_name

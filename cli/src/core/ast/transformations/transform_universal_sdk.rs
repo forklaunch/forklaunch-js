@@ -13,23 +13,14 @@ use crate::core::ast::{
 
 pub(crate) fn transform_universal_sdk_add_sdk(
     base_path: &Path,
-    kebab_app_name: &str,
-    camel_case_name: &str,
-    pascal_case_name: &str,
-    kebab_case_name: &str,
+    app_name: &str,
+    name: &str,
 ) -> Result<String> {
     let allocator = Allocator::default();
     let app_program_text = read_to_string(base_path.join("universal-sdk").join("universalSdk.ts"))?;
     let mut app_program_ast = parse_ast_program(&allocator, &app_program_text, SourceType::ts());
 
-    inject_into_universal_sdk(
-        &allocator,
-        &mut app_program_ast,
-        kebab_app_name,
-        camel_case_name,
-        pascal_case_name,
-        kebab_case_name,
-    )?;
+    inject_into_universal_sdk(&allocator, &mut app_program_ast, app_name, name)?;
 
     Ok(CodeGenerator::new()
         .with_options(CodegenOptions::default())
@@ -39,21 +30,14 @@ pub(crate) fn transform_universal_sdk_add_sdk(
 
 pub(crate) fn transform_universal_sdk_remove_sdk(
     base_path: &Path,
-    kebab_app_name: &str,
-    camel_case_name: &str,
-    kebab_case_name: &str,
+    app_name: &str,
+    name: &str,
 ) -> Result<String> {
     let allocator = Allocator::default();
     let app_program_text = read_to_string(base_path.join("universal-sdk").join("universalSdk.ts"))?;
     let mut app_program_ast = parse_ast_program(&allocator, &app_program_text, SourceType::ts());
 
-    delete_from_universal_sdk(
-        &allocator,
-        &mut app_program_ast,
-        kebab_app_name,
-        camel_case_name,
-        kebab_case_name,
-    )?;
+    delete_from_universal_sdk(&allocator, &mut app_program_ast, app_name, name)?;
 
     Ok(CodeGenerator::new()
         .with_options(CodegenOptions::default())
@@ -63,31 +47,16 @@ pub(crate) fn transform_universal_sdk_remove_sdk(
 
 pub(crate) fn transform_universal_sdk_change_sdk(
     base_path: &Path,
-    kebab_app_name: &str,
-    camel_case_name: &str,
-    pascal_case_name: &str,
-    kebab_case_name: &str,
+    app_name: &str,
+    existing_name: &str,
+    name: &str,
 ) -> Result<String> {
     let allocator = Allocator::default();
     let app_program_text = read_to_string(base_path.join("universal-sdk").join("universalSdk.ts"))?;
     let mut app_program_ast = parse_ast_program(&allocator, &app_program_text, SourceType::ts());
 
-    delete_from_universal_sdk(
-        &allocator,
-        &mut app_program_ast,
-        kebab_app_name,
-        camel_case_name,
-        kebab_case_name,
-    )?;
-
-    inject_into_universal_sdk(
-        &allocator,
-        &mut app_program_ast,
-        kebab_app_name,
-        camel_case_name,
-        pascal_case_name,
-        kebab_case_name,
-    )?;
+    delete_from_universal_sdk(&allocator, &mut app_program_ast, app_name, existing_name)?;
+    inject_into_universal_sdk(&allocator, &mut app_program_ast, app_name, name)?;
 
     Ok(CodeGenerator::new()
         .with_options(CodegenOptions::default())

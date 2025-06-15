@@ -1,4 +1,5 @@
 use anyhow::Result;
+use convert_case::{Case, Casing};
 use oxc_allocator::{Allocator, CloneIn, Vec};
 use oxc_ast::ast::{
     BindingPatternKind, Declaration, Expression, ObjectPropertyKind, Program, Statement,
@@ -110,10 +111,13 @@ fn delete_from_universal_sdk_function<'a>(
 pub(crate) fn delete_from_universal_sdk<'a>(
     allocator: &'a Allocator,
     app_program_ast: &mut Program<'a>,
-    kebab_app_name: &str,
-    camel_case_name: &str,
-    kebab_case_name: &str,
+    app_name: &str,
+    name: &str,
 ) -> Result<()> {
+    let kebab_app_name = &app_name.to_case(Case::Kebab);
+    let camel_case_name = &name.to_case(Case::Camel);
+    let kebab_case_name = &name.to_case(Case::Kebab);
+
     let import_source = format!("@{}/{}", kebab_app_name, kebab_case_name);
 
     delete_import_statement(allocator, app_program_ast, &import_source)?;

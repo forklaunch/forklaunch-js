@@ -149,10 +149,8 @@ fn generate_basic_service(
     add_project_to_universal_sdk(
         &mut rendered_templates,
         base_path,
-        &manifest_data.kebab_case_app_name,
-        &manifest_data.camel_case_name,
-        &manifest_data.pascal_case_name,
-        &manifest_data.kebab_case_name,
+        &manifest_data.app_name,
+        &manifest_data.service_name,
     )?;
 
     write_rendered_templates(&rendered_templates, dryrun, stdout)
