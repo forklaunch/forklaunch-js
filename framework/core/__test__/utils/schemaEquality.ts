@@ -11,24 +11,30 @@ import {
   parse as zodParse
 } from '@forklaunch/validator/zod';
 
-export function testSchemaEquality<
-  Z extends IdiomaticSchema<ZodSchemaValidator>,
-  T extends IdiomaticSchema<TypeboxSchemaValidator>
->(zodSchema: Z, typeBoxSchema: T, testData: Schema<Z, ZodSchemaValidator>) {
-  const zodParseResult = zodParse(zodSchema, testData);
-  const typeboxParseResult = typeboxParse(typeBoxSchema, testData);
+export function testSchemaEquality<Schematic>() {
+  return <
+    Z extends IdiomaticSchema<ZodSchemaValidator>,
+    T extends IdiomaticSchema<TypeboxSchemaValidator>
+  >(
+    zodSchema: Z,
+    typeBoxSchema: T,
+    testData: Schema<Z, ZodSchemaValidator> & Schematic
+  ) => {
+    const zodParseResult = zodParse(zodSchema, testData);
+    const typeboxParseResult = typeboxParse(typeBoxSchema, testData);
 
-  const isEqual =
-    safeStringify(
-      zodParseResult.ok ? sortObjectKeys(zodParseResult.value) : '-1'
-    ) ===
-    safeStringify(
-      typeboxParseResult.ok
-        ? sortObjectKeys(typeboxParseResult.value as Record<string, unknown>)
-        : '1'
-    );
+    const isEqual =
+      safeStringify(
+        zodParseResult.ok ? sortObjectKeys(zodParseResult.value) : '-1'
+      ) ===
+      safeStringify(
+        typeboxParseResult.ok
+          ? sortObjectKeys(typeboxParseResult.value as Record<string, unknown>)
+          : '1'
+      );
 
-  return isEqual as EqualityWithoutFunction<T, Z>;
+    return isEqual as EqualityWithoutFunction<T, Z>;
+  };
 }
 
 type InjectiveWithoutFunction<O, T> = {

@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.9.16
+
+### Patch Changes
+
+- Slight test utility change
+
 ## 0.9.15
 
 ### Patch Changes
