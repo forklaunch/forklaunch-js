@@ -42,8 +42,8 @@ const getHandler = handlers.get(
   typeboxSchemaValidator,
   '/test',
   {
-    name: 'Test',
-    summary: 'Test Summary',
+    name: 'Test File',
+    summary: 'Gets a sample file back',
     responses: {
       200: {
         file: file
@@ -83,8 +83,8 @@ const postHandler = handlers.post(
   typeboxSchemaValidator,
   '/test',
   {
-    name: 'Test',
-    summary: 'Test Summary',
+    name: 'Test SSE',
+    summary: 'Sends a stream of events',
     body: {
       f: string,
       m: union([array(number), string])
@@ -128,8 +128,8 @@ const jsonPatchHandler = handlers.patch(
   typeboxSchemaValidator,
   '/test',
   {
-    name: 'Test',
-    summary: 'Test Summary',
+    name: 'Test JSON Patch',
+    summary: 'Returns a JSON object',
     body: {
       f: string,
       h: uuid
@@ -154,8 +154,8 @@ const multipartHandler = handlers.post(
   typeboxSchemaValidator,
   '/test/multipart',
   {
-    name: 'Test',
-    summary: 'Test Summary',
+    name: 'Test Multipart',
+    summary: 'Returns a string',
     body: {
       multipartForm: {
         f: string,
@@ -182,8 +182,8 @@ const urlEncodedFormHandler = handlers.post(
   typeboxSchemaValidator,
   '/test/url-encoded-form',
   {
-    name: 'Test',
-    summary: 'Test Summary',
+    name: 'Test URL Encoded Form',
+    summary: 'Returns a string',
     body: {
       urlEncodedForm: {
         f: string,

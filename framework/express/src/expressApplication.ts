@@ -3,6 +3,8 @@ import {
   ATTR_HTTP_RESPONSE_STATUS_CODE,
   DocsConfiguration,
   ForklaunchExpressLikeApplication,
+  ForklaunchRouter,
+  generateMcpServer,
   generateSwaggerDocument,
   isForklaunchRequest,
   logger,
@@ -11,6 +13,8 @@ import {
   OpenTelemetryCollector
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
+import { ZodSchemaValidator } from '@forklaunch/validator/zod';
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { apiReference } from '@scalar/express-api-reference';
 import crypto from 'crypto';
 import express, {
@@ -117,6 +121,42 @@ export class Application<
       port,
       this.routers
     );
+
+    if (this.schemaValidator instanceof ZodSchemaValidator) {
+      this.internal.post('/mcp', async (req, res) => {
+        try {
+          const server = generateMcpServer(
+            this.schemaValidator as unknown as ZodSchemaValidator,
+            port,
+            '1.0.0',
+            this.routers as unknown as ForklaunchRouter<ZodSchemaValidator>[]
+          );
+          const transport: StreamableHTTPServerTransport =
+            new StreamableHTTPServerTransport({
+              sessionIdGenerator: undefined
+            });
+          res.on('close', () => {
+            console.log('Request closed');
+            transport.close();
+            server.close();
+          });
+          await server.connect(transport);
+          await transport.handleRequest(req, res, req.body);
+        } catch (error) {
+          console.error('Error handling MCP request:', error);
+          if (!res.headersSent) {
+            res.status(500).json({
+              jsonrpc: '2.0',
+              error: {
+                code: -32603,
+                message: 'Internal server error'
+              },
+              id: null
+            });
+          }
+        }
+      });
+    }
 
     if (
       this.docsConfiguration == null ||

@@ -13,6 +13,7 @@ export * from './handlers/trace';
 export * from './handlers/typedHandler';
 export * from './httpStatusCodes';
 export * from './interfaces/expressLikeRouter.interface';
+export * from './mcpGenerator/mcpGenerator';
 export * from './middleware/response/enrichExpressLikeSend.middleware';
 export * from './openApiV3Generator/openApiV3Generator';
 export * from './router/discriminateBody';

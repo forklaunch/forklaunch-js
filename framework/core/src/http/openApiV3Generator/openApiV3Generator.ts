@@ -139,6 +139,7 @@ export function generateSwaggerDocument<SV extends AnySchemaValidator>(
       const fullPath = `${router.basePath}${
         route.path === '/' ? '' : route.path
       }`.replace(/:(\w+)/g, '{$1}');
+
       if (!paths[fullPath]) {
         paths[fullPath] = {};
       }

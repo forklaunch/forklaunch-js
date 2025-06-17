@@ -38,6 +38,7 @@
     "@forklaunch/common": "workspace:*",
     "@forklaunch/core": "workspace:*",
     "@forklaunch/validator": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.12.3",
     "@scalar/express-api-reference": "^0.8.3",
     "@types/multer": "^1.4.13",
     "body-parser": "^2.2.0",
