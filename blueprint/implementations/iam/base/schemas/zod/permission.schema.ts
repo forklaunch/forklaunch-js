@@ -10,13 +10,13 @@ import {
 export const CreatePermissionSchema = {
   slug: string,
   addToRolesIds: optional(array(string)),
-  extraFields: optional(unknown)
+  providerFields: optional(unknown)
 };
 
 export const UpdatePermissionSchema = ({ uuidId }: { uuidId: boolean }) => ({
   id: uuidId ? uuid : string,
   slug: optional(string),
-  extraFields: optional(unknown),
+  providerFields: optional(unknown),
   addToRolesIds: optional(array(string)),
   removeFromRolesIds: optional(array(string))
 });
@@ -24,7 +24,7 @@ export const UpdatePermissionSchema = ({ uuidId }: { uuidId: boolean }) => ({
 export const PermissionSchema = ({ uuidId }: { uuidId: boolean }) => ({
   id: uuidId ? uuid : string,
   slug: string,
-  extraFields: optional(unknown),
+  providerFields: optional(unknown),
   createdAt: optional(date),
   updatedAt: optional(date)
 });

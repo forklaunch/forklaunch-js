@@ -18,7 +18,8 @@ import {
   StripeBillingPortalDto,
   StripeCreateBillingPortalDto,
   StripeUpdateBillingPortalDto
-} from '../types/stripe.types';
+} from '../types/stripe.dto.types';
+import { StripeBillingPortalEntity } from '../types/stripe.entity.types';
 
 export class StripeBillingPortalService<
     SchemaValidator extends AnySchemaValidator,
@@ -33,13 +34,13 @@ export class StripeBillingPortalService<
       UpdateBillingPortalDtoMapper: StripeUpdateBillingPortalDto;
     },
     Entities extends {
-      BillingPortalDtoMapper: StripeBillingPortalDto;
-      CreateBillingPortalDtoMapper: StripeBillingPortalDto;
-      UpdateBillingPortalDtoMapper: StripeBillingPortalDto;
+      BillingPortalDtoMapper: StripeBillingPortalEntity;
+      CreateBillingPortalDtoMapper: StripeBillingPortalEntity;
+      UpdateBillingPortalDtoMapper: StripeBillingPortalEntity;
     } = {
-      BillingPortalDtoMapper: StripeBillingPortalDto;
-      CreateBillingPortalDtoMapper: StripeBillingPortalDto;
-      UpdateBillingPortalDtoMapper: StripeBillingPortalDto;
+      BillingPortalDtoMapper: StripeBillingPortalEntity;
+      CreateBillingPortalDtoMapper: StripeBillingPortalEntity;
+      UpdateBillingPortalDtoMapper: StripeBillingPortalEntity;
     }
   >
   extends BaseBillingPortalService<SchemaValidator, Metrics, Dto, Entities>
@@ -86,7 +87,7 @@ export class StripeBillingPortalService<
     billingPortalDto: Dto['CreateBillingPortalDtoMapper']
   ): Promise<Dto['BillingPortalDtoMapper']> {
     const session = await this.stripeClient.billingPortal.sessions.create({
-      ...billingPortalDto.extraFields,
+      ...billingPortalDto.stripeFields,
       customer: billingPortalDto.customerId
     });
     return super.createBillingPortalSession({
@@ -94,7 +95,7 @@ export class StripeBillingPortalService<
       id: session.id,
       uri: session.url,
       expiresAt: new Date(Date.now() + 5 * 60 * 1000),
-      extraFields: session
+      providerFields: session
     });
   }
 
@@ -105,7 +106,7 @@ export class StripeBillingPortalService<
       id: billingPortalDto.id
     });
     const session = await this.stripeClient.billingPortal.sessions.create({
-      ...billingPortalDto.extraFields,
+      ...billingPortalDto.stripeFields,
       customer: existingSession.customerId
     });
     return super.updateBillingPortalSession({
@@ -113,7 +114,7 @@ export class StripeBillingPortalService<
       id: session.id,
       uri: session.url,
       expiresAt: new Date(Date.now() + 5 * 60 * 1000),
-      extraFields: session
+      providerFields: session
     });
   }
 }

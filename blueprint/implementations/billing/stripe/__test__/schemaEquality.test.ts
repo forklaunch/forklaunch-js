@@ -1,8 +1,10 @@
 import { isTrue } from '@forklaunch/common';
 import { DummyEnum, testSchemaEquality } from '@forklaunch/core/test';
-import { PlanCadenceEnum } from '../domain';
+import Stripe from 'stripe';
+import { BillingProviderEnum } from '../domain/enums/billingProvider.enum';
 import { CurrencyEnum } from '../domain/enums/currency.enum';
 import { PaymentMethodEnum } from '../domain/enums/paymentMethod.enum';
+import { PlanCadenceEnum } from '../domain/enums/planCadence.enum';
 import {
   BillingPortalSchema as TypeboxBillingPortalSchema,
   CreateBillingPortalSchema as TypeboxCreateBillingPortalSchema,
@@ -69,7 +71,7 @@ import {
   StripeUpdatePaymentLinkDto,
   StripeUpdatePlanDto,
   StripeUpdateSubscriptionDto
-} from '../types/stripe.types';
+} from '../types/stripe.dto.types';
 
 const zodCreateCheckoutSessionSchema =
   ZodCreateCheckoutSessionSchema(DummyEnum);
@@ -110,7 +112,8 @@ describe('schema equality', () => {
           {
             customerId: 'test',
             uri: 'https://example.com',
-            expiresAt: new Date()
+            expiresAt: new Date(),
+            stripeFields: {}
           }
         )
       )
@@ -139,7 +142,8 @@ describe('schema equality', () => {
             id: 'test',
             customerId: 'test',
             uri: 'https://example.com',
-            expiresAt: new Date()
+            expiresAt: new Date(),
+            stripeFields: {} as Stripe.BillingPortal.Session
           }
         )
       )
@@ -160,8 +164,7 @@ describe('schema equality', () => {
             cancelRedirectUri: 'https://example.com',
             expiresAt: new Date(),
             status: DummyEnum.A,
-            mode: 'payment',
-            lineItems: []
+            stripeFields: {}
           }
         )
       )
@@ -196,9 +199,8 @@ describe('schema equality', () => {
             successRedirectUri: 'https://example.com',
             cancelRedirectUri: 'https://example.com',
             expiresAt: new Date(),
-            lineItems: [],
-            mode: 'payment',
-            status: DummyEnum.A
+            status: DummyEnum.A,
+            stripeFields: {} as Stripe.Checkout.Session
           }
         )
       )
@@ -216,7 +218,7 @@ describe('schema equality', () => {
             currency: CurrencyEnum.USD,
             paymentMethods: [PaymentMethodEnum.CARD, PaymentMethodEnum.AFFIRM],
             status: DummyEnum.A,
-            lineItems: []
+            stripeFields: {} as Stripe.PaymentLinkCreateParams
           }
         )
       )
@@ -231,7 +233,7 @@ describe('schema equality', () => {
             id: 'test',
             amount: 100,
             currency: CurrencyEnum.USD,
-            lineItems: []
+            stripeFields: {} as Stripe.PaymentLinkUpdateParams
           }
         )
       )
@@ -247,8 +249,8 @@ describe('schema equality', () => {
             amount: 100,
             currency: CurrencyEnum.USD,
             paymentMethods: [PaymentMethodEnum.CARD, PaymentMethodEnum.AFFIRM],
-            lineItems: [],
-            status: DummyEnum.A
+            status: DummyEnum.A,
+            stripeFields: {} as Stripe.PaymentLink
           }
         )
       )
@@ -268,6 +270,7 @@ describe('schema equality', () => {
             currency: CurrencyEnum.USD,
             features: [DummyEnum.A, DummyEnum.B],
             externalId: 'test',
+            stripeFields: {} as Stripe.PlanCreateParams,
             active: true,
             description: 'test'
           }
@@ -305,7 +308,8 @@ describe('schema equality', () => {
           features: [DummyEnum.A, DummyEnum.B],
           externalId: 'test',
           active: true,
-          description: 'test'
+          description: 'test',
+          stripeFields: {} as Stripe.Plan
         })
       )
     ).toBeTruthy();
@@ -327,7 +331,8 @@ describe('schema equality', () => {
             startDate: new Date(),
             endDate: new Date(),
             description: 'test',
-            billingProvider: 'stripe'
+            billingProvider: BillingProviderEnum.STRIPE,
+            stripeFields: {} as Stripe.SubscriptionCreateParams
           }
         )
       )
@@ -349,7 +354,7 @@ describe('schema equality', () => {
             startDate: new Date(),
             endDate: new Date(),
             description: 'test',
-            billingProvider: 'stripe'
+            billingProvider: BillingProviderEnum.STRIPE
           }
         )
       )
@@ -371,7 +376,8 @@ describe('schema equality', () => {
             startDate: new Date(),
             endDate: new Date(),
             description: 'test',
-            billingProvider: 'stripe'
+            billingProvider: BillingProviderEnum.STRIPE,
+            stripeFields: {} as Stripe.Subscription
           }
         )
       )

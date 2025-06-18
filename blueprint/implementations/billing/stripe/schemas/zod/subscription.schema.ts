@@ -7,11 +7,12 @@ import {
   string,
   type
 } from '@forklaunch/validator/zod';
+import { BillingProviderEnum } from '../../domain/enums/billingProvider.enum';
 import {
   StripeCreateSubscriptionDto,
   StripeSubscriptionDto,
   StripeUpdateSubscriptionDto
-} from '../../types/stripe.types';
+} from '../../types/stripe.dto.types';
 
 export const CreateSubscriptionSchema = <
   T extends Record<string, LiteralSchema>
@@ -28,7 +29,8 @@ export const CreateSubscriptionSchema = <
   startDate: date,
   endDate: date,
   status: string,
-  extraFields: optional(type<StripeCreateSubscriptionDto<T>['extraFields']>())
+  billingProvider: optional(enum_(BillingProviderEnum)),
+  stripeFields: type<StripeCreateSubscriptionDto<T>['stripeFields']>()
 });
 
 export const UpdateSubscriptionSchema = <
@@ -46,7 +48,8 @@ export const UpdateSubscriptionSchema = <
   startDate: optional(date),
   endDate: optional(date),
   status: optional(string),
-  extraFields: optional(type<StripeUpdateSubscriptionDto<T>['extraFields']>())
+  billingProvider: optional(enum_(BillingProviderEnum)),
+  stripeFields: optional(type<StripeUpdateSubscriptionDto<T>['stripeFields']>())
 });
 
 export const SubscriptionSchema = <T extends Record<string, LiteralSchema>>(
@@ -62,12 +65,13 @@ export const SubscriptionSchema = <T extends Record<string, LiteralSchema>>(
   startDate: date,
   endDate: date,
   status: string,
-  extraFields: optional(type<StripeSubscriptionDto<T>['extraFields']>()),
+  billingProvider: optional(enum_(BillingProviderEnum)),
+  stripeFields: type<StripeSubscriptionDto<T>['stripeFields']>(),
   createdAt: optional(date),
   updatedAt: optional(date)
 });
 
-export const BaseSubscriptionServiceSchemas = {
+export const StripeSubscriptionServiceSchemas = {
   CreateSubscriptionSchema,
   UpdateSubscriptionSchema,
   SubscriptionSchema

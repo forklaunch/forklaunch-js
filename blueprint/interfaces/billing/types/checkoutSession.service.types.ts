@@ -12,7 +12,7 @@ export type CreateCheckoutSessionDto<
   cancelRedirectUri?: string;
   expiresAt: Date;
   status: StatusEnum[keyof StatusEnum];
-  extraFields?: unknown;
+  providerFields?: unknown;
 };
 export type UpdateCheckoutSessionDto<
   PaymentMethodEnum,

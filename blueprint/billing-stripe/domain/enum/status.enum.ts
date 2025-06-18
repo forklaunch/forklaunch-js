@@ -1,0 +1,7 @@
+export enum StatusEnum {
+  PENDING = 'PENDING',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
+  FAILED = 'FAILED',
+  EXPIRED = 'EXPIRED'
+}

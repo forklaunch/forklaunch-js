@@ -8,14 +8,13 @@ import {
   string,
   type
 } from '@forklaunch/validator/zod';
-import Stripe from 'stripe';
 import { CurrencyEnum } from '../../domain/enums/currency.enum';
 import { PaymentMethodEnum } from '../../domain/enums/paymentMethod.enum';
 import {
   StripeCreatePaymentLinkDto,
   StripePaymentLinkDto,
   StripeUpdatePaymentLinkDto
-} from '../../types/stripe.types';
+} from '../../types/stripe.dto.types';
 
 export const CreatePaymentLinkSchema = <
   T extends Record<string, LiteralSchema>
@@ -26,9 +25,8 @@ export const CreatePaymentLinkSchema = <
   amount: number,
   currency: enum_(CurrencyEnum),
   paymentMethods: array(enum_(PaymentMethodEnum)),
-  lineItems: array(type<Stripe.PaymentLinkCreateParams.LineItem>()),
   status: enum_(StatusEnum),
-  extraFields: optional(type<StripeCreatePaymentLinkDto<T>['extraFields']>())
+  stripeFields: type<StripeCreatePaymentLinkDto<T>['stripeFields']>()
 });
 
 export const UpdatePaymentLinkSchema = <
@@ -40,9 +38,8 @@ export const UpdatePaymentLinkSchema = <
   amount: optional(number),
   currency: optional(enum_(CurrencyEnum)),
   paymentMethods: optional(array(enum_(PaymentMethodEnum))),
-  lineItems: optional(array(type<Stripe.PaymentLinkUpdateParams.LineItem>())),
   status: optional(enum_(StatusEnum)),
-  extraFields: optional(type<StripeUpdatePaymentLinkDto<T>['extraFields']>())
+  stripeFields: optional(type<StripeUpdatePaymentLinkDto<T>['stripeFields']>())
 });
 
 export const PaymentLinkSchema = <T extends Record<string, LiteralSchema>>(
@@ -52,14 +49,13 @@ export const PaymentLinkSchema = <T extends Record<string, LiteralSchema>>(
   amount: number,
   currency: enum_(CurrencyEnum),
   paymentMethods: array(enum_(PaymentMethodEnum)),
-  lineItems: array(type<Stripe.LineItem>()),
   status: enum_(StatusEnum),
-  extraFields: optional(type<StripePaymentLinkDto<T>['extraFields']>()),
+  stripeFields: type<StripePaymentLinkDto<T>['stripeFields']>(),
   createdAt: optional(date),
   updatedAt: optional(date)
 });
 
-export const BasePaymentLinkServiceSchemas = {
+export const StripePaymentLinkServiceSchemas = {
   CreatePaymentLinkSchema,
   UpdatePaymentLinkSchema,
   PaymentLinkSchema

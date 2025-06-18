@@ -13,13 +13,15 @@ import { PlanService } from '@forklaunch/interfaces-billing/interfaces';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
 import Stripe from 'stripe';
+import { BillingProviderEnum } from '../domain/enums/billingProvider.enum';
 import { CurrencyEnum } from '../domain/enums/currency.enum';
 import { PlanCadenceEnum } from '../domain/enums/planCadence.enum';
 import {
   StripeCreatePlanDto,
   StripePlanDto,
   StripeUpdatePlanDto
-} from '../types/stripe.types';
+} from '../types/stripe.dto.types';
+import { StripePlanEntity } from '../types/stripe.entity.types';
 
 export class StripePlanService<
     SchemaValidator extends AnySchemaValidator,
@@ -34,20 +36,20 @@ export class StripePlanService<
       UpdatePlanDtoMapper: StripeUpdatePlanDto;
     },
     Entities extends {
-      PlanDtoMapper: StripePlanDto;
-      CreatePlanDtoMapper: StripePlanDto;
-      UpdatePlanDtoMapper: StripePlanDto;
+      PlanDtoMapper: StripePlanEntity;
+      CreatePlanDtoMapper: StripePlanEntity;
+      UpdatePlanDtoMapper: StripePlanEntity;
     } = {
-      PlanDtoMapper: StripePlanDto;
-      CreatePlanDtoMapper: StripePlanDto;
-      UpdatePlanDtoMapper: StripePlanDto;
+      PlanDtoMapper: StripePlanEntity;
+      CreatePlanDtoMapper: StripePlanEntity;
+      UpdatePlanDtoMapper: StripePlanEntity;
     }
   >
   extends BasePlanService<
     SchemaValidator,
     typeof PlanCadenceEnum,
     typeof CurrencyEnum,
-    { stripe: 'stripe' },
+    typeof BillingProviderEnum,
     Metrics,
     Dto,
     Entities
@@ -56,7 +58,7 @@ export class StripePlanService<
     PlanService<
       typeof PlanCadenceEnum,
       typeof CurrencyEnum,
-      { stripe: 'stripe' },
+      typeof BillingProviderEnum,
       {
         CreatePlanDto: StripeCreatePlanDto;
         UpdatePlanDto: StripeUpdatePlanDto;
@@ -101,7 +103,7 @@ export class StripePlanService<
     em?: EntityManager
   ): Promise<Dto['PlanDtoMapper']> {
     const plan = await this.stripeClient.plans.create({
-      ...planDto.extraFields,
+      ...planDto.stripeFields,
       interval: planDto.cadence,
       product: planDto.name,
       currency: planDto.currency as string
@@ -111,7 +113,7 @@ export class StripePlanService<
         ...planDto,
         externalId: plan.id,
         billingProvider: 'stripe',
-        extraFields: plan
+        providerFields: plan
       },
       em
     );
@@ -133,7 +135,7 @@ export class StripePlanService<
     }
     return {
       ...(await super.getPlan({ id }, em)),
-      extraFields: plan
+      stripeFields: plan
     };
   }
 
@@ -144,7 +146,7 @@ export class StripePlanService<
     const existingPlan = await this.stripeClient.plans.retrieve(planDto.id);
     const plan = await this.stripeClient.plans.del(planDto.id).then(() =>
       this.stripeClient.plans.create({
-        ...planDto.extraFields,
+        ...planDto.stripeFields,
         interval: planDto.cadence ?? existingPlan.interval,
         product: planDto.name,
         currency: planDto.currency ?? existingPlan.currency
@@ -155,7 +157,7 @@ export class StripePlanService<
         ...planDto,
         externalId: plan.id,
         billingProvider: 'stripe',
-        extraFields: plan
+        providerFields: plan
       },
       em
     );
@@ -178,14 +180,16 @@ export class StripePlanService<
         this.options?.databaseTableName ?? 'plan',
         { where: { externalId: { $in: plans.data.map((plan) => plan.id) } } }
       )
-    )?.map((s) => s.id);
+    )
+      ?.filter((s) => idsDto?.ids?.includes(s.id))
+      ?.map((s) => s.id);
 
     if (!ids) {
       throw new Error('Plans not found');
     }
     return (await super.listPlans({ ids }, em)).map((plan) => ({
       ...plan,
-      extraFields: plans.data.find(
+      stripeFields: plans.data.find(
         (stripePlan) => stripePlan.id === plan.externalId
       )
     }));

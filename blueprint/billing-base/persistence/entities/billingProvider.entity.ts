@@ -9,10 +9,10 @@ export class BillingProvider extends SqlBaseEntity {
   @Unique()
   externalId?: string;
 
-  // maybe include standardized auth fields if the same, if not, leverage the extraFields
+  // maybe include standardized auth fields if the same, if not, leverage the providerFields
   // store information here as well
   @Property({ type: 'json', nullable: true })
-  extraFields?: unknown;
+  providerFields?: unknown;
 
   @Enum({ items: () => BillingProviderEnum, nullable: true })
   billingProvider?: BillingProviderEnum;

@@ -3,7 +3,7 @@ import { IdDto, IdsDto, RecordTimingDto } from '@forklaunch/common';
 export type CreatePermissionDto = Partial<IdDto> & {
   slug: string;
   addToRolesIds?: string[];
-  extraFields?: unknown;
+  providerFields?: unknown;
 };
 export type UpdatePermissionDto = Partial<CreatePermissionDto> &
   IdDto & {
@@ -13,7 +13,7 @@ export type PermissionDto = CreatePermissionDto &
   IdDto &
   Partial<RecordTimingDto> & {
     slug: string;
-    extraFields?: unknown;
+    providerFields?: unknown;
   };
 
 export type PermissionServiceParameters = {

@@ -13,11 +13,13 @@ import { SubscriptionService } from '@forklaunch/interfaces-billing/interfaces';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
 import Stripe from 'stripe';
+import { BillingProviderEnum } from '../domain/enums/billingProvider.enum';
 import {
   StripeCreateSubscriptionDto,
   StripeSubscriptionDto,
   StripeUpdateSubscriptionDto
-} from '../types/stripe.types';
+} from '../types/stripe.dto.types';
+import { StripeSubscriptionEntity } from '../types/stripe.entity.types';
 
 export class StripeSubscriptionService<
     SchemaValidator extends AnySchemaValidator,
@@ -33,19 +35,19 @@ export class StripeSubscriptionService<
       UpdateSubscriptionDtoMapper: StripeUpdateSubscriptionDto<PartyType>;
     },
     Entities extends {
-      SubscriptionDtoMapper: StripeSubscriptionDto<PartyType>;
-      CreateSubscriptionDtoMapper: StripeSubscriptionDto<PartyType>;
-      UpdateSubscriptionDtoMapper: StripeSubscriptionDto<PartyType>;
+      SubscriptionDtoMapper: StripeSubscriptionEntity<PartyType>;
+      CreateSubscriptionDtoMapper: StripeSubscriptionEntity<PartyType>;
+      UpdateSubscriptionDtoMapper: StripeSubscriptionEntity<PartyType>;
     } = {
-      SubscriptionDtoMapper: StripeSubscriptionDto<PartyType>;
-      CreateSubscriptionDtoMapper: StripeSubscriptionDto<PartyType>;
-      UpdateSubscriptionDtoMapper: StripeSubscriptionDto<PartyType>;
+      SubscriptionDtoMapper: StripeSubscriptionEntity<PartyType>;
+      CreateSubscriptionDtoMapper: StripeSubscriptionEntity<PartyType>;
+      UpdateSubscriptionDtoMapper: StripeSubscriptionEntity<PartyType>;
     }
   >
   extends BaseSubscriptionService<
     SchemaValidator,
     PartyType,
-    { stripe: 'stripe' },
+    typeof BillingProviderEnum,
     Metrics,
     Dto,
     Entities
@@ -53,7 +55,7 @@ export class StripeSubscriptionService<
   implements
     SubscriptionService<
       PartyType,
-      { stripe: 'stripe' },
+      typeof BillingProviderEnum,
       {
         CreateSubscriptionDto: StripeCreateSubscriptionDto<PartyType>;
         UpdateSubscriptionDto: StripeUpdateSubscriptionDto<PartyType>;
@@ -98,7 +100,7 @@ export class StripeSubscriptionService<
     em?: EntityManager
   ): Promise<Dto['SubscriptionDtoMapper']> {
     const subscription = await this.stripe.subscriptions.create({
-      ...subscriptionDto.extraFields,
+      ...subscriptionDto.stripeFields,
       customer: subscriptionDto.partyId,
       items: [
         {
@@ -111,7 +113,7 @@ export class StripeSubscriptionService<
         ...subscriptionDto,
         externalId: subscription.id,
         billingProvider: 'stripe',
-        extraFields: subscription
+        providerFields: subscription
       },
       em
     );
@@ -123,7 +125,7 @@ export class StripeSubscriptionService<
   ): Promise<Dto['SubscriptionDtoMapper']> {
     return {
       ...(await super.getSubscription(idDto, em)),
-      extraFields: await this.stripe.subscriptions.retrieve(idDto.id)
+      stripeFields: await this.stripe.subscriptions.retrieve(idDto.id)
     };
   }
 
@@ -133,7 +135,7 @@ export class StripeSubscriptionService<
   ): Promise<Dto['SubscriptionDtoMapper']> {
     return {
       ...(await super.getUserSubscription(idDto, em)),
-      extraFields: await this.stripe.subscriptions.retrieve(idDto.id)
+      stripeFields: await this.stripe.subscriptions.retrieve(idDto.id)
     };
   }
 
@@ -152,7 +154,7 @@ export class StripeSubscriptionService<
     }
     return {
       ...(await super.getOrganizationSubscription({ id }, em)),
-      extraFields: await this.stripe.subscriptions.retrieve(idDto.id)
+      stripeFields: await this.stripe.subscriptions.retrieve(idDto.id)
     };
   }
 
@@ -163,7 +165,7 @@ export class StripeSubscriptionService<
     const subscription = await this.stripe.subscriptions.update(
       subscriptionDto.id,
       {
-        ...subscriptionDto.extraFields,
+        ...subscriptionDto.stripeFields,
         items: [
           {
             plan: subscriptionDto.productId
@@ -176,7 +178,7 @@ export class StripeSubscriptionService<
         ...subscriptionDto,
         externalId: subscription.id,
         billingProvider: 'stripe',
-        extraFields: subscription
+        providerFields: subscription
       },
       em
     );
@@ -214,7 +216,9 @@ export class StripeSubscriptionService<
     return (await super.listSubscriptions({ ids }, em)).map((subscription) => {
       return {
         ...subscription,
-        extraFields: subscriptions.find((s) => s.id === subscription.externalId)
+        stripeFields: subscriptions.find(
+          (s) => s.id === subscription.externalId
+        )
       };
     });
   }

@@ -9,7 +9,7 @@ export type CreatePlanDto<PlanCadenceEnum, CurrencyEnum, BillingProviderEnum> =
     currency: CurrencyEnum[keyof CurrencyEnum];
     cadence: PlanCadenceEnum[keyof PlanCadenceEnum];
     features?: string[];
-    extraFields?: unknown;
+    providerFields?: unknown;
     externalId: string;
     billingProvider?: BillingProviderEnum[keyof BillingProviderEnum];
   };

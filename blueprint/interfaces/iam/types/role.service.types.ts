@@ -4,7 +4,7 @@ import { PermissionDto } from './permission.service.types';
 export type CreateRoleDto = Partial<IdDto> & {
   name: string;
   permissionIds?: string[];
-  extraFields?: unknown;
+  providerFields?: unknown;
 };
 export type UpdateRoleDto = Partial<CreateRoleDto> & IdDto;
 export type RoleDto = Omit<CreateRoleDto, 'permissionIds'> &

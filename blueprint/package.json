@@ -10,6 +10,7 @@
     "iam-base",
     "iam-better-auth",
     "billing-base",
+    "billing-stripe",
     "sample-worker",
     "monitoring",
     "implementations/**/*",

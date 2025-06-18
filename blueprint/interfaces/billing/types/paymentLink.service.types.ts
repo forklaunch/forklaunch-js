@@ -6,7 +6,7 @@ export type CreatePaymentLinkDto<PaymentMethodEnum, CurrencyEnum, StatusEnum> =
     currency: CurrencyEnum[keyof CurrencyEnum];
     paymentMethods: PaymentMethodEnum[keyof PaymentMethodEnum][];
     status: StatusEnum[keyof StatusEnum];
-    extraFields?: unknown;
+    providerFields?: unknown;
   };
 export type UpdatePaymentLinkDto<PaymentMethodEnum, CurrencyEnum, StatusEnum> =
   Partial<CreatePaymentLinkDto<PaymentMethodEnum, CurrencyEnum, StatusEnum>> &

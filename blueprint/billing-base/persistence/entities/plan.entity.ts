@@ -29,7 +29,7 @@ export class Plan extends SqlBaseEntity {
   features?: string[];
 
   @Property({ type: 'json', nullable: true })
-  extraFields?: unknown;
+  providerFields?: unknown;
 
   @Property()
   @Unique()

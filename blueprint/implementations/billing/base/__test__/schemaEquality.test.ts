@@ -222,7 +222,7 @@ describe('schema equality', () => {
             customerId: 'test',
             uri: 'https://example.com',
             expiresAt: new Date(),
-            extraFields: {
+            providerFields: {
               test: 'test'
             }
           }
@@ -251,7 +251,7 @@ describe('schema equality', () => {
             cancelRedirectUri: 'https://example.com',
             expiresAt: new Date(),
             status: DummyEnum.A,
-            extraFields: {
+            providerFields: {
               test: 'test'
             }
           }
@@ -276,7 +276,7 @@ describe('schema equality', () => {
             paymentMethods: [DummyEnum.A, DummyEnum.B],
             successRedirectUri: 'https://example.com',
             cancelRedirectUri: 'https://example.com',
-            extraFields: {
+            providerFields: {
               test: 'test'
             }
           }
@@ -301,7 +301,7 @@ describe('schema equality', () => {
           cancelRedirectUri: 'https://example.com',
           expiresAt: new Date(),
           status: DummyEnum.A,
-          extraFields: {
+          providerFields: {
             test: 'test'
           }
         })
@@ -323,7 +323,7 @@ describe('schema equality', () => {
           currency: DummyEnum.A,
           paymentMethods: [DummyEnum.A, DummyEnum.B],
           status: DummyEnum.A,
-          extraFields: {
+          providerFields: {
             test: 'test'
           }
         })
@@ -343,7 +343,7 @@ describe('schema equality', () => {
           amount: 100,
           currency: DummyEnum.A,
           paymentMethods: [DummyEnum.A, DummyEnum.B],
-          extraFields: {
+          providerFields: {
             test: 'test'
           }
         })
@@ -360,7 +360,7 @@ describe('schema equality', () => {
           currency: DummyEnum.A,
           paymentMethods: [DummyEnum.A, DummyEnum.B],
           status: DummyEnum.A,
-          extraFields: {
+          providerFields: {
             test: 'test'
           }
         })
@@ -382,7 +382,7 @@ describe('schema equality', () => {
           externalId: 'test',
           active: true,
           description: 'test',
-          extraFields: {
+          providerFields: {
             test: 'test'
           }
         })
@@ -403,7 +403,7 @@ describe('schema equality', () => {
           externalId: 'test',
           active: true,
           description: 'test',
-          extraFields: {
+          providerFields: {
             test: 'test'
           }
         })
@@ -424,7 +424,7 @@ describe('schema equality', () => {
           externalId: 'test',
           active: true,
           description: 'test',
-          extraFields: {
+          providerFields: {
             test: 'test'
           }
         })
@@ -447,7 +447,7 @@ describe('schema equality', () => {
           startDate: new Date(),
           endDate: new Date(),
           description: 'test',
-          extraFields: {
+          providerFields: {
             test: 'test'
           },
           billingProvider: DummyEnum.A
@@ -470,7 +470,7 @@ describe('schema equality', () => {
           startDate: new Date(),
           endDate: new Date(),
           description: 'test',
-          extraFields: {
+          providerFields: {
             test: 'test'
           },
           billingProvider: DummyEnum.A
@@ -493,7 +493,7 @@ describe('schema equality', () => {
           startDate: new Date(),
           endDate: new Date(),
           description: 'test',
-          extraFields: {
+          providerFields: {
             test: 'test'
           },
           billingProvider: DummyEnum.A

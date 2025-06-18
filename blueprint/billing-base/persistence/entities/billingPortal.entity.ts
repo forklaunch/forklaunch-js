@@ -14,5 +14,5 @@ export class BillingPortal extends SqlBaseEntity {
   expiresAt!: Date;
 
   @Property({ type: 'json', nullable: true })
-  extraFields?: unknown;
+  providerFields?: unknown;
 }

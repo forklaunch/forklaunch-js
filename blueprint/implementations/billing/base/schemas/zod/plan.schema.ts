@@ -29,7 +29,7 @@ export const CreatePlanSchema = <
   externalId: string,
   billingProvider: optional(enum_(BillingProviderEnum)),
   active: boolean,
-  extraFields: optional(unknown)
+  providerFields: optional(unknown)
 });
 
 export const UpdatePlanSchema =
@@ -53,7 +53,7 @@ export const UpdatePlanSchema =
     externalId: optional(string),
     billingProvider: optional(enum_(BillingProviderEnum)),
     active: optional(boolean),
-    extraFields: optional(unknown)
+    providerFields: optional(unknown)
   });
 
 export const PlanSchema =
@@ -77,7 +77,7 @@ export const PlanSchema =
     externalId: string,
     billingProvider: optional(enum_(BillingProviderEnum)),
     active: boolean,
-    extraFields: optional(unknown),
+    providerFields: optional(unknown),
     createdAt: optional(date),
     updatedAt: optional(date)
   });

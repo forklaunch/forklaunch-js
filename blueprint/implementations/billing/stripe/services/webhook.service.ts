@@ -12,6 +12,7 @@ import {
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
 import Stripe from 'stripe';
+import { BillingProviderEnum } from '../domain/enums/billingProvider.enum';
 import { CurrencyEnum } from '../domain/enums/currency.enum';
 import { PaymentMethodEnum } from '../domain/enums/paymentMethod.enum';
 import { PlanCadenceEnum } from '../domain/enums/planCadence.enum';
@@ -43,12 +44,12 @@ export class StripeWebhookService<
       SchemaValidator,
       typeof PlanCadenceEnum,
       typeof CurrencyEnum,
-      { stripe: 'stripe' }
+      typeof BillingProviderEnum
     >,
     protected readonly subscriptionService: BaseSubscriptionService<
       SchemaValidator,
       PartyEnum,
-      { stripe: 'stripe' }
+      typeof BillingProviderEnum
     >
   ) {}
 
@@ -65,7 +66,7 @@ export class StripeWebhookService<
           customerId: event.data.object.customer,
           expiresAt: new Date(event.data.object.created + 5 * 60 * 1000),
           uri: event.data.object.url,
-          extraFields: event.data.object
+          providerFields: event.data.object
         });
         break;
       }
@@ -97,7 +98,7 @@ export class StripeWebhookService<
               .payment_method_types as PaymentMethodEnum[],
             status: 'CREATED' as StatusEnum[keyof StatusEnum],
             currency: event.data.object.currency as CurrencyEnum,
-            extraFields: event.data.object
+            providerFields: event.data.object
           });
         }
         break;
@@ -114,7 +115,7 @@ export class StripeWebhookService<
             .payment_method_types as PaymentMethodEnum[],
           status: 'UPDATED' as StatusEnum[keyof StatusEnum],
           currency: event.data.object.currency as CurrencyEnum,
-          extraFields: event.data.object
+          providerFields: event.data.object
         });
         break;
       }
@@ -127,7 +128,7 @@ export class StripeWebhookService<
         ) {
           this.planService.createPlan({
             id: event.data.object.id,
-            billingProvider: 'stripe',
+            billingProvider: BillingProviderEnum.STRIPE,
             cadence: event.data.object.interval as PlanCadenceEnum,
             currency: event.data.object.currency as CurrencyEnum,
             active: true,
@@ -137,7 +138,7 @@ export class StripeWebhookService<
                 : event.data.object.product?.id,
             price: event.data.object.amount,
             externalId: event.data.object.id,
-            extraFields: event.data.object
+            providerFields: event.data.object
           });
         } else {
           throw new Error('Invalid plan');
@@ -153,7 +154,7 @@ export class StripeWebhookService<
         ) {
           this.planService.updatePlan({
             id: event.data.object.id,
-            billingProvider: 'stripe',
+            billingProvider: BillingProviderEnum.STRIPE,
             cadence: event.data.object.interval as PlanCadenceEnum,
             currency: event.data.object.currency as CurrencyEnum,
             active: true,
@@ -163,7 +164,7 @@ export class StripeWebhookService<
                 : event.data.object.product?.id,
             price: event.data.object.amount,
             externalId: event.data.object.id,
-            extraFields: event.data.object
+            providerFields: event.data.object
           });
         } else {
           throw new Error('Invalid plan');
@@ -189,9 +190,9 @@ export class StripeWebhookService<
           description: event.data.object.description ?? undefined,
           active: true,
           productId: event.data.object.items.data[0].plan.id,
-          extraFields: event.data.object,
+          providerFields: event.data.object,
           externalId: event.data.object.id,
-          billingProvider: 'stripe',
+          billingProvider: BillingProviderEnum.STRIPE,
           startDate: new Date(event.data.object.created),
           endDate: event.data.object.cancel_at
             ? new Date(event.data.object.cancel_at)
@@ -210,9 +211,9 @@ export class StripeWebhookService<
               : event.data.object.customer.id,
           description: event.data.object.description ?? undefined,
           active: true,
-          extraFields: event.data.object,
+          providerFields: event.data.object,
           externalId: event.data.object.id,
-          billingProvider: 'stripe',
+          billingProvider: BillingProviderEnum.STRIPE,
           startDate: new Date(event.data.object.created),
           status: event.data.object.status
         });

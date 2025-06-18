@@ -16,11 +16,12 @@ import { EntityManager } from '@mikro-orm/core';
 import Stripe from 'stripe';
 import { CurrencyEnum } from '../domain/enums/currency.enum';
 import { PaymentMethodEnum } from '../domain/enums/paymentMethod.enum';
+import { StripePaymentLinkEntity } from '../types';
 import {
   StripeCreatePaymentLinkDto,
   StripePaymentLinkDto,
   StripeUpdatePaymentLinkDto
-} from '../types/stripe.types';
+} from '../types/stripe.dto.types';
 
 export class StripePaymentLinkService<
     SchemaValidator extends AnySchemaValidator,
@@ -36,13 +37,13 @@ export class StripePaymentLinkService<
       UpdatePaymentLinkDtoMapper: StripeUpdatePaymentLinkDto<StatusEnum>;
     },
     Entities extends {
-      PaymentLinkDtoMapper: StripePaymentLinkDto<StatusEnum>;
-      CreatePaymentLinkDtoMapper: StripePaymentLinkDto<StatusEnum>;
-      UpdatePaymentLinkDtoMapper: StripePaymentLinkDto<StatusEnum>;
+      PaymentLinkDtoMapper: StripePaymentLinkEntity<StatusEnum>;
+      CreatePaymentLinkDtoMapper: StripePaymentLinkEntity<StatusEnum>;
+      UpdatePaymentLinkDtoMapper: StripePaymentLinkEntity<StatusEnum>;
     } = {
-      PaymentLinkDtoMapper: StripePaymentLinkDto<StatusEnum>;
-      CreatePaymentLinkDtoMapper: StripePaymentLinkDto<StatusEnum>;
-      UpdatePaymentLinkDtoMapper: StripePaymentLinkDto<StatusEnum>;
+      PaymentLinkDtoMapper: StripePaymentLinkEntity<StatusEnum>;
+      CreatePaymentLinkDtoMapper: StripePaymentLinkEntity<StatusEnum>;
+      UpdatePaymentLinkDtoMapper: StripePaymentLinkEntity<StatusEnum>;
     }
   >
   extends BasePaymentLinkService<
@@ -103,8 +104,7 @@ export class StripePaymentLinkService<
     paymentLinkDto: Dto['CreatePaymentLinkDtoMapper']
   ): Promise<Dto['PaymentLinkDtoMapper']> {
     const session = await this.stripeClient.paymentLinks.create({
-      ...paymentLinkDto.extraFields,
-      line_items: paymentLinkDto.lineItems,
+      ...paymentLinkDto.stripeFields,
       payment_method_types: paymentLinkDto.paymentMethods,
       currency: paymentLinkDto.currency as string
     });
@@ -117,7 +117,7 @@ export class StripePaymentLinkService<
           (total, item) => total + item.amount_total,
           0
         ) ?? 0,
-      extraFields: session
+      providerFields: session
     });
   }
 
@@ -127,8 +127,7 @@ export class StripePaymentLinkService<
     const session = await this.stripeClient.paymentLinks.update(
       paymentLinkDto.id,
       {
-        ...paymentLinkDto.extraFields,
-        line_items: paymentLinkDto.lineItems,
+        ...paymentLinkDto.stripeFields,
         payment_method_types: paymentLinkDto.paymentMethods
       }
     );
@@ -141,7 +140,7 @@ export class StripePaymentLinkService<
           (total, item) => total + item.amount_total,
           0
         ) ?? 0,
-      extraFields: session
+      providerFields: session
     });
   }
 
@@ -149,7 +148,7 @@ export class StripePaymentLinkService<
     const databasePaymentLink = await super.getPaymentLink({ id });
     return {
       ...databasePaymentLink,
-      extraFields: await this.stripeClient.paymentLinks.retrieve(id)
+      stripeFields: await this.stripeClient.paymentLinks.retrieve(id)
     };
   }
 
@@ -188,7 +187,7 @@ export class StripePaymentLinkService<
     });
     return (await super.listPaymentLinks(idsDto)).map((paymentLink) => ({
       ...paymentLink,
-      extraFields: paymentLinks.data.find(
+      stripeFields: paymentLinks.data.find(
         (paymentLink) => paymentLink.id === paymentLink.id
       )
     }));

@@ -1,8 +1,8 @@
 import { serviceSchemaResolver } from '@forklaunch/core/mappers';
-import { BasePaymentLinkServiceSchemas as TypeBoxSchemas } from './typebox/paymentLink.schema';
-import { BasePaymentLinkServiceSchemas as ZodSchemas } from './zod/paymentLink.schema';
+import { StripePaymentLinkServiceSchemas as TypeBoxSchemas } from './typebox/paymentLink.schema';
+import { StripePaymentLinkServiceSchemas as ZodSchemas } from './zod/paymentLink.schema';
 
-export const BasePaymentLinkServiceSchemas = serviceSchemaResolver(
+export const StripePaymentLinkServiceSchemas = serviceSchemaResolver(
   () => TypeBoxSchemas,
   () => ZodSchemas
 );

@@ -6,6 +6,7 @@ packages:
 - core
 - monitoring
 - billing-base
+- billing-stripe
 - iam-base
 - iam-better-auth
 - sample-worker

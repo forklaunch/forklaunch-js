@@ -4,7 +4,7 @@ export type CreateBillingPortalDto = Partial<IdDto> & {
   customerId: string;
   uri?: string;
   expiresAt: Date;
-  extraFields?: unknown;
+  providerFields?: unknown;
 };
 export type UpdateBillingPortalDto = Partial<CreateBillingPortalDto> & IdDto;
 export type BillingPortalDto = CreateBillingPortalDto &

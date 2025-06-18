@@ -25,7 +25,7 @@ export const CreateCheckoutSessionSchema = <
   cancelRedirectUri: optional(string),
   expiresAt: date,
   status: enum_(StatusEnum),
-  extraFields: optional(unknown)
+  providerFields: optional(unknown)
 });
 
 export const UpdateCheckoutSessionSchema =
@@ -47,7 +47,7 @@ export const UpdateCheckoutSessionSchema =
     cancelRedirectUri: optional(string),
     expiresAt: optional(date),
     status: optional(enum_(StatusEnum)),
-    extraFields: optional(unknown)
+    providerFields: optional(unknown)
   });
 
 export const CheckoutSessionSchema =
@@ -69,7 +69,7 @@ export const CheckoutSessionSchema =
     cancelRedirectUri: optional(string),
     expiresAt: date,
     status: enum_(StatusEnum),
-    extraFields: optional(unknown),
+    providerFields: optional(unknown),
     createdAt: optional(date),
     updatedAt: optional(date)
   });

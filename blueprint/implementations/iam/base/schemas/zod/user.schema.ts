@@ -18,7 +18,7 @@ export const CreateUserSchema = {
   roleIds: array(string),
   phoneNumber: optional(string),
   subscription: optional(string),
-  extraFields: optional(unknown)
+  providerFields: optional(unknown)
 };
 
 export const UpdateUserSchema = ({ uuidId }: { uuidId: boolean }) => ({
@@ -30,7 +30,7 @@ export const UpdateUserSchema = ({ uuidId }: { uuidId: boolean }) => ({
   roleIds: optional(array(string)),
   phoneNumber: optional(string),
   subscription: optional(string),
-  extraFields: optional(unknown)
+  providerFields: optional(unknown)
 });
 
 export const UserSchema = ({ uuidId }: { uuidId: boolean }) => ({
@@ -41,7 +41,7 @@ export const UserSchema = ({ uuidId }: { uuidId: boolean }) => ({
   roles: array(RoleSchema({ uuidId })),
   phoneNumber: optional(string),
   subscription: optional(string),
-  extraFields: optional(unknown),
+  providerFields: optional(unknown),
   createdAt: optional(date),
   updatedAt: optional(date)
 });

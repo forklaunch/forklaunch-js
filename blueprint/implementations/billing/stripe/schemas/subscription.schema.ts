@@ -1,8 +1,8 @@
 import { serviceSchemaResolver } from '@forklaunch/core/mappers';
-import { BaseSubscriptionServiceSchemas as TypeBoxSchemas } from './typebox/subscription.schema';
-import { BaseSubscriptionServiceSchemas as ZodSchemas } from './zod/subscription.schema';
+import { StripeSubscriptionServiceSchemas as TypeBoxSchemas } from './typebox/subscription.schema';
+import { StripeSubscriptionServiceSchemas as ZodSchemas } from './zod/subscription.schema';
 
-export const BaseSubscriptionServiceSchemas = serviceSchemaResolver(
+export const StripeSubscriptionServiceSchemas = serviceSchemaResolver(
   () => TypeBoxSchemas,
   () => ZodSchemas
 );

@@ -23,7 +23,7 @@ export const CreatePaymentLinkSchema = <
   paymentMethods: array(enum_(PaymentMethodEnum)),
   currency: enum_(CurrencyEnum),
   status: enum_(StatusEnum),
-  extraFields: optional(unknown)
+  providerFields: optional(unknown)
 });
 
 export const UpdatePaymentLinkSchema =
@@ -42,7 +42,7 @@ export const UpdatePaymentLinkSchema =
     paymentMethods: optional(array(enum_(PaymentMethodEnum))),
     currency: optional(enum_(CurrencyEnum)),
     status: optional(enum_(StatusEnum)),
-    extraFields: optional(unknown)
+    providerFields: optional(unknown)
   });
 
 export const PaymentLinkSchema =
@@ -61,7 +61,7 @@ export const PaymentLinkSchema =
     currency: enum_(CurrencyEnum),
     paymentMethods: array(enum_(PaymentMethodEnum)),
     status: enum_(StatusEnum),
-    extraFields: optional(unknown),
+    providerFields: optional(unknown),
     createdAt: optional(date),
     updatedAt: optional(date)
   });

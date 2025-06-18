@@ -15,7 +15,7 @@ import { Subscription } from './entities/subscription.entity';
 export const billingProvider = {
   billingProvider: BillingProviderEnum.STRIPE,
   externalId: '1234567890',
-  extraFields: {},
+  providerFields: {},
   createdAt: new Date(),
   updatedAt: new Date()
 } satisfies RequiredEntityData<BillingProvider>;
@@ -37,7 +37,7 @@ export const plan = {
   currency: CurrencyEnum.USD,
   cadence: PlanCadenceEnum.MONTHLY,
   features: ['feature1', 'feature2'],
-  extraFields: {},
+  providerFields: {},
   externalId: '1234567890',
   billingProvider: BillingProviderEnum.STRIPE,
   createdAt: new Date(),
@@ -62,7 +62,7 @@ export const subscription = {
   description: 'Test subscription',
   active: true,
   productId: '1234567890',
-  extraFields: {},
+  providerFields: {},
   externalId: '1234567890',
   billingProvider: BillingProviderEnum.STRIPE,
   startDate: new Date(),

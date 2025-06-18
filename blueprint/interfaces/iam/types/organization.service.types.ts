@@ -6,7 +6,7 @@ export type CreateOrganizationDto = Partial<IdDto> & {
   domain: string;
   subscription: string;
   logoUrl?: string;
-  extraFields?: unknown;
+  providerFields?: unknown;
 };
 export type UpdateOrganizationDto = Partial<CreateOrganizationDto> & IdDto;
 export type OrganizationDto<OrganizationStatus> = CreateOrganizationDto &

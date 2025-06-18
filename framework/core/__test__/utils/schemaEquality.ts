@@ -18,11 +18,15 @@ export function testSchemaEquality<Schematic>() {
   >(
     zodSchema: Z,
     typeBoxSchema: T,
-    testData: Schema<Z, ZodSchemaValidator> extends Schematic
-      ? Schematic extends Schema<T, TypeboxSchemaValidator>
-        ? Schematic
-        : never
-      : never
+    testData: Schematic extends Schema<Z, ZodSchemaValidator>
+      ? Schema<Z, ZodSchemaValidator> extends Schematic
+        ? Schematic extends Schema<T, TypeboxSchemaValidator>
+          ? Schema<T, TypeboxSchemaValidator> extends Schematic
+            ? Schematic
+            : { _success: never } & Schematic
+          : { _success: never } & Schematic
+        : { _success: never } & Schematic
+      : { _success: never } & Schematic
   ) => {
     const zodParseResult = zodParse(zodSchema, testData);
     const typeboxParseResult = typeboxParse(typeBoxSchema, testData);

@@ -23,5 +23,5 @@ export class PaymentLink extends SqlBaseEntity {
   status!: StatusEnum;
 
   @Property({ type: 'json', nullable: true })
-  extraFields?: unknown;
+  providerFields?: unknown;
 }

@@ -24,7 +24,7 @@ export class Subscription extends SqlBaseEntity {
 
   // access billing provider information pointer -- especially about entitlements, that can be grabbed later
   @Property({ type: 'json', nullable: true })
-  extraFields?: unknown;
+  providerFields?: unknown;
 
   @Property()
   @Unique()

@@ -97,7 +97,7 @@ describe('schema equality', () => {
           {
             slug: 'test',
             addToRolesIds: ['test'],
-            extraFields: {
+            providerFields: {
               test: 'test'
             }
           }
@@ -115,7 +115,7 @@ describe('schema equality', () => {
             slug: 'test',
             addToRolesIds: ['test'],
             removeFromRolesIds: ['test'],
-            extraFields: {
+            providerFields: {
               test: 'test'
             }
           }
@@ -131,7 +131,7 @@ describe('schema equality', () => {
           {
             id: 'test',
             slug: 'test',
-            extraFields: {
+            providerFields: {
               test: 'test'
             }
           }
@@ -149,7 +149,7 @@ describe('schema equality', () => {
           {
             name: 'test',
             permissionIds: ['test'],
-            extraFields: {
+            providerFields: {
               test: 'test'
             }
           }
@@ -166,7 +166,7 @@ describe('schema equality', () => {
             id: 'test',
             name: 'test',
             permissionIds: ['test'],
-            extraFields: {
+            providerFields: {
               test: 'test'
             }
           }
@@ -183,12 +183,12 @@ describe('schema equality', () => {
             {
               id: 'test',
               slug: 'test',
-              extraFields: {
+              providerFields: {
                 test: 'test'
               }
             }
           ],
-          extraFields: {
+          providerFields: {
             test: 'test'
           }
         })
@@ -211,7 +211,7 @@ describe('schema equality', () => {
             roleIds: ['test'],
             phoneNumber: 'test',
             subscription: 'test',
-            extraFields: {
+            providerFields: {
               test: 'test'
             }
           }
@@ -233,7 +233,7 @@ describe('schema equality', () => {
             roleIds: ['test'],
             phoneNumber: 'test',
             subscription: 'test',
-            extraFields: {
+            providerFields: {
               test: 'test'
             }
           }
@@ -253,14 +253,14 @@ describe('schema equality', () => {
               id: 'test',
               name: 'test',
               permissions: [{ id: 'test', slug: 'test' }],
-              extraFields: {
+              providerFields: {
                 test: 'test'
               }
             }
           ],
           phoneNumber: 'test',
           subscription: 'test',
-          extraFields: {
+          providerFields: {
             test: 'test'
           }
         })
@@ -279,7 +279,7 @@ describe('schema equality', () => {
             domain: 'test',
             subscription: 'test',
             logoUrl: 'test',
-            extraFields: { test: 'test' }
+            providerFields: { test: 'test' }
           }
         )
       )
@@ -296,7 +296,7 @@ describe('schema equality', () => {
             domain: 'test',
             subscription: 'test',
             logoUrl: 'test',
-            extraFields: { test: 'test' }
+            providerFields: { test: 'test' }
           }
         )
       )
@@ -313,7 +313,7 @@ describe('schema equality', () => {
             domain: 'test',
             subscription: 'test',
             logoUrl: 'test',
-            extraFields: { test: 'test' },
+            providerFields: { test: 'test' },
             status: DummyEnum.A,
             users: [
               {
@@ -326,7 +326,7 @@ describe('schema equality', () => {
                     id: 'test',
                     name: 'test',
                     permissions: [{ id: 'test', slug: 'test' }],
-                    extraFields: { test: 'test' }
+                    providerFields: { test: 'test' }
                   }
                 ]
               }

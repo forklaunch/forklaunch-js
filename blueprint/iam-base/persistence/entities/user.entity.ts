@@ -36,5 +36,5 @@ export class User extends SqlBaseEntity {
   subscription?: string;
 
   @Property({ type: 'json', nullable: true })
-  extraFields?: unknown;
+  providerFields?: unknown;
 }

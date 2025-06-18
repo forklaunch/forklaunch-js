@@ -10,7 +10,7 @@ export type CreateUserDto = Partial<IdDto> & {
   roleIds: string[];
   phoneNumber?: string;
   subscription?: string;
-  extraFields?: unknown;
+  providerFields?: unknown;
 };
 export type UpdateUserDto = Partial<Omit<CreateUserDto, 'organizationId'>> &
   IdDto;

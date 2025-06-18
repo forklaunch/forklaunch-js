@@ -20,7 +20,8 @@ import {
   StripeCheckoutSessionDto,
   StripeCreateCheckoutSessionDto,
   StripeUpdateCheckoutSessionDto
-} from '../types/stripe.types';
+} from '../types/stripe.dto.types';
+import { StripeCheckoutSessionEntity } from '../types/stripe.entity.types';
 
 export class StripeCheckoutSessionService<
     SchemaValidator extends AnySchemaValidator,
@@ -36,13 +37,13 @@ export class StripeCheckoutSessionService<
       UpdateCheckoutSessionDtoMapper: StripeUpdateCheckoutSessionDto<StatusEnum>;
     },
     Entities extends {
-      CheckoutSessionDtoMapper: StripeCheckoutSessionDto<StatusEnum>;
-      CreateCheckoutSessionDtoMapper: StripeCheckoutSessionDto<StatusEnum>;
-      UpdateCheckoutSessionDtoMapper: StripeCheckoutSessionDto<StatusEnum>;
+      CheckoutSessionDtoMapper: StripeCheckoutSessionEntity<StatusEnum>;
+      CreateCheckoutSessionDtoMapper: StripeCheckoutSessionEntity<StatusEnum>;
+      UpdateCheckoutSessionDtoMapper: StripeCheckoutSessionEntity<StatusEnum>;
     } = {
-      CheckoutSessionDtoMapper: StripeCheckoutSessionDto<StatusEnum>;
-      CreateCheckoutSessionDtoMapper: StripeCheckoutSessionDto<StatusEnum>;
-      UpdateCheckoutSessionDtoMapper: StripeCheckoutSessionDto<StatusEnum>;
+      CheckoutSessionDtoMapper: StripeCheckoutSessionEntity<StatusEnum>;
+      CreateCheckoutSessionDtoMapper: StripeCheckoutSessionEntity<StatusEnum>;
+      UpdateCheckoutSessionDtoMapper: StripeCheckoutSessionEntity<StatusEnum>;
     }
   >
   extends BaseCheckoutSessionService<
@@ -101,11 +102,9 @@ export class StripeCheckoutSessionService<
     checkoutSessionDto: Dto['CreateCheckoutSessionDtoMapper']
   ): Promise<Dto['CheckoutSessionDtoMapper']> {
     const session = await this.stripeClient.checkout.sessions.create({
-      ...checkoutSessionDto.extraFields,
+      ...checkoutSessionDto.stripeFields,
       payment_method_types: checkoutSessionDto.paymentMethods,
       currency: checkoutSessionDto.currency as string,
-      line_items: checkoutSessionDto.lineItems,
-      mode: checkoutSessionDto.mode,
       success_url: checkoutSessionDto.successRedirectUri,
       cancel_url: checkoutSessionDto.cancelRedirectUri
     });
@@ -114,7 +113,7 @@ export class StripeCheckoutSessionService<
       id: session.id,
       uri: session.url,
       expiresAt: new Date(Date.now() + 5 * 60 * 1000),
-      extraFields: session
+      providerFields: session
     });
   }
 
@@ -124,7 +123,7 @@ export class StripeCheckoutSessionService<
     const databaseCheckoutSession = await super.getCheckoutSession({ id });
     return {
       ...databaseCheckoutSession,
-      extraFields: await this.stripeClient.checkout.sessions.retrieve(id)
+      stripeFields: await this.stripeClient.checkout.sessions.retrieve(id)
     };
   }
 

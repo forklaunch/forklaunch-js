@@ -10,14 +10,14 @@ export const CreateBillingPortalSchema = {
   customerId: string,
   expiresAt: date,
   uri: optional(string),
-  extraFields: optional(unknown)
+  providerFields: optional(unknown)
 };
 
 export const UpdateBillingPortalSchema = ({ uuidId }: { uuidId: boolean }) => ({
   id: uuidId ? uuid : string,
   uri: optional(string),
   expiresAt: optional(date),
-  extraFields: optional(unknown)
+  providerFields: optional(unknown)
 });
 
 export const BillingPortalSchema = ({ uuidId }: { uuidId: boolean }) => ({
@@ -25,7 +25,7 @@ export const BillingPortalSchema = ({ uuidId }: { uuidId: boolean }) => ({
   customerId: string,
   uri: optional(string),
   expiresAt: date,
-  extraFields: optional(unknown),
+  providerFields: optional(unknown),
   createdAt: optional(date),
   updatedAt: optional(date)
 });

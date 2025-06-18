@@ -26,7 +26,7 @@ export const CreateSubscriptionSchema = <
   endDate: date,
   status: string,
   billingProvider: optional(enum_(BillingProviderEnum)),
-  extraFields: optional(unknown)
+  providerFields: optional(unknown)
 });
 
 export const UpdateSubscriptionSchema =
@@ -49,7 +49,7 @@ export const UpdateSubscriptionSchema =
     endDate: optional(date),
     status: optional(string),
     billingProvider: optional(enum_(BillingProviderEnum)),
-    extraFields: optional(unknown)
+    providerFields: optional(unknown)
   });
 
 export const SubscriptionSchema =
@@ -72,7 +72,7 @@ export const SubscriptionSchema =
     endDate: date,
     status: string,
     billingProvider: optional(enum_(BillingProviderEnum)),
-    extraFields: optional(unknown),
+    providerFields: optional(unknown),
     createdAt: optional(date),
     updatedAt: optional(date)
   });

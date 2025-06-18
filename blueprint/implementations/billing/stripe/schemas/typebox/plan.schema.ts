@@ -3,19 +3,19 @@ import {
   boolean,
   date,
   enum_,
-  literal,
   number,
   optional,
   string,
   type
 } from '@forklaunch/validator/typebox';
+import { BillingProviderEnum } from '../../domain/enums/billingProvider.enum';
 import { CurrencyEnum } from '../../domain/enums/currency.enum';
 import { PlanCadenceEnum } from '../../domain/enums/planCadence.enum';
 import {
   StripeCreatePlanDto,
   StripePlanDto,
   StripeUpdatePlanDto
-} from '../../types/stripe.types';
+} from '../../types/stripe.dto.types';
 
 export const CreatePlanSchema = {
   id: optional(string),
@@ -25,9 +25,9 @@ export const CreatePlanSchema = {
   cadence: enum_(PlanCadenceEnum),
   currency: enum_(CurrencyEnum),
   features: optional(array(string)),
-  extraFields: optional(type<StripeCreatePlanDto['extraFields']>()),
+  stripeFields: type<StripeCreatePlanDto['stripeFields']>(),
   externalId: string,
-  billingProvider: optional(literal('stripe')),
+  billingProvider: optional(enum_(BillingProviderEnum)),
   active: boolean
 };
 
@@ -39,9 +39,9 @@ export const UpdatePlanSchema = {
   cadence: optional(enum_(PlanCadenceEnum)),
   currency: optional(enum_(CurrencyEnum)),
   features: optional(array(string)),
-  extraFields: optional(type<StripeUpdatePlanDto['extraFields']>()),
+  stripeFields: optional(type<StripeUpdatePlanDto['stripeFields']>()),
   externalId: optional(string),
-  billingProvider: optional(literal('stripe')),
+  billingProvider: optional(enum_(BillingProviderEnum)),
   active: optional(boolean)
 };
 
@@ -53,15 +53,15 @@ export const PlanSchema = {
   cadence: enum_(PlanCadenceEnum),
   currency: enum_(CurrencyEnum),
   features: optional(array(string)),
-  extraFields: optional(type<StripePlanDto['extraFields']>()),
+  stripeFields: type<StripePlanDto['stripeFields']>(),
   externalId: string,
-  billingProvider: optional(literal('stripe')),
+  billingProvider: optional(enum_(BillingProviderEnum)),
   active: boolean,
   createdAt: optional(date),
   updatedAt: optional(date)
 };
 
-export const BasePlanServiceSchemas = {
+export const StripePlanServiceSchemas = {
   CreatePlanSchema,
   UpdatePlanSchema,
   PlanSchema

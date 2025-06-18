@@ -8,14 +8,13 @@ import {
   type,
   unknown
 } from '@forklaunch/validator/typebox';
-import Stripe from 'stripe';
 import { CurrencyEnum } from '../../domain/enums/currency.enum';
 import { PaymentMethodEnum } from '../../domain/enums/paymentMethod.enum';
 import {
   StripeCheckoutSessionDto,
   StripeCreateCheckoutSessionDto,
   StripeUpdateCheckoutSessionDto
-} from '../../types/stripe.types';
+} from '../../types/stripe.dto.types';
 
 export const CreateCheckoutSessionSchema = <
   T extends Record<string, LiteralSchema>
@@ -30,11 +29,7 @@ export const CreateCheckoutSessionSchema = <
   cancelRedirectUri: optional(string),
   expiresAt: date,
   status: enum_(StatusEnum),
-  lineItems: array(type<Stripe.Checkout.SessionCreateParams.LineItem>()),
-  mode: type<Stripe.Checkout.SessionCreateParams.Mode>(),
-  extraFields: optional(
-    type<StripeCreateCheckoutSessionDto<T>['extraFields']>()
-  )
+  stripeFields: type<StripeCreateCheckoutSessionDto<T>['stripeFields']>()
 });
 
 export const UpdateCheckoutSessionSchema = <
@@ -50,8 +45,8 @@ export const UpdateCheckoutSessionSchema = <
   cancelRedirectUri: optional(string),
   expiresAt: optional(date),
   status: optional(enum_(StatusEnum)),
-  extraFields: optional(
-    type<StripeUpdateCheckoutSessionDto<T>['extraFields']>()
+  stripeFields: optional(
+    type<StripeUpdateCheckoutSessionDto<T>['stripeFields']>()
   )
 });
 
@@ -67,14 +62,12 @@ export const CheckoutSessionSchema = <T extends Record<string, LiteralSchema>>(
   cancelRedirectUri: optional(string),
   expiresAt: date,
   status: enum_(StatusEnum),
-  lineItems: array(type<Stripe.LineItem>()),
-  mode: type<Stripe.Checkout.Session.Mode>(),
-  extraFields: optional(type<StripeCheckoutSessionDto<T>['extraFields']>()),
+  stripeFields: type<StripeCheckoutSessionDto<T>['stripeFields']>(),
   createdAt: optional(date),
   updatedAt: optional(date)
 });
 
-export const BaseCheckoutSessionServiceSchemas = {
+export const StripeCheckoutSessionServiceSchemas = {
   CreateCheckoutSessionSchema,
   UpdateCheckoutSessionSchema,
   CheckoutSessionSchema

@@ -15,7 +15,7 @@ export const CreateOrganizationSchema = {
   domain: string,
   subscription: string,
   logoUrl: optional(string),
-  extraFields: optional(unknown)
+  providerFields: optional(unknown)
 };
 
 export const UpdateOrganizationSchema = ({ uuidId }: { uuidId: boolean }) => ({
@@ -24,7 +24,7 @@ export const UpdateOrganizationSchema = ({ uuidId }: { uuidId: boolean }) => ({
   domain: optional(string),
   subscription: optional(string),
   logoUrl: optional(string),
-  extraFields: optional(unknown)
+  providerFields: optional(unknown)
 });
 
 export const OrganizationSchema =
@@ -39,7 +39,7 @@ export const OrganizationSchema =
     subscription: string,
     status: enum_(organizationStatus),
     logoUrl: optional(string),
-    extraFields: optional(unknown),
+    providerFields: optional(unknown),
     createdAt: optional(date),
     updatedAt: optional(date)
   });

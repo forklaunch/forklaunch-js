@@ -3,21 +3,21 @@ import {
   StripeBillingPortalDto,
   StripeCreateBillingPortalDto,
   StripeUpdateBillingPortalDto
-} from '../../types/stripe.types';
+} from '../../types/stripe.dto.types';
 
 export const CreateBillingPortalSchema = {
   id: optional(string),
   customerId: string,
   uri: optional(string),
   expiresAt: date,
-  extraFields: optional(type<StripeCreateBillingPortalDto['extraFields']>())
+  stripeFields: type<StripeCreateBillingPortalDto['stripeFields']>()
 };
 
 export const UpdateBillingPortalSchema = {
   id: string,
   uri: optional(string),
   expiresAt: optional(date),
-  extraFields: optional(type<StripeUpdateBillingPortalDto['extraFields']>())
+  stripeFields: optional(type<StripeUpdateBillingPortalDto['stripeFields']>())
 };
 
 export const BillingPortalSchema = {
@@ -25,12 +25,12 @@ export const BillingPortalSchema = {
   customerId: string,
   uri: optional(string),
   expiresAt: date,
-  extraFields: optional(type<StripeBillingPortalDto['extraFields']>()),
+  stripeFields: type<StripeBillingPortalDto['stripeFields']>(),
   createdAt: optional(date),
   updatedAt: optional(date)
 };
 
-export const BaseBillingPortalServiceSchemas = {
+export const StripeBillingPortalServiceSchemas = {
   CreateBillingPortalSchema,
   UpdateBillingPortalSchema,
   BillingPortalSchema
