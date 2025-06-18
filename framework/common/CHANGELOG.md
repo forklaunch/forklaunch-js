@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.3.12
+
+### Patch Changes
+
+- bump package subdependencies
+
 ## 0.3.11
 
 ### Patch Changes
