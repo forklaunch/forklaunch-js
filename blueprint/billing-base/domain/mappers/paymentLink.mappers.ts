@@ -4,13 +4,18 @@ import { EntityManager } from '@mikro-orm/core';
 import { PaymentLink } from '../../persistence/entities/paymentLink.entity';
 import { PaymentLinkSchemas } from '../../registrations';
 import { CurrencyEnum } from '../enum/currency.enum';
+import { PaymentMethodEnum } from '../enum/paymentMethod.enum';
 import { StatusEnum } from '../enum/status.enum';
 
 export class CreatePaymentLinkDtoMapper extends RequestDtoMapper<
   PaymentLink,
   SchemaValidator
 > {
-  schema = PaymentLinkSchemas.CreatePaymentLinkSchema(CurrencyEnum, StatusEnum);
+  schema = PaymentLinkSchemas.CreatePaymentLinkSchema(
+    PaymentMethodEnum,
+    CurrencyEnum,
+    StatusEnum
+  );
 
   async toEntity(em: EntityManager): Promise<PaymentLink> {
     return PaymentLink.create(
@@ -28,7 +33,11 @@ export class UpdatePaymentLinkDtoMapper extends RequestDtoMapper<
   PaymentLink,
   SchemaValidator
 > {
-  schema = PaymentLinkSchemas.UpdatePaymentLinkSchema(CurrencyEnum, StatusEnum);
+  schema = PaymentLinkSchemas.UpdatePaymentLinkSchema(
+    PaymentMethodEnum,
+    CurrencyEnum,
+    StatusEnum
+  );
 
   async toEntity(em: EntityManager): Promise<PaymentLink> {
     return PaymentLink.update(this.dto, em);
@@ -39,7 +48,11 @@ export class PaymentLinkDtoMapper extends ResponseDtoMapper<
   PaymentLink,
   SchemaValidator
 > {
-  schema = PaymentLinkSchemas.PaymentLinkSchema(CurrencyEnum, StatusEnum);
+  schema = PaymentLinkSchemas.PaymentLinkSchema(
+    PaymentMethodEnum,
+    CurrencyEnum,
+    StatusEnum
+  );
 
   async fromEntity(paymentLink: PaymentLink): Promise<this> {
     this.dto = await paymentLink.read();

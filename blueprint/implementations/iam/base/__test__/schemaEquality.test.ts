@@ -1,6 +1,20 @@
 import { isTrue } from '@forklaunch/common';
 import { DummyEnum, testSchemaEquality } from '@forklaunch/core/test';
 import {
+  CreateOrganizationDto,
+  CreatePermissionDto,
+  CreateRoleDto,
+  CreateUserDto,
+  OrganizationDto,
+  PermissionDto,
+  RoleDto,
+  UpdateOrganizationDto,
+  UpdatePermissionDto,
+  UpdateRoleDto,
+  UpdateUserDto,
+  UserDto
+} from '@forklaunch/interfaces-iam/types';
+import {
   CreateOrganizationSchema as TypeboxCreateOrganizationSchema,
   OrganizationSchema as TypeboxOrganizationSchema,
   UpdateOrganizationSchema as TypeboxUpdateOrganizationSchema
@@ -77,7 +91,7 @@ describe('schema equality', () => {
   it('should be equal for permission', () => {
     expect(
       isTrue(
-        testSchemaEquality(
+        testSchemaEquality<CreatePermissionDto>()(
           ZodCreatePermissionSchema,
           TypeboxCreatePermissionSchema,
           {
@@ -93,7 +107,7 @@ describe('schema equality', () => {
 
     expect(
       isTrue(
-        testSchemaEquality(
+        testSchemaEquality<UpdatePermissionDto>()(
           zodUpdatePermissionSchema,
           typeboxUpdatePermissionSchema,
           {
@@ -111,13 +125,17 @@ describe('schema equality', () => {
 
     expect(
       isTrue(
-        testSchemaEquality(zodPermissionSchema, typeboxPermissionSchema, {
-          id: 'test',
-          slug: 'test',
-          extraFields: {
-            test: 'test'
+        testSchemaEquality<PermissionDto>()(
+          zodPermissionSchema,
+          typeboxPermissionSchema,
+          {
+            id: 'test',
+            slug: 'test',
+            extraFields: {
+              test: 'test'
+            }
           }
-        })
+        )
       )
     ).toBeTruthy();
   });
@@ -125,39 +143,49 @@ describe('schema equality', () => {
   it('should be equal for role', () => {
     expect(
       isTrue(
-        testSchemaEquality(ZodCreateRoleSchema, TypeboxCreateRoleSchema, {
-          name: 'test',
-          permissionIds: ['test'],
-          extraFields: {
-            test: 'test'
+        testSchemaEquality<CreateRoleDto>()(
+          ZodCreateRoleSchema,
+          TypeboxCreateRoleSchema,
+          {
+            name: 'test',
+            permissionIds: ['test'],
+            extraFields: {
+              test: 'test'
+            }
           }
-        })
+        )
       )
     ).toBeTruthy();
 
     expect(
       isTrue(
-        testSchemaEquality(zodUpdateRoleSchema, typeboxUpdateRoleSchema, {
-          id: 'test',
-          name: 'test',
-          permissionIds: ['test'],
-          extraFields: {
-            test: 'test'
+        testSchemaEquality<UpdateRoleDto>()(
+          zodUpdateRoleSchema,
+          typeboxUpdateRoleSchema,
+          {
+            id: 'test',
+            name: 'test',
+            permissionIds: ['test'],
+            extraFields: {
+              test: 'test'
+            }
           }
-        })
+        )
       )
     ).toBeTruthy();
 
     expect(
       isTrue(
-        testSchemaEquality(zodRoleSchema, typeboxRoleSchema, {
+        testSchemaEquality<RoleDto>()(zodRoleSchema, typeboxRoleSchema, {
           id: 'test',
           name: 'test',
           permissions: [
             {
               id: 'test',
               slug: 'test',
-              extraFields: { test: 'test' }
+              extraFields: {
+                test: 'test'
+              }
             }
           ],
           extraFields: {
@@ -171,43 +199,51 @@ describe('schema equality', () => {
   it('should be equal for user', () => {
     expect(
       isTrue(
-        testSchemaEquality(ZodCreateUserSchema, TypeboxCreateUserSchema, {
-          email: 'test@test.com',
-          password: 'test',
-          firstName: 'test',
-          lastName: 'test',
-          organizationId: 'test',
-          roleIds: ['test'],
-          phoneNumber: 'test',
-          subscription: 'test',
-          extraFields: {
-            test: 'test'
+        testSchemaEquality<CreateUserDto>()(
+          ZodCreateUserSchema,
+          TypeboxCreateUserSchema,
+          {
+            email: 'test@test.com',
+            password: 'test',
+            firstName: 'test',
+            lastName: 'test',
+            organizationId: 'test',
+            roleIds: ['test'],
+            phoneNumber: 'test',
+            subscription: 'test',
+            extraFields: {
+              test: 'test'
+            }
           }
-        })
+        )
       )
     ).toBeTruthy();
 
     expect(
       isTrue(
-        testSchemaEquality(zodUpdateUserSchema, typeboxUpdateUserSchema, {
-          id: 'test',
-          email: 'test@test.com',
-          password: 'test',
-          firstName: 'test',
-          lastName: 'test',
-          roleIds: ['test'],
-          phoneNumber: 'test',
-          subscription: 'test',
-          extraFields: {
-            test: 'test'
+        testSchemaEquality<UpdateUserDto>()(
+          zodUpdateUserSchema,
+          typeboxUpdateUserSchema,
+          {
+            id: 'test',
+            email: 'test@test.com',
+            password: 'test',
+            firstName: 'test',
+            lastName: 'test',
+            roleIds: ['test'],
+            phoneNumber: 'test',
+            subscription: 'test',
+            extraFields: {
+              test: 'test'
+            }
           }
-        })
+        )
       )
     ).toBeTruthy();
 
     expect(
       isTrue(
-        testSchemaEquality(zodUserSchema, typeboxUserSchema, {
+        testSchemaEquality<UserDto>()(zodUserSchema, typeboxUserSchema, {
           id: 'test',
           email: 'test@test.com',
           firstName: 'test',
@@ -235,7 +271,7 @@ describe('schema equality', () => {
   it('should be equal for organization', () => {
     expect(
       isTrue(
-        testSchemaEquality(
+        testSchemaEquality<CreateOrganizationDto>()(
           ZodCreateOrganizationSchema,
           TypeboxCreateOrganizationSchema,
           {
@@ -251,7 +287,7 @@ describe('schema equality', () => {
 
     expect(
       isTrue(
-        testSchemaEquality(
+        testSchemaEquality<UpdateOrganizationDto>()(
           zodUpdateOrganizationSchema,
           typeboxUpdateOrganizationSchema,
           {
@@ -268,31 +304,35 @@ describe('schema equality', () => {
 
     expect(
       isTrue(
-        testSchemaEquality(zodOrganizationSchema, typeboxOrganizationSchema, {
-          id: 'test',
-          name: 'test',
-          domain: 'test',
-          subscription: 'test',
-          logoUrl: 'test',
-          extraFields: { test: 'test' },
-          status: DummyEnum.A,
-          users: [
-            {
-              id: 'test',
-              email: 'test@test.com',
-              firstName: 'test',
-              lastName: 'test',
-              roles: [
-                {
-                  id: 'test',
-                  name: 'test',
-                  permissions: [{ id: 'test', slug: 'test' }],
-                  extraFields: { test: 'test' }
-                }
-              ]
-            }
-          ]
-        })
+        testSchemaEquality<OrganizationDto<typeof DummyEnum>>()(
+          zodOrganizationSchema,
+          typeboxOrganizationSchema,
+          {
+            id: 'test',
+            name: 'test',
+            domain: 'test',
+            subscription: 'test',
+            logoUrl: 'test',
+            extraFields: { test: 'test' },
+            status: DummyEnum.A,
+            users: [
+              {
+                id: 'test',
+                email: 'test@test.com',
+                firstName: 'test',
+                lastName: 'test',
+                roles: [
+                  {
+                    id: 'test',
+                    name: 'test',
+                    permissions: [{ id: 'test', slug: 'test' }],
+                    extraFields: { test: 'test' }
+                  }
+                ]
+              }
+            ]
+          }
+        )
       )
     ).toBeTruthy();
   });

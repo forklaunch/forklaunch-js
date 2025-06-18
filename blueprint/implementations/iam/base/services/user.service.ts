@@ -50,7 +50,7 @@ export class BaseUserService<
   }
 > implements UserService
 {
-  #mappers: InternalDtoMapper<
+  protected _mappers: InternalDtoMapper<
     InstanceTypeRecord<typeof this.mappers>,
     Entities,
     Dto
@@ -89,7 +89,7 @@ export class BaseUserService<
       telemetry?: TelemetryOptions;
     }
   ) {
-    this.#mappers = transformIntoInternalDtoMapper(mappers, schemaValidator);
+    this._mappers = transformIntoInternalDtoMapper(mappers, schemaValidator);
     this.evaluatedTelemetryOptions = options?.telemetry
       ? evaluateTelemetryOptions(options.telemetry).enabled
       : {
@@ -107,7 +107,7 @@ export class BaseUserService<
       this.openTelemetryCollector.info('Creating user', userDto);
     }
 
-    const user = await this.#mappers.CreateUserDtoMapper.deserializeDtoToEntity(
+    const user = await this._mappers.CreateUserDtoMapper.deserializeDtoToEntity(
       userDto,
       em ?? this.em
     );
@@ -118,7 +118,7 @@ export class BaseUserService<
       await this.em.persistAndFlush(user);
     }
 
-    return this.#mappers.UserDtoMapper.serializeEntityToDto(user);
+    return this._mappers.UserDtoMapper.serializeEntityToDto(user);
   }
 
   async createBatchUsers(
@@ -131,7 +131,7 @@ export class BaseUserService<
 
     const users = await Promise.all(
       userDtos.map(async (createUserDto) =>
-        this.#mappers.CreateUserDtoMapper.deserializeDtoToEntity(
+        this._mappers.CreateUserDtoMapper.deserializeDtoToEntity(
           createUserDto,
           em ?? this.em
         )
@@ -146,7 +146,7 @@ export class BaseUserService<
 
     return Promise.all(
       users.map((user) =>
-        this.#mappers.UserDtoMapper.serializeEntityToDto(user)
+        this._mappers.UserDtoMapper.serializeEntityToDto(user)
       )
     );
   }
@@ -163,7 +163,7 @@ export class BaseUserService<
       populate: ['id', '*']
     });
 
-    return this.#mappers.UserDtoMapper.serializeEntityToDto(
+    return this._mappers.UserDtoMapper.serializeEntityToDto(
       user as Entities['UserDtoMapper']
     );
   }
@@ -182,7 +182,7 @@ export class BaseUserService<
           populate: ['id', '*']
         })
       ).map((user) =>
-        this.#mappers.UserDtoMapper.serializeEntityToDto(
+        this._mappers.UserDtoMapper.serializeEntityToDto(
           user as Entities['UserDtoMapper']
         )
       )
@@ -197,7 +197,7 @@ export class BaseUserService<
       this.openTelemetryCollector.info('Updating user', userDto);
     }
 
-    const user = await this.#mappers.UpdateUserDtoMapper.deserializeDtoToEntity(
+    const user = await this._mappers.UpdateUserDtoMapper.deserializeDtoToEntity(
       userDto,
       em ?? this.em
     );
@@ -208,7 +208,7 @@ export class BaseUserService<
       await this.em.persistAndFlush(user);
     }
 
-    return this.#mappers.UserDtoMapper.serializeEntityToDto(user);
+    return this._mappers.UserDtoMapper.serializeEntityToDto(user);
   }
 
   async updateBatchUsers(
@@ -221,7 +221,7 @@ export class BaseUserService<
 
     const users = await Promise.all(
       userDtos.map(async (updateUserDto) =>
-        this.#mappers.UpdateUserDtoMapper.deserializeDtoToEntity(
+        this._mappers.UpdateUserDtoMapper.deserializeDtoToEntity(
           updateUserDto,
           em ?? this.em
         )
@@ -236,7 +236,7 @@ export class BaseUserService<
 
     return Promise.all(
       users.map((user) =>
-        this.#mappers.UserDtoMapper.serializeEntityToDto(user)
+        this._mappers.UserDtoMapper.serializeEntityToDto(user)
       )
     );
   }

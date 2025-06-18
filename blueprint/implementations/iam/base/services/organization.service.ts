@@ -63,7 +63,7 @@ export class BaseOrganizationService<
   }
 > implements OrganizationService<OrganizationStatus>
 {
-  #mappers: InternalDtoMapper<
+  protected _mappers: InternalDtoMapper<
     InstanceTypeRecord<typeof this.mappers>,
     Entities,
     Dto
@@ -99,7 +99,7 @@ export class BaseOrganizationService<
       telemetry?: TelemetryOptions;
     }
   ) {
-    this.#mappers = transformIntoInternalDtoMapper(mappers, schemaValidator);
+    this._mappers = transformIntoInternalDtoMapper(mappers, schemaValidator);
     this.evaluatedTelemetryOptions = options?.telemetry
       ? evaluateTelemetryOptions(options.telemetry).enabled
       : {
@@ -121,7 +121,7 @@ export class BaseOrganizationService<
     }
 
     const organization =
-      await this.#mappers.CreateOrganizationDtoMapper.deserializeDtoToEntity(
+      await this._mappers.CreateOrganizationDtoMapper.deserializeDtoToEntity(
         organizationDto,
         em ?? this.em
       );
@@ -132,7 +132,7 @@ export class BaseOrganizationService<
       await this.em.persistAndFlush(organization);
     }
 
-    return this.#mappers.OrganizationDtoMapper.serializeEntityToDto(
+    return this._mappers.OrganizationDtoMapper.serializeEntityToDto(
       organization
     );
   }
@@ -150,7 +150,7 @@ export class BaseOrganizationService<
       idDto
     );
 
-    return this.#mappers.OrganizationDtoMapper.serializeEntityToDto(
+    return this._mappers.OrganizationDtoMapper.serializeEntityToDto(
       organization as Entities['OrganizationDtoMapper']
     );
   }
@@ -167,7 +167,7 @@ export class BaseOrganizationService<
     }
 
     const updatedOrganization =
-      await this.#mappers.UpdateOrganizationDtoMapper.deserializeDtoToEntity(
+      await this._mappers.UpdateOrganizationDtoMapper.deserializeDtoToEntity(
         organizationDto,
         em ?? this.em
       );
@@ -178,7 +178,7 @@ export class BaseOrganizationService<
       await this.em.persistAndFlush(updatedOrganization);
     }
 
-    return this.#mappers.OrganizationDtoMapper.serializeEntityToDto(
+    return this._mappers.OrganizationDtoMapper.serializeEntityToDto(
       updatedOrganization
     );
   }

@@ -8,20 +8,22 @@ import {
 
 export const CreateBillingPortalSchema = {
   customerId: string,
-  uri: string,
-  expiresAt: date
+  expiresAt: date,
+  uri: optional(string),
+  extraFields: optional(unknown)
 };
 
 export const UpdateBillingPortalSchema = ({ uuidId }: { uuidId: boolean }) => ({
   id: uuidId ? uuid : string,
   uri: optional(string),
-  expiresAt: optional(date)
+  expiresAt: optional(date),
+  extraFields: optional(unknown)
 });
 
 export const BillingPortalSchema = ({ uuidId }: { uuidId: boolean }) => ({
   id: uuidId ? uuid : string,
   customerId: string,
-  uri: string,
+  uri: optional(string),
   expiresAt: date,
   extraFields: optional(unknown),
   createdAt: optional(date),

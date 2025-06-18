@@ -179,8 +179,10 @@ export function createDependencies(orm: MikroORM) {
       type: BullMqWorkerOptionsSchema,
       factory: ({ REDIS_URL }) => ({
         backoffType: 'exponential' as const,
-        connection: {
-          url: REDIS_URL
+        queueOptions: {
+          connection: {
+            url: REDIS_URL
+          }
         },
         retries: 3,
         interval: 5000

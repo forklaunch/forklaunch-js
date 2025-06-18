@@ -196,6 +196,7 @@ export function createDependencies(orm: MikroORM) {
       type: BaseCheckoutSessionService<
         SchemaValidator,
         typeof PaymentMethodEnum,
+        typeof CurrencyEnum,
         typeof StatusEnum
       >,
       factory: ({ EntityManager, TtlCache, OpenTelemetryCollector }) =>
@@ -215,6 +216,7 @@ export function createDependencies(orm: MikroORM) {
       lifetime: Lifetime.Scoped,
       type: BasePaymentLinkService<
         SchemaValidator,
+        typeof PaymentMethodEnum,
         typeof CurrencyEnum,
         typeof StatusEnum
       >,
@@ -236,6 +238,7 @@ export function createDependencies(orm: MikroORM) {
       type: BasePlanService<
         SchemaValidator,
         typeof PlanCadenceEnum,
+        typeof CurrencyEnum,
         typeof BillingProviderEnum
       >,
       factory: ({ EntityManager, OpenTelemetryCollector }) =>

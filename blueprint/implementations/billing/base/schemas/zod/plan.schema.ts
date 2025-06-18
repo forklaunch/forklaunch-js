@@ -13,62 +13,71 @@ import {
 
 export const CreatePlanSchema = <
   T extends Record<string, LiteralSchema>,
-  U extends Record<string, LiteralSchema>
+  U extends Record<string, LiteralSchema>,
+  V extends Record<string, LiteralSchema>
 >(
   PlanCadenceEnum: T,
-  BillingProviderEnum: U
+  CurrencyEnum: U,
+  BillingProviderEnum: V
 ) => ({
   name: string,
   description: optional(string),
   price: number,
   cadence: enum_(PlanCadenceEnum),
-  features: array(string),
-  extraFields: optional(unknown),
+  currency: enum_(CurrencyEnum),
+  features: optional(array(string)),
   externalId: string,
   billingProvider: optional(enum_(BillingProviderEnum)),
-  active: boolean
+  active: boolean,
+  extraFields: optional(unknown)
 });
 
 export const UpdatePlanSchema =
   ({ uuidId }: { uuidId: boolean }) =>
   <
     T extends Record<string, LiteralSchema>,
-    U extends Record<string, LiteralSchema>
+    U extends Record<string, LiteralSchema>,
+    V extends Record<string, LiteralSchema>
   >(
     PlanCadenceEnum: T,
-    BillingProviderEnum: U
+    CurrencyEnum: U,
+    BillingProviderEnum: V
   ) => ({
     id: uuidId ? uuid : string,
     name: optional(string),
     description: optional(string),
     price: optional(number),
     cadence: optional(enum_(PlanCadenceEnum)),
+    currency: optional(enum_(CurrencyEnum)),
     features: optional(array(string)),
-    extraFields: optional(unknown),
     externalId: optional(string),
     billingProvider: optional(enum_(BillingProviderEnum)),
-    active: optional(boolean)
+    active: optional(boolean),
+    extraFields: optional(unknown)
   });
 
 export const PlanSchema =
   ({ uuidId }: { uuidId: boolean }) =>
   <
     T extends Record<string, LiteralSchema>,
-    U extends Record<string, LiteralSchema>
+    U extends Record<string, LiteralSchema>,
+    V extends Record<string, LiteralSchema>
   >(
     PlanCadenceEnum: T,
-    BillingProviderEnum: U
+    CurrencyEnum: U,
+    BillingProviderEnum: V
   ) => ({
     id: uuidId ? uuid : string,
     name: string,
     description: optional(string),
     price: number,
     cadence: enum_(PlanCadenceEnum),
+    currency: enum_(CurrencyEnum),
     features: optional(array(string)),
-    extraFields: optional(unknown),
     externalId: string,
     billingProvider: optional(enum_(BillingProviderEnum)),
     active: boolean,
+    extraFields: optional(unknown),
     createdAt: optional(date),
     updatedAt: optional(date)
   });

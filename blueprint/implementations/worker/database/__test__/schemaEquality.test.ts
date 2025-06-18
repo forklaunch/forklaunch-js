@@ -2,12 +2,13 @@ import { isTrue } from '@forklaunch/common';
 import { testSchemaEquality } from '@forklaunch/core/test';
 import { DatabaseWorkerOptionsSchema as TypeboxDatabaseWorkerOptionsSchema } from '../schemas/typebox/databaseWorker.schema';
 import { DatabaseWorkerOptionsSchema as ZodDatabaseWorkerOptionsSchema } from '../schemas/zod/databaseWorker.schema';
+import { DatabaseWorkerOptions } from '../types/databaseWorker.types';
 
 describe('schema equality', () => {
   it('should be equal for bullmq worker', () => {
     expect(
       isTrue(
-        testSchemaEquality(
+        testSchemaEquality<DatabaseWorkerOptions>()(
           ZodDatabaseWorkerOptionsSchema,
           TypeboxDatabaseWorkerOptionsSchema,
           {

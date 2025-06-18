@@ -9,6 +9,7 @@ import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { CheckoutSessionService } from '@forklaunch/interfaces-billing/interfaces';
+import { CurrencyEnum } from '../../domain/enum/currency.enum';
 import { PaymentMethodEnum } from '../../domain/enum/paymentMethod.enum';
 import { StatusEnum } from '../../domain/enum/status.enum';
 import {
@@ -122,5 +123,9 @@ export const CheckoutSessionController = (
       }
     )
   }) satisfies Controller<
-    CheckoutSessionService<typeof PaymentMethodEnum, typeof StatusEnum>
+    CheckoutSessionService<
+      typeof PaymentMethodEnum,
+      typeof CurrencyEnum,
+      typeof StatusEnum
+    >
   >;

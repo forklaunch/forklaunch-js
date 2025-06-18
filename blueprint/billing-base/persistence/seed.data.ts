@@ -23,10 +23,7 @@ export const billingProvider = {
 export const paymentLink = {
   amount: 1000,
   currency: CurrencyEnum.USD,
-  description: 'Test payment link',
-  successRedirectUri: 'https://example.com/success',
-  cancelRedirectUri: 'https://example.com/cancel',
-  expiresAt: new Date(),
+  paymentMethods: [PaymentMethodEnum.CREDIT_CARD],
   status: StatusEnum.EXPIRED,
   createdAt: new Date(),
   updatedAt: new Date()
@@ -37,6 +34,7 @@ export const plan = {
   name: 'Basic',
   description: 'Basic plan',
   price: 1000,
+  currency: CurrencyEnum.USD,
   cadence: PlanCadenceEnum.MONTHLY,
   features: ['feature1', 'feature2'],
   extraFields: {},
@@ -49,7 +47,7 @@ export const plan = {
 export const checkoutSession = {
   customerId: 'test@example.com',
   paymentMethods: [PaymentMethodEnum.CREDIT_CARD],
-  metadata: {},
+  currency: CurrencyEnum.USD,
   successRedirectUri: 'https://example.com/success',
   cancelRedirectUri: 'https://example.com/cancel',
   expiresAt: new Date(),

@@ -24,63 +24,88 @@ import { EntityManager } from '@mikro-orm/core';
 export class BaseCheckoutSessionService<
   SchemaValidator extends AnySchemaValidator,
   PaymentMethodEnum,
+  CurrencyEnum,
   StatusEnum,
   Metrics extends MetricsDefinition = MetricsDefinition,
   Dto extends {
-    CheckoutSessionDtoMapper: CheckoutSessionDto<PaymentMethodEnum, StatusEnum>;
+    CheckoutSessionDtoMapper: CheckoutSessionDto<
+      PaymentMethodEnum,
+      CurrencyEnum,
+      StatusEnum
+    >;
     CreateCheckoutSessionDtoMapper: CreateCheckoutSessionDto<
       PaymentMethodEnum,
+      CurrencyEnum,
       StatusEnum
     >;
     UpdateCheckoutSessionDtoMapper: UpdateCheckoutSessionDto<
       PaymentMethodEnum,
+      CurrencyEnum,
       StatusEnum
     >;
   } = {
-    CheckoutSessionDtoMapper: CheckoutSessionDto<PaymentMethodEnum, StatusEnum>;
+    CheckoutSessionDtoMapper: CheckoutSessionDto<
+      PaymentMethodEnum,
+      CurrencyEnum,
+      StatusEnum
+    >;
     CreateCheckoutSessionDtoMapper: CreateCheckoutSessionDto<
       PaymentMethodEnum,
+      CurrencyEnum,
       StatusEnum
     >;
     UpdateCheckoutSessionDtoMapper: UpdateCheckoutSessionDto<
       PaymentMethodEnum,
+      CurrencyEnum,
       StatusEnum
     >;
   },
   Entities extends {
-    CheckoutSessionDtoMapper: CheckoutSessionDto<PaymentMethodEnum, StatusEnum>;
+    CheckoutSessionDtoMapper: CheckoutSessionDto<
+      PaymentMethodEnum,
+      CurrencyEnum,
+      StatusEnum
+    >;
     CreateCheckoutSessionDtoMapper: CheckoutSessionDto<
       PaymentMethodEnum,
+      CurrencyEnum,
       StatusEnum
     >;
     UpdateCheckoutSessionDtoMapper: CheckoutSessionDto<
       PaymentMethodEnum,
+      CurrencyEnum,
       StatusEnum
     >;
   } = {
-    CheckoutSessionDtoMapper: CheckoutSessionDto<PaymentMethodEnum, StatusEnum>;
+    CheckoutSessionDtoMapper: CheckoutSessionDto<
+      PaymentMethodEnum,
+      CurrencyEnum,
+      StatusEnum
+    >;
     CreateCheckoutSessionDtoMapper: CheckoutSessionDto<
       PaymentMethodEnum,
+      CurrencyEnum,
       StatusEnum
     >;
     UpdateCheckoutSessionDtoMapper: CheckoutSessionDto<
       PaymentMethodEnum,
+      CurrencyEnum,
       StatusEnum
     >;
   }
-> implements CheckoutSessionService<PaymentMethodEnum, StatusEnum>
+> implements CheckoutSessionService<PaymentMethodEnum, CurrencyEnum, StatusEnum>
 {
-  #mappers: InternalDtoMapper<
+  protected _mappers: InternalDtoMapper<
     InstanceTypeRecord<typeof this.mappers>,
     Entities,
     Dto
   >;
-  private evaluatedTelemetryOptions: {
+  protected evaluatedTelemetryOptions: {
     logging?: boolean;
     metrics?: boolean;
     tracing?: boolean;
   };
-  private enableDatabaseBackup: boolean;
+  protected enableDatabaseBackup: boolean;
 
   constructor(
     protected readonly em: EntityManager,
@@ -109,7 +134,7 @@ export class BaseCheckoutSessionService<
       telemetry?: TelemetryOptions;
     }
   ) {
-    this.#mappers = transformIntoInternalDtoMapper(mappers, schemaValidator);
+    this._mappers = transformIntoInternalDtoMapper(mappers, schemaValidator);
     this.enableDatabaseBackup = options?.enableDatabaseBackup ?? false;
     this.evaluatedTelemetryOptions = options?.telemetry
       ? evaluateTelemetryOptions(options.telemetry).enabled
@@ -133,13 +158,13 @@ export class BaseCheckoutSessionService<
     }
 
     const checkoutSession =
-      await this.#mappers.CreateCheckoutSessionDtoMapper.deserializeDtoToEntity(
+      await this._mappers.CreateCheckoutSessionDtoMapper.deserializeDtoToEntity(
         checkoutSessionDto,
         this.em
       );
 
     const createdCheckoutSessionDto =
-      await this.#mappers.CheckoutSessionDtoMapper.serializeEntityToDto(
+      await this._mappers.CheckoutSessionDtoMapper.serializeEntityToDto(
         checkoutSession
       );
 
@@ -166,7 +191,7 @@ export class BaseCheckoutSessionService<
       throw new Error('Session not found');
     }
 
-    return this.#mappers.CheckoutSessionDtoMapper.serializeEntityToDto(
+    return this._mappers.CheckoutSessionDtoMapper.serializeEntityToDto(
       checkoutSessionDetails.value
     );
   }

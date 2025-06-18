@@ -15,7 +15,7 @@ export class BullMqWorkerProducer<
     private readonly options: Options
   ) {
     this.queue = new Queue(this.queueName, {
-      connection: this.options.connection
+      connection: this.options.queueOptions.connection
     });
   }
 

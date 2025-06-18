@@ -69,12 +69,12 @@ export class BaseSubscriptionService<
   }
 > implements SubscriptionService<PartyType, BillingProviderType>
 {
-  #mappers: InternalDtoMapper<
+  protected _mappers: InternalDtoMapper<
     InstanceTypeRecord<typeof this.mappers>,
     Entities,
     Dto
   >;
-  private evaluatedTelemetryOptions: {
+  protected evaluatedTelemetryOptions: {
     logging?: boolean;
     metrics?: boolean;
     tracing?: boolean;
@@ -102,11 +102,10 @@ export class BaseSubscriptionService<
       >;
     },
     readonly options?: {
-      enableDatabaseBackup?: boolean;
       telemetry?: TelemetryOptions;
     }
   ) {
-    this.#mappers = transformIntoInternalDtoMapper<
+    this._mappers = transformIntoInternalDtoMapper<
       SchemaValidator,
       typeof this.mappers,
       Entities,
@@ -132,7 +131,7 @@ export class BaseSubscriptionService<
       );
     }
     const subscription =
-      await this.#mappers.CreateSubscriptionDtoMapper.deserializeDtoToEntity(
+      await this._mappers.CreateSubscriptionDtoMapper.deserializeDtoToEntity(
         subscriptionDto,
         em ?? this.em
       );
@@ -140,7 +139,7 @@ export class BaseSubscriptionService<
       await innerEm.persist(subscription);
     });
     const createdSubscriptionDto =
-      await this.#mappers.SubscriptionDtoMapper.serializeEntityToDto(
+      await this._mappers.SubscriptionDtoMapper.serializeEntityToDto(
         subscription
       );
     return createdSubscriptionDto;
@@ -157,7 +156,7 @@ export class BaseSubscriptionService<
       'Subscription',
       idDto
     );
-    return this.#mappers.SubscriptionDtoMapper.serializeEntityToDto(
+    return this._mappers.SubscriptionDtoMapper.serializeEntityToDto(
       subscription as Entities['SubscriptionDtoMapper']
     );
   }
@@ -175,7 +174,7 @@ export class BaseSubscriptionService<
       active: true
     });
 
-    return this.#mappers.SubscriptionDtoMapper.serializeEntityToDto(
+    return this._mappers.SubscriptionDtoMapper.serializeEntityToDto(
       subscription as Entities['SubscriptionDtoMapper']
     );
   }
@@ -192,7 +191,7 @@ export class BaseSubscriptionService<
       partyType: 'ORGANIZATION',
       active: true
     });
-    return this.#mappers.SubscriptionDtoMapper.serializeEntityToDto(
+    return this._mappers.SubscriptionDtoMapper.serializeEntityToDto(
       subscription as Entities['SubscriptionDtoMapper']
     );
   }
@@ -208,7 +207,7 @@ export class BaseSubscriptionService<
       );
     }
     const subscription =
-      this.#mappers.UpdateSubscriptionDtoMapper.deserializeDtoToEntity(
+      this._mappers.UpdateSubscriptionDtoMapper.deserializeDtoToEntity(
         subscriptionDto,
         em ?? this.em
       );
@@ -217,7 +216,7 @@ export class BaseSubscriptionService<
       await innerEm.persist(updatedSubscription);
     });
     const updatedSubscriptionDto =
-      await this.#mappers.SubscriptionDtoMapper.serializeEntityToDto(
+      await this._mappers.SubscriptionDtoMapper.serializeEntityToDto(
         updatedSubscription
       );
 
@@ -258,7 +257,7 @@ export class BaseSubscriptionService<
     return Promise.all(
       subscriptions.map((subscription) => {
         const subscriptionDto =
-          this.#mappers.SubscriptionDtoMapper.serializeEntityToDto(
+          this._mappers.SubscriptionDtoMapper.serializeEntityToDto(
             subscription as Entities['SubscriptionDtoMapper']
           );
         return subscriptionDto;

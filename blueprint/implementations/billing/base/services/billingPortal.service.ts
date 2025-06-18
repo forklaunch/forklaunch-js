@@ -44,17 +44,17 @@ export class BaseBillingPortalService<
   }
 > implements BillingPortalService
 {
-  #mappers: InternalDtoMapper<
+  protected _mappers: InternalDtoMapper<
     InstanceTypeRecord<typeof this.mappers>,
     Entities,
     Dto
   >;
-  private evaluatedTelemetryOptions: {
+  protected evaluatedTelemetryOptions: {
     logging?: boolean;
     metrics?: boolean;
     tracing?: boolean;
   };
-  private enableDatabaseBackup: boolean;
+  protected enableDatabaseBackup: boolean;
 
   constructor(
     protected em: EntityManager,
@@ -83,7 +83,7 @@ export class BaseBillingPortalService<
       enableDatabaseBackup?: boolean;
     }
   ) {
-    this.#mappers = transformIntoInternalDtoMapper(mappers, schemaValidator);
+    this._mappers = transformIntoInternalDtoMapper(mappers, schemaValidator);
     this.enableDatabaseBackup = options?.enableDatabaseBackup ?? false;
     this.evaluatedTelemetryOptions = options?.telemetry
       ? evaluateTelemetryOptions(options.telemetry).enabled
@@ -107,7 +107,7 @@ export class BaseBillingPortalService<
     }
 
     const billingPortal =
-      await this.#mappers.CreateBillingPortalDtoMapper.deserializeDtoToEntity(
+      await this._mappers.CreateBillingPortalDtoMapper.deserializeDtoToEntity(
         billingPortalDto,
         this.em
       );
@@ -117,7 +117,7 @@ export class BaseBillingPortalService<
     }
 
     const createdBillingPortalDto =
-      await this.#mappers.BillingPortalDtoMapper.serializeEntityToDto(
+      await this._mappers.BillingPortalDtoMapper.serializeEntityToDto(
         billingPortal
       );
 
@@ -169,7 +169,7 @@ export class BaseBillingPortalService<
     }
 
     const billingPortal =
-      await this.#mappers.UpdateBillingPortalDtoMapper.deserializeDtoToEntity(
+      await this._mappers.UpdateBillingPortalDtoMapper.deserializeDtoToEntity(
         billingPortalDto,
         this.em
       );
@@ -182,7 +182,7 @@ export class BaseBillingPortalService<
 
     const updatedBillingPortalDto = {
       ...existingBillingPortal,
-      ...(await this.#mappers.BillingPortalDtoMapper.serializeEntityToDto(
+      ...(await this._mappers.BillingPortalDtoMapper.serializeEntityToDto(
         billingPortal
       ))
     };

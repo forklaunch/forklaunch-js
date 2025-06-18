@@ -22,7 +22,7 @@ export class BullMqWorkerConsumer<
     protected readonly failureHandler: WorkerFailureHandler<EventEntity>
   ) {
     this.queue = new Queue(this.queueName, {
-      connection: this.options.connection
+      connection: this.options.queueOptions.connection
     });
   }
 
@@ -38,7 +38,7 @@ export class BullMqWorkerConsumer<
         const event = job.data as EventEntity;
         await this.processEvents([event]);
       },
-      this.options
+      this.options.queueOptions
     );
 
     this.worker.on('failed', (job: Job | undefined, error: Error) => {

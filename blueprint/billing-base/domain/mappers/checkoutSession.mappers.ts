@@ -3,6 +3,7 @@ import { RequestDtoMapper, ResponseDtoMapper } from '@forklaunch/core/mappers';
 import { EntityManager } from '@mikro-orm/core';
 import { CheckoutSession } from '../../persistence/entities/checkoutSession.entity';
 import { CheckoutSessionSchemas } from '../../registrations';
+import { CurrencyEnum } from '../enum/currency.enum';
 import { PaymentMethodEnum } from '../enum/paymentMethod.enum';
 import { StatusEnum } from '../enum/status.enum';
 
@@ -12,6 +13,7 @@ export class CreateCheckoutSessionDtoMapper extends RequestDtoMapper<
 > {
   schema = CheckoutSessionSchemas.CreateCheckoutSessionSchema(
     PaymentMethodEnum,
+    CurrencyEnum,
     StatusEnum
   );
 
@@ -33,6 +35,7 @@ export class UpdateCheckoutSessionDtoMapper extends RequestDtoMapper<
 > {
   schema = CheckoutSessionSchemas.UpdateCheckoutSessionSchema(
     PaymentMethodEnum,
+    CurrencyEnum,
     StatusEnum
   );
 
@@ -47,6 +50,7 @@ export class CheckoutSessionDtoMapper extends ResponseDtoMapper<
 > {
   schema = CheckoutSessionSchemas.CheckoutSessionSchema(
     PaymentMethodEnum,
+    CurrencyEnum,
     StatusEnum
   );
 

@@ -7,8 +7,8 @@ export class BillingPortal extends SqlBaseEntity {
   @Property()
   customerId!: string;
 
-  @Property()
-  uri!: string;
+  @Property({ nullable: true })
+  uri?: string;
 
   @Property()
   expiresAt!: Date;

@@ -23,40 +23,89 @@ import { EntityManager } from '@mikro-orm/core';
 
 export class BasePaymentLinkService<
   SchemaValidator extends AnySchemaValidator,
+  PaymentMethodEnum,
   CurrencyEnum,
   StatusEnum,
   Metrics extends MetricsDefinition = MetricsDefinition,
   Dto extends {
-    PaymentLinkDtoMapper: PaymentLinkDto<CurrencyEnum, StatusEnum>;
-    CreatePaymentLinkDtoMapper: CreatePaymentLinkDto<CurrencyEnum, StatusEnum>;
-    UpdatePaymentLinkDtoMapper: UpdatePaymentLinkDto<CurrencyEnum, StatusEnum>;
+    PaymentLinkDtoMapper: PaymentLinkDto<
+      PaymentMethodEnum,
+      CurrencyEnum,
+      StatusEnum
+    >;
+    CreatePaymentLinkDtoMapper: CreatePaymentLinkDto<
+      PaymentMethodEnum,
+      CurrencyEnum,
+      StatusEnum
+    >;
+    UpdatePaymentLinkDtoMapper: UpdatePaymentLinkDto<
+      PaymentMethodEnum,
+      CurrencyEnum,
+      StatusEnum
+    >;
   } = {
-    PaymentLinkDtoMapper: PaymentLinkDto<CurrencyEnum, StatusEnum>;
-    CreatePaymentLinkDtoMapper: CreatePaymentLinkDto<CurrencyEnum, StatusEnum>;
-    UpdatePaymentLinkDtoMapper: UpdatePaymentLinkDto<CurrencyEnum, StatusEnum>;
+    PaymentLinkDtoMapper: PaymentLinkDto<
+      PaymentMethodEnum,
+      CurrencyEnum,
+      StatusEnum
+    >;
+    CreatePaymentLinkDtoMapper: CreatePaymentLinkDto<
+      PaymentMethodEnum,
+      CurrencyEnum,
+      StatusEnum
+    >;
+    UpdatePaymentLinkDtoMapper: UpdatePaymentLinkDto<
+      PaymentMethodEnum,
+      CurrencyEnum,
+      StatusEnum
+    >;
   },
   Entities extends {
-    PaymentLinkDtoMapper: PaymentLinkDto<CurrencyEnum, StatusEnum>;
-    CreatePaymentLinkDtoMapper: PaymentLinkDto<CurrencyEnum, StatusEnum>;
-    UpdatePaymentLinkDtoMapper: PaymentLinkDto<CurrencyEnum, StatusEnum>;
+    PaymentLinkDtoMapper: PaymentLinkDto<
+      PaymentMethodEnum,
+      CurrencyEnum,
+      StatusEnum
+    >;
+    CreatePaymentLinkDtoMapper: PaymentLinkDto<
+      PaymentMethodEnum,
+      CurrencyEnum,
+      StatusEnum
+    >;
+    UpdatePaymentLinkDtoMapper: PaymentLinkDto<
+      PaymentMethodEnum,
+      CurrencyEnum,
+      StatusEnum
+    >;
   } = {
-    PaymentLinkDtoMapper: PaymentLinkDto<CurrencyEnum, StatusEnum>;
-    CreatePaymentLinkDtoMapper: PaymentLinkDto<CurrencyEnum, StatusEnum>;
-    UpdatePaymentLinkDtoMapper: PaymentLinkDto<CurrencyEnum, StatusEnum>;
+    PaymentLinkDtoMapper: PaymentLinkDto<
+      PaymentMethodEnum,
+      CurrencyEnum,
+      StatusEnum
+    >;
+    CreatePaymentLinkDtoMapper: PaymentLinkDto<
+      PaymentMethodEnum,
+      CurrencyEnum,
+      StatusEnum
+    >;
+    UpdatePaymentLinkDtoMapper: PaymentLinkDto<
+      PaymentMethodEnum,
+      CurrencyEnum,
+      StatusEnum
+    >;
   }
-> implements PaymentLinkService<CurrencyEnum, StatusEnum>
+> implements PaymentLinkService<PaymentMethodEnum, CurrencyEnum, StatusEnum>
 {
-  #mappers: InternalDtoMapper<
+  protected _mappers: InternalDtoMapper<
     InstanceTypeRecord<typeof this.mappers>,
     Entities,
     Dto
   >;
-  private evaluatedTelemetryOptions: {
+  protected evaluatedTelemetryOptions: {
     logging?: boolean;
     metrics?: boolean;
     tracing?: boolean;
   };
-  private enableDatabaseBackup: boolean;
+  protected enableDatabaseBackup: boolean;
 
   constructor(
     protected readonly em: EntityManager,
@@ -85,7 +134,7 @@ export class BasePaymentLinkService<
       telemetry?: TelemetryOptions;
     }
   ) {
-    this.#mappers = transformIntoInternalDtoMapper(mappers, schemaValidator);
+    this._mappers = transformIntoInternalDtoMapper(mappers, schemaValidator);
     this.enableDatabaseBackup = options?.enableDatabaseBackup ?? false;
     this.evaluatedTelemetryOptions = options?.telemetry
       ? evaluateTelemetryOptions(options.telemetry).enabled
@@ -107,7 +156,7 @@ export class BasePaymentLinkService<
     }
 
     const paymentLink =
-      await this.#mappers.CreatePaymentLinkDtoMapper.deserializeDtoToEntity(
+      await this._mappers.CreatePaymentLinkDtoMapper.deserializeDtoToEntity(
         paymentLinkDto,
         this.em
       );
@@ -117,7 +166,7 @@ export class BasePaymentLinkService<
     }
 
     const createdPaymentLinkDto =
-      await this.#mappers.PaymentLinkDtoMapper.serializeEntityToDto(
+      await this._mappers.PaymentLinkDtoMapper.serializeEntityToDto(
         paymentLink
       );
 
@@ -145,7 +194,7 @@ export class BasePaymentLinkService<
       throw new Error('Payment link not found');
     }
     const paymentLink =
-      await this.#mappers.UpdatePaymentLinkDtoMapper.deserializeDtoToEntity(
+      await this._mappers.UpdatePaymentLinkDtoMapper.deserializeDtoToEntity(
         paymentLinkDto,
         this.em
       );
@@ -156,7 +205,7 @@ export class BasePaymentLinkService<
 
     const updatedLinkDto = {
       ...existingLink,
-      ...(await this.#mappers.PaymentLinkDtoMapper.serializeEntityToDto(
+      ...(await this._mappers.PaymentLinkDtoMapper.serializeEntityToDto(
         paymentLink
       ))
     };
@@ -181,7 +230,7 @@ export class BasePaymentLinkService<
       throw new Error('Payment link not found');
     }
 
-    return this.#mappers.PaymentLinkDtoMapper.serializeEntityToDto(
+    return this._mappers.PaymentLinkDtoMapper.serializeEntityToDto(
       paymentLink.value
     );
   }
@@ -235,7 +284,7 @@ export class BasePaymentLinkService<
         const paymentLink =
           await this.cache.readRecord<Entities['PaymentLinkDtoMapper']>(key);
         const paymentLinkDto =
-          this.#mappers.PaymentLinkDtoMapper.serializeEntityToDto(
+          this._mappers.PaymentLinkDtoMapper.serializeEntityToDto(
             paymentLink.value
           );
         return paymentLinkDto;

@@ -12,6 +12,7 @@ import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { PlanService } from '@forklaunch/interfaces-billing/interfaces';
 import { BillingProviderEnum } from '../../domain/enum/billingProvider.enum';
+import { CurrencyEnum } from '../../domain/enum/currency.enum';
 import { PlanCadenceEnum } from '../../domain/enum/planCadence.enum';
 import {
   CreatePlanDtoMapper,
@@ -54,7 +55,11 @@ export const PlanController = (
         summary: 'Get a plan',
         params: IdSchema,
         responses: {
-          200: PlanSchemas.PlanSchema(PlanCadenceEnum, BillingProviderEnum)
+          200: PlanSchemas.PlanSchema(
+            PlanCadenceEnum,
+            CurrencyEnum,
+            BillingProviderEnum
+          )
         }
       },
       async (req, res) => {
@@ -107,7 +112,11 @@ export const PlanController = (
         query: IdsSchema,
         responses: {
           200: array(
-            PlanSchemas.PlanSchema(PlanCadenceEnum, BillingProviderEnum)
+            PlanSchemas.PlanSchema(
+              PlanCadenceEnum,
+              CurrencyEnum,
+              BillingProviderEnum
+            )
           )
         }
       },
@@ -117,5 +126,9 @@ export const PlanController = (
       }
     )
   }) satisfies Controller<
-    PlanService<typeof PlanCadenceEnum, typeof BillingProviderEnum>
+    PlanService<
+      typeof PlanCadenceEnum,
+      typeof CurrencyEnum,
+      typeof BillingProviderEnum
+    >
   >;

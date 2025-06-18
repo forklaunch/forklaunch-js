@@ -1,17 +1,19 @@
 import { IdDto, IdsDto, RecordTimingDto } from '@forklaunch/common';
 
-export type CreatePermissionDto = {
+export type CreatePermissionDto = Partial<IdDto> & {
   slug: string;
   addToRolesIds?: string[];
   extraFields?: unknown;
 };
-export type UpdatePermissionDto = IdDto &
-  Partial<CreatePermissionDto> & {
+export type UpdatePermissionDto = Partial<CreatePermissionDto> &
+  IdDto & {
     removeFromRolesIds?: string[];
   };
-export type PermissionDto = IdDto &
+export type PermissionDto = CreatePermissionDto &
+  IdDto &
   Partial<RecordTimingDto> & {
     slug: string;
+    extraFields?: unknown;
   };
 
 export type PermissionServiceParameters = {

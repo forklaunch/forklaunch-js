@@ -1,5 +1,6 @@
 import { LiteralSchema } from '@forklaunch/validator';
 import {
+  array,
   date,
   enum_,
   number,
@@ -11,18 +12,16 @@ import {
 
 export const CreatePaymentLinkSchema = <
   T extends Record<string, LiteralSchema>,
-  U extends Record<string, LiteralSchema>
+  U extends Record<string, LiteralSchema>,
+  V extends Record<string, LiteralSchema>
 >(
-  CurrencyEnum: T,
-  StatusEnum: U
+  PaymentMethodEnum: T,
+  CurrencyEnum: U,
+  StatusEnum: V
 ) => ({
   amount: number,
+  paymentMethods: array(enum_(PaymentMethodEnum)),
   currency: enum_(CurrencyEnum),
-  description: optional(string),
-  metadata: optional(unknown),
-  successRedirectUri: string,
-  cancelRedirectUri: string,
-  expiresAt: date,
   status: enum_(StatusEnum),
   extraFields: optional(unknown)
 });
@@ -31,19 +30,17 @@ export const UpdatePaymentLinkSchema =
   ({ uuidId }: { uuidId: boolean }) =>
   <
     T extends Record<string, LiteralSchema>,
-    U extends Record<string, LiteralSchema>
+    U extends Record<string, LiteralSchema>,
+    V extends Record<string, LiteralSchema>
   >(
-    CurrencyEnum: T,
-    StatusEnum: U
+    PaymentMethodEnum: T,
+    CurrencyEnum: U,
+    StatusEnum: V
   ) => ({
     id: uuidId ? uuid : string,
     amount: optional(number),
+    paymentMethods: optional(array(enum_(PaymentMethodEnum))),
     currency: optional(enum_(CurrencyEnum)),
-    description: optional(string),
-    metadata: optional(unknown),
-    successRedirectUri: optional(string),
-    cancelRedirectUri: optional(string),
-    expiresAt: optional(date),
     status: optional(enum_(StatusEnum)),
     extraFields: optional(unknown)
   });
@@ -52,19 +49,17 @@ export const PaymentLinkSchema =
   ({ uuidId }: { uuidId: boolean }) =>
   <
     T extends Record<string, LiteralSchema>,
-    U extends Record<string, LiteralSchema>
+    U extends Record<string, LiteralSchema>,
+    V extends Record<string, LiteralSchema>
   >(
-    CurrencyEnum: T,
-    StatusEnum: U
+    PaymentMethodEnum: T,
+    CurrencyEnum: U,
+    StatusEnum: V
   ) => ({
     id: uuidId ? uuid : string,
     amount: number,
+    paymentMethods: array(enum_(PaymentMethodEnum)),
     currency: enum_(CurrencyEnum),
-    description: optional(string),
-    metadata: optional(unknown),
-    successRedirectUri: string,
-    cancelRedirectUri: string,
-    expiresAt: date,
     status: enum_(StatusEnum),
     extraFields: optional(unknown),
     createdAt: optional(date),

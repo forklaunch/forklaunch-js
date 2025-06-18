@@ -3,11 +3,13 @@ import { PlanServiceParameters } from '../types/plan.service.types';
 
 export interface PlanService<
   PlanCadenceEnum,
+  CurrencyEnum,
   BillingProviderEnum,
   Params extends PlanServiceParameters<
     PlanCadenceEnum,
+    CurrencyEnum,
     BillingProviderEnum
-  > = PlanServiceParameters<PlanCadenceEnum, BillingProviderEnum>
+  > = PlanServiceParameters<PlanCadenceEnum, CurrencyEnum, BillingProviderEnum>
 > {
   createPlan: (
     planDto: Params['CreatePlanDto'],

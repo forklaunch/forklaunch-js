@@ -12,6 +12,7 @@ import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { PaymentLinkService } from '@forklaunch/interfaces-billing/interfaces';
 import { CurrencyEnum } from '../../domain/enum/currency.enum';
+import { PaymentMethodEnum } from '../../domain/enum/paymentMethod.enum';
 import { StatusEnum } from '../../domain/enum/status.enum';
 import {
   CreatePaymentLinkDtoMapper,
@@ -164,5 +165,9 @@ export const PaymentLinkController = (
       }
     )
   }) satisfies Controller<
-    PaymentLinkService<typeof CurrencyEnum, typeof StatusEnum>
+    PaymentLinkService<
+      typeof PaymentMethodEnum,
+      typeof CurrencyEnum,
+      typeof StatusEnum
+    >
   >;
