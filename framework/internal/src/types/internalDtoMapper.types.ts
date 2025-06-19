@@ -1,15 +1,4 @@
-import { AnySchemaValidator } from '@forklaunch/validator';
-import { EntityManager } from '@mikro-orm/core';
-
-type AllAfterFirstParameters<T> = T extends (
-  first: never,
-  ...args: infer U
-) => unknown
-  ? U
-  : never[];
-
 export type InternalDtoMapper<
-  SchemaValidator extends AnySchemaValidator,
   DtoMapper extends Record<
     string,
     | {
@@ -22,9 +11,7 @@ export type InternalDtoMapper<
         _Entity: unknown;
         deserializeDtoToEntity: unknown;
       }
-  >,
-  Entities extends Record<keyof DtoMapper, unknown>,
-  Dto extends Record<keyof DtoMapper, unknown>
+  >
 > = {
   [K in keyof DtoMapper]: DtoMapper[K] extends {
     dto: unknown;
@@ -32,13 +19,7 @@ export type InternalDtoMapper<
     serializeEntityToDto: unknown;
   }
     ? {
-        serializeEntityToDto: (
-          schemaValidator: SchemaValidator,
-          entity: Entities[K],
-          ...additionalArgs: AllAfterFirstParameters<
-            DtoMapper[K]['serializeEntityToDto']
-          >
-        ) => Promise<Dto[K]>;
+        serializeEntityToDto: DtoMapper[K]['serializeEntityToDto'];
       }
     : DtoMapper[K] extends {
           dto: unknown;
@@ -46,14 +27,7 @@ export type InternalDtoMapper<
           deserializeDtoToEntity: unknown;
         }
       ? {
-          deserializeDtoToEntity: (
-            schemaValidator: SchemaValidator,
-            dto: Dto[K],
-            em?: EntityManager,
-            ...additionalArgs: AllAfterFirstParameters<
-              DtoMapper[K]['deserializeDtoToEntity']
-            >
-          ) => Promise<Entities[K]>;
+          deserializeDtoToEntity: DtoMapper[K]['deserializeDtoToEntity'];
         }
       : never;
 };

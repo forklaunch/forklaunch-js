@@ -17,27 +17,15 @@ export function transformIntoInternalDtoMapper<
           _Entity: unknown;
           deserializeDtoToEntity: unknown;
         }
-  >,
-  Entities extends Record<keyof DtoMapper, unknown>,
-  Dto extends Record<keyof DtoMapper, unknown>
+  >
 >(
   mappers: DtoMapper,
   schemaValidator: SchemaValidator
-): InternalDtoMapper<
-  SchemaValidator,
-  InstanceTypeRecord<DtoMapper>,
-  Entities,
-  Dto
-> {
+): InternalDtoMapper<InstanceTypeRecord<DtoMapper>> {
   return Object.fromEntries(
     Object.entries(mappers).map(([key, value]) => [
       key,
       new value(schemaValidator)
     ])
-  ) as unknown as InternalDtoMapper<
-    SchemaValidator,
-    InstanceTypeRecord<DtoMapper>,
-    Entities,
-    Dto
-  >;
+  ) as unknown as InternalDtoMapper<InstanceTypeRecord<DtoMapper>>;
 }
