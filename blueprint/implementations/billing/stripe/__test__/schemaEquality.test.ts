@@ -1,5 +1,5 @@
 import { isTrue } from '@forklaunch/common';
-import { DummyEnum, testSchemaEquality } from '@forklaunch/core/test';
+import { DummyEnum, testSchemaEquality } from '@forklaunch/internal';
 import Stripe from 'stripe';
 import { BillingProviderEnum } from '../domain/enums/billingProvider.enum';
 import { CurrencyEnum } from '../domain/enums/currency.enum';
@@ -113,7 +113,7 @@ describe('schema equality', () => {
             customerId: 'test',
             uri: 'https://example.com',
             expiresAt: new Date(),
-            stripeFields: {}
+            stripeFields: {} as Stripe.BillingPortal.SessionCreateParams
           }
         )
       )

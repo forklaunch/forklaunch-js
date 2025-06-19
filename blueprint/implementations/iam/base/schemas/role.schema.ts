@@ -1,4 +1,4 @@
-import { serviceSchemaResolver } from '@forklaunch/core/mappers';
+import { serviceSchemaResolver } from '@forklaunch/internal';
 import { BaseRoleServiceSchemas as TypeBoxSchemas } from './typebox/role.schema';
 import { BaseRoleServiceSchemas as ZodSchemas } from './zod/role.schema';
 

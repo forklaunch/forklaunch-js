@@ -6,18 +6,18 @@ import {
   OpenTelemetryCollector,
   TelemetryOptions
 } from '@forklaunch/core/http';
-import {
-  InternalDtoMapper,
-  RequestDtoMapperConstructor,
-  ResponseDtoMapperConstructor,
-  transformIntoInternalDtoMapper
-} from '@forklaunch/core/mappers';
 import { CheckoutSessionService } from '@forklaunch/interfaces-billing/interfaces';
 import {
   CheckoutSessionDto,
   CreateCheckoutSessionDto,
   UpdateCheckoutSessionDto
 } from '@forklaunch/interfaces-billing/types';
+import {
+  InternalDtoMapper,
+  RequestDtoMapperConstructor,
+  ResponseDtoMapperConstructor,
+  transformIntoInternalDtoMapper
+} from '@forklaunch/internal';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
 
@@ -96,9 +96,7 @@ export class BaseCheckoutSessionService<
 > implements CheckoutSessionService<PaymentMethodEnum, CurrencyEnum, StatusEnum>
 {
   protected _mappers: InternalDtoMapper<
-    InstanceTypeRecord<typeof this.mappers>,
-    Entities,
-    Dto
+    InstanceTypeRecord<typeof this.mappers>
   >;
   protected evaluatedTelemetryOptions: {
     logging?: boolean;
@@ -159,12 +157,14 @@ export class BaseCheckoutSessionService<
 
     const checkoutSession =
       await this._mappers.CreateCheckoutSessionDtoMapper.deserializeDtoToEntity(
+        this.schemaValidator,
         checkoutSessionDto,
         this.em
       );
 
     const createdCheckoutSessionDto =
       await this._mappers.CheckoutSessionDtoMapper.serializeEntityToDto(
+        this.schemaValidator,
         checkoutSession
       );
 
@@ -192,6 +192,7 @@ export class BaseCheckoutSessionService<
     }
 
     return this._mappers.CheckoutSessionDtoMapper.serializeEntityToDto(
+      this.schemaValidator,
       checkoutSessionDetails.value
     );
   }

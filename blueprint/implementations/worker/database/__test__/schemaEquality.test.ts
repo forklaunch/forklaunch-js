@@ -1,5 +1,5 @@
 import { isTrue } from '@forklaunch/common';
-import { testSchemaEquality } from '@forklaunch/core/test';
+import { testSchemaEquality } from '@forklaunch/internal';
 import { DatabaseWorkerOptionsSchema as TypeboxDatabaseWorkerOptionsSchema } from '../schemas/typebox/databaseWorker.schema';
 import { DatabaseWorkerOptionsSchema as ZodDatabaseWorkerOptionsSchema } from '../schemas/zod/databaseWorker.schema';
 import { DatabaseWorkerOptions } from '../types/databaseWorker.types';

@@ -1,61 +1,37 @@
-import { IdDto } from '@forklaunch/common';
+import { IdDto, InstanceTypeRecord } from '@forklaunch/common';
 import { TtlCache } from '@forklaunch/core/cache';
 import {
   MetricsDefinition,
   OpenTelemetryCollector,
   TelemetryOptions
 } from '@forklaunch/core/http';
-import {
-  RequestDtoMapperConstructor,
-  ResponseDtoMapperConstructor
-} from '@forklaunch/core/mappers';
 import { BaseCheckoutSessionService } from '@forklaunch/implementation-billing-base/services';
 import { CheckoutSessionService } from '@forklaunch/interfaces-billing/interfaces';
+import {
+  IdentityRequestMapper,
+  IdentityResponseMapper,
+  InternalDtoMapper,
+  RequestDtoMapperConstructor,
+  ResponseDtoMapperConstructor,
+  transformIntoInternalDtoMapper
+} from '@forklaunch/internal';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
 import Stripe from 'stripe';
 import { CurrencyEnum } from '../domain/enums/currency.enum';
 import { PaymentMethodEnum } from '../domain/enums/paymentMethod.enum';
-import {
-  StripeCheckoutSessionDto,
-  StripeCreateCheckoutSessionDto,
-  StripeUpdateCheckoutSessionDto
-} from '../types/stripe.dto.types';
-import { StripeCheckoutSessionEntity } from '../types/stripe.entity.types';
+import { StripeCheckoutSessionDtos } from '../types/stripe.dto.types';
+import { StripeCheckoutSessionEntities } from '../types/stripe.entity.types';
 
 export class StripeCheckoutSessionService<
-    SchemaValidator extends AnySchemaValidator,
-    StatusEnum,
-    Metrics extends MetricsDefinition = MetricsDefinition,
-    Dto extends {
-      CheckoutSessionDtoMapper: StripeCheckoutSessionDto<StatusEnum>;
-      CreateCheckoutSessionDtoMapper: StripeCreateCheckoutSessionDto<StatusEnum>;
-      UpdateCheckoutSessionDtoMapper: StripeUpdateCheckoutSessionDto<StatusEnum>;
-    } = {
-      CheckoutSessionDtoMapper: StripeCheckoutSessionDto<StatusEnum>;
-      CreateCheckoutSessionDtoMapper: StripeCreateCheckoutSessionDto<StatusEnum>;
-      UpdateCheckoutSessionDtoMapper: StripeUpdateCheckoutSessionDto<StatusEnum>;
-    },
-    Entities extends {
-      CheckoutSessionDtoMapper: StripeCheckoutSessionEntity<StatusEnum>;
-      CreateCheckoutSessionDtoMapper: StripeCheckoutSessionEntity<StatusEnum>;
-      UpdateCheckoutSessionDtoMapper: StripeCheckoutSessionEntity<StatusEnum>;
-    } = {
-      CheckoutSessionDtoMapper: StripeCheckoutSessionEntity<StatusEnum>;
-      CreateCheckoutSessionDtoMapper: StripeCheckoutSessionEntity<StatusEnum>;
-      UpdateCheckoutSessionDtoMapper: StripeCheckoutSessionEntity<StatusEnum>;
-    }
-  >
-  extends BaseCheckoutSessionService<
-    SchemaValidator,
-    typeof PaymentMethodEnum,
-    typeof CurrencyEnum,
-    StatusEnum,
-    Metrics,
-    Dto,
-    Entities
-  >
-  implements
+  SchemaValidator extends AnySchemaValidator,
+  StatusEnum,
+  Metrics extends MetricsDefinition = MetricsDefinition,
+  Dto extends
+    StripeCheckoutSessionDtos<StatusEnum> = StripeCheckoutSessionDtos<StatusEnum>,
+  Entities extends
+    StripeCheckoutSessionEntities<StatusEnum> = StripeCheckoutSessionEntities<StatusEnum>
+> implements
     CheckoutSessionService<
       typeof PaymentMethodEnum,
       typeof CurrencyEnum,
@@ -67,6 +43,19 @@ export class StripeCheckoutSessionService<
       }
     >
 {
+  baseCheckoutSessionService: BaseCheckoutSessionService<
+    SchemaValidator,
+    typeof PaymentMethodEnum,
+    typeof CurrencyEnum,
+    StatusEnum,
+    Metrics,
+    Entities,
+    Entities
+  >;
+  protected _mappers: InternalDtoMapper<
+    InstanceTypeRecord<typeof this.mappers>
+  >;
+
   constructor(
     protected readonly stripeClient: Stripe,
     protected readonly em: EntityManager,
@@ -82,12 +71,24 @@ export class StripeCheckoutSessionService<
       CreateCheckoutSessionDtoMapper: RequestDtoMapperConstructor<
         SchemaValidator,
         Dto['CreateCheckoutSessionDtoMapper'],
-        Entities['CreateCheckoutSessionDtoMapper']
+        Entities['CreateCheckoutSessionDtoMapper'],
+        (
+          schemaValidator: SchemaValidator,
+          dto: Dto['CreateCheckoutSessionDtoMapper'],
+          em?: EntityManager,
+          session?: Stripe.Checkout.Session
+        ) => Promise<Entities['CreateCheckoutSessionDtoMapper']>
       >;
       UpdateCheckoutSessionDtoMapper: RequestDtoMapperConstructor<
         SchemaValidator,
         Dto['UpdateCheckoutSessionDtoMapper'],
-        Entities['UpdateCheckoutSessionDtoMapper']
+        Entities['UpdateCheckoutSessionDtoMapper'],
+        (
+          schemaValidator: SchemaValidator,
+          dto: Dto['UpdateCheckoutSessionDtoMapper'],
+          em?: EntityManager,
+          session?: Stripe.Checkout.Session
+        ) => Promise<Entities['UpdateCheckoutSessionDtoMapper']>
       >;
     },
     readonly options?: {
@@ -95,7 +96,28 @@ export class StripeCheckoutSessionService<
       telemetry?: TelemetryOptions;
     }
   ) {
-    super(em, cache, openTelemetryCollector, schemaValidator, mappers, options);
+    this._mappers = transformIntoInternalDtoMapper(mappers, schemaValidator);
+    this.baseCheckoutSessionService = new BaseCheckoutSessionService(
+      em,
+      cache,
+      openTelemetryCollector,
+      schemaValidator,
+      {
+        CheckoutSessionDtoMapper: IdentityResponseMapper<
+          Entities['CheckoutSessionDtoMapper'],
+          SchemaValidator
+        >,
+        CreateCheckoutSessionDtoMapper: IdentityRequestMapper<
+          Entities['CreateCheckoutSessionDtoMapper'],
+          SchemaValidator
+        >,
+        UpdateCheckoutSessionDtoMapper: IdentityRequestMapper<
+          Entities['UpdateCheckoutSessionDtoMapper'],
+          SchemaValidator
+        >
+      },
+      options
+    );
   }
 
   async createCheckoutSession(
@@ -108,28 +130,46 @@ export class StripeCheckoutSessionService<
       success_url: checkoutSessionDto.successRedirectUri,
       cancel_url: checkoutSessionDto.cancelRedirectUri
     });
-    return super.createCheckoutSession({
-      ...checkoutSessionDto,
-      id: session.id,
-      uri: session.url,
-      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
-      providerFields: session
-    });
+
+    const checkoutSessionEntity =
+      await this.baseCheckoutSessionService.createCheckoutSession(
+        await this._mappers.CreateCheckoutSessionDtoMapper.deserializeDtoToEntity(
+          this.schemaValidator,
+          {
+            ...checkoutSessionDto,
+            id: session.id,
+            uri: session.url,
+            expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+            providerFields: session
+          },
+          this.em,
+          session
+        )
+      );
+
+    return this._mappers.CheckoutSessionDtoMapper.serializeEntityToDto(
+      this.schemaValidator,
+      checkoutSessionEntity
+    );
   }
 
   async getCheckoutSession({
     id
   }: IdDto): Promise<Dto['CheckoutSessionDtoMapper']> {
-    const databaseCheckoutSession = await super.getCheckoutSession({ id });
+    const databaseCheckoutSession =
+      await this.baseCheckoutSessionService.getCheckoutSession({ id });
     return {
-      ...databaseCheckoutSession,
+      ...this._mappers.CheckoutSessionDtoMapper.serializeEntityToDto(
+        this.schemaValidator,
+        databaseCheckoutSession
+      ),
       stripeFields: await this.stripeClient.checkout.sessions.retrieve(id)
     };
   }
 
   async expireCheckoutSession({ id }: IdDto): Promise<void> {
     await this.stripeClient.checkout.sessions.expire(id);
-    await super.expireCheckoutSession({ id });
+    await this.baseCheckoutSessionService.expireCheckoutSession({ id });
   }
 
   async handleCheckoutSuccess({ id }: IdDto): Promise<void> {
@@ -138,7 +178,7 @@ export class StripeCheckoutSessionService<
         status: 'SUCCESS'
       }
     });
-    await super.handleCheckoutSuccess({ id });
+    await this.baseCheckoutSessionService.handleCheckoutSuccess({ id });
   }
 
   async handleCheckoutFailure({ id }: IdDto): Promise<void> {
@@ -147,6 +187,6 @@ export class StripeCheckoutSessionService<
         status: 'FAILED'
       }
     });
-    await super.handleCheckoutFailure({ id });
+    await this.baseCheckoutSessionService.handleCheckoutFailure({ id });
   }
 }

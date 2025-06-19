@@ -1,5 +1,4 @@
 import { isTrue } from '@forklaunch/common';
-import { DummyEnum, testSchemaEquality } from '@forklaunch/core/test';
 import {
   CreateOrganizationDto,
   CreatePermissionDto,
@@ -14,6 +13,7 @@ import {
   UpdateUserDto,
   UserDto
 } from '@forklaunch/interfaces-iam/types';
+import { DummyEnum, testSchemaEquality } from '@forklaunch/internal';
 import {
   CreateOrganizationSchema as TypeboxCreateOrganizationSchema,
   OrganizationSchema as TypeboxOrganizationSchema,

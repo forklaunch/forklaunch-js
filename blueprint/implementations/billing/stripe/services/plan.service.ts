@@ -1,15 +1,19 @@
-import { IdDto, IdsDto } from '@forklaunch/common';
+import { IdDto, IdsDto, InstanceTypeRecord } from '@forklaunch/common';
 import {
   MetricsDefinition,
   OpenTelemetryCollector,
   TelemetryOptions
 } from '@forklaunch/core/http';
-import {
-  RequestDtoMapperConstructor,
-  ResponseDtoMapperConstructor
-} from '@forklaunch/core/mappers';
 import { BasePlanService } from '@forklaunch/implementation-billing-base/services';
 import { PlanService } from '@forklaunch/interfaces-billing/interfaces';
+import {
+  IdentityRequestMapper,
+  IdentityResponseMapper,
+  InternalDtoMapper,
+  RequestDtoMapperConstructor,
+  ResponseDtoMapperConstructor,
+  transformIntoInternalDtoMapper
+} from '@forklaunch/internal';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
 import Stripe from 'stripe';
@@ -19,42 +23,17 @@ import { PlanCadenceEnum } from '../domain/enums/planCadence.enum';
 import {
   StripeCreatePlanDto,
   StripePlanDto,
+  StripePlanDtos,
   StripeUpdatePlanDto
 } from '../types/stripe.dto.types';
-import { StripePlanEntity } from '../types/stripe.entity.types';
+import { StripePlanEntities } from '../types/stripe.entity.types';
 
 export class StripePlanService<
-    SchemaValidator extends AnySchemaValidator,
-    Metrics extends MetricsDefinition = MetricsDefinition,
-    Dto extends {
-      PlanDtoMapper: StripePlanDto;
-      CreatePlanDtoMapper: StripeCreatePlanDto;
-      UpdatePlanDtoMapper: StripeUpdatePlanDto;
-    } = {
-      PlanDtoMapper: StripePlanDto;
-      CreatePlanDtoMapper: StripeCreatePlanDto;
-      UpdatePlanDtoMapper: StripeUpdatePlanDto;
-    },
-    Entities extends {
-      PlanDtoMapper: StripePlanEntity;
-      CreatePlanDtoMapper: StripePlanEntity;
-      UpdatePlanDtoMapper: StripePlanEntity;
-    } = {
-      PlanDtoMapper: StripePlanEntity;
-      CreatePlanDtoMapper: StripePlanEntity;
-      UpdatePlanDtoMapper: StripePlanEntity;
-    }
-  >
-  extends BasePlanService<
-    SchemaValidator,
-    typeof PlanCadenceEnum,
-    typeof CurrencyEnum,
-    typeof BillingProviderEnum,
-    Metrics,
-    Dto,
-    Entities
-  >
-  implements
+  SchemaValidator extends AnySchemaValidator,
+  Metrics extends MetricsDefinition = MetricsDefinition,
+  Dto extends StripePlanDtos = StripePlanDtos,
+  Entities extends StripePlanEntities = StripePlanEntities
+> implements
     PlanService<
       typeof PlanCadenceEnum,
       typeof CurrencyEnum,
@@ -68,6 +47,19 @@ export class StripePlanService<
       }
     >
 {
+  basePlanService: BasePlanService<
+    SchemaValidator,
+    typeof PlanCadenceEnum,
+    typeof CurrencyEnum,
+    typeof BillingProviderEnum,
+    Metrics,
+    Entities,
+    Entities
+  >;
+  protected _mappers: InternalDtoMapper<
+    InstanceTypeRecord<typeof this.mappers>
+  >;
+
   constructor(
     protected readonly stripeClient: Stripe,
     protected readonly em: EntityManager,
@@ -82,12 +74,24 @@ export class StripePlanService<
       CreatePlanDtoMapper: RequestDtoMapperConstructor<
         SchemaValidator,
         Dto['CreatePlanDtoMapper'],
-        Entities['CreatePlanDtoMapper']
+        Entities['CreatePlanDtoMapper'],
+        (
+          schemaValidator: SchemaValidator,
+          dto: Dto['CreatePlanDtoMapper'],
+          em?: EntityManager,
+          plan?: Stripe.Plan
+        ) => Promise<Entities['CreatePlanDtoMapper']>
       >;
       UpdatePlanDtoMapper: RequestDtoMapperConstructor<
         SchemaValidator,
         Dto['UpdatePlanDtoMapper'],
-        Entities['UpdatePlanDtoMapper']
+        Entities['UpdatePlanDtoMapper'],
+        (
+          schemaValidator: SchemaValidator,
+          dto: Dto['UpdatePlanDtoMapper'],
+          em?: EntityManager,
+          plan?: Stripe.Plan
+        ) => Promise<Entities['UpdatePlanDtoMapper']>
       >;
     },
     readonly options?: {
@@ -95,7 +99,27 @@ export class StripePlanService<
       databaseTableName?: string;
     }
   ) {
-    super(em, openTelemetryCollector, schemaValidator, mappers, options);
+    this._mappers = transformIntoInternalDtoMapper(mappers, schemaValidator);
+    this.basePlanService = new BasePlanService(
+      em,
+      openTelemetryCollector,
+      schemaValidator,
+      {
+        PlanDtoMapper: IdentityResponseMapper<
+          Entities['PlanDtoMapper'],
+          SchemaValidator
+        >,
+        CreatePlanDtoMapper: IdentityRequestMapper<
+          Entities['CreatePlanDtoMapper'],
+          SchemaValidator
+        >,
+        UpdatePlanDtoMapper: IdentityRequestMapper<
+          Entities['UpdatePlanDtoMapper'],
+          SchemaValidator
+        >
+      },
+      options
+    );
   }
 
   async createPlan(
@@ -108,14 +132,25 @@ export class StripePlanService<
       product: planDto.name,
       currency: planDto.currency as string
     });
-    return super.createPlan(
-      {
-        ...planDto,
-        externalId: plan.id,
-        billingProvider: 'stripe',
-        providerFields: plan
-      },
+
+    const planEntity = await this.basePlanService.createPlan(
+      await this._mappers.CreatePlanDtoMapper.deserializeDtoToEntity(
+        this.schemaValidator,
+
+        {
+          ...planDto,
+          externalId: plan.id,
+          billingProvider: 'stripe'
+        },
+        em,
+        plan
+      ),
       em
+    );
+
+    return this._mappers.PlanDtoMapper.serializeEntityToDto(
+      this.schemaValidator,
+      planEntity
     );
   }
 
@@ -134,7 +169,10 @@ export class StripePlanService<
       throw new Error('Plan not found');
     }
     return {
-      ...(await super.getPlan({ id }, em)),
+      ...(await this._mappers.PlanDtoMapper.serializeEntityToDto(
+        this.schemaValidator,
+        await this.basePlanService.getPlan({ id }, em)
+      )),
       stripeFields: plan
     };
   }
@@ -152,20 +190,31 @@ export class StripePlanService<
         currency: planDto.currency ?? existingPlan.currency
       })
     );
-    return super.updatePlan(
-      {
-        ...planDto,
-        externalId: plan.id,
-        billingProvider: 'stripe',
-        providerFields: plan
-      },
+
+    const planEntity = await this.basePlanService.updatePlan(
+      await this._mappers.UpdatePlanDtoMapper.deserializeDtoToEntity(
+        this.schemaValidator,
+
+        {
+          ...planDto,
+          externalId: plan.id,
+          billingProvider: 'stripe'
+        },
+        em,
+        plan
+      ),
       em
+    );
+
+    return this._mappers.PlanDtoMapper.serializeEntityToDto(
+      this.schemaValidator,
+      planEntity
     );
   }
 
   async deletePlan(idDto: { id: string }, em?: EntityManager): Promise<void> {
     await this.stripeClient.plans.del(idDto.id);
-    await super.deletePlan(idDto, em);
+    await this.basePlanService.deletePlan(idDto, em);
   }
 
   async listPlans(
@@ -187,11 +236,16 @@ export class StripePlanService<
     if (!ids) {
       throw new Error('Plans not found');
     }
-    return (await super.listPlans({ ids }, em)).map((plan) => ({
-      ...plan,
-      stripeFields: plans.data.find(
-        (stripePlan) => stripePlan.id === plan.externalId
-      )
-    }));
+    return await Promise.all(
+      (await this.basePlanService.listPlans({ ids }, em)).map(async (plan) => ({
+        ...(await this._mappers.PlanDtoMapper.serializeEntityToDto(
+          this.schemaValidator,
+          plan
+        )),
+        stripeFields: plans.data.find(
+          (stripePlan) => stripePlan.id === plan.externalId
+        )
+      }))
+    );
   }
 }

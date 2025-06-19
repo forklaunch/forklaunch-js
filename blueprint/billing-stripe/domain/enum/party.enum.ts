@@ -1,4 +1,1 @@
-export enum PartyEnum {
-  USER = 'user',
-  ORGANIZATION = 'organization'
-}
+../../../billing-base/domain/enum/party.enum.ts

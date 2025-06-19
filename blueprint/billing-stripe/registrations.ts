@@ -24,7 +24,8 @@ import {
   StripeCheckoutSessionService,
   StripePaymentLinkService,
   StripePlanService,
-  StripeSubscriptionService
+  StripeSubscriptionService,
+  StripeWebhookService
 } from '@forklaunch/implementation-billing-stripe/services';
 import { RedisTtlCache } from '@forklaunch/infrastructure-redis';
 import { EntityManager, ForkOptions, MikroORM } from '@mikro-orm/core';
@@ -274,6 +275,35 @@ export function createDependencies(orm: MikroORM) {
             CreateSubscriptionDtoMapper,
             UpdateSubscriptionDtoMapper
           }
+        )
+    },
+    WebhookService: {
+      lifetime: Lifetime.Scoped,
+      type: StripeWebhookService<
+        SchemaValidator,
+        typeof StatusEnum,
+        typeof PartyEnum
+      >,
+      factory: ({
+        StripeClient,
+        EntityManager,
+        OpenTelemetryCollector,
+        BillingPortalService,
+        CheckoutSessionService,
+        PaymentLinkService,
+        PlanService,
+        SubscriptionService
+      }) =>
+        new StripeWebhookService(
+          StripeClient,
+          EntityManager,
+          SchemaValidator(),
+          OpenTelemetryCollector,
+          BillingPortalService,
+          CheckoutSessionService,
+          PaymentLinkService,
+          PlanService,
+          SubscriptionService
         )
     }
   });

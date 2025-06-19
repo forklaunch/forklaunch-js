@@ -2,13 +2,6 @@ import {
   MetricsDefinition,
   OpenTelemetryCollector
 } from '@forklaunch/core/http';
-import {
-  BaseBillingPortalService,
-  BaseCheckoutSessionService,
-  BasePaymentLinkService,
-  BasePlanService,
-  BaseSubscriptionService
-} from '@forklaunch/implementation-billing-base/services';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
 import Stripe from 'stripe';
@@ -16,6 +9,11 @@ import { BillingProviderEnum } from '../domain/enums/billingProvider.enum';
 import { CurrencyEnum } from '../domain/enums/currency.enum';
 import { PaymentMethodEnum } from '../domain/enums/paymentMethod.enum';
 import { PlanCadenceEnum } from '../domain/enums/planCadence.enum';
+import { StripeBillingPortalService } from './billingPortal.service';
+import { StripeCheckoutSessionService } from './checkoutSession.service';
+import { StripePaymentLinkService } from './paymentLink.service';
+import { StripePlanService } from './plan.service';
+import { StripeSubscriptionService } from './subscription.service';
 
 export class StripeWebhookService<
   SchemaValidator extends AnySchemaValidator,
@@ -27,29 +25,19 @@ export class StripeWebhookService<
     protected readonly em: EntityManager,
     protected readonly schemaValidator: SchemaValidator,
     protected readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-    protected readonly billingPortalService: BaseBillingPortalService<SchemaValidator>,
-    protected readonly checkoutSessionService: BaseCheckoutSessionService<
+    protected readonly billingPortalService: StripeBillingPortalService<SchemaValidator>,
+    protected readonly checkoutSessionService: StripeCheckoutSessionService<
       SchemaValidator,
-      typeof PaymentMethodEnum,
-      typeof CurrencyEnum,
       StatusEnum
     >,
-    protected readonly paymentLinkService: BasePaymentLinkService<
+    protected readonly paymentLinkService: StripePaymentLinkService<
       SchemaValidator,
-      typeof PaymentMethodEnum,
-      typeof CurrencyEnum,
       StatusEnum
     >,
-    protected readonly planService: BasePlanService<
+    protected readonly planService: StripePlanService<SchemaValidator>,
+    protected readonly subscriptionService: StripeSubscriptionService<
       SchemaValidator,
-      typeof PlanCadenceEnum,
-      typeof CurrencyEnum,
-      typeof BillingProviderEnum
-    >,
-    protected readonly subscriptionService: BaseSubscriptionService<
-      SchemaValidator,
-      PartyEnum,
-      typeof BillingProviderEnum
+      PartyEnum
     >
   ) {}
 
@@ -61,13 +49,15 @@ export class StripeWebhookService<
 
     switch (eventType) {
       case 'billing_portal.session.created': {
-        this.billingPortalService.createBillingPortalSession({
-          id: event.data.object.id,
-          customerId: event.data.object.customer,
-          expiresAt: new Date(event.data.object.created + 5 * 60 * 1000),
-          uri: event.data.object.url,
-          providerFields: event.data.object
-        });
+        this.billingPortalService.baseBillingPortalService.createBillingPortalSession(
+          {
+            id: event.data.object.id,
+            customerId: event.data.object.customer,
+            expiresAt: new Date(event.data.object.created + 5 * 60 * 1000),
+            uri: event.data.object.url,
+            providerFields: event.data.object
+          }
+        );
         break;
       }
 
@@ -87,7 +77,7 @@ export class StripeWebhookService<
 
       case 'payment_link.created':
         {
-          this.paymentLinkService.createPaymentLink({
+          this.paymentLinkService.basePaymentLinkService.createPaymentLink({
             id: event.data.object.id,
             amount:
               event.data.object.line_items?.data.reduce<number>(
@@ -104,7 +94,7 @@ export class StripeWebhookService<
         break;
 
       case 'payment_link.updated': {
-        this.paymentLinkService.updatePaymentLink({
+        this.paymentLinkService.basePaymentLinkService.updatePaymentLink({
           id: event.data.object.id,
           amount:
             event.data.object.line_items?.data.reduce<number>(
@@ -126,7 +116,7 @@ export class StripeWebhookService<
           event.data.object.product != null &&
           event.data.object.amount != null
         ) {
-          this.planService.createPlan({
+          this.planService.basePlanService.createPlan({
             id: event.data.object.id,
             billingProvider: BillingProviderEnum.STRIPE,
             cadence: event.data.object.interval as PlanCadenceEnum,
@@ -152,7 +142,7 @@ export class StripeWebhookService<
           event.data.object.product != null &&
           event.data.object.amount != null
         ) {
-          this.planService.updatePlan({
+          this.planService.basePlanService.updatePlan({
             id: event.data.object.id,
             billingProvider: BillingProviderEnum.STRIPE,
             cadence: event.data.object.interval as PlanCadenceEnum,
@@ -180,7 +170,7 @@ export class StripeWebhookService<
       }
 
       case 'customer.subscription.created': {
-        this.subscriptionService.createSubscription({
+        this.subscriptionService.baseSubscriptionService.createSubscription({
           id: event.data.object.id,
           partyId:
             typeof event.data.object.customer === 'string'
@@ -203,18 +193,23 @@ export class StripeWebhookService<
       }
 
       case 'customer.subscription.updated': {
-        this.subscriptionService.updateSubscription({
+        this.subscriptionService.baseSubscriptionService.updateSubscription({
           id: event.data.object.id,
           partyId:
             typeof event.data.object.customer === 'string'
               ? event.data.object.customer
               : event.data.object.customer.id,
+          partyType: 'USER' as PartyEnum[keyof PartyEnum],
           description: event.data.object.description ?? undefined,
           active: true,
           providerFields: event.data.object,
           externalId: event.data.object.id,
           billingProvider: BillingProviderEnum.STRIPE,
           startDate: new Date(event.data.object.created),
+          endDate: event.data.object.cancel_at
+            ? new Date(event.data.object.cancel_at)
+            : new Date(Infinity),
+          productId: event.data.object.items.data[0].plan.id,
           status: event.data.object.status
         });
         break;

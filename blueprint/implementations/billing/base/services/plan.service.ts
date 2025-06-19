@@ -5,18 +5,18 @@ import {
   OpenTelemetryCollector,
   TelemetryOptions
 } from '@forklaunch/core/http';
-import {
-  InternalDtoMapper,
-  RequestDtoMapperConstructor,
-  ResponseDtoMapperConstructor,
-  transformIntoInternalDtoMapper
-} from '@forklaunch/core/mappers';
 import { PlanService } from '@forklaunch/interfaces-billing/interfaces';
 import {
   CreatePlanDto,
   PlanDto,
   UpdatePlanDto
 } from '@forklaunch/interfaces-billing/types';
+import {
+  InternalDtoMapper,
+  RequestDtoMapperConstructor,
+  ResponseDtoMapperConstructor,
+  transformIntoInternalDtoMapper
+} from '@forklaunch/internal';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
 
@@ -79,9 +79,7 @@ export class BasePlanService<
 > implements PlanService<PlanCadenceEnum, CurrencyEnum, BillingProviderEnum>
 {
   protected _mappers: InternalDtoMapper<
-    InstanceTypeRecord<typeof this.mappers>,
-    Entities,
-    Dto
+    InstanceTypeRecord<typeof this.mappers>
   >;
   protected evaluatedTelemetryOptions: {
     logging?: boolean;
@@ -138,6 +136,7 @@ export class BasePlanService<
         })
       ).map((plan) =>
         this._mappers.PlanDtoMapper.serializeEntityToDto(
+          this.schemaValidator,
           plan as Entities['PlanDtoMapper']
         )
       )
@@ -152,13 +151,17 @@ export class BasePlanService<
       this.openTelemetryCollector.info('Creating plan', planDto);
     }
     const plan = await this._mappers.CreatePlanDtoMapper.deserializeDtoToEntity(
+      this.schemaValidator,
       planDto,
       em ?? this.em
     );
     await (em ?? this.em).transactional(async (innerEm) => {
       await innerEm.persist(plan);
     });
-    return this._mappers.PlanDtoMapper.serializeEntityToDto(plan);
+    return this._mappers.PlanDtoMapper.serializeEntityToDto(
+      this.schemaValidator,
+      plan
+    );
   }
 
   async getPlan(
@@ -170,6 +173,7 @@ export class BasePlanService<
     }
     const plan = await (em ?? this.em).findOneOrFail('Plan', idDto);
     return this._mappers.PlanDtoMapper.serializeEntityToDto(
+      this.schemaValidator,
       plan as Entities['PlanDtoMapper']
     );
   }
@@ -182,6 +186,7 @@ export class BasePlanService<
       this.openTelemetryCollector.info('Updating plan', planDto);
     }
     const plan = await this._mappers.UpdatePlanDtoMapper.deserializeDtoToEntity(
+      this.schemaValidator,
       planDto,
       em ?? this.em
     );
@@ -190,7 +195,10 @@ export class BasePlanService<
       await innerEm.persist(plan);
     });
     const updatedPlanDto =
-      await this._mappers.PlanDtoMapper.serializeEntityToDto(updatedPlan);
+      await this._mappers.PlanDtoMapper.serializeEntityToDto(
+        this.schemaValidator,
+        updatedPlan
+      );
     return updatedPlanDto;
   }
 

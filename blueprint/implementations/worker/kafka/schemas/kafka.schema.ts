@@ -1,4 +1,4 @@
-import { serviceSchemaResolver } from '@forklaunch/core/mappers';
+import { serviceSchemaResolver } from '@forklaunch/internal';
 import { KafkaWorkerOptionsSchema as TypeBoxSchemas } from './typebox/kafkaWorker.schema';
 import { KafkaWorkerOptionsSchema as ZodSchemas } from './zod/kafkaWorker.schema';
 

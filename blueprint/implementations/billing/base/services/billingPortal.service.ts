@@ -6,48 +6,28 @@ import {
   OpenTelemetryCollector,
   TelemetryOptions
 } from '@forklaunch/core/http';
+import { BillingPortalService } from '@forklaunch/interfaces-billing/interfaces';
+import { UpdateBillingPortalDto } from '@forklaunch/interfaces-billing/types';
 import {
   InternalDtoMapper,
   RequestDtoMapperConstructor,
   ResponseDtoMapperConstructor,
   transformIntoInternalDtoMapper
-} from '@forklaunch/core/mappers';
-import { BillingPortalService } from '@forklaunch/interfaces-billing/interfaces';
-import {
-  BillingPortalDto,
-  CreateBillingPortalDto,
-  UpdateBillingPortalDto
-} from '@forklaunch/interfaces-billing/types';
+} from '@forklaunch/internal';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
+import { BaseBillingDtos } from '../types/baseBillingDto.types';
+import { BaseBillingEntities } from '../types/baseBillingEntity.types';
 
 export class BaseBillingPortalService<
   SchemaValidator extends AnySchemaValidator,
   Metrics extends MetricsDefinition = MetricsDefinition,
-  Dto extends {
-    BillingPortalDtoMapper: BillingPortalDto;
-    CreateBillingPortalDtoMapper: CreateBillingPortalDto;
-    UpdateBillingPortalDtoMapper: UpdateBillingPortalDto;
-  } = {
-    BillingPortalDtoMapper: BillingPortalDto;
-    CreateBillingPortalDtoMapper: CreateBillingPortalDto;
-    UpdateBillingPortalDtoMapper: UpdateBillingPortalDto;
-  },
-  Entities extends {
-    BillingPortalDtoMapper: BillingPortalDto;
-    CreateBillingPortalDtoMapper: BillingPortalDto;
-    UpdateBillingPortalDtoMapper: BillingPortalDto;
-  } = {
-    BillingPortalDtoMapper: BillingPortalDto;
-    CreateBillingPortalDtoMapper: BillingPortalDto;
-    UpdateBillingPortalDtoMapper: BillingPortalDto;
-  }
+  Dto extends BaseBillingDtos = BaseBillingDtos,
+  Entities extends BaseBillingEntities = BaseBillingEntities
 > implements BillingPortalService
 {
   protected _mappers: InternalDtoMapper<
-    InstanceTypeRecord<typeof this.mappers>,
-    Entities,
-    Dto
+    InstanceTypeRecord<typeof this.mappers>
   >;
   protected evaluatedTelemetryOptions: {
     logging?: boolean;
@@ -108,6 +88,7 @@ export class BaseBillingPortalService<
 
     const billingPortal =
       await this._mappers.CreateBillingPortalDtoMapper.deserializeDtoToEntity(
+        this.schemaValidator,
         billingPortalDto,
         this.em
       );
@@ -118,6 +99,7 @@ export class BaseBillingPortalService<
 
     const createdBillingPortalDto =
       await this._mappers.BillingPortalDtoMapper.serializeEntityToDto(
+        this.schemaValidator,
         billingPortal
       );
 
@@ -170,6 +152,7 @@ export class BaseBillingPortalService<
 
     const billingPortal =
       await this._mappers.UpdateBillingPortalDtoMapper.deserializeDtoToEntity(
+        this.schemaValidator,
         billingPortalDto,
         this.em
       );
@@ -183,6 +166,7 @@ export class BaseBillingPortalService<
     const updatedBillingPortalDto = {
       ...existingBillingPortal,
       ...(await this._mappers.BillingPortalDtoMapper.serializeEntityToDto(
+        this.schemaValidator,
         billingPortal
       ))
     };

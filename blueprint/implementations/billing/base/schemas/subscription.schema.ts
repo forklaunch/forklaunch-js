@@ -1,4 +1,4 @@
-import { serviceSchemaResolver } from '@forklaunch/core/mappers';
+import { serviceSchemaResolver } from '@forklaunch/internal';
 import { BaseSubscriptionServiceSchemas as TypeBoxSchemas } from './typebox/subscription.schema';
 import { BaseSubscriptionServiceSchemas as ZodSchemas } from './zod/subscription.schema';
 

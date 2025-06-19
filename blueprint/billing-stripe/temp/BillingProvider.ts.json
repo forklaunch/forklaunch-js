@@ -1,0 +1,58 @@
+{
+  "data": {
+    "_id": 2000,
+    "properties": {
+      "externalId": {
+        "name": "externalId",
+        "kind": "scalar",
+        "nullable": true,
+        "getter": false,
+        "setter": false,
+        "type": "string",
+        "array": false,
+        "runtimeType": "string",
+        "optional": true
+      },
+      "extraFields": {
+        "name": "extraFields",
+        "kind": "scalar",
+        "type": "json",
+        "nullable": true,
+        "getter": false,
+        "setter": false,
+        "array": false,
+        "runtimeType": "unknown",
+        "optional": true
+      },
+      "billingProvider": {
+        "name": "billingProvider",
+        "kind": "scalar",
+        "enum": true,
+        "items": ["none", "stripe", "adyen"],
+        "nullable": true,
+        "type": "BillingProviderEnum",
+        "array": false,
+        "runtimeType": "BillingProviderEnum",
+        "optional": true
+      }
+    },
+    "primaryKeys": [],
+    "filters": {},
+    "hooks": {},
+    "indexes": [],
+    "uniques": [{ "properties": "externalId" }],
+    "className": "BillingProvider",
+    "path": "./persistence/entities/billingProvider.entity.ts",
+    "name": "BillingProvider",
+    "abstract": false,
+    "internal": true,
+    "constructorParams": [],
+    "toJsonParams": [],
+    "extends": "SqlBaseEntity",
+    "useCache": true,
+    "collection": "billing_provider"
+  },
+  "origin": "./persistence/entities/billingProvider.entity.ts",
+  "hash": "e073d45349766c6594172e857a620ddc",
+  "version": "6.4.16"
+}

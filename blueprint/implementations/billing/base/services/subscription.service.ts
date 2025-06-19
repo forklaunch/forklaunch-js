@@ -5,18 +5,18 @@ import {
   OpenTelemetryCollector,
   TelemetryOptions
 } from '@forklaunch/core/http';
-import {
-  InternalDtoMapper,
-  RequestDtoMapperConstructor,
-  ResponseDtoMapperConstructor,
-  transformIntoInternalDtoMapper
-} from '@forklaunch/core/mappers';
 import { SubscriptionService } from '@forklaunch/interfaces-billing/interfaces';
 import {
   CreateSubscriptionDto,
   SubscriptionDto,
   UpdateSubscriptionDto
 } from '@forklaunch/interfaces-billing/types';
+import {
+  InternalDtoMapper,
+  RequestDtoMapperConstructor,
+  ResponseDtoMapperConstructor,
+  transformIntoInternalDtoMapper
+} from '@forklaunch/internal';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
 
@@ -70,9 +70,7 @@ export class BaseSubscriptionService<
 > implements SubscriptionService<PartyType, BillingProviderType>
 {
   protected _mappers: InternalDtoMapper<
-    InstanceTypeRecord<typeof this.mappers>,
-    Entities,
-    Dto
+    InstanceTypeRecord<typeof this.mappers>
   >;
   protected evaluatedTelemetryOptions: {
     logging?: boolean;
@@ -105,12 +103,10 @@ export class BaseSubscriptionService<
       telemetry?: TelemetryOptions;
     }
   ) {
-    this._mappers = transformIntoInternalDtoMapper<
-      SchemaValidator,
-      typeof this.mappers,
-      Entities,
-      Dto
-    >(mappers, this.schemaValidator);
+    this._mappers = transformIntoInternalDtoMapper(
+      mappers,
+      this.schemaValidator
+    );
     this.evaluatedTelemetryOptions = options?.telemetry
       ? evaluateTelemetryOptions(options.telemetry).enabled
       : {
@@ -132,6 +128,7 @@ export class BaseSubscriptionService<
     }
     const subscription =
       await this._mappers.CreateSubscriptionDtoMapper.deserializeDtoToEntity(
+        this.schemaValidator,
         subscriptionDto,
         em ?? this.em
       );
@@ -140,6 +137,7 @@ export class BaseSubscriptionService<
     });
     const createdSubscriptionDto =
       await this._mappers.SubscriptionDtoMapper.serializeEntityToDto(
+        this.schemaValidator,
         subscription
       );
     return createdSubscriptionDto;
@@ -157,6 +155,7 @@ export class BaseSubscriptionService<
       idDto
     );
     return this._mappers.SubscriptionDtoMapper.serializeEntityToDto(
+      this.schemaValidator,
       subscription as Entities['SubscriptionDtoMapper']
     );
   }
@@ -175,6 +174,7 @@ export class BaseSubscriptionService<
     });
 
     return this._mappers.SubscriptionDtoMapper.serializeEntityToDto(
+      this.schemaValidator,
       subscription as Entities['SubscriptionDtoMapper']
     );
   }
@@ -192,6 +192,7 @@ export class BaseSubscriptionService<
       active: true
     });
     return this._mappers.SubscriptionDtoMapper.serializeEntityToDto(
+      this.schemaValidator,
       subscription as Entities['SubscriptionDtoMapper']
     );
   }
@@ -208,6 +209,7 @@ export class BaseSubscriptionService<
     }
     const subscription =
       this._mappers.UpdateSubscriptionDtoMapper.deserializeDtoToEntity(
+        this.schemaValidator,
         subscriptionDto,
         em ?? this.em
       );
@@ -217,6 +219,7 @@ export class BaseSubscriptionService<
     });
     const updatedSubscriptionDto =
       await this._mappers.SubscriptionDtoMapper.serializeEntityToDto(
+        this.schemaValidator,
         updatedSubscription
       );
 
@@ -258,6 +261,7 @@ export class BaseSubscriptionService<
       subscriptions.map((subscription) => {
         const subscriptionDto =
           this._mappers.SubscriptionDtoMapper.serializeEntityToDto(
+            this.schemaValidator,
             subscription as Entities['SubscriptionDtoMapper']
           );
         return subscriptionDto;

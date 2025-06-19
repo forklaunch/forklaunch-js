@@ -1,5 +1,5 @@
 import { isTrue } from '@forklaunch/common';
-import { testSchemaEquality } from '@forklaunch/core/test';
+import { testSchemaEquality } from '@forklaunch/internal';
 import { BullMqWorkerOptionsSchema as TypeboxBullMqWorkerOptionsSchema } from '../schemas/typebox/bullMqWorker.schema';
 import { BullMqWorkerOptionsSchema as ZodBullMqWorkerOptionsSchema } from '../schemas/zod/bullMqWorker.schema';
 import { BullMqWorkerOptions } from '../types/bullMqWorker.types';

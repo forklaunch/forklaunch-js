@@ -11,7 +11,7 @@ export type CreateSubscriptionDto<PartyType, BillingProviderType> =
     externalId: string;
     billingProvider?: BillingProviderType[keyof BillingProviderType];
     startDate: Date;
-    endDate: Date;
+    endDate?: Date;
     status: string;
   };
 export type UpdateSubscriptionDto<PartyType, BillingProviderType> = Partial<

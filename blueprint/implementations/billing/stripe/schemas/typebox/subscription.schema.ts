@@ -27,7 +27,7 @@ export const CreateSubscriptionSchema = <
   active: boolean,
   externalId: string,
   startDate: date,
-  endDate: date,
+  endDate: optional(date),
   status: string,
   billingProvider: optional(enum_(BillingProviderEnum)),
   stripeFields: type<StripeCreateSubscriptionDto<T>['stripeFields']>()
@@ -63,7 +63,7 @@ export const SubscriptionSchema = <T extends Record<string, LiteralSchema>>(
   active: boolean,
   externalId: string,
   startDate: date,
-  endDate: date,
+  endDate: optional(date),
   status: string,
   billingProvider: optional(enum_(BillingProviderEnum)),
   stripeFields: type<StripeSubscriptionDto<T>['stripeFields']>(),

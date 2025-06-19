@@ -1,5 +1,5 @@
 import { isTrue } from '@forklaunch/common';
-import { testSchemaEquality } from '@forklaunch/core/test';
+import { testSchemaEquality } from '@forklaunch/internal';
 import { KafkaWorkerOptionsSchema as TypeboxKafkaWorkerOptionsSchema } from '../schemas/typebox/kafkaWorker.schema';
 import { KafkaWorkerOptionsSchema as ZodKafkaWorkerOptionsSchema } from '../schemas/zod/kafkaWorker.schema';
 import { KafkaWorkerOptions } from '../types/kafkaWorker.types';

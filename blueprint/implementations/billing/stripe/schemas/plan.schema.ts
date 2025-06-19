@@ -1,4 +1,4 @@
-import { serviceSchemaResolver } from '@forklaunch/core/mappers';
+import { serviceSchemaResolver } from '@forklaunch/internal';
 import { StripePlanServiceSchemas as TypeBoxSchemas } from './typebox/plan.schema';
 import { StripePlanServiceSchemas as ZodSchemas } from './zod/plan.schema';
 

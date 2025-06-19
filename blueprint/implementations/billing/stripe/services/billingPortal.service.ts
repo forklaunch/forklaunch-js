@@ -1,50 +1,37 @@
-import { IdDto } from '@forklaunch/common';
+import { IdDto, InstanceTypeRecord } from '@forklaunch/common';
 import { TtlCache } from '@forklaunch/core/cache';
 import {
   MetricsDefinition,
   OpenTelemetryCollector,
   TelemetryOptions
 } from '@forklaunch/core/http';
-import {
-  RequestDtoMapperConstructor,
-  ResponseDtoMapperConstructor
-} from '@forklaunch/core/mappers';
 import { BaseBillingPortalService } from '@forklaunch/implementation-billing-base/services';
 import { BillingPortalService } from '@forklaunch/interfaces-billing/interfaces';
+import {
+  IdentityRequestMapper,
+  IdentityResponseMapper,
+  InternalDtoMapper,
+  RequestDtoMapperConstructor,
+  ResponseDtoMapperConstructor,
+  transformIntoInternalDtoMapper
+} from '@forklaunch/internal';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
 import Stripe from 'stripe';
 import {
   StripeBillingPortalDto,
+  StripeBillingPortalDtos,
   StripeCreateBillingPortalDto,
   StripeUpdateBillingPortalDto
 } from '../types/stripe.dto.types';
-import { StripeBillingPortalEntity } from '../types/stripe.entity.types';
+import { StripeBillingPortalEntities } from '../types/stripe.entity.types';
 
 export class StripeBillingPortalService<
-    SchemaValidator extends AnySchemaValidator,
-    Metrics extends MetricsDefinition = MetricsDefinition,
-    Dto extends {
-      BillingPortalDtoMapper: StripeBillingPortalDto;
-      CreateBillingPortalDtoMapper: StripeCreateBillingPortalDto;
-      UpdateBillingPortalDtoMapper: StripeUpdateBillingPortalDto;
-    } = {
-      BillingPortalDtoMapper: StripeBillingPortalDto;
-      CreateBillingPortalDtoMapper: StripeCreateBillingPortalDto;
-      UpdateBillingPortalDtoMapper: StripeUpdateBillingPortalDto;
-    },
-    Entities extends {
-      BillingPortalDtoMapper: StripeBillingPortalEntity;
-      CreateBillingPortalDtoMapper: StripeBillingPortalEntity;
-      UpdateBillingPortalDtoMapper: StripeBillingPortalEntity;
-    } = {
-      BillingPortalDtoMapper: StripeBillingPortalEntity;
-      CreateBillingPortalDtoMapper: StripeBillingPortalEntity;
-      UpdateBillingPortalDtoMapper: StripeBillingPortalEntity;
-    }
-  >
-  extends BaseBillingPortalService<SchemaValidator, Metrics, Dto, Entities>
-  implements
+  SchemaValidator extends AnySchemaValidator,
+  Metrics extends MetricsDefinition = MetricsDefinition,
+  Dto extends StripeBillingPortalDtos = StripeBillingPortalDtos,
+  Entities extends StripeBillingPortalEntities = StripeBillingPortalEntities
+> implements
     BillingPortalService<{
       CreateBillingPortalDto: StripeCreateBillingPortalDto;
       UpdateBillingPortalDto: StripeUpdateBillingPortalDto;
@@ -52,6 +39,18 @@ export class StripeBillingPortalService<
       IdDto: IdDto;
     }>
 {
+  private readonly billingPortalSessionExpiryDurationMs = 5 * 60 * 1000;
+
+  baseBillingPortalService: BaseBillingPortalService<
+    SchemaValidator,
+    Metrics,
+    Entities,
+    Entities
+  >;
+  protected _mappers: InternalDtoMapper<
+    InstanceTypeRecord<typeof this.mappers>
+  >;
+
   constructor(
     protected stripeClient: Stripe,
     protected em: EntityManager,
@@ -67,12 +66,24 @@ export class StripeBillingPortalService<
       CreateBillingPortalDtoMapper: RequestDtoMapperConstructor<
         SchemaValidator,
         Dto['CreateBillingPortalDtoMapper'],
-        Entities['CreateBillingPortalDtoMapper']
+        Entities['CreateBillingPortalDtoMapper'],
+        (
+          schemaValidator: SchemaValidator,
+          dto: Dto['CreateBillingPortalDtoMapper'],
+          em?: EntityManager,
+          session?: Stripe.BillingPortal.Session
+        ) => Promise<Entities['CreateBillingPortalDtoMapper']>
       >;
       UpdateBillingPortalDtoMapper: RequestDtoMapperConstructor<
         SchemaValidator,
         Dto['UpdateBillingPortalDtoMapper'],
-        Entities['UpdateBillingPortalDtoMapper']
+        Entities['UpdateBillingPortalDtoMapper'],
+        (
+          schemaValidator: SchemaValidator,
+          dto: Dto['UpdateBillingPortalDtoMapper'],
+          em?: EntityManager,
+          session?: Stripe.BillingPortal.Session
+        ) => Promise<Entities['UpdateBillingPortalDtoMapper']>
       >;
     },
     readonly options?: {
@@ -80,7 +91,28 @@ export class StripeBillingPortalService<
       enableDatabaseBackup?: boolean;
     }
   ) {
-    super(em, cache, openTelemetryCollector, schemaValidator, mappers, options);
+    this._mappers = transformIntoInternalDtoMapper(mappers, schemaValidator);
+    this.baseBillingPortalService = new BaseBillingPortalService(
+      em,
+      cache,
+      openTelemetryCollector,
+      schemaValidator,
+      {
+        BillingPortalDtoMapper: IdentityResponseMapper<
+          Entities['BillingPortalDtoMapper'],
+          SchemaValidator
+        >,
+        CreateBillingPortalDtoMapper: IdentityRequestMapper<
+          Entities['CreateBillingPortalDtoMapper'],
+          SchemaValidator
+        >,
+        UpdateBillingPortalDtoMapper: IdentityRequestMapper<
+          Entities['UpdateBillingPortalDtoMapper'],
+          SchemaValidator
+        >
+      },
+      options
+    );
   }
 
   async createBillingPortalSession(
@@ -90,31 +122,78 @@ export class StripeBillingPortalService<
       ...billingPortalDto.stripeFields,
       customer: billingPortalDto.customerId
     });
-    return super.createBillingPortalSession({
-      ...billingPortalDto,
-      id: session.id,
-      uri: session.url,
-      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
-      providerFields: session
-    });
+
+    const billingPortalEntity =
+      await this.baseBillingPortalService.createBillingPortalSession(
+        await this._mappers.CreateBillingPortalDtoMapper.deserializeDtoToEntity(
+          this.schemaValidator,
+          {
+            ...billingPortalDto,
+            id: session.id,
+            uri: session.url,
+            expiresAt: new Date(
+              Date.now() + this.billingPortalSessionExpiryDurationMs
+            )
+          },
+          this.em,
+          session
+        )
+      );
+
+    return this._mappers.BillingPortalDtoMapper.serializeEntityToDto(
+      this.schemaValidator,
+      billingPortalEntity
+    );
+  }
+
+  async getBillingPortalSession(
+    idDto: IdDto
+  ): Promise<Dto['BillingPortalDtoMapper']> {
+    const billingPortalEntity =
+      await this.baseBillingPortalService.getBillingPortalSession(idDto);
+
+    return this._mappers.BillingPortalDtoMapper.serializeEntityToDto(
+      this.schemaValidator,
+      billingPortalEntity
+    );
+  }
+
+  async expireBillingPortalSession(idDto: IdDto): Promise<void> {
+    return this.baseBillingPortalService.expireBillingPortalSession(idDto);
   }
 
   async updateBillingPortalSession(
     billingPortalDto: Dto['UpdateBillingPortalDtoMapper']
   ): Promise<Dto['BillingPortalDtoMapper']> {
-    const existingSession = await this.getBillingPortalSession({
-      id: billingPortalDto.id
-    });
+    const existingSession =
+      await this.baseBillingPortalService.getBillingPortalSession({
+        id: billingPortalDto.id
+      });
     const session = await this.stripeClient.billingPortal.sessions.create({
       ...billingPortalDto.stripeFields,
       customer: existingSession.customerId
     });
-    return super.updateBillingPortalSession({
-      ...billingPortalDto,
-      id: session.id,
-      uri: session.url,
-      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
-      providerFields: session
-    });
+
+    const baseBillingPortalDto =
+      await this.baseBillingPortalService.updateBillingPortalSession(
+        await this._mappers.UpdateBillingPortalDtoMapper.deserializeDtoToEntity(
+          this.schemaValidator,
+          {
+            ...billingPortalDto,
+            id: session.id,
+            uri: session.url,
+            expiresAt: new Date(
+              Date.now() + this.billingPortalSessionExpiryDurationMs
+            )
+          },
+          this.em,
+          session
+        )
+      );
+
+    return this._mappers.BillingPortalDtoMapper.serializeEntityToDto(
+      this.schemaValidator,
+      baseBillingPortalDto
+    );
   }
 }

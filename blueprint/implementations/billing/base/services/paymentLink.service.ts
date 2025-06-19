@@ -6,18 +6,18 @@ import {
   OpenTelemetryCollector,
   TelemetryOptions
 } from '@forklaunch/core/http';
-import {
-  InternalDtoMapper,
-  RequestDtoMapperConstructor,
-  ResponseDtoMapperConstructor,
-  transformIntoInternalDtoMapper
-} from '@forklaunch/core/mappers';
 import { PaymentLinkService } from '@forklaunch/interfaces-billing/interfaces';
 import {
   CreatePaymentLinkDto,
   PaymentLinkDto,
   UpdatePaymentLinkDto
 } from '@forklaunch/interfaces-billing/types';
+import {
+  InternalDtoMapper,
+  RequestDtoMapperConstructor,
+  ResponseDtoMapperConstructor,
+  transformIntoInternalDtoMapper
+} from '@forklaunch/internal';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
 
@@ -96,9 +96,7 @@ export class BasePaymentLinkService<
 > implements PaymentLinkService<PaymentMethodEnum, CurrencyEnum, StatusEnum>
 {
   protected _mappers: InternalDtoMapper<
-    InstanceTypeRecord<typeof this.mappers>,
-    Entities,
-    Dto
+    InstanceTypeRecord<typeof this.mappers>
   >;
   protected evaluatedTelemetryOptions: {
     logging?: boolean;
@@ -157,6 +155,7 @@ export class BasePaymentLinkService<
 
     const paymentLink =
       await this._mappers.CreatePaymentLinkDtoMapper.deserializeDtoToEntity(
+        this.schemaValidator,
         paymentLinkDto,
         this.em
       );
@@ -167,6 +166,7 @@ export class BasePaymentLinkService<
 
     const createdPaymentLinkDto =
       await this._mappers.PaymentLinkDtoMapper.serializeEntityToDto(
+        this.schemaValidator,
         paymentLink
       );
 
@@ -195,6 +195,7 @@ export class BasePaymentLinkService<
     }
     const paymentLink =
       await this._mappers.UpdatePaymentLinkDtoMapper.deserializeDtoToEntity(
+        this.schemaValidator,
         paymentLinkDto,
         this.em
       );
@@ -206,6 +207,7 @@ export class BasePaymentLinkService<
     const updatedLinkDto = {
       ...existingLink,
       ...(await this._mappers.PaymentLinkDtoMapper.serializeEntityToDto(
+        this.schemaValidator,
         paymentLink
       ))
     };
@@ -231,6 +233,7 @@ export class BasePaymentLinkService<
     }
 
     return this._mappers.PaymentLinkDtoMapper.serializeEntityToDto(
+      this.schemaValidator,
       paymentLink.value
     );
   }
@@ -285,6 +288,7 @@ export class BasePaymentLinkService<
           await this.cache.readRecord<Entities['PaymentLinkDtoMapper']>(key);
         const paymentLinkDto =
           this._mappers.PaymentLinkDtoMapper.serializeEntityToDto(
+            this.schemaValidator,
             paymentLink.value
           );
         return paymentLinkDto;

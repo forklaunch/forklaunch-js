@@ -51,6 +51,12 @@ export type StripeBillingPortalDto = Omit<
   stripeFields: Stripe.BillingPortal.Session;
 };
 
+export type StripeBillingPortalDtos = {
+  BillingPortalDtoMapper: StripeBillingPortalDto;
+  CreateBillingPortalDtoMapper: StripeCreateBillingPortalDto;
+  UpdateBillingPortalDtoMapper: StripeUpdateBillingPortalDto;
+};
+
 // Checkout Session Types
 type CheckoutSessionOmissions =
   | 'payment_method_types'
@@ -93,6 +99,12 @@ export type StripeCheckoutSessionDto<StatusEnum> = Omit<
   stripeFields: Stripe.Checkout.Session;
 };
 
+export type StripeCheckoutSessionDtos<StatusEnum> = {
+  CheckoutSessionDtoMapper: StripeCheckoutSessionDto<StatusEnum>;
+  CreateCheckoutSessionDtoMapper: StripeCreateCheckoutSessionDto<StatusEnum>;
+  UpdateCheckoutSessionDtoMapper: StripeUpdateCheckoutSessionDto<StatusEnum>;
+};
+
 // Payment Link Types
 export type StripeCreatePaymentLinkDto<StatusEnum> = Omit<
   CreatePaymentLinkDto<
@@ -121,6 +133,12 @@ export type StripePaymentLinkDto<StatusEnum> = Omit<
   'providerFields'
 > & {
   stripeFields: Stripe.PaymentLink;
+};
+
+export type StripePaymentLinkDtos<StatusEnum> = {
+  PaymentLinkDtoMapper: StripePaymentLinkDto<StatusEnum>;
+  CreatePaymentLinkDtoMapper: StripeCreatePaymentLinkDto<StatusEnum>;
+  UpdatePaymentLinkDtoMapper: StripeUpdatePaymentLinkDto<StatusEnum>;
 };
 
 // Plan Types
@@ -159,6 +177,12 @@ export type StripePlanDto = Omit<
   stripeFields: Stripe.Plan;
 };
 
+export type StripePlanDtos = {
+  PlanDtoMapper: StripePlanDto;
+  CreatePlanDtoMapper: StripeCreatePlanDto;
+  UpdatePlanDtoMapper: StripeUpdatePlanDto;
+};
+
 // Subscription Types
 type SubscriptionOmissions = 'items' | 'customer';
 
@@ -181,4 +205,10 @@ export type StripeSubscriptionDto<PartyType> = Omit<
   'providerFields'
 > & {
   stripeFields: Stripe.Subscription;
+};
+
+export type StripeSubscriptionDtos<PartyType> = {
+  SubscriptionDtoMapper: StripeSubscriptionDto<PartyType>;
+  CreateSubscriptionDtoMapper: StripeCreateSubscriptionDto<PartyType>;
+  UpdateSubscriptionDtoMapper: StripeUpdateSubscriptionDto<PartyType>;
 };

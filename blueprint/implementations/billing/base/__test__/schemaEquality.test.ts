@@ -1,5 +1,4 @@
 import { isTrue } from '@forklaunch/common';
-import { DummyEnum, testSchemaEquality } from '@forklaunch/core/test';
 import {
   BillingPortalDto,
   CheckoutSessionDto,
@@ -17,6 +16,7 @@ import {
   UpdatePlanDto,
   UpdateSubscriptionDto
 } from '@forklaunch/interfaces-billing/types';
+import { DummyEnum, testSchemaEquality } from '@forklaunch/internal';
 import {
   BillingPortalSchema as TypeboxBillingPortalSchema,
   CreateBillingPortalSchema as TypeboxCreateBillingPortalSchema,

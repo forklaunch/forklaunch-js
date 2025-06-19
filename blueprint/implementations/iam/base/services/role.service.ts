@@ -8,18 +8,18 @@ import { RoleService } from '@forklaunch/interfaces-iam/interfaces';
 import { EntityManager } from '@mikro-orm/core';
 
 import { IdDto, IdsDto, InstanceTypeRecord } from '@forklaunch/common';
-import {
-  InternalDtoMapper,
-  RequestDtoMapperConstructor,
-  ResponseDtoMapperConstructor,
-  transformIntoInternalDtoMapper
-} from '@forklaunch/core/mappers';
 import { MapNestedDtoArraysToCollections } from '@forklaunch/core/services';
 import {
   CreateRoleDto,
   RoleDto,
   UpdateRoleDto
 } from '@forklaunch/interfaces-iam/types';
+import {
+  InternalDtoMapper,
+  RequestDtoMapperConstructor,
+  ResponseDtoMapperConstructor,
+  transformIntoInternalDtoMapper
+} from '@forklaunch/internal';
 import { AnySchemaValidator } from '@forklaunch/validator';
 
 export class BaseRoleService<
@@ -58,9 +58,7 @@ export class BaseRoleService<
 > implements RoleService
 {
   protected _mappers: InternalDtoMapper<
-    InstanceTypeRecord<typeof this.mappers>,
-    Entities,
-    Dto
+    InstanceTypeRecord<typeof this.mappers>
   >;
   private evaluatedTelemetryOptions: {
     logging?: boolean;
@@ -111,6 +109,7 @@ export class BaseRoleService<
       this.openTelemetryCollector.info('Creating role', roleDto);
     }
     const role = await this._mappers.CreateRoleDtoMapper.deserializeDtoToEntity(
+      this.schemaValidator,
       roleDto,
       em ?? this.em
     );
@@ -121,7 +120,10 @@ export class BaseRoleService<
       await this.em.persistAndFlush(role);
     }
 
-    return this._mappers.RoleDtoMapper.serializeEntityToDto(role);
+    return this._mappers.RoleDtoMapper.serializeEntityToDto(
+      this.schemaValidator,
+      role
+    );
   }
 
   async createBatchRoles(
@@ -135,6 +137,7 @@ export class BaseRoleService<
     const roles = await Promise.all(
       roleDtos.map(async (roleDto) =>
         this._mappers.CreateRoleDtoMapper.deserializeDtoToEntity(
+          this.schemaValidator,
           roleDto,
           em ?? this.em
         )
@@ -149,7 +152,10 @@ export class BaseRoleService<
 
     return Promise.all(
       roles.map((role) =>
-        this._mappers.RoleDtoMapper.serializeEntityToDto(role)
+        this._mappers.RoleDtoMapper.serializeEntityToDto(
+          this.schemaValidator,
+          role
+        )
       )
     );
   }
@@ -164,6 +170,7 @@ export class BaseRoleService<
     });
 
     return this._mappers.RoleDtoMapper.serializeEntityToDto(
+      this.schemaValidator,
       role as Entities['RoleDtoMapper']
     );
   }
@@ -186,6 +193,7 @@ export class BaseRoleService<
         )
       ).map((role) =>
         this._mappers.RoleDtoMapper.serializeEntityToDto(
+          this.schemaValidator,
           role as Entities['RoleDtoMapper']
         )
       )
@@ -201,6 +209,7 @@ export class BaseRoleService<
     }
 
     const role = await this._mappers.UpdateRoleDtoMapper.deserializeDtoToEntity(
+      this.schemaValidator,
       roleDto,
       em ?? this.em
     );
@@ -211,7 +220,10 @@ export class BaseRoleService<
       await this.em.persistAndFlush(role);
     }
 
-    return this._mappers.RoleDtoMapper.serializeEntityToDto(role);
+    return this._mappers.RoleDtoMapper.serializeEntityToDto(
+      this.schemaValidator,
+      role
+    );
   }
 
   async updateBatchRoles(
@@ -225,6 +237,7 @@ export class BaseRoleService<
     const roles = await Promise.all(
       roleDtos.map(async (roleDto) =>
         this._mappers.UpdateRoleDtoMapper.deserializeDtoToEntity(
+          this.schemaValidator,
           roleDto,
           em ?? this.em
         )
@@ -239,6 +252,7 @@ export class BaseRoleService<
     return Promise.all(
       roles.map((role) =>
         this._mappers.RoleDtoMapper.serializeEntityToDto(
+          this.schemaValidator,
           role as Entities['RoleDtoMapper']
         )
       )

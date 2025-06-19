@@ -23,7 +23,7 @@ export const CreateSubscriptionSchema = <
   active: boolean,
   externalId: string,
   startDate: date,
-  endDate: date,
+  endDate: optional(date),
   status: string,
   billingProvider: optional(enum_(BillingProviderEnum)),
   providerFields: optional(unknown)
@@ -69,7 +69,7 @@ export const SubscriptionSchema =
     active: boolean,
     externalId: string,
     startDate: date,
-    endDate: date,
+    endDate: optional(date),
     status: string,
     billingProvider: optional(enum_(BillingProviderEnum)),
     providerFields: optional(unknown),

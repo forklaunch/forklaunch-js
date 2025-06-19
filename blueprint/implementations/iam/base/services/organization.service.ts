@@ -5,12 +5,6 @@ import {
   OpenTelemetryCollector,
   TelemetryOptions
 } from '@forklaunch/core/http';
-import {
-  InternalDtoMapper,
-  RequestDtoMapperConstructor,
-  ResponseDtoMapperConstructor,
-  transformIntoInternalDtoMapper
-} from '@forklaunch/core/mappers';
 import { MapNestedDtoArraysToCollections } from '@forklaunch/core/services';
 import { OrganizationService } from '@forklaunch/interfaces-iam/interfaces';
 import {
@@ -18,6 +12,12 @@ import {
   OrganizationDto,
   UpdateOrganizationDto
 } from '@forklaunch/interfaces-iam/types';
+import {
+  InternalDtoMapper,
+  RequestDtoMapperConstructor,
+  ResponseDtoMapperConstructor,
+  transformIntoInternalDtoMapper
+} from '@forklaunch/internal';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
 
@@ -64,9 +64,7 @@ export class BaseOrganizationService<
 > implements OrganizationService<OrganizationStatus>
 {
   protected _mappers: InternalDtoMapper<
-    InstanceTypeRecord<typeof this.mappers>,
-    Entities,
-    Dto
+    InstanceTypeRecord<typeof this.mappers>
   >;
   private evaluatedTelemetryOptions: {
     logging?: boolean;
@@ -122,6 +120,7 @@ export class BaseOrganizationService<
 
     const organization =
       await this._mappers.CreateOrganizationDtoMapper.deserializeDtoToEntity(
+        this.schemaValidator,
         organizationDto,
         em ?? this.em
       );
@@ -133,6 +132,7 @@ export class BaseOrganizationService<
     }
 
     return this._mappers.OrganizationDtoMapper.serializeEntityToDto(
+      this.schemaValidator,
       organization
     );
   }
@@ -151,6 +151,7 @@ export class BaseOrganizationService<
     );
 
     return this._mappers.OrganizationDtoMapper.serializeEntityToDto(
+      this.schemaValidator,
       organization as Entities['OrganizationDtoMapper']
     );
   }
@@ -168,6 +169,7 @@ export class BaseOrganizationService<
 
     const updatedOrganization =
       await this._mappers.UpdateOrganizationDtoMapper.deserializeDtoToEntity(
+        this.schemaValidator,
         organizationDto,
         em ?? this.em
       );
@@ -179,6 +181,7 @@ export class BaseOrganizationService<
     }
 
     return this._mappers.OrganizationDtoMapper.serializeEntityToDto(
+      this.schemaValidator,
       updatedOrganization
     );
   }

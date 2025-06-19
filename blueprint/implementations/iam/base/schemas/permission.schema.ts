@@ -1,4 +1,4 @@
-import { serviceSchemaResolver } from '@forklaunch/core/mappers';
+import { serviceSchemaResolver } from '@forklaunch/internal';
 import { BasePermissionServiceSchemas as TypeBoxSchemas } from './typebox/permission.schema';
 import { BasePermissionServiceSchemas as ZodSchemas } from './zod/permission.schema';
 
