@@ -1,5 +1,14 @@
 # @forklaunch/infrastructure-redis
 
+## 0.0.26
+
+### Patch Changes
+
+- create internal package for internal utilities
+- Updated dependencies
+  - @forklaunch/common@0.3.13
+  - @forklaunch/core@0.9.18
+
 ## 0.0.25
 
 ### Patch Changes

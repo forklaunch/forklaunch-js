@@ -1,3 +1,4 @@
+import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
 
 type AllAfterFirstParameters<T> = T extends (
@@ -8,6 +9,7 @@ type AllAfterFirstParameters<T> = T extends (
   : never[];
 
 export type InternalDtoMapper<
+  SchemaValidator extends AnySchemaValidator,
   DtoMapper extends Record<
     string,
     | {
@@ -31,6 +33,7 @@ export type InternalDtoMapper<
   }
     ? {
         serializeEntityToDto: (
+          schemaValidator: SchemaValidator,
           entity: Entities[K],
           ...additionalArgs: AllAfterFirstParameters<
             DtoMapper[K]['serializeEntityToDto']
@@ -44,6 +47,7 @@ export type InternalDtoMapper<
         }
       ? {
           deserializeDtoToEntity: (
+            schemaValidator: SchemaValidator,
             dto: Dto[K],
             em?: EntityManager,
             ...additionalArgs: AllAfterFirstParameters<

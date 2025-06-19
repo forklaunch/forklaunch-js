@@ -1,10 +1,13 @@
 # @forklaunch/common
 
-## 0.3.13
+## 0.0.1
 
 ### Patch Changes
 
 - create internal package for internal utilities
+- Updated dependencies
+  - @forklaunch/validator@0.6.15
+  - @forklaunch/common@0.3.13
 
 ## 0.3.12
 

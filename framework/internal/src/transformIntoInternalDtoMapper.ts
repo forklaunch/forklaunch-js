@@ -23,13 +23,19 @@ export function transformIntoInternalDtoMapper<
 >(
   mappers: DtoMapper,
   schemaValidator: SchemaValidator
-): InternalDtoMapper<InstanceTypeRecord<DtoMapper>, Entities, Dto> {
+): InternalDtoMapper<
+  SchemaValidator,
+  InstanceTypeRecord<DtoMapper>,
+  Entities,
+  Dto
+> {
   return Object.fromEntries(
     Object.entries(mappers).map(([key, value]) => [
       key,
       new value(schemaValidator)
     ])
   ) as unknown as InternalDtoMapper<
+    SchemaValidator,
     InstanceTypeRecord<DtoMapper>,
     Entities,
     Dto

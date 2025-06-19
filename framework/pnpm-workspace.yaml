@@ -8,3 +8,4 @@ packages:
   - e2e-tests
   - infrastructure/redis
   - infrastructure/S3
+  - internal

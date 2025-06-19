@@ -1,7 +1,7 @@
 {
-  "name": "@forklaunch/express",
-  "version": "0.5.30",
-  "description": "Forklaunch framework for express.",
+  "name": "@forklaunch/internal",
+  "version": "0.0.1",
+  "description": "Internal package for utilities and other internal code.",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
     "url": "https://github.com/forklaunch/forklaunch-js/issues"
@@ -21,11 +21,15 @@
     }
   },
   "types": "lib/index.d.ts",
+  "directories": {
+    "test": "__test__"
+  },
   "files": [
     "lib/**"
   ],
   "scripts": {
     "build": "tsgo --noEmit && tsup index.ts --format cjs,esm --no-splitting --tsconfig tsconfig.json --outDir lib --dts --clean",
+    "check": "depcheck",
     "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
@@ -36,37 +40,20 @@
   },
   "dependencies": {
     "@forklaunch/common": "workspace:*",
-    "@forklaunch/core": "workspace:*",
     "@forklaunch/validator": "workspace:*",
-    "@scalar/express-api-reference": "^0.8.5",
-    "@types/multer": "^1.4.13",
-    "body-parser": "^2.2.0",
-    "busboy": "^1.6.0",
-    "cors": "^2.8.5",
-    "express": "^5.1.0",
-    "multer": "2.0.1",
-    "qs": "^6.14.0",
-    "swagger-ui-express": "^5.0.1"
+    "@mikro-orm/core": "^6.4.16"
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",
-    "@types/body-parser": "^1.19.6",
-    "@types/busboy": "^1.5.4",
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.3",
-    "@types/express-serve-static-core": "^5.0.6",
-    "@types/jest": "^30.0.0",
-    "@types/qs": "^6.14.0",
-    "@types/swagger-ui-express": "^4.1.8",
+    "@types/node": "^24.0.3",
     "@typescript/native-preview": "7.0.0-dev.20250619.1",
-    "jest": "^30.0.2",
-    "kill-port-process": "^3.2.1",
-    "prettier": "^3.5.3",
-    "ts-jest": "^29.4.0",
-    "ts-node": "^10.9.2",
+    "depcheck": "^1.4.7",
+    "eslint": "^9.29.0",
+    "globals": "^16.2.0",
     "tsup": "^8.5.0",
     "typedoc": "^0.28.5",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.34.1"
+    "typescript-eslint": "^8.34.1",
+    "vitest": "^3.2.4"
   }
 }
