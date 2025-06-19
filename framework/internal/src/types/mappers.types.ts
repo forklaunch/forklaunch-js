@@ -22,11 +22,9 @@ export type ResponseMapperConstructor<
   Dto,
   Entity,
   SerializeEntityToDto extends (
-    schemaValidator: SchemaValidator,
     entity: Entity,
     ...additionalArgs: never[]
   ) => Promise<Dto> = (
-    schemaValidator: SchemaValidator,
     entity: Entity,
     ...additionalArgs: never[]
   ) => Promise<Dto>
