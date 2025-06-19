@@ -1,5 +1,14 @@
 # @forklaunch/core
 
+## 0.9.21
+
+### Patch Changes
+
+- change dtoMapper to Mapper
+- Updated dependencies
+  - @forklaunch/validator@0.6.16
+  - @forklaunch/common@0.3.14
+
 ## 0.9.20
 
 ### Patch Changes

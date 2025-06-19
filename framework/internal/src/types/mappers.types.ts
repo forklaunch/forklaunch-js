@@ -5,9 +5,9 @@ import { EntityManager } from '@mikro-orm/core';
  * Type representing a schema validator object for an entity mapper.
  *
  * @template SV - A type that extends AnySchemaValidator.
- * @typedef {SV['_ValidSchemaObject'] | UnboxedObjectSchema<SV>} DtoMapperSchemaValidatorObject
+ * @typedef {SV['_ValidSchemaObject'] | UnboxedObjectSchema<SV>} MapperSchemaValidatorObject
  */
-export type DtoMapperSchemaValidatorObject<SV extends AnySchemaValidator> =
+export type MapperSchemaValidatorObject<SV extends AnySchemaValidator> =
   | SV['_ValidSchemaObject']
   | UnboxedObjectSchema<SV>;
 
@@ -18,7 +18,7 @@ export type DtoMapperSchemaValidatorObject<SV extends AnySchemaValidator> =
  * @template Dto - The type of the DTO object.
  * @template Entity - The type of the entity object.
  */
-export type ResponseDtoMapperConstructor<
+export type ResponseMapperConstructor<
   SchemaValidator extends AnySchemaValidator,
   Dto,
   Entity,
@@ -44,7 +44,7 @@ export type ResponseDtoMapperConstructor<
  * @template Dto - The type of the DTO object.
  * @template Entity - The type of the entity object.
  */
-export type RequestDtoMapperConstructor<
+export type RequestMapperConstructor<
   SchemaValidator extends AnySchemaValidator,
   Dto,
   Entity,

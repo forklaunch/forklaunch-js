@@ -1,10 +1,10 @@
 import { InstanceTypeRecord } from '@forklaunch/common';
 import { AnySchemaValidator } from '@forklaunch/validator';
-import { InternalDtoMapper } from './types/internalDtoMapper.types';
+import { InternalMapper } from './types/internalMapper.types';
 
-export function transformIntoInternalDtoMapper<
+export function transformIntoInternalMapper<
   SchemaValidator extends AnySchemaValidator,
-  DtoMapper extends Record<
+  Mapper extends Record<
     string,
     new (schemaValidator: SchemaValidator) =>
       | {
@@ -19,13 +19,13 @@ export function transformIntoInternalDtoMapper<
         }
   >
 >(
-  mappers: DtoMapper,
+  mappers: Mapper,
   schemaValidator: SchemaValidator
-): InternalDtoMapper<InstanceTypeRecord<DtoMapper>> {
+): InternalMapper<InstanceTypeRecord<Mapper>> {
   return Object.fromEntries(
     Object.entries(mappers).map(([key, value]) => [
       key,
       new value(schemaValidator)
     ])
-  ) as unknown as InternalDtoMapper<InstanceTypeRecord<DtoMapper>>;
+  ) as unknown as InternalMapper<InstanceTypeRecord<Mapper>>;
 }

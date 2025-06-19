@@ -4,20 +4,20 @@ import {
   Schema,
   SchemaValidator
 } from '@forklaunch/validator';
-import { DtoMapperSchemaValidatorObject } from '../../../../internal/src/types/mappers.types';
-import { DtoMapperConstructor } from '../interfaces/mappers.interface';
+import { MapperSchemaValidatorObject } from '../../../../internal/src/types/mappers.types';
+import { MapperConstructor } from '../interfaces/mappers.interface';
 
 /**
  * Constructs an instance of a T.
  *
- * @template T - A type that extends BaseDtoMapper.
+ * @template T - A type that extends BaseMapper.
  * @template SV - A type that extends AnySchemaValidator.
- * @param {DtoMapperConstructor<T, SV>} self - The constructor of the T.
+ * @param {MapperConstructor<T, SV>} self - The constructor of the T.
  * @param {SV} [schemaValidator] - The optional schema validator.
  * @returns {T} - An instance of the T.
  */
 export function construct<T, SV extends AnySchemaValidator>(
-  self: DtoMapperConstructor<T, SV>,
+  self: MapperConstructor<T, SV>,
   schemaValidator?: SV
 ): T {
   return new self(schemaValidator || ({} as SV));
@@ -28,7 +28,7 @@ export function construct<T, SV extends AnySchemaValidator>(
  *
  * @template SV - A type that extends AnySchemaValidator.
  */
-export abstract class BaseDtoMapper<SV extends AnySchemaValidator> {
+export abstract class BaseMapper<SV extends AnySchemaValidator> {
   /**
    * The schema validator exact type.
    * @type {SV}
@@ -45,10 +45,10 @@ export abstract class BaseDtoMapper<SV extends AnySchemaValidator> {
 
   /**
    * The schema definition.
-   * @type {DtoMapperSchemaValidatorObject<SV>}
+   * @type {MapperSchemaValidatorObject<SV>}
    * @abstract
    */
-  abstract schema: DtoMapperSchemaValidatorObject<SV>;
+  abstract schema: MapperSchemaValidatorObject<SV>;
 
   /**
    * The Data Transfer Object (DTO).
@@ -57,7 +57,7 @@ export abstract class BaseDtoMapper<SV extends AnySchemaValidator> {
   _dto!: Schema<this['schema'], SV>;
 
   /**
-   * Creates an instance of BaseDtoMapper.
+   * Creates an instance of BaseMapper.
    *
    * @param {SV} schemaValidator - The schema provider.
    */
@@ -94,13 +94,13 @@ export abstract class BaseDtoMapper<SV extends AnySchemaValidator> {
   /**
    * Gets the schema of a T.
    *
-   * @template T - A type that extends BaseDtoMapper.
+   * @template T - A type that extends BaseMapper.
    * @template SV - A type that extends AnySchemaValidator.
-   * @param {DtoMapperConstructor<T, SV>} this - The constructor of the T.
+   * @param {MapperConstructor<T, SV>} this - The constructor of the T.
    * @returns {T['schema']} - The schema of the T.
    */
-  static schema<T extends BaseDtoMapper<SV>, SV extends AnySchemaValidator>(
-    this: DtoMapperConstructor<T, SV>
+  static schema<T extends BaseMapper<SV>, SV extends AnySchemaValidator>(
+    this: MapperConstructor<T, SV>
   ): T['schema'] {
     return construct(this).schema;
   }

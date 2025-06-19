@@ -2,20 +2,20 @@ import {
   AnySchemaValidator,
   prettyPrintParseErrors
 } from '@forklaunch/validator';
-import { DtoMapperConstructor } from '../interfaces/mappers.interface';
-import { BaseDtoMapper, construct } from './baseDtoMapper.model';
+import { MapperConstructor } from '../interfaces/mappers.interface';
+import { BaseMapper, construct } from './baseMapper.model';
 
 /**
  * Abstract class representing a request entity mapper.
  *
  * @template Entity - A type that extends SqlBaseEntity.
  * @template SV - A type that extends AnySchemaValidator.
- * @extends {BaseDtoMapper<SV>}
+ * @extends {BaseMapper<SV>}
  */
-export abstract class RequestDtoMapper<
+export abstract class RequestMapper<
   Entity,
   SV extends AnySchemaValidator
-> extends BaseDtoMapper<SV> {
+> extends BaseMapper<SV> {
   /**
    * The entity type.
    * @type {Entity}
@@ -36,7 +36,7 @@ export abstract class RequestDtoMapper<
    * Populates the DTO with data from a JSON object.
    *
    * @param {this['_dto']} json - The JSON object.
-   * @returns {Promise<this>} - The instance of the RequestDtoMapper.
+   * @returns {Promise<this>} - The instance of the RequestMapper.
    */
   fromDto(json: this['_dto']): Promise<this> {
     const parsedSchema = this.schemaValidator.parse(
@@ -66,22 +66,22 @@ export abstract class RequestDtoMapper<
   }
 
   /**
-   * Creates an instance of a RequestDtoMapper from a JSON object.
+   * Creates an instance of a RequestMapper from a JSON object.
    *
-   * @template T - A type that extends RequestDtoMapper.
+   * @template T - A type that extends RequestMapper.
    * @template SV - A type that extends AnySchemaValidator.
    * @template JsonType - The type of the JSON object.
-   * @param {DtoMapperConstructor<T, SV>} this - The constructor of the T.
+   * @param {MapperConstructor<T, SV>} this - The constructor of the T.
    * @param {SV} schemaValidator - The schema provider.
    * @param {JsonType} json - The JSON object.
    * @returns {T} - An instance of the T.
    */
   static fromDto<
-    T extends RequestDtoMapper<unknown, SV>,
+    T extends RequestMapper<unknown, SV>,
     SV extends AnySchemaValidator,
     JsonType extends T['_dto']
   >(
-    this: DtoMapperConstructor<T, SV>,
+    this: MapperConstructor<T, SV>,
     schemaValidator: SV,
     json: JsonType
   ): Promise<T> {
@@ -91,21 +91,21 @@ export abstract class RequestDtoMapper<
   /**
    * Deserializes a JSON object to an entity.
    *
-   * @template T - A type that extends RequestDtoMapper.
+   * @template T - A type that extends RequestMapper.
    * @template SV - A type that extends AnySchemaValidator.
    * @template JsonType - The type of the JSON object.
-   * @param {DtoMapperConstructor<T, SV>} this - The constructor of the T.
+   * @param {MapperConstructor<T, SV>} this - The constructor of the T.
    * @param {SV} schemaValidator - The schema provider.
    * @param {JsonType} json - The JSON object.
    * @param {...unknown[]} additionalArgs - Additional arguments.
    * @returns {T['_Entity']} - The entity.
    */
   static deserializeDtoToEntity<
-    T extends RequestDtoMapper<unknown, SV>,
+    T extends RequestMapper<unknown, SV>,
     SV extends AnySchemaValidator,
     JsonType extends T['_dto']
   >(
-    this: DtoMapperConstructor<T, SV>,
+    this: MapperConstructor<T, SV>,
     schemaValidator: SV,
     json: JsonType,
     ...additionalArgs: Parameters<T['toEntity']>

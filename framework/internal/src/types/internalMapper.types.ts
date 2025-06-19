@@ -1,5 +1,5 @@
-export type InternalDtoMapper<
-  DtoMapper extends Record<
+export type InternalMapper<
+  Mapper extends Record<
     string,
     | {
         dto: unknown;
@@ -13,21 +13,21 @@ export type InternalDtoMapper<
       }
   >
 > = {
-  [K in keyof DtoMapper]: DtoMapper[K] extends {
+  [K in keyof Mapper]: Mapper[K] extends {
     dto: unknown;
     _Entity: unknown;
     serializeEntityToDto: unknown;
   }
     ? {
-        serializeEntityToDto: DtoMapper[K]['serializeEntityToDto'];
+        serializeEntityToDto: Mapper[K]['serializeEntityToDto'];
       }
-    : DtoMapper[K] extends {
+    : Mapper[K] extends {
           dto: unknown;
           _Entity: unknown;
           deserializeDtoToEntity: unknown;
         }
       ? {
-          deserializeDtoToEntity: DtoMapper[K]['deserializeDtoToEntity'];
+          deserializeDtoToEntity: Mapper[K]['deserializeDtoToEntity'];
         }
       : never;
 };

@@ -1,2 +1,2 @@
-export * from './models/requestDtoMapper.model';
-export * from './models/responseDtoMapper.model';
+export * from './models/requestMapper.model';
+export * from './models/responseMapper.model';

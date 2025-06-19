@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.3.14
+
+### Patch Changes
+
+- change dtoMapper to Mapper
+
 ## 0.3.13
 
 ### Patch Changes

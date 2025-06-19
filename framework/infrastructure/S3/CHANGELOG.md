@@ -1,5 +1,14 @@
 # @forklaunch/infrastructure-s3
 
+## 0.0.29
+
+### Patch Changes
+
+- change dtoMapper to Mapper
+- Updated dependencies
+  - @forklaunch/common@0.3.14
+  - @forklaunch/core@0.9.21
+
 ## 0.0.28
 
 ### Patch Changes
