@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.0.3
+
+### Patch Changes
+
+- return promise from identity mapper
+
 ## 0.0.2
 
 ### Patch Changes

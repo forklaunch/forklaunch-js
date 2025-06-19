@@ -7,7 +7,10 @@ export class IdentityRequestMapper<
   dto!: T;
   _Entity!: T;
 
-  deserializeDtoToEntity(schemaValidator: SchemaValidator, dto: T): T {
+  async deserializeDtoToEntity(
+    schemaValidator: SchemaValidator,
+    dto: T
+  ): Promise<T> {
     return dto;
   }
 }
@@ -19,7 +22,10 @@ export class IdentityResponseMapper<
   dto!: T;
   _Entity!: T;
 
-  serializeEntityToDto(schemaValidator: SchemaValidator, entity: T): T {
+  async serializeEntityToDto(
+    schemaValidator: SchemaValidator,
+    entity: T
+  ): Promise<T> {
     return entity;
   }
 }
