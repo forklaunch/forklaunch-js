@@ -389,6 +389,8 @@ async function main() {
 
     await flushOutputStreams();
     await waitForAsyncOperations();
+
+    process.exit(0);
   } catch (error) {
     console.error("\nDownload failed:", error.message);
     console.error(
