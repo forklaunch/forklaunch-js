@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.0.7
+
+### Patch Changes
+
+- remove schema validator from identity mappers
+
 ## 0.0.6
 
 ### Patch Changes
