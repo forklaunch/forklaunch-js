@@ -7,8 +7,13 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to release (e.g., 0.2.0)'
-        required: true
+        description: 'Version to release (e.g., 0.2.0) - leave empty to use latest CLI tag'
+        required: false
+        default: ''
+      use_latest_tag:
+        description: 'Use latest CLI tag'
+        type: boolean
+        default: true
 
 jobs:
   build:
@@ -49,7 +54,7 @@ jobs:
           echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
       
       - name: Cache cargo
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/registry
@@ -75,7 +80,7 @@ jobs:
           copy target\${{ matrix.target }}\release\forklaunch.exe ${{ matrix.artifact }}
       
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
           path: cli/${{ matrix.artifact }}
@@ -89,7 +94,7 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Download all artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: artifacts
       
@@ -97,31 +102,29 @@ jobs:
         id: version
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+            if [[ "${{ github.event.inputs.use_latest_tag }}" == "true" ]]; then
+              latest_tag=$(git tag -l "cli-v*" | sort -V | tail -1)
+              echo "version=${latest_tag#cli-v}" >> $GITHUB_OUTPUT
+            elif [[ -n "${{ github.event.inputs.version }}" ]]; then
+              echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+            else
+              echo "Error: Version is required when not using latest tag" >&2
+              exit 1
+            fi
           else
             echo "version=${GITHUB_REF#refs/tags/cli-v}" >> $GITHUB_OUTPUT
           fi
       
       - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: cli-v${{ steps.version.outputs.version }}
-          release_name: CLI v${{ steps.version.outputs.version }}
+          name: CLI v${{ steps.version.outputs.version }}
           draft: false
           prerelease: false
-      
-      - name: Upload Release Assets
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          for artifact in artifacts/*/forklaunch-*; do
-            filename=$(basename "$artifact")
-            echo "Uploading $filename"
-            gh release upload cli-v${{ steps.version.outputs.version }} "$artifact" --clobber
-          done
+          files: artifacts/*/forklaunch-*
 
   npm-publish:
     needs: release
@@ -140,7 +143,15 @@ jobs:
         id: version
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+            if [[ "${{ github.event.inputs.use_latest_tag }}" == "true" ]]; then
+              latest_tag=$(git tag -l "cli-v*" | sort -V | tail -1)
+              echo "version=${latest_tag#cli-v}" >> $GITHUB_OUTPUT
+            elif [[ -n "${{ github.event.inputs.version }}" ]]; then
+              echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+            else
+              echo "Error: Version is required when not using latest tag" >&2
+              exit 1
+            fi
           else
             echo "version=${GITHUB_REF#refs/tags/cli-v}" >> $GITHUB_OUTPUT
           fi
