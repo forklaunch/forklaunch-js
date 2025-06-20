@@ -1,9 +1,12 @@
 [package]
 name = "forklaunch"
-version = "0.1.10"
+version = "0.2.0"
 edition = "2024"
 license = "AGPL-3.0-only"
 description = "Launch faster with forklaunch"
+authors = ["Forklift Technologies, Inc. <engineering@forklaunch.com>"]
+keywords = ["cli", "scaffolding", "microservices", "typescript", "rust"]
+repository = "https://github.com/forklaunch/forklaunch-js"
 
 [dependencies]
 anyhow = "1.0"
