@@ -16,12 +16,7 @@
     "url": "https://github.com/forklaunch/forklaunch-js.git",
     "directory": "cli"
   },
-  "bin": {
-    "forklaunch": "./bin/forklaunch",
-    "fl": "./bin/fl"
-  },
   "files": [
-    "bin/",
     "scripts/",
     "README.md",
     "LICENSE"
