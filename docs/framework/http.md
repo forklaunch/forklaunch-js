@@ -21,7 +21,7 @@ There are plans to support `express 5.0` as well as part of a separate package.
 
 ## Application
 
-`forklaunchExpress` virtually acts as a drop-in replacement for `express.Application`, with additional initialization arguments:
+`forklaunchExpress` virtually acts as a drop-in replacement for `express`, with additional initialization arguments:
 
 ### Express Framework (`@forklaunch/express`)
 
