@@ -83,5 +83,5 @@ After adding a router:
 2. Use consistent naming conventions for endpoints
 3. Implement proper request validation
 4. Write comprehensive tests for all endpoints
-5. Use DtoMappers to control data flow between layers
+5. Use Mappers to control data flow between layers
 6. Keep controller logic thin, delegating to services

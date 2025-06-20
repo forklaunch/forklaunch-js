@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/core",
-  "version": "0.9.15",
+  "version": "0.9.21",
   "description": "forklaunch-js core package. Contains useful building blocks.",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -14,52 +14,46 @@
   "author": "Rohin Bhargava",
   "exports": {
     "./cache": {
-      "types": "./lib/src/cache/index.d.ts",
-      "import": "./lib/src/cache/index.mjs",
-      "require": "./lib/src/cache/index.js",
-      "default": "./lib/src/cache/index.js"
+      "types": "./lib/cache/index.d.ts",
+      "import": "./lib/cache/index.mjs",
+      "require": "./lib/cache/index.js",
+      "default": "./lib/cache/index.js"
     },
     "./controllers": {
-      "types": "./lib/src/controllers/index.d.ts",
-      "import": "./lib/src/controllers/index.mjs",
-      "require": "./lib/src/controllers/index.js",
-      "default": "./lib/src/controllers/index.js"
+      "types": "./lib/controllers/index.d.ts",
+      "import": "./lib/controllers/index.mjs",
+      "require": "./lib/controllers/index.js",
+      "default": "./lib/controllers/index.js"
     },
     "./mappers": {
-      "types": "./lib/src/mappers/index.d.ts",
-      "import": "./lib/src/mappers/index.mjs",
-      "require": "./lib/src/mappers/index.js",
-      "default": "./lib/src/mappers/index.js"
+      "types": "./lib/mappers/index.d.ts",
+      "import": "./lib/mappers/index.mjs",
+      "require": "./lib/mappers/index.js",
+      "default": "./lib/mappers/index.js"
     },
     "./objectstore": {
-      "types": "./lib/src/objectstore/index.d.ts",
-      "import": "./lib/src/objectstore/index.mjs",
-      "require": "./lib/src/objectstore/index.js",
-      "default": "./lib/src/objectstore/index.js"
+      "types": "./lib/objectstore/index.d.ts",
+      "import": "./lib/objectstore/index.mjs",
+      "require": "./lib/objectstore/index.js",
+      "default": "./lib/objectstore/index.js"
     },
     "./http": {
-      "types": "./lib/src/http/index.d.ts",
-      "import": "./lib/src/http/index.mjs",
-      "require": "./lib/src/http/index.js",
-      "default": "./lib/src/http/index.js"
+      "types": "./lib/http/index.d.ts",
+      "import": "./lib/http/index.mjs",
+      "require": "./lib/http/index.js",
+      "default": "./lib/http/index.js"
     },
     "./persistence": {
-      "types": "./lib/src/persistence/index.d.ts",
-      "import": "./lib/src/persistence/index.mjs",
-      "require": "./lib/src/persistence/index.js",
-      "default": "./lib/src/persistence/index.js"
+      "types": "./lib/persistence/index.d.ts",
+      "import": "./lib/persistence/index.mjs",
+      "require": "./lib/persistence/index.js",
+      "default": "./lib/persistence/index.js"
     },
     "./services": {
-      "types": "./lib/src/services/index.d.ts",
-      "import": "./lib/src/services/index.mjs",
-      "require": "./lib/src/services/index.js",
-      "default": "./lib/src/services/index.js"
-    },
-    "./test": {
-      "types": "./lib/__test__/index.d.ts",
-      "import": "./lib/__test__/index.mjs",
-      "require": "./lib/__test__/index.js",
-      "default": "./lib/__test__/index.js"
+      "types": "./lib/services/index.d.ts",
+      "import": "./lib/services/index.mjs",
+      "require": "./lib/services/index.js",
+      "default": "./lib/services/index.js"
     }
   },
   "types": "lib/index.d.ts",
@@ -70,7 +64,7 @@
     "lib/**"
   ],
   "scripts": {
-    "build": "tsgo --noEmit && tsup ./src/cache/index.ts ./src/controllers/index.ts ./src/mappers/index.ts ./src/objectstore/index.ts ./src/persistence/index.ts ./src/http/index.ts ./src/services/index.ts ./__test__/index.ts --format cjs,esm --no-splitting --dts --tsconfig tsconfig.json --out-dir lib --clean --sourcemap",
+    "build": "tsgo --noEmit && tsup ./src/cache/index.ts ./src/controllers/index.ts ./src/mappers/index.ts ./src/objectstore/index.ts ./src/persistence/index.ts ./src/http/index.ts ./src/services/index.ts --format cjs,esm --no-splitting --dts --tsconfig tsconfig.json --out-dir lib --clean --sourcemap",
     "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
@@ -110,15 +104,15 @@
     "uuid": "^11.1.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.28.0",
-    "@scalar/express-api-reference": "^0.8.3",
+    "@eslint/js": "^9.29.0",
+    "@scalar/express-api-reference": "^0.8.5",
     "@types/cors": "^2.8.19",
-    "@types/jest": "^29.5.14",
+    "@types/jest": "^30.0.0",
     "@types/qs": "^6.14.0",
     "@types/uuid": "^10.0.0",
-    "@typescript/native-preview": "7.0.0-dev.20250611.1",
+    "@typescript/native-preview": "7.0.0-dev.20250619.1",
     "globals": "^16.2.0",
-    "jest": "^30.0.0",
+    "jest": "^30.0.2",
     "prettier": "^3.5.3",
     "testcontainers": "^11.0.3",
     "ts-jest": "^29.4.0",
@@ -126,6 +120,6 @@
     "tsup": "^8.5.0",
     "typedoc": "^0.28.5",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.34.0"
+    "typescript-eslint": "^8.34.1"
   }
 }

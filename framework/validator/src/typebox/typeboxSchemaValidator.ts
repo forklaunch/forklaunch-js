@@ -337,7 +337,7 @@ export class TypeboxSchemaValidator
           new InMemoryFile(value, name, { type }) as File
       )
       .Encode((value) => (value('name', 'type') as InMemoryFile).content);
-  type = <T>() => this.any as T;
+  type = <T>() => this.any as TTransform<TAny, T>;
 
   /**
    * Extracts the error type of a schema for error messages.

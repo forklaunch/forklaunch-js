@@ -1,5 +1,6 @@
 import { SqlBaseEntity } from '@forklaunch/blueprint-core';
 import { Entity, Enum, Property } from '@mikro-orm/core';
+import { CurrencyEnum } from '../../domain/enum/currency.enum';
 import { PaymentMethodEnum } from '../../domain/enum/paymentMethod.enum';
 import { StatusEnum } from '../../domain/enum/status.enum';
 
@@ -12,14 +13,14 @@ export class CheckoutSession extends SqlBaseEntity {
   @Enum(() => PaymentMethodEnum)
   paymentMethods!: PaymentMethodEnum[];
 
-  @Property({ type: 'json', nullable: true })
-  metadata?: unknown;
+  @Enum(() => CurrencyEnum)
+  currency!: CurrencyEnum;
 
-  @Property()
-  successRedirectUri!: string;
+  @Property({ nullable: true })
+  successRedirectUri?: string;
 
-  @Property()
-  cancelRedirectUri!: string;
+  @Property({ nullable: true })
+  cancelRedirectUri?: string;
 
   @Property()
   expiresAt!: Date;
@@ -28,5 +29,5 @@ export class CheckoutSession extends SqlBaseEntity {
   status!: StatusEnum;
 
   @Property({ type: 'json', nullable: true })
-  extraFields?: unknown;
+  providerFields?: unknown;
 }

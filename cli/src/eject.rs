@@ -21,6 +21,7 @@ use crate::{
         ERROR_FAILED_TO_PARSE_PACKAGE_JSON, ERROR_FAILED_TO_READ_MANIFEST,
     },
     core::{
+        ast::transformations::transform_registrations_ts::transform_registration_schema_ejection,
         base_path::{BasePathLocation, BasePathType, prompt_base_path},
         command::command,
         manifest::{
@@ -28,7 +29,7 @@ use crate::{
             InitializableManifestConfigMetadata, application::ApplicationManifestData,
         },
         relative_path::get_relative_path,
-        rendered_template::{RenderedTemplate, write_rendered_templates},
+        rendered_template::{RenderedTemplate, RenderedTemplatesCache, write_rendered_templates},
     },
     prompt::{ArrayCompleter, prompt_comma_separated_list, prompt_for_confirmation},
 };
@@ -43,7 +44,49 @@ impl EjectCommand {
     }
 }
 
+fn should_skip_file(path: &Path) -> bool {
+    path.file_name().and_then(|n| n.to_str()) == Some("index.ts")
+}
+
+fn copy_directory_selective(
+    source_dir: &Path,
+    target_dir: &Path,
+    dryrun: bool,
+    stdout: &mut StandardStream,
+) -> Result<()> {
+    for entry in WalkDir::new(source_dir) {
+        let entry = entry?;
+        if entry.file_type().is_file() {
+            let source_path = entry.path();
+
+            if should_skip_file(source_path) {
+                continue;
+            }
+
+            let relative_path = source_path.strip_prefix(source_dir)?;
+            let target_path = target_dir.join(relative_path);
+
+            if let Some(parent) = target_path.parent() {
+                std::fs::create_dir_all(parent)?;
+            }
+
+            if dryrun {
+                writeln!(
+                    stdout,
+                    "Would copy {} to {}",
+                    source_path.display(),
+                    target_path.display()
+                )?;
+            } else {
+                std::fs::copy(source_path, target_path)?;
+            }
+        }
+    }
+    Ok(())
+}
+
 fn eject_dependencies(
+    project_variant: &Option<String>,
     package_json: &mut Value,
     matches: &ArgMatches,
     line_editor: &mut Editor<ArrayCompleter, DefaultHistory>,
@@ -59,7 +102,8 @@ fn eject_dependencies(
     let mut ejection_candidates = Vec::new();
     for dependency in dependencies {
         let dependency_name = dependency.0;
-        if dependency_name.starts_with("@forklaunch/implementation-")
+        if (dependency_name.starts_with("@forklaunch/implementation-")
+            && dependency_name.contains(project_variant.as_ref().unwrap()))
             || dependency_name.starts_with("@forklaunch/interfaces-")
             || dependency_name.starts_with("@forklaunch/infrastructure-")
         {
@@ -93,6 +137,8 @@ fn eject_dependencies(
     .map(|dependency| dependency.to_string())
     .collect();
 
+    detect_collisions_and_prepare_merges(&base_path, &dependencies_to_eject)?;
+
     let filtered_dependencies: Map<String, Value> = dependencies
         .iter()
         .filter(|(name, _)| !dependencies_to_eject.contains(&name.to_string()))
@@ -117,6 +163,7 @@ fn eject_dependencies(
                 ERROR_FAILED_TO_EJECT_DIRECTORY_NOT_EJECTABLE.to_string()
             );
         }
+
         let mut options = CopyOptions::new();
         options.overwrite = false;
         options.copy_inside = true;
@@ -124,24 +171,34 @@ fn eject_dependencies(
         for entry in read_dir(&dependency_path)? {
             let entry = entry?;
             let source_path = entry.path();
-            let target_path = if source_path.is_dir() && base_path.join(entry.file_name()).is_dir()
-            {
-                base_path.to_path_buf()
-            } else {
-                base_path.join(entry.file_name())
-            };
+            let target_path = base_path.join(entry.file_name());
 
-            if dryrun {
-                writeln!(
-                    stdout,
-                    "Would copy {} to {}",
-                    source_path.display(),
-                    target_path.display()
-                )?;
+            if source_path.is_dir() {
+                copy_directory_selective(&source_path, &target_path, dryrun, stdout)?;
             } else {
-                copy(&source_path, &target_path, &options).with_context(|| {
-                    format!("Failed to copy files from {}", source_path.display())
-                })?;
+                if should_skip_file(&source_path) {
+                    if dryrun {
+                        writeln!(
+                            stdout,
+                            "Would skip {} (will be merged)",
+                            source_path.display()
+                        )?;
+                    }
+                    continue;
+                }
+
+                if dryrun {
+                    writeln!(
+                        stdout,
+                        "Would copy {} to {}",
+                        source_path.display(),
+                        target_path.display()
+                    )?;
+                } else {
+                    copy(&source_path, &target_path, &options).with_context(|| {
+                        format!("Failed to copy files from {}", source_path.display())
+                    })?;
+                }
             }
         }
     }
@@ -151,6 +208,7 @@ fn eject_dependencies(
 
 fn domain_prefix(package_name: &str) -> &str {
     match package_name {
+        "/enum" => "/domain/enum",
         "/schemas" => "/domain/schemas",
         "/interfaces" => "/domain/interfaces",
         "/types" => "/domain/types",
@@ -163,16 +221,18 @@ fn perform_string_replacements(
     base_path: &Path,
     manifest_data: &ApplicationManifestData,
     dependencies_to_eject: &Vec<String>,
-    templates_to_render: &mut Vec<RenderedTemplate>,
+    rendered_templates_cache: &mut RenderedTemplatesCache,
 ) -> Result<()> {
-    let mut file_cache: HashMap<PathBuf, String> = HashMap::new();
     for file in app_files {
         if file.file_name() != "package.json" {
-            let file_path = &file.path();
+            let file_path = file.path();
             let relative_path_difference = get_relative_path(file_path, base_path);
 
-            let content = read_to_string(file_path)
-                .with_context(|| format!("Failed to read file {}", file_path.display()))?;
+            let content = rendered_templates_cache
+                .get(file_path)?
+                .unwrap()
+                .content
+                .clone();
 
             let mut new_content = content.clone();
 
@@ -188,23 +248,12 @@ fn perform_string_replacements(
             };
 
             for dependency in dependencies_to_eject {
-                // This may need AST treatment if multiple implementations are included
-                // in the same file, but this should never be the case
                 if new_content.contains(format!("{}/schemas", dependency).as_str()) {
-                    new_content = new_content
-                        .lines()
-                        .filter(|line| {
-                            if line.contains("validator: SchemaValidator()") {
-                                false
-                            } else {
-                                true
-                            }
-                        })
-                        .collect::<Vec<_>>()
-                        .join("\n");
+                    new_content = transform_registration_schema_ejection(&new_content);
                 }
 
                 let module_types = [
+                    "/enum",
                     "/schemas",
                     "/interfaces",
                     "/types",
@@ -223,28 +272,188 @@ fn perform_string_replacements(
                         .as_str(),
                     );
                 }
+
+                if new_content.contains("@forklaunch/infrastructure-")
+                    && dependency.contains("@forklaunch/infrastructure-")
+                {
+                    let module = dependency.replace("@forklaunch/infrastructure-", "");
+                    new_content = new_content.replace(
+                        dependency,
+                        format!(
+                            "{}/infrastructure/{}",
+                            relative_path_difference_prefix, module
+                        )
+                        .as_str(),
+                    );
+                }
             }
 
-            if file_cache.contains_key(&file_path.to_path_buf()) {
-                file_cache
-                    .get_mut(&file_path.to_path_buf())
-                    .unwrap()
-                    .push_str(&new_content);
-            } else {
-                file_cache.insert(file_path.to_path_buf(), new_content);
+            rendered_templates_cache.insert(
+                file_path.to_string_lossy(),
+                RenderedTemplate {
+                    path: file_path.to_path_buf(),
+                    content: new_content,
+                    context: Some(format!(
+                        "Failed to write file {}",
+                        file_path.to_string_lossy()
+                    )),
+                },
+            );
+        }
+    }
+
+    Ok(())
+}
+
+fn detect_collisions_and_prepare_merges(
+    base_path: &Path,
+    dependencies_to_eject: &Vec<String>,
+) -> Result<(Vec<PathBuf>, Vec<PathBuf>)> {
+    let node_modules_path = if base_path.join("node_modules").exists() {
+        base_path.join("node_modules")
+    } else {
+        base_path.parent().unwrap().join("node_modules")
+    };
+
+    let mut collisions = Vec::new();
+    let mut index_ts_files = Vec::new();
+
+    let mut target_path_dependencies: HashMap<PathBuf, Vec<String>> = HashMap::new();
+
+    for ejectable_dependency in dependencies_to_eject {
+        let dependency_path = node_modules_path
+            .join(&ejectable_dependency)
+            .join("lib")
+            .join("eject");
+
+        if !dependency_path.exists() {
+            continue;
+        }
+
+        for entry in WalkDir::new(&dependency_path) {
+            let entry = entry?;
+            if entry.file_type().is_file() {
+                let source_path = entry.path();
+                let relative_path = source_path.strip_prefix(&dependency_path)?;
+                let target_path = base_path.join(relative_path);
+
+                target_path_dependencies
+                    .entry(target_path)
+                    .or_insert_with(Vec::new)
+                    .push(ejectable_dependency.clone());
             }
         }
     }
 
-    for (file_path, new_content) in file_cache {
-        templates_to_render.push(RenderedTemplate {
-            path: file_path.clone(),
-            content: new_content,
-            context: Some(format!(
-                "Failed to write file {}",
-                file_path.clone().to_string_lossy()
-            )),
-        });
+    for (target_path, source_dependencies) in target_path_dependencies {
+        let target_exists = target_path.exists();
+        let is_index_ts = target_path.file_name().and_then(|n| n.to_str()) == Some("index.ts");
+        let multiple_dependencies = source_dependencies.len() > 1;
+
+        if is_index_ts {
+            index_ts_files.push(target_path);
+        } else if target_exists || multiple_dependencies {
+            if multiple_dependencies {
+                bail!(
+                    "Multiple dependencies would create the same file: {} (from dependencies: {}). Cannot proceed with ejection.",
+                    target_path.display(),
+                    source_dependencies.join(", ")
+                );
+            } else {
+                collisions.push(target_path);
+            }
+        }
+    }
+
+    if !collisions.is_empty() {
+        let collision_list = collisions
+            .iter()
+            .map(|p| p.display().to_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+        bail!(
+            "File collisions detected (files already exist): {}. Cannot proceed with ejection.",
+            collision_list
+        );
+    }
+
+    Ok((collisions, index_ts_files))
+}
+
+fn merge_index_ts_files(
+    base_path: &Path,
+    dependencies_to_eject: &Vec<String>,
+    rendered_templates_cache: &mut RenderedTemplatesCache,
+) -> Result<()> {
+    let node_modules_path = if base_path.join("node_modules").exists() {
+        base_path.join("node_modules")
+    } else {
+        base_path.parent().unwrap().join("node_modules")
+    };
+
+    let mut index_files_to_merge: HashMap<PathBuf, Vec<PathBuf>> = HashMap::new();
+
+    for ejectable_dependency in dependencies_to_eject {
+        let dependency_path = node_modules_path
+            .join(&ejectable_dependency)
+            .join("lib")
+            .join("eject");
+
+        if !dependency_path.exists() {
+            continue;
+        }
+
+        for entry in WalkDir::new(&dependency_path) {
+            let entry = entry?;
+            if entry.file_type().is_file() {
+                let source_path = entry.path();
+                if source_path.file_name().and_then(|n| n.to_str()) == Some("index.ts") {
+                    let relative_path = source_path.strip_prefix(&dependency_path)?;
+                    let target_path = base_path.join(relative_path);
+
+                    index_files_to_merge
+                        .entry(target_path.clone())
+                        .or_insert_with(Vec::new)
+                        .push(source_path.to_path_buf());
+                }
+            }
+        }
+    }
+
+    for (target_path, source_files) in index_files_to_merge {
+        let mut merged_content = String::new();
+
+        if target_path.exists() {
+            let existing_content = rendered_templates_cache
+                .get(&target_path)?
+                .unwrap()
+                .content
+                .clone();
+            merged_content.push_str(&existing_content);
+            merged_content.push('\n');
+        }
+
+        for source_file in source_files {
+            let content = rendered_templates_cache
+                .get(&source_file)?
+                .unwrap()
+                .content
+                .clone();
+            merged_content.push_str(&content);
+            merged_content.push('\n');
+        }
+
+        rendered_templates_cache.insert(
+            target_path.clone().to_string_lossy(),
+            RenderedTemplate {
+                path: target_path.clone(),
+                content: merged_content,
+                context: Some(format!(
+                    "Failed to write merged index.ts file {}",
+                    target_path.display()
+                )),
+            },
+        );
     }
 
     Ok(())
@@ -328,6 +537,15 @@ impl CliCommand for EjectCommand {
             },
         ));
 
+        let mut project_variant = None;
+        if let Some(project) = manifest_data
+            .projects
+            .iter()
+            .find(|project| base_path.file_name().unwrap().to_str().unwrap() == project.name)
+        {
+            project_variant = project.variant.clone();
+        }
+
         let package_path = base_path.join("package.json");
 
         let package_data =
@@ -336,7 +554,10 @@ impl CliCommand for EjectCommand {
         let mut package_json: Value =
             from_str(&package_data).with_context(|| ERROR_FAILED_TO_PARSE_PACKAGE_JSON)?;
 
+        let mut rendered_templates_cache = RenderedTemplatesCache::new();
+
         let (dependencies_to_eject, filtered_dependencies) = eject_dependencies(
+            &project_variant,
             &mut package_json,
             matches,
             &mut line_editor,
@@ -356,11 +577,6 @@ impl CliCommand for EjectCommand {
             .collect::<Vec<_>>();
 
         package_json["dependencies"] = filtered_dependencies.into();
-        let mut templates_to_render = vec![RenderedTemplate {
-            path: package_path,
-            content: to_string_pretty(&package_json)?,
-            context: None,
-        }];
 
         if !dryrun {
             perform_string_replacements(
@@ -368,9 +584,25 @@ impl CliCommand for EjectCommand {
                 &base_path,
                 &manifest_data,
                 &dependencies_to_eject,
-                &mut templates_to_render,
+                &mut rendered_templates_cache,
+            )?;
+            merge_index_ts_files(
+                &base_path,
+                &dependencies_to_eject,
+                &mut rendered_templates_cache,
             )?;
         }
+
+        let mut templates_to_render: Vec<RenderedTemplate> = rendered_templates_cache
+            .drain()
+            .map(|(_, template)| template)
+            .collect();
+
+        templates_to_render.push(RenderedTemplate {
+            path: package_path,
+            content: to_string_pretty(&package_json)?,
+            context: None,
+        });
 
         write_rendered_templates(&templates_to_render, dryrun, &mut stdout)?;
 

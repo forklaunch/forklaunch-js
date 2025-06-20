@@ -1,4 +1,1 @@
-export enum OrganizationStatus {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive'
-}
+../../../iam-base/domain/enum/organizationStatus.enum.ts

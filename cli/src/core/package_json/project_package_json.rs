@@ -158,6 +158,7 @@ pub(crate) struct ProjectDependencies {
     pub(crate) forklaunch_express: Option<String>,
     pub(crate) forklaunch_hyper_express: Option<String>,
     pub(crate) forklaunch_implementation_billing_base: Option<String>,
+    pub(crate) forklaunch_implementation_billing_stripe: Option<String>,
     pub(crate) forklaunch_interfaces_billing: Option<String>,
     pub(crate) forklaunch_implementation_iam_base: Option<String>,
     pub(crate) forklaunch_interfaces_iam: Option<String>,
@@ -168,6 +169,7 @@ pub(crate) struct ProjectDependencies {
     pub(crate) forklaunch_interfaces_worker: Option<String>,
     pub(crate) forklaunch_infrastructure_redis: Option<String>,
     pub(crate) forklaunch_infrastructure_s3: Option<String>,
+    pub(crate) forklaunch_internal: Option<String>,
     pub(crate) forklaunch_universal_sdk: Option<String>,
     pub(crate) forklaunch_validator: Option<String>,
     pub(crate) mikro_orm_core: Option<String>,
@@ -183,6 +185,7 @@ pub(crate) struct ProjectDependencies {
     pub(crate) bullmq: Option<String>,
     pub(crate) dotenv: Option<String>,
     pub(crate) sqlite3: Option<String>,
+    pub(crate) stripe: Option<String>,
     pub(crate) uuid: Option<String>,
     pub(crate) zod: Option<String>,
 
@@ -221,6 +224,9 @@ impl Serialize for ProjectDependencies {
         if let Some(ref v) = self.forklaunch_implementation_billing_base {
             map.serialize_entry("@forklaunch/implementation-billing-base", v)?;
         }
+        if let Some(ref v) = self.forklaunch_implementation_billing_stripe {
+            map.serialize_entry("@forklaunch/implementation-billing-stripe", v)?;
+        }
         if let Some(ref v) = self.forklaunch_interfaces_billing {
             map.serialize_entry("@forklaunch/interfaces-billing", v)?;
         }
@@ -250,6 +256,9 @@ impl Serialize for ProjectDependencies {
         }
         if let Some(ref v) = self.forklaunch_interfaces_worker {
             map.serialize_entry("@forklaunch/interfaces-worker", v)?;
+        }
+        if let Some(ref v) = self.forklaunch_internal {
+            map.serialize_entry("@forklaunch/internal", v)?;
         }
         if let Some(ref v) = self.forklaunch_universal_sdk {
             map.serialize_entry("@forklaunch/universal-sdk", v)?;
@@ -303,6 +312,9 @@ impl Serialize for ProjectDependencies {
         }
         if let Some(ref v) = self.sqlite3 {
             map.serialize_entry("sqlite3", v)?;
+        }
+        if let Some(ref v) = self.stripe {
+            map.serialize_entry("stripe", v)?;
         }
         if let Some(ref v) = self.uuid {
             map.serialize_entry("uuid", v)?;
@@ -433,6 +445,9 @@ impl<'de> Deserialize<'de> for ProjectDependencies {
                         "@forklaunch/implementation-billing-base" => {
                             deps.forklaunch_implementation_billing_base = Some(value)
                         }
+                        "@forklaunch/implementation-billing-stripe" => {
+                            deps.forklaunch_implementation_billing_stripe = Some(value)
+                        }
                         "@forklaunch/interfaces-billing" => {
                             deps.forklaunch_interfaces_billing = Some(value)
                         }
@@ -463,6 +478,7 @@ impl<'de> Deserialize<'de> for ProjectDependencies {
                         "@forklaunch/interfaces-worker" => {
                             deps.forklaunch_interfaces_worker = Some(value)
                         }
+                        "@forklaunch/internal" => deps.forklaunch_internal = Some(value),
                         "@forklaunch/universal-sdk" => deps.forklaunch_universal_sdk = Some(value),
                         "@forklaunch/validator" => deps.forklaunch_validator = Some(value),
                         "@mikro-orm/core" => deps.mikro_orm_core = Some(value),
@@ -476,6 +492,7 @@ impl<'de> Deserialize<'de> for ProjectDependencies {
                         "better-sqlite3" => deps.better_sqlite3 = Some(value),
                         "dotenv" => deps.dotenv = Some(value),
                         "sqlite3" => deps.sqlite3 = Some(value),
+                        "stripe" => deps.stripe = Some(value),
                         "uuid" => deps.uuid = Some(value),
                         "zod" => deps.zod = Some(value),
                         _ => {

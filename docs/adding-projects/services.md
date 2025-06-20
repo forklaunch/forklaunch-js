@@ -103,4 +103,4 @@ After creating a service:
 2. Use the interface for defining your service contract
 3. Implement proper error handling in your service layer
 4. Write comprehensive tests for your business logic
-5. Use DtoMappers for data transformation between layers
+5. Use Mappers for data transformation between layers

@@ -63,6 +63,8 @@ config_struct!(
 
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) is_better_auth: bool,
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) is_stripe: bool,
     }
 );
 
@@ -119,7 +121,8 @@ impl InitializableManifestConfig for ServiceManifestData {
 
             is_iam: service_name == get_service_module_name(&Module::BaseIam)
                 || service_name == get_service_module_name(&Module::BetterAuthIam),
-            is_billing: service_name == get_service_module_name(&Module::BaseBilling),
+            is_billing: service_name == get_service_module_name(&Module::BaseBilling)
+                || service_name == get_service_module_name(&Module::StripeBilling),
             is_cache_enabled: project_entry.resources.as_ref().unwrap().cache.is_some(),
             is_s3_enabled: project_entry
                 .resources

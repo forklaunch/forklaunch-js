@@ -58,6 +58,20 @@ pub(crate) struct Env {
         skip_serializing_if = "Option::is_none"
     )]
     pub(crate) password_encryption_public_key_path: Option<String>,
+    #[serde(
+        rename = "PASSWORD_ENCRYPTION_SECRET_PATH",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub(crate) password_encryption_secret_path: Option<String>,
+    #[serde(
+        rename = "BETTER_AUTH_BASE_PATH",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub(crate) better_auth_base_path: Option<String>,
+    #[serde(rename = "CORS_ORIGINS", skip_serializing_if = "Option::is_none")]
+    pub(crate) cors_origins: Option<String>,
+    #[serde(rename = "STRIPE_API_KEY", skip_serializing_if = "Option::is_none")]
+    pub(crate) stripe_api_key: Option<String>,
     #[serde(flatten, default)]
     pub(crate) additional_env_vars: HashMap<String, String>,
 }
@@ -130,6 +144,10 @@ impl<'de> Deserialize<'de> for Env {
                     version: None,
                     docs_path: None,
                     password_encryption_public_key_path: None,
+                    password_encryption_secret_path: None,
+                    better_auth_base_path: None,
+                    cors_origins: None,
+                    stripe_api_key: None,
                     additional_env_vars: HashMap::new(),
                 };
 

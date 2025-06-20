@@ -229,6 +229,11 @@ choice! {
             description: Some("app hooks only"),
             exclusive_files: Some(&["billing-base"]),
         },
+        StripeBilling = Choice {
+            id: "billing-stripe",
+            description: Some("stripe billing implementation"),
+            exclusive_files: Some(&["billing-stripe"]),
+        },
         BaseIam = Choice {
             id: "iam-base",
             description: Some("authorization only"),
@@ -236,7 +241,7 @@ choice! {
         },
         BetterAuthIam = Choice {
             id: "iam-better-auth",
-            description: None,
+            description: Some("better auth implementation for iam"),
             exclusive_files: Some(&["iam-better-auth"])
         }
     }
@@ -353,7 +358,7 @@ pub(crate) fn get_universal_sdk_module_description(name: &str) -> String {
 }
 pub(crate) fn get_service_module_name(service_type: &Module) -> String {
     match service_type {
-        Module::BaseBilling => "billing".to_string(),
+        Module::BaseBilling | Module::StripeBilling => "billing".to_string(),
         Module::BaseIam | Module::BetterAuthIam => "iam".to_string(),
     }
 }
@@ -364,14 +369,14 @@ pub(crate) fn get_service_module_description(name: &str, service_type: &Module) 
         name,
         get_service_module_name(service_type),
         match service_type {
-            Module::BaseBilling => "billing service APIs",
+            Module::BaseBilling | Module::StripeBilling => "billing service APIs",
             Module::BaseIam | Module::BetterAuthIam => "identity and access management APIs",
         }
     )
 }
 pub(crate) fn get_service_module_cache(service_type: &Module) -> Option<String> {
     match service_type {
-        Module::BaseBilling => Some(Infrastructure::Redis.to_string()),
+        Module::BaseBilling | Module::StripeBilling => Some(Infrastructure::Redis.to_string()),
         _ => None,
     }
 }

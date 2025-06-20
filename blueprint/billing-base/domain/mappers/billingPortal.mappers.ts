@@ -1,10 +1,10 @@
 import { SchemaValidator } from '@forklaunch/blueprint-core';
-import { RequestDtoMapper, ResponseDtoMapper } from '@forklaunch/core/mappers';
+import { RequestMapper, ResponseMapper } from '@forklaunch/core/mappers';
 import { EntityManager } from '@mikro-orm/core';
 import { BillingPortal } from '../../persistence/entities/billingPortal.entity';
 import { BillingPortalSchemas } from '../../registrations';
 
-export class CreateBillingPortalDtoMapper extends RequestDtoMapper<
+export class CreateBillingPortalMapper extends RequestMapper<
   BillingPortal,
   SchemaValidator
 > {
@@ -22,7 +22,7 @@ export class CreateBillingPortalDtoMapper extends RequestDtoMapper<
   }
 }
 
-export class UpdateBillingPortalDtoMapper extends RequestDtoMapper<
+export class UpdateBillingPortalMapper extends RequestMapper<
   BillingPortal,
   SchemaValidator
 > {
@@ -33,7 +33,7 @@ export class UpdateBillingPortalDtoMapper extends RequestDtoMapper<
   }
 }
 
-export class BillingPortalDtoMapper extends ResponseDtoMapper<
+export class BillingPortalMapper extends ResponseMapper<
   BillingPortal,
   SchemaValidator
 > {

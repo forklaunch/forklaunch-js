@@ -1098,6 +1098,12 @@ pub(crate) fn add_service_definition_to_docker_compose(
             "http://localhost:3001".to_string(),
         );
     }
+    if manifest_data.is_stripe {
+        environment.insert(
+            "STRIPE_API_KEY".to_string(),
+            "replace-with-stripe-api-key".to_string(),
+        );
+    }
 
     if manifest_data.is_cache_enabled {
         add_redis_to_docker_compose(

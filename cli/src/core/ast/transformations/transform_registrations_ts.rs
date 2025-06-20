@@ -10,7 +10,10 @@ use crate::{
     constants::WorkerType,
     core::{
         ast::{
-            deletions::delete_from_registrations_ts::delete_from_registrations_ts_worker_type,
+            deletions::delete_from_registrations_ts::{
+                delete_from_registration_schema_validators,
+                delete_from_registrations_ts_worker_type,
+            },
             infrastructure::{
                 database::database_entity_manager_runtime_dependency,
                 kafka::kafka_url_environment_variable,
@@ -381,4 +384,21 @@ pub(crate) fn transform_registrations_ts_worker_type(
         .with_options(CodegenOptions::default())
         .build(&registration_program)
         .code)
+}
+
+pub(crate) fn transform_registration_schema_ejection(content: &str) -> String {
+    let allocator = Allocator::default();
+    let source_type = SourceType::ts();
+
+    let mut program =
+        crate::core::ast::parse_ast_program::parse_ast_program(&allocator, content, source_type);
+
+    delete_from_registration_schema_validators(&allocator, &mut program);
+
+    let codegen_options = CodegenOptions::default();
+    let result = CodeGenerator::new()
+        .with_options(codegen_options)
+        .build(&program);
+
+    result.code
 }

@@ -1,5 +1,53 @@
 # @forklaunch/infrastructure-s3
 
+## 0.0.29
+
+### Patch Changes
+
+- change dtoMapper to Mapper
+- Updated dependencies
+  - @forklaunch/common@0.3.14
+  - @forklaunch/core@0.9.21
+
+## 0.0.28
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.9.20
+
+## 0.0.27
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.9.19
+
+## 0.0.26
+
+### Patch Changes
+
+- create internal package for internal utilities
+- Updated dependencies
+  - @forklaunch/common@0.3.13
+  - @forklaunch/core@0.9.18
+
+## 0.0.25
+
+### Patch Changes
+
+- bump package subdependencies
+- Updated dependencies
+  - @forklaunch/common@0.3.12
+  - @forklaunch/core@0.9.17
+
+## 0.0.24
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.9.16
+
 ## 0.0.23
 
 ### Patch Changes

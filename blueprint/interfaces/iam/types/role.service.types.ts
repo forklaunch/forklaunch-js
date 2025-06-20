@@ -1,14 +1,14 @@
 import { IdDto, IdsDto, RecordTimingDto } from '@forklaunch/common';
 import { PermissionDto } from './permission.service.types';
 
-export type CreateRoleDto = {
+export type CreateRoleDto = Partial<IdDto> & {
   name: string;
-  permissionsIds?: PermissionDto[];
-  extraFields?: unknown;
+  permissionIds?: string[];
+  providerFields?: unknown;
 };
-export type UpdateRoleDto = IdDto & Partial<CreateRoleDto>;
-export type RoleDto = IdDto &
-  Omit<CreateRoleDto, 'permissionsIds'> &
+export type UpdateRoleDto = Partial<CreateRoleDto> & IdDto;
+export type RoleDto = Omit<CreateRoleDto, 'permissionIds'> &
+  IdDto &
   Partial<RecordTimingDto> & {
     permissions: PermissionDto[];
   };

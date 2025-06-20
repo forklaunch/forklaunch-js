@@ -1,23 +1,27 @@
 import { IdDto, IdsDto, RecordTimingDto } from '@forklaunch/common';
 
-export type CreateSubscriptionDto<PartyType, BillingProviderType> = {
-  partyId: string;
-  partyType: PartyType[keyof PartyType];
-  description?: string;
-  active: boolean;
-  productId: string;
-  extraFields?: unknown;
-  externalId: string;
-  billingProvider?: BillingProviderType[keyof BillingProviderType];
-  startDate: Date;
-  endDate: Date;
-  status: string;
-};
-export type UpdateSubscriptionDto<PartyType, BillingProviderType> = IdDto &
-  Partial<CreateSubscriptionDto<PartyType, BillingProviderType>>;
-export type SubscriptionDto<PartyType, BillingProviderType> = IdDto &
+export type CreateSubscriptionDto<PartyType, BillingProviderType> =
+  Partial<IdDto> & {
+    partyId: string;
+    partyType: PartyType[keyof PartyType];
+    description?: string;
+    active: boolean;
+    productId: string;
+    providerFields?: unknown;
+    externalId: string;
+    billingProvider?: BillingProviderType[keyof BillingProviderType];
+    startDate: Date;
+    endDate?: Date;
+    status: string;
+  };
+export type UpdateSubscriptionDto<PartyType, BillingProviderType> = Partial<
+  CreateSubscriptionDto<PartyType, BillingProviderType>
+> &
+  IdDto;
+export type SubscriptionDto<PartyType, BillingProviderType> =
   CreateSubscriptionDto<PartyType, BillingProviderType> &
-  Partial<RecordTimingDto>;
+    IdDto &
+    Partial<RecordTimingDto>;
 
 export type SubscriptionServiceParameters<PartyType, BillingProviderType> = {
   CreateSubscriptionDto: CreateSubscriptionDto<PartyType, BillingProviderType>;

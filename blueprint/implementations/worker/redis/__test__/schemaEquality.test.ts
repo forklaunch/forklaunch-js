@@ -1,13 +1,14 @@
 import { isTrue } from '@forklaunch/common';
-import { testSchemaEquality } from '@forklaunch/core/test';
-import { RedisWorkerOptionsSchema as TypeboxRedisWorkerOptionsSchema } from '../schemas/typebox/redisWorker.schema';
-import { RedisWorkerOptionsSchema as ZodRedisWorkerOptionsSchema } from '../schemas/zod/redisWorker.schema';
+import { testSchemaEquality } from '@forklaunch/internal';
+import { RedisWorkerOptionsSchema as TypeboxRedisWorkerOptionsSchema } from '../domain/schemas/typebox/redisWorker.schema';
+import { RedisWorkerOptionsSchema as ZodRedisWorkerOptionsSchema } from '../domain/schemas/zod/redisWorker.schema';
+import { RedisWorkerOptions } from '../domain/types/redisWorker.types';
 
 describe('schema equality', () => {
   it('should be equal for bullmq worker', () => {
     expect(
       isTrue(
-        testSchemaEquality(
+        testSchemaEquality<RedisWorkerOptions>()(
           ZodRedisWorkerOptionsSchema,
           TypeboxRedisWorkerOptionsSchema,
           {

@@ -1,0 +1,91 @@
+{
+  "data": {
+    "_id": 3000,
+    "properties": {
+      "customerId": {
+        "name": "customerId",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "string",
+        "array": false,
+        "runtimeType": "string"
+      },
+      "paymentMethods": {
+        "name": "paymentMethods",
+        "kind": "scalar",
+        "enum": false,
+        "items": [
+          "ach",
+          "credit_card",
+          "debit_card",
+          "wire",
+          "apple_pay",
+          "google_pay",
+          "paypal"
+        ],
+        "type": "PaymentMethodEnum[]",
+        "array": true,
+        "runtimeType": "PaymentMethodEnum[]"
+      },
+      "metadata": {
+        "name": "metadata",
+        "kind": "scalar",
+        "type": "json",
+        "nullable": true,
+        "getter": false,
+        "setter": false,
+        "array": false,
+        "runtimeType": "unknown",
+        "optional": true
+      },
+      "successRedirectUri": {
+        "name": "successRedirectUri",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "string",
+        "array": false,
+        "runtimeType": "string"
+      },
+      "cancelRedirectUri": {
+        "name": "cancelRedirectUri",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "string",
+        "array": false,
+        "runtimeType": "string"
+      },
+      "extraFields": {
+        "name": "extraFields",
+        "kind": "scalar",
+        "type": "json",
+        "nullable": true,
+        "getter": false,
+        "setter": false,
+        "array": false,
+        "runtimeType": "unknown",
+        "optional": true
+      }
+    },
+    "primaryKeys": [],
+    "filters": {},
+    "hooks": {},
+    "indexes": [],
+    "uniques": [],
+    "className": "CheckoutSession",
+    "path": "./persistence/entities/checkoutSession.entity.ts",
+    "name": "CheckoutSession",
+    "abstract": false,
+    "internal": true,
+    "constructorParams": [],
+    "toJsonParams": [],
+    "extends": "SqlBaseEntity",
+    "useCache": true,
+    "collection": "checkout_session"
+  },
+  "origin": "./persistence/entities/checkoutSession.entity.ts",
+  "hash": "ed2c2ed402b823af0277a46975025e3d",
+  "version": "6.4.16"
+}

@@ -1,26 +1,42 @@
 import { IdDto, IdsDto, RecordTimingDto } from '@forklaunch/common';
 
-export type CreatePlanDto<PlanCadenceEnum, BillingProviderEnum> = {
-  active: boolean;
-  name: string;
-  description?: string;
-  price: number;
-  cadence: PlanCadenceEnum[keyof PlanCadenceEnum];
-  features?: string[];
-  extraFields?: unknown;
-  externalId: string;
-  billingProvider?: BillingProviderEnum[keyof BillingProviderEnum];
-};
-export type UpdatePlanDto<PlanCadenceEnum, BillingProviderEnum> = IdDto &
-  Partial<CreatePlanDto<PlanCadenceEnum, BillingProviderEnum>>;
-export type PlanDto<PlanCadenceEnum, BillingProviderEnum> = IdDto &
-  CreatePlanDto<PlanCadenceEnum, BillingProviderEnum> &
-  Partial<RecordTimingDto>;
+export type CreatePlanDto<PlanCadenceEnum, CurrencyEnum, BillingProviderEnum> =
+  Partial<IdDto> & {
+    active: boolean;
+    name: string;
+    description?: string;
+    price: number;
+    currency: CurrencyEnum[keyof CurrencyEnum];
+    cadence: PlanCadenceEnum[keyof PlanCadenceEnum];
+    features?: string[];
+    providerFields?: unknown;
+    externalId: string;
+    billingProvider?: BillingProviderEnum[keyof BillingProviderEnum];
+  };
+export type UpdatePlanDto<PlanCadenceEnum, CurrencyEnum, BillingProviderEnum> =
+  Partial<CreatePlanDto<PlanCadenceEnum, CurrencyEnum, BillingProviderEnum>> &
+    IdDto;
+export type PlanDto<PlanCadenceEnum, CurrencyEnum, BillingProviderEnum> =
+  CreatePlanDto<PlanCadenceEnum, CurrencyEnum, BillingProviderEnum> &
+    IdDto &
+    Partial<RecordTimingDto>;
 
-export type PlanServiceParameters<PlanCadenceEnum, BillingProviderEnum> = {
-  CreatePlanDto: CreatePlanDto<PlanCadenceEnum, BillingProviderEnum>;
-  UpdatePlanDto: UpdatePlanDto<PlanCadenceEnum, BillingProviderEnum>;
-  PlanDto: PlanDto<PlanCadenceEnum, BillingProviderEnum>;
+export type PlanServiceParameters<
+  PlanCadenceEnum,
+  CurrencyEnum,
+  BillingProviderEnum
+> = {
+  CreatePlanDto: CreatePlanDto<
+    PlanCadenceEnum,
+    CurrencyEnum,
+    BillingProviderEnum
+  >;
+  UpdatePlanDto: UpdatePlanDto<
+    PlanCadenceEnum,
+    CurrencyEnum,
+    BillingProviderEnum
+  >;
+  PlanDto: PlanDto<PlanCadenceEnum, CurrencyEnum, BillingProviderEnum>;
   IdDto: IdDto;
   IdsDto: IdsDto;
 };

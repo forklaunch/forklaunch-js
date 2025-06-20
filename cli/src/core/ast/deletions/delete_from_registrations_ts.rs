@@ -2,9 +2,12 @@ use std::{collections::HashSet, fs::read_to_string, path::Path};
 
 use anyhow::Result;
 use oxc_allocator::{Allocator, CloneIn, Vec};
-use oxc_ast::ast::{
-    Argument, BindingPatternKind, Declaration, Expression, ObjectPropertyKind, Program,
-    PropertyKey, SourceType, Statement,
+use oxc_ast::{
+    VisitMut,
+    ast::{
+        Argument, BindingPatternKind, Declaration, Expression, ObjectPropertyKind, Program,
+        PropertyKey, SourceType, Statement, VariableDeclarator,
+    },
 };
 use oxc_codegen::{CodeGenerator, CodegenOptions};
 
@@ -307,4 +310,51 @@ pub(crate) fn delete_from_registrations_ts_config_injector<'a>(
         .with_options(CodegenOptions::default())
         .build(&registrations_program)
         .code)
+}
+
+pub(crate) fn delete_from_registration_schema_validators<'a>(
+    allocator: &'a Allocator,
+    program: &mut Program<'a>,
+) {
+    struct ValidatorRemover<'a> {
+        allocator: &'a Allocator,
+    }
+
+    impl<'a> VisitMut<'a> for ValidatorRemover<'a> {
+        fn visit_variable_declarator(&mut self, declarator: &mut VariableDeclarator<'a>) {
+            if let Some(Expression::CallExpression(call_expr)) = &mut declarator.init {
+                if let Some(first_arg) = call_expr.arguments.first_mut() {
+                    if let Argument::ObjectExpression(obj_expr) = first_arg {
+                        obj_expr.properties.retain(|prop| match prop {
+                            ObjectPropertyKind::ObjectProperty(obj_prop) => match &obj_prop.key {
+                                PropertyKey::StaticIdentifier(ident) => ident.name != "validator",
+                                PropertyKey::StringLiteral(str_lit) => str_lit.value != "validator",
+                                _ => true,
+                            },
+                            _ => true,
+                        });
+
+                        if obj_expr.properties.is_empty() {
+                            call_expr.arguments.clear();
+                            declarator.init = Some(call_expr.callee.clone_in(self.allocator));
+                        }
+                    }
+                }
+            }
+
+            self.visit_variable_declarator_impl(declarator);
+        }
+    }
+
+    impl<'a> ValidatorRemover<'a> {
+        fn visit_variable_declarator_impl(&mut self, declarator: &mut VariableDeclarator<'a>) {
+            self.visit_binding_pattern(&mut declarator.id);
+            if let Some(init) = &mut declarator.init {
+                self.visit_expression(init);
+            }
+        }
+    }
+
+    let mut visitor = ValidatorRemover { allocator };
+    visitor.visit_program(program);
 }

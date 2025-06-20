@@ -5,7 +5,7 @@ import {
   WorkerProcessFunction
 } from '@forklaunch/interfaces-worker/types';
 import { BaseEntity, EntityManager, EntityName } from '@mikro-orm/core';
-import { DatabaseWorkerOptions } from '../types/databaseWorker.types';
+import { DatabaseWorkerOptions } from '../domain/types/databaseWorker.types';
 
 export class DatabaseWorkerConsumer<
   EventEntity extends WorkerEventEntity & BaseEntity,

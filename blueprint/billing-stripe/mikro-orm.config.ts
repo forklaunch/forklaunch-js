@@ -1,0 +1,1 @@
+../billing-base/mikro-orm.config.ts

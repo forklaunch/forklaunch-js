@@ -5,69 +5,27 @@ import {
   OpenTelemetryCollector,
   TelemetryOptions
 } from '@forklaunch/core/http';
-import {
-  InternalDtoMapper,
-  RequestDtoMapperConstructor,
-  ResponseDtoMapperConstructor,
-  transformIntoInternalDtoMapper
-} from '@forklaunch/core/mappers';
-import { MapNestedDtoArraysToCollections } from '@forklaunch/core/services';
 import { OrganizationService } from '@forklaunch/interfaces-iam/interfaces';
 import {
-  CreateOrganizationDto,
-  OrganizationDto,
-  UpdateOrganizationDto
-} from '@forklaunch/interfaces-iam/types';
+  InternalMapper,
+  RequestMapperConstructor,
+  ResponseMapperConstructor,
+  transformIntoInternalMapper
+} from '@forklaunch/internal';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
+import { OrganizationDtos } from '../domain/types/iamDto.types';
+import { OrganizationEntities } from '../domain/types/iamEntities.types';
 
 export class BaseOrganizationService<
   SchemaValidator extends AnySchemaValidator,
   OrganizationStatus,
-  Metrics extends MetricsDefinition = MetricsDefinition,
-  Dto extends {
-    OrganizationDtoMapper: OrganizationDto<OrganizationStatus>;
-    CreateOrganizationDtoMapper: CreateOrganizationDto;
-    UpdateOrganizationDtoMapper: UpdateOrganizationDto;
-  } = {
-    OrganizationDtoMapper: OrganizationDto<OrganizationStatus>;
-    CreateOrganizationDtoMapper: CreateOrganizationDto;
-    UpdateOrganizationDtoMapper: UpdateOrganizationDto;
-  },
-  Entities extends {
-    OrganizationDtoMapper: MapNestedDtoArraysToCollections<
-      OrganizationDto<OrganizationStatus>,
-      'users'
-    >;
-    CreateOrganizationDtoMapper: MapNestedDtoArraysToCollections<
-      OrganizationDto<OrganizationStatus>,
-      'users'
-    >;
-    UpdateOrganizationDtoMapper: MapNestedDtoArraysToCollections<
-      OrganizationDto<OrganizationStatus>,
-      'users'
-    >;
-  } = {
-    OrganizationDtoMapper: MapNestedDtoArraysToCollections<
-      OrganizationDto<OrganizationStatus>,
-      'users'
-    >;
-    CreateOrganizationDtoMapper: MapNestedDtoArraysToCollections<
-      OrganizationDto<OrganizationStatus>,
-      'users'
-    >;
-    UpdateOrganizationDtoMapper: MapNestedDtoArraysToCollections<
-      OrganizationDto<OrganizationStatus>,
-      'users'
-    >;
-  }
+  MapperEntities extends OrganizationEntities<OrganizationStatus>,
+  MapperDtos extends
+    OrganizationDtos<OrganizationStatus> = OrganizationDtos<OrganizationStatus>
 > implements OrganizationService<OrganizationStatus>
 {
-  #mappers: InternalDtoMapper<
-    InstanceTypeRecord<typeof this.mappers>,
-    Entities,
-    Dto
-  >;
+  protected _mappers: InternalMapper<InstanceTypeRecord<typeof this.mappers>>;
   private evaluatedTelemetryOptions: {
     logging?: boolean;
     metrics?: boolean;
@@ -76,30 +34,38 @@ export class BaseOrganizationService<
 
   constructor(
     public em: EntityManager,
-    protected openTelemetryCollector: OpenTelemetryCollector<Metrics>,
+    protected openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
     protected schemaValidator: SchemaValidator,
     protected mappers: {
-      OrganizationDtoMapper: ResponseDtoMapperConstructor<
+      OrganizationMapper: ResponseMapperConstructor<
         SchemaValidator,
-        Dto['OrganizationDtoMapper'],
-        Entities['OrganizationDtoMapper']
+        MapperDtos['OrganizationMapper'],
+        MapperEntities['OrganizationMapper']
       >;
-      CreateOrganizationDtoMapper: RequestDtoMapperConstructor<
+      CreateOrganizationMapper: RequestMapperConstructor<
         SchemaValidator,
-        Dto['CreateOrganizationDtoMapper'],
-        Entities['CreateOrganizationDtoMapper']
+        MapperDtos['CreateOrganizationMapper'],
+        MapperEntities['CreateOrganizationMapper'],
+        (
+          dto: MapperDtos['CreateOrganizationMapper'],
+          em: EntityManager
+        ) => Promise<MapperEntities['CreateOrganizationMapper']>
       >;
-      UpdateOrganizationDtoMapper: RequestDtoMapperConstructor<
+      UpdateOrganizationMapper: RequestMapperConstructor<
         SchemaValidator,
-        Dto['UpdateOrganizationDtoMapper'],
-        Entities['UpdateOrganizationDtoMapper']
+        MapperDtos['UpdateOrganizationMapper'],
+        MapperEntities['UpdateOrganizationMapper'],
+        (
+          dto: MapperDtos['UpdateOrganizationMapper'],
+          em: EntityManager
+        ) => Promise<MapperEntities['UpdateOrganizationMapper']>
       >;
     },
     options?: {
       telemetry?: TelemetryOptions;
     }
   ) {
-    this.#mappers = transformIntoInternalDtoMapper(mappers, schemaValidator);
+    this._mappers = transformIntoInternalMapper(mappers, schemaValidator);
     this.evaluatedTelemetryOptions = options?.telemetry
       ? evaluateTelemetryOptions(options.telemetry).enabled
       : {
@@ -110,9 +76,9 @@ export class BaseOrganizationService<
   }
 
   async createOrganization(
-    organizationDto: Dto['CreateOrganizationDtoMapper'],
+    organizationDto: MapperDtos['CreateOrganizationMapper'],
     em?: EntityManager
-  ): Promise<Dto['OrganizationDtoMapper']> {
+  ): Promise<MapperDtos['OrganizationMapper']> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info(
         'Creating organization',
@@ -121,7 +87,7 @@ export class BaseOrganizationService<
     }
 
     const organization =
-      await this.#mappers.CreateOrganizationDtoMapper.deserializeDtoToEntity(
+      await this._mappers.CreateOrganizationMapper.deserializeDtoToEntity(
         organizationDto,
         em ?? this.em
       );
@@ -132,15 +98,13 @@ export class BaseOrganizationService<
       await this.em.persistAndFlush(organization);
     }
 
-    return this.#mappers.OrganizationDtoMapper.serializeEntityToDto(
-      organization
-    );
+    return this._mappers.OrganizationMapper.serializeEntityToDto(organization);
   }
 
   async getOrganization(
     idDto: IdDto,
     em?: EntityManager
-  ): Promise<Dto['OrganizationDtoMapper']> {
+  ): Promise<MapperDtos['OrganizationMapper']> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info('Getting organization', idDto);
     }
@@ -150,15 +114,15 @@ export class BaseOrganizationService<
       idDto
     );
 
-    return this.#mappers.OrganizationDtoMapper.serializeEntityToDto(
-      organization as Entities['OrganizationDtoMapper']
+    return this._mappers.OrganizationMapper.serializeEntityToDto(
+      organization as MapperEntities['OrganizationMapper']
     );
   }
 
   async updateOrganization(
-    organizationDto: Dto['UpdateOrganizationDtoMapper'],
+    organizationDto: MapperDtos['UpdateOrganizationMapper'],
     em?: EntityManager
-  ): Promise<Dto['OrganizationDtoMapper']> {
+  ): Promise<MapperDtos['OrganizationMapper']> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info(
         'Updating organization',
@@ -167,7 +131,7 @@ export class BaseOrganizationService<
     }
 
     const updatedOrganization =
-      await this.#mappers.UpdateOrganizationDtoMapper.deserializeDtoToEntity(
+      await this._mappers.UpdateOrganizationMapper.deserializeDtoToEntity(
         organizationDto,
         em ?? this.em
       );
@@ -178,7 +142,7 @@ export class BaseOrganizationService<
       await this.em.persistAndFlush(updatedOrganization);
     }
 
-    return this.#mappers.OrganizationDtoMapper.serializeEntityToDto(
+    return this._mappers.OrganizationMapper.serializeEntityToDto(
       updatedOrganization
     );
   }

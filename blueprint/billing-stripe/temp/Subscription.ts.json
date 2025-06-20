@@ -1,0 +1,129 @@
+{
+  "data": {
+    "_id": 6000,
+    "properties": {
+      "partyId": {
+        "name": "partyId",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "string",
+        "array": false,
+        "runtimeType": "string"
+      },
+      "partyType": {
+        "name": "partyType",
+        "kind": "scalar",
+        "enum": true,
+        "items": ["user", "organization"],
+        "type": "PartyEnum",
+        "array": false,
+        "runtimeType": "PartyEnum"
+      },
+      "description": {
+        "name": "description",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "string",
+        "array": false,
+        "runtimeType": "string",
+        "optional": true
+      },
+      "active": {
+        "name": "active",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "boolean",
+        "array": false,
+        "runtimeType": "boolean"
+      },
+      "productId": {
+        "name": "productId",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "string",
+        "array": false,
+        "runtimeType": "string"
+      },
+      "extraFields": {
+        "name": "extraFields",
+        "kind": "scalar",
+        "type": "json",
+        "nullable": true,
+        "getter": false,
+        "setter": false,
+        "array": false,
+        "runtimeType": "unknown",
+        "optional": true
+      },
+      "externalId": {
+        "name": "externalId",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "string",
+        "array": false,
+        "runtimeType": "string"
+      },
+      "billingProvider": {
+        "name": "billingProvider",
+        "kind": "scalar",
+        "enum": true,
+        "items": ["none", "stripe", "adyen"],
+        "nullable": true,
+        "type": "BillingProviderEnum",
+        "array": false,
+        "runtimeType": "BillingProviderEnum",
+        "optional": true
+      },
+      "startDate": {
+        "name": "startDate",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "Date",
+        "array": false,
+        "runtimeType": "Date"
+      },
+      "endDate": {
+        "name": "endDate",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "Date",
+        "array": false,
+        "runtimeType": "Date"
+      },
+      "status": {
+        "name": "status",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "string",
+        "array": false,
+        "runtimeType": "string"
+      }
+    },
+    "primaryKeys": [],
+    "filters": {},
+    "hooks": {},
+    "indexes": [],
+    "uniques": [{ "properties": "externalId" }],
+    "className": "Subscription",
+    "path": "./persistence/entities/subscription.entity.ts",
+    "name": "Subscription",
+    "abstract": false,
+    "internal": true,
+    "constructorParams": [],
+    "toJsonParams": [],
+    "extends": "SqlBaseEntity",
+    "useCache": true,
+    "collection": "subscription"
+  },
+  "origin": "./persistence/entities/subscription.entity.ts",
+  "hash": "c2f8e410a1ff64519ef4ce50abb1f22d",
+  "version": "6.4.16"
+}

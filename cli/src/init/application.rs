@@ -814,12 +814,15 @@ impl CliCommand for ApplicationCommand {
 
                 is_iam: template_dir.module_id == Some(Module::BaseIam)
                     || template_dir.module_id == Some(Module::BetterAuthIam),
-                is_billing: template_dir.module_id == Some(Module::BaseBilling),
-                is_cache_enabled: template_dir.module_id == Some(Module::BaseBilling),
+                is_billing: template_dir.module_id == Some(Module::BaseBilling)
+                    || template_dir.module_id == Some(Module::StripeBilling),
+                is_cache_enabled: template_dir.module_id == Some(Module::BaseBilling)
+                    || template_dir.module_id == Some(Module::StripeBilling),
                 is_s3_enabled: false,
                 is_database_enabled: true,
 
                 is_better_auth: template_dir.module_id == Some(Module::BetterAuthIam),
+                is_stripe: template_dir.module_id == Some(Module::StripeBilling),
             };
 
             if service_data.service_name == "universal-sdk" {

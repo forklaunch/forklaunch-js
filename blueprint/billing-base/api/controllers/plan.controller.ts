@@ -12,11 +12,12 @@ import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { PlanService } from '@forklaunch/interfaces-billing/interfaces';
 import { BillingProviderEnum } from '../../domain/enum/billingProvider.enum';
+import { CurrencyEnum } from '../../domain/enum/currency.enum';
 import { PlanCadenceEnum } from '../../domain/enum/planCadence.enum';
 import {
-  CreatePlanDtoMapper,
-  PlanDtoMapper,
-  UpdatePlanDtoMapper
+  CreatePlanMapper,
+  PlanMapper,
+  UpdatePlanMapper
 } from '../../domain/mappers/plan.mappers';
 import { PlanSchemas, SchemaDependencies } from '../../registrations';
 
@@ -35,9 +36,9 @@ export const PlanController = (
       {
         name: 'createPlan',
         summary: 'Create a plan',
-        body: CreatePlanDtoMapper.schema(),
+        body: CreatePlanMapper.schema(),
         responses: {
-          200: PlanDtoMapper.schema()
+          200: PlanMapper.schema()
         }
       },
       async (req, res) => {
@@ -54,7 +55,11 @@ export const PlanController = (
         summary: 'Get a plan',
         params: IdSchema,
         responses: {
-          200: PlanSchemas.PlanSchema(PlanCadenceEnum, BillingProviderEnum)
+          200: PlanSchemas.PlanSchema(
+            PlanCadenceEnum,
+            CurrencyEnum,
+            BillingProviderEnum
+          )
         }
       },
       async (req, res) => {
@@ -69,9 +74,9 @@ export const PlanController = (
       {
         name: 'updatePlan',
         summary: 'Update a plan',
-        body: UpdatePlanDtoMapper.schema(),
+        body: UpdatePlanMapper.schema(),
         responses: {
-          200: PlanDtoMapper.schema()
+          200: PlanMapper.schema()
         }
       },
       async (req, res) => {
@@ -107,7 +112,11 @@ export const PlanController = (
         query: IdsSchema,
         responses: {
           200: array(
-            PlanSchemas.PlanSchema(PlanCadenceEnum, BillingProviderEnum)
+            PlanSchemas.PlanSchema(
+              PlanCadenceEnum,
+              CurrencyEnum,
+              BillingProviderEnum
+            )
           )
         }
       },
@@ -117,5 +126,9 @@ export const PlanController = (
       }
     )
   }) satisfies Controller<
-    PlanService<typeof PlanCadenceEnum, typeof BillingProviderEnum>
+    PlanService<
+      typeof PlanCadenceEnum,
+      typeof CurrencyEnum,
+      typeof BillingProviderEnum
+    >
   >;

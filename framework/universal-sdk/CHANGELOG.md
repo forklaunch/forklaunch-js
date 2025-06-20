@@ -1,5 +1,29 @@
 # @forklaunch/universal-sdk
 
+## 0.3.16
+
+### Patch Changes
+
+- change dtoMapper to Mapper
+- Updated dependencies
+  - @forklaunch/common@0.3.14
+
+## 0.3.15
+
+### Patch Changes
+
+- create internal package for internal utilities
+- Updated dependencies
+  - @forklaunch/common@0.3.13
+
+## 0.3.14
+
+### Patch Changes
+
+- bump package subdependencies
+- Updated dependencies
+  - @forklaunch/common@0.3.12
+
 ## 0.3.13
 
 ### Patch Changes

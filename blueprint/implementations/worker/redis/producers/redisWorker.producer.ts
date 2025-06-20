@@ -1,7 +1,7 @@
 import { TtlCache } from '@forklaunch/core/cache';
 import { WorkerProducer } from '@forklaunch/interfaces-worker/interfaces';
 import { WorkerEventEntity } from '@forklaunch/interfaces-worker/types';
-import { RedisWorkerOptions } from '../types/redisWorker.types';
+import { RedisWorkerOptions } from '../domain/types/redisWorker.types';
 
 export class RedisWorkerProducer<
   EventEntity extends WorkerEventEntity,

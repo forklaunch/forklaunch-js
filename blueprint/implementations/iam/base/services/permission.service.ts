@@ -11,59 +11,23 @@ import {
   TelemetryOptions
 } from '@forklaunch/core/http';
 import {
-  InternalDtoMapper,
-  RequestDtoMapperConstructor,
-  ResponseDtoMapperConstructor,
-  transformIntoInternalDtoMapper
-} from '@forklaunch/core/mappers';
-import { MapNestedDtoArraysToCollections } from '@forklaunch/core/services';
-import {
-  CreatePermissionDto,
-  PermissionDto,
-  UpdatePermissionDto,
-  UpdateRoleDto
-} from '@forklaunch/interfaces-iam/types';
+  InternalMapper,
+  RequestMapperConstructor,
+  ResponseMapperConstructor,
+  transformIntoInternalMapper
+} from '@forklaunch/internal';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
+import { PermissionDtos } from '../domain/types/iamDto.types';
+import { PermissionEntities } from '../domain/types/iamEntities.types';
 
 export class BasePermissionService<
   SchemaValidator extends AnySchemaValidator,
-  Metrics extends MetricsDefinition = MetricsDefinition,
-  Dto extends {
-    PermissionDtoMapper: PermissionDto;
-    CreatePermissionDtoMapper: CreatePermissionDto;
-    UpdatePermissionDtoMapper: UpdatePermissionDto;
-    RoleEntityMapper: UpdateRoleDto;
-  } = {
-    PermissionDtoMapper: PermissionDto;
-    CreatePermissionDtoMapper: CreatePermissionDto;
-    UpdatePermissionDtoMapper: UpdatePermissionDto;
-    RoleEntityMapper: UpdateRoleDto;
-  },
-  Entities extends {
-    PermissionDtoMapper: PermissionDto;
-    CreatePermissionDtoMapper: PermissionDto;
-    UpdatePermissionDtoMapper: PermissionDto;
-    RoleEntityMapper: MapNestedDtoArraysToCollections<
-      UpdateRoleDto,
-      'permissions'
-    >;
-  } = {
-    PermissionDtoMapper: PermissionDto;
-    CreatePermissionDtoMapper: PermissionDto;
-    UpdatePermissionDtoMapper: PermissionDto;
-    RoleEntityMapper: MapNestedDtoArraysToCollections<
-      UpdateRoleDto,
-      'permissions'
-    >;
-  }
+  MapperEntities extends PermissionEntities,
+  MapperDto extends PermissionDtos = PermissionDtos
 > implements PermissionService
 {
-  #mappers: InternalDtoMapper<
-    InstanceTypeRecord<typeof this.mappers>,
-    Entities,
-    Dto
-  >;
+  protected _mappers: InternalMapper<InstanceTypeRecord<typeof this.mappers>>;
   private evaluatedTelemetryOptions: {
     logging?: boolean;
     metrics?: boolean;
@@ -73,35 +37,47 @@ export class BasePermissionService<
   constructor(
     public em: EntityManager,
     protected roleServiceFactory: () => RoleService,
-    protected openTelemetryCollector: OpenTelemetryCollector<Metrics>,
+    protected openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
     protected schemaValidator: SchemaValidator,
     protected mappers: {
-      PermissionDtoMapper: ResponseDtoMapperConstructor<
+      PermissionMapper: ResponseMapperConstructor<
         SchemaValidator,
-        Dto['PermissionDtoMapper'],
-        Entities['PermissionDtoMapper']
+        MapperDto['PermissionMapper'],
+        MapperEntities['PermissionMapper']
       >;
-      CreatePermissionDtoMapper: RequestDtoMapperConstructor<
+      CreatePermissionMapper: RequestMapperConstructor<
         SchemaValidator,
-        Dto['CreatePermissionDtoMapper'],
-        Entities['CreatePermissionDtoMapper']
+        MapperDto['CreatePermissionMapper'],
+        MapperEntities['CreatePermissionMapper'],
+        (
+          dto: MapperDto['CreatePermissionMapper'],
+          em: EntityManager
+        ) => Promise<MapperEntities['CreatePermissionMapper']>
       >;
-      UpdatePermissionDtoMapper: RequestDtoMapperConstructor<
+      UpdatePermissionMapper: RequestMapperConstructor<
         SchemaValidator,
-        Dto['UpdatePermissionDtoMapper'],
-        Entities['UpdatePermissionDtoMapper']
+        MapperDto['UpdatePermissionMapper'],
+        MapperEntities['UpdatePermissionMapper'],
+        (
+          dto: MapperDto['UpdatePermissionMapper'],
+          em: EntityManager
+        ) => Promise<MapperEntities['UpdatePermissionMapper']>
       >;
-      RoleEntityMapper: RequestDtoMapperConstructor<
+      RoleEntityMapper: RequestMapperConstructor<
         SchemaValidator,
-        Dto['RoleEntityMapper'],
-        Entities['RoleEntityMapper']
+        MapperDto['RoleEntityMapper'],
+        MapperEntities['RoleEntityMapper'],
+        (
+          dto: MapperDto['RoleEntityMapper'],
+          em: EntityManager
+        ) => Promise<MapperEntities['RoleEntityMapper']>
       >;
     },
     options?: {
       telemetry?: TelemetryOptions;
     }
   ) {
-    this.#mappers = transformIntoInternalDtoMapper(mappers, schemaValidator);
+    this._mappers = transformIntoInternalMapper(mappers, schemaValidator);
     this.evaluatedTelemetryOptions = options?.telemetry
       ? evaluateTelemetryOptions(options.telemetry).enabled
       : {
@@ -113,9 +89,9 @@ export class BasePermissionService<
 
   // start: global helper functions
   private async updateRolesWithPermissions(
-    roles: Entities['RoleEntityMapper'][],
-    permissions: Entities['PermissionDtoMapper'][]
-  ): Promise<Entities['RoleEntityMapper'][]> {
+    roles: MapperEntities['RoleEntityMapper'][],
+    permissions: MapperEntities['PermissionMapper'][]
+  ): Promise<MapperEntities['RoleEntityMapper'][]> {
     return Promise.all(
       roles.map(async (role) => {
         permissions.forEach((permission) => role.permissions.add(permission));
@@ -125,9 +101,9 @@ export class BasePermissionService<
   }
 
   private async removePermissionsFromRoles(
-    roles: Entities['RoleEntityMapper'][],
-    permissions: Entities['PermissionDtoMapper'][]
-  ): Promise<Entities['RoleEntityMapper'][]> {
+    roles: MapperEntities['RoleEntityMapper'][],
+    permissions: MapperEntities['PermissionMapper'][]
+  ): Promise<MapperEntities['RoleEntityMapper'][]> {
     return Promise.all(
       roles.map(async (role) => {
         permissions.forEach((permission) =>
@@ -141,13 +117,13 @@ export class BasePermissionService<
   private async getBatchRoles(
     roleIds?: IdsDto,
     em?: EntityManager
-  ): Promise<Entities['RoleEntityMapper'][]> {
+  ): Promise<MapperEntities['RoleEntityMapper'][]> {
     return roleIds
       ? await Promise.all(
           (await this.roleServiceFactory().getBatchRoles(roleIds, em)).map(
             async (role) => {
               return (em ?? this.em).merge(
-                await this.#mappers.RoleEntityMapper.deserializeDtoToEntity(
+                await this._mappers.RoleEntityMapper.deserializeDtoToEntity(
                   role,
                   em ?? this.em
                 )
@@ -164,13 +140,13 @@ export class BasePermissionService<
     permission,
     addToRoles
   }: {
-    permission: Entities['PermissionDtoMapper'];
-    addToRoles: Entities['RoleEntityMapper'][];
+    permission: MapperEntities['PermissionMapper'];
+    addToRoles: MapperEntities['RoleEntityMapper'][];
   }): Promise<{
-    permission: Entities['PermissionDtoMapper'];
-    roles: Entities['RoleEntityMapper'][];
+    permission: MapperEntities['PermissionMapper'];
+    roles: MapperEntities['RoleEntityMapper'][];
   }> {
-    let roles: Entities['RoleEntityMapper'][] = [];
+    let roles: MapperEntities['RoleEntityMapper'][] = [];
     if (addToRoles) {
       roles = await this.updateRolesWithPermissions(addToRoles, [permission]);
     }
@@ -179,15 +155,15 @@ export class BasePermissionService<
   }
 
   private async extractCreatePermissionDtoToEntityData(
-    permissionDto: Dto['CreatePermissionDtoMapper'],
+    permissionDto: MapperDto['CreatePermissionMapper'],
     em?: EntityManager
   ): Promise<{
-    permission: Entities['PermissionDtoMapper'];
-    addToRoles: Entities['RoleEntityMapper'][];
+    permission: MapperEntities['PermissionMapper'];
+    addToRoles: MapperEntities['RoleEntityMapper'][];
   }> {
     return {
       permission: (em ?? this.em).merge(
-        await this.#mappers.CreatePermissionDtoMapper.deserializeDtoToEntity(
+        await this._mappers.CreatePermissionMapper.deserializeDtoToEntity(
           permissionDto,
           em ?? this.em
         )
@@ -200,9 +176,9 @@ export class BasePermissionService<
   // end: createPermission helper functions
 
   async createPermission(
-    createPermissionDto: Dto['CreatePermissionDtoMapper'],
+    createPermissionDto: MapperDto['CreatePermissionMapper'],
     em?: EntityManager
-  ): Promise<Dto['PermissionDtoMapper']> {
+  ): Promise<MapperDto['PermissionMapper']> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info(
         'Creating permission',
@@ -219,21 +195,21 @@ export class BasePermissionService<
       await this.em.persistAndFlush([permission, ...roles]);
     }
 
-    return this.#mappers.PermissionDtoMapper.serializeEntityToDto(permission);
+    return this._mappers.PermissionMapper.serializeEntityToDto(permission);
   }
 
   async createBatchPermissions(
-    permissionDtos: Dto['CreatePermissionDtoMapper'][],
+    permissionDtos: MapperDto['CreatePermissionMapper'][],
     em?: EntityManager
-  ): Promise<Dto['PermissionDtoMapper'][]> {
+  ): Promise<MapperDto['PermissionMapper'][]> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info(
         'Creating batch permissions',
         permissionDtos
       );
     }
-    const rolesCache: Record<string, Entities['RoleEntityMapper']> = {};
-    const permissions: Entities['PermissionDtoMapper'][] = [];
+    const rolesCache: Record<string, MapperEntities['RoleEntityMapper']> = {};
+    const permissions: MapperEntities['PermissionMapper'][] = [];
     permissionDtos.map(async (createPermissionDto) => {
       const { permission, roles } = await this.createPermissionDto(
         await this.extractCreatePermissionDtoToEntityData(
@@ -267,7 +243,7 @@ export class BasePermissionService<
 
     return Promise.all(
       permissions.map(async (permission) =>
-        this.#mappers.PermissionDtoMapper.serializeEntityToDto(permission)
+        this._mappers.PermissionMapper.serializeEntityToDto(permission)
       )
     );
   }
@@ -275,27 +251,27 @@ export class BasePermissionService<
   async getPermission(
     idDto: IdDto,
     em?: EntityManager
-  ): Promise<Dto['PermissionDtoMapper']> {
+  ): Promise<MapperDto['PermissionMapper']> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info('Getting permission', idDto);
     }
     const permission = await (em ?? this.em).findOneOrFail('Permission', idDto);
-    return this.#mappers.PermissionDtoMapper.serializeEntityToDto(
-      permission as Entities['PermissionDtoMapper']
+    return this._mappers.PermissionMapper.serializeEntityToDto(
+      permission as MapperEntities['PermissionMapper']
     );
   }
 
   async getBatchPermissions(
     idsDto: IdsDto,
     em?: EntityManager
-  ): Promise<Dto['PermissionDtoMapper'][]> {
+  ): Promise<MapperDto['PermissionMapper'][]> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info('Getting batch permissions', idsDto);
     }
     return Promise.all(
       (await (em ?? this.em).find('Permission', idsDto)).map((permission) =>
-        this.#mappers.PermissionDtoMapper.serializeEntityToDto(
-          permission as Entities['PermissionDtoMapper']
+        this._mappers.PermissionMapper.serializeEntityToDto(
+          permission as MapperEntities['PermissionMapper']
         )
       )
     );
@@ -303,14 +279,14 @@ export class BasePermissionService<
 
   // start: updatePermission helper functions
   private updatePermissionDto = async (
-    permissionDto: Dto['UpdatePermissionDtoMapper'],
+    permissionDto: MapperDto['UpdatePermissionMapper'],
     em?: EntityManager
   ): Promise<{
-    permission: Entities['PermissionDtoMapper'];
-    roles: Entities['RoleEntityMapper'][];
+    permission: MapperEntities['PermissionMapper'];
+    roles: MapperEntities['RoleEntityMapper'][];
   }> => {
     const permission =
-      await this.#mappers.UpdatePermissionDtoMapper.deserializeDtoToEntity(
+      await this._mappers.UpdatePermissionMapper.deserializeDtoToEntity(
         permissionDto,
         em ?? this.em
       );
@@ -321,7 +297,7 @@ export class BasePermissionService<
       ? await this.getBatchRoles({ ids: permissionDto.removeFromRolesIds }, em)
       : [];
 
-    let roles: Entities['RoleEntityMapper'][] = [];
+    let roles: MapperEntities['RoleEntityMapper'][] = [];
 
     roles = roles.concat(
       await this.updateRolesWithPermissions(addToRoles, [permission])
@@ -338,9 +314,9 @@ export class BasePermissionService<
   // end: updatePermission helper functions
 
   async updatePermission(
-    permissionDto: Dto['UpdatePermissionDtoMapper'],
+    permissionDto: MapperDto['UpdatePermissionMapper'],
     em?: EntityManager
-  ): Promise<Dto['PermissionDtoMapper']> {
+  ): Promise<MapperDto['PermissionMapper']> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info('Updating permission', permissionDto);
     }
@@ -353,21 +329,21 @@ export class BasePermissionService<
       await this.em.persistAndFlush(entities);
     }
 
-    return this.#mappers.PermissionDtoMapper.serializeEntityToDto(permission);
+    return this._mappers.PermissionMapper.serializeEntityToDto(permission);
   }
 
   async updateBatchPermissions(
-    permissionDtos: Dto['UpdatePermissionDtoMapper'][],
+    permissionDtos: MapperDto['UpdatePermissionMapper'][],
     em?: EntityManager
-  ): Promise<Dto['PermissionDtoMapper'][]> {
+  ): Promise<MapperDto['PermissionMapper'][]> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info(
         'Updating batch permissions',
         permissionDtos
       );
     }
-    const rolesCache: Record<string, Entities['RoleEntityMapper']> = {};
-    const permissions: Entities['PermissionDtoMapper'][] = [];
+    const rolesCache: Record<string, MapperEntities['RoleEntityMapper']> = {};
+    const permissions: MapperEntities['PermissionMapper'][] = [];
     await (em ?? this.em).transactional(async (em) => {
       permissionDtos.map(async (updatePermissionDto) => {
         const { permission, roles } =
@@ -399,7 +375,7 @@ export class BasePermissionService<
 
     return Promise.all(
       permissions.map((permission) =>
-        this.#mappers.PermissionDtoMapper.serializeEntityToDto(permission)
+        this._mappers.PermissionMapper.serializeEntityToDto(permission)
       )
     );
   }

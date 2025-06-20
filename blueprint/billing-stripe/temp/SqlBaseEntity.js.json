@@ -1,0 +1,51 @@
+{
+  "data": {
+    "_id": 1000,
+    "properties": {
+      "id": {
+        "name": "id",
+        "kind": "scalar",
+        "primary": true,
+        "type": "uuid",
+        "array": false,
+        "runtimeType": "string"
+      },
+      "createdAt": {
+        "name": "createdAt",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "Date",
+        "runtimeType": "Date",
+        "array": false
+      },
+      "updatedAt": {
+        "name": "updatedAt",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "Date",
+        "runtimeType": "Date",
+        "array": false
+      }
+    },
+    "primaryKeys": ["id"],
+    "filters": {},
+    "hooks": {},
+    "indexes": [],
+    "uniques": [],
+    "className": "SqlBaseEntity",
+    "path": "../core/lib/persistence/sql.base.entity.js",
+    "abstract": true,
+    "internal": true,
+    "constructorParams": [],
+    "toJsonParams": [],
+    "extends": "BaseEntity2",
+    "useCache": true,
+    "compositePK": false,
+    "simplePK": true
+  },
+  "origin": "../core/lib/persistence/sql.base.entity.js",
+  "hash": "b1e54b14f964453dfc1249e576d5a3af",
+  "version": "6.4.16"
+}

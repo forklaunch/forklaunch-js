@@ -1,5 +1,50 @@
 # @forklaunch/core
 
+## 0.9.21
+
+### Patch Changes
+
+- change dtoMapper to Mapper
+- Updated dependencies
+  - @forklaunch/validator@0.6.16
+  - @forklaunch/common@0.3.14
+
+## 0.9.20
+
+### Patch Changes
+
+- move internal utilities out of core and into internal
+
+## 0.9.19
+
+### Patch Changes
+
+- remove internal type from core
+
+## 0.9.18
+
+### Patch Changes
+
+- create internal package for internal utilities
+- Updated dependencies
+  - @forklaunch/validator@0.6.15
+  - @forklaunch/common@0.3.13
+
+## 0.9.17
+
+### Patch Changes
+
+- bump package subdependencies
+- Updated dependencies
+  - @forklaunch/validator@0.6.14
+  - @forklaunch/common@0.3.12
+
+## 0.9.16
+
+### Patch Changes
+
+- Slight test utility change
+
 ## 0.9.15
 
 ### Patch Changes

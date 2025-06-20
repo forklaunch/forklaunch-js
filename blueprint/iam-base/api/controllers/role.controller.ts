@@ -12,9 +12,9 @@ import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { RoleService } from '@forklaunch/interfaces-iam/interfaces';
 import {
-  CreateRoleDtoMapper,
-  RoleDtoMapper,
-  UpdateRoleDtoMapper
+  CreateRoleMapper,
+  RoleMapper,
+  UpdateRoleMapper
 } from '../../domain/mappers/role.mappers';
 import { SchemaDependencies } from '../../registrations';
 
@@ -33,7 +33,7 @@ export const RoleController = (
       {
         name: 'Create Role',
         summary: 'Creates a new role',
-        body: CreateRoleDtoMapper.schema(),
+        body: CreateRoleMapper.schema(),
         responses: {
           201: string,
           500: string
@@ -52,7 +52,7 @@ export const RoleController = (
       {
         name: 'Create Batch Roles',
         summary: 'Creates multiple roles',
-        body: array(CreateRoleDtoMapper.schema()),
+        body: array(CreateRoleMapper.schema()),
         responses: {
           201: string,
           500: string
@@ -72,7 +72,7 @@ export const RoleController = (
         name: 'Get Role',
         summary: 'Gets a role by ID',
         responses: {
-          200: RoleDtoMapper.schema(),
+          200: RoleMapper.schema(),
           500: string
         },
         params: IdSchema
@@ -90,7 +90,7 @@ export const RoleController = (
         name: 'Get Batch Roles',
         summary: 'Gets multiple roles by IDs',
         responses: {
-          200: array(RoleDtoMapper.schema()),
+          200: array(RoleMapper.schema()),
           500: string
         },
         query: IdsSchema
@@ -107,7 +107,7 @@ export const RoleController = (
       {
         name: 'Update Role',
         summary: 'Updates a role by ID',
-        body: UpdateRoleDtoMapper.schema(),
+        body: UpdateRoleMapper.schema(),
         responses: {
           200: string,
           500: string
@@ -126,7 +126,7 @@ export const RoleController = (
       {
         name: 'Update Batch Roles',
         summary: 'Updates multiple roles by IDs',
-        body: array(UpdateRoleDtoMapper.schema()),
+        body: array(UpdateRoleMapper.schema()),
         responses: {
           200: string,
           500: string
