@@ -95,7 +95,7 @@ After creating a service:
 
 1. **Database Connection**: Ensure your database credentials are correct in the environment variables
 2. **Port Conflicts**: Check that the PORT specified isn't already in use
-3. **Dependencies**: Run `npm install` if you see missing dependency errors
+3. **Dependencies**: Run `pnpm/bun install` if you see missing dependency errors
 
 ### Best Practices
 

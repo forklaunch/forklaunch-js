@@ -21,6 +21,7 @@ The `ForkLaunch` framework collects a set of lightweight libraries and exposes u
 ### Utilities
 - `@forklaunch/common`: Common HTTP utilities, middleware, and request/response handling
 - `@forklaunch/core`: Core framework library containing shared utilities, base classes, and common interfaces
+- `@forklaunch/internal`: Internal utilities for ForkLaunch framework
 
 ## Framework Features
 
@@ -29,10 +30,7 @@ The `ForkLaunch` framework collects a set of lightweight libraries and exposes u
 - [Observability and OpenTelemetry](/docs/framework/telemetry.md)
 - [Configuration](/docs/framework/config.md)
 - [Authorization](/docs/framework/authorization.md)
-- [Documentation](/docs/framework/documentation.md)
+- [OpenAPI + Documentation](/docs/framework/documentation.md)
+- [MCP Generation](/docs/framework/mcp.md)
 - [Error Handling](/docs/framework/error-handling.md)
 - [Universal SDK](/docs/framework/universal-sdk.md)
-
-## API Reference
-
-For detailed API documentation, visit our [TypeDoc Reference](https://github.com/forklaunch/forklaunch-js/tree/main/framework/docs/index.html).
