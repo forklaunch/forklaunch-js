@@ -83,7 +83,7 @@ The command reports:
 
 **Dependency resolution fails**
 - Clear node_modules and package-lock.json
-- Run fresh `npm install`
+- Run fresh `pnpm/bun install`
 - Check for corrupted package cache
 
 ## Example Scenarios

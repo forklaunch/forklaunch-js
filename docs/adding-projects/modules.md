@@ -72,7 +72,7 @@ After creating a module:
 ### Common Issues
 
 1. **Missing Configuration**: Ensure all required environment variables are set
-2. **Dependency Errors**: Run `npm install` if you see missing dependency errors
+2. **Dependency Errors**: Run `pnpm/bun install` if you see missing dependency errors
 3. **Version Conflicts**: Make sure your module is compatible with your application version
 
 ### Best Practices
