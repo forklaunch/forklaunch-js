@@ -1,5 +1,11 @@
 # @forklaunch/interfaces-iam
 
+## 0.3.2
+
+### Patch Changes
+
+- update dependencies and introduce stripe billing
+
 ## 0.3.1
 
 ### Patch Changes

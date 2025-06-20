@@ -1,5 +1,11 @@
 # @forklaunch/interfaces-billing
 
+## 0.2.2
+
+### Patch Changes
+
+- update dependencies and introduce stripe billing
+
 ## 0.2.1
 
 ### Patch Changes
