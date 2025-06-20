@@ -17,7 +17,7 @@ import {
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
 import Stripe from 'stripe';
-import { BillingProviderEnum } from '../domain/enums/billingProvider.enum';
+import { BillingProviderEnum } from '../enum/billingProvider.enum';
 import {
   StripeCreateSubscriptionDto,
   StripeSubscriptionDto,

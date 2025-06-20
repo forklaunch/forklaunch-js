@@ -2,7 +2,7 @@ import { SqlBaseEntity } from '@forklaunch/blueprint-core';
 import {
   CurrencyEnum,
   PaymentMethodEnum
-} from '@forklaunch/implementation-billing-stripe/domain';
+} from '@forklaunch/implementation-billing-stripe/enum';
 import { Entity, Enum, Property } from '@mikro-orm/core';
 import Stripe from 'stripe';
 import { StatusEnum } from '../../domain/enum/status.enum';

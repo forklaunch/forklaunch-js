@@ -17,9 +17,9 @@ import {
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
 import Stripe from 'stripe';
-import { BillingProviderEnum } from '../domain/enums/billingProvider.enum';
-import { CurrencyEnum } from '../domain/enums/currency.enum';
-import { PlanCadenceEnum } from '../domain/enums/planCadence.enum';
+import { BillingProviderEnum } from '../enum/billingProvider.enum';
+import { CurrencyEnum } from '../enum/currency.enum';
+import { PlanCadenceEnum } from '../enum/planCadence.enum';
 import {
   StripeCreatePlanDto,
   StripePlanDto,

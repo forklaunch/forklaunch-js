@@ -3,7 +3,7 @@ import {
   BillingProviderEnum,
   CurrencyEnum,
   PlanCadenceEnum
-} from '@forklaunch/implementation-billing-stripe/domain';
+} from '@forklaunch/implementation-billing-stripe/enum';
 import { Entity, Enum, Property, Unique } from '@mikro-orm/core';
 import Stripe from 'stripe';
 

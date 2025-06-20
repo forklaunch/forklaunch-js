@@ -11,7 +11,7 @@ import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import {
   CurrencyEnum,
   PaymentMethodEnum
-} from '@forklaunch/implementation-billing-stripe/domain';
+} from '@forklaunch/implementation-billing-stripe/enum';
 import { CheckoutSessionService } from '@forklaunch/interfaces-billing/interfaces';
 import { StatusEnum } from '../../domain/enum/status.enum';
 import {

@@ -10,7 +10,7 @@ import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
-import { BillingProviderEnum } from '@forklaunch/implementation-billing-stripe/domain';
+import { BillingProviderEnum } from '@forklaunch/implementation-billing-stripe/enum';
 import { SubscriptionService } from '@forklaunch/interfaces-billing/interfaces';
 import { PartyEnum } from '../../domain/enum/party.enum';
 import {

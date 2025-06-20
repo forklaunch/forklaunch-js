@@ -7,7 +7,7 @@ import {
   CurrencyEnum,
   PaymentMethodEnum,
   PlanCadenceEnum
-} from '@forklaunch/implementation-billing-stripe/domain';
+} from '@forklaunch/implementation-billing-stripe/enum';
 import Stripe from 'stripe';
 import { StatusEnum } from '../domain/enum/status.enum';
 import { CheckoutSession } from './entities/checkoutSession.entity';

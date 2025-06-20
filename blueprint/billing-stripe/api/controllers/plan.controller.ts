@@ -14,7 +14,7 @@ import {
   BillingProviderEnum,
   CurrencyEnum,
   PlanCadenceEnum
-} from '@forklaunch/implementation-billing-stripe/domain';
+} from '@forklaunch/implementation-billing-stripe/enum';
 import { PlanService } from '@forklaunch/interfaces-billing/interfaces';
 import {
   CreatePlanMapper,

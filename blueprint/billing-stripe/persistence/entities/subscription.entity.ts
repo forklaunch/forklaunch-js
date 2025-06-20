@@ -1,5 +1,5 @@
 import { SqlBaseEntity } from '@forklaunch/blueprint-core';
-import { BillingProviderEnum } from '@forklaunch/implementation-billing-stripe/domain';
+import { BillingProviderEnum } from '@forklaunch/implementation-billing-stripe/enum';
 import { Entity, Enum, Property, Unique } from '@mikro-orm/core';
 import Stripe from 'stripe';
 import { PartyEnum } from '../../domain/enum/party.enum';

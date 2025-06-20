@@ -18,8 +18,8 @@ import {
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
 import Stripe from 'stripe';
-import { CurrencyEnum } from '../domain/enums/currency.enum';
-import { PaymentMethodEnum } from '../domain/enums/paymentMethod.enum';
+import { CurrencyEnum } from '../enum/currency.enum';
+import { PaymentMethodEnum } from '../enum/paymentMethod.enum';
 import {
   StripeCreatePaymentLinkDto,
   StripePaymentLinkDto,

@@ -8,8 +8,8 @@ import {
   string,
   type
 } from '@forklaunch/validator/zod';
-import { CurrencyEnum } from '../../domain/enums/currency.enum';
-import { PaymentMethodEnum } from '../../domain/enums/paymentMethod.enum';
+import { CurrencyEnum } from '../../enum/currency.enum';
+import { PaymentMethodEnum } from '../../enum/paymentMethod.enum';
 import {
   StripeCreatePaymentLinkDto,
   StripePaymentLinkDto,

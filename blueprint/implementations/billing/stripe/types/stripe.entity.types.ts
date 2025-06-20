@@ -6,10 +6,10 @@ import {
   SubscriptionDto
 } from '@forklaunch/interfaces-billing/types';
 import Stripe from 'stripe';
-import { BillingProviderEnum } from '../domain/enums/billingProvider.enum';
-import { CurrencyEnum } from '../domain/enums/currency.enum';
-import { PaymentMethodEnum } from '../domain/enums/paymentMethod.enum';
-import { PlanCadenceEnum } from '../domain/enums/planCadence.enum';
+import { BillingProviderEnum } from '../enum/billingProvider.enum';
+import { CurrencyEnum } from '../enum/currency.enum';
+import { PaymentMethodEnum } from '../enum/paymentMethod.enum';
+import { PlanCadenceEnum } from '../enum/planCadence.enum';
 
 // Billing Portal Types
 export type StripeBillingPortalEntity = BillingPortalDto & {

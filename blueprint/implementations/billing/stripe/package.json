@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/implementation-billing-stripe",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Stripe implementation for forklaunch billing",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -13,11 +13,11 @@
   "license": "MIT",
   "author": "Forklift Technologies, Inc.",
   "exports": {
-    "./domain": {
-      "types": "./lib/domain/index.d.ts",
-      "import": "./lib/domain/index.mjs",
-      "require": "./lib/domain/index.js",
-      "default": "./lib/domain/index.js"
+    "./enum": {
+      "types": "./lib/enum/index.d.ts",
+      "import": "./lib/enum/index.mjs",
+      "require": "./lib/enum/index.js",
+      "default": "./lib/enum/index.js"
     },
     "./schemas": {
       "types": "./lib/schemas/index.d.ts",
@@ -42,7 +42,7 @@
     "lib/**"
   ],
   "scripts": {
-    "build": "tsc --noEmit && tsup schemas/index.ts services/index.ts domain/index.ts types/index.ts --format cjs,esm --no-splitting --dts --tsconfig tsconfig.json --out-dir lib --clean && if [ -f eject-package.bash ]; then pnpm package:eject; fi",
+    "build": "tsc --noEmit && tsup schemas/index.ts services/index.ts enum/index.ts types/index.ts --format cjs,esm --no-splitting --dts --tsconfig tsconfig.json --out-dir lib --clean && if [ -f eject-package.bash ]; then pnpm package:eject; fi",
     "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",

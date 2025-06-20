@@ -7,7 +7,7 @@ import {
   string,
   type
 } from '@forklaunch/validator/zod';
-import { BillingProviderEnum } from '../../domain/enums/billingProvider.enum';
+import { BillingProviderEnum } from '../../enum/billingProvider.enum';
 import {
   StripeCreateSubscriptionDto,
   StripeSubscriptionDto,
