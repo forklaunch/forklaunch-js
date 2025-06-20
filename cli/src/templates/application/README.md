@@ -92,6 +92,10 @@ forklaunch change [application,service,worker,library,router]
 
 Changes can be made at any time using the above command. This allows you to change configuration selected during creation. Note: it is highly recommended to revision your code before attempting to perform changes in case of failure.
 
+### Deleting Services
+
+To remove services, workers, libraries, or routers from your project, use the `forklaunch delete` command. This safely removes all associated files, updates the manifest configuration, cleans up Docker Compose definitions, and removes dependencies that are no longer needed. The delete process includes confirmation prompts and detailed logging to ensure you understand exactly what will be removed. Always commit your changes before deleting components, as this operation modifies multiple files across your project structure.
+
 #### Check dependencies
 
 ```bash
