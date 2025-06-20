@@ -1,5 +1,11 @@
 # @forklaunch/implementation-billing-base
 
+## 0.3.4
+
+### Patch Changes
+
+- fix import paths from schemas to other domain layers
+
 ## 0.3.3
 
 ### Patch Changes
