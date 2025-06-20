@@ -24,7 +24,7 @@ During initialization, you'll be prompted to configure your application. All cho
 | _Test Runner_ | `vitest`, `jest` | Test execution framework | Update test scripts in package.json files |
 | _Database_ | `postgresql`, `mongodb` | Database with MikroORM integration | Update SqlBaseEntity exports and extensions |
 | _License_ | `apgl`, `gpl`, `lgpl`, `mozilla`, `apache`, `mit`, `boost`, `unlicense`, `none` | Project license | Edit LICENSE file |
-| _Preconfigured Services_ | `billing`, `iam` | Optional base services (see [Preconfigured Services](/docs/preconfigured-services)) | Remove service folder and update manifest.toml |
+| _Preconfigured Modules_ | `billing`, `iam` | Optional base services (see [Preconfigured Modules](/docs/preconfigured-modules)) | Remove service folder and update manifest.toml |
 
 ### Important Notes
 

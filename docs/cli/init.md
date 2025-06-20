@@ -28,11 +28,24 @@ forklaunch init application [options]
 | `-f, --http-framework` | HTTP framework | `express`, `hyper-express` |
 | `-r, --runtime` | Runtime environment | `node`, `bun` |
 | `-t, --test-framework` | Testing framework | `vitest`, `jest` |
-| `-s, --services` | Additional services | `billing`, `iam` |
+| `-m, --modules` | Additional modules | `billing-base`, `billing-stripe`, `iam-base`, `iam-better-auth` |
 | `-D, --description` | Application description | _string_ |
 | `-A, --author` | Application author | _string_ |
 | `-L, --license` | License type | `apgl`, `gpl`, `lgpl`, `mozilla`, `apache`, `mit`, `boost`, `unlicense`, `none` |
 | `-n, --dryrun` | Preview changes | None |
+
+### Initialize Module
+
+```bash
+forklaunch init module [OPTIONS] [name]
+```
+
+| Option | Description | Values |
+| :----- | :---------- | :------ |
+| `-p, --path <base_path>` | The application path to initialize the module in | _string_ |
+| `-m, --module <module>` | The module to initialize | `billing-base`, `billing-stripe`, `iam-base`, `iam-better-auth` |
+| `-d, --database <database>` | The database to use | `postgresql`, `mysql`, `mariadb`, `mssql`, `mongodb`, `libsql`, `sqlite`, `better-sqlite` |
+| `-n, --dryrun` | Dry run the command | None |
 
 ### Initialize Service
 ```bash
@@ -84,6 +97,9 @@ forklaunch init router [options]
 ```bash
 # Create a new application
 forklaunch init application --database postgresql --validator zod --runtime node
+
+# Add a module to existing application
+forklaunch init module --path ./my-app --module billing-base
 
 # Add a service to existing application
 forklaunch init service --path ./my-app --database postgresql

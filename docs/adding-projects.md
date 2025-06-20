@@ -14,6 +14,7 @@ The cornerstone of `ForkLaunch` is its modular project system. This approach:
 ## Available Projects
 
 ### Core Projects
+- **Modules**: Pre-built services/workers/libraries that help you bootstrap your application
 - **Services**: Host HTTP APIs and web applications
 - **Workers**: Run asynchronous tasks using event-driven architecture
 - **Libraries**: Share common code and business logic
@@ -24,7 +25,7 @@ The cornerstone of `ForkLaunch` is its modular project system. This approach:
   - Controllers
   - Services
   - Interfaces
-  - DTOMappers
+  - Mappers
   - Entities
   - Seeders
 
@@ -38,6 +39,7 @@ Have an idea for a new project type? We welcome feature requests! Please submit 
 ## Next Steps
 
 Learn more about each project type:
+- [Modules](/docs/adding-projects/modules.md)
 - [Services](/docs/adding-projects/services.md)
 - [Workers](/docs/adding-projects/workers.md)
 - [Libraries](/docs/adding-projects/libraries.md)

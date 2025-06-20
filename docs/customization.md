@@ -35,29 +35,8 @@ const app = forkLaunchApplication({
 
 ## Authorization
 
-Authorization can be configured at multiple levels:
+Authorization can be configured at the endpoint contract definition:
 
-### Application Level
-```typescript
-const app = forkLaunchApplication({
-  ...,
-  auth: {
-    ...
-  }
-})
-```
-
-### Router Level
-```typescript
-const router = forkLaunchRouter('/api', {
-  ...,
-  auth: {
-    ...
-  }
-})
-```
-
-### Endpoint Level
 ```typescript
 router.get('/path', {
   ...,
@@ -69,31 +48,8 @@ router.get('/path', {
 
 ## Validation
 
-Control validation behavior at different levels:
+Control validation behavior by endpoint:
 
-### Application Level
-```typescript
-const app = forkLaunchApplication({
-  ...,
-  validation: {
-    request: 'error',
-    response: 'warning'
-  }
-})
-```
-
-### Router Level
-```typescript
-const router = forkLaunchRouter('/api', {
-  ...,
-  validation: {
-    request: 'warning',
-    response: 'none'
-  }
-})
-```
-
-### Endpoint Level
 ```typescript
 router.post('/path', {
   ...,
