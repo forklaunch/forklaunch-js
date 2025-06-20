@@ -1,4 +1,8 @@
-use std::{env::current_dir, os::unix::fs::symlink, path::Path};
+#[cfg(unix)]
+use std::os::unix::fs::symlink;
+#[cfg(windows)]
+use std::os::windows::fs::{symlink_dir, symlink_file};
+use std::{env::current_dir, path::Path};
 
 use anyhow::{Context, Result};
 use pathdiff::diff_paths;
@@ -11,6 +15,27 @@ use crate::{
     core::manifest::ManifestConfig,
 };
 
+pub(crate) fn create_symlink_cross_platform<
+    P: AsRef<std::path::Path>,
+    Q: AsRef<std::path::Path>,
+>(
+    original: P,
+    link: Q,
+) -> std::io::Result<()> {
+    #[cfg(unix)]
+    {
+        symlink(original, link)
+    }
+    #[cfg(windows)]
+    {
+        if original.as_ref().is_dir() {
+            symlink_dir(original, link)
+        } else {
+            symlink_file(original, link)
+        }
+    }
+}
+
 fn create_symlink(
     file_name: &str,
     relative_path: &Path,
@@ -18,7 +43,9 @@ fn create_symlink(
     dryrun: bool,
 ) -> Result<()> {
     if !dryrun {
-        symlink(relative_path.join(file_name), current_path.join(file_name))
+        let source_path = relative_path.join(file_name);
+        let target_path = current_path.join(file_name);
+        create_symlink_cross_platform(source_path, target_path)
             .with_context(|| error_failed_to_create_symlink(&current_path.join(file_name)))?;
     } else {
         println!(
