@@ -6,7 +6,7 @@ description: Learn how to use the forklaunch init command.
 
 ## Overview
 
-The `init` command creates new resources for your application. For detailed information about project types, see [Adding Projects](/docs/adding-projects).
+Create new ForkLaunch resources. For detailed information, see [Adding Projects](/docs/adding-projects).
 
 ## Usage
 
@@ -42,9 +42,9 @@ forklaunch init module [OPTIONS] [name]
 
 | Option | Description | Values |
 | :----- | :---------- | :------ |
-| `-p, --path <base_path>` | The application path to initialize the module in | _string_ |
-| `-m, --module <module>` | The module to initialize | `billing-base`, `billing-stripe`, `iam-base`, `iam-better-auth` |
-| `-d, --database <database>` | The database to use | `postgresql`, `mysql`, `mariadb`, `mssql`, `mongodb`, `libsql`, `sqlite`, `better-sqlite` |
+| `-p, --path <base_path>` | Application path | _string_ |
+| `-m, --module <module>` | Module to initialize | `billing-base`, `billing-stripe`, `iam-base`, `iam-better-auth` |
+| `-d, --database <database>` | Database type | `postgresql`, `mysql`, `mariadb`, `mssql`, `mongodb`, `libsql`, `sqlite`, `better-sqlite` |
 | `-n, --dryrun` | Dry run the command | None |
 
 ### Initialize Service
@@ -110,3 +110,34 @@ forklaunch init worker --path ./my-app --backend cache
 # Preview router creation
 forklaunch init router --path ./my-app/services/api --dryrun
 ```
+
+## Troubleshooting
+
+**Error: "Directory already exists"**
+- Choose a different name or remove existing directory
+- Use `--dryrun` to preview changes before execution
+
+**Error: "Invalid database type"**
+- Check available database options in command help
+- Ensure database is supported for the component type
+
+**Error: "Path not found"**
+- Verify the specified path exists
+- For services/workers, ensure you're in an application directory
+
+**Error: "Module not found"**
+- Check available modules with `forklaunch init module --help`
+- Verify module name spelling and availability
+
+**Permission denied errors**
+- Check file/directory permissions
+- Ensure you have write access to the target directory
+
+## Related Commands
+
+- [`forklaunch add`](../adding-projects.md) - Add components to existing projects
+- [`forklaunch depcheck`](./depcheck.md) - Check dependencies after initialization
+
+## See Also
+
+- [Adding Projects Guide](../adding-projects.md) - Comprehensive project creation guide
