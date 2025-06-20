@@ -20,7 +20,36 @@ on:
         default: true
 
 jobs:
+  resolve_version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set version
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            if [[ "${{ github.event.inputs.use_latest_tag }}" == "true" ]]; then
+              latest_tag=$(git tag -l "cli-v*" | sort -V | tail -1)
+              echo "version=${latest_tag#cli-v}" >> $GITHUB_OUTPUT
+            elif [[ -n "${{ github.event.inputs.version }}" ]]; then
+              echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+            else
+              echo "Error: Version is required when not using latest tag" >&2
+              exit 1
+            fi
+          elif [[ "${{ github.event_name }}" == "push" ]]; then
+            tag_name="${{ github.ref_name }}"
+            echo "version=${tag_name#cli-v}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/cli-v}" >> $GITHUB_OUTPUT
+          fi
+
   build:
+    needs: resolve_version
     strategy:
       matrix:
         include:
@@ -49,6 +78,12 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
+      
+      - name: Update Cargo.toml version
+        working-directory: cli
+        run: |
+          cargo install cargo-edit
+          cargo set-version ${{ needs.resolve_version.outputs.version }}
       
       - name: Install cross-compilation tools (Linux)
         if: matrix.os == 'ubuntu-latest'
@@ -116,7 +151,7 @@ jobs:
           files: artifacts/*/forklaunch-*
 
   npm-publish:
-    needs: build
+    needs: [build, resolve_version]
     runs-on: ubuntu-latest
     
     steps:
@@ -125,45 +160,19 @@ jobs:
           ref: main
           fetch-depth: 0
       
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-          registry-url: 'https://registry.npmjs.org'
-      
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-      
-      - name: Set version
-        id: version
-        run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            if [[ "${{ github.event.inputs.use_latest_tag }}" == "true" ]]; then
-              latest_tag=$(git tag -l "cli-v*" | sort -V | tail -1)
-              echo "version=${latest_tag#cli-v}" >> $GITHUB_OUTPUT
-            elif [[ -n "${{ github.event.inputs.version }}" ]]; then
-              echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
-            else
-              echo "Error: Version is required when not using latest tag" >&2
-              exit 1
-            fi
-          elif [[ "${{ github.event_name }}" == "push" ]]; then
-            tag_name="${{ github.ref_name }}"
-            echo "version=${tag_name#cli-v}" >> $GITHUB_OUTPUT
-          else
-            echo "version=${GITHUB_REF#refs/tags/cli-v}" >> $GITHUB_OUTPUT
-          fi
       
       - name: Update package.json version
         working-directory: cli
         run: |
-          npm version ${{ steps.version.outputs.version }} --no-git-tag-version
+          npm version ${{ needs.resolve_version.outputs.version }} --no-git-tag-version
       
       - name: Update Cargo.toml version
         working-directory: cli
         run: |
           cargo install cargo-edit
-          cargo set-version ${{ steps.version.outputs.version }}
+          cargo set-version ${{ needs.resolve_version.outputs.version }}
 
       - name: Publish to npm
         working-directory: cli
@@ -182,7 +191,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add cli/Cargo.toml cli/Cargo.lock cli/package.json
-          git commit -m "chore(release): bump version to ${{ steps.version.outputs.version }}"
+          git commit -m "chore(release): bump version to ${{ needs.resolve_version.outputs.version }}"
           git push
 
         
