@@ -186,12 +186,4 @@ jobs:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_TOKEN }}
         run: cargo publish --allow-dirty
 
-      - name: Commit and push version files
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add cli/Cargo.toml cli/Cargo.lock cli/package.json
-          git commit -m "chore(release): bump version to ${{ needs.resolve_version.outputs.version }}"
-          git push
-
         
