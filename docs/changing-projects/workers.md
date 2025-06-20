@@ -4,11 +4,9 @@ category: Changing Projects
 description: Complete guide for modifying ForkLaunch worker types, queue systems, and processing configurations.
 ---
 
-# Changing Workers
+## Overview
 
 The `forklaunch change worker` command allows you to modify existing worker configuration including worker types, queue systems, database connections, and metadata. This guide covers all available options and migration strategies.
-
-## Command Overview
 
 ```bash
 forklaunch change worker [worker-name] [options]
@@ -18,16 +16,17 @@ If no worker name is provided, you'll be prompted to select from available worke
 
 ## Available Options
 
-| Option | Type | Description | Default |
-|--------|------|-------------|---------|
-| `--name <name>` | string | Change worker name | Current name |
-| `--description <desc>` | string | Update worker description | Current description |
-| `--type <type>` | database\|redis\|kafka\|bullmq | Change worker type | Current type |
-| `--database <database>` | See database options | Change database type | Current database |
+| Option                  | Type                           | Description               | Default             |
+| ----------------------- | ------------------------------ | ------------------------- | ------------------- |
+| `--name <name>`         | string                         | Change worker name        | Current name        |
+| `--description <desc>`  | string                         | Update worker description | Current description |
+| `--type <type>`         | database\|redis\|kafka\|bullmq | Change worker type        | Current type        |
+| `--database <database>` | See database options           | Change database type      | Current database    |
 
 ## Worker Types
 
 Available worker types:
+
 - `database` - Database-driven worker for polling and processing
 - `redis` - Redis-based pub/sub worker
 - `kafka` - Apache Kafka consumer worker
@@ -36,8 +35,9 @@ Available worker types:
 ## Database Options
 
 For database workers:
+
 - `postgresql` - PostgreSQL database
-- `mysql` - MySQL database  
+- `mysql` - MySQL database
 - `mariadb` - MariaDB database
 - `mssql` - Microsoft SQL Server
 - `mongodb` - MongoDB database
@@ -107,6 +107,7 @@ forklaunch change worker email-processor --type database --database sqlite
 ### Queue Connection Issues
 
 **1. Redis Connection Problems**
+
 ```bash
 # Test Redis connectivity
 redis-cli ping
@@ -116,6 +117,7 @@ docker logs redis-container
 ```
 
 **2. Kafka Consumer Issues**
+
 ```bash
 # Check consumer group status
 kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group order-processor
@@ -153,5 +155,3 @@ kafka-consumer-groups.sh --bootstrap-server localhost:9092 --reset-offsets --gro
 - **[Changing Services](./services.md)** - Service configuration changes
 - **[Adding Workers](../adding-projects/workers.md)** - Creating new workers
 - **[Framework Workers](../framework/workers.md)** - Worker framework documentation
-- **[Best Practices](../best-practices.md)** - Development best practices
-- **[Troubleshooting](../troubleshooting.md)** - Common issues and solutions

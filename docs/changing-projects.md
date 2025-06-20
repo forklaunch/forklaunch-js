@@ -4,16 +4,14 @@ category: Guides
 description: Learn how to modify and update existing ForkLaunch projects safely and efficiently.
 ---
 
-# Changing Projects
+## Overview
 
 ForkLaunch provides powerful commands to modify existing projects, allowing you to update configurations, change technologies, and adapt your application as requirements evolve. This guide covers the core concepts and best practices for safely changing ForkLaunch projects.
-
-## Overview
 
 The `forklaunch change` command family allows you to modify:
 
 - **Applications**: Runtime, frameworks, tools, and configuration
-- **Services**: Database types, infrastructure, and service configuration  
+- **Services**: Database types, infrastructure, and service configuration
 - **Workers**: Worker types, queue systems, and processing logic
 - **Routers**: Router configuration and naming
 - **Libraries**: Library metadata and configuration
@@ -23,16 +21,19 @@ All change operations are designed to be safe, reversible, and maintain project 
 ## Core Principles
 
 ### Safety First
+
 - Always commit your changes to version control before making modifications
 - Use `--dry-run` to preview changes before applying them
 - Test thoroughly after each change operation
 
 ### Incremental Changes
+
 - Make one change at a time to minimize risk
 - Test each change before proceeding to the next
 - Keep related changes grouped in separate commits
 
 ### Consistency
+
 - Maintain consistent configuration across all components
 - Use `forklaunch depcheck` to verify dependency alignment
 - Update documentation and environment files as needed
@@ -40,17 +41,19 @@ All change operations are designed to be safe, reversible, and maintain project 
 ## Quick Start
 
 ### Preview Changes
+
 Before making any changes, preview what will happen:
 
 ```bash
 # Preview application changes
 forklaunch change application --runtime bun --dry-run
 
-# Preview service changes  
+# Preview service changes
 forklaunch change service --database postgresql --dry-run
 ```
 
 ### Make Changes Safely
+
 Always follow this workflow:
 
 ```bash
@@ -67,16 +70,16 @@ forklaunch change application --runtime bun
 <CodeTabs type="terminal">
   <Tab title="pnpm">
 
-  ```bash
-  pnpm install
-  ```
+```bash
+pnpm install
+```
 
   </Tab>
   <Tab title="bun">
 
-  ```bash
-  bun install
-  ```
+```bash
+bun install
+```
 
   </Tab>
 </CodeTabs>
@@ -88,18 +91,18 @@ forklaunch change application --runtime bun
 <CodeTabs type="terminal">
   <Tab title="pnpm">
 
-  ```bash
-  pnpm test
-  pnpm run dev
-  ```
+```bash
+pnpm test
+pnpm run dev
+```
 
   </Tab>
   <Tab title="bun">
 
-  ```bash
-  bun test
-  bun run dev
-  ```
+```bash
+bun test
+bun run dev
+```
 
   </Tab>
 </CodeTabs>
@@ -113,6 +116,7 @@ git commit -m "Changed runtime to Bun"
 ## Common Change Scenarios
 
 ### Technology Upgrades
+
 Update your technology stack as projects evolve:
 
 ```bash
@@ -130,6 +134,7 @@ forklaunch change application --validator typebox
 ```
 
 ### Database Migration
+
 Change database systems safely:
 
 ```bash
@@ -141,6 +146,7 @@ forklaunch change service --infrastructure redis
 ```
 
 ### Development Tools
+
 Update development and build tools:
 
 ```bash
@@ -154,6 +160,7 @@ forklaunch change application \
 ## Component-Specific Guides
 
 ### Applications
+
 Learn how to modify application-level configuration, runtimes, and frameworks.
 
 👉 **[Changing Applications](./changing-projects/applications.md)**
@@ -165,6 +172,7 @@ Learn how to modify application-level configuration, runtimes, and frameworks.
 - Validation library changes (Zod ↔ TypeBox)
 
 ### Services
+
 Modify service configuration, databases, and infrastructure components.
 
 👉 **[Changing Services](./changing-projects/services.md)**
@@ -175,6 +183,7 @@ Modify service configuration, databases, and infrastructure components.
 - Configuration and environment changes
 
 ### Workers
+
 Update worker types, queue systems, and processing configurations.
 
 👉 **[Changing Workers](./changing-projects/workers.md)**
@@ -185,6 +194,7 @@ Update worker types, queue systems, and processing configurations.
 - Processing logic updates
 
 ### Routers
+
 Modify router configurations and naming.
 
 👉 **[Changing Routers](./changing-projects/routers.md)**
@@ -194,6 +204,7 @@ Modify router configurations and naming.
 - Route structure modifications
 
 ### Libraries
+
 Update library configuration and metadata.
 
 👉 **[Changing Libraries](./changing-projects/libraries.md)**
@@ -221,55 +232,55 @@ Update library configuration and metadata.
 ### After Changes
 
 1. **Dependencies**: Install updated packages
-<CodeTabs type="terminal">
-  <Tab title="pnpm">
+   <CodeTabs type="terminal">
+   <Tab title="pnpm">
 
-  ```bash
-  pnpm install
-  ```
+```bash
+pnpm install
+```
 
   </Tab>
   <Tab title="bun">
 
-  ```bash
-  bun install
-  ```
+```bash
+bun install
+```
 
   </Tab>
 </CodeTabs>
 
 2. **Testing**: Run full test suite
-<CodeTabs type="terminal">
-  <Tab title="pnpm">
+   <CodeTabs type="terminal">
+   <Tab title="pnpm">
 
-  ```bash
-  pnpm test
-  ```
+```bash
+pnpm test
+```
 
   </Tab>
   <Tab title="bun">
 
-  ```bash
-  bun test
-  ```
+```bash
+bun test
+```
 
   </Tab>
 </CodeTabs>
 
 3. **Development**: Test in development environment
-<CodeTabs type="terminal">
-  <Tab title="pnpm">
+   <CodeTabs type="terminal">
+   <Tab title="pnpm">
 
-  ```bash
-  pnpm run dev
-  ```
+```bash
+pnpm run dev
+```
 
   </Tab>
   <Tab title="bun">
 
-  ```bash
-  bun run dev
-  ```
+```bash
+bun run dev
+```
 
   </Tab>
 </CodeTabs>
@@ -280,6 +291,7 @@ Update library configuration and metadata.
 ## Advanced Scenarios
 
 ### Batch Changes
+
 Make multiple related changes efficiently:
 
 ```bash
@@ -294,17 +306,19 @@ forklaunch change application \
 ```
 
 ### Environment-Specific Changes
+
 Handle different requirements across environments:
 
 ```bash
 # Development optimized
 forklaunch change application --formatter prettier --linter eslint
 
-# Production optimized  
+# Production optimized
 forklaunch change application --formatter biome --linter oxlint
 ```
 
 ### Migration Scripts
+
 Create reusable scripts for common change patterns:
 
 ```bash
@@ -321,18 +335,18 @@ forklaunch change application --linter oxlint
 <CodeTabs type="terminal">
   <Tab title="pnpm">
 
-  ```bash
-  pnpm install
-  pnpm test
-  ```
+```bash
+pnpm install
+pnpm test
+```
 
   </Tab>
   <Tab title="bun">
 
-  ```bash
-  bun install
-  bun test
-  ```
+```bash
+bun install
+bun test
+```
 
   </Tab>
 </CodeTabs>
@@ -347,25 +361,26 @@ echo "Stack upgrade complete!"
 
 **Dependency Conflicts**
 <CodeTabs type="terminal">
-  <Tab title="pnpm">
+<Tab title="pnpm">
 
-  ```bash
-  rm -rf node_modules pnpm-lock.yaml
-  pnpm install
-  ```
+```bash
+rm -rf node_modules pnpm-lock.yaml
+pnpm install
+```
 
   </Tab>
   <Tab title="bun">
 
-  ```bash
-  rm -rf node_modules bun.lockb
-  bun install
-  ```
+```bash
+rm -rf node_modules bun.lockb
+bun install
+```
 
   </Tab>
 </CodeTabs>
 
 **Configuration Errors**
+
 ```bash
 forklaunch depcheck
 ```
@@ -373,36 +388,36 @@ forklaunch depcheck
 <CodeTabs type="terminal">
   <Tab title="pnpm">
 
-  ```bash
-  pnpm run lint
-  ```
+```bash
+pnpm run lint
+```
 
   </Tab>
   <Tab title="bun">
 
-  ```bash
-  bun run lint
-  ```
+```bash
+bun run lint
+```
 
   </Tab>
 </CodeTabs>
 
 **Runtime Errors**
 <CodeTabs type="terminal">
-  <Tab title="pnpm">
+<Tab title="pnpm">
 
-  ```bash
-  pnpm run dev
-  # Check logs for specific error messages
-  ```
+```bash
+pnpm run dev
+# Check logs for specific error messages
+```
 
   </Tab>
   <Tab title="bun">
 
-  ```bash
-  bun run dev
-  # Check logs for specific error messages
-  ```
+```bash
+bun run dev
+# Check logs for specific error messages
+```
 
   </Tab>
 </CodeTabs>
@@ -410,6 +425,7 @@ forklaunch depcheck
 ## Migration Considerations
 
 ### Major Version Changes
+
 When upgrading ForkLaunch versions:
 
 1. Review [Migration Guide](./migration.md) for breaking changes
@@ -419,6 +435,7 @@ When upgrading ForkLaunch versions:
 5. Test thoroughly in development environment
 
 ### Project Structure Changes
+
 Some changes may affect project structure:
 
 - File relocations and renames

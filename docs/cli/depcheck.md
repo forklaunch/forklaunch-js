@@ -113,7 +113,6 @@ backend = ["api-server", "worker"]
 - [`forklaunch init`](./init.md) - Initialize projects with proper dependencies
 - [`forklaunch eject`](./eject.md) - Check dependencies after ejection
 
-## See Also
+## Related Documentation
 
-- [Project Structure](../framework.md) - Understanding ForkLaunch project layout
-- [Dependency Management](../best-practices.md) - Best practices for dependencies
+- **[Project Structure](../framework.md)** - Understanding ForkLaunch project layout

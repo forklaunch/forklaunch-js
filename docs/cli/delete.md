@@ -4,7 +4,7 @@ category: CLI Reference
 description: CLI reference for ForkLaunch delete commands.
 ---
 
-# Overview
+## Overview
 
 Delete ForkLaunch project components with confirmation prompts.
 
@@ -18,14 +18,15 @@ Delete ForkLaunch project components with confirmation prompts.
 forklaunch delete service <service-name> [OPTIONS]
 ```
 
-| Option | Description | Values |
-| :----- | :---------- | :----- |
-| `<service-name>` | Name of the service to delete | _string_ |
-| `-p, --path <path>` | Application path | _string_ (default: current directory) |
-| `-c, --continue` | Skip confirmation prompt | None |
-| `-h, --help` | Show help | None |
+| Option              | Description                   | Values                                |
+| :------------------ | :---------------------------- | :------------------------------------ |
+| `<service-name>`    | Name of the service to delete | _string_                              |
+| `-p, --path <path>` | Application path              | _string_ (default: current directory) |
+| `-c, --continue`    | Skip confirmation prompt      | None                                  |
+| `-h, --help`        | Show help                     | None                                  |
 
 **Examples:**
+
 ```bash
 # Delete a service with confirmation
 forklaunch delete service billing
@@ -45,14 +46,15 @@ Delete a worker and its queue configuration.
 forklaunch delete worker <worker-name> [OPTIONS]
 ```
 
-| Option | Description | Values |
-| :----- | :---------- | :----- |
-| `<worker-name>` | Name of the worker to delete | _string_ |
-| `-p, --path <path>` | Application path | _string_ (default: current directory) |
-| `-c, --continue` | Skip confirmation prompt | None |
-| `-h, --help` | Show help | None |
+| Option              | Description                  | Values                                |
+| :------------------ | :--------------------------- | :------------------------------------ |
+| `<worker-name>`     | Name of the worker to delete | _string_                              |
+| `-p, --path <path>` | Application path             | _string_ (default: current directory) |
+| `-c, --continue`    | Skip confirmation prompt     | None                                  |
+| `-h, --help`        | Show help                    | None                                  |
 
 **Examples:**
+
 ```bash
 # Delete a worker
 forklaunch delete worker email-processor
@@ -70,14 +72,15 @@ Delete a router and its route definitions.
 forklaunch delete router <router-name> [OPTIONS]
 ```
 
-| Option | Description | Values |
-| :----- | :---------- | :----- |
-| `<router-name>` | Name of the router to delete | _string_ |
-| `-p, --path <path>` | Application path | _string_ (default: current directory) |
-| `-c, --continue` | Skip confirmation prompt | None |
-| `-h, --help` | Show help | None |
+| Option              | Description                  | Values                                |
+| :------------------ | :--------------------------- | :------------------------------------ |
+| `<router-name>`     | Name of the router to delete | _string_                              |
+| `-p, --path <path>` | Application path             | _string_ (default: current directory) |
+| `-c, --continue`    | Skip confirmation prompt     | None                                  |
+| `-h, --help`        | Show help                    | None                                  |
 
 **Examples:**
+
 ```bash
 # Delete a router
 forklaunch delete router api-v1
@@ -94,14 +97,15 @@ Delete a library and its exports.
 forklaunch delete library <library-name> [OPTIONS]
 ```
 
-| Option | Description | Values |
-| :----- | :---------- | :----- |
-| `<library-name>` | Name of the library to delete | _string_ |
-| `-p, --path <path>` | Application path | _string_ (default: current directory) |
-| `-c, --continue` | Skip confirmation prompt | None |
-| `-h, --help` | Show help | None |
+| Option              | Description                   | Values                                |
+| :------------------ | :---------------------------- | :------------------------------------ |
+| `<library-name>`    | Name of the library to delete | _string_                              |
+| `-p, --path <path>` | Application path              | _string_ (default: current directory) |
+| `-c, --continue`    | Skip confirmation prompt      | None                                  |
+| `-h, --help`        | Show help                     | None                                  |
 
 **Examples:**
+
 ```bash
 # Delete a library
 forklaunch delete library utils
@@ -112,11 +116,11 @@ forklaunch delete library validation --continue
 
 ## Global Options
 
-| Option | Description |
-| :----- | :---------- |
+| Option              | Description                                   |
+| :------------------ | :-------------------------------------------- |
 | `-p, --path <path>` | Application path (default: current directory) |
-| `-c, --continue` | Skip confirmation prompt |
-| `-h, --help` | Show help |
+| `-c, --continue`    | Skip confirmation prompt                      |
+| `-h, --help`        | Show help                                     |
 
 ## Examples
 
@@ -145,14 +149,17 @@ forklaunch delete worker deprecated-worker --continue
 ## Troubleshooting
 
 **Error: Component not found**
+
 - Verify component name and path
 - Check current directory is correct application
 
 **Error: Dependency conflicts**
+
 - Review dependent services before deletion
 - Use `forklaunch depcheck` after deletion
 
 **Error: Permission denied**
+
 - Check file permissions
 - Ensure no processes are using component files
 
@@ -162,6 +169,6 @@ forklaunch delete worker deprecated-worker --continue
 - [`forklaunch change`](/docs/changing-projects.md) - Modify components
 - [`forklaunch depcheck`](/docs/cli/depcheck.md) - Check dependencies
 
-## See Also
+## Related Documentation
 
-- [Deleting Projects Guide](/docs/deleting-projects.md) - Comprehensive deletion guide
+- **[Deleting Projects Guide](../deleting-projects.md)** - Comprehensive deletion guide

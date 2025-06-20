@@ -99,7 +99,7 @@ forklaunch eject --continue -d @forklaunch/infrastructure-redis
 - [`forklaunch depcheck`](./depcheck.md) - Check dependency alignment
 - [`forklaunch change`](../changing-projects.md) - Modify ejected services
 
-## See Also
+## Related Documentation
 
-- [Framework Documentation](../framework.md)
-- [Customization Guide](../customization.md)
+- **[Framework Documentation](../framework.md)** - Framework overview and features
+- **[Customization Guide](../customization.md)** - Project customization options

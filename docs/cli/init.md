@@ -138,6 +138,6 @@ forklaunch init router --path ./my-app/services/api --dryrun
 - [`forklaunch add`](../adding-projects.md) - Add components to existing projects
 - [`forklaunch depcheck`](./depcheck.md) - Check dependencies after initialization
 
-## See Also
+## Related Documentation
 
-- [Adding Projects Guide](../adding-projects.md) - Comprehensive project creation guide
+- **[Adding Projects Guide](../adding-projects.md)** - Comprehensive project creation guide

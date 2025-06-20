@@ -4,7 +4,7 @@ category: Guide
 description: Guide for safely deleting ForkLaunch project components.
 ---
 
-# Deleting Projects
+## Deleting Projects
 
 The ForkLaunch CLI provides commands to delete project components such as services, workers, routers, and libraries. These operations are **irreversible** and require confirmation to prevent accidental data loss.
 
@@ -12,7 +12,6 @@ The ForkLaunch CLI provides commands to delete project components such as servic
 > [Delete Command Reference](/docs/cli/delete.md)
 
 ---
-
 
 ## Basic Usage
 
@@ -24,16 +23,17 @@ forklaunch del <component> <name> [OPTIONS]
 
 ### Available Components
 
-| Component | Command | Description |
-|:----------|:--------|:------------|
-| **Service** | `forklaunch delete service <name>` | Delete a service and its dependencies |
-| **Worker** | `forklaunch delete worker <name>` | Delete a worker and its queue configuration |
-| **Router** | `forklaunch delete router <name>` | Delete a router and its route definitions |
-| **Library** | `forklaunch delete library <name>` | Delete a library and its exports |
+| Component   | Command                            | Description                                 |
+| :---------- | :--------------------------------- | :------------------------------------------ |
+| **Service** | `forklaunch delete service <name>` | Delete a service and its dependencies       |
+| **Worker**  | `forklaunch delete worker <name>`  | Delete a worker and its queue configuration |
+| **Router**  | `forklaunch delete router <name>`  | Delete a router and its route definitions   |
+| **Library** | `forklaunch delete library <name>` | Delete a library and its exports            |
 
 ## Safety Features
 
 ### Confirmation Required
+
 All delete operations require explicit confirmation unless bypassed:
 
 ```bash
@@ -44,7 +44,6 @@ forklaunch delete service payments
 # Skip confirmation
 forklaunch delete service payments --continue
 ```
-
 
 ## Common Scenarios
 
@@ -89,25 +88,28 @@ forklaunch delete library old-validation  # using new validation service
 
 ### Pre-Deletion Checklist
 
-1. **Review Dependencies**  
+1. **Review Dependencies**
+
    ```bash
    # Check what uses this component
    grep -r "import.*from.*billing" services/
    grep -r "billing" *.ts *.js
    ```
 
-2. **Backup Important Code**  
+2. **Backup Important Code**
+
    ```bash
    # Copy useful logic before deletion
    cp services/billing/business-logic.ts ~/backups/
    ```
 
-3. **Update Documentation**  
+3. **Update Documentation**
+
    - Remove component from README
    - Update API documentation
    - Clean up architecture diagrams
 
-4. **Run Tests**  
+4. **Run Tests**
    ```bash
    # Ensure tests pass before deletion
    npm test
@@ -116,6 +118,7 @@ forklaunch delete library old-validation  # using new validation service
 ### Safe Deletion Process
 
 1. **Identify Dependencies**
+
    ```bash
    # Search for imports
    grep -r "from.*component-name" .
@@ -123,11 +126,13 @@ forklaunch delete library old-validation  # using new validation service
    ```
 
 2. **Update Dependents First**
+
    - Remove or replace imports
    - Update business logic
    - Fix broken tests
 
 3. **Delete Component**
+
    ```bash
    forklaunch delete <component> <name>
    ```
@@ -160,12 +165,14 @@ forklaunch delete library billing-utils --continue
 If you accidentally delete a component:
 
 1. **Restore from Git**
+
    ```bash
    git checkout HEAD -- services/deleted-service/
    git checkout HEAD -- registrations.ts
    ```
 
 2. **Regenerate if Needed**
+
    ```bash
    # Recreate the component
    forklaunch add service restored-service --database postgresql
@@ -181,12 +188,14 @@ If you accidentally delete a component:
 If deletion fails partway through:
 
 1. **Check File System**
+
    ```bash
    # Look for leftover files
    find . -name "*deleted-component*"
    ```
 
 2. **Clean Registration Files**
+
    - Remove orphaned imports
    - Clean up registrations.ts
    - Update index.ts files

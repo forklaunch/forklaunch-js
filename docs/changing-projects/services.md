@@ -4,11 +4,9 @@ category: Changing Projects
 description: Complete guide for modifying ForkLaunch service configuration, databases, and infrastructure.
 ---
 
-# Changing Services
+## Overview
 
 The `forklaunch change service` command allows you to modify existing service configuration including database types, infrastructure components, and service metadata. This guide covers all available options and migration strategies.
-
-## Command Overview
 
 ```bash
 forklaunch change service [service-name] [options]
@@ -18,18 +16,19 @@ If no service name is provided, you'll be prompted to select from available serv
 
 ## Available Options
 
-| Option | Type | Description | Default |
-|--------|------|-------------|---------|
-| `--name <name>` | string | Change service name | Current name |
-| `--description <desc>` | string | Update service description | Current description |
-| `--database <database>` | See options below | Change database type | Current database |
-| `--infrastructure <infra>` | `redis`, `s3` | Add/remove infrastructure | Current infrastructure |
+| Option                     | Type              | Description                | Default                |
+| -------------------------- | ----------------- | -------------------------- | ---------------------- |
+| `--name <name>`            | string            | Change service name        | Current name           |
+| `--description <desc>`     | string            | Update service description | Current description    |
+| `--database <database>`    | See options below | Change database type       | Current database       |
+| `--infrastructure <infra>` | `redis`, `s3`     | Add/remove infrastructure  | Current infrastructure |
 
 ## Database Options
 
 Available database types:
+
 - `postgresql` - PostgreSQL database
-- `mysql` - MySQL database  
+- `mysql` - MySQL database
 - `mariadb` - MariaDB database
 - `mssql` - Microsoft SQL Server
 - `mongodb` - MongoDB database
@@ -77,7 +76,7 @@ Update multiple services with same configuration:
 ```bash
 # Upgrade all services to PostgreSQL
 forklaunch change service user-service --database postgresql
-forklaunch change service billing-service --database postgresql  
+forklaunch change service billing-service --database postgresql
 forklaunch change service analytics-service --database postgresql
 ```
 
@@ -86,7 +85,8 @@ forklaunch change service analytics-service --database postgresql
 ### Development to Production Migration
 
 #### Phase 1: Prepare Development
-```bash
+
+````bash
 # Update to production database
 forklaunch change service user-service --database postgresql
 
@@ -100,49 +100,51 @@ forklaunch change service user-service --infrastructure redis
   ```bash
   pnpm test
   pnpm run dev
-  ```
+````
 
   </Tab>
   <Tab title="bun">
 
-  ```bash
-  bun test
-  bun run dev
-  ```
+```bash
+bun test
+bun run dev
+```
 
   </Tab>
 </CodeTabs>
 ```
 
 #### Phase 2: Data Migration
+
 <CodeTabs type="terminal">
   <Tab title="pnpm">
 
-  ```bash
-  # Create migration scripts
-  pnpm run migration:generate -- CreateUserTable
-  pnpm run migration:run
+```bash
+# Create migration scripts
+pnpm run migration:generate -- CreateUserTable
+pnpm run migration:run
 
-  # Verify data migration
-  pnpm run migration:show
-  ```
+# Verify data migration
+pnpm run migration:show
+```
 
   </Tab>
   <Tab title="bun">
 
-  ```bash
-  # Create migration scripts
-  bun run migration:generate -- CreateUserTable
-  bun run migration:run
+```bash
+# Create migration scripts
+bun run migration:generate -- CreateUserTable
+bun run migration:run
 
-  # Verify data migration
-  bun run migration:show
-  ```
+# Verify data migration
+bun run migration:show
+```
 
   </Tab>
 </CodeTabs>
 
 #### Phase 3: Environment Updates
+
 Update environment variables:
 
 ```bash
@@ -223,12 +225,12 @@ forklaunch add service profile-service --database postgresql
 
 ### Post-Change Validation
 
-| Step | pnpm | bun |
-| :--- | :--- | :--- |
-| **Dependencies** | `pnpm install` | `bun install` |
-| **Database** | Test connections and migrations | Test connections and migrations |
-| **Integration** | Run full test suite | Run full test suite |
-| **Development** | Start and test locally | Start and test locally |
+| Step              | pnpm                                | bun                                 |
+| :---------------- | :---------------------------------- | :---------------------------------- |
+| **Dependencies**  | `pnpm install`                      | `bun install`                       |
+| **Database**      | Test connections and migrations     | Test connections and migrations     |
+| **Integration**   | Run full test suite                 | Run full test suite                 |
+| **Development**   | Start and test locally              | Start and test locally              |
 | **Documentation** | Update README and environment files | Update README and environment files |
 
 ## Related Documentation
@@ -237,4 +239,3 @@ forklaunch add service profile-service --database postgresql
 - **[Adding Services](../adding-projects/services.md)** - Creating new services
 - **[Database Configuration](../framework/database.md)** - Database setup and configuration
 - **[Infrastructure Integration](../framework/infrastructure.md)** - Infrastructure components
-- **[Best Practices](../best-practices.md)** - Development best practices

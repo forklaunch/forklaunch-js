@@ -4,11 +4,9 @@ category: Changing Projects
 description: Complete guide for modifying ForkLaunch application configuration, runtimes, and frameworks.
 ---
 
-# Changing Applications
+## Overview
 
-The `forklaunch change application` command allows you to modify application-level configuration including runtime, HTTP framework, development tools, and metadata. This guide covers all available options and common scenarios.
-
-## Command Overview
+The `forklaunch change library` command allows you to modify existing library configuration including names, descriptions, and metadata. This guide covers all available options and common scenarios.
 
 ```bash
 forklaunch change application [options]
@@ -16,18 +14,18 @@ forklaunch change application [options]
 
 ## Available Options
 
-| Option | Type | Description | Default |
-|--------|------|-------------|---------|
-| `--name <name>` | string | Change application name | Current name |
-| `--description <desc>` | string | Update application description | Current description |
-| `--author <author>` | string | Change author information | Current author |
-| `--license <license>` | string | Update license | Current license |
-| `--runtime <runtime>` | `node`,`bun` | Change JavaScript runtime | Current runtime |
-| `--http-framework <framework>` | `express`,`hyper-express` | Change HTTP framework | Current framework |
-| `--validator <validator>` | `zod`,`typebox` | Change validation library | Current validator |
-| `--formatter <formatter>` | `prettier`,`biome` | Change code formatter | Current formatter |
-| `--linter <linter>` | `eslint`,`oxlint` | Change linter | Current linter |
-| `--test-framework <framework>` | `vitest`,`jest` | Change testing framework | Current test framework |
+| Option                         | Type                      | Description                    | Default                |
+| ------------------------------ | ------------------------- | ------------------------------ | ---------------------- |
+| `--name <name>`                | string                    | Change application name        | Current name           |
+| `--description <desc>`         | string                    | Update application description | Current description    |
+| `--author <author>`            | string                    | Change author information      | Current author         |
+| `--license <license>`          | string                    | Update license                 | Current license        |
+| `--runtime <runtime>`          | `node`,`bun`              | Change JavaScript runtime      | Current runtime        |
+| `--http-framework <framework>` | `express`,`hyper-express` | Change HTTP framework          | Current framework      |
+| `--validator <validator>`      | `zod`,`typebox`           | Change validation library      | Current validator      |
+| `--formatter <formatter>`      | `prettier`,`biome`        | Change code formatter          | Current formatter      |
+| `--linter <linter>`            | `eslint`,`oxlint`         | Change linter                  | Current linter         |
+| `--test-framework <framework>` | `vitest`,`jest`           | Change testing framework       | Current test framework |
 
 ## Batch Changes
 
@@ -110,86 +108,86 @@ forklaunch change application \
 
 **1. Dependency Conflicts**
 <CodeTabs type="terminal">
-  <Tab title="pnpm">
+<Tab title="pnpm">
 
-  ```bash
-  # Clear and reinstall
-  rm -rf node_modules package-lock.json
-  pnpm install
-  ```
+```bash
+# Clear and reinstall
+rm -rf node_modules package-lock.json
+pnpm install
+```
 
   </Tab>
   <Tab title="bun">
 
-  ```bash
-  # Clear and reinstall
-  rm -rf node_modules bun.lockb
-  bun install
-  ```
+```bash
+# Clear and reinstall
+rm -rf node_modules bun.lockb
+bun install
+```
 
   </Tab>
 </CodeTabs>
 
 **2. Configuration Errors**
 <CodeTabs type="terminal">
-  <Tab title="pnpm">
+<Tab title="pnpm">
 
-  ```bash
-  # Check configuration
-  pnpm run lint
-  pnpm run build
-  ```
+```bash
+# Check configuration
+pnpm run lint
+pnpm run build
+```
 
   </Tab>
   <Tab title="bun">
 
-  ```bash
-  # Check configuration
-  bun run lint
-  bun run build
-  ```
+```bash
+# Check configuration
+bun run lint
+bun run build
+```
 
   </Tab>
 </CodeTabs>
 
 **3. Runtime Compatibility**
 <CodeTabs type="terminal">
-  <Tab title="pnpm">
+<Tab title="pnpm">
 
-  ```bash
-  # Test new runtime
-  pnpm run dev
-  pnpm test
-  ```
+```bash
+# Test new runtime
+pnpm run dev
+pnpm test
+```
 
   </Tab>
   <Tab title="bun">
 
-  ```bash
-  # Test new runtime
-  bun run dev
-  bun test
-  ```
+```bash
+# Test new runtime
+bun run dev
+bun test
+```
 
   </Tab>
 </CodeTabs>
 
 **4. Import Resolution Issues**
 <CodeTabs type="terminal">
-  <Tab title="pnpm">
+<Tab title="pnpm">
 
-  ```bash
-  # Check imports after framework changes
-  pnpm run build
-  ```
+```bash
+# Check imports after framework changes
+pnpm run build
+```
 
   </Tab>
   <Tab title="bun">
 
-  ```bash
-  # Check imports after framework changes
-  bun run build
-  ```
+```bash
+# Check imports after framework changes
+bun run build
+```
 
   </Tab>
 </CodeTabs>
@@ -198,13 +196,13 @@ forklaunch change application \
 
 After making changes, always:
 
-| Step | pnpm | bun |
-| :--- | :--- | :--- |
-| **Install dependencies** | `pnpm install` | `bun install` |
-| **Run linter** | `pnpm run lint` | `bun run lint` |
-| **Run tests** | `pnpm test` | `bun test` |
-| **Build project** | `pnpm run build` | `bun run build` |
-| **Start development** | `pnpm run dev` | `bun run dev` |
+| Step                     | pnpm             | bun             |
+| :----------------------- | :--------------- | :-------------- |
+| **Install dependencies** | `pnpm install`   | `bun install`   |
+| **Run linter**           | `pnpm run lint`  | `bun run lint`  |
+| **Run tests**            | `pnpm test`      | `bun test`      |
+| **Build project**        | `pnpm run build` | `bun run build` |
+| **Start development**    | `pnpm run dev`   | `bun run dev`   |
 
 ### Rollback Strategy
 
@@ -213,26 +211,26 @@ If issues occur:
 <CodeTabs type="terminal">
   <Tab title="pnpm">
 
-  ```bash
-  # Quick rollback
-  git checkout -- .
-  pnpm install
+```bash
+# Quick rollback
+git checkout -- .
+pnpm install
 
-  # Or revert specific commit
-  git revert HEAD
-  ```
+# Or revert specific commit
+git revert HEAD
+```
 
   </Tab>
   <Tab title="bun">
 
-  ```bash
-  # Quick rollback
-  git checkout -- .
-  bun install
+```bash
+# Quick rollback
+git checkout -- .
+bun install
 
-  # Or revert specific commit
-  git revert HEAD
-  ```
+# Or revert specific commit
+git revert HEAD
+```
 
   </Tab>
 </CodeTabs>
@@ -270,5 +268,3 @@ forklaunch add service user-service  # Will use TypeBox
 
 - **[Changing Services](./services.md)** - Service-specific changes
 - **[CLI Reference](../cli/change.md)** - Complete CLI reference
-- **[Best Practices](../best-practices.md)** - Development best practices
-- **[Troubleshooting](../troubleshooting.md)** - Common issues and solutions

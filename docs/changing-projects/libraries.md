@@ -4,10 +4,6 @@ category: Changing Projects
 description: Complete guide for modifying ForkLaunch library configuration and metadata.
 ---
 
-# Changing Libraries
-
-The `forklaunch change library` command allows you to modify existing library configuration including names, descriptions, and metadata. This guide covers all available options and common scenarios.
-
 ## Command Overview
 
 ```bash
@@ -18,9 +14,9 @@ If no library name is provided, you'll be prompted to select from available libr
 
 ## Available Options
 
-| Option | Type | Description | Default |
-|--------|------|-------------|---------|
-| `--name <name>` | string | New library name | Current name |
+| Option                 | Type   | Description                | Default             |
+| ---------------------- | ------ | -------------------------- | ------------------- |
+| `--name <name>`        | string | New library name           | Current name        |
 | `--description <desc>` | string | Update library description | Current description |
 
 ### Combined Changes
@@ -86,40 +82,40 @@ forklaunch change library core-utils --name core-utilities-stable
 
 **Solution**:
 <CodeTabs type="terminal">
-  <Tab title="pnpm">
+<Tab title="pnpm">
 
-  ```bash
-  # Clear node_modules and reinstall
-  rm -rf node_modules package-lock.json
-  pnpm install
+```bash
+# Clear node_modules and reinstall
+rm -rf node_modules package-lock.json
+pnpm install
 
-  # Clear TypeScript cache
-  npx tsc --build --clean
+# Clear TypeScript cache
+npx tsc --build --clean
 
-  # Rebuild all packages
-  pnpm run build
+# Rebuild all packages
+pnpm run build
 
-  # Check for remaining references
-  grep -r "@myapp/old-library-name" .
-  ```
+# Check for remaining references
+grep -r "@myapp/old-library-name" .
+```
 
   </Tab>
   <Tab title="bun">
 
-  ```bash
-  # Clear node_modules and reinstall
-  rm -rf node_modules bun.lockb
-  bun install
+```bash
+# Clear node_modules and reinstall
+rm -rf node_modules bun.lockb
+bun install
 
-  # Clear TypeScript cache
-  bunx tsc --build --clean
+# Clear TypeScript cache
+bunx tsc --build --clean
 
-  # Rebuild all packages
-  bun run build
+# Rebuild all packages
+bun run build
 
-  # Check for remaining references
-  grep -r "@myapp/old-library-name" .
-  ```
+# Check for remaining references
+grep -r "@myapp/old-library-name" .
+```
 
   </Tab>
 </CodeTabs>
@@ -130,32 +126,32 @@ forklaunch change library core-utils --name core-utilities-stable
 
 **Solution**:
 <CodeTabs type="terminal">
-  <Tab title="pnpm">
+<Tab title="pnpm">
 
-  ```bash
-  # Verify workspace configuration
-  cat package.json | grep -A 5 "workspaces"
+```bash
+# Verify workspace configuration
+cat package.json | grep -A 5 "workspaces"
 
-  # Reinstall workspace dependencies
-  pnpm install
+# Reinstall workspace dependencies
+pnpm install
 
-  # Check package resolution
-  pnpm ls @myapp/account-utilities
-  ```
+# Check package resolution
+pnpm ls @myapp/account-utilities
+```
 
   </Tab>
   <Tab title="bun">
 
-  ```bash
-  # Verify workspace configuration
-  cat package.json | grep -A 5 "workspaces"
+```bash
+# Verify workspace configuration
+cat package.json | grep -A 5 "workspaces"
 
-  # Reinstall workspace dependencies
-  bun install
+# Reinstall workspace dependencies
+bun install
 
-  # Check package resolution
-  bun pm ls @myapp/account-utilities
-  ```
+# Check package resolution
+bun pm ls @myapp/account-utilities
+```
 
   </Tab>
 </CodeTabs>
@@ -173,15 +169,17 @@ forklaunch change library core-utils --name core-utilities-stable
 ### Naming Conventions
 
 1. **Descriptive Names**: Use clear, descriptive library names
+
    ```bash
    # Good
    forklaunch change library utils --name validation-utilities
-   
+
    # Avoid
    forklaunch change library utils --name lib1
    ```
 
 2. **Consistent Patterns**: Follow consistent naming across libraries
+
    ```bash
    # Consistent pattern
    validation-utilities
@@ -206,6 +204,6 @@ forklaunch change library core-utils --name core-utilities-stable
 
 - **[Adding Libraries](../adding-projects/libraries.md)** - Creating new libraries
 - **[Framework Libraries](../framework/libraries.md)** - Library framework documentation
-- **[Best Practices](../best-practices.md)** - Development best practices
+
 - **[TypeScript Configuration](../configuration/typescript.md)** - TypeScript setup
 - **[Workspace Management](../configuration/workspaces.md)** - Managing workspaces
