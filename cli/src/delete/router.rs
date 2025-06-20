@@ -33,8 +33,8 @@ use crate::{
         command::command,
         manifest::{
             InitializableManifestConfig, InitializableManifestConfigMetadata,
-            RouterInitializationMetadata, application::ApplicationManifestData,
-            remove_router_definition_from_manifest,
+            RouterInitializationMetadata, remove_router_definition_from_manifest,
+            router::RouterManifestData,
         },
         rendered_template::{RenderedTemplate, write_rendered_templates},
     },
@@ -91,7 +91,7 @@ impl CliCommand for RouterCommand {
             .join(".forklaunch")
             .join("manifest.toml");
 
-        let mut manifest_data: ApplicationManifestData = toml::from_str(
+        let mut manifest_data: RouterManifestData = toml::from_str(
             &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
@@ -116,13 +116,7 @@ impl CliCommand for RouterCommand {
 
         manifest_data = manifest_data.initialize(InitializableManifestConfigMetadata::Router(
             RouterInitializationMetadata {
-                project_name: base_path
-                    .parent()
-                    .unwrap()
-                    .file_name()
-                    .unwrap()
-                    .to_string_lossy()
-                    .to_string(),
+                project_name: base_path.file_name().unwrap().to_string_lossy().to_string(),
                 router_name: Some(router_name.clone()),
             },
         ));

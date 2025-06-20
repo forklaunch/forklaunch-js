@@ -102,17 +102,7 @@ impl CliCommand for LibraryCommand {
         manifest_data = manifest_data.initialize(InitializableManifestConfigMetadata::Application(
             ApplicationInitializationMetadata {
                 app_name: base_path.file_name().unwrap().to_string_lossy().to_string(),
-                database: match manifest_data
-                    .projects
-                    .iter()
-                    .find(|project| {
-                        project.name == library_name && project.r#type == ProjectType::Library
-                    })
-                    .map(|project| project.resources.as_ref().unwrap())
-                {
-                    Some(resource_inventory) => resource_inventory.database.clone(),
-                    None => None,
-                },
+                database: None,
             },
         ));
 

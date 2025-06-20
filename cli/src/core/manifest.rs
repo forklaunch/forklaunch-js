@@ -422,7 +422,7 @@ pub(crate) fn remove_project_definition_from_manifest(
 }
 
 pub(crate) fn remove_router_definition_from_manifest(
-    manifest_data: &mut ApplicationManifestData,
+    manifest_data: &mut RouterManifestData,
     project_name: &String,
     router_name: &String,
 ) -> Result<String> {
