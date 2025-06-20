@@ -16,8 +16,8 @@ import {
   transformIntoInternalMapper
 } from '@forklaunch/internal';
 import { AnySchemaValidator } from '@forklaunch/validator';
-import { RoleDtos } from '../types/iamDto.types';
-import { RoleEntities } from '../types/iamEntities.types';
+import { RoleDtos } from '../domain/types/iamDto.types';
+import { RoleEntities } from '../domain/types/iamEntities.types';
 
 export class BaseRoleService<
   SchemaValidator extends AnySchemaValidator,

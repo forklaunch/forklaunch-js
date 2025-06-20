@@ -14,8 +14,8 @@ import {
 } from '@forklaunch/internal';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
-import { BaseSubscriptionDtos } from '../types/baseBillingDto.types';
-import { BaseSubscriptionEntities } from '../types/baseBillingEntity.types';
+import { BaseSubscriptionDtos } from '../domain/types/baseBillingDto.types';
+import { BaseSubscriptionEntities } from '../domain/types/baseBillingEntity.types';
 
 export class BaseSubscriptionService<
   SchemaValidator extends AnySchemaValidator,

@@ -18,42 +18,42 @@ import {
   CreateOrganizationSchema as TypeboxCreateOrganizationSchema,
   OrganizationSchema as TypeboxOrganizationSchema,
   UpdateOrganizationSchema as TypeboxUpdateOrganizationSchema
-} from '../schemas/typebox/organization.schema';
+} from '../domain/schemas/typebox/organization.schema';
 import {
   CreatePermissionSchema as TypeboxCreatePermissionSchema,
   PermissionSchema as TypeboxPermissionSchema,
   UpdatePermissionSchema as TypeboxUpdatePermissionSchema
-} from '../schemas/typebox/permission.schema';
+} from '../domain/schemas/typebox/permission.schema';
 import {
   CreateRoleSchema as TypeboxCreateRoleSchema,
   RoleSchema as TypeboxRoleSchema,
   UpdateRoleSchema as TypeboxUpdateRoleSchema
-} from '../schemas/typebox/role.schema';
+} from '../domain/schemas/typebox/role.schema';
 import {
   CreateUserSchema as TypeboxCreateUserSchema,
   UpdateUserSchema as TypeboxUpdateUserSchema,
   UserSchema as TypeboxUserSchema
-} from '../schemas/typebox/user.schema';
+} from '../domain/schemas/typebox/user.schema';
 import {
   CreateOrganizationSchema as ZodCreateOrganizationSchema,
   OrganizationSchema as ZodOrganizationSchema,
   UpdateOrganizationSchema as ZodUpdateOrganizationSchema
-} from '../schemas/zod/organization.schema';
+} from '../domain/schemas/zod/organization.schema';
 import {
   CreatePermissionSchema as ZodCreatePermissionSchema,
   PermissionSchema as ZodPermissionSchema,
   UpdatePermissionSchema as ZodUpdatePermissionSchema
-} from '../schemas/zod/permission.schema';
+} from '../domain/schemas/zod/permission.schema';
 import {
   CreateRoleSchema as ZodCreateRoleSchema,
   RoleSchema as ZodRoleSchema,
   UpdateRoleSchema as ZodUpdateRoleSchema
-} from '../schemas/zod/role.schema';
+} from '../domain/schemas/zod/role.schema';
 import {
   CreateUserSchema as ZodCreateUserSchema,
   UpdateUserSchema as ZodUpdateUserSchema,
   UserSchema as ZodUserSchema
-} from '../schemas/zod/user.schema';
+} from '../domain/schemas/zod/user.schema';
 
 const zodUpdatePermissionSchema = ZodUpdatePermissionSchema({
   uuidId: false

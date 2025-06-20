@@ -18,15 +18,15 @@ import {
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
 import Stripe from 'stripe';
-import { CurrencyEnum } from '../enum/currency.enum';
-import { PaymentMethodEnum } from '../enum/paymentMethod.enum';
+import { CurrencyEnum } from '../domain/enum/currency.enum';
+import { PaymentMethodEnum } from '../domain/enum/paymentMethod.enum';
 import {
   StripeCreatePaymentLinkDto,
   StripePaymentLinkDto,
   StripePaymentLinkDtos,
   StripeUpdatePaymentLinkDto
-} from '../types/stripe.dto.types';
-import { StripePaymentLinkEntities } from '../types/stripe.entity.types';
+} from '../domain/types/stripe.dto.types';
+import { StripePaymentLinkEntities } from '../domain/types/stripe.entity.types';
 
 export class StripePaymentLinkService<
   SchemaValidator extends AnySchemaValidator,

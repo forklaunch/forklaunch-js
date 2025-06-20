@@ -1,10 +1,10 @@
 import { isTrue } from '@forklaunch/common';
 import { DummyEnum, testSchemaEquality } from '@forklaunch/internal';
 import Stripe from 'stripe';
-import { BillingProviderEnum } from '../enum/billingProvider.enum';
-import { CurrencyEnum } from '../enum/currency.enum';
-import { PaymentMethodEnum } from '../enum/paymentMethod.enum';
-import { PlanCadenceEnum } from '../enum/planCadence.enum';
+import { BillingProviderEnum } from '../domain/enum/billingProvider.enum';
+import { CurrencyEnum } from '../domain/enum/currency.enum';
+import { PaymentMethodEnum } from '../domain/enum/paymentMethod.enum';
+import { PlanCadenceEnum } from '../domain/enum/planCadence.enum';
 import {
   BillingPortalSchema as TypeboxBillingPortalSchema,
   CreateBillingPortalSchema as TypeboxCreateBillingPortalSchema,

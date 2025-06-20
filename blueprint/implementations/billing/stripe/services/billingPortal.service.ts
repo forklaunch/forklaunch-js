@@ -23,8 +23,8 @@ import {
   StripeBillingPortalDtos,
   StripeCreateBillingPortalDto,
   StripeUpdateBillingPortalDto
-} from '../types/stripe.dto.types';
-import { StripeBillingPortalEntities } from '../types/stripe.entity.types';
+} from '../domain/types/stripe.dto.types';
+import { StripeBillingPortalEntities } from '../domain/types/stripe.entity.types';
 
 export class StripeBillingPortalService<
   SchemaValidator extends AnySchemaValidator,

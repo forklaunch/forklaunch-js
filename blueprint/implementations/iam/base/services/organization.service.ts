@@ -14,8 +14,8 @@ import {
 } from '@forklaunch/internal';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
-import { OrganizationDtos } from '../types/iamDto.types';
-import { OrganizationEntities } from '../types/iamEntities.types';
+import { OrganizationDtos } from '../domain/types/iamDto.types';
+import { OrganizationEntities } from '../domain/types/iamEntities.types';
 
 export class BaseOrganizationService<
   SchemaValidator extends AnySchemaValidator,

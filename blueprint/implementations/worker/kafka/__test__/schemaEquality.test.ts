@@ -1,8 +1,8 @@
 import { isTrue } from '@forklaunch/common';
 import { testSchemaEquality } from '@forklaunch/internal';
-import { KafkaWorkerOptionsSchema as TypeboxKafkaWorkerOptionsSchema } from '../schemas/typebox/kafkaWorker.schema';
-import { KafkaWorkerOptionsSchema as ZodKafkaWorkerOptionsSchema } from '../schemas/zod/kafkaWorker.schema';
-import { KafkaWorkerOptions } from '../types/kafkaWorker.types';
+import { KafkaWorkerOptionsSchema as TypeboxKafkaWorkerOptionsSchema } from '../domain/schemas/typebox/kafkaWorker.schema';
+import { KafkaWorkerOptionsSchema as ZodKafkaWorkerOptionsSchema } from '../domain/schemas/zod/kafkaWorker.schema';
+import { KafkaWorkerOptions } from '../domain/types/kafkaWorker.types';
 
 describe('schema equality', () => {
   it('should be equal for bullmq worker', () => {

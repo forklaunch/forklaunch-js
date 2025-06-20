@@ -18,8 +18,8 @@ import {
 } from '@forklaunch/internal';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
-import { PermissionDtos } from '../types/iamDto.types';
-import { PermissionEntities } from '../types/iamEntities.types';
+import { PermissionDtos } from '../domain/types/iamDto.types';
+import { PermissionEntities } from '../domain/types/iamEntities.types';
 
 export class BasePermissionService<
   SchemaValidator extends AnySchemaValidator,

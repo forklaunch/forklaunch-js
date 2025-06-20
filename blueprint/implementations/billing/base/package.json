@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/implementation-billing-base",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Billing basic implementation for forklaunch",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -14,23 +14,29 @@
   "author": "Forklift Technologies, Inc.",
   "exports": {
     "./schemas": {
-      "types": "./lib/schemas/index.d.ts",
-      "import": "./lib/schemas/index.mjs",
-      "require": "./lib/schemas/index.js",
-      "default": "./lib/schemas/index.js"
+      "types": "./lib/domain/schemas/index.d.ts",
+      "import": "./lib/domain/schemas/index.mjs",
+      "require": "./lib/domain/schemas/index.js",
+      "default": "./lib/domain/schemas/index.js"
     },
     "./services": {
       "types": "./lib/services/index.d.ts",
       "import": "./lib/services/index.mjs",
       "require": "./lib/services/index.js",
       "default": "./lib/services/index.js"
+    },
+    "./types": {
+      "types": "./lib/domain/types/index.d.ts",
+      "import": "./lib/domain/types/index.mjs",
+      "require": "./lib/domain/types/index.js",
+      "default": "./lib/domain/types/index.js"
     }
   },
   "files": [
     "lib/**"
   ],
   "scripts": {
-    "build": "tsc --noEmit && tsup schemas/index.ts services/index.ts --format cjs,esm --no-splitting --dts --tsconfig tsconfig.json --out-dir lib --clean && if [ -f eject-package.bash ]; then pnpm package:eject; fi",
+    "build": "tsc --noEmit && tsup domain/schemas/index.ts services/index.ts domain/types/index.ts --format cjs,esm --no-splitting --dts --tsconfig tsconfig.json --out-dir lib --clean && if [ -f eject-package.bash ]; then pnpm package:eject; fi",
     "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",

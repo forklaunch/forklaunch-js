@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/implementation-worker-redis",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Redis implementation for forklaunch workers",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -26,23 +26,23 @@
       "default": "./lib/producers/index.js"
     },
     "./schemas": {
-      "types": "./lib/schemas/index.d.ts",
-      "import": "./lib/schemas/index.mjs",
-      "require": "./lib/schemas/index.js",
-      "default": "./lib/schemas/index.js"
+      "types": "./lib/domain/schemas/index.d.ts",
+      "import": "./lib/domain/schemas/index.mjs",
+      "require": "./lib/domain/schemas/index.js",
+      "default": "./lib/domain/schemas/index.js"
     },
     "./types": {
-      "types": "./lib/types/index.d.ts",
-      "import": "./lib/types/index.mjs",
-      "require": "./lib/types/index.js",
-      "default": "./lib/types/index.js"
+      "types": "./lib/domain/types/index.d.ts",
+      "import": "./lib/domain/types/index.mjs",
+      "require": "./lib/domain/types/index.js",
+      "default": "./lib/domain/types/index.js"
     }
   },
   "files": [
     "lib/**"
   ],
   "scripts": {
-    "build": "tsc --noEmit && tsup producers/index.ts consumers/index.ts schemas/index.ts types/index.ts --format cjs,esm --no-splitting --dts --tsconfig tsconfig.json --out-dir lib --clean && if [ -f eject-package.bash ]; then pnpm package:eject; fi",
+    "build": "tsc --noEmit && tsup producers/index.ts consumers/index.ts domain/schemas/index.ts domain/types/index.ts --format cjs,esm --no-splitting --dts --tsconfig tsconfig.json --out-dir lib --clean && if [ -f eject-package.bash ]; then pnpm package:eject; fi",
     "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",

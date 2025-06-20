@@ -15,8 +15,8 @@ import {
 } from '@forklaunch/internal';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
-import { BaseCheckoutSessionDtos } from '../types/baseBillingDto.types';
-import { BaseCheckoutSessionEntities } from '../types/baseBillingEntity.types';
+import { BaseCheckoutSessionDtos } from '../domain/types/baseBillingDto.types';
+import { BaseCheckoutSessionEntities } from '../domain/types/baseBillingEntity.types';
 
 export class BaseCheckoutSessionService<
   SchemaValidator extends AnySchemaValidator,

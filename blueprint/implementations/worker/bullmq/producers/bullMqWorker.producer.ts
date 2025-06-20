@@ -1,7 +1,7 @@
 import { WorkerProducer } from '@forklaunch/interfaces-worker/interfaces';
 import { WorkerEventEntity } from '@forklaunch/interfaces-worker/types';
 import { Queue } from 'bullmq';
-import { BullMqWorkerOptions } from '../types/bullMqWorker.types';
+import { BullMqWorkerOptions } from '../domain/types/bullMqWorker.types';
 
 export class BullMqWorkerProducer<
   EventEntity extends WorkerEventEntity,

@@ -5,7 +5,7 @@ import {
   WorkerProcessFunction
 } from '@forklaunch/interfaces-worker/types';
 import { Job, Queue, Worker } from 'bullmq';
-import { BullMqWorkerOptions } from '../types/bullMqWorker.types';
+import { BullMqWorkerOptions } from '../domain/types/bullMqWorker.types';
 
 export class BullMqWorkerConsumer<
   EventEntity extends WorkerEventEntity,

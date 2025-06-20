@@ -1,8 +1,8 @@
 import { isTrue } from '@forklaunch/common';
 import { testSchemaEquality } from '@forklaunch/internal';
-import { BullMqWorkerOptionsSchema as TypeboxBullMqWorkerOptionsSchema } from '../schemas/typebox/bullMqWorker.schema';
-import { BullMqWorkerOptionsSchema as ZodBullMqWorkerOptionsSchema } from '../schemas/zod/bullMqWorker.schema';
-import { BullMqWorkerOptions } from '../types/bullMqWorker.types';
+import { BullMqWorkerOptionsSchema as TypeboxBullMqWorkerOptionsSchema } from '../domain/schemas/typebox/bullMqWorker.schema';
+import { BullMqWorkerOptionsSchema as ZodBullMqWorkerOptionsSchema } from '../domain/schemas/zod/bullMqWorker.schema';
+import { BullMqWorkerOptions } from '../domain/types/bullMqWorker.types';
 
 describe('schema equality', () => {
   it('should be equal for bullmq worker', () => {

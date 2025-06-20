@@ -20,8 +20,8 @@ import {
 } from '@forklaunch/internal';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
-import { UserDtos } from '../types/iamDto.types';
-import { UserEntities } from '../types/iamEntities.types';
+import { UserDtos } from '../domain/types/iamDto.types';
+import { UserEntities } from '../domain/types/iamEntities.types';
 
 export class BaseUserService<
   SchemaValidator extends AnySchemaValidator,

@@ -17,16 +17,16 @@ import {
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
 import Stripe from 'stripe';
-import { BillingProviderEnum } from '../enum/billingProvider.enum';
-import { CurrencyEnum } from '../enum/currency.enum';
-import { PlanCadenceEnum } from '../enum/planCadence.enum';
+import { BillingProviderEnum } from '../domain/enum/billingProvider.enum';
+import { CurrencyEnum } from '../domain/enum/currency.enum';
+import { PlanCadenceEnum } from '../domain/enum/planCadence.enum';
 import {
   StripeCreatePlanDto,
   StripePlanDto,
   StripePlanDtos,
   StripeUpdatePlanDto
-} from '../types/stripe.dto.types';
-import { StripePlanEntities } from '../types/stripe.entity.types';
+} from '../domain/types/stripe.dto.types';
+import { StripePlanEntities } from '../domain/types/stripe.entity.types';
 
 export class StripePlanService<
   SchemaValidator extends AnySchemaValidator,

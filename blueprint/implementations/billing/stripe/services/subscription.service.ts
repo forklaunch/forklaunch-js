@@ -17,14 +17,14 @@ import {
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
 import Stripe from 'stripe';
-import { BillingProviderEnum } from '../enum/billingProvider.enum';
+import { BillingProviderEnum } from '../domain/enum/billingProvider.enum';
 import {
   StripeCreateSubscriptionDto,
   StripeSubscriptionDto,
   StripeSubscriptionDtos,
   StripeUpdateSubscriptionDto
-} from '../types/stripe.dto.types';
-import { StripeSubscriptionEntities } from '../types/stripe.entity.types';
+} from '../domain/types/stripe.dto.types';
+import { StripeSubscriptionEntities } from '../domain/types/stripe.entity.types';
 
 export class StripeSubscriptionService<
   SchemaValidator extends AnySchemaValidator,

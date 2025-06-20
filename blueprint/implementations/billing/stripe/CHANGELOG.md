@@ -1,5 +1,13 @@
 # @forklaunch/implementation-billing-base
 
+## 0.0.3
+
+### Patch Changes
+
+- move domain files into domain folder
+- Updated dependencies
+  - @forklaunch/implementation-billing-base@0.3.4
+
 ## 0.0.2
 
 ### Patch Changes

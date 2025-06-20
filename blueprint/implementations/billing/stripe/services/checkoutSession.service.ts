@@ -18,10 +18,10 @@ import {
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
 import Stripe from 'stripe';
-import { CurrencyEnum } from '../enum/currency.enum';
-import { PaymentMethodEnum } from '../enum/paymentMethod.enum';
-import { StripeCheckoutSessionDtos } from '../types/stripe.dto.types';
-import { StripeCheckoutSessionEntities } from '../types/stripe.entity.types';
+import { CurrencyEnum } from '../domain/enum/currency.enum';
+import { PaymentMethodEnum } from '../domain/enum/paymentMethod.enum';
+import { StripeCheckoutSessionDtos } from '../domain/types/stripe.dto.types';
+import { StripeCheckoutSessionEntities } from '../domain/types/stripe.entity.types';
 
 export class StripeCheckoutSessionService<
   SchemaValidator extends AnySchemaValidator,
