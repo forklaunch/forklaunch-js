@@ -12,9 +12,9 @@ import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { UserService } from '@forklaunch/interfaces-iam/interfaces';
 import {
-  CreateUserDtoMapper,
-  UpdateUserDtoMapper,
-  UserDtoMapper
+  CreateUserMapper,
+  UpdateUserMapper,
+  UserMapper
 } from '../../domain/mappers/user.mappers';
 import { SchemaDependencies } from '../../registrations';
 
@@ -33,7 +33,7 @@ export const UserController = (
       {
         name: 'Create User',
         summary: 'Creates a new user',
-        body: CreateUserDtoMapper.schema(),
+        body: CreateUserMapper.schema(),
         responses: {
           201: string,
           500: string
@@ -52,7 +52,7 @@ export const UserController = (
       {
         name: 'Create Batch Users',
         summary: 'Creates multiple users',
-        body: array(CreateUserDtoMapper.schema()),
+        body: array(CreateUserMapper.schema()),
         responses: {
           201: string,
           500: string
@@ -72,7 +72,7 @@ export const UserController = (
         name: 'Get User',
         summary: 'Gets a user by ID',
         responses: {
-          200: UserDtoMapper.schema(),
+          200: UserMapper.schema(),
           500: string
         },
         params: IdSchema
@@ -90,7 +90,7 @@ export const UserController = (
         name: 'Get Batch Users',
         summary: 'Gets multiple users by IDs',
         responses: {
-          200: array(UserDtoMapper.schema()),
+          200: array(UserMapper.schema()),
           500: string
         },
         query: IdsSchema
@@ -107,7 +107,7 @@ export const UserController = (
       {
         name: 'Update User',
         summary: 'Updates a user by ID',
-        body: UpdateUserDtoMapper.schema(),
+        body: UpdateUserMapper.schema(),
         responses: {
           200: string,
           500: string
@@ -126,7 +126,7 @@ export const UserController = (
       {
         name: 'Update Batch Users',
         summary: 'Updates multiple users by IDs',
-        body: array(UpdateUserDtoMapper.schema()),
+        body: array(UpdateUserMapper.schema()),
         responses: {
           200: string,
           500: string

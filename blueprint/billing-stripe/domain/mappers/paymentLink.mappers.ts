@@ -1,47 +1,54 @@
-import { SchemaValidator, type } from '@forklaunch/blueprint-core';
-import { RequestDtoMapper, ResponseDtoMapper } from '@forklaunch/core/mappers';
+import { SchemaValidator } from '@forklaunch/blueprint-core';
+import { RequestMapper, ResponseMapper } from '@forklaunch/core/mappers';
 import { EntityManager } from '@mikro-orm/core';
 import Stripe from 'stripe';
 import { PaymentLink } from '../../persistence/entities/paymentLink.entity';
 import { PaymentLinkSchemas } from '../../registrations';
 import { StatusEnum } from '../enum/status.enum';
 
-export class CreatePaymentLinkDtoMapper extends RequestDtoMapper<
+export class CreatePaymentLinkMapper extends RequestMapper<
   PaymentLink,
   SchemaValidator
 > {
-  schema = {
-    ...PaymentLinkSchemas.CreatePaymentLinkSchema(StatusEnum),
-    providerFields: type<Stripe.PaymentLink>()
-  };
+  schema = PaymentLinkSchemas.CreatePaymentLinkSchema(StatusEnum);
 
-  async toEntity(em: EntityManager): Promise<PaymentLink> {
+  async toEntity(
+    em: EntityManager,
+    providerFields: Stripe.PaymentLink
+  ): Promise<PaymentLink> {
     return PaymentLink.create(
       {
         ...this.dto,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        providerFields
       },
       em
     );
   }
 }
 
-export class UpdatePaymentLinkDtoMapper extends RequestDtoMapper<
+export class UpdatePaymentLinkMapper extends RequestMapper<
   PaymentLink,
   SchemaValidator
 > {
-  schema = {
-    ...PaymentLinkSchemas.UpdatePaymentLinkSchema(StatusEnum),
-    providerFields: type<Stripe.PaymentLink>()
-  };
+  schema = PaymentLinkSchemas.UpdatePaymentLinkSchema(StatusEnum);
 
-  async toEntity(em: EntityManager): Promise<PaymentLink> {
-    return PaymentLink.update(this.dto, em);
+  async toEntity(
+    em: EntityManager,
+    providerFields: Stripe.PaymentLink
+  ): Promise<PaymentLink> {
+    return PaymentLink.update(
+      {
+        ...this.dto,
+        providerFields
+      },
+      em
+    );
   }
 }
 
-export class PaymentLinkDtoMapper extends ResponseDtoMapper<
+export class PaymentLinkMapper extends ResponseMapper<
   PaymentLink,
   SchemaValidator
 > {

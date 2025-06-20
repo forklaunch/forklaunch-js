@@ -4,15 +4,15 @@ import {
   SchemaValidator,
   string
 } from '@forklaunch/blueprint-core';
-import { RequestDtoMapper, ResponseDtoMapper } from '@forklaunch/core/mappers';
+import { RequestMapper, ResponseMapper } from '@forklaunch/core/mappers';
 import { wrap } from '@mikro-orm/core';
 import { SampleWorkerEventRecord } from '../../persistence/entities/sampleWorkerRecord.entity';
 import { SampleWorkerSchema } from '../schemas/sampleWorker.schema';
 
 // Exported type that matches the request schema
-export type SampleWorkerRequestDto = SampleWorkerRequestDtoMapper['dto'];
-// RequestDtoMapper class that maps the request schema to the entity
-export class SampleWorkerRequestDtoMapper extends RequestDtoMapper<
+export type SampleWorkerRequestDto = SampleWorkerRequestMapper['dto'];
+// RequestMapper class that maps the request schema to the entity
+export class SampleWorkerRequestMapper extends RequestMapper<
   SampleWorkerEventRecord,
   SchemaValidator
 > {
@@ -32,9 +32,9 @@ export class SampleWorkerRequestDtoMapper extends RequestDtoMapper<
 }
 
 // Exported type that matches the response schema
-export type SampleWorkerResponseDto = SampleWorkerResponseDtoMapper['dto'];
-// ResponseDtoMapper class that maps the response schema to the entity
-export class SampleWorkerResponseDtoMapper extends ResponseDtoMapper<
+export type SampleWorkerResponseDto = SampleWorkerResponseMapper['dto'];
+// ResponseMapper class that maps the response schema to the entity
+export class SampleWorkerResponseMapper extends ResponseMapper<
   SampleWorkerEventRecord,
   SchemaValidator
 > {

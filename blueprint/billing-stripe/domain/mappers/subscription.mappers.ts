@@ -1,47 +1,54 @@
-import { SchemaValidator, type } from '@forklaunch/blueprint-core';
-import { RequestDtoMapper, ResponseDtoMapper } from '@forklaunch/core/mappers';
+import { SchemaValidator } from '@forklaunch/blueprint-core';
+import { RequestMapper, ResponseMapper } from '@forklaunch/core/mappers';
 import { EntityManager } from '@mikro-orm/core';
 import Stripe from 'stripe';
 import { Subscription } from '../../persistence/entities/subscription.entity';
 import { SubscriptionSchemas } from '../../registrations';
 import { PartyEnum } from '../enum/party.enum';
 
-export class CreateSubscriptionDtoMapper extends RequestDtoMapper<
+export class CreateSubscriptionMapper extends RequestMapper<
   Subscription,
   SchemaValidator
 > {
-  schema = {
-    ...SubscriptionSchemas.CreateSubscriptionSchema(PartyEnum),
-    providerFields: type<Stripe.Subscription>()
-  };
+  schema = SubscriptionSchemas.CreateSubscriptionSchema(PartyEnum);
 
-  async toEntity(em: EntityManager): Promise<Subscription> {
+  async toEntity(
+    em: EntityManager,
+    providerFields: Stripe.Subscription
+  ): Promise<Subscription> {
     return Subscription.create(
       {
         ...this.dto,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        providerFields
       },
       em
     );
   }
 }
 
-export class UpdateSubscriptionDtoMapper extends RequestDtoMapper<
+export class UpdateSubscriptionMapper extends RequestMapper<
   Subscription,
   SchemaValidator
 > {
-  schema = {
-    ...SubscriptionSchemas.UpdateSubscriptionSchema(PartyEnum),
-    providerFields: type<Stripe.Subscription>()
-  };
+  schema = SubscriptionSchemas.UpdateSubscriptionSchema(PartyEnum);
 
-  async toEntity(em: EntityManager): Promise<Subscription> {
-    return Subscription.update(this.dto, em);
+  async toEntity(
+    em: EntityManager,
+    providerFields: Stripe.Subscription
+  ): Promise<Subscription> {
+    return Subscription.update(
+      {
+        ...this.dto,
+        providerFields
+      },
+      em
+    );
   }
 }
 
-export class SubscriptionDtoMapper extends ResponseDtoMapper<
+export class SubscriptionMapper extends ResponseMapper<
   Subscription,
   SchemaValidator
 > {

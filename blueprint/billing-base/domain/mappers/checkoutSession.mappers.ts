@@ -1,5 +1,5 @@
 import { SchemaValidator } from '@forklaunch/blueprint-core';
-import { RequestDtoMapper, ResponseDtoMapper } from '@forklaunch/core/mappers';
+import { RequestMapper, ResponseMapper } from '@forklaunch/core/mappers';
 import { EntityManager } from '@mikro-orm/core';
 import { CheckoutSession } from '../../persistence/entities/checkoutSession.entity';
 import { CheckoutSessionSchemas } from '../../registrations';
@@ -7,7 +7,7 @@ import { CurrencyEnum } from '../enum/currency.enum';
 import { PaymentMethodEnum } from '../enum/paymentMethod.enum';
 import { StatusEnum } from '../enum/status.enum';
 
-export class CreateCheckoutSessionDtoMapper extends RequestDtoMapper<
+export class CreateCheckoutSessionMapper extends RequestMapper<
   CheckoutSession,
   SchemaValidator
 > {
@@ -29,7 +29,7 @@ export class CreateCheckoutSessionDtoMapper extends RequestDtoMapper<
   }
 }
 
-export class UpdateCheckoutSessionDtoMapper extends RequestDtoMapper<
+export class UpdateCheckoutSessionMapper extends RequestMapper<
   CheckoutSession,
   SchemaValidator
 > {
@@ -44,7 +44,7 @@ export class UpdateCheckoutSessionDtoMapper extends RequestDtoMapper<
   }
 }
 
-export class CheckoutSessionDtoMapper extends ResponseDtoMapper<
+export class CheckoutSessionMapper extends ResponseMapper<
   CheckoutSession,
   SchemaValidator
 > {

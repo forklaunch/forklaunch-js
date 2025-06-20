@@ -15,8 +15,8 @@ import {
 import { CheckoutSessionService } from '@forklaunch/interfaces-billing/interfaces';
 import { StatusEnum } from '../../domain/enum/status.enum';
 import {
-  CheckoutSessionDtoMapper,
-  CreateCheckoutSessionDtoMapper
+  CheckoutSessionMapper,
+  CreateCheckoutSessionMapper
 } from '../../domain/mappers/checkoutSession.mappers';
 import { SchemaDependencies } from '../../registrations';
 
@@ -35,9 +35,9 @@ export const CheckoutSessionController = (
       {
         name: 'createCheckoutSession',
         summary: 'Create a checkout session',
-        body: CreateCheckoutSessionDtoMapper.schema(),
+        body: CreateCheckoutSessionMapper.schema(),
         responses: {
-          200: CheckoutSessionDtoMapper.schema()
+          200: CheckoutSessionMapper.schema()
         }
       },
       async (req, res) => {
@@ -56,7 +56,7 @@ export const CheckoutSessionController = (
         summary: 'Get a checkout session',
         params: IdSchema,
         responses: {
-          200: CheckoutSessionDtoMapper.schema()
+          200: CheckoutSessionMapper.schema()
         }
       },
       async (req, res) => {

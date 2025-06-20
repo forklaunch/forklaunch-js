@@ -10,9 +10,9 @@ import { RedisWorkerOptions } from '@forklaunch/implementation-worker-redis/type
 import { SampleWorkerService } from '../domain/interfaces/sampleWorkerService.interface';
 import {
   SampleWorkerRequestDto,
-  SampleWorkerRequestDtoMapper,
+  SampleWorkerRequestMapper,
   SampleWorkerResponseDto,
-  SampleWorkerResponseDtoMapper
+  SampleWorkerResponseMapper
 } from '../domain/mappers/sampleWorker.mappers';
 import { SampleWorkerEventRecord } from '../persistence/entities';
 
@@ -41,7 +41,7 @@ export class BaseSampleWorkerService implements SampleWorkerService {
   sampleWorkerPost = async (
     dto: SampleWorkerRequestDto
   ): Promise<SampleWorkerResponseDto> => {
-    const entity = await SampleWorkerRequestDtoMapper.deserializeDtoToEntity(
+    const entity = await SampleWorkerRequestMapper.deserializeDtoToEntity(
       SchemaValidator(),
       dto
     );
@@ -51,7 +51,7 @@ export class BaseSampleWorkerService implements SampleWorkerService {
     await this.redisWorkerProducer.enqueueJob(entity);
     await this.kafkaWorkerProducer.enqueueJob(entity);
 
-    return SampleWorkerResponseDtoMapper.serializeEntityToDto(
+    return SampleWorkerResponseMapper.serializeEntityToDto(
       SchemaValidator(),
       entity
     );

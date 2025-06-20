@@ -1,46 +1,53 @@
-import { SchemaValidator, type } from '@forklaunch/blueprint-core';
-import { RequestDtoMapper, ResponseDtoMapper } from '@forklaunch/core/mappers';
+import { SchemaValidator } from '@forklaunch/blueprint-core';
+import { RequestMapper, ResponseMapper } from '@forklaunch/core/mappers';
 import { EntityManager } from '@mikro-orm/core';
 import Stripe from 'stripe';
 import { BillingPortal } from '../../persistence/entities/billingPortal.entity';
 import { BillingPortalSchemas } from '../../registrations';
 
-export class CreateBillingPortalDtoMapper extends RequestDtoMapper<
+export class CreateBillingPortalMapper extends RequestMapper<
   BillingPortal,
   SchemaValidator
 > {
-  schema = {
-    ...BillingPortalSchemas.CreateBillingPortalSchema,
-    providerFields: type<Stripe.BillingPortal.Session>()
-  };
+  schema = BillingPortalSchemas.CreateBillingPortalSchema;
 
-  async toEntity(em: EntityManager): Promise<BillingPortal> {
+  async toEntity(
+    em: EntityManager,
+    providerFields: Stripe.BillingPortal.Session
+  ): Promise<BillingPortal> {
     return BillingPortal.create(
       {
         ...this.dto,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        providerFields
       },
       em
     );
   }
 }
 
-export class UpdateBillingPortalDtoMapper extends RequestDtoMapper<
+export class UpdateBillingPortalMapper extends RequestMapper<
   BillingPortal,
   SchemaValidator
 > {
-  schema = {
-    ...BillingPortalSchemas.UpdateBillingPortalSchema,
-    providerFields: type<Stripe.BillingPortal.Session>()
-  };
+  schema = BillingPortalSchemas.UpdateBillingPortalSchema;
 
-  async toEntity(em: EntityManager): Promise<BillingPortal> {
-    return BillingPortal.update(this.dto, em);
+  async toEntity(
+    em: EntityManager,
+    providerFields: Stripe.BillingPortal.Session
+  ): Promise<BillingPortal> {
+    return BillingPortal.update(
+      {
+        ...this.dto,
+        providerFields
+      },
+      em
+    );
   }
 }
 
-export class BillingPortalDtoMapper extends ResponseDtoMapper<
+export class BillingPortalMapper extends ResponseMapper<
   BillingPortal,
   SchemaValidator
 > {

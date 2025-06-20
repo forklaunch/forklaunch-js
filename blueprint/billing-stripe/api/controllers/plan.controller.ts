@@ -17,9 +17,9 @@ import {
 } from '@forklaunch/implementation-billing-stripe/domain';
 import { PlanService } from '@forklaunch/interfaces-billing/interfaces';
 import {
-  CreatePlanDtoMapper,
-  PlanDtoMapper,
-  UpdatePlanDtoMapper
+  CreatePlanMapper,
+  PlanMapper,
+  UpdatePlanMapper
 } from '../../domain/mappers/plan.mappers';
 import { PlanSchemas, SchemaDependencies } from '../../registrations';
 
@@ -38,9 +38,9 @@ export const PlanController = (
       {
         name: 'createPlan',
         summary: 'Create a plan',
-        body: CreatePlanDtoMapper.schema(),
+        body: CreatePlanMapper.schema(),
         responses: {
-          200: PlanDtoMapper.schema()
+          200: PlanMapper.schema()
         }
       },
       async (req, res) => {
@@ -72,9 +72,9 @@ export const PlanController = (
       {
         name: 'updatePlan',
         summary: 'Update a plan',
-        body: UpdatePlanDtoMapper.schema(),
+        body: UpdatePlanMapper.schema(),
         responses: {
-          200: PlanDtoMapper.schema()
+          200: PlanMapper.schema()
         }
       },
       async (req, res) => {

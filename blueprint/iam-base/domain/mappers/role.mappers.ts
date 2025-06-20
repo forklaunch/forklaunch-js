@@ -1,14 +1,11 @@
 import { SchemaValidator } from '@forklaunch/blueprint-core';
-import { RequestDtoMapper, ResponseDtoMapper } from '@forklaunch/core/mappers';
+import { RequestMapper, ResponseMapper } from '@forklaunch/core/mappers';
 import { EntityManager } from '@mikro-orm/core';
 import { Role } from '../../persistence/entities/role.entity';
 import { RoleSchemas } from '../../registrations';
-import { PermissionDtoMapper } from './permission.mappers';
+import { PermissionMapper } from './permission.mappers';
 
-export class CreateRoleDtoMapper extends RequestDtoMapper<
-  Role,
-  SchemaValidator
-> {
+export class CreateRoleMapper extends RequestMapper<Role, SchemaValidator> {
   schema = RoleSchemas.CreateRoleSchema;
 
   async toEntity(em: EntityManager): Promise<Role> {
@@ -23,10 +20,7 @@ export class CreateRoleDtoMapper extends RequestDtoMapper<
   }
 }
 
-export class UpdateRoleDtoMapper extends RequestDtoMapper<
-  Role,
-  SchemaValidator
-> {
+export class UpdateRoleMapper extends RequestMapper<Role, SchemaValidator> {
   schema = RoleSchemas.UpdateRoleSchema;
 
   async toEntity(em: EntityManager): Promise<Role> {
@@ -34,7 +28,7 @@ export class UpdateRoleDtoMapper extends RequestDtoMapper<
   }
 }
 
-export class RoleDtoMapper extends ResponseDtoMapper<Role, SchemaValidator> {
+export class RoleMapper extends ResponseMapper<Role, SchemaValidator> {
   schema = RoleSchemas.RoleSchema;
 
   async fromEntity(entity: Role): Promise<this> {
@@ -47,7 +41,7 @@ export class RoleDtoMapper extends ResponseDtoMapper<Role, SchemaValidator> {
       permissions: await Promise.all(
         entity.permissions.map(async (permission) =>
           (
-            await PermissionDtoMapper.fromEntity(
+            await PermissionMapper.fromEntity(
               this.schemaValidator as SchemaValidator,
               permission
             )
@@ -59,7 +53,7 @@ export class RoleDtoMapper extends ResponseDtoMapper<Role, SchemaValidator> {
   }
 }
 
-export class RoleEntityMapper extends RequestDtoMapper<Role, SchemaValidator> {
+export class RoleEntityMapper extends RequestMapper<Role, SchemaValidator> {
   schema = RoleSchemas.UpdateRoleSchema;
 
   async toEntity(em: EntityManager): Promise<Role> {

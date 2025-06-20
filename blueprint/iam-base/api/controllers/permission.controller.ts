@@ -12,9 +12,9 @@ import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { PermissionService } from '@forklaunch/interfaces-iam/interfaces';
 import {
-  CreatePermissionDtoMapper,
-  PermissionDtoMapper,
-  UpdatePermissionDtoMapper
+  CreatePermissionMapper,
+  PermissionMapper,
+  UpdatePermissionMapper
 } from '../../domain/mappers/permission.mappers';
 import { SchemaDependencies } from '../../registrations';
 
@@ -33,7 +33,7 @@ export const PermissionController = (
       {
         name: 'Create Permission',
         summary: 'Creates a new permission',
-        body: CreatePermissionDtoMapper.schema(),
+        body: CreatePermissionMapper.schema(),
         responses: {
           201: string,
           500: string
@@ -52,7 +52,7 @@ export const PermissionController = (
       {
         name: 'Create Batch Permissions',
         summary: 'Creates multiple permissions',
-        body: array(CreatePermissionDtoMapper.schema()),
+        body: array(CreatePermissionMapper.schema()),
         responses: {
           201: string,
           500: string
@@ -72,7 +72,7 @@ export const PermissionController = (
         name: 'Get Permission',
         summary: 'Gets a permission by ID',
         responses: {
-          200: PermissionDtoMapper.schema(),
+          200: PermissionMapper.schema(),
           500: string
         },
         params: IdSchema
@@ -90,7 +90,7 @@ export const PermissionController = (
         name: 'Get Batch Permissions',
         summary: 'Gets multiple permissions by IDs',
         responses: {
-          200: array(PermissionDtoMapper.schema()),
+          200: array(PermissionMapper.schema()),
           500: string
         },
         query: IdsSchema
@@ -109,7 +109,7 @@ export const PermissionController = (
       {
         name: 'Update Permission',
         summary: 'Updates a permission by ID',
-        body: UpdatePermissionDtoMapper.schema(),
+        body: UpdatePermissionMapper.schema(),
         responses: {
           200: string,
           500: string
@@ -128,7 +128,7 @@ export const PermissionController = (
       {
         name: 'Update Batch Permissions',
         summary: 'Updates multiple permissions by IDs',
-        body: array(UpdatePermissionDtoMapper.schema()),
+        body: array(UpdatePermissionMapper.schema()),
         responses: {
           200: string,
           500: string

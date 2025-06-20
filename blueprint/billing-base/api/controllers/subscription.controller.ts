@@ -14,9 +14,9 @@ import { SubscriptionService } from '@forklaunch/interfaces-billing/interfaces';
 import { BillingProviderEnum } from '../../domain/enum/billingProvider.enum';
 import { PartyEnum } from '../../domain/enum/party.enum';
 import {
-  CreateSubscriptionDtoMapper,
-  SubscriptionDtoMapper,
-  UpdateSubscriptionDtoMapper
+  CreateSubscriptionMapper,
+  SubscriptionMapper,
+  UpdateSubscriptionMapper
 } from '../../domain/mappers/subscription.mappers';
 import { SchemaDependencies } from '../../registrations';
 
@@ -35,9 +35,9 @@ export const SubscriptionController = (
       {
         name: 'createSubscription',
         summary: 'Create a subscription',
-        body: CreateSubscriptionDtoMapper.schema(),
+        body: CreateSubscriptionMapper.schema(),
         responses: {
-          200: SubscriptionDtoMapper.schema()
+          200: SubscriptionMapper.schema()
         }
       },
       async (req, res) => {
@@ -56,7 +56,7 @@ export const SubscriptionController = (
         summary: 'Get a subscription',
         params: IdSchema,
         responses: {
-          200: SubscriptionDtoMapper.schema()
+          200: SubscriptionMapper.schema()
         }
       },
       async (req, res) => {
@@ -75,7 +75,7 @@ export const SubscriptionController = (
         summary: 'Get a user subscription',
         params: IdSchema,
         responses: {
-          200: SubscriptionDtoMapper.schema()
+          200: SubscriptionMapper.schema()
         }
       },
       async (req, res) => {
@@ -97,7 +97,7 @@ export const SubscriptionController = (
         summary: 'Get an organization subscription',
         params: IdSchema,
         responses: {
-          200: SubscriptionDtoMapper.schema()
+          200: SubscriptionMapper.schema()
         }
       },
       async (req, res) => {
@@ -118,9 +118,9 @@ export const SubscriptionController = (
         name: 'updateSubscription',
         summary: 'Update a subscription',
         params: IdSchema,
-        body: UpdateSubscriptionDtoMapper.schema(),
+        body: UpdateSubscriptionMapper.schema(),
         responses: {
-          200: SubscriptionDtoMapper.schema()
+          200: SubscriptionMapper.schema()
         }
       },
       async (req, res) => {
@@ -157,7 +157,7 @@ export const SubscriptionController = (
         summary: 'List subscriptions',
         query: IdsSchema,
         responses: {
-          200: array(SubscriptionDtoMapper.schema())
+          200: array(SubscriptionMapper.schema())
         }
       },
       async (req, res) => {

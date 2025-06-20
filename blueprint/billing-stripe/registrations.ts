@@ -33,30 +33,37 @@ import Stripe from 'stripe';
 import { PartyEnum } from './domain/enum/party.enum';
 import { StatusEnum } from './domain/enum/status.enum';
 import {
-  BillingPortalDtoMapper,
-  CreateBillingPortalDtoMapper,
-  UpdateBillingPortalDtoMapper
+  BillingPortalMapper,
+  CreateBillingPortalMapper,
+  UpdateBillingPortalMapper
 } from './domain/mappers/billingPortal.mappers';
 import {
-  CheckoutSessionDtoMapper,
-  CreateCheckoutSessionDtoMapper,
-  UpdateCheckoutSessionDtoMapper
+  CheckoutSessionMapper,
+  CreateCheckoutSessionMapper,
+  UpdateCheckoutSessionMapper
 } from './domain/mappers/checkoutSession.mappers';
 import {
-  CreatePaymentLinkDtoMapper,
-  PaymentLinkDtoMapper,
-  UpdatePaymentLinkDtoMapper
+  CreatePaymentLinkMapper,
+  PaymentLinkMapper,
+  UpdatePaymentLinkMapper
 } from './domain/mappers/paymentLink.mappers';
 import {
-  CreatePlanDtoMapper,
-  PlanDtoMapper,
-  UpdatePlanDtoMapper
+  CreatePlanMapper,
+  PlanMapper,
+  UpdatePlanMapper
 } from './domain/mappers/plan.mappers';
 import {
-  CreateSubscriptionDtoMapper,
-  SubscriptionDtoMapper,
-  UpdateSubscriptionDtoMapper
+  CreateSubscriptionMapper,
+  SubscriptionMapper,
+  UpdateSubscriptionMapper
 } from './domain/mappers/subscription.mappers';
+import {
+  BillingPortalEntities,
+  CheckoutSessionEntities,
+  PaymentLinkEntities,
+  PlanEntities,
+  SubscriptionEntities
+} from './domain/types/mapperEntities.types';
 
 //! defines the schemas for the billing portal service
 export const BillingPortalSchemas = StripeBillingPortalServiceSchemas({
@@ -181,7 +188,7 @@ export function createDependencies(orm: MikroORM) {
   const serviceDependencies = runtimeDependencies.chain({
     BillingPortalService: {
       lifetime: Lifetime.Scoped,
-      type: StripeBillingPortalService<SchemaValidator>,
+      type: StripeBillingPortalService<SchemaValidator, BillingPortalEntities>,
       factory: ({
         StripeClient,
         EntityManager,
@@ -195,15 +202,19 @@ export function createDependencies(orm: MikroORM) {
           OpenTelemetryCollector,
           SchemaValidator(),
           {
-            BillingPortalDtoMapper,
-            CreateBillingPortalDtoMapper,
-            UpdateBillingPortalDtoMapper
+            BillingPortalMapper,
+            CreateBillingPortalMapper,
+            UpdateBillingPortalMapper
           }
         )
     },
     CheckoutSessionService: {
       lifetime: Lifetime.Scoped,
-      type: StripeCheckoutSessionService<SchemaValidator, typeof StatusEnum>,
+      type: StripeCheckoutSessionService<
+        SchemaValidator,
+        typeof StatusEnum,
+        CheckoutSessionEntities
+      >,
       factory: ({
         StripeClient,
         EntityManager,
@@ -217,15 +228,19 @@ export function createDependencies(orm: MikroORM) {
           OpenTelemetryCollector,
           SchemaValidator(),
           {
-            CheckoutSessionDtoMapper,
-            CreateCheckoutSessionDtoMapper,
-            UpdateCheckoutSessionDtoMapper
+            CheckoutSessionMapper,
+            CreateCheckoutSessionMapper,
+            UpdateCheckoutSessionMapper
           }
         )
     },
     PaymentLinkService: {
       lifetime: Lifetime.Scoped,
-      type: StripePaymentLinkService<SchemaValidator, typeof StatusEnum>,
+      type: StripePaymentLinkService<
+        SchemaValidator,
+        typeof StatusEnum,
+        PaymentLinkEntities
+      >,
       factory: ({
         StripeClient,
         EntityManager,
@@ -239,15 +254,15 @@ export function createDependencies(orm: MikroORM) {
           OpenTelemetryCollector,
           SchemaValidator(),
           {
-            PaymentLinkDtoMapper,
-            CreatePaymentLinkDtoMapper,
-            UpdatePaymentLinkDtoMapper
+            PaymentLinkMapper,
+            CreatePaymentLinkMapper,
+            UpdatePaymentLinkMapper
           }
         )
     },
     PlanService: {
       lifetime: Lifetime.Scoped,
-      type: StripePlanService<SchemaValidator>,
+      type: StripePlanService<SchemaValidator, PlanEntities>,
       factory: ({ StripeClient, EntityManager, OpenTelemetryCollector }) =>
         new StripePlanService(
           StripeClient,
@@ -255,15 +270,19 @@ export function createDependencies(orm: MikroORM) {
           OpenTelemetryCollector,
           SchemaValidator(),
           {
-            PlanDtoMapper,
-            CreatePlanDtoMapper,
-            UpdatePlanDtoMapper
+            PlanMapper,
+            CreatePlanMapper,
+            UpdatePlanMapper
           }
         )
     },
     SubscriptionService: {
       lifetime: Lifetime.Scoped,
-      type: StripeSubscriptionService<SchemaValidator, typeof PartyEnum>,
+      type: StripeSubscriptionService<
+        SchemaValidator,
+        typeof PartyEnum,
+        SubscriptionEntities
+      >,
       factory: ({ StripeClient, EntityManager, OpenTelemetryCollector }) =>
         new StripeSubscriptionService(
           StripeClient,
@@ -271,9 +290,9 @@ export function createDependencies(orm: MikroORM) {
           OpenTelemetryCollector,
           SchemaValidator(),
           {
-            SubscriptionDtoMapper,
-            CreateSubscriptionDtoMapper,
-            UpdateSubscriptionDtoMapper
+            SubscriptionMapper,
+            CreateSubscriptionMapper,
+            UpdateSubscriptionMapper
           }
         )
     },
@@ -282,7 +301,12 @@ export function createDependencies(orm: MikroORM) {
       type: StripeWebhookService<
         SchemaValidator,
         typeof StatusEnum,
-        typeof PartyEnum
+        typeof PartyEnum,
+        BillingPortalEntities,
+        CheckoutSessionEntities,
+        PaymentLinkEntities,
+        PlanEntities,
+        SubscriptionEntities
       >,
       factory: ({
         StripeClient,

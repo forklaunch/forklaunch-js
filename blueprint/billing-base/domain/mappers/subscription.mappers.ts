@@ -1,12 +1,12 @@
 import { SchemaValidator } from '@forklaunch/blueprint-core';
-import { RequestDtoMapper, ResponseDtoMapper } from '@forklaunch/core/mappers';
+import { RequestMapper, ResponseMapper } from '@forklaunch/core/mappers';
 import { EntityManager } from '@mikro-orm/core';
 import { Subscription } from '../../persistence/entities/subscription.entity';
 import { SubscriptionSchemas } from '../../registrations';
 import { BillingProviderEnum } from '../enum/billingProvider.enum';
 import { PartyEnum } from '../enum/party.enum';
 
-export class CreateSubscriptionDtoMapper extends RequestDtoMapper<
+export class CreateSubscriptionMapper extends RequestMapper<
   Subscription,
   SchemaValidator
 > {
@@ -27,7 +27,7 @@ export class CreateSubscriptionDtoMapper extends RequestDtoMapper<
   }
 }
 
-export class UpdateSubscriptionDtoMapper extends RequestDtoMapper<
+export class UpdateSubscriptionMapper extends RequestMapper<
   Subscription,
   SchemaValidator
 > {
@@ -41,7 +41,7 @@ export class UpdateSubscriptionDtoMapper extends RequestDtoMapper<
   }
 }
 
-export class SubscriptionDtoMapper extends ResponseDtoMapper<
+export class SubscriptionMapper extends ResponseMapper<
   Subscription,
   SchemaValidator
 > {

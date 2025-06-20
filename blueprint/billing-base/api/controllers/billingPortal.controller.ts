@@ -10,9 +10,9 @@ import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { BillingPortalService } from '@forklaunch/interfaces-billing/interfaces';
 import {
-  BillingPortalDtoMapper,
-  CreateBillingPortalDtoMapper,
-  UpdateBillingPortalDtoMapper
+  BillingPortalMapper,
+  CreateBillingPortalMapper,
+  UpdateBillingPortalMapper
 } from '../../domain/mappers/billingPortal.mappers';
 import { SchemaDependencies } from '../../registrations';
 
@@ -31,9 +31,9 @@ export const BillingPortalController = (
       {
         name: 'createBillingPortalSession',
         summary: 'Create a billing portal session',
-        body: CreateBillingPortalDtoMapper.schema(),
+        body: CreateBillingPortalMapper.schema(),
         responses: {
-          200: BillingPortalDtoMapper.schema()
+          200: BillingPortalMapper.schema()
         }
       },
       async (req, res) => {
@@ -55,7 +55,7 @@ export const BillingPortalController = (
         summary: 'Get a billing portal session',
         params: IdSchema,
         responses: {
-          200: BillingPortalDtoMapper.schema()
+          200: BillingPortalMapper.schema()
         }
       },
       async (req, res) => {
@@ -76,9 +76,9 @@ export const BillingPortalController = (
         name: 'updateBillingPortalSession',
         summary: 'Update a billing portal session',
         params: IdSchema,
-        body: UpdateBillingPortalDtoMapper.schema(),
+        body: UpdateBillingPortalMapper.schema(),
         responses: {
-          200: BillingPortalDtoMapper.schema()
+          200: BillingPortalMapper.schema()
         }
       },
       async (req, res) => {

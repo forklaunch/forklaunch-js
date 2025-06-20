@@ -9,10 +9,10 @@ import { SubscriptionService } from '@forklaunch/interfaces-billing/interfaces';
 import {
   IdentityRequestMapper,
   IdentityResponseMapper,
-  InternalDtoMapper,
-  RequestDtoMapperConstructor,
-  ResponseDtoMapperConstructor,
-  transformIntoInternalDtoMapper
+  InternalMapper,
+  RequestMapperConstructor,
+  ResponseMapperConstructor,
+  transformIntoInternalMapper
 } from '@forklaunch/internal';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
@@ -29,11 +29,9 @@ import { StripeSubscriptionEntities } from '../types/stripe.entity.types';
 export class StripeSubscriptionService<
   SchemaValidator extends AnySchemaValidator,
   PartyType,
-  Metrics extends MetricsDefinition = MetricsDefinition,
+  Entities extends StripeSubscriptionEntities<PartyType>,
   Dto extends
-    StripeSubscriptionDtos<PartyType> = StripeSubscriptionDtos<PartyType>,
-  Entities extends
-    StripeSubscriptionEntities<PartyType> = StripeSubscriptionEntities<PartyType>
+    StripeSubscriptionDtos<PartyType> = StripeSubscriptionDtos<PartyType>
 > implements
     SubscriptionService<
       PartyType,
@@ -51,46 +49,41 @@ export class StripeSubscriptionService<
     SchemaValidator,
     PartyType,
     typeof BillingProviderEnum,
-    Metrics,
     Entities,
     Entities
   >;
-  protected _mappers: InternalDtoMapper<
-    InstanceTypeRecord<typeof this.mappers>
-  >;
+  protected _mappers: InternalMapper<InstanceTypeRecord<typeof this.mappers>>;
 
   constructor(
     protected readonly stripe: Stripe,
     protected readonly em: EntityManager,
-    protected readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>,
+    protected readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
     protected readonly schemaValidator: SchemaValidator,
     protected readonly mappers: {
-      SubscriptionDtoMapper: ResponseDtoMapperConstructor<
+      SubscriptionMapper: ResponseMapperConstructor<
         SchemaValidator,
-        Dto['SubscriptionDtoMapper'],
-        Entities['SubscriptionDtoMapper']
+        Dto['SubscriptionMapper'],
+        Entities['SubscriptionMapper']
       >;
-      CreateSubscriptionDtoMapper: RequestDtoMapperConstructor<
+      CreateSubscriptionMapper: RequestMapperConstructor<
         SchemaValidator,
-        Dto['CreateSubscriptionDtoMapper'],
-        Entities['CreateSubscriptionDtoMapper'],
+        Dto['CreateSubscriptionMapper'],
+        Entities['CreateSubscriptionMapper'],
         (
-          schemaValidator: SchemaValidator,
-          dto: Dto['CreateSubscriptionDtoMapper'],
-          em?: EntityManager,
-          subscription?: Stripe.Subscription
-        ) => Promise<Entities['CreateSubscriptionDtoMapper']>
+          dto: Dto['CreateSubscriptionMapper'],
+          em: EntityManager,
+          subscription: Stripe.Subscription
+        ) => Promise<Entities['CreateSubscriptionMapper']>
       >;
-      UpdateSubscriptionDtoMapper: RequestDtoMapperConstructor<
+      UpdateSubscriptionMapper: RequestMapperConstructor<
         SchemaValidator,
-        Dto['UpdateSubscriptionDtoMapper'],
-        Entities['UpdateSubscriptionDtoMapper'],
+        Dto['UpdateSubscriptionMapper'],
+        Entities['UpdateSubscriptionMapper'],
         (
-          schemaValidator: SchemaValidator,
-          dto: Dto['UpdateSubscriptionDtoMapper'],
-          em?: EntityManager,
-          subscription?: Stripe.Subscription
-        ) => Promise<Entities['UpdateSubscriptionDtoMapper']>
+          dto: Dto['UpdateSubscriptionMapper'],
+          em: EntityManager,
+          subscription: Stripe.Subscription
+        ) => Promise<Entities['UpdateSubscriptionMapper']>
       >;
     },
     readonly options?: {
@@ -98,23 +91,20 @@ export class StripeSubscriptionService<
       databaseTableName?: string;
     }
   ) {
-    this._mappers = transformIntoInternalDtoMapper(mappers, schemaValidator);
+    this._mappers = transformIntoInternalMapper(mappers, schemaValidator);
     this.baseSubscriptionService = new BaseSubscriptionService(
       em,
       openTelemetryCollector,
       schemaValidator,
       {
-        SubscriptionDtoMapper: IdentityResponseMapper<
-          Entities['SubscriptionDtoMapper'],
-          SchemaValidator
+        SubscriptionMapper: IdentityResponseMapper<
+          Entities['SubscriptionMapper']
         >,
-        CreateSubscriptionDtoMapper: IdentityRequestMapper<
-          Entities['CreateSubscriptionDtoMapper'],
-          SchemaValidator
+        CreateSubscriptionMapper: IdentityRequestMapper<
+          Entities['CreateSubscriptionMapper']
         >,
-        UpdateSubscriptionDtoMapper: IdentityRequestMapper<
-          Entities['UpdateSubscriptionDtoMapper'],
-          SchemaValidator
+        UpdateSubscriptionMapper: IdentityRequestMapper<
+          Entities['UpdateSubscriptionMapper']
         >
       },
       options
@@ -122,9 +112,9 @@ export class StripeSubscriptionService<
   }
 
   async createSubscription(
-    subscriptionDto: Dto['CreateSubscriptionDtoMapper'],
+    subscriptionDto: Dto['CreateSubscriptionMapper'],
     em?: EntityManager
-  ): Promise<Dto['SubscriptionDtoMapper']> {
+  ): Promise<Dto['SubscriptionMapper']> {
     const subscription = await this.stripe.subscriptions.create({
       ...subscriptionDto.stripeFields,
       customer: subscriptionDto.partyId,
@@ -137,21 +127,19 @@ export class StripeSubscriptionService<
 
     const subscriptionEntity =
       await this.baseSubscriptionService.createSubscription(
-        await this._mappers.CreateSubscriptionDtoMapper.deserializeDtoToEntity(
-          this.schemaValidator,
+        await this._mappers.CreateSubscriptionMapper.deserializeDtoToEntity(
           {
             ...subscriptionDto,
             externalId: subscription.id,
             billingProvider: 'stripe'
           },
-          em,
+          em ?? this.em,
           subscription
         ),
         em
       );
 
-    return this._mappers.SubscriptionDtoMapper.serializeEntityToDto(
-      this.schemaValidator,
+    return this._mappers.SubscriptionMapper.serializeEntityToDto(
       subscriptionEntity
     );
   }
@@ -159,10 +147,9 @@ export class StripeSubscriptionService<
   async getSubscription(
     idDto: IdDto,
     em?: EntityManager
-  ): Promise<Dto['SubscriptionDtoMapper']> {
+  ): Promise<Dto['SubscriptionMapper']> {
     return {
-      ...(await this._mappers.SubscriptionDtoMapper.serializeEntityToDto(
-        this.schemaValidator,
+      ...(await this._mappers.SubscriptionMapper.serializeEntityToDto(
         await this.baseSubscriptionService.getSubscription(idDto, em)
       )),
       stripeFields: await this.stripe.subscriptions.retrieve(idDto.id)
@@ -172,10 +159,9 @@ export class StripeSubscriptionService<
   async getUserSubscription(
     idDto: IdDto,
     em?: EntityManager
-  ): Promise<Dto['SubscriptionDtoMapper']> {
+  ): Promise<Dto['SubscriptionMapper']> {
     return {
-      ...(await this._mappers.SubscriptionDtoMapper.serializeEntityToDto(
-        this.schemaValidator,
+      ...(await this._mappers.SubscriptionMapper.serializeEntityToDto(
         await this.baseSubscriptionService.getUserSubscription(idDto, em)
       )),
       stripeFields: await this.stripe.subscriptions.retrieve(idDto.id)
@@ -185,7 +171,7 @@ export class StripeSubscriptionService<
   async getOrganizationSubscription(
     idDto: IdDto,
     em?: EntityManager
-  ): Promise<Dto['SubscriptionDtoMapper']> {
+  ): Promise<Dto['SubscriptionMapper']> {
     const id = (
       await em?.findOne<{ id: string; externalId: string }>(
         this.options?.databaseTableName ?? 'subscription',
@@ -196,8 +182,7 @@ export class StripeSubscriptionService<
       throw new Error('Subscription not found');
     }
     return {
-      ...(await this._mappers.SubscriptionDtoMapper.serializeEntityToDto(
-        this.schemaValidator,
+      ...(await this._mappers.SubscriptionMapper.serializeEntityToDto(
         await this.baseSubscriptionService.getOrganizationSubscription(
           { id },
           em
@@ -208,9 +193,9 @@ export class StripeSubscriptionService<
   }
 
   async updateSubscription(
-    subscriptionDto: Dto['UpdateSubscriptionDtoMapper'],
+    subscriptionDto: Dto['UpdateSubscriptionMapper'],
     em?: EntityManager
-  ): Promise<Dto['SubscriptionDtoMapper']> {
+  ): Promise<Dto['SubscriptionMapper']> {
     const subscription = await this.stripe.subscriptions.update(
       subscriptionDto.id,
       {
@@ -225,23 +210,20 @@ export class StripeSubscriptionService<
 
     const subscriptionEntity =
       await this.baseSubscriptionService.updateSubscription(
-        await this._mappers.UpdateSubscriptionDtoMapper.deserializeDtoToEntity(
-          this.schemaValidator,
-
+        await this._mappers.UpdateSubscriptionMapper.deserializeDtoToEntity(
           {
             ...subscriptionDto,
             externalId: subscription.id,
             billingProvider: 'stripe',
             providerFields: subscription
           },
-          em,
+          em ?? this.em,
           subscription
         ),
         em
       );
 
-    return this._mappers.SubscriptionDtoMapper.serializeEntityToDto(
-      this.schemaValidator,
+    return this._mappers.SubscriptionMapper.serializeEntityToDto(
       subscriptionEntity
     );
   }
@@ -257,7 +239,7 @@ export class StripeSubscriptionService<
   async listSubscriptions(
     idsDto: IdsDto,
     em?: EntityManager
-  ): Promise<Dto['SubscriptionDtoMapper'][]> {
+  ): Promise<Dto['SubscriptionMapper'][]> {
     const subscriptions = (
       await this.stripe.subscriptions.list({
         status: 'active'
@@ -279,8 +261,7 @@ export class StripeSubscriptionService<
       (await this.baseSubscriptionService.listSubscriptions({ ids }, em)).map(
         async (subscription) => {
           return {
-            ...(await this._mappers.SubscriptionDtoMapper.serializeEntityToDto(
-              this.schemaValidator,
+            ...(await this._mappers.SubscriptionMapper.serializeEntityToDto(
               subscription
             )),
             stripeFields: subscriptions.find(

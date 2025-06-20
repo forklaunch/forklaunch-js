@@ -9,6 +9,13 @@ import { BillingProviderEnum } from '../domain/enums/billingProvider.enum';
 import { CurrencyEnum } from '../domain/enums/currency.enum';
 import { PaymentMethodEnum } from '../domain/enums/paymentMethod.enum';
 import { PlanCadenceEnum } from '../domain/enums/planCadence.enum';
+import {
+  StripeBillingPortalEntities,
+  StripeCheckoutSessionEntities,
+  StripePaymentLinkEntities,
+  StripePlanEntities,
+  StripeSubscriptionEntities
+} from '../types/stripe.entity.types';
 import { StripeBillingPortalService } from './billingPortal.service';
 import { StripeCheckoutSessionService } from './checkoutSession.service';
 import { StripePaymentLinkService } from './paymentLink.service';
@@ -18,26 +25,44 @@ import { StripeSubscriptionService } from './subscription.service';
 export class StripeWebhookService<
   SchemaValidator extends AnySchemaValidator,
   StatusEnum,
-  PartyEnum
+  PartyEnum,
+  BillingPortalEntities extends
+    StripeBillingPortalEntities = StripeBillingPortalEntities,
+  CheckoutSessionEntities extends
+    StripeCheckoutSessionEntities<StatusEnum> = StripeCheckoutSessionEntities<StatusEnum>,
+  PaymentLinkEntities extends
+    StripePaymentLinkEntities<StatusEnum> = StripePaymentLinkEntities<StatusEnum>,
+  PlanEntities extends StripePlanEntities = StripePlanEntities,
+  SubscriptionEntities extends
+    StripeSubscriptionEntities<PartyEnum> = StripeSubscriptionEntities<PartyEnum>
 > {
   constructor(
     protected readonly stripeClient: Stripe,
     protected readonly em: EntityManager,
     protected readonly schemaValidator: SchemaValidator,
     protected readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-    protected readonly billingPortalService: StripeBillingPortalService<SchemaValidator>,
+    protected readonly billingPortalService: StripeBillingPortalService<
+      SchemaValidator,
+      BillingPortalEntities
+    >,
     protected readonly checkoutSessionService: StripeCheckoutSessionService<
       SchemaValidator,
-      StatusEnum
+      StatusEnum,
+      CheckoutSessionEntities
     >,
     protected readonly paymentLinkService: StripePaymentLinkService<
       SchemaValidator,
-      StatusEnum
+      StatusEnum,
+      PaymentLinkEntities
     >,
-    protected readonly planService: StripePlanService<SchemaValidator>,
+    protected readonly planService: StripePlanService<
+      SchemaValidator,
+      PlanEntities
+    >,
     protected readonly subscriptionService: StripeSubscriptionService<
       SchemaValidator,
-      PartyEnum
+      PartyEnum,
+      SubscriptionEntities
     >
   ) {}
 

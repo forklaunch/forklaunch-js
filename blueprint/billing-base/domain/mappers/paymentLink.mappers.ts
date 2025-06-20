@@ -1,5 +1,5 @@
 import { SchemaValidator } from '@forklaunch/blueprint-core';
-import { RequestDtoMapper, ResponseDtoMapper } from '@forklaunch/core/mappers';
+import { RequestMapper, ResponseMapper } from '@forklaunch/core/mappers';
 import { EntityManager } from '@mikro-orm/core';
 import { PaymentLink } from '../../persistence/entities/paymentLink.entity';
 import { PaymentLinkSchemas } from '../../registrations';
@@ -7,7 +7,7 @@ import { CurrencyEnum } from '../enum/currency.enum';
 import { PaymentMethodEnum } from '../enum/paymentMethod.enum';
 import { StatusEnum } from '../enum/status.enum';
 
-export class CreatePaymentLinkDtoMapper extends RequestDtoMapper<
+export class CreatePaymentLinkMapper extends RequestMapper<
   PaymentLink,
   SchemaValidator
 > {
@@ -29,7 +29,7 @@ export class CreatePaymentLinkDtoMapper extends RequestDtoMapper<
   }
 }
 
-export class UpdatePaymentLinkDtoMapper extends RequestDtoMapper<
+export class UpdatePaymentLinkMapper extends RequestMapper<
   PaymentLink,
   SchemaValidator
 > {
@@ -44,7 +44,7 @@ export class UpdatePaymentLinkDtoMapper extends RequestDtoMapper<
   }
 }
 
-export class PaymentLinkDtoMapper extends ResponseDtoMapper<
+export class PaymentLinkMapper extends ResponseMapper<
   PaymentLink,
   SchemaValidator
 > {

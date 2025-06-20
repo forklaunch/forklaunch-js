@@ -8,8 +8,8 @@ import {
 } from '@forklaunch/core/services';
 import { SampleWorkerService } from '../../domain/interfaces/sampleWorkerService.interface';
 import {
-  SampleWorkerRequestDtoMapper,
-  SampleWorkerResponseDtoMapper
+  SampleWorkerRequestMapper,
+  SampleWorkerResponseMapper
 } from '../../domain/mappers/sampleWorker.mappers';
 import { SchemaDependencies } from '../../registrations';
 
@@ -37,8 +37,8 @@ export const SampleWorkerController = (
           id: 'string'
         },
         responses: {
-          // specifies the success response schema using DtoMapper constructs
-          200: SampleWorkerResponseDtoMapper.schema()
+          // specifies the success response schema using Mapper constructs
+          200: SampleWorkerResponseMapper.schema()
         }
       },
       async (req, res) => {
@@ -58,11 +58,11 @@ export const SampleWorkerController = (
       {
         name: 'sampleWorker',
         summary: 'SampleWorker',
-        // specifies the request body schema using DtoMapper constructs
-        body: SampleWorkerRequestDtoMapper.schema(),
+        // specifies the request body schema using Mapper constructs
+        body: SampleWorkerRequestMapper.schema(),
         responses: {
-          // specifies the success response schema using DtoMapper constructs
-          200: SampleWorkerResponseDtoMapper.schema()
+          // specifies the success response schema using Mapper constructs
+          200: SampleWorkerResponseMapper.schema()
         }
       },
       async (req, res) => {

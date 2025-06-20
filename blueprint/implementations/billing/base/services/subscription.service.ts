@@ -7,71 +7,28 @@ import {
 } from '@forklaunch/core/http';
 import { SubscriptionService } from '@forklaunch/interfaces-billing/interfaces';
 import {
-  CreateSubscriptionDto,
-  SubscriptionDto,
-  UpdateSubscriptionDto
-} from '@forklaunch/interfaces-billing/types';
-import {
-  InternalDtoMapper,
-  RequestDtoMapperConstructor,
-  ResponseDtoMapperConstructor,
-  transformIntoInternalDtoMapper
+  InternalMapper,
+  RequestMapperConstructor,
+  ResponseMapperConstructor,
+  transformIntoInternalMapper
 } from '@forklaunch/internal';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
+import { BaseSubscriptionDtos } from '../types/baseBillingDto.types';
+import { BaseSubscriptionEntities } from '../types/baseBillingEntity.types';
 
 export class BaseSubscriptionService<
   SchemaValidator extends AnySchemaValidator,
   PartyType,
   BillingProviderType,
-  Metrics extends MetricsDefinition = MetricsDefinition,
-  Dto extends {
-    SubscriptionDtoMapper: SubscriptionDto<PartyType, BillingProviderType>;
-    CreateSubscriptionDtoMapper: CreateSubscriptionDto<
-      PartyType,
-      BillingProviderType
-    >;
-    UpdateSubscriptionDtoMapper: UpdateSubscriptionDto<
-      PartyType,
-      BillingProviderType
-    >;
-  } = {
-    SubscriptionDtoMapper: SubscriptionDto<PartyType, BillingProviderType>;
-    CreateSubscriptionDtoMapper: CreateSubscriptionDto<
-      PartyType,
-      BillingProviderType
-    >;
-    UpdateSubscriptionDtoMapper: UpdateSubscriptionDto<
-      PartyType,
-      BillingProviderType
-    >;
-  },
-  Entities extends {
-    SubscriptionDtoMapper: SubscriptionDto<PartyType, BillingProviderType>;
-    CreateSubscriptionDtoMapper: SubscriptionDto<
-      PartyType,
-      BillingProviderType
-    >;
-    UpdateSubscriptionDtoMapper: SubscriptionDto<
-      PartyType,
-      BillingProviderType
-    >;
-  } = {
-    SubscriptionDtoMapper: SubscriptionDto<PartyType, BillingProviderType>;
-    CreateSubscriptionDtoMapper: SubscriptionDto<
-      PartyType,
-      BillingProviderType
-    >;
-    UpdateSubscriptionDtoMapper: SubscriptionDto<
-      PartyType,
-      BillingProviderType
-    >;
-  }
+  Entities extends BaseSubscriptionEntities<PartyType, BillingProviderType>,
+  Dto extends BaseSubscriptionDtos<
+    PartyType,
+    BillingProviderType
+  > = BaseSubscriptionDtos<PartyType, BillingProviderType>
 > implements SubscriptionService<PartyType, BillingProviderType>
 {
-  protected _mappers: InternalDtoMapper<
-    InstanceTypeRecord<typeof this.mappers>
-  >;
+  protected _mappers: InternalMapper<InstanceTypeRecord<typeof this.mappers>>;
   protected evaluatedTelemetryOptions: {
     logging?: boolean;
     metrics?: boolean;
@@ -80,33 +37,38 @@ export class BaseSubscriptionService<
 
   constructor(
     protected em: EntityManager,
-    protected readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>,
+    protected readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
     protected readonly schemaValidator: SchemaValidator,
     protected readonly mappers: {
-      SubscriptionDtoMapper: ResponseDtoMapperConstructor<
+      SubscriptionMapper: ResponseMapperConstructor<
         SchemaValidator,
-        Dto['SubscriptionDtoMapper'],
-        Entities['SubscriptionDtoMapper']
+        Dto['SubscriptionMapper'],
+        Entities['SubscriptionMapper']
       >;
-      CreateSubscriptionDtoMapper: RequestDtoMapperConstructor<
+      CreateSubscriptionMapper: RequestMapperConstructor<
         SchemaValidator,
-        Dto['CreateSubscriptionDtoMapper'],
-        Entities['CreateSubscriptionDtoMapper']
+        Dto['CreateSubscriptionMapper'],
+        Entities['CreateSubscriptionMapper'],
+        (
+          dto: Dto['CreateSubscriptionMapper'],
+          em: EntityManager
+        ) => Promise<Entities['CreateSubscriptionMapper']>
       >;
-      UpdateSubscriptionDtoMapper: RequestDtoMapperConstructor<
+      UpdateSubscriptionMapper: RequestMapperConstructor<
         SchemaValidator,
-        Dto['UpdateSubscriptionDtoMapper'],
-        Entities['UpdateSubscriptionDtoMapper']
+        Dto['UpdateSubscriptionMapper'],
+        Entities['UpdateSubscriptionMapper'],
+        (
+          dto: Dto['UpdateSubscriptionMapper'],
+          em: EntityManager
+        ) => Promise<Entities['UpdateSubscriptionMapper']>
       >;
     },
     readonly options?: {
       telemetry?: TelemetryOptions;
     }
   ) {
-    this._mappers = transformIntoInternalDtoMapper(
-      mappers,
-      this.schemaValidator
-    );
+    this._mappers = transformIntoInternalMapper(mappers, this.schemaValidator);
     this.evaluatedTelemetryOptions = options?.telemetry
       ? evaluateTelemetryOptions(options.telemetry).enabled
       : {
@@ -117,9 +79,9 @@ export class BaseSubscriptionService<
   }
 
   async createSubscription(
-    subscriptionDto: Dto['CreateSubscriptionDtoMapper'],
+    subscriptionDto: Dto['CreateSubscriptionMapper'],
     em?: EntityManager
-  ): Promise<Dto['SubscriptionDtoMapper']> {
+  ): Promise<Dto['SubscriptionMapper']> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info(
         'Creating subscription',
@@ -127,8 +89,7 @@ export class BaseSubscriptionService<
       );
     }
     const subscription =
-      await this._mappers.CreateSubscriptionDtoMapper.deserializeDtoToEntity(
-        this.schemaValidator,
+      await this._mappers.CreateSubscriptionMapper.deserializeDtoToEntity(
         subscriptionDto,
         em ?? this.em
       );
@@ -136,17 +97,14 @@ export class BaseSubscriptionService<
       await innerEm.persist(subscription);
     });
     const createdSubscriptionDto =
-      await this._mappers.SubscriptionDtoMapper.serializeEntityToDto(
-        this.schemaValidator,
-        subscription
-      );
+      await this._mappers.SubscriptionMapper.serializeEntityToDto(subscription);
     return createdSubscriptionDto;
   }
 
   async getSubscription(
     idDto: IdDto,
     em?: EntityManager
-  ): Promise<Dto['SubscriptionDtoMapper']> {
+  ): Promise<Dto['SubscriptionMapper']> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info('Getting subscription', idDto);
     }
@@ -154,16 +112,15 @@ export class BaseSubscriptionService<
       'Subscription',
       idDto
     );
-    return this._mappers.SubscriptionDtoMapper.serializeEntityToDto(
-      this.schemaValidator,
-      subscription as Entities['SubscriptionDtoMapper']
+    return this._mappers.SubscriptionMapper.serializeEntityToDto(
+      subscription as Entities['SubscriptionMapper']
     );
   }
 
   async getUserSubscription(
     { id }: IdDto,
     em?: EntityManager
-  ): Promise<Dto['SubscriptionDtoMapper']> {
+  ): Promise<Dto['SubscriptionMapper']> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info('Getting user subscription', id);
     }
@@ -173,16 +130,15 @@ export class BaseSubscriptionService<
       active: true
     });
 
-    return this._mappers.SubscriptionDtoMapper.serializeEntityToDto(
-      this.schemaValidator,
-      subscription as Entities['SubscriptionDtoMapper']
+    return this._mappers.SubscriptionMapper.serializeEntityToDto(
+      subscription as Entities['SubscriptionMapper']
     );
   }
 
   async getOrganizationSubscription(
     { id }: IdDto,
     em?: EntityManager
-  ): Promise<Dto['SubscriptionDtoMapper']> {
+  ): Promise<Dto['SubscriptionMapper']> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info('Getting organization subscription', id);
     }
@@ -191,16 +147,15 @@ export class BaseSubscriptionService<
       partyType: 'ORGANIZATION',
       active: true
     });
-    return this._mappers.SubscriptionDtoMapper.serializeEntityToDto(
-      this.schemaValidator,
-      subscription as Entities['SubscriptionDtoMapper']
+    return this._mappers.SubscriptionMapper.serializeEntityToDto(
+      subscription as Entities['SubscriptionMapper']
     );
   }
 
   async updateSubscription(
-    subscriptionDto: Dto['UpdateSubscriptionDtoMapper'],
+    subscriptionDto: Dto['UpdateSubscriptionMapper'],
     em?: EntityManager
-  ): Promise<Dto['SubscriptionDtoMapper']> {
+  ): Promise<Dto['SubscriptionMapper']> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info(
         'Updating subscription',
@@ -208,8 +163,7 @@ export class BaseSubscriptionService<
       );
     }
     const subscription =
-      this._mappers.UpdateSubscriptionDtoMapper.deserializeDtoToEntity(
-        this.schemaValidator,
+      this._mappers.UpdateSubscriptionMapper.deserializeDtoToEntity(
         subscriptionDto,
         em ?? this.em
       );
@@ -218,8 +172,7 @@ export class BaseSubscriptionService<
       await innerEm.persist(updatedSubscription);
     });
     const updatedSubscriptionDto =
-      await this._mappers.SubscriptionDtoMapper.serializeEntityToDto(
-        this.schemaValidator,
+      await this._mappers.SubscriptionMapper.serializeEntityToDto(
         updatedSubscription
       );
 
@@ -243,7 +196,7 @@ export class BaseSubscriptionService<
   async listSubscriptions(
     idsDto: { ids?: string[] },
     em?: EntityManager
-  ): Promise<Dto['SubscriptionDtoMapper'][]> {
+  ): Promise<Dto['SubscriptionMapper'][]> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info('Listing subscriptions', idsDto);
     }
@@ -260,9 +213,8 @@ export class BaseSubscriptionService<
     return Promise.all(
       subscriptions.map((subscription) => {
         const subscriptionDto =
-          this._mappers.SubscriptionDtoMapper.serializeEntityToDto(
-            this.schemaValidator,
-            subscription as Entities['SubscriptionDtoMapper']
+          this._mappers.SubscriptionMapper.serializeEntityToDto(
+            subscription as Entities['SubscriptionMapper']
           );
         return subscriptionDto;
       })
@@ -277,7 +229,7 @@ export class BaseSubscriptionService<
     if (!subscription) {
       throw new Error('Subscription not found');
     }
-    (subscription as Entities['SubscriptionDtoMapper']).active = false;
+    (subscription as Entities['SubscriptionMapper']).active = false;
     await (em ?? this.em).transactional(async (innerEm) => {
       await innerEm.persist(subscription);
     });
@@ -291,7 +243,7 @@ export class BaseSubscriptionService<
     if (!subscription) {
       throw new Error('Subscription not found');
     }
-    (subscription as Entities['SubscriptionDtoMapper']).active = true;
+    (subscription as Entities['SubscriptionMapper']).active = true;
     await (em ?? this.em).transactional(async (innerEm) => {
       await innerEm.persist(subscription);
     });

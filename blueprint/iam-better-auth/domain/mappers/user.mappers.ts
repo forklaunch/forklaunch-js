@@ -1,16 +1,13 @@
 import { boolean, SchemaValidator, string } from '@forklaunch/blueprint-core';
-import { RequestDtoMapper, ResponseDtoMapper } from '@forklaunch/core/mappers';
+import { RequestMapper, ResponseMapper } from '@forklaunch/core/mappers';
 import { EntityManager } from '@mikro-orm/core';
 import { Organization } from '../../persistence/entities/organization.entity';
 import { Role } from '../../persistence/entities/role.entity';
 import { User } from '../../persistence/entities/user.entity';
 import { UserSchemas } from '../../registrations';
-import { RoleDtoMapper } from './role.mappers';
+import { RoleMapper } from './role.mappers';
 
-export class CreateUserDtoMapper extends RequestDtoMapper<
-  User,
-  SchemaValidator
-> {
+export class CreateUserMapper extends RequestMapper<User, SchemaValidator> {
   schema = {
     ...UserSchemas.CreateUserSchema,
     name: string,
@@ -35,10 +32,7 @@ export class CreateUserDtoMapper extends RequestDtoMapper<
   }
 }
 
-export class UpdateUserDtoMapper extends RequestDtoMapper<
-  User,
-  SchemaValidator
-> {
+export class UpdateUserMapper extends RequestMapper<User, SchemaValidator> {
   schema = UserSchemas.UpdateUserSchema;
 
   async toEntity(em: EntityManager): Promise<User> {
@@ -46,7 +40,7 @@ export class UpdateUserDtoMapper extends RequestDtoMapper<
   }
 }
 
-export class UserDtoMapper extends ResponseDtoMapper<User, SchemaValidator> {
+export class UserMapper extends ResponseMapper<User, SchemaValidator> {
   schema = UserSchemas.UserSchema;
 
   async fromEntity(entity: User): Promise<this> {
@@ -55,7 +49,7 @@ export class UserDtoMapper extends ResponseDtoMapper<User, SchemaValidator> {
       roles: await Promise.all(
         entity.roles.map(async (role) =>
           (
-            await RoleDtoMapper.fromEntity(
+            await RoleMapper.fromEntity(
               this.schemaValidator as SchemaValidator,
               role
             )

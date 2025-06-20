@@ -17,9 +17,9 @@ export type StripeBillingPortalEntity = BillingPortalDto & {
 };
 
 export type StripeBillingPortalEntities = {
-  BillingPortalDtoMapper: StripeBillingPortalEntity;
-  CreateBillingPortalDtoMapper: StripeBillingPortalEntity;
-  UpdateBillingPortalDtoMapper: StripeBillingPortalEntity;
+  BillingPortalMapper: StripeBillingPortalEntity;
+  CreateBillingPortalMapper: StripeBillingPortalEntity;
+  UpdateBillingPortalMapper: StripeBillingPortalEntity;
 };
 
 // Checkout Session Types
@@ -33,9 +33,9 @@ export type StripeCheckoutSessionEntity<StatusEnum> = CheckoutSessionDto<
 };
 
 export type StripeCheckoutSessionEntities<StatusEnum> = {
-  CheckoutSessionDtoMapper: StripeCheckoutSessionEntity<StatusEnum>;
-  CreateCheckoutSessionDtoMapper: StripeCheckoutSessionEntity<StatusEnum>;
-  UpdateCheckoutSessionDtoMapper: StripeCheckoutSessionEntity<StatusEnum>;
+  CheckoutSessionMapper: StripeCheckoutSessionEntity<StatusEnum>;
+  CreateCheckoutSessionMapper: StripeCheckoutSessionEntity<StatusEnum>;
+  UpdateCheckoutSessionMapper: StripeCheckoutSessionEntity<StatusEnum>;
 };
 
 // Payment Link Types
@@ -48,9 +48,9 @@ export type StripePaymentLinkEntity<StatusEnum> = PaymentLinkDto<
 };
 
 export type StripePaymentLinkEntities<StatusEnum> = {
-  PaymentLinkDtoMapper: StripePaymentLinkEntity<StatusEnum>;
-  CreatePaymentLinkDtoMapper: StripePaymentLinkEntity<StatusEnum>;
-  UpdatePaymentLinkDtoMapper: StripePaymentLinkEntity<StatusEnum>;
+  PaymentLinkMapper: StripePaymentLinkEntity<StatusEnum>;
+  CreatePaymentLinkMapper: StripePaymentLinkEntity<StatusEnum>;
+  UpdatePaymentLinkMapper: StripePaymentLinkEntity<StatusEnum>;
 };
 
 // Plan Types
@@ -63,9 +63,9 @@ export type StripePlanEntity = PlanDto<
 };
 
 export type StripePlanEntities = {
-  PlanDtoMapper: StripePlanEntity;
-  CreatePlanDtoMapper: StripePlanEntity;
-  UpdatePlanDtoMapper: StripePlanEntity;
+  PlanMapper: StripePlanEntity;
+  CreatePlanMapper: StripePlanEntity;
+  UpdatePlanMapper: StripePlanEntity;
 };
 
 // Subscription Types
@@ -77,7 +77,7 @@ export type StripeSubscriptionEntity<PartyType> = SubscriptionDto<
 };
 
 export type StripeSubscriptionEntities<PartyType> = {
-  SubscriptionDtoMapper: StripeSubscriptionEntity<PartyType>;
-  CreateSubscriptionDtoMapper: StripeSubscriptionEntity<PartyType>;
-  UpdateSubscriptionDtoMapper: StripeSubscriptionEntity<PartyType>;
+  SubscriptionMapper: StripeSubscriptionEntity<PartyType>;
+  CreateSubscriptionMapper: StripeSubscriptionEntity<PartyType>;
+  UpdateSubscriptionMapper: StripeSubscriptionEntity<PartyType>;
 };

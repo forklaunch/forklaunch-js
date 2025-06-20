@@ -37,8 +37,8 @@ export class Subscription extends SqlBaseEntity {
   @Property()
   startDate!: Date;
 
-  @Property()
-  endDate!: Date;
+  @Property({ nullable: true })
+  endDate?: Date;
 
   @Property()
   status!: string;
