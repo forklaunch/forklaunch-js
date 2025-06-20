@@ -6,11 +6,11 @@
 
 ## Overview
 
-ForkLaunch streamlines the development process by automating boilerplate creation and managing dependencies across services, workers, and libraries. 
+ForkLaunch is a TypeScript framework that generates production-ready backend applications by automating boilerplate creation and managing dependencies across services, workers, and libraries.
 
-The **CLI** handles manifest updates, Docker configuration, and ensures consistent development patterns.
+The **CLI** handles manifest updates, docker/environment management, and ensures consistent development patterns. Soon it will help you deploy with whatever architecture you need.
 
-The **framework** defines powerful abstractions that supercharge common development patterns, to get you up and running quickly.
+The **framework** provides database integration, authentication, validation, and other common backend functionality, with maximum type-safety in mind, to get you up and running quickly.
 
 The best part? If you don't like it, you can easily change it.
 
