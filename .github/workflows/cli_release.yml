@@ -128,6 +128,9 @@ jobs:
           node-version: '18'
           registry-url: 'https://registry.npmjs.org'
       
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      
       - name: Set version
         id: version
         run: |
@@ -153,8 +156,20 @@ jobs:
         run: |
           npm version ${{ steps.version.outputs.version }} --no-git-tag-version
       
+      - name: Update Cargo.toml version
+        working-directory: cli
+        run: |
+          cargo install cargo-edit
+          cargo set-version ${{ steps.version.outputs.version }}
+
       - name: Publish to npm
         working-directory: cli
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish --access public
+
+      - name: Publish to crates.io
+        working-directory: cli
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_TOKEN }}
+        run: cargo publish
