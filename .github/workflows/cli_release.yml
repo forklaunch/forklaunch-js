@@ -1,12 +1,13 @@
 name: CLI Release
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - 'cli-v*'
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to release (e.g., 0.2.0) - leave empty to use latest CLI tag'
+        description: 'Version to release (e.g., cli-v0.2.0) - leave empty to use latest CLI tag'
         required: false
         default: ''
       use_latest_tag:
@@ -90,7 +91,7 @@ jobs:
   upload-assets:
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'release'
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/cli-v')
     
     steps:
       - name: Download all artifacts
@@ -98,12 +99,16 @@ jobs:
         with:
           path: artifacts
       
-      - name: Upload Release Assets
+      - name: Create Release
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.event.release.tag_name }}
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
           files: artifacts/*/forklaunch-*
 
   npm-publish:
@@ -132,8 +137,8 @@ jobs:
               echo "Error: Version is required when not using latest tag" >&2
               exit 1
             fi
-          elif [[ "${{ github.event_name }}" == "release" ]]; then
-            tag_name="${{ github.event.release.tag_name }}"
+          elif [[ "${{ github.event_name }}" == "push" ]]; then
+            tag_name="${{ github.ref_name }}"
             echo "version=${tag_name#cli-v}" >> $GITHUB_OUTPUT
           else
             echo "version=${GITHUB_REF#refs/tags/cli-v}" >> $GITHUB_OUTPUT
