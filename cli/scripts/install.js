@@ -388,7 +388,7 @@ async function main() {
     }
 
     await flushOutputStreams();
-    await waitForAsyncOperations();
+    // await waitForAsyncOperations();
 
     process.exit(0);
   } catch (error) {
