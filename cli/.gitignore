@@ -21,3 +21,6 @@ Cargo.lock
 #.idea/
 
 tests/output
+
+forklaunch-*.tgz
+bin/

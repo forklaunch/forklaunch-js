@@ -1,0 +1,16 @@
+# Rust source and build artifacts
+src/
+target/
+tests/
+Cargo.lock
+Cargo.toml
+.rustfmt.toml
+
+# Development files
+.DS_Store
+.gitignore
+.github
+
+# Include necessary files for npm package
+!bin/
+!scripts/

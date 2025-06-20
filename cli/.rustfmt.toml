@@ -6,4 +6,4 @@ imports_granularity = "Crate"
 
 # Other useful formatting options
 reorder_imports = true
-reorder_modules = true 
+reorder_modules = true
