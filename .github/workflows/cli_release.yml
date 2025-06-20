@@ -1,9 +1,8 @@
 name: CLI Release
 
 on:
-  push:
-    tags:
-      - 'cli-v*'
+  release:
+    types: [published]
   workflow_dispatch:
     inputs:
       version:
@@ -88,49 +87,27 @@ jobs:
           name: ${{ matrix.artifact }}
           path: cli/${{ matrix.artifact }}
 
-  release:
+  upload-assets:
     needs: build
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/cli-v') || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'release'
     
     steps:
-      - uses: actions/checkout@v4
-      
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
       
-      - name: Set version
-        id: version
-        run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            if [[ "${{ github.event.inputs.use_latest_tag }}" == "true" ]]; then
-              latest_tag=$(git tag -l "cli-v*" | sort -V | tail -1)
-              echo "version=${latest_tag#cli-v}" >> $GITHUB_OUTPUT
-            elif [[ -n "${{ github.event.inputs.version }}" ]]; then
-              echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
-            else
-              echo "Error: Version is required when not using latest tag" >&2
-              exit 1
-            fi
-          else
-            echo "version=${GITHUB_REF#refs/tags/cli-v}" >> $GITHUB_OUTPUT
-          fi
-      
-      - name: Create Release
+      - name: Upload Release Assets
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: cli-v${{ steps.version.outputs.version }}
-          name: CLI v${{ steps.version.outputs.version }}
-          draft: false
-          prerelease: false
+          tag_name: ${{ github.event.release.tag_name }}
           files: artifacts/*/forklaunch-*
 
   npm-publish:
-    needs: release
+    needs: build
     runs-on: ubuntu-latest
     
     steps:
@@ -155,6 +132,9 @@ jobs:
               echo "Error: Version is required when not using latest tag" >&2
               exit 1
             fi
+          elif [[ "${{ github.event_name }}" == "release" ]]; then
+            tag_name="${{ github.event.release.tag_name }}"
+            echo "version=${tag_name#cli-v}" >> $GITHUB_OUTPUT
           else
             echo "version=${GITHUB_REF#refs/tags/cli-v}" >> $GITHUB_OUTPUT
           fi
