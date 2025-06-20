@@ -28,3 +28,9 @@ fi
 if [ -d "domain/enum" ]; then
   cp -r domain/enum lib/eject/domain/enum
 fi
+
+find lib/eject -type f -name '*.ts' -exec sh -c \
+  'for f do \
+    sed "s|@forklaunch/validator/zod|@{{app_name}}/core|g" "$f" > "$f.tmp" && \
+    mv "$f.tmp" "$f"; \
+  done' sh {} +
