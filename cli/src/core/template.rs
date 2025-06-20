@@ -189,6 +189,14 @@ pub(crate) fn get_routers_from_standard_package(package: Module) -> Option<Vec<S
             String::from("plan"),
             String::from("subscription"),
         ]),
+        Module::StripeBilling => Some(vec![
+            String::from("billingPortal"),
+            String::from("checkoutSession"),
+            String::from("paymentLink"),
+            String::from("plan"),
+            String::from("subscription"),
+            String::from("webhook"),
+        ]),
         Module::BaseIam | Module::BetterAuthIam => Some(vec![
             String::from("organization"),
             String::from("permission"),

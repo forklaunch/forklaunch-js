@@ -13,6 +13,7 @@ pub(crate) enum IamConfig {
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) enum BillingConfig {
     BaseBilling,
+    StripeBilling,
 }
 
 #[derive(Debug, PartialEq, Eq, Default)]
@@ -37,6 +38,9 @@ pub(crate) fn validate_modules(
             }
             Module::BaseBilling => {
                 global_module_config.billing = Some(BillingConfig::BaseBilling);
+            }
+            Module::StripeBilling => {
+                global_module_config.billing = Some(BillingConfig::StripeBilling);
             }
         }
 

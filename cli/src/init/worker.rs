@@ -48,8 +48,8 @@ use crate::{
                 AJV_VERSION, APP_CORE_VERSION, APP_MONITORING_VERSION, BETTER_SQLITE3_VERSION,
                 BIOME_VERSION, BULLMQ_VERSION, COMMON_VERSION, CORE_VERSION, DOTENV_VERSION,
                 ESLINT_VERSION, EXPRESS_VERSION, HYPER_EXPRESS_VERSION,
-                INFRASTRUCTURE_REDIS_VERSION, MIKRO_ORM_CLI_VERSION, MIKRO_ORM_CORE_VERSION,
-                MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
+                INFRASTRUCTURE_REDIS_VERSION, INTERNAL_VERSION, MIKRO_ORM_CLI_VERSION,
+                MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
                 MIKRO_ORM_REFLECTION_VERSION, MIKRO_ORM_SEEDER_VERSION, OXLINT_VERSION,
                 PRETTIER_VERSION, PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT, PROJECT_SEED_SCRIPT,
                 PROJECT_START_WORKER_CLIENT_SCRIPT, SQLITE3_VERSION, TSX_VERSION, TYPEBOX_VERSION,
@@ -373,6 +373,7 @@ pub(crate) fn generate_worker_package_json(
                     None
                 },
                 forklaunch_implementation_billing_base: None,
+                forklaunch_implementation_billing_stripe: None,
                 forklaunch_interfaces_billing: None,
                 forklaunch_implementation_iam_base: None,
                 forklaunch_interfaces_iam: None,
@@ -419,6 +420,7 @@ pub(crate) fn generate_worker_package_json(
                 },
                 forklaunch_infrastructure_s3: None,
                 forklaunch_interfaces_worker: Some(WORKER_INTERFACES_VERSION.to_string()),
+                forklaunch_internal: Some(INTERNAL_VERSION.to_string()),
                 forklaunch_universal_sdk: None,
                 forklaunch_validator: Some(VALIDATOR_VERSION.to_string()),
                 mikro_orm_core: Some(MIKRO_ORM_CORE_VERSION.to_string()),
@@ -474,6 +476,7 @@ pub(crate) fn generate_worker_package_json(
                 } else {
                     None
                 },
+                stripe: None,
                 uuid: Some(UUID_VERSION.to_string()),
                 zod: if manifest_data.is_zod {
                     Some(ZOD_VERSION.to_string())

@@ -203,12 +203,15 @@ impl CliCommand for ModuleCommand {
             db_driver: get_db_driver(&database),
 
             is_iam: module.clone() == Module::BaseIam || module.clone() == Module::BetterAuthIam,
-            is_billing: module.clone() == Module::BaseBilling,
-            is_cache_enabled: module.clone() == Module::BaseBilling,
+            is_billing: module.clone() == Module::BaseBilling
+                || module.clone() == Module::StripeBilling,
+            is_cache_enabled: module.clone() == Module::BaseBilling
+                || module.clone() == Module::StripeBilling,
             is_s3_enabled: false,
             is_database_enabled: true,
 
             is_better_auth: module.clone() == Module::BetterAuthIam,
+            is_stripe: module.clone() == Module::StripeBilling,
         };
 
         let manifest_data = add_project_definition_to_manifest(

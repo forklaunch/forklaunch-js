@@ -9,8 +9,9 @@
   "updateInternalDependencies": "patch",
   "ignore": [
     "@forklaunch/blueprint-sample-worker",
-    "@forklaunch/blueprint-billing",
-    "@forklaunch/blueprint-iam",
+    "@forklaunch/blueprint-billing-base",
+    "@forklaunch/blueprint-billing-stripe",
+    "@forklaunch/blueprint-iam-base",
     "@forklaunch/blueprint-iam-better-auth",
     "@forklaunch/blueprint-core",
     "@forklaunch/blueprint-monitoring"
