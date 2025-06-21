@@ -72,7 +72,7 @@ export function enrichDetails<
     res.responseSchemas = responseSchemas;
     req.openTelemetryCollector = openTelemetryCollector;
 
-    req.context.span?.setAttribute(ATTR_API_NAME, req.contractDetails?.name);
+    req.context?.span?.setAttribute(ATTR_API_NAME, req.contractDetails?.name);
     const startTime = process.hrtime();
 
     res.on('finish', () => {

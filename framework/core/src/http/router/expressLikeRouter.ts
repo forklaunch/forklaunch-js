@@ -16,6 +16,7 @@ import {
   PathOrMiddlewareBasedHandler
 } from '../interfaces/expressLikeRouter.interface';
 import { parseRequestAuth } from '../middleware/request/auth.middleware';
+import { createContext } from '../middleware/request/createContext.middleware';
 import { enrichDetails } from '../middleware/request/enrichDetails.middleware';
 import { parse } from '../middleware/request/parse.middleware';
 import { OpenTelemetryCollector } from '../telemetry/openTelemetryCollector';
@@ -80,6 +81,27 @@ export class ForklaunchExpressLikeRouter<
     readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
   ) {
     this.basePath = basePath;
+
+    process.on('uncaughtException', (err) => {
+      this.openTelemetryCollector.log('error', `Uncaught exception: ${err}`);
+      process.exit(1);
+    });
+    process.on('unhandledRejection', (reason) => {
+      this.openTelemetryCollector.log(
+        'error',
+        `Unhandled rejection: ${reason}`
+      );
+      process.exit(1);
+    });
+    process.on('exit', () => {
+      this.openTelemetryCollector.log('info', 'Shutting down application');
+    });
+    process.on('SIGINT', () => {
+      this.openTelemetryCollector.log('info', 'Shutting down application');
+      process.exit(0);
+    });
+
+    this.internal.use(createContext(this.schemaValidator) as RouterHandler);
   }
 
   /**

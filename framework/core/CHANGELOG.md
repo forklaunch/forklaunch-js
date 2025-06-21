@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.9.22
+
+### Patch Changes
+
+- "move enrichment middleware to router level instead of application level"
+
 ## 0.9.21
 
 ### Patch Changes
