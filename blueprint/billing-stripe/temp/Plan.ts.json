@@ -1,0 +1,111 @@
+{
+  "data": {
+    "_id": 5000,
+    "properties": {
+      "active": {
+        "name": "active",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "boolean",
+        "array": false,
+        "runtimeType": "boolean"
+      },
+      "name": {
+        "name": "name",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "string",
+        "array": false,
+        "runtimeType": "string"
+      },
+      "description": {
+        "name": "description",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "string",
+        "array": false,
+        "runtimeType": "string",
+        "optional": true
+      },
+      "price": {
+        "name": "price",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "number",
+        "array": false,
+        "runtimeType": "number"
+      },
+      "cadence": {
+        "name": "cadence",
+        "kind": "scalar",
+        "enum": true,
+        "items": ["WEEKLY", "BIWEEKLY", "MONTHLY", "ANNUALLY"],
+        "type": "PlanCadenceEnum",
+        "array": false,
+        "runtimeType": "PlanCadenceEnum"
+      },
+      "features": {
+        "name": "features",
+        "kind": "scalar",
+        "nullable": true,
+        "getter": false,
+        "setter": false,
+        "array": true,
+        "runtimeType": "string[]"
+      },
+      "extraFields": {
+        "name": "extraFields",
+        "kind": "scalar",
+        "type": "json",
+        "nullable": true,
+        "getter": false,
+        "setter": false,
+        "array": false,
+        "runtimeType": "unknown",
+        "optional": true
+      },
+      "externalId": {
+        "name": "externalId",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "string",
+        "array": false,
+        "runtimeType": "string"
+      },
+      "billingProvider": {
+        "name": "billingProvider",
+        "kind": "scalar",
+        "enum": true,
+        "items": ["none", "stripe", "adyen"],
+        "nullable": true,
+        "type": "BillingProviderEnum",
+        "array": false,
+        "runtimeType": "BillingProviderEnum",
+        "optional": true
+      }
+    },
+    "primaryKeys": [],
+    "filters": {},
+    "hooks": {},
+    "indexes": [],
+    "uniques": [{ "properties": "externalId" }],
+    "className": "Plan",
+    "path": "./persistence/entities/plan.entity.ts",
+    "name": "Plan",
+    "abstract": false,
+    "internal": true,
+    "constructorParams": [],
+    "toJsonParams": [],
+    "extends": "SqlBaseEntity",
+    "useCache": true,
+    "collection": "plan"
+  },
+  "origin": "./persistence/entities/plan.entity.ts",
+  "hash": "f59e4cd6e8e8e3c04ceca8744d6e3a00",
+  "version": "6.4.16"
+}

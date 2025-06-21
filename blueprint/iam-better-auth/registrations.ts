@@ -33,26 +33,32 @@ import { betterAuth } from 'better-auth';
 import { BetterAuthConfig, betterAuthConfig } from './auth';
 import { OrganizationStatus } from './domain/enum/organizationStatus.enum';
 import {
-  CreateOrganizationDtoMapper,
-  OrganizationDtoMapper,
-  UpdateOrganizationDtoMapper
+  CreateOrganizationMapper,
+  OrganizationMapper,
+  UpdateOrganizationMapper
 } from './domain/mappers/organization.mappers';
 import {
-  CreatePermissionDtoMapper,
-  PermissionDtoMapper,
-  UpdatePermissionDtoMapper
+  CreatePermissionMapper,
+  PermissionMapper,
+  UpdatePermissionMapper
 } from './domain/mappers/permission.mappers';
 import {
-  CreateRoleDtoMapper,
-  RoleDtoMapper,
+  CreateRoleMapper,
   RoleEntityMapper,
-  UpdateRoleDtoMapper
+  RoleMapper,
+  UpdateRoleMapper
 } from './domain/mappers/role.mappers';
 import {
-  CreateUserDtoMapper,
-  UpdateUserDtoMapper,
-  UserDtoMapper
+  CreateUserMapper,
+  UpdateUserMapper,
+  UserMapper
 } from './domain/mappers/user.mappers';
+import {
+  OrganizationMapperTypes,
+  PermissionMapperTypes,
+  RoleMapperTypes,
+  UserMapperTypes
+} from './domain/types/iamMappers.types';
 //! defines the schemas for the organization service
 export const OrganizationSchemas = BaseOrganizationServiceSchemas({
   uuidId: true,
@@ -220,7 +226,11 @@ export function createDependencies(orm: MikroORM) {
   const serviceDependencies = runtimeDependencies.chain({
     OrganizationService: {
       lifetime: Lifetime.Scoped,
-      type: BaseOrganizationService<SchemaValidator, typeof OrganizationStatus>,
+      type: BaseOrganizationService<
+        SchemaValidator,
+        typeof OrganizationStatus,
+        OrganizationMapperTypes
+      >,
       factory: ({ EntityManager, OpenTelemetryCollector }, resolve, context) =>
         new BaseOrganizationService(
           context.entityManagerOptions
@@ -229,15 +239,15 @@ export function createDependencies(orm: MikroORM) {
           OpenTelemetryCollector,
           SchemaValidator(),
           {
-            OrganizationDtoMapper,
-            CreateOrganizationDtoMapper,
-            UpdateOrganizationDtoMapper
+            OrganizationMapper,
+            CreateOrganizationMapper,
+            UpdateOrganizationMapper
           }
         )
     },
     PermissionService: {
       lifetime: Lifetime.Scoped,
-      type: BasePermissionService<SchemaValidator>,
+      type: BasePermissionService<SchemaValidator, PermissionMapperTypes>,
       factory: ({ EntityManager, OpenTelemetryCollector }, resolve, context) =>
         new BasePermissionService(
           context.entityManagerOptions
@@ -247,16 +257,16 @@ export function createDependencies(orm: MikroORM) {
           OpenTelemetryCollector,
           SchemaValidator(),
           {
-            PermissionDtoMapper,
-            CreatePermissionDtoMapper,
-            UpdatePermissionDtoMapper,
+            PermissionMapper,
+            CreatePermissionMapper,
+            UpdatePermissionMapper,
             RoleEntityMapper
           }
         )
     },
     RoleService: {
       lifetime: Lifetime.Scoped,
-      type: BaseRoleService<SchemaValidator>,
+      type: BaseRoleService<SchemaValidator, RoleMapperTypes>,
       factory: ({ EntityManager, OpenTelemetryCollector }, resolve, context) =>
         new BaseRoleService(
           context.entityManagerOptions
@@ -265,15 +275,24 @@ export function createDependencies(orm: MikroORM) {
           OpenTelemetryCollector,
           SchemaValidator(),
           {
-            RoleDtoMapper,
-            CreateRoleDtoMapper,
-            UpdateRoleDtoMapper
+            RoleMapper,
+            CreateRoleMapper,
+            UpdateRoleMapper
           }
         )
     },
     UserService: {
       lifetime: Lifetime.Scoped,
-      type: BaseUserService<SchemaValidator, typeof OrganizationStatus>,
+      type: BaseUserService<
+        SchemaValidator,
+        typeof OrganizationStatus,
+        UserMapperTypes,
+        {
+          UserMapper: UserMapper['dto'];
+          CreateUserMapper: CreateUserMapper['dto'];
+          UpdateUserMapper: UpdateUserMapper['dto'];
+        }
+      >,
       factory: (
         {
           EntityManager,
@@ -291,9 +310,9 @@ export function createDependencies(orm: MikroORM) {
           OpenTelemetryCollector,
           SchemaValidator(),
           {
-            UserDtoMapper,
-            CreateUserDtoMapper,
-            UpdateUserDtoMapper
+            UserMapper,
+            CreateUserMapper,
+            UpdateUserMapper
           }
         )
     }

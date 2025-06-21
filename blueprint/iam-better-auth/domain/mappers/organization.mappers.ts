@@ -1,12 +1,12 @@
 import { SchemaValidator } from '@forklaunch/blueprint-core';
-import { RequestDtoMapper, ResponseDtoMapper } from '@forklaunch/core/mappers';
+import { RequestMapper, ResponseMapper } from '@forklaunch/core/mappers';
 import { EntityManager } from '@mikro-orm/core';
 import { OrganizationStatus } from '../../domain/enum/organizationStatus.enum';
 import { Organization } from '../../persistence/entities/organization.entity';
 import { OrganizationSchemas } from '../../registrations';
-import { UserDtoMapper } from './user.mappers';
+import { UserMapper } from './user.mappers';
 
-export class CreateOrganizationDtoMapper extends RequestDtoMapper<
+export class CreateOrganizationMapper extends RequestMapper<
   Organization,
   SchemaValidator
 > {
@@ -26,7 +26,7 @@ export class CreateOrganizationDtoMapper extends RequestDtoMapper<
   }
 }
 
-export class UpdateOrganizationDtoMapper extends RequestDtoMapper<
+export class UpdateOrganizationMapper extends RequestMapper<
   Organization,
   SchemaValidator
 > {
@@ -36,7 +36,7 @@ export class UpdateOrganizationDtoMapper extends RequestDtoMapper<
     return Organization.update(this.dto, em);
   }
 }
-export class OrganizationDtoMapper extends ResponseDtoMapper<
+export class OrganizationMapper extends ResponseMapper<
   Organization,
   SchemaValidator
 > {
@@ -48,7 +48,7 @@ export class OrganizationDtoMapper extends ResponseDtoMapper<
       users: await Promise.all(
         entity.users.map(async (user) =>
           (
-            await UserDtoMapper.fromEntity(
+            await UserMapper.fromEntity(
               this.schemaValidator as SchemaValidator,
               user
             )

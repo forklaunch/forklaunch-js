@@ -36,7 +36,7 @@
     "@forklaunch/better-auth-mikro-orm-fork": "^0.3.0",
     "@forklaunch/blueprint-core": "workspace:*",
     "@forklaunch/blueprint-monitoring": "workspace:*",
-    "@forklaunch/core": "^0.9.15",
+    "@forklaunch/core": "^0.9.21",
     "@forklaunch/implementation-iam-base": "workspace:*",
     "@forklaunch/interfaces-iam": "workspace:*",
     "@mikro-orm/core": "^6.4.16",
@@ -48,12 +48,12 @@
     "@mikro-orm/seeder": "^6.4.16",
     "@mikro-orm/sqlite": "^6.4.16",
     "@opentelemetry/api": "^1.9.0",
-    "@sinclair/typebox": "^0.34.33",
+    "@sinclair/typebox": "^0.34.35",
     "better-auth": "^1.2.9",
     "dotenv": "^16.5.0",
     "pino": "^9.7.0",
     "uuid": "^11.1.0",
-    "zod": "^3.25.63"
+    "zod": "^3.25.67"
   },
   "devDependencies": {
     "@mikro-orm/cli": "^6.4.16",
@@ -66,6 +66,9 @@
     "typedoc": "^0.28.5"
   },
   "mikro-orm": {
-    "configPaths": ["./mikro-orm.config.ts", "./dist/mikro-orm.config.js"]
+    "configPaths": [
+      "./mikro-orm.config.ts",
+      "./dist/mikro-orm.config.js"
+    ]
   }
 }

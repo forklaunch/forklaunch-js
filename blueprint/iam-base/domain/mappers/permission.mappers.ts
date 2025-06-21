@@ -1,10 +1,10 @@
 import { SchemaValidator } from '@forklaunch/blueprint-core';
-import { RequestDtoMapper, ResponseDtoMapper } from '@forklaunch/core/mappers';
+import { RequestMapper, ResponseMapper } from '@forklaunch/core/mappers';
 import { EntityManager } from '@mikro-orm/core';
 import { Permission } from '../../persistence/entities/permission.entity';
 import { PermissionSchemas } from '../../registrations';
 
-export class CreatePermissionDtoMapper extends RequestDtoMapper<
+export class CreatePermissionMapper extends RequestMapper<
   Permission,
   SchemaValidator
 > {
@@ -22,7 +22,7 @@ export class CreatePermissionDtoMapper extends RequestDtoMapper<
   }
 }
 
-export class UpdatePermissionDtoMapper extends RequestDtoMapper<
+export class UpdatePermissionMapper extends RequestMapper<
   Permission,
   SchemaValidator
 > {
@@ -33,7 +33,7 @@ export class UpdatePermissionDtoMapper extends RequestDtoMapper<
   }
 }
 
-export class PermissionDtoMapper extends ResponseDtoMapper<
+export class PermissionMapper extends ResponseMapper<
   Permission,
   SchemaValidator
 > {

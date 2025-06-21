@@ -12,11 +12,12 @@ import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { PaymentLinkService } from '@forklaunch/interfaces-billing/interfaces';
 import { CurrencyEnum } from '../../domain/enum/currency.enum';
+import { PaymentMethodEnum } from '../../domain/enum/paymentMethod.enum';
 import { StatusEnum } from '../../domain/enum/status.enum';
 import {
-  CreatePaymentLinkDtoMapper,
-  PaymentLinkDtoMapper,
-  UpdatePaymentLinkDtoMapper
+  CreatePaymentLinkMapper,
+  PaymentLinkMapper,
+  UpdatePaymentLinkMapper
 } from '../../domain/mappers/paymentLink.mappers';
 import { SchemaDependencies } from '../../registrations';
 
@@ -35,9 +36,9 @@ export const PaymentLinkController = (
       {
         name: 'createPaymentLink',
         summary: 'Create a payment link',
-        body: CreatePaymentLinkDtoMapper.schema(),
+        body: CreatePaymentLinkMapper.schema(),
         responses: {
-          200: PaymentLinkDtoMapper.schema()
+          200: PaymentLinkMapper.schema()
         }
       },
       async (req, res) => {
@@ -56,7 +57,7 @@ export const PaymentLinkController = (
         summary: 'Get a payment link',
         params: IdSchema,
         responses: {
-          200: PaymentLinkDtoMapper.schema()
+          200: PaymentLinkMapper.schema()
         }
       },
       async (req, res) => {
@@ -71,10 +72,10 @@ export const PaymentLinkController = (
       {
         name: 'updatePaymentLink',
         summary: 'Update a payment link',
-        body: UpdatePaymentLinkDtoMapper.schema(),
+        body: UpdatePaymentLinkMapper.schema(),
         params: IdSchema,
         responses: {
-          200: PaymentLinkDtoMapper.schema()
+          200: PaymentLinkMapper.schema()
         }
       },
       async (req, res) => {
@@ -153,7 +154,7 @@ export const PaymentLinkController = (
         summary: 'List payment links',
         query: IdsSchema,
         responses: {
-          200: array(PaymentLinkDtoMapper.schema())
+          200: array(PaymentLinkMapper.schema())
         }
       },
       async (req, res) => {
@@ -164,5 +165,9 @@ export const PaymentLinkController = (
       }
     )
   }) satisfies Controller<
-    PaymentLinkService<typeof CurrencyEnum, typeof StatusEnum>
+    PaymentLinkService<
+      typeof PaymentMethodEnum,
+      typeof CurrencyEnum,
+      typeof StatusEnum
+    >
   >;

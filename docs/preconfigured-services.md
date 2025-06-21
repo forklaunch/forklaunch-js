@@ -16,12 +16,14 @@ ForkLaunch provides production-ready service modules that handle common applicat
 ## Available Services
 
 ### Identity and Access Management (IAM)
-Base authentication and authorization service that handles:
+Authorization service that handles:
 - User management
 - Role-based access control
 - Session management
 
-Best when coupled with an external authentication system.
+Authentication flavors:
+- BetterAuth (https://www.better-auth.com/)
+- BYO Authentication (Base IAM + custom code)
 
 [View IAM API Documentation →](https://forklaunch.com/iam-api/docs)
 
@@ -33,14 +35,16 @@ Base billing infrastructure service that manages:
 - Subscription management
 - Billing portal
 
-Best when coupled when an external payment processor.
+Payment Processors:
+- Stripe
+- BYO Payment Processor (Base Billing + custom code)
 
 [View Billing API Documentation →](https://forklaunch.com/billing-api/docs)
 
 ### Ejected Implementation
 For full customization, eject the service into your codebase:
 ```bash
-forklaunch eject iam
+forklaunch eject <service>
 ```
 
 ## Best Practices

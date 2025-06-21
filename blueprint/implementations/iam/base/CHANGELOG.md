@@ -1,5 +1,25 @@
 # @forklaunch/implementation-iam-base
 
+## 0.3.4
+
+### Patch Changes
+
+- fix import paths from schemas to other domain layers
+
+## 0.3.3
+
+### Patch Changes
+
+- move domain files into domain folder
+
+## 0.3.2
+
+### Patch Changes
+
+- update dependencies and introduce stripe billing
+- Updated dependencies
+  - @forklaunch/interfaces-iam@0.3.2
+
 ## 0.3.1
 
 ### Patch Changes

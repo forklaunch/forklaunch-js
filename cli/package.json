@@ -1,0 +1,31 @@
+{
+  "name": "forklaunch",
+  "version": "0.0.0",
+  "description": "Launch faster with forklaunch",
+  "keywords": [
+    "cli",
+    "scaffolding",
+    "microservices",
+    "typescript",
+    "rust"
+  ],
+  "author": "Forklift Technologies, Inc. <engineering@forklaunch.com>",
+  "license": "AGPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/forklaunch/forklaunch-js.git",
+    "directory": "cli"
+  },
+  "files": [
+    "scripts/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "postinstall": "node scripts/install.js",
+    "test": "cargo test"
+  },
+  "engines": {
+    "node": ">=16"
+  }
+}

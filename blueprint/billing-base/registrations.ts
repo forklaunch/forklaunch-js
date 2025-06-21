@@ -35,30 +35,37 @@ import { PaymentMethodEnum } from './domain/enum/paymentMethod.enum';
 import { PlanCadenceEnum } from './domain/enum/planCadence.enum';
 import { StatusEnum } from './domain/enum/status.enum';
 import {
-  BillingPortalDtoMapper,
-  CreateBillingPortalDtoMapper,
-  UpdateBillingPortalDtoMapper
+  BillingPortalMapper,
+  CreateBillingPortalMapper,
+  UpdateBillingPortalMapper
 } from './domain/mappers/billingPortal.mappers';
 import {
-  CheckoutSessionDtoMapper,
-  CreateCheckoutSessionDtoMapper,
-  UpdateCheckoutSessionDtoMapper
+  CheckoutSessionMapper,
+  CreateCheckoutSessionMapper,
+  UpdateCheckoutSessionMapper
 } from './domain/mappers/checkoutSession.mappers';
 import {
-  CreatePaymentLinkDtoMapper,
-  PaymentLinkDtoMapper,
-  UpdatePaymentLinkDtoMapper
+  CreatePaymentLinkMapper,
+  PaymentLinkMapper,
+  UpdatePaymentLinkMapper
 } from './domain/mappers/paymentLink.mappers';
 import {
-  CreatePlanDtoMapper,
-  PlanDtoMapper,
-  UpdatePlanDtoMapper
+  CreatePlanMapper,
+  PlanMapper,
+  UpdatePlanMapper
 } from './domain/mappers/plan.mappers';
 import {
-  CreateSubscriptionDtoMapper,
-  SubscriptionDtoMapper,
-  UpdateSubscriptionDtoMapper
+  CreateSubscriptionMapper,
+  SubscriptionMapper,
+  UpdateSubscriptionMapper
 } from './domain/mappers/subscription.mappers';
+import {
+  BillingPortal,
+  CheckoutSession,
+  PaymentLink,
+  Plan,
+  Subscription
+} from './persistence/entities';
 //! defines the schemas for the billing portal service
 export const BillingPortalSchemas = BaseBillingPortalServiceSchemas({
   uuidId: true,
@@ -177,7 +184,14 @@ export function createDependencies(orm: MikroORM) {
   const serviceDependencies = runtimeDependencies.chain({
     BillingPortalService: {
       lifetime: Lifetime.Scoped,
-      type: BaseBillingPortalService<SchemaValidator>,
+      type: BaseBillingPortalService<
+        SchemaValidator,
+        {
+          BillingPortalMapper: BillingPortal;
+          CreateBillingPortalMapper: BillingPortal;
+          UpdateBillingPortalMapper: BillingPortal;
+        }
+      >,
       factory: ({ EntityManager, TtlCache, OpenTelemetryCollector }) =>
         new BaseBillingPortalService(
           EntityManager,
@@ -185,9 +199,9 @@ export function createDependencies(orm: MikroORM) {
           OpenTelemetryCollector,
           SchemaValidator(),
           {
-            BillingPortalDtoMapper,
-            CreateBillingPortalDtoMapper,
-            UpdateBillingPortalDtoMapper
+            BillingPortalMapper,
+            CreateBillingPortalMapper,
+            UpdateBillingPortalMapper
           }
         )
     },
@@ -196,7 +210,13 @@ export function createDependencies(orm: MikroORM) {
       type: BaseCheckoutSessionService<
         SchemaValidator,
         typeof PaymentMethodEnum,
-        typeof StatusEnum
+        typeof CurrencyEnum,
+        typeof StatusEnum,
+        {
+          CheckoutSessionMapper: CheckoutSession;
+          CreateCheckoutSessionMapper: CheckoutSession;
+          UpdateCheckoutSessionMapper: CheckoutSession;
+        }
       >,
       factory: ({ EntityManager, TtlCache, OpenTelemetryCollector }) =>
         new BaseCheckoutSessionService(
@@ -205,9 +225,9 @@ export function createDependencies(orm: MikroORM) {
           OpenTelemetryCollector,
           SchemaValidator(),
           {
-            CheckoutSessionDtoMapper,
-            CreateCheckoutSessionDtoMapper,
-            UpdateCheckoutSessionDtoMapper
+            CheckoutSessionMapper,
+            CreateCheckoutSessionMapper,
+            UpdateCheckoutSessionMapper
           }
         )
     },
@@ -215,8 +235,14 @@ export function createDependencies(orm: MikroORM) {
       lifetime: Lifetime.Scoped,
       type: BasePaymentLinkService<
         SchemaValidator,
+        typeof PaymentMethodEnum,
         typeof CurrencyEnum,
-        typeof StatusEnum
+        typeof StatusEnum,
+        {
+          PaymentLinkMapper: PaymentLink;
+          CreatePaymentLinkMapper: PaymentLink;
+          UpdatePaymentLinkMapper: PaymentLink;
+        }
       >,
       factory: ({ EntityManager, TtlCache, OpenTelemetryCollector }) =>
         new BasePaymentLinkService(
@@ -225,9 +251,9 @@ export function createDependencies(orm: MikroORM) {
           OpenTelemetryCollector,
           SchemaValidator(),
           {
-            PaymentLinkDtoMapper,
-            CreatePaymentLinkDtoMapper,
-            UpdatePaymentLinkDtoMapper
+            PaymentLinkMapper,
+            CreatePaymentLinkMapper,
+            UpdatePaymentLinkMapper
           }
         )
     },
@@ -236,7 +262,13 @@ export function createDependencies(orm: MikroORM) {
       type: BasePlanService<
         SchemaValidator,
         typeof PlanCadenceEnum,
-        typeof BillingProviderEnum
+        typeof CurrencyEnum,
+        typeof BillingProviderEnum,
+        {
+          PlanMapper: Plan;
+          CreatePlanMapper: Plan;
+          UpdatePlanMapper: Plan;
+        }
       >,
       factory: ({ EntityManager, OpenTelemetryCollector }) =>
         new BasePlanService(
@@ -244,9 +276,9 @@ export function createDependencies(orm: MikroORM) {
           OpenTelemetryCollector,
           SchemaValidator(),
           {
-            PlanDtoMapper,
-            CreatePlanDtoMapper,
-            UpdatePlanDtoMapper
+            PlanMapper,
+            CreatePlanMapper,
+            UpdatePlanMapper
           }
         )
     },
@@ -255,7 +287,12 @@ export function createDependencies(orm: MikroORM) {
       type: BaseSubscriptionService<
         SchemaValidator,
         typeof PartyEnum,
-        typeof BillingProviderEnum
+        typeof BillingProviderEnum,
+        {
+          SubscriptionMapper: Subscription;
+          CreateSubscriptionMapper: Subscription;
+          UpdateSubscriptionMapper: Subscription;
+        }
       >,
       factory: ({ EntityManager, OpenTelemetryCollector }) =>
         new BaseSubscriptionService(
@@ -263,9 +300,9 @@ export function createDependencies(orm: MikroORM) {
           OpenTelemetryCollector,
           SchemaValidator(),
           {
-            SubscriptionDtoMapper,
-            CreateSubscriptionDtoMapper,
-            UpdateSubscriptionDtoMapper
+            SubscriptionMapper,
+            CreateSubscriptionMapper,
+            UpdateSubscriptionMapper
           }
         )
     }

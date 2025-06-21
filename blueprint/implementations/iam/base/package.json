@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/implementation-iam-base",
-  "version": "0.3.1",
+  "version": "0.3.4",
   "description": "Billing basic implementation for forklaunch",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -14,21 +14,29 @@
   "author": "Forklift Technologies, Inc.",
   "exports": {
     "./schemas": {
-      "types": "./lib/schemas/index.d.ts",
-      "import": "./lib/schemas/index.mjs",
-      "require": "./lib/schemas/index.js",
-      "default": "./lib/schemas/index.js"
+      "types": "./lib/domain/schemas/index.d.ts",
+      "import": "./lib/domain/schemas/index.mjs",
+      "require": "./lib/domain/schemas/index.js",
+      "default": "./lib/domain/schemas/index.js"
     },
     "./services": {
       "types": "./lib/services/index.d.ts",
       "import": "./lib/services/index.mjs",
       "require": "./lib/services/index.js",
       "default": "./lib/services/index.js"
+    },
+    "./types": {
+      "types": "./lib/domain/types/index.d.ts",
+      "import": "./lib/domain/types/index.mjs",
+      "require": "./lib/domain/types/index.js",
+      "default": "./lib/domain/types/index.js"
     }
   },
-  "files": ["lib/**"],
+  "files": [
+    "lib/**"
+  ],
   "scripts": {
-    "build": "tsc --noEmit && tsup schemas/index.ts services/index.ts --format cjs,esm --no-splitting --dts --tsconfig tsconfig.json --out-dir lib --clean && if [ -f eject-package.bash ]; then pnpm package:eject; fi",
+    "build": "tsc --noEmit && tsup domain/schemas/index.ts services/index.ts domain/types/index.ts --format cjs,esm --no-splitting --dts --tsconfig tsconfig.json --out-dir lib --clean && if [ -f eject-package.bash ]; then pnpm package:eject; fi",
     "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
@@ -39,17 +47,18 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/common": "^0.3.11",
-    "@forklaunch/core": "^0.9.15",
+    "@forklaunch/common": "^0.3.14",
+    "@forklaunch/core": "^0.9.21",
     "@forklaunch/interfaces-iam": "workspace:*",
-    "@forklaunch/validator": "^0.6.13",
+    "@forklaunch/internal": "^0.0.7",
+    "@forklaunch/validator": "^0.6.16",
     "@mikro-orm/core": "^6.4.16",
-    "@sinclair/typebox": "^0.34.33",
+    "@sinclair/typebox": "^0.34.35",
     "ajv": "^8.17.1",
-    "zod": "^3.25.63"
+    "zod": "^3.25.67"
   },
   "devDependencies": {
-    "@typescript/native-preview": "7.0.0-dev.20250611.1",
+    "@typescript/native-preview": "7.0.0-dev.20250619.1",
     "depcheck": "^1.4.7",
     "prettier": "^3.5.3",
     "typedoc": "^0.28.5"

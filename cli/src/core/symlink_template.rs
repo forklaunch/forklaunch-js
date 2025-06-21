@@ -1,7 +1,9 @@
-use std::{fs::exists, io::Write, os::unix::fs::symlink, path::PathBuf};
+use std::{fs::exists, io::Write, path::PathBuf};
 
 use anyhow::{Context, Result};
 use termcolor::StandardStream;
+
+use crate::core::symlinks::create_symlink_cross_platform;
 
 #[derive(Debug)]
 pub(crate) struct SymlinkTemplate {
@@ -22,13 +24,14 @@ pub(crate) fn create_symlinks(
                     &symlink_template.target.parent().unwrap(),
                 )
                 .expect("Failed to compute relative path");
-                symlink(relative_path.clone(), &symlink_template.target).with_context(|| {
-                    format!(
-                        "Failed to symlink {} to {}",
-                        relative_path.display(),
-                        symlink_template.target.display()
-                    )
-                })?;
+                create_symlink_cross_platform(relative_path.clone(), &symlink_template.target)
+                    .with_context(|| {
+                        format!(
+                            "Failed to symlink {} to {}",
+                            relative_path.display(),
+                            symlink_template.target.display()
+                        )
+                    })?;
             }
         } else {
             let relative_path = pathdiff::diff_paths(

@@ -95,7 +95,7 @@ After creating a service:
 
 1. **Database Connection**: Ensure your database credentials are correct in the environment variables
 2. **Port Conflicts**: Check that the PORT specified isn't already in use
-3. **Dependencies**: Run `npm install` if you see missing dependency errors
+3. **Dependencies**: Run `pnpm/bun install` if you see missing dependency errors
 
 ### Best Practices
 
@@ -103,4 +103,4 @@ After creating a service:
 2. Use the interface for defining your service contract
 3. Implement proper error handling in your service layer
 4. Write comprehensive tests for your business logic
-5. Use DtoMappers for data transformation between layers
+5. Use Mappers for data transformation between layers

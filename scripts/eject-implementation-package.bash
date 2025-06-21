@@ -1,19 +1,20 @@
 rm -rf lib/eject
 mkdir -p lib/eject/domain
 
-cp -r schemas/zod lib/eject/domain/schemas
-cp schemas/index.ts lib/eject/domain/schemas
+cp -r domain/schemas/zod lib/eject/domain/schemas
+cp domain/schemas/index.ts lib/eject/domain/schemas
+find lib/eject/domain/schemas -type f -name "*.ts" -exec perl -i -pe "s|'\.\.\/\.\.|'\.\.|g" {} \;
 
 if [ -d "services" ]; then
   cp -r services lib/eject/services
 fi
 
-if [ -d "types" ]; then
-  cp -r types lib/eject/types
+if [ -d "domain/types" ]; then
+  cp -r domain/types lib/eject/domain/types
 fi
 
-if [ -d "interfaces" ]; then
-  cp -r interfaces lib/eject/interfaces
+if [ -d "domain/interfaces" ]; then
+  cp -r domain/interfaces lib/eject/domain/interfaces
 fi
 
 if [ -d "consumers" ]; then
@@ -22,6 +23,10 @@ fi
 
 if [ -d "producers" ]; then
   cp -r producers lib/eject/producers
+fi
+
+if [ -d "domain/enum" ]; then
+  cp -r domain/enum lib/eject/domain/enum
 fi
 
 find lib/eject -type f -name '*.ts' -exec sh -c \

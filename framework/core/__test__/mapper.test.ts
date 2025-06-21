@@ -2,8 +2,8 @@
 import { SchemaValidator, number, string } from '@forklaunch/validator/typebox';
 import { PrimaryKey, Property } from '@mikro-orm/core';
 import { v4 } from 'uuid';
-import { RequestDtoMapper } from '../src/mappers/models/requestDtoMapper.model';
-import { ResponseDtoMapper } from '../src/mappers/models/responseDtoMapper.model';
+import { RequestMapper } from '../src/mappers/models/requestMapper.model';
+import { ResponseMapper } from '../src/mappers/models/responseMapper.model';
 
 const SV = SchemaValidator();
 
@@ -26,7 +26,7 @@ class TestEntity {
   age!: number;
 }
 
-class TestRequestDtoMapper extends RequestDtoMapper<
+class TestRequestMapper extends RequestMapper<
   TestEntity,
   TypeboxSchemaValidator
 > {
@@ -45,7 +45,7 @@ class TestRequestDtoMapper extends RequestDtoMapper<
   }
 }
 
-class TestResponseDtoMapper extends ResponseDtoMapper<
+class TestResponseMapper extends ResponseMapper<
   TestEntity,
   TypeboxSchemaValidator
 > {
@@ -86,14 +86,14 @@ function genericDtoWrapperFunction<T>(dto: T): T {
 }
 
 describe('request mappers tests', () => {
-  let TestRequestDM: TestRequestDtoMapper;
+  let TestRequestDM: TestRequestMapper;
 
   beforeAll(() => {
-    TestRequestDM = new TestRequestDtoMapper(SV);
+    TestRequestDM = new TestRequestMapper(SV);
   });
 
   test('schema static and constructed equality', async () => {
-    expect(TestRequestDM.schema).toEqual(TestRequestDtoMapper.schema());
+    expect(TestRequestDM.schema).toEqual(TestRequestMapper.schema());
   });
 
   test('from JSON', async () => {
@@ -104,7 +104,7 @@ describe('request mappers tests', () => {
     };
 
     const responseDM = await TestRequestDM.fromDto(json);
-    const staticDM = await TestRequestDtoMapper.fromDto(SV, json);
+    const staticDM = await TestRequestMapper.fromDto(SV, json);
     const expectedDto = {
       id: '123',
       name: 'test',
@@ -130,12 +130,7 @@ describe('request mappers tests', () => {
       await (await TestRequestDM.fromDto(json)).toEntity('arg1')
     );
     const staticEntity = extractNonTimeBasedEntityFields(
-      await TestRequestDtoMapper.deserializeDtoToEntity(
-        SV,
-        json,
-        'arg1',
-        'arg2'
-      )
+      await TestRequestMapper.deserializeDtoToEntity(SV, json, 'arg1', 'arg2')
     );
     let expectedEntity = new TestEntity();
     expectedEntity.id = '123';
@@ -169,7 +164,7 @@ describe('request mappers tests', () => {
 
     await expect(
       async () =>
-        await TestRequestDtoMapper.fromDto(
+        await TestRequestMapper.fromDto(
           SV,
           // @ts-expect-error - missing age
           json
@@ -179,14 +174,14 @@ describe('request mappers tests', () => {
 });
 
 describe('response mappers tests', () => {
-  let TestResponseDM: TestResponseDtoMapper;
+  let TestResponseDM: TestResponseMapper;
 
   beforeAll(() => {
-    TestResponseDM = new TestResponseDtoMapper(SV);
+    TestResponseDM = new TestResponseMapper(SV);
   });
 
   test('schema static and constructed equality', async () => {
-    expect(TestResponseDM.schema).toEqual(TestResponseDtoMapper.schema());
+    expect(TestResponseDM.schema).toEqual(TestResponseMapper.schema());
   });
 
   test('from entity', async () => {
@@ -196,7 +191,7 @@ describe('response mappers tests', () => {
     entity.age = 1;
 
     const responseDM = await TestResponseDM.fromEntity(entity, 'arg1');
-    const staticDM = await TestResponseDtoMapper.fromEntity(SV, entity, 'arg1');
+    const staticDM = await TestResponseMapper.fromEntity(SV, entity, 'arg1');
     const expectedDto = {
       id: '123',
       name: 'test',
@@ -221,12 +216,7 @@ describe('response mappers tests', () => {
       await (await TestResponseDM.fromEntity(entity, 'arg1')).toDto()
     );
     const staticJson = genericDtoWrapperFunction(
-      await TestResponseDtoMapper.serializeEntityToDto(
-        SV,
-        entity,
-        'arg1',
-        'arg2'
-      )
+      await TestResponseMapper.serializeEntityToDto(SV, entity, 'arg1', 'arg2')
     );
     const expectedJson = {
       id: '123',
@@ -255,7 +245,7 @@ describe('response mappers tests', () => {
     await expect(
       async () =>
         await (
-          await TestResponseDtoMapper.fromEntity(SV, entity, 'arg1', 'arg2')
+          await TestResponseMapper.fromEntity(SV, entity, 'arg1', 'arg2')
         ).toDto()
     ).rejects.toThrow();
   });

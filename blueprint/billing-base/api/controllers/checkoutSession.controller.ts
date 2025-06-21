@@ -9,11 +9,12 @@ import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { CheckoutSessionService } from '@forklaunch/interfaces-billing/interfaces';
+import { CurrencyEnum } from '../../domain/enum/currency.enum';
 import { PaymentMethodEnum } from '../../domain/enum/paymentMethod.enum';
 import { StatusEnum } from '../../domain/enum/status.enum';
 import {
-  CheckoutSessionDtoMapper,
-  CreateCheckoutSessionDtoMapper
+  CheckoutSessionMapper,
+  CreateCheckoutSessionMapper
 } from '../../domain/mappers/checkoutSession.mappers';
 import { SchemaDependencies } from '../../registrations';
 
@@ -32,9 +33,9 @@ export const CheckoutSessionController = (
       {
         name: 'createCheckoutSession',
         summary: 'Create a checkout session',
-        body: CreateCheckoutSessionDtoMapper.schema(),
+        body: CreateCheckoutSessionMapper.schema(),
         responses: {
-          200: CheckoutSessionDtoMapper.schema()
+          200: CheckoutSessionMapper.schema()
         }
       },
       async (req, res) => {
@@ -53,7 +54,7 @@ export const CheckoutSessionController = (
         summary: 'Get a checkout session',
         params: IdSchema,
         responses: {
-          200: CheckoutSessionDtoMapper.schema()
+          200: CheckoutSessionMapper.schema()
         }
       },
       async (req, res) => {
@@ -122,5 +123,9 @@ export const CheckoutSessionController = (
       }
     )
   }) satisfies Controller<
-    CheckoutSessionService<typeof PaymentMethodEnum, typeof StatusEnum>
+    CheckoutSessionService<
+      typeof PaymentMethodEnum,
+      typeof CurrencyEnum,
+      typeof StatusEnum
+    >
   >;

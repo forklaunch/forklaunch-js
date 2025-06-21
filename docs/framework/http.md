@@ -21,69 +21,287 @@ There are plans to support `express 5.0` as well as part of a separate package.
 
 ## Application
 
-`forklaunchApplication` virtually acts as a drop-in replacement for `express.Application`, with one additional initialization argument:
+`forklaunchExpress` virtually acts as a drop-in replacement for `express`, with additional initialization arguments:
+
+### Express Framework (`@forklaunch/express`)
 
 ```typescript
-function forkLaunchApplication(initArgs: {
-  /**
-   * A validator instance for schema validation and type coercion.
-   * Typically exported from core/registrations.ts.
-   */
-  schemaValidator: SchemaValidator
-  /**
-   * OpenTelemetry collector instance for observability.
-   * Can be constructed from @forklaunch/core/telemetry
-   */
-  openTelemetryCollector: OpenTelemetryCollector
-  /**
-   * Configuration for customizing auto-generated API documentation styling and options.
-   */
-  docsConfiguration?: DocsConfiguration
-  /**
-   * Configuration for validation across all APIs
-   */ 
-  validation: ValidationConfiguration
-  /**
-   * Configuration for auth across all APIs
-   */
-  auth?: AuthConfiguration
-}) {
-    ...
-}
+import { forklaunchExpress } from '@forklaunch/express';
 
-// Example instantiation
-const app = forkLaunchApplication({
-  schemaValidator: schemaValidator,
-  openTelemetryCollector: openTelemetryCollector,
-})
+const app = forklaunchExpress(
+  schemaValidator,
+  openTelemetryCollector,
+  options?: {
+    docs?: DocsConfiguration;
+    busboy?: BusboyConfig;
+    text?: OptionsText;
+    json?: OptionsJson;
+    urlencoded?: OptionsUrlencoded;
+    cors?: CorsOptions;
+    mcp?: McpConfiguration; // Future: MCP autogeneration
+  }
+);
+```
+
+#### Configuration Options
+
+| Option | Type | Description | Default |
+| :----- | :--- | :---------- | :------ |
+| `docs` | `DocsConfiguration` | API documentation generation settings | Auto-configured |
+| `busboy` | `BusboyConfig` | File upload configuration via busboy | Default limits |
+| `text` | `OptionsText` | Text body parser options | Default settings |
+| `json` | `OptionsJson` | JSON body parser options | Default settings |
+| `urlencoded` | `OptionsUrlencoded` | URL-encoded body parser options | Default settings |
+| `cors` | `CorsOptions` | Cross-Origin Resource Sharing configuration | Disabled |
+| `mcp` | `McpConfiguration` | Model Context Protocol settings (planned) | Disabled |
+
+#### Body Parser Configuration
+
+**JSON Parser Options (`OptionsJson`)**
+```typescript
+{
+  json: {
+    limit: '100kb',           // Maximum request body size
+    strict: true,             // Only parse objects and arrays
+    type: 'application/json', // Content-Type to parse as JSON
+    verify: undefined,        // Function to verify body
+  }
+}
+```
+
+**Text Parser Options (`OptionsText`)**
+```typescript
+{
+  text: {
+    limit: '100kb',          // Maximum request body size
+    type: 'text/plain',      // Content-Type to parse as text
+    defaultCharset: 'utf-8', // Default charset when not specified
+  }
+}
+```
+
+**URL-Encoded Parser Options (`OptionsUrlencoded`)**
+```typescript
+{
+  urlencoded: {
+    limit: '100kb',          // Maximum request body size
+    extended: true,          // Use qs library (true) or querystring (false)
+    parameterLimit: 1000,    // Maximum number of parameters
+  }
+}
+```
+
+**File Upload Options (`BusboyConfig`)**
+```typescript
+{
+  busboy: {
+    limits: {
+      fileSize: 10 * 1024 * 1024, // 10MB file size limit
+      files: 5,                    // Maximum number of files
+      fields: 10,                  // Maximum number of fields
+    },
+    preservePath: false,           // Preserve file path
+  }
+}
+```
+
+**CORS Configuration (`CorsOptions`)**
+```typescript
+{
+  cors: {
+    origin: true,                  // Allow all origins
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,             // Allow credentials
+    maxAge: 86400,                 // Preflight cache duration
+  }
+}
+```
+
+### HyperExpress Framework (`@forklaunch/hyper-express`)
+
+```typescript
+import { forklaunchExpress } from '@forklaunch/hyper-express';
+
+const app = forklaunchExpress(
+  schemaValidator,
+  openTelemetryCollector,
+  options?: {
+    docs?: DocsConfiguration;
+    busboy?: BusboyConfig;
+    server?: ServerConstructorOptions;
+    cors?: CorsOptions;
+    mcp?: McpConfiguration; // Future: MCP autogeneration
+  }
+);
+```
+
+#### Configuration Options
+
+| Option | Type | Description | Default |
+| :----- | :--- | :---------- | :------ |
+| `docs` | `DocsConfiguration` | API documentation generation settings | Auto-configured |
+| `busboy` | `BusboyConfig` | File upload configuration via busboy | Default limits |
+| `server` | `ServerConstructorOptions` | HyperExpress server configuration | Default settings |
+| `cors` | `CorsOptions` | Cross-Origin Resource Sharing configuration | Disabled |
+| `mcp` | `McpConfiguration` | Model Context Protocol settings (planned) | Disabled |
+
+#### HyperExpress Server Options (`ServerConstructorOptions`)
+
+```typescript
+{
+  server: {
+    key_file_name: undefined,        // SSL private key file
+    cert_file_name: undefined,       // SSL certificate file
+    passphrase: undefined,           // SSL passphrase
+    dh_params_file_name: undefined,  // DH parameters file
+    ssl_prefer_low_memory_usage: false, // Optimize for memory vs speed
+    compression: uWS.SHARED_COMPRESSOR, // Response compression
+    max_compression_size: 64 * 1024,    // Maximum compression size
+    max_backpressure: 64 * 1024,        // Maximum backpressure
+    close_on_backpressure_limit: false, // Close on backpressure
+    reset_idle_timeout_on_send: true,   // Reset timeout on send
+    send_pings_automatically: true,     // Automatic ping frames
+  }
+}
+```
+
+#### Performance Tuning
+
+**High Performance Configuration**
+```typescript
+const app = forklaunchExpress(schemaValidator, telemetryCollector, {
+  server: {
+    compression: uWS.DEDICATED_COMPRESSOR,
+    max_compression_size: 128 * 1024,
+    max_backpressure: 128 * 1024,
+    ssl_prefer_low_memory_usage: false,
+  },
+  busboy: {
+    limits: {
+      fileSize: 50 * 1024 * 1024, // 50MB for large uploads
+      files: 10,
+    },
+  },
+});
+```
+
+**Memory Optimized Configuration**
+```typescript
+const app = forklaunchExpress(schemaValidator, telemetryCollector, {
+  server: {
+    ssl_prefer_low_memory_usage: true,
+    max_compression_size: 32 * 1024,
+    max_backpressure: 32 * 1024,
+  },
+  busboy: {
+    limits: {
+      fileSize: 5 * 1024 * 1024, // 5MB limit
+      files: 3,
+    },
+  },
+});
 ```
 
 ## Router
 
-`forklaunchRouter` virtually acts as a drop-in replacement for `express.Router`, with one additional initialization argument:
+`forklaunchRouter` virtually acts as a drop-in replacement for `express.Router`, with additional initialization arguments:
+
+### Express Router
 
 ```typescript
-function forklaunchRouter(
-  /**
-   * The base path for all routes registered with the router
-   */
-  basePath: `/${string}`,
-  initArgs: {
-    /**
-     * OpenTelemetry collector instance for observability.
-     * Can be constructed from @forklaunch/core/telemetry
-     */
-    openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
-  }
-) {
-    ...
-}
+import { forklaunchRouter } from '@forklaunch/express';
 
-// Example instantiation
 const router = forklaunchRouter(
-  '/router-path',
+  basePath,
+  schemaValidator,
   openTelemetryCollector,
-)
+  options?: {
+    busboy?: BusboyConfig;
+    text?: OptionsText;
+    json?: OptionsJson;
+    urlencoded?: OptionsUrlencoded;
+  }
+);
+```
+
+### HyperExpress Router
+
+```typescript
+import { forklaunchRouter } from '@forklaunch/hyper-express';
+
+const router = forklaunchRouter(
+  basePath,
+  schemaValidator,
+  openTelemetryCollector,
+  options?: {
+    busboy?: BusboyConfig;
+  }
+);
+```
+
+## Example Configurations
+
+### Production Express Setup
+```typescript
+import { forklaunchExpress } from '@forklaunch/express';
+
+const app = forklaunchExpress(schemaValidator, telemetryCollector, {
+  json: {
+    limit: '10mb',
+    strict: true,
+  },
+  urlencoded: {
+    limit: '10mb',
+    extended: true,
+    parameterLimit: 1000,
+  },
+  cors: {
+    origin: process.env.ALLOWED_ORIGINS?.split(',') || false,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
+  },
+  busboy: {
+    limits: {
+      fileSize: 25 * 1024 * 1024, // 25MB
+      files: 5,
+      fields: 20,
+    },
+  },
+  docs: {
+    enabled: process.env.NODE_ENV !== 'production',
+    title: 'My API Documentation',
+    version: '1.0.0',
+  },
+});
+```
+
+### Development HyperExpress Setup
+```typescript
+import { forklaunchExpress } from '@forklaunch/hyper-express';
+
+const app = forklaunchExpress(schemaValidator, telemetryCollector, {
+  server: {
+    compression: uWS.DEDICATED_COMPRESSOR,
+    max_compression_size: 64 * 1024,
+  },
+  cors: {
+    origin: true, // Allow all origins in development
+    credentials: true,
+  },
+  busboy: {
+    limits: {
+      fileSize: 100 * 1024 * 1024, // 100MB for development
+      files: 10,
+    },
+  },
+  docs: {
+    enabled: true,
+    title: 'Development API',
+    description: 'API documentation for development',
+  },
+});
 ```
 
 ## Handlers

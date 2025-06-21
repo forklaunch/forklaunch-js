@@ -5,7 +5,7 @@ import {
   WorkerFailureHandler,
   WorkerProcessFunction
 } from '@forklaunch/interfaces-worker/types';
-import { RedisWorkerOptions } from '../types/redisWorker.types';
+import { RedisWorkerOptions } from '../domain/types/redisWorker.types';
 
 export class RedisWorkerConsumer<
   EventEntity extends WorkerEventEntity,

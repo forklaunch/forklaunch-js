@@ -9,8 +9,8 @@ import {
   {{pascal_case_name}}ResponseDto 
 } from '../domain/types/{{camel_case_name}}.types';
 import {
-  {{pascal_case_name}}RequestDtoMapper,
-  {{pascal_case_name}}ResponseDtoMapper
+  {{pascal_case_name}}RequestMapper,
+  {{pascal_case_name}}ResponseMapper
 } from '../domain/mappers/{{camel_case_name}}.mappers';{{#is_worker}}
 import { {{pascal_case_name}}EventRecord } from '../persistence/entities';{{/is_worker}}
 
@@ -26,7 +26,7 @@ export class Base{{pascal_case_name}}Service implements {{pascal_case_name}}Serv
   {{camel_case_name}}Post = async (
     dto: {{pascal_case_name}}RequestDto
   ): Promise<{{pascal_case_name}}ResponseDto> => {
-    const entity = await {{pascal_case_name}}RequestDtoMapper.deserializeDtoToEntity(
+    const entity = await {{pascal_case_name}}RequestMapper.deserializeDtoToEntity(
       SchemaValidator(),
       dto{{^is_worker}},
       this.entityManager{{/is_worker}}
@@ -35,7 +35,7 @@ export class Base{{pascal_case_name}}Service implements {{pascal_case_name}}Serv
     await this.workerProducer.enqueueJob(entity);{{/is_worker}}{{^is_worker}}
     this.entityManager.persistAndFlush(entity);
     {{/is_worker}}
-    return {{pascal_case_name}}ResponseDtoMapper.serializeEntityToDto(
+    return {{pascal_case_name}}ResponseMapper.serializeEntityToDto(
       SchemaValidator(),
       entity
     );

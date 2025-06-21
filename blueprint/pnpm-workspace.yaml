@@ -6,6 +6,7 @@ packages:
 - core
 - monitoring
 - billing-base
+- billing-stripe
 - iam-base
 - iam-better-auth
 - sample-worker
@@ -13,6 +14,7 @@ packages:
 - interfaces/iam
 - interfaces/worker
 - implementations/billing/base
+- implementations/billing/stripe
 - implementations/iam/base
 - implementations/worker/bullmq
 - implementations/worker/database

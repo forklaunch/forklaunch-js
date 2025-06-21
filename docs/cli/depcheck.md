@@ -6,7 +6,7 @@ description: Learn how to use the forklaunch depcheck command.
 
 ## Overview
 
-The `depcheck` command ensures dependency consistency across your application's projects by checking for version mismatches based on defined project groups.
+Check dependency consistency across your application's projects for version mismatches based on defined project groups.
 
 ## Usage
 
@@ -49,7 +49,44 @@ backend_group = [
 ]
 ```
 
-### Example Scenarios
+## What It Checks
+
+- **Version mismatches** between projects in the same group
+- **Missing dependencies** that should be aligned
+- **Inconsistent dependency configurations**
+
+## Output
+
+The command reports:
+- Projects with mismatched versions
+- Suggested version alignment actions
+- Dependency conflicts that need resolution
+
+## Troubleshooting
+
+**Error: "Manifest file not found"**
+- Ensure you're in a ForkLaunch application directory
+- Check that `./forklaunch/manifest.toml` exists
+
+**Error: "No project groups defined"**
+- Add project groups to your manifest.toml
+- Use default configuration if checking all projects
+
+**Version mismatch warnings**
+- Review conflicting dependencies and their versions
+- Update package.json files to align versions
+- Run `npm install` after making changes
+
+**Permission errors reading manifest**
+- Check file permissions on manifest.toml
+- Ensure the forklaunch directory is accessible
+
+**Dependency resolution fails**
+- Clear node_modules and package-lock.json
+- Run fresh `pnpm/bun install`
+- Check for corrupted package cache
+
+## Example Scenarios
 
 1. **Microservices**: Group services that share common dependencies
 ```toml
@@ -65,8 +102,17 @@ frontend = ["web-app", "mobile-app"]
 backend = ["api-server", "worker"]
 ```
 
-### Best Practices
+## Best Practices
 
 - Group projects that should share identical dependency versions
 - Keep critical infrastructure services in separate groups
 - Use meaningful group names that reflect project relationships
+
+## Related Commands
+
+- [`forklaunch init`](./init.md) - Initialize projects with proper dependencies
+- [`forklaunch eject`](./eject.md) - Check dependencies after ejection
+
+## Related Documentation
+
+- **[Project Structure](../framework.md)** - Understanding ForkLaunch project layout

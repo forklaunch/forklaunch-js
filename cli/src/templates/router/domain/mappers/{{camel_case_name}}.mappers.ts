@@ -1,14 +1,14 @@
 import {
-  RequestDtoMapper,
-  ResponseDtoMapper
+  RequestMapper,
+  ResponseMapper
 } from '@forklaunch/core/mappers';
 import { SchemaValidator } from '@{{app_name}}/core';{{^is_worker}}
 import { EntityManager } from '@mikro-orm/core';{{/is_worker}}
 import { {{pascal_case_name}}{{#is_worker}}Event{{/is_worker}}Record} from '../../persistence/entities/{{camel_case_name}}{{#is_worker}}Event{{/is_worker}}Record.entity';
 import { {{pascal_case_name}}RequestSchema, {{pascal_case_name}}ResponseSchema } from '../schemas/{{camel_case_name}}.schema';
 
-// RequestDtoMapper class that maps the request schema to the entity
-export class {{pascal_case_name}}RequestDtoMapper extends RequestDtoMapper<
+// RequestMapper class that maps the request schema to the entity
+export class {{pascal_case_name}}RequestMapper extends RequestMapper<
   {{pascal_case_name}}{{#is_worker}}Event{{/is_worker}}Record,
   SchemaValidator
 > {
@@ -27,8 +27,8 @@ export class {{pascal_case_name}}RequestDtoMapper extends RequestDtoMapper<
   }
 }
 
-// ResponseDtoMapper class that maps the response schema to the entity
-export class {{pascal_case_name}}ResponseDtoMapper extends ResponseDtoMapper<
+// ResponseMapper class that maps the response schema to the entity
+export class {{pascal_case_name}}ResponseMapper extends ResponseMapper<
   {{pascal_case_name}}{{#is_worker}}Event{{/is_worker}}Record,
   SchemaValidator
 > {

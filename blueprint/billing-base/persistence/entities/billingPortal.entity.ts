@@ -7,12 +7,12 @@ export class BillingPortal extends SqlBaseEntity {
   @Property()
   customerId!: string;
 
-  @Property()
-  uri!: string;
+  @Property({ nullable: true })
+  uri?: string;
 
   @Property()
   expiresAt!: Date;
 
   @Property({ type: 'json', nullable: true })
-  extraFields?: unknown;
+  providerFields?: unknown;
 }

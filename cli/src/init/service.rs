@@ -48,17 +48,18 @@ use crate::{
             package_json_constants::{
                 AJV_VERSION, APP_CORE_VERSION, APP_MONITORING_VERSION,
                 BETTER_AUTH_MIKRO_ORM_VERSION, BETTER_AUTH_VERSION, BETTER_SQLITE3_VERSION,
-                BILLING_BASE_VERSION, BILLING_INTERFACES_VERSION, BIOME_VERSION, COMMON_VERSION,
-                CORE_VERSION, DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION,
-                HYPER_EXPRESS_VERSION, IAM_BASE_VERSION, IAM_INTERFACES_VERSION,
-                INFRASTRUCTURE_REDIS_VERSION, INFRASTRUCTURE_S3_VERSION, MIKRO_ORM_CLI_VERSION,
-                MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
-                MIKRO_ORM_REFLECTION_VERSION, MIKRO_ORM_SEEDER_VERSION, OPENTELEMETRY_API_VERSION,
-                OXLINT_VERSION, PRETTIER_VERSION, PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT,
-                PROJECT_SEED_SCRIPT, SQLITE3_VERSION, TSX_VERSION, TYPEBOX_VERSION,
-                TYPEDOC_VERSION, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION,
-                TYPES_QS_VERSION, TYPES_UUID_VERSION, TYPESCRIPT_ESLINT_VERSION, UUID_VERSION,
-                VALIDATOR_VERSION, ZOD_VERSION, project_clean_script, project_dev_local_script,
+                BILLING_BASE_VERSION, BILLING_INTERFACES_VERSION, BILLING_STRIPE_VERSION,
+                BIOME_VERSION, COMMON_VERSION, CORE_VERSION, DOTENV_VERSION, ESLINT_VERSION,
+                EXPRESS_VERSION, HYPER_EXPRESS_VERSION, IAM_BASE_VERSION, IAM_INTERFACES_VERSION,
+                INFRASTRUCTURE_REDIS_VERSION, INFRASTRUCTURE_S3_VERSION, INTERNAL_VERSION,
+                MIKRO_ORM_CLI_VERSION, MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION,
+                MIKRO_ORM_MIGRATIONS_VERSION, MIKRO_ORM_REFLECTION_VERSION,
+                MIKRO_ORM_SEEDER_VERSION, OPENTELEMETRY_API_VERSION, OXLINT_VERSION,
+                PRETTIER_VERSION, PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT, PROJECT_SEED_SCRIPT,
+                SQLITE3_VERSION, STRIPE_VERSION, TSX_VERSION, TYPEBOX_VERSION, TYPEDOC_VERSION,
+                TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION, TYPES_QS_VERSION,
+                TYPES_UUID_VERSION, TYPESCRIPT_ESLINT_VERSION, UUID_VERSION, VALIDATOR_VERSION,
+                ZOD_VERSION, project_clean_script, project_dev_local_script,
                 project_dev_server_script, project_format_script, project_lint_fix_script,
                 project_lint_script, project_migrate_script, project_start_server_script,
                 project_test_script,
@@ -328,6 +329,11 @@ pub(crate) fn generate_service_package_json(
                 } else {
                     None
                 },
+                forklaunch_implementation_billing_stripe: if manifest_data.is_stripe {
+                    Some(BILLING_STRIPE_VERSION.to_string())
+                } else {
+                    None
+                },
                 forklaunch_interfaces_billing: if manifest_data.is_billing {
                     Some(BILLING_INTERFACES_VERSION.to_string())
                 } else {
@@ -358,6 +364,7 @@ pub(crate) fn generate_service_package_json(
                 forklaunch_implementation_worker_kafka: None,
                 forklaunch_implementation_worker_redis: None,
                 forklaunch_interfaces_worker: None,
+                forklaunch_internal: Some(INTERNAL_VERSION.to_string()),
                 forklaunch_universal_sdk: None,
                 forklaunch_validator: Some(VALIDATOR_VERSION.to_string()),
                 mikro_orm_core: Some(MIKRO_ORM_CORE_VERSION.to_string()),
@@ -396,6 +403,11 @@ pub(crate) fn generate_service_package_json(
                     && manifest_data.is_sqlite
                 {
                     Some(SQLITE3_VERSION.to_string())
+                } else {
+                    None
+                },
+                stripe: if manifest_data.is_stripe {
+                    Some(STRIPE_VERSION.to_string())
                 } else {
                     None
                 },
@@ -658,6 +670,7 @@ impl CliCommand for ServiceCommand {
             is_database_enabled: true,
 
             is_better_auth: false,
+            is_stripe: false,
         };
 
         let dryrun = matches.get_flag("dryrun");

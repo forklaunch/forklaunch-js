@@ -6,8 +6,8 @@ mkdir -p output/init-module
 cd output/init-module
 
 RUST_BACKTRACE=1 cargo run --release init application service-test-node-application -d postgresql -f prettier -l eslint -v zod -F express -r node -t vitest -D "Test service" -A "Rohin Bhargava" -L 'AGPL-3.0'
-RUST_BACKTRACE=1 cargo run --release init module -m iam -d postgresql -p service-test-node-application
-RUST_BACKTRACE=1 cargo run --release init module -m billing -d postgresql -p service-test-node-application
+RUST_BACKTRACE=1 cargo run --release init module -m iam-base -d postgresql -p service-test-node-application
+RUST_BACKTRACE=1 cargo run --release init module -m billing-base -d postgresql -p service-test-node-application
 
 cd service-test-node-application
 
@@ -16,9 +16,9 @@ pnpm build
 
 cd ..
 
-RUST_BACKTRACE=1 cargo run --release init application service-test-bun-application -d postgresql -f biome -l oxlint -v zod -F express -r bun -t vitest -m billing-base -m iam-base -D "Test service" -A "Rohin Bhargava" -L "MIT"
-RUST_BACKTRACE=1 cargo run --release init module -m iam -d postgresql -p service-test-bun-application
-RUST_BACKTRACE=1 cargo run --release init module -m billing -d postgresql -p service-test-bun-application
+RUST_BACKTRACE=1 cargo run --release init application service-test-bun-application -d postgresql -f biome -l oxlint -v zod -F express -r bun -t vitest -D "Test service" -A "Rohin Bhargava" -L "MIT"
+RUST_BACKTRACE=1 cargo run --release init module -m iam-base -d postgresql -p service-test-bun-application
+RUST_BACKTRACE=1 cargo run --release init module -m billing-base -d postgresql -p service-test-bun-application
 
 cd service-test-bun-application
 

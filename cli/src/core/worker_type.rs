@@ -11,8 +11,10 @@ pub(crate) fn get_worker_type_name(r#type: &WorkerType) -> String {
 
 const DEFAULT_BULLMQ_WORKER_OPTIONS: &str = "factory: ({ REDIS_URL }) => ({
   backoffType: 'exponential' as const,
-  connection: {
-    url: REDIS_URL
+  queueOptions: {
+    connection: {
+      url: REDIS_URL
+    }
   },
   retries: 3,
   interval: 5000

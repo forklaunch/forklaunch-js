@@ -6,11 +6,18 @@ description: Reference for using Validation and Coercion in ForkLaunch.
 
 ## Overview
 
-`@forklaunch/validator` wraps common validation libraries and simplifies validation and coercion.
+`@forklaunch/validator` wraps common validation libraries and simplifies validation and coercion for ForkLaunch applications. Validation schemas are used throughout the framework for:
+
+- **HTTP request/response validation** in [ContractDetails](/docs/framework/http.md)
+- **Automatic OpenAPI generation** for [documentation](/docs/framework/documentation.md) 
+- **MCP tool parameter validation** for [MCP autogeneration](/docs/framework/mcp.md)
+- **Type-safe API contracts** with the [Universal SDK](/docs/framework/universal-sdk.md)
 
 Available validators include:
-- [Zod](https://zod.dev/)
-- [TypeBox](https://github.com/sinclairzx81/typebox)
+- [Zod](https://zod.dev/) - Recommended for full framework compatibility
+- [TypeBox](https://github.com/sinclairzx81/typebox) - Lightweight alternative
+
+> **Note**: MCP autogeneration currently requires `zod` validator choice.
 
 ### Schema Types
 
@@ -81,7 +88,41 @@ if (!result.ok) {
 
 ### Best Practices
 
-1. Use the most specific schema type available
-2. Prefer `parse` over `validate` to ensure type coercion
-3. Use `union` types when multiple types are valid
-4. Use `literal` types for exact value matching
+1. **Use the most specific schema type available** - Prefer `email` over `string` for email fields
+2. **Prefer `parse` over `validate`** - Ensures type coercion and safer data handling
+3. **Use `union` types when multiple types are valid** - Better than `any` for flexibility
+4. **Use `literal` types for exact value matching** - Ensures precise validation
+5. **Define schemas once, reuse everywhere** - Same schema for HTTP, docs, and MCP
+
+## Integration Examples
+
+### HTTP Framework Integration
+```typescript
+import { string, number } from '@forklaunch/validator/zod';
+
+app.post('/users', {
+  name: 'Create User',
+  body: {
+    name: string,
+    age: number
+  },
+  responses: {
+    201: { id: number, name: string }
+  }
+}, handler);
+```
+
+### Universal SDK Usage
+```typescript
+// Same schemas provide type safety in SDK
+const user = await sdk.post('/users', {
+  body: { name: 'John', age: 30 } // Fully typed
+});
+```
+
+## Related Documentation
+
+- **[HTTP Frameworks](/docs/framework/http.md)** - Using schemas in ContractDetails
+- **[Documentation](/docs/framework/documentation.md)** - Automatic OpenAPI generation from schemas
+- **[Universal SDK](/docs/framework/universal-sdk.md)** - Type-safe client requests
+- **[MCP Autogeneration](/docs/framework/mcp.md)** - Tool parameter validation (zod only)

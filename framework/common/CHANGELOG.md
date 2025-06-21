@@ -1,5 +1,23 @@
 # @forklaunch/common
 
+## 0.3.14
+
+### Patch Changes
+
+- change dtoMapper to Mapper
+
+## 0.3.13
+
+### Patch Changes
+
+- create internal package for internal utilities
+
+## 0.3.12
+
+### Patch Changes
+
+- bump package subdependencies
+
 ## 0.3.11
 
 ### Patch Changes

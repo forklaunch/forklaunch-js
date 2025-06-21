@@ -4,7 +4,7 @@ import { ConfigInjector, ScopedDependencyFactory } from '@forklaunch/core/servic
 import { handlers, SchemaValidator } from '@{{app_name}}/core';
 import { Metrics } from '@{{app_name}}/monitoring';
 import { {{pascal_case_name}}Service } from '../../domain/interfaces/{{camel_case_name}}.interface';
-import { {{pascal_case_name}}RequestDtoMapper, {{pascal_case_name}}ResponseDtoMapper } from '../../domain/mappers/{{camel_case_name}}.mappers';
+import { {{pascal_case_name}}RequestMapper, {{pascal_case_name}}ResponseMapper } from '../../domain/mappers/{{camel_case_name}}.mappers';
 import { SchemaDependencies } from '../../registrations';
 
 // Controller class that implements the {{pascal_case_name}}Service interface 
@@ -31,8 +31,8 @@ export const {{pascal_case_name}}Controller = (
       name: '{{camel_case_name}}',
       summary: '{{pascal_case_name}}',
       responses: {
-        // specifies the success response schema using DtoMapper constructs
-        200: {{pascal_case_name}}ResponseDtoMapper.schema()
+        // specifies the success response schema using Mapper constructs
+        200: {{pascal_case_name}}ResponseMapper.schema()
       }
     },
     async (req, res) => {
@@ -52,11 +52,11 @@ export const {{pascal_case_name}}Controller = (
     {
       name: '{{camel_case_name}}', 
       summary: '{{pascal_case_name}}',
-      // specifies the request body schema using DtoMapper constructs
-      body: {{pascal_case_name}}RequestDtoMapper.schema(),
+      // specifies the request body schema using Mapper constructs
+      body: {{pascal_case_name}}RequestMapper.schema(),
       responses: {
-        // specifies the success response schema using DtoMapper constructs
-        200: {{pascal_case_name}}ResponseDtoMapper.schema()
+        // specifies the success response schema using Mapper constructs
+        200: {{pascal_case_name}}ResponseMapper.schema()
       }
     },
     async (req, res) => {

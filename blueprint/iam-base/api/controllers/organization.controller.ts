@@ -12,9 +12,9 @@ import { OrganizationService } from '@forklaunch/interfaces-iam/interfaces';
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { OrganizationStatus } from '../../domain/enum/organizationStatus.enum';
 import {
-  CreateOrganizationDtoMapper,
-  OrganizationDtoMapper,
-  UpdateOrganizationDtoMapper
+  CreateOrganizationMapper,
+  OrganizationMapper,
+  UpdateOrganizationMapper
 } from '../../domain/mappers/organization.mappers';
 import { SchemaDependencies } from '../../registrations';
 
@@ -33,9 +33,9 @@ export const OrganizationController = (
       {
         name: 'Create Organization',
         summary: 'Creates a new organization',
-        body: CreateOrganizationDtoMapper.schema(),
+        body: CreateOrganizationMapper.schema(),
         responses: {
-          201: OrganizationDtoMapper.schema(),
+          201: OrganizationMapper.schema(),
           409: string
         }
       },
@@ -66,7 +66,7 @@ export const OrganizationController = (
         name: 'Get Organization',
         summary: 'Gets an organization by ID',
         responses: {
-          200: OrganizationDtoMapper.schema(),
+          200: OrganizationMapper.schema(),
           404: string
         },
         params: IdSchema
@@ -91,9 +91,9 @@ export const OrganizationController = (
       {
         name: 'Update Organization',
         summary: 'Updates an organization by ID',
-        body: UpdateOrganizationDtoMapper.schema(),
+        body: UpdateOrganizationMapper.schema(),
         responses: {
-          200: OrganizationDtoMapper.schema(),
+          200: OrganizationMapper.schema(),
           404: string
         }
       },

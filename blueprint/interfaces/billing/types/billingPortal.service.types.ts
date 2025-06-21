@@ -1,14 +1,14 @@
 import { IdDto, RecordTimingDto } from '@forklaunch/common';
 
-export type CreateBillingPortalDto = {
+export type CreateBillingPortalDto = Partial<IdDto> & {
   customerId: string;
-  uri: string;
+  uri?: string;
   expiresAt: Date;
-  extraFields?: unknown;
+  providerFields?: unknown;
 };
-export type UpdateBillingPortalDto = IdDto & Partial<CreateBillingPortalDto>;
-export type BillingPortalDto = IdDto &
-  CreateBillingPortalDto &
+export type UpdateBillingPortalDto = Partial<CreateBillingPortalDto> & IdDto;
+export type BillingPortalDto = CreateBillingPortalDto &
+  IdDto &
   Partial<RecordTimingDto>;
 
 export type BillingPortalServiceParameters = {

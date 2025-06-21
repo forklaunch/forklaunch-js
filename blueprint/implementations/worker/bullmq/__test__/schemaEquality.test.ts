@@ -1,21 +1,24 @@
 import { isTrue } from '@forklaunch/common';
-import { testSchemaEquality } from '@forklaunch/core/test';
-import { BullMqWorkerOptionsSchema as TypeboxBullMqWorkerOptionsSchema } from '../schemas/typebox/bullMqWorker.schema';
-import { BullMqWorkerOptionsSchema as ZodBullMqWorkerOptionsSchema } from '../schemas/zod/bullMqWorker.schema';
+import { testSchemaEquality } from '@forklaunch/internal';
+import { BullMqWorkerOptionsSchema as TypeboxBullMqWorkerOptionsSchema } from '../domain/schemas/typebox/bullMqWorker.schema';
+import { BullMqWorkerOptionsSchema as ZodBullMqWorkerOptionsSchema } from '../domain/schemas/zod/bullMqWorker.schema';
+import { BullMqWorkerOptions } from '../domain/types/bullMqWorker.types';
 
 describe('schema equality', () => {
   it('should be equal for bullmq worker', () => {
     expect(
       isTrue(
-        testSchemaEquality(
+        testSchemaEquality<BullMqWorkerOptions>()(
           ZodBullMqWorkerOptionsSchema,
           TypeboxBullMqWorkerOptionsSchema,
           {
             backoffType: 'fixed',
             retries: 1,
             interval: 1000,
-            connection: {
-              url: 'redis://localhost:6379'
+            queueOptions: {
+              connection: {
+                url: 'redis://localhost:6379'
+              }
             }
           }
         )

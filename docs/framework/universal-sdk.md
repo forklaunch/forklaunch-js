@@ -19,7 +19,7 @@ Chaining requests copies correlation ID and other useful debugging context.
 
 ```typescript
 // Initialize SDK
-const sdk = new UniversalSdk('https://api.example.com');
+const sdk = createUniversalSdk<LiveAPIType>('https://api.example.com');
 
 // Make requests
 const response = await sdk.get('/users/:id', {
