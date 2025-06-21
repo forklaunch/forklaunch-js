@@ -19,17 +19,17 @@ import {
 } from '@forklaunch/validator/zod';
 import { NextFunction, Request, Response } from 'express';
 
-const typeboxSchemaValidator = SchemaValidator();
+const zodSchemaValidator = SchemaValidator();
 const openTelemetryCollector = new OpenTelemetryCollector('test');
 
 const forklaunchApplication = forklaunchExpress(
-  typeboxSchemaValidator,
+  zodSchemaValidator,
   openTelemetryCollector
 );
 
 const forklaunchRouterInstance = forklaunchRouter(
   '/testpath',
-  typeboxSchemaValidator,
+  zodSchemaValidator,
   openTelemetryCollector
 );
 
@@ -39,7 +39,7 @@ const expressMiddleware = (req: Request, res: Response, next: NextFunction) => {
 };
 
 const getHandler = handlers.get(
-  typeboxSchemaValidator,
+  zodSchemaValidator,
   '/test',
   {
     name: 'Test',
@@ -80,7 +80,7 @@ End of file.`
 );
 
 const postHandler = handlers.post(
-  typeboxSchemaValidator,
+  zodSchemaValidator,
   '/test',
   {
     name: 'Test',
@@ -125,7 +125,7 @@ const postHandler = handlers.post(
 );
 
 const jsonPatchHandler = handlers.patch(
-  typeboxSchemaValidator,
+  zodSchemaValidator,
   '/test',
   {
     name: 'Test',
@@ -151,7 +151,7 @@ const jsonPatchHandler = handlers.patch(
 );
 
 const multipartHandler = handlers.post(
-  typeboxSchemaValidator,
+  zodSchemaValidator,
   '/test/multipart',
   {
     name: 'Test',
@@ -179,7 +179,7 @@ const multipartHandler = handlers.post(
 );
 
 const urlEncodedFormHandler = handlers.post(
-  typeboxSchemaValidator,
+  zodSchemaValidator,
   '/test/url-encoded-form',
   {
     name: 'Test',

@@ -2,7 +2,6 @@ import { AnySchemaValidator } from '@forklaunch/validator';
 import { CorsOptions } from 'cors';
 import { ExpressLikeRouter } from '../interfaces/expressLikeRouter.interface';
 import { cors } from '../middleware/request/cors.middleware';
-import { createContext } from '../middleware/request/createContext.middleware';
 import { ForklaunchExpressLikeRouter } from '../router/expressLikeRouter';
 import { OpenTelemetryCollector } from '../telemetry/openTelemetryCollector';
 import { MetricsDefinition } from '../types/openTelemetryCollector.types';
@@ -51,26 +50,6 @@ export abstract class ForklaunchExpressLikeApplication<
       openTelemetryCollector
     );
 
-    process.on('uncaughtException', (err) => {
-      this.openTelemetryCollector.log('error', `Uncaught exception: ${err}`);
-      process.exit(1);
-    });
-    process.on('unhandledRejection', (reason) => {
-      this.openTelemetryCollector.log(
-        'error',
-        `Unhandled rejection: ${reason}`
-      );
-      process.exit(1);
-    });
-    process.on('exit', () => {
-      this.openTelemetryCollector.log('info', 'Shutting down application');
-    });
-    process.on('SIGINT', () => {
-      this.openTelemetryCollector.log('info', 'Shutting down application');
-      process.exit(0);
-    });
-
-    this.internal.use(createContext(this.schemaValidator) as RouterHandler);
     this.internal.use(cors(this.appOptions?.cors ?? {}) as RouterHandler);
   }
 
