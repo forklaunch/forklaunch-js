@@ -39,5 +39,8 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.34.1",
     "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "@eslint/js": "^9.29.0"
   }
 }
