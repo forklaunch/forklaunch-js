@@ -249,6 +249,9 @@ importers:
       '@forklaunch/validator':
         specifier: workspace:*
         version: link:../validator
+      zod:
+        specifier: ^3.25.67
+        version: 3.25.67
     devDependencies:
       '@types/express':
         specifier: ^5.0.3
