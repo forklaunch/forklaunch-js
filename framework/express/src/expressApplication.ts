@@ -123,13 +123,27 @@ export class Application<
     );
 
     if (this.schemaValidator instanceof ZodSchemaValidator) {
+      const zodSchemaValidator = this.schemaValidator;
+      const routers = this
+        .routers as unknown as ForklaunchRouter<ZodSchemaValidator>[];
+
+      this.internal.get('/mcp', async (_req, res) => {
+        const server = generateMcpServer(
+          zodSchemaValidator,
+          port,
+          '1.0.0',
+          routers
+        );
+        res.json(server);
+      });
+
       this.internal.post('/mcp', async (req, res) => {
         try {
           const server = generateMcpServer(
-            this.schemaValidator as unknown as ZodSchemaValidator,
+            zodSchemaValidator,
             port,
             '1.0.0',
-            this.routers as unknown as ForklaunchRouter<ZodSchemaValidator>[]
+            routers
           );
           const transport: StreamableHTTPServerTransport =
             new StreamableHTTPServerTransport({

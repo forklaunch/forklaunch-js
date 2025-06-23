@@ -134,6 +134,9 @@ const jsonPatchHandler = handlers.patch(
       f: string,
       h: uuid
     },
+    query: {
+      q: string
+    },
     responses: {
       200: {
         json: {
@@ -162,6 +165,9 @@ const multipartHandler = handlers.post(
         g: file
       }
     },
+    requestHeaders: {
+      'x-test': string
+    },
     responses: {
       200: {
         text: string
@@ -180,7 +186,7 @@ const multipartHandler = handlers.post(
 
 const urlEncodedFormHandler = handlers.post(
   zodSchemaValidator,
-  '/test/url-encoded-form',
+  '/test/url-encoded-form/:id',
   {
     name: 'Test URL Encoded Form',
     summary: 'Returns a string',
@@ -189,6 +195,9 @@ const urlEncodedFormHandler = handlers.post(
         f: string,
         h: optional(number)
       }
+    },
+    params: {
+      id: string
     },
     responses: {
       200: {
@@ -213,7 +222,7 @@ const multipartTest = forklaunchRouterInstance.post(
   multipartHandler
 );
 const urlEncodedFormTest = forklaunchRouterInstance.post(
-  '/test/url-encoded-form',
+  '/test/url-encoded-form/:id',
   urlEncodedFormHandler
 );
 

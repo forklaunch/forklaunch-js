@@ -22,6 +22,8 @@ export interface ForklaunchRouter<SV extends AnySchemaValidator> {
   basePath: `/${string}`;
   /** The routes associated with the router */
   routes: ForklaunchRoute<SV>[];
+  /** Nested routers */
+  routers: ForklaunchRouter<SV>[];
 }
 
 /**

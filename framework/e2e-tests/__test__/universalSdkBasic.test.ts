@@ -1,6 +1,5 @@
 import { universalSdk } from '@forklaunch/universal-sdk';
-import { Server } from 'http';
-import { SDK, start } from '../servers/express-zod';
+import { SDK } from '../servers/express-zod';
 
 async function instantiateSdk() {
   return await universalSdk<{ m: SDK }>({
@@ -15,15 +14,15 @@ async function instantiateSdk() {
 }
 
 describe('universalSdkBasic', async () => {
-  const server: Server = start();
+  // const server: Server = start();
   let sdk: { m: SDK };
 
   beforeAll(() => {
-    start();
+    // start();
   });
 
   afterAll(() => {
-    server.close();
+    // server.close();
   });
 
   it('should build and call SDK', async () => {
@@ -62,6 +61,9 @@ describe('universalSdkBasic', async () => {
       body: {
         f: 'ok',
         h: 'b658f7e0-9b8a-4e1f-b6d8-1c0b7d8b3f59'
+      },
+      query: {
+        q: 'test'
       }
     });
     expect(jsonPatchTest.code).toBe(200);
@@ -74,6 +76,9 @@ describe('universalSdkBasic', async () => {
     const multipartTest = await sdk.m.multipartTest.post(
       '/testpath/test/multipart',
       {
+        headers: {
+          'x-test': 'test'
+        },
         body: {
           multipartForm: {
             f: '!',
@@ -90,8 +95,11 @@ describe('universalSdkBasic', async () => {
       sdk = await instantiateSdk();
     }
     const urlEncodedFormTest = await sdk.m.urlEncodedFormTest.post(
-      '/testpath/test/url-encoded-form',
+      '/testpath/test/url-encoded-form/:id',
       {
+        params: {
+          id: '123'
+        },
         body: {
           urlEncodedForm: {
             f: '!',

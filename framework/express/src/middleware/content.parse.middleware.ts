@@ -83,8 +83,10 @@ function contentParse<SV extends AnySchemaValidator>(options?: {
             });
 
             file.on('end', () => {
-              const fileBuffer = Uint8Array.from(chunks.flat());
-              body[fieldname] = fileBuffer.toString();
+              const fileString = chunks
+                .map((chunk) => chunk.toString())
+                .join('');
+              body[fieldname] = fileString;
             });
           });
 

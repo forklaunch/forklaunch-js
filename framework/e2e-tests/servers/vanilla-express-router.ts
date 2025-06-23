@@ -69,7 +69,7 @@ const postHandler = handlers.post(
 );
 
 flRouter.post('/sse', postHandler);
-console.log(flRouter.internal);
+
 app.use(flRouter.basePath, flRouter.internal);
 
 app.listen(3000, () => {

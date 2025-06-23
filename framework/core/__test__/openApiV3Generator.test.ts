@@ -35,7 +35,8 @@ describe('openApiV3Generator tests', () => {
                 }
               }
             }
-          ]
+          ],
+          routers: []
         }
       ]
     );

@@ -23,6 +23,9 @@ describe('liveTests', () => {
       body: {
         f: 'ok',
         h: 'b658f7e0-9b8a-4e1f-b6d8-1c0b7d8b3f59'
+      },
+      query: {
+        q: 'test'
       }
     });
     expect(jsonPatchTest.code).toBe(200);
@@ -32,6 +35,9 @@ describe('liveTests', () => {
     const multipartTest = await sdk.m.multipartTest.post(
       '/testpath/test/multipart',
       {
+        headers: {
+          'x-test': 'test'
+        },
         body: {
           multipartForm: {
             f: '!',
@@ -45,8 +51,11 @@ describe('liveTests', () => {
 
   it('should call urlEncodedFormTest', async () => {
     const urlEncodedFormTest = await sdk.m.urlEncodedFormTest.post(
-      '/testpath/test/url-encoded-form',
+      '/testpath/test/url-encoded-form/:id',
       {
+        params: {
+          id: '123'
+        },
         body: {
           urlEncodedForm: {
             f: '!',
