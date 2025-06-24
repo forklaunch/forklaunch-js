@@ -11,9 +11,13 @@ import express from 'express';
 
 const app = express();
 
-app.get('/test', (req, res) => {
-  res.send('Hello, world!');
-});
+app
+  .get('/test', (req, res) => {
+    res.send('Hello, world!');
+  })
+  .post('/test', (req, res) => {
+    res.send('Hello, world!');
+  });
 
 const zodSchemaValidator = SchemaValidator();
 const openTelemetryCollector = new OpenTelemetryCollector('test');

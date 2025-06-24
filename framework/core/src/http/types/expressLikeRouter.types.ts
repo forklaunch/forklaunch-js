@@ -22,9 +22,12 @@ export interface LiveTypeRouteDefinition<
   SV extends AnySchemaValidator,
   BasePath extends `/${string}`,
   ContractMethod extends Method,
+  RouterHandler,
+  Internal extends ExpressLikeRouter<RouterHandler, Internal>,
   BaseRequest,
   BaseResponse,
-  NextFunction
+  NextFunction,
+  ChainableRouter extends { routeMap: Record<string, unknown> }
 > {
   <
     Path extends `/${string}`,
@@ -53,17 +56,22 @@ export interface LiveTypeRouteDefinition<
       BaseResponse,
       NextFunction
     >
-  ): {
-    [Key in ContractMethod]: LiveTypeFunction<
-      SV,
-      `${BasePath}${Path}`,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders
-    >;
+  ): ChainableRouter & {
+    routeMap: ChainableRouter['routeMap'] &
+      Record<
+        `${BasePath}${Path}`,
+        LiveTypeFunction<
+          SV,
+          `${BasePath}${Path}`,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          ContractMethod
+        >
+      >;
   };
 
   <
@@ -121,17 +129,22 @@ export interface LiveTypeRouteDefinition<
         NextFunction
       >
     ]
-  ): {
-    [Key in ContractMethod]: LiveTypeFunction<
-      SV,
-      `${BasePath}${Path}`,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders
-    >;
+  ): ChainableRouter & {
+    routeMap: ChainableRouter['routeMap'] &
+      Record<
+        `${BasePath}${Path}`,
+        LiveTypeFunction<
+          SV,
+          `${BasePath}${Path}`,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          ContractMethod
+        >
+      >;
   };
 
   <
@@ -170,17 +183,22 @@ export interface LiveTypeRouteDefinition<
       BaseResponse,
       NextFunction
     >[]
-  ): {
-    [Key in ContractMethod]: LiveTypeFunction<
-      SV,
-      `${BasePath}${Path}`,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders
-    >;
+  ): ChainableRouter & {
+    routeMap: ChainableRouter['routeMap'] &
+      Record<
+        `${BasePath}${Path}`,
+        LiveTypeFunction<
+          SV,
+          `${BasePath}${Path}`,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          ContractMethod
+        >
+      >;
   };
 }
 

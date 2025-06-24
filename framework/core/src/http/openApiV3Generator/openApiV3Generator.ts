@@ -17,6 +17,7 @@ import {
   discriminateBody,
   discriminateResponseBodies
 } from '../router/discriminateBody';
+import { unpackRouters } from '../router/unpackRouters';
 import { ForklaunchRouter } from '../types/router.types';
 
 /**
@@ -37,7 +38,7 @@ function toUpperCase(str: string) {
  */
 function transformBasePath(basePath: string) {
   if (basePath.startsWith('/')) {
-    return toUpperCase(basePath.slice(1));
+    return basePath.slice(1);
   }
   return `/${basePath}`;
 }
@@ -51,9 +52,15 @@ function transformBasePath(basePath: string) {
  * @returns {OpenAPIObject} - The Swagger document.
  */
 function generateOpenApiDocument(
+  protocol: 'http' | 'https',
+  host: string,
   port: string | number,
   tags: TagObject[],
-  paths: PathObject
+  paths: PathObject,
+  otherServers?: {
+    url: string;
+    description: string;
+  }[]
 ): OpenAPIObject {
   return {
     openapi: '3.1.0',
@@ -73,8 +80,10 @@ function generateOpenApiDocument(
     tags,
     servers: [
       {
-        url: `http://localhost:${port}`
-      }
+        url: `${protocol}://${host}:${port}`,
+        description: 'Main Server'
+      },
+      ...(otherServers || [])
     ],
     paths
   };
@@ -124,25 +133,30 @@ function contentResolver<SV extends AnySchemaValidator>(
  */
 export function generateSwaggerDocument<SV extends AnySchemaValidator>(
   schemaValidator: SV,
+  protocol: 'http' | 'https',
+  host: string,
   port: string | number,
-  routers: ForklaunchRouter<SV>[]
+  routers: ForklaunchRouter<SV>[],
+  otherServers?: {
+    url: string;
+    description: string;
+  }[]
 ): OpenAPIObject {
   const tags: TagObject[] = [];
   const paths: PathObject = {};
 
-  routers.flat(Infinity).forEach((router) => {
-    const controllerName = transformBasePath(router.basePath);
+  unpackRouters<SV>(routers).forEach(({ fullPath, router }) => {
+    const controllerName = transformBasePath(fullPath);
     tags.push({
       name: controllerName,
-      description: `${controllerName} Operations`
+      description: `${toUpperCase(controllerName)} Operations`
     });
     router.routes.forEach((route) => {
-      const fullPath = openApiCompliantPath(
-        `${router.basePath}${route.path === '/' ? '' : route.path}`
+      const openApiPath = openApiCompliantPath(
+        `${fullPath}${route.path === '/' ? '' : route.path}`
       );
-
-      if (!paths[fullPath]) {
-        paths[fullPath] = {};
+      if (!paths[openApiPath]) {
+        paths[openApiPath] = {};
       }
       const { name, summary, query, requestHeaders } = route.contractDetails;
 
@@ -251,10 +265,17 @@ export function generateSwaggerDocument<SV extends AnySchemaValidator>(
       }
 
       if (route.method !== 'middleware') {
-        paths[fullPath][route.method] = pathItemObject;
+        paths[openApiPath][route.method] = pathItemObject;
       }
     });
   });
 
-  return generateOpenApiDocument(port, tags, paths);
+  return generateOpenApiDocument(
+    protocol,
+    host,
+    port,
+    tags,
+    paths,
+    otherServers
+  );
 }

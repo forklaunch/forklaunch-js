@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { noop } from '@forklaunch/common';
-import { OpenTelemetryCollector } from '@forklaunch/core/http';
+import { ApiClient, OpenTelemetryCollector } from '@forklaunch/core/http';
 import {
   forklaunchExpress,
   forklaunchRouter,
@@ -270,11 +270,36 @@ export function start() {
   });
 }
 
-export type SDK = {
+export type SDK = ApiClient<{
   getTest: typeof getTest;
   postTest: typeof postTest;
   jsonPatchTest: typeof jsonPatchTest;
   multipartTest: typeof multipartTest;
   urlEncodedFormTest: typeof urlEncodedFormTest;
   filePostTest: typeof filePostTest;
-};
+}>;
+
+class X<A extends Record<string, unknown> = Record<string, never>> {
+  constructor(private _routes: A = {} as A) {}
+
+  register<K extends string, V>(name: K, value: V): X<A & Record<K, V>> {
+    const newRoutes = { ...this._routes, [name]: value } as A & Record<K, V>;
+    return new X(newRoutes);
+  }
+
+  get routes(): A {
+    return this._routes;
+  }
+}
+
+const x = new X();
+const y = x.register('a', 1);
+const z = y.register('b', 'hello');
+const l = z.register('c', { foo: 'bar' });
+
+const m = l.routes; // Type is { a: number; b: string; c: { foo: string; } }
+
+// Now you can access properties with full type safety
+console.log(l.a); // number
+console.log(l.b); // string
+console.log(l.c.foo); // string

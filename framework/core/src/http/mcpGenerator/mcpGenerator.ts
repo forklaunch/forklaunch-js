@@ -5,6 +5,7 @@ import {
   discriminateBody,
   discriminateResponseBodies
 } from '../router/discriminateBody';
+import { unpackRouters } from '../router/unpackRouters';
 import { ForklaunchRouter } from '../types/router.types';
 
 /**
@@ -18,6 +19,8 @@ import { ForklaunchRouter } from '../types/router.types';
  */
 export function generateMcpServer(
   schemaValidator: ZodSchemaValidator,
+  protocol: 'http' | 'https',
+  host: string,
   port: number,
   version: string,
   routers: ForklaunchRouter<ZodSchemaValidator>[],
@@ -34,7 +37,7 @@ export function generateMcpServer(
     version: version
   });
 
-  routers.flat(Infinity).forEach((router) => {
+  unpackRouters<ZodSchemaValidator>(routers).forEach(({ fullPath, router }) => {
     router.routes.forEach((route) => {
       let discriminatedBody:
         | ReturnType<typeof discriminateBody<ZodSchemaValidator>>
@@ -87,7 +90,7 @@ export function generateMcpServer(
             headers?: Record<string, string>;
           };
 
-          let url = `http://localhost:${port}${router.basePath}${route.path}`;
+          let url = `${protocol}://${host}:${port}${fullPath}${route.path}`;
 
           if (params) {
             for (const key in params) {

@@ -15,6 +15,7 @@ import {
   HttpContractDetails,
   JsonBody,
   MapSchema,
+  Method,
   MultipartForm,
   ParamsDictionary,
   ParamsObject,
@@ -661,12 +662,18 @@ export type LiveTypeFunction<
   ReqBody extends Body<SV>,
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
-  ResHeaders extends HeadersObject<SV>
-> = (ParamsObject<SV> extends P
-  ? unknown
-  : {
-      params: MapSchema<SV, P>;
-    }) &
+  ResHeaders extends HeadersObject<SV>,
+  ContractMethod extends Method
+> = Omit<
+  Parameters<typeof fetch>[1],
+  'method' | 'body' | 'query' | 'headers' | 'params'
+> & {
+  method: Uppercase<ContractMethod>;
+} & (ParamsObject<SV> extends P
+    ? unknown
+    : {
+        params: MapSchema<SV, P>;
+      }) &
   (Body<SV> extends ReqBody
     ? unknown
     : {
@@ -776,7 +783,7 @@ export type ApiClient<Routes extends Record<string, unknown>> = {
     ...args: never[]
   ) => infer ReturnType
     ? Omit<ReturnType, 'router'>
-    : never;
+    : Routes[Key];
 };
 
 /**

@@ -18,7 +18,8 @@ export abstract class ForklaunchExpressLikeApplication<
   RouterHandler,
   BaseRequest,
   BaseResponse,
-  NextFunction
+  NextFunction,
+  RouteMap extends Record<string, unknown>
 > extends ForklaunchExpressLikeRouter<
   SV,
   '/',
@@ -26,7 +27,8 @@ export abstract class ForklaunchExpressLikeApplication<
   Server,
   BaseRequest,
   BaseResponse,
-  NextFunction
+  NextFunction,
+  RouteMap
 > {
   /**
    * Creates an instance of the Application class.
