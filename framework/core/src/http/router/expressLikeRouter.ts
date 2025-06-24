@@ -450,25 +450,25 @@ export class ForklaunchExpressLikeRouter<
         path: route
       };
 
-      function remapFileBody(body: Record<string, unknown> | File) {
-        if (body instanceof File) {
-          return (name: string, contentType: string) => {
-            return new File([body], name, { type: contentType });
-          };
-        }
-        Object.entries(body).forEach(([key, value]) => {
-          if (value instanceof File) {
-            body[key] = (name: string, contentType: string) => {
-              return new File([value], name, { type: contentType });
-            };
-          } else if (typeof value === 'object') {
-            body[key] = remapFileBody(value as Record<string, unknown>);
-          }
-        });
-        return body;
-      }
+      // function remapFileBody(body: Record<string, unknown> | File) {
+      //   if (body instanceof File) {
+      //     return (name: string, contentType: string) => {
+      //       return new File([body], name, { type: contentType });
+      //     };
+      //   }
+      //   Object.entries(body).forEach(([key, value]) => {
+      //     if (value instanceof File) {
+      //       body[key] = (name: string, contentType: string) => {
+      //         return new File([value], name, { type: contentType });
+      //       };
+      //     } else if (typeof value === 'object') {
+      //       body[key] = remapFileBody(value as Record<string, unknown>);
+      //     }
+      //   });
+      //   return body;
+      // }
 
-      req.body = remapFileBody(req.body);
+      // req.body = remapFileBody(req.body);
 
       const res = {
         status: (code: number) => {

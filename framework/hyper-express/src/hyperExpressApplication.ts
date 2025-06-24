@@ -5,7 +5,6 @@ import {
   ForklaunchExpressLikeApplication,
   generateSwaggerDocument,
   isForklaunchRequest,
-  logger,
   MetricsDefinition,
   OpenTelemetryCollector
 } from '@forklaunch/core/http';
@@ -154,7 +153,7 @@ export class Application<
                 : 'No correlation ID'
             }`
           );
-        logger('error').error(err.stack ?? err.message, {
+        this.openTelemetryCollector.error(err.stack ?? err.message, {
           [ATTR_HTTP_RESPONSE_STATUS_CODE]: statusCode ?? 500
         });
       });

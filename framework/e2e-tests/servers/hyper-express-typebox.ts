@@ -178,11 +178,7 @@ const multipartHandler = handlers.post(
   },
   expressMiddleware,
   async (req, res) => {
-    res
-      .status(200)
-      .send(
-        `${req.body.f} ${await req.body.g('test.txt', 'text/plain').text()}`
-      );
+    res.status(200).send(`${req.body.f} ${await req.body.g.text()}`);
   }
 );
 

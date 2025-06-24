@@ -1,5 +1,6 @@
 import { universalSdk } from '@forklaunch/universal-sdk';
-import { SDK } from '../servers/express-zod';
+import { Server } from 'http';
+import { SDK, start } from '../servers/express-zod';
 
 async function instantiateSdk() {
   return await universalSdk<{ m: SDK }>({
@@ -14,15 +15,15 @@ async function instantiateSdk() {
 }
 
 describe('universalSdkBasic', async () => {
-  // const server: Server = start();
+  const server: Server = start();
   let sdk: { m: SDK };
 
   beforeAll(() => {
-    // start();
+    start();
   });
 
   afterAll(() => {
-    // server.close();
+    server.close();
   });
 
   it('should build and call SDK', async () => {
@@ -81,7 +82,7 @@ describe('universalSdkBasic', async () => {
         },
         body: {
           multipartForm: {
-            f: '!',
+            fileName: '!',
             g: new File(['Hello World'], 'test.txt', { type: 'text/plain' })
           }
         }
@@ -109,5 +110,15 @@ describe('universalSdkBasic', async () => {
       }
     );
     expect(urlEncodedFormTest.code).toBe(200);
+  });
+
+  it('should call filePostTest', async () => {
+    if (!sdk) {
+      sdk = await instantiateSdk();
+    }
+    const filePostTest = await sdk.m.filePostTest.post('/testpath/test/file', {
+      body: new File(['Hello World'], 'test2.txt', { type: 'text/plain' })
+    });
+    expect(filePostTest.code).toBe(200);
   });
 });

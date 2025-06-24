@@ -145,11 +145,19 @@ export interface ForklaunchStatusResponse<ResBody> {
    */
   send: {
     (
-      body?: ResBody extends AsyncGenerator<unknown> ? never : ResBody | null,
+      body?: ResBody extends AsyncGenerator<unknown>
+        ? never
+        : ResBody extends Blob
+          ? Blob | File | Buffer | ArrayBuffer | NodeJS.ReadableStream
+          : ResBody | null,
       close_connection?: boolean
     ): boolean;
     <U>(
-      body?: ResBody extends AsyncGenerator<unknown> ? never : ResBody | null,
+      body?: ResBody extends AsyncGenerator<unknown>
+        ? never
+        : ResBody extends Blob
+          ? Blob | File | Buffer | ArrayBuffer | NodeJS.ReadableStream
+          : ResBody | null,
       close_connection?: boolean
     ): U;
   };
@@ -464,8 +472,8 @@ export type ExtractContentType<
           ? 'text/event-stream'
           : T extends UnknownResponseBody<SV>
             ? 'application/json'
-            : T extends SV['string']
-              ? 'text/plain'
+            : T extends SV['file']
+              ? 'application/octet-stream'
               : 'text/plain';
 
 export type ExtractResponseBody<
@@ -632,19 +640,6 @@ export type ExpressLikeAuthMapper<
   >
 ) => Set<string> | Promise<Set<string>>;
 
-type RemapFileBody<T> =
-  T extends Record<string, unknown>
-    ? {
-        [K in keyof T]: T[K] extends (name: string, type: string) => infer R
-          ? R
-          : T[K] extends Record<string, unknown>
-            ? RemapFileBody<T[K]>
-            : T[K];
-      }
-    : T extends (name: string, type: string) => infer R
-      ? R
-      : T;
-
 /**
  * Represents a live type function for the SDK.
  *
@@ -675,7 +670,7 @@ export type LiveTypeFunction<
   (Body<SV> extends ReqBody
     ? unknown
     : {
-        body: RemapFileBody<MapSchema<SV, ReqBody>>;
+        body: MapSchema<SV, ReqBody>;
       }) &
   (QueryObject<SV> extends ReqQuery
     ? unknown

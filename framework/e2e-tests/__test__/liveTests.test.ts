@@ -40,7 +40,7 @@ describe('liveTests', () => {
         },
         body: {
           multipartForm: {
-            f: '!',
+            fileName: '!',
             g: new File(['Hello World'], 'test.txt', { type: 'text/plain' })
           }
         }
@@ -65,5 +65,12 @@ describe('liveTests', () => {
       }
     );
     expect(urlEncodedFormTest.code).toBe(200);
+  });
+
+  it('should call filePostTest', async () => {
+    const filePostTest = await sdk.m.filePostTest.post('/testpath/test/file', {
+      body: new File(['Hello World'], 'test.txt', { type: 'text/plain' })
+    });
+    expect(filePostTest.code).toBe(200);
   });
 });

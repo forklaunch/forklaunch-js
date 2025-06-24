@@ -18,6 +18,8 @@ import {
   uuid
 } from '@forklaunch/validator/zod';
 import { NextFunction, Request, Response } from 'express';
+import fs from 'fs';
+import path from 'path';
 
 const zodSchemaValidator = SchemaValidator();
 const openTelemetryCollector = new OpenTelemetryCollector('test');
@@ -45,9 +47,7 @@ const getHandler = handlers.get(
     name: 'Test File',
     summary: 'Gets a sample file back',
     responses: {
-      200: {
-        file: file
-      }
+      200: file
     }
   },
   expressMiddleware,
@@ -161,7 +161,7 @@ const multipartHandler = handlers.post(
     summary: 'Returns a string',
     body: {
       multipartForm: {
-        f: string,
+        fileName: string,
         g: file
       }
     },
@@ -176,11 +176,13 @@ const multipartHandler = handlers.post(
   },
   expressMiddleware,
   async (req, res) => {
-    res
-      .status(200)
-      .send(
-        `${req.body.f} ${await req.body.g('test.txt', 'text/plain').text()}`
+    if (__dirname) {
+      fs.writeFileSync(
+        path.join(__dirname, '.temp', req.body.fileName),
+        await req.body.g.text()
       );
+    }
+    res.status(200).send(`${req.body.fileName} ${await req.body.g.text()}`);
   }
 );
 
@@ -214,6 +216,23 @@ const urlEncodedFormHandler = handlers.post(
   }
 );
 
+const filePostHandler = handlers.post(
+  zodSchemaValidator,
+  '/test/file',
+  {
+    name: 'Test File Upload/Download',
+    summary: 'Returns a file',
+    body: file,
+    responses: {
+      200: file
+    }
+  },
+  expressMiddleware,
+  (req, res) => {
+    res.status(200).send(req.body);
+  }
+);
+
 const getTest = forklaunchRouterInstance.get('/test', getHandler);
 const postTest = forklaunchRouterInstance.post('/test', postHandler);
 const jsonPatchTest = forklaunchRouterInstance.patch('/test', jsonPatchHandler);
@@ -224,6 +243,10 @@ const multipartTest = forklaunchRouterInstance.post(
 const urlEncodedFormTest = forklaunchRouterInstance.post(
   '/test/url-encoded-form/:id',
   urlEncodedFormHandler
+);
+const filePostTest = forklaunchRouterInstance.post(
+  '/test/file',
+  filePostHandler
 );
 
 forklaunchApplication.use(forklaunchRouterInstance);
@@ -237,7 +260,8 @@ export const liveTests = {
   postTest,
   jsonPatchTest,
   multipartTest,
-  urlEncodedFormTest
+  urlEncodedFormTest,
+  filePostTest
 };
 
 export function start() {
@@ -252,4 +276,5 @@ export type SDK = {
   jsonPatchTest: typeof jsonPatchTest;
   multipartTest: typeof multipartTest;
   urlEncodedFormTest: typeof urlEncodedFormTest;
+  filePostTest: typeof filePostTest;
 };

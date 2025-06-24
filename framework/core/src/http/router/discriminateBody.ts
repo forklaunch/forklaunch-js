@@ -91,6 +91,15 @@ export function discriminateBody<SV extends AnySchemaValidator>(
       parserType: 'text',
       schema: maybeTypedBody
     };
+  } else if (
+    (schemaValidator as SchemaValidator).openapi(maybeTypedBody).format ===
+    'binary'
+  ) {
+    return {
+      contentType: 'application/octet-stream',
+      parserType: 'file',
+      schema: maybeTypedBody
+    };
   } else {
     return {
       contentType: 'application/json',
@@ -187,6 +196,15 @@ export function discriminateResponseBodies<SV extends AnySchemaValidator>(
         discriminatedResponses[Number(statusCode)] = {
           contentType: 'text/plain',
           parserType: 'text',
+          schema: response
+        };
+      } else if (
+        (schemaValidator as SchemaValidator).openapi(response).format ===
+        'binary'
+      ) {
+        discriminatedResponses[Number(statusCode)] = {
+          contentType: 'application/octet-stream',
+          parserType: 'file',
           schema: response
         };
       } else {

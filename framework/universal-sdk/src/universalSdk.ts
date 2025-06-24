@@ -1,4 +1,8 @@
-import { safeParse, safeStringify } from '@forklaunch/common';
+import {
+  openApiCompliantPath,
+  safeParse,
+  safeStringify
+} from '@forklaunch/common';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 import { OpenAPIObject } from 'openapi3-ts/oas31';
@@ -101,7 +105,10 @@ export class UniversalSdk {
     let defaultContentType = 'application/json';
     let parsedBody;
     if (body != null) {
-      if ('schema' in body && body.schema != null) {
+      if (body instanceof File || body instanceof Blob) {
+        defaultContentType = 'application/octet-stream';
+        parsedBody = body;
+      } else if ('schema' in body && body.schema != null) {
         defaultContentType = 'application/json';
         parsedBody = safeStringify(body.schema);
       } else if ('json' in body && body.json != null) {
@@ -112,7 +119,7 @@ export class UniversalSdk {
         parsedBody = body.text;
       } else if ('file' in body && body.file != null) {
         defaultContentType = 'application/octet-stream';
-        parsedBody = await body.file.text();
+        parsedBody = body.file;
       } else if ('multipartForm' in body && body.multipartForm != null) {
         defaultContentType = 'multipart/form-data';
         const formData = new FormData();
@@ -168,7 +175,7 @@ export class UniversalSdk {
     });
 
     const responseOpenApi =
-      this.registryOpenApiJson?.paths?.[route]?.[
+      this.registryOpenApiJson?.paths?.[openApiCompliantPath(route)]?.[
         method.toLowerCase() as typeof method
       ]?.responses?.[response.status];
 

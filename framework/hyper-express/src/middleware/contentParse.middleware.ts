@@ -50,7 +50,7 @@ export function contentParse<SV extends AnySchemaValidator>(options?: {
     if (discriminatedBody != null) {
       switch (discriminatedBody.parserType) {
         case 'file':
-          req.body = await req.buffer();
+          req.body = (await req.buffer()).toString('utf-8');
           break;
         case 'json':
           req.body = await req.json();

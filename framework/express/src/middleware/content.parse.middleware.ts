@@ -67,7 +67,15 @@ function contentParse<SV extends AnySchemaValidator>(options?: {
         case 'text':
           return textParser(req, res, next);
         case 'file':
-          return rawParser(req, res, next);
+          return rawParser(req, res, async (err) => {
+            if (err) {
+              return next(err);
+            }
+            if (req.body instanceof Buffer) {
+              req.body = req.body.toString('utf-8');
+            }
+            next();
+          });
         case 'multipart': {
           const bb = Busboy({
             headers: req.headers,

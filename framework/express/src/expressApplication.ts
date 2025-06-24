@@ -7,7 +7,6 @@ import {
   generateMcpServer,
   generateSwaggerDocument,
   isForklaunchRequest,
-  logger,
   meta,
   MetricsDefinition,
   OpenTelemetryCollector
@@ -150,7 +149,6 @@ export class Application<
               sessionIdGenerator: undefined
             });
           res.on('close', () => {
-            console.log('Request closed');
             transport.close();
             server.close();
           });
@@ -235,7 +233,7 @@ export class Application<
               : 'No correlation ID'
           }`
         );
-      logger('error').error(
+      this.openTelemetryCollector.error(
         err.stack ?? err.message,
         meta({
           [ATTR_HTTP_RESPONSE_STATUS_CODE]: statusCode

@@ -5,7 +5,7 @@
  * @module TypeboxSchemaValidator
  */
 
-import { InMemoryFile, MimeType } from '@forklaunch/common';
+import { InMemoryBlob } from '@forklaunch/common';
 import {
   FormatRegistry,
   Kind,
@@ -323,20 +323,16 @@ export class TypeboxSchemaValidator
       }
       return '';
     });
-  file: TTransform<TString, (name: string, type: MimeType) => File> =
-    Type.Transform(
-      Type.String({
-        errorType: 'binary',
-        format: 'binary',
-        example: 'a utf-8 encodable string',
-        title: 'File'
-      })
-    )
-      .Decode(
-        (value) => (name: string, type: MimeType) =>
-          new InMemoryFile(value, name, { type }) as File
-      )
-      .Encode((value) => (value('name', 'type') as InMemoryFile).content);
+  file: TTransform<TString, Blob> = Type.Transform(
+    Type.String({
+      errorType: 'binary',
+      format: 'binary',
+      example: 'a utf-8 encodable blob or file',
+      title: 'File'
+    })
+  )
+    .Decode((value) => new InMemoryBlob(value) as Blob)
+    .Encode((value) => (value as InMemoryBlob).content);
   type = <T>() => this.any as TTransform<TAny, T>;
 
   /**

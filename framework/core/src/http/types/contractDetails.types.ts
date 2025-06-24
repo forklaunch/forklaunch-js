@@ -1,6 +1,5 @@
 import {
   ExclusiveRecord,
-  MimeType,
   Prettify,
   UnionToIntersection
 } from '@forklaunch/common';
@@ -46,32 +45,28 @@ export type NumberOnlyObject<SV extends AnySchemaValidator> = Omit<
  *
  * @template SV - A type that extends AnySchemaValidator.
  */
-export type BodyObject<SV extends AnySchemaValidator> = StringOnlyObject<SV> &
-  unknown;
+export type BodyObject<SV extends AnySchemaValidator> = StringOnlyObject<SV>;
 
 /**
  * Type representing the parameters object in a request.
  *
  * @template SV - A type that extends AnySchemaValidator.
  */
-export type ParamsObject<SV extends AnySchemaValidator> = StringOnlyObject<SV> &
-  unknown;
+export type ParamsObject<SV extends AnySchemaValidator> = StringOnlyObject<SV>;
 
 /**
  * Type representing the query object in a request.
  *
  * @template SV - A type that extends AnySchemaValidator.
  */
-export type QueryObject<SV extends AnySchemaValidator> = StringOnlyObject<SV> &
-  unknown;
+export type QueryObject<SV extends AnySchemaValidator> = StringOnlyObject<SV>;
 
 /**
  * Type representing the headers object in a request.
  *
  * @template SV - A type that extends AnySchemaValidator.
  */
-export type HeadersObject<SV extends AnySchemaValidator> =
-  StringOnlyObject<SV> & unknown;
+export type HeadersObject<SV extends AnySchemaValidator> = StringOnlyObject<SV>;
 
 export type RawTypedResponseBody<SV extends AnySchemaValidator> =
   | TextBody<SV>
@@ -130,7 +125,11 @@ export type ResponseBody<SV extends AnySchemaValidator> =
   | TypedResponseBody<SV>
   | (ExclusiveResponseBodyBase<SV> & SV['_ValidSchemaObject'])
   | (ExclusiveResponseBodyBase<SV> & UnboxedObjectSchema<SV>)
-  | (ExclusiveResponseBodyBase<SV> & SV['string']);
+  | (ExclusiveResponseBodyBase<SV> & SV['string'])
+  | (ExclusiveResponseBodyBase<SV> & SV['number'])
+  | (ExclusiveResponseBodyBase<SV> & SV['boolean'])
+  | (ExclusiveResponseBodyBase<SV> & SV['array'])
+  | (ExclusiveResponseBodyBase<SV> & SV['file']);
 
 /**
  * Type representing the responses object in a request.
@@ -184,9 +183,7 @@ export type FileBody<SV extends AnySchemaValidator> = {
     | 'audio/wav'
     | 'video/mp4'
     | string;
-  file: SV['file'] extends (name: string, mimeType: MimeType) => infer R
-    ? R
-    : SV['file'];
+  file: SV['file'];
 };
 
 /**
