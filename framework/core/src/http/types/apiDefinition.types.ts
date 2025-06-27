@@ -1,7 +1,7 @@
 import {
   MakePropertyOptionalIfChildrenOptional,
   Prettify,
-  RemoveTrailingSlash
+  SanitizePathSlashes
 } from '@forklaunch/common';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { Span } from '@opentelemetry/api';
@@ -641,6 +641,35 @@ export type ExpressLikeAuthMapper<
   >
 ) => Set<string> | Promise<Set<string>>;
 
+export type LiveTypeFunctionRequestInit<
+  SV extends AnySchemaValidator,
+  P extends ParamsObject<SV>,
+  ReqBody extends Body<SV>,
+  ReqQuery extends QueryObject<SV>,
+  ReqHeaders extends HeadersObject<SV>
+> = MakePropertyOptionalIfChildrenOptional<
+  (ParamsObject<SV> extends P
+    ? unknown
+    : {
+        params: MapSchema<SV, P>;
+      }) &
+    (Body<SV> extends ReqBody
+      ? unknown
+      : {
+          body: MapSchema<SV, ReqBody>;
+        }) &
+    (QueryObject<SV> extends ReqQuery
+      ? unknown
+      : {
+          query: MapSchema<SV, ReqQuery>;
+        }) &
+    (HeadersObject<SV> extends ReqHeaders
+      ? unknown
+      : {
+          headers: MapSchema<SV, ReqHeaders>;
+        })
+>;
+
 /**
  * Represents a live type function for the SDK.
  *
@@ -664,32 +693,24 @@ export type LiveTypeFunction<
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
   ContractMethod extends Method
-> = Omit<
-  Parameters<typeof fetch>[1],
-  'method' | 'body' | 'query' | 'headers' | 'params'
-> & {
-  method: Uppercase<ContractMethod>;
-} & (ParamsObject<SV> extends P
-    ? unknown
-    : {
-        params: MapSchema<SV, P>;
-      }) &
-  (Body<SV> extends ReqBody
-    ? unknown
-    : {
-        body: MapSchema<SV, ReqBody>;
-      }) &
-  (QueryObject<SV> extends ReqQuery
-    ? unknown
-    : {
-        query: MapSchema<SV, ReqQuery>;
-      }) &
-  (HeadersObject<SV> extends ReqHeaders
-    ? unknown
-    : {
-        headers: MapSchema<SV, ReqHeaders>;
-      }) extends infer Request
-  ? SdkResponse<
+> = (
+  route: SanitizePathSlashes<Route>,
+  ...reqInit: Prettify<
+    Omit<RequestInit, 'method' | 'body' | 'query' | 'headers' | 'params'> & {
+      method: Uppercase<ContractMethod>;
+    } & LiveTypeFunctionRequestInit<SV, P, ReqBody, ReqQuery, ReqHeaders>
+  > extends infer ReqInit
+    ? ReqInit extends
+        | { body: unknown }
+        | { params: unknown }
+        | { query: unknown }
+        | { headers: unknown }
+      ? [reqInit: ReqInit]
+      : [reqInit?: ReqInit]
+    : never
+) => Promise<
+  Prettify<
+    SdkResponse<
       SV,
       ResponsesObject<SV> extends ResBodyMap
         ? Record<number, unknown>
@@ -697,15 +718,56 @@ export type LiveTypeFunction<
       ForklaunchResHeaders extends ResHeaders
         ? unknown
         : MapSchema<SV, ResHeaders>
-    > extends infer Return
-    ? unknown extends Request
-      ? (route: RemoveTrailingSlash<Route>) => Promise<Return>
-      : (
-          route: RemoveTrailingSlash<Route>,
-          request: Prettify<MakePropertyOptionalIfChildrenOptional<Request>>
-        ) => Promise<Return>
+    >
+  >
+>;
+
+/**
+ * Represents a live type function for the SDK.
+ *
+ * @template SV - A type that extends AnySchemaValidator.
+ * @template P - A type for request parameters.
+ * @template ResBodyMap - A type for response schemas.
+ * @template ReqBody - A type for the request body.
+ * @template ReqQuery - A type for the request query.
+ * @template ReqHeaders - A type for the request headers.
+ * @template ResHeaders - A type for the response headers.
+ *
+ */
+export type LiveSdkFunction<
+  SV extends AnySchemaValidator,
+  P extends ParamsObject<SV>,
+  ResBodyMap extends ResponsesObject<SV>,
+  ReqBody extends Body<SV>,
+  ReqQuery extends QueryObject<SV>,
+  ReqHeaders extends HeadersObject<SV>,
+  ResHeaders extends HeadersObject<SV>
+> = (
+  ...reqInit: Prettify<
+    Omit<RequestInit, 'method' | 'body' | 'query' | 'headers' | 'params'> &
+      LiveTypeFunctionRequestInit<SV, P, ReqBody, ReqQuery, ReqHeaders>
+  > extends infer ReqInit
+    ? ReqInit extends
+        | { body: unknown }
+        | { params: unknown }
+        | { query: unknown }
+        | { headers: unknown }
+      ? [reqInit: ReqInit]
+      : [reqInit?: ReqInit]
     : never
-  : never;
+) => Promise<
+  Prettify<
+    SdkResponse<
+      SV,
+      ResponsesObject<SV> extends ResBodyMap
+        ? Record<number, unknown>
+        : ResBodyMap,
+      ForklaunchResHeaders extends ResHeaders
+        ? unknown
+        : MapSchema<SV, ResHeaders>
+    >
+  >
+>;
 
 /**
  * Represents a basic SDK Response object.
@@ -773,17 +835,6 @@ export type ResponseShape<Params, Headers, Query, Body> = {
   headers: Headers;
   query: Query;
   body: Body;
-};
-
-/**
- * Acts as a container to collect API routes for export to SDK consumers.
- */
-export type ApiClient<Routes extends Record<string, unknown>> = {
-  [Key in keyof Routes]: Routes[Key] extends (
-    ...args: never[]
-  ) => infer ReturnType
-    ? Omit<ReturnType, 'router'>
-    : Routes[Key];
 };
 
 /**

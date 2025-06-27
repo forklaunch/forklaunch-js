@@ -234,7 +234,8 @@ describe('handlers', () => {
     );
     application.get('/:id', getRequest);
     const liveTypeFunction = router.get('/:id', getRequest);
-    await liveTypeFunction.get('/organization/:id', {
+    await liveTypeFunction.fetch('/organization/:id', {
+      method: 'GET',
       params: {
         id: 'string'
       },
@@ -266,7 +267,8 @@ describe('handlers', () => {
     );
     application.post('/', postRequest);
     const liveTypeFunction = router.post('/', postRequest);
-    await liveTypeFunction.post('/organization', {
+    await liveTypeFunction.fetch('/organization', {
+      method: 'POST',
       body: {
         name: 'string'
       }

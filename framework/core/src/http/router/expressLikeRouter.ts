@@ -1,7 +1,14 @@
 import { AnySchemaValidator, SchemaValidator } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
 
-import { RemoveTrailingSlash } from '@forklaunch/common';
+import {
+  Prettify,
+  PrettyCamelCase,
+  sanitizePathSlashes,
+  SanitizePathSlashes,
+  toPrettyCamelCase,
+  TypeSafeFunction
+} from '@forklaunch/common';
 import { isConstrainedForklaunchRouter } from '../guards/isConstrainedForklaunchRouter';
 import { isExpressLikeSchemaHandler } from '../guards/isExpressLikeSchemaHandler';
 import { isForklaunchExpressLikeRouter } from '../guards/isForklaunchExpressLikeRouter';
@@ -23,6 +30,7 @@ import { OpenTelemetryCollector } from '../telemetry/openTelemetryCollector';
 import {
   ExpressLikeHandler,
   ExpressLikeSchemaHandler,
+  LiveSdkFunction,
   LiveTypeFunction
 } from '../types/apiDefinition.types';
 import {
@@ -66,7 +74,9 @@ export class ForklaunchExpressLikeRouter<
   BaseRequest,
   BaseResponse,
   NextFunction,
-  RouteMap extends Record<string, unknown>
+  FetchMap extends Record<never, never> = Record<never, never>,
+  Sdk extends Record<never, never> = Record<never, never>,
+  SdkName extends string = PrettyCamelCase<BasePath>
 > implements ConstrainedForklaunchRouter<SV, RouterHandler>
 {
   requestHandler!: RouterHandler;
@@ -74,35 +84,37 @@ export class ForklaunchExpressLikeRouter<
   readonly routes: ForklaunchRoute<SV>[] = [];
   readonly basePath: BasePath;
 
-  routeMap: RouteMap = {} as RouteMap;
+  fetchMap: FetchMap = {} as FetchMap;
+  sdk: Sdk = {} as Sdk;
 
   constructor(
     basePath: BasePath,
     readonly schemaValidator: SV,
     readonly internal: Internal,
     readonly postEnrichMiddleware: RouterHandler[],
-    readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
+    readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
+    readonly sdkName?: SdkName
   ) {
     this.basePath = basePath;
 
-    process.on('uncaughtException', (err) => {
-      this.openTelemetryCollector.log('error', `Uncaught exception: ${err}`);
-      process.exit(1);
-    });
-    process.on('unhandledRejection', (reason) => {
-      this.openTelemetryCollector.log(
-        'error',
-        `Unhandled rejection: ${reason}`
-      );
-      process.exit(1);
-    });
-    process.on('exit', () => {
-      this.openTelemetryCollector.log('info', 'Shutting down application');
-    });
-    process.on('SIGINT', () => {
-      this.openTelemetryCollector.log('info', 'Shutting down application');
-      process.exit(0);
-    });
+    if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
+      process.on('uncaughtException', (err) => {
+        this.openTelemetryCollector.error(`Uncaught exception: ${err}`);
+        process.exit(1);
+      });
+      process.on('unhandledRejection', (reason) => {
+        this.openTelemetryCollector.error(`Unhandled rejection: ${reason}`);
+        process.exit(1);
+      });
+
+      process.on('exit', () => {
+        this.openTelemetryCollector.info('Shutting down application');
+      });
+      process.on('SIGINT', () => {
+        this.openTelemetryCollector.info('Shutting down application');
+        process.exit(0);
+      });
+    }
 
     this.internal.use(createContext(this.schemaValidator) as RouterHandler);
   }
@@ -307,6 +319,7 @@ export class ForklaunchExpressLikeRouter<
 
   #compile<
     ContractMethod extends Method,
+    Name extends string,
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -317,6 +330,7 @@ export class ForklaunchExpressLikeRouter<
   >(
     contractDetails: ContractDetails<
       SV,
+      Name,
       ContractMethod,
       Path,
       P,
@@ -334,6 +348,7 @@ export class ForklaunchExpressLikeRouter<
     if (
       isHttpContractDetails<
         SV,
+        Name,
         Path,
         P,
         ResBodyMap,
@@ -366,6 +381,7 @@ export class ForklaunchExpressLikeRouter<
       500: schemaValidator.string,
       ...(isPathParamHttpContractDetails<
         SV,
+        Name,
         Path,
         P,
         ResBodyMap,
@@ -376,6 +392,7 @@ export class ForklaunchExpressLikeRouter<
       >(contractDetails) ||
       isHttpContractDetails<
         SV,
+        Name,
         Path,
         P,
         ResBodyMap,
@@ -421,6 +438,45 @@ export class ForklaunchExpressLikeRouter<
   }
 
   /**
+   * Fetches a route from the route map and executes it with the given parameters.
+   *
+   * @template Path - The path type that extends keyof fetchMap and string.
+   * @param {Path} path - The route path
+   * @param {Parameters<fetchMap[Path]>[1]} [requestInit] - Optional request initialization parameters.
+   * @returns {Promise<ReturnType<fetchMap[Path]>>} - The result of executing the route handler.
+   */
+  async fetch<Path extends keyof this['fetchMap']>(
+    path: Path,
+    ...reqInit: this['fetchMap'][Path] extends TypeSafeFunction
+      ? Parameters<this['fetchMap'][Path]>[1] extends
+          | {
+              body: unknown;
+            }
+          | { query: unknown }
+          | { params: unknown }
+          | { headers: unknown }
+        ? [reqInit: Parameters<this['fetchMap'][Path]>[1]]
+        : [reqInit?: Parameters<this['fetchMap'][Path]>[1]]
+      : [reqInit?: never]
+  ): Promise<
+    this['fetchMap'][Path] extends TypeSafeFunction
+      ? ReturnType<this['fetchMap'][Path]>
+      : never
+  > {
+    return (
+      this.fetchMap[path] as (
+        route: string,
+        request?: unknown
+      ) => Promise<unknown>
+    )(
+      path as string,
+      reqInit
+    ) as this['fetchMap'][Path] extends TypeSafeFunction
+      ? ReturnType<this['fetchMap'][Path]>
+      : never;
+  }
+
+  /**
    * Executes request locally, applying parameters
    *
    * @param handlers {ExpressLikeHandler<SV>}
@@ -432,7 +488,7 @@ export class ForklaunchExpressLikeRouter<
     controllerHandler: Middleware
   ) {
     return async (
-      route: RemoveTrailingSlash<Route>,
+      route: SanitizePathSlashes<Route>,
       request?: {
         params?: Record<string, string>;
         query?: Record<string, string>;
@@ -524,6 +580,7 @@ export class ForklaunchExpressLikeRouter<
   }
 
   registerRoute<
+    Name extends string,
     ContractMethod extends Method,
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
@@ -539,6 +596,7 @@ export class ForklaunchExpressLikeRouter<
     registrationMethod: PathBasedHandler<RouterHandler>,
     contractDetailsOrMiddlewareOrTypedHandler: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
+      Name,
       ContractMethod,
       Path,
       P,
@@ -554,6 +612,7 @@ export class ForklaunchExpressLikeRouter<
     >,
     ...middlewareOrMiddlewareAndTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
+      Name,
       ContractMethod,
       Path,
       P,
@@ -568,26 +627,50 @@ export class ForklaunchExpressLikeRouter<
       NextFunction
     >[]
   ): this & {
-    routeMap: RouteMap &
-      Record<
-        `${BasePath}${Path}`,
-        LiveTypeFunction<
-          SV,
-          `${BasePath}${Path}`,
-          P,
-          ResBodyMap,
-          ReqBody,
-          ReqQuery,
-          ReqHeaders,
-          ResHeaders,
-          ContractMethod
+    fetchMap: Prettify<
+      FetchMap &
+        Record<
+          SanitizePathSlashes<`${BasePath}${Path}`>,
+          LiveTypeFunction<
+            SV,
+            SanitizePathSlashes<`${BasePath}${Path}`>,
+            P,
+            ResBodyMap,
+            ReqBody,
+            ReqQuery,
+            ReqHeaders,
+            ResHeaders,
+            ContractMethod
+          >
         >
-      >;
+    >;
+    sdk: Prettify<
+      Sdk &
+        Record<
+          PrettyCamelCase<
+            Name extends string
+              ? Name
+              : SanitizePathSlashes<`${BasePath}${Path}`>
+          >,
+          Prettify<
+            LiveSdkFunction<
+              SV,
+              P,
+              ResBodyMap,
+              ReqBody,
+              ReqQuery,
+              ReqHeaders,
+              ResHeaders
+            >
+          >
+        >
+    >;
   } {
     // in this case, we know that the first argument is the typedHandler. As a result, we only use defined handlers
     if (
       isTypedHandler<
         SV,
+        Name,
         ContractMethod,
         Path,
         P,
@@ -604,36 +687,58 @@ export class ForklaunchExpressLikeRouter<
     ) {
       const { contractDetails, handlers } =
         contractDetailsOrMiddlewareOrTypedHandler;
-      Object.assign(this.routeMap, {
-        [`${this.basePath}${path}`]: this.registerRoute<
-          ContractMethod,
-          Path,
-          P,
-          ResBodyMap,
-          ReqBody,
-          ReqQuery,
-          ReqHeaders,
-          ResHeaders,
-          LocalsObj
-        >(method, path, registrationMethod, contractDetails, ...handlers)
-      });
+      this.registerRoute<
+        Name,
+        ContractMethod,
+        Path,
+        P,
+        ResBodyMap,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders,
+        ResHeaders,
+        LocalsObj
+      >(method, path, registrationMethod, contractDetails, ...handlers);
 
-      return this as unknown as this & {
-        routeMap: RouteMap &
-          Record<
-            `${BasePath}${Path}`,
-            LiveTypeFunction<
-              SV,
-              `${BasePath}${Path}`,
-              P,
-              ResBodyMap,
-              ReqBody,
-              ReqQuery,
-              ReqHeaders,
-              ResHeaders,
-              ContractMethod
+      return this as this & {
+        fetchMap: Prettify<
+          FetchMap &
+            Record<
+              SanitizePathSlashes<`${BasePath}${Path}`>,
+              LiveTypeFunction<
+                SV,
+                SanitizePathSlashes<`${BasePath}${Path}`>,
+                P,
+                ResBodyMap,
+                ReqBody,
+                ReqQuery,
+                ReqHeaders,
+                ResHeaders,
+                ContractMethod
+              >
             >
-          >;
+        >;
+        sdk: Prettify<
+          Sdk &
+            Record<
+              PrettyCamelCase<
+                Name extends string
+                  ? Name
+                  : SanitizePathSlashes<`${BasePath}${Path}`>
+              >,
+              Prettify<
+                LiveSdkFunction<
+                  SV,
+                  P,
+                  ResBodyMap,
+                  ReqBody,
+                  ReqQuery,
+                  ReqHeaders,
+                  ResHeaders
+                >
+              >
+            >
+        >;
       };
     }
     // in this case, we test for the last element of the handlers. If typed handler, break this down
@@ -645,6 +750,7 @@ export class ForklaunchExpressLikeRouter<
       if (
         isTypedHandler<
           SV,
+          Name,
           ContractMethod,
           Path,
           P,
@@ -660,42 +766,64 @@ export class ForklaunchExpressLikeRouter<
         >(maybeTypedHandler)
       ) {
         const { contractDetails, handlers } = maybeTypedHandler;
-        Object.assign(this.routeMap, {
-          [`${this.basePath}${path}`]: this.registerRoute<
-            ContractMethod,
-            Path,
-            P,
-            ResBodyMap,
-            ReqBody,
-            ReqQuery,
-            ReqHeaders,
-            ResHeaders,
-            LocalsObj
-          >(
-            method,
-            path,
-            registrationMethod,
-            contractDetails,
-            ...middlewareOrMiddlewareAndTypedHandler.concat(handlers)
-          )
-        });
+        this.registerRoute<
+          Name,
+          ContractMethod,
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj
+        >(
+          method,
+          path,
+          registrationMethod,
+          contractDetails,
+          ...middlewareOrMiddlewareAndTypedHandler.concat(handlers)
+        );
 
-        return this as unknown as this & {
-          routeMap: RouteMap &
-            Record<
-              `${BasePath}${Path}`,
-              LiveTypeFunction<
-                SV,
-                `${BasePath}${Path}`,
-                P,
-                ResBodyMap,
-                ReqBody,
-                ReqQuery,
-                ReqHeaders,
-                ResHeaders,
-                ContractMethod
+        return this as this & {
+          fetchMap: Prettify<
+            FetchMap &
+              Record<
+                SanitizePathSlashes<`${BasePath}${Path}`>,
+                LiveTypeFunction<
+                  SV,
+                  SanitizePathSlashes<`${BasePath}${Path}`>,
+                  P,
+                  ResBodyMap,
+                  ReqBody,
+                  ReqQuery,
+                  ReqHeaders,
+                  ResHeaders,
+                  ContractMethod
+                >
               >
-            >;
+          >;
+          sdk: Prettify<
+            Sdk &
+              Record<
+                PrettyCamelCase<
+                  Name extends string
+                    ? Name
+                    : SanitizePathSlashes<`${BasePath}${Path}`>
+                >,
+                Prettify<
+                  LiveSdkFunction<
+                    SV,
+                    P,
+                    ResBodyMap,
+                    ReqBody,
+                    ReqQuery,
+                    ReqHeaders,
+                    ResHeaders
+                  >
+                >
+              >
+          >;
         };
       } else {
         if (
@@ -714,6 +842,7 @@ export class ForklaunchExpressLikeRouter<
           >(contractDetailsOrMiddlewareOrTypedHandler) ||
           isTypedHandler<
             SV,
+            Name,
             ContractMethod,
             Path,
             P,
@@ -753,6 +882,7 @@ export class ForklaunchExpressLikeRouter<
         if (
           !isHttpContractDetails<
             SV,
+            Name,
             Path,
             P,
             ResBodyMap,
@@ -764,6 +894,7 @@ export class ForklaunchExpressLikeRouter<
           >(contractDetails) &&
           !isPathParamHttpContractDetails<
             SV,
+            Name,
             Path,
             P,
             ResBodyMap,
@@ -787,6 +918,7 @@ export class ForklaunchExpressLikeRouter<
 
         const { requestSchema, responseSchemas } = this.#compile<
           ContractMethod,
+          Name,
           Path,
           P,
           ResBodyMap,
@@ -817,45 +949,66 @@ export class ForklaunchExpressLikeRouter<
           this.#parseAndRunControllerHandler(controllerHandler) as RouterHandler
         );
 
-        Object.assign(this.routeMap, {
-          [`${this.basePath}${path}`]: this.#localParamRequest(
-            handlers,
-            controllerHandler
-          ) as LiveTypeFunction<
-            SV,
-            `${BasePath}${Path}`,
-            P,
-            ResBodyMap,
-            ReqBody,
-            ReqQuery,
-            ReqHeaders,
-            ResHeaders,
-            ContractMethod
-          >
+        const localParamRequest = this.#localParamRequest(
+          handlers,
+          controllerHandler
+        );
+
+        Object.assign(this.fetchMap, {
+          [sanitizePathSlashes(`${this.basePath}${path}`)]: localParamRequest
+        });
+        Object.assign(this.sdk, {
+          [toPrettyCamelCase(contractDetails.name ?? this.basePath)]: (
+            req: Parameters<typeof localParamRequest>[1]
+          ) => localParamRequest(`${this.basePath}${path}`, req)
         });
 
-        return this as unknown as this & {
-          routeMap: RouteMap &
-            Record<
-              `${BasePath}${Path}`,
-              LiveTypeFunction<
-                SV,
-                `${BasePath}${Path}`,
-                P,
-                ResBodyMap,
-                ReqBody,
-                ReqQuery,
-                ReqHeaders,
-                ResHeaders,
-                ContractMethod
+        return this as this & {
+          fetchMap: Prettify<
+            FetchMap &
+              Record<
+                SanitizePathSlashes<`${BasePath}${Path}`>,
+                LiveTypeFunction<
+                  SV,
+                  SanitizePathSlashes<`${BasePath}${Path}`>,
+                  P,
+                  ResBodyMap,
+                  ReqBody,
+                  ReqQuery,
+                  ReqHeaders,
+                  ResHeaders,
+                  ContractMethod
+                >
               >
-            >;
+          >;
+          sdk: Prettify<
+            Sdk &
+              Record<
+                PrettyCamelCase<
+                  Name extends string
+                    ? Name
+                    : SanitizePathSlashes<`${BasePath}${Path}`>
+                >,
+                Prettify<
+                  LiveSdkFunction<
+                    SV,
+                    P,
+                    ResBodyMap,
+                    ReqBody,
+                    ReqQuery,
+                    ReqHeaders,
+                    ResHeaders
+                  >
+                >
+              >
+          >;
         };
       }
     }
   }
 
   #extractHandlers<
+    Name extends string,
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -869,6 +1022,7 @@ export class ForklaunchExpressLikeRouter<
     handlers: (
       | MiddlewareOrMiddlewareWithTypedHandler<
           SV,
+          Name,
           'middleware',
           Path,
           P,
@@ -883,6 +1037,7 @@ export class ForklaunchExpressLikeRouter<
           NextFunction
         >
       | ConstrainedForklaunchRouter<SV, RouterHandler>
+      | RouterHandler
     )[],
     processMiddleware?: (handler: unknown) => RouterHandler | Internal
   ) {
@@ -891,6 +1046,7 @@ export class ForklaunchExpressLikeRouter<
     if (
       isTypedHandler<
         SV,
+        Name,
         'middleware',
         Path,
         P,
@@ -912,6 +1068,7 @@ export class ForklaunchExpressLikeRouter<
       if (
         isTypedHandler<
           SV,
+          Name,
           'middleware',
           Path,
           P,
@@ -940,6 +1097,7 @@ export class ForklaunchExpressLikeRouter<
   }
 
   #extractMiddlewareFromEnrichedTypedHandlerArray<
+    Name extends string,
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -949,23 +1107,28 @@ export class ForklaunchExpressLikeRouter<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>
   >(
-    handlers: MiddlewareOrMiddlewareWithTypedHandler<
-      SV,
-      'middleware',
-      Path,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders,
-      LocalsObj,
-      BaseRequest,
-      BaseResponse,
-      NextFunction
-    >[]
+    handlers: (
+      | MiddlewareOrMiddlewareWithTypedHandler<
+          SV,
+          Name,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj,
+          BaseRequest,
+          BaseResponse,
+          NextFunction
+        >
+      | RouterHandler
+    )[]
   ) {
     return this.#extractHandlers<
+      Name,
       Path,
       P,
       ResBodyMap,
@@ -979,6 +1142,7 @@ export class ForklaunchExpressLikeRouter<
   }
 
   #extractNestableMiddlewareFromEnrichedTypedHandlerArray<
+    Name extends string,
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -991,6 +1155,7 @@ export class ForklaunchExpressLikeRouter<
     handlers: (
       | MiddlewareOrMiddlewareWithTypedHandler<
           SV,
+          Name,
           'middleware',
           Path,
           P,
@@ -1008,6 +1173,7 @@ export class ForklaunchExpressLikeRouter<
     )[]
   ) {
     return this.#extractHandlers<
+      Name,
       Path,
       P,
       ResBodyMap,
@@ -1026,7 +1192,9 @@ export class ForklaunchExpressLikeRouter<
         BaseRequest,
         BaseResponse,
         NextFunction,
-        RouteMap
+        FetchMap,
+        Sdk,
+        SdkName
       >(handler)
         ? handler.internal
         : (handler as RouterHandler)
@@ -1034,6 +1202,7 @@ export class ForklaunchExpressLikeRouter<
   }
 
   #processTypedHandlerOrMiddleware<
+    Name extends string,
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -1046,6 +1215,7 @@ export class ForklaunchExpressLikeRouter<
     handler:
       | ContractDetailsOrMiddlewareOrTypedHandler<
           SV,
+          Name,
           'middleware',
           Path,
           P,
@@ -1059,12 +1229,14 @@ export class ForklaunchExpressLikeRouter<
           BaseResponse,
           NextFunction
         >
+      | RouterHandler
       | undefined,
     middleware: RouterHandler[]
   ) {
     if (
       isTypedHandler<
         SV,
+        Name,
         'middleware',
         Path,
         P,
@@ -1086,6 +1258,7 @@ export class ForklaunchExpressLikeRouter<
   }
 
   #extractMiddlewareAsRouterHandlers<
+    Name extends string,
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -1098,6 +1271,7 @@ export class ForklaunchExpressLikeRouter<
     contractDetailsOrMiddlewareOrTypedHandler:
       | ContractDetailsOrMiddlewareOrTypedHandler<
           SV,
+          Name,
           'middleware',
           Path,
           P,
@@ -1111,26 +1285,32 @@ export class ForklaunchExpressLikeRouter<
           BaseResponse,
           NextFunction
         >
+      | RouterHandler
       | undefined,
-    middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
-      SV,
-      'middleware',
-      Path,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders,
-      LocalsObj,
-      BaseRequest,
-      BaseResponse,
-      NextFunction
-    >[]
+    middlewareOrMiddlewareWithTypedHandler: (
+      | MiddlewareOrMiddlewareWithTypedHandler<
+          SV,
+          Name,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj,
+          BaseRequest,
+          BaseResponse,
+          NextFunction
+        >
+      | RouterHandler
+    )[]
   ) {
     const middleware: RouterHandler[] = [];
 
     this.#processTypedHandlerOrMiddleware<
+      Name,
       Path,
       P,
       ResBodyMap,
@@ -1143,6 +1323,7 @@ export class ForklaunchExpressLikeRouter<
 
     middleware.push(
       ...this.#extractMiddlewareFromEnrichedTypedHandlerArray<
+        Name,
         Path,
         P,
         ResBodyMap,
@@ -1158,6 +1339,7 @@ export class ForklaunchExpressLikeRouter<
   }
 
   #extractNestableMiddlewareAsRouterHandlers<
+    Name extends string,
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -1170,6 +1352,7 @@ export class ForklaunchExpressLikeRouter<
     contractDetailsOrMiddlewareOrTypedHandler:
       | ContractDetailsOrMiddlewareOrTypedHandler<
           SV,
+          Name,
           'middleware',
           Path,
           P,
@@ -1188,6 +1371,7 @@ export class ForklaunchExpressLikeRouter<
     middlewareOrMiddlewareWithTypedHandler: (
       | MiddlewareOrMiddlewareWithTypedHandler<
           SV,
+          Name,
           'middleware',
           Path,
           P,
@@ -1207,6 +1391,7 @@ export class ForklaunchExpressLikeRouter<
     const middleware: (RouterHandler | Internal)[] = [];
 
     this.#processTypedHandlerOrMiddleware<
+      Name,
       Path,
       P,
       ResBodyMap,
@@ -1218,6 +1403,7 @@ export class ForklaunchExpressLikeRouter<
     >(
       contractDetailsOrMiddlewareOrTypedHandler as ContractDetailsOrMiddlewareOrTypedHandler<
         SV,
+        Name,
         'middleware',
         Path,
         P,
@@ -1243,7 +1429,9 @@ export class ForklaunchExpressLikeRouter<
         BaseRequest,
         BaseResponse,
         NextFunction,
-        RouteMap
+        FetchMap,
+        Sdk,
+        SdkName
       >(contractDetailsOrMiddlewareOrTypedHandler)
     ) {
       middleware.push(contractDetailsOrMiddlewareOrTypedHandler.internal);
@@ -1251,6 +1439,7 @@ export class ForklaunchExpressLikeRouter<
 
     middleware.push(
       ...this.#extractNestableMiddlewareFromEnrichedTypedHandlerArray<
+        Name,
         Path,
         P,
         ResBodyMap,
@@ -1266,6 +1455,7 @@ export class ForklaunchExpressLikeRouter<
   }
 
   registerMiddlewareHandler<
+    Name extends string,
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -1280,6 +1470,7 @@ export class ForklaunchExpressLikeRouter<
       | Path
       | ContractDetailsOrMiddlewareOrTypedHandler<
           SV,
+          Name,
           'middleware',
           Path,
           P,
@@ -1292,43 +1483,52 @@ export class ForklaunchExpressLikeRouter<
           BaseRequest,
           BaseResponse,
           NextFunction
-        >,
-    contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
-      SV,
-      'middleware',
-      Path,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders,
-      LocalsObj,
-      BaseRequest,
-      BaseResponse,
-      NextFunction
-    >,
-    ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
-      SV,
-      'middleware',
-      Path,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders,
-      LocalsObj,
-      BaseRequest,
-      BaseResponse,
-      NextFunction
-    >[]
+        >
+      | RouterHandler,
+    contractDetailsOrMiddlewareOrTypedHandler?:
+      | ContractDetailsOrMiddlewareOrTypedHandler<
+          SV,
+          Name,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj,
+          BaseRequest,
+          BaseResponse,
+          NextFunction
+        >
+      | RouterHandler,
+    ...middlewareOrMiddlewareWithTypedHandler: (
+      | MiddlewareOrMiddlewareWithTypedHandler<
+          SV,
+          Name,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj,
+          BaseRequest,
+          BaseResponse,
+          NextFunction
+        >
+      | RouterHandler
+    )[]
   ): this {
     const middleware: RouterHandler[] = [];
 
     if (typeof pathOrContractDetailsOrMiddlewareOrTypedHandler === 'string') {
       middleware.push(
         ...this.#extractMiddlewareAsRouterHandlers<
+          Name,
           Path,
           P,
           ResBodyMap,
@@ -1347,6 +1547,7 @@ export class ForklaunchExpressLikeRouter<
     } else {
       middleware.push(
         ...this.#extractMiddlewareAsRouterHandlers<
+          Name,
           Path,
           P,
           ResBodyMap,
@@ -1357,36 +1558,56 @@ export class ForklaunchExpressLikeRouter<
           LocalsObj
         >(
           pathOrContractDetailsOrMiddlewareOrTypedHandler,
-          (isExpressLikeSchemaHandler<
-            SV,
-            P,
-            ResBodyMap,
-            ReqBody,
-            ReqQuery,
-            ReqHeaders,
-            ResHeaders,
-            LocalsObj,
-            BaseRequest,
-            BaseResponse,
-            NextFunction
-          >(contractDetailsOrMiddlewareOrTypedHandler) ||
-          isTypedHandler<
-            SV,
-            'middleware',
-            Path,
-            P,
-            ResBodyMap,
-            ReqBody,
-            ReqQuery,
-            ReqHeaders,
-            ResHeaders,
-            LocalsObj,
-            BaseRequest,
-            BaseResponse,
-            NextFunction
-          >(contractDetailsOrMiddlewareOrTypedHandler)
-            ? [contractDetailsOrMiddlewareOrTypedHandler]
-            : []
+          (
+            (isExpressLikeSchemaHandler<
+              SV,
+              P,
+              ResBodyMap,
+              ReqBody,
+              ReqQuery,
+              ReqHeaders,
+              ResHeaders,
+              LocalsObj,
+              BaseRequest,
+              BaseResponse,
+              NextFunction
+            >(contractDetailsOrMiddlewareOrTypedHandler) ||
+            isTypedHandler<
+              SV,
+              Name,
+              'middleware',
+              Path,
+              P,
+              ResBodyMap,
+              ReqBody,
+              ReqQuery,
+              ReqHeaders,
+              ResHeaders,
+              LocalsObj,
+              BaseRequest,
+              BaseResponse,
+              NextFunction
+            >(contractDetailsOrMiddlewareOrTypedHandler)
+              ? [contractDetailsOrMiddlewareOrTypedHandler]
+              : []) as (
+              | MiddlewareOrMiddlewareWithTypedHandler<
+                  SV,
+                  Name,
+                  'middleware',
+                  Path,
+                  P,
+                  ResBodyMap,
+                  ReqBody,
+                  ReqQuery,
+                  ReqHeaders,
+                  ResHeaders,
+                  LocalsObj,
+                  BaseRequest,
+                  BaseResponse,
+                  NextFunction
+                >
+              | RouterHandler
+            )[]
           ).concat(middlewareOrMiddlewareWithTypedHandler)
         )
       );
@@ -1396,6 +1617,7 @@ export class ForklaunchExpressLikeRouter<
   }
 
   registerNestableMiddlewareHandler<
+    Name extends string,
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -1410,6 +1632,7 @@ export class ForklaunchExpressLikeRouter<
       | Path
       | ContractDetailsOrMiddlewareOrTypedHandler<
           SV,
+          Name,
           'middleware',
           Path,
           P,
@@ -1427,6 +1650,7 @@ export class ForklaunchExpressLikeRouter<
     contractDetailsOrMiddlewareOrTypedHandler?:
       | ContractDetailsOrMiddlewareOrTypedHandler<
           SV,
+          Name,
           'middleware',
           Path,
           P,
@@ -1444,6 +1668,7 @@ export class ForklaunchExpressLikeRouter<
     ...middlewareOrMiddlewareWithTypedHandler: (
       | MiddlewareOrMiddlewareWithTypedHandler<
           SV,
+          Name,
           'middleware',
           Path,
           P,
@@ -1460,12 +1685,13 @@ export class ForklaunchExpressLikeRouter<
       | ConstrainedForklaunchRouter<SV, RouterHandler>
     )[]
   ): this {
-    const middleware: (RouterHandler | Internal)[] = [];
+    let middleware: (RouterHandler | Internal)[] = [];
     let path: `/${string}` | undefined;
 
     if (typeof pathOrContractDetailsOrMiddlewareOrTypedHandler === 'string') {
       middleware.push(
         ...this.#extractNestableMiddlewareAsRouterHandlers<
+          Name,
           Path,
           P,
           ResBodyMap,
@@ -1486,10 +1712,24 @@ export class ForklaunchExpressLikeRouter<
           pathOrContractDetailsOrMiddlewareOrTypedHandler
         )
       ) {
-        path = pathOrContractDetailsOrMiddlewareOrTypedHandler.basePath;
+        const router = pathOrContractDetailsOrMiddlewareOrTypedHandler;
+        Object.assign(
+          this.fetchMap,
+          Object.fromEntries(
+            Object.entries(router.fetchMap as FetchMap).map(([key, value]) => [
+              sanitizePathSlashes(`${this.basePath}${key}`),
+              value
+            ])
+          )
+        );
+        Object.assign(this.sdk, {
+          [router.sdkName ?? toPrettyCamelCase(router.basePath)]: router.sdk
+        });
+        path = router.basePath;
       }
       middleware.push(
         ...this.#extractNestableMiddlewareAsRouterHandlers<
+          Name,
           Path,
           P,
           ResBodyMap,
@@ -1515,6 +1755,7 @@ export class ForklaunchExpressLikeRouter<
           >(contractDetailsOrMiddlewareOrTypedHandler) ||
           isTypedHandler<
             SV,
+            Name,
             'middleware',
             Path,
             P,
@@ -1538,6 +1779,12 @@ export class ForklaunchExpressLikeRouter<
       );
     }
 
+    middleware = middleware.map((m) =>
+      typeof m === 'object' && m && 'internal' in m
+        ? (m.internal as Internal)
+        : m
+    );
+
     if (path) {
       registrationMethod.bind(this.internal)(path, ...middleware);
     } else {
@@ -1555,6 +1802,7 @@ export class ForklaunchExpressLikeRouter<
     BaseResponse,
     NextFunction
   > = <
+    Name extends string,
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -1563,22 +1811,13 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
-    Subpath extends `/${string}`,
-    Router extends ForklaunchExpressLikeRouter<
-      SV,
-      Subpath,
-      RouterHandler,
-      Internal,
-      BaseRequest,
-      BaseResponse,
-      NextFunction,
-      Record<string, unknown>
-    >
+    Router extends ConstrainedForklaunchRouter<SV, RouterHandler>
   >(
     pathOrContractDetailsOrMiddlewareOrTypedHandler:
       | Path
       | ContractDetailsOrMiddlewareOrTypedHandler<
           SV,
+          Name,
           'middleware',
           Path,
           P,
@@ -1596,6 +1835,7 @@ export class ForklaunchExpressLikeRouter<
     contractDetailsOrMiddlewareOrTypedHandler?:
       | ContractDetailsOrMiddlewareOrTypedHandler<
           SV,
+          Name,
           'middleware',
           Path,
           P,
@@ -1613,6 +1853,7 @@ export class ForklaunchExpressLikeRouter<
     ...middlewareOrMiddlewareWithTypedHandler: (
       | MiddlewareOrMiddlewareWithTypedHandler<
           SV,
+          Name,
           'middleware',
           Path,
           P,
@@ -1640,6 +1881,7 @@ export class ForklaunchExpressLikeRouter<
     });
 
     return this.registerNestableMiddlewareHandler<
+      Name,
       Path,
       P,
       ResBodyMap,
@@ -1653,7 +1895,13 @@ export class ForklaunchExpressLikeRouter<
       pathOrContractDetailsOrMiddlewareOrTypedHandler,
       contractDetailsOrMiddlewareOrTypedHandler,
       ...middlewareOrMiddlewareWithTypedHandler
-    );
+    ) as this & {
+      fetchMap: FetchMap & {
+        [Key in keyof Router['fetchMap'] as Key extends string
+          ? SanitizePathSlashes<`${BasePath}${Key}`>
+          : never]: Router['fetchMap'][Key];
+      };
+    };
   };
 
   all: TypedMiddlewareDefinition<
@@ -1661,8 +1909,10 @@ export class ForklaunchExpressLikeRouter<
     SV,
     BaseRequest,
     BaseResponse,
-    NextFunction
+    NextFunction,
+    RouterHandler
   > = <
+    Name extends string,
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -1676,6 +1926,7 @@ export class ForklaunchExpressLikeRouter<
       | Path
       | ContractDetailsOrMiddlewareOrTypedHandler<
           SV,
+          Name,
           'middleware',
           Path,
           P,
@@ -1688,39 +1939,48 @@ export class ForklaunchExpressLikeRouter<
           BaseRequest,
           BaseResponse,
           NextFunction
-        >,
-    contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
-      SV,
-      'middleware',
-      Path,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders,
-      LocalsObj,
-      BaseRequest,
-      BaseResponse,
-      NextFunction
-    >,
-    ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
-      SV,
-      'middleware',
-      Path,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders,
-      LocalsObj,
-      BaseRequest,
-      BaseResponse,
-      NextFunction
-    >[]
+        >
+      | RouterHandler,
+    contractDetailsOrMiddlewareOrTypedHandler?:
+      | ContractDetailsOrMiddlewareOrTypedHandler<
+          SV,
+          Name,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj,
+          BaseRequest,
+          BaseResponse,
+          NextFunction
+        >
+      | RouterHandler,
+    ...middlewareOrMiddlewareWithTypedHandler: (
+      | MiddlewareOrMiddlewareWithTypedHandler<
+          SV,
+          Name,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj,
+          BaseRequest,
+          BaseResponse,
+          NextFunction
+        >
+      | RouterHandler
+    )[]
   ) => {
     return this.registerMiddlewareHandler<
+      Name,
       Path,
       P,
       ResBodyMap,
@@ -1742,8 +2002,10 @@ export class ForklaunchExpressLikeRouter<
     SV,
     BaseRequest,
     BaseResponse,
-    NextFunction
+    NextFunction,
+    RouterHandler
   > = <
+    Name extends string,
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -1757,6 +2019,7 @@ export class ForklaunchExpressLikeRouter<
       | Path
       | ContractDetailsOrMiddlewareOrTypedHandler<
           SV,
+          Name,
           'middleware',
           Path,
           P,
@@ -1769,39 +2032,48 @@ export class ForklaunchExpressLikeRouter<
           BaseRequest,
           BaseResponse,
           NextFunction
-        >,
-    contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
-      SV,
-      'middleware',
-      Path,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders,
-      LocalsObj,
-      BaseRequest,
-      BaseResponse,
-      NextFunction
-    >,
-    ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
-      SV,
-      'middleware',
-      Path,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders,
-      LocalsObj,
-      BaseRequest,
-      BaseResponse,
-      NextFunction
-    >[]
+        >
+      | RouterHandler,
+    contractDetailsOrMiddlewareOrTypedHandler?:
+      | ContractDetailsOrMiddlewareOrTypedHandler<
+          SV,
+          Name,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj,
+          BaseRequest,
+          BaseResponse,
+          NextFunction
+        >
+      | RouterHandler,
+    ...middlewareOrMiddlewareWithTypedHandler: (
+      | MiddlewareOrMiddlewareWithTypedHandler<
+          SV,
+          Name,
+          'middleware',
+          Path,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj,
+          BaseRequest,
+          BaseResponse,
+          NextFunction
+        >
+      | RouterHandler
+    )[]
   ) => {
     return this.registerMiddlewareHandler<
+      Name,
       Path,
       P,
       ResBodyMap,
@@ -1842,6 +2114,7 @@ export class ForklaunchExpressLikeRouter<
     NextFunction,
     this
   > = <
+    Name extends string,
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -1854,6 +2127,7 @@ export class ForklaunchExpressLikeRouter<
     path: Path,
     contractDetailsOrMiddlewareOrTypedHandler: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
+      Name,
       'get',
       Path,
       P,
@@ -1869,6 +2143,7 @@ export class ForklaunchExpressLikeRouter<
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
+      Name,
       'get',
       Path,
       P,
@@ -1884,6 +2159,7 @@ export class ForklaunchExpressLikeRouter<
     >[]
   ) => {
     return this.registerRoute<
+      Name,
       'get',
       Path,
       P,
@@ -1926,6 +2202,7 @@ export class ForklaunchExpressLikeRouter<
     NextFunction,
     this
   > = <
+    Name extends string,
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -1938,6 +2215,7 @@ export class ForklaunchExpressLikeRouter<
     path: Path,
     contractDetailsOrMiddlewareOrTypedHandler: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
+      Name,
       'post',
       Path,
       P,
@@ -1953,6 +2231,7 @@ export class ForklaunchExpressLikeRouter<
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
+      Name,
       'post',
       Path,
       P,
@@ -1968,6 +2247,7 @@ export class ForklaunchExpressLikeRouter<
     >[]
   ) => {
     return this.registerRoute<
+      Name,
       'post',
       Path,
       P,
@@ -2010,6 +2290,7 @@ export class ForklaunchExpressLikeRouter<
     NextFunction,
     this
   > = <
+    Name extends string,
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -2022,6 +2303,7 @@ export class ForklaunchExpressLikeRouter<
     path: Path,
     contractDetailsOrMiddlewareOrTypedHandler: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
+      Name,
       'put',
       Path,
       P,
@@ -2037,6 +2319,7 @@ export class ForklaunchExpressLikeRouter<
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
+      Name,
       'put',
       Path,
       P,
@@ -2052,6 +2335,7 @@ export class ForklaunchExpressLikeRouter<
     >[]
   ) => {
     return this.registerRoute<
+      Name,
       'put',
       Path,
       P,
@@ -2094,6 +2378,7 @@ export class ForklaunchExpressLikeRouter<
     NextFunction,
     this
   > = <
+    Name extends string,
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -2106,6 +2391,7 @@ export class ForklaunchExpressLikeRouter<
     path: Path,
     contractDetailsOrMiddlewareOrTypedHandler: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
+      Name,
       'patch',
       Path,
       P,
@@ -2121,6 +2407,7 @@ export class ForklaunchExpressLikeRouter<
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
+      Name,
       'patch',
       Path,
       P,
@@ -2136,6 +2423,7 @@ export class ForklaunchExpressLikeRouter<
     >[]
   ) => {
     return this.registerRoute<
+      Name,
       'patch',
       Path,
       P,
@@ -2178,6 +2466,7 @@ export class ForklaunchExpressLikeRouter<
     NextFunction,
     this
   > = <
+    Name extends string,
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -2190,6 +2479,7 @@ export class ForklaunchExpressLikeRouter<
     path: Path,
     contractDetailsOrMiddlewareOrTypedHandler: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
+      Name,
       'delete',
       Path,
       P,
@@ -2205,6 +2495,7 @@ export class ForklaunchExpressLikeRouter<
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
+      Name,
       'delete',
       Path,
       P,
@@ -2220,6 +2511,7 @@ export class ForklaunchExpressLikeRouter<
     >[]
   ) => {
     return this.registerRoute<
+      Name,
       'delete',
       Path,
       P,
@@ -2262,6 +2554,7 @@ export class ForklaunchExpressLikeRouter<
     NextFunction,
     this
   > = <
+    Name extends string,
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -2274,6 +2567,7 @@ export class ForklaunchExpressLikeRouter<
     path: Path,
     contractDetailsOrMiddlewareOrTypedHandler: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
+      Name,
       'options',
       Path,
       P,
@@ -2289,6 +2583,7 @@ export class ForklaunchExpressLikeRouter<
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
+      Name,
       'options',
       Path,
       P,
@@ -2304,6 +2599,7 @@ export class ForklaunchExpressLikeRouter<
     >[]
   ) => {
     return this.registerRoute<
+      Name,
       'options',
       Path,
       P,
@@ -2346,6 +2642,7 @@ export class ForklaunchExpressLikeRouter<
     NextFunction,
     this
   > = <
+    Name extends string,
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -2358,6 +2655,7 @@ export class ForklaunchExpressLikeRouter<
     path: Path,
     contractDetailsOrMiddlewareOrTypedHandler: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
+      Name,
       'head',
       Path,
       P,
@@ -2373,6 +2671,7 @@ export class ForklaunchExpressLikeRouter<
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
+      Name,
       'head',
       Path,
       P,
@@ -2388,6 +2687,7 @@ export class ForklaunchExpressLikeRouter<
     >[]
   ) => {
     return this.registerRoute<
+      Name,
       'head',
       Path,
       P,
@@ -2430,6 +2730,7 @@ export class ForklaunchExpressLikeRouter<
     NextFunction,
     this
   > = <
+    Name extends string,
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -2442,6 +2743,7 @@ export class ForklaunchExpressLikeRouter<
     path: Path,
     contractDetailsOrMiddlewareOrTypedHandler: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
+      Name,
       'trace',
       Path,
       P,
@@ -2457,6 +2759,7 @@ export class ForklaunchExpressLikeRouter<
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
+      Name,
       'trace',
       Path,
       P,
@@ -2472,6 +2775,7 @@ export class ForklaunchExpressLikeRouter<
     >[]
   ) => {
     return this.registerRoute<
+      Name,
       'trace',
       Path,
       P,

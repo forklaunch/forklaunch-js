@@ -114,9 +114,14 @@ export class Application<
   listen(...args: unknown[]): Server {
     const port =
       typeof args[0] === 'number' ? args[0] : Number(process.env.PORT);
+    const host =
+      typeof args[1] === 'string' ? args[1] : (process.env.HOST ?? 'localhost');
+    const protocol = (process.env.PROTOCOL as 'http' | 'https') ?? 'http';
 
     const openApi = generateSwaggerDocument<SV>(
       this.schemaValidator,
+      protocol,
+      host,
       port,
       this.routers
     );
@@ -129,6 +134,8 @@ export class Application<
       this.internal.get('/mcp', async (_req, res) => {
         const server = generateMcpServer(
           zodSchemaValidator,
+          protocol,
+          host,
           port,
           '1.0.0',
           routers
@@ -140,6 +147,8 @@ export class Application<
         try {
           const server = generateMcpServer(
             zodSchemaValidator,
+            protocol,
+            host,
             port,
             '1.0.0',
             routers
@@ -222,7 +231,7 @@ export class Application<
     const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
       const statusCode = Number(res.statusCode);
       res.locals.errorMessage = err.message;
-      console.log(err);
+      console.error(err);
       res.type('text/plain');
       res
         .status(statusCode >= 400 ? statusCode : 500)

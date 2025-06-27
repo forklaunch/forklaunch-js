@@ -413,6 +413,7 @@ export type ResponseCompiledSchema = {
  */
 export type PathParamHttpContractDetails<
   SV extends AnySchemaValidator,
+  Name extends string = string,
   Path extends `/${string}` = `/${string}`,
   ParamsSchema extends ParamsObject<SV> = ParamsObject<SV>,
   ResponseSchemas extends ResponsesObject<SV> = ResponsesObject<SV>,
@@ -422,7 +423,7 @@ export type PathParamHttpContractDetails<
   BaseRequest = unknown
 > = {
   /** Name of the contract */
-  readonly name: string;
+  readonly name: Name;
   /** Summary of the contract */
   readonly summary: string;
   /** Response schemas for the contract */
@@ -473,6 +474,7 @@ export type PathParamHttpContractDetails<
  */
 export type HttpContractDetails<
   SV extends AnySchemaValidator,
+  Name extends string = string,
   Path extends `/${string}` = `/${string}`,
   ParamsSchema extends ParamsObject<SV> = ParamsObject<SV>,
   ResponseSchemas extends ResponsesObject<SV> = ResponsesObject<SV>,
@@ -483,6 +485,7 @@ export type HttpContractDetails<
   BaseRequest = unknown
 > = PathParamHttpContractDetails<
   SV,
+  Name,
   Path,
   ParamsSchema,
   ResponseSchemas,
@@ -551,6 +554,7 @@ export type HttpContractDetails<
  */
 export type MiddlewareContractDetails<
   SV extends AnySchemaValidator,
+  Name extends string = string,
   Path extends `/${string}` = `/${string}`,
   ParamsSchema extends ParamsObject<SV> = ParamsObject<SV>,
   ResponseSchemas extends ResponsesObject<SV> = ResponsesObject<SV>,
@@ -563,6 +567,7 @@ export type MiddlewareContractDetails<
   Partial<
     HttpContractDetails<
       SV,
+      Name,
       Path,
       ParamsSchema,
       ResponseSchemas,
@@ -573,7 +578,7 @@ export type MiddlewareContractDetails<
       BaseRequest
     >
   >,
-  'name' | 'summary' | 'responses'
+  'responses'
 >;
 
 /**
@@ -581,6 +586,7 @@ export type MiddlewareContractDetails<
  */
 export type ContractDetails<
   SV extends AnySchemaValidator,
+  Name extends string,
   ContractMethod extends Method,
   Path extends `/${string}`,
   ParamsSchema extends ParamsObject<SV>,
@@ -593,6 +599,7 @@ export type ContractDetails<
 > = ContractMethod extends PathParamMethod
   ? PathParamHttpContractDetails<
       SV,
+      Name,
       Path,
       ParamsSchema,
       ResponseSchemas,
@@ -604,6 +611,7 @@ export type ContractDetails<
   : ContractMethod extends HttpMethod
     ? HttpContractDetails<
         SV,
+        Name,
         Path,
         ParamsSchema,
         ResponseSchemas,
@@ -616,6 +624,7 @@ export type ContractDetails<
     : ContractMethod extends 'middleware'
       ? MiddlewareContractDetails<
           SV,
+          Name,
           Path,
           ParamsSchema,
           ResponseSchemas,

@@ -139,6 +139,9 @@ export class Application<
   ): Promise<uWebsockets.us_listen_socket> {
     if (typeof arg0 === 'number') {
       const port = arg0 || Number(process.env.PORT);
+      const protocol = (process.env.PROTOCOL || 'http') as 'http' | 'https';
+      const host =
+        typeof arg1 === 'string' ? arg1 : process.env.HOST || '0.0.0.0';
 
       this.internal.set_error_handler((req, res, err) => {
         const statusCode = Number(res.statusCode);
@@ -160,6 +163,8 @@ export class Application<
 
       const openApi = generateSwaggerDocument<SV>(
         this.schemaValidator,
+        protocol,
+        host,
         port,
         this.routers
       );

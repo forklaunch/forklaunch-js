@@ -18,6 +18,7 @@ import { SetQsAndStaticTypes } from '../types/export.types';
  * Creates a GET route handler with schema validation and type safety.
  *
  * @template SV - Schema validator type extending AnySchemaValidator
+ * @template Name - The name of the route
  * @template Path - Route path type extending string with leading slash
  * @template P - Parameters object type extending ParamsObject
  * @template ResBodyMap - Response body map type extending ResponsesObject
@@ -29,7 +30,7 @@ import { SetQsAndStaticTypes } from '../types/export.types';
  *
  * @param {SV} schemaValidator - Schema validator instance
  * @param {Path} path - Route path starting with '/'
- * @param {ContractDetails} contractDetails - Contract details for route validation
+ * @param {ContractDetails<SV, 'get', Name, Path, P, ResBodyMap, ReqBody, ReqQuery, ReqHeaders, ResHeaders, Request>} contractDetails - Contract details for route validation
  * @param {...ExpressLikeSchemaHandler[]} handlers - Route handler middleware functions
  * @returns {Function} Express route handler with schema validation
  *
@@ -53,6 +54,7 @@ import { SetQsAndStaticTypes } from '../types/export.types';
  */
 export const get = <
   SV extends AnySchemaValidator,
+  Name extends string,
   Path extends `/${string}`,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
@@ -66,6 +68,7 @@ export const get = <
   path: Path,
   contractDetails: ContractDetails<
     SV,
+    Name,
     'get',
     Path,
     P,
@@ -92,6 +95,7 @@ export const get = <
 ) => {
   return innerGet<
     SV,
+    Name,
     Path,
     P,
     ResBodyMap,

@@ -12,6 +12,7 @@ import { typedHandler } from './typedHandler';
 
 export const delete_ = <
   SV extends AnySchemaValidator,
+  Name extends string,
   Path extends `/${string}`,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
@@ -28,6 +29,7 @@ export const delete_ = <
   path: Path,
   contractDetails: PathParamHttpContractDetails<
     SV,
+    Name,
     Path,
     P,
     ResBodyMap,
@@ -52,6 +54,7 @@ export const delete_ = <
 ) => {
   return typedHandler<
     SV,
+    Name,
     'delete',
     Path,
     P,

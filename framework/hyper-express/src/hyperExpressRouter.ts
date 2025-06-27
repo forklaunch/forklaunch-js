@@ -73,7 +73,8 @@ export class Router<
     SV,
     Request<Record<string, unknown>>,
     Response<Record<string, unknown>>,
-    MiddlewareNext
+    MiddlewareNext,
+    MiddlewareHandler
   > = <
     Path extends `/${string}`,
     P extends ParamsObject<SV>,

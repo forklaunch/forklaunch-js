@@ -26,7 +26,7 @@ pub(crate) fn transform_server_ts(router_name: &str, base_path: &Path) -> Result
     let mut server_program = parse_ast_program(&allocator, &server_source_text, server_source_type);
 
     let scoped_service_factory_injection_text = format!(
-        "const scoped{router_name_pascal_case}ServiceFactory = ci.scopedResolver(tokens.{router_name_pascal_case}Service);",
+        "const {router_name_pascal_case}ServiceFactory = ci.scopedResolver(tokens.{router_name_pascal_case}Service);",
     );
     let mut injection_program_ast = parse_ast_program(
         &allocator,
@@ -73,7 +73,7 @@ pub(crate) fn transform_server_ts(router_name: &str, base_path: &Path) -> Result
     )?;
 
     let routes_injection_text = format!(
-        "const {router_name_camel_case}Routes = {router_name_pascal_case}Routes(() => ci.createScope(), scoped{router_name_pascal_case}ServiceFactory, openTelemetryCollector);",
+        "const {router_name_camel_case}Routes = {router_name_pascal_case}Routes(() => ci.createScope(), {router_name_pascal_case}ServiceFactory, openTelemetryCollector);",
     );
     let mut injection_program_ast =
         parse_ast_program(&allocator, &routes_injection_text, SourceType::ts());

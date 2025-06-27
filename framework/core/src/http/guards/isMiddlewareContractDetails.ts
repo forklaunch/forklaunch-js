@@ -11,6 +11,7 @@ import {
 
 export function isMiddlewareContractDetails<
   SV extends AnySchemaValidator,
+  Name extends string,
   Path extends `/${string}`,
   ParamsSchema extends ExtractedParamsObject<Path> & ParamsObject<SV>,
   ResponseSchemas extends ResponsesObject<SV>,
@@ -23,6 +24,7 @@ export function isMiddlewareContractDetails<
   contractDetails: unknown
 ): contractDetails is MiddlewareContractDetails<
   SV,
+  Name,
   Path,
   ParamsSchema,
   ResponseSchemas,

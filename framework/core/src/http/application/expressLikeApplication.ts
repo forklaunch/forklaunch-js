@@ -19,7 +19,9 @@ export abstract class ForklaunchExpressLikeApplication<
   BaseRequest,
   BaseResponse,
   NextFunction,
-  RouteMap extends Record<string, unknown>
+  FetchMap extends Record<never, never> = Record<never, never>,
+  Sdk extends Record<never, never> = Record<never, never>,
+  SdkName extends string = 'sdk'
 > extends ForklaunchExpressLikeRouter<
   SV,
   '/',
@@ -28,7 +30,9 @@ export abstract class ForklaunchExpressLikeApplication<
   BaseRequest,
   BaseResponse,
   NextFunction,
-  RouteMap
+  FetchMap,
+  Sdk,
+  SdkName
 > {
   /**
    * Creates an instance of the Application class.
@@ -42,6 +46,7 @@ export abstract class ForklaunchExpressLikeApplication<
     readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
     readonly appOptions?: {
       cors?: CorsOptions;
+      sdkName?: SdkName;
     }
   ) {
     super(

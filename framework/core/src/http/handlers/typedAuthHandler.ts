@@ -12,6 +12,7 @@ import {
 
 export function typedAuthHandler<
   SV extends AnySchemaValidator,
+  Name extends string,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
   ReqBody extends Body<SV>,
@@ -23,6 +24,7 @@ export function typedAuthHandler<
   _schemaValidator: SV,
   _contractDetails: ContractDetails<
     SV,
+    Name,
     Method,
     `/${string}`,
     P,

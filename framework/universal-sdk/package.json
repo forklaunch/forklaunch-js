@@ -46,12 +46,12 @@
     "ajv-formats": "^3.0.1"
   },
   "devDependencies": {
-    "@types/node": "^24.0.3",
-    "@typescript/native-preview": "7.0.0-dev.20250619.1",
+    "@types/node": "^24.0.4",
+    "@typescript/native-preview": "7.0.0-dev.20250624.1",
     "fetch-mock": "^12.5.3",
     "jest": "^30.0.2",
-    "openapi3-ts": "^4.4.0",
-    "prettier": "^3.5.3",
+    "openapi3-ts": "^4.5.0",
+    "prettier": "^3.6.0",
     "ts-jest": "^29.4.0",
     "tsup": "^8.5.0",
     "typedoc": "^0.28.5"

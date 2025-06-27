@@ -45,15 +45,15 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",
-    "@types/node": "^24.0.3",
-    "@typescript/native-preview": "7.0.0-dev.20250619.1",
+    "@types/node": "^24.0.4",
+    "@typescript/native-preview": "7.0.0-dev.20250624.1",
     "depcheck": "^1.4.7",
     "eslint": "^9.29.0",
     "globals": "^16.2.0",
     "tsup": "^8.5.0",
     "typedoc": "^0.28.5",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.34.1",
+    "typescript-eslint": "^8.35.0",
     "vitest": "^3.2.4"
   }
 }

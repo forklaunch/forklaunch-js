@@ -30,4 +30,5 @@ export * from './types/docsConfiguration.types';
 export * from './types/expressLikeRouter.types';
 export * from './types/openTelemetryCollector.types';
 export * from './types/router.types';
+export * from './types/sdk.types';
 export * from './types/typedHandler.types';
