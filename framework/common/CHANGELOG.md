@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.4.0
+
+### Minor Changes
+
+- package version upgrade, mcp generation and nicer universal sdk syntax
+
 ## 0.3.14
 
 ### Patch Changes

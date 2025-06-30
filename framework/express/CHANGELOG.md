@@ -1,5 +1,18 @@
 # @forklaunch/express
 
+## 0.6.0
+
+### Minor Changes
+
+- package version upgrade, mcp generation and nicer universal sdk syntax
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.7.0
+  - @forklaunch/common@0.4.0
+  - @forklaunch/core@0.10.0
+
 ## 0.5.34
 
 ### Patch Changes

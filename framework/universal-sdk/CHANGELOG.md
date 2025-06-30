@@ -1,5 +1,16 @@
 # @forklaunch/universal-sdk
 
+## 0.4.0
+
+### Minor Changes
+
+- package version upgrade, mcp generation and nicer universal sdk syntax
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/common@0.4.0
+
 ## 0.3.16
 
 ### Patch Changes

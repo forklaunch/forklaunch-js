@@ -1,5 +1,17 @@
 # @forklaunch/infrastructure-s3
 
+## 0.1.0
+
+### Minor Changes
+
+- package version upgrade, mcp generation and nicer universal sdk syntax
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/common@0.4.0
+  - @forklaunch/core@0.10.0
+
 ## 0.0.30
 
 ### Patch Changes

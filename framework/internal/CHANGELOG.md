@@ -1,5 +1,17 @@
 # @forklaunch/common
 
+## 0.1.0
+
+### Minor Changes
+
+- package version upgrade, mcp generation and nicer universal sdk syntax
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.7.0
+  - @forklaunch/common@0.4.0
+
 ## 0.0.7
 
 ### Patch Changes

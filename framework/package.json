@@ -35,9 +35,9 @@
     "sort-package-json": "^3.3.1",
     "ts-jest": "^29.4.0",
     "tsx": "^4.20.3",
-    "typedoc": "^0.28.6",
+    "typedoc": "^0.28.7",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.35.0",
+    "typescript-eslint": "^8.35.1",
     "vitest": "^3.2.4"
   },
   "dependencies": {
