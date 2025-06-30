@@ -43,6 +43,14 @@ describe('universalSdkBasic', async () => {
     expect(getTest.code).toBe(200);
   });
 
+  it('should call getTest fetch', async () => {
+    if (!client) {
+      client = await instantiateSdk();
+    }
+    const getTest = await client.fetch('/testpath/test');
+    expect(getTest.code).toBe(200);
+  });
+
   it('should call postTest', async () => {
     if (!client) {
       client = await instantiateSdk();
@@ -56,11 +64,42 @@ describe('universalSdkBasic', async () => {
     expect(postTest.code).toBe(200);
   });
 
+  it('should call postTest fetch', async () => {
+    if (!client) {
+      client = await instantiateSdk();
+    }
+    const postTest = await client.fetch('/testpath/test', {
+      method: 'POST',
+      body: {
+        f: '!',
+        m: [1, 2, 3]
+      }
+    });
+    expect(postTest.code).toBe(200);
+  });
+
   it('should call jsonPatchTest', async () => {
     if (!client) {
       client = await instantiateSdk();
     }
     const jsonPatchTest = await client.sdk.testpath.testJsonPatch({
+      body: {
+        f: 'ok',
+        h: 'b658f7e0-9b8a-4e1f-b6d8-1c0b7d8b3f59'
+      },
+      query: {
+        q: 'test'
+      }
+    });
+    expect(jsonPatchTest.code).toBe(200);
+  });
+
+  it('should call jsonPatchTest fetch', async () => {
+    if (!client) {
+      client = await instantiateSdk();
+    }
+    const jsonPatchTest = await client.fetch('/testpath/test', {
+      method: 'PATCH',
       body: {
         f: 'ok',
         h: 'b658f7e0-9b8a-4e1f-b6d8-1c0b7d8b3f59'
@@ -87,7 +126,25 @@ describe('universalSdkBasic', async () => {
         }
       }
     });
-    console.log(multipartTest);
+    expect(multipartTest.code).toBe(200);
+  });
+
+  it('should call multipartTest fetch', async () => {
+    if (!client) {
+      client = await instantiateSdk();
+    }
+    const multipartTest = await client.fetch('/testpath/test/multipart', {
+      method: 'POST',
+      headers: {
+        'x-test': 'test'
+      },
+      body: {
+        multipartForm: {
+          fileName: '!',
+          g: new File(['Hello World'], 'test.txt', { type: 'text/plain' })
+        }
+      }
+    });
     expect(multipartTest.code).toBe(200);
   });
 
@@ -106,6 +163,28 @@ describe('universalSdkBasic', async () => {
         }
       }
     });
+    expect(urlEncodedFormTest.code).toBe(200);
+  });
+
+  it('should call urlEncodedFormTest fetch', async () => {
+    if (!client) {
+      client = await instantiateSdk();
+    }
+    const urlEncodedFormTest = await client.fetch(
+      '/testpath/test/url-encoded-form/:id',
+      {
+        method: 'POST',
+        params: {
+          id: '123'
+        },
+        body: {
+          urlEncodedForm: {
+            f: '!',
+            h: 444
+          }
+        }
+      }
+    );
     expect(urlEncodedFormTest.code).toBe(200);
   });
 
