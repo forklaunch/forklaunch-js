@@ -41,6 +41,8 @@ export class Router<
   >
   implements ForklaunchRouter<SV>
 {
+  private configOptions;
+
   constructor(
     public basePath: BasePath,
     schemaValidator: SV,
@@ -60,6 +62,8 @@ export class Router<
       openTelemetryCollector
     );
 
+    this.configOptions = options;
+
     this.internal.use(polyfillGetHeaders);
   }
 
@@ -76,6 +80,7 @@ export class Router<
     MiddlewareNext,
     MiddlewareHandler
   > = <
+    Name extends string,
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -89,6 +94,7 @@ export class Router<
       | Path
       | ContractDetailsOrMiddlewareOrTypedHandler<
           SV,
+          Name,
           'middleware',
           Path,
           P,
@@ -104,6 +110,7 @@ export class Router<
         >,
     contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
+      Name,
       'middleware',
       Path,
       P,
@@ -119,6 +126,7 @@ export class Router<
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
+      Name,
       'middleware',
       Path,
       P,
@@ -134,6 +142,7 @@ export class Router<
     >[]
   ) => {
     return this.registerMiddlewareHandler<
+      Name,
       Path,
       P,
       ResBodyMap,
@@ -153,4 +162,17 @@ export class Router<
   // TODO: Implement the rest of the methods
   // upgrade
   // ws
+
+  clone(): this {
+    const clone = new Router<SV, BasePath>(
+      this.basePath,
+      this.schemaValidator,
+      this.openTelemetryCollector,
+      this.configOptions
+    ) as this;
+
+    this.cloneInternals(clone);
+
+    return clone;
+  }
 }

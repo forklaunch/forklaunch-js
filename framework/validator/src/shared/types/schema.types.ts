@@ -319,6 +319,11 @@ export interface SchemaResolve<T> {
    * Schema resolution for TypeBox.
    */
   TypeBox: TResolve<T>;
+
+  /**
+   * Mock schema resolution.
+   */
+  Mock: T;
 }
 
 /**
@@ -336,6 +341,11 @@ export interface SchemaTranslate<T> {
    * Schema translation for TypeBox.
    */
   TypeBox: TSchemaTranslate<T>;
+
+  /**
+   * Mock schema translation.
+   */
+  Mock: T;
 }
 
 /**

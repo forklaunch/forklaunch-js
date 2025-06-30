@@ -1,4 +1,39 @@
-import { PrettyCamelCase } from '@forklaunch/common';
+import {
+  MergeArrayOfMaps,
+  Prettify,
+  PrettyCamelCase,
+  TypeSafeFunction,
+  UnionToIntersectionChildren
+} from '@forklaunch/common';
+
+/**
+ * Extracts all fetchMaps from an array of routers and merges them
+ */
+export type UnionedFetchMap<Routers extends readonly unknown[]> =
+  MergeArrayOfMaps<{
+    [K in keyof Routers]: Routers[K] extends { fetchMap: infer FM }
+      ? FM extends Record<string, unknown>
+        ? FM
+        : Record<string, never>
+      : Record<string, never>;
+  }>;
+
+export type FetchFunction<FetchMap> = <Path extends keyof FetchMap>(
+  path: Path,
+  ...reqInit: FetchMap[Path] extends TypeSafeFunction
+    ? Parameters<FetchMap[Path]>[1] extends
+        | {
+            body: unknown;
+          }
+        | { query: unknown }
+        | { params: unknown }
+        | { headers: unknown }
+      ? [reqInit: Parameters<FetchMap[Path]>[1]]
+      : [reqInit?: Parameters<FetchMap[Path]>[1]]
+    : [reqInit?: never]
+) => Promise<
+  FetchMap[Path] extends TypeSafeFunction ? ReturnType<FetchMap[Path]> : never
+>;
 
 /**
  * Creates a client SDK type from an array of routers.
@@ -33,24 +68,29 @@ export type SdkClient<
       })
   )[]
 > = {
-  [K in keyof Routers as PrettyCamelCase<
-    K extends (...args: never[]) => {
-      sdkName: string;
-      basePath: string;
+  fetch: UnionedFetchMap<Routers> extends infer MergedFetchMap
+    ? FetchFunction<MergedFetchMap>
+    : never;
+  sdk: UnionToIntersectionChildren<{
+    [K in Routers[number] as PrettyCamelCase<
+      K extends (...args: never[]) => {
+        sdkName?: infer SdkName;
+        basePath: infer BasePath;
+      }
+        ? string extends SdkName
+          ? BasePath
+          : SdkName
+        : K extends { sdkName?: infer SdkName; basePath: infer BasePath }
+          ? string extends SdkName
+            ? BasePath
+            : SdkName
+          : never
+    >]: K extends (...args: never[]) => {
+      sdk: infer Sdk;
     }
-      ? string extends ReturnType<K>['sdkName']
-        ? ReturnType<K>['basePath']
-        : ReturnType<K>['sdkName']
-      : K extends { sdkName: string; basePath: string }
-        ? string extends K['sdkName']
-          ? K['basePath']
-          : K['sdkName']
-        : never
-  >]: Routers[K] extends (...args: never[]) => {
-    sdk: Record<string, unknown>;
-  }
-    ? ReturnType<Routers[K]>['sdk']
-    : Routers[K] extends { sdk: Record<string, unknown> }
-      ? Routers[K]['sdk']
-      : never;
+      ? Prettify<Sdk>
+      : K extends { sdk: infer Sdk }
+        ? Prettify<Sdk>
+        : never;
+  }>;
 };

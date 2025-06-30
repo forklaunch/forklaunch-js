@@ -48,9 +48,9 @@ import {
   SchemaValidator as SV
 } from '../shared/types/schema.types';
 import {
+  SafeTObject,
   TCatchall,
   TIdiomaticSchema,
-  TObject,
   TObjectShape,
   TResolve,
   TSchemaTranslate,
@@ -86,7 +86,7 @@ SetErrorFunction((params) => {
 export class TypeboxSchemaValidator
   implements
     SV<
-      <T extends TObject<TProperties>>(schema: T) => TypeCheck<T>,
+      <T extends SafeTObject<TProperties>>(schema: T) => TypeCheck<T>,
       <T extends TIdiomaticSchema>(schema: T) => TResolve<T>,
       <T extends TIdiomaticSchema>(schema: T) => TOptional<TResolve<T>>,
       <T extends TIdiomaticSchema>(schema: T) => TArray<TResolve<T>>,
@@ -127,7 +127,9 @@ export class TypeboxSchemaValidator
 {
   _Type = 'TypeBox' as const;
   _SchemaCatchall!: TCatchall;
-  _ValidSchemaObject!: TObject<TProperties> | TArray<TObject<TProperties>>;
+  _ValidSchemaObject!:
+    | SafeTObject<TProperties>
+    | TArray<SafeTObject<TProperties>>;
 
   string: TString = Type.String({
     example: 'a string',
@@ -356,7 +358,7 @@ export class TypeboxSchemaValidator
    * @param {TObject<TProperties>} schema - The schema to compile.
    * @returns {TypeCheck<T>} - The compiled schema.
    */
-  compile<T extends TObject<TProperties>>(schema: T): TypeCheck<T> {
+  compile<T extends SafeTObject<TProperties>>(schema: T): TypeCheck<T> {
     return TypeCompiler.Compile(schema);
   }
 

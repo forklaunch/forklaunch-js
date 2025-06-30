@@ -6,7 +6,7 @@ import { checkout } from '../src/handlers/checkout';
 import { get } from '../src/handlers/get';
 import { post } from '../src/handlers/post';
 
-import { noop, Prettify, safeStringify } from '@forklaunch/common';
+import { noop, safeStringify } from '@forklaunch/common';
 import {
   NextFunction as ExpressNextFunction,
   Request as ExpressRequest,
@@ -279,150 +279,9 @@ describe('handlers', () => {
         res.status(200).json(req.body);
       }
     );
-    application.post('/', postRequest);
+
     const liveTypeFunction = router.post('/', postRequest);
-    const x = router.get(
-      '/f',
-      {
-        name: 'Get Organization',
-        summary: '',
-        responses: {
-          200: string
-        }
-      },
-      (req, res) => {
-        res.status(200).send('asdd');
-      }
-    );
-
-    x.fetch('/organization/f');
-
-    const nestedLiveTypeFunction = nestedForklaunchRouterInstance.post(
-      '/',
-      postRequest
-    );
-    nestedLiveTypeFunction.fetch('/nested', {
-      method: 'POST',
-      body: {
-        json: {
-          name: 'jasdfa'
-        }
-      }
-    });
-    const mf = forklaunchRouter(
-      '/aaaa',
-      SchemaValidator(),
-      openTelemetryCollector
-    );
-    const cuf = forklaunchRouter(
-      '/aaaa',
-      SchemaValidator(),
-      openTelemetryCollector
-    );
-
-    const buf = cuf.get(
-      '/fff',
-      {
-        name: 'ok',
-        summary: 'nice',
-        responses: {
-          200: string
-        }
-      },
-      (req, res) => {
-        res.status(200).send('afadfa');
-      }
-    );
-
-    const lad = mf.get(
-      '/lk',
-      {
-        name: 'off',
-        summary: 'nice',
-        responses: {
-          200: string
-        }
-      },
-      (req, res) => {
-        res.status(200).send('afadfa');
-      }
-    );
-    const m = nestedLiveTypeFunction.use(lad);
-    const xo = liveTypeFunction.use(m);
-
-    console.log('hello');
-    const o = xo
-      .use(
-        (req, res, next) => {
-          next();
-        },
-        (req, res, next) => {
-          next();
-        },
-        lad
-      )
-      .use(buf);
-    console.log('hello2');
-    xo.use(
-      // {
-      //   params: {
-      //     id: string
-      //   }
-      // },
-      (req, res, next) => {
-        next();
-      }
-    );
-
-    type SdkClient<
-      Routers extends (
-        | { basePath: string; sdkName?: string; sdk: Record<string, unknown> }
-        | ((...args: never[]) => {
-            basePath: string;
-            sdkName?: string;
-            sdk: Record<string, unknown>;
-          })
-      )[]
-    > = {
-      [K in Routers[number] as 'ok']: //         never //         //   : K['sdkName'] //         //   ? K['basePath'] //       : // ? string extends K['sdkName'] //       ? 'rockester' //     : K extends { sdkName: string; basePath: string } //       : ReturnType<K>['sdkName'] //       ? ReturnType<K>['basePath'] //     ? string extends ReturnType<K>['sdkName'] //   } //     basePath: string; //     sdkName: string; //   K extends (...args: never[]) => { // PrettyCamelCase<
-      // >
-      Prettify<
-        K extends (...args: never[]) => {
-          sdk: Record<string, unknown>;
-        }
-          ? Prettify<ReturnType<K>['sdk']>
-          : K extends { sdk: Record<string, unknown> }
-            ? Prettify<K['sdk']>
-            : never
-      >;
-      // [K in Routers[number] as PrettyCamelCase<
-      //   K extends (...args: never[]) => {
-      //     sdkName: string;
-      //     basePath: string;
-      //   }
-      //     ? string extends ReturnType<K>['sdkName']
-      //       ? ReturnType<K>['basePath']
-      //       : ReturnType<K>['sdkName']
-      //     : K extends { sdkName: string; basePath: string }
-      //       ? string extends K['sdkName']
-      //         ? K['basePath']
-      //         : K['sdkName']
-      //       : never
-      // >]: K extends (...args: never[]) => {
-      //   sdk: Record<string, unknown>;
-      // }
-      //   ? ReturnType<K>['sdk']
-      //   : K extends { sdk: Record<string, unknown> }
-      //     ? K['sdk']
-      //     : never;
-    };
-    o.fetch('/organization/aaaa/fff');
-    type A = Prettify<SdkClient<[typeof o]>>;
-    const r: A = {};
-    o.sdk.aaaa.off({});
-    r.ok.aaaa.off();
-    console.log('hello3');
-    const l = await o.fetch('/organization/nested', {
+    await liveTypeFunction.fetch('/organization', {
       method: 'POST',
       body: {
         json: {
@@ -430,8 +289,41 @@ describe('handlers', () => {
         }
       }
     });
-    console.log('hello4');
-    await liveTypeFunction.fetch('/organization', {
+  });
+
+  it('should be able to create a nested router', async () => {
+    const postRequest = post(
+      typeboxSchemaValidator,
+      '/',
+      {
+        name: 'Create Organization',
+        body: {
+          json: {
+            name: string
+          }
+        },
+        summary: 'Creates an organization',
+        responses: {
+          200: {
+            json: {
+              name: string
+            }
+          },
+          400: string
+        }
+      },
+      async (req, res) => {
+        res.status(200).json(req.body);
+      }
+    );
+
+    const liveTypeFunction = router.post('/', postRequest);
+
+    const nestedLiveTypeFunction = nestedForklaunchRouterInstance
+      .use(liveTypeFunction)
+      .post('/', postRequest);
+
+    await nestedLiveTypeFunction.fetch('/nested/organization', {
       method: 'POST',
       body: {
         json: {
@@ -454,10 +346,7 @@ describe('handlers', () => {
         noop(req.query.name);
       }
     );
-    console.log('hello5');
     application.use(checkoutMiddleware);
-    console.log('hello6');
     router.checkout('/', checkoutMiddleware);
-    console.log('hello7');
   });
 });

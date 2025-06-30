@@ -88,16 +88,14 @@ export interface LiveTypeRouteDefinition<
       ChainableRouter['sdk'] &
         Record<
           PrettyCamelCase<Name>,
-          Prettify<
-            LiveSdkFunction<
-              SV,
-              P,
-              ResBodyMap,
-              ReqBody,
-              ReqQuery,
-              ReqHeaders,
-              ResHeaders
-            >
+          LiveSdkFunction<
+            SV,
+            P,
+            ResBodyMap,
+            ReqBody,
+            ReqQuery,
+            ReqHeaders,
+            ResHeaders
           >
         >
     >;
@@ -182,16 +180,14 @@ export interface LiveTypeRouteDefinition<
       ChainableRouter['sdk'] &
         Record<
           PrettyCamelCase<Name>,
-          Prettify<
-            LiveSdkFunction<
-              SV,
-              P,
-              ResBodyMap,
-              ReqBody,
-              ReqQuery,
-              ReqHeaders,
-              ResHeaders
-            >
+          LiveSdkFunction<
+            SV,
+            P,
+            ResBodyMap,
+            ReqBody,
+            ReqQuery,
+            ReqHeaders,
+            ResHeaders
           >
         >
     >;
@@ -257,16 +253,14 @@ export interface LiveTypeRouteDefinition<
       ChainableRouter['sdk'] &
         Record<
           PrettyCamelCase<Name>,
-          Prettify<
-            LiveSdkFunction<
-              SV,
-              P,
-              ResBodyMap,
-              ReqBody,
-              ReqQuery,
-              ReqHeaders,
-              ResHeaders
-            >
+          LiveSdkFunction<
+            SV,
+            P,
+            ResBodyMap,
+            ReqBody,
+            ReqQuery,
+            ReqHeaders,
+            ResHeaders
           >
         >
     >;
@@ -609,7 +603,7 @@ export interface TypedNestableMiddlewareDefinition<
           Router['sdkName'] extends string
             ? Router['sdkName']
             : Router['basePath']
-        >]: Router['sdk'];
+        >]: Prettify<Router['sdk']>;
       }
     >;
   };
@@ -631,7 +625,7 @@ export interface TypedNestableMiddlewareDefinition<
           Router['sdkName'] extends string
             ? Router['sdkName']
             : Router['basePath']
-        >]: Router['sdk'];
+        >]: Prettify<Router['sdk']>;
       }
     >;
   };
@@ -653,7 +647,7 @@ export interface TypedNestableMiddlewareDefinition<
           Router['sdkName'] extends string
             ? Router['sdkName']
             : Router['basePath']
-        >]: Router['sdk'];
+        >]: Prettify<Router['sdk']>;
       }
     >;
   };
@@ -736,7 +730,7 @@ export interface TypedNestableMiddlewareDefinition<
           Router['sdkName'] extends string
             ? Router['sdkName']
             : Router['basePath']
-        >]: Router['sdk'];
+        >]: Prettify<Router['sdk']>;
       }
     >;
   };
@@ -816,7 +810,7 @@ export interface TypedNestableMiddlewareDefinition<
           Router['sdkName'] extends string
             ? Router['sdkName']
             : Router['basePath']
-        >]: Router['sdk'];
+        >]: Prettify<Router['sdk']>;
       }
     >;
   };
@@ -894,7 +888,7 @@ export interface TypedNestableMiddlewareDefinition<
           Router['sdkName'] extends string
             ? Router['sdkName']
             : Router['basePath']
-        >]: Router['sdk'];
+        >]: Prettify<Router['sdk']>;
       }
     >;
   };
@@ -969,7 +963,7 @@ export interface TypedNestableMiddlewareDefinition<
           Router['sdkName'] extends string
             ? Router['sdkName']
             : Router['basePath']
-        >]: Router['sdk'];
+        >]: Prettify<Router['sdk']>;
       }
     >;
   };

@@ -1,5 +1,34 @@
 import { OpenAPIObject } from 'openapi3-ts/oas31';
-import { RegistryOptions } from '../types/sdk.types';
+import { RegistryOptions, SdkPathMap } from '../types/sdk.types';
+
+export function getSdkPathMap(registryOpenApiJson: OpenAPIObject): SdkPathMap {
+  const sdkPathMap: SdkPathMap = {};
+  Object.entries(registryOpenApiJson?.paths || {}).forEach(
+    ([path, pathItem]) => {
+      const methods = [
+        'get',
+        'post',
+        'put',
+        'patch',
+        'delete',
+        'options',
+        'head',
+        'trace'
+      ] as const;
+
+      methods.forEach((method) => {
+        if (pathItem[method]?.operationId) {
+          sdkPathMap[pathItem[method].operationId] = {
+            method,
+            path
+          };
+        }
+      });
+    }
+  );
+
+  return sdkPathMap;
+}
 
 export async function refreshOpenApi(
   host: string,
@@ -10,6 +39,7 @@ export async function refreshOpenApi(
       updateRequired: true;
       registryOpenApiJson: OpenAPIObject;
       registryOpenApiHash: string;
+      sdkPathMap: SdkPathMap;
     }
   | {
       updateRequired: false;
@@ -28,7 +58,8 @@ export async function refreshOpenApi(
     return {
       updateRequired: true,
       registryOpenApiJson: registryOptions.raw,
-      registryOpenApiHash: 'static'
+      registryOpenApiHash: 'static',
+      sdkPathMap: getSdkPathMap(registryOptions.raw)
     };
   }
 
@@ -56,7 +87,8 @@ export async function refreshOpenApi(
     return {
       updateRequired: true,
       registryOpenApiJson,
-      registryOpenApiHash
+      registryOpenApiHash,
+      sdkPathMap: getSdkPathMap(registryOpenApiJson)
     };
   }
 

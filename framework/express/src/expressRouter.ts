@@ -2,6 +2,7 @@ import {
   Body,
   ContractDetailsOrMiddlewareOrTypedHandler,
   ForklaunchExpressLikeRouter,
+  ForklaunchRouter,
   HeadersObject,
   MetricsDefinition,
   MiddlewareOrMiddlewareWithTypedHandler,
@@ -36,18 +37,22 @@ import { enrichResponseTransmission } from './middleware/enrichResponseTransmiss
  * @implements {ForklaunchRouter<SV>}
  */
 export class Router<
-  SV extends AnySchemaValidator,
-  BasePath extends `/${string}`
-> extends ForklaunchExpressLikeRouter<
-  SV,
-  BasePath,
-  RequestHandler,
-  ExpressRouter,
-  Request,
-  Response,
-  NextFunction
-> {
-  // implements ForklaunchRouter<SV>
+    SV extends AnySchemaValidator,
+    BasePath extends `/${string}`
+  >
+  extends ForklaunchExpressLikeRouter<
+    SV,
+    BasePath,
+    RequestHandler,
+    ExpressRouter,
+    Request,
+    Response,
+    NextFunction
+  >
+  implements ForklaunchRouter<SV>
+{
+  private configOptions;
+
   /**
    * Creates an instance of Router.
    *
@@ -75,6 +80,8 @@ export class Router<
       ],
       openTelemetryCollector
     );
+
+    this.configOptions = options;
   }
 
   route(path: string): this {
@@ -1766,4 +1773,17 @@ export class Router<
       ...middlewareOrMiddlewareWithTypedHandler
     );
   };
+
+  clone(): this {
+    const clone = new Router<SV, BasePath>(
+      this.basePath,
+      this.schemaValidator,
+      this.openTelemetryCollector,
+      this.configOptions
+    ) as this;
+
+    this.cloneInternals(clone);
+
+    return clone;
+  }
 }

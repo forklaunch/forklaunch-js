@@ -2,11 +2,13 @@ import { AnySchemaValidator, SchemaValidator } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
 
 import {
+  EmptyObject,
   Prettify,
   PrettyCamelCase,
   sanitizePathSlashes,
   SanitizePathSlashes,
   toPrettyCamelCase,
+  toRecord,
   TypeSafeFunction
 } from '@forklaunch/common';
 import { isConstrainedForklaunchRouter } from '../guards/isConstrainedForklaunchRouter';
@@ -58,6 +60,7 @@ import {
   ForklaunchRoute,
   ForklaunchRouter
 } from '../types/router.types';
+import { FetchFunction } from '../types/sdk.types';
 import {
   discriminateBody,
   discriminateResponseBodies
@@ -74,29 +77,26 @@ export class ForklaunchExpressLikeRouter<
   BaseRequest,
   BaseResponse,
   NextFunction,
-  FetchMap extends Record<never, never> = Record<never, never>,
-  Sdk extends Record<never, never> = Record<never, never>,
+  FetchMap extends Record<string, unknown> = EmptyObject,
+  Sdk extends Record<string, unknown> = EmptyObject,
   SdkName extends string = PrettyCamelCase<BasePath>
 > implements ConstrainedForklaunchRouter<SV, RouterHandler>
 {
   requestHandler!: RouterHandler;
   routers: ForklaunchRouter<SV>[] = [];
-  readonly routes: ForklaunchRoute<SV>[] = [];
-  readonly basePath: BasePath;
+  routes: ForklaunchRoute<SV>[] = [];
 
   fetchMap: FetchMap = {} as FetchMap;
   sdk: Sdk = {} as Sdk;
 
   constructor(
-    basePath: BasePath,
+    readonly basePath: BasePath,
     readonly schemaValidator: SV,
     readonly internal: Internal,
     readonly postEnrichMiddleware: RouterHandler[],
     readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
     readonly sdkName?: SdkName
   ) {
-    this.basePath = basePath;
-
     if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
       process.on('uncaughtException', (err) => {
         this.openTelemetryCollector.error(`Uncaught exception: ${err}`);
@@ -445,24 +445,7 @@ export class ForklaunchExpressLikeRouter<
    * @param {Parameters<fetchMap[Path]>[1]} [requestInit] - Optional request initialization parameters.
    * @returns {Promise<ReturnType<fetchMap[Path]>>} - The result of executing the route handler.
    */
-  async fetch<Path extends keyof this['fetchMap']>(
-    path: Path,
-    ...reqInit: this['fetchMap'][Path] extends TypeSafeFunction
-      ? Parameters<this['fetchMap'][Path]>[1] extends
-          | {
-              body: unknown;
-            }
-          | { query: unknown }
-          | { params: unknown }
-          | { headers: unknown }
-        ? [reqInit: Parameters<this['fetchMap'][Path]>[1]]
-        : [reqInit?: Parameters<this['fetchMap'][Path]>[1]]
-      : [reqInit?: never]
-  ): Promise<
-    this['fetchMap'][Path] extends TypeSafeFunction
-      ? ReturnType<this['fetchMap'][Path]>
-      : never
-  > {
+  fetch: FetchFunction<this['fetchMap']> = async (path, ...reqInit) => {
     return (
       this.fetchMap[path] as (
         route: string,
@@ -470,11 +453,11 @@ export class ForklaunchExpressLikeRouter<
       ) => Promise<unknown>
     )(
       path as string,
-      reqInit
-    ) as this['fetchMap'][Path] extends TypeSafeFunction
-      ? ReturnType<this['fetchMap'][Path]>
+      reqInit[0]
+    ) as this['fetchMap'][typeof path] extends TypeSafeFunction
+      ? ReturnType<this['fetchMap'][typeof path]>
       : never;
-  }
+  };
 
   /**
    * Executes request locally, applying parameters
@@ -652,16 +635,14 @@ export class ForklaunchExpressLikeRouter<
               ? Name
               : SanitizePathSlashes<`${BasePath}${Path}`>
           >,
-          Prettify<
-            LiveSdkFunction<
-              SV,
-              P,
-              ResBodyMap,
-              ReqBody,
-              ReqQuery,
-              ReqHeaders,
-              ResHeaders
-            >
+          LiveSdkFunction<
+            SV,
+            P,
+            ResBodyMap,
+            ReqBody,
+            ReqQuery,
+            ReqHeaders,
+            ResHeaders
           >
         >
     >;
@@ -726,16 +707,14 @@ export class ForklaunchExpressLikeRouter<
                   ? Name
                   : SanitizePathSlashes<`${BasePath}${Path}`>
               >,
-              Prettify<
-                LiveSdkFunction<
-                  SV,
-                  P,
-                  ResBodyMap,
-                  ReqBody,
-                  ReqQuery,
-                  ReqHeaders,
-                  ResHeaders
-                >
+              LiveSdkFunction<
+                SV,
+                P,
+                ResBodyMap,
+                ReqBody,
+                ReqQuery,
+                ReqHeaders,
+                ResHeaders
               >
             >
         >;
@@ -811,16 +790,14 @@ export class ForklaunchExpressLikeRouter<
                     ? Name
                     : SanitizePathSlashes<`${BasePath}${Path}`>
                 >,
-                Prettify<
-                  LiveSdkFunction<
-                    SV,
-                    P,
-                    ResBodyMap,
-                    ReqBody,
-                    ReqQuery,
-                    ReqHeaders,
-                    ResHeaders
-                  >
+                LiveSdkFunction<
+                  SV,
+                  P,
+                  ResBodyMap,
+                  ReqBody,
+                  ReqQuery,
+                  ReqHeaders,
+                  ResHeaders
                 >
               >
           >;
@@ -954,14 +931,14 @@ export class ForklaunchExpressLikeRouter<
           controllerHandler
         );
 
-        Object.assign(this.fetchMap, {
-          [sanitizePathSlashes(`${this.basePath}${path}`)]: localParamRequest
-        });
-        Object.assign(this.sdk, {
-          [toPrettyCamelCase(contractDetails.name ?? this.basePath)]: (
-            req: Parameters<typeof localParamRequest>[1]
-          ) => localParamRequest(`${this.basePath}${path}`, req)
-        });
+        toRecord(this.fetchMap)[
+          sanitizePathSlashes(`${this.basePath}${path}`)
+        ] = localParamRequest;
+
+        toRecord(this.sdk)[
+          toPrettyCamelCase(contractDetails.name ?? this.basePath)
+        ] = (req: Parameters<typeof localParamRequest>[1]) =>
+          localParamRequest(`${this.basePath}${path}`, req);
 
         return this as this & {
           fetchMap: Prettify<
@@ -989,16 +966,14 @@ export class ForklaunchExpressLikeRouter<
                     ? Name
                     : SanitizePathSlashes<`${BasePath}${Path}`>
                 >,
-                Prettify<
-                  LiveSdkFunction<
-                    SV,
-                    P,
-                    ResBodyMap,
-                    ReqBody,
-                    ReqQuery,
-                    ReqHeaders,
-                    ResHeaders
-                  >
+                LiveSdkFunction<
+                  SV,
+                  P,
+                  ResBodyMap,
+                  ReqBody,
+                  ReqQuery,
+                  ReqHeaders,
+                  ResHeaders
                 >
               >
           >;
@@ -1183,22 +1158,26 @@ export class ForklaunchExpressLikeRouter<
       ResHeaders,
       LocalsObj,
       RouterHandler | Internal
-    >(handlers, (handler) =>
-      isForklaunchExpressLikeRouter<
-        SV,
-        Path,
-        RouterHandler,
-        Internal,
-        BaseRequest,
-        BaseResponse,
-        NextFunction,
-        FetchMap,
-        Sdk,
-        SdkName
-      >(handler)
-        ? handler.internal
-        : (handler as RouterHandler)
-    );
+    >(handlers, (handler) => {
+      if (
+        isForklaunchExpressLikeRouter<
+          SV,
+          Path,
+          RouterHandler,
+          Internal,
+          BaseRequest,
+          BaseResponse,
+          NextFunction,
+          FetchMap,
+          Sdk,
+          SdkName
+        >(handler)
+      ) {
+        this.addRouterToSdk(handler);
+        return handler.internal;
+      }
+      return handler as RouterHandler;
+    });
   }
 
   #processTypedHandlerOrMiddleware<
@@ -1434,6 +1413,7 @@ export class ForklaunchExpressLikeRouter<
         SdkName
       >(contractDetailsOrMiddlewareOrTypedHandler)
     ) {
+      this.addRouterToSdk(contractDetailsOrMiddlewareOrTypedHandler);
       middleware.push(contractDetailsOrMiddlewareOrTypedHandler.internal);
     }
 
@@ -1616,6 +1596,24 @@ export class ForklaunchExpressLikeRouter<
     return this;
   }
 
+  private addRouterToSdk(
+    router: ConstrainedForklaunchRouter<SV, RouterHandler>
+  ) {
+    Object.entries(router.fetchMap).map(
+      ([key, value]) =>
+        (toRecord(this.fetchMap)[
+          sanitizePathSlashes(`${this.basePath}${key}`)
+        ] = value)
+    );
+
+    const existingSdk =
+      this.sdk[router.sdkName ?? toPrettyCamelCase(router.basePath)];
+    toRecord(this.sdk)[router.sdkName ?? toPrettyCamelCase(router.basePath)] = {
+      ...(typeof existingSdk === 'object' ? existingSdk : {}),
+      ...router.sdk
+    };
+  }
+
   registerNestableMiddlewareHandler<
     Name extends string,
     Path extends `/${string}`,
@@ -1685,7 +1683,7 @@ export class ForklaunchExpressLikeRouter<
       | ConstrainedForklaunchRouter<SV, RouterHandler>
     )[]
   ): this {
-    let middleware: (RouterHandler | Internal)[] = [];
+    const middleware: (RouterHandler | Internal)[] = [];
     let path: `/${string}` | undefined;
 
     if (typeof pathOrContractDetailsOrMiddlewareOrTypedHandler === 'string') {
@@ -1713,18 +1711,8 @@ export class ForklaunchExpressLikeRouter<
         )
       ) {
         const router = pathOrContractDetailsOrMiddlewareOrTypedHandler;
-        Object.assign(
-          this.fetchMap,
-          Object.fromEntries(
-            Object.entries(router.fetchMap as FetchMap).map(([key, value]) => [
-              sanitizePathSlashes(`${this.basePath}${key}`),
-              value
-            ])
-          )
-        );
-        Object.assign(this.sdk, {
-          [router.sdkName ?? toPrettyCamelCase(router.basePath)]: router.sdk
-        });
+
+        this.addRouterToSdk(router);
         path = router.basePath;
       }
       middleware.push(
@@ -1779,11 +1767,28 @@ export class ForklaunchExpressLikeRouter<
       );
     }
 
-    middleware = middleware.map((m) =>
-      typeof m === 'object' && m && 'internal' in m
-        ? (m.internal as Internal)
-        : m
-    );
+    if (!path) {
+      path = middleware.filter((m) =>
+        isForklaunchExpressLikeRouter<
+          SV,
+          Path,
+          RouterHandler,
+          Internal,
+          BaseRequest,
+          BaseResponse,
+          NextFunction,
+          FetchMap,
+          Sdk,
+          SdkName
+        >(m)
+      )[0]?.basePath;
+    }
+
+    // middleware = middleware.map((m) =>
+    //   typeof m === 'object' && m && 'internal' in m
+    //     ? (m.internal as Internal)
+    //     : m
+    // );
 
     if (path) {
       registrationMethod.bind(this.internal)(path, ...middleware);
@@ -1900,6 +1905,15 @@ export class ForklaunchExpressLikeRouter<
         [Key in keyof Router['fetchMap'] as Key extends string
           ? SanitizePathSlashes<`${BasePath}${Key}`>
           : never]: Router['fetchMap'][Key];
+      };
+      sdk: Sdk & {
+        [Key in PrettyCamelCase<
+          Router extends { sdkName?: string; basePath: string }
+            ? string extends Router['sdkName']
+              ? Router['basePath']
+              : Router['sdkName']
+            : never
+        >]: Router['sdk'];
       };
     };
   };
@@ -2793,4 +2807,37 @@ export class ForklaunchExpressLikeRouter<
       ...middlewareOrMiddlewareWithTypedHandler
     );
   };
+
+  protected cloneInternals(clone: this): void {
+    clone.routers = [...this.routers];
+    clone.routes = [...this.routes];
+    clone.fetchMap = { ...this.fetchMap };
+    clone.sdk = { ...this.sdk };
+  }
+
+  clone(): this {
+    const clone = new ForklaunchExpressLikeRouter<
+      SV,
+      BasePath,
+      RouterHandler,
+      Internal,
+      BaseRequest,
+      BaseResponse,
+      NextFunction,
+      FetchMap,
+      Sdk,
+      SdkName
+    >(
+      this.basePath,
+      this.schemaValidator,
+      this.internal,
+      this.postEnrichMiddleware,
+      this.openTelemetryCollector,
+      this.sdkName
+    ) as this;
+
+    this.cloneInternals(clone);
+
+    return clone;
+  }
 }

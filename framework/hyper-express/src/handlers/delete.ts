@@ -81,6 +81,7 @@ import { AnySchemaValidator } from '@forklaunch/validator';
  */
 export const delete_ = <
   SV extends AnySchemaValidator,
+  Name extends string,
   Path extends `/${string}`,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
@@ -94,6 +95,7 @@ export const delete_ = <
   path: Path,
   contractDetails: ContractDetails<
     SV,
+    Name,
     'delete',
     Path,
     P,
@@ -120,6 +122,7 @@ export const delete_ = <
 ) => {
   return innerDelete<
     SV,
+    Name,
     Path,
     P,
     ResBodyMap,

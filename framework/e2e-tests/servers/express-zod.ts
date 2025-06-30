@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { noop } from '@forklaunch/common';
-import { ApiClient, OpenTelemetryCollector } from '@forklaunch/core/http';
+import { OpenTelemetryCollector, SdkClient } from '@forklaunch/core/http';
 import {
   forklaunchExpress,
   forklaunchRouter,
@@ -220,7 +220,7 @@ const filePostHandler = handlers.post(
   zodSchemaValidator,
   '/test/file',
   {
-    name: 'Test File Upload/Download',
+    name: 'Test File Upload + Download',
     summary: 'Returns a file',
     body: file,
     responses: {
@@ -270,11 +270,13 @@ export function start() {
   });
 }
 
-export type SDK = ApiClient<{
-  getTest: typeof getTest;
-  postTest: typeof postTest;
-  jsonPatchTest: typeof jsonPatchTest;
-  multipartTest: typeof multipartTest;
-  urlEncodedFormTest: typeof urlEncodedFormTest;
-  filePostTest: typeof filePostTest;
-}>;
+export type SDK = SdkClient<
+  [
+    typeof getTest,
+    typeof postTest,
+    typeof jsonPatchTest,
+    typeof multipartTest,
+    typeof urlEncodedFormTest,
+    typeof filePostTest
+  ]
+>;

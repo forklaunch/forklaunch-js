@@ -1,10 +1,10 @@
 import {
-  TObject as OriginalTObject,
   StaticDecode,
   TArray,
   TKind,
   TLiteral,
   TNever,
+  TObject,
   TProperties,
   TSchema,
   TUnknown
@@ -41,7 +41,7 @@ export type TObjectShape = TProperties;
  *
  * @template T - The type to check and possibly convert to an object schema.
  */
-export type TObject<T> = T extends TObjectShape ? OriginalTObject<T> : TNever;
+export type SafeTObject<T> = T extends TObjectShape ? TObject<T> : TNever;
 
 /**
  * Translates a schema type T to its static type if T extends TCatchall. Otherwise, it returns TNever.
@@ -99,7 +99,7 @@ export type TResolve<T, Depth extends number = 0> = Depth extends 12
       : T extends TKind
         ? T
         : T extends UnboxedTObjectSchema
-          ? TObject<{
+          ? SafeTObject<{
               [K in keyof T]: TResolve<T[K], Increment<Depth>>;
             }> extends infer R
             ? R

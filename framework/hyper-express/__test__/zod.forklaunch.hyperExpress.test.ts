@@ -17,6 +17,11 @@ const forklaunchRouterInstance = forklaunchRouter(
   zodSchemaValidator,
   openTelemetryCollector
 );
+const nestedForklaunchRouterInstance = forklaunchRouter(
+  '/nested',
+  zodSchemaValidator,
+  openTelemetryCollector
+);
 
 describe('Forklaunch Hyper-Express Tests', () => {
   beforeAll(async () => {
@@ -233,8 +238,49 @@ describe('handlers', () => {
         res.status(200).json(req.body);
       }
     );
-    application.post('/', postRequest);
+
     router.post('/', postRequest);
+  });
+
+  it('should be able to create a nested router', async () => {
+    const postRequest = post(
+      zodSchemaValidator,
+      '/',
+      {
+        name: 'Create Organization',
+        body: {
+          json: {
+            name: string
+          }
+        },
+        summary: 'Creates an organization',
+        responses: {
+          200: {
+            json: {
+              name: string
+            }
+          },
+          400: string
+        }
+      },
+      async (req, res) => {
+        res.status(200).json(req.body);
+      }
+    );
+
+    const liveTypeFunction = router.post('/', postRequest);
+    const nestedLiveTypeFunction = nestedForklaunchRouterInstance
+      .use(liveTypeFunction)
+      .post('/', postRequest);
+
+    await nestedLiveTypeFunction.fetch('/nested/organization', {
+      method: 'POST',
+      body: {
+        json: {
+          name: 'string'
+        }
+      }
+    });
   });
 
   it('should be able to create a middleware handler', () => {

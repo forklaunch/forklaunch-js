@@ -33,6 +33,11 @@ const forklaunchRouterInstance = forklaunchRouter(
   typeboxSchemaValidator,
   openTelemetryCollector
 );
+const nestedForklaunchRouterInstance = forklaunchRouter(
+  '/nested',
+  typeboxSchemaValidator,
+  openTelemetryCollector
+);
 
 describe('Forklaunch Hyper-Express Tests', () => {
   beforeAll(async () => {
@@ -265,12 +270,54 @@ describe('handlers', () => {
         res.status(200).json(req.body);
       }
     );
-    application.post('/', postRequest);
+
     const liveTypeFunction = router.post('/', postRequest);
     await liveTypeFunction.fetch('/organization', {
       method: 'POST',
       body: {
         name: 'string'
+      }
+    });
+  });
+
+  it('should be able to create a nested router', async () => {
+    const postRequest = post(
+      typeboxSchemaValidator,
+      '/',
+      {
+        name: 'Create Organization',
+        body: {
+          json: {
+            name: string
+          }
+        },
+        summary: 'Creates an organization',
+        responses: {
+          200: {
+            json: {
+              name: string
+            }
+          },
+          400: string
+        }
+      },
+      async (req, res) => {
+        res.status(200).json(req.body);
+      }
+    );
+
+    const liveTypeFunction = router.post('/', postRequest);
+
+    const nestedLiveTypeFunction = nestedForklaunchRouterInstance
+      .use(liveTypeFunction)
+      .post('/', postRequest);
+
+    await nestedLiveTypeFunction.fetch('/nested/organization', {
+      method: 'POST',
+      body: {
+        json: {
+          name: 'string'
+        }
       }
     });
   });

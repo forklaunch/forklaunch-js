@@ -34,8 +34,8 @@ export function isForklaunchExpressLikeRouter<
   BaseRequest,
   BaseResponse,
   NextFunction,
-  FetchMap extends Record<never, never>,
-  Sdk extends Record<never, never>,
+  FetchMap extends Record<string, unknown>,
+  Sdk extends Record<string, unknown>,
   SdkName extends string
 >(
   maybeForklaunchExpressLikeRouter: unknown

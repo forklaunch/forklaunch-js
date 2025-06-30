@@ -100,6 +100,7 @@ import { AnySchemaValidator } from '@forklaunch/validator';
  */
 export const post = <
   SV extends AnySchemaValidator,
+  Name extends string,
   Path extends `/${string}`,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
@@ -113,6 +114,7 @@ export const post = <
   path: Path,
   contractDetails: ContractDetails<
     SV,
+    Name,
     'post',
     Path,
     P,
@@ -139,6 +141,7 @@ export const post = <
 ) => {
   return innerPost<
     SV,
+    Name,
     Path,
     P,
     ResBodyMap,

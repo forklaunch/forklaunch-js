@@ -71,3 +71,19 @@ export type RegistryOptions =
   | {
       raw: OpenAPIObject;
     };
+
+export type SdkPathMap = Record<
+  string,
+  {
+    method:
+      | 'get'
+      | 'post'
+      | 'put'
+      | 'patch'
+      | 'delete'
+      | 'options'
+      | 'head'
+      | 'trace';
+    path: string;
+  }
+>;

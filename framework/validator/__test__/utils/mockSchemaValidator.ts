@@ -6,16 +6,6 @@ import {
   ParseResult
 } from '../../src/shared/types/schema.types';
 
-declare module '@forklaunch/validator' {
-  interface SchemaResolve<T> {
-    Mock: T;
-  }
-
-  interface SchemaTranslate<T> {
-    Mock: T;
-  }
-}
-
 /**
  * Creates a union type string from an array of string literals.
  *

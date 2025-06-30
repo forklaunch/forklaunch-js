@@ -85,6 +85,7 @@ import { AnySchemaValidator } from '@forklaunch/validator';
  */
 export const head = <
   SV extends AnySchemaValidator,
+  Name extends string,
   Path extends `/${string}`,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
@@ -98,6 +99,7 @@ export const head = <
   path: Path,
   contractDetails: ContractDetails<
     SV,
+    Name,
     'head',
     Path,
     P,
@@ -124,6 +126,7 @@ export const head = <
 ) => {
   return innerHead<
     SV,
+    Name,
     Path,
     P,
     ResBodyMap,

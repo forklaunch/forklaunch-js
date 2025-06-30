@@ -33,6 +33,11 @@ const forklaunchRouterInstance = forklaunchRouter(
   zodSchemaValidator,
   openTelemetryCollector
 );
+const nestedForklaunchRouterInstance = forklaunchRouter(
+  '/nested',
+  zodSchemaValidator,
+  openTelemetryCollector
+);
 
 describe('Forklaunch Express Tests', () => {
   let server: Server;
@@ -234,7 +239,8 @@ describe('handlers', () => {
     );
     application.get('/:id', getRequest);
     const liveTypeFunction = router.get('/:id', getRequest);
-    const l = await liveTypeFunction.fetch('/organization/:id', {
+
+    await liveTypeFunction.fetch('/organization/:id', {
       method: 'GET',
       params: {
         id: 'string'
@@ -269,12 +275,54 @@ describe('handlers', () => {
         res.status(200).json(req.body);
       }
     );
-    application.post('/', postRequest);
+
     const liveTypeFunction = router.post('/', postRequest);
     await liveTypeFunction.fetch('/organization', {
       method: 'POST',
       body: {
         multipartForm: {
+          name: 'string'
+        }
+      }
+    });
+  });
+
+  it('should be able to create a nested router', async () => {
+    const postRequest = post(
+      zodSchemaValidator,
+      '/',
+      {
+        name: 'Create Organization',
+        body: {
+          json: {
+            name: string
+          }
+        },
+        summary: 'Creates an organization',
+        responses: {
+          200: {
+            json: {
+              name: string
+            }
+          },
+          400: string
+        }
+      },
+      async (req, res) => {
+        res.status(200).json(req.body);
+      }
+    );
+
+    const liveTypeFunction = router.post('/', postRequest);
+
+    const nestedLiveTypeFunction = nestedForklaunchRouterInstance
+      .use(liveTypeFunction)
+      .post('/', postRequest);
+
+    await nestedLiveTypeFunction.fetch('/nested/organization', {
+      method: 'POST',
+      body: {
+        json: {
           name: 'string'
         }
       }

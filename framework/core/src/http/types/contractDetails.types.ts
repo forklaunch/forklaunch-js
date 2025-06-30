@@ -1,6 +1,7 @@
 import {
   ExclusiveRecord,
   Prettify,
+  StringWithoutSlash,
   UnionToIntersection
 } from '@forklaunch/common';
 import {
@@ -423,7 +424,7 @@ export type PathParamHttpContractDetails<
   BaseRequest = unknown
 > = {
   /** Name of the contract */
-  readonly name: Name;
+  readonly name: StringWithoutSlash<Name>;
   /** Summary of the contract */
   readonly summary: string;
   /** Response schemas for the contract */

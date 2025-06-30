@@ -1,3 +1,4 @@
+import { EmptyObject } from '@forklaunch/common';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { CorsOptions } from 'cors';
 import { ExpressLikeRouter } from '../interfaces/expressLikeRouter.interface';
@@ -19,8 +20,8 @@ export abstract class ForklaunchExpressLikeApplication<
   BaseRequest,
   BaseResponse,
   NextFunction,
-  FetchMap extends Record<never, never> = Record<never, never>,
-  Sdk extends Record<never, never> = Record<never, never>,
+  FetchMap extends Record<string, unknown> = EmptyObject,
+  Sdk extends Record<string, unknown> = EmptyObject,
   SdkName extends string = 'sdk'
 > extends ForklaunchExpressLikeRouter<
   SV,

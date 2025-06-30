@@ -25,9 +25,9 @@ export interface ForklaunchRouter<SV extends AnySchemaValidator> {
   /** Nested routers */
   routers: ForklaunchRouter<SV>[];
   /** Nested route map */
-  fetchMap: Record<never, never>;
+  fetchMap: Record<string, unknown>;
   /** The SDK for the router */
-  sdk: Record<never, never>;
+  sdk: Record<string, unknown>;
   /** The name of the SDK for the router */
   sdkName?: string;
 }

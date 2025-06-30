@@ -8,10 +8,15 @@ import addFormats from 'ajv-formats';
 import { OpenAPIObject } from 'openapi3-ts/oas31';
 import { coerceSpecialTypes } from './core/coerceSpecialTypes';
 import { mapContentType } from './core/mapContentType';
-import { refreshOpenApi } from './core/refreshOpenApi';
+import { refreshOpenApi } from './core/openApi';
 import { getSdkPath } from './core/resolvePath';
 import { ResponseContentParserType } from './types/contentTypes.types';
-import { RegistryOptions, RequestType, ResponseType } from './types/sdk.types';
+import {
+  RegistryOptions,
+  RequestType,
+  ResponseType,
+  SdkPathMap
+} from './types/sdk.types';
 
 /**
  * A class representing the Forklaunch SDK.
@@ -25,7 +30,8 @@ export class UniversalSdk {
       | Record<string, ResponseContentParserType>
       | undefined,
     private registryOpenApiJson: OpenAPIObject | undefined,
-    private registryOpenApiHash: string | undefined
+    private registryOpenApiHash: string | undefined,
+    private sdkPathMap: SdkPathMap | undefined
   ) {}
 
   /**
@@ -42,10 +48,12 @@ export class UniversalSdk {
 
     let registryOpenApiJson;
     let registryOpenApiHash;
+    let sdkPathMap;
 
     if (refreshResult.updateRequired) {
       registryOpenApiJson = refreshResult.registryOpenApiJson;
       registryOpenApiHash = refreshResult.registryOpenApiHash;
+      sdkPathMap = refreshResult.sdkPathMap;
     }
 
     const ajv = new Ajv({
@@ -61,21 +69,46 @@ export class UniversalSdk {
       registryOptions,
       contentTypeParserMap,
       registryOpenApiJson,
-      registryOpenApiHash
+      registryOpenApiHash,
+      sdkPathMap
     );
   }
 
-  /**
-   * Executes an HTTP request.
-   *
-   * @param {string} route - The route path for the request.
-   * @param {'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'} method - The HTTP method.
-   * @param {RequestType} [request] - The request object.
-   * @returns {Promise<ResponseType>} - The response object.
-   */
-  private async execute(
-    route: string,
-    method: 'get' | 'post' | 'put' | 'patch' | 'delete',
+  async executeFetchCall(
+    path: string,
+    request?: RequestType & {
+      method:
+        | 'get'
+        | 'post'
+        | 'put'
+        | 'patch'
+        | 'delete'
+        | 'options'
+        | 'head'
+        | 'trace';
+    }
+  ): Promise<ResponseType> {
+    if (!this.host) {
+      throw new Error('Host not initialized, please run .create(..) first');
+    }
+
+    const refreshResult = await refreshOpenApi(
+      this.host,
+      this.registryOptions,
+      this.registryOpenApiHash
+    );
+
+    if (refreshResult.updateRequired) {
+      this.registryOpenApiJson = refreshResult.registryOpenApiJson;
+      this.registryOpenApiHash = refreshResult.registryOpenApiHash;
+      this.sdkPathMap = refreshResult.sdkPathMap;
+    }
+
+    return this.execute(path, request?.method ?? 'get', request);
+  }
+
+  async executeSdkCall(
+    sdkPath: string,
     request?: RequestType
   ): Promise<ResponseType> {
     if (!this.host) {
@@ -91,10 +124,53 @@ export class UniversalSdk {
     if (refreshResult.updateRequired) {
       this.registryOpenApiJson = refreshResult.registryOpenApiJson;
       this.registryOpenApiHash = refreshResult.registryOpenApiHash;
+      this.sdkPathMap = refreshResult.sdkPathMap;
     }
 
+    if (this.sdkPathMap == null) {
+      throw new Error(
+        'Sdk path map not initialized, please run .create(..) first'
+      );
+    }
+
+    const fullSdkPath = sdkPath.split('.');
+    while (fullSdkPath.length > 0) {
+      fullSdkPath.shift();
+      if (fullSdkPath.join('.') in this.sdkPathMap) {
+        break;
+      }
+    }
+    if (fullSdkPath.length === 0) {
+      throw new Error(`Sdk path not found: ${sdkPath}`);
+    }
+    const { method, path } = this.sdkPathMap?.[fullSdkPath.join('.')] || {};
+
+    return this.execute(path, method, request);
+  }
+
+  /**
+   * Executes an HTTP request.
+   *
+   * @param {string} route - The route path for the request.
+   * @param {'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'} method - The HTTP method.
+   * @param {RequestType} [request] - The request object.
+   * @returns {Promise<ResponseType>} - The response object.
+   */
+  private async execute(
+    path: string,
+    method:
+      | 'get'
+      | 'post'
+      | 'put'
+      | 'patch'
+      | 'delete'
+      | 'options'
+      | 'head'
+      | 'trace',
+    request?: RequestType
+  ): Promise<ResponseType> {
     const { params, body, query, headers } = request || {};
-    let url = getSdkPath(this.host + route);
+    let url = getSdkPath(this.host + path);
 
     if (params) {
       for (const key in params) {
@@ -164,7 +240,7 @@ export class UniversalSdk {
     }
 
     const response = await fetch(encodeURI(url), {
-      method: method.toUpperCase(),
+      method: method?.toUpperCase(),
       headers: {
         ...headers,
         ...(defaultContentType != 'multipart/form-data'
@@ -175,13 +251,15 @@ export class UniversalSdk {
     });
 
     const responseOpenApi =
-      this.registryOpenApiJson?.paths?.[openApiCompliantPath(route)]?.[
-        method.toLowerCase() as typeof method
-      ]?.responses?.[response.status];
+      path != null && method != null
+        ? this.registryOpenApiJson?.paths?.[openApiCompliantPath(path)]?.[
+            method?.toLowerCase() as typeof method
+          ]?.responses?.[response.status]
+        : null;
 
     if (responseOpenApi == null) {
       throw new Error(
-        `Response ${response.status} not found in OpenAPI spec for route ${route}`
+        `Response ${response.status} not found in OpenAPI spec for ${path} with method ${method}`
       );
     }
 
@@ -326,92 +404,5 @@ export class UniversalSdk {
       response: responseBody,
       headers: response.headers
     };
-  }
-
-  /**
-   * Executes a request with path parameters.
-   *
-   * @param {string} route - The route path for the request.
-   * @param {'GET' | 'DELETE'} method - The HTTP method.
-   * @param {RequestType} [request] - The request object.
-   * @returns {Promise<ResponseType>} - The response object.
-   */
-  async pathParamRequest(
-    route: string,
-    method: 'get' | 'delete',
-    request?: RequestType
-  ) {
-    return this.execute(route, method, request);
-  }
-
-  /**
-   * Executes a request with a body.
-   *
-   * @param {string} route - The route path for the request.
-   * @param {'POST' | 'PUT' | 'PATCH'} method - The HTTP method.
-   * @param {RequestType} [request] - The request object.
-   * @returns {Promise<ResponseType>} - The response object.
-   */
-  async bodyRequest(
-    route: string,
-    method: 'post' | 'put' | 'patch',
-    request?: RequestType
-  ) {
-    return this.execute(route, method, request);
-  }
-
-  /**
-   * Executes a GET request.
-   *
-   * @param {string} route - The route path for the request.
-   * @param {RequestType} [request] - The request object.
-   * @returns {Promise<ResponseType>} - The response object.
-   */
-  async get(route: string, request?: RequestType) {
-    return this.pathParamRequest(route, 'get', request);
-  }
-
-  /**
-   * Executes a POST request.
-   *
-   * @param {string} route - The route path for the request.
-   * @param {RequestType} [request] - The request object.
-   * @returns {Promise<ResponseType>} - The response object.
-   */
-  async post(route: string, request?: RequestType) {
-    return this.bodyRequest(route, 'post', request);
-  }
-
-  /**
-   * Executes a PUT request.
-   *
-   * @param {string} route - The route path for the request.
-   * @param {RequestType} [request] - The request object.
-   * @returns {Promise<ResponseType>} - The response object.
-   */
-  async put(route: string, request?: RequestType) {
-    return this.bodyRequest(route, 'put', request);
-  }
-
-  /**
-   * Executes a PATCH request.
-   *
-   * @param {string} route - The route path for the request.
-   * @param {RequestType} [request] - The request object.
-   * @returns {Promise<ResponseType>} - The response object.
-   */
-  async patch(route: string, request?: RequestType) {
-    return this.bodyRequest(route, 'patch', request);
-  }
-
-  /**
-   * Executes a DELETE request.
-   *
-   * @param {string} route - The route path for the request.
-   * @param {RequestType} [request] - The request object.
-   * @returns {Promise<ResponseType>} - The response object.
-   */
-  async delete(route: string, request?: RequestType) {
-    return this.pathParamRequest(route, 'delete', request);
   }
 }

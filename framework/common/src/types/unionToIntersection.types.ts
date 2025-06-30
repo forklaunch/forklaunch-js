@@ -3,3 +3,7 @@ export type UnionToIntersection<U> = (
 ) extends (k: infer I) => void
   ? I
   : never;
+
+export type UnionToIntersectionChildren<U> = {
+  [K in keyof U]: UnionToIntersection<U[K]>;
+};

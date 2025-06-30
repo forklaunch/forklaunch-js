@@ -72,6 +72,7 @@ import { AnySchemaValidator } from '@forklaunch/validator';
  */
 export const options = <
   SV extends AnySchemaValidator,
+  Name extends string,
   Path extends `/${string}`,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
@@ -85,6 +86,7 @@ export const options = <
   path: Path,
   contractDetails: ContractDetails<
     SV,
+    Name,
     'options',
     Path,
     P,
@@ -111,6 +113,7 @@ export const options = <
 ) => {
   return innerOptions<
     SV,
+    Name,
     Path,
     P,
     ResBodyMap,
