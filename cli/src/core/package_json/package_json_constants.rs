@@ -178,10 +178,10 @@ pub(crate) fn application_seed_script<'a>(
 pub(crate) fn application_setup_script(runtime: &Runtime) -> String {
     match runtime {
         Runtime::Bun => {
-            String::from("bun migrate:init && bun run build && bun migrate:up && bun seed")
+            String::from("bun run build && bun migrate:init && bun migrate:up && bun seed")
         }
         Runtime::Node => {
-            String::from("pnpm migrate:init && pnpm run build && pnpm migrate:up && pnpm seed")
+            String::from("pnpm build && pnpm migrate:init && pnpm migrate:up && pnpm seed")
         }
     }
 }
@@ -245,9 +245,9 @@ pub(crate) const WORKER_KAFKA_VERSION: &str = "^0.3.4";
 // @forklaunch/interfaces-worker
 pub(crate) const WORKER_INTERFACES_VERSION: &str = "^0.2.2";
 // @forklaunch/infrastructure-redis
-pub(crate) const INFRASTRUCTURE_REDIS_VERSION: &str = "^0.0.29";
+pub(crate) const INFRASTRUCTURE_REDIS_VERSION: &str = "^0.0.30";
 // @forklaunch/infrastructure-s3
-pub(crate) const INFRASTRUCTURE_S3_VERSION: &str = "^0.0.29";
+pub(crate) const INFRASTRUCTURE_S3_VERSION: &str = "^0.0.30";
 // @forklaunch/internal
 pub(crate) const INTERNAL_VERSION: &str = "^0.0.7";
 // @forklaunch/universal-sdk
