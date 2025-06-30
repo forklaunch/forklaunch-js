@@ -1,5 +1,11 @@
 # @forklaunch/interfaces-billing
 
+## 0.2.3
+
+### Patch Changes
+
+- bump internal package versions
+
 ## 0.2.2
 
 ### Patch Changes
