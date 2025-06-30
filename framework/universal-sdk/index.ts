@@ -26,7 +26,6 @@ export const universalSdk = async <TypedController>(options: {
         return undefined;
       }
 
-      // Handle fetch calls
       if (prop === 'fetch') {
         return sdkInternal.executeFetchCall;
       }
@@ -39,12 +38,10 @@ export const universalSdk = async <TypedController>(options: {
         return value;
       }
 
-      // Track descent path for SDK calls
       return createSdkProxy([prop as string]);
     }
   });
 
-  // Helper function to create nested proxies that track the path
   function createSdkProxy(path: string[]): unknown {
     return new Proxy(() => {}, {
       get(_target, prop) {
@@ -62,7 +59,6 @@ export const universalSdk = async <TypedController>(options: {
 
         const newPath = [...path, prop as string];
 
-        // If this is a function call (has apply/call), execute the SDK call
         if (
           prop === Symbol.toPrimitive ||
           prop === 'valueOf' ||
@@ -71,11 +67,9 @@ export const universalSdk = async <TypedController>(options: {
           return () => sdkInternal.executeSdkCall(path.join('.'));
         }
 
-        // Continue tracking descent
         return createSdkProxy(newPath);
       },
 
-      // Handle function calls - this executes when the proxy is called as a function
       apply(_target, _thisArg, args) {
         return sdkInternal.executeSdkCall(path.join('.'), ...args);
       }
