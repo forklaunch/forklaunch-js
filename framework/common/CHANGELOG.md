@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.4.1
+
+### Patch Changes
+
+- node types version upgrade
+
 ## 0.4.0
 
 ### Minor Changes

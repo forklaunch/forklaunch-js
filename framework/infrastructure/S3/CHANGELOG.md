@@ -1,5 +1,14 @@
 # @forklaunch/infrastructure-s3
 
+## 0.1.1
+
+### Patch Changes
+
+- node types version upgrade
+- Updated dependencies
+  - @forklaunch/common@0.4.1
+  - @forklaunch/core@0.10.1
+
 ## 0.1.0
 
 ### Minor Changes

@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/core",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "description": "forklaunch-js core package. Contains useful building blocks.",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -79,7 +79,7 @@
     "@forklaunch/validator": "workspace:*",
     "@mikro-orm/core": "^6.4.16",
     "@mikro-orm/mongodb": "^6.4.16",
-    "@modelcontextprotocol/sdk": "^1.13.2",
+    "@modelcontextprotocol/sdk": "^1.13.3",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/api-logs": "^0.202.0",
     "@opentelemetry/exporter-logs-otlp-http": "^0.202.0",
@@ -95,7 +95,7 @@
     "@opentelemetry/sdk-trace-node": "^2.0.1",
     "@opentelemetry/semantic-conventions": "^1.34.0",
     "cors": "^2.8.5",
-    "dotenv": "^17.0.0",
+    "dotenv": "^17.0.1",
     "jose": "^6.0.11",
     "openapi3-ts": "^4.5.0",
     "pino": "^9.7.0",
@@ -105,14 +105,14 @@
     "uuid": "^11.1.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.30.0",
+    "@eslint/js": "^9.30.1",
     "@scalar/express-api-reference": "^0.8.7",
     "@types/cors": "^2.8.19",
     "@types/jest": "^30.0.0",
     "@types/qs": "^6.14.0",
     "@types/uuid": "^10.0.0",
-    "@typescript/native-preview": "7.0.0-dev.20250630.1",
-    "globals": "^16.2.0",
+    "@typescript/native-preview": "7.0.0-dev.20250702.1",
+    "globals": "^16.3.0",
     "jest": "^30.0.3",
     "prettier": "^3.6.2",
     "testcontainers": "^11.0.3",

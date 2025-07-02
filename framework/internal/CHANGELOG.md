@@ -1,5 +1,14 @@
 # @forklaunch/common
 
+## 0.1.1
+
+### Patch Changes
+
+- node types version upgrade
+- Updated dependencies
+  - @forklaunch/validator@0.7.1
+  - @forklaunch/common@0.4.1
+
 ## 0.1.0
 
 ### Minor Changes
