@@ -24,19 +24,9 @@ export const OrganizationRoutes = (
     openTelemetryCollector
   );
 
-  return {
-    router,
-
-    // Create organization
-    createOrganization: router.post('/', controller.createOrganization),
-
-    // Get organization by ID
-    getOrganization: router.get('/:id', controller.getOrganization),
-
-    // Update organization by ID
-    updateOrganization: router.put('/', controller.updateOrganization),
-
-    // Delete organization by ID
-    deleteOrganization: router.delete('/:id', controller.deleteOrganization)
-  };
+  return router
+    .post('/', controller.createOrganization)
+    .get('/:id', controller.getOrganization)
+    .put('/', controller.updateOrganization)
+    .delete('/:id', controller.deleteOrganization);
 };

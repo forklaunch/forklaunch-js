@@ -25,24 +25,9 @@ export const BillingPortalRoutes = (
     openTelemetryCollector
   );
 
-  return {
-    router,
-
-    createBillingPortalSession: router.post(
-      '/',
-      controller.createBillingPortalSession
-    ),
-    getBillingPortalSession: router.get(
-      '/:id',
-      controller.getBillingPortalSession
-    ),
-    updateBillingPortalSession: router.put(
-      '/:id',
-      controller.updateBillingPortalSession
-    ),
-    expireBillingPortalSession: router.delete(
-      '/:id',
-      controller.expireBillingPortalSession
-    )
-  };
+  return router
+    .post('/', controller.createBillingPortalSession)
+    .get('/:id', controller.getBillingPortalSession)
+    .put('/:id', controller.updateBillingPortalSession)
+    .delete('/:id', controller.expireBillingPortalSession);
 };

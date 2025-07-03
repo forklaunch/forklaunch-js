@@ -24,13 +24,10 @@ export const PlanRoutes = (
     openTelemetryCollector
   );
 
-  return {
-    router,
-
-    createPlan: router.post('/', controller.createPlan),
-    getPlan: router.get('/:id', controller.getPlan),
-    updatePlan: router.put('/', controller.updatePlan),
-    deletePlan: router.delete('/:id', controller.deletePlan),
-    listPlans: router.get('/', controller.listPlans)
-  };
+  return router
+    .post('/', controller.createPlan)
+    .get('/:id', controller.getPlan)
+    .put('/', controller.updatePlan)
+    .delete('/:id', controller.deletePlan)
+    .get('/', controller.listPlans);
 };

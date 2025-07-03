@@ -24,9 +24,5 @@ export const WebhookRoutes = (
     openTelemetryCollector
   );
 
-  return {
-    router,
-
-    handleWebhookEvent: router.post('/', controller.handleWebhookEvent)
-  };
+  return router.post('/', controller.handleWebhookEvent);
 };

@@ -31,10 +31,7 @@ export const SampleWorkerRoutes = (
     openTelemetryCollector
   );
 
-  return {
-    router,
-
-    sampleWorkerGet: router.get('/:id', controller.sampleWorkerGet),
-    sampleWorkerPost: router.post('/', controller.sampleWorkerPost)
-  };
+  return router
+    .get('/:id', controller.sampleWorkerGet)
+    .post('/', controller.sampleWorkerPost);
 };

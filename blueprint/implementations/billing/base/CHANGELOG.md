@@ -1,5 +1,13 @@
 # @forklaunch/implementation-billing-base
 
+## 0.3.7
+
+### Patch Changes
+
+- remove enums from implementations for erasable syntax
+- Updated dependencies
+  - @forklaunch/interfaces-billing@0.3.3
+
 ## 0.3.6
 
 ### Patch Changes

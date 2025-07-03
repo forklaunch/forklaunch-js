@@ -6,7 +6,7 @@ import { SchemaDependencies } from '../../registrations';
 import { PaymentLinkController } from '../controllers/paymentLink.controller';
 
 export const PaymentLinkRoutes = (
-  scopedServiceFactory: ScopedDependencyFactory<
+  serviceFactory: ScopedDependencyFactory<
     SchemaValidator,
     SchemaDependencies,
     'PaymentLinkService'
@@ -20,25 +20,16 @@ export const PaymentLinkRoutes = (
   );
 
   const controller = PaymentLinkController(
-    scopedServiceFactory,
+    serviceFactory,
     openTelemetryCollector
   );
 
-  return {
-    router,
-
-    createPaymentLink: router.post('/', controller.createPaymentLink),
-    getPaymentLink: router.get('/:id', controller.getPaymentLink),
-    updatePaymentLink: router.put('/:id', controller.updatePaymentLink),
-    listPaymentLinks: router.get('/', controller.listPaymentLinks),
-    expirePaymentLink: router.delete('/:id', controller.expirePaymentLink),
-    handlePaymentSuccess: router.get(
-      '/:id/success',
-      controller.handlePaymentSuccess
-    ),
-    handlePaymentFailure: router.get(
-      '/:id/failure',
-      controller.handlePaymentFailure
-    )
-  };
+  return router
+    .post('/', controller.createPaymentLink)
+    .get('/:id', controller.getPaymentLink)
+    .put('/:id', controller.updatePaymentLink)
+    .get('/', controller.listPaymentLinks)
+    .delete('/:id', controller.expirePaymentLink)
+    .get('/:id/success', controller.handlePaymentSuccess)
+    .get('/:id/failure', controller.handlePaymentFailure);
 };
