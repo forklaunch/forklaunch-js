@@ -49,7 +49,7 @@
     "@types/node": "^24.0.10",
     "@typescript/native-preview": "7.0.0-dev.20250702.1",
     "fetch-mock": "^12.5.3",
-    "jest": "^30.0.3",
+    "jest": "^30.0.4",
     "openapi3-ts": "^4.5.0",
     "prettier": "^3.6.2",
     "ts-jest": "^29.4.0",

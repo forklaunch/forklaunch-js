@@ -1,5 +1,17 @@
 # @forklaunch/validator
 
+## 0.7.3
+
+### Patch Changes
+
+- Reduce zod depth inference a little bit further
+
+## 0.7.2
+
+### Patch Changes
+
+- Lower zod depth checking threshold to help with type inference
+
 ## 0.7.1
 
 ### Patch Changes

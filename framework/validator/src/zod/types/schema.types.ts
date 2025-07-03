@@ -123,7 +123,7 @@ export type UnionZodResolve<T extends ZodUnionContainer> = T extends [
  * @template T - The Zod schema type to resolve.
  * @template Depth - The current depth of the resolution.
  */
-export type ZodResolve<T, Depth extends number = 0> = Depth extends 28
+export type ZodResolve<T, Depth extends number = 0> = Depth extends 20
   ? ZodUnknown
   : T extends ZodPipeline<ZodTypeAny, infer R>
     ? R
