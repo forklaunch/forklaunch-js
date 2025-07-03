@@ -505,6 +505,29 @@ pub(crate) fn remove_service_from_docker_compose<'a>(
     Ok(docker_compose)
 }
 
+pub(crate) fn remove_worker_from_docker_compose<'a>(
+    docker_compose: &'a mut DockerCompose,
+    worker_name: &str,
+) -> Result<&'a mut DockerCompose> {
+    if docker_compose
+        .services
+        .contains_key(format!("{}-{}", worker_name, "server").as_str())
+    {
+        docker_compose
+            .services
+            .shift_remove(format!("{}-{}", worker_name, "server").as_str());
+    }
+    if docker_compose
+        .services
+        .contains_key(format!("{}-{}", worker_name, "worker").as_str())
+    {
+        docker_compose
+            .services
+            .shift_remove(format!("{}-{}", worker_name, "worker").as_str());
+    }
+    Ok(docker_compose)
+}
+
 pub(crate) fn add_kafka_to_docker_compose<'a>(
     app_name: &str,
     project_name: &str,

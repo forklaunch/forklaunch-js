@@ -20,7 +20,7 @@ use crate::{
     core::{
         base_path::{BasePathLocation, BasePathType, prompt_base_path},
         command::command,
-        docker::remove_service_from_docker_compose,
+        docker::remove_worker_from_docker_compose,
         manifest::{
             ApplicationInitializationMetadata, InitializableManifestConfig,
             InitializableManifestConfigMetadata, ProjectType, application::ApplicationManifestData,
@@ -146,7 +146,7 @@ impl CliCommand for WorkerCommand {
                 .with_context(|| ERROR_FAILED_TO_READ_DOCKER_COMPOSE)?,
         )
         .with_context(|| ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE)?;
-        remove_service_from_docker_compose(&mut docker_compose, &worker_name)?;
+        remove_worker_from_docker_compose(&mut docker_compose, &worker_name)?;
 
         let mut rendered_templates = vec![
             RenderedTemplate {
