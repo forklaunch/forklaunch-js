@@ -1,4 +1,5 @@
 use std::fs::{self, read_dir};
+use std::path::PathBuf;
 use toml;
 
 mod check_blueprint_deps;
@@ -29,6 +30,14 @@ fn main() {
                 .collect::<Vec<_>>(),
         );
     }
+    implementation_refs.push(
+        read_dir(format!("../../../../framework/infrastructure"))
+            .unwrap()
+            .map(|entry| entry.unwrap().path())
+            .filter(|entry| entry.is_dir())
+            .collect::<Vec<_>>(),
+    );
+    implementation_refs.push(vec![PathBuf::from("../../../../framework/internal")]);
     let project_refs: Vec<&str> = projects.iter().map(|s| s.as_str()).collect();
     match check_blueprint_deps::verify_package_versions(
         &project_refs,

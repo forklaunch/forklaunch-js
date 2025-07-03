@@ -1,7 +1,7 @@
 use anyhow::{Result, bail};
 use convert_case::{Case, Casing};
-use oxc_allocator::{Allocator, CloneIn, Vec};
-use oxc_ast::ast::{Argument, Declaration, Expression, Program, Statement, TSSignature, TSType};
+use oxc_allocator::Allocator;
+use oxc_ast::ast::{Argument, Declaration, Expression, Program, Statement, TSType};
 use oxc_codegen::{CodeGenerator, CodegenOptions};
 
 use super::delete_import_statement::delete_import_statement;
@@ -44,8 +44,7 @@ where
     bail!("Failed to delete from server.ts")
 }
 
-pub(crate) fn delete_from_server_exported_api_client<'a>(
-    allocator: &'a Allocator,
+pub(crate) fn delete_from_server_exported_sdk_client<'a>(
     server_program_ast: &mut Program<'a>,
     router_name_camel_case: &str,
 ) -> Result<()> {
@@ -60,7 +59,7 @@ pub(crate) fn delete_from_server_exported_api_client<'a>(
             _ => continue,
         };
 
-        if !ts_declaration.id.name.contains("ApiClient") {
+        if !ts_declaration.id.name.contains("SdkClient") {
             continue;
         }
 
@@ -69,32 +68,29 @@ pub(crate) fn delete_from_server_exported_api_client<'a>(
             _ => continue,
         };
 
-        let inner_sdk_instantiations = match type_reference
+        let inner_sdk_tuple = match type_reference
             .type_parameters
             .as_mut()
             .and_then(|tp| tp.params.iter_mut().find(|_| true))
         {
-            Some(TSType::TSTypeLiteral(inner)) => inner,
+            Some(TSType::TSTupleType(tuple)) => tuple,
             _ => continue,
         };
 
-        let mut new_inner_sdk_instantiation_members = Vec::new_in(allocator);
-        inner_sdk_instantiations.members.iter().for_each(|member| {
-            let member_key = match &member {
-                TSSignature::TSPropertySignature(member) => &member.key,
-                _ => return,
-            };
-
-            if let Some(member_name) = member_key.name() {
-                if member_name == router_name_camel_case {
-                    return;
-                }
+        // Simple string-based matching approach
+        let mut indices_to_remove = std::vec::Vec::new();
+        for (i, tuple_element) in inner_sdk_tuple.element_types.iter().enumerate() {
+            // Use debug format to check if the tuple element contains our router name
+            let debug_str = format!("{:?}", tuple_element);
+            if debug_str.contains(router_name_camel_case) {
+                indices_to_remove.push(i);
             }
+        }
 
-            new_inner_sdk_instantiation_members.push(member.clone_in(allocator));
-        });
-
-        inner_sdk_instantiations.members = new_inner_sdk_instantiation_members;
+        // Remove elements in reverse order to maintain correct indices
+        for &i in indices_to_remove.iter().rev() {
+            inner_sdk_tuple.element_types.remove(i);
+        }
     }
 
     Ok(())
@@ -232,10 +228,48 @@ pub(crate) fn delete_from_server_ts_router<'a>(
         format!("./api/routes/{router_name_camel_case}.routes").as_str(),
     )?;
 
-    delete_from_server_exported_api_client(allocator, server_program, &router_name_camel_case)?;
+    delete_from_server_exported_sdk_client(server_program, &router_name_camel_case)?;
 
     Ok(CodeGenerator::new()
         .with_options(CodegenOptions::default())
         .build(&server_program)
         .code)
+}
+
+#[cfg(test)]
+mod tests {
+    use oxc_allocator::Allocator;
+    use oxc_ast::ast::SourceType;
+    use oxc_codegen::{CodeGenerator, CodegenOptions};
+
+    use super::*;
+    use crate::core::ast::parse_ast_program::parse_ast_program;
+
+    #[test]
+    fn test_successful_deletion() {
+        let allocator = Allocator::default();
+
+        let server_code = r#"
+export type MySdkClient = SdkClient<[
+    typeof UserRoutes,
+    typeof PostRoutes,
+    typeof CommentRoutes
+]>;
+"#;
+        let mut server_program = parse_ast_program(&allocator, server_code, SourceType::ts());
+
+        let result = delete_from_server_exported_sdk_client(&mut server_program, "PostRoutes");
+
+        assert!(result.is_ok());
+
+        let expected_code =
+            "export type MySdkClient = SdkClient<[typeof UserRoutes, typeof CommentRoutes]>;\n";
+
+        let actual_code = CodeGenerator::new()
+            .with_options(CodegenOptions::default())
+            .build(&server_program)
+            .code;
+
+        assert_eq!(actual_code, expected_code);
+    }
 }

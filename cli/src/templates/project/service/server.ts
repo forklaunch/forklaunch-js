@@ -1,4 +1,4 @@
-import { ApiClient } from '@forklaunch/core/http';
+import { SdkClient } from '@forklaunch/core/http';
 import { forklaunchExpress, SchemaValidator } from '@{{app_name}}/core';
 import { bootstrap } from './bootstrapper';
 import { {{pascal_case_name}}Routes } from './api/routes/{{camel_case_name}}.routes';
@@ -23,7 +23,7 @@ bootstrap((ci, tokens) => {
     openTelemetryCollector
   );
   //! mounts the routes to the app
-  app.use({{camel_case_name}}Routes.router);
+  app.use({{camel_case_name}}Routes);
   //! starts the server
   app.listen(port, host, () => {
     openTelemetryCollector.info(
@@ -31,7 +31,7 @@ bootstrap((ci, tokens) => {
     );
   });
 });
-//! defines the ApiClient for use with the UniversalSDK client
-export type {{pascal_case_name}}ApiClient = ApiClient<{
-  {{camel_case_name}}: typeof {{pascal_case_name}}Routes;
-}>;
+//! defines the SdkClient for use with the UniversalSDK client
+export type {{pascal_case_name}}SdkClient = SdkClient<[
+  typeof {{pascal_case_name}}Routes
+]>;

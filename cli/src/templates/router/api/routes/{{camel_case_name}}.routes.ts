@@ -16,7 +16,11 @@ export const {{pascal_case_name}}Routes = (
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) => {
   // defines the router for the {{camel_case_name}} routes
-  const router = forklaunchRouter('/{{kebab_case_name}}', SchemaValidator(), openTelemetryCollector);
+  const router = forklaunchRouter(
+    '/{{kebab_case_name}}',
+    SchemaValidator(), 
+    openTelemetryCollector
+  );
 
   const controller = {{pascal_case_name}}Controller(
     scopeFactory,
@@ -24,10 +28,7 @@ export const {{pascal_case_name}}Routes = (
     openTelemetryCollector
   );
 
-  return {
-    router,
-
-    {{camel_case_name}}Get: router.get('/', controller.{{camel_case_name}}Get),
-    {{camel_case_name}}Post: router.post('/', controller.{{camel_case_name}}Post)
-  };
+  return router
+    .get('/', controller.{{camel_case_name}}Get)
+    .post('/', controller.{{camel_case_name}}Post);
 };
