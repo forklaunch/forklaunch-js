@@ -167,9 +167,9 @@ describe('zod schema validator tests', () => {
   });
 
   test('enum', async () => {
-    enum TestSingleEnum {
-      WORLD = 'world'
-    }
+    const TestSingleEnum = {
+      WORLD: 'world'
+    } as const;
     const schemified = enum_(TestSingleEnum);
 
     compare(
@@ -181,10 +181,10 @@ describe('zod schema validator tests', () => {
       ])
     );
 
-    enum TestMultipleEnum {
-      WORLD = 'world',
-      HELLO = 'hello'
-    }
+    const TestMultipleEnum = {
+      WORLD: 'world',
+      HELLO: 'hello'
+    } as const;
     const schemifiedMultiple = enum_(TestMultipleEnum);
     compare(
       schemifiedMultiple,

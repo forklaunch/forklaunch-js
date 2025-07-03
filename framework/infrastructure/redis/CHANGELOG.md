@@ -1,5 +1,14 @@
 # @forklaunch/infrastructure-redis
 
+## 0.1.4
+
+### Patch Changes
+
+- remove enum from all packages for erasable syntax
+- Updated dependencies
+  - @forklaunch/common@0.4.2
+  - @forklaunch/core@0.10.4
+
 ## 0.1.3
 
 ### Patch Changes

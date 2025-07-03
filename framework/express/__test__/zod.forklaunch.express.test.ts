@@ -126,11 +126,11 @@ describe('Forklaunch Express Tests', () => {
 
     forklaunchApplication.use(forklaunchRouterInstance);
 
-    server = await forklaunchApplication.listen(6935, () => {});
+    server = await forklaunchApplication.listen(6840, () => {});
   });
 
   test('Get', async () => {
-    const testGet = await fetch('http://localhost:6935/testpath/test', {
+    const testGet = await fetch('http://localhost:6840/testpath/test', {
       method: 'GET'
     });
 
@@ -139,7 +139,7 @@ describe('Forklaunch Express Tests', () => {
   });
 
   test('Post', async () => {
-    const testPost = await fetch('http://localhost:6935/testpath/test', {
+    const testPost = await fetch('http://localhost:6840/testpath/test', {
       method: 'POST',
       body: JSON.stringify({ test: 'Hello World' }),
       headers: { 'Content-Type': 'application/json' }
@@ -150,7 +150,7 @@ describe('Forklaunch Express Tests', () => {
   });
 
   test('Put', async () => {
-    const testPut = await fetch('http://localhost:6935/testpath/test', {
+    const testPut = await fetch('http://localhost:6840/testpath/test', {
       method: 'PUT',
       body: JSON.stringify({ test: 'Hello World' }),
       headers: { 'Content-Type': 'application/json' }
@@ -161,7 +161,7 @@ describe('Forklaunch Express Tests', () => {
   });
 
   test('Patch', async () => {
-    const testPatch = await fetch('http://localhost:6935/testpath/test', {
+    const testPatch = await fetch('http://localhost:6840/testpath/test', {
       method: 'PATCH',
       body: JSON.stringify({ test: 'Hello World' }),
       headers: { 'Content-Type': 'application/json' }
@@ -172,7 +172,7 @@ describe('Forklaunch Express Tests', () => {
   });
 
   test('Delete', async () => {
-    const testDelete = await fetch('http://localhost:6935/testpath/test', {
+    const testDelete = await fetch('http://localhost:6840/testpath/test', {
       method: 'DELETE'
     });
 

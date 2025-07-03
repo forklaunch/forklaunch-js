@@ -84,7 +84,8 @@ type EqualityWithoutFunction<
       : false
     : false;
 
-export enum DummyEnum {
-  A = 'A',
-  B = 'B'
-}
+export const DummyEnum = {
+  A: 'A',
+  B: 'B'
+} as const;
+export type DummyEnum = (typeof DummyEnum)[keyof typeof DummyEnum];

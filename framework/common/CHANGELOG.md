@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.4.2
+
+### Patch Changes
+
+- remove enum from all packages for erasable syntax
+
 ## 0.4.1
 
 ### Patch Changes

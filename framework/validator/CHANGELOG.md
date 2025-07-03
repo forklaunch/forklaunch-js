@@ -1,5 +1,13 @@
 # @forklaunch/validator
 
+## 0.7.4
+
+### Patch Changes
+
+- remove enum from all packages for erasable syntax
+- Updated dependencies
+  - @forklaunch/common@0.4.2
+
 ## 0.7.3
 
 ### Patch Changes

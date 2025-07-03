@@ -58,6 +58,7 @@ describe('openApiV3Generator tests', () => {
       paths: {
         '/api': {
           get: {
+            operationId: 'api.testContract',
             tags: ['api'],
             summary: 'Test Contract: Test Contract Summary',
             parameters: [

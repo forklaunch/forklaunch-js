@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/core",
-  "version": "0.10.3",
+  "version": "0.10.4",
   "description": "forklaunch-js core package. Contains useful building blocks.",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -79,7 +79,7 @@
     "@forklaunch/validator": "workspace:*",
     "@mikro-orm/core": "^6.4.16",
     "@mikro-orm/mongodb": "^6.4.16",
-    "@modelcontextprotocol/sdk": "^1.13.3",
+    "@modelcontextprotocol/sdk": "^1.14.0",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/api-logs": "^0.202.0",
     "@opentelemetry/exporter-logs-otlp-http": "^0.202.0",
@@ -111,7 +111,7 @@
     "@types/jest": "^30.0.0",
     "@types/qs": "^6.14.0",
     "@types/uuid": "^10.0.0",
-    "@typescript/native-preview": "7.0.0-dev.20250702.1",
+    "@typescript/native-preview": "7.0.0-dev.20250703.1",
     "globals": "^16.3.0",
     "jest": "^30.0.4",
     "prettier": "^3.6.2",

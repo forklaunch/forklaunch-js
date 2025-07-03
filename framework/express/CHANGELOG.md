@@ -1,5 +1,15 @@
 # @forklaunch/express
 
+## 0.6.4
+
+### Patch Changes
+
+- remove enum from all packages for erasable syntax
+- Updated dependencies
+  - @forklaunch/validator@0.7.4
+  - @forklaunch/common@0.4.2
+  - @forklaunch/core@0.10.4
+
 ## 0.6.3
 
 ### Patch Changes
