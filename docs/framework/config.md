@@ -90,7 +90,7 @@ The ConfigInjector supports creating scopes for managing dependency lifetimes:
 const scope = configInjector.createScope();
 
 // Resolve scoped dependencies
-const scopedService = scope.resolve('someService');
+const service = scope.resolve('someService');
 
 // Clean up scope
 scope.dispose();

@@ -6,7 +6,7 @@ import { SchemaDependencies } from '../../registrations';
 import { PermissionController } from '../controllers/permission.controller';
 
 export const PermissionRoutes = (
-  scopedServiceFactory: ScopedDependencyFactory<
+  serviceFactory: ScopedDependencyFactory<
     SchemaValidator,
     SchemaDependencies,
     'PermissionService'
@@ -20,7 +20,7 @@ export const PermissionRoutes = (
   );
 
   const controller = PermissionController(
-    scopedServiceFactory,
+    serviceFactory,
     openTelemetryCollector
   );
 

@@ -6,7 +6,7 @@ import { SchemaDependencies } from '../../registrations';
 import { WebhookController } from '../controllers/webhook.controller';
 
 export const WebhookRoutes = (
-  scopedServiceFactory: ScopedDependencyFactory<
+  serviceFactory: ScopedDependencyFactory<
     SchemaValidator,
     SchemaDependencies,
     'WebhookService'
@@ -19,10 +19,7 @@ export const WebhookRoutes = (
     openTelemetryCollector
   );
 
-  const controller = WebhookController(
-    scopedServiceFactory,
-    openTelemetryCollector
-  );
+  const controller = WebhookController(serviceFactory, openTelemetryCollector);
 
   return router.post('/', controller.handleWebhookEvent);
 };

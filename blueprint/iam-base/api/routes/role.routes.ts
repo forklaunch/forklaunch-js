@@ -6,7 +6,7 @@ import { SchemaDependencies } from '../../registrations';
 import { RoleController } from '../controllers/role.controller';
 
 export const RoleRoutes = (
-  scopedServiceFactory: ScopedDependencyFactory<
+  serviceFactory: ScopedDependencyFactory<
     SchemaValidator,
     SchemaDependencies,
     'RoleService'
@@ -19,10 +19,7 @@ export const RoleRoutes = (
     openTelemetryCollector
   );
 
-  const controller = RoleController(
-    scopedServiceFactory,
-    openTelemetryCollector
-  );
+  const controller = RoleController(serviceFactory, openTelemetryCollector);
 
   return router
     .post('/', controller.createRole)

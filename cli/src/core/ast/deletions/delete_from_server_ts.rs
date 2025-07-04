@@ -104,6 +104,8 @@ pub(crate) fn delete_from_server_ts_router<'a>(
     let router_name_camel_case = router_name.to_case(Case::Camel);
     let router_name_pascal_case = router_name.to_case(Case::Pascal);
 
+    println!("delete service factory");
+
     delete_from_server_ts(server_program, |statements| {
         let mut maybe_splice_pos = None;
 
@@ -117,9 +119,7 @@ pub(crate) fn delete_from_server_ts_router<'a>(
                 };
 
                 match expr.declarations[0].id.get_identifier_name() {
-                    Some(name)
-                        if name != format!("scoped{router_name_pascal_case}ServiceFactory") =>
-                    {
+                    Some(name) if name != format!("{router_name_pascal_case}ServiceFactory") => {
                         return;
                     }
                     _ => {}
@@ -205,16 +205,14 @@ pub(crate) fn delete_from_server_ts_router<'a>(
             };
 
             let arg = match &call.arguments[0] {
-                Argument::StaticMemberExpression(arg) => Some(arg),
+                Argument::Identifier(arg) => Some(arg),
                 _ => None,
             };
 
             if id.name == "app" && member.property.name == "use" {
                 if let Some(arg) = arg {
-                    if let Expression::Identifier(object) = &arg.object {
-                        if object.name == format!("{router_name_camel_case}Routes").as_str() {
-                            maybe_splice_pos = Some(index);
-                        }
+                    if &arg.name == format!("{router_name_camel_case}Routes").as_str() {
+                        maybe_splice_pos = Some(index);
                     }
                 }
             }

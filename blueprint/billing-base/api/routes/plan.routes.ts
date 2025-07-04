@@ -6,7 +6,7 @@ import { SchemaDependencies } from '../../registrations';
 import { PlanController } from '../controllers/plan.controller';
 
 export const PlanRoutes = (
-  scopedServiceFactory: ScopedDependencyFactory<
+  serviceFactory: ScopedDependencyFactory<
     SchemaValidator,
     SchemaDependencies,
     'PlanService'
@@ -19,10 +19,7 @@ export const PlanRoutes = (
     openTelemetryCollector
   );
 
-  const controller = PlanController(
-    scopedServiceFactory,
-    openTelemetryCollector
-  );
+  const controller = PlanController(serviceFactory, openTelemetryCollector);
 
   return router
     .post('/', controller.createPlan)

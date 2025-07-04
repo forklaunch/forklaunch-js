@@ -6,7 +6,7 @@ import { SchemaDependencies } from '../../registrations';
 import { SubscriptionController } from '../controllers/subscription.controller';
 
 export const SubscriptionRoutes = (
-  scopedServiceFactory: ScopedDependencyFactory<
+  serviceFactory: ScopedDependencyFactory<
     SchemaValidator,
     SchemaDependencies,
     'SubscriptionService'
@@ -20,7 +20,7 @@ export const SubscriptionRoutes = (
   );
 
   const controller = SubscriptionController(
-    scopedServiceFactory,
+    serviceFactory,
     openTelemetryCollector
   );
 

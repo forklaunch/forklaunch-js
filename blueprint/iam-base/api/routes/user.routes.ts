@@ -6,7 +6,7 @@ import { SchemaDependencies } from '../../registrations';
 import { UserController } from '../controllers/user.controller';
 
 export const UserRoutes = (
-  scopedUserServiceFactory: ScopedDependencyFactory<
+  userServiceFactory: ScopedDependencyFactory<
     SchemaValidator,
     SchemaDependencies,
     'UserService'
@@ -18,10 +18,7 @@ export const UserRoutes = (
     SchemaValidator(),
     openTelemetryCollector
   );
-  const controller = UserController(
-    scopedUserServiceFactory,
-    openTelemetryCollector
-  );
+  const controller = UserController(userServiceFactory, openTelemetryCollector);
 
   return router
     .post('/', controller.createUser)

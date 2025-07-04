@@ -18,8 +18,6 @@ import {
   uuid
 } from '@forklaunch/validator/zod';
 import { NextFunction, Request, Response } from 'express';
-import fs from 'fs';
-import path from 'path';
 
 const zodSchemaValidator = SchemaValidator();
 const openTelemetryCollector = new OpenTelemetryCollector('test');
@@ -176,12 +174,6 @@ const multipartHandler = handlers.post(
   },
   expressMiddleware,
   async (req, res) => {
-    if (__dirname) {
-      fs.writeFileSync(
-        path.join(__dirname, '.temp', req.body.fileName),
-        await req.body.g.text()
-      );
-    }
     res.status(200).send(`${req.body.fileName} ${await req.body.g.text()}`);
   }
 );

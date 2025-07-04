@@ -6,7 +6,7 @@ import { SchemaDependencies } from '../../registrations';
 import { OrganizationController } from '../controllers/organization.controller';
 
 export const OrganizationRoutes = (
-  scopedServiceFactory: ScopedDependencyFactory<
+  serviceFactory: ScopedDependencyFactory<
     SchemaValidator,
     SchemaDependencies,
     'OrganizationService'
@@ -20,7 +20,7 @@ export const OrganizationRoutes = (
   );
 
   const controller = OrganizationController(
-    scopedServiceFactory,
+    serviceFactory,
     openTelemetryCollector
   );
 

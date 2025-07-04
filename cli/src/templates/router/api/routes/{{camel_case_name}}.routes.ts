@@ -8,7 +8,7 @@ import { SchemaDependencies } from '../../registrations';
 // returns an object with the router and the {{camel_case_name}}Get and {{camel_case_name}}Post methods for easy installation
 export const {{pascal_case_name}}Routes = (
   scopeFactory: () => ConfigInjector<SchemaValidator, SchemaDependencies>,
-  scopedServiceFactory: ScopedDependencyFactory<
+  serviceFactory: ScopedDependencyFactory<
     SchemaValidator,
     SchemaDependencies,
     '{{pascal_case_name}}Service'
@@ -24,7 +24,7 @@ export const {{pascal_case_name}}Routes = (
 
   const controller = {{pascal_case_name}}Controller(
     scopeFactory,
-    scopedServiceFactory,
+    serviceFactory,
     openTelemetryCollector
   );
 

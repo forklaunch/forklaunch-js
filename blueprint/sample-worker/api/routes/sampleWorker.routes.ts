@@ -11,7 +11,7 @@ import { SampleWorkerController } from '../controllers/sampleWorker.controller';
 // returns an object with the router and the sampleWorkerGet and sampleWorkerPost methods for easy installation
 export const SampleWorkerRoutes = (
   scopeFactory: () => ConfigInjector<SchemaValidator, SchemaDependencies>,
-  scopedServiceFactory: ScopedDependencyFactory<
+  serviceFactory: ScopedDependencyFactory<
     SchemaValidator,
     SchemaDependencies,
     'SampleWorkerService'
@@ -27,7 +27,7 @@ export const SampleWorkerRoutes = (
 
   const controller = SampleWorkerController(
     scopeFactory,
-    scopedServiceFactory,
+    serviceFactory,
     openTelemetryCollector
   );
 

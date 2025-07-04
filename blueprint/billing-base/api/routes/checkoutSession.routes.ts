@@ -6,7 +6,7 @@ import { SchemaDependencies } from '../../registrations';
 import { CheckoutSessionController } from '../controllers/checkoutSession.controller';
 
 export const CheckoutSessionRoutes = (
-  scopedServiceFactory: ScopedDependencyFactory<
+  serviceFactory: ScopedDependencyFactory<
     SchemaValidator,
     SchemaDependencies,
     'CheckoutSessionService'
@@ -20,7 +20,7 @@ export const CheckoutSessionRoutes = (
   );
 
   const controller = CheckoutSessionController(
-    scopedServiceFactory,
+    serviceFactory,
     openTelemetryCollector
   );
 

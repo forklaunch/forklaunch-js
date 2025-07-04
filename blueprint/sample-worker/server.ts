@@ -15,13 +15,13 @@ bootstrap((ci, tokens) => {
   const version = ci.resolve(tokens.VERSION);
   const docsPath = ci.resolve(tokens.DOCS_PATH);
   //! resolves the necessary services from the configuration
-  const scopedSampleWorkerServiceFactory = ci.scopedResolver(
+  const sampleWorkerServiceFactory = ci.scopedResolver(
     tokens.SampleWorkerService
   );
   //! constructs the necessary routes using the appropriate Routes functions
   const sampleWorkerRoutes = SampleWorkerRoutes(
     () => ci.createScope(),
-    scopedSampleWorkerServiceFactory,
+    sampleWorkerServiceFactory,
     openTelemetryCollector
   );
   //! mounts the routes to the app
