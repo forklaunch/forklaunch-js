@@ -15,12 +15,12 @@
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist bun.lockb node_modules",
-    "dev:bun:local": "DOTENV_FILE_PATH=.env.local bun run migrate:up && DOTENV_FILE_PATH=.env.local bun tsx watch server.ts & DOTENV_FILE_PATH=.env.local bun tsx watch worker.ts",
+    "dev:bun:local": "DOTENV_FILE_PATH=.env.local bun run migrate:up && DOTENV_FILE_PATH=.env.local bun --watch server.ts & DOTENV_FILE_PATH=.env.local bun --watch worker.ts",
     "dev:local": "DOTENV_FILE_PATH=.env.local pnpm run migrate:up && DOTENV_FILE_PATH=.env.local pnpm tsx watch server.ts & DOTENV_FILE_PATH=.env.local pnpm tsx watch worker.ts",
     "dev:server": "pnpm run migrate:up && pnpm tsx watch server.ts",
-    "dev:server:bun": "bun run migrate:up && bun tsx watch server.ts",
+    "dev:server:bun": "bun run migrate:up && bun --watch server.ts",
     "dev:worker": "pnpm tsx watch worker.ts",
-    "dev:worker:bun": "bun tsx watch worker.ts",
+    "dev:worker:bun": "bun --watch worker.ts",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
     "lint": "eslint . -c eslint.config.mjs",
@@ -37,13 +37,13 @@
   "dependencies": {
     "@forklaunch/blueprint-core": "workspace:*",
     "@forklaunch/blueprint-monitoring": "workspace:*",
-    "@forklaunch/core": "^0.9.21",
+    "@forklaunch/core": "^0.10.4",
     "@forklaunch/implementation-worker-bullmq": "workspace:*",
     "@forklaunch/implementation-worker-database": "workspace:*",
     "@forklaunch/implementation-worker-kafka": "workspace:*",
     "@forklaunch/implementation-worker-redis": "workspace:*",
-    "@forklaunch/infrastructure-redis": "^0.0.29",
-    "@forklaunch/infrastructure-s3": "^0.0.29",
+    "@forklaunch/infrastructure-redis": "^0.1.4",
+    "@forklaunch/infrastructure-s3": "^0.1.4",
     "@forklaunch/interfaces-worker": "workspace:*",
     "@mikro-orm/better-sqlite": "^6.4.16",
     "@mikro-orm/core": "^6.4.16",
@@ -57,15 +57,15 @@
     "@mikro-orm/reflection": "^6.4.16",
     "@mikro-orm/seeder": "^6.4.16",
     "@mikro-orm/sqlite": "^6.4.16",
-    "@sinclair/typebox": "^0.34.35",
+    "@sinclair/typebox": "^0.34.37",
     "ajv": "^8.17.1",
-    "better-sqlite3": "^11.10.0",
-    "bullmq": "^5.54.3",
-    "dotenv": "^16.5.0",
+    "better-sqlite3": "^12.2.0",
+    "bullmq": "^5.56.1",
+    "dotenv": "^17.0.1",
     "kafkajs": "^2.2.4",
     "node-gyp": "^11.2.0",
     "sqlite3": "^5.1.7",
-    "zod": "^3.25.67"
+    "zod": "^3.25.71"
   },
   "devDependencies": {
     "@mikro-orm/cli": "^6.4.16",
@@ -73,10 +73,10 @@
     "@types/express-serve-static-core": "^5.0.6",
     "@types/qs": "^6.14.0",
     "depcheck": "^1.4.7",
-    "eslint": "^9.29.0",
+    "eslint": "^9.30.1",
     "tsx": "^4.20.3",
-    "typedoc": "^0.28.5",
-    "typescript-eslint": "^8.34.1"
+    "typedoc": "^0.28.7",
+    "typescript-eslint": "^8.35.1"
   },
   "mikro-orm": {
     "config_paths": [

@@ -4,20 +4,20 @@
  * This is an auto-generated file. Modifications are encouraged but may inhibit automated upgrades.
  */
 
-import type { BillingApiClient } from '@forklaunch/blueprint-billing-base';
-import type { IamApiClient } from '@forklaunch/blueprint-iam-base';
-import type { IamApiClient as IamBetterAuthApiClient } from '@forklaunch/blueprint-iam-better-auth';
-import type { SampleWorkerApiClient } from '@forklaunch/blueprint-sample-worker';
+import type { BillingSdkClient } from '@forklaunch/blueprint-billing-base';
+import type { IamSdkClient } from '@forklaunch/blueprint-iam-base';
+import type { IamSdkClient as IamBetterAuthSdkClient } from '@forklaunch/blueprint-iam-better-auth';
+import type { SampleWorkerSdkClient } from '@forklaunch/blueprint-sample-worker';
 import { universalSdk } from '@forklaunch/universal-sdk';
 import { createAuthClient } from 'better-auth/client';
 
 export type ForklaunchPlatformUniversalSdk = {
-  iam: IamApiClient;
-  billing: BillingApiClient;
-  sampleWorker: SampleWorkerApiClient;
+  iam: IamSdkClient;
+  billing: BillingSdkClient;
+  sampleWorker: SampleWorkerSdkClient;
   iamBetterAuth: {
     betterAuth: ReturnType<typeof createAuthClient>;
-    forklaunch: IamBetterAuthApiClient;
+    forklaunch: IamBetterAuthSdkClient;
   };
 };
 
@@ -32,19 +32,19 @@ export const forklaunchPlatformUniversalSdk = async ({
   sampleWorkerHost: string;
   iamBetterAuthHost: string;
 }): Promise<ForklaunchPlatformUniversalSdk> => ({
-  iam: await universalSdk<IamApiClient>({
+  iam: await universalSdk<IamSdkClient>({
     host: iamHost,
     registryOptions: {
       path: 'api/v1/openapi'
     }
   }),
-  billing: await universalSdk<BillingApiClient>({
+  billing: await universalSdk<BillingSdkClient>({
     host: billingHost,
     registryOptions: {
       path: 'api/v1/openapi'
     }
   }),
-  sampleWorker: await universalSdk<SampleWorkerApiClient>({
+  sampleWorker: await universalSdk<SampleWorkerSdkClient>({
     host: sampleWorkerHost,
     registryOptions: {
       path: 'api/v1/openapi'
@@ -54,7 +54,7 @@ export const forklaunchPlatformUniversalSdk = async ({
     betterAuth: createAuthClient({
       baseURL: iamBetterAuthHost
     }),
-    forklaunch: await universalSdk<IamBetterAuthApiClient>({
+    forklaunch: await universalSdk<IamBetterAuthSdkClient>({
       host: iamBetterAuthHost,
       registryOptions: {
         path: 'api/v1/openapi'

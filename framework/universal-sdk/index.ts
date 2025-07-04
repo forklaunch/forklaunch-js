@@ -25,6 +25,11 @@ export const universalSdk = async <TypedController>(options: {
       if (prop === 'then' || prop === 'catch' || prop === 'finally') {
         return undefined;
       }
+
+      if (prop === 'fetch') {
+        return sdkInternal.executeFetchCall;
+      }
+
       if (typeof prop === 'string' && prop in target) {
         const value = target[prop as keyof UniversalSdk];
         if (typeof value === 'function') {
@@ -32,33 +37,44 @@ export const universalSdk = async <TypedController>(options: {
         }
         return value;
       }
-      // 2nd layer proxy for first missing property access
-      return new Proxy(() => {}, {
-        get(_innerTarget, innerProp) {
-          if (typeof innerProp === 'string' && innerProp in target) {
-            const value = target[innerProp as keyof UniversalSdk];
-            if (typeof value === 'function') {
-              return value.bind(target);
-            }
-            return value;
-          }
-          // 3rd layer proxy for second missing property access
-          return new Proxy(() => {}, {
-            get(__innerTarget, deepProp) {
-              if (typeof deepProp === 'string' && deepProp in target) {
-                const value = target[deepProp as keyof UniversalSdk];
-                if (typeof value === 'function') {
-                  return value.bind(target);
-                }
-                return value;
-              }
-              return undefined;
-            }
-          });
-        }
-      });
+
+      return createSdkProxy([prop as string]);
     }
   });
+
+  function createSdkProxy(path: string[]): unknown {
+    return new Proxy(() => {}, {
+      get(_target, prop) {
+        if (prop === 'then' || prop === 'catch' || prop === 'finally') {
+          return undefined;
+        }
+
+        if (typeof prop === 'string' && prop in sdkInternal) {
+          const value = sdkInternal[prop as keyof UniversalSdk];
+          if (typeof value === 'function') {
+            return value.bind(sdkInternal);
+          }
+          return value;
+        }
+
+        const newPath = [...path, prop as string];
+
+        if (
+          prop === Symbol.toPrimitive ||
+          prop === 'valueOf' ||
+          prop === 'toString'
+        ) {
+          return () => sdkInternal.executeSdkCall(path.join('.'));
+        }
+
+        return createSdkProxy(newPath);
+      },
+
+      apply(_target, _thisArg, args) {
+        return sdkInternal.executeSdkCall(path.join('.'), ...args);
+      }
+    });
+  }
 
   return proxyInternal as TypedController;
 };

@@ -1,5 +1,5 @@
 import { forklaunchExpress, SchemaValidator } from '@forklaunch/blueprint-core';
-import { ApiClient } from '@forklaunch/core/http';
+import { SdkClient } from '@forklaunch/core/http';
 import { CheckoutSessionRoutes } from './api/routes/checkoutSession.routes';
 import { PaymentLinkRoutes } from './api/routes/paymentLink.routes';
 import { PlanRoutes } from './api/routes/plan.routes';
@@ -18,44 +18,41 @@ bootstrap((ci, tokens) => {
   const version = ci.resolve(tokens.VERSION);
   const docsPath = ci.resolve(tokens.DOCS_PATH);
   //! resolves the necessary services from the configuration
-  const scopedCheckoutSessionServiceFactory = ci.scopedResolver(
+  const checkoutSessionServiceFactory = ci.scopedResolver(
     tokens.CheckoutSessionService
   );
-  const scopedPaymentLinkServiceFactory = ci.scopedResolver(
+  const paymentLinkServiceFactory = ci.scopedResolver(
     tokens.PaymentLinkService
   );
-  const scopedPlanServiceFactory = ci.scopedResolver(tokens.PlanService);
-  const scopedSubscriptionServiceFactory = ci.scopedResolver(
+  const planServiceFactory = ci.scopedResolver(tokens.PlanService);
+  const subscriptionServiceFactory = ci.scopedResolver(
     tokens.SubscriptionService
   );
-  const scopedWebhookServiceFactory = ci.scopedResolver(tokens.WebhookService);
+  const webhookServiceFactory = ci.scopedResolver(tokens.WebhookService);
   //! constructs the necessary routes using the appropriate Routes functions
   const checkoutSessionRoutes = CheckoutSessionRoutes(
-    scopedCheckoutSessionServiceFactory,
+    checkoutSessionServiceFactory,
     openTelemetryCollector
   );
   const paymentLinkRoutes = PaymentLinkRoutes(
-    scopedPaymentLinkServiceFactory,
+    paymentLinkServiceFactory,
     openTelemetryCollector
   );
-  const planRoutes = PlanRoutes(
-    scopedPlanServiceFactory,
-    openTelemetryCollector
-  );
+  const planRoutes = PlanRoutes(planServiceFactory, openTelemetryCollector);
   const subscriptionRoutes = SubscriptionRoutes(
-    scopedSubscriptionServiceFactory,
+    subscriptionServiceFactory,
     openTelemetryCollector
   );
   const webhookRoutes = WebhookRoutes(
-    scopedWebhookServiceFactory,
+    webhookServiceFactory,
     openTelemetryCollector
   );
   //! mounts the routes to the app
-  app.use(checkoutSessionRoutes.router);
-  app.use(paymentLinkRoutes.router);
-  app.use(planRoutes.router);
-  app.use(subscriptionRoutes.router);
-  app.use(webhookRoutes.router);
+  app.use(checkoutSessionRoutes);
+  app.use(paymentLinkRoutes);
+  app.use(planRoutes);
+  app.use(subscriptionRoutes);
+  app.use(webhookRoutes);
   //! starts the server
   app.listen(port, host, () => {
     openTelemetryCollector.info(
@@ -63,11 +60,13 @@ bootstrap((ci, tokens) => {
     );
   });
 });
-//! defines the ApiClient for use with the UniversalSDK client
-export type BillingApiClient = ApiClient<{
-  checkoutSession: typeof CheckoutSessionRoutes;
-  paymentLink: typeof PaymentLinkRoutes;
-  plan: typeof PlanRoutes;
-  subscription: typeof SubscriptionRoutes;
-  webhook: typeof WebhookRoutes;
-}>;
+//! defines the SdkClient for use with the UniversalSDK client
+export type BillingSdkClient = SdkClient<
+  [
+    typeof CheckoutSessionRoutes,
+    typeof PaymentLinkRoutes,
+    typeof PlanRoutes,
+    typeof SubscriptionRoutes,
+    typeof WebhookRoutes
+  ]
+>;

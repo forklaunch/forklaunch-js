@@ -10,6 +10,7 @@ import {
 
 export function isPathParamHttpContractDetails<
   SV extends AnySchemaValidator,
+  Name extends string,
   Path extends `/${string}`,
   ParamsSchema extends ExtractedParamsObject<Path> & ParamsObject<SV>,
   ResponseSchemas extends ResponsesObject<SV>,
@@ -21,6 +22,7 @@ export function isPathParamHttpContractDetails<
   maybePathParamHttpContractDetails: unknown
 ): maybePathParamHttpContractDetails is PathParamHttpContractDetails<
   SV,
+  Name,
   Path,
   ParamsSchema,
   ResponseSchemas,

@@ -1,5 +1,23 @@
 # @forklaunch/common
 
+## 0.4.2
+
+### Patch Changes
+
+- remove enum from all packages for erasable syntax
+
+## 0.4.1
+
+### Patch Changes
+
+- node types version upgrade
+
+## 0.4.0
+
+### Minor Changes
+
+- package version upgrade, mcp generation and nicer universal sdk syntax
+
 ## 0.3.14
 
 ### Patch Changes

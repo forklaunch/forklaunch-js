@@ -19,19 +19,6 @@ import {
 } from '../../shared/types/schema.types';
 import { ZodSchemaValidator } from '../zodSchemaValidator';
 
-export type {
-  ZodObject as OriginalZodObject,
-  ZodArray,
-  ZodEffects,
-  ZodLiteral,
-  ZodNever,
-  ZodPipeline,
-  ZodRawShape,
-  ZodType,
-  ZodTypeAny,
-  ZodUnknown
-};
-
 /**
  * Represents a catch-all Zod schema type.
  */
@@ -136,7 +123,7 @@ export type UnionZodResolve<T extends ZodUnionContainer> = T extends [
  * @template T - The Zod schema type to resolve.
  * @template Depth - The current depth of the resolution.
  */
-export type ZodResolve<T, Depth extends number = 0> = Depth extends 29
+export type ZodResolve<T, Depth extends number = 0> = Depth extends 28
   ? ZodUnknown
   : T extends ZodPipeline<ZodTypeAny, infer R>
     ? R

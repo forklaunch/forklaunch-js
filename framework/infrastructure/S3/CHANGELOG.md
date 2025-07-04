@@ -1,5 +1,47 @@
 # @forklaunch/infrastructure-s3
 
+## 0.1.4
+
+### Patch Changes
+
+- remove enum from all packages for erasable syntax
+- Updated dependencies
+  - @forklaunch/common@0.4.2
+  - @forklaunch/core@0.10.4
+
+## 0.1.3
+
+### Patch Changes
+
+- @forklaunch/core@0.10.3
+
+## 0.1.2
+
+### Patch Changes
+
+- @forklaunch/core@0.10.2
+
+## 0.1.1
+
+### Patch Changes
+
+- node types version upgrade
+- Updated dependencies
+  - @forklaunch/common@0.4.1
+  - @forklaunch/core@0.10.1
+
+## 0.1.0
+
+### Minor Changes
+
+- package version upgrade, mcp generation and nicer universal sdk syntax
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/common@0.4.0
+  - @forklaunch/core@0.10.0
+
 ## 0.0.30
 
 ### Patch Changes

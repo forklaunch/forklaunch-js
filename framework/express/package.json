@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/express",
-  "version": "0.5.34",
+  "version": "0.6.4",
   "description": "Forklaunch framework for express.",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -38,8 +38,9 @@
     "@forklaunch/common": "workspace:*",
     "@forklaunch/core": "workspace:*",
     "@forklaunch/validator": "workspace:*",
-    "@scalar/express-api-reference": "^0.8.5",
-    "@types/multer": "^1.4.13",
+    "@modelcontextprotocol/sdk": "^1.14.0",
+    "@scalar/express-api-reference": "^0.8.7",
+    "@types/multer": "^2.0.0",
     "body-parser": "^2.2.0",
     "busboy": "^1.6.0",
     "cors": "^2.8.5",
@@ -49,7 +50,7 @@
     "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
-    "@eslint/js": "^9.29.0",
+    "@eslint/js": "^9.30.1",
     "@types/body-parser": "^1.19.6",
     "@types/busboy": "^1.5.4",
     "@types/cors": "^2.8.19",
@@ -58,15 +59,15 @@
     "@types/jest": "^30.0.0",
     "@types/qs": "^6.14.0",
     "@types/swagger-ui-express": "^4.1.8",
-    "@typescript/native-preview": "7.0.0-dev.20250619.1",
-    "jest": "^30.0.2",
+    "@typescript/native-preview": "7.0.0-dev.20250703.1",
+    "jest": "^30.0.4",
     "kill-port-process": "^3.2.1",
-    "prettier": "^3.5.3",
+    "prettier": "^3.6.2",
     "ts-jest": "^29.4.0",
     "ts-node": "^10.9.2",
     "tsup": "^8.5.0",
-    "typedoc": "^0.28.5",
+    "typedoc": "^0.28.7",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.34.1"
+    "typescript-eslint": "^8.35.1"
   }
 }

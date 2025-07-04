@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { MimeType } from '@forklaunch/common';
 import { Schema } from '../../index';
 import {
   array,
@@ -179,7 +178,7 @@ type ShortExpected = {
   s: string;
   non: number;
   b: Uint8Array;
-  f: (name: string, type: MimeType) => File;
+  f: Blob;
 };
 
 assert<Equality<Schema<typeof shortOne, ZodSchemaValidator>, ShortExpected>>();

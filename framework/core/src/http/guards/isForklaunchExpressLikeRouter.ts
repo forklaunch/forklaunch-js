@@ -33,7 +33,10 @@ export function isForklaunchExpressLikeRouter<
   Internal extends ExpressLikeRouter<RouterHandler, Internal>,
   BaseRequest,
   BaseResponse,
-  NextFunction
+  NextFunction,
+  FetchMap extends Record<string, unknown>,
+  Sdk extends Record<string, unknown>,
+  SdkName extends string
 >(
   maybeForklaunchExpressLikeRouter: unknown
 ): maybeForklaunchExpressLikeRouter is ForklaunchExpressLikeRouter<
@@ -43,7 +46,10 @@ export function isForklaunchExpressLikeRouter<
   Internal,
   BaseRequest,
   BaseResponse,
-  NextFunction
+  NextFunction,
+  FetchMap,
+  Sdk,
+  SdkName
 > {
   return (
     isConstrainedForklaunchRouter<SV, RouterHandler>(

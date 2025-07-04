@@ -1,5 +1,32 @@
 # @forklaunch/universal-sdk
 
+## 0.4.2
+
+### Patch Changes
+
+- remove enum from all packages for erasable syntax
+- Updated dependencies
+  - @forklaunch/common@0.4.2
+
+## 0.4.1
+
+### Patch Changes
+
+- node types version upgrade
+- Updated dependencies
+  - @forklaunch/common@0.4.1
+
+## 0.4.0
+
+### Minor Changes
+
+- package version upgrade, mcp generation and nicer universal sdk syntax
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/common@0.4.0
+
 ## 0.3.16
 
 ### Patch Changes

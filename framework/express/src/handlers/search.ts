@@ -85,6 +85,7 @@ import { SetQsAndStaticTypes } from '../types/export.types';
  */
 export const search = <
   SV extends AnySchemaValidator,
+  Name extends string,
   Path extends `/${string}`,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
@@ -98,6 +99,7 @@ export const search = <
   path: Path,
   contractDetails: ContractDetails<
     SV,
+    Name,
     'middleware',
     Path,
     P,
@@ -124,6 +126,7 @@ export const search = <
 ) => {
   return middleware<
     SV,
+    Name,
     Path,
     P,
     ResBodyMap,

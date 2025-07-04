@@ -1,3 +1,4 @@
+import { EmptyObject } from '@forklaunch/common';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { CorsOptions } from 'cors';
 import { ExpressLikeRouter } from '../interfaces/expressLikeRouter.interface';
@@ -18,7 +19,10 @@ export abstract class ForklaunchExpressLikeApplication<
   RouterHandler,
   BaseRequest,
   BaseResponse,
-  NextFunction
+  NextFunction,
+  FetchMap extends Record<string, unknown> = EmptyObject,
+  Sdk extends Record<string, unknown> = EmptyObject,
+  SdkName extends string = 'sdk'
 > extends ForklaunchExpressLikeRouter<
   SV,
   '/',
@@ -26,7 +30,10 @@ export abstract class ForklaunchExpressLikeApplication<
   Server,
   BaseRequest,
   BaseResponse,
-  NextFunction
+  NextFunction,
+  FetchMap,
+  Sdk,
+  SdkName
 > {
   /**
    * Creates an instance of the Application class.
@@ -40,6 +47,7 @@ export abstract class ForklaunchExpressLikeApplication<
     readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
     readonly appOptions?: {
       cors?: CorsOptions;
+      sdkName?: SdkName;
     }
   ) {
     super(

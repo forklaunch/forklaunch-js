@@ -19,7 +19,6 @@ export class RedisWorkerProducer<
   }
 
   async enqueueBatchJobs(events: EventEntity[]): Promise<void> {
-    console.log('Enqueuing batch jobs', events);
     await this.cache.enqueueBatchRecords(this.queueName, events);
   }
 }

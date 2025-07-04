@@ -79,6 +79,7 @@ import { AnySchemaValidator } from '@forklaunch/validator';
  */
 export const middleware = <
   SV extends AnySchemaValidator,
+  Name extends string,
   Path extends `/${string}`,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
@@ -92,6 +93,7 @@ export const middleware = <
   path: Path,
   contractDetails: ContractDetails<
     SV,
+    Name,
     'middleware',
     Path,
     P,
@@ -118,6 +120,7 @@ export const middleware = <
 ) => {
   return innerMiddleware<
     SV,
+    Name,
     Path,
     P,
     ResBodyMap,

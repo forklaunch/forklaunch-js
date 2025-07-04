@@ -67,6 +67,7 @@ import { AnySchemaValidator } from '@forklaunch/validator';
  */
 export const trace = <
   SV extends AnySchemaValidator,
+  Name extends string,
   Path extends `/${string}`,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
@@ -80,6 +81,7 @@ export const trace = <
   path: Path,
   contractDetails: ContractDetails<
     SV,
+    Name,
     'trace',
     Path,
     P,
@@ -106,6 +108,7 @@ export const trace = <
 ) => {
   return innerTrace<
     SV,
+    Name,
     Path,
     P,
     ResBodyMap,

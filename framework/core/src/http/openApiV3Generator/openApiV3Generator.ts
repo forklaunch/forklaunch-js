@@ -1,3 +1,4 @@
+import { openApiCompliantPath, toPrettyCamelCase } from '@forklaunch/common';
 import {
   AnySchemaValidator,
   IdiomaticSchema,
@@ -16,6 +17,7 @@ import {
   discriminateBody,
   discriminateResponseBodies
 } from '../router/discriminateBody';
+import { unpackRouters } from '../router/unpackRouters';
 import { ForklaunchRouter } from '../types/router.types';
 
 /**
@@ -36,7 +38,7 @@ function toUpperCase(str: string) {
  */
 function transformBasePath(basePath: string) {
   if (basePath.startsWith('/')) {
-    return toUpperCase(basePath.slice(1));
+    return basePath.slice(1);
   }
   return `/${basePath}`;
 }
@@ -50,9 +52,15 @@ function transformBasePath(basePath: string) {
  * @returns {OpenAPIObject} - The Swagger document.
  */
 function generateOpenApiDocument(
+  protocol: 'http' | 'https',
+  host: string,
   port: string | number,
   tags: TagObject[],
-  paths: PathObject
+  paths: PathObject,
+  otherServers?: {
+    url: string;
+    description: string;
+  }[]
 ): OpenAPIObject {
   return {
     openapi: '3.1.0',
@@ -72,8 +80,10 @@ function generateOpenApiDocument(
     tags,
     servers: [
       {
-        url: `http://localhost:${port}`
-      }
+        url: `${protocol}://${host}:${port}`,
+        description: 'Main Server'
+      },
+      ...(otherServers || [])
     ],
     paths
   };
@@ -123,24 +133,30 @@ function contentResolver<SV extends AnySchemaValidator>(
  */
 export function generateSwaggerDocument<SV extends AnySchemaValidator>(
   schemaValidator: SV,
+  protocol: 'http' | 'https',
+  host: string,
   port: string | number,
-  routers: ForklaunchRouter<SV>[]
+  routers: ForklaunchRouter<SV>[],
+  otherServers?: {
+    url: string;
+    description: string;
+  }[]
 ): OpenAPIObject {
   const tags: TagObject[] = [];
   const paths: PathObject = {};
 
-  routers.flat(Infinity).forEach((router) => {
-    const controllerName = transformBasePath(router.basePath);
+  unpackRouters<SV>(routers).forEach(({ fullPath, router, sdkPath }) => {
+    const controllerName = transformBasePath(fullPath);
     tags.push({
       name: controllerName,
-      description: `${controllerName} Operations`
+      description: `${toUpperCase(controllerName)} Operations`
     });
     router.routes.forEach((route) => {
-      const fullPath = `${router.basePath}${
-        route.path === '/' ? '' : route.path
-      }`.replace(/:(\w+)/g, '{$1}');
-      if (!paths[fullPath]) {
-        paths[fullPath] = {};
+      const openApiPath = openApiCompliantPath(
+        `${fullPath}${route.path === '/' ? '' : route.path}`
+      );
+      if (!paths[openApiPath]) {
+        paths[openApiPath] = {};
       }
       const { name, summary, query, requestHeaders } = route.contractDetails;
 
@@ -172,15 +188,16 @@ export function generateSwaggerDocument<SV extends AnySchemaValidator>(
         }
       }
 
-      const pathItemObject: OperationObject = {
+      const operationObject: OperationObject = {
         tags: [controllerName],
         summary: `${name}: ${summary}`,
         parameters: [],
-        responses
+        responses,
+        operationId: `${sdkPath}.${toPrettyCamelCase(name)}`
       };
       if (route.contractDetails.params) {
         for (const key in route.contractDetails.params) {
-          pathItemObject.parameters?.push({
+          operationObject.parameters?.push({
             name: key,
             in: 'path',
             schema: (schemaValidator as SchemaValidator).openapi(
@@ -196,7 +213,7 @@ export function generateSwaggerDocument<SV extends AnySchemaValidator>(
           : null;
 
       if (discriminatedBodyResult) {
-        pathItemObject.requestBody = {
+        operationObject.requestBody = {
           required: true,
           content: contentResolver(
             schemaValidator,
@@ -208,7 +225,7 @@ export function generateSwaggerDocument<SV extends AnySchemaValidator>(
 
       if (requestHeaders) {
         for (const key in requestHeaders) {
-          pathItemObject.parameters?.push({
+          operationObject.parameters?.push({
             name: key,
             in: 'header',
             schema: (schemaValidator as SchemaValidator).openapi(
@@ -220,7 +237,7 @@ export function generateSwaggerDocument<SV extends AnySchemaValidator>(
 
       if (query) {
         for (const key in query) {
-          pathItemObject.parameters?.push({
+          operationObject.parameters?.push({
             name: key,
             in: 'query',
             schema: (schemaValidator as SchemaValidator).openapi(query[key])
@@ -238,7 +255,7 @@ export function generateSwaggerDocument<SV extends AnySchemaValidator>(
           content: contentResolver(schemaValidator, schemaValidator.string)
         };
         if (route.contractDetails.auth.method === 'jwt') {
-          pathItemObject.security = [
+          operationObject.security = [
             {
               bearer: Array.from(
                 route.contractDetails.auth.allowedPermissions?.values() || []
@@ -249,10 +266,17 @@ export function generateSwaggerDocument<SV extends AnySchemaValidator>(
       }
 
       if (route.method !== 'middleware') {
-        paths[fullPath][route.method] = pathItemObject;
+        paths[openApiPath][route.method] = operationObject;
       }
     });
   });
 
-  return generateOpenApiDocument(port, tags, paths);
+  return generateOpenApiDocument(
+    protocol,
+    host,
+    port,
+    tags,
+    paths,
+    otherServers
+  );
 }

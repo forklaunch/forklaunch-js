@@ -37,7 +37,7 @@ export class StripePaymentLinkService<
 > implements
     PaymentLinkService<
       PaymentMethodEnum,
-      CurrencyEnum,
+      typeof CurrencyEnum,
       StatusEnum,
       {
         CreatePaymentLinkDto: StripeCreatePaymentLinkDto<StatusEnum>;

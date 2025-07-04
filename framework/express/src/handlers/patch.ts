@@ -18,6 +18,7 @@ import { SetQsAndStaticTypes } from '../types/export.types';
  * Creates a PATCH route handler with schema validation and type safety.
  *
  * @template SV - The schema validator type
+ * @template Name - The name of the route
  * @template Path - The route path type (must start with '/')
  * @template P - The path parameters type
  * @template ResBodyMap - The response body map type
@@ -29,7 +30,7 @@ import { SetQsAndStaticTypes } from '../types/export.types';
  *
  * @param {SV} schemaValidator - The schema validator instance
  * @param {Path} path - The route path
- * @param {ContractDetails<SV, 'patch', Path, P, ResBodyMap, ReqBody, ReqQuery, ReqHeaders, ResHeaders, Request>} contractDetails - The contract details for the route
+ * @param {ContractDetails<SV, 'patch', Name, Path, P, ResBodyMap, ReqBody, ReqQuery, ReqHeaders, ResHeaders, Request>} contractDetails - The contract details for the route
  * @param {...ExpressLikeSchemaHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, ReqHeaders, ResHeaders, LocalsObj, Request, Response, NextFunction>[]} handlers - The route handlers
  *
  * @returns {void} - Returns nothing, registers the route with Express
@@ -93,6 +94,7 @@ import { SetQsAndStaticTypes } from '../types/export.types';
  */
 export const patch = <
   SV extends AnySchemaValidator,
+  Name extends string,
   Path extends `/${string}`,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
@@ -106,6 +108,7 @@ export const patch = <
   path: Path,
   contractDetails: ContractDetails<
     SV,
+    Name,
     'patch',
     Path,
     P,
@@ -132,6 +135,7 @@ export const patch = <
 ) => {
   return innerPatch<
     SV,
+    Name,
     Path,
     P,
     ResBodyMap,

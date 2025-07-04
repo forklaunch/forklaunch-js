@@ -13,6 +13,7 @@ import { typedHandler } from './typedHandler';
 
 export const middleware = <
   SV extends AnySchemaValidator,
+  Name extends string,
   Path extends `/${string}`,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
@@ -29,6 +30,7 @@ export const middleware = <
   path: Path,
   contractDetails: MiddlewareContractDetails<
     SV,
+    Name,
     Path,
     P,
     ResBodyMap,
@@ -54,6 +56,7 @@ export const middleware = <
 ) => {
   return typedHandler<
     SV,
+    Name,
     'middleware',
     Path,
     P,
@@ -71,6 +74,7 @@ export const middleware = <
     _path: Path;
     contractDetails: ContractDetails<
       SV,
+      Name,
       'middleware',
       Path,
       P,

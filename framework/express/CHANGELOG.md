@@ -1,5 +1,54 @@
 # @forklaunch/express
 
+## 0.6.4
+
+### Patch Changes
+
+- remove enum from all packages for erasable syntax
+- Updated dependencies
+  - @forklaunch/validator@0.7.4
+  - @forklaunch/common@0.4.2
+  - @forklaunch/core@0.10.4
+
+## 0.6.3
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.7.3
+  - @forklaunch/core@0.10.3
+
+## 0.6.2
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.7.2
+  - @forklaunch/core@0.10.2
+
+## 0.6.1
+
+### Patch Changes
+
+- node types version upgrade
+- Updated dependencies
+  - @forklaunch/validator@0.7.1
+  - @forklaunch/common@0.4.1
+  - @forklaunch/core@0.10.1
+
+## 0.6.0
+
+### Minor Changes
+
+- package version upgrade, mcp generation and nicer universal sdk syntax
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.7.0
+  - @forklaunch/common@0.4.0
+  - @forklaunch/core@0.10.0
+
 ## 0.5.34
 
 ### Patch Changes

@@ -1,5 +1,21 @@
 # @forklaunch/implementation-billing-base
 
+## 0.3.6
+
+### Patch Changes
+
+- remove enums from implementations for erasable syntax
+- Updated dependencies
+  - @forklaunch/interfaces-worker@0.2.4
+
+## 0.3.5
+
+### Patch Changes
+
+- bump internal package versions
+- Updated dependencies
+  - @forklaunch/interfaces-worker@0.2.3
+
 ## 0.3.4
 
 ### Patch Changes

@@ -18,7 +18,8 @@ import { SetQsAndStaticTypes } from '../types/export.types';
  * Creates a SUBSCRIBE route handler with schema validation and type safety.
  *
  * @template SV - The schema validator type
- * @template Path - The route path type (must start with '/')
+ * @template Name - The name of the route
+ * @template Path - The route path type
  * @template P - The path parameters type
  * @template ResBodyMap - The response body map type
  * @template ReqBody - The request body type
@@ -77,6 +78,7 @@ import { SetQsAndStaticTypes } from '../types/export.types';
  */
 export const subscribe = <
   SV extends AnySchemaValidator,
+  Name extends string,
   Path extends `/${string}`,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
@@ -90,6 +92,7 @@ export const subscribe = <
   path: Path,
   contractDetails: ContractDetails<
     SV,
+    Name,
     'middleware',
     Path,
     P,
@@ -116,6 +119,7 @@ export const subscribe = <
 ) => {
   return middleware<
     SV,
+    Name,
     Path,
     P,
     ResBodyMap,

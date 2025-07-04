@@ -6,7 +6,7 @@ import { SchemaDependencies } from '../../registrations';
 import { CheckoutSessionController } from '../controllers/checkoutSession.controller';
 
 export const CheckoutSessionRoutes = (
-  scopedServiceFactory: ScopedDependencyFactory<
+  serviceFactory: ScopedDependencyFactory<
     SchemaValidator,
     SchemaDependencies,
     'CheckoutSessionService'
@@ -20,26 +20,14 @@ export const CheckoutSessionRoutes = (
   );
 
   const controller = CheckoutSessionController(
-    scopedServiceFactory,
+    serviceFactory,
     openTelemetryCollector
   );
 
-  return {
-    router,
-
-    createCheckoutSession: router.post('/', controller.createCheckoutSession),
-    getCheckoutSession: router.get('/:id', controller.getCheckoutSession),
-    expireCheckoutSession: router.delete(
-      '/:id/expire',
-      controller.expireCheckoutSession
-    ),
-    handleCheckoutSuccess: router.get(
-      '/:id/success',
-      controller.handleCheckoutSuccess
-    ),
-    handleCheckoutFailure: router.get(
-      '/:id/failure',
-      controller.handleCheckoutFailure
-    )
-  };
+  return router
+    .post('/', controller.createCheckoutSession)
+    .get('/:id', controller.getCheckoutSession)
+    .delete('/:id/expire', controller.expireCheckoutSession)
+    .get('/:id/success', controller.handleCheckoutSuccess)
+    .get('/:id/failure', controller.handleCheckoutFailure);
 };

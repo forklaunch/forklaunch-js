@@ -107,6 +107,7 @@ import { AnySchemaValidator } from '@forklaunch/validator';
  */
 export const patch = <
   SV extends AnySchemaValidator,
+  Name extends string,
   Path extends `/${string}`,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
@@ -120,6 +121,7 @@ export const patch = <
   path: Path,
   contractDetails: ContractDetails<
     SV,
+    Name,
     'patch',
     Path,
     P,
@@ -146,6 +148,7 @@ export const patch = <
 ) => {
   return innerPatch<
     SV,
+    Name,
     Path,
     P,
     ResBodyMap,

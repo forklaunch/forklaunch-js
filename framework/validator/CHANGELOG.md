@@ -1,5 +1,44 @@
 # @forklaunch/validator
 
+## 0.7.4
+
+### Patch Changes
+
+- remove enum from all packages for erasable syntax
+- Updated dependencies
+  - @forklaunch/common@0.4.2
+
+## 0.7.3
+
+### Patch Changes
+
+- Reduce zod depth inference a little bit further
+
+## 0.7.2
+
+### Patch Changes
+
+- Lower zod depth checking threshold to help with type inference
+
+## 0.7.1
+
+### Patch Changes
+
+- node types version upgrade
+- Updated dependencies
+  - @forklaunch/common@0.4.1
+
+## 0.7.0
+
+### Minor Changes
+
+- package version upgrade, mcp generation and nicer universal sdk syntax
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/common@0.4.0
+
 ## 0.6.16
 
 ### Patch Changes

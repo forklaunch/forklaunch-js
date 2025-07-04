@@ -18,7 +18,7 @@
     "build": "tsc",
     "clean": "rm -rf dist pnpm.lock.yaml node_modules",
     "dev": "DOTENV_FILE_PATH=.env.local pnpm run migrate:up && DOTENV_FILE_PATH=.env.local pnpm tsx watch server.ts",
-    "dev:bun": "DOTENV_FILE_PATH=.env.local bun run migrate:up && DOTENV_FILE_PATH=.env.local bun tsx watch server.ts",
+    "dev:bun": "DOTENV_FILE_PATH=.env.local bun run migrate:up && DOTENV_FILE_PATH=.env.local bun --watch server.ts",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
     "lint": "eslint . -c eslint.config.mjs",
@@ -36,7 +36,7 @@
     "@forklaunch/better-auth-mikro-orm-fork": "^0.3.0",
     "@forklaunch/blueprint-core": "workspace:*",
     "@forklaunch/blueprint-monitoring": "workspace:*",
-    "@forklaunch/core": "^0.9.21",
+    "@forklaunch/core": "^0.10.4",
     "@forklaunch/implementation-iam-base": "workspace:*",
     "@forklaunch/interfaces-iam": "workspace:*",
     "@mikro-orm/core": "^6.4.16",
@@ -48,12 +48,12 @@
     "@mikro-orm/seeder": "^6.4.16",
     "@mikro-orm/sqlite": "^6.4.16",
     "@opentelemetry/api": "^1.9.0",
-    "@sinclair/typebox": "^0.34.35",
-    "better-auth": "^1.2.9",
-    "dotenv": "^16.5.0",
+    "@sinclair/typebox": "^0.34.37",
+    "better-auth": "^1.2.12",
+    "dotenv": "^17.0.1",
     "pino": "^9.7.0",
     "uuid": "^11.1.0",
-    "zod": "^3.25.67"
+    "zod": "^3.25.71"
   },
   "devDependencies": {
     "@mikro-orm/cli": "^6.4.16",
@@ -62,8 +62,8 @@
     "@types/qs": "^6.14.0",
     "@types/uuid": "^10.0.0",
     "depcheck": "^1.4.7",
-    "prettier": "^3.5.3",
-    "typedoc": "^0.28.5"
+    "prettier": "^3.6.2",
+    "typedoc": "^0.28.7"
   },
   "mikro-orm": {
     "configPaths": [

@@ -33,6 +33,11 @@ const forklaunchRouterInstance = forklaunchRouter(
   zodSchemaValidator,
   openTelemetryCollector
 );
+const nestedForklaunchRouterInstance = forklaunchRouter(
+  '/nested',
+  zodSchemaValidator,
+  openTelemetryCollector
+);
 
 describe('Forklaunch Express Tests', () => {
   let server: Server;
@@ -121,11 +126,11 @@ describe('Forklaunch Express Tests', () => {
 
     forklaunchApplication.use(forklaunchRouterInstance);
 
-    server = await forklaunchApplication.listen(6935, () => {});
+    server = await forklaunchApplication.listen(6840, () => {});
   });
 
   test('Get', async () => {
-    const testGet = await fetch('http://localhost:6935/testpath/test', {
+    const testGet = await fetch('http://localhost:6840/testpath/test', {
       method: 'GET'
     });
 
@@ -134,7 +139,7 @@ describe('Forklaunch Express Tests', () => {
   });
 
   test('Post', async () => {
-    const testPost = await fetch('http://localhost:6935/testpath/test', {
+    const testPost = await fetch('http://localhost:6840/testpath/test', {
       method: 'POST',
       body: JSON.stringify({ test: 'Hello World' }),
       headers: { 'Content-Type': 'application/json' }
@@ -145,7 +150,7 @@ describe('Forklaunch Express Tests', () => {
   });
 
   test('Put', async () => {
-    const testPut = await fetch('http://localhost:6935/testpath/test', {
+    const testPut = await fetch('http://localhost:6840/testpath/test', {
       method: 'PUT',
       body: JSON.stringify({ test: 'Hello World' }),
       headers: { 'Content-Type': 'application/json' }
@@ -156,7 +161,7 @@ describe('Forklaunch Express Tests', () => {
   });
 
   test('Patch', async () => {
-    const testPatch = await fetch('http://localhost:6935/testpath/test', {
+    const testPatch = await fetch('http://localhost:6840/testpath/test', {
       method: 'PATCH',
       body: JSON.stringify({ test: 'Hello World' }),
       headers: { 'Content-Type': 'application/json' }
@@ -167,7 +172,7 @@ describe('Forklaunch Express Tests', () => {
   });
 
   test('Delete', async () => {
-    const testDelete = await fetch('http://localhost:6935/testpath/test', {
+    const testDelete = await fetch('http://localhost:6840/testpath/test', {
       method: 'DELETE'
     });
 
@@ -234,7 +239,9 @@ describe('handlers', () => {
     );
     application.get('/:id', getRequest);
     const liveTypeFunction = router.get('/:id', getRequest);
-    await liveTypeFunction.get('/organization/:id', {
+
+    await liveTypeFunction.fetch('/organization/:id', {
+      method: 'GET',
       params: {
         id: 'string'
       },
@@ -268,11 +275,54 @@ describe('handlers', () => {
         res.status(200).json(req.body);
       }
     );
-    application.post('/', postRequest);
+
     const liveTypeFunction = router.post('/', postRequest);
-    await liveTypeFunction.post('/organization', {
+    await liveTypeFunction.fetch('/organization', {
+      method: 'POST',
       body: {
         multipartForm: {
+          name: 'string'
+        }
+      }
+    });
+  });
+
+  it('should be able to create a nested router', async () => {
+    const postRequest = post(
+      zodSchemaValidator,
+      '/',
+      {
+        name: 'Create Organization',
+        body: {
+          json: {
+            name: string
+          }
+        },
+        summary: 'Creates an organization',
+        responses: {
+          200: {
+            json: {
+              name: string
+            }
+          },
+          400: string
+        }
+      },
+      async (req, res) => {
+        res.status(200).json(req.body);
+      }
+    );
+
+    const liveTypeFunction = router.post('/', postRequest);
+
+    const nestedLiveTypeFunction = nestedForklaunchRouterInstance
+      .use(liveTypeFunction)
+      .post('/', postRequest);
+
+    await nestedLiveTypeFunction.fetch('/nested/organization', {
+      method: 'POST',
+      body: {
+        json: {
           name: 'string'
         }
       }

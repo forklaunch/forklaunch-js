@@ -70,5 +70,5 @@ export function isExpressLikeSchemaHandler<
         argumentName.toLowerCase()
       )
     );
-  return extractedArgumentNames && extractedArgumentNames.size <= 3;
+  return extractedArgumentNames && extractedArgumentNames.size <= 4;
 }

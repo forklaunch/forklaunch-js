@@ -6,7 +6,7 @@ import { SchemaDependencies } from '../../registrations';
 import { PlanController } from '../controllers/plan.controller';
 
 export const PlanRoutes = (
-  scopedServiceFactory: ScopedDependencyFactory<
+  serviceFactory: ScopedDependencyFactory<
     SchemaValidator,
     SchemaDependencies,
     'PlanService'
@@ -19,18 +19,12 @@ export const PlanRoutes = (
     openTelemetryCollector
   );
 
-  const controller = PlanController(
-    scopedServiceFactory,
-    openTelemetryCollector
-  );
+  const controller = PlanController(serviceFactory, openTelemetryCollector);
 
-  return {
-    router,
-
-    createPlan: router.post('/', controller.createPlan),
-    getPlan: router.get('/:id', controller.getPlan),
-    updatePlan: router.put('/', controller.updatePlan),
-    deletePlan: router.delete('/:id', controller.deletePlan),
-    listPlans: router.get('/', controller.listPlans)
-  };
+  return router
+    .post('/', controller.createPlan)
+    .get('/:id', controller.getPlan)
+    .put('/', controller.updatePlan)
+    .delete('/:id', controller.deletePlan)
+    .get('/', controller.listPlans);
 };

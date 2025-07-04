@@ -29,11 +29,12 @@
     "@forklaunch/hyper-express-fork": "^6.17.34",
     "@forklaunch/universal-sdk": "workspace:*",
     "@forklaunch/validator": "workspace:*",
-    "zod": "^3.25.67"
+    "@sinclair/typebox": "^0.34.37",
+    "zod": "^3.25.71"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",
-    "@typescript/native-preview": "7.0.0-dev.20250619.1",
+    "@typescript/native-preview": "7.0.0-dev.20250703.1",
     "tsup": "^8.5.0"
   }
 }

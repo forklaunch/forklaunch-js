@@ -1,5 +1,5 @@
 import { forklaunchExpress, SchemaValidator } from '@forklaunch/blueprint-core';
-import { ApiClient } from '@forklaunch/core/http';
+import { SdkClient } from '@forklaunch/core/http';
 import { OrganizationRoutes } from './api/routes/organization.routes';
 import { PermissionRoutes } from './api/routes/permission.routes';
 import { RoleRoutes } from './api/routes/role.routes';
@@ -17,36 +17,28 @@ bootstrap((ci, tokens) => {
   const version = ci.resolve(tokens.VERSION);
   const docsPath = ci.resolve(tokens.DOCS_PATH);
   //! resolves the necessary services from the configuration
-  const scopedOrganizationServiceFactory = ci.scopedResolver(
+  const organizationServiceFactory = ci.scopedResolver(
     tokens.OrganizationService
   );
-  const scopedPermissionServiceFactory = ci.scopedResolver(
-    tokens.PermissionService
-  );
-  const scopedRoleServiceFactory = ci.scopedResolver(tokens.RoleService);
-  const scopedUserServiceFactory = ci.scopedResolver(tokens.UserService);
+  const permissionServiceFactory = ci.scopedResolver(tokens.PermissionService);
+  const roleServiceFactory = ci.scopedResolver(tokens.RoleService);
+  const userServiceFactory = ci.scopedResolver(tokens.UserService);
   //! constructs the routes using the appropriate controllers
   const organizationRoutes = OrganizationRoutes(
-    scopedOrganizationServiceFactory,
+    organizationServiceFactory,
     openTelemetryCollector
   );
   const permissionRoutes = PermissionRoutes(
-    scopedPermissionServiceFactory,
+    permissionServiceFactory,
     openTelemetryCollector
   );
-  const roleRoutes = RoleRoutes(
-    scopedRoleServiceFactory,
-    openTelemetryCollector
-  );
-  const userRoutes = UserRoutes(
-    scopedUserServiceFactory,
-    openTelemetryCollector
-  );
+  const roleRoutes = RoleRoutes(roleServiceFactory, openTelemetryCollector);
+  const userRoutes = UserRoutes(userServiceFactory, openTelemetryCollector);
   //! mounts the routes to the app
-  app.use(organizationRoutes.router);
-  app.use(permissionRoutes.router);
-  app.use(roleRoutes.router);
-  app.use(userRoutes.router);
+  app.use(organizationRoutes);
+  app.use(permissionRoutes);
+  app.use(roleRoutes);
+  app.use(userRoutes);
   //! starts the server
   app.listen(port, host, () => {
     openTelemetryCollector.info(
@@ -54,10 +46,12 @@ bootstrap((ci, tokens) => {
     );
   });
 });
-//! defines the ApiClient for use with the UniversalSDK client
-export type IamApiClient = ApiClient<{
-  organization: typeof OrganizationRoutes;
-  role: typeof RoleRoutes;
-  permission: typeof PermissionRoutes;
-  user: typeof UserRoutes;
-}>;
+//! defines the SdkClient for use with the UniversalSDK client
+export type IamSdkClient = SdkClient<
+  [
+    typeof OrganizationRoutes,
+    typeof RoleRoutes,
+    typeof PermissionRoutes,
+    typeof UserRoutes
+  ]
+>;

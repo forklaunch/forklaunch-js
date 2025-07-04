@@ -12,6 +12,7 @@ import { TypedHandler } from '../types/typedHandler.types';
 
 export function isTypedHandler<
   SV extends AnySchemaValidator,
+  Name extends string,
   ContractMethod extends Method,
   Path extends `/${string}`,
   P extends ParamsObject<SV>,
@@ -28,6 +29,7 @@ export function isTypedHandler<
   maybeTypedHandler: unknown
 ): maybeTypedHandler is TypedHandler<
   SV,
+  Name,
   ContractMethod,
   Path,
   P,

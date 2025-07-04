@@ -39,6 +39,7 @@ export type ContractDetailsExpressLikeSchemaHandler<
 
 export type TypedHandler<
   SV extends AnySchemaValidator,
+  Name extends string,
   ContractMethod extends Method,
   Path extends `/${string}`,
   P extends ParamsObject<SV>,
@@ -56,6 +57,7 @@ export type TypedHandler<
   _path: Path | undefined;
   contractDetails: ContractDetails<
     SV,
+    Name,
     ContractMethod,
     Path,
     P,
@@ -84,6 +86,7 @@ export type TypedHandler<
 
 export type ExpressLikeTypedHandler<
   SV extends AnySchemaValidator,
+  Name extends string,
   ContractMethod extends Method,
   Path extends `/${string}`,
   P extends ParamsObject<SV>,
@@ -102,6 +105,7 @@ export type ExpressLikeTypedHandler<
   contractDetails: Omit<
     ContractDetails<
       SV,
+      Name,
       ContractMethod,
       Path,
       P,

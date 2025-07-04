@@ -1,2 +1,2 @@
 export * from './stripe.dto.types';
-export * from './stripe.entity.types';
+export type * from './stripe.entity.types';

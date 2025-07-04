@@ -12,6 +12,7 @@ import { typedHandler } from './typedHandler';
 
 export const put = <
   SV extends AnySchemaValidator,
+  Name extends string,
   Path extends `/${string}`,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
@@ -28,6 +29,7 @@ export const put = <
   path: Path,
   contractDetails: HttpContractDetails<
     SV,
+    Name,
     Path,
     P,
     ResBodyMap,
@@ -53,6 +55,7 @@ export const put = <
 ) => {
   return typedHandler<
     SV,
+    Name,
     'put',
     Path,
     P,

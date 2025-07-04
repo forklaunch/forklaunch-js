@@ -1,3 +1,5 @@
+// This is temporary until tsgo resolves symlinked referencing
+export * from '@sinclair/typebox';
 export * from './staticSchemaValidator';
-export type { TypeboxSchemaValidator } from './typeboxSchemaValidator';
+export { TypeboxSchemaValidator } from './typeboxSchemaValidator';
 export * from './types/schema.types';

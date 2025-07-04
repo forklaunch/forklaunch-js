@@ -5,22 +5,23 @@ import {
 } from '@forklaunch/validator';
 import { ConfigInjector } from '../configInjector';
 
-export enum Lifetime {
-  Singleton,
-  Transient,
-  Scoped
-}
+export const Lifetime = {
+  Singleton: 0,
+  Transient: 1,
+  Scoped: 2
+} as const;
+export type Lifetime = (typeof Lifetime)[keyof typeof Lifetime];
 
 export type Singleton<Type, Args, Value> =
   | {
-      lifetime: Lifetime.Singleton;
+      lifetime: typeof Lifetime.Singleton;
       type: Type;
       value: Value;
     }
   | ConstructedSingleton<Type, Args, Value>;
 
 export type ConstructedSingleton<Type, Args, Return> = {
-  lifetime: Lifetime.Singleton;
+  lifetime: typeof Lifetime.Singleton;
   type: Type;
   factory: (
     args: Args,
@@ -33,7 +34,7 @@ export type ConstructedSingleton<Type, Args, Return> = {
 };
 
 export type Constructed<Type, Args, Return> = {
-  lifetime: Lifetime.Transient | Lifetime.Scoped;
+  lifetime: typeof Lifetime.Transient | typeof Lifetime.Scoped;
   type: Type;
   factory: (
     args: Args,

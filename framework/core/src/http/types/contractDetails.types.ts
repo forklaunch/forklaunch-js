@@ -1,7 +1,7 @@
 import {
   ExclusiveRecord,
-  MimeType,
   Prettify,
+  StringWithoutSlash,
   UnionToIntersection
 } from '@forklaunch/common';
 import {
@@ -46,32 +46,28 @@ export type NumberOnlyObject<SV extends AnySchemaValidator> = Omit<
  *
  * @template SV - A type that extends AnySchemaValidator.
  */
-export type BodyObject<SV extends AnySchemaValidator> = StringOnlyObject<SV> &
-  unknown;
+export type BodyObject<SV extends AnySchemaValidator> = StringOnlyObject<SV>;
 
 /**
  * Type representing the parameters object in a request.
  *
  * @template SV - A type that extends AnySchemaValidator.
  */
-export type ParamsObject<SV extends AnySchemaValidator> = StringOnlyObject<SV> &
-  unknown;
+export type ParamsObject<SV extends AnySchemaValidator> = StringOnlyObject<SV>;
 
 /**
  * Type representing the query object in a request.
  *
  * @template SV - A type that extends AnySchemaValidator.
  */
-export type QueryObject<SV extends AnySchemaValidator> = StringOnlyObject<SV> &
-  unknown;
+export type QueryObject<SV extends AnySchemaValidator> = StringOnlyObject<SV>;
 
 /**
  * Type representing the headers object in a request.
  *
  * @template SV - A type that extends AnySchemaValidator.
  */
-export type HeadersObject<SV extends AnySchemaValidator> =
-  StringOnlyObject<SV> & unknown;
+export type HeadersObject<SV extends AnySchemaValidator> = StringOnlyObject<SV>;
 
 export type RawTypedResponseBody<SV extends AnySchemaValidator> =
   | TextBody<SV>
@@ -130,7 +126,11 @@ export type ResponseBody<SV extends AnySchemaValidator> =
   | TypedResponseBody<SV>
   | (ExclusiveResponseBodyBase<SV> & SV['_ValidSchemaObject'])
   | (ExclusiveResponseBodyBase<SV> & UnboxedObjectSchema<SV>)
-  | (ExclusiveResponseBodyBase<SV> & SV['string']);
+  | (ExclusiveResponseBodyBase<SV> & SV['string'])
+  | (ExclusiveResponseBodyBase<SV> & SV['number'])
+  | (ExclusiveResponseBodyBase<SV> & SV['boolean'])
+  | (ExclusiveResponseBodyBase<SV> & SV['array'])
+  | (ExclusiveResponseBodyBase<SV> & SV['file']);
 
 /**
  * Type representing the responses object in a request.
@@ -184,9 +184,7 @@ export type FileBody<SV extends AnySchemaValidator> = {
     | 'audio/wav'
     | 'video/mp4'
     | string;
-  file: SV['file'] extends (name: string, mimeType: MimeType) => infer R
-    ? R
-    : SV['file'];
+  file: SV['file'];
 };
 
 /**
@@ -416,6 +414,7 @@ export type ResponseCompiledSchema = {
  */
 export type PathParamHttpContractDetails<
   SV extends AnySchemaValidator,
+  Name extends string = string,
   Path extends `/${string}` = `/${string}`,
   ParamsSchema extends ParamsObject<SV> = ParamsObject<SV>,
   ResponseSchemas extends ResponsesObject<SV> = ResponsesObject<SV>,
@@ -425,7 +424,7 @@ export type PathParamHttpContractDetails<
   BaseRequest = unknown
 > = {
   /** Name of the contract */
-  readonly name: string;
+  readonly name: StringWithoutSlash<Name>;
   /** Summary of the contract */
   readonly summary: string;
   /** Response schemas for the contract */
@@ -476,6 +475,7 @@ export type PathParamHttpContractDetails<
  */
 export type HttpContractDetails<
   SV extends AnySchemaValidator,
+  Name extends string = string,
   Path extends `/${string}` = `/${string}`,
   ParamsSchema extends ParamsObject<SV> = ParamsObject<SV>,
   ResponseSchemas extends ResponsesObject<SV> = ResponsesObject<SV>,
@@ -486,6 +486,7 @@ export type HttpContractDetails<
   BaseRequest = unknown
 > = PathParamHttpContractDetails<
   SV,
+  Name,
   Path,
   ParamsSchema,
   ResponseSchemas,
@@ -554,6 +555,7 @@ export type HttpContractDetails<
  */
 export type MiddlewareContractDetails<
   SV extends AnySchemaValidator,
+  Name extends string = string,
   Path extends `/${string}` = `/${string}`,
   ParamsSchema extends ParamsObject<SV> = ParamsObject<SV>,
   ResponseSchemas extends ResponsesObject<SV> = ResponsesObject<SV>,
@@ -566,6 +568,7 @@ export type MiddlewareContractDetails<
   Partial<
     HttpContractDetails<
       SV,
+      Name,
       Path,
       ParamsSchema,
       ResponseSchemas,
@@ -576,7 +579,7 @@ export type MiddlewareContractDetails<
       BaseRequest
     >
   >,
-  'name' | 'summary' | 'responses'
+  'responses'
 >;
 
 /**
@@ -584,6 +587,7 @@ export type MiddlewareContractDetails<
  */
 export type ContractDetails<
   SV extends AnySchemaValidator,
+  Name extends string,
   ContractMethod extends Method,
   Path extends `/${string}`,
   ParamsSchema extends ParamsObject<SV>,
@@ -596,6 +600,7 @@ export type ContractDetails<
 > = ContractMethod extends PathParamMethod
   ? PathParamHttpContractDetails<
       SV,
+      Name,
       Path,
       ParamsSchema,
       ResponseSchemas,
@@ -607,6 +612,7 @@ export type ContractDetails<
   : ContractMethod extends HttpMethod
     ? HttpContractDetails<
         SV,
+        Name,
         Path,
         ParamsSchema,
         ResponseSchemas,
@@ -619,6 +625,7 @@ export type ContractDetails<
     : ContractMethod extends 'middleware'
       ? MiddlewareContractDetails<
           SV,
+          Name,
           Path,
           ParamsSchema,
           ResponseSchemas,

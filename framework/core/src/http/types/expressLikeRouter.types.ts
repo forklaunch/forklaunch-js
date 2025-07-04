@@ -1,8 +1,13 @@
+import {
+  Prettify,
+  PrettyCamelCase,
+  SanitizePathSlashes
+} from '@forklaunch/common';
 import { AnySchemaValidator } from '@forklaunch/validator';
-
 import { ExpressLikeRouter } from '../interfaces/expressLikeRouter.interface';
 import {
   ExpressLikeSchemaHandler,
+  LiveSdkFunction,
   LiveTypeFunction,
   PathMatch
 } from './apiDefinition.types';
@@ -22,11 +27,18 @@ export interface LiveTypeRouteDefinition<
   SV extends AnySchemaValidator,
   BasePath extends `/${string}`,
   ContractMethod extends Method,
+  RouterHandler,
+  Internal extends ExpressLikeRouter<RouterHandler, Internal>,
   BaseRequest,
   BaseResponse,
-  NextFunction
+  NextFunction,
+  ChainableRouter extends {
+    fetchMap: object;
+    sdk: object;
+  }
 > {
   <
+    Name extends string,
     Path extends `/${string}`,
     SuppliedPath extends Path,
     P extends ParamsObject<SV>,
@@ -40,6 +52,7 @@ export interface LiveTypeRouteDefinition<
     path: PathMatch<SuppliedPath, Path>,
     typedHandler: TypedHandler<
       SV,
+      Name,
       ContractMethod,
       Path,
       P,
@@ -53,20 +66,43 @@ export interface LiveTypeRouteDefinition<
       BaseResponse,
       NextFunction
     >
-  ): {
-    [Key in ContractMethod]: LiveTypeFunction<
-      SV,
-      `${BasePath}${Path}`,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders
+  ): ChainableRouter & {
+    fetchMap: Prettify<
+      ChainableRouter['fetchMap'] &
+        Record<
+          SanitizePathSlashes<`${BasePath}${Path}`>,
+          LiveTypeFunction<
+            SV,
+            SanitizePathSlashes<`${BasePath}${Path}`>,
+            P,
+            ResBodyMap,
+            ReqBody,
+            ReqQuery,
+            ReqHeaders,
+            ResHeaders,
+            ContractMethod
+          >
+        >
+    >;
+    sdk: Prettify<
+      ChainableRouter['sdk'] &
+        Record<
+          PrettyCamelCase<Name>,
+          LiveSdkFunction<
+            SV,
+            P,
+            ResBodyMap,
+            ReqBody,
+            ReqQuery,
+            ReqHeaders,
+            ResHeaders
+          >
+        >
     >;
   };
 
   <
+    Name extends string,
     Path extends `/${string}`,
     SuppliedPath extends Path,
     P extends ParamsObject<SV>,
@@ -107,6 +143,7 @@ export interface LiveTypeRouteDefinition<
       >[],
       TypedHandler<
         SV,
+        Name,
         ContractMethod,
         Path,
         P,
@@ -121,20 +158,43 @@ export interface LiveTypeRouteDefinition<
         NextFunction
       >
     ]
-  ): {
-    [Key in ContractMethod]: LiveTypeFunction<
-      SV,
-      `${BasePath}${Path}`,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders
+  ): ChainableRouter & {
+    fetchMap: Prettify<
+      ChainableRouter['fetchMap'] &
+        Record<
+          SanitizePathSlashes<`${BasePath}${Path}`>,
+          LiveTypeFunction<
+            SV,
+            SanitizePathSlashes<`${BasePath}${Path}`>,
+            P,
+            ResBodyMap,
+            ReqBody,
+            ReqQuery,
+            ReqHeaders,
+            ResHeaders,
+            ContractMethod
+          >
+        >
+    >;
+    sdk: Prettify<
+      ChainableRouter['sdk'] &
+        Record<
+          PrettyCamelCase<Name>,
+          LiveSdkFunction<
+            SV,
+            P,
+            ResBodyMap,
+            ReqBody,
+            ReqQuery,
+            ReqHeaders,
+            ResHeaders
+          >
+        >
     >;
   };
 
   <
+    Name extends string,
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -147,6 +207,7 @@ export interface LiveTypeRouteDefinition<
     path: Path,
     contractDetails: ContractDetails<
       SV,
+      Name,
       ContractMethod,
       Path,
       P,
@@ -170,16 +231,38 @@ export interface LiveTypeRouteDefinition<
       BaseResponse,
       NextFunction
     >[]
-  ): {
-    [Key in ContractMethod]: LiveTypeFunction<
-      SV,
-      `${BasePath}${Path}`,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders
+  ): ChainableRouter & {
+    fetchMap: Prettify<
+      ChainableRouter['fetchMap'] &
+        Record<
+          SanitizePathSlashes<`${BasePath}${Path}`>,
+          LiveTypeFunction<
+            SV,
+            SanitizePathSlashes<`${BasePath}${Path}`>,
+            P,
+            ResBodyMap,
+            ReqBody,
+            ReqQuery,
+            ReqHeaders,
+            ResHeaders,
+            ContractMethod
+          >
+        >
+    >;
+    sdk: Prettify<
+      ChainableRouter['sdk'] &
+        Record<
+          PrettyCamelCase<Name>,
+          LiveSdkFunction<
+            SV,
+            P,
+            ResBodyMap,
+            ReqBody,
+            ReqQuery,
+            ReqHeaders,
+            ResHeaders
+          >
+        >
     >;
   };
 }
@@ -189,9 +272,16 @@ export interface TypedMiddlewareDefinition<
   SV extends AnySchemaValidator,
   BaseRequest,
   BaseResponse,
-  NextFunction
+  NextFunction,
+  RouterHandler
 > {
+  (
+    middleware: RouterHandler,
+    ...otherMiddleware: RouterHandler[]
+  ): ChainableRouter;
+
   <
+    Name extends string,
     Path extends `/${string}`,
     SuppliedPath extends Path,
     P extends ParamsObject<SV>,
@@ -205,6 +295,7 @@ export interface TypedMiddlewareDefinition<
     path: PathMatch<SuppliedPath, Path>,
     typedHandler: TypedHandler<
       SV,
+      Name,
       'middleware',
       Path,
       P,
@@ -221,6 +312,7 @@ export interface TypedMiddlewareDefinition<
   ): ChainableRouter;
 
   <
+    Name extends string,
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -232,6 +324,7 @@ export interface TypedMiddlewareDefinition<
   >(
     typedHandler: TypedHandler<
       SV,
+      Name,
       'middleware',
       Path,
       P,
@@ -248,6 +341,7 @@ export interface TypedMiddlewareDefinition<
   ): ChainableRouter;
 
   <
+    Name extends string,
     Path extends `/${string}`,
     SuppliedPath extends Path,
     P extends ParamsObject<SV>,
@@ -288,6 +382,7 @@ export interface TypedMiddlewareDefinition<
       >[],
       TypedHandler<
         SV,
+        Name,
         'middleware',
         Path,
         P,
@@ -305,6 +400,7 @@ export interface TypedMiddlewareDefinition<
   ): ChainableRouter;
 
   <
+    Name extends string,
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -343,6 +439,7 @@ export interface TypedMiddlewareDefinition<
       >[],
       TypedHandler<
         SV,
+        Name,
         'middleware',
         Path,
         P,
@@ -360,6 +457,7 @@ export interface TypedMiddlewareDefinition<
   ): ChainableRouter;
 
   <
+    Name extends string,
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -372,6 +470,7 @@ export interface TypedMiddlewareDefinition<
     path: Path,
     contractDetails: ContractDetails<
       SV,
+      Name,
       'middleware',
       Path,
       P,
@@ -411,6 +510,7 @@ export interface TypedMiddlewareDefinition<
   ): ChainableRouter;
 
   <
+    Name extends string,
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -422,6 +522,7 @@ export interface TypedMiddlewareDefinition<
   >(
     contractDetails: ContractDetails<
       SV,
+      Name,
       'middleware',
       Path,
       P,
@@ -462,7 +563,11 @@ export interface TypedMiddlewareDefinition<
 }
 
 export interface TypedNestableMiddlewareDefinition<
-  ChainableRouter,
+  ChainableRouter extends {
+    fetchMap: object;
+    basePath: `/${string}`;
+    sdk: Record<string, unknown>;
+  },
   RouterHandler,
   Internal extends ExpressLikeRouter<RouterHandler, Internal>,
   SV extends AnySchemaValidator,
@@ -474,27 +579,94 @@ export interface TypedNestableMiddlewareDefinition<
     SV,
     BaseRequest,
     BaseResponse,
-    NextFunction
+    NextFunction,
+    RouterHandler
   > {
-  (router: ConstrainedForklaunchRouter<SV, RouterHandler>): ChainableRouter;
-
-  <Path extends `/${string}`>(
-    path: Path,
-    router: ConstrainedForklaunchRouter<SV, RouterHandler>
+  (
+    middleware: RouterHandler,
+    ...otherMiddleware: RouterHandler[]
   ): ChainableRouter;
 
+  <Router extends ConstrainedForklaunchRouter<SV, RouterHandler>>(
+    router: Router
+  ): ChainableRouter & {
+    fetchMap: Prettify<
+      ChainableRouter['fetchMap'] & {
+        [Key in keyof Router['fetchMap'] as Key extends string
+          ? SanitizePathSlashes<`${ChainableRouter['basePath']}${Key}`>
+          : never]: Router['fetchMap'][Key];
+      }
+    >;
+    sdk: Prettify<
+      ChainableRouter['sdk'] & {
+        [K in PrettyCamelCase<
+          Router['sdkName'] extends string
+            ? Router['sdkName']
+            : Router['basePath']
+        >]: Prettify<Router['sdk']>;
+      }
+    >;
+  };
+
+  <Router extends ConstrainedForklaunchRouter<SV, RouterHandler>>(
+    middlewareOrRouter: RouterHandler | Router,
+    ...otherMiddlewareOrRouters: [...(RouterHandler | Router)[]]
+  ): ChainableRouter & {
+    fetchMap: Prettify<
+      ChainableRouter['fetchMap'] & {
+        [Key in keyof Router['fetchMap'] as Key extends string
+          ? SanitizePathSlashes<`${ChainableRouter['basePath']}${Key}`>
+          : never]: Router['fetchMap'][Key];
+      }
+    >;
+    sdk: Prettify<
+      ChainableRouter['sdk'] & {
+        [K in PrettyCamelCase<
+          Router['sdkName'] extends string
+            ? Router['sdkName']
+            : Router['basePath']
+        >]: Prettify<Router['sdk']>;
+      }
+    >;
+  };
+
+  <Router extends ConstrainedForklaunchRouter<SV, RouterHandler>>(
+    path: Router['basePath'],
+    router: Router
+  ): ChainableRouter & {
+    fetchMap: Prettify<
+      ChainableRouter['fetchMap'] & {
+        [Key in keyof Router['fetchMap'] as Key extends string
+          ? SanitizePathSlashes<`${ChainableRouter['basePath']}${Key}`>
+          : never]: Router['fetchMap'][Key];
+      }
+    >;
+    sdk: Prettify<
+      ChainableRouter['sdk'] & {
+        [K in PrettyCamelCase<
+          Router['sdkName'] extends string
+            ? Router['sdkName']
+            : Router['basePath']
+        >]: Prettify<Router['sdk']>;
+      }
+    >;
+  };
+
   <
+    Name extends string,
     Path extends `/${string}`,
-    SuppliedPath extends Path,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
     ReqBody extends Body<SV>,
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    Router extends ConstrainedForklaunchRouter<SV, RouterHandler>
   >(
-    path: PathMatch<SuppliedPath, Path>,
+    path: `/${string}` extends Router['basePath']
+      ? Path
+      : PathMatch<Path, Router['basePath']>,
     middleware:
       | ExpressLikeSchemaHandler<
           SV,
@@ -509,7 +681,7 @@ export interface TypedNestableMiddlewareDefinition<
           BaseResponse,
           NextFunction
         >
-      | ConstrainedForklaunchRouter<SV, RouterHandler>,
+      | Router,
     ...middlewareAndTypedHandler: [
       ...(
         | ExpressLikeSchemaHandler<
@@ -525,10 +697,11 @@ export interface TypedNestableMiddlewareDefinition<
             BaseResponse,
             NextFunction
           >
-        | ConstrainedForklaunchRouter<SV, RouterHandler>
+        | Router
       )[],
       TypedHandler<
         SV,
+        Name,
         'middleware',
         Path,
         P,
@@ -543,9 +716,27 @@ export interface TypedNestableMiddlewareDefinition<
         NextFunction
       >
     ]
-  ): ChainableRouter;
+  ): ChainableRouter & {
+    fetchMap: Prettify<
+      ChainableRouter['fetchMap'] & {
+        [Key in keyof Router['fetchMap'] as Key extends string
+          ? SanitizePathSlashes<`${ChainableRouter['basePath']}${Key}`>
+          : never]: Router['fetchMap'][Key];
+      }
+    >;
+    sdk: Prettify<
+      ChainableRouter['sdk'] & {
+        [K in PrettyCamelCase<
+          Router['sdkName'] extends string
+            ? Router['sdkName']
+            : Router['basePath']
+        >]: Prettify<Router['sdk']>;
+      }
+    >;
+  };
 
   <
+    Name extends string,
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -553,7 +744,8 @@ export interface TypedNestableMiddlewareDefinition<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    Router extends ConstrainedForklaunchRouter<SV, RouterHandler>
   >(
     middleware:
       | ExpressLikeSchemaHandler<
@@ -569,7 +761,7 @@ export interface TypedNestableMiddlewareDefinition<
           BaseResponse,
           NextFunction
         >
-      | ConstrainedForklaunchRouter<SV, RouterHandler>,
+      | Router,
     ...middlewareAndTypedHandler: [
       ...(
         | ExpressLikeSchemaHandler<
@@ -585,10 +777,11 @@ export interface TypedNestableMiddlewareDefinition<
             BaseResponse,
             NextFunction
           >
-        | ConstrainedForklaunchRouter<SV, RouterHandler>
+        | Router
       )[],
       TypedHandler<
         SV,
+        Name,
         'middleware',
         Path,
         P,
@@ -603,9 +796,27 @@ export interface TypedNestableMiddlewareDefinition<
         NextFunction
       >
     ]
-  ): ChainableRouter;
+  ): ChainableRouter & {
+    fetchMap: Prettify<
+      ChainableRouter['fetchMap'] & {
+        [Key in keyof Router['fetchMap'] as Key extends string
+          ? SanitizePathSlashes<`${ChainableRouter['basePath']}${Key}`>
+          : never]: Router['fetchMap'][Key];
+      }
+    >;
+    sdk: Prettify<
+      ChainableRouter['sdk'] & {
+        [K in PrettyCamelCase<
+          Router['sdkName'] extends string
+            ? Router['sdkName']
+            : Router['basePath']
+        >]: Prettify<Router['sdk']>;
+      }
+    >;
+  };
 
   <
+    Name extends string,
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -613,11 +824,15 @@ export interface TypedNestableMiddlewareDefinition<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    Router extends ConstrainedForklaunchRouter<SV, RouterHandler>
   >(
-    path: Path,
+    path: `/${string}` extends Router['basePath']
+      ? Path
+      : PathMatch<Path, Router['basePath']>,
     contractDetails: ContractDetails<
       SV,
+      Name,
       'middleware',
       Path,
       P,
@@ -642,7 +857,7 @@ export interface TypedNestableMiddlewareDefinition<
           BaseResponse,
           NextFunction
         >
-      | ConstrainedForklaunchRouter<SV, RouterHandler>,
+      | Router,
     ...middlewares: (
       | ExpressLikeSchemaHandler<
           SV,
@@ -657,11 +872,29 @@ export interface TypedNestableMiddlewareDefinition<
           BaseResponse,
           NextFunction
         >
-      | ConstrainedForklaunchRouter<SV, RouterHandler>
+      | Router
     )[]
-  ): ChainableRouter;
+  ): ChainableRouter & {
+    fetchMap: Prettify<
+      ChainableRouter['fetchMap'] & {
+        [Key in keyof Router['fetchMap'] as Key extends string
+          ? SanitizePathSlashes<`${ChainableRouter['basePath']}${Key}`>
+          : never]: Router['fetchMap'][Key];
+      }
+    >;
+    sdk: Prettify<
+      ChainableRouter['sdk'] & {
+        [K in PrettyCamelCase<
+          Router['sdkName'] extends string
+            ? Router['sdkName']
+            : Router['basePath']
+        >]: Prettify<Router['sdk']>;
+      }
+    >;
+  };
 
   <
+    Name extends string,
     Path extends `/${string}`,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
@@ -669,10 +902,12 @@ export interface TypedNestableMiddlewareDefinition<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    Router extends ConstrainedForklaunchRouter<SV, RouterHandler>
   >(
     contractDetails: ContractDetails<
       SV,
+      Name,
       'middleware',
       Path,
       P,
@@ -697,7 +932,7 @@ export interface TypedNestableMiddlewareDefinition<
           BaseResponse,
           NextFunction
         >
-      | ConstrainedForklaunchRouter<SV, RouterHandler>,
+      | Router,
     ...middlewares: (
       | ExpressLikeSchemaHandler<
           SV,
@@ -712,13 +947,31 @@ export interface TypedNestableMiddlewareDefinition<
           BaseResponse,
           NextFunction
         >
-      | ConstrainedForklaunchRouter<SV, RouterHandler>
+      | Router
     )[]
-  ): ChainableRouter;
+  ): ChainableRouter & {
+    fetchMap: Prettify<
+      ChainableRouter['fetchMap'] & {
+        [Key in keyof Router['fetchMap'] as Key extends string
+          ? SanitizePathSlashes<`${ChainableRouter['basePath']}${Key}`>
+          : never]: Router['fetchMap'][Key];
+      }
+    >;
+    sdk: Prettify<
+      ChainableRouter['sdk'] & {
+        [K in PrettyCamelCase<
+          Router['sdkName'] extends string
+            ? Router['sdkName']
+            : Router['basePath']
+        >]: Prettify<Router['sdk']>;
+      }
+    >;
+  };
 }
 
 export type ContractDetailsOrMiddlewareOrTypedHandler<
   SV extends AnySchemaValidator,
+  Name extends string,
   ContractMethod extends Method,
   Path extends `/${string}`,
   P extends ParamsObject<SV>,
@@ -734,6 +987,7 @@ export type ContractDetailsOrMiddlewareOrTypedHandler<
 > =
   | ContractDetails<
       SV,
+      Name,
       ContractMethod,
       Path,
       P,
@@ -759,6 +1013,7 @@ export type ContractDetailsOrMiddlewareOrTypedHandler<
     >
   | TypedHandler<
       SV,
+      Name,
       ContractMethod,
       Path,
       P,
@@ -775,6 +1030,7 @@ export type ContractDetailsOrMiddlewareOrTypedHandler<
 
 export type MiddlewareOrMiddlewareWithTypedHandler<
   SV extends AnySchemaValidator,
+  Name extends string,
   ContractMethod extends Method,
   Path extends `/${string}`,
   P extends ParamsObject<SV>,
@@ -803,6 +1059,7 @@ export type MiddlewareOrMiddlewareWithTypedHandler<
     >
   | TypedHandler<
       SV,
+      Name,
       ContractMethod,
       Path,
       P,

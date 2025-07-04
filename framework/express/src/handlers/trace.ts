@@ -18,7 +18,8 @@ import { SetQsAndStaticTypes } from '../types/export.types';
  * Creates a TRACE route handler with schema validation and type safety.
  *
  * @template SV - The schema validator type
- * @template Path - The route path type (must start with '/')
+ * @template Name - The name of the route
+ * @template Path - The route path type
  * @template P - The path parameters type
  * @template ResBodyMap - The response body map type
  * @template ReqBody - The request body type
@@ -29,7 +30,7 @@ import { SetQsAndStaticTypes } from '../types/export.types';
  *
  * @param {SV} schemaValidator - The schema validator instance
  * @param {Path} path - The route path
- * @param {ContractDetails<SV, 'trace', Path, P, ResBodyMap, ReqBody, ReqQuery, ReqHeaders, ResHeaders, Request>} contractDetails - The contract details for the route
+ * @param {ContractDetails<SV, 'trace', Name, Path, P, ResBodyMap, ReqBody, ReqQuery, ReqHeaders, ResHeaders, Request>} contractDetails - The contract details for the route
  * @param {...ExpressLikeSchemaHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, ReqHeaders, ResHeaders, LocalsObj, Request, Response, NextFunction>[]} handlers - The route handlers
  *
  * @returns {void} - Returns nothing, registers the route with Express
@@ -66,6 +67,7 @@ import { SetQsAndStaticTypes } from '../types/export.types';
  */
 export const trace = <
   SV extends AnySchemaValidator,
+  Name extends string,
   Path extends `/${string}`,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
@@ -79,6 +81,7 @@ export const trace = <
   path: Path,
   contractDetails: ContractDetails<
     SV,
+    Name,
     'trace',
     Path,
     P,
@@ -105,6 +108,7 @@ export const trace = <
 ) => {
   return innerTrace<
     SV,
+    Name,
     Path,
     P,
     ResBodyMap,

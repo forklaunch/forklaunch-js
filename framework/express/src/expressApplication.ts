@@ -3,14 +3,17 @@ import {
   ATTR_HTTP_RESPONSE_STATUS_CODE,
   DocsConfiguration,
   ForklaunchExpressLikeApplication,
+  ForklaunchRouter,
+  generateMcpServer,
   generateSwaggerDocument,
   isForklaunchRequest,
-  logger,
   meta,
   MetricsDefinition,
   OpenTelemetryCollector
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
+import { ZodSchemaValidator } from '@forklaunch/validator/zod';
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { apiReference } from '@scalar/express-api-reference';
 import crypto from 'crypto';
 import express, {
@@ -111,12 +114,70 @@ export class Application<
   listen(...args: unknown[]): Server {
     const port =
       typeof args[0] === 'number' ? args[0] : Number(process.env.PORT);
+    const host =
+      typeof args[1] === 'string' ? args[1] : (process.env.HOST ?? 'localhost');
+    const protocol = (process.env.PROTOCOL as 'http' | 'https') ?? 'http';
 
     const openApi = generateSwaggerDocument<SV>(
       this.schemaValidator,
+      protocol,
+      host,
       port,
       this.routers
     );
+
+    if (this.schemaValidator instanceof ZodSchemaValidator) {
+      const zodSchemaValidator = this.schemaValidator;
+      const routers = this
+        .routers as unknown as ForklaunchRouter<ZodSchemaValidator>[];
+
+      this.internal.get('/mcp', async (_req, res) => {
+        const server = generateMcpServer(
+          zodSchemaValidator,
+          protocol,
+          host,
+          port,
+          '1.0.0',
+          routers
+        );
+        res.json(server);
+      });
+
+      this.internal.post('/mcp', async (req, res) => {
+        try {
+          const server = generateMcpServer(
+            zodSchemaValidator,
+            protocol,
+            host,
+            port,
+            '1.0.0',
+            routers
+          );
+          const transport: StreamableHTTPServerTransport =
+            new StreamableHTTPServerTransport({
+              sessionIdGenerator: undefined
+            });
+          res.on('close', () => {
+            transport.close();
+            server.close();
+          });
+          await server.connect(transport);
+          await transport.handleRequest(req, res, req.body);
+        } catch (error) {
+          console.error('Error handling MCP request:', error);
+          if (!res.headersSent) {
+            res.status(500).json({
+              jsonrpc: '2.0',
+              error: {
+                code: -32603,
+                message: 'Internal server error'
+              },
+              id: null
+            });
+          }
+        }
+      });
+    }
 
     if (
       this.docsConfiguration == null ||
@@ -170,7 +231,7 @@ export class Application<
     const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
       const statusCode = Number(res.statusCode);
       res.locals.errorMessage = err.message;
-      console.log(err);
+      console.error(err);
       res.type('text/plain');
       res
         .status(statusCode >= 400 ? statusCode : 500)
@@ -181,7 +242,7 @@ export class Application<
               : 'No correlation ID'
           }`
         );
-      logger('error').error(
+      this.openTelemetryCollector.error(
         err.stack ?? err.message,
         meta({
           [ATTR_HTTP_RESPONSE_STATUS_CODE]: statusCode

@@ -17,7 +17,7 @@
     "build": "tsc",
     "clean": "rm -rf dist pnpm.lock.yaml node_modules",
     "dev": "pnpm run migrate:up && pnpm tsx watch server.ts",
-    "dev:bun": "bun run migrate:up && bun tsx watch server.ts",
+    "dev:bun": "bun run migrate:up && bun --watch server.ts",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
     "lint": "eslint . -c eslint.config.mjs",
@@ -34,14 +34,14 @@
   "dependencies": {
     "@forklaunch/blueprint-core": "workspace:*",
     "@forklaunch/blueprint-monitoring": "workspace:*",
-    "@forklaunch/common": "^0.3.14",
-    "@forklaunch/core": "^0.9.21",
-    "@forklaunch/express": "^0.5.33",
-    "@forklaunch/hyper-express": "^0.5.32",
+    "@forklaunch/common": "^0.4.2",
+    "@forklaunch/core": "^0.10.4",
+    "@forklaunch/express": "^0.6.4",
+    "@forklaunch/hyper-express": "^0.6.4",
     "@forklaunch/implementation-billing-base": "workspace:*",
-    "@forklaunch/infrastructure-redis": "^0.0.29",
+    "@forklaunch/infrastructure-redis": "^0.1.4",
     "@forklaunch/interfaces-billing": "workspace:*",
-    "@forklaunch/validator": "^0.6.16",
+    "@forklaunch/validator": "^0.7.4",
     "@mikro-orm/core": "^6.4.16",
     "@mikro-orm/migrations": "^6.4.16",
     "@mikro-orm/mongodb": "^6.4.16",
@@ -50,11 +50,11 @@
     "@mikro-orm/reflection": "^6.4.16",
     "@mikro-orm/seeder": "^6.4.16",
     "@mikro-orm/sqlite": "^6.4.16",
-    "@sinclair/typebox": "^0.34.35",
+    "@sinclair/typebox": "^0.34.37",
     "ajv": "^8.17.1",
-    "dotenv": "^16.5.0",
+    "dotenv": "^17.0.1",
     "uuid": "^11.1.0",
-    "zod": "^3.25.67"
+    "zod": "^3.25.71"
   },
   "devDependencies": {
     "@mikro-orm/cli": "^6.4.16",
@@ -62,10 +62,11 @@
     "@types/express-serve-static-core": "^5.0.6",
     "@types/qs": "^6.14.0",
     "@types/uuid": "^10.0.0",
+    "@typescript/native-preview": "7.0.0-dev.20250703.1",
     "depcheck": "^1.4.7",
-    "prettier": "^3.5.3",
+    "prettier": "^3.6.2",
     "ts-node": "^10.9.2",
-    "typedoc": "^0.28.5"
+    "typedoc": "^0.28.7"
   },
   "mikro-orm": {
     "configPaths": [

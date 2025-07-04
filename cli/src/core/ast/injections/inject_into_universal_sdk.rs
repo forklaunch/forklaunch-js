@@ -102,7 +102,7 @@ fn inject_into_universal_sdk_function<'a>(
                             &mut parenthesized_expr.expression
                         {
                             let return_prop_text = format!(
-                                "const obj = {{ {}: await universalSdk<{}ApiClient>({{ host: {}Host, registryOptions: {{ path: \"api/v1/openapi\" }} }}) }};",
+                                "const obj = {{ {}: await universalSdk<{}SdkClient>({{ host: {}Host, registryOptions: {{ path: \"api/v1/openapi\" }} }}) }};",
                                 camel_case_name, pascal_case_name, camel_case_name
                             );
                             let mut return_prop_program = parse_ast_program(
@@ -146,7 +146,7 @@ pub(crate) fn inject_into_universal_sdk<'a>(
     let kebab_case_name = &name.to_case(Case::Kebab);
 
     let import_text = format!(
-        "import type {{ {}ApiClient }} from \"@{}/{}\";",
+        "import type {{ {}SdkClient }} from \"@{}/{}\";",
         pascal_case_name, kebab_app_name, kebab_case_name
     );
     let mut import_program = parse_ast_program(

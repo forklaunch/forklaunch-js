@@ -1,5 +1,5 @@
 import { forklaunchExpress, SchemaValidator } from '@forklaunch/blueprint-core';
-import { ApiClient } from '@forklaunch/core/http';
+import { SdkClient } from '@forklaunch/core/http';
 import { SampleWorkerRoutes } from './api/routes/sampleWorker.routes';
 import { bootstrap } from './bootstrapper';
 //! bootstrap function that initializes the service application
@@ -15,17 +15,17 @@ bootstrap((ci, tokens) => {
   const version = ci.resolve(tokens.VERSION);
   const docsPath = ci.resolve(tokens.DOCS_PATH);
   //! resolves the necessary services from the configuration
-  const scopedSampleWorkerServiceFactory = ci.scopedResolver(
+  const sampleWorkerServiceFactory = ci.scopedResolver(
     tokens.SampleWorkerService
   );
   //! constructs the necessary routes using the appropriate Routes functions
   const sampleWorkerRoutes = SampleWorkerRoutes(
     () => ci.createScope(),
-    scopedSampleWorkerServiceFactory,
+    sampleWorkerServiceFactory,
     openTelemetryCollector
   );
   //! mounts the routes to the app
-  app.use(sampleWorkerRoutes.router);
+  app.use(sampleWorkerRoutes);
   //! starts the server
   app.listen(port, host, () => {
     openTelemetryCollector.info(
@@ -33,7 +33,5 @@ bootstrap((ci, tokens) => {
     );
   });
 });
-//! defines the ApiClient for use with the UniversalSDK client
-export type SampleWorkerApiClient = ApiClient<{
-  sampleWorker: typeof SampleWorkerRoutes;
-}>;
+//! defines the SdkClient for use with the UniversalSDK client
+export type SampleWorkerSdkClient = SdkClient<[typeof SampleWorkerRoutes]>;

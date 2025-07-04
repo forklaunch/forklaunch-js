@@ -6,7 +6,6 @@
  */
 
 import { extendZodWithOpenApi, generateSchema } from '@anatine/zod-openapi';
-import { MimeType } from '@forklaunch/common';
 import { SchemaObject } from 'openapi3-ts/oas31';
 import {
   z,
@@ -38,20 +37,6 @@ import {
   ZodTupleContainer,
   ZodUnionContainer
 } from './types/schema.types';
-
-export type {
-  ZodArray,
-  ZodFunction,
-  ZodLiteral,
-  ZodObject,
-  ZodOptional,
-  ZodPromise,
-  ZodRawShape,
-  ZodRecord,
-  ZodTuple,
-  ZodType,
-  ZodUnion
-};
 
 extendZodWithOpenApi(z);
 
@@ -253,17 +238,13 @@ export class ZodSchemaValidator
   file = z
     .string()
     .transform((val) => {
-      return (name: string, type: MimeType) =>
-        new File([val], name, {
-          type,
-          lastModified: Date.now()
-        });
+      return new Blob([val]);
     })
     .openapi({
       title: 'File',
       type: 'string',
       format: 'binary',
-      example: 'a utf-8 encodable string'
+      example: 'a utf-8 encodable blob or file'
     });
   type = <T>() => this.any as ZodType<T>;
 

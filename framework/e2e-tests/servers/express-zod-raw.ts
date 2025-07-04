@@ -38,11 +38,7 @@ const getHandler = handlers.get(
     responses: {
       200: {
         file: z.string().transform((val: string) => {
-          return (name: string, type: string) =>
-            new File([val], name, {
-              type,
-              lastModified: Date.now()
-            });
+          return new Blob([val]);
         })
       }
     }

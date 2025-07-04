@@ -319,6 +319,11 @@ export interface SchemaResolve<T> {
    * Schema resolution for TypeBox.
    */
   TypeBox: TResolve<T>;
+
+  /**
+   * Mock schema resolution.
+   */
+  Mock: T;
 }
 
 /**
@@ -336,6 +341,11 @@ export interface SchemaTranslate<T> {
    * Schema translation for TypeBox.
    */
   TypeBox: TSchemaTranslate<T>;
+
+  /**
+   * Mock schema translation.
+   */
+  Mock: T;
 }
 
 /**
@@ -344,9 +354,14 @@ export interface SchemaTranslate<T> {
  * @template T - The type of the schema to translate.
  * @template SV - The type of the schema validator.
  */
-type SchemaPrettify<T, SV extends AnySchemaValidator> = Prettify<
-  SchemaTranslate<T>[SV['_Type']]
->;
+type SchemaPrettify<
+  T,
+  SV extends AnySchemaValidator
+> = SchemaTranslate<T>[SV['_Type']] extends infer Schema
+  ? Schema extends Blob | Uint8Array
+    ? Schema
+    : Prettify<Schema>
+  : never;
 
 /**
  * Type representing a schema, which can be a valid schema object or an idiomatic schema.

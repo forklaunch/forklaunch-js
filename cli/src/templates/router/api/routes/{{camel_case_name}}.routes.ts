@@ -8,7 +8,7 @@ import { SchemaDependencies } from '../../registrations';
 // returns an object with the router and the {{camel_case_name}}Get and {{camel_case_name}}Post methods for easy installation
 export const {{pascal_case_name}}Routes = (
   scopeFactory: () => ConfigInjector<SchemaValidator, SchemaDependencies>,
-  scopedServiceFactory: ScopedDependencyFactory<
+  serviceFactory: ScopedDependencyFactory<
     SchemaValidator,
     SchemaDependencies,
     '{{pascal_case_name}}Service'
@@ -16,18 +16,19 @@ export const {{pascal_case_name}}Routes = (
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) => {
   // defines the router for the {{camel_case_name}} routes
-  const router = forklaunchRouter('/{{kebab_case_name}}', SchemaValidator(), openTelemetryCollector);
-
-  const controller = {{pascal_case_name}}Controller(
-    scopeFactory,
-    scopedServiceFactory,
+  const router = forklaunchRouter(
+    '/{{kebab_case_name}}',
+    SchemaValidator(), 
     openTelemetryCollector
   );
 
-  return {
-    router,
+  const controller = {{pascal_case_name}}Controller(
+    scopeFactory,
+    serviceFactory,
+    openTelemetryCollector
+  );
 
-    {{camel_case_name}}Get: router.get('/', controller.{{camel_case_name}}Get),
-    {{camel_case_name}}Post: router.post('/', controller.{{camel_case_name}}Post)
-  };
+  return router
+    .get('/', controller.{{camel_case_name}}Get)
+    .post('/', controller.{{camel_case_name}}Post);
 };

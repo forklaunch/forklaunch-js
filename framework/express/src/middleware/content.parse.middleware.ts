@@ -67,7 +67,15 @@ function contentParse<SV extends AnySchemaValidator>(options?: {
         case 'text':
           return textParser(req, res, next);
         case 'file':
-          return rawParser(req, res, next);
+          return rawParser(req, res, async (err) => {
+            if (err) {
+              return next(err);
+            }
+            if (req.body instanceof Buffer) {
+              req.body = req.body.toString('utf-8');
+            }
+            next();
+          });
         case 'multipart': {
           const bb = Busboy({
             headers: req.headers,
@@ -83,8 +91,10 @@ function contentParse<SV extends AnySchemaValidator>(options?: {
             });
 
             file.on('end', () => {
-              const fileBuffer = Uint8Array.from(chunks.flat());
-              body[fieldname] = fileBuffer.toString();
+              const fileString = chunks
+                .map((chunk) => chunk.toString())
+                .join('');
+              body[fieldname] = fileString;
             });
           });
 

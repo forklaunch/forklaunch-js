@@ -21,6 +21,7 @@ import { ExpressLikeTypedHandler } from '../types/typedHandler.types';
  */
 export function typedHandler<
   SV extends AnySchemaValidator,
+  Name extends string,
   ContractMethod extends Method,
   Path extends `/${string}`,
   P extends ParamsObject<SV>,
@@ -39,6 +40,7 @@ export function typedHandler<
   _contractMethod: ContractMethod,
   contractDetails: ContractDetails<
     SV,
+    Name,
     ContractMethod,
     Path,
     P,
@@ -64,6 +66,7 @@ export function typedHandler<
   >[]
 ): ExpressLikeTypedHandler<
   SV,
+  Name,
   ContractMethod,
   Path,
   P,
@@ -79,6 +82,7 @@ export function typedHandler<
 >;
 export function typedHandler<
   SV extends AnySchemaValidator,
+  Name extends string,
   ContractMethod extends Method,
   Path extends `/${string}`,
   P extends ParamsObject<SV>,
@@ -96,6 +100,7 @@ export function typedHandler<
   _contractMethod: ContractMethod,
   contractDetails: ContractDetails<
     SV,
+    Name,
     ContractMethod,
     Path,
     P,
@@ -121,6 +126,7 @@ export function typedHandler<
   >[]
 ): ExpressLikeTypedHandler<
   SV,
+  Name,
   ContractMethod,
   Path,
   P,
@@ -136,6 +142,7 @@ export function typedHandler<
 >;
 export function typedHandler<
   SV extends AnySchemaValidator,
+  Name extends string,
   ContractMethod extends Method,
   Path extends `/${string}`,
   P extends ParamsObject<SV>,
@@ -155,6 +162,7 @@ export function typedHandler<
     | ContractMethod
     | ContractDetails<
         SV,
+        Name,
         ContractMethod,
         Path,
         P,
@@ -168,6 +176,7 @@ export function typedHandler<
   contractDetailsOrHandler:
     | ContractDetails<
         SV,
+        Name,
         ContractMethod,
         Path,
         P,
@@ -206,6 +215,7 @@ export function typedHandler<
   >[]
 ): ExpressLikeTypedHandler<
   SV,
+  Name,
   ContractMethod,
   Path,
   P,
@@ -223,6 +233,7 @@ export function typedHandler<
 
   let contractDetails: ContractDetails<
     SV,
+    Name,
     ContractMethod,
     Path,
     P,

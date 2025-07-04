@@ -826,9 +826,7 @@ describe('typebox advanced parse', () => {
       const parsed = schemaValidator.parse(file, 'Hello World');
       expect(parsed.ok).toBe(true);
       if (parsed.ok) {
-        expect(await parsed.value('test.txt', 'text/plain').text()).toBe(
-          'Hello World'
-        );
+        expect(await parsed.value.text()).toBe('Hello World');
       }
     });
 

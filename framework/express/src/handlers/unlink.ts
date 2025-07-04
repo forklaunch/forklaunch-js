@@ -73,6 +73,7 @@ import { SetQsAndStaticTypes } from '../types/export.types';
  */
 export const unlink = <
   SV extends AnySchemaValidator,
+  Name extends string,
   Path extends `/${string}`,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
@@ -86,6 +87,7 @@ export const unlink = <
   path: Path,
   contractDetails: ContractDetails<
     SV,
+    Name,
     'middleware',
     Path,
     P,
@@ -112,6 +114,7 @@ export const unlink = <
 ) => {
   return middleware<
     SV,
+    Name,
     Path,
     P,
     ResBodyMap,

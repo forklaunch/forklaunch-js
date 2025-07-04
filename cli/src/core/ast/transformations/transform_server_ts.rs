@@ -8,7 +8,7 @@ use oxc_codegen::{CodeGenerator, CodegenOptions};
 
 use crate::core::ast::{
     injections::{
-        inject_into_exported_api_client::inject_into_exported_api_client,
+        inject_into_exported_sdk_client::inject_into_exported_sdk_client,
         inject_into_import_statement::inject_into_import_statement,
         inject_into_server_ts::inject_into_server_ts,
     },
@@ -26,7 +26,7 @@ pub(crate) fn transform_server_ts(router_name: &str, base_path: &Path) -> Result
     let mut server_program = parse_ast_program(&allocator, &server_source_text, server_source_type);
 
     let scoped_service_factory_injection_text = format!(
-        "const scoped{router_name_pascal_case}ServiceFactory = ci.scopedResolver(tokens.{router_name_pascal_case}Service);",
+        "const {router_name_pascal_case}ServiceFactory = ci.scopedResolver(tokens.{router_name_pascal_case}Service);",
     );
     let mut injection_program_ast = parse_ast_program(
         &allocator,
@@ -73,7 +73,7 @@ pub(crate) fn transform_server_ts(router_name: &str, base_path: &Path) -> Result
     )?;
 
     let routes_injection_text = format!(
-        "const {router_name_camel_case}Routes = {router_name_pascal_case}Routes(() => ci.createScope(), scoped{router_name_pascal_case}ServiceFactory, openTelemetryCollector);",
+        "const {router_name_camel_case}Routes = {router_name_pascal_case}Routes(() => ci.createScope(), {router_name_pascal_case}ServiceFactory, openTelemetryCollector);",
     );
     let mut injection_program_ast =
         parse_ast_program(&allocator, &routes_injection_text, SourceType::ts());
@@ -110,7 +110,7 @@ pub(crate) fn transform_server_ts(router_name: &str, base_path: &Path) -> Result
         },
     )?;
 
-    let use_injection_text = format!("app.use({router_name_camel_case}Routes.router);",);
+    let use_injection_text = format!("app.use({router_name_camel_case}Routes);",);
     let mut injection_program_ast =
         parse_ast_program(&allocator, &use_injection_text, SourceType::ts());
     inject_into_server_ts(
@@ -162,11 +162,12 @@ pub(crate) fn transform_server_ts(router_name: &str, base_path: &Path) -> Result
         format!("./api/routes/{router_name_camel_case}.routes").as_str(),
     )?;
 
-    let api_client_skeleton_text =
-        format!("ApiClient<{{{router_name_camel_case}: typeof {router_name_pascal_case}Routes}}>");
-    let mut injected_api_client_skeleton =
-        parse_ast_program(&allocator, &api_client_skeleton_text, server_source_type);
-    inject_into_exported_api_client(&mut server_program, &mut injected_api_client_skeleton)?;
+    let sdk_client_skeleton_text = format!(
+        "export type SdkClient = SdkClient<[{router_name_camel_case}: typeof {router_name_pascal_case}Routes]>"
+    );
+    let mut injected_sdk_client_skeleton =
+        parse_ast_program(&allocator, &sdk_client_skeleton_text, server_source_type);
+    inject_into_exported_sdk_client(&mut server_program, &mut injected_sdk_client_skeleton)?;
 
     Ok(CodeGenerator::new()
         .with_options(CodegenOptions::default())
