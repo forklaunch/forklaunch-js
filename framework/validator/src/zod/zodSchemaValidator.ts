@@ -20,7 +20,7 @@ import {
   ZodTuple,
   ZodType,
   ZodUnion
-} from 'zod/v3';
+} from 'zod';
 import {
   LiteralSchema,
   ParseResult,
