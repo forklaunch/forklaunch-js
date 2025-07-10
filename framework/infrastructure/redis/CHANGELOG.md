@@ -1,5 +1,17 @@
 # @forklaunch/infrastructure-redis
 
+## 0.2.0
+
+### Minor Changes
+
+- Auth types are now propogated to live sdk types
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.11.0
+  - @forklaunch/common@0.4.3
+
 ## 0.1.4
 
 ### Patch Changes

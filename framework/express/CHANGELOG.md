@@ -1,5 +1,18 @@
 # @forklaunch/express
 
+## 0.7.0
+
+### Minor Changes
+
+- Auth types are now propogated to live sdk types
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.11.0
+  - @forklaunch/validator@0.7.5
+  - @forklaunch/common@0.4.3
+
 ## 0.6.4
 
 ### Patch Changes

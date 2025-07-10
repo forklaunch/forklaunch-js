@@ -1,5 +1,16 @@
 # @forklaunch/universal-sdk
 
+## 0.5.0
+
+### Minor Changes
+
+- Auth types are now propogated to live sdk types
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/common@0.4.3
+
 ## 0.4.2
 
 ### Patch Changes
