@@ -4,7 +4,8 @@ import { OpenTelemetryCollector, SdkClient } from '@forklaunch/core/http';
 import {
   forklaunchExpress,
   forklaunchRouter,
-  handlers
+  handlers,
+  ParsedQs
 } from '@forklaunch/express';
 import {
   array,
@@ -311,3 +312,8 @@ export type SDK = SdkClient<
     typeof filePostTest
   ]
 >;
+
+// Temporary shim for supporting TSGO experimental compiler
+import type * as ExpressStaticCore from 'express-serve-static-core';
+import { Range } from 'range-parser';
+type TSGoShim = ParsedQs & Range & ExpressStaticCore.Application;

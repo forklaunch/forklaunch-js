@@ -1,3 +1,4 @@
+export type { ParsedQs } from 'qs';
 export * from './application/expressLikeApplication';
 export * from './guards/isForklaunchRequest';
 export * from './guards/isForklaunchRouter';

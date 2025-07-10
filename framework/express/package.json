@@ -38,8 +38,8 @@
     "@forklaunch/common": "workspace:*",
     "@forklaunch/core": "workspace:*",
     "@forklaunch/validator": "workspace:*",
-    "@modelcontextprotocol/sdk": "^1.14.0",
-    "@scalar/express-api-reference": "^0.8.7",
+    "@modelcontextprotocol/sdk": "^1.15.0",
+    "@scalar/express-api-reference": "^0.8.9",
     "@types/multer": "^2.0.0",
     "body-parser": "^2.2.0",
     "busboy": "^1.6.0",
@@ -55,11 +55,12 @@
     "@types/busboy": "^1.5.4",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
-    "@types/express-serve-static-core": "^5.0.6",
+    "@types/express-serve-static-core": "^5.0.7",
     "@types/jest": "^30.0.0",
     "@types/qs": "^6.14.0",
+    "@types/range-parser": "^1.2.7",
     "@types/swagger-ui-express": "^4.1.8",
-    "@typescript/native-preview": "7.0.0-dev.20250703.1",
+    "@typescript/native-preview": "7.0.0-dev.20250709.1",
     "jest": "^30.0.4",
     "kill-port-process": "^3.2.1",
     "prettier": "^3.6.2",
@@ -68,6 +69,6 @@
     "tsup": "^8.5.0",
     "typedoc": "^0.28.7",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.35.1"
+    "typescript-eslint": "^8.36.0"
   }
 }

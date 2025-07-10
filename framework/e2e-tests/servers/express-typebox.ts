@@ -4,7 +4,8 @@ import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import {
   forklaunchExpress,
   forklaunchRouter,
-  handlers
+  handlers,
+  ParsedQs
 } from '@forklaunch/express';
 import {
   array,
@@ -226,3 +227,6 @@ export type SDK = {
   multipartTest: typeof multipartTest;
   urlEncodedFormTest: typeof urlEncodedFormTest;
 };
+
+// Temporary shim for supporting TSGO experimental compiler
+type TSGoShim = ParsedQs;

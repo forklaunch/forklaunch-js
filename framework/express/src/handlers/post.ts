@@ -13,7 +13,8 @@ import { AnySchemaValidator } from '@forklaunch/validator';
 import { NextFunction, Request, Response } from 'express';
 import express from 'express-serve-static-core';
 import { ParsedQs } from 'qs';
-import { SetQsAndStaticTypes } from '../types/export.types';
+import { Range } from 'range-parser';
+import { SetExportTypes } from '../types/export.types';
 
 /**
  * Creates a POST route handler with schema validation and type safety.
@@ -127,4 +128,4 @@ export const post = <
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-type Dummy = SetQsAndStaticTypes<ParsedQs, express.Express>;
+type Dummy = SetExportTypes<ParsedQs, express.Express, Range>;

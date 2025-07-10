@@ -428,7 +428,7 @@ export interface ExpressLikeHandler<
               : never;
         },
     next: NextFunction
-  ): void | Promise<void>;
+  ): unknown;
 }
 
 export type MapParamsSchema<
