@@ -37,13 +37,13 @@
   "dependencies": {
     "@forklaunch/blueprint-core": "workspace:*",
     "@forklaunch/blueprint-monitoring": "workspace:*",
-    "@forklaunch/core": "^0.10.4",
+    "@forklaunch/core": "^0.11.0",
     "@forklaunch/implementation-worker-bullmq": "workspace:*",
     "@forklaunch/implementation-worker-database": "workspace:*",
     "@forklaunch/implementation-worker-kafka": "workspace:*",
     "@forklaunch/implementation-worker-redis": "workspace:*",
-    "@forklaunch/infrastructure-redis": "^0.1.4",
-    "@forklaunch/infrastructure-s3": "^0.1.4",
+    "@forklaunch/infrastructure-redis": "^0.2.0",
+    "@forklaunch/infrastructure-s3": "^0.2.0",
     "@forklaunch/interfaces-worker": "workspace:*",
     "@mikro-orm/better-sqlite": "^6.4.16",
     "@mikro-orm/core": "^6.4.16",
@@ -60,23 +60,23 @@
     "@sinclair/typebox": "^0.34.37",
     "ajv": "^8.17.1",
     "better-sqlite3": "^12.2.0",
-    "bullmq": "^5.56.1",
-    "dotenv": "^17.0.1",
+    "bullmq": "^5.56.3",
+    "dotenv": "^17.2.0",
     "kafkajs": "^2.2.4",
     "node-gyp": "^11.2.0",
     "sqlite3": "^5.1.7",
-    "zod": "^3.25.71"
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@mikro-orm/cli": "^6.4.16",
     "@types/express": "^5.0.3",
-    "@types/express-serve-static-core": "^5.0.6",
+    "@types/express-serve-static-core": "^5.0.7",
     "@types/qs": "^6.14.0",
     "depcheck": "^1.4.7",
     "eslint": "^9.30.1",
     "tsx": "^4.20.3",
     "typedoc": "^0.28.7",
-    "typescript-eslint": "^8.35.1"
+    "typescript-eslint": "^8.36.0"
   },
   "mikro-orm": {
     "config_paths": [
