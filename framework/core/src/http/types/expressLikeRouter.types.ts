@@ -18,7 +18,8 @@ import {
   Method,
   ParamsObject,
   QueryObject,
-  ResponsesObject
+  ResponsesObject,
+  SchemaAuthMethods
 } from './contractDetails.types';
 import { ConstrainedForklaunchRouter } from './router.types';
 import { TypedHandler } from './typedHandler.types';
@@ -47,7 +48,15 @@ export interface LiveTypeRouteDefinition<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      BaseRequest
+    >
   >(
     path: PathMatch<SuppliedPath, Path>,
     typedHandler: TypedHandler<
@@ -64,7 +73,8 @@ export interface LiveTypeRouteDefinition<
       LocalsObj,
       BaseRequest,
       BaseResponse,
-      NextFunction
+      NextFunction,
+      Auth
     >
   ): ChainableRouter & {
     fetchMap: Prettify<
@@ -80,7 +90,8 @@ export interface LiveTypeRouteDefinition<
             ReqQuery,
             ReqHeaders,
             ResHeaders,
-            ContractMethod
+            ContractMethod,
+            Auth
           >
         >
     >;
@@ -95,7 +106,8 @@ export interface LiveTypeRouteDefinition<
             ReqBody,
             ReqQuery,
             ReqHeaders,
-            ResHeaders
+            ResHeaders,
+            Auth
           >
         >
     >;
@@ -111,7 +123,15 @@ export interface LiveTypeRouteDefinition<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      BaseRequest
+    >
   >(
     path: PathMatch<SuppliedPath, Path>,
     middleware: ExpressLikeSchemaHandler<
@@ -155,7 +175,8 @@ export interface LiveTypeRouteDefinition<
         LocalsObj,
         BaseRequest,
         BaseResponse,
-        NextFunction
+        NextFunction,
+        Auth
       >
     ]
   ): ChainableRouter & {
@@ -172,7 +193,8 @@ export interface LiveTypeRouteDefinition<
             ReqQuery,
             ReqHeaders,
             ResHeaders,
-            ContractMethod
+            ContractMethod,
+            Auth
           >
         >
     >;
@@ -187,7 +209,8 @@ export interface LiveTypeRouteDefinition<
             ReqBody,
             ReqQuery,
             ReqHeaders,
-            ResHeaders
+            ResHeaders,
+            Auth
           >
         >
     >;
@@ -202,7 +225,15 @@ export interface LiveTypeRouteDefinition<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      BaseRequest
+    >
   >(
     path: Path,
     contractDetails: ContractDetails<
@@ -216,7 +247,8 @@ export interface LiveTypeRouteDefinition<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      BaseRequest
+      BaseRequest,
+      Auth
     >,
     ...middleware: ExpressLikeSchemaHandler<
       SV,
@@ -245,7 +277,8 @@ export interface LiveTypeRouteDefinition<
             ReqQuery,
             ReqHeaders,
             ResHeaders,
-            ContractMethod
+            ContractMethod,
+            Auth
           >
         >
     >;
@@ -260,7 +293,8 @@ export interface LiveTypeRouteDefinition<
             ReqBody,
             ReqQuery,
             ReqHeaders,
-            ResHeaders
+            ResHeaders,
+            Auth
           >
         >
     >;
@@ -290,7 +324,15 @@ export interface TypedMiddlewareDefinition<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      BaseRequest
+    >
   >(
     path: PathMatch<SuppliedPath, Path>,
     typedHandler: TypedHandler<
@@ -307,7 +349,8 @@ export interface TypedMiddlewareDefinition<
       LocalsObj,
       BaseRequest,
       BaseResponse,
-      NextFunction
+      NextFunction,
+      Auth
     >
   ): ChainableRouter;
 
@@ -320,7 +363,15 @@ export interface TypedMiddlewareDefinition<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      BaseRequest
+    >
   >(
     typedHandler: TypedHandler<
       SV,
@@ -336,7 +387,8 @@ export interface TypedMiddlewareDefinition<
       LocalsObj,
       BaseRequest,
       BaseResponse,
-      NextFunction
+      NextFunction,
+      Auth
     >
   ): ChainableRouter;
 
@@ -350,7 +402,15 @@ export interface TypedMiddlewareDefinition<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      BaseRequest
+    >
   >(
     path: PathMatch<SuppliedPath, Path>,
     middleware: ExpressLikeSchemaHandler<
@@ -394,7 +454,8 @@ export interface TypedMiddlewareDefinition<
         LocalsObj,
         BaseRequest,
         BaseResponse,
-        NextFunction
+        NextFunction,
+        Auth
       >
     ]
   ): ChainableRouter;
@@ -408,7 +469,15 @@ export interface TypedMiddlewareDefinition<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      BaseRequest
+    >
   >(
     middleware: ExpressLikeSchemaHandler<
       SV,
@@ -451,7 +520,8 @@ export interface TypedMiddlewareDefinition<
         LocalsObj,
         BaseRequest,
         BaseResponse,
-        NextFunction
+        NextFunction,
+        Auth
       >
     ]
   ): ChainableRouter;
@@ -465,7 +535,15 @@ export interface TypedMiddlewareDefinition<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      BaseRequest
+    >
   >(
     path: Path,
     contractDetails: ContractDetails<
@@ -479,7 +557,8 @@ export interface TypedMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      BaseRequest
+      BaseRequest,
+      Auth
     >,
     middleware: ExpressLikeSchemaHandler<
       SV,
@@ -518,7 +597,15 @@ export interface TypedMiddlewareDefinition<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      BaseRequest
+    >
   >(
     contractDetails: ContractDetails<
       SV,
@@ -531,7 +618,8 @@ export interface TypedMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      BaseRequest
+      BaseRequest,
+      Auth
     >,
     middleware: ExpressLikeSchemaHandler<
       SV,
@@ -662,7 +750,15 @@ export interface TypedNestableMiddlewareDefinition<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
-    Router extends ConstrainedForklaunchRouter<SV, RouterHandler>
+    Router extends ConstrainedForklaunchRouter<SV, RouterHandler>,
+    Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      BaseRequest
+    >
   >(
     path: `/${string}` extends Router['basePath']
       ? Path
@@ -713,7 +809,8 @@ export interface TypedNestableMiddlewareDefinition<
         LocalsObj,
         BaseRequest,
         BaseResponse,
-        NextFunction
+        NextFunction,
+        Auth
       >
     ]
   ): ChainableRouter & {
@@ -745,7 +842,15 @@ export interface TypedNestableMiddlewareDefinition<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
-    Router extends ConstrainedForklaunchRouter<SV, RouterHandler>
+    Router extends ConstrainedForklaunchRouter<SV, RouterHandler>,
+    Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      BaseRequest
+    >
   >(
     middleware:
       | ExpressLikeSchemaHandler<
@@ -793,7 +898,8 @@ export interface TypedNestableMiddlewareDefinition<
         LocalsObj,
         BaseRequest,
         BaseResponse,
-        NextFunction
+        NextFunction,
+        Auth
       >
     ]
   ): ChainableRouter & {
@@ -825,7 +931,15 @@ export interface TypedNestableMiddlewareDefinition<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
-    Router extends ConstrainedForklaunchRouter<SV, RouterHandler>
+    Router extends ConstrainedForklaunchRouter<SV, RouterHandler>,
+    Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      BaseRequest
+    >
   >(
     path: `/${string}` extends Router['basePath']
       ? Path
@@ -841,7 +955,8 @@ export interface TypedNestableMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      BaseRequest
+      BaseRequest,
+      Auth
     >,
     middleware:
       | ExpressLikeSchemaHandler<
@@ -903,7 +1018,15 @@ export interface TypedNestableMiddlewareDefinition<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
-    Router extends ConstrainedForklaunchRouter<SV, RouterHandler>
+    Router extends ConstrainedForklaunchRouter<SV, RouterHandler>,
+    Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      BaseRequest
+    >
   >(
     contractDetails: ContractDetails<
       SV,
@@ -916,7 +1039,8 @@ export interface TypedNestableMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      BaseRequest
+      BaseRequest,
+      Auth
     >,
     middleware:
       | ExpressLikeSchemaHandler<
@@ -983,7 +1107,15 @@ export type ContractDetailsOrMiddlewareOrTypedHandler<
   LocalsObj extends Record<string, unknown>,
   BaseRequest,
   BaseResponse,
-  NextFunction
+  NextFunction,
+  Auth extends SchemaAuthMethods<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    BaseRequest
+  >
 > =
   | ContractDetails<
       SV,
@@ -996,7 +1128,8 @@ export type ContractDetailsOrMiddlewareOrTypedHandler<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      BaseRequest
+      BaseRequest,
+      Auth
     >
   | ExpressLikeSchemaHandler<
       SV,
@@ -1025,7 +1158,8 @@ export type ContractDetailsOrMiddlewareOrTypedHandler<
       LocalsObj,
       BaseRequest,
       BaseResponse,
-      NextFunction
+      NextFunction,
+      Auth
     >;
 
 export type MiddlewareOrMiddlewareWithTypedHandler<
@@ -1042,7 +1176,15 @@ export type MiddlewareOrMiddlewareWithTypedHandler<
   LocalsObj extends Record<string, unknown>,
   BaseRequest,
   BaseResponse,
-  NextFunction
+  NextFunction,
+  Auth extends SchemaAuthMethods<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    BaseRequest
+  >
 > =
   | ExpressLikeSchemaHandler<
       SV,
@@ -1071,5 +1213,6 @@ export type MiddlewareOrMiddlewareWithTypedHandler<
       LocalsObj,
       BaseRequest,
       BaseResponse,
-      NextFunction
+      NextFunction,
+      Auth
     >;

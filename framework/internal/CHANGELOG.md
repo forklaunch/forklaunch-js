@@ -1,5 +1,14 @@
 # @forklaunch/common
 
+## 0.1.5
+
+### Patch Changes
+
+- Auth types are now propogated to live sdk types
+- Updated dependencies
+  - @forklaunch/validator@0.7.5
+  - @forklaunch/common@0.4.3
+
 ## 0.1.4
 
 ### Patch Changes

@@ -6,7 +6,8 @@ import {
   HttpContractDetails,
   ParamsObject,
   QueryObject,
-  ResponsesObject
+  ResponsesObject,
+  SchemaAuthMethods
 } from '../types/contractDetails.types';
 import { typedHandler } from './typedHandler';
 
@@ -23,7 +24,15 @@ export const patch = <
   LocalsObj extends Record<string, unknown>,
   BaseRequest,
   BaseResponse,
-  NextFunction
+  NextFunction,
+  const Auth extends SchemaAuthMethods<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    BaseRequest
+  >
 >(
   _schemaValidator: SV,
   path: Path,
@@ -37,7 +46,8 @@ export const patch = <
     ReqQuery,
     ReqHeaders,
     ResHeaders,
-    BaseRequest
+    BaseRequest,
+    Auth
   >,
   ...handlers: ExpressLikeSchemaHandler<
     SV,
@@ -67,6 +77,7 @@ export const patch = <
     LocalsObj,
     BaseRequest,
     BaseResponse,
-    NextFunction
+    NextFunction,
+    Auth
   >(_schemaValidator, path, 'patch', contractDetails, ...handlers);
 };

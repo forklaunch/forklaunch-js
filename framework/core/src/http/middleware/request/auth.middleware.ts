@@ -1,6 +1,10 @@
+import { isNever } from '@forklaunch/common';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { jwtVerify } from 'jose';
 import { ParsedQs } from 'qs';
+import { discriminateAuthMethod } from '../../discriminateAuthMethod';
+import { hasPermissionChecks } from '../../guards/hasPermissionChecks';
+import { hasRoleChecks } from '../../guards/hasRoleChecks';
 import {
   ForklaunchNextFunction,
   ForklaunchRequest,
@@ -89,19 +93,18 @@ async function checkAuthorizationToken<
 
   let resourceId;
 
-  switch (authorizationMethod.method) {
+  const { type, auth } = discriminateAuthMethod(authorizationMethod);
+
+  switch (type) {
     case 'jwt': {
-      if (tokenPrefix !== 'Bearer') {
+      if (tokenPrefix !== (authorizationMethod.tokenPrefix ?? 'Bearer')) {
         return invalidAuthorizationTokenFormat;
       }
 
       try {
         const decodedJwt = await jwtVerify(
           token,
-          new TextEncoder().encode(
-            // TODO: Check this at application startup if there is any route with jwt checking
-            process.env.JWT_SECRET
-          )
+          new TextEncoder().encode(process.env.JWT_SECRET)
         );
 
         if (!decodedJwt.payload.sub) {
@@ -119,7 +122,7 @@ async function checkAuthorizationToken<
       break;
     }
     case 'basic': {
-      if (authorizationToken !== 'Basic') {
+      if (authorizationToken !== (authorizationMethod.tokenPrefix ?? 'Basic')) {
         return invalidAuthorizationTokenFormat;
       }
 
@@ -131,27 +134,19 @@ async function checkAuthorizationToken<
         return invalidAuthorizationTokenFormat;
       }
 
-      if (!authorizationMethod.login(username, password)) {
+      if (!auth.login(username, password)) {
         return invalidAuthorizationLogin;
       }
 
       resourceId = username;
       break;
     }
-    case 'other':
-      if (tokenPrefix !== authorizationMethod.tokenPrefix) {
-        return invalidAuthorizationTokenFormat;
-      }
-
-      resourceId = authorizationMethod.decodeResource(token);
-
-      break;
+    default:
+      isNever(type);
+      return [401, 'Invalid Authorization method.'];
   }
 
-  if (
-    authorizationMethod.allowedPermissions ||
-    authorizationMethod.forbiddenPermissions
-  ) {
+  if (hasPermissionChecks(authorizationMethod)) {
     if (!authorizationMethod.mapPermissions) {
       return [500, 'No permission mapping function provided.'];
     }
@@ -161,7 +156,10 @@ async function checkAuthorizationToken<
       req
     );
 
-    if (authorizationMethod.allowedPermissions) {
+    if (
+      'allowedPermissions' in authorizationMethod &&
+      authorizationMethod.allowedPermissions
+    ) {
       if (
         resourcePermissions.intersection(authorizationMethod.allowedPermissions)
           .size === 0
@@ -170,7 +168,10 @@ async function checkAuthorizationToken<
       }
     }
 
-    if (authorizationMethod.forbiddenPermissions) {
+    if (
+      'forbiddenPermissions' in authorizationMethod &&
+      authorizationMethod.forbiddenPermissions
+    ) {
       if (
         resourcePermissions.intersection(
           authorizationMethod.forbiddenPermissions
@@ -179,16 +180,17 @@ async function checkAuthorizationToken<
         return invalidAuthorizationTokenPermissions;
       }
     }
-  }
-
-  if (authorizationMethod.allowedRoles || authorizationMethod.forbiddenRoles) {
+  } else if (hasRoleChecks(authorizationMethod)) {
     if (!authorizationMethod.mapRoles) {
       return [500, 'No role mapping function provided.'];
     }
 
     const resourceRoles = await authorizationMethod.mapRoles(resourceId, req);
 
-    if (authorizationMethod.allowedRoles) {
+    if (
+      'allowedRoles' in authorizationMethod &&
+      authorizationMethod.allowedRoles
+    ) {
       if (
         resourceRoles.intersection(authorizationMethod.allowedRoles).size === 0
       ) {
@@ -196,7 +198,10 @@ async function checkAuthorizationToken<
       }
     }
 
-    if (authorizationMethod.forbiddenRoles) {
+    if (
+      'forbiddenRoles' in authorizationMethod &&
+      authorizationMethod.forbiddenRoles
+    ) {
       if (
         resourceRoles.intersection(authorizationMethod.forbiddenRoles).size !==
         0
@@ -204,9 +209,9 @@ async function checkAuthorizationToken<
         return invalidAuthorizationTokenRoles;
       }
     }
+  } else {
+    return [401, 'Invalid Authorization method.'];
   }
-
-  return [401, 'Invalid Authorization method.'];
 }
 
 /**
@@ -245,14 +250,16 @@ export async function parseRequestAuth<
   >,
   next?: ForklaunchNextFunction
 ) {
-  const auth = req.contractDetails.auth as AuthMethods<
-    SV,
-    MapParamsSchema<SV, P>,
-    MapReqBodySchema<SV, ReqBody>,
-    MapReqQuerySchema<SV, ReqQuery>,
-    MapReqHeadersSchema<SV, ReqHeaders>,
-    unknown
-  >;
+  const auth = req.contractDetails.auth as
+    | AuthMethods<
+        SV,
+        MapParamsSchema<SV, P>,
+        MapReqBodySchema<SV, ReqBody>,
+        MapReqQuerySchema<SV, ReqQuery>,
+        MapReqHeadersSchema<SV, ReqHeaders>,
+        unknown
+      >
+    | undefined;
 
   if (auth) {
     const [error, message] =
@@ -265,16 +272,14 @@ export async function parseRequestAuth<
         unknown
       >(
         auth,
-        req.headers[
-          (auth.method === 'other' ? auth.headerName : undefined) ??
-            'Authorization'
-        ],
+        req.headers[auth.headerName ?? 'Authorization'] ||
+          req.headers[auth.headerName ?? 'authorization'],
         req
       )) ?? [];
     if (error != null) {
       res.type('text/plain');
       res.status(error).send(message as never);
-      next?.(new Error(message));
+      return;
     }
   }
 

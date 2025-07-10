@@ -9,6 +9,8 @@ import { ParsedQs } from 'qs';
 import { Readable } from 'stream';
 import { OpenTelemetryCollector } from '../telemetry/openTelemetryCollector';
 import {
+  AuthMethodsBase,
+  BasicAuthMethods,
   Body,
   FileBody,
   HeadersObject,
@@ -42,25 +44,6 @@ export interface RequestContext {
   idempotencyKey?: string;
   /** Active OpenTelemetry Span */
   span?: Span;
-}
-
-export interface ForklaunchBaseRequest<
-  P extends ParamsDictionary,
-  ReqBody extends Record<string, unknown>,
-  ReqQuery extends ParsedQs,
-  ReqHeaders extends Record<string, string>
-> {
-  /** Context of the request */
-  context: Prettify<RequestContext>;
-
-  /** Request parameters */
-  params: P;
-  /** Request headers */
-  headers: ReqHeaders;
-  /** Request body */
-  body: ReqBody;
-  /** Request query */
-  query: ReqQuery;
 }
 
 /**
@@ -445,7 +428,7 @@ export interface ExpressLikeHandler<
               : never;
         },
     next: NextFunction
-  ): void | Promise<void>;
+  ): unknown;
 }
 
 export type MapParamsSchema<
@@ -615,10 +598,26 @@ export type ExpressLikeSchemaAuthMapper<
   BaseRequest
 > = ExpressLikeAuthMapper<
   SV,
-  MapParamsSchema<SV, P>,
-  MapReqBodySchema<SV, ReqBody>,
-  MapReqQuerySchema<SV, ReqQuery>,
-  MapReqHeadersSchema<SV, ReqHeaders>,
+  P extends infer UnmappedParams
+    ? UnmappedParams extends ParamsObject<SV>
+      ? MapParamsSchema<SV, UnmappedParams>
+      : never
+    : never,
+  ReqBody extends infer UnmappedReqBody
+    ? UnmappedReqBody extends Body<SV>
+      ? MapReqBodySchema<SV, UnmappedReqBody>
+      : never
+    : never,
+  ReqQuery extends infer UnmappedReqQuery
+    ? UnmappedReqQuery extends QueryObject<SV>
+      ? MapReqQuerySchema<SV, UnmappedReqQuery>
+      : never
+    : never,
+  ReqHeaders extends infer UnmappedReqHeaders
+    ? UnmappedReqHeaders extends HeadersObject<SV>
+      ? MapReqHeadersSchema<SV, UnmappedReqHeaders>
+      : never
+    : never,
   BaseRequest
 >;
 
@@ -641,12 +640,29 @@ export type ExpressLikeAuthMapper<
   >
 ) => Set<string> | Promise<Set<string>>;
 
+type TokenPrefix<Auth extends AuthMethodsBase> =
+  undefined extends Auth['tokenPrefix']
+    ? Auth extends BasicAuthMethods
+      ? 'Basic '
+      : 'Bearer '
+    : `${Auth['tokenPrefix']} `;
+
+type AuthHeaders<Auth extends AuthMethodsBase> =
+  undefined extends Auth['headerName']
+    ? {
+        authorization: `${TokenPrefix<Auth>}${string}`;
+      }
+    : {
+        [K in NonNullable<Auth['headerName']>]: `${TokenPrefix<Auth>}${string}`;
+      };
+
 export type LiveTypeFunctionRequestInit<
   SV extends AnySchemaValidator,
   P extends ParamsObject<SV>,
   ReqBody extends Body<SV>,
   ReqQuery extends QueryObject<SV>,
-  ReqHeaders extends HeadersObject<SV>
+  ReqHeaders extends HeadersObject<SV>,
+  Auth extends AuthMethodsBase
 > = MakePropertyOptionalIfChildrenOptional<
   (ParamsObject<SV> extends P
     ? unknown
@@ -664,10 +680,16 @@ export type LiveTypeFunctionRequestInit<
           query: MapSchema<SV, ReqQuery>;
         }) &
     (HeadersObject<SV> extends ReqHeaders
-      ? unknown
-      : {
-          headers: MapSchema<SV, ReqHeaders>;
-        })
+      ? AuthHeaders<AuthMethodsBase> extends AuthHeaders<Auth>
+        ? unknown
+        : {
+            headers: AuthHeaders<Auth>;
+          }
+      : AuthHeaders<AuthMethodsBase> extends AuthHeaders<Auth>
+        ? { headers: MapSchema<SV, ReqHeaders> }
+        : {
+            headers: MapSchema<SV, ReqHeaders> & AuthHeaders<Auth>;
+          })
 >;
 
 /**
@@ -692,13 +714,14 @@ export type LiveTypeFunction<
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
-  ContractMethod extends Method
+  ContractMethod extends Method,
+  Auth extends AuthMethodsBase
 > = (
   route: SanitizePathSlashes<Route>,
   ...reqInit: Prettify<
     Omit<RequestInit, 'method' | 'body' | 'query' | 'headers' | 'params'> & {
       method: Uppercase<ContractMethod>;
-    } & LiveTypeFunctionRequestInit<SV, P, ReqBody, ReqQuery, ReqHeaders>
+    } & LiveTypeFunctionRequestInit<SV, P, ReqBody, ReqQuery, ReqHeaders, Auth>
   > extends infer ReqInit
     ? ReqInit extends
         | { body: unknown }
@@ -741,11 +764,12 @@ export type LiveSdkFunction<
   ReqBody extends Body<SV>,
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
-  ResHeaders extends HeadersObject<SV>
+  ResHeaders extends HeadersObject<SV>,
+  Auth extends AuthMethodsBase
 > = (
   ...reqInit: Prettify<
     Omit<RequestInit, 'method' | 'body' | 'query' | 'headers' | 'params'> &
-      LiveTypeFunctionRequestInit<SV, P, ReqBody, ReqQuery, ReqHeaders>
+      LiveTypeFunctionRequestInit<SV, P, ReqBody, ReqQuery, ReqHeaders, Auth>
   > extends infer ReqInit
     ? ReqInit extends
         | { body: unknown }

@@ -7,7 +7,8 @@ import {
   MiddlewareContractDetails,
   ParamsObject,
   QueryObject,
-  ResponsesObject
+  ResponsesObject,
+  SchemaAuthMethods
 } from '../types/contractDetails.types';
 import { typedHandler } from './typedHandler';
 
@@ -24,7 +25,15 @@ export const middleware = <
   LocalsObj extends Record<string, unknown>,
   BaseRequest,
   BaseResponse,
-  NextFunction
+  NextFunction,
+  const Auth extends SchemaAuthMethods<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    BaseRequest
+  >
 >(
   _schemaValidator: SV,
   path: Path,
@@ -38,7 +47,8 @@ export const middleware = <
     ReqQuery,
     ReqHeaders,
     ResHeaders,
-    BaseRequest
+    BaseRequest,
+    Auth
   >,
   ...handlers: ExpressLikeSchemaHandler<
     SV,
@@ -68,7 +78,8 @@ export const middleware = <
     LocalsObj,
     BaseRequest,
     BaseResponse,
-    NextFunction
+    NextFunction,
+    Auth
   >(_schemaValidator, path, 'middleware', contractDetails, ...handlers) as {
     _typedHandler: true;
     _path: Path;
@@ -83,7 +94,8 @@ export const middleware = <
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      BaseRequest
+      BaseRequest,
+      Auth
     >;
     handlers: ExpressLikeSchemaHandler<
       SV,

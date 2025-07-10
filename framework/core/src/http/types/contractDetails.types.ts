@@ -1,6 +1,5 @@
 import {
   ExclusiveRecord,
-  Prettify,
   StringWithoutSlash,
   UnionToIntersection
 } from '@forklaunch/common';
@@ -251,47 +250,36 @@ export type Body<SV extends AnySchemaValidator> =
   | SV['_ValidSchemaObject']
   | SV['_SchemaCatchall'];
 
-export type AuthMethodsBase = (
+export type BasicAuthMethods = {
+  readonly basic: {
+    readonly login: (username: string, password: string) => boolean;
+  };
+};
+
+export type JwtAuthMethods = {
+  readonly jwt?: {
+    readonly decodeResource?: (token: string) => string;
+  };
+};
+
+export type AuthMethodsBase = {
+  readonly tokenPrefix?: string;
+  readonly headerName?: string;
+} & (BasicAuthMethods | JwtAuthMethods);
+
+type PermissionSet =
   | {
-      readonly method: 'jwt';
+      readonly allowedPermissions: Set<string>;
+    }
+  | { readonly forbiddenPermissions: Set<string> };
+
+type RoleSet =
+  | {
+      readonly allowedRoles: Set<string>;
     }
   | {
-      readonly method: 'basic';
-      readonly login: (username: string, password: string) => boolean;
-    }
-  | {
-      readonly method: 'other';
-      readonly tokenPrefix: string;
-      readonly headerName?: string;
-      readonly decodeResource: (token: string) => string;
-    }
-) &
-  (
-    | {
-        readonly allowedPermissions: Set<string>;
-        readonly forbiddenPermissions?: Set<string>;
-        readonly allowedRoles?: Set<string>;
-        readonly forbiddenRoles?: Set<string>;
-      }
-    | {
-        readonly allowedPermissions?: Set<string>;
-        readonly forbiddenPermissions: Set<string>;
-        readonly allowedRoles?: Set<string>;
-        readonly forbiddenRoles?: Set<string>;
-      }
-    | {
-        readonly allowedPermissions?: Set<string>;
-        readonly forbiddenPermissions?: Set<string>;
-        readonly allowedRoles: Set<string>;
-        readonly forbiddenRoles?: Set<string>;
-      }
-    | {
-        readonly allowedPermissions?: Set<string>;
-        readonly forbiddenPermissions?: Set<string>;
-        readonly allowedRoles?: Set<string>;
-        readonly forbiddenRoles: Set<string>;
-      }
-  );
+      readonly forbiddenRoles: Set<string>;
+    };
 
 /**
  * Type representing the authentication methods.
@@ -303,26 +291,29 @@ export type SchemaAuthMethods<
   QuerySchema extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   BaseRequest
-> = Prettify<
-  AuthMethodsBase & {
-    readonly mapPermissions?: ExpressLikeSchemaAuthMapper<
-      SV,
-      ParamsSchema,
-      ReqBody,
-      QuerySchema,
-      ReqHeaders,
-      BaseRequest
-    >;
-    readonly mapRoles?: ExpressLikeSchemaAuthMapper<
-      SV,
-      ParamsSchema,
-      ReqBody,
-      QuerySchema,
-      ReqHeaders,
-      BaseRequest
-    >;
-  }
->;
+> = AuthMethodsBase &
+  (
+    | ({
+        readonly mapPermissions: ExpressLikeSchemaAuthMapper<
+          SV,
+          ParamsSchema,
+          ReqBody,
+          QuerySchema,
+          ReqHeaders,
+          BaseRequest
+        >;
+      } & PermissionSet)
+    | ({
+        readonly mapRoles: ExpressLikeSchemaAuthMapper<
+          SV,
+          ParamsSchema,
+          ReqBody,
+          QuerySchema,
+          ReqHeaders,
+          BaseRequest
+        >;
+      } & RoleSet)
+  );
 
 export type AuthMethods<
   SV extends AnySchemaValidator,
@@ -331,24 +322,29 @@ export type AuthMethods<
   ReqQuery extends ParsedQs,
   ReqHeaders extends Record<string, string>,
   BaseRequest
-> = AuthMethodsBase & {
-  readonly mapPermissions?: ExpressLikeAuthMapper<
-    SV,
-    P,
-    ReqBody,
-    ReqQuery,
-    ReqHeaders,
-    BaseRequest
-  >;
-  readonly mapRoles?: ExpressLikeAuthMapper<
-    SV,
-    P,
-    ReqBody,
-    ReqQuery,
-    ReqHeaders,
-    BaseRequest
-  >;
-};
+> = AuthMethodsBase &
+  (
+    | ({
+        readonly mapPermissions: ExpressLikeAuthMapper<
+          SV,
+          P,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          BaseRequest
+        >;
+      } & PermissionSet)
+    | ({
+        readonly mapRoles: ExpressLikeAuthMapper<
+          SV,
+          P,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          BaseRequest
+        >;
+      } & RoleSet)
+  );
 
 /**
  * Type representing a mapped schema.
@@ -404,15 +400,7 @@ export type ResponseCompiledSchema = {
   responses: Record<number, unknown>;
 };
 
-/**
- * Interface representing HTTP contract details for path parameters.
- *
- * @template SV - A type that extends AnySchemaValidator.
- * @template ParamsSchema - A type for parameter schemas, defaulting to ParamsObject.
- * @template ResponseSchemas - A type for response schemas, defaulting to ResponsesObject.
- * @template QuerySchema - A type for query schemas, defaulting to QueryObject.
- */
-export type PathParamHttpContractDetails<
+type BasePathParamHttpContractDetails<
   SV extends AnySchemaValidator,
   Name extends string = string,
   Path extends `/${string}` = `/${string}`,
@@ -420,8 +408,7 @@ export type PathParamHttpContractDetails<
   ResponseSchemas extends ResponsesObject<SV> = ResponsesObject<SV>,
   QuerySchema extends QueryObject<SV> = QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV> = HeadersObject<SV>,
-  ResHeaders extends HeadersObject<SV> = HeadersObject<SV>,
-  BaseRequest = unknown
+  ResHeaders extends HeadersObject<SV> = HeadersObject<SV>
 > = {
   /** Name of the contract */
   readonly name: StringWithoutSlash<Name>;
@@ -435,19 +422,7 @@ export type PathParamHttpContractDetails<
   readonly responseHeaders?: ResHeaders;
   /** Optional query schemas for the contract */
   readonly query?: QuerySchema;
-  /** Optional authentication details for the contract */
-  readonly auth?: SchemaAuthMethods<
-    SV,
-    string | number | symbol extends ExtractedParamsObject<Path>
-      ? {
-          [K in keyof ExtractedParamsObject<Path>]: ParamsSchema[K];
-        }
-      : ParamsSchema,
-    never,
-    QuerySchema,
-    ReqHeaders,
-    BaseRequest
-  >;
+  /** Options for the contract */
   readonly options?: {
     readonly requestValidation: 'error' | 'warning' | 'none';
     readonly responseValidation: 'error' | 'warning' | 'none';
@@ -463,6 +438,54 @@ export type PathParamHttpContractDetails<
         [K in keyof ExtractedParamsObject<Path>]: ParamsSchema[K];
       };
     });
+
+/**
+ * Interface representing HTTP contract details for path parameters.
+ *
+ * @template SV - A type that extends AnySchemaValidator.
+ * @template ParamsSchema - A type for parameter schemas, defaulting to ParamsObject.
+ * @template ResponseSchemas - A type for response schemas, defaulting to ResponsesObject.
+ * @template QuerySchema - A type for query schemas, defaulting to QueryObject.
+ */
+export type PathParamHttpContractDetails<
+  SV extends AnySchemaValidator,
+  Name extends string = string,
+  Path extends `/${string}` = `/${string}`,
+  ParamsSchema extends ParamsObject<SV> = ParamsObject<SV>,
+  ResponseSchemas extends ResponsesObject<SV> = ResponsesObject<SV>,
+  BodySchema extends Body<SV> = Body<SV>,
+  QuerySchema extends QueryObject<SV> = QueryObject<SV>,
+  ReqHeaders extends HeadersObject<SV> = HeadersObject<SV>,
+  ResHeaders extends HeadersObject<SV> = HeadersObject<SV>,
+  BaseRequest = unknown,
+  Auth extends SchemaAuthMethods<
+    SV,
+    ParamsSchema,
+    BodySchema,
+    QuerySchema,
+    ReqHeaders,
+    BaseRequest
+  > = SchemaAuthMethods<
+    SV,
+    ParamsSchema,
+    BodySchema,
+    QuerySchema,
+    ReqHeaders,
+    BaseRequest
+  >
+> = BasePathParamHttpContractDetails<
+  SV,
+  Name,
+  Path,
+  ParamsSchema,
+  ResponseSchemas,
+  QuerySchema,
+  ReqHeaders,
+  ResHeaders
+> & {
+  /** Optional authentication details for the contract */
+  readonly auth?: Auth;
+};
 
 /**
  * Interface representing HTTP contract details.
@@ -483,8 +506,23 @@ export type HttpContractDetails<
   QuerySchema extends QueryObject<SV> = QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV> = HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV> = HeadersObject<SV>,
-  BaseRequest = unknown
-> = PathParamHttpContractDetails<
+  BaseRequest = unknown,
+  Auth extends SchemaAuthMethods<
+    SV,
+    ParamsSchema,
+    BodySchema,
+    QuerySchema,
+    ReqHeaders,
+    BaseRequest
+  > = SchemaAuthMethods<
+    SV,
+    ParamsSchema,
+    BodySchema,
+    QuerySchema,
+    ReqHeaders,
+    BaseRequest
+  >
+> = BasePathParamHttpContractDetails<
   SV,
   Name,
   Path,
@@ -492,8 +530,7 @@ export type HttpContractDetails<
   ResponseSchemas,
   QuerySchema,
   ReqHeaders,
-  ResHeaders,
-  BaseRequest
+  ResHeaders
 > &
   (BodySchema extends SV['_SchemaCatchall']
     ? {
@@ -529,18 +566,7 @@ export type HttpContractDetails<
                   /** Required body schema for body-based methods for the contract */
                   readonly body: BodySchema;
                 }) & {
-    readonly auth?: SchemaAuthMethods<
-      SV,
-      string | number | symbol extends ExtractedParamsObject<Path>
-        ? {
-            [K in keyof ExtractedParamsObject<Path>]: ParamsSchema[K];
-          }
-        : ParamsSchema,
-      BodySchema,
-      QuerySchema,
-      ReqHeaders,
-      BaseRequest
-    >;
+    readonly auth?: Auth;
   };
 
 /**
@@ -563,7 +589,22 @@ export type MiddlewareContractDetails<
   QuerySchema extends QueryObject<SV> = QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV> = HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV> = HeadersObject<SV>,
-  BaseRequest = unknown
+  BaseRequest = unknown,
+  Auth extends SchemaAuthMethods<
+    SV,
+    ParamsSchema,
+    BodySchema,
+    QuerySchema,
+    ReqHeaders,
+    BaseRequest
+  > = SchemaAuthMethods<
+    SV,
+    ParamsSchema,
+    BodySchema,
+    QuerySchema,
+    ReqHeaders,
+    BaseRequest
+  >
 > = Omit<
   Partial<
     HttpContractDetails<
@@ -576,7 +617,8 @@ export type MiddlewareContractDetails<
       QuerySchema,
       ReqHeaders,
       ResHeaders,
-      BaseRequest
+      BaseRequest,
+      Auth
     >
   >,
   'responses'
@@ -596,7 +638,15 @@ export type ContractDetails<
   QuerySchema extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
-  BaseRequest
+  BaseRequest,
+  Auth extends SchemaAuthMethods<
+    SV,
+    ParamsSchema,
+    BodySchema,
+    QuerySchema,
+    ReqHeaders,
+    BaseRequest
+  >
 > = ContractMethod extends PathParamMethod
   ? PathParamHttpContractDetails<
       SV,
@@ -604,10 +654,12 @@ export type ContractDetails<
       Path,
       ParamsSchema,
       ResponseSchemas,
+      BodySchema,
       QuerySchema,
       ReqHeaders,
       ResHeaders,
-      BaseRequest
+      BaseRequest,
+      Auth
     >
   : ContractMethod extends HttpMethod
     ? HttpContractDetails<
@@ -620,7 +672,8 @@ export type ContractDetails<
         QuerySchema,
         ReqHeaders,
         ResHeaders,
-        BaseRequest
+        BaseRequest,
+        Auth
       >
     : ContractMethod extends 'middleware'
       ? MiddlewareContractDetails<
@@ -633,6 +686,7 @@ export type ContractDetails<
           QuerySchema,
           ReqHeaders,
           ResHeaders,
-          BaseRequest
+          BaseRequest,
+          Auth
         >
       : never;

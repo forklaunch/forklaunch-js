@@ -45,7 +45,8 @@ import {
   PathParamHttpContractDetails,
   QueryObject,
   ResponseCompiledSchema,
-  ResponsesObject
+  ResponsesObject,
+  SchemaAuthMethods
 } from '../types/contractDetails.types';
 import {
   ContractDetailsOrMiddlewareOrTypedHandler,
@@ -326,7 +327,15 @@ export class ForklaunchExpressLikeRouter<
     ReqBody extends Body<SV>,
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
-    ResHeaders extends HeadersObject<SV>
+    ResHeaders extends HeadersObject<SV>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      BaseRequest
+    >
   >(
     contractDetails: ContractDetails<
       SV,
@@ -339,7 +348,8 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      BaseRequest
+      BaseRequest,
+      Auth
     >
   ) {
     const schemaValidator = this.schemaValidator as SchemaValidator;
@@ -356,7 +366,8 @@ export class ForklaunchExpressLikeRouter<
         ReqQuery,
         ReqHeaders,
         ResHeaders,
-        BaseRequest
+        BaseRequest,
+        Auth
       >(contractDetails)
     ) {
       body = discriminateBody(this.schemaValidator, contractDetails.body);
@@ -385,10 +396,12 @@ export class ForklaunchExpressLikeRouter<
         Path,
         P,
         ResBodyMap,
+        ReqBody,
         ReqQuery,
         ReqHeaders,
         ResHeaders,
-        BaseRequest
+        BaseRequest,
+        Auth
       >(contractDetails) ||
       isHttpContractDetails<
         SV,
@@ -400,7 +413,8 @@ export class ForklaunchExpressLikeRouter<
         ReqQuery,
         ReqHeaders,
         ResHeaders,
-        BaseRequest
+        BaseRequest,
+        Auth
       >(contractDetails)
         ? Object.fromEntries(
             Object.entries(
@@ -572,7 +586,15 @@ export class ForklaunchExpressLikeRouter<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      BaseRequest
+    >
   >(
     method: ContractMethod,
     path: Path,
@@ -591,7 +613,8 @@ export class ForklaunchExpressLikeRouter<
       LocalsObj,
       BaseRequest,
       BaseResponse,
-      NextFunction
+      NextFunction,
+      Auth
     >,
     ...middlewareOrMiddlewareAndTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -607,7 +630,8 @@ export class ForklaunchExpressLikeRouter<
       LocalsObj,
       BaseRequest,
       BaseResponse,
-      NextFunction
+      NextFunction,
+      Auth
     >[]
   ): this & {
     fetchMap: Prettify<
@@ -623,7 +647,8 @@ export class ForklaunchExpressLikeRouter<
             ReqQuery,
             ReqHeaders,
             ResHeaders,
-            ContractMethod
+            ContractMethod,
+            Auth
           >
         >
     >;
@@ -642,7 +667,8 @@ export class ForklaunchExpressLikeRouter<
             ReqBody,
             ReqQuery,
             ReqHeaders,
-            ResHeaders
+            ResHeaders,
+            Auth
           >
         >
     >;
@@ -663,7 +689,8 @@ export class ForklaunchExpressLikeRouter<
         LocalsObj,
         BaseRequest,
         BaseResponse,
-        NextFunction
+        NextFunction,
+        Auth
       >(contractDetailsOrMiddlewareOrTypedHandler)
     ) {
       const { contractDetails, handlers } =
@@ -678,7 +705,8 @@ export class ForklaunchExpressLikeRouter<
         ReqQuery,
         ReqHeaders,
         ResHeaders,
-        LocalsObj
+        LocalsObj,
+        Auth
       >(method, path, registrationMethod, contractDetails, ...handlers);
 
       return this as this & {
@@ -695,7 +723,8 @@ export class ForklaunchExpressLikeRouter<
                 ReqQuery,
                 ReqHeaders,
                 ResHeaders,
-                ContractMethod
+                ContractMethod,
+                Auth
               >
             >
         >;
@@ -714,7 +743,8 @@ export class ForklaunchExpressLikeRouter<
                 ReqBody,
                 ReqQuery,
                 ReqHeaders,
-                ResHeaders
+                ResHeaders,
+                Auth
               >
             >
         >;
@@ -741,7 +771,8 @@ export class ForklaunchExpressLikeRouter<
           LocalsObj,
           BaseRequest,
           BaseResponse,
-          NextFunction
+          NextFunction,
+          Auth
         >(maybeTypedHandler)
       ) {
         const { contractDetails, handlers } = maybeTypedHandler;
@@ -755,7 +786,8 @@ export class ForklaunchExpressLikeRouter<
           ReqQuery,
           ReqHeaders,
           ResHeaders,
-          LocalsObj
+          LocalsObj,
+          Auth
         >(
           method,
           path,
@@ -778,7 +810,8 @@ export class ForklaunchExpressLikeRouter<
                   ReqQuery,
                   ReqHeaders,
                   ResHeaders,
-                  ContractMethod
+                  ContractMethod,
+                  Auth
                 >
               >
           >;
@@ -797,7 +830,8 @@ export class ForklaunchExpressLikeRouter<
                   ReqBody,
                   ReqQuery,
                   ReqHeaders,
-                  ResHeaders
+                  ResHeaders,
+                  Auth
                 >
               >
           >;
@@ -831,7 +865,8 @@ export class ForklaunchExpressLikeRouter<
             LocalsObj,
             BaseRequest,
             BaseResponse,
-            NextFunction
+            NextFunction,
+            Auth
           >(contractDetailsOrMiddlewareOrTypedHandler)
         ) {
           throw new Error('Contract details are not defined');
@@ -867,7 +902,8 @@ export class ForklaunchExpressLikeRouter<
             ReqQuery,
             ReqHeaders,
             ResHeaders,
-            BaseRequest
+            BaseRequest,
+            Auth
           >(contractDetails) &&
           !isPathParamHttpContractDetails<
             SV,
@@ -875,10 +911,12 @@ export class ForklaunchExpressLikeRouter<
             Path,
             P,
             ResBodyMap,
+            ReqBody,
             ReqQuery,
             ReqHeaders,
             ResHeaders,
-            BaseRequest
+            BaseRequest,
+            Auth
           >(contractDetails)
         ) {
           throw new Error(
@@ -902,7 +940,8 @@ export class ForklaunchExpressLikeRouter<
           ReqBody,
           ReqQuery,
           ReqHeaders,
-          ResHeaders
+          ResHeaders,
+          Auth
         >(contractDetails);
 
         const controllerHandler = this.#extractControllerHandler(handlers);
@@ -954,7 +993,8 @@ export class ForklaunchExpressLikeRouter<
                   ReqQuery,
                   ReqHeaders,
                   ResHeaders,
-                  ContractMethod
+                  ContractMethod,
+                  Auth
                 >
               >
           >;
@@ -973,7 +1013,8 @@ export class ForklaunchExpressLikeRouter<
                   ReqBody,
                   ReqQuery,
                   ReqHeaders,
-                  ResHeaders
+                  ResHeaders,
+                  Auth
                 >
               >
           >;
@@ -992,7 +1033,15 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
-    ArrayReturnType
+    ArrayReturnType,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      BaseRequest
+    >
   >(
     handlers: (
       | MiddlewareOrMiddlewareWithTypedHandler<
@@ -1009,7 +1058,8 @@ export class ForklaunchExpressLikeRouter<
           LocalsObj,
           BaseRequest,
           BaseResponse,
-          NextFunction
+          NextFunction,
+          Auth
         >
       | ConstrainedForklaunchRouter<SV, RouterHandler>
       | RouterHandler
@@ -1033,7 +1083,8 @@ export class ForklaunchExpressLikeRouter<
         LocalsObj,
         BaseRequest,
         BaseResponse,
-        NextFunction
+        NextFunction,
+        Auth
       >(last)
     ) {
       finalHandlers = last.handlers;
@@ -1055,7 +1106,8 @@ export class ForklaunchExpressLikeRouter<
           LocalsObj,
           BaseRequest,
           BaseResponse,
-          NextFunction
+          NextFunction,
+          Auth
         >(handler)
       ) {
         throw new Error(
@@ -1080,7 +1132,15 @@ export class ForklaunchExpressLikeRouter<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      BaseRequest
+    >
   >(
     handlers: (
       | MiddlewareOrMiddlewareWithTypedHandler<
@@ -1097,7 +1157,8 @@ export class ForklaunchExpressLikeRouter<
           LocalsObj,
           BaseRequest,
           BaseResponse,
-          NextFunction
+          NextFunction,
+          Auth
         >
       | RouterHandler
     )[]
@@ -1112,7 +1173,8 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
-      RouterHandler
+      RouterHandler,
+      Auth
     >(handlers);
   }
 
@@ -1125,7 +1187,15 @@ export class ForklaunchExpressLikeRouter<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      BaseRequest
+    >
   >(
     handlers: (
       | MiddlewareOrMiddlewareWithTypedHandler<
@@ -1142,7 +1212,8 @@ export class ForklaunchExpressLikeRouter<
           LocalsObj,
           BaseRequest,
           BaseResponse,
-          NextFunction
+          NextFunction,
+          Auth
         >
       | ConstrainedForklaunchRouter<SV, RouterHandler>
     )[]
@@ -1157,7 +1228,8 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
-      RouterHandler | Internal
+      RouterHandler | Internal,
+      Auth
     >(handlers, (handler) => {
       if (
         isForklaunchExpressLikeRouter<
@@ -1189,7 +1261,15 @@ export class ForklaunchExpressLikeRouter<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      BaseRequest
+    >
   >(
     handler:
       | ContractDetailsOrMiddlewareOrTypedHandler<
@@ -1206,7 +1286,8 @@ export class ForklaunchExpressLikeRouter<
           LocalsObj,
           BaseRequest,
           BaseResponse,
-          NextFunction
+          NextFunction,
+          Auth
         >
       | RouterHandler
       | undefined,
@@ -1227,7 +1308,8 @@ export class ForklaunchExpressLikeRouter<
         LocalsObj,
         BaseRequest,
         BaseResponse,
-        NextFunction
+        NextFunction,
+        Auth
       >(handler)
     ) {
       middleware.push(...(handler.handlers as RouterHandler[]));
@@ -1245,7 +1327,15 @@ export class ForklaunchExpressLikeRouter<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      BaseRequest
+    >
   >(
     contractDetailsOrMiddlewareOrTypedHandler:
       | ContractDetailsOrMiddlewareOrTypedHandler<
@@ -1262,7 +1352,8 @@ export class ForklaunchExpressLikeRouter<
           LocalsObj,
           BaseRequest,
           BaseResponse,
-          NextFunction
+          NextFunction,
+          Auth
         >
       | RouterHandler
       | undefined,
@@ -1281,7 +1372,8 @@ export class ForklaunchExpressLikeRouter<
           LocalsObj,
           BaseRequest,
           BaseResponse,
-          NextFunction
+          NextFunction,
+          Auth
         >
       | RouterHandler
     )[]
@@ -1297,7 +1389,8 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Auth
     >(contractDetailsOrMiddlewareOrTypedHandler, middleware);
 
     middleware.push(
@@ -1310,7 +1403,8 @@ export class ForklaunchExpressLikeRouter<
         ReqQuery,
         ReqHeaders,
         ResHeaders,
-        LocalsObj
+        LocalsObj,
+        Auth
       >(middlewareOrMiddlewareWithTypedHandler)
     );
 
@@ -1326,7 +1420,15 @@ export class ForklaunchExpressLikeRouter<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      BaseRequest
+    >
   >(
     contractDetailsOrMiddlewareOrTypedHandler:
       | ContractDetailsOrMiddlewareOrTypedHandler<
@@ -1343,7 +1445,8 @@ export class ForklaunchExpressLikeRouter<
           LocalsObj,
           BaseRequest,
           BaseResponse,
-          NextFunction
+          NextFunction,
+          Auth
         >
       | ConstrainedForklaunchRouter<SV, RouterHandler>
       | undefined,
@@ -1362,7 +1465,8 @@ export class ForklaunchExpressLikeRouter<
           LocalsObj,
           BaseRequest,
           BaseResponse,
-          NextFunction
+          NextFunction,
+          Auth
         >
       | ConstrainedForklaunchRouter<SV, RouterHandler>
     )[]
@@ -1378,7 +1482,8 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Auth
     >(
       contractDetailsOrMiddlewareOrTypedHandler as ContractDetailsOrMiddlewareOrTypedHandler<
         SV,
@@ -1394,7 +1499,8 @@ export class ForklaunchExpressLikeRouter<
         LocalsObj,
         BaseRequest,
         BaseResponse,
-        NextFunction
+        NextFunction,
+        Auth
       >,
       middleware as RouterHandler[]
     );
@@ -1427,7 +1533,8 @@ export class ForklaunchExpressLikeRouter<
         ReqQuery,
         ReqHeaders,
         ResHeaders,
-        LocalsObj
+        LocalsObj,
+        Auth
       >(middlewareOrMiddlewareWithTypedHandler)
     );
 
@@ -1443,7 +1550,15 @@ export class ForklaunchExpressLikeRouter<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      BaseRequest
+    >
   >(
     registrationMethod: PathOrMiddlewareBasedHandler<RouterHandler>,
     pathOrContractDetailsOrMiddlewareOrTypedHandler:
@@ -1462,7 +1577,8 @@ export class ForklaunchExpressLikeRouter<
           LocalsObj,
           BaseRequest,
           BaseResponse,
-          NextFunction
+          NextFunction,
+          Auth
         >
       | RouterHandler,
     contractDetailsOrMiddlewareOrTypedHandler?:
@@ -1480,7 +1596,8 @@ export class ForklaunchExpressLikeRouter<
           LocalsObj,
           BaseRequest,
           BaseResponse,
-          NextFunction
+          NextFunction,
+          Auth
         >
       | RouterHandler,
     ...middlewareOrMiddlewareWithTypedHandler: (
@@ -1498,7 +1615,8 @@ export class ForklaunchExpressLikeRouter<
           LocalsObj,
           BaseRequest,
           BaseResponse,
-          NextFunction
+          NextFunction,
+          Auth
         >
       | RouterHandler
     )[]
@@ -1516,7 +1634,8 @@ export class ForklaunchExpressLikeRouter<
           ReqQuery,
           ReqHeaders,
           ResHeaders,
-          LocalsObj
+          LocalsObj,
+          Auth
         >(
           contractDetailsOrMiddlewareOrTypedHandler,
           middlewareOrMiddlewareWithTypedHandler
@@ -1535,7 +1654,8 @@ export class ForklaunchExpressLikeRouter<
           ReqQuery,
           ReqHeaders,
           ResHeaders,
-          LocalsObj
+          LocalsObj,
+          Auth
         >(
           pathOrContractDetailsOrMiddlewareOrTypedHandler,
           (
@@ -1566,7 +1686,8 @@ export class ForklaunchExpressLikeRouter<
               LocalsObj,
               BaseRequest,
               BaseResponse,
-              NextFunction
+              NextFunction,
+              Auth
             >(contractDetailsOrMiddlewareOrTypedHandler)
               ? [contractDetailsOrMiddlewareOrTypedHandler]
               : []) as (
@@ -1584,7 +1705,8 @@ export class ForklaunchExpressLikeRouter<
                   LocalsObj,
                   BaseRequest,
                   BaseResponse,
-                  NextFunction
+                  NextFunction,
+                  Auth
                 >
               | RouterHandler
             )[]
@@ -1623,7 +1745,15 @@ export class ForklaunchExpressLikeRouter<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      BaseRequest
+    >
   >(
     registrationMethod: NestableRouterBasedHandler<RouterHandler, Internal>,
     pathOrContractDetailsOrMiddlewareOrTypedHandler:
@@ -1642,7 +1772,8 @@ export class ForklaunchExpressLikeRouter<
           LocalsObj,
           BaseRequest,
           BaseResponse,
-          NextFunction
+          NextFunction,
+          Auth
         >
       | ConstrainedForklaunchRouter<SV, RouterHandler>,
     contractDetailsOrMiddlewareOrTypedHandler?:
@@ -1660,7 +1791,8 @@ export class ForklaunchExpressLikeRouter<
           LocalsObj,
           BaseRequest,
           BaseResponse,
-          NextFunction
+          NextFunction,
+          Auth
         >
       | ConstrainedForklaunchRouter<SV, RouterHandler>,
     ...middlewareOrMiddlewareWithTypedHandler: (
@@ -1678,7 +1810,8 @@ export class ForklaunchExpressLikeRouter<
           LocalsObj,
           BaseRequest,
           BaseResponse,
-          NextFunction
+          NextFunction,
+          Auth
         >
       | ConstrainedForklaunchRouter<SV, RouterHandler>
     )[]
@@ -1697,7 +1830,8 @@ export class ForklaunchExpressLikeRouter<
           ReqQuery,
           ReqHeaders,
           ResHeaders,
-          LocalsObj
+          LocalsObj,
+          Auth
         >(
           contractDetailsOrMiddlewareOrTypedHandler,
           middlewareOrMiddlewareWithTypedHandler
@@ -1725,7 +1859,8 @@ export class ForklaunchExpressLikeRouter<
           ReqQuery,
           ReqHeaders,
           ResHeaders,
-          LocalsObj
+          LocalsObj,
+          Auth
         >(
           pathOrContractDetailsOrMiddlewareOrTypedHandler,
           (isExpressLikeSchemaHandler<
@@ -1755,7 +1890,8 @@ export class ForklaunchExpressLikeRouter<
             LocalsObj,
             BaseRequest,
             BaseResponse,
-            NextFunction
+            NextFunction,
+            Auth
           >(contractDetailsOrMiddlewareOrTypedHandler) ||
           isConstrainedForklaunchRouter<SV, RouterHandler>(
             contractDetailsOrMiddlewareOrTypedHandler
@@ -1816,7 +1952,15 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
-    Router extends ConstrainedForklaunchRouter<SV, RouterHandler>
+    Router extends ConstrainedForklaunchRouter<SV, RouterHandler>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      BaseRequest
+    >
   >(
     pathOrContractDetailsOrMiddlewareOrTypedHandler:
       | Path
@@ -1834,7 +1978,8 @@ export class ForklaunchExpressLikeRouter<
           LocalsObj,
           BaseRequest,
           BaseResponse,
-          NextFunction
+          NextFunction,
+          Auth
         >
       | Router,
     contractDetailsOrMiddlewareOrTypedHandler?:
@@ -1852,7 +1997,8 @@ export class ForklaunchExpressLikeRouter<
           LocalsObj,
           BaseRequest,
           BaseResponse,
-          NextFunction
+          NextFunction,
+          Auth
         >
       | Router,
     ...middlewareOrMiddlewareWithTypedHandler: (
@@ -1870,7 +2016,8 @@ export class ForklaunchExpressLikeRouter<
           LocalsObj,
           BaseRequest,
           BaseResponse,
-          NextFunction
+          NextFunction,
+          Auth
         >
       | Router
     )[]
@@ -1894,7 +2041,8 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Auth
     >(
       this.internal.use,
       pathOrContractDetailsOrMiddlewareOrTypedHandler,
@@ -1934,7 +2082,15 @@ export class ForklaunchExpressLikeRouter<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      BaseRequest
+    >
   >(
     pathOrContractDetailsOrMiddlewareOrTypedHandler:
       | Path
@@ -1952,7 +2108,8 @@ export class ForklaunchExpressLikeRouter<
           LocalsObj,
           BaseRequest,
           BaseResponse,
-          NextFunction
+          NextFunction,
+          Auth
         >
       | RouterHandler,
     contractDetailsOrMiddlewareOrTypedHandler?:
@@ -1970,7 +2127,8 @@ export class ForklaunchExpressLikeRouter<
           LocalsObj,
           BaseRequest,
           BaseResponse,
-          NextFunction
+          NextFunction,
+          Auth
         >
       | RouterHandler,
     ...middlewareOrMiddlewareWithTypedHandler: (
@@ -1988,7 +2146,8 @@ export class ForklaunchExpressLikeRouter<
           LocalsObj,
           BaseRequest,
           BaseResponse,
-          NextFunction
+          NextFunction,
+          Auth
         >
       | RouterHandler
     )[]
@@ -2002,7 +2161,8 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Auth
     >(
       this.internal.all,
       pathOrContractDetailsOrMiddlewareOrTypedHandler,
@@ -2027,7 +2187,15 @@ export class ForklaunchExpressLikeRouter<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      BaseRequest
+    >
   >(
     pathOrContractDetailsOrMiddlewareOrTypedHandler:
       | Path
@@ -2045,7 +2213,8 @@ export class ForklaunchExpressLikeRouter<
           LocalsObj,
           BaseRequest,
           BaseResponse,
-          NextFunction
+          NextFunction,
+          Auth
         >
       | RouterHandler,
     contractDetailsOrMiddlewareOrTypedHandler?:
@@ -2063,7 +2232,8 @@ export class ForklaunchExpressLikeRouter<
           LocalsObj,
           BaseRequest,
           BaseResponse,
-          NextFunction
+          NextFunction,
+          Auth
         >
       | RouterHandler,
     ...middlewareOrMiddlewareWithTypedHandler: (
@@ -2081,7 +2251,8 @@ export class ForklaunchExpressLikeRouter<
           LocalsObj,
           BaseRequest,
           BaseResponse,
-          NextFunction
+          NextFunction,
+          Auth
         >
       | RouterHandler
     )[]
@@ -2095,7 +2266,8 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Auth
     >(
       this.internal.connect,
       pathOrContractDetailsOrMiddlewareOrTypedHandler,
@@ -2136,7 +2308,15 @@ export class ForklaunchExpressLikeRouter<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      BaseRequest
+    >
   >(
     path: Path,
     contractDetailsOrMiddlewareOrTypedHandler: ContractDetailsOrMiddlewareOrTypedHandler<
@@ -2153,7 +2333,8 @@ export class ForklaunchExpressLikeRouter<
       LocalsObj,
       BaseRequest,
       BaseResponse,
-      NextFunction
+      NextFunction,
+      Auth
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -2169,7 +2350,8 @@ export class ForklaunchExpressLikeRouter<
       LocalsObj,
       BaseRequest,
       BaseResponse,
-      NextFunction
+      NextFunction,
+      Auth
     >[]
   ) => {
     return this.registerRoute<
@@ -2182,7 +2364,8 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Auth
     >(
       'get',
       path,
@@ -2224,7 +2407,15 @@ export class ForklaunchExpressLikeRouter<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      BaseRequest
+    >
   >(
     path: Path,
     contractDetailsOrMiddlewareOrTypedHandler: ContractDetailsOrMiddlewareOrTypedHandler<
@@ -2241,7 +2432,8 @@ export class ForklaunchExpressLikeRouter<
       LocalsObj,
       BaseRequest,
       BaseResponse,
-      NextFunction
+      NextFunction,
+      Auth
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -2257,7 +2449,8 @@ export class ForklaunchExpressLikeRouter<
       LocalsObj,
       BaseRequest,
       BaseResponse,
-      NextFunction
+      NextFunction,
+      Auth
     >[]
   ) => {
     return this.registerRoute<
@@ -2270,7 +2463,8 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Auth
     >(
       'post',
       path,
@@ -2312,7 +2506,15 @@ export class ForklaunchExpressLikeRouter<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      BaseRequest
+    >
   >(
     path: Path,
     contractDetailsOrMiddlewareOrTypedHandler: ContractDetailsOrMiddlewareOrTypedHandler<
@@ -2329,7 +2531,8 @@ export class ForklaunchExpressLikeRouter<
       LocalsObj,
       BaseRequest,
       BaseResponse,
-      NextFunction
+      NextFunction,
+      Auth
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -2345,7 +2548,8 @@ export class ForklaunchExpressLikeRouter<
       LocalsObj,
       BaseRequest,
       BaseResponse,
-      NextFunction
+      NextFunction,
+      Auth
     >[]
   ) => {
     return this.registerRoute<
@@ -2358,7 +2562,8 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Auth
     >(
       'put',
       path,
@@ -2400,7 +2605,15 @@ export class ForklaunchExpressLikeRouter<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      BaseRequest
+    >
   >(
     path: Path,
     contractDetailsOrMiddlewareOrTypedHandler: ContractDetailsOrMiddlewareOrTypedHandler<
@@ -2417,7 +2630,8 @@ export class ForklaunchExpressLikeRouter<
       LocalsObj,
       BaseRequest,
       BaseResponse,
-      NextFunction
+      NextFunction,
+      Auth
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -2433,7 +2647,8 @@ export class ForklaunchExpressLikeRouter<
       LocalsObj,
       BaseRequest,
       BaseResponse,
-      NextFunction
+      NextFunction,
+      Auth
     >[]
   ) => {
     return this.registerRoute<
@@ -2446,7 +2661,8 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Auth
     >(
       'patch',
       path,
@@ -2488,7 +2704,15 @@ export class ForklaunchExpressLikeRouter<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      BaseRequest
+    >
   >(
     path: Path,
     contractDetailsOrMiddlewareOrTypedHandler: ContractDetailsOrMiddlewareOrTypedHandler<
@@ -2505,7 +2729,8 @@ export class ForklaunchExpressLikeRouter<
       LocalsObj,
       BaseRequest,
       BaseResponse,
-      NextFunction
+      NextFunction,
+      Auth
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -2521,7 +2746,8 @@ export class ForklaunchExpressLikeRouter<
       LocalsObj,
       BaseRequest,
       BaseResponse,
-      NextFunction
+      NextFunction,
+      Auth
     >[]
   ) => {
     return this.registerRoute<
@@ -2534,7 +2760,8 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Auth
     >(
       'delete',
       path,
@@ -2576,7 +2803,15 @@ export class ForklaunchExpressLikeRouter<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      BaseRequest
+    >
   >(
     path: Path,
     contractDetailsOrMiddlewareOrTypedHandler: ContractDetailsOrMiddlewareOrTypedHandler<
@@ -2593,7 +2828,8 @@ export class ForklaunchExpressLikeRouter<
       LocalsObj,
       BaseRequest,
       BaseResponse,
-      NextFunction
+      NextFunction,
+      Auth
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -2609,7 +2845,8 @@ export class ForklaunchExpressLikeRouter<
       LocalsObj,
       BaseRequest,
       BaseResponse,
-      NextFunction
+      NextFunction,
+      Auth
     >[]
   ) => {
     return this.registerRoute<
@@ -2622,7 +2859,8 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Auth
     >(
       'options',
       path,
@@ -2664,7 +2902,15 @@ export class ForklaunchExpressLikeRouter<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      BaseRequest
+    >
   >(
     path: Path,
     contractDetailsOrMiddlewareOrTypedHandler: ContractDetailsOrMiddlewareOrTypedHandler<
@@ -2681,7 +2927,8 @@ export class ForklaunchExpressLikeRouter<
       LocalsObj,
       BaseRequest,
       BaseResponse,
-      NextFunction
+      NextFunction,
+      Auth
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -2697,7 +2944,8 @@ export class ForklaunchExpressLikeRouter<
       LocalsObj,
       BaseRequest,
       BaseResponse,
-      NextFunction
+      NextFunction,
+      Auth
     >[]
   ) => {
     return this.registerRoute<
@@ -2710,7 +2958,8 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Auth
     >(
       'head',
       path,
@@ -2752,7 +3001,15 @@ export class ForklaunchExpressLikeRouter<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      BaseRequest
+    >
   >(
     path: Path,
     contractDetailsOrMiddlewareOrTypedHandler: ContractDetailsOrMiddlewareOrTypedHandler<
@@ -2769,7 +3026,8 @@ export class ForklaunchExpressLikeRouter<
       LocalsObj,
       BaseRequest,
       BaseResponse,
-      NextFunction
+      NextFunction,
+      Auth
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -2785,7 +3043,8 @@ export class ForklaunchExpressLikeRouter<
       LocalsObj,
       BaseRequest,
       BaseResponse,
-      NextFunction
+      NextFunction,
+      Auth
     >[]
   ) => {
     return this.registerRoute<
@@ -2798,7 +3057,8 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Auth
     >(
       'trace',
       path,

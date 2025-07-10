@@ -8,7 +8,8 @@ import {
   Method,
   ParamsObject,
   QueryObject,
-  ResponsesObject
+  ResponsesObject,
+  SchemaAuthMethods
 } from '../types/contractDetails.types';
 import { ExpressLikeTypedHandler } from '../types/typedHandler.types';
 
@@ -33,7 +34,15 @@ export function typedHandler<
   LocalsObj extends Record<string, unknown>,
   BaseRequest,
   BaseResponse,
-  NextFunction
+  NextFunction,
+  const Auth extends SchemaAuthMethods<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    BaseRequest
+  >
 >(
   _schemaValidator: SV,
   _path: Path | undefined,
@@ -49,7 +58,8 @@ export function typedHandler<
     ReqQuery,
     ReqHeaders,
     ResHeaders,
-    BaseRequest
+    BaseRequest,
+    Auth
   >,
   ...handlers: ExpressLikeSchemaHandler<
     SV,
@@ -78,7 +88,8 @@ export function typedHandler<
   LocalsObj,
   BaseRequest,
   BaseResponse,
-  NextFunction
+  NextFunction,
+  Auth
 >;
 export function typedHandler<
   SV extends AnySchemaValidator,
@@ -94,7 +105,15 @@ export function typedHandler<
   LocalsObj extends Record<string, unknown>,
   BaseRequest,
   BaseResponse,
-  NextFunction
+  NextFunction,
+  const Auth extends SchemaAuthMethods<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    BaseRequest
+  >
 >(
   _schemaValidator: SV,
   _contractMethod: ContractMethod,
@@ -109,7 +128,8 @@ export function typedHandler<
     ReqQuery,
     ReqHeaders,
     ResHeaders,
-    BaseRequest
+    BaseRequest,
+    Auth
   >,
   ...handlers: ExpressLikeSchemaHandler<
     SV,
@@ -138,7 +158,8 @@ export function typedHandler<
   LocalsObj,
   BaseRequest,
   BaseResponse,
-  NextFunction
+  NextFunction,
+  Auth
 >;
 export function typedHandler<
   SV extends AnySchemaValidator,
@@ -154,7 +175,15 @@ export function typedHandler<
   LocalsObj extends Record<string, unknown>,
   BaseRequest,
   BaseResponse,
-  NextFunction
+  NextFunction,
+  const Auth extends SchemaAuthMethods<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    BaseRequest
+  >
 >(
   _schemaValidator: SV,
   pathOrContractMethod: Path | ContractMethod,
@@ -171,7 +200,8 @@ export function typedHandler<
         ReqQuery,
         ReqHeaders,
         ResHeaders,
-        BaseRequest
+        BaseRequest,
+        Auth
       >,
   contractDetailsOrHandler:
     | ContractDetails<
@@ -185,7 +215,8 @@ export function typedHandler<
         ReqQuery,
         ReqHeaders,
         ResHeaders,
-        BaseRequest
+        BaseRequest,
+        Auth
       >
     | ExpressLikeSchemaHandler<
         SV,
@@ -227,7 +258,8 @@ export function typedHandler<
   LocalsObj,
   BaseRequest,
   BaseResponse,
-  NextFunction
+  NextFunction,
+  Auth
 > {
   // TODO: Clean this up with guards
 
@@ -242,7 +274,8 @@ export function typedHandler<
     ReqQuery,
     ReqHeaders,
     ResHeaders,
-    BaseRequest
+    BaseRequest,
+    Auth
   >;
   let handlers: ExpressLikeSchemaHandler<
     SV,

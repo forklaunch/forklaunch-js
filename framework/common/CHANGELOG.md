@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.4.3
+
+### Patch Changes
+
+- Auth types are now propogated to live sdk types
+
 ## 0.4.2
 
 ### Patch Changes

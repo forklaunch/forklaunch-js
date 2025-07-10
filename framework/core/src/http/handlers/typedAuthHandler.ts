@@ -7,7 +7,8 @@ import {
   Method,
   ParamsObject,
   QueryObject,
-  ResponsesObject
+  ResponsesObject,
+  SchemaAuthMethods
 } from '../types/contractDetails.types';
 
 export function typedAuthHandler<
@@ -33,7 +34,8 @@ export function typedAuthHandler<
     ReqQuery,
     ReqHeaders,
     ResHeaders,
-    BaseRequest
+    BaseRequest,
+    SchemaAuthMethods<SV, P, ReqBody, ReqQuery, ReqHeaders, BaseRequest>
   >,
   authHandler: ExpressLikeSchemaAuthMapper<
     SV,

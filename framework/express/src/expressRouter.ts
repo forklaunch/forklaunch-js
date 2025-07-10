@@ -10,6 +10,7 @@ import {
   ParamsObject,
   QueryObject,
   ResponsesObject,
+  SchemaAuthMethods,
   TypedMiddlewareDefinition
 } from '@forklaunch/core/http';
 import {
@@ -137,7 +138,15 @@ export class Router<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      Request
+    >
   >(
     pathOrContractDetailsOrMiddlewareOrTypedHandler:
       | Path
@@ -155,7 +164,8 @@ export class Router<
           LocalsObj,
           Request,
           Response,
-          NextFunction
+          NextFunction,
+          Auth
         >,
     contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
@@ -171,7 +181,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -187,7 +198,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >[]
   ) => {
     return this.registerMiddlewareHandler<
@@ -199,7 +211,8 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Auth
     >(
       this.internal.checkout,
       pathOrContractDetailsOrMiddlewareOrTypedHandler,
@@ -224,7 +237,15 @@ export class Router<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      Request
+    >
   >(
     pathOrContractDetailsOrMiddlewareOrTypedHandler:
       | Path
@@ -242,7 +263,8 @@ export class Router<
           LocalsObj,
           Request,
           Response,
-          NextFunction
+          NextFunction,
+          Auth
         >,
     contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
@@ -258,7 +280,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -274,7 +297,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >[]
   ) => {
     return this.registerMiddlewareHandler<
@@ -286,7 +310,8 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Auth
     >(
       this.internal.copy,
       pathOrContractDetailsOrMiddlewareOrTypedHandler,
@@ -311,7 +336,15 @@ export class Router<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      Request
+    >
   >(
     pathOrContractDetailsOrMiddlewareOrTypedHandler:
       | Path
@@ -329,7 +362,8 @@ export class Router<
           LocalsObj,
           Request,
           Response,
-          NextFunction
+          NextFunction,
+          Auth
         >,
     contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
@@ -345,7 +379,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -361,7 +396,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >[]
   ) => {
     return this.registerMiddlewareHandler<
@@ -373,7 +409,8 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Auth
     >(
       this.internal.lock,
       pathOrContractDetailsOrMiddlewareOrTypedHandler,
@@ -398,7 +435,15 @@ export class Router<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      Request
+    >
   >(
     pathOrContractDetailsOrMiddlewareOrTypedHandler:
       | Path
@@ -416,7 +461,8 @@ export class Router<
           LocalsObj,
           Request,
           Response,
-          NextFunction
+          NextFunction,
+          Auth
         >,
     contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
@@ -432,7 +478,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -448,7 +495,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >[]
   ) => {
     return this.registerMiddlewareHandler<
@@ -460,7 +508,8 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Auth
     >(
       this.internal.merge,
       pathOrContractDetailsOrMiddlewareOrTypedHandler,
@@ -485,7 +534,15 @@ export class Router<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      Request
+    >
   >(
     pathOrContractDetailsOrMiddlewareOrTypedHandler:
       | Path
@@ -503,7 +560,8 @@ export class Router<
           LocalsObj,
           Request,
           Response,
-          NextFunction
+          NextFunction,
+          Auth
         >,
     contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
@@ -519,7 +577,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -535,7 +594,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >[]
   ) => {
     return this.registerMiddlewareHandler<
@@ -547,7 +607,8 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Auth
     >(
       this.internal.mkactivity,
       pathOrContractDetailsOrMiddlewareOrTypedHandler,
@@ -572,7 +633,15 @@ export class Router<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      Request
+    >
   >(
     pathOrContractDetailsOrMiddlewareOrTypedHandler:
       | Path
@@ -590,7 +659,8 @@ export class Router<
           LocalsObj,
           Request,
           Response,
-          NextFunction
+          NextFunction,
+          Auth
         >,
     contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
@@ -606,7 +676,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -622,7 +693,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >[]
   ) => {
     return this.registerMiddlewareHandler<
@@ -634,7 +706,8 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Auth
     >(
       this.internal.mkcol,
       pathOrContractDetailsOrMiddlewareOrTypedHandler,
@@ -659,7 +732,15 @@ export class Router<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      Request
+    >
   >(
     pathOrContractDetailsOrMiddlewareOrTypedHandler:
       | Path
@@ -677,7 +758,8 @@ export class Router<
           LocalsObj,
           Request,
           Response,
-          NextFunction
+          NextFunction,
+          Auth
         >,
     contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
@@ -693,7 +775,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -709,7 +792,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >[]
   ) => {
     return this.registerMiddlewareHandler<
@@ -721,7 +805,8 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Auth
     >(
       this.internal.move,
       pathOrContractDetailsOrMiddlewareOrTypedHandler,
@@ -746,7 +831,15 @@ export class Router<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      Request
+    >
   >(
     pathOrContractDetailsOrMiddlewareOrTypedHandler:
       | Path
@@ -764,7 +857,8 @@ export class Router<
           LocalsObj,
           Request,
           Response,
-          NextFunction
+          NextFunction,
+          Auth
         >,
     contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
@@ -780,7 +874,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -796,7 +891,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >[]
   ) => {
     return this.registerMiddlewareHandler<
@@ -808,7 +904,8 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Auth
     >(
       this.internal['m-search'],
       pathOrContractDetailsOrMiddlewareOrTypedHandler,
@@ -833,7 +930,15 @@ export class Router<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      Request
+    >
   >(
     pathOrContractDetailsOrMiddlewareOrTypedHandler:
       | Path
@@ -851,7 +956,8 @@ export class Router<
           LocalsObj,
           Request,
           Response,
-          NextFunction
+          NextFunction,
+          Auth
         >,
     contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
@@ -867,7 +973,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -883,7 +990,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >[]
   ) => {
     return this.registerMiddlewareHandler<
@@ -895,7 +1003,8 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Auth
     >(
       this.internal.notify,
       pathOrContractDetailsOrMiddlewareOrTypedHandler,
@@ -920,7 +1029,15 @@ export class Router<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      Request
+    >
   >(
     pathOrContractDetailsOrMiddlewareOrTypedHandler:
       | Path
@@ -938,7 +1055,8 @@ export class Router<
           LocalsObj,
           Request,
           Response,
-          NextFunction
+          NextFunction,
+          Auth
         >,
     contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
@@ -954,7 +1072,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -970,7 +1089,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >[]
   ) => {
     return this.registerMiddlewareHandler<
@@ -982,7 +1102,8 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Auth
     >(
       this.internal.propfind,
       pathOrContractDetailsOrMiddlewareOrTypedHandler,
@@ -1007,7 +1128,15 @@ export class Router<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      Request
+    >
   >(
     pathOrContractDetailsOrMiddlewareOrTypedHandler:
       | Path
@@ -1025,7 +1154,8 @@ export class Router<
           LocalsObj,
           Request,
           Response,
-          NextFunction
+          NextFunction,
+          Auth
         >,
     contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
@@ -1041,7 +1171,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -1057,7 +1188,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >[]
   ) => {
     return this.registerMiddlewareHandler<
@@ -1069,7 +1201,8 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Auth
     >(
       this.internal.proppatch,
       pathOrContractDetailsOrMiddlewareOrTypedHandler,
@@ -1094,7 +1227,15 @@ export class Router<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      Request
+    >
   >(
     pathOrContractDetailsOrMiddlewareOrTypedHandler:
       | Path
@@ -1112,7 +1253,8 @@ export class Router<
           LocalsObj,
           Request,
           Response,
-          NextFunction
+          NextFunction,
+          Auth
         >,
     contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
@@ -1128,7 +1270,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -1144,7 +1287,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >[]
   ) => {
     return this.registerMiddlewareHandler<
@@ -1156,7 +1300,8 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Auth
     >(
       this.internal.purge,
       pathOrContractDetailsOrMiddlewareOrTypedHandler,
@@ -1181,7 +1326,15 @@ export class Router<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      Request
+    >
   >(
     pathOrContractDetailsOrMiddlewareOrTypedHandler:
       | Path
@@ -1199,7 +1352,8 @@ export class Router<
           LocalsObj,
           Request,
           Response,
-          NextFunction
+          NextFunction,
+          Auth
         >,
     contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
@@ -1215,7 +1369,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -1231,7 +1386,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >[]
   ) => {
     return this.registerMiddlewareHandler<
@@ -1243,7 +1399,8 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Auth
     >(
       this.internal.report,
       pathOrContractDetailsOrMiddlewareOrTypedHandler,
@@ -1268,7 +1425,15 @@ export class Router<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      Request
+    >
   >(
     pathOrContractDetailsOrMiddlewareOrTypedHandler:
       | Path
@@ -1286,7 +1451,8 @@ export class Router<
           LocalsObj,
           Request,
           Response,
-          NextFunction
+          NextFunction,
+          Auth
         >,
     contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
@@ -1302,7 +1468,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -1318,7 +1485,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >[]
   ) => {
     return this.registerMiddlewareHandler<
@@ -1330,7 +1498,8 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Auth
     >(
       this.internal.search,
       pathOrContractDetailsOrMiddlewareOrTypedHandler,
@@ -1355,7 +1524,15 @@ export class Router<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      Request
+    >
   >(
     pathOrContractDetailsOrMiddlewareOrTypedHandler:
       | Path
@@ -1373,7 +1550,8 @@ export class Router<
           LocalsObj,
           Request,
           Response,
-          NextFunction
+          NextFunction,
+          Auth
         >,
     contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
@@ -1389,7 +1567,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -1405,7 +1584,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >[]
   ) => {
     return this.registerMiddlewareHandler<
@@ -1417,7 +1597,8 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Auth
     >(
       this.internal.subscribe,
       pathOrContractDetailsOrMiddlewareOrTypedHandler,
@@ -1442,7 +1623,15 @@ export class Router<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      Request
+    >
   >(
     pathOrContractDetailsOrMiddlewareOrTypedHandler:
       | Path
@@ -1460,7 +1649,8 @@ export class Router<
           LocalsObj,
           Request,
           Response,
-          NextFunction
+          NextFunction,
+          Auth
         >,
     contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
@@ -1476,7 +1666,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -1492,7 +1683,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >[]
   ) => {
     return this.registerMiddlewareHandler<
@@ -1504,7 +1696,8 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Auth
     >(
       this.internal.unlock,
       pathOrContractDetailsOrMiddlewareOrTypedHandler,
@@ -1529,7 +1722,15 @@ export class Router<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      Request
+    >
   >(
     pathOrContractDetailsOrMiddlewareOrTypedHandler:
       | Path
@@ -1547,7 +1748,8 @@ export class Router<
           LocalsObj,
           Request,
           Response,
-          NextFunction
+          NextFunction,
+          Auth
         >,
     contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
@@ -1563,7 +1765,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -1579,7 +1782,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >[]
   ) => {
     return this.registerMiddlewareHandler<
@@ -1591,7 +1795,8 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Auth
     >(
       this.internal.unsubscribe,
       pathOrContractDetailsOrMiddlewareOrTypedHandler,
@@ -1616,7 +1821,15 @@ export class Router<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      Request
+    >
   >(
     pathOrContractDetailsOrMiddlewareOrTypedHandler:
       | Path
@@ -1634,7 +1847,8 @@ export class Router<
           LocalsObj,
           Request,
           Response,
-          NextFunction
+          NextFunction,
+          Auth
         >,
     contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
@@ -1650,7 +1864,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -1666,7 +1881,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >[]
   ) => {
     return this.registerMiddlewareHandler<
@@ -1678,7 +1894,8 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Auth
     >(
       this.internal.link,
       pathOrContractDetailsOrMiddlewareOrTypedHandler,
@@ -1703,7 +1920,15 @@ export class Router<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      Request
+    >
   >(
     pathOrContractDetailsOrMiddlewareOrTypedHandler:
       | Path
@@ -1721,7 +1946,8 @@ export class Router<
           LocalsObj,
           Request,
           Response,
-          NextFunction
+          NextFunction,
+          Auth
         >,
     contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
@@ -1737,7 +1963,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -1753,7 +1980,8 @@ export class Router<
       LocalsObj,
       Request,
       Response,
-      NextFunction
+      NextFunction,
+      Auth
     >[]
   ) => {
     return this.registerMiddlewareHandler<
@@ -1765,7 +1993,8 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Auth
     >(
       this.internal.unlink,
       pathOrContractDetailsOrMiddlewareOrTypedHandler,

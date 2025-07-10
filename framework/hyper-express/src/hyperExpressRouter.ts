@@ -10,6 +10,7 @@ import {
   ParamsObject,
   QueryObject,
   ResponsesObject,
+  SchemaAuthMethods,
   TypedMiddlewareDefinition
 } from '@forklaunch/core/http';
 import {
@@ -88,7 +89,15 @@ export class Router<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    const Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      Request<Record<string, unknown>>
+    >
   >(
     pathOrContractDetailsOrMiddlewareOrTypedHandler:
       | Path
@@ -106,7 +115,8 @@ export class Router<
           LocalsObj,
           Request<Record<string, unknown>>,
           Response<Record<string, unknown>>,
-          MiddlewareNext
+          MiddlewareNext,
+          Auth
         >,
     contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
       SV,
@@ -122,7 +132,8 @@ export class Router<
       LocalsObj,
       Request<Record<string, unknown>>,
       Response<Record<string, unknown>>,
-      MiddlewareNext
+      MiddlewareNext,
+      Auth
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
       SV,
@@ -138,7 +149,8 @@ export class Router<
       LocalsObj,
       Request<Record<string, unknown>>,
       Response<Record<string, unknown>>,
-      MiddlewareNext
+      MiddlewareNext,
+      Auth
     >[]
   ) => {
     return this.registerMiddlewareHandler<
@@ -150,7 +162,8 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Auth
     >(
       this.internal.any,
       pathOrContractDetailsOrMiddlewareOrTypedHandler,

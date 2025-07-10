@@ -6,13 +6,15 @@ import {
   middleware,
   ParamsObject,
   QueryObject,
-  ResponsesObject
+  ResponsesObject,
+  SchemaAuthMethods
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { NextFunction, Request, Response } from 'express';
 import express from 'express-serve-static-core';
 import { ParsedQs } from 'qs';
-import { SetQsAndStaticTypes } from '../types/export.types';
+import { Range } from 'range-parser';
+import { SetExportTypes } from '../types/export.types';
 
 /**
  * Creates a REPORT route handler with schema validation and type safety.
@@ -82,7 +84,15 @@ export const report = <
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
-  LocalsObj extends Record<string, unknown>
+  LocalsObj extends Record<string, unknown>,
+  const Auth extends SchemaAuthMethods<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    Request
+  >
 >(
   schemaValidator: SV,
   path: Path,
@@ -97,7 +107,8 @@ export const report = <
     ReqQuery,
     ReqHeaders,
     ResHeaders,
-    Request
+    Request,
+    Auth
   >,
   ...handlers: ExpressLikeSchemaHandler<
     SV,
@@ -126,9 +137,10 @@ export const report = <
     LocalsObj,
     Request,
     Response,
-    NextFunction
+    NextFunction,
+    Auth
   >(schemaValidator, path, contractDetails, ...handlers);
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-type Dummy = SetQsAndStaticTypes<ParsedQs, express.Express>;
+type Dummy = SetExportTypes<ParsedQs, express.Express, Range>;

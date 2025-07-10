@@ -219,7 +219,6 @@ describe('handlers', () => {
           'x-test': string
         },
         auth: {
-          method: 'jwt',
           allowedRoles: new Set(['admin']),
           mapRoles: (sub, req) => {
             return new Set(['admin', sub, req?.params.id ?? '']);
@@ -246,6 +245,7 @@ describe('handlers', () => {
         id: 'string'
       },
       headers: {
+        authorization: 'Bearer string',
         'x-test': 'string'
       }
     });
@@ -306,6 +306,12 @@ describe('handlers', () => {
             }
           },
           400: string
+        },
+        auth: {
+          allowedPermissions: new Set(['admin']),
+          mapPermissions: (sub, req) => {
+            return new Set(['admin', sub, req?.params.id ?? '']);
+          }
         }
       },
       async (req, res) => {
@@ -321,6 +327,9 @@ describe('handlers', () => {
 
     await nestedLiveTypeFunction.fetch('/nested/organization', {
       method: 'POST',
+      headers: {
+        authorization: 'Bearer string'
+      },
       body: {
         json: {
           name: 'string'

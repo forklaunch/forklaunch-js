@@ -26,7 +26,8 @@ import Busboy, { BusboyConfig } from 'busboy';
 import express, { NextFunction, Request, Response } from 'express';
 import expressStatic from 'express-serve-static-core';
 import { ParsedQs } from 'qs';
-import { SetQsAndStaticTypes } from '../types/export.types';
+import { Range } from 'range-parser';
+import { SetExportTypes } from '../types/export.types';
 
 function contentParse<SV extends AnySchemaValidator>(options?: {
   busboy?: BusboyConfig;
@@ -126,4 +127,4 @@ function contentParse<SV extends AnySchemaValidator>(options?: {
 export { contentParse };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-type Dummy = SetQsAndStaticTypes<ParsedQs, expressStatic.Express>;
+type Dummy = SetExportTypes<ParsedQs, expressStatic.Express, Range>;

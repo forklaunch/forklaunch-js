@@ -7,7 +7,8 @@ import {
   Method,
   ParamsObject,
   QueryObject,
-  ResponsesObject
+  ResponsesObject,
+  SchemaAuthMethods
 } from './contractDetails.types';
 
 // This is a hack to satisfy the type checker -- later ts versions may fix this
@@ -51,7 +52,15 @@ export type TypedHandler<
   LocalsObj extends Record<string, unknown>,
   BaseRequest,
   BaseResponse,
-  NextFunction
+  NextFunction,
+  Auth extends SchemaAuthMethods<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    BaseRequest
+  >
 > = {
   _typedHandler: true;
   _path: Path | undefined;
@@ -66,7 +75,8 @@ export type TypedHandler<
     ReqQuery,
     ReqHeaders,
     ResHeaders,
-    BaseRequest
+    BaseRequest,
+    Auth
   >;
   // This is an alias hack to satisfy the type checker -- later ts versions may fix this
   handlers: ContractDetailsExpressLikeSchemaHandler<
@@ -98,25 +108,31 @@ export type ExpressLikeTypedHandler<
   LocalsObj extends Record<string, unknown>,
   BaseRequest,
   BaseResponse,
-  NextFunction
+  NextFunction,
+  Auth extends SchemaAuthMethods<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    BaseRequest
+  >
 > = {
   _typedHandler: true;
   _path: Path | undefined;
-  contractDetails: Omit<
-    ContractDetails<
-      SV,
-      Name,
-      ContractMethod,
-      Path,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders,
-      BaseRequest
-    >,
-    'auth'
+  contractDetails: ContractDetails<
+    SV,
+    Name,
+    ContractMethod,
+    Path,
+    P,
+    ResBodyMap,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    ResHeaders,
+    BaseRequest,
+    Auth
   >;
   handlers: ExpressLikeSchemaHandler<
     SV,

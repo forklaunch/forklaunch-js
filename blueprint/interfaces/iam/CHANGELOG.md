@@ -1,5 +1,11 @@
 # @forklaunch/interfaces-iam
 
+## 0.3.5
+
+### Patch Changes
+
+- update package dependencies
+
 ## 0.3.4
 
 ### Patch Changes

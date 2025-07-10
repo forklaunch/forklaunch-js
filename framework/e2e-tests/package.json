@@ -30,11 +30,14 @@
     "@forklaunch/universal-sdk": "workspace:*",
     "@forklaunch/validator": "workspace:*",
     "@sinclair/typebox": "^0.34.37",
-    "zod": "^3.25.71"
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",
-    "@typescript/native-preview": "7.0.0-dev.20250703.1",
+    "@types/express-serve-static-core": "^5.0.7",
+    "@types/qs": "^6.14.0",
+    "@types/range-parser": "^1.2.7",
+    "@typescript/native-preview": "7.0.0-dev.20250709.1",
     "tsup": "^8.5.0"
   }
 }

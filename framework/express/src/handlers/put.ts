@@ -6,13 +6,15 @@ import {
   put as innerPut,
   ParamsObject,
   QueryObject,
-  ResponsesObject
+  ResponsesObject,
+  SchemaAuthMethods
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { NextFunction, Request, Response } from 'express';
 import express from 'express-serve-static-core';
 import { ParsedQs } from 'qs';
-import { SetQsAndStaticTypes } from '../types/export.types';
+import { Range } from 'range-parser';
+import { SetExportTypes } from '../types/export.types';
 
 /**
  * Creates a PUT route handler with schema validation and type safety.
@@ -27,10 +29,11 @@ import { SetQsAndStaticTypes } from '../types/export.types';
  * @template ReqHeaders - The request headers type
  * @template ResHeaders - The response headers type
  * @template LocalsObj - The locals object type
+ * @template Auth - The authentication method type
  *
  * @param {SV} schemaValidator - The schema validator instance
  * @param {Path} path - The route path
- * @param {ContractDetails<SV, 'put', Name, Path, P, ResBodyMap, ReqBody, ReqQuery, ReqHeaders, ResHeaders, Request>} contractDetails - The contract details for the route
+ * @param {ContractDetails<SV, 'put', Name, Path, P, ResBodyMap, ReqBody, ReqQuery, ReqHeaders, ResHeaders, Request, Auth>} contractDetails - The contract details for the route
  * @param {...ExpressLikeSchemaHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, ReqHeaders, ResHeaders, LocalsObj, Request, Response, NextFunction>[]} handlers - The route handlers
  *
  * @returns {void} - Returns nothing, registers the route with Express
@@ -89,7 +92,15 @@ export const put = <
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
-  LocalsObj extends Record<string, unknown>
+  LocalsObj extends Record<string, unknown>,
+  const Auth extends SchemaAuthMethods<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    Request
+  >
 >(
   schemaValidator: SV,
   path: Path,
@@ -104,7 +115,8 @@ export const put = <
     ReqQuery,
     ReqHeaders,
     ResHeaders,
-    Request
+    Request,
+    Auth
   >,
   ...handlers: ExpressLikeSchemaHandler<
     SV,
@@ -133,9 +145,10 @@ export const put = <
     LocalsObj,
     Request,
     Response,
-    NextFunction
+    NextFunction,
+    Auth
   >(schemaValidator, path, contractDetails, ...handlers);
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-type Dummy = SetQsAndStaticTypes<ParsedQs, express.Express>;
+type Dummy = SetExportTypes<ParsedQs, express.Express, Range>;
