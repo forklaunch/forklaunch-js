@@ -6,7 +6,8 @@ import {
   middleware,
   ParamsObject,
   QueryObject,
-  ResponsesObject
+  ResponsesObject,
+  SchemaAuthMethods
 } from '@forklaunch/core/http';
 import {
   MiddlewareNext,
@@ -79,7 +80,15 @@ export const any = <
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
-  LocalsObj extends Record<string, unknown>
+  LocalsObj extends Record<string, unknown>,
+  const Auth extends SchemaAuthMethods<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    Request<LocalsObj>
+  >
 >(
   schemaValidator: SV,
   path: Path,
@@ -94,7 +103,8 @@ export const any = <
     ReqQuery,
     ReqHeaders,
     ResHeaders,
-    Request<LocalsObj>
+    Request<LocalsObj>,
+    Auth
   >,
   ...handlers: ExpressLikeSchemaHandler<
     SV,
@@ -123,6 +133,7 @@ export const any = <
     LocalsObj,
     Request<LocalsObj>,
     Response<LocalsObj>,
-    MiddlewareNext
+    MiddlewareNext,
+    Auth
   >(schemaValidator, path, contractDetails, ...handlers);
 };

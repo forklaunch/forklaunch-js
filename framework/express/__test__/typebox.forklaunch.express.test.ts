@@ -215,7 +215,12 @@ describe('handlers', () => {
           'x-test': string
         },
         auth: {
-          method: 'jwt',
+          tokenPrefix: 'Bearerz',
+          basic: {
+            login: (username: string, password: string) => {
+              return username === 'test' && password === 'test';
+            }
+          },
           allowedRoles: new Set(['admin']),
           mapRoles: (sub, req) => {
             return new Set(['admin', sub, req?.params.id ?? '']);
@@ -240,6 +245,7 @@ describe('handlers', () => {
         id: 'string'
       },
       headers: {
+        authorization: 'Bearerz string',
         'x-test': 'string'
       }
     });
@@ -249,6 +255,7 @@ describe('handlers', () => {
         id: '1234'
       },
       headers: {
+        authorization: 'Bearerz string',
         'x-test': 'jjjj'
       }
     });

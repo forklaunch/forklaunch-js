@@ -10,6 +10,7 @@ import {
   OperationObject,
   PathObject,
   ResponsesObject,
+  SecuritySchemeObject,
   TagObject
 } from 'openapi3-ts/oas31';
 import HTTPStatuses from '../httpStatusCodes';
@@ -57,6 +58,7 @@ function generateOpenApiDocument(
   port: string | number,
   tags: TagObject[],
   paths: PathObject,
+  securitySchemes: Record<string, SecuritySchemeObject>,
   otherServers?: {
     url: string;
     description: string;
@@ -69,13 +71,7 @@ function generateOpenApiDocument(
       version: process.env.VERSION || '1.0.0'
     },
     components: {
-      securitySchemes: {
-        bearer: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT'
-        }
-      }
+      securitySchemes
     },
     tags,
     servers: [
@@ -144,6 +140,7 @@ export function generateSwaggerDocument<SV extends AnySchemaValidator>(
 ): OpenAPIObject {
   const tags: TagObject[] = [];
   const paths: PathObject = {};
+  const securitySchemes: Record<string, SecuritySchemeObject> = {};
 
   unpackRouters<SV>(routers).forEach(({ fullPath, router, sdkPath }) => {
     const controllerName = transformBasePath(fullPath);
@@ -254,14 +251,53 @@ export function generateSwaggerDocument<SV extends AnySchemaValidator>(
           description: HTTPStatuses[403],
           content: contentResolver(schemaValidator, schemaValidator.string)
         };
-        if (route.contractDetails.auth.method === 'jwt') {
+
+        if ('basic' in route.contractDetails.auth) {
           operationObject.security = [
             {
-              bearer: Array.from(
-                route.contractDetails.auth.allowedPermissions?.values() || []
+              basic: Array.from(
+                'allowedPermissions' in route.contractDetails.auth
+                  ? route.contractDetails.auth.allowedPermissions?.values() ||
+                      []
+                  : []
               )
             }
           ];
+
+          securitySchemes['basic'] = {
+            type: 'http',
+            scheme: 'basic'
+          };
+        } else if (route.contractDetails.auth) {
+          operationObject.security = [
+            {
+              [route.contractDetails.auth.headerName !== 'Authorization'
+                ? 'bearer'
+                : 'apiKey']: Array.from(
+                'allowedPermissions' in route.contractDetails.auth
+                  ? route.contractDetails.auth.allowedPermissions?.values() ||
+                      []
+                  : []
+              )
+            }
+          ];
+
+          if (
+            route.contractDetails.auth.headerName &&
+            route.contractDetails.auth.headerName !== 'Authorization'
+          ) {
+            securitySchemes[route.contractDetails.auth.headerName] = {
+              type: 'apiKey',
+              in: 'header',
+              name: route.contractDetails.auth.headerName
+            };
+          } else {
+            securitySchemes['Authorization'] = {
+              type: 'http',
+              scheme: 'bearer',
+              bearerFormat: 'JWT'
+            };
+          }
         }
       }
 
@@ -277,6 +313,7 @@ export function generateSwaggerDocument<SV extends AnySchemaValidator>(
     port,
     tags,
     paths,
+    securitySchemes,
     otherServers
   );
 }

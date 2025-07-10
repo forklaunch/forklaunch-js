@@ -6,7 +6,8 @@ import {
   middleware,
   ParamsObject,
   QueryObject,
-  ResponsesObject
+  ResponsesObject,
+  SchemaAuthMethods
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { NextFunction, Request, Response } from 'express';
@@ -75,7 +76,15 @@ export const purge = <
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
-  LocalsObj extends Record<string, unknown>
+  LocalsObj extends Record<string, unknown>,
+  const Auth extends SchemaAuthMethods<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    Request
+  >
 >(
   schemaValidator: SV,
   path: Path,
@@ -90,7 +99,8 @@ export const purge = <
     ReqQuery,
     ReqHeaders,
     ResHeaders,
-    Request
+    Request,
+    Auth
   >,
   ...handlers: ExpressLikeSchemaHandler<
     SV,
@@ -119,7 +129,8 @@ export const purge = <
     LocalsObj,
     Request,
     Response,
-    NextFunction
+    NextFunction,
+    Auth
   >(schemaValidator, path, contractDetails, ...handlers);
 };
 

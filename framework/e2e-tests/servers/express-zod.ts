@@ -46,6 +46,19 @@ const getHandler = handlers.get(
     summary: 'Gets a sample file back',
     responses: {
       200: file
+    },
+    auth: {
+      tokenPrefix: 'bb',
+      basic: {
+        login: (username: string, password: string) => {
+          return username === 'test' && password === 'test';
+        }
+      },
+      forbiddenPermissions: new Set(['test:write']),
+      allowedPermissions: new Set(['test:read']),
+      mapPermissions: (resourceId, req) => {
+        return new Set(['test:read']);
+      }
     }
   },
   expressMiddleware,
@@ -97,6 +110,20 @@ const postHandler = handlers.post(
           }
         }
       }
+    },
+    auth: {
+      basic: {
+        login: (username: string, password: string) => {
+          return username === 'test' && password === 'test';
+        }
+      },
+      allowedRoles: new Set(['test:write']),
+      mapRoles: (resourceId, req) => {
+        return new Set(['test:write']);
+      },
+      mapPermissions: (resourceId, req) => {
+        return new Set(['test:write']);
+      }
     }
   },
   expressMiddleware,
@@ -142,6 +169,18 @@ const jsonPatchHandler = handlers.patch(
             g: array(date)
           }
         }
+      }
+    },
+    auth: {
+      tokenPrefix: 'bb',
+      basic: {
+        login: (username: string, password: string) => {
+          return username === 'test' && password === 'test';
+        }
+      },
+      allowedPermissions: new Set(['test:write']),
+      mapPermissions: (resourceId, req) => {
+        return new Set(['test:read']);
       }
     }
   },

@@ -10,6 +10,7 @@ export * from './handlers/patch';
 export * from './handlers/post';
 export * from './handlers/put';
 export * from './handlers/trace';
+export * from './handlers/typedAuthHandler';
 export * from './handlers/typedHandler';
 export * from './httpStatusCodes';
 export * from './interfaces/expressLikeRouter.interface';

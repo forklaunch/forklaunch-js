@@ -6,7 +6,8 @@ import {
   post as innerPost,
   ParamsObject,
   QueryObject,
-  ResponsesObject
+  ResponsesObject,
+  SchemaAuthMethods
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { NextFunction, Request, Response } from 'express';
@@ -27,10 +28,11 @@ import { SetQsAndStaticTypes } from '../types/export.types';
  * @template ReqHeaders - Request headers type extending HeadersObject
  * @template ResHeaders - Response headers type extending HeadersObject
  * @template LocalsObj - Local variables type extending Record<string, unknown>
+ * @template Auth - Auth methods type extending AuthMethodsBase
  *
  * @param {SV} schemaValidator - Schema validator instance
  * @param {Path} path - Route path starting with '/'
- * @param {ContractDetails<SV, 'post', Name, Path, P, ResBodyMap, ReqBody, ReqQuery, ReqHeaders, ResHeaders, Request>} contractDetails - Contract details for route validation
+ * @param {ContractDetails<SV, 'post', Name, Path, P, ResBodyMap, ReqBody, ReqQuery, ReqHeaders, ResHeaders, Request, Auth>} contractDetails - Contract details for route validation
  * @param {...ExpressLikeSchemaHandler[]} handlers - Route handler middleware functions
  * @returns {Function} Express route handler with schema validation
  *
@@ -66,7 +68,15 @@ export const post = <
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
-  LocalsObj extends Record<string, unknown>
+  LocalsObj extends Record<string, unknown>,
+  const Auth extends SchemaAuthMethods<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    Request
+  >
 >(
   schemaValidator: SV,
   path: Path,
@@ -81,7 +91,8 @@ export const post = <
     ReqQuery,
     ReqHeaders,
     ResHeaders,
-    Request
+    Request,
+    Auth
   >,
   ...handlers: ExpressLikeSchemaHandler<
     SV,
@@ -110,7 +121,8 @@ export const post = <
     LocalsObj,
     Request,
     Response,
-    NextFunction
+    NextFunction,
+    Auth
   >(schemaValidator, path, contractDetails, ...handlers);
 };
 

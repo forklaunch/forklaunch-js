@@ -1,5 +1,5 @@
 import { isNever, isRecord, safeStringify } from '@forklaunch/common';
-import { ZodSchemaValidator } from '@forklaunch/validator/zod';
+import { string, ZodSchemaValidator } from '@forklaunch/validator/zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import {
   discriminateBody,
@@ -66,15 +66,22 @@ export function generateMcpServer(
           : {}),
         ...(route.contractDetails.requestHeaders
           ? {
-              headers: schemaValidator.schemify(
-                route.contractDetails.requestHeaders
-              )
+              headers: schemaValidator.schemify({
+                ...route.contractDetails.requestHeaders,
+                ...(route.contractDetails.auth
+                  ? {
+                      [route.contractDetails.auth.headerName ??
+                      'authorization']: string.startsWith(
+                        route.contractDetails.auth.tokenPrefix ??
+                          ('basic' in route.contractDetails.auth
+                            ? 'Basic '
+                            : 'Bearer ')
+                      )
+                    }
+                  : {})
+              })
             }
           : {})
-        // TODO: support auth
-        //   ...(route.contractDetails.auth
-        //     ? { auth: route.contractDetails.auth }
-        //     : {})
       };
 
       mcpServer.tool(
@@ -155,79 +162,6 @@ export function generateMcpServer(
               }
             }
           }
-
-          // let defaultContentType = 'application/json';
-          // let parsedBody;
-          // let contentType;
-          // if (body != null) {
-          //   contentType = body.contentType;
-          //   if ('schema' in body && body.schema != null) {
-          //     defaultContentType = 'application/json';
-          //     parsedBody = safeStringify(body.schema);
-          //   } else if ('json' in body && body.json != null) {
-          //     defaultContentType = 'application/json';
-          //     parsedBody = safeStringify(body.json);
-          //   } else if ('text' in body && body.text != null) {
-          //     defaultContentType = 'text/plain';
-          //     parsedBody = body.text;
-          //   } else if ('file' in body && body.file != null) {
-          //     defaultContentType = 'application/octet-stream';
-          //     parsedBody = await body.file('test.txt', 'text/plain');
-          //   } else if ('multipartForm' in body && body.multipartForm != null) {
-          //     defaultContentType = 'multipart/form-data';
-          //     const formData = new FormData();
-          //     for (const key in body.multipartForm) {
-          //       if (
-          //         Object.prototype.hasOwnProperty.call(body.multipartForm, key)
-          //       ) {
-          //         const multipartForm = body.multipartForm as Record<
-          //           string,
-          //           unknown
-          //         >;
-          //         const value = multipartForm[key];
-
-          //         if (value instanceof Blob || value instanceof File) {
-          //           formData.append(key, value);
-          //         } else if (typeof value === 'function') {
-          //           const producedFile = (await value(
-          //             'test.txt',
-          //             'text/plain'
-          //           )) as File;
-          //           formData.append(key, producedFile);
-          //         } else if (Array.isArray(value)) {
-          //           for (const item of value) {
-          //             formData.append(
-          //               key,
-          //               item instanceof Blob || item instanceof File
-          //                 ? item
-          //                 : typeof item === 'function'
-          //                   ? safeStringify(
-          //                       await item('test.txt', 'text/plain')
-          //                     )
-          //                   : safeStringify(item)
-          //             );
-          //           }
-          //         } else {
-          //           formData.append(key, safeStringify(value));
-          //         }
-          //       }
-          //     }
-          //     parsedBody = formData;
-          //   } else if (
-          //     'urlEncodedForm' in body &&
-          //     body.urlEncodedForm != null
-          //   ) {
-          //     defaultContentType = 'application/x-www-form-urlencoded';
-          //     parsedBody = new URLSearchParams(
-          //       Object.entries(body.urlEncodedForm).map(([key, value]) => [
-          //         key,
-          //         safeStringify(value)
-          //       ])
-          //     );
-          //   } else {
-          //     parsedBody = safeStringify(body);
-          //   }
-          // }
 
           if (query) {
             const queryString = new URLSearchParams(

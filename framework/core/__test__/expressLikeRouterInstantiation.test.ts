@@ -33,8 +33,8 @@ const contractDetails = {
 };
 
 const kl = typedAuthHandler(SchemaValidator(), contractDetails, (sub, req) => {
-  const j = req?.params.id;
-  const x = req?.headers['x-test'];
+  // const j = req?.params.id;
+  // const x = req?.headers['x-test'];
   return new Set(['admin', 'user']);
 });
 
@@ -57,7 +57,11 @@ const xasd = typedHandler(
       400: string
     },
     auth: {
-      method: 'jwt',
+      basic: {
+        login: (username: string, password: string) => {
+          return username === 'test' && password === 'test';
+        }
+      },
       mapPermissions: kl,
       // (sub, req) => {
       //   const j = req?.params.id;
@@ -121,7 +125,6 @@ const bl = xa.trace(
       400: string
     },
     auth: {
-      method: 'jwt',
       // mapPermissions: (sub, req) => {
       //   const j = req?.params.id;
       //   return new Set(['admin', 'user']);

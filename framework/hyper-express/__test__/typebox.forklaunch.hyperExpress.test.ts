@@ -219,7 +219,6 @@ describe('handlers', () => {
           'x-test': string
         },
         auth: {
-          method: 'jwt',
           allowedRoles: new Set(['admin']),
           mapRoles: (sub, req) => {
             return new Set(['admin', sub, req?.params.id ?? '']);
@@ -245,6 +244,7 @@ describe('handlers', () => {
         id: 'string'
       },
       headers: {
+        authorization: 'Bearer string',
         'x-test': 'string'
       }
     });

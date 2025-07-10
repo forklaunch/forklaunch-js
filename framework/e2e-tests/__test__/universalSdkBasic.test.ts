@@ -39,7 +39,11 @@ describe('universalSdkBasic', async () => {
     if (!client) {
       client = await instantiateSdk();
     }
-    const getTest = await client.sdk.testpath.testFile();
+    const getTest = await client.sdk.testpath.testFile({
+      headers: {
+        authorization: 'bb string'
+      }
+    });
     expect(getTest.code).toBe(200);
   });
 
@@ -47,7 +51,12 @@ describe('universalSdkBasic', async () => {
     if (!client) {
       client = await instantiateSdk();
     }
-    const getTest = await client.fetch('/testpath/test');
+    const getTest = await client.fetch('/testpath/test', {
+      method: 'GET',
+      headers: {
+        authorization: 'bb string'
+      }
+    });
     expect(getTest.code).toBe(200);
   });
 
@@ -56,6 +65,9 @@ describe('universalSdkBasic', async () => {
       client = await instantiateSdk();
     }
     const postTest = await client.sdk.testpath.testSse({
+      headers: {
+        authorization: 'Basic string'
+      },
       body: {
         f: '!',
         m: [1, 2, 3]
@@ -69,6 +81,9 @@ describe('universalSdkBasic', async () => {
       client = await instantiateSdk();
     }
     const postTest = await client.fetch('/testpath/test', {
+      headers: {
+        authorization: 'Basic string'
+      },
       method: 'POST',
       body: {
         f: '!',
@@ -83,6 +98,9 @@ describe('universalSdkBasic', async () => {
       client = await instantiateSdk();
     }
     const jsonPatchTest = await client.sdk.testpath.testJsonPatch({
+      headers: {
+        authorization: 'bb string'
+      },
       body: {
         f: 'ok',
         h: 'b658f7e0-9b8a-4e1f-b6d8-1c0b7d8b3f59'
@@ -100,6 +118,9 @@ describe('universalSdkBasic', async () => {
     }
     const jsonPatchTest = await client.fetch('/testpath/test', {
       method: 'PATCH',
+      headers: {
+        authorization: 'bb string'
+      },
       body: {
         f: 'ok',
         h: 'b658f7e0-9b8a-4e1f-b6d8-1c0b7d8b3f59'

@@ -6,7 +6,8 @@ import {
   HttpContractDetails,
   ParamsObject,
   QueryObject,
-  ResponsesObject
+  ResponsesObject,
+  SchemaAuthMethods
 } from '../types/contractDetails.types';
 import { isPathParamHttpContractDetails } from './isPathParamContractDetails';
 
@@ -45,7 +46,15 @@ export function isHttpContractDetails<
   QuerySchema extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
-  BaseRequest
+  BaseRequest,
+  const Auth extends SchemaAuthMethods<
+    SV,
+    ParamsSchema,
+    BodySchema,
+    QuerySchema,
+    ReqHeaders,
+    BaseRequest
+  >
 >(
   maybeContractDetails: unknown
 ): maybeContractDetails is HttpContractDetails<
@@ -58,7 +67,8 @@ export function isHttpContractDetails<
   QuerySchema,
   ReqHeaders,
   ResHeaders,
-  BaseRequest
+  BaseRequest,
+  Auth
 > {
   return (
     isPathParamHttpContractDetails(maybeContractDetails) &&

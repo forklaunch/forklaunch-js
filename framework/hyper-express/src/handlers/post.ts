@@ -6,7 +6,8 @@ import {
   post as innerPost,
   ParamsObject,
   QueryObject,
-  ResponsesObject
+  ResponsesObject,
+  SchemaAuthMethods
 } from '@forklaunch/core/http';
 import {
   MiddlewareNext,
@@ -108,7 +109,15 @@ export const post = <
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
-  LocalsObj extends Record<string, unknown>
+  LocalsObj extends Record<string, unknown>,
+  const Auth extends SchemaAuthMethods<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    Request<LocalsObj>
+  >
 >(
   schemaValidator: SV,
   path: Path,
@@ -123,7 +132,8 @@ export const post = <
     ReqQuery,
     ReqHeaders,
     ResHeaders,
-    Request<LocalsObj>
+    Request<LocalsObj>,
+    Auth
   >,
   ...handlers: ExpressLikeSchemaHandler<
     SV,
@@ -152,6 +162,7 @@ export const post = <
     LocalsObj,
     Request<LocalsObj>,
     Response<LocalsObj>,
-    MiddlewareNext
+    MiddlewareNext,
+    Auth
   >(schemaValidator, path, contractDetails, ...handlers);
 };

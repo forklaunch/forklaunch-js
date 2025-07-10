@@ -6,7 +6,8 @@ import {
   Method,
   ParamsObject,
   QueryObject,
-  ResponsesObject
+  ResponsesObject,
+  SchemaAuthMethods
 } from '../types/contractDetails.types';
 import { TypedHandler } from '../types/typedHandler.types';
 
@@ -24,7 +25,15 @@ export function isTypedHandler<
   LocalsObj extends Record<string, unknown>,
   BaseRequest,
   BaseResponse,
-  NextFunction
+  NextFunction,
+  const Auth extends SchemaAuthMethods<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    BaseRequest
+  >
 >(
   maybeTypedHandler: unknown
 ): maybeTypedHandler is TypedHandler<
@@ -41,7 +50,8 @@ export function isTypedHandler<
   LocalsObj,
   BaseRequest,
   BaseResponse,
-  NextFunction
+  NextFunction,
+  Auth
 > {
   return (
     maybeTypedHandler != null &&

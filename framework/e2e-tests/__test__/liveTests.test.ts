@@ -2,17 +2,29 @@ import { liveTests } from '../servers/express-zod';
 
 describe('liveTests', () => {
   it('should call getTest', async () => {
-    const getTest = await liveTests.getTest.sdk.testFile();
+    const getTest = await liveTests.getTest.sdk.testFile({
+      headers: {
+        authorization: 'bb string'
+      }
+    });
     expect(getTest.code).toBe(200);
   });
 
   it('should fetch getTest', async () => {
-    const getTest = await liveTests.getTest.fetch('/testpath/test');
+    const getTest = await liveTests.getTest.fetch('/testpath/test', {
+      method: 'GET',
+      headers: {
+        authorization: 'bb string'
+      }
+    });
     expect(getTest.code).toBe(200);
   });
 
   it('should call postTest', async () => {
     const postTest = await liveTests.postTest.sdk.testSse({
+      headers: {
+        authorization: 'Basic string'
+      },
       body: {
         f: '!',
         m: [1, 2, 3]
@@ -27,6 +39,9 @@ describe('liveTests', () => {
       body: {
         f: '!',
         m: [1, 2, 3]
+      },
+      headers: {
+        authorization: 'Basic string'
       }
     });
     expect(postTest.code).toBe(200);
@@ -40,6 +55,9 @@ describe('liveTests', () => {
       },
       query: {
         q: 'test'
+      },
+      headers: {
+        authorization: 'bb string'
       }
     });
     expect(jsonPatchTest.code).toBe(200);
@@ -56,6 +74,9 @@ describe('liveTests', () => {
         },
         query: {
           q: 'test'
+        },
+        headers: {
+          authorization: 'bb string'
         }
       }
     );
