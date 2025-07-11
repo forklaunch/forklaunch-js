@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { number, SchemaValidator, string } from '@forklaunch/validator/zod';
 import { forklaunchExpress, forklaunchRouter } from '../index';
@@ -197,8 +198,8 @@ describe('handlers', () => {
         },
         auth: {
           allowedRoles: new Set(['admin']),
-          mapRoles: (sub, req) => {
-            return new Set(['admin', sub, req?.params.id ?? '']);
+          mapRoles: (_payload, _req) => {
+            return new Set(['admin']);
           }
         }
       },

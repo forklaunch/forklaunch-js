@@ -23,7 +23,7 @@ describe('liveTests', () => {
   it('should call postTest', async () => {
     const postTest = await liveTests.postTest.sdk.testSse({
       headers: {
-        authorization: 'Basic string'
+        xyz: 'Basic string'
       },
       body: {
         f: '!',
@@ -41,7 +41,7 @@ describe('liveTests', () => {
         m: [1, 2, 3]
       },
       headers: {
-        authorization: 'Basic string'
+        xyz: 'Basic string'
       }
     });
     expect(postTest.code).toBe(200);

@@ -49,9 +49,7 @@ describe('openApiV3Generator tests', () => {
       openapi: '3.1.0',
       info: { title: '', version: '1.0.0' },
       components: {
-        securitySchemes: {
-          bearer: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }
-        }
+        securitySchemes: {}
       },
       tags: [{ name: 'api', description: 'Api Operations' }],
       servers: [{ url: 'http://localhost:8000', description: 'Main Server' }],

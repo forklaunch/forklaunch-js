@@ -1,5 +1,11 @@
 # @forklaunch/implementation-billing-base
 
+## 0.3.8
+
+### Patch Changes
+
+- update internal dependencies
+
 ## 0.3.7
 
 ### Patch Changes

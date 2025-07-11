@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { noop } from '@forklaunch/common';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { number, SchemaValidator, string } from '@forklaunch/validator/zod';
@@ -220,8 +221,8 @@ describe('handlers', () => {
         },
         auth: {
           allowedRoles: new Set(['admin']),
-          mapRoles: (sub, req) => {
-            return new Set(['admin', sub, req?.params.id ?? '']);
+          mapRoles: (_payload, _req) => {
+            return new Set(['admin']);
           }
         }
       },
@@ -309,8 +310,8 @@ describe('handlers', () => {
         },
         auth: {
           allowedPermissions: new Set(['admin']),
-          mapPermissions: (sub, req) => {
-            return new Set(['admin', sub, req?.params.id ?? '']);
+          mapPermissions: (_payload, _req) => {
+            return new Set(['admin']);
           }
         }
       },

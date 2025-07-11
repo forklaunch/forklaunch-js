@@ -41,7 +41,7 @@ describe('universalSdkBasic', async () => {
     }
     const getTest = await client.sdk.testpath.testFile({
       headers: {
-        authorization: 'bb string'
+        authorization: 'bb YmFzaWN1c2VyOnBhc3N3b3Jk'
       }
     });
     expect(getTest.code).toBe(200);
@@ -54,7 +54,7 @@ describe('universalSdkBasic', async () => {
     const getTest = await client.fetch('/testpath/test', {
       method: 'GET',
       headers: {
-        authorization: 'bb string'
+        authorization: 'bb YmFzaWN1c2VyOnBhc3N3b3Jk'
       }
     });
     expect(getTest.code).toBe(200);
@@ -66,7 +66,7 @@ describe('universalSdkBasic', async () => {
     }
     const postTest = await client.sdk.testpath.testSse({
       headers: {
-        authorization: 'Basic string'
+        xyz: 'Basic YmFzaWN1c2VyOnBhc3N3b3Jk'
       },
       body: {
         f: '!',
@@ -82,7 +82,7 @@ describe('universalSdkBasic', async () => {
     }
     const postTest = await client.fetch('/testpath/test', {
       headers: {
-        authorization: 'Basic string'
+        xyz: 'Basic YmFzaWN1c2VyOnBhc3N3b3Jk'
       },
       method: 'POST',
       body: {
@@ -99,7 +99,8 @@ describe('universalSdkBasic', async () => {
     }
     const jsonPatchTest = await client.sdk.testpath.testJsonPatch({
       headers: {
-        authorization: 'bb string'
+        authorization:
+          'bb eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0dXNlciIsImlhdCI6MTUxNjIzOTAyMn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c' // random valid jwt token
       },
       body: {
         f: 'ok',

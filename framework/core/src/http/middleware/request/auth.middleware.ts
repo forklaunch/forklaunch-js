@@ -1,6 +1,6 @@
 import { isNever } from '@forklaunch/common';
 import { AnySchemaValidator } from '@forklaunch/validator';
-import { jwtVerify } from 'jose';
+import { JWTPayload, jwtVerify } from 'jose';
 import { ParsedQs } from 'qs';
 import { discriminateAuthMethod } from '../../discriminateAuthMethod';
 import { hasPermissionChecks } from '../../guards/hasPermissionChecks';
@@ -91,7 +91,7 @@ async function checkAuthorizationToken<
 
   const [tokenPrefix, token] = authorizationToken.split(' ');
 
-  let resourceId;
+  let resourceId: JWTPayload;
 
   const { type, auth } = discriminateAuthMethod(authorizationMethod);
 
@@ -102,43 +102,53 @@ async function checkAuthorizationToken<
       }
 
       try {
-        const decodedJwt = await jwtVerify(
-          token,
-          new TextEncoder().encode(process.env.JWT_SECRET)
-        );
+        const decodedJwt =
+          (await auth?.decodeResource?.(token)) ??
+          (
+            await jwtVerify(
+              token,
+              new TextEncoder().encode(process.env.JWT_SECRET)
+            )
+          ).payload;
 
-        if (!decodedJwt.payload.sub) {
+        if (!decodedJwt) {
           return invalidAuthorizationSubject;
         }
 
-        resourceId = decodedJwt.payload.sub;
+        resourceId = decodedJwt;
       } catch (error) {
         (
           req as ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>
-        ).openTelemetryCollector.error(error);
+        )?.openTelemetryCollector.error(error);
         return invalidAuthorizationToken;
       }
 
       break;
     }
     case 'basic': {
-      if (authorizationToken !== (authorizationMethod.tokenPrefix ?? 'Basic')) {
+      if (tokenPrefix !== (authorizationMethod.tokenPrefix ?? 'Basic')) {
         return invalidAuthorizationTokenFormat;
       }
 
-      const [username, password] = Buffer.from(token, 'base64')
-        .toString('utf-8')
-        .split(':');
+      if (auth.decodeResource) {
+        resourceId = await auth.decodeResource(token);
+      } else {
+        const [username, password] = Buffer.from(token, 'base64')
+          .toString('utf-8')
+          .split(':');
 
-      if (!username || !password) {
-        return invalidAuthorizationTokenFormat;
+        if (!username || !password) {
+          return invalidAuthorizationTokenFormat;
+        }
+
+        if (!auth.login(username, password)) {
+          return invalidAuthorizationLogin;
+        }
+
+        resourceId = {
+          sub: username
+        };
       }
-
-      if (!auth.login(username, password)) {
-        return invalidAuthorizationLogin;
-      }
-
-      resourceId = username;
       break;
     }
     default:

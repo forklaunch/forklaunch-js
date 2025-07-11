@@ -17,14 +17,14 @@ importers:
         specifier: ^0.4.3
         version: 0.4.3
       '@forklaunch/core':
-        specifier: ^0.11.0
-        version: 0.11.0(socks@2.8.5)
+        specifier: ^0.11.1
+        version: 0.11.1(socks@2.8.5)
       '@forklaunch/express':
-        specifier: ^0.7.0
-        version: 0.7.0(openapi3-ts@4.5.0)(socks@2.8.5)
+        specifier: ^0.7.1
+        version: 0.7.1(openapi3-ts@4.5.0)(socks@2.8.5)
       '@forklaunch/hyper-express':
-        specifier: ^0.7.0
-        version: 0.7.0(express@5.1.0)(socks@2.8.5)
+        specifier: ^0.7.1
+        version: 0.7.1(express@5.1.0)(socks@2.8.5)
       '@forklaunch/universal-sdk':
         specifier: ^0.5.0
         version: 0.5.0
@@ -96,20 +96,20 @@ importers:
         specifier: ^0.4.3
         version: 0.4.3
       '@forklaunch/core':
-        specifier: ^0.11.0
-        version: 0.11.0(socks@2.8.5)
+        specifier: ^0.11.1
+        version: 0.11.1(socks@2.8.5)
       '@forklaunch/express':
-        specifier: ^0.7.0
-        version: 0.7.0(openapi3-ts@4.5.0)(socks@2.8.5)
+        specifier: ^0.7.1
+        version: 0.7.1(openapi3-ts@4.5.0)(socks@2.8.5)
       '@forklaunch/hyper-express':
-        specifier: ^0.7.0
-        version: 0.7.0(express@5.1.0)(socks@2.8.5)
+        specifier: ^0.7.1
+        version: 0.7.1(express@5.1.0)(socks@2.8.5)
       '@forklaunch/implementation-billing-base':
         specifier: workspace:*
         version: link:../implementations/billing/base
       '@forklaunch/infrastructure-redis':
-        specifier: ^0.2.0
-        version: 0.2.0(socks@2.8.5)
+        specifier: ^0.2.1
+        version: 0.2.1(socks@2.8.5)
       '@forklaunch/interfaces-billing':
         specifier: workspace:*
         version: link:../interfaces/billing
@@ -199,20 +199,20 @@ importers:
         specifier: ^0.4.3
         version: 0.4.3
       '@forklaunch/core':
-        specifier: ^0.11.0
-        version: 0.11.0(socks@2.8.5)
+        specifier: ^0.11.1
+        version: 0.11.1(socks@2.8.5)
       '@forklaunch/express':
-        specifier: ^0.7.0
-        version: 0.7.0(openapi3-ts@4.5.0)(socks@2.8.5)
+        specifier: ^0.7.1
+        version: 0.7.1(openapi3-ts@4.5.0)(socks@2.8.5)
       '@forklaunch/hyper-express':
-        specifier: ^0.7.0
-        version: 0.7.0(express@5.1.0)(socks@2.8.5)
+        specifier: ^0.7.1
+        version: 0.7.1(express@5.1.0)(socks@2.8.5)
       '@forklaunch/implementation-billing-stripe':
         specifier: workspace:*
         version: link:../implementations/billing/stripe
       '@forklaunch/infrastructure-redis':
-        specifier: ^0.2.0
-        version: 0.2.0(socks@2.8.5)
+        specifier: ^0.2.1
+        version: 0.2.1(socks@2.8.5)
       '@forklaunch/interfaces-billing':
         specifier: workspace:*
         version: link:../interfaces/billing
@@ -299,14 +299,14 @@ importers:
         specifier: ^0.4.3
         version: 0.4.3
       '@forklaunch/core':
-        specifier: ^0.11.0
-        version: 0.11.0(socks@2.8.5)
+        specifier: ^0.11.1
+        version: 0.11.1(socks@2.8.5)
       '@forklaunch/express':
-        specifier: ^0.7.0
-        version: 0.7.0(openapi3-ts@4.5.0)(socks@2.8.5)
+        specifier: ^0.7.1
+        version: 0.7.1(openapi3-ts@4.5.0)(socks@2.8.5)
       '@forklaunch/hyper-express':
-        specifier: ^0.7.0
-        version: 0.7.0(express@5.1.0)(socks@2.8.5)
+        specifier: ^0.7.1
+        version: 0.7.1(express@5.1.0)(socks@2.8.5)
       '@forklaunch/validator':
         specifier: ^0.7.5
         version: 0.7.5(openapi3-ts@4.5.0)
@@ -345,8 +345,8 @@ importers:
         specifier: workspace:*
         version: link:../monitoring
       '@forklaunch/core':
-        specifier: ^0.11.0
-        version: 0.11.0(socks@2.8.5)
+        specifier: ^0.11.1
+        version: 0.11.1(socks@2.8.5)
       '@forklaunch/hyper-express-fork':
         specifier: ^6.17.34
         version: 6.17.34
@@ -424,8 +424,8 @@ importers:
         specifier: workspace:*
         version: link:../monitoring
       '@forklaunch/core':
-        specifier: ^0.11.0
-        version: 0.11.0(socks@2.8.5)
+        specifier: ^0.11.1
+        version: 0.11.1(socks@2.8.5)
       '@forklaunch/implementation-iam-base':
         specifier: workspace:*
         version: link:../implementations/iam/base
@@ -509,8 +509,8 @@ importers:
         specifier: ^0.4.3
         version: 0.4.3
       '@forklaunch/core':
-        specifier: ^0.11.0
-        version: 0.11.0(socks@2.8.5)
+        specifier: ^0.11.1
+        version: 0.11.1(socks@2.8.5)
       '@forklaunch/interfaces-billing':
         specifier: workspace:*
         version: link:../../../interfaces/billing
@@ -552,8 +552,8 @@ importers:
         specifier: ^0.4.3
         version: 0.4.3
       '@forklaunch/core':
-        specifier: ^0.11.0
-        version: 0.11.0(socks@2.8.5)
+        specifier: ^0.11.1
+        version: 0.11.1(socks@2.8.5)
       '@forklaunch/implementation-billing-base':
         specifier: workspace:*
         version: link:../base
@@ -601,8 +601,8 @@ importers:
         specifier: ^0.4.3
         version: 0.4.3
       '@forklaunch/core':
-        specifier: ^0.11.0
-        version: 0.11.0(socks@2.8.5)
+        specifier: ^0.11.1
+        version: 0.11.1(socks@2.8.5)
       '@forklaunch/interfaces-iam':
         specifier: workspace:*
         version: link:../../../interfaces/iam
@@ -641,8 +641,8 @@ importers:
   implementations/worker/bullmq:
     dependencies:
       '@forklaunch/core':
-        specifier: ^0.11.0
-        version: 0.11.0(socks@2.8.5)
+        specifier: ^0.11.1
+        version: 0.11.1(socks@2.8.5)
       '@forklaunch/interfaces-worker':
         specifier: workspace:*
         version: link:../../../interfaces/worker
@@ -681,8 +681,8 @@ importers:
   implementations/worker/database:
     dependencies:
       '@forklaunch/core':
-        specifier: ^0.11.0
-        version: 0.11.0(socks@2.8.5)
+        specifier: ^0.11.1
+        version: 0.11.1(socks@2.8.5)
       '@forklaunch/interfaces-worker':
         specifier: workspace:*
         version: link:../../../interfaces/worker
@@ -721,8 +721,8 @@ importers:
   implementations/worker/kafka:
     dependencies:
       '@forklaunch/core':
-        specifier: ^0.11.0
-        version: 0.11.0(socks@2.8.5)
+        specifier: ^0.11.1
+        version: 0.11.1(socks@2.8.5)
       '@forklaunch/interfaces-worker':
         specifier: workspace:*
         version: link:../../../interfaces/worker
@@ -761,8 +761,8 @@ importers:
   implementations/worker/redis:
     dependencies:
       '@forklaunch/core':
-        specifier: ^0.11.0
-        version: 0.11.0(socks@2.8.5)
+        specifier: ^0.11.1
+        version: 0.11.1(socks@2.8.5)
       '@forklaunch/interfaces-worker':
         specifier: workspace:*
         version: link:../../../interfaces/worker
@@ -863,8 +863,8 @@ importers:
   monitoring:
     dependencies:
       '@forklaunch/core':
-        specifier: ^0.11.0
-        version: 0.11.0(socks@2.8.5)
+        specifier: ^0.11.1
+        version: 0.11.1(socks@2.8.5)
 
   sample-worker:
     dependencies:
@@ -875,8 +875,8 @@ importers:
         specifier: workspace:*
         version: link:../monitoring
       '@forklaunch/core':
-        specifier: ^0.11.0
-        version: 0.11.0(socks@2.8.5)
+        specifier: ^0.11.1
+        version: 0.11.1(socks@2.8.5)
       '@forklaunch/implementation-worker-bullmq':
         specifier: workspace:*
         version: link:../implementations/worker/bullmq
@@ -890,11 +890,11 @@ importers:
         specifier: workspace:*
         version: link:../implementations/worker/redis
       '@forklaunch/infrastructure-redis':
-        specifier: ^0.2.0
-        version: 0.2.0(socks@2.8.5)
+        specifier: ^0.2.1
+        version: 0.2.1(socks@2.8.5)
       '@forklaunch/infrastructure-s3':
-        specifier: ^0.2.0
-        version: 0.2.0(socks@2.8.5)
+        specifier: ^0.2.1
+        version: 0.2.1(socks@2.8.5)
       '@forklaunch/interfaces-worker':
         specifier: workspace:*
         version: link:../interfaces/worker
@@ -1747,23 +1747,23 @@ packages:
   '@forklaunch/common@0.4.3':
     resolution: {integrity: sha512-XzdTjX7QuTxGELRD2CtBSdwSjyvdJyQsAG8LQKSWSDt0fZqonWCFPGgJDL+ZTB3oUC3vFbVc2siY2fsfYRUqRA==}
 
-  '@forklaunch/core@0.11.0':
-    resolution: {integrity: sha512-tAd50hXCdL/+gfysmNsmX82dErGffm0CsrjXyZuNuO7IDACERibJs5CTNFxVUs6E/1ErSbQhlkQIFyJnlasLIQ==}
+  '@forklaunch/core@0.11.1':
+    resolution: {integrity: sha512-OsBu+C0kyPJ1QAw6p0tww8Cag1rupCzOM48d2tb6ft0PmMf4LTEz2I5l4QF+teC3lQz9wS0Yk8d3kn++z5aWig==}
 
-  '@forklaunch/express@0.7.0':
-    resolution: {integrity: sha512-ibL45WV8MVbFiQD2aV3gU6ZbkeKKowntJ3rdWtgHtoqNBMIVo0h42dHDE8r9FM6uVDMVy/VHXh9rcvXp5T5q9g==}
+  '@forklaunch/express@0.7.1':
+    resolution: {integrity: sha512-o57loQMjxzwJ5spAEfWnjMoL9SvX2okK3OpZf4dcitZWw1aQukYW4q1o+1zXCMoFkS1fSg/4oBGGk68Yb8bA9g==}
 
   '@forklaunch/hyper-express-fork@6.17.34':
     resolution: {integrity: sha512-ftLBbQgrqAjHVaDWlJ/0UEIxMAmAF5TYZmjTVUni92lxv/aJeDofYNCyEb2FM8cy4lbaGqsYnTf3WiKnekTLeg==}
 
-  '@forklaunch/hyper-express@0.7.0':
-    resolution: {integrity: sha512-mtZNFM+Rhcm1EUpGmkGoTq9xO3g7D95LZIEt4cFOgEHZykm1zMMG4YEl2GVrbHEt+k0gEVHZ9KPWf6Cp7NFEzw==}
+  '@forklaunch/hyper-express@0.7.1':
+    resolution: {integrity: sha512-H/Db2N/FSxfo0KCgq03OrSJ9ny3DQjtATqaQ/nv3HuRRl2oFkFIsbTvmaOzBMIANEM2RF7tC9TkBl0VE1ZisSQ==}
 
-  '@forklaunch/infrastructure-redis@0.2.0':
-    resolution: {integrity: sha512-07NBQ35+9iWiJ/7jXfxBuvh/IePnzOAAxFlf9FVqJZ1gupPO45CNUOpA8Si9tiJDiSH+Dl89smihgmldoiQm9Q==}
+  '@forklaunch/infrastructure-redis@0.2.1':
+    resolution: {integrity: sha512-Q7YLvpSa4Dlo9DssddBBKZJ3DOda4wEqyHZHD7jjI/DcbhSmOKSPJdgYKE63+xLctN7OPgybviZsS6keRfUtVA==}
 
-  '@forklaunch/infrastructure-s3@0.2.0':
-    resolution: {integrity: sha512-OCSz6Nc7D3XMyAdtG/uAzt213R84y3MYN1BiWOba5P4UKPVyD0u3mE6kam8aMkR7Jq1zi/ffapPhLn33mDDjBg==}
+  '@forklaunch/infrastructure-s3@0.2.1':
+    resolution: {integrity: sha512-OOjjJSun6X/aO7qdpFgMSFpbC1rasQ+iRELCWKFLowol8G8BikfNDcsWD1RMAMNGnOd6qt+3CCysfsTGNWaETA==}
 
   '@forklaunch/internal@0.1.5':
     resolution: {integrity: sha512-in8RXFQiC4IyIqHdaZk8iGzBIEBpO/R+ZH8tExem6dZO6l+6fmdVtJkLSzDdJ6I8cfPROQT0emFYUvc8KZ5lhA==}
@@ -2365,8 +2365,8 @@ packages:
     resolution: {integrity: sha512-lp4qAiMTD4sNWW4DbKLBkfiMZ4jbAboJIGOQr5DvciMRI494OapieI9qiODpOt0XBr1LjIDy1xAGAnVs5supTA==}
     engines: {node: '>=14'}
 
-  '@opentelemetry/semantic-conventions@1.35.0':
-    resolution: {integrity: sha512-3R+blYJd3PNevNDl9co0u+VuDaQH7cGikkMDG6VcDSJF9kisMqyIKMVl5HLkyXh3sw0XhMkAFO+TTM1fnX0eXQ==}
+  '@opentelemetry/semantic-conventions@1.36.0':
+    resolution: {integrity: sha512-TtxJSRD8Ohxp6bKkhrm27JRHAxPczQA7idtcTOMYI+wQRRrfgqxHv1cFbCApcSnNjtXkmzFozn6jQtFrOmbjPQ==}
     engines: {node: '>=14'}
 
   '@oxlint/darwin-arm64@1.6.0':
@@ -7826,7 +7826,7 @@ snapshots:
 
   '@forklaunch/common@0.4.3': {}
 
-  '@forklaunch/core@0.11.0(socks@2.8.5)':
+  '@forklaunch/core@0.11.1(socks@2.8.5)':
     dependencies:
       '@forklaunch/common': 0.4.3
       '@forklaunch/opentelemetry-instrumentation-hyper-express': 0.0.5(@opentelemetry/api@1.9.0)
@@ -7847,7 +7847,7 @@ snapshots:
       '@opentelemetry/sdk-metrics': 2.0.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-node': 0.203.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-trace-node': 2.0.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.35.0
+      '@opentelemetry/semantic-conventions': 1.36.0
       cors: 2.8.5
       dotenv: 17.2.0
       jose: 6.0.11
@@ -7867,10 +7867,10 @@ snapshots:
       - socks
       - supports-color
 
-  '@forklaunch/express@0.7.0(openapi3-ts@4.5.0)(socks@2.8.5)':
+  '@forklaunch/express@0.7.1(openapi3-ts@4.5.0)(socks@2.8.5)':
     dependencies:
       '@forklaunch/common': 0.4.3
-      '@forklaunch/core': 0.11.0(socks@2.8.5)
+      '@forklaunch/core': 0.11.1(socks@2.8.5)
       '@forklaunch/validator': 0.7.5(openapi3-ts@4.5.0)
       '@modelcontextprotocol/sdk': 1.15.1
       '@scalar/express-api-reference': 0.8.10
@@ -7906,10 +7906,10 @@ snapshots:
       typed-emitter: 2.1.0
       uWebSockets.js: https://codeload.github.com/uNetworking/uWebSockets.js/tar.gz/6609a88ffa9a16ac5158046761356ce03250a0df
 
-  '@forklaunch/hyper-express@0.7.0(express@5.1.0)(socks@2.8.5)':
+  '@forklaunch/hyper-express@0.7.1(express@5.1.0)(socks@2.8.5)':
     dependencies:
       '@forklaunch/common': 0.4.3
-      '@forklaunch/core': 0.11.0(socks@2.8.5)
+      '@forklaunch/core': 0.11.1(socks@2.8.5)
       '@forklaunch/hyper-express-fork': 6.17.34
       '@forklaunch/validator': 0.7.5(openapi3-ts@4.5.0)
       '@scalar/express-api-reference': 0.8.10
@@ -7931,10 +7931,10 @@ snapshots:
       - socks
       - supports-color
 
-  '@forklaunch/infrastructure-redis@0.2.0(socks@2.8.5)':
+  '@forklaunch/infrastructure-redis@0.2.1(socks@2.8.5)':
     dependencies:
       '@forklaunch/common': 0.4.3
-      '@forklaunch/core': 0.11.0(socks@2.8.5)
+      '@forklaunch/core': 0.11.1(socks@2.8.5)
       redis: 5.6.0
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
@@ -7946,11 +7946,11 @@ snapshots:
       - socks
       - supports-color
 
-  '@forklaunch/infrastructure-s3@0.2.0(socks@2.8.5)':
+  '@forklaunch/infrastructure-s3@0.2.1(socks@2.8.5)':
     dependencies:
       '@aws-sdk/client-s3': 3.844.0
       '@forklaunch/common': 0.4.3
-      '@forklaunch/core': 0.11.0(socks@2.8.5)
+      '@forklaunch/core': 0.11.1(socks@2.8.5)
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
       - '@mongodb-js/zstd'
@@ -7975,7 +7975,7 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/core': 1.30.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation': 0.57.2(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.35.0
+      '@opentelemetry/semantic-conventions': 1.36.0
       '@types/busboy': 1.5.4
     transitivePeerDependencies:
       - supports-color
@@ -8815,7 +8815,7 @@ snapshots:
   '@opentelemetry/core@2.0.1(@opentelemetry/api@1.9.0)':
     dependencies:
       '@opentelemetry/api': 1.9.0
-      '@opentelemetry/semantic-conventions': 1.35.0
+      '@opentelemetry/semantic-conventions': 1.36.0
 
   '@opentelemetry/exporter-logs-otlp-grpc@0.203.0(@opentelemetry/api@1.9.0)':
     dependencies:
@@ -8920,14 +8920,14 @@ snapshots:
       '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/resources': 2.0.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-trace-base': 2.0.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.35.0
+      '@opentelemetry/semantic-conventions': 1.36.0
 
   '@opentelemetry/instrumentation-express@0.52.0(@opentelemetry/api@1.9.0)':
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation': 0.203.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.35.0
+      '@opentelemetry/semantic-conventions': 1.36.0
     transitivePeerDependencies:
       - supports-color
 
@@ -8936,7 +8936,7 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation': 0.203.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.35.0
+      '@opentelemetry/semantic-conventions': 1.36.0
       forwarded-parse: 2.1.2
     transitivePeerDependencies:
       - supports-color
@@ -9001,7 +9001,7 @@ snapshots:
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.35.0
+      '@opentelemetry/semantic-conventions': 1.36.0
 
   '@opentelemetry/sdk-logs@0.203.0(@opentelemetry/api@1.9.0)':
     dependencies:
@@ -9040,7 +9040,7 @@ snapshots:
       '@opentelemetry/sdk-metrics': 2.0.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-trace-base': 2.0.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-trace-node': 2.0.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.35.0
+      '@opentelemetry/semantic-conventions': 1.36.0
     transitivePeerDependencies:
       - supports-color
 
@@ -9049,7 +9049,7 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/resources': 2.0.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.35.0
+      '@opentelemetry/semantic-conventions': 1.36.0
 
   '@opentelemetry/sdk-trace-node@2.0.1(@opentelemetry/api@1.9.0)':
     dependencies:
@@ -9060,7 +9060,7 @@ snapshots:
 
   '@opentelemetry/semantic-conventions@1.28.0': {}
 
-  '@opentelemetry/semantic-conventions@1.35.0': {}
+  '@opentelemetry/semantic-conventions@1.36.0': {}
 
   '@oxlint/darwin-arm64@1.6.0':
     optional: true

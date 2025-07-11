@@ -9,6 +9,7 @@ import {
   Schema,
   UnboxedObjectSchema
 } from '@forklaunch/validator';
+import { JWTPayload } from 'jose';
 import { ParsedQs } from 'qs';
 import {
   ExpressLikeAuthMapper,
@@ -265,6 +266,7 @@ export type JwtAuthMethods = {
 export type AuthMethodsBase = {
   readonly tokenPrefix?: string;
   readonly headerName?: string;
+  readonly decodeResource?: (token: string) => JWTPayload | Promise<JWTPayload>;
 } & (BasicAuthMethods | JwtAuthMethods);
 
 type PermissionSet =

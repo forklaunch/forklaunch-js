@@ -2,8 +2,8 @@ import { AnySchemaValidator } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
 import {
   AuthMethods,
+  AuthMethodsBase,
   BasicAuthMethods,
-  JwtAuthMethods,
   ParamsDictionary
 } from './types/contractDetails.types';
 
@@ -51,25 +51,38 @@ export function discriminateAuthMethod<
 ):
   | {
       type: 'basic';
-      auth: BasicAuthMethods['basic'];
+      auth: {
+        decodeResource?: AuthMethodsBase['decodeResource'];
+        login: BasicAuthMethods['basic']['login'];
+      };
     }
   | {
       type: 'jwt';
-      auth?: JwtAuthMethods['jwt'];
+      auth: {
+        decodeResource?: AuthMethodsBase['decodeResource'];
+      };
     } {
   if ('basic' in auth) {
     return {
       type: 'basic' as const,
-      auth: auth.basic
+      auth: {
+        decodeResource: auth.decodeResource,
+        login: auth.basic.login
+      }
     };
   } else if ('jwt' in auth) {
     return {
       type: 'jwt' as const,
-      auth: auth.jwt
+      auth: {
+        decodeResource: auth.decodeResource
+      }
     };
   } else {
     return {
-      type: 'jwt' as const
+      type: 'jwt' as const,
+      auth: {
+        decodeResource: auth.decodeResource
+      }
     };
   }
 }

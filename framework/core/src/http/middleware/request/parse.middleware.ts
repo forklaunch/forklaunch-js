@@ -62,7 +62,18 @@ export function parse<
       enumerable: true,
       configurable: false
     });
-    req.headers = parsedRequest.value.headers ?? {};
+    const parsedHeaders = parsedRequest.value.headers ?? {};
+    req.headers = Object.keys(req.headers).reduce<Record<string, string>>(
+      (acc, key) => {
+        if (parsedHeaders?.[key]) {
+          acc[key] = parsedHeaders[key];
+        } else {
+          acc[key] = req.headers[key];
+        }
+        return acc;
+      },
+      {}
+    ) as ReqHeaders;
   }
   if (!parsedRequest.ok) {
     switch (req.contractDetails.options?.requestValidation) {

@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/implementation-billing-stripe",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Stripe implementation for forklaunch billing",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -54,7 +54,7 @@
   },
   "dependencies": {
     "@forklaunch/common": "^0.4.3",
-    "@forklaunch/core": "^0.11.0",
+    "@forklaunch/core": "^0.11.1",
     "@forklaunch/implementation-billing-base": "workspace:*",
     "@forklaunch/interfaces-billing": "workspace:*",
     "@forklaunch/internal": "^0.1.5",

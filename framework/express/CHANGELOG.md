@@ -1,5 +1,13 @@
 # @forklaunch/express
 
+## 0.7.1
+
+### Patch Changes
+
+- Fix auth header bugs
+- Updated dependencies
+  - @forklaunch/core@0.11.1
+
 ## 0.7.0
 
 ### Minor Changes

@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.11.1
+
+### Patch Changes
+
+- Fix auth header bugs
+
 ## 0.11.0
 
 ### Minor Changes

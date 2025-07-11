@@ -19,6 +19,7 @@ import {
   uuid
 } from '@forklaunch/validator/zod';
 import { NextFunction, Request, Response } from 'express';
+import { JWTPayload } from 'jose';
 
 const zodSchemaValidator = SchemaValidator();
 const openTelemetryCollector = new OpenTelemetryCollector('test');
@@ -52,7 +53,7 @@ const getHandler = handlers.get(
       tokenPrefix: 'bb',
       basic: {
         login: (username: string, password: string) => {
-          return username === 'test' && password === 'test';
+          return username === 'basicuser' && password === 'password';
         }
       },
       forbiddenPermissions: new Set(['test:write']),
@@ -115,9 +116,10 @@ const postHandler = handlers.post(
     auth: {
       basic: {
         login: (username: string, password: string) => {
-          return username === 'test' && password === 'test';
+          return username === 'basicuser' && password === 'password';
         }
       },
+      headerName: 'xyz',
       allowedRoles: new Set(['test:write']),
       mapRoles: (resourceId, req) => {
         return new Set(['test:write']);
@@ -174,14 +176,14 @@ const jsonPatchHandler = handlers.patch(
     },
     auth: {
       tokenPrefix: 'bb',
-      basic: {
-        login: (username: string, password: string) => {
-          return username === 'test' && password === 'test';
-        }
+      decodeResource: async (token) => {
+        return {
+          sub: 'test'
+        };
       },
       allowedPermissions: new Set(['test:write']),
       mapPermissions: (resourceId, req) => {
-        return new Set(['test:read']);
+        return new Set(['test:write']);
       }
     }
   },
@@ -316,4 +318,4 @@ export type SDK = SdkClient<
 // Temporary shim for supporting TSGO experimental compiler
 import type * as ExpressStaticCore from 'express-serve-static-core';
 import { Range } from 'range-parser';
-type TSGoShim = ParsedQs & Range & ExpressStaticCore.Application;
+type TSGoShim = ParsedQs & Range & ExpressStaticCore.Application & JWTPayload;

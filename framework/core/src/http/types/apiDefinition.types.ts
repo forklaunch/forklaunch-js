@@ -5,6 +5,7 @@ import {
 } from '@forklaunch/common';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { Span } from '@opentelemetry/api';
+import { JWTPayload } from 'jose';
 import { ParsedQs } from 'qs';
 import { Readable } from 'stream';
 import { OpenTelemetryCollector } from '../telemetry/openTelemetryCollector';
@@ -629,7 +630,7 @@ export type ExpressLikeAuthMapper<
   ReqHeaders extends Record<string, string>,
   BaseRequest
 > = (
-  sub: string,
+  payload: JWTPayload,
   req?: ResolvedForklaunchRequest<
     SV,
     P,
