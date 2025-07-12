@@ -9,7 +9,7 @@ import { PermissionRoutes } from './api/routes/permission.routes';
 import { RoleRoutes } from './api/routes/role.routes';
 import { UserRoutes } from './api/routes/user.routes';
 import { bootstrap } from './bootstrapper';
-//! bootstrap function that initializes the service application
+//! bootstrap resources and config
 bootstrap(async (ci, tokens) => {
   //! resolves the openTelemetryCollector from the configuration
   const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);

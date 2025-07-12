@@ -2,7 +2,7 @@ import { forklaunchExpress, SchemaValidator } from '@forklaunch/blueprint-core';
 import { SdkClient } from '@forklaunch/core/http';
 import { SampleWorkerRoutes } from './api/routes/sampleWorker.routes';
 import { bootstrap } from './bootstrapper';
-//! bootstrap function that initializes the service application
+//! bootstrap resources and config
 bootstrap((ci, tokens) => {
   //! resolves the openTelemetryCollector from the configuration
   const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
@@ -34,4 +34,6 @@ bootstrap((ci, tokens) => {
   });
 });
 //! defines the SdkClient for use with the UniversalSDK client
-export type SampleWorkerSdkClient = SdkClient<[typeof SampleWorkerRoutes]>;
+export type SampleWorkerSdkClient = SdkClient<{
+  routes: typeof SampleWorkerRoutes;
+}>;

@@ -115,12 +115,12 @@ export class BasePermissionService<
   }
 
   private async getBatchRoles(
-    roleIds?: IdsDto,
+    roles?: IdsDto,
     em?: EntityManager
   ): Promise<MapperEntities['RoleEntityMapper'][]> {
-    return roleIds
+    return roles
       ? await Promise.all(
-          (await this.roleServiceFactory().getBatchRoles(roleIds, em)).map(
+          (await this.roleServiceFactory().getBatchRoles(roles, em)).map(
             async (role) => {
               return (em ?? this.em).merge(
                 await this._mappers.RoleEntityMapper.deserializeDtoToEntity(

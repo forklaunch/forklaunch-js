@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { noop } from '@forklaunch/common';
-import { OpenTelemetryCollector, SdkClient } from '@forklaunch/core/http';
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import {
   forklaunchExpress,
   forklaunchRouter,
@@ -283,7 +283,20 @@ const filePostTest = forklaunchRouterInstance.post(
   filePostHandler
 );
 
+const flNestedRouter = forklaunchRouter(
+  '/testpath/nested',
+  zodSchemaValidator,
+  openTelemetryCollector
+)
+  .get('/test', getHandler)
+  .post('/test', postHandler)
+  .patch('/test', jsonPatchHandler)
+  .post('/test/multipart', multipartHandler)
+  .post('/test/url-encoded-form/:id', urlEncodedFormHandler)
+  .post('/test/file', filePostHandler);
+
 forklaunchApplication.use(forklaunchRouterInstance);
+forklaunchApplication.use(flNestedRouter);
 
 forklaunchApplication.listen(6935, () => {
   console.log('server started on 6935');
@@ -303,17 +316,6 @@ export function start() {
     console.log('server started on 6935');
   });
 }
-
-export type SDK = SdkClient<
-  [
-    typeof getTest,
-    typeof postTest,
-    typeof jsonPatchTest,
-    typeof multipartTest,
-    typeof urlEncodedFormTest,
-    typeof filePostTest
-  ]
->;
 
 // Temporary shim for supporting TSGO experimental compiler
 import type * as ExpressStaticCore from 'express-serve-static-core';

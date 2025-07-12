@@ -2,7 +2,7 @@ import { SdkClient } from '@forklaunch/core/http';
 import { forklaunchExpress, SchemaValidator } from '@{{app_name}}/core';
 import { bootstrap } from './bootstrapper';
 import { {{pascal_case_name}}Routes } from './api/routes/{{camel_case_name}}.routes';
-//! bootstrap function that initializes the service application
+//! bootstrap resources and config
 bootstrap((ci, tokens) => {
   //! creates an instance of forklaunchExpress
   const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);

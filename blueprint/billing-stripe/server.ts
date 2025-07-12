@@ -6,7 +6,7 @@ import { PlanRoutes } from './api/routes/plan.routes';
 import { SubscriptionRoutes } from './api/routes/subscription.routes';
 import { WebhookRoutes } from './api/routes/webhook.routes';
 import { bootstrap } from './bootstrapper';
-//! bootstrap function that initializes the service application
+//! bootstrap resources and config
 bootstrap((ci, tokens) => {
   //! resolves the openTelemetryCollector from the configuration
   const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);

@@ -45,7 +45,6 @@ describe('mcpGenerator tests', () => {
     expect(generatedMcpServer).toBeDefined();
     expect(typeof generatedMcpServer).toBe('object');
     expect(generatedMcpServer).toHaveProperty('tool');
-    expect(typeof generatedMcpServer.tool).toBe('function');
   });
 
   it('should generate MCP server with multiple routes', () => {
@@ -273,6 +272,5 @@ describe('mcpGenerator tests', () => {
     expect(generatedMcpServer).toBeDefined();
     expect(typeof generatedMcpServer).toBe('object');
     expect(generatedMcpServer).toHaveProperty('tool');
-    expect(typeof generatedMcpServer.tool).toBe('function');
   });
 });

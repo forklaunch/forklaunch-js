@@ -1,5 +1,21 @@
 # @forklaunch/validator
 
+## 0.7.7
+
+### Patch Changes
+
+- Update to zod v4, keeping zod v3 as active zod version
+- Updated dependencies
+  - @forklaunch/common@0.4.5
+
+## 0.7.6
+
+### Patch Changes
+
+- Upgrade internal dependencies
+- Updated dependencies
+  - @forklaunch/common@0.4.4
+
 ## 0.7.5
 
 ### Patch Changes

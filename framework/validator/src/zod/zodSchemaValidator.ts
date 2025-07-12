@@ -5,7 +5,6 @@
  * @module ZodSchemaValidator
  */
 
-import { extendZodWithOpenApi, generateSchema } from '@anatine/zod-openapi';
 import { SchemaObject } from 'openapi3-ts/oas31';
 import {
   z,
@@ -20,7 +19,9 @@ import {
   ZodTuple,
   ZodType,
   ZodUnion
-} from 'zod';
+} from 'zod/v3';
+import { extendZodWithOpenApi } from '../../shims/zod-v3-openapi/zod-extensions';
+import { generateSchema } from '../../shims/zod-v3-openapi/zod-openapi';
 import {
   LiteralSchema,
   ParseResult,

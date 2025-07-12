@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/infrastructure-s3",
-  "version": "0.2.1",
+  "version": "0.2.5",
   "description": "S3 infrastructure for ForkLaunch components.",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -44,9 +44,9 @@
     "@forklaunch/core": "workspace:*"
   },
   "devDependencies": {
-    "@eslint/js": "^9.30.1",
+    "@eslint/js": "^9.31.0",
     "@types/jest": "^30.0.0",
-    "@typescript/native-preview": "7.0.0-dev.20250709.1",
+    "@typescript/native-preview": "7.0.0-dev.20250712.1",
     "globals": "^16.3.0",
     "jest": "^30.0.4",
     "prettier": "^3.6.2",

@@ -207,8 +207,8 @@ describe('schema equality', () => {
             password: 'test',
             firstName: 'test',
             lastName: 'test',
-            organizationId: 'test',
-            roleIds: ['test'],
+            organization: 'test',
+            roles: ['test'],
             phoneNumber: 'test',
             subscription: 'test',
             providerFields: {
@@ -230,7 +230,7 @@ describe('schema equality', () => {
             password: 'test',
             firstName: 'test',
             lastName: 'test',
-            roleIds: ['test'],
+            roles: ['test'],
             phoneNumber: 'test',
             subscription: 'test',
             providerFields: {

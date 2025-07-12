@@ -1,5 +1,21 @@
 # @forklaunch/universal-sdk
 
+## 0.5.2
+
+### Patch Changes
+
+- Update to zod v4, keeping zod v3 as active zod version
+- Updated dependencies
+  - @forklaunch/common@0.4.5
+
+## 0.5.1
+
+### Patch Changes
+
+- Upgrade internal dependencies
+- Updated dependencies
+  - @forklaunch/common@0.4.4
+
 ## 0.5.0
 
 ### Minor Changes

@@ -1,8 +1,9 @@
 
-{{#is_iam}}import type { IamSdkClient } from "@{{app_name}}/iam";{{/is_iam}}{{#is_billing}}
+{{#is_iam}}import type { IamSdkClient{{is_better_auth}}, BetterAuthConfig{{/is_better_auth}} } from "@{{app_name}}/iam";{{/is_iam}}{{#is_billing}}
 import type { BillingSdkClient } from "@{{app_name}}/billing";{{/is_billing}}
 import { universalSdk } from "@forklaunch/universal-sdk";{{#is_better_auth}}
 import { createAuthClient } from "better-auth/client";{{/is_better_auth}}
+import { inferAdditionalFields } from 'better-auth/client/plugins';
 //! exportable function for creating a universal SDK instance for use in browser and server environments
 export const {{camel_case_app_name}}UniversalSdk = async ({
   iamHost,
@@ -19,6 +20,7 @@ export const {{camel_case_app_name}}UniversalSdk = async ({
   }){{/is_better_auth}}{{#is_better_auth}}{
     betterAuth: createAuthClient({
       baseURL: iamBetterAuthHost,
+      plugins: [inferAdditionalFields<BetterAuthConfig>()]
     }),
     {{camel_case_app_name}}: await universalSdk<IamSdkClient>({
       host: iamHost,
