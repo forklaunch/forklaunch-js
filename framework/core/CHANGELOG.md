@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.11.6
+
+### Patch Changes
+
+- Fix universal sdk bugs and address fetch thrashing internally
+
 ## 0.11.5
 
 ### Patch Changes

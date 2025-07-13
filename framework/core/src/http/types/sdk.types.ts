@@ -66,21 +66,49 @@ import {
  * });
  * ```
  **/
-export type FetchFunction<FetchMap> = <Path extends keyof FetchMap>(
+export type FetchFunction<FetchMap> = <
+  const Path extends keyof FetchMap,
+  const Method extends keyof FetchMap[Path]
+>(
   path: Path,
-  ...reqInit: FetchMap[Path] extends TypeSafeFunction
-    ? Parameters<FetchMap[Path]>[1] extends
-        | {
-            body: unknown;
+  ...reqInit: FetchMap[Path][Method] extends TypeSafeFunction
+    ? 'get' extends keyof FetchMap[Path]
+      ? FetchMap[Path]['get'] extends TypeSafeFunction
+        ? Parameters<FetchMap[Path]['get']>[1] extends
+            | {
+                body: unknown;
+              }
+            | { query: unknown }
+            | { params: unknown }
+            | { headers: unknown }
+          ? [
+              reqInit: Omit<Parameters<FetchMap[Path][Method]>[1], 'method'> & {
+                method: Method;
+              }
+            ]
+          : [
+              reqInit?: Omit<
+                Parameters<FetchMap[Path][Method]>[1],
+                'method'
+              > & {
+                method: Method;
+              }
+            ]
+        : [
+            reqInit: Omit<Parameters<FetchMap[Path][Method]>[1], 'method'> & {
+              method: Method;
+            }
+          ]
+      : [
+          reqInit: Omit<Parameters<FetchMap[Path][Method]>[1], 'method'> & {
+            method: Method;
           }
-        | { query: unknown }
-        | { params: unknown }
-        | { headers: unknown }
-      ? [reqInit: Parameters<FetchMap[Path]>[1]]
-      : [reqInit?: Parameters<FetchMap[Path]>[1]]
-    : [reqInit?: never]
+        ]
+    : []
 ) => Promise<
-  FetchMap[Path] extends TypeSafeFunction ? ReturnType<FetchMap[Path]> : never
+  FetchMap[Path][Method] extends TypeSafeFunction
+    ? ReturnType<FetchMap[Path][Method]>
+    : never
 >;
 
 /**

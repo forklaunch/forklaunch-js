@@ -1,5 +1,13 @@
 # @forklaunch/express
 
+## 0.7.6
+
+### Patch Changes
+
+- Fix universal sdk bugs and address fetch thrashing internally
+- Updated dependencies
+  - @forklaunch/core@0.11.6
+
 ## 0.7.5
 
 ### Patch Changes

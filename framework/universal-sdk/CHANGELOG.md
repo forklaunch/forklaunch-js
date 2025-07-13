@@ -1,5 +1,11 @@
 # @forklaunch/universal-sdk
 
+## 0.5.3
+
+### Patch Changes
+
+- Fix universal sdk bugs and address fetch thrashing internally
+
 ## 0.5.2
 
 ### Patch Changes

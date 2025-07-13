@@ -49,6 +49,11 @@ export const universalSdk = async <TypedController>(options: {
           return undefined;
         }
 
+        // TODO: revisit this to export fetch as a separate SDK client, when performance is figured out
+        if (prop === 'fetch') {
+          return sdkInternal.executeFetchCall;
+        }
+
         if (typeof prop === 'string' && prop in sdkInternal) {
           const value = sdkInternal[prop as keyof UniversalSdk];
           if (typeof value === 'function') {

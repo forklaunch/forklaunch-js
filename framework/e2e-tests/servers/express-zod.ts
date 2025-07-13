@@ -267,27 +267,7 @@ const filePostHandler = handlers.post(
   }
 );
 
-const getTest = forklaunchRouterInstance.get('/test', getHandler);
-const postTest = forklaunchRouterInstance.post('/test', postHandler);
-const jsonPatchTest = forklaunchRouterInstance.patch('/test', jsonPatchHandler);
-const multipartTest = forklaunchRouterInstance.post(
-  '/test/multipart',
-  multipartHandler
-);
-const urlEncodedFormTest = forklaunchRouterInstance.post(
-  '/test/url-encoded-form/:id',
-  urlEncodedFormHandler
-);
-const filePostTest = forklaunchRouterInstance.post(
-  '/test/file',
-  filePostHandler
-);
-
-const flNestedRouter = forklaunchRouter(
-  '/testpath/nested',
-  zodSchemaValidator,
-  openTelemetryCollector
-)
+const flRouter = forklaunchRouterInstance
   .get('/test', getHandler)
   .post('/test', postHandler)
   .patch('/test', jsonPatchHandler)
@@ -295,24 +275,26 @@ const flNestedRouter = forklaunchRouter(
   .post('/test/url-encoded-form/:id', urlEncodedFormHandler)
   .post('/test/file', filePostHandler);
 
-forklaunchApplication.use(forklaunchRouterInstance);
-forklaunchApplication.use(flNestedRouter);
+const flNestedRouter = forklaunchRouter(
+  '/testpath/nested',
+  zodSchemaValidator,
+  openTelemetryCollector
+)
+  .get('/test', getHandler)
+  .post('/test', postHandler);
 
-forklaunchApplication.listen(6935, () => {
-  console.log('server started on 6935');
-});
-
-export const liveTests = {
-  getTest,
-  postTest,
-  jsonPatchTest,
-  multipartTest,
-  urlEncodedFormTest,
-  filePostTest
-};
+export const sdkRouter = flRouter.use(flNestedRouter);
+forklaunchApplication.use(sdkRouter);
 
 export function start() {
   return forklaunchApplication.listen(6935, () => {
+    console.log('server started on 6935');
+  });
+}
+
+// Only run the server if this script is executed directly
+if (import.meta.url === `file://${process.argv[1]}`) {
+  forklaunchApplication.listen(6935, () => {
     console.log('server started on 6935');
   });
 }

@@ -135,10 +135,10 @@ export class UniversalSdk {
 
     const fullSdkPath = sdkPath.split('.');
     while (fullSdkPath.length > 0) {
-      fullSdkPath.shift();
       if (fullSdkPath.join('.') in this.sdkPathMap) {
         break;
       }
+      fullSdkPath.shift();
     }
     if (fullSdkPath.length === 0) {
       throw new Error(`Sdk path not found: ${sdkPath}`);
