@@ -6,7 +6,6 @@ import { z, ZodTypeDef } from 'zod/v3';
 import { AnatineSchemaObject, extendApi } from './zod-openapi';
 
 declare module 'zod/v3' {
-   
   interface ZodSchema<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     Output = any,

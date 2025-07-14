@@ -1,5 +1,11 @@
 # @forklaunch/infrastructure-s3
 
+## 0.2.7
+
+### Patch Changes
+
+- Add bucket initialization method for creation in S3
+
 ## 0.2.6
 
 ### Patch Changes
