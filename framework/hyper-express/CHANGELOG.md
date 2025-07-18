@@ -1,5 +1,47 @@
 # @forklaunch/hyper-express
 
+## 0.7.6
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.11.6
+
+## 0.7.5
+
+### Patch Changes
+
+- Update to zod v4, keeping zod v3 as active zod version
+- Updated dependencies
+  - @forklaunch/validator@0.7.7
+  - @forklaunch/common@0.4.5
+  - @forklaunch/core@0.11.5
+
+## 0.7.4
+
+### Patch Changes
+
+- Upgrade internal dependencies
+- Updated dependencies
+  - @forklaunch/validator@0.7.6
+  - @forklaunch/common@0.4.4
+  - @forklaunch/core@0.11.4
+
+## 0.7.3
+
+### Patch Changes
+
+- SDK client types simplified for better performance
+- Updated dependencies
+  - @forklaunch/core@0.11.3
+
+## 0.7.2
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.11.2
+
 ## 0.7.1
 
 ### Patch Changes

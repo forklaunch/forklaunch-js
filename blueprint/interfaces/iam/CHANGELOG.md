@@ -1,5 +1,11 @@
 # @forklaunch/interfaces-iam
 
+## 0.4.0
+
+### Minor Changes
+
+- change implementation structure, and update internal dependencies, SdkClient breaking changes
+
 ## 0.3.5
 
 ### Patch Changes

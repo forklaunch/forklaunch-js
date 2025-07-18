@@ -250,16 +250,6 @@ describe('handlers', () => {
         'x-test': 'string'
       }
     });
-    await liveTypeFunction.fetchMap['/organization/:id']('/organization/:id', {
-      method: 'GET',
-      params: {
-        id: '1234'
-      },
-      headers: {
-        authorization: 'Bearerz string',
-        'x-test': 'jjjj'
-      }
-    });
   });
 
   it('should be able to create a body param handler', async () => {

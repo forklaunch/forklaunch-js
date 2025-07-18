@@ -27,7 +27,7 @@ export type {
   ZodUnion,
   ZodUnknown,
   ZodVoid
-} from 'zod';
+} from 'zod/v3';
 export * from './staticSchemaValidator';
 export * from './types/schema.types';
 export { ZodSchemaValidator } from './zodSchemaValidator';

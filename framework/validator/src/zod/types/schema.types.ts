@@ -1,5 +1,6 @@
 import {
   ZodObject as OriginalZodObject,
+  z,
   ZodArray,
   ZodEffects,
   ZodLiteral,
@@ -8,9 +9,8 @@ import {
   ZodRawShape,
   ZodType,
   ZodTypeAny,
-  ZodUnknown,
-  z
-} from 'zod';
+  ZodUnknown
+} from 'zod/v3';
 import {
   IdiomaticSchema,
   Increment,

@@ -27,10 +27,7 @@ use crate::{
                 inject_into_import_statement::{
                     inject_into_import_statement, inject_specifier_into_import_statement,
                 },
-                inject_into_registrations_ts::{
-                    inject_in_registrations_ts_create_dependencies_args,
-                    inject_into_registrations_config_injector,
-                },
+                inject_into_registrations_ts::inject_into_registrations_config_injector,
             },
             parse_ast_program::parse_ast_program,
             replacements::{
@@ -295,16 +292,26 @@ pub(crate) fn transform_registrations_ts_worker_type(
                 &mut mikro_orm_import_program,
                 "@mikro-orm/core",
             )?;
-            let mut create_dependencies_program = parse_ast_program(
+            let mut mikro_orm_config_import_program = parse_ast_program(
                 &allocator,
-                "export function createDependencies(orm: MikroORM) {}",
+                "import mikroOrmOptionsConfig from './mikro-orm.config';",
                 SourceType::ts(),
             );
-            inject_in_registrations_ts_create_dependencies_args(
-                &allocator,
-                &mut create_dependencies_program,
+            replace_import_statment(
                 &mut registration_program,
+                &mut mikro_orm_config_import_program,
+                "./mikro-orm.config",
             )?;
+            // let mut create_dependencies_program = parse_ast_program(
+            //     &allocator,
+            //     "export function createDependencies() {}",
+            //     SourceType::ts(),
+            // );
+            // inject_in_registrations_ts_create_dependencies_args(
+            //     &allocator,
+            //     &mut create_dependencies_program,
+            //     &mut registration_program,
+            // )?;
             database_entity_manager_runtime_dependency(&allocator, &mut registration_program)?;
         }
         WorkerType::Kafka => {

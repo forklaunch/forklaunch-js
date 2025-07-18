@@ -117,74 +117,74 @@ pub(crate) fn inject_into_registrations_config_injector<'a>(
     Ok(())
 }
 
-pub(crate) fn inject_in_registrations_ts_create_dependencies_args<'a>(
-    allocator: &'a Allocator,
-    create_dependencies_program: &mut Program<'a>,
-    registrations_program: &mut Program<'a>,
-) -> Result<()> {
-    let new_function = create_dependencies_program
-        .body
-        .first_mut()
-        .map(|statement| match statement {
-            Statement::ExportNamedDeclaration(export) => match &mut export.declaration {
-                Some(Declaration::FunctionDeclaration(function)) => function,
-                _ => unreachable!(),
-            },
-            _ => unreachable!(),
-        })
-        .unwrap();
+// pub(crate) fn inject_in_registrations_ts_create_dependencies_args<'a>(
+//     allocator: &'a Allocator,
+//     create_dependencies_program: &mut Program<'a>,
+//     registrations_program: &mut Program<'a>,
+// ) -> Result<()> {
+//     let new_function = create_dependencies_program
+//         .body
+//         .first_mut()
+//         .map(|statement| match statement {
+//             Statement::ExportNamedDeclaration(export) => match &mut export.declaration {
+//                 Some(Declaration::FunctionDeclaration(function)) => function,
+//                 _ => unreachable!(),
+//             },
+//             _ => unreachable!(),
+//         })
+//         .unwrap();
 
-    for statement in &mut registrations_program.body {
-        let export = match statement {
-            Statement::ExportNamedDeclaration(export) => export,
-            _ => continue,
-        };
+//     for statement in &mut registrations_program.body {
+//         let export = match statement {
+//             Statement::ExportNamedDeclaration(export) => export,
+//             _ => continue,
+//         };
 
-        let function = match &mut export.declaration {
-            Some(Declaration::FunctionDeclaration(function)) => function,
-            _ => continue,
-        };
+//         let function = match &mut export.declaration {
+//             Some(Declaration::FunctionDeclaration(function)) => function,
+//             _ => continue,
+//         };
 
-        let cloned_type_parameters = function.type_parameters.clone_in(allocator);
-        let new_type_parameters = new_function.type_parameters.clone_in(allocator);
+//         let cloned_type_parameters = function.type_parameters.clone_in(allocator);
+//         let new_type_parameters = new_function.type_parameters.clone_in(allocator);
 
-        if cloned_type_parameters.is_none() {
-            function.type_parameters = new_type_parameters;
-        } else {
-            let params = cloned_type_parameters
-                .unwrap()
-                .params
-                .iter()
-                .map(|param| param.name.to_string())
-                .collect::<HashSet<String>>();
+//         if cloned_type_parameters.is_none() {
+//             function.type_parameters = new_type_parameters;
+//         } else {
+//             let params = cloned_type_parameters
+//                 .unwrap()
+//                 .params
+//                 .iter()
+//                 .map(|param| param.name.to_string())
+//                 .collect::<HashSet<String>>();
 
-            for param in new_type_parameters.unwrap().params.iter() {
-                if !params.contains(&param.name.to_string()) {
-                    function
-                        .type_parameters
-                        .as_mut()
-                        .unwrap()
-                        .params
-                        .push(param.clone_in(allocator));
-                }
-            }
-        }
+//             for param in new_type_parameters.unwrap().params.iter() {
+//                 if !params.contains(&param.name.to_string()) {
+//                     function
+//                         .type_parameters
+//                         .as_mut()
+//                         .unwrap()
+//                         .params
+//                         .push(param.clone_in(allocator));
+//                 }
+//             }
+//         }
 
-        let params = function
-            .params
-            .items
-            .clone_in(allocator)
-            .iter()
-            .map(|fp| fp.pattern.get_identifier_name().unwrap().to_string())
-            .collect::<HashSet<String>>();
-        let new_params = new_function.params.items.clone_in(allocator);
+//         let params = function
+//             .params
+//             .items
+//             .clone_in(allocator)
+//             .iter()
+//             .map(|fp| fp.pattern.get_identifier_name().unwrap().to_string())
+//             .collect::<HashSet<String>>();
+//         let new_params = new_function.params.items.clone_in(allocator);
 
-        for param in new_params.iter() {
-            if !params.contains(&param.pattern.get_identifier_name().unwrap().to_string()) {
-                function.params.items.push(param.clone_in(allocator));
-            }
-        }
-    }
+//         for param in new_params.iter() {
+//             if !params.contains(&param.pattern.get_identifier_name().unwrap().to_string()) {
+//                 function.params.items.push(param.clone_in(allocator));
+//             }
+//         }
+//     }
 
-    Ok(())
-}
+//     Ok(())
+// }

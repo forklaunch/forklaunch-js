@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { noop } from '@forklaunch/common';
-import { OpenTelemetryCollector, SdkClient } from '@forklaunch/core/http';
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import {
   forklaunchExpress,
   forklaunchRouter,
@@ -267,36 +267,24 @@ const filePostHandler = handlers.post(
   }
 );
 
-const getTest = forklaunchRouterInstance.get('/test', getHandler);
-const postTest = forklaunchRouterInstance.post('/test', postHandler);
-const jsonPatchTest = forklaunchRouterInstance.patch('/test', jsonPatchHandler);
-const multipartTest = forklaunchRouterInstance.post(
-  '/test/multipart',
-  multipartHandler
-);
-const urlEncodedFormTest = forklaunchRouterInstance.post(
-  '/test/url-encoded-form/:id',
-  urlEncodedFormHandler
-);
-const filePostTest = forklaunchRouterInstance.post(
-  '/test/file',
-  filePostHandler
-);
+const flRouter = forklaunchRouterInstance
+  .get('/test', getHandler)
+  .post('/test', postHandler)
+  .patch('/test', jsonPatchHandler)
+  .post('/test/multipart', multipartHandler)
+  .post('/test/url-encoded-form/:id', urlEncodedFormHandler)
+  .post('/test/file', filePostHandler);
 
-forklaunchApplication.use(forklaunchRouterInstance);
+const flNestedRouter = forklaunchRouter(
+  '/testpath/nested',
+  zodSchemaValidator,
+  openTelemetryCollector
+)
+  .get('/test', getHandler)
+  .post('/test', postHandler);
 
-forklaunchApplication.listen(6935, () => {
-  console.log('server started on 6935');
-});
-
-export const liveTests = {
-  getTest,
-  postTest,
-  jsonPatchTest,
-  multipartTest,
-  urlEncodedFormTest,
-  filePostTest
-};
+export const sdkRouter = flRouter.use(flNestedRouter);
+forklaunchApplication.use(sdkRouter);
 
 export function start() {
   return forklaunchApplication.listen(6935, () => {
@@ -304,16 +292,12 @@ export function start() {
   });
 }
 
-export type SDK = SdkClient<
-  [
-    typeof getTest,
-    typeof postTest,
-    typeof jsonPatchTest,
-    typeof multipartTest,
-    typeof urlEncodedFormTest,
-    typeof filePostTest
-  ]
->;
+// Only run the server if this script is executed directly
+if (import.meta.url === `file://${process.argv[1]}`) {
+  forklaunchApplication.listen(6935, () => {
+    console.log('server started on 6935');
+  });
+}
 
 // Temporary shim for supporting TSGO experimental compiler
 import type * as ExpressStaticCore from 'express-serve-static-core';

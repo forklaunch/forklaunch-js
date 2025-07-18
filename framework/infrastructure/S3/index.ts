@@ -1,8 +1,10 @@
 import {
+  CreateBucketCommand,
   DeleteObjectCommand,
   DeleteObjectsCommand,
   DeleteObjectsCommandInput,
   GetObjectCommand,
+  HeadBucketCommand,
   PutObjectCommand,
   PutObjectCommandInput,
   S3Client
@@ -45,6 +47,7 @@ interface S3ObjectStoreOptions {
 export class S3ObjectStore implements ObjectStore<S3Client> {
   private s3: S3Client;
   private bucket: string;
+  private initialized: boolean;
 
   /**
    * Creates a new S3ObjectStore instance.
@@ -62,6 +65,17 @@ export class S3ObjectStore implements ObjectStore<S3Client> {
   ) {
     this.s3 = options.client || new S3Client(options.clientConfig || {});
     this.bucket = options.bucket;
+    this.initialized = false;
+  }
+
+  private async ensureBucketExists() {
+    try {
+      await this.s3.send(new HeadBucketCommand({ Bucket: this.bucket }));
+    } catch {
+      await this.s3.send(new CreateBucketCommand({ Bucket: this.bucket }));
+    }
+
+    this.initialized = true;
   }
 
   /**
@@ -73,6 +87,10 @@ export class S3ObjectStore implements ObjectStore<S3Client> {
    * await store.putObject({ key: 'user-1', name: 'Alice' });
    */
   async putObject<T>(object: T & { key: string }): Promise<void> {
+    if (!this.initialized) {
+      await this.ensureBucketExists();
+    }
+
     const { key, ...rest } = object;
     const params: PutObjectCommandInput = {
       Bucket: this.bucket,

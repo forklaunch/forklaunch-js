@@ -78,22 +78,49 @@ export interface LiveTypeRouteDefinition<
     >
   ): ChainableRouter & {
     fetchMap: Prettify<
-      ChainableRouter['fetchMap'] &
-        Record<
-          SanitizePathSlashes<`${BasePath}${Path}`>,
-          LiveTypeFunction<
-            SV,
-            SanitizePathSlashes<`${BasePath}${Path}`>,
-            P,
-            ResBodyMap,
-            ReqBody,
-            ReqQuery,
-            ReqHeaders,
-            ResHeaders,
-            ContractMethod,
-            Auth
-          >
-        >
+      ChainableRouter['fetchMap'] extends Record<
+        SanitizePathSlashes<`${BasePath}${Path}`>,
+        unknown
+      >
+        ? ChainableRouter['fetchMap'] &
+            Record<
+              SanitizePathSlashes<`${BasePath}${Path}`>,
+              ChainableRouter['fetchMap'][SanitizePathSlashes<`${BasePath}${Path}`>] &
+                Record<
+                  Uppercase<ContractMethod>,
+                  LiveTypeFunction<
+                    SV,
+                    SanitizePathSlashes<`${BasePath}${Path}`>,
+                    P,
+                    ResBodyMap,
+                    ReqBody,
+                    ReqQuery,
+                    ReqHeaders,
+                    ResHeaders,
+                    ContractMethod,
+                    Auth
+                  >
+                >
+            >
+        : ChainableRouter['fetchMap'] &
+            Record<
+              SanitizePathSlashes<`${BasePath}${Path}`>,
+              Record<
+                Uppercase<ContractMethod>,
+                LiveTypeFunction<
+                  SV,
+                  SanitizePathSlashes<`${BasePath}${Path}`>,
+                  P,
+                  ResBodyMap,
+                  ReqBody,
+                  ReqQuery,
+                  ReqHeaders,
+                  ResHeaders,
+                  ContractMethod,
+                  Auth
+                >
+              >
+            >
     >;
     sdk: Prettify<
       ChainableRouter['sdk'] &
@@ -181,22 +208,49 @@ export interface LiveTypeRouteDefinition<
     ]
   ): ChainableRouter & {
     fetchMap: Prettify<
-      ChainableRouter['fetchMap'] &
-        Record<
-          SanitizePathSlashes<`${BasePath}${Path}`>,
-          LiveTypeFunction<
-            SV,
-            SanitizePathSlashes<`${BasePath}${Path}`>,
-            P,
-            ResBodyMap,
-            ReqBody,
-            ReqQuery,
-            ReqHeaders,
-            ResHeaders,
-            ContractMethod,
-            Auth
-          >
-        >
+      ChainableRouter['fetchMap'] extends Record<
+        SanitizePathSlashes<`${BasePath}${Path}`>,
+        unknown
+      >
+        ? ChainableRouter['fetchMap'] &
+            Record<
+              SanitizePathSlashes<`${BasePath}${Path}`>,
+              ChainableRouter['fetchMap'][SanitizePathSlashes<`${BasePath}${Path}`>] &
+                Record<
+                  Uppercase<ContractMethod>,
+                  LiveTypeFunction<
+                    SV,
+                    SanitizePathSlashes<`${BasePath}${Path}`>,
+                    P,
+                    ResBodyMap,
+                    ReqBody,
+                    ReqQuery,
+                    ReqHeaders,
+                    ResHeaders,
+                    ContractMethod,
+                    Auth
+                  >
+                >
+            >
+        : ChainableRouter['fetchMap'] &
+            Record<
+              SanitizePathSlashes<`${BasePath}${Path}`>,
+              Record<
+                Uppercase<ContractMethod>,
+                LiveTypeFunction<
+                  SV,
+                  SanitizePathSlashes<`${BasePath}${Path}`>,
+                  P,
+                  ResBodyMap,
+                  ReqBody,
+                  ReqQuery,
+                  ReqHeaders,
+                  ResHeaders,
+                  ContractMethod,
+                  Auth
+                >
+              >
+            >
     >;
     sdk: Prettify<
       ChainableRouter['sdk'] &
@@ -265,22 +319,49 @@ export interface LiveTypeRouteDefinition<
     >[]
   ): ChainableRouter & {
     fetchMap: Prettify<
-      ChainableRouter['fetchMap'] &
-        Record<
-          SanitizePathSlashes<`${BasePath}${Path}`>,
-          LiveTypeFunction<
-            SV,
-            SanitizePathSlashes<`${BasePath}${Path}`>,
-            P,
-            ResBodyMap,
-            ReqBody,
-            ReqQuery,
-            ReqHeaders,
-            ResHeaders,
-            ContractMethod,
-            Auth
-          >
-        >
+      ChainableRouter['fetchMap'] extends Record<
+        SanitizePathSlashes<`${BasePath}${Path}`>,
+        unknown
+      >
+        ? ChainableRouter['fetchMap'] &
+            Record<
+              SanitizePathSlashes<`${BasePath}${Path}`>,
+              ChainableRouter['fetchMap'][SanitizePathSlashes<`${BasePath}${Path}`>] &
+                Record<
+                  Uppercase<ContractMethod>,
+                  LiveTypeFunction<
+                    SV,
+                    SanitizePathSlashes<`${BasePath}${Path}`>,
+                    P,
+                    ResBodyMap,
+                    ReqBody,
+                    ReqQuery,
+                    ReqHeaders,
+                    ResHeaders,
+                    ContractMethod,
+                    Auth
+                  >
+                >
+            >
+        : ChainableRouter['fetchMap'] &
+            Record<
+              SanitizePathSlashes<`${BasePath}${Path}`>,
+              Record<
+                Uppercase<ContractMethod>,
+                LiveTypeFunction<
+                  SV,
+                  SanitizePathSlashes<`${BasePath}${Path}`>,
+                  P,
+                  ResBodyMap,
+                  ReqBody,
+                  ReqQuery,
+                  ReqHeaders,
+                  ResHeaders,
+                  ContractMethod,
+                  Auth
+                >
+              >
+            >
     >;
     sdk: Prettify<
       ChainableRouter['sdk'] &

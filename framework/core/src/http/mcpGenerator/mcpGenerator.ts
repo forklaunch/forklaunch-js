@@ -1,6 +1,6 @@
 import { isNever, isRecord, safeStringify } from '@forklaunch/common';
 import { string, ZodSchemaValidator } from '@forklaunch/validator/zod';
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { FastMCP } from 'fastmcp';
 import {
   discriminateBody,
   discriminateResponseBodies
@@ -17,13 +17,18 @@ import { ForklaunchRouter } from '../types/router.types';
  * @param {ForklaunchRouter<SV>[]} routers - The routers to include in the server.
  * @returns {McpServer} - The generated ModelContextProtocol server.
  */
-export function generateMcpServer(
+export function generateMcpServer<
+  T extends Record<string, unknown> | undefined =
+    | Record<string, unknown>
+    | undefined
+>(
   schemaValidator: ZodSchemaValidator,
   protocol: 'http' | 'https',
   host: string,
   port: number,
-  version: string,
+  version: `${number}.${number}.${number}`,
   routers: ForklaunchRouter<ZodSchemaValidator>[],
+  options?: ConstructorParameters<typeof FastMCP<T>>[0],
   contentTypeMap?: Record<string, string>
 ) {
   if (!(schemaValidator instanceof ZodSchemaValidator)) {
@@ -32,9 +37,10 @@ export function generateMcpServer(
     );
   }
 
-  const mcpServer = new McpServer({
-    name: 'example-server',
-    version: version
+  const mcpServer = new FastMCP({
+    ...options,
+    name: options?.name ?? 'mcp-server',
+    version
   });
 
   unpackRouters<ZodSchemaValidator>(routers).forEach(({ fullPath, router }) => {
@@ -49,7 +55,7 @@ export function generateMcpServer(
         );
       }
 
-      const inputSchema = {
+      const inputSchema = schemaValidator.schemify({
         ...(discriminatedBody && 'body' in route.contractDetails
           ? {
               ...('contentType' in route.contractDetails.body
@@ -82,13 +88,13 @@ export function generateMcpServer(
               })
             }
           : {})
-      };
+      });
 
-      mcpServer.tool(
-        route.contractDetails.name,
-        route.contractDetails.summary,
-        inputSchema,
-        async (args) => {
+      mcpServer.addTool({
+        name: route.contractDetails.name,
+        description: route.contractDetails.summary,
+        parameters: inputSchema,
+        execute: async (args) => {
           const { contentType, body, params, query, headers } = args as {
             contentType?: string;
             params?: Record<string, string | number | boolean>;
@@ -245,7 +251,7 @@ export function generateMcpServer(
               };
           }
         }
-      );
+      });
     });
   });
 

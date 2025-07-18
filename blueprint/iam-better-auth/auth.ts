@@ -49,15 +49,13 @@ export const betterAuthConfig = ({
           type: 'string',
           required: false
         },
-        roleIds: {
-          type: 'string[]',
-          required: false,
-          input: false
-        },
-        organizationId: {
+        organization: {
           type: 'string',
-          required: false,
-          input: false
+          required: false
+        },
+        roles: {
+          type: 'string[]',
+          required: false
         }
       }
     },
@@ -68,15 +66,15 @@ export const betterAuthConfig = ({
             return {
               data: {
                 ...user,
-                ...(ctx?.body.organizationId
+                ...(ctx?.body.organization
                   ? {
                       organization: {
-                        $in: [ctx?.body.organizationId]
+                        $in: [ctx?.body.organization]
                       }
                     }
                   : {}),
                 roles: {
-                  $in: ctx?.body.roleIds ? ctx?.body.roleIds : []
+                  $in: ctx?.body.roles ? ctx?.body.roles : []
                 }
               }
             };
@@ -85,7 +83,9 @@ export const betterAuthConfig = ({
       }
     },
     advanced: {
-      generateId: false
+      database: {
+        generateId: false
+      }
     },
     logger: openTelemetryCollector
   }) satisfies BetterAuthOptions;

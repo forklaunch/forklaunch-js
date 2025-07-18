@@ -15,10 +15,10 @@ export class CreateUserMapper extends RequestMapper<User, SchemaValidator> {
       {
         ...this.dto,
         organization: await em.findOne(Organization, {
-          id: this.dto.organizationId
+          id: this.dto.organization
         }),
         roles: await em.findAll(Role, {
-          where: { id: { $in: this.dto.roleIds } }
+          where: { id: { $in: this.dto.roles } }
         }),
         createdAt: new Date(),
         updatedAt: new Date()

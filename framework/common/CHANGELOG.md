@@ -1,5 +1,17 @@
 # @forklaunch/common
 
+## 0.4.5
+
+### Patch Changes
+
+- Update to zod v4, keeping zod v3 as active zod version
+
+## 0.4.4
+
+### Patch Changes
+
+- Upgrade internal dependencies
+
 ## 0.4.3
 
 ### Patch Changes

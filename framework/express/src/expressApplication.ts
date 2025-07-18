@@ -13,7 +13,6 @@ import {
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { ZodSchemaValidator } from '@forklaunch/validator/zod';
-import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { apiReference } from '@scalar/express-api-reference';
 import crypto from 'crypto';
 import express, {
@@ -42,7 +41,8 @@ import { ExpressOptions } from './types/expressOptions.types';
  * ```
  */
 export class Application<
-  SV extends AnySchemaValidator
+  SV extends AnySchemaValidator,
+  T extends Record<string, unknown> | undefined
 > extends ForklaunchExpressLikeApplication<
   SV,
   Express,
@@ -62,7 +62,7 @@ export class Application<
   constructor(
     schemaValidator: SV,
     openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-    options?: ExpressOptions
+    options?: ExpressOptions<T>
   ) {
     super(
       schemaValidator,
@@ -131,51 +131,69 @@ export class Application<
       const routers = this
         .routers as unknown as ForklaunchRouter<ZodSchemaValidator>[];
 
-      this.internal.get('/mcp', async (_req, res) => {
-        const server = generateMcpServer(
-          zodSchemaValidator,
-          protocol,
-          host,
-          port,
-          '1.0.0',
-          routers
-        );
-        res.json(server);
-      });
+      // TODO: clean up if fastmcp is stable enough
+      // this.internal.get('/mcp', async (_req, res) => {
+      //   const server = generateMcpServer(
+      //     zodSchemaValidator,
+      //     protocol,
+      //     host,
+      //     port,
+      //     '1.0.0',
+      //     routers
+      //   );
+      //   res.json(server);
+      // });
 
-      this.internal.post('/mcp', async (req, res) => {
-        try {
-          const server = generateMcpServer(
-            zodSchemaValidator,
-            protocol,
-            host,
-            port,
-            '1.0.0',
-            routers
-          );
-          const transport: StreamableHTTPServerTransport =
-            new StreamableHTTPServerTransport({
-              sessionIdGenerator: undefined
-            });
-          res.on('close', () => {
-            transport.close();
-            server.close();
-          });
-          await server.connect(transport);
-          await transport.handleRequest(req, res, req.body);
-        } catch (error) {
-          console.error('Error handling MCP request:', error);
-          if (!res.headersSent) {
-            res.status(500).json({
-              jsonrpc: '2.0',
-              error: {
-                code: -32603,
-                message: 'Internal server error'
-              },
-              id: null
-            });
-          }
-        }
+      // this.internal.post('/mcp', async (req, res) => {
+      //   try {
+      //     const server = generateMcpServer(
+      //       zodSchemaValidator,
+      //       protocol,
+      //       host,
+      //       port,
+      //       '1.0.0',
+      //       routers
+      //     );
+      //     const transport: StreamableHTTPServerTransport =
+      //       new StreamableHTTPServerTransport({
+      //         sessionIdGenerator: undefined
+      //       });
+      //     res.on('close', () => {
+      //       transport.close();
+      //       server.close();
+      //     });
+      //     await server.connect(transport);
+      //     await transport.handleRequest(req, res, req.body);
+      //   } catch (error) {
+      //     console.error('Error handling MCP request:', error);
+      //     if (!res.headersSent) {
+      //       res.status(500).json({
+      //         jsonrpc: '2.0',
+      //         error: {
+      //           code: -32603,
+      //           message: 'Internal server error'
+      //         },
+      //         id: null
+      //       });
+      //     }
+      //   }
+      // });
+      // END TODO
+
+      const mcpServer = generateMcpServer(
+        zodSchemaValidator,
+        protocol,
+        host,
+        port,
+        '1.0.0',
+        routers
+      );
+      mcpServer.start({
+        httpStream: {
+          endpoint: '/mcp',
+          port: port + 1
+        },
+        transportType: 'httpStream'
       });
     }
 

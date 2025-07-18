@@ -47,6 +47,43 @@ export interface RequestContext {
   span?: Span;
 }
 
+export interface ForklaunchBaseRequest<
+  P extends ParamsDictionary,
+  ReqBody extends Record<string, unknown>,
+  ReqQuery extends ParsedQs,
+  ReqHeaders extends Record<string, string>
+> {
+  /** Request parameters */
+  params: P;
+  /** Request headers */
+  headers: ReqHeaders;
+  /** Request body */
+  body: ReqBody;
+  /** Request query */
+  query: ReqQuery;
+
+  /** Method */
+  method:
+    | 'GET'
+    | 'POST'
+    | 'PUT'
+    | 'PATCH'
+    | 'DELETE'
+    | 'OPTIONS'
+    | 'HEAD'
+    | 'CONNECT'
+    | 'TRACE';
+
+  /** Request path */
+  path: string;
+
+  /** Original path */
+  originalPath: string;
+
+  /** OpenTelemetry Collector */
+  openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
+}
+
 /**
  * Interface representing a Forklaunch request.
  *
@@ -371,6 +408,27 @@ export type ResolvedForklaunchRequest<
         ReqHeaders
       >
         ? ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>[key]
+        : key extends keyof BaseRequest
+          ? BaseRequest[key]
+          : never;
+    };
+
+export type ResolvedForklaunchAuthRequest<
+  P extends ParamsDictionary,
+  ReqBody extends Record<string, unknown>,
+  ReqQuery extends ParsedQs,
+  ReqHeaders extends Record<string, string>,
+  BaseRequest
+> = unknown extends BaseRequest
+  ? ForklaunchBaseRequest<P, ReqBody, ReqQuery, ReqHeaders>
+  : {
+      [key in keyof BaseRequest]: key extends keyof ForklaunchBaseRequest<
+        P,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders
+      >
+        ? ForklaunchBaseRequest<P, ReqBody, ReqQuery, ReqHeaders>[key]
         : key extends keyof BaseRequest
           ? BaseRequest[key]
           : never;

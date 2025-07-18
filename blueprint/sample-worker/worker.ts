@@ -1,76 +1,77 @@
+import { getEnvVar } from '@forklaunch/common';
 import {
   WorkerFailureHandler,
   WorkerProcessFunction
 } from '@forklaunch/interfaces-worker/types';
-import { bootstrap } from './bootstrapper';
+import dotenv from 'dotenv';
 import { SampleWorkerEventRecord } from './persistence/entities/sampleWorkerRecord.entity';
+import { createDependencies } from './registrations';
 
-bootstrap(async (ci, tokens) => {
-  const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
-  const s3 = ci.resolve(tokens.S3ObjectStore);
+//! bootstrap resources and config
+const envFilePath = getEnvVar('DOTENV_FILE_PATH');
+dotenv.config({ path: envFilePath });
 
-  const processEvents: (
-    name: string
-  ) => WorkerProcessFunction<SampleWorkerEventRecord> =
-    (name: string) => async (events) => {
-      const failedEvents = [];
+const { serviceDependencies, tokens } = createDependencies();
+const ci = serviceDependencies.validateConfigSingletons(envFilePath);
 
-      for (const event of events) {
-        try {
-          openTelemetryCollector.info(
-            `processing message from ${name}: ${event.message}`
-          );
-          s3.putObject({
-            key: event.id,
-            value: event
-          });
-          event.processed = true;
-        } catch (error) {
-          failedEvents.push({
-            value: event,
-            error: error as Error
-          });
-        }
+const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
+const s3 = ci.resolve(tokens.S3ObjectStore);
+
+const processEvents: (
+  name: string
+) => WorkerProcessFunction<SampleWorkerEventRecord> =
+  (name: string) => async (events) => {
+    const failedEvents = [];
+
+    for (const event of events) {
+      try {
+        openTelemetryCollector.info(
+          `processing message from ${name}: ${event.message}`
+        );
+        s3.putObject({
+          key: event.id,
+          value: event
+        });
+        event.processed = true;
+      } catch (error) {
+        failedEvents.push({
+          value: event,
+          error: error as Error
+        });
       }
+    }
 
-      return failedEvents;
-    };
-
-  const processErrors: WorkerFailureHandler<SampleWorkerEventRecord> = async (
-    events
-  ) => {
-    events.forEach((event) => {
-      openTelemetryCollector.error(
-        event.error,
-        'error processing message',
-        event.value
-      );
-    });
+    return failedEvents;
   };
 
-  const queues = [];
+const processErrors: WorkerFailureHandler<SampleWorkerEventRecord> = async (
+  events
+) => {
+  events.forEach((event) => {
+    openTelemetryCollector.error(
+      event.error,
+      'error processing message',
+      event.value
+    );
+  });
+};
 
-  const databaseWorkerConsumer = ci.resolve(
-    tokens.SampleWorkerDatabaseConsumer
-  );
-  queues.push(
-    databaseWorkerConsumer(processEvents('database'), processErrors).start()
-  );
+const queues = [];
 
-  const redisWorkerConsumer = ci.resolve(tokens.SampleWorkerRedisConsumer);
-  queues.push(
-    redisWorkerConsumer(processEvents('redis'), processErrors).start()
-  );
+const databaseWorkerConsumer = ci.resolve(tokens.SampleWorkerDatabaseConsumer);
+queues.push(
+  databaseWorkerConsumer(processEvents('database'), processErrors).start()
+);
 
-  const bullMqWorkerConsumer = ci.resolve(tokens.SampleWorkerBullMqConsumer);
-  queues.push(
-    bullMqWorkerConsumer(processEvents('bullmq'), processErrors).start()
-  );
+const redisWorkerConsumer = ci.resolve(tokens.SampleWorkerRedisConsumer);
+queues.push(redisWorkerConsumer(processEvents('redis'), processErrors).start());
 
-  const kafkaWorkerConsumer = ci.resolve(tokens.SampleWorkerKafkaConsumer);
-  queues.push(
-    kafkaWorkerConsumer(processEvents('kafka'), processErrors).start()
-  );
+const bullMqWorkerConsumer = ci.resolve(tokens.SampleWorkerBullMqConsumer);
+queues.push(
+  bullMqWorkerConsumer(processEvents('bullmq'), processErrors).start()
+);
 
-  await Promise.all(queues);
-});
+const kafkaWorkerConsumer = ci.resolve(tokens.SampleWorkerKafkaConsumer);
+queues.push(kafkaWorkerConsumer(processEvents('kafka'), processErrors).start());
+
+await Promise.all(queues);

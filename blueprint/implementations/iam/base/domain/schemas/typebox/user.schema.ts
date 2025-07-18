@@ -14,8 +14,8 @@ export const CreateUserSchema = {
   password: string,
   firstName: string,
   lastName: string,
-  organizationId: string,
-  roleIds: array(string),
+  organization: string,
+  roles: array(string),
   phoneNumber: optional(string),
   subscription: optional(string),
   providerFields: optional(unknown)
@@ -27,7 +27,7 @@ export const UpdateUserSchema = ({ uuidId }: { uuidId: boolean }) => ({
   password: optional(string),
   firstName: optional(string),
   lastName: optional(string),
-  roleIds: optional(array(string)),
+  roles: optional(array(string)),
   phoneNumber: optional(string),
   subscription: optional(string),
   providerFields: optional(unknown)

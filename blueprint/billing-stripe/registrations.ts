@@ -64,6 +64,7 @@ import {
   PlanEntities,
   SubscriptionEntities
 } from './domain/types/mapperEntities.types';
+import mikroOrmOptionsConfig from './mikro-orm.config';
 
 //! defines the schemas for the billing portal service
 export const BillingPortalSchemas = StripeBillingPortalServiceSchemas({
@@ -82,7 +83,7 @@ export const SubscriptionSchemas = StripeSubscriptionServiceSchemas({
   validator: SchemaValidator()
 });
 //! defines the configuration schema for the application
-export function createDependencies(orm: MikroORM) {
+export function createDependencies() {
   const configInjector = createConfigInjector(SchemaValidator(), {
     SERVICE_METADATA: {
       lifetime: Lifetime.Singleton,
@@ -151,6 +152,11 @@ export function createDependencies(orm: MikroORM) {
       type: Stripe,
       factory: ({ STRIPE_API_KEY }) => new Stripe(STRIPE_API_KEY)
     },
+    MikroORM: {
+      lifetime: Lifetime.Singleton,
+      type: MikroORM,
+      factory: () => MikroORM.initSync(mikroOrmOptionsConfig)
+    },
     OpenTelemetryCollector: {
       lifetime: Lifetime.Singleton,
       type: OpenTelemetryCollector<Metrics>,
@@ -180,8 +186,10 @@ export function createDependencies(orm: MikroORM) {
     EntityManager: {
       lifetime: Lifetime.Scoped,
       type: EntityManager,
-      factory: (_args, _resolve, context) =>
-        orm.em.fork(context?.entityManagerOptions as ForkOptions | undefined)
+      factory: ({ MikroORM }, _resolve, context) =>
+        MikroORM.em.fork(
+          context?.entityManagerOptions as ForkOptions | undefined
+        )
     }
   });
   //! defines the service dependencies for the application

@@ -72,6 +72,36 @@ fn delete_from_universal_sdk_function<'a>(
                     }
                 }
 
+                // Handle return type annotation (Promise<{ }>) deletion
+                if let Some(return_type) = &mut arrow_func.return_type {
+                    if let TSType::TSTypeReference(type_ref) = &mut return_type.type_annotation {
+                        if let Some(type_params) = &mut type_ref.type_parameters {
+                            if let Some(TSType::TSTypeLiteral(promise_type_literal)) =
+                                type_params.params.first_mut()
+                            {
+                                let mut new_promise_members = Vec::new_in(allocator);
+                                promise_type_literal.members.iter().for_each(|member| {
+                                    match member {
+                                        TSSignature::TSPropertySignature(prop) => {
+                                            if let Some(prop_name) = prop.key.name() {
+                                                if prop_name == camel_case_name {
+                                                    return;
+                                                }
+                                                new_promise_members
+                                                    .push(member.clone_in(allocator));
+                                            }
+                                        }
+                                        _ => {
+                                            new_promise_members.push(member.clone_in(allocator));
+                                        }
+                                    };
+                                });
+                                promise_type_literal.members = new_promise_members;
+                            }
+                        }
+                    }
+                }
+
                 if let Some(Statement::ExpressionStatement(return_stmt)) =
                     arrow_func.body.as_mut().statements.first_mut()
                 {
@@ -124,4 +154,54 @@ pub(crate) fn delete_from_universal_sdk<'a>(
     delete_from_universal_sdk_function(allocator, app_program_ast, camel_case_name)?;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use oxc_allocator::Allocator;
+    use oxc_ast::ast::SourceType;
+    use oxc_codegen::{CodeGenerator, CodegenOptions};
+
+    use super::*;
+    use crate::core::ast::parse_ast_program::parse_ast_program;
+
+    #[test]
+    fn test_delete_from_universal_sdk_function() {
+        let allocator = Allocator::default();
+
+        let app_code = r#"
+        export const universalSdk = ({ userServiceHost, otherServiceHost }: {
+            userServiceHost: string
+            otherServiceHost: string
+        }): Promise<{
+            userService: UserServiceSdkClient
+            otherService: OtherServiceSdkClient
+        }> => ({
+            userService: await universalSdk<UserServiceSdkClient>({
+                host: userServiceHost,
+                registryOptions: { path: "api/v1/openapi" }
+            }),
+            otherService: await universalSdk<OtherServiceSdkClient>({
+                host: otherServiceHost,
+                registryOptions: { path: "api/v1/openapi" }
+            })
+        });
+        "#;
+        let mut app_program = parse_ast_program(&allocator, app_code, SourceType::ts());
+
+        let result =
+            delete_from_universal_sdk_function(&allocator, &mut app_program, "userService");
+
+        assert!(result.is_ok());
+
+        let expected_code = "export const universalSdk = ({ otherServiceHost }: {\n\totherServiceHost: string\n}): Promise<{\n\totherService: OtherServiceSdkClient\n}> => ({ otherService: await universalSdk<OtherServiceSdkClient>({\n\thost: otherServiceHost,\n\tregistryOptions: { path: \"api/v1/openapi\" }\n}) });\n";
+
+        assert_eq!(
+            CodeGenerator::new()
+                .with_options(CodegenOptions::default())
+                .build(&app_program)
+                .code,
+            expected_code
+        );
+    }
 }

@@ -1,5 +1,5 @@
-import { generateSchema } from '@anatine/zod-openapi';
-import { ZodLiteral, ZodObject, ZodTypeAny, record, z } from 'zod';
+import { ZodLiteral, ZodObject, ZodTypeAny, record, z } from 'zod/v3';
+import { generateSchema } from '../../shims/zod-v3-openapi/zod-openapi';
 import { UnboxedObjectSchema } from '../../src/shared/types/schema.types';
 import { prettyPrintParseErrors } from '../../src/shared/utils/prettyPrintParseErrors';
 import {

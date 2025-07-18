@@ -59,6 +59,7 @@ import {
   SubscriptionMapper,
   UpdateSubscriptionMapper
 } from './domain/mappers/subscription.mappers';
+import mikroOrmOptionsConfig from './mikro-orm.config';
 import {
   BillingPortal,
   CheckoutSession,
@@ -88,7 +89,7 @@ export const SubscriptionSchemas = BaseSubscriptionServiceSchemas({
   validator: SchemaValidator()
 });
 //! defines the configuration schema for the application
-export function createDependencies(orm: MikroORM) {
+export function createDependencies() {
   const configInjector = createConfigInjector(SchemaValidator(), {
     SERVICE_METADATA: {
       lifetime: Lifetime.Singleton,
@@ -147,6 +148,11 @@ export function createDependencies(orm: MikroORM) {
   });
   //! defines the runtime dependencies for the application
   const runtimeDependencies = environmentConfig.chain({
+    MikroORM: {
+      lifetime: Lifetime.Singleton,
+      type: MikroORM,
+      factory: () => MikroORM.initSync(mikroOrmOptionsConfig)
+    },
     OpenTelemetryCollector: {
       lifetime: Lifetime.Singleton,
       type: OpenTelemetryCollector<Metrics>,
@@ -176,8 +182,10 @@ export function createDependencies(orm: MikroORM) {
     EntityManager: {
       lifetime: Lifetime.Scoped,
       type: EntityManager,
-      factory: (_args, _resolve, context) =>
-        orm.em.fork(context?.entityManagerOptions as ForkOptions | undefined)
+      factory: ({ MikroORM }, _resolve, context) =>
+        MikroORM.em.fork(
+          context?.entityManagerOptions as ForkOptions | undefined
+        )
     }
   });
   //! defines the service dependencies for the application

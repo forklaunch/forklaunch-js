@@ -9,7 +9,7 @@ import {
 } from '@forklaunch/express';
 import { SchemaValidator } from '@forklaunch/validator/zod';
 import { NextFunction, Request, Response } from 'express';
-import { z } from 'zod';
+import { z } from 'zod/v3';
 
 const zodSchemaValidator = SchemaValidator();
 const openTelemetryCollector = new OpenTelemetryCollector('test');

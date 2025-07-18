@@ -1,5 +1,41 @@
 # @forklaunch/core
 
+## 0.11.6
+
+### Patch Changes
+
+- Fix universal sdk bugs and address fetch thrashing internally
+
+## 0.11.5
+
+### Patch Changes
+
+- Update to zod v4, keeping zod v3 as active zod version
+- Updated dependencies
+  - @forklaunch/validator@0.7.7
+  - @forklaunch/common@0.4.5
+
+## 0.11.4
+
+### Patch Changes
+
+- Upgrade internal dependencies
+- Updated dependencies
+  - @forklaunch/validator@0.7.6
+  - @forklaunch/common@0.4.4
+
+## 0.11.3
+
+### Patch Changes
+
+- SDK client types simplified for better performance
+
+## 0.11.2
+
+### Patch Changes
+
+- Lessen depth instation on Auth for better performance
+
 ## 0.11.1
 
 ### Patch Changes

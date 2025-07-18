@@ -1,12 +1,10 @@
 import {
-  DocsConfiguration,
   MetricsDefinition,
   OpenTelemetryCollector
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { OptionsJson, OptionsText, OptionsUrlencoded } from 'body-parser';
 import { BusboyConfig } from 'busboy';
-import { CorsOptions } from 'cors';
 import { Application } from './src/expressApplication';
 import { Router } from './src/expressRouter';
 import { checkout } from './src/handlers/checkout';
@@ -37,6 +35,7 @@ import { trace } from './src/handlers/trace';
 import { unlink } from './src/handlers/unlink';
 import { unlock } from './src/handlers/unlock';
 import { unsubscribe } from './src/handlers/unsubscribe';
+import { ExpressOptions } from './src/types/expressOptions.types';
 
 /**
  * Creates a new instance of Application with the given schema validator.
@@ -45,17 +44,13 @@ import { unsubscribe } from './src/handlers/unsubscribe';
  * @param {SV} schemaValidator - The schema validator.
  * @returns {Application<SV>} - The new application instance.
  */
-export function forklaunchExpress<SV extends AnySchemaValidator>(
+export function forklaunchExpress<
+  SV extends AnySchemaValidator,
+  T extends Record<string, unknown> | undefined
+>(
   schemaValidator: SV,
   openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-  options?: {
-    docs?: DocsConfiguration;
-    busboy?: BusboyConfig;
-    text?: OptionsText;
-    json?: OptionsJson;
-    urlencoded?: OptionsUrlencoded;
-    cors?: CorsOptions;
-  }
+  options?: ExpressOptions<T>
 ) {
   return new Application(schemaValidator, openTelemetryCollector, options);
 }

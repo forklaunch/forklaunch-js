@@ -21,13 +21,15 @@ export class DatabaseWorkerConsumer<
   ) {}
 
   private async retrieveEvents(): Promise<EventEntity[]> {
-    return this.em.getRepository(this.entityName).find({
-      where: {
+    return this.em.getRepository(this.entityName).find(
+      {
         processed: false,
         retryCount: { $lt: this.options.retries }
       },
-      orderBy: { createdAt: 'ASC' }
-    });
+      {
+        orderBy: { createdAt: 'ASC' }
+      }
+    );
   }
 
   private async updateEvents(events: EventEntity[]): Promise<void> {

@@ -1,9 +1,8 @@
-import { AnySchemaValidator } from '@forklaunch/validator';
 import corsMiddleware, { CorsOptions } from 'cors';
 import { ParsedQs } from 'qs';
 import {
+  ForklaunchBaseRequest,
   ForklaunchNextFunction,
-  ForklaunchRequest,
   ForklaunchResHeaders,
   ForklaunchResponse
 } from '../../types/apiDefinition.types';
@@ -17,7 +16,6 @@ import { ParamsDictionary } from '../../types/contractDetails.types';
  * @param next - Express-like next function
  */
 export function cors<
-  SV extends AnySchemaValidator,
   P extends ParamsDictionary,
   ResBodyMap extends Record<number, unknown>,
   ReqBody extends Record<string, unknown>,
@@ -27,7 +25,7 @@ export function cors<
   LocalsObj extends Record<string, unknown>
 >(corsOptions: CorsOptions) {
   return (
-    req: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>,
+    req: ForklaunchBaseRequest<P, ReqBody, ReqQuery, ReqHeaders>,
     res: ForklaunchResponse<
       unknown,
       ResBodyMap,

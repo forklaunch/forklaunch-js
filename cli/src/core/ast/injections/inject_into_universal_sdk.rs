@@ -92,6 +92,39 @@ fn inject_into_universal_sdk_function<'a>(
                     }
                 }
 
+                // Handle return type annotation (Promise<{ }>) injection
+                if let Some(return_type) = &mut arrow_func.return_type {
+                    if let TSType::TSTypeReference(type_ref) = &mut return_type.type_annotation {
+                        if let Some(type_params) = &mut type_ref.type_parameters {
+                            if let Some(TSType::TSTypeLiteral(promise_type_literal)) =
+                                type_params.params.first_mut()
+                            {
+                                let return_type_text = format!(
+                                    "type ReturnType = {{ {}: {}SdkClient }};",
+                                    camel_case_name, pascal_case_name
+                                );
+                                let mut return_type_program = parse_ast_program(
+                                    allocator,
+                                    allocator.alloc_str(&return_type_text),
+                                    SourceType::ts(),
+                                );
+
+                                if let Some(Statement::TSTypeAliasDeclaration(type_alias)) =
+                                    return_type_program.body.first_mut()
+                                {
+                                    if let TSType::TSTypeLiteral(type_literal) =
+                                        &mut type_alias.type_annotation
+                                    {
+                                        if let Some(member) = type_literal.members.pop() {
+                                            promise_type_literal.members.push(member);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
                 if let Some(Statement::ExpressionStatement(return_stmt)) =
                     arrow_func.body.as_mut().statements.first_mut()
                 {
@@ -168,4 +201,44 @@ pub(crate) fn inject_into_universal_sdk<'a>(
     )?;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use oxc_allocator::Allocator;
+    use oxc_ast::ast::SourceType;
+    use oxc_codegen::{CodeGenerator, CodegenOptions};
+
+    use super::*;
+    use crate::core::ast::parse_ast_program::parse_ast_program;
+
+    #[test]
+    fn test_inject_into_universal_sdk_function() {
+        let allocator = Allocator::default();
+
+        let app_code = r#"
+        export const universalSdk = ({ }: { }): Promise<{ }> => ({
+        });
+        "#;
+        let mut app_program = parse_ast_program(&allocator, app_code, SourceType::ts());
+
+        let result = inject_into_universal_sdk_function(
+            &allocator,
+            &mut app_program,
+            "userService",
+            "UserService",
+        );
+
+        assert!(result.is_ok());
+
+        let expected_code = "export const universalSdk = ({ userServiceHost }: {\n\tuserServiceHost: string\n}): Promise<{\n\tuserService: UserServiceSdkClient\n}> => ({ userService: await universalSdk<UserServiceSdkClient>({\n\thost: userServiceHost,\n\tregistryOptions: { path: \"api/v1/openapi\" }\n}) });\n";
+
+        assert_eq!(
+            CodeGenerator::new()
+                .with_options(CodegenOptions::default())
+                .build(&app_program)
+                .code,
+            expected_code
+        );
+    }
 }

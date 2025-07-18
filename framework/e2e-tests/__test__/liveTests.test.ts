@@ -1,8 +1,8 @@
-import { liveTests } from '../servers/express-zod';
+import { sdkRouter } from '../servers/express-zod';
 
 describe('liveTests', () => {
   it('should call getTest', async () => {
-    const getTest = await liveTests.getTest.sdk.testFile({
+    const getTest = await sdkRouter.sdk.testFile({
       headers: {
         authorization: 'bb string'
       }
@@ -11,7 +11,7 @@ describe('liveTests', () => {
   });
 
   it('should fetch getTest', async () => {
-    const getTest = await liveTests.getTest.fetch('/testpath/test', {
+    const getTest = await sdkRouter.fetch('/testpath/test', {
       method: 'GET',
       headers: {
         authorization: 'bb string'
@@ -21,7 +21,7 @@ describe('liveTests', () => {
   });
 
   it('should call postTest', async () => {
-    const postTest = await liveTests.postTest.sdk.testSse({
+    const postTest = await sdkRouter.sdk.testSse({
       headers: {
         xyz: 'Basic string'
       },
@@ -34,7 +34,7 @@ describe('liveTests', () => {
   });
 
   it('should fetch postTest', async () => {
-    const postTest = await liveTests.postTest.fetch('/testpath/test', {
+    const postTest = await sdkRouter.fetch('/testpath/test', {
       method: 'POST',
       body: {
         f: '!',
@@ -48,7 +48,7 @@ describe('liveTests', () => {
   });
 
   it('should call jsonPatchTest', async () => {
-    const jsonPatchTest = await liveTests.jsonPatchTest.sdk.testJsonPatch({
+    const jsonPatchTest = await sdkRouter.sdk.testJsonPatch({
       body: {
         f: 'ok',
         h: 'b658f7e0-9b8a-4e1f-b6d8-1c0b7d8b3f59'
@@ -64,27 +64,24 @@ describe('liveTests', () => {
   });
 
   it('should fetch jsonPatchTest', async () => {
-    const jsonPatchTest = await liveTests.jsonPatchTest.fetch(
-      '/testpath/test',
-      {
-        method: 'PATCH',
-        body: {
-          f: 'ok',
-          h: 'b658f7e0-9b8a-4e1f-b6d8-1c0b7d8b3f59'
-        },
-        query: {
-          q: 'test'
-        },
-        headers: {
-          authorization: 'bb string'
-        }
+    const jsonPatchTest = await sdkRouter.fetch('/testpath/test', {
+      method: 'PATCH',
+      body: {
+        f: 'ok',
+        h: 'b658f7e0-9b8a-4e1f-b6d8-1c0b7d8b3f59'
+      },
+      query: {
+        q: 'test'
+      },
+      headers: {
+        authorization: 'bb string'
       }
-    );
+    });
     expect(jsonPatchTest.code).toBe(200);
   });
 
   it('should call multipartTest', async () => {
-    const multipartTest = await liveTests.multipartTest.sdk.testMultipart({
+    const multipartTest = await sdkRouter.sdk.testMultipart({
       headers: {
         'x-test': 'test'
       },
@@ -99,42 +96,38 @@ describe('liveTests', () => {
   });
 
   it('should fetch multipartTest', async () => {
-    const multipartTest = await liveTests.multipartTest.fetch(
-      '/testpath/test/multipart',
-      {
-        method: 'POST',
-        body: {
-          multipartForm: {
-            fileName: '!',
-            g: new File(['Hello World'], 'test.txt', { type: 'text/plain' })
-          }
-        },
-        headers: {
-          'x-test': 'test'
+    const multipartTest = await sdkRouter.fetch('/testpath/test/multipart', {
+      method: 'POST',
+      body: {
+        multipartForm: {
+          fileName: '!',
+          g: new File(['Hello World'], 'test.txt', { type: 'text/plain' })
         }
+      },
+      headers: {
+        'x-test': 'test'
       }
-    );
+    });
     expect(multipartTest.code).toBe(200);
   });
 
   it('should call urlEncodedFormTest', async () => {
-    const urlEncodedFormTest =
-      await liveTests.urlEncodedFormTest.sdk.testUrlEncodedForm({
-        params: {
-          id: '123'
-        },
-        body: {
-          urlEncodedForm: {
-            f: '!',
-            h: 444
-          }
+    const urlEncodedFormTest = await sdkRouter.sdk.testUrlEncodedForm({
+      params: {
+        id: '123'
+      },
+      body: {
+        urlEncodedForm: {
+          f: '!',
+          h: 444
         }
-      });
+      }
+    });
     expect(urlEncodedFormTest.code).toBe(200);
   });
 
   it('should fetch urlEncodedFormTest', async () => {
-    const urlEncodedFormTest = await liveTests.urlEncodedFormTest.fetch(
+    const urlEncodedFormTest = await sdkRouter.fetch(
       '/testpath/test/url-encoded-form/:id',
       {
         method: 'POST',
@@ -153,21 +146,17 @@ describe('liveTests', () => {
   });
 
   it('should call filePostTest', async () => {
-    const filePostTest =
-      await liveTests.filePostTest.sdk.testFileUploadDownload({
-        body: new File(['Hello World'], 'test.txt', { type: 'text/plain' })
-      });
+    const filePostTest = await sdkRouter.sdk.testFileUploadDownload({
+      body: new File(['Hello World'], 'test.txt', { type: 'text/plain' })
+    });
     expect(filePostTest.code).toBe(200);
   });
 
   it('should fetch filePostTest', async () => {
-    const filePostTest = await liveTests.filePostTest.fetch(
-      '/testpath/test/file',
-      {
-        method: 'POST',
-        body: new File(['Hello World'], 'test.txt', { type: 'text/plain' })
-      }
-    );
+    const filePostTest = await sdkRouter.fetch('/testpath/test/file', {
+      method: 'POST',
+      body: new File(['Hello World'], 'test.txt', { type: 'text/plain' })
+    });
     expect(filePostTest.code).toBe(200);
   });
 });

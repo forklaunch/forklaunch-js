@@ -459,7 +459,55 @@ export class ForklaunchExpressLikeRouter<
    * @param {Parameters<fetchMap[Path]>[1]} [requestInit] - Optional request initialization parameters.
    * @returns {Promise<ReturnType<fetchMap[Path]>>} - The result of executing the route handler.
    */
-  fetch: FetchFunction<this['fetchMap']> = async (path, ...reqInit) => {
+  fetch: FetchFunction<this['fetchMap']> = async <
+    Path extends keyof this['fetchMap'],
+    Method extends keyof this['fetchMap'][Path]
+  >(
+    path: Path,
+    ...reqInit: this['fetchMap'][Path][Method] extends TypeSafeFunction
+      ? 'get' extends keyof this['fetchMap'][Path]
+        ? this['fetchMap'][Path]['get'] extends TypeSafeFunction
+          ? Parameters<this['fetchMap'][Path]['get']>[1] extends
+              | {
+                  body: unknown;
+                }
+              | { query: unknown }
+              | { params: unknown }
+              | { headers: unknown }
+            ? [
+                reqInit: Omit<
+                  Parameters<this['fetchMap'][Path][Method]>[1],
+                  'method'
+                > & {
+                  method: Method;
+                }
+              ]
+            : [
+                reqInit?: Omit<
+                  Parameters<this['fetchMap'][Path][Method]>[1],
+                  'method'
+                > & {
+                  method: Method;
+                }
+              ]
+          : [
+              reqInit: Omit<
+                Parameters<this['fetchMap'][Path][Method]>[1],
+                'method'
+              > & {
+                method: Method;
+              }
+            ]
+        : [
+            reqInit: Omit<
+              Parameters<this['fetchMap'][Path][Method]>[1],
+              'method'
+            > & {
+              method: Method;
+            }
+          ]
+      : []
+  ) => {
     return (
       this.fetchMap[path] as (
         route: string,
@@ -468,8 +516,8 @@ export class ForklaunchExpressLikeRouter<
     )(
       path as string,
       reqInit[0]
-    ) as this['fetchMap'][typeof path] extends TypeSafeFunction
-      ? ReturnType<this['fetchMap'][typeof path]>
+    ) as this['fetchMap'][Path][Method] extends TypeSafeFunction
+      ? ReturnType<this['fetchMap'][Path][Method]>
       : never;
   };
 
@@ -635,22 +683,49 @@ export class ForklaunchExpressLikeRouter<
     >[]
   ): this & {
     fetchMap: Prettify<
-      FetchMap &
-        Record<
-          SanitizePathSlashes<`${BasePath}${Path}`>,
-          LiveTypeFunction<
-            SV,
-            SanitizePathSlashes<`${BasePath}${Path}`>,
-            P,
-            ResBodyMap,
-            ReqBody,
-            ReqQuery,
-            ReqHeaders,
-            ResHeaders,
-            ContractMethod,
-            Auth
-          >
-        >
+      FetchMap extends Record<
+        SanitizePathSlashes<`${BasePath}${Path}`>,
+        unknown
+      >
+        ? FetchMap &
+            Record<
+              SanitizePathSlashes<`${BasePath}${Path}`>,
+              FetchMap[SanitizePathSlashes<`${BasePath}${Path}`>] &
+                Record<
+                  Uppercase<ContractMethod>,
+                  LiveTypeFunction<
+                    SV,
+                    SanitizePathSlashes<`${BasePath}${Path}`>,
+                    P,
+                    ResBodyMap,
+                    ReqBody,
+                    ReqQuery,
+                    ReqHeaders,
+                    ResHeaders,
+                    ContractMethod,
+                    Auth
+                  >
+                >
+            >
+        : FetchMap &
+            Record<
+              SanitizePathSlashes<`${BasePath}${Path}`>,
+              Record<
+                Uppercase<ContractMethod>,
+                LiveTypeFunction<
+                  SV,
+                  SanitizePathSlashes<`${BasePath}${Path}`>,
+                  P,
+                  ResBodyMap,
+                  ReqBody,
+                  ReqQuery,
+                  ReqHeaders,
+                  ResHeaders,
+                  ContractMethod,
+                  Auth
+                >
+              >
+            >
     >;
     sdk: Prettify<
       Sdk &
@@ -711,22 +786,49 @@ export class ForklaunchExpressLikeRouter<
 
       return this as this & {
         fetchMap: Prettify<
-          FetchMap &
-            Record<
-              SanitizePathSlashes<`${BasePath}${Path}`>,
-              LiveTypeFunction<
-                SV,
-                SanitizePathSlashes<`${BasePath}${Path}`>,
-                P,
-                ResBodyMap,
-                ReqBody,
-                ReqQuery,
-                ReqHeaders,
-                ResHeaders,
-                ContractMethod,
-                Auth
-              >
-            >
+          FetchMap extends Record<
+            SanitizePathSlashes<`${BasePath}${Path}`>,
+            unknown
+          >
+            ? FetchMap &
+                Record<
+                  SanitizePathSlashes<`${BasePath}${Path}`>,
+                  FetchMap[SanitizePathSlashes<`${BasePath}${Path}`>] &
+                    Record<
+                      Uppercase<ContractMethod>,
+                      LiveTypeFunction<
+                        SV,
+                        SanitizePathSlashes<`${BasePath}${Path}`>,
+                        P,
+                        ResBodyMap,
+                        ReqBody,
+                        ReqQuery,
+                        ReqHeaders,
+                        ResHeaders,
+                        ContractMethod,
+                        Auth
+                      >
+                    >
+                >
+            : FetchMap &
+                Record<
+                  SanitizePathSlashes<`${BasePath}${Path}`>,
+                  Record<
+                    Uppercase<ContractMethod>,
+                    LiveTypeFunction<
+                      SV,
+                      SanitizePathSlashes<`${BasePath}${Path}`>,
+                      P,
+                      ResBodyMap,
+                      ReqBody,
+                      ReqQuery,
+                      ReqHeaders,
+                      ResHeaders,
+                      ContractMethod,
+                      Auth
+                    >
+                  >
+                >
         >;
         sdk: Prettify<
           Sdk &
@@ -798,22 +900,49 @@ export class ForklaunchExpressLikeRouter<
 
         return this as this & {
           fetchMap: Prettify<
-            FetchMap &
-              Record<
-                SanitizePathSlashes<`${BasePath}${Path}`>,
-                LiveTypeFunction<
-                  SV,
-                  SanitizePathSlashes<`${BasePath}${Path}`>,
-                  P,
-                  ResBodyMap,
-                  ReqBody,
-                  ReqQuery,
-                  ReqHeaders,
-                  ResHeaders,
-                  ContractMethod,
-                  Auth
-                >
-              >
+            FetchMap extends Record<
+              SanitizePathSlashes<`${BasePath}${Path}`>,
+              unknown
+            >
+              ? FetchMap &
+                  Record<
+                    SanitizePathSlashes<`${BasePath}${Path}`>,
+                    FetchMap[SanitizePathSlashes<`${BasePath}${Path}`>] &
+                      Record<
+                        Uppercase<ContractMethod>,
+                        LiveTypeFunction<
+                          SV,
+                          SanitizePathSlashes<`${BasePath}${Path}`>,
+                          P,
+                          ResBodyMap,
+                          ReqBody,
+                          ReqQuery,
+                          ReqHeaders,
+                          ResHeaders,
+                          ContractMethod,
+                          Auth
+                        >
+                      >
+                  >
+              : FetchMap &
+                  Record<
+                    SanitizePathSlashes<`${BasePath}${Path}`>,
+                    Record<
+                      Uppercase<ContractMethod>,
+                      LiveTypeFunction<
+                        SV,
+                        SanitizePathSlashes<`${BasePath}${Path}`>,
+                        P,
+                        ResBodyMap,
+                        ReqBody,
+                        ReqQuery,
+                        ReqHeaders,
+                        ResHeaders,
+                        ContractMethod,
+                        Auth
+                      >
+                    >
+                  >
           >;
           sdk: Prettify<
             Sdk &
@@ -981,22 +1110,49 @@ export class ForklaunchExpressLikeRouter<
 
         return this as this & {
           fetchMap: Prettify<
-            FetchMap &
-              Record<
-                SanitizePathSlashes<`${BasePath}${Path}`>,
-                LiveTypeFunction<
-                  SV,
-                  SanitizePathSlashes<`${BasePath}${Path}`>,
-                  P,
-                  ResBodyMap,
-                  ReqBody,
-                  ReqQuery,
-                  ReqHeaders,
-                  ResHeaders,
-                  ContractMethod,
-                  Auth
-                >
-              >
+            FetchMap extends Record<
+              SanitizePathSlashes<`${BasePath}${Path}`>,
+              unknown
+            >
+              ? FetchMap &
+                  Record<
+                    SanitizePathSlashes<`${BasePath}${Path}`>,
+                    FetchMap[SanitizePathSlashes<`${BasePath}${Path}`>] &
+                      Record<
+                        Uppercase<ContractMethod>,
+                        LiveTypeFunction<
+                          SV,
+                          SanitizePathSlashes<`${BasePath}${Path}`>,
+                          P,
+                          ResBodyMap,
+                          ReqBody,
+                          ReqQuery,
+                          ReqHeaders,
+                          ResHeaders,
+                          ContractMethod,
+                          Auth
+                        >
+                      >
+                  >
+              : FetchMap &
+                  Record<
+                    SanitizePathSlashes<`${BasePath}${Path}`>,
+                    Record<
+                      Uppercase<ContractMethod>,
+                      LiveTypeFunction<
+                        SV,
+                        SanitizePathSlashes<`${BasePath}${Path}`>,
+                        P,
+                        ResBodyMap,
+                        ReqBody,
+                        ReqQuery,
+                        ReqHeaders,
+                        ResHeaders,
+                        ContractMethod,
+                        Auth
+                      >
+                    >
+                  >
           >;
           sdk: Prettify<
             Sdk &

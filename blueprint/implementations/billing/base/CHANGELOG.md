@@ -1,5 +1,16 @@
 # @forklaunch/implementation-billing-base
 
+## 0.4.0
+
+### Minor Changes
+
+- change implementation structure, and update internal dependencies, SdkClient breaking changes
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/interfaces-billing@0.4.0
+
 ## 0.3.9
 
 ### Patch Changes

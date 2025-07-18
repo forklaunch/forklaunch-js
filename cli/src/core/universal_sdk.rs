@@ -64,7 +64,7 @@ pub(crate) fn add_project_to_universal_sdk(
 
     rendered_templates.push(RenderedTemplate {
         path: base_path.join("universal-sdk").join("package.json"),
-        content: serde_json::to_string(&universal_sdk_project_json)?,
+        content: serde_json::to_string_pretty(&universal_sdk_project_json)?,
         context: None,
     });
 
@@ -101,7 +101,7 @@ pub(crate) fn remove_project_from_universal_sdk(
 
     rendered_templates.push(RenderedTemplate {
         path: base_path.join("universal-sdk").join("package.json"),
-        content: serde_json::to_string(&universal_sdk_project_json)?,
+        content: serde_json::to_string_pretty(&universal_sdk_project_json)?,
         context: None,
     });
 
@@ -159,7 +159,7 @@ pub(crate) fn change_project_in_universal_sdk(
             .to_string_lossy(),
         RenderedTemplate {
             path: base_path.join("universal-sdk").join("package.json"),
-            content: serde_json::to_string(&universal_sdk_project_json)?,
+            content: serde_json::to_string_pretty(&universal_sdk_project_json)?,
             context: None,
         },
     );
