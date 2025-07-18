@@ -21,7 +21,7 @@ const docsPath = ci.resolve(tokens.DOCS_PATH);
 //! resolves the necessary services from the configuration
 const scoped{{pascal_case_name}}ServiceFactory = ci.scopedResolver(tokens.{{pascal_case_name}}Service);
 //! constructs the necessary routes using the appropriate Routes functions
-const {{camel_case_name}}Routes = {{pascal_case_name}}Routes(
+export const {{camel_case_name}}Routes = {{pascal_case_name}}Routes(
   () => ci.createScope(),
   scoped{{pascal_case_name}}ServiceFactory,
   openTelemetryCollector

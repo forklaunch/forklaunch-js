@@ -3,7 +3,7 @@ use std::{fs::read_to_string, path::Path};
 use anyhow::Result;
 use convert_case::{Case, Casing};
 use oxc_allocator::Allocator;
-use oxc_ast::ast::{Expression, SourceType, Statement};
+use oxc_ast::ast::{Declaration, Expression, SourceType, Statement};
 use oxc_codegen::{CodeGenerator, CodegenOptions};
 
 use crate::core::ast::{
@@ -72,7 +72,7 @@ pub(crate) fn transform_server_ts(router_name: &str, base_path: &Path) -> Result
     )?;
 
     let routes_injection_text = format!(
-        "const {router_name_camel_case}Routes = {router_name_pascal_case}Routes(() => ci.createScope(), {router_name_pascal_case}ServiceFactory, openTelemetryCollector);",
+        "export const {router_name_camel_case}Routes = {router_name_pascal_case}Routes(() => ci.createScope(), {router_name_pascal_case}ServiceFactory, openTelemetryCollector);",
     );
     let mut injection_program_ast =
         parse_ast_program(&allocator, &routes_injection_text, SourceType::ts());
@@ -86,8 +86,13 @@ pub(crate) fn transform_server_ts(router_name: &str, base_path: &Path) -> Result
                 .iter()
                 .enumerate()
                 .for_each(|(index, inner_stmt)| {
-                    let expr = match inner_stmt {
-                        Statement::VariableDeclaration(expr) => expr,
+                    let export = match inner_stmt {
+                        Statement::ExportNamedDeclaration(export) => export,
+                        _ => return,
+                    };
+
+                    let expr = match &export.declaration {
+                        Some(Declaration::VariableDeclaration(expr)) => expr,
                         _ => return,
                     };
 

@@ -197,8 +197,8 @@ export function createDependencies() {
     EntityManager: {
       lifetime: Lifetime.Scoped,
       type: EntityManager,
-      factory: (_args, _resolve, context) =>
-        orm.em.fork(context?.entityManagerOptions as ForkOptions | undefined),
+      factory: ({ MikroORM }, _resolve, context) =>
+        MikroORM.em.fork(context?.entityManagerOptions as ForkOptions | undefined),
     },{{/is_database_enabled}}
   });
   //! defines the service dependencies for the application
