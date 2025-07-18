@@ -1,4 +1,5 @@
 import { ZodSchemaValidator } from '@forklaunch/validator/zod';
+import { FastMCP } from 'fastmcp';
 import { describe, expect, it } from 'vitest';
 import { generateMcpServer } from '../src/http/mcpGenerator/mcpGenerator';
 
@@ -43,8 +44,7 @@ describe('mcpGenerator tests', () => {
     );
 
     expect(generatedMcpServer).toBeDefined();
-    expect(typeof generatedMcpServer).toBe('object');
-    expect(generatedMcpServer).toHaveProperty('tool');
+    expect(generatedMcpServer).toBeInstanceOf(FastMCP);
   });
 
   it('should generate MCP server with multiple routes', () => {
@@ -93,8 +93,7 @@ describe('mcpGenerator tests', () => {
     );
 
     expect(generatedMcpServer).toBeDefined();
-    expect(typeof generatedMcpServer).toBe('object');
-    expect(generatedMcpServer).toHaveProperty('tool');
+    expect(generatedMcpServer).toBeInstanceOf(FastMCP);
   });
 
   it('should generate MCP server with query and headers', () => {
@@ -270,7 +269,6 @@ describe('mcpGenerator tests', () => {
     );
 
     expect(generatedMcpServer).toBeDefined();
-    expect(typeof generatedMcpServer).toBe('object');
-    expect(generatedMcpServer).toHaveProperty('tool');
+    expect(generatedMcpServer).toBeInstanceOf(FastMCP);
   });
 });
