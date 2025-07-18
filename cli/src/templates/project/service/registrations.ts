@@ -14,9 +14,9 @@ import { {{worker_type}}WorkerProducer } from '@forklaunch/implementation-worker
 import { {{worker_type}}WorkerSchemas } from '@forklaunch/implementation-worker-{{worker_type_lowercase}}/schemas';
 import { {{worker_type}}WorkerOptions } from '@forklaunch/implementation-worker-{{worker_type_lowercase}}/types';
 import { WorkerProcessFunction, WorkerFailureHandler } from '@forklaunch/interfaces-worker/types';{{/is_worker}}{{#is_database_enabled}}
-import { EntityManager, ForkOptions, MikroORM } from "@mikro-orm/core";{{/is_database_enabled}}{{#is_worker}}
+import { EntityManager, ForkOptions, MikroORM } from "@mikro-orm/core";
+import mikroOrmOptionsConfig from './mikro-orm.config';{{/is_database_enabled}}{{#is_worker}}
 import { {{pascal_case_name}}EventRecord } from "./persistence/entities/{{camel_case_name}}EventRecord.entity";{{/is_worker}}
-import mikroOrmOptionsConfig from './mikro-orm.config';
 import { Base{{pascal_case_name}}Service } from "./services/{{camel_case_name}}.service";
 //! defines the configuration schema for the application
 export function createDependencies() {
