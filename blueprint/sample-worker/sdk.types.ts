@@ -6,14 +6,14 @@ import {
 } from '@forklaunch/core/http';
 import { sampleWorkerRoutes } from './server';
 
-type SampleWorkerClientSdkInput = {
+type SampleWorkerSdkClientInput = {
   sampleWorker: typeof sampleWorkerRoutes;
 };
 
-type UnpackedSampleWorkerClientSdkInput =
-  UnpackSdkClientInput<SampleWorkerClientSdkInput>;
+type UnpackedSampleWorkerSdkClientInput =
+  UnpackSdkClientInput<SampleWorkerSdkClientInput>;
 
-type ValidatedSampleWorkerClientSdkInput =
-  ValidSdkClientInput<UnpackedSampleWorkerClientSdkInput>;
+type ValidatedSampleWorkerSdkClientInput =
+  ValidSdkClientInput<UnpackedSampleWorkerSdkClientInput>;
 
-export type SampleWorkerSdkClient = SdkClient<SampleWorkerClientSdkInput>;
+export type SampleWorkerSdkClient = SdkClient<SampleWorkerSdkClientInput>;

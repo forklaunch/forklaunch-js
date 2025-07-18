@@ -282,8 +282,11 @@ impl CliCommand for RouterCommand {
         let sdk_types_text = read_to_string(&sdk_types_path)?;
         let sdk_types_type = SourceType::from_path(&sdk_types_path)?;
         let mut sdk_types_program = parse_ast_program(&allocator, &sdk_types_text, sdk_types_type);
-        let new_sdk_types_content =
-            delete_from_sdk_types_client_input(&mut sdk_types_program, &router_name)?;
+        let new_sdk_types_content = delete_from_sdk_types_client_input(
+            &allocator,
+            &mut sdk_types_program,
+            &camel_case_name,
+        )?;
 
         write_rendered_templates(
             &vec![

@@ -5,9 +5,9 @@ import { universalSdk } from "@forklaunch/universal-sdk";{{#is_better_auth}}
 import { createAuthClient } from "better-auth/client";{{/is_better_auth}}
 {{#is_better_auth}}import { inferAdditionalFields } from 'better-auth/client/plugins';{{/is_better_auth}}
 //! exportable function for creating a universal SDK instance for use in browser and server environments
-export const {{camel_case_app_name}}UniversalSdk = async ({
-  iamHost,
-  billingHost,
+export const {{camel_case_app_name}}UniversalSdk = async ({ {{#is_iam}}
+  iamHost,{{/is_iam}}{{#is_billing}}
+  billingHost,{{/is_billing}}
 }: { {{#is_iam}}
   iamHost: string;{{/is_iam}}{{#is_billing}}
   billingHost: string;{{/is_billing}}

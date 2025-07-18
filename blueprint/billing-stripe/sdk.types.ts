@@ -12,7 +12,7 @@ import {
   webhookRoutes
 } from './server';
 
-type BillingClientSdkInput = {
+type BillingSdkClientInput = {
   checkoutSession: typeof checkoutSessionRoutes;
   paymentLink: typeof paymentLinkRoutes;
   plan: typeof planRoutes;
@@ -20,10 +20,10 @@ type BillingClientSdkInput = {
   webhook: typeof webhookRoutes;
 };
 
-type UnpackedBillingClientSdkInput =
-  UnpackSdkClientInput<BillingClientSdkInput>;
+type UnpackedBillingSdkClientInput =
+  UnpackSdkClientInput<BillingSdkClientInput>;
 
-type ValidatedBillingClientSdkInput =
-  ValidSdkClientInput<UnpackedBillingClientSdkInput>;
+type ValidatedBillingSdkClientInput =
+  ValidSdkClientInput<UnpackedBillingSdkClientInput>;
 
-export type BillingSdkClient = SdkClient<BillingClientSdkInput>;
+export type BillingSdkClient = SdkClient<BillingSdkClientInput>;

@@ -1,19 +1,18 @@
 use anyhow::Result;
-use oxc_ast::ast::{Declaration, Program, Statement, TSType};
+use oxc_allocator::Allocator;
+use oxc_ast::ast::{Program, Statement, TSType};
 use oxc_codegen::{CodeGenerator, CodegenOptions};
 
+use super::delete_import_statement::delete_import_specifier;
+
 pub(crate) fn delete_from_sdk_types_client_input<'a>(
-    server_program_ast: &mut Program<'a>,
+    allocator: &'a Allocator,
+    sdk_types_program_ast: &mut Program<'a>,
     router_name_camel_case: &str,
 ) -> Result<String> {
-    for stmt in server_program_ast.body.iter_mut() {
-        let export = match stmt {
-            Statement::ExportNamedDeclaration(export) => export,
-            _ => continue,
-        };
-
-        let ts_declaration = match &mut export.declaration {
-            Some(Declaration::TSTypeAliasDeclaration(ts_decl)) => ts_decl,
+    for stmt in sdk_types_program_ast.body.iter_mut() {
+        let ts_declaration = match stmt {
+            Statement::TSTypeAliasDeclaration(ts_decl) => ts_decl,
             _ => continue,
         };
 
@@ -21,13 +20,11 @@ pub(crate) fn delete_from_sdk_types_client_input<'a>(
             continue;
         }
 
-        // Handle object type literal (TSTypeLiteral) instead of type reference
         let type_literal = match &mut ts_declaration.type_annotation {
             TSType::TSTypeLiteral(literal) => literal,
             _ => continue,
         };
 
-        // Simple string-based matching approach
         let mut indices_to_remove = std::vec::Vec::new();
         for (i, member) in type_literal.members.iter().enumerate() {
             // Use debug format to check if the member contains our router name
@@ -37,15 +34,21 @@ pub(crate) fn delete_from_sdk_types_client_input<'a>(
             }
         }
 
-        // Remove elements in reverse order to maintain correct indices
         for &i in indices_to_remove.iter().rev() {
             type_literal.members.remove(i);
         }
     }
 
+    let _ = delete_import_specifier(
+        &allocator,
+        sdk_types_program_ast,
+        &format!("{}Routes", router_name_camel_case),
+        "./server",
+    )?;
+
     Ok(CodeGenerator::new()
         .with_options(CodegenOptions::default())
-        .build(&server_program_ast)
+        .build(&sdk_types_program_ast)
         .code)
 }
 
@@ -61,20 +64,21 @@ mod tests {
     fn test_successful_deletion() {
         let allocator = Allocator::default();
 
-        let server_code = r#"
-        export type MySdkClientInput = {
+        let sdk_types_code = r#"
+        type MySdkClientInput = {
             userRoutes: typeof UserRoutes,
             postRoutes: typeof PostRoutes,
             commentRoutes: typeof CommentRoutes
         };
         "#;
-        let mut server_program = parse_ast_program(&allocator, server_code, SourceType::ts());
+        let mut sdk_types_program = parse_ast_program(&allocator, sdk_types_code, SourceType::ts());
 
-        let result = delete_from_sdk_types_client_input(&mut server_program, "postRoutes");
+        let result =
+            delete_from_sdk_types_client_input(&allocator, &mut sdk_types_program, "postRoutes");
 
         assert!(result.is_ok());
 
-        let expected_code = "export type MySdkClientInput = {\n\tuserRoutes: typeof UserRoutes\n\tcommentRoutes: typeof CommentRoutes\n};\n";
+        let expected_code = "type MySdkClientInput = {\n\tuserRoutes: typeof UserRoutes\n\tcommentRoutes: typeof CommentRoutes\n};\n";
 
         assert_eq!(result.unwrap(), expected_code);
     }

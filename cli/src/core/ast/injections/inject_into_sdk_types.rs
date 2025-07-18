@@ -6,13 +6,8 @@ pub(crate) fn inject_into_sdk_types_client_input<'a>(
     injection_program_ast: &mut Program<'a>,
 ) -> Result<()> {
     for stmt in app_program_ast.body.iter_mut() {
-        let export = match stmt {
-            Statement::ExportNamedDeclaration(export) => export,
-            _ => continue,
-        };
-
-        let ts_declaration = match &mut export.declaration {
-            Some(Declaration::TSTypeAliasDeclaration(ts_decl)) => ts_decl,
+        let ts_declaration = match stmt {
+            Statement::TSTypeAliasDeclaration(export) => export,
             _ => continue,
         };
 

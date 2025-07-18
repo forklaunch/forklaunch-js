@@ -11,17 +11,17 @@ import {
   subscriptionRoutes
 } from './server';
 
-type BillingClientSdkInput = {
+type BillingSdkClientInput = {
   checkoutSession: typeof checkoutSessionRoutes;
   paymentLink: typeof paymentLinkRoutes;
   plan: typeof planRoutes;
   subscription: typeof subscriptionRoutes;
 };
 
-type UnpackedBillingClientSdkInput =
-  UnpackSdkClientInput<BillingClientSdkInput>;
+type UnpackedBillingSdkClientInput =
+  UnpackSdkClientInput<BillingSdkClientInput>;
 
-type ValidatedBillingClientSdkInput =
-  ValidSdkClientInput<UnpackedBillingClientSdkInput>;
+type ValidatedBillingSdkClientInput =
+  ValidSdkClientInput<UnpackedBillingSdkClientInput>;
 
-export type BillingSdkClient = SdkClient<BillingClientSdkInput>;
+export type BillingSdkClient = SdkClient<BillingSdkClientInput>;

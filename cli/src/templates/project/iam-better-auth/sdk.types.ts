@@ -11,16 +11,16 @@ import {
   userRoutes,
 } from "./server";
 
-type IamClientSdkInput = {
+type IamSdkClientInput = {
   organization: typeof organizationRoutes;
   permission: typeof permissionRoutes;
   role: typeof roleRoutes;
   user: typeof userRoutes;
 };
 
-type UnpackedIamClientSdkInput = UnpackSdkClientInput<IamClientSdkInput>;
+type UnpackedIamSdkClientInput = UnpackSdkClientInput<IamSdkClientInput>;
 
-type ValidatedIamClientSdkInput =
-  ValidSdkClientInput<UnpackedIamClientSdkInput>;
+type ValidatedIamSdkClientInput =
+  ValidSdkClientInput<UnpackedIamSdkClientInput>;
 
-export type IamSdkClient = SdkClient<IamClientSdkInput>;
+export type IamSdkClient = SdkClient<IamSdkClientInput>;
