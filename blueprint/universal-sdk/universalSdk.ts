@@ -17,7 +17,7 @@ export type ForklaunchPlatformUniversalSdk = {
   sampleWorker: SampleWorkerSdkClient;
   iamBetterAuth: {
     betterAuth: ReturnType<typeof createAuthClient>;
-    forklaunch: IamBetterAuthSdkClient;
+    core: IamBetterAuthSdkClient;
   };
 };
 
@@ -54,7 +54,7 @@ export const forklaunchPlatformUniversalSdk = async ({
     betterAuth: createAuthClient({
       baseURL: iamBetterAuthHost
     }),
-    forklaunch: await universalSdk<IamBetterAuthSdkClient>({
+    core: await universalSdk<IamBetterAuthSdkClient>({
       host: iamBetterAuthHost,
       registryOptions: {
         path: 'api/v1/openapi'

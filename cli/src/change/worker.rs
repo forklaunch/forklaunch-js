@@ -24,7 +24,6 @@ use crate::{
     },
     core::{
         ast::transformations::{
-            transform_bootstrapper_ts::transform_bootstrapper_ts_database_dependency_injection,
             transform_mikroorm_config_ts::transform_mikroorm_config_ts,
             transform_registrations_ts::transform_registrations_ts_worker_type,
         },
@@ -302,15 +301,6 @@ fn change_type(
                     } else {
                         transform_mikroorm_config_ts(base_path, &existing_database, &db)?
                     },
-                    context: None,
-                },
-            );
-
-            rendered_templates_cache.insert(
-                base_path.join("bootstrapper.ts").to_string_lossy(),
-                RenderedTemplate {
-                    path: base_path.join("bootstrapper.ts").into(),
-                    content: transform_bootstrapper_ts_database_dependency_injection(base_path)?,
                     context: None,
                 },
             );

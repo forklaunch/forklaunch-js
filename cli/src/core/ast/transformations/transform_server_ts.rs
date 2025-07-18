@@ -8,7 +8,6 @@ use oxc_codegen::{CodeGenerator, CodegenOptions};
 
 use crate::core::ast::{
     injections::{
-        inject_into_exported_sdk_client::inject_into_exported_sdk_client,
         inject_into_import_statement::inject_into_import_statement,
         inject_into_server_ts::inject_into_server_ts,
     },
@@ -161,13 +160,6 @@ pub(crate) fn transform_server_ts(router_name: &str, base_path: &Path) -> Result
         &mut forklaunch_routes_import_injection,
         format!("./api/routes/{router_name_camel_case}.routes").as_str(),
     )?;
-
-    let sdk_client_skeleton_text = format!(
-        "export type SdkClient = SdkClient<[{router_name_camel_case}: typeof {router_name_pascal_case}Routes]>"
-    );
-    let mut injected_sdk_client_skeleton =
-        parse_ast_program(&allocator, &sdk_client_skeleton_text, server_source_type);
-    inject_into_exported_sdk_client(&mut server_program, &mut injected_sdk_client_skeleton)?;
 
     Ok(CodeGenerator::new()
         .with_options(CodegenOptions::default())

@@ -59,6 +59,7 @@ import {
   RoleMapperTypes,
   UserMapperTypes
 } from './domain/types/iamMappers.types';
+import mikroOrmOptionsConfig from './mikro-orm.config';
 //! defines the schemas for the organization service
 export const OrganizationSchemas = BaseOrganizationServiceSchemas({
   uuidId: true,
@@ -77,7 +78,7 @@ export const UserSchemas = BaseUserServiceSchemas({
   validator: SchemaValidator()
 });
 //! defines the configuration schema for the application
-export function createDependencies(orm: MikroORM) {
+export function createDependencies() {
   const configInjector = createConfigInjector(SchemaValidator(), {
     SERVICE_METADATA: {
       lifetime: Lifetime.Singleton,
@@ -151,6 +152,11 @@ export function createDependencies(orm: MikroORM) {
   });
   //! defines the runtime dependencies for the application
   const runtimeDependencies = environmentConfig.chain({
+    MikroORM: {
+      lifetime: Lifetime.Singleton,
+      type: MikroORM,
+      factory: () => MikroORM.initSync(mikroOrmOptionsConfig)
+    },
     OpenTelemetryCollector: {
       lifetime: Lifetime.Singleton,
       type: OpenTelemetryCollector<Metrics>,
@@ -164,31 +170,34 @@ export function createDependencies(orm: MikroORM) {
     EntityManager: {
       lifetime: Lifetime.Scoped,
       type: EntityManager,
-      factory: (_args, _resolve, context) =>
-        orm.em.fork(context?.entityManagerOptions as ForkOptions | undefined)
+      factory: ({ MikroORM }, _resolve, context) =>
+        MikroORM.em.fork(
+          context?.entityManagerOptions as ForkOptions | undefined
+        )
     },
     BetterAuth: {
       lifetime: Lifetime.Singleton,
       type: type<ReturnType<typeof betterAuth<BetterAuthConfig>>>(),
       factory: ({
         BETTER_AUTH_BASE_PATH,
-        OpenTelemetryCollector,
         PASSWORD_ENCRYPTION_SECRET_PATH,
-        CORS_ORIGINS
+        CORS_ORIGINS,
+        MikroORM,
+        OpenTelemetryCollector
       }) =>
         betterAuth(
           betterAuthConfig({
             BETTER_AUTH_BASE_PATH,
             PASSWORD_ENCRYPTION_SECRET_PATH,
             CORS_ORIGINS,
-            orm,
+            orm: MikroORM,
             openTelemetryCollector: OpenTelemetryCollector
           })
         )
     },
     ExpressOptions: {
       lifetime: Lifetime.Singleton,
-      type: promise(type<ExpressOptions>()),
+      type: promise(type<ExpressOptions<undefined>>()),
       factory: async ({ BETTER_AUTH_BASE_PATH, CORS_ORIGINS, BetterAuth }) => {
         const betterAuthOpenAPIContent =
           await BetterAuth.api.generateOpenAPISchema();

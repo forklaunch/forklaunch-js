@@ -1,7 +1,7 @@
 use anyhow::{Result, bail};
 use oxc_ast::ast::{Declaration, Program, Statement, TSType};
 
-pub(crate) fn inject_into_exported_sdk_client<'a>(
+pub(crate) fn inject_into_sdk_types_client_input<'a>(
     app_program_ast: &mut Program<'a>,
     injection_program_ast: &mut Program<'a>,
 ) -> Result<()> {
@@ -16,21 +16,12 @@ pub(crate) fn inject_into_exported_sdk_client<'a>(
             _ => continue,
         };
 
-        if !ts_declaration.id.name.contains("SdkClient") {
+        if !ts_declaration.id.name.contains("SdkClientInput") {
             continue;
         }
 
-        let type_reference = match &mut ts_declaration.type_annotation {
-            TSType::TSTypeReference(type_ref) => type_ref,
-            _ => continue,
-        };
-
-        let inner_sdk_tuple = match type_reference
-            .type_parameters
-            .as_mut()
-            .and_then(|tp| tp.params.iter_mut().find(|_| true))
-        {
-            Some(TSType::TSTupleType(tuple)) => tuple,
+        let app_object_type = match &mut ts_declaration.type_annotation {
+            TSType::TSTypeLiteral(type_literal) => type_literal,
             _ => continue,
         };
 
@@ -45,27 +36,16 @@ pub(crate) fn inject_into_exported_sdk_client<'a>(
                 _ => continue,
             };
 
-            let injection_tuple = match &mut ts_decl.type_annotation {
-                TSType::TSTupleType(tuple) => Some(tuple),
-                TSType::TSTypeReference(type_ref) => {
-                    if let Some(type_params) = type_ref.type_parameters.as_mut() {
-                        type_params.params.iter_mut().find_map(|param| match param {
-                            TSType::TSTupleType(tuple) => Some(tuple),
-                            _ => None,
-                        })
-                    } else {
-                        None
-                    }
-                }
-                _ => None,
+            let injection_object_type = match &mut ts_decl.type_annotation {
+                TSType::TSTypeLiteral(type_literal) => type_literal,
+                _ => continue,
             };
 
-            if let Some(tuple) = injection_tuple {
-                inner_sdk_tuple
-                    .element_types
-                    .extend(tuple.element_types.drain(..));
-                return Ok(());
-            }
+            // Merge the properties from injection into app
+            app_object_type
+                .members
+                .extend(injection_object_type.members.drain(..));
+            return Ok(());
         }
     }
 
@@ -86,24 +66,24 @@ mod tests {
         let allocator = Allocator::default();
 
         let app_code = r#"
-export type MySdkClient = SdkClient<[
-    typeof MySdkClientRoutes
-]>;
-"#;
+        export type MySdkClientInput = {
+            mySdkClientRoutes: typeof MySdkClientRoutes
+        };
+        "#;
         let mut app_program = parse_ast_program(&allocator, app_code, SourceType::ts());
 
         let injection_code = r#"
-export type SdkClient = SdkClient<[
-    typeof MySdkClient2Routes
-]>;
-"#;
+        export type MySdkClientInput = {
+            mySdkClient2Routes: typeof MySdkClient2Routes
+        };
+        "#;
         let mut injection_program = parse_ast_program(&allocator, injection_code, SourceType::ts());
 
-        let result = inject_into_exported_sdk_client(&mut app_program, &mut injection_program);
+        let result = inject_into_sdk_types_client_input(&mut app_program, &mut injection_program);
 
         assert!(result.is_ok());
 
-        let expected_code = "export type MySdkClient = SdkClient<[typeof MySdkClientRoutes, typeof MySdkClient2Routes]>;\n";
+        let expected_code = "export type MySdkClientInput = {\n\tmySdkClientRoutes: typeof MySdkClientRoutes\n\tmySdkClient2Routes: typeof MySdkClient2Routes\n};\n";
 
         assert_eq!(
             CodeGenerator::new()

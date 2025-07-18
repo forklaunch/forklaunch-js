@@ -1,5 +1,11 @@
 # @forklaunch/interfaces-billing
 
+## 0.3.0
+
+### Minor Changes
+
+- change implementation structure, and update internal dependencies, SdkClient breaking changes
+
 ## 0.2.5
 
 ### Patch Changes

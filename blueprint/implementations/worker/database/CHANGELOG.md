@@ -1,5 +1,22 @@
 # @forklaunch/implementation-billing-base
 
+## 0.4.1
+
+### Patch Changes
+
+- Fix: find args for database worker
+
+## 0.4.0
+
+### Minor Changes
+
+- change implementation structure, and update internal dependencies, SdkClient breaking changes
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/interfaces-worker@0.3.0
+
 ## 0.3.8
 
 ### Patch Changes

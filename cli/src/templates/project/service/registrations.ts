@@ -16,9 +16,10 @@ import { {{worker_type}}WorkerOptions } from '@forklaunch/implementation-worker-
 import { WorkerProcessFunction, WorkerFailureHandler } from '@forklaunch/interfaces-worker/types';{{/is_worker}}{{#is_database_enabled}}
 import { EntityManager, ForkOptions, MikroORM } from "@mikro-orm/core";{{/is_database_enabled}}{{#is_worker}}
 import { {{pascal_case_name}}EventRecord } from "./persistence/entities/{{camel_case_name}}EventRecord.entity";{{/is_worker}}
+import mikroOrmOptionsConfig from './mikro-orm.config';
 import { Base{{pascal_case_name}}Service } from "./services/{{camel_case_name}}.service";
 //! defines the configuration schema for the application
-export function createDependencies({{#is_database_enabled}}orm: MikroORM{{/is_database_enabled}}) {
+export function createDependencies() {
   const configInjector = createConfigInjector(SchemaValidator(), {
     SERVICE_METADATA: {
       lifetime: Lifetime.Singleton,
@@ -127,6 +128,12 @@ export function createDependencies({{#is_database_enabled}}orm: MikroORM{{/is_da
   });
   //! defines the runtime dependencies for the application
   const runtimeDependencies = environmentConfig.chain({
+    {{#is_database_enabled}}
+    MikroORM: {
+      lifetime: Lifetime.Singleton,
+      type: MikroORM,
+      factory: () => MikroORM.initSync(mikroOrmOptionsConfig)
+    },{{/is_database_enabled}}
     {{#is_worker}}WorkerOptions: {
       lifetime: Lifetime.Singleton,
       type: {{worker_type}}WorkerSchemas({

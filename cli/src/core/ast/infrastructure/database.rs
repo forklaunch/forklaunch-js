@@ -13,10 +13,15 @@ pub(crate) fn database_entity_manager_runtime_dependency<'a>(
 ) -> Result<()> {
     let entity_manager_registration_text =
         "const configInjector = createConfigInjector(SchemaValidator(), {
+                MikroORM: {
+                  lifetime: Lifetime.Singleton,
+                  type: MikroORM,
+                  factory: () => MikroORM.initSync(mikroOrmOptionsConfig)
+                },
                 EntityManager: {
                   lifetime: Lifetime.Scoped,
                   type: EntityManager,
-                  factory: (_args, _resolve, context) =>
+                  factory: ({ MikroORM }, _resolve, context) =>
                     orm.em.fork(context?.entityManagerOptions as ForkOptions | undefined),
                 },
             })";

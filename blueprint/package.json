@@ -60,10 +60,10 @@
   },
   "dependencies": {
     "@forklaunch/common": "^0.4.5",
-    "@forklaunch/core": "^0.11.5",
-    "@forklaunch/express": "^0.7.5",
-    "@forklaunch/hyper-express": "^0.7.5",
-    "@forklaunch/universal-sdk": "^0.5.2",
+    "@forklaunch/core": "^0.11.6",
+    "@forklaunch/express": "^0.7.6",
+    "@forklaunch/hyper-express": "^0.7.6",
+    "@forklaunch/universal-sdk": "^0.5.3",
     "@forklaunch/validator": "^0.7.7"
   },
   "pnpm": {

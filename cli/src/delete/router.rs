@@ -23,6 +23,7 @@ use crate::{
             deletions::{
                 delete_from_index_ts::delete_from_index_ts_export,
                 delete_from_registrations_ts::delete_from_registrations_ts_config_injector,
+                delete_from_sdk_types_ts::delete_from_sdk_types_client_input,
                 delete_from_seed_data_ts::delete_from_seed_data_ts,
                 delete_from_server_ts::delete_from_server_ts_router,
                 delete_import_statement::delete_import_statement,
@@ -277,6 +278,13 @@ impl CliCommand for RouterCommand {
         let new_server_content =
             delete_from_server_ts_router(&allocator, &mut server_program, &router_name)?;
 
+        let sdk_types_path = base_path.join("sdk.types.ts");
+        let sdk_types_text = read_to_string(&sdk_types_path)?;
+        let sdk_types_type = SourceType::from_path(&sdk_types_path)?;
+        let mut sdk_types_program = parse_ast_program(&allocator, &sdk_types_text, sdk_types_type);
+        let new_sdk_types_content =
+            delete_from_sdk_types_client_input(&mut sdk_types_program, &router_name)?;
+
         write_rendered_templates(
             &vec![
                 RenderedTemplate {
@@ -307,6 +315,11 @@ impl CliCommand for RouterCommand {
                 RenderedTemplate {
                     path: entities_path,
                     content: new_entities_index_content,
+                    context: Some(ERROR_FAILED_TO_WRITE_SERVICE_FILES.to_string()),
+                },
+                RenderedTemplate {
+                    path: sdk_types_path,
+                    content: new_sdk_types_content,
                     context: Some(ERROR_FAILED_TO_WRITE_SERVICE_FILES.to_string()),
                 },
             ],
