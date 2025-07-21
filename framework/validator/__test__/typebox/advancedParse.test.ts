@@ -10,6 +10,7 @@ import {
   null_,
   nullish,
   number,
+  optional,
   SchemaValidator,
   string,
   symbol,
@@ -877,6 +878,183 @@ describe('typebox advanced parse', () => {
         ok: true,
         value: 'hello'
       });
+    });
+  });
+
+  describe('object strictness', () => {
+    test('valid object with exact properties', () => {
+      const objectSchema = {
+        name: string,
+        age: number
+      };
+
+      compare(schemaValidator.parse(objectSchema, { name: 'John', age: 30 }), {
+        ok: true,
+        value: { name: 'John', age: 30 }
+      });
+    });
+
+    test('object with extra properties', () => {
+      const objectSchema = {
+        name: string,
+        age: number
+      };
+
+      compare(
+        schemaValidator.parse(objectSchema, {
+          name: 'John',
+          age: 30,
+          extra: 'property'
+        }),
+        {
+          ok: false,
+          errors: [{ path: ['extra'], message: 'Unexpected property' }]
+        }
+      );
+    });
+
+    test('invalid object with missing required properties', () => {
+      const objectSchema = {
+        name: string,
+        age: number
+      };
+
+      expect(
+        schemaValidator.parse(objectSchema, {
+          name: 'John'
+        }).ok
+      ).toBe(false);
+    });
+
+    test('invalid object with wrong property types', () => {
+      const objectSchema = {
+        name: string,
+        age: number
+      };
+
+      expect(
+        schemaValidator.parse(objectSchema, {
+          name: 123,
+          age: 'thirty'
+        }).ok
+      ).toBe(false);
+    });
+
+    test('valid nested object with strict validation', () => {
+      const nestedSchema = {
+        user: {
+          name: string,
+          profile: {
+            age: number,
+            email: email
+          }
+        }
+      };
+
+      compare(
+        schemaValidator.parse(nestedSchema, {
+          user: {
+            name: 'John',
+            profile: {
+              age: 30,
+              email: 'john@example.com'
+            }
+          }
+        }),
+        {
+          ok: true,
+          value: {
+            user: {
+              name: 'John',
+              profile: {
+                age: 30,
+                email: 'john@example.com'
+              }
+            }
+          }
+        }
+      );
+    });
+
+    test('nested object with extra properties', () => {
+      const nestedSchema = {
+        user: {
+          name: string,
+          profile: {
+            age: number
+          }
+        }
+      };
+
+      compare(
+        schemaValidator.parse(nestedSchema, {
+          user: {
+            name: 'John',
+            profile: {
+              age: 30,
+              extra: 'property'
+            },
+            extra: 'property'
+          }
+        }),
+        {
+          ok: false,
+          errors: [
+            { path: ['user', 'extra'], message: 'Unexpected property' },
+            {
+              path: ['user', 'profile', 'extra'],
+              message: 'Unexpected property'
+            }
+          ]
+        }
+      );
+    });
+
+    test('valid object with optional properties', () => {
+      const objectSchema = {
+        name: string,
+        age: optional(number)
+      };
+
+      compare(
+        schemaValidator.parse(objectSchema, {
+          name: 'John',
+          age: 30
+        }),
+        {
+          ok: true,
+          value: { name: 'John', age: 30 }
+        }
+      );
+
+      compare(
+        schemaValidator.parse(objectSchema, {
+          name: 'John'
+        }),
+        {
+          ok: true,
+          value: { name: 'John' }
+        }
+      );
+    });
+
+    test('object with optional fields and extra properties', () => {
+      const objectSchema = {
+        name: string,
+        age: optional(number)
+      };
+
+      compare(
+        schemaValidator.parse(objectSchema, {
+          name: 'John',
+          age: 30,
+          extra: 'property'
+        }),
+        {
+          ok: false,
+          errors: [{ path: ['extra'], message: 'Unexpected property' }]
+        }
+      );
     });
   });
 });

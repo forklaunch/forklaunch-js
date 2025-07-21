@@ -1,6 +1,6 @@
 import { isNever } from '@forklaunch/common';
 import { AnySchemaValidator } from '@forklaunch/validator';
-import { JWTPayload, jwtVerify } from 'jose';
+import { decodeJwt, JWTPayload, jwtVerify } from 'jose';
 import { ParsedQs } from 'qs';
 import { discriminateAuthMethod } from '../../discriminateAuthMethod';
 import { hasPermissionChecks } from '../../guards/hasPermissionChecks';
@@ -15,16 +15,20 @@ import {
   MapReqQuerySchema,
   MapResBodyMapSchema,
   MapResHeadersSchema,
-  ResolvedForklaunchRequest
+  MapVersionedReqsSchema,
+  ResolvedForklaunchRequest,
+  VersionedRequests
 } from '../../types/apiDefinition.types';
 import {
   AuthMethods,
   Body,
   HeadersObject,
+  Method,
   ParamsDictionary,
   ParamsObject,
   QueryObject,
-  ResponsesObject
+  ResponsesObject,
+  VersionSchema
 } from '../../types/contractDetails.types';
 
 const invalidAuthorizationTokenFormat = [
@@ -65,6 +69,7 @@ async function checkAuthorizationToken<
   ReqBody extends Record<string, unknown>,
   ReqQuery extends ParsedQs,
   ReqHeaders extends Record<string, string>,
+  VersionedReqs extends VersionedRequests,
   BaseRequest
 >(
   authorizationMethod: AuthMethods<
@@ -73,16 +78,17 @@ async function checkAuthorizationToken<
     ReqBody,
     ReqQuery,
     ReqHeaders,
+    VersionedReqs,
     BaseRequest
   >,
   authorizationToken?: string,
-  req?: ResolvedForklaunchRequest<
+  req?: ForklaunchRequest<
     SV,
     P,
     ReqBody,
     ReqQuery,
     ReqHeaders,
-    BaseRequest
+    Extract<keyof VersionedReqs, string>
   >
 ): Promise<readonly [401 | 403 | 500, string] | undefined> {
   if (authorizationToken == null) {
@@ -118,7 +124,14 @@ async function checkAuthorizationToken<
         resourceId = decodedJwt;
       } catch (error) {
         (
-          req as ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>
+          req as ForklaunchRequest<
+            SV,
+            P,
+            ReqBody,
+            ReqQuery,
+            ReqHeaders,
+            Extract<keyof VersionedReqs, string>
+          >
         )?.openTelemetryCollector.error(error);
         return invalidAuthorizationToken;
       }
@@ -163,7 +176,15 @@ async function checkAuthorizationToken<
 
     const resourcePermissions = await authorizationMethod.mapPermissions(
       resourceId,
-      req
+      req as ResolvedForklaunchRequest<
+        SV,
+        P,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders,
+        VersionedReqs,
+        BaseRequest
+      >
     );
 
     if (
@@ -195,7 +216,18 @@ async function checkAuthorizationToken<
       return [500, 'No role mapping function provided.'];
     }
 
-    const resourceRoles = await authorizationMethod.mapRoles(resourceId, req);
+    const resourceRoles = await authorizationMethod.mapRoles(
+      resourceId,
+      req as ResolvedForklaunchRequest<
+        SV,
+        P,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders,
+        VersionedReqs,
+        BaseRequest
+      >
+    );
 
     if (
       'allowedRoles' in authorizationMethod &&
@@ -237,26 +269,30 @@ async function checkAuthorizationToken<
  */
 export async function parseRequestAuth<
   SV extends AnySchemaValidator,
+  ContractMethod extends Method,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
   ReqBody extends Body<SV>,
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
-  LocalsObj extends Record<string, unknown>
+  LocalsObj extends Record<string, unknown>,
+  VersionedApi extends VersionSchema<SV, ContractMethod>
 >(
   req: ForklaunchRequest<
     SV,
     MapParamsSchema<SV, P>,
     MapReqBodySchema<SV, ReqBody>,
     MapReqQuerySchema<SV, ReqQuery>,
-    MapReqHeadersSchema<SV, ReqHeaders>
+    MapReqHeadersSchema<SV, ReqHeaders>,
+    Extract<keyof MapVersionedReqsSchema<SV, VersionedApi>, string>
   >,
   res: ForklaunchResponse<
     unknown,
     MapResBodyMapSchema<SV, ResBodyMap>,
     MapResHeadersSchema<SV, ResHeaders>,
-    LocalsObj
+    LocalsObj,
+    Extract<keyof MapVersionedReqsSchema<SV, VersionedApi>, string>
   >,
   next?: ForklaunchNextFunction
 ) {
@@ -267,6 +303,7 @@ export async function parseRequestAuth<
         MapReqBodySchema<SV, ReqBody>,
         MapReqQuerySchema<SV, ReqQuery>,
         MapReqHeadersSchema<SV, ReqHeaders>,
+        MapVersionedReqsSchema<SV, VersionedApi>,
         unknown
       >
     | undefined;
@@ -279,11 +316,13 @@ export async function parseRequestAuth<
         MapReqBodySchema<SV, ReqBody>,
         MapReqQuerySchema<SV, ReqQuery>,
         MapReqHeadersSchema<SV, ReqHeaders>,
+        MapVersionedReqsSchema<SV, VersionedApi>,
         unknown
       >(
         auth,
         req.headers[auth.headerName ?? 'Authorization'] ||
           req.headers[auth.headerName ?? 'authorization'],
+        // we can safely cast here because we know that the user will supply resolution for the request
         req
       )) ?? [];
     if (error != null) {
@@ -291,6 +330,11 @@ export async function parseRequestAuth<
       res.status(error).send(message as never);
       return;
     }
+
+    req.session = decodeJwt(
+      req.headers[auth.headerName ?? 'Authorization'] ||
+        req.headers[auth.headerName ?? 'authorization']
+    );
   }
 
   next?.();

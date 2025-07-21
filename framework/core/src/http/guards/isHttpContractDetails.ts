@@ -4,10 +4,12 @@ import {
   ExtractedParamsObject,
   HeadersObject,
   HttpContractDetails,
+  HttpMethod,
   ParamsObject,
   QueryObject,
   ResponsesObject,
-  SchemaAuthMethods
+  SchemaAuthMethods,
+  VersionSchema
 } from '../types/contractDetails.types';
 import { isPathParamHttpContractDetails } from './isPathParamContractDetails';
 
@@ -46,6 +48,7 @@ export function isHttpContractDetails<
   QuerySchema extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
+  VersionedReqs extends VersionSchema<SV, HttpMethod>,
   BaseRequest,
   const Auth extends SchemaAuthMethods<
     SV,
@@ -53,6 +56,7 @@ export function isHttpContractDetails<
     BodySchema,
     QuerySchema,
     ReqHeaders,
+    VersionedReqs,
     BaseRequest
   >
 >(
@@ -67,6 +71,7 @@ export function isHttpContractDetails<
   QuerySchema,
   ReqHeaders,
   ResHeaders,
+  VersionedReqs,
   BaseRequest,
   Auth
 > {

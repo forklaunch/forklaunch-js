@@ -18,7 +18,8 @@ import {
   ForklaunchResHeaders,
   ForklaunchResponse,
   ForklaunchSendableData,
-  ForklaunchStatusResponse
+  ForklaunchStatusResponse,
+  VersionedRequests
 } from '../../types/apiDefinition.types';
 import { ParamsDictionary } from '../../types/contractDetails.types';
 
@@ -56,15 +57,24 @@ export function enrichExpressLikeSend<
   ReqQuery extends ParsedQs,
   ReqHeaders extends Record<string, string>,
   ResHeaders extends Record<string, string>,
-  LocalsObj extends Record<string, unknown>
+  LocalsObj extends Record<string, unknown>,
+  VersionedReqs extends VersionedRequests
 >(
   instance: unknown,
-  req: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>,
+  req: ForklaunchRequest<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    Extract<keyof VersionedReqs, string>
+  >,
   res: ForklaunchResponse<
     unknown,
     ResBodyMap,
     ForklaunchResHeaders & ResHeaders,
-    LocalsObj
+    LocalsObj,
+    Extract<keyof VersionedReqs, string>
   >,
   originalOperation:
     | ForklaunchStatusResponse<ForklaunchSendableData>['json']
@@ -92,6 +102,10 @@ export function enrichExpressLikeSend<
     req.openTelemetryCollector.error('Not Found');
     originalSend.call(instance, 'Not Found');
     errorSent = true;
+  }
+
+  if (req.contractDetails.responses == null) {
+    throw new Error('Responses schema definitions are required');
   }
 
   const responseBodies = discriminateResponseBodies(
@@ -233,7 +247,8 @@ export function enrichExpressLikeSend<
       ResBodyMap,
       ReqHeaders,
       ForklaunchResHeaders & ResHeaders,
-      LocalsObj
+      LocalsObj,
+      VersionedReqs
     >(req, res);
   }
 }

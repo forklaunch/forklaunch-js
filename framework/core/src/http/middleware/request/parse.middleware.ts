@@ -1,5 +1,7 @@
+import { isRecord } from '@forklaunch/common';
 import {
   AnySchemaValidator,
+  ParseResult,
   prettyPrintParseErrors,
   SchemaValidator
 } from '@forklaunch/validator';
@@ -9,7 +11,8 @@ import { isRequestShape } from '../../guards/isRequestShape';
 import {
   ForklaunchNextFunction,
   ForklaunchRequest,
-  ForklaunchResponse
+  ForklaunchResponse,
+  VersionedRequests
 } from '../../types/apiDefinition.types';
 import { ParamsDictionary } from '../../types/contractDetails.types';
 
@@ -32,10 +35,24 @@ export function parse<
   ReqQuery extends ParsedQs,
   ReqHeaders extends Record<string, string>,
   ResHeaders extends Record<string, string>,
-  LocalsObj extends Record<string, unknown>
+  LocalsObj extends Record<string, unknown>,
+  VersionedReqs extends VersionedRequests
 >(
-  req: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>,
-  res: ForklaunchResponse<unknown, ResBodyMap, ResHeaders, LocalsObj>,
+  req: ForklaunchRequest<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    Extract<keyof VersionedReqs, string>
+  >,
+  res: ForklaunchResponse<
+    unknown,
+    ResBodyMap,
+    ResHeaders,
+    LocalsObj,
+    Extract<keyof VersionedReqs, string>
+  >,
   next?: ForklaunchNextFunction
 ) {
   const request = {
@@ -45,10 +62,47 @@ export function parse<
     body: req.body
   };
 
-  const parsedRequest = (req.schemaValidator as SchemaValidator).parse(
-    req.requestSchema,
-    request
-  );
+  const schemaValidator = req.schemaValidator as SchemaValidator;
+
+  let matchedVersions;
+
+  let parsedRequest: ParseResult<object> | undefined;
+  let collectedParseErrors: string | undefined;
+
+  if (isRecord(req.requestSchema)) {
+    let runningParseErrors: string = '';
+    matchedVersions = [];
+
+    Object.entries(req.requestSchema).forEach(([version, schema]) => {
+      const parsingResult = schemaValidator.parse(schema, request);
+
+      if (parsingResult.ok) {
+        parsedRequest = parsingResult;
+        matchedVersions.push(version);
+        req.version = version as Extract<keyof VersionedReqs, string>;
+        res.version = version as Extract<keyof VersionedReqs, string>;
+      } else {
+        runningParseErrors += prettyPrintParseErrors(
+          parsingResult.errors,
+          `Version ${version} request`
+        );
+      }
+    });
+
+    if (!parsedRequest) {
+      parsedRequest = {
+        ok: false,
+        errors: []
+      };
+      collectedParseErrors = runningParseErrors;
+    }
+  } else {
+    const parsingResult = schemaValidator.parse(req.requestSchema, request);
+
+    parsedRequest = parsingResult;
+
+    matchedVersions = 0;
+  }
 
   if (
     parsedRequest.ok &&
@@ -83,10 +137,10 @@ export function parse<
         res.status(400);
         if (hasSend(res)) {
           res.send(
-            `${prettyPrintParseErrors(
-              parsedRequest.errors,
-              'Request'
-            )}\n\nCorrelation id: ${
+            `${
+              collectedParseErrors ??
+              prettyPrintParseErrors(parsedRequest.errors, 'Request')
+            }\n\nCorrelation id: ${
               req.context.correlationId ?? 'No correlation ID'
             }`
           );
@@ -96,7 +150,8 @@ export function parse<
         return;
       case 'warning':
         req.openTelemetryCollector.warn(
-          prettyPrintParseErrors(parsedRequest.errors, 'Request')
+          collectedParseErrors ??
+            prettyPrintParseErrors(parsedRequest.errors, 'Request')
         );
         break;
       case 'none':
@@ -104,5 +159,6 @@ export function parse<
     }
   }
 
+  req._parsedVersions = matchedVersions;
   next?.();
 }

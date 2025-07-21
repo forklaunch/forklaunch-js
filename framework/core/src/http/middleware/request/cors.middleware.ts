@@ -30,7 +30,8 @@ export function cors<
       unknown,
       ResBodyMap,
       ForklaunchResHeaders & ResHeaders,
-      LocalsObj
+      LocalsObj,
+      never
     >,
     next?: ForklaunchNextFunction
   ) => {

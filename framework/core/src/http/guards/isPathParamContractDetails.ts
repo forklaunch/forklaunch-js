@@ -5,9 +5,11 @@ import {
   HeadersObject,
   ParamsObject,
   PathParamHttpContractDetails,
+  PathParamMethod,
   QueryObject,
   ResponsesObject,
-  SchemaAuthMethods
+  SchemaAuthMethods,
+  VersionSchema
 } from '../types/contractDetails.types';
 
 export function isPathParamHttpContractDetails<
@@ -20,6 +22,7 @@ export function isPathParamHttpContractDetails<
   QuerySchema extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
+  VersionedApi extends VersionSchema<SV, PathParamMethod>,
   BaseRequest,
   const Auth extends SchemaAuthMethods<
     SV,
@@ -27,6 +30,7 @@ export function isPathParamHttpContractDetails<
     BodySchema,
     QuerySchema,
     ReqHeaders,
+    VersionedApi,
     BaseRequest
   >
 >(
@@ -41,6 +45,7 @@ export function isPathParamHttpContractDetails<
   QuerySchema,
   ReqHeaders,
   ResHeaders,
+  VersionedApi,
   BaseRequest,
   Auth
 > {

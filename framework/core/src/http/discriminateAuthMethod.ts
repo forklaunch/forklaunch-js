@@ -1,5 +1,6 @@
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
+import { VersionedRequests } from './types/apiDefinition.types';
 import {
   AuthMethods,
   AuthMethodsBase,
@@ -45,9 +46,18 @@ export function discriminateAuthMethod<
   ReqBody extends Record<string, unknown>,
   ReqQuery extends ParsedQs,
   ReqHeaders extends Record<string, string>,
+  VersionedReqs extends VersionedRequests,
   BaseRequest
 >(
-  auth: AuthMethods<SV, P, ReqBody, ReqQuery, ReqHeaders, BaseRequest>
+  auth: AuthMethods<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    VersionedReqs,
+    BaseRequest
+  >
 ):
   | {
       type: 'basic';

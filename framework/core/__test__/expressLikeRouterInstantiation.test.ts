@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { isNever } from '@forklaunch/common';
 import {
   date,
   number,
@@ -168,5 +169,74 @@ const b = xa.trace(
 );
 
 const c = xa.trace('/test/:name/:id', xasd);
+
+const fff = typedHandler(
+  SchemaValidator(),
+  '/test/:name/:id',
+  'trace',
+  {
+    name: 'string',
+    summary: 'string',
+    params: {
+      name: string,
+      id: number
+    },
+    versions: {
+      '1.0.0': {
+        requestHeaders: {
+          'x-test': number
+        },
+        responses: {
+          200: date,
+          400: string
+        }
+      },
+      '4': {
+        requestHeaders: {
+          'x-test': string
+        },
+        responses: {
+          200: string,
+          400: number
+        }
+      }
+    },
+    auth: {
+      basic: {
+        login: (username: string, password: string) => {
+          return username === 'test' && password === 'test';
+        }
+      },
+      mapPermissions: kl,
+      // (sub, req) => {
+      //   const j = req?.params.id;
+      //   return new Set(['admin', 'user']);
+      // },
+      allowedPermissions: new Set(['admin', 'user'])
+    }
+  },
+  async (req, res) => {
+    // const r = req.params.a;
+    switch (req.version) {
+      case '1.0.0':
+        req.headers['x-test'] = 1;
+        break;
+      case 4:
+        req.headers['x-test'] = '1';
+        break;
+      default:
+        isNever(req.version);
+    }
+    const i = req.headers['x-test'] * 7;
+    const l = res.getHeaders()['x-correlation-id'];
+  },
+  async (req, res) => {
+    // const r = req.params.a;
+    req.version;
+    const i = req.headers['x-test'] * 7;
+    const l = res.getHeaders()['x-correlation-id'];
+    res.status(200).send(new Date());
+  }
+);
 
 xa.all(contractDetails, async (req, res) => {});

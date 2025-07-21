@@ -34,45 +34,60 @@ describe('typebox schema validator tests', () => {
       }
     };
     schemified = schemify(schema);
-    expectedSchema = Type.Object({
-      hello: Type.Object({
-        world: Type.String({
-          example: 'a string',
-          title: 'String'
-        })
-      }),
-      foo: Type.Object({
-        bar: Type.Transform(
-          Type.Union(
-            [
-              Type.Number(),
-              Type.String({ pattern: '^[0-9]+$' }),
-              Type.Boolean(),
-              Type.Null(),
-              Type.BigInt(),
-              Type.Date()
-            ],
-            {
-              errorType: 'number-like',
-              example: 123,
-              title: 'Number'
-            }
-          )
+    expectedSchema = Type.Object(
+      {
+        hello: Type.Object(
+          {
+            world: Type.String({
+              example: 'a string',
+              title: 'String'
+            })
+          },
+          {
+            additionalProperties: false
+          }
+        ),
+        foo: Type.Object(
+          {
+            bar: Type.Transform(
+              Type.Union(
+                [
+                  Type.Number(),
+                  Type.String({ pattern: '^[0-9]+$' }),
+                  Type.Boolean(),
+                  Type.Null(),
+                  Type.BigInt(),
+                  Type.Date()
+                ],
+                {
+                  errorType: 'number-like',
+                  example: 123,
+                  title: 'Number'
+                }
+              )
+            )
+              .Decode((value) => {
+                if (typeof value === 'string') {
+                  const num = Number(value);
+                  if (isNaN(num)) {
+                    throw new Error('Invalid number');
+                  } else {
+                    return num;
+                  }
+                }
+                return value;
+              })
+              .Encode(Number)
+          },
+          {
+            additionalProperties: false
+          }
         )
-          .Decode((value) => {
-            if (typeof value === 'string') {
-              const num = Number(value);
-              if (isNaN(num)) {
-                throw new Error('Invalid number');
-              } else {
-                return num;
-              }
-            }
-            return value;
-          })
-          .Encode(Number)
-      })
-    });
+      },
+      {
+        additionalProperties: false
+      }
+    );
   });
 
   test('schemify', async () => {
@@ -176,9 +191,14 @@ describe('typebox schema validator tests', () => {
     const schemifiedExpected = Type.Union(
       [
         expectedSchema,
-        Type.Object({
-          test: Type.String({ example: 'a string', title: 'String' })
-        })
+        Type.Object(
+          {
+            test: Type.String({ example: 'a string', title: 'String' })
+          },
+          {
+            additionalProperties: false
+          }
+        )
       ],
       {
         errorType: 'any of object, object',
@@ -199,9 +219,14 @@ describe('typebox schema validator tests', () => {
 
     compare(
       schemified,
-      Type.Object({
-        hello: Type.Literal('world')
-      })
+      Type.Object(
+        {
+          hello: Type.Literal('world')
+        },
+        {
+          additionalProperties: false
+        }
+      )
     );
   });
 
@@ -349,27 +374,42 @@ describe('typebox schema validator tests', () => {
     const mutation = schemify(schema);
     compare(
       openapi(schema),
-      Type.Object({
-        hello: Type.Object({
-          world: Type.String({ example: 'a string', title: 'String' })
-        }),
-        foo: Type.Object({
-          bar: Type.Union(
-            [
-              Type.Number(),
-              Type.String({ pattern: '^[0-9]+$' }),
-              Type.Boolean(),
-              Type.Null(),
-              Type.BigInt(),
-              Type.String({ format: 'date-time' })
-            ],
+      Type.Object(
+        {
+          hello: Type.Object(
             {
-              example: 123,
-              title: 'Number'
+              world: Type.String({ example: 'a string', title: 'String' })
+            },
+            {
+              additionalProperties: false
+            }
+          ),
+          foo: Type.Object(
+            {
+              bar: Type.Union(
+                [
+                  Type.Number(),
+                  Type.String({ pattern: '^[0-9]+$' }),
+                  Type.Boolean(),
+                  Type.Null(),
+                  Type.BigInt(),
+                  Type.String({ format: 'date-time' })
+                ],
+                {
+                  example: 123,
+                  title: 'Number'
+                }
+              )
+            },
+            {
+              additionalProperties: false
             }
           )
-        })
-      })
+        },
+        {
+          additionalProperties: false
+        }
+      )
     );
     // ensure that no mutation has occurred to schema
     compare(schemify(schema), mutation);

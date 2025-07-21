@@ -3,6 +3,7 @@ import { ParsedQs } from 'qs';
 
 import {
   EmptyObject,
+  isRecord,
   Prettify,
   PrettyCamelCase,
   sanitizePathSlashes,
@@ -11,6 +12,7 @@ import {
   toRecord,
   TypeSafeFunction
 } from '@forklaunch/common';
+import { hasVersionedSchema } from '../guards/hasVersionedSchema';
 import { isConstrainedForklaunchRouter } from '../guards/isConstrainedForklaunchRouter';
 import { isExpressLikeSchemaHandler } from '../guards/isExpressLikeSchemaHandler';
 import { isForklaunchExpressLikeRouter } from '../guards/isForklaunchExpressLikeRouter';
@@ -33,20 +35,25 @@ import {
   ExpressLikeHandler,
   ExpressLikeSchemaHandler,
   LiveSdkFunction,
-  LiveTypeFunction
+  LiveTypeFunction,
+  VersionedRequests,
+  VersionedResponses
 } from '../types/apiDefinition.types';
 import {
   Body,
   ContractDetails,
   HeadersObject,
+  HttpMethod,
   Method,
   ParamsDictionary,
   ParamsObject,
   PathParamHttpContractDetails,
+  PathParamMethod,
   QueryObject,
   ResponseCompiledSchema,
   ResponsesObject,
-  SchemaAuthMethods
+  SchemaAuthMethods,
+  VersionSchema
 } from '../types/contractDetails.types';
 import {
   ContractDetailsOrMiddlewareOrTypedHandler,
@@ -128,17 +135,21 @@ export class ForklaunchExpressLikeRouter<
    */
   #resolveMiddlewares<
     P extends ParamsObject<SV>,
+    ContractMethod extends Method,
     ResBodyMap extends ResponsesObject<SV>,
     ReqBody extends Body<SV>,
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    VersionedApi extends VersionSchema<SV, ContractMethod>
   >(
     path: string,
     contractDetails: PathParamHttpContractDetails<SV>,
-    requestSchema: unknown,
-    responseSchemas: ResponseCompiledSchema
+    requestSchema: unknown | Record<string, unknown>,
+    responseSchemas:
+      | ResponseCompiledSchema
+      | Record<string, ResponseCompiledSchema>
   ): ExpressLikeSchemaHandler<
     SV,
     P,
@@ -148,6 +159,7 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders,
     ResHeaders,
     LocalsObj,
+    VersionedApi,
     BaseRequest,
     BaseResponse,
     NextFunction
@@ -155,13 +167,15 @@ export class ForklaunchExpressLikeRouter<
     return [
       enrichDetails<
         SV,
+        ContractMethod,
         P,
         ResBodyMap,
         ReqBody,
         ReqQuery,
         ReqHeaders,
         ResHeaders,
-        LocalsObj
+        LocalsObj,
+        VersionedApi
       >(
         `${this.basePath}${path}`,
         contractDetails as PathParamHttpContractDetails<SV>,
@@ -173,13 +187,15 @@ export class ForklaunchExpressLikeRouter<
       parse,
       parseRequestAuth<
         SV,
+        ContractMethod,
         P,
         ResBodyMap,
         ReqBody,
         ReqQuery,
         ReqHeaders,
         ResHeaders,
-        LocalsObj
+        LocalsObj,
+        VersionedApi
       >
     ] as ExpressLikeSchemaHandler<
       SV,
@@ -190,6 +206,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -215,7 +232,9 @@ export class ForklaunchExpressLikeRouter<
     ReqQuery extends ParsedQs,
     ReqHeaders extends Record<string, string>,
     ResHeaders extends Record<string, string>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    VersionedReqs extends VersionedRequests,
+    VersionedResps extends VersionedResponses
   >(
     requestHandler: ExpressLikeHandler<
       SV,
@@ -226,6 +245,8 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedReqs,
+      VersionedResps,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -239,6 +260,8 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders,
     ResHeaders,
     LocalsObj,
+    VersionedReqs,
+    VersionedResps,
     BaseRequest,
     BaseResponse,
     NextFunction
@@ -279,7 +302,9 @@ export class ForklaunchExpressLikeRouter<
     ReqQuery extends ParsedQs,
     ReqHeaders extends Record<string, string>,
     ResHeaders extends Record<string, string>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    VersionedReqs extends VersionedRequests,
+    VersionedResps extends VersionedResponses
   >(
     handlers: ExpressLikeHandler<
       SV,
@@ -290,6 +315,8 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedReqs,
+      VersionedResps,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -303,6 +330,8 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders,
     ResHeaders,
     LocalsObj,
+    VersionedReqs,
+    VersionedResps,
     BaseRequest,
     BaseResponse,
     NextFunction
@@ -318,6 +347,76 @@ export class ForklaunchExpressLikeRouter<
     return controllerHandler;
   }
 
+  #processContractDetailsIO<P extends ParamsObject<SV>>(
+    contractDetailsIO: {
+      requestHeaders?: HeadersObject<SV>;
+      responseHeaders?: HeadersObject<SV>;
+      query?: QueryObject<SV>;
+      body?: Body<SV>;
+      responses: ResponsesObject<SV>;
+    },
+    params?: P
+  ) {
+    const schemaValidator = this.schemaValidator as SchemaValidator;
+
+    const responseSchemas = {
+      400: schemaValidator.string,
+      401: schemaValidator.string,
+      403: schemaValidator.string,
+      404: schemaValidator.string,
+      500: schemaValidator.string,
+      ...Object.fromEntries(
+        Object.entries(
+          discriminateResponseBodies(
+            this.schemaValidator,
+            contractDetailsIO.responses
+          )
+        ).map(([key, value]) => {
+          return [Number(key), value.schema];
+        })
+      )
+    };
+
+    return {
+      requestSchema: schemaValidator.compile(
+        schemaValidator.schemify({
+          ...(params != null ? { params } : {}),
+          ...(contractDetailsIO.requestHeaders != null
+            ? { headers: contractDetailsIO.requestHeaders }
+            : {}),
+          ...(contractDetailsIO.query != null
+            ? { query: contractDetailsIO.query }
+            : {}),
+          ...(contractDetailsIO.body != null
+            ? {
+                body: discriminateBody(
+                  this.schemaValidator,
+                  contractDetailsIO.body
+                )?.schema
+              }
+            : {})
+        })
+      ),
+      responseSchemas: {
+        ...(contractDetailsIO.responseHeaders != null
+          ? {
+              headers: schemaValidator.compile(
+                schemaValidator.schemify(contractDetailsIO.responseHeaders)
+              )
+            }
+          : {}),
+        responses: Object.fromEntries(
+          Object.entries(responseSchemas).map(([key, value]) => {
+            return [
+              key,
+              schemaValidator.compile(schemaValidator.schemify(value))
+            ];
+          })
+        )
+      }
+    };
+  }
+
   #compile<
     ContractMethod extends Method,
     Name extends string,
@@ -328,12 +427,14 @@ export class ForklaunchExpressLikeRouter<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
+    const VersionedApi extends VersionSchema<SV, ContractMethod>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -348,102 +449,75 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
+      VersionedApi,
       BaseRequest,
       Auth
     >
   ) {
-    const schemaValidator = this.schemaValidator as SchemaValidator;
+    let requestSchema: unknown | Record<string, unknown>;
+    let responseSchemas:
+      | ResponseCompiledSchema
+      | Record<string, ResponseCompiledSchema>;
 
-    let body = null;
-    if (
-      isHttpContractDetails<
-        SV,
-        Name,
-        Path,
-        P,
-        ResBodyMap,
-        ReqBody,
-        ReqQuery,
-        ReqHeaders,
-        ResHeaders,
-        BaseRequest,
-        Auth
-      >(contractDetails)
-    ) {
-      body = discriminateBody(this.schemaValidator, contractDetails.body);
-    }
+    if (hasVersionedSchema(contractDetails)) {
+      requestSchema = {};
+      responseSchemas = {};
 
-    const requestSchema = schemaValidator.compile(
-      schemaValidator.schemify({
-        ...(contractDetails.params ? { params: contractDetails.params } : {}),
-        ...(contractDetails.requestHeaders
-          ? { headers: contractDetails.requestHeaders }
-          : {}),
-        ...(contractDetails.query ? { query: contractDetails.query } : {}),
-        ...(body != null ? { body: body.schema } : {})
-      })
-    );
+      Object.entries(contractDetails.versions ?? {}).forEach(
+        ([version, versionedContractDetails]) => {
+          const {
+            requestSchema: versionedRequestSchema,
+            responseSchemas: versionedResponseSchemas
+          } = this.#processContractDetailsIO(
+            versionedContractDetails,
+            contractDetails.params
+          );
 
-    const responseEntries = {
-      400: schemaValidator.string,
-      401: schemaValidator.string,
-      403: schemaValidator.string,
-      404: schemaValidator.string,
-      500: schemaValidator.string,
-      ...(isPathParamHttpContractDetails<
-        SV,
-        Name,
-        Path,
-        P,
-        ResBodyMap,
-        ReqBody,
-        ReqQuery,
-        ReqHeaders,
-        ResHeaders,
-        BaseRequest,
-        Auth
-      >(contractDetails) ||
-      isHttpContractDetails<
-        SV,
-        Name,
-        Path,
-        P,
-        ResBodyMap,
-        ReqBody,
-        ReqQuery,
-        ReqHeaders,
-        ResHeaders,
-        BaseRequest,
-        Auth
-      >(contractDetails)
-        ? Object.fromEntries(
-            Object.entries(
-              discriminateResponseBodies(
-                this.schemaValidator,
-                contractDetails.responses
-              )
-            ).map(([key, value]) => {
-              return [key, value.schema];
-            })
-          )
-        : {})
-    };
-
-    const responseSchemas: ResponseCompiledSchema = {
-      responses: {},
-      ...(contractDetails.responseHeaders
-        ? {
-            headers: schemaValidator.compile(
-              schemaValidator.schemify(contractDetails.responseHeaders)
-            )
+          if (isRecord(requestSchema)) {
+            requestSchema = {
+              ...requestSchema,
+              [version]: versionedRequestSchema
+            };
           }
-        : {})
-    };
-    Object.entries(responseEntries).forEach(([code, responseShape]) => {
-      responseSchemas.responses[Number(code)] = schemaValidator.compile(
-        schemaValidator.schemify(responseShape)
+          if (isRecord(responseSchemas)) {
+            responseSchemas = {
+              ...responseSchemas,
+              [version]: versionedResponseSchemas
+            };
+          }
+        }
       );
-    });
+    } else {
+      const {
+        requestSchema: unversionedRequestSchema,
+        responseSchemas: unversionedResponseSchemas
+      } = this.#processContractDetailsIO(
+        {
+          ...('requestHeaders' in contractDetails &&
+          contractDetails.requestHeaders != null
+            ? { requestHeaders: contractDetails.requestHeaders }
+            : {}),
+          ...('responseHeaders' in contractDetails &&
+          contractDetails.responseHeaders != null
+            ? { responseHeaders: contractDetails.responseHeaders }
+            : {}),
+          ...('query' in contractDetails && contractDetails.query != null
+            ? { query: contractDetails.query }
+            : {}),
+          ...('body' in contractDetails && contractDetails.body != null
+            ? { body: contractDetails.body }
+            : {}),
+          responses:
+            'responses' in contractDetails && contractDetails.responses != null
+              ? contractDetails.responses
+              : {}
+        },
+        contractDetails.params
+      );
+
+      requestSchema = unversionedRequestSchema;
+      responseSchemas = unversionedResponseSchemas;
+    }
 
     return {
       requestSchema,
@@ -635,12 +709,14 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, ContractMethod>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -659,6 +735,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -676,6 +753,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -762,6 +840,7 @@ export class ForklaunchExpressLikeRouter<
         ReqHeaders,
         ResHeaders,
         LocalsObj,
+        VersionedApi,
         BaseRequest,
         BaseResponse,
         NextFunction,
@@ -781,6 +860,7 @@ export class ForklaunchExpressLikeRouter<
         ReqHeaders,
         ResHeaders,
         LocalsObj,
+        VersionedApi,
         Auth
       >(method, path, registrationMethod, contractDetails, ...handlers);
 
@@ -871,6 +951,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -889,6 +970,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           Auth
         >(
           method,
@@ -969,6 +1051,7 @@ export class ForklaunchExpressLikeRouter<
         if (
           isExpressLikeSchemaHandler<
             SV,
+            ContractMethod,
             P,
             ResBodyMap,
             ReqBody,
@@ -976,6 +1059,7 @@ export class ForklaunchExpressLikeRouter<
             ReqHeaders,
             ResHeaders,
             LocalsObj,
+            VersionedApi,
             BaseRequest,
             BaseResponse,
             NextFunction
@@ -992,6 +1076,7 @@ export class ForklaunchExpressLikeRouter<
             ReqHeaders,
             ResHeaders,
             LocalsObj,
+            VersionedApi,
             BaseRequest,
             BaseResponse,
             NextFunction,
@@ -1007,6 +1092,7 @@ export class ForklaunchExpressLikeRouter<
         ).filter((handler) =>
           isExpressLikeSchemaHandler<
             SV,
+            ContractMethod,
             P,
             ResBodyMap,
             ReqBody,
@@ -1014,6 +1100,7 @@ export class ForklaunchExpressLikeRouter<
             ReqHeaders,
             ResHeaders,
             LocalsObj,
+            VersionedApi,
             BaseRequest,
             BaseResponse,
             NextFunction
@@ -1031,6 +1118,9 @@ export class ForklaunchExpressLikeRouter<
             ReqQuery,
             ReqHeaders,
             ResHeaders,
+            VersionedApi extends VersionSchema<SV, HttpMethod>
+              ? VersionedApi
+              : never,
             BaseRequest,
             Auth
           >(contractDetails) &&
@@ -1044,6 +1134,9 @@ export class ForklaunchExpressLikeRouter<
             ReqQuery,
             ReqHeaders,
             ResHeaders,
+            VersionedApi extends VersionSchema<SV, PathParamMethod>
+              ? VersionedApi
+              : never,
             BaseRequest,
             Auth
           >(contractDetails)
@@ -1070,27 +1163,32 @@ export class ForklaunchExpressLikeRouter<
           ReqQuery,
           ReqHeaders,
           ResHeaders,
+          VersionedApi,
           Auth
         >(contractDetails);
 
         const controllerHandler = this.#extractControllerHandler(handlers);
 
+        const resolvedMiddlewares = this.#resolveMiddlewares<
+          P,
+          ContractMethod,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj,
+          VersionedApi
+        >(
+          path,
+          contractDetails as PathParamHttpContractDetails<SV>,
+          requestSchema,
+          responseSchemas
+        ).concat(handlers);
+
         registrationMethod.bind(this.internal)(
           path,
-          ...(this.#resolveMiddlewares<
-            P,
-            ResBodyMap,
-            ReqBody,
-            ReqQuery,
-            ReqHeaders,
-            ResHeaders,
-            LocalsObj
-          >(
-            path,
-            contractDetails as PathParamHttpContractDetails<SV>,
-            requestSchema,
-            responseSchemas
-          ).concat(handlers) as RouterHandler[]),
+          ...(resolvedMiddlewares as RouterHandler[]),
           this.#parseAndRunControllerHandler(controllerHandler) as RouterHandler
         );
 
@@ -1190,12 +1288,14 @@ export class ForklaunchExpressLikeRouter<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     ArrayReturnType,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -1212,6 +1312,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -1237,6 +1338,7 @@ export class ForklaunchExpressLikeRouter<
         ReqHeaders,
         ResHeaders,
         LocalsObj,
+        VersionedApi,
         BaseRequest,
         BaseResponse,
         NextFunction,
@@ -1260,6 +1362,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -1289,12 +1392,14 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -1311,6 +1416,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -1330,6 +1436,7 @@ export class ForklaunchExpressLikeRouter<
       ResHeaders,
       LocalsObj,
       RouterHandler,
+      VersionedApi,
       Auth
     >(handlers);
   }
@@ -1344,12 +1451,14 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -1366,6 +1475,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -1385,6 +1495,7 @@ export class ForklaunchExpressLikeRouter<
       ResHeaders,
       LocalsObj,
       RouterHandler | Internal,
+      VersionedApi,
       Auth
     >(handlers, (handler) => {
       if (
@@ -1418,12 +1529,14 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -1440,6 +1553,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -1462,6 +1576,7 @@ export class ForklaunchExpressLikeRouter<
         ReqHeaders,
         ResHeaders,
         LocalsObj,
+        VersionedApi,
         BaseRequest,
         BaseResponse,
         NextFunction,
@@ -1484,12 +1599,14 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -1506,6 +1623,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -1526,6 +1644,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -1546,6 +1665,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(contractDetailsOrMiddlewareOrTypedHandler, middleware);
 
@@ -1560,6 +1680,7 @@ export class ForklaunchExpressLikeRouter<
         ReqHeaders,
         ResHeaders,
         LocalsObj,
+        VersionedApi,
         Auth
       >(middlewareOrMiddlewareWithTypedHandler)
     );
@@ -1577,12 +1698,14 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -1599,6 +1722,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -1619,6 +1743,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -1639,6 +1764,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       contractDetailsOrMiddlewareOrTypedHandler as ContractDetailsOrMiddlewareOrTypedHandler<
@@ -1653,6 +1779,7 @@ export class ForklaunchExpressLikeRouter<
         ReqHeaders,
         ResHeaders,
         LocalsObj,
+        VersionedApi,
         BaseRequest,
         BaseResponse,
         NextFunction,
@@ -1690,6 +1817,7 @@ export class ForklaunchExpressLikeRouter<
         ReqHeaders,
         ResHeaders,
         LocalsObj,
+        VersionedApi,
         Auth
       >(middlewareOrMiddlewareWithTypedHandler)
     );
@@ -1707,12 +1835,14 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -1731,6 +1861,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -1750,6 +1881,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -1769,6 +1901,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -1791,6 +1924,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           Auth
         >(
           contractDetailsOrMiddlewareOrTypedHandler,
@@ -1811,12 +1945,14 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           Auth
         >(
           pathOrContractDetailsOrMiddlewareOrTypedHandler,
           (
             (isExpressLikeSchemaHandler<
               SV,
+              'middleware',
               P,
               ResBodyMap,
               ReqBody,
@@ -1824,6 +1960,7 @@ export class ForklaunchExpressLikeRouter<
               ReqHeaders,
               ResHeaders,
               LocalsObj,
+              VersionedApi,
               BaseRequest,
               BaseResponse,
               NextFunction
@@ -1840,6 +1977,7 @@ export class ForklaunchExpressLikeRouter<
               ReqHeaders,
               ResHeaders,
               LocalsObj,
+              VersionedApi,
               BaseRequest,
               BaseResponse,
               NextFunction,
@@ -1859,6 +1997,7 @@ export class ForklaunchExpressLikeRouter<
                   ReqHeaders,
                   ResHeaders,
                   LocalsObj,
+                  VersionedApi,
                   BaseRequest,
                   BaseResponse,
                   NextFunction,
@@ -1902,12 +2041,14 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -1926,6 +2067,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -1945,6 +2087,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -1964,6 +2107,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -1987,6 +2131,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           Auth
         >(
           contractDetailsOrMiddlewareOrTypedHandler,
@@ -2016,11 +2161,13 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           Auth
         >(
           pathOrContractDetailsOrMiddlewareOrTypedHandler,
           (isExpressLikeSchemaHandler<
             SV,
+            'middleware',
             P,
             ResBodyMap,
             ReqBody,
@@ -2028,6 +2175,7 @@ export class ForklaunchExpressLikeRouter<
             ReqHeaders,
             ResHeaders,
             LocalsObj,
+            VersionedApi,
             BaseRequest,
             BaseResponse,
             NextFunction
@@ -2044,6 +2192,7 @@ export class ForklaunchExpressLikeRouter<
             ReqHeaders,
             ResHeaders,
             LocalsObj,
+            VersionedApi,
             BaseRequest,
             BaseResponse,
             NextFunction,
@@ -2109,12 +2258,14 @@ export class ForklaunchExpressLikeRouter<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     Router extends ConstrainedForklaunchRouter<SV, RouterHandler>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -2132,6 +2283,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -2151,6 +2303,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -2170,6 +2323,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -2198,6 +2352,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       this.internal.use,
@@ -2239,12 +2394,14 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -2262,6 +2419,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -2281,6 +2439,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -2300,6 +2459,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -2318,6 +2478,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       this.internal.all,
@@ -2344,12 +2505,14 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -2367,6 +2530,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -2386,6 +2550,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -2405,6 +2570,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -2423,6 +2589,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       this.internal.connect,
@@ -2465,12 +2632,14 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'get'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -2487,6 +2656,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -2504,6 +2674,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -2521,6 +2692,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       'get',
@@ -2564,12 +2736,14 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'post'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -2586,6 +2760,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -2603,6 +2778,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -2620,6 +2796,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       'post',
@@ -2663,12 +2840,14 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'put'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -2685,6 +2864,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -2702,6 +2882,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -2719,6 +2900,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       'put',
@@ -2762,12 +2944,14 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'patch'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -2784,6 +2968,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -2801,6 +2986,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -2818,6 +3004,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       'patch',
@@ -2861,12 +3048,14 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'delete'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -2883,6 +3072,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -2900,6 +3090,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -2917,6 +3108,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       'delete',
@@ -2960,12 +3152,14 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'options'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -2982,6 +3176,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -2999,6 +3194,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -3016,6 +3212,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       'options',
@@ -3059,12 +3256,14 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'head'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -3081,6 +3280,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -3098,6 +3298,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -3115,6 +3316,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       'head',
@@ -3158,12 +3360,14 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'trace'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -3180,6 +3384,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -3197,6 +3402,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -3214,6 +3420,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       'trace',

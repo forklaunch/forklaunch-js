@@ -6,6 +6,7 @@ import {
   optional,
   union
 } from '@forklaunch/validator/tests/mockSchemaValidator';
+import { JWTPayload } from 'jose';
 import {
   ForklaunchRequest,
   ForklaunchResponse,
@@ -28,13 +29,15 @@ describe('http middleware tests', () => {
     ParamsDictionary,
     Record<string, IdiomaticSchema<MockSchemaValidator>>,
     Record<string, string>,
-    Record<string, string>
+    Record<string, string>,
+    never
   >;
   let res: ForklaunchResponse<
     unknown,
     Record<number, unknown>,
     Record<string, string>,
-    Record<string, unknown>
+    Record<string, unknown>,
+    never
   >;
 
   const nextFunction = (err?: unknown) => {
@@ -75,7 +78,10 @@ describe('http middleware tests', () => {
         headers: testSchema,
         body: testSchema
       },
-      openTelemetryCollector: {} as OpenTelemetryCollector<MetricsDefinition>
+      openTelemetryCollector: {} as OpenTelemetryCollector<MetricsDefinition>,
+      version: {} as never,
+      session: {} as JWTPayload,
+      _parsedVersions: 0
     };
 
     res = {
@@ -105,7 +111,8 @@ describe('http middleware tests', () => {
           200: testSchema
         }
       },
-      sent: false
+      sent: false,
+      version: {} as never
     };
   });
 

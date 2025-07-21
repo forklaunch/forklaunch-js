@@ -31,7 +31,8 @@ import {
   TextBody,
   UnknownBody,
   UnknownResponseBody,
-  UrlEncodedForm
+  UrlEncodedForm,
+  VersionSchema
 } from './contractDetails.types';
 import { MetricsDefinition } from './openTelemetryCollector.types';
 
@@ -98,10 +99,14 @@ export interface ForklaunchRequest<
   P extends ParamsDictionary,
   ReqBody extends Record<string, unknown>,
   ReqQuery extends ParsedQs,
-  ReqHeaders extends Record<string, string>
+  ReqHeaders extends Record<string, string>,
+  Version extends string
 > {
   /** Context of the request */
   context: Prettify<RequestContext>;
+
+  /** API Version of the request */
+  version: Version;
 
   /** Request parameters */
   params: P;
@@ -133,13 +138,19 @@ export interface ForklaunchRequest<
   path: string;
 
   /** Request schema, compiled */
-  requestSchema: unknown;
+  requestSchema: unknown | Record<string, unknown>;
 
   /** Original path */
   originalPath: string;
 
   /** OpenTelemetry Collector */
   openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
+
+  /** Session */
+  session: JWTPayload;
+
+  /** Parsed versions */
+  _parsedVersions: string[] | number;
 }
 
 /**
@@ -250,7 +261,8 @@ export interface ForklaunchResponse<
   BaseResponse,
   ResBodyMap extends Record<number, unknown>,
   ResHeaders extends Record<string, string>,
-  LocalsObj extends Record<string, unknown>
+  LocalsObj extends Record<string, unknown>,
+  Version extends string
 > {
   /** Data of the response body */
   bodyData: unknown;
@@ -366,13 +378,18 @@ export interface ForklaunchResponse<
   cors: boolean;
 
   /** Response schema, compiled */
-  responseSchemas: ResponseCompiledSchema;
+  responseSchemas:
+    | ResponseCompiledSchema
+    | Record<string, ResponseCompiledSchema>;
 
   /** Whether the metric has been recorded */
   metricRecorded: boolean;
 
   /** Whether the response has been sent */
   sent: boolean;
+
+  /** Versioned responses */
+  version: Version;
 }
 
 /**
@@ -380,6 +397,40 @@ export interface ForklaunchResponse<
  * @param {unknown} [err] - Optional error parameter.
  */
 export type ForklaunchNextFunction = (err?: unknown) => void;
+
+export type VersionedRequests = Record<
+  string,
+  {
+    requestHeaders?: Record<string, unknown>;
+    body?: Record<string, unknown>;
+    query?: ParsedQs;
+  }
+>;
+
+type ResolvedForklaunchRequestBase<
+  SV extends AnySchemaValidator,
+  P extends ParamsDictionary,
+  ReqBody extends Record<string, unknown>,
+  ReqQuery extends ParsedQs,
+  ReqHeaders extends Record<string, string>,
+  Version extends string,
+  BaseRequest
+> = unknown extends BaseRequest
+  ? ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders, Version>
+  : {
+      [K in keyof BaseRequest]: K extends keyof ForklaunchRequest<
+        SV,
+        P,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders,
+        Version
+      >
+        ? ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders, Version>[K]
+        : K extends keyof BaseRequest
+          ? BaseRequest[K]
+          : never;
+    };
 
 /**
  * Type representing the resolved forklaunch request from a base request type.
@@ -396,22 +447,35 @@ export type ResolvedForklaunchRequest<
   ReqBody extends Record<string, unknown>,
   ReqQuery extends ParsedQs,
   ReqHeaders extends Record<string, string>,
+  VersionedReqs extends VersionedRequests,
   BaseRequest
-> = unknown extends BaseRequest
-  ? ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>
-  : {
-      [key in keyof BaseRequest]: key extends keyof ForklaunchRequest<
+> = VersionedRequests extends VersionedReqs
+  ? {
+      [K in keyof VersionedReqs]: ResolvedForklaunchRequestBase<
         SV,
         P,
-        ReqBody,
-        ReqQuery,
-        ReqHeaders
-      >
-        ? ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>[key]
-        : key extends keyof BaseRequest
-          ? BaseRequest[key]
-          : never;
-    };
+        VersionedReqs[K]['body'] extends Record<string, unknown>
+          ? VersionedReqs[K]['body']
+          : Record<string, unknown>,
+        VersionedReqs[K]['query'] extends ParsedQs
+          ? VersionedReqs[K]['query']
+          : ParsedQs,
+        VersionedReqs[K]['requestHeaders'] extends Record<string, string>
+          ? VersionedReqs[K]['requestHeaders']
+          : Record<string, string>,
+        K extends string ? K : never,
+        BaseRequest
+      >;
+    }[keyof VersionedReqs]
+  : ResolvedForklaunchRequestBase<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      never,
+      BaseRequest
+    >;
 
 export type ResolvedForklaunchAuthRequest<
   P extends ParamsDictionary,
@@ -434,6 +498,68 @@ export type ResolvedForklaunchAuthRequest<
           : never;
     };
 
+export type VersionedResponses = Record<
+  string,
+  {
+    responseHeaders?: Record<string, string>;
+    responses: Record<number, unknown>;
+  }
+>;
+
+type ResolvedForklaunchResponseBase<
+  ResBodyMap extends Record<number, unknown>,
+  ResHeaders extends Record<string, string>,
+  LocalsObj extends Record<string, unknown>,
+  Version extends string,
+  BaseResponse
+> = unknown extends BaseResponse
+  ? ForklaunchResponse<BaseResponse, ResBodyMap, ResHeaders, LocalsObj, Version>
+  : {
+      [K in keyof BaseResponse]: K extends keyof ForklaunchResponse<
+        BaseResponse,
+        ResBodyMap,
+        ResHeaders,
+        LocalsObj,
+        Version
+      >
+        ? ForklaunchResponse<
+            BaseResponse,
+            ResBodyMap,
+            ResHeaders,
+            LocalsObj,
+            Version
+          >[K]
+        : K extends keyof BaseResponse
+          ? BaseResponse[K]
+          : never;
+    };
+
+export type ResolvedForklaunchResponse<
+  ResBodyMap extends Record<number, unknown>,
+  ResHeaders extends Record<string, string>,
+  LocalsObj extends Record<string, unknown>,
+  VersionedResps extends VersionedResponses,
+  BaseResponse
+> = VersionedResponses extends VersionedResps
+  ? {
+      [K in keyof VersionedResps]: ResolvedForklaunchResponseBase<
+        VersionedResps[K]['responses'],
+        VersionedResps[K]['responseHeaders'] extends Record<string, string>
+          ? VersionedResps[K]['responseHeaders']
+          : Record<string, string>,
+        LocalsObj,
+        K extends string ? K : never,
+        BaseResponse
+      >;
+    }[keyof VersionedResps]
+  : ResolvedForklaunchResponseBase<
+      ResBodyMap,
+      ResHeaders,
+      LocalsObj,
+      never,
+      BaseResponse
+    >;
+
 /**
  * Represents a middleware handler with schema validation.
  *
@@ -454,6 +580,8 @@ export interface ExpressLikeHandler<
   ReqHeaders extends Record<string, string>,
   ResHeaders extends Record<string, string>,
   LocalsObj extends Record<string, unknown>,
+  VersionedReqs extends VersionedRequests,
+  VersionedResps extends VersionedResponses,
   BaseRequest,
   BaseResponse,
   NextFunction
@@ -465,27 +593,16 @@ export interface ExpressLikeHandler<
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedReqs,
       BaseRequest
     >,
-    res: unknown extends BaseResponse
-      ? ForklaunchResponse<BaseResponse, ResBodyMap, ResHeaders, LocalsObj>
-      : {
-          [key in keyof BaseResponse]: key extends keyof ForklaunchResponse<
-            BaseResponse,
-            ResBodyMap,
-            ResHeaders,
-            LocalsObj
-          >
-            ? ForklaunchResponse<
-                BaseResponse,
-                ResBodyMap,
-                ResHeaders,
-                LocalsObj
-              >[key]
-            : key extends keyof BaseResponse
-              ? BaseResponse[key]
-              : never;
-        },
+    res: ResolvedForklaunchResponse<
+      ResBodyMap,
+      ResHeaders,
+      LocalsObj,
+      VersionedResps,
+      BaseResponse
+    >,
     next: NextFunction
   ): unknown;
 }
@@ -599,6 +716,59 @@ export type MapResHeadersSchema<
       : ResponseHeaders
     : ForklaunchResHeaders;
 
+export type MapVersionedReqsSchema<
+  SV extends AnySchemaValidator,
+  VersionedReqs extends VersionSchema<SV, Method>
+> = {
+  [K in keyof VersionedReqs]: {
+    requestHeaders: MapReqHeadersSchema<
+      SV,
+      VersionedReqs[K]['requestHeaders'] extends HeadersObject<SV>
+        ? VersionedReqs[K]['requestHeaders']
+        : HeadersObject<SV>
+    >;
+    body: MapReqBodySchema<
+      SV,
+      VersionedReqs[K]['body'] extends Body<SV>
+        ? VersionedReqs[K]['body']
+        : Body<SV>
+    >;
+    query: MapReqQuerySchema<
+      SV,
+      VersionedReqs[K]['query'] extends QueryObject<SV>
+        ? VersionedReqs[K]['query']
+        : QueryObject<SV>
+    >;
+  };
+} extends infer MappedVersionedReqs
+  ? MappedVersionedReqs extends VersionedRequests
+    ? MappedVersionedReqs
+    : VersionedRequests
+  : VersionedRequests;
+
+export type MapVersionedRespsSchema<
+  SV extends AnySchemaValidator,
+  VersionedResps extends VersionSchema<SV, Method>
+> = {
+  [K in keyof VersionedResps]: {
+    responseHeaders: MapResHeadersSchema<
+      SV,
+      VersionedResps[K]['responseHeaders'] extends HeadersObject<SV>
+        ? VersionedResps[K]['responseHeaders']
+        : HeadersObject<SV>
+    >;
+    responses: MapResBodyMapSchema<
+      SV,
+      VersionedResps[K]['responses'] extends ResponsesObject<SV>
+        ? VersionedResps[K]['responses']
+        : ResponsesObject<SV>
+    >;
+  };
+} extends infer MappedVersionedResps
+  ? MappedVersionedResps extends VersionedResponses
+    ? MappedVersionedResps
+    : VersionedResponses
+  : VersionedResponses;
 /**
  * Represents a schema middleware handler with typed parameters, responses, body, and query.
  *
@@ -618,6 +788,7 @@ export type ExpressLikeSchemaHandler<
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
+  VersionedApi extends VersionSchema<SV, Method>,
   BaseRequest,
   BaseResponse,
   NextFunction
@@ -630,6 +801,8 @@ export type ExpressLikeSchemaHandler<
   MapReqHeadersSchema<SV, ReqHeaders>,
   MapResHeadersSchema<SV, ResHeaders>,
   LocalsObj,
+  MapVersionedReqsSchema<SV, VersionedApi>,
+  MapVersionedRespsSchema<SV, VersionedApi>,
   BaseRequest,
   BaseResponse,
   NextFunction
@@ -654,6 +827,7 @@ export type ExpressLikeSchemaAuthMapper<
   ReqBody extends Body<SV>,
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
+  VersionedReqs extends VersionSchema<SV, Method>,
   BaseRequest
 > = ExpressLikeAuthMapper<
   SV,
@@ -677,6 +851,11 @@ export type ExpressLikeSchemaAuthMapper<
       ? MapReqHeadersSchema<SV, UnmappedReqHeaders>
       : never
     : never,
+  VersionedReqs extends infer UnmappedVersionedReqs
+    ? UnmappedVersionedReqs extends VersionSchema<SV, Method>
+      ? MapVersionedReqsSchema<SV, UnmappedVersionedReqs>
+      : never
+    : never,
   BaseRequest
 >;
 
@@ -686,6 +865,7 @@ export type ExpressLikeAuthMapper<
   ReqBody extends Record<string, unknown>,
   ReqQuery extends ParsedQs,
   ReqHeaders extends Record<string, string>,
+  VersionedReqs extends VersionedRequests,
   BaseRequest
 > = (
   payload: JWTPayload,
@@ -695,6 +875,7 @@ export type ExpressLikeAuthMapper<
     ReqBody,
     ReqQuery,
     ReqHeaders,
+    VersionedReqs,
     BaseRequest
   >
 ) => Set<string> | Promise<Set<string>>;
