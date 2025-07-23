@@ -370,7 +370,7 @@ export type AuthMethods<
   P extends ParamsDictionary,
   ReqBody extends Record<string, unknown>,
   ReqQuery extends ParsedQs,
-  ReqHeaders extends Record<string, string>,
+  ReqHeaders extends Record<string, unknown>,
   VersionedReqs extends VersionedRequests,
   BaseRequest
 > = AuthMethodsBase &

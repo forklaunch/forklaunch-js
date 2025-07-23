@@ -202,7 +202,7 @@ export class Application<
       this.docsConfiguration.type === 'scalar'
     ) {
       this.internal.use(
-        `/api/${process.env.VERSION ?? 'v1'}${
+        `/api${process.env.VERSION ? `/${process.env.VERSION}` : ''}${
           process.env.DOCS_PATH ?? '/docs'
         }`,
         apiReference({
@@ -218,7 +218,7 @@ export class Application<
       );
     } else if (this.docsConfiguration.type === 'swagger') {
       this.internal.use(
-        `/api/${process.env.VERSION ?? 'v1'}${
+        `/api${process.env.VERSION ? `/${process.env.VERSION}` : ''}${
           process.env.DOCS_PATH ?? '/docs'
         }`,
         swaggerUi.serve,
@@ -227,7 +227,7 @@ export class Application<
     }
 
     this.internal.get(
-      `/api/${process.env.VERSION ?? 'v1'}/openapi`,
+      `/api${process.env.VERSION ? `/${process.env.VERSION}` : ''}/openapi`,
       (_, res) => {
         res.type('application/json');
         res.json(openApi);

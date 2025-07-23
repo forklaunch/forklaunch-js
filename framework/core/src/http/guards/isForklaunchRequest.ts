@@ -14,7 +14,7 @@ import { ParamsDictionary } from '../types/contractDetails.types';
  * @template P - The type of route parameters that extends ParamsDictionary
  * @template ReqBody - The type of request body that extends Record<string, unknown>
  * @template ReqQuery - The type of request query parameters that extends ParsedQs
- * @template ReqHeaders - The type of request headers that extends Record<string, string>
+ * @template ReqHeaders - The type of request headers that extends Record<string, unknown>
  * @param {unknown} request - The object to check
  * @returns {boolean} A type predicate indicating whether the object is a ForklaunchRequest
  *
@@ -31,7 +31,7 @@ export function isForklaunchRequest<
   P extends ParamsDictionary,
   ReqBody extends Record<string, unknown>,
   ReqQuery extends ParsedQs,
-  ReqHeaders extends Record<string, string>,
+  ReqHeaders extends Record<string, unknown>,
   VersionedReqs extends VersionedRequests
 >(
   request: unknown

@@ -230,8 +230,8 @@ export class ForklaunchExpressLikeRouter<
     ResBodyMap extends Record<number, unknown>,
     ReqBody extends Record<string, unknown>,
     ReqQuery extends ParsedQs,
-    ReqHeaders extends Record<string, string>,
-    ResHeaders extends Record<string, string>,
+    ReqHeaders extends Record<string, unknown>,
+    ResHeaders extends Record<string, unknown>,
     LocalsObj extends Record<string, unknown>,
     VersionedReqs extends VersionedRequests,
     VersionedResps extends VersionedResponses
@@ -300,8 +300,8 @@ export class ForklaunchExpressLikeRouter<
     ResBodyMap extends Record<number, unknown>,
     ReqBody extends Record<string, unknown>,
     ReqQuery extends ParsedQs,
-    ReqHeaders extends Record<string, string>,
-    ResHeaders extends Record<string, string>,
+    ReqHeaders extends Record<string, unknown>,
+    ResHeaders extends Record<string, unknown>,
     LocalsObj extends Record<string, unknown>,
     VersionedReqs extends VersionedRequests,
     VersionedResps extends VersionedResponses
@@ -609,15 +609,15 @@ export class ForklaunchExpressLikeRouter<
     return async (
       route: SanitizePathSlashes<Route>,
       request?: {
-        params?: Record<string, string>;
-        query?: Record<string, string>;
-        headers?: Record<string, string>;
+        params?: Record<string, unknown>;
+        query?: Record<string, unknown>;
+        headers?: Record<string, unknown>;
         body?: Record<string, unknown>;
       }
     ) => {
       let statusCode;
       let responseMessage;
-      const responseHeaders: Record<string, string> = {};
+      const responseHeaders: Record<string, unknown> = {};
 
       const req = {
         params: request?.params ?? {},

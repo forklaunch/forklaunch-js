@@ -53,6 +53,12 @@ const xasd = typedHandler(
     requestHeaders: {
       'x-test': number
     },
+    responseHeaders: {
+      'x-test': number
+    },
+    query: {
+      a: number
+    },
     responses: {
       200: date,
       400: string
@@ -73,13 +79,14 @@ const xasd = typedHandler(
   },
   async (req, res) => {
     // const r = req.params.a;
-    const i = req.headers['x-test'] * 7;
+    const i = req.headers['x-test'] * req.query.a;
     const l = res.getHeaders()['x-correlation-id'];
   },
   async (req, res) => {
     // const r = req.params.a;
     const i = req.headers['x-test'] * 7;
     const l = res.getHeaders()['x-correlation-id'];
+    res.setHeader('x-test', 'ffff');
     res.status(200).send(new Date());
   }
 );
@@ -207,35 +214,55 @@ const fff = typedHandler(
           return username === 'test' && password === 'test';
         }
       },
-      mapPermissions: kl,
-      // (sub, req) => {
-      //   const j = req?.params.id;
-      //   return new Set(['admin', 'user']);
-      // },
+      mapPermissions: (sub, req) => {
+        const version = req?.version;
+        switch (version) {
+          case '1.0.0':
+            return new Set(['admin']);
+          case '4':
+            return new Set(['user']);
+          case undefined:
+            return new Set(['admin', 'user']);
+          default:
+            isNever(version);
+            return new Set(['admin', 'user']);
+        }
+      },
       allowedPermissions: new Set(['admin', 'user'])
     }
   },
   async (req, res) => {
     // const r = req.params.a;
-    switch (req.version) {
-      case '1.0.0':
-        req.headers['x-test'] = 1;
+    const version = req.version;
+    switch (version) {
+      case '1.0.0': {
+        const x = req.headers['x-test'] * 5;
         break;
-      case 4:
-        req.headers['x-test'] = '1';
+      }
+      case '4': {
+        const y = req.headers['x-test'].charAt(0);
         break;
+      }
       default:
-        isNever(req.version);
+        isNever(version);
     }
-    const i = req.headers['x-test'] * 7;
     const l = res.getHeaders()['x-correlation-id'];
   },
   async (req, res) => {
     // const r = req.params.a;
-    req.version;
-    const i = req.headers['x-test'] * 7;
-    const l = res.getHeaders()['x-correlation-id'];
-    res.status(200).send(new Date());
+    const version = res.version;
+    switch (version) {
+      case '1.0.0': {
+        res.status(200).send(new Date());
+        break;
+      }
+      case '4': {
+        res.status(200).send('the version is 4');
+        break;
+      }
+      default:
+        isNever(version);
+    }
   }
 );
 

@@ -68,7 +68,7 @@ async function checkAuthorizationToken<
   P extends ParamsDictionary,
   ReqBody extends Record<string, unknown>,
   ReqQuery extends ParsedQs,
-  ReqHeaders extends Record<string, string>,
+  ReqHeaders extends Record<string, unknown>,
   VersionedReqs extends VersionedRequests,
   BaseRequest
 >(
@@ -320,8 +320,8 @@ export async function parseRequestAuth<
         unknown
       >(
         auth,
-        req.headers[auth.headerName ?? 'Authorization'] ||
-          req.headers[auth.headerName ?? 'authorization'],
+        (req.headers[auth.headerName ?? 'Authorization'] as string) ||
+          (req.headers[auth.headerName ?? 'authorization'] as string),
         // we can safely cast here because we know that the user will supply resolution for the request
         req
       )) ?? [];
@@ -332,8 +332,8 @@ export async function parseRequestAuth<
     }
 
     req.session = decodeJwt(
-      req.headers[auth.headerName ?? 'Authorization'] ||
-        req.headers[auth.headerName ?? 'authorization']
+      (req.headers[auth.headerName ?? 'Authorization'] as string) ||
+        (req.headers[auth.headerName ?? 'authorization'] as string)
     );
   }
 

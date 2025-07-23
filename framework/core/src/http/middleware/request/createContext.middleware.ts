@@ -59,13 +59,13 @@ export function createContext<
     let correlationId = v4();
 
     if (req.headers['x-correlation-id']) {
-      correlationId = req.headers['x-correlation-id'];
+      correlationId = req.headers['x-correlation-id'] as string;
     }
 
     (
       res as ResolvedForklaunchResponse<
         ResHeaders,
-        Record<string, string>,
+        Record<string, unknown>,
         LocalsObj,
         VersionedResponses,
         unknown

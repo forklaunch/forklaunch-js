@@ -33,8 +33,8 @@ export function parse<
   ResBodyMap extends Record<number, unknown>,
   ReqBody extends Record<string, unknown>,
   ReqQuery extends ParsedQs,
-  ReqHeaders extends Record<string, string>,
-  ResHeaders extends Record<string, string>,
+  ReqHeaders extends Record<string, unknown>,
+  ResHeaders extends Record<string, unknown>,
   LocalsObj extends Record<string, unknown>,
   VersionedReqs extends VersionedRequests
 >(
@@ -117,7 +117,7 @@ export function parse<
       configurable: false
     });
     const parsedHeaders = parsedRequest.value.headers ?? {};
-    req.headers = Object.keys(req.headers).reduce<Record<string, string>>(
+    req.headers = Object.keys(req.headers).reduce<Record<string, unknown>>(
       (acc, key) => {
         if (parsedHeaders?.[key]) {
           acc[key] = parsedHeaders[key];

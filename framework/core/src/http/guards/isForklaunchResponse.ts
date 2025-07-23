@@ -26,7 +26,7 @@ import {
 export function isForklaunchResponse<
   BaseResponse,
   ResBodyMap extends Record<number, unknown>,
-  ResHeaders extends Record<string, string>,
+  ResHeaders extends Record<string, unknown>,
   LocalsObj extends Record<string, unknown>,
   VersionedResps extends VersionedResponses
 >(

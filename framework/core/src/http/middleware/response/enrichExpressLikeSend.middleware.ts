@@ -55,8 +55,8 @@ export function enrichExpressLikeSend<
   ResBodyMap extends Record<number, unknown>,
   ReqBody extends Record<string, unknown>,
   ReqQuery extends ParsedQs,
-  ReqHeaders extends Record<string, string>,
-  ResHeaders extends Record<string, string>,
+  ReqHeaders extends Record<string, unknown>,
+  ResHeaders extends Record<string, unknown>,
   LocalsObj extends Record<string, unknown>,
   VersionedReqs extends VersionedRequests
 >(

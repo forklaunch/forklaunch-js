@@ -20,7 +20,7 @@ import {
  * @template P - A type that extends ParamsDictionary
  * @template ReqBody - A type that extends Record<string, unknown>
  * @template ReqQuery - A type that extends ParsedQs
- * @template ReqHeaders - A type that extends Record<string, string>
+ * @template ReqHeaders - A type that extends Record<string, unknown>
  * @template BaseRequest - The base request type
  *
  * @param auth - The authentication methods configuration object
@@ -45,7 +45,7 @@ export function discriminateAuthMethod<
   P extends ParamsDictionary,
   ReqBody extends Record<string, unknown>,
   ReqQuery extends ParsedQs,
-  ReqHeaders extends Record<string, string>,
+  ReqHeaders extends Record<string, unknown>,
   VersionedReqs extends VersionedRequests,
   BaseRequest
 >(
