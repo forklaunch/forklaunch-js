@@ -52,7 +52,7 @@ export interface ForklaunchBaseRequest<
   P extends ParamsDictionary,
   ReqBody extends Record<string, unknown>,
   ReqQuery extends ParsedQs,
-  ReqHeaders extends Record<string, unknown>
+  ReqHeaders extends Record<string, string>
 > {
   /** Request parameters */
   params: P;
@@ -98,7 +98,7 @@ export interface ForklaunchRequest<
   SV extends AnySchemaValidator,
   P extends ParamsDictionary,
   ReqBody extends Record<string, unknown>,
-  ReqQuery extends ParsedQs,
+  ReqQuery extends Record<string, unknown>,
   ReqHeaders extends Record<string, unknown>,
   Version extends string
 > {
@@ -403,7 +403,7 @@ export type VersionedRequests = Record<
   {
     requestHeaders?: Record<string, unknown>;
     body?: Record<string, unknown>;
-    query?: ParsedQs;
+    query?: Record<string, unknown>;
   }
 >;
 
@@ -411,7 +411,7 @@ type ResolvedForklaunchRequestBase<
   SV extends AnySchemaValidator,
   P extends ParamsDictionary,
   ReqBody extends Record<string, unknown>,
-  ReqQuery extends ParsedQs,
+  ReqQuery extends Record<string, unknown>,
   ReqHeaders extends Record<string, unknown>,
   Version extends string,
   BaseRequest
@@ -445,8 +445,8 @@ export type ResolvedForklaunchRequest<
   SV extends AnySchemaValidator,
   P extends ParamsDictionary,
   ReqBody extends Record<string, unknown>,
-  ReqQuery extends ParsedQs,
-  ReqHeaders extends Record<string, unknown>,
+  ReqQuery extends Record<string, unknown>,
+  ReqHeaders extends Record<string, string>,
   VersionedReqs extends VersionedRequests,
   BaseRequest
 > = VersionedRequests extends VersionedReqs
@@ -466,12 +466,12 @@ export type ResolvedForklaunchRequest<
         VersionedReqs[K]['body'] extends Record<string, unknown>
           ? VersionedReqs[K]['body']
           : Record<string, unknown>,
-        VersionedReqs[K]['query'] extends ParsedQs
+        VersionedReqs[K]['query'] extends Record<string, unknown>
           ? VersionedReqs[K]['query']
           : ParsedQs,
         VersionedReqs[K]['requestHeaders'] extends Record<string, unknown>
           ? VersionedReqs[K]['requestHeaders']
-          : Record<string, unknown>,
+          : Record<string, string>,
         K extends string ? K : never,
         BaseRequest
       >;
@@ -481,7 +481,7 @@ export type ResolvedForklaunchAuthRequest<
   P extends ParamsDictionary,
   ReqBody extends Record<string, unknown>,
   ReqQuery extends ParsedQs,
-  ReqHeaders extends Record<string, unknown>,
+  ReqHeaders extends Record<string, string>,
   BaseRequest
 > = unknown extends BaseRequest
   ? ForklaunchBaseRequest<P, ReqBody, ReqQuery, ReqHeaders>
@@ -577,7 +577,7 @@ export interface ExpressLikeHandler<
   ResBodyMap extends Record<number, unknown>,
   ReqBody extends Record<string, unknown>,
   ReqQuery extends ParsedQs,
-  ReqHeaders extends Record<string, unknown>,
+  ReqHeaders extends Record<string, string>,
   ResHeaders extends Record<string, unknown>,
   LocalsObj extends Record<string, unknown>,
   VersionedReqs extends VersionedRequests,
@@ -702,9 +702,9 @@ export type MapReqHeadersSchema<
 > =
   MapSchema<SV, ReqHeaders> extends infer RequestHeaders
     ? unknown extends RequestHeaders
-      ? Record<string, unknown>
+      ? Record<string, string>
       : RequestHeaders
-    : Record<string, unknown>;
+    : Record<string, string>;
 
 export type MapResHeadersSchema<
   SV extends AnySchemaValidator,
@@ -727,23 +727,17 @@ export type MapVersionedReqsSchema<
           VersionedReqs[K]['requestHeaders']
         >;
       }
-    : {
-        requestHeaders?: MapReqHeadersSchema<SV, HeadersObject<SV>>;
-      }) &
+    : unknown) &
     (VersionedReqs[K]['body'] extends Body<SV>
       ? {
           body: MapReqBodySchema<SV, VersionedReqs[K]['body']>;
         }
-      : {
-          body?: MapReqBodySchema<SV, Body<SV>>;
-        }) &
+      : unknown) &
     (VersionedReqs[K]['query'] extends QueryObject<SV>
       ? {
           query: MapReqQuerySchema<SV, VersionedReqs[K]['query']>;
         }
-      : {
-          query?: MapReqQuerySchema<SV, QueryObject<SV>>;
-        });
+      : unknown);
 } extends infer MappedVersionedReqs
   ? MappedVersionedReqs extends VersionedRequests
     ? MappedVersionedReqs
@@ -761,16 +755,12 @@ export type MapVersionedRespsSchema<
           VersionedResps[K]['responseHeaders']
         >;
       }
-    : {
-        responseHeaders?: MapResHeadersSchema<SV, HeadersObject<SV>>;
-      }) &
+    : unknown) &
     (VersionedResps[K]['responses'] extends ResponsesObject<SV>
       ? {
           responses: MapResBodyMapSchema<SV, VersionedResps[K]['responses']>;
         }
-      : {
-          responses?: MapResBodyMapSchema<SV, ResponsesObject<SV>>;
-        });
+      : unknown);
 } extends infer MappedVersionedResps
   ? MappedVersionedResps extends VersionedResponses
     ? MappedVersionedResps
@@ -870,8 +860,8 @@ export type ExpressLikeAuthMapper<
   SV extends AnySchemaValidator,
   P extends ParamsDictionary,
   ReqBody extends Record<string, unknown>,
-  ReqQuery extends ParsedQs,
-  ReqHeaders extends Record<string, unknown>,
+  ReqQuery extends Record<string, unknown>,
+  ReqHeaders extends Record<string, string>,
   VersionedReqs extends VersionedRequests,
   BaseRequest
 > = (

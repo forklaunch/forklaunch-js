@@ -11,7 +11,8 @@ import {
   QueryObject,
   ResponsesObject,
   SchemaAuthMethods,
-  TypedMiddlewareDefinition
+  TypedMiddlewareDefinition,
+  VersionSchema
 } from '@forklaunch/core/http';
 import {
   Router as ExpressRouter,
@@ -26,6 +27,7 @@ import { BusboyConfig } from 'busboy';
 import { contentParse } from './middleware/contentParse.middleware';
 import { enrichResponseTransmission } from './middleware/enrichResponseTransmission.middleware';
 import { polyfillGetHeaders } from './middleware/polyfillGetHeaders.middleware';
+import { ExpressRequestHandler } from './types/hyperExpress.types';
 
 export class Router<
     SV extends AnySchemaValidator,
@@ -79,7 +81,7 @@ export class Router<
     Request<Record<string, unknown>>,
     Response<Record<string, unknown>>,
     MiddlewareNext,
-    MiddlewareHandler
+    ExpressRequestHandler
   > = <
     Name extends string,
     Path extends `/${string}`,
@@ -90,12 +92,14 @@ export class Router<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       Request<Record<string, unknown>>
     >
   >(
@@ -113,6 +117,7 @@ export class Router<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           Request<Record<string, unknown>>,
           Response<Record<string, unknown>>,
           MiddlewareNext,
@@ -130,6 +135,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request<Record<string, unknown>>,
       Response<Record<string, unknown>>,
       MiddlewareNext,
@@ -147,6 +153,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request<Record<string, unknown>>,
       Response<Record<string, unknown>>,
       MiddlewareNext,
@@ -163,6 +170,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       this.internal.any,

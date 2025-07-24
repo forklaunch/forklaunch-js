@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { isNever } from '@forklaunch/common';
 import {
+  array,
   date,
   number,
   SchemaValidator,
@@ -86,7 +87,7 @@ const xasd = typedHandler(
     // const r = req.params.a;
     const i = req.headers['x-test'] * 7;
     const l = res.getHeaders()['x-correlation-id'];
-    res.setHeader('x-test', 'ffff');
+    res.setHeader('x-test', 4);
     res.status(200).send(new Date());
   }
 );
@@ -177,6 +178,29 @@ const b = xa.trace(
 
 const c = xa.trace('/test/:name/:id', xasd);
 
+xa.patch(
+  '/test/:name/:id',
+  {
+    name: 'string',
+    summary: 'string',
+    params: {
+      name: string,
+      id: number
+    },
+    body: {
+      name: number
+    },
+    responses: {
+      200: date
+    }
+  },
+  async (req, res) => {
+    const i = req.body.name * 7;
+    const l = res.getHeaders()['x-correlation-id'];
+    res.status(200).send(new Date());
+  }
+);
+
 const fff = typedHandler(
   SchemaValidator(),
   '/test/:name/:id',
@@ -192,6 +216,12 @@ const fff = typedHandler(
       '1.0.0': {
         requestHeaders: {
           'x-test': number
+        },
+        responseHeaders: {
+          'x-test': number
+        },
+        query: {
+          a: array(number)
         },
         responses: {
           200: date,
@@ -236,7 +266,7 @@ const fff = typedHandler(
     const version = req.version;
     switch (version) {
       case '1.0.0': {
-        const x = req.headers['x-test'] * 5;
+        const x = req.headers['x-test'] * 5 * req.query.a[0];
         break;
       }
       case '4': {

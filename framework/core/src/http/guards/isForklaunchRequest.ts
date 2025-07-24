@@ -31,7 +31,7 @@ export function isForklaunchRequest<
   P extends ParamsDictionary,
   ReqBody extends Record<string, unknown>,
   ReqQuery extends ParsedQs,
-  ReqHeaders extends Record<string, unknown>,
+  ReqHeaders extends Record<string, string>,
   VersionedReqs extends VersionedRequests
 >(
   request: unknown

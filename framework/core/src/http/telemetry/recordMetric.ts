@@ -22,7 +22,7 @@ export function recordMetric<
   ReqBody extends Record<string, unknown>,
   ReqQuery extends ParsedQs,
   ResBodyMap extends Record<string, unknown>,
-  ReqHeaders extends Record<string, unknown>,
+  ReqHeaders extends Record<string, string>,
   ResHeaders extends Record<string, unknown>,
   LocalsObj extends Record<string, unknown>,
   VersionedReqs extends VersionedRequests

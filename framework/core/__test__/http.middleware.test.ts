@@ -29,7 +29,7 @@ describe('http middleware tests', () => {
     ParamsDictionary,
     Record<string, IdiomaticSchema<MockSchemaValidator>>,
     Record<string, string>,
-    Record<string, unknown>,
+    Record<string, string>,
     never
   >;
   let res: ForklaunchResponse<

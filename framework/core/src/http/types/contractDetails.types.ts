@@ -6,7 +6,6 @@ import {
   UnboxedObjectSchema
 } from '@forklaunch/validator';
 import { JWTPayload } from 'jose';
-import { ParsedQs } from 'qs';
 import {
   ExpressLikeAuthMapper,
   ExpressLikeSchemaAuthMapper,
@@ -369,8 +368,8 @@ export type AuthMethods<
   SV extends AnySchemaValidator,
   P extends ParamsDictionary,
   ReqBody extends Record<string, unknown>,
-  ReqQuery extends ParsedQs,
-  ReqHeaders extends Record<string, unknown>,
+  ReqQuery extends Record<string, unknown>,
+  ReqHeaders extends Record<string, string>,
   VersionedReqs extends VersionedRequests,
   BaseRequest
 > = AuthMethodsBase &
@@ -455,13 +454,14 @@ export type ResponseCompiledSchema = {
 
 type BasePathParamHttpContractDetailsIO<
   SV extends AnySchemaValidator,
+  BodySchema extends Body<SV> | undefined = Body<SV>,
   ResponseSchemas extends ResponsesObject<SV> = ResponsesObject<SV>,
   QuerySchema extends QueryObject<SV> | undefined = QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV> | undefined = HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV> | undefined = HeadersObject<SV>
 > = {
   /** Optional body for the contract */
-  readonly body?: never;
+  readonly body?: BodySchema;
   /** Response schemas for the contract */
   readonly responses: ResponseSchemas;
   /** Optional request headers for the contract */
@@ -550,6 +550,7 @@ export type PathParamHttpContractDetails<
   (
     | (BasePathParamHttpContractDetailsIO<
         SV,
+        never,
         ResponseSchemas,
         QuerySchema,
         ReqHeaders,
@@ -558,32 +559,15 @@ export type PathParamHttpContractDetails<
         readonly versions?: never;
       })
     | (VersionedBasePathParamHttpContractDetailsIO<SV, VersionedApi> & {
+        readonly query?: never;
+        readonly requestHeaders?: never;
+        readonly responseHeaders?: never;
         readonly responses?: never;
       })
   ) & {
     /** Optional authentication details for the contract */
     readonly auth?: Auth;
   };
-
-export type HttpContractDetailsIO<
-  SV extends AnySchemaValidator,
-  BodySchema extends Body<SV>,
-  ResponseSchemas extends ResponsesObject<SV>,
-  QuerySchema extends QueryObject<SV> | undefined,
-  ReqHeaders extends HeadersObject<SV> | undefined,
-  ResHeaders extends HeadersObject<SV> | undefined
-> = Omit<
-  BasePathParamHttpContractDetailsIO<
-    SV,
-    ResponseSchemas,
-    QuerySchema,
-    ReqHeaders,
-    ResHeaders
-  >,
-  'body'
-> & {
-  readonly body: BodySchema;
-};
 
 type VersionedHttpContractDetailsIO<
   SV extends AnySchemaValidator,
@@ -635,7 +619,7 @@ export type HttpContractDetails<
   >
 > = BasePathParamHttpContractDetails<SV, Name, Path, ParamsSchema> &
   (
-    | (HttpContractDetailsIO<
+    | (BasePathParamHttpContractDetailsIO<
         SV,
         BodySchema,
         ResponseSchemas,
@@ -646,6 +630,10 @@ export type HttpContractDetails<
         readonly versions?: never;
       })
     | (VersionedHttpContractDetailsIO<SV, VersionedApi> & {
+        readonly query?: never;
+        readonly requestHeaders?: never;
+        readonly responseHeaders?: never;
+        readonly body?: never;
         readonly responses?: never;
       })
   ) & {
@@ -719,22 +707,14 @@ export type VersionSchema<
   ContractMethod extends Method
 > = Record<
   string,
-  ContractMethod extends PathParamMethod
-    ? BasePathParamHttpContractDetailsIO<
-        SV,
-        ResponsesObject<SV>,
-        QueryObject<SV>,
-        HeadersObject<SV>,
-        HeadersObject<SV>
-      >
-    : HttpContractDetailsIO<
-        SV,
-        Body<SV>,
-        ResponsesObject<SV>,
-        QueryObject<SV>,
-        HeadersObject<SV>,
-        HeadersObject<SV>
-      >
+  BasePathParamHttpContractDetailsIO<
+    SV,
+    ContractMethod extends PathParamMethod ? never : Body<SV>,
+    ResponsesObject<SV>,
+    QueryObject<SV>,
+    HeadersObject<SV>,
+    HeadersObject<SV>
+  >
 >;
 
 /**

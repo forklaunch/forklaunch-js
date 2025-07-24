@@ -3,14 +3,16 @@ import {
   ForklaunchResponse,
   ForklaunchSendableData,
   ForklaunchStatusResponse,
-  ParamsDictionary
+  ParamsDictionary,
+  ParsedQs
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import {
   Request as ExpressRequest,
   Response as ExpressResponse
 } from 'express';
-import { ParsedQs } from 'qs';
+import { NextFunction } from 'express-serve-static-core';
+import { IncomingHttpHeaders } from 'http';
 
 /**
  * Extends the Forklaunch request interface with properties from Express's request interface.
@@ -43,10 +45,11 @@ export interface MiddlewareRequest<
   P extends ParamsDictionary,
   ResBodyMap extends Record<number, unknown>,
   ReqBody extends Record<string, unknown>,
-  ReqQuery extends ParsedQs,
-  ReqHeaders extends Record<string, string>,
-  LocalsObj extends Record<string, unknown>
-> extends ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>,
+  ReqQuery extends Record<string, unknown>,
+  ReqHeaders extends Record<string, unknown>,
+  LocalsObj extends Record<string, unknown>,
+  Versions extends string = 'middleware'
+> extends ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders, Versions>,
     Omit<
       ExpressRequest<P, ResBodyMap, ReqBody, ReqQuery, LocalsObj>,
       'method' | 'body' | 'params' | 'query' | 'headers' | 'path'
@@ -82,12 +85,14 @@ export interface MiddlewareRequest<
 export interface MiddlewareResponse<
   ResBodyMap extends Record<number, unknown>,
   ResHeaders extends Record<string, string>,
-  LocalsObj extends Record<string, unknown> = Record<string, unknown>
+  LocalsObj extends Record<string, unknown> = Record<string, unknown>,
+  Versions extends string = string
 > extends ForklaunchResponse<
       ExpressResponse,
       ResBodyMap,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Versions
     >,
     Omit<
       ExpressResponse<ResBodyMap, LocalsObj>,
@@ -109,3 +114,27 @@ export interface MiddlewareResponse<
   /** Whether CORS headers are applied to the response */
   cors: boolean;
 }
+
+/**
+ * Express-compatible request handler type for Forklaunch.
+ *
+ * @param req - The incoming request object, with `query` and `headers` properties normalized to either `ParsedQs` or a generic record.
+ * @param res - The response object for sending data back to the client.
+ * @param next - The next middleware function in the Express stack.
+ *
+ * @example
+ * const handler: ExpressRequestHandler = (req, res, next) => {
+ *   // Access normalized query and headers
+ *   const userId = req.query.userId;
+ *   const customHeader = req.headers['x-custom-header'];
+ *   res.json({ userId, customHeader });
+ * };
+ */
+export type ExpressRequestHandler = (
+  req: Omit<ExpressRequest, 'query' | 'headers'> & {
+    query: ParsedQs | Record<string, unknown>;
+    headers: IncomingHttpHeaders | Record<string, unknown>;
+  },
+  res: ExpressResponse,
+  next: NextFunction
+) => void;

@@ -7,7 +7,8 @@ import {
   ParamsObject,
   QueryObject,
   ResponsesObject,
-  SchemaAuthMethods
+  SchemaAuthMethods,
+  VersionSchema
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { NextFunction, Request, Response } from 'express';
@@ -55,12 +56,14 @@ export const checkout = <
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
+  const VersionedApi extends VersionSchema<SV, 'middleware'>,
   const Auth extends SchemaAuthMethods<
     SV,
     P,
     ReqBody,
     ReqQuery,
     ReqHeaders,
+    VersionedApi,
     Request
   >
 >(
@@ -77,6 +80,7 @@ export const checkout = <
     ReqQuery,
     ReqHeaders,
     ResHeaders,
+    VersionedApi,
     Request,
     Auth
   >,
@@ -89,6 +93,7 @@ export const checkout = <
     ReqHeaders,
     ResHeaders,
     LocalsObj,
+    VersionedApi,
     Request,
     Response,
     NextFunction
@@ -105,6 +110,7 @@ export const checkout = <
     ReqHeaders,
     ResHeaders,
     LocalsObj,
+    VersionedApi,
     Request,
     Response,
     NextFunction,

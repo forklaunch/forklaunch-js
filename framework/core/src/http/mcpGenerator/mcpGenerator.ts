@@ -111,10 +111,10 @@ export function generateMcpServer<
             generateInputSchema(
               schemaValidator,
               version.body,
-              version.params,
+              route.contractDetails.params,
               version.query,
               version.requestHeaders,
-              version.auth
+              route.contractDetails.auth
             )
           );
         });
