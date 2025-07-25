@@ -896,21 +896,16 @@ type AuthHeaders<Auth extends AuthMethodsBase> =
 export type LiveTypeFunctionRequestInit<
   SV extends AnySchemaValidator,
   P extends ParamsObject<SV>,
-  ReqBody extends Body<SV>,
-  ReqQuery extends QueryObject<SV>,
-  ReqHeaders extends HeadersObject<SV>,
+  ReqBody extends Body<SV> | undefined,
+  ReqQuery extends QueryObject<SV> | undefined,
+  ReqHeaders extends HeadersObject<SV> | undefined,
   Auth extends AuthMethodsBase
 > = MakePropertyOptionalIfChildrenOptional<
-  (ParamsObject<SV> extends P
+  (Body<SV> extends ReqBody
     ? unknown
     : {
-        params: MapSchema<SV, P>;
+        body: MapSchema<SV, ReqBody>;
       }) &
-    (Body<SV> extends ReqBody
-      ? unknown
-      : {
-          body: MapSchema<SV, ReqBody>;
-        }) &
     (QueryObject<SV> extends ReqQuery
       ? unknown
       : {
@@ -926,7 +921,12 @@ export type LiveTypeFunctionRequestInit<
         ? { headers: MapSchema<SV, ReqHeaders> }
         : {
             headers: MapSchema<SV, ReqHeaders> & AuthHeaders<Auth>;
-          })
+          }) &
+    (ParamsObject<SV> extends P
+      ? unknown
+      : {
+          params: MapSchema<SV, P>;
+        })
 >;
 
 /**
@@ -952,35 +952,91 @@ export type LiveTypeFunction<
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
   ContractMethod extends Method,
+  VersionedApi extends VersionSchema<SV, ContractMethod>,
   Auth extends AuthMethodsBase
-> = (
-  route: SanitizePathSlashes<Route>,
-  ...reqInit: Prettify<
-    Omit<RequestInit, 'method' | 'body' | 'query' | 'headers' | 'params'> & {
-      method: Uppercase<ContractMethod>;
-    } & LiveTypeFunctionRequestInit<SV, P, ReqBody, ReqQuery, ReqHeaders, Auth>
-  > extends infer ReqInit
-    ? ReqInit extends
-        | { body: unknown }
-        | { params: unknown }
-        | { query: unknown }
-        | { headers: unknown }
-      ? [reqInit: ReqInit]
-      : [reqInit?: ReqInit]
-    : never
-) => Promise<
-  Prettify<
-    SdkResponse<
-      SV,
-      ResponsesObject<SV> extends ResBodyMap
-        ? Record<number, unknown>
-        : ResBodyMap,
-      ForklaunchResHeaders extends ResHeaders
-        ? unknown
-        : MapSchema<SV, ResHeaders>
+> = string extends keyof VersionedApi
+  ? (
+      route: SanitizePathSlashes<Route>,
+      ...reqInit: Prettify<
+        Omit<
+          RequestInit,
+          'method' | 'body' | 'query' | 'headers' | 'params'
+        > & {
+          method: Uppercase<ContractMethod>;
+        } & LiveTypeFunctionRequestInit<
+            SV,
+            P,
+            ReqBody,
+            ReqQuery,
+            ReqHeaders,
+            Auth
+          >
+      > extends infer ReqInit
+        ? ReqInit extends
+            | { body: unknown }
+            | { params: unknown }
+            | { query: unknown }
+            | { headers: unknown }
+          ? [reqInit: ReqInit]
+          : [reqInit?: ReqInit]
+        : never
+    ) => Promise<
+      Prettify<
+        SdkResponse<
+          SV,
+          ResponsesObject<SV> extends ResBodyMap
+            ? Record<number, unknown>
+            : ResBodyMap,
+          ForklaunchResHeaders extends ResHeaders
+            ? unknown
+            : MapSchema<SV, ResHeaders>
+        >
+      >
     >
-  >
->;
+  : {
+      [K in keyof VersionedApi]: (
+        ...reqInit: Prettify<
+          Omit<
+            RequestInit,
+            'method' | 'body' | 'query' | 'headers' | 'params'
+          > &
+            LiveTypeFunctionRequestInit<
+              SV,
+              P,
+              VersionedApi[K]['body'] extends Body<SV>
+                ? VersionedApi[K]['body']
+                : Body<SV>,
+              VersionedApi[K]['query'] extends QueryObject<SV>
+                ? VersionedApi[K]['query']
+                : QueryObject<SV>,
+              VersionedApi[K]['requestHeaders'] extends HeadersObject<SV>
+                ? VersionedApi[K]['requestHeaders']
+                : HeadersObject<SV>,
+              Auth
+            >
+        > extends infer ReqInit
+          ? ReqInit extends
+              | { body: unknown }
+              | { params: unknown }
+              | { query: unknown }
+              | { headers: unknown }
+            ? [reqInit: ReqInit & { version: K }]
+            : [reqInit?: ReqInit & { version: K }]
+          : never
+      ) => Promise<
+        Prettify<
+          SdkResponse<
+            SV,
+            ResponsesObject<SV> extends ResBodyMap
+              ? Record<number, unknown>
+              : VersionedApi[K]['responses'],
+            ForklaunchResHeaders extends ResHeaders
+              ? unknown
+              : MapSchema<SV, VersionedApi[K]['responseHeaders']>
+          >
+        >
+      >;
+    };
 
 /**
  * Represents a live type function for the SDK.
@@ -1002,33 +1058,86 @@ export type LiveSdkFunction<
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
+  VersionedApi extends VersionSchema<SV, Method>,
   Auth extends AuthMethodsBase
-> = (
-  ...reqInit: Prettify<
-    Omit<RequestInit, 'method' | 'body' | 'query' | 'headers' | 'params'> &
-      LiveTypeFunctionRequestInit<SV, P, ReqBody, ReqQuery, ReqHeaders, Auth>
-  > extends infer ReqInit
-    ? ReqInit extends
-        | { body: unknown }
-        | { params: unknown }
-        | { query: unknown }
-        | { headers: unknown }
-      ? [reqInit: ReqInit]
-      : [reqInit?: ReqInit]
-    : never
-) => Promise<
-  Prettify<
-    SdkResponse<
-      SV,
-      ResponsesObject<SV> extends ResBodyMap
-        ? Record<number, unknown>
-        : ResBodyMap,
-      ForklaunchResHeaders extends ResHeaders
-        ? unknown
-        : MapSchema<SV, ResHeaders>
+> = string extends keyof VersionedApi
+  ? (
+      ...reqInit: Prettify<
+        Omit<RequestInit, 'method' | 'body' | 'query' | 'headers' | 'params'> &
+          LiveTypeFunctionRequestInit<
+            SV,
+            P,
+            ReqBody,
+            ReqQuery,
+            ReqHeaders,
+            Auth
+          >
+      > extends infer ReqInit
+        ? ReqInit extends
+            | { body: unknown }
+            | { params: unknown }
+            | { query: unknown }
+            | { headers: unknown }
+          ? [reqInit: ReqInit]
+          : [reqInit?: ReqInit]
+        : never
+    ) => Promise<
+      Prettify<
+        SdkResponse<
+          SV,
+          ResponsesObject<SV> extends ResBodyMap
+            ? Record<number, unknown>
+            : ResBodyMap,
+          ForklaunchResHeaders extends ResHeaders
+            ? unknown
+            : MapSchema<SV, ResHeaders>
+        >
+      >
     >
-  >
->;
+  : {
+      [K in keyof VersionedApi]: (
+        ...reqInit: Prettify<
+          Omit<
+            RequestInit,
+            'method' | 'body' | 'query' | 'headers' | 'params'
+          > &
+            LiveTypeFunctionRequestInit<
+              SV,
+              P,
+              VersionedApi[K]['body'] extends Body<SV>
+                ? VersionedApi[K]['body']
+                : Body<SV>,
+              VersionedApi[K]['query'] extends QueryObject<SV>
+                ? VersionedApi[K]['query']
+                : QueryObject<SV>,
+              VersionedApi[K]['requestHeaders'] extends HeadersObject<SV>
+                ? VersionedApi[K]['requestHeaders']
+                : HeadersObject<SV>,
+              Auth
+            >
+        > extends infer ReqInit
+          ? ReqInit extends
+              | { body: unknown }
+              | { params: unknown }
+              | { query: unknown }
+              | { headers: unknown }
+            ? [reqInit: ReqInit]
+            : [reqInit?: ReqInit]
+          : never
+      ) => Promise<
+        Prettify<
+          SdkResponse<
+            SV,
+            ResBodyMap extends ResponsesObject<SV>
+              ? VersionedApi[K]['responses']
+              : Record<number, unknown>,
+            ResHeaders extends ForklaunchResHeaders
+              ? MapSchema<SV, VersionedApi[K]['responseHeaders']>
+              : unknown
+          >
+        >
+      >;
+    };
 
 /**
  * Represents a basic SDK Response object.
@@ -1040,21 +1149,19 @@ type SdkResponse<
   SV extends AnySchemaValidator,
   ResBodyMap extends Record<number, unknown>,
   ResHeaders extends Record<string, unknown> | unknown
-> = Prettify<
-  ({
-    [K in keyof ForklaunchResErrors]: {
-      code: K;
-      contentType: 'text/plain';
-      response: ForklaunchResErrors[K];
-    };
-  } & {
-    [K in keyof ResBodyMap]: {
-      code: K;
-      contentType: ExtractContentType<SV, ResBodyMap[K]>;
-      response: ExtractResponseBody<SV, ResBodyMap[K]>;
-    } & (unknown extends ResHeaders ? unknown : { headers: ResHeaders });
-  })[keyof (ForklaunchResErrors & ResBodyMap)]
->;
+> = ({
+  [K in keyof ForklaunchResErrors]: {
+    code: K;
+    contentType: 'text/plain';
+    response: ForklaunchResErrors[K];
+  };
+} & {
+  [K in keyof ResBodyMap]: {
+    code: K;
+    contentType: ExtractContentType<SV, ResBodyMap[K]>;
+    response: ExtractResponseBody<SV, ResBodyMap[K]>;
+  } & (unknown extends ResHeaders ? unknown : { headers: ResHeaders });
+})[keyof (ForklaunchResErrors & ResBodyMap)];
 
 /**
  * Represents the default error types for responses.

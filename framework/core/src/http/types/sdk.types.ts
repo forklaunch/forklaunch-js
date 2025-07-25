@@ -68,16 +68,15 @@ import {
  **/
 export type FetchFunction<FetchMap> = <
   const Path extends keyof FetchMap,
-  const Method extends keyof FetchMap[Path]
+  const Method extends keyof FetchMap[Path],
+  const Version extends keyof FetchMap[Path][Method]
 >(
   path: Path,
   ...reqInit: FetchMap[Path][Method] extends TypeSafeFunction
     ? 'get' extends keyof FetchMap[Path]
       ? FetchMap[Path]['get'] extends TypeSafeFunction
         ? Parameters<FetchMap[Path]['get']>[1] extends
-            | {
-                body: unknown;
-              }
+            | { body: unknown }
             | { query: unknown }
             | { params: unknown }
             | { headers: unknown }
@@ -104,11 +103,23 @@ export type FetchFunction<FetchMap> = <
             method: Method;
           }
         ]
-    : []
+    : FetchMap[Path][Method] extends Record<string, TypeSafeFunction>
+      ? [
+          reqInit: Omit<
+            Parameters<FetchMap[Path][Method][Version]>[0],
+            'method' | 'version'
+          > & {
+            method: Method;
+            version: Version;
+          }
+        ]
+      : []
 ) => Promise<
   FetchMap[Path][Method] extends TypeSafeFunction
     ? ReturnType<FetchMap[Path][Method]>
-    : never
+    : FetchMap[Path][Method] extends Record<string, TypeSafeFunction>
+      ? ReturnType<FetchMap[Path][Method][Version]>
+      : never
 >;
 
 /**

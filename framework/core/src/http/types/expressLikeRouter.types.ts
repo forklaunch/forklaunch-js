@@ -102,6 +102,7 @@ export interface LiveTypeRouteDefinition<
                     ReqHeaders,
                     ResHeaders,
                     ContractMethod,
+                    VersionedApi,
                     Auth
                   >
                 >
@@ -121,6 +122,7 @@ export interface LiveTypeRouteDefinition<
                   ReqHeaders,
                   ResHeaders,
                   ContractMethod,
+                  VersionedApi,
                   Auth
                 >
               >
@@ -138,6 +140,7 @@ export interface LiveTypeRouteDefinition<
             ReqQuery,
             ReqHeaders,
             ResHeaders,
+            VersionedApi,
             Auth
           >
         >
@@ -237,6 +240,7 @@ export interface LiveTypeRouteDefinition<
                     ReqHeaders,
                     ResHeaders,
                     ContractMethod,
+                    VersionedApi,
                     Auth
                   >
                 >
@@ -256,6 +260,7 @@ export interface LiveTypeRouteDefinition<
                   ReqHeaders,
                   ResHeaders,
                   ContractMethod,
+                  VersionedApi,
                   Auth
                 >
               >
@@ -273,6 +278,7 @@ export interface LiveTypeRouteDefinition<
             ReqQuery,
             ReqHeaders,
             ResHeaders,
+            VersionedApi,
             Auth
           >
         >
@@ -352,6 +358,7 @@ export interface LiveTypeRouteDefinition<
                     ReqHeaders,
                     ResHeaders,
                     ContractMethod,
+                    VersionedApi,
                     Auth
                   >
                 >
@@ -371,6 +378,7 @@ export interface LiveTypeRouteDefinition<
                   ReqHeaders,
                   ResHeaders,
                   ContractMethod,
+                  VersionedApi,
                   Auth
                 >
               >
@@ -388,6 +396,7 @@ export interface LiveTypeRouteDefinition<
             ReqQuery,
             ReqHeaders,
             ResHeaders,
+            VersionedApi,
             Auth
           >
         >

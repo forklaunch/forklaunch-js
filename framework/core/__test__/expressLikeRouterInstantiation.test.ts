@@ -296,4 +296,79 @@ const fff = typedHandler(
   }
 );
 
+xa.trace('/test/:name/:id', xasd).sdk.string({
+  params: {
+    name: 'test',
+    id: 1
+  },
+  query: {
+    a: 3
+  },
+  headers: {
+    authorization: 'Basic dGVzdDp0ZXN0',
+    'x-test': 4
+  }
+});
+
+const r = xa.trace('/test/:name/:id', fff);
+
+await r.fetch('/l/test/:name/:id', {
+  method: 'TRACE',
+  params: {
+    name: 'test',
+    id: 1
+  },
+  query: {
+    a: [1, 2, 3]
+  },
+  version: '1.0.0',
+  headers: {
+    authorization: 'Basic dGVzdDp0ZXN0',
+    'x-test': 4
+  }
+});
+
+await b.fetch('/l/test/:name/:id', {
+  method: 'TRACE',
+  params: {
+    name: 'test',
+    id: 1
+  },
+  query: {
+    a: 4
+  },
+  headers: {
+    authorization: 'Basic dGVzdDp0ZXN0',
+    'x-test': 4
+  }
+});
+
+r.sdk.string['1.0.0']({
+  params: {
+    name: 'test',
+    id: 1
+  },
+  query: {
+    a: [1, 2, 3]
+  },
+  headers: {
+    authorization: 'Basic dGVzdDp0ZXN0',
+    'x-test': 4
+  }
+});
+
+await b.sdk.string({
+  params: {
+    name: 'test',
+    id: 1
+  },
+  query: {
+    a: 4
+  },
+  headers: {
+    authorization: 'Basic dGVzdDp0ZXN0',
+    'x-test': 8
+  }
+});
+
 xa.all(contractDetails, async (req, res) => {});

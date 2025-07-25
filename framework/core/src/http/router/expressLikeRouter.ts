@@ -535,7 +535,8 @@ export class ForklaunchExpressLikeRouter<
    */
   fetch: FetchFunction<this['fetchMap']> = async <
     Path extends keyof this['fetchMap'],
-    Method extends keyof this['fetchMap'][Path]
+    Method extends keyof this['fetchMap'][Path],
+    Version extends keyof this['fetchMap'][Path][Method]
   >(
     path: Path,
     ...reqInit: this['fetchMap'][Path][Method] extends TypeSafeFunction
@@ -580,7 +581,17 @@ export class ForklaunchExpressLikeRouter<
               method: Method;
             }
           ]
-      : []
+      : this['fetchMap'][Path][Method] extends Record<string, TypeSafeFunction>
+        ? [
+            reqInit: Omit<
+              Parameters<this['fetchMap'][Path][Method][Version]>[0],
+              'method' | 'version'
+            > & {
+              method: Method;
+              version: Version;
+            }
+          ]
+        : []
   ) => {
     return (
       this.fetchMap[path] as (
@@ -592,7 +603,9 @@ export class ForklaunchExpressLikeRouter<
       reqInit[0]
     ) as this['fetchMap'][Path][Method] extends TypeSafeFunction
       ? ReturnType<this['fetchMap'][Path][Method]>
-      : never;
+      : this['fetchMap'][Path][Method] extends Record<string, TypeSafeFunction>
+        ? ReturnType<this['fetchMap'][Path][Method][Version]>
+        : never;
   };
 
   /**
@@ -781,6 +794,7 @@ export class ForklaunchExpressLikeRouter<
                     ReqHeaders,
                     ResHeaders,
                     ContractMethod,
+                    VersionedApi,
                     Auth
                   >
                 >
@@ -800,6 +814,7 @@ export class ForklaunchExpressLikeRouter<
                   ReqHeaders,
                   ResHeaders,
                   ContractMethod,
+                  VersionedApi,
                   Auth
                 >
               >
@@ -821,6 +836,7 @@ export class ForklaunchExpressLikeRouter<
             ReqQuery,
             ReqHeaders,
             ResHeaders,
+            VersionedApi,
             Auth
           >
         >
@@ -886,6 +902,7 @@ export class ForklaunchExpressLikeRouter<
                         ReqHeaders,
                         ResHeaders,
                         ContractMethod,
+                        VersionedApi,
                         Auth
                       >
                     >
@@ -905,6 +922,7 @@ export class ForklaunchExpressLikeRouter<
                       ReqHeaders,
                       ResHeaders,
                       ContractMethod,
+                      VersionedApi,
                       Auth
                     >
                   >
@@ -926,6 +944,7 @@ export class ForklaunchExpressLikeRouter<
                 ReqQuery,
                 ReqHeaders,
                 ResHeaders,
+                VersionedApi,
                 Auth
               >
             >
@@ -1002,6 +1021,7 @@ export class ForklaunchExpressLikeRouter<
                           ReqHeaders,
                           ResHeaders,
                           ContractMethod,
+                          VersionedApi,
                           Auth
                         >
                       >
@@ -1021,6 +1041,7 @@ export class ForklaunchExpressLikeRouter<
                         ReqHeaders,
                         ResHeaders,
                         ContractMethod,
+                        VersionedApi,
                         Auth
                       >
                     >
@@ -1042,6 +1063,7 @@ export class ForklaunchExpressLikeRouter<
                   ReqQuery,
                   ReqHeaders,
                   ResHeaders,
+                  VersionedApi,
                   Auth
                 >
               >
@@ -1228,6 +1250,7 @@ export class ForklaunchExpressLikeRouter<
                           ReqHeaders,
                           ResHeaders,
                           ContractMethod,
+                          VersionedApi,
                           Auth
                         >
                       >
@@ -1247,6 +1270,7 @@ export class ForklaunchExpressLikeRouter<
                         ReqHeaders,
                         ResHeaders,
                         ContractMethod,
+                        VersionedApi,
                         Auth
                       >
                     >
@@ -1268,6 +1292,7 @@ export class ForklaunchExpressLikeRouter<
                   ReqQuery,
                   ReqHeaders,
                   ResHeaders,
+                  VersionedApi,
                   Auth
                 >
               >
