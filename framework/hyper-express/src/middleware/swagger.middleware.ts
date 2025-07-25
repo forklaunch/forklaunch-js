@@ -55,7 +55,7 @@ export function swaggerRedirect(path: string): MiddlewareHandler {
  * @example
  * ```typescript
  * const swaggerPath = '/api/v1/docs';
- * const swaggerSpec = generateSwaggerDocument(schemaValidator, 3000, routers);
+ * const swaggerSpec = generateOpenApiSpecs(schemaValidator, 3000, routers);
  *
  * app.get(
  *   `${swaggerPath}/*`,

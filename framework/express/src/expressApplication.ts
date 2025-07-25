@@ -5,10 +5,11 @@ import {
   ForklaunchExpressLikeApplication,
   ForklaunchRouter,
   generateMcpServer,
-  generateSwaggerDocument,
+  generateOpenApiSpecs,
   isForklaunchRequest,
   meta,
   MetricsDefinition,
+  OPENAPI_DEFAULT_VERSION,
   OpenTelemetryCollector
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
@@ -118,13 +119,16 @@ export class Application<
       typeof args[1] === 'string' ? args[1] : (process.env.HOST ?? 'localhost');
     const protocol = (process.env.PROTOCOL as 'http' | 'https') ?? 'http';
 
-    const openApi = generateSwaggerDocument<SV>(
+    const openApi = generateOpenApiSpecs<SV>(
       this.schemaValidator,
       protocol,
       host,
       port,
       this.routers
     );
+
+    console.log(openApi);
+    console.log(openApi[OPENAPI_DEFAULT_VERSION]);
 
     if (this.schemaValidator instanceof ZodSchemaValidator) {
       const zodSchemaValidator = this.schemaValidator;
@@ -209,9 +213,13 @@ export class Application<
           ...this.docsConfiguration,
           sources: [
             {
-              content: openApi,
+              content: openApi[OPENAPI_DEFAULT_VERSION],
               title: 'API Reference'
             },
+            ...Object.entries(openApi).map(([version, spec]) => ({
+              content: spec,
+              title: `API Reference - ${version}`
+            })),
             ...(this.docsConfiguration?.sources ?? [])
           ]
         })
@@ -221,7 +229,7 @@ export class Application<
         `/api${process.env.VERSION ? `/${process.env.VERSION}` : ''}${
           process.env.DOCS_PATH ?? '/docs'
         }`,
-        swaggerUi.serve,
+        swaggerUi.serveFiles(openApi),
         swaggerUi.setup(openApi)
       );
     }
@@ -230,7 +238,15 @@ export class Application<
       `/api${process.env.VERSION ? `/${process.env.VERSION}` : ''}/openapi`,
       (_, res) => {
         res.type('application/json');
-        res.json(openApi);
+        res.json({
+          latest: openApi[OPENAPI_DEFAULT_VERSION],
+          ...Object.fromEntries(
+            Object.entries(openApi).map(([version, spec]) => [
+              `v${version}`,
+              spec
+            ])
+          )
+        });
       }
     );
 

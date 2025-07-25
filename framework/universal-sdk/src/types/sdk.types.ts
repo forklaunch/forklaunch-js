@@ -69,7 +69,7 @@ export type RegistryOptions =
       static?: boolean;
     }
   | {
-      raw: OpenAPIObject;
+      raw: OpenAPIObject | Record<string, OpenAPIObject>;
     };
 
 export type SdkPathMap = Record<
@@ -85,5 +85,6 @@ export type SdkPathMap = Record<
       | 'head'
       | 'trace';
     path: string;
+    version: string;
   }
 >;

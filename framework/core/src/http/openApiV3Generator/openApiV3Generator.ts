@@ -32,7 +32,7 @@ import {
 } from '../types/contractDetails.types';
 import { ForklaunchRouter } from '../types/router.types';
 
-const defaultKey = Symbol('default');
+export const OPENAPI_DEFAULT_VERSION = Symbol('default');
 
 /**
  * Capitalizes the first letter of a string.
@@ -78,7 +78,7 @@ function generateOpenApiDocument(
   }[]
 ): Record<string | symbol, OpenAPIObject> {
   return {
-    [defaultKey]: {
+    [OPENAPI_DEFAULT_VERSION]: {
       openapi: '3.1.0',
       info: {
         title: process.env.API_TITLE || 'API Definition',
@@ -95,7 +95,7 @@ function generateOpenApiDocument(
         },
         ...(otherServers || [])
       ],
-      paths: versionedPaths[defaultKey]
+      paths: versionedPaths[OPENAPI_DEFAULT_VERSION]
     },
     ...Object.fromEntries(
       Object.entries(versionedPaths).map(([version, paths]) => [
@@ -338,7 +338,7 @@ function generateOperationObject<SV extends AnySchemaValidator>(
  * @param {ForklaunchRouter<SV>[]} routers - The routers to include in the Swagger document.
  * @returns {OpenAPIObject} - The generated Swagger document.
  */
-export function generateSwaggerDocument<SV extends AnySchemaValidator>(
+export function generateOpenApiSpecs<SV extends AnySchemaValidator>(
   schemaValidator: SV,
   protocol: 'http' | 'https',
   host: string,
@@ -350,13 +350,10 @@ export function generateSwaggerDocument<SV extends AnySchemaValidator>(
   }[]
 ): Record<string | symbol, OpenAPIObject> {
   const versionedPaths: Record<string | symbol, PathObject> = {
-    [defaultKey]: {
-      paths: {}
-    }
+    [OPENAPI_DEFAULT_VERSION]: {}
   };
 
   const tags: TagObject[] = [];
-  // const paths: PathObject = {};
   const securitySchemes: Record<string, SecuritySchemeObject> = {};
 
   unpackRouters<SV>(routers).forEach(({ fullPath, router, sdkPath }) => {
@@ -405,12 +402,12 @@ export function generateSwaggerDocument<SV extends AnySchemaValidator>(
           }
         }
       } else {
-        if (!versionedPaths[defaultKey]) {
-          versionedPaths[defaultKey] = {
+        if (!versionedPaths[OPENAPI_DEFAULT_VERSION]) {
+          versionedPaths[OPENAPI_DEFAULT_VERSION] = {
             paths: {}
           };
         }
-        versionedPaths[defaultKey][openApiPath] = {};
+        versionedPaths[OPENAPI_DEFAULT_VERSION][openApiPath] = {};
 
         const { query, requestHeaders, body, responses, responseHeaders } =
           route.contractDetails;
@@ -432,7 +429,7 @@ export function generateSwaggerDocument<SV extends AnySchemaValidator>(
         );
 
         if (route.method !== 'middleware') {
-          versionedPaths[defaultKey][openApiPath][route.method] =
+          versionedPaths[OPENAPI_DEFAULT_VERSION][openApiPath][route.method] =
             operationObject;
         }
       }

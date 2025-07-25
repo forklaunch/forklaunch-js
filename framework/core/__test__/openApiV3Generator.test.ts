@@ -4,7 +4,7 @@ import {
   optional,
   union
 } from '@forklaunch/validator/tests/mockSchemaValidator';
-import { generateSwaggerDocument } from '../src/http/openApiV3Generator/openApiV3Generator';
+import { generateOpenApiSpecs } from '../src/http/openApiV3Generator/openApiV3Generator';
 
 describe('openApiV3Generator tests', () => {
   const testSchema = {
@@ -12,7 +12,7 @@ describe('openApiV3Generator tests', () => {
   };
 
   test('generate openApiV3', async () => {
-    const generatedOpenApiSpec = generateSwaggerDocument(
+    const generatedOpenApiSpec = generateOpenApiSpecs(
       mockSchemaValidator,
       'http',
       'localhost',
@@ -93,7 +93,7 @@ describe('openApiV3Generator tests', () => {
   });
 
   test('generate openApiV3 with nested routers', async () => {
-    const generatedOpenApiSpec = generateSwaggerDocument(
+    const generatedOpenApiSpec = generateOpenApiSpecs(
       mockSchemaValidator,
       'https',
       'api.example.com',
