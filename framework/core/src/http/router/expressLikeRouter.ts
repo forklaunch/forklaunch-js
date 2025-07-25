@@ -865,7 +865,7 @@ export class ForklaunchExpressLikeRouter<
     ) {
       const { contractDetails, handlers } =
         contractDetailsOrMiddlewareOrTypedHandler;
-      this.registerRoute<
+      const router = this.registerRoute<
         Name,
         ContractMethod,
         Path,
@@ -880,76 +880,7 @@ export class ForklaunchExpressLikeRouter<
         Auth
       >(method, path, registrationMethod, contractDetails, ...handlers);
 
-      return this as this & {
-        fetchMap: Prettify<
-          FetchMap extends Record<
-            SanitizePathSlashes<`${BasePath}${Path}`>,
-            unknown
-          >
-            ? FetchMap &
-                Record<
-                  SanitizePathSlashes<`${BasePath}${Path}`>,
-                  FetchMap[SanitizePathSlashes<`${BasePath}${Path}`>] &
-                    Record<
-                      Uppercase<ContractMethod>,
-                      LiveTypeFunction<
-                        SV,
-                        SanitizePathSlashes<`${BasePath}${Path}`>,
-                        P,
-                        ResBodyMap,
-                        ReqBody,
-                        ReqQuery,
-                        ReqHeaders,
-                        ResHeaders,
-                        ContractMethod,
-                        VersionedApi,
-                        Auth
-                      >
-                    >
-                >
-            : FetchMap &
-                Record<
-                  SanitizePathSlashes<`${BasePath}${Path}`>,
-                  Record<
-                    Uppercase<ContractMethod>,
-                    LiveTypeFunction<
-                      SV,
-                      SanitizePathSlashes<`${BasePath}${Path}`>,
-                      P,
-                      ResBodyMap,
-                      ReqBody,
-                      ReqQuery,
-                      ReqHeaders,
-                      ResHeaders,
-                      ContractMethod,
-                      VersionedApi,
-                      Auth
-                    >
-                  >
-                >
-        >;
-        sdk: Prettify<
-          Sdk &
-            Record<
-              PrettyCamelCase<
-                Name extends string
-                  ? Name
-                  : SanitizePathSlashes<`${BasePath}${Path}`>
-              >,
-              LiveSdkFunction<
-                SV,
-                P,
-                ResBodyMap,
-                ReqBody,
-                ReqQuery,
-                ReqHeaders,
-                ResHeaders,
-                VersionedApi,
-                Auth
-              >
-            >
-        >;
-      };
+      return router;
     }
     // in this case, we test for the last element of the handlers. If typed handler, break this down
     else {
@@ -978,7 +909,7 @@ export class ForklaunchExpressLikeRouter<
         >(maybeTypedHandler)
       ) {
         const { contractDetails, handlers } = maybeTypedHandler;
-        this.registerRoute<
+        const router = this.registerRoute<
           Name,
           ContractMethod,
           Path,
@@ -999,76 +930,7 @@ export class ForklaunchExpressLikeRouter<
           ...middlewareOrMiddlewareAndTypedHandler.concat(handlers)
         );
 
-        return this as this & {
-          fetchMap: Prettify<
-            FetchMap extends Record<
-              SanitizePathSlashes<`${BasePath}${Path}`>,
-              unknown
-            >
-              ? FetchMap &
-                  Record<
-                    SanitizePathSlashes<`${BasePath}${Path}`>,
-                    FetchMap[SanitizePathSlashes<`${BasePath}${Path}`>] &
-                      Record<
-                        Uppercase<ContractMethod>,
-                        LiveTypeFunction<
-                          SV,
-                          SanitizePathSlashes<`${BasePath}${Path}`>,
-                          P,
-                          ResBodyMap,
-                          ReqBody,
-                          ReqQuery,
-                          ReqHeaders,
-                          ResHeaders,
-                          ContractMethod,
-                          VersionedApi,
-                          Auth
-                        >
-                      >
-                  >
-              : FetchMap &
-                  Record<
-                    SanitizePathSlashes<`${BasePath}${Path}`>,
-                    Record<
-                      Uppercase<ContractMethod>,
-                      LiveTypeFunction<
-                        SV,
-                        SanitizePathSlashes<`${BasePath}${Path}`>,
-                        P,
-                        ResBodyMap,
-                        ReqBody,
-                        ReqQuery,
-                        ReqHeaders,
-                        ResHeaders,
-                        ContractMethod,
-                        VersionedApi,
-                        Auth
-                      >
-                    >
-                  >
-          >;
-          sdk: Prettify<
-            Sdk &
-              Record<
-                PrettyCamelCase<
-                  Name extends string
-                    ? Name
-                    : SanitizePathSlashes<`${BasePath}${Path}`>
-                >,
-                LiveSdkFunction<
-                  SV,
-                  P,
-                  ResBodyMap,
-                  ReqBody,
-                  ReqQuery,
-                  ReqHeaders,
-                  ResHeaders,
-                  VersionedApi,
-                  Auth
-                >
-              >
-          >;
-        };
+        return router;
       } else {
         if (
           isExpressLikeSchemaHandler<
@@ -1227,37 +1089,15 @@ export class ForklaunchExpressLikeRouter<
           toPrettyCamelCase(contractDetails.name ?? this.basePath)
         ] = (req: Parameters<typeof localParamRequest>[1]) =>
           localParamRequest(`${this.basePath}${path}`, req);
-
         return this as this & {
-          fetchMap: Prettify<
-            FetchMap extends Record<
-              SanitizePathSlashes<`${BasePath}${Path}`>,
-              unknown
-            >
-              ? FetchMap &
-                  Record<
-                    SanitizePathSlashes<`${BasePath}${Path}`>,
-                    FetchMap[SanitizePathSlashes<`${BasePath}${Path}`>] &
-                      Record<
-                        Uppercase<ContractMethod>,
-                        LiveTypeFunction<
-                          SV,
-                          SanitizePathSlashes<`${BasePath}${Path}`>,
-                          P,
-                          ResBodyMap,
-                          ReqBody,
-                          ReqQuery,
-                          ReqHeaders,
-                          ResHeaders,
-                          ContractMethod,
-                          VersionedApi,
-                          Auth
-                        >
-                      >
-                  >
-              : FetchMap &
-                  Record<
-                    SanitizePathSlashes<`${BasePath}${Path}`>,
+          fetchMap: FetchMap extends Record<
+            SanitizePathSlashes<`${BasePath}${Path}`>,
+            unknown
+          >
+            ? FetchMap &
+                Record<
+                  SanitizePathSlashes<`${BasePath}${Path}`>,
+                  FetchMap[SanitizePathSlashes<`${BasePath}${Path}`>] &
                     Record<
                       Uppercase<ContractMethod>,
                       LiveTypeFunction<
@@ -1274,29 +1114,46 @@ export class ForklaunchExpressLikeRouter<
                         Auth
                       >
                     >
-                  >
-          >;
-          sdk: Prettify<
-            Sdk &
-              Record<
-                PrettyCamelCase<
-                  Name extends string
-                    ? Name
-                    : SanitizePathSlashes<`${BasePath}${Path}`>
-                >,
-                LiveSdkFunction<
-                  SV,
-                  P,
-                  ResBodyMap,
-                  ReqBody,
-                  ReqQuery,
-                  ReqHeaders,
-                  ResHeaders,
-                  VersionedApi,
-                  Auth
                 >
+            : FetchMap &
+                Record<
+                  SanitizePathSlashes<`${BasePath}${Path}`>,
+                  Record<
+                    Uppercase<ContractMethod>,
+                    LiveTypeFunction<
+                      SV,
+                      SanitizePathSlashes<`${BasePath}${Path}`>,
+                      P,
+                      ResBodyMap,
+                      ReqBody,
+                      ReqQuery,
+                      ReqHeaders,
+                      ResHeaders,
+                      ContractMethod,
+                      VersionedApi,
+                      Auth
+                    >
+                  >
+                >;
+          sdk: Sdk &
+            Record<
+              PrettyCamelCase<
+                Name extends string
+                  ? Name
+                  : SanitizePathSlashes<`${BasePath}${Path}`>
+              >,
+              LiveSdkFunction<
+                SV,
+                P,
+                ResBodyMap,
+                ReqBody,
+                ReqQuery,
+                ReqHeaders,
+                ResHeaders,
+                VersionedApi,
+                Auth
               >
-          >;
+            >;
         };
       }
     }
