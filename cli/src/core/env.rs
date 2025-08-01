@@ -22,9 +22,12 @@ pub(crate) struct Env {
     pub(crate) s3_bucket: Option<String>,
     #[serde(rename = "S3_REGION", skip_serializing_if = "Option::is_none")]
     pub(crate) s3_region: Option<String>,
-    #[serde(rename = "S3_ACCESS_KEY", skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "S3_SECRET_KEY_ID", skip_serializing_if = "Option::is_none")]
     pub(crate) s3_access_key: Option<String>,
-    #[serde(rename = "S3_SECRET_KEY", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "S3_SECRET_ACCESS_KEY",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub(crate) s3_secret_key: Option<String>,
     #[serde(rename = "KAFKA_BROKERS", skip_serializing_if = "Option::is_none")]
     pub(crate) kafka_brokers: Option<String>,
