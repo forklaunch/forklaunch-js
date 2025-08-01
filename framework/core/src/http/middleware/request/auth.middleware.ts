@@ -1,6 +1,6 @@
 import { isNever } from '@forklaunch/common';
 import { AnySchemaValidator } from '@forklaunch/validator';
-import { decodeJwt, JWTPayload, jwtVerify } from 'jose';
+import { JWTPayload, jwtVerify } from 'jose';
 import { ParsedQs } from 'qs';
 import { discriminateAuthMethod } from '../../discriminateAuthMethod';
 import { hasPermissionChecks } from '../../guards/hasPermissionChecks';
@@ -330,11 +330,6 @@ export async function parseRequestAuth<
       res.status(error).send(message as never);
       return;
     }
-
-    req.session = decodeJwt(
-      (req.headers[auth.headerName ?? 'Authorization'] as string) ||
-        (req.headers[auth.headerName ?? 'authorization'] as string)
-    );
   }
 
   next?.();

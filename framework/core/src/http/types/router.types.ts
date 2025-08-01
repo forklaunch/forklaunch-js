@@ -30,6 +30,8 @@ export interface ForklaunchRouter<SV extends AnySchemaValidator> {
   sdk: Record<string, unknown>;
   /** The name of the SDK for the router */
   sdkName?: string;
+  /** The SDK paths for the router */
+  sdkPaths: Record<string, string>;
 }
 
 /**
@@ -41,7 +43,7 @@ export interface ForklaunchRoute<SV extends AnySchemaValidator> {
   /** The base path for the route */
   basePath: string;
   /** The path for the route, which can be a string, RegExp, or an array of strings or RegExps */
-  path: string | RegExp | (string | RegExp)[];
+  path: `/${string}`;
   /** The HTTP method for the route */
   method: Method;
   /** The contract details for the route */

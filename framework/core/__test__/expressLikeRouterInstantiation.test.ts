@@ -11,6 +11,8 @@ import {
   ForklaunchExpressLikeRouter,
   MetricsDefinition,
   OpenTelemetryCollector,
+  sdkClient,
+  sdkRouter,
   typedHandler
 } from '../src/http';
 import { typedAuthHandler } from '../src/http/handlers/typedAuthHandler';
@@ -191,19 +193,19 @@ xa.patch(
       name: number
     },
     responses: {
-      200: date
+      200: number
     }
   },
   async (req, res) => {
     const i = req.body.name * 7;
     const l = res.getHeaders()['x-correlation-id'];
-    res.status(200).send(new Date());
+    res.status(200).send(i);
   }
 );
 
 const fff = typedHandler(
   SchemaValidator(),
-  '/test/:name/:id',
+  '/test/:name/:id/fff',
   'trace',
   {
     name: 'string',
@@ -310,9 +312,9 @@ xa.trace('/test/:name/:id', xasd).sdk.string({
   }
 });
 
-const r = xa.trace('/test/:name/:id', fff);
+const r = xa.trace('/test/:name/:id/fff', fff);
 
-await r.fetch('/l/test/:name/:id', {
+const laaa = await r.fetch('/l/test/:name/:id/fff', {
   method: 'TRACE',
   params: {
     name: 'test',
@@ -328,7 +330,7 @@ await r.fetch('/l/test/:name/:id', {
   }
 });
 
-await b.fetch('/l/test/:name/:id', {
+const maaa = await b.fetch('/l/test/:name/:id', {
   method: 'TRACE',
   params: {
     name: 'test',
@@ -357,7 +359,7 @@ r.sdk.string['1.0.0']({
   }
 });
 
-await b.sdk.string({
+const af = await b.sdk.string({
   params: {
     name: 'test',
     id: 1
@@ -368,6 +370,71 @@ await b.sdk.string({
   headers: {
     authorization: 'Basic dGVzdDp0ZXN0',
     'x-test': 8
+  }
+});
+
+const ra = sdkRouter(
+  SchemaValidator(),
+  {
+    ad: xasd,
+    b: fff
+  },
+  c
+);
+const m = sdkClient(SchemaValidator(), {
+  m: { o: { ra } },
+  n: ra
+});
+
+type m = (typeof ra.fetchMap)['/l/test/:name/:id']['TRACE'];
+const n2 = ra.fetch('/l/test/:name/:id', {
+  method: 'TRACE',
+  params: {
+    name: 'test',
+    id: 1
+  },
+  query: {
+    a: 4
+  },
+  headers: {
+    authorization: 'Basic dGVzdDp0ZXN0',
+    'x-test': 4
+  }
+});
+const m2 = ra.fetch('/l/test/:name/:id/fff', {
+  version: '4',
+  method: 'TRACE',
+  params: {
+    name: 'test',
+    id: 1
+  },
+  headers: {
+    authorization: 'Basic dGVzdDp0ZXN0',
+    'x-test': '333'
+  }
+});
+
+ra.sdk.b['4']({
+  params: {
+    name: 'test',
+    id: 1
+  },
+  headers: {
+    authorization: 'Basic dGVzdDp0ZXN0',
+    'x-test': 'aa'
+  }
+});
+ra.sdk.ad({
+  query: {
+    a: 4
+  },
+  headers: {
+    authorization: 'Basic dGVzdDp0ZXN0',
+    'x-test': 4
+  },
+  params: {
+    name: 'test',
+    id: 1
   }
 });
 

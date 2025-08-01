@@ -69,7 +69,7 @@ export function parse<
   let parsedRequest: ParseResult<object> | undefined;
   let collectedParseErrors: string | undefined;
 
-  if (isRecord(req.requestSchema)) {
+  if (isRecord(req.requestSchema) && req.contractDetails.versions) {
     let runningParseErrors: string = '';
     matchedVersions = [];
 

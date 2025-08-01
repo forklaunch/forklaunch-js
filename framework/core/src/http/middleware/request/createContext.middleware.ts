@@ -65,7 +65,7 @@ export function createContext<
     (
       res as ResolvedForklaunchResponse<
         ResHeaders,
-        Record<string, unknown>,
+        Record<string, string>,
         LocalsObj,
         VersionedResponses,
         unknown

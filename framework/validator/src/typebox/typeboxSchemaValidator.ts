@@ -377,9 +377,6 @@ export class TypeboxSchemaValidator
     }
 
     if (KindGuard.IsSchema(schema) || schema instanceof TypeCheck) {
-      if (KindGuard.IsObject(schema)) {
-        schema.additionalProperties = false;
-      }
       return schema as TResolve<T>;
     }
 
@@ -393,9 +390,7 @@ export class TypeboxSchemaValidator
       }
     });
 
-    return Type.Object(newSchema, {
-      additionalProperties: false
-    }) as unknown as TResolve<T>;
+    return Type.Object(newSchema) as unknown as TResolve<T>;
   }
 
   /**

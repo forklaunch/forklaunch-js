@@ -131,6 +131,7 @@ export type ExpressLikeTypedHandler<
 > = {
   _typedHandler: true;
   _path: Path | undefined;
+  _method: ContractMethod;
   contractDetails: ContractDetails<
     SV,
     Name,

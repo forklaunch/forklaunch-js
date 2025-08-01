@@ -77,7 +77,12 @@ export function isHttpContractDetails<
 > {
   return (
     isPathParamHttpContractDetails(maybeContractDetails) &&
-    'body' in maybeContractDetails &&
-    maybeContractDetails.body != null
+    (('body' in maybeContractDetails && maybeContractDetails.body != null) ||
+      ('versions' in maybeContractDetails &&
+        typeof maybeContractDetails.versions === 'object' &&
+        maybeContractDetails.versions != null &&
+        Object.values(maybeContractDetails.versions).every(
+          (version) => 'body' in version && version.body != null
+        )))
   );
 }

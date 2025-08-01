@@ -328,9 +328,20 @@ export function typedHandler<
       throw new Error('Invalid definition for handler');
     }
   }
+
+  if (
+    isPath(pathOrContractMethod) &&
+    typeof contractMethodOrContractDetails !== 'string'
+  ) {
+    throw new Error('Contract method not supplied, bailing');
+  }
+
   return {
     _typedHandler: true as const,
     _path: isPath(pathOrContractMethod) ? pathOrContractMethod : undefined,
+    _method: isPath(pathOrContractMethod)
+      ? (contractMethodOrContractDetails as ContractMethod)
+      : pathOrContractMethod,
     contractDetails,
     handlers
   };

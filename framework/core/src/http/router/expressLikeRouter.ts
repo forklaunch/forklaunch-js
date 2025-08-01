@@ -86,8 +86,7 @@ export class ForklaunchExpressLikeRouter<
   BaseResponse,
   NextFunction,
   FetchMap extends Record<string, unknown> = EmptyObject,
-  Sdk extends Record<string, unknown> = EmptyObject,
-  SdkName extends string = PrettyCamelCase<BasePath>
+  Sdk extends Record<string, unknown> = EmptyObject
 > implements ConstrainedForklaunchRouter<SV, RouterHandler>
 {
   requestHandler!: RouterHandler;
@@ -97,13 +96,14 @@ export class ForklaunchExpressLikeRouter<
   fetchMap: FetchMap = {} as FetchMap;
   sdk: Sdk = {} as Sdk;
 
+  sdkPaths: Record<string, string> = {};
+
   constructor(
     readonly basePath: BasePath,
     readonly schemaValidator: SV,
     readonly internal: Internal,
     readonly postEnrichMiddleware: RouterHandler[],
-    readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-    readonly sdkName?: SdkName
+    readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
   ) {
     if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
       process.on('uncaughtException', (err) => {
@@ -231,7 +231,7 @@ export class ForklaunchExpressLikeRouter<
     ReqBody extends Record<string, unknown>,
     ReqQuery extends ParsedQs,
     ReqHeaders extends Record<string, string>,
-    ResHeaders extends Record<string, unknown>,
+    ResHeaders extends Record<string, string>,
     LocalsObj extends Record<string, unknown>,
     VersionedReqs extends VersionedRequests,
     VersionedResps extends VersionedResponses
@@ -301,7 +301,7 @@ export class ForklaunchExpressLikeRouter<
     ReqBody extends Record<string, unknown>,
     ReqQuery extends ParsedQs,
     ReqHeaders extends Record<string, string>,
-    ResHeaders extends Record<string, unknown>,
+    ResHeaders extends Record<string, string>,
     LocalsObj extends Record<string, unknown>,
     VersionedReqs extends VersionedRequests,
     VersionedResps extends VersionedResponses
@@ -380,13 +380,15 @@ export class ForklaunchExpressLikeRouter<
     return {
       requestSchema: schemaValidator.compile(
         schemaValidator.schemify({
-          ...(params != null ? { params } : {}),
+          ...(params != null
+            ? { params }
+            : { params: schemaValidator.unknown as ParamsObject<SV> }),
           ...(contractDetailsIO.requestHeaders != null
             ? { headers: contractDetailsIO.requestHeaders }
-            : {}),
+            : { headers: schemaValidator.unknown as HeadersObject<SV> }),
           ...(contractDetailsIO.query != null
             ? { query: contractDetailsIO.query }
-            : {}),
+            : { query: schemaValidator.unknown as QueryObject<SV> }),
           ...(contractDetailsIO.body != null
             ? {
                 body: discriminateBody(
@@ -394,7 +396,7 @@ export class ForklaunchExpressLikeRouter<
                   contractDetailsIO.body
                 )?.schema
               }
-            : {})
+            : { body: schemaValidator.unknown as Body<SV> })
         })
       ),
       responseSchemas: {
@@ -404,7 +406,7 @@ export class ForklaunchExpressLikeRouter<
                 schemaValidator.schemify(contractDetailsIO.responseHeaders)
               )
             }
-          : {}),
+          : { headers: schemaValidator.unknown as HeadersObject<SV> }),
         responses: Object.fromEntries(
           Object.entries(responseSchemas).map(([key, value]) => {
             return [
@@ -454,6 +456,8 @@ export class ForklaunchExpressLikeRouter<
       Auth
     >
   ) {
+    const schemaValidator = this.schemaValidator as SchemaValidator;
+
     let requestSchema: unknown | Record<string, unknown>;
     let responseSchemas:
       | ResponseCompiledSchema
@@ -493,24 +497,35 @@ export class ForklaunchExpressLikeRouter<
         responseSchemas: unversionedResponseSchemas
       } = this.#processContractDetailsIO(
         {
+          ...('params' in contractDetails && contractDetails.params != null
+            ? { params: contractDetails.params }
+            : { params: schemaValidator.unknown as ParamsObject<SV> }),
           ...('requestHeaders' in contractDetails &&
           contractDetails.requestHeaders != null
             ? { requestHeaders: contractDetails.requestHeaders }
-            : {}),
+            : {
+                requestHeaders: schemaValidator.unknown as HeadersObject<SV>
+              }),
           ...('responseHeaders' in contractDetails &&
           contractDetails.responseHeaders != null
             ? { responseHeaders: contractDetails.responseHeaders }
-            : {}),
+            : {
+                responseHeaders: schemaValidator.unknown as HeadersObject<SV>
+              }),
           ...('query' in contractDetails && contractDetails.query != null
             ? { query: contractDetails.query }
-            : {}),
+            : {
+                query: schemaValidator.unknown as QueryObject<SV>
+              }),
           ...('body' in contractDetails && contractDetails.body != null
             ? { body: contractDetails.body }
-            : {}),
+            : {
+                body: schemaValidator.unknown as Body<SV>
+              }),
           responses:
             'responses' in contractDetails && contractDetails.responses != null
               ? contractDetails.responses
-              : {}
+              : (schemaValidator.unknown as ResponsesObject<SV>)
         },
         contractDetails.params
       );
@@ -540,15 +555,16 @@ export class ForklaunchExpressLikeRouter<
   >(
     path: Path,
     ...reqInit: this['fetchMap'][Path][Method] extends TypeSafeFunction
-      ? 'get' extends keyof this['fetchMap'][Path]
-        ? this['fetchMap'][Path]['get'] extends TypeSafeFunction
-          ? Parameters<this['fetchMap'][Path]['get']>[1] extends
+      ? 'GET' extends keyof this['fetchMap'][Path]
+        ? this['fetchMap'][Path]['GET'] extends TypeSafeFunction
+          ? Parameters<this['fetchMap'][Path]['GET']>[1] extends
               | {
                   body: unknown;
                 }
               | { query: unknown }
               | { params: unknown }
               | { headers: unknown }
+              | { version: unknown }
             ? [
                 reqInit: Omit<
                   Parameters<this['fetchMap'][Path][Method]>[1],
@@ -591,20 +607,18 @@ export class ForklaunchExpressLikeRouter<
               version: Version;
             }
           ]
-        : []
+        : [{ method: Method }]
   ) => {
     return (
-      this.fetchMap[path] as (
-        route: string,
-        request?: unknown
-      ) => Promise<unknown>
+      this.fetchMap[path] as (route: string, request?: unknown) => unknown
     )(
       path as string,
       reqInit[0]
+      // reqInit
     ) as this['fetchMap'][Path][Method] extends TypeSafeFunction
-      ? ReturnType<this['fetchMap'][Path][Method]>
+      ? Awaited<ReturnType<this['fetchMap'][Path][Method]>>
       : this['fetchMap'][Path][Method] extends Record<string, TypeSafeFunction>
-        ? ReturnType<this['fetchMap'][Path][Method][Version]>
+        ? Awaited<ReturnType<this['fetchMap'][Path][Method][Version]>>
         : never;
   };
 
@@ -1390,8 +1404,7 @@ export class ForklaunchExpressLikeRouter<
           BaseResponse,
           NextFunction,
           FetchMap,
-          Sdk,
-          SdkName
+          Sdk
         >(handler)
       ) {
         this.addRouterToSdk(handler);
@@ -1680,8 +1693,7 @@ export class ForklaunchExpressLikeRouter<
         BaseResponse,
         NextFunction,
         FetchMap,
-        Sdk,
-        SdkName
+        Sdk
       >(contractDetailsOrMiddlewareOrTypedHandler)
     ) {
       this.addRouterToSdk(contractDetailsOrMiddlewareOrTypedHandler);
@@ -2101,8 +2113,7 @@ export class ForklaunchExpressLikeRouter<
           BaseResponse,
           NextFunction,
           FetchMap,
-          Sdk,
-          SdkName
+          Sdk
         >(m)
       )[0]?.basePath;
     }
@@ -3318,6 +3329,7 @@ export class ForklaunchExpressLikeRouter<
     clone.routes = [...this.routes];
     clone.fetchMap = { ...this.fetchMap };
     clone.sdk = { ...this.sdk };
+    clone.sdkPaths = { ...this.sdkPaths };
   }
 
   clone(): this {
@@ -3330,15 +3342,13 @@ export class ForklaunchExpressLikeRouter<
       BaseResponse,
       NextFunction,
       FetchMap,
-      Sdk,
-      SdkName
+      Sdk
     >(
       this.basePath,
       this.schemaValidator,
       this.internal,
       this.postEnrichMiddleware,
-      this.openTelemetryCollector,
-      this.sdkName
+      this.openTelemetryCollector
     ) as this;
 
     this.cloneInternals(clone);

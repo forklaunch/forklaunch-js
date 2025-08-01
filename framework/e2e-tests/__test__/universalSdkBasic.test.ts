@@ -1,26 +1,17 @@
-import {
-  SdkClient,
-  UnpackSdkClientInput,
-  ValidSdkClientInput
-} from '@forklaunch/core/http';
 import { universalSdk } from '@forklaunch/universal-sdk';
 import { Server } from 'http';
 import { setTimeout } from 'timers/promises';
-import { sdkRouter, start } from '../servers/express-zod';
+import { sampleSdkClient, sdkRoutes, start } from '../servers/express-zod';
 
 export type SdkClientInput = {
-  testpath: typeof sdkRouter;
+  testpath: typeof sdkRoutes;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-type ValidSDK = ValidSdkClientInput<UnpackSdkClientInput<SdkClientInput>>;
-type SDK = SdkClient<SdkClientInput>;
-
 async function instantiateSdk() {
-  return await universalSdk<SDK>({
+  return await universalSdk<typeof sampleSdkClient>({
     host: 'http://localhost:6935',
     registryOptions: {
-      path: 'api/v1/openapi'
+      path: 'api/openapi'
     },
     contentTypeParserMap: {
       'custom/content': 'json'
@@ -30,7 +21,7 @@ async function instantiateSdk() {
 
 describe('universalSdkBasic', async () => {
   let server: Server;
-  let client: SDK;
+  let client: typeof sampleSdkClient;
 
   beforeAll(async () => {
     server = start();
@@ -52,7 +43,7 @@ describe('universalSdkBasic', async () => {
     if (!client) {
       client = await instantiateSdk();
     }
-    const getTest = await client.testpath.testFile({
+    const getTest = await client.sdk.sample.path.get['2.0.0']({
       headers: {
         authorization: 'bb YmFzaWN1c2VyOnBhc3N3b3Jk'
       }
@@ -64,11 +55,13 @@ describe('universalSdkBasic', async () => {
     if (!client) {
       client = await instantiateSdk();
     }
-    const getTest = await client.testpath.fetch('/testpath/test', {
+    const getTest = await client.fetch('/testpath/test', {
       method: 'GET',
       headers: {
-        authorization: 'bb YmFzaWN1c2VyOnBhc3N3b3Jk'
-      }
+        authorization: 'bb YmFzaWN1c2VyOnBhc3N3b3Jk',
+        'x-test': 'test'
+      },
+      version: '1.0.0'
     });
     expect(getTest.code).toBe(200);
   });
@@ -77,7 +70,7 @@ describe('universalSdkBasic', async () => {
     if (!client) {
       client = await instantiateSdk();
     }
-    const postTest = await client.testpath.testSse({
+    const postTest = await client.sdk.sample.path.post({
       headers: {
         xyz: 'Basic YmFzaWN1c2VyOnBhc3N3b3Jk'
       },
@@ -93,7 +86,7 @@ describe('universalSdkBasic', async () => {
     if (!client) {
       client = await instantiateSdk();
     }
-    const postTest = await client.testpath.fetch('/testpath/test', {
+    const postTest = await client.fetch('/testpath/test', {
       headers: {
         xyz: 'Basic YmFzaWN1c2VyOnBhc3N3b3Jk'
       },
@@ -110,7 +103,7 @@ describe('universalSdkBasic', async () => {
     if (!client) {
       client = await instantiateSdk();
     }
-    const jsonPatchTest = await client.testpath.testJsonPatch({
+    const jsonPatchTest = await client.sdk.sample.path.patch({
       headers: {
         authorization:
           'bb eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0dXNlciIsImlhdCI6MTUxNjIzOTAyMn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c' // random valid jwt token
@@ -130,7 +123,7 @@ describe('universalSdkBasic', async () => {
     if (!client) {
       client = await instantiateSdk();
     }
-    const jsonPatchTest = await client.testpath.fetch('/testpath/test', {
+    const jsonPatchTest = await client.fetch('/testpath/test', {
       method: 'PATCH',
       headers: {
         authorization: 'bb string'
@@ -150,7 +143,27 @@ describe('universalSdkBasic', async () => {
     if (!client) {
       client = await instantiateSdk();
     }
-    const multipartTest = await client.testpath.testMultipart({
+    const multipartTest = await client.sdk.sample.path.multipart({
+      headers: {
+        'x-test': 'test'
+      },
+      body: {
+        multipartForm: {
+          fileName: '!',
+          g: new File(['Hello World'], 'test.txt', { type: 'text/plain' })
+        }
+      }
+    });
+    console.log(multipartTest);
+    expect(multipartTest.code).toBe(200);
+  });
+
+  it('should call multipartTest fetch', async () => {
+    if (!client) {
+      client = await instantiateSdk();
+    }
+    const multipartTest = await client.fetch('/testpath/test/multipart', {
+      method: 'POST',
       headers: {
         'x-test': 'test'
       },
@@ -164,33 +177,11 @@ describe('universalSdkBasic', async () => {
     expect(multipartTest.code).toBe(200);
   });
 
-  it('should call multipartTest fetch', async () => {
-    if (!client) {
-      client = await instantiateSdk();
-    }
-    const multipartTest = await client.testpath.fetch(
-      '/testpath/test/multipart',
-      {
-        method: 'POST',
-        headers: {
-          'x-test': 'test'
-        },
-        body: {
-          multipartForm: {
-            fileName: '!',
-            g: new File(['Hello World'], 'test.txt', { type: 'text/plain' })
-          }
-        }
-      }
-    );
-    expect(multipartTest.code).toBe(200);
-  });
-
   it('should call urlEncodedFormTest', async () => {
     if (!client) {
       client = await instantiateSdk();
     }
-    const urlEncodedFormTest = await client.testpath.testUrlEncodedForm({
+    const urlEncodedFormTest = await client.sdk.sample.path.urlEncodedForm({
       params: {
         id: '123'
       },
@@ -208,7 +199,7 @@ describe('universalSdkBasic', async () => {
     if (!client) {
       client = await instantiateSdk();
     }
-    const urlEncodedFormTest = await client.testpath.fetch(
+    const urlEncodedFormTest = await client.fetch(
       '/testpath/test/url-encoded-form/:id',
       {
         method: 'POST',
@@ -230,7 +221,7 @@ describe('universalSdkBasic', async () => {
     if (!client) {
       client = await instantiateSdk();
     }
-    const filePostTest = await client.testpath.testFileUploadDownload({
+    const filePostTest = await client.sdk.sample.path.file({
       body: new File(['Hello World'], 'test2.txt', { type: 'text/plain' })
     });
     expect(filePostTest.code).toBe(200);
@@ -240,7 +231,7 @@ describe('universalSdkBasic', async () => {
     if (!client) {
       client = await instantiateSdk();
     }
-    const filePostTest = await client.testpath.fetch('/testpath/test/file', {
+    const filePostTest = await client.fetch('/testpath/test/file', {
       method: 'POST',
       body: new File(['Hello World'], 'test2.txt', { type: 'text/plain' })
     });

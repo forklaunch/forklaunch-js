@@ -417,20 +417,11 @@ type ResolvedForklaunchRequestBase<
   BaseRequest
 > = unknown extends BaseRequest
   ? ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders, Version>
-  : {
-      [K in keyof BaseRequest]: K extends keyof ForklaunchRequest<
-        SV,
-        P,
-        ReqBody,
-        ReqQuery,
-        ReqHeaders,
-        Version
-      >
-        ? ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders, Version>[K]
-        : K extends keyof BaseRequest
-          ? BaseRequest[K]
-          : never;
-    };
+  : Omit<
+      BaseRequest,
+      keyof ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders, Version>
+    > &
+      ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders, Version>;
 
 /**
  * Type representing the resolved forklaunch request from a base request type.
@@ -514,8 +505,16 @@ type ResolvedForklaunchResponseBase<
   BaseResponse
 > = unknown extends BaseResponse
   ? ForklaunchResponse<BaseResponse, ResBodyMap, ResHeaders, LocalsObj, Version>
-  : {
-      [K in keyof BaseResponse]: K extends keyof ForklaunchResponse<
+  : (string extends Version ? unknown : { version?: Version }) & {
+      [K in
+        | keyof BaseResponse
+        | keyof ForklaunchResponse<
+            BaseResponse,
+            ResBodyMap,
+            ResHeaders,
+            LocalsObj,
+            Version
+          >]: K extends keyof ForklaunchResponse<
         BaseResponse,
         ResBodyMap,
         ResHeaders,
@@ -536,7 +535,7 @@ type ResolvedForklaunchResponseBase<
 
 export type ResolvedForklaunchResponse<
   ResBodyMap extends Record<number, unknown>,
-  ResHeaders extends Record<string, unknown>,
+  ResHeaders extends Record<string, string>,
   LocalsObj extends Record<string, unknown>,
   VersionedResps extends VersionedResponses,
   BaseResponse
@@ -553,7 +552,7 @@ export type ResolvedForklaunchResponse<
         VersionedResps[K]['responses'],
         VersionedResps[K]['responseHeaders'] extends Record<string, unknown>
           ? VersionedResps[K]['responseHeaders']
-          : Record<string, unknown>,
+          : Record<string, string>,
         LocalsObj,
         K extends string ? K : never,
         BaseResponse
@@ -578,7 +577,7 @@ export interface ExpressLikeHandler<
   ReqBody extends Record<string, unknown>,
   ReqQuery extends ParsedQs,
   ReqHeaders extends Record<string, string>,
-  ResHeaders extends Record<string, unknown>,
+  ResHeaders extends Record<string, string>,
   LocalsObj extends Record<string, unknown>,
   VersionedReqs extends VersionedRequests,
   VersionedResps extends VersionedResponses,
@@ -1014,23 +1013,23 @@ export type LiveTypeFunction<
                 : HeadersObject<SV>,
               Auth
             >
-        > extends infer ReqInit
+        > & { version: K } extends infer ReqInit
           ? ReqInit extends
               | { body: unknown }
               | { params: unknown }
               | { query: unknown }
               | { headers: unknown }
-            ? [reqInit: ReqInit & { version: K }]
-            : [reqInit?: ReqInit & { version: K }]
+            ? [reqInit: ReqInit]
+            : [reqInit?: ReqInit]
           : never
       ) => Promise<
         Prettify<
           SdkResponse<
             SV,
-            ResponsesObject<SV> extends ResBodyMap
+            ResponsesObject<SV> extends VersionedApi[K]['responses']
               ? Record<number, unknown>
               : VersionedApi[K]['responses'],
-            ForklaunchResHeaders extends ResHeaders
+            ForklaunchResHeaders extends VersionedApi[K]['responseHeaders']
               ? unknown
               : MapSchema<SV, VersionedApi[K]['responseHeaders']>
           >
@@ -1128,12 +1127,12 @@ export type LiveSdkFunction<
         Prettify<
           SdkResponse<
             SV,
-            ResBodyMap extends ResponsesObject<SV>
-              ? VersionedApi[K]['responses']
-              : Record<number, unknown>,
-            ResHeaders extends ForklaunchResHeaders
-              ? MapSchema<SV, VersionedApi[K]['responseHeaders']>
-              : unknown
+            ResponsesObject<SV> extends VersionedApi['responses']
+              ? Record<number, unknown>
+              : VersionedApi['responses'],
+            ForklaunchResHeaders extends VersionedApi['responseHeaders']
+              ? unknown
+              : MapSchema<SV, VersionedApi['responseHeaders']>
           >
         >
       >;

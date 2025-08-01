@@ -109,7 +109,7 @@ export class UniversalSdk {
     return this.execute(
       path,
       request?.method ?? 'get',
-      request?.version,
+      request?.version ?? 'latest',
       request
     );
   }

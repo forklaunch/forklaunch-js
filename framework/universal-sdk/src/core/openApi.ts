@@ -20,10 +20,12 @@ export function getSdkPathMap(
       ] as const;
 
       const versionedPath =
-        version === 'latest' ? `latest` : version.substring(1);
+        version === 'latest' ? undefined : version.substring(1);
       methods.forEach((method) => {
         if (pathItem[method]?.operationId) {
-          sdkPathMap[`${pathItem[method].operationId}.${versionedPath}`] = {
+          sdkPathMap[
+            `${pathItem[method].operationId}${versionedPath ? `.${versionedPath}` : ''}`
+          ] = {
             method,
             path,
             version

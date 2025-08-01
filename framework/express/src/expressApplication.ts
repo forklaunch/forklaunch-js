@@ -127,9 +127,6 @@ export class Application<
       this.routers
     );
 
-    console.log(openApi);
-    console.log(openApi[OPENAPI_DEFAULT_VERSION]);
-
     if (this.schemaValidator instanceof ZodSchemaValidator) {
       const zodSchemaValidator = this.schemaValidator;
       const routers = this

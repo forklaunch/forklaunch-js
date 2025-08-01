@@ -54,9 +54,15 @@ export function isPathParamHttpContractDetails<
     typeof maybePathParamHttpContractDetails === 'object' &&
     'name' in maybePathParamHttpContractDetails &&
     'summary' in maybePathParamHttpContractDetails &&
-    'responses' in maybePathParamHttpContractDetails &&
     maybePathParamHttpContractDetails.name != null &&
     maybePathParamHttpContractDetails.summary != null &&
-    maybePathParamHttpContractDetails.responses != null
+    (('responses' in maybePathParamHttpContractDetails &&
+      maybePathParamHttpContractDetails.responses != null) ||
+      ('versions' in maybePathParamHttpContractDetails &&
+        typeof maybePathParamHttpContractDetails.versions === 'object' &&
+        maybePathParamHttpContractDetails.versions != null &&
+        Object.values(maybePathParamHttpContractDetails.versions).every(
+          (version) => 'responses' in version && version.responses != null
+        )))
   );
 }

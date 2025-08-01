@@ -274,9 +274,7 @@ export class ZodSchemaValidator
     }
 
     if (schema instanceof ZodType) {
-      return (
-        this.isInstanceOf(schema, z.object({})) ? schema.strict() : schema
-      ) as ZodResolve<T>;
+      return schema as ZodResolve<T>;
     }
 
     const newSchema: ZodRawShape = {};
@@ -288,7 +286,7 @@ export class ZodSchemaValidator
       }
     });
 
-    return z.object(newSchema).strict() as ZodResolve<T>;
+    return z.object(newSchema) as ZodResolve<T>;
   }
 
   /**

@@ -1,4 +1,4 @@
-import { openApiCompliantPath, toPrettyCamelCase } from '@forklaunch/common';
+import { openApiCompliantPath } from '@forklaunch/common';
 import {
   AnySchemaValidator,
   IdiomaticSchema,
@@ -69,9 +69,12 @@ function generateOpenApiDocument(
   protocol: 'http' | 'https',
   host: string,
   port: string | number,
-  tags: TagObject[],
+  versionedTags: Record<string | symbol, TagObject[]>,
   versionedPaths: Record<string | symbol, PathObject>,
-  securitySchemes: Record<string, SecuritySchemeObject>,
+  versionedSecuritySchemes: Record<
+    string | symbol,
+    Record<string, SecuritySchemeObject>
+  >,
   otherServers?: {
     url: string;
     description: string;
@@ -85,9 +88,9 @@ function generateOpenApiDocument(
         version: process.env.VERSION || 'latest'
       },
       components: {
-        securitySchemes
+        securitySchemes: versionedSecuritySchemes[OPENAPI_DEFAULT_VERSION]
       },
-      tags,
+      tags: versionedTags[OPENAPI_DEFAULT_VERSION],
       servers: [
         {
           url: `${protocol}://${host}:${port}`,
@@ -107,9 +110,9 @@ function generateOpenApiDocument(
             version
           },
           components: {
-            securitySchemes
+            securitySchemes: versionedSecuritySchemes[version]
           },
-          tags,
+          tags: versionedTags[version],
           servers: [
             {
               url: `${protocol}://${host}:${port}`,
@@ -158,8 +161,10 @@ function contentResolver<SV extends AnySchemaValidator>(
 
 function generateOperationObject<SV extends AnySchemaValidator>(
   schemaValidator: SV,
+  path: string,
+  method: Method,
   controllerName: string,
-  sdkPath: string,
+  sdkPaths: Record<string, string>,
   securitySchemes: Record<string, SecuritySchemeObject>,
   name: string,
   summary: string,
@@ -212,7 +217,7 @@ function generateOperationObject<SV extends AnySchemaValidator>(
   const commonErrors = [400, 404, 500];
   for (const error of commonErrors) {
     if (!(error in responses)) {
-      responses[error] = {
+      coercedResponses[error] = {
         description: HTTPStatuses[error],
         content: contentResolver(schemaValidator, schemaValidator.string)
       };
@@ -223,8 +228,8 @@ function generateOperationObject<SV extends AnySchemaValidator>(
     tags: [controllerName],
     summary: `${name}: ${summary}`,
     parameters: [],
-    responses,
-    operationId: `${sdkPath}.${toPrettyCamelCase(name)}`
+    responses: coercedResponses,
+    operationId: sdkPaths[[method, path].join('.')]
   };
 
   if (params) {
@@ -352,16 +357,18 @@ export function generateOpenApiSpecs<SV extends AnySchemaValidator>(
   const versionedPaths: Record<string | symbol, PathObject> = {
     [OPENAPI_DEFAULT_VERSION]: {}
   };
+  const versionedTags: Record<string | symbol, TagObject[]> = {
+    [OPENAPI_DEFAULT_VERSION]: []
+  };
+  const versionedSecuritySchemes: Record<
+    string | symbol,
+    Record<string, SecuritySchemeObject>
+  > = {
+    [OPENAPI_DEFAULT_VERSION]: {}
+  };
 
-  const tags: TagObject[] = [];
-  const securitySchemes: Record<string, SecuritySchemeObject> = {};
-
-  unpackRouters<SV>(routers).forEach(({ fullPath, router, sdkPath }) => {
+  unpackRouters<SV>(routers).forEach(({ fullPath, router }) => {
     const controllerName = transformBasePath(fullPath);
-    tags.push({
-      name: controllerName,
-      description: `${toUpperCase(controllerName)} Operations`
-    });
     router.routes.forEach((route) => {
       const openApiPath = openApiCompliantPath(
         `${fullPath}${route.path === '/' ? '' : route.path}`
@@ -371,20 +378,36 @@ export function generateOpenApiSpecs<SV extends AnySchemaValidator>(
       if (versions) {
         for (const version of Object.keys(versions)) {
           if (!versionedPaths[version]) {
-            versionedPaths[version] = {
-              paths: {}
-            };
+            versionedPaths[version] = {};
           }
-          versionedPaths[version][openApiPath] = {};
+          if (!versionedPaths[version][openApiPath]) {
+            versionedPaths[version][openApiPath] = {};
+          }
+          if (!versionedTags[version]) {
+            versionedTags[version] = [];
+          }
+          if (
+            !versionedTags[version].find((tag) => tag.name === controllerName)
+          ) {
+            versionedTags[version].push({
+              name: controllerName,
+              description: `${toUpperCase(controllerName)} Operations`
+            });
+          }
+          if (!versionedSecuritySchemes[version]) {
+            versionedSecuritySchemes[version] = {};
+          }
 
           const { query, requestHeaders, body, responses, responseHeaders } =
             versions[version];
 
           const operationObject = generateOperationObject<SV>(
             schemaValidator,
+            route.path,
+            route.method,
             controllerName,
-            sdkPath,
-            securitySchemes,
+            router.sdkPaths,
+            versionedSecuritySchemes[version],
             name,
             summary,
             responses,
@@ -403,20 +426,38 @@ export function generateOpenApiSpecs<SV extends AnySchemaValidator>(
         }
       } else {
         if (!versionedPaths[OPENAPI_DEFAULT_VERSION]) {
-          versionedPaths[OPENAPI_DEFAULT_VERSION] = {
-            paths: {}
-          };
+          versionedPaths[OPENAPI_DEFAULT_VERSION] = {};
         }
-        versionedPaths[OPENAPI_DEFAULT_VERSION][openApiPath] = {};
+        if (!versionedPaths[OPENAPI_DEFAULT_VERSION][openApiPath]) {
+          versionedPaths[OPENAPI_DEFAULT_VERSION][openApiPath] = {};
+        }
+        if (!versionedTags[OPENAPI_DEFAULT_VERSION]) {
+          versionedTags[OPENAPI_DEFAULT_VERSION] = [];
+        }
+        if (
+          !versionedTags[OPENAPI_DEFAULT_VERSION].find(
+            (tag) => tag.name === controllerName
+          )
+        ) {
+          versionedTags[OPENAPI_DEFAULT_VERSION].push({
+            name: controllerName,
+            description: `${toUpperCase(controllerName)} Operations`
+          });
+        }
+        if (!versionedSecuritySchemes[OPENAPI_DEFAULT_VERSION]) {
+          versionedSecuritySchemes[OPENAPI_DEFAULT_VERSION] = {};
+        }
 
         const { query, requestHeaders, body, responses, responseHeaders } =
           route.contractDetails;
 
         const operationObject = generateOperationObject<SV>(
           schemaValidator,
+          route.path,
+          route.method,
           controllerName,
-          sdkPath,
-          securitySchemes,
+          router.sdkPaths,
+          versionedSecuritySchemes[OPENAPI_DEFAULT_VERSION],
           name,
           summary,
           responses,
@@ -440,9 +481,9 @@ export function generateOpenApiSpecs<SV extends AnySchemaValidator>(
     protocol,
     host,
     port,
-    tags,
+    versionedTags,
     versionedPaths,
-    securitySchemes,
+    versionedSecuritySchemes,
     otherServers
   );
 }
