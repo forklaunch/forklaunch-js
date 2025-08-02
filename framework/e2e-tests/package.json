@@ -30,16 +30,16 @@
     "@forklaunch/hyper-express-fork": "^6.17.34",
     "@forklaunch/universal-sdk": "workspace:*",
     "@forklaunch/validator": "workspace:*",
-    "@sinclair/typebox": "^0.34.37",
-    "zod": "^4.0.5"
+    "@sinclair/typebox": "^0.34.38",
+    "zod": "^4.0.14"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",
     "@types/express-serve-static-core": "^5.0.7",
     "@types/qs": "^6.14.0",
     "@types/range-parser": "^1.2.7",
-    "@typescript/native-preview": "7.0.0-dev.20250712.1",
-    "jose": "^6.0.11",
+    "@typescript/native-preview": "7.0.0-dev.20250802.1",
+    "jose": "^6.0.12",
     "tsup": "^8.5.0"
   }
 }

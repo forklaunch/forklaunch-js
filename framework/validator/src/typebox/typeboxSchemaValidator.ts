@@ -318,7 +318,7 @@ export class TypeboxSchemaValidator
       title: 'Binary'
     })
   )
-    .Decode((value) => new TextEncoder().encode(value))
+    .Decode((value) => new TextEncoder().encode(value) as Uint8Array)
     .Encode((value) => {
       if (value instanceof ArrayBuffer) {
         return String.fromCharCode(...new Uint8Array(value));
