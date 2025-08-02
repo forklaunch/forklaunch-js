@@ -1,5 +1,13 @@
 # @forklaunch/validator
 
+## 0.7.8
+
+### Patch Changes
+
+- Add versions to contract details, migrate sdk and fetch to functions for much better ergonomics
+- Updated dependencies
+  - @forklaunch/common@0.4.6
+
 ## 0.7.7
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # @forklaunch/core
 
+## 0.11.7
+
+### Patch Changes
+
+- Add versions to contract details, migrate sdk and fetch to functions for much better ergonomics
+- Updated dependencies
+  - @forklaunch/validator@0.7.8
+  - @forklaunch/common@0.4.6
+
 ## 0.11.6
 
 ### Patch Changes
