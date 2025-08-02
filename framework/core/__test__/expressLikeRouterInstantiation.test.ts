@@ -11,8 +11,6 @@ import {
   ForklaunchExpressLikeRouter,
   MetricsDefinition,
   OpenTelemetryCollector,
-  sdkClient,
-  sdkRouter,
   typedHandler
 } from '../src/http';
 import { typedAuthHandler } from '../src/http/handlers/typedAuthHandler';
@@ -83,12 +81,10 @@ const xasd = typedHandler(
   async (req, res) => {
     // const r = req.params.a;
     const i = req.headers['x-test'] * req.query.a;
-    const l = res.getHeaders()['x-correlation-id'];
   },
   async (req, res) => {
     // const r = req.params.a;
     const i = req.headers['x-test'] * 7;
-    const l = res.getHeaders()['x-correlation-id'];
     res.setHeader('x-test', 4);
     res.status(200).send(new Date());
   }
@@ -147,7 +143,6 @@ const bl = xa.trace(
   },
   async (req, res) => {
     const i = req.headers['x-test'] * 7;
-    const l = res.getHeaders()['x-correlation-id'];
     res.status(200).send({ n: new Date() });
   }
 );
@@ -158,12 +153,10 @@ const a = xa.trace(
   async (req, res) => {
     // const r = req.params.a;
     const i = req.headers['x-test'] * 7;
-    const l = res.getHeaders()['x-correlation-id'];
   },
   async (req, res) => {
     // const r = req.params.a;
     const i = req.headers['x-test'] * 7;
-    const l = res.getHeaders()['x-correlation-id'];
     res.status(200).send(new Date());
   }
 );
@@ -172,7 +165,6 @@ const b = xa.trace(
   '/test/:name/:id',
   async (req, res) => {
     const i = req.headers['x-test'] * 7;
-    const l = res.getHeaders()['x-correlation-id'];
     res.status(200).send(new Date());
   },
   xasd
@@ -198,7 +190,6 @@ xa.patch(
   },
   async (req, res) => {
     const i = req.body.name * 7;
-    const l = res.getHeaders()['x-correlation-id'];
     res.status(200).send(i);
   }
 );
@@ -278,7 +269,6 @@ const fff = typedHandler(
       default:
         isNever(version);
     }
-    const l = res.getHeaders()['x-correlation-id'];
   },
   async (req, res) => {
     // const r = req.params.a;
@@ -309,132 +299,6 @@ xa.trace('/test/:name/:id', xasd).sdk.string({
   headers: {
     authorization: 'Basic dGVzdDp0ZXN0',
     'x-test': 4
-  }
-});
-
-const r = xa.trace('/test/:name/:id/fff', fff);
-
-const laaa = await r.fetch('/l/test/:name/:id/fff', {
-  method: 'TRACE',
-  params: {
-    name: 'test',
-    id: 1
-  },
-  query: {
-    a: [1, 2, 3]
-  },
-  version: '1.0.0',
-  headers: {
-    authorization: 'Basic dGVzdDp0ZXN0',
-    'x-test': 4
-  }
-});
-
-const maaa = await b.fetch('/l/test/:name/:id', {
-  method: 'TRACE',
-  params: {
-    name: 'test',
-    id: 1
-  },
-  query: {
-    a: 4
-  },
-  headers: {
-    authorization: 'Basic dGVzdDp0ZXN0',
-    'x-test': 4
-  }
-});
-
-r.sdk.string['1.0.0']({
-  params: {
-    name: 'test',
-    id: 1
-  },
-  query: {
-    a: [1, 2, 3]
-  },
-  headers: {
-    authorization: 'Basic dGVzdDp0ZXN0',
-    'x-test': 4
-  }
-});
-
-const af = await b.sdk.string({
-  params: {
-    name: 'test',
-    id: 1
-  },
-  query: {
-    a: 4
-  },
-  headers: {
-    authorization: 'Basic dGVzdDp0ZXN0',
-    'x-test': 8
-  }
-});
-
-const ra = sdkRouter(
-  SchemaValidator(),
-  {
-    ad: xasd,
-    b: fff
-  },
-  c
-);
-const m = sdkClient(SchemaValidator(), {
-  m: { o: { ra } },
-  n: ra
-});
-
-type m = (typeof ra._fetchMap)['/l/test/:name/:id']['TRACE'];
-const n2 = ra.fetch('/l/test/:name/:id', {
-  method: 'TRACE',
-  params: {
-    name: 'test',
-    id: 1
-  },
-  query: {
-    a: 4
-  },
-  headers: {
-    authorization: 'Basic dGVzdDp0ZXN0',
-    'x-test': 4
-  }
-});
-const m2 = ra.fetch('/l/test/:name/:id/fff', {
-  version: '4',
-  method: 'TRACE',
-  params: {
-    name: 'test',
-    id: 1
-  },
-  headers: {
-    authorization: 'Basic dGVzdDp0ZXN0',
-    'x-test': '333'
-  }
-});
-
-ra.sdk.b['4']({
-  params: {
-    name: 'test',
-    id: 1
-  },
-  headers: {
-    authorization: 'Basic dGVzdDp0ZXN0',
-    'x-test': 'aa'
-  }
-});
-ra.sdk.ad({
-  query: {
-    a: 4
-  },
-  headers: {
-    authorization: 'Basic dGVzdDp0ZXN0',
-    'x-test': 4
-  },
-  params: {
-    name: 'test',
-    id: 1
   }
 });
 

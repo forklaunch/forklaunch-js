@@ -36,20 +36,14 @@ describe('zod schema validator tests', () => {
       }
     };
     schemified = schemify(schema);
-    expectedSchema = z
-      .object({
-        hello: z
-          .object({
-            world: z.string()
-          })
-          .strict(),
-        foo: z
-          .object({
-            bar: z.number()
-          })
-          .strict()
+    expectedSchema = z.object({
+      hello: z.object({
+        world: z.string()
+      }),
+      foo: z.object({
+        bar: z.number()
       })
-      .strict();
+    });
   });
 
   test('schemify', async () => {
@@ -149,11 +143,9 @@ describe('zod schema validator tests', () => {
 
     const schemifiedExpected = z.union([
       expectedSchema,
-      z
-        .object({
-          test: z.string()
-        })
-        .strict()
+      z.object({
+        test: z.string()
+      })
     ]);
 
     compare(unboxSchemified, schemifiedExpected);
@@ -168,11 +160,9 @@ describe('zod schema validator tests', () => {
     });
     compare(
       schemified,
-      z
-        .object({
-          hello: z.literal('world')
-        })
-        .strict()
+      z.object({
+        hello: z.literal('world')
+      })
     );
   });
 
