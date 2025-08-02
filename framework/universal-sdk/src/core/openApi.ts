@@ -1,10 +1,13 @@
 import { OpenAPIObject } from 'openapi3-ts/oas31';
+import { isOpenAPIObject } from '../guards/isOpenApiObject';
 import { RegistryOptions, SdkPathMap } from '../types/sdk.types';
 
-export function getSdkPathMap(registryOpenApiJson: OpenAPIObject): SdkPathMap {
+export function getSdkPathMap(
+  registryOpenApiJson: Record<string, OpenAPIObject>
+): SdkPathMap {
   const sdkPathMap: SdkPathMap = {};
-  Object.entries(registryOpenApiJson?.paths || {}).forEach(
-    ([path, pathItem]) => {
+  Object.entries(registryOpenApiJson).forEach(([version, openApi]) => {
+    Object.entries(openApi?.paths || {}).forEach(([path, pathItem]) => {
       const methods = [
         'get',
         'post',
@@ -16,16 +19,21 @@ export function getSdkPathMap(registryOpenApiJson: OpenAPIObject): SdkPathMap {
         'trace'
       ] as const;
 
+      const versionedPath =
+        version === 'latest' ? undefined : version.substring(1);
       methods.forEach((method) => {
         if (pathItem[method]?.operationId) {
-          sdkPathMap[pathItem[method].operationId] = {
+          sdkPathMap[
+            `${pathItem[method].operationId}${versionedPath ? `.${versionedPath}` : ''}`
+          ] = {
             method,
-            path
+            path,
+            version
           };
         }
       });
-    }
-  );
+    });
+  });
 
   return sdkPathMap;
 }
@@ -37,7 +45,7 @@ export async function refreshOpenApi(
 ): Promise<
   | {
       updateRequired: true;
-      registryOpenApiJson: OpenAPIObject;
+      registryOpenApiJson: Record<string, OpenAPIObject>;
       registryOpenApiHash: string;
       sdkPathMap: SdkPathMap;
     }
@@ -55,11 +63,16 @@ export async function refreshOpenApi(
   }
 
   if ('raw' in registryOptions) {
+    const rawVersionedOpenApi = isOpenAPIObject(registryOptions.raw)
+      ? {
+          latest: registryOptions.raw
+        }
+      : registryOptions.raw;
     return {
       updateRequired: true,
-      registryOpenApiJson: registryOptions.raw,
+      registryOpenApiJson: rawVersionedOpenApi,
       registryOpenApiHash: 'static',
-      sdkPathMap: getSdkPathMap(registryOptions.raw)
+      sdkPathMap: getSdkPathMap(rawVersionedOpenApi)
     };
   }
 

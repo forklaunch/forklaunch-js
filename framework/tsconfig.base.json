@@ -13,6 +13,7 @@
     "allowJs": true,
     "esModuleInterop": true,
     "moduleResolution": "bundler",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "sourceMap": true
   }
 }

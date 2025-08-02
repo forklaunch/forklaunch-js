@@ -5,10 +5,11 @@ import {
   ForklaunchExpressLikeApplication,
   ForklaunchRouter,
   generateMcpServer,
-  generateSwaggerDocument,
+  generateOpenApiSpecs,
   isForklaunchRequest,
   meta,
   MetricsDefinition,
+  OPENAPI_DEFAULT_VERSION,
   OpenTelemetryCollector
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
@@ -118,7 +119,7 @@ export class Application<
       typeof args[1] === 'string' ? args[1] : (process.env.HOST ?? 'localhost');
     const protocol = (process.env.PROTOCOL as 'http' | 'https') ?? 'http';
 
-    const openApi = generateSwaggerDocument<SV>(
+    const openApi = generateOpenApiSpecs<SV>(
       this.schemaValidator,
       protocol,
       host,
@@ -202,35 +203,47 @@ export class Application<
       this.docsConfiguration.type === 'scalar'
     ) {
       this.internal.use(
-        `/api/${process.env.VERSION ?? 'v1'}${
+        `/api${process.env.VERSION ? `/${process.env.VERSION}` : ''}${
           process.env.DOCS_PATH ?? '/docs'
         }`,
         apiReference({
           ...this.docsConfiguration,
           sources: [
             {
-              content: openApi,
+              content: openApi[OPENAPI_DEFAULT_VERSION],
               title: 'API Reference'
             },
+            ...Object.entries(openApi).map(([version, spec]) => ({
+              content: spec,
+              title: `API Reference - ${version}`
+            })),
             ...(this.docsConfiguration?.sources ?? [])
           ]
         })
       );
     } else if (this.docsConfiguration.type === 'swagger') {
       this.internal.use(
-        `/api/${process.env.VERSION ?? 'v1'}${
+        `/api${process.env.VERSION ? `/${process.env.VERSION}` : ''}${
           process.env.DOCS_PATH ?? '/docs'
         }`,
-        swaggerUi.serve,
+        swaggerUi.serveFiles(openApi),
         swaggerUi.setup(openApi)
       );
     }
 
     this.internal.get(
-      `/api/${process.env.VERSION ?? 'v1'}/openapi`,
+      `/api${process.env.VERSION ? `/${process.env.VERSION}` : ''}/openapi`,
       (_, res) => {
         res.type('application/json');
-        res.json(openApi);
+        res.json({
+          latest: openApi[OPENAPI_DEFAULT_VERSION],
+          ...Object.fromEntries(
+            Object.entries(openApi).map(([version, spec]) => [
+              `v${version}`,
+              spec
+            ])
+          )
+        });
       }
     );
 

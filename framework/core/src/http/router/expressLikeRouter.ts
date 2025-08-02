@@ -3,6 +3,7 @@ import { ParsedQs } from 'qs';
 
 import {
   EmptyObject,
+  isRecord,
   Prettify,
   PrettyCamelCase,
   sanitizePathSlashes,
@@ -11,6 +12,7 @@ import {
   toRecord,
   TypeSafeFunction
 } from '@forklaunch/common';
+import { hasVersionedSchema } from '../guards/hasVersionedSchema';
 import { isConstrainedForklaunchRouter } from '../guards/isConstrainedForklaunchRouter';
 import { isExpressLikeSchemaHandler } from '../guards/isExpressLikeSchemaHandler';
 import { isForklaunchExpressLikeRouter } from '../guards/isForklaunchExpressLikeRouter';
@@ -33,20 +35,25 @@ import {
   ExpressLikeHandler,
   ExpressLikeSchemaHandler,
   LiveSdkFunction,
-  LiveTypeFunction
+  LiveTypeFunction,
+  VersionedRequests,
+  VersionedResponses
 } from '../types/apiDefinition.types';
 import {
   Body,
   ContractDetails,
   HeadersObject,
+  HttpMethod,
   Method,
   ParamsDictionary,
   ParamsObject,
   PathParamHttpContractDetails,
+  PathParamMethod,
   QueryObject,
   ResponseCompiledSchema,
   ResponsesObject,
-  SchemaAuthMethods
+  SchemaAuthMethods,
+  VersionSchema
 } from '../types/contractDetails.types';
 import {
   ContractDetailsOrMiddlewareOrTypedHandler,
@@ -79,24 +86,24 @@ export class ForklaunchExpressLikeRouter<
   BaseResponse,
   NextFunction,
   FetchMap extends Record<string, unknown> = EmptyObject,
-  Sdk extends Record<string, unknown> = EmptyObject,
-  SdkName extends string = PrettyCamelCase<BasePath>
+  Sdk extends Record<string, unknown> = EmptyObject
 > implements ConstrainedForklaunchRouter<SV, RouterHandler>
 {
   requestHandler!: RouterHandler;
   routers: ForklaunchRouter<SV>[] = [];
   routes: ForklaunchRoute<SV>[] = [];
 
-  fetchMap: FetchMap = {} as FetchMap;
+  _fetchMap: FetchMap = {} as FetchMap;
   sdk: Sdk = {} as Sdk;
+
+  sdkPaths: Record<string, string> = {};
 
   constructor(
     readonly basePath: BasePath,
     readonly schemaValidator: SV,
     readonly internal: Internal,
     readonly postEnrichMiddleware: RouterHandler[],
-    readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-    readonly sdkName?: SdkName
+    readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
   ) {
     if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
       process.on('uncaughtException', (err) => {
@@ -128,17 +135,21 @@ export class ForklaunchExpressLikeRouter<
    */
   #resolveMiddlewares<
     P extends ParamsObject<SV>,
+    ContractMethod extends Method,
     ResBodyMap extends ResponsesObject<SV>,
     ReqBody extends Body<SV>,
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    VersionedApi extends VersionSchema<SV, ContractMethod>
   >(
     path: string,
     contractDetails: PathParamHttpContractDetails<SV>,
-    requestSchema: unknown,
-    responseSchemas: ResponseCompiledSchema
+    requestSchema: unknown | Record<string, unknown>,
+    responseSchemas:
+      | ResponseCompiledSchema
+      | Record<string, ResponseCompiledSchema>
   ): ExpressLikeSchemaHandler<
     SV,
     P,
@@ -148,6 +159,7 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders,
     ResHeaders,
     LocalsObj,
+    VersionedApi,
     BaseRequest,
     BaseResponse,
     NextFunction
@@ -155,13 +167,15 @@ export class ForklaunchExpressLikeRouter<
     return [
       enrichDetails<
         SV,
+        ContractMethod,
         P,
         ResBodyMap,
         ReqBody,
         ReqQuery,
         ReqHeaders,
         ResHeaders,
-        LocalsObj
+        LocalsObj,
+        VersionedApi
       >(
         `${this.basePath}${path}`,
         contractDetails as PathParamHttpContractDetails<SV>,
@@ -173,13 +187,15 @@ export class ForklaunchExpressLikeRouter<
       parse,
       parseRequestAuth<
         SV,
+        ContractMethod,
         P,
         ResBodyMap,
         ReqBody,
         ReqQuery,
         ReqHeaders,
         ResHeaders,
-        LocalsObj
+        LocalsObj,
+        VersionedApi
       >
     ] as ExpressLikeSchemaHandler<
       SV,
@@ -190,6 +206,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -215,7 +232,9 @@ export class ForklaunchExpressLikeRouter<
     ReqQuery extends ParsedQs,
     ReqHeaders extends Record<string, string>,
     ResHeaders extends Record<string, string>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    VersionedReqs extends VersionedRequests,
+    VersionedResps extends VersionedResponses
   >(
     requestHandler: ExpressLikeHandler<
       SV,
@@ -226,6 +245,8 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedReqs,
+      VersionedResps,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -239,6 +260,8 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders,
     ResHeaders,
     LocalsObj,
+    VersionedReqs,
+    VersionedResps,
     BaseRequest,
     BaseResponse,
     NextFunction
@@ -279,7 +302,9 @@ export class ForklaunchExpressLikeRouter<
     ReqQuery extends ParsedQs,
     ReqHeaders extends Record<string, string>,
     ResHeaders extends Record<string, string>,
-    LocalsObj extends Record<string, unknown>
+    LocalsObj extends Record<string, unknown>,
+    VersionedReqs extends VersionedRequests,
+    VersionedResps extends VersionedResponses
   >(
     handlers: ExpressLikeHandler<
       SV,
@@ -290,6 +315,8 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedReqs,
+      VersionedResps,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -303,6 +330,8 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders,
     ResHeaders,
     LocalsObj,
+    VersionedReqs,
+    VersionedResps,
     BaseRequest,
     BaseResponse,
     NextFunction
@@ -318,6 +347,78 @@ export class ForklaunchExpressLikeRouter<
     return controllerHandler;
   }
 
+  #processContractDetailsIO<P extends ParamsObject<SV>>(
+    contractDetailsIO: {
+      requestHeaders?: HeadersObject<SV>;
+      responseHeaders?: HeadersObject<SV>;
+      query?: QueryObject<SV>;
+      body?: Body<SV>;
+      responses: ResponsesObject<SV>;
+    },
+    params?: P
+  ) {
+    const schemaValidator = this.schemaValidator as SchemaValidator;
+
+    const responseSchemas = {
+      400: schemaValidator.string,
+      401: schemaValidator.string,
+      403: schemaValidator.string,
+      404: schemaValidator.string,
+      500: schemaValidator.string,
+      ...Object.fromEntries(
+        Object.entries(
+          discriminateResponseBodies(
+            this.schemaValidator,
+            contractDetailsIO.responses
+          )
+        ).map(([key, value]) => {
+          return [Number(key), value.schema];
+        })
+      )
+    };
+
+    return {
+      requestSchema: schemaValidator.compile(
+        schemaValidator.schemify({
+          ...(params != null
+            ? { params }
+            : { params: schemaValidator.unknown as ParamsObject<SV> }),
+          ...(contractDetailsIO.requestHeaders != null
+            ? { headers: contractDetailsIO.requestHeaders }
+            : { headers: schemaValidator.unknown as HeadersObject<SV> }),
+          ...(contractDetailsIO.query != null
+            ? { query: contractDetailsIO.query }
+            : { query: schemaValidator.unknown as QueryObject<SV> }),
+          ...(contractDetailsIO.body != null
+            ? {
+                body: discriminateBody(
+                  this.schemaValidator,
+                  contractDetailsIO.body
+                )?.schema
+              }
+            : { body: schemaValidator.unknown as Body<SV> })
+        })
+      ),
+      responseSchemas: {
+        ...(contractDetailsIO.responseHeaders != null
+          ? {
+              headers: schemaValidator.compile(
+                schemaValidator.schemify(contractDetailsIO.responseHeaders)
+              )
+            }
+          : { headers: schemaValidator.unknown as HeadersObject<SV> }),
+        responses: Object.fromEntries(
+          Object.entries(responseSchemas).map(([key, value]) => {
+            return [
+              key,
+              schemaValidator.compile(schemaValidator.schemify(value))
+            ];
+          })
+        )
+      }
+    };
+  }
+
   #compile<
     ContractMethod extends Method,
     Name extends string,
@@ -328,12 +429,14 @@ export class ForklaunchExpressLikeRouter<
     ReqQuery extends QueryObject<SV>,
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
+    const VersionedApi extends VersionSchema<SV, ContractMethod>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -348,102 +451,88 @@ export class ForklaunchExpressLikeRouter<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
+      VersionedApi,
       BaseRequest,
       Auth
     >
   ) {
     const schemaValidator = this.schemaValidator as SchemaValidator;
 
-    let body = null;
-    if (
-      isHttpContractDetails<
-        SV,
-        Name,
-        Path,
-        P,
-        ResBodyMap,
-        ReqBody,
-        ReqQuery,
-        ReqHeaders,
-        ResHeaders,
-        BaseRequest,
-        Auth
-      >(contractDetails)
-    ) {
-      body = discriminateBody(this.schemaValidator, contractDetails.body);
-    }
+    let requestSchema: unknown | Record<string, unknown>;
+    let responseSchemas:
+      | ResponseCompiledSchema
+      | Record<string, ResponseCompiledSchema>;
 
-    const requestSchema = schemaValidator.compile(
-      schemaValidator.schemify({
-        ...(contractDetails.params ? { params: contractDetails.params } : {}),
-        ...(contractDetails.requestHeaders
-          ? { headers: contractDetails.requestHeaders }
-          : {}),
-        ...(contractDetails.query ? { query: contractDetails.query } : {}),
-        ...(body != null ? { body: body.schema } : {})
-      })
-    );
+    if (hasVersionedSchema(contractDetails)) {
+      requestSchema = {};
+      responseSchemas = {};
 
-    const responseEntries = {
-      400: schemaValidator.string,
-      401: schemaValidator.string,
-      403: schemaValidator.string,
-      404: schemaValidator.string,
-      500: schemaValidator.string,
-      ...(isPathParamHttpContractDetails<
-        SV,
-        Name,
-        Path,
-        P,
-        ResBodyMap,
-        ReqBody,
-        ReqQuery,
-        ReqHeaders,
-        ResHeaders,
-        BaseRequest,
-        Auth
-      >(contractDetails) ||
-      isHttpContractDetails<
-        SV,
-        Name,
-        Path,
-        P,
-        ResBodyMap,
-        ReqBody,
-        ReqQuery,
-        ReqHeaders,
-        ResHeaders,
-        BaseRequest,
-        Auth
-      >(contractDetails)
-        ? Object.fromEntries(
-            Object.entries(
-              discriminateResponseBodies(
-                this.schemaValidator,
-                contractDetails.responses
-              )
-            ).map(([key, value]) => {
-              return [key, value.schema];
-            })
-          )
-        : {})
-    };
+      Object.entries(contractDetails.versions ?? {}).forEach(
+        ([version, versionedContractDetails]) => {
+          const {
+            requestSchema: versionedRequestSchema,
+            responseSchemas: versionedResponseSchemas
+          } = this.#processContractDetailsIO(
+            versionedContractDetails,
+            contractDetails.params
+          );
 
-    const responseSchemas: ResponseCompiledSchema = {
-      responses: {},
-      ...(contractDetails.responseHeaders
-        ? {
-            headers: schemaValidator.compile(
-              schemaValidator.schemify(contractDetails.responseHeaders)
-            )
+          if (isRecord(requestSchema)) {
+            requestSchema = {
+              ...requestSchema,
+              [version]: versionedRequestSchema
+            };
           }
-        : {})
-    };
-    Object.entries(responseEntries).forEach(([code, responseShape]) => {
-      responseSchemas.responses[Number(code)] = schemaValidator.compile(
-        schemaValidator.schemify(responseShape)
+          if (isRecord(responseSchemas)) {
+            responseSchemas = {
+              ...responseSchemas,
+              [version]: versionedResponseSchemas
+            };
+          }
+        }
       );
-    });
+    } else {
+      const {
+        requestSchema: unversionedRequestSchema,
+        responseSchemas: unversionedResponseSchemas
+      } = this.#processContractDetailsIO(
+        {
+          ...('params' in contractDetails && contractDetails.params != null
+            ? { params: contractDetails.params }
+            : { params: schemaValidator.unknown as ParamsObject<SV> }),
+          ...('requestHeaders' in contractDetails &&
+          contractDetails.requestHeaders != null
+            ? { requestHeaders: contractDetails.requestHeaders }
+            : {
+                requestHeaders: schemaValidator.unknown as HeadersObject<SV>
+              }),
+          ...('responseHeaders' in contractDetails &&
+          contractDetails.responseHeaders != null
+            ? { responseHeaders: contractDetails.responseHeaders }
+            : {
+                responseHeaders: schemaValidator.unknown as HeadersObject<SV>
+              }),
+          ...('query' in contractDetails && contractDetails.query != null
+            ? { query: contractDetails.query }
+            : {
+                query: schemaValidator.unknown as QueryObject<SV>
+              }),
+          ...('body' in contractDetails && contractDetails.body != null
+            ? { body: contractDetails.body }
+            : {
+                body: schemaValidator.unknown as Body<SV>
+              }),
+          responses:
+            'responses' in contractDetails && contractDetails.responses != null
+              ? contractDetails.responses
+              : (schemaValidator.unknown as ResponsesObject<SV>)
+        },
+        contractDetails.params
+      );
+
+      requestSchema = unversionedRequestSchema;
+      responseSchemas = unversionedResponseSchemas;
+    }
 
     return {
       requestSchema,
@@ -454,29 +543,31 @@ export class ForklaunchExpressLikeRouter<
   /**
    * Fetches a route from the route map and executes it with the given parameters.
    *
-   * @template Path - The path type that extends keyof fetchMap and string.
+   * @template Path - The path type that extends keyof _fetchMap and string.
    * @param {Path} path - The route path
-   * @param {Parameters<fetchMap[Path]>[1]} [requestInit] - Optional request initialization parameters.
-   * @returns {Promise<ReturnType<fetchMap[Path]>>} - The result of executing the route handler.
+   * @param {Parameters<_fetchMap[Path]>[1]} [requestInit] - Optional request initialization parameters.
+   * @returns {Promise<ReturnType<_fetchMap[Path]>>} - The result of executing the route handler.
    */
-  fetch: FetchFunction<this['fetchMap']> = async <
-    Path extends keyof this['fetchMap'],
-    Method extends keyof this['fetchMap'][Path]
+  fetch: FetchFunction<this['_fetchMap']> = async <
+    Path extends keyof this['_fetchMap'],
+    Method extends keyof this['_fetchMap'][Path],
+    Version extends keyof this['_fetchMap'][Path][Method]
   >(
     path: Path,
-    ...reqInit: this['fetchMap'][Path][Method] extends TypeSafeFunction
-      ? 'get' extends keyof this['fetchMap'][Path]
-        ? this['fetchMap'][Path]['get'] extends TypeSafeFunction
-          ? Parameters<this['fetchMap'][Path]['get']>[1] extends
+    ...reqInit: this['_fetchMap'][Path][Method] extends TypeSafeFunction
+      ? 'GET' extends keyof this['_fetchMap'][Path]
+        ? this['_fetchMap'][Path]['GET'] extends TypeSafeFunction
+          ? Parameters<this['_fetchMap'][Path]['GET']>[1] extends
               | {
                   body: unknown;
                 }
               | { query: unknown }
               | { params: unknown }
               | { headers: unknown }
+              | { version: unknown }
             ? [
                 reqInit: Omit<
-                  Parameters<this['fetchMap'][Path][Method]>[1],
+                  Parameters<this['_fetchMap'][Path][Method]>[1],
                   'method'
                 > & {
                   method: Method;
@@ -484,7 +575,7 @@ export class ForklaunchExpressLikeRouter<
               ]
             : [
                 reqInit?: Omit<
-                  Parameters<this['fetchMap'][Path][Method]>[1],
+                  Parameters<this['_fetchMap'][Path][Method]>[1],
                   'method'
                 > & {
                   method: Method;
@@ -492,7 +583,7 @@ export class ForklaunchExpressLikeRouter<
               ]
           : [
               reqInit: Omit<
-                Parameters<this['fetchMap'][Path][Method]>[1],
+                Parameters<this['_fetchMap'][Path][Method]>[1],
                 'method'
               > & {
                 method: Method;
@@ -500,25 +591,46 @@ export class ForklaunchExpressLikeRouter<
             ]
         : [
             reqInit: Omit<
-              Parameters<this['fetchMap'][Path][Method]>[1],
+              Parameters<this['_fetchMap'][Path][Method]>[1],
               'method'
             > & {
               method: Method;
             }
           ]
-      : []
+      : this['_fetchMap'][Path][Method] extends Record<string, TypeSafeFunction>
+        ? [
+            reqInit: Omit<
+              Parameters<this['_fetchMap'][Path][Method][Version]>[0],
+              'method' | 'version'
+            > & {
+              method: Method;
+              version: Version;
+            }
+          ]
+        : [{ method: Method }]
   ) => {
+    const method = reqInit[0]?.method;
+    const version =
+      reqInit[0] != null && 'version' in reqInit[0]
+        ? reqInit[0].version
+        : undefined;
+
     return (
-      this.fetchMap[path] as (
+      (version
+        ? this._fetchMap[path][method ?? ('GET' as Method)][version]
+        : this._fetchMap[path][method ?? ('GET' as Method)]) as (
         route: string,
         request?: unknown
-      ) => Promise<unknown>
+      ) => unknown
     )(
       path as string,
       reqInit[0]
-    ) as this['fetchMap'][Path][Method] extends TypeSafeFunction
-      ? ReturnType<this['fetchMap'][Path][Method]>
-      : never;
+      // reqInit
+    ) as this['_fetchMap'][Path][Method] extends TypeSafeFunction
+      ? Awaited<ReturnType<this['_fetchMap'][Path][Method]>>
+      : this['_fetchMap'][Path][Method] extends Record<string, TypeSafeFunction>
+        ? Awaited<ReturnType<this['_fetchMap'][Path][Method][Version]>>
+        : never;
   };
 
   /**
@@ -530,20 +642,21 @@ export class ForklaunchExpressLikeRouter<
    */
   #localParamRequest<Middleware, Route extends string>(
     handlers: Middleware[],
-    controllerHandler: Middleware
+    controllerHandler: Middleware,
+    version?: string
   ) {
     return async (
       route: SanitizePathSlashes<Route>,
       request?: {
-        params?: Record<string, string>;
-        query?: Record<string, string>;
-        headers?: Record<string, string>;
+        params?: Record<string, unknown>;
+        query?: Record<string, unknown>;
+        headers?: Record<string, unknown>;
         body?: Record<string, unknown>;
       }
     ) => {
       let statusCode;
       let responseMessage;
-      const responseHeaders: Record<string, string> = {};
+      const responseHeaders: Record<string, unknown> = {};
 
       const req = {
         params: request?.params ?? {},
@@ -551,7 +664,8 @@ export class ForklaunchExpressLikeRouter<
         headers: request?.headers ?? {},
         body:
           discriminateBody(this.schemaValidator, request?.body)?.schema ?? {},
-        path: route
+        path: route,
+        version
       };
 
       const res = {
@@ -575,7 +689,8 @@ export class ForklaunchExpressLikeRouter<
           generator: () => AsyncGenerator<Record<string, unknown>>
         ) => {
           responseMessage = generator();
-        }
+        },
+        version
       };
 
       let cursor = handlers.shift() as unknown as (
@@ -635,12 +750,14 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, ContractMethod>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -659,6 +776,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -676,13 +794,14 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
       Auth
     >[]
   ): this & {
-    fetchMap: Prettify<
+    _fetchMap: Prettify<
       FetchMap extends Record<
         SanitizePathSlashes<`${BasePath}${Path}`>,
         unknown
@@ -703,6 +822,7 @@ export class ForklaunchExpressLikeRouter<
                     ReqHeaders,
                     ResHeaders,
                     ContractMethod,
+                    VersionedApi,
                     Auth
                   >
                 >
@@ -722,6 +842,7 @@ export class ForklaunchExpressLikeRouter<
                   ReqHeaders,
                   ResHeaders,
                   ContractMethod,
+                  VersionedApi,
                   Auth
                 >
               >
@@ -743,6 +864,7 @@ export class ForklaunchExpressLikeRouter<
             ReqQuery,
             ReqHeaders,
             ResHeaders,
+            VersionedApi,
             Auth
           >
         >
@@ -762,6 +884,7 @@ export class ForklaunchExpressLikeRouter<
         ReqHeaders,
         ResHeaders,
         LocalsObj,
+        VersionedApi,
         BaseRequest,
         BaseResponse,
         NextFunction,
@@ -770,7 +893,7 @@ export class ForklaunchExpressLikeRouter<
     ) {
       const { contractDetails, handlers } =
         contractDetailsOrMiddlewareOrTypedHandler;
-      this.registerRoute<
+      const router = this.registerRoute<
         Name,
         ContractMethod,
         Path,
@@ -781,76 +904,11 @@ export class ForklaunchExpressLikeRouter<
         ReqHeaders,
         ResHeaders,
         LocalsObj,
+        VersionedApi,
         Auth
       >(method, path, registrationMethod, contractDetails, ...handlers);
 
-      return this as this & {
-        fetchMap: Prettify<
-          FetchMap extends Record<
-            SanitizePathSlashes<`${BasePath}${Path}`>,
-            unknown
-          >
-            ? FetchMap &
-                Record<
-                  SanitizePathSlashes<`${BasePath}${Path}`>,
-                  FetchMap[SanitizePathSlashes<`${BasePath}${Path}`>] &
-                    Record<
-                      Uppercase<ContractMethod>,
-                      LiveTypeFunction<
-                        SV,
-                        SanitizePathSlashes<`${BasePath}${Path}`>,
-                        P,
-                        ResBodyMap,
-                        ReqBody,
-                        ReqQuery,
-                        ReqHeaders,
-                        ResHeaders,
-                        ContractMethod,
-                        Auth
-                      >
-                    >
-                >
-            : FetchMap &
-                Record<
-                  SanitizePathSlashes<`${BasePath}${Path}`>,
-                  Record<
-                    Uppercase<ContractMethod>,
-                    LiveTypeFunction<
-                      SV,
-                      SanitizePathSlashes<`${BasePath}${Path}`>,
-                      P,
-                      ResBodyMap,
-                      ReqBody,
-                      ReqQuery,
-                      ReqHeaders,
-                      ResHeaders,
-                      ContractMethod,
-                      Auth
-                    >
-                  >
-                >
-        >;
-        sdk: Prettify<
-          Sdk &
-            Record<
-              PrettyCamelCase<
-                Name extends string
-                  ? Name
-                  : SanitizePathSlashes<`${BasePath}${Path}`>
-              >,
-              LiveSdkFunction<
-                SV,
-                P,
-                ResBodyMap,
-                ReqBody,
-                ReqQuery,
-                ReqHeaders,
-                ResHeaders,
-                Auth
-              >
-            >
-        >;
-      };
+      return router;
     }
     // in this case, we test for the last element of the handlers. If typed handler, break this down
     else {
@@ -871,6 +929,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -878,7 +937,7 @@ export class ForklaunchExpressLikeRouter<
         >(maybeTypedHandler)
       ) {
         const { contractDetails, handlers } = maybeTypedHandler;
-        this.registerRoute<
+        const router = this.registerRoute<
           Name,
           ContractMethod,
           Path,
@@ -889,6 +948,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           Auth
         >(
           method,
@@ -898,77 +958,12 @@ export class ForklaunchExpressLikeRouter<
           ...middlewareOrMiddlewareAndTypedHandler.concat(handlers)
         );
 
-        return this as this & {
-          fetchMap: Prettify<
-            FetchMap extends Record<
-              SanitizePathSlashes<`${BasePath}${Path}`>,
-              unknown
-            >
-              ? FetchMap &
-                  Record<
-                    SanitizePathSlashes<`${BasePath}${Path}`>,
-                    FetchMap[SanitizePathSlashes<`${BasePath}${Path}`>] &
-                      Record<
-                        Uppercase<ContractMethod>,
-                        LiveTypeFunction<
-                          SV,
-                          SanitizePathSlashes<`${BasePath}${Path}`>,
-                          P,
-                          ResBodyMap,
-                          ReqBody,
-                          ReqQuery,
-                          ReqHeaders,
-                          ResHeaders,
-                          ContractMethod,
-                          Auth
-                        >
-                      >
-                  >
-              : FetchMap &
-                  Record<
-                    SanitizePathSlashes<`${BasePath}${Path}`>,
-                    Record<
-                      Uppercase<ContractMethod>,
-                      LiveTypeFunction<
-                        SV,
-                        SanitizePathSlashes<`${BasePath}${Path}`>,
-                        P,
-                        ResBodyMap,
-                        ReqBody,
-                        ReqQuery,
-                        ReqHeaders,
-                        ResHeaders,
-                        ContractMethod,
-                        Auth
-                      >
-                    >
-                  >
-          >;
-          sdk: Prettify<
-            Sdk &
-              Record<
-                PrettyCamelCase<
-                  Name extends string
-                    ? Name
-                    : SanitizePathSlashes<`${BasePath}${Path}`>
-                >,
-                LiveSdkFunction<
-                  SV,
-                  P,
-                  ResBodyMap,
-                  ReqBody,
-                  ReqQuery,
-                  ReqHeaders,
-                  ResHeaders,
-                  Auth
-                >
-              >
-          >;
-        };
+        return router;
       } else {
         if (
           isExpressLikeSchemaHandler<
             SV,
+            ContractMethod,
             P,
             ResBodyMap,
             ReqBody,
@@ -976,6 +971,7 @@ export class ForklaunchExpressLikeRouter<
             ReqHeaders,
             ResHeaders,
             LocalsObj,
+            VersionedApi,
             BaseRequest,
             BaseResponse,
             NextFunction
@@ -992,6 +988,7 @@ export class ForklaunchExpressLikeRouter<
             ReqHeaders,
             ResHeaders,
             LocalsObj,
+            VersionedApi,
             BaseRequest,
             BaseResponse,
             NextFunction,
@@ -1007,6 +1004,7 @@ export class ForklaunchExpressLikeRouter<
         ).filter((handler) =>
           isExpressLikeSchemaHandler<
             SV,
+            ContractMethod,
             P,
             ResBodyMap,
             ReqBody,
@@ -1014,6 +1012,7 @@ export class ForklaunchExpressLikeRouter<
             ReqHeaders,
             ResHeaders,
             LocalsObj,
+            VersionedApi,
             BaseRequest,
             BaseResponse,
             NextFunction
@@ -1031,6 +1030,9 @@ export class ForklaunchExpressLikeRouter<
             ReqQuery,
             ReqHeaders,
             ResHeaders,
+            VersionedApi extends VersionSchema<SV, HttpMethod>
+              ? VersionedApi
+              : never,
             BaseRequest,
             Auth
           >(contractDetails) &&
@@ -1044,6 +1046,9 @@ export class ForklaunchExpressLikeRouter<
             ReqQuery,
             ReqHeaders,
             ResHeaders,
+            VersionedApi extends VersionSchema<SV, PathParamMethod>
+              ? VersionedApi
+              : never,
             BaseRequest,
             Auth
           >(contractDetails)
@@ -1051,6 +1056,23 @@ export class ForklaunchExpressLikeRouter<
           throw new Error(
             'Contract details are malformed for route definition'
           );
+        }
+
+        if (contractDetails.versions) {
+          const parserTypes = Object.values(contractDetails.versions).map(
+            (version) =>
+              discriminateBody(this.schemaValidator, version.body)?.parserType
+          );
+
+          const allParserTypesSame =
+            parserTypes.length === 0 ||
+            parserTypes.every((pt) => pt === parserTypes[0]);
+
+          if (!allParserTypesSame) {
+            throw new Error(
+              'All versioned contractDetails must have the same parsing type for body.'
+            );
+          }
         }
 
         this.routes.push({
@@ -1070,73 +1092,87 @@ export class ForklaunchExpressLikeRouter<
           ReqQuery,
           ReqHeaders,
           ResHeaders,
+          VersionedApi,
           Auth
         >(contractDetails);
 
         const controllerHandler = this.#extractControllerHandler(handlers);
 
+        const resolvedMiddlewares = this.#resolveMiddlewares<
+          P,
+          ContractMethod,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj,
+          VersionedApi
+        >(
+          path,
+          contractDetails as PathParamHttpContractDetails<SV>,
+          requestSchema,
+          responseSchemas
+        ).concat(handlers);
+
         registrationMethod.bind(this.internal)(
           path,
-          ...(this.#resolveMiddlewares<
-            P,
-            ResBodyMap,
-            ReqBody,
-            ReqQuery,
-            ReqHeaders,
-            ResHeaders,
-            LocalsObj
-          >(
-            path,
-            contractDetails as PathParamHttpContractDetails<SV>,
-            requestSchema,
-            responseSchemas
-          ).concat(handlers) as RouterHandler[]),
+          ...(resolvedMiddlewares as RouterHandler[]),
           this.#parseAndRunControllerHandler(controllerHandler) as RouterHandler
         );
 
-        const localParamRequest = this.#localParamRequest(
-          handlers,
-          controllerHandler
-        );
-
-        toRecord(this.fetchMap)[
+        toRecord(this._fetchMap)[
           sanitizePathSlashes(`${this.basePath}${path}`)
-        ] = localParamRequest;
+        ] = {
+          ...(this._fetchMap[sanitizePathSlashes(`${this.basePath}${path}`)] ??
+            {}),
+          [method.toUpperCase()]: contractDetails.versions
+            ? Object.fromEntries(
+                Object.keys(contractDetails.versions).map((version) => [
+                  version,
+                  this.#localParamRequest(handlers, controllerHandler, version)
+                ])
+              )
+            : this.#localParamRequest(handlers, controllerHandler)
+        };
 
-        toRecord(this.sdk)[
-          toPrettyCamelCase(contractDetails.name ?? this.basePath)
-        ] = (req: Parameters<typeof localParamRequest>[1]) =>
-          localParamRequest(`${this.basePath}${path}`, req);
-
+        toRecord(this.sdk)[toPrettyCamelCase(contractDetails.name)] =
+          contractDetails.versions
+            ? Object.fromEntries(
+                Object.keys(contractDetails.versions).map((version) => [
+                  version,
+                  (req: {
+                    params?: Record<string, unknown>;
+                    query?: Record<string, unknown>;
+                    headers?: Record<string, unknown>;
+                    body?: Record<string, unknown>;
+                  }) =>
+                    this.#localParamRequest(
+                      handlers,
+                      controllerHandler,
+                      version
+                    )(`${this.basePath}${path}`, req)
+                ])
+              )
+            : (req: {
+                params?: Record<string, unknown>;
+                query?: Record<string, unknown>;
+                headers?: Record<string, unknown>;
+                body?: Record<string, unknown>;
+              }) =>
+                this.#localParamRequest(handlers, controllerHandler)(
+                  `${this.basePath}${path}`,
+                  req
+                );
         return this as this & {
-          fetchMap: Prettify<
-            FetchMap extends Record<
-              SanitizePathSlashes<`${BasePath}${Path}`>,
-              unknown
-            >
-              ? FetchMap &
-                  Record<
-                    SanitizePathSlashes<`${BasePath}${Path}`>,
-                    FetchMap[SanitizePathSlashes<`${BasePath}${Path}`>] &
-                      Record<
-                        Uppercase<ContractMethod>,
-                        LiveTypeFunction<
-                          SV,
-                          SanitizePathSlashes<`${BasePath}${Path}`>,
-                          P,
-                          ResBodyMap,
-                          ReqBody,
-                          ReqQuery,
-                          ReqHeaders,
-                          ResHeaders,
-                          ContractMethod,
-                          Auth
-                        >
-                      >
-                  >
-              : FetchMap &
-                  Record<
-                    SanitizePathSlashes<`${BasePath}${Path}`>,
+          _fetchMap: FetchMap extends Record<
+            SanitizePathSlashes<`${BasePath}${Path}`>,
+            unknown
+          >
+            ? FetchMap &
+                Record<
+                  SanitizePathSlashes<`${BasePath}${Path}`>,
+                  FetchMap[SanitizePathSlashes<`${BasePath}${Path}`>] &
                     Record<
                       Uppercase<ContractMethod>,
                       LiveTypeFunction<
@@ -1149,31 +1185,50 @@ export class ForklaunchExpressLikeRouter<
                         ReqHeaders,
                         ResHeaders,
                         ContractMethod,
+                        VersionedApi,
                         Auth
                       >
                     >
-                  >
-          >;
-          sdk: Prettify<
-            Sdk &
-              Record<
-                PrettyCamelCase<
-                  Name extends string
-                    ? Name
-                    : SanitizePathSlashes<`${BasePath}${Path}`>
-                >,
-                LiveSdkFunction<
-                  SV,
-                  P,
-                  ResBodyMap,
-                  ReqBody,
-                  ReqQuery,
-                  ReqHeaders,
-                  ResHeaders,
-                  Auth
                 >
+            : FetchMap &
+                Record<
+                  SanitizePathSlashes<`${BasePath}${Path}`>,
+                  Record<
+                    Uppercase<ContractMethod>,
+                    LiveTypeFunction<
+                      SV,
+                      SanitizePathSlashes<`${BasePath}${Path}`>,
+                      P,
+                      ResBodyMap,
+                      ReqBody,
+                      ReqQuery,
+                      ReqHeaders,
+                      ResHeaders,
+                      ContractMethod,
+                      VersionedApi,
+                      Auth
+                    >
+                  >
+                >;
+          sdk: Sdk &
+            Record<
+              PrettyCamelCase<
+                Name extends string
+                  ? Name
+                  : SanitizePathSlashes<`${BasePath}${Path}`>
+              >,
+              LiveSdkFunction<
+                SV,
+                P,
+                ResBodyMap,
+                ReqBody,
+                ReqQuery,
+                ReqHeaders,
+                ResHeaders,
+                VersionedApi,
+                Auth
               >
-          >;
+            >;
         };
       }
     }
@@ -1190,12 +1245,14 @@ export class ForklaunchExpressLikeRouter<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     ArrayReturnType,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -1212,6 +1269,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -1237,6 +1295,7 @@ export class ForklaunchExpressLikeRouter<
         ReqHeaders,
         ResHeaders,
         LocalsObj,
+        VersionedApi,
         BaseRequest,
         BaseResponse,
         NextFunction,
@@ -1260,6 +1319,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -1289,12 +1349,14 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -1311,6 +1373,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -1330,6 +1393,7 @@ export class ForklaunchExpressLikeRouter<
       ResHeaders,
       LocalsObj,
       RouterHandler,
+      VersionedApi,
       Auth
     >(handlers);
   }
@@ -1344,12 +1408,14 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -1366,6 +1432,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -1385,6 +1452,7 @@ export class ForklaunchExpressLikeRouter<
       ResHeaders,
       LocalsObj,
       RouterHandler | Internal,
+      VersionedApi,
       Auth
     >(handlers, (handler) => {
       if (
@@ -1397,8 +1465,7 @@ export class ForklaunchExpressLikeRouter<
           BaseResponse,
           NextFunction,
           FetchMap,
-          Sdk,
-          SdkName
+          Sdk
         >(handler)
       ) {
         this.addRouterToSdk(handler);
@@ -1418,12 +1485,14 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -1440,6 +1509,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -1462,6 +1532,7 @@ export class ForklaunchExpressLikeRouter<
         ReqHeaders,
         ResHeaders,
         LocalsObj,
+        VersionedApi,
         BaseRequest,
         BaseResponse,
         NextFunction,
@@ -1484,12 +1555,14 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -1506,6 +1579,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -1526,6 +1600,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -1546,6 +1621,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(contractDetailsOrMiddlewareOrTypedHandler, middleware);
 
@@ -1560,6 +1636,7 @@ export class ForklaunchExpressLikeRouter<
         ReqHeaders,
         ResHeaders,
         LocalsObj,
+        VersionedApi,
         Auth
       >(middlewareOrMiddlewareWithTypedHandler)
     );
@@ -1577,12 +1654,14 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -1599,6 +1678,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -1619,6 +1699,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -1639,6 +1720,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       contractDetailsOrMiddlewareOrTypedHandler as ContractDetailsOrMiddlewareOrTypedHandler<
@@ -1653,6 +1735,7 @@ export class ForklaunchExpressLikeRouter<
         ReqHeaders,
         ResHeaders,
         LocalsObj,
+        VersionedApi,
         BaseRequest,
         BaseResponse,
         NextFunction,
@@ -1671,8 +1754,7 @@ export class ForklaunchExpressLikeRouter<
         BaseResponse,
         NextFunction,
         FetchMap,
-        Sdk,
-        SdkName
+        Sdk
       >(contractDetailsOrMiddlewareOrTypedHandler)
     ) {
       this.addRouterToSdk(contractDetailsOrMiddlewareOrTypedHandler);
@@ -1690,6 +1772,7 @@ export class ForklaunchExpressLikeRouter<
         ReqHeaders,
         ResHeaders,
         LocalsObj,
+        VersionedApi,
         Auth
       >(middlewareOrMiddlewareWithTypedHandler)
     );
@@ -1707,12 +1790,14 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -1731,6 +1816,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -1750,6 +1836,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -1769,6 +1856,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -1791,6 +1879,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           Auth
         >(
           contractDetailsOrMiddlewareOrTypedHandler,
@@ -1811,12 +1900,14 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           Auth
         >(
           pathOrContractDetailsOrMiddlewareOrTypedHandler,
           (
             (isExpressLikeSchemaHandler<
               SV,
+              'middleware',
               P,
               ResBodyMap,
               ReqBody,
@@ -1824,6 +1915,7 @@ export class ForklaunchExpressLikeRouter<
               ReqHeaders,
               ResHeaders,
               LocalsObj,
+              VersionedApi,
               BaseRequest,
               BaseResponse,
               NextFunction
@@ -1840,6 +1932,7 @@ export class ForklaunchExpressLikeRouter<
               ReqHeaders,
               ResHeaders,
               LocalsObj,
+              VersionedApi,
               BaseRequest,
               BaseResponse,
               NextFunction,
@@ -1859,6 +1952,7 @@ export class ForklaunchExpressLikeRouter<
                   ReqHeaders,
                   ResHeaders,
                   LocalsObj,
+                  VersionedApi,
                   BaseRequest,
                   BaseResponse,
                   NextFunction,
@@ -1877,9 +1971,9 @@ export class ForklaunchExpressLikeRouter<
   private addRouterToSdk(
     router: ConstrainedForklaunchRouter<SV, RouterHandler>
   ) {
-    Object.entries(router.fetchMap).map(
+    Object.entries(router._fetchMap).map(
       ([key, value]) =>
-        (toRecord(this.fetchMap)[
+        (toRecord(this._fetchMap)[
           sanitizePathSlashes(`${this.basePath}${key}`)
         ] = value)
     );
@@ -1902,12 +1996,14 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -1926,6 +2022,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -1945,6 +2042,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -1964,6 +2062,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -1987,6 +2086,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           Auth
         >(
           contractDetailsOrMiddlewareOrTypedHandler,
@@ -2016,11 +2116,13 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           Auth
         >(
           pathOrContractDetailsOrMiddlewareOrTypedHandler,
           (isExpressLikeSchemaHandler<
             SV,
+            'middleware',
             P,
             ResBodyMap,
             ReqBody,
@@ -2028,6 +2130,7 @@ export class ForklaunchExpressLikeRouter<
             ReqHeaders,
             ResHeaders,
             LocalsObj,
+            VersionedApi,
             BaseRequest,
             BaseResponse,
             NextFunction
@@ -2044,6 +2147,7 @@ export class ForklaunchExpressLikeRouter<
             ReqHeaders,
             ResHeaders,
             LocalsObj,
+            VersionedApi,
             BaseRequest,
             BaseResponse,
             NextFunction,
@@ -2070,8 +2174,7 @@ export class ForklaunchExpressLikeRouter<
           BaseResponse,
           NextFunction,
           FetchMap,
-          Sdk,
-          SdkName
+          Sdk
         >(m)
       )[0]?.basePath;
     }
@@ -2109,12 +2212,14 @@ export class ForklaunchExpressLikeRouter<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     Router extends ConstrainedForklaunchRouter<SV, RouterHandler>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -2132,6 +2237,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -2151,6 +2257,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -2170,6 +2277,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -2198,6 +2306,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       this.internal.use,
@@ -2205,10 +2314,10 @@ export class ForklaunchExpressLikeRouter<
       contractDetailsOrMiddlewareOrTypedHandler,
       ...middlewareOrMiddlewareWithTypedHandler
     ) as this & {
-      fetchMap: FetchMap & {
-        [Key in keyof Router['fetchMap'] as Key extends string
+      _fetchMap: FetchMap & {
+        [Key in keyof Router['_fetchMap'] as Key extends string
           ? SanitizePathSlashes<`${BasePath}${Key}`>
-          : never]: Router['fetchMap'][Key];
+          : never]: Router['_fetchMap'][Key];
       };
       sdk: Sdk & {
         [Key in PrettyCamelCase<
@@ -2239,12 +2348,14 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -2262,6 +2373,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -2281,6 +2393,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -2300,6 +2413,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -2318,6 +2432,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       this.internal.all,
@@ -2344,12 +2459,14 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -2367,6 +2484,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -2386,6 +2504,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -2405,6 +2524,7 @@ export class ForklaunchExpressLikeRouter<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction,
@@ -2423,6 +2543,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       this.internal.connect,
@@ -2465,12 +2586,14 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'get'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -2487,6 +2610,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -2504,6 +2628,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -2521,6 +2646,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       'get',
@@ -2564,12 +2690,14 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'post'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -2586,6 +2714,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -2603,6 +2732,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -2620,6 +2750,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       'post',
@@ -2663,12 +2794,14 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'put'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -2685,6 +2818,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -2702,6 +2836,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -2719,6 +2854,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       'put',
@@ -2762,12 +2898,14 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'patch'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -2784,6 +2922,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -2801,6 +2940,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -2818,6 +2958,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       'patch',
@@ -2861,12 +3002,14 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'delete'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -2883,6 +3026,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -2900,6 +3044,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -2917,6 +3062,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       'delete',
@@ -2960,12 +3106,14 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'options'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -2982,6 +3130,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -2999,6 +3148,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -3016,6 +3166,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       'options',
@@ -3059,12 +3210,14 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'head'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -3081,6 +3234,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -3098,6 +3252,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -3115,6 +3270,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       'head',
@@ -3158,12 +3314,14 @@ export class ForklaunchExpressLikeRouter<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'trace'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -3180,6 +3338,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -3197,6 +3356,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -3214,6 +3374,7 @@ export class ForklaunchExpressLikeRouter<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       'trace',
@@ -3227,8 +3388,9 @@ export class ForklaunchExpressLikeRouter<
   protected cloneInternals(clone: this): void {
     clone.routers = [...this.routers];
     clone.routes = [...this.routes];
-    clone.fetchMap = { ...this.fetchMap };
+    clone._fetchMap = { ...this._fetchMap };
     clone.sdk = { ...this.sdk };
+    clone.sdkPaths = { ...this.sdkPaths };
   }
 
   clone(): this {
@@ -3241,15 +3403,13 @@ export class ForklaunchExpressLikeRouter<
       BaseResponse,
       NextFunction,
       FetchMap,
-      Sdk,
-      SdkName
+      Sdk
     >(
       this.basePath,
       this.schemaValidator,
       this.internal,
       this.postEnrichMiddleware,
-      this.openTelemetryCollector,
-      this.sdkName
+      this.openTelemetryCollector
     ) as this;
 
     this.cloneInternals(clone);

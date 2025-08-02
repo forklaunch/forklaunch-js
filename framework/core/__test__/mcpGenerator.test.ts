@@ -37,8 +37,9 @@ describe('mcpGenerator tests', () => {
             }
           ],
           routers: [],
-          fetchMap: {},
-          sdk: {}
+          _fetchMap: {},
+          sdk: {},
+          sdkPaths: {}
         }
       ]
     );
@@ -86,8 +87,9 @@ describe('mcpGenerator tests', () => {
             }
           ],
           routers: [],
-          fetchMap: {},
-          sdk: {}
+          _fetchMap: {},
+          sdk: {},
+          sdkPaths: {}
         }
       ]
     );
@@ -130,8 +132,9 @@ describe('mcpGenerator tests', () => {
             }
           ],
           routers: [],
-          fetchMap: {},
-          sdk: {}
+          _fetchMap: {},
+          sdk: {},
+          sdkPaths: {}
         }
       ]
     );
@@ -254,16 +257,19 @@ describe('mcpGenerator tests', () => {
                     }
                   ],
                   routers: [],
-                  fetchMap: {},
-                  sdk: {}
+                  _fetchMap: {},
+                  sdk: {},
+                  sdkPaths: {}
                 }
               ],
-              fetchMap: {},
-              sdk: {}
+              _fetchMap: {},
+              sdk: {},
+              sdkPaths: {}
             }
           ],
-          fetchMap: {},
-          sdk: {}
+          _fetchMap: {},
+          sdk: {},
+          sdkPaths: {}
         }
       ]
     );

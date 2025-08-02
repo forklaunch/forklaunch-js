@@ -7,7 +7,8 @@ import {
   ParamsObject,
   QueryObject,
   ResponsesObject,
-  SchemaAuthMethods
+  SchemaAuthMethods,
+  VersionSchema
 } from '../types/contractDetails.types';
 import { TypedHandler } from '../types/typedHandler.types';
 
@@ -23,6 +24,7 @@ export function isTypedHandler<
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
+  VersionedApi extends VersionSchema<SV, ContractMethod>,
   BaseRequest,
   BaseResponse,
   NextFunction,
@@ -32,6 +34,7 @@ export function isTypedHandler<
     ReqBody,
     ReqQuery,
     ReqHeaders,
+    VersionedApi,
     BaseRequest
   >
 >(
@@ -48,6 +51,7 @@ export function isTypedHandler<
   ReqHeaders,
   ResHeaders,
   LocalsObj,
+  VersionedApi,
   BaseRequest,
   BaseResponse,
   NextFunction,

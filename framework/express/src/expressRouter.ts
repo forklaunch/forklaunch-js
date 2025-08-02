@@ -11,7 +11,8 @@ import {
   QueryObject,
   ResponsesObject,
   SchemaAuthMethods,
-  TypedMiddlewareDefinition
+  TypedMiddlewareDefinition,
+  VersionSchema
 } from '@forklaunch/core/http';
 import {
   AnySchemaValidator,
@@ -25,11 +26,12 @@ import express, {
   Router as ExpressRouter,
   NextFunction,
   Request,
-  RequestHandler,
   Response
 } from 'express';
+import { RequestHandler } from 'express-serve-static-core';
 import { contentParse } from './middleware/content.parse.middleware';
 import { enrichResponseTransmission } from './middleware/enrichResponseTransmission.middleware';
+import { ExpressRequestHandler } from './types/express.types';
 
 /**
  * Router class that sets up routes and middleware for an Express router.
@@ -77,7 +79,7 @@ export class Router<
       express.Router(),
       [
         contentParse<SV>(options),
-        enrichResponseTransmission as unknown as RequestHandler
+        enrichResponseTransmission as unknown as ExpressRequestHandler
       ],
       openTelemetryCollector
     );
@@ -128,7 +130,7 @@ export class Router<
     Request,
     Response,
     NextFunction,
-    RequestHandler
+    ExpressRequestHandler
   > = <
     Name extends string,
     Path extends `/${string}`,
@@ -139,12 +141,14 @@ export class Router<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       Request
     >
   >(
@@ -162,6 +166,7 @@ export class Router<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           Request,
           Response,
           NextFunction,
@@ -179,6 +184,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -196,6 +202,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -212,6 +219,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       this.internal.checkout,
@@ -227,7 +235,7 @@ export class Router<
     Request,
     Response,
     NextFunction,
-    RequestHandler
+    ExpressRequestHandler
   > = <
     Name extends string,
     Path extends `/${string}`,
@@ -238,12 +246,14 @@ export class Router<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       Request
     >
   >(
@@ -261,6 +271,7 @@ export class Router<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           Request,
           Response,
           NextFunction,
@@ -278,6 +289,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -295,6 +307,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -311,6 +324,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       this.internal.copy,
@@ -326,7 +340,7 @@ export class Router<
     Request,
     Response,
     NextFunction,
-    RequestHandler
+    ExpressRequestHandler
   > = <
     Name extends string,
     Path extends `/${string}`,
@@ -337,12 +351,14 @@ export class Router<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       Request
     >
   >(
@@ -360,6 +376,7 @@ export class Router<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           Request,
           Response,
           NextFunction,
@@ -377,6 +394,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -394,6 +412,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -410,6 +429,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       this.internal.lock,
@@ -425,7 +445,7 @@ export class Router<
     Request,
     Response,
     NextFunction,
-    RequestHandler
+    ExpressRequestHandler
   > = <
     Name extends string,
     Path extends `/${string}`,
@@ -436,12 +456,14 @@ export class Router<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       Request
     >
   >(
@@ -459,6 +481,7 @@ export class Router<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           Request,
           Response,
           NextFunction,
@@ -476,6 +499,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -493,6 +517,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -509,6 +534,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       this.internal.merge,
@@ -524,7 +550,7 @@ export class Router<
     Request,
     Response,
     NextFunction,
-    RequestHandler
+    ExpressRequestHandler
   > = <
     Name extends string,
     Path extends `/${string}`,
@@ -535,12 +561,14 @@ export class Router<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       Request
     >
   >(
@@ -558,6 +586,7 @@ export class Router<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           Request,
           Response,
           NextFunction,
@@ -575,6 +604,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -592,6 +622,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -608,6 +639,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       this.internal.mkactivity,
@@ -623,7 +655,7 @@ export class Router<
     Request,
     Response,
     NextFunction,
-    RequestHandler
+    ExpressRequestHandler
   > = <
     Name extends string,
     Path extends `/${string}`,
@@ -634,12 +666,14 @@ export class Router<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       Request
     >
   >(
@@ -657,6 +691,7 @@ export class Router<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           Request,
           Response,
           NextFunction,
@@ -674,6 +709,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -691,6 +727,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -707,6 +744,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       this.internal.mkcol,
@@ -722,7 +760,7 @@ export class Router<
     Request,
     Response,
     NextFunction,
-    RequestHandler
+    ExpressRequestHandler
   > = <
     Name extends string,
     Path extends `/${string}`,
@@ -733,12 +771,14 @@ export class Router<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       Request
     >
   >(
@@ -756,6 +796,7 @@ export class Router<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           Request,
           Response,
           NextFunction,
@@ -773,6 +814,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -790,6 +832,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -806,6 +849,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       this.internal.move,
@@ -821,7 +865,7 @@ export class Router<
     Request,
     Response,
     NextFunction,
-    RequestHandler
+    ExpressRequestHandler
   > = <
     Name extends string,
     Path extends `/${string}`,
@@ -832,12 +876,14 @@ export class Router<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       Request
     >
   >(
@@ -855,6 +901,7 @@ export class Router<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           Request,
           Response,
           NextFunction,
@@ -872,6 +919,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -889,6 +937,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -905,6 +954,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       this.internal['m-search'],
@@ -920,7 +970,7 @@ export class Router<
     Request,
     Response,
     NextFunction,
-    RequestHandler
+    ExpressRequestHandler
   > = <
     Name extends string,
     Path extends `/${string}`,
@@ -931,12 +981,14 @@ export class Router<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       Request
     >
   >(
@@ -954,6 +1006,7 @@ export class Router<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           Request,
           Response,
           NextFunction,
@@ -971,6 +1024,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -988,6 +1042,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -1004,6 +1059,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       this.internal.notify,
@@ -1019,7 +1075,7 @@ export class Router<
     Request,
     Response,
     NextFunction,
-    RequestHandler
+    ExpressRequestHandler
   > = <
     Name extends string,
     Path extends `/${string}`,
@@ -1030,12 +1086,14 @@ export class Router<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       Request
     >
   >(
@@ -1053,6 +1111,7 @@ export class Router<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           Request,
           Response,
           NextFunction,
@@ -1070,6 +1129,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -1087,6 +1147,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -1103,6 +1164,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       this.internal.propfind,
@@ -1118,7 +1180,7 @@ export class Router<
     Request,
     Response,
     NextFunction,
-    RequestHandler
+    ExpressRequestHandler
   > = <
     Name extends string,
     Path extends `/${string}`,
@@ -1129,12 +1191,14 @@ export class Router<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       Request
     >
   >(
@@ -1152,6 +1216,7 @@ export class Router<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           Request,
           Response,
           NextFunction,
@@ -1169,6 +1234,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -1186,6 +1252,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -1202,6 +1269,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       this.internal.proppatch,
@@ -1217,7 +1285,7 @@ export class Router<
     Request,
     Response,
     NextFunction,
-    RequestHandler
+    ExpressRequestHandler
   > = <
     Name extends string,
     Path extends `/${string}`,
@@ -1228,12 +1296,14 @@ export class Router<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       Request
     >
   >(
@@ -1251,6 +1321,7 @@ export class Router<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           Request,
           Response,
           NextFunction,
@@ -1268,6 +1339,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -1285,6 +1357,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -1301,6 +1374,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       this.internal.purge,
@@ -1316,7 +1390,7 @@ export class Router<
     Request,
     Response,
     NextFunction,
-    RequestHandler
+    ExpressRequestHandler
   > = <
     Name extends string,
     Path extends `/${string}`,
@@ -1327,12 +1401,14 @@ export class Router<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       Request
     >
   >(
@@ -1350,6 +1426,7 @@ export class Router<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           Request,
           Response,
           NextFunction,
@@ -1367,6 +1444,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -1384,6 +1462,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -1400,6 +1479,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       this.internal.report,
@@ -1415,7 +1495,7 @@ export class Router<
     Request,
     Response,
     NextFunction,
-    RequestHandler
+    ExpressRequestHandler
   > = <
     Name extends string,
     Path extends `/${string}`,
@@ -1426,12 +1506,14 @@ export class Router<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       Request
     >
   >(
@@ -1449,6 +1531,7 @@ export class Router<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           Request,
           Response,
           NextFunction,
@@ -1466,6 +1549,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -1483,6 +1567,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -1499,6 +1584,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       this.internal.search,
@@ -1514,7 +1600,7 @@ export class Router<
     Request,
     Response,
     NextFunction,
-    RequestHandler
+    ExpressRequestHandler
   > = <
     Name extends string,
     Path extends `/${string}`,
@@ -1525,12 +1611,14 @@ export class Router<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       Request
     >
   >(
@@ -1548,6 +1636,7 @@ export class Router<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           Request,
           Response,
           NextFunction,
@@ -1565,6 +1654,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -1582,6 +1672,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -1598,6 +1689,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       this.internal.subscribe,
@@ -1613,7 +1705,7 @@ export class Router<
     Request,
     Response,
     NextFunction,
-    RequestHandler
+    ExpressRequestHandler
   > = <
     Name extends string,
     Path extends `/${string}`,
@@ -1624,12 +1716,14 @@ export class Router<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       Request
     >
   >(
@@ -1647,6 +1741,7 @@ export class Router<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           Request,
           Response,
           NextFunction,
@@ -1664,6 +1759,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -1681,6 +1777,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -1697,6 +1794,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       this.internal.unlock,
@@ -1712,7 +1810,7 @@ export class Router<
     Request,
     Response,
     NextFunction,
-    RequestHandler
+    ExpressRequestHandler
   > = <
     Name extends string,
     Path extends `/${string}`,
@@ -1723,12 +1821,14 @@ export class Router<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       Request
     >
   >(
@@ -1746,6 +1846,7 @@ export class Router<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           Request,
           Response,
           NextFunction,
@@ -1763,6 +1864,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -1780,6 +1882,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -1796,6 +1899,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       this.internal.unsubscribe,
@@ -1811,7 +1915,7 @@ export class Router<
     Request,
     Response,
     NextFunction,
-    RequestHandler
+    ExpressRequestHandler
   > = <
     Name extends string,
     Path extends `/${string}`,
@@ -1822,12 +1926,14 @@ export class Router<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       Request
     >
   >(
@@ -1845,6 +1951,7 @@ export class Router<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           Request,
           Response,
           NextFunction,
@@ -1862,6 +1969,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -1879,6 +1987,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -1895,6 +2004,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       this.internal.link,
@@ -1910,7 +2020,7 @@ export class Router<
     Request,
     Response,
     NextFunction,
-    RequestHandler
+    ExpressRequestHandler
   > = <
     Name extends string,
     Path extends `/${string}`,
@@ -1921,12 +2031,14 @@ export class Router<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    const VersionedApi extends VersionSchema<SV, 'middleware'>,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       Request
     >
   >(
@@ -1944,6 +2056,7 @@ export class Router<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           Request,
           Response,
           NextFunction,
@@ -1961,6 +2074,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -1978,6 +2092,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Request,
       Response,
       NextFunction,
@@ -1994,6 +2109,7 @@ export class Router<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       Auth
     >(
       this.internal.unlink,

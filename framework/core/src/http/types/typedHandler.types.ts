@@ -8,12 +8,14 @@ import {
   ParamsObject,
   QueryObject,
   ResponsesObject,
-  SchemaAuthMethods
+  SchemaAuthMethods,
+  VersionSchema
 } from './contractDetails.types';
 
 // This is a hack to satisfy the type checker -- later ts versions may fix this
 export type ContractDetailsExpressLikeSchemaHandler<
   SV extends AnySchemaValidator,
+  ContractMethod extends Method,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
   ReqBody extends Body<SV>,
@@ -21,6 +23,7 @@ export type ContractDetailsExpressLikeSchemaHandler<
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
+  VersionedApi extends VersionSchema<SV, ContractMethod>,
   BaseRequest,
   BaseResponse,
   NextFunction
@@ -33,6 +36,7 @@ export type ContractDetailsExpressLikeSchemaHandler<
   ReqHeaders,
   ResHeaders,
   LocalsObj,
+  VersionedApi,
   BaseRequest,
   BaseResponse,
   NextFunction
@@ -50,6 +54,7 @@ export type TypedHandler<
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
+  VersionedApi extends VersionSchema<SV, ContractMethod>,
   BaseRequest,
   BaseResponse,
   NextFunction,
@@ -59,6 +64,7 @@ export type TypedHandler<
     ReqBody,
     ReqQuery,
     ReqHeaders,
+    VersionedApi,
     BaseRequest
   >
 > = {
@@ -75,12 +81,14 @@ export type TypedHandler<
     ReqQuery,
     ReqHeaders,
     ResHeaders,
+    VersionedApi,
     BaseRequest,
     Auth
   >;
   // This is an alias hack to satisfy the type checker -- later ts versions may fix this
   handlers: ContractDetailsExpressLikeSchemaHandler<
     SV,
+    ContractMethod,
     P,
     ResBodyMap,
     ReqBody,
@@ -88,6 +96,7 @@ export type TypedHandler<
     ReqHeaders,
     ResHeaders,
     LocalsObj,
+    VersionedApi,
     BaseRequest,
     BaseResponse,
     NextFunction
@@ -106,6 +115,7 @@ export type ExpressLikeTypedHandler<
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
+  VersionedApi extends VersionSchema<SV, ContractMethod>,
   BaseRequest,
   BaseResponse,
   NextFunction,
@@ -115,11 +125,13 @@ export type ExpressLikeTypedHandler<
     ReqBody,
     ReqQuery,
     ReqHeaders,
+    VersionedApi,
     BaseRequest
   >
 > = {
   _typedHandler: true;
   _path: Path | undefined;
+  _method: ContractMethod;
   contractDetails: ContractDetails<
     SV,
     Name,
@@ -131,6 +143,7 @@ export type ExpressLikeTypedHandler<
     ReqQuery,
     ReqHeaders,
     ResHeaders,
+    VersionedApi,
     BaseRequest,
     Auth
   >;
@@ -143,6 +156,7 @@ export type ExpressLikeTypedHandler<
     ReqHeaders,
     ResHeaders,
     LocalsObj,
+    VersionedApi,
     BaseRequest,
     BaseResponse,
     NextFunction

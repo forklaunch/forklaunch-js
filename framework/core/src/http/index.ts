@@ -20,6 +20,8 @@ export * from './middleware/response/enrichExpressLikeSend.middleware';
 export * from './openApiV3Generator/openApiV3Generator';
 export * from './router/discriminateBody';
 export * from './router/expressLikeRouter';
+export * from './sdk/sdkClient';
+export * from './sdk/sdkRouter';
 export * from './telemetry/constants';
 export * from './telemetry/evaluateTelemetryOptions';
 export * from './telemetry/metricsDefinition';

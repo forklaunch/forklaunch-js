@@ -35,6 +35,7 @@ const forklaunchRouterInstance = forklaunchRouter(
   typeboxSchemaValidator,
   openTelemetryCollector
 );
+
 const nestedForklaunchRouterInstance = forklaunchRouter(
   '/nested',
   typeboxSchemaValidator,

@@ -5,11 +5,13 @@ import {
 } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
 import { hasSend } from '../../guards/hasSend';
+import { isResponseCompiledSchema } from '../../guards/isResponseCompiledSchema';
 import {
   ForklaunchNextFunction,
   ForklaunchRequest,
   ForklaunchResHeaders,
-  ForklaunchResponse
+  ForklaunchResponse,
+  VersionedRequests
 } from '../../types/apiDefinition.types';
 import { ParamsDictionary } from '../../types/contractDetails.types';
 
@@ -45,29 +47,78 @@ export function parse<
   ReqBody extends Record<string, unknown>,
   ReqQuery extends ParsedQs,
   ReqHeaders extends Record<string, string>,
-  ResHeaders extends Record<string, string>,
-  LocalsObj extends Record<string, unknown>
+  ResHeaders extends Record<string, unknown>,
+  LocalsObj extends Record<string, unknown>,
+  VersionedReqs extends VersionedRequests
 >(
-  req: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>,
+  req: ForklaunchRequest<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    Extract<keyof VersionedReqs, string>
+  >,
   res: ForklaunchResponse<
     unknown,
     ResBodyMap,
     ForklaunchResHeaders & ResHeaders,
-    LocalsObj
+    LocalsObj,
+    Extract<keyof VersionedReqs, string>
   >,
   next?: ForklaunchNextFunction
 ) {
-  const { headers, responses } = res.responseSchemas;
+  let headers;
+  let responses;
+
+  const responseSchemas = res.responseSchemas;
+  const schemaValidator = req.schemaValidator as SchemaValidator;
+
+  if (!isResponseCompiledSchema(responseSchemas)) {
+    const parsedVersions = req._parsedVersions;
+    if (typeof parsedVersions === 'number') {
+      throw new Error('Request failed to parse given version map');
+    }
+    const mappedHeaderSchemas = parsedVersions.map(
+      (version) => responseSchemas[version].headers
+    );
+    const mappedResponseSchemas = parsedVersions.map(
+      (version) => responseSchemas[version].responses
+    );
+
+    const collapsedResponseSchemas = mappedResponseSchemas.reduce<
+      Record<number, unknown[]>
+    >((acc, responseSchema) => {
+      Object.entries(responseSchema).forEach(([status, schema]) => {
+        if (!acc[Number(status)]) {
+          acc[Number(status)] = [];
+        }
+        acc[Number(status)].push(schema);
+      });
+      return acc;
+    }, {});
+
+    headers = schemaValidator.union(mappedHeaderSchemas);
+    responses = Object.fromEntries(
+      Object.entries(collapsedResponseSchemas).map(([status, schemas]) => [
+        status,
+        schemaValidator.union(schemas)
+      ])
+    );
+  } else {
+    headers = responseSchemas.headers;
+    responses = responseSchemas.responses;
+  }
 
   const statusCode = Number(res.statusCode);
 
-  const parsedResponse = (req.schemaValidator as SchemaValidator).parse(
+  const parsedResponse = schemaValidator.parse(
     responses?.[statusCode],
     res.bodyData
   );
 
-  const parsedHeaders = (req.schemaValidator as SchemaValidator).parse(
-    headers ?? req.schemaValidator.unknown,
+  const parsedHeaders = schemaValidator.parse(
+    headers ?? schemaValidator.unknown,
     res.getHeaders()
   );
   const parseErrors: string[] = [];

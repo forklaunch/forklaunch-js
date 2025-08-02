@@ -7,7 +7,12 @@ import {
   ATTR_SERVICE_NAME
 } from '@opentelemetry/semantic-conventions';
 import { ParsedQs } from 'qs';
-import { ForklaunchRequest, ForklaunchResponse, ParamsDictionary } from '..';
+import {
+  ForklaunchRequest,
+  ForklaunchResponse,
+  ParamsDictionary,
+  VersionedRequests
+} from '..';
 import { ATTR_API_NAME, ATTR_CORRELATION_ID } from './constants';
 import { httpRequestsTotalCounter } from './openTelemetryCollector';
 
@@ -18,11 +23,25 @@ export function recordMetric<
   ReqQuery extends ParsedQs,
   ResBodyMap extends Record<string, unknown>,
   ReqHeaders extends Record<string, string>,
-  ResHeaders extends Record<string, string>,
-  LocalsObj extends Record<string, unknown>
+  ResHeaders extends Record<string, unknown>,
+  LocalsObj extends Record<string, unknown>,
+  VersionedReqs extends VersionedRequests
 >(
-  req: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>,
-  res: ForklaunchResponse<unknown, ResBodyMap, ResHeaders, LocalsObj>
+  req: ForklaunchRequest<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    Extract<keyof VersionedReqs, string>
+  >,
+  res: ForklaunchResponse<
+    unknown,
+    ResBodyMap,
+    ResHeaders,
+    LocalsObj,
+    Extract<keyof VersionedReqs, string>
+  >
 ) {
   if (res.metricRecorded) {
     return;

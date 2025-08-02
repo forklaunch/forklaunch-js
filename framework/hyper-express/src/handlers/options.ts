@@ -7,7 +7,8 @@ import {
   ParamsObject,
   QueryObject,
   ResponsesObject,
-  SchemaAuthMethods
+  SchemaAuthMethods,
+  VersionSchema
 } from '@forklaunch/core/http';
 import {
   MiddlewareNext,
@@ -82,12 +83,14 @@ export const options = <
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
+  const VersionedApi extends VersionSchema<SV, 'options'>,
   const Auth extends SchemaAuthMethods<
     SV,
     P,
     ReqBody,
     ReqQuery,
     ReqHeaders,
+    VersionSchema<SV, 'options'>,
     Request<LocalsObj>
   >
 >(
@@ -104,6 +107,7 @@ export const options = <
     ReqQuery,
     ReqHeaders,
     ResHeaders,
+    VersionedApi,
     Request<LocalsObj>,
     Auth
   >,
@@ -116,6 +120,7 @@ export const options = <
     ReqHeaders,
     ResHeaders,
     LocalsObj,
+    VersionedApi,
     Request<LocalsObj>,
     Response<LocalsObj>,
     MiddlewareNext
@@ -132,6 +137,7 @@ export const options = <
     ReqHeaders,
     ResHeaders,
     LocalsObj,
+    VersionedApi,
     Request<LocalsObj>,
     Response<LocalsObj>,
     MiddlewareNext,

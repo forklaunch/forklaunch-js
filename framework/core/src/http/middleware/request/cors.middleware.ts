@@ -21,7 +21,7 @@ export function cors<
   ReqBody extends Record<string, unknown>,
   ReqQuery extends ParsedQs,
   ReqHeaders extends Record<string, string>,
-  ResHeaders extends Record<string, string>,
+  ResHeaders extends Record<string, unknown>,
   LocalsObj extends Record<string, unknown>
 >(corsOptions: CorsOptions) {
   return (
@@ -30,7 +30,8 @@ export function cors<
       unknown,
       ResBodyMap,
       ForklaunchResHeaders & ResHeaders,
-      LocalsObj
+      LocalsObj,
+      never
     >,
     next?: ForklaunchNextFunction
   ) => {
@@ -39,9 +40,13 @@ export function cors<
     }
     if (!res.getHeader) {
       res.getHeader = (key: string) => {
-        return res.getHeaders()[key];
+        return res.getHeaders()[key] as string | string[] | undefined;
       };
     }
-    corsMiddleware(corsOptions)(req, res, next ?? (() => {}));
+    corsMiddleware(corsOptions)(
+      req as typeof req & { headers: Record<string, string> },
+      res,
+      next ?? (() => {})
+    );
   };
 }

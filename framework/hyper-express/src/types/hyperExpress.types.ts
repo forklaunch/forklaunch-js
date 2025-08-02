@@ -3,14 +3,15 @@ import {
   ForklaunchResponse,
   ForklaunchSendableData,
   ForklaunchStatusResponse,
-  ParamsDictionary
+  ParamsDictionary,
+  ParsedQs
 } from '@forklaunch/core/http';
 import {
   Request as ExpressRequest,
-  Response as ExpressResponse
+  Response as ExpressResponse,
+  MiddlewareNext
 } from '@forklaunch/hyper-express-fork';
 import { AnySchemaValidator } from '@forklaunch/validator';
-import { ParsedQs } from 'qs';
 
 /**
  * Extends the Forklaunch request interface with properties from Hyper-Express's request interface.
@@ -26,10 +27,11 @@ export interface InternalRequest<
   SV extends AnySchemaValidator,
   P extends ParamsDictionary,
   ReqBody extends Record<string, unknown>,
-  ReqQuery extends ParsedQs,
-  ReqHeaders extends Record<string, string>,
-  LocalsObj extends Record<string, unknown>
-> extends ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>,
+  ReqQuery extends Record<string, unknown>,
+  ReqHeaders extends Record<string, unknown>,
+  LocalsObj extends Record<string, unknown>,
+  Version extends string
+> extends ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders, Version>,
     Omit<
       ExpressRequest<LocalsObj>,
       'method' | 'params' | 'query' | 'headers' | 'path'
@@ -52,12 +54,14 @@ export interface InternalRequest<
 export interface InternalResponse<
   ResBodyMap extends Record<number, unknown>,
   ResHeaders extends Record<string, string>,
-  LocalsObj extends Record<string, unknown>
+  LocalsObj extends Record<string, unknown>,
+  Version extends string
 > extends ForklaunchResponse<
       ExpressResponse,
       ResBodyMap,
       ResHeaders,
-      LocalsObj
+      LocalsObj,
+      Version
     >,
     Omit<
       ExpressResponse<LocalsObj>,
@@ -86,3 +90,19 @@ export interface InternalResponse<
   /** Whether the response is currently corked */
   _corked: boolean;
 }
+
+/**
+ * A request handler function compatible with Hyper-Express, used for processing HTTP requests.
+ *
+ * @param req - The incoming request object, with `query` and `headers` properties normalized to either `ParsedQs` or a generic record.
+ * @param res - The response object for sending data back to the client.
+ * @param next - The middleware next function to pass control to the next handler.
+ */
+export type ExpressRequestHandler = (
+  req: Omit<ExpressRequest<Record<string, unknown>>, 'query' | 'headers'> & {
+    query: ParsedQs | Record<string, unknown>;
+    headers: Record<string, unknown>;
+  },
+  res: ExpressResponse<Record<string, unknown>>,
+  next: MiddlewareNext
+) => void;

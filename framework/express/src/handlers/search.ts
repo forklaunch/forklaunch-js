@@ -7,7 +7,8 @@ import {
   ParamsObject,
   QueryObject,
   ResponsesObject,
-  SchemaAuthMethods
+  SchemaAuthMethods,
+  VersionSchema
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { NextFunction, Request, Response } from 'express';
@@ -34,7 +35,7 @@ import { SetExportTypes } from '../types/export.types';
  * @param {SV} schemaValidator - The schema validator instance
  * @param {Path} path - The route path
  * @param {ContractDetails<SV, Name, 'middleware', Path, P, ResBodyMap, ReqBody, ReqQuery, ReqHeaders, ResHeaders, Request, Auth>} contractDetails - The contract details for the route
- * @param {...ExpressLikeSchemaHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, ReqHeaders, ResHeaders, LocalsObj, Request, Response, NextFunction>[]} handlers - The route handlers
+ * @param {...ExpressLikeSchemaHandler<SV, P, ResBodyMap, ReqBody, ReqQuery, ReqHeaders, ResHeaders, LocalsObj, Request, Auth>} handlers - The route handlers
  *
  * @returns {void} - Returns nothing, registers the route with Express
  *
@@ -98,12 +99,14 @@ export const search = <
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
+  const VersionedApi extends VersionSchema<SV, 'middleware'>,
   const Auth extends SchemaAuthMethods<
     SV,
     P,
     ReqBody,
     ReqQuery,
     ReqHeaders,
+    VersionedApi,
     Request
   >
 >(
@@ -120,6 +123,7 @@ export const search = <
     ReqQuery,
     ReqHeaders,
     ResHeaders,
+    VersionedApi,
     Request,
     Auth
   >,
@@ -132,6 +136,7 @@ export const search = <
     ReqHeaders,
     ResHeaders,
     LocalsObj,
+    VersionedApi,
     Request,
     Response,
     NextFunction
@@ -148,6 +153,7 @@ export const search = <
     ReqHeaders,
     ResHeaders,
     LocalsObj,
+    VersionedApi,
     Request,
     Response,
     NextFunction,

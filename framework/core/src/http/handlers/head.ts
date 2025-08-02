@@ -7,7 +7,8 @@ import {
   PathParamHttpContractDetails,
   QueryObject,
   ResponsesObject,
-  SchemaAuthMethods
+  SchemaAuthMethods,
+  VersionSchema
 } from '../types/contractDetails.types';
 import { typedHandler } from './typedHandler';
 
@@ -22,6 +23,7 @@ export const head = <
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
+  VersionedApi extends VersionSchema<SV, 'head'>,
   BaseRequest,
   BaseResponse,
   NextFunction,
@@ -31,6 +33,7 @@ export const head = <
     ReqBody,
     ReqQuery,
     ReqHeaders,
+    VersionedApi,
     BaseRequest
   >
 >(
@@ -46,6 +49,7 @@ export const head = <
     ReqQuery,
     ReqHeaders,
     ResHeaders,
+    VersionedApi,
     BaseRequest,
     Auth
   >,
@@ -58,6 +62,7 @@ export const head = <
     ReqHeaders,
     ResHeaders,
     LocalsObj,
+    VersionedApi,
     BaseRequest,
     BaseResponse,
     NextFunction
@@ -75,6 +80,7 @@ export const head = <
     ReqHeaders,
     ResHeaders,
     LocalsObj,
+    VersionedApi,
     BaseRequest,
     BaseResponse,
     NextFunction,

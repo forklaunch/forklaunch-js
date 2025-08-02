@@ -9,7 +9,8 @@ import {
   ParamsObject,
   QueryObject,
   ResponsesObject,
-  SchemaAuthMethods
+  SchemaAuthMethods,
+  VersionSchema
 } from '../types/contractDetails.types';
 import { ExpressLikeTypedHandler } from '../types/typedHandler.types';
 
@@ -32,6 +33,7 @@ export function typedHandler<
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
+  const VersionedApi extends VersionSchema<SV, ContractMethod>,
   BaseRequest,
   BaseResponse,
   NextFunction,
@@ -41,6 +43,7 @@ export function typedHandler<
     ReqBody,
     ReqQuery,
     ReqHeaders,
+    VersionedApi,
     BaseRequest
   >
 >(
@@ -58,6 +61,7 @@ export function typedHandler<
     ReqQuery,
     ReqHeaders,
     ResHeaders,
+    VersionedApi,
     BaseRequest,
     Auth
   >,
@@ -70,6 +74,7 @@ export function typedHandler<
     ReqHeaders,
     ResHeaders,
     LocalsObj,
+    VersionedApi,
     BaseRequest,
     BaseResponse,
     NextFunction
@@ -86,6 +91,7 @@ export function typedHandler<
   ReqHeaders,
   ResHeaders,
   LocalsObj,
+  VersionedApi,
   BaseRequest,
   BaseResponse,
   NextFunction,
@@ -103,6 +109,7 @@ export function typedHandler<
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
+  const VersionedApi extends VersionSchema<SV, ContractMethod>,
   BaseRequest,
   BaseResponse,
   NextFunction,
@@ -112,6 +119,7 @@ export function typedHandler<
     ReqBody,
     ReqQuery,
     ReqHeaders,
+    VersionedApi,
     BaseRequest
   >
 >(
@@ -128,6 +136,7 @@ export function typedHandler<
     ReqQuery,
     ReqHeaders,
     ResHeaders,
+    VersionedApi,
     BaseRequest,
     Auth
   >,
@@ -140,6 +149,7 @@ export function typedHandler<
     ReqHeaders,
     ResHeaders,
     LocalsObj,
+    VersionedApi,
     BaseRequest,
     BaseResponse,
     NextFunction
@@ -156,6 +166,7 @@ export function typedHandler<
   ReqHeaders,
   ResHeaders,
   LocalsObj,
+  VersionedApi,
   BaseRequest,
   BaseResponse,
   NextFunction,
@@ -173,6 +184,7 @@ export function typedHandler<
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
+  const VersionedApi extends VersionSchema<SV, ContractMethod>,
   BaseRequest,
   BaseResponse,
   NextFunction,
@@ -182,6 +194,7 @@ export function typedHandler<
     ReqBody,
     ReqQuery,
     ReqHeaders,
+    VersionedApi,
     BaseRequest
   >
 >(
@@ -200,6 +213,7 @@ export function typedHandler<
         ReqQuery,
         ReqHeaders,
         ResHeaders,
+        VersionedApi,
         BaseRequest,
         Auth
       >,
@@ -215,6 +229,7 @@ export function typedHandler<
         ReqQuery,
         ReqHeaders,
         ResHeaders,
+        VersionedApi,
         BaseRequest,
         Auth
       >
@@ -227,6 +242,7 @@ export function typedHandler<
         ReqHeaders,
         ResHeaders,
         LocalsObj,
+        VersionedApi,
         BaseRequest,
         BaseResponse,
         NextFunction
@@ -240,6 +256,7 @@ export function typedHandler<
     ReqHeaders,
     ResHeaders,
     LocalsObj,
+    VersionedApi,
     BaseRequest,
     BaseResponse,
     NextFunction
@@ -256,6 +273,7 @@ export function typedHandler<
   ReqHeaders,
   ResHeaders,
   LocalsObj,
+  VersionedApi,
   BaseRequest,
   BaseResponse,
   NextFunction,
@@ -274,6 +292,7 @@ export function typedHandler<
     ReqQuery,
     ReqHeaders,
     ResHeaders,
+    VersionedApi,
     BaseRequest,
     Auth
   >;
@@ -286,6 +305,7 @@ export function typedHandler<
     ReqHeaders,
     ResHeaders,
     LocalsObj,
+    VersionedApi,
     BaseRequest,
     BaseResponse,
     NextFunction
@@ -308,9 +328,20 @@ export function typedHandler<
       throw new Error('Invalid definition for handler');
     }
   }
+
+  if (
+    isPath(pathOrContractMethod) &&
+    typeof contractMethodOrContractDetails !== 'string'
+  ) {
+    throw new Error('Contract method not supplied, bailing');
+  }
+
   return {
     _typedHandler: true as const,
     _path: isPath(pathOrContractMethod) ? pathOrContractMethod : undefined,
+    _method: isPath(pathOrContractMethod)
+      ? (contractMethodOrContractDetails as ContractMethod)
+      : pathOrContractMethod,
     contractDetails,
     handlers
   };
