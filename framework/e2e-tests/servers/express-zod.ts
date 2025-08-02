@@ -317,7 +317,7 @@ const flRouter = forklaunchRouterInstance
   .post('/test/file', filePostHandler);
 
 const flNestedRouter = forklaunchRouter(
-  '/testpath/nested',
+  '/nested',
   zodSchemaValidator,
   openTelemetryCollector
 )
@@ -327,33 +327,13 @@ const flNestedRouter = forklaunchRouter(
 const sdkRoutes = flRouter.use(flNestedRouter);
 forklaunchApplication.use(sdkRoutes);
 
-sdkRoutes.fetch('/testpath/test/file', {
-  method: 'POST',
-  body: new File([], 'test.txt'),
-  credentials: 'include'
-});
-sdkRoutes.fetch('/testpath/test', {
-  method: 'GET',
-  version: '2.0.0',
-  headers: {
-    authorization: 'bb dGVzdDp0ZXN0'
-  }
-});
-
-sdkRoutes.sdk.testFile['1.0.0']({
-  headers: {
-    'x-test': 'test',
-    authorization: 'bb dGVzdDp0ZXN0'
-  }
-});
-
 const sampleController = {
   get: getHandler,
   post: postHandler,
   patch: jsonPatchHandler,
   multipart: multipartHandler
 };
-export const sampleController2 = {
+const sampleController2 = {
   urlEncodedForm: urlEncodedFormHandler,
   file: filePostHandler
 };
@@ -370,32 +350,6 @@ const sampleSdkRouter2 = sdkRouter(
   sdkRoutes
 );
 
-sampleSdkRouter.sdk.get['1.0.0']({
-  headers: {
-    'x-test': 'test',
-    authorization: 'bb dGVzdDp0ZXN0'
-  }
-});
-sampleSdkRouter2.fetch('/testpath/test/file', {
-  method: 'POST',
-  body: new File([], 'test.txt'),
-  credentials: 'include'
-});
-
-sampleSdkRouter.fetch('/testpath/test', {
-  method: 'GET',
-  headers: {
-    authorization: 'bb dGVzdDp0ZXN0'
-  },
-  version: '2.0.0'
-});
-
-sampleSdkRouter2.fetch('/testpath/test/file', {
-  method: 'POST',
-  body: new File([], 'test.txt'),
-  credentials: 'include'
-});
-
 export const sampleSdkClient = sdkClient(zodSchemaValidator, {
   sample: {
     path: {
@@ -409,7 +363,7 @@ export const sampleSdkClient = sdkClient(zodSchemaValidator, {
   }
 });
 
-const sampleSdkClient2 = sdkClient(zodSchemaValidator, {
+export const sampleSdkClient2 = sdkClient(zodSchemaValidator, {
   sample: {
     path: {
       a: {
@@ -417,21 +371,6 @@ const sampleSdkClient2 = sdkClient(zodSchemaValidator, {
       }
     }
   }
-});
-
-sampleSdkClient2.sdk.sample.path.a.b.testpathNested.testFile['1.0.0']({
-  headers: {
-    'x-test': 'test',
-    authorization: 'bb dGVzdDp0ZXN0'
-  }
-});
-
-sampleSdkClient.fetch('/testpath/test', {
-  method: 'GET',
-  headers: {
-    authorization: 'bb dGVzdDp0ZXN0'
-  },
-  version: '2.0.0'
 });
 
 export function start() {
