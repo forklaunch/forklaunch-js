@@ -69,32 +69,47 @@ export function parse<
   let parsedRequest: ParseResult<object> | undefined;
   let collectedParseErrors: string | undefined;
 
-  if (isRecord(req.requestSchema) && req.contractDetails.versions) {
-    let runningParseErrors: string = '';
-    matchedVersions = [];
+  if (req.contractDetails.versions) {
+    if (isRecord(req.requestSchema)) {
+      let runningParseErrors: string = '';
+      matchedVersions = [];
 
-    Object.entries(req.requestSchema).forEach(([version, schema]) => {
-      const parsingResult = schemaValidator.parse(schema, request);
+      Object.entries(req.requestSchema).forEach(([version, schema]) => {
+        const parsingResult = schemaValidator.parse(schema, request);
 
-      if (parsingResult.ok) {
-        parsedRequest = parsingResult;
-        matchedVersions.push(version);
-        req.version = version as Extract<keyof VersionedReqs, string>;
-        res.version = version as Extract<keyof VersionedReqs, string>;
-      } else {
-        runningParseErrors += prettyPrintParseErrors(
-          parsingResult.errors,
-          `Version ${version} request`
-        );
+        if (parsingResult.ok) {
+          parsedRequest = parsingResult;
+          matchedVersions.push(version);
+          req.version = version as Extract<keyof VersionedReqs, string>;
+          res.version = req.version;
+        } else {
+          runningParseErrors += prettyPrintParseErrors(
+            parsingResult.errors,
+            `Version ${version} request`
+          );
+        }
+      });
+
+      if (!parsedRequest) {
+        parsedRequest = {
+          ok: false,
+          errors: []
+        };
+        collectedParseErrors = runningParseErrors;
       }
-    });
+    } else {
+      req.version = Object.keys(req.contractDetails.versions).pop() as Extract<
+        keyof VersionedReqs,
+        string
+      >;
+      res.version = req.version;
 
-    if (!parsedRequest) {
       parsedRequest = {
-        ok: false,
-        errors: []
+        ok: true,
+        value: request
       };
-      collectedParseErrors = runningParseErrors;
+
+      matchedVersions = Object.keys(req.contractDetails.versions);
     }
   } else {
     const parsingResult = schemaValidator.parse(req.requestSchema, request);

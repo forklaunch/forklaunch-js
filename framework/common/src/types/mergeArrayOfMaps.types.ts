@@ -1,7 +1,7 @@
 import { MergeUnionOnCollision } from './mergeUnionOnCollision.types';
 
 /**
- * Recursively merges an array of fetchMap objects
+ * Recursively merges an array of _fetchMap objects
  */
 export type MergeArrayOfMaps<T extends readonly Record<string, unknown>[]> =
   T extends readonly [infer First, ...infer Rest]

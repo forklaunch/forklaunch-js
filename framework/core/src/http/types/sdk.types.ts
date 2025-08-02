@@ -1,4 +1,8 @@
-import { TypeSafeFunction, UnionToIntersection } from '@forklaunch/common';
+import {
+  Prettify,
+  TypeSafeFunction,
+  UnionToIntersection
+} from '@forklaunch/common';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { LiveSdkFunction, LiveTypeFunction } from './apiDefinition.types';
 import {
@@ -135,12 +139,12 @@ export type FetchFunction<FetchMap> = <
  * Represents the structure of a SDK router.
  *
  * @property sdk - The SDK object containing all the SDK functions.
- * @property fetchMap - The fetch map object containing all the fetch functions.
+ * @property _fetchMap - The fetch map object containing all the fetch functions.
  * @property sdkPaths - The SDK paths object containing all the SDK paths.
  */
 export type SdkRouter = {
   sdk: Record<string, unknown>;
-  fetchMap: Record<string, unknown>;
+  _fetchMap: Record<string, unknown>;
   sdkPaths: Record<string, string>;
 };
 
@@ -158,11 +162,11 @@ export type SdkRouter = {
  *   api: {
  *     users: {
  *       sdk: { getUser: () => Promise.resolve({}) },
- *       fetchMap: { getUser: { get: () => fetch('/api/users') } }
+ *       _fetchMap: { getUser: { get: () => fetch('/api/users') } }
  *     },
  *     posts: {
  *       sdk: { getPosts: () => Promise.resolve([]) },
- *       fetchMap: { getPosts: { get: () => fetch('/api/posts') } }
+ *       _fetchMap: { getPosts: { get: () => fetch('/api/posts') } }
  *     }
  *   }
  * };
@@ -209,7 +213,7 @@ export type MapToSdk<
 /**
  * Tail-recursive type that extracts and flattens fetch map interfaces from a RouterMap structure.
  * This version uses an accumulator pattern to avoid deep recursion and improve performance.
- * Similar to MapToSdk but focuses on fetchMap properties and merges all fetch maps into a single intersection type.
+ * Similar to MapToSdk but focuses on _fetchMap properties and merges all fetch maps into a single intersection type.
  *
  * @template SV - The schema validator type
  * @template T - The RouterMap to extract fetch maps from
@@ -232,15 +236,17 @@ export type MapToFetch<
   SV extends AnySchemaValidator,
   T extends RouterMap<SV>
 > = UnionToIntersection<
-  {
-    [K in keyof T]: T[K] extends RouterMap<SV>
-      ? MapToFetch<SV, T[K]>
-      : T[K] extends { fetchMap: infer F }
-        ? F extends Record<string, unknown>
-          ? F
-          : never
-        : never;
-  }[keyof T]
+  Prettify<
+    {
+      [K in keyof T]: T[K] extends RouterMap<SV>
+        ? MapToFetch<SV, T[K]>
+        : T[K] extends { _fetchMap: infer F }
+          ? F extends Record<string, unknown>
+            ? F
+            : never
+          : never;
+    }[keyof T]
+  >
 >;
 
 /**

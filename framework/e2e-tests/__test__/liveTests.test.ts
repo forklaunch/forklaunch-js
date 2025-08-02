@@ -2,7 +2,7 @@ import { sampleSdkClient } from '../servers/express-zod';
 
 describe('liveTests', () => {
   it('should call getTest', async () => {
-    const getTest = await sampleSdkClient.sdk.sample.path.get['2.0.0']({
+    const getTest = await sampleSdkClient.sdk.sample.path.a.b.get['2.0.0']({
       headers: {
         authorization: 'bb string'
       }
@@ -23,7 +23,7 @@ describe('liveTests', () => {
   });
 
   it('should call postTest', async () => {
-    const postTest = await sampleSdkClient.sdk.sample.path.post({
+    const postTest = await sampleSdkClient.sdk.sample.path.a.b.post['2.0.0']({
       headers: {
         xyz: 'Basic string'
       },
@@ -44,13 +44,14 @@ describe('liveTests', () => {
       },
       headers: {
         xyz: 'Basic string'
-      }
+      },
+      version: '1.0.0'
     });
     expect(postTest.code).toBe(200);
   });
 
   it('should call jsonPatchTest', async () => {
-    const jsonPatchTest = await sampleSdkClient.sdk.sample.path.patch({
+    const jsonPatchTest = await sampleSdkClient.sdk.sample.path.a.b.patch({
       body: {
         f: 'ok',
         h: 'b658f7e0-9b8a-4e1f-b6d8-1c0b7d8b3f59'
@@ -83,7 +84,7 @@ describe('liveTests', () => {
   });
 
   it('should call multipartTest', async () => {
-    const multipartTest = await sampleSdkClient.sdk.sample.path.multipart({
+    const multipartTest = await sampleSdkClient.sdk.sample.path.a.b.multipart({
       headers: {
         'x-test': 'test'
       },
@@ -118,7 +119,7 @@ describe('liveTests', () => {
 
   it('should call urlEncodedFormTest', async () => {
     const urlEncodedFormTest =
-      await sampleSdkClient.sdk.sample.path.urlEncodedForm({
+      await sampleSdkClient.sdk.sample.c.d.urlEncodedForm({
         params: {
           id: '123'
         },
@@ -152,7 +153,7 @@ describe('liveTests', () => {
   });
 
   it('should call filePostTest', async () => {
-    const filePostTest = await sampleSdkClient.sdk.sample.path.file({
+    const filePostTest = await sampleSdkClient.sdk.sample.c.d.file({
       body: new File(['Hello World'], 'test.txt', { type: 'text/plain' })
     });
     expect(filePostTest.code).toBe(200);

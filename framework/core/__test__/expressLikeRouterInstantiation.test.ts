@@ -386,7 +386,7 @@ const m = sdkClient(SchemaValidator(), {
   n: ra
 });
 
-type m = (typeof ra.fetchMap)['/l/test/:name/:id']['TRACE'];
+type m = (typeof ra._fetchMap)['/l/test/:name/:id']['TRACE'];
 const n2 = ra.fetch('/l/test/:name/:id', {
   method: 'TRACE',
   params: {

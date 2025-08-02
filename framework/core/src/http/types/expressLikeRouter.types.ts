@@ -35,7 +35,7 @@ export interface LiveTypeRouteDefinition<
   BaseResponse,
   NextFunction,
   ChainableRouter extends {
-    fetchMap: object;
+    _fetchMap: object;
     sdk: object;
   }
 > {
@@ -81,15 +81,15 @@ export interface LiveTypeRouteDefinition<
       Auth
     >
   ): ChainableRouter & {
-    fetchMap: Prettify<
-      ChainableRouter['fetchMap'] extends Record<
+    _fetchMap: Prettify<
+      ChainableRouter['_fetchMap'] extends Record<
         SanitizePathSlashes<`${BasePath}${Path}`>,
         unknown
       >
-        ? ChainableRouter['fetchMap'] &
+        ? ChainableRouter['_fetchMap'] &
             Record<
               SanitizePathSlashes<`${BasePath}${Path}`>,
-              ChainableRouter['fetchMap'][SanitizePathSlashes<`${BasePath}${Path}`>] &
+              ChainableRouter['_fetchMap'][SanitizePathSlashes<`${BasePath}${Path}`>] &
                 Record<
                   Uppercase<ContractMethod>,
                   LiveTypeFunction<
@@ -107,7 +107,7 @@ export interface LiveTypeRouteDefinition<
                   >
                 >
             >
-        : ChainableRouter['fetchMap'] &
+        : ChainableRouter['_fetchMap'] &
             Record<
               SanitizePathSlashes<`${BasePath}${Path}`>,
               Record<
@@ -219,15 +219,15 @@ export interface LiveTypeRouteDefinition<
       >
     ]
   ): ChainableRouter & {
-    fetchMap: Prettify<
-      ChainableRouter['fetchMap'] extends Record<
+    _fetchMap: Prettify<
+      ChainableRouter['_fetchMap'] extends Record<
         SanitizePathSlashes<`${BasePath}${Path}`>,
         unknown
       >
-        ? ChainableRouter['fetchMap'] &
+        ? ChainableRouter['_fetchMap'] &
             Record<
               SanitizePathSlashes<`${BasePath}${Path}`>,
-              ChainableRouter['fetchMap'][SanitizePathSlashes<`${BasePath}${Path}`>] &
+              ChainableRouter['_fetchMap'][SanitizePathSlashes<`${BasePath}${Path}`>] &
                 Record<
                   Uppercase<ContractMethod>,
                   LiveTypeFunction<
@@ -245,7 +245,7 @@ export interface LiveTypeRouteDefinition<
                   >
                 >
             >
-        : ChainableRouter['fetchMap'] &
+        : ChainableRouter['_fetchMap'] &
             Record<
               SanitizePathSlashes<`${BasePath}${Path}`>,
               Record<
@@ -337,15 +337,15 @@ export interface LiveTypeRouteDefinition<
       NextFunction
     >[]
   ): ChainableRouter & {
-    fetchMap: Prettify<
-      ChainableRouter['fetchMap'] extends Record<
+    _fetchMap: Prettify<
+      ChainableRouter['_fetchMap'] extends Record<
         SanitizePathSlashes<`${BasePath}${Path}`>,
         unknown
       >
-        ? ChainableRouter['fetchMap'] &
+        ? ChainableRouter['_fetchMap'] &
             Record<
               SanitizePathSlashes<`${BasePath}${Path}`>,
-              ChainableRouter['fetchMap'][SanitizePathSlashes<`${BasePath}${Path}`>] &
+              ChainableRouter['_fetchMap'][SanitizePathSlashes<`${BasePath}${Path}`>] &
                 Record<
                   Uppercase<ContractMethod>,
                   LiveTypeFunction<
@@ -363,7 +363,7 @@ export interface LiveTypeRouteDefinition<
                   >
                 >
             >
-        : ChainableRouter['fetchMap'] &
+        : ChainableRouter['_fetchMap'] &
             Record<
               SanitizePathSlashes<`${BasePath}${Path}`>,
               Record<
@@ -781,7 +781,7 @@ export interface TypedMiddlewareDefinition<
 
 export interface TypedNestableMiddlewareDefinition<
   ChainableRouter extends {
-    fetchMap: object;
+    _fetchMap: object;
     basePath: `/${string}`;
     sdk: Record<string, unknown>;
   },
@@ -807,11 +807,11 @@ export interface TypedNestableMiddlewareDefinition<
   <Router extends ConstrainedForklaunchRouter<SV, RouterHandler>>(
     router: Router
   ): ChainableRouter & {
-    fetchMap: Prettify<
-      ChainableRouter['fetchMap'] & {
-        [Key in keyof Router['fetchMap'] as Key extends string
+    _fetchMap: Prettify<
+      ChainableRouter['_fetchMap'] & {
+        [Key in keyof Router['_fetchMap'] as Key extends string
           ? SanitizePathSlashes<`${ChainableRouter['basePath']}${Key}`>
-          : never]: Router['fetchMap'][Key];
+          : never]: Router['_fetchMap'][Key];
       }
     >;
     sdk: Prettify<
@@ -829,11 +829,11 @@ export interface TypedNestableMiddlewareDefinition<
     middlewareOrRouter: RouterHandler | Router,
     ...otherMiddlewareOrRouters: [...(RouterHandler | Router)[]]
   ): ChainableRouter & {
-    fetchMap: Prettify<
-      ChainableRouter['fetchMap'] & {
-        [Key in keyof Router['fetchMap'] as Key extends string
+    _fetchMap: Prettify<
+      ChainableRouter['_fetchMap'] & {
+        [Key in keyof Router['_fetchMap'] as Key extends string
           ? SanitizePathSlashes<`${ChainableRouter['basePath']}${Key}`>
-          : never]: Router['fetchMap'][Key];
+          : never]: Router['_fetchMap'][Key];
       }
     >;
     sdk: Prettify<
@@ -851,11 +851,11 @@ export interface TypedNestableMiddlewareDefinition<
     path: Router['basePath'],
     router: Router
   ): ChainableRouter & {
-    fetchMap: Prettify<
-      ChainableRouter['fetchMap'] & {
-        [Key in keyof Router['fetchMap'] as Key extends string
+    _fetchMap: Prettify<
+      ChainableRouter['_fetchMap'] & {
+        [Key in keyof Router['_fetchMap'] as Key extends string
           ? SanitizePathSlashes<`${ChainableRouter['basePath']}${Key}`>
-          : never]: Router['fetchMap'][Key];
+          : never]: Router['_fetchMap'][Key];
       }
     >;
     sdk: Prettify<
@@ -948,11 +948,11 @@ export interface TypedNestableMiddlewareDefinition<
       >
     ]
   ): ChainableRouter & {
-    fetchMap: Prettify<
-      ChainableRouter['fetchMap'] & {
-        [Key in keyof Router['fetchMap'] as Key extends string
+    _fetchMap: Prettify<
+      ChainableRouter['_fetchMap'] & {
+        [Key in keyof Router['_fetchMap'] as Key extends string
           ? SanitizePathSlashes<`${ChainableRouter['basePath']}${Key}`>
-          : never]: Router['fetchMap'][Key];
+          : never]: Router['_fetchMap'][Key];
       }
     >;
     sdk: Prettify<
@@ -1042,11 +1042,11 @@ export interface TypedNestableMiddlewareDefinition<
       >
     ]
   ): ChainableRouter & {
-    fetchMap: Prettify<
-      ChainableRouter['fetchMap'] & {
-        [Key in keyof Router['fetchMap'] as Key extends string
+    _fetchMap: Prettify<
+      ChainableRouter['_fetchMap'] & {
+        [Key in keyof Router['_fetchMap'] as Key extends string
           ? SanitizePathSlashes<`${ChainableRouter['basePath']}${Key}`>
-          : never]: Router['fetchMap'][Key];
+          : never]: Router['_fetchMap'][Key];
       }
     >;
     sdk: Prettify<
@@ -1134,11 +1134,11 @@ export interface TypedNestableMiddlewareDefinition<
       | Router
     )[]
   ): ChainableRouter & {
-    fetchMap: Prettify<
-      ChainableRouter['fetchMap'] & {
-        [Key in keyof Router['fetchMap'] as Key extends string
+    _fetchMap: Prettify<
+      ChainableRouter['_fetchMap'] & {
+        [Key in keyof Router['_fetchMap'] as Key extends string
           ? SanitizePathSlashes<`${ChainableRouter['basePath']}${Key}`>
-          : never]: Router['fetchMap'][Key];
+          : never]: Router['_fetchMap'][Key];
       }
     >;
     sdk: Prettify<
@@ -1223,11 +1223,11 @@ export interface TypedNestableMiddlewareDefinition<
       | Router
     )[]
   ): ChainableRouter & {
-    fetchMap: Prettify<
-      ChainableRouter['fetchMap'] & {
-        [Key in keyof Router['fetchMap'] as Key extends string
+    _fetchMap: Prettify<
+      ChainableRouter['_fetchMap'] & {
+        [Key in keyof Router['_fetchMap'] as Key extends string
           ? SanitizePathSlashes<`${ChainableRouter['basePath']}${Key}`>
-          : never]: Router['fetchMap'][Key];
+          : never]: Router['_fetchMap'][Key];
       }
     >;
     sdk: Prettify<

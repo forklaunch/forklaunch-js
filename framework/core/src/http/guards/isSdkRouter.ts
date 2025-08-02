@@ -11,7 +11,7 @@ export function isSdkRouter(value: unknown): value is SdkRouter {
     typeof value === 'object' &&
     value !== null &&
     'sdk' in value &&
-    'fetchMap' in value &&
+    '_fetchMap' in value &&
     'sdkPaths' in value
   );
 }

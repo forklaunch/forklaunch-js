@@ -93,7 +93,7 @@ export class ForklaunchExpressLikeRouter<
   routers: ForklaunchRouter<SV>[] = [];
   routes: ForklaunchRoute<SV>[] = [];
 
-  fetchMap: FetchMap = {} as FetchMap;
+  _fetchMap: FetchMap = {} as FetchMap;
   sdk: Sdk = {} as Sdk;
 
   sdkPaths: Record<string, string> = {};
@@ -543,21 +543,21 @@ export class ForklaunchExpressLikeRouter<
   /**
    * Fetches a route from the route map and executes it with the given parameters.
    *
-   * @template Path - The path type that extends keyof fetchMap and string.
+   * @template Path - The path type that extends keyof _fetchMap and string.
    * @param {Path} path - The route path
-   * @param {Parameters<fetchMap[Path]>[1]} [requestInit] - Optional request initialization parameters.
-   * @returns {Promise<ReturnType<fetchMap[Path]>>} - The result of executing the route handler.
+   * @param {Parameters<_fetchMap[Path]>[1]} [requestInit] - Optional request initialization parameters.
+   * @returns {Promise<ReturnType<_fetchMap[Path]>>} - The result of executing the route handler.
    */
-  fetch: FetchFunction<this['fetchMap']> = async <
-    Path extends keyof this['fetchMap'],
-    Method extends keyof this['fetchMap'][Path],
-    Version extends keyof this['fetchMap'][Path][Method]
+  fetch: FetchFunction<this['_fetchMap']> = async <
+    Path extends keyof this['_fetchMap'],
+    Method extends keyof this['_fetchMap'][Path],
+    Version extends keyof this['_fetchMap'][Path][Method]
   >(
     path: Path,
-    ...reqInit: this['fetchMap'][Path][Method] extends TypeSafeFunction
-      ? 'GET' extends keyof this['fetchMap'][Path]
-        ? this['fetchMap'][Path]['GET'] extends TypeSafeFunction
-          ? Parameters<this['fetchMap'][Path]['GET']>[1] extends
+    ...reqInit: this['_fetchMap'][Path][Method] extends TypeSafeFunction
+      ? 'GET' extends keyof this['_fetchMap'][Path]
+        ? this['_fetchMap'][Path]['GET'] extends TypeSafeFunction
+          ? Parameters<this['_fetchMap'][Path]['GET']>[1] extends
               | {
                   body: unknown;
                 }
@@ -567,7 +567,7 @@ export class ForklaunchExpressLikeRouter<
               | { version: unknown }
             ? [
                 reqInit: Omit<
-                  Parameters<this['fetchMap'][Path][Method]>[1],
+                  Parameters<this['_fetchMap'][Path][Method]>[1],
                   'method'
                 > & {
                   method: Method;
@@ -575,7 +575,7 @@ export class ForklaunchExpressLikeRouter<
               ]
             : [
                 reqInit?: Omit<
-                  Parameters<this['fetchMap'][Path][Method]>[1],
+                  Parameters<this['_fetchMap'][Path][Method]>[1],
                   'method'
                 > & {
                   method: Method;
@@ -583,7 +583,7 @@ export class ForklaunchExpressLikeRouter<
               ]
           : [
               reqInit: Omit<
-                Parameters<this['fetchMap'][Path][Method]>[1],
+                Parameters<this['_fetchMap'][Path][Method]>[1],
                 'method'
               > & {
                 method: Method;
@@ -591,16 +591,16 @@ export class ForklaunchExpressLikeRouter<
             ]
         : [
             reqInit: Omit<
-              Parameters<this['fetchMap'][Path][Method]>[1],
+              Parameters<this['_fetchMap'][Path][Method]>[1],
               'method'
             > & {
               method: Method;
             }
           ]
-      : this['fetchMap'][Path][Method] extends Record<string, TypeSafeFunction>
+      : this['_fetchMap'][Path][Method] extends Record<string, TypeSafeFunction>
         ? [
             reqInit: Omit<
-              Parameters<this['fetchMap'][Path][Method][Version]>[0],
+              Parameters<this['_fetchMap'][Path][Method][Version]>[0],
               'method' | 'version'
             > & {
               method: Method;
@@ -609,16 +609,27 @@ export class ForklaunchExpressLikeRouter<
           ]
         : [{ method: Method }]
   ) => {
+    const method = reqInit[0]?.method;
+    const version =
+      reqInit[0] != null && 'version' in reqInit[0]
+        ? reqInit[0].version
+        : undefined;
+
     return (
-      this.fetchMap[path] as (route: string, request?: unknown) => unknown
+      (version
+        ? this._fetchMap[path][method ?? ('GET' as Method)][version]
+        : this._fetchMap[path][method ?? ('GET' as Method)]) as (
+        route: string,
+        request?: unknown
+      ) => unknown
     )(
       path as string,
       reqInit[0]
       // reqInit
-    ) as this['fetchMap'][Path][Method] extends TypeSafeFunction
-      ? Awaited<ReturnType<this['fetchMap'][Path][Method]>>
-      : this['fetchMap'][Path][Method] extends Record<string, TypeSafeFunction>
-        ? Awaited<ReturnType<this['fetchMap'][Path][Method][Version]>>
+    ) as this['_fetchMap'][Path][Method] extends TypeSafeFunction
+      ? Awaited<ReturnType<this['_fetchMap'][Path][Method]>>
+      : this['_fetchMap'][Path][Method] extends Record<string, TypeSafeFunction>
+        ? Awaited<ReturnType<this['_fetchMap'][Path][Method][Version]>>
         : never;
   };
 
@@ -631,7 +642,8 @@ export class ForklaunchExpressLikeRouter<
    */
   #localParamRequest<Middleware, Route extends string>(
     handlers: Middleware[],
-    controllerHandler: Middleware
+    controllerHandler: Middleware,
+    version?: string
   ) {
     return async (
       route: SanitizePathSlashes<Route>,
@@ -652,7 +664,8 @@ export class ForklaunchExpressLikeRouter<
         headers: request?.headers ?? {},
         body:
           discriminateBody(this.schemaValidator, request?.body)?.schema ?? {},
-        path: route
+        path: route,
+        version
       };
 
       const res = {
@@ -676,7 +689,8 @@ export class ForklaunchExpressLikeRouter<
           generator: () => AsyncGenerator<Record<string, unknown>>
         ) => {
           responseMessage = generator();
-        }
+        },
+        version
       };
 
       let cursor = handlers.shift() as unknown as (
@@ -787,7 +801,7 @@ export class ForklaunchExpressLikeRouter<
       Auth
     >[]
   ): this & {
-    fetchMap: Prettify<
+    _fetchMap: Prettify<
       FetchMap extends Record<
         SanitizePathSlashes<`${BasePath}${Path}`>,
         unknown
@@ -1044,6 +1058,23 @@ export class ForklaunchExpressLikeRouter<
           );
         }
 
+        if (contractDetails.versions) {
+          const parserTypes = Object.values(contractDetails.versions).map(
+            (version) =>
+              discriminateBody(this.schemaValidator, version.body)?.parserType
+          );
+
+          const allParserTypesSame =
+            parserTypes.length === 0 ||
+            parserTypes.every((pt) => pt === parserTypes[0]);
+
+          if (!allParserTypesSame) {
+            throw new Error(
+              'All versioned contractDetails must have the same parsing type for body.'
+            );
+          }
+        }
+
         this.routes.push({
           basePath: this.basePath,
           path,
@@ -1090,21 +1121,51 @@ export class ForklaunchExpressLikeRouter<
           this.#parseAndRunControllerHandler(controllerHandler) as RouterHandler
         );
 
-        const localParamRequest = this.#localParamRequest(
-          handlers,
-          controllerHandler
-        );
-
-        toRecord(this.fetchMap)[
+        toRecord(this._fetchMap)[
           sanitizePathSlashes(`${this.basePath}${path}`)
-        ] = localParamRequest;
+        ] = {
+          ...(this._fetchMap[sanitizePathSlashes(`${this.basePath}${path}`)] ??
+            {}),
+          [method.toUpperCase()]: contractDetails.versions
+            ? Object.fromEntries(
+                Object.keys(contractDetails.versions).map((version) => [
+                  version,
+                  this.#localParamRequest(handlers, controllerHandler, version)
+                ])
+              )
+            : this.#localParamRequest(handlers, controllerHandler)
+        };
 
-        toRecord(this.sdk)[
-          toPrettyCamelCase(contractDetails.name ?? this.basePath)
-        ] = (req: Parameters<typeof localParamRequest>[1]) =>
-          localParamRequest(`${this.basePath}${path}`, req);
+        toRecord(this.sdk)[toPrettyCamelCase(contractDetails.name)] =
+          contractDetails.versions
+            ? Object.fromEntries(
+                Object.keys(contractDetails.versions).map((version) => [
+                  version,
+                  (req: {
+                    params?: Record<string, unknown>;
+                    query?: Record<string, unknown>;
+                    headers?: Record<string, unknown>;
+                    body?: Record<string, unknown>;
+                  }) =>
+                    this.#localParamRequest(
+                      handlers,
+                      controllerHandler,
+                      version
+                    )(`${this.basePath}${path}`, req)
+                ])
+              )
+            : (req: {
+                params?: Record<string, unknown>;
+                query?: Record<string, unknown>;
+                headers?: Record<string, unknown>;
+                body?: Record<string, unknown>;
+              }) =>
+                this.#localParamRequest(handlers, controllerHandler)(
+                  `${this.basePath}${path}`,
+                  req
+                );
         return this as this & {
-          fetchMap: FetchMap extends Record<
+          _fetchMap: FetchMap extends Record<
             SanitizePathSlashes<`${BasePath}${Path}`>,
             unknown
           >
@@ -1910,9 +1971,9 @@ export class ForklaunchExpressLikeRouter<
   private addRouterToSdk(
     router: ConstrainedForklaunchRouter<SV, RouterHandler>
   ) {
-    Object.entries(router.fetchMap).map(
+    Object.entries(router._fetchMap).map(
       ([key, value]) =>
-        (toRecord(this.fetchMap)[
+        (toRecord(this._fetchMap)[
           sanitizePathSlashes(`${this.basePath}${key}`)
         ] = value)
     );
@@ -2253,10 +2314,10 @@ export class ForklaunchExpressLikeRouter<
       contractDetailsOrMiddlewareOrTypedHandler,
       ...middlewareOrMiddlewareWithTypedHandler
     ) as this & {
-      fetchMap: FetchMap & {
-        [Key in keyof Router['fetchMap'] as Key extends string
+      _fetchMap: FetchMap & {
+        [Key in keyof Router['_fetchMap'] as Key extends string
           ? SanitizePathSlashes<`${BasePath}${Key}`>
-          : never]: Router['fetchMap'][Key];
+          : never]: Router['_fetchMap'][Key];
       };
       sdk: Sdk & {
         [Key in PrettyCamelCase<
@@ -3327,7 +3388,7 @@ export class ForklaunchExpressLikeRouter<
   protected cloneInternals(clone: this): void {
     clone.routers = [...this.routers];
     clone.routes = [...this.routes];
-    clone.fetchMap = { ...this.fetchMap };
+    clone._fetchMap = { ...this._fetchMap };
     clone.sdk = { ...this.sdk };
     clone.sdkPaths = { ...this.sdkPaths };
   }

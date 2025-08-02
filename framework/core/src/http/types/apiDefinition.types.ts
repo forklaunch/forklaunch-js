@@ -1127,12 +1127,12 @@ export type LiveSdkFunction<
         Prettify<
           SdkResponse<
             SV,
-            ResponsesObject<SV> extends VersionedApi['responses']
+            ResponsesObject<SV> extends VersionedApi[K]['responses']
               ? Record<number, unknown>
-              : VersionedApi['responses'],
-            ForklaunchResHeaders extends VersionedApi['responseHeaders']
+              : VersionedApi[K]['responses'],
+            ForklaunchResHeaders extends VersionedApi[K]['responseHeaders']
               ? unknown
-              : MapSchema<SV, VersionedApi['responseHeaders']>
+              : MapSchema<SV, VersionedApi[K]['responseHeaders']>
           >
         >
       >;

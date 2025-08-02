@@ -118,17 +118,38 @@ const postHandler = handlers.post(
   {
     name: 'Test SSE',
     summary: 'Sends a stream of events',
-    body: {
-      f: string,
-      m: union([array(number), string])
-    },
-    responses: {
-      200: {
-        contentType: 'text/event-stream',
-        event: {
-          id: string,
-          data: {
-            message: string
+    versions: {
+      '1.0.0': {
+        body: {
+          f: string,
+          m: union([array(number), string])
+        },
+        responses: {
+          200: {
+            contentType: 'text/event-stream',
+            event: {
+              id: string,
+              data: {
+                message: string
+              }
+            }
+          }
+        }
+      },
+      '2.0.0': {
+        body: {
+          f: string,
+          m: union([array(number), string])
+        },
+        responses: {
+          200: {
+            contentType: 'text/event-stream',
+            event: {
+              id: string,
+              data: {
+                message: string
+              }
+            }
           }
         }
       }
@@ -303,15 +324,15 @@ const flNestedRouter = forklaunchRouter(
   .get('/test', getHandler)
   .post('/test', postHandler);
 
-export const sdkRoutes = flRouter.use(flNestedRouter);
+const sdkRoutes = flRouter.use(flNestedRouter);
 forklaunchApplication.use(sdkRoutes);
 
-const mjj = await sdkRoutes.fetch('/testpath/test/file', {
+sdkRoutes.fetch('/testpath/test/file', {
   method: 'POST',
   body: new File([], 'test.txt'),
   credentials: 'include'
 });
-const yyy = await sdkRoutes.fetch('/testpath/test', {
+sdkRoutes.fetch('/testpath/test', {
   method: 'GET',
   version: '2.0.0',
   headers: {
@@ -319,7 +340,6 @@ const yyy = await sdkRoutes.fetch('/testpath/test', {
   }
 });
 
-console.log(sdkRoutes.sdk);
 sdkRoutes.sdk.testFile['1.0.0']({
   headers: {
     'x-test': 'test',
@@ -331,7 +351,9 @@ const sampleController = {
   get: getHandler,
   post: postHandler,
   patch: jsonPatchHandler,
-  multipart: multipartHandler,
+  multipart: multipartHandler
+};
+export const sampleController2 = {
   urlEncodedForm: urlEncodedFormHandler,
   file: filePostHandler
 };
@@ -341,19 +363,26 @@ const sampleSdkRouter = sdkRouter(
   sampleController,
   sdkRoutes
 );
+
+const sampleSdkRouter2 = sdkRouter(
+  zodSchemaValidator,
+  sampleController2,
+  sdkRoutes
+);
+
 sampleSdkRouter.sdk.get['1.0.0']({
   headers: {
     'x-test': 'test',
     authorization: 'bb dGVzdDp0ZXN0'
   }
 });
-sampleSdkRouter.fetch('/testpath/test/file', {
+sampleSdkRouter2.fetch('/testpath/test/file', {
   method: 'POST',
   body: new File([], 'test.txt'),
   credentials: 'include'
 });
 
-const r = await sampleSdkRouter.fetch('/testpath/test', {
+sampleSdkRouter.fetch('/testpath/test', {
   method: 'GET',
   headers: {
     authorization: 'bb dGVzdDp0ZXN0'
@@ -361,7 +390,7 @@ const r = await sampleSdkRouter.fetch('/testpath/test', {
   version: '2.0.0'
 });
 
-const s = await sampleSdkRouter.fetch('/testpath/test/file', {
+sampleSdkRouter2.fetch('/testpath/test/file', {
   method: 'POST',
   body: new File([], 'test.txt'),
   credentials: 'include'
@@ -369,8 +398,40 @@ const s = await sampleSdkRouter.fetch('/testpath/test/file', {
 
 export const sampleSdkClient = sdkClient(zodSchemaValidator, {
   sample: {
-    path: sampleSdkRouter
+    path: {
+      a: {
+        b: sampleSdkRouter
+      }
+    },
+    c: {
+      d: sampleSdkRouter2
+    }
   }
+});
+
+const sampleSdkClient2 = sdkClient(zodSchemaValidator, {
+  sample: {
+    path: {
+      a: {
+        b: sdkRoutes
+      }
+    }
+  }
+});
+
+sampleSdkClient2.sdk.sample.path.a.b.testpathNested.testFile['1.0.0']({
+  headers: {
+    'x-test': 'test',
+    authorization: 'bb dGVzdDp0ZXN0'
+  }
+});
+
+sampleSdkClient.fetch('/testpath/test', {
+  method: 'GET',
+  headers: {
+    authorization: 'bb dGVzdDp0ZXN0'
+  },
+  version: '2.0.0'
 });
 
 export function start() {

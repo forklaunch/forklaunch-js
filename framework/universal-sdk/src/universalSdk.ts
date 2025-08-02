@@ -109,7 +109,7 @@ export class UniversalSdk {
     return this.execute(
       path,
       request?.method ?? 'get',
-      request?.version ?? 'latest',
+      request?.version ? `v${request.version}` : 'latest',
       request
     );
   }
@@ -175,7 +175,7 @@ export class UniversalSdk {
       | 'options'
       | 'head'
       | 'trace',
-    version?: string,
+    version: string,
     request?: RequestType
   ): Promise<ResponseType> {
     const { params, body, query, headers } = request || {};
@@ -261,11 +261,11 @@ export class UniversalSdk {
 
     const responseOpenApi =
       path != null && method != null
-        ? this.registryOpenApiJson?.[
-            version === 'latest' ? 'latest' : `v${version}`
-          ]?.paths?.[openApiCompliantPath(path)]?.[
-            method?.toLowerCase() as typeof method
-          ]?.responses?.[response.status]
+        ? this.registryOpenApiJson?.[version]?.paths?.[
+            openApiCompliantPath(path)
+          ]?.[method?.toLowerCase() as typeof method]?.responses?.[
+            response.status
+          ]
         : null;
 
     if (responseOpenApi == null) {

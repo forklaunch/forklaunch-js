@@ -1,11 +1,7 @@
 import { universalSdk } from '@forklaunch/universal-sdk';
 import { Server } from 'http';
 import { setTimeout } from 'timers/promises';
-import { sampleSdkClient, sdkRoutes, start } from '../servers/express-zod';
-
-export type SdkClientInput = {
-  testpath: typeof sdkRoutes;
-};
+import { sampleSdkClient, start } from '../servers/express-zod';
 
 async function instantiateSdk() {
   return await universalSdk<typeof sampleSdkClient>({
@@ -43,7 +39,7 @@ describe('universalSdkBasic', async () => {
     if (!client) {
       client = await instantiateSdk();
     }
-    const getTest = await client.sdk.sample.path.get['2.0.0']({
+    const getTest = await client.sdk.sample.path.a.b.get['2.0.0']({
       headers: {
         authorization: 'bb YmFzaWN1c2VyOnBhc3N3b3Jk'
       }
@@ -70,7 +66,7 @@ describe('universalSdkBasic', async () => {
     if (!client) {
       client = await instantiateSdk();
     }
-    const postTest = await client.sdk.sample.path.post({
+    const postTest = await client.sdk.sample.path.a.b.post['2.0.0']({
       headers: {
         xyz: 'Basic YmFzaWN1c2VyOnBhc3N3b3Jk'
       },
@@ -94,7 +90,8 @@ describe('universalSdkBasic', async () => {
       body: {
         f: '!',
         m: [1, 2, 3]
-      }
+      },
+      version: '1.0.0'
     });
     expect(postTest.code).toBe(200);
   });
@@ -103,7 +100,7 @@ describe('universalSdkBasic', async () => {
     if (!client) {
       client = await instantiateSdk();
     }
-    const jsonPatchTest = await client.sdk.sample.path.patch({
+    const jsonPatchTest = await client.sdk.sample.path.a.b.patch({
       headers: {
         authorization:
           'bb eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0dXNlciIsImlhdCI6MTUxNjIzOTAyMn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c' // random valid jwt token
@@ -143,7 +140,7 @@ describe('universalSdkBasic', async () => {
     if (!client) {
       client = await instantiateSdk();
     }
-    const multipartTest = await client.sdk.sample.path.multipart({
+    const multipartTest = await client.sdk.sample.path.a.b.multipart({
       headers: {
         'x-test': 'test'
       },
@@ -154,7 +151,6 @@ describe('universalSdkBasic', async () => {
         }
       }
     });
-    console.log(multipartTest);
     expect(multipartTest.code).toBe(200);
   });
 
@@ -181,7 +177,7 @@ describe('universalSdkBasic', async () => {
     if (!client) {
       client = await instantiateSdk();
     }
-    const urlEncodedFormTest = await client.sdk.sample.path.urlEncodedForm({
+    const urlEncodedFormTest = await client.sdk.sample.c.d.urlEncodedForm({
       params: {
         id: '123'
       },
@@ -221,7 +217,7 @@ describe('universalSdkBasic', async () => {
     if (!client) {
       client = await instantiateSdk();
     }
-    const filePostTest = await client.sdk.sample.path.file({
+    const filePostTest = await client.sdk.sample.c.d.file({
       body: new File(['Hello World'], 'test2.txt', { type: 'text/plain' })
     });
     expect(filePostTest.code).toBe(200);

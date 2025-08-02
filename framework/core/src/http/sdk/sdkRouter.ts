@@ -16,19 +16,19 @@ import {
  *
  * @template SV - The schema validator type that constrains the router and controller structure
  * @template T - The controller type containing contract details for each endpoint (const parameter)
- * @template Router - The router type that provides SDK functions, fetch, and fetchMap capabilities (const parameter)
+ * @template Router - The router type that provides SDK functions, fetch, and _fetchMap capabilities (const parameter)
  * @param SV - Must extend AnySchemaValidator to ensure type safety
  * @param T - Must be a const record where each key maps to a controller method with contract details
- * @param Router - Must be a const object with optional sdk, fetch, and fetchMap properties
+ * @param Router - Must be a const object with optional sdk, fetch, and _fetchMap properties
  *
  * @param schemaValidator - The schema validator instance used for validation and type constraints
  * @param controller - The controller object containing contract details for each endpoint
- * @param router - The router instance that provides SDK functions, fetch, and fetchMap capabilities
+ * @param router - The router instance that provides SDK functions, fetch, and _fetchMap capabilities
  *
  * @returns An object containing:
  *          - `sdk`: Type-safe SDK functions mapped from controller methods using LiveSdkFunction
  *          - `fetch`: The router's fetch function cast to FetchFunction with proper typing
- *          - `fetchMap`: A comprehensive fetch map with LiveTypeFunction for each endpoint and method
+ *          - `_fetchMap`: A comprehensive fetch map with LiveTypeFunction for each endpoint and method
  *
  * @example
  * ```typescript
@@ -56,7 +56,7 @@ import {
  * const router = {
  *   sdk: { createAgent: () => Promise.resolve({}), getAgent: () => Promise.resolve({}) },
  *   fetch: (path: string, options: any) => fetch(path, options),
- *   fetchMap: { '/agents': { POST: () => fetch('/agents', { method: 'POST' }) } }
+ *   _fetchMap: { '/agents': { POST: () => fetch('/agents', { method: 'POST' }) } }
  * } as const;
  *
  * const sdkRouter = sdkRouter(zodValidator, controller, router);
@@ -77,7 +77,7 @@ import {
  * });
  *
  * // Access the fetch map for advanced usage
- * const fetchMap = sdkRouter.fetchMap;
+ * const _fetchMap = sdkRouter._fetchMap;
  * ```
  */
 export function sdkRouter<
@@ -86,14 +86,17 @@ export function sdkRouter<
   const Router extends {
     sdk?: unknown;
     fetch?: unknown;
-    fetchMap?: unknown;
+    _fetchMap?: unknown;
     basePath?: string;
     sdkPaths: Record<string, string>;
   }
 >(schemaValidator: SV, controller: T, router: Router) {
+  const controllerSdkPaths: string[] = [];
   const mappedSdk = Object.fromEntries(
     Object.entries(controller).map(([key, value]) => {
-      router.sdkPaths[[value._method, value._path].join('.')] = key;
+      const sdkPath = [value._method, value._path].join('.');
+      controllerSdkPaths.push(sdkPath);
+      router.sdkPaths[sdkPath] = key;
       return [
         key,
         (router.sdk as Record<string, unknown>)[
@@ -103,7 +106,7 @@ export function sdkRouter<
     })
   );
 
-  const fetchMap = router.fetchMap as ToFetchMap<
+  const _fetchMap = router._fetchMap as ToFetchMap<
     T,
     SV,
     Router['basePath'] extends `/${string}` ? Router['basePath'] : '/'
@@ -111,8 +114,14 @@ export function sdkRouter<
 
   return {
     sdk: mappedSdk as MapControllerToSdk<SV, T>,
-    fetch: router.fetch as FetchFunction<typeof fetchMap>,
-    fetchMap,
-    sdkPaths: router.sdkPaths
+    fetch: router.fetch as FetchFunction<typeof _fetchMap>,
+    _fetchMap,
+    sdkPaths: router.sdkPaths,
+    controllerSdkPaths
+  } as {
+    sdk: MapControllerToSdk<SV, T>;
+    fetch: FetchFunction<typeof _fetchMap>;
+    _fetchMap: typeof _fetchMap;
+    sdkPaths: Router['sdkPaths'];
   };
 }

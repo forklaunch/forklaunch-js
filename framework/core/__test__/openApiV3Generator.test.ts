@@ -39,7 +39,7 @@ describe('openApiV3Generator tests', () => {
             }
           ],
           routers: [],
-          fetchMap: {},
+          _fetchMap: {},
           sdk: {},
           sdkPaths: {}
         }
@@ -122,12 +122,12 @@ describe('openApiV3Generator tests', () => {
                 }
               ],
               routers: [],
-              fetchMap: {},
+              _fetchMap: {},
               sdk: {},
               sdkPaths: {}
             }
           ],
-          fetchMap: {},
+          _fetchMap: {},
           sdk: {},
           sdkPaths: {}
         }

@@ -104,13 +104,26 @@ export function enrichExpressLikeSend<
     errorSent = true;
   }
 
-  if (req.contractDetails.responses == null) {
+  let responses;
+  if (
+    req.contractDetails.responses == null &&
+    (req.contractDetails.versions == null ||
+      Object.values(req.contractDetails.versions).some(
+        (version) => version?.responses == null
+      ))
+  ) {
     throw new Error('Responses schema definitions are required');
+  } else {
+    if (req.contractDetails.responses != null) {
+      responses = req.contractDetails.responses;
+    } else {
+      responses = req.contractDetails.versions[req.version].responses;
+    }
   }
 
   const responseBodies = discriminateResponseBodies(
     req.schemaValidator,
-    req.contractDetails.responses
+    responses
   );
 
   if (

@@ -1,3 +1,4 @@
+import { hashString, safeStringify, toRecord } from '@forklaunch/common';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { isSdkRouter } from '../guards/isSdkRouter';
 import {
@@ -26,11 +27,11 @@ import {
  *   api: {
  *     users: {
  *       sdk: { getUser: () => Promise.resolve({ id: 1, name: 'John' }) },
- *       fetchMap: { getUser: { get: () => fetch('/api/users') } }
+ *       _fetchMap: { getUser: { get: () => fetch('/api/users') } }
  *     },
  *     posts: {
  *       sdk: { getPosts: () => Promise.resolve([]) },
- *       fetchMap: { getPosts: { get: () => fetch('/api/posts') } }
+ *       _fetchMap: { getPosts: { get: () => fetch('/api/posts') } }
  *     }
  *   }
  * };
@@ -42,19 +43,37 @@ import {
 function mapToSdk<SV extends AnySchemaValidator, T extends RouterMap<SV>>(
   schemaValidator: SV,
   routerMap: T,
-  runningPath: string = ''
+  runningPath: string | undefined = undefined
 ): MapToSdk<SV, T> {
+  const routerUniquenessCache = new Set<number>();
   return Object.fromEntries(
     Object.entries(routerMap).map(([key, value]) => {
+      if (routerUniquenessCache.has(hashString(safeStringify(value)))) {
+        throw new Error(
+          `SdkClient: Cannot use the same router pointer twice. Please clone the duplicate router with .clone() or only use the router once.`
+        );
+      }
+      routerUniquenessCache.add(hashString(safeStringify(value)));
+      const currentPath = runningPath ? [runningPath, key].join('.') : key;
       if (isSdkRouter(value)) {
-        Object.entries(value.sdkPaths).forEach(([path, key]) => {
-          value.sdkPaths[path] = [runningPath, key].join('.');
+        Object.entries(value.sdkPaths).forEach(([routePath, sdkKey]) => {
+          if (
+            'controllerSdkPaths' in value &&
+            Array.isArray(value.controllerSdkPaths) &&
+            value.controllerSdkPaths.includes(routePath)
+          ) {
+            value.sdkPaths[routePath] = [currentPath, sdkKey].join('.');
+          }
         });
         return [key, value.sdk];
       } else {
         return [
           key,
-          mapToSdk(schemaValidator, value, [runningPath, key].join('.'))
+          mapToSdk(
+            schemaValidator,
+            value,
+            runningPath ? [runningPath, key].join('.') : key
+          )
         ];
       }
     })
@@ -80,16 +99,16 @@ function mapToSdk<SV extends AnySchemaValidator, T extends RouterMap<SV>>(
  *   api: {
  *     users: {
  *       sdk: { getUser: () => Promise.resolve({}) },
- *       fetchMap: { getUser: { get: () => fetch('/api/users') } }
+ *       _fetchMap: { getUser: { get: () => fetch('/api/users') } }
  *     },
  *     posts: {
  *       sdk: { getPosts: () => Promise.resolve([]) },
- *       fetchMap: { getPosts: { get: () => fetch('/api/posts') } }
+ *       _fetchMap: { getPosts: { get: () => fetch('/api/posts') } }
  *     }
  *   }
  * };
  *
- * const fetchMap = flattenFetchMap(zodValidator, routerMap);
+ * const _fetchMap = flattenFetchMap(zodValidator, routerMap);
  * // Results in: { getUser: { get: () => fetch('/api/users') }, getPosts: { get: () => fetch('/api/posts') } }
  * ```
  */
@@ -97,17 +116,13 @@ function flattenFetchMap<
   SV extends AnySchemaValidator,
   T extends RouterMap<SV>
 >(schemaValidator: SV, routerMap: T): MapToFetch<SV, T> {
-  const fetchMap = Object.entries(routerMap).reduce<Record<string, unknown>>(
-    (acc, [key, value]) => {
-      if ('fetchMap' in value) {
-        if (acc[key]) {
-          return {
-            ...acc,
-            [key]: { ...acc[key], ...value.fetchMap }
-          };
-        } else {
-          return { ...acc, [key]: value.fetchMap };
-        }
+  const _fetchMap = Object.entries(routerMap).reduce<Record<string, unknown>>(
+    (acc, [, value]) => {
+      if ('_fetchMap' in value) {
+        return {
+          ...acc,
+          ...value._fetchMap
+        };
       } else {
         return {
           ...acc,
@@ -120,7 +135,7 @@ function flattenFetchMap<
     },
     {}
   );
-  return fetchMap as MapToFetch<SV, T>;
+  return _fetchMap as MapToFetch<SV, T>;
 }
 
 /**
@@ -141,7 +156,7 @@ function flattenFetchMap<
  * const routerMap = {
  *   users: {
  *     sdk: { getUser: () => Promise.resolve({}) },
- *     fetchMap: { getUser: { get: (id: string) => fetch(`/api/users/${id}`) } }
+ *     _fetchMap: { getUser: { get: (id: string) => fetch(`/api/users/${id}`) } }
  *   }
  * };
  *
@@ -157,9 +172,17 @@ function mapToFetch<SV extends AnySchemaValidator, T extends RouterMap<SV>>(
     schemaValidator,
     routerMap
   ) as Record<string, unknown>;
-  return ((path: string, ...reqInit: unknown[]) => {
+  return ((path: string, ...reqInit: { method: string; version: string }[]) => {
+    const method = reqInit[0]?.method;
+    const version =
+      reqInit[0] != null && 'version' in reqInit[0]
+        ? reqInit[0].version
+        : undefined;
+
     return (
-      flattenedFetchMap[path] as (
+      (version
+        ? toRecord(toRecord(flattenedFetchMap[path])[method ?? 'GET'])[version]
+        : toRecord(flattenedFetchMap[path])[method ?? 'GET']) as (
         route: string,
         request?: unknown
       ) => Promise<unknown>
@@ -187,11 +210,11 @@ function mapToFetch<SV extends AnySchemaValidator, T extends RouterMap<SV>>(
  *   api: {
  *     users: {
  *       sdk: { getUser: (id: string) => Promise.resolve({ id, name: 'John' }) },
- *       fetchMap: { getUser: { get: (id: string) => fetch(`/api/users/${id}`) } }
+ *       _fetchMap: { getUser: { get: (id: string) => fetch(`/api/users/${id}`) } }
  *     },
  *     posts: {
  *       sdk: { getPosts: () => Promise.resolve([]) },
- *       fetchMap: { getPosts: { get: () => fetch('/api/posts') } }
+ *       _fetchMap: { getPosts: { get: () => fetch('/api/posts') } }
  *     }
  *   }
  * };
