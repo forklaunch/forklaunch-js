@@ -168,4 +168,16 @@ describe('nestedPaths', () => {
       });
     expect(filePostTest.code).toBe(200);
   });
+
+  it('should fetch nested filePostTest', async () => {
+    const filePostTest = await sampleSdkClient2.fetch('/testpath/nested/test', {
+      method: 'GET',
+      headers: {
+        'x-test': 'test',
+        authorization: 'bb string'
+      },
+      version: '1.0.0'
+    });
+    expect(filePostTest.code).toBe(200);
+  });
 });
