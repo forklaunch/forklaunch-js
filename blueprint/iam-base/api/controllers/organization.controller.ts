@@ -7,7 +7,6 @@ import {
 import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { OrganizationService } from '@forklaunch/interfaces-iam/interfaces';
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { OrganizationStatus } from '../../domain/enum/organizationStatus.enum';
@@ -16,14 +15,10 @@ import {
   OrganizationMapper,
   UpdateOrganizationMapper
 } from '../../domain/mappers/organization.mappers';
-import { SchemaDependencies } from '../../registrations';
+import { OrganizationServiceFactory } from '../routes/organization.routes';
 
 export const OrganizationController = (
-  serviceFactory: ScopedDependencyFactory<
-    SchemaValidator,
-    SchemaDependencies,
-    'OrganizationService'
-  >,
+  serviceFactory: OrganizationServiceFactory,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) =>
   ({

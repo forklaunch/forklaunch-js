@@ -1,33 +1,29 @@
 import { forklaunchRouter, SchemaValidator } from '@forklaunch/blueprint-core';
-import { Metrics } from '@forklaunch/blueprint-monitoring';
-import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { ScopedDependencyFactory } from '@forklaunch/core/services';
-import { SchemaDependencies } from '../../registrations';
+import { sdkRouter } from '@forklaunch/core/http';
+import { ci, tokens } from '../../server';
 import { RoleController } from '../controllers/role.controller';
 
-export const RoleRoutes = (
-  serviceFactory: ScopedDependencyFactory<
-    SchemaValidator,
-    SchemaDependencies,
-    'RoleService'
-  >,
-  openTelemetryCollector: OpenTelemetryCollector<Metrics>
-) => {
-  const router = forklaunchRouter(
-    '/role',
-    SchemaValidator(),
-    openTelemetryCollector
-  );
+const schemaValidator = SchemaValidator();
+const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
+const roleServiceFactory = ci.scopedResolver(tokens.RoleService);
 
-  const controller = RoleController(serviceFactory, openTelemetryCollector);
+export type RoleServiceFactory = typeof roleServiceFactory;
 
-  return router
-    .post('/', controller.createRole)
-    .post('/batch', controller.createBatchRoles)
-    .get('/:id', controller.getRole)
-    .get('/batch', controller.getBatchRoles)
-    .put('/', controller.updateRole)
-    .put('/batch', controller.updateBatchRoles)
-    .delete('/:id', controller.deleteRole)
-    .delete('/batch', controller.deleteBatchRoles);
-};
+export const roleRouter = forklaunchRouter(
+  '/role',
+  schemaValidator,
+  openTelemetryCollector
+);
+
+const controller = RoleController(roleServiceFactory, openTelemetryCollector);
+
+roleRouter.post('/', controller.createRole);
+roleRouter.post('/batch', controller.createBatchRoles);
+roleRouter.get('/:id', controller.getRole);
+roleRouter.get('/batch', controller.getBatchRoles);
+roleRouter.put('/', controller.updateRole);
+roleRouter.put('/batch', controller.updateBatchRoles);
+roleRouter.delete('/:id', controller.deleteRole);
+roleRouter.delete('/batch', controller.deleteBatchRoles);
+
+export const roleSdkRouter = sdkRouter(schemaValidator, controller, roleRouter);

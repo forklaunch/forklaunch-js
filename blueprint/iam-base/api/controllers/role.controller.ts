@@ -9,21 +9,16 @@ import {
 import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { RoleService } from '@forklaunch/interfaces-iam/interfaces';
 import {
   CreateRoleMapper,
   RoleMapper,
   UpdateRoleMapper
 } from '../../domain/mappers/role.mappers';
-import { SchemaDependencies } from '../../registrations';
+import { RoleServiceFactory } from '../routes/role.routes';
 
 export const RoleController = (
-  serviceFactory: ScopedDependencyFactory<
-    SchemaValidator,
-    SchemaDependencies,
-    'RoleService'
-  >,
+  serviceFactory: RoleServiceFactory,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) =>
   ({

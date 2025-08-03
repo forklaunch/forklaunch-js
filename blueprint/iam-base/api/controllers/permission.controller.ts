@@ -9,21 +9,16 @@ import {
 import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { PermissionService } from '@forklaunch/interfaces-iam/interfaces';
 import {
   CreatePermissionMapper,
   PermissionMapper,
   UpdatePermissionMapper
 } from '../../domain/mappers/permission.mappers';
-import { SchemaDependencies } from '../../registrations';
+import { PermissionServiceFactory } from '../routes/permission.routes';
 
 export const PermissionController = (
-  serviceFactory: ScopedDependencyFactory<
-    SchemaValidator,
-    SchemaDependencies,
-    'PermissionService'
-  >,
+  serviceFactory: PermissionServiceFactory,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) =>
   ({

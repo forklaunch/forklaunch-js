@@ -1,32 +1,34 @@
 import { forklaunchRouter, SchemaValidator } from '@forklaunch/blueprint-core';
-import { Metrics } from '@forklaunch/blueprint-monitoring';
-import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { ScopedDependencyFactory } from '@forklaunch/core/services';
-import { SchemaDependencies } from '../../registrations';
+import { sdkRouter } from '@forklaunch/core/http';
+import { ci, tokens } from '../../server';
 import { OrganizationController } from '../controllers/organization.controller';
 
-export const OrganizationRoutes = (
-  serviceFactory: ScopedDependencyFactory<
-    SchemaValidator,
-    SchemaDependencies,
-    'OrganizationService'
-  >,
-  openTelemetryCollector: OpenTelemetryCollector<Metrics>
-) => {
-  const router = forklaunchRouter(
-    '/organization',
-    SchemaValidator(),
-    openTelemetryCollector
-  );
+const schemaValidator = SchemaValidator();
+const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
+const organizationServiceFactory = ci.scopedResolver(
+  tokens.OrganizationService
+);
 
-  const controller = OrganizationController(
-    serviceFactory,
-    openTelemetryCollector
-  );
+export type OrganizationServiceFactory = typeof organizationServiceFactory;
 
-  return router
-    .post('/', controller.createOrganization)
-    .get('/:id', controller.getOrganization)
-    .put('/', controller.updateOrganization)
-    .delete('/:id', controller.deleteOrganization);
-};
+export const organiztionRouter = forklaunchRouter(
+  '/organization',
+  schemaValidator,
+  openTelemetryCollector
+);
+
+const controller = OrganizationController(
+  organizationServiceFactory,
+  openTelemetryCollector
+);
+
+organiztionRouter.post('/', controller.createOrganization);
+organiztionRouter.get('/:id', controller.getOrganization);
+organiztionRouter.put('/', controller.updateOrganization);
+organiztionRouter.delete('/:id', controller.deleteOrganization);
+
+export const organizationSdkRouter = sdkRouter(
+  schemaValidator,
+  controller,
+  organiztionRouter
+);
