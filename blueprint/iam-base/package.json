@@ -35,7 +35,7 @@
   "dependencies": {
     "@forklaunch/blueprint-core": "workspace:*",
     "@forklaunch/blueprint-monitoring": "workspace:*",
-    "@forklaunch/core": "^0.11.6",
+    "@forklaunch/core": "^0.11.7",
     "@forklaunch/hyper-express-fork": "^6.17.34",
     "@forklaunch/implementation-iam-base": "workspace:*",
     "@forklaunch/interfaces-iam": "workspace:*",
@@ -47,9 +47,9 @@
     "@mikro-orm/reflection": "^6.4.16",
     "@mikro-orm/seeder": "^6.4.16",
     "@mikro-orm/sqlite": "^6.4.16",
-    "@sinclair/typebox": "^0.34.37",
-    "dotenv": "^17.2.0",
-    "zod": "^4.0.5"
+    "@sinclair/typebox": "^0.34.38",
+    "dotenv": "^17.2.1",
+    "zod": "^4.0.14"
   },
   "devDependencies": {
     "@mikro-orm/cli": "^6.4.16",
@@ -58,7 +58,7 @@
     "@types/qs": "^6.14.0",
     "depcheck": "^1.4.7",
     "prettier": "^3.6.2",
-    "typedoc": "^0.28.7"
+    "typedoc": "^0.28.9"
   },
   "mikro-orm": {
     "configPaths": [
