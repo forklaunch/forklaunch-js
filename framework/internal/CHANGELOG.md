@@ -1,5 +1,12 @@
 # @forklaunch/common
 
+## 0.1.9
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.8.0
+
 ## 0.1.8
 
 ### Patch Changes

@@ -1,5 +1,16 @@
 # @forklaunch/core
 
+## 0.12.0
+
+### Minor Changes
+
+- Add more permissive body types and update schema validator types
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.8.0
+
 ## 0.11.7
 
 ### Patch Changes
