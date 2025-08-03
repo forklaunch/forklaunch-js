@@ -11,7 +11,7 @@ const organizationServiceFactory = ci.scopedResolver(
 
 export type OrganizationServiceFactory = typeof organizationServiceFactory;
 
-export const organiztionRouter = forklaunchRouter(
+export const organizationRouter = forklaunchRouter(
   '/organization',
   schemaValidator,
   openTelemetryCollector
@@ -22,13 +22,13 @@ const controller = OrganizationController(
   openTelemetryCollector
 );
 
-organiztionRouter.post('/', controller.createOrganization);
-organiztionRouter.get('/:id', controller.getOrganization);
-organiztionRouter.put('/', controller.updateOrganization);
-organiztionRouter.delete('/:id', controller.deleteOrganization);
+organizationRouter.post('/', controller.createOrganization);
+organizationRouter.get('/:id', controller.getOrganization);
+organizationRouter.put('/', controller.updateOrganization);
+organizationRouter.delete('/:id', controller.deleteOrganization);
 
 export const organizationSdkRouter = sdkRouter(
   schemaValidator,
   controller,
-  organiztionRouter
+  organizationRouter
 );

@@ -9,7 +9,6 @@ import {
 import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import {
   BillingProviderEnum,
   CurrencyEnum,
@@ -21,14 +20,11 @@ import {
   PlanMapper,
   UpdatePlanMapper
 } from '../../domain/mappers/plan.mappers';
-import { PlanSchemas, SchemaDependencies } from '../../registrations';
+import { PlanSchemas } from '../../registrations';
+import { PlanServiceFactory } from '../routes/plan.routes';
 
 export const PlanController = (
-  serviceFactory: ScopedDependencyFactory<
-    SchemaValidator,
-    SchemaDependencies,
-    'PlanService'
-  >,
+  serviceFactory: PlanServiceFactory,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) =>
   ({

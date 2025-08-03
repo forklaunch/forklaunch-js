@@ -7,7 +7,6 @@ import {
 import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import {
   CurrencyEnum,
   PaymentMethodEnum
@@ -18,14 +17,10 @@ import {
   CheckoutSessionMapper,
   CreateCheckoutSessionMapper
 } from '../../domain/mappers/checkoutSession.mappers';
-import { SchemaDependencies } from '../../registrations';
+import { CheckoutSessionServiceFactory } from '../routes/checkoutSession.routes';
 
 export const CheckoutSessionController = (
-  serviceFactory: ScopedDependencyFactory<
-    SchemaValidator,
-    SchemaDependencies,
-    'CheckoutSessionService'
-  >,
+  serviceFactory: CheckoutSessionServiceFactory,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) =>
   ({

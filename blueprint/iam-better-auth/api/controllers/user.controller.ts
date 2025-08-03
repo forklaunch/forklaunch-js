@@ -9,21 +9,16 @@ import {
 import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { UserService } from '@forklaunch/interfaces-iam/interfaces';
 import {
   CreateUserMapper,
   UpdateUserMapper,
   UserMapper
 } from '../../domain/mappers/user.mappers';
-import { SchemaDependencies } from '../../registrations';
+import { UserServiceFactory } from '../routes/user.routes';
 
 export const UserController = (
-  serviceFactory: ScopedDependencyFactory<
-    SchemaValidator,
-    SchemaDependencies,
-    'UserService'
-  >,
+  serviceFactory: UserServiceFactory,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) =>
   ({

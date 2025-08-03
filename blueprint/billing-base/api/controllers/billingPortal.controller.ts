@@ -7,21 +7,16 @@ import {
 import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { BillingPortalService } from '@forklaunch/interfaces-billing/interfaces';
 import {
   BillingPortalMapper,
   CreateBillingPortalMapper,
   UpdateBillingPortalMapper
 } from '../../domain/mappers/billingPortal.mappers';
-import { SchemaDependencies } from '../../registrations';
+import { BillingPortalServiceFactory } from '../routes/billingPortal.routes';
 
 export const BillingPortalController = (
-  serviceFactory: ScopedDependencyFactory<
-    SchemaValidator,
-    SchemaDependencies,
-    'BillingPortalService'
-  >,
+  serviceFactory: BillingPortalServiceFactory,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) =>
   ({

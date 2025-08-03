@@ -45,7 +45,7 @@
     "@mikro-orm/core": "^6.4.16"
   },
   "devDependencies": {
-    "@typescript/native-preview": "7.0.0-dev.20250802.1",
+    "@typescript/native-preview": "7.0.0-dev.20250803.1",
     "depcheck": "^1.4.7",
     "prettier": "^3.6.2",
     "typedoc": "^0.28.9"

@@ -1,37 +1,41 @@
 import { forklaunchRouter, SchemaValidator } from '@forklaunch/blueprint-core';
-import { Metrics } from '@forklaunch/blueprint-monitoring';
-import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { ScopedDependencyFactory } from '@forklaunch/core/services';
-import { SchemaDependencies } from '../../registrations';
+import { sdkRouter } from '@forklaunch/core/http';
+import { ci, tokens } from '../../server';
 import { SubscriptionController } from '../controllers/subscription.controller';
 
-export const SubscriptionRoutes = (
-  serviceFactory: ScopedDependencyFactory<
-    SchemaValidator,
-    SchemaDependencies,
-    'SubscriptionService'
-  >,
-  openTelemetryCollector: OpenTelemetryCollector<Metrics>
-) => {
-  const router = forklaunchRouter(
-    '/subscription',
-    SchemaValidator(),
-    openTelemetryCollector
-  );
+const schemaValidator = SchemaValidator();
+const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
+const subscriptionServiceFactory = ci.scopedResolver(
+  tokens.SubscriptionService
+);
 
-  const controller = SubscriptionController(
-    serviceFactory,
-    openTelemetryCollector
-  );
+export type SubscriptionServiceFactory = typeof subscriptionServiceFactory;
 
-  return router
-    .post('/', controller.createSubscription)
-    .get('/:id', controller.getSubscription)
-    .get('/user/:id', controller.getUserSubscription)
-    .get('/organization/:id', controller.getOrganizationSubscription)
-    .put('/:id', controller.updateSubscription)
-    .delete('/:id', controller.deleteSubscription)
-    .get('/', controller.listSubscriptions)
-    .get('/:id/cancel', controller.cancelSubscription)
-    .get('/:id/resume', controller.resumeSubscription);
-};
+export const subscriptionRouter = forklaunchRouter(
+  '/subscription',
+  schemaValidator,
+  openTelemetryCollector
+);
+const controller = SubscriptionController(
+  subscriptionServiceFactory,
+  openTelemetryCollector
+);
+
+subscriptionRouter.post('/', controller.createSubscription);
+subscriptionRouter.get('/:id', controller.getSubscription);
+subscriptionRouter.get('/user/:id', controller.getUserSubscription);
+subscriptionRouter.get(
+  '/organization/:id',
+  controller.getOrganizationSubscription
+);
+subscriptionRouter.put('/:id', controller.updateSubscription);
+subscriptionRouter.delete('/:id', controller.deleteSubscription);
+subscriptionRouter.get('/', controller.listSubscriptions);
+subscriptionRouter.get('/:id/cancel', controller.cancelSubscription);
+subscriptionRouter.get('/:id/resume', controller.resumeSubscription);
+
+export const subscriptionSdkRouter = sdkRouter(
+  schemaValidator,
+  controller,
+  subscriptionRouter
+);

@@ -3,8 +3,8 @@ import { getEnvVar } from '@forklaunch/common';
 import { sdkClient } from '@forklaunch/core/http';
 import dotenv from 'dotenv';
 import {
-  organizationSdkRouter,
-  organiztionRouter
+  organizationRouter,
+  organizationSdkRouter
 } from './api/routes/organization.routes';
 import {
   permissionRouter,
@@ -28,7 +28,7 @@ const port = ci.resolve(tokens.PORT);
 const version = ci.resolve(tokens.VERSION);
 const docsPath = ci.resolve(tokens.DOCS_PATH);
 //! mounts the routes to the app
-app.use(organiztionRouter);
+app.use(organizationRouter);
 app.use(permissionRouter);
 app.use(roleRouter);
 app.use(userRouter);

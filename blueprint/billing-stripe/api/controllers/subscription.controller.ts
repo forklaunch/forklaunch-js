@@ -9,7 +9,6 @@ import {
 import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { BillingProviderEnum } from '@forklaunch/implementation-billing-stripe/enum';
 import { SubscriptionService } from '@forklaunch/interfaces-billing/interfaces';
 import { PartyEnum } from '../../domain/enum/party.enum';
@@ -18,14 +17,10 @@ import {
   SubscriptionMapper,
   UpdateSubscriptionMapper
 } from '../../domain/mappers/subscription.mappers';
-import { SchemaDependencies } from '../../registrations';
+import { SubscriptionServiceFactory } from '../routes/subscription.routes';
 
 export const SubscriptionController = (
-  serviceFactory: ScopedDependencyFactory<
-    SchemaValidator,
-    SchemaDependencies,
-    'SubscriptionService'
-  >,
+  serviceFactory: SubscriptionServiceFactory,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) =>
   ({

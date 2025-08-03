@@ -7,7 +7,6 @@ import {
 import { Metrics, metrics } from '@forklaunch/blueprint-monitoring';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import {
-  ConfigInjector,
   createConfigInjector,
   getEnvVar,
   Lifetime
@@ -242,11 +241,6 @@ const serviceDependencies = runtimeDependencies.chain({
       )
   }
 });
-
-export type ServiceDependencies =
-  typeof serviceDependencies extends ConfigInjector<SchemaValidator, infer CV>
-    ? CV
-    : never;
 export const createDependencies = (envFilePath: string) => ({
   ci: serviceDependencies.validateConfigSingletons(envFilePath),
   tokens: serviceDependencies.tokens()
