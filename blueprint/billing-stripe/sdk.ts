@@ -8,7 +8,7 @@ import { subscriptionSdkRouter } from './api/routes/subscription.routes';
 import { webhookSdkRouter } from './api/routes/webhook.routes';
 
 //! creates an instance of the sdkClient
-export const BillingSdk = sdkClient(schemaValidator, {
+export const BillingSdkClient = sdkClient(schemaValidator, {
   billingPortal: billingPortalSdkRouter,
   checkoutSession: checkoutSessionSdkRouter,
   paymentLink: paymentLinkSdkRouter,

@@ -1,7 +1,7 @@
 import { forklaunchExpress, SchemaValidator } from '@{{app_name}}/core';
 import { getEnvVar } from '@forklaunch/common';
 import dotenv from 'dotenv';
-import { {{pascal_case_name}}Routes } from './api/routes/{{camel_case_name}}.routes';
+import { {{camel_case_name}}Router } from './api/routes/{{camel_case_name}}.routes';
 import { createDependencyContainer } from './registrations';
 
 //! bootstrap resources and config

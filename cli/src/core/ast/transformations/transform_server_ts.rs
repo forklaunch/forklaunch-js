@@ -20,11 +20,10 @@ pub(crate) fn transform_server_ts(router_name: &str, base_path: &Path) -> Result
     let server_source_text = read_to_string(&server_path)?;
     let server_source_type = SourceType::from_path(&server_path)?;
     let router_name_camel_case = router_name.to_case(Case::Camel);
-    let router_name_pascal_case = router_name.to_case(Case::Pascal);
 
     let mut server_program = parse_ast_program(&allocator, &server_source_text, server_source_type);
 
-    let use_injection_text = format!("app.use({router_name_camel_case}Routes);",);
+    let use_injection_text = format!("app.use({router_name_camel_case}Router);",);
     let mut injection_program_ast =
         parse_ast_program(&allocator, &use_injection_text, SourceType::ts());
     inject_into_server_ts(
@@ -62,7 +61,7 @@ pub(crate) fn transform_server_ts(router_name: &str, base_path: &Path) -> Result
     )?;
 
     let forklaunch_routes_import_text = format!(
-        "import {{ {router_name_pascal_case}Routes }} from './api/routes/{router_name_camel_case}.routes';",
+        "import {{ {router_name_camel_case}Router }} from './api/routes/{router_name_camel_case}.routes';",
     );
     let mut forklaunch_routes_import_injection = parse_ast_program(
         &allocator,

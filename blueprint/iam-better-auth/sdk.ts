@@ -6,7 +6,7 @@ import { roleSdkRouter } from './api/routes/role.routes';
 import { userSdkRouter } from './api/routes/user.routes';
 
 //! creates an instance of the sdkClient
-export const iamSdk = sdkClient(schemaValidator, {
+export const IamSdkClient = sdkClient(schemaValidator, {
   organization: organizationSdkRouter,
   permission: permissionSdkRouter,
   role: roleSdkRouter,

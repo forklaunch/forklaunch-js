@@ -7,7 +7,7 @@ import { planSdkRouter } from './api/routes/plan.routes';
 import { subscriptionSdkRouter } from './api/routes/subscription.routes';
 
 //! exports the SDK for client usage
-export const BillingSdk = sdkClient(schemaValidator, {
+export const BillingSdkClient = sdkClient(schemaValidator, {
   billingPortal: billingPortalSdkRouter,
   checkoutSession: checkoutSessionSdkRouter,
   paymentLink: paymentLinkSdkRouter,

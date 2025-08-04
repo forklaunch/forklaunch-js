@@ -1,5 +1,8 @@
+import { sdkRouter } from '@forklaunch/core/http';
 import { forklaunchRouter, schemaValidator } from '@{{app_name}}/core';
 import { {{pascal_case_name}}Controller } from '../controllers/{{camel_case_name}}.controller';
+import { ci, tokens } from '../../server';
+
 // resolve the dependencies
 const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
 const {{camel_case_name}}ServiceFactory = ci.scopedResolver(
@@ -19,8 +22,8 @@ export const {{camel_case_name}}Router = forklaunchRouter(
 
 // instantiate the controller
 const controller = {{pascal_case_name}}Controller(
-  scopeFactory,
-  serviceFactory,
+  ci.createScope,
+  {{camel_case_name}}ServiceFactory,
   openTelemetryCollector
 );
 
