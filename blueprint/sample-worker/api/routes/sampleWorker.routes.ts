@@ -1,9 +1,8 @@
-import { forklaunchRouter, SchemaValidator } from '@forklaunch/blueprint-core';
+import { forklaunchRouter, schemaValidator } from '@forklaunch/blueprint-core';
 import { sdkRouter } from '@forklaunch/core/http';
 import { ci, tokens } from '../../server';
 import { SampleWorkerController } from '../controllers/sampleWorker.controller';
 
-const schemaValidator = SchemaValidator();
 const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
 const sampleWorkerServiceFactory = ci.scopedResolver(
   tokens.SampleWorkerService

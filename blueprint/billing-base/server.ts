@@ -1,31 +1,17 @@
-import { forklaunchExpress, SchemaValidator } from '@forklaunch/blueprint-core';
+import { forklaunchExpress, schemaValidator } from '@forklaunch/blueprint-core';
 import { getEnvVar } from '@forklaunch/common';
-import { sdkClient } from '@forklaunch/core/http';
 import dotenv from 'dotenv';
-import {
-  billingPortalRouter,
-  billingPortalSdkRouter
-} from './api/routes/billingPortal.routes';
-import {
-  checkoutSessionRouter,
-  checkoutSessionSdkRouter
-} from './api/routes/checkoutSession.routes';
-import {
-  paymentLinkRouter,
-  paymentLinkSdkRouter
-} from './api/routes/paymentLink.routes';
-import { planRouter, planSdkRouter } from './api/routes/plan.routes';
-import {
-  subscriptionRouter,
-  subscriptionSdkRouter
-} from './api/routes/subscription.routes';
-import { createDependencies } from './registrations';
+import { billingPortalRouter } from './api/routes/billingPortal.routes';
+import { checkoutSessionRouter } from './api/routes/checkoutSession.routes';
+import { paymentLinkRouter } from './api/routes/paymentLink.routes';
+import { planRouter } from './api/routes/plan.routes';
+import { subscriptionRouter } from './api/routes/subscription.routes';
+import { createDependencyContainer } from './registrations';
 
 //! bootstrap resources and config
 const envFilePath = getEnvVar('DOTENV_FILE_PATH');
 dotenv.config({ path: envFilePath });
-export const { ci, tokens } = createDependencies(envFilePath);
-const schemaValidator = SchemaValidator();
+export const { ci, tokens } = createDependencyContainer(envFilePath);
 
 //! resolves the openTelemetryCollector from the configuration
 const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
@@ -51,12 +37,4 @@ app.listen(port, host, () => {
   openTelemetryCollector.info(
     `🎉 Billing Server is running at http://${host}:${port} 🎉.\nAn API reference can be accessed at http://${host}:${port}/api/${version}${docsPath}`
   );
-});
-
-export const billingSdk = sdkClient(schemaValidator, {
-  billingPortal: billingPortalSdkRouter,
-  checkoutSession: checkoutSessionSdkRouter,
-  paymentLink: paymentLinkSdkRouter,
-  plan: planSdkRouter,
-  subscription: subscriptionSdkRouter
 });

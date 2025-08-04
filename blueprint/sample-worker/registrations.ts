@@ -2,7 +2,7 @@
 import {
   array,
   number,
-  SchemaValidator,
+  schemaValidator,
   string
 } from '@forklaunch/blueprint-core';
 import { Metrics, metrics } from '@forklaunch/blueprint-monitoring';
@@ -40,23 +40,23 @@ import { SampleWorkerEventRecord } from './persistence/entities';
 import { BaseSampleWorkerService } from './services/sampleWorker.service';
 
 const BullMqWorkerOptionsSchema = BullMqWorkerSchemas({
-  validator: SchemaValidator()
+  validator: schemaValidator
 });
 
 const KafkaWorkerOptionsSchema = KafkaWorkerSchemas({
-  validator: SchemaValidator()
+  validator: schemaValidator
 });
 
 const RedisWorkerOptionsSchema = RedisWorkerSchemas({
-  validator: SchemaValidator()
+  validator: schemaValidator
 });
 
 const DatabaseWorkerOptionsSchema = DatabaseWorkerSchemas({
-  validator: SchemaValidator()
+  validator: schemaValidator
 });
 
 //! defines the configuration schema for the application
-const configInjector = createConfigInjector(SchemaValidator(), {
+const configInjector = createConfigInjector(schemaValidator, {
   SERVICE_METADATA: {
     lifetime: Lifetime.Singleton,
     type: {
@@ -402,7 +402,7 @@ const serviceDependencies = runtimeDependencies.chain({
   }
 });
 
-export const createDependencies = (envFilePath: string) => ({
+export const createDependencyContainer = (envFilePath: string) => ({
   ci: serviceDependencies.validateConfigSingletons(envFilePath),
   tokens: serviceDependencies.tokens()
 });

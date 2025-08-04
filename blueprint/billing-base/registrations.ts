@@ -1,6 +1,7 @@
 import {
   number,
   optional,
+  schemaValidator,
   SchemaValidator,
   string
 } from '@forklaunch/blueprint-core';
@@ -70,27 +71,27 @@ import {
 //! defines the schemas for the billing portal service
 export const BillingPortalSchemas = BaseBillingPortalServiceSchemas({
   uuidId: true,
-  validator: SchemaValidator()
+  validator: schemaValidator
 });
 export const CheckoutSessionSchemas = BaseCheckoutSessionServiceSchemas({
   uuidId: true,
-  validator: SchemaValidator()
+  validator: schemaValidator
 });
 export const PaymentLinkSchemas = BasePaymentLinkServiceSchemas({
   uuidId: true,
-  validator: SchemaValidator()
+  validator: schemaValidator
 });
 export const PlanSchemas = BasePlanServiceSchemas({
   uuidId: true,
-  validator: SchemaValidator()
+  validator: schemaValidator
 });
 export const SubscriptionSchemas = BaseSubscriptionServiceSchemas({
   uuidId: true,
-  validator: SchemaValidator()
+  validator: schemaValidator
 });
 
 //! defines the configuration schema for the application
-const configInjector = createConfigInjector(SchemaValidator(), {
+const configInjector = createConfigInjector(schemaValidator, {
   SERVICE_METADATA: {
     lifetime: Lifetime.Singleton,
     type: {
@@ -212,7 +213,7 @@ const serviceDependencies = runtimeDependencies.chain({
           : EntityManager,
         TtlCache,
         OpenTelemetryCollector,
-        SchemaValidator(),
+        schemaValidator,
         {
           BillingPortalMapper,
           CreateBillingPortalMapper,
@@ -244,7 +245,7 @@ const serviceDependencies = runtimeDependencies.chain({
           : EntityManager,
         TtlCache,
         OpenTelemetryCollector,
-        SchemaValidator(),
+        schemaValidator,
         {
           CheckoutSessionMapper,
           CreateCheckoutSessionMapper,
@@ -276,7 +277,7 @@ const serviceDependencies = runtimeDependencies.chain({
           : EntityManager,
         TtlCache,
         OpenTelemetryCollector,
-        SchemaValidator(),
+        schemaValidator,
         {
           PaymentLinkMapper,
           CreatePaymentLinkMapper,
@@ -303,7 +304,7 @@ const serviceDependencies = runtimeDependencies.chain({
           ? resolve('EntityManager', context)
           : EntityManager,
         OpenTelemetryCollector,
-        SchemaValidator(),
+        schemaValidator,
         {
           PlanMapper,
           CreatePlanMapper,
@@ -329,7 +330,7 @@ const serviceDependencies = runtimeDependencies.chain({
           ? resolve('EntityManager', context)
           : EntityManager,
         OpenTelemetryCollector,
-        SchemaValidator(),
+        schemaValidator,
         {
           SubscriptionMapper,
           CreateSubscriptionMapper,
@@ -339,7 +340,8 @@ const serviceDependencies = runtimeDependencies.chain({
   }
 });
 
-export const createDependencies = (envFilePath: string) => ({
+//! validates the configuration and returns the dependencies for the application
+export const createDependencyContainer = (envFilePath: string) => ({
   ci: serviceDependencies.validateConfigSingletons(envFilePath),
   tokens: serviceDependencies.tokens()
 });

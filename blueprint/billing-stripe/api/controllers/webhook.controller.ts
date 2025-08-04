@@ -1,5 +1,6 @@
 import {
   handlers,
+  schemaValidator,
   SchemaValidator,
   string,
   type
@@ -19,7 +20,7 @@ export const WebhookController = (
 ) =>
   ({
     handleWebhookEvent: handlers.post(
-      SchemaValidator(),
+      schemaValidator,
       '/',
       {
         name: 'handleWebhookEvent',

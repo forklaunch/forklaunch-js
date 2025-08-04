@@ -3,7 +3,7 @@ import {
   handlers,
   IdSchema,
   IdsSchema,
-  SchemaValidator,
+  schemaValidator,
   string
 } from '@forklaunch/blueprint-core';
 import { Metrics } from '@forklaunch/blueprint-monitoring';
@@ -23,7 +23,7 @@ export const UserController = (
 ) =>
   ({
     createUser: handlers.post(
-      SchemaValidator(),
+      schemaValidator,
       '/',
       {
         name: 'Create User',
@@ -42,7 +42,7 @@ export const UserController = (
     ),
 
     createBatchUsers: handlers.post(
-      SchemaValidator(),
+      schemaValidator,
       '/batch',
       {
         name: 'Create Batch Users',
@@ -61,7 +61,7 @@ export const UserController = (
     ),
 
     getUser: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/:id',
       {
         name: 'Get User',
@@ -79,7 +79,7 @@ export const UserController = (
     ),
 
     getBatchUsers: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/batch',
       {
         name: 'Get Batch Users',
@@ -97,7 +97,7 @@ export const UserController = (
     ),
 
     updateUser: handlers.put(
-      SchemaValidator(),
+      schemaValidator,
       '/',
       {
         name: 'Update User',
@@ -116,7 +116,7 @@ export const UserController = (
     ),
 
     updateBatchUsers: handlers.put(
-      SchemaValidator(),
+      schemaValidator,
       '/batch',
       {
         name: 'Update Batch Users',
@@ -135,7 +135,7 @@ export const UserController = (
     ),
 
     deleteUser: handlers.delete(
-      SchemaValidator(),
+      schemaValidator,
       '/:id',
       {
         name: 'Delete User',
@@ -154,7 +154,7 @@ export const UserController = (
     ),
 
     deleteBatchUsers: handlers.delete(
-      SchemaValidator(),
+      schemaValidator,
       '/batch',
       {
         name: 'Delete Batch Users',
@@ -173,7 +173,7 @@ export const UserController = (
     ),
 
     verifyHasRole: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/:id/verify-role/:roleId',
       {
         name: 'Verify User Role',
@@ -196,7 +196,7 @@ export const UserController = (
     ),
 
     verifyHasPermission: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/:id/verify-permission/:permissionId',
       {
         name: 'Verify User Permission',

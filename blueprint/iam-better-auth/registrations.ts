@@ -4,6 +4,7 @@ import {
   number,
   optional,
   promise,
+  schemaValidator,
   SchemaValidator,
   string,
   type
@@ -63,23 +64,23 @@ import mikroOrmOptionsConfig from './mikro-orm.config';
 //! defines the schemas for the organization service
 export const OrganizationSchemas = BaseOrganizationServiceSchemas({
   uuidId: true,
-  validator: SchemaValidator()
+  validator: schemaValidator
 });
 export const PermissionSchemas = BasePermissionServiceSchemas({
   uuidId: true,
-  validator: SchemaValidator()
+  validator: schemaValidator
 });
 export const RoleSchemas = BaseRoleServiceSchemas({
   uuidId: true,
-  validator: SchemaValidator()
+  validator: schemaValidator
 });
 export const UserSchemas = BaseUserServiceSchemas({
   uuidId: true,
-  validator: SchemaValidator()
+  validator: schemaValidator
 });
 
 //! defines the configuration schema for the application
-const configInjector = createConfigInjector(SchemaValidator(), {
+const configInjector = createConfigInjector(schemaValidator, {
   SERVICE_METADATA: {
     lifetime: Lifetime.Singleton,
     type: {
@@ -244,7 +245,7 @@ const serviceDependencies = runtimeDependencies.chain({
           ? resolve('EntityManager', context)
           : EntityManager,
         OpenTelemetryCollector,
-        SchemaValidator(),
+        schemaValidator,
         {
           OrganizationMapper,
           CreateOrganizationMapper,
@@ -262,7 +263,7 @@ const serviceDependencies = runtimeDependencies.chain({
           : EntityManager,
         () => resolve('RoleService', context),
         OpenTelemetryCollector,
-        SchemaValidator(),
+        schemaValidator,
         {
           PermissionMapper,
           CreatePermissionMapper,
@@ -280,7 +281,7 @@ const serviceDependencies = runtimeDependencies.chain({
           ? resolve('EntityManager', context)
           : EntityManager,
         OpenTelemetryCollector,
-        SchemaValidator(),
+        schemaValidator,
         {
           RoleMapper,
           CreateRoleMapper,
@@ -315,7 +316,7 @@ const serviceDependencies = runtimeDependencies.chain({
         () => resolve('RoleService', context),
         () => resolve('OrganizationService', context),
         OpenTelemetryCollector,
-        SchemaValidator(),
+        schemaValidator,
         {
           UserMapper,
           CreateUserMapper,
@@ -325,7 +326,8 @@ const serviceDependencies = runtimeDependencies.chain({
   }
 });
 
-export const createDependencies = (envFilePath: string) => ({
+//! validates the configuration and returns the dependencies for the application
+export const createDependencyContainer = (envFilePath: string) => ({
   ci: serviceDependencies.validateConfigSingletons(envFilePath),
   tokens: serviceDependencies.tokens()
 });

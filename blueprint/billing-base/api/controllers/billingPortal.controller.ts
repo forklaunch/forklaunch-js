@@ -1,7 +1,7 @@
 import {
   handlers,
   IdSchema,
-  SchemaValidator,
+  schemaValidator,
   string
 } from '@forklaunch/blueprint-core';
 import { Metrics } from '@forklaunch/blueprint-monitoring';
@@ -21,7 +21,7 @@ export const BillingPortalController = (
 ) =>
   ({
     createBillingPortalSession: handlers.post(
-      SchemaValidator(),
+      schemaValidator,
       '/',
       {
         name: 'createBillingPortalSession',
@@ -43,7 +43,7 @@ export const BillingPortalController = (
     ),
 
     getBillingPortalSession: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/:id',
       {
         name: 'getBillingPortalSession',
@@ -65,7 +65,7 @@ export const BillingPortalController = (
     ),
 
     updateBillingPortalSession: handlers.put(
-      SchemaValidator(),
+      schemaValidator,
       '/:id',
       {
         name: 'updateBillingPortalSession',
@@ -91,7 +91,7 @@ export const BillingPortalController = (
     ),
 
     expireBillingPortalSession: handlers.delete(
-      SchemaValidator(),
+      schemaValidator,
       '/:id',
       {
         name: 'expireBillingPortalSession',

@@ -1,9 +1,8 @@
-import { forklaunchRouter, SchemaValidator } from '@forklaunch/blueprint-core';
+import { forklaunchRouter, schemaValidator } from '@forklaunch/blueprint-core';
 import { sdkRouter } from '@forklaunch/core/http';
 import { ci, tokens } from '../../server';
 import { RoleController } from '../controllers/role.controller';
 
-const schemaValidator = SchemaValidator();
 const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
 const roleServiceFactory = ci.scopedResolver(tokens.RoleService);
 

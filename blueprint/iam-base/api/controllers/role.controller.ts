@@ -3,7 +3,7 @@ import {
   handlers,
   IdSchema,
   IdsSchema,
-  SchemaValidator,
+  schemaValidator,
   string
 } from '@forklaunch/blueprint-core';
 import { Metrics } from '@forklaunch/blueprint-monitoring';
@@ -23,7 +23,7 @@ export const RoleController = (
 ) =>
   ({
     createRole: handlers.post(
-      SchemaValidator(),
+      schemaValidator,
       '/',
       {
         name: 'Create Role',
@@ -42,7 +42,7 @@ export const RoleController = (
     ),
 
     createBatchRoles: handlers.post(
-      SchemaValidator(),
+      schemaValidator,
       '/batch',
       {
         name: 'Create Batch Roles',
@@ -61,7 +61,7 @@ export const RoleController = (
     ),
 
     getRole: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/:id',
       {
         name: 'Get Role',
@@ -79,7 +79,7 @@ export const RoleController = (
     ),
 
     getBatchRoles: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/batch',
       {
         name: 'Get Batch Roles',
@@ -97,7 +97,7 @@ export const RoleController = (
     ),
 
     updateRole: handlers.put(
-      SchemaValidator(),
+      schemaValidator,
       '/',
       {
         name: 'Update Role',
@@ -116,7 +116,7 @@ export const RoleController = (
     ),
 
     updateBatchRoles: handlers.put(
-      SchemaValidator(),
+      schemaValidator,
       '/batch',
       {
         name: 'Update Batch Roles',
@@ -135,7 +135,7 @@ export const RoleController = (
     ),
 
     deleteRole: handlers.delete(
-      SchemaValidator(),
+      schemaValidator,
       '/:id',
       {
         name: 'Delete Role',
@@ -154,7 +154,7 @@ export const RoleController = (
     ),
 
     deleteBatchRoles: handlers.delete(
-      SchemaValidator(),
+      schemaValidator,
       '/batch',
       {
         name: 'Delete Batch Roles',

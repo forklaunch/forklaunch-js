@@ -1,24 +1,18 @@
-import { forklaunchExpress, SchemaValidator } from '@forklaunch/blueprint-core';
+import { forklaunchExpress, schemaValidator } from '@forklaunch/blueprint-core';
 import { getEnvVar } from '@forklaunch/common';
-import { sdkClient } from '@forklaunch/core/http';
 import dotenv from 'dotenv';
-import {
-  sampleWorkerRouter,
-  sampleWorkerSdkRouter
-} from './api/routes/sampleWorker.routes';
-import { createDependencies } from './registrations';
+import { sampleWorkerRouter } from './api/routes/sampleWorker.routes';
+import { createDependencyContainer } from './registrations';
 
 //! bootstrap resources and config
 const envFilePath = getEnvVar('DOTENV_FILE_PATH');
 dotenv.config({ path: envFilePath });
-
-export const { ci, tokens } = createDependencies(envFilePath);
+export const { ci, tokens } = createDependencyContainer(envFilePath);
 
 //! resolves the openTelemetryCollector from the configuration
 const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
 
 //! creates an instance of forklaunchExpress
-const schemaValidator = SchemaValidator();
 const app = forklaunchExpress(schemaValidator, openTelemetryCollector);
 
 //! resolves the protocol, host, port, and version from the configuration
@@ -34,11 +28,7 @@ app.use(sampleWorkerRouter);
 //! starts the server
 app.listen(port, host, () => {
   openTelemetryCollector.info(
-    `🎉 SampleWorker Server is running at ${protocol}://${host}:${port} 🎉.\nAn API reference can be accessed at ${protocol}://${host}:${port}/api/${version}${docsPath}`
+    `🎉 SampleWorker Server is running at ${protocol}://${host}:${port} 🎉.
+    // An API reference can be accessed at ${protocol}://${host}:${port}/api/${version}${docsPath}`
   );
-});
-
-//! exports the SDK for client usage
-export const sampleWorkerSdk = sdkClient(schemaValidator, {
-  sampleWorker: sampleWorkerSdkRouter
 });

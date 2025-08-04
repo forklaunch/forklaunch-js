@@ -1,7 +1,7 @@
 import {
   handlers,
   IdSchema,
-  SchemaValidator,
+  schemaValidator,
   string
 } from '@forklaunch/blueprint-core';
 import { Metrics } from '@forklaunch/blueprint-monitoring';
@@ -23,7 +23,7 @@ export const OrganizationController = (
 ) =>
   ({
     createOrganization: handlers.post(
-      SchemaValidator(),
+      schemaValidator,
       '/',
       {
         name: 'Create Organization',
@@ -55,7 +55,7 @@ export const OrganizationController = (
     ),
 
     getOrganization: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/:id',
       {
         name: 'Get Organization',
@@ -81,7 +81,7 @@ export const OrganizationController = (
     ),
 
     updateOrganization: handlers.put(
-      SchemaValidator(),
+      schemaValidator,
       '/',
       {
         name: 'Update Organization',
@@ -101,7 +101,7 @@ export const OrganizationController = (
     ),
 
     deleteOrganization: handlers.delete(
-      SchemaValidator(),
+      schemaValidator,
       '/:id',
       {
         name: 'Delete Organization',

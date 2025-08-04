@@ -1,7 +1,7 @@
 import {
   handlers,
   IdSchema,
-  SchemaValidator,
+  schemaValidator,
   string
 } from '@forklaunch/blueprint-core';
 import { Metrics } from '@forklaunch/blueprint-monitoring';
@@ -25,7 +25,7 @@ export const CheckoutSessionController = (
 ) =>
   ({
     createCheckoutSession: handlers.post(
-      SchemaValidator(),
+      schemaValidator,
       '/',
       {
         name: 'createCheckoutSession',
@@ -44,7 +44,7 @@ export const CheckoutSessionController = (
     ),
 
     getCheckoutSession: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/:id',
       {
         name: 'getCheckoutSession',
@@ -63,7 +63,7 @@ export const CheckoutSessionController = (
     ),
 
     expireCheckoutSession: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/:id/expire',
       {
         name: 'expireCheckoutSession',
@@ -81,7 +81,7 @@ export const CheckoutSessionController = (
     ),
 
     handleCheckoutSuccess: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/:id/success',
       {
         name: 'handleCheckoutSuccess',
@@ -101,7 +101,7 @@ export const CheckoutSessionController = (
     ),
 
     handleCheckoutFailure: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/:id/failure',
       {
         name: 'handleCheckoutFailure',

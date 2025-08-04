@@ -1,4 +1,4 @@
-import { handlers, SchemaValidator } from '@forklaunch/blueprint-core';
+import { handlers, schemaValidator } from '@forklaunch/blueprint-core';
 import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
@@ -18,7 +18,7 @@ export const SampleWorkerController = (
   ({
     // GET endpoint handler that returns a simple message
     sampleWorkerGet: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/:id',
       {
         name: 'sampleWorker',
@@ -43,7 +43,7 @@ export const SampleWorkerController = (
 
     // POST endpoint handler that processes request body and returns response from service
     sampleWorkerPost: handlers.post(
-      SchemaValidator(),
+      schemaValidator,
       '/',
       {
         name: 'sampleWorker',

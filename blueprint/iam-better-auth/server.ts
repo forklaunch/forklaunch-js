@@ -1,28 +1,20 @@
-import { forklaunchExpress, SchemaValidator } from '@forklaunch/blueprint-core';
+import { forklaunchExpress, schemaValidator } from '@forklaunch/blueprint-core';
 import { getEnvVar } from '@forklaunch/common';
-import { sdkClient } from '@forklaunch/core/http';
 import dotenv from 'dotenv';
 import {
   betterAuthTelemetryHookMiddleware,
   enrichBetterAuthApi
 } from './api/middlewares/betterAuth.middleware';
-import {
-  organizationRouter,
-  organizationSdkRouter
-} from './api/routes/organization.routes';
-import {
-  permissionRouter,
-  permissionSdkRouter
-} from './api/routes/permission.routes';
-import { roleRouter, roleSdkRouter } from './api/routes/role.routes';
-import { userRouter, userSdkRouter } from './api/routes/user.routes';
-import { createDependencies } from './registrations';
+import { organizationRouter } from './api/routes/organization.routes';
+import { permissionRouter } from './api/routes/permission.routes';
+import { roleRouter } from './api/routes/role.routes';
+import { userRouter } from './api/routes/user.routes';
+import { createDependencyContainer } from './registrations';
 
 //! bootstrap resources and config
 const envFilePath = getEnvVar('DOTENV_FILE_PATH');
 dotenv.config({ path: envFilePath });
-export const { ci, tokens } = createDependencies(envFilePath);
-const schemaValidator = SchemaValidator();
+export const { ci, tokens } = createDependencyContainer(envFilePath);
 
 //! resolves the openTelemetryCollector from the configuration
 const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
@@ -58,11 +50,4 @@ app.listen(port, host, () => {
   openTelemetryCollector.info(
     `🎉 IAM Server is running at http://${host}:${port} 🎉.\nAn API reference can be accessed at http://${host}:${port}/api/${version}${docsPath}`
   );
-});
-
-export const iamSdk = sdkClient(schemaValidator, {
-  organization: organizationSdkRouter,
-  permission: permissionSdkRouter,
-  role: roleSdkRouter,
-  user: userSdkRouter
 });

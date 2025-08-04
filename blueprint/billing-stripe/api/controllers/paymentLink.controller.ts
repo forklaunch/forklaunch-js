@@ -3,7 +3,7 @@ import {
   handlers,
   IdSchema,
   IdsSchema,
-  SchemaValidator,
+  schemaValidator,
   string
 } from '@forklaunch/blueprint-core';
 import { Metrics } from '@forklaunch/blueprint-monitoring';
@@ -28,7 +28,7 @@ export const PaymentLinkController = (
 ) =>
   ({
     createPaymentLink: handlers.post(
-      SchemaValidator(),
+      schemaValidator,
       '/',
       {
         name: 'createPaymentLink',
@@ -47,7 +47,7 @@ export const PaymentLinkController = (
     ),
 
     getPaymentLink: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/:id',
       {
         name: 'getPaymentLink',
@@ -64,7 +64,7 @@ export const PaymentLinkController = (
     ),
 
     updatePaymentLink: handlers.put(
-      SchemaValidator(),
+      schemaValidator,
       '/:id',
       {
         name: 'updatePaymentLink',
@@ -84,7 +84,7 @@ export const PaymentLinkController = (
     ),
 
     expirePaymentLink: handlers.delete(
-      SchemaValidator(),
+      schemaValidator,
       '/:id',
       {
         name: 'expirePaymentLink',
@@ -102,7 +102,7 @@ export const PaymentLinkController = (
     ),
 
     handlePaymentSuccess: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/:id/success',
       {
         name: 'handlePaymentSuccess',
@@ -123,7 +123,7 @@ export const PaymentLinkController = (
     ),
 
     handlePaymentFailure: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/:id/failure',
       {
         name: 'handlePaymentFailure',
@@ -144,7 +144,7 @@ export const PaymentLinkController = (
     ),
 
     listPaymentLinks: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/',
       {
         name: 'listPaymentLinks',
