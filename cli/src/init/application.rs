@@ -1080,7 +1080,7 @@ impl CliCommand for ApplicationCommand {
 
         if runtime == Runtime::Node {
             rendered_templates.extend(
-                generate_pnpm_workspace(&name, &full_project_path, &additional_projects)
+                generate_pnpm_workspace(&full_project_path, &additional_projects)
                     .with_context(|| ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE)?,
             );
         }
