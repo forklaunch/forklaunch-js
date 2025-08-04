@@ -60,13 +60,6 @@ for database in "${databases[@]}"; do
                     continue
                 fi
                 
-                # Determine the actual path where the app was created
-                if [ "$path_scenario" = "current" ]; then
-                  app_path="$app_name"
-                else
-                  app_path="$custom_path/$app_name"
-                fi
-
                 cd "$app_name"
                 if [ "$runtime" = "bun" ]; then
                   bun install
