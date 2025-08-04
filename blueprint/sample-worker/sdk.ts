@@ -3,6 +3,7 @@ import { sdkClient } from '@forklaunch/core/http';
 import { sampleWorkerSdkRouter } from './api/routes/sampleWorker.routes';
 
 //! creates an instance of the sdkClient
-export const SampleWorkerSdkClient = sdkClient(schemaValidator, {
+export const sampleWorkerSdkClient = sdkClient(schemaValidator, {
   sampleWorker: sampleWorkerSdkRouter
 });
+export type SampleWorkerSdkClient = typeof sampleWorkerSdkClient;
