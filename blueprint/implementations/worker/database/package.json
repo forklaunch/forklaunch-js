@@ -53,9 +53,9 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/core": "^0.12.0",
+    "@forklaunch/core": "~0.12.0",
     "@forklaunch/interfaces-worker": "workspace:*",
-    "@forklaunch/internal": "^0.1.9",
+    "@forklaunch/internal": "~0.1.9",
     "@mikro-orm/core": "^6.4.16",
     "@sinclair/typebox": "^0.34.38",
     "zod": "^4.0.14"

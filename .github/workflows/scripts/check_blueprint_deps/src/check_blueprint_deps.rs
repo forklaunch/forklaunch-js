@@ -74,13 +74,14 @@ pub fn verify_package_versions(
             })?;
             if let Some((got, line_num)) = inventory.get(name) {
                 println!("Checking {} in {}", name, path.display());
-                if format!("^{}", version) != got.clone() {
+                if format!("^{}", version) != got.clone() && format!("~{}", version) != got.clone()
+                {
                     return Err(format!(
                         r#"Version mismatch for {}: expected {}, got {} 
 source: {}
 destination: cli/src/core/package_json/package_json_constants.rs:{}"#,
                         name,
-                        format!("^{}", version),
+                        format!("{}{}", got.chars().next().unwrap(), version),
                         got,
                         path.display(),
                         line_num
