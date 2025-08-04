@@ -14,7 +14,7 @@
   "author": "Forklift Technologies, Inc.",
   "type": "module",
   "main": "server.ts",
-  "types": "dist/sdk.types.d.ts",
+  "types": "dist/sdk.d.ts",
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist pnpm.lock.yaml node_modules",
