@@ -5,12 +5,12 @@ use oxc_codegen::{CodeGenerator, CodegenOptions};
 
 use super::delete_import_statement::delete_import_specifier;
 
-pub(crate) fn delete_from_sdk_types_client_input<'a>(
+pub(crate) fn delete_from_sdk_client_input<'a>(
     allocator: &'a Allocator,
-    sdk_types_program_ast: &mut Program<'a>,
+    sdk_program_ast: &mut Program<'a>,
     router_name_camel_case: &str,
 ) -> Result<String> {
-    for stmt in sdk_types_program_ast.body.iter_mut() {
+    for stmt in sdk_program_ast.body.iter_mut() {
         let ts_declaration = match stmt {
             Statement::TSTypeAliasDeclaration(ts_decl) => ts_decl,
             _ => continue,
@@ -41,14 +41,14 @@ pub(crate) fn delete_from_sdk_types_client_input<'a>(
 
     let _ = delete_import_specifier(
         &allocator,
-        sdk_types_program_ast,
+        sdk_program_ast,
         &format!("{}Routes", router_name_camel_case),
         "./server",
     )?;
 
     Ok(CodeGenerator::new()
         .with_options(CodegenOptions::default())
-        .build(&sdk_types_program_ast)
+        .build(&sdk_program_ast)
         .code)
 }
 
@@ -64,17 +64,17 @@ mod tests {
     fn test_successful_deletion() {
         let allocator = Allocator::default();
 
-        let sdk_types_code = r#"
+        let sdk_code = r#"
         type MySdkClientInput = {
             userRoutes: typeof UserRoutes,
             postRoutes: typeof PostRoutes,
             commentRoutes: typeof CommentRoutes
         };
         "#;
-        let mut sdk_types_program = parse_ast_program(&allocator, sdk_types_code, SourceType::ts());
+        let mut sdk_program = parse_ast_program(&allocator, sdk_code, SourceType::ts());
 
         let result =
-            delete_from_sdk_types_client_input(&allocator, &mut sdk_types_program, "postRoutes");
+            delete_from_sdk_client_input(&allocator, &mut sdk_program, "postRoutes");
 
         assert!(result.is_ok());
 

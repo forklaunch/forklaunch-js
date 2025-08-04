@@ -304,7 +304,7 @@ pub(crate) fn transform_registrations_ts_worker_type(
             )?;
             // let mut create_dependencies_program = parse_ast_program(
             //     &allocator,
-            //     "export function createDependencies() {}",
+            //     "export function createDependencyContainer() {}",
             //     SourceType::ts(),
             // );
             // inject_in_registrations_ts_create_dependencies_args(

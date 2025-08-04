@@ -1,7 +1,7 @@
 use anyhow::{Result, bail};
 use oxc_ast::ast::{Declaration, Program, Statement, TSType};
 
-pub(crate) fn inject_into_sdk_types_client_input<'a>(
+pub(crate) fn inject_into_sdk_client_input<'a>(
     app_program_ast: &mut Program<'a>,
     injection_program_ast: &mut Program<'a>,
 ) -> Result<()> {
@@ -74,7 +74,7 @@ mod tests {
         "#;
         let mut injection_program = parse_ast_program(&allocator, injection_code, SourceType::ts());
 
-        let result = inject_into_sdk_types_client_input(&mut app_program, &mut injection_program);
+        let result = inject_into_sdk_client_input(&mut app_program, &mut injection_program);
 
         assert!(result.is_ok());
 

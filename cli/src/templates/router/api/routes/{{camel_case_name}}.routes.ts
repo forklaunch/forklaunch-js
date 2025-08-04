@@ -1,34 +1,32 @@
-import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { ConfigInjector, ScopedDependencyFactory } from '@forklaunch/core/services';
-import { forklaunchRouter, SchemaValidator } from '@{{app_name}}/core';
-import { Metrics } from '@{{app_name}}/monitoring';
+import { forklaunchRouter, schemaValidator } from '@{{app_name}}/core';
 import { {{pascal_case_name}}Controller } from '../controllers/{{camel_case_name}}.controller';
-import { SchemaDependencies } from '../../registrations';
+// resolve the dependencies
+const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
+const {{camel_case_name}}ServiceFactory = ci.scopedResolver(
+  tokens.{{pascal_case_name}}Service
+);
 
-// returns an object with the router and the {{camel_case_name}}Get and {{camel_case_name}}Post methods for easy installation
-export const {{pascal_case_name}}Routes = (
-  scopeFactory: () => ConfigInjector<SchemaValidator, SchemaDependencies>,
-  serviceFactory: ScopedDependencyFactory<
-    SchemaValidator,
-    SchemaDependencies,
-    '{{pascal_case_name}}Service'
-  >,
-  openTelemetryCollector: OpenTelemetryCollector<Metrics>
-) => {
-  // defines the router for the {{camel_case_name}} routes
-  const router = forklaunchRouter(
-    '/{{kebab_case_name}}',
-    SchemaValidator(), 
-    openTelemetryCollector
-  );
+// export the service factory type
+export type {{pascal_case_name}}ServiceFactory = typeof {{camel_case_name}}ServiceFactory;
 
-  const controller = {{pascal_case_name}}Controller(
-    scopeFactory,
-    serviceFactory,
-    openTelemetryCollector
-  );
 
-  return router
-    .get('/', controller.{{camel_case_name}}Get)
-    .post('/', controller.{{camel_case_name}}Post);
-};
+// defines the router for the {{camel_case_name}} routes
+export const {{camel_case_name}}Router = forklaunchRouter(
+  '/{{kebab_case_name}}',
+  schemaValidator, 
+  openTelemetryCollector
+);
+
+// instantiate the controller
+const controller = {{pascal_case_name}}Controller(
+  scopeFactory,
+  serviceFactory,
+  openTelemetryCollector
+);
+
+// mount the routes
+{{camel_case_name}}Router.get('/', controller.{{camel_case_name}}Get)
+{{camel_case_name}}Router.post('/', controller.{{camel_case_name}}Post);
+
+// create an sdk binding for the router
+export const {{camel_case_name}}SdkRouter = sdkRouter(schemaValidator, {

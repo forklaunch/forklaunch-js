@@ -4,13 +4,12 @@ import {
 } from '@forklaunch/interfaces-worker/types';
 import { getEnvVar } from '@forklaunch/common';
 import dotenv from 'dotenv';
-import { createDependencies } from './registrations';
+import { createDependencyContainer } from './registrations';
 import { {{pascal_case_name}}EventRecord} from './persistence/entities/{{camel_case_name}}EventRecord.entity';
 
 const envFilePath = getEnvVar('DOTENV_FILE_PATH');
 dotenv.config({ path: envFilePath });
-const { serviceDependencies, tokens } = createDependencies();
-const ci = serviceDependencies.validateConfigSingletons(envFilePath);
+const { ci, tokens } = createDependencyContainer(envFilePath);
 
 const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
 
