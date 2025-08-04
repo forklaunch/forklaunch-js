@@ -81,7 +81,7 @@ use crate::{
     },
     prompt::{
         ArrayCompleter, prompt_comma_separated_list, prompt_with_validation,
-        prompt_without_validation,
+        prompt_without_validation, prompt_for_confirmation,
     },
 };
 
@@ -392,18 +392,12 @@ impl CliCommand for ApplicationCommand {
             custom_path.clone()
         } else {
             // Use interactive prompts as before
-            let use_cwd = prompt_with_validation(
-                &mut line_editor,
-                &mut stdout,
-                "use_cwd",
-                matches,
-                "Would you like to use current directory for project files? (y/n)",
-                Some(&["y", "n", "yes", "no"]),
-                |input| ["y", "n", "yes", "no"].contains(&input.to_lowercase().as_str()),
-                |_| "Please enter 'y', 'n', 'yes', or 'no'".to_string(),
-            )?;
+            let use_cwd = prompt_for_confirmation(
+            &mut line_editor,
+            "Would you like to use the current directory for project files? (y/n) ",
+        )?;
 
-            if use_cwd.to_lowercase() == "n" || use_cwd.to_lowercase() == "no" {
+        if !use_cwd {
                 prompt_with_validation(
                     &mut line_editor,
                     &mut stdout,
