@@ -25,91 +25,66 @@ licenses=("Mozilla-2.0")
 # Test both current directory and custom path scenarios
 path_scenarios=("current" "custom")
 
-for path_scenario in "${path_scenarios[@]}"; do
-  for database in "${databases[@]}"; do
-    for formatter in "${formatters[@]}"; do
-      for linter in "${linters[@]}"; do
-        for validator in "${validators[@]}"; do
-          for framework in "${frameworks[@]}"; do
-            for runtime in "${runtimes[@]}"; do
-              if [ "$framework" = "hyper-express" ] && [ "$runtime" = "bun" ]; then
-                continue
-              fi
-              for test_framework in "${test_frameworks[@]}"; do
-                for license in "${licenses[@]}"; do
-                  license_name=$(echo "$license" | tr '[:upper:]' '[:lower:]' | cut -d'-' -f1)
-                  cache_name="application-${validator}-${framework}-${runtime}-${path_scenario}"
-                  app_name="${cache_name}-${database}-${linter}-${formatter}-${test_framework}-${license_name}"
 
-                  
+for database in "${databases[@]}"; do
+  for formatter in "${formatters[@]}"; do
+    for linter in "${linters[@]}"; do
+      for validator in "${validators[@]}"; do
+        for framework in "${frameworks[@]}"; do
+          for runtime in "${runtimes[@]}"; do
+            if [ "$framework" = "hyper-express" ] && [ "$runtime" = "bun" ]; then
+              continue
+            fi
+            for test_framework in "${test_frameworks[@]}"; do
+              for license in "${licenses[@]}"; do
+                license_name=$(echo "$license" | tr '[:upper:]' '[:lower:]' | cut -d'-' -f1)
+                cache_name="application-${validator}-${framework}-${runtime}-${path_scenario}"
+                app_name="${cache_name}-${database}-${linter}-${formatter}-${test_framework}-${license_name}"
 
-                  echo "Testing $path_scenario path scenario for $app_name"
+                
+                # Test current directory scenario
+                RUST_BACKTRACE=1 cargo run --release init application "$app_name" \
+                    --path "." \
+                    -d "$database" \
+                    -v "$validator" \
+                    -f "$formatter" \
+                    -l "$linter" \
+                    -F "$framework" \
+                    -r "$runtime" \
+                    -t "$test_framework" \
+                    -m "billing-base" \
+                    -m "iam-base" \
+                    -D "Test application" \
+                    -A "Rohin Bhargava" \
+                    -L "$license"
 
-                  if [ "$path_scenario" = "current" ]; then
-                    # Test current directory scenario
-                    RUST_BACKTRACE=1 cargo run --release init application "$app_name" \
-                        --path "." \
-                        -d "$database" \
-                        -v "$validator" \
-                        -f "$formatter" \
-                        -l "$linter" \
-                        -F "$framework" \
-                        -r "$runtime" \
-                        -t "$test_framework" \
-                        -m "billing-base" \
-                        -m "iam-base" \
-                        -D "Test application" \
-                        -A "Rohin Bhargava" \
-                        -L "$license"
-                  else
-                    # Test custom path scenario
-                    custom_path="./custom-test-path"
-                    mkdir -p "$custom_path"
+                if grep -Fxq "$cache_name" "$CACHE_FILE"; then
+                    continue
+                fi
+                
+                # Determine the actual path where the app was created
+                if [ "$path_scenario" = "current" ]; then
+                  app_path="$app_name"
+                else
+                  app_path="$custom_path/$app_name"
+                fi
 
-                    RUST_BACKTRACE=1 cargo run --release init application "$app_name" \
-                        --path "$custom_path" \
-                        -d "$database" \
-                        -v "$validator" \
-                        -f "$formatter" \
-                        -l "$linter" \
-                        -F "$framework" \
-                        -r "$runtime" \
-                        -t "$test_framework" \
-                        -m "billing-base" \
-                        -m "iam-base" \
-                        -D "Test application" \
-                        -A "Rohin Bhargava" \
-                        -L "$license"
-                  fi 
+                cd "$app_name"
+                if [ "$runtime" = "bun" ]; then
+                  bun install
+                else
+                  pnpm install
+                fi
 
-                  if grep -Fxq "$cache_name" "$CACHE_FILE"; then
-                      continue
-                  fi
-                  
-                  # Determine the actual path where the app was created
-                  if [ "$path_scenario" = "current" ]; then
-                    app_path="$app_name"
-                  else
-                    app_path="$custom_path/$app_name"
-                  fi
-                  
-                  cd "$app_name"
-                  if [ "$runtime" = "bun" ]; then
-                    bun install
-                  else
-                    pnpm install
-                  fi
+                if [ "$runtime" = "bun" ]; then
+                  bun run build
+                else
+                  pnpm build
+                fi
 
-                  if [ "$runtime" = "bun" ]; then
-                    bun run build
-                  else
-                    pnpm build
-                  fi
+                cd ..
 
-                  cd ..
-
-                  echo "$cache_name" >> "$CACHE_FILE"
-                done
+                echo "$cache_name" >> "$CACHE_FILE"
               done
             done
           done
