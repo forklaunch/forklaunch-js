@@ -48,6 +48,7 @@ extendZodWithOpenApi(z);
 export class ZodSchemaValidator
   implements
     SV<
+      <T>() => ZodType<T>,
       <T extends ZodObject<ZodRawShape>>(schema: T) => ZodResolve<T>,
       <T extends ZodIdiomaticSchema>(schema: T) => ZodResolve<T>,
       <T extends ZodIdiomaticSchema>(schema: T) => ZodOptional<ZodResolve<T>>,

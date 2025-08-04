@@ -7,14 +7,16 @@ pub fn verify_package_versions(
     package_dirs: &[&str],
     implementation_refs: &Vec<PathBuf>,
 ) -> Result<(), String> {
-    let mut inventory: HashMap<String, String> = HashMap::new();
+    let mut inventory: HashMap<String, (String, u32)> = HashMap::new();
     let mut last_comment = String::new();
+    let mut line_number = 0;
 
     let contents =
         read_to_string("../../../../cli/src/core/package_json/package_json_constants.rs")
             .map_err(|e| e.to_string())?;
 
     for line in contents.lines() {
+        line_number += 1;
         if line.trim().starts_with("//") {
             last_comment = line.trim().to_string();
         } else if line.contains("_VERSION: &str =") {
@@ -35,7 +37,7 @@ pub fn verify_package_versions(
                     .filter(|s| !s.is_empty());
 
                 for package in packages {
-                    inventory.insert(package, version.to_string());
+                    inventory.insert(package, (version.to_string(), line_number));
                 }
             }
         }
@@ -48,7 +50,7 @@ pub fn verify_package_versions(
     for implementation in implementation_refs {
         fn check_package_json(
             path: &Path,
-            inventory: &HashMap<String, String>,
+            inventory: &HashMap<String, (String, u32)>,
         ) -> Result<(), String> {
             let package_json_string = read_to_string(path)
                 .map_err(|e| format!("Failed to read {}: {}", path.display(), e))?;
@@ -70,15 +72,27 @@ pub fn verify_package_versions(
                     package_json_string
                 )
             })?;
-            if let Some(expected) = inventory.get(name) {
+            if let Some((got, line_num)) = inventory.get(name) {
                 println!("Checking {} in {}", name, path.display());
-                if format!("^{}", version) != expected.clone() {
+                let got_stripped = if let Some(first) = got.chars().next() {
+                    if first == '~' || first == '^' {
+                        &got[1..]
+                    } else {
+                        got.as_str()
+                    }
+                } else {
+                    got.as_str()
+                };
+                if version != got_stripped {
                     return Err(format!(
-                        "Version mismatch for {} in {}: expected {}, got {}",
+                        r#"Version mismatch for {}: expected {}, got {} 
+source: {}
+destination: cli/src/core/package_json/package_json_constants.rs:{}"#,
                         name,
+                        format!("{}{}", got.chars().next().unwrap(), version),
+                        got,
                         path.display(),
-                        expected,
-                        format!("^{}", version)
+                        line_num
                     ));
                 }
             } else {
@@ -111,19 +125,26 @@ pub fn verify_package_versions(
         for section in &["dependencies", "devDependencies", "peerDependencies"] {
             if let Some(deps) = pkg_json[section].as_object() {
                 for (pkg, ver) in deps {
-                    if let Some(expected) = inventory.get(pkg.as_str()) {
+                    if let Some((got, line_num)) = inventory.get(pkg.as_str()) {
                         println!("Checking {} in {}", pkg, path.display());
-                        let actual = ver.as_str().ok_or_else(|| {
+                        let expected = ver.as_str().ok_or_else(|| {
                             format!("Invalid version for {} in {}", pkg, path.display())
                         })?;
-                        if actual != expected && !actual.contains("workspace:") {
+                        let mut expected_cmp = expected.to_string();
+                        if pkg.starts_with("@forklaunch") && expected_cmp.starts_with('^') {
+                            expected_cmp.replace_range(0..1, "~");
+                        }
+                        if &expected_cmp != got && !expected.contains("workspace:") {
                             return Err(format!(
-                                "Version mismatch for {} in {} {}: expected {}, got {}",
+                                r#"Version mismatch for {}: expected {}, got {} 
+source: {} {}
+defined in cli/src/core/package_json/package_json_constants.rs:{}"#,
                                 pkg,
+                                expected,
+                                got,
                                 path.display(),
                                 section,
-                                expected,
-                                actual
+                                line_num
                             ));
                         }
                     } else {

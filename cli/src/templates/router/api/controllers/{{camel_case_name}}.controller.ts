@@ -1,31 +1,24 @@
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { ConfigInjector, ScopedDependencyFactory } from '@forklaunch/core/services';
-import { handlers, SchemaValidator } from '@{{app_name}}/core';
+import { handlers, schemaValidator } from '@{{app_name}}/core';
 import { Metrics } from '@{{app_name}}/monitoring';
 import { {{pascal_case_name}}Service } from '../../domain/interfaces/{{camel_case_name}}.interface';
 import { {{pascal_case_name}}RequestMapper, {{pascal_case_name}}ResponseMapper } from '../../domain/mappers/{{camel_case_name}}.mappers';
-import { SchemaDependencies } from '../../registrations';
+import { ScopeFactory } from '../../server';
+import { {{pascal_case_name}}ServiceFactory } from '../routes/{{camel_case_name}}.routes';
 
 // Controller class that implements the {{pascal_case_name}}Service interface 
 export const {{pascal_case_name}}Controller = (
-  // scopeFactory returns new scopes that can be used for joint transactions
-    scopeFactory: () => ConfigInjector<
-      SchemaValidator,
-      SchemaDependencies
-    >,
+    // scopeFactory creates a new scope for the service
+    scopeFactory: ScopeFactory,
     // serviceFactory returns a new service instance on demand
-    serviceFactory: ScopedDependencyFactory<
-      SchemaValidator,
-      SchemaDependencies,
-      '{{pascal_case_name}}Service'
-    >,
+    serviceFactory: {{pascal_case_name}}ServiceFactory,
     // openTelemetryCollector for collecting logs and metrics with appropriate context
     openTelemetryCollector: OpenTelemetryCollector<Metrics>
   ) => ({
   // GET endpoint handler that returns a simple message
   {{camel_case_name}}Get: handlers.get(
-    SchemaValidator(),
+    schemaValidator,
     '/',
     {
       name: '{{camel_case_name}}',
@@ -47,7 +40,7 @@ export const {{pascal_case_name}}Controller = (
 
   // POST endpoint handler that processes request body and returns response from service
   {{camel_case_name}}Post: handlers.post(
-    SchemaValidator(),
+    schemaValidator,
     '/',
     {
       name: '{{camel_case_name}}', 

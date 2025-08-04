@@ -6,8 +6,10 @@ import { defineConfig{{^is_mongo}}, Platform, TextType, Type{{/is_mongo}} } from
 import { {{db_driver}} } from '@mikro-orm/{{database}}';
 import dotenv from 'dotenv';
 import * as entities from './persistence/entities';
+
 //! Load the environment variables
 dotenv.config({ path: getEnvVar('DOTENV_FILE_PATH') });
+
 //! Create the config injector
 const configInjector = createConfigInjector(
   SchemaValidator(),
@@ -44,11 +46,13 @@ const configInjector = createConfigInjector(
     }
   }
 );
+
 //! Validate the config injector
 export const validConfigInjector = configInjector.validateConfigSingletons(
   getEnvVar('DOTENV_FILE_PATH')
 );
 const tokens = validConfigInjector.tokens();
+
 //! Define the mikro-orm options config
 const mikroOrmOptionsConfig = defineConfig({
   driver: {{db_driver}},{{#is_mongo}}
@@ -104,6 +108,7 @@ const mikroOrmOptionsConfig = defineConfig({
   }{{#is_better_auth}},
   allowGlobalContext: true{{/is_better_auth}}
 });
+
 //! Export the mikro-orm options config
 export default mikroOrmOptionsConfig;
 

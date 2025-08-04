@@ -113,7 +113,9 @@ export function parse<
   const statusCode = Number(res.statusCode);
 
   const parsedResponse = schemaValidator.parse(
-    responses?.[statusCode],
+    [400, 401, 404, 403, 500].includes(statusCode)
+      ? schemaValidator.union([schemaValidator.string, responses?.[statusCode]])
+      : responses?.[statusCode],
     res.bodyData
   );
 

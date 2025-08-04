@@ -5,14 +5,13 @@ import {
 } from '@forklaunch/interfaces-worker/types';
 import dotenv from 'dotenv';
 import { SampleWorkerEventRecord } from './persistence/entities/sampleWorkerRecord.entity';
-import { createDependencies } from './registrations';
+import { createDependencyContainer } from './registrations';
 
 //! bootstrap resources and config
 const envFilePath = getEnvVar('DOTENV_FILE_PATH');
 dotenv.config({ path: envFilePath });
 
-const { serviceDependencies, tokens } = createDependencies();
-const ci = serviceDependencies.validateConfigSingletons(envFilePath);
+const { ci, tokens } = createDependencyContainer(envFilePath);
 
 const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
 const s3 = ci.resolve(tokens.S3ObjectStore);

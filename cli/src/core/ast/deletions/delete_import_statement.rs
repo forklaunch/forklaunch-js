@@ -33,12 +33,12 @@ pub(crate) fn delete_import_statement<'a>(
 
 pub(crate) fn delete_import_specifier<'a>(
     allocator: &'a Allocator,
-    sdk_types_program_ast: &mut Program<'a>,
+    sdk_program_ast: &mut Program<'a>,
     import_specifier: &str,
     import_source_identifier: &str,
 ) -> Result<String> {
     let mut new_body = Vec::new_in(allocator);
-    sdk_types_program_ast.body.iter_mut().for_each(|stmt| {
+    sdk_program_ast.body.iter_mut().for_each(|stmt| {
         let import = match stmt {
             Statement::ImportDeclaration(import) => import,
             _ => {
@@ -71,10 +71,10 @@ pub(crate) fn delete_import_specifier<'a>(
         }
     });
 
-    sdk_types_program_ast.body = new_body;
+    sdk_program_ast.body = new_body;
 
     Ok(CodeGenerator::new()
         .with_options(CodegenOptions::default())
-        .build(sdk_types_program_ast)
+        .build(sdk_program_ast)
         .code)
 }

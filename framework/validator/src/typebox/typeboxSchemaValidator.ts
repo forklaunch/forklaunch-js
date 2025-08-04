@@ -86,6 +86,7 @@ SetErrorFunction((params) => {
 export class TypeboxSchemaValidator
   implements
     SV<
+      <T>() => TTransform<TAny, T>,
       <T extends SafeTObject<TProperties>>(schema: T) => TypeCheck<T>,
       <T extends TIdiomaticSchema>(schema: T) => TResolve<T>,
       <T extends TIdiomaticSchema>(schema: T) => TOptional<TResolve<T>>,

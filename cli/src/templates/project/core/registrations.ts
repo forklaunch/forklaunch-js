@@ -39,6 +39,7 @@ import {
   Response,
 } from "@forklaunch/{{http_framework}}";
 
+export const schemaValidator = SchemaValidator();
 export type SchemaValidator = ReturnType<typeof SchemaValidator>;
 
 export {

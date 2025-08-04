@@ -20,8 +20,7 @@ use crate::{
         ast::transformations::{
             transform_entities_index_ts::transform_entities_index_ts,
             transform_registrations_ts::transform_registrations_ts_add_router,
-            transform_sdk_types_ts::transform_sdk_types_ts,
-            transform_seed_data_ts::transform_seed_data_ts,
+            transform_sdk_ts::transform_sdk_ts, transform_seed_data_ts::transform_seed_data_ts,
             transform_seeders_index_ts::transform_seeders_index_ts,
             transform_server_ts::transform_server_ts,
         },
@@ -98,8 +97,8 @@ fn add_router_to_artifacts(
     });
 
     rendered_templates.push(RenderedTemplate {
-        path: base_path.join("sdk.types.ts"),
-        content: transform_sdk_types_ts(manifest_data.router_name.as_str(), &base_path)?,
+        path: base_path.join("sdk.ts"),
+        content: transform_sdk_ts(manifest_data.router_name.as_str(), &base_path)?,
         context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_APP.to_string()),
     });
 

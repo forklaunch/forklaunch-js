@@ -3,32 +3,27 @@ import {
   handlers,
   IdSchema,
   IdsSchema,
-  SchemaValidator,
+  schemaValidator,
   string
 } from '@forklaunch/blueprint-core';
 import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { UserService } from '@forklaunch/interfaces-iam/interfaces';
 import {
   CreateUserMapper,
   UpdateUserMapper,
   UserMapper
 } from '../../domain/mappers/user.mappers';
-import { SchemaDependencies } from '../../registrations';
+import { UserServiceFactory } from '../routes/user.routes';
 
 export const UserController = (
-  serviceFactory: ScopedDependencyFactory<
-    SchemaValidator,
-    SchemaDependencies,
-    'UserService'
-  >,
+  serviceFactory: UserServiceFactory,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) =>
   ({
     createUser: handlers.post(
-      SchemaValidator(),
+      schemaValidator,
       '/',
       {
         name: 'Create User',
@@ -47,7 +42,7 @@ export const UserController = (
     ),
 
     createBatchUsers: handlers.post(
-      SchemaValidator(),
+      schemaValidator,
       '/batch',
       {
         name: 'Create Batch Users',
@@ -66,7 +61,7 @@ export const UserController = (
     ),
 
     getUser: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/:id',
       {
         name: 'Get User',
@@ -84,7 +79,7 @@ export const UserController = (
     ),
 
     getBatchUsers: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/batch',
       {
         name: 'Get Batch Users',
@@ -102,7 +97,7 @@ export const UserController = (
     ),
 
     updateUser: handlers.put(
-      SchemaValidator(),
+      schemaValidator,
       '/',
       {
         name: 'Update User',
@@ -121,7 +116,7 @@ export const UserController = (
     ),
 
     updateBatchUsers: handlers.put(
-      SchemaValidator(),
+      schemaValidator,
       '/batch',
       {
         name: 'Update Batch Users',
@@ -140,7 +135,7 @@ export const UserController = (
     ),
 
     deleteUser: handlers.delete(
-      SchemaValidator(),
+      schemaValidator,
       '/:id',
       {
         name: 'Delete User',
@@ -159,7 +154,7 @@ export const UserController = (
     ),
 
     deleteBatchUsers: handlers.delete(
-      SchemaValidator(),
+      schemaValidator,
       '/batch',
       {
         name: 'Delete Batch Users',
@@ -178,7 +173,7 @@ export const UserController = (
     ),
 
     verifyHasRole: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/:id/verify-role/:roleId',
       {
         name: 'Verify User Role',
@@ -201,7 +196,7 @@ export const UserController = (
     ),
 
     verifyHasPermission: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/:id/verify-permission/:permissionId',
       {
         name: 'Verify User Permission',

@@ -1,34 +1,24 @@
-import { handlers, SchemaValidator } from '@forklaunch/blueprint-core';
+import { handlers, schemaValidator } from '@forklaunch/blueprint-core';
 import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import {
-  ConfigInjector,
-  ScopedDependencyFactory
-} from '@forklaunch/core/services';
 import { SampleWorkerService } from '../../domain/interfaces/sampleWorkerService.interface';
 import {
   SampleWorkerRequestMapper,
   SampleWorkerResponseMapper
 } from '../../domain/mappers/sampleWorker.mappers';
-import { SchemaDependencies } from '../../registrations';
+import { SampleWorkerServiceFactory } from '../routes/sampleWorker.routes';
 
 // Controller class that implements the SampleWorkerService interface
 export const SampleWorkerController = (
-  // scopeFactory returns new scopes that can be used for joint transactions
-  scopeFactory: () => ConfigInjector<SchemaValidator, SchemaDependencies>,
   // serviceFactory returns a new service instance on demand
-  serviceFactory: ScopedDependencyFactory<
-    SchemaValidator,
-    SchemaDependencies,
-    'SampleWorkerService'
-  >,
+  serviceFactory: SampleWorkerServiceFactory,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) =>
   ({
     // GET endpoint handler that returns a simple message
     sampleWorkerGet: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/:id',
       {
         name: 'sampleWorker',
@@ -53,7 +43,7 @@ export const SampleWorkerController = (
 
     // POST endpoint handler that processes request body and returns response from service
     sampleWorkerPost: handlers.post(
-      SchemaValidator(),
+      schemaValidator,
       '/',
       {
         name: 'sampleWorker',
@@ -68,8 +58,8 @@ export const SampleWorkerController = (
       async (req, res) => {
         openTelemetryCollector.debug('SampleWorkerPost', req.body);
         res.status(200).json(
-          // constructs a new service instance using the scopeFactory and calls the sampleWorkerPost method
-          await serviceFactory(scopeFactory()).sampleWorkerPost(req.body)
+          // constructs a new service instance and calls the sampleWorkerPost method
+          await serviceFactory().sampleWorkerPost(req.body)
         );
       }
     )

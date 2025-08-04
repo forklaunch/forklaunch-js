@@ -1,13 +1,12 @@
 import {
   handlers,
   IdSchema,
-  SchemaValidator,
+  schemaValidator,
   string
 } from '@forklaunch/blueprint-core';
 import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { CheckoutSessionService } from '@forklaunch/interfaces-billing/interfaces';
 import { CurrencyEnum } from '../../domain/enum/currency.enum';
 import { PaymentMethodEnum } from '../../domain/enum/paymentMethod.enum';
@@ -16,19 +15,15 @@ import {
   CheckoutSessionMapper,
   CreateCheckoutSessionMapper
 } from '../../domain/mappers/checkoutSession.mappers';
-import { SchemaDependencies } from '../../registrations';
+import { CheckoutSessionServiceFactory } from '../routes/checkoutSession.routes';
 
 export const CheckoutSessionController = (
-  serviceFactory: ScopedDependencyFactory<
-    SchemaValidator,
-    SchemaDependencies,
-    'CheckoutSessionService'
-  >,
+  serviceFactory: CheckoutSessionServiceFactory,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) =>
   ({
     createCheckoutSession: handlers.post(
-      SchemaValidator(),
+      schemaValidator,
       '/',
       {
         name: 'createCheckoutSession',
@@ -47,7 +42,7 @@ export const CheckoutSessionController = (
     ),
 
     getCheckoutSession: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/:id',
       {
         name: 'getCheckoutSession',
@@ -66,7 +61,7 @@ export const CheckoutSessionController = (
     ),
 
     expireCheckoutSession: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/:id/expire',
       {
         name: 'expireCheckoutSession',
@@ -84,7 +79,7 @@ export const CheckoutSessionController = (
     ),
 
     handleCheckoutSuccess: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/:id/success',
       {
         name: 'handleCheckoutSuccess',
@@ -104,7 +99,7 @@ export const CheckoutSessionController = (
     ),
 
     handleCheckoutFailure: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/:id/failure',
       {
         name: 'handleCheckoutFailure',

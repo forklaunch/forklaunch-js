@@ -1,63 +1,40 @@
-import { forklaunchExpress, SchemaValidator } from '@forklaunch/blueprint-core';
+import { forklaunchExpress, schemaValidator } from '@forklaunch/blueprint-core';
 import { getEnvVar } from '@forklaunch/common';
 import dotenv from 'dotenv';
-import { CheckoutSessionRoutes } from './api/routes/checkoutSession.routes';
-import { PaymentLinkRoutes } from './api/routes/paymentLink.routes';
-import { PlanRoutes } from './api/routes/plan.routes';
-import { SubscriptionRoutes } from './api/routes/subscription.routes';
-import { WebhookRoutes } from './api/routes/webhook.routes';
-import { createDependencies } from './registrations';
+import { billingPortalRouter } from './api/routes/billingPortal.routes';
+import { checkoutSessionRouter } from './api/routes/checkoutSession.routes';
+import { paymentLinkRouter } from './api/routes/paymentLink.routes';
+import { planRouter } from './api/routes/plan.routes';
+import { subscriptionRouter } from './api/routes/subscription.routes';
+import { webhookRouter } from './api/routes/webhook.routes';
+import { createDependencyContainer } from './registrations';
+
 //! bootstrap resources and config
 const envFilePath = getEnvVar('DOTENV_FILE_PATH');
 dotenv.config({ path: envFilePath });
-const { serviceDependencies, tokens } = createDependencies();
-const ci = serviceDependencies.validateConfigSingletons(envFilePath);
+export const { ci, tokens } = createDependencyContainer(envFilePath);
+export type ScopeFactory = typeof ci.createScope;
+
 //! resolves the openTelemetryCollector from the configuration
 const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
+
 //! creates an instance of forklaunchExpress
-const app = forklaunchExpress(SchemaValidator(), openTelemetryCollector);
+const app = forklaunchExpress(schemaValidator, openTelemetryCollector);
+
 //! resolves the host, port, and version from the configuration
 const host = ci.resolve(tokens.HOST);
 const port = ci.resolve(tokens.PORT);
 const version = ci.resolve(tokens.VERSION);
 const docsPath = ci.resolve(tokens.DOCS_PATH);
-//! resolves the necessary services from the configuration
-const checkoutSessionServiceFactory = ci.scopedResolver(
-  tokens.CheckoutSessionService
-);
-const paymentLinkServiceFactory = ci.scopedResolver(tokens.PaymentLinkService);
-const planServiceFactory = ci.scopedResolver(tokens.PlanService);
-const subscriptionServiceFactory = ci.scopedResolver(
-  tokens.SubscriptionService
-);
-const webhookServiceFactory = ci.scopedResolver(tokens.WebhookService);
-//! constructs the necessary routes using the appropriate Routes functions
-export const checkoutSessionRoutes = CheckoutSessionRoutes(
-  checkoutSessionServiceFactory,
-  openTelemetryCollector
-);
-export const paymentLinkRoutes = PaymentLinkRoutes(
-  paymentLinkServiceFactory,
-  openTelemetryCollector
-);
-export const planRoutes = PlanRoutes(
-  planServiceFactory,
-  openTelemetryCollector
-);
-export const subscriptionRoutes = SubscriptionRoutes(
-  subscriptionServiceFactory,
-  openTelemetryCollector
-);
-export const webhookRoutes = WebhookRoutes(
-  webhookServiceFactory,
-  openTelemetryCollector
-);
+
 //! mounts the routes to the app
-app.use(checkoutSessionRoutes);
-app.use(paymentLinkRoutes);
-app.use(planRoutes);
-app.use(subscriptionRoutes);
-app.use(webhookRoutes);
+app.use(billingPortalRouter);
+app.use(checkoutSessionRouter);
+app.use(paymentLinkRouter);
+app.use(planRouter);
+app.use(subscriptionRouter);
+app.use(webhookRouter);
+
 //! starts the server
 app.listen(port, host, () => {
   openTelemetryCollector.info(

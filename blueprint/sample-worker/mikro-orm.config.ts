@@ -1,4 +1,4 @@
-import { number, SchemaValidator, string } from '@forklaunch/blueprint-core';
+import { number, schemaValidator, string } from '@forklaunch/blueprint-core';
 import {
   createConfigInjector,
   getEnvVar,
@@ -13,7 +13,7 @@ import * as entities from './persistence/entities';
 
 dotenv.config({ path: getEnvVar('DOTENV_FILE_PATH') });
 
-const configInjector = createConfigInjector(SchemaValidator(), {
+const configInjector = createConfigInjector(schemaValidator, {
   DB_NAME: {
     lifetime: Lifetime.Singleton,
     type: string,

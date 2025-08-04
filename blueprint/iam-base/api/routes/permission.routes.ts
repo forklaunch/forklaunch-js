@@ -1,36 +1,35 @@
-import { forklaunchRouter, SchemaValidator } from '@forklaunch/blueprint-core';
-import { Metrics } from '@forklaunch/blueprint-monitoring';
-import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { ScopedDependencyFactory } from '@forklaunch/core/services';
-import { SchemaDependencies } from '../../registrations';
+import { forklaunchRouter, schemaValidator } from '@forklaunch/blueprint-core';
+import { sdkRouter } from '@forklaunch/core/http';
+import { ci, tokens } from '../../server';
 import { PermissionController } from '../controllers/permission.controller';
 
-export const PermissionRoutes = (
-  serviceFactory: ScopedDependencyFactory<
-    SchemaValidator,
-    SchemaDependencies,
-    'PermissionService'
-  >,
-  openTelemetryCollector: OpenTelemetryCollector<Metrics>
-) => {
-  const router = forklaunchRouter(
-    '/permission',
-    SchemaValidator(),
-    openTelemetryCollector
-  );
+const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
+const permissionServiceFactory = ci.scopedResolver(tokens.PermissionService);
 
-  const controller = PermissionController(
-    serviceFactory,
-    openTelemetryCollector
-  );
+export type PermissionServiceFactory = typeof permissionServiceFactory;
 
-  return router
-    .post('/', controller.createPermission)
-    .post('/batch', controller.createBatchPermissions)
-    .get('/:id', controller.getPermission)
-    .get('/batch', controller.getBatchPermissions)
-    .put('/', controller.updatePermission)
-    .put('/batch', controller.updateBatchPermissions)
-    .delete('/:id', controller.deletePermission)
-    .delete('/batch', controller.deleteBatchPermissions);
-};
+export const permissionRouter = forklaunchRouter(
+  '/permission',
+  schemaValidator,
+  openTelemetryCollector
+);
+
+const controller = PermissionController(
+  permissionServiceFactory,
+  openTelemetryCollector
+);
+
+permissionRouter.post('/', controller.createPermission);
+permissionRouter.post('/batch', controller.createBatchPermissions);
+permissionRouter.get('/:id', controller.getPermission);
+permissionRouter.get('/batch', controller.getBatchPermissions);
+permissionRouter.put('/', controller.updatePermission);
+permissionRouter.put('/batch', controller.updateBatchPermissions);
+permissionRouter.delete('/:id', controller.deletePermission);
+permissionRouter.delete('/batch', controller.deleteBatchPermissions);
+
+export const permissionSdkRouter = sdkRouter(
+  schemaValidator,
+  controller,
+  permissionRouter
+);

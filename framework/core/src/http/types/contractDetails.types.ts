@@ -1,4 +1,8 @@
-import { StringWithoutSlash, UnionToIntersection } from '@forklaunch/common';
+import {
+  StringWithoutSlash,
+  TypeSafeFunction,
+  UnionToIntersection
+} from '@forklaunch/common';
 import {
   AnySchemaValidator,
   IdiomaticSchema,
@@ -293,7 +297,12 @@ export type Body<SV extends AnySchemaValidator> =
   | (ExclusiveRequestBodyBase<SV> & SV['boolean'])
   | (ExclusiveRequestBodyBase<SV> & SV['date'])
   | (ExclusiveRequestBodyBase<SV> & SV['array'])
-  | (ExclusiveRequestBodyBase<SV> & SV['file']);
+  | (ExclusiveRequestBodyBase<SV> & SV['file'])
+  | (ExclusiveRequestBodyBase<SV> & SV['any'])
+  | (ExclusiveRequestBodyBase<SV> & SV['unknown'])
+  | (ExclusiveRequestBodyBase<SV> & SV['binary'])
+  | (ExclusiveRequestBodyBase<SV> &
+      (SV['type'] extends TypeSafeFunction ? ReturnType<SV['type']> : never));
 
 export type BasicAuthMethods = {
   readonly basic: {

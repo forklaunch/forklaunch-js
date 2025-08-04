@@ -3,13 +3,12 @@ import {
   handlers,
   IdSchema,
   IdsSchema,
-  SchemaValidator,
+  schemaValidator,
   string
 } from '@forklaunch/blueprint-core';
 import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { BillingProviderEnum } from '@forklaunch/implementation-billing-stripe/enum';
 import { SubscriptionService } from '@forklaunch/interfaces-billing/interfaces';
 import { PartyEnum } from '../../domain/enum/party.enum';
@@ -18,19 +17,15 @@ import {
   SubscriptionMapper,
   UpdateSubscriptionMapper
 } from '../../domain/mappers/subscription.mappers';
-import { SchemaDependencies } from '../../registrations';
+import { SubscriptionServiceFactory } from '../routes/subscription.routes';
 
 export const SubscriptionController = (
-  serviceFactory: ScopedDependencyFactory<
-    SchemaValidator,
-    SchemaDependencies,
-    'SubscriptionService'
-  >,
+  serviceFactory: SubscriptionServiceFactory,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) =>
   ({
     createSubscription: handlers.post(
-      SchemaValidator(),
+      schemaValidator,
       '/',
       {
         name: 'createSubscription',
@@ -49,7 +44,7 @@ export const SubscriptionController = (
     ),
 
     getSubscription: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/:id',
       {
         name: 'getSubscription',
@@ -68,7 +63,7 @@ export const SubscriptionController = (
     ),
 
     getUserSubscription: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/user/:id',
       {
         name: 'getUserSubscription',
@@ -90,7 +85,7 @@ export const SubscriptionController = (
     ),
 
     getOrganizationSubscription: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/organization/:id',
       {
         name: 'getOrganizationSubscription',
@@ -112,7 +107,7 @@ export const SubscriptionController = (
     ),
 
     updateSubscription: handlers.put(
-      SchemaValidator(),
+      schemaValidator,
       '/:id',
       {
         name: 'updateSubscription',
@@ -132,7 +127,7 @@ export const SubscriptionController = (
     ),
 
     deleteSubscription: handlers.delete(
-      SchemaValidator(),
+      schemaValidator,
       '/:id',
       {
         name: 'deleteSubscription',
@@ -150,7 +145,7 @@ export const SubscriptionController = (
     ),
 
     listSubscriptions: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/',
       {
         name: 'listSubscriptions',
@@ -169,7 +164,7 @@ export const SubscriptionController = (
     ),
 
     cancelSubscription: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/:id/cancel',
       {
         name: 'cancelSubscription',
@@ -187,7 +182,7 @@ export const SubscriptionController = (
     ),
 
     resumeSubscription: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/:id/resume',
       {
         name: 'resumeSubscription',

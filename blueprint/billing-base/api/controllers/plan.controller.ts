@@ -3,13 +3,12 @@ import {
   handlers,
   IdSchema,
   IdsSchema,
-  SchemaValidator,
+  schemaValidator,
   string
 } from '@forklaunch/blueprint-core';
 import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { PlanService } from '@forklaunch/interfaces-billing/interfaces';
 import { BillingProviderEnum } from '../../domain/enum/billingProvider.enum';
 import { CurrencyEnum } from '../../domain/enum/currency.enum';
@@ -19,19 +18,15 @@ import {
   PlanMapper,
   UpdatePlanMapper
 } from '../../domain/mappers/plan.mappers';
-import { PlanSchemas, SchemaDependencies } from '../../registrations';
-
+import { PlanSchemas } from '../../registrations';
+import { PlanServiceFactory } from '../routes/plan.routes';
 export const PlanController = (
-  serviceFactory: ScopedDependencyFactory<
-    SchemaValidator,
-    SchemaDependencies,
-    'PlanService'
-  >,
+  serviceFactory: PlanServiceFactory,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) =>
   ({
     createPlan: handlers.post(
-      SchemaValidator(),
+      schemaValidator,
       '/',
       {
         name: 'createPlan',
@@ -48,7 +43,7 @@ export const PlanController = (
     ),
 
     getPlan: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/:id',
       {
         name: 'getPlan',
@@ -69,7 +64,7 @@ export const PlanController = (
     ),
 
     updatePlan: handlers.put(
-      SchemaValidator(),
+      schemaValidator,
       '/',
       {
         name: 'updatePlan',
@@ -86,7 +81,7 @@ export const PlanController = (
     ),
 
     deletePlan: handlers.delete(
-      SchemaValidator(),
+      schemaValidator,
       '/:id',
       {
         name: 'deletePlan',
@@ -104,7 +99,7 @@ export const PlanController = (
     ),
 
     listPlans: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/',
       {
         name: 'listPlans',

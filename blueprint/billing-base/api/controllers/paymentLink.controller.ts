@@ -3,13 +3,12 @@ import {
   handlers,
   IdSchema,
   IdsSchema,
-  SchemaValidator,
+  schemaValidator,
   string
 } from '@forklaunch/blueprint-core';
 import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { PaymentLinkService } from '@forklaunch/interfaces-billing/interfaces';
 import { CurrencyEnum } from '../../domain/enum/currency.enum';
 import { PaymentMethodEnum } from '../../domain/enum/paymentMethod.enum';
@@ -19,19 +18,15 @@ import {
   PaymentLinkMapper,
   UpdatePaymentLinkMapper
 } from '../../domain/mappers/paymentLink.mappers';
-import { SchemaDependencies } from '../../registrations';
+import { PaymentLinkServiceFactory } from '../routes/paymentLink.routes';
 
 export const PaymentLinkController = (
-  serviceFactory: ScopedDependencyFactory<
-    SchemaValidator,
-    SchemaDependencies,
-    'PaymentLinkService'
-  >,
+  serviceFactory: PaymentLinkServiceFactory,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) =>
   ({
     createPaymentLink: handlers.post(
-      SchemaValidator(),
+      schemaValidator,
       '/',
       {
         name: 'createPaymentLink',
@@ -50,7 +45,7 @@ export const PaymentLinkController = (
     ),
 
     getPaymentLink: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/:id',
       {
         name: 'getPaymentLink',
@@ -67,7 +62,7 @@ export const PaymentLinkController = (
     ),
 
     updatePaymentLink: handlers.put(
-      SchemaValidator(),
+      schemaValidator,
       '/:id',
       {
         name: 'updatePaymentLink',
@@ -87,7 +82,7 @@ export const PaymentLinkController = (
     ),
 
     expirePaymentLink: handlers.delete(
-      SchemaValidator(),
+      schemaValidator,
       '/:id',
       {
         name: 'expirePaymentLink',
@@ -105,7 +100,7 @@ export const PaymentLinkController = (
     ),
 
     handlePaymentSuccess: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/:id/success',
       {
         name: 'handlePaymentSuccess',
@@ -126,7 +121,7 @@ export const PaymentLinkController = (
     ),
 
     handlePaymentFailure: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/:id/failure',
       {
         name: 'handlePaymentFailure',
@@ -147,7 +142,7 @@ export const PaymentLinkController = (
     ),
 
     listPaymentLinks: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/',
       {
         name: 'listPaymentLinks',

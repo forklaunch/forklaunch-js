@@ -1,13 +1,12 @@
 import {
   handlers,
   IdSchema,
-  SchemaValidator,
+  schemaValidator,
   string
 } from '@forklaunch/blueprint-core';
 import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { OrganizationService } from '@forklaunch/interfaces-iam/interfaces';
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { OrganizationStatus } from '../../domain/enum/organizationStatus.enum';
@@ -16,19 +15,15 @@ import {
   OrganizationMapper,
   UpdateOrganizationMapper
 } from '../../domain/mappers/organization.mappers';
-import { SchemaDependencies } from '../../registrations';
+import type { OrganizationServiceFactory } from '../routes/organization.routes';
 
 export const OrganizationController = (
-  serviceFactory: ScopedDependencyFactory<
-    SchemaValidator,
-    SchemaDependencies,
-    'OrganizationService'
-  >,
+  serviceFactory: OrganizationServiceFactory,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) =>
   ({
     createOrganization: handlers.post(
-      SchemaValidator(),
+      schemaValidator,
       '/',
       {
         name: 'Create Organization',
@@ -60,7 +55,7 @@ export const OrganizationController = (
     ),
 
     getOrganization: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/:id',
       {
         name: 'Get Organization',
@@ -86,7 +81,7 @@ export const OrganizationController = (
     ),
 
     updateOrganization: handlers.put(
-      SchemaValidator(),
+      schemaValidator,
       '/',
       {
         name: 'Update Organization',
@@ -106,7 +101,7 @@ export const OrganizationController = (
     ),
 
     deleteOrganization: handlers.delete(
-      SchemaValidator(),
+      schemaValidator,
       '/:id',
       {
         name: 'Delete Organization',

@@ -1,4 +1,4 @@
-import { SchemaValidator } from '@forklaunch/blueprint-core';
+import { schemaValidator } from '@forklaunch/blueprint-core';
 import { BullMqWorkerProducer } from '@forklaunch/implementation-worker-bullmq/producers';
 import { BullMqWorkerOptions } from '@forklaunch/implementation-worker-bullmq/types';
 import { DatabaseWorkerProducer } from '@forklaunch/implementation-worker-database/producers';
@@ -42,7 +42,7 @@ export class BaseSampleWorkerService implements SampleWorkerService {
     dto: SampleWorkerRequestDto
   ): Promise<SampleWorkerResponseDto> => {
     const entity = await SampleWorkerRequestMapper.deserializeDtoToEntity(
-      SchemaValidator(),
+      schemaValidator,
       dto
     );
 
@@ -52,7 +52,7 @@ export class BaseSampleWorkerService implements SampleWorkerService {
     await this.kafkaWorkerProducer.enqueueJob(entity);
 
     return SampleWorkerResponseMapper.serializeEntityToDto(
-      SchemaValidator(),
+      schemaValidator,
       entity
     );
   };
