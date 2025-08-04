@@ -22,8 +22,6 @@ test_frameworks=("vitest" "jest")
 # licenses=("AGPL-3.0" "GPL-3.0" "LGPL-3.0" "Mozilla-2.0" "Apache-2.0" "MIT" "Boost-1.0" "Unlicense" "none")
 licenses=("Mozilla-2.0")
 
-# Test both current directory and custom path scenarios
-path_scenarios=("current" "custom")
 
 
 for database in "${databases[@]}"; do
