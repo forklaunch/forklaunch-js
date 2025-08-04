@@ -29,4 +29,4 @@ const controller = {{pascal_case_name}}Controller(
 {{camel_case_name}}Router.post('/', controller.{{camel_case_name}}Post);
 
 // create an sdk binding for the router
-export const {{camel_case_name}}SdkRouter = sdkRouter(schemaValidator, {
+export const {{camel_case_name}}SdkRouter = sdkRouter(schemaValidator, controller, {{camel_case_name}}Router);

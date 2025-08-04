@@ -15,7 +15,7 @@ import {
   OrganizationMapper,
   UpdateOrganizationMapper
 } from '../../domain/mappers/organization.mappers';
-import { OrganizationServiceFactory } from '../routes/organization.routes';
+import type { OrganizationServiceFactory } from '../routes/organization.routes';
 
 export const OrganizationController = (
   serviceFactory: OrganizationServiceFactory,

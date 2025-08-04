@@ -4,10 +4,13 @@ import { handlers, schemaValidator } from '@{{app_name}}/core';
 import { Metrics } from '@{{app_name}}/monitoring';
 import { {{pascal_case_name}}Service } from '../../domain/interfaces/{{camel_case_name}}.interface';
 import { {{pascal_case_name}}RequestMapper, {{pascal_case_name}}ResponseMapper } from '../../domain/mappers/{{camel_case_name}}.mappers';
-import { ci } from '../../../registrations';
+import { ScopeFactory } from '../../server';
+import { {{pascal_case_name}}ServiceFactory } from '../routes/{{camel_case_name}}.routes';
 
 // Controller class that implements the {{pascal_case_name}}Service interface 
 export const {{pascal_case_name}}Controller = (
+    // scopeFactory creates a new scope for the service
+    scopeFactory: ScopeFactory,
     // serviceFactory returns a new service instance on demand
     serviceFactory: {{pascal_case_name}}ServiceFactory,
     // openTelemetryCollector for collecting logs and metrics with appropriate context
@@ -55,7 +58,7 @@ export const {{pascal_case_name}}Controller = (
         .json(
           // constructs a new service instance using the scopeFactory and calls the {{camel_case_name}}Post method
           await serviceFactory(
-            ci.createScope()
+            scopeFactory()
           ).{{camel_case_name}}Post(req.body)
         );
     }
