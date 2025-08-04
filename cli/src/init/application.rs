@@ -244,7 +244,7 @@ fn generate_application_package_json(
     };
 
     Ok(RenderedTemplate {
-        path: Path::new(&data.project_path).join("package.json"),
+        path: Path::new(&data.application_path).join("package.json"),
         content: to_string_pretty(&package_json_contents).unwrap(),
         context: None,
     })
@@ -387,7 +387,7 @@ impl CliCommand for ApplicationCommand {
         )?;
 
         // Check if path argument is provided
-        let project_path = if let Some(custom_path) = matches.get_one::<String>("path") {
+        let application_path = if let Some(custom_path) = matches.get_one::<String>("path") {
             // Use the provided path directly
             custom_path.clone()
         } else {
@@ -407,7 +407,7 @@ impl CliCommand for ApplicationCommand {
                 prompt_with_validation(
                     &mut line_editor,
                     &mut stdout,
-                    "project_path",
+                    "application_path",
                     matches,
                     "Please provide path to project directory:",
                     None,
@@ -427,10 +427,10 @@ impl CliCommand for ApplicationCommand {
         };
 
         // Combine the project path with the application name
-        let full_project_path = if project_path.ends_with('/') || project_path.ends_with('\\') {
-            format!("{}{}", project_path, name)
+        let full_application_path = if application_path.ends_with('/') || application_path.ends_with('\\') {
+            format!("{}{}", application_path, name)
         } else {
-            format!("{}/{}", project_path, name)
+            format!("{}/{}", application_path, name)
         };
 
         let runtime: Runtime = prompt_with_validation(
@@ -698,7 +698,7 @@ impl CliCommand for ApplicationCommand {
         let mut data = ApplicationManifestData {
             id: Uuid::new_v4().to_string(),
             cli_version: env!("CARGO_PKG_VERSION").to_string(),
-            project_path: full_project_path.clone(),
+            application_path: full_application_path.clone(),
             database: database.to_string(),
             app_name: name.to_string(),
             camel_case_app_name: name.to_string().to_case(Case::Camel),
@@ -750,7 +750,7 @@ impl CliCommand for ApplicationCommand {
         let mut rendered_templates = Vec::new();
 
         rendered_templates.extend(
-            generate_manifest(&Path::new(&full_project_path).to_string_lossy().to_string(), &data)
+            generate_manifest(&Path::new(&full_application_path).to_string_lossy().to_string(), &data)
                 .with_context(|| "Failed to setup manifest file for application")?,
         );
 
@@ -780,7 +780,7 @@ impl CliCommand for ApplicationCommand {
         template_dirs.extend(additional_projects_dirs.clone());
 
         rendered_templates.extend(generate_with_template(
-            Some(&full_project_path),
+            Some(&full_application_path),
             &PathIO {
                 input_path: Path::new("application").to_string_lossy().to_string(),
                 output_path: "".to_string(),
@@ -894,13 +894,13 @@ impl CliCommand for ApplicationCommand {
             {
                 docker_compose_string = Some(add_service_definition_to_docker_compose(
                     &service_data,
-                    &Path::new(&full_project_path),
+                    &Path::new(&full_application_path),
                     docker_compose_string,
                 )?);
             }
 
             rendered_templates.extend(generate_with_template(
-                Some(&full_project_path),
+                Some(&full_application_path),
                 &template_dir,
                 &ManifestData::Service(&service_data),
                 &ignore_files
@@ -924,7 +924,7 @@ impl CliCommand for ApplicationCommand {
 
             rendered_templates.push(generate_service_package_json(
                 &service_data,
-                &Path::new(&full_project_path).join(&template_dir.output_path),
+                &Path::new(&full_application_path).join(&template_dir.output_path),
                 match service_data.service_name.as_str() {
                     "core" => Some(ProjectDependencies {
                         app_name: service_data.app_name.clone(),
@@ -1049,7 +1049,7 @@ impl CliCommand for ApplicationCommand {
         }
 
         rendered_templates.push(RenderedTemplate {
-            path: Path::new(&full_project_path).join("docker-compose.yaml"),
+            path: Path::new(&full_application_path).join("docker-compose.yaml"),
             content: docker_compose_string.unwrap(),
             context: None,
         });
@@ -1061,7 +1061,7 @@ impl CliCommand for ApplicationCommand {
 
         rendered_templates.push(
             generate_index_ts_database_export(
-                &Path::new(&full_project_path),
+                &Path::new(&full_application_path),
                 Some(vec![database.to_string()]),
                 None,
             )
@@ -1069,29 +1069,29 @@ impl CliCommand for ApplicationCommand {
         );
 
         rendered_templates.extend(
-            generate_license(&Path::new(&full_project_path), &data)
+            generate_license(&Path::new(&full_application_path), &data)
                 .with_context(|| ERROR_FAILED_TO_CREATE_LICENSE)?,
         );
 
         rendered_templates.extend(
-            generate_gitignore(&Path::new(&full_project_path))
+            generate_gitignore(&Path::new(&full_application_path))
                 .with_context(|| ERROR_FAILED_TO_CREATE_GITIGNORE)?,
         );
 
         if runtime == Runtime::Node {
             rendered_templates.extend(
-                generate_pnpm_workspace(&full_project_path, &additional_projects)
+                generate_pnpm_workspace(&full_application_path, &additional_projects)
                     .with_context(|| ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE)?,
             );
         }
 
         if additional_projects_names.contains(&"iam".to_string()) {
             rendered_templates.extend(
-                generate_iam_keys(&Path::new(&full_project_path)).with_context(|| ERROR_FAILED_TO_SETUP_IAM)?,
+                generate_iam_keys(&Path::new(&full_application_path)).with_context(|| ERROR_FAILED_TO_SETUP_IAM)?,
             );
         }
 
-        create_forklaunch_dir(&Path::new(&full_project_path).to_string_lossy().to_string(), dryrun)?;
+        create_forklaunch_dir(&Path::new(&full_application_path).to_string_lossy().to_string(), dryrun)?;
         write_rendered_templates(&rendered_templates, dryrun, &mut stdout)
             .with_context(|| "Failed to write application files")?;
 
@@ -1099,8 +1099,8 @@ impl CliCommand for ApplicationCommand {
             .into_iter()
             .try_for_each(|template_dir| {
                 generate_symlinks(
-                    Some(&Path::new(&full_project_path)),
-                    &Path::new(&full_project_path).join(&template_dir.output_path),
+                    Some(&Path::new(&full_application_path)),
+                    &Path::new(&full_application_path).join(&template_dir.output_path),
                     &mut data,
                     dryrun,
                 )
@@ -1110,7 +1110,7 @@ impl CliCommand for ApplicationCommand {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
             writeln!(stdout, "{} initialized successfully!", name)?;
             stdout.reset()?;
-            format_code(&Path::new(&full_project_path), &data.runtime.parse()?);
+            format_code(&Path::new(&full_application_path), &data.runtime.parse()?);
         }
 
         Ok(())

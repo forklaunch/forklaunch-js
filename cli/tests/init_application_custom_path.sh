@@ -1,4 +1,4 @@
-echo "Testing small subset of application initialization..."
+echo "Testing custom path subset of application initialization..."
 
 # Clean up any existing test directories
 rm -rf test-app-current test-app-custom custom-test-path output/init-application

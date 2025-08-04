@@ -36,7 +36,7 @@ for database in "${databases[@]}"; do
             for test_framework in "${test_frameworks[@]}"; do
               for license in "${licenses[@]}"; do
                 license_name=$(echo "$license" | tr '[:upper:]' '[:lower:]' | cut -d'-' -f1)
-                cache_name="application-${validator}-${framework}-${runtime}-${path_scenario}"
+                cache_name="application-${validator}-${framework}-${runtime}"
                 app_name="${cache_name}-${database}-${linter}-${formatter}-${test_framework}-${license_name}"
 
                 
