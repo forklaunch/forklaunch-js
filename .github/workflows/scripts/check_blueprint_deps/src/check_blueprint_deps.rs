@@ -74,8 +74,16 @@ pub fn verify_package_versions(
             })?;
             if let Some((got, line_num)) = inventory.get(name) {
                 println!("Checking {} in {}", name, path.display());
-                if format!("^{}", version) != got.clone() && format!("~{}", version) != got.clone()
-                {
+                let got_stripped = if let Some(first) = got.chars().next() {
+                    if first == '~' || first == '^' {
+                        &got[1..]
+                    } else {
+                        got.as_str()
+                    }
+                } else {
+                    got.as_str()
+                };
+                if version != got_stripped {
                     return Err(format!(
                         r#"Version mismatch for {}: expected {}, got {} 
 source: {}
@@ -122,7 +130,11 @@ destination: cli/src/core/package_json/package_json_constants.rs:{}"#,
                         let expected = ver.as_str().ok_or_else(|| {
                             format!("Invalid version for {} in {}", pkg, path.display())
                         })?;
-                        if expected != got && !expected.contains("workspace:") {
+                        let mut expected_cmp = expected.to_string();
+                        if pkg.starts_with("@forklaunch") && expected_cmp.starts_with('^') {
+                            expected_cmp.replace_range(0..1, "~");
+                        }
+                        if &expected_cmp != got && !expected.contains("workspace:") {
                             return Err(format!(
                                 r#"Version mismatch for {}: expected {}, got {} 
 source: {} {}

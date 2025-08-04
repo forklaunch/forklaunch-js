@@ -1,5 +1,11 @@
 # @forklaunch/interfaces-iam
 
+## 0.5.0
+
+### Minor Changes
+
+- pin forklaunch package to patch versions
+
 ## 0.4.0
 
 ### Minor Changes

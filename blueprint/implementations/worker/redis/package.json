@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/implementation-worker-redis",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Redis implementation for forklaunch workers",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -53,9 +53,9 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/core": "~0.12.0",
+    "@forklaunch/core": "^0.12.0",
     "@forklaunch/interfaces-worker": "workspace:*",
-    "@forklaunch/internal": "~0.1.9",
+    "@forklaunch/internal": "^0.1.9",
     "@sinclair/typebox": "^0.34.38",
     "zod": "^4.0.14"
   },

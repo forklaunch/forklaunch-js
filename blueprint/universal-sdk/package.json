@@ -15,7 +15,7 @@
     "test": "pnpm vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/common": "~0.4.6",
+    "@forklaunch/common": "^0.4.6",
     "better-auth": "^1.3.4"
   },
   "devDependencies": {

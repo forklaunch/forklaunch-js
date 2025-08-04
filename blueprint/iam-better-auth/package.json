@@ -34,10 +34,10 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/better-auth-mikro-orm-fork": "~0.4.102",
+    "@forklaunch/better-auth-mikro-orm-fork": "^0.4.102",
     "@forklaunch/blueprint-core": "workspace:*",
     "@forklaunch/blueprint-monitoring": "workspace:*",
-    "@forklaunch/core": "~0.12.0",
+    "@forklaunch/core": "^0.12.0",
     "@forklaunch/implementation-iam-base": "workspace:*",
     "@forklaunch/interfaces-iam": "workspace:*",
     "@mikro-orm/core": "^6.4.16",
