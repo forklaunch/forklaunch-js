@@ -14,22 +14,22 @@ importers:
   .:
     dependencies:
       '@forklaunch/common':
-        specifier: ^0.4.6
+        specifier: ~0.4.6
         version: 0.4.6
       '@forklaunch/core':
-        specifier: ^0.12.0
+        specifier: ~0.12.0
         version: 0.12.0(socks@2.8.6)
       '@forklaunch/express':
-        specifier: ^0.7.8
+        specifier: ~0.7.8
         version: 0.7.8(socks@2.8.6)
       '@forklaunch/hyper-express':
-        specifier: ^0.7.8
+        specifier: ~0.7.8
         version: 0.7.8(express@5.1.0)(socks@2.8.6)
       '@forklaunch/universal-sdk':
-        specifier: ^0.5.4
+        specifier: ~0.5.4
         version: 0.5.4
       '@forklaunch/validator':
-        specifier: ^0.8.0
+        specifier: ~0.8.0
         version: 0.8.0
     devDependencies:
       '@biomejs/biome':
@@ -93,28 +93,28 @@ importers:
         specifier: workspace:*
         version: link:../monitoring
       '@forklaunch/common':
-        specifier: ^0.4.6
+        specifier: ~0.4.6
         version: 0.4.6
       '@forklaunch/core':
-        specifier: ^0.12.0
+        specifier: ~0.12.0
         version: 0.12.0(socks@2.8.6)
       '@forklaunch/express':
-        specifier: ^0.7.8
+        specifier: ~0.7.8
         version: 0.7.8(socks@2.8.6)
       '@forklaunch/hyper-express':
-        specifier: ^0.7.8
+        specifier: ~0.7.8
         version: 0.7.8(express@5.1.0)(socks@2.8.6)
       '@forklaunch/implementation-billing-base':
         specifier: workspace:*
         version: link:../implementations/billing/base
       '@forklaunch/infrastructure-redis':
-        specifier: ^0.2.8
+        specifier: ~0.2.8
         version: 0.2.8(socks@2.8.6)
       '@forklaunch/interfaces-billing':
         specifier: workspace:*
         version: link:../interfaces/billing
       '@forklaunch/validator':
-        specifier: ^0.8.0
+        specifier: ~0.8.0
         version: 0.8.0
       '@mikro-orm/core':
         specifier: ^6.4.16
@@ -196,28 +196,28 @@ importers:
         specifier: workspace:*
         version: link:../monitoring
       '@forklaunch/common':
-        specifier: ^0.4.6
+        specifier: ~0.4.6
         version: 0.4.6
       '@forklaunch/core':
-        specifier: ^0.12.0
+        specifier: ~0.12.0
         version: 0.12.0(socks@2.8.6)
       '@forklaunch/express':
-        specifier: ^0.7.8
+        specifier: ~0.7.8
         version: 0.7.8(socks@2.8.6)
       '@forklaunch/hyper-express':
-        specifier: ^0.7.8
+        specifier: ~0.7.8
         version: 0.7.8(express@5.1.0)(socks@2.8.6)
       '@forklaunch/implementation-billing-stripe':
         specifier: workspace:*
         version: link:../implementations/billing/stripe
       '@forklaunch/infrastructure-redis':
-        specifier: ^0.2.8
+        specifier: ~0.2.8
         version: 0.2.8(socks@2.8.6)
       '@forklaunch/interfaces-billing':
         specifier: workspace:*
         version: link:../interfaces/billing
       '@forklaunch/validator':
-        specifier: ^0.8.0
+        specifier: ~0.8.0
         version: 0.8.0
       '@mikro-orm/core':
         specifier: ^6.4.16
@@ -296,19 +296,19 @@ importers:
   core:
     dependencies:
       '@forklaunch/common':
-        specifier: ^0.4.6
+        specifier: ~0.4.6
         version: 0.4.6
       '@forklaunch/core':
-        specifier: ^0.12.0
+        specifier: ~0.12.0
         version: 0.12.0(socks@2.8.6)
       '@forklaunch/express':
-        specifier: ^0.7.8
+        specifier: ~0.7.8
         version: 0.7.8(socks@2.8.6)
       '@forklaunch/hyper-express':
-        specifier: ^0.7.8
+        specifier: ~0.7.8
         version: 0.7.8(express@5.1.0)(socks@2.8.6)
       '@forklaunch/validator':
-        specifier: ^0.8.0
+        specifier: ~0.8.0
         version: 0.8.0
       '@mikro-orm/core':
         specifier: ^6.4.16
@@ -345,10 +345,10 @@ importers:
         specifier: workspace:*
         version: link:../monitoring
       '@forklaunch/core':
-        specifier: ^0.12.0
+        specifier: ~0.12.0
         version: 0.12.0(socks@2.8.6)
       '@forklaunch/hyper-express-fork':
-        specifier: ^6.17.34
+        specifier: ~6.17.34
         version: 6.17.34
       '@forklaunch/implementation-iam-base':
         specifier: workspace:*
@@ -415,7 +415,7 @@ importers:
   iam-better-auth:
     dependencies:
       '@forklaunch/better-auth-mikro-orm-fork':
-        specifier: ^0.4.102
+        specifier: ~0.4.102
         version: 0.4.102(@mikro-orm/core@6.4.16)(better-auth@1.3.4)
       '@forklaunch/blueprint-core':
         specifier: workspace:*
@@ -424,7 +424,7 @@ importers:
         specifier: workspace:*
         version: link:../monitoring
       '@forklaunch/core':
-        specifier: ^0.12.0
+        specifier: ~0.12.0
         version: 0.12.0(socks@2.8.6)
       '@forklaunch/implementation-iam-base':
         specifier: workspace:*
@@ -506,19 +506,19 @@ importers:
   implementations/billing/base:
     dependencies:
       '@forklaunch/common':
-        specifier: ^0.4.6
+        specifier: ~0.4.6
         version: 0.4.6
       '@forklaunch/core':
-        specifier: ^0.12.0
+        specifier: ~0.12.0
         version: 0.12.0(socks@2.8.6)
       '@forklaunch/interfaces-billing':
         specifier: workspace:*
         version: link:../../../interfaces/billing
       '@forklaunch/internal':
-        specifier: ^0.1.9
+        specifier: ~0.1.9
         version: 0.1.9
       '@forklaunch/validator':
-        specifier: ^0.8.0
+        specifier: ~0.8.0
         version: 0.8.0
       '@mikro-orm/core':
         specifier: ^6.4.16
@@ -549,10 +549,10 @@ importers:
   implementations/billing/stripe:
     dependencies:
       '@forklaunch/common':
-        specifier: ^0.4.6
+        specifier: ~0.4.6
         version: 0.4.6
       '@forklaunch/core':
-        specifier: ^0.12.0
+        specifier: ~0.12.0
         version: 0.12.0(socks@2.8.6)
       '@forklaunch/implementation-billing-base':
         specifier: workspace:*
@@ -561,10 +561,10 @@ importers:
         specifier: workspace:*
         version: link:../../../interfaces/billing
       '@forklaunch/internal':
-        specifier: ^0.1.9
+        specifier: ~0.1.9
         version: 0.1.9
       '@forklaunch/validator':
-        specifier: ^0.8.0
+        specifier: ~0.8.0
         version: 0.8.0
       '@mikro-orm/core':
         specifier: ^6.4.16
@@ -598,19 +598,19 @@ importers:
   implementations/iam/base:
     dependencies:
       '@forklaunch/common':
-        specifier: ^0.4.6
+        specifier: ~0.4.6
         version: 0.4.6
       '@forklaunch/core':
-        specifier: ^0.12.0
+        specifier: ~0.12.0
         version: 0.12.0(socks@2.8.6)
       '@forklaunch/interfaces-iam':
         specifier: workspace:*
         version: link:../../../interfaces/iam
       '@forklaunch/internal':
-        specifier: ^0.1.9
+        specifier: ~0.1.9
         version: 0.1.9
       '@forklaunch/validator':
-        specifier: ^0.8.0
+        specifier: ~0.8.0
         version: 0.8.0
       '@mikro-orm/core':
         specifier: ^6.4.16
@@ -641,13 +641,13 @@ importers:
   implementations/worker/bullmq:
     dependencies:
       '@forklaunch/core':
-        specifier: ^0.12.0
+        specifier: ~0.12.0
         version: 0.12.0(socks@2.8.6)
       '@forklaunch/interfaces-worker':
         specifier: workspace:*
         version: link:../../../interfaces/worker
       '@forklaunch/internal':
-        specifier: ^0.1.9
+        specifier: ~0.1.9
         version: 0.1.9
       '@sinclair/typebox':
         specifier: ^0.34.38
@@ -681,13 +681,13 @@ importers:
   implementations/worker/database:
     dependencies:
       '@forklaunch/core':
-        specifier: ^0.12.0
+        specifier: ~0.12.0
         version: 0.12.0(socks@2.8.6)
       '@forklaunch/interfaces-worker':
         specifier: workspace:*
         version: link:../../../interfaces/worker
       '@forklaunch/internal':
-        specifier: ^0.1.9
+        specifier: ~0.1.9
         version: 0.1.9
       '@mikro-orm/core':
         specifier: ^6.4.16
@@ -721,13 +721,13 @@ importers:
   implementations/worker/kafka:
     dependencies:
       '@forklaunch/core':
-        specifier: ^0.12.0
+        specifier: ~0.12.0
         version: 0.12.0(socks@2.8.6)
       '@forklaunch/interfaces-worker':
         specifier: workspace:*
         version: link:../../../interfaces/worker
       '@forklaunch/internal':
-        specifier: ^0.1.9
+        specifier: ~0.1.9
         version: 0.1.9
       '@sinclair/typebox':
         specifier: ^0.34.38
@@ -761,13 +761,13 @@ importers:
   implementations/worker/redis:
     dependencies:
       '@forklaunch/core':
-        specifier: ^0.12.0
+        specifier: ~0.12.0
         version: 0.12.0(socks@2.8.6)
       '@forklaunch/interfaces-worker':
         specifier: workspace:*
         version: link:../../../interfaces/worker
       '@forklaunch/internal':
-        specifier: ^0.1.9
+        specifier: ~0.1.9
         version: 0.1.9
       '@sinclair/typebox':
         specifier: ^0.34.38
@@ -798,7 +798,7 @@ importers:
   interfaces/billing:
     dependencies:
       '@forklaunch/common':
-        specifier: ^0.4.6
+        specifier: ~0.4.6
         version: 0.4.6
       '@mikro-orm/core':
         specifier: ^6.4.16
@@ -820,7 +820,7 @@ importers:
   interfaces/iam:
     dependencies:
       '@forklaunch/common':
-        specifier: ^0.4.6
+        specifier: ~0.4.6
         version: 0.4.6
       '@mikro-orm/core':
         specifier: ^6.4.16
@@ -863,7 +863,7 @@ importers:
   monitoring:
     dependencies:
       '@forklaunch/core':
-        specifier: ^0.12.0
+        specifier: ~0.12.0
         version: 0.12.0(socks@2.8.6)
 
   sample-worker:
@@ -875,7 +875,7 @@ importers:
         specifier: workspace:*
         version: link:../monitoring
       '@forklaunch/core':
-        specifier: ^0.12.0
+        specifier: ~0.12.0
         version: 0.12.0(socks@2.8.6)
       '@forklaunch/implementation-worker-bullmq':
         specifier: workspace:*
@@ -890,10 +890,10 @@ importers:
         specifier: workspace:*
         version: link:../implementations/worker/redis
       '@forklaunch/infrastructure-redis':
-        specifier: ^0.2.8
+        specifier: ~0.2.8
         version: 0.2.8(socks@2.8.6)
       '@forklaunch/infrastructure-s3':
-        specifier: ^0.2.9
+        specifier: ~0.2.9
         version: 0.2.9(socks@2.8.6)
       '@forklaunch/interfaces-worker':
         specifier: workspace:*
@@ -993,7 +993,7 @@ importers:
   universal-sdk:
     dependencies:
       '@forklaunch/common':
-        specifier: ^0.4.6
+        specifier: ~0.4.6
         version: 0.4.6
       better-auth:
         specifier: ^1.3.4
@@ -3621,8 +3621,8 @@ packages:
     resolution: {integrity: sha512-oKnbhFyRIXpUuez8iBMmyEa4nbj4IOQyuhc/wy9kY7/WVPcwIO9VA668Pu8RkO7+0G76SLROeyw9CpQ061i4mA==}
     engines: {node: '>=10'}
 
-  chalk@5.4.1:
-    resolution: {integrity: sha512-zgVZuo2WcZgfUEmsn6eO3kINexW8RAE4maiQ8QNs8CtpPCSyMiYsULR3HQYkm3w8FIA3SberyMJMSldGsW+U3w==}
+  chalk@5.5.0:
+    resolution: {integrity: sha512-1tm8DTaJhPBG3bIkVeZt1iZM9GfSX2lzOeDVZH9R9ffRHpmHvxZ/QhgQH/aDTkswQVt+YHdXAdS/In/30OjCbg==}
     engines: {node: ^12.17.0 || ^14.13 || >=16.0.0}
 
   char-regex@1.0.2:
@@ -10684,7 +10684,7 @@ snapshots:
       ansi-styles: 4.3.0
       supports-color: 7.2.0
 
-  chalk@5.4.1: {}
+  chalk@5.5.0: {}
 
   char-regex@1.0.2: {}
 
@@ -12306,7 +12306,7 @@ snapshots:
 
   lint-staged@16.1.4:
     dependencies:
-      chalk: 5.4.1
+      chalk: 5.5.0
       commander: 14.0.0
       debug: 4.4.1
       lilconfig: 3.1.3
