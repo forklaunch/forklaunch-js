@@ -1,6 +1,6 @@
 use anyhow::Result;
-use oxc_allocator::Allocator;
-use oxc_ast::ast::{Program, Statement, TSType};
+use oxc_allocator::{Allocator, CloneIn, Vec};
+use oxc_ast::ast::{Argument, Expression, ObjectPropertyKind, Program, PropertyKey, Statement};
 use oxc_codegen::{CodeGenerator, CodegenOptions};
 
 use super::delete_import_statement::delete_import_specifier;
@@ -11,31 +11,56 @@ pub(crate) fn delete_from_sdk_client_input<'a>(
     router_name_camel_case: &str,
 ) -> Result<String> {
     for stmt in sdk_program_ast.body.iter_mut() {
-        let ts_declaration = match stmt {
-            Statement::TSTypeAliasDeclaration(ts_decl) => ts_decl,
+        let var_decl = match stmt {
+            Statement::VariableDeclaration(var_decl) => var_decl,
             _ => continue,
         };
 
-        if !ts_declaration.id.name.contains("SdkClientInput") {
-            continue;
-        }
+        // Find the sdkClient call
+        for declarator in &mut var_decl.declarations {
+            let call_expr = match &mut declarator.init {
+                Some(Expression::CallExpression(call)) => call,
+                _ => continue,
+            };
 
-        let type_literal = match &mut ts_declaration.type_annotation {
-            TSType::TSTypeLiteral(literal) => literal,
-            _ => continue,
-        };
+            // Check if this is the sdkClient call
+            let callee = match &call_expr.callee {
+                Expression::Identifier(ident) => ident,
+                _ => continue,
+            };
 
-        let mut indices_to_remove = std::vec::Vec::new();
-        for (i, member) in type_literal.members.iter().enumerate() {
-            // Use debug format to check if the member contains our router name
-            let debug_str = format!("{:?}", member);
-            if debug_str.contains(router_name_camel_case) {
-                indices_to_remove.push(i);
+            if callee.name != "sdkClient" {
+                continue;
             }
-        }
 
-        for &i in indices_to_remove.iter().rev() {
-            type_literal.members.remove(i);
+            // Look for the object literal in the arguments
+            for argument in &mut call_expr.arguments {
+                let object_expr = match argument {
+                    Argument::ObjectExpression(object_expr) => object_expr,
+                    _ => continue,
+                };
+
+                // Remove the property that matches the router name
+                let mut new_properties = Vec::new_in(allocator);
+                object_expr.properties.iter().for_each(|prop| {
+                    let prop = match prop {
+                        ObjectPropertyKind::ObjectProperty(prop) => prop,
+                        _ => return,
+                    };
+                    let key = match &prop.key {
+                        PropertyKey::StaticIdentifier(identifier) => identifier,
+                        _ => return,
+                    };
+
+                    // Remove the property that matches the router name (e.g., "postRoutes")
+                    if key.name.as_str() != router_name_camel_case {
+                        new_properties.push(ObjectPropertyKind::ObjectProperty(
+                            prop.clone_in(&allocator),
+                        ));
+                    }
+                });
+                object_expr.properties = new_properties;
+            }
         }
     }
 
@@ -65,20 +90,19 @@ mod tests {
         let allocator = Allocator::default();
 
         let sdk_code = r#"
-        type MySdkClientInput = {
-            userRoutes: typeof UserRoutes,
-            postRoutes: typeof PostRoutes,
-            commentRoutes: typeof CommentRoutes
-        };
+        const testSdk = sdkClient(schemaValidator, {
+            userRoutes: userSdkRouter,
+            postRoutes: postSdkRouter,
+            commentRoutes: commentSdkRouter
+        });
         "#;
         let mut sdk_program = parse_ast_program(&allocator, sdk_code, SourceType::ts());
 
-        let result =
-            delete_from_sdk_client_input(&allocator, &mut sdk_program, "postRoutes");
+        let result = delete_from_sdk_client_input(&allocator, &mut sdk_program, "postRoutes");
 
         assert!(result.is_ok());
 
-        let expected_code = "type MySdkClientInput = {\n\tuserRoutes: typeof UserRoutes\n\tcommentRoutes: typeof CommentRoutes\n};\n";
+        let expected_code = "const testSdk = sdkClient(schemaValidator, {\n\tuserRoutes: userSdkRouter,\n\tcommentRoutes: commentSdkRouter\n});\n";
 
         assert_eq!(result.unwrap(), expected_code);
     }

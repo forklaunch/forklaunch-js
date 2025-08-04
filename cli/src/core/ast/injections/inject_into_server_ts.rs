@@ -11,7 +11,7 @@ where
 {
     let splice_pos = match app_ts_injection_pos(&app_program_ast.body) {
         Some(pos) => pos,
-        None => bail!("Failed to delete from server.ts"),
+        None => bail!("Failed to insert into server.ts"),
     };
 
     for stmt in injection_program_ast.body.drain(..).rev() {

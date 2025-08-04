@@ -278,7 +278,7 @@ impl CliCommand for RouterCommand {
         let new_server_content =
             delete_from_server_ts_router(&allocator, &mut server_program, &router_name)?;
 
-        let sdk_path = base_path.join("sdkts");
+        let sdk_path = base_path.join("sdk.ts");
         let sdk_text = read_to_string(&sdk_path)?;
         let sdk_type = SourceType::from_path(&sdk_path)?;
         let mut sdk_program = parse_ast_program(&allocator, &sdk_text, sdk_type);

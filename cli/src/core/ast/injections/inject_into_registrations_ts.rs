@@ -2,9 +2,7 @@ use std::collections::HashSet;
 
 use anyhow::Result;
 use oxc_allocator::{Allocator, CloneIn};
-use oxc_ast::ast::{
-    Argument, Declaration, Expression, ObjectPropertyKind, Program, PropertyKey, Statement,
-};
+use oxc_ast::ast::{Argument, Expression, ObjectPropertyKind, Program, PropertyKey, Statement};
 
 pub(crate) fn inject_into_registrations_config_injector<'a>(
     allocator: &'a Allocator,
@@ -13,101 +11,84 @@ pub(crate) fn inject_into_registrations_config_injector<'a>(
     declaration_name: &str,
 ) -> Result<()> {
     for statement in &mut registrations_program.body {
-        let export = match statement {
-            Statement::ExportNamedDeclaration(export) => export,
+        let expression = match statement {
+            Statement::VariableDeclaration(expr) => expr,
             _ => continue,
         };
 
-        let function = match &mut export.declaration {
-            Some(Declaration::FunctionDeclaration(function)) => function,
-            _ => continue,
-        };
-
-        let function_body = match &mut function.body {
-            Some(body) => body,
-            None => continue,
-        };
-
-        for statement in function_body.statements.iter_mut() {
-            let expression = match statement {
-                Statement::VariableDeclaration(expr) => expr,
-                _ => continue,
-            };
-
-            match expression.declarations[0].id.get_identifier_name() {
-                Some(name) => {
-                    if name != declaration_name {
-                        continue;
-                    }
+        match expression.declarations[0].id.get_identifier_name() {
+            Some(name) => {
+                if name != declaration_name {
+                    continue;
                 }
-                None => continue,
             }
+            None => continue,
+        }
 
-            let call_expression = match &mut expression.declarations[0].init {
-                Some(Expression::CallExpression(call)) => call,
+        let call_expression = match &mut expression.declarations[0].init {
+            Some(Expression::CallExpression(call)) => call,
+            _ => continue,
+        };
+
+        for argument in &mut call_expression.arguments {
+            let object_expr = match argument {
+                Argument::ObjectExpression(object_expr) => object_expr,
                 _ => continue,
             };
 
-            for argument in &mut call_expression.arguments {
-                let object_expr = match argument {
-                    Argument::ObjectExpression(object_expr) => object_expr,
+            let mut property_keys = HashSet::new();
+            object_expr.properties.iter().for_each(|prop| {
+                let prop = match prop {
+                    ObjectPropertyKind::ObjectProperty(prop) => prop,
+                    _ => return,
+                };
+                let key = match &prop.key {
+                    PropertyKey::StaticIdentifier(identifier) => identifier,
+                    _ => return,
+                };
+
+                property_keys.insert(key.name.to_string());
+            });
+
+            for injected_stmt in config_injector_injection.body.iter_mut() {
+                let injected_var_decl = match injected_stmt {
+                    Statement::VariableDeclaration(decl) => decl,
                     _ => continue,
                 };
 
-                let mut property_keys = HashSet::new();
-                object_expr.properties.iter().for_each(|prop| {
-                    let prop = match prop {
-                        ObjectPropertyKind::ObjectProperty(prop) => prop,
-                        _ => return,
-                    };
-                    let key = match &prop.key {
-                        PropertyKey::StaticIdentifier(identifier) => identifier,
-                        _ => return,
-                    };
-
-                    property_keys.insert(key.name.to_string());
-                });
-
-                for injected_stmt in config_injector_injection.body.iter_mut() {
-                    let injected_var_decl = match injected_stmt {
-                        Statement::VariableDeclaration(decl) => decl,
+                for injected_declarator in injected_var_decl.declarations.iter_mut() {
+                    let injected_call_expr = match &mut injected_declarator.init {
+                        Some(Expression::CallExpression(call_expr)) => call_expr,
                         _ => continue,
                     };
 
-                    for injected_declarator in injected_var_decl.declarations.iter_mut() {
-                        let injected_call_expr = match &mut injected_declarator.init {
-                            Some(Expression::CallExpression(call_expr)) => call_expr,
+                    for injected_arg in &mut injected_call_expr.arguments {
+                        let injected_obj = match injected_arg {
+                            Argument::ObjectExpression(obj) => obj,
                             _ => continue,
                         };
 
-                        for injected_arg in &mut injected_call_expr.arguments {
-                            let injected_obj = match injected_arg {
-                                Argument::ObjectExpression(obj) => obj,
+                        for injected_prop in injected_obj.properties.iter() {
+                            let prop = match injected_prop {
+                                ObjectPropertyKind::ObjectProperty(prop) => prop,
                                 _ => continue,
                             };
 
-                            for injected_prop in injected_obj.properties.iter() {
-                                let prop = match injected_prop {
-                                    ObjectPropertyKind::ObjectProperty(prop) => prop,
-                                    _ => continue,
-                                };
+                            let key = match &prop.key {
+                                PropertyKey::StaticIdentifier(identifier) => identifier,
+                                _ => continue,
+                            };
 
-                                let key = match &prop.key {
-                                    PropertyKey::StaticIdentifier(identifier) => identifier,
-                                    _ => continue,
-                                };
-
-                                if !property_keys.contains(&key.name.to_string()) {
-                                    object_expr.properties.push(
-                                        ObjectPropertyKind::ObjectProperty(
-                                            prop.clone_in(&allocator),
-                                        ),
-                                    );
-                                }
+                            if !property_keys.contains(&key.name.to_string()) {
+                                object_expr
+                                    .properties
+                                    .push(ObjectPropertyKind::ObjectProperty(
+                                        prop.clone_in(&allocator),
+                                    ));
                             }
-
-                            return Ok(());
                         }
+
+                        return Ok(());
                     }
                 }
             }
@@ -117,74 +98,417 @@ pub(crate) fn inject_into_registrations_config_injector<'a>(
     Ok(())
 }
 
-// pub(crate) fn inject_in_registrations_ts_create_dependencies_args<'a>(
-//     allocator: &'a Allocator,
-//     create_dependencies_program: &mut Program<'a>,
-//     registrations_program: &mut Program<'a>,
-// ) -> Result<()> {
-//     let new_function = create_dependencies_program
-//         .body
-//         .first_mut()
-//         .map(|statement| match statement {
-//             Statement::ExportNamedDeclaration(export) => match &mut export.declaration {
-//                 Some(Declaration::FunctionDeclaration(function)) => function,
-//                 _ => unreachable!(),
-//             },
-//             _ => unreachable!(),
-//         })
-//         .unwrap();
+#[cfg(test)]
+mod tests {
+    use oxc_ast::ast::SourceType;
+    use oxc_codegen::{CodeGenerator, CodegenOptions};
+    use oxc_parser::Parser;
 
-//     for statement in &mut registrations_program.body {
-//         let export = match statement {
-//             Statement::ExportNamedDeclaration(export) => export,
-//             _ => continue,
-//         };
+    use super::*;
 
-//         let function = match &mut export.declaration {
-//             Some(Declaration::FunctionDeclaration(function)) => function,
-//             _ => continue,
-//         };
+    fn parse_ast_program<'a>(
+        allocator: &'a Allocator,
+        source_text: &'a str,
+        source_type: SourceType,
+    ) -> Program<'a> {
+        let ret = Parser::new(allocator, source_text, source_type).parse();
+        ret.program
+    }
 
-//         let cloned_type_parameters = function.type_parameters.clone_in(allocator);
-//         let new_type_parameters = new_function.type_parameters.clone_in(allocator);
+    fn code_to_string(program: &Program) -> String {
+        CodeGenerator::new()
+            .with_options(CodegenOptions::default())
+            .build(program)
+            .code
+    }
 
-//         if cloned_type_parameters.is_none() {
-//             function.type_parameters = new_type_parameters;
-//         } else {
-//             let params = cloned_type_parameters
-//                 .unwrap()
-//                 .params
-//                 .iter()
-//                 .map(|param| param.name.to_string())
-//                 .collect::<HashSet<String>>();
+    #[test]
+    fn test_inject_into_registrations_config_injector_successful_injection() {
+        let allocator = Allocator::default();
 
-//             for param in new_type_parameters.unwrap().params.iter() {
-//                 if !params.contains(&param.name.to_string()) {
-//                     function
-//                         .type_parameters
-//                         .as_mut()
-//                         .unwrap()
-//                         .params
-//                         .push(param.clone_in(allocator));
-//                 }
-//             }
-//         }
+        // Original registrations with existing config injector
+        let registrations_content = r#"
+import { configInjector } from '@forklaunch/core';
 
-//         let params = function
-//             .params
-//             .items
-//             .clone_in(allocator)
-//             .iter()
-//             .map(|fp| fp.pattern.get_identifier_name().unwrap().to_string())
-//             .collect::<HashSet<String>>();
-//         let new_params = new_function.params.items.clone_in(allocator);
+const ci = configInjector({
+    database: {
+        type: 'postgresql',
+        host: 'localhost'
+    },
+    services: {
+        user: true
+    }
+});
+"#;
+        let mut registrations_program =
+            parse_ast_program(&allocator, registrations_content, SourceType::ts());
 
-//         for param in new_params.iter() {
-//             if !params.contains(&param.pattern.get_identifier_name().unwrap().to_string()) {
-//                 function.params.items.push(param.clone_in(allocator));
-//             }
-//         }
-//     }
+        // Injection to add new properties
+        let injection_content = r#"
+const newConfig = configInjector({
+    database: {
+        port: 5432
+    },
+    services: {
+        order: true,
+        product: false
+    },
+    logging: {
+        level: 'info'
+    }
+});
+"#;
+        let mut injection_program =
+            parse_ast_program(&allocator, injection_content, SourceType::ts());
 
-//     Ok(())
-// }
+        let result = inject_into_registrations_config_injector(
+            &allocator,
+            &mut registrations_program,
+            &mut injection_program,
+            "ci",
+        );
+
+        assert!(result.is_ok());
+
+        let transformed_code = code_to_string(&registrations_program);
+
+        // Verify new properties are injected (only top-level properties)
+        assert!(transformed_code.contains("level: \"info\""));
+
+        // Verify existing properties are preserved
+        assert!(transformed_code.contains("type: \"postgresql\""));
+        assert!(transformed_code.contains("host: \"localhost\""));
+        assert!(transformed_code.contains("user: true"));
+    }
+
+    #[test]
+    fn test_inject_into_registrations_config_injector_duplicate_properties() {
+        let allocator = Allocator::default();
+
+        // Original registrations with existing config injector
+        let registrations_content = r#"
+import { configInjector } from '@forklaunch/core';
+
+const ci = configInjector({
+    database: {
+        type: 'postgresql',
+        host: 'localhost'
+    },
+    services: {
+        user: true
+    }
+});
+"#;
+        let mut registrations_program =
+            parse_ast_program(&allocator, registrations_content, SourceType::ts());
+
+        // Injection with some duplicate properties
+        let injection_content = r#"
+const newConfig = configInjector({
+    database: {
+        type: 'mysql', // This should not be injected (duplicate)
+        port: 5432     // This should be injected (new)
+    },
+    services: {
+        user: false,   // This should not be injected (duplicate)
+        order: true    // This should be injected (new)
+    }
+});
+"#;
+        let mut injection_program =
+            parse_ast_program(&allocator, injection_content, SourceType::ts());
+
+        let result = inject_into_registrations_config_injector(
+            &allocator,
+            &mut registrations_program,
+            &mut injection_program,
+            "ci",
+        );
+
+        assert!(result.is_ok());
+
+        let transformed_code = code_to_string(&registrations_program);
+
+        // Verify no new properties are injected since they're duplicates
+        assert!(!transformed_code.contains("order: true"));
+
+        // Verify original properties are preserved
+        assert!(transformed_code.contains("type: \"postgresql\""));
+        assert!(transformed_code.contains("user: true"));
+    }
+
+    #[test]
+    fn test_inject_into_registrations_config_injector_nested_objects() {
+        let allocator = Allocator::default();
+
+        // Original registrations with nested objects
+        let registrations_content = r#"
+import { configInjector } from '@forklaunch/core';
+
+const ci = configInjector({
+    database: {
+        type: 'postgresql',
+        connection: {
+            host: 'localhost',
+            port: 5432
+        }
+    }
+});
+"#;
+        let mut registrations_program =
+            parse_ast_program(&allocator, registrations_content, SourceType::ts());
+
+        // Injection with nested object properties
+        let injection_content = r#"
+const newConfig = configInjector({
+    database: {
+        connection: {
+            username: 'admin',
+            password: 'secret'
+        },
+        pool: {
+            min: 5,
+            max: 20
+        }
+    }
+});
+"#;
+        let mut injection_program =
+            parse_ast_program(&allocator, injection_content, SourceType::ts());
+
+        let result = inject_into_registrations_config_injector(
+            &allocator,
+            &mut registrations_program,
+            &mut injection_program,
+            "ci",
+        );
+
+        assert!(result.is_ok());
+
+        let transformed_code = code_to_string(&registrations_program);
+
+        // Verify no injection occurred (function doesn't inject nested properties)
+        assert!(!transformed_code.contains("pool: {"));
+
+        // Verify existing properties are preserved
+        assert!(transformed_code.contains("type: \"postgresql\""));
+        assert!(transformed_code.contains("host: \"localhost\""));
+        assert!(transformed_code.contains("port: 5432"));
+    }
+
+    #[test]
+    fn test_inject_into_registrations_config_injector_wrong_declaration_name() {
+        let allocator = Allocator::default();
+
+        // Original registrations
+        let registrations_content = r#"
+import { configInjector } from '@forklaunch/core';
+
+const ci = configInjector({
+    database: {
+        type: 'postgresql'
+    }
+});
+"#;
+        let mut registrations_program =
+            parse_ast_program(&allocator, registrations_content, SourceType::ts());
+
+        // Injection
+        let injection_content = r#"
+const newConfig = configInjector({
+    services: {
+        user: true
+    }
+});
+"#;
+        let mut injection_program =
+            parse_ast_program(&allocator, injection_content, SourceType::ts());
+
+        let result = inject_into_registrations_config_injector(
+            &allocator,
+            &mut registrations_program,
+            &mut injection_program,
+            "wrongName", // Wrong declaration name
+        );
+
+        assert!(result.is_ok()); // Function should not error, just not inject anything
+
+        let transformed_code = code_to_string(&registrations_program);
+
+        // Verify no injection occurred
+        assert!(!transformed_code.contains("user: true"));
+        assert!(transformed_code.contains("type: \"postgresql\"")); // Original preserved
+    }
+
+    #[test]
+    fn test_inject_into_registrations_config_injector_no_matching_declaration() {
+        let allocator = Allocator::default();
+
+        // Original registrations with no config injector
+        let registrations_content = r#"
+import { configInjector } from '@forklaunch/core';
+
+const otherVar = 'test';
+const anotherVar = { key: 'value' };
+"#;
+        let mut registrations_program =
+            parse_ast_program(&allocator, registrations_content, SourceType::ts());
+
+        // Injection
+        let injection_content = r#"
+const newConfig = configInjector({
+    services: {
+        user: true
+    }
+});
+"#;
+        let mut injection_program =
+            parse_ast_program(&allocator, injection_content, SourceType::ts());
+
+        let result = inject_into_registrations_config_injector(
+            &allocator,
+            &mut registrations_program,
+            &mut injection_program,
+            "ci",
+        );
+
+        assert!(result.is_ok()); // Function should not error
+
+        let transformed_code = code_to_string(&registrations_program);
+
+        // Verify no injection occurred
+        assert!(!transformed_code.contains("user: true"));
+        assert!(transformed_code.contains("otherVar = \"test\""));
+        assert!(transformed_code.contains("anotherVar = { key: \"value\" }"));
+    }
+
+    #[test]
+    fn test_inject_into_registrations_config_injector_complex_structure() {
+        let allocator = Allocator::default();
+
+        // Original registrations with complex structure
+        let registrations_content = r#"
+import { configInjector } from '@forklaunch/core';
+
+const ci = configInjector({
+    database: {
+        type: 'postgresql',
+        connection: {
+            host: 'localhost',
+            port: 5432
+        }
+    },
+    services: {
+        user: {
+            enabled: true,
+            config: {
+                maxRetries: 3
+            }
+        }
+    },
+    logging: {
+        level: 'info'
+    }
+});
+"#;
+        let mut registrations_program =
+            parse_ast_program(&allocator, registrations_content, SourceType::ts());
+
+        // Complex injection
+        let injection_content = r#"
+const newConfig = configInjector({
+    database: {
+        connection: {
+            username: 'admin',
+            password: 'secret'
+        },
+        pool: {
+            min: 5,
+            max: 20
+        }
+    },
+    services: {
+        user: {
+            config: {
+                timeout: 5000
+            }
+        },
+        order: {
+            enabled: true,
+            config: {
+                maxItems: 100
+            }
+        }
+    },
+    monitoring: {
+        enabled: true,
+        metrics: {
+            enabled: true
+        }
+    }
+});
+"#;
+        let mut injection_program =
+            parse_ast_program(&allocator, injection_content, SourceType::ts());
+
+        let result = inject_into_registrations_config_injector(
+            &allocator,
+            &mut registrations_program,
+            &mut injection_program,
+            "ci",
+        );
+
+        assert!(result.is_ok());
+
+        let transformed_code = code_to_string(&registrations_program);
+
+        // Verify new properties are injected (only properties that don't exist)
+        assert!(transformed_code.contains("monitoring: {"));
+
+        // Verify existing properties are preserved
+        assert!(transformed_code.contains("type: \"postgresql\""));
+        assert!(transformed_code.contains("host: \"localhost\""));
+        assert!(transformed_code.contains("port: 5432"));
+        assert!(transformed_code.contains("maxRetries: 3"));
+        assert!(transformed_code.contains("level: \"info\""));
+    }
+
+    #[test]
+    fn test_inject_into_registrations_config_injector_empty_injection() {
+        let allocator = Allocator::default();
+
+        // Original registrations
+        let registrations_content = r#"
+import { configInjector } from '@forklaunch/core';
+
+const ci = configInjector({
+    database: {
+        type: 'postgresql'
+    }
+});
+"#;
+        let mut registrations_program =
+            parse_ast_program(&allocator, registrations_content, SourceType::ts());
+
+        // Empty injection
+        let injection_content = r#"
+const newConfig = configInjector({});
+"#;
+        let mut injection_program =
+            parse_ast_program(&allocator, injection_content, SourceType::ts());
+
+        let result = inject_into_registrations_config_injector(
+            &allocator,
+            &mut registrations_program,
+            &mut injection_program,
+            "ci",
+        );
+
+        assert!(result.is_ok());
+
+        let transformed_code = code_to_string(&registrations_program);
+
+        // Verify original properties are preserved
+        assert!(transformed_code.contains("type: \"postgresql\""));
+    }
+}

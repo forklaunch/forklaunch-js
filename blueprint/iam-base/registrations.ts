@@ -54,6 +54,7 @@ import {
   UserMapperTypes
 } from './domain/types/iamMappers.types';
 import mikroOrmOptionsConfig from './mikro-orm.config';
+
 //! defines the schemas for the organization service
 export const OrganizationSchemas = BaseOrganizationServiceSchemas({
   uuidId: true,
@@ -71,6 +72,7 @@ export const UserSchemas = BaseUserServiceSchemas({
   uuidId: true,
   validator: schemaValidator
 });
+
 //! defines the configuration schema for the application
 const configInjector = createConfigInjector(schemaValidator, {
   SERVICE_METADATA: {
@@ -85,6 +87,7 @@ const configInjector = createConfigInjector(schemaValidator, {
     }
   }
 });
+
 //! defines the environment configuration for the application
 const environmentConfig = configInjector.chain({
   HOST: {
@@ -128,6 +131,7 @@ const environmentConfig = configInjector.chain({
     value: getEnvVar('PASSWORD_ENCRYPTION_PUBLIC_KEY_PATH')
   }
 });
+
 //! defines the runtime dependencies for the application
 const runtimeDependencies = environmentConfig.chain({
   MikroORM: {
@@ -152,6 +156,7 @@ const runtimeDependencies = environmentConfig.chain({
       MikroORM.em.fork(context?.entityManagerOptions as ForkOptions | undefined)
   }
 });
+
 //! defines the service dependencies for the application
 const serviceDependencies = runtimeDependencies.chain({
   OrganizationService: {

@@ -97,7 +97,7 @@ fn add_router_to_artifacts(
     });
 
     rendered_templates.push(RenderedTemplate {
-        path: base_path.join("sdkts"),
+        path: base_path.join("sdk.ts"),
         content: transform_sdk_ts(manifest_data.router_name.as_str(), &base_path)?,
         context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_APP.to_string()),
     });
