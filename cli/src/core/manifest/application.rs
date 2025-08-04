@@ -9,6 +9,9 @@ config_struct!(
     #[derive(Debug, Serialize, Content, Clone)]
     pub(crate) struct ApplicationManifestData {
         #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) project_path: String,
+        
+        #[serde(skip_serializing, skip_deserializing)]
         pub(crate) database: String,
 
         #[serde(skip_serializing, skip_deserializing)]

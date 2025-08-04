@@ -20,10 +20,10 @@ pub(crate) struct PnpmWorkspace {
 }
 
 pub(crate) fn generate_pnpm_workspace(
-    app_name: &str,
+    project_path: &str,
     additional_projects: &Vec<ProjectEntry>,
 ) -> Result<Option<RenderedTemplate>> {
-    let pnpm_workspace_path = Path::new(app_name).join("pnpm-workspace.yaml");
+    let pnpm_workspace_path = Path::new(project_path).join("pnpm-workspace.yaml");
     if pnpm_workspace_path.exists() {
         return Ok(None);
     }
