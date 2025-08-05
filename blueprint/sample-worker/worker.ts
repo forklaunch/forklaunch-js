@@ -1,17 +1,9 @@
-import { getEnvVar } from '@forklaunch/common';
 import {
   WorkerFailureHandler,
   WorkerProcessFunction
 } from '@forklaunch/interfaces-worker/types';
-import dotenv from 'dotenv';
+import { ci, tokens } from './bootstrapper';
 import { SampleWorkerEventRecord } from './persistence/entities/sampleWorkerRecord.entity';
-import { createDependencyContainer } from './registrations';
-
-//! bootstrap resources and config
-const envFilePath = getEnvVar('DOTENV_FILE_PATH');
-dotenv.config({ path: envFilePath });
-
-const { ci, tokens } = createDependencyContainer(envFilePath);
 
 const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
 const s3 = ci.resolve(tokens.S3ObjectStore);

@@ -1,19 +1,11 @@
 import { forklaunchExpress, schemaValidator } from '@forklaunch/blueprint-core';
-import { getEnvVar } from '@forklaunch/common';
-import dotenv from 'dotenv';
 import { billingPortalRouter } from './api/routes/billingPortal.routes';
 import { checkoutSessionRouter } from './api/routes/checkoutSession.routes';
 import { paymentLinkRouter } from './api/routes/paymentLink.routes';
 import { planRouter } from './api/routes/plan.routes';
 import { subscriptionRouter } from './api/routes/subscription.routes';
 import { webhookRouter } from './api/routes/webhook.routes';
-import { createDependencyContainer } from './registrations';
-
-//! bootstrap resources and config
-const envFilePath = getEnvVar('DOTENV_FILE_PATH');
-dotenv.config({ path: envFilePath });
-export const { ci, tokens } = createDependencyContainer(envFilePath);
-export type ScopeFactory = typeof ci.createScope;
+import { ci, tokens } from './bootstrapper';
 
 //! resolves the openTelemetryCollector from the configuration
 const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);

@@ -1,6 +1,4 @@
 import { forklaunchExpress, schemaValidator } from '@forklaunch/blueprint-core';
-import { getEnvVar } from '@forklaunch/common';
-import dotenv from 'dotenv';
 import {
   betterAuthTelemetryHookMiddleware,
   enrichBetterAuthApi
@@ -9,13 +7,7 @@ import { organizationRouter } from './api/routes/organization.routes';
 import { permissionRouter } from './api/routes/permission.routes';
 import { roleRouter } from './api/routes/role.routes';
 import { userRouter } from './api/routes/user.routes';
-import { createDependencyContainer } from './registrations';
-
-//! bootstrap resources and config
-const envFilePath = getEnvVar('DOTENV_FILE_PATH');
-dotenv.config({ path: envFilePath });
-export const { ci, tokens } = createDependencyContainer(envFilePath);
-export type ScopeFactory = typeof ci.createScope;
+import { ci, tokens } from './bootstrapper';
 
 //! resolves the openTelemetryCollector from the configuration
 const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);

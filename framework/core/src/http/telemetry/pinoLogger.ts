@@ -1,4 +1,4 @@
-import { isNever, safeStringify } from '@forklaunch/common';
+import { isNever } from '@forklaunch/common';
 import { trace } from '@opentelemetry/api';
 import { AnyValueMap, logs } from '@opentelemetry/api-logs';
 import pino, { LevelWithSilent, LevelWithSilentOrString, Logger } from 'pino';
@@ -34,6 +34,33 @@ function mapSeverity(level: LevelWithSilent) {
   }
 }
 
+type LoggableArg = string | number | boolean | object | null | undefined;
+
+/**
+ * Normalize a list of arguments into a single metadata object and message string.
+ * @param args - List of log arguments like console.log('msg', { a }, { b }, 123)
+ * @returns [metadataObject, messageString]
+ */
+function normalizeLogArgs(
+  args: LoggableArg[]
+): [Record<string, unknown>, string] {
+  let message = '';
+  const metaObjects: Record<string, unknown>[] = [];
+
+  for (const arg of args) {
+    if (typeof arg === 'string' && message === '') {
+      message = arg;
+    } else if (arg && typeof arg === 'object' && !Array.isArray(arg)) {
+      metaObjects.push(arg as Record<string, unknown>);
+    } else {
+      message += ` ${String(arg)}`;
+    }
+  }
+
+  const metadata = Object.assign({}, ...metaObjects);
+  return [metadata, message.trim()];
+}
+
 class PinoLogger {
   private pinoLogger: Logger;
   private meta: AnyValueMap;
@@ -61,15 +88,13 @@ class PinoLogger {
   log(level: LevelWithSilent, ...args: (string | unknown | LoggerMeta)[]) {
     let meta: AnyValueMap = {};
 
-    const filteredArgs = args
-      .filter((arg) => {
-        if (isLoggerMeta(arg)) {
-          Object.assign(meta, arg);
-          return false;
-        }
-        return true;
-      })
-      .map(safeStringify) as Parameters<pino.LogFn>;
+    const filteredArgs = args.filter((arg) => {
+      if (isLoggerMeta(arg)) {
+        Object.assign(meta, arg);
+        return false;
+      }
+      return true;
+    }) as LoggableArg[];
 
     const activeSpan = trace.getActiveSpan();
     if (activeSpan) {
@@ -90,7 +115,7 @@ class PinoLogger {
       ...meta
     };
 
-    this.pinoLogger[level](...filteredArgs);
+    this.pinoLogger[level](...normalizeLogArgs(filteredArgs));
     logs.getLogger(process.env.OTEL_SERVICE_NAME ?? 'unknown').emit({
       severityText: level,
       severityNumber: mapSeverity(level),

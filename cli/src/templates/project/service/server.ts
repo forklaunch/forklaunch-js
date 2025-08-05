@@ -1,14 +1,6 @@
 import { forklaunchExpress, SchemaValidator } from '@{{app_name}}/core';
-import { getEnvVar } from '@forklaunch/common';
-import dotenv from 'dotenv';
 import { {{camel_case_name}}Router } from './api/routes/{{camel_case_name}}.routes';
-import { createDependencyContainer } from './registrations';
-
-//! bootstrap resources and config
-const envFilePath = getEnvVar('DOTENV_FILE_PATH');
-dotenv.config({ path: envFilePath });
-export const { ci, tokens } = createDependencyContainer(envFilePath);
-export type ScopeFactory = typeof ci.createScope;
+import { ci, tokens } from './bootstrapper';
 
 //! creates an instance of forklaunchExpress
 const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
