@@ -106,7 +106,9 @@ export function generateMcpServer<
       fullPath: application.basePath === '/' ? '' : application.basePath,
       router: application
     },
-    ...unpackRouters<ZodSchemaValidator>(application.routers)
+    ...unpackRouters<ZodSchemaValidator>(application.routers, [
+      application.basePath === '/' ? '' : application.basePath
+    ])
   ].forEach(({ fullPath, router }) => {
     router.routes.forEach((route) => {
       const inputSchemas: ZodType[] = [];

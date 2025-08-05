@@ -371,7 +371,9 @@ export function generateOpenApiSpecs<SV extends AnySchemaValidator>(
       fullPath: application.basePath === '/' ? '' : application.basePath,
       router: application
     },
-    ...unpackRouters<SV>(application.routers)
+    ...unpackRouters<SV>(application.routers, [
+      application.basePath === '/' ? '' : application.basePath
+    ])
   ].forEach(({ fullPath, router }) => {
     const controllerName = transformBasePath(fullPath);
     router.routes.forEach((route) => {
