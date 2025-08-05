@@ -4,7 +4,7 @@ use anyhow::Result;
 use convert_case::{Case, Casing};
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{Expression, SourceType, Statement};
-use oxc_codegen::{CodeGenerator, CodegenOptions};
+use oxc_codegen::{Codegen, CodegenOptions};
 
 use crate::core::ast::{
     injections::{
@@ -75,7 +75,7 @@ pub(crate) fn transform_server_ts(router_name: &str, base_path: &Path) -> Result
         format!("./api/routes/{router_name_camel_case}.routes").as_str(),
     )?;
 
-    Ok(CodeGenerator::new()
+    Ok(Codegen::new()
         .with_options(CodegenOptions::default())
         .build(&server_program)
         .code)

@@ -101,7 +101,7 @@ pub(crate) fn inject_into_registrations_config_injector<'a>(
 #[cfg(test)]
 mod tests {
     use oxc_ast::ast::SourceType;
-    use oxc_codegen::{CodeGenerator, CodegenOptions};
+    use oxc_codegen::{Codegen, CodegenOptions};
     use oxc_parser::Parser;
 
     use super::*;
@@ -116,7 +116,7 @@ mod tests {
     }
 
     fn code_to_string(program: &Program) -> String {
-        CodeGenerator::new()
+        Codegen::new()
             .with_options(CodegenOptions::default())
             .build(program)
             .code

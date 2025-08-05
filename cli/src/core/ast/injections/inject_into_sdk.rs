@@ -97,7 +97,7 @@ pub(crate) fn inject_into_sdk_client_input<'a>(
 mod tests {
     use oxc_allocator::Allocator;
     use oxc_ast::ast::SourceType;
-    use oxc_codegen::{CodeGenerator, CodegenOptions};
+    use oxc_codegen::{Codegen, CodegenOptions};
 
     use super::*;
     use crate::core::ast::parse_ast_program::parse_ast_program;
@@ -127,7 +127,7 @@ mod tests {
         let expected_code = "export const sdkClient = sdkClient(schemaValidator, {\n\tmySdkClientRoutes: mySdkClientSdkRouter,\n\tmySdkClient2Routes: mySdkClient2SdkRouter\n});\n";
 
         assert_eq!(
-            CodeGenerator::new()
+            Codegen::new()
                 .with_options(CodegenOptions::default())
                 .build(&app_program)
                 .code,

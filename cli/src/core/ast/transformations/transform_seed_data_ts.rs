@@ -4,7 +4,7 @@ use anyhow::Result;
 use convert_case::{Case, Casing};
 use oxc_allocator::Allocator;
 use oxc_ast::ast::SourceType;
-use oxc_codegen::{CodeGenerator, CodegenOptions};
+use oxc_codegen::{Codegen, CodegenOptions};
 
 use crate::core::{
     ast::{
@@ -63,7 +63,7 @@ pub(crate) fn transform_seed_data_ts(
         .body
         .extend(seed_data_injection.body.drain(..));
 
-    Ok(CodeGenerator::new()
+    Ok(Codegen::new()
         .with_options(CodegenOptions::default())
         .build(&seed_data_program)
         .code)

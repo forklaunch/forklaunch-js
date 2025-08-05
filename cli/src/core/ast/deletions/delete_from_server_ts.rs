@@ -2,7 +2,7 @@ use anyhow::{Result, bail};
 use convert_case::{Case, Casing};
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{Argument, Expression, Program, Statement};
-use oxc_codegen::{CodeGenerator, CodegenOptions};
+use oxc_codegen::{Codegen, CodegenOptions};
 
 use super::delete_import_statement::delete_import_statement;
 
@@ -75,7 +75,7 @@ pub(crate) fn delete_from_server_ts_router<'a>(
         format!("./api/routes/{router_name_camel_case}.routes").as_str(),
     )?;
 
-    Ok(CodeGenerator::new()
+    Ok(Codegen::new()
         .with_options(CodegenOptions::default())
         .build(&server_program)
         .code)
@@ -85,7 +85,7 @@ pub(crate) fn delete_from_server_ts_router<'a>(
 mod tests {
     use oxc_allocator::Allocator;
     use oxc_ast::ast::SourceType;
-    use oxc_codegen::{CodeGenerator, CodegenOptions};
+    use oxc_codegen::{Codegen, CodegenOptions};
 
     use super::*;
     use crate::core::ast::parse_ast_program::parse_ast_program;
@@ -484,7 +484,7 @@ app.listen(3000, () => {});
 
         assert!(result.is_ok());
 
-        let transformed_code = CodeGenerator::new()
+        let transformed_code = Codegen::new()
             .with_options(CodegenOptions::default())
             .build(&server_program)
             .code;
@@ -544,7 +544,7 @@ const port = 3000;
         assert!(result.is_ok());
 
         // Verify the statement was removed
-        let transformed_code = CodeGenerator::new()
+        let transformed_code = Codegen::new()
             .with_options(CodegenOptions::default())
             .build(&server_program)
             .code;

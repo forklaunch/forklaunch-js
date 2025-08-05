@@ -1,7 +1,7 @@
 use anyhow::Result;
 use oxc_allocator::{Allocator, CloneIn, Vec};
 use oxc_ast::ast::{Argument, Expression, ObjectPropertyKind, Program, PropertyKey, Statement};
-use oxc_codegen::{CodeGenerator, CodegenOptions};
+use oxc_codegen::{Codegen, CodegenOptions};
 
 use super::delete_import_statement::delete_import_specifier;
 
@@ -71,7 +71,7 @@ pub(crate) fn delete_from_sdk_client_input<'a>(
         "./server",
     )?;
 
-    Ok(CodeGenerator::new()
+    Ok(Codegen::new()
         .with_options(CodegenOptions::default())
         .build(&sdk_program_ast)
         .code)

@@ -1,7 +1,7 @@
 use anyhow::Result;
 use oxc_allocator::{Allocator, CloneIn, Vec};
 use oxc_ast::ast::{Program, Statement};
-use oxc_codegen::{CodeGenerator, CodegenOptions};
+use oxc_codegen::{Codegen, CodegenOptions};
 
 pub(crate) fn delete_import_statement<'a>(
     allocator: &'a Allocator,
@@ -25,7 +25,7 @@ pub(crate) fn delete_import_statement<'a>(
 
     app_program_ast.body = new_body;
 
-    Ok(CodeGenerator::new()
+    Ok(Codegen::new()
         .with_options(CodegenOptions::default())
         .build(app_program_ast)
         .code)
@@ -73,7 +73,7 @@ pub(crate) fn delete_import_specifier<'a>(
 
     sdk_program_ast.body = new_body;
 
-    Ok(CodeGenerator::new()
+    Ok(Codegen::new()
         .with_options(CodegenOptions::default())
         .build(sdk_program_ast)
         .code)
