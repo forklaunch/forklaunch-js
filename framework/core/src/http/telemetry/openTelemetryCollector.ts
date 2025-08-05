@@ -193,11 +193,12 @@ new NodeSDK({
     new HttpInstrumentation({
       applyCustomAttributesOnSpan: (span, request) => {
         span.setAttribute(
-          'service.name',
+          ATTR_SERVICE_NAME,
           getEnvVar('OTEL_SERVICE_NAME') ?? 'unknown'
         );
         if (isForklaunchRequest(request)) {
-          span.setAttribute('api.name', request.contractDetails?.name);
+          span.setAttribute(ATTR_API_NAME, request.contractDetails?.name);
+          span.setAttribute(ATTR_CORRELATION_ID, request.context.correlationId);
         }
       }
     }),
