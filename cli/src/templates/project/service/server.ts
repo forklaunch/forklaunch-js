@@ -2,10 +2,14 @@ import { forklaunchExpress, SchemaValidator } from '@{{app_name}}/core';
 import { {{camel_case_name}}Router } from './api/routes/{{camel_case_name}}.routes';
 import { ci, tokens } from './bootstrapper';
 
-//! creates an instance of forklaunchExpress
+/**
+ * Creates an instance of OpenTelemetryCollector
+ */
 const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
 
-//! creates an instance of forklaunchExpress
+/**
+ * Creates an instance of forklaunchExpress
+ */
 const app = forklaunchExpress(SchemaValidator(), openTelemetryCollector);
 
 //! resolves the protocol, host, port, and version from the configuration

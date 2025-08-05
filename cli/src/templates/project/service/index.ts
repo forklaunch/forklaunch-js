@@ -1,1 +1,1 @@
-export type { {{camel_case_name}}SdkClient } from "./sdk";
+export type { {{pascal_case_name}}SdkClient } from "./sdk";

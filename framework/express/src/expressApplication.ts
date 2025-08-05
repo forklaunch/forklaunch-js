@@ -1,4 +1,4 @@
-import { safeStringify } from '@forklaunch/common';
+import { getEnvVar, safeStringify } from '@forklaunch/common';
 import {
   ATTR_HTTP_RESPONSE_STATUS_CODE,
   DocsConfiguration,
@@ -119,67 +119,22 @@ export class Application<
       typeof args[1] === 'string' ? args[1] : (process.env.HOST ?? 'localhost');
     const protocol = (process.env.PROTOCOL as 'http' | 'https') ?? 'http';
 
+    const openApiServerUrls = getEnvVar('DOCS_SERVER_URLS')?.split(',') ?? [
+      `${protocol}://${host}:${port}`
+    ];
+    const openApiServerDescriptions = getEnvVar(
+      'DOCS_SERVER_DESCRIPTIONS'
+    )?.split(',') ?? ['Main Server'];
+
     const openApi = generateOpenApiSpecs<SV>(
       this.schemaValidator,
-      protocol,
-      host,
-      port,
-      this.routers
+      openApiServerUrls,
+      openApiServerDescriptions,
+      this
     );
 
     if (this.schemaValidator instanceof ZodSchemaValidator) {
       const zodSchemaValidator = this.schemaValidator;
-      const routers = this
-        .routers as unknown as ForklaunchRouter<ZodSchemaValidator>[];
-
-      // TODO: clean up if fastmcp is stable enough
-      // this.internal.get('/mcp', async (_req, res) => {
-      //   const server = generateMcpServer(
-      //     zodSchemaValidator,
-      //     protocol,
-      //     host,
-      //     port,
-      //     '1.0.0',
-      //     routers
-      //   );
-      //   res.json(server);
-      // });
-
-      // this.internal.post('/mcp', async (req, res) => {
-      //   try {
-      //     const server = generateMcpServer(
-      //       zodSchemaValidator,
-      //       protocol,
-      //       host,
-      //       port,
-      //       '1.0.0',
-      //       routers
-      //     );
-      //     const transport: StreamableHTTPServerTransport =
-      //       new StreamableHTTPServerTransport({
-      //         sessionIdGenerator: undefined
-      //       });
-      //     res.on('close', () => {
-      //       transport.close();
-      //       server.close();
-      //     });
-      //     await server.connect(transport);
-      //     await transport.handleRequest(req, res, req.body);
-      //   } catch (error) {
-      //     console.error('Error handling MCP request:', error);
-      //     if (!res.headersSent) {
-      //       res.status(500).json({
-      //         jsonrpc: '2.0',
-      //         error: {
-      //           code: -32603,
-      //           message: 'Internal server error'
-      //         },
-      //         id: null
-      //       });
-      //     }
-      //   }
-      // });
-      // END TODO
 
       const mcpServer = generateMcpServer(
         zodSchemaValidator,
@@ -187,7 +142,7 @@ export class Application<
         host,
         port,
         '1.0.0',
-        routers
+        this as unknown as ForklaunchRouter<ZodSchemaValidator>
       );
       mcpServer.start({
         httpStream: {
@@ -257,6 +212,10 @@ export class Application<
         res.send(hash);
       }
     );
+
+    this.internal.get('/health', (_, res) => {
+      res.send('OK');
+    });
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
