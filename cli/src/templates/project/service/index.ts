@@ -1,0 +1,1 @@
+export type { {{camel_case_name}}SdkClient } from "./sdk";

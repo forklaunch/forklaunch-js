@@ -265,12 +265,13 @@ pub(crate) fn generate_service_package_json(
             manifest_data.kebab_case_app_name, manifest_data.kebab_case_name
         )),
         version: Some("0.1.0".to_string()),
+        r#type: Some("module".to_string()),
         description: Some(manifest_data.description.to_string()),
         keywords: Some(vec![]),
         license: Some(manifest_data.license.to_string()),
         author: Some(manifest_data.author.to_string()),
         main: main_override,
-        types: Some("./dist/sdk.d.ts".to_string()),
+        types: None,
         scripts: Some(if let Some(scripts) = scripts_override {
             scripts
         } else {
@@ -279,9 +280,12 @@ pub(crate) fn generate_service_package_json(
                 clean: Some(project_clean_script(&manifest_data.runtime.parse()?)),
                 dev: Some(project_dev_server_script(
                     &manifest_data.runtime.parse()?,
-                    manifest_data.is_database_enabled,
+                    manifest_data.database.parse::<Database>().ok(),
                 )),
-                dev_local: Some(project_dev_local_script(&manifest_data.runtime.parse()?)),
+                dev_local: Some(project_dev_local_script(
+                    &manifest_data.runtime.parse()?,
+                    manifest_data.database.parse::<Database>().ok(),
+                )),
                 test: project_test_script(&manifest_data.runtime.parse()?, &test_framework),
                 docs: Some(PROJECT_DOCS_SCRIPT.to_string()),
                 format: Some(project_format_script(&manifest_data.formatter.parse()?)),
@@ -294,7 +298,7 @@ pub(crate) fn generate_service_package_json(
                 seed: Some(PROJECT_SEED_SCRIPT.to_string()),
                 start: Some(project_start_server_script(
                     &manifest_data.runtime.parse()?,
-                    manifest_data.is_database_enabled,
+                    manifest_data.database.parse::<Database>().ok(),
                 )),
                 ..Default::default()
             }

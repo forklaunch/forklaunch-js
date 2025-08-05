@@ -286,12 +286,13 @@ pub(crate) fn generate_worker_package_json(
             manifest_data.kebab_case_app_name, manifest_data.kebab_case_name
         )),
         version: Some("0.1.0".to_string()),
+        r#type: Some("module".to_string()),
         description: Some(manifest_data.description.to_string()),
         keywords: Some(vec![]),
         license: Some(manifest_data.license.to_string()),
         author: Some(manifest_data.author.to_string()),
         main: main_override,
-        types: Some("./dist/sdk.d.ts".to_string()),
+        types: None,
         scripts: Some(if let Some(scripts) = scripts_override {
             scripts
         } else {
@@ -300,14 +301,20 @@ pub(crate) fn generate_worker_package_json(
                 clean: Some(project_clean_script(&manifest_data.runtime.parse()?)),
                 dev_server: Some(project_dev_server_script(
                     &manifest_data.runtime.parse()?,
-                    manifest_data.is_database_enabled,
+                    manifest_data
+                        .database
+                        .as_ref()
+                        .map(|db| db.parse::<Database>().unwrap()),
                 )),
                 dev_worker: Some(project_dev_worker_client_script(
                     &manifest_data.runtime.parse()?,
                 )),
                 dev_local: Some(project_dev_local_worker_script(
                     &manifest_data.runtime.parse()?,
-                    manifest_data.is_database_enabled,
+                    manifest_data
+                        .database
+                        .as_ref()
+                        .map(|db| db.parse::<Database>().unwrap()),
                 )),
                 test: project_test_script(&manifest_data.runtime.parse()?, &test_framework),
                 docs: Some(PROJECT_DOCS_SCRIPT.to_string()),
@@ -341,7 +348,10 @@ pub(crate) fn generate_worker_package_json(
                 },
                 start_server: Some(project_start_worker_script(
                     &manifest_data.runtime.parse()?,
-                    manifest_data.is_database_enabled,
+                    manifest_data
+                        .database
+                        .as_ref()
+                        .map(|db| db.parse::<Database>().unwrap()),
                 )),
                 start_worker: Some(PROJECT_START_WORKER_CLIENT_SCRIPT.to_string()),
                 ..Default::default()
