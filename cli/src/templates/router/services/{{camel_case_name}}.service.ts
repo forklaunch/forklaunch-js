@@ -15,7 +15,7 @@ import {
 import { {{pascal_case_name}}EventRecord } from '../persistence/entities';{{/is_worker}}
 
 // Base{{pascal_case_name}}Service class that implements the {{pascal_case_name}}Service interface
-export class Base{{pascal_case_name}}Service implements {{pascal_case_name}}Service {
+export class Base{{pascal_case_name}}Service implements {{pascal_case_name}}Service { {{^is_worker}}
     private entityManager: EntityManager;{{/is_worker}}{{#is_worker}}
     private workerProducer: WorkerProducer<{{pascal_case_name}}EventRecord>;{{/is_worker}}, 
     private readonly openTelemetryCollector: OpenTelemetryCollector<Metrics>;
