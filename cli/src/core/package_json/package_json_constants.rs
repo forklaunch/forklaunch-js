@@ -9,27 +9,27 @@ use crate::{
 // @biomejs/biome
 pub(crate) const BIOME_VERSION: &str = "1.9.4";
 // @eslint/js
-pub(crate) const ESLINT_VERSION: &str = "^9.24.0";
+pub(crate) const ESLINT_VERSION: &str = "^9.32.0";
 // @types/jest
-pub(crate) const JEST_TYPES_VERSION: &str = "^29.5.14";
+pub(crate) const JEST_TYPES_VERSION: &str = "^30.0.0";
 // jest
-pub(crate) const JEST_VERSION: &str = "^29.7.0";
+pub(crate) const JEST_VERSION: &str = "^30.0.5";
 // oxlint
 pub(crate) const OXLINT_VERSION: &str = "^0.16.6";
 // prettier
 pub(crate) const PRETTIER_VERSION: &str = "^3.6.2";
 // ts-jest
-pub(crate) const TS_JEST_VERSION: &str = "^29.2.6";
+pub(crate) const TS_JEST_VERSION: &str = "^29.4.0";
 // ts-nodef
 pub(crate) const TS_NODE_VERSION: &str = "^10.9.2";
 // typescript-eslint
 pub(crate) const TYPESCRIPT_ESLINT_VERSION: &str = "^8.38.0";
 // vitest
-pub(crate) const VITEST_VERSION: &str = "^3.0.8";
+pub(crate) const VITEST_VERSION: &str = "^3.2.4";
 
 // Application package.json dependencies constants
 // globals
-pub(crate) const GLOBALS_VERSION: &str = "^16.0.0";
+pub(crate) const GLOBALS_VERSION: &str = "^16.3.0";
 // husky
 pub(crate) const HUSKY_VERSION: &str = "^9.1.7";
 // lint-staged
@@ -41,7 +41,7 @@ pub(crate) const SORT_PACKAGE_JSON_VERSION: &str = "^3.0.0";
 // tsx
 pub(crate) const TSX_VERSION: &str = "^4.20.3";
 // typescript
-pub(crate) const TYPESCRIPT_VERSION: &str = "^5.8.2";
+pub(crate) const TYPESCRIPT_VERSION: &str = "^5.9.2";
 
 // Application package.json scripts constants
 pub(crate) const APP_DEV_SCRIPT: &str = "docker compose up --watch";
@@ -213,9 +213,9 @@ pub(crate) fn application_up_packages_script(runtime: &Runtime) -> String {
 // @forklaunch/better-auth-mikro-orm-fork
 pub(crate) const BETTER_AUTH_MIKRO_ORM_VERSION: &str = "~0.4.102";
 // @forklaunch/blueprint-core
-pub(crate) const APP_CORE_VERSION: &str = "workspace:*";
+pub(crate) const APP_CORE_VERSION: &str = "1.0.0";
 // @forklaunch/blueprint-monitoring
-pub(crate) const APP_MONITORING_VERSION: &str = "workspace:*";
+pub(crate) const APP_MONITORING_VERSION: &str = "0.1.0";
 // @forklaunch/common
 pub(crate) const COMMON_VERSION: &str = "~0.4.6";
 // @forklaunch/core
@@ -225,19 +225,19 @@ pub(crate) const EXPRESS_VERSION: &str = "~0.7.8";
 // @forklaunch/hyper-express
 pub(crate) const HYPER_EXPRESS_VERSION: &str = "~0.7.8";
 // @forklaunch/implementation-billing-base
-pub(crate) const BILLING_BASE_VERSION: &str = "~0.5.0";
+pub(crate) const BILLING_BASE_VERSION: &str = "~0.5.1";
 // @forklaunch/implementation-billing-stripe
-pub(crate) const BILLING_STRIPE_VERSION: &str = "~0.2.0";
+pub(crate) const BILLING_STRIPE_VERSION: &str = "~0.2.1";
 // @forklaunch/implementation-iam-base
-pub(crate) const IAM_BASE_VERSION: &str = "~0.5.0";
+pub(crate) const IAM_BASE_VERSION: &str = "~0.5.1";
 // @forklaunch/implementation-worker-bullmq
-pub(crate) const WORKER_BULLMQ_VERSION: &str = "~0.5.0";
+pub(crate) const WORKER_BULLMQ_VERSION: &str = "~0.5.1";
 // @forklaunch/implementation-worker-redis
-pub(crate) const WORKER_REDIS_VERSION: &str = "~0.5.0";
+pub(crate) const WORKER_REDIS_VERSION: &str = "~0.5.1";
 // @forklaunch/implementation-worker-database
-pub(crate) const WORKER_DATABASE_VERSION: &str = "~0.5.0";
+pub(crate) const WORKER_DATABASE_VERSION: &str = "~0.5.1";
 // @forklaunch/implementation-worker-kafka
-pub(crate) const WORKER_KAFKA_VERSION: &str = "~0.5.0";
+pub(crate) const WORKER_KAFKA_VERSION: &str = "~0.5.1";
 // @forklaunch/infrastructure-redis
 pub(crate) const INFRASTRUCTURE_REDIS_VERSION: &str = "~0.2.8";
 // @forklaunch/infrastructure-s3
