@@ -1,5 +1,13 @@
 # @forklaunch/express
 
+## 0.7.9
+
+### Patch Changes
+
+- Allows for server urls to be passed in as env vars for use with openapi
+- Updated dependencies
+  - @forklaunch/core@0.12.1
+
 ## 0.7.8
 
 ### Patch Changes

@@ -8,11 +8,15 @@ export class RedisWorkerProducer<
   Options extends RedisWorkerOptions
 > implements WorkerProducer<EventEntity>
 {
-  constructor(
-    private readonly queueName: string,
-    private readonly cache: TtlCache,
-    private readonly options: Options
-  ) {}
+  private readonly queueName: string;
+  private readonly cache: TtlCache;
+  private readonly options: Options;
+
+  constructor(queueName: string, cache: TtlCache, options: Options) {
+    this.queueName = queueName;
+    this.cache = cache;
+    this.options = options;
+  }
 
   async enqueueJob(event: EventEntity): Promise<void> {
     await this.cache.enqueueRecord(this.queueName, event);

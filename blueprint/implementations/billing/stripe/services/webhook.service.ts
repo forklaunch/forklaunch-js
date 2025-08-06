@@ -36,35 +36,70 @@ export class StripeWebhookService<
   SubscriptionEntities extends
     StripeSubscriptionEntities<PartyEnum> = StripeSubscriptionEntities<PartyEnum>
 > {
+  protected readonly stripeClient: Stripe;
+  protected readonly em: EntityManager;
+  protected readonly schemaValidator: SchemaValidator;
+  protected readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
+  protected readonly billingPortalService: StripeBillingPortalService<
+    SchemaValidator,
+    BillingPortalEntities
+  >;
+  protected readonly checkoutSessionService: StripeCheckoutSessionService<
+    SchemaValidator,
+    StatusEnum,
+    CheckoutSessionEntities
+  >;
+  protected readonly paymentLinkService: StripePaymentLinkService<
+    SchemaValidator,
+    StatusEnum,
+    PaymentLinkEntities
+  >;
+  protected readonly planService: StripePlanService<
+    SchemaValidator,
+    PlanEntities
+  >;
+  protected readonly subscriptionService: StripeSubscriptionService<
+    SchemaValidator,
+    PartyEnum,
+    SubscriptionEntities
+  >;
+
   constructor(
-    protected readonly stripeClient: Stripe,
-    protected readonly em: EntityManager,
-    protected readonly schemaValidator: SchemaValidator,
-    protected readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-    protected readonly billingPortalService: StripeBillingPortalService<
+    stripeClient: Stripe,
+    em: EntityManager,
+    schemaValidator: SchemaValidator,
+    openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
+    billingPortalService: StripeBillingPortalService<
       SchemaValidator,
       BillingPortalEntities
     >,
-    protected readonly checkoutSessionService: StripeCheckoutSessionService<
+    checkoutSessionService: StripeCheckoutSessionService<
       SchemaValidator,
       StatusEnum,
       CheckoutSessionEntities
     >,
-    protected readonly paymentLinkService: StripePaymentLinkService<
+    paymentLinkService: StripePaymentLinkService<
       SchemaValidator,
       StatusEnum,
       PaymentLinkEntities
     >,
-    protected readonly planService: StripePlanService<
-      SchemaValidator,
-      PlanEntities
-    >,
-    protected readonly subscriptionService: StripeSubscriptionService<
+    planService: StripePlanService<SchemaValidator, PlanEntities>,
+    subscriptionService: StripeSubscriptionService<
       SchemaValidator,
       PartyEnum,
       SubscriptionEntities
     >
-  ) {}
+  ) {
+    this.stripeClient = stripeClient;
+    this.em = em;
+    this.schemaValidator = schemaValidator;
+    this.openTelemetryCollector = openTelemetryCollector;
+    this.billingPortalService = billingPortalService;
+    this.checkoutSessionService = checkoutSessionService;
+    this.paymentLinkService = paymentLinkService;
+    this.planService = planService;
+    this.subscriptionService = subscriptionService;
+  }
 
   async handleWebhookEvent(event: Stripe.Event): Promise<void> {
     if (this.openTelemetryCollector) {

@@ -4,7 +4,7 @@ import { handlers, schemaValidator } from '@{{app_name}}/core';
 import { Metrics } from '@{{app_name}}/monitoring';
 import { {{pascal_case_name}}Service } from '../../domain/interfaces/{{camel_case_name}}.interface';
 import { {{pascal_case_name}}RequestMapper, {{pascal_case_name}}ResponseMapper } from '../../domain/mappers/{{camel_case_name}}.mappers';
-import { ScopeFactory } from '../../server';
+import { ScopeFactory } from '../../bootstrapper';
 import { {{pascal_case_name}}ServiceFactory } from '../routes/{{camel_case_name}}.routes';
 
 // Controller class that implements the {{pascal_case_name}}Service interface 

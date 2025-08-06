@@ -66,9 +66,8 @@ function transformBasePath(basePath: string) {
  * @returns {OpenAPIObject} - The Swagger document.
  */
 function generateOpenApiDocument(
-  protocol: 'http' | 'https',
-  host: string,
-  port: string | number,
+  serverUrls: string[],
+  serverDescriptions: string[],
   versionedTags: Record<string | symbol, TagObject[]>,
   versionedPaths: Record<string | symbol, PathObject>,
   versionedSecuritySchemes: Record<
@@ -92,10 +91,10 @@ function generateOpenApiDocument(
       },
       tags: versionedTags[OPENAPI_DEFAULT_VERSION],
       servers: [
-        {
-          url: `${protocol}://${host}:${port}`,
-          description: 'Main Server'
-        },
+        ...serverUrls.map((url, index) => ({
+          url,
+          description: serverDescriptions?.[index]
+        })),
         ...(otherServers || [])
       ],
       paths: versionedPaths[OPENAPI_DEFAULT_VERSION]
@@ -114,10 +113,11 @@ function generateOpenApiDocument(
           },
           tags: versionedTags[version],
           servers: [
-            {
-              url: `${protocol}://${host}:${port}`,
-              description: 'Main Server'
-            }
+            ...serverUrls.map((url, index) => ({
+              url,
+              description: serverDescriptions?.[index]
+            })),
+            ...(otherServers || [])
           ],
           paths
         }
@@ -345,10 +345,9 @@ function generateOperationObject<SV extends AnySchemaValidator>(
  */
 export function generateOpenApiSpecs<SV extends AnySchemaValidator>(
   schemaValidator: SV,
-  protocol: 'http' | 'https',
-  host: string,
-  port: string | number,
-  routers: ForklaunchRouter<SV>[],
+  serverUrls: string[],
+  serverDescriptions: string[],
+  application: ForklaunchRouter<SV>,
   otherServers?: {
     url: string;
     description: string;
@@ -367,7 +366,15 @@ export function generateOpenApiSpecs<SV extends AnySchemaValidator>(
     [OPENAPI_DEFAULT_VERSION]: {}
   };
 
-  unpackRouters<SV>(routers).forEach(({ fullPath, router }) => {
+  [
+    {
+      fullPath: application.basePath === '/' ? '' : application.basePath,
+      router: application
+    },
+    ...unpackRouters<SV>(application.routers, [
+      application.basePath === '/' ? '' : application.basePath
+    ])
+  ].forEach(({ fullPath, router }) => {
     const controllerName = transformBasePath(fullPath);
     router.routes.forEach((route) => {
       const openApiPath = openApiCompliantPath(
@@ -478,9 +485,8 @@ export function generateOpenApiSpecs<SV extends AnySchemaValidator>(
   });
 
   return generateOpenApiDocument(
-    protocol,
-    host,
-    port,
+    serverUrls,
+    serverDescriptions,
     versionedTags,
     versionedPaths,
     versionedSecuritySchemes,

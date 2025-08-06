@@ -1,7 +1,11 @@
+import { getEnvVar } from '@forklaunch/common';
 import { AnySchemaValidator } from '@forklaunch/validator';
-import { trace } from '@opentelemetry/api';
+import { context, trace } from '@opentelemetry/api';
 import { v4 } from 'uuid';
-import { ATTR_CORRELATION_ID } from '../../telemetry/constants';
+import {
+  ATTR_CORRELATION_ID,
+  ATTR_SERVICE_NAME
+} from '../../telemetry/constants';
 import {
   ExpressLikeSchemaHandler,
   ForklaunchNextFunction,
@@ -57,7 +61,6 @@ export function createContext<
     req.schemaValidator = schemaValidator;
 
     let correlationId = v4();
-
     if (req.headers['x-correlation-id']) {
       correlationId = req.headers['x-correlation-id'] as string;
     }
@@ -76,10 +79,15 @@ export function createContext<
       correlationId: correlationId
     };
 
-    const span = trace.getActiveSpan();
+    const span = trace.getSpan(context.active());
+
     if (span != null) {
       req.context.span = span;
       req.context.span?.setAttribute(ATTR_CORRELATION_ID, correlationId);
+      req.context.span?.setAttribute(
+        ATTR_SERVICE_NAME,
+        getEnvVar('OTEL_SERVICE_NAME')
+      );
     }
 
     next?.();

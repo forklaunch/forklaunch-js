@@ -3,7 +3,7 @@ use std::{collections::HashSet, fs::read_to_string, path::Path};
 use anyhow::Result;
 use oxc_allocator::{Allocator, CloneIn, Vec};
 use oxc_ast::ast::{Argument, Expression, ObjectPropertyKind, PropertyKey, SourceType, Statement};
-use oxc_codegen::{CodeGenerator, CodegenOptions};
+use oxc_codegen::{Codegen, CodegenOptions};
 
 use crate::{
     constants::Database,
@@ -350,7 +350,7 @@ pub(crate) fn transform_mikroorm_config_ts(
         }
     }
 
-    Ok(CodeGenerator::new()
+    Ok(Codegen::new()
         .with_options(CodegenOptions::default())
         .build(&mikro_orm_config_program)
         .code)

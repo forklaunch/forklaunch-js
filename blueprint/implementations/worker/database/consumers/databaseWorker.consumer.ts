@@ -12,13 +12,25 @@ export class DatabaseWorkerConsumer<
   Options extends DatabaseWorkerOptions
 > implements WorkerConsumer<EventEntity>
 {
+  protected readonly entityName: EntityName<EventEntity>;
+  protected readonly em: EntityManager;
+  protected readonly options: Options;
+  protected readonly processEvents: WorkerProcessFunction<EventEntity>;
+  protected readonly failureHandler: WorkerFailureHandler<EventEntity>;
+
   constructor(
-    protected readonly entityName: EntityName<EventEntity>,
-    protected readonly em: EntityManager,
-    protected readonly options: Options,
-    protected readonly processEvents: WorkerProcessFunction<EventEntity>,
-    protected readonly failureHandler: WorkerFailureHandler<EventEntity>
-  ) {}
+    entityName: EntityName<EventEntity>,
+    em: EntityManager,
+    options: Options,
+    processEvents: WorkerProcessFunction<EventEntity>,
+    failureHandler: WorkerFailureHandler<EventEntity>
+  ) {
+    this.entityName = entityName;
+    this.em = em;
+    this.options = options;
+    this.processEvents = processEvents;
+    this.failureHandler = failureHandler;
+  }
 
   private async retrieveEvents(): Promise<EventEntity[]> {
     return this.em.getRepository(this.entityName).find(

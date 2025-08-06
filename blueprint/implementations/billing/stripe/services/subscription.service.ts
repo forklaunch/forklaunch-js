@@ -53,13 +53,44 @@ export class StripeSubscriptionService<
     Entities
   >;
   protected _mappers: InternalMapper<InstanceTypeRecord<typeof this.mappers>>;
+  protected readonly stripe: Stripe;
+  protected readonly em: EntityManager;
+  protected readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
+  protected readonly schemaValidator: SchemaValidator;
+  protected readonly mappers: {
+    SubscriptionMapper: ResponseMapperConstructor<
+      SchemaValidator,
+      Dto['SubscriptionMapper'],
+      Entities['SubscriptionMapper']
+    >;
+    CreateSubscriptionMapper: RequestMapperConstructor<
+      SchemaValidator,
+      Dto['CreateSubscriptionMapper'],
+      Entities['CreateSubscriptionMapper'],
+      (
+        dto: Dto['CreateSubscriptionMapper'],
+        em: EntityManager,
+        subscription: Stripe.Subscription
+      ) => Promise<Entities['CreateSubscriptionMapper']>
+    >;
+    UpdateSubscriptionMapper: RequestMapperConstructor<
+      SchemaValidator,
+      Dto['UpdateSubscriptionMapper'],
+      Entities['UpdateSubscriptionMapper'],
+      (
+        dto: Dto['UpdateSubscriptionMapper'],
+        em: EntityManager,
+        subscription: Stripe.Subscription
+      ) => Promise<Entities['UpdateSubscriptionMapper']>
+    >;
+  };
 
   constructor(
-    protected readonly stripe: Stripe,
-    protected readonly em: EntityManager,
-    protected readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-    protected readonly schemaValidator: SchemaValidator,
-    protected readonly mappers: {
+    stripe: Stripe,
+    em: EntityManager,
+    openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
+    schemaValidator: SchemaValidator,
+    mappers: {
       SubscriptionMapper: ResponseMapperConstructor<
         SchemaValidator,
         Dto['SubscriptionMapper'],
@@ -91,6 +122,11 @@ export class StripeSubscriptionService<
       databaseTableName?: string;
     }
   ) {
+    this.stripe = stripe;
+    this.em = em;
+    this.openTelemetryCollector = openTelemetryCollector;
+    this.schemaValidator = schemaValidator;
+    this.mappers = mappers;
     this._mappers = transformIntoInternalMapper(mappers, schemaValidator);
     this.baseSubscriptionService = new BaseSubscriptionService(
       em,

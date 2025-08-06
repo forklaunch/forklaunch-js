@@ -627,6 +627,8 @@ pub(crate) struct ProjectPackageJson {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) version: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) r#type: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) description: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) keywords: Option<Vec<String>>,
@@ -672,6 +674,7 @@ impl<'de> Deserialize<'de> for ProjectPackageJson {
                 let mut package = ProjectPackageJson {
                     name: None,
                     version: None,
+                    r#type: None,
                     description: None,
                     keywords: None,
                     license: None,
@@ -694,6 +697,11 @@ impl<'de> Deserialize<'de> for ProjectPackageJson {
                         }
                         "version" => {
                             package.version = Some(
+                                serde_json::from_value(value).map_err(serde::de::Error::custom)?,
+                            )
+                        }
+                        "type" => {
+                            package.r#type = Some(
                                 serde_json::from_value(value).map_err(serde::de::Error::custom)?,
                             )
                         }

@@ -2,14 +2,12 @@ use std::{collections::HashSet, fs::read_to_string, path::Path};
 
 use anyhow::Result;
 use oxc_allocator::{Allocator, CloneIn, Vec};
-use oxc_ast::{
-    VisitMut,
-    ast::{
-        Argument, BindingPatternKind, Expression, ObjectPropertyKind, Program, PropertyKey,
-        SourceType, Statement, VariableDeclarator,
-    },
+use oxc_ast::ast::{
+    Argument, BindingPatternKind, Expression, ObjectPropertyKind, Program, PropertyKey, SourceType,
+    Statement, VariableDeclarator,
 };
-use oxc_codegen::{CodeGenerator, CodegenOptions};
+use oxc_ast_visit::VisitMut;
+use oxc_codegen::{Codegen, CodegenOptions};
 
 use crate::core::ast::{
     infrastructure::{
@@ -187,7 +185,7 @@ pub(crate) fn delete_from_registrations_ts_infrastructure_redis(
     delete_redis_url_environment_variable(&allocator, &mut registrations_program);
     delete_redis_ttl_cache_runtime_dependency(&allocator, &mut registrations_program);
 
-    Ok(CodeGenerator::new()
+    Ok(Codegen::new()
         .with_options(CodegenOptions::default())
         .build(&registrations_program)
         .code)
@@ -214,7 +212,7 @@ pub(crate) fn delete_from_registrations_ts_infrastructure_s3(
     delete_s3_url_environment_variable(&allocator, &mut registrations_program);
     delete_s3_object_store_runtime_dependency(&allocator, &mut registrations_program);
 
-    Ok(CodeGenerator::new()
+    Ok(Codegen::new()
         .with_options(CodegenOptions::default())
         .build(&registrations_program)
         .code)
@@ -273,7 +271,7 @@ pub(crate) fn delete_from_registrations_ts_config_injector<'a>(
         }
     }
 
-    Ok(CodeGenerator::new()
+    Ok(Codegen::new()
         .with_options(CodegenOptions::default())
         .build(&registrations_program)
         .code)
@@ -331,7 +329,7 @@ pub(crate) fn delete_from_registration_schema_validators<'a>(
 mod tests {
     use oxc_allocator::Allocator;
     use oxc_ast::ast::SourceType;
-    use oxc_codegen::{CodeGenerator, CodegenOptions};
+    use oxc_codegen::{Codegen, CodegenOptions};
 
     use super::*;
     use crate::core::ast::parse_ast_program::parse_ast_program;
@@ -397,7 +395,7 @@ mod tests {
         // regardless of whether they are used by services or not
         let expected_code = "const registrations = configInjector({\n\tworkerService: {\n\t\tlifetime: Lifetime.Scoped,\n\t\tfactory: (options) => {\n\t\t\tconst { REDIS_URL, TtlCache, DB_HOST } = options;\n\t\t\treturn new WorkerService(options);\n\t\t}\n\t},\n\totherService: {\n\t\tlifetime: Lifetime.Scoped,\n\t\tfactory: (options) => {\n\t\t\tconst { OTHER_PROP } = options;\n\t\t\treturn new OtherService();\n\t\t}\n\t}\n});\n";
 
-        let generated_code = CodeGenerator::new()
+        let generated_code = Codegen::new()
             .with_options(CodegenOptions::default())
             .build(&registrations_program)
             .code;
@@ -458,7 +456,7 @@ mod tests {
 
         let expected_code = "const userSchema = UserSchema;\nconst postSchema = PostSchema;\nconst commentSchema = CommentSchema({ someOtherProp: \"someOtherProp\" });\n";
 
-        let generated_code = CodeGenerator::new()
+        let generated_code = Codegen::new()
             .with_options(CodegenOptions::default())
             .build(&registrations_program)
             .code;

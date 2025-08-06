@@ -373,6 +373,20 @@ export const sampleSdkClient2 = sdkClient(zodSchemaValidator, {
   }
 });
 
+forklaunchApplication.get(
+  '/alfalfa',
+  {
+    name: 'Test',
+    summary: 'Test',
+    responses: {
+      200: string
+    }
+  },
+  (req, res) => {
+    res.status(200).send('Hello World');
+  }
+);
+
 export function start() {
   return forklaunchApplication.listen(6935, () => {
     console.log('server started on 6935');

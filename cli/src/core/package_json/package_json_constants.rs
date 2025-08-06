@@ -9,27 +9,27 @@ use crate::{
 // @biomejs/biome
 pub(crate) const BIOME_VERSION: &str = "1.9.4";
 // @eslint/js
-pub(crate) const ESLINT_VERSION: &str = "^9.24.0";
+pub(crate) const ESLINT_VERSION: &str = "^9.32.0";
 // @types/jest
-pub(crate) const JEST_TYPES_VERSION: &str = "^29.5.14";
+pub(crate) const JEST_TYPES_VERSION: &str = "^30.0.0";
 // jest
-pub(crate) const JEST_VERSION: &str = "^29.7.0";
+pub(crate) const JEST_VERSION: &str = "^30.0.5";
 // oxlint
 pub(crate) const OXLINT_VERSION: &str = "^0.16.6";
 // prettier
 pub(crate) const PRETTIER_VERSION: &str = "^3.6.2";
 // ts-jest
-pub(crate) const TS_JEST_VERSION: &str = "^29.2.6";
+pub(crate) const TS_JEST_VERSION: &str = "^29.4.0";
 // ts-nodef
 pub(crate) const TS_NODE_VERSION: &str = "^10.9.2";
 // typescript-eslint
 pub(crate) const TYPESCRIPT_ESLINT_VERSION: &str = "^8.38.0";
 // vitest
-pub(crate) const VITEST_VERSION: &str = "^3.0.8";
+pub(crate) const VITEST_VERSION: &str = "^3.2.4";
 
 // Application package.json dependencies constants
 // globals
-pub(crate) const GLOBALS_VERSION: &str = "^16.0.0";
+pub(crate) const GLOBALS_VERSION: &str = "^16.3.0";
 // husky
 pub(crate) const HUSKY_VERSION: &str = "^9.1.7";
 // lint-staged
@@ -41,7 +41,7 @@ pub(crate) const SORT_PACKAGE_JSON_VERSION: &str = "^3.0.0";
 // tsx
 pub(crate) const TSX_VERSION: &str = "^4.20.3";
 // typescript
-pub(crate) const TYPESCRIPT_VERSION: &str = "^5.8.2";
+pub(crate) const TYPESCRIPT_VERSION: &str = "^5.9.2";
 
 // Application package.json scripts constants
 pub(crate) const APP_DEV_SCRIPT: &str = "docker compose up --watch";
@@ -77,7 +77,7 @@ pub(crate) fn application_build_script(runtime: &Runtime, app_name: &str) -> Str
             "bun --filter='!@{}/universal-sdk' run build && bun --filter='@{}/universal-sdk' run build",
             app_name, app_name
         ),
-        Runtime::Node => "pnpm -r run build".to_string(),
+        Runtime::Node => "pnpm -r --no-bail run build".to_string(),
     }
 }
 
@@ -85,7 +85,7 @@ pub(crate) fn application_clean_script(runtime: &Runtime) -> String {
     String::from(match runtime {
         Runtime::Bun => "rm -rf node_modules bun.lockb && bun --filter='*' clean",
         Runtime::Node => {
-            "rm -rf node_modules pnpm-lock.yaml && pnpm --parallel -r clean && pnpm store prune"
+            "rm -rf node_modules pnpm-lock.yaml && pnpm --parallel -r --no-bail clean && pnpm store prune"
         }
     })
 }
@@ -100,7 +100,7 @@ pub(crate) fn application_clean_purge_script(runtime: &Runtime) -> String {
 pub(crate) fn application_docs_script(runtime: &Runtime) -> String {
     String::from(match runtime {
         Runtime::Bun => "bun --filter='*' docs",
-        Runtime::Node => "pnpm --parallel -r run docs",
+        Runtime::Node => "pnpm --parallel -r --no-bail run docs",
     })
 }
 
@@ -205,7 +205,7 @@ pub(crate) fn application_test_script<'a>(
 pub(crate) fn application_up_packages_script(runtime: &Runtime) -> String {
     String::from(match runtime {
         Runtime::Bun => "bun update --latest && bun --filter='*' update --latest",
-        Runtime::Node => "pnpm -r update --latest",
+        Runtime::Node => "pnpm -r --no-bail update --latest",
     })
 }
 
@@ -225,19 +225,19 @@ pub(crate) const EXPRESS_VERSION: &str = "~0.7.8";
 // @forklaunch/hyper-express
 pub(crate) const HYPER_EXPRESS_VERSION: &str = "~0.7.8";
 // @forklaunch/implementation-billing-base
-pub(crate) const BILLING_BASE_VERSION: &str = "~0.5.0";
+pub(crate) const BILLING_BASE_VERSION: &str = "~0.5.1";
 // @forklaunch/implementation-billing-stripe
-pub(crate) const BILLING_STRIPE_VERSION: &str = "~0.2.0";
+pub(crate) const BILLING_STRIPE_VERSION: &str = "~0.2.1";
 // @forklaunch/implementation-iam-base
-pub(crate) const IAM_BASE_VERSION: &str = "~0.5.0";
+pub(crate) const IAM_BASE_VERSION: &str = "~0.5.1";
 // @forklaunch/implementation-worker-bullmq
-pub(crate) const WORKER_BULLMQ_VERSION: &str = "~0.5.0";
+pub(crate) const WORKER_BULLMQ_VERSION: &str = "~0.5.1";
 // @forklaunch/implementation-worker-redis
-pub(crate) const WORKER_REDIS_VERSION: &str = "~0.5.0";
+pub(crate) const WORKER_REDIS_VERSION: &str = "~0.5.1";
 // @forklaunch/implementation-worker-database
-pub(crate) const WORKER_DATABASE_VERSION: &str = "~0.5.0";
+pub(crate) const WORKER_DATABASE_VERSION: &str = "~0.5.1";
 // @forklaunch/implementation-worker-kafka
-pub(crate) const WORKER_KAFKA_VERSION: &str = "~0.5.0";
+pub(crate) const WORKER_KAFKA_VERSION: &str = "~0.5.1";
 // @forklaunch/infrastructure-redis
 pub(crate) const INFRASTRUCTURE_REDIS_VERSION: &str = "~0.2.8";
 // @forklaunch/infrastructure-s3
@@ -338,11 +338,11 @@ pub(crate) fn project_clean_script(runtime: &Runtime) -> String {
     })
 }
 
-pub(crate) fn project_dev_server_script(runtime: &Runtime, is_database_enabled: bool) -> String {
+pub(crate) fn project_dev_server_script(runtime: &Runtime, database: Option<Database>) -> String {
     String::from(match runtime {
         Runtime::Bun => format!(
             "{}bun --watch server.ts",
-            if is_database_enabled {
+            if database.is_some_and(|db| db != Database::MongoDB) {
                 "bun migrate:up && "
             } else {
                 ""
@@ -350,7 +350,7 @@ pub(crate) fn project_dev_server_script(runtime: &Runtime, is_database_enabled: 
         ),
         Runtime::Node => format!(
             "{}pnpm tsx watch server.ts",
-            if is_database_enabled {
+            if database.is_some_and(|db| db != Database::MongoDB) {
                 "pnpm migrate:up && "
             } else {
                 ""
@@ -359,14 +359,24 @@ pub(crate) fn project_dev_server_script(runtime: &Runtime, is_database_enabled: 
     })
 }
 
-pub(crate) fn project_dev_local_script(runtime: &Runtime) -> String {
+pub(crate) fn project_dev_local_script(runtime: &Runtime, database: Option<Database>) -> String {
     String::from(match runtime {
-        Runtime::Bun => {
-            "DOTENV_FILE_PATH=.env.local bun migrate:up && DOTENV_FILE_PATH=.env.local bun --watch server.ts"
-        }
-        Runtime::Node => {
-            "DOTENV_FILE_PATH=.env.local pnpm migrate:up && DOTENV_FILE_PATH=.env.local pnpm tsx watch server.ts"
-        }
+        Runtime::Bun => format!(
+            "{}DOTENV_FILE_PATH=.env.local bun --watch server.ts",
+            if database.is_some_and(|db| db != Database::MongoDB) {
+                "DOTENV_FILE_PATH=.env.local bun migrate:up && "
+            } else {
+                ""
+            }
+        ),
+        Runtime::Node => format!(
+            "{}DOTENV_FILE_PATH=.env.local pnpm tsx watch server.ts",
+            if database.is_some_and(|db| db != Database::MongoDB) {
+                "DOTENV_FILE_PATH=.env.local pnpm migrate:up && "
+            } else {
+                ""
+            }
+        ),
     })
 }
 
@@ -400,10 +410,10 @@ pub(crate) fn project_migrate_script(command: &str) -> String {
     }
 }
 
-pub(crate) fn project_start_server_script(runtime: &Runtime, is_database_enabled: bool) -> String {
+pub(crate) fn project_start_server_script(runtime: &Runtime, database: Option<Database>) -> String {
     format!(
         "{}DOTENV_FILE_PATH=.env.prod node --import tsx dist/server.js",
-        if is_database_enabled {
+        if database.is_some_and(|db| db != Database::MongoDB) {
             format!(
                 "DOTENV_FILE_PATH=.env.prod {} migrate:up && ",
                 if runtime == &Runtime::Node {
@@ -417,10 +427,10 @@ pub(crate) fn project_start_server_script(runtime: &Runtime, is_database_enabled
         }
     )
 }
-pub(crate) fn project_start_worker_script(runtime: &Runtime, is_database_enabled: bool) -> String {
+pub(crate) fn project_start_worker_script(runtime: &Runtime, database: Option<Database>) -> String {
     format!(
         "{}DOTENV_FILE_PATH=.env.prod node --import tsx dist/worker.js",
-        if is_database_enabled {
+        if database.is_some_and(|db| db != Database::MongoDB) {
             format!(
                 "{} migrate:up && ",
                 if runtime == &Runtime::Node {
@@ -444,12 +454,12 @@ pub(crate) fn project_dev_worker_client_script(runtime: &Runtime) -> String {
 
 pub(crate) fn project_dev_local_worker_script(
     runtime: &Runtime,
-    is_database_enabled: bool,
+    database: Option<Database>,
 ) -> String {
     String::from(match runtime {
         Runtime::Bun => format!(
             "{}DOTENV_FILE_PATH=.env.local bun --watch server.ts && DOTENV_FILE_PATH=.env.local bun --watch worker.ts",
-            if is_database_enabled {
+            if database.is_some_and(|db| db != Database::MongoDB) {
                 "DOTENV_FILE_PATH=.env.local bun migrate:up && "
             } else {
                 ""
@@ -457,7 +467,7 @@ pub(crate) fn project_dev_local_worker_script(
         ),
         Runtime::Node => format!(
             "{}DOTENV_FILE_PATH=.env.local pnpm tsx watch server.ts && DOTENV_FILE_PATH=.env.local pnpm tsx watch worker.ts",
-            if is_database_enabled {
+            if database.is_some_and(|db| db != Database::MongoDB) {
                 "DOTENV_FILE_PATH=.env.local pnpm migrate:up && "
             } else {
                 ""

@@ -1,4 +1,4 @@
-import { safeStringify } from '@forklaunch/common';
+import { getEnvVar, safeStringify } from '@forklaunch/common';
 import {
   ATTR_HTTP_RESPONSE_STATUS_CODE,
   DocsConfiguration,
@@ -162,12 +162,18 @@ export class Application<
         });
       });
 
+      const openApiServerUrls = getEnvVar('DOCS_SERVER_URLS')?.split(',') ?? [
+        `${protocol}://${host}:${port}`
+      ];
+      const openApiServerDescriptions = getEnvVar(
+        'DOCS_SERVER_DESCRIPTIONS'
+      )?.split(',') ?? ['Main Server'];
+
       const openApi = generateOpenApiSpecs<SV>(
         this.schemaValidator,
-        protocol,
-        host,
-        port,
-        this.routers
+        openApiServerUrls,
+        openApiServerDescriptions,
+        this
       );
 
       if (

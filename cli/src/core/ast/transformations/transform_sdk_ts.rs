@@ -4,7 +4,7 @@ use anyhow::Result;
 use convert_case::{Case, Casing};
 use oxc_allocator::Allocator;
 use oxc_ast::ast::SourceType;
-use oxc_codegen::{CodeGenerator, CodegenOptions};
+use oxc_codegen::{Codegen, CodegenOptions};
 
 use crate::core::ast::{
     injections::{
@@ -42,7 +42,7 @@ pub(crate) fn transform_sdk_ts(router_name: &str, base_path: &Path) -> Result<St
 
     inject_into_sdk_client_input(&mut sdk_program, &mut injected_sdk_client_skeleton)?;
 
-    Ok(CodeGenerator::new()
+    Ok(Codegen::new()
         .with_options(CodegenOptions::default())
         .build(&sdk_program)
         .code)

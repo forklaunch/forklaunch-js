@@ -32,13 +32,42 @@ export class BaseBillingPortalService<
     tracing?: boolean;
   };
   protected enableDatabaseBackup: boolean;
+  protected em: EntityManager;
+  protected cache: TtlCache;
+  protected openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
+  protected schemaValidator: SchemaValidator;
+  protected mappers: {
+    BillingPortalMapper: ResponseMapperConstructor<
+      SchemaValidator,
+      Dto['BillingPortalMapper'],
+      Entities['BillingPortalMapper']
+    >;
+    CreateBillingPortalMapper: RequestMapperConstructor<
+      SchemaValidator,
+      Dto['CreateBillingPortalMapper'],
+      Entities['CreateBillingPortalMapper'],
+      (
+        dto: Dto['CreateBillingPortalMapper'],
+        em: EntityManager
+      ) => Promise<Entities['CreateBillingPortalMapper']>
+    >;
+    UpdateBillingPortalMapper: RequestMapperConstructor<
+      SchemaValidator,
+      Dto['UpdateBillingPortalMapper'],
+      Entities['UpdateBillingPortalMapper'],
+      (
+        dto: Dto['UpdateBillingPortalMapper'],
+        em: EntityManager
+      ) => Promise<Entities['UpdateBillingPortalMapper']>
+    >;
+  };
 
   constructor(
-    protected em: EntityManager,
-    protected cache: TtlCache,
-    protected openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-    protected schemaValidator: SchemaValidator,
-    protected mappers: {
+    em: EntityManager,
+    cache: TtlCache,
+    openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
+    schemaValidator: SchemaValidator,
+    mappers: {
       BillingPortalMapper: ResponseMapperConstructor<
         SchemaValidator,
         Dto['BillingPortalMapper'],
@@ -68,6 +97,11 @@ export class BaseBillingPortalService<
       enableDatabaseBackup?: boolean;
     }
   ) {
+    this.em = em;
+    this.cache = cache;
+    this.openTelemetryCollector = openTelemetryCollector;
+    this.schemaValidator = schemaValidator;
+    this.mappers = mappers;
     this._mappers = transformIntoInternalMapper(mappers, schemaValidator);
     this.enableDatabaseBackup = options?.enableDatabaseBackup ?? false;
     this.evaluatedTelemetryOptions = options?.telemetry

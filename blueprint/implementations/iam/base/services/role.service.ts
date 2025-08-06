@@ -31,12 +31,40 @@ export class BaseRoleService<
     metrics?: boolean;
     tracing?: boolean;
   };
+  public em: EntityManager;
+  protected openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
+  protected schemaValidator: SchemaValidator;
+  protected mappers: {
+    RoleMapper: ResponseMapperConstructor<
+      SchemaValidator,
+      MapperDto['RoleMapper'],
+      MapperEntities['RoleMapper']
+    >;
+    CreateRoleMapper: RequestMapperConstructor<
+      SchemaValidator,
+      MapperDto['CreateRoleMapper'],
+      MapperEntities['CreateRoleMapper'],
+      (
+        dto: MapperDto['CreateRoleMapper'],
+        em: EntityManager
+      ) => Promise<MapperEntities['CreateRoleMapper']>
+    >;
+    UpdateRoleMapper: RequestMapperConstructor<
+      SchemaValidator,
+      MapperDto['UpdateRoleMapper'],
+      MapperEntities['UpdateRoleMapper'],
+      (
+        dto: MapperDto['UpdateRoleMapper'],
+        em: EntityManager
+      ) => Promise<MapperEntities['UpdateRoleMapper']>
+    >;
+  };
 
   constructor(
-    public em: EntityManager,
-    protected openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-    protected schemaValidator: SchemaValidator,
-    protected mappers: {
+    em: EntityManager,
+    openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
+    schemaValidator: SchemaValidator,
+    mappers: {
       RoleMapper: ResponseMapperConstructor<
         SchemaValidator,
         MapperDto['RoleMapper'],
@@ -65,6 +93,10 @@ export class BaseRoleService<
       telemetry?: TelemetryOptions;
     }
   ) {
+    this.em = em;
+    this.openTelemetryCollector = openTelemetryCollector;
+    this.schemaValidator = schemaValidator;
+    this.mappers = mappers;
     this._mappers = transformIntoInternalMapper(mappers, schemaValidator);
     this.evaluatedTelemetryOptions = options?.telemetry
       ? evaluateTelemetryOptions(options.telemetry).enabled

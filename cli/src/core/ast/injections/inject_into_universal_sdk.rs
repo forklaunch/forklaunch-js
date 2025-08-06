@@ -95,7 +95,7 @@ fn inject_into_universal_sdk_function<'a>(
                 // Handle return type annotation (Promise<{ }>) injection
                 if let Some(return_type) = &mut arrow_func.return_type {
                     if let TSType::TSTypeReference(type_ref) = &mut return_type.type_annotation {
-                        if let Some(type_params) = &mut type_ref.type_parameters {
+                        if let Some(type_params) = &mut type_ref.type_arguments {
                             if let Some(TSType::TSTypeLiteral(promise_type_literal)) =
                                 type_params.params.first_mut()
                             {
@@ -207,7 +207,7 @@ pub(crate) fn inject_into_universal_sdk<'a>(
 mod tests {
     use oxc_allocator::Allocator;
     use oxc_ast::ast::SourceType;
-    use oxc_codegen::{CodeGenerator, CodegenOptions};
+    use oxc_codegen::{Codegen, CodegenOptions};
 
     use super::*;
     use crate::core::ast::parse_ast_program::parse_ast_program;
@@ -234,7 +234,7 @@ mod tests {
         let expected_code = "export const universalSdk = ({ userServiceHost }: {\n\tuserServiceHost: string\n}): Promise<{\n\tuserService: UserServiceSdkClient\n}> => ({ userService: await universalSdk<UserServiceSdkClient>({\n\thost: userServiceHost,\n\tregistryOptions: { path: \"api/v1/openapi\" }\n}) });\n";
 
         assert_eq!(
-            CodeGenerator::new()
+            Codegen::new()
                 .with_options(CodegenOptions::default())
                 .build(&app_program)
                 .code,

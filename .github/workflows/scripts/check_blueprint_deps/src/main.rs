@@ -1,3 +1,4 @@
+use std::env;
 use std::fs::{self, read_dir};
 use std::path::PathBuf;
 use toml;
@@ -5,6 +6,15 @@ use toml;
 mod check_blueprint_deps;
 
 fn main() {
+    let args: Vec<String> = env::args().collect();
+    let fix_mode = args.iter().any(|arg| arg == "--fix" || arg == "-f");
+
+    if fix_mode {
+        println!("Running in fix mode - will update package.json files with correct versions");
+    } else {
+        println!("Running in check mode - will only verify versions (use --fix to update)");
+    }
+
     let topology = fs::read_to_string("../../../../blueprint/.forklaunch/manifest.toml")
         .expect("Failed to read manifest.toml");
     let projects: Vec<String> = toml::from_str::<toml::Value>(&topology)
@@ -42,8 +52,15 @@ fn main() {
     match check_blueprint_deps::verify_package_versions(
         &project_refs,
         &implementation_refs.concat(),
+        fix_mode,
     ) {
-        Ok(_) => println!("All package versions are correct"),
+        Ok(_) => {
+            if fix_mode {
+                println!("All package versions have been updated successfully");
+            } else {
+                println!("All package versions are correct");
+            }
+        }
         Err(e) => println!("Error: {}", e),
     }
 }

@@ -4,7 +4,7 @@ use anyhow::{Ok, Result};
 use convert_case::{Case, Casing};
 use oxc_allocator::Allocator;
 use oxc_ast::ast::SourceType;
-use oxc_codegen::{CodeGenerator, CodegenOptions};
+use oxc_codegen::{Codegen, CodegenOptions};
 
 use crate::{
     constants::WorkerType,
@@ -120,7 +120,7 @@ pub(crate) fn transform_registrations_ts_add_router(
         "serviceDependencies",
     )?;
 
-    Ok(CodeGenerator::new()
+    Ok(Codegen::new()
         .with_options(CodegenOptions::default())
         .build(&registrations_program)
         .code)
@@ -147,7 +147,7 @@ pub(crate) fn transform_registrations_ts_infrastructure_redis(
     redis_url_environment_variable(&allocator, &mut registrations_program)?;
     redis_ttl_cache_runtime_dependency(&allocator, &mut registrations_program)?;
 
-    Ok(CodeGenerator::new()
+    Ok(Codegen::new()
         .with_options(CodegenOptions::default())
         .build(&registrations_program)
         .code)
@@ -174,7 +174,7 @@ pub(crate) fn transform_registrations_ts_infrastructure_s3(
     s3_url_environment_variable(&allocator, &mut registrations_program)?;
     s3_object_store_runtime_dependency(&allocator, &mut registrations_program)?;
 
-    Ok(CodeGenerator::new()
+    Ok(Codegen::new()
         .with_options(CodegenOptions::default())
         .build(&registrations_program)
         .code)
@@ -377,7 +377,7 @@ pub(crate) fn transform_registrations_ts_worker_type(
         "serviceDependencies",
     );
 
-    Ok(CodeGenerator::new()
+    Ok(Codegen::new()
         .with_options(CodegenOptions::default())
         .build(&registration_program)
         .code)
@@ -393,9 +393,7 @@ pub(crate) fn transform_registration_schema_ejection(content: &str) -> String {
     delete_from_registration_schema_validators(&allocator, &mut program);
 
     let codegen_options = CodegenOptions::default();
-    let result = CodeGenerator::new()
-        .with_options(codegen_options)
-        .build(&program);
+    let result = Codegen::new().with_options(codegen_options).build(&program);
 
     result.code
 }

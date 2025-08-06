@@ -17,36 +17,33 @@ describe('openApiV3Generator tests', () => {
   test('generate openApiV3', async () => {
     const generatedOpenApiSpec = generateOpenApiSpecs(
       mockSchemaValidator,
-      'http',
-      'localhost',
-      8000,
-      [
-        {
-          basePath: '/api',
-          routes: [
-            {
-              basePath: '/test',
-              path: '/',
-              method: 'get',
-              contractDetails: {
-                name: 'Test Contract',
-                summary: 'Test Contract Summary',
-                body: testSchema,
-                params: testSchema,
-                requestHeaders: testSchema,
-                query: testSchema,
-                responses: {
-                  200: testSchema
-                }
+      ['http://localhost:8000'],
+      ['Main Server'],
+      {
+        basePath: '/api',
+        routes: [
+          {
+            basePath: '/test',
+            path: '/',
+            method: 'get',
+            contractDetails: {
+              name: 'Test Contract',
+              summary: 'Test Contract Summary',
+              body: testSchema,
+              params: testSchema,
+              requestHeaders: testSchema,
+              query: testSchema,
+              responses: {
+                200: testSchema
               }
             }
-          ],
-          routers: [],
-          _fetchMap: {},
-          sdk: {},
-          sdkPaths: {}
-        }
-      ]
+          }
+        ],
+        routers: [],
+        _fetchMap: {},
+        sdk: {},
+        sdkPaths: {}
+      }
     );
 
     expect(generatedOpenApiSpec[OPENAPI_DEFAULT_VERSION]).toEqual({
@@ -100,42 +97,39 @@ describe('openApiV3Generator tests', () => {
   test('generate openApiV3 with nested routers', async () => {
     const generatedOpenApiSpec = generateOpenApiSpecs(
       mockSchemaValidator,
-      'https',
-      'api.example.com',
-      443,
-      [
-        {
-          basePath: '/api',
-          routes: [],
-          routers: [
-            {
-              basePath: '/v1',
-              routes: [
-                {
-                  basePath: '/users',
-                  path: '/:id',
-                  method: 'get',
-                  contractDetails: {
-                    name: 'Get User',
-                    summary: 'Get user by ID',
-                    params: { id: literal('123') },
-                    responses: {
-                      200: testSchema
-                    }
+      ['https://api.example.com:443'],
+      ['Main Server'],
+      {
+        basePath: '/api',
+        routes: [],
+        routers: [
+          {
+            basePath: '/v1',
+            routes: [
+              {
+                basePath: '/users',
+                path: '/:id',
+                method: 'get',
+                contractDetails: {
+                  name: 'Get User',
+                  summary: 'Get user by ID',
+                  params: { id: literal('123') },
+                  responses: {
+                    200: testSchema
                   }
                 }
-              ],
-              routers: [],
-              _fetchMap: {},
-              sdk: {},
-              sdkPaths: {}
-            }
-          ],
-          _fetchMap: {},
-          sdk: {},
-          sdkPaths: {}
-        }
-      ]
+              }
+            ],
+            routers: [],
+            _fetchMap: {},
+            sdk: {},
+            sdkPaths: {}
+          }
+        ],
+        _fetchMap: {},
+        sdk: {},
+        sdkPaths: {}
+      }
     );
 
     expect(generatedOpenApiSpec[OPENAPI_DEFAULT_VERSION]).toMatchObject({

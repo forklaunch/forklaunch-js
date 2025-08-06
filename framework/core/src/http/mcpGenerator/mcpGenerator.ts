@@ -85,7 +85,7 @@ export function generateMcpServer<
   host: string,
   port: number,
   version: `${number}.${number}.${number}`,
-  routers: ForklaunchRouter<ZodSchemaValidator>[],
+  application: ForklaunchRouter<ZodSchemaValidator>,
   options?: ConstructorParameters<typeof FastMCP<T>>[0],
   contentTypeMap?: Record<string, string>
 ) {
@@ -101,7 +101,15 @@ export function generateMcpServer<
     version
   });
 
-  unpackRouters<ZodSchemaValidator>(routers).forEach(({ fullPath, router }) => {
+  [
+    {
+      fullPath: application.basePath === '/' ? '' : application.basePath,
+      router: application
+    },
+    ...unpackRouters<ZodSchemaValidator>(application.routers, [
+      application.basePath === '/' ? '' : application.basePath
+    ])
+  ].forEach(({ fullPath, router }) => {
     router.routes.forEach((route) => {
       const inputSchemas: ZodType[] = [];
 

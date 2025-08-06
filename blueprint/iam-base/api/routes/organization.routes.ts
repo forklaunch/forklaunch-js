@@ -1,6 +1,6 @@
 import { forklaunchRouter, schemaValidator } from '@forklaunch/blueprint-core';
 import { sdkRouter } from '@forklaunch/core/http';
-import { ci, tokens } from '../../server';
+import { ci, tokens } from '../../bootstrapper';
 import { OrganizationController } from '../controllers/organization.controller';
 
 const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);

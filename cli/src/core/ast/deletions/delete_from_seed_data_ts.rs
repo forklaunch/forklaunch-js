@@ -1,7 +1,7 @@
 use anyhow::Result;
 use oxc_allocator::{Allocator, CloneIn, Vec};
 use oxc_ast::ast::{Declaration, Program, Statement};
-use oxc_codegen::{CodeGenerator, CodegenOptions};
+use oxc_codegen::{Codegen, CodegenOptions};
 
 pub(crate) fn delete_from_seed_data_ts<'a>(
     allocator: &'a Allocator,
@@ -37,7 +37,7 @@ pub(crate) fn delete_from_seed_data_ts<'a>(
 
     seed_data_program.body = new_body;
 
-    Ok(CodeGenerator::new()
+    Ok(Codegen::new()
         .with_options(CodegenOptions::default())
         .build(seed_data_program)
         .code)

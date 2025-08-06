@@ -34,12 +34,40 @@ export class BaseSubscriptionService<
     metrics?: boolean;
     tracing?: boolean;
   };
+  protected em: EntityManager;
+  protected readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
+  protected readonly schemaValidator: SchemaValidator;
+  protected readonly mappers: {
+    SubscriptionMapper: ResponseMapperConstructor<
+      SchemaValidator,
+      Dto['SubscriptionMapper'],
+      Entities['SubscriptionMapper']
+    >;
+    CreateSubscriptionMapper: RequestMapperConstructor<
+      SchemaValidator,
+      Dto['CreateSubscriptionMapper'],
+      Entities['CreateSubscriptionMapper'],
+      (
+        dto: Dto['CreateSubscriptionMapper'],
+        em: EntityManager
+      ) => Promise<Entities['CreateSubscriptionMapper']>
+    >;
+    UpdateSubscriptionMapper: RequestMapperConstructor<
+      SchemaValidator,
+      Dto['UpdateSubscriptionMapper'],
+      Entities['UpdateSubscriptionMapper'],
+      (
+        dto: Dto['UpdateSubscriptionMapper'],
+        em: EntityManager
+      ) => Promise<Entities['UpdateSubscriptionMapper']>
+    >;
+  };
 
   constructor(
-    protected em: EntityManager,
-    protected readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-    protected readonly schemaValidator: SchemaValidator,
-    protected readonly mappers: {
+    em: EntityManager,
+    openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
+    schemaValidator: SchemaValidator,
+    mappers: {
       SubscriptionMapper: ResponseMapperConstructor<
         SchemaValidator,
         Dto['SubscriptionMapper'],
@@ -68,6 +96,10 @@ export class BaseSubscriptionService<
       telemetry?: TelemetryOptions;
     }
   ) {
+    this.em = em;
+    this.openTelemetryCollector = openTelemetryCollector;
+    this.schemaValidator = schemaValidator;
+    this.mappers = mappers;
     this._mappers = transformIntoInternalMapper(mappers, this.schemaValidator);
     this.evaluatedTelemetryOptions = options?.telemetry
       ? evaluateTelemetryOptions(options.telemetry).enabled

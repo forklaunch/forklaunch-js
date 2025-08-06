@@ -14,8 +14,9 @@ export function unpackRouters<SV extends AnySchemaValidator>(
       router: ForklaunchRouter<SV>;
     }[]
   >((acc, router) => {
+    const fullPath = [...recursiveBasePath, router.basePath].join('');
     acc.push({
-      fullPath: [...recursiveBasePath, router.basePath].join(''),
+      fullPath,
       router
     });
     acc.push(

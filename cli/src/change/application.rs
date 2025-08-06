@@ -1031,7 +1031,7 @@ fn change_runtime(
             .find(|project_entry| &project_entry.name == project_name)
             .unwrap();
         let project_type = &project_entry.r#type;
-        let is_database_enabled = if let Some(resources) = &project_entry.resources {
+        let database = if let Some(resources) = &project_entry.resources {
             if let Some(database) = &resources.database {
                 is_in_memory_database = if !is_in_memory_database {
                     match database.parse::<Database>()? {
@@ -1044,9 +1044,12 @@ fn change_runtime(
                     true
                 };
             }
-            resources.database.is_some()
+            resources
+                .database
+                .as_ref()
+                .map(|db| db.parse::<Database>().unwrap())
         } else {
-            false
+            None
         };
 
         if let Some(project_scripts) = &mut project.scripts {
@@ -1066,30 +1069,30 @@ fn change_runtime(
                         &mut project_scripts.additional_scripts,
                         project_scripts.dev.clone(),
                         Some(existing_runtime.to_string()),
-                        Some(project_dev_server_script(&existing_runtime, true)),
+                        Some(project_dev_server_script(&existing_runtime, database)),
                         "dev",
                         &runtime.to_string(),
-                        &project_dev_server_script(runtime, true),
+                        &project_dev_server_script(runtime, database),
                         None,
                     ));
                     project_scripts.dev_local = Some(attempt_replacement(
                         &mut project_scripts.additional_scripts,
                         project_scripts.dev_local.clone(),
                         Some(existing_runtime.to_string()),
-                        Some(project_dev_local_script(&existing_runtime)),
+                        Some(project_dev_local_script(&existing_runtime, database)),
                         "dev-local",
                         &runtime.to_string(),
-                        &project_dev_local_script(runtime),
+                        &project_dev_local_script(runtime, database),
                         None,
                     ));
                     project_scripts.start = Some(attempt_replacement(
                         &mut project_scripts.additional_scripts,
                         project_scripts.start.clone(),
                         Some(existing_runtime.to_string()),
-                        Some(project_start_server_script(&existing_runtime, true)),
+                        Some(project_start_server_script(&existing_runtime, database)),
                         "start",
                         &runtime.to_string(),
-                        &project_start_server_script(runtime, true),
+                        &project_start_server_script(runtime, database),
                         None,
                     ));
                 }
@@ -1098,13 +1101,10 @@ fn change_runtime(
                         &mut project_scripts.additional_scripts,
                         project_scripts.dev_server.clone(),
                         Some(existing_runtime.to_string()),
-                        Some(project_dev_server_script(
-                            &existing_runtime,
-                            is_database_enabled,
-                        )),
+                        Some(project_dev_server_script(&existing_runtime, database)),
                         "dev-server",
                         &runtime.to_string(),
-                        &project_dev_server_script(runtime, is_database_enabled),
+                        &project_dev_server_script(runtime, database),
                         None,
                     ));
 
@@ -1123,13 +1123,10 @@ fn change_runtime(
                         &mut project_scripts.additional_scripts,
                         project_scripts.start_server.clone(),
                         Some(existing_runtime.to_string()),
-                        Some(project_start_server_script(
-                            &existing_runtime,
-                            is_database_enabled,
-                        )),
+                        Some(project_start_server_script(&existing_runtime, database)),
                         "start-server",
                         &runtime.to_string(),
-                        &project_start_server_script(runtime, is_database_enabled),
+                        &project_start_server_script(runtime, database),
                         None,
                     ));
 
@@ -1137,13 +1134,10 @@ fn change_runtime(
                         &mut project_scripts.additional_scripts,
                         project_scripts.start_worker.clone(),
                         Some(existing_runtime.to_string()),
-                        Some(project_start_worker_script(
-                            &existing_runtime,
-                            is_database_enabled,
-                        )),
+                        Some(project_start_worker_script(&existing_runtime, database)),
                         "start-worker",
                         &runtime.to_string(),
-                        &project_start_worker_script(runtime, is_database_enabled),
+                        &project_start_worker_script(runtime, database),
                         None,
                     ));
                 }
