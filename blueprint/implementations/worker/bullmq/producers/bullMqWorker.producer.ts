@@ -9,11 +9,12 @@ export class BullMqWorkerProducer<
 > implements WorkerProducer<EventEntity>
 {
   private queue;
+  private readonly queueName: string;
+  private readonly options: Options;
 
-  constructor(
-    private readonly queueName: string,
-    private readonly options: Options
-  ) {
+  constructor(queueName: string, options: Options) {
+    this.queueName = queueName;
+    this.options = options;
     this.queue = new Queue(this.queueName, {
       connection: this.options.queueOptions.connection
     });

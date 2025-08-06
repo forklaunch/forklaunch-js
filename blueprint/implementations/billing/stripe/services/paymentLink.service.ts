@@ -18,8 +18,7 @@ import {
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
 import Stripe from 'stripe';
-import { CurrencyEnum } from '../domain/enum/currency.enum';
-import { PaymentMethodEnum } from '../domain/enum/paymentMethod.enum';
+import { CurrencyEnum, PaymentMethodEnum } from '../domain/enum';
 import {
   StripeCreatePaymentLinkDto,
   StripePaymentLinkDto,
@@ -57,14 +56,46 @@ export class StripePaymentLinkService<
     Entities
   >;
   protected _mappers: InternalMapper<InstanceTypeRecord<typeof this.mappers>>;
+  protected readonly stripeClient: Stripe;
+  protected readonly em: EntityManager;
+  protected readonly cache: TtlCache;
+  protected readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
+  protected readonly schemaValidator: SchemaValidator;
+  protected readonly mappers: {
+    PaymentLinkMapper: ResponseMapperConstructor<
+      SchemaValidator,
+      Dto['PaymentLinkMapper'],
+      Entities['PaymentLinkMapper']
+    >;
+    CreatePaymentLinkMapper: RequestMapperConstructor<
+      SchemaValidator,
+      Dto['CreatePaymentLinkMapper'],
+      Entities['CreatePaymentLinkMapper'],
+      (
+        dto: Dto['CreatePaymentLinkMapper'],
+        em: EntityManager,
+        paymentLink: Stripe.PaymentLink
+      ) => Promise<Entities['CreatePaymentLinkMapper']>
+    >;
+    UpdatePaymentLinkMapper: RequestMapperConstructor<
+      SchemaValidator,
+      Dto['UpdatePaymentLinkMapper'],
+      Entities['UpdatePaymentLinkMapper'],
+      (
+        dto: Dto['UpdatePaymentLinkMapper'],
+        em: EntityManager,
+        paymentLink: Stripe.PaymentLink
+      ) => Promise<Entities['UpdatePaymentLinkMapper']>
+    >;
+  };
 
   constructor(
-    protected readonly stripeClient: Stripe,
-    protected readonly em: EntityManager,
-    protected readonly cache: TtlCache,
-    protected readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-    protected readonly schemaValidator: SchemaValidator,
-    protected readonly mappers: {
+    stripeClient: Stripe,
+    em: EntityManager,
+    cache: TtlCache,
+    openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
+    schemaValidator: SchemaValidator,
+    mappers: {
       PaymentLinkMapper: ResponseMapperConstructor<
         SchemaValidator,
         Dto['PaymentLinkMapper'],
@@ -96,6 +127,12 @@ export class StripePaymentLinkService<
       telemetry?: TelemetryOptions;
     }
   ) {
+    this.stripeClient = stripeClient;
+    this.em = em;
+    this.cache = cache;
+    this.openTelemetryCollector = openTelemetryCollector;
+    this.schemaValidator = schemaValidator;
+    this.mappers = mappers;
     this._mappers = transformIntoInternalMapper(mappers, schemaValidator);
     this.basePaymentLinkService = new BasePaymentLinkService(
       em,

@@ -36,15 +36,46 @@ export class BaseUserService<
     metrics?: boolean;
     tracing?: boolean;
   };
+  public em: EntityManager;
+  protected passwordEncryptionPublicKeyPath: string;
+  protected roleServiceFactory: () => RoleService;
+  protected organizationServiceFactory: () => OrganizationService<OrganizationStatus>;
+  protected openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
+  protected schemaValidator: SchemaValidator;
+  protected mappers: {
+    UserMapper: ResponseMapperConstructor<
+      SchemaValidator,
+      Dto['UserMapper'],
+      Entities['UserMapper']
+    >;
+    CreateUserMapper: RequestMapperConstructor<
+      SchemaValidator,
+      Dto['CreateUserMapper'],
+      Entities['CreateUserMapper'],
+      (
+        dto: Dto['CreateUserMapper'],
+        em: EntityManager
+      ) => Promise<Entities['CreateUserMapper']>
+    >;
+    UpdateUserMapper: RequestMapperConstructor<
+      SchemaValidator,
+      Dto['UpdateUserMapper'],
+      Entities['UpdateUserMapper'],
+      (
+        dto: Dto['UpdateUserMapper'],
+        em: EntityManager
+      ) => Promise<Entities['UpdateUserMapper']>
+    >;
+  };
 
   constructor(
-    public em: EntityManager,
-    protected passwordEncryptionPublicKeyPath: string,
-    protected roleServiceFactory: () => RoleService,
-    protected organizationServiceFactory: () => OrganizationService<OrganizationStatus>,
-    protected openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-    protected schemaValidator: SchemaValidator,
-    protected mappers: {
+    em: EntityManager,
+    passwordEncryptionPublicKeyPath: string,
+    roleServiceFactory: () => RoleService,
+    organizationServiceFactory: () => OrganizationService<OrganizationStatus>,
+    openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
+    schemaValidator: SchemaValidator,
+    mappers: {
       UserMapper: ResponseMapperConstructor<
         SchemaValidator,
         Dto['UserMapper'],
@@ -73,6 +104,13 @@ export class BaseUserService<
       telemetry?: TelemetryOptions;
     }
   ) {
+    this.em = em;
+    this.passwordEncryptionPublicKeyPath = passwordEncryptionPublicKeyPath;
+    this.roleServiceFactory = roleServiceFactory;
+    this.organizationServiceFactory = organizationServiceFactory;
+    this.openTelemetryCollector = openTelemetryCollector;
+    this.schemaValidator = schemaValidator;
+    this.mappers = mappers;
     this._mappers = transformIntoInternalMapper(mappers, schemaValidator);
     this.evaluatedTelemetryOptions = options?.telemetry
       ? evaluateTelemetryOptions(options.telemetry).enabled

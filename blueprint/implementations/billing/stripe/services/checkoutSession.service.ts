@@ -50,14 +50,46 @@ export class StripeCheckoutSessionService<
     Entities
   >;
   protected _mappers: InternalMapper<InstanceTypeRecord<typeof this.mappers>>;
+  protected readonly stripeClient: Stripe;
+  protected readonly em: EntityManager;
+  protected readonly cache: TtlCache;
+  protected readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
+  protected readonly schemaValidator: SchemaValidator;
+  protected readonly mappers: {
+    CheckoutSessionMapper: ResponseMapperConstructor<
+      SchemaValidator,
+      Dto['CheckoutSessionMapper'],
+      Entities['CheckoutSessionMapper']
+    >;
+    CreateCheckoutSessionMapper: RequestMapperConstructor<
+      SchemaValidator,
+      Dto['CreateCheckoutSessionMapper'],
+      Entities['CreateCheckoutSessionMapper'],
+      (
+        dto: Dto['CreateCheckoutSessionMapper'],
+        em: EntityManager,
+        session: Stripe.Checkout.Session
+      ) => Promise<Entities['CreateCheckoutSessionMapper']>
+    >;
+    UpdateCheckoutSessionMapper: RequestMapperConstructor<
+      SchemaValidator,
+      Dto['UpdateCheckoutSessionMapper'],
+      Entities['UpdateCheckoutSessionMapper'],
+      (
+        dto: Dto['UpdateCheckoutSessionMapper'],
+        em: EntityManager,
+        session: Stripe.Checkout.Session
+      ) => Promise<Entities['UpdateCheckoutSessionMapper']>
+    >;
+  };
 
   constructor(
-    protected readonly stripeClient: Stripe,
-    protected readonly em: EntityManager,
-    protected readonly cache: TtlCache,
-    protected readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-    protected readonly schemaValidator: SchemaValidator,
-    protected readonly mappers: {
+    stripeClient: Stripe,
+    em: EntityManager,
+    cache: TtlCache,
+    openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
+    schemaValidator: SchemaValidator,
+    mappers: {
       CheckoutSessionMapper: ResponseMapperConstructor<
         SchemaValidator,
         Dto['CheckoutSessionMapper'],
@@ -89,6 +121,12 @@ export class StripeCheckoutSessionService<
       telemetry?: TelemetryOptions;
     }
   ) {
+    this.stripeClient = stripeClient;
+    this.em = em;
+    this.cache = cache;
+    this.openTelemetryCollector = openTelemetryCollector;
+    this.schemaValidator = schemaValidator;
+    this.mappers = mappers;
     this._mappers = transformIntoInternalMapper(mappers, schemaValidator);
     this.baseCheckoutSessionService = new BaseCheckoutSessionService(
       em,

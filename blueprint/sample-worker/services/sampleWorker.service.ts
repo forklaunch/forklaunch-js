@@ -18,24 +18,46 @@ import { SampleWorkerEventRecord } from '../persistence/entities';
 
 // BaseSampleWorkerService class that implements the SampleWorkerService interface
 export class BaseSampleWorkerService implements SampleWorkerService {
+  private databaseWorkerProducer: DatabaseWorkerProducer<
+    SampleWorkerEventRecord,
+    DatabaseWorkerOptions
+  >;
+  private bullMqWorkerProducer: BullMqWorkerProducer<
+    SampleWorkerEventRecord,
+    BullMqWorkerOptions
+  >;
+  private redisWorkerProducer: RedisWorkerProducer<
+    SampleWorkerEventRecord,
+    RedisWorkerOptions
+  >;
+  private kafkaWorkerProducer: KafkaWorkerProducer<
+    SampleWorkerEventRecord,
+    KafkaWorkerOptions
+  >;
+
   constructor(
-    private databaseWorkerProducer: DatabaseWorkerProducer<
+    databaseWorkerProducer: DatabaseWorkerProducer<
       SampleWorkerEventRecord,
       DatabaseWorkerOptions
     >,
-    private bullMqWorkerProducer: BullMqWorkerProducer<
+    bullMqWorkerProducer: BullMqWorkerProducer<
       SampleWorkerEventRecord,
       BullMqWorkerOptions
     >,
-    private redisWorkerProducer: RedisWorkerProducer<
+    redisWorkerProducer: RedisWorkerProducer<
       SampleWorkerEventRecord,
       RedisWorkerOptions
     >,
-    private kafkaWorkerProducer: KafkaWorkerProducer<
+    kafkaWorkerProducer: KafkaWorkerProducer<
       SampleWorkerEventRecord,
       KafkaWorkerOptions
     >
-  ) {}
+  ) {
+    this.databaseWorkerProducer = databaseWorkerProducer;
+    this.bullMqWorkerProducer = bullMqWorkerProducer;
+    this.redisWorkerProducer = redisWorkerProducer;
+    this.kafkaWorkerProducer = kafkaWorkerProducer;
+  }
 
   // sampleWorkerPost method that implements the SampleWorkerService interface
   sampleWorkerPost = async (

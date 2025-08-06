@@ -55,13 +55,44 @@ export class StripePlanService<
     Entities
   >;
   protected _mappers: InternalMapper<InstanceTypeRecord<typeof this.mappers>>;
+  protected readonly stripeClient: Stripe;
+  protected readonly em: EntityManager;
+  protected readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
+  protected readonly schemaValidator: SchemaValidator;
+  protected readonly mappers: {
+    PlanMapper: ResponseMapperConstructor<
+      SchemaValidator,
+      Dto['PlanMapper'],
+      Entities['PlanMapper']
+    >;
+    CreatePlanMapper: RequestMapperConstructor<
+      SchemaValidator,
+      Dto['CreatePlanMapper'],
+      Entities['CreatePlanMapper'],
+      (
+        dto: Dto['CreatePlanMapper'],
+        em: EntityManager,
+        plan: Stripe.Plan
+      ) => Promise<Entities['CreatePlanMapper']>
+    >;
+    UpdatePlanMapper: RequestMapperConstructor<
+      SchemaValidator,
+      Dto['UpdatePlanMapper'],
+      Entities['UpdatePlanMapper'],
+      (
+        dto: Dto['UpdatePlanMapper'],
+        em: EntityManager,
+        plan: Stripe.Plan
+      ) => Promise<Entities['UpdatePlanMapper']>
+    >;
+  };
 
   constructor(
-    protected readonly stripeClient: Stripe,
-    protected readonly em: EntityManager,
-    protected readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-    protected readonly schemaValidator: SchemaValidator,
-    protected readonly mappers: {
+    stripeClient: Stripe,
+    em: EntityManager,
+    openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
+    schemaValidator: SchemaValidator,
+    mappers: {
       PlanMapper: ResponseMapperConstructor<
         SchemaValidator,
         Dto['PlanMapper'],
@@ -93,6 +124,11 @@ export class StripePlanService<
       databaseTableName?: string;
     }
   ) {
+    this.stripeClient = stripeClient;
+    this.em = em;
+    this.openTelemetryCollector = openTelemetryCollector;
+    this.schemaValidator = schemaValidator;
+    this.mappers = mappers;
     this._mappers = transformIntoInternalMapper(mappers, schemaValidator);
     this.basePlanService = new BasePlanService(
       em,

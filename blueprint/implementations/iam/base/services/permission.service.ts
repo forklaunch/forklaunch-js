@@ -33,13 +33,51 @@ export class BasePermissionService<
     metrics?: boolean;
     tracing?: boolean;
   };
+  public em: EntityManager;
+  protected roleServiceFactory: () => RoleService;
+  protected openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
+  protected schemaValidator: SchemaValidator;
+  protected mappers: {
+    PermissionMapper: ResponseMapperConstructor<
+      SchemaValidator,
+      MapperDto['PermissionMapper'],
+      MapperEntities['PermissionMapper']
+    >;
+    CreatePermissionMapper: RequestMapperConstructor<
+      SchemaValidator,
+      MapperDto['CreatePermissionMapper'],
+      MapperEntities['CreatePermissionMapper'],
+      (
+        dto: MapperDto['CreatePermissionMapper'],
+        em: EntityManager
+      ) => Promise<MapperEntities['CreatePermissionMapper']>
+    >;
+    UpdatePermissionMapper: RequestMapperConstructor<
+      SchemaValidator,
+      MapperDto['UpdatePermissionMapper'],
+      MapperEntities['UpdatePermissionMapper'],
+      (
+        dto: MapperDto['UpdatePermissionMapper'],
+        em: EntityManager
+      ) => Promise<MapperEntities['UpdatePermissionMapper']>
+    >;
+    RoleEntityMapper: RequestMapperConstructor<
+      SchemaValidator,
+      MapperDto['RoleEntityMapper'],
+      MapperEntities['RoleEntityMapper'],
+      (
+        dto: MapperDto['RoleEntityMapper'],
+        em: EntityManager
+      ) => Promise<MapperEntities['RoleEntityMapper']>
+    >;
+  };
 
   constructor(
-    public em: EntityManager,
-    protected roleServiceFactory: () => RoleService,
-    protected openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-    protected schemaValidator: SchemaValidator,
-    protected mappers: {
+    em: EntityManager,
+    roleServiceFactory: () => RoleService,
+    openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
+    schemaValidator: SchemaValidator,
+    mappers: {
       PermissionMapper: ResponseMapperConstructor<
         SchemaValidator,
         MapperDto['PermissionMapper'],
@@ -77,6 +115,11 @@ export class BasePermissionService<
       telemetry?: TelemetryOptions;
     }
   ) {
+    this.em = em;
+    this.roleServiceFactory = roleServiceFactory;
+    this.openTelemetryCollector = openTelemetryCollector;
+    this.schemaValidator = schemaValidator;
+    this.mappers = mappers;
     this._mappers = transformIntoInternalMapper(mappers, schemaValidator);
     this.evaluatedTelemetryOptions = options?.telemetry
       ? evaluateTelemetryOptions(options.telemetry).enabled

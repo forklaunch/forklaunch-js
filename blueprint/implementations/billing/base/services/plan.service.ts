@@ -40,12 +40,40 @@ export class BasePlanService<
     metrics?: boolean;
     tracing?: boolean;
   };
+  protected em: EntityManager;
+  protected readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
+  protected readonly schemaValidator: SchemaValidator;
+  protected readonly mappers: {
+    PlanMapper: ResponseMapperConstructor<
+      SchemaValidator,
+      Dto['PlanMapper'],
+      Entities['PlanMapper']
+    >;
+    CreatePlanMapper: RequestMapperConstructor<
+      SchemaValidator,
+      Dto['CreatePlanMapper'],
+      Entities['CreatePlanMapper'],
+      (
+        dto: Dto['CreatePlanMapper'],
+        em: EntityManager
+      ) => Promise<Entities['CreatePlanMapper']>
+    >;
+    UpdatePlanMapper: RequestMapperConstructor<
+      SchemaValidator,
+      Dto['UpdatePlanMapper'],
+      Entities['UpdatePlanMapper'],
+      (
+        dto: Dto['UpdatePlanMapper'],
+        em: EntityManager
+      ) => Promise<Entities['UpdatePlanMapper']>
+    >;
+  };
 
   constructor(
-    protected em: EntityManager,
-    protected readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-    protected readonly schemaValidator: SchemaValidator,
-    protected readonly mappers: {
+    em: EntityManager,
+    openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
+    schemaValidator: SchemaValidator,
+    mappers: {
       PlanMapper: ResponseMapperConstructor<
         SchemaValidator,
         Dto['PlanMapper'],
@@ -74,6 +102,10 @@ export class BasePlanService<
       telemetry?: TelemetryOptions;
     }
   ) {
+    this.em = em;
+    this.openTelemetryCollector = openTelemetryCollector;
+    this.schemaValidator = schemaValidator;
+    this.mappers = mappers;
     this._mappers = transformIntoInternalMapper(mappers, schemaValidator);
     this.evaluatedTelemetryOptions = options?.telemetry
       ? evaluateTelemetryOptions(options.telemetry).enabled

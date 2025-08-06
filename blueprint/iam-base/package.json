@@ -13,6 +13,7 @@
   "license": "MIT",
   "author": "Forklift Technologies, Inc.",
   "main": "server.ts",
+  "type": "module",
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist pnpm.lock.yaml node_modules",
