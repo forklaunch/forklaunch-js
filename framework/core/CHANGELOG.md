@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.12.1
+
+### Patch Changes
+
+- Allows for server urls to be passed in as env vars for use with openapi
+
 ## 0.12.0
 
 ### Minor Changes
