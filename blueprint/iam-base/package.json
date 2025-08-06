@@ -12,7 +12,6 @@
   },
   "license": "MIT",
   "author": "Forklift Technologies, Inc.",
-  "main": "server.ts",
   "type": "module",
   "scripts": {
     "build": "tsc",
