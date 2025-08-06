@@ -102,6 +102,11 @@ fn check_against_constants_file(actual_versions: &HashMap<String, String>) -> Re
 
                 for package in packages {
                     if let Some(actual_version) = actual_versions.get(&package) {
+                        // Skip verification for workspace: values
+                        if version.starts_with("workspace:") {
+                            continue;
+                        }
+
                         // Strip leading characters for comparison
                         let constants_version_stripped =
                             if version.starts_with('^') || version.starts_with('~') {
@@ -172,6 +177,16 @@ fn update_constants_file(actual_versions: &HashMap<String, String>) -> Result<()
 
                 for package in packages {
                     if let Some(actual_version) = actual_versions.get(&package) {
+                        // Skip updates if the current version starts with workspace:
+                        if version.starts_with("workspace:") {
+                            println!(
+                                "Skipping update for {} - preserving workspace:{}",
+                                package,
+                                &version[9..]
+                            );
+                            continue;
+                        }
+
                         if version != actual_version {
                             should_update = true;
                             // Preserve the leading character from the original constant
