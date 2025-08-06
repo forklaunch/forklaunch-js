@@ -29,6 +29,7 @@ echo "Testing custom path scenario..."
 mkdir -p custom-test-path
 
 RUST_BACKTRACE=1 cargo run --release init application "test-app-custom" \
+    --path "./custom-test-path" \
     -d "postgresql" \
     -v "zod" \
     -f "prettier" \
