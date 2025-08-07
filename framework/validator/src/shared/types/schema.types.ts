@@ -38,6 +38,7 @@ export type ParseResult<T> =
  * @template OpenAPIFunction - The function type for converting a schema into an OpenAPI schema object.
  */
 export interface SchemaValidator<
+  TypeFunction = <T>() => T,
   CompilationFunction = <T>(schema: T) => unknown,
   SchematicFunction = <T>(schema: T) => unknown,
   OptionalFunction = <T>(schema: T) => unknown,
@@ -151,6 +152,11 @@ export interface SchemaValidator<
    * Validator for file type
    */
   file: unknown;
+
+  /**
+   * Validator for type type
+   */
+  type: TypeFunction;
 
   /**
    * Compiles schema if this exists, for optimal performance.
@@ -282,6 +288,7 @@ export interface SchemaValidator<
  * Type representing any schema validator.
  */
 export type AnySchemaValidator = SchemaValidator<
+  unknown,
   unknown,
   unknown,
   unknown,

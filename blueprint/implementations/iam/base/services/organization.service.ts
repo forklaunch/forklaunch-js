@@ -31,12 +31,40 @@ export class BaseOrganizationService<
     metrics?: boolean;
     tracing?: boolean;
   };
+  public em: EntityManager;
+  protected openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
+  protected schemaValidator: SchemaValidator;
+  protected mappers: {
+    OrganizationMapper: ResponseMapperConstructor<
+      SchemaValidator,
+      MapperDtos['OrganizationMapper'],
+      MapperEntities['OrganizationMapper']
+    >;
+    CreateOrganizationMapper: RequestMapperConstructor<
+      SchemaValidator,
+      MapperDtos['CreateOrganizationMapper'],
+      MapperEntities['CreateOrganizationMapper'],
+      (
+        dto: MapperDtos['CreateOrganizationMapper'],
+        em: EntityManager
+      ) => Promise<MapperEntities['CreateOrganizationMapper']>
+    >;
+    UpdateOrganizationMapper: RequestMapperConstructor<
+      SchemaValidator,
+      MapperDtos['UpdateOrganizationMapper'],
+      MapperEntities['UpdateOrganizationMapper'],
+      (
+        dto: MapperDtos['UpdateOrganizationMapper'],
+        em: EntityManager
+      ) => Promise<MapperEntities['UpdateOrganizationMapper']>
+    >;
+  };
 
   constructor(
-    public em: EntityManager,
-    protected openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-    protected schemaValidator: SchemaValidator,
-    protected mappers: {
+    em: EntityManager,
+    openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
+    schemaValidator: SchemaValidator,
+    mappers: {
       OrganizationMapper: ResponseMapperConstructor<
         SchemaValidator,
         MapperDtos['OrganizationMapper'],
@@ -65,6 +93,10 @@ export class BaseOrganizationService<
       telemetry?: TelemetryOptions;
     }
   ) {
+    this.em = em;
+    this.openTelemetryCollector = openTelemetryCollector;
+    this.schemaValidator = schemaValidator;
+    this.mappers = mappers;
     this._mappers = transformIntoInternalMapper(mappers, schemaValidator);
     this.evaluatedTelemetryOptions = options?.telemetry
       ? evaluateTelemetryOptions(options.telemetry).enabled

@@ -9,7 +9,7 @@ import {
   ATTR_SERVICE_NAME,
   httpRequestsTotalCounter
 } from '@forklaunch/core/http';
-import { trace } from '@opentelemetry/api';
+import { context, trace } from '@opentelemetry/api';
 import { betterAuth, BetterAuthOptions } from 'better-auth';
 import { toNodeHandler } from 'better-auth/node';
 import {
@@ -28,13 +28,14 @@ export function betterAuthTelemetryHookMiddleware(
     throw new Error('Invalid request');
   }
 
-  const span = trace.getActiveSpan();
+  const span = trace.getSpan(context.active());
   const correlationId = v4();
   span?.setAttribute(
-    'api.id',
+    ATTR_API_NAME,
     `Better Auth: ${req.path.replace('/api/auth/', '').replace('/', '-')}`
   );
-  span?.setAttribute('correlation.id', correlationId);
+  span?.setAttribute(ATTR_CORRELATION_ID, correlationId);
+  span?.setAttribute(ATTR_SERVICE_NAME, getEnvVar('OTEL_SERVICE_NAME'));
 
   req.context.correlationId = correlationId;
   req.context.span = span;

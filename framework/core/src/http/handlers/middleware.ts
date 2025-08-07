@@ -8,7 +8,8 @@ import {
   ParamsObject,
   QueryObject,
   ResponsesObject,
-  SchemaAuthMethods
+  SchemaAuthMethods,
+  VersionSchema
 } from '../types/contractDetails.types';
 import { typedHandler } from './typedHandler';
 
@@ -23,6 +24,7 @@ export const middleware = <
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
+  VersionedApi extends VersionSchema<SV, 'middleware'>,
   BaseRequest,
   BaseResponse,
   NextFunction,
@@ -32,6 +34,7 @@ export const middleware = <
     ReqBody,
     ReqQuery,
     ReqHeaders,
+    VersionedApi,
     BaseRequest
   >
 >(
@@ -47,6 +50,7 @@ export const middleware = <
     ReqQuery,
     ReqHeaders,
     ResHeaders,
+    VersionedApi,
     BaseRequest,
     Auth
   >,
@@ -59,6 +63,7 @@ export const middleware = <
     ReqHeaders,
     ResHeaders,
     LocalsObj,
+    VersionedApi,
     BaseRequest,
     BaseResponse,
     NextFunction
@@ -76,6 +81,7 @@ export const middleware = <
     ReqHeaders,
     ResHeaders,
     LocalsObj,
+    VersionedApi,
     BaseRequest,
     BaseResponse,
     NextFunction,
@@ -94,6 +100,7 @@ export const middleware = <
       ReqQuery,
       ReqHeaders,
       ResHeaders,
+      VersionedApi,
       BaseRequest,
       Auth
     >;
@@ -106,6 +113,7 @@ export const middleware = <
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction

@@ -16,13 +16,21 @@ export class KafkaWorkerConsumer<
   private producer: Producer;
   private consumer: Consumer;
   private processedMessages: Set<string> = new Set();
+  protected readonly queueName: string;
+  protected readonly options: Options;
+  protected readonly processEventsFunction: WorkerProcessFunction<EventEntity>;
+  protected readonly failureHandler: WorkerFailureHandler<EventEntity>;
 
   constructor(
-    protected readonly queueName: string,
-    protected readonly options: Options,
-    protected readonly processEventsFunction: WorkerProcessFunction<EventEntity>,
-    protected readonly failureHandler: WorkerFailureHandler<EventEntity>
+    queueName: string,
+    options: Options,
+    processEventsFunction: WorkerProcessFunction<EventEntity>,
+    failureHandler: WorkerFailureHandler<EventEntity>
   ) {
+    this.queueName = queueName;
+    this.options = options;
+    this.processEventsFunction = processEventsFunction;
+    this.failureHandler = failureHandler;
     this.kafka = new Kafka({
       clientId: this.options.clientId,
       brokers: this.options.brokers

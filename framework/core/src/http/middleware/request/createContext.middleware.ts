@@ -1,17 +1,24 @@
+import { getEnvVar } from '@forklaunch/common';
 import { AnySchemaValidator } from '@forklaunch/validator';
-import { trace } from '@opentelemetry/api';
+import { context, trace } from '@opentelemetry/api';
 import { v4 } from 'uuid';
-import { ATTR_CORRELATION_ID } from '../../telemetry/constants';
+import {
+  ATTR_CORRELATION_ID,
+  ATTR_SERVICE_NAME
+} from '../../telemetry/constants';
 import {
   ExpressLikeSchemaHandler,
-  ForklaunchNextFunction
+  ForklaunchNextFunction,
+  ResolvedForklaunchResponse,
+  VersionedResponses
 } from '../../types/apiDefinition.types';
 import {
   Body,
   HeadersObject,
   ParamsObject,
   QueryObject,
-  ResponsesObject
+  ResponsesObject,
+  VersionSchema
 } from '../../types/contractDetails.types';
 
 /**
@@ -32,7 +39,8 @@ export function createContext<
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
-  LocalsObj extends Record<string, unknown>
+  LocalsObj extends Record<string, unknown>,
+  VersionedApi extends VersionSchema<SV, 'middleware'>
 >(
   schemaValidator: SV
 ): ExpressLikeSchemaHandler<
@@ -44,6 +52,7 @@ export function createContext<
   ReqHeaders,
   ResHeaders,
   LocalsObj,
+  VersionedApi,
   unknown,
   unknown,
   ForklaunchNextFunction
@@ -52,21 +61,33 @@ export function createContext<
     req.schemaValidator = schemaValidator;
 
     let correlationId = v4();
-
     if (req.headers['x-correlation-id']) {
-      correlationId = req.headers['x-correlation-id'];
+      correlationId = req.headers['x-correlation-id'] as string;
     }
 
-    res.setHeader('x-correlation-id', correlationId);
+    (
+      res as ResolvedForklaunchResponse<
+        ResHeaders,
+        Record<string, string>,
+        LocalsObj,
+        VersionedResponses,
+        unknown
+      >
+    ).setHeader('x-correlation-id', correlationId);
 
     req.context = {
       correlationId: correlationId
     };
 
-    const span = trace.getActiveSpan();
+    const span = trace.getSpan(context.active());
+
     if (span != null) {
       req.context.span = span;
       req.context.span?.setAttribute(ATTR_CORRELATION_ID, correlationId);
+      req.context.span?.setAttribute(
+        ATTR_SERVICE_NAME,
+        getEnvVar('OTEL_SERVICE_NAME')
+      );
     }
 
     next?.();

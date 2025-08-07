@@ -1,32 +1,27 @@
 import {
   handlers,
   IdSchema,
-  SchemaValidator,
+  schemaValidator,
   string
 } from '@forklaunch/blueprint-core';
 import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { BillingPortalService } from '@forklaunch/interfaces-billing/interfaces';
 import {
   BillingPortalMapper,
   CreateBillingPortalMapper,
   UpdateBillingPortalMapper
 } from '../../domain/mappers/billingPortal.mappers';
-import { SchemaDependencies } from '../../registrations';
+import { BillingPortalServiceFactory } from '../routes/billingPortal.routes';
 
 export const BillingPortalController = (
-  serviceFactory: ScopedDependencyFactory<
-    SchemaValidator,
-    SchemaDependencies,
-    'BillingPortalService'
-  >,
+  serviceFactory: BillingPortalServiceFactory,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) =>
   ({
     createBillingPortalSession: handlers.post(
-      SchemaValidator(),
+      schemaValidator,
       '/',
       {
         name: 'createBillingPortalSession',
@@ -48,7 +43,7 @@ export const BillingPortalController = (
     ),
 
     getBillingPortalSession: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/:id',
       {
         name: 'getBillingPortalSession',
@@ -70,7 +65,7 @@ export const BillingPortalController = (
     ),
 
     updateBillingPortalSession: handlers.put(
-      SchemaValidator(),
+      schemaValidator,
       '/:id',
       {
         name: 'updateBillingPortalSession',
@@ -96,7 +91,7 @@ export const BillingPortalController = (
     ),
 
     expireBillingPortalSession: handlers.delete(
-      SchemaValidator(),
+      schemaValidator,
       '/:id',
       {
         name: 'expireBillingPortalSession',

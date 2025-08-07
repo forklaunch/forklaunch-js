@@ -1,35 +1,33 @@
-import { forklaunchRouter, SchemaValidator } from '@forklaunch/blueprint-core';
-import { Metrics } from '@forklaunch/blueprint-monitoring';
-import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { ScopedDependencyFactory } from '@forklaunch/core/services';
-import { SchemaDependencies } from '../../registrations';
+import { forklaunchRouter, schemaValidator } from '@forklaunch/blueprint-core';
+import { sdkRouter } from '@forklaunch/core/http';
+import { ci, tokens } from '../../bootstrapper';
 import { PaymentLinkController } from '../controllers/paymentLink.controller';
 
-export const PaymentLinkRoutes = (
-  serviceFactory: ScopedDependencyFactory<
-    SchemaValidator,
-    SchemaDependencies,
-    'PaymentLinkService'
-  >,
-  openTelemetryCollector: OpenTelemetryCollector<Metrics>
-) => {
-  const router = forklaunchRouter(
-    '/payment-link',
-    SchemaValidator(),
-    openTelemetryCollector
-  );
+const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
+const paymentLinkServiceFactory = ci.scopedResolver(tokens.PaymentLinkService);
 
-  const controller = PaymentLinkController(
-    serviceFactory,
-    openTelemetryCollector
-  );
+export type PaymentLinkServiceFactory = typeof paymentLinkServiceFactory;
 
-  return router
-    .post('/', controller.createPaymentLink)
-    .get('/:id', controller.getPaymentLink)
-    .put('/:id', controller.updatePaymentLink)
-    .get('/', controller.listPaymentLinks)
-    .delete('/:id', controller.expirePaymentLink)
-    .get('/:id/success', controller.handlePaymentSuccess)
-    .get('/:id/failure', controller.handlePaymentFailure);
-};
+export const paymentLinkRouter = forklaunchRouter(
+  '/payment-link',
+  schemaValidator,
+  openTelemetryCollector
+);
+const controller = PaymentLinkController(
+  paymentLinkServiceFactory,
+  openTelemetryCollector
+);
+
+paymentLinkRouter.post('/', controller.createPaymentLink);
+paymentLinkRouter.get('/:id', controller.getPaymentLink);
+paymentLinkRouter.put('/:id', controller.updatePaymentLink);
+paymentLinkRouter.get('/', controller.listPaymentLinks);
+paymentLinkRouter.delete('/:id', controller.expirePaymentLink);
+paymentLinkRouter.get('/:id/success', controller.handlePaymentSuccess);
+paymentLinkRouter.get('/:id/failure', controller.handlePaymentFailure);
+
+export const paymentLinkSdkRouter = sdkRouter(
+  schemaValidator,
+  controller,
+  paymentLinkRouter
+);

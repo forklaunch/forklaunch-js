@@ -8,7 +8,8 @@ import {
   ParamsObject,
   QueryObject,
   ResponsesObject,
-  SchemaAuthMethods
+  SchemaAuthMethods,
+  VersionSchema
 } from '../types/contractDetails.types';
 
 export function typedAuthHandler<
@@ -20,6 +21,7 @@ export function typedAuthHandler<
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
+  VersionedApi extends VersionSchema<SV, Method>,
   BaseRequest
 >(
   _schemaValidator: SV,
@@ -34,8 +36,17 @@ export function typedAuthHandler<
     ReqQuery,
     ReqHeaders,
     ResHeaders,
+    VersionedApi,
     BaseRequest,
-    SchemaAuthMethods<SV, P, ReqBody, ReqQuery, ReqHeaders, BaseRequest>
+    SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      VersionedApi,
+      BaseRequest
+    >
   >,
   authHandler: ExpressLikeSchemaAuthMapper<
     SV,
@@ -43,6 +54,7 @@ export function typedAuthHandler<
     ReqBody,
     ReqQuery,
     ReqHeaders,
+    VersionedApi,
     BaseRequest
   >
 ) {

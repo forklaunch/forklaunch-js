@@ -3,11 +3,12 @@ import {
   ContractDetails,
   ExpressLikeSchemaHandler,
   HeadersObject,
+  middleware as innerMiddleware,
   ParamsObject,
   QueryObject,
   ResponsesObject,
   SchemaAuthMethods,
-  middleware as innerMiddleware
+  VersionSchema
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { NextFunction, Request, Response } from 'express';
@@ -82,12 +83,14 @@ export const middleware = <
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
+  const VersionedApi extends VersionSchema<SV, 'middleware'>,
   const Auth extends SchemaAuthMethods<
     SV,
     P,
     ReqBody,
     ReqQuery,
     ReqHeaders,
+    VersionedApi,
     Request
   >
 >(
@@ -104,6 +107,7 @@ export const middleware = <
     ReqQuery,
     ReqHeaders,
     ResHeaders,
+    VersionedApi,
     Request,
     Auth
   >,
@@ -116,6 +120,7 @@ export const middleware = <
     ReqHeaders,
     ResHeaders,
     LocalsObj,
+    VersionedApi,
     Request,
     Response,
     NextFunction
@@ -132,6 +137,7 @@ export const middleware = <
     ReqHeaders,
     ResHeaders,
     LocalsObj,
+    VersionedApi,
     Request,
     Response,
     NextFunction,

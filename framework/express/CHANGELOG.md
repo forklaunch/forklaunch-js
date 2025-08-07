@@ -1,5 +1,31 @@
 # @forklaunch/express
 
+## 0.7.9
+
+### Patch Changes
+
+- Allows for server urls to be passed in as env vars for use with openapi
+- Updated dependencies
+  - @forklaunch/core@0.12.1
+
+## 0.7.8
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.8.0
+  - @forklaunch/core@0.12.0
+
+## 0.7.7
+
+### Patch Changes
+
+- Add versions to contract details, migrate sdk and fetch to functions for much better ergonomics
+- Updated dependencies
+  - @forklaunch/validator@0.7.8
+  - @forklaunch/common@0.4.6
+  - @forklaunch/core@0.11.7
+
 ## 0.7.6
 
 ### Patch Changes

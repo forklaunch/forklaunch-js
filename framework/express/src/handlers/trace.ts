@@ -7,7 +7,8 @@ import {
   ParamsObject,
   QueryObject,
   ResponsesObject,
-  SchemaAuthMethods
+  SchemaAuthMethods,
+  VersionSchema
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { NextFunction, Request, Response } from 'express';
@@ -79,12 +80,14 @@ export const trace = <
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
+  const VersionedApi extends VersionSchema<SV, 'trace'>,
   const Auth extends SchemaAuthMethods<
     SV,
     P,
     ReqBody,
     ReqQuery,
     ReqHeaders,
+    VersionedApi,
     Request
   >
 >(
@@ -101,6 +104,7 @@ export const trace = <
     ReqQuery,
     ReqHeaders,
     ResHeaders,
+    VersionedApi,
     Request,
     Auth
   >,
@@ -113,6 +117,7 @@ export const trace = <
     ReqHeaders,
     ResHeaders,
     LocalsObj,
+    VersionedApi,
     Request,
     Response,
     NextFunction
@@ -129,6 +134,7 @@ export const trace = <
     ReqHeaders,
     ResHeaders,
     LocalsObj,
+    VersionedApi,
     Request,
     Response,
     NextFunction,

@@ -49,13 +49,25 @@ export const betterAuthConfig = ({
           type: 'string',
           required: false
         },
+        organizationId: {
+          type: 'string',
+          required: false,
+          returned: true
+        },
+        roleIds: {
+          type: 'string[]',
+          required: false,
+          returned: true
+        },
         organization: {
           type: 'string',
-          required: false
+          required: false,
+          returned: false
         },
         roles: {
           type: 'string[]',
-          required: false
+          required: false,
+          returned: false
         }
       }
     },
@@ -66,16 +78,22 @@ export const betterAuthConfig = ({
             return {
               data: {
                 ...user,
-                ...(ctx?.body.organization
+                ...(ctx?.body.organization || ctx?.body.organizationId
                   ? {
                       organization: {
-                        $in: [ctx?.body.organization]
+                        $in: [
+                          ctx?.body.organizationId || ctx?.body.organization
+                        ]
                       }
                     }
                   : {}),
-                roles: {
-                  $in: ctx?.body.roles ? ctx?.body.roles : []
-                }
+                ...(ctx?.body.roleIds || ctx?.body.roles
+                  ? {
+                      roles: {
+                        $in: ctx?.body.roleIds || ctx?.body.roles
+                      }
+                    }
+                  : {})
               }
             };
           }

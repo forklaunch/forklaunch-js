@@ -1,30 +1,24 @@
-import { forklaunchRouter, SchemaValidator } from '@forklaunch/blueprint-core';
-import { Metrics } from '@forklaunch/blueprint-monitoring';
-import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { ScopedDependencyFactory } from '@forklaunch/core/services';
-import { SchemaDependencies } from '../../registrations';
+import { forklaunchRouter, schemaValidator } from '@forklaunch/blueprint-core';
+import { sdkRouter } from '@forklaunch/core/http';
+import { ci, tokens } from '../../bootstrapper';
 import { PlanController } from '../controllers/plan.controller';
 
-export const PlanRoutes = (
-  serviceFactory: ScopedDependencyFactory<
-    SchemaValidator,
-    SchemaDependencies,
-    'PlanService'
-  >,
-  openTelemetryCollector: OpenTelemetryCollector<Metrics>
-) => {
-  const router = forklaunchRouter(
-    '/plan',
-    SchemaValidator(),
-    openTelemetryCollector
-  );
+const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
+const planServiceFactory = ci.scopedResolver(tokens.PlanService);
 
-  const controller = PlanController(serviceFactory, openTelemetryCollector);
+export type PlanServiceFactory = typeof planServiceFactory;
 
-  return router
-    .post('/', controller.createPlan)
-    .get('/:id', controller.getPlan)
-    .put('/', controller.updatePlan)
-    .delete('/:id', controller.deletePlan)
-    .get('/', controller.listPlans);
-};
+export const planRouter = forklaunchRouter(
+  '/plan',
+  schemaValidator,
+  openTelemetryCollector
+);
+const controller = PlanController(planServiceFactory, openTelemetryCollector);
+
+planRouter.post('/', controller.createPlan);
+planRouter.get('/:id', controller.getPlan);
+planRouter.put('/', controller.updatePlan);
+planRouter.delete('/:id', controller.deletePlan);
+planRouter.get('/', controller.listPlans);
+
+export const planSdkRouter = sdkRouter(schemaValidator, controller, planRouter);

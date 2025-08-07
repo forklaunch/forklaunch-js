@@ -12,13 +12,25 @@ export class RedisWorkerConsumer<
   Options extends RedisWorkerOptions
 > implements WorkerConsumer<EventEntity>
 {
+  protected readonly queueName: string;
+  protected readonly cache: TtlCache;
+  protected readonly options: Options;
+  protected readonly processEvents: WorkerProcessFunction<EventEntity>;
+  protected readonly failureHandler: WorkerFailureHandler<EventEntity>;
+
   constructor(
-    protected readonly queueName: string,
-    protected readonly cache: TtlCache,
-    protected readonly options: Options,
-    protected readonly processEvents: WorkerProcessFunction<EventEntity>,
-    protected readonly failureHandler: WorkerFailureHandler<EventEntity>
-  ) {}
+    queueName: string,
+    cache: TtlCache,
+    options: Options,
+    processEvents: WorkerProcessFunction<EventEntity>,
+    failureHandler: WorkerFailureHandler<EventEntity>
+  ) {
+    this.queueName = queueName;
+    this.cache = cache;
+    this.options = options;
+    this.processEvents = processEvents;
+    this.failureHandler = failureHandler;
+  }
 
   private async retrieveEvents(): Promise<EventEntity[]> {
     const events = (

@@ -19,11 +19,13 @@ import {
   Body,
   HeadersObject,
   HttpContractDetails,
+  Method,
   ParamsObject,
   PathParamHttpContractDetails,
   QueryObject,
   ResponseCompiledSchema,
-  ResponsesObject
+  ResponsesObject,
+  VersionSchema
 } from '../../types/contractDetails.types';
 import { MetricsDefinition } from '../../types/openTelemetryCollector.types';
 
@@ -39,18 +41,22 @@ import { MetricsDefinition } from '../../types/openTelemetryCollector.types';
  */
 export function enrichDetails<
   SV extends AnySchemaValidator,
+  ContractMethod extends Method,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
   ReqBody extends Body<SV>,
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
-  LocalsObj extends Record<string, unknown>
+  LocalsObj extends Record<string, unknown>,
+  VersionedApi extends VersionSchema<SV, ContractMethod>
 >(
   path: string,
   contractDetails: HttpContractDetails<SV> | PathParamHttpContractDetails<SV>,
-  requestSchema: unknown,
-  responseSchemas: ResponseCompiledSchema,
+  requestSchema: unknown | Record<string, unknown>,
+  responseSchemas:
+    | ResponseCompiledSchema
+    | Record<string, ResponseCompiledSchema>,
   openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
 ): ExpressLikeSchemaHandler<
   SV,
@@ -61,6 +67,7 @@ export function enrichDetails<
   ReqHeaders,
   ResHeaders,
   LocalsObj,
+  VersionedApi,
   unknown,
   unknown,
   ForklaunchNextFunction

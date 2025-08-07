@@ -1,8 +1,8 @@
 use anyhow::{Result, bail};
 use convert_case::{Case, Casing};
 use oxc_allocator::Allocator;
-use oxc_ast::ast::{Argument, Declaration, Expression, Program, Statement};
-use oxc_codegen::{CodeGenerator, CodegenOptions};
+use oxc_ast::ast::{Argument, Expression, Program, Statement};
+use oxc_codegen::{Codegen, CodegenOptions};
 
 use super::delete_import_statement::delete_import_statement;
 
@@ -29,86 +29,7 @@ pub(crate) fn delete_from_server_ts_router<'a>(
     router_name: &str,
 ) -> Result<String> {
     let router_name_camel_case = router_name.to_case(Case::Camel);
-    let router_name_pascal_case = router_name.to_case(Case::Pascal);
-    delete_from_server_ts(server_program, |statements| {
-        let mut maybe_splice_pos = None;
 
-        statements
-            .iter()
-            .enumerate()
-            .for_each(|(index, inner_stmt)| {
-                let expr = match inner_stmt {
-                    Statement::VariableDeclaration(expr) => expr,
-                    _ => return,
-                };
-
-                match expr.declarations[0].id.get_identifier_name() {
-                    Some(name) if name == format!("{router_name_pascal_case}ServiceFactory") => {
-                        // This is the one we want to delete, continue processing
-                    }
-                    _ => return, // Skip all others
-                }
-
-                let call = match &expr.declarations[0].init {
-                    Some(Expression::CallExpression(call)) => call,
-                    _ => return,
-                };
-
-                let expr_member = match &call.callee {
-                    Expression::StaticMemberExpression(expr_member) => expr_member,
-                    _ => return,
-                };
-
-                let identifier = match &expr_member.object {
-                    Expression::Identifier(identifier) => identifier,
-                    _ => return,
-                };
-
-                if identifier.name == "ci" && expr_member.property.name == "scopedResolver" {
-                    maybe_splice_pos = Some(index);
-                }
-            });
-        maybe_splice_pos
-    })?;
-    delete_from_server_ts(server_program, |statements| {
-        let mut maybe_splice_pos = None;
-
-        statements
-            .iter()
-            .enumerate()
-            .for_each(|(index, inner_stmt)| {
-                let expr = match inner_stmt {
-                    Statement::ExportNamedDeclaration(export) => match &export.declaration {
-                        Some(Declaration::VariableDeclaration(expr)) => expr,
-                        _ => return,
-                    },
-                    Statement::VariableDeclaration(expr) => expr,
-                    _ => return,
-                };
-
-                match expr.declarations[0].id.get_identifier_name() {
-                    Some(name) if name == format!("{router_name_camel_case}Routes") => {
-                        // This is the one we want to delete, continue processing
-                    }
-                    _ => return, // Skip all others
-                }
-
-                let call = match &expr.declarations[0].init {
-                    Some(Expression::CallExpression(call)) => call,
-                    _ => return,
-                };
-
-                let identifier = match &call.callee {
-                    Expression::Identifier(identifier) => identifier,
-                    _ => return,
-                };
-
-                if identifier.name.contains("Routes") {
-                    maybe_splice_pos = Some(index);
-                }
-            });
-        maybe_splice_pos
-    })?;
     delete_from_server_ts(server_program, |statements| {
         let mut maybe_splice_pos = None;
         statements.iter().enumerate().for_each(|(index, stmt)| {
@@ -139,7 +60,7 @@ pub(crate) fn delete_from_server_ts_router<'a>(
 
             if id.name == "app" && member.property.name == "use" {
                 if let Some(arg) = arg {
-                    if &arg.name == format!("{router_name_camel_case}Routes").as_str() {
+                    if &arg.name == format!("{router_name_camel_case}Router").as_str() {
                         maybe_splice_pos = Some(index);
                     }
                 }
@@ -154,7 +75,7 @@ pub(crate) fn delete_from_server_ts_router<'a>(
         format!("./api/routes/{router_name_camel_case}.routes").as_str(),
     )?;
 
-    Ok(CodeGenerator::new()
+    Ok(Codegen::new()
         .with_options(CodegenOptions::default())
         .build(&server_program)
         .code)
@@ -164,7 +85,7 @@ pub(crate) fn delete_from_server_ts_router<'a>(
 mod tests {
     use oxc_allocator::Allocator;
     use oxc_ast::ast::SourceType;
-    use oxc_codegen::{CodeGenerator, CodegenOptions};
+    use oxc_codegen::{Codegen, CodegenOptions};
 
     use super::*;
     use crate::core::ast::parse_ast_program::parse_ast_program;
@@ -173,9 +94,9 @@ mod tests {
         r#"import express from 'express';
 import { ci } from './registrations';
 import { openTelemetryCollector } from '@forklaunch/core';
-import { UserRoutes } from './api/routes/user.routes';
-import { OrderRoutes } from './api/routes/order.routes';
-import { ProductRoutes } from './api/routes/product.routes';
+import { UserRouter } from './api/routes/user.routes';
+import { OrderRouter } from './api/routes/order.routes';
+import { ProductRouter } from './api/routes/product.routes';
 
 const app = express();
 
@@ -184,13 +105,9 @@ const UserServiceFactory = ci.scopedResolver(tokens.UserService);
 const OrderServiceFactory = ci.scopedResolver(tokens.OrderService);
 const ProductServiceFactory = ci.scopedResolver(tokens.ProductService);
 
-export const userRoutes = UserRoutes(() => ci.createScope(), UserServiceFactory, openTelemetryCollector);
-export const orderRoutes = OrderRoutes(() => ci.createScope(), OrderServiceFactory, openTelemetryCollector);
-export const productRoutes = ProductRoutes(() => ci.createScope(), ProductServiceFactory, openTelemetryCollector);
-
-app.use(userRoutes);
-app.use(orderRoutes);
-app.use(productRoutes);
+app.use(userRouter);
+app.use(orderRouter);
+app.use(productRouter);
 
 app.listen(port, () => {});
 "#
@@ -200,16 +117,14 @@ app.listen(port, () => {});
         r#"import express from 'express';
 import { ci } from './registrations';
 import { openTelemetryCollector } from '@forklaunch/core';
-import { UserRoutes } from './api/routes/user.routes';
+import { UserRouter } from './api/routes/user.routes';
 
 const app = express();
 
 const port = process.env.PORT || 3000;
 const UserServiceFactory = ci.scopedResolver(tokens.UserService);
 
-export const userRoutes = UserRoutes(() => ci.createScope(), UserServiceFactory, openTelemetryCollector);
-
-app.use(userRoutes);
+app.use(userRouter);
 
 app.listen(port, () => {});
 "#
@@ -228,15 +143,10 @@ app.listen(port, () => {});
         let transformed_code = result.unwrap();
 
         // Verify the order router components are removed
+        assert!(!transformed_code.contains("app.use(orderRouter);"));
         assert!(
             !transformed_code
-                .contains("const OrderServiceFactory = ci.scopedResolver(tokens.OrderService);")
-        );
-        assert!(!transformed_code.contains("export const orderRoutes = OrderRoutes"));
-        assert!(!transformed_code.contains("app.use(orderRoutes);"));
-        assert!(
-            !transformed_code
-                .contains("import { OrderRoutes } from \"./api/routes/order.routes\";")
+                .contains("import { OrderRouter } from \"./api/routes/order.routes\";")
         );
 
         // Verify other routers are preserved
@@ -249,16 +159,14 @@ app.listen(port, () => {});
                 "const ProductServiceFactory = ci.scopedResolver(tokens.ProductService);"
             )
         );
-        assert!(transformed_code.contains("export const userRoutes = UserRoutes"));
-        assert!(transformed_code.contains("export const productRoutes = ProductRoutes"));
-        assert!(transformed_code.contains("app.use(userRoutes);"));
-        assert!(transformed_code.contains("app.use(productRoutes);"));
+        assert!(transformed_code.contains("app.use(userRouter);"));
+        assert!(transformed_code.contains("app.use(productRouter);"));
         assert!(
-            transformed_code.contains("import { UserRoutes } from \"./api/routes/user.routes\";")
+            transformed_code.contains("import { UserRouter } from \"./api/routes/user.routes\";")
         );
         assert!(
             transformed_code
-                .contains("import { ProductRoutes } from \"./api/routes/product.routes\";")
+                .contains("import { ProductRouter } from \"./api/routes/product.routes\";")
         );
 
         // Verify basic structure is preserved
@@ -273,7 +181,7 @@ app.listen(port, () => {});
         let server_content = r#"import express from 'express';
 import { ci } from './registrations';
 import { openTelemetryCollector } from '@forklaunch/core';
-import { UserManagementRoutes } from './api/routes/userManagement.routes';
+import { UserManagementRouter } from './api/routes/userManagement.routes';
 
 const app = express();
 
@@ -281,9 +189,7 @@ const port = process.env.PORT || 3000;
 
 const UserManagementServiceFactory = ci.scopedResolver(tokens.UserManagementService);
 
-export const userManagementRoutes = UserManagementRoutes(() => ci.createScope(), UserManagementServiceFactory, openTelemetryCollector);
-
-app.use(userManagementRoutes);
+app.use(userManagementRouter);
 app.listen(port, () => {});
 "#;
         let mut server_program = parse_ast_program(&allocator, server_content, SourceType::ts());
@@ -296,10 +202,8 @@ app.listen(port, () => {});
         let transformed_code = result.unwrap();
 
         // Verify all UserManagement router components are removed
-        assert!(!transformed_code.contains("const UserManagementServiceFactory"));
-        assert!(!transformed_code.contains("export const userManagementRoutes"));
-        assert!(!transformed_code.contains("app.use(userManagementRoutes);"));
-        assert!(!transformed_code.contains("import { UserManagementRoutes }"));
+        assert!(!transformed_code.contains("app.use(userManagementRouter);"));
+        assert!(!transformed_code.contains("import { UserManagementRouter }"));
 
         // Verify basic structure is preserved
         assert!(transformed_code.contains("import express from \"express\";"));
@@ -313,7 +217,7 @@ app.listen(port, () => {});
         let server_content = r#"import express from 'express';
 import { ci } from './registrations';
 import { openTelemetryCollector } from '@forklaunch/core';
-import { OrderProcessingRoutes } from './api/routes/orderProcessing.routes';
+import { OrderProcessingRouter } from './api/routes/orderProcessing.routes';
 
 const app = express();
 
@@ -321,9 +225,7 @@ const port = process.env.PORT || 3000;
 
 const OrderProcessingServiceFactory = ci.scopedResolver(tokens.OrderProcessingService);
 
-export const orderProcessingRoutes = OrderProcessingRoutes(() => ci.createScope(), OrderProcessingServiceFactory, openTelemetryCollector);
-
-app.use(orderProcessingRoutes);
+app.use(orderProcessingRouter);
 
 app.listen(port, () => {});
 "#;
@@ -337,10 +239,8 @@ app.listen(port, () => {});
         let transformed_code = result.unwrap();
 
         // Verify all OrderProcessing router components are removed
-        assert!(!transformed_code.contains("const OrderProcessingServiceFactory"));
-        assert!(!transformed_code.contains("export const orderProcessingRoutes"));
-        assert!(!transformed_code.contains("app.use(orderProcessingRoutes);"));
-        assert!(!transformed_code.contains("import { OrderProcessingRoutes }"));
+        assert!(!transformed_code.contains("app.use(orderProcessingRouter);"));
+        assert!(!transformed_code.contains("import { OrderProcessingRouter }"));
 
         // Verify basic structure is preserved
         assert!(transformed_code.contains("import express from \"express\";"));
@@ -361,10 +261,8 @@ app.listen(port, () => {});
         let transformed_code = result.unwrap();
 
         // Verify the user router components are removed
-        assert!(!transformed_code.contains("const UserServiceFactory"));
-        assert!(!transformed_code.contains("export const userRoutes"));
-        assert!(!transformed_code.contains("app.use(userRoutes);"));
-        assert!(!transformed_code.contains("import { UserRoutes }"));
+        assert!(!transformed_code.contains("app.use(userRouter);"));
+        assert!(!transformed_code.contains("import { UserRouter }"));
 
         // Verify basic structure is preserved
         assert!(transformed_code.contains("import express from \"express\";"));
@@ -412,10 +310,10 @@ app.listen(port, () => {});
         });
         let user_routes_line = lines
             .iter()
-            .position(|&line| line.contains("export const userRoutes = UserRoutes"));
+            .position(|&line| line.contains("app.use(userRouter);"));
         let product_routes_line = lines
             .iter()
-            .position(|&line| line.contains("export const productRoutes = ProductRoutes"));
+            .position(|&line| line.contains("app.use(productRouter);"));
 
         // Verify order is preserved (user comes before product in original)
         assert!(user_factory_line.is_some());
@@ -425,6 +323,134 @@ app.listen(port, () => {});
 
         assert!(user_factory_line.unwrap() < product_factory_line.unwrap());
         assert!(user_routes_line.unwrap() < product_routes_line.unwrap());
+    }
+
+    #[test]
+    fn test_delete_from_server_ts_router_with_middleware() {
+        let allocator = Allocator::default();
+        let server_content = r#"import express from 'express';
+import { ci } from './registrations';
+import { openTelemetryCollector } from '@forklaunch/core';
+import { UserRouter } from './api/routes/user.routes';
+import { OrderRouter } from './api/routes/order.routes';
+
+const app = express();
+
+const port = process.env.PORT || 3000;
+const UserServiceFactory = ci.scopedResolver(tokens.UserService);
+const OrderServiceFactory = ci.scopedResolver(tokens.OrderService);
+
+const userRouter = UserRouter(() => ci.createScope(), UserServiceFactory, openTelemetryCollector);
+const orderRouter = OrderRouter(() => ci.createScope(), OrderServiceFactory, openTelemetryCollector);
+
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.use(userRouter);
+app.use(orderRouter);
+
+app.listen(port, () => {});
+"#;
+        let mut server_program = parse_ast_program(&allocator, server_content, SourceType::ts());
+
+        let result = delete_from_server_ts_router(&allocator, &mut server_program, "order");
+
+        assert!(result.is_ok());
+
+        let transformed_code = result.unwrap();
+
+        // Verify order router components are removed
+        assert!(!transformed_code.contains("app.use(orderRouter);"));
+        assert!(!transformed_code.contains("import { OrderRouter }"));
+
+        // Verify user router and middleware are preserved
+        assert!(transformed_code.contains("app.use(userRouter);"));
+        assert!(transformed_code.contains("app.use(express.json());"));
+        assert!(transformed_code.contains("app.use(express.urlencoded({ extended: true }));"));
+    }
+
+    #[test]
+    fn test_delete_from_server_ts_router_with_comments() {
+        let allocator = Allocator::default();
+        let server_content = r#"import express from 'express';
+import { ci } from './registrations';
+import { openTelemetryCollector } from '@forklaunch/core';
+import { UserRoutes } from './api/routes/user.routes';
+import { OrderRoutes } from './api/routes/order.routes';
+
+const app = express();
+
+const port = process.env.PORT || 3000;
+
+// User service factory
+const UserServiceFactory = ci.scopedResolver(tokens.UserService);
+
+// Order service factory
+const OrderServiceFactory = ci.scopedResolver(tokens.OrderService);
+
+// Export routes
+export const userRouter = UserRoutes(() => ci.createScope(), UserServiceFactory, openTelemetryCollector);
+export const orderRouter = OrderRoutes(() => ci.createScope(), OrderServiceFactory, openTelemetryCollector);
+
+// Use routes
+app.use(userRouter);
+app.use(orderRouter);
+
+app.listen(port, () => {});
+"#;
+        let mut server_program = parse_ast_program(&allocator, server_content, SourceType::ts());
+
+        let result = delete_from_server_ts_router(&allocator, &mut server_program, "order");
+
+        assert!(result.is_ok());
+
+        let transformed_code = result.unwrap();
+
+        // Verify order router components are removed
+        assert!(!transformed_code.contains("app.use(orderRouter);"));
+
+        // Verify user router is preserved
+        assert!(transformed_code.contains("app.use(userRouter);"));
+    }
+
+    #[test]
+    fn test_delete_from_server_ts_router_with_multiple_uses() {
+        let allocator = Allocator::default();
+        let server_content = r#"import express from 'express';
+import { ci } from './registrations';
+import { openTelemetryCollector } from '@forklaunch/core';
+import { UserRouter } from './api/routes/user.routes';
+
+const app = express();
+
+const port = process.env.PORT || 3000;
+const UserServiceFactory = ci.scopedResolver(tokens.UserService);
+
+app.use(userRouter);
+app.use('/api', userRouter);
+app.use('/v1', userRouter);
+
+app.listen(port, () => {});
+"#;
+        let mut server_program = parse_ast_program(&allocator, server_content, SourceType::ts());
+
+        let result = delete_from_server_ts_router(&allocator, &mut server_program, "user");
+
+        assert!(result.is_ok());
+
+        let transformed_code = result.unwrap();
+
+        // Verify all user router usages are removed
+        assert!(!transformed_code.contains("app.use(userRouter);"));
+        assert!(!transformed_code.contains("app.use('/api', userRouter);"));
+        assert!(!transformed_code.contains("app.use('/v1', userRouter);"));
+        assert!(!transformed_code.contains("import { UserRouter }"));
+
+        // Verify basic structure is preserved
+        assert!(transformed_code.contains("import express from \"express\";"));
+        assert!(transformed_code.contains("const app = express();"));
+        assert!(transformed_code.contains("app.listen(port"));
     }
 
     #[test]
@@ -458,7 +484,7 @@ app.listen(3000, () => {});
 
         assert!(result.is_ok());
 
-        let transformed_code = CodeGenerator::new()
+        let transformed_code = Codegen::new()
             .with_options(CodegenOptions::default())
             .build(&server_program)
             .code;
@@ -518,7 +544,7 @@ const port = 3000;
         assert!(result.is_ok());
 
         // Verify the statement was removed
-        let transformed_code = CodeGenerator::new()
+        let transformed_code = Codegen::new()
             .with_options(CodegenOptions::default())
             .build(&server_program)
             .code;

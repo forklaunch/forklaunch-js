@@ -1,14 +1,15 @@
-import { safeStringify } from '@forklaunch/common';
+import { getEnvVar, safeStringify } from '@forklaunch/common';
 import {
   ATTR_HTTP_RESPONSE_STATUS_CODE,
   DocsConfiguration,
   ForklaunchExpressLikeApplication,
   ForklaunchRouter,
   generateMcpServer,
-  generateSwaggerDocument,
+  generateOpenApiSpecs,
   isForklaunchRequest,
   meta,
   MetricsDefinition,
+  OPENAPI_DEFAULT_VERSION,
   OpenTelemetryCollector
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
@@ -118,67 +119,22 @@ export class Application<
       typeof args[1] === 'string' ? args[1] : (process.env.HOST ?? 'localhost');
     const protocol = (process.env.PROTOCOL as 'http' | 'https') ?? 'http';
 
-    const openApi = generateSwaggerDocument<SV>(
+    const openApiServerUrls = getEnvVar('DOCS_SERVER_URLS')?.split(',') ?? [
+      `${protocol}://${host}:${port}`
+    ];
+    const openApiServerDescriptions = getEnvVar(
+      'DOCS_SERVER_DESCRIPTIONS'
+    )?.split(',') ?? ['Main Server'];
+
+    const openApi = generateOpenApiSpecs<SV>(
       this.schemaValidator,
-      protocol,
-      host,
-      port,
-      this.routers
+      openApiServerUrls,
+      openApiServerDescriptions,
+      this
     );
 
     if (this.schemaValidator instanceof ZodSchemaValidator) {
       const zodSchemaValidator = this.schemaValidator;
-      const routers = this
-        .routers as unknown as ForklaunchRouter<ZodSchemaValidator>[];
-
-      // TODO: clean up if fastmcp is stable enough
-      // this.internal.get('/mcp', async (_req, res) => {
-      //   const server = generateMcpServer(
-      //     zodSchemaValidator,
-      //     protocol,
-      //     host,
-      //     port,
-      //     '1.0.0',
-      //     routers
-      //   );
-      //   res.json(server);
-      // });
-
-      // this.internal.post('/mcp', async (req, res) => {
-      //   try {
-      //     const server = generateMcpServer(
-      //       zodSchemaValidator,
-      //       protocol,
-      //       host,
-      //       port,
-      //       '1.0.0',
-      //       routers
-      //     );
-      //     const transport: StreamableHTTPServerTransport =
-      //       new StreamableHTTPServerTransport({
-      //         sessionIdGenerator: undefined
-      //       });
-      //     res.on('close', () => {
-      //       transport.close();
-      //       server.close();
-      //     });
-      //     await server.connect(transport);
-      //     await transport.handleRequest(req, res, req.body);
-      //   } catch (error) {
-      //     console.error('Error handling MCP request:', error);
-      //     if (!res.headersSent) {
-      //       res.status(500).json({
-      //         jsonrpc: '2.0',
-      //         error: {
-      //           code: -32603,
-      //           message: 'Internal server error'
-      //         },
-      //         id: null
-      //       });
-      //     }
-      //   }
-      // });
-      // END TODO
 
       const mcpServer = generateMcpServer(
         zodSchemaValidator,
@@ -186,7 +142,7 @@ export class Application<
         host,
         port,
         '1.0.0',
-        routers
+        this as unknown as ForklaunchRouter<ZodSchemaValidator>
       );
       mcpServer.start({
         httpStream: {
@@ -202,35 +158,47 @@ export class Application<
       this.docsConfiguration.type === 'scalar'
     ) {
       this.internal.use(
-        `/api/${process.env.VERSION ?? 'v1'}${
+        `/api${process.env.VERSION ? `/${process.env.VERSION}` : ''}${
           process.env.DOCS_PATH ?? '/docs'
         }`,
         apiReference({
           ...this.docsConfiguration,
           sources: [
             {
-              content: openApi,
+              content: openApi[OPENAPI_DEFAULT_VERSION],
               title: 'API Reference'
             },
+            ...Object.entries(openApi).map(([version, spec]) => ({
+              content: spec,
+              title: `API Reference - ${version}`
+            })),
             ...(this.docsConfiguration?.sources ?? [])
           ]
         })
       );
     } else if (this.docsConfiguration.type === 'swagger') {
       this.internal.use(
-        `/api/${process.env.VERSION ?? 'v1'}${
+        `/api${process.env.VERSION ? `/${process.env.VERSION}` : ''}${
           process.env.DOCS_PATH ?? '/docs'
         }`,
-        swaggerUi.serve,
+        swaggerUi.serveFiles(openApi),
         swaggerUi.setup(openApi)
       );
     }
 
     this.internal.get(
-      `/api/${process.env.VERSION ?? 'v1'}/openapi`,
+      `/api${process.env.VERSION ? `/${process.env.VERSION}` : ''}/openapi`,
       (_, res) => {
         res.type('application/json');
-        res.json(openApi);
+        res.json({
+          latest: openApi[OPENAPI_DEFAULT_VERSION],
+          ...Object.fromEntries(
+            Object.entries(openApi).map(([version, spec]) => [
+              `v${version}`,
+              spec
+            ])
+          )
+        });
       }
     );
 
@@ -244,6 +212,10 @@ export class Application<
         res.send(hash);
       }
     );
+
+    this.internal.get('/health', (_, res) => {
+      res.send('OK');
+    });
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {

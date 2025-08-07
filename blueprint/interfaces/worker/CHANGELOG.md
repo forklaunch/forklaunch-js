@@ -1,5 +1,11 @@
 # @forklaunch/interfaces-billing
 
+## 0.4.0
+
+### Minor Changes
+
+- pin forklaunch package to patch versions
+
 ## 0.3.0
 
 ### Minor Changes

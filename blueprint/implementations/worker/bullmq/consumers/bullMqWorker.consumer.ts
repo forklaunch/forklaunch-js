@@ -14,13 +14,21 @@ export class BullMqWorkerConsumer<
 {
   private queue: Queue;
   private worker?: Worker;
+  protected readonly queueName: string;
+  protected readonly options: Options;
+  protected readonly processEvents: WorkerProcessFunction<EventEntity>;
+  protected readonly failureHandler: WorkerFailureHandler<EventEntity>;
 
   constructor(
-    protected readonly queueName: string,
-    protected readonly options: Options,
-    protected readonly processEvents: WorkerProcessFunction<EventEntity>,
-    protected readonly failureHandler: WorkerFailureHandler<EventEntity>
+    queueName: string,
+    options: Options,
+    processEvents: WorkerProcessFunction<EventEntity>,
+    failureHandler: WorkerFailureHandler<EventEntity>
   ) {
+    this.queueName = queueName;
+    this.options = options;
+    this.processEvents = processEvents;
+    this.failureHandler = failureHandler;
     this.queue = new Queue(this.queueName, {
       connection: this.options.queueOptions.connection
     });

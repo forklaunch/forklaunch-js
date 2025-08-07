@@ -1,5 +1,6 @@
 import {
   handlers,
+  schemaValidator,
   SchemaValidator,
   string,
   type
@@ -7,24 +8,19 @@ import {
 import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { StripeWebhookService } from '@forklaunch/implementation-billing-stripe/services';
 import Stripe from 'stripe';
 import { PartyEnum } from '../../domain/enum/party.enum';
 import { StatusEnum } from '../../domain/enum/status.enum';
-import { SchemaDependencies } from '../../registrations';
+import { WebhookServiceFactory } from '../routes/webhook.routes';
 
 export const WebhookController = (
-  serviceFactory: ScopedDependencyFactory<
-    SchemaValidator,
-    SchemaDependencies,
-    'WebhookService'
-  >,
+  serviceFactory: WebhookServiceFactory,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) =>
   ({
     handleWebhookEvent: handlers.post(
-      SchemaValidator(),
+      schemaValidator,
       '/',
       {
         name: 'handleWebhookEvent',

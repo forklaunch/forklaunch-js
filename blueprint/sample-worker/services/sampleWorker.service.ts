@@ -1,4 +1,4 @@
-import { SchemaValidator } from '@forklaunch/blueprint-core';
+import { schemaValidator } from '@forklaunch/blueprint-core';
 import { BullMqWorkerProducer } from '@forklaunch/implementation-worker-bullmq/producers';
 import { BullMqWorkerOptions } from '@forklaunch/implementation-worker-bullmq/types';
 import { DatabaseWorkerProducer } from '@forklaunch/implementation-worker-database/producers';
@@ -18,31 +18,53 @@ import { SampleWorkerEventRecord } from '../persistence/entities';
 
 // BaseSampleWorkerService class that implements the SampleWorkerService interface
 export class BaseSampleWorkerService implements SampleWorkerService {
+  private databaseWorkerProducer: DatabaseWorkerProducer<
+    SampleWorkerEventRecord,
+    DatabaseWorkerOptions
+  >;
+  private bullMqWorkerProducer: BullMqWorkerProducer<
+    SampleWorkerEventRecord,
+    BullMqWorkerOptions
+  >;
+  private redisWorkerProducer: RedisWorkerProducer<
+    SampleWorkerEventRecord,
+    RedisWorkerOptions
+  >;
+  private kafkaWorkerProducer: KafkaWorkerProducer<
+    SampleWorkerEventRecord,
+    KafkaWorkerOptions
+  >;
+
   constructor(
-    private databaseWorkerProducer: DatabaseWorkerProducer<
+    databaseWorkerProducer: DatabaseWorkerProducer<
       SampleWorkerEventRecord,
       DatabaseWorkerOptions
     >,
-    private bullMqWorkerProducer: BullMqWorkerProducer<
+    bullMqWorkerProducer: BullMqWorkerProducer<
       SampleWorkerEventRecord,
       BullMqWorkerOptions
     >,
-    private redisWorkerProducer: RedisWorkerProducer<
+    redisWorkerProducer: RedisWorkerProducer<
       SampleWorkerEventRecord,
       RedisWorkerOptions
     >,
-    private kafkaWorkerProducer: KafkaWorkerProducer<
+    kafkaWorkerProducer: KafkaWorkerProducer<
       SampleWorkerEventRecord,
       KafkaWorkerOptions
     >
-  ) {}
+  ) {
+    this.databaseWorkerProducer = databaseWorkerProducer;
+    this.bullMqWorkerProducer = bullMqWorkerProducer;
+    this.redisWorkerProducer = redisWorkerProducer;
+    this.kafkaWorkerProducer = kafkaWorkerProducer;
+  }
 
   // sampleWorkerPost method that implements the SampleWorkerService interface
   sampleWorkerPost = async (
     dto: SampleWorkerRequestDto
   ): Promise<SampleWorkerResponseDto> => {
     const entity = await SampleWorkerRequestMapper.deserializeDtoToEntity(
-      SchemaValidator(),
+      schemaValidator,
       dto
     );
 
@@ -52,7 +74,7 @@ export class BaseSampleWorkerService implements SampleWorkerService {
     await this.kafkaWorkerProducer.enqueueJob(entity);
 
     return SampleWorkerResponseMapper.serializeEntityToDto(
-      SchemaValidator(),
+      schemaValidator,
       entity
     );
   };

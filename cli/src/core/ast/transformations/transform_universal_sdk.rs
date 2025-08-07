@@ -3,7 +3,7 @@ use std::{fs::read_to_string, path::Path};
 use anyhow::Result;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::SourceType;
-use oxc_codegen::{CodeGenerator, CodegenOptions};
+use oxc_codegen::{Codegen, CodegenOptions};
 
 use crate::core::ast::{
     deletions::delete_from_universal_sdk::delete_from_universal_sdk,
@@ -22,7 +22,7 @@ pub(crate) fn transform_universal_sdk_add_sdk(
 
     inject_into_universal_sdk(&allocator, &mut app_program_ast, app_name, name)?;
 
-    Ok(CodeGenerator::new()
+    Ok(Codegen::new()
         .with_options(CodegenOptions::default())
         .build(&app_program_ast)
         .code)
@@ -39,7 +39,7 @@ pub(crate) fn transform_universal_sdk_remove_sdk(
 
     delete_from_universal_sdk(&allocator, &mut app_program_ast, app_name, name)?;
 
-    Ok(CodeGenerator::new()
+    Ok(Codegen::new()
         .with_options(CodegenOptions::default())
         .build(&app_program_ast)
         .code)
@@ -58,7 +58,7 @@ pub(crate) fn transform_universal_sdk_change_sdk(
     delete_from_universal_sdk(&allocator, &mut app_program_ast, app_name, existing_name)?;
     inject_into_universal_sdk(&allocator, &mut app_program_ast, app_name, name)?;
 
-    Ok(CodeGenerator::new()
+    Ok(Codegen::new()
         .with_options(CodegenOptions::default())
         .build(&app_program_ast)
         .code)

@@ -3,32 +3,27 @@ import {
   handlers,
   IdSchema,
   IdsSchema,
-  SchemaValidator,
+  schemaValidator,
   string
 } from '@forklaunch/blueprint-core';
 import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { ScopedDependencyFactory } from '@forklaunch/core/services';
 import { PermissionService } from '@forklaunch/interfaces-iam/interfaces';
 import {
   CreatePermissionMapper,
   PermissionMapper,
   UpdatePermissionMapper
 } from '../../domain/mappers/permission.mappers';
-import { SchemaDependencies } from '../../registrations';
+import { PermissionServiceFactory } from '../routes/permission.routes';
 
 export const PermissionController = (
-  serviceFactory: ScopedDependencyFactory<
-    SchemaValidator,
-    SchemaDependencies,
-    'PermissionService'
-  >,
+  serviceFactory: PermissionServiceFactory,
   openTelemetryCollector: OpenTelemetryCollector<Metrics>
 ) =>
   ({
     createPermission: handlers.post(
-      SchemaValidator(),
+      schemaValidator,
       '/',
       {
         name: 'Create Permission',
@@ -47,7 +42,7 @@ export const PermissionController = (
     ),
 
     createBatchPermissions: handlers.post(
-      SchemaValidator(),
+      schemaValidator,
       '/batch',
       {
         name: 'Create Batch Permissions',
@@ -66,7 +61,7 @@ export const PermissionController = (
     ),
 
     getPermission: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/:id',
       {
         name: 'Get Permission',
@@ -84,7 +79,7 @@ export const PermissionController = (
     ),
 
     getBatchPermissions: handlers.get(
-      SchemaValidator(),
+      schemaValidator,
       '/batch',
       {
         name: 'Get Batch Permissions',
@@ -104,7 +99,7 @@ export const PermissionController = (
     ),
 
     updatePermission: handlers.put(
-      SchemaValidator(),
+      schemaValidator,
       '/',
       {
         name: 'Update Permission',
@@ -123,7 +118,7 @@ export const PermissionController = (
     ),
 
     updateBatchPermissions: handlers.put(
-      SchemaValidator(),
+      schemaValidator,
       '/batch',
       {
         name: 'Update Batch Permissions',
@@ -142,7 +137,7 @@ export const PermissionController = (
     ),
 
     deletePermission: handlers.delete(
-      SchemaValidator(),
+      schemaValidator,
       '/:id',
       {
         name: 'Delete Permission',
@@ -161,7 +156,7 @@ export const PermissionController = (
     ),
 
     deleteBatchPermissions: handlers.delete(
-      SchemaValidator(),
+      schemaValidator,
       '/batch',
       {
         name: 'Delete Batch Permissions',

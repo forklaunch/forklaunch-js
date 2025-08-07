@@ -1,25 +1,27 @@
-import { forklaunchRouter, SchemaValidator } from '@forklaunch/blueprint-core';
-import { Metrics } from '@forklaunch/blueprint-monitoring';
-import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { ScopedDependencyFactory } from '@forklaunch/core/services';
-import { SchemaDependencies } from '../../registrations';
+import { forklaunchRouter, schemaValidator } from '@forklaunch/blueprint-core';
+import { sdkRouter } from '@forklaunch/core/http';
+import { ci, tokens } from '../../bootstrapper';
 import { WebhookController } from '../controllers/webhook.controller';
 
-export const WebhookRoutes = (
-  serviceFactory: ScopedDependencyFactory<
-    SchemaValidator,
-    SchemaDependencies,
-    'WebhookService'
-  >,
-  openTelemetryCollector: OpenTelemetryCollector<Metrics>
-) => {
-  const router = forklaunchRouter(
-    '/webhook',
-    SchemaValidator(),
-    openTelemetryCollector
-  );
+const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
+const webhookServiceFactory = ci.scopedResolver(tokens.WebhookService);
 
-  const controller = WebhookController(serviceFactory, openTelemetryCollector);
+export type WebhookServiceFactory = typeof webhookServiceFactory;
 
-  return router.post('/', controller.handleWebhookEvent);
-};
+export const webhookRouter = forklaunchRouter(
+  '/webhook',
+  schemaValidator,
+  openTelemetryCollector
+);
+const controller = WebhookController(
+  webhookServiceFactory,
+  openTelemetryCollector
+);
+
+webhookRouter.post('/', controller.handleWebhookEvent);
+
+export const webhookSdkRouter = sdkRouter(
+  schemaValidator,
+  controller,
+  webhookRouter
+);

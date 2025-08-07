@@ -38,6 +38,7 @@ type SerializeStringArray<T extends string[]> = T extends [
 export class MockSchemaValidator
   implements
     SchemaValidator<
+      <T>() => T,
       <T extends string>(schema: T) => T,
       <T extends string>(schema: T) => T,
       <T extends string>(schema: T) => `optional ${T}`,
@@ -80,6 +81,10 @@ export class MockSchemaValidator
   never = 'never';
   binary = 'binary';
   file = 'file';
+
+  type<T>() {
+    return 'type' as T;
+  }
 
   /**
    * Compiles a schema string.

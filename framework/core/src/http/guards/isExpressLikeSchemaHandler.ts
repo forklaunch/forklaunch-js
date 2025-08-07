@@ -4,9 +4,11 @@ import { ExpressLikeSchemaHandler } from '../types/apiDefinition.types';
 import {
   Body,
   HeadersObject,
+  Method,
   ParamsObject,
   QueryObject,
-  ResponsesObject
+  ResponsesObject,
+  VersionSchema
 } from '../types/contractDetails.types';
 
 /**
@@ -38,6 +40,7 @@ import {
  */
 export function isExpressLikeSchemaHandler<
   SV extends AnySchemaValidator,
+  ContractMethod extends Method,
   P extends ParamsObject<SV>,
   ResBodyMap extends ResponsesObject<SV>,
   ReqBody extends Body<SV>,
@@ -45,6 +48,7 @@ export function isExpressLikeSchemaHandler<
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
+  VersionedApi extends VersionSchema<SV, ContractMethod>,
   BaseRequest,
   BaseResponse,
   NextFunction
@@ -59,6 +63,7 @@ export function isExpressLikeSchemaHandler<
   ReqHeaders,
   ResHeaders,
   LocalsObj,
+  VersionedApi,
   BaseRequest,
   BaseResponse,
   NextFunction

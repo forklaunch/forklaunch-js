@@ -4,7 +4,7 @@ use anyhow::Result;
 use convert_case::{Case, Casing};
 use oxc_allocator::Allocator;
 use oxc_ast::ast::SourceType;
-use oxc_codegen::{CodeGenerator, CodegenOptions};
+use oxc_codegen::{Codegen, CodegenOptions};
 
 use crate::core::ast::{
     injections::inject_into_index_ts::inject_into_index_ts_export,
@@ -40,7 +40,7 @@ pub(crate) fn transform_seeders_index_ts(router_name: &str, base_path: &Path) ->
         &router_name_camel_case,
     )?;
 
-    Ok(CodeGenerator::new()
+    Ok(Codegen::new()
         .with_options(CodegenOptions::default())
         .build(&seeders_index_program)
         .code)

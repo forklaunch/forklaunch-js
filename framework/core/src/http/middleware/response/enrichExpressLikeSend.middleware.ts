@@ -18,7 +18,8 @@ import {
   ForklaunchResHeaders,
   ForklaunchResponse,
   ForklaunchSendableData,
-  ForklaunchStatusResponse
+  ForklaunchStatusResponse,
+  VersionedRequests
 } from '../../types/apiDefinition.types';
 import { ParamsDictionary } from '../../types/contractDetails.types';
 
@@ -55,16 +56,25 @@ export function enrichExpressLikeSend<
   ReqBody extends Record<string, unknown>,
   ReqQuery extends ParsedQs,
   ReqHeaders extends Record<string, string>,
-  ResHeaders extends Record<string, string>,
-  LocalsObj extends Record<string, unknown>
+  ResHeaders extends Record<string, unknown>,
+  LocalsObj extends Record<string, unknown>,
+  VersionedReqs extends VersionedRequests
 >(
   instance: unknown,
-  req: ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders>,
+  req: ForklaunchRequest<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    Extract<keyof VersionedReqs, string>
+  >,
   res: ForklaunchResponse<
     unknown,
     ResBodyMap,
     ForklaunchResHeaders & ResHeaders,
-    LocalsObj
+    LocalsObj,
+    Extract<keyof VersionedReqs, string>
   >,
   originalOperation:
     | ForklaunchStatusResponse<ForklaunchSendableData>['json']
@@ -94,9 +104,26 @@ export function enrichExpressLikeSend<
     errorSent = true;
   }
 
+  let responses;
+  if (
+    req.contractDetails.responses == null &&
+    (req.contractDetails.versions == null ||
+      Object.values(req.contractDetails.versions).some(
+        (version) => version?.responses == null
+      ))
+  ) {
+    throw new Error('Responses schema definitions are required');
+  } else {
+    if (req.contractDetails.responses != null) {
+      responses = req.contractDetails.responses;
+    } else {
+      responses = req.contractDetails.versions[req.version].responses;
+    }
+  }
+
   const responseBodies = discriminateResponseBodies(
     req.schemaValidator,
-    req.contractDetails.responses
+    responses
   );
 
   if (
@@ -233,7 +260,8 @@ export function enrichExpressLikeSend<
       ResBodyMap,
       ReqHeaders,
       ForklaunchResHeaders & ResHeaders,
-      LocalsObj
+      LocalsObj,
+      VersionedReqs
     >(req, res);
   }
 }

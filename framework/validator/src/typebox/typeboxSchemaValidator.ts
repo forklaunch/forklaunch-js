@@ -86,6 +86,7 @@ SetErrorFunction((params) => {
 export class TypeboxSchemaValidator
   implements
     SV<
+      <T>() => TTransform<TAny, T>,
       <T extends SafeTObject<TProperties>>(schema: T) => TypeCheck<T>,
       <T extends TIdiomaticSchema>(schema: T) => TResolve<T>,
       <T extends TIdiomaticSchema>(schema: T) => TOptional<TResolve<T>>,
@@ -318,7 +319,7 @@ export class TypeboxSchemaValidator
       title: 'Binary'
     })
   )
-    .Decode((value) => new TextEncoder().encode(value))
+    .Decode((value) => new TextEncoder().encode(value) as Uint8Array)
     .Encode((value) => {
       if (value instanceof ArrayBuffer) {
         return String.fromCharCode(...new Uint8Array(value));
@@ -368,16 +369,16 @@ export class TypeboxSchemaValidator
    * @returns {TResolve<T>} The resolved schema.
    */
   schemify<T extends TIdiomaticSchema>(schema: T): TResolve<T> {
-    if (KindGuard.IsSchema(schema) || schema instanceof TypeCheck) {
-      return schema as TResolve<T>;
-    }
-
     if (
       typeof schema === 'string' ||
       typeof schema === 'number' ||
       typeof schema === 'boolean'
     ) {
       return Type.Literal(schema) as TResolve<T>;
+    }
+
+    if (KindGuard.IsSchema(schema) || schema instanceof TypeCheck) {
+      return schema as TResolve<T>;
     }
 
     const newSchema: TObjectShape = {};

@@ -916,9 +916,10 @@ impl CliCommand for ApplicationCommand {
                     None
                 };
 
+            let service_base_path = Path::new(&full_application_path).join(&template_dir.output_path);
             rendered_templates.push(generate_service_package_json(
                 &service_data,
-                &Path::new(&full_application_path).join(&template_dir.output_path),
+                &service_base_path,
                 match service_data.service_name.as_str() {
                     "core" => Some(ProjectDependencies {
                         app_name: service_data.app_name.clone(),

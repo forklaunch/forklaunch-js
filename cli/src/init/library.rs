@@ -178,6 +178,7 @@ fn generate_library_package_json(
             manifest_data.kebab_case_app_name, manifest_data.kebab_case_name
         )),
         version: Some("0.1.0".to_string()),
+        r#type: Some("module".to_string()),
         description: Some(manifest_data.description.clone()),
         keywords: Some(vec![]),
         license: Some(manifest_data.license.clone()),

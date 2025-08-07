@@ -6,7 +6,7 @@ use std::{
 use anyhow::Result;
 use oxc_allocator::{Allocator, CloneIn, HashMap, Vec};
 use oxc_ast::ast::{ClassElement, PropertyKey, SourceType, Statement};
-use oxc_codegen::{CodeGenerator, CodegenOptions};
+use oxc_codegen::{Codegen, CodegenOptions};
 
 use crate::{
     constants::Database,
@@ -156,7 +156,7 @@ pub(crate) fn transform_base_entity_ts(
         break;
     }
 
-    let code = CodeGenerator::new()
+    let code = Codegen::new()
         .with_options(CodegenOptions::default())
         .build(&base_entity_to_create_program)
         .code;

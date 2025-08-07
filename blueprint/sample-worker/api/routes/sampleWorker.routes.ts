@@ -1,37 +1,31 @@
-import { forklaunchRouter, SchemaValidator } from '@forklaunch/blueprint-core';
-import { Metrics } from '@forklaunch/blueprint-monitoring';
-import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import {
-  ConfigInjector,
-  ScopedDependencyFactory
-} from '@forklaunch/core/services';
-import { SchemaDependencies } from '../../registrations';
+import { forklaunchRouter, schemaValidator } from '@forklaunch/blueprint-core';
+import { sdkRouter } from '@forklaunch/core/http';
+import { ci, tokens } from '../../bootstrapper';
 import { SampleWorkerController } from '../controllers/sampleWorker.controller';
 
-// returns an object with the router and the sampleWorkerGet and sampleWorkerPost methods for easy installation
-export const SampleWorkerRoutes = (
-  scopeFactory: () => ConfigInjector<SchemaValidator, SchemaDependencies>,
-  serviceFactory: ScopedDependencyFactory<
-    SchemaValidator,
-    SchemaDependencies,
-    'SampleWorkerService'
-  >,
-  openTelemetryCollector: OpenTelemetryCollector<Metrics>
-) => {
-  // defines the router for the sampleWorker routes
-  const router = forklaunchRouter(
-    '/sample-worker',
-    SchemaValidator(),
-    openTelemetryCollector
-  );
+const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
+const sampleWorkerServiceFactory = ci.scopedResolver(
+  tokens.SampleWorkerService
+);
 
-  const controller = SampleWorkerController(
-    scopeFactory,
-    serviceFactory,
-    openTelemetryCollector
-  );
+export type SampleWorkerServiceFactory = typeof sampleWorkerServiceFactory;
 
-  return router
-    .get('/:id', controller.sampleWorkerGet)
-    .post('/', controller.sampleWorkerPost);
-};
+export const sampleWorkerRouter = forklaunchRouter(
+  '/sample-worker',
+  schemaValidator,
+  openTelemetryCollector
+);
+
+const controller = SampleWorkerController(
+  sampleWorkerServiceFactory,
+  openTelemetryCollector
+);
+
+sampleWorkerRouter.get('/:id', controller.sampleWorkerGet);
+sampleWorkerRouter.post('/', controller.sampleWorkerPost);
+
+export const sampleWorkerSdkRouter = sdkRouter(
+  schemaValidator,
+  controller,
+  sampleWorkerRouter
+);

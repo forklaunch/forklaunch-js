@@ -462,8 +462,8 @@ pub(crate) fn add_s3_to_docker_compose<'a>(
         format!("{}-{}-dev", app_name, service_name).to_string(),
     );
     environment.insert("S3_REGION".to_string(), "us-east-1".to_string());
-    environment.insert("S3_ACCESS_KEY".to_string(), "minioadmin".to_string());
-    environment.insert("S3_SECRET_KEY".to_string(), "minioadmin".to_string());
+    environment.insert("S3_SECRET_KEY_ID".to_string(), "minioadmin".to_string());
+    environment.insert("S3_SECRET_ACCESS_KEY".to_string(), "minioadmin".to_string());
     if !docker_compose.services.contains_key("minio") {
         docker_compose.services.insert(
             "minio".to_string(),
@@ -486,8 +486,8 @@ pub(crate) fn remove_s3_from_docker_compose<'a>(
 ) -> Result<&'a mut DockerCompose> {
     environment.shift_remove("S3_URL");
     environment.shift_remove("S3_REGION");
-    environment.shift_remove("S3_ACCESS_KEY");
-    environment.shift_remove("S3_SECRET_KEY");
+    environment.shift_remove("S3_SECRET_KEY_ID");
+    environment.shift_remove("S3_SECRET_ACCESS_KEY");
     environment.shift_remove("S3_BUCKET");
     if docker_compose.services.contains_key("minio") {
         docker_compose.services.shift_remove("minio");

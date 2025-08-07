@@ -1,11 +1,12 @@
-import { safeStringify } from '@forklaunch/common';
+import { getEnvVar, safeStringify } from '@forklaunch/common';
 import {
   ATTR_HTTP_RESPONSE_STATUS_CODE,
   DocsConfiguration,
   ForklaunchExpressLikeApplication,
-  generateSwaggerDocument,
+  generateOpenApiSpecs,
   isForklaunchRequest,
   MetricsDefinition,
+  OPENAPI_DEFAULT_VERSION,
   OpenTelemetryCollector
 } from '@forklaunch/core/http';
 import {
@@ -161,12 +162,18 @@ export class Application<
         });
       });
 
-      const openApi = generateSwaggerDocument<SV>(
+      const openApiServerUrls = getEnvVar('DOCS_SERVER_URLS')?.split(',') ?? [
+        `${protocol}://${host}:${port}`
+      ];
+      const openApiServerDescriptions = getEnvVar(
+        'DOCS_SERVER_DESCRIPTIONS'
+      )?.split(',') ?? ['Main Server'];
+
+      const openApi = generateOpenApiSpecs<SV>(
         this.schemaValidator,
-        protocol,
-        host,
-        port,
-        this.routers
+        openApiServerUrls,
+        openApiServerDescriptions,
+        this
       );
 
       if (
@@ -174,38 +181,53 @@ export class Application<
         this.docsConfiguration.type === 'scalar'
       ) {
         this.internal.use(
-          `/api/${process.env.VERSION ?? 'v1'}${
+          `/api${process.env.VERSION ? `/${process.env.VERSION}` : ''}${
             process.env.DOCS_PATH ?? '/docs'
           }`,
           apiReference({
             ...this.docsConfiguration,
             sources: [
               {
-                content: openApi,
+                content: openApi[OPENAPI_DEFAULT_VERSION],
                 title: 'API Reference'
               },
+              ...Object.entries(openApi).map(([version, spec]) => ({
+                content: spec,
+                title: `API Reference - ${version}`
+              })),
               ...(this.docsConfiguration?.sources ?? [])
             ]
           }) as unknown as MiddlewareHandler
         );
       } else if (this.docsConfiguration?.type === 'swagger') {
-        const swaggerPath = `/api/${process.env.VERSION ?? 'v1'}${
+        const swaggerPath = `/api${process.env.VERSION ? `/${process.env.VERSION}` : ''}${
           process.env.DOCS_PATH ?? '/docs'
         }`;
-        this.internal.use(swaggerPath, swaggerRedirect(swaggerPath));
-        this.internal.get(`${swaggerPath}/*`, swagger(swaggerPath, openApi));
+        Object.entries(openApi).forEach(([version, spec]) => {
+          const versionPath = encodeURIComponent(`${swaggerPath}/${version}`);
+          this.internal.use(versionPath, swaggerRedirect(versionPath));
+          this.internal.get(`${versionPath}/*`, swagger(versionPath, spec));
+        });
       }
 
       this.internal.get(
-        `/api/${process.env.VERSION ?? 'v1'}/openapi`,
+        `/api${process.env.VERSION ? `/${process.env.VERSION}` : ''}/openapi`,
         (_, res) => {
           res.type('application/json');
-          res.json(openApi);
+          res.json({
+            latest: openApi[OPENAPI_DEFAULT_VERSION],
+            ...Object.fromEntries(
+              Object.entries(openApi).map(([version, spec]) => [
+                `v${version}`,
+                spec
+              ])
+            )
+          });
         }
       );
 
       this.internal.get(
-        `/api/${process.env.VERSION ?? 'v1'}/openapi-hash`,
+        `/api${process.env.VERSION ? `/${process.env.VERSION}` : ''}/openapi-hash`,
         async (_, res) => {
           const hash = await crypto
             .createHash('sha256')

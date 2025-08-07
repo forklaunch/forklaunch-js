@@ -1,40 +1,29 @@
-import { toPrettyCamelCase } from '@forklaunch/common';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { ForklaunchRouter } from '../types/router.types';
 
 export function unpackRouters<SV extends AnySchemaValidator>(
   routers: ForklaunchRouter<SV>[],
-  recursiveBasePath: string[] = [],
-  recursiveSdkPath: string[] = []
+  recursiveBasePath: string[] = []
 ): {
   fullPath: string;
-  sdkPath: string;
   router: ForklaunchRouter<SV>;
 }[] {
   return routers.reduce<
     {
       fullPath: string;
-      sdkPath: string;
       router: ForklaunchRouter<SV>;
     }[]
   >((acc, router) => {
+    const fullPath = [...recursiveBasePath, router.basePath].join('');
     acc.push({
-      fullPath: [...recursiveBasePath, router.basePath].join(''),
-      sdkPath: [
-        ...recursiveSdkPath,
-        toPrettyCamelCase(router.sdkName ?? router.basePath)
-      ].join('.'),
+      fullPath,
       router
     });
     acc.push(
-      ...unpackRouters<SV>(
-        router.routers,
-        [...recursiveBasePath, router.basePath],
-        [
-          ...recursiveSdkPath,
-          toPrettyCamelCase(router.sdkName ?? router.basePath)
-        ]
-      )
+      ...unpackRouters<SV>(router.routers, [
+        ...recursiveBasePath,
+        router.basePath
+      ])
     );
     return acc;
   }, []);

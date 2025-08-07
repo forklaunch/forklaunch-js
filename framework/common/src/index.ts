@@ -7,6 +7,7 @@ export * from './guards/isNever';
 export * from './guards/isNodeJsWriteableStream';
 export * from './guards/isRecord';
 export * from './guards/isTrue';
+export * from './hashString';
 export * from './InMemoryBlob';
 export * from './noop';
 export * from './openApiCompliantPath';

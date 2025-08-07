@@ -1,4 +1,4 @@
-import { openApiCompliantPath, toPrettyCamelCase } from '@forklaunch/common';
+import { openApiCompliantPath } from '@forklaunch/common';
 import {
   AnySchemaValidator,
   IdiomaticSchema,
@@ -9,6 +9,7 @@ import {
   OpenAPIObject,
   OperationObject,
   PathObject,
+  ResponseObject,
   ResponsesObject,
   SecuritySchemeObject,
   TagObject
@@ -19,7 +20,19 @@ import {
   discriminateResponseBodies
 } from '../router/discriminateBody';
 import { unpackRouters } from '../router/unpackRouters';
+import {
+  Body,
+  HeadersObject,
+  Method,
+  ParamsObject,
+  QueryObject,
+  ResponseBody,
+  SchemaAuthMethods,
+  VersionSchema
+} from '../types/contractDetails.types';
 import { ForklaunchRouter } from '../types/router.types';
+
+export const OPENAPI_DEFAULT_VERSION = Symbol('default');
 
 /**
  * Capitalizes the first letter of a string.
@@ -53,35 +66,63 @@ function transformBasePath(basePath: string) {
  * @returns {OpenAPIObject} - The Swagger document.
  */
 function generateOpenApiDocument(
-  protocol: 'http' | 'https',
-  host: string,
-  port: string | number,
-  tags: TagObject[],
-  paths: PathObject,
-  securitySchemes: Record<string, SecuritySchemeObject>,
+  serverUrls: string[],
+  serverDescriptions: string[],
+  versionedTags: Record<string | symbol, TagObject[]>,
+  versionedPaths: Record<string | symbol, PathObject>,
+  versionedSecuritySchemes: Record<
+    string | symbol,
+    Record<string, SecuritySchemeObject>
+  >,
   otherServers?: {
     url: string;
     description: string;
   }[]
-): OpenAPIObject {
+): Record<string | symbol, OpenAPIObject> {
   return {
-    openapi: '3.1.0',
-    info: {
-      title: process.env.API_TITLE || '',
-      version: process.env.VERSION || '1.0.0'
-    },
-    components: {
-      securitySchemes
-    },
-    tags,
-    servers: [
-      {
-        url: `${protocol}://${host}:${port}`,
-        description: 'Main Server'
+    [OPENAPI_DEFAULT_VERSION]: {
+      openapi: '3.1.0',
+      info: {
+        title: process.env.API_TITLE || 'API Definition',
+        version: process.env.VERSION || 'latest'
       },
-      ...(otherServers || [])
-    ],
-    paths
+      components: {
+        securitySchemes: versionedSecuritySchemes[OPENAPI_DEFAULT_VERSION]
+      },
+      tags: versionedTags[OPENAPI_DEFAULT_VERSION],
+      servers: [
+        ...serverUrls.map((url, index) => ({
+          url,
+          description: serverDescriptions?.[index]
+        })),
+        ...(otherServers || [])
+      ],
+      paths: versionedPaths[OPENAPI_DEFAULT_VERSION]
+    },
+    ...Object.fromEntries(
+      Object.entries(versionedPaths).map(([version, paths]) => [
+        version,
+        {
+          openapi: '3.1.0',
+          info: {
+            title: process.env.API_TITLE || 'API Definition',
+            version
+          },
+          components: {
+            securitySchemes: versionedSecuritySchemes[version]
+          },
+          tags: versionedTags[version],
+          servers: [
+            ...serverUrls.map((url, index) => ({
+              url,
+              description: serverDescriptions?.[index]
+            })),
+            ...(otherServers || [])
+          ],
+          paths
+        }
+      ])
+    )
   };
 }
 
@@ -118,6 +159,181 @@ function contentResolver<SV extends AnySchemaValidator>(
         };
 }
 
+function generateOperationObject<SV extends AnySchemaValidator>(
+  schemaValidator: SV,
+  path: string,
+  method: Method,
+  controllerName: string,
+  sdkPaths: Record<string, string>,
+  securitySchemes: Record<string, SecuritySchemeObject>,
+  name: string,
+  summary: string,
+  responses: Record<number, ResponseBody<SV>>,
+  params?: ParamsObject<SV>,
+  responseHeaders?: HeadersObject<SV>,
+  requestHeaders?: HeadersObject<SV>,
+  query?: QueryObject<SV>,
+  body?: Body<SV>,
+  auth?: SchemaAuthMethods<
+    SV,
+    ParamsObject<SV>,
+    Body<SV>,
+    QueryObject<SV>,
+    HeadersObject<SV>,
+    VersionSchema<SV, Method>,
+    unknown
+  >
+) {
+  const typedSchemaValidator = schemaValidator as SchemaValidator;
+
+  const coercedResponses: ResponsesObject = {};
+
+  const discriminatedResponseBodiesResult = discriminateResponseBodies(
+    schemaValidator,
+    responses
+  );
+
+  for (const key in discriminatedResponseBodiesResult) {
+    coercedResponses[key] = {
+      description: HTTPStatuses[key],
+      content: contentResolver(
+        schemaValidator,
+        discriminatedResponseBodiesResult[key].schema,
+        discriminatedResponseBodiesResult[key].contentType
+      ),
+      headers: responseHeaders
+        ? Object.fromEntries(
+            Object.entries(responseHeaders).map(([key, value]) => [
+              key,
+              {
+                schema: typedSchemaValidator.openapi(value)
+              }
+            ])
+          )
+        : undefined
+    } satisfies ResponseObject;
+  }
+
+  const commonErrors = [400, 404, 500];
+  for (const error of commonErrors) {
+    if (!(error in responses)) {
+      coercedResponses[error] = {
+        description: HTTPStatuses[error],
+        content: contentResolver(schemaValidator, schemaValidator.string)
+      };
+    }
+  }
+
+  const operationObject: OperationObject = {
+    tags: [controllerName],
+    summary: `${name}: ${summary}`,
+    parameters: [],
+    responses: coercedResponses,
+    operationId: sdkPaths[[method, path].join('.')]
+  };
+
+  if (params) {
+    for (const key in params) {
+      operationObject.parameters?.push({
+        name: key,
+        in: 'path',
+        schema: typedSchemaValidator.openapi(params[key])
+      });
+    }
+  }
+
+  const discriminatedBodyResult = body
+    ? discriminateBody(schemaValidator, body)
+    : null;
+
+  if (discriminatedBodyResult) {
+    operationObject.requestBody = {
+      required: true,
+      content: contentResolver(
+        schemaValidator,
+        discriminatedBodyResult.schema,
+        discriminatedBodyResult.contentType
+      )
+    };
+  }
+
+  if (requestHeaders) {
+    for (const key in requestHeaders) {
+      operationObject.parameters?.push({
+        name: key,
+        in: 'header',
+        schema: typedSchemaValidator.openapi(requestHeaders[key])
+      });
+    }
+  }
+
+  if (query) {
+    for (const key in query) {
+      operationObject.parameters?.push({
+        name: key,
+        in: 'query',
+        schema: typedSchemaValidator.openapi(query[key])
+      });
+    }
+  }
+
+  if (auth) {
+    responses[401] = {
+      description: HTTPStatuses[401],
+      content: contentResolver(schemaValidator, schemaValidator.string)
+    };
+
+    responses[403] = {
+      description: HTTPStatuses[403],
+      content: contentResolver(schemaValidator, schemaValidator.string)
+    };
+
+    if ('basic' in auth) {
+      operationObject.security = [
+        {
+          basic: Array.from(
+            'allowedPermissions' in auth
+              ? auth.allowedPermissions?.values() || []
+              : []
+          )
+        }
+      ];
+
+      securitySchemes['basic'] = {
+        type: 'http',
+        scheme: 'basic'
+      };
+    } else if (auth) {
+      operationObject.security = [
+        {
+          [auth.headerName !== 'Authorization' ? 'bearer' : 'apiKey']:
+            Array.from(
+              'allowedPermissions' in auth
+                ? auth.allowedPermissions?.values() || []
+                : []
+            )
+        }
+      ];
+
+      if (auth.headerName && auth.headerName !== 'Authorization') {
+        securitySchemes[auth.headerName] = {
+          type: 'apiKey',
+          in: 'header',
+          name: auth.headerName
+        };
+      } else {
+        securitySchemes['Authorization'] = {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT'
+        };
+      }
+    }
+  }
+
+  return operationObject;
+}
+
 /**
  * Generates a Swagger document from given routers.
  *
@@ -127,193 +343,153 @@ function contentResolver<SV extends AnySchemaValidator>(
  * @param {ForklaunchRouter<SV>[]} routers - The routers to include in the Swagger document.
  * @returns {OpenAPIObject} - The generated Swagger document.
  */
-export function generateSwaggerDocument<SV extends AnySchemaValidator>(
+export function generateOpenApiSpecs<SV extends AnySchemaValidator>(
   schemaValidator: SV,
-  protocol: 'http' | 'https',
-  host: string,
-  port: string | number,
-  routers: ForklaunchRouter<SV>[],
+  serverUrls: string[],
+  serverDescriptions: string[],
+  application: ForklaunchRouter<SV>,
   otherServers?: {
     url: string;
     description: string;
   }[]
-): OpenAPIObject {
-  const tags: TagObject[] = [];
-  const paths: PathObject = {};
-  const securitySchemes: Record<string, SecuritySchemeObject> = {};
+): Record<string | symbol, OpenAPIObject> {
+  const versionedPaths: Record<string | symbol, PathObject> = {
+    [OPENAPI_DEFAULT_VERSION]: {}
+  };
+  const versionedTags: Record<string | symbol, TagObject[]> = {
+    [OPENAPI_DEFAULT_VERSION]: []
+  };
+  const versionedSecuritySchemes: Record<
+    string | symbol,
+    Record<string, SecuritySchemeObject>
+  > = {
+    [OPENAPI_DEFAULT_VERSION]: {}
+  };
 
-  unpackRouters<SV>(routers).forEach(({ fullPath, router, sdkPath }) => {
+  [
+    {
+      fullPath: application.basePath === '/' ? '' : application.basePath,
+      router: application
+    },
+    ...unpackRouters<SV>(application.routers, [
+      application.basePath === '/' ? '' : application.basePath
+    ])
+  ].forEach(({ fullPath, router }) => {
     const controllerName = transformBasePath(fullPath);
-    tags.push({
-      name: controllerName,
-      description: `${toUpperCase(controllerName)} Operations`
-    });
     router.routes.forEach((route) => {
       const openApiPath = openApiCompliantPath(
         `${fullPath}${route.path === '/' ? '' : route.path}`
       );
-      if (!paths[openApiPath]) {
-        paths[openApiPath] = {};
-      }
-      const { name, summary, query, requestHeaders } = route.contractDetails;
 
-      const responses: ResponsesObject = {};
-
-      const discriminatedResponseBodiesResult = discriminateResponseBodies(
-        schemaValidator,
-        route.contractDetails.responses
-      );
-
-      for (const key in discriminatedResponseBodiesResult) {
-        responses[key] = {
-          description: HTTPStatuses[key],
-          content: contentResolver(
-            schemaValidator,
-            discriminatedResponseBodiesResult[key].schema,
-            discriminatedResponseBodiesResult[key].contentType
-          )
-        };
-      }
-
-      const commonErrors = [400, 404, 500];
-      for (const error of commonErrors) {
-        if (!(error in responses)) {
-          responses[error] = {
-            description: HTTPStatuses[error],
-            content: contentResolver(schemaValidator, schemaValidator.string)
-          };
-        }
-      }
-
-      const operationObject: OperationObject = {
-        tags: [controllerName],
-        summary: `${name}: ${summary}`,
-        parameters: [],
-        responses,
-        operationId: `${sdkPath}.${toPrettyCamelCase(name)}`
-      };
-      if (route.contractDetails.params) {
-        for (const key in route.contractDetails.params) {
-          operationObject.parameters?.push({
-            name: key,
-            in: 'path',
-            schema: (schemaValidator as SchemaValidator).openapi(
-              route.contractDetails.params[key]
-            )
-          });
-        }
-      }
-
-      const discriminatedBodyResult =
-        'body' in route.contractDetails
-          ? discriminateBody(schemaValidator, route.contractDetails.body)
-          : null;
-
-      if (discriminatedBodyResult) {
-        operationObject.requestBody = {
-          required: true,
-          content: contentResolver(
-            schemaValidator,
-            discriminatedBodyResult.schema,
-            discriminatedBodyResult.contentType
-          )
-        };
-      }
-
-      if (requestHeaders) {
-        for (const key in requestHeaders) {
-          operationObject.parameters?.push({
-            name: key,
-            in: 'header',
-            schema: (schemaValidator as SchemaValidator).openapi(
-              requestHeaders[key]
-            )
-          });
-        }
-      }
-
-      if (query) {
-        for (const key in query) {
-          operationObject.parameters?.push({
-            name: key,
-            in: 'query',
-            schema: (schemaValidator as SchemaValidator).openapi(query[key])
-          });
-        }
-      }
-
-      if (route.contractDetails.auth) {
-        responses[401] = {
-          description: HTTPStatuses[401],
-          content: contentResolver(schemaValidator, schemaValidator.string)
-        };
-        responses[403] = {
-          description: HTTPStatuses[403],
-          content: contentResolver(schemaValidator, schemaValidator.string)
-        };
-
-        if ('basic' in route.contractDetails.auth) {
-          operationObject.security = [
-            {
-              basic: Array.from(
-                'allowedPermissions' in route.contractDetails.auth
-                  ? route.contractDetails.auth.allowedPermissions?.values() ||
-                      []
-                  : []
-              )
-            }
-          ];
-
-          securitySchemes['basic'] = {
-            type: 'http',
-            scheme: 'basic'
-          };
-        } else if (route.contractDetails.auth) {
-          operationObject.security = [
-            {
-              [route.contractDetails.auth.headerName !== 'Authorization'
-                ? 'bearer'
-                : 'apiKey']: Array.from(
-                'allowedPermissions' in route.contractDetails.auth
-                  ? route.contractDetails.auth.allowedPermissions?.values() ||
-                      []
-                  : []
-              )
-            }
-          ];
-
+      const { name, summary, params, versions, auth } = route.contractDetails;
+      if (versions) {
+        for (const version of Object.keys(versions)) {
+          if (!versionedPaths[version]) {
+            versionedPaths[version] = {};
+          }
+          if (!versionedPaths[version][openApiPath]) {
+            versionedPaths[version][openApiPath] = {};
+          }
+          if (!versionedTags[version]) {
+            versionedTags[version] = [];
+          }
           if (
-            route.contractDetails.auth.headerName &&
-            route.contractDetails.auth.headerName !== 'Authorization'
+            !versionedTags[version].find((tag) => tag.name === controllerName)
           ) {
-            securitySchemes[route.contractDetails.auth.headerName] = {
-              type: 'apiKey',
-              in: 'header',
-              name: route.contractDetails.auth.headerName
-            };
-          } else {
-            securitySchemes['Authorization'] = {
-              type: 'http',
-              scheme: 'bearer',
-              bearerFormat: 'JWT'
-            };
+            versionedTags[version].push({
+              name: controllerName,
+              description: `${toUpperCase(controllerName)} Operations`
+            });
+          }
+          if (!versionedSecuritySchemes[version]) {
+            versionedSecuritySchemes[version] = {};
+          }
+
+          const { query, requestHeaders, body, responses, responseHeaders } =
+            versions[version];
+
+          const operationObject = generateOperationObject<SV>(
+            schemaValidator,
+            route.path,
+            route.method,
+            controllerName,
+            router.sdkPaths,
+            versionedSecuritySchemes[version],
+            name,
+            summary,
+            responses,
+            params,
+            responseHeaders,
+            requestHeaders,
+            query,
+            body,
+            auth
+          );
+
+          if (route.method !== 'middleware') {
+            versionedPaths[version][openApiPath][route.method] =
+              operationObject;
           }
         }
-      }
+      } else {
+        if (!versionedPaths[OPENAPI_DEFAULT_VERSION]) {
+          versionedPaths[OPENAPI_DEFAULT_VERSION] = {};
+        }
+        if (!versionedPaths[OPENAPI_DEFAULT_VERSION][openApiPath]) {
+          versionedPaths[OPENAPI_DEFAULT_VERSION][openApiPath] = {};
+        }
+        if (!versionedTags[OPENAPI_DEFAULT_VERSION]) {
+          versionedTags[OPENAPI_DEFAULT_VERSION] = [];
+        }
+        if (
+          !versionedTags[OPENAPI_DEFAULT_VERSION].find(
+            (tag) => tag.name === controllerName
+          )
+        ) {
+          versionedTags[OPENAPI_DEFAULT_VERSION].push({
+            name: controllerName,
+            description: `${toUpperCase(controllerName)} Operations`
+          });
+        }
+        if (!versionedSecuritySchemes[OPENAPI_DEFAULT_VERSION]) {
+          versionedSecuritySchemes[OPENAPI_DEFAULT_VERSION] = {};
+        }
 
-      if (route.method !== 'middleware') {
-        paths[openApiPath][route.method] = operationObject;
+        const { query, requestHeaders, body, responses, responseHeaders } =
+          route.contractDetails;
+
+        const operationObject = generateOperationObject<SV>(
+          schemaValidator,
+          route.path,
+          route.method,
+          controllerName,
+          router.sdkPaths,
+          versionedSecuritySchemes[OPENAPI_DEFAULT_VERSION],
+          name,
+          summary,
+          responses,
+          params,
+          responseHeaders,
+          requestHeaders,
+          query,
+          body,
+          auth
+        );
+
+        if (route.method !== 'middleware') {
+          versionedPaths[OPENAPI_DEFAULT_VERSION][openApiPath][route.method] =
+            operationObject;
+        }
       }
     });
   });
 
   return generateOpenApiDocument(
-    protocol,
-    host,
-    port,
-    tags,
-    paths,
-    securitySchemes,
+    serverUrls,
+    serverDescriptions,
+    versionedTags,
+    versionedPaths,
+    versionedSecuritySchemes,
     otherServers
   );
 }

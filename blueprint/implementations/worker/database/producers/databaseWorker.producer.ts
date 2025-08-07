@@ -6,10 +6,13 @@ export class DatabaseWorkerProducer<
   EventEntity extends WorkerEventEntity & BaseEntity,
   Options extends DatabaseWorkerOptions
 > {
-  constructor(
-    private readonly em: EntityManager,
-    private readonly options: Options
-  ) {}
+  private readonly em: EntityManager;
+  private readonly options: Options;
+
+  constructor(em: EntityManager, options: Options) {
+    this.em = em;
+    this.options = options;
+  }
 
   async enqueueJob(event: EventEntity): Promise<void> {
     await this.em.persistAndFlush(event);

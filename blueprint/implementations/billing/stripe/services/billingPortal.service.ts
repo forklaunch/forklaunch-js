@@ -46,14 +46,46 @@ export class StripeBillingPortalService<
     Entities
   >;
   protected _mappers: InternalMapper<InstanceTypeRecord<typeof this.mappers>>;
+  protected stripeClient: Stripe;
+  protected em: EntityManager;
+  protected cache: TtlCache;
+  protected openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
+  protected schemaValidator: SchemaValidator;
+  protected mappers: {
+    BillingPortalMapper: ResponseMapperConstructor<
+      SchemaValidator,
+      Dto['BillingPortalMapper'],
+      Entities['BillingPortalMapper']
+    >;
+    CreateBillingPortalMapper: RequestMapperConstructor<
+      SchemaValidator,
+      Dto['CreateBillingPortalMapper'],
+      Entities['CreateBillingPortalMapper'],
+      (
+        dto: Dto['CreateBillingPortalMapper'],
+        em: EntityManager,
+        session: Stripe.BillingPortal.Session
+      ) => Promise<Entities['CreateBillingPortalMapper']>
+    >;
+    UpdateBillingPortalMapper: RequestMapperConstructor<
+      SchemaValidator,
+      Dto['UpdateBillingPortalMapper'],
+      Entities['UpdateBillingPortalMapper'],
+      (
+        dto: Dto['UpdateBillingPortalMapper'],
+        em: EntityManager,
+        session: Stripe.BillingPortal.Session
+      ) => Promise<Entities['UpdateBillingPortalMapper']>
+    >;
+  };
 
   constructor(
-    protected stripeClient: Stripe,
-    protected em: EntityManager,
-    protected cache: TtlCache,
-    protected openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-    protected schemaValidator: SchemaValidator,
-    protected mappers: {
+    stripeClient: Stripe,
+    em: EntityManager,
+    cache: TtlCache,
+    openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
+    schemaValidator: SchemaValidator,
+    mappers: {
       BillingPortalMapper: ResponseMapperConstructor<
         SchemaValidator,
         Dto['BillingPortalMapper'],
@@ -85,6 +117,12 @@ export class StripeBillingPortalService<
       enableDatabaseBackup?: boolean;
     }
   ) {
+    this.stripeClient = stripeClient;
+    this.em = em;
+    this.cache = cache;
+    this.openTelemetryCollector = openTelemetryCollector;
+    this.schemaValidator = schemaValidator;
+    this.mappers = mappers;
     this._mappers = transformIntoInternalMapper(mappers, schemaValidator);
     this.baseBillingPortalService = new BaseBillingPortalService(
       em,

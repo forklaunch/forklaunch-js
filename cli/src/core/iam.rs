@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use anyhow::Result;
-use base64::{engine::general_purpose::STANDARD, Engine};
+use base64::{Engine, engine::general_purpose::STANDARD};
 use rcgen::KeyPair;
 
 use super::rendered_template::RenderedTemplate;
@@ -22,7 +22,7 @@ pub(crate) fn generate_iam_keys(base_path: &Path) -> Result<Vec<RenderedTemplate
 
     let public_key_pem = format!(
         "-----BEGIN PUBLIC KEY-----\n{}\n-----END PUBLIC KEY-----",
-        STANDARD.encode(key_pair.public_key_der())
+        STANDARD.encode(key_pair.public_key_pem())
     );
     rendered_templates.push(RenderedTemplate {
         path: base_path.join("iam").join("public.pem"),

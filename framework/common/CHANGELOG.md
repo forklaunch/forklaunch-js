@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.4.6
+
+### Patch Changes
+
+- Add versions to contract details, migrate sdk and fetch to functions for much better ergonomics
+
 ## 0.4.5
 
 ### Patch Changes

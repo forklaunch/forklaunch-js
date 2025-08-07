@@ -51,9 +51,17 @@ function contentParse<SV extends AnySchemaValidator>(options?: {
         contractDetails: HttpContractDetails<SV>;
       };
 
+      let contractBody;
+      if (coercedRequest.contractDetails.versions) {
+        contractBody = Object.values(coercedRequest.contractDetails.versions)[0]
+          ?.body;
+      } else {
+        contractBody = coercedRequest.contractDetails.body;
+      }
+
       const discriminatedBody = discriminateBody(
         coercedRequest.schemaValidator,
-        coercedRequest.contractDetails.body
+        contractBody
       );
 
       if (!discriminatedBody) {
@@ -117,6 +125,9 @@ function contentParse<SV extends AnySchemaValidator>(options?: {
         }
         default:
           isNever(discriminatedBody.parserType);
+          throw new Error(
+            'Unsupported parser type for body: ' + discriminatedBody.parserType
+          );
       }
     } catch (error) {
       next(error);

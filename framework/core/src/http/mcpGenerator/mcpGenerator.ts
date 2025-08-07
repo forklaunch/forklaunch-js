@@ -1,13 +1,71 @@
 import { isNever, isRecord, safeStringify } from '@forklaunch/common';
-import { string, ZodSchemaValidator } from '@forklaunch/validator/zod';
+import { string, ZodSchemaValidator, ZodType } from '@forklaunch/validator/zod';
 import { FastMCP } from 'fastmcp';
+import { isUnionable } from '../guards/isVersionedInputSchema';
 import {
   discriminateBody,
   discriminateResponseBodies
 } from '../router/discriminateBody';
 import { unpackRouters } from '../router/unpackRouters';
+import {
+  Body,
+  HeadersObject,
+  Method,
+  ParamsObject,
+  QueryObject,
+  SchemaAuthMethods,
+  VersionSchema
+} from '../types/contractDetails.types';
 import { ForklaunchRouter } from '../types/router.types';
 
+function generateInputSchema(
+  schemaValidator: ZodSchemaValidator,
+  body?: Body<ZodSchemaValidator>,
+  params?: ParamsObject<ZodSchemaValidator>,
+  query?: QueryObject<ZodSchemaValidator>,
+  requestHeaders?: HeadersObject<ZodSchemaValidator>,
+  auth?: SchemaAuthMethods<
+    ZodSchemaValidator,
+    ParamsObject<ZodSchemaValidator>,
+    Body<ZodSchemaValidator>,
+    QueryObject<ZodSchemaValidator>,
+    HeadersObject<ZodSchemaValidator>,
+    VersionSchema<ZodSchemaValidator, Method>,
+    unknown
+  >
+) {
+  let discriminatedBody:
+    | ReturnType<typeof discriminateBody<ZodSchemaValidator>>
+    | undefined;
+
+  if (body) {
+    discriminatedBody = discriminateBody(schemaValidator, body);
+  }
+  return schemaValidator.schemify({
+    ...(discriminatedBody && body
+      ? {
+          ...('contentType' in body ? { contentType: body.contentType } : {}),
+          body: schemaValidator.schemify(discriminatedBody.schema)
+        }
+      : {}),
+    ...(params ? { params: schemaValidator.schemify(params) } : {}),
+    ...(query ? { query: schemaValidator.schemify(query) } : {}),
+    ...(requestHeaders
+      ? {
+          headers: schemaValidator.schemify({
+            ...requestHeaders,
+            ...(auth
+              ? {
+                  [auth.headerName ?? 'authorization']: string.startsWith(
+                    auth.tokenPrefix ?? ('basic' in auth ? 'Basic ' : 'Bearer ')
+                  )
+                }
+              : {})
+          })
+        }
+      : {})
+  });
+}
 /**
  * Generates a ModelContextProtocol server from given routers.
  *
@@ -27,7 +85,7 @@ export function generateMcpServer<
   host: string,
   port: number,
   version: `${number}.${number}.${number}`,
-  routers: ForklaunchRouter<ZodSchemaValidator>[],
+  application: ForklaunchRouter<ZodSchemaValidator>,
   options?: ConstructorParameters<typeof FastMCP<T>>[0],
   contentTypeMap?: Record<string, string>
 ) {
@@ -43,64 +101,57 @@ export function generateMcpServer<
     version
   });
 
-  unpackRouters<ZodSchemaValidator>(routers).forEach(({ fullPath, router }) => {
+  [
+    {
+      fullPath: application.basePath === '/' ? '' : application.basePath,
+      router: application
+    },
+    ...unpackRouters<ZodSchemaValidator>(application.routers, [
+      application.basePath === '/' ? '' : application.basePath
+    ])
+  ].forEach(({ fullPath, router }) => {
     router.routes.forEach((route) => {
-      let discriminatedBody:
-        | ReturnType<typeof discriminateBody<ZodSchemaValidator>>
-        | undefined;
-      if ('body' in route.contractDetails) {
-        discriminatedBody = discriminateBody(
-          schemaValidator,
-          route.contractDetails.body
+      const inputSchemas: ZodType[] = [];
+
+      if (route.contractDetails.versions) {
+        Object.values(route.contractDetails.versions).forEach((version) => {
+          inputSchemas.push(
+            generateInputSchema(
+              schemaValidator,
+              version.body,
+              route.contractDetails.params,
+              version.query,
+              version.requestHeaders,
+              route.contractDetails.auth
+            )
+          );
+        });
+      } else {
+        inputSchemas.push(
+          generateInputSchema(
+            schemaValidator,
+            route.contractDetails.body,
+            route.contractDetails.params,
+            route.contractDetails.query,
+            route.contractDetails.requestHeaders,
+            route.contractDetails.auth
+          )
         );
       }
-
-      const inputSchema = schemaValidator.schemify({
-        ...(discriminatedBody && 'body' in route.contractDetails
-          ? {
-              ...('contentType' in route.contractDetails.body
-                ? { contentType: route.contractDetails.body.contentType }
-                : {}),
-              body: schemaValidator.schemify(discriminatedBody.schema)
-            }
-          : {}),
-        ...(route.contractDetails.params
-          ? { params: schemaValidator.schemify(route.contractDetails.params) }
-          : {}),
-        ...(route.contractDetails.query
-          ? { query: schemaValidator.schemify(route.contractDetails.query) }
-          : {}),
-        ...(route.contractDetails.requestHeaders
-          ? {
-              headers: schemaValidator.schemify({
-                ...route.contractDetails.requestHeaders,
-                ...(route.contractDetails.auth
-                  ? {
-                      [route.contractDetails.auth.headerName ??
-                      'authorization']: string.startsWith(
-                        route.contractDetails.auth.tokenPrefix ??
-                          ('basic' in route.contractDetails.auth
-                            ? 'Basic '
-                            : 'Bearer ')
-                      )
-                    }
-                  : {})
-              })
-            }
-          : {})
-      });
 
       mcpServer.addTool({
         name: route.contractDetails.name,
         description: route.contractDetails.summary,
-        parameters: inputSchema,
+        parameters: isUnionable(inputSchemas)
+          ? schemaValidator.union(inputSchemas)
+          : inputSchemas[0],
         execute: async (args) => {
           const { contentType, body, params, query, headers } = args as {
             contentType?: string;
             params?: Record<string, string | number | boolean>;
             body?: Record<string, unknown> | string;
             query?: Record<string, string | number | boolean>;
-            headers?: Record<string, string>;
+            headers?: Record<string, unknown>;
           };
 
           let url = `${protocol}://${host}:${port}${fullPath}${route.path}`;
@@ -113,6 +164,29 @@ export function generateMcpServer<
               );
             }
           }
+
+          let bodySchema;
+          let responsesSchemas;
+          if (route.contractDetails.versions) {
+            Object.values(route.contractDetails.versions).forEach(
+              (version, index) => {
+                if (
+                  version.body &&
+                  schemaValidator.parse(inputSchemas[index], args).ok
+                ) {
+                  bodySchema = version.body;
+                  responsesSchemas = version.responses;
+                }
+              }
+            );
+          } else {
+            bodySchema = route.contractDetails.body;
+            responsesSchemas = route.contractDetails.responses;
+          }
+
+          const discriminatedBody = bodySchema
+            ? discriminateBody(schemaValidator, bodySchema)
+            : undefined;
 
           let parsedBody;
           if (discriminatedBody) {
@@ -199,9 +273,13 @@ export function generateMcpServer<
             );
           }
 
+          if (!responsesSchemas) {
+            throw new Error('No responses schemas found');
+          }
+
           const contractContentType = discriminateResponseBodies(
             schemaValidator,
-            route.contractDetails.responses
+            responsesSchemas
           )[response.status].contentType;
           switch (
             contentTypeMap && contentTypeMap[contractContentType]

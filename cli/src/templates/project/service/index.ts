@@ -1,0 +1,1 @@
+export type { {{pascal_case_name}}SdkClient } from "./sdk";

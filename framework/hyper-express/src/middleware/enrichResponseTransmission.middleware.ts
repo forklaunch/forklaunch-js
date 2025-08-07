@@ -3,7 +3,8 @@ import {
   enrichExpressLikeSend,
   ForklaunchNextFunction,
   ForklaunchSendableData,
-  ParamsDictionary
+  ParamsDictionary,
+  VersionSchema
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { ParsedQs } from 'qs';
@@ -36,12 +37,14 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
     Record<string, unknown>,
     ParsedQs,
     Record<string, string>,
-    Record<string, unknown>
+    Record<string, unknown>,
+    string
   >,
   res: InternalResponse<
     Record<number, unknown>,
     Record<string, string>,
-    Record<string, unknown>
+    Record<string, unknown>,
+    string
   >,
   next: ForklaunchNextFunction
 ) {
@@ -73,7 +76,8 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
       ParsedQs,
       Record<string, string>,
       Record<string, string>,
-      Record<string, unknown>
+      Record<string, unknown>,
+      VersionSchema<SV, 'middleware'>
     >(
       this,
       req,
@@ -114,7 +118,8 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
       ParsedQs,
       Record<string, string>,
       Record<string, string>,
-      Record<string, unknown>
+      Record<string, unknown>,
+      VersionSchema<SV, 'middleware'>
     >(
       this,
       req,
@@ -164,7 +169,8 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
       ParsedQs,
       Record<string, string>,
       Record<string, string>,
-      Record<string, unknown>
+      Record<string, unknown>,
+      VersionSchema<SV, 'middleware'>
     >(
       this,
       req,

@@ -42,13 +42,42 @@ export class BaseCheckoutSessionService<
     tracing?: boolean;
   };
   protected enableDatabaseBackup: boolean;
+  protected readonly em: EntityManager;
+  protected readonly cache: TtlCache;
+  protected readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
+  protected readonly schemaValidator: SchemaValidator;
+  protected readonly mappers: {
+    CheckoutSessionMapper: ResponseMapperConstructor<
+      SchemaValidator,
+      Dto['CheckoutSessionMapper'],
+      Entities['CheckoutSessionMapper']
+    >;
+    CreateCheckoutSessionMapper: RequestMapperConstructor<
+      SchemaValidator,
+      Dto['CreateCheckoutSessionMapper'],
+      Entities['CreateCheckoutSessionMapper'],
+      (
+        dto: Dto['CreateCheckoutSessionMapper'],
+        em: EntityManager
+      ) => Promise<Entities['CreateCheckoutSessionMapper']>
+    >;
+    UpdateCheckoutSessionMapper: RequestMapperConstructor<
+      SchemaValidator,
+      Dto['UpdateCheckoutSessionMapper'],
+      Entities['UpdateCheckoutSessionMapper'],
+      (
+        dto: Dto['UpdateCheckoutSessionMapper'],
+        em: EntityManager
+      ) => Promise<Entities['UpdateCheckoutSessionMapper']>
+    >;
+  };
 
   constructor(
-    protected readonly em: EntityManager,
-    protected readonly cache: TtlCache,
-    protected readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-    protected readonly schemaValidator: SchemaValidator,
-    protected readonly mappers: {
+    em: EntityManager,
+    cache: TtlCache,
+    openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
+    schemaValidator: SchemaValidator,
+    mappers: {
       CheckoutSessionMapper: ResponseMapperConstructor<
         SchemaValidator,
         Dto['CheckoutSessionMapper'],
@@ -78,6 +107,11 @@ export class BaseCheckoutSessionService<
       telemetry?: TelemetryOptions;
     }
   ) {
+    this.em = em;
+    this.cache = cache;
+    this.openTelemetryCollector = openTelemetryCollector;
+    this.schemaValidator = schemaValidator;
+    this.mappers = mappers;
     this._mappers = transformIntoInternalMapper(mappers, schemaValidator);
     this.enableDatabaseBackup = options?.enableDatabaseBackup ?? false;
     this.evaluatedTelemetryOptions = options?.telemetry

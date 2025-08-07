@@ -11,35 +11,36 @@ repository = "https://github.com/forklaunch/forklaunch-js"
 [dependencies]
 anyhow = "1.0"
 base64 = "0.22.1"
-clap = { version = "4.5.21", features = ["cargo"] }
-convert_case = "0.7.1"
+clap = { version = "4.5.42", features = ["cargo"] }
+convert_case = "0.8.0"
 futures-io = "0.3.31"
 include_dir = { version = "0.7.4", features = ["glob"] }
-indexmap = { version = "2.6.0", features = ["serde"] }
-log = "0.4.22"
-oxc_allocator = "0.48.2"
-oxc_ast = { version = "0.48.2", features = ["serialize"] }
-oxc_parser = "0.48.2"
+indexmap = { version = "2.10.0", features = ["serde"] }
+log = "0.4.27"
+oxc_allocator = "0.80.0"
+oxc_ast = { version = "0.80.0", features = ["serialize"] }
+oxc_codegen = "0.80.0"
+oxc_parser = "0.80.0"
+oxc_ast_visit = "0.80.0"
 paste = "1.0.15"
-pathdiff = "0.2.2"
+pathdiff = "0.2.3"
 ramhorns = "1.0.1"
-rcgen = "0.13.2"
-reqwest = { version = "0.12.5", features = ["blocking", "native-tls-vendored"] }
-rustyline = "15.0.0"
-rustyline-derive = "0.11.0"
-serde = { version = "1.0.215", features = ["derive"] }
-serde_json = { version = "1.0.133", features = ["preserve_order"] }
+rcgen = "0.14.3"
+reqwest = { version = "0.12.22", features = ["blocking", "native-tls-vendored"] }
+rustyline = "17.0.0"
+rustyline-derive = "0.11.1"
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = { version = "1.0.142", features = ["preserve_order"] }
 serde_yml = "0.0.12"
 termcolor = "1.4.1"
-toml = "0.8.19"
+toml = "0.9.5"
 wasm-bindgen = "0.2.100"
-uuid = { version = "1.11.0", features = ["serde", "v4"] }
-oxc_codegen = "0.48.2"
+uuid = { version = "1.17.0", features = ["serde", "v4"] }
 fs_extra = "1.3.0"
 walkdir = "2.5.0"
-regex = "1.10.3"
-lazy_static = "1.4.0"
+regex = "1.11.1"
+lazy_static = "1.5.0"
 dialoguer = { version = "0.11.0", features = ["fuzzy-select"] }
 glob = "0.3.2"
-serde-envfile = "0.2.0"
-tempfile = "3.14.0"
+serde-envfile = "0.3.0"
+tempfile = "3.20.0"

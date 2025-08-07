@@ -1,8 +1,20 @@
 import {
   Prettify,
-  PrettyCamelCase,
-  TypeSafeFunction
+  TypeSafeFunction,
+  UnionToIntersection
 } from '@forklaunch/common';
+import { AnySchemaValidator } from '@forklaunch/validator';
+import { LiveSdkFunction, LiveTypeFunction } from './apiDefinition.types';
+import {
+  AuthMethodsBase,
+  Body,
+  HeadersObject,
+  Method,
+  ParamsObject,
+  QueryObject,
+  ResponsesObject,
+  VersionSchema
+} from './contractDetails.types';
 
 /**
  * Creates a type-safe fetch function based on a provided fetch map.
@@ -68,19 +80,19 @@ import {
  **/
 export type FetchFunction<FetchMap> = <
   const Path extends keyof FetchMap,
-  const Method extends keyof FetchMap[Path]
+  const Method extends keyof FetchMap[Path],
+  const Version extends keyof FetchMap[Path][Method]
 >(
   path: Path,
   ...reqInit: FetchMap[Path][Method] extends TypeSafeFunction
-    ? 'get' extends keyof FetchMap[Path]
-      ? FetchMap[Path]['get'] extends TypeSafeFunction
-        ? Parameters<FetchMap[Path]['get']>[1] extends
-            | {
-                body: unknown;
-              }
+    ? 'GET' extends keyof FetchMap[Path]
+      ? FetchMap[Path]['GET'] extends TypeSafeFunction
+        ? Parameters<FetchMap[Path]['GET']>[1] extends
+            | { body: unknown }
             | { query: unknown }
             | { params: unknown }
             | { headers: unknown }
+            | { version: unknown }
           ? [
               reqInit: Omit<Parameters<FetchMap[Path][Method]>[1], 'method'> & {
                 method: Method;
@@ -104,205 +116,390 @@ export type FetchFunction<FetchMap> = <
             method: Method;
           }
         ]
-    : []
+    : FetchMap[Path][Method] extends Record<string, TypeSafeFunction>
+      ? [
+          reqInit: Omit<
+            Parameters<FetchMap[Path][Method][Version]>[0],
+            'method' | 'version'
+          > & {
+            method: Method;
+            version: Version;
+          }
+        ]
+      : [{ method: Method }]
 ) => Promise<
   FetchMap[Path][Method] extends TypeSafeFunction
-    ? ReturnType<FetchMap[Path][Method]>
-    : never
+    ? Awaited<ReturnType<FetchMap[Path][Method]>>
+    : FetchMap[Path][Method] extends Record<string, TypeSafeFunction>
+      ? Awaited<ReturnType<FetchMap[Path][Method][Version]>>
+      : never
 >;
 
 /**
- * Creates a router SDK by combining the router's SDK with its fetch functionality.
- * This type merges the router's SDK interface with its fetch methods to create
- * a complete router client.
+ * Represents the structure of a SDK router.
  *
- * @template TRoute - A route object that must contain both `sdk` and `fetch` properties
- * @param TRoute.sdk - The SDK interface/methods for the route
- * @param TRoute.fetch - The fetch functionality for the route
- *
- * @returns A prettified object combining the SDK and fetch properties
- *
- * @example
- * ```typescript
- * type UserRoute = {
- *   sdk: { getUser: () => Promise<User>; createUser: (data: UserData) => Promise<User> };
- *   fetch: { get: (path: string) => Promise<Response> };
- * };
- *
- * type UserRouter = SdkRouter<UserRoute>;
- * // Result: {
- * //   getUser: () => Promise<User>;
- * //   createUser: (data: UserData) => Promise<User>;
- * //   fetch: { get: (path: string) => Promise<Response> };
- * // }
- * ```
+ * @property sdk - The SDK object containing all the SDK functions.
+ * @property _fetchMap - The fetch map object containing all the fetch functions.
+ * @property sdkPaths - The SDK paths object containing all the SDK paths.
  */
-export type SdkRouter<TRoute extends { sdk: unknown; fetch: unknown }> =
-  Prettify<
-    TRoute['sdk'] & {
-      fetch: TRoute['fetch'];
-    }
-  >;
+export type SdkRouter = {
+  sdk: Record<string, unknown>;
+  _fetchMap: Record<string, unknown>;
+  sdkPaths: Record<string, string>;
+};
 
 /**
- * Creates a complete SDK client from a record of route definitions.
- * Each route in the input is transformed into an SdkRouter, creating a comprehensive
- * client SDK with all routes and their associated fetch functionality.
+ * Recursive interface representing a hierarchical map of router configurations.
+ * Each entry can either be a leaf node with SDK and fetch map configurations,
+ * or a nested RouterMap for deeper routing structures.
  *
- * @template Input - A record where each key represents a route name and each value
- *                   contains the route's SDK, fetch methods, optional SDK name, and base path
- * @param Input[K].sdk - The SDK interface for route K
- * @param Input[K].fetch - The fetch functionality for route K
- * @param Input[K].sdkName - Optional custom name for the SDK (defaults to camelCase basePath)
- * @param Input[K].basePath - The base URL path for the route (used for SDK naming if sdkName not provided)
- *
- * @returns A prettified object where each route becomes an SdkRouter
+ * @template SV - The schema validator type that constrains the router structure
+ * @param SV - Must extend AnySchemaValidator to ensure type safety
  *
  * @example
  * ```typescript
- * type Routes = {
- *   users: {
- *     sdk: { getUser: () => Promise<User> };
- *     fetch: { get: (path: string) => Promise<Response> };
- *     basePath: '/api/users';
- *   };
- *   posts: {
- *     sdk: { getPost: () => Promise<Post> };
- *     fetch: { get: (path: string) => Promise<Response> };
- *     basePath: '/api/posts';
- *     sdkName: 'articles';
- *   };
- * };
- *
- * type Client = SdkClient<Routes>;
- * // Result: {
- * //   users: { getUser: () => Promise<User>; fetch: {...} };
- * //   posts: { getPost: () => Promise<Post>; fetch: {...} };
- * // }
- * ```
- */
-export type SdkClient<
-  Input extends Record<
-    string,
-    {
-      sdk: unknown;
-      fetch: unknown;
-      sdkName?: string;
-      basePath: string;
-    }
-  >
-> = Prettify<{
-  [K in keyof Input]: Prettify<SdkRouter<Input[K]>>;
-}>;
-
-/**
- * Validates and unpacks SDK client input by ensuring that each key in the input record
- * corresponds to either the route's custom `sdkName` or the PrettyCamelCase version
- * of its `basePath`. This type provides compile-time validation for SDK client configuration.
- *
- * @template Input - A record of route definitions to validate
- * @param Input[K].sdk - The SDK interface for route K
- * @param Input[K].fetch - The fetch functionality for route K
- * @param Input[K].sdkName - Optional custom SDK name that should match the key K
- * @param Input[K].basePath - Base path that when converted to PrettyCamelCase should match key K
- *
- * @returns The original Input type if valid, or 'Invalid SDK Client Input' if validation fails
- *
- * @example
- * ```typescript
- * // Valid input - key matches basePath in camelCase
- * type ValidInput = {
- *   apiUsers: {
- *     sdk: UserSdk;
- *     fetch: FetchMethods;
- *     basePath: '/api/users'; // PrettyCamelCase becomes 'apiUsers'
- *   };
- * };
- * type Result1 = UnpackSdkClientInput<ValidInput>; // Returns ValidInput
- *
- * // Valid input - key matches custom sdkName
- * type ValidInput2 = {
- *   userService: {
- *     sdk: UserSdk;
- *     fetch: FetchMethods;
- *     sdkName: 'userService';
- *     basePath: '/api/users';
- *   };
- * };
- * type Result2 = UnpackSdkClientInput<ValidInput2>; // Returns ValidInput2
- *
- * // Invalid input - key doesn't match either sdkName or camelCase basePath
- * type InvalidInput = {
- *   wrongKey: {
- *     sdk: UserSdk;
- *     fetch: FetchMethods;
- *     basePath: '/api/users'; // Should be 'apiUsers'
- *   };
- * };
- * type Result3 = UnpackSdkClientInput<InvalidInput>; // Returns 'Invalid SDK Client Input'
- * ```
- */
-export type UnpackSdkClientInput<
-  Input extends Record<
-    string,
-    {
-      sdk: unknown;
-      fetch: unknown;
-      sdkName?: string;
-      basePath: string;
-    }
-  >
-> = Prettify<
-  {
-    [K in keyof Input]: K extends Input[K]['sdkName']
-      ? Input[K]
-      : K extends PrettyCamelCase<Input[K]['basePath']>
-        ? Input[K]
-        : unknown;
-  } extends Input
-    ? Prettify<Input>
-    : 'Invalid SDK Client Input'
->;
-
-/**
- * Type alias for valid SDK client input configuration.
- * This type serves as a constraint to ensure that input to SDK client functions
- * conforms to the expected structure with required sdk, fetch, and basePath properties,
- * plus an optional sdkName property.
- *
- * @template Input - A record of route definitions that must conform to the SDK client structure
- * @param Input[K].sdk - The SDK interface containing route-specific methods
- * @param Input[K].fetch - The fetch functionality for making HTTP requests
- * @param Input[K].sdkName - Optional custom name for the SDK (if not provided, uses camelCase basePath)
- * @param Input[K].basePath - Required base URL path for the route
- *
- * @returns The input type unchanged, serving as a validation constraint
- *
- * @example
- * ```typescript
- * // Use as a constraint in function parameters
- * function createSdkClient<T extends ValidSdkClientInput<T>>(input: T): SdkClient<T> {
- *   // Function implementation
- * }
- *
- * // Valid usage
- * const validInput = {
- *   users: {
- *     sdk: { getUser: () => Promise.resolve({}) },
- *     fetch: { get: (path: string) => fetch(path) },
- *     basePath: '/api/users'
+ * const routerMap: RouterMap<ZodValidator> = {
+ *   api: {
+ *     users: {
+ *       sdk: { getUser: () => Promise.resolve({}) },
+ *       _fetchMap: { getUser: { get: () => fetch('/api/users') } }
+ *     },
+ *     posts: {
+ *       sdk: { getPosts: () => Promise.resolve([]) },
+ *       _fetchMap: { getPosts: { get: () => fetch('/api/posts') } }
+ *     }
  *   }
- * } satisfies ValidSdkClientInput<UnpackSdkClientInput<typeof validInput>>;
+ * };
  * ```
  */
-export type ValidSdkClientInput<
-  Input extends Record<
-    string,
+export type RouterMap<SV extends AnySchemaValidator> = {
+  [K: string]: SdkRouter | RouterMap<SV>;
+};
+
+/**
+ * Tail-recursive type that extracts SDK interfaces from a RouterMap structure.
+ * This version uses an accumulator pattern to avoid deep recursion and improve performance.
+ * Traverses the nested router map and collects all SDK interfaces into a flat structure.
+ *
+ * @template SV - The schema validator type
+ * @template T - The RouterMap to extract SDKs from
+ * @template Acc - The accumulator type for collecting SDK interfaces (defaults to empty object)
+ * @param SV - Must extend AnySchemaValidator
+ * @param T - Must extend RouterMap<SV>
+ * @param Acc - The accumulated SDK interfaces so far
+ *
+ * @returns A mapped type where each key corresponds to the original router structure,
+ *         but values are the extracted SDK interfaces instead of the full router configuration
+ *
+ * @example
+ * ```typescript
+ * // Given a RouterMap with nested structure
+ * type ExtractedSdk = MapToSdk<ZodValidator, typeof routerMap>;
+ * // Results in: { api: { users: { getUser: () => Promise<{}> }, posts: { getPosts: () => Promise<[]> } } }
+ * ```
+ */
+export type MapToSdk<
+  SV extends AnySchemaValidator,
+  T extends RouterMap<SV>,
+  Acc extends Record<string, unknown> = Record<string, never>
+> = {
+  [K in keyof T]: T[K] extends { sdk: infer S }
+    ? S
+    : T[K] extends RouterMap<SV>
+      ? MapToSdk<SV, T[K], Acc>
+      : never;
+};
+
+/**
+ * Tail-recursive type that extracts and flattens fetch map interfaces from a RouterMap structure.
+ * This version uses an accumulator pattern to avoid deep recursion and improve performance.
+ * Similar to MapToSdk but focuses on _fetchMap properties and merges all fetch maps into a single intersection type.
+ *
+ * @template SV - The schema validator type
+ * @template T - The RouterMap to extract fetch maps from
+ * @template Acc - The accumulator type for collecting fetch maps (defaults to empty object)
+ * @param SV - Must extend AnySchemaValidator
+ * @param T - Must extend RouterMap<SV>
+ * @param Acc - The accumulated fetch maps so far
+ *
+ * @returns An intersection type containing all fetch map interfaces from the router structure,
+ *         flattened into a single type for unified fetch functionality
+ *
+ * @example
+ * ```typescript
+ * // Given a RouterMap with nested fetch maps
+ * type ExtractedFetch = MapToFetch<ZodValidator, typeof routerMap>;
+ * // Results in: { getUser: { get: () => Promise<Response> } } & { getPosts: { get: () => Promise<Response> } }
+ * ```
+ */
+export type MapToFetch<
+  SV extends AnySchemaValidator,
+  T extends RouterMap<SV>
+> = UnionToIntersection<
+  Prettify<
     {
-      sdk: unknown;
-      fetch: unknown;
-      sdkName?: string;
-      basePath: string;
-    }
+      [K in keyof T]: T[K] extends RouterMap<SV>
+        ? MapToFetch<SV, T[K]>
+        : T[K] extends { _fetchMap: infer F }
+          ? F extends Record<string, unknown>
+            ? F
+            : never
+          : never;
+    }[keyof T]
   >
-> = Input;
+>;
+
+/**
+ * Base interface for controller entries that defines the structure
+ * of each controller method with its path, HTTP method, and contract details.
+ * This type serves as the foundation for type-safe SDK generation by ensuring
+ * all controller entries follow a consistent structure.
+ *
+ * @template SV - The schema validator type that constrains the contract details
+ *
+ * @example
+ * ```typescript
+ * const controller: Record<string, SdkHandler> = {
+ *   createUser: {
+ *     _path: '/users',
+ *     _method: 'post',
+ *     contractDetails: {
+ *       name: 'createUser',
+ *       body: { name: string, email: string },
+ *       responses: { 201: { id: string, name: string } }
+ *     }
+ *   },
+ *   getUser: {
+ *     _path: '/users/:id',
+ *     _method: 'get',
+ *     contractDetails: {
+ *       name: 'getUser',
+ *       params: { id: string },
+ *       responses: { 200: { id: string, name: string } }
+ *     }
+ *   }
+ * };
+ * ```
+ */
+export type SdkHandler = {
+  /** The HTTP path for this endpoint, must start with '/' */
+  _path?: `/${string}`;
+  /** The HTTP method for this endpoint (get, post, put, etc.) */
+  _method?: Method;
+  /** Contract details defining the request/response schema for this endpoint */
+  contractDetails: {
+    /** The name of this endpoint/method */
+    name: string;
+    /** URL parameters schema */
+    params?: unknown;
+    /** Response schemas for different status codes */
+    responses?: unknown;
+    /** Query parameters schema */
+    query?: unknown;
+    /** Request body schema */
+    body?: unknown;
+    /** Request headers schema */
+    requestHeaders?: unknown;
+    /** Response headers schema */
+    responseHeaders?: unknown;
+    /** Authentication requirements */
+    auth?: unknown;
+    /** API versioning information */
+    versions?: unknown;
+  };
+};
+
+export type MapControllerToSdk<
+  SV extends AnySchemaValidator,
+  T extends Record<string, SdkHandler>
+> = {
+  [K in keyof T]: LiveSdkFunction<
+    SV,
+    T[K]['contractDetails']['params'] extends infer Params | undefined
+      ? Params extends ParamsObject<SV>
+        ? Params
+        : ParamsObject<SV>
+      : ParamsObject<SV>,
+    T[K]['contractDetails']['responses'] extends infer Responses | undefined
+      ? Responses extends ResponsesObject<SV>
+        ? Responses
+        : ResponsesObject<SV>
+      : ResponsesObject<SV>,
+    T[K]['contractDetails']['body'] extends infer B | undefined
+      ? B extends Body<SV>
+        ? B
+        : Body<SV>
+      : Body<SV>,
+    T[K]['contractDetails']['query'] extends infer Q | undefined
+      ? Q extends QueryObject<SV>
+        ? Q
+        : QueryObject<SV>
+      : QueryObject<SV>,
+    T[K]['contractDetails']['requestHeaders'] extends
+      | infer RequestHeaders
+      | undefined
+      ? RequestHeaders extends HeadersObject<SV>
+        ? RequestHeaders
+        : HeadersObject<SV>
+      : HeadersObject<SV>,
+    T[K]['contractDetails']['responseHeaders'] extends
+      | infer ResponseHeaders
+      | undefined
+      ? ResponseHeaders extends HeadersObject<SV>
+        ? ResponseHeaders
+        : HeadersObject<SV>
+      : HeadersObject<SV>,
+    T[K]['contractDetails']['versions'] extends infer Versions | undefined
+      ? Versions extends VersionSchema<SV, Method>
+        ? Versions
+        : VersionSchema<SV, Method>
+      : VersionSchema<SV, Method>,
+    T[K]['contractDetails']['auth'] extends infer Auth | undefined
+      ? Auth extends AuthMethodsBase
+        ? Auth
+        : AuthMethodsBase
+      : AuthMethodsBase
+  >;
+};
+
+/**
+ * Extracts and constructs a LiveTypeFunction from an SdkHandler object.
+ * This type utility takes a controller entry and transforms it into a type-safe
+ * function that can be used for making HTTP requests with full type safety.
+ *
+ * @template Entry - The controller entry containing path, method, and contract details
+ * @template SV - The schema validator type that constrains the contract details
+ * @template BasePath - The base path prefix to prepend to the entry's path
+ *
+ * @returns A LiveTypeFunction with properly typed parameters and return values
+ *          based on the entry's contract details
+ *
+ * @example
+ * ```typescript
+ * type UserCreateFunction = ExtractLiveTypeFn<
+ *   { _path: '/users', _method: 'post', contractDetails: { body: { name: string } } },
+ *   SchemaValidator,
+ *   '/api/v1'
+ * >;
+ * // Results in: (path: '/api/v1/users', options: { body: { name: string } }) => Promise<...>
+ * ```
+ */
+export type ExtractLiveTypeFn<
+  Entry extends SdkHandler,
+  SV extends AnySchemaValidator,
+  BasePath extends `/${string}`
+> = LiveTypeFunction<
+  SV,
+  Entry['_path'] extends infer Path | undefined
+    ? Path extends `/${string}`
+      ? `${BasePath}${Path}`
+      : never
+    : never,
+  Entry['contractDetails']['params'] extends infer Params | undefined
+    ? Params extends ParamsObject<SV>
+      ? Params
+      : ParamsObject<SV>
+    : ParamsObject<SV>,
+  Entry['contractDetails']['responses'] extends infer Responses | undefined
+    ? Responses extends ResponsesObject<SV>
+      ? Responses
+      : ResponsesObject<SV>
+    : ResponsesObject<SV>,
+  Entry['contractDetails']['body'] extends infer B | undefined
+    ? B extends Body<SV>
+      ? B
+      : Body<SV>
+    : Body<SV>,
+  Entry['contractDetails']['query'] extends infer Q | undefined
+    ? Q extends QueryObject<SV>
+      ? Q
+      : QueryObject<SV>
+    : QueryObject<SV>,
+  Entry['contractDetails']['requestHeaders'] extends
+    | infer RequestHeaders
+    | undefined
+    ? RequestHeaders extends HeadersObject<SV>
+      ? RequestHeaders
+      : HeadersObject<SV>
+    : HeadersObject<SV>,
+  Entry['contractDetails']['responseHeaders'] extends
+    | infer ResponseHeaders
+    | undefined
+    ? ResponseHeaders extends HeadersObject<SV>
+      ? ResponseHeaders
+      : HeadersObject<SV>
+    : HeadersObject<SV>,
+  Entry['_method'] extends Method ? Entry['_method'] : never,
+  Entry['contractDetails']['versions'] extends infer Versions | undefined
+    ? Versions extends VersionSchema<SV, Method>
+      ? Versions
+      : VersionSchema<SV, Method>
+    : VersionSchema<SV, Method>,
+  Entry['contractDetails']['auth'] extends infer Auth | undefined
+    ? Auth extends AuthMethodsBase
+      ? Auth
+      : AuthMethodsBase
+    : AuthMethodsBase
+>;
+
+/**
+ * Transforms a controller object into a fetch map structure that provides
+ * type-safe access to HTTP endpoints. This type creates a discriminated union
+ * where each path maps to its specific HTTP methods, ensuring that different
+ * methods for the same path are properly discriminated rather than unioned.
+ *
+ * @template T - The controller object type containing all endpoint definitions
+ * @template SV - The schema validator type that constrains the contract details
+ * @template RouterBasePath - The base path prefix for the router
+ *
+ * @returns A fetch map structure where:
+ *          - Keys are full paths (basePath + entry path)
+ *          - Values are records mapping HTTP methods to their corresponding LiveTypeFunctions
+ *          - Each method is properly discriminated with its own contract details
+ *
+ * @example
+ * ```typescript
+ * const controller = {
+ *   createUser: { _path: '/users', _method: 'post', contractDetails: { body: { name: string } } },
+ *   getUser: { _path: '/users/:id', _method: 'get', contractDetails: { params: { id: string } } },
+ *   updateUser: { _path: '/users/:id', _method: 'put', contractDetails: { body: { name: string } } }
+ * } as const;
+ *
+ * type FetchMap = ToFetchMap<typeof controller, SchemaValidator, '/api/v1'>;
+ * // Results in:
+ * // {
+ * //   '/api/v1/users': {
+ * //     POST: LiveTypeFunction<...>, // from createUser
+ * //   },
+ * //   '/api/v1/users/:id': {
+ * //     GET: LiveTypeFunction<...>,  // from getUser
+ * //     PUT: LiveTypeFunction<...>   // from updateUser
+ * //   }
+ * // }
+ * ```
+ */
+export type ToFetchMap<
+  T extends Record<string, SdkHandler>,
+  SV extends AnySchemaValidator,
+  RouterBasePath extends `/${string}`
+> = {
+  [K in keyof T as T[K]['_path'] extends infer P | undefined
+    ? P extends `/${string}`
+      ? `${RouterBasePath}${P}`
+      : never
+    : never]: {
+    [M in T[K]['_method'] as M extends Method
+      ? Uppercase<M>
+      : never]: ExtractLiveTypeFn<
+      Extract<
+        T[K],
+        {
+          _path: T[K]['_path'];
+          _method: M;
+        }
+      >,
+      SV,
+      RouterBasePath
+    >;
+  };
+};

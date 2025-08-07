@@ -19,7 +19,8 @@ import {
   ParamsObject,
   QueryObject,
   ResponsesObject,
-  SchemaAuthMethods
+  SchemaAuthMethods,
+  VersionSchema
 } from './contractDetails.types';
 import { ConstrainedForklaunchRouter } from './router.types';
 import { TypedHandler } from './typedHandler.types';
@@ -34,7 +35,7 @@ export interface LiveTypeRouteDefinition<
   BaseResponse,
   NextFunction,
   ChainableRouter extends {
-    fetchMap: object;
+    _fetchMap: object;
     sdk: object;
   }
 > {
@@ -49,12 +50,14 @@ export interface LiveTypeRouteDefinition<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    VersionedApi extends VersionSchema<SV, ContractMethod>,
     Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -71,21 +74,22 @@ export interface LiveTypeRouteDefinition<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
       Auth
     >
   ): ChainableRouter & {
-    fetchMap: Prettify<
-      ChainableRouter['fetchMap'] extends Record<
+    _fetchMap: Prettify<
+      ChainableRouter['_fetchMap'] extends Record<
         SanitizePathSlashes<`${BasePath}${Path}`>,
         unknown
       >
-        ? ChainableRouter['fetchMap'] &
+        ? ChainableRouter['_fetchMap'] &
             Record<
               SanitizePathSlashes<`${BasePath}${Path}`>,
-              ChainableRouter['fetchMap'][SanitizePathSlashes<`${BasePath}${Path}`>] &
+              ChainableRouter['_fetchMap'][SanitizePathSlashes<`${BasePath}${Path}`>] &
                 Record<
                   Uppercase<ContractMethod>,
                   LiveTypeFunction<
@@ -98,11 +102,12 @@ export interface LiveTypeRouteDefinition<
                     ReqHeaders,
                     ResHeaders,
                     ContractMethod,
+                    VersionedApi,
                     Auth
                   >
                 >
             >
-        : ChainableRouter['fetchMap'] &
+        : ChainableRouter['_fetchMap'] &
             Record<
               SanitizePathSlashes<`${BasePath}${Path}`>,
               Record<
@@ -117,6 +122,7 @@ export interface LiveTypeRouteDefinition<
                   ReqHeaders,
                   ResHeaders,
                   ContractMethod,
+                  VersionedApi,
                   Auth
                 >
               >
@@ -134,6 +140,7 @@ export interface LiveTypeRouteDefinition<
             ReqQuery,
             ReqHeaders,
             ResHeaders,
+            VersionedApi,
             Auth
           >
         >
@@ -151,12 +158,14 @@ export interface LiveTypeRouteDefinition<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    VersionedApi extends VersionSchema<SV, ContractMethod>,
     Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -170,6 +179,7 @@ export interface LiveTypeRouteDefinition<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -184,6 +194,7 @@ export interface LiveTypeRouteDefinition<
         ReqHeaders,
         ResHeaders,
         LocalsObj,
+        VersionedApi,
         BaseRequest,
         BaseResponse,
         NextFunction
@@ -200,6 +211,7 @@ export interface LiveTypeRouteDefinition<
         ReqHeaders,
         ResHeaders,
         LocalsObj,
+        VersionedApi,
         BaseRequest,
         BaseResponse,
         NextFunction,
@@ -207,15 +219,15 @@ export interface LiveTypeRouteDefinition<
       >
     ]
   ): ChainableRouter & {
-    fetchMap: Prettify<
-      ChainableRouter['fetchMap'] extends Record<
+    _fetchMap: Prettify<
+      ChainableRouter['_fetchMap'] extends Record<
         SanitizePathSlashes<`${BasePath}${Path}`>,
         unknown
       >
-        ? ChainableRouter['fetchMap'] &
+        ? ChainableRouter['_fetchMap'] &
             Record<
               SanitizePathSlashes<`${BasePath}${Path}`>,
-              ChainableRouter['fetchMap'][SanitizePathSlashes<`${BasePath}${Path}`>] &
+              ChainableRouter['_fetchMap'][SanitizePathSlashes<`${BasePath}${Path}`>] &
                 Record<
                   Uppercase<ContractMethod>,
                   LiveTypeFunction<
@@ -228,11 +240,12 @@ export interface LiveTypeRouteDefinition<
                     ReqHeaders,
                     ResHeaders,
                     ContractMethod,
+                    VersionedApi,
                     Auth
                   >
                 >
             >
-        : ChainableRouter['fetchMap'] &
+        : ChainableRouter['_fetchMap'] &
             Record<
               SanitizePathSlashes<`${BasePath}${Path}`>,
               Record<
@@ -247,6 +260,7 @@ export interface LiveTypeRouteDefinition<
                   ReqHeaders,
                   ResHeaders,
                   ContractMethod,
+                  VersionedApi,
                   Auth
                 >
               >
@@ -264,6 +278,7 @@ export interface LiveTypeRouteDefinition<
             ReqQuery,
             ReqHeaders,
             ResHeaders,
+            VersionedApi,
             Auth
           >
         >
@@ -280,12 +295,14 @@ export interface LiveTypeRouteDefinition<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    VersionedApi extends VersionSchema<SV, ContractMethod>,
     Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -301,6 +318,7 @@ export interface LiveTypeRouteDefinition<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
+      VersionedApi,
       BaseRequest,
       Auth
     >,
@@ -313,20 +331,21 @@ export interface LiveTypeRouteDefinition<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction
     >[]
   ): ChainableRouter & {
-    fetchMap: Prettify<
-      ChainableRouter['fetchMap'] extends Record<
+    _fetchMap: Prettify<
+      ChainableRouter['_fetchMap'] extends Record<
         SanitizePathSlashes<`${BasePath}${Path}`>,
         unknown
       >
-        ? ChainableRouter['fetchMap'] &
+        ? ChainableRouter['_fetchMap'] &
             Record<
               SanitizePathSlashes<`${BasePath}${Path}`>,
-              ChainableRouter['fetchMap'][SanitizePathSlashes<`${BasePath}${Path}`>] &
+              ChainableRouter['_fetchMap'][SanitizePathSlashes<`${BasePath}${Path}`>] &
                 Record<
                   Uppercase<ContractMethod>,
                   LiveTypeFunction<
@@ -339,11 +358,12 @@ export interface LiveTypeRouteDefinition<
                     ReqHeaders,
                     ResHeaders,
                     ContractMethod,
+                    VersionedApi,
                     Auth
                   >
                 >
             >
-        : ChainableRouter['fetchMap'] &
+        : ChainableRouter['_fetchMap'] &
             Record<
               SanitizePathSlashes<`${BasePath}${Path}`>,
               Record<
@@ -358,6 +378,7 @@ export interface LiveTypeRouteDefinition<
                   ReqHeaders,
                   ResHeaders,
                   ContractMethod,
+                  VersionedApi,
                   Auth
                 >
               >
@@ -375,6 +396,7 @@ export interface LiveTypeRouteDefinition<
             ReqQuery,
             ReqHeaders,
             ResHeaders,
+            VersionedApi,
             Auth
           >
         >
@@ -406,12 +428,14 @@ export interface TypedMiddlewareDefinition<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    VersionedApi extends VersionSchema<SV, 'middleware'>,
     Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -428,6 +452,7 @@ export interface TypedMiddlewareDefinition<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -445,12 +470,14 @@ export interface TypedMiddlewareDefinition<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    VersionedApi extends VersionSchema<SV, 'middleware'>,
     Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -466,6 +493,7 @@ export interface TypedMiddlewareDefinition<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -484,12 +512,14 @@ export interface TypedMiddlewareDefinition<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    VersionedApi extends VersionSchema<SV, 'middleware'>,
     Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -503,6 +533,7 @@ export interface TypedMiddlewareDefinition<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -517,6 +548,7 @@ export interface TypedMiddlewareDefinition<
         ReqHeaders,
         ResHeaders,
         LocalsObj,
+        VersionedApi,
         BaseRequest,
         BaseResponse,
         NextFunction
@@ -533,6 +565,7 @@ export interface TypedMiddlewareDefinition<
         ReqHeaders,
         ResHeaders,
         LocalsObj,
+        VersionedApi,
         BaseRequest,
         BaseResponse,
         NextFunction,
@@ -551,12 +584,14 @@ export interface TypedMiddlewareDefinition<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    VersionedApi extends VersionSchema<SV, 'middleware'>,
     Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -569,6 +604,7 @@ export interface TypedMiddlewareDefinition<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -583,6 +619,7 @@ export interface TypedMiddlewareDefinition<
         ReqHeaders,
         ResHeaders,
         LocalsObj,
+        VersionedApi,
         BaseRequest,
         BaseResponse,
         NextFunction
@@ -599,6 +636,7 @@ export interface TypedMiddlewareDefinition<
         ReqHeaders,
         ResHeaders,
         LocalsObj,
+        VersionedApi,
         BaseRequest,
         BaseResponse,
         NextFunction,
@@ -617,12 +655,14 @@ export interface TypedMiddlewareDefinition<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    VersionedApi extends VersionSchema<SV, 'middleware'>,
     Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -638,6 +678,7 @@ export interface TypedMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
+      VersionedApi,
       BaseRequest,
       Auth
     >,
@@ -650,6 +691,7 @@ export interface TypedMiddlewareDefinition<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -663,6 +705,7 @@ export interface TypedMiddlewareDefinition<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -679,12 +722,14 @@ export interface TypedMiddlewareDefinition<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    VersionedApi extends VersionSchema<SV, 'middleware'>,
     Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -699,6 +744,7 @@ export interface TypedMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
+      VersionedApi,
       BaseRequest,
       Auth
     >,
@@ -711,6 +757,7 @@ export interface TypedMiddlewareDefinition<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -724,6 +771,7 @@ export interface TypedMiddlewareDefinition<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -733,7 +781,7 @@ export interface TypedMiddlewareDefinition<
 
 export interface TypedNestableMiddlewareDefinition<
   ChainableRouter extends {
-    fetchMap: object;
+    _fetchMap: object;
     basePath: `/${string}`;
     sdk: Record<string, unknown>;
   },
@@ -759,11 +807,11 @@ export interface TypedNestableMiddlewareDefinition<
   <Router extends ConstrainedForklaunchRouter<SV, RouterHandler>>(
     router: Router
   ): ChainableRouter & {
-    fetchMap: Prettify<
-      ChainableRouter['fetchMap'] & {
-        [Key in keyof Router['fetchMap'] as Key extends string
+    _fetchMap: Prettify<
+      ChainableRouter['_fetchMap'] & {
+        [Key in keyof Router['_fetchMap'] as Key extends string
           ? SanitizePathSlashes<`${ChainableRouter['basePath']}${Key}`>
-          : never]: Router['fetchMap'][Key];
+          : never]: Router['_fetchMap'][Key];
       }
     >;
     sdk: Prettify<
@@ -781,11 +829,11 @@ export interface TypedNestableMiddlewareDefinition<
     middlewareOrRouter: RouterHandler | Router,
     ...otherMiddlewareOrRouters: [...(RouterHandler | Router)[]]
   ): ChainableRouter & {
-    fetchMap: Prettify<
-      ChainableRouter['fetchMap'] & {
-        [Key in keyof Router['fetchMap'] as Key extends string
+    _fetchMap: Prettify<
+      ChainableRouter['_fetchMap'] & {
+        [Key in keyof Router['_fetchMap'] as Key extends string
           ? SanitizePathSlashes<`${ChainableRouter['basePath']}${Key}`>
-          : never]: Router['fetchMap'][Key];
+          : never]: Router['_fetchMap'][Key];
       }
     >;
     sdk: Prettify<
@@ -803,11 +851,11 @@ export interface TypedNestableMiddlewareDefinition<
     path: Router['basePath'],
     router: Router
   ): ChainableRouter & {
-    fetchMap: Prettify<
-      ChainableRouter['fetchMap'] & {
-        [Key in keyof Router['fetchMap'] as Key extends string
+    _fetchMap: Prettify<
+      ChainableRouter['_fetchMap'] & {
+        [Key in keyof Router['_fetchMap'] as Key extends string
           ? SanitizePathSlashes<`${ChainableRouter['basePath']}${Key}`>
-          : never]: Router['fetchMap'][Key];
+          : never]: Router['_fetchMap'][Key];
       }
     >;
     sdk: Prettify<
@@ -831,6 +879,7 @@ export interface TypedNestableMiddlewareDefinition<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    VersionedApi extends VersionSchema<SV, 'middleware'>,
     Router extends ConstrainedForklaunchRouter<SV, RouterHandler>,
     Auth extends SchemaAuthMethods<
       SV,
@@ -838,6 +887,7 @@ export interface TypedNestableMiddlewareDefinition<
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -854,6 +904,7 @@ export interface TypedNestableMiddlewareDefinition<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction
@@ -870,6 +921,7 @@ export interface TypedNestableMiddlewareDefinition<
             ReqHeaders,
             ResHeaders,
             LocalsObj,
+            VersionedApi,
             BaseRequest,
             BaseResponse,
             NextFunction
@@ -888,6 +940,7 @@ export interface TypedNestableMiddlewareDefinition<
         ReqHeaders,
         ResHeaders,
         LocalsObj,
+        VersionedApi,
         BaseRequest,
         BaseResponse,
         NextFunction,
@@ -895,11 +948,11 @@ export interface TypedNestableMiddlewareDefinition<
       >
     ]
   ): ChainableRouter & {
-    fetchMap: Prettify<
-      ChainableRouter['fetchMap'] & {
-        [Key in keyof Router['fetchMap'] as Key extends string
+    _fetchMap: Prettify<
+      ChainableRouter['_fetchMap'] & {
+        [Key in keyof Router['_fetchMap'] as Key extends string
           ? SanitizePathSlashes<`${ChainableRouter['basePath']}${Key}`>
-          : never]: Router['fetchMap'][Key];
+          : never]: Router['_fetchMap'][Key];
       }
     >;
     sdk: Prettify<
@@ -923,6 +976,7 @@ export interface TypedNestableMiddlewareDefinition<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    VersionedApi extends VersionSchema<SV, 'middleware'>,
     Router extends ConstrainedForklaunchRouter<SV, RouterHandler>,
     Auth extends SchemaAuthMethods<
       SV,
@@ -930,6 +984,7 @@ export interface TypedNestableMiddlewareDefinition<
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -943,6 +998,7 @@ export interface TypedNestableMiddlewareDefinition<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction
@@ -959,6 +1015,7 @@ export interface TypedNestableMiddlewareDefinition<
             ReqHeaders,
             ResHeaders,
             LocalsObj,
+            VersionedApi,
             BaseRequest,
             BaseResponse,
             NextFunction
@@ -977,6 +1034,7 @@ export interface TypedNestableMiddlewareDefinition<
         ReqHeaders,
         ResHeaders,
         LocalsObj,
+        VersionedApi,
         BaseRequest,
         BaseResponse,
         NextFunction,
@@ -984,11 +1042,11 @@ export interface TypedNestableMiddlewareDefinition<
       >
     ]
   ): ChainableRouter & {
-    fetchMap: Prettify<
-      ChainableRouter['fetchMap'] & {
-        [Key in keyof Router['fetchMap'] as Key extends string
+    _fetchMap: Prettify<
+      ChainableRouter['_fetchMap'] & {
+        [Key in keyof Router['_fetchMap'] as Key extends string
           ? SanitizePathSlashes<`${ChainableRouter['basePath']}${Key}`>
-          : never]: Router['fetchMap'][Key];
+          : never]: Router['_fetchMap'][Key];
       }
     >;
     sdk: Prettify<
@@ -1013,12 +1071,14 @@ export interface TypedNestableMiddlewareDefinition<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     Router extends ConstrainedForklaunchRouter<SV, RouterHandler>,
+    VersionedApi extends VersionSchema<SV, 'middleware'>,
     Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -1036,6 +1096,7 @@ export interface TypedNestableMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
+      VersionedApi,
       BaseRequest,
       Auth
     >,
@@ -1049,6 +1110,7 @@ export interface TypedNestableMiddlewareDefinition<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction
@@ -1064,6 +1126,7 @@ export interface TypedNestableMiddlewareDefinition<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction
@@ -1071,11 +1134,11 @@ export interface TypedNestableMiddlewareDefinition<
       | Router
     )[]
   ): ChainableRouter & {
-    fetchMap: Prettify<
-      ChainableRouter['fetchMap'] & {
-        [Key in keyof Router['fetchMap'] as Key extends string
+    _fetchMap: Prettify<
+      ChainableRouter['_fetchMap'] & {
+        [Key in keyof Router['_fetchMap'] as Key extends string
           ? SanitizePathSlashes<`${ChainableRouter['basePath']}${Key}`>
-          : never]: Router['fetchMap'][Key];
+          : never]: Router['_fetchMap'][Key];
       }
     >;
     sdk: Prettify<
@@ -1100,12 +1163,14 @@ export interface TypedNestableMiddlewareDefinition<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     Router extends ConstrainedForklaunchRouter<SV, RouterHandler>,
+    VersionedApi extends VersionSchema<SV, 'middleware'>,
     Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
+      VersionedApi,
       BaseRequest
     >
   >(
@@ -1120,6 +1185,7 @@ export interface TypedNestableMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
+      VersionedApi,
       BaseRequest,
       Auth
     >,
@@ -1133,6 +1199,7 @@ export interface TypedNestableMiddlewareDefinition<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction
@@ -1148,6 +1215,7 @@ export interface TypedNestableMiddlewareDefinition<
           ReqHeaders,
           ResHeaders,
           LocalsObj,
+          VersionedApi,
           BaseRequest,
           BaseResponse,
           NextFunction
@@ -1155,11 +1223,11 @@ export interface TypedNestableMiddlewareDefinition<
       | Router
     )[]
   ): ChainableRouter & {
-    fetchMap: Prettify<
-      ChainableRouter['fetchMap'] & {
-        [Key in keyof Router['fetchMap'] as Key extends string
+    _fetchMap: Prettify<
+      ChainableRouter['_fetchMap'] & {
+        [Key in keyof Router['_fetchMap'] as Key extends string
           ? SanitizePathSlashes<`${ChainableRouter['basePath']}${Key}`>
-          : never]: Router['fetchMap'][Key];
+          : never]: Router['_fetchMap'][Key];
       }
     >;
     sdk: Prettify<
@@ -1186,6 +1254,7 @@ export type ContractDetailsOrMiddlewareOrTypedHandler<
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
+  VersionedApi extends VersionSchema<SV, ContractMethod>,
   BaseRequest,
   BaseResponse,
   NextFunction,
@@ -1195,6 +1264,7 @@ export type ContractDetailsOrMiddlewareOrTypedHandler<
     ReqBody,
     ReqQuery,
     ReqHeaders,
+    VersionedApi,
     BaseRequest
   >
 > =
@@ -1209,6 +1279,7 @@ export type ContractDetailsOrMiddlewareOrTypedHandler<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
+      VersionedApi,
       BaseRequest,
       Auth
     >
@@ -1221,6 +1292,7 @@ export type ContractDetailsOrMiddlewareOrTypedHandler<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -1237,6 +1309,7 @@ export type ContractDetailsOrMiddlewareOrTypedHandler<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -1255,6 +1328,7 @@ export type MiddlewareOrMiddlewareWithTypedHandler<
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
+  VersionedApi extends VersionSchema<SV, ContractMethod>,
   BaseRequest,
   BaseResponse,
   NextFunction,
@@ -1264,6 +1338,7 @@ export type MiddlewareOrMiddlewareWithTypedHandler<
     ReqBody,
     ReqQuery,
     ReqHeaders,
+    VersionedApi,
     BaseRequest
   >
 > =
@@ -1276,6 +1351,7 @@ export type MiddlewareOrMiddlewareWithTypedHandler<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -1292,6 +1368,7 @@ export type MiddlewareOrMiddlewareWithTypedHandler<
       ReqHeaders,
       ResHeaders,
       LocalsObj,
+      VersionedApi,
       BaseRequest,
       BaseResponse,
       NextFunction,

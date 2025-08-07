@@ -38,6 +38,7 @@ import {
   void_
 } from '@forklaunch/validator/zod';
 
+export const schemaValidator = SchemaValidator();
 export type SchemaValidator = ReturnType<typeof SchemaValidator>;
 
 export {

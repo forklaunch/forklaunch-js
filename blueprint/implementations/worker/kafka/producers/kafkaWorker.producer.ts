@@ -6,11 +6,12 @@ export class KafkaWorkerProducer<
   Options extends KafkaWorkerOptions
 > {
   private producer;
+  private readonly queueName: string;
+  private readonly options: Options;
 
-  constructor(
-    private readonly queueName: string,
-    private readonly options: Options
-  ) {
+  constructor(queueName: string, options: Options) {
+    this.queueName = queueName;
+    this.options = options;
     const kafka = new Kafka({
       clientId: this.options.clientId,
       brokers: this.options.brokers

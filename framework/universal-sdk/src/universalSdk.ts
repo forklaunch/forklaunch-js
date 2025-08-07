@@ -29,7 +29,7 @@ export class UniversalSdk {
     private contentTypeParserMap:
       | Record<string, ResponseContentParserType>
       | undefined,
-    private registryOpenApiJson: OpenAPIObject | undefined,
+    private registryOpenApiJson: Record<string, OpenAPIObject> | undefined,
     private registryOpenApiHash: string | undefined,
     private sdkPathMap: SdkPathMap | undefined
   ) {}
@@ -86,6 +86,8 @@ export class UniversalSdk {
         | 'options'
         | 'head'
         | 'trace';
+    } & {
+      version?: string;
     }
   ): Promise<ResponseType> {
     if (!this.host) {
@@ -104,7 +106,12 @@ export class UniversalSdk {
       this.sdkPathMap = refreshResult.sdkPathMap;
     }
 
-    return this.execute(path, request?.method ?? 'get', request);
+    return this.execute(
+      path,
+      request?.method ?? 'get',
+      request?.version ? `v${request.version}` : 'latest',
+      request
+    );
   }
 
   async executeSdkCall(
@@ -143,9 +150,10 @@ export class UniversalSdk {
     if (fullSdkPath.length === 0) {
       throw new Error(`Sdk path not found: ${sdkPath}`);
     }
-    const { method, path } = this.sdkPathMap?.[fullSdkPath.join('.')] || {};
+    const { method, path, version } =
+      this.sdkPathMap?.[fullSdkPath.join('.')] || {};
 
-    return this.execute(path, method, request);
+    return this.execute(path, method, version, request);
   }
 
   /**
@@ -167,6 +175,7 @@ export class UniversalSdk {
       | 'options'
       | 'head'
       | 'trace',
+    version: string,
     request?: RequestType
   ): Promise<ResponseType> {
     const { params, body, query, headers } = request || {};
@@ -252,9 +261,11 @@ export class UniversalSdk {
 
     const responseOpenApi =
       path != null && method != null
-        ? this.registryOpenApiJson?.paths?.[openApiCompliantPath(path)]?.[
-            method?.toLowerCase() as typeof method
-          ]?.responses?.[response.status]
+        ? this.registryOpenApiJson?.[version]?.paths?.[
+            openApiCompliantPath(path)
+          ]?.[method?.toLowerCase() as typeof method]?.responses?.[
+            response.status
+          ]
         : null;
 
     if (responseOpenApi == null) {
