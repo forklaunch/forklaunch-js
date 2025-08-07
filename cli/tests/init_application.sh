@@ -23,6 +23,7 @@ test_frameworks=("vitest" "jest")
 licenses=("Mozilla-2.0")
 
 
+
 for database in "${databases[@]}"; do
   for formatter in "${formatters[@]}"; do
     for linter in "${linters[@]}"; do
@@ -38,7 +39,10 @@ for database in "${databases[@]}"; do
                 cache_name="application-${validator}-${framework}-${runtime}"
                 app_name="${cache_name}-${database}-${linter}-${formatter}-${test_framework}-${license_name}"
 
+                
+                # Test current directory scenario
                 RUST_BACKTRACE=1 cargo run --release init application "$app_name" \
+                    --path "." \
                     -d "$database" \
                     -v "$validator" \
                     -f "$formatter" \
@@ -50,7 +54,7 @@ for database in "${databases[@]}"; do
                     -m "iam-base" \
                     -D "Test application" \
                     -A "Rohin Bhargava" \
-                    -L "$license" 
+                    -L "$license"
 
                 if grep -Fxq "$cache_name" "$CACHE_FILE"; then
                     continue
