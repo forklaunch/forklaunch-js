@@ -86,7 +86,8 @@ impl CliCommand for ModuleCommand {
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
-
+        
+        // base path should be the application path
         let base_path_input = prompt_base_path(
             &mut line_editor,
             &mut stdout,
@@ -148,6 +149,38 @@ impl CliCommand for ModuleCommand {
         .parse()?;
 
         let dryrun = matches.get_flag("dryrun");
+
+        // Default output path should be src/modules/(module_name)
+        let src_path = base_path.join("src");
+        let destination_path = if src_path.exists() && src_path.is_dir() {
+            src_path
+                .join("modules")
+        } else {
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+            writeln!(
+                stdout,
+                "No 'src' folder in project root. Please confirm where module will be initialized."
+            )?;
+            stdout.reset()?;
+            let temp_path: String = prompt_with_validation(
+                &mut line_editor,
+                &mut stdout,
+                "destination_path",
+                matches,
+                "Confirm where module will be initialized:",
+                Some(&["src/modules", "modules"]),
+                |input| {
+                    let path = Path::new(&input);
+                    if let Some(parent) = path.parent() {
+                        parent.exists() || parent.to_str().is_some()
+                    } else {
+                        false
+                    }
+                },
+                |_| "Invalid path. Please provide a valid destination path.".to_string(),
+            )?;
+            Path::new(&temp_path).to_path_buf()
+        };
 
         let name = existing_manifest_data.app_name.clone();
 
@@ -233,7 +266,7 @@ impl CliCommand for ModuleCommand {
                 .join(&module.metadata().exclusive_files.unwrap().first().unwrap())
                 .to_string_lossy()
                 .to_string(),
-            output_path: base_path
+            output_path: destination_path
                 .join(get_service_module_name(&module))
                 .to_string_lossy()
                 .to_string(),
