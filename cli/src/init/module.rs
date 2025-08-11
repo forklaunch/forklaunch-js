@@ -96,11 +96,12 @@ impl CliCommand for ModuleCommand {
             &BasePathType::Init,
         )?;
         let base_path = Path::new(&base_path_input);
+        println!("00: base_path: {:?}", base_path);
 
         let config_path = Path::new(&base_path)
             .join(".forklaunch")
             .join("manifest.toml");
-
+        println!("01: config_path: {:?}", config_path);
         let existing_manifest_data = toml::from_str::<ApplicationManifestData>(
             &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
@@ -179,9 +180,9 @@ impl CliCommand for ModuleCommand {
                 },
                 |_| "Invalid path. Please provide a valid destination path.".to_string(),
             )?;
-            Path::new(&temp_path).to_path_buf()
+            base_path.join(Path::new(&temp_path)).to_path_buf()
         };
-
+        println!("02: destination_path: {:?}", destination_path);
         let name = existing_manifest_data.app_name.clone();
 
         let mut service_data = ServiceManifestData {
@@ -272,21 +273,22 @@ impl CliCommand for ModuleCommand {
                 .to_string(),
             module_id: Some(module.clone()),
         };
+        println!("03: template_dir: {:?}", template_dir);
 
         let mut rendered_templates = vec![];
-
+        println!("04: config_path: {:?}", config_path);
         rendered_templates.push(RenderedTemplate {
             path: config_path.clone(),
             content: manifest_data,
             context: Some(ERROR_FAILED_TO_WRITE_MANIFEST.to_string()),
         });
-
+        println!("docker-compose.yaml: {:?}", base_path.join("docker-compose.yaml"));
         rendered_templates.push(RenderedTemplate {
             path: base_path.join("docker-compose.yaml"),
             content: add_service_definition_to_docker_compose(&service_data, base_path, None)?,
             context: Some(ERROR_FAILED_TO_WRITE_DOCKER_COMPOSE.to_string()),
         });
-
+        println!("05: template_dir: {:?}", template_dir);
         rendered_templates.extend(generate_with_template(
             None,
             &template_dir,
@@ -296,10 +298,11 @@ impl CliCommand for ModuleCommand {
             &vec![],
             dryrun,
         )?);
-
+        println!("06 destination_path: {:?}", destination_path);
+        println!("06 service_name: {:?}", get_service_module_name(&module));
         rendered_templates.push(generate_service_package_json(
             &service_data,
-            &base_path.join(get_service_module_name(&module)),
+            &destination_path.join(get_service_module_name(&module)),
             None,
             None,
             None,

@@ -103,7 +103,8 @@ fn generate_basic_service(
     let ignore_files = vec![];
     let ignore_dirs = vec![];
     let preserve_files = vec![];
-
+    println!("service:00: template_dir: {:?}", template_dir);
+    println!("service:00: base_path: {:?}", base_path);
     let mut rendered_templates = generate_with_template(
         None,
         &template_dir,
@@ -146,7 +147,8 @@ fn generate_basic_service(
             context: Some(ERROR_FAILED_TO_UPDATE_DOCKERFILE.to_string()),
         });
     }
-
+    println!("service:01: template_dir: {:?}", template_dir);
+    println!("service:01: base_path: {:?}", base_path);
     add_project_to_universal_sdk(
         &mut rendered_templates,
         base_path,
@@ -157,6 +159,8 @@ fn generate_basic_service(
     write_rendered_templates(&rendered_templates, dryrun, stdout)
         .with_context(|| ERROR_FAILED_TO_WRITE_SERVICE_FILES)?;
 
+    println!("service:02: template_dir: {:?}", template_dir);
+    println!("service:02: base_path: {:?}", base_path);
     generate_symlinks(
         Some(base_path),
         &Path::new(&template_dir.output_path),
