@@ -20,6 +20,7 @@ import {
   QueryObject,
   ResponsesObject,
   SchemaAuthMethods,
+  SessionObject,
   VersionSchema
 } from './contractDetails.types';
 import { ConstrainedForklaunchRouter } from './router.types';
@@ -50,6 +51,7 @@ export interface LiveTypeRouteDefinition<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    Session extends SessionObject<SV>,
     VersionedApi extends VersionSchema<SV, ContractMethod>,
     Auth extends SchemaAuthMethods<
       SV,
@@ -58,6 +60,7 @@ export interface LiveTypeRouteDefinition<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
+      Session,
       BaseRequest
     >
   >(
@@ -75,6 +78,7 @@ export interface LiveTypeRouteDefinition<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      Session,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -158,6 +162,7 @@ export interface LiveTypeRouteDefinition<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
+    Session extends SessionObject<SV>,
     VersionedApi extends VersionSchema<SV, ContractMethod>,
     Auth extends SchemaAuthMethods<
       SV,
@@ -166,6 +171,7 @@ export interface LiveTypeRouteDefinition<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
+      Session,
       BaseRequest
     >
   >(
@@ -180,6 +186,7 @@ export interface LiveTypeRouteDefinition<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      Session,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -195,6 +202,7 @@ export interface LiveTypeRouteDefinition<
         ResHeaders,
         LocalsObj,
         VersionedApi,
+        Session,
         BaseRequest,
         BaseResponse,
         NextFunction
@@ -212,6 +220,7 @@ export interface LiveTypeRouteDefinition<
         ResHeaders,
         LocalsObj,
         VersionedApi,
+        Session,
         BaseRequest,
         BaseResponse,
         NextFunction,
@@ -1255,6 +1264,7 @@ export type ContractDetailsOrMiddlewareOrTypedHandler<
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
   VersionedApi extends VersionSchema<SV, ContractMethod>,
+  Session extends SessionObject<SV>,
   BaseRequest,
   BaseResponse,
   NextFunction,
@@ -1265,6 +1275,7 @@ export type ContractDetailsOrMiddlewareOrTypedHandler<
     ReqQuery,
     ReqHeaders,
     VersionedApi,
+    Session,
     BaseRequest
   >
 > =
@@ -1280,6 +1291,7 @@ export type ContractDetailsOrMiddlewareOrTypedHandler<
       ReqHeaders,
       ResHeaders,
       VersionedApi,
+      Session,
       BaseRequest,
       Auth
     >
@@ -1293,6 +1305,7 @@ export type ContractDetailsOrMiddlewareOrTypedHandler<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      Session,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -1329,6 +1342,7 @@ export type MiddlewareOrMiddlewareWithTypedHandler<
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
   VersionedApi extends VersionSchema<SV, ContractMethod>,
+  Session extends SessionObject<SV>,
   BaseRequest,
   BaseResponse,
   NextFunction,
@@ -1339,6 +1353,7 @@ export type MiddlewareOrMiddlewareWithTypedHandler<
     ReqQuery,
     ReqHeaders,
     VersionedApi,
+    Session,
     BaseRequest
   >
 > =
@@ -1352,6 +1367,7 @@ export type MiddlewareOrMiddlewareWithTypedHandler<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      Session,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -1369,6 +1385,7 @@ export type MiddlewareOrMiddlewareWithTypedHandler<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      Session,
       BaseRequest,
       BaseResponse,
       NextFunction,

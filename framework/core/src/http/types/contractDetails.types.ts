@@ -304,6 +304,8 @@ export type Body<SV extends AnySchemaValidator> =
   | (ExclusiveRequestBodyBase<SV> &
       (SV['type'] extends TypeSafeFunction ? ReturnType<SV['type']> : never));
 
+export type SessionObject<SV extends AnySchemaValidator> = StringOnlyObject<SV>;
+
 export type BasicAuthMethods = {
   readonly basic: {
     readonly login: (username: string, password: string) => boolean;
@@ -346,6 +348,7 @@ export type SchemaAuthMethods<
   QuerySchema extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   VersionedApi extends VersionSchema<SV, Method>,
+  SessionSchema extends SessionObject<SV>,
   BaseRequest
 > = AuthMethodsBase &
   (
@@ -357,6 +360,7 @@ export type SchemaAuthMethods<
           QuerySchema,
           ReqHeaders,
           VersionedApi,
+          SessionSchema,
           BaseRequest
         >;
       } & PermissionSet)
@@ -368,6 +372,7 @@ export type SchemaAuthMethods<
           QuerySchema,
           ReqHeaders,
           VersionedApi,
+          SessionSchema,
           BaseRequest
         >;
       } & RoleSet)
@@ -380,6 +385,7 @@ export type AuthMethods<
   ReqQuery extends Record<string, unknown>,
   ReqHeaders extends Record<string, string>,
   VersionedReqs extends VersionedRequests,
+  SessionSchema extends Record<string, unknown>,
   BaseRequest
 > = AuthMethodsBase &
   (
@@ -391,6 +397,7 @@ export type AuthMethods<
           ReqQuery,
           ReqHeaders,
           VersionedReqs,
+          SessionSchema,
           BaseRequest
         >;
       } & PermissionSet)
@@ -402,6 +409,7 @@ export type AuthMethods<
           ReqQuery,
           ReqHeaders,
           VersionedReqs,
+          SessionSchema,
           BaseRequest
         >;
       } & RoleSet)
@@ -537,6 +545,7 @@ export type PathParamHttpContractDetails<
     SV,
     PathParamMethod
   >,
+  SessionSchema extends SessionObject<SV> = SessionObject<SV>,
   BaseRequest = unknown,
   Auth extends SchemaAuthMethods<
     SV,
@@ -545,6 +554,7 @@ export type PathParamHttpContractDetails<
     QuerySchema,
     ReqHeaders,
     VersionedApi,
+    SessionSchema,
     BaseRequest
   > = SchemaAuthMethods<
     SV,
@@ -553,6 +563,7 @@ export type PathParamHttpContractDetails<
     QuerySchema,
     ReqHeaders,
     VersionedApi,
+    SessionSchema,
     BaseRequest
   >
 > = BasePathParamHttpContractDetails<SV, Name, Path, ParamsSchema> &
@@ -608,6 +619,7 @@ export type HttpContractDetails<
     SV,
     HttpMethod
   >,
+  SessionSchema extends SessionObject<SV> = SessionObject<SV>,
   BaseRequest = unknown,
   Auth extends SchemaAuthMethods<
     SV,
@@ -616,6 +628,7 @@ export type HttpContractDetails<
     QuerySchema,
     ReqHeaders,
     VersionedApi,
+    SessionSchema,
     BaseRequest
   > = SchemaAuthMethods<
     SV,
@@ -624,6 +637,7 @@ export type HttpContractDetails<
     QuerySchema,
     ReqHeaders,
     VersionedApi,
+    SessionSchema,
     BaseRequest
   >
 > = BasePathParamHttpContractDetails<SV, Name, Path, ParamsSchema> &
@@ -673,6 +687,7 @@ export type MiddlewareContractDetails<
     SV,
     'middleware'
   >,
+  SessionSchema extends SessionObject<SV> = SessionObject<SV>,
   BaseRequest = unknown,
   Auth extends SchemaAuthMethods<
     SV,
@@ -681,6 +696,7 @@ export type MiddlewareContractDetails<
     QuerySchema,
     ReqHeaders,
     VersionedApi,
+    SessionSchema,
     BaseRequest
   > = SchemaAuthMethods<
     SV,
@@ -689,6 +705,7 @@ export type MiddlewareContractDetails<
     QuerySchema,
     ReqHeaders,
     VersionedApi,
+    SessionSchema,
     BaseRequest
   >
 > = Omit<
@@ -704,6 +721,7 @@ export type MiddlewareContractDetails<
       ReqHeaders,
       ResHeaders,
       VersionedApi,
+      SessionSchema,
       BaseRequest,
       Auth
     >
@@ -741,6 +759,7 @@ export type ContractDetails<
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
   VersionedApi extends VersionSchema<SV, ContractMethod>,
+  SessionSchema extends SessionObject<SV>,
   BaseRequest,
   Auth extends SchemaAuthMethods<
     SV,
@@ -749,6 +768,7 @@ export type ContractDetails<
     QuerySchema,
     ReqHeaders,
     VersionedApi,
+    SessionSchema,
     BaseRequest
   >
 > = ContractMethod extends PathParamMethod
@@ -763,6 +783,7 @@ export type ContractDetails<
       ReqHeaders,
       ResHeaders,
       VersionedApi,
+      SessionSchema,
       BaseRequest,
       Auth
     >
@@ -778,6 +799,7 @@ export type ContractDetails<
         ReqHeaders,
         ResHeaders,
         VersionedApi,
+        SessionSchema,
         BaseRequest,
         Auth
       >
@@ -793,6 +815,7 @@ export type ContractDetails<
           ReqHeaders,
           ResHeaders,
           VersionedApi,
+          SessionSchema,
           BaseRequest,
           Auth
         >
