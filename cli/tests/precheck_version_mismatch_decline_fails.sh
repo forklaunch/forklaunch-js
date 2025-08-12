@@ -24,7 +24,11 @@ RUST_BACKTRACE=1 cargo run --release init application app \
 
 # 2) Force manifest cli_version to mismatch the running cargo binary (0.0.0)
 MANIFEST="app/.forklaunch/manifest.toml"
-sed -E -i '' 's/^cli_version[[:space:]]*=[[:space:]]*"[^"]*"/cli_version = "999.0.0"/' "$MANIFEST"
+if [[ "$OSTYPE" == darwin* ]]; then
+  sed -E -i '' 's/^cli_version[[:space:]]*=[[:space:]]*"[^"]*"/cli_version = "999.0.0"/' "$MANIFEST"
+else
+  sed -E -i 's/^cli_version[[:space:]]*=[[:space:]]*"[^"]*"/cli_version = "999.0.0"/' "$MANIFEST"
+fi
 
 # 3) Trigger a command and decline upgrade; expect non-zero exit
 set +e

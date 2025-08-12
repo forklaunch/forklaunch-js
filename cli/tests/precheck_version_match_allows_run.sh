@@ -25,7 +25,11 @@ RUST_BACKTRACE=1 cargo run --release init application app \
 
 # 2) Force manifest cli_version to match the running cargo binary (0.0.0)
 MANIFEST="app/.forklaunch/manifest.toml"
-sed -E -i '' 's/^cli_version[[:space:]]*=[[:space:]]*"[^"]*"/cli_version = "0.0.0"/' "$MANIFEST"
+if [[ "$OSTYPE" == darwin* ]]; then
+  sed -E -i '' 's/^cli_version[[:space:]]*=[[:space:]]*"[^"]*"/cli_version = "0.0.0"/' "$MANIFEST"
+else
+  sed -E -i 's/^cli_version[[:space:]]*=[[:space:]]*"[^"]*"/cli_version = "0.0.0"/' "$MANIFEST"
+fi
 
 # 3) Run a command that triggers precheck; expect no prompt and success
 RUST_BACKTRACE=1 cargo run --release depcheck -p app
