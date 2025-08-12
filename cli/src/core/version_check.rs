@@ -1,4 +1,9 @@
-use std::{fs, io::Write, path::PathBuf, process::Command as OsCommand};
+use std::{
+    fs,
+    io::Write,
+    path::{Path, PathBuf},
+    process::Command as OsCommand,
+};
 
 use anyhow::{Context, Result};
 use clap::ArgMatches;
@@ -125,7 +130,35 @@ pub(crate) fn precheck_version(
         }
     }
 
-    let Some(manifest_root) = find_nearest_manifest_root_unbounded() else {
+    // Determine a sensible starting path for manifest discovery.
+    // Prefer an explicit path flag from the subcommand, else use CWD.
+    let start_path: PathBuf = if let Some(p) = matches.get_one::<String>("base_path") {
+        PathBuf::from(p)
+    } else if let Some(p) = matches.get_one::<String>("path") {
+        PathBuf::from(p)
+    } else {
+        std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."))
+    };
+
+    // Walk upwards from the provided path (or CWD) to find the nearest manifest.
+    fn find_nearest_manifest_from(start: &Path) -> Option<PathBuf> {
+        let mut base_path = start.canonicalize().ok()?;
+        loop {
+            let manifest = base_path.join(".forklaunch").join("manifest.toml");
+            if manifest.exists() {
+                return Some(base_path.clone());
+            }
+            match base_path.parent() {
+                Some(parent) => base_path = parent.to_path_buf(),
+                None => break,
+            }
+        }
+        None
+    }
+
+    let manifest_root =
+        find_nearest_manifest_from(&start_path).or_else(|| find_nearest_manifest_root_unbounded());
+    let Some(manifest_root) = manifest_root else {
         return Ok(VersionCheckOutcome::SkipNoManifest);
     };
     let Some(required_version) = parse_required_cli_version(&manifest_root) else {
@@ -158,34 +191,33 @@ pub(crate) fn precheck_version(
 
     // Informative messages before/after install
     let platform = platform_triple()?;
-    let mut stdout2 = StandardStream::stdout(ColorChoice::Always);
-    stdout2.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
+    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
     writeln!(
-        &mut stdout2,
+        &mut stdout,
         "Installing forklaunch CLI v{} for {}...",
         required_version, platform
     )?;
-    stdout2.reset()?;
+    stdout.reset()?;
 
     let binary_path = download_binary(&required_version)?;
 
-    stdout2.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
     writeln!(
-        &mut stdout2,
+        &mut stdout,
         "Installed forklaunch CLI v{} at {}",
         required_version,
         binary_path.display()
     )?;
-    stdout2.reset()?;
+    stdout.reset()?;
 
     // Attempt to re-exec the command via the newly downloaded binary
-    stdout2.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
+    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
     writeln!(
-        &mut stdout2,
+        &mut stdout,
         "Re-executing your command with forklaunch v{}...",
         required_version
     )?;
-    stdout2.reset()?;
+    stdout.reset()?;
 
     let status = OsCommand::new(&binary_path)
         .args(std::env::args().skip(1))
@@ -196,7 +228,6 @@ pub(crate) fn precheck_version(
             std::process::exit(s.code().unwrap_or(0));
         }
         Err(_) => {
-            let mut stdout = StandardStream::stdout(ColorChoice::Always);
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
             writeln!(
                 &mut stdout,
