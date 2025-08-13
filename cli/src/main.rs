@@ -59,11 +59,9 @@ fn main() -> Result<()> {
         .subcommand(version.command())
         .get_matches();
 
-    // Centralized version precheck for all commands except `version`.
+    // Centralized version precheck for all commands (soft-check semantics: if manifest, enforce; else proceed)
     if let Some((cmd, sub_matches)) = matches.subcommand() {
-        if cmd != "version" {
-            crate::core::version_check::precheck_version(sub_matches, cmd)?;
-        }
+        crate::core::version_check::precheck_version(sub_matches, cmd)?;
     }
 
     let result = match matches.subcommand() {
