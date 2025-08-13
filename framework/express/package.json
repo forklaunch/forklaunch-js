@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/express",
-  "version": "0.7.9",
+  "version": "0.7.10",
   "description": "Forklaunch framework for express.",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -45,7 +45,7 @@
     "busboy": "^1.6.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
-    "fastmcp": "^3.13.0",
+    "@forklaunch/fastmcp-fork": "^1.0.3",
     "multer": "2.0.2",
     "qs": "^6.14.0",
     "swagger-ui-express": "^5.0.1"

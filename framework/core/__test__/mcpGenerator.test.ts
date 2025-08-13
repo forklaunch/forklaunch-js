@@ -1,5 +1,5 @@
+import { FastMCP } from '@forklaunch/fastmcp-fork';
 import { ZodSchemaValidator } from '@forklaunch/validator/zod';
-import { FastMCP } from 'fastmcp';
 import { describe, expect, it } from 'vitest';
 import { generateMcpServer } from '../src/http/mcpGenerator/mcpGenerator';
 

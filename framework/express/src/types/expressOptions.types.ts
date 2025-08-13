@@ -1,8 +1,8 @@
 import { DocsConfiguration } from '@forklaunch/core/http';
+import { FastMCP } from '@forklaunch/fastmcp-fork';
 import { OptionsJson, OptionsText, OptionsUrlencoded } from 'body-parser';
 import { BusboyConfig } from 'busboy';
 import { CorsOptions } from 'cors';
-import { FastMCP } from 'fastmcp';
 
 export type ExpressOptions<T extends Record<string, unknown> | undefined> = {
   docs?: DocsConfiguration;
