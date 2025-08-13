@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.12.2
+
+### Patch Changes
+
+- Allow for host specifier in mcp implementation
+
 ## 0.12.1
 
 ### Patch Changes

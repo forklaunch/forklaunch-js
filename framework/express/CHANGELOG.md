@@ -1,5 +1,13 @@
 # @forklaunch/express
 
+## 0.7.10
+
+### Patch Changes
+
+- Allow for host specifier in mcp implementation
+- Updated dependencies
+  - @forklaunch/core@0.12.2
+
 ## 0.7.9
 
 ### Patch Changes

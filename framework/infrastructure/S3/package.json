@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/infrastructure-s3",
-  "version": "0.2.10",
+  "version": "0.2.11",
   "description": "S3 infrastructure for ForkLaunch components.",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
