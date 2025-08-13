@@ -299,7 +299,7 @@ impl CliCommand for ModuleCommand {
             dryrun,
         )?);
         println!("06 destination_path: {:?}", destination_path);
-        println!("06 service_name: {:?}", get_service_module_name(&module));
+        println!("07 service_name: {:?}", get_service_module_name(&module));
         rendered_templates.push(generate_service_package_json(
             &service_data,
             &destination_path.join(get_service_module_name(&module)),
@@ -327,11 +327,12 @@ impl CliCommand for ModuleCommand {
         }
 
         write_rendered_templates(&rendered_templates, dryrun, &mut stdout)?;
-
+        println!("module:08: base_path: {:?}", base_path);
+        println!("module:09: destination_path: {:?}", destination_path);
         if !dryrun {
             generate_symlinks(
                 Some(base_path),
-                &base_path.join(get_service_module_name(&module)),
+                &destination_path.join(get_service_module_name(&module)),
                 &mut service_data,
                 dryrun,
             )?;
