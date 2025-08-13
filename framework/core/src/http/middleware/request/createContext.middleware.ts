@@ -18,6 +18,7 @@ import {
   ParamsObject,
   QueryObject,
   ResponsesObject,
+  SessionObject,
   VersionSchema
 } from '../../types/contractDetails.types';
 
@@ -40,7 +41,8 @@ export function createContext<
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
-  VersionedApi extends VersionSchema<SV, 'middleware'>
+  VersionedApi extends VersionSchema<SV, 'middleware'>,
+  SessionSchema extends SessionObject<SV>
 >(
   schemaValidator: SV
 ): ExpressLikeSchemaHandler<
@@ -53,6 +55,7 @@ export function createContext<
   ResHeaders,
   LocalsObj,
   VersionedApi,
+  SessionSchema,
   unknown,
   unknown,
   ForklaunchNextFunction

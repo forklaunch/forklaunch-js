@@ -15,6 +15,7 @@ import {
   MapReqQuerySchema,
   MapResBodyMapSchema,
   MapResHeadersSchema,
+  MapSessionSchema,
   MapVersionedReqsSchema,
   ResolvedForklaunchRequest,
   VersionedRequests
@@ -28,6 +29,7 @@ import {
   ParamsObject,
   QueryObject,
   ResponsesObject,
+  SessionObject,
   VersionSchema
 } from '../../types/contractDetails.types';
 
@@ -70,6 +72,7 @@ async function checkAuthorizationToken<
   ReqQuery extends ParsedQs,
   ReqHeaders extends Record<string, string>,
   VersionedReqs extends VersionedRequests,
+  SessionSchema extends SessionObject<SV>,
   BaseRequest
 >(
   authorizationMethod: AuthMethods<
@@ -79,6 +82,7 @@ async function checkAuthorizationToken<
     ReqQuery,
     ReqHeaders,
     VersionedReqs,
+    SessionSchema,
     BaseRequest
   >,
   authorizationToken?: string,
@@ -88,7 +92,8 @@ async function checkAuthorizationToken<
     ReqBody,
     ReqQuery,
     ReqHeaders,
-    Extract<keyof VersionedReqs, string>
+    Extract<keyof VersionedReqs, string>,
+    SessionSchema
   >
 ): Promise<readonly [401 | 403 | 500, string] | undefined> {
   if (authorizationToken == null) {
@@ -130,7 +135,8 @@ async function checkAuthorizationToken<
             ReqBody,
             ReqQuery,
             ReqHeaders,
-            Extract<keyof VersionedReqs, string>
+            Extract<keyof VersionedReqs, string>,
+            SessionSchema
           >
         )?.openTelemetryCollector.error(error);
         return invalidAuthorizationToken;
@@ -183,6 +189,7 @@ async function checkAuthorizationToken<
         ReqQuery,
         ReqHeaders,
         VersionedReqs,
+        SessionSchema,
         BaseRequest
       >
     );
@@ -225,6 +232,7 @@ async function checkAuthorizationToken<
         ReqQuery,
         ReqHeaders,
         VersionedReqs,
+        SessionSchema,
         BaseRequest
       >
     );
@@ -277,7 +285,8 @@ export async function parseRequestAuth<
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
-  VersionedApi extends VersionSchema<SV, ContractMethod>
+  VersionedApi extends VersionSchema<SV, ContractMethod>,
+  SessionSchema extends SessionObject<SV>
 >(
   req: ForklaunchRequest<
     SV,
@@ -285,7 +294,8 @@ export async function parseRequestAuth<
     MapReqBodySchema<SV, ReqBody>,
     MapReqQuerySchema<SV, ReqQuery>,
     MapReqHeadersSchema<SV, ReqHeaders>,
-    Extract<keyof MapVersionedReqsSchema<SV, VersionedApi>, string>
+    Extract<keyof MapVersionedReqsSchema<SV, VersionedApi>, string>,
+    MapSessionSchema<SV, SessionSchema>
   >,
   res: ForklaunchResponse<
     unknown,
@@ -304,6 +314,7 @@ export async function parseRequestAuth<
         MapReqQuerySchema<SV, ReqQuery>,
         MapReqHeadersSchema<SV, ReqHeaders>,
         MapVersionedReqsSchema<SV, VersionedApi>,
+        MapSessionSchema<SV, SessionSchema>,
         unknown
       >
     | undefined;
@@ -317,6 +328,7 @@ export async function parseRequestAuth<
         MapReqQuerySchema<SV, ReqQuery>,
         MapReqHeadersSchema<SV, ReqHeaders>,
         MapVersionedReqsSchema<SV, VersionedApi>,
+        MapSessionSchema<SV, SessionSchema>,
         unknown
       >(
         auth,

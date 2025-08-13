@@ -14,6 +14,7 @@ import {
   ParamsObject,
   QueryObject,
   SchemaAuthMethods,
+  SessionObject,
   VersionSchema
 } from '../types/contractDetails.types';
 import { ForklaunchRouter } from '../types/router.types';
@@ -31,6 +32,7 @@ function generateInputSchema(
     QueryObject<ZodSchemaValidator>,
     HeadersObject<ZodSchemaValidator>,
     VersionSchema<ZodSchemaValidator, Method>,
+    SessionObject<ZodSchemaValidator>,
     unknown
   >
 ) {

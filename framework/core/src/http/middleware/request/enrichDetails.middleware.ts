@@ -25,6 +25,7 @@ import {
   QueryObject,
   ResponseCompiledSchema,
   ResponsesObject,
+  SessionObject,
   VersionSchema
 } from '../../types/contractDetails.types';
 import { MetricsDefinition } from '../../types/openTelemetryCollector.types';
@@ -49,7 +50,8 @@ export function enrichDetails<
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
-  VersionedApi extends VersionSchema<SV, ContractMethod>
+  VersionedApi extends VersionSchema<SV, ContractMethod>,
+  SessionSchema extends SessionObject<SV>
 >(
   path: string,
   contractDetails: HttpContractDetails<SV> | PathParamHttpContractDetails<SV>,
@@ -68,6 +70,7 @@ export function enrichDetails<
   ResHeaders,
   LocalsObj,
   VersionedApi,
+  SessionSchema,
   unknown,
   unknown,
   ForklaunchNextFunction

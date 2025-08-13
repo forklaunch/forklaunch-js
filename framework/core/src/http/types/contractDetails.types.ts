@@ -353,7 +353,7 @@ export type SchemaAuthMethods<
 > = AuthMethodsBase &
   (
     | ({
-        readonly mapPermissions: ExpressLikeSchemaAuthMapper<
+        readonly mapPermissions?: ExpressLikeSchemaAuthMapper<
           SV,
           ParamsSchema,
           ReqBody,
@@ -365,7 +365,7 @@ export type SchemaAuthMethods<
         >;
       } & PermissionSet)
     | ({
-        readonly mapRoles: ExpressLikeSchemaAuthMapper<
+        readonly mapRoles?: ExpressLikeSchemaAuthMapper<
           SV,
           ParamsSchema,
           ReqBody,
@@ -376,7 +376,9 @@ export type SchemaAuthMethods<
           BaseRequest
         >;
       } & RoleSet)
-  );
+  ) & {
+    readonly sessionSchema?: SessionSchema;
+  };
 
 export type AuthMethods<
   SV extends AnySchemaValidator,
@@ -390,7 +392,7 @@ export type AuthMethods<
 > = AuthMethodsBase &
   (
     | ({
-        readonly mapPermissions: ExpressLikeAuthMapper<
+        readonly mapPermissions?: ExpressLikeAuthMapper<
           SV,
           P,
           ReqBody,
@@ -402,7 +404,7 @@ export type AuthMethods<
         >;
       } & PermissionSet)
     | ({
-        readonly mapRoles: ExpressLikeAuthMapper<
+        readonly mapRoles?: ExpressLikeAuthMapper<
           SV,
           P,
           ReqBody,
@@ -413,7 +415,9 @@ export type AuthMethods<
           BaseRequest
         >;
       } & RoleSet)
-  );
+  ) & {
+    readonly sessionSchema?: SessionSchema;
+  };
 
 /**
  * Type representing a mapped schema.

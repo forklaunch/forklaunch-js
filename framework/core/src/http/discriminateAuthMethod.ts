@@ -47,6 +47,7 @@ export function discriminateAuthMethod<
   ReqQuery extends ParsedQs,
   ReqHeaders extends Record<string, string>,
   VersionedReqs extends VersionedRequests,
+  SessionSchema extends Record<string, unknown>,
   BaseRequest
 >(
   auth: AuthMethods<
@@ -56,6 +57,7 @@ export function discriminateAuthMethod<
     ReqQuery,
     ReqHeaders,
     VersionedReqs,
+    SessionSchema,
     BaseRequest
   >
 ):

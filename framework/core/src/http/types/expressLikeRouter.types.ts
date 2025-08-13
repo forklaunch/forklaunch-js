@@ -32,6 +32,7 @@ export interface LiveTypeRouteDefinition<
   ContractMethod extends Method,
   RouterHandler,
   Internal extends ExpressLikeRouter<RouterHandler, Internal>,
+  Session extends SessionObject<SV>,
   BaseRequest,
   BaseResponse,
   NextFunction,
@@ -51,7 +52,6 @@ export interface LiveTypeRouteDefinition<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
-    Session extends SessionObject<SV>,
     VersionedApi extends VersionSchema<SV, ContractMethod>,
     Auth extends SchemaAuthMethods<
       SV,
@@ -162,7 +162,6 @@ export interface LiveTypeRouteDefinition<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
-    Session extends SessionObject<SV>,
     VersionedApi extends VersionSchema<SV, ContractMethod>,
     Auth extends SchemaAuthMethods<
       SV,
@@ -312,6 +311,7 @@ export interface LiveTypeRouteDefinition<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
+      Session,
       BaseRequest
     >
   >(
@@ -328,6 +328,7 @@ export interface LiveTypeRouteDefinition<
       ReqHeaders,
       ResHeaders,
       VersionedApi,
+      Session,
       BaseRequest,
       Auth
     >,
@@ -341,6 +342,7 @@ export interface LiveTypeRouteDefinition<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      Session,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -416,6 +418,7 @@ export interface LiveTypeRouteDefinition<
 export interface TypedMiddlewareDefinition<
   ChainableRouter,
   SV extends AnySchemaValidator,
+  Session extends SessionObject<SV>,
   BaseRequest,
   BaseResponse,
   NextFunction,
@@ -445,6 +448,7 @@ export interface TypedMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
+      Session,
       BaseRequest
     >
   >(
@@ -462,6 +466,7 @@ export interface TypedMiddlewareDefinition<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      Session,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -487,6 +492,7 @@ export interface TypedMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
+      Session,
       BaseRequest
     >
   >(
@@ -503,6 +509,7 @@ export interface TypedMiddlewareDefinition<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      Session,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -529,6 +536,7 @@ export interface TypedMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
+      Session,
       BaseRequest
     >
   >(
@@ -543,6 +551,7 @@ export interface TypedMiddlewareDefinition<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      Session,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -558,6 +567,7 @@ export interface TypedMiddlewareDefinition<
         ResHeaders,
         LocalsObj,
         VersionedApi,
+        Session,
         BaseRequest,
         BaseResponse,
         NextFunction
@@ -575,6 +585,7 @@ export interface TypedMiddlewareDefinition<
         ResHeaders,
         LocalsObj,
         VersionedApi,
+        Session,
         BaseRequest,
         BaseResponse,
         NextFunction,
@@ -601,6 +612,7 @@ export interface TypedMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
+      Session,
       BaseRequest
     >
   >(
@@ -614,6 +626,7 @@ export interface TypedMiddlewareDefinition<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      Session,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -629,6 +642,7 @@ export interface TypedMiddlewareDefinition<
         ResHeaders,
         LocalsObj,
         VersionedApi,
+        Session,
         BaseRequest,
         BaseResponse,
         NextFunction
@@ -646,6 +660,7 @@ export interface TypedMiddlewareDefinition<
         ResHeaders,
         LocalsObj,
         VersionedApi,
+        Session,
         BaseRequest,
         BaseResponse,
         NextFunction,
@@ -672,6 +687,7 @@ export interface TypedMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
+      Session,
       BaseRequest
     >
   >(
@@ -688,6 +704,7 @@ export interface TypedMiddlewareDefinition<
       ReqHeaders,
       ResHeaders,
       VersionedApi,
+      Session,
       BaseRequest,
       Auth
     >,
@@ -701,6 +718,7 @@ export interface TypedMiddlewareDefinition<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      Session,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -715,6 +733,7 @@ export interface TypedMiddlewareDefinition<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      Session,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -739,6 +758,7 @@ export interface TypedMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
+      Session,
       BaseRequest
     >
   >(
@@ -754,6 +774,7 @@ export interface TypedMiddlewareDefinition<
       ReqHeaders,
       ResHeaders,
       VersionedApi,
+      Session,
       BaseRequest,
       Auth
     >,
@@ -767,6 +788,7 @@ export interface TypedMiddlewareDefinition<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      Session,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -781,6 +803,7 @@ export interface TypedMiddlewareDefinition<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      Session,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -797,12 +820,14 @@ export interface TypedNestableMiddlewareDefinition<
   RouterHandler,
   Internal extends ExpressLikeRouter<RouterHandler, Internal>,
   SV extends AnySchemaValidator,
+  Session extends SessionObject<SV>,
   BaseRequest,
   BaseResponse,
   NextFunction
 > extends TypedMiddlewareDefinition<
     ChainableRouter,
     SV,
+    Session,
     BaseRequest,
     BaseResponse,
     NextFunction,
@@ -897,6 +922,7 @@ export interface TypedNestableMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
+      Session,
       BaseRequest
     >
   >(
@@ -914,6 +940,7 @@ export interface TypedNestableMiddlewareDefinition<
           ResHeaders,
           LocalsObj,
           VersionedApi,
+          Session,
           BaseRequest,
           BaseResponse,
           NextFunction
@@ -931,6 +958,7 @@ export interface TypedNestableMiddlewareDefinition<
             ResHeaders,
             LocalsObj,
             VersionedApi,
+            Session,
             BaseRequest,
             BaseResponse,
             NextFunction
@@ -950,6 +978,7 @@ export interface TypedNestableMiddlewareDefinition<
         ResHeaders,
         LocalsObj,
         VersionedApi,
+        Session,
         BaseRequest,
         BaseResponse,
         NextFunction,
@@ -994,6 +1023,7 @@ export interface TypedNestableMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
+      Session,
       BaseRequest
     >
   >(
@@ -1008,6 +1038,7 @@ export interface TypedNestableMiddlewareDefinition<
           ResHeaders,
           LocalsObj,
           VersionedApi,
+          Session,
           BaseRequest,
           BaseResponse,
           NextFunction
@@ -1025,6 +1056,7 @@ export interface TypedNestableMiddlewareDefinition<
             ResHeaders,
             LocalsObj,
             VersionedApi,
+            Session,
             BaseRequest,
             BaseResponse,
             NextFunction
@@ -1044,6 +1076,7 @@ export interface TypedNestableMiddlewareDefinition<
         ResHeaders,
         LocalsObj,
         VersionedApi,
+        Session,
         BaseRequest,
         BaseResponse,
         NextFunction,
@@ -1088,6 +1121,7 @@ export interface TypedNestableMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
+      Session,
       BaseRequest
     >
   >(
@@ -1106,6 +1140,7 @@ export interface TypedNestableMiddlewareDefinition<
       ReqHeaders,
       ResHeaders,
       VersionedApi,
+      Session,
       BaseRequest,
       Auth
     >,
@@ -1120,6 +1155,7 @@ export interface TypedNestableMiddlewareDefinition<
           ResHeaders,
           LocalsObj,
           VersionedApi,
+          Session,
           BaseRequest,
           BaseResponse,
           NextFunction
@@ -1136,6 +1172,7 @@ export interface TypedNestableMiddlewareDefinition<
           ResHeaders,
           LocalsObj,
           VersionedApi,
+          Session,
           BaseRequest,
           BaseResponse,
           NextFunction
@@ -1180,6 +1217,7 @@ export interface TypedNestableMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
+      Session,
       BaseRequest
     >
   >(
@@ -1195,6 +1233,7 @@ export interface TypedNestableMiddlewareDefinition<
       ReqHeaders,
       ResHeaders,
       VersionedApi,
+      Session,
       BaseRequest,
       Auth
     >,
@@ -1209,6 +1248,7 @@ export interface TypedNestableMiddlewareDefinition<
           ResHeaders,
           LocalsObj,
           VersionedApi,
+          Session,
           BaseRequest,
           BaseResponse,
           NextFunction
@@ -1225,6 +1265,7 @@ export interface TypedNestableMiddlewareDefinition<
           ResHeaders,
           LocalsObj,
           VersionedApi,
+          Session,
           BaseRequest,
           BaseResponse,
           NextFunction
@@ -1323,6 +1364,7 @@ export type ContractDetailsOrMiddlewareOrTypedHandler<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      Session,
       BaseRequest,
       BaseResponse,
       NextFunction,

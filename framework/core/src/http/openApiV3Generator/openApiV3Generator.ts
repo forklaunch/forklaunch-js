@@ -28,6 +28,7 @@ import {
   QueryObject,
   ResponseBody,
   SchemaAuthMethods,
+  SessionObject,
   VersionSchema
 } from '../types/contractDetails.types';
 import { ForklaunchRouter } from '../types/router.types';
@@ -181,6 +182,7 @@ function generateOperationObject<SV extends AnySchemaValidator>(
     QueryObject<SV>,
     HeadersObject<SV>,
     VersionSchema<SV, Method>,
+    SessionObject<SV>,
     unknown
   >
 ) {

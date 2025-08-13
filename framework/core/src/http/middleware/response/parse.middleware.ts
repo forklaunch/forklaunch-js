@@ -49,7 +49,8 @@ export function parse<
   ReqHeaders extends Record<string, string>,
   ResHeaders extends Record<string, unknown>,
   LocalsObj extends Record<string, unknown>,
-  VersionedReqs extends VersionedRequests
+  VersionedReqs extends VersionedRequests,
+  SessionSchema extends Record<string, unknown>
 >(
   req: ForklaunchRequest<
     SV,
@@ -57,7 +58,8 @@ export function parse<
     ReqBody,
     ReqQuery,
     ReqHeaders,
-    Extract<keyof VersionedReqs, string>
+    Extract<keyof VersionedReqs, string>,
+    SessionSchema
   >,
   res: ForklaunchResponse<
     unknown,

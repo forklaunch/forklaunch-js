@@ -3,6 +3,7 @@ import {
   IdiomaticSchema,
   Schema
 } from '@forklaunch/validator';
+import { CorsOptions } from 'cors';
 import { FastMCP } from 'fastmcp';
 import { JWTPayload } from 'jose';
 import { TelemetryOptions } from './openTelemetryCollector.types';
@@ -73,4 +74,5 @@ export type ExpressLikeApplicationOptions<
         };
         discreteVersions?: boolean;
       };
+  cors?: CorsOptions;
 };

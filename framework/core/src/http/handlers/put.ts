@@ -8,6 +8,7 @@ import {
   QueryObject,
   ResponsesObject,
   SchemaAuthMethods,
+  SessionObject,
   VersionSchema
 } from '../types/contractDetails.types';
 import { typedHandler } from './typedHandler';
@@ -27,6 +28,7 @@ export const put = <
   BaseRequest,
   BaseResponse,
   NextFunction,
+  SessionSchema extends SessionObject<SV>,
   const Auth extends SchemaAuthMethods<
     SV,
     P,
@@ -34,6 +36,7 @@ export const put = <
     ReqQuery,
     ReqHeaders,
     VersionedApi,
+    SessionSchema,
     BaseRequest
   >
 >(
@@ -50,6 +53,7 @@ export const put = <
     ReqHeaders,
     ResHeaders,
     VersionedApi,
+    SessionSchema,
     BaseRequest,
     Auth
   >,
@@ -63,6 +67,7 @@ export const put = <
     ResHeaders,
     LocalsObj,
     VersionedApi,
+    SessionSchema,
     BaseRequest,
     BaseResponse,
     NextFunction
@@ -81,6 +86,7 @@ export const put = <
     ResHeaders,
     LocalsObj,
     VersionedApi,
+    SessionSchema,
     BaseRequest,
     BaseResponse,
     NextFunction,
