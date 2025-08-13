@@ -37,6 +37,7 @@
   "dependencies": {
     "@forklaunch/common": "workspace:*",
     "@forklaunch/core": "workspace:*",
+    "@forklaunch/fastmcp-fork": "^1.0.3",
     "@forklaunch/validator": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.17.1",
     "@scalar/express-api-reference": "^0.8.13",
@@ -45,7 +46,6 @@
     "busboy": "^1.6.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
-    "@forklaunch/fastmcp-fork": "^1.0.3",
     "multer": "2.0.2",
     "qs": "^6.14.0",
     "swagger-ui-express": "^5.0.1"
