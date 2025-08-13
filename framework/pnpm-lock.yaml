@@ -259,6 +259,9 @@ importers:
       '@sinclair/typebox':
         specifier: ^0.34.38
         version: 0.34.38
+      express:
+        specifier: ^5.1.0
+        version: 5.1.0
       zod:
         specifier: ^4.0.14
         version: 4.0.14
@@ -4865,6 +4868,7 @@ packages:
   source-map@0.8.0-beta.0:
     resolution: {integrity: sha512-2ymg6oRBpebeZi9UUNsgQ89bhx01TcTkmNTGnNO88imTmbSgy4nfujrgVEFKWpMTEGA11EDkTt7mqObTPdigIA==}
     engines: {node: '>= 8'}
+    deprecated: The work that was done in this beta branch won't be included in future versions
 
   sparse-bitfield@3.0.3:
     resolution: {integrity: sha512-kvzhi7vqKTfkh0PZU+2D2PIllw2ymqJKujUcyPMd9Y75Nv4nPbGJZXNhxsgdQab2BmlDct1YnfQCguEvHr7VsQ==}

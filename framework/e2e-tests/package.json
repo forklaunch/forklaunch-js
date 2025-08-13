@@ -20,6 +20,9 @@
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
+    "perf:hello": "tsx perf/hello.ts",
+    "perf:hello:ac": "bash perf/hello.sh",
+    "perf:multi-host": "BASE_PORT=6000 INSTANCES=12 tsx perf/multi-host.ts",
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
@@ -31,6 +34,7 @@
     "@forklaunch/universal-sdk": "workspace:*",
     "@forklaunch/validator": "workspace:*",
     "@sinclair/typebox": "^0.34.38",
+    "express": "^5.1.0",
     "zod": "^4.0.14"
   },
   "devDependencies": {
