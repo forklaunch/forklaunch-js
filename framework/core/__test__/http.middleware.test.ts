@@ -14,13 +14,15 @@ import {
   MetricsDefinition,
   OpenTelemetryCollector,
   ParamsDictionary,
-  RequestContext
+  RequestContext,
+  SessionObject
 } from '../src/http';
 import { cors } from '../src/http/middleware/request/cors.middleware';
 import { createContext } from '../src/http/middleware/request/createContext.middleware';
 import { enrichDetails } from '../src/http/middleware/request/enrichDetails.middleware';
 import { parse as parseRequest } from '../src/http/middleware/request/parse.middleware';
 import { parse as parseResponse } from '../src/http/middleware/response/parse.middleware';
+import { ExpressLikeRouterOptions } from '../src/http/types/expressLikeOptions';
 
 describe('http middleware tests', () => {
   let contractDetails: HttpContractDetails<MockSchemaValidator>;
@@ -82,7 +84,11 @@ describe('http middleware tests', () => {
       openTelemetryCollector: {} as OpenTelemetryCollector<MetricsDefinition>,
       version: {} as never,
       session: {} as JWTPayload,
-      _parsedVersions: 0
+      _parsedVersions: 0,
+      _globalOptions: {} as ExpressLikeRouterOptions<
+        MockSchemaValidator,
+        SessionObject<MockSchemaValidator>
+      >
     };
 
     res = {

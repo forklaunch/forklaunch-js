@@ -70,7 +70,7 @@ const xasd = typedHandler(
           return username === 'test' && password === 'test';
         }
       },
-      mapPermissions: kl,
+      surfacePermissions: kl,
       // (sub, req) => {
       //   const j = req?.params.id;
       //   return new Set(['admin', 'user']);
@@ -132,12 +132,12 @@ const bl = xa.trace(
       400: string
     },
     auth: {
-      // mapPermissions: (sub, req) => {
+      // surfacePermissions: (sub, req) => {
       //   const j = req?.params.id;
       //   return new Set(['admin', 'user']);
       // },
-      mapPermissions: kl,
-      mapRoles: kl,
+      surfacePermissions: kl,
+      surfaceRoles: kl,
       allowedPermissions: new Set(['admin', 'user'])
     }
   },
@@ -237,7 +237,7 @@ const fff = typedHandler(
           return username === 'test' && password === 'test';
         }
       },
-      mapPermissions: (sub, req) => {
+      surfacePermissions: (sub, req) => {
         const version = req?.version;
         switch (version) {
           case '1.0.0':

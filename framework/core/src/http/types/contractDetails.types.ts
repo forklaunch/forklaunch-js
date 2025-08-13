@@ -353,7 +353,7 @@ export type SchemaAuthMethods<
 > = AuthMethodsBase &
   (
     | ({
-        readonly mapPermissions?: ExpressLikeSchemaAuthMapper<
+        readonly surfacePermissions?: ExpressLikeSchemaAuthMapper<
           SV,
           ParamsSchema,
           ReqBody,
@@ -365,7 +365,7 @@ export type SchemaAuthMethods<
         >;
       } & PermissionSet)
     | ({
-        readonly mapRoles?: ExpressLikeSchemaAuthMapper<
+        readonly surfaceRoles?: ExpressLikeSchemaAuthMapper<
           SV,
           ParamsSchema,
           ReqBody,
@@ -378,6 +378,18 @@ export type SchemaAuthMethods<
       } & RoleSet)
   ) & {
     readonly sessionSchema?: SessionSchema;
+    readonly requiredScope?: string;
+    readonly scopeHeirarchy?: string[];
+    readonly surfaceScopes?: ExpressLikeSchemaAuthMapper<
+      SV,
+      ParamsSchema,
+      ReqBody,
+      QuerySchema,
+      ReqHeaders,
+      VersionedApi,
+      SessionSchema,
+      BaseRequest
+    >;
   };
 
 export type AuthMethods<
@@ -392,7 +404,7 @@ export type AuthMethods<
 > = AuthMethodsBase &
   (
     | ({
-        readonly mapPermissions?: ExpressLikeAuthMapper<
+        readonly surfacePermissions?: ExpressLikeAuthMapper<
           SV,
           P,
           ReqBody,
@@ -404,7 +416,7 @@ export type AuthMethods<
         >;
       } & PermissionSet)
     | ({
-        readonly mapRoles?: ExpressLikeAuthMapper<
+        readonly surfaceRoles?: ExpressLikeAuthMapper<
           SV,
           P,
           ReqBody,
@@ -417,6 +429,18 @@ export type AuthMethods<
       } & RoleSet)
   ) & {
     readonly sessionSchema?: SessionSchema;
+    readonly requiredScope?: string;
+    readonly scopeHeirarchy?: string[];
+    readonly surfaceScopes?: ExpressLikeAuthMapper<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      VersionedReqs,
+      SessionSchema,
+      BaseRequest
+    >;
   };
 
 /**

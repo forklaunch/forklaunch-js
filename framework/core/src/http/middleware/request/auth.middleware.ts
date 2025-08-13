@@ -32,6 +32,7 @@ import {
   SessionObject,
   VersionSchema
 } from '../../types/contractDetails.types';
+import { ExpressLikeGlobalAuthOptions } from '../../types/expressLikeOptions';
 
 const invalidAuthorizationTokenFormat = [
   401,
@@ -75,7 +76,7 @@ async function checkAuthorizationToken<
   SessionSchema extends SessionObject<SV>,
   BaseRequest
 >(
-  authorizationMethod: AuthMethods<
+  authorizationMethod?: AuthMethods<
     SV,
     P,
     ReqBody,
@@ -85,6 +86,7 @@ async function checkAuthorizationToken<
     SessionSchema,
     BaseRequest
   >,
+  globalOptions?: ExpressLikeGlobalAuthOptions<SV, SessionSchema>,
   authorizationToken?: string,
   req?: ForklaunchRequest<
     SV,
@@ -96,19 +98,30 @@ async function checkAuthorizationToken<
     SessionSchema
   >
 ): Promise<readonly [401 | 403 | 500, string] | undefined> {
+  if (authorizationMethod == null) {
+    return undefined;
+  }
+
+  const collapsedAuthorizationMethod = {
+    ...globalOptions,
+    ...authorizationMethod
+  };
+
   if (authorizationToken == null) {
     return [401, 'No Authorization token provided.'];
   }
 
   const [tokenPrefix, token] = authorizationToken.split(' ');
 
-  let resourceId: JWTPayload;
+  let resourceId: JWTPayload & SessionSchema;
 
-  const { type, auth } = discriminateAuthMethod(authorizationMethod);
+  const { type, auth } = discriminateAuthMethod(collapsedAuthorizationMethod);
 
   switch (type) {
     case 'jwt': {
-      if (tokenPrefix !== (authorizationMethod.tokenPrefix ?? 'Bearer')) {
+      if (
+        tokenPrefix !== (collapsedAuthorizationMethod.tokenPrefix ?? 'Bearer')
+      ) {
         return invalidAuthorizationTokenFormat;
       }
 
@@ -126,7 +139,7 @@ async function checkAuthorizationToken<
           return invalidAuthorizationSubject;
         }
 
-        resourceId = decodedJwt;
+        resourceId = decodedJwt as JWTPayload & SessionSchema;
       } catch (error) {
         (
           req as ForklaunchRequest<
@@ -145,12 +158,15 @@ async function checkAuthorizationToken<
       break;
     }
     case 'basic': {
-      if (tokenPrefix !== (authorizationMethod.tokenPrefix ?? 'Basic')) {
+      if (
+        tokenPrefix !== (collapsedAuthorizationMethod.tokenPrefix ?? 'Basic')
+      ) {
         return invalidAuthorizationTokenFormat;
       }
 
       if (auth.decodeResource) {
-        resourceId = await auth.decodeResource(token);
+        resourceId = (await auth.decodeResource(token)) as JWTPayload &
+          SessionSchema;
       } else {
         const [username, password] = Buffer.from(token, 'base64')
           .toString('utf-8')
@@ -166,7 +182,7 @@ async function checkAuthorizationToken<
 
         resourceId = {
           sub: username
-        };
+        } as JWTPayload & SessionSchema;
       }
       break;
     }
@@ -175,55 +191,88 @@ async function checkAuthorizationToken<
       return [401, 'Invalid Authorization method.'];
   }
 
-  if (hasPermissionChecks(authorizationMethod)) {
-    if (!authorizationMethod.mapPermissions) {
-      return [500, 'No permission mapping function provided.'];
+  if (hasPermissionChecks(collapsedAuthorizationMethod)) {
+    if (!collapsedAuthorizationMethod.surfacePermissions) {
+      return [500, 'No permission surfacing function provided.'];
     }
 
-    const resourcePermissions = await authorizationMethod.mapPermissions(
-      resourceId,
-      req as ResolvedForklaunchRequest<
-        SV,
-        P,
-        ReqBody,
-        ReqQuery,
-        ReqHeaders,
-        VersionedReqs,
-        SessionSchema,
-        BaseRequest
-      >
-    );
+    const resourcePermissions =
+      await collapsedAuthorizationMethod.surfacePermissions(
+        resourceId,
+        req as ResolvedForklaunchRequest<
+          SV,
+          P,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          VersionedReqs,
+          SessionSchema,
+          BaseRequest
+        >
+      );
+
+    if (collapsedAuthorizationMethod.surfaceScopes) {
+      const resourceScopes = await collapsedAuthorizationMethod.surfaceScopes(
+        resourceId,
+        req as ResolvedForklaunchRequest<
+          SV,
+          P,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          VersionedReqs,
+          SessionSchema,
+          BaseRequest
+        >
+      );
+
+      if (collapsedAuthorizationMethod.scopeHeirarchy) {
+        if (collapsedAuthorizationMethod.requiredScope) {
+          if (
+            !resourceScopes.has(collapsedAuthorizationMethod.requiredScope) ||
+            Array.from(resourceScopes).every(
+              (scope) =>
+                collapsedAuthorizationMethod.scopeHeirarchy?.indexOf(scope) ??
+                -1 > -1
+            )
+          ) {
+            return invalidAuthorizationTokenPermissions;
+          }
+        }
+      }
+    }
 
     if (
-      'allowedPermissions' in authorizationMethod &&
-      authorizationMethod.allowedPermissions
+      'allowedPermissions' in collapsedAuthorizationMethod &&
+      collapsedAuthorizationMethod.allowedPermissions
     ) {
       if (
-        resourcePermissions.intersection(authorizationMethod.allowedPermissions)
-          .size === 0
+        resourcePermissions.intersection(
+          collapsedAuthorizationMethod.allowedPermissions
+        ).size === 0
       ) {
         return invalidAuthorizationTokenPermissions;
       }
     }
 
     if (
-      'forbiddenPermissions' in authorizationMethod &&
-      authorizationMethod.forbiddenPermissions
+      'forbiddenPermissions' in collapsedAuthorizationMethod &&
+      collapsedAuthorizationMethod.forbiddenPermissions
     ) {
       if (
         resourcePermissions.intersection(
-          authorizationMethod.forbiddenPermissions
+          collapsedAuthorizationMethod.forbiddenPermissions
         ).size !== 0
       ) {
         return invalidAuthorizationTokenPermissions;
       }
     }
-  } else if (hasRoleChecks(authorizationMethod)) {
-    if (!authorizationMethod.mapRoles) {
-      return [500, 'No role mapping function provided.'];
+  } else if (hasRoleChecks(collapsedAuthorizationMethod)) {
+    if (!collapsedAuthorizationMethod.surfaceRoles) {
+      return [500, 'No role surfacing function provided.'];
     }
 
-    const resourceRoles = await authorizationMethod.mapRoles(
+    const resourceRoles = await collapsedAuthorizationMethod.surfaceRoles(
       resourceId,
       req as ResolvedForklaunchRequest<
         SV,
@@ -238,23 +287,24 @@ async function checkAuthorizationToken<
     );
 
     if (
-      'allowedRoles' in authorizationMethod &&
-      authorizationMethod.allowedRoles
+      'allowedRoles' in collapsedAuthorizationMethod &&
+      collapsedAuthorizationMethod.allowedRoles
     ) {
       if (
-        resourceRoles.intersection(authorizationMethod.allowedRoles).size === 0
+        resourceRoles.intersection(collapsedAuthorizationMethod.allowedRoles)
+          .size === 0
       ) {
         return invalidAuthorizationTokenRoles;
       }
     }
 
     if (
-      'forbiddenRoles' in authorizationMethod &&
-      authorizationMethod.forbiddenRoles
+      'forbiddenRoles' in collapsedAuthorizationMethod &&
+      collapsedAuthorizationMethod.forbiddenRoles
     ) {
       if (
-        resourceRoles.intersection(authorizationMethod.forbiddenRoles).size !==
-        0
+        resourceRoles.intersection(collapsedAuthorizationMethod.forbiddenRoles)
+          .size !== 0
       ) {
         return invalidAuthorizationTokenRoles;
       }
@@ -319,29 +369,27 @@ export async function parseRequestAuth<
       >
     | undefined;
 
-  if (auth) {
-    const [error, message] =
-      (await checkAuthorizationToken<
-        SV,
-        MapParamsSchema<SV, P>,
-        MapReqBodySchema<SV, ReqBody>,
-        MapReqQuerySchema<SV, ReqQuery>,
-        MapReqHeadersSchema<SV, ReqHeaders>,
-        MapVersionedReqsSchema<SV, VersionedApi>,
-        MapSessionSchema<SV, SessionSchema>,
-        unknown
-      >(
-        auth,
-        (req.headers[auth.headerName ?? 'Authorization'] as string) ||
-          (req.headers[auth.headerName ?? 'authorization'] as string),
-        // we can safely cast here because we know that the user will supply resolution for the request
-        req
-      )) ?? [];
-    if (error != null) {
-      res.type('text/plain');
-      res.status(error).send(message as never);
-      return;
-    }
+  const [error, message] =
+    (await checkAuthorizationToken<
+      SV,
+      MapParamsSchema<SV, P>,
+      MapReqBodySchema<SV, ReqBody>,
+      MapReqQuerySchema<SV, ReqQuery>,
+      MapReqHeadersSchema<SV, ReqHeaders>,
+      MapVersionedReqsSchema<SV, VersionedApi>,
+      MapSessionSchema<SV, SessionSchema>,
+      unknown
+    >(
+      auth,
+      req._globalOptions.auth,
+      (req.headers[auth?.headerName ?? 'Authorization'] as string) ||
+        (req.headers[auth?.headerName ?? 'authorization'] as string),
+      req
+    )) ?? [];
+  if (error != null) {
+    res.type('text/plain');
+    res.status(error).send(message as never);
+    return;
   }
 
   next?.();

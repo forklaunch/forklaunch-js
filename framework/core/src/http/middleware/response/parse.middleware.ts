@@ -73,6 +73,17 @@ export function parse<
   let headers;
   let responses;
 
+  const collapsedOptions =
+    (req.contractDetails.options?.responseValidation ??
+    req._globalOptions.validation === false)
+      ? 'none'
+      : req._globalOptions.validation?.response;
+
+  if (collapsedOptions === 'none') {
+    next?.();
+    return;
+  }
+
   const responseSchemas = res.responseSchemas;
   const schemaValidator = req.schemaValidator as SchemaValidator;
 
@@ -146,6 +157,7 @@ export function parse<
   if (parseErrors.length > 0) {
     switch (req.contractDetails.options?.responseValidation) {
       default:
+      case undefined:
       case 'error':
         res.type('text/plain');
         res.status(500);

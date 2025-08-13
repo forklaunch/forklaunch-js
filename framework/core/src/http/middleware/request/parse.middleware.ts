@@ -57,6 +57,12 @@ export function parse<
   >,
   next?: ForklaunchNextFunction
 ) {
+  const collapsedOptions =
+    (req.contractDetails.options?.requestValidation ??
+    req._globalOptions.validation === false)
+      ? 'none'
+      : req._globalOptions.validation?.request;
+
   const request = {
     params: req.params,
     query: req.query,
@@ -147,8 +153,9 @@ export function parse<
     ) as ReqHeaders;
   }
   if (!parsedRequest.ok) {
-    switch (req.contractDetails.options?.requestValidation) {
+    switch (collapsedOptions) {
       default:
+      case undefined:
       case 'error':
         res.type('application/json');
         res.status(400);

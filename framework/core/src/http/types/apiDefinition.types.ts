@@ -35,6 +35,7 @@ import {
   UrlEncodedForm,
   VersionSchema
 } from './contractDetails.types';
+import { ExpressLikeRouterOptions } from './expressLikeOptions';
 import { MetricsDefinition } from './openTelemetryCollector.types';
 
 /**
@@ -153,6 +154,9 @@ export interface ForklaunchRequest<
 
   /** Parsed versions */
   _parsedVersions: string[] | number;
+
+  /** Global options */
+  _globalOptions: ExpressLikeRouterOptions<SV, SessionSchema>;
 }
 
 /**
@@ -915,7 +919,7 @@ export type ExpressLikeAuthMapper<
   SessionSchema extends Record<string, unknown>,
   BaseRequest
 > = (
-  payload: JWTPayload,
+  payload: JWTPayload & SessionSchema,
   req?: ResolvedForklaunchRequest<
     SV,
     P,

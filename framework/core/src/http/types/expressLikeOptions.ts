@@ -1,47 +1,77 @@
-import {
-  AnySchemaValidator,
-  IdiomaticSchema,
-  Schema
-} from '@forklaunch/validator';
+import { FastMCP } from '@forklaunch/fastmcp-fork';
+import { AnySchemaValidator, Schema } from '@forklaunch/validator';
 import { CorsOptions } from 'cors';
-import { FastMCP } from 'fastmcp';
 import { JWTPayload } from 'jose';
-import { TelemetryOptions } from './openTelemetryCollector.types';
+import { ForklaunchRequest, MapSessionSchema } from './apiDefinition.types';
+import { SessionObject } from './contractDetails.types';
+
+export type ExpressLikeGlobalAuthOptions<
+  SV extends AnySchemaValidator,
+  SessionSchema extends Record<string, unknown>
+> =
+  | false
+  | {
+      sessionSchema?: SessionSchema;
+      scopeHeirarchy?: string[];
+      surfaceScopes?: (
+        payload: JWTPayload & SessionSchema,
+        req?: ForklaunchRequest<
+          SV,
+          Record<string, string>,
+          Record<string, unknown>,
+          Record<string, unknown>,
+          Record<string, unknown>,
+          string,
+          SessionSchema
+        >
+      ) => Set<string> | Promise<Set<string>>;
+      surfacePermissions?: (
+        payload: JWTPayload & SessionSchema,
+        req?: ForklaunchRequest<
+          SV,
+          Record<string, string>,
+          Record<string, unknown>,
+          Record<string, unknown>,
+          Record<string, unknown>,
+          string,
+          SessionSchema
+        >
+      ) => Set<string> | Promise<Set<string>>;
+      surfaceRoles?: (
+        payload: JWTPayload & SessionSchema,
+        req?: ForklaunchRequest<
+          SV,
+          Record<string, string>,
+          Record<string, unknown>,
+          Record<string, unknown>,
+          Record<string, unknown>,
+          string,
+          SessionSchema
+        >
+      ) => Set<string> | Promise<Set<string>>;
+    };
+
+export type ExpressLikeSchemaGlobalAuthOptions<
+  SV extends AnySchemaValidator,
+  SessionSchema extends SessionObject<SV>
+> = ExpressLikeGlobalAuthOptions<SV, MapSessionSchema<SV, SessionSchema>>;
 
 export type ExpressLikeRouterOptions<
   SV extends AnySchemaValidator,
-  SessionSchema extends IdiomaticSchema<SV>
+  SessionSchema extends SessionObject<SV>
 > = {
-  auth?:
-    | false
-    | {
-        sessionSchema?: SessionSchema;
-        mapPermissions?: (permissions: string[]) => JWTPayload & SessionSchema;
-        mapRoles?: (roles: string[]) => JWTPayload & SessionSchema;
-      };
-
+  auth?: ExpressLikeSchemaGlobalAuthOptions<SV, SessionSchema>;
   validation?:
     | false
     | {
         request?: 'none' | 'warning' | 'error';
         response?: 'none' | 'warning' | 'error';
       };
-  telemetry?: TelemetryOptions;
-  openapi?:
-    | false
-    | {
-        title?: string;
-        description?: string;
-        contact?: {
-          name?: string;
-          email?: string;
-        };
-      };
 };
 
 export type ExpressLikeApplicationOptions<
   SV extends AnySchemaValidator,
-  SessionSchema extends IdiomaticSchema<SV> | undefined
+  SessionSchema extends SessionObject<SV>
 > = ExpressLikeRouterOptions<SV, SessionSchema> & {
   hosting?: {
     host?: string;
