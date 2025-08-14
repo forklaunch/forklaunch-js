@@ -25,10 +25,10 @@ export const put = <
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
   VersionedApi extends VersionSchema<SV, 'put'>,
+  SessionSchema extends SessionObject<SV>,
   BaseRequest,
   BaseResponse,
   NextFunction,
-  SessionSchema extends SessionObject<SV>,
   const Auth extends SchemaAuthMethods<
     SV,
     P,
