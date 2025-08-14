@@ -8,6 +8,7 @@ import {
   QueryObject,
   ResponsesObject,
   SchemaAuthMethods,
+  SessionObject,
   VersionSchema
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
@@ -68,6 +69,7 @@ export const get = <
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
   const VersionedApi extends VersionSchema<SV, 'get'>,
+  const SessionSchema extends SessionObject<SV>,
   const Auth extends SchemaAuthMethods<
     SV,
     P,
@@ -75,6 +77,7 @@ export const get = <
     ReqQuery,
     ReqHeaders,
     VersionedApi,
+    SessionSchema,
     Request
   >
 >(
@@ -92,6 +95,7 @@ export const get = <
     ReqHeaders,
     ResHeaders,
     VersionedApi,
+    SessionSchema,
     Request,
     Auth
   >,
@@ -105,6 +109,7 @@ export const get = <
     ResHeaders,
     LocalsObj,
     VersionedApi,
+    SessionSchema,
     Request,
     Response,
     NextFunction
@@ -122,6 +127,7 @@ export const get = <
     ResHeaders,
     LocalsObj,
     VersionedApi,
+    SessionSchema,
     Request,
     Response,
     NextFunction,
