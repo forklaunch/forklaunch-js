@@ -10,7 +10,8 @@ import {
   meta,
   MetricsDefinition,
   OPENAPI_DEFAULT_VERSION,
-  OpenTelemetryCollector
+  OpenTelemetryCollector,
+  SessionObject
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { ZodSchemaValidator } from '@forklaunch/validator/zod';
@@ -43,14 +44,15 @@ import { ExpressOptions } from './types/expressOptions.types';
  */
 export class Application<
   SV extends AnySchemaValidator,
-  T extends Record<string, unknown> | undefined
+  SessionSchema extends SessionObject<SV>
 > extends ForklaunchExpressLikeApplication<
   SV,
   Express,
   RequestHandler,
   Request,
   Response,
-  NextFunction
+  NextFunction,
+  SessionSchema
 > {
   private docsConfiguration: DocsConfiguration | undefined;
   /**
@@ -63,7 +65,7 @@ export class Application<
   constructor(
     schemaValidator: SV,
     openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-    options?: ExpressOptions<T>
+    options?: ExpressOptions<SV, SessionSchema>
   ) {
     super(
       schemaValidator,

@@ -1,10 +1,9 @@
 import {
   MetricsDefinition,
-  OpenTelemetryCollector
+  OpenTelemetryCollector,
+  SessionObject
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
-import { OptionsJson, OptionsText, OptionsUrlencoded } from 'body-parser';
-import { BusboyConfig } from 'busboy';
 import { Application } from './src/expressApplication';
 import { Router } from './src/expressRouter';
 import { checkout } from './src/handlers/checkout';
@@ -35,7 +34,10 @@ import { trace } from './src/handlers/trace';
 import { unlink } from './src/handlers/unlink';
 import { unlock } from './src/handlers/unlock';
 import { unsubscribe } from './src/handlers/unsubscribe';
-import { ExpressOptions } from './src/types/expressOptions.types';
+import {
+  ExpressOptions,
+  ExpressRouterOptions
+} from './src/types/expressOptions.types';
 
 /**
  * Creates a new instance of Application with the given schema validator.
@@ -46,13 +48,17 @@ import { ExpressOptions } from './src/types/expressOptions.types';
  */
 export function forklaunchExpress<
   SV extends AnySchemaValidator,
-  T extends Record<string, unknown> | undefined
+  SessionSchema extends SessionObject<SV>
 >(
   schemaValidator: SV,
   openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-  options?: ExpressOptions<T>
+  options?: ExpressOptions<SV, SessionSchema>
 ) {
-  return new Application(schemaValidator, openTelemetryCollector, options);
+  return new Application<SV, SessionSchema>(
+    schemaValidator,
+    openTelemetryCollector,
+    options
+  );
 }
 
 /**
@@ -65,19 +71,15 @@ export function forklaunchExpress<
  */
 export function forklaunchRouter<
   SV extends AnySchemaValidator,
-  BasePath extends `/${string}`
+  BasePath extends `/${string}`,
+  SessionSchema extends SessionObject<SV>
 >(
   basePath: BasePath,
   schemaValidator: SV,
   openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-  options?: {
-    busboy?: BusboyConfig;
-    text?: OptionsText;
-    json?: OptionsJson;
-    urlencoded?: OptionsUrlencoded;
-  }
-): Router<SV, BasePath> {
-  const router = new Router(
+  options?: ExpressRouterOptions<SV, SessionSchema>
+): Router<SV, BasePath, SessionSchema> {
+  const router = new Router<SV, BasePath, SessionSchema>(
     basePath,
     schemaValidator,
     openTelemetryCollector,
