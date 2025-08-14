@@ -1,5 +1,11 @@
 # @forklaunch/express
 
+## 0.7.11
+
+### Patch Changes
+
+- inject host into mcp path
+
 ## 0.7.10
 
 ### Patch Changes
