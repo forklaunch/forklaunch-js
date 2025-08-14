@@ -124,7 +124,6 @@ pub(crate) fn precheck_version(
     matches: &ArgMatches,
     subcommand: &str,
 ) -> Result<VersionCheckOutcome> {
-    // Skip for init application specifically
     if subcommand == "init" {
         if let Some((child, _)) = matches.subcommand() {
             if child == "application" {
@@ -133,8 +132,6 @@ pub(crate) fn precheck_version(
         }
     }
 
-    // Determine a sensible starting path for manifest discovery.
-    // Prefer an explicit path flag from the subcommand, else use CWD.
     let start_path: PathBuf = if let Some(p) = matches.get_one::<String>("base_path") {
         PathBuf::from(p)
     } else if let Some(p) = matches.get_one::<String>("path") {
@@ -143,7 +140,6 @@ pub(crate) fn precheck_version(
         current_dir().unwrap_or_else(|_| PathBuf::from("."))
     };
 
-    // Walk upwards from the provided path (or CWD) to find the nearest manifest.
     fn find_nearest_manifest_from(start: &Path) -> Option<PathBuf> {
         let mut base_path = start.canonicalize().ok()?;
         loop {
@@ -192,7 +188,6 @@ pub(crate) fn precheck_version(
         anyhow::bail!("Version mismatch. Aborting as per user choice.");
     }
 
-    // Informative messages before/after install
     let platform = platform_triple()?;
     stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
     writeln!(
@@ -213,7 +208,6 @@ pub(crate) fn precheck_version(
     )?;
     stdout.reset()?;
 
-    // Attempt to re-exec the command via the newly downloaded binary
     stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
     writeln!(
         &mut stdout,
