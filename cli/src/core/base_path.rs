@@ -5,12 +5,12 @@ use std::{
 
 use anyhow::{Context, Result};
 use clap::ArgMatches;
-use rustyline::{Editor, history::DefaultHistory};
+use rustyline::{history::DefaultHistory, Editor};
 use termcolor::StandardStream;
 
 use crate::{
     constants::ERROR_FAILED_TO_GET_CWD,
-    prompt::{ArrayCompleter, prompt_with_validation},
+    prompt::{prompt_with_validation, ArrayCompleter},
 };
 
 pub(crate) enum BasePathType {
@@ -87,6 +87,21 @@ fn find_base_path(
             return Some(base_path);
         }
         base_path = base_path.parent().unwrap().to_path_buf();
+    }
+    None
+}
+
+pub(crate) fn find_nearest_manifest_root_unbounded() -> Option<PathBuf> {
+    let mut base_path = current_dir().ok()?;
+    loop {
+        let manifest = base_path.join(".forklaunch").join("manifest.toml");
+        if manifest.exists() {
+            return Some(base_path);
+        }
+        match base_path.parent() {
+            Some(parent) => base_path = parent.to_path_buf(),
+            None => break,
+        }
     }
     None
 }

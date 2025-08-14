@@ -59,6 +59,10 @@ fn main() -> Result<()> {
         .subcommand(version.command())
         .get_matches();
 
+    if let Some((cmd, sub_matches)) = matches.subcommand() {
+        crate::core::version_check::precheck_version(sub_matches, cmd)?;
+    }
+
     let result = match matches.subcommand() {
         Some(("init", sub_matches)) => init.handler(sub_matches),
         Some(("change", sub_matches)) => change.handler(sub_matches),
