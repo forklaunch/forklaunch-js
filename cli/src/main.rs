@@ -59,7 +59,6 @@ fn main() -> Result<()> {
         .subcommand(version.command())
         .get_matches();
 
-    // Centralized version precheck for all commands (soft-check semantics: if manifest, enforce; else proceed)
     if let Some((cmd, sub_matches)) = matches.subcommand() {
         crate::core::version_check::precheck_version(sub_matches, cmd)?;
     }
