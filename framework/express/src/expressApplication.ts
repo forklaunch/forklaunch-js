@@ -148,6 +148,7 @@ export class Application<
       );
       mcpServer.start({
         httpStream: {
+          host,
           endpoint: '/mcp',
           port: port + 1
         },
