@@ -1,9 +1,13 @@
 use std::{
-    fs,
-    io::Write,
+    env::{args, current_dir},
+    fs::{File, create_dir_all, metadata, read_to_string, remove_file, set_permissions},
+    io::{Write, copy},
     path::{Path, PathBuf},
-    process::Command as OsCommand,
+    process::{Command as OsCommand, exit},
 };
+
+#[cfg(unix)]
+use std::os::unix::{fs::symlink, prelude::PermissionsExt};
 
 use anyhow::{Context, Result};
 use clap::ArgMatches;
@@ -28,7 +32,7 @@ fn current_cli_version() -> &'static str {
 
 fn parse_required_cli_version(manifest_root: &PathBuf) -> Option<String> {
     let manifest_path = manifest_root.join(".forklaunch").join("manifest.toml");
-    let content = fs::read_to_string(&manifest_path).ok()?;
+    let content = read_to_string(&manifest_path).ok()?;
     let value: toml::Value = toml::from_str(&content).ok()?;
     value
         .get("cli_version")
@@ -76,7 +80,7 @@ fn download_binary(required_version: &str) -> Result<PathBuf> {
     let dir = dirs::home_dir()
         .map(|p| p.join(".forklaunch").join("bin"))
         .context("Failed to resolve install directory")?;
-    fs::create_dir_all(&dir).ok();
+    create_dir_all(&dir).ok();
     let binary_path = if platform.starts_with("windows") {
         dir.join("forklaunch.exe")
     } else {
@@ -93,14 +97,13 @@ fn download_binary(required_version: &str) -> Result<PathBuf> {
             resp.status()
         );
     }
-    let mut file = fs::File::create(&binary_path)?;
-    std::io::copy(&mut resp, &mut file)?;
+    let mut file = File::create(&binary_path)?;
+    copy(&mut resp, &mut file)?;
     #[cfg(unix)]
     {
-        use std::os::unix::fs::PermissionsExt;
-        let mut perms = fs::metadata(&binary_path)?.permissions();
+        let mut perms = metadata(&binary_path)?.permissions();
         perms.set_mode(0o755);
-        fs::set_permissions(&binary_path, perms)?;
+        set_permissions(&binary_path, perms)?;
     }
 
     // Create alias 'fl' on unix-like systems
@@ -108,10 +111,10 @@ fn download_binary(required_version: &str) -> Result<PathBuf> {
     {
         let alias_path = dir.join("fl");
         if alias_path.exists() {
-            let _ = fs::remove_file(&alias_path);
+            let _ = remove_file(&alias_path);
         }
         #[cfg(unix)]
-        std::os::unix::fs::symlink(&binary_path, &alias_path).ok();
+        symlink(&binary_path, &alias_path).ok();
     }
 
     Ok(binary_path)
@@ -137,7 +140,7 @@ pub(crate) fn precheck_version(
     } else if let Some(p) = matches.get_one::<String>("path") {
         PathBuf::from(p)
     } else {
-        std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."))
+        current_dir().unwrap_or_else(|_| PathBuf::from("."))
     };
 
     // Walk upwards from the provided path (or CWD) to find the nearest manifest.
@@ -219,13 +222,11 @@ pub(crate) fn precheck_version(
     )?;
     stdout.reset()?;
 
-    let status = OsCommand::new(&binary_path)
-        .args(std::env::args().skip(1))
-        .status();
+    let status = OsCommand::new(&binary_path).args(args().skip(1)).status();
 
     match status {
         Ok(s) => {
-            std::process::exit(s.code().unwrap_or(0));
+            exit(s.code().unwrap_or(0));
         }
         Err(_) => {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
