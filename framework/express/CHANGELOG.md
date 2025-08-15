@@ -1,5 +1,13 @@
 # @forklaunch/express
 
+## 0.7.12
+
+### Patch Changes
+
+- "bump fastmcp internal version"
+- Updated dependencies
+  - @forklaunch/core@0.12.3
+
 ## 0.7.11
 
 ### Patch Changes

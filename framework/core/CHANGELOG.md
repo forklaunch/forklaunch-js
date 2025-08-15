@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.12.3
+
+### Patch Changes
+
+- "bump fastmcp internal version"
+
 ## 0.12.2
 
 ### Patch Changes

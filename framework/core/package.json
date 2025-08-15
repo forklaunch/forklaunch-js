@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/core",
-  "version": "0.12.2",
+  "version": "0.12.3",
   "description": "forklaunch-js core package. Contains useful building blocks.",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -75,7 +75,7 @@
   },
   "dependencies": {
     "@forklaunch/common": "workspace:*",
-    "@forklaunch/fastmcp-fork": "^1.0.3",
+    "@forklaunch/fastmcp-fork": "^1.0.5",
     "@forklaunch/opentelemetry-instrumentation-hyper-express": "0.0.5",
     "@forklaunch/validator": "workspace:*",
     "@mikro-orm/core": "^6.4.16",

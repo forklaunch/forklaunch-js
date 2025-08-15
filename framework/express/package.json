@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/express",
-  "version": "0.7.11",
+  "version": "0.7.12",
   "description": "Forklaunch framework for express.",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -37,7 +37,7 @@
   "dependencies": {
     "@forklaunch/common": "workspace:*",
     "@forklaunch/core": "workspace:*",
-    "@forklaunch/fastmcp-fork": "^1.0.3",
+    "@forklaunch/fastmcp-fork": "^1.0.5",
     "@forklaunch/validator": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.17.1",
     "@scalar/express-api-reference": "^0.8.13",

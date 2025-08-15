@@ -97,8 +97,8 @@ importers:
         specifier: workspace:*
         version: link:../common
       '@forklaunch/fastmcp-fork':
-        specifier: ^1.0.3
-        version: 1.0.3
+        specifier: ^1.0.5
+        version: 1.0.5
       '@forklaunch/opentelemetry-instrumentation-hyper-express':
         specifier: 0.0.5
         version: 0.0.5(@opentelemetry/api@1.9.0)
@@ -297,8 +297,8 @@ importers:
         specifier: workspace:*
         version: link:../core
       '@forklaunch/fastmcp-fork':
-        specifier: ^1.0.3
-        version: 1.0.3
+        specifier: ^1.0.5
+        version: 1.0.5
       '@forklaunch/validator':
         specifier: workspace:*
         version: link:../validator
@@ -1331,8 +1331,8 @@ packages:
     resolution: {integrity: sha512-Ul5l+lHEcw3L5+k8POx6r74mxEYKG5kOb6Xpy2gCRW6zweT6TEhAf8vhxGgjhqrd/VO/Dirhsb+1hNpD1ue9hw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@forklaunch/fastmcp-fork@1.0.3':
-    resolution: {integrity: sha512-6gQcAU615i6AgVlXDwQNBz1MzZP/UxPtciStKpS8MG3w9kD5OUsR2RA6Vfn6xQMdKXAsbt9seIClnPoKApn/OA==}
+  '@forklaunch/fastmcp-fork@1.0.5':
+    resolution: {integrity: sha512-rpQsfVdEWqBX9D1YysO/yBYQqstk1DrRip2xNTr3R8G/fbKV33jjL9oYF3D5fxjg7t2WcxzYOVtVJyTIOvXNKA==}
     hasBin: true
 
   '@forklaunch/hyper-express-fork@6.17.34':
@@ -6517,7 +6517,7 @@ snapshots:
       '@eslint/core': 0.15.1
       levn: 0.4.1
 
-  '@forklaunch/fastmcp-fork@1.0.3':
+  '@forklaunch/fastmcp-fork@1.0.5':
     dependencies:
       '@modelcontextprotocol/sdk': 1.17.2
       '@standard-schema/spec': 1.0.0
