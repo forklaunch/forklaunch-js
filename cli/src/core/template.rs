@@ -74,6 +74,8 @@ pub(crate) fn generate_with_template(
         None => Path::new(&template_dir.output_path).to_path_buf(),
     };
 
+    // println!("cli:core:template:00: output_dir: {:?}", output_dir);
+
     for entry in get_directory_filenames(&template_dir)? {
         let output_path_template =
             Template::new(entry.path().file_name().unwrap().to_string_lossy())?;
