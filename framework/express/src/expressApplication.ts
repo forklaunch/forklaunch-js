@@ -29,7 +29,7 @@ import { Server } from 'http';
 import swaggerUi from 'swagger-ui-express';
 import { contentParse } from './middleware/content.parse.middleware';
 import { enrichResponseTransmission } from './middleware/enrichResponseTransmission.middleware';
-import { ExpressOptions } from './types/expressOptions.types';
+import { ExpressApplicationOptions } from './types/expressOptions.types';
 
 /**
  * Application class that sets up an Express server with Forklaunch routers and middleware.
@@ -65,7 +65,7 @@ export class Application<
   constructor(
     schemaValidator: SV,
     openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-    options?: ExpressOptions<SV, SessionSchema>
+    options?: ExpressApplicationOptions<SV, SessionSchema>
   ) {
     super(
       schemaValidator,

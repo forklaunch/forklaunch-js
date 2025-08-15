@@ -21,8 +21,6 @@ import {
   LiteralSchema,
   SchemaResolve
 } from '@forklaunch/validator';
-import { OptionsJson, OptionsText, OptionsUrlencoded } from 'body-parser';
-import { BusboyConfig } from 'busboy';
 import express, {
   Router as ExpressRouter,
   NextFunction,
@@ -33,6 +31,7 @@ import { RequestHandler } from 'express-serve-static-core';
 import { contentParse } from './middleware/content.parse.middleware';
 import { enrichResponseTransmission } from './middleware/enrichResponseTransmission.middleware';
 import { ExpressRequestHandler } from './types/express.types';
+import { ExpressRouterOptions } from './types/expressOptions.types';
 
 /**
  * Router class that sets up routes and middleware for an Express router.
@@ -69,12 +68,7 @@ export class Router<
     public basePath: BasePath,
     schemaValidator: SV,
     openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-    options?: {
-      busboy?: BusboyConfig;
-      text?: OptionsText;
-      json?: OptionsJson;
-      urlencoded?: OptionsUrlencoded;
-    }
+    options?: ExpressRouterOptions<SV, SessionSchema>
   ) {
     super(
       basePath,
@@ -84,7 +78,8 @@ export class Router<
         contentParse<SV>(options),
         enrichResponseTransmission as unknown as ExpressRequestHandler
       ],
-      openTelemetryCollector
+      openTelemetryCollector,
+      options
     );
 
     this.configOptions = options;

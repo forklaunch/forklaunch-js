@@ -515,6 +515,10 @@ type BasePathParamHttpContractDetailsIO<
   readonly responseHeaders?: ResHeaders;
   /** Optional query schemas for the contract */
   readonly query?: QuerySchema;
+  /** Optional MCP details for the contract */
+  readonly mcpEnabled?: boolean;
+  /** Optional OpenAPI details for the contract */
+  readonly openapiEnabled?: boolean;
 };
 
 type VersionedBasePathParamHttpContractDetailsIO<

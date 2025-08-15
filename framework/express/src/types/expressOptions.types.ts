@@ -7,7 +7,7 @@ import { AnySchemaValidator } from '@forklaunch/validator';
 import { OptionsJson, OptionsText, OptionsUrlencoded } from 'body-parser';
 import { BusboyConfig } from 'busboy';
 
-export type ExpressOptions<
+export type ExpressApplicationOptions<
   SV extends AnySchemaValidator,
   SessionSchema extends SessionObject<SV>
 > = ExpressLikeApplicationOptions<SV, SessionSchema> & {

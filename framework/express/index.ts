@@ -35,7 +35,7 @@ import { unlink } from './src/handlers/unlink';
 import { unlock } from './src/handlers/unlock';
 import { unsubscribe } from './src/handlers/unsubscribe';
 import {
-  ExpressOptions,
+  ExpressApplicationOptions,
   ExpressRouterOptions
 } from './src/types/expressOptions.types';
 
@@ -52,7 +52,7 @@ export function forklaunchExpress<
 >(
   schemaValidator: SV,
   openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-  options?: ExpressOptions<SV, SessionSchema>
+  options?: ExpressApplicationOptions<SV, SessionSchema>
 ) {
   return new Application<SV, SessionSchema>(
     schemaValidator,
@@ -96,7 +96,10 @@ export type { NextFunction, Request, Response } from 'express';
 export type * from 'express-serve-static-core';
 export type { Application } from './src/expressApplication';
 export type { Router } from './src/expressRouter';
-export type { ExpressOptions } from './src/types/expressOptions.types';
+export type {
+  ExpressApplicationOptions,
+  ExpressRouterOptions
+} from './src/types/expressOptions.types';
 
 export const handlers: {
   checkout: typeof checkout;

@@ -38,7 +38,8 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
     ParsedQs,
     Record<string, string>,
     Record<string, unknown>,
-    string
+    string,
+    Record<string, unknown>
   >,
   res: InternalResponse<
     Record<number, unknown>,
@@ -77,7 +78,8 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
       Record<string, string>,
       Record<string, string>,
       Record<string, unknown>,
-      VersionSchema<SV, 'middleware'>
+      VersionSchema<SV, 'middleware'>,
+      Record<string, unknown>
     >(
       this,
       req,
@@ -119,7 +121,8 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
       Record<string, string>,
       Record<string, string>,
       Record<string, unknown>,
-      VersionSchema<SV, 'middleware'>
+      VersionSchema<SV, 'middleware'>,
+      Record<string, unknown>
     >(
       this,
       req,
@@ -170,7 +173,8 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
       Record<string, string>,
       Record<string, string>,
       Record<string, unknown>,
-      VersionSchema<SV, 'middleware'>
+      VersionSchema<SV, 'middleware'>,
+      Record<string, unknown>
     >(
       this,
       req,

@@ -7,7 +7,8 @@ import {
   isForklaunchRequest,
   MetricsDefinition,
   OPENAPI_DEFAULT_VERSION,
-  OpenTelemetryCollector
+  OpenTelemetryCollector,
+  SessionObject
 } from '@forklaunch/core/http';
 import {
   MiddlewareHandler,
@@ -23,7 +24,7 @@ import * as uWebsockets from 'uWebSockets.js';
 import { contentParse } from './middleware/contentParse.middleware';
 import { enrichResponseTransmission } from './middleware/enrichResponseTransmission.middleware';
 import { swagger, swaggerRedirect } from './middleware/swagger.middleware';
-import { ExpressOptions } from './types/hyperExpressOptions.types';
+import { ExpressApplicationOptions } from './types/hyperExpressOptions.types';
 
 /**
  * Represents an application built on top of Hyper-Express and Forklaunch.
@@ -48,14 +49,16 @@ import { ExpressOptions } from './types/hyperExpressOptions.types';
  * ```
  */
 export class Application<
-  SV extends AnySchemaValidator
+  SV extends AnySchemaValidator,
+  SessionSchema extends SessionObject<SV>
 > extends ForklaunchExpressLikeApplication<
   SV,
   Server,
   MiddlewareHandler,
   Request<Record<string, unknown>>,
   Response<Record<string, unknown>>,
-  MiddlewareNext
+  MiddlewareNext,
+  SessionSchema
 > {
   private docsConfiguration: DocsConfiguration | undefined;
   /**
@@ -77,7 +80,7 @@ export class Application<
   constructor(
     schemaValidator: SV,
     openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-    configurationOptions?: ExpressOptions
+    configurationOptions?: ExpressApplicationOptions<SV, SessionSchema>
   ) {
     super(
       schemaValidator,
