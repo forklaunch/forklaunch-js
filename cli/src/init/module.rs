@@ -80,6 +80,12 @@ impl CliCommand for ModuleCommand {
                     .help("Dry run the command")
                     .action(ArgAction::SetTrue),
             )
+            .arg(
+                Arg::new("module_folder")
+                    .short('f')
+                    .long("module-folder")
+                    .help("The folder to store the module in")
+            )
     }
 
     // pass token in from parent and perform get token above?
@@ -153,7 +159,9 @@ impl CliCommand for ModuleCommand {
 
         // Default output path should be src/modules/(module_name)
         let src_path = base_path.join("src");
-        let destination_path = if src_path.exists() && src_path.is_dir() {
+        let destination_path = if let Some(module_folder) = matches.get_one::<String>("module_folder") {
+            base_path.join(Path::new(&module_folder))
+        } else if src_path.exists() && src_path.is_dir() {
             src_path
                 .join("modules")
         } else {
@@ -183,6 +191,7 @@ impl CliCommand for ModuleCommand {
             base_path.join(Path::new(&temp_path)).to_path_buf()
         };
         println!("02: destination_path: {:?}", destination_path);
+
         let name = existing_manifest_data.app_name.clone();
 
         let mut service_data = ServiceManifestData {
