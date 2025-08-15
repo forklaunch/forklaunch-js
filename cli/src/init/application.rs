@@ -780,7 +780,7 @@ impl CliCommand for ApplicationCommand {
         });
 
         template_dirs.extend(additional_projects_dirs.clone());
-        println!("init:application:00: template_dirs: {:?}", template_dirs);
+        // println!("init:application:00: template_dirs: {:?}", template_dirs);
         rendered_templates.extend(generate_with_template(
             Some(&application_path),
             &PathIO {
@@ -900,8 +900,8 @@ impl CliCommand for ApplicationCommand {
                     docker_compose_string,
                 )?);
             }
-            println!("init:application:01: application_path: {:?}", application_path);
-            println!("init:application:02: template_dir: {:?}", template_dir);
+            // println!("init:application:01: application_path: {:?}", application_path);
+            // println!("init:application:02: template_dir: {:?}", template_dir);
             rendered_templates.extend(generate_with_template(
                 Some(&application_path),
                 &template_dir,
@@ -926,7 +926,7 @@ impl CliCommand for ApplicationCommand {
                 };
 
             let service_base_path = Path::new(&application_path).join(&template_dir.output_path);
-            println!("init:application:03: service_base_path: {:?}", service_base_path);
+            // println!("init:application:03: service_base_path: {:?}", service_base_path);
             rendered_templates.push(generate_service_package_json(
                 &service_data,
                 &service_base_path,
