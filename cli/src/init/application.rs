@@ -644,6 +644,7 @@ impl CliCommand for ApplicationCommand {
                 resources: None,
                 routers: None,
                 metadata: None,
+                path: Some("core".to_string()),
             },
             ProjectEntry {
                 r#type: ProjectType::Library,
@@ -653,6 +654,7 @@ impl CliCommand for ApplicationCommand {
                 resources: None,
                 routers: None,
                 metadata: None,
+                path: Some("monitoring".to_string()),
             },
             ProjectEntry {
                 r#type: ProjectType::Library,
@@ -662,6 +664,7 @@ impl CliCommand for ApplicationCommand {
                 resources: None,
                 routers: None,
                 metadata: None,
+                path: Some("universal-sdk".to_string()),
             },
         ];
         additional_projects.extend(modules.clone().into_iter().map(|package| ProjectEntry {
@@ -677,6 +680,7 @@ impl CliCommand for ApplicationCommand {
             }),
             routers: get_routers_from_standard_package(package),
             metadata: None,
+            path: Some(format!("src/modules/{}", get_service_module_name(&package))),
         }));
 
         let additional_projects_names = additional_projects
@@ -780,7 +784,7 @@ impl CliCommand for ApplicationCommand {
         });
 
         template_dirs.extend(additional_projects_dirs.clone());
-        // println!("init:application:00: template_dirs: {:?}", template_dirs);
+        
         rendered_templates.extend(generate_with_template(
             Some(&application_path),
             &PathIO {
@@ -809,6 +813,8 @@ impl CliCommand for ApplicationCommand {
             )?)
             .unwrap(),
         );
+        println!("init:application:00: template_dirs: {:?}", template_dirs);
+        println!("init:application:02: modules: {:?}", modules);
         for template_dir in template_dirs {
             let mut service_data = ServiceManifestData {
                 id: data.id.clone(),
@@ -1082,7 +1088,8 @@ impl CliCommand for ApplicationCommand {
             generate_gitignore(&Path::new(&application_path))
                 .with_context(|| ERROR_FAILED_TO_CREATE_GITIGNORE)?,
         );
-
+        println!("init:application:03: application_path: {:?}", application_path);
+        println!("init:application:04: additional_projects: {:?}", additional_projects);
         if runtime == Runtime::Node {
             rendered_templates.extend(
                 generate_pnpm_workspace(&application_path, &additional_projects)

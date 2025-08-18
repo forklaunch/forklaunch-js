@@ -111,6 +111,7 @@ pub(crate) struct ProjectEntry {
     pub(crate) resources: Option<ResourceInventory>,
     pub(crate) routers: Option<Vec<String>>,
     pub(crate) metadata: Option<ProjectMetadata>,
+    pub(crate) path: Option<String>,
 }
 
 #[macro_export]
@@ -345,6 +346,7 @@ pub(crate) fn add_project_definition_to_manifest<
         resources,
         routers,
         metadata,
+        path: None,
     });
 
     let app_name = manifest_data.app_name().to_owned();

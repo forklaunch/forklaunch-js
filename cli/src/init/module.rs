@@ -256,7 +256,8 @@ impl CliCommand for ModuleCommand {
             is_better_auth: module.clone() == Module::BetterAuthIam,
             is_stripe: module.clone() == Module::StripeBilling,
         };
-
+        println!("init:module:00: service_data: {:?}", service_data);
+        println!("init:module:01: module: {:?}", module);
         let manifest_data = add_project_definition_to_manifest(
             ProjectType::Service,
             &mut service_data,
@@ -282,22 +283,22 @@ impl CliCommand for ModuleCommand {
                 .to_string(),
             module_id: Some(module.clone()),
         };
-        // println!("03: template_dir: {:?}", template_dir);
+        println!("init:module:02: template_dir: {:?}", template_dir);
 
         let mut rendered_templates = vec![];
-        // println!("04: config_path: {:?}", config_path);
+        println!("init:module:03: config_path: {:?}", config_path);
         rendered_templates.push(RenderedTemplate {
             path: config_path.clone(),
             content: manifest_data,
             context: Some(ERROR_FAILED_TO_WRITE_MANIFEST.to_string()),
         });
-        // println!("docker-compose.yaml: {:?}", base_path.join("docker-compose.yaml"));
+        println!("init:module:04: docker-compose.yaml: {:?}", base_path.join("docker-compose.yaml"));
         rendered_templates.push(RenderedTemplate {
             path: base_path.join("docker-compose.yaml"),
             content: add_service_definition_to_docker_compose(&service_data, base_path, None)?,
             context: Some(ERROR_FAILED_TO_WRITE_DOCKER_COMPOSE.to_string()),
         });
-        // println!("05: template_dir: {:?}", template_dir);
+        println!("init:module:05: template_dir: {:?}", template_dir);
         rendered_templates.extend(generate_with_template(
             None,
             &template_dir,
