@@ -183,7 +183,9 @@ export class UniversalSdk {
 
     if (params) {
       for (const key in params) {
-        url = url.replace(`:${key}`, encodeURIComponent(params[key] as string));
+        const paramValue = encodeURIComponent(params[key] as string);
+        url = url.replace(`:${key}`, paramValue);
+        url = url.replace(`{${key}}`, paramValue);
       }
     }
 
