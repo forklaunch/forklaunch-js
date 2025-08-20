@@ -1,5 +1,11 @@
 # @forklaunch/interfaces-iam
 
+## 0.5.1
+
+### Patch Changes
+
+- bump internal package versions
+
 ## 0.5.0
 
 ### Minor Changes

@@ -36,13 +36,13 @@
   "dependencies": {
     "@forklaunch/blueprint-core": "workspace:*",
     "@forklaunch/blueprint-monitoring": "workspace:*",
-    "@forklaunch/core": "^0.12.0",
+    "@forklaunch/core": "^0.13.0",
     "@forklaunch/implementation-worker-bullmq": "workspace:*",
     "@forklaunch/implementation-worker-database": "workspace:*",
     "@forklaunch/implementation-worker-kafka": "workspace:*",
     "@forklaunch/implementation-worker-redis": "workspace:*",
-    "@forklaunch/infrastructure-redis": "^0.2.8",
-    "@forklaunch/infrastructure-s3": "^0.2.9",
+    "@forklaunch/infrastructure-redis": "^0.3.0",
+    "@forklaunch/infrastructure-s3": "^0.3.0",
     "@forklaunch/interfaces-worker": "workspace:*",
     "@mikro-orm/better-sqlite": "^6.4.16",
     "@mikro-orm/core": "^6.4.16",
@@ -56,15 +56,15 @@
     "@mikro-orm/reflection": "^6.4.16",
     "@mikro-orm/seeder": "^6.4.16",
     "@mikro-orm/sqlite": "^6.4.16",
-    "@sinclair/typebox": "^0.34.38",
+    "@sinclair/typebox": "^0.34.40",
     "ajv": "^8.17.1",
     "better-sqlite3": "^12.2.0",
-    "bullmq": "^5.56.9",
+    "bullmq": "^5.58.0",
     "dotenv": "^17.2.1",
     "kafkajs": "^2.2.4",
-    "node-gyp": "^11.3.0",
+    "node-gyp": "^11.4.1",
     "sqlite3": "^5.1.7",
-    "zod": "^4.0.14"
+    "zod": "^4.0.17"
   },
   "devDependencies": {
     "@mikro-orm/cli": "^6.4.16",
@@ -72,10 +72,10 @@
     "@types/express-serve-static-core": "^5.0.7",
     "@types/qs": "^6.14.0",
     "depcheck": "^1.4.7",
-    "eslint": "^9.32.0",
-    "tsx": "^4.20.3",
-    "typedoc": "^0.28.9",
-    "typescript-eslint": "^8.38.0"
+    "eslint": "^9.33.0",
+    "tsx": "^4.20.4",
+    "typedoc": "^0.28.10",
+    "typescript-eslint": "^8.40.0"
   },
   "mikro-orm": {
     "config_paths": [

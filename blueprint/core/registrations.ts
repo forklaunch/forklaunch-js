@@ -1,5 +1,5 @@
 import {
-  ExpressOptions,
+  ExpressApplicationOptions,
   forklaunchExpress,
   forklaunchRouter,
   handlers,
@@ -50,7 +50,7 @@ export {
   date,
   email,
   enum_,
-  ExpressOptions,
+  ExpressApplicationOptions,
   file,
   forklaunchExpress,
   forklaunchRouter,

@@ -1,6 +1,6 @@
 import {
   array,
-  ExpressOptions,
+  ExpressApplicationOptions,
   number,
   optional,
   promise,
@@ -10,7 +10,7 @@ import {
   type
 } from '@forklaunch/blueprint-core';
 import { Metrics, metrics } from '@forklaunch/blueprint-monitoring';
-import { OpenTelemetryCollector } from '@forklaunch/core/http';
+import { OpenTelemetryCollector, SessionObject } from '@forklaunch/core/http';
 import {
   createConfigInjector,
   getEnvVar,
@@ -198,7 +198,14 @@ const runtimeDependencies = environmentConfig.chain({
   },
   ExpressOptions: {
     lifetime: Lifetime.Singleton,
-    type: promise(type<ExpressOptions<undefined>>()),
+    type: promise(
+      type<
+        ExpressApplicationOptions<
+          SchemaValidator,
+          SessionObject<SchemaValidator>
+        >
+      >()
+    ),
     factory: async ({ BETTER_AUTH_BASE_PATH, CORS_ORIGINS, BetterAuth }) => {
       const betterAuthOpenAPIContent =
         await BetterAuth.api.generateOpenAPISchema();

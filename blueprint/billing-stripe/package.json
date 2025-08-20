@@ -33,14 +33,14 @@
   "dependencies": {
     "@forklaunch/blueprint-core": "workspace:*",
     "@forklaunch/blueprint-monitoring": "workspace:*",
-    "@forklaunch/common": "^0.4.6",
-    "@forklaunch/core": "^0.12.0",
-    "@forklaunch/express": "^0.7.8",
-    "@forklaunch/hyper-express": "^0.7.8",
+    "@forklaunch/common": "^0.5.0",
+    "@forklaunch/core": "^0.13.0",
+    "@forklaunch/express": "^0.8.0",
+    "@forklaunch/hyper-express": "^0.8.0",
     "@forklaunch/implementation-billing-stripe": "workspace:*",
-    "@forklaunch/infrastructure-redis": "^0.2.8",
+    "@forklaunch/infrastructure-redis": "^0.3.0",
     "@forklaunch/interfaces-billing": "workspace:*",
-    "@forklaunch/validator": "^0.8.0",
+    "@forklaunch/validator": "^0.9.0",
     "@mikro-orm/core": "^6.4.16",
     "@mikro-orm/migrations": "^6.4.16",
     "@mikro-orm/mongodb": "^6.4.16",
@@ -49,12 +49,12 @@
     "@mikro-orm/reflection": "^6.4.16",
     "@mikro-orm/seeder": "^6.4.16",
     "@mikro-orm/sqlite": "^6.4.16",
-    "@sinclair/typebox": "^0.34.38",
+    "@sinclair/typebox": "^0.34.40",
     "ajv": "^8.17.1",
     "dotenv": "^17.2.1",
     "stripe": "^18.4.0",
     "uuid": "^11.1.0",
-    "zod": "^4.0.14"
+    "zod": "^4.0.17"
   },
   "devDependencies": {
     "@mikro-orm/cli": "^6.4.16",
@@ -62,11 +62,11 @@
     "@types/express-serve-static-core": "^5.0.7",
     "@types/qs": "^6.14.0",
     "@types/uuid": "^10.0.0",
-    "@typescript/native-preview": "7.0.0-dev.20250803.1",
+    "@typescript/native-preview": "7.0.0-dev.20250820.1",
     "depcheck": "^1.4.7",
     "prettier": "^3.6.2",
     "ts-node": "^10.9.2",
-    "typedoc": "^0.28.9"
+    "typedoc": "^0.28.10"
   },
   "mikro-orm": {
     "configPaths": [
