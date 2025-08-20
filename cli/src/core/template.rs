@@ -58,6 +58,7 @@ fn forklaunch_replacements(app_name: &String, template: String) -> String {
     template.replace("@forklaunch/blueprint-", format!("@{app_name}/").as_str())
 }
 
+
 pub(crate) fn generate_with_template(
     output_prefix: Option<&String>,
     template_dir: &PathIO,
@@ -68,7 +69,8 @@ pub(crate) fn generate_with_template(
     dryrun: bool,
 ) -> Result<Vec<RenderedTemplate>> {
     let mut rendered_templates = Vec::new();
-
+    
+    println!("cli:core:template:00: output_prefix: {:?}", output_prefix);
     let output_dir = match output_prefix {
         Some(output_prefix) => Path::new(output_prefix).join(&template_dir.output_path),
         None => Path::new(&template_dir.output_path).to_path_buf(),

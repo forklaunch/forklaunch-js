@@ -24,10 +24,10 @@ pub(crate) fn get_universal_sdk_additional_deps(
     let mut additional_deps = HashMap::new();
     println!("core:universal_sdk:00: This is where the additional deps are added on universal sdk");
     if is_billing_enabled {
-        additional_deps.insert(format!("@{app_name}/src/modules/billing"), "workspace:*".to_string());
+        additional_deps.insert(format!("@{app_name}/billing"), "workspace:*".to_string());
     }
     if is_iam_enabled {
-        additional_deps.insert(format!("@{app_name}/src/modules/iam"), "workspace:*".to_string());
+        additional_deps.insert(format!("@{app_name}/iam"), "workspace:*".to_string());
     }
     additional_deps
 }

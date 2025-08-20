@@ -202,6 +202,7 @@ impl CliCommand for ModuleCommand {
             pascal_case_app_name: existing_manifest_data.pascal_case_app_name.clone(),
             kebab_case_app_name: existing_manifest_data.kebab_case_app_name.clone(),
             service_name: get_service_module_name(&module),
+            service_path: get_service_module_name(&module),
             camel_case_name: get_service_module_name(&module).to_case(Case::Camel),
             pascal_case_name: get_service_module_name(&module).to_case(Case::Pascal),
             kebab_case_name: get_service_module_name(&module).to_case(Case::Kebab),
