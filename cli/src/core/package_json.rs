@@ -3,7 +3,7 @@ use std::{fs::read_to_string, path::Path};
 use anyhow::{Context, Result, bail};
 use application_package_json::ApplicationPackageJson;
 use ramhorns::{Content, Template};
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use serde_json::{from_str, to_string_pretty};
 
 use super::{
@@ -23,12 +23,6 @@ use crate::{
 pub(crate) mod application_package_json;
 pub(crate) mod package_json_constants;
 pub(crate) mod project_package_json;
-
-#[derive(Debug, Serialize, Deserialize)]
-struct PackageJson {
-    #[serde(default)]
-    workspaces: Option<Vec<String>>,
-}
 
 pub(crate) fn add_project_definition_to_package_json<
     T: Content + ManifestConfig + ProjectManifestConfig + InitializableManifestConfig + Serialize,

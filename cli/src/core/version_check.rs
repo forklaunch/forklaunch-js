@@ -4,7 +4,7 @@ use std::{
     env::{args, current_dir},
     fs::{File, create_dir_all, metadata, read_to_string, remove_file, set_permissions},
     io::{Write, copy},
-    path::{Path, PathBuf},
+    path::PathBuf,
     process::{Command as OsCommand, exit},
 };
 

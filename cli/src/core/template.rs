@@ -18,7 +18,7 @@ pub(crate) struct PathIO {
     pub(crate) module_id: Option<Module>,
 }
 
-pub(crate) fn get_directory_filenames(path: &PathIO) -> Result<Vec<&File>> {
+pub(crate) fn get_directory_filenames(path: &'_ PathIO) -> Result<Vec<&'_ File<'_>>> {
     Ok(TEMPLATES_DIR
         .get_dir(&path.input_path)
         .unwrap()
@@ -26,7 +26,7 @@ pub(crate) fn get_directory_filenames(path: &PathIO) -> Result<Vec<&File>> {
         .collect())
 }
 
-pub(crate) fn get_directory_subdirectory_names(path: &PathIO) -> Result<Vec<&Dir>> {
+pub(crate) fn get_directory_subdirectory_names(path: &'_ PathIO) -> Result<Vec<&'_ Dir<'_>>> {
     Ok(TEMPLATES_DIR
         .get_dir(&path.input_path)
         .unwrap()

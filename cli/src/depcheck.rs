@@ -8,7 +8,6 @@ use std::{
 use anyhow::{Context, Result};
 use clap::{Arg, ArgMatches, Command};
 use rustyline::{Editor, history::DefaultHistory};
-use serde::{Deserialize, Serialize};
 use serde_json::{Value, from_str, json};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
@@ -22,14 +21,6 @@ use crate::{
     },
     prompt::ArrayCompleter,
 };
-
-#[derive(Default, Serialize, Deserialize)]
-struct PackageJsonDependencies {
-    #[serde(default)]
-    dependencies: Value,
-    #[serde(default)]
-    dev_dependencies: Value,
-}
 
 struct ProjectDependencyVersion {
     project_name: String,
