@@ -1,2 +1,2 @@
-pnpm sort-package-json */package.json
-pnpm lint-staged --relative 
+{{is_node}}pnpm{{/is_node}}{{is_bun}}bun{{/is_bun}} sort-package-json */package.json
+{{is_node}}pnpm{{/is_node}}{{is_bun}}bun{{/is_bun}} lint-staged --relative 

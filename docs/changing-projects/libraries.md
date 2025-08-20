@@ -104,7 +104,7 @@ grep -r "@myapp/old-library-name" .
 
 ```bash
 # Clear node_modules and reinstall
-rm -rf node_modules bun.lockb
+rm -rf node_modules bun.lockb bun.lock
 bun install
 
 # Clear TypeScript cache

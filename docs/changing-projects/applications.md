@@ -121,7 +121,7 @@ pnpm install
 
 ```bash
 # Clear and reinstall
-rm -rf node_modules bun.lockb
+rm -rf node_modules bun.lockb bun.lock
 bun install
 ```
 
