@@ -39,14 +39,16 @@ export class RoleMapper extends ResponseMapper<Role, SchemaValidator> {
     this.dto = {
       ...(await entity.read()),
       permissions: await Promise.all(
-        entity.permissions.map(async (permission) =>
-          (
-            await PermissionMapper.fromEntity(
-              this.schemaValidator as SchemaValidator,
-              permission
-            )
-          ).toDto()
-        )
+        entity.permissions
+          .getItems()
+          .map(async (permission) =>
+            (
+              await PermissionMapper.fromEntity(
+                this.schemaValidator as SchemaValidator,
+                permission
+              )
+            ).toDto()
+          )
       )
     };
     return this;

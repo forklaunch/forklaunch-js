@@ -46,14 +46,16 @@ export class OrganizationMapper extends ResponseMapper<
     this.dto = {
       ...(await entity.read()),
       users: await Promise.all(
-        entity.users.map(async (user) =>
-          (
-            await UserMapper.fromEntity(
-              this.schemaValidator as SchemaValidator,
-              user
-            )
-          ).toDto()
-        )
+        entity.users
+          .getItems()
+          .map(async (user) =>
+            (
+              await UserMapper.fromEntity(
+                this.schemaValidator as SchemaValidator,
+                user
+              )
+            ).toDto()
+          )
       )
     };
     return this;
