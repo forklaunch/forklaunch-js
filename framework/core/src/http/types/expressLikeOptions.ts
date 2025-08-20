@@ -1,5 +1,5 @@
 import { FastMCP } from '@forklaunch/fastmcp-fork';
-import { AnySchemaValidator, Schema } from '@forklaunch/validator';
+import { AnySchemaValidator } from '@forklaunch/validator';
 import { CorsOptions } from 'cors';
 import { JWTPayload } from 'jose';
 import { ForklaunchRequest, MapSessionSchema } from './apiDefinition.types';
@@ -117,6 +117,14 @@ export type ExpressLikeRouterOptions<
          */
         response?: 'none' | 'warning' | 'error';
       };
+  /**
+   * OpenAPI documentation options.
+   */
+  openapi?: boolean;
+  /**
+   * MCP options.
+   */
+  mcp?: boolean;
 };
 
 /**
@@ -128,7 +136,7 @@ export type ExpressLikeRouterOptions<
 export type ExpressLikeApplicationOptions<
   SV extends AnySchemaValidator,
   SessionSchema extends SessionObject<SV>
-> = ExpressLikeRouterOptions<SV, SessionSchema> & {
+> = Omit<ExpressLikeRouterOptions<SV, SessionSchema>, 'openapi' | 'mcp'> & {
   /**
    * Documentation configuration.
    */
@@ -138,32 +146,30 @@ export type ExpressLikeApplicationOptions<
    */
   hosting?: {
     /**
-     * Hostname or IP address to bind the server.
-     */
-    host?: string;
-    /**
-     * Port number to listen on.
-     */
-    port?: number;
-    /**
      * SSL configuration or boolean to enable/disable SSL.
      */
-    ssl?:
-      | {
-          /**
-           * Whether SSL is enabled.
-           */
-          enabled?: boolean;
-          /**
-           * SSL certificate as a string.
-           */
-          cert: string;
-        }
-      | boolean;
+    ssl?: {
+      /**
+       * SSL certificate as a string.
+       */
+      certFile: string;
+      /**
+       * SSL key as a string.
+       */
+      keyFile: string;
+      /**
+       * SSL CA as a string.
+       */
+      caFile: string;
+    };
     /**
      * Number of worker processes to spawn.
      */
-    workers?: number;
+    workerCount?: number;
+    /**
+     * Routing strategy to use.
+     */
+    routingStrategy?: 'round-robin' | 'sticky' | 'random';
   };
   /**
    * FastMCP (management/control plane) options.
@@ -177,11 +183,25 @@ export type ExpressLikeApplicationOptions<
          */
         port?: number;
         /**
+         * Endpoint for the MCP server.
+         */
+        path?: `/${string}`;
+        /**
          * Additional options for FastMCP.
          */
-        options?: ConstructorParameters<
-          typeof FastMCP<Schema<SessionSchema, SV>>
-        >[0];
+        options?: ConstructorParameters<typeof FastMCP>[0];
+        /**
+         * Additional tools to register with the MCP server.
+         */
+        additionalTools: (mcpServer: FastMCP) => void;
+        /**
+         * Content type mapping for the MCP server.
+         */
+        contentTypeMapping?: Record<string, string>;
+        /**
+         * Version of the MCP server.
+         */
+        version?: `${number}.${number}.${number}`;
       };
   /**
    * OpenAPI documentation options.

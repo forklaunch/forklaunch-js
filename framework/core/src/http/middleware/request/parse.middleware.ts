@@ -58,10 +58,10 @@ export function parse<
   next?: ForklaunchNextFunction
 ) {
   const collapsedOptions =
-    (req.contractDetails.options?.requestValidation ??
-    req._globalOptions.validation === false)
+    req.contractDetails.options?.requestValidation ??
+    (req._globalOptions?.validation === false
       ? 'none'
-      : req._globalOptions.validation?.request;
+      : req._globalOptions?.validation?.request);
 
   const request = {
     params: req.params,

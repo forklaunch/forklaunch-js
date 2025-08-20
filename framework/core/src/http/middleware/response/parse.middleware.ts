@@ -74,10 +74,10 @@ export function parse<
   let responses;
 
   const collapsedOptions =
-    (req.contractDetails.options?.responseValidation ??
-    req._globalOptions.validation === false)
+    req.contractDetails.options?.responseValidation ??
+    (req._globalOptions?.validation === false
       ? 'none'
-      : req._globalOptions.validation?.response;
+      : req._globalOptions?.validation?.response);
 
   if (collapsedOptions === 'none') {
     next?.();

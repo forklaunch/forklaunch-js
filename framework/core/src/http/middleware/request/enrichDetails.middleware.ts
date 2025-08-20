@@ -28,6 +28,7 @@ import {
   SessionObject,
   VersionSchema
 } from '../../types/contractDetails.types';
+import { ExpressLikeRouterOptions } from '../../types/expressLikeOptions';
 import { MetricsDefinition } from '../../types/openTelemetryCollector.types';
 
 /**
@@ -59,7 +60,8 @@ export function enrichDetails<
   responseSchemas:
     | ResponseCompiledSchema
     | Record<string, ResponseCompiledSchema>,
-  openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
+  openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
+  globalOptions?: ExpressLikeRouterOptions<SV, SessionSchema>
 ): ExpressLikeSchemaHandler<
   SV,
   P,
@@ -81,6 +83,7 @@ export function enrichDetails<
     req.requestSchema = requestSchema;
     res.responseSchemas = responseSchemas;
     req.openTelemetryCollector = openTelemetryCollector;
+    req._globalOptions = globalOptions;
 
     req.context?.span?.setAttribute(ATTR_API_NAME, req.contractDetails?.name);
     const startTime = process.hrtime();

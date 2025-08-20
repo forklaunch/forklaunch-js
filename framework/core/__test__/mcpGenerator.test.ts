@@ -18,7 +18,6 @@ describe('mcpGenerator tests', () => {
       'localhost',
       8000,
       '1.0.0',
-
       {
         basePath: '/api' as const,
         routes: [
@@ -40,7 +39,8 @@ describe('mcpGenerator tests', () => {
         _fetchMap: {},
         sdk: {},
         sdkPaths: {}
-      }
+      },
+      true
     );
 
     expect(generatedMcpServer).toBeDefined();
@@ -54,7 +54,6 @@ describe('mcpGenerator tests', () => {
       'example.com',
       443,
       '2.0.0',
-
       {
         basePath: '/api' as const,
         routes: [
@@ -89,7 +88,8 @@ describe('mcpGenerator tests', () => {
         _fetchMap: {},
         sdk: {},
         sdkPaths: {}
-      }
+      },
+      true
     );
 
     expect(generatedMcpServer).toBeDefined();
@@ -103,7 +103,6 @@ describe('mcpGenerator tests', () => {
       'localhost',
       3000,
       '1.0.0',
-
       {
         basePath: '/api' as const,
         routes: [
@@ -133,7 +132,8 @@ describe('mcpGenerator tests', () => {
         _fetchMap: {},
         sdk: {},
         sdkPaths: {}
-      }
+      },
+      true
     );
 
     expect(generatedMcpServer).toBeDefined();
@@ -147,7 +147,6 @@ describe('mcpGenerator tests', () => {
       'localhost',
       8000,
       '1.0.0',
-
       {
         basePath: '/api' as const,
         routes: [
@@ -238,7 +237,8 @@ describe('mcpGenerator tests', () => {
         _fetchMap: {},
         sdk: {},
         sdkPaths: {}
-      }
+      },
+      true
     );
 
     expect(generatedMcpServer).toBeDefined();

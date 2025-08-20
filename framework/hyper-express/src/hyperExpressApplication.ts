@@ -3,6 +3,8 @@ import {
   ATTR_HTTP_RESPONSE_STATUS_CODE,
   DocsConfiguration,
   ForklaunchExpressLikeApplication,
+  ForklaunchRouter,
+  generateMcpServer,
   generateOpenApiSpecs,
   isForklaunchRequest,
   MetricsDefinition,
@@ -18,6 +20,7 @@ import {
   Server
 } from '@forklaunch/hyper-express-fork';
 import { AnySchemaValidator } from '@forklaunch/validator';
+import { ZodSchemaValidator } from '@forklaunch/validator/zod';
 import { apiReference } from '@scalar/express-api-reference';
 import crypto from 'crypto';
 import * as uWebsockets from 'uWebSockets.js';
@@ -61,6 +64,15 @@ export class Application<
   SessionSchema
 > {
   private docsConfiguration: DocsConfiguration | undefined;
+  private mcpConfiguration:
+    | ExpressApplicationOptions<SV, SessionSchema>['mcp']
+    | undefined;
+  private openapiConfiguration:
+    | ExpressApplicationOptions<SV, SessionSchema>['openapi']
+    | undefined;
+  private hostingConfiguration:
+    | ExpressApplicationOptions<SV, SessionSchema>['hosting']
+    | undefined;
   /**
    * Creates an instance of the Application class.
    *
@@ -93,7 +105,10 @@ export class Application<
       configurationOptions
     );
 
+    this.hostingConfiguration = configurationOptions?.hosting;
     this.docsConfiguration = configurationOptions?.docs;
+    this.mcpConfiguration = configurationOptions?.mcp;
+    this.openapiConfiguration = configurationOptions?.openapi;
   }
 
   /**
@@ -165,80 +180,197 @@ export class Application<
         });
       });
 
-      const openApiServerUrls = getEnvVar('DOCS_SERVER_URLS')?.split(',') ?? [
-        `${protocol}://${host}:${port}`
-      ];
-      const openApiServerDescriptions = getEnvVar(
-        'DOCS_SERVER_DESCRIPTIONS'
-      )?.split(',') ?? ['Main Server'];
-
-      const openApi = generateOpenApiSpecs<SV>(
-        this.schemaValidator,
-        openApiServerUrls,
-        openApiServerDescriptions,
-        this
-      );
-
       if (
-        this.docsConfiguration == null ||
-        this.docsConfiguration.type === 'scalar'
+        this.schemaValidator instanceof ZodSchemaValidator &&
+        this.mcpConfiguration !== false
       ) {
-        this.internal.use(
-          `/api${process.env.VERSION ? `/${process.env.VERSION}` : ''}${
-            process.env.DOCS_PATH ?? '/docs'
-          }`,
-          apiReference({
-            ...this.docsConfiguration,
-            sources: [
-              {
-                content: openApi[OPENAPI_DEFAULT_VERSION],
-                title: 'API Reference'
-              },
-              ...Object.entries(openApi).map(([version, spec]) => ({
-                content: spec,
-                title: `API Reference - ${version}`
-              })),
-              ...(this.docsConfiguration?.sources ?? [])
-            ]
-          }) as unknown as MiddlewareHandler
+        const {
+          port: mcpPort,
+          options,
+          path: mcpPath,
+          version,
+          additionalTools,
+          contentTypeMapping
+        } = this.mcpConfiguration ?? {};
+        const zodSchemaValidator = this.schemaValidator;
+        const finalMcpPort = mcpPort ?? port + 2000;
+
+        const mcpServer = generateMcpServer(
+          zodSchemaValidator,
+          protocol,
+          host,
+          finalMcpPort,
+          version ?? '1.0.0',
+          this as unknown as ForklaunchRouter<ZodSchemaValidator>,
+          typeof this.appOptions?.mcp === 'boolean'
+            ? this.appOptions.mcp
+            : this.appOptions?.mcp != null,
+          options,
+          contentTypeMapping
         );
-      } else if (this.docsConfiguration?.type === 'swagger') {
-        const swaggerPath = `/api${process.env.VERSION ? `/${process.env.VERSION}` : ''}${
-          process.env.DOCS_PATH ?? '/docs'
-        }`;
-        Object.entries(openApi).forEach(([version, spec]) => {
-          const versionPath = encodeURIComponent(`${swaggerPath}/${version}`);
-          this.internal.use(versionPath, swaggerRedirect(versionPath));
-          this.internal.get(`${versionPath}/*`, swagger(versionPath, spec));
+
+        if (additionalTools) {
+          additionalTools(mcpServer);
+        }
+
+        mcpServer.start({
+          httpStream: {
+            host,
+            endpoint: mcpPath ?? '/mcp',
+            port: finalMcpPort
+          },
+          transportType: 'httpStream'
         });
       }
 
-      this.internal.get(
-        `/api${process.env.VERSION ? `/${process.env.VERSION}` : ''}/openapi`,
-        (_, res) => {
-          res.type('application/json');
-          res.json({
-            latest: openApi[OPENAPI_DEFAULT_VERSION],
-            ...Object.fromEntries(
-              Object.entries(openApi).map(([version, spec]) => [
-                `v${version}`,
-                spec
-              ])
-            )
+      if (this.openapiConfiguration !== false) {
+        const openApiServerUrls = getEnvVar('DOCS_SERVER_URLS')?.split(',') ?? [
+          `${protocol}://${host}:${port}`
+        ];
+        const openApiServerDescriptions = getEnvVar(
+          'DOCS_SERVER_DESCRIPTIONS'
+        )?.split(',') ?? ['Main Server'];
+
+        const openApi = generateOpenApiSpecs<SV>(
+          this.schemaValidator,
+          openApiServerUrls,
+          openApiServerDescriptions,
+          this,
+          typeof this.appOptions?.openapi === 'boolean'
+            ? this.appOptions.openapi
+            : this.appOptions?.openapi != null,
+          this.openapiConfiguration
+        );
+
+        if (
+          this.docsConfiguration == null ||
+          this.docsConfiguration.type === 'scalar'
+        ) {
+          this.internal.use(
+            `/api${process.env.VERSION ? `/${process.env.VERSION}` : ''}${
+              process.env.DOCS_PATH ?? '/docs'
+            }`,
+            apiReference({
+              ...this.docsConfiguration,
+              sources: [
+                {
+                  content: openApi[OPENAPI_DEFAULT_VERSION],
+                  title: 'API Reference'
+                },
+                ...Object.entries(openApi).map(([version, spec]) => ({
+                  content:
+                    typeof this.openapiConfiguration === 'boolean'
+                      ? spec
+                      : this.openapiConfiguration?.discreteVersions === false
+                        ? {
+                            ...openApi[OPENAPI_DEFAULT_VERSION],
+                            ...spec
+                          }
+                        : spec,
+                  title: `API Reference - ${version}`
+                })),
+                ...(this.docsConfiguration?.sources ?? [])
+              ]
+            }) as unknown as MiddlewareHandler
+          );
+        } else if (this.docsConfiguration?.type === 'swagger') {
+          const swaggerPath = `/api${process.env.VERSION ? `/${process.env.VERSION}` : ''}${
+            process.env.DOCS_PATH ?? '/docs'
+          }`;
+          Object.entries(openApi).forEach(([version, spec]) => {
+            const versionPath = encodeURIComponent(`${swaggerPath}/${version}`);
+            this.internal.use(versionPath, swaggerRedirect(versionPath));
+            this.internal.get(`${versionPath}/*`, swagger(versionPath, spec));
           });
         }
-      );
 
-      this.internal.get(
-        `/api${process.env.VERSION ? `/${process.env.VERSION}` : ''}/openapi-hash`,
-        async (_, res) => {
-          const hash = await crypto
-            .createHash('sha256')
-            .update(safeStringify(openApi))
-            .digest('hex');
-          res.send(hash);
-        }
-      );
+        this.internal.get(
+          `/api${process.env.VERSION ? `/${process.env.VERSION}` : ''}/openapi`,
+          (_, res) => {
+            res.type('application/json');
+            res.json({
+              latest: openApi[OPENAPI_DEFAULT_VERSION],
+              ...Object.fromEntries(
+                Object.entries(openApi).map(([version, spec]) => [
+                  `v${version}`,
+                  typeof this.openapiConfiguration === 'boolean'
+                    ? spec
+                    : this.openapiConfiguration?.discreteVersions === false
+                      ? {
+                          ...openApi[OPENAPI_DEFAULT_VERSION],
+                          ...spec
+                        }
+                      : spec
+                ])
+              )
+            });
+          }
+        );
+
+        this.internal.get(
+          `/api${process.env.VERSION ? `/${process.env.VERSION}` : ''}/openapi/:id`,
+          async (req, res) => {
+            res.type('application/json');
+            if (req.params.id === 'latest') {
+              res.json(openApi[OPENAPI_DEFAULT_VERSION]);
+            } else {
+              if (openApi[req.params.id] == null) {
+                res.status(404).send('Not Found');
+                return;
+              }
+
+              res.json(
+                typeof this.openapiConfiguration === 'boolean'
+                  ? openApi[req.params.id]
+                  : this.openapiConfiguration?.discreteVersions === false
+                    ? {
+                        ...openApi[OPENAPI_DEFAULT_VERSION],
+                        ...openApi[req.params.id]
+                      }
+                    : openApi[req.params.id]
+              );
+            }
+          }
+        );
+
+        this.internal.get(
+          `/api/${process.env.VERSION ?? 'v1'}/openapi-hash`,
+          async (_, res) => {
+            const hash = await crypto
+              .createHash('sha256')
+              .update(safeStringify(openApi))
+              .digest('hex');
+            res.send(hash);
+          }
+        );
+      }
+
+      this.internal.get('/health', (_, res) => {
+        res.send('OK');
+      });
+
+      const { workerCount, ssl, routingStrategy } =
+        this.hostingConfiguration ?? {};
+
+      if (workerCount != null && workerCount > 1) {
+        // Import the cluster function dynamically
+        const { startUWebSocketsCluster } = await import(
+          '@forklaunch/core/http'
+        );
+
+        startUWebSocketsCluster({
+          expressApp: this.internal,
+          openTelemetryCollector: this.openTelemetryCollector,
+          port,
+          host,
+          workerCount,
+          routingStrategy,
+          ssl
+        });
+
+        // Return a promise that never resolves since clustering takes over
+        return new Promise(() => {});
+      }
 
       if (arg1 && typeof arg1 === 'string') {
         return this.internal.listen(port, arg1, arg2);

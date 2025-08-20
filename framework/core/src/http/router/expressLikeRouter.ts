@@ -188,7 +188,8 @@ export class ForklaunchExpressLikeRouter<
         contractDetails as PathParamHttpContractDetails<SV>,
         requestSchema,
         responseSchemas,
-        this.openTelemetryCollector
+        this.openTelemetryCollector,
+        this.routerOptions
       ),
       ...this.postEnrichMiddleware,
       parse,

@@ -88,6 +88,7 @@ export function generateMcpServer<
   port: number,
   version: `${number}.${number}.${number}`,
   application: ForklaunchRouter<ZodSchemaValidator>,
+  globallyEnabled: boolean | undefined,
   options?: ConstructorParameters<typeof FastMCP<T>>[0],
   contentTypeMap?: Record<string, string>
 ) {
@@ -113,6 +114,16 @@ export function generateMcpServer<
     ])
   ].forEach(({ fullPath, router }) => {
     router.routes.forEach((route) => {
+      if (
+        !(
+          route.contractDetails.options?.mcp ??
+          router.routerOptions?.mcp ??
+          globallyEnabled !== false
+        )
+      ) {
+        return;
+      }
+
       const inputSchemas: ZodType[] = [];
 
       if (route.contractDetails.versions) {

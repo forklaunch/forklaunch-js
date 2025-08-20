@@ -54,7 +54,17 @@ export abstract class ForklaunchExpressLikeApplication<
       internal,
       postEnrichMiddleware,
       openTelemetryCollector,
-      appOptions
+      {
+        ...appOptions,
+        openapi:
+          typeof appOptions?.openapi === 'boolean'
+            ? appOptions.openapi
+            : appOptions?.openapi != null,
+        mcp:
+          typeof appOptions?.mcp === 'boolean'
+            ? appOptions.mcp
+            : appOptions?.mcp != null
+      }
     );
 
     this.internal.use(cors(this.appOptions?.cors ?? {}) as RouterHandler);
