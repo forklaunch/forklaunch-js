@@ -1,5 +1,17 @@
 # @forklaunch/infrastructure-s3
 
+## 0.3.0
+
+### Minor Changes
+
+- Adds more configuration options for application and routers. Additionally adds optional cluster support built-in (experimental)
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/common@0.5.0
+  - @forklaunch/core@0.13.0
+
 ## 0.2.12
 
 ### Patch Changes

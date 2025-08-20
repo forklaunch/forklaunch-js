@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.5.0
+
+### Minor Changes
+
+- Adds more configuration options for application and routers. Additionally adds optional cluster support built-in (experimental)
+
 ## 0.4.6
 
 ### Patch Changes
