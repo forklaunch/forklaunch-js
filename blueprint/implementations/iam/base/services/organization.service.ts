@@ -143,7 +143,10 @@ export class BaseOrganizationService<
 
     const organization = await (em ?? this.em).findOneOrFail(
       'Organization',
-      idDto
+      idDto,
+      {
+        populate: ['id', '*']
+      }
     );
 
     return this._mappers.OrganizationMapper.serializeEntityToDto(
