@@ -30,7 +30,12 @@ const openTelemetryCollector = new OpenTelemetryCollector('test');
 
 const forklaunchApplication = forklaunchExpress(
   zodSchemaValidator,
-  openTelemetryCollector
+  openTelemetryCollector,
+  {
+    hosting: {
+      workerCount: 2
+    }
+  }
 );
 
 const forklaunchRouterInstance = forklaunchRouter(
@@ -388,7 +393,7 @@ forklaunchApplication.get(
 );
 
 export function start() {
-  const port = Number(process.env.PORT) || 6935;
+  const port = Number(process.env.PORT) || 6936;
   return forklaunchApplication.listen(port, () => {
     console.log(`server started on ${port}`);
   });
@@ -396,7 +401,7 @@ export function start() {
 
 // Only run the server if this script is executed directly
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const port = Number(process.env.PORT) || 6935;
+  const port = Number(process.env.PORT) || 6936;
   forklaunchApplication.listen(port, () => {
     console.log(`server started on ${port}`);
   });

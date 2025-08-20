@@ -277,6 +277,9 @@ importers:
       express:
         specifier: ^5.1.0
         version: 5.1.0
+      uWebSockets.js:
+        specifier: github:uNetworking/uWebSockets.js#v20.44.0
+        version: https://codeload.github.com/uNetworking/uWebSockets.js/tar.gz/8fa05571bf6ea95be8966ad313d9d39453e381ae
       zod:
         specifier: ^4.0.17
         version: 4.0.17

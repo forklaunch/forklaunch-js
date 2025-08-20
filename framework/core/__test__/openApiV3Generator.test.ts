@@ -43,8 +43,7 @@ describe('openApiV3Generator tests', () => {
         _fetchMap: {},
         sdk: {},
         sdkPaths: {}
-      },
-      true
+      }
     );
 
     expect(generatedOpenApiSpec[OPENAPI_DEFAULT_VERSION]).toEqual({
@@ -130,8 +129,7 @@ describe('openApiV3Generator tests', () => {
         _fetchMap: {},
         sdk: {},
         sdkPaths: {}
-      },
-      true
+      }
     );
 
     expect(generatedOpenApiSpec[OPENAPI_DEFAULT_VERSION]).toMatchObject({

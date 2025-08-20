@@ -1,4 +1,5 @@
 import { hashString } from '@forklaunch/common';
+import { ClusterConfig } from '@forklaunch/core/http';
 import cluster, { Worker } from 'node:cluster';
 import fs from 'node:fs';
 import http, { IncomingMessage, ServerResponse } from 'node:http';
@@ -6,7 +7,6 @@ import https from 'node:https';
 import net from 'node:net';
 import os from 'node:os';
 import tls from 'node:tls';
-import { ClusterConfig } from './cluster.types';
 
 export function startNodeCluster<
   ExpressApp extends (req: IncomingMessage, res: ServerResponse) => void

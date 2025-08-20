@@ -20,6 +20,10 @@
  * This is a pure shim - no additional utilities or middleware beyond what Express provides.
  */
 import {
+  MetricsDefinition,
+  OpenTelemetryCollector
+} from '@forklaunch/core/http';
+import {
   Errback,
   Express,
   Request as ExpressRequest,
@@ -33,9 +37,7 @@ import { OutgoingHttpHeader, OutgoingHttpHeaders } from 'node:http';
 import { Socket } from 'node:net';
 import * as path from 'node:path';
 import { PassThrough, Readable, Transform } from 'node:stream';
-import RangeParser, { Ranges, Result } from 'range-parser';
-import { OpenTelemetryCollector } from '../telemetry/openTelemetryCollector';
-import { MetricsDefinition } from '../types/openTelemetryCollector.types';
+import RangeParser from 'range-parser';
 import { createSocketFromBunRequest } from './bun.socket.shim';
 
 function toNodeReadable(
@@ -59,12 +61,8 @@ function toNodeReadable(
 
       if (signal) {
         signal.addEventListener('abort', () => {
-          try {
-            reader.cancel();
-            out.destroy(new Error('Request aborted'));
-          } catch {
-            // ignore
-          }
+          reader.cancel();
+          out.destroy(new Error('Request aborted'));
         });
       }
 
@@ -203,27 +201,6 @@ function parseSignedCookies(
   return signedCookies;
 }
 
-function parseRange(range: string, size: number): Ranges | Result | undefined {
-  const ranges: Ranges = [] as unknown as Ranges;
-  ranges.type = 'bytes';
-  const parts = range.replace(/bytes=/, '').split(',');
-
-  for (const part of parts) {
-    const [start, end] = part.trim().split('-');
-    const startNum = start ? parseInt(start, 10) : 0;
-    const endNum = end ? parseInt(end, 10) : size - 1;
-
-    if (!isNaN(startNum) && !isNaN(endNum) && startNum <= endNum) {
-      ranges.push({
-        start: startNum,
-        end: Math.min(endNum, size - 1)
-      });
-    }
-  }
-
-  return ranges.length > 0 ? ranges : undefined;
-}
-
 export type ServeOptions = {
   port?: number;
   host?: string;
@@ -326,7 +303,6 @@ export function serveExpress(
         responded = true;
         const finalHeaders = new Headers(headerMap);
 
-        // Add security headers if not present
         if (!finalHeaders.has('X-Powered-By')) {
           finalHeaders.set('X-Powered-By', 'Express');
         }
@@ -365,11 +341,7 @@ export function serveExpress(
           socketTimeoutId = undefined;
         }
         if (writer && !ended) {
-          try {
-            writer.close();
-          } catch {
-            // ignore
-          }
+          writer.close();
         }
 
         req.emit('end');
@@ -385,7 +357,6 @@ export function serveExpress(
         locals: {},
         charset: 'utf-8',
 
-        // Missing Node.js ServerResponse properties
         strictContentLength: false,
         writeProcessing: () => {},
         chunkedEncoding: false,
@@ -418,7 +389,6 @@ export function serveExpress(
         _maxRequestsPerSocket: 0,
         req: undefined as unknown as ExpressRequest,
 
-        // Additional missing ServerResponse properties
         writable: true,
         writableAborted: false,
         setDefaultEncoding: (encoding: BufferEncoding) => {
@@ -435,12 +405,10 @@ export function serveExpress(
             | Iterable<T>
             | AsyncIterable<T>
         ): T => {
-          // Simple implementation that handles basic cases
           if (stream && typeof stream === 'object' && 'pipe' in stream) {
             return stream as T;
           }
 
-          // For functions, create a simple transform stream
           if (typeof stream === 'function') {
             const transform = new Transform({
               objectMode: true,
@@ -456,7 +424,6 @@ export function serveExpress(
             return transform as unknown as T;
           }
 
-          // For iterables, return first item if it's a stream
           if (
             stream &&
             typeof stream === 'object' &&
@@ -474,7 +441,6 @@ export function serveExpress(
             }
           }
 
-          // For async iterables, return a readable stream
           if (
             stream &&
             typeof stream === 'object' &&
@@ -483,14 +449,12 @@ export function serveExpress(
             const readable = new Readable({
               objectMode: true,
               read() {
-                // This is a placeholder - in practice, async iteration would be handled differently
                 this.push(null);
               }
             });
             return readable as unknown as T;
           }
 
-          // Fallback: return an empty readable stream
           const emptyStream = new Readable({
             read() {
               this.push(null);
@@ -513,7 +477,6 @@ export function serveExpress(
           return res.append(name, value);
         },
         addTrailers: (headers: Record<string, string>) => {
-          // Basic implementation - trailers are sent after body
           return res;
         },
         flushHeaders: () => {
@@ -522,7 +485,6 @@ export function serveExpress(
           ensureResponse();
         },
 
-        // Core response methods
         setHeader(name: string, value: string | number | string[]) {
           if (Array.isArray(value)) {
             headerMap.delete(name);
@@ -652,7 +614,6 @@ export function serveExpress(
           return res;
         },
 
-        // Missing writable stream methods
         cork: () => {},
         uncork: () => {},
         destroy: (error?: Error) => {
@@ -703,7 +664,6 @@ export function serveExpress(
         listenerCount: resEE.listenerCount.bind(resEE),
         eventNames: resEE.eventNames.bind(resEE),
 
-        // Express-specific response methods
         status(code: number) {
           statusCode = code;
           res.statusCode = code;
@@ -937,7 +897,6 @@ export function serveExpress(
                 ? path.join(options.root, filePath)
                 : filePath;
 
-              // Security check for path traversal
               if (
                 options.dotfiles === 'deny' &&
                 path.basename(fullPath).startsWith('.')
@@ -959,7 +918,6 @@ export function serveExpress(
               const stats = await file.size;
               const lastModified = new Date(file.lastModified);
 
-              // Set cache headers
               if (options.cacheControl !== false) {
                 const maxAge = options.maxAge || 0;
                 res.setHeader('Cache-Control', `public, max-age=${maxAge}`);
@@ -974,7 +932,6 @@ export function serveExpress(
                 res.setHeader('ETag', etag);
               }
 
-              // Check if-modified-since and if-none-match
               const ifModifiedSince = req.get('if-modified-since');
               const ifNoneMatch = req.get('if-none-match');
 
@@ -1055,7 +1012,6 @@ export function serveExpress(
         ) => {
           const errback = typeof locals === 'function' ? locals : callback;
           try {
-            // Basic template rendering - in production, integrate with template engines
             const templateLocals = {
               ...res.locals,
               ...(typeof locals === 'function' ? {} : locals)
@@ -1156,14 +1112,11 @@ export function serveExpress(
           return res;
         },
 
-        // Additional Express response methods
         writeContinue: () => {
-          // HTTP 100 Continue - basic implementation
           return res;
         },
 
         writeEarlyHints: (hints: Record<string, string | string[]>) => {
-          // HTTP/2 Early Hints - store for potential future use
           return res;
         },
 
@@ -1190,311 +1143,325 @@ export function serveExpress(
         app
       });
 
-      const req: ExpressRequest & EventEmitter = Object.assign(
-        nodeReq,
-        new EventEmitter(),
-        {
-          method: request.method,
-          url: url.pathname + url.search,
-          originalUrl: url.pathname + url.search,
-          headers,
-          httpVersion: '1.1',
-          httpVersionMajor: 1,
-          httpVersionMinor: 1,
-          complete: false,
-          socket,
-          connection: socket,
-          protocol: proto,
-          secure: proto === 'https',
-          ip: ip as string,
-          ips: forwardedFor
-            ? Array.isArray(forwardedFor)
-              ? forwardedFor
-              : forwardedFor.split(',').map((s: string) => s.trim())
-            : [],
-          hostname: Array.isArray(
+      const reqEE = new EventEmitter() as EventEmitter & typeof nodeReq;
+
+      Object.getOwnPropertyNames(nodeReq).forEach((key) => {
+        if (key !== 'constructor') {
+          try {
+            const descriptor = Object.getOwnPropertyDescriptor(nodeReq, key);
+            if (
+              descriptor &&
+              descriptor.configurable !== false &&
+              descriptor.writable !== false
+            ) {
+              Object.defineProperty(reqEE, key, descriptor);
+            } else {
+              openTelemetryCollector.info(
+                'Property not configurable or writable:',
+                key
+              );
+            }
+          } catch (e) {
+            openTelemetryCollector.error('Error defining property:', e);
+          }
+        }
+      });
+
+      const req: ExpressRequest = Object.assign(reqEE, {
+        method: request.method,
+        url: url.pathname + url.search,
+        originalUrl: url.pathname + url.search,
+        headers,
+        httpVersion: '1.1',
+        httpVersionMajor: 1,
+        httpVersionMinor: 1,
+        complete: false,
+        socket,
+        connection: socket,
+        protocol: proto,
+        secure: proto === 'https',
+        ip: ip as string,
+        ips: forwardedFor
+          ? Array.isArray(forwardedFor)
+            ? forwardedFor
+            : forwardedFor.split(',').map((s: string) => s.trim())
+          : [],
+        hostname: Array.isArray(headers['x-forwarded-host'] || headers['host'])
+          ? (headers['x-forwarded-host'] || headers['host'])[0].split(':')[0]
+          : (headers['x-forwarded-host'] || headers['host'] || '').split(
+              ':'
+            )[0],
+        host: Array.isArray(headers['x-forwarded-host'] || headers['host'])
+          ? (headers['x-forwarded-host'] || headers['host'])[0]
+          : headers['x-forwarded-host'] || headers['host'] || '',
+        path: url.pathname,
+        query,
+        params: {}, // Will be populated by route matching
+        body: undefined, // Will be populated by body parsing middleware
+        cookies,
+        signedCookies,
+        secret: cookieSecret,
+        accepted: [],
+
+        subdomains: (() => {
+          const hostname = Array.isArray(
             headers['x-forwarded-host'] || headers['host']
           )
             ? (headers['x-forwarded-host'] || headers['host'])[0].split(':')[0]
             : (headers['x-forwarded-host'] || headers['host'] || '').split(
                 ':'
-              )[0],
-          host: Array.isArray(headers['x-forwarded-host'] || headers['host'])
-            ? (headers['x-forwarded-host'] || headers['host'])[0]
-            : headers['x-forwarded-host'] || headers['host'] || '',
-          path: url.pathname,
-          query,
-          params: {}, // Will be populated by route matching
-          body: undefined, // Will be populated by body parsing middleware
-          cookies,
-          signedCookies,
-          secret: cookieSecret,
-          accepted: [], // Initialize empty accepted array
+              )[0];
+          if (!hostname) return [];
+          const parts = hostname.split('.');
+          return parts.length > 2 ? parts.slice(0, -2).reverse() : [];
+        })(),
 
-          subdomains: (() => {
-            const hostname = Array.isArray(
-              headers['x-forwarded-host'] || headers['host']
-            )
-              ? (headers['x-forwarded-host'] || headers['host'])[0].split(
-                  ':'
-                )[0]
-              : (headers['x-forwarded-host'] || headers['host'] || '').split(
-                  ':'
-                )[0];
-            if (!hostname) return [];
-            const parts = hostname.split('.');
-            return parts.length > 2 ? parts.slice(0, -2).reverse() : [];
-          })(),
+        get fresh(): boolean {
+          const method = request.method;
+          const status = res.statusCode;
 
-          fresh: (() => {
-            const method = request.method;
-            const status = res.statusCode;
+          if (method !== 'GET' && method !== 'HEAD') return false;
+          if ((status >= 200 && status < 300) || status === 304) {
+            const modifiedSince = headers['if-modified-since'];
+            const noneMatch = headers['if-none-match'];
+            const lastModified = res.get('last-modified');
+            const etag = res.get('etag');
 
-            // Only GET and HEAD requests can be fresh
-            if (method !== 'GET' && method !== 'HEAD') return false;
-
-            // 2xx or 304 responses can be fresh
-            if ((status >= 200 && status < 300) || status === 304) {
-              const modifiedSince = headers['if-modified-since'];
-              const noneMatch = headers['if-none-match'];
-              const lastModified = res.get('last-modified');
-              const etag = res.get('etag');
-
-              if (noneMatch && etag) {
-                return noneMatch.includes(etag);
-              }
-
-              if (modifiedSince && lastModified) {
-                return new Date(modifiedSince) >= new Date(lastModified);
-              }
+            if (noneMatch && etag) {
+              return noneMatch.includes(etag);
             }
 
-            return false;
-          })(),
-
-          get stale(): boolean {
-            return !req.fresh;
-          },
-
-          xhr: (() => {
-            const requestedWith = headers['x-requested-with'];
-            return requestedWith === 'XMLHttpRequest';
-          })(),
-
-          get: ((name: string): string | undefined => {
-            const value = headers[name.toLowerCase()];
-            if (!value) return undefined;
-            return Array.isArray(value) ? value[0] : value;
-          }) as ExpressRequest['get'],
-
-          header: ((name: string): string | undefined => {
-            return req.get(name);
-          }) as ExpressRequest['header'],
-
-          is(types: string | string[]): string | false | null {
-            const contentType = headers['content-type'] || '';
-            if (!contentType) return false;
-
-            const typesToCheck = Array.isArray(types) ? types : [types];
-
-            for (const type of typesToCheck) {
-              if (type === 'json' && contentType.includes('application/json'))
-                return 'json';
-              if (type === 'html' && contentType.includes('text/html'))
-                return 'html';
-              if (type === 'xml' && contentType.includes('application/xml'))
-                return 'xml';
-              if (type === 'text' && contentType.includes('text/'))
-                return 'text';
-              if (contentType.includes(type)) return type;
+            if (modifiedSince && lastModified) {
+              return new Date(modifiedSince) >= new Date(lastModified);
             }
+          }
 
-            return false;
-          },
+          return false;
+        },
 
-          accepts: ((types?: string | string[]): string[] => {
-            const accept = headers.accept || '*/*';
-            if (!types) {
-              const acceptStr = Array.isArray(accept)
-                ? accept.join(',')
-                : accept;
-              return acceptStr.split(',').map((t) => t.trim().split(';')[0]);
-            }
+        get stale(): boolean {
+          return !this.fresh;
+        },
 
-            const typesToCheck = Array.isArray(types) ? types : [types];
+        xhr: (() => {
+          const requestedWith = headers['x-requested-with'];
+          return requestedWith === 'XMLHttpRequest';
+        })(),
+
+        get: ((name: string): string | undefined => {
+          const value = headers[name.toLowerCase()];
+          if (!value) return undefined;
+          return Array.isArray(value) ? value[0] : value;
+        }) as ExpressRequest['get'],
+
+        header: ((name: string): string | undefined => {
+          const value = headers[name.toLowerCase()];
+          if (!value) return undefined;
+          return Array.isArray(value) ? value[0] : value;
+        }) as ExpressRequest['header'],
+
+        is(types: string | string[]): string | false | null {
+          const contentType = headers['content-type'] || '';
+          if (!contentType) return false;
+
+          const typesToCheck = Array.isArray(types) ? types : [types];
+
+          for (const type of typesToCheck) {
+            if (type === 'json' && contentType.includes('application/json'))
+              return 'json';
+            if (type === 'html' && contentType.includes('text/html'))
+              return 'html';
+            if (type === 'xml' && contentType.includes('application/xml'))
+              return 'xml';
+            if (type === 'text' && contentType.includes('text/')) return 'text';
+            if (contentType.includes(type)) return type;
+          }
+
+          return false;
+        },
+
+        accepts: ((types?: string | string[]): string[] => {
+          const accept = headers.accept || '*/*';
+          if (!types) {
             const acceptStr = Array.isArray(accept) ? accept.join(',') : accept;
+            return acceptStr.split(',').map((t) => t.trim().split(';')[0]);
+          }
 
-            const result: string[] = [];
-            for (const type of typesToCheck) {
-              if (acceptStr.includes(type) || acceptStr.includes('*/*')) {
-                result.push(type);
-              }
-              // Handle simplified type matching
-              if (type === 'json' && acceptStr.includes('application/json'))
-                result.push('json');
-              if (type === 'html' && acceptStr.includes('text/html'))
-                result.push('html');
-              if (type === 'xml' && acceptStr.includes('application/xml'))
-                result.push('xml');
+          const typesToCheck = Array.isArray(types) ? types : [types];
+          const acceptStr = Array.isArray(accept) ? accept.join(',') : accept;
+
+          const result: string[] = [];
+          for (const type of typesToCheck) {
+            if (acceptStr.includes(type) || acceptStr.includes('*/*')) {
+              result.push(type);
             }
+            if (type === 'json' && acceptStr.includes('application/json'))
+              result.push('json');
+            if (type === 'html' && acceptStr.includes('text/html'))
+              result.push('html');
+            if (type === 'xml' && acceptStr.includes('application/xml'))
+              result.push('xml');
+          }
 
-            return result;
-          }) as ExpressRequest['accepts'],
+          return result;
+        }) as ExpressRequest['accepts'],
 
-          acceptsCharsets: ((charsets?: string | string[]): string[] => {
-            const acceptCharset = headers['accept-charset'] || '*';
-            const acceptCharsetStr = Array.isArray(acceptCharset)
-              ? acceptCharset.join(',')
-              : acceptCharset;
-            if (!charsets)
-              return acceptCharsetStr.split(',').map((c) => c.trim());
+        acceptsCharsets: ((charsets?: string | string[]): string[] => {
+          const acceptCharset = headers['accept-charset'] || '*';
+          const acceptCharsetStr = Array.isArray(acceptCharset)
+            ? acceptCharset.join(',')
+            : acceptCharset;
+          if (!charsets)
+            return acceptCharsetStr.split(',').map((c) => c.trim());
 
-            const charsetsToCheck = Array.isArray(charsets)
-              ? charsets
-              : [charsets];
+          const charsetsToCheck = Array.isArray(charsets)
+            ? charsets
+            : [charsets];
 
-            const result: string[] = [];
-            for (const charset of charsetsToCheck) {
-              if (
-                acceptCharsetStr.includes(charset) ||
-                acceptCharsetStr.includes('*')
-              ) {
-                result.push(charset);
-              }
-            }
-
-            return result;
-          }) as ExpressRequest['acceptsCharsets'],
-
-          acceptsEncodings: ((encodings?: string | string[]): string[] => {
-            const acceptEncoding = headers['accept-encoding'] || 'identity';
-            const acceptEncodingStr = Array.isArray(acceptEncoding)
-              ? acceptEncoding.join(',')
-              : acceptEncoding;
-            if (!encodings)
-              return acceptEncodingStr.split(',').map((e) => e.trim());
-
-            const encodingsToCheck = Array.isArray(encodings)
-              ? encodings
-              : [encodings];
-
-            const result: string[] = [];
-            for (const encoding of encodingsToCheck) {
-              if (
-                acceptEncodingStr.includes(encoding) ||
-                acceptEncodingStr.includes('*')
-              ) {
-                result.push(encoding);
-              }
-            }
-
-            return result;
-          }) as ExpressRequest['acceptsEncodings'],
-
-          acceptsLanguages: ((languages?: string | string[]): string[] => {
-            const acceptLanguage = headers['accept-language'] || '*';
-            const acceptLanguageStr = Array.isArray(acceptLanguage)
-              ? acceptLanguage.join(',')
-              : acceptLanguage;
-            if (!languages)
-              return acceptLanguageStr.split(',').map((l) => l.trim());
-
-            const languagesToCheck = Array.isArray(languages)
-              ? languages
-              : [languages];
-
-            const result: string[] = [];
-            for (const language of languagesToCheck) {
-              if (
-                acceptLanguageStr.includes(language) ||
-                acceptLanguageStr.includes('*')
-              ) {
-                result.push(language);
-              }
-            }
-
-            return result;
-          }) as ExpressRequest['acceptsLanguages'],
-
-          range(size: number, options?: RangeParser.Options) {
-            const rangeHeader = headers.range;
-            if (!rangeHeader) return undefined;
-
-            const rangeStr = Array.isArray(rangeHeader)
-              ? rangeHeader[0]
-              : rangeHeader;
-            return RangeParser(size, rangeStr, options);
-          },
-
-          param(name: string, defaultValue?: unknown): unknown {
-            // Check route parameters first
-            if (req.params && req.params[name] !== undefined) {
-              return req.params[name];
-            }
-            // Check query parameters
-            if (req.query && req.query[name] !== undefined) {
-              return req.query[name];
-            }
-            // Check body parameters (if parsed)
+          const result: string[] = [];
+          for (const charset of charsetsToCheck) {
             if (
-              req.body &&
-              typeof req.body === 'object' &&
-              req.body[name] !== undefined
+              acceptCharsetStr.includes(charset) ||
+              acceptCharsetStr.includes('*')
             ) {
-              return req.body[name];
+              result.push(charset);
             }
-            return defaultValue;
-          },
+          }
 
-          app,
-          baseUrl: (app as { basePath?: string }).basePath || '',
-          route: {
-            path: pathname,
-            stack: [],
-            methods: { [request.method.toLowerCase()]: true }
-          },
-          res,
-          next: (() => {}) as NextFunction,
+          return result;
+        }) as ExpressRequest['acceptsCharsets'],
 
-          rawHeaders: Object.entries(headers).flat(),
-          trailers: {},
-          rawTrailers: [],
-          aborted: false,
-          upgrade: false,
-          readable: true,
-          readableHighWaterMark: 16384,
-          readableLength: 0,
-          destroyed: false,
-          closed: false,
-          clearCookie: (
-            name: string,
-            options?: {
-              domain?: string;
-              path?: string;
-              httpOnly?: boolean;
-              secure?: boolean;
-              sameSite?: boolean | 'strict' | 'lax' | 'none';
-              expires?: Date;
+        acceptsEncodings: ((encodings?: string | string[]): string[] => {
+          const acceptEncoding = headers['accept-encoding'] || 'identity';
+          const acceptEncodingStr = Array.isArray(acceptEncoding)
+            ? acceptEncoding.join(',')
+            : acceptEncoding;
+          if (!encodings)
+            return acceptEncodingStr.split(',').map((e) => e.trim());
+
+          const encodingsToCheck = Array.isArray(encodings)
+            ? encodings
+            : [encodings];
+
+          const result: string[] = [];
+          for (const encoding of encodingsToCheck) {
+            if (
+              acceptEncodingStr.includes(encoding) ||
+              acceptEncodingStr.includes('*')
+            ) {
+              result.push(encoding);
             }
-          ) => {
-            const opts = Object.assign({}, options);
-            opts.expires = new Date(1);
-            opts.path = opts.path || '/';
-            return res.cookie(name, '', opts);
-          },
-          setTimeout: (msecs: number, callback?: () => void) => {
-            setTimeout(callback || (() => {}), msecs);
-            return req;
-          },
-          headersDistinct: Object.fromEntries(
-            Object.entries(headers).map(([key, value]) => [
-              key,
-              Array.isArray(value) ? value : [value]
-            ])
-          ) as Dict<string[]>,
-          trailersDistinct: {}
-        }
-      );
+          }
+
+          return result;
+        }) as ExpressRequest['acceptsEncodings'],
+
+        acceptsLanguages: ((languages?: string | string[]): string[] => {
+          const acceptLanguage = headers['accept-language'] || '*';
+          const acceptLanguageStr = Array.isArray(acceptLanguage)
+            ? acceptLanguage.join(',')
+            : acceptLanguage;
+          if (!languages)
+            return acceptLanguageStr.split(',').map((l) => l.trim());
+
+          const languagesToCheck = Array.isArray(languages)
+            ? languages
+            : [languages];
+
+          const result: string[] = [];
+          for (const language of languagesToCheck) {
+            if (
+              acceptLanguageStr.includes(language) ||
+              acceptLanguageStr.includes('*')
+            ) {
+              result.push(language);
+            }
+          }
+
+          return result;
+        }) as ExpressRequest['acceptsLanguages'],
+
+        range(size: number, options?: RangeParser.Options) {
+          const rangeHeader = headers.range;
+          if (!rangeHeader) return undefined;
+
+          const rangeStr = Array.isArray(rangeHeader)
+            ? rangeHeader[0]
+            : rangeHeader;
+          return RangeParser(size, rangeStr, options);
+        },
+
+        param(name: string, defaultValue?: unknown): unknown {
+          if (
+            this.params &&
+            (this.params as Record<string, unknown>)[name] !== undefined
+          ) {
+            return (this.params as Record<string, unknown>)[name];
+          }
+          if (
+            this.query &&
+            (this.query as Record<string, unknown>)[name] !== undefined
+          ) {
+            return (this.query as Record<string, unknown>)[name];
+          }
+          if (
+            this.body &&
+            typeof this.body === 'object' &&
+            (this.body as Record<string, unknown>)[name] !== undefined
+          ) {
+            return (this.body as Record<string, unknown>)[name];
+          }
+          return defaultValue;
+        },
+
+        app,
+        baseUrl: (app as { basePath?: string }).basePath || '',
+        route: {
+          path: pathname,
+          stack: [],
+          methods: { [request.method.toLowerCase()]: true }
+        },
+        res,
+        next: (() => {}) as NextFunction,
+
+        rawHeaders: Object.entries(headers).flat(),
+        trailers: {},
+        rawTrailers: [],
+        aborted: false,
+        upgrade: false,
+        readable: true,
+        readableHighWaterMark: 16384,
+        readableLength: 0,
+        destroyed: false,
+        closed: false,
+        clearCookie: (
+          name: string,
+          options?: {
+            domain?: string;
+            path?: string;
+            httpOnly?: boolean;
+            secure?: boolean;
+            sameSite?: boolean | 'strict' | 'lax' | 'none';
+            expires?: Date;
+          }
+        ) => {
+          const opts = Object.assign({}, options);
+          opts.expires = new Date(1);
+          opts.path = opts.path || '/';
+          return res.cookie(name, '', opts);
+        },
+        setTimeout: (msecs: number, callback?: () => void) => {
+          setTimeout(callback || (() => {}), msecs);
+          return req;
+        },
+        headersDistinct: Object.fromEntries(
+          Object.entries(headers).map(([key, value]) => [
+            key,
+            Array.isArray(value) ? value : [value]
+          ])
+        ) as Dict<string[]>,
+        trailersDistinct: {}
+      });
 
       Object.assign(req, {
         res,
@@ -1514,11 +1481,7 @@ export function serveExpress(
         resEE.emit('close');
         req.emit('close');
         req.emit('aborted');
-        try {
-          writer.abort('client aborted');
-        } catch {
-          // ignore
-        }
+        writer.abort('client aborted');
       };
       abort.signal.addEventListener('abort', onAbort);
 
@@ -1552,7 +1515,6 @@ export function serveExpress(
           res.emit('close');
         });
 
-        // Enhanced next function
         const next: NextFunction = (error?: unknown) => {
           if (error) {
             openTelemetryCollector.error('Express middleware error:', error);
@@ -1565,7 +1527,6 @@ export function serveExpress(
                 500;
               res.status(status);
 
-              // Vanilla Express sends simple error messages as strings
               if (development) {
                 const message = (error as Error)?.message || String(error);
                 res.send(`${status} ${message}`);
@@ -1587,7 +1548,6 @@ export function serveExpress(
           }
         };
 
-        // Execute the Express application
         if (development) {
           openTelemetryCollector.info(
             `${request.method} ${pathname} - Started`
@@ -1595,7 +1555,7 @@ export function serveExpress(
         }
 
         try {
-          app(req, res, next);
+          app(req as unknown as ExpressRequest, res, next);
         } catch (syncError) {
           openTelemetryCollector.error(
             'Synchronous Express application error:',
@@ -1614,14 +1574,12 @@ export function serveExpress(
         });
       }
 
-      // Enhanced response timeout handling
       queueMicrotask(() => {
         if (!responded && (res.headersSent || res.statusCode !== 200)) {
           ensureResponse();
         }
       });
 
-      // Development mode timeout with comprehensive error reporting
       if (development) {
         setTimeout(() => {
           if (!responded && !serverClosed) {
@@ -1636,12 +1594,7 @@ export function serveExpress(
               if (!res.headersSent) {
                 res.status(504).send('Gateway Timeout');
               } else {
-                // Force close the writer if headers were sent but response not completed
-                try {
-                  writer.close();
-                } catch {
-                  // ignore
-                }
+                writer.close();
                 ensureResponse();
               }
             } catch (error) {
@@ -1649,7 +1602,6 @@ export function serveExpress(
                 'Error sending timeout response:',
                 error
               );
-              // Force response if all else fails
               if (!responded) {
                 ensureResponse();
               }

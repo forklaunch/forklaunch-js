@@ -39,8 +39,7 @@ describe('mcpGenerator tests', () => {
         _fetchMap: {},
         sdk: {},
         sdkPaths: {}
-      },
-      true
+      }
     );
 
     expect(generatedMcpServer).toBeDefined();
@@ -88,8 +87,7 @@ describe('mcpGenerator tests', () => {
         _fetchMap: {},
         sdk: {},
         sdkPaths: {}
-      },
-      true
+      }
     );
 
     expect(generatedMcpServer).toBeDefined();
@@ -132,8 +130,7 @@ describe('mcpGenerator tests', () => {
         _fetchMap: {},
         sdk: {},
         sdkPaths: {}
-      },
-      true
+      }
     );
 
     expect(generatedMcpServer).toBeDefined();
@@ -237,8 +234,7 @@ describe('mcpGenerator tests', () => {
         _fetchMap: {},
         sdk: {},
         sdkPaths: {}
-      },
-      true
+      }
     );
 
     expect(generatedMcpServer).toBeDefined();

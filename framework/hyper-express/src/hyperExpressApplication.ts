@@ -7,6 +7,7 @@ import {
   generateMcpServer,
   generateOpenApiSpecs,
   isForklaunchRequest,
+  isPortBound,
   MetricsDefinition,
   OPENAPI_DEFAULT_VERSION,
   OpenTelemetryCollector,
@@ -24,6 +25,7 @@ import { ZodSchemaValidator } from '@forklaunch/validator/zod';
 import { apiReference } from '@scalar/express-api-reference';
 import crypto from 'crypto';
 import * as uWebsockets from 'uWebSockets.js';
+import { startHyperExpressCluster } from './cluster/hyperExpress.cluster';
 import { contentParse } from './middleware/contentParse.middleware';
 import { enrichResponseTransmission } from './middleware/enrichResponseTransmission.middleware';
 import { swagger, swaggerRedirect } from './middleware/swagger.middleware';
@@ -96,7 +98,11 @@ export class Application<
   ) {
     super(
       schemaValidator,
-      new Server(configurationOptions?.server),
+      new Server({
+        key_file_name: configurationOptions?.hosting?.ssl?.keyFile,
+        cert_file_name: configurationOptions?.hosting?.ssl?.certFile,
+        ...configurationOptions?.server
+      }),
       [
         contentParse<SV>(configurationOptions),
         enrichResponseTransmission as unknown as MiddlewareHandler
@@ -202,9 +208,7 @@ export class Application<
           finalMcpPort,
           version ?? '1.0.0',
           this as unknown as ForklaunchRouter<ZodSchemaValidator>,
-          typeof this.appOptions?.mcp === 'boolean'
-            ? this.appOptions.mcp
-            : this.appOptions?.mcp != null,
+          this.mcpConfiguration,
           options,
           contentTypeMapping
         );
@@ -213,14 +217,32 @@ export class Application<
           additionalTools(mcpServer);
         }
 
-        mcpServer.start({
-          httpStream: {
-            host,
-            endpoint: mcpPath ?? '/mcp',
-            port: finalMcpPort
-          },
-          transportType: 'httpStream'
-        });
+        if (
+          this.hostingConfiguration?.workerCount &&
+          this.hostingConfiguration.workerCount > 1
+        ) {
+          isPortBound(finalMcpPort, host).then((isBound) => {
+            if (!isBound) {
+              mcpServer.start({
+                httpStream: {
+                  host,
+                  endpoint: mcpPath ?? '/mcp',
+                  port: finalMcpPort
+                },
+                transportType: 'httpStream'
+              });
+            }
+          });
+        } else {
+          mcpServer.start({
+            httpStream: {
+              host,
+              endpoint: mcpPath ?? '/mcp',
+              port: finalMcpPort
+            },
+            transportType: 'httpStream'
+          });
+        }
       }
 
       if (this.openapiConfiguration !== false) {
@@ -236,9 +258,6 @@ export class Application<
           openApiServerUrls,
           openApiServerDescriptions,
           this,
-          typeof this.appOptions?.openapi === 'boolean'
-            ? this.appOptions.openapi
-            : this.appOptions?.openapi != null,
           this.openapiConfiguration
         );
 
@@ -353,12 +372,10 @@ export class Application<
         this.hostingConfiguration ?? {};
 
       if (workerCount != null && workerCount > 1) {
-        // Import the cluster function dynamically
-        const { startUWebSocketsCluster } = await import(
-          '@forklaunch/core/http'
+        this.openTelemetryCollector.warn(
+          'Clustering with hyper-express will default to kernel-level routing.'
         );
-
-        startUWebSocketsCluster({
+        startHyperExpressCluster({
           expressApp: this.internal,
           openTelemetryCollector: this.openTelemetryCollector,
           port,
@@ -367,9 +384,6 @@ export class Application<
           routingStrategy,
           ssl
         });
-
-        // Return a promise that never resolves since clustering takes over
-        return new Promise(() => {});
       }
 
       if (arg1 && typeof arg1 === 'string') {

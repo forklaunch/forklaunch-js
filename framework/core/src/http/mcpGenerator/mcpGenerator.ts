@@ -17,6 +17,7 @@ import {
   SessionObject,
   VersionSchema
 } from '../types/contractDetails.types';
+import { ExpressLikeApplicationOptions } from '../types/expressLikeOptions';
 import { ForklaunchRouter } from '../types/router.types';
 
 function generateInputSchema(
@@ -88,7 +89,10 @@ export function generateMcpServer<
   port: number,
   version: `${number}.${number}.${number}`,
   application: ForklaunchRouter<ZodSchemaValidator>,
-  globallyEnabled: boolean | undefined,
+  appOptions?: ExpressLikeApplicationOptions<
+    ZodSchemaValidator,
+    SessionObject<ZodSchemaValidator>
+  >['mcp'],
   options?: ConstructorParameters<typeof FastMCP<T>>[0],
   contentTypeMap?: Record<string, string>
 ) {
@@ -118,7 +122,7 @@ export function generateMcpServer<
         !(
           route.contractDetails.options?.mcp ??
           router.routerOptions?.mcp ??
-          globallyEnabled !== false
+          appOptions !== false
         )
       ) {
         return;

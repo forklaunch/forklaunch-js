@@ -8,13 +8,12 @@ import {
   generateMcpServer,
   generateOpenApiSpecs,
   isForklaunchRequest,
+  isPortBound,
   meta,
   MetricsDefinition,
   OPENAPI_DEFAULT_VERSION,
   OpenTelemetryCollector,
-  SessionObject,
-  startBunCluster,
-  startNodeCluster
+  SessionObject
 } from '@forklaunch/core/http';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { ZodSchemaValidator } from '@forklaunch/validator/zod';
@@ -30,6 +29,8 @@ import express, {
 } from 'express';
 import { Server } from 'http';
 import swaggerUi from 'swagger-ui-express';
+import { startBunCluster } from './cluster/bun.cluster';
+import { startNodeCluster } from './cluster/node.cluster';
 import { contentParse } from './middleware/content.parse.middleware';
 import { enrichResponseTransmission } from './middleware/enrichResponseTransmission.middleware';
 import { ExpressApplicationOptions } from './types/expressOptions.types';
@@ -90,6 +91,7 @@ export class Application<
       options
     );
 
+    console.log('this.routerOptions offa', this.routerOptions);
     this.hostingConfiguration = options?.hosting;
     this.docsConfiguration = options?.docs;
     this.mcpConfiguration = options?.mcp;
@@ -158,9 +160,7 @@ export class Application<
         finalMcpPort,
         version ?? '1.0.0',
         this as unknown as ForklaunchRouter<ZodSchemaValidator>,
-        typeof this.appOptions?.mcp === 'boolean'
-          ? this.appOptions.mcp
-          : this.appOptions?.mcp != null,
+        this.mcpConfiguration,
         options,
         contentTypeMapping
       );
@@ -169,14 +169,32 @@ export class Application<
         additionalTools(mcpServer);
       }
 
-      mcpServer.start({
-        httpStream: {
-          host,
-          endpoint: mcpPath ?? '/mcp',
-          port: finalMcpPort
-        },
-        transportType: 'httpStream'
-      });
+      if (
+        this.hostingConfiguration?.workerCount &&
+        this.hostingConfiguration.workerCount > 1
+      ) {
+        isPortBound(finalMcpPort, host).then((isBound) => {
+          if (!isBound) {
+            mcpServer.start({
+              httpStream: {
+                host,
+                endpoint: mcpPath ?? '/mcp',
+                port: finalMcpPort
+              },
+              transportType: 'httpStream'
+            });
+          }
+        });
+      } else {
+        mcpServer.start({
+          httpStream: {
+            host,
+            endpoint: mcpPath ?? '/mcp',
+            port: finalMcpPort
+          },
+          transportType: 'httpStream'
+        });
+      }
     }
 
     if (this.openapiConfiguration !== false) {
@@ -192,9 +210,6 @@ export class Application<
         openApiServerUrls,
         openApiServerDescriptions,
         this,
-        typeof this.appOptions?.openapi === 'boolean'
-          ? this.appOptions.openapi
-          : this.appOptions?.openapi != null,
         this.openapiConfiguration
       );
 

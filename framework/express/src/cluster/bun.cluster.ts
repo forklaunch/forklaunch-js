@@ -1,8 +1,8 @@
+import { ClusterConfig } from '@forklaunch/core/http';
 import { Express } from 'express';
 import cluster, { Worker } from 'node:cluster';
 import os from 'node:os';
 import { serveExpress } from './bun.serve.shim';
-import { ClusterConfig } from './cluster.types';
 
 export function startBunCluster(config: ClusterConfig<Express>) {
   const WORKERS = config.workerCount;

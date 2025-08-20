@@ -56,14 +56,8 @@ export abstract class ForklaunchExpressLikeApplication<
       openTelemetryCollector,
       {
         ...appOptions,
-        openapi:
-          typeof appOptions?.openapi === 'boolean'
-            ? appOptions.openapi
-            : appOptions?.openapi != null,
-        mcp:
-          typeof appOptions?.mcp === 'boolean'
-            ? appOptions.mcp
-            : appOptions?.mcp != null
+        openapi: appOptions?.openapi !== false,
+        mcp: appOptions?.mcp !== false
       }
     );
 

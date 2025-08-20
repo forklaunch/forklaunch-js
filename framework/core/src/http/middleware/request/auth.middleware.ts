@@ -144,7 +144,6 @@ async function checkAuthorizationToken<
     }
     case 'jwt': {
       if (
-        !('tokenPrefix' in collapsedAuthorizationMethod) ||
         tokenPrefix !== (collapsedAuthorizationMethod.tokenPrefix ?? 'Bearer')
       ) {
         return invalidAuthorizationTokenFormat;
@@ -182,7 +181,6 @@ async function checkAuthorizationToken<
     }
     case 'basic': {
       if (
-        !('tokenPrefix' in collapsedAuthorizationMethod) ||
         tokenPrefix !== (collapsedAuthorizationMethod.tokenPrefix ?? 'Basic')
       ) {
         return invalidAuthorizationTokenFormat;
@@ -297,9 +295,7 @@ async function checkAuthorizationToken<
         return invalidAuthorizationTokenPermissions;
       }
     }
-  }
-
-  if (hasRoleChecks(collapsedAuthorizationMethod)) {
+  } else if (hasRoleChecks(collapsedAuthorizationMethod)) {
     if (!collapsedAuthorizationMethod.surfaceRoles) {
       return [500, 'No role surfacing function provided.'];
     }

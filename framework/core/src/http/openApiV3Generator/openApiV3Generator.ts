@@ -282,12 +282,12 @@ function generateOperationObject<SV extends AnySchemaValidator>(
   }
 
   if (auth) {
-    responses[401] = {
+    coercedResponses[401] = {
       description: HTTPStatuses[401],
       content: contentResolver(schemaValidator, schemaValidator.string)
     };
 
-    responses[403] = {
+    coercedResponses[403] = {
       description: HTTPStatuses[403],
       content: contentResolver(schemaValidator, schemaValidator.string)
     };
@@ -352,12 +352,7 @@ export function generateOpenApiSpecs<SV extends AnySchemaValidator>(
   serverUrls: string[],
   serverDescriptions: string[],
   application: ForklaunchRouter<SV>,
-  globallyEnabled: boolean | undefined,
   appOptions?: ExpressLikeApplicationOptions<SV, SessionObject<SV>>['openapi']
-  // otherServers?: {
-  //   url: string;
-  //   description: string;
-  // }[]
 ): Record<string | symbol, OpenAPIObject> {
   const versionedPaths: Record<string | symbol, PathObject> = {
     [OPENAPI_DEFAULT_VERSION]: {}
@@ -394,7 +389,7 @@ export function generateOpenApiSpecs<SV extends AnySchemaValidator>(
         !(
           options?.openapi ??
           router.routerOptions?.openapi ??
-          globallyEnabled !== false
+          appOptions !== false
         )
       ) {
         return;
