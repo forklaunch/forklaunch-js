@@ -41,12 +41,12 @@
   "dependencies": {
     "@forklaunch/common": "workspace:*",
     "@forklaunch/core": "workspace:*",
-    "redis": "^5.8.1"
+    "redis": "^5.8.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",
     "@types/jest": "^30.0.0",
-    "@typescript/native-preview": "7.0.0-dev.20250819.1",
+    "@typescript/native-preview": "7.0.0-dev.20250820.1",
     "globals": "^16.3.0",
     "jest": "^30.0.5",
     "prettier": "^3.6.2",
