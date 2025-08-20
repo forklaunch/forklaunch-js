@@ -35,8 +35,8 @@
     "@forklaunch/validator": "workspace:*",
     "@sinclair/typebox": "^0.34.40",
     "express": "^5.1.0",
-    "zod": "^4.0.17",
-    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.44.0"
+    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.44.0",
+    "zod": "^4.0.17"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",
