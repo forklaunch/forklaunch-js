@@ -1,3 +1,5 @@
+#[cfg(unix)]
+use std::os::unix::{fs::symlink, prelude::PermissionsExt};
 use std::{
     env::{args, current_dir},
     fs::{File, create_dir_all, metadata, read_to_string, remove_file, set_permissions},
@@ -6,17 +8,13 @@ use std::{
     process::{Command as OsCommand, exit},
 };
 
-#[cfg(unix)]
-use std::os::unix::{fs::symlink, prelude::PermissionsExt};
-
 use anyhow::{Context, Result};
 use clap::ArgMatches;
 use reqwest::blocking::Client;
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
+use super::base_path::{find_nearest_manifest_from, find_nearest_manifest_root_unbounded};
 use crate::prompt::{ArrayCompleter, prompt_for_confirmation};
-
-use super::base_path::find_nearest_manifest_root_unbounded;
 
 #[derive(Debug)]
 pub(crate) enum VersionCheckOutcome {
@@ -139,21 +137,6 @@ pub(crate) fn precheck_version(
     } else {
         current_dir().unwrap_or_else(|_| PathBuf::from("."))
     };
-
-    fn find_nearest_manifest_from(start: &Path) -> Option<PathBuf> {
-        let mut base_path = start.canonicalize().ok()?;
-        loop {
-            let manifest = base_path.join(".forklaunch").join("manifest.toml");
-            if manifest.exists() {
-                return Some(base_path.clone());
-            }
-            match base_path.parent() {
-                Some(parent) => base_path = parent.to_path_buf(),
-                None => break,
-            }
-        }
-        None
-    }
 
     let manifest_root =
         find_nearest_manifest_from(&start_path).or_else(|| find_nearest_manifest_root_unbounded());
