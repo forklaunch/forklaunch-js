@@ -245,6 +245,19 @@ choice! {
             exclusive_files: Some(&["iam-better-auth"])
         }
     }
+
+    pub(crate) enum FileDestinationOption {
+        Src = Choice {
+            id: "source",
+            description: Some("src/modules"),
+            exclusive_files: None,
+        },
+        Modules = Choice {
+            id: "modules",
+            description: Some("modules"),
+            exclusive_files: None,
+        },
+    }
 }
 
 // ERRORS

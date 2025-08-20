@@ -21,7 +21,7 @@ use crate::{
         Database, ERROR_FAILED_TO_CREATE_DATABASE_EXPORT_INDEX_TS,
         ERROR_FAILED_TO_CREATE_GITIGNORE, ERROR_FAILED_TO_CREATE_LICENSE,
         ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE, ERROR_FAILED_TO_SETUP_IAM, Formatter,
-        HttpFramework, License, Linter, Module, Runtime, TestFramework, Validator,
+        HttpFramework, License, Linter, Module, Runtime, TestFramework, Validator, FileDestinationOption,
         get_core_module_description, get_monitoring_module_description, get_service_module_cache,
         get_service_module_description, get_service_module_name,
         get_universal_sdk_module_description,
@@ -271,6 +271,13 @@ impl CliCommand for ApplicationCommand {
                 .help("Project path (optional, will prompt if not provided)"),
             )
             .arg(
+                Arg::new("file_destination_option")
+                    .short('o')
+                    .long("file-dest-option")
+                    .help("The option to use for the app files destination")
+                    .value_parser(FileDestinationOption::VARIANTS),
+            )
+            .arg(
                 Arg::new("database")
                     .short('d')
                     .long("database")
@@ -425,13 +432,58 @@ impl CliCommand for ApplicationCommand {
                     .to_string()
             }
         };
-        
-        // Combine the project path with src/modules as default path for all app-related files
-        let application_path = if project_root_path.ends_with('/') || project_root_path.ends_with('\\') {
-            format!("{}{}", project_root_path, "src/modules")
+        // Default output path should be src/modules
+        let src_path = format!("{}/src", project_root_path);
+        let application_path = if let Some(file_destination_option) = matches.get_one::<String>("file_destination_option") {
+            format!("{}/{}", project_root_path, file_destination_option)
+        } else if Path::new(&src_path).exists() && Path::new(&src_path).is_dir() {
+            format!("{}/modules", src_path)
         } else {
-            format!("{}/{}", project_root_path, "src/modules")
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+            writeln!(
+                stdout,
+                "No 'src' folder in project root. Please confirm where application files will be initialized."
+            )?;
+            stdout.reset()?;
+            let temp_path: String = prompt_with_validation(
+                &mut line_editor,
+                &mut stdout,
+                "file_destination_option",
+                matches,
+                "Confirm where application files will be initialized:",
+                Some(&FileDestinationOption::VARIANTS),
+                |input| {
+                    let path = Path::new(&input);
+                    if let Some(parent) = path.parent() {
+                        parent.exists() || parent.to_str().is_some()
+                    } else {
+                        false
+                    }
+                },
+                |_| "Invalid path. Please provide a valid destination path.".to_string(),
+            )?;
+            println!("01: temp_path: {:?}", temp_path);
+            // Handle special input values
+            let final_path = if temp_path == "source" {
+                // Do something when input is "source"
+                format!("{}/src/modules", project_root_path)
+            } else if temp_path == "modules" {
+                // Do something when input is "modules"
+                format!("{}/modules", project_root_path)
+            } else {
+                // Default behavior for other inputs
+                format!("{}/{}", project_root_path, temp_path)
+            };
+            
+            final_path
         };
+        println!("02: application_path: {:?}", application_path);
+        // Combine the project path with src/modules as default path for all app-related files
+        // let application_path = if project_root_path.ends_with('/') || project_root_path.ends_with('\\') {
+        //     format!("{}{}", project_root_path, "src/modules")
+        // } else {
+        //     format!("{}/{}", project_root_path, "src/modules")
+        // };
 
         // Prompt for runtime
         let runtime: Runtime = prompt_with_validation(
