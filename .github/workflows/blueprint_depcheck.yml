@@ -30,7 +30,7 @@ jobs:
           cargo build --release
           chmod +x ./target/release/forklaunch
 
-      - name: Run CLI in framework
+      - name: Run CLI in blueprint
         run: |
           cd blueprint
           ../cli/target/release/forklaunch depcheck
