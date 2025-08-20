@@ -13,7 +13,7 @@
   "author": "Forklift Technologies, Inc.",
   "scripts": {
     "build": "tsc",
-    "clean": "rm -rf dist bun.lockb node_modules",
+    "clean": "rm -rf dist bun.lockb bun.lock node_modules",
     "dev:bun:local": "DOTENV_FILE_PATH=.env.local bun run migrate:up && DOTENV_FILE_PATH=.env.local bun --watch server.ts & DOTENV_FILE_PATH=.env.local bun --watch worker.ts",
     "dev:local": "DOTENV_FILE_PATH=.env.local pnpm run migrate:up && DOTENV_FILE_PATH=.env.local pnpm tsx watch server.ts & DOTENV_FILE_PATH=.env.local pnpm tsx watch worker.ts",
     "dev:server": "pnpm run migrate:up && pnpm tsx watch server.ts",

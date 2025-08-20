@@ -1,1 +1,5 @@
-../../../../blueprint/.lintstagedrc.json
+{
+  "**/*.{ts,tsx}": ["{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} lint:fix"],
+  "**/*.{ts,tsx,json}": ["{{#is_node}}pnpm{{/is_node}}{{#is_bun}}bun{{/is_bun}} format"],
+  "!**/package.json": []
+}

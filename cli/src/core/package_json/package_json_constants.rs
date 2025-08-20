@@ -83,7 +83,7 @@ pub(crate) fn application_build_script(runtime: &Runtime, app_name: &str) -> Str
 
 pub(crate) fn application_clean_script(runtime: &Runtime) -> String {
     String::from(match runtime {
-        Runtime::Bun => "rm -rf node_modules bun.lockb && bun --filter='*' clean",
+        Runtime::Bun => "rm -rf node_modules bun.lockb bun.lock && bun --filter='*' clean",
         Runtime::Node => {
             "rm -rf node_modules pnpm-lock.yaml && pnpm --parallel -r --no-bail clean && pnpm store prune"
         }
@@ -333,7 +333,7 @@ pub(crate) fn project_lint_fix_script(linter: &Linter) -> String {
 
 pub(crate) fn project_clean_script(runtime: &Runtime) -> String {
     String::from(match runtime {
-        Runtime::Bun => "rm -rf dist bun.lockb node_modules",
+        Runtime::Bun => "rm -rf dist bun.lockb bun.lock node_modules",
         Runtime::Node => "rm -rf dist pnpm.lock.yaml node_modules",
     })
 }
