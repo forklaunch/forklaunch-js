@@ -10,6 +10,7 @@ import {
   QueryObject,
   ResponsesObject,
   SchemaAuthMethods,
+  SessionObject,
   VersionSchema
 } from '../types/contractDetails.types';
 import { ExpressLikeTypedHandler } from '../types/typedHandler.types';
@@ -34,6 +35,7 @@ export function typedHandler<
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
   const VersionedApi extends VersionSchema<SV, ContractMethod>,
+  const Session extends SessionObject<SV>,
   BaseRequest,
   BaseResponse,
   NextFunction,
@@ -44,6 +46,7 @@ export function typedHandler<
     ReqQuery,
     ReqHeaders,
     VersionedApi,
+    Session,
     BaseRequest
   >
 >(
@@ -62,6 +65,7 @@ export function typedHandler<
     ReqHeaders,
     ResHeaders,
     VersionedApi,
+    Session,
     BaseRequest,
     Auth
   >,
@@ -75,6 +79,7 @@ export function typedHandler<
     ResHeaders,
     LocalsObj,
     VersionedApi,
+    Session,
     BaseRequest,
     BaseResponse,
     NextFunction
@@ -92,6 +97,7 @@ export function typedHandler<
   ResHeaders,
   LocalsObj,
   VersionedApi,
+  Session,
   BaseRequest,
   BaseResponse,
   NextFunction,
@@ -110,6 +116,7 @@ export function typedHandler<
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
   const VersionedApi extends VersionSchema<SV, ContractMethod>,
+  const Session extends SessionObject<SV>,
   BaseRequest,
   BaseResponse,
   NextFunction,
@@ -120,6 +127,7 @@ export function typedHandler<
     ReqQuery,
     ReqHeaders,
     VersionedApi,
+    Session,
     BaseRequest
   >
 >(
@@ -137,6 +145,7 @@ export function typedHandler<
     ReqHeaders,
     ResHeaders,
     VersionedApi,
+    Session,
     BaseRequest,
     Auth
   >,
@@ -150,6 +159,7 @@ export function typedHandler<
     ResHeaders,
     LocalsObj,
     VersionedApi,
+    Session,
     BaseRequest,
     BaseResponse,
     NextFunction
@@ -167,6 +177,7 @@ export function typedHandler<
   ResHeaders,
   LocalsObj,
   VersionedApi,
+  Session,
   BaseRequest,
   BaseResponse,
   NextFunction,
@@ -185,6 +196,7 @@ export function typedHandler<
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
   const VersionedApi extends VersionSchema<SV, ContractMethod>,
+  const Session extends SessionObject<SV>,
   BaseRequest,
   BaseResponse,
   NextFunction,
@@ -195,6 +207,7 @@ export function typedHandler<
     ReqQuery,
     ReqHeaders,
     VersionedApi,
+    Session,
     BaseRequest
   >
 >(
@@ -214,6 +227,7 @@ export function typedHandler<
         ReqHeaders,
         ResHeaders,
         VersionedApi,
+        Session,
         BaseRequest,
         Auth
       >,
@@ -230,6 +244,7 @@ export function typedHandler<
         ReqHeaders,
         ResHeaders,
         VersionedApi,
+        Session,
         BaseRequest,
         Auth
       >
@@ -243,6 +258,7 @@ export function typedHandler<
         ResHeaders,
         LocalsObj,
         VersionedApi,
+        Session,
         BaseRequest,
         BaseResponse,
         NextFunction
@@ -257,6 +273,7 @@ export function typedHandler<
     ResHeaders,
     LocalsObj,
     VersionedApi,
+    Session,
     BaseRequest,
     BaseResponse,
     NextFunction
@@ -274,6 +291,7 @@ export function typedHandler<
   ResHeaders,
   LocalsObj,
   VersionedApi,
+  Session,
   BaseRequest,
   BaseResponse,
   NextFunction,
@@ -293,6 +311,7 @@ export function typedHandler<
     ReqHeaders,
     ResHeaders,
     VersionedApi,
+    Session,
     BaseRequest,
     Auth
   >;
@@ -306,6 +325,7 @@ export function typedHandler<
     ResHeaders,
     LocalsObj,
     VersionedApi,
+    Session,
     BaseRequest,
     BaseResponse,
     NextFunction

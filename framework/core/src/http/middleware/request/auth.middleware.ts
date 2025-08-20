@@ -1,10 +1,12 @@
 import { isNever } from '@forklaunch/common';
 import { AnySchemaValidator } from '@forklaunch/validator';
-import { JWTPayload, jwtVerify } from 'jose';
+import { JWTPayload } from 'jose';
 import { ParsedQs } from 'qs';
 import { discriminateAuthMethod } from '../../discriminateAuthMethod';
 import { hasPermissionChecks } from '../../guards/hasPermissionChecks';
 import { hasRoleChecks } from '../../guards/hasRoleChecks';
+import { hasScopeChecks } from '../../guards/hasScopeChecks';
+import { isSystemAuthMethod } from '../../guards/isSystemAuthMethod';
 import {
   ForklaunchNextFunction,
   ForklaunchRequest,
@@ -15,6 +17,7 @@ import {
   MapReqQuerySchema,
   MapResBodyMapSchema,
   MapResHeadersSchema,
+  MapSessionSchema,
   MapVersionedReqsSchema,
   ResolvedForklaunchRequest,
   VersionedRequests
@@ -28,8 +31,10 @@ import {
   ParamsObject,
   QueryObject,
   ResponsesObject,
+  SessionObject,
   VersionSchema
 } from '../../types/contractDetails.types';
+import { ExpressLikeGlobalAuthOptions } from '../../types/expressLikeOptions';
 
 const invalidAuthorizationTokenFormat = [
   401,
@@ -55,6 +60,15 @@ const invalidAuthorizationLogin = [
   403,
   'Invalid Authorization login.'
 ] as const;
+const invalidScope = [403, 'Invalid scope for operation.'] as const;
+const invalidAuthorizationMethod = [
+  401,
+  'Invalid Authorization method.'
+] as const;
+const authorizationTokenRequired = [
+  401,
+  'Authorization token required.'
+] as const;
 
 /**
  * Checks the authorization token for validity.
@@ -70,17 +84,20 @@ async function checkAuthorizationToken<
   ReqQuery extends ParsedQs,
   ReqHeaders extends Record<string, string>,
   VersionedReqs extends VersionedRequests,
+  SessionSchema extends SessionObject<SV>,
   BaseRequest
 >(
-  authorizationMethod: AuthMethods<
+  authorizationMethod?: AuthMethods<
     SV,
     P,
     ReqBody,
     ReqQuery,
     ReqHeaders,
     VersionedReqs,
+    SessionSchema,
     BaseRequest
   >,
+  globalOptions?: ExpressLikeGlobalAuthOptions<SV, SessionSchema>,
   authorizationToken?: string,
   req?: ForklaunchRequest<
     SV,
@@ -88,40 +105,63 @@ async function checkAuthorizationToken<
     ReqBody,
     ReqQuery,
     ReqHeaders,
-    Extract<keyof VersionedReqs, string>
+    Extract<keyof VersionedReqs, string>,
+    SessionSchema
   >
 ): Promise<readonly [401 | 403 | 500, string] | undefined> {
+  if (authorizationMethod == null) {
+    return undefined;
+  }
+
+  const collapsedAuthorizationMethod = {
+    ...globalOptions,
+    ...authorizationMethod
+  };
+
   if (authorizationToken == null) {
-    return [401, 'No Authorization token provided.'];
+    return authorizationTokenRequired;
   }
 
   const [tokenPrefix, token] = authorizationToken.split(' ');
 
-  let resourceId: JWTPayload;
+  let resourceId: (JWTPayload & SessionSchema) | null;
 
-  const { type, auth } = discriminateAuthMethod(authorizationMethod);
+  const { type, auth } = await discriminateAuthMethod(
+    collapsedAuthorizationMethod
+  );
 
   switch (type) {
+    case 'system': {
+      if (
+        token !== auth.secretKey ||
+        tokenPrefix !== collapsedAuthorizationMethod.tokenPrefix
+      ) {
+        return invalidAuthorizationToken;
+      }
+
+      resourceId = null;
+      break;
+    }
     case 'jwt': {
-      if (tokenPrefix !== (authorizationMethod.tokenPrefix ?? 'Bearer')) {
+      if (
+        tokenPrefix !== (collapsedAuthorizationMethod.tokenPrefix ?? 'Bearer')
+      ) {
         return invalidAuthorizationTokenFormat;
       }
 
       try {
         const decodedJwt =
-          (await auth?.decodeResource?.(token)) ??
-          (
-            await jwtVerify(
-              token,
-              new TextEncoder().encode(process.env.JWT_SECRET)
-            )
-          ).payload;
+          'decodeResource' in auth && auth.decodeResource
+            ? await auth.decodeResource(token)
+            : 'verificationFunction' in auth && auth.verificationFunction
+              ? await auth.verificationFunction(token)
+              : undefined;
 
         if (!decodedJwt) {
           return invalidAuthorizationSubject;
         }
 
-        resourceId = decodedJwt;
+        resourceId = decodedJwt as JWTPayload & SessionSchema;
       } catch (error) {
         (
           req as ForklaunchRequest<
@@ -130,7 +170,8 @@ async function checkAuthorizationToken<
             ReqBody,
             ReqQuery,
             ReqHeaders,
-            Extract<keyof VersionedReqs, string>
+            Extract<keyof VersionedReqs, string>,
+            SessionSchema
           >
         )?.openTelemetryCollector.error(error);
         return invalidAuthorizationToken;
@@ -139,12 +180,15 @@ async function checkAuthorizationToken<
       break;
     }
     case 'basic': {
-      if (tokenPrefix !== (authorizationMethod.tokenPrefix ?? 'Basic')) {
+      if (
+        tokenPrefix !== (collapsedAuthorizationMethod.tokenPrefix ?? 'Basic')
+      ) {
         return invalidAuthorizationTokenFormat;
       }
 
       if (auth.decodeResource) {
-        resourceId = await auth.decodeResource(token);
+        resourceId = (await auth.decodeResource(token)) as JWTPayload &
+          SessionSchema;
       } else {
         const [username, password] = Buffer.from(token, 'base64')
           .toString('utf-8')
@@ -160,7 +204,7 @@ async function checkAuthorizationToken<
 
         resourceId = {
           sub: username
-        };
+        } as JWTPayload & SessionSchema;
       }
       break;
     }
@@ -169,54 +213,94 @@ async function checkAuthorizationToken<
       return [401, 'Invalid Authorization method.'];
   }
 
-  if (hasPermissionChecks(authorizationMethod)) {
-    if (!authorizationMethod.mapPermissions) {
-      return [500, 'No permission mapping function provided.'];
+  if (isSystemAuthMethod(collapsedAuthorizationMethod) || resourceId == null) {
+    return;
+  }
+
+  if (hasScopeChecks(collapsedAuthorizationMethod)) {
+    if (collapsedAuthorizationMethod.surfaceScopes) {
+      const resourceScopes = await collapsedAuthorizationMethod.surfaceScopes(
+        resourceId,
+        req as ResolvedForklaunchRequest<
+          SV,
+          P,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          VersionedReqs,
+          SessionSchema,
+          BaseRequest
+        >
+      );
+
+      if (collapsedAuthorizationMethod.scopeHeirarchy) {
+        if (collapsedAuthorizationMethod.requiredScope) {
+          if (
+            !resourceScopes.has(collapsedAuthorizationMethod.requiredScope) ||
+            Array.from(resourceScopes).every(
+              (scope) =>
+                collapsedAuthorizationMethod.scopeHeirarchy?.indexOf(scope) ??
+                -1 > -1
+            )
+          ) {
+            return invalidScope;
+          }
+        }
+      }
+    }
+  }
+
+  if (hasPermissionChecks(collapsedAuthorizationMethod)) {
+    if (!collapsedAuthorizationMethod.surfacePermissions) {
+      return [500, 'No permission surfacing function provided.'];
     }
 
-    const resourcePermissions = await authorizationMethod.mapPermissions(
-      resourceId,
-      req as ResolvedForklaunchRequest<
-        SV,
-        P,
-        ReqBody,
-        ReqQuery,
-        ReqHeaders,
-        VersionedReqs,
-        BaseRequest
-      >
-    );
+    const resourcePermissions =
+      await collapsedAuthorizationMethod.surfacePermissions(
+        resourceId,
+        req as ResolvedForklaunchRequest<
+          SV,
+          P,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          VersionedReqs,
+          SessionSchema,
+          BaseRequest
+        >
+      );
 
     if (
-      'allowedPermissions' in authorizationMethod &&
-      authorizationMethod.allowedPermissions
+      'allowedPermissions' in collapsedAuthorizationMethod &&
+      collapsedAuthorizationMethod.allowedPermissions
     ) {
       if (
-        resourcePermissions.intersection(authorizationMethod.allowedPermissions)
-          .size === 0
+        resourcePermissions.intersection(
+          collapsedAuthorizationMethod.allowedPermissions
+        ).size === 0
       ) {
         return invalidAuthorizationTokenPermissions;
       }
     }
 
     if (
-      'forbiddenPermissions' in authorizationMethod &&
-      authorizationMethod.forbiddenPermissions
+      'forbiddenPermissions' in collapsedAuthorizationMethod &&
+      collapsedAuthorizationMethod.forbiddenPermissions
     ) {
       if (
         resourcePermissions.intersection(
-          authorizationMethod.forbiddenPermissions
+          collapsedAuthorizationMethod.forbiddenPermissions
         ).size !== 0
       ) {
         return invalidAuthorizationTokenPermissions;
       }
     }
-  } else if (hasRoleChecks(authorizationMethod)) {
-    if (!authorizationMethod.mapRoles) {
-      return [500, 'No role mapping function provided.'];
+  } else if (hasRoleChecks(collapsedAuthorizationMethod)) {
+    if (!collapsedAuthorizationMethod.surfaceRoles) {
+      return [500, 'No role surfacing function provided.'];
     }
 
-    const resourceRoles = await authorizationMethod.mapRoles(
+    const resourceRoles = await collapsedAuthorizationMethod.surfaceRoles(
       resourceId,
       req as ResolvedForklaunchRequest<
         SV,
@@ -225,34 +309,36 @@ async function checkAuthorizationToken<
         ReqQuery,
         ReqHeaders,
         VersionedReqs,
+        SessionSchema,
         BaseRequest
       >
     );
 
     if (
-      'allowedRoles' in authorizationMethod &&
-      authorizationMethod.allowedRoles
+      'allowedRoles' in collapsedAuthorizationMethod &&
+      collapsedAuthorizationMethod.allowedRoles
     ) {
       if (
-        resourceRoles.intersection(authorizationMethod.allowedRoles).size === 0
+        resourceRoles.intersection(collapsedAuthorizationMethod.allowedRoles)
+          .size === 0
       ) {
         return invalidAuthorizationTokenRoles;
       }
     }
 
     if (
-      'forbiddenRoles' in authorizationMethod &&
-      authorizationMethod.forbiddenRoles
+      'forbiddenRoles' in collapsedAuthorizationMethod &&
+      collapsedAuthorizationMethod.forbiddenRoles
     ) {
       if (
-        resourceRoles.intersection(authorizationMethod.forbiddenRoles).size !==
-        0
+        resourceRoles.intersection(collapsedAuthorizationMethod.forbiddenRoles)
+          .size !== 0
       ) {
         return invalidAuthorizationTokenRoles;
       }
     }
   } else {
-    return [401, 'Invalid Authorization method.'];
+    return invalidAuthorizationMethod;
   }
 }
 
@@ -277,7 +363,8 @@ export async function parseRequestAuth<
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
-  VersionedApi extends VersionSchema<SV, ContractMethod>
+  VersionedApi extends VersionSchema<SV, ContractMethod>,
+  SessionSchema extends SessionObject<SV>
 >(
   req: ForklaunchRequest<
     SV,
@@ -285,7 +372,8 @@ export async function parseRequestAuth<
     MapReqBodySchema<SV, ReqBody>,
     MapReqQuerySchema<SV, ReqQuery>,
     MapReqHeadersSchema<SV, ReqHeaders>,
-    Extract<keyof MapVersionedReqsSchema<SV, VersionedApi>, string>
+    Extract<keyof MapVersionedReqsSchema<SV, VersionedApi>, string>,
+    MapSessionSchema<SV, SessionSchema>
   >,
   res: ForklaunchResponse<
     unknown,
@@ -304,32 +392,32 @@ export async function parseRequestAuth<
         MapReqQuerySchema<SV, ReqQuery>,
         MapReqHeadersSchema<SV, ReqHeaders>,
         MapVersionedReqsSchema<SV, VersionedApi>,
+        MapSessionSchema<SV, SessionSchema>,
         unknown
       >
     | undefined;
 
-  if (auth) {
-    const [error, message] =
-      (await checkAuthorizationToken<
-        SV,
-        MapParamsSchema<SV, P>,
-        MapReqBodySchema<SV, ReqBody>,
-        MapReqQuerySchema<SV, ReqQuery>,
-        MapReqHeadersSchema<SV, ReqHeaders>,
-        MapVersionedReqsSchema<SV, VersionedApi>,
-        unknown
-      >(
-        auth,
-        (req.headers[auth.headerName ?? 'Authorization'] as string) ||
-          (req.headers[auth.headerName ?? 'authorization'] as string),
-        // we can safely cast here because we know that the user will supply resolution for the request
-        req
-      )) ?? [];
-    if (error != null) {
-      res.type('text/plain');
-      res.status(error).send(message as never);
-      return;
-    }
+  const [error, message] =
+    (await checkAuthorizationToken<
+      SV,
+      MapParamsSchema<SV, P>,
+      MapReqBodySchema<SV, ReqBody>,
+      MapReqQuerySchema<SV, ReqQuery>,
+      MapReqHeadersSchema<SV, ReqHeaders>,
+      MapVersionedReqsSchema<SV, VersionedApi>,
+      MapSessionSchema<SV, SessionSchema>,
+      unknown
+    >(
+      auth,
+      req._globalOptions?.auth,
+      (req.headers[auth?.headerName ?? 'Authorization'] as string) ||
+        (req.headers[auth?.headerName ?? 'authorization'] as string),
+      req
+    )) ?? [];
+  if (error != null) {
+    res.type('text/plain');
+    res.status(error).send(message as never);
+    return;
   }
 
   next?.();

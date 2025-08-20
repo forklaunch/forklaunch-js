@@ -28,12 +28,14 @@ import {
   ResponseCompiledSchema,
   ResponsesObject,
   ServerSentEventBody,
+  SessionObject,
   TextBody,
   UnknownBody,
   UnknownResponseBody,
   UrlEncodedForm,
   VersionSchema
 } from './contractDetails.types';
+import { ExpressLikeRouterOptions } from './expressLikeOptions';
 import { MetricsDefinition } from './openTelemetryCollector.types';
 
 /**
@@ -100,7 +102,8 @@ export interface ForklaunchRequest<
   ReqBody extends Record<string, unknown>,
   ReqQuery extends Record<string, unknown>,
   ReqHeaders extends Record<string, unknown>,
-  Version extends string
+  Version extends string,
+  SessionSchema extends Record<string, unknown>
 > {
   /** Context of the request */
   context: Prettify<RequestContext>;
@@ -147,10 +150,13 @@ export interface ForklaunchRequest<
   openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
 
   /** Session */
-  session: JWTPayload;
+  session: JWTPayload & SessionSchema;
 
   /** Parsed versions */
   _parsedVersions: string[] | number;
+
+  /** Global options */
+  _globalOptions?: ExpressLikeRouterOptions<SV, SessionSchema>;
 }
 
 /**
@@ -414,14 +420,39 @@ type ResolvedForklaunchRequestBase<
   ReqQuery extends Record<string, unknown>,
   ReqHeaders extends Record<string, unknown>,
   Version extends string,
+  SessionSchema extends Record<string, unknown>,
   BaseRequest
 > = unknown extends BaseRequest
-  ? ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders, Version>
+  ? ForklaunchRequest<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      Version,
+      SessionSchema
+    >
   : Omit<
       BaseRequest,
-      keyof ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders, Version>
+      keyof ForklaunchRequest<
+        SV,
+        P,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders,
+        Version,
+        SessionSchema
+      >
     > &
-      ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders, Version>;
+      ForklaunchRequest<
+        SV,
+        P,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders,
+        Version,
+        SessionSchema
+      >;
 
 /**
  * Type representing the resolved forklaunch request from a base request type.
@@ -439,6 +470,7 @@ export type ResolvedForklaunchRequest<
   ReqQuery extends Record<string, unknown>,
   ReqHeaders extends Record<string, string>,
   VersionedReqs extends VersionedRequests,
+  SessionSchema extends Record<string, unknown>,
   BaseRequest
 > = VersionedRequests extends VersionedReqs
   ? ResolvedForklaunchRequestBase<
@@ -448,6 +480,7 @@ export type ResolvedForklaunchRequest<
       ReqQuery,
       ReqHeaders,
       never,
+      SessionSchema,
       BaseRequest
     >
   : {
@@ -464,6 +497,7 @@ export type ResolvedForklaunchRequest<
           ? VersionedReqs[K]['requestHeaders']
           : Record<string, string>,
         K extends string ? K : never,
+        SessionSchema,
         BaseRequest
       >;
     }[keyof VersionedReqs];
@@ -581,6 +615,7 @@ export interface ExpressLikeHandler<
   LocalsObj extends Record<string, unknown>,
   VersionedReqs extends VersionedRequests,
   VersionedResps extends VersionedResponses,
+  SessionSchema extends Record<string, unknown>,
   BaseRequest,
   BaseResponse,
   NextFunction
@@ -593,6 +628,7 @@ export interface ExpressLikeHandler<
       ReqQuery,
       ReqHeaders,
       VersionedReqs,
+      SessionSchema,
       BaseRequest
     >,
     res: ResolvedForklaunchResponse<
@@ -765,6 +801,16 @@ export type MapVersionedRespsSchema<
     ? MappedVersionedResps
     : VersionedResponses
   : VersionedResponses;
+
+export type MapSessionSchema<
+  SV extends AnySchemaValidator,
+  SessionSchema extends SessionObject<SV>
+> = SessionSchema extends infer UnmappedSessionSchema
+  ? UnmappedSessionSchema extends SessionObject<SV>
+    ? MapSchema<SV, UnmappedSessionSchema>
+    : never
+  : never;
+
 /**
  * Represents a schema middleware handler with typed parameters, responses, body, and query.
  *
@@ -785,6 +831,7 @@ export type ExpressLikeSchemaHandler<
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
   VersionedApi extends VersionSchema<SV, Method>,
+  SessionSchema extends Record<string, unknown>,
   BaseRequest,
   BaseResponse,
   NextFunction
@@ -799,6 +846,7 @@ export type ExpressLikeSchemaHandler<
   LocalsObj,
   MapVersionedReqsSchema<SV, VersionedApi>,
   MapVersionedRespsSchema<SV, VersionedApi>,
+  MapSessionSchema<SV, SessionSchema>,
   BaseRequest,
   BaseResponse,
   NextFunction
@@ -824,6 +872,7 @@ export type ExpressLikeSchemaAuthMapper<
   ReqQuery extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   VersionedReqs extends VersionSchema<SV, Method>,
+  SessionSchema extends SessionObject<SV>,
   BaseRequest
 > = ExpressLikeAuthMapper<
   SV,
@@ -852,6 +901,11 @@ export type ExpressLikeSchemaAuthMapper<
       ? MapVersionedReqsSchema<SV, UnmappedVersionedReqs>
       : never
     : never,
+  SessionSchema extends infer UnmappedSessionSchema
+    ? UnmappedSessionSchema extends Record<string, unknown>
+      ? MapSessionSchema<SV, UnmappedSessionSchema>
+      : never
+    : never,
   BaseRequest
 >;
 
@@ -862,9 +916,10 @@ export type ExpressLikeAuthMapper<
   ReqQuery extends Record<string, unknown>,
   ReqHeaders extends Record<string, string>,
   VersionedReqs extends VersionedRequests,
+  SessionSchema extends Record<string, unknown>,
   BaseRequest
 > = (
-  payload: JWTPayload,
+  payload: JWTPayload & SessionSchema,
   req?: ResolvedForklaunchRequest<
     SV,
     P,
@@ -872,6 +927,7 @@ export type ExpressLikeAuthMapper<
     ReqQuery,
     ReqHeaders,
     VersionedReqs,
+    SessionSchema,
     BaseRequest
   >
 ) => Set<string> | Promise<Set<string>>;

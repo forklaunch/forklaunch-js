@@ -1,5 +1,16 @@
 # @forklaunch/universal-sdk
 
+## 0.6.0
+
+### Minor Changes
+
+- Adds more configuration options for application and routers. Additionally adds optional cluster support built-in (experimental)
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/common@0.5.0
+
 ## 0.5.4
 
 ### Patch Changes

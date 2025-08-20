@@ -8,6 +8,7 @@ import {
   ParamsObject,
   QueryObject,
   ResponsesObject,
+  SessionObject,
   VersionSchema
 } from '../types/contractDetails.types';
 
@@ -49,6 +50,7 @@ export function isExpressLikeSchemaHandler<
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
   VersionedApi extends VersionSchema<SV, ContractMethod>,
+  Session extends SessionObject<SV>,
   BaseRequest,
   BaseResponse,
   NextFunction
@@ -64,6 +66,7 @@ export function isExpressLikeSchemaHandler<
   ResHeaders,
   LocalsObj,
   VersionedApi,
+  Session,
   BaseRequest,
   BaseResponse,
   NextFunction

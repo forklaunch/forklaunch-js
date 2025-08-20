@@ -1,4 +1,5 @@
 import { AnySchemaValidator } from '@forklaunch/validator';
+import { JWK, JWTPayload, jwtVerify } from 'jose';
 import { ParsedQs } from 'qs';
 import { VersionedRequests } from './types/apiDefinition.types';
 import {
@@ -40,13 +41,14 @@ import {
  * // result.auth === authConfig.basic
  * ```
  */
-export function discriminateAuthMethod<
+export async function discriminateAuthMethod<
   SV extends AnySchemaValidator,
   P extends ParamsDictionary,
   ReqBody extends Record<string, unknown>,
   ReqQuery extends ParsedQs,
   ReqHeaders extends Record<string, string>,
   VersionedReqs extends VersionedRequests,
+  SessionSchema extends Record<string, unknown>,
   BaseRequest
 >(
   auth: AuthMethods<
@@ -56,9 +58,10 @@ export function discriminateAuthMethod<
     ReqQuery,
     ReqHeaders,
     VersionedReqs,
+    SessionSchema,
     BaseRequest
   >
-):
+): Promise<
   | {
       type: 'basic';
       auth: {
@@ -68,10 +71,23 @@ export function discriminateAuthMethod<
     }
   | {
       type: 'jwt';
+      auth:
+        | {
+            decodeResource?: AuthMethodsBase['decodeResource'];
+          }
+        | {
+            verificationFunction: (
+              token: string
+            ) => Promise<JWTPayload | undefined>;
+          };
+    }
+  | {
+      type: 'system';
       auth: {
-        decodeResource?: AuthMethodsBase['decodeResource'];
+        secretKey: string;
       };
-    } {
+    }
+> {
   if ('basic' in auth) {
     return {
       type: 'basic' as const,
@@ -80,18 +96,61 @@ export function discriminateAuthMethod<
         login: auth.basic.login
       }
     };
-  } else if ('jwt' in auth) {
+  } else if ('jwt' in auth && auth.jwt != null) {
+    const jwt = auth.jwt;
+    let verificationFunction: (
+      token: string
+    ) => Promise<JWTPayload | undefined>;
+    if ('privateKey' in jwt) {
+      verificationFunction = async (token) => {
+        const { payload } = await jwtVerify(token, Buffer.from(jwt.privateKey));
+        return payload;
+      };
+    } else {
+      let jwks: JWK[];
+      if ('jwksPublicKeyUrl' in jwt) {
+        const jwksResponse = await fetch(jwt.jwksPublicKeyUrl);
+        jwks = (await jwksResponse.json()).keys;
+      } else {
+        jwks = [jwt.jwksPublicKey];
+      }
+      verificationFunction = async (token) => {
+        for (const key of jwks) {
+          try {
+            const { payload } = await jwtVerify(token, key);
+            return payload;
+          } catch {
+            continue;
+          }
+        }
+      };
+    }
     return {
       type: 'jwt' as const,
       auth: {
-        decodeResource: auth.decodeResource
+        decodeResource: auth.decodeResource,
+        verificationFunction
+      }
+    };
+  } else if ('secretKey' in auth) {
+    return {
+      type: 'system' as const,
+      auth: {
+        secretKey: auth.secretKey
       }
     };
   } else {
     return {
       type: 'jwt' as const,
       auth: {
-        decodeResource: auth.decodeResource
+        decodeResource: auth.decodeResource,
+        verificationFunction: async (token) => {
+          const { payload } = await jwtVerify(
+            token,
+            Buffer.from(process.env.JWT_SECRET_KEY!)
+          );
+          return payload;
+        }
       }
     };
   }

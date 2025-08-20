@@ -9,6 +9,7 @@ import {
   QueryObject,
   ResponsesObject,
   SchemaAuthMethods,
+  SessionObject,
   VersionSchema
 } from '../types/contractDetails.types';
 
@@ -22,6 +23,7 @@ export function typedAuthHandler<
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
   VersionedApi extends VersionSchema<SV, Method>,
+  SessionSchema extends SessionObject<SV>,
   BaseRequest
 >(
   _schemaValidator: SV,
@@ -37,6 +39,7 @@ export function typedAuthHandler<
     ReqHeaders,
     ResHeaders,
     VersionedApi,
+    SessionSchema,
     BaseRequest,
     SchemaAuthMethods<
       SV,
@@ -45,6 +48,7 @@ export function typedAuthHandler<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
+      SessionSchema,
       BaseRequest
     >
   >,
@@ -55,6 +59,7 @@ export function typedAuthHandler<
     ReqQuery,
     ReqHeaders,
     VersionedApi,
+    SessionSchema,
     BaseRequest
   >
 ) {

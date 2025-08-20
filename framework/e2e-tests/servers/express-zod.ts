@@ -74,7 +74,7 @@ const getHandler = handlers.get(
       },
       forbiddenPermissions: new Set(['test:write']),
       allowedPermissions: new Set(['test:read']),
-      mapPermissions: (resourceId, req) => {
+      surfacePermissions: (resourceId, req) => {
         return new Set(['test:read']);
       }
     }
@@ -162,10 +162,10 @@ const postHandler = handlers.post(
       },
       headerName: 'xyz',
       allowedRoles: new Set(['test:write']),
-      mapRoles: (resourceId, req) => {
+      surfaceRoles: (resourceId, req) => {
         return new Set(['test:write']);
       },
-      mapPermissions: (resourceId, req) => {
+      surfacePermissions: (resourceId, req) => {
         return new Set(['test:write']);
       }
     }
@@ -223,7 +223,7 @@ export const jsonPatchHandler = handlers.patch(
         };
       },
       allowedPermissions: new Set(['test:write']),
-      mapPermissions: (resourceId, req) => {
+      surfacePermissions: (resourceId, req) => {
         return new Set(['test:write']);
       }
     }
@@ -388,15 +388,17 @@ forklaunchApplication.get(
 );
 
 export function start() {
-  return forklaunchApplication.listen(6935, () => {
-    console.log('server started on 6935');
+  const port = Number(process.env.PORT) || 6935;
+  return forklaunchApplication.listen(port, () => {
+    console.log(`server started on ${port}`);
   });
 }
 
 // Only run the server if this script is executed directly
 if (import.meta.url === `file://${process.argv[1]}`) {
-  forklaunchApplication.listen(6935, () => {
-    console.log('server started on 6935');
+  const port = Number(process.env.PORT) || 6935;
+  forklaunchApplication.listen(port, () => {
+    console.log(`server started on ${port}`);
   });
 }
 

@@ -37,6 +37,8 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
     Record<string, unknown>,
     ParsedQs,
     Record<string, string>,
+    Record<string, unknown>,
+    'middleware',
     Record<string, unknown>
   >,
   res: MiddlewareResponse<
@@ -78,7 +80,8 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
         {
           [key: string]: unknown;
         }
-      >
+      >,
+      Record<string, unknown>
     >(this, req, res, originalJson, originalSend, data, !res.cors);
     return data;
   };
@@ -115,7 +118,8 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
         {
           [key: string]: unknown;
         }
-      >
+      >,
+      Record<string, unknown>
     >(this, req, res, originalSend, originalSend, data, !res.cors);
     res.sent = true;
     return true;
@@ -163,7 +167,8 @@ export function enrichResponseTransmission<SV extends AnySchemaValidator>(
         {
           [key: string]: unknown;
         }
-      >
+      >,
+      Record<string, unknown>
     >(this, req, res, originalSend, originalSend, generator, !res.cors);
   };
 

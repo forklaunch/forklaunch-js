@@ -1,3 +1,5 @@
+import { IncomingMessage, ServerOptions, ServerResponse } from 'node:http';
+
 export interface PathBasedHandler<RouterHandler> {
   (path: string, ...handlers: RouterHandler[]): unknown;
 }
@@ -13,7 +15,8 @@ export interface NestableRouterBasedHandler<RouterHandler, Router>
   (path: string, ...handlers: (Router | RouterHandler)[]): unknown;
 }
 
-export interface ExpressLikeRouter<RouterHandler, Router> {
+export interface ExpressLikeRouter<RouterHandler, Router>
+  extends ServerOptions<typeof IncomingMessage, typeof ServerResponse> {
   use: NestableRouterBasedHandler<RouterHandler, Router>;
   all: PathOrMiddlewareBasedHandler<RouterHandler>;
   connect: PathOrMiddlewareBasedHandler<RouterHandler>;

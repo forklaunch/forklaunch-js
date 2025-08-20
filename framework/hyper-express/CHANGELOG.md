@@ -1,5 +1,18 @@
 # @forklaunch/hyper-express
 
+## 0.8.0
+
+### Minor Changes
+
+- Adds more configuration options for application and routers. Additionally adds optional cluster support built-in (experimental)
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.9.0
+  - @forklaunch/common@0.5.0
+  - @forklaunch/core@0.13.0
+
 ## 0.7.11
 
 ### Patch Changes

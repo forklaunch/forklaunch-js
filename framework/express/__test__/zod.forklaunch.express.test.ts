@@ -221,7 +221,7 @@ describe('handlers', () => {
         },
         auth: {
           allowedRoles: new Set(['admin']),
-          mapRoles: (_payload, _req) => {
+          surfaceRoles: (_payload, _req) => {
             return new Set(['admin']);
           }
         }
@@ -310,7 +310,7 @@ describe('handlers', () => {
         },
         auth: {
           allowedPermissions: new Set(['admin']),
-          mapPermissions: (_payload, _req) => {
+          surfacePermissions: (_payload, _req) => {
             return new Set(['admin']);
           }
         }

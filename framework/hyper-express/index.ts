@@ -1,12 +1,9 @@
 import {
-  DocsConfiguration,
   MetricsDefinition,
-  OpenTelemetryCollector
+  OpenTelemetryCollector,
+  SessionObject
 } from '@forklaunch/core/http';
-import { ServerConstructorOptions } from '@forklaunch/hyper-express-fork';
 import { AnySchemaValidator } from '@forklaunch/validator';
-import { BusboyConfig } from 'busboy';
-import { CorsOptions } from 'cors';
 import { any } from './src/handlers/any';
 import { delete_ } from './src/handlers/delete';
 import { get } from './src/handlers/get';
@@ -19,8 +16,15 @@ import { put } from './src/handlers/put';
 import { trace } from './src/handlers/trace';
 import { Application } from './src/hyperExpressApplication';
 import { Router } from './src/hyperExpressRouter';
+import {
+  ExpressApplicationOptions,
+  ExpressRouterOptions
+} from './src/types/hyperExpressOptions.types';
 
-export type App<SV extends AnySchemaValidator> = Application<SV>;
+export type App<
+  SV extends AnySchemaValidator,
+  SessionSchema extends SessionObject<SV>
+> = Application<SV, SessionSchema>;
 
 /**
  * Creates a new instance of Application with the given schema validator.
@@ -29,17 +33,19 @@ export type App<SV extends AnySchemaValidator> = Application<SV>;
  * @param {SV} schemaValidator - The schema validator.
  * @returns {Application<SV>} - The new application instance.
  */
-export function forklaunchExpress<SV extends AnySchemaValidator>(
+export function forklaunchExpress<
+  SV extends AnySchemaValidator,
+  SessionSchema extends SessionObject<SV>
+>(
   schemaValidator: SV,
   openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-  options?: {
-    docs?: DocsConfiguration;
-    busboy?: BusboyConfig;
-    server?: ServerConstructorOptions;
-    cors?: CorsOptions;
-  }
+  options?: ExpressApplicationOptions<SV, SessionSchema>
 ) {
-  return new Application(schemaValidator, openTelemetryCollector, options);
+  return new Application<SV, SessionSchema>(
+    schemaValidator,
+    openTelemetryCollector,
+    options
+  );
 }
 
 /**
@@ -52,15 +58,14 @@ export function forklaunchExpress<SV extends AnySchemaValidator>(
  */
 export function forklaunchRouter<
   SV extends AnySchemaValidator,
-  BasePath extends `/${string}`
+  BasePath extends `/${string}`,
+  SessionSchema extends SessionObject<SV>
 >(
   basePath: BasePath,
   schemaValidator: SV,
   openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-  options?: {
-    busboy?: BusboyConfig;
-  }
-): Router<SV, BasePath> {
+  options?: ExpressRouterOptions<SV, SessionSchema>
+): Router<SV, BasePath, SessionSchema> {
   const router = new Router(
     basePath,
     schemaValidator,
@@ -80,7 +85,10 @@ export type { BusboyConfig } from 'busboy';
 export type { CorsOptions } from 'cors';
 export type { Application } from './src/hyperExpressApplication';
 export type { Router } from './src/hyperExpressRouter';
-export type { ExpressOptions } from './src/types/hyperExpressOptions.types';
+export type {
+  ExpressApplicationOptions,
+  ExpressRouterOptions
+} from './src/types/hyperExpressOptions.types';
 
 export const handlers: {
   any: typeof any;

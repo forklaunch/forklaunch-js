@@ -8,6 +8,7 @@ import {
   QueryObject,
   ResponsesObject,
   SchemaAuthMethods,
+  SessionObject,
   VersionSchema
 } from '../types/contractDetails.types';
 import { typedHandler } from './typedHandler';
@@ -24,6 +25,7 @@ export const trace = <
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
   VersionedApi extends VersionSchema<SV, 'trace'>,
+  SessionSchema extends SessionObject<SV>,
   BaseRequest,
   BaseResponse,
   NextFunction,
@@ -34,6 +36,7 @@ export const trace = <
     ReqQuery,
     ReqHeaders,
     VersionedApi,
+    SessionSchema,
     BaseRequest
   >
 >(
@@ -50,6 +53,7 @@ export const trace = <
     ReqHeaders,
     ResHeaders,
     VersionedApi,
+    SessionSchema,
     BaseRequest,
     Auth
   >,
@@ -63,6 +67,7 @@ export const trace = <
     ResHeaders,
     LocalsObj,
     VersionedApi,
+    SessionSchema,
     BaseRequest,
     BaseResponse,
     NextFunction
@@ -81,6 +86,7 @@ export const trace = <
     ResHeaders,
     LocalsObj,
     VersionedApi,
+    SessionSchema,
     BaseRequest,
     BaseResponse,
     NextFunction,

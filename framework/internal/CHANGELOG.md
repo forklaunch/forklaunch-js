@@ -1,5 +1,17 @@
 # @forklaunch/common
 
+## 0.2.0
+
+### Minor Changes
+
+- Adds more configuration options for application and routers. Additionally adds optional cluster support built-in (experimental)
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.9.0
+  - @forklaunch/common@0.5.0
+
 ## 0.1.9
 
 ### Patch Changes

@@ -58,7 +58,8 @@ export function enrichExpressLikeSend<
   ReqHeaders extends Record<string, string>,
   ResHeaders extends Record<string, unknown>,
   LocalsObj extends Record<string, unknown>,
-  VersionedReqs extends VersionedRequests
+  VersionedReqs extends VersionedRequests,
+  SessionSchema extends Record<string, unknown>
 >(
   instance: unknown,
   req: ForklaunchRequest<
@@ -67,7 +68,8 @@ export function enrichExpressLikeSend<
     ReqBody,
     ReqQuery,
     ReqHeaders,
-    Extract<keyof VersionedReqs, string>
+    Extract<keyof VersionedReqs, string>,
+    SessionSchema
   >,
   res: ForklaunchResponse<
     unknown,
@@ -261,7 +263,8 @@ export function enrichExpressLikeSend<
       ReqHeaders,
       ForklaunchResHeaders & ResHeaders,
       LocalsObj,
-      VersionedReqs
+      VersionedReqs,
+      SessionSchema
     >(req, res);
   }
 }

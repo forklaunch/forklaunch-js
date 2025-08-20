@@ -1,18 +1,28 @@
-import { DocsConfiguration } from '@forklaunch/core/http';
-import { FastMCP } from '@forklaunch/fastmcp-fork';
+import {
+  ExpressLikeApplicationOptions,
+  ExpressLikeRouterOptions,
+  SessionObject
+} from '@forklaunch/core/http';
+import { AnySchemaValidator } from '@forklaunch/validator';
 import { OptionsJson, OptionsText, OptionsUrlencoded } from 'body-parser';
 import { BusboyConfig } from 'busboy';
-import { CorsOptions } from 'cors';
 
-export type ExpressOptions<T extends Record<string, unknown> | undefined> = {
-  docs?: DocsConfiguration;
+export type ExpressApplicationOptions<
+  SV extends AnySchemaValidator,
+  SessionSchema extends SessionObject<SV>
+> = ExpressLikeApplicationOptions<SV, SessionSchema> & {
   busboy?: BusboyConfig;
   text?: OptionsText;
   json?: OptionsJson;
   urlencoded?: OptionsUrlencoded;
-  cors?: CorsOptions;
-  mcp?: {
-    sessionAuth?: T;
-    options?: ConstructorParameters<typeof FastMCP<T>>[0];
-  };
+};
+
+export type ExpressRouterOptions<
+  SV extends AnySchemaValidator,
+  SessionSchema extends SessionObject<SV>
+> = ExpressLikeRouterOptions<SV, SessionSchema> & {
+  busboy?: BusboyConfig;
+  text?: OptionsText;
+  json?: OptionsJson;
+  urlencoded?: OptionsUrlencoded;
 };

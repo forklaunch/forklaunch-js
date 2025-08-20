@@ -49,6 +49,7 @@ export function isHttpContractDetails<
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
   VersionedReqs extends VersionSchema<SV, HttpMethod>,
+  SessionSchema extends Record<string, unknown>,
   BaseRequest,
   const Auth extends SchemaAuthMethods<
     SV,
@@ -57,6 +58,7 @@ export function isHttpContractDetails<
     QuerySchema,
     ReqHeaders,
     VersionedReqs,
+    SessionSchema,
     BaseRequest
   >
 >(
@@ -72,6 +74,7 @@ export function isHttpContractDetails<
   ReqHeaders,
   ResHeaders,
   VersionedReqs,
+  SessionSchema,
   BaseRequest,
   Auth
 > {

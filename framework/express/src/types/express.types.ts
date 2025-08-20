@@ -48,8 +48,17 @@ export interface MiddlewareRequest<
   ReqQuery extends Record<string, unknown>,
   ReqHeaders extends Record<string, unknown>,
   LocalsObj extends Record<string, unknown>,
-  Versions extends string = 'middleware'
-> extends ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders, Versions>,
+  Versions extends string,
+  SessionSchema extends Record<string, unknown>
+> extends ForklaunchRequest<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      Versions,
+      SessionSchema
+    >,
     Omit<
       ExpressRequest<P, ResBodyMap, ReqBody, ReqQuery, LocalsObj>,
       'method' | 'body' | 'params' | 'query' | 'headers' | 'path'
