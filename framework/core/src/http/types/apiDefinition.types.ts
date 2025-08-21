@@ -967,12 +967,12 @@ export type LiveTypeFunctionRequestInit<
           query: MapSchema<SV, ReqQuery>;
         }) &
     (HeadersObject<SV> extends ReqHeaders
-      ? AuthHeaders<AuthMethodsBase> extends AuthHeaders<Auth>
+      ? AuthMethodsBase extends Auth
         ? unknown
         : {
             headers: AuthHeaders<Auth>;
           }
-      : AuthHeaders<AuthMethodsBase> extends AuthHeaders<Auth>
+      : Auth extends AuthMethodsBase
         ? { headers: MapSchema<SV, ReqHeaders> }
         : {
             headers: MapSchema<SV, ReqHeaders> & AuthHeaders<Auth>;

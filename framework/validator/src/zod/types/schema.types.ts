@@ -118,12 +118,12 @@ export type UnionZodResolve<T extends ZodUnionContainer> = T extends [
   : [ZodNever, ZodNever];
 
 /**
- * Resolves a Zod schema type T to its resolved type. The depth is limited to 29 to prevent infinite recursion.
+ * Resolves a Zod schema type T to its resolved type. The depth is limited to 24 to prevent infinite recursion.
  *
  * @template T - The Zod schema type to resolve.
  * @template Depth - The current depth of the resolution.
  */
-export type ZodResolve<T, Depth extends number = 0> = Depth extends 28
+export type ZodResolve<T, Depth extends number = 0> = Depth extends 24
   ? ZodUnknown
   : T extends ZodPipeline<ZodTypeAny, infer R>
     ? R

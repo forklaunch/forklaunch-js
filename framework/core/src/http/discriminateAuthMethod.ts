@@ -1,11 +1,14 @@
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { JWK, JWTPayload, jwtVerify } from 'jose';
 import { ParsedQs } from 'qs';
+import { isBasicAuthMethod } from './guards/isBasicAuthMethod';
+import { isJwtAuthMethod } from './guards/isJwtAuthMethod';
+import { isSystemAuthMethod } from './guards/isSystemAuthMethod';
 import { VersionedRequests } from './types/apiDefinition.types';
 import {
   AuthMethods,
-  AuthMethodsBase,
   BasicAuthMethods,
+  DecodeResource,
   ParamsDictionary
 } from './types/contractDetails.types';
 
@@ -65,7 +68,7 @@ export async function discriminateAuthMethod<
   | {
       type: 'basic';
       auth: {
-        decodeResource?: AuthMethodsBase['decodeResource'];
+        decodeResource?: DecodeResource;
         login: BasicAuthMethods['basic']['login'];
       };
     }
@@ -73,7 +76,7 @@ export async function discriminateAuthMethod<
       type: 'jwt';
       auth:
         | {
-            decodeResource?: AuthMethodsBase['decodeResource'];
+            decodeResource?: DecodeResource;
           }
         | {
             verificationFunction: (
@@ -88,22 +91,26 @@ export async function discriminateAuthMethod<
       };
     }
 > {
-  if ('basic' in auth) {
-    return {
+  let authMethod;
+  if (isBasicAuthMethod(auth)) {
+    authMethod = {
       type: 'basic' as const,
       auth: {
         decodeResource: auth.decodeResource,
         login: auth.basic.login
       }
     };
-  } else if ('jwt' in auth && auth.jwt != null) {
+  } else if (isJwtAuthMethod(auth) && auth.jwt != null) {
     const jwt = auth.jwt;
     let verificationFunction: (
       token: string
     ) => Promise<JWTPayload | undefined>;
-    if ('privateKey' in jwt) {
+    if ('signatureKey' in jwt) {
       verificationFunction = async (token) => {
-        const { payload } = await jwtVerify(token, Buffer.from(jwt.privateKey));
+        const { payload } = await jwtVerify(
+          token,
+          Buffer.from(jwt.signatureKey)
+        );
         return payload;
       };
     } else {
@@ -125,33 +132,40 @@ export async function discriminateAuthMethod<
         }
       };
     }
-    return {
+    authMethod = {
       type: 'jwt' as const,
       auth: {
         decodeResource: auth.decodeResource,
         verificationFunction
       }
     };
-  } else if ('secretKey' in auth) {
-    return {
+  } else if (isSystemAuthMethod(auth)) {
+    authMethod = {
       type: 'system' as const,
       auth: {
         secretKey: auth.secretKey
       }
     };
-  } else {
-    return {
-      type: 'jwt' as const,
-      auth: {
-        decodeResource: auth.decodeResource,
-        verificationFunction: async (token) => {
-          const { payload } = await jwtVerify(
-            token,
-            Buffer.from(process.env.JWT_SECRET_KEY!)
-          );
-          return payload;
-        }
-      }
-    };
   }
+
+  if (authMethod == null) {
+    throw new Error('Invalid auth method');
+  }
+
+  return authMethod;
+  // else {
+  //   return {
+  //     type: 'jwt' as const,
+  //     auth: {
+  //       decodeResource: auth.decodeResource,
+  //       verificationFunction: async (token) => {
+  //         const { payload } = await jwtVerify(
+  //           token,
+  //           Buffer.from(process.env.JWT_SECRET_KEY!)
+  //         );
+  //         return payload;
+  //       }
+  //     }
+  //   };
+  // }
 }

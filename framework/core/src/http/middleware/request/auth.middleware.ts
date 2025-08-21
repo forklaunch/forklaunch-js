@@ -124,6 +124,10 @@ async function checkAuthorizationToken<
 
   const [tokenPrefix, token] = authorizationToken.split(' ');
 
+  if (!token || !tokenPrefix) {
+    return invalidAuthorizationTokenFormat;
+  }
+
   let resourceId: (JWTPayload & SessionSchema) | null;
 
   const { type, auth } = await discriminateAuthMethod(
