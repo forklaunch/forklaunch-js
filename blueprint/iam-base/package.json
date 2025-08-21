@@ -34,7 +34,7 @@
   "dependencies": {
     "@forklaunch/blueprint-core": "workspace:*",
     "@forklaunch/blueprint-monitoring": "workspace:*",
-    "@forklaunch/core": "^0.13.0",
+    "@forklaunch/core": "^0.13.1",
     "@forklaunch/hyper-express-fork": "^6.17.35",
     "@forklaunch/implementation-iam-base": "workspace:*",
     "@forklaunch/interfaces-iam": "workspace:*",
