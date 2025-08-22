@@ -51,15 +51,16 @@ export interface LiveTypeRouteDefinition<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
-    VersionedApi extends VersionSchema<SV, ContractMethod>,
-    Auth extends SchemaAuthMethods<
+    const VersionedApi extends VersionSchema<SV, ContractMethod>,
+    SessionSchema extends SessionObject<SV>,
+    const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      Session,
+      SessionObject<SV> extends SessionSchema ? Session : SessionSchema,
       BaseRequest
     >
   >(
@@ -76,7 +77,7 @@ export interface LiveTypeRouteDefinition<
       ReqHeaders,
       ResHeaders,
       VersionedApi,
-      Session,
+      SessionObject<SV> extends SessionSchema ? Session : SessionSchema,
       BaseRequest,
       Auth
     >,
@@ -90,7 +91,7 @@ export interface LiveTypeRouteDefinition<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      Session,
+      SessionObject<SV> extends SessionSchema ? Session : SessionSchema,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -173,15 +174,16 @@ export interface LiveTypeRouteDefinition<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
-    VersionedApi extends VersionSchema<SV, ContractMethod>,
-    Auth extends SchemaAuthMethods<
+    const VersionedApi extends VersionSchema<SV, ContractMethod>,
+    SessionSchema extends SessionObject<SV>,
+    const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      Session,
+      SessionObject<SV> extends SessionSchema ? Session : SessionSchema,
       BaseRequest
     >
   >(
@@ -196,7 +198,7 @@ export interface LiveTypeRouteDefinition<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      Session,
+      SessionObject<SV> extends SessionSchema ? Session : SessionSchema,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -212,7 +214,7 @@ export interface LiveTypeRouteDefinition<
         ResHeaders,
         LocalsObj,
         VersionedApi,
-        Session,
+        SessionObject<SV> extends SessionSchema ? Session : SessionSchema,
         BaseRequest,
         BaseResponse,
         NextFunction
@@ -230,7 +232,7 @@ export interface LiveTypeRouteDefinition<
         ResHeaders,
         LocalsObj,
         VersionedApi,
-        Session,
+        SessionObject<SV> extends SessionSchema ? Session : SessionSchema,
         BaseRequest,
         BaseResponse,
         NextFunction,
@@ -315,15 +317,16 @@ export interface LiveTypeRouteDefinition<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
-    VersionedApi extends VersionSchema<SV, ContractMethod>,
-    Auth extends SchemaAuthMethods<
+    const VersionedApi extends VersionSchema<SV, ContractMethod>,
+    SessionSchema extends SessionObject<SV>,
+    const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      Session,
+      SessionObject<SV> extends SessionSchema ? Session : SessionSchema,
       BaseRequest
     >
   >(
@@ -341,7 +344,7 @@ export interface LiveTypeRouteDefinition<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      Session,
+      SessionObject<SV> extends SessionSchema ? Session : SessionSchema,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -435,6 +438,7 @@ export interface TypedMiddlewareDefinition<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     VersionedApi extends VersionSchema<SV, 'middleware'>,
+    SessionSchema extends SessionObject<SV>,
     Auth extends SchemaAuthMethods<
       SV,
       P,
@@ -442,7 +446,7 @@ export interface TypedMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      Session,
+      SessionObject<SV> extends SessionSchema ? Session : SessionSchema,
       BaseRequest
     >
   >(
@@ -458,7 +462,7 @@ export interface TypedMiddlewareDefinition<
       ReqHeaders,
       ResHeaders,
       VersionedApi,
-      Session,
+      SessionObject<SV> extends SessionSchema ? Session : SessionSchema,
       BaseRequest,
       Auth
     >,
@@ -472,7 +476,7 @@ export interface TypedMiddlewareDefinition<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      Session,
+      SessionObject<SV> extends SessionSchema ? Session : SessionSchema,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -505,6 +509,7 @@ export interface TypedMiddlewareDefinition<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     VersionedApi extends VersionSchema<SV, 'middleware'>,
+    SessionSchema extends SessionObject<SV>,
     Auth extends SchemaAuthMethods<
       SV,
       P,
@@ -512,7 +517,7 @@ export interface TypedMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      Session,
+      SessionObject<SV> extends SessionSchema ? Session : SessionSchema,
       BaseRequest
     >
   >(
@@ -529,7 +534,7 @@ export interface TypedMiddlewareDefinition<
       ReqHeaders,
       ResHeaders,
       VersionedApi,
-      Session,
+      SessionObject<SV> extends SessionSchema ? Session : SessionSchema,
       BaseRequest,
       Auth
     >,
@@ -558,7 +563,7 @@ export interface TypedMiddlewareDefinition<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      Session,
+      SessionObject<SV> extends SessionSchema ? Session : SessionSchema,
       BaseRequest,
       BaseResponse,
       NextFunction
