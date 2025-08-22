@@ -435,7 +435,14 @@ impl CliCommand for ApplicationCommand {
         // Default output path should be src/modules
         let src_path = format!("{}/src", project_root_path);
         let application_path = if let Some(file_destination_option) = matches.get_one::<String>("file_destination_option") {
-            format!("{}/{}", project_root_path, file_destination_option)
+            // Handle special input values
+            if file_destination_option == "source" {
+                format!("{}/src/modules", project_root_path)
+            } else if file_destination_option == "modules" {
+                format!("{}/modules", project_root_path)
+            } else {
+                format!("{}/{}", project_root_path, file_destination_option)
+            }
         } else if Path::new(&src_path).exists() && Path::new(&src_path).is_dir() {
             format!("{}/modules", src_path)
         } else {
@@ -463,18 +470,14 @@ impl CliCommand for ApplicationCommand {
                 |_| "Invalid path. Please provide a valid destination path.".to_string(),
             )?;
             println!("01: temp_path: {:?}", temp_path);
-            // Handle special input values
+            // Default behavior for other inputs
             let final_path = if temp_path == "source" {
-                // Do something when input is "source"
                 format!("{}/src/modules", project_root_path)
             } else if temp_path == "modules" {
-                // Do something when input is "modules"
                 format!("{}/modules", project_root_path)
             } else {
-                // Default behavior for other inputs
                 format!("{}/{}", project_root_path, temp_path)
             };
-            
             final_path
         };
         println!("02: application_path: {:?}", application_path);
