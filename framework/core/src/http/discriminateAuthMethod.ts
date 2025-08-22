@@ -110,7 +110,7 @@ export async function discriminateAuthMethod<
         login: auth.basic.login
       }
     };
-  } else if (isJwtAuthMethod(auth) && auth.jwt != null) {
+  } else if (isJwtAuthMethod(auth)) {
     const jwt = auth.jwt;
     let verificationFunction: (
       token: string
@@ -128,7 +128,7 @@ export async function discriminateAuthMethod<
       if ('jwksPublicKeyUrl' in jwt) {
         const jwksResponse = await fetch(jwt.jwksPublicKeyUrl);
         jwks = (await jwksResponse.json()).keys;
-      } else {
+      } else if ('jwksPublicKey' in jwt) {
         jwks = [jwt.jwksPublicKey];
       }
       verificationFunction = async (token) => {

@@ -6,11 +6,7 @@ export function isJwtAuthMethod(
   return (
     typeof maybeJwtAuthMethod === 'object' &&
     maybeJwtAuthMethod !== null &&
-    (('signatureKey' in maybeJwtAuthMethod &&
-      maybeJwtAuthMethod.signatureKey != null) ||
-      ('jwksPublicKey' in maybeJwtAuthMethod &&
-        maybeJwtAuthMethod.jwksPublicKey != null) ||
-      ('jwksPublicKeyUrl' in maybeJwtAuthMethod &&
-        maybeJwtAuthMethod.jwksPublicKeyUrl != null))
+    'jwt' in maybeJwtAuthMethod &&
+    maybeJwtAuthMethod.jwt != null
   );
 }
