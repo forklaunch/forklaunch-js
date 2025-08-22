@@ -220,6 +220,9 @@ describe('handlers', () => {
           'x-test': string
         },
         auth: {
+          jwt: {
+            signatureKey: 'test'
+          },
           allowedRoles: new Set(['admin']),
           surfaceRoles: (_payload, _req) => {
             return new Set(['admin']);

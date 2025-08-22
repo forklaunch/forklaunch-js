@@ -1,9 +1,10 @@
 import { AnySchemaValidator } from '@forklaunch/validator';
+import { createHmac } from 'crypto';
 import { JWK, JWTPayload, jwtVerify } from 'jose';
 import { ParsedQs } from 'qs';
 import { isBasicAuthMethod } from './guards/isBasicAuthMethod';
+import { isHmacMethod } from './guards/isHmacMethod';
 import { isJwtAuthMethod } from './guards/isJwtAuthMethod';
-import { isSystemAuthMethod } from './guards/isSystemAuthMethod';
 import { VersionedRequests } from './types/apiDefinition.types';
 import {
   AuthMethods,
@@ -85,9 +86,18 @@ export async function discriminateAuthMethod<
           };
     }
   | {
-      type: 'system';
+      type: 'hmac';
       auth: {
-        secretKey: string;
+        secretKeys: Record<string, string>;
+        verificationFunction: (
+          method: string,
+          path: string,
+          body: string,
+          timestamp: string,
+          nonce: string,
+          signature: string,
+          secretKey: string
+        ) => Promise<boolean | undefined>;
       };
     }
 > {
@@ -139,33 +149,32 @@ export async function discriminateAuthMethod<
         verificationFunction
       }
     };
-  } else if (isSystemAuthMethod(auth)) {
+  } else if (isHmacMethod(auth)) {
     authMethod = {
-      type: 'system' as const,
+      type: 'hmac' as const,
       auth: {
-        secretKey: auth.secretKey
+        secretKeys: auth.hmac.secretKeys,
+        verificationFunction: async (
+          method: string,
+          path: string,
+          body: string,
+          timestamp: string,
+          nonce: string,
+          signature: string,
+          secretKey: string
+        ) => {
+          const hmac = createHmac('sha256', secretKey);
+
+          hmac.update(`${method}\n${path}\n${body}\n${timestamp}\n${nonce}`);
+          const digest = hmac.digest('base64');
+          return digest === signature;
+        }
       }
     };
   }
-
   if (authMethod == null) {
     throw new Error('Invalid auth method');
   }
 
   return authMethod;
-  // else {
-  //   return {
-  //     type: 'jwt' as const,
-  //     auth: {
-  //       decodeResource: auth.decodeResource,
-  //       verificationFunction: async (token) => {
-  //         const { payload } = await jwtVerify(
-  //           token,
-  //           Buffer.from(process.env.JWT_SECRET_KEY!)
-  //         );
-  //         return payload;
-  //       }
-  //     }
-  //   };
-  // }
 }

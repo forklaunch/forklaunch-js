@@ -312,11 +312,11 @@ export type BasicAuthMethods = {
   };
 
   readonly jwt?: never;
-  readonly secretKey?: never;
+  readonly hmac?: never;
 };
 
 export type JwtAuthMethods = {
-  jwt?:
+  jwt:
     | {
         readonly jwksPublicKey: JWK;
       }
@@ -326,13 +326,14 @@ export type JwtAuthMethods = {
     | {
         readonly signatureKey: string;
       };
-} & {
   readonly basic?: never;
-  readonly secretKey?: never;
+  readonly hmac?: never;
 };
 
-export type SystemAuthMethods = {
-  readonly secretKey: string;
+export type HmacMethods = {
+  readonly hmac: {
+    readonly secretKeys: Record<string, string>;
+  };
 
   readonly basic?: never;
   readonly jwt?: never;
@@ -349,7 +350,7 @@ export type DecodeResource = (
 
 export type AuthMethodsBase = TokenOptions &
   (
-    | SystemAuthMethods
+    | HmacMethods
     | ({
         readonly decodeResource?: DecodeResource;
       } & (BasicAuthMethods | JwtAuthMethods))

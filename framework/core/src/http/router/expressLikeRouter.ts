@@ -960,6 +960,18 @@ export class ForklaunchExpressLikeRouter<
         >(maybeTypedHandler)
       ) {
         const { contractDetails, handlers } = maybeTypedHandler;
+
+        const finalHandlers: typeof middlewareOrMiddlewareAndTypedHandler = [];
+        if (
+          isExpressLikeSchemaHandler(contractDetailsOrMiddlewareOrTypedHandler)
+        ) {
+          finalHandlers.push(
+            contractDetailsOrMiddlewareOrTypedHandler as (typeof middlewareOrMiddlewareAndTypedHandler)[number]
+          );
+        }
+        finalHandlers.push(...middlewareOrMiddlewareAndTypedHandler);
+        finalHandlers.push(...handlers);
+
         const router = this.registerRoute<
           Name,
           ContractMethod,
@@ -973,13 +985,7 @@ export class ForklaunchExpressLikeRouter<
           LocalsObj,
           VersionedApi,
           Auth
-        >(
-          method,
-          path,
-          registrationMethod,
-          contractDetails,
-          ...middlewareOrMiddlewareAndTypedHandler.concat(handlers)
-        );
+        >(method, path, registrationMethod, contractDetails, ...finalHandlers);
 
         return router;
       } else {
@@ -2358,6 +2364,10 @@ export class ForklaunchExpressLikeRouter<
     ].forEach((arg) => {
       if (isForklaunchRouter<SV>(arg)) {
         this.routers.push(arg);
+        arg.routerOptions = {
+          ...(this.routerOptions ?? {}),
+          ...(arg.routerOptions ?? {})
+        } as typeof arg.routerOptions;
       }
     });
 

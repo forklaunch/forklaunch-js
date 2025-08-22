@@ -6,7 +6,7 @@ import { discriminateAuthMethod } from '../../discriminateAuthMethod';
 import { hasPermissionChecks } from '../../guards/hasPermissionChecks';
 import { hasRoleChecks } from '../../guards/hasRoleChecks';
 import { hasScopeChecks } from '../../guards/hasScopeChecks';
-import { isSystemAuthMethod } from '../../guards/isSystemAuthMethod';
+import { isHmacMethod } from '../../guards/isHmacMethod';
 import {
   ForklaunchNextFunction,
   ForklaunchRequest,
@@ -40,9 +40,9 @@ const invalidAuthorizationTokenFormat = [
   401,
   'Invalid Authorization token format.'
 ] as const;
-const invalidAuthorizationSubject = [
+const invalidAuthorizationSignature = [
   403,
-  'Invalid Authorization subject.'
+  'Invalid Authorization signature.'
 ] as const;
 const invalidAuthorizationTokenPermissions = [
   403,
@@ -69,6 +69,27 @@ const authorizationTokenRequired = [
   401,
   'Authorization token required.'
 ] as const;
+const invalidInstantiation = [
+  500,
+  'Invalid instantiation of authorization method.'
+] as const;
+
+/**
+ * Parses a HMAC token part.
+ *
+ * @param {string} part - The part of the token.
+ * @param {string} expectedKey - The expected key.
+ * @returns {string | undefined} - The parsed part.
+ */
+function parseHmacTokenPart(
+  part: string,
+  expectedKey: string
+): string | undefined {
+  if (!part) return undefined;
+  const [key, ...rest] = part.split('=');
+  if (key !== expectedKey || rest.length === 0) return undefined;
+  return rest.join('=');
+}
 
 /**
  * Checks the authorization token for validity.
@@ -122,9 +143,9 @@ async function checkAuthorizationToken<
     return authorizationTokenRequired;
   }
 
-  const [tokenPrefix, token] = authorizationToken.split(' ');
+  const [tokenPrefix, ...tokenParts] = authorizationToken.split(' ');
 
-  if (!token || !tokenPrefix) {
+  if (!tokenParts.length || !tokenPrefix) {
     return invalidAuthorizationTokenFormat;
   }
 
@@ -135,18 +156,55 @@ async function checkAuthorizationToken<
   );
 
   switch (type) {
-    case 'system': {
+    case 'hmac': {
+      const [keyId, timestamp, nonce, signature] = tokenParts;
       if (
-        token !== auth.secretKey ||
-        tokenPrefix !== collapsedAuthorizationMethod.tokenPrefix
+        keyId == null ||
+        timestamp == null ||
+        nonce == null ||
+        signature == null ||
+        tokenPrefix !== (collapsedAuthorizationMethod.tokenPrefix ?? 'HMAC')
       ) {
         return invalidAuthorizationToken;
+      }
+
+      if (!collapsedAuthorizationMethod.hmac?.secretKeys) {
+        return invalidInstantiation;
+      }
+
+      const parsedKeyId = parseHmacTokenPart(keyId, 'keyId');
+      const parsedTimestamp = parseHmacTokenPart(timestamp, 'ts');
+      const parsedNonce = parseHmacTokenPart(nonce, 'nonce');
+      const parsedSignature = parseHmacTokenPart(signature, 'signature');
+
+      if (
+        !parsedKeyId ||
+        !parsedTimestamp ||
+        !parsedNonce ||
+        !parsedSignature
+      ) {
+        return invalidAuthorizationTokenFormat;
+      }
+
+      const verificationResult = await auth.verificationFunction(
+        req?.method ?? '',
+        req?.path ?? '',
+        JSON.stringify(req?.body ?? ''),
+        parsedTimestamp,
+        parsedNonce,
+        parsedSignature,
+        collapsedAuthorizationMethod.hmac.secretKeys[parsedKeyId]
+      );
+
+      if (!verificationResult) {
+        return invalidAuthorizationSignature;
       }
 
       resourceId = null;
       break;
     }
     case 'jwt': {
+      const [token] = tokenParts;
       if (
         tokenPrefix !== (collapsedAuthorizationMethod.tokenPrefix ?? 'Bearer')
       ) {
@@ -162,7 +220,7 @@ async function checkAuthorizationToken<
               : undefined;
 
         if (!decodedJwt) {
-          return invalidAuthorizationSubject;
+          return invalidAuthorizationToken;
         }
 
         resourceId = decodedJwt as JWTPayload & SessionSchema;
@@ -184,6 +242,8 @@ async function checkAuthorizationToken<
       break;
     }
     case 'basic': {
+      const [token] = tokenParts;
+
       if (
         tokenPrefix !== (collapsedAuthorizationMethod.tokenPrefix ?? 'Basic')
       ) {
@@ -217,8 +277,12 @@ async function checkAuthorizationToken<
       return [401, 'Invalid Authorization method.'];
   }
 
-  if (isSystemAuthMethod(collapsedAuthorizationMethod) || resourceId == null) {
+  if (isHmacMethod(collapsedAuthorizationMethod) && resourceId == null) {
     return;
+  }
+
+  if (resourceId == null) {
+    return invalidAuthorizationToken;
   }
 
   if (hasScopeChecks(collapsedAuthorizationMethod)) {

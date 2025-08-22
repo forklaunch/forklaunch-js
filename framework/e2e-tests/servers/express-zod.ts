@@ -216,6 +216,9 @@ export const jsonPatchHandler = handlers.patch(
       }
     },
     auth: {
+      jwt: {
+        signatureKey: 'secret'
+      },
       tokenPrefix: 'bb',
       decodeResource: async (token) => {
         return {

@@ -136,6 +136,9 @@ const bl = xa.trace(
       //   const j = req?.params.id;
       //   return new Set(['admin', 'user']);
       // },
+      jwt: {
+        signatureKey: 'test'
+      },
       surfacePermissions: kl,
       surfaceRoles: kl,
       allowedPermissions: new Set(['admin', 'user'])
