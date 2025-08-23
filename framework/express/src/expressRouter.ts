@@ -42,7 +42,7 @@ import { ExpressRouterOptions } from './types/expressOptions.types';
 export class Router<
     SV extends AnySchemaValidator,
     BasePath extends `/${string}`,
-    SessionSchema extends SessionObject<SV>
+    RouterSession extends SessionObject<SV>
   >
   extends ForklaunchExpressLikeRouter<
     SV,
@@ -52,7 +52,7 @@ export class Router<
     Request,
     Response,
     NextFunction,
-    SessionSchema
+    RouterSession
   >
   implements ForklaunchRouter<SV>
 {
@@ -68,7 +68,7 @@ export class Router<
     public basePath: BasePath,
     schemaValidator: SV,
     openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-    options?: ExpressRouterOptions<SV, SessionSchema>
+    options?: ExpressRouterOptions<SV, RouterSession>
   ) {
     super(
       basePath,
@@ -125,7 +125,7 @@ export class Router<
   checkout: TypedMiddlewareDefinition<
     this,
     SV,
-    SessionSchema,
+    RouterSession,
     Request,
     Response,
     NextFunction,
@@ -141,6 +141,10 @@ export class Router<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     const VersionedApi extends VersionSchema<SV, 'middleware'>,
+    const SessionSchema extends SessionObject<SV>,
+    const ResolvedSession extends SessionObject<SV> extends SessionSchema
+      ? RouterSession
+      : SessionSchema,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
@@ -148,7 +152,7 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request
     >
   >(
@@ -167,7 +171,7 @@ export class Router<
           ResHeaders,
           LocalsObj,
           VersionedApi,
-          SessionSchema,
+          ResolvedSession,
           Request,
           Response,
           NextFunction,
@@ -186,7 +190,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -205,7 +209,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -223,6 +227,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      ResolvedSession,
       Auth
     >(
       this.internal.checkout,
@@ -235,7 +240,7 @@ export class Router<
   copy: TypedMiddlewareDefinition<
     this,
     SV,
-    SessionSchema,
+    RouterSession,
     Request,
     Response,
     NextFunction,
@@ -251,6 +256,10 @@ export class Router<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     const VersionedApi extends VersionSchema<SV, 'middleware'>,
+    const SessionSchema extends SessionObject<SV>,
+    const ResolvedSession extends SessionObject<SV> extends SessionSchema
+      ? RouterSession
+      : SessionSchema,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
@@ -258,7 +267,7 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request
     >
   >(
@@ -277,7 +286,7 @@ export class Router<
           ResHeaders,
           LocalsObj,
           VersionedApi,
-          SessionSchema,
+          ResolvedSession,
           Request,
           Response,
           NextFunction,
@@ -296,7 +305,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -315,7 +324,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -333,6 +342,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      ResolvedSession,
       Auth
     >(
       this.internal.copy,
@@ -345,7 +355,7 @@ export class Router<
   lock: TypedMiddlewareDefinition<
     this,
     SV,
-    SessionSchema,
+    RouterSession,
     Request,
     Response,
     NextFunction,
@@ -361,6 +371,10 @@ export class Router<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     const VersionedApi extends VersionSchema<SV, 'middleware'>,
+    const SessionSchema extends SessionObject<SV>,
+    const ResolvedSession extends SessionObject<SV> extends SessionSchema
+      ? RouterSession
+      : SessionSchema,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
@@ -368,7 +382,7 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request
     >
   >(
@@ -387,7 +401,7 @@ export class Router<
           ResHeaders,
           LocalsObj,
           VersionedApi,
-          SessionSchema,
+          ResolvedSession,
           Request,
           Response,
           NextFunction,
@@ -406,7 +420,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -425,7 +439,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -443,6 +457,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      ResolvedSession,
       Auth
     >(
       this.internal.lock,
@@ -455,7 +470,7 @@ export class Router<
   merge: TypedMiddlewareDefinition<
     this,
     SV,
-    SessionSchema,
+    RouterSession,
     Request,
     Response,
     NextFunction,
@@ -471,6 +486,10 @@ export class Router<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     const VersionedApi extends VersionSchema<SV, 'middleware'>,
+    const SessionSchema extends SessionObject<SV>,
+    const ResolvedSession extends SessionObject<SV> extends SessionSchema
+      ? RouterSession
+      : SessionSchema,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
@@ -478,7 +497,7 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request
     >
   >(
@@ -497,7 +516,7 @@ export class Router<
           ResHeaders,
           LocalsObj,
           VersionedApi,
-          SessionSchema,
+          ResolvedSession,
           Request,
           Response,
           NextFunction,
@@ -516,7 +535,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -535,7 +554,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -553,6 +572,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      ResolvedSession,
       Auth
     >(
       this.internal.merge,
@@ -565,7 +585,7 @@ export class Router<
   mkcactivity: TypedMiddlewareDefinition<
     this,
     SV,
-    SessionSchema,
+    RouterSession,
     Request,
     Response,
     NextFunction,
@@ -581,6 +601,10 @@ export class Router<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     const VersionedApi extends VersionSchema<SV, 'middleware'>,
+    const SessionSchema extends SessionObject<SV>,
+    const ResolvedSession extends SessionObject<SV> extends SessionSchema
+      ? RouterSession
+      : SessionSchema,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
@@ -588,7 +612,7 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request
     >
   >(
@@ -607,7 +631,7 @@ export class Router<
           ResHeaders,
           LocalsObj,
           VersionedApi,
-          SessionSchema,
+          ResolvedSession,
           Request,
           Response,
           NextFunction,
@@ -626,7 +650,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -645,7 +669,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -663,6 +687,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      ResolvedSession,
       Auth
     >(
       this.internal.mkactivity,
@@ -675,7 +700,7 @@ export class Router<
   mkcol: TypedMiddlewareDefinition<
     this,
     SV,
-    SessionSchema,
+    RouterSession,
     Request,
     Response,
     NextFunction,
@@ -691,6 +716,10 @@ export class Router<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     const VersionedApi extends VersionSchema<SV, 'middleware'>,
+    const SessionSchema extends SessionObject<SV>,
+    const ResolvedSession extends SessionObject<SV> extends SessionSchema
+      ? RouterSession
+      : SessionSchema,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
@@ -698,7 +727,7 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request
     >
   >(
@@ -717,7 +746,7 @@ export class Router<
           ResHeaders,
           LocalsObj,
           VersionedApi,
-          SessionSchema,
+          ResolvedSession,
           Request,
           Response,
           NextFunction,
@@ -736,7 +765,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -755,7 +784,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -773,6 +802,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      ResolvedSession,
       Auth
     >(
       this.internal.mkcol,
@@ -785,7 +815,7 @@ export class Router<
   move: TypedMiddlewareDefinition<
     this,
     SV,
-    SessionSchema,
+    RouterSession,
     Request,
     Response,
     NextFunction,
@@ -801,6 +831,10 @@ export class Router<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     const VersionedApi extends VersionSchema<SV, 'middleware'>,
+    const SessionSchema extends SessionObject<SV>,
+    const ResolvedSession extends SessionObject<SV> extends SessionSchema
+      ? RouterSession
+      : SessionSchema,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
@@ -808,7 +842,7 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request
     >
   >(
@@ -827,7 +861,7 @@ export class Router<
           ResHeaders,
           LocalsObj,
           VersionedApi,
-          SessionSchema,
+          ResolvedSession,
           Request,
           Response,
           NextFunction,
@@ -846,7 +880,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -865,7 +899,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -883,6 +917,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      ResolvedSession,
       Auth
     >(
       this.internal.move,
@@ -895,7 +930,7 @@ export class Router<
   'm-search': TypedMiddlewareDefinition<
     this,
     SV,
-    SessionSchema,
+    RouterSession,
     Request,
     Response,
     NextFunction,
@@ -911,6 +946,10 @@ export class Router<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     const VersionedApi extends VersionSchema<SV, 'middleware'>,
+    const SessionSchema extends SessionObject<SV>,
+    const ResolvedSession extends SessionObject<SV> extends SessionSchema
+      ? RouterSession
+      : SessionSchema,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
@@ -918,7 +957,7 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request
     >
   >(
@@ -937,7 +976,7 @@ export class Router<
           ResHeaders,
           LocalsObj,
           VersionedApi,
-          SessionSchema,
+          ResolvedSession,
           Request,
           Response,
           NextFunction,
@@ -956,7 +995,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -975,7 +1014,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -993,6 +1032,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      ResolvedSession,
       Auth
     >(
       this.internal['m-search'],
@@ -1005,7 +1045,7 @@ export class Router<
   notify: TypedMiddlewareDefinition<
     this,
     SV,
-    SessionSchema,
+    RouterSession,
     Request,
     Response,
     NextFunction,
@@ -1021,6 +1061,10 @@ export class Router<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     const VersionedApi extends VersionSchema<SV, 'middleware'>,
+    const SessionSchema extends SessionObject<SV>,
+    const ResolvedSession extends SessionObject<SV> extends SessionSchema
+      ? RouterSession
+      : SessionSchema,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
@@ -1028,7 +1072,7 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request
     >
   >(
@@ -1047,7 +1091,7 @@ export class Router<
           ResHeaders,
           LocalsObj,
           VersionedApi,
-          SessionSchema,
+          ResolvedSession,
           Request,
           Response,
           NextFunction,
@@ -1066,7 +1110,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -1085,7 +1129,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -1103,6 +1147,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      ResolvedSession,
       Auth
     >(
       this.internal.notify,
@@ -1115,7 +1160,7 @@ export class Router<
   propfind: TypedMiddlewareDefinition<
     this,
     SV,
-    SessionSchema,
+    RouterSession,
     Request,
     Response,
     NextFunction,
@@ -1131,6 +1176,10 @@ export class Router<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     const VersionedApi extends VersionSchema<SV, 'middleware'>,
+    const SessionSchema extends SessionObject<SV>,
+    const ResolvedSession extends SessionObject<SV> extends SessionSchema
+      ? RouterSession
+      : SessionSchema,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
@@ -1138,7 +1187,7 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request
     >
   >(
@@ -1157,7 +1206,7 @@ export class Router<
           ResHeaders,
           LocalsObj,
           VersionedApi,
-          SessionSchema,
+          ResolvedSession,
           Request,
           Response,
           NextFunction,
@@ -1176,7 +1225,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -1195,7 +1244,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -1213,6 +1262,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      ResolvedSession,
       Auth
     >(
       this.internal.propfind,
@@ -1225,7 +1275,7 @@ export class Router<
   proppatch: TypedMiddlewareDefinition<
     this,
     SV,
-    SessionSchema,
+    RouterSession,
     Request,
     Response,
     NextFunction,
@@ -1241,6 +1291,10 @@ export class Router<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     const VersionedApi extends VersionSchema<SV, 'middleware'>,
+    const SessionSchema extends SessionObject<SV>,
+    const ResolvedSession extends SessionObject<SV> extends SessionSchema
+      ? RouterSession
+      : SessionSchema,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
@@ -1248,7 +1302,7 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request
     >
   >(
@@ -1267,7 +1321,7 @@ export class Router<
           ResHeaders,
           LocalsObj,
           VersionedApi,
-          SessionSchema,
+          ResolvedSession,
           Request,
           Response,
           NextFunction,
@@ -1286,7 +1340,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -1305,7 +1359,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -1323,6 +1377,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      ResolvedSession,
       Auth
     >(
       this.internal.proppatch,
@@ -1335,7 +1390,7 @@ export class Router<
   purge: TypedMiddlewareDefinition<
     this,
     SV,
-    SessionSchema,
+    RouterSession,
     Request,
     Response,
     NextFunction,
@@ -1351,6 +1406,10 @@ export class Router<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     const VersionedApi extends VersionSchema<SV, 'middleware'>,
+    const SessionSchema extends SessionObject<SV>,
+    const ResolvedSession extends SessionObject<SV> extends SessionSchema
+      ? RouterSession
+      : SessionSchema,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
@@ -1358,7 +1417,7 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request
     >
   >(
@@ -1377,7 +1436,7 @@ export class Router<
           ResHeaders,
           LocalsObj,
           VersionedApi,
-          SessionSchema,
+          ResolvedSession,
           Request,
           Response,
           NextFunction,
@@ -1396,7 +1455,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -1415,7 +1474,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -1433,6 +1492,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      ResolvedSession,
       Auth
     >(
       this.internal.purge,
@@ -1445,7 +1505,7 @@ export class Router<
   report: TypedMiddlewareDefinition<
     this,
     SV,
-    SessionSchema,
+    RouterSession,
     Request,
     Response,
     NextFunction,
@@ -1461,6 +1521,10 @@ export class Router<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     const VersionedApi extends VersionSchema<SV, 'middleware'>,
+    const SessionSchema extends SessionObject<SV>,
+    const ResolvedSession extends SessionObject<SV> extends SessionSchema
+      ? RouterSession
+      : SessionSchema,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
@@ -1468,7 +1532,7 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request
     >
   >(
@@ -1487,7 +1551,7 @@ export class Router<
           ResHeaders,
           LocalsObj,
           VersionedApi,
-          SessionSchema,
+          ResolvedSession,
           Request,
           Response,
           NextFunction,
@@ -1506,7 +1570,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -1525,7 +1589,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -1543,6 +1607,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      ResolvedSession,
       Auth
     >(
       this.internal.report,
@@ -1555,7 +1620,7 @@ export class Router<
   search: TypedMiddlewareDefinition<
     this,
     SV,
-    SessionSchema,
+    RouterSession,
     Request,
     Response,
     NextFunction,
@@ -1571,6 +1636,10 @@ export class Router<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     const VersionedApi extends VersionSchema<SV, 'middleware'>,
+    const SessionSchema extends SessionObject<SV>,
+    const ResolvedSession extends SessionObject<SV> extends SessionSchema
+      ? RouterSession
+      : SessionSchema,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
@@ -1578,7 +1647,7 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request
     >
   >(
@@ -1597,7 +1666,7 @@ export class Router<
           ResHeaders,
           LocalsObj,
           VersionedApi,
-          SessionSchema,
+          ResolvedSession,
           Request,
           Response,
           NextFunction,
@@ -1616,7 +1685,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -1635,7 +1704,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -1653,6 +1722,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      ResolvedSession,
       Auth
     >(
       this.internal.search,
@@ -1665,7 +1735,7 @@ export class Router<
   subscribe: TypedMiddlewareDefinition<
     this,
     SV,
-    SessionSchema,
+    RouterSession,
     Request,
     Response,
     NextFunction,
@@ -1681,6 +1751,10 @@ export class Router<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     const VersionedApi extends VersionSchema<SV, 'middleware'>,
+    const SessionSchema extends SessionObject<SV>,
+    const ResolvedSession extends SessionObject<SV> extends SessionSchema
+      ? RouterSession
+      : SessionSchema,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
@@ -1688,7 +1762,7 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request
     >
   >(
@@ -1707,7 +1781,7 @@ export class Router<
           ResHeaders,
           LocalsObj,
           VersionedApi,
-          SessionSchema,
+          ResolvedSession,
           Request,
           Response,
           NextFunction,
@@ -1726,7 +1800,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -1745,7 +1819,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -1763,6 +1837,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      ResolvedSession,
       Auth
     >(
       this.internal.subscribe,
@@ -1775,7 +1850,7 @@ export class Router<
   unlock: TypedMiddlewareDefinition<
     this,
     SV,
-    SessionSchema,
+    RouterSession,
     Request,
     Response,
     NextFunction,
@@ -1791,6 +1866,10 @@ export class Router<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     const VersionedApi extends VersionSchema<SV, 'middleware'>,
+    const SessionSchema extends SessionObject<SV>,
+    const ResolvedSession extends SessionObject<SV> extends SessionSchema
+      ? RouterSession
+      : SessionSchema,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
@@ -1798,7 +1877,7 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request
     >
   >(
@@ -1817,7 +1896,7 @@ export class Router<
           ResHeaders,
           LocalsObj,
           VersionedApi,
-          SessionSchema,
+          ResolvedSession,
           Request,
           Response,
           NextFunction,
@@ -1836,7 +1915,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -1855,7 +1934,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -1873,6 +1952,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      ResolvedSession,
       Auth
     >(
       this.internal.unlock,
@@ -1885,7 +1965,7 @@ export class Router<
   unsubscribe: TypedMiddlewareDefinition<
     this,
     SV,
-    SessionSchema,
+    RouterSession,
     Request,
     Response,
     NextFunction,
@@ -1901,6 +1981,10 @@ export class Router<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     const VersionedApi extends VersionSchema<SV, 'middleware'>,
+    const SessionSchema extends SessionObject<SV>,
+    const ResolvedSession extends SessionObject<SV> extends SessionSchema
+      ? RouterSession
+      : SessionSchema,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
@@ -1908,7 +1992,7 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request
     >
   >(
@@ -1927,7 +2011,7 @@ export class Router<
           ResHeaders,
           LocalsObj,
           VersionedApi,
-          SessionSchema,
+          ResolvedSession,
           Request,
           Response,
           NextFunction,
@@ -1946,7 +2030,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -1965,7 +2049,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -1983,6 +2067,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      ResolvedSession,
       Auth
     >(
       this.internal.unsubscribe,
@@ -1995,7 +2080,7 @@ export class Router<
   link: TypedMiddlewareDefinition<
     this,
     SV,
-    SessionSchema,
+    RouterSession,
     Request,
     Response,
     NextFunction,
@@ -2011,6 +2096,10 @@ export class Router<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     const VersionedApi extends VersionSchema<SV, 'middleware'>,
+    const SessionSchema extends SessionObject<SV>,
+    const ResolvedSession extends SessionObject<SV> extends SessionSchema
+      ? RouterSession
+      : SessionSchema,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
@@ -2018,7 +2107,7 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request
     >
   >(
@@ -2037,7 +2126,7 @@ export class Router<
           ResHeaders,
           LocalsObj,
           VersionedApi,
-          SessionSchema,
+          ResolvedSession,
           Request,
           Response,
           NextFunction,
@@ -2056,7 +2145,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -2075,7 +2164,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -2093,6 +2182,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      ResolvedSession,
       Auth
     >(
       this.internal.link,
@@ -2105,7 +2195,7 @@ export class Router<
   unlink: TypedMiddlewareDefinition<
     this,
     SV,
-    SessionSchema,
+    RouterSession,
     Request,
     Response,
     NextFunction,
@@ -2121,6 +2211,10 @@ export class Router<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     const VersionedApi extends VersionSchema<SV, 'middleware'>,
+    const SessionSchema extends SessionObject<SV>,
+    const ResolvedSession extends SessionObject<SV> extends SessionSchema
+      ? RouterSession
+      : SessionSchema,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
@@ -2128,7 +2222,7 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request
     >
   >(
@@ -2147,7 +2241,7 @@ export class Router<
           ResHeaders,
           LocalsObj,
           VersionedApi,
-          SessionSchema,
+          ResolvedSession,
           Request,
           Response,
           NextFunction,
@@ -2166,7 +2260,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -2185,7 +2279,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request,
       Response,
       NextFunction,
@@ -2203,6 +2297,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      ResolvedSession,
       Auth
     >(
       this.internal.unlink,
@@ -2213,7 +2308,7 @@ export class Router<
   };
 
   clone(): this {
-    const clone = new Router<SV, BasePath, SessionSchema>(
+    const clone = new Router<SV, BasePath, RouterSession>(
       this.basePath,
       this.schemaValidator,
       this.openTelemetryCollector,

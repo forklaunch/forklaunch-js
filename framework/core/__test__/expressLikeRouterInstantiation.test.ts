@@ -235,6 +235,9 @@ const fff = typedHandler(
       }
     },
     auth: {
+      sessionSchema: {
+        name: string
+      },
       basic: {
         login: (username: string, password: string) => {
           return username === 'test' && password === 'test';
