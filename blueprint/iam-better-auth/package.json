@@ -35,7 +35,7 @@
     "@forklaunch/better-auth-mikro-orm-fork": "^0.4.103",
     "@forklaunch/blueprint-core": "workspace:*",
     "@forklaunch/blueprint-monitoring": "workspace:*",
-    "@forklaunch/core": "^0.13.1",
+    "@forklaunch/core": "^0.13.2",
     "@forklaunch/implementation-iam-base": "workspace:*",
     "@forklaunch/interfaces-iam": "workspace:*",
     "@mikro-orm/core": "^6.4.16",
@@ -52,7 +52,7 @@
     "dotenv": "^17.2.1",
     "pino": "^9.9.0",
     "uuid": "^11.1.0",
-    "zod": "^4.0.17"
+    "zod": "^4.1.0"
   },
   "devDependencies": {
     "@mikro-orm/cli": "^6.4.16",

@@ -40,11 +40,11 @@
     "up:packages": "pnpm -r update --latest"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.2.0",
+    "@biomejs/biome": "2.2.2",
     "@changesets/cli": "^2.29.6",
-    "@eslint/js": "^9.33.0",
+    "@eslint/js": "^9.34.0",
     "@types/jest": "^30.0.0",
-    "eslint": "^9.33.0",
+    "eslint": "^9.34.0",
     "globals": "^16.3.0",
     "jest": "^30.0.5",
     "lint-staged": "^16.1.5",
@@ -60,11 +60,11 @@
   },
   "dependencies": {
     "@forklaunch/common": "^0.5.1",
-    "@forklaunch/core": "^0.13.1",
-    "@forklaunch/express": "^0.8.1",
-    "@forklaunch/hyper-express": "^0.8.1",
+    "@forklaunch/core": "^0.13.2",
+    "@forklaunch/express": "^0.8.2",
+    "@forklaunch/hyper-express": "^0.8.2",
     "@forklaunch/universal-sdk": "^0.6.1",
-    "@forklaunch/validator": "^0.9.1"
+    "@forklaunch/validator": "^0.9.2"
   },
   "pnpm": {
     "patchedDependencies": {
