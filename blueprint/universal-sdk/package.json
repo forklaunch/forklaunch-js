@@ -15,8 +15,8 @@
     "test": "pnpm vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/common": "^0.5.1",
-    "better-auth": "^1.3.7"
+    "@forklaunch/better-auth": "^1.3.8",
+    "@forklaunch/common": "^0.5.2"
   },
   "devDependencies": {
     "@forklaunch/blueprint-billing-base": "workspace:*",
