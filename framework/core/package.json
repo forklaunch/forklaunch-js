@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/core",
-  "version": "0.13.2",
+  "version": "0.13.3",
   "description": "forklaunch-js core package. Contains useful building blocks.",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -96,7 +96,7 @@
     "@opentelemetry/semantic-conventions": "^1.36.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
-    "jose": "^6.0.12",
+    "jose": "6.0.13",
     "openapi3-ts": "^4.5.0",
     "pino": "^9.9.0",
     "pino-http": "^10.5.0",
@@ -105,16 +105,16 @@
     "uuid": "^11.1.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.33.0",
-    "@scalar/express-api-reference": "^0.8.13",
+    "@eslint/js": "^9.34.0",
+    "@scalar/express-api-reference": "^0.8.15",
     "@types/cors": "^2.8.19",
     "@types/jest": "^30.0.0",
     "@types/qs": "^6.14.0",
     "@types/uuid": "^10.0.0",
-    "@typescript/native-preview": "7.0.0-dev.20250821.1",
+    "@typescript/native-preview": "7.0.0-dev.20250823.8",
     "globals": "^16.3.0",
     "jest": "^30.0.5",
-    "jose": "^6.0.12",
+    "jose": "5.10.0",
     "prettier": "^3.6.2",
     "testcontainers": "^11.5.1",
     "ts-jest": "^29.4.1",
