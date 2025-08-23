@@ -1,5 +1,11 @@
 # @forklaunch/validator
 
+## 0.9.2
+
+### Patch Changes
+
+- Auth fixes and add HMAC auth
+
 ## 0.9.1
 
 ### Patch Changes

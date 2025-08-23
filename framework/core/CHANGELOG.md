@@ -1,5 +1,13 @@
 # @forklaunch/core
 
+## 0.13.2
+
+### Patch Changes
+
+- Auth fixes and add HMAC auth
+- Updated dependencies
+  - @forklaunch/validator@0.9.2
+
 ## 0.13.1
 
 ### Patch Changes
