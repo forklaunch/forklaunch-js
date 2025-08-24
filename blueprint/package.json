@@ -53,18 +53,18 @@
     "sort-package-json": "^3.4.0",
     "ts-jest": "^29.4.1",
     "tsup": "^8.5.0",
-    "tsx": "^4.20.4",
+    "tsx": "^4.20.5",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.40.0",
     "vitest": "^3.2.4"
   },
   "dependencies": {
-    "@forklaunch/common": "^0.5.2",
-    "@forklaunch/core": "^0.13.3",
-    "@forklaunch/express": "^0.8.3",
-    "@forklaunch/hyper-express": "^0.8.3",
-    "@forklaunch/universal-sdk": "^0.6.2",
-    "@forklaunch/validator": "^0.9.3"
+    "@forklaunch/common": "^0.5.3",
+    "@forklaunch/core": "^0.13.4",
+    "@forklaunch/express": "^0.8.4",
+    "@forklaunch/hyper-express": "^0.8.4",
+    "@forklaunch/universal-sdk": "^0.6.3",
+    "@forklaunch/validator": "^0.9.4"
   },
   "pnpm": {
     "patchedDependencies": {

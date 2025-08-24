@@ -1,5 +1,13 @@
 # @forklaunch/implementation-billing-base
 
+## 0.5.6
+
+### Patch Changes
+
+- upgrade internal packages
+- Updated dependencies
+  - @forklaunch/interfaces-worker@0.4.5
+
 ## 0.5.5
 
 ### Patch Changes
