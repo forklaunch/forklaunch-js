@@ -1,5 +1,14 @@
 # @forklaunch/infrastructure-s3
 
+## 0.3.5
+
+### Patch Changes
+
+- zod validator regex relaxation for email
+- Updated dependencies
+  - @forklaunch/common@0.5.4
+  - @forklaunch/core@0.13.5
+
 ## 0.3.4
 
 ### Patch Changes

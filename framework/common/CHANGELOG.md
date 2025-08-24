@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.5.4
+
+### Patch Changes
+
+- zod validator regex relaxation for email
+
 ## 0.5.3
 
 ### Patch Changes

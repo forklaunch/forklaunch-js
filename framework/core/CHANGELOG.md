@@ -1,5 +1,14 @@
 # @forklaunch/core
 
+## 0.13.5
+
+### Patch Changes
+
+- zod validator regex relaxation for email
+- Updated dependencies
+  - @forklaunch/validator@0.9.5
+  - @forklaunch/common@0.5.4
+
 ## 0.13.4
 
 ### Patch Changes

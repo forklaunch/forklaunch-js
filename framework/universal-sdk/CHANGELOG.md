@@ -1,5 +1,13 @@
 # @forklaunch/universal-sdk
 
+## 0.6.4
+
+### Patch Changes
+
+- zod validator regex relaxation for email
+- Updated dependencies
+  - @forklaunch/common@0.5.4
+
 ## 0.6.3
 
 ### Patch Changes

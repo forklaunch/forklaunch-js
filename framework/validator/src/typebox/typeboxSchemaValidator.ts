@@ -145,8 +145,7 @@ export class TypeboxSchemaValidator
     title: 'UUID'
   });
   email: TString = Type.String({
-    pattern:
-      '(?:[a-z0-9!#$%&\'*+/=?^_{|}~-]+(?:\\.[a-z0-9!#$%&\'*+/=?^_{|}~-]+)*|"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x5b-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)])',
+    pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$',
     errorType: 'email',
     example: 'a@b.com',
     title: 'Email'
@@ -335,7 +334,9 @@ export class TypeboxSchemaValidator
       title: 'File'
     })
   )
-    .Decode((value) => new InMemoryBlob(value) as Blob)
+    .Decode((value) => {
+      return new InMemoryBlob(value) as Blob;
+    })
     .Encode((value) => (value as InMemoryBlob).content);
   type = <T>() => this.any as TTransform<TAny, T>;
 
@@ -591,10 +592,40 @@ export class TypeboxSchemaValidator
     } else {
       const schemified = this.schemify(schema);
 
-      if (Value.Check(schemified, value)) {
-        conversion = Value.Decode(schemified, value);
+      if (schemified[Kind] === 'Unsafe') {
+        try {
+          if (value instanceof Buffer) {
+            conversion = new InMemoryBlob(value) as Blob;
+          } else {
+            errors = [
+              {
+                type: ValueErrorType.String,
+                schema: schemified,
+                path: '',
+                message: `Invalid file type: expected Buffer or string, got ${typeof value}`,
+                value: value,
+                errors: []
+              }
+            ];
+          }
+        } catch (err) {
+          errors = [
+            {
+              type: ValueErrorType.String,
+              schema: schemified,
+              path: '',
+              message: err instanceof Error ? err.message : 'Invalid file type',
+              value: value,
+              errors: []
+            }
+          ];
+        }
       } else {
-        errors = Array.from(Value.Errors(schemified, value));
+        if (Value.Check(schemified, value)) {
+          conversion = Value.Decode(schemified, value);
+        } else {
+          errors = Array.from(Value.Errors(schemified, value));
+        }
       }
     }
 
