@@ -432,6 +432,14 @@ pub(crate) fn add_redis_to_docker_compose<'a>(
                 restart: Some(Restart::Always),
                 ports: Some(vec!["6379:6379".to_string()]),
                 networks: Some(vec![format!("{}-network", app_name)]),
+                healthcheck: Some(Healthcheck {
+                    test: "[\"CMD\", \"redis-cli\", \"ping\"]".to_string(),
+                    interval: "10s".to_string(),
+                    timeout: "5s".to_string(),
+                    retries: 5,
+                    start_period: "10s".to_string(),
+                    additional_properties: HashMap::new(),
+                }),
                 ..Default::default()
             },
         );
@@ -692,6 +700,17 @@ pub(crate) fn add_database_to_docker_compose(
                             "{}-postgresql-data:/var/lib/postgresql/{}/data",
                             app_name, app_name
                         )]),
+                        healthcheck: Some(Healthcheck {
+                            test: format!(
+                                "[\"CMD-SHELL\", \"pg_isready -U postgresql -d {}-{}-dev\"]",
+                                app_name, name
+                            ),
+                            interval: "10s".to_string(),
+                            timeout: "5s".to_string(),
+                            retries: 5,
+                            start_period: "30s".to_string(),
+                            additional_properties: HashMap::new(),
+                        }),
                         ..Default::default()
                     },
                 );
@@ -783,6 +802,14 @@ pub(crate) fn add_database_to_docker_compose(
                         ])),
                         networks: Some(vec![format!("{}-network", app_name)]),
                         volumes: Some(vec![format!("{}-mysql-data:/var/lib/mysql", app_name)]),
+                        healthcheck: Some(Healthcheck {
+                            test: "[\"CMD\", \"mysqladmin\", \"ping\", \"-h\", \"localhost\", \"-u\", \"mysql\", \"-pmysql\"]".to_string(),
+                            interval: "10s".to_string(),
+                            timeout: "5s".to_string(),
+                            retries: 5,
+                            start_period: "30s".to_string(),
+                            additional_properties: HashMap::new(),
+                        }),
                         ..Default::default()
                     },
                 );
@@ -815,6 +842,14 @@ pub(crate) fn add_database_to_docker_compose(
                         ])),
                         networks: Some(vec![format!("{}-network", app_name)]),
                         volumes: Some(vec![format!("{}-mariadb-data:/var/lib/mysql", app_name)]),
+                        healthcheck: Some(Healthcheck {
+                            test: "[\"CMD\", \"mysqladmin\", \"ping\", \"-h\", \"localhost\", \"-u\", \"mariadb\", \"-pmariadb\"]".to_string(),
+                            interval: "10s".to_string(),
+                            timeout: "5s".to_string(),
+                            retries: 5,
+                            start_period: "30s".to_string(),
+                            additional_properties: HashMap::new(),
+                        }),
                         ..Default::default()
                     },
                 );
@@ -846,6 +881,14 @@ pub(crate) fn add_database_to_docker_compose(
                         ])),
                         networks: Some(vec![format!("{}-network", app_name)]),
                         volumes: Some(vec![format!("{}-mssql-data:/var/opt/mssql", app_name)]),
+                        healthcheck: Some(Healthcheck {
+                            test: "[\"CMD-SHELL\", \"/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Mssql123! -Q 'SELECT 1' || exit 1\"]".to_string(),
+                            interval: "10s".to_string(),
+                            timeout: "5s".to_string(),
+                            retries: 5,
+                            start_period: "30s".to_string(),
+                            additional_properties: HashMap::new(),
+                        }),
                         ..Default::default()
                     },
                 );
@@ -1088,6 +1131,22 @@ fn create_base_service(
             "run".to_string(),
             entrypoint_command.to_string(),
         ]),
+        healthcheck: if let Some(port_number) = port_number {
+            // Add health check for services that expose HTTP ports
+            Some(Healthcheck {
+                test: format!(
+                    "[\"CMD\", \"curl\", \"-f\", \"http://localhost:{}/health\"]",
+                    port_number
+                ),
+                interval: "30s".to_string(),
+                timeout: "10s".to_string(),
+                retries: 3,
+                start_period: "40s".to_string(),
+                additional_properties: HashMap::new(),
+            })
+        } else {
+            None
+        },
         ..Default::default()
     }
 }
