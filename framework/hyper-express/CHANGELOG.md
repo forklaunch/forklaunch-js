@@ -1,5 +1,15 @@
 # @forklaunch/hyper-express
 
+## 0.8.4
+
+### Patch Changes
+
+- Update validator types for files to use raw streams, lazy load openapi for universal sdk, and remove private members from otel
+- Updated dependencies
+  - @forklaunch/validator@0.9.4
+  - @forklaunch/common@0.5.3
+  - @forklaunch/core@0.13.4
+
 ## 0.8.3
 
 ### Patch Changes

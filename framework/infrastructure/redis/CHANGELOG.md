@@ -1,5 +1,14 @@
 # @forklaunch/infrastructure-redis
 
+## 0.3.4
+
+### Patch Changes
+
+- Update validator types for files to use raw streams, lazy load openapi for universal sdk, and remove private members from otel
+- Updated dependencies
+  - @forklaunch/common@0.5.3
+  - @forklaunch/core@0.13.4
+
 ## 0.3.3
 
 ### Patch Changes

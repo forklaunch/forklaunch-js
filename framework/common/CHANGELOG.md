@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.5.3
+
+### Patch Changes
+
+- Update validator types for files to use raw streams, lazy load openapi for universal sdk, and remove private members from otel
+
 ## 0.5.2
 
 ### Patch Changes

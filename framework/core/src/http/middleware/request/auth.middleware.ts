@@ -477,7 +477,7 @@ export async function parseRequestAuth<
       unknown
     >(
       auth,
-      req._globalOptions?.auth,
+      req._globalOptions?.()?.auth,
       (req.headers[auth?.headerName ?? 'Authorization'] as string) ||
         (req.headers[auth?.headerName ?? 'authorization'] as string),
       req

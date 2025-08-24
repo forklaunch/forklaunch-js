@@ -85,10 +85,11 @@ describe('http middleware tests', () => {
       version: {} as never,
       session: {} as JWTPayload,
       _parsedVersions: 0,
-      _globalOptions: {} as ExpressLikeRouterOptions<
-        MockSchemaValidator,
-        SessionObject<MockSchemaValidator>
-      >
+      _globalOptions: () =>
+        ({}) as ExpressLikeRouterOptions<
+          MockSchemaValidator,
+          SessionObject<MockSchemaValidator>
+        >
     };
 
     res = {
@@ -150,7 +151,12 @@ describe('http middleware tests', () => {
           200: testSchema
         }
       },
-      new OpenTelemetryCollector('test')
+      new OpenTelemetryCollector('test'),
+      () =>
+        ({}) as ExpressLikeRouterOptions<
+          MockSchemaValidator,
+          SessionObject<MockSchemaValidator>
+        >
     )(req, res, nextFunction);
     expect(req.contractDetails).toEqual(contractDetails);
   });

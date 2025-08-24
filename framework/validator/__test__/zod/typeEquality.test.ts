@@ -177,7 +177,7 @@ const shortTwo = schemify({
 type ShortExpected = {
   s: string;
   non: number;
-  b: Uint8Array<ArrayBufferLike>;
+  b: Uint8Array<ArrayBuffer>;
   f: Blob;
 };
 

@@ -189,7 +189,7 @@ export class ForklaunchExpressLikeRouter<
         requestSchema,
         responseSchemas,
         this.openTelemetryCollector,
-        this.routerOptions
+        () => this.routerOptions
       ),
       ...this.postEnrichMiddleware,
       parse,

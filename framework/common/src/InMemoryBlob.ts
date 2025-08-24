@@ -1,5 +1,5 @@
 export class InMemoryBlob extends Blob {
-  constructor(public content: string) {
-    super([Buffer.from(content)]);
+  constructor(public content: Buffer<ArrayBuffer>) {
+    super([content]);
   }
 }

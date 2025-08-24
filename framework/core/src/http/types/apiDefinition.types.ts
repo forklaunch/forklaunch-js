@@ -157,7 +157,7 @@ export interface ForklaunchRequest<
   _parsedVersions: string[] | number;
 
   /** Global options */
-  _globalOptions?: ExpressLikeRouterOptions<SV, SessionSchema>;
+  _globalOptions: () => ExpressLikeRouterOptions<SV, SessionSchema> | undefined;
 }
 
 /**

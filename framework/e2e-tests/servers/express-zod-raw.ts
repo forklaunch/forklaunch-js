@@ -38,7 +38,7 @@ const getHandler = handlers.get(
     summary: 'Test Summary',
     responses: {
       200: {
-        file: z.string().transform((val: string) => {
+        file: z.instanceof(Buffer<ArrayBuffer>).transform((val) => {
           return new Blob([val]);
         })
       }

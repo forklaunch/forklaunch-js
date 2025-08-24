@@ -31,6 +31,7 @@ import {
   TUndefined,
   TUnion,
   TUnknown,
+  TUnsafe,
   TVoid,
   Type
 } from '@sinclair/typebox';
@@ -145,7 +146,7 @@ export class TypeboxSchemaValidator
   });
   email: TString = Type.String({
     pattern:
-      '(?:[a-z0-9!#$%&\'*+/=?^_{|}~-]+(?:\\.[a-z0-9!#$%&\'*+/=?^_{|}~-]+)*|"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)])',
+      '(?:[a-z0-9!#$%&\'*+/=?^_{|}~-]+(?:\\.[a-z0-9!#$%&\'*+/=?^_{|}~-]+)*|"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x5b-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)])',
     errorType: 'email',
     example: 'a@b.com',
     title: 'Email'
@@ -311,26 +312,26 @@ export class TypeboxSchemaValidator
     example: 'never',
     title: 'Never'
   });
-  binary: TTransform<TString, Uint8Array> = Type.Transform(
+  binary: TTransform<TString, Uint8Array<ArrayBuffer>> = Type.Transform(
     Type.String({
       errorType: 'binary',
       format: 'binary',
-      example: 'a utf-8 encodable string',
+      example: 'a base-64 encodable string',
       title: 'Binary'
     })
   )
-    .Decode((value) => new TextEncoder().encode(value) as Uint8Array)
+    .Decode((value) => new Uint8Array(Buffer.from(value, 'base64')))
     .Encode((value) => {
-      if (value instanceof ArrayBuffer) {
+      if (value instanceof Buffer) {
         return String.fromCharCode(...new Uint8Array(value));
       }
       return '';
     });
-  file: TTransform<TString, Blob> = Type.Transform(
-    Type.String({
+  file: TTransform<TUnsafe<Buffer<ArrayBuffer>>, Blob> = Type.Transform(
+    Type.Unsafe<Buffer<ArrayBuffer>>({
       errorType: 'binary',
       format: 'binary',
-      example: 'a utf-8 encodable blob or file',
+      example: 'a raw buffer or file stream',
       title: 'File'
     })
   )
