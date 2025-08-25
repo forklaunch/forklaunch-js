@@ -159,13 +159,13 @@ export type MapToSdk<
   SV extends AnySchemaValidator,
   T extends RouterMap<SV>,
   Acc extends Record<string, unknown> = Record<string, never>
-> = {
-  [K in keyof T]: T[K] extends { sdk: infer S }
-    ? S
+> = Prettify<{
+  [K in keyof T]: T[K] extends { sdk: unknown }
+    ? T[K]['sdk']
     : T[K] extends RouterMap<SV>
       ? MapToSdk<SV, T[K], Acc>
       : never;
-};
+}>;
 
 /**
  * Tail-recursive type that extracts and flattens fetch map interfaces from a RouterMap structure.
@@ -197,9 +197,9 @@ export type MapToFetch<
     {
       [K in keyof T]: T[K] extends RouterMap<SV>
         ? MapToFetch<SV, T[K]>
-        : T[K] extends { _fetchMap: infer F }
-          ? F extends Record<string, unknown>
-            ? F
+        : T[K] extends { _fetchMap: unknown }
+          ? T[K]['_fetchMap'] extends Record<string, unknown>
+            ? T[K]['_fetchMap']
             : never
           : never;
     }[keyof T]
@@ -414,7 +414,7 @@ export type ToFetchMap<
   T extends Record<string, SdkHandler>,
   SV extends AnySchemaValidator,
   RouterBasePath extends `/${string}`
-> = {
+> = Prettify<{
   [K in keyof T as T[K]['_path'] extends infer P | undefined
     ? P extends `/${string}`
       ? `${RouterBasePath}${P}`
@@ -434,4 +434,4 @@ export type ToFetchMap<
       RouterBasePath
     >;
   };
-};
+}>;

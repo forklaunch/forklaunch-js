@@ -1,5 +1,13 @@
 # @forklaunch/universal-sdk
 
+## 0.6.7
+
+### Patch Changes
+
+- One more attempt at performance bump
+- Updated dependencies
+  - @forklaunch/common@0.5.7
+
 ## 0.6.6
 
 ### Patch Changes

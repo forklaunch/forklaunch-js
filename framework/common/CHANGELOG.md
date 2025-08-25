@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.5.7
+
+### Patch Changes
+
+- One more attempt at performance bump
+
 ## 0.5.6
 
 ### Patch Changes

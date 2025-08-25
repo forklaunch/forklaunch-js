@@ -1,5 +1,14 @@
 # @forklaunch/infrastructure-s3
 
+## 0.3.8
+
+### Patch Changes
+
+- One more attempt at performance bump
+- Updated dependencies
+  - @forklaunch/common@0.5.7
+  - @forklaunch/core@0.13.8
+
 ## 0.3.7
 
 ### Patch Changes

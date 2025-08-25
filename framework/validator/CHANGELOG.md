@@ -1,5 +1,13 @@
 # @forklaunch/validator
 
+## 0.9.8
+
+### Patch Changes
+
+- One more attempt at performance bump
+- Updated dependencies
+  - @forklaunch/common@0.5.7
+
 ## 0.9.7
 
 ### Patch Changes
