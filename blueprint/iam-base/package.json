@@ -34,7 +34,7 @@
   "dependencies": {
     "@forklaunch/blueprint-core": "workspace:*",
     "@forklaunch/blueprint-monitoring": "workspace:*",
-    "@forklaunch/core": "^0.13.4",
+    "@forklaunch/core": "^0.13.6",
     "@forklaunch/hyper-express-fork": "^6.17.35",
     "@forklaunch/implementation-iam-base": "workspace:*",
     "@forklaunch/interfaces-iam": "workspace:*",
@@ -57,7 +57,7 @@
     "@types/qs": "^6.14.0",
     "depcheck": "^1.4.7",
     "prettier": "^3.6.2",
-    "typedoc": "^0.28.10"
+    "typedoc": "^0.28.11"
   },
   "mikro-orm": {
     "configPaths": [
