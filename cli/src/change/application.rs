@@ -106,13 +106,14 @@ fn change_name(
     let existing_name = manifest_data.app_name.clone();
     let existing_kebab_name = manifest_data.kebab_case_app_name.clone();
     println!("change:application:01: name: {}", existing_name);
+    println!("change:application:02: existing_kebab_name: {}", existing_kebab_name);
 
     
     manifest_data.app_name = name.to_string();
     manifest_data.kebab_case_app_name = name.to_case(Case::Kebab);
     manifest_data.camel_case_app_name = name.to_case(Case::Camel);
     manifest_data.pascal_case_app_name = name.to_case(Case::Pascal);
-    println!("change:application:02: This is where package json is changed: existing_kebab_name: {:?}, manifest_data.kebab_case_app_name: {:?}", existing_kebab_name, manifest_data.kebab_case_app_name);
+    println!("change:application:03: This is where package json is changed: existing_kebab_name: {:?}, manifest_data.kebab_case_app_name: {:?}", existing_kebab_name, manifest_data.kebab_case_app_name);
     application_json_to_write.name = Some(
         application_json_to_write
             .name
@@ -129,7 +130,7 @@ fn change_name(
     );
     // update project in manifest data
     for project in project_jsons_to_write.values_mut() {
-        println!("change:application:03: project.name: {:?}", project.name);
+        println!("change:application:04: project.name: {:?}", project.name);
         project.name = Some(
             project
                 .name
@@ -189,8 +190,8 @@ fn change_name(
         let entry = entry?;
         let path = entry.path();
         let relative_path = path.strip_prefix(base_path)?;
-        println!("change:application:04: path: {}", path.to_string_lossy());
-        println!("change:application:05: relative_path: {}", relative_path.to_string_lossy());
+        println!("change:application:05: path: {}", path.to_string_lossy());
+        println!("change:application:06: relative_path: {}", relative_path.to_string_lossy());
         if entry.file_type().is_dir() {
             // Check for .flignore in this directory
             let flignore_path = path.join(".flignore");
@@ -262,7 +263,7 @@ fn change_name(
                     );
                 }
             }
-            println!("change:application:06: I changed {:?}", entry.file_name().to_str().unwrap());
+            println!("change:application:07: I changed {:?}", entry.file_name().to_str().unwrap());
         }
     }
 
@@ -1566,7 +1567,12 @@ impl CliCommand for ApplicationCommand {
                 database: None,
             },
         ));
-        println!("change:application:08: manifest_data.app_name: {:?}", manifest_data.app_name);
+        manifest_data.kebab_case_app_name = manifest_data.app_name.to_case(Case::Kebab);
+        manifest_data.camel_case_app_name = manifest_data.app_name.to_case(Case::Camel);
+        manifest_data.pascal_case_app_name = manifest_data.app_name.to_case(Case::Pascal);
+        println!("change:application:09: manifest_data.app_name: {:?}", manifest_data.app_name);
+        println!("change:application:08: manifest_data.kebab_case_app_name: {:?}", manifest_data.kebab_case_app_name);
+        
 
         let app_path = if base_path.join("src").exists() {
             base_path.join("src").join("modules")
@@ -1575,7 +1581,7 @@ impl CliCommand for ApplicationCommand {
         } else {
             return Err(anyhow::anyhow!("application directory not found in base_path, src/modules, or modules directories"));
         };
-        println!("change:application:09: app_path: {:?}", app_path);
+        println!("change:application:10: app_path: {:?}", app_path);
 
         let name = matches.get_one::<String>("name");
         let formatter = matches.get_one::<String>("formatter");
@@ -1764,7 +1770,7 @@ impl CliCommand for ApplicationCommand {
         let mut removal_templates = vec![];
         // let mut move_templates = vec![];
         let mut symlink_templates = vec![];
-        println!("change:application:10: base_path: {:?}", base_path);
+        println!("change:application:11: base_path: {:?}", base_path);
         
         // Try to find package.json in base_path, then check src/modules and modules directories
         let application_package_json_path = if base_path.join("package.json").exists() {
@@ -1776,7 +1782,7 @@ impl CliCommand for ApplicationCommand {
         } else {
             return Err(anyhow::anyhow!("package.json not found in base_path, src/modules, or modules directories"));
         };
-        println!("change:application:09: {:?}", application_package_json_path);
+        println!("change:application:12: {:?}", application_package_json_path);
         // read package.json
         let application_package_json_data = read_to_string(&application_package_json_path)
             .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?;
@@ -1947,7 +1953,7 @@ impl CliCommand for ApplicationCommand {
             },
         );
         // write package.json
-        println!("change:application:11: {:?}", application_package_json_path);
+        println!("change:application:13: {:?}", application_package_json_path);
         rendered_templates_cache.insert(
             application_package_json_path.to_string_lossy(),
             RenderedTemplate {
