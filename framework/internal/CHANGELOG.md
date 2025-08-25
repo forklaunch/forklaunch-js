@@ -1,5 +1,14 @@
 # @forklaunch/common
 
+## 0.2.6
+
+### Patch Changes
+
+- attempt to make sdk pathing more efficient
+- Updated dependencies
+  - @forklaunch/validator@0.9.6
+  - @forklaunch/common@0.5.5
+
 ## 0.2.5
 
 ### Patch Changes

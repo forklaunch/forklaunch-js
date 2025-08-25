@@ -1,5 +1,15 @@
 # @forklaunch/hyper-express
 
+## 0.8.6
+
+### Patch Changes
+
+- attempt to make sdk pathing more efficient
+- Updated dependencies
+  - @forklaunch/validator@0.9.6
+  - @forklaunch/common@0.5.5
+  - @forklaunch/core@0.13.6
+
 ## 0.8.5
 
 ### Patch Changes

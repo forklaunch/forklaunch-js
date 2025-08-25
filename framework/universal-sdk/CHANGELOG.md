@@ -1,5 +1,13 @@
 # @forklaunch/universal-sdk
 
+## 0.6.5
+
+### Patch Changes
+
+- attempt to make sdk pathing more efficient
+- Updated dependencies
+  - @forklaunch/common@0.5.5
+
 ## 0.6.4
 
 ### Patch Changes

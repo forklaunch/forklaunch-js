@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.5.5
+
+### Patch Changes
+
+- attempt to make sdk pathing more efficient
+
 ## 0.5.4
 
 ### Patch Changes
