@@ -14,23 +14,23 @@ importers:
   .:
     dependencies:
       '@forklaunch/common':
-        specifier: ^0.5.5
-        version: 0.5.5
+        specifier: ^0.5.7
+        version: 0.5.7
       '@forklaunch/core':
-        specifier: ^0.13.6
-        version: 0.13.6(socks@2.8.7)
+        specifier: ^0.13.8
+        version: 0.13.8(socks@2.8.7)
       '@forklaunch/express':
-        specifier: ^0.8.6
-        version: 0.8.6(socks@2.8.7)
+        specifier: ^0.8.8
+        version: 0.8.8(socks@2.8.7)
       '@forklaunch/hyper-express':
-        specifier: ^0.8.6
-        version: 0.8.6(express@5.1.0)(socks@2.8.7)
+        specifier: ^0.8.8
+        version: 0.8.8(express@5.1.0)(socks@2.8.7)
       '@forklaunch/universal-sdk':
-        specifier: ^0.6.5
-        version: 0.6.5
+        specifier: ^0.6.7
+        version: 0.6.7
       '@forklaunch/validator':
-        specifier: ^0.9.6
-        version: 0.9.6
+        specifier: ^0.9.8
+        version: 0.9.8
     devDependencies:
       '@biomejs/biome':
         specifier: 2.2.2
@@ -78,8 +78,8 @@ importers:
         specifier: ^5.9.2
         version: 5.9.2
       typescript-eslint:
-        specifier: ^8.40.0
-        version: 8.40.0(eslint@9.34.0)(typescript@5.9.2)
+        specifier: ^8.41.0
+        version: 8.41.0(eslint@9.34.0)(typescript@5.9.2)
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.3.0)(tsx@4.20.5)(yaml@2.8.1)
@@ -93,29 +93,29 @@ importers:
         specifier: workspace:*
         version: link:../monitoring
       '@forklaunch/common':
-        specifier: ^0.5.5
-        version: 0.5.5
+        specifier: ^0.5.7
+        version: 0.5.7
       '@forklaunch/core':
-        specifier: ^0.13.6
-        version: 0.13.6(socks@2.8.7)
+        specifier: ^0.13.8
+        version: 0.13.8(socks@2.8.7)
       '@forklaunch/express':
-        specifier: ^0.8.6
-        version: 0.8.6(socks@2.8.7)
+        specifier: ^0.8.8
+        version: 0.8.8(socks@2.8.7)
       '@forklaunch/hyper-express':
-        specifier: ^0.8.6
-        version: 0.8.6(express@5.1.0)(socks@2.8.7)
+        specifier: ^0.8.8
+        version: 0.8.8(express@5.1.0)(socks@2.8.7)
       '@forklaunch/implementation-billing-base':
         specifier: workspace:*
         version: link:../implementations/billing/base
       '@forklaunch/infrastructure-redis':
-        specifier: ^0.3.6
-        version: 0.3.6(socks@2.8.7)
+        specifier: ^0.3.8
+        version: 0.3.8(socks@2.8.7)
       '@forklaunch/interfaces-billing':
         specifier: workspace:*
         version: link:../interfaces/billing
       '@forklaunch/validator':
-        specifier: ^0.9.6
-        version: 0.9.6
+        specifier: ^0.9.8
+        version: 0.9.8
       '@mikro-orm/core':
         specifier: ^6.4.16
         version: 6.4.16
@@ -196,29 +196,29 @@ importers:
         specifier: workspace:*
         version: link:../monitoring
       '@forklaunch/common':
-        specifier: ^0.5.5
-        version: 0.5.5
+        specifier: ^0.5.7
+        version: 0.5.7
       '@forklaunch/core':
-        specifier: ^0.13.6
-        version: 0.13.6(socks@2.8.7)
+        specifier: ^0.13.8
+        version: 0.13.8(socks@2.8.7)
       '@forklaunch/express':
-        specifier: ^0.8.6
-        version: 0.8.6(socks@2.8.7)
+        specifier: ^0.8.8
+        version: 0.8.8(socks@2.8.7)
       '@forklaunch/hyper-express':
-        specifier: ^0.8.6
-        version: 0.8.6(express@5.1.0)(socks@2.8.7)
+        specifier: ^0.8.8
+        version: 0.8.8(express@5.1.0)(socks@2.8.7)
       '@forklaunch/implementation-billing-stripe':
         specifier: workspace:*
         version: link:../implementations/billing/stripe
       '@forklaunch/infrastructure-redis':
-        specifier: ^0.3.6
-        version: 0.3.6(socks@2.8.7)
+        specifier: ^0.3.8
+        version: 0.3.8(socks@2.8.7)
       '@forklaunch/interfaces-billing':
         specifier: workspace:*
         version: link:../interfaces/billing
       '@forklaunch/validator':
-        specifier: ^0.9.6
-        version: 0.9.6
+        specifier: ^0.9.8
+        version: 0.9.8
       '@mikro-orm/core':
         specifier: ^6.4.16
         version: 6.4.16
@@ -296,20 +296,20 @@ importers:
   core:
     dependencies:
       '@forklaunch/common':
-        specifier: ^0.5.5
-        version: 0.5.5
+        specifier: ^0.5.7
+        version: 0.5.7
       '@forklaunch/core':
-        specifier: ^0.13.6
-        version: 0.13.6(socks@2.8.7)
+        specifier: ^0.13.8
+        version: 0.13.8(socks@2.8.7)
       '@forklaunch/express':
-        specifier: ^0.8.6
-        version: 0.8.6(socks@2.8.7)
+        specifier: ^0.8.8
+        version: 0.8.8(socks@2.8.7)
       '@forklaunch/hyper-express':
-        specifier: ^0.8.6
-        version: 0.8.6(express@5.1.0)(socks@2.8.7)
+        specifier: ^0.8.8
+        version: 0.8.8(express@5.1.0)(socks@2.8.7)
       '@forklaunch/validator':
-        specifier: ^0.9.6
-        version: 0.9.6
+        specifier: ^0.9.8
+        version: 0.9.8
       '@mikro-orm/core':
         specifier: ^6.4.16
         version: 6.4.16
@@ -345,8 +345,8 @@ importers:
         specifier: workspace:*
         version: link:../monitoring
       '@forklaunch/core':
-        specifier: ^0.13.6
-        version: 0.13.6(socks@2.8.7)
+        specifier: ^0.13.8
+        version: 0.13.8(socks@2.8.7)
       '@forklaunch/hyper-express-fork':
         specifier: ^6.17.35
         version: 6.17.35
@@ -427,8 +427,8 @@ importers:
         specifier: workspace:*
         version: link:../monitoring
       '@forklaunch/core':
-        specifier: ^0.13.6
-        version: 0.13.6(socks@2.8.7)
+        specifier: ^0.13.8
+        version: 0.13.8(socks@2.8.7)
       '@forklaunch/implementation-iam-base':
         specifier: workspace:*
         version: link:../implementations/iam/base
@@ -506,20 +506,20 @@ importers:
   implementations/billing/base:
     dependencies:
       '@forklaunch/common':
-        specifier: ^0.5.5
-        version: 0.5.5
+        specifier: ^0.5.7
+        version: 0.5.7
       '@forklaunch/core':
-        specifier: ^0.13.6
-        version: 0.13.6(socks@2.8.7)
+        specifier: ^0.13.8
+        version: 0.13.8(socks@2.8.7)
       '@forklaunch/interfaces-billing':
         specifier: workspace:*
         version: link:../../../interfaces/billing
       '@forklaunch/internal':
-        specifier: ^0.2.6
-        version: 0.2.6
+        specifier: ^0.2.8
+        version: 0.2.8
       '@forklaunch/validator':
-        specifier: ^0.9.6
-        version: 0.9.6
+        specifier: ^0.9.8
+        version: 0.9.8
       '@mikro-orm/core':
         specifier: ^6.4.16
         version: 6.4.16
@@ -549,11 +549,11 @@ importers:
   implementations/billing/stripe:
     dependencies:
       '@forklaunch/common':
-        specifier: ^0.5.5
-        version: 0.5.5
+        specifier: ^0.5.7
+        version: 0.5.7
       '@forklaunch/core':
-        specifier: ^0.13.6
-        version: 0.13.6(socks@2.8.7)
+        specifier: ^0.13.8
+        version: 0.13.8(socks@2.8.7)
       '@forklaunch/implementation-billing-base':
         specifier: workspace:*
         version: link:../base
@@ -561,11 +561,11 @@ importers:
         specifier: workspace:*
         version: link:../../../interfaces/billing
       '@forklaunch/internal':
-        specifier: ^0.2.6
-        version: 0.2.6
+        specifier: ^0.2.8
+        version: 0.2.8
       '@forklaunch/validator':
-        specifier: ^0.9.6
-        version: 0.9.6
+        specifier: ^0.9.8
+        version: 0.9.8
       '@mikro-orm/core':
         specifier: ^6.4.16
         version: 6.4.16
@@ -598,20 +598,20 @@ importers:
   implementations/iam/base:
     dependencies:
       '@forklaunch/common':
-        specifier: ^0.5.5
-        version: 0.5.5
+        specifier: ^0.5.7
+        version: 0.5.7
       '@forklaunch/core':
-        specifier: ^0.13.6
-        version: 0.13.6(socks@2.8.7)
+        specifier: ^0.13.8
+        version: 0.13.8(socks@2.8.7)
       '@forklaunch/interfaces-iam':
         specifier: workspace:*
         version: link:../../../interfaces/iam
       '@forklaunch/internal':
-        specifier: ^0.2.6
-        version: 0.2.6
+        specifier: ^0.2.8
+        version: 0.2.8
       '@forklaunch/validator':
-        specifier: ^0.9.6
-        version: 0.9.6
+        specifier: ^0.9.8
+        version: 0.9.8
       '@mikro-orm/core':
         specifier: ^6.4.16
         version: 6.4.16
@@ -641,14 +641,14 @@ importers:
   implementations/worker/bullmq:
     dependencies:
       '@forklaunch/core':
-        specifier: ^0.13.6
-        version: 0.13.6(socks@2.8.7)
+        specifier: ^0.13.8
+        version: 0.13.8(socks@2.8.7)
       '@forklaunch/interfaces-worker':
         specifier: workspace:*
         version: link:../../../interfaces/worker
       '@forklaunch/internal':
-        specifier: ^0.2.6
-        version: 0.2.6
+        specifier: ^0.2.8
+        version: 0.2.8
       '@sinclair/typebox':
         specifier: ^0.34.40
         version: 0.34.40
@@ -675,20 +675,20 @@ importers:
         specifier: ^0.28.11
         version: 0.28.11(typescript@5.9.2)
       typescript-eslint:
-        specifier: ^8.40.0
-        version: 8.40.0(eslint@9.34.0)(typescript@5.9.2)
+        specifier: ^8.41.0
+        version: 8.41.0(eslint@9.34.0)(typescript@5.9.2)
 
   implementations/worker/database:
     dependencies:
       '@forklaunch/core':
-        specifier: ^0.13.6
-        version: 0.13.6(socks@2.8.7)
+        specifier: ^0.13.8
+        version: 0.13.8(socks@2.8.7)
       '@forklaunch/interfaces-worker':
         specifier: workspace:*
         version: link:../../../interfaces/worker
       '@forklaunch/internal':
-        specifier: ^0.2.6
-        version: 0.2.6
+        specifier: ^0.2.8
+        version: 0.2.8
       '@mikro-orm/core':
         specifier: ^6.4.16
         version: 6.4.16
@@ -715,20 +715,20 @@ importers:
         specifier: ^0.28.11
         version: 0.28.11(typescript@5.9.2)
       typescript-eslint:
-        specifier: ^8.40.0
-        version: 8.40.0(eslint@9.34.0)(typescript@5.9.2)
+        specifier: ^8.41.0
+        version: 8.41.0(eslint@9.34.0)(typescript@5.9.2)
 
   implementations/worker/kafka:
     dependencies:
       '@forklaunch/core':
-        specifier: ^0.13.6
-        version: 0.13.6(socks@2.8.7)
+        specifier: ^0.13.8
+        version: 0.13.8(socks@2.8.7)
       '@forklaunch/interfaces-worker':
         specifier: workspace:*
         version: link:../../../interfaces/worker
       '@forklaunch/internal':
-        specifier: ^0.2.6
-        version: 0.2.6
+        specifier: ^0.2.8
+        version: 0.2.8
       '@sinclair/typebox':
         specifier: ^0.34.40
         version: 0.34.40
@@ -755,20 +755,20 @@ importers:
         specifier: ^0.28.11
         version: 0.28.11(typescript@5.9.2)
       typescript-eslint:
-        specifier: ^8.40.0
-        version: 8.40.0(eslint@9.34.0)(typescript@5.9.2)
+        specifier: ^8.41.0
+        version: 8.41.0(eslint@9.34.0)(typescript@5.9.2)
 
   implementations/worker/redis:
     dependencies:
       '@forklaunch/core':
-        specifier: ^0.13.6
-        version: 0.13.6(socks@2.8.7)
+        specifier: ^0.13.8
+        version: 0.13.8(socks@2.8.7)
       '@forklaunch/interfaces-worker':
         specifier: workspace:*
         version: link:../../../interfaces/worker
       '@forklaunch/internal':
-        specifier: ^0.2.6
-        version: 0.2.6
+        specifier: ^0.2.8
+        version: 0.2.8
       '@sinclair/typebox':
         specifier: ^0.34.40
         version: 0.34.40
@@ -792,14 +792,14 @@ importers:
         specifier: ^0.28.11
         version: 0.28.11(typescript@5.9.2)
       typescript-eslint:
-        specifier: ^8.40.0
-        version: 8.40.0(eslint@9.34.0)(typescript@5.9.2)
+        specifier: ^8.41.0
+        version: 8.41.0(eslint@9.34.0)(typescript@5.9.2)
 
   interfaces/billing:
     dependencies:
       '@forklaunch/common':
-        specifier: ^0.5.5
-        version: 0.5.5
+        specifier: ^0.5.7
+        version: 0.5.7
       '@mikro-orm/core':
         specifier: ^6.4.16
         version: 6.4.16
@@ -820,8 +820,8 @@ importers:
   interfaces/iam:
     dependencies:
       '@forklaunch/common':
-        specifier: ^0.5.5
-        version: 0.5.5
+        specifier: ^0.5.7
+        version: 0.5.7
       '@mikro-orm/core':
         specifier: ^6.4.16
         version: 6.4.16
@@ -857,14 +857,14 @@ importers:
         specifier: ^0.28.11
         version: 0.28.11(typescript@5.9.2)
       typescript-eslint:
-        specifier: ^8.40.0
-        version: 8.40.0(eslint@9.34.0)(typescript@5.9.2)
+        specifier: ^8.41.0
+        version: 8.41.0(eslint@9.34.0)(typescript@5.9.2)
 
   monitoring:
     dependencies:
       '@forklaunch/core':
-        specifier: ^0.13.6
-        version: 0.13.6(socks@2.8.7)
+        specifier: ^0.13.8
+        version: 0.13.8(socks@2.8.7)
 
   sample-worker:
     dependencies:
@@ -875,8 +875,8 @@ importers:
         specifier: workspace:*
         version: link:../monitoring
       '@forklaunch/core':
-        specifier: ^0.13.6
-        version: 0.13.6(socks@2.8.7)
+        specifier: ^0.13.8
+        version: 0.13.8(socks@2.8.7)
       '@forklaunch/implementation-worker-bullmq':
         specifier: workspace:*
         version: link:../implementations/worker/bullmq
@@ -890,11 +890,11 @@ importers:
         specifier: workspace:*
         version: link:../implementations/worker/redis
       '@forklaunch/infrastructure-redis':
-        specifier: ^0.3.6
-        version: 0.3.6(socks@2.8.7)
+        specifier: ^0.3.8
+        version: 0.3.8(socks@2.8.7)
       '@forklaunch/infrastructure-s3':
-        specifier: ^0.3.6
-        version: 0.3.6(socks@2.8.7)
+        specifier: ^0.3.8
+        version: 0.3.8(socks@2.8.7)
       '@forklaunch/interfaces-worker':
         specifier: workspace:*
         version: link:../interfaces/worker
@@ -987,8 +987,8 @@ importers:
         specifier: ^0.28.11
         version: 0.28.11(typescript@5.9.2)
       typescript-eslint:
-        specifier: ^8.40.0
-        version: 8.40.0(eslint@9.34.0)(typescript@5.9.2)
+        specifier: ^8.41.0
+        version: 8.41.0(eslint@9.34.0)(typescript@5.9.2)
 
   universal-sdk:
     dependencies:
@@ -996,8 +996,8 @@ importers:
         specifier: ^1.3.8
         version: 1.3.8(zod@4.1.1)
       '@forklaunch/common':
-        specifier: ^0.5.5
-        version: 0.5.5
+        specifier: ^0.5.7
+        version: 0.5.7
     devDependencies:
       '@forklaunch/blueprint-billing-base':
         specifier: workspace:*
@@ -1749,14 +1749,14 @@ packages:
       react-dom:
         optional: true
 
-  '@forklaunch/common@0.5.5':
-    resolution: {integrity: sha512-75+n91MUwjaPVtr7YPq3a6zgg8YWtvpDyL70xFluvutE3ohsvoc1uF25+L9HDwruQwS0oEJfLjgOIWe5Pt4b5A==}
+  '@forklaunch/common@0.5.7':
+    resolution: {integrity: sha512-B+FI9gFWsqZ+otTzxjmr6h8D9UfZB8OR0nl3Wat1JQ2ByW5yiXaIs3WyPYspCFgO41yAYjNYdEA9HhARW/c+Pw==}
 
-  '@forklaunch/core@0.13.6':
-    resolution: {integrity: sha512-1tD2bVVfBnE9U3HNHPyl6Ss/eTwfRM/UONfnCwtH6nQB48sKwngcIFsd/CkpXna/9xGSpnCrdiy7ffjvVpcRjw==}
+  '@forklaunch/core@0.13.8':
+    resolution: {integrity: sha512-+xMUJ4qpjdrmMEsBZDn7aQCDUYdVS0MEl4qTttTejkPNkOkgu5e7/EZKKnfqzt9/wUuYXekbXfNXq+V+Azzx4Q==}
 
-  '@forklaunch/express@0.8.6':
-    resolution: {integrity: sha512-ONNrnXZL3uKfDlj3sguN8KEsl/+FM3JK27+NOIGdRfXxr0aBj+s1RRNfGGKk7jhG3uuWCYfdY4w8MeJ36lomlA==}
+  '@forklaunch/express@0.8.8':
+    resolution: {integrity: sha512-o6BwkhqlvNFjXw6tc4VWoKQf1DPR9czFtWrkmbyvcD4h1T+QxgWOODRAB+wXpjC6NfXmVS4fjyYCk9qrsDygNg==}
 
   '@forklaunch/fastmcp-fork@1.0.5':
     resolution: {integrity: sha512-rpQsfVdEWqBX9D1YysO/yBYQqstk1DrRip2xNTr3R8G/fbKV33jjL9oYF3D5fxjg7t2WcxzYOVtVJyTIOvXNKA==}
@@ -1765,17 +1765,17 @@ packages:
   '@forklaunch/hyper-express-fork@6.17.35':
     resolution: {integrity: sha512-FXez51tbt+3bB8J6B6qcL1Jqp0Bd6/Aq2iFVaQq3PDeeWAAXhktnN9+WkQ+UdqvxgV07oHbZgOY6ec56K0IxTg==}
 
-  '@forklaunch/hyper-express@0.8.6':
-    resolution: {integrity: sha512-uYP5tDYKQpmcUcjI90kygRH167r7NQ3u5aJtXYpWmuliNVWr2lGYy75zd3EADwioZ8hkpD5S1KN4HepfnToavw==}
+  '@forklaunch/hyper-express@0.8.8':
+    resolution: {integrity: sha512-DWt+5OimDCk0xsrZhn34EBXN3jay4AzgnqYDm90Q9lMxu9zwWAQyUiLNcrpYCT04NyW+LjV6qDS8NxuBXbp6fA==}
 
-  '@forklaunch/infrastructure-redis@0.3.6':
-    resolution: {integrity: sha512-v18iq/mzJa5cOzrlgTJ6e2l0Z6hG4BiDGdmgLn/4c01LgTvT9bZ9iPKldR7NW/M9GWltHdBLBDRq/tG5u5lGzQ==}
+  '@forklaunch/infrastructure-redis@0.3.8':
+    resolution: {integrity: sha512-yNh18Lq+UP6f51z8UE9nJnk8h9U1VcYFl3r3cKgtffUj96krDZa//udlvBLYjyIqTTF+NgWgFNy003d/FYg52A==}
 
-  '@forklaunch/infrastructure-s3@0.3.6':
-    resolution: {integrity: sha512-feSBBkFqMCEWSn8J24JTShx+vIFeqmV01cPPN9QpnD2l8b9dwjytdewDPy9c15Dalz5/mkaY6dtlGXR/W0BukA==}
+  '@forklaunch/infrastructure-s3@0.3.8':
+    resolution: {integrity: sha512-s8a22iBLRfkvKy6v0Ng4ZWOrpwmH21fHb/NCb9Dhs0MiUeP39sokajc3Y+kY78Zj08HNIH530mhxPwb72+NnAg==}
 
-  '@forklaunch/internal@0.2.6':
-    resolution: {integrity: sha512-KbAFQ8djahDwtHETS2AplKKRZIGp3TgU0P9Dh335V5P/D1ZSTeryCPHXsKWJk3QnnW4U5+00p3sAXSfqn5ei/A==}
+  '@forklaunch/internal@0.2.8':
+    resolution: {integrity: sha512-1AM/vu9NBl/XSzhXTmaX91Co30/wLI8Ht1IIovDi0gjOHnlIH9haJEzzRoshP8Zh6u19se63geccj/YropKRXw==}
 
   '@forklaunch/opentelemetry-instrumentation-hyper-express@0.0.5':
     resolution: {integrity: sha512-AwkA0ywzdZRz5p+kRMGWH0v0MH2aqxhlIBLV8SQDETKTbpN6G1BtptxPegC9QFFfCJSywDguXDNvVdmxX+VV0A==}
@@ -1783,11 +1783,11 @@ packages:
     peerDependencies:
       '@opentelemetry/api': ^1.3.0
 
-  '@forklaunch/universal-sdk@0.6.5':
-    resolution: {integrity: sha512-iMYfBPNktmIV6wX1gc9n2a/2V2Rk5dduuys5GLS9JLJZwlxpBshiTFAad8BwP9eriPwz4oP+oIh9QidJRLoSXA==}
+  '@forklaunch/universal-sdk@0.6.7':
+    resolution: {integrity: sha512-kC3r1p75zodH5X5ZqyRJ1Qivb0PURRcTLtyKEqRqsAm9gKTN89G1nhjuwtVTDvOjpHDIEn+WCTM2zdJ97TwSiw==}
 
-  '@forklaunch/validator@0.9.6':
-    resolution: {integrity: sha512-4RKJihiGMAEmu30eyCTUiezoBFYK7tgarm1YZcL1a6sXAlq8LrEs39RPsP9Sjus2uowkND7wJjbYql09taVauA==}
+  '@forklaunch/validator@0.9.8':
+    resolution: {integrity: sha512-DbEguGiZjOOWuhO6si+wvssh2PIxlt0iokHTJ4r4Suq7/DTgZwJftYGo+2rs6e1B6/hcFNsW55ow6qLSvkeKHw==}
 
   '@gar/promisify@1.1.3':
     resolution: {integrity: sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==}
@@ -3088,63 +3088,63 @@ packages:
   '@types/yargs@17.0.33':
     resolution: {integrity: sha512-WpxBCKWPLr4xSsHgz511rFJAM+wS28w2zEO1QDNY5zM/S8ok70NNfztH0xwhqKyaK0OHCbN98LDAZuy1ctxDkA==}
 
-  '@typescript-eslint/eslint-plugin@8.40.0':
-    resolution: {integrity: sha512-w/EboPlBwnmOBtRbiOvzjD+wdiZdgFeo17lkltrtn7X37vagKKWJABvyfsJXTlHe6XBzugmYgd4A4nW+k8Mixw==}
+  '@typescript-eslint/eslint-plugin@8.41.0':
+    resolution: {integrity: sha512-8fz6oa6wEKZrhXWro/S3n2eRJqlRcIa6SlDh59FXJ5Wp5XRZ8B9ixpJDcjadHq47hMx0u+HW6SNa6LjJQ6NLtw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
-      '@typescript-eslint/parser': ^8.40.0
+      '@typescript-eslint/parser': ^8.41.0
       eslint: ^8.57.0 || ^9.0.0
       typescript: '>=4.8.4 <6.0.0'
 
-  '@typescript-eslint/parser@8.40.0':
-    resolution: {integrity: sha512-jCNyAuXx8dr5KJMkecGmZ8KI61KBUhkCob+SD+C+I5+Y1FWI2Y3QmY4/cxMCC5WAsZqoEtEETVhUiUMIGCf6Bw==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-    peerDependencies:
-      eslint: ^8.57.0 || ^9.0.0
-      typescript: '>=4.8.4 <6.0.0'
-
-  '@typescript-eslint/project-service@8.40.0':
-    resolution: {integrity: sha512-/A89vz7Wf5DEXsGVvcGdYKbVM9F7DyFXj52lNYUDS1L9yJfqjW/fIp5PgMuEJL/KeqVTe2QSbXAGUZljDUpArw==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-    peerDependencies:
-      typescript: '>=4.8.4 <6.0.0'
-
-  '@typescript-eslint/scope-manager@8.40.0':
-    resolution: {integrity: sha512-y9ObStCcdCiZKzwqsE8CcpyuVMwRouJbbSrNuThDpv16dFAj429IkM6LNb1dZ2m7hK5fHyzNcErZf7CEeKXR4w==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-
-  '@typescript-eslint/tsconfig-utils@8.40.0':
-    resolution: {integrity: sha512-jtMytmUaG9d/9kqSl/W3E3xaWESo4hFDxAIHGVW/WKKtQhesnRIJSAJO6XckluuJ6KDB5woD1EiqknriCtAmcw==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-    peerDependencies:
-      typescript: '>=4.8.4 <6.0.0'
-
-  '@typescript-eslint/type-utils@8.40.0':
-    resolution: {integrity: sha512-eE60cK4KzAc6ZrzlJnflXdrMqOBaugeukWICO2rB0KNvwdIMaEaYiywwHMzA1qFpTxrLhN9Lp4E/00EgWcD3Ow==}
+  '@typescript-eslint/parser@8.41.0':
+    resolution: {integrity: sha512-gTtSdWX9xiMPA/7MV9STjJOOYtWwIJIYxkQxnSV1U3xcE+mnJSH3f6zI0RYP+ew66WSlZ5ed+h0VCxsvdC1jJg==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
       eslint: ^8.57.0 || ^9.0.0
       typescript: '>=4.8.4 <6.0.0'
 
-  '@typescript-eslint/types@8.40.0':
-    resolution: {integrity: sha512-ETdbFlgbAmXHyFPwqUIYrfc12ArvpBhEVgGAxVYSwli26dn8Ko+lIo4Su9vI9ykTZdJn+vJprs/0eZU0YMAEQg==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-
-  '@typescript-eslint/typescript-estree@8.40.0':
-    resolution: {integrity: sha512-k1z9+GJReVVOkc1WfVKs1vBrR5MIKKbdAjDTPvIK3L8De6KbFfPFt6BKpdkdk7rZS2GtC/m6yI5MYX+UsuvVYQ==}
+  '@typescript-eslint/project-service@8.41.0':
+    resolution: {integrity: sha512-b8V9SdGBQzQdjJ/IO3eDifGpDBJfvrNTp2QD9P2BeqWTGrRibgfgIlBSw6z3b6R7dPzg752tOs4u/7yCLxksSQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
       typescript: '>=4.8.4 <6.0.0'
 
-  '@typescript-eslint/utils@8.40.0':
-    resolution: {integrity: sha512-Cgzi2MXSZyAUOY+BFwGs17s7ad/7L+gKt6Y8rAVVWS+7o6wrjeFN4nVfTpbE25MNcxyJ+iYUXflbs2xR9h4UBg==}
+  '@typescript-eslint/scope-manager@8.41.0':
+    resolution: {integrity: sha512-n6m05bXn/Cd6DZDGyrpXrELCPVaTnLdPToyhBoFkLIMznRUQUEQdSp96s/pcWSQdqOhrgR1mzJ+yItK7T+WPMQ==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@typescript-eslint/tsconfig-utils@8.41.0':
+    resolution: {integrity: sha512-TDhxYFPUYRFxFhuU5hTIJk+auzM/wKvWgoNYOPcOf6i4ReYlOoYN8q1dV5kOTjNQNJgzWN3TUUQMtlLOcUgdUw==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    peerDependencies:
+      typescript: '>=4.8.4 <6.0.0'
+
+  '@typescript-eslint/type-utils@8.41.0':
+    resolution: {integrity: sha512-63qt1h91vg3KsjVVonFJWjgSK7pZHSQFKH6uwqxAH9bBrsyRhO6ONoKyXxyVBzG1lJnFAJcKAcxLS54N1ee1OQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
       eslint: ^8.57.0 || ^9.0.0
       typescript: '>=4.8.4 <6.0.0'
 
-  '@typescript-eslint/visitor-keys@8.40.0':
-    resolution: {integrity: sha512-8CZ47QwalyRjsypfwnbI3hKy5gJDPmrkLjkgMxhi0+DZZ2QNx2naS6/hWoVYUHU7LU2zleF68V9miaVZvhFfTA==}
+  '@typescript-eslint/types@8.41.0':
+    resolution: {integrity: sha512-9EwxsWdVqh42afLbHP90n2VdHaWU/oWgbH2P0CfcNfdKL7CuKpwMQGjwev56vWu9cSKU7FWSu6r9zck6CVfnag==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@typescript-eslint/typescript-estree@8.41.0':
+    resolution: {integrity: sha512-D43UwUYJmGhuwHfY7MtNKRZMmfd8+p/eNSfFe6tH5mbVDto+VQCayeAt35rOx3Cs6wxD16DQtIKw/YXxt5E0UQ==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    peerDependencies:
+      typescript: '>=4.8.4 <6.0.0'
+
+  '@typescript-eslint/utils@8.41.0':
+    resolution: {integrity: sha512-udbCVstxZ5jiPIXrdH+BZWnPatjlYwJuJkDA4Tbo3WyYLh8NvB+h/bKeSZHDOFKfphsZYJQqaFtLeXEqurQn1A==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    peerDependencies:
+      eslint: ^8.57.0 || ^9.0.0
+      typescript: '>=4.8.4 <6.0.0'
+
+  '@typescript-eslint/visitor-keys@8.41.0':
+    resolution: {integrity: sha512-+GeGMebMCy0elMNg67LRNoVnUFPIm37iu5CmHESVx56/9Jsfdpsvbv605DQ81Pi/x11IdKUsS5nzgTYbCQU9fg==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
   '@typescript/native-preview-darwin-arm64@7.0.0-dev.20250825.1':
@@ -4003,8 +4003,8 @@ packages:
   ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
 
-  electron-to-chromium@1.5.208:
-    resolution: {integrity: sha512-ozZyibehoe7tOhNaf16lKmljVf+3npZcJIEbJRVftVsmAg5TeA1mGS9dVCZzOwr2xT7xK15V0p7+GZqSPgkuPg==}
+  electron-to-chromium@1.5.209:
+    resolution: {integrity: sha512-Xoz0uMrim9ZETCQt8UgM5FxQF9+imA7PBpokoGcZloA1uw2LeHzTlip5cb5KOAsXZLjh/moN2vReN3ZjJmjI9A==}
 
   emittery@0.13.1:
     resolution: {integrity: sha512-DeWwawk6r5yR9jFgnDKYt4sLS0LmHJJi3ZOnb5/JdbYwj3nW+FxQnHIjhBKz8YLC7oRNPVM9NQ47I3CVx34eqQ==}
@@ -4237,8 +4237,8 @@ packages:
   fast-safe-stringify@2.1.1:
     resolution: {integrity: sha512-W+KJc2dmILlPplD/H4K9l9LcAHAfPtP6BY84uVLXQ6Evcz9Lcg33Y2z1IVblT6xdY54PXYVHEv+0Wpq8Io6zkA==}
 
-  fast-uri@3.0.6:
-    resolution: {integrity: sha512-Atfo14OibSv5wAp4VWNsFYE1AchQRTv9cBGWET4pZWHzYshFSS9NQI6I57rdKn9croWVMbYFbLhJ+yJvmZIIHw==}
+  fast-uri@3.1.0:
+    resolution: {integrity: sha512-iPeeDKJSWf4IEOasVVrknXpaBV0IApz/gp7S2bb7Z4Lljbl2MGJRqInZiUrQwV16cpzw/D3S5j5Julj/gT52AA==}
 
   fast-xml-parser@5.2.5:
     resolution: {integrity: sha512-pfX9uG9Ki0yekDHx2SiuRIyFdyAr1kMIMitPvb0YBo8SUfKvia7w7FIyd/l6av85pFYRhZscS75MwMnbvY+hcQ==}
@@ -6515,8 +6515,8 @@ packages:
     peerDependencies:
       typescript: 5.0.x || 5.1.x || 5.2.x || 5.3.x || 5.4.x || 5.5.x || 5.6.x || 5.7.x || 5.8.x || 5.9.x
 
-  typescript-eslint@8.40.0:
-    resolution: {integrity: sha512-Xvd2l+ZmFDPEt4oj1QEXzA4A2uUK6opvKu3eGN9aGjB8au02lIVcLyi375w94hHyejTOmzIU77L8ol2sRg9n7Q==}
+  typescript-eslint@8.41.0:
+    resolution: {integrity: sha512-n66rzs5OBXW3SFSnZHr2T685q1i4ODm2nulFJhMZBotaTavsS8TrI3d7bDlRSs9yWo7HmyWrN9qDu14Qv7Y0Dw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
       eslint: ^8.57.0 || ^9.0.0
@@ -8035,14 +8035,14 @@ snapshots:
       nanostores: 1.0.1
       zod: 4.1.1
 
-  '@forklaunch/common@0.5.5': {}
+  '@forklaunch/common@0.5.7': {}
 
-  '@forklaunch/core@0.13.6(socks@2.8.7)':
+  '@forklaunch/core@0.13.8(socks@2.8.7)':
     dependencies:
-      '@forklaunch/common': 0.5.5
+      '@forklaunch/common': 0.5.7
       '@forklaunch/fastmcp-fork': 1.0.5
       '@forklaunch/opentelemetry-instrumentation-hyper-express': 0.0.5(@opentelemetry/api@1.9.0)
-      '@forklaunch/validator': 0.9.6
+      '@forklaunch/validator': 0.9.8
       '@mikro-orm/core': 6.4.16
       '@mikro-orm/mongodb': 6.4.16(@mikro-orm/core@6.4.16)(socks@2.8.7)
       '@opentelemetry/api': 1.9.0
@@ -8082,12 +8082,12 @@ snapshots:
       - supports-color
       - sury
 
-  '@forklaunch/express@0.8.6(socks@2.8.7)':
+  '@forklaunch/express@0.8.8(socks@2.8.7)':
     dependencies:
-      '@forklaunch/common': 0.5.5
-      '@forklaunch/core': 0.13.6(socks@2.8.7)
+      '@forklaunch/common': 0.5.7
+      '@forklaunch/core': 0.13.8(socks@2.8.7)
       '@forklaunch/fastmcp-fork': 1.0.5
-      '@forklaunch/validator': 0.9.6
+      '@forklaunch/validator': 0.9.8
       '@modelcontextprotocol/sdk': 1.17.4
       '@scalar/express-api-reference': 0.8.15
       '@types/multer': 2.0.0
@@ -8148,12 +8148,12 @@ snapshots:
       typed-emitter: 2.1.0
       uWebSockets.js: https://codeload.github.com/uNetworking/uWebSockets.js/tar.gz/cfc9a40d8132a34881813cec3d5f8e3a185b3ce3
 
-  '@forklaunch/hyper-express@0.8.6(express@5.1.0)(socks@2.8.7)':
+  '@forklaunch/hyper-express@0.8.8(express@5.1.0)(socks@2.8.7)':
     dependencies:
-      '@forklaunch/common': 0.5.5
-      '@forklaunch/core': 0.13.6(socks@2.8.7)
+      '@forklaunch/common': 0.5.7
+      '@forklaunch/core': 0.13.8(socks@2.8.7)
       '@forklaunch/hyper-express-fork': 6.17.35
-      '@forklaunch/validator': 0.9.6
+      '@forklaunch/validator': 0.9.8
       '@scalar/express-api-reference': 0.8.15
       cors: 2.8.5
       live-directory: 3.0.3
@@ -8177,10 +8177,10 @@ snapshots:
       - supports-color
       - sury
 
-  '@forklaunch/infrastructure-redis@0.3.6(socks@2.8.7)':
+  '@forklaunch/infrastructure-redis@0.3.8(socks@2.8.7)':
     dependencies:
-      '@forklaunch/common': 0.5.5
-      '@forklaunch/core': 0.13.6(socks@2.8.7)
+      '@forklaunch/common': 0.5.7
+      '@forklaunch/core': 0.13.8(socks@2.8.7)
       redis: 5.8.2
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
@@ -8196,11 +8196,11 @@ snapshots:
       - supports-color
       - sury
 
-  '@forklaunch/infrastructure-s3@0.3.6(socks@2.8.7)':
+  '@forklaunch/infrastructure-s3@0.3.8(socks@2.8.7)':
     dependencies:
       '@aws-sdk/client-s3': 3.873.0
-      '@forklaunch/common': 0.5.5
-      '@forklaunch/core': 0.13.6(socks@2.8.7)
+      '@forklaunch/common': 0.5.7
+      '@forklaunch/core': 0.13.8(socks@2.8.7)
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
       - '@mongodb-js/zstd'
@@ -8216,10 +8216,10 @@ snapshots:
       - supports-color
       - sury
 
-  '@forklaunch/internal@0.2.6':
+  '@forklaunch/internal@0.2.8':
     dependencies:
-      '@forklaunch/common': 0.5.5
-      '@forklaunch/validator': 0.9.6
+      '@forklaunch/common': 0.5.7
+      '@forklaunch/validator': 0.9.8
       '@mikro-orm/core': 6.4.16
 
   '@forklaunch/opentelemetry-instrumentation-hyper-express@0.0.5(@opentelemetry/api@1.9.0)':
@@ -8232,15 +8232,15 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@forklaunch/universal-sdk@0.6.5':
+  '@forklaunch/universal-sdk@0.6.7':
     dependencies:
-      '@forklaunch/common': 0.5.5
+      '@forklaunch/common': 0.5.7
       ajv: 8.17.1
       ajv-formats: 3.0.1(ajv@8.17.1)
 
-  '@forklaunch/validator@0.9.6':
+  '@forklaunch/validator@0.9.8':
     dependencies:
-      '@forklaunch/common': 0.5.5
+      '@forklaunch/common': 0.5.7
       '@sinclair/typebox': 0.34.40
       ts-deepmerge: 7.0.3
       zod: 4.1.1
@@ -10112,14 +10112,14 @@ snapshots:
     dependencies:
       '@types/yargs-parser': 21.0.3
 
-  '@typescript-eslint/eslint-plugin@8.40.0(@typescript-eslint/parser@8.40.0(eslint@9.34.0)(typescript@5.9.2))(eslint@9.34.0)(typescript@5.9.2)':
+  '@typescript-eslint/eslint-plugin@8.41.0(@typescript-eslint/parser@8.41.0(eslint@9.34.0)(typescript@5.9.2))(eslint@9.34.0)(typescript@5.9.2)':
     dependencies:
       '@eslint-community/regexpp': 4.12.1
-      '@typescript-eslint/parser': 8.40.0(eslint@9.34.0)(typescript@5.9.2)
-      '@typescript-eslint/scope-manager': 8.40.0
-      '@typescript-eslint/type-utils': 8.40.0(eslint@9.34.0)(typescript@5.9.2)
-      '@typescript-eslint/utils': 8.40.0(eslint@9.34.0)(typescript@5.9.2)
-      '@typescript-eslint/visitor-keys': 8.40.0
+      '@typescript-eslint/parser': 8.41.0(eslint@9.34.0)(typescript@5.9.2)
+      '@typescript-eslint/scope-manager': 8.41.0
+      '@typescript-eslint/type-utils': 8.41.0(eslint@9.34.0)(typescript@5.9.2)
+      '@typescript-eslint/utils': 8.41.0(eslint@9.34.0)(typescript@5.9.2)
+      '@typescript-eslint/visitor-keys': 8.41.0
       eslint: 9.34.0
       graphemer: 1.4.0
       ignore: 7.0.5
@@ -10129,41 +10129,41 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/parser@8.40.0(eslint@9.34.0)(typescript@5.9.2)':
+  '@typescript-eslint/parser@8.41.0(eslint@9.34.0)(typescript@5.9.2)':
     dependencies:
-      '@typescript-eslint/scope-manager': 8.40.0
-      '@typescript-eslint/types': 8.40.0
-      '@typescript-eslint/typescript-estree': 8.40.0(typescript@5.9.2)
-      '@typescript-eslint/visitor-keys': 8.40.0
+      '@typescript-eslint/scope-manager': 8.41.0
+      '@typescript-eslint/types': 8.41.0
+      '@typescript-eslint/typescript-estree': 8.41.0(typescript@5.9.2)
+      '@typescript-eslint/visitor-keys': 8.41.0
       debug: 4.4.1
       eslint: 9.34.0
       typescript: 5.9.2
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/project-service@8.40.0(typescript@5.9.2)':
+  '@typescript-eslint/project-service@8.41.0(typescript@5.9.2)':
     dependencies:
-      '@typescript-eslint/tsconfig-utils': 8.40.0(typescript@5.9.2)
-      '@typescript-eslint/types': 8.40.0
+      '@typescript-eslint/tsconfig-utils': 8.41.0(typescript@5.9.2)
+      '@typescript-eslint/types': 8.41.0
       debug: 4.4.1
       typescript: 5.9.2
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/scope-manager@8.40.0':
+  '@typescript-eslint/scope-manager@8.41.0':
     dependencies:
-      '@typescript-eslint/types': 8.40.0
-      '@typescript-eslint/visitor-keys': 8.40.0
+      '@typescript-eslint/types': 8.41.0
+      '@typescript-eslint/visitor-keys': 8.41.0
 
-  '@typescript-eslint/tsconfig-utils@8.40.0(typescript@5.9.2)':
+  '@typescript-eslint/tsconfig-utils@8.41.0(typescript@5.9.2)':
     dependencies:
       typescript: 5.9.2
 
-  '@typescript-eslint/type-utils@8.40.0(eslint@9.34.0)(typescript@5.9.2)':
+  '@typescript-eslint/type-utils@8.41.0(eslint@9.34.0)(typescript@5.9.2)':
     dependencies:
-      '@typescript-eslint/types': 8.40.0
-      '@typescript-eslint/typescript-estree': 8.40.0(typescript@5.9.2)
-      '@typescript-eslint/utils': 8.40.0(eslint@9.34.0)(typescript@5.9.2)
+      '@typescript-eslint/types': 8.41.0
+      '@typescript-eslint/typescript-estree': 8.41.0(typescript@5.9.2)
+      '@typescript-eslint/utils': 8.41.0(eslint@9.34.0)(typescript@5.9.2)
       debug: 4.4.1
       eslint: 9.34.0
       ts-api-utils: 2.1.0(typescript@5.9.2)
@@ -10171,14 +10171,14 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/types@8.40.0': {}
+  '@typescript-eslint/types@8.41.0': {}
 
-  '@typescript-eslint/typescript-estree@8.40.0(typescript@5.9.2)':
+  '@typescript-eslint/typescript-estree@8.41.0(typescript@5.9.2)':
     dependencies:
-      '@typescript-eslint/project-service': 8.40.0(typescript@5.9.2)
-      '@typescript-eslint/tsconfig-utils': 8.40.0(typescript@5.9.2)
-      '@typescript-eslint/types': 8.40.0
-      '@typescript-eslint/visitor-keys': 8.40.0
+      '@typescript-eslint/project-service': 8.41.0(typescript@5.9.2)
+      '@typescript-eslint/tsconfig-utils': 8.41.0(typescript@5.9.2)
+      '@typescript-eslint/types': 8.41.0
+      '@typescript-eslint/visitor-keys': 8.41.0
       debug: 4.4.1
       fast-glob: 3.3.3
       is-glob: 4.0.3
@@ -10189,20 +10189,20 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/utils@8.40.0(eslint@9.34.0)(typescript@5.9.2)':
+  '@typescript-eslint/utils@8.41.0(eslint@9.34.0)(typescript@5.9.2)':
     dependencies:
       '@eslint-community/eslint-utils': 4.7.0(eslint@9.34.0)
-      '@typescript-eslint/scope-manager': 8.40.0
-      '@typescript-eslint/types': 8.40.0
-      '@typescript-eslint/typescript-estree': 8.40.0(typescript@5.9.2)
+      '@typescript-eslint/scope-manager': 8.41.0
+      '@typescript-eslint/types': 8.41.0
+      '@typescript-eslint/typescript-estree': 8.41.0(typescript@5.9.2)
       eslint: 9.34.0
       typescript: 5.9.2
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/visitor-keys@8.40.0':
+  '@typescript-eslint/visitor-keys@8.41.0':
     dependencies:
-      '@typescript-eslint/types': 8.40.0
+      '@typescript-eslint/types': 8.41.0
       eslint-visitor-keys: 4.2.1
 
   '@typescript/native-preview-darwin-arm64@7.0.0-dev.20250825.1':
@@ -10456,7 +10456,7 @@ snapshots:
   ajv@8.17.1:
     dependencies:
       fast-deep-equal: 3.1.3
-      fast-uri: 3.0.6
+      fast-uri: 3.1.0
       json-schema-traverse: 1.0.0
       require-from-string: 2.0.2
 
@@ -10671,7 +10671,7 @@ snapshots:
   browserslist@4.25.3:
     dependencies:
       caniuse-lite: 1.0.30001737
-      electron-to-chromium: 1.5.208
+      electron-to-chromium: 1.5.209
       node-releases: 2.0.19
       update-browserslist-db: 1.1.3(browserslist@4.25.3)
 
@@ -11064,7 +11064,7 @@ snapshots:
 
   ee-first@1.1.1: {}
 
-  electron-to-chromium@1.5.208: {}
+  electron-to-chromium@1.5.209: {}
 
   emittery@0.13.1: {}
 
@@ -11350,7 +11350,7 @@ snapshots:
 
   fast-safe-stringify@2.1.1: {}
 
-  fast-uri@3.0.6: {}
+  fast-uri@3.1.0: {}
 
   fast-xml-parser@5.2.5:
     dependencies:
@@ -13988,12 +13988,12 @@ snapshots:
       typescript: 5.9.2
       yaml: 2.8.1
 
-  typescript-eslint@8.40.0(eslint@9.34.0)(typescript@5.9.2):
+  typescript-eslint@8.41.0(eslint@9.34.0)(typescript@5.9.2):
     dependencies:
-      '@typescript-eslint/eslint-plugin': 8.40.0(@typescript-eslint/parser@8.40.0(eslint@9.34.0)(typescript@5.9.2))(eslint@9.34.0)(typescript@5.9.2)
-      '@typescript-eslint/parser': 8.40.0(eslint@9.34.0)(typescript@5.9.2)
-      '@typescript-eslint/typescript-estree': 8.40.0(typescript@5.9.2)
-      '@typescript-eslint/utils': 8.40.0(eslint@9.34.0)(typescript@5.9.2)
+      '@typescript-eslint/eslint-plugin': 8.41.0(@typescript-eslint/parser@8.41.0(eslint@9.34.0)(typescript@5.9.2))(eslint@9.34.0)(typescript@5.9.2)
+      '@typescript-eslint/parser': 8.41.0(eslint@9.34.0)(typescript@5.9.2)
+      '@typescript-eslint/typescript-estree': 8.41.0(typescript@5.9.2)
+      '@typescript-eslint/utils': 8.41.0(eslint@9.34.0)(typescript@5.9.2)
       eslint: 9.34.0
       typescript: 5.9.2
     transitivePeerDependencies:

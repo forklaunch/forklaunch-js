@@ -53,9 +53,9 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/core": "^0.13.6",
+    "@forklaunch/core": "^0.13.8",
     "@forklaunch/interfaces-worker": "workspace:*",
-    "@forklaunch/internal": "^0.2.6",
+    "@forklaunch/internal": "^0.2.8",
     "@sinclair/typebox": "^0.34.40",
     "kafkajs": "^2.2.4",
     "zod": "^4.1.1"
@@ -66,6 +66,6 @@
     "eslint": "^9.34.0",
     "prettier": "^3.6.2",
     "typedoc": "^0.28.11",
-    "typescript-eslint": "^8.40.0"
+    "typescript-eslint": "^8.41.0"
   }
 }
