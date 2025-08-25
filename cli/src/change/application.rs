@@ -40,7 +40,7 @@ use crate::{
             ApplicationInitializationMetadata, InitializableManifestConfig,
             InitializableManifestConfigMetadata, ProjectType, application::ApplicationManifestData,
         },
-        move_template::{MoveTemplate, MoveTemplateType, move_template_files},
+        // move_template::{MoveTemplate, MoveTemplateType, move_template_files},
         name::validate_name,
         package_json::{
             application_package_json::{
@@ -102,14 +102,17 @@ fn change_name(
     project_jsons_to_write: &mut HashMap<String, ProjectPackageJson>,
     rendered_templates_cache: &mut RenderedTemplatesCache,
 ) -> Result<()> {
+    println!("change:application:00: Beginning change_name");
     let existing_name = manifest_data.app_name.clone();
     let existing_kebab_name = manifest_data.kebab_case_app_name.clone();
+    println!("change:application:01: name: {}", existing_name);
 
+    
     manifest_data.app_name = name.to_string();
     manifest_data.kebab_case_app_name = name.to_case(Case::Kebab);
     manifest_data.camel_case_app_name = name.to_case(Case::Camel);
     manifest_data.pascal_case_app_name = name.to_case(Case::Pascal);
-
+    println!("change:application:02: This is where package json is changed: existing_kebab_name: {:?}, manifest_data.kebab_case_app_name: {:?}", existing_kebab_name, manifest_data.kebab_case_app_name);
     application_json_to_write.name = Some(
         application_json_to_write
             .name
@@ -124,7 +127,9 @@ fn change_name(
             .unwrap()
             .replace(&existing_kebab_name, &manifest_data.kebab_case_app_name),
     );
+    // update project in manifest data
     for project in project_jsons_to_write.values_mut() {
+        println!("change:application:03: project.name: {:?}", project.name);
         project.name = Some(
             project
                 .name
@@ -179,11 +184,13 @@ fn change_name(
 
     let mut ignore_pattern_stack: Vec<Vec<String>> = Vec::new();
     ignore_pattern_stack.push(vec!["**/node_modules/**/*".to_string()]);
+    
     for entry in WalkDir::new(base_path).contents_first(false) {
         let entry = entry?;
         let path = entry.path();
         let relative_path = path.strip_prefix(base_path)?;
-
+        println!("change:application:04: path: {}", path.to_string_lossy());
+        println!("change:application:05: relative_path: {}", relative_path.to_string_lossy());
         if entry.file_type().is_dir() {
             // Check for .flignore in this directory
             let flignore_path = path.join(".flignore");
@@ -255,6 +262,7 @@ fn change_name(
                     );
                 }
             }
+            println!("change:application:06: I changed {:?}", entry.file_name().to_str().unwrap());
         }
     }
 
@@ -1532,6 +1540,7 @@ impl CliCommand for ApplicationCommand {
     }
 
     fn handler(&self, matches: &clap::ArgMatches) -> Result<()> {
+        
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
         let mut rendered_templates_cache = RenderedTemplatesCache::new();
@@ -1546,17 +1555,27 @@ impl CliCommand for ApplicationCommand {
         let base_path = Path::new(&base_path_input);
 
         let config_path = &base_path.join(".forklaunch").join("manifest.toml");
-
+        println!("change:application:07: config_path: {:?}", config_path);
         let mut manifest_data = toml::from_str::<ApplicationManifestData>(
             &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
-        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
-        .initialize(InitializableManifestConfigMetadata::Application(
+        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+        manifest_data.initialize(InitializableManifestConfigMetadata::Application(
             ApplicationInitializationMetadata {
-                app_name: base_path.file_name().unwrap().to_string_lossy().to_string(),
+                app_name: manifest_data.app_name.clone(),
                 database: None,
             },
         ));
+        println!("change:application:08: manifest_data.app_name: {:?}", manifest_data.app_name);
+
+        let app_path = if base_path.join("src").exists() {
+            base_path.join("src").join("modules")
+        } else if base_path.join("modules").exists() {
+            base_path.join("modules")
+        } else {
+            return Err(anyhow::anyhow!("application directory not found in base_path, src/modules, or modules directories"));
+        };
+        println!("change:application:09: app_path: {:?}", app_path);
 
         let name = matches.get_one::<String>("name");
         let formatter = matches.get_one::<String>("formatter");
@@ -1599,7 +1618,7 @@ impl CliCommand for ApplicationCommand {
         } else {
             vec![]
         };
-
+        // start of prompt calls
         let name = prompt_field_from_selections_with_validation(
             "name",
             name,
@@ -1743,21 +1762,33 @@ impl CliCommand for ApplicationCommand {
         )?;
 
         let mut removal_templates = vec![];
-        let mut move_templates = vec![];
+        // let mut move_templates = vec![];
         let mut symlink_templates = vec![];
-
-        let application_package_json_path = base_path.join("package.json");
+        println!("change:application:10: base_path: {:?}", base_path);
+        
+        // Try to find package.json in base_path, then check src/modules and modules directories
+        let application_package_json_path = if base_path.join("package.json").exists() {
+            base_path.join("package.json")
+        } else if base_path.join("src").join("modules").join("package.json").exists() {
+            base_path.join("src").join("modules").join("package.json")
+        } else if base_path.join("modules").join("package.json").exists() {
+            base_path.join("modules").join("package.json")
+        } else {
+            return Err(anyhow::anyhow!("package.json not found in base_path, src/modules, or modules directories"));
+        };
+        println!("change:application:09: {:?}", application_package_json_path);
+        // read package.json
         let application_package_json_data = read_to_string(&application_package_json_path)
             .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?;
-
+        // parse package.json
         let mut application_json_to_write =
             serde_json::from_str::<ApplicationPackageJson>(&application_package_json_data)?;
-
+        // parse project package.jsons
         let mut project_jsons_to_write: HashMap<String, ProjectPackageJson> = manifest_data
             .projects
             .iter()
             .map(|project| {
-                let project_package_json_path = base_path.join(&project.name).join("package.json");
+                let project_package_json_path = app_path.join(&project.name).join("package.json");
                 let project_package_json_data = read_to_string(&project_package_json_path)
                     .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)
                     .unwrap();
@@ -1768,7 +1799,8 @@ impl CliCommand for ApplicationCommand {
                 )
             })
             .collect();
-
+        
+        // start of change calls
         if let Some(name) = name {
             clean_application(
                 &base_path,
@@ -1786,11 +1818,11 @@ impl CliCommand for ApplicationCommand {
                 &mut rendered_templates_cache,
             )?;
 
-            move_templates.push(MoveTemplate {
-                path: base_path.to_path_buf(),
-                target: base_path.parent().unwrap().join(&name),
-                r#type: MoveTemplateType::Directory,
-            });
+            // move_templates.push(MoveTemplate {
+            //     path: base_path.to_path_buf(),
+            //     target: base_path.parent().unwrap().join(&name),
+            //     r#type: MoveTemplateType::Directory,
+            // });
         }
 
         if let Some(formatter) = formatter {
@@ -1902,7 +1934,10 @@ impl CliCommand for ApplicationCommand {
                 removal_templates.push(removal_template);
             }
         }
+        // end of change calls
 
+        // start of rendering calls
+        // write manifest.toml
         rendered_templates_cache.insert(
             config_path.to_string_lossy(),
             RenderedTemplate {
@@ -1911,42 +1946,49 @@ impl CliCommand for ApplicationCommand {
                 context: None,
             },
         );
-
+        // write package.json
+        println!("change:application:11: {:?}", application_package_json_path);
         rendered_templates_cache.insert(
-            base_path.join("package.json").to_string_lossy(),
+            application_package_json_path.to_string_lossy(),
             RenderedTemplate {
-                path: base_path.join("package.json"),
+                path: application_package_json_path.clone(),
                 content: serde_json::to_string_pretty(&application_json_to_write)?,
                 context: None,
             },
         );
-
+        // write project package.jsons
         project_jsons_to_write
             .iter()
             .for_each(|(project_name, project_json)| {
                 rendered_templates_cache.insert(
-                    base_path
+                    app_path
                         .join(project_name)
                         .join("package.json")
                         .to_string_lossy(),
                     RenderedTemplate {
-                        path: base_path.join(project_name).join("package.json"),
+                        path: app_path.join(project_name).join("package.json"),
                         content: serde_json::to_string_pretty(&project_json).unwrap(),
                         context: None,
                     },
                 );
             });
+        // end of rendering calls
 
+        // start of template calls
         let rendered_templates: Vec<RenderedTemplate> = rendered_templates_cache
             .drain()
             .map(|(_, template)| template)
             .collect();
+        // end of template calls
 
+        // start of template execution calls
         remove_template_files(&removal_templates, dryrun, &mut stdout)?;
         write_rendered_templates(&rendered_templates, dryrun, &mut stdout)?;
         create_symlinks(&symlink_templates, dryrun, &mut stdout)?;
-        move_template_files(&move_templates, dryrun, &mut stdout)?;
+        // move_template_files(&move_templates, dryrun, &mut stdout)?;
+        // end of template execution calls
 
+        // Success message
         if !dryrun {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
             writeln!(stdout, "{} changed successfully!", &manifest_data.app_name)?;
