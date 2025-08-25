@@ -1,5 +1,14 @@
 # @forklaunch/common
 
+## 0.2.7
+
+### Patch Changes
+
+- prettify req init for slightly faster sdk access
+- Updated dependencies
+  - @forklaunch/validator@0.9.7
+  - @forklaunch/common@0.5.6
+
 ## 0.2.6
 
 ### Patch Changes

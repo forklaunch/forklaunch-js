@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.5.6
+
+### Patch Changes
+
+- prettify req init for slightly faster sdk access
+
 ## 0.5.5
 
 ### Patch Changes

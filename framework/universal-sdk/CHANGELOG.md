@@ -1,5 +1,13 @@
 # @forklaunch/universal-sdk
 
+## 0.6.6
+
+### Patch Changes
+
+- prettify req init for slightly faster sdk access
+- Updated dependencies
+  - @forklaunch/common@0.5.6
+
 ## 0.6.5
 
 ### Patch Changes

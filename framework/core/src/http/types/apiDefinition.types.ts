@@ -1045,8 +1045,8 @@ export type LiveTypeFunction<
             | { params: unknown }
             | { query: unknown }
             | { headers: unknown }
-          ? [reqInit: ReqInit]
-          : [reqInit?: ReqInit]
+          ? [reqInit: Prettify<ReqInit>]
+          : [reqInit?: Prettify<ReqInit>]
         : never
     ) => Promise<
       Prettify<
@@ -1088,8 +1088,8 @@ export type LiveTypeFunction<
               | { params: unknown }
               | { query: unknown }
               | { headers: unknown }
-            ? [reqInit: ReqInit]
-            : [reqInit?: ReqInit]
+            ? [reqInit: Prettify<ReqInit>]
+            : [reqInit?: Prettify<ReqInit>]
           : never
       ) => Promise<
         Prettify<
@@ -1146,8 +1146,8 @@ export type LiveSdkFunction<
             | { params: unknown }
             | { query: unknown }
             | { headers: unknown }
-          ? [reqInit: ReqInit]
-          : [reqInit?: ReqInit]
+          ? [reqInit: Prettify<ReqInit>]
+          : [reqInit?: Prettify<ReqInit>]
         : never
     ) => Promise<
       Prettify<
@@ -1189,8 +1189,8 @@ export type LiveSdkFunction<
               | { params: unknown }
               | { query: unknown }
               | { headers: unknown }
-            ? [reqInit: ReqInit]
-            : [reqInit?: ReqInit]
+            ? [reqInit: Prettify<ReqInit>]
+            : [reqInit?: Prettify<ReqInit>]
           : never
       ) => Promise<
         Prettify<

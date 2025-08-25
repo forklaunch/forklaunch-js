@@ -1,5 +1,14 @@
 # @forklaunch/infrastructure-redis
 
+## 0.3.7
+
+### Patch Changes
+
+- prettify req init for slightly faster sdk access
+- Updated dependencies
+  - @forklaunch/common@0.5.6
+  - @forklaunch/core@0.13.7
+
 ## 0.3.6
 
 ### Patch Changes
