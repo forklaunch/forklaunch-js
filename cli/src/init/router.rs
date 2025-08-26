@@ -1,8 +1,9 @@
-use std::{fs::read_to_string, io::Write, path::Path};
+use std::{fs::read_to_string, io::Write, path::Path, path::PathBuf};
 
 use anyhow::{Context, Result, bail};
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use convert_case::{Case, Casing};
+use walkdir::WalkDir;
 use rustyline::{Editor, history::DefaultHistory};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use toml::from_str;
@@ -37,7 +38,7 @@ use crate::{
         rendered_template::{RenderedTemplate, write_rendered_templates},
         template::{PathIO, generate_with_template},
     },
-    prompt::{ArrayCompleter, prompt_comma_separated_list, prompt_with_validation},
+    prompt::{ArrayCompleter, prompt_comma_separated_list, prompt_with_validation, prompt_for_confirmation},
 };
 
 fn generate_basic_router(
@@ -46,6 +47,7 @@ fn generate_basic_router(
     service_name: &String,
     stdout: &mut StandardStream,
     dryrun: bool,
+    config_path: &Path,
 ) -> Result<()> {
     let output_path = base_path.to_string_lossy().to_string();
     let template_dir = PathIO {
@@ -69,7 +71,7 @@ fn generate_basic_router(
     )?;
     rendered_templates.extend(
         // check if this also adds to app and bootstrapper
-        add_router_to_artifacts(manifest_data, base_path, service_name)
+        add_router_to_artifacts(manifest_data, base_path, service_name, config_path)
             .with_context(|| "Failed to add service metadata to artifacts")?,
     );
 
@@ -83,6 +85,7 @@ fn add_router_to_artifacts(
     manifest_data: &mut RouterManifestData,
     base_path: &Path,
     service_name: &String,
+    config_path: &Path,
 ) -> Result<Vec<RenderedTemplate>> {
     let (project_type, forklaunch_definition_buffer) =
         add_router_definition_to_manifest(manifest_data, service_name)
@@ -141,16 +144,42 @@ fn add_router_to_artifacts(
     });
 
     rendered_templates.push(RenderedTemplate {
-        path: base_path
-            .parent()
-            .unwrap()
-            .join(".forklaunch")
-            .join("manifest.toml"),
+        path: config_path.to_path_buf(),
         content: forklaunch_definition_buffer,
         context: Some(ERROR_FAILED_TO_ADD_ROUTER_METADATA_TO_MANIFEST.to_string()),
     });
 
     Ok(rendered_templates)
+}
+
+fn find_manifest_path(start_dir: &Path, max_depth: usize, direction: &str) -> Option<PathBuf> {
+    if direction == "up" {
+        let mut current_path = Some(start_dir.to_path_buf());
+        let mut depth = 0;
+        
+        while let Some(current) = current_path {
+            if depth > max_depth {
+                return None;
+            }
+            let candidate_path = current.join(".forklaunch/manifest.toml");
+            if candidate_path.exists() {
+                return Some(candidate_path);
+            }
+            current_path = current.parent().map(|p| p.to_path_buf());
+                depth += 1;
+            }
+            None
+    } else if direction == "down" {
+        for entry in WalkDir::new(start_dir).max_depth(max_depth).into_iter().flatten() {
+            let path = entry.path().join(".forklaunch/manifest.toml");
+            if path.exists() {
+                return Some(path);
+            }
+        }
+        None
+    } else {
+        None
+    }
 }
 
 #[derive(Debug)]
@@ -187,6 +216,12 @@ impl CliCommand for RouterCommand {
                     .help("Dry run the command")
                     .action(ArgAction::SetTrue),
             )
+            .arg(Arg::new("project_root_flag")
+                .short('r')
+                .long("project-root")
+                .help("Flag to indicate if the current directory is the project root directory, service directory, or something else")
+                .value_parser(vec!["project", "service", "other"]),
+            )
     }
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
@@ -201,13 +236,46 @@ impl CliCommand for RouterCommand {
             &BasePathType::Init,
         )?;
         let base_path = Path::new(&base_path_input);
-
         let path = Path::new(&base_path);
-        let config_path = path
-            .parent()
-            .unwrap_or_else(|| path)
-            .join(".forklaunch")
-            .join("manifest.toml");
+
+        let current_dir = std::env::current_dir()?;
+        println!("init:router:00: Current directory: {:?}", current_dir);
+
+        // Confirm if the current directory is a service directory, project directory, or something else
+        // Check if base_path is subdirectory of a project directory
+        let search_direction = if let Some(project_root_flag) = matches.get_one::<String>("project_root_flag") {
+            if project_root_flag == "project" {
+                "down"
+            } else if project_root_flag == "service" {
+                "up"
+            } else {
+                "down"
+            }
+        } else {
+            let is_subdirectory_of_project = current_dir.join(base_path).exists();
+            if is_subdirectory_of_project {
+                if prompt_for_confirmation(
+                    &mut line_editor,
+                    &format!("Is the current directory the project root directory? (y/n)"),
+                )? {
+                    "down"
+                } else if prompt_for_confirmation(
+                        &mut line_editor,
+                        &format!("Is the current directory a service directory? (y/n)"),
+                    )? {
+                        "up"
+                    } else {
+                        "down"
+                    }
+            } else {
+                "down"
+            }
+        };
+        println!("init:router:00: Direction: {:?}", search_direction);
+        let config_path = find_manifest_path(&current_dir, 4, search_direction).unwrap();
+        
+        println!("init:router:00: This is where the manifest lives: {:?}", config_path);
+        println!("init:router:01: This is where the service path is located: {:?}", path);
 
         let mut manifest_data = from_str::<RouterManifestData>(
             &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
@@ -294,6 +362,7 @@ impl CliCommand for RouterCommand {
                 &service_name.to_string(),
                 &mut stdout,
                 dryrun,
+                &config_path,
             )
             .with_context(|| "Failed to create router")?;
 

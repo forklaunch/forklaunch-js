@@ -480,13 +480,8 @@ impl CliCommand for ApplicationCommand {
             };
             final_path
         };
-        println!("02: application_path: {:?}", application_path);
-        // Combine the project path with src/modules as default path for all app-related files
-        // let application_path = if project_root_path.ends_with('/') || project_root_path.ends_with('\\') {
-        //     format!("{}{}", project_root_path, "src/modules")
-        // } else {
-        //     format!("{}/{}", project_root_path, "src/modules")
-        // };
+        // println!("02: application_path: {:?}", application_path);
+        
 
         // Prompt for runtime
         let runtime: Runtime = prompt_with_validation(
@@ -876,7 +871,7 @@ impl CliCommand for ApplicationCommand {
             )?)
             .unwrap(),
         );
-        println!("init:application:00: template_dirs: {:?}", template_dirs);
+        // println!("init:application:00: template_dirs: {:?}", template_dirs);
         // Write templates to template_dirs
         // Generate the service templates to be stored in the src/modules folder
         for template_dir in template_dirs {
@@ -971,8 +966,8 @@ impl CliCommand for ApplicationCommand {
                     docker_compose_string,
                 )?);
             }
-            println!("init:application:01: application_path: {:?}", application_path);
-            println!("init:application:02: template_dir: {:?}", template_dir);
+            // println!("init:application:01: application_path: {:?}", application_path);
+            // println!("init:application:02: template_dir: {:?}", template_dir);
             rendered_templates.extend(generate_with_template(
                 Some(&application_path),
                 &template_dir,
@@ -997,7 +992,7 @@ impl CliCommand for ApplicationCommand {
                 };
 
             let service_base_path = Path::new(&application_path).join(&template_dir.output_path);
-            println!("init:application:03: service_base_path: {:?}", service_base_path);
+            // println!("init:application:03: service_base_path: {:?}", service_base_path);
             rendered_templates.push(generate_service_package_json(
                 &service_data,
                 &service_base_path,
@@ -1131,7 +1126,7 @@ impl CliCommand for ApplicationCommand {
         });
 
         // Generate the application package.json file in the src/modules folder
-        println!("init:application:04: application_path in manifest: {:?}", data.app_path);
+        // println!("init:application:04: application_path in manifest: {:?}", data.app_path);
         rendered_templates.push(generate_application_package_json(
             &data,
             bun_package_json_workspace_vec,
@@ -1155,8 +1150,8 @@ impl CliCommand for ApplicationCommand {
             generate_gitignore(&Path::new(&project_root_path))
                 .with_context(|| ERROR_FAILED_TO_CREATE_GITIGNORE)?,
         );
-        println!("init:application:02: application_path: {:?}", application_path);
-        println!("init:application:03: additional_projects: {:?}", additional_projects);
+        // println!("init:application:02: application_path: {:?}", application_path);
+        // println!("init:application:03: additional_projects: {:?}", additional_projects);
         // Generate the pnpm-workspace.yaml file in the src/modules folder
         if runtime == Runtime::Node {
             rendered_templates.extend(
@@ -1174,7 +1169,7 @@ impl CliCommand for ApplicationCommand {
         create_forklaunch_dir(&Path::new(&project_root_path).to_string_lossy().to_string(), dryrun)?;
 
         // Add assets and readme files to the project root path
-        println!("init:application:05: Testing assets and readme files now outside the template/application folder");
+        // println!("init:application:05: Testing assets and readme files now outside the template/application folder");
         rendered_templates.extend(generate_with_template(
             Some(&project_root_path),
             &PathIO {
