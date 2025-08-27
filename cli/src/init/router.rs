@@ -1,9 +1,8 @@
-use std::{fs::read_to_string, io::Write, path::Path, path::PathBuf};
+use std::{fs::read_to_string, io::Write, path::Path};
 
 use anyhow::{Context, Result, bail};
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use convert_case::{Case, Casing};
-use walkdir::WalkDir;
 use rustyline::{Editor, history::DefaultHistory};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use toml::from_str;
@@ -25,7 +24,8 @@ use crate::{
             transform_seeders_index_ts::transform_seeders_index_ts,
             transform_server_ts::transform_server_ts,
         },
-        base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        // base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        flexible_path::{create_generic_config, find_manifest_path},
         command::command,
         database::{self, is_in_memory_database},
         format::format_code,
@@ -38,7 +38,7 @@ use crate::{
         rendered_template::{RenderedTemplate, write_rendered_templates},
         template::{PathIO, generate_with_template},
     },
-    prompt::{ArrayCompleter, prompt_comma_separated_list, prompt_with_validation, prompt_for_confirmation},
+    prompt::{ArrayCompleter, prompt_comma_separated_list, prompt_with_validation},
 };
 
 fn generate_basic_router(
@@ -152,35 +152,35 @@ fn add_router_to_artifacts(
     Ok(rendered_templates)
 }
 
-fn find_manifest_path(start_dir: &Path, max_depth: usize, direction: &str) -> Option<PathBuf> {
-    if direction == "up" {
-        let mut current_path = Some(start_dir.to_path_buf());
-        let mut depth = 0;
+// fn find_manifest_path(start_dir: &Path, max_depth: usize, direction: &str) -> Option<PathBuf> {
+//     if direction == "up" {
+//         let mut current_path = Some(start_dir.to_path_buf());
+//         let mut depth = 0;
         
-        while let Some(current) = current_path {
-            if depth > max_depth {
-                return None;
-            }
-            let candidate_path = current.join(".forklaunch/manifest.toml");
-            if candidate_path.exists() {
-                return Some(candidate_path);
-            }
-            current_path = current.parent().map(|p| p.to_path_buf());
-                depth += 1;
-            }
-            None
-    } else if direction == "down" {
-        for entry in WalkDir::new(start_dir).max_depth(max_depth).into_iter().flatten() {
-            let path = entry.path().join(".forklaunch/manifest.toml");
-            if path.exists() {
-                return Some(path);
-            }
-        }
-        None
-    } else {
-        None
-    }
-}
+//         while let Some(current) = current_path {
+//             if depth > max_depth {
+//                 return None;
+//             }
+//             let candidate_path = current.join(".forklaunch/manifest.toml");
+//             if candidate_path.exists() {
+//                 return Some(candidate_path);
+//             }
+//             current_path = current.parent().map(|p| p.to_path_buf());
+//                 depth += 1;
+//             }
+//             None
+//     } else if direction == "down" {
+//         for entry in WalkDir::new(start_dir).max_depth(max_depth).into_iter().flatten() {
+//             let path = entry.path().join(".forklaunch/manifest.toml");
+//             if path.exists() {
+//                 return Some(path);
+//             }
+//         }
+//         None
+//     } else {
+//         None
+//     }
+// }
 
 #[derive(Debug)]
 pub(super) struct RouterCommand;
@@ -216,66 +216,52 @@ impl CliCommand for RouterCommand {
                     .help("Dry run the command")
                     .action(ArgAction::SetTrue),
             )
-            .arg(Arg::new("project_root_flag")
-                .short('r')
-                .long("project-root")
-                .help("Flag to indicate if the current directory is the project root directory, service directory, or something else")
-                .value_parser(vec!["project", "service", "other"]),
-            )
     }
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let base_path_input = &prompt_base_path(
-            &mut line_editor,
-            &mut stdout,
-            matches,
-            &BasePathLocation::Router,
-            &BasePathType::Init,
-        )?;
-        let base_path = Path::new(&base_path_input);
-        let path = Path::new(&base_path);
+        // let base_path_input = &prompt_base_path(
+        //     &mut line_editor,
+        //     &mut stdout,
+        //     matches,
+        //     &BasePathLocation::Router,
+        //     &BasePathType::Init,
+        // )?;
+        // let base_path = Path::new(&base_path_input);
+        // let path = Path::new(&base_path);
 
         let current_dir = std::env::current_dir()?;
         println!("init:router:00: Current directory: {:?}", current_dir);
 
-        // Confirm if the current directory is a service directory, project directory, or something else
-        // Check if base_path is subdirectory of a project directory
-        let search_direction = if let Some(project_root_flag) = matches.get_one::<String>("project_root_flag") {
-            if project_root_flag == "project" {
-                "down"
-            } else if project_root_flag == "service" {
-                "up"
-            } else {
-                "down"
-            }
+        
+
+        // Determine where the router should be created
+        let router_base_path = if let Some(relative_path) = matches.get_one::<String>("base_path") {
+            // User provided a relative path, resolve it relative to current directory
+            let resolved_path = current_dir.join(relative_path);
+            println!("init:router:03: Router will be created at: {:?}", resolved_path);
+            resolved_path
         } else {
-            let is_subdirectory_of_project = current_dir.join(base_path).exists();
-            if is_subdirectory_of_project {
-                if prompt_for_confirmation(
-                    &mut line_editor,
-                    &format!("Is the current directory the project root directory? (y/n)"),
-                )? {
-                    "down"
-                } else if prompt_for_confirmation(
-                        &mut line_editor,
-                        &format!("Is the current directory a service directory? (y/n)"),
-                    )? {
-                        "up"
-                    } else {
-                        "down"
-                    }
-            } else {
-                "down"
-            }
+            // No path provided, assume current directory is where router should go
+            println!("init:router:03: No path provided, router will be created in current directory: {:?}", current_dir);
+            current_dir.clone()
         };
-        println!("init:router:00: Direction: {:?}", search_direction);
-        let config_path = find_manifest_path(&current_dir, 4, search_direction).unwrap();
+
+        // Find the manifest using flexible_path
+        let root_path_config = create_generic_config();
+        let manifest_path = find_manifest_path(&router_base_path, &root_path_config);
+        
+        let config_path = if let Some(manifest) = manifest_path {
+            manifest
+        } else {
+            // No manifest found, this might be an error or we need to search more broadly
+            anyhow::bail!("Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path.");
+        };
         
         println!("init:router:00: This is where the manifest lives: {:?}", config_path);
-        println!("init:router:01: This is where the service path is located: {:?}", path);
+        println!("init:router:01: This is where the router will be created: {:?}", router_base_path);
 
         let mut manifest_data = from_str::<RouterManifestData>(
             &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
@@ -298,7 +284,7 @@ impl CliCommand for RouterCommand {
 
         manifest_data = manifest_data.initialize(InitializableManifestConfigMetadata::Router(
             RouterInitializationMetadata {
-                project_name: base_path.file_name().unwrap().to_string_lossy().to_string(),
+                project_name: router_base_path.file_name().unwrap().to_string_lossy().to_string(),
                 router_name: Some(router_name.clone()),
             },
         ));
@@ -320,12 +306,12 @@ impl CliCommand for RouterCommand {
             vec![]
         };
 
-        let service_name = path.file_name().unwrap().to_str().unwrap();
+        let service_name = router_base_path.file_name().unwrap().to_str().unwrap();
         let service_data = manifest_data
             .projects
             .iter()
             .find(|project| service_name == project.name)
-            .unwrap();
+            .ok_or_else(|| anyhow::anyhow!("Service '{}' not found in manifest", service_name))?;
 
         // this needs to handle non database router cases -- for workers
         if let Some(database) = service_data.resources.as_ref().unwrap().database.clone() {
@@ -357,7 +343,7 @@ impl CliCommand for RouterCommand {
 
             let dryrun = matches.get_flag("dryrun");
             generate_basic_router(
-                &base_path,
+                &router_base_path,
                 &mut manifest_data,
                 &service_name.to_string(),
                 &mut stdout,
@@ -370,7 +356,7 @@ impl CliCommand for RouterCommand {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
                 writeln!(stdout, "{} initialized successfully!", router_name)?;
                 stdout.reset()?;
-                format_code(&base_path, &manifest_data.runtime.parse()?);
+                format_code(&router_base_path, &manifest_data.runtime.parse()?);
             }
 
             Ok(())

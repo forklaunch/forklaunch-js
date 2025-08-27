@@ -5,7 +5,7 @@ use std::{
     path::Path,
 };
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail, anyhow};
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use convert_case::{Case, Casing};
 use rustyline::{Editor, history::DefaultHistory};
@@ -29,6 +29,7 @@ use crate::{
     },
     core::{
         base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        flexible_path::{create_module_config, find_manifest_path},
         command::command,
         database::{
             add_base_entity_to_core, get_database_port, get_db_driver, is_in_memory_database,
@@ -86,6 +87,7 @@ use crate::{
 fn generate_basic_service(
     service_name: &String,
     base_path: &Path,
+    project_root_path: &Path,
     manifest_data: &mut ServiceManifestData,
     stdout: &mut StandardStream,
     dryrun: bool,
@@ -103,8 +105,8 @@ fn generate_basic_service(
     let ignore_files = vec![];
     let ignore_dirs = vec![];
     let preserve_files = vec![];
-    println!("service:00: template_dir: {:?}", template_dir);
-    println!("service:00: base_path: {:?}", base_path);
+    println!("init:service:00: template_dir: {:?}", template_dir);
+    println!("init:service:00: base_path: {:?}", base_path);
     let mut rendered_templates = generate_with_template(
         None,
         &template_dir,
@@ -117,6 +119,7 @@ fn generate_basic_service(
     rendered_templates.push(generate_service_package_json(
         manifest_data,
         &output_path,
+        &project_root_path,
         None,
         None,
         None,
@@ -128,7 +131,7 @@ fn generate_basic_service(
         generate_gitignore(&output_path).with_context(|| ERROR_FAILED_TO_CREATE_GITIGNORE)?,
     );
     rendered_templates.extend(
-        add_service_to_artifacts(manifest_data, base_path)
+        add_service_to_artifacts(manifest_data, base_path, project_root_path)
             .with_context(|| ERROR_FAILED_TO_ADD_SERVICE_METADATA_TO_ARTIFACTS)?,
     );
     rendered_templates.extend(
@@ -147,8 +150,9 @@ fn generate_basic_service(
             context: Some(ERROR_FAILED_TO_UPDATE_DOCKERFILE.to_string()),
         });
     }
-    println!("service:01: template_dir: {:?}", template_dir);
-    println!("service:01: base_path: {:?}", base_path);
+    println!("init:service:01: template_dir: {:?}", template_dir);
+    println!("init:service:02: base_path: {:?}", base_path);
+    
     add_project_to_universal_sdk(
         &mut rendered_templates,
         base_path,
@@ -159,8 +163,8 @@ fn generate_basic_service(
     write_rendered_templates(&rendered_templates, dryrun, stdout)
         .with_context(|| ERROR_FAILED_TO_WRITE_SERVICE_FILES)?;
 
-    println!("service:02: template_dir: {:?}", template_dir);
-    println!("service:02: base_path: {:?}", base_path);
+    println!("init:service:04: template_dir: {:?}", template_dir);
+    println!("init:service:05: base_path: {:?}", base_path);
     generate_symlinks(
         Some(base_path),
         &Path::new(&template_dir.output_path),
@@ -175,9 +179,10 @@ fn generate_basic_service(
 fn add_service_to_artifacts(
     manifest_data: &mut ServiceManifestData,
     base_path: &Path,
+    project_root_path: &Path,
 ) -> Result<Vec<RenderedTemplate>> {
     let docker_compose_buffer =
-        add_service_definition_to_docker_compose(manifest_data, base_path, None)
+        add_service_definition_to_docker_compose(manifest_data, base_path, project_root_path, None)
             .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
 
     let forklaunch_manifest_buffer = add_project_definition_to_manifest(
@@ -218,13 +223,13 @@ fn add_service_to_artifacts(
     let mut rendered_templates = Vec::new();
 
     rendered_templates.push(RenderedTemplate {
-        path: base_path.join("docker-compose.yaml"),
+        path: project_root_path.join("docker-compose.yaml"),
         content: docker_compose_buffer,
         context: Some(ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE.to_string()),
     });
 
     rendered_templates.push(RenderedTemplate {
-        path: base_path.join(".forklaunch").join("manifest.toml"),
+        path: project_root_path.join(".forklaunch").join("manifest.toml"),
         content: forklaunch_manifest_buffer.clone(),
         context: Some(ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST.to_string()),
     });
@@ -252,6 +257,7 @@ fn add_service_to_artifacts(
 pub(crate) fn generate_service_package_json(
     manifest_data: &ServiceManifestData,
     base_path: &Path,
+    project_root_path: &Path,
     dependencies_override: Option<ProjectDependencies>,
     dev_dependencies_override: Option<ProjectDevDependencies>,
     scripts_override: Option<ProjectScripts>,
@@ -552,13 +558,25 @@ impl CliCommand for ServiceCommand {
             &BasePathType::Init,
         )?;
         let base_path = Path::new(&base_path_input);
-
-        let config_path = Path::new(&base_path)
-            .join(".forklaunch")
-            .join("manifest.toml");
-
+        let manifest_path_config = create_module_config();
+        let manifest_path = find_manifest_path(&base_path, &manifest_path_config);
+        
+        let config_path = if let Some(manifest) = manifest_path {
+            manifest
+        } else {
+            // No manifest found, this might be an error or we need to search more broadly
+            anyhow::bail!("Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path.");
+        };
+        let project_path = config_path
+            .strip_suffix(".forklaunch/manifest.toml")
+            .ok_or_else(|| {
+            anyhow::anyhow!("Expected manifest path to end with .forklaunch/manifest.toml, got: {:?}", config_path)
+        })?;
+        
+        println!("init:service:06: config_path: {:?}", config_path);
+        println!("init:service:07: base_path: {:?}", base_path);
         let existing_manifest_data = from_str::<ApplicationManifestData>(
-            &read_to_string(config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
+            &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
         .initialize(InitializableManifestConfigMetadata::Application(
@@ -686,6 +704,7 @@ impl CliCommand for ServiceCommand {
         generate_basic_service(
             &service_name,
             &base_path,
+            &project_path,
             &mut manifest_data,
             &mut stdout,
             dryrun,

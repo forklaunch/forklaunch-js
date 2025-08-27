@@ -2,6 +2,7 @@
 pub(crate) mod ast;
 pub(crate) mod base_path;
 pub(crate) mod choices;
+pub(crate) mod flexible_path;
 pub(crate) mod command;
 pub(crate) mod database;
 pub(crate) mod docker;
