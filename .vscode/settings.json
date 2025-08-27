@@ -15,5 +15,6 @@
       "source.organizeImports": "never"
     }
   },
-  "rust-analyzer.checkOnSave": true
+  "rust-analyzer.checkOnSave": true,
+  "typescript.experimental.useTsgo": false
 }

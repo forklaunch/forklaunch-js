@@ -310,12 +310,13 @@ export type BasicAuthMethods = {
   readonly basic: {
     readonly login: (username: string, password: string) => boolean;
   };
+
+  readonly jwt?: never;
+  readonly hmac?: never;
 };
 
 export type JwtAuthMethods = {
-  readonly jwt?: {
-    readonly decodeResource?: (token: string) => string;
-  } & (
+  jwt:
     | {
         readonly jwksPublicKey: JWK;
       }
@@ -323,22 +324,37 @@ export type JwtAuthMethods = {
         readonly jwksPublicKeyUrl: string;
       }
     | {
-        readonly privateKey: string;
-      }
+        readonly signatureKey: string;
+      };
+  readonly basic?: never;
+  readonly hmac?: never;
+};
+
+export type HmacMethods = {
+  readonly hmac: {
+    readonly secretKeys: Record<string, string>;
+  };
+
+  readonly basic?: never;
+  readonly jwt?: never;
+};
+
+type TokenOptions = {
+  readonly tokenPrefix?: string;
+  readonly headerName?: string;
+};
+
+export type DecodeResource = (
+  token: string
+) => JWTPayload | Promise<JWTPayload>;
+
+export type AuthMethodsBase = TokenOptions &
+  (
+    | HmacMethods
+    | ({
+        readonly decodeResource?: DecodeResource;
+      } & (BasicAuthMethods | JwtAuthMethods))
   );
-};
-
-export type SystemAuthMethods = {
-  readonly secretKey: string;
-  readonly headerName?: string;
-  readonly tokenPrefix?: string;
-};
-
-export type AuthMethodsBase = {
-  readonly tokenPrefix?: string;
-  readonly headerName?: string;
-  readonly decodeResource?: (token: string) => JWTPayload | Promise<JWTPayload>;
-} & (BasicAuthMethods | JwtAuthMethods);
 
 type PermissionSet =
   | {
@@ -366,38 +382,10 @@ export type SchemaAuthMethods<
   VersionedApi extends VersionSchema<SV, Method>,
   SessionSchema extends SessionObject<SV>,
   BaseRequest
-> =
-  | (AuthMethodsBase &
-      (
-        | ({
-            readonly surfacePermissions?: ExpressLikeSchemaAuthMapper<
-              SV,
-              ParamsSchema,
-              ReqBody,
-              QuerySchema,
-              ReqHeaders,
-              VersionedApi,
-              SessionSchema,
-              BaseRequest
-            >;
-          } & PermissionSet)
-        | ({
-            readonly surfaceRoles?: ExpressLikeSchemaAuthMapper<
-              SV,
-              ParamsSchema,
-              ReqBody,
-              QuerySchema,
-              ReqHeaders,
-              VersionedApi,
-              SessionSchema,
-              BaseRequest
-            >;
-          } & RoleSet)
-      ) & {
-        readonly sessionSchema?: SessionSchema;
-        readonly requiredScope?: string;
-        readonly scopeHeirarchy?: string[];
-        readonly surfaceScopes?: ExpressLikeSchemaAuthMapper<
+> = AuthMethodsBase &
+  (
+    | ({
+        readonly surfacePermissions?: ExpressLikeSchemaAuthMapper<
           SV,
           ParamsSchema,
           ReqBody,
@@ -407,8 +395,34 @@ export type SchemaAuthMethods<
           SessionSchema,
           BaseRequest
         >;
-      })
-  | SystemAuthMethods;
+      } & PermissionSet)
+    | ({
+        readonly surfaceRoles?: ExpressLikeSchemaAuthMapper<
+          SV,
+          ParamsSchema,
+          ReqBody,
+          QuerySchema,
+          ReqHeaders,
+          VersionedApi,
+          SessionSchema,
+          BaseRequest
+        >;
+      } & RoleSet)
+  ) & {
+    readonly sessionSchema?: SessionSchema;
+    readonly requiredScope?: string;
+    readonly scopeHeirarchy?: string[];
+    readonly surfaceScopes?: ExpressLikeSchemaAuthMapper<
+      SV,
+      ParamsSchema,
+      ReqBody,
+      QuerySchema,
+      ReqHeaders,
+      VersionedApi,
+      SessionSchema,
+      BaseRequest
+    >;
+  };
 
 export type AuthMethods<
   SV extends AnySchemaValidator,
@@ -419,38 +433,10 @@ export type AuthMethods<
   VersionedReqs extends VersionedRequests,
   SessionSchema extends Record<string, unknown>,
   BaseRequest
-> =
-  | (AuthMethodsBase &
-      (
-        | ({
-            readonly surfacePermissions?: ExpressLikeAuthMapper<
-              SV,
-              P,
-              ReqBody,
-              ReqQuery,
-              ReqHeaders,
-              VersionedReqs,
-              SessionSchema,
-              BaseRequest
-            >;
-          } & PermissionSet)
-        | ({
-            readonly surfaceRoles?: ExpressLikeAuthMapper<
-              SV,
-              P,
-              ReqBody,
-              ReqQuery,
-              ReqHeaders,
-              VersionedReqs,
-              SessionSchema,
-              BaseRequest
-            >;
-          } & RoleSet)
-      ) & {
-        readonly sessionSchema?: SessionSchema;
-        readonly requiredScope?: string;
-        readonly scopeHeirarchy?: string[];
-        readonly surfaceScopes?: ExpressLikeAuthMapper<
+> = AuthMethodsBase &
+  (
+    | ({
+        readonly surfacePermissions?: ExpressLikeAuthMapper<
           SV,
           P,
           ReqBody,
@@ -460,8 +446,34 @@ export type AuthMethods<
           SessionSchema,
           BaseRequest
         >;
-      })
-  | SystemAuthMethods;
+      } & PermissionSet)
+    | ({
+        readonly surfaceRoles?: ExpressLikeAuthMapper<
+          SV,
+          P,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          VersionedReqs,
+          SessionSchema,
+          BaseRequest
+        >;
+      } & RoleSet)
+  ) & {
+    readonly sessionSchema?: SessionSchema;
+    readonly requiredScope?: string;
+    readonly scopeHeirarchy?: string[];
+    readonly surfaceScopes?: ExpressLikeAuthMapper<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      VersionedReqs,
+      SessionSchema,
+      BaseRequest
+    >;
+  };
 
 /**
  * Type representing a mapped schema.

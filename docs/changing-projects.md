@@ -372,7 +372,7 @@ pnpm install
   <Tab title="bun">
 
 ```bash
-rm -rf node_modules bun.lockb
+rm -rf node_modules bun.lockb bun.lock
 bun install
 ```
 

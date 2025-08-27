@@ -778,7 +778,8 @@ describe('zod advanced parse', () => {
 
   describe('binary', () => {
     test('valid binary with string', () => {
-      compare(schemaValidator.parse(binary, 'Hello World'), {
+      const base64String = Buffer.from('Hello World').toString('base64');
+      compare(schemaValidator.parse(binary, base64String), {
         ok: true,
         value: new TextEncoder().encode('Hello World')
       });
@@ -823,7 +824,7 @@ describe('zod advanced parse', () => {
 
   describe('file', () => {
     test('valid file with string', async () => {
-      const parsed = schemaValidator.parse(file, 'Hello World');
+      const parsed = schemaValidator.parse(file, Buffer.from('Hello World'));
       expect(parsed.ok).toBe(true);
       if (parsed.ok) {
         expect(await parsed.value.text()).toBe('Hello World');

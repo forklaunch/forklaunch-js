@@ -15,6 +15,7 @@ import {
   Body,
   FileBody,
   HeadersObject,
+  HmacMethods,
   HttpContractDetails,
   JsonBody,
   MapSchema,
@@ -156,7 +157,7 @@ export interface ForklaunchRequest<
   _parsedVersions: string[] | number;
 
   /** Global options */
-  _globalOptions?: ExpressLikeRouterOptions<SV, SessionSchema>;
+  _globalOptions: () => ExpressLikeRouterOptions<SV, SessionSchema> | undefined;
 }
 
 /**
@@ -936,17 +937,29 @@ type TokenPrefix<Auth extends AuthMethodsBase> =
   undefined extends Auth['tokenPrefix']
     ? Auth extends BasicAuthMethods
       ? 'Basic '
-      : 'Bearer '
+      : Auth extends HmacMethods
+        ? 'HMAC '
+        : 'Bearer '
     : `${Auth['tokenPrefix']} `;
 
 type AuthHeaders<Auth extends AuthMethodsBase> =
   undefined extends Auth['headerName']
     ? {
-        authorization: `${TokenPrefix<Auth>}${string}`;
+        authorization: Auth extends HmacMethods
+          ? `${TokenPrefix<Auth>}keyId=${string} ts=${string} nonce=${string} signature=${string}`
+          : `${TokenPrefix<Auth>}${string}`;
       }
     : {
         [K in NonNullable<Auth['headerName']>]: `${TokenPrefix<Auth>}${string}`;
       };
+
+type AuthCollapse<Auth extends AuthMethodsBase> = undefined extends Auth['jwt']
+  ? undefined extends Auth['basic']
+    ? undefined extends Auth['hmac']
+      ? true
+      : false
+    : false
+  : false;
 
 export type LiveTypeFunctionRequestInit<
   SV extends AnySchemaValidator,
@@ -967,12 +980,12 @@ export type LiveTypeFunctionRequestInit<
           query: MapSchema<SV, ReqQuery>;
         }) &
     (HeadersObject<SV> extends ReqHeaders
-      ? AuthHeaders<AuthMethodsBase> extends AuthHeaders<Auth>
+      ? true extends AuthCollapse<Auth>
         ? unknown
         : {
             headers: AuthHeaders<Auth>;
           }
-      : AuthHeaders<AuthMethodsBase> extends AuthHeaders<Auth>
+      : true extends AuthCollapse<Auth>
         ? { headers: MapSchema<SV, ReqHeaders> }
         : {
             headers: MapSchema<SV, ReqHeaders> & AuthHeaders<Auth>;
@@ -1032,8 +1045,8 @@ export type LiveTypeFunction<
             | { params: unknown }
             | { query: unknown }
             | { headers: unknown }
-          ? [reqInit: ReqInit]
-          : [reqInit?: ReqInit]
+          ? [reqInit: Prettify<ReqInit>]
+          : [reqInit?: Prettify<ReqInit>]
         : never
     ) => Promise<
       Prettify<
@@ -1075,8 +1088,8 @@ export type LiveTypeFunction<
               | { params: unknown }
               | { query: unknown }
               | { headers: unknown }
-            ? [reqInit: ReqInit]
-            : [reqInit?: ReqInit]
+            ? [reqInit: Prettify<ReqInit>]
+            : [reqInit?: Prettify<ReqInit>]
           : never
       ) => Promise<
         Prettify<
@@ -1133,8 +1146,8 @@ export type LiveSdkFunction<
             | { params: unknown }
             | { query: unknown }
             | { headers: unknown }
-          ? [reqInit: ReqInit]
-          : [reqInit?: ReqInit]
+          ? [reqInit: Prettify<ReqInit>]
+          : [reqInit?: Prettify<ReqInit>]
         : never
     ) => Promise<
       Prettify<
@@ -1176,8 +1189,8 @@ export type LiveSdkFunction<
               | { params: unknown }
               | { query: unknown }
               | { headers: unknown }
-            ? [reqInit: ReqInit]
-            : [reqInit?: ReqInit]
+            ? [reqInit: Prettify<ReqInit>]
+            : [reqInit?: Prettify<ReqInit>]
           : never
       ) => Promise<
         Prettify<

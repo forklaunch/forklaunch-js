@@ -1,5 +1,59 @@
 # @forklaunch/validator
 
+## 0.9.8
+
+### Patch Changes
+
+- One more attempt at performance bump
+- Updated dependencies
+  - @forklaunch/common@0.5.7
+
+## 0.9.7
+
+### Patch Changes
+
+- prettify req init for slightly faster sdk access
+- Updated dependencies
+  - @forklaunch/common@0.5.6
+
+## 0.9.6
+
+### Patch Changes
+
+- attempt to make sdk pathing more efficient
+- Updated dependencies
+  - @forklaunch/common@0.5.5
+
+## 0.9.5
+
+### Patch Changes
+
+- zod validator regex relaxation for email
+- Updated dependencies
+  - @forklaunch/common@0.5.4
+
+## 0.9.4
+
+### Patch Changes
+
+- Update validator types for files to use raw streams, lazy load openapi for universal sdk, and remove private members from otel
+- Updated dependencies
+  - @forklaunch/common@0.5.3
+
+## 0.9.3
+
+### Patch Changes
+
+- update package versions
+- Updated dependencies
+  - @forklaunch/common@0.5.2
+
+## 0.9.2
+
+### Patch Changes
+
+- Auth fixes and add HMAC auth
+
 ## 0.9.1
 
 ### Patch Changes

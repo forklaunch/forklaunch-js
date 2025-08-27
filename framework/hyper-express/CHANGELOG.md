@@ -1,5 +1,74 @@
 # @forklaunch/hyper-express
 
+## 0.8.8
+
+### Patch Changes
+
+- One more attempt at performance bump
+- Updated dependencies
+  - @forklaunch/validator@0.9.8
+  - @forklaunch/common@0.5.7
+  - @forklaunch/core@0.13.8
+
+## 0.8.7
+
+### Patch Changes
+
+- prettify req init for slightly faster sdk access
+- Updated dependencies
+  - @forklaunch/validator@0.9.7
+  - @forklaunch/common@0.5.6
+  - @forklaunch/core@0.13.7
+
+## 0.8.6
+
+### Patch Changes
+
+- attempt to make sdk pathing more efficient
+- Updated dependencies
+  - @forklaunch/validator@0.9.6
+  - @forklaunch/common@0.5.5
+  - @forklaunch/core@0.13.6
+
+## 0.8.5
+
+### Patch Changes
+
+- zod validator regex relaxation for email
+- Updated dependencies
+  - @forklaunch/validator@0.9.5
+  - @forklaunch/common@0.5.4
+  - @forklaunch/core@0.13.5
+
+## 0.8.4
+
+### Patch Changes
+
+- Update validator types for files to use raw streams, lazy load openapi for universal sdk, and remove private members from otel
+- Updated dependencies
+  - @forklaunch/validator@0.9.4
+  - @forklaunch/common@0.5.3
+  - @forklaunch/core@0.13.4
+
+## 0.8.3
+
+### Patch Changes
+
+- update package versions
+- Updated dependencies
+  - @forklaunch/validator@0.9.3
+  - @forklaunch/common@0.5.2
+  - @forklaunch/core@0.13.3
+
+## 0.8.2
+
+### Patch Changes
+
+- Auth fixes and add HMAC auth
+- Updated dependencies
+  - @forklaunch/validator@0.9.2
+  - @forklaunch/core@0.13.2
+
 ## 0.8.1
 
 ### Patch Changes

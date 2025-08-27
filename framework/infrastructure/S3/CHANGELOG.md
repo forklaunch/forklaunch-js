@@ -1,5 +1,66 @@
 # @forklaunch/infrastructure-s3
 
+## 0.3.8
+
+### Patch Changes
+
+- One more attempt at performance bump
+- Updated dependencies
+  - @forklaunch/common@0.5.7
+  - @forklaunch/core@0.13.8
+
+## 0.3.7
+
+### Patch Changes
+
+- prettify req init for slightly faster sdk access
+- Updated dependencies
+  - @forklaunch/common@0.5.6
+  - @forklaunch/core@0.13.7
+
+## 0.3.6
+
+### Patch Changes
+
+- attempt to make sdk pathing more efficient
+- Updated dependencies
+  - @forklaunch/common@0.5.5
+  - @forklaunch/core@0.13.6
+
+## 0.3.5
+
+### Patch Changes
+
+- zod validator regex relaxation for email
+- Updated dependencies
+  - @forklaunch/common@0.5.4
+  - @forklaunch/core@0.13.5
+
+## 0.3.4
+
+### Patch Changes
+
+- Update validator types for files to use raw streams, lazy load openapi for universal sdk, and remove private members from otel
+- Updated dependencies
+  - @forklaunch/common@0.5.3
+  - @forklaunch/core@0.13.4
+
+## 0.3.3
+
+### Patch Changes
+
+- update package versions
+- Updated dependencies
+  - @forklaunch/common@0.5.2
+  - @forklaunch/core@0.13.3
+
+## 0.3.2
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.13.2
+
 ## 0.3.1
 
 ### Patch Changes

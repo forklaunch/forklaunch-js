@@ -216,6 +216,9 @@ export const jsonPatchHandler = handlers.patch(
       }
     },
     auth: {
+      jwt: {
+        signatureKey: 'secret'
+      },
       tokenPrefix: 'bb',
       decodeResource: async (token) => {
         return {
@@ -405,4 +408,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 // Temporary shim for supporting TSGO experimental compiler
 import type * as ExpressStaticCore from 'express-serve-static-core';
 import { Range } from 'range-parser';
-type TSGoShim = ParsedQs & Range & ExpressStaticCore.Application & JWTPayload;
+import { z } from 'zod/v3';
+type TSGoShim = ParsedQs &
+  Range &
+  ExpressStaticCore.Application &
+  JWTPayload &
+  typeof z;
