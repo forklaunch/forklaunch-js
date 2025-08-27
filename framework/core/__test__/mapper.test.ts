@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { Schema } from '@forklaunch/validator';
 import { SchemaValidator, number, string } from '@forklaunch/validator/typebox';
 import { PrimaryKey, Property } from '@mikro-orm/core';
 import { v4 } from 'uuid';
-import { mapper } from '../src/mappers';
+import { requestMapper, responseMapper } from '../src/mappers';
 import { BaseEntity } from '../src/persistence';
 
 const SV = SchemaValidator();
@@ -24,31 +25,31 @@ class TestEntity extends BaseEntity {
   age!: number;
 }
 
-const TestMapper = mapper(
-  SV,
-  {
-    id: string,
-    name: string,
-    age: number
-  },
-  TestEntity,
-  {
-    toEntity: async (dto, arg1: string, arg2?: string) => {
-      const entity = new TestEntity();
-      entity.id = dto.id;
-      entity.name = dto.name;
-      entity.age = dto.age;
-      return entity;
-    },
-    toDto: async (entity, arg1: string, arg2?: string) => {
-      return {
-        id: entity.id,
-        name: entity.name,
-        age: entity.age
-      };
-    }
+const TestSchema = {
+  id: string,
+  name: string,
+  age: number
+};
+
+const TestRequestMapper = requestMapper(SV, TestSchema, TestEntity, {
+  toEntity: async (dto, arg1: string, arg2?: string) => {
+    const entity = new TestEntity();
+    entity.id = dto.id;
+    entity.name = dto.name;
+    entity.age = dto.age;
+    return entity;
   }
-);
+});
+
+const TestResponseMapper = responseMapper(SV, TestSchema, TestEntity, {
+  toDto: async (entity, arg1: string, arg2?: string) => {
+    return {
+      id: entity.id,
+      name: entity.name,
+      age: entity.age
+    };
+  }
+});
 
 function extractNonTimeBasedEntityFields<
   T extends {
@@ -66,15 +67,23 @@ function genericDtoWrapperFunction<T>(dto: T): T {
 }
 
 describe('request mappers tests', () => {
-  let TestRequestDM: typeof TestMapper;
+  let TestRequestDM: {
+    schema: typeof TestSchema;
+    toEntity: (
+      dto: Schema<typeof TestSchema, typeof SV>,
+      arg1: string,
+      arg2?: string
+    ) => Promise<TestEntity>;
+    toDto: (
+      entity: TestEntity,
+      arg1: string,
+      arg2?: string
+    ) => Promise<Schema<typeof TestSchema, typeof SV>>;
+  };
 
   beforeAll(() => {
     TestRequestDM = {
-      schema: {
-        id: string,
-        name: string,
-        age: number
-      },
+      schema: TestSchema,
       toEntity: async (dto, arg1: string, arg2?: string) => {
         const entity = new TestEntity();
         entity.id = dto.id;
@@ -92,34 +101,7 @@ describe('request mappers tests', () => {
     };
   });
   test('schema static and constructed equality', async () => {
-    expect(TestRequestDM.schema).toEqual(TestMapper.schema);
-  });
-
-  test('from JSON', async () => {
-    const json = {
-      id: '123',
-      name: 'test',
-      age: 1
-    };
-
-    const responseDM = await TestRequestDM.toDto(
-      await TestRequestDM.toEntity(json, 'arg1'),
-      'arg1'
-    );
-    const staticDM = await TestMapper.toDto(
-      await TestMapper.toEntity(json, 'arg1'),
-      'arg1'
-    );
-
-    const expectedDto = {
-      id: '123',
-      name: 'test',
-      age: 1
-    };
-
-    expect(staticDM).toEqual(expectedDto);
-    expect(responseDM).toEqual(expectedDto);
-    expect(responseDM).toEqual(staticDM);
+    expect(TestRequestDM.schema).toEqual(TestRequestMapper.schema);
   });
 
   test('deserialize', async () => {
@@ -136,7 +118,7 @@ describe('request mappers tests', () => {
     //   await TestRequestDM.toEntity('arg1')
     // );
     const staticEntity = extractNonTimeBasedEntityFields(
-      await TestMapper.toEntity(json, 'arg1', 'arg2')
+      await TestRequestMapper.toEntity(json, 'arg1', 'arg2')
     );
     let expectedEntity = new TestEntity();
     expectedEntity.id = '123';
@@ -151,7 +133,7 @@ describe('request mappers tests', () => {
     expect(staticEntity).toEqual(expectedEntity);
   });
 
-  test('serialize failure', async () => {
+  test('deserialize failure', async () => {
     const json = {
       id: '123',
       name: 'test'
@@ -159,7 +141,7 @@ describe('request mappers tests', () => {
 
     await expect(
       async () =>
-        await TestMapper.toEntity(
+        await TestRequestMapper.toEntity(
           // @ts-expect-error - missing age
           json,
           'arg1'
@@ -169,7 +151,7 @@ describe('request mappers tests', () => {
 });
 
 describe('response mappers tests', () => {
-  let TestResponseDM: typeof TestMapper;
+  let TestResponseDM: typeof TestResponseMapper;
 
   beforeAll(() => {
     TestResponseDM = {
@@ -184,29 +166,22 @@ describe('response mappers tests', () => {
           name: entity.name,
           age: entity.age
         };
-      },
-      toEntity: async (dto, arg1: string, arg2?: string) => {
-        const entity = new TestEntity();
-        entity.id = dto.id;
-        entity.name = dto.name;
-        entity.age = dto.age;
-        return entity;
       }
     };
   });
 
   test('schema static and constructed equality', async () => {
-    expect(TestResponseDM.schema).toEqual(TestMapper.schema);
+    expect(TestResponseDM.schema).toEqual(TestResponseMapper.schema);
   });
 
-  test('from entity', async () => {
+  test('serialize', async () => {
     const entity = new TestEntity();
     entity.id = '123';
     entity.name = 'test';
     entity.age = 1;
 
     const responseDM = await TestResponseDM.toDto(entity, 'arg1');
-    const staticDM = await TestMapper.toDto(entity, 'arg1');
+    const staticDM = await TestResponseMapper.toDto(entity, 'arg1');
     const expectedDto = {
       id: '123',
       name: 'test',
@@ -231,7 +206,7 @@ describe('response mappers tests', () => {
       await TestResponseDM.toDto(entity, 'arg1')
     );
     const staticJson = genericDtoWrapperFunction(
-      await TestMapper.toDto(entity, 'arg1', 'arg2')
+      await TestResponseMapper.toDto(entity, 'arg1', 'arg2')
     );
     const expectedJson = {
       id: '123',
@@ -248,13 +223,13 @@ describe('response mappers tests', () => {
     expect(staticJson).toEqual(objectJson);
   });
 
-  test('deserialize failure', async () => {
+  test('serialize failure', async () => {
     const entity = new TestEntity();
     entity.id = '123';
     entity.name = 'test';
 
     await expect(
-      async () => await TestMapper.toDto(entity, 'arg1', 'arg2')
+      async () => await TestResponseMapper.toDto(entity, 'arg1', 'arg2')
     ).rejects.toThrow();
   });
 });

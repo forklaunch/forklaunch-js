@@ -1,5 +1,14 @@
 # @forklaunch/infrastructure-s3
 
+## 0.4.1
+
+### Patch Changes
+
+- request and response mapper discrimination and clean up of internal types
+- Updated dependencies
+  - @forklaunch/common@0.6.1
+  - @forklaunch/core@0.14.1
+
 ## 0.4.0
 
 ### Minor Changes

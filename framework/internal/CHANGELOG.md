@@ -1,5 +1,14 @@
 # @forklaunch/common
 
+## 0.3.1
+
+### Patch Changes
+
+- request and response mapper discrimination and clean up of internal types
+- Updated dependencies
+  - @forklaunch/validator@0.10.1
+  - @forklaunch/common@0.6.1
+
 ## 0.3.0
 
 ### Minor Changes

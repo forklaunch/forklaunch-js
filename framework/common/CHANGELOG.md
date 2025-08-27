@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.6.1
+
+### Patch Changes
+
+- request and response mapper discrimination and clean up of internal types
+
 ## 0.6.0
 
 ### Minor Changes

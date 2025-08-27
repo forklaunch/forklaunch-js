@@ -1,5 +1,13 @@
 # @forklaunch/universal-sdk
 
+## 0.7.1
+
+### Patch Changes
+
+- request and response mapper discrimination and clean up of internal types
+- Updated dependencies
+  - @forklaunch/common@0.6.1
+
 ## 0.7.0
 
 ### Minor Changes
