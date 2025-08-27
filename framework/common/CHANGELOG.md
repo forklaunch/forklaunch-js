@@ -1,5 +1,17 @@
 # @forklaunch/common
 
+## 0.6.0
+
+### Minor Changes
+
+- remove class based mappers
+
+## 0.5.8
+
+### Patch Changes
+
+- add mappers as functions
+
 ## 0.5.7
 
 ### Patch Changes

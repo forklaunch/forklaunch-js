@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/core",
-  "version": "0.13.8",
+  "version": "0.14.0",
   "description": "forklaunch-js core package. Contains useful building blocks.",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -78,8 +78,8 @@
     "@forklaunch/fastmcp-fork": "^1.0.5",
     "@forklaunch/opentelemetry-instrumentation-hyper-express": "0.0.5",
     "@forklaunch/validator": "workspace:*",
-    "@mikro-orm/core": "^6.4.16",
-    "@mikro-orm/mongodb": "^6.4.16",
+    "@mikro-orm/core": "^6.5.1",
+    "@mikro-orm/mongodb": "^6.5.1",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/api-logs": "^0.203.0",
     "@opentelemetry/exporter-logs-otlp-http": "^0.203.0",
@@ -106,14 +106,14 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.34.0",
-    "@scalar/express-api-reference": "^0.8.15",
+    "@scalar/express-api-reference": "^0.8.16",
     "@types/cors": "^2.8.19",
     "@types/jest": "^30.0.0",
     "@types/qs": "^6.14.0",
     "@types/uuid": "^10.0.0",
-    "@typescript/native-preview": "7.0.0-dev.20250825.1",
+    "@typescript/native-preview": "7.0.0-dev.20250827.1",
     "globals": "^16.3.0",
-    "jest": "^30.0.5",
+    "jest": "^30.1.1",
     "jose": "5.10.0",
     "prettier": "^3.6.2",
     "testcontainers": "^11.5.1",
@@ -122,6 +122,6 @@
     "tsup": "^8.5.0",
     "typedoc": "^0.28.11",
     "typescript": "^5.9.2",
-    "typescript-eslint": "^8.40.0"
+    "typescript-eslint": "^8.41.0"
   }
 }

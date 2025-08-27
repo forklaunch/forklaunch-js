@@ -1,5 +1,26 @@
 # @forklaunch/infrastructure-s3
 
+## 0.4.0
+
+### Minor Changes
+
+- remove class based mappers
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/common@0.6.0
+  - @forklaunch/core@0.14.0
+
+## 0.3.9
+
+### Patch Changes
+
+- add mappers as functions
+- Updated dependencies
+  - @forklaunch/common@0.5.8
+  - @forklaunch/core@0.13.9
+
 ## 0.3.8
 
 ### Patch Changes

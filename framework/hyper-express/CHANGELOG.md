@@ -1,5 +1,28 @@
 # @forklaunch/hyper-express
 
+## 0.9.0
+
+### Minor Changes
+
+- remove class based mappers
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.10.0
+  - @forklaunch/common@0.6.0
+  - @forklaunch/core@0.14.0
+
+## 0.8.9
+
+### Patch Changes
+
+- add mappers as functions
+- Updated dependencies
+  - @forklaunch/validator@0.9.9
+  - @forklaunch/common@0.5.8
+  - @forklaunch/core@0.13.9
+
 ## 0.8.8
 
 ### Patch Changes

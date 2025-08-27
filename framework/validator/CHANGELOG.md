@@ -1,5 +1,24 @@
 # @forklaunch/validator
 
+## 0.10.0
+
+### Minor Changes
+
+- remove class based mappers
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/common@0.6.0
+
+## 0.9.9
+
+### Patch Changes
+
+- add mappers as functions
+- Updated dependencies
+  - @forklaunch/common@0.5.8
+
 ## 0.9.8
 
 ### Patch Changes

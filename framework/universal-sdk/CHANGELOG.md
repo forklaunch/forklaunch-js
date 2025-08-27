@@ -1,5 +1,24 @@
 # @forklaunch/universal-sdk
 
+## 0.7.0
+
+### Minor Changes
+
+- remove class based mappers
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/common@0.6.0
+
+## 0.6.8
+
+### Patch Changes
+
+- add mappers as functions
+- Updated dependencies
+  - @forklaunch/common@0.5.8
+
 ## 0.6.7
 
 ### Patch Changes
