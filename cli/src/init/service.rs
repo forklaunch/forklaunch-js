@@ -2,10 +2,10 @@ use std::{
     collections::{HashMap, HashSet},
     fs::read_to_string,
     io::Write,
-    path::Path,
+    path::{Path, PathBuf},
 };
 
-use anyhow::{Context, Result, bail, anyhow};
+use anyhow::{Context, Result, anyhow};
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use convert_case::{Case, Casing};
 use rustyline::{Editor, history::DefaultHistory};
@@ -87,7 +87,7 @@ use crate::{
 fn generate_basic_service(
     service_name: &String,
     base_path: &Path,
-    project_root_path: &Path,
+    app_root_path: &Path,
     manifest_data: &mut ServiceManifestData,
     stdout: &mut StandardStream,
     dryrun: bool,
@@ -119,7 +119,6 @@ fn generate_basic_service(
     rendered_templates.push(generate_service_package_json(
         manifest_data,
         &output_path,
-        &project_root_path,
         None,
         None,
         None,
@@ -131,7 +130,7 @@ fn generate_basic_service(
         generate_gitignore(&output_path).with_context(|| ERROR_FAILED_TO_CREATE_GITIGNORE)?,
     );
     rendered_templates.extend(
-        add_service_to_artifacts(manifest_data, base_path, project_root_path)
+        add_service_to_artifacts(manifest_data, base_path, app_root_path)
             .with_context(|| ERROR_FAILED_TO_ADD_SERVICE_METADATA_TO_ARTIFACTS)?,
     );
     rendered_templates.extend(
@@ -179,10 +178,10 @@ fn generate_basic_service(
 fn add_service_to_artifacts(
     manifest_data: &mut ServiceManifestData,
     base_path: &Path,
-    project_root_path: &Path,
+    app_root_path: &Path,
 ) -> Result<Vec<RenderedTemplate>> {
     let docker_compose_buffer =
-        add_service_definition_to_docker_compose(manifest_data, base_path, project_root_path, None)
+        add_service_definition_to_docker_compose(manifest_data, app_root_path, None)
             .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
 
     let forklaunch_manifest_buffer = add_project_definition_to_manifest(
@@ -204,7 +203,8 @@ fn add_service_to_artifacts(
 
     let mut package_json_buffer: Option<String> = None;
     let mut pnpm_workspace_buffer: Option<String> = None;
-
+    println!("init:service:00: base_path: {:?}", base_path);
+    println!("init:service:00: app_root_path: {:?}", app_root_path);
     match runtime {
         Runtime::Bun => {
             package_json_buffer = Some(
@@ -223,13 +223,13 @@ fn add_service_to_artifacts(
     let mut rendered_templates = Vec::new();
 
     rendered_templates.push(RenderedTemplate {
-        path: project_root_path.join("docker-compose.yaml"),
+        path: app_root_path.join("docker-compose.yaml"),
         content: docker_compose_buffer,
         context: Some(ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE.to_string()),
     });
 
     rendered_templates.push(RenderedTemplate {
-        path: project_root_path.join(".forklaunch").join("manifest.toml"),
+        path: app_root_path.join(".forklaunch").join("manifest.toml"),
         content: forklaunch_manifest_buffer.clone(),
         context: Some(ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST.to_string()),
     });
@@ -257,7 +257,6 @@ fn add_service_to_artifacts(
 pub(crate) fn generate_service_package_json(
     manifest_data: &ServiceManifestData,
     base_path: &Path,
-    project_root_path: &Path,
     dependencies_override: Option<ProjectDependencies>,
     dev_dependencies_override: Option<ProjectDevDependencies>,
     scripts_override: Option<ProjectScripts>,
@@ -513,7 +512,7 @@ impl CliCommand for ServiceCommand {
                 Arg::new("base_path")
                     .short('p')
                     .long("path")
-                    .help("The application path to initialize the service in"),
+                    .help("The path to initialize the service in"),
             )
             .arg(
                 Arg::new("database")
@@ -567,14 +566,18 @@ impl CliCommand for ServiceCommand {
             // No manifest found, this might be an error or we need to search more broadly
             anyhow::bail!("Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path.");
         };
-        let project_path = config_path
+        let app_root_path: PathBuf = config_path
+            .to_string_lossy()
             .strip_suffix(".forklaunch/manifest.toml")
             .ok_or_else(|| {
             anyhow::anyhow!("Expected manifest path to end with .forklaunch/manifest.toml, got: {:?}", config_path)
-        })?;
+        })?
+            .to_string()
+            .into();
         
         println!("init:service:06: config_path: {:?}", config_path);
         println!("init:service:07: base_path: {:?}", base_path);
+        println!("init:service:08: app_root_path: {:?}", app_root_path);
         let existing_manifest_data = from_str::<ApplicationManifestData>(
             &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
@@ -704,7 +707,7 @@ impl CliCommand for ServiceCommand {
         generate_basic_service(
             &service_name,
             &base_path,
-            &project_path,
+            &app_root_path,
             &mut manifest_data,
             &mut stdout,
             dryrun,
