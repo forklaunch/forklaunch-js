@@ -197,7 +197,7 @@ const runtimeDependencies = environmentConfig.chain({
         })
       )
   },
-  ExpressApplicationOptionstionOptions: {
+  ExpressApplicationOptions: {
     lifetime: Lifetime.Singleton,
     type: promise(
       type<
