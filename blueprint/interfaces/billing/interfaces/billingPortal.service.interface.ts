@@ -6,13 +6,15 @@ export interface BillingPortalService<
   // for generating external links
   // store in cache, for permissions
   createBillingPortalSession: (
-    billingPortalDto: Params['CreateBillingPortalDto']
+    billingPortalDto: Params['CreateBillingPortalDto'],
+    ...args: unknown[]
   ) => Promise<Params['BillingPortalDto']>;
   getBillingPortalSession: (
     idDto: Params['IdDto']
   ) => Promise<Params['BillingPortalDto']>;
   updateBillingPortalSession: (
-    billingPortalDto: Params['UpdateBillingPortalDto']
+    billingPortalDto: Params['UpdateBillingPortalDto'],
+    ...args: unknown[]
   ) => Promise<Params['BillingPortalDto']>;
   expireBillingPortalSession: (idDto: Params['IdDto']) => Promise<void>;
 }

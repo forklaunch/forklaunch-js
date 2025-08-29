@@ -30,9 +30,9 @@ export const CheckoutSessionController = (
       {
         name: 'createCheckoutSession',
         summary: 'Create a checkout session',
-        body: CreateCheckoutSessionMapper.schema(),
+        body: CreateCheckoutSessionMapper.schema,
         responses: {
-          200: CheckoutSessionMapper.schema()
+          200: CheckoutSessionMapper.schema
         }
       },
       async (req, res) => {
@@ -51,7 +51,7 @@ export const CheckoutSessionController = (
         summary: 'Get a checkout session',
         params: IdSchema,
         responses: {
-          200: CheckoutSessionMapper.schema()
+          200: CheckoutSessionMapper.schema
         }
       },
       async (req, res) => {

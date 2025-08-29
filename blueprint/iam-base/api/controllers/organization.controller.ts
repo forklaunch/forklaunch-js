@@ -28,9 +28,9 @@ export const OrganizationController = (
       {
         name: 'Create Organization',
         summary: 'Creates a new organization',
-        body: CreateOrganizationMapper.schema(),
+        body: CreateOrganizationMapper.schema,
         responses: {
-          201: OrganizationMapper.schema(),
+          201: OrganizationMapper.schema,
           409: string
         }
       },
@@ -61,7 +61,7 @@ export const OrganizationController = (
         name: 'Get Organization',
         summary: 'Gets an organization by ID',
         responses: {
-          200: OrganizationMapper.schema(),
+          200: OrganizationMapper.schema,
           404: string
         },
         params: IdSchema
@@ -86,9 +86,9 @@ export const OrganizationController = (
       {
         name: 'Update Organization',
         summary: 'Updates an organization by ID',
-        body: UpdateOrganizationMapper.schema(),
+        body: UpdateOrganizationMapper.schema,
         responses: {
-          200: OrganizationMapper.schema(),
+          200: OrganizationMapper.schema,
           404: string
         }
       },

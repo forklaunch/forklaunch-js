@@ -1,56 +1,55 @@
 import {
   boolean,
   number,
-  SchemaValidator,
+  schemaValidator,
   string
 } from '@forklaunch/blueprint-core';
-import { RequestMapper, ResponseMapper } from '@forklaunch/core/mappers';
+import { requestMapper, responseMapper } from '@forklaunch/core/mappers';
 import { wrap } from '@mikro-orm/core';
 import { SampleWorkerEventRecord } from '../../persistence/entities/sampleWorkerRecord.entity';
 import { SampleWorkerSchema } from '../schemas/sampleWorker.schema';
 
-// Exported type that matches the request schema
-export type SampleWorkerRequestDto = SampleWorkerRequestMapper['dto'];
-// RequestMapper class that maps the request schema to the entity
-export class SampleWorkerRequestMapper extends RequestMapper<
+// RequestMapper function that maps the request schema to the entity
+export const SampleWorkerRequestMapper = requestMapper(
+  schemaValidator,
+  SampleWorkerSchema,
   SampleWorkerEventRecord,
-  SchemaValidator
-> {
-  // idiomatic validator schema defines the request schema
-  schema = SampleWorkerSchema;
-
-  // toEntity method maps the request schema to the entity
-  async toEntity(): Promise<SampleWorkerEventRecord> {
-    return SampleWorkerEventRecord.create({
-      ...this.dto,
-      processed: false,
-      retryCount: 0,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    });
+  {
+    toEntity: async (dto) => {
+      return SampleWorkerEventRecord.create({
+        ...dto,
+        processed: false,
+        retryCount: 0,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+    }
   }
-}
+);
 
-// Exported type that matches the response schema
-export type SampleWorkerResponseDto = SampleWorkerResponseMapper['dto'];
-// ResponseMapper class that maps the response schema to the entity
-export class SampleWorkerResponseMapper extends ResponseMapper<
-  SampleWorkerEventRecord,
-  SchemaValidator
-> {
-  // idiomatic validator schema defines the response schema
-  schema = {
+// ResponseMapper function that maps the response schema to the entity
+export const SampleWorkerResponseMapper = responseMapper(
+  schemaValidator,
+  {
     message: string,
     processed: boolean,
     retryCount: number
-  };
-
-  // fromEntity method maps the entity to the response schema
-  async fromEntity(entity: SampleWorkerEventRecord): Promise<this> {
-    if (!entity.isInitialized()) {
-      throw new Error('SampleWorkerEventRecord is not initialized');
+  },
+  SampleWorkerEventRecord,
+  {
+    toDto: async (entity: SampleWorkerEventRecord) => {
+      if (!entity.isInitialized()) {
+        throw new Error('SampleWorkerEventRecord is not initialized');
+      }
+      return wrap(entity).toPOJO();
     }
-    this.dto = wrap(entity).toPOJO();
-    return this;
   }
-}
+);
+
+// Exported types for backward compatibility
+export type SampleWorkerRequestDto = Parameters<
+  typeof SampleWorkerRequestMapper.toEntity
+>[0];
+export type SampleWorkerResponseDto = Awaited<
+  ReturnType<typeof SampleWorkerResponseMapper.toDto>
+>;

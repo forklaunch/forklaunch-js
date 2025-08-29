@@ -1,4 +1,3 @@
-import { schemaValidator } from '@forklaunch/blueprint-core';
 import { BullMqWorkerProducer } from '@forklaunch/implementation-worker-bullmq/producers';
 import { BullMqWorkerOptions } from '@forklaunch/implementation-worker-bullmq/types';
 import { DatabaseWorkerProducer } from '@forklaunch/implementation-worker-database/producers';
@@ -63,19 +62,15 @@ export class BaseSampleWorkerService implements SampleWorkerService {
   sampleWorkerPost = async (
     dto: SampleWorkerRequestDto
   ): Promise<SampleWorkerResponseDto> => {
-    const entity = await SampleWorkerRequestMapper.deserializeDtoToEntity(
-      schemaValidator,
-      dto
-    );
+    // Create entity using the new mapper approach
+    const entity = await SampleWorkerRequestMapper.toEntity(dto);
 
     await this.databaseWorkerProducer.enqueueJob(entity);
     await this.bullMqWorkerProducer.enqueueJob(entity);
     await this.redisWorkerProducer.enqueueJob(entity);
     await this.kafkaWorkerProducer.enqueueJob(entity);
 
-    return SampleWorkerResponseMapper.serializeEntityToDto(
-      schemaValidator,
-      entity
-    );
+    // Convert entity to response DTO using the new mapper approach
+    return await SampleWorkerResponseMapper.toDto(entity);
   };
 }

@@ -1,4 +1,4 @@
-import { IdDto, IdsDto, InstanceTypeRecord } from '@forklaunch/common';
+import { IdDto, IdsDto } from '@forklaunch/common';
 import { TtlCache } from '@forklaunch/core/cache';
 import {
   MetricsDefinition,
@@ -6,19 +6,13 @@ import {
   TelemetryOptions
 } from '@forklaunch/core/http';
 import { BasePaymentLinkService } from '@forklaunch/implementation-billing-base/services';
+import { PaymentLinkMappers } from '@forklaunch/implementation-billing-base/types';
 import { PaymentLinkService } from '@forklaunch/interfaces-billing/interfaces';
-import {
-  IdentityRequestMapper,
-  IdentityResponseMapper,
-  InternalMapper,
-  RequestMapperConstructor,
-  ResponseMapperConstructor,
-  transformIntoInternalMapper
-} from '@forklaunch/internal';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
 import Stripe from 'stripe';
 import { CurrencyEnum, PaymentMethodEnum } from '../domain/enum';
+import { StripePaymentLinkMappers } from '../domain/types/paymentLink.mapper.types';
 import {
   StripeCreatePaymentLinkDto,
   StripePaymentLinkDto,
@@ -49,45 +43,22 @@ export class StripePaymentLinkService<
 {
   basePaymentLinkService: BasePaymentLinkService<
     SchemaValidator,
-    typeof PaymentMethodEnum,
-    typeof CurrencyEnum,
+    PaymentMethodEnum,
+    CurrencyEnum,
     StatusEnum,
     Entities,
-    Entities
+    Dto
   >;
-  protected _mappers: InternalMapper<InstanceTypeRecord<typeof this.mappers>>;
   protected readonly stripeClient: Stripe;
   protected readonly em: EntityManager;
   protected readonly cache: TtlCache;
   protected readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
   protected readonly schemaValidator: SchemaValidator;
-  protected readonly mappers: {
-    PaymentLinkMapper: ResponseMapperConstructor<
-      SchemaValidator,
-      Dto['PaymentLinkMapper'],
-      Entities['PaymentLinkMapper']
-    >;
-    CreatePaymentLinkMapper: RequestMapperConstructor<
-      SchemaValidator,
-      Dto['CreatePaymentLinkMapper'],
-      Entities['CreatePaymentLinkMapper'],
-      (
-        dto: Dto['CreatePaymentLinkMapper'],
-        em: EntityManager,
-        paymentLink: Stripe.PaymentLink
-      ) => Promise<Entities['CreatePaymentLinkMapper']>
-    >;
-    UpdatePaymentLinkMapper: RequestMapperConstructor<
-      SchemaValidator,
-      Dto['UpdatePaymentLinkMapper'],
-      Entities['UpdatePaymentLinkMapper'],
-      (
-        dto: Dto['UpdatePaymentLinkMapper'],
-        em: EntityManager,
-        paymentLink: Stripe.PaymentLink
-      ) => Promise<Entities['UpdatePaymentLinkMapper']>
-    >;
-  };
+  protected readonly mappers: StripePaymentLinkMappers<
+    StatusEnum,
+    Entities,
+    Dto
+  >;
 
   constructor(
     stripeClient: Stripe,
@@ -95,33 +66,7 @@ export class StripePaymentLinkService<
     cache: TtlCache,
     openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
     schemaValidator: SchemaValidator,
-    mappers: {
-      PaymentLinkMapper: ResponseMapperConstructor<
-        SchemaValidator,
-        Dto['PaymentLinkMapper'],
-        Entities['PaymentLinkMapper']
-      >;
-      CreatePaymentLinkMapper: RequestMapperConstructor<
-        SchemaValidator,
-        Dto['CreatePaymentLinkMapper'],
-        Entities['CreatePaymentLinkMapper'],
-        (
-          dto: Dto['CreatePaymentLinkMapper'],
-          em: EntityManager,
-          paymentLink: Stripe.PaymentLink
-        ) => Promise<Entities['CreatePaymentLinkMapper']>
-      >;
-      UpdatePaymentLinkMapper: RequestMapperConstructor<
-        SchemaValidator,
-        Dto['UpdatePaymentLinkMapper'],
-        Entities['UpdatePaymentLinkMapper'],
-        (
-          dto: Dto['UpdatePaymentLinkMapper'],
-          em: EntityManager,
-          paymentLink: Stripe.PaymentLink
-        ) => Promise<Entities['UpdatePaymentLinkMapper']>
-      >;
-    },
+    mappers: StripePaymentLinkMappers<StatusEnum, Entities, Dto>,
     readonly options?: {
       enableDatabaseBackup?: boolean;
       telemetry?: TelemetryOptions;
@@ -133,29 +78,25 @@ export class StripePaymentLinkService<
     this.openTelemetryCollector = openTelemetryCollector;
     this.schemaValidator = schemaValidator;
     this.mappers = mappers;
-    this._mappers = transformIntoInternalMapper(mappers, schemaValidator);
     this.basePaymentLinkService = new BasePaymentLinkService(
       em,
       cache,
       openTelemetryCollector,
       schemaValidator,
-      {
-        PaymentLinkMapper: IdentityResponseMapper<
-          Entities['PaymentLinkMapper']
-        >,
-        CreatePaymentLinkMapper: IdentityRequestMapper<
-          Entities['CreatePaymentLinkMapper']
-        >,
-        UpdatePaymentLinkMapper: IdentityRequestMapper<
-          Entities['UpdatePaymentLinkMapper']
-        >
-      },
+      mappers as PaymentLinkMappers<
+        PaymentMethodEnum,
+        CurrencyEnum,
+        StatusEnum,
+        Entities,
+        Dto
+      >,
       options
     );
   }
 
   async createPaymentLink(
-    paymentLinkDto: Dto['CreatePaymentLinkMapper']
+    paymentLinkDto: StripeCreatePaymentLinkDto<StatusEnum>,
+    ...args: unknown[]
   ): Promise<Dto['PaymentLinkMapper']> {
     const session = await this.stripeClient.paymentLinks.create({
       ...paymentLinkDto.stripeFields,
@@ -163,30 +104,29 @@ export class StripePaymentLinkService<
       currency: paymentLinkDto.currency as string
     });
 
-    const paymentLinkEntity =
-      await this.basePaymentLinkService.createPaymentLink(
-        await this._mappers.CreatePaymentLinkMapper.deserializeDtoToEntity(
-          {
-            ...paymentLinkDto,
-            id: session.id,
-            amount:
-              session.line_items?.data.reduce<number>(
-                (total, item) => total + item.amount_total,
-                0
-              ) ?? 0
-          },
-          this.em,
-          session
-        )
-      );
-
-    return this._mappers.PaymentLinkMapper.serializeEntityToDto(
-      paymentLinkEntity
+    const paymentLink = await this.basePaymentLinkService.createPaymentLink(
+      {
+        ...paymentLinkDto,
+        id: session.id,
+        amount:
+          session.line_items?.data.reduce<number>(
+            (total, item) => total + item.amount_total,
+            0
+          ) ?? 0
+      },
+      this.em,
+      session,
+      ...args
     );
+
+    paymentLink.stripeFields = session;
+
+    return paymentLink;
   }
 
   async updatePaymentLink(
-    paymentLinkDto: Dto['UpdatePaymentLinkMapper']
+    paymentLinkDto: StripeUpdatePaymentLinkDto<StatusEnum>,
+    ...args: unknown[]
   ): Promise<Dto['PaymentLinkMapper']> {
     const session = await this.stripeClient.paymentLinks.update(
       paymentLinkDto.id,
@@ -196,37 +136,37 @@ export class StripePaymentLinkService<
       }
     );
 
-    const paymentLinkEntity =
-      await this.basePaymentLinkService.updatePaymentLink(
-        await this._mappers.UpdatePaymentLinkMapper.deserializeDtoToEntity(
-          {
-            ...paymentLinkDto,
-            id: session.id,
-            amount:
-              session.line_items?.data.reduce<number>(
-                (total, item) => total + item.amount_total,
-                0
-              ) ?? 0
-          },
-          this.em,
-          session
-        )
-      );
-
-    return this._mappers.PaymentLinkMapper.serializeEntityToDto(
-      paymentLinkEntity
+    const paymentLink = await this.basePaymentLinkService.updatePaymentLink(
+      await this.mappers.UpdatePaymentLinkMapper.toEntity(
+        {
+          ...paymentLinkDto,
+          id: session.id,
+          amount:
+            session.line_items?.data.reduce<number>(
+              (total, item) => total + item.amount_total,
+              0
+            ) ?? 0
+        },
+        this.em,
+        session
+      ),
+      ...args
     );
+
+    paymentLink.stripeFields = session;
+
+    return paymentLink;
   }
 
   async getPaymentLink({ id }: IdDto): Promise<Dto['PaymentLinkMapper']> {
+    const stripePaymentLink = await this.stripeClient.paymentLinks.retrieve(id);
+
     const databasePaymentLink =
       await this.basePaymentLinkService.getPaymentLink({ id });
-    return {
-      ...this._mappers.PaymentLinkMapper.serializeEntityToDto(
-        databasePaymentLink
-      ),
-      stripeFields: await this.stripeClient.paymentLinks.retrieve(id)
-    };
+
+    databasePaymentLink.stripeFields = stripePaymentLink;
+
+    return databasePaymentLink;
   }
 
   async expirePaymentLink({ id }: IdDto): Promise<void> {
@@ -257,20 +197,26 @@ export class StripePaymentLinkService<
   }
 
   async listPaymentLinks(idsDto?: IdsDto): Promise<Dto['PaymentLinkMapper'][]> {
-    const paymentLinks = await this.stripeClient.paymentLinks.list({
+    const stripePaymentLinks = await this.stripeClient.paymentLinks.list({
       active: true
     });
+
+    const databasePaymentLinks =
+      await this.basePaymentLinkService.listPaymentLinks(idsDto);
+
     return await Promise.all(
-      (await this.basePaymentLinkService.listPaymentLinks(idsDto)).map(
-        async (paymentLink) => ({
-          ...(await this._mappers.PaymentLinkMapper.serializeEntityToDto(
-            paymentLink
-          )),
-          stripeFields: paymentLinks.data.find(
-            (paymentLink) => paymentLink.id === paymentLink.id
-          )
-        })
-      )
+      databasePaymentLinks.map(async (paymentLink) => {
+        const stripePaymentLink = stripePaymentLinks.data.find(
+          (sp) => sp.id === paymentLink.id
+        );
+        if (!stripePaymentLink) {
+          throw new Error(
+            `Stripe payment link not found for id: ${paymentLink.id}`
+          );
+        }
+        paymentLink.stripeFields = stripePaymentLink;
+        return paymentLink;
+      })
     );
   }
 }

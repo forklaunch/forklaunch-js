@@ -28,7 +28,7 @@ export const PermissionController = (
       {
         name: 'Create Permission',
         summary: 'Creates a new permission',
-        body: CreatePermissionMapper.schema(),
+        body: CreatePermissionMapper.schema,
         responses: {
           201: string,
           500: string
@@ -47,7 +47,7 @@ export const PermissionController = (
       {
         name: 'Create Batch Permissions',
         summary: 'Creates multiple permissions',
-        body: array(CreatePermissionMapper.schema()),
+        body: array(CreatePermissionMapper.schema),
         responses: {
           201: string,
           500: string
@@ -67,7 +67,7 @@ export const PermissionController = (
         name: 'Get Permission',
         summary: 'Gets a permission by ID',
         responses: {
-          200: PermissionMapper.schema(),
+          200: PermissionMapper.schema,
           500: string
         },
         params: IdSchema
@@ -85,7 +85,7 @@ export const PermissionController = (
         name: 'Get Batch Permissions',
         summary: 'Gets multiple permissions by IDs',
         responses: {
-          200: array(PermissionMapper.schema()),
+          200: array(PermissionMapper.schema),
           500: string
         },
         query: IdsSchema
@@ -104,7 +104,7 @@ export const PermissionController = (
       {
         name: 'Update Permission',
         summary: 'Updates a permission by ID',
-        body: UpdatePermissionMapper.schema(),
+        body: UpdatePermissionMapper.schema,
         responses: {
           200: string,
           500: string
@@ -123,7 +123,7 @@ export const PermissionController = (
       {
         name: 'Update Batch Permissions',
         summary: 'Updates multiple permissions by IDs',
-        body: array(UpdatePermissionMapper.schema()),
+        body: array(UpdatePermissionMapper.schema),
         responses: {
           200: string,
           500: string

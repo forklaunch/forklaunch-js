@@ -1,4 +1,4 @@
-import { IdDto, InstanceTypeRecord } from '@forklaunch/common';
+import { IdDto } from '@forklaunch/common';
 import { createCacheKey, TtlCache } from '@forklaunch/core/cache';
 import {
   evaluateTelemetryOptions,
@@ -7,104 +7,63 @@ import {
   TelemetryOptions
 } from '@forklaunch/core/http';
 import { CheckoutSessionService } from '@forklaunch/interfaces-billing/interfaces';
-import {
-  InternalMapper,
-  RequestMapperConstructor,
-  ResponseMapperConstructor,
-  transformIntoInternalMapper
-} from '@forklaunch/internal';
+import { CreateCheckoutSessionDto } from '@forklaunch/interfaces-billing/types';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
 import { BaseCheckoutSessionDtos } from '../domain/types/baseBillingDto.types';
 import { BaseCheckoutSessionEntities } from '../domain/types/baseBillingEntity.types';
+import { CheckoutSessionMappers } from '../domain/types/checkoutSession.mapper.types';
 
 export class BaseCheckoutSessionService<
   SchemaValidator extends AnySchemaValidator,
   PaymentMethodEnum,
   CurrencyEnum,
   StatusEnum,
-  Entities extends BaseCheckoutSessionEntities<
+  MapperEntities extends BaseCheckoutSessionEntities<
     PaymentMethodEnum,
     CurrencyEnum,
     StatusEnum
   >,
-  Dto extends BaseCheckoutSessionDtos<
+  MapperDomains extends BaseCheckoutSessionDtos<
     PaymentMethodEnum,
     CurrencyEnum,
     StatusEnum
   > = BaseCheckoutSessionDtos<PaymentMethodEnum, CurrencyEnum, StatusEnum>
 > implements CheckoutSessionService<PaymentMethodEnum, CurrencyEnum, StatusEnum>
 {
-  protected _mappers: InternalMapper<InstanceTypeRecord<typeof this.mappers>>;
-  protected evaluatedTelemetryOptions: {
+  private evaluatedTelemetryOptions: {
     logging?: boolean;
     metrics?: boolean;
     tracing?: boolean;
   };
   protected enableDatabaseBackup: boolean;
-  protected readonly em: EntityManager;
-  protected readonly cache: TtlCache;
-  protected readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
-  protected readonly schemaValidator: SchemaValidator;
-  protected readonly mappers: {
-    CheckoutSessionMapper: ResponseMapperConstructor<
-      SchemaValidator,
-      Dto['CheckoutSessionMapper'],
-      Entities['CheckoutSessionMapper']
-    >;
-    CreateCheckoutSessionMapper: RequestMapperConstructor<
-      SchemaValidator,
-      Dto['CreateCheckoutSessionMapper'],
-      Entities['CreateCheckoutSessionMapper'],
-      (
-        dto: Dto['CreateCheckoutSessionMapper'],
-        em: EntityManager
-      ) => Promise<Entities['CreateCheckoutSessionMapper']>
-    >;
-    UpdateCheckoutSessionMapper: RequestMapperConstructor<
-      SchemaValidator,
-      Dto['UpdateCheckoutSessionMapper'],
-      Entities['UpdateCheckoutSessionMapper'],
-      (
-        dto: Dto['UpdateCheckoutSessionMapper'],
-        em: EntityManager
-      ) => Promise<Entities['UpdateCheckoutSessionMapper']>
-    >;
-  };
+  public em: EntityManager;
+  protected cache: TtlCache;
+  protected openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
+  protected schemaValidator: SchemaValidator;
+  protected mappers: CheckoutSessionMappers<
+    PaymentMethodEnum,
+    CurrencyEnum,
+    StatusEnum,
+    MapperEntities,
+    MapperDomains
+  >;
 
   constructor(
     em: EntityManager,
     cache: TtlCache,
     openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
     schemaValidator: SchemaValidator,
-    mappers: {
-      CheckoutSessionMapper: ResponseMapperConstructor<
-        SchemaValidator,
-        Dto['CheckoutSessionMapper'],
-        Entities['CheckoutSessionMapper']
-      >;
-      CreateCheckoutSessionMapper: RequestMapperConstructor<
-        SchemaValidator,
-        Dto['CreateCheckoutSessionMapper'],
-        Entities['CreateCheckoutSessionMapper'],
-        (
-          dto: Dto['CreateCheckoutSessionMapper'],
-          em: EntityManager
-        ) => Promise<Entities['CreateCheckoutSessionMapper']>
-      >;
-      UpdateCheckoutSessionMapper: RequestMapperConstructor<
-        SchemaValidator,
-        Dto['UpdateCheckoutSessionMapper'],
-        Entities['UpdateCheckoutSessionMapper'],
-        (
-          dto: Dto['UpdateCheckoutSessionMapper'],
-          em: EntityManager
-        ) => Promise<Entities['UpdateCheckoutSessionMapper']>
-      >;
-    },
-    readonly options?: {
-      enableDatabaseBackup?: boolean;
+    mappers: CheckoutSessionMappers<
+      PaymentMethodEnum,
+      CurrencyEnum,
+      StatusEnum,
+      MapperEntities,
+      MapperDomains
+    >,
+    options?: {
       telemetry?: TelemetryOptions;
+      enableDatabaseBackup?: boolean;
     }
   ) {
     this.em = em;
@@ -112,7 +71,6 @@ export class BaseCheckoutSessionService<
     this.openTelemetryCollector = openTelemetryCollector;
     this.schemaValidator = schemaValidator;
     this.mappers = mappers;
-    this._mappers = transformIntoInternalMapper(mappers, schemaValidator);
     this.enableDatabaseBackup = options?.enableDatabaseBackup ?? false;
     this.evaluatedTelemetryOptions = options?.telemetry
       ? evaluateTelemetryOptions(options.telemetry).enabled
@@ -126,8 +84,13 @@ export class BaseCheckoutSessionService<
   protected createCacheKey = createCacheKey('checkout_session');
 
   async createCheckoutSession(
-    checkoutSessionDto: Dto['CreateCheckoutSessionMapper']
-  ): Promise<Dto['CheckoutSessionMapper']> {
+    checkoutSessionDto: CreateCheckoutSessionDto<
+      PaymentMethodEnum,
+      CurrencyEnum,
+      StatusEnum
+    >,
+    ...args: unknown[]
+  ): Promise<MapperDomains['CheckoutSessionMapper']> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info(
         'Creating checkout session',
@@ -136,15 +99,14 @@ export class BaseCheckoutSessionService<
     }
 
     const checkoutSession =
-      await this._mappers.CreateCheckoutSessionMapper.deserializeDtoToEntity(
+      await this.mappers.CreateCheckoutSessionMapper.toEntity(
         checkoutSessionDto,
-        this.em
+        this.em,
+        ...args
       );
 
     const createdCheckoutSessionDto =
-      await this._mappers.CheckoutSessionMapper.serializeEntityToDto(
-        checkoutSession
-      );
+      await this.mappers.CheckoutSessionMapper.toDto(checkoutSession);
 
     if (this.enableDatabaseBackup) {
       await this.em.persistAndFlush(checkoutSession);
@@ -161,15 +123,15 @@ export class BaseCheckoutSessionService<
 
   async getCheckoutSession({
     id
-  }: IdDto): Promise<Dto['CheckoutSessionMapper']> {
+  }: IdDto): Promise<MapperDomains['CheckoutSessionMapper']> {
     const checkoutSessionDetails = await this.cache.readRecord<
-      Entities['CheckoutSessionMapper']
+      MapperEntities['CheckoutSessionMapper']
     >(this.createCacheKey(id));
     if (!checkoutSessionDetails) {
       throw new Error('Session not found');
     }
 
-    return this._mappers.CheckoutSessionMapper.serializeEntityToDto(
+    return this.mappers.CheckoutSessionMapper.toDto(
       checkoutSessionDetails.value
     );
   }

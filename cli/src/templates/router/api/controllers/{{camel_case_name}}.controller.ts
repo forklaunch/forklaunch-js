@@ -25,7 +25,7 @@ export const {{pascal_case_name}}Controller = (
       summary: '{{pascal_case_name}}',
       responses: {
         // specifies the success response schema using Mapper constructs
-        200: {{pascal_case_name}}ResponseMapper.schema()
+        200: {{pascal_case_name}}ResponseMapper.schema
       }
     },
     async (req, res) => {
@@ -46,10 +46,10 @@ export const {{pascal_case_name}}Controller = (
       name: '{{camel_case_name}}', 
       summary: '{{pascal_case_name}}',
       // specifies the request body schema using Mapper constructs
-      body: {{pascal_case_name}}RequestMapper.schema(),
+      body: {{pascal_case_name}}RequestMapper.schema,
       responses: {
         // specifies the success response schema using Mapper constructs
-        200: {{pascal_case_name}}ResponseMapper.schema()
+        200: {{pascal_case_name}}ResponseMapper.schema
       }
     },
     async (req, res) => {

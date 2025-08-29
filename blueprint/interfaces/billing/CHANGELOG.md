@@ -1,5 +1,11 @@
 # @forklaunch/interfaces-billing
 
+## 0.6.0
+
+### Minor Changes
+
+- new mapper syntax, and cleaner logic
+
 ## 0.5.7
 
 ### Patch Changes

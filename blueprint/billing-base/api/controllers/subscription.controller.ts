@@ -30,9 +30,9 @@ export const SubscriptionController = (
       {
         name: 'createSubscription',
         summary: 'Create a subscription',
-        body: CreateSubscriptionMapper.schema(),
+        body: CreateSubscriptionMapper.schema,
         responses: {
-          200: SubscriptionMapper.schema()
+          200: SubscriptionMapper.schema
         }
       },
       async (req, res) => {
@@ -51,7 +51,7 @@ export const SubscriptionController = (
         summary: 'Get a subscription',
         params: IdSchema,
         responses: {
-          200: SubscriptionMapper.schema()
+          200: SubscriptionMapper.schema
         }
       },
       async (req, res) => {
@@ -70,7 +70,7 @@ export const SubscriptionController = (
         summary: 'Get a user subscription',
         params: IdSchema,
         responses: {
-          200: SubscriptionMapper.schema()
+          200: SubscriptionMapper.schema
         }
       },
       async (req, res) => {
@@ -92,7 +92,7 @@ export const SubscriptionController = (
         summary: 'Get an organization subscription',
         params: IdSchema,
         responses: {
-          200: SubscriptionMapper.schema()
+          200: SubscriptionMapper.schema
         }
       },
       async (req, res) => {
@@ -113,9 +113,9 @@ export const SubscriptionController = (
         name: 'updateSubscription',
         summary: 'Update a subscription',
         params: IdSchema,
-        body: UpdateSubscriptionMapper.schema(),
+        body: UpdateSubscriptionMapper.schema,
         responses: {
-          200: SubscriptionMapper.schema()
+          200: SubscriptionMapper.schema
         }
       },
       async (req, res) => {
@@ -152,7 +152,7 @@ export const SubscriptionController = (
         summary: 'List subscriptions',
         query: IdsSchema,
         responses: {
-          200: array(SubscriptionMapper.schema())
+          200: array(SubscriptionMapper.schema)
         }
       },
       async (req, res) => {

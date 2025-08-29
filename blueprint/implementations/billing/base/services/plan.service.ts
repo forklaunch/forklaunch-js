@@ -1,4 +1,4 @@
-import { IdDto, IdsDto, InstanceTypeRecord } from '@forklaunch/common';
+import { IdDto, IdsDto } from '@forklaunch/common';
 import {
   evaluateTelemetryOptions,
   MetricsDefinition,
@@ -7,98 +7,60 @@ import {
 } from '@forklaunch/core/http';
 import { PlanService } from '@forklaunch/interfaces-billing/interfaces';
 import {
-  InternalMapper,
-  RequestMapperConstructor,
-  ResponseMapperConstructor,
-  transformIntoInternalMapper
-} from '@forklaunch/internal';
+  CreatePlanDto,
+  UpdatePlanDto
+} from '@forklaunch/interfaces-billing/types';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
 import { BasePlanDtos } from '../domain/types/baseBillingDto.types';
 import { BasePlanEntities } from '../domain/types/baseBillingEntity.types';
+import { PlanMappers } from '../domain/types/plan.mapper.types';
 
 export class BasePlanService<
   SchemaValidator extends AnySchemaValidator,
   PlanCadenceEnum,
   CurrencyEnum,
   BillingProviderEnum,
-  Entities extends BasePlanEntities<
+  MapperEntities extends BasePlanEntities<
     PlanCadenceEnum,
     CurrencyEnum,
     BillingProviderEnum
   >,
-  Dto extends BasePlanDtos<
+  MapperDomains extends BasePlanDtos<
     PlanCadenceEnum,
     CurrencyEnum,
     BillingProviderEnum
   > = BasePlanDtos<PlanCadenceEnum, CurrencyEnum, BillingProviderEnum>
 > implements PlanService<PlanCadenceEnum, CurrencyEnum, BillingProviderEnum>
 {
-  protected _mappers: InternalMapper<InstanceTypeRecord<typeof this.mappers>>;
-  protected evaluatedTelemetryOptions: {
+  private evaluatedTelemetryOptions: {
     logging?: boolean;
     metrics?: boolean;
     tracing?: boolean;
   };
-  protected em: EntityManager;
-  protected readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
-  protected readonly schemaValidator: SchemaValidator;
-  protected readonly mappers: {
-    PlanMapper: ResponseMapperConstructor<
-      SchemaValidator,
-      Dto['PlanMapper'],
-      Entities['PlanMapper']
-    >;
-    CreatePlanMapper: RequestMapperConstructor<
-      SchemaValidator,
-      Dto['CreatePlanMapper'],
-      Entities['CreatePlanMapper'],
-      (
-        dto: Dto['CreatePlanMapper'],
-        em: EntityManager
-      ) => Promise<Entities['CreatePlanMapper']>
-    >;
-    UpdatePlanMapper: RequestMapperConstructor<
-      SchemaValidator,
-      Dto['UpdatePlanMapper'],
-      Entities['UpdatePlanMapper'],
-      (
-        dto: Dto['UpdatePlanMapper'],
-        em: EntityManager
-      ) => Promise<Entities['UpdatePlanMapper']>
-    >;
-  };
+  public em: EntityManager;
+  protected openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
+  protected schemaValidator: SchemaValidator;
+  protected mappers: PlanMappers<
+    PlanCadenceEnum,
+    CurrencyEnum,
+    BillingProviderEnum,
+    MapperEntities,
+    MapperDomains
+  >;
 
   constructor(
     em: EntityManager,
     openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
     schemaValidator: SchemaValidator,
-    mappers: {
-      PlanMapper: ResponseMapperConstructor<
-        SchemaValidator,
-        Dto['PlanMapper'],
-        Entities['PlanMapper']
-      >;
-      CreatePlanMapper: RequestMapperConstructor<
-        SchemaValidator,
-        Dto['CreatePlanMapper'],
-        Entities['CreatePlanMapper'],
-        (
-          dto: Dto['CreatePlanMapper'],
-          em: EntityManager
-        ) => Promise<Entities['CreatePlanMapper']>
-      >;
-      UpdatePlanMapper: RequestMapperConstructor<
-        SchemaValidator,
-        Dto['UpdatePlanMapper'],
-        Entities['UpdatePlanMapper'],
-        (
-          dto: Dto['UpdatePlanMapper'],
-          em: EntityManager
-        ) => Promise<Entities['UpdatePlanMapper']>
-      >;
-    },
-    readonly options?: {
+    mappers: PlanMappers<
+      PlanCadenceEnum,
+      CurrencyEnum,
+      BillingProviderEnum,
+      MapperEntities,
+      MapperDomains
+    >,
+    options?: {
       telemetry?: TelemetryOptions;
     }
   ) {
@@ -106,7 +68,6 @@ export class BasePlanService<
     this.openTelemetryCollector = openTelemetryCollector;
     this.schemaValidator = schemaValidator;
     this.mappers = mappers;
-    this._mappers = transformIntoInternalMapper(mappers, schemaValidator);
     this.evaluatedTelemetryOptions = options?.telemetry
       ? evaluateTelemetryOptions(options.telemetry).enabled
       : {
@@ -119,7 +80,7 @@ export class BasePlanService<
   async listPlans(
     idsDto?: IdsDto,
     em?: EntityManager
-  ): Promise<Dto['PlanMapper'][]> {
+  ): Promise<MapperDomains['PlanMapper'][]> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info('Listing plans', idsDto);
     }
@@ -129,57 +90,59 @@ export class BasePlanService<
           filters: idsDto?.ids ? { id: { $in: idsDto.ids } } : undefined
         })
       ).map((plan) =>
-        this._mappers.PlanMapper.serializeEntityToDto(
-          plan as Entities['PlanMapper']
-        )
+        this.mappers.PlanMapper.toDto(plan as MapperEntities['PlanMapper'])
       )
     );
   }
 
   async createPlan(
-    planDto: Dto['CreatePlanMapper'],
-    em?: EntityManager
-  ): Promise<Dto['PlanMapper']> {
+    planDto: CreatePlanDto<PlanCadenceEnum, CurrencyEnum, BillingProviderEnum>,
+    em?: EntityManager,
+    ...args: unknown[]
+  ): Promise<MapperDomains['PlanMapper']> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info('Creating plan', planDto);
     }
-    const plan = await this._mappers.CreatePlanMapper.deserializeDtoToEntity(
+    const plan = await this.mappers.CreatePlanMapper.toEntity(
       planDto,
-      em ?? this.em
+      em ?? this.em,
+      ...args
     );
     await (em ?? this.em).transactional(async (innerEm) => {
       await innerEm.persist(plan);
     });
-    return this._mappers.PlanMapper.serializeEntityToDto(plan);
+    return this.mappers.PlanMapper.toDto(plan);
   }
 
-  async getPlan(idDto: IdDto, em?: EntityManager): Promise<Dto['PlanMapper']> {
+  async getPlan(
+    idDto: IdDto,
+    em?: EntityManager
+  ): Promise<MapperDomains['PlanMapper']> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info('Getting plan', idDto);
     }
     const plan = await (em ?? this.em).findOneOrFail('Plan', idDto);
-    return this._mappers.PlanMapper.serializeEntityToDto(
-      plan as Entities['PlanMapper']
-    );
+    return this.mappers.PlanMapper.toDto(plan as MapperEntities['PlanMapper']);
   }
 
   async updatePlan(
-    planDto: Dto['UpdatePlanMapper'],
-    em?: EntityManager
-  ): Promise<Dto['PlanMapper']> {
+    planDto: UpdatePlanDto<PlanCadenceEnum, CurrencyEnum, BillingProviderEnum>,
+    em?: EntityManager,
+    ...args: unknown[]
+  ): Promise<MapperDomains['PlanMapper']> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info('Updating plan', planDto);
     }
-    const plan = await this._mappers.UpdatePlanMapper.deserializeDtoToEntity(
+    const plan = await this.mappers.UpdatePlanMapper.toEntity(
       planDto,
-      em ?? this.em
+      em ?? this.em,
+      ...args
     );
     const updatedPlan = await (em ?? this.em).upsert(plan);
     await (em ?? this.em).transactional(async (innerEm) => {
       await innerEm.persist(plan);
     });
-    const updatedPlanDto =
-      await this._mappers.PlanMapper.serializeEntityToDto(updatedPlan);
+    const updatedPlanDto = await this.mappers.PlanMapper.toDto(updatedPlan);
     return updatedPlanDto;
   }
 

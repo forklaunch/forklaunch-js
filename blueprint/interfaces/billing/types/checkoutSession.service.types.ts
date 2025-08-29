@@ -9,6 +9,7 @@ export type CreateCheckoutSessionDto<
   paymentMethods: PaymentMethodEnum[keyof PaymentMethodEnum][];
   currency: CurrencyEnum[keyof CurrencyEnum];
   successRedirectUri?: string;
+  uri?: string;
   cancelRedirectUri?: string;
   expiresAt: Date;
   status: StatusEnum[keyof StatusEnum];
