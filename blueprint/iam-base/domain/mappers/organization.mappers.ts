@@ -46,10 +46,15 @@ export const OrganizationMapper = responseMapper(
       return {
         ...(await entity.read()),
         users: await Promise.all(
-          entity.users.getItems().map(async (user) => {
-            // Use the mapper function directly to avoid circular dependency
-            return await UserMapper.toDomain(user);
-          })
+          (entity.users.isInitialized()
+            ? entity.users
+            : await entity.users.init()
+          )
+            .getItems()
+            .map(async (user) => {
+              // Use the mapper function directly to avoid circular dependency
+              return UserMapper.toDomain(user);
+            })
         )
       };
     }

@@ -55,9 +55,12 @@ export const UserMapper = responseMapper(
       return {
         ...(await entity.read()),
         roles: await Promise.all(
-          entity.roles
+          (entity.roles.isInitialized()
+            ? entity.roles
+            : await entity.roles.init()
+          )
             .getItems()
-            .map(async (role) => await RoleMapper.toDomain(role))
+            .map(async (role) => RoleMapper.toDomain(role))
         )
       };
     }

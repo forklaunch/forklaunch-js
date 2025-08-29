@@ -47,10 +47,15 @@ export const RoleMapper = responseMapper(
       return {
         ...(await entity.read()),
         permissions: await Promise.all(
-          entity.permissions.getItems().map(async (permission) => {
-            // Use the mapper function directly to avoid circular dependency
-            return await PermissionMapper.toDomain(permission);
-          })
+          (entity.permissions.isInitialized()
+            ? entity.permissions
+            : await entity.permissions.init()
+          )
+            .getItems()
+            .map(async (permission) => {
+              // Use the mapper function directly to avoid circular dependency
+              return PermissionMapper.toDomain(permission);
+            })
         )
       };
     }

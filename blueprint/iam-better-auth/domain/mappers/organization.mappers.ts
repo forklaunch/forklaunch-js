@@ -46,9 +46,12 @@ export const OrganizationMapper = responseMapper(
       return {
         ...(await entity.read()),
         users: await Promise.all(
-          entity.users
+          (entity.users.isInitialized()
+            ? entity.users
+            : await entity.users.init()
+          )
             .getItems()
-            .map(async (user) => await UserMapper.toDomain(user))
+            .map(async (user) => UserMapper.toDomain(user))
         )
       };
     }

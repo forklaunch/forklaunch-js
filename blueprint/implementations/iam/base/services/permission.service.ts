@@ -198,6 +198,20 @@ export class BasePermissionService<
           em
         )
       );
+      await Promise.all(
+        roles.map(async (role) => {
+          if (role.permissions.isInitialized()) {
+            return role.permissions.init();
+          }
+        })
+      );
+      await Promise.all(
+        roles.map(async (role) => {
+          if (role.permissions.isInitialized()) {
+            return role.permissions.init();
+          }
+        })
+      );
       roles.forEach((role) => {
         if (
           rolesCache[role.id] &&
