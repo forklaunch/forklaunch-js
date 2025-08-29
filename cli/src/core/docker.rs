@@ -1097,6 +1097,8 @@ pub(crate) fn add_service_definition_to_docker_compose(
     base_path: &Path,
     docker_compose_string: Option<String>,
 ) -> Result<String> {
+    println!("core:docker:00: manifest_data: {:?},{:?}", manifest_data.app_name, manifest_data.service_name);
+    println!("core:docker:01: base_path: {:?}", base_path);
     let (mut docker_compose, port_number, mut environment) = add_base_definition_to_docker_compose(
         &manifest_data.app_name,
         &manifest_data.service_name,
@@ -1153,7 +1155,7 @@ pub(crate) fn add_service_definition_to_docker_compose(
         &mut environment,
     )
     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
-
+    println!("core:docker:02: this is where the service volume paths are created");
     let volumes = vec![
         format!(
             "./{}:/{}/{}",

@@ -254,6 +254,13 @@ impl CliCommand for LibraryCommand {
             &BasePathType::Init,
         )?;
         let base_path = Path::new(&base_path_input);
+        let app_path = if base_path.join("src").exists() {
+            base_path.join("src").join("modules")
+        } else if base_path.join("modules").exists() {
+            base_path.join("modules")
+        } else {
+            return Err(anyhow::anyhow!("Application directory not found in base_path, src/modules, or modules directories. Please check if your application is initialized and you are in the correct directory."));
+        };
 
         let config_path = Path::new(&base_path)
             .join(".forklaunch")
@@ -262,13 +269,14 @@ impl CliCommand for LibraryCommand {
         let existing_manifest_data = from_str::<ApplicationManifestData>(
             &read_to_string(config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
-        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
-        .initialize(InitializableManifestConfigMetadata::Application(
+        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+        existing_manifest_data.initialize(InitializableManifestConfigMetadata::Application(
             ApplicationInitializationMetadata {
-                app_name: base_path.file_name().unwrap().to_string_lossy().to_string(),
+                app_name: existing_manifest_data.app_name.clone(),
                 database: None,
             },
         ));
+        
 
         let library_name = prompt_with_validation(
             &mut line_editor,
@@ -333,9 +341,10 @@ impl CliCommand for LibraryCommand {
         };
 
         let dryrun = matches.get_flag("dryrun");
+        println!("init:library:00: This is where library is initialized: app_path: {:?}", app_path);
         generate_basic_library(
             &library_name,
-            &base_path,
+            &app_path,
             &mut manifest_data,
             &mut stdout,
             dryrun,

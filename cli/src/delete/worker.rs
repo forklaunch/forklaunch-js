@@ -1,7 +1,7 @@
 use std::{
     fs::{read_to_string, remove_dir_all},
     io::Write,
-    path::Path,
+    path::{Path, PathBuf},
 };
 
 use anyhow::{Context, Result};
@@ -18,7 +18,8 @@ use crate::{
         ERROR_FAILED_TO_WRITE_DOCKER_COMPOSE, ERROR_FAILED_TO_WRITE_MANIFEST, Runtime,
     },
     core::{
-        base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        // base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        flexible_path::{create_generic_config, find_manifest_path},
         command::command,
         docker::remove_worker_from_docker_compose,
         manifest::{
@@ -68,18 +69,48 @@ impl CliCommand for WorkerCommand {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let base_path_input = prompt_base_path(
-            &mut line_editor,
-            &mut stdout,
-            matches,
-            &BasePathLocation::Anywhere,
-            &BasePathType::Delete,
-        )?;
-        let base_path = Path::new(&base_path_input);
+        // let base_path_input = prompt_base_path(
+        //     &mut line_editor,
+        //     &mut stdout,
+        //     matches,
+        //     &BasePathLocation::Anywhere,
+        //     &BasePathType::Delete,
+        // )?;
+        // let base_path = Path::new(&base_path_input);
 
-        let config_path = Path::new(&base_path)
-            .join(".forklaunch")
-            .join("manifest.toml");
+        let current_dir = std::env::current_dir().unwrap();
+        // Determine where the router should be created
+        let worker_base_path = if let Some(relative_path) = matches.get_one::<String>("base_path") {
+            // User provided a relative path, resolve it relative to current directory
+            let resolved_path = current_dir.join(relative_path);
+            println!("init:service:03: Service will be deleted at: {:?}", resolved_path);
+            resolved_path
+        } else {
+            current_dir.clone()
+        };
+
+        // Find the manifest using flexible_path
+        let root_path_config = create_generic_config();
+        let manifest_path = find_manifest_path(&worker_base_path, &root_path_config);
+        
+        let config_path = if let Some(manifest) = manifest_path {
+            manifest
+        } else {
+            // No manifest found, this might be an error or we need to search more broadly
+            anyhow::bail!("Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path.");
+        };
+        let app_root_path: PathBuf = config_path
+            .to_string_lossy()
+            .strip_suffix(".forklaunch/manifest.toml")
+            .ok_or_else(|| {
+            anyhow::anyhow!("Expected manifest path to end with .forklaunch/manifest.toml, got: {:?}", config_path)
+        })?
+            .to_string()
+            .into();
+        
+        println!("init:service:06: config_path: {:?}", config_path);
+        println!("init:service:07: base_path: {:?}", worker_base_path);
+        println!("init:service:08: app_root_path: {:?}", app_root_path);
 
         let mut manifest_data = toml::from_str::<ApplicationManifestData>(
             &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
@@ -102,9 +133,9 @@ impl CliCommand for WorkerCommand {
             |_| "Worker not found".to_string(),
         )?;
 
-        manifest_data = manifest_data.initialize(InitializableManifestConfigMetadata::Application(
+        manifest_data.initialize(InitializableManifestConfigMetadata::Application(
             ApplicationInitializationMetadata {
-                app_name: base_path.file_name().unwrap().to_string_lossy().to_string(),
+                app_name: manifest_data.app_name.clone(),
                 database: match manifest_data
                     .projects
                     .iter()
@@ -138,9 +169,9 @@ impl CliCommand for WorkerCommand {
         let manifest_content =
             remove_project_definition_from_manifest(&mut manifest_data, &worker_name)?;
 
-        remove_dir_all(&base_path.join(&worker_name))?;
+        remove_dir_all(&worker_base_path.join(&worker_name))?;
 
-        let docker_compose_path = base_path.join("docker-compose.yaml");
+        let docker_compose_path = app_root_path.join("docker-compose.yaml");
         let mut docker_compose = serde_yml::from_str(
             &read_to_string(&docker_compose_path)
                 .with_context(|| ERROR_FAILED_TO_READ_DOCKER_COMPOSE)?,
@@ -164,15 +195,15 @@ impl CliCommand for WorkerCommand {
         match manifest_data.runtime.parse()? {
             Runtime::Node => {
                 rendered_templates.push(RenderedTemplate {
-                    path: base_path.join("pnpm-workspace.yaml"),
-                    content: remove_project_definition_to_pnpm_workspace(base_path, &worker_name)?,
+                    path: worker_base_path.join("pnpm-workspace.yaml"),
+                    content: remove_project_definition_to_pnpm_workspace(&worker_base_path, &worker_name)?,
                     context: Some(ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE.to_string()),
                 });
             }
             Runtime::Bun => {
                 rendered_templates.push(RenderedTemplate {
-                    path: base_path.join("package.json"),
-                    content: remove_project_definition_to_package_json(base_path, &worker_name)?,
+                    path: worker_base_path.join("package.json"),
+                    content: remove_project_definition_to_package_json(&worker_base_path, &worker_name)?,
                     context: Some(ERROR_FAILED_TO_CREATE_PACKAGE_JSON.to_string()),
                 });
             }
@@ -180,7 +211,7 @@ impl CliCommand for WorkerCommand {
 
         remove_project_from_universal_sdk(
             &mut rendered_templates,
-            base_path,
+            &worker_base_path,
             &manifest_data.app_name,
             &worker_name,
         )?;

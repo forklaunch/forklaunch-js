@@ -17,6 +17,8 @@ config_struct!(
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) service_name: String,
         #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) service_path: String,
+        #[serde(skip_serializing, skip_deserializing)]
         pub(crate) camel_case_name: String,
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) pascal_case_name: String,

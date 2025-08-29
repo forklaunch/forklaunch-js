@@ -80,13 +80,20 @@ impl CliCommand for ModuleCommand {
                     .help("Dry run the command")
                     .action(ArgAction::SetTrue),
             )
+            .arg(
+                Arg::new("module_folder")
+                    .short('f')
+                    .long("module-folder")
+                    .help("The folder to store the module in")
+            )
     }
 
     // pass token in from parent and perform get token above?
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
-
+        
+        // base path should be the application path
         let base_path_input = prompt_base_path(
             &mut line_editor,
             &mut stdout,
@@ -95,11 +102,12 @@ impl CliCommand for ModuleCommand {
             &BasePathType::Init,
         )?;
         let base_path = Path::new(&base_path_input);
+        // println!("00: base_path: {:?}", base_path);
 
         let config_path = Path::new(&base_path)
             .join(".forklaunch")
             .join("manifest.toml");
-
+        // println!("01: config_path: {:?}", config_path);
         let existing_manifest_data = toml::from_str::<ApplicationManifestData>(
             &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
@@ -149,6 +157,41 @@ impl CliCommand for ModuleCommand {
 
         let dryrun = matches.get_flag("dryrun");
 
+        // Default output path should be src/modules/(module_name)
+        let src_path = base_path.join("src");
+        let destination_path = if let Some(module_folder) = matches.get_one::<String>("module_folder") {
+            base_path.join(Path::new(&module_folder))
+        } else if src_path.exists() && src_path.is_dir() {
+            src_path
+                .join("modules")
+        } else {
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+            writeln!(
+                stdout,
+                "No 'src' folder in project root. Please confirm where module will be initialized."
+            )?;
+            stdout.reset()?;
+            let temp_path: String = prompt_with_validation(
+                &mut line_editor,
+                &mut stdout,
+                "destination_path",
+                matches,
+                "Confirm where module will be initialized:",
+                Some(&["src/modules", "modules"]),
+                |input| {
+                    let path = Path::new(&input);
+                    if let Some(parent) = path.parent() {
+                        parent.exists() || parent.to_str().is_some()
+                    } else {
+                        false
+                    }
+                },
+                |_| "Invalid path. Please provide a valid destination path.".to_string(),
+            )?;
+            base_path.join(Path::new(&temp_path)).to_path_buf()
+        };
+        // println!("02: destination_path: {:?}", destination_path);
+
         let name = existing_manifest_data.app_name.clone();
 
         let mut service_data = ServiceManifestData {
@@ -159,6 +202,7 @@ impl CliCommand for ModuleCommand {
             pascal_case_app_name: existing_manifest_data.pascal_case_app_name.clone(),
             kebab_case_app_name: existing_manifest_data.kebab_case_app_name.clone(),
             service_name: get_service_module_name(&module),
+            service_path: get_service_module_name(&module),
             camel_case_name: get_service_module_name(&module).to_case(Case::Camel),
             pascal_case_name: get_service_module_name(&module).to_case(Case::Pascal),
             kebab_case_name: get_service_module_name(&module).to_case(Case::Kebab),
@@ -213,7 +257,8 @@ impl CliCommand for ModuleCommand {
             is_better_auth: module.clone() == Module::BetterAuthIam,
             is_stripe: module.clone() == Module::StripeBilling,
         };
-
+        println!("init:module:00: service_data: {:?}", service_data);
+        println!("init:module:01: module: {:?}", module);
         let manifest_data = add_project_definition_to_manifest(
             ProjectType::Service,
             &mut service_data,
@@ -233,27 +278,28 @@ impl CliCommand for ModuleCommand {
                 .join(&module.metadata().exclusive_files.unwrap().first().unwrap())
                 .to_string_lossy()
                 .to_string(),
-            output_path: base_path
+            output_path: destination_path
                 .join(get_service_module_name(&module))
                 .to_string_lossy()
                 .to_string(),
             module_id: Some(module.clone()),
         };
+        println!("init:module:02: template_dir: {:?}", template_dir);
 
         let mut rendered_templates = vec![];
-
+        println!("init:module:03: config_path: {:?}", config_path);
         rendered_templates.push(RenderedTemplate {
             path: config_path.clone(),
             content: manifest_data,
             context: Some(ERROR_FAILED_TO_WRITE_MANIFEST.to_string()),
         });
-
+        println!("init:module:04: docker-compose.yaml: {:?}", base_path.join("docker-compose.yaml"));
         rendered_templates.push(RenderedTemplate {
             path: base_path.join("docker-compose.yaml"),
             content: add_service_definition_to_docker_compose(&service_data, base_path, None)?,
             context: Some(ERROR_FAILED_TO_WRITE_DOCKER_COMPOSE.to_string()),
         });
-
+        println!("init:module:05: template_dir: {:?}", template_dir);
         rendered_templates.extend(generate_with_template(
             None,
             &template_dir,
@@ -263,10 +309,11 @@ impl CliCommand for ModuleCommand {
             &vec![],
             dryrun,
         )?);
-
+        // println!("06 destination_path: {:?}", destination_path);
+        // println!("07 service_name: {:?}", get_service_module_name(&module));
         rendered_templates.push(generate_service_package_json(
             &service_data,
-            &base_path.join(get_service_module_name(&module)),
+            &destination_path.join(get_service_module_name(&module)),
             None,
             None,
             None,
@@ -291,11 +338,12 @@ impl CliCommand for ModuleCommand {
         }
 
         write_rendered_templates(&rendered_templates, dryrun, &mut stdout)?;
-
+        // println!("module:08: base_path: {:?}", base_path);
+        // println!("module:09: destination_path: {:?}", destination_path);
         if !dryrun {
             generate_symlinks(
                 Some(base_path),
-                &base_path.join(get_service_module_name(&module)),
+                &destination_path.join(get_service_module_name(&module)),
                 &mut service_data,
                 dryrun,
             )?;

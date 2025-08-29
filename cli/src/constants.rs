@@ -245,6 +245,52 @@ choice! {
             exclusive_files: Some(&["iam-better-auth"])
         }
     }
+
+    pub(crate) enum FileDestinationOption {
+        Src = Choice {
+            id: "source",
+            description: Some("src/modules"),
+            exclusive_files: None,
+        },
+        Modules = Choice {
+            id: "modules",
+            description: Some("modules"),
+            exclusive_files: None,
+        },
+    }
+
+    pub(crate) enum CurrentPathLocation {
+        Application = Choice {
+            id: "application",
+            description: Some("application"),
+            exclusive_files: None,
+        },
+        Service = Choice {
+            id: "service",
+            description: Some("service"),
+            exclusive_files: None,
+        },
+        Worker = Choice {
+            id: "worker",
+            description: Some("worker"),
+            exclusive_files: None,
+        },
+        Library = Choice {
+            id: "library",
+            description: Some("library"),
+            exclusive_files: None,
+        },
+        Router = Choice {
+            id: "router",
+            description: Some("router"),
+            exclusive_files: None,
+        },
+        Anywhere = Choice {
+            id: "anywhere",
+            description: Some("anywhere"),
+            exclusive_files: None,
+        },
+    }
 }
 
 // ERRORS

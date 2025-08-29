@@ -2,7 +2,7 @@ use std::{
     collections::{HashMap, HashSet},
     fs::read_to_string,
     io::Write,
-    path::Path,
+    path::{Path, PathBuf},
 };
 
 use anyhow::{Context, Result};
@@ -29,6 +29,7 @@ use crate::{
     },
     core::{
         base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        flexible_path::{create_generic_config, find_manifest_path},
         command::command,
         database::{
             add_base_entity_to_core, get_database_port, get_db_driver, is_in_memory_database,
@@ -94,6 +95,7 @@ impl WorkerCommand {
 fn generate_basic_worker(
     worker_name: &String,
     base_path: &Path,
+    app_root_path: &Path,
     manifest_data: &mut WorkerManifestData,
     stdout: &mut StandardStream,
     dryrun: bool,
@@ -143,7 +145,7 @@ fn generate_basic_worker(
         generate_gitignore(&output_path).with_context(|| ERROR_FAILED_TO_CREATE_GITIGNORE)?,
     );
     rendered_templates.extend(
-        add_worker_to_artifacts(manifest_data, base_path)
+        add_worker_to_artifacts(manifest_data, base_path, app_root_path)
             .with_context(|| ERROR_FAILED_TO_ADD_SERVICE_METADATA_TO_ARTIFACTS)?,
     );
 
@@ -178,9 +180,10 @@ fn generate_basic_worker(
 fn add_worker_to_artifacts(
     manifest_data: &mut WorkerManifestData,
     base_path: &Path,
+    app_root_path: &Path,
 ) -> Result<Vec<RenderedTemplate>> {
     let docker_compose_buffer =
-        add_worker_definition_to_docker_compose(manifest_data, base_path, None)
+        add_worker_definition_to_docker_compose(manifest_data, app_root_path, None)
             .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
 
     let forklaunch_manifest_buffer = add_project_definition_to_manifest(
@@ -235,13 +238,13 @@ fn add_worker_to_artifacts(
     let mut rendered_templates = Vec::new();
 
     rendered_templates.push(RenderedTemplate {
-        path: base_path.join("docker-compose.yaml"),
+        path: app_root_path.join("docker-compose.yaml"),
         content: docker_compose_buffer,
         context: Some(ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE.to_string()),
     });
 
     rendered_templates.push(RenderedTemplate {
-        path: base_path.join(".forklaunch").join("manifest.toml"),
+        path: app_root_path.join(".forklaunch").join("manifest.toml"),
         content: forklaunch_manifest_buffer.clone(),
         context: Some(ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST.to_string()),
     });
@@ -616,17 +619,36 @@ impl CliCommand for WorkerCommand {
         )?;
         let base_path = Path::new(&base_path_input);
 
-        let config_path = Path::new(&base_path)
-            .join(".forklaunch")
-            .join("manifest.toml");
+        let manifest_path_config = create_generic_config();
+        let manifest_path = find_manifest_path(&base_path, &manifest_path_config);
+        
+        let config_path = if let Some(manifest) = manifest_path {
+            manifest
+        } else {
+            // No manifest found, this might be an error or we need to search more broadly
+            anyhow::bail!("Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path.");
+        };
+        let app_root_path: PathBuf = config_path
+            .to_string_lossy()
+            .strip_suffix(".forklaunch/manifest.toml")
+            .ok_or_else(|| {
+            anyhow::anyhow!("Expected manifest path to end with .forklaunch/manifest.toml, got: {:?}", config_path)
+        })?
+            .to_string()
+            .into();
+        
+        println!("init:worker:00: config_path: {:?}", config_path);
+        println!("init:worker:01: base_path: {:?}", base_path);
+        println!("init:worker:02: app_root_path: {:?}", app_root_path);
 
         let existing_manifest_data = from_str::<ApplicationManifestData>(
             &read_to_string(config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
-        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
-        .initialize(InitializableManifestConfigMetadata::Application(
+        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+
+        existing_manifest_data.initialize(InitializableManifestConfigMetadata::Application(
             ApplicationInitializationMetadata {
-                app_name: base_path.file_name().unwrap().to_string_lossy().to_string(),
+                app_name: existing_manifest_data.app_name.clone(),
                 database: None,
             },
         ));
@@ -801,6 +823,7 @@ impl CliCommand for WorkerCommand {
         generate_basic_worker(
             &worker_name,
             &base_path,
+            &app_root_path,
             &mut manifest_data,
             &mut stdout,
             dryrun,
