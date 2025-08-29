@@ -42,7 +42,7 @@ const TestRequestMapper = requestMapper(SV, TestSchema, TestEntity, {
 });
 
 const TestResponseMapper = responseMapper(SV, TestSchema, TestEntity, {
-  toDomain: async (entity, arg1: string, arg2?: string) => {
+  toDto: async (entity, arg1: string, arg2?: string) => {
     return {
       id: entity.id,
       name: entity.name,
@@ -74,7 +74,7 @@ describe('request mappers tests', () => {
       arg1: string,
       arg2?: string
     ) => Promise<TestEntity>;
-    toDomain: (
+    toDto: (
       entity: TestEntity,
       arg1: string,
       arg2?: string
@@ -91,7 +91,7 @@ describe('request mappers tests', () => {
         entity.age = dto.age;
         return entity;
       },
-      toDomain: async (entity, arg1: string, arg2?: string) => {
+      toDto: async (entity, arg1: string, arg2?: string) => {
         return {
           id: entity.id,
           name: entity.name,
@@ -160,7 +160,7 @@ describe('response mappers tests', () => {
         name: string,
         age: number
       },
-      toDomain: async (entity, arg1: string, arg2?: string) => {
+      toDto: async (entity, arg1: string, arg2?: string) => {
         return {
           id: entity.id,
           name: entity.name,
@@ -180,8 +180,8 @@ describe('response mappers tests', () => {
     entity.name = 'test';
     entity.age = 1;
 
-    const responseDM = await TestResponseDM.toDomain(entity, 'arg1');
-    const staticDM = await TestResponseMapper.toDomain(entity, 'arg1');
+    const responseDM = await TestResponseDM.toDto(entity, 'arg1');
+    const staticDM = await TestResponseMapper.toDto(entity, 'arg1');
     const expectedDto = {
       id: '123',
       name: 'test',
@@ -200,13 +200,13 @@ describe('response mappers tests', () => {
     entity.age = 1;
 
     const json = genericDtoWrapperFunction(
-      await TestResponseDM.toDomain(entity, 'arg1')
+      await TestResponseDM.toDto(entity, 'arg1')
     );
     const objectJson = genericDtoWrapperFunction(
-      await TestResponseDM.toDomain(entity, 'arg1')
+      await TestResponseDM.toDto(entity, 'arg1')
     );
     const staticJson = genericDtoWrapperFunction(
-      await TestResponseMapper.toDomain(entity, 'arg1', 'arg2')
+      await TestResponseMapper.toDto(entity, 'arg1', 'arg2')
     );
     const expectedJson = {
       id: '123',
@@ -229,7 +229,7 @@ describe('response mappers tests', () => {
     entity.name = 'test';
 
     await expect(
-      async () => await TestResponseMapper.toDomain(entity, 'arg1', 'arg2')
+      async () => await TestResponseMapper.toDto(entity, 'arg1', 'arg2')
     ).rejects.toThrow();
   });
 });

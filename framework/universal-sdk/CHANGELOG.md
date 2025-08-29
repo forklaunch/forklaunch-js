@@ -1,5 +1,13 @@
 # @forklaunch/universal-sdk
 
+## 0.7.3
+
+### Patch Changes
+
+- toDomain -> toDto for more accurate naming conventions
+- Updated dependencies
+  - @forklaunch/common@0.6.3
+
 ## 0.7.2
 
 ### Patch Changes

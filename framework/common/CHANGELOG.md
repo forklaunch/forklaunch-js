@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.6.3
+
+### Patch Changes
+
+- toDomain -> toDto for more accurate naming conventions
+
 ## 0.6.2
 
 ### Patch Changes

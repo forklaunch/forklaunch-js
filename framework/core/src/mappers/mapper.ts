@@ -57,7 +57,7 @@ export function responseMapper<
   domainSchema: DomainSchema,
   _entityConstructor: Constructor<Entity>,
   mapperDefinition: {
-    toDomain: (
+    toDto: (
       entity: Entity,
       ...args: AdditionalArgs
     ) => Promise<Schema<DomainSchema, SV>>;
@@ -72,8 +72,8 @@ export function responseMapper<
     ...mapperDefinition,
     schema: domainSchema,
 
-    toDomain: async (entity: Entity, ...args: AdditionalArgs) => {
-      const domain = await mapperDefinition.toDomain(entity, ...args);
+    toDto: async (entity: Entity, ...args: AdditionalArgs) => {
+      const domain = await mapperDefinition.toDto(entity, ...args);
       const parsedSchema = sv.parse(sv.schemify(domainSchema), domain);
       if (!parsedSchema.ok) {
         throw new Error(prettyPrintParseErrors(parsedSchema.errors, 'DTO'));

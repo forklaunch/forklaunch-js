@@ -1,5 +1,15 @@
 # @forklaunch/hyper-express
 
+## 0.9.3
+
+### Patch Changes
+
+- toDomain -> toDto for more accurate naming conventions
+- Updated dependencies
+  - @forklaunch/validator@0.10.3
+  - @forklaunch/common@0.6.3
+  - @forklaunch/core@0.14.3
+
 ## 0.9.2
 
 ### Patch Changes

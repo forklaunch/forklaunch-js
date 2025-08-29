@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/internal",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Internal package for utilities and other internal code.",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {

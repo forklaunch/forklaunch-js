@@ -1,5 +1,14 @@
 # @forklaunch/infrastructure-redis
 
+## 0.4.3
+
+### Patch Changes
+
+- toDomain -> toDto for more accurate naming conventions
+- Updated dependencies
+  - @forklaunch/common@0.6.3
+  - @forklaunch/core@0.14.3
+
 ## 0.4.2
 
 ### Patch Changes

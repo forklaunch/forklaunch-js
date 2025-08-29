@@ -1,5 +1,14 @@
 # @forklaunch/core
 
+## 0.14.3
+
+### Patch Changes
+
+- toDomain -> toDto for more accurate naming conventions
+- Updated dependencies
+  - @forklaunch/validator@0.10.3
+  - @forklaunch/common@0.6.3
+
 ## 0.14.2
 
 ### Patch Changes
