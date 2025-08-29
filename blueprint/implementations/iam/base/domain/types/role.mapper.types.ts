@@ -7,7 +7,7 @@ export type RoleMappers<
   MapperDomains extends RoleDtos
 > = {
   RoleMapper: {
-    toDomain: (
+    toDto: (
       entity: MapperEntities['RoleMapper']
     ) => Promise<MapperDomains['RoleMapper']>;
   };

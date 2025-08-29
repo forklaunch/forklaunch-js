@@ -54,7 +54,7 @@ export const BillingPortalMapper = responseMapper(
   BillingPortalSchemas.BillingPortalSchema,
   BillingPortal,
   {
-    toDomain: async (entity: BillingPortal) => {
+    toDto: async (entity: BillingPortal) => {
       return {
         ...(await entity.read()),
         stripeFields: entity.providerFields

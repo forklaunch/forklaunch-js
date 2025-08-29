@@ -37,7 +37,7 @@ export const SampleWorkerResponseMapper = responseMapper(
   },
   SampleWorkerEventRecord,
   {
-    toDomain: async (entity: SampleWorkerEventRecord) => {
+    toDto: async (entity: SampleWorkerEventRecord) => {
       if (!entity.isInitialized()) {
         throw new Error('SampleWorkerEventRecord is not initialized');
       }
@@ -51,5 +51,5 @@ export type SampleWorkerRequestDto = Parameters<
   typeof SampleWorkerRequestMapper.toEntity
 >[0];
 export type SampleWorkerResponseDto = Awaited<
-  ReturnType<typeof SampleWorkerResponseMapper.toDomain>
+  ReturnType<typeof SampleWorkerResponseMapper.toDto>
 >;

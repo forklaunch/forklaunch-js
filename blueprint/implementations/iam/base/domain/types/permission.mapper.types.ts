@@ -7,7 +7,7 @@ export type PermissionMappers<
   MapperDomains extends PermissionDtos
 > = {
   PermissionMapper: {
-    toDomain: (
+    toDto: (
       entity: MapperEntities['PermissionMapper']
     ) => Promise<MapperDomains['PermissionMapper']>;
   };

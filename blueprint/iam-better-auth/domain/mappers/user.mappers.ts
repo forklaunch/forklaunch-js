@@ -51,7 +51,7 @@ export const UserMapper = responseMapper(
   UserSchemas.UserSchema,
   User,
   {
-    toDomain: async (entity: User) => {
+    toDto: async (entity: User) => {
       return {
         ...(await entity.read()),
         roles: await Promise.all(
@@ -60,7 +60,7 @@ export const UserMapper = responseMapper(
             : await entity.roles.init()
           )
             .getItems()
-            .map(async (role) => RoleMapper.toDomain(role))
+            .map(async (role) => RoleMapper.toDto(role))
         )
       };
     }

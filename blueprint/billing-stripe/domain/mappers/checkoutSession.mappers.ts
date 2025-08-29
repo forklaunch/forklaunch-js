@@ -56,7 +56,7 @@ export const CheckoutSessionMapper = responseMapper(
   CheckoutSessionSchemas.CheckoutSessionSchema(StatusEnum),
   CheckoutSession,
   {
-    toDomain: async (entity: CheckoutSession) => {
+    toDto: async (entity: CheckoutSession) => {
       return {
         ...(await entity.read()),
         stripeFields: entity.providerFields

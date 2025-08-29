@@ -40,7 +40,7 @@ export const PlanMapper = responseMapper(
   PlanSchemas.PlanSchema,
   Plan,
   {
-    toDomain: async (entity: Plan) => {
+    toDto: async (entity: Plan) => {
       return {
         ...(await entity.read()),
         stripeFields: entity.providerFields

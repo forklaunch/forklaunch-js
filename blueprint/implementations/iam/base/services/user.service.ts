@@ -87,7 +87,7 @@ export class BaseUserService<
       await this.em.persistAndFlush(user);
     }
 
-    return this.mappers.UserMapper.toDomain(user);
+    return this.mappers.UserMapper.toDto(user);
   }
 
   async createBatchUsers(
@@ -116,7 +116,7 @@ export class BaseUserService<
     }
 
     return Promise.all(
-      users.map((user) => this.mappers.UserMapper.toDomain(user))
+      users.map((user) => this.mappers.UserMapper.toDto(user))
     );
   }
 
@@ -132,9 +132,7 @@ export class BaseUserService<
       populate: ['id', '*']
     });
 
-    return this.mappers.UserMapper.toDomain(
-      user as MapperEntities['UserMapper']
-    );
+    return this.mappers.UserMapper.toDto(user as MapperEntities['UserMapper']);
   }
 
   async getBatchUsers(
@@ -151,7 +149,7 @@ export class BaseUserService<
           populate: ['id', '*']
         })
       ).map((user) =>
-        this.mappers.UserMapper.toDomain(user as MapperEntities['UserMapper'])
+        this.mappers.UserMapper.toDto(user as MapperEntities['UserMapper'])
       )
     );
   }
@@ -177,7 +175,7 @@ export class BaseUserService<
       await this.em.persistAndFlush(user);
     }
 
-    return this.mappers.UserMapper.toDomain(user);
+    return this.mappers.UserMapper.toDto(user);
   }
 
   async updateBatchUsers(
@@ -206,7 +204,7 @@ export class BaseUserService<
     }
 
     return Promise.all(
-      users.map((user) => this.mappers.UserMapper.toDomain(user))
+      users.map((user) => this.mappers.UserMapper.toDto(user))
     );
   }
 

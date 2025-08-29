@@ -49,7 +49,7 @@ export const PlanMapper = responseMapper(
   PlanSchemas.PlanSchema(PlanCadenceEnum, CurrencyEnum, BillingProviderEnum),
   Plan,
   {
-    toDomain: async (entity: Plan) => {
+    toDto: async (entity: Plan) => {
       return await entity.read();
     }
   }

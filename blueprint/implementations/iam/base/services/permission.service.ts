@@ -176,7 +176,7 @@ export class BasePermissionService<
       await this.em.persistAndFlush([permission, ...roles]);
     }
 
-    return this.mappers.PermissionMapper.toDomain(permission);
+    return this.mappers.PermissionMapper.toDto(permission);
   }
 
   async createBatchPermissions(
@@ -238,7 +238,7 @@ export class BasePermissionService<
 
     return Promise.all(
       permissions.map(async (permission) =>
-        this.mappers.PermissionMapper.toDomain(permission)
+        this.mappers.PermissionMapper.toDto(permission)
       )
     );
   }
@@ -251,7 +251,7 @@ export class BasePermissionService<
       this.openTelemetryCollector.info('Getting permission', idDto);
     }
     const permission = await (em ?? this.em).findOneOrFail('Permission', idDto);
-    return this.mappers.PermissionMapper.toDomain(
+    return this.mappers.PermissionMapper.toDto(
       permission as MapperEntities['PermissionMapper']
     );
   }
@@ -265,7 +265,7 @@ export class BasePermissionService<
     }
     return Promise.all(
       (await (em ?? this.em).find('Permission', idsDto)).map((permission) =>
-        this.mappers.PermissionMapper.toDomain(
+        this.mappers.PermissionMapper.toDto(
           permission as MapperEntities['PermissionMapper']
         )
       )
@@ -325,7 +325,7 @@ export class BasePermissionService<
       await this.em.persistAndFlush(entities);
     }
 
-    return this.mappers.PermissionMapper.toDomain(permission);
+    return this.mappers.PermissionMapper.toDto(permission);
   }
 
   async updateBatchPermissions(
@@ -371,7 +371,7 @@ export class BasePermissionService<
 
     return Promise.all(
       permissions.map((permission) =>
-        this.mappers.PermissionMapper.toDomain(permission)
+        this.mappers.PermissionMapper.toDto(permission)
       )
     );
   }

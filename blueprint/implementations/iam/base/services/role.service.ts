@@ -76,7 +76,7 @@ export class BaseRoleService<
       await this.em.persistAndFlush(role);
     }
 
-    return this.mappers.RoleMapper.toDomain(role);
+    return this.mappers.RoleMapper.toDto(role);
   }
 
   async createBatchRoles(
@@ -101,7 +101,7 @@ export class BaseRoleService<
     }
 
     return Promise.all(
-      roles.map((role) => this.mappers.RoleMapper.toDomain(role))
+      roles.map((role) => this.mappers.RoleMapper.toDto(role))
     );
   }
 
@@ -114,9 +114,7 @@ export class BaseRoleService<
       populate: ['id', '*']
     });
 
-    return this.mappers.RoleMapper.toDomain(
-      role as MapperEntities['RoleMapper']
-    );
+    return this.mappers.RoleMapper.toDto(role as MapperEntities['RoleMapper']);
   }
 
   async getBatchRoles({ ids }: IdsDto, em?: EntityManager): Promise<RoleDto[]> {
@@ -136,7 +134,7 @@ export class BaseRoleService<
           }
         )
       ).map((role) =>
-        this.mappers.RoleMapper.toDomain(role as MapperEntities['RoleMapper'])
+        this.mappers.RoleMapper.toDto(role as MapperEntities['RoleMapper'])
       )
     );
   }
@@ -162,7 +160,7 @@ export class BaseRoleService<
       await this.em.persistAndFlush(role);
     }
 
-    return this.mappers.RoleMapper.toDomain(role);
+    return this.mappers.RoleMapper.toDto(role);
   }
 
   async updateBatchRoles(
@@ -187,7 +185,7 @@ export class BaseRoleService<
     }
     return Promise.all(
       roles.map((role) =>
-        this.mappers.RoleMapper.toDomain(role as MapperEntities['RoleMapper'])
+        this.mappers.RoleMapper.toDto(role as MapperEntities['RoleMapper'])
       )
     );
   }

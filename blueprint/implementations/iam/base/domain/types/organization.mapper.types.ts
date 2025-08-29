@@ -8,7 +8,7 @@ export type OrganizationMappers<
   MapperDomains extends OrganizationDtos<OrganizationStatus>
 > = {
   OrganizationMapper: {
-    toDomain: (
+    toDto: (
       entity: MapperEntities['OrganizationMapper']
     ) => Promise<MapperDomains['OrganizationMapper']>;
   };

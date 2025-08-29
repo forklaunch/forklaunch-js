@@ -47,7 +47,7 @@ export const UserMapper = responseMapper(
   UserSchemas.UserSchema,
   User,
   {
-    toDomain: async (entity: User) => {
+    toDto: async (entity: User) => {
       return {
         ...(await entity.read()),
         roles: await Promise.all(
@@ -58,7 +58,7 @@ export const UserMapper = responseMapper(
             .getItems()
             .map(async (role) => {
               // Use the mapper function directly to avoid circular dependency
-              return RoleMapper.toDomain(role);
+              return RoleMapper.toDto(role);
             })
         )
       };

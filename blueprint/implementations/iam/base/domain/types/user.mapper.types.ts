@@ -7,7 +7,7 @@ export type UserMappers<
   MapperDomains extends UserDtos
 > = {
   UserMapper: {
-    toDomain: (
+    toDto: (
       entity: MapperEntities['UserMapper']
     ) => Promise<MapperDomains['UserMapper']>;
   };

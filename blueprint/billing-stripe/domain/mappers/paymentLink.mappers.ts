@@ -55,7 +55,7 @@ export const PaymentLinkMapper = responseMapper(
   PaymentLinkSchemas.PaymentLinkSchema(StatusEnum),
   PaymentLink,
   {
-    toDomain: async (entity: PaymentLink) => {
+    toDto: async (entity: PaymentLink) => {
       return {
         ...(await entity.read()),
         stripeFields: entity.providerFields

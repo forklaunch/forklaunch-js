@@ -90,7 +90,7 @@ export class BasePlanService<
           filters: idsDto?.ids ? { id: { $in: idsDto.ids } } : undefined
         })
       ).map((plan) =>
-        this.mappers.PlanMapper.toDomain(plan as MapperEntities['PlanMapper'])
+        this.mappers.PlanMapper.toDto(plan as MapperEntities['PlanMapper'])
       )
     );
   }
@@ -111,7 +111,7 @@ export class BasePlanService<
     await (em ?? this.em).transactional(async (innerEm) => {
       await innerEm.persist(plan);
     });
-    return this.mappers.PlanMapper.toDomain(plan);
+    return this.mappers.PlanMapper.toDto(plan);
   }
 
   async getPlan(
@@ -122,9 +122,7 @@ export class BasePlanService<
       this.openTelemetryCollector.info('Getting plan', idDto);
     }
     const plan = await (em ?? this.em).findOneOrFail('Plan', idDto);
-    return this.mappers.PlanMapper.toDomain(
-      plan as MapperEntities['PlanMapper']
-    );
+    return this.mappers.PlanMapper.toDto(plan as MapperEntities['PlanMapper']);
   }
 
   async updatePlan(
@@ -144,7 +142,7 @@ export class BasePlanService<
     await (em ?? this.em).transactional(async (innerEm) => {
       await innerEm.persist(plan);
     });
-    const updatedPlanDto = await this.mappers.PlanMapper.toDomain(updatedPlan);
+    const updatedPlanDto = await this.mappers.PlanMapper.toDto(updatedPlan);
     return updatedPlanDto;
   }
 

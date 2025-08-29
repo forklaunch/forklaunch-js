@@ -40,7 +40,7 @@ export const SubscriptionMapper = responseMapper(
   SubscriptionSchemas.SubscriptionSchema(PartyEnum, BillingProviderEnum),
   Subscription,
   {
-    toDomain: async (entity: Subscription) => {
+    toDto: async (entity: Subscription) => {
       return await entity.read();
     }
   }

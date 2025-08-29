@@ -18,7 +18,7 @@ export type CheckoutSessionMappers<
   >
 > = {
   CheckoutSessionMapper: {
-    toDomain: (
+    toDto: (
       entity: MapperEntities['CheckoutSessionMapper']
     ) => Promise<MapperDomains['CheckoutSessionMapper']>;
   };

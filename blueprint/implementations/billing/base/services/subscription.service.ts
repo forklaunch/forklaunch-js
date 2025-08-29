@@ -84,7 +84,7 @@ export class BaseSubscriptionService<
       await innerEm.persist(subscription);
     });
     const createdSubscriptionDto =
-      await this.mappers.SubscriptionMapper.toDomain(subscription);
+      await this.mappers.SubscriptionMapper.toDto(subscription);
     return createdSubscriptionDto;
   }
 
@@ -99,7 +99,7 @@ export class BaseSubscriptionService<
       'Subscription',
       idDto
     );
-    return this.mappers.SubscriptionMapper.toDomain(
+    return this.mappers.SubscriptionMapper.toDto(
       subscription as Entities['SubscriptionMapper']
     );
   }
@@ -117,7 +117,7 @@ export class BaseSubscriptionService<
       active: true
     });
 
-    return this.mappers.SubscriptionMapper.toDomain(
+    return this.mappers.SubscriptionMapper.toDto(
       subscription as Entities['SubscriptionMapper']
     );
   }
@@ -134,7 +134,7 @@ export class BaseSubscriptionService<
       partyType: 'ORGANIZATION',
       active: true
     });
-    return this.mappers.SubscriptionMapper.toDomain(
+    return this.mappers.SubscriptionMapper.toDto(
       subscription as Entities['SubscriptionMapper']
     );
   }
@@ -160,7 +160,7 @@ export class BaseSubscriptionService<
       await innerEm.persist(updatedSubscription);
     });
     const updatedSubscriptionDto =
-      await this.mappers.SubscriptionMapper.toDomain(updatedSubscription);
+      await this.mappers.SubscriptionMapper.toDto(updatedSubscription);
 
     return updatedSubscriptionDto;
   }
@@ -198,7 +198,7 @@ export class BaseSubscriptionService<
 
     return Promise.all(
       subscriptions.map((subscription) => {
-        const subscriptionDto = this.mappers.SubscriptionMapper.toDomain(
+        const subscriptionDto = this.mappers.SubscriptionMapper.toDto(
           subscription as Entities['SubscriptionMapper']
         );
         return subscriptionDto;

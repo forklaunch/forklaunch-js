@@ -9,7 +9,7 @@ export type StripeCheckoutSessionMappers<
   Dto extends StripeCheckoutSessionDtos<StatusEnum>
 > = {
   CheckoutSessionMapper: {
-    toDomain: (
+    toDto: (
       entity: Entities['CheckoutSessionMapper']
     ) => Promise<Dto['CheckoutSessionMapper']>;
   };

@@ -53,7 +53,7 @@ export const PaymentLinkMapper = responseMapper(
   ),
   PaymentLink,
   {
-    toDomain: async (entity: PaymentLink) => {
+    toDto: async (entity: PaymentLink) => {
       return await entity.read();
     }
   }

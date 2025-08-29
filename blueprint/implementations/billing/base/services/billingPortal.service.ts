@@ -85,7 +85,7 @@ export class BaseBillingPortalService<
     }
 
     const createdBillingPortalDto =
-      await this.mappers.BillingPortalMapper.toDomain(billingPortal);
+      await this.mappers.BillingPortalMapper.toDto(billingPortal);
 
     await this.cache.putRecord({
       key: this.createCacheKey(createdBillingPortalDto.id),
@@ -149,7 +149,7 @@ export class BaseBillingPortalService<
 
     const updatedBillingPortalDto = {
       ...existingBillingPortal,
-      ...(await this.mappers.BillingPortalMapper.toDomain(billingPortal))
+      ...(await this.mappers.BillingPortalMapper.toDto(billingPortal))
     };
 
     await this.cache.putRecord({

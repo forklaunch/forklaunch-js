@@ -38,7 +38,7 @@ export const PermissionMapper = responseMapper(
   PermissionSchemas.PermissionSchema,
   Permission,
   {
-    toDomain: async (entity: Permission) => {
+    toDto: async (entity: Permission) => {
       return await entity.read();
     }
   }

@@ -42,7 +42,7 @@ export const OrganizationMapper = responseMapper(
   OrganizationSchemas.OrganizationSchema(OrganizationStatus),
   Organization,
   {
-    toDomain: async (entity: Organization) => {
+    toDto: async (entity: Organization) => {
       return {
         ...(await entity.read()),
         users: await Promise.all(
@@ -53,7 +53,7 @@ export const OrganizationMapper = responseMapper(
             .getItems()
             .map(async (user) => {
               // Use the mapper function directly to avoid circular dependency
-              return UserMapper.toDomain(user);
+              return UserMapper.toDto(user);
             })
         )
       };

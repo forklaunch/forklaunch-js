@@ -18,7 +18,7 @@ export type PaymentLinkMappers<
   >
 > = {
   PaymentLinkMapper: {
-    toDomain: (
+    toDto: (
       entity: MapperEntities['PaymentLinkMapper']
     ) => Promise<MapperDomains['PaymentLinkMapper']>;
   };

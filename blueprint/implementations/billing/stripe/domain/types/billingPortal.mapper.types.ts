@@ -8,7 +8,7 @@ export type StripeBillingPortalMappers<
   Dto extends StripeBillingPortalDtos
 > = {
   BillingPortalMapper: {
-    toDomain: (
+    toDto: (
       entity: Entities['BillingPortalMapper']
     ) => Promise<Dto['BillingPortalMapper']>;
   };

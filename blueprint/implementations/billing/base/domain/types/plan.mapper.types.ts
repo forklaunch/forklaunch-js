@@ -18,7 +18,7 @@ export type PlanMappers<
   >
 > = {
   PlanMapper: {
-    toDomain: (
+    toDto: (
       entity: MapperEntities['PlanMapper']
     ) => Promise<MapperDomains['PlanMapper']>;
   };

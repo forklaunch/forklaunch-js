@@ -9,7 +9,7 @@ export type StripeSubscriptionMappers<
   Dto extends StripeSubscriptionDtos<PartyType>
 > = {
   SubscriptionMapper: {
-    toDomain: (
+    toDto: (
       entity: Entities['SubscriptionMapper']
     ) => Promise<Dto['SubscriptionMapper']>;
   };

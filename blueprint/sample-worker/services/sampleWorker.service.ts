@@ -71,6 +71,6 @@ export class BaseSampleWorkerService implements SampleWorkerService {
     await this.kafkaWorkerProducer.enqueueJob(entity);
 
     // Convert entity to response DTO using the new mapper approach
-    return await SampleWorkerResponseMapper.toDomain(entity);
+    return await SampleWorkerResponseMapper.toDto(entity);
   };
 }

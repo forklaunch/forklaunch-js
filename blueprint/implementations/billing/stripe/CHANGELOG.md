@@ -1,5 +1,17 @@
 # @forklaunch/implementation-billing-base
 
+## 0.3.0
+
+### Minor Changes
+
+- new mapper syntax, and cleaner logic
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/implementation-billing-base@0.6.0
+  - @forklaunch/interfaces-billing@0.6.0
+
 ## 0.2.8
 
 ### Patch Changes

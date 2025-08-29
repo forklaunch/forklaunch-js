@@ -90,7 +90,7 @@ export class BaseOrganizationService<
       await this.em.persistAndFlush(organization);
     }
 
-    return this.mappers.OrganizationMapper.toDomain(organization);
+    return this.mappers.OrganizationMapper.toDto(organization);
   }
 
   async getOrganization(
@@ -109,7 +109,7 @@ export class BaseOrganizationService<
       }
     );
 
-    return this.mappers.OrganizationMapper.toDomain(
+    return this.mappers.OrganizationMapper.toDto(
       organization as MapperEntities['OrganizationMapper']
     );
   }
@@ -139,7 +139,7 @@ export class BaseOrganizationService<
       await this.em.persistAndFlush(updatedOrganization);
     }
 
-    return this.mappers.OrganizationMapper.toDomain(updatedOrganization);
+    return this.mappers.OrganizationMapper.toDto(updatedOrganization);
   }
 
   async deleteOrganization(idDto: IdDto, em?: EntityManager): Promise<void> {

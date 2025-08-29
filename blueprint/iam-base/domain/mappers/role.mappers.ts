@@ -39,7 +39,7 @@ export const RoleMapper = responseMapper(
   RoleSchemas.RoleSchema,
   Role,
   {
-    toDomain: async (entity: Role) => {
+    toDto: async (entity: Role) => {
       if (!entity.isInitialized()) {
         throw new Error('Role is not initialized');
       }
@@ -54,7 +54,7 @@ export const RoleMapper = responseMapper(
             .getItems()
             .map(async (permission) => {
               // Use the mapper function directly to avoid circular dependency
-              return PermissionMapper.toDomain(permission);
+              return PermissionMapper.toDto(permission);
             })
         )
       };

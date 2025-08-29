@@ -106,7 +106,7 @@ export class BaseCheckoutSessionService<
       );
 
     const createdCheckoutSessionDto =
-      await this.mappers.CheckoutSessionMapper.toDomain(checkoutSession);
+      await this.mappers.CheckoutSessionMapper.toDto(checkoutSession);
 
     if (this.enableDatabaseBackup) {
       await this.em.persistAndFlush(checkoutSession);
@@ -131,7 +131,7 @@ export class BaseCheckoutSessionService<
       throw new Error('Session not found');
     }
 
-    return this.mappers.CheckoutSessionMapper.toDomain(
+    return this.mappers.CheckoutSessionMapper.toDto(
       checkoutSessionDetails.value
     );
   }

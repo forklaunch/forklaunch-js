@@ -54,7 +54,7 @@ export const CheckoutSessionMapper = responseMapper(
   ),
   CheckoutSession,
   {
-    toDomain: async (entity: CheckoutSession) => {
+    toDto: async (entity: CheckoutSession) => {
       return await entity.read();
     }
   }
