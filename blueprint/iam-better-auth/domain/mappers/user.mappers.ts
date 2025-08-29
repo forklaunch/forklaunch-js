@@ -55,7 +55,7 @@ export class UserMapper extends ResponseMapper<User, SchemaValidator> {
                 this.schemaValidator as SchemaValidator,
                 role
               )
-            ).toDto()
+            ).toDomain()
           )
       )
     };

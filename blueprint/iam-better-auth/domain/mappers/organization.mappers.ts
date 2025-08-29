@@ -54,7 +54,7 @@ export class OrganizationMapper extends ResponseMapper<
                 this.schemaValidator as SchemaValidator,
                 user
               )
-            ).toDto()
+            ).toDomain()
           )
       )
     };

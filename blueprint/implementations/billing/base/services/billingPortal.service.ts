@@ -1,4 +1,4 @@
-import { IdDto, InstanceTypeRecord } from '@forklaunch/common';
+import { IdDto } from '@forklaunch/common';
 import { createCacheKey, TtlCache } from '@forklaunch/core/cache';
 import {
   evaluateTelemetryOptions,
@@ -7,92 +7,41 @@ import {
   TelemetryOptions
 } from '@forklaunch/core/http';
 import { BillingPortalService } from '@forklaunch/interfaces-billing/interfaces';
-import { UpdateBillingPortalDto } from '@forklaunch/interfaces-billing/types';
 import {
-  InternalMapper,
-  RequestMapperConstructor,
-  ResponseMapperConstructor,
-  transformIntoInternalMapper
-} from '@forklaunch/internal';
+  CreateBillingPortalDto,
+  UpdateBillingPortalDto
+} from '@forklaunch/interfaces-billing/types';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
 import { BaseBillingDtos } from '../domain/types/baseBillingDto.types';
 import { BaseBillingEntities } from '../domain/types/baseBillingEntity.types';
+import { BillingPortalMappers } from '../domain/types/billingPortal.mapper.types';
 
 export class BaseBillingPortalService<
   SchemaValidator extends AnySchemaValidator,
-  Entities extends BaseBillingEntities,
-  Dto extends BaseBillingDtos = BaseBillingDtos
+  MapperEntities extends BaseBillingEntities,
+  MapperDomains extends BaseBillingDtos = BaseBillingDtos
 > implements BillingPortalService
 {
-  protected _mappers: InternalMapper<InstanceTypeRecord<typeof this.mappers>>;
-  protected evaluatedTelemetryOptions: {
+  private evaluatedTelemetryOptions: {
     logging?: boolean;
     metrics?: boolean;
     tracing?: boolean;
   };
   protected enableDatabaseBackup: boolean;
-  protected em: EntityManager;
+  public em: EntityManager;
   protected cache: TtlCache;
   protected openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
   protected schemaValidator: SchemaValidator;
-  protected mappers: {
-    BillingPortalMapper: ResponseMapperConstructor<
-      SchemaValidator,
-      Dto['BillingPortalMapper'],
-      Entities['BillingPortalMapper']
-    >;
-    CreateBillingPortalMapper: RequestMapperConstructor<
-      SchemaValidator,
-      Dto['CreateBillingPortalMapper'],
-      Entities['CreateBillingPortalMapper'],
-      (
-        dto: Dto['CreateBillingPortalMapper'],
-        em: EntityManager
-      ) => Promise<Entities['CreateBillingPortalMapper']>
-    >;
-    UpdateBillingPortalMapper: RequestMapperConstructor<
-      SchemaValidator,
-      Dto['UpdateBillingPortalMapper'],
-      Entities['UpdateBillingPortalMapper'],
-      (
-        dto: Dto['UpdateBillingPortalMapper'],
-        em: EntityManager
-      ) => Promise<Entities['UpdateBillingPortalMapper']>
-    >;
-  };
+  protected mappers: BillingPortalMappers<MapperEntities, MapperDomains>;
 
   constructor(
     em: EntityManager,
     cache: TtlCache,
     openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
     schemaValidator: SchemaValidator,
-    mappers: {
-      BillingPortalMapper: ResponseMapperConstructor<
-        SchemaValidator,
-        Dto['BillingPortalMapper'],
-        Entities['BillingPortalMapper']
-      >;
-      CreateBillingPortalMapper: RequestMapperConstructor<
-        SchemaValidator,
-        Dto['CreateBillingPortalMapper'],
-        Entities['CreateBillingPortalMapper'],
-        (
-          dto: Dto['CreateBillingPortalMapper'],
-          em: EntityManager
-        ) => Promise<Entities['CreateBillingPortalMapper']>
-      >;
-      UpdateBillingPortalMapper: RequestMapperConstructor<
-        SchemaValidator,
-        Dto['UpdateBillingPortalMapper'],
-        Entities['UpdateBillingPortalMapper'],
-        (
-          dto: Dto['UpdateBillingPortalMapper'],
-          em: EntityManager
-        ) => Promise<Entities['UpdateBillingPortalMapper']>
-      >;
-    },
-    readonly options?: {
+    mappers: BillingPortalMappers<MapperEntities, MapperDomains>,
+    options?: {
       telemetry?: TelemetryOptions;
       enableDatabaseBackup?: boolean;
     }
@@ -102,7 +51,6 @@ export class BaseBillingPortalService<
     this.openTelemetryCollector = openTelemetryCollector;
     this.schemaValidator = schemaValidator;
     this.mappers = mappers;
-    this._mappers = transformIntoInternalMapper(mappers, schemaValidator);
     this.enableDatabaseBackup = options?.enableDatabaseBackup ?? false;
     this.evaluatedTelemetryOptions = options?.telemetry
       ? evaluateTelemetryOptions(options.telemetry).enabled
@@ -116,8 +64,9 @@ export class BaseBillingPortalService<
   protected createCacheKey = createCacheKey('billing_portal_session');
 
   async createBillingPortalSession(
-    billingPortalDto: Dto['CreateBillingPortalMapper']
-  ): Promise<Dto['BillingPortalMapper']> {
+    billingPortalDto: CreateBillingPortalDto,
+    ...args: unknown[]
+  ): Promise<MapperDomains['BillingPortalMapper']> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info(
         'Creating billing portal session',
@@ -125,20 +74,18 @@ export class BaseBillingPortalService<
       );
     }
 
-    const billingPortal =
-      await this._mappers.CreateBillingPortalMapper.deserializeDtoToEntity(
-        billingPortalDto,
-        this.em
-      );
+    const billingPortal = await this.mappers.CreateBillingPortalMapper.toEntity(
+      billingPortalDto,
+      this.em,
+      ...args
+    );
 
     if (this.enableDatabaseBackup) {
       await this.em.persistAndFlush(billingPortal);
     }
 
     const createdBillingPortalDto =
-      await this._mappers.BillingPortalMapper.serializeEntityToDto(
-        billingPortal
-      );
+      await this.mappers.BillingPortalMapper.toDomain(billingPortal);
 
     await this.cache.putRecord({
       key: this.createCacheKey(createdBillingPortalDto.id),
@@ -151,13 +98,13 @@ export class BaseBillingPortalService<
 
   async getBillingPortalSession(
     idDto: IdDto
-  ): Promise<Dto['BillingPortalMapper']> {
+  ): Promise<MapperDomains['BillingPortalMapper']> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info('Getting billing portal session', idDto);
     }
 
     const billingPortalDetails = await this.cache.readRecord<
-      Entities['BillingPortalMapper']
+      MapperEntities['BillingPortalMapper']
     >(this.createCacheKey(idDto.id));
 
     if (!billingPortalDetails) {
@@ -168,8 +115,9 @@ export class BaseBillingPortalService<
   }
 
   async updateBillingPortalSession(
-    billingPortalDto: UpdateBillingPortalDto
-  ): Promise<Dto['BillingPortalMapper']> {
+    billingPortalDto: UpdateBillingPortalDto,
+    ...args: unknown[]
+  ): Promise<MapperDomains['BillingPortalMapper']> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info(
         'Updating billing portal session',
@@ -178,7 +126,7 @@ export class BaseBillingPortalService<
     }
 
     const existingBillingPortal = (
-      await this.cache.readRecord<Entities['BillingPortalMapper']>(
+      await this.cache.readRecord<MapperEntities['BillingPortalMapper']>(
         this.createCacheKey(billingPortalDto.id)
       )
     )?.value;
@@ -187,11 +135,11 @@ export class BaseBillingPortalService<
       throw new Error('Session not found');
     }
 
-    const billingPortal =
-      await this._mappers.UpdateBillingPortalMapper.deserializeDtoToEntity(
-        billingPortalDto,
-        this.em
-      );
+    const billingPortal = await this.mappers.UpdateBillingPortalMapper.toEntity(
+      billingPortalDto,
+      this.em,
+      ...args
+    );
 
     if (this.enableDatabaseBackup) {
       await this.em.persistAndFlush({
@@ -201,9 +149,7 @@ export class BaseBillingPortalService<
 
     const updatedBillingPortalDto = {
       ...existingBillingPortal,
-      ...(await this._mappers.BillingPortalMapper.serializeEntityToDto(
-        billingPortal
-      ))
+      ...(await this.mappers.BillingPortalMapper.toDomain(billingPortal))
     };
 
     await this.cache.putRecord({

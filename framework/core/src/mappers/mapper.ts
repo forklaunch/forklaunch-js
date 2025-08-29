@@ -10,34 +10,37 @@ import { Constructor } from '@mikro-orm/core';
 
 export function requestMapper<
   SV extends AnySchemaValidator,
-  DtoSchema extends IdiomaticSchema<SV>,
+  DomainSchema extends IdiomaticSchema<SV>,
   Entity,
   AdditionalArgs extends unknown[] = []
 >(
   schemaValidator: SV,
-  dtoSchema: DtoSchema,
+  domainSchema: DomainSchema,
   _entityConstructor: Constructor<Entity>,
   mapperDefinition: {
     toEntity: (
-      dto: Schema<DtoSchema, SV>,
+      dto: Schema<DomainSchema, SV>,
       ...args: AdditionalArgs
     ) => Promise<Entity>;
   }
 ): {
-  schema: DtoSchema;
+  schema: DomainSchema;
 } & typeof mapperDefinition {
   const sv = schemaValidator as SchemaValidator;
   return {
     ...mapperDefinition,
-    schema: dtoSchema,
+    schema: domainSchema,
 
-    toEntity: async (dto: Schema<DtoSchema, SV>, ...args: AdditionalArgs) => {
-      const parsedSchema = sv.parse(sv.schemify(dtoSchema), dto);
+    toEntity: async (
+      dto: Schema<DomainSchema, SV>,
+      ...args: AdditionalArgs
+    ) => {
+      const parsedSchema = sv.parse(sv.schemify(domainSchema), dto);
       if (!parsedSchema.ok) {
         throw new Error(prettyPrintParseErrors(parsedSchema.errors, 'DTO'));
       }
       return mapperDefinition.toEntity(
-        dto as Schema<DtoSchema, SV>,
+        dto as Schema<DomainSchema, SV>,
         ...(args as AdditionalArgs)
       );
     }
@@ -46,36 +49,36 @@ export function requestMapper<
 
 export function responseMapper<
   SV extends AnySchemaValidator,
-  DtoSchema extends IdiomaticSchema<SV>,
+  DomainSchema extends IdiomaticSchema<SV>,
   Entity,
   AdditionalArgs extends unknown[] = []
 >(
   schemaValidator: SV,
-  dtoSchema: DtoSchema,
+  domainSchema: DomainSchema,
   _entityConstructor: Constructor<Entity>,
   mapperDefinition: {
-    toDto: (
+    toDomain: (
       entity: Entity,
       ...args: AdditionalArgs
-    ) => Promise<Schema<DtoSchema, SV>>;
+    ) => Promise<Schema<DomainSchema, SV>>;
   }
 ): Prettify<
   {
-    schema: DtoSchema;
+    schema: DomainSchema;
   } & typeof mapperDefinition
 > {
   const sv = schemaValidator as SchemaValidator;
   return {
     ...mapperDefinition,
-    schema: dtoSchema,
+    schema: domainSchema,
 
-    toDto: async (entity: Entity, ...args: AdditionalArgs) => {
-      const dto = await mapperDefinition.toDto(entity, ...args);
-      const parsedSchema = sv.parse(sv.schemify(dtoSchema), dto);
+    toDomain: async (entity: Entity, ...args: AdditionalArgs) => {
+      const domain = await mapperDefinition.toDomain(entity, ...args);
+      const parsedSchema = sv.parse(sv.schemify(domainSchema), domain);
       if (!parsedSchema.ok) {
         throw new Error(prettyPrintParseErrors(parsedSchema.errors, 'DTO'));
       }
-      return dto;
+      return domain;
     }
   };
 }

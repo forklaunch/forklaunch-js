@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.6.2
+
+### Patch Changes
+
+- toDto -> toDomain
+
 ## 0.6.1
 
 ### Patch Changes

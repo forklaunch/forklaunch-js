@@ -31,9 +31,9 @@ export const PlanController = (
       {
         name: 'createPlan',
         summary: 'Create a plan',
-        body: CreatePlanMapper.schema(),
+        body: CreatePlanMapper.schema,
         responses: {
-          200: PlanMapper.schema()
+          200: PlanMapper.schema
         }
       },
       async (req, res) => {
@@ -69,9 +69,9 @@ export const PlanController = (
       {
         name: 'updatePlan',
         summary: 'Update a plan',
-        body: UpdatePlanMapper.schema(),
+        body: UpdatePlanMapper.schema,
         responses: {
-          200: PlanMapper.schema()
+          200: PlanMapper.schema
         }
       },
       async (req, res) => {

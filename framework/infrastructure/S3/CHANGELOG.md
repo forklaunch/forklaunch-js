@@ -1,5 +1,14 @@
 # @forklaunch/infrastructure-s3
 
+## 0.4.2
+
+### Patch Changes
+
+- toDto -> toDomain
+- Updated dependencies
+  - @forklaunch/common@0.6.2
+  - @forklaunch/core@0.14.2
+
 ## 0.4.1
 
 ### Patch Changes

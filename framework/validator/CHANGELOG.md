@@ -1,5 +1,13 @@
 # @forklaunch/validator
 
+## 0.10.2
+
+### Patch Changes
+
+- toDto -> toDomain
+- Updated dependencies
+  - @forklaunch/common@0.6.2
+
 ## 0.10.1
 
 ### Patch Changes
