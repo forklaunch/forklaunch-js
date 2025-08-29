@@ -1,5 +1,12 @@
 # @forklaunch/implementation-billing-base
 
+## 0.3.1
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/implementation-billing-base@0.6.1
+
 ## 0.3.0
 
 ### Minor Changes

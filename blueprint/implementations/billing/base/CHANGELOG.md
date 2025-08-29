@@ -1,5 +1,11 @@
 # @forklaunch/implementation-billing-base
 
+## 0.6.1
+
+### Patch Changes
+
+- import path incorrect
+
 ## 0.6.0
 
 ### Minor Changes

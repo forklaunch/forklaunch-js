@@ -1,6 +1,6 @@
 import { EntityManager } from '@mikro-orm/core';
-import { BaseBillingDtos } from '../../dist/domain/types/baseBillingDto.types';
-import { BaseBillingEntities } from '../../dist/domain/types/baseBillingEntity.types';
+import { BaseBillingDtos } from './baseBillingDto.types';
+import { BaseBillingEntities } from './baseBillingEntity.types';
 
 export type BillingPortalMappers<
   MapperEntities extends BaseBillingEntities,
