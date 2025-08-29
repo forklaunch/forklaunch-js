@@ -1,7 +1,7 @@
 use std::{
     fs::{read_to_string, remove_dir_all},
     io::Write,
-    path::Path,
+    path::{Path, PathBuf},
 };
 
 use anyhow::{Context, Result};
@@ -19,6 +19,7 @@ use crate::{
     core::{
         base_path::{BasePathLocation, BasePathType, prompt_base_path},
         command::command,
+        flexible_path::{create_generic_config, find_manifest_path},
         manifest::{
             ApplicationInitializationMetadata, InitializableManifestConfig,
             InitializableManifestConfigMetadata, ProjectType, application::ApplicationManifestData,
@@ -86,7 +87,7 @@ impl CliCommand for LibraryCommand {
 
         // Find the manifest using flexible_path
         let root_path_config = create_generic_config();
-        let manifest_path = find_manifest_path(&service_base_path, &root_path_config);
+        let manifest_path = find_manifest_path(&library_base_path, &root_path_config);
         
         let config_path = if let Some(manifest) = manifest_path {
             manifest
@@ -104,7 +105,7 @@ impl CliCommand for LibraryCommand {
             .into();
         
         println!("init:service:06: config_path: {:?}", config_path);
-        println!("init:service:07: base_path: {:?}", service_base_path);
+        println!("init:service:07: base_path: {:?}", library_base_path);
         println!("init:service:08: app_root_path: {:?}", app_root_path);
 
         let mut manifest_data = toml::from_str::<ApplicationManifestData>(
@@ -166,14 +167,14 @@ impl CliCommand for LibraryCommand {
             Runtime::Node => {
                 rendered_templates.push(RenderedTemplate {
                     path: library_base_path.join("pnpm-workspace.yaml"),
-                    content: remove_project_definition_to_pnpm_workspace(base_path, &library_name)?,
+                    content: remove_project_definition_to_pnpm_workspace(&library_base_path, &library_name)?,
                     context: Some(ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE.to_string()),
                 });
             }
             Runtime::Bun => {
                 rendered_templates.push(RenderedTemplate {
                     path: library_base_path.join("package.json"),
-                    content: remove_project_definition_to_package_json(base_path, &library_name)?,
+                    content: remove_project_definition_to_package_json(&library_base_path, &library_name)?,
                     context: Some(ERROR_FAILED_TO_CREATE_PACKAGE_JSON.to_string()),
                 });
             }

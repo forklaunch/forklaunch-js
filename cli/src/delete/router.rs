@@ -99,7 +99,7 @@ impl CliCommand for RouterCommand {
             current_dir.clone()
         };
         let manifest_path_config = create_module_config();
-        let manifest_path = find_manifest_path(&base_path, &manifest_path_config);
+        let manifest_path = find_manifest_path(&router_base_path, &manifest_path_config);
         
         let config_path = if let Some(manifest) = manifest_path {
             manifest
@@ -186,39 +186,39 @@ impl CliCommand for RouterCommand {
         let pascal_case_name = router_name.to_case(Case::Pascal);
 
         let file_paths = [
-            base_path
+            router_base_path
                 .join("api")
                 .join("controllers")
                 .join(format!("{}.controller.ts", camel_case_name)),
-            base_path
+            router_base_path
                 .join("api")
                 .join("routes")
                 .join(format!("{}.routes.ts", camel_case_name)),
-            base_path
+            router_base_path
                 .join("domain")
                 .join("interfaces")
                 .join(format!("{}.interface.ts", camel_case_name)),
-            base_path
+            router_base_path
                 .join("domain")
                 .join("mappers")
                 .join(format!("{}.mappers.ts", camel_case_name)),
-            base_path
+            router_base_path
                 .join("domain")
                 .join("schemas")
                 .join(format!("{}.schema.ts", camel_case_name)),
-            base_path
+            router_base_path
                 .join("domain")
                 .join("types")
                 .join(format!("{}.types.ts", camel_case_name)),
-            base_path
+            router_base_path
                 .join("persistence")
                 .join("entities")
                 .join(format!("{}Record.entity.ts", camel_case_name)),
-            base_path
+            router_base_path
                 .join("persistence")
                 .join("seeders")
                 .join(format!("{}Record.seeder.ts", camel_case_name)),
-            base_path
+            router_base_path
                 .join("services")
                 .join(format!("{}.service.ts", camel_case_name)),
         ];

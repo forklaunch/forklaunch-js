@@ -121,7 +121,7 @@ impl CliCommand for RouterCommand {
             current_dir.clone()
         };
         let manifest_path_config = create_module_config();
-        let manifest_path = find_manifest_path(&base_path, &manifest_path_config);
+        let manifest_path = find_manifest_path(&router_base_path, &manifest_path_config);
         
         let config_path = if let Some(manifest) = manifest_path {
             manifest

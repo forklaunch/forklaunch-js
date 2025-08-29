@@ -1,4 +1,4 @@
-use std::{fs::read_to_string, io::Write, path::Path};
+use std::{fs::read_to_string, io::Write, path::{Path, PathBuf}};
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, Command};
@@ -18,6 +18,7 @@ use crate::{
     },
     core::{
         base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        flexible_path::{create_generic_config, find_manifest_path},
         command::command,
         format::format_code,
         manifest::{

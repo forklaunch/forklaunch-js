@@ -1,4 +1,4 @@
-use std::{collections::HashSet, io::Write, path::Path};
+use std::{collections::HashSet, io::Write, path::{Path, PathBuf}};
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, Command};
@@ -36,6 +36,7 @@ use crate::{
             },
         },
         base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        flexible_path::{create_generic_config, find_manifest_path},
         command::command,
         database::{get_database_variants, is_in_memory_database},
         docker::{
@@ -664,7 +665,7 @@ impl CliCommand for ServiceCommand {
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
         .initialize(InitializableManifestConfigMetadata::Project(
             ProjectInitializationMetadata {
-                project_name: servicebase_path.file_name().unwrap().to_string_lossy().to_string(),
+                project_name: service_base_path.file_name().unwrap().to_string_lossy().to_string(),
             },
         ));
 
@@ -776,7 +777,7 @@ impl CliCommand for ServiceCommand {
         let mut removal_templates = vec![];
         let mut move_templates = vec![];
 
-        let application_package_json_path = base_path.parent().unwrap().join("package.json");
+        let application_package_json_path = service_base_path.parent().unwrap().join("package.json");
         let application_package_json_data = rendered_templates_cache
             .get(&application_package_json_path)
             .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?
@@ -786,7 +787,7 @@ impl CliCommand for ServiceCommand {
         let mut application_package_json_to_write =
             serde_json::from_str::<ApplicationPackageJson>(&application_package_json_data)?;
 
-        let project_package_json_path = base_path.join("package.json");
+        let project_package_json_path = service_base_path.join("package.json");
         let project_package_json_data = rendered_templates_cache
             .get(&project_package_json_path)
             .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?
@@ -796,7 +797,7 @@ impl CliCommand for ServiceCommand {
         let mut project_json_to_write =
             serde_json::from_str::<ProjectPackageJson>(&project_package_json_data)?;
 
-        let docker_compose_path = base_path.parent().unwrap().join("docker-compose.yaml");
+        let docker_compose_path = app_root_path.join("docker-compose.yaml");
         let mut docker_compose_data = serde_yml::from_str::<DockerCompose>(
             &rendered_templates_cache
                 .get(&docker_compose_path)
@@ -807,7 +808,7 @@ impl CliCommand for ServiceCommand {
 
         if let Some(database) = database {
             change_database(
-                &base_path,
+                &service_base_path,
                 &database.parse()?,
                 &mut manifest_data,
                 &mut application_package_json_to_write,
@@ -839,7 +840,7 @@ impl CliCommand for ServiceCommand {
                 .collect();
 
             change_infrastructure(
-                &base_path,
+                &service_base_path,
                 infrastructure_to_add,
                 infrastructure_to_remove,
                 &mut project_json_to_write,
@@ -851,7 +852,7 @@ impl CliCommand for ServiceCommand {
 
         if let Some(name) = name {
             move_templates.push(change_name(
-                &base_path,
+                &service_base_path,
                 &name,
                 confirm,
                 &mut manifest_data,
@@ -920,7 +921,7 @@ impl CliCommand for ServiceCommand {
                 &manifest_data.service_name
             )?;
             stdout.reset()?;
-            format_code(&base_path, &manifest_data.runtime.parse()?);
+            format_code(&service_base_path, &manifest_data.runtime.parse()?);
         }
 
         Ok(())
