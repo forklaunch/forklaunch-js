@@ -1,64 +1,66 @@
-import { SchemaValidator } from '@forklaunch/blueprint-core';
-import { RequestMapper, ResponseMapper } from '@forklaunch/core/mappers';
+import { schemaValidator } from '@forklaunch/blueprint-core';
+import { requestMapper, responseMapper } from '@forklaunch/core/mappers';
 import { EntityManager } from '@mikro-orm/core';
 import Stripe from 'stripe';
 import { CheckoutSession } from '../../persistence/entities/checkoutSession.entity';
 import { CheckoutSessionSchemas } from '../../registrations';
 import { StatusEnum } from '../enum/status.enum';
 
-export class CreateCheckoutSessionMapper extends RequestMapper<
+export const CreateCheckoutSessionMapper = requestMapper(
+  schemaValidator,
+  CheckoutSessionSchemas.CreateCheckoutSessionSchema(StatusEnum),
   CheckoutSession,
-  SchemaValidator
-> {
-  schema = CheckoutSessionSchemas.CreateCheckoutSessionSchema(StatusEnum);
-
-  async toEntity(
-    em: EntityManager,
-    providerFields: Stripe.Checkout.Session
-  ): Promise<CheckoutSession> {
-    return CheckoutSession.create(
-      {
-        ...this.dto,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        providerFields
-      },
-      em
-    );
+  {
+    toEntity: async (
+      dto,
+      em: EntityManager,
+      providerFields: Stripe.Checkout.Session
+    ) => {
+      return CheckoutSession.create(
+        {
+          ...dto,
+          uri: `checkout/${Date.now()}`, // Generate a simple URI
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          providerFields
+        },
+        em
+      );
+    }
   }
-}
+);
 
-export class UpdateCheckoutSessionMapper extends RequestMapper<
+export const UpdateCheckoutSessionMapper = requestMapper(
+  schemaValidator,
+  CheckoutSessionSchemas.UpdateCheckoutSessionSchema(StatusEnum),
   CheckoutSession,
-  SchemaValidator
-> {
-  schema = CheckoutSessionSchemas.UpdateCheckoutSessionSchema(StatusEnum);
-
-  async toEntity(
-    em: EntityManager,
-    providerFields: Stripe.Checkout.Session
-  ): Promise<CheckoutSession> {
-    return CheckoutSession.update(
-      {
-        ...this.dto,
-        providerFields
-      },
-      em
-    );
+  {
+    toEntity: async (
+      dto,
+      em: EntityManager,
+      providerFields: Stripe.Checkout.Session
+    ) => {
+      return CheckoutSession.update(
+        {
+          ...dto,
+          providerFields
+        },
+        em
+      );
+    }
   }
-}
+);
 
-export class CheckoutSessionMapper extends ResponseMapper<
+export const CheckoutSessionMapper = responseMapper(
+  schemaValidator,
+  CheckoutSessionSchemas.CheckoutSessionSchema(StatusEnum),
   CheckoutSession,
-  SchemaValidator
-> {
-  schema = CheckoutSessionSchemas.CheckoutSessionSchema(StatusEnum);
-
-  async fromEntity(checkoutSession: CheckoutSession): Promise<this> {
-    this.dto = {
-      ...(await checkoutSession.read()),
-      stripeFields: checkoutSession.providerFields
-    };
-    return this;
+  {
+    toDomain: async (entity: CheckoutSession) => {
+      return {
+        ...(await entity.read()),
+        stripeFields: entity.providerFields
+      };
+    }
   }
-}
+);

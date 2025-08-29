@@ -1,57 +1,47 @@
-import { SchemaValidator } from '@forklaunch/blueprint-core';
-import { RequestMapper, ResponseMapper } from '@forklaunch/core/mappers';
+import { schemaValidator } from '@forklaunch/blueprint-core';
+import { requestMapper, responseMapper } from '@forklaunch/core/mappers';
 import { EntityManager } from '@mikro-orm/core';
 import { Subscription } from '../../persistence/entities/subscription.entity';
 import { SubscriptionSchemas } from '../../registrations';
 import { BillingProviderEnum } from '../enum/billingProvider.enum';
 import { PartyEnum } from '../enum/party.enum';
 
-export class CreateSubscriptionMapper extends RequestMapper<
+export const CreateSubscriptionMapper = requestMapper(
+  schemaValidator,
+  SubscriptionSchemas.CreateSubscriptionSchema(PartyEnum, BillingProviderEnum),
   Subscription,
-  SchemaValidator
-> {
-  schema = SubscriptionSchemas.CreateSubscriptionSchema(
-    PartyEnum,
-    BillingProviderEnum
-  );
-
-  async toEntity(em: EntityManager): Promise<Subscription> {
-    return Subscription.create(
-      {
-        ...this.dto,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      em
-    );
+  {
+    toEntity: async (dto, em: EntityManager) => {
+      return Subscription.create(
+        {
+          ...dto,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        em
+      );
+    }
   }
-}
+);
 
-export class UpdateSubscriptionMapper extends RequestMapper<
+export const UpdateSubscriptionMapper = requestMapper(
+  schemaValidator,
+  SubscriptionSchemas.UpdateSubscriptionSchema(PartyEnum, BillingProviderEnum),
   Subscription,
-  SchemaValidator
-> {
-  schema = SubscriptionSchemas.UpdateSubscriptionSchema(
-    PartyEnum,
-    BillingProviderEnum
-  );
-
-  async toEntity(em: EntityManager): Promise<Subscription> {
-    return Subscription.update(this.dto, em);
+  {
+    toEntity: async (dto, em: EntityManager) => {
+      return Subscription.update(dto, em);
+    }
   }
-}
+);
 
-export class SubscriptionMapper extends ResponseMapper<
+export const SubscriptionMapper = responseMapper(
+  schemaValidator,
+  SubscriptionSchemas.SubscriptionSchema(PartyEnum, BillingProviderEnum),
   Subscription,
-  SchemaValidator
-> {
-  schema = SubscriptionSchemas.SubscriptionSchema(
-    PartyEnum,
-    BillingProviderEnum
-  );
-
-  async fromEntity(entity: Subscription): Promise<this> {
-    this.dto = await entity.read();
-    return this;
+  {
+    toDomain: async (entity: Subscription) => {
+      return await entity.read();
+    }
   }
-}
+);

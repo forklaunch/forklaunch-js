@@ -1,45 +1,50 @@
-import { SchemaValidator } from '@forklaunch/blueprint-core';
-import { RequestMapper, ResponseMapper } from '@forklaunch/core/mappers';
+import { schemaValidator } from '@forklaunch/blueprint-core';
+import { requestMapper, responseMapper } from '@forklaunch/core/mappers';
 import { EntityManager } from '@mikro-orm/core';
 import Stripe from 'stripe';
 import { Plan } from '../../persistence/entities/plan.entity';
 import { PlanSchemas } from '../../registrations';
 
-export class CreatePlanMapper extends RequestMapper<Plan, SchemaValidator> {
-  schema = PlanSchemas.CreatePlanSchema;
-
-  async toEntity(
-    em: EntityManager,
-    providerFields: Stripe.Plan
-  ): Promise<Plan> {
-    return Plan.create(
-      {
-        ...this.dto,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        providerFields
-      },
-      em
-    );
+export const CreatePlanMapper = requestMapper(
+  schemaValidator,
+  PlanSchemas.CreatePlanSchema,
+  Plan,
+  {
+    toEntity: async (dto, em: EntityManager, providerFields: Stripe.Plan) => {
+      return Plan.create(
+        {
+          ...dto,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          providerFields
+        },
+        em
+      );
+    }
   }
-}
+);
 
-export class UpdatePlanMapper extends RequestMapper<Plan, SchemaValidator> {
-  schema = PlanSchemas.UpdatePlanSchema;
-
-  async toEntity(em: EntityManager): Promise<Plan> {
-    return Plan.update(this.dto, em);
+export const UpdatePlanMapper = requestMapper(
+  schemaValidator,
+  PlanSchemas.UpdatePlanSchema,
+  Plan,
+  {
+    toEntity: async (dto, em: EntityManager) => {
+      return Plan.update(dto, em);
+    }
   }
-}
+);
 
-export class PlanMapper extends ResponseMapper<Plan, SchemaValidator> {
-  schema = PlanSchemas.PlanSchema;
-
-  async fromEntity(plan: Plan): Promise<this> {
-    this.dto = {
-      ...(await plan.read()),
-      stripeFields: plan.providerFields
-    };
-    return this;
+export const PlanMapper = responseMapper(
+  schemaValidator,
+  PlanSchemas.PlanSchema,
+  Plan,
+  {
+    toDomain: async (entity: Plan) => {
+      return {
+        ...(await entity.read()),
+        stripeFields: entity.providerFields
+      };
+    }
   }
-}
+);

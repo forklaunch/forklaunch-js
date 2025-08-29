@@ -54,10 +54,11 @@ import {
   UserMapper
 } from './domain/mappers/user.mappers';
 import {
-  OrganizationMapperTypes,
-  PermissionMapperTypes,
-  RoleMapperTypes,
-  UserMapperTypes
+  OrganizationMapperEntityTypes,
+  PermissionMapperEntityTypes,
+  RoleMapperEntityTypes,
+  UserMapperDomainObjectTypes,
+  UserMapperEntityTypes
 } from './domain/types/iamMappers.types';
 import mikroOrmOptionsConfig from './mikro-orm.config';
 
@@ -244,7 +245,7 @@ const serviceDependencies = runtimeDependencies.chain({
     type: BaseOrganizationService<
       SchemaValidator,
       typeof OrganizationStatus,
-      OrganizationMapperTypes
+      OrganizationMapperEntityTypes
     >,
     factory: ({ EntityManager, OpenTelemetryCollector }, resolve, context) =>
       new BaseOrganizationService(
@@ -262,7 +263,7 @@ const serviceDependencies = runtimeDependencies.chain({
   },
   PermissionService: {
     lifetime: Lifetime.Scoped,
-    type: BasePermissionService<SchemaValidator, PermissionMapperTypes>,
+    type: BasePermissionService<SchemaValidator, PermissionMapperEntityTypes>,
     factory: ({ EntityManager, OpenTelemetryCollector }, resolve, context) =>
       new BasePermissionService(
         context.entityManagerOptions
@@ -281,7 +282,7 @@ const serviceDependencies = runtimeDependencies.chain({
   },
   RoleService: {
     lifetime: Lifetime.Scoped,
-    type: BaseRoleService<SchemaValidator, RoleMapperTypes>,
+    type: BaseRoleService<SchemaValidator, RoleMapperEntityTypes>,
     factory: ({ EntityManager, OpenTelemetryCollector }, resolve, context) =>
       new BaseRoleService(
         context.entityManagerOptions
@@ -301,12 +302,8 @@ const serviceDependencies = runtimeDependencies.chain({
     type: BaseUserService<
       SchemaValidator,
       typeof OrganizationStatus,
-      UserMapperTypes,
-      {
-        UserMapper: UserMapper['dto'];
-        CreateUserMapper: CreateUserMapper['dto'];
-        UpdateUserMapper: UpdateUserMapper['dto'];
-      }
+      UserMapperEntityTypes,
+      UserMapperDomainObjectTypes
     >,
     factory: (
       {

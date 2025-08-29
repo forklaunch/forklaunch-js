@@ -33,9 +33,9 @@ export const PaymentLinkController = (
       {
         name: 'createPaymentLink',
         summary: 'Create a payment link',
-        body: CreatePaymentLinkMapper.schema(),
+        body: CreatePaymentLinkMapper.schema,
         responses: {
-          200: PaymentLinkMapper.schema()
+          200: PaymentLinkMapper.schema
         }
       },
       async (req, res) => {
@@ -54,7 +54,7 @@ export const PaymentLinkController = (
         summary: 'Get a payment link',
         params: IdSchema,
         responses: {
-          200: PaymentLinkMapper.schema()
+          200: PaymentLinkMapper.schema
         }
       },
       async (req, res) => {
@@ -69,10 +69,10 @@ export const PaymentLinkController = (
       {
         name: 'updatePaymentLink',
         summary: 'Update a payment link',
-        body: UpdatePaymentLinkMapper.schema(),
+        body: UpdatePaymentLinkMapper.schema,
         params: IdSchema,
         responses: {
-          200: PaymentLinkMapper.schema()
+          200: PaymentLinkMapper.schema
         }
       },
       async (req, res) => {
@@ -151,7 +151,7 @@ export const PaymentLinkController = (
         summary: 'List payment links',
         query: IdsSchema,
         responses: {
-          200: array(PaymentLinkMapper.schema())
+          200: array(PaymentLinkMapper.schema)
         }
       },
       async (req, res) => {

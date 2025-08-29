@@ -1,63 +1,64 @@
-import { SchemaValidator } from '@forklaunch/blueprint-core';
-import { RequestMapper, ResponseMapper } from '@forklaunch/core/mappers';
+import { schemaValidator } from '@forklaunch/blueprint-core';
+import { requestMapper, responseMapper } from '@forklaunch/core/mappers';
 import { EntityManager } from '@mikro-orm/core';
 import Stripe from 'stripe';
 import { BillingPortal } from '../../persistence/entities/billingPortal.entity';
 import { BillingPortalSchemas } from '../../registrations';
 
-export class CreateBillingPortalMapper extends RequestMapper<
+export const CreateBillingPortalMapper = requestMapper(
+  schemaValidator,
+  BillingPortalSchemas.CreateBillingPortalSchema,
   BillingPortal,
-  SchemaValidator
-> {
-  schema = BillingPortalSchemas.CreateBillingPortalSchema;
-
-  async toEntity(
-    em: EntityManager,
-    providerFields: Stripe.BillingPortal.Session
-  ): Promise<BillingPortal> {
-    return BillingPortal.create(
-      {
-        ...this.dto,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        providerFields
-      },
-      em
-    );
+  {
+    toEntity: async (
+      dto,
+      em: EntityManager,
+      providerFields: Stripe.BillingPortal.Session
+    ) => {
+      return BillingPortal.create(
+        {
+          ...dto,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          providerFields
+        },
+        em
+      );
+    }
   }
-}
+);
 
-export class UpdateBillingPortalMapper extends RequestMapper<
+export const UpdateBillingPortalMapper = requestMapper(
+  schemaValidator,
+  BillingPortalSchemas.UpdateBillingPortalSchema,
   BillingPortal,
-  SchemaValidator
-> {
-  schema = BillingPortalSchemas.UpdateBillingPortalSchema;
-
-  async toEntity(
-    em: EntityManager,
-    providerFields: Stripe.BillingPortal.Session
-  ): Promise<BillingPortal> {
-    return BillingPortal.update(
-      {
-        ...this.dto,
-        providerFields
-      },
-      em
-    );
+  {
+    toEntity: async (
+      dto,
+      em: EntityManager,
+      providerFields: Stripe.BillingPortal.Session
+    ) => {
+      return BillingPortal.update(
+        {
+          ...dto,
+          providerFields
+        },
+        em
+      );
+    }
   }
-}
+);
 
-export class BillingPortalMapper extends ResponseMapper<
+export const BillingPortalMapper = responseMapper(
+  schemaValidator,
+  BillingPortalSchemas.BillingPortalSchema,
   BillingPortal,
-  SchemaValidator
-> {
-  schema = BillingPortalSchemas.BillingPortalSchema;
-
-  async fromEntity(entity: BillingPortal): Promise<this> {
-    this.dto = {
-      ...(await entity.read()),
-      stripeFields: entity.providerFields
-    };
-    return this;
+  {
+    toDomain: async (entity: BillingPortal) => {
+      return {
+        ...(await entity.read()),
+        stripeFields: entity.providerFields
+      };
+    }
   }
-}
+);

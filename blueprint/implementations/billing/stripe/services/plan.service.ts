@@ -1,5 +1,4 @@
 import { IdDto, IdsDto } from '@forklaunch/common';
-import { TtlCache } from '@forklaunch/core/cache';
 import {
   MetricsDefinition,
   OpenTelemetryCollector,
@@ -51,7 +50,6 @@ export class StripePlanService<
   >;
   protected readonly stripeClient: Stripe;
   protected readonly em: EntityManager;
-  protected readonly cache: TtlCache;
   protected readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
   protected readonly schemaValidator: SchemaValidator;
   protected readonly mappers: StripePlanMappers<Entities, Dto>;
@@ -59,7 +57,6 @@ export class StripePlanService<
   constructor(
     stripeClient: Stripe,
     em: EntityManager,
-    cache: TtlCache,
     openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
     schemaValidator: SchemaValidator,
     mappers: StripePlanMappers<Entities, Dto>,
@@ -70,7 +67,6 @@ export class StripePlanService<
   ) {
     this.stripeClient = stripeClient;
     this.em = em;
-    this.cache = cache;
     this.openTelemetryCollector = openTelemetryCollector;
     this.schemaValidator = schemaValidator;
     this.mappers = mappers;

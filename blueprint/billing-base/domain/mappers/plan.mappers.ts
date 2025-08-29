@@ -1,5 +1,5 @@
-import { SchemaValidator } from '@forklaunch/blueprint-core';
-import { RequestMapper, ResponseMapper } from '@forklaunch/core/mappers';
+import { schemaValidator } from '@forklaunch/blueprint-core';
+import { requestMapper, responseMapper } from '@forklaunch/core/mappers';
 import { EntityManager } from '@mikro-orm/core';
 import { Plan } from '../../persistence/entities/plan.entity';
 import { PlanSchemas } from '../../registrations';
@@ -7,46 +7,50 @@ import { BillingProviderEnum } from '../enum/billingProvider.enum';
 import { CurrencyEnum } from '../enum/currency.enum';
 import { PlanCadenceEnum } from '../enum/planCadence.enum';
 
-export class CreatePlanMapper extends RequestMapper<Plan, SchemaValidator> {
-  schema = PlanSchemas.CreatePlanSchema(
+export const CreatePlanMapper = requestMapper(
+  schemaValidator,
+  PlanSchemas.CreatePlanSchema(
     PlanCadenceEnum,
     CurrencyEnum,
     BillingProviderEnum
-  );
-
-  async toEntity(em: EntityManager): Promise<Plan> {
-    return Plan.create(
-      {
-        ...this.dto,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      em
-    );
+  ),
+  Plan,
+  {
+    toEntity: async (dto, em: EntityManager) => {
+      return Plan.create(
+        {
+          ...dto,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        em
+      );
+    }
   }
-}
+);
 
-export class UpdatePlanMapper extends RequestMapper<Plan, SchemaValidator> {
-  schema = PlanSchemas.UpdatePlanSchema(
+export const UpdatePlanMapper = requestMapper(
+  schemaValidator,
+  PlanSchemas.UpdatePlanSchema(
     PlanCadenceEnum,
     CurrencyEnum,
     BillingProviderEnum
-  );
-
-  async toEntity(em: EntityManager): Promise<Plan> {
-    return Plan.update(this.dto, em);
+  ),
+  Plan,
+  {
+    toEntity: async (dto, em: EntityManager) => {
+      return Plan.update(dto, em);
+    }
   }
-}
+);
 
-export class PlanMapper extends ResponseMapper<Plan, SchemaValidator> {
-  schema = PlanSchemas.PlanSchema(
-    PlanCadenceEnum,
-    CurrencyEnum,
-    BillingProviderEnum
-  );
-
-  async fromEntity(plan: Plan): Promise<this> {
-    this.dto = await plan.read();
-    return this;
+export const PlanMapper = responseMapper(
+  schemaValidator,
+  PlanSchemas.PlanSchema(PlanCadenceEnum, CurrencyEnum, BillingProviderEnum),
+  Plan,
+  {
+    toDomain: async (entity: Plan) => {
+      return await entity.read();
+    }
   }
-}
+);

@@ -45,6 +45,7 @@ export const checkoutSession = {
   customerId: 'test@example.com',
   paymentMethods: [PaymentMethodEnum.CARD],
   currency: CurrencyEnum.USD,
+  uri: 'checkout/seed-data',
   successRedirectUri: 'https://example.com/success',
   cancelRedirectUri: 'https://example.com/cancel',
   expiresAt: new Date(),
