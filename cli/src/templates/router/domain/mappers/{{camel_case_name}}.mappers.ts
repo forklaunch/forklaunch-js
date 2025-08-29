@@ -13,7 +13,7 @@ export const {{pascal_case_name}}RequestMapper = requestMapper(
   {{pascal_case_name}}RequestSchema,
   {{pascal_case_name}}{{#is_worker}}Event{{/is_worker}}Record,
   {
-    toEntity: async (dto, {{^is_worker}}em: EntityManager{{/is_worker}}) {
+    toEntity: async (dto{{^is_worker}}, em: EntityManager{{/is_worker}}) => {
       return {{pascal_case_name}}{{#is_worker}}Event{{/is_worker}}Record.create({
         ...dto,{{#is_worker}}
         processed: false,
