@@ -16,7 +16,7 @@ cd ..
 
 RUST_BACKTRACE=1 cargo run --release change application -p change-application -N change-application-test-bun-application -f biome -l oxlint -v typebox -F express -r bun -t jest -D "Test service 2" -A "Rohin Bhargava A" -L "MIT" -c
 
-# cd change-application-test-bun-application
+cd change-application
 
 bun install
 cd core

@@ -1,4 +1,4 @@
-use std::{io::Write, path::Path};
+use std::{io::Write, path::{Path, PathBuf}};
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, Command};
@@ -12,6 +12,7 @@ use crate::{
     constants::{ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST, Runtime},
     core::{
         base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        flexible_path::{create_module_config, find_manifest_path},
         command::command,
         format::format_code,
         manifest::{
@@ -98,27 +99,51 @@ impl CliCommand for RouterCommand {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
         let mut rendered_templates_cache = RenderedTemplatesCache::new();
 
-        let base_path_input = prompt_base_path(
-            &mut line_editor,
-            &mut stdout,
-            matches,
-            &BasePathLocation::Router,
-            &BasePathType::Change,
-        )?;
-        let base_path = Path::new(&base_path_input);
+        // let base_path_input = prompt_base_path(
+        //     &mut line_editor,
+        //     &mut stdout,
+        //     matches,
+        //     &BasePathLocation::Router,
+        //     &BasePathType::Change,
+        // )?;
+        // let base_path = Path::new(&base_path_input);
 
-        let config_path = &base_path
-            .parent()
-            .unwrap()
-            .join(".forklaunch")
-            .join("manifest.toml");
+        let current_dir = std::env::current_dir().unwrap();
+        // Determine where the router should be created
+        let router_base_path = if let Some(relative_path) = matches.get_one::<String>("base_path") {
+            // User provided a relative path, resolve it relative to current directory
+            let resolved_path = current_dir.join(relative_path);
+            println!("init:router:03: Router will be deleted at: {:?}", resolved_path);
+            resolved_path
+        } else {
+            // No path provided, assume current directory is where router should go
+            println!("init:router:03: No path provided, router will be deleted in current directory: {:?}", current_dir);
+            current_dir.clone()
+        };
+        let manifest_path_config = create_module_config();
+        let manifest_path = find_manifest_path(&base_path, &manifest_path_config);
+        
+        let config_path = if let Some(manifest) = manifest_path {
+            manifest
+        } else {
+            // No manifest found, this might be an error or we need to search more broadly
+            anyhow::bail!("Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path.");
+        };
+        let app_root_path: PathBuf = config_path
+            .to_string_lossy()
+            .strip_suffix(".forklaunch/manifest.toml")
+            .ok_or_else(|| {
+            anyhow::anyhow!("Expected manifest path to end with .forklaunch/manifest.toml, got: {:?}", config_path)
+        })?
+            .to_string()
+            .into();
 
         let existing_name = matches.get_one::<String>("existing-name");
         let new_name = matches.get_one::<String>("new-name");
         let dryrun = matches.get_flag("dryrun");
         let confirm = matches.get_flag("confirm");
 
-        let project_name = base_path.file_name().unwrap().to_string_lossy().to_string();
+        let project_name = router_base_path.file_name().unwrap().to_string_lossy().to_string();
         let mut manifest_data = toml::from_str::<RouterManifestData>(
             &rendered_templates_cache
                 .get(&config_path)
@@ -172,7 +197,7 @@ impl CliCommand for RouterCommand {
 
         if let Some(new_name) = new_name {
             removal_templates.extend(change_name(
-                &base_path,
+                &router_base_path,
                 &existing_name.unwrap(),
                 &new_name,
                 confirm,
@@ -207,7 +232,7 @@ impl CliCommand for RouterCommand {
         if !dryrun {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
             stdout.reset()?;
-            format_code(&base_path, &manifest_data.runtime.parse()?);
+            format_code(&router_base_path, &manifest_data.runtime.parse()?);
         }
 
         Ok(())

@@ -65,18 +65,47 @@ impl CliCommand for LibraryCommand {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let base_path_input = prompt_base_path(
-            &mut line_editor,
-            &mut stdout,
-            matches,
-            &BasePathLocation::Anywhere,
-            &BasePathType::Delete,
-        )?;
-        let base_path = Path::new(&base_path_input);
+        // let base_path_input = prompt_base_path(
+        //     &mut line_editor,
+        //     &mut stdout,
+        //     matches,
+        //     &BasePathLocation::Anywhere,
+        //     &BasePathType::Delete,
+        // )?;
+        // let base_path = Path::new(&base_path_input);
+        let current_dir = std::env::current_dir().unwrap();
+        // Determine where the router should be created
+        let library_base_path = if let Some(relative_path) = matches.get_one::<String>("base_path") {
+            // User provided a relative path, resolve it relative to current directory
+            let resolved_path = current_dir.join(relative_path);
+            println!("init:service:03: Library will be deleted at: {:?}", resolved_path);
+            resolved_path
+        } else {
+            current_dir.clone()
+        };
 
-        let config_path = Path::new(&base_path)
-            .join(".forklaunch")
-            .join("manifest.toml");
+        // Find the manifest using flexible_path
+        let root_path_config = create_generic_config();
+        let manifest_path = find_manifest_path(&service_base_path, &root_path_config);
+        
+        let config_path = if let Some(manifest) = manifest_path {
+            manifest
+        } else {
+            // No manifest found, this might be an error or we need to search more broadly
+            anyhow::bail!("Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path.");
+        };
+        let app_root_path: PathBuf = config_path
+            .to_string_lossy()
+            .strip_suffix(".forklaunch/manifest.toml")
+            .ok_or_else(|| {
+            anyhow::anyhow!("Expected manifest path to end with .forklaunch/manifest.toml, got: {:?}", config_path)
+        })?
+            .to_string()
+            .into();
+        
+        println!("init:service:06: config_path: {:?}", config_path);
+        println!("init:service:07: base_path: {:?}", service_base_path);
+        println!("init:service:08: app_root_path: {:?}", app_root_path);
 
         let mut manifest_data = toml::from_str::<ApplicationManifestData>(
             &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
@@ -101,7 +130,7 @@ impl CliCommand for LibraryCommand {
 
         manifest_data = manifest_data.initialize(InitializableManifestConfigMetadata::Application(
             ApplicationInitializationMetadata {
-                app_name: base_path.file_name().unwrap().to_string_lossy().to_string(),
+                app_name: manifest_data.app_name.clone(),
                 database: None,
             },
         ));
@@ -125,7 +154,7 @@ impl CliCommand for LibraryCommand {
         let manifest_content =
             remove_project_definition_from_manifest(&mut manifest_data, &library_name)?;
 
-        remove_dir_all(&base_path.join(&library_name))?;
+        remove_dir_all(&library_base_path.join(&library_name))?;
 
         let mut rendered_templates = vec![RenderedTemplate {
             path: config_path,
@@ -136,14 +165,14 @@ impl CliCommand for LibraryCommand {
         match manifest_data.runtime.parse()? {
             Runtime::Node => {
                 rendered_templates.push(RenderedTemplate {
-                    path: base_path.join("pnpm-workspace.yaml"),
+                    path: library_base_path.join("pnpm-workspace.yaml"),
                     content: remove_project_definition_to_pnpm_workspace(base_path, &library_name)?,
                     context: Some(ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE.to_string()),
                 });
             }
             Runtime::Bun => {
                 rendered_templates.push(RenderedTemplate {
-                    path: base_path.join("package.json"),
+                    path: library_base_path.join("package.json"),
                     content: remove_project_definition_to_package_json(base_path, &library_name)?,
                     context: Some(ERROR_FAILED_TO_CREATE_PACKAGE_JSON.to_string()),
                 });

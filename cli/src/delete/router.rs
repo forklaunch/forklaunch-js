@@ -1,7 +1,7 @@
 use std::{
     fs::{exists, read_to_string, remove_file},
     io::Write,
-    path::Path,
+    path::{Path, PathBuf},
 };
 
 use anyhow::{Context, Result};
@@ -31,6 +31,7 @@ use crate::{
             parse_ast_program::parse_ast_program,
         },
         base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        flexible_path::{create_module_config, find_manifest_path},
         command::command,
         manifest::{
             InitializableManifestConfig, InitializableManifestConfigMetadata,
@@ -77,20 +78,43 @@ impl CliCommand for RouterCommand {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let base_path_input = prompt_base_path(
-            &mut line_editor,
-            &mut stdout,
-            matches,
-            &BasePathLocation::Router,
-            &BasePathType::Delete,
-        )?;
-        let base_path = Path::new(&base_path_input);
-
-        let config_path = Path::new(&base_path)
-            .parent()
-            .unwrap()
-            .join(".forklaunch")
-            .join("manifest.toml");
+        // let base_path_input = prompt_base_path(
+        //     &mut line_editor,
+        //     &mut stdout,
+        //     matches,
+        //     &BasePathLocation::Router,
+        //     &BasePathType::Delete,
+        // )?;
+        // let base_path = Path::new(&base_path_input);
+        let current_dir = std::env::current_dir().unwrap();
+        // Determine where the router should be created
+        let router_base_path = if let Some(relative_path) = matches.get_one::<String>("base_path") {
+            // User provided a relative path, resolve it relative to current directory
+            let resolved_path = current_dir.join(relative_path);
+            println!("init:router:03: Router will be deleted at: {:?}", resolved_path);
+            resolved_path
+        } else {
+            // No path provided, assume current directory is where router should go
+            println!("init:router:03: No path provided, router will be deleted in current directory: {:?}", current_dir);
+            current_dir.clone()
+        };
+        let manifest_path_config = create_module_config();
+        let manifest_path = find_manifest_path(&base_path, &manifest_path_config);
+        
+        let config_path = if let Some(manifest) = manifest_path {
+            manifest
+        } else {
+            // No manifest found, this might be an error or we need to search more broadly
+            anyhow::bail!("Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path.");
+        };
+        let app_root_path: PathBuf = config_path
+            .to_string_lossy()
+            .strip_suffix(".forklaunch/manifest.toml")
+            .ok_or_else(|| {
+            anyhow::anyhow!("Expected manifest path to end with .forklaunch/manifest.toml, got: {:?}", config_path)
+        })?
+            .to_string()
+            .into();
 
         let mut manifest_data: RouterManifestData = toml::from_str(
             &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
@@ -117,7 +141,7 @@ impl CliCommand for RouterCommand {
 
         manifest_data = manifest_data.initialize(InitializableManifestConfigMetadata::Router(
             RouterInitializationMetadata {
-                project_name: base_path.file_name().unwrap().to_string_lossy().to_string(),
+                project_name: router_base_path.file_name().unwrap().to_string_lossy().to_string(),
                 router_name: Some(router_name.clone()),
             },
         ));
@@ -206,7 +230,7 @@ impl CliCommand for RouterCommand {
         }
 
         let allocator = Allocator::default();
-        let entities_path = base_path
+        let entities_path = router_base_path
             .join("persistence")
             .join("entities")
             .join("index.ts");
@@ -222,7 +246,7 @@ impl CliCommand for RouterCommand {
             &format!("./{}Record.entity", camel_case_name).as_str(),
         )?;
 
-        let seeders_path = base_path
+        let seeders_path = router_base_path
             .join("persistence")
             .join("seeders")
             .join("index.ts");
@@ -238,7 +262,7 @@ impl CliCommand for RouterCommand {
             &format!("./{}Record.seeder", camel_case_name).as_str(),
         )?;
 
-        let seed_data_path = base_path.join("persistence").join("seed.data.ts");
+        let seed_data_path = router_base_path.join("persistence").join("seed.data.ts");
         let seed_data_source_text = read_to_string(&seed_data_path).unwrap();
         let mut seed_data_program = parse_ast_program(
             &allocator,
@@ -253,7 +277,7 @@ impl CliCommand for RouterCommand {
         let new_seed_data_content =
             delete_from_seed_data_ts(&allocator, &mut seed_data_program, &camel_case_name)?;
 
-        let registrations_path = base_path.join("registrations.ts");
+        let registrations_path = router_base_path.join("registrations.ts");
         let registrations_text = read_to_string(&registrations_path)?;
         let registrations_type = SourceType::from_path(&registrations_path)?;
         let mut registrations_program =
@@ -270,7 +294,7 @@ impl CliCommand for RouterCommand {
             "serviceDependencies",
         )?;
 
-        let server_program_path = base_path.join("server.ts");
+        let server_program_path = router_base_path.join("server.ts");
         let server_program_text = read_to_string(&server_program_path)?;
         let server_program_type = SourceType::from_path(&server_program_path)?;
         let mut server_program =
@@ -278,7 +302,7 @@ impl CliCommand for RouterCommand {
         let new_server_content =
             delete_from_server_ts_router(&allocator, &mut server_program, &router_name)?;
 
-        let sdk_path = base_path.join("sdk.ts");
+        let sdk_path = router_base_path.join("sdk.ts");
         let sdk_text = read_to_string(&sdk_path)?;
         let sdk_type = SourceType::from_path(&sdk_path)?;
         let mut sdk_program = parse_ast_program(&allocator, &sdk_text, sdk_type);
