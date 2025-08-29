@@ -31,7 +31,7 @@ export const {{pascal_case_name}}ResponseMapper = responseMapper(
   {{pascal_case_name}}ResponseSchema,
   {{pascal_case_name}}{{#is_worker}}Event{{/is_worker}}Record,
   {
-    toDomain: async (entity: {{pascal_case_name}}{{#is_worker}}Event{{/is_worker}}Record) => {
+    toDto: async (entity: {{pascal_case_name}}{{#is_worker}}Event{{/is_worker}}Record) => {
       return await entity.read();
     }
   }

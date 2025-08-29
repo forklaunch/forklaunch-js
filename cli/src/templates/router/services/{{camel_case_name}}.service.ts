@@ -42,6 +42,6 @@ export class Base{{pascal_case_name}}Service implements {{pascal_case_name}}Serv
     await this.workerProducer.enqueueJob(entity);{{/is_worker}}{{^is_worker}}
     this.entityManager.persistAndFlush(entity);
     {{/is_worker}}
-    return {{pascal_case_name}}ResponseMapper.toDomain(entity);
+    return {{pascal_case_name}}ResponseMapper.toDto(entity);
   };
 }
