@@ -1,7 +1,7 @@
 use std::{
     borrow::Cow,
     collections::HashMap,
-    fs::{read_dir, read_to_string},
+    fs::{read_dir, read_to_string, remove_file},
     io::Write,
     path::{Path, PathBuf},
 };
@@ -21,7 +21,10 @@ use crate::{
         ERROR_FAILED_TO_PARSE_PACKAGE_JSON, ERROR_FAILED_TO_READ_MANIFEST,
     },
     core::{
-        ast::transformations::transform_registrations_ts::transform_registration_schema_ejection,
+        ast::{
+            deletions::delete_from_index_ts::delete_from_index_ts_export,
+            transformations::transform_domain_schemas_index::transform_domain_schemas_index_remove_service_schemas,
+        },
         base_path::{BasePathLocation, BasePathType, prompt_base_path},
         command::command,
         manifest::{
@@ -29,6 +32,7 @@ use crate::{
             InitializableManifestConfigMetadata, application::ApplicationManifestData,
         },
         relative_path::get_relative_path,
+        removal_template::{self, RemovalTemplate, RemovalTemplateType, remove_template_files},
         rendered_template::{RenderedTemplate, RenderedTemplatesCache, write_rendered_templates},
     },
     prompt::{ArrayCompleter, prompt_comma_separated_list, prompt_for_confirmation},
@@ -248,10 +252,6 @@ fn perform_string_replacements(
             };
 
             for dependency in dependencies_to_eject {
-                if new_content.contains(format!("{}/schemas", dependency).as_str()) {
-                    new_content = transform_registration_schema_ejection(&new_content);
-                }
-
                 let module_types = [
                     "/enum",
                     "/schemas",
@@ -459,6 +459,46 @@ fn merge_index_ts_files(
     Ok(())
 }
 
+fn delete_from_schema_folder(
+    base_path: &Path,
+    rendered_templates_cache: &mut RenderedTemplatesCache,
+) -> Result<Vec<RemovalTemplate>> {
+    let service_schemas_ts_path = base_path
+        .join("domain")
+        .join("schemas")
+        .join("service.schemas.ts");
+
+    let mut removal_templates = Vec::new();
+
+    let schema_index_ts_path = base_path.join("domain").join("schemas").join("index.ts");
+
+    if service_schemas_ts_path.exists() {
+        removal_templates.push(RemovalTemplate {
+            path: service_schemas_ts_path.clone(),
+            r#type: RemovalTemplateType::File,
+        });
+    }
+
+    let schema_index_ts_text = rendered_templates_cache
+        .get(&service_schemas_ts_path)?
+        .unwrap()
+        .content
+        .clone();
+
+    transform_domain_schemas_index_remove_service_schemas(&base_path, Some(&schema_index_ts_text))?;
+
+    rendered_templates_cache.insert(
+        schema_index_ts_path.to_string_lossy(),
+        RenderedTemplate {
+            path: schema_index_ts_path.clone(),
+            content: schema_index_ts_text,
+            context: None,
+        },
+    );
+
+    Ok(removal_templates)
+}
+
 impl CliCommand for EjectCommand {
     fn command(&self) -> Command {
         command("eject", "Eject a forklaunch project")
@@ -555,6 +595,7 @@ impl CliCommand for EjectCommand {
             from_str(&package_data).with_context(|| ERROR_FAILED_TO_PARSE_PACKAGE_JSON)?;
 
         let mut rendered_templates_cache = RenderedTemplatesCache::new();
+        let mut removal_templates = Vec::new();
 
         let (dependencies_to_eject, filtered_dependencies) = eject_dependencies(
             &project_variant,
@@ -591,6 +632,10 @@ impl CliCommand for EjectCommand {
                 &dependencies_to_eject,
                 &mut rendered_templates_cache,
             )?;
+            removal_templates.append(&mut delete_from_schema_folder(
+                &base_path,
+                &mut rendered_templates_cache,
+            )?);
         }
 
         let mut templates_to_render: Vec<RenderedTemplate> = rendered_templates_cache
@@ -605,6 +650,7 @@ impl CliCommand for EjectCommand {
         });
 
         write_rendered_templates(&templates_to_render, dryrun, &mut stdout)?;
+        remove_template_files(&removal_templates, dryrun, &mut stdout)?;
 
         if !dryrun {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
