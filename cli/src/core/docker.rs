@@ -1247,7 +1247,6 @@ fn create_base_service(
             entrypoint_command.to_string(),
         ]),
         healthcheck: if let Some(port_number) = port_number {
-            // Add health check for services that expose HTTP ports
             Some(Healthcheck {
                 test: HealthTest::List(vec![
                     "CMD".to_string(),
