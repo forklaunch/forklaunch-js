@@ -1,5 +1,15 @@
 # @forklaunch/hyper-express
 
+## 0.9.4
+
+### Patch Changes
+
+- Update internal package versions and add mapServiceSchemas method for clean DX in implemented modules
+- Updated dependencies
+  - @forklaunch/validator@0.10.4
+  - @forklaunch/common@0.6.4
+  - @forklaunch/core@0.14.4
+
 ## 0.9.3
 
 ### Patch Changes

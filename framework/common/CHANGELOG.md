@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.6.4
+
+### Patch Changes
+
+- Update internal package versions and add mapServiceSchemas method for clean DX in implemented modules
+
 ## 0.6.3
 
 ### Patch Changes

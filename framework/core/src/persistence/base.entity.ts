@@ -32,7 +32,11 @@ export class BaseEntity extends MikroORMBaseEntity {
     if (em) {
       return em.create(this, data);
     } else {
-      Object.assign(instance, data);
+      Object.assign(instance, {
+        ...data,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
     }
     return instance;
   }
@@ -56,7 +60,10 @@ export class BaseEntity extends MikroORMBaseEntity {
     if (em) {
       return em.upsert(instance, data);
     } else {
-      Object.assign(instance, data);
+      Object.assign(instance, {
+        ...data,
+        updatedAt: new Date()
+      });
     }
     return instance;
   }

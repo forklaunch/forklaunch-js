@@ -1,5 +1,13 @@
 # @forklaunch/validator
 
+## 0.10.4
+
+### Patch Changes
+
+- Update internal package versions and add mapServiceSchemas method for clean DX in implemented modules
+- Updated dependencies
+  - @forklaunch/common@0.6.4
+
 ## 0.10.3
 
 ### Patch Changes

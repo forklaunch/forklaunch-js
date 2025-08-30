@@ -1,5 +1,14 @@
 # @forklaunch/infrastructure-redis
 
+## 0.4.4
+
+### Patch Changes
+
+- Update internal package versions and add mapServiceSchemas method for clean DX in implemented modules
+- Updated dependencies
+  - @forklaunch/common@0.6.4
+  - @forklaunch/core@0.14.4
+
 ## 0.4.3
 
 ### Patch Changes
