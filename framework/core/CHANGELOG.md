@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.14.5
+
+### Patch Changes
+
+- extend mapServiceSchemas to accept more arguments
+
 ## 0.14.4
 
 ### Patch Changes

@@ -1,5 +1,12 @@
 # @forklaunch/express
 
+## 0.9.5
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.14.5
+
 ## 0.9.4
 
 ### Patch Changes
