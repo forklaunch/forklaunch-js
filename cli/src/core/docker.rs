@@ -692,11 +692,11 @@ pub(crate) fn add_kafka_to_docker_compose<'a>(
                 ("KAFKA_BROKER_ID".to_string(), "1".to_string()),
                 (
                     "KAFKA_LISTENERS".to_string(),
-                    "PLAINTEXT://kafka:29092,PLAINTEXT_HOST://0.0.0.0:9092".to_string(),
+                    "PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092".to_string(),
                 ),
                 (
                     "KAFKA_ADVERTISED_LISTENERS".to_string(),
-                    "PLAINTEXT://kafka:29092,PLAINTEXT_HOST://0.0.0.0:9092".to_string(),
+                    "PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092".to_string(),
                 ),
                 (
                     "KAFKA_LISTENER_SECURITY_PROTOCOL_MAP".to_string(),
@@ -803,7 +803,7 @@ pub(crate) fn add_database_to_docker_compose(
                             test: HealthTest::List(vec![
                                 "CMD-SHELL".to_string(),
                                 format!(
-                                    "pg_isready -U postgresql -d {}-{}-dev -h 0.0.0.0",
+                                    "pg_isready -U postgresql -d {}-{}-dev -h localhost",
                                     app_name, name
                                 ),
                             ]),
@@ -910,7 +910,7 @@ pub(crate) fn add_database_to_docker_compose(
                         healthcheck: Some(Healthcheck {
                             test: HealthTest::List(vec![
                                 "CMD-SHELL".to_string(),
-                                "mysqladmin ping -h 0.0.0.0 -u $${MYSQL_USER} -p$${MYSQL_PASSWORD}"
+                                "mysqladmin ping -h localhost -u $${MYSQL_USER} -p$${MYSQL_PASSWORD}"
                                     .to_string(),
                             ]),
                             interval: "10s".to_string(),
@@ -954,7 +954,7 @@ pub(crate) fn add_database_to_docker_compose(
                         healthcheck: Some(Healthcheck {
                             test: HealthTest::List(vec![
                                 "CMD-SHELL".to_string(),
-                                "mysqladmin ping -h 0.0.0.0 -u $${MARIADB_USER} -p$${MARIADB_PASSWORD}".to_string(),
+                                "mysqladmin ping -h localhost -u $${MARIADB_USER} -p$${MARIADB_PASSWORD}".to_string(),
                             ]),
                             interval: "10s".to_string(),
                             timeout: "5s".to_string(),
@@ -996,7 +996,7 @@ pub(crate) fn add_database_to_docker_compose(
                         healthcheck: Some(Healthcheck {
                             test: HealthTest::List(vec![
                                 "CMD-SHELL".to_string(),
-                                "/opt/mssql-tools/bin/sqlcmd -S 0.0.0.0 -U sa -P \"$${SA_PASSWORD}\" -Q 'SELECT 1' || exit 1".to_string(),
+                                "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P \"$${SA_PASSWORD}\" -Q 'SELECT 1' || exit 1".to_string(),
                             ]),
                             interval: "10s".to_string(),
                             timeout: "5s".to_string(),
@@ -1255,7 +1255,7 @@ fn create_base_service(
                     "--no-verbose".to_string(),
                     "--tries=1".to_string(),
                     "--spider".to_string(),
-                    format!("http://0.0.0.0:{}/health", port_number),
+                    format!("http://localhost:{}/health", port_number),
                 ]),
                 interval: "30s".to_string(),
                 timeout: "10s".to_string(),
