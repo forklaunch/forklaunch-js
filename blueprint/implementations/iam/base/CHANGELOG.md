@@ -1,5 +1,13 @@
 # @forklaunch/implementation-iam-base
 
+## 0.6.1
+
+### Patch Changes
+
+- Much cleaner schema syntax for registrations
+- Updated dependencies
+  - @forklaunch/interfaces-iam@0.6.1
+
 ## 0.6.0
 
 ### Minor Changes

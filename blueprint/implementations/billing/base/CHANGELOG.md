@@ -1,5 +1,13 @@
 # @forklaunch/implementation-billing-base
 
+## 0.6.2
+
+### Patch Changes
+
+- Much cleaner schema syntax for registrations
+- Updated dependencies
+  - @forklaunch/interfaces-billing@0.6.1
+
 ## 0.6.1
 
 ### Patch Changes
