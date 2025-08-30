@@ -282,7 +282,20 @@ pub(crate) fn change_name(
                             }),
                             healthcheck: value.healthcheck.as_ref().map(|healthcheck| {
                                 Healthcheck {
-                                    test: healthcheck.test.replace(&existing_name, &name),
+                                    test: match &healthcheck.test {
+                                        crate::core::docker::HealthTest::String(s) => {
+                                            crate::core::docker::HealthTest::String(
+                                                s.replace(&existing_name, &name),
+                                            )
+                                        }
+                                        crate::core::docker::HealthTest::List(list) => {
+                                            crate::core::docker::HealthTest::List(
+                                                list.iter()
+                                                    .map(|item| item.replace(&existing_name, &name))
+                                                    .collect(),
+                                            )
+                                        }
+                                    },
                                     interval: healthcheck.interval.replace(&existing_name, &name),
                                     timeout: healthcheck.timeout.replace(&existing_name, &name),
                                     retries: healthcheck.retries,
