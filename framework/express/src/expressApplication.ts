@@ -91,7 +91,6 @@ export class Application<
       options
     );
 
-    console.log('this.routerOptions offa', this.routerOptions);
     this.hostingConfiguration = options?.hosting;
     this.docsConfiguration = options?.docs;
     this.mcpConfiguration = options?.mcp;

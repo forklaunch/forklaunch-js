@@ -33,7 +33,7 @@ import { ExpressRouterOptions } from './types/hyperExpressOptions.types';
 export class Router<
     SV extends AnySchemaValidator,
     BasePath extends `/${string}`,
-    SessionSchema extends SessionObject<SV>
+    RouterSession extends SessionObject<SV>
   >
   extends ForklaunchExpressLikeRouter<
     SV,
@@ -43,7 +43,7 @@ export class Router<
     Request<Record<string, unknown>>,
     Response<Record<string, unknown>>,
     MiddlewareNext,
-    SessionSchema
+    RouterSession
   >
   implements ForklaunchRouter<SV>
 {
@@ -53,7 +53,7 @@ export class Router<
     public basePath: BasePath,
     schemaValidator: SV,
     openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-    options?: ExpressRouterOptions<SV, SessionSchema>
+    options?: ExpressRouterOptions<SV, RouterSession>
   ) {
     super(
       basePath,
@@ -80,7 +80,7 @@ export class Router<
   any: TypedMiddlewareDefinition<
     this,
     SV,
-    SessionSchema,
+    RouterSession,
     Request<Record<string, unknown>>,
     Response<Record<string, unknown>>,
     MiddlewareNext,
@@ -96,6 +96,10 @@ export class Router<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     const VersionedApi extends VersionSchema<SV, 'middleware'>,
+    const SessionSchema extends SessionObject<SV>,
+    const ResolvedSession extends SessionObject<SV> extends SessionSchema
+      ? RouterSession
+      : SessionSchema,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
@@ -103,7 +107,7 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request<Record<string, unknown>>
     >
   >(
@@ -122,7 +126,7 @@ export class Router<
           ResHeaders,
           LocalsObj,
           VersionedApi,
-          SessionSchema,
+          ResolvedSession,
           Request<Record<string, unknown>>,
           Response<Record<string, unknown>>,
           MiddlewareNext,
@@ -141,7 +145,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request<Record<string, unknown>>,
       Response<Record<string, unknown>>,
       MiddlewareNext,
@@ -160,7 +164,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      SessionSchema,
+      ResolvedSession,
       Request<Record<string, unknown>>,
       Response<Record<string, unknown>>,
       MiddlewareNext,
@@ -178,6 +182,7 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      ResolvedSession,
       Auth
     >(
       this.internal.any,
@@ -192,7 +197,7 @@ export class Router<
   // ws
 
   clone(): this {
-    const clone = new Router<SV, BasePath, SessionSchema>(
+    const clone = new Router<SV, BasePath, RouterSession>(
       this.basePath,
       this.schemaValidator,
       this.openTelemetryCollector,

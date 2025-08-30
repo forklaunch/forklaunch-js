@@ -40,11 +40,11 @@
     "up:packages": "pnpm -r update --latest"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.2.0",
+    "@biomejs/biome": "2.2.2",
     "@changesets/cli": "^2.29.6",
-    "@eslint/js": "^9.33.0",
+    "@eslint/js": "^9.34.0",
     "@types/jest": "^30.0.0",
-    "eslint": "^9.33.0",
+    "eslint": "^9.34.0",
     "globals": "^16.3.0",
     "jest": "^30.0.5",
     "lint-staged": "^16.1.5",
@@ -53,18 +53,18 @@
     "sort-package-json": "^3.4.0",
     "ts-jest": "^29.4.1",
     "tsup": "^8.5.0",
-    "tsx": "^4.20.4",
+    "tsx": "^4.20.5",
     "typescript": "^5.9.2",
-    "typescript-eslint": "^8.40.0",
+    "typescript-eslint": "^8.41.0",
     "vitest": "^3.2.4"
   },
   "dependencies": {
-    "@forklaunch/common": "^0.5.1",
-    "@forklaunch/core": "^0.13.1",
-    "@forklaunch/express": "^0.8.1",
-    "@forklaunch/hyper-express": "^0.8.1",
-    "@forklaunch/universal-sdk": "^0.6.1",
-    "@forklaunch/validator": "^0.9.1"
+    "@forklaunch/common": "^0.5.7",
+    "@forklaunch/core": "^0.13.8",
+    "@forklaunch/express": "^0.8.8",
+    "@forklaunch/hyper-express": "^0.8.8",
+    "@forklaunch/universal-sdk": "^0.6.7",
+    "@forklaunch/validator": "^0.9.8"
   },
   "pnpm": {
     "patchedDependencies": {

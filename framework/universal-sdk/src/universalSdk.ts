@@ -22,16 +22,17 @@ import {
  * A class representing the Forklaunch SDK.
  */
 export class UniversalSdk {
+  private registryOpenApiJson: Record<string, OpenAPIObject> | undefined;
+  private registryOpenApiHash: string | undefined;
+  private sdkPathMap: SdkPathMap | undefined;
+
   constructor(
     private host: string,
     private ajv: Ajv,
     private registryOptions: RegistryOptions,
     private contentTypeParserMap:
       | Record<string, ResponseContentParserType>
-      | undefined,
-    private registryOpenApiJson: Record<string, OpenAPIObject> | undefined,
-    private registryOpenApiHash: string | undefined,
-    private sdkPathMap: SdkPathMap | undefined
+      | undefined
   ) {}
 
   /**
@@ -44,18 +45,6 @@ export class UniversalSdk {
     registryOptions: RegistryOptions,
     contentTypeParserMap?: Record<string, ResponseContentParserType>
   ) {
-    const refreshResult = await refreshOpenApi(host, registryOptions);
-
-    let registryOpenApiJson;
-    let registryOpenApiHash;
-    let sdkPathMap;
-
-    if (refreshResult.updateRequired) {
-      registryOpenApiJson = refreshResult.registryOpenApiJson;
-      registryOpenApiHash = refreshResult.registryOpenApiHash;
-      sdkPathMap = refreshResult.sdkPathMap;
-    }
-
     const ajv = new Ajv({
       coerceTypes: true,
       allErrors: true,
@@ -63,15 +52,7 @@ export class UniversalSdk {
     });
     addFormats(ajv);
 
-    return new UniversalSdk(
-      host,
-      ajv,
-      registryOptions,
-      contentTypeParserMap,
-      registryOpenApiJson,
-      registryOpenApiHash,
-      sdkPathMap
-    );
+    return new UniversalSdk(host, ajv, registryOptions, contentTypeParserMap);
   }
 
   async executeFetchCall(

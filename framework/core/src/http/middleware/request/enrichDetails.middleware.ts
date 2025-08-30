@@ -61,7 +61,7 @@ export function enrichDetails<
     | ResponseCompiledSchema
     | Record<string, ResponseCompiledSchema>,
   openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-  globalOptions?: ExpressLikeRouterOptions<SV, SessionSchema>
+  globalOptions: () => ExpressLikeRouterOptions<SV, SessionSchema> | undefined
 ): ExpressLikeSchemaHandler<
   SV,
   P,

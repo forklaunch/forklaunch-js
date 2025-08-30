@@ -80,9 +80,6 @@ function contentParse<SV extends AnySchemaValidator>(options?: {
             if (err) {
               return next(err);
             }
-            if (req.body instanceof Buffer) {
-              req.body = req.body.toString('utf-8');
-            }
             next();
           });
         case 'multipart': {
@@ -100,10 +97,8 @@ function contentParse<SV extends AnySchemaValidator>(options?: {
             });
 
             file.on('end', () => {
-              const fileString = chunks
-                .map((chunk) => chunk.toString())
-                .join('');
-              body[fieldname] = fileString;
+              const fileBuffer = Buffer.concat(chunks);
+              body[fieldname] = fileBuffer;
             });
           });
 

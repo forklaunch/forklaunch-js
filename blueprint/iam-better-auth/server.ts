@@ -16,7 +16,7 @@ const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
 const app = forklaunchExpress(
   schemaValidator,
   openTelemetryCollector,
-  await ci.resolve(tokens.ExpressOptions)
+  await ci.resolve(tokens.ExpressApplicationOptions)
 );
 
 //! registers the betterAuth middleware

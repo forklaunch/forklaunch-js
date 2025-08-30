@@ -353,4 +353,5 @@ export type SDK = {
 
 // Temporary shim for supporting TSGO experimental compiler
 import type * as uWs from 'uWebSockets.js';
-type TSGOShim = uWs.us_listen_socket;
+import { z } from 'zod/v3';
+type TSGOShim = uWs.us_listen_socket & typeof z;

@@ -1,5 +1,41 @@
 # @forklaunch/common
 
+## 0.5.7
+
+### Patch Changes
+
+- One more attempt at performance bump
+
+## 0.5.6
+
+### Patch Changes
+
+- prettify req init for slightly faster sdk access
+
+## 0.5.5
+
+### Patch Changes
+
+- attempt to make sdk pathing more efficient
+
+## 0.5.4
+
+### Patch Changes
+
+- zod validator regex relaxation for email
+
+## 0.5.3
+
+### Patch Changes
+
+- Update validator types for files to use raw streams, lazy load openapi for universal sdk, and remove private members from otel
+
+## 0.5.2
+
+### Patch Changes
+
+- update package versions
+
 ## 0.5.1
 
 ### Patch Changes
