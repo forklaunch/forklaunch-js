@@ -77,7 +77,7 @@ export {
   unknown,
   uri,
   uuid,
-  void_,
+  void_
 };
 
 export const IdSchema = {
