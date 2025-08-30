@@ -1255,7 +1255,7 @@ fn create_base_service(
                     "--no-verbose".to_string(),
                     "--tries=1".to_string(),
                     "--spider".to_string(),
-                    format!("http://localhost:{}/health", port_number),
+                    format!("http://0.0.0.0:{}/health", port_number),
                 ]),
                 interval: "30s".to_string(),
                 timeout: "10s".to_string(),
