@@ -3,7 +3,7 @@ import { requestMapper, responseMapper } from '@forklaunch/core/mappers';
 import { EntityManager } from '@mikro-orm/core';
 import Stripe from 'stripe';
 import { BillingPortal } from '../../persistence/entities/billingPortal.entity';
-import { BillingPortalSchemas } from '../../registrations';
+import { BillingPortalSchemas } from '../schemas';
 
 export const CreateBillingPortalMapper = requestMapper(
   schemaValidator,

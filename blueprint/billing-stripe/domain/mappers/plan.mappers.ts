@@ -3,7 +3,7 @@ import { requestMapper, responseMapper } from '@forklaunch/core/mappers';
 import { EntityManager } from '@mikro-orm/core';
 import Stripe from 'stripe';
 import { Plan } from '../../persistence/entities/plan.entity';
-import { PlanSchemas } from '../../registrations';
+import { PlanSchemas } from '../schemas';
 
 export const CreatePlanMapper = requestMapper(
   schemaValidator,

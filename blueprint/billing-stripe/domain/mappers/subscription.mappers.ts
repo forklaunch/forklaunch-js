@@ -3,8 +3,8 @@ import { requestMapper, responseMapper } from '@forklaunch/core/mappers';
 import { EntityManager } from '@mikro-orm/core';
 import Stripe from 'stripe';
 import { Subscription } from '../../persistence/entities/subscription.entity';
-import { SubscriptionSchemas } from '../../registrations';
 import { PartyEnum } from '../enum/party.enum';
+import { SubscriptionSchemas } from '../schemas';
 
 export const CreateSubscriptionMapper = requestMapper(
   schemaValidator,

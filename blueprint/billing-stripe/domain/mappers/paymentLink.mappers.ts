@@ -3,8 +3,8 @@ import { requestMapper, responseMapper } from '@forklaunch/core/mappers';
 import { EntityManager } from '@mikro-orm/core';
 import Stripe from 'stripe';
 import { PaymentLink } from '../../persistence/entities/paymentLink.entity';
-import { PaymentLinkSchemas } from '../../registrations';
 import { StatusEnum } from '../enum/status.enum';
+import { PaymentLinkSchemas } from '../schemas';
 
 export const CreatePaymentLinkMapper = requestMapper(
   schemaValidator,
@@ -42,7 +42,7 @@ export const UpdatePaymentLinkMapper = requestMapper(
       return PaymentLink.update(
         {
           ...dto,
-          providerFields
+          ...(providerFields !== undefined ? { providerFields } : {})
         },
         em
       );
