@@ -21,9 +21,9 @@
   },
   "dependencies": {
     "@forklaunch/common": "^0.6.4",
-    "@forklaunch/core": "^0.14.4",
-    "@forklaunch/express": "^0.9.4",
-    "@forklaunch/hyper-express": "^0.9.4",
+    "@forklaunch/core": "^0.14.5",
+    "@forklaunch/express": "^0.9.5",
+    "@forklaunch/hyper-express": "^0.9.5",
     "@forklaunch/validator": "^0.10.4",
     "@mikro-orm/core": "^6.5.1",
     "@mikro-orm/mongodb": "^6.5.1",

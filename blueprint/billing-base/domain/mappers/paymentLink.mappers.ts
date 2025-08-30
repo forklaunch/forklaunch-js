@@ -2,10 +2,10 @@ import { schemaValidator } from '@forklaunch/blueprint-core';
 import { requestMapper, responseMapper } from '@forklaunch/core/mappers';
 import { EntityManager } from '@mikro-orm/core';
 import { PaymentLink } from '../../persistence/entities/paymentLink.entity';
-import { PaymentLinkSchemas } from '../../registrations';
 import { CurrencyEnum } from '../enum/currency.enum';
 import { PaymentMethodEnum } from '../enum/paymentMethod.enum';
 import { StatusEnum } from '../enum/status.enum';
+import { PaymentLinkSchemas } from '../schemas';
 
 export const CreatePaymentLinkMapper = requestMapper(
   schemaValidator,

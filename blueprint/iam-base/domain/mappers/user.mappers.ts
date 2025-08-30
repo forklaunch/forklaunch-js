@@ -4,7 +4,7 @@ import { EntityManager } from '@mikro-orm/core';
 import { Organization } from '../../persistence/entities/organization.entity';
 import { Role } from '../../persistence/entities/role.entity';
 import { User } from '../../persistence/entities/user.entity';
-import { UserSchemas } from '../../registrations';
+import { UserSchemas } from '../schemas';
 import { RoleMapper } from './role.mappers';
 
 export const CreateUserMapper = requestMapper(

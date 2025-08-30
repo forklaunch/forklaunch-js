@@ -2,10 +2,10 @@ import { schemaValidator } from '@forklaunch/blueprint-core';
 import { requestMapper, responseMapper } from '@forklaunch/core/mappers';
 import { EntityManager } from '@mikro-orm/core';
 import { Plan } from '../../persistence/entities/plan.entity';
-import { PlanSchemas } from '../../registrations';
 import { BillingProviderEnum } from '../enum/billingProvider.enum';
 import { CurrencyEnum } from '../enum/currency.enum';
 import { PlanCadenceEnum } from '../enum/planCadence.enum';
+import { PlanSchemas } from '../schemas';
 
 export const CreatePlanMapper = requestMapper(
   schemaValidator,

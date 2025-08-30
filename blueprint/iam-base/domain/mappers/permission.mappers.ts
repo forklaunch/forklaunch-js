@@ -2,7 +2,7 @@ import { schemaValidator } from '@forklaunch/blueprint-core';
 import { requestMapper, responseMapper } from '@forklaunch/core/mappers';
 import { EntityManager } from '@mikro-orm/core';
 import { Permission } from '../../persistence/entities/permission.entity';
-import { PermissionSchemas } from '../../registrations';
+import { PermissionSchemas } from '../schemas';
 
 export const CreatePermissionMapper = requestMapper(
   schemaValidator,

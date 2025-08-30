@@ -36,7 +36,7 @@
     "@forklaunch/better-auth-mikro-orm-fork": "^0.4.105",
     "@forklaunch/blueprint-core": "workspace:*",
     "@forklaunch/blueprint-monitoring": "workspace:*",
-    "@forklaunch/core": "^0.14.4",
+    "@forklaunch/core": "^0.14.5",
     "@forklaunch/implementation-iam-base": "workspace:*",
     "@forklaunch/interfaces-iam": "workspace:*",
     "@mikro-orm/core": "^6.5.1",

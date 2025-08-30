@@ -3,7 +3,7 @@ import { requestMapper, responseMapper } from '@forklaunch/core/mappers';
 import { EntityManager } from '@mikro-orm/core';
 import { OrganizationStatus } from '../../domain/enum/organizationStatus.enum';
 import { Organization } from '../../persistence/entities/organization.entity';
-import { OrganizationSchemas } from '../../registrations';
+import { OrganizationSchemas } from '../schemas';
 import { UserMapper } from './user.mappers';
 
 export const CreateOrganizationMapper = requestMapper(

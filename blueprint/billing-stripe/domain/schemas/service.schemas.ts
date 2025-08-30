@@ -23,5 +23,7 @@ export const {
     PlanSchemas: StripePlanServiceSchemas,
     SubscriptionSchemas: StripeSubscriptionServiceSchemas
   },
-  schemaValidator
+  {
+    validator: schemaValidator
+  }
 );

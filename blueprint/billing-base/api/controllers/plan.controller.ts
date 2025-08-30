@@ -18,7 +18,7 @@ import {
   PlanMapper,
   UpdatePlanMapper
 } from '../../domain/mappers/plan.mappers';
-import { PlanSchemas } from '../../registrations';
+import { PlanSchemas } from '../../domain/schemas';
 import { PlanServiceFactory } from '../routes/plan.routes';
 export const PlanController = (
   serviceFactory: PlanServiceFactory,

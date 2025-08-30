@@ -2,8 +2,8 @@ import { schemaValidator } from '@forklaunch/blueprint-core';
 import { requestMapper, responseMapper } from '@forklaunch/core/mappers';
 import { EntityManager } from '@mikro-orm/core';
 import { Organization } from '../../persistence/entities/organization.entity';
-import { OrganizationSchemas } from '../../registrations';
 import { OrganizationStatus } from '../enum/organizationStatus.enum';
+import { OrganizationSchemas } from '../schemas';
 import { UserMapper } from './user.mappers';
 
 export const CreateOrganizationMapper = requestMapper(
