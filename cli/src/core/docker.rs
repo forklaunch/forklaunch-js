@@ -1264,11 +1264,9 @@ fn create_base_service(
             Some(Healthcheck {
                 test: HealthTest::List(vec![
                     "CMD".to_string(),
-                    "wget".to_string(),
-                    "--no-verbose".to_string(),
-                    "--tries=1".to_string(),
-                    "--spider".to_string(),
-                    format!("http://0.0.0.0:{}/health", port_number),
+                    "curl".to_string(),
+                    "-f".to_string(),
+                    format!("http://localhost:{}/health", port_number),
                 ]),
                 interval: "30s".to_string(),
                 timeout: "10s".to_string(),
