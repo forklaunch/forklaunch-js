@@ -659,12 +659,18 @@ pub(crate) fn add_kafka_to_docker_compose<'a>(
             healthcheck: Some(Healthcheck {
                 test: HealthTest::List(vec![
                     "CMD-SHELL".to_string(),
-                    "echo srvr | nc localhost 2181 || exit 1".to_string(),
+                    r#"if command -v nc >/dev/null 2>&1; then
+                        nc -z -w 3 localhost 2181 || exit 1
+                    else
+                        timeout 3 bash -c 'exec 3<>/dev/tcp/localhost/2181' 2>/dev/null || exit 1
+                    fi &&
+                    echo ruok | nc localhost 2181 | grep -q imok || exit 1"#
+                        .to_string(),
                 ]),
                 interval: "10s".to_string(),
-                timeout: "5s".to_string(),
+                timeout: "8s".to_string(),
                 retries: 5,
-                start_period: "10s".to_string(),
+                start_period: "15s".to_string(),
                 additional_properties: HashMap::new(),
             }),
             ..Default::default()
@@ -680,7 +686,7 @@ pub(crate) fn add_kafka_to_docker_compose<'a>(
             depends_on: Some(IndexMap::from([(
                 "zookeeper".to_string(),
                 DependsOn {
-                    condition: DependencyCondition::ServiceStarted,
+                    condition: DependencyCondition::ServiceHealthy,
                 },
             )])),
             ports: Some(vec!["9092:9092".to_string(), "29092:29092".to_string()]),
@@ -724,13 +730,21 @@ pub(crate) fn add_kafka_to_docker_compose<'a>(
             healthcheck: Some(Healthcheck {
                 test: HealthTest::List(vec![
                     "CMD-SHELL".to_string(),
-                    "kafka-topics --bootstrap-server kafka:29092 --list >/dev/null 2>&1 || exit 1"
+                    r#"# First ensure Zookeeper is still healthy
+                    if command -v nc >/dev/null 2>&1; then
+                        nc -z -w 3 zookeeper 2181 || exit 1
+                        echo ruok | nc zookeeper 2181 | grep -q imok || exit 1
+                    else
+                        timeout 3 bash -c 'exec 3<>/dev/tcp/zookeeper/2181' 2>/dev/null || exit 1
+                    fi &&
+                    # Then check Kafka readiness
+                    kafka-topics --bootstrap-server kafka:29092 --list >/dev/null 2>&1 || exit 1"#
                         .to_string(),
                 ]),
-                interval: "10s".to_string(),
-                timeout: "10s".to_string(),
+                interval: "15s".to_string(),
+                timeout: "12s".to_string(),
                 retries: 5,
-                start_period: "15s".to_string(),
+                start_period: "30s".to_string(),
                 additional_properties: HashMap::new(),
             }),
             ..Default::default()

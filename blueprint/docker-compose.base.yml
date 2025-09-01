@@ -91,12 +91,6 @@ services:
     volumes:
       - './monitoring/otel-collector-config.yaml:/etc/otel-collector-config.yaml'
     command: '--config=/etc/otel-collector-config.yaml'
-    # healthcheck: # Disabled for minimal container - service works but no health check tools available
-    #   test: ["CMD", "nc", "-z", "localhost", "8889"]
-    #   interval: 30s
-    #   timeout: 10s
-    #   retries: 3
-    #   start_period: 60s
 
   postgres:
     image: postgres:latest
