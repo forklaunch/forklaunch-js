@@ -4,9 +4,8 @@ use anyhow::Result;
 use oxc_allocator::{Allocator, CloneIn, Vec};
 use oxc_ast::ast::{
     Argument, BindingPatternKind, Expression, ObjectPropertyKind, Program, PropertyKey, SourceType,
-    Statement, VariableDeclarator,
+    Statement,
 };
-use oxc_ast_visit::VisitMut;
 use oxc_codegen::{Codegen, CodegenOptions};
 
 use crate::core::ast::{
