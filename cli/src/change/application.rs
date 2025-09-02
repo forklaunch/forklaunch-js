@@ -31,7 +31,7 @@ use crate::{
             transform_core_registrations_ts_http_framework,
             transform_core_registrations_ts_validator,
         },
-        base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        // base_path::{BasePathLocation, BasePathType, prompt_base_path},
         flexible_path::{create_project_config, find_manifest_path},
         command::command,
         docker::update_dockerfile_contents,

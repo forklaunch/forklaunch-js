@@ -35,7 +35,7 @@ use crate::{
                 },
             },
         },
-        base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        // base_path::{BasePathLocation, BasePathType, prompt_base_path},
         flexible_path::{create_generic_config, find_manifest_path},
         command::command,
         database::{get_database_variants, is_in_memory_database},

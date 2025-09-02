@@ -40,13 +40,14 @@ impl Default for PathSearchConfig {
     }
 }
 
-pub(crate) fn check_base_app_path(base_path: &String) -> Option<PathBuf> {
+
+pub(crate) fn get_base_app_path(base_path: &String) -> Option<PathBuf> {
     if base_path.contains("modules") && Path::new(&base_path).exists() {
-        Some(Path::new(&base_path))
+        Some(PathBuf::from(base_path))
     } else if Path::new(&base_path).join("src").join("modules").exists() {
-        Some(Path::new(&base_path).join("src").join("modules"))
+        Some(Path::new(&base_path).join("src").join("modules").to_path_buf())
     } else if Path::new(&base_path).join("modules").exists() {
-        Some(Path::new(&base_path).join("modules"))
+        Some(Path::new(&base_path).join("modules").to_path_buf())
     } else {
         None
     }

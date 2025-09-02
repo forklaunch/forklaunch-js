@@ -1,7 +1,7 @@
 use std::{
     fs::{read_to_string, remove_dir_all},
     io::Write,
-    path::{Path, PathBuf},
+    path::{PathBuf},
 };
 
 use anyhow::{Context, Result};
@@ -17,7 +17,7 @@ use crate::{
         ERROR_FAILED_TO_WRITE_MANIFEST, Runtime,
     },
     core::{
-        base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        // base_path::{BasePathLocation, BasePathType, prompt_base_path},
         command::command,
         flexible_path::{create_generic_config, find_manifest_path},
         manifest::{

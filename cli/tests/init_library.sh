@@ -11,7 +11,7 @@ RUST_BACKTRACE=1 cargo run --release init library lib-test -p library-test-node-
 cd library-test-node-application/src/modules
 RUST_BACKTRACE=1 cargo run --release delete library lib-test -c
 
-RUST_BACKTRACE=1 cargo run --release init library lib-test -D "Test service" -p src/modules
+RUST_BACKTRACE=1 cargo run --release init library lib-test -D "Test service" -p .
 
 pnpm install
 pnpm build
@@ -24,7 +24,7 @@ RUST_BACKTRACE=1 cargo run --release init library lib-test -p library-test-bun-a
 cd library-test-bun-application/src/modules
 RUST_BACKTRACE=1 cargo run --release delete library lib-test -c
 
-RUST_BACKTRACE=1 cargo run --release init library lib-test -D "Test library" -p src/modules
+RUST_BACKTRACE=1 cargo run --release init library lib-test -D "Test library" -p .
 
 bun install
 bun run build

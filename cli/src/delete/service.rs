@@ -1,7 +1,7 @@
 use std::{
     fs::{read_to_string, remove_dir_all},
     io::Write,
-    path::{Path, PathBuf},
+    path::{PathBuf},
 };
 
 use anyhow::{Context, Result};
@@ -18,8 +18,8 @@ use crate::{
         ERROR_FAILED_TO_WRITE_DOCKER_COMPOSE, ERROR_FAILED_TO_WRITE_MANIFEST, Runtime,
     },
     core::{
-        base_path::{BasePathLocation, BasePathType, prompt_base_path},
-        flexible_path::{create_generic_config, find_manifest_path},
+        // base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        flexible_path::{get_base_app_path, create_generic_config, find_manifest_path},
         command::command,
         docker::remove_service_from_docker_compose,
         manifest::{

@@ -17,7 +17,7 @@ use crate::{
         ERROR_FAILED_TO_READ_PACKAGE_JSON,
     },
     core::{
-        base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        // base_path::{BasePathLocation, BasePathType, prompt_base_path},
         flexible_path::{create_generic_config, find_manifest_path},
         command::command,
         format::format_code,

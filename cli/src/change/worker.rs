@@ -27,7 +27,7 @@ use crate::{
             transform_mikroorm_config_ts::transform_mikroorm_config_ts,
             transform_registrations_ts::transform_registrations_ts_worker_type,
         },
-        base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        // base_path::{BasePathLocation, BasePathType, prompt_base_path},
         flexible_path::{create_generic_config, find_manifest_path},
         command::command,
         database::{get_database_variants, get_db_driver, is_in_memory_database},

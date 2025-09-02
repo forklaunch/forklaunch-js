@@ -29,7 +29,7 @@ use crate::{
     },
     core::{
         base_path::{BasePathLocation, BasePathType, prompt_base_path},
-        flexible_path::{create_generic_config, find_manifest_path},
+        flexible_path::{get_base_app_path, create_generic_config, find_manifest_path},
         command::command,
         database::{
             add_base_entity_to_core, get_database_port, get_db_driver, is_in_memory_database,
@@ -617,11 +617,13 @@ impl CliCommand for WorkerCommand {
             &BasePathLocation::Worker,
             &BasePathType::Init,
         )?;
-        let base_path = Path::new(&base_path_input).join(if base_path_input.join("src").exists() {
-            "src/modules"
+        let base_path = Path::new(&base_path_input);
+        let app_path = if let Some(temp_app_path) = get_base_app_path(&base_path_input) {
+            temp_app_path
         } else {
-            "modules"
-        });
+            return Err(anyhow::anyhow!("Application directory not found in base_path, src/modules, or modules directories. Please check if your application is initialized and you are in the correct directory."));
+        };
+        println!("init:worker:00: app_path: {:?}", app_path);
 
 
         let manifest_path_config = create_generic_config();
@@ -828,7 +830,7 @@ impl CliCommand for WorkerCommand {
         let dryrun = matches.get_flag("dryrun");
         generate_basic_worker(
             &worker_name,
-            &base_path,
+            &app_path,
             &app_root_path,
             &mut manifest_data,
             &mut stdout,

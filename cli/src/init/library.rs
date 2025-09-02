@@ -1,4 +1,4 @@
-use std::{fs::read_to_string, io::Write, path::Path};
+use std::{fs::read_to_string, io::Write, path::{Path, PathBuf}};
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, ArgMatches, Command};
@@ -20,6 +20,7 @@ use crate::{
     },
     core::{
         base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        flexible_path::{get_base_app_path, find_manifest_path, create_generic_config},
         command::command,
         format::format_code,
         gitignore::generate_gitignore,
@@ -51,6 +52,7 @@ use crate::{
 fn generate_basic_library(
     library_name: &String,
     base_path: &Path,
+    config_path: &Path,
     manifest_data: &mut LibraryManifestData,
     stdout: &mut StandardStream,
     dryrun: bool,
@@ -86,7 +88,7 @@ fn generate_basic_library(
         generate_gitignore(&output_path).with_context(|| ERROR_FAILED_TO_CREATE_GITIGNORE)?,
     );
     rendered_templates.extend(
-        add_library_to_artifacts(manifest_data, base_path)
+        add_library_to_artifacts(manifest_data, base_path, config_path)
             .with_context(|| "Failed to add library metadata to artifacts")?,
     );
 
@@ -107,6 +109,7 @@ fn generate_basic_library(
 fn add_library_to_artifacts(
     manifest_data: &mut LibraryManifestData,
     base_path: &Path,
+    config_path: &Path,
 ) -> Result<Vec<RenderedTemplate>> {
     let forklaunch_definition_buffer = add_project_definition_to_manifest(
         ProjectType::Library,
@@ -140,7 +143,7 @@ fn add_library_to_artifacts(
 
     let mut rendered_templates = Vec::new();
     rendered_templates.push(RenderedTemplate {
-        path: base_path.join(".forklaunch").join("manifest.toml"),
+        path: config_path.to_path_buf(),
         content: forklaunch_definition_buffer,
         context: Some(ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST.to_string()),
     });
@@ -255,18 +258,32 @@ impl CliCommand for LibraryCommand {
         )?;
         let base_path = Path::new(&base_path_input);
 
-        let app_path = if let Some(temp_app_path) = check_base_app_path(&base_path_input) {
+        let app_path = if let Some(temp_app_path) = get_base_app_path(&base_path_input.to_string()) {
             temp_app_path
         } else {
             return Err(anyhow::anyhow!("Application directory not found in base_path, src/modules, or modules directories. Please check if your application is initialized and you are in the correct directory."));
         };
-
-        let config_path = Path::new(&base_path)
-            .join(".forklaunch")
-            .join("manifest.toml");
+        println!("init:library:00: app_path: {:?}", app_path);
+        let root_path_config = create_generic_config();
+        let manifest_path = find_manifest_path(&base_path, &root_path_config);
+        
+        let config_path = if let Some(manifest) = manifest_path {
+            manifest
+        } else {
+            // No manifest found, this might be an error or we need to search more broadly
+            anyhow::bail!("Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path.");
+        };
+        let app_root_path: PathBuf = config_path
+            .to_string_lossy()
+            .strip_suffix(".forklaunch/manifest.toml")
+            .ok_or_else(|| {
+            anyhow::anyhow!("Expected manifest path to end with .forklaunch/manifest.toml, got: {:?}", config_path)
+        })?
+            .to_string()
+            .into();
 
         let existing_manifest_data = from_str::<ApplicationManifestData>(
-            &read_to_string(config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
+            &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
         existing_manifest_data.initialize(InitializableManifestConfigMetadata::Application(
@@ -345,6 +362,7 @@ impl CliCommand for LibraryCommand {
         generate_basic_library(
             &library_name,
             &app_path,
+            &config_path,
             &mut manifest_data,
             &mut stdout,
             dryrun,
@@ -355,7 +373,7 @@ impl CliCommand for LibraryCommand {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
             writeln!(stdout, "{} initialized successfully!", library_name)?;
             stdout.reset()?;
-            format_code(&base_path, &manifest_data.runtime.parse()?);
+            format_code(&app_path, &manifest_data.runtime.parse()?);
         }
 
         Ok(())

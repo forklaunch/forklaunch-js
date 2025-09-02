@@ -1,7 +1,7 @@
 use std::{
     fs::{read_to_string, remove_dir_all},
     io::Write,
-    path::{Path, PathBuf},
+    path::{PathBuf},
 };
 
 use anyhow::{Context, Result};

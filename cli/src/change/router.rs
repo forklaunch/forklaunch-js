@@ -11,7 +11,7 @@ use crate::{
     CliCommand,
     constants::{ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST, Runtime},
     core::{
-        base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        // base_path::{BasePathLocation, BasePathType, prompt_base_path},
         flexible_path::{create_module_config, find_manifest_path},
         command::command,
         format::format_code,
@@ -129,14 +129,14 @@ impl CliCommand for RouterCommand {
             // No manifest found, this might be an error or we need to search more broadly
             anyhow::bail!("Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path.");
         };
-        let app_root_path: PathBuf = config_path
-            .to_string_lossy()
-            .strip_suffix(".forklaunch/manifest.toml")
-            .ok_or_else(|| {
-            anyhow::anyhow!("Expected manifest path to end with .forklaunch/manifest.toml, got: {:?}", config_path)
-        })?
-            .to_string()
-            .into();
+        // let app_root_path: PathBuf = config_path
+        //     .to_string_lossy()
+        //     .strip_suffix(".forklaunch/manifest.toml")
+        //     .ok_or_else(|| {
+        //     anyhow::anyhow!("Expected manifest path to end with .forklaunch/manifest.toml, got: {:?}", config_path)
+        // })?
+        //     .to_string()
+        //     .into();
 
         let existing_name = matches.get_one::<String>("existing-name");
         let new_name = matches.get_one::<String>("new-name");
