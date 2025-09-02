@@ -9,21 +9,21 @@ RUST_BACKTRACE=1 cargo run --release init application service-test-node-applicat
 RUST_BACKTRACE=1 cargo run --release init module -m iam-base -d postgresql -p service-test-node-application
 RUST_BACKTRACE=1 cargo run --release init module -m billing-base -d postgresql -p service-test-node-application
 
-cd service-test-node-application
+cd service-test-node-application/src/modules
 
 pnpm install
 pnpm build
 
-cd ..
+cd ../../..
 
 RUST_BACKTRACE=1 cargo run --release init application service-test-bun-application -p ./service-test-bun-application -o source -d postgresql -f biome -l oxlint -v zod -F express -r bun -t vitest -D "Test service" -A "Rohin Bhargava" -L "MIT"
 RUST_BACKTRACE=1 cargo run --release init module -m iam-base -d postgresql -p service-test-bun-application
 RUST_BACKTRACE=1 cargo run --release init module -m billing-base -d postgresql -p service-test-bun-application
 
-cd service-test-bun-application
+cd service-test-bun-application/src/modules
 
 bun install
 bun run build
 
-cd ..
+cd ../../..
 

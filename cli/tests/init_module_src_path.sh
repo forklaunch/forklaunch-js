@@ -10,20 +10,21 @@ RUST_BACKTRACE=1 cargo run --release init application module-test-src-path -p ./
 RUST_BACKTRACE=1 cargo run --release init module -m iam-base -d postgresql -p ./module-test-src-path
 RUST_BACKTRACE=1 cargo run --release init module -m billing-base -d postgresql -p ./module-test-src-path
 
-cd module-test-src-path
+cd module-test-src-path/src/modules
 
 pnpm install
 pnpm build
 
-cd ..
+cd ../../..
+
 # Test for specific path for modules using -f flag (no src path)
 RUST_BACKTRACE=1 cargo run --release init application module-test-no-src-path -p ./module-test-no-src-path -o modules -d postgresql -f biome -l oxlint -v zod -F express -r node -t vitest -D "Test service" -A "ForkLaunch" -L "MIT"
 RUST_BACKTRACE=1 cargo run --release init module -m iam-base -d postgresql -p module-test-no-src-path -f modules
 RUST_BACKTRACE=1 cargo run --release init module -m billing-base -d postgresql -p module-test-no-src-path -f modules
 
-cd module-test-no-src-path
+cd module-test-no-src-path/src/modules
 
 pnpm install
 pnpm build
 
-cd ..
+cd ../../..

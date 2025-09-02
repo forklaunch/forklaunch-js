@@ -254,10 +254,9 @@ impl CliCommand for LibraryCommand {
             &BasePathType::Init,
         )?;
         let base_path = Path::new(&base_path_input);
-        let app_path = if base_path.join("src").exists() {
-            base_path.join("src").join("modules")
-        } else if base_path.join("modules").exists() {
-            base_path.join("modules")
+
+        let app_path = if let Some(temp_app_path) = check_base_app_path(&base_path_input) {
+            temp_app_path
         } else {
             return Err(anyhow::anyhow!("Application directory not found in base_path, src/modules, or modules directories. Please check if your application is initialized and you are in the correct directory."));
         };

@@ -617,7 +617,12 @@ impl CliCommand for WorkerCommand {
             &BasePathLocation::Worker,
             &BasePathType::Init,
         )?;
-        let base_path = Path::new(&base_path_input);
+        let base_path = Path::new(&base_path_input).join(if base_path_input.join("src").exists() {
+            "src/modules"
+        } else {
+            "modules"
+        });
+
 
         let manifest_path_config = create_generic_config();
         let manifest_path = find_manifest_path(&base_path, &manifest_path_config);

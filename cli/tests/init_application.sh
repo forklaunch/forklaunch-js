@@ -42,7 +42,7 @@ for database in "${databases[@]}"; do
                 
                 # Test current directory scenario
                 RUST_BACKTRACE=1 cargo run --release init application "$app_name" \
-                    --path "." \
+                    --path "./$app_name" \
                     -o "source" \
                     -d "$database" \
                     -v "$validator" \
@@ -61,7 +61,7 @@ for database in "${databases[@]}"; do
                     continue
                 fi
                 
-                cd "$app_name"
+                cd "$app_name/src/modules"
                 if [ "$runtime" = "bun" ]; then
                   bun install
                 else
@@ -74,7 +74,7 @@ for database in "${databases[@]}"; do
                   pnpm build
                 fi
 
-                cd ..
+                cd ../../..
 
                 echo "$cache_name" >> "$CACHE_FILE"
               done

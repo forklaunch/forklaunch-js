@@ -40,6 +40,18 @@ impl Default for PathSearchConfig {
     }
 }
 
+pub(crate) fn check_base_app_path(base_path: &String) -> Option<PathBuf> {
+    if base_path.contains("modules") && Path::new(&base_path).exists() {
+        Some(Path::new(&base_path))
+    } else if Path::new(&base_path).join("src").join("modules").exists() {
+        Some(Path::new(&base_path).join("src").join("modules"))
+    } else if Path::new(&base_path).join("modules").exists() {
+        Some(Path::new(&base_path).join("modules"))
+    } else {
+        None
+    }
+}
+
 pub(crate) fn find_manifest_path(
     start_dir: &Path,
     config: &PathSearchConfig,
