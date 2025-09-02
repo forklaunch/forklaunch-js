@@ -142,7 +142,7 @@ impl CliCommand for LibraryCommand {
 
         // Find the manifest using flexible_path
         let root_path_config = create_generic_config();
-        let manifest_path = find_manifest_path(&service_base_path, &root_path_config);
+        let manifest_path = find_manifest_path(&library_base_path, &root_path_config);
         
         let config_path = if let Some(manifest) = manifest_path {
             manifest
