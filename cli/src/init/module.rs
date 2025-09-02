@@ -198,6 +198,7 @@ impl CliCommand for ModuleCommand {
             id: existing_manifest_data.id.clone(),
             cli_version: existing_manifest_data.cli_version.clone(),
             app_name: name.clone(),
+            docker_compose_path: existing_manifest_data.docker_compose_path.clone(),
             camel_case_app_name: existing_manifest_data.camel_case_app_name.clone(),
             pascal_case_app_name: existing_manifest_data.pascal_case_app_name.clone(),
             kebab_case_app_name: existing_manifest_data.kebab_case_app_name.clone(),

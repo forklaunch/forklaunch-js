@@ -4,7 +4,7 @@ use std::{
     fs::{exists, read_to_string},
     io::Write,
     iter::zip,
-    path::Path,
+    path::{Path, PathBuf},
     rc::Rc,
 };
 
@@ -32,6 +32,7 @@ use crate::{
             transform_core_registrations_ts_validator,
         },
         base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        flexible_path::{create_project_config, find_manifest_path},
         command::command,
         docker::update_dockerfile_contents,
         format::format_code,
@@ -806,7 +807,7 @@ fn change_runtime(
 
     let mut removal_templates = vec![];
     let mut symlink_templates = vec![];
-
+    println!("change:application:09: base_path: {:?}", base_path);
     let existing_workspaces: Vec<String> = match manifest_data.runtime.parse()? {
         Runtime::Bun => application_json_to_write
             .workspaces
@@ -1546,17 +1547,49 @@ impl CliCommand for ApplicationCommand {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
         let mut rendered_templates_cache = RenderedTemplatesCache::new();
 
-        let base_path_input = prompt_base_path(
-            &mut line_editor,
-            &mut stdout,
-            matches,
-            &BasePathLocation::Application,
-            &BasePathType::Change,
-        )?;
-        let base_path = Path::new(&base_path_input);
+        // let base_path_input = prompt_base_path(
+        //     &mut line_editor,
+        //     &mut stdout,
+        //     matches,
+        //     &BasePathLocation::Application,
+        //     &BasePathType::Change,
+        // )?;
+        // let base_path = Path::new(&base_path_input);
 
-        let config_path = &base_path.join(".forklaunch").join("manifest.toml");
+        // let config_path = &base_path.join(".forklaunch").join("manifest.toml");
+        let current_dir = std::env::current_dir().unwrap();
+        // Determine where the router should be created
+        let app_base_path = if let Some(relative_path) = matches.get_one::<String>("base_path") {
+            // User provided a relative path, resolve it relative to current directory
+            let resolved_path = current_dir.join(relative_path);
+            println!("init:router:03: Application will be changed at: {:?}", resolved_path);
+            resolved_path
+        } else {
+            // No path provided, assume current directory is where router should go
+            println!("init:router:03: No path provided, application will be changed in current directory: {:?}", current_dir);
+            current_dir.clone()
+        };
+        let manifest_path_config = create_project_config();
+        let manifest_path = find_manifest_path(&app_base_path, &manifest_path_config);
+        
+        let config_path = if let Some(manifest) = manifest_path {
+            manifest
+        } else {
+            // No manifest found, this might be an error or we need to search more broadly
+            anyhow::bail!("Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path.");
+        };
+        let app_root_path: PathBuf = config_path
+            .to_string_lossy()
+            .strip_suffix(".forklaunch/manifest.toml")
+            .ok_or_else(|| {
+            anyhow::anyhow!("Expected manifest path to end with .forklaunch/manifest.toml, got: {:?}", config_path)
+        })?
+            .to_string()
+            .into();
+        
         println!("change:application:07: config_path: {:?}", config_path);
+        println!("change:application:08: app_root_path: {:?}", app_root_path);
+        println!("change:application:09: app_base_path: {:?}", app_base_path);
         let mut manifest_data = toml::from_str::<ApplicationManifestData>(
             &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
@@ -1573,11 +1606,21 @@ impl CliCommand for ApplicationCommand {
         // println!("change:application:09: manifest_data.app_name: {:?}", manifest_data.app_name);
         // println!("change:application:08: manifest_data.kebab_case_app_name: {:?}", manifest_data.kebab_case_app_name);
         
+        let is_src_modules = if app_base_path.join("src").exists() {
+            true
+        } else {
+            false
+        };
+        let is_modules = if app_base_path.join("modules").exists() {
+            true
+        } else {
+            false
+        };
 
-        let app_path = if base_path.join("src").exists() {
-            base_path.join("src").join("modules")
-        } else if base_path.join("modules").exists() {
-            base_path.join("modules")
+        let app_path = if is_src_modules {
+            app_base_path.join("src").join("modules")
+        } else if is_modules {
+            app_base_path.join("modules")
         } else {
             return Err(anyhow::anyhow!("application directory not found in base_path, src/modules, or modules directories"));
         };
@@ -1773,14 +1816,10 @@ impl CliCommand for ApplicationCommand {
         // println!("change:application:11: base_path: {:?}", base_path);
         
         // Try to find package.json in base_path, then check src/modules and modules directories
-        let application_package_json_path = if base_path.join("package.json").exists() {
-            base_path.join("package.json")
-        } else if base_path.join("src").join("modules").join("package.json").exists() {
-            base_path.join("src").join("modules").join("package.json")
-        } else if base_path.join("modules").join("package.json").exists() {
-            base_path.join("modules").join("package.json")
+        let application_package_json_path = if app_path.join("package.json").exists() {
+            app_path.join("package.json")
         } else {
-            return Err(anyhow::anyhow!("package.json not found in base_path, src/modules, or modules directories"));
+            return Err(anyhow::anyhow!("package.json not found in {}", app_path.display()));
         };
         // println!("change:application:12: {:?}", application_package_json_path);
         // read package.json
@@ -1809,7 +1848,7 @@ impl CliCommand for ApplicationCommand {
         // start of change calls
         if let Some(name) = name {
             clean_application(
-                &base_path,
+                &app_path,
                 &manifest_data.runtime.parse()?,
                 confirm,
                 &mut stdout,
@@ -1817,7 +1856,7 @@ impl CliCommand for ApplicationCommand {
 
             change_name(
                 &mut manifest_data,
-                &base_path,
+                &app_base_path,
                 &name,
                 &mut application_json_to_write,
                 &mut project_jsons_to_write,
@@ -1833,7 +1872,7 @@ impl CliCommand for ApplicationCommand {
 
         if let Some(formatter) = formatter {
             let (formatter_removal_templates, formatter_symlink_templates) = change_formatter(
-                &base_path,
+                &app_path,
                 &formatter.parse()?,
                 &mut manifest_data,
                 &mut application_json_to_write,
@@ -1846,7 +1885,7 @@ impl CliCommand for ApplicationCommand {
 
         if let Some(linter) = linter {
             let (linter_removal_templates, linter_symlink_templates) = change_linter(
-                &base_path,
+                &app_path,
                 &linter.parse()?,
                 &mut manifest_data,
                 &mut application_json_to_write,
@@ -1859,7 +1898,7 @@ impl CliCommand for ApplicationCommand {
 
         if let Some(validator) = validator {
             change_validator(
-                &base_path,
+                &app_path,
                 &validator.parse()?,
                 &mut manifest_data,
                 &mut project_jsons_to_write,
@@ -1869,7 +1908,7 @@ impl CliCommand for ApplicationCommand {
 
         if let Some(http_framework) = http_framework {
             change_http_framework(
-                &base_path,
+                &app_path,
                 &http_framework.parse()?,
                 &mut manifest_data,
                 &mut project_jsons_to_write,
@@ -1879,17 +1918,17 @@ impl CliCommand for ApplicationCommand {
 
         if let Some(runtime) = runtime {
             clean_application(
-                &base_path,
+                &app_path,
                 &manifest_data.runtime.parse()?,
                 confirm,
                 &mut stdout,
             )?;
-
+            println!("change:application:1887: base_path: {:?}", app_base_path);
             let (runtime_removal_templates, runtime_symlink_templates) = change_runtime(
                 &mut line_editor,
                 &mut stdout,
                 matches,
-                &base_path,
+                &app_path,
                 &runtime.parse()?,
                 &mut manifest_data,
                 &mut application_json_to_write,
@@ -1903,7 +1942,7 @@ impl CliCommand for ApplicationCommand {
         if let Some(test_framework) = test_framework {
             let (test_framework_removal_templates, test_framework_symlink_templates) =
                 change_test_framework(
-                    &base_path,
+                    &app_path,
                     &test_framework.parse()?,
                     &mut manifest_data,
                     &mut application_json_to_write,
@@ -1929,7 +1968,7 @@ impl CliCommand for ApplicationCommand {
 
         if let Some(license) = license {
             let removal_template = change_license(
-                &base_path,
+                &app_base_path,
                 &license.parse()?,
                 &mut manifest_data,
                 &mut application_json_to_write,
@@ -1999,7 +2038,7 @@ impl CliCommand for ApplicationCommand {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
             writeln!(stdout, "{} changed successfully!", &manifest_data.app_name)?;
             stdout.reset()?;
-            format_code(&base_path, &manifest_data.runtime.parse()?);
+            format_code(&app_base_path, &manifest_data.runtime.parse()?);
         }
 
         Ok(())

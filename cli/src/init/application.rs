@@ -469,7 +469,7 @@ impl CliCommand for ApplicationCommand {
                 },
                 |_| "Invalid path. Please provide a valid destination path.".to_string(),
             )?;
-            println!("01: temp_path: {:?}", temp_path);
+            // println!("01: temp_path: {:?}", temp_path);
             // Default behavior for other inputs
             let final_path = if temp_path == "source" {
                 format!("{}/src/modules", project_root_path)
@@ -480,8 +480,9 @@ impl CliCommand for ApplicationCommand {
             };
             final_path
         };
-        // println!("02: application_path: {:?}", application_path);
-        
+        println!("02: application_path: {:?}", application_path);
+
+        println!("03: project_root_path: {:?}", project_root_path);
 
         // Prompt for runtime
         let runtime: Runtime = prompt_with_validation(
@@ -879,6 +880,7 @@ impl CliCommand for ApplicationCommand {
                 id: data.id.clone(),
                 cli_version: data.cli_version.clone(),
                 app_name: data.app_name.clone(),
+                docker_compose_path: data.docker_compose_path.clone(),
                 camel_case_app_name: data.camel_case_app_name.clone(),
                 pascal_case_app_name: data.pascal_case_app_name.clone(),
                 kebab_case_app_name: data.kebab_case_app_name.clone(),

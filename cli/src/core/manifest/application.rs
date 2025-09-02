@@ -12,7 +12,7 @@ config_struct!(
         pub(crate) app_path: String,
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) manifest_path: String,
-        #[serde(skip_serializing, skip_deserializing)]
+        
         pub(crate) docker_compose_path: String,
         
         #[serde(skip_serializing, skip_deserializing)]
