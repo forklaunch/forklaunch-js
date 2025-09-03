@@ -98,9 +98,22 @@ impl<'de> Deserialize<'de> for DockerCompose {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(untagged)]
+pub(crate) enum HealthTest {
+    String(String),
+    List(Vec<String>),
+}
+
+impl Default for HealthTest {
+    fn default() -> Self {
+        HealthTest::String(String::new())
+    }
+}
+
 #[derive(Debug, Serialize, Default, Clone)]
 pub(crate) struct Healthcheck {
-    pub(crate) test: String,
+    pub(crate) test: HealthTest,
     pub(crate) interval: String,
     pub(crate) timeout: String,
     pub(crate) retries: i32,
@@ -356,6 +369,21 @@ pub(crate) fn add_otel_to_docker_compose<'a>(
             ports: Some(vec!["3200:3200".to_string(), "4317:4317".to_string()]),
             volumes: Some(vec!["./monitoring/tempo.yaml:/etc/tempo.yaml".to_string()]),
             networks: Some(vec![format!("{}-network", app_name)]),
+            healthcheck: Some(Healthcheck {
+                test: HealthTest::List(vec![
+                    "CMD".to_string(),
+                    "wget".to_string(),
+                    "--no-verbose".to_string(),
+                    "--tries=1".to_string(),
+                    "--spider".to_string(),
+                    "http://localhost:3200/ready".to_string(),
+                ]),
+                interval: "30s".to_string(),
+                timeout: "10s".to_string(),
+                retries: 3,
+                start_period: "60s".to_string(),
+                additional_properties: HashMap::new(),
+            }),
             ..Default::default()
         },
     );
@@ -366,6 +394,21 @@ pub(crate) fn add_otel_to_docker_compose<'a>(
             image: Some("grafana/loki:latest".to_string()),
             ports: Some(vec!["3100:3100".to_string()]),
             networks: Some(vec![format!("{}-network", app_name)]),
+            healthcheck: Some(Healthcheck {
+                test: HealthTest::List(vec![
+                    "CMD".to_string(),
+                    "wget".to_string(),
+                    "--no-verbose".to_string(),
+                    "--tries=1".to_string(),
+                    "--spider".to_string(),
+                    "http://localhost:3100/ready".to_string(),
+                ]),
+                interval: "30s".to_string(),
+                timeout: "10s".to_string(),
+                retries: 3,
+                start_period: "30s".to_string(),
+                additional_properties: HashMap::new(),
+            }),
             ..Default::default()
         },
     );
@@ -379,6 +422,21 @@ pub(crate) fn add_otel_to_docker_compose<'a>(
                 "./monitoring/prometheus.yaml:/etc/prometheus/prometheus.yml".to_string(),
             ]),
             networks: Some(vec![format!("{}-network", app_name)]),
+            healthcheck: Some(Healthcheck {
+                test: HealthTest::List(vec![
+                    "CMD".to_string(),
+                    "wget".to_string(),
+                    "--no-verbose".to_string(),
+                    "--tries=1".to_string(),
+                    "--spider".to_string(),
+                    "http://localhost:9090/-/healthy".to_string(),
+                ]),
+                interval: "30s".to_string(),
+                timeout: "10s".to_string(),
+                retries: 3,
+                start_period: "30s".to_string(),
+                additional_properties: HashMap::new(),
+            }),
             ..Default::default()
         },
     );
@@ -393,6 +451,21 @@ pub(crate) fn add_otel_to_docker_compose<'a>(
                 "./monitoring/grafana-provisioning/dashboards:/etc/grafana/provisioning/dashboards".to_string()
             ]),
             networks: Some(vec![format!("{}-network", app_name)]),
+            healthcheck: Some(Healthcheck {
+                test: HealthTest::List(vec![
+                    "CMD".to_string(),
+                    "wget".to_string(),
+                    "--no-verbose".to_string(),
+                    "--tries=1".to_string(),
+                    "--spider".to_string(),
+                    "http://localhost:3000/api/health".to_string(),
+                ]),
+                interval: "30s".to_string(),
+                timeout: "10s".to_string(),
+                retries: 3,
+                start_period: "30s".to_string(),
+                additional_properties: HashMap::new(),
+            }),
             ..Default::default()
         },
     );
@@ -410,6 +483,8 @@ pub(crate) fn add_otel_to_docker_compose<'a>(
                     .to_string(),
             ]),
             networks: Some(vec![format!("{}-network", app_name)]),
+            // Note: OTEL Collector health check is disabled as the container is too minimal
+            // and doesn't have wget, curl, or nc available
             ..Default::default()
         },
     );
@@ -432,6 +507,18 @@ pub(crate) fn add_redis_to_docker_compose<'a>(
                 restart: Some(Restart::Always),
                 ports: Some(vec!["6379:6379".to_string()]),
                 networks: Some(vec![format!("{}-network", app_name)]),
+                healthcheck: Some(Healthcheck {
+                    test: HealthTest::List(vec![
+                        "CMD".to_string(),
+                        "redis-cli".to_string(),
+                        "ping".to_string(),
+                    ]),
+                    interval: "10s".to_string(),
+                    timeout: "5s".to_string(),
+                    retries: 5,
+                    start_period: "10s".to_string(),
+                    additional_properties: HashMap::new(),
+                }),
                 ..Default::default()
             },
         );
@@ -473,6 +560,21 @@ pub(crate) fn add_s3_to_docker_compose<'a>(
                 restart: Some(Restart::Always),
                 ports: Some(vec!["9000:9000".to_string()]),
                 networks: Some(vec![format!("{}-network", app_name)]),
+                healthcheck: Some(Healthcheck {
+                    test: HealthTest::List(vec![
+                        "CMD".to_string(),
+                        "wget".to_string(),
+                        "--no-verbose".to_string(),
+                        "--tries=1".to_string(),
+                        "--spider".to_string(),
+                        "http://localhost:9000/minio/health/live".to_string(),
+                    ]),
+                    interval: "30s".to_string(),
+                    timeout: "10s".to_string(),
+                    retries: 3,
+                    start_period: "30s".to_string(),
+                    additional_properties: HashMap::new(),
+                }),
                 ..Default::default()
             },
         );
@@ -555,11 +657,20 @@ pub(crate) fn add_kafka_to_docker_compose<'a>(
             ports: Some(vec!["2181:2181".to_string()]),
             networks: Some(vec![format!("{}-network", app_name)]),
             healthcheck: Some(Healthcheck {
-                test: "echo srvr | nc localhost 2181 || exit 1".to_string(),
+                test: HealthTest::List(vec![
+                    "CMD-SHELL".to_string(),
+                    r#"if command -v nc >/dev/null 2>&1; then
+                        nc -z -w 3 localhost 2181 || exit 1
+                    else
+                        timeout 3 bash -c 'exec 3<>/dev/tcp/localhost/2181' 2>/dev/null || exit 1
+                    fi &&
+                    echo ruok | nc localhost 2181 | grep -q imok || exit 1"#
+                        .to_string(),
+                ]),
                 interval: "10s".to_string(),
-                timeout: "5s".to_string(),
+                timeout: "8s".to_string(),
                 retries: 5,
-                start_period: "10s".to_string(),
+                start_period: "15s".to_string(),
                 additional_properties: HashMap::new(),
             }),
             ..Default::default()
@@ -575,7 +686,7 @@ pub(crate) fn add_kafka_to_docker_compose<'a>(
             depends_on: Some(IndexMap::from([(
                 "zookeeper".to_string(),
                 DependsOn {
-                    condition: DependencyCondition::ServiceStarted,
+                    condition: DependencyCondition::ServiceHealthy,
                 },
             )])),
             ports: Some(vec!["9092:9092".to_string(), "29092:29092".to_string()]),
@@ -587,11 +698,11 @@ pub(crate) fn add_kafka_to_docker_compose<'a>(
                 ("KAFKA_BROKER_ID".to_string(), "1".to_string()),
                 (
                     "KAFKA_LISTENERS".to_string(),
-                    "PLAINTEXT://kafka:29092,PLAINTEXT_HOST://0.0.0.0:9092".to_string(),
+                    "PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092".to_string(),
                 ),
                 (
                     "KAFKA_ADVERTISED_LISTENERS".to_string(),
-                    "PLAINTEXT://kafka:29092,PLAINTEXT_HOST://0.0.0.0:9092".to_string(),
+                    "PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092".to_string(),
                 ),
                 (
                     "KAFKA_LISTENER_SECURITY_PROTOCOL_MAP".to_string(),
@@ -617,13 +728,23 @@ pub(crate) fn add_kafka_to_docker_compose<'a>(
             ])),
             networks: Some(vec![format!("{}-network", app_name)]),
             healthcheck: Some(Healthcheck {
-                test:
-                    "kafka-topics --bootstrap-server kafka:29092 --list >/dev/null 2>&1 || exit 1"
+                test: HealthTest::List(vec![
+                    "CMD-SHELL".to_string(),
+                    r#"# First ensure Zookeeper is still healthy
+                    if command -v nc >/dev/null 2>&1; then
+                        nc -z -w 3 zookeeper 2181 || exit 1
+                        echo ruok | nc zookeeper 2181 | grep -q imok || exit 1
+                    else
+                        timeout 3 bash -c 'exec 3<>/dev/tcp/zookeeper/2181' 2>/dev/null || exit 1
+                    fi &&
+                    # Then check Kafka readiness
+                    kafka-topics --bootstrap-server kafka:29092 --list >/dev/null 2>&1 || exit 1"#
                         .to_string(),
-                interval: "10s".to_string(),
-                timeout: "10s".to_string(),
+                ]),
+                interval: "15s".to_string(),
+                timeout: "12s".to_string(),
                 retries: 5,
-                start_period: "15s".to_string(),
+                start_period: "30s".to_string(),
                 additional_properties: HashMap::new(),
             }),
             ..Default::default()
@@ -689,9 +810,23 @@ pub(crate) fn add_database_to_docker_compose(
                         ])),
                         networks: Some(vec![format!("{}-network", app_name)]),
                         volumes: Some(vec![format!(
-                            "{}-postgresql-data:/var/lib/postgresql/{}/data",
-                            app_name, app_name
+                            "{}-postgresql-data:/var/lib/postgresql/data",
+                            app_name
                         )]),
+                        healthcheck: Some(Healthcheck {
+                            test: HealthTest::List(vec![
+                                "CMD-SHELL".to_string(),
+                                format!(
+                                    "pg_isready -U postgresql -d {}-{}-dev -h localhost",
+                                    app_name, name
+                                ),
+                            ]),
+                            interval: "10s".to_string(),
+                            timeout: "5s".to_string(),
+                            retries: 5,
+                            start_period: "30s".to_string(),
+                            additional_properties: HashMap::new(),
+                        }),
                         ..Default::default()
                     },
                 );
@@ -729,7 +864,10 @@ pub(crate) fn add_database_to_docker_compose(
                         networks: Some(vec![format!("{}-network", app_name)]),
                         volumes: Some(vec![format!("{}-mongodb-data:/data/db", app_name)]),
                         healthcheck: Some(Healthcheck {
-                            test: "mongosh --eval 'db.runCommand(\"ping\").ok' localhost:27017/test --quiet".to_string(),
+                            test: HealthTest::List(vec![
+                                "CMD-SHELL".to_string(),
+                                "mongosh --eval 'db.runCommand(\"ping\").ok' localhost:27017/test --quiet".to_string(),
+                            ]),
                             interval: "2s".to_string(),
                             timeout: "3s".to_string(),
                             retries: 5,
@@ -783,6 +921,18 @@ pub(crate) fn add_database_to_docker_compose(
                         ])),
                         networks: Some(vec![format!("{}-network", app_name)]),
                         volumes: Some(vec![format!("{}-mysql-data:/var/lib/mysql", app_name)]),
+                        healthcheck: Some(Healthcheck {
+                            test: HealthTest::List(vec![
+                                "CMD-SHELL".to_string(),
+                                "mysqladmin ping -h localhost -u $${MYSQL_USER} -p$${MYSQL_PASSWORD}"
+                                    .to_string(),
+                            ]),
+                            interval: "10s".to_string(),
+                            timeout: "5s".to_string(),
+                            retries: 5,
+                            start_period: "30s".to_string(),
+                            additional_properties: HashMap::new(),
+                        }),
                         ..Default::default()
                     },
                 );
@@ -815,6 +965,17 @@ pub(crate) fn add_database_to_docker_compose(
                         ])),
                         networks: Some(vec![format!("{}-network", app_name)]),
                         volumes: Some(vec![format!("{}-mariadb-data:/var/lib/mysql", app_name)]),
+                        healthcheck: Some(Healthcheck {
+                            test: HealthTest::List(vec![
+                                "CMD-SHELL".to_string(),
+                                "mysqladmin ping -h localhost -u $${MARIADB_USER} -p$${MARIADB_PASSWORD}".to_string(),
+                            ]),
+                            interval: "10s".to_string(),
+                            timeout: "5s".to_string(),
+                            retries: 5,
+                            start_period: "30s".to_string(),
+                            additional_properties: HashMap::new(),
+                        }),
                         ..Default::default()
                     },
                 );
@@ -846,6 +1007,17 @@ pub(crate) fn add_database_to_docker_compose(
                         ])),
                         networks: Some(vec![format!("{}-network", app_name)]),
                         volumes: Some(vec![format!("{}-mssql-data:/var/opt/mssql", app_name)]),
+                        healthcheck: Some(Healthcheck {
+                            test: HealthTest::List(vec![
+                                "CMD-SHELL".to_string(),
+                                "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P \"$${SA_PASSWORD}\" -Q 'SELECT 1' || exit 1".to_string(),
+                            ]),
+                            interval: "10s".to_string(),
+                            timeout: "5s".to_string(),
+                            retries: 5,
+                            start_period: "30s".to_string(),
+                            additional_properties: HashMap::new(),
+                        }),
                         ..Default::default()
                     },
                 );
@@ -1088,6 +1260,23 @@ fn create_base_service(
             "run".to_string(),
             entrypoint_command.to_string(),
         ]),
+        healthcheck: if let Some(port_number) = port_number {
+            Some(Healthcheck {
+                test: HealthTest::List(vec![
+                    "CMD".to_string(),
+                    "curl".to_string(),
+                    "-f".to_string(),
+                    format!("http://localhost:{}/health", port_number),
+                ]),
+                interval: "30s".to_string(),
+                timeout: "10s".to_string(),
+                retries: 3,
+                start_period: "40s".to_string(),
+                additional_properties: HashMap::new(),
+            })
+        } else {
+            None
+        },
         ..Default::default()
     }
 }

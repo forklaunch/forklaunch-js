@@ -1,63 +1,68 @@
-import { boolean, SchemaValidator, string } from '@forklaunch/blueprint-core';
-import { RequestMapper, ResponseMapper } from '@forklaunch/core/mappers';
+import { boolean, schemaValidator, string } from '@forklaunch/blueprint-core';
+import { requestMapper, responseMapper } from '@forklaunch/core/mappers';
 import { EntityManager } from '@mikro-orm/core';
 import { Organization } from '../../persistence/entities/organization.entity';
 import { Role } from '../../persistence/entities/role.entity';
 import { User } from '../../persistence/entities/user.entity';
-import { UserSchemas } from '../../registrations';
+import { UserSchemas } from '../schemas';
 import { RoleMapper } from './role.mappers';
 
-export class CreateUserMapper extends RequestMapper<User, SchemaValidator> {
-  schema = {
+export const CreateUserMapper = requestMapper(
+  schemaValidator,
+  {
     ...UserSchemas.CreateUserSchema,
     name: string,
     emailVerified: boolean
-  };
-
-  async toEntity(em: EntityManager): Promise<User> {
-    return User.create(
-      {
-        ...this.dto,
-        organization: await em.findOne(Organization, {
-          id: this.dto.organization
-        }),
-        roles: await em.findAll(Role, {
-          where: { id: { $in: this.dto.roles } }
-        }),
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      em
-    );
+  },
+  User,
+  {
+    toEntity: async (dto, em: EntityManager) => {
+      return User.create(
+        {
+          ...dto,
+          organization: await em.findOne(Organization, {
+            id: dto.organization
+          }),
+          roles: await em.findAll(Role, {
+            where: { id: { $in: dto.roles } }
+          }),
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        em
+      );
+    }
   }
-}
+);
 
-export class UpdateUserMapper extends RequestMapper<User, SchemaValidator> {
-  schema = UserSchemas.UpdateUserSchema;
-
-  async toEntity(em: EntityManager): Promise<User> {
-    return User.update(this.dto, em);
+export const UpdateUserMapper = requestMapper(
+  schemaValidator,
+  UserSchemas.UpdateUserSchema,
+  User,
+  {
+    toEntity: async (dto, em: EntityManager) => {
+      return User.update(dto, em);
+    }
   }
-}
+);
 
-export class UserMapper extends ResponseMapper<User, SchemaValidator> {
-  schema = UserSchemas.UserSchema;
-
-  async fromEntity(entity: User): Promise<this> {
-    this.dto = {
-      ...(await entity.read()),
-      roles: await Promise.all(
-        entity.roles.map(async (role) =>
-          (
-            await RoleMapper.fromEntity(
-              this.schemaValidator as SchemaValidator,
-              role
-            )
-          ).toDto()
+export const UserMapper = responseMapper(
+  schemaValidator,
+  UserSchemas.UserSchema,
+  User,
+  {
+    toDto: async (entity: User) => {
+      return {
+        ...(await entity.read()),
+        roles: await Promise.all(
+          (entity.roles.isInitialized()
+            ? entity.roles
+            : await entity.roles.init()
+          )
+            .getItems()
+            .map(async (role) => RoleMapper.toDto(role))
         )
-      )
-    };
-
-    return this;
+      };
+    }
   }
-}
+);

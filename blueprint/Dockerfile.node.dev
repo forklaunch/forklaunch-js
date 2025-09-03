@@ -8,6 +8,7 @@ COPY . .
 # Install dependencies
 RUN npm install -g pnpm
 RUN apk add --no-cache git
+RUN apk add --no-cache curl
 
 # Install dependencies with proper Node.js settings
 RUN pnpm install

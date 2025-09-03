@@ -13,12 +13,6 @@ import {
   Lifetime
 } from '@forklaunch/core/services';
 import {
-  BaseOrganizationServiceSchemas,
-  BasePermissionServiceSchemas,
-  BaseRoleServiceSchemas,
-  BaseUserServiceSchemas
-} from '@forklaunch/implementation-iam-base/schemas';
-import {
   BaseOrganizationService,
   BasePermissionService,
   BaseRoleService,
@@ -54,24 +48,6 @@ import {
   UserMapperTypes
 } from './domain/types/iamMappers.types';
 import mikroOrmOptionsConfig from './mikro-orm.config';
-
-//! defines the schemas for the organization service
-export const OrganizationSchemas = BaseOrganizationServiceSchemas({
-  uuidId: true,
-  validator: schemaValidator
-});
-export const PermissionSchemas = BasePermissionServiceSchemas({
-  uuidId: true,
-  validator: schemaValidator
-});
-export const RoleSchemas = BaseRoleServiceSchemas({
-  uuidId: true,
-  validator: schemaValidator
-});
-export const UserSchemas = BaseUserServiceSchemas({
-  uuidId: true,
-  validator: schemaValidator
-});
 
 //! defines the configuration schema for the application
 const configInjector = createConfigInjector(schemaValidator, {

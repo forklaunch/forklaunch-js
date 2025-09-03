@@ -1,64 +1,65 @@
-import { SchemaValidator } from '@forklaunch/blueprint-core';
-import { RequestMapper, ResponseMapper } from '@forklaunch/core/mappers';
+import { schemaValidator } from '@forklaunch/blueprint-core';
+import { requestMapper, responseMapper } from '@forklaunch/core/mappers';
 import { EntityManager } from '@mikro-orm/core';
 import Stripe from 'stripe';
 import { PaymentLink } from '../../persistence/entities/paymentLink.entity';
-import { PaymentLinkSchemas } from '../../registrations';
 import { StatusEnum } from '../enum/status.enum';
+import { PaymentLinkSchemas } from '../schemas';
 
-export class CreatePaymentLinkMapper extends RequestMapper<
+export const CreatePaymentLinkMapper = requestMapper(
+  schemaValidator,
+  PaymentLinkSchemas.CreatePaymentLinkSchema(StatusEnum),
   PaymentLink,
-  SchemaValidator
-> {
-  schema = PaymentLinkSchemas.CreatePaymentLinkSchema(StatusEnum);
-
-  async toEntity(
-    em: EntityManager,
-    providerFields: Stripe.PaymentLink
-  ): Promise<PaymentLink> {
-    return PaymentLink.create(
-      {
-        ...this.dto,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        providerFields
-      },
-      em
-    );
+  {
+    toEntity: async (
+      dto,
+      em: EntityManager,
+      providerFields: Stripe.PaymentLink
+    ) => {
+      return PaymentLink.create(
+        {
+          ...dto,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          providerFields
+        },
+        em
+      );
+    }
   }
-}
+);
 
-export class UpdatePaymentLinkMapper extends RequestMapper<
+export const UpdatePaymentLinkMapper = requestMapper(
+  schemaValidator,
+  PaymentLinkSchemas.UpdatePaymentLinkSchema(StatusEnum),
   PaymentLink,
-  SchemaValidator
-> {
-  schema = PaymentLinkSchemas.UpdatePaymentLinkSchema(StatusEnum);
-
-  async toEntity(
-    em: EntityManager,
-    providerFields: Stripe.PaymentLink
-  ): Promise<PaymentLink> {
-    return PaymentLink.update(
-      {
-        ...this.dto,
-        providerFields
-      },
-      em
-    );
+  {
+    toEntity: async (
+      dto,
+      em: EntityManager,
+      providerFields: Stripe.PaymentLink
+    ) => {
+      return PaymentLink.update(
+        {
+          ...dto,
+          ...(providerFields !== undefined ? { providerFields } : {})
+        },
+        em
+      );
+    }
   }
-}
+);
 
-export class PaymentLinkMapper extends ResponseMapper<
+export const PaymentLinkMapper = responseMapper(
+  schemaValidator,
+  PaymentLinkSchemas.PaymentLinkSchema(StatusEnum),
   PaymentLink,
-  SchemaValidator
-> {
-  schema = PaymentLinkSchemas.PaymentLinkSchema(StatusEnum);
-
-  async fromEntity(paymentLink: PaymentLink): Promise<this> {
-    this.dto = {
-      ...(await paymentLink.read()),
-      stripeFields: paymentLink.providerFields
-    };
-    return this;
+  {
+    toDto: async (entity: PaymentLink) => {
+      return {
+        ...(await entity.read()),
+        stripeFields: entity.providerFields
+      };
+    }
   }
-}
+);

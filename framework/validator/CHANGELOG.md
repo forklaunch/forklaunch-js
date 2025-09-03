@@ -1,5 +1,137 @@
 # @forklaunch/validator
 
+## 0.10.5
+
+### Patch Changes
+
+- update internal packages
+- Updated dependencies
+  - @forklaunch/common@0.6.5
+
+## 0.10.4
+
+### Patch Changes
+
+- Update internal package versions and add mapServiceSchemas method for clean DX in implemented modules
+- Updated dependencies
+  - @forklaunch/common@0.6.4
+
+## 0.10.3
+
+### Patch Changes
+
+- toDomain -> toDto for more accurate naming conventions
+- Updated dependencies
+  - @forklaunch/common@0.6.3
+
+## 0.10.2
+
+### Patch Changes
+
+- toDto -> toDomain
+- Updated dependencies
+  - @forklaunch/common@0.6.2
+
+## 0.10.1
+
+### Patch Changes
+
+- request and response mapper discrimination and clean up of internal types
+- Updated dependencies
+  - @forklaunch/common@0.6.1
+
+## 0.10.0
+
+### Minor Changes
+
+- remove class based mappers
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/common@0.6.0
+
+## 0.9.9
+
+### Patch Changes
+
+- add mappers as functions
+- Updated dependencies
+  - @forklaunch/common@0.5.8
+
+## 0.9.8
+
+### Patch Changes
+
+- One more attempt at performance bump
+- Updated dependencies
+  - @forklaunch/common@0.5.7
+
+## 0.9.7
+
+### Patch Changes
+
+- prettify req init for slightly faster sdk access
+- Updated dependencies
+  - @forklaunch/common@0.5.6
+
+## 0.9.6
+
+### Patch Changes
+
+- attempt to make sdk pathing more efficient
+- Updated dependencies
+  - @forklaunch/common@0.5.5
+
+## 0.9.5
+
+### Patch Changes
+
+- zod validator regex relaxation for email
+- Updated dependencies
+  - @forklaunch/common@0.5.4
+
+## 0.9.4
+
+### Patch Changes
+
+- Update validator types for files to use raw streams, lazy load openapi for universal sdk, and remove private members from otel
+- Updated dependencies
+  - @forklaunch/common@0.5.3
+
+## 0.9.3
+
+### Patch Changes
+
+- update package versions
+- Updated dependencies
+  - @forklaunch/common@0.5.2
+
+## 0.9.2
+
+### Patch Changes
+
+- Auth fixes and add HMAC auth
+
+## 0.9.1
+
+### Patch Changes
+
+- bump internal packages
+- Updated dependencies
+  - @forklaunch/common@0.5.1
+
+## 0.9.0
+
+### Minor Changes
+
+- Adds more configuration options for application and routers. Additionally adds optional cluster support built-in (experimental)
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/common@0.5.0
+
 ## 0.8.0
 
 ### Minor Changes

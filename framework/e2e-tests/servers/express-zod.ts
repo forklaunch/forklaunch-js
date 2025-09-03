@@ -74,7 +74,7 @@ const getHandler = handlers.get(
       },
       forbiddenPermissions: new Set(['test:write']),
       allowedPermissions: new Set(['test:read']),
-      mapPermissions: (resourceId, req) => {
+      surfacePermissions: (resourceId, req) => {
         return new Set(['test:read']);
       }
     }
@@ -162,10 +162,10 @@ const postHandler = handlers.post(
       },
       headerName: 'xyz',
       allowedRoles: new Set(['test:write']),
-      mapRoles: (resourceId, req) => {
+      surfaceRoles: (resourceId, req) => {
         return new Set(['test:write']);
       },
-      mapPermissions: (resourceId, req) => {
+      surfacePermissions: (resourceId, req) => {
         return new Set(['test:write']);
       }
     }
@@ -216,6 +216,9 @@ export const jsonPatchHandler = handlers.patch(
       }
     },
     auth: {
+      jwt: {
+        signatureKey: 'secret'
+      },
       tokenPrefix: 'bb',
       decodeResource: async (token) => {
         return {
@@ -223,7 +226,7 @@ export const jsonPatchHandler = handlers.patch(
         };
       },
       allowedPermissions: new Set(['test:write']),
-      mapPermissions: (resourceId, req) => {
+      surfacePermissions: (resourceId, req) => {
         return new Set(['test:write']);
       }
     }
@@ -388,19 +391,26 @@ forklaunchApplication.get(
 );
 
 export function start() {
-  return forklaunchApplication.listen(6935, () => {
-    console.log('server started on 6935');
+  const port = Number(process.env.PORT) || 6935;
+  return forklaunchApplication.listen(port, () => {
+    console.log(`server started on ${port}`);
   });
 }
 
 // Only run the server if this script is executed directly
 if (import.meta.url === `file://${process.argv[1]}`) {
-  forklaunchApplication.listen(6935, () => {
-    console.log('server started on 6935');
+  const port = Number(process.env.PORT) || 6935;
+  forklaunchApplication.listen(port, () => {
+    console.log(`server started on ${port}`);
   });
 }
 
 // Temporary shim for supporting TSGO experimental compiler
 import type * as ExpressStaticCore from 'express-serve-static-core';
 import { Range } from 'range-parser';
-type TSGoShim = ParsedQs & Range & ExpressStaticCore.Application & JWTPayload;
+import { z } from 'zod/v3';
+type TSGoShim = ParsedQs &
+  Range &
+  ExpressStaticCore.Application &
+  JWTPayload &
+  typeof z;

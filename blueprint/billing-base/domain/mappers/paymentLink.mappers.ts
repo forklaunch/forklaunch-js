@@ -1,61 +1,60 @@
-import { SchemaValidator } from '@forklaunch/blueprint-core';
-import { RequestMapper, ResponseMapper } from '@forklaunch/core/mappers';
+import { schemaValidator } from '@forklaunch/blueprint-core';
+import { requestMapper, responseMapper } from '@forklaunch/core/mappers';
 import { EntityManager } from '@mikro-orm/core';
 import { PaymentLink } from '../../persistence/entities/paymentLink.entity';
-import { PaymentLinkSchemas } from '../../registrations';
 import { CurrencyEnum } from '../enum/currency.enum';
 import { PaymentMethodEnum } from '../enum/paymentMethod.enum';
 import { StatusEnum } from '../enum/status.enum';
+import { PaymentLinkSchemas } from '../schemas';
 
-export class CreatePaymentLinkMapper extends RequestMapper<
-  PaymentLink,
-  SchemaValidator
-> {
-  schema = PaymentLinkSchemas.CreatePaymentLinkSchema(
+export const CreatePaymentLinkMapper = requestMapper(
+  schemaValidator,
+  PaymentLinkSchemas.CreatePaymentLinkSchema(
     PaymentMethodEnum,
     CurrencyEnum,
     StatusEnum
-  );
-
-  async toEntity(em: EntityManager): Promise<PaymentLink> {
-    return PaymentLink.create(
-      {
-        ...this.dto,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      em
-    );
-  }
-}
-
-export class UpdatePaymentLinkMapper extends RequestMapper<
+  ),
   PaymentLink,
-  SchemaValidator
-> {
-  schema = PaymentLinkSchemas.UpdatePaymentLinkSchema(
+  {
+    toEntity: async (dto, em: EntityManager) => {
+      return PaymentLink.create(
+        {
+          ...dto,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        em
+      );
+    }
+  }
+);
+
+export const UpdatePaymentLinkMapper = requestMapper(
+  schemaValidator,
+  PaymentLinkSchemas.UpdatePaymentLinkSchema(
     PaymentMethodEnum,
     CurrencyEnum,
     StatusEnum
-  );
-
-  async toEntity(em: EntityManager): Promise<PaymentLink> {
-    return PaymentLink.update(this.dto, em);
-  }
-}
-
-export class PaymentLinkMapper extends ResponseMapper<
+  ),
   PaymentLink,
-  SchemaValidator
-> {
-  schema = PaymentLinkSchemas.PaymentLinkSchema(
+  {
+    toEntity: async (dto, em: EntityManager) => {
+      return PaymentLink.update(dto, em);
+    }
+  }
+);
+
+export const PaymentLinkMapper = responseMapper(
+  schemaValidator,
+  PaymentLinkSchemas.PaymentLinkSchema(
     PaymentMethodEnum,
     CurrencyEnum,
     StatusEnum
-  );
-
-  async fromEntity(paymentLink: PaymentLink): Promise<this> {
-    this.dto = await paymentLink.read();
-    return this;
+  ),
+  PaymentLink,
+  {
+    toDto: async (entity: PaymentLink) => {
+      return await entity.read();
+    }
   }
-}
+);

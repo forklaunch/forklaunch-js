@@ -15,7 +15,9 @@ RUN pip install setuptools --break-system-packages
 RUN apk update
 RUN apk add --no-cache libc6-compat
 RUN apk add --no-cache git
-RUN pnpm install{{/is_node}}{{#is_bun}}RUN bun install{{/is_bun}}
+RUN apk add --no-cache curl
+RUN pnpm install{{/is_node}}{{#is_bun}}RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+RUN bun install{{/is_bun}}
 
 # Build TypeScript code
 {{#is_node}}

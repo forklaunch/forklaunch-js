@@ -59,7 +59,7 @@ export function contentParse<SV extends AnySchemaValidator>(options?: {
     if (discriminatedBody != null) {
       switch (discriminatedBody.parserType) {
         case 'file':
-          req.body = (await req.buffer()).toString('utf-8');
+          req.body = await req.buffer();
           break;
         case 'json':
           req.body = await req.json();
@@ -73,7 +73,7 @@ export function contentParse<SV extends AnySchemaValidator>(options?: {
                 buffer += chunk;
               }
               const fileBuffer = Buffer.from(buffer);
-              body[field.name] = fileBuffer.toString();
+              body[field.name] = fileBuffer;
             } else {
               body[field.name] = field.value;
             }

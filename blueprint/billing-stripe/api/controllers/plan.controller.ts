@@ -20,7 +20,7 @@ import {
   PlanMapper,
   UpdatePlanMapper
 } from '../../domain/mappers/plan.mappers';
-import { PlanSchemas } from '../../registrations';
+import { PlanSchemas } from '../../domain/schemas';
 import { PlanServiceFactory } from '../routes/plan.routes';
 
 export const PlanController = (
@@ -34,9 +34,9 @@ export const PlanController = (
       {
         name: 'createPlan',
         summary: 'Create a plan',
-        body: CreatePlanMapper.schema(),
+        body: CreatePlanMapper.schema,
         responses: {
-          200: PlanMapper.schema()
+          200: PlanMapper.schema
         }
       },
       async (req, res) => {
@@ -68,9 +68,9 @@ export const PlanController = (
       {
         name: 'updatePlan',
         summary: 'Update a plan',
-        body: UpdatePlanMapper.schema(),
+        body: UpdatePlanMapper.schema,
         responses: {
-          200: PlanMapper.schema()
+          200: PlanMapper.schema
         }
       },
       async (req, res) => {

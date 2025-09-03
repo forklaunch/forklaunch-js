@@ -10,10 +10,7 @@ use crate::{
     constants::WorkerType,
     core::{
         ast::{
-            deletions::delete_from_registrations_ts::{
-                delete_from_registration_schema_validators,
-                delete_from_registrations_ts_worker_type,
-            },
+            deletions::delete_from_registrations_ts::delete_from_registrations_ts_worker_type,
             infrastructure::{
                 database::database_entity_manager_runtime_dependency,
                 kafka::kafka_url_environment_variable,
@@ -381,21 +378,6 @@ pub(crate) fn transform_registrations_ts_worker_type(
         .with_options(CodegenOptions::default())
         .build(&registration_program)
         .code)
-}
-
-pub(crate) fn transform_registration_schema_ejection(content: &str) -> String {
-    let allocator = Allocator::default();
-    let source_type = SourceType::ts();
-
-    let mut program =
-        crate::core::ast::parse_ast_program::parse_ast_program(&allocator, content, source_type);
-
-    delete_from_registration_schema_validators(&allocator, &mut program);
-
-    let codegen_options = CodegenOptions::default();
-    let result = Codegen::new().with_options(codegen_options).build(&program);
-
-    result.code
 }
 
 #[cfg(test)]
@@ -1451,74 +1433,5 @@ const serviceDependencies = runtimeDependencies.chain({
             // Don't check if it's empty since the function might return empty content
         }
         // If it fails, that's okay for now since the function might not be fully implemented
-    }
-
-    #[test]
-    fn test_transform_registration_schema_ejection() {
-        let content = r#"
-import { SchemaValidator } from '@forklaunch/core';
-
-const schemaValidator = SchemaValidator({
-    validators: {
-        user: {
-            type: 'object',
-            properties: {
-                id: { type: 'string' },
-                name: { type: 'string' }
-            }
-        },
-        order: {
-            type: 'object',
-            properties: {
-                id: { type: 'string' },
-                amount: { type: 'number' }
-            }
-        }
-    }
-});
-"#;
-
-        let result = transform_registration_schema_ejection(content);
-
-        // The function currently doesn't remove validators, so we test what it actually does
-        // Verify that SchemaValidator is preserved
-        assert!(result.contains("SchemaValidator"));
-        assert!(result.contains("validators: {"));
-        assert!(result.contains("user: {"));
-        assert!(result.contains("order: {"));
-    }
-
-    #[test]
-    fn test_transform_registration_schema_ejection_empty_validators() {
-        let content = r#"
-import { SchemaValidator } from '@forklaunch/core';
-
-const schemaValidator = SchemaValidator({
-    validators: {}
-});
-"#;
-
-        let result = transform_registration_schema_ejection(content);
-
-        // The function currently doesn't remove validators, so we test what it actually does
-        assert!(result.contains("validators: {}"));
-        assert!(result.contains("SchemaValidator"));
-    }
-
-    #[test]
-    fn test_transform_registration_schema_ejection_no_validators() {
-        let content = r#"
-import { SchemaValidator } from '@forklaunch/core';
-
-const schemaValidator = SchemaValidator({
-    otherProperty: 'value'
-});
-"#;
-
-        let result = transform_registration_schema_ejection(content);
-
-        // Verify that content is unchanged
-        assert!(result.contains("otherProperty: \"value\""));
-        assert!(result.contains("SchemaValidator"));
     }
 }

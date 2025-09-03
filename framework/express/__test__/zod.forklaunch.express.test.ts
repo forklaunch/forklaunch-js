@@ -220,8 +220,11 @@ describe('handlers', () => {
           'x-test': string
         },
         auth: {
+          jwt: {
+            signatureKey: 'secret'
+          },
           allowedRoles: new Set(['admin']),
-          mapRoles: (_payload, _req) => {
+          surfaceRoles: (_payload, _req) => {
             return new Set(['admin']);
           }
         }
@@ -309,8 +312,11 @@ describe('handlers', () => {
           400: string
         },
         auth: {
+          jwt: {
+            signatureKey: 'secret'
+          },
           allowedPermissions: new Set(['admin']),
-          mapPermissions: (_payload, _req) => {
+          surfacePermissions: (_payload, _req) => {
             return new Set(['admin']);
           }
         }

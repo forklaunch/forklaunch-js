@@ -1,5 +1,5 @@
+import { FastMCP } from '@forklaunch/fastmcp-fork';
 import { ZodSchemaValidator } from '@forklaunch/validator/zod';
-import { FastMCP } from 'fastmcp';
 import { describe, expect, it } from 'vitest';
 import { generateMcpServer } from '../src/http/mcpGenerator/mcpGenerator';
 
@@ -18,7 +18,6 @@ describe('mcpGenerator tests', () => {
       'localhost',
       8000,
       '1.0.0',
-
       {
         basePath: '/api' as const,
         routes: [
@@ -54,7 +53,6 @@ describe('mcpGenerator tests', () => {
       'example.com',
       443,
       '2.0.0',
-
       {
         basePath: '/api' as const,
         routes: [
@@ -103,7 +101,6 @@ describe('mcpGenerator tests', () => {
       'localhost',
       3000,
       '1.0.0',
-
       {
         basePath: '/api' as const,
         routes: [
@@ -147,7 +144,6 @@ describe('mcpGenerator tests', () => {
       'localhost',
       8000,
       '1.0.0',
-
       {
         basePath: '/api' as const,
         routes: [

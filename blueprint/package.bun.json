@@ -16,7 +16,7 @@
   ],
   "scripts": {
     "build": "bun run --filter='*' build",
-    "clean": "rm -rf node_modules bun.lockb && bun --filter='*' clean",
+    "clean": "rm -rf node_modules bun.lockb bun.lock && bun --filter='*' clean",
     "clean:purge": "bun run clean",
     "dev": "RUNTIME=bun docker compose -f docker-compose.base.yml -f docker-compose.bun.yml up",
     "docs": "bun --filter='*' docs",

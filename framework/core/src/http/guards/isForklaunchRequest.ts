@@ -32,7 +32,8 @@ export function isForklaunchRequest<
   ReqBody extends Record<string, unknown>,
   ReqQuery extends ParsedQs,
   ReqHeaders extends Record<string, string>,
-  VersionedReqs extends VersionedRequests
+  VersionedReqs extends VersionedRequests,
+  SessionSchema extends Record<string, unknown>
 >(
   request: unknown
 ): request is ForklaunchRequest<
@@ -41,7 +42,8 @@ export function isForklaunchRequest<
   ReqBody,
   ReqQuery,
   ReqHeaders,
-  Extract<keyof VersionedReqs, string>
+  Extract<keyof VersionedReqs, string>,
+  SessionSchema
 > {
   return (
     request != null &&

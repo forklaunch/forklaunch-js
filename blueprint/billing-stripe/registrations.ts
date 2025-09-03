@@ -13,13 +13,6 @@ import {
   Lifetime
 } from '@forklaunch/core/services';
 import {
-  StripeBillingPortalServiceSchemas,
-  StripeCheckoutSessionServiceSchemas,
-  StripePaymentLinkServiceSchemas,
-  StripePlanServiceSchemas,
-  StripeSubscriptionServiceSchemas
-} from '@forklaunch/implementation-billing-stripe/schemas';
-import {
   StripeBillingPortalService,
   StripeCheckoutSessionService,
   StripePaymentLinkService,
@@ -65,23 +58,6 @@ import {
   SubscriptionEntities
 } from './domain/types/mapperEntities.types';
 import mikroOrmOptionsConfig from './mikro-orm.config';
-
-//! defines the schemas for the billing portal service
-export const BillingPortalSchemas = StripeBillingPortalServiceSchemas({
-  validator: schemaValidator
-});
-export const CheckoutSessionSchemas = StripeCheckoutSessionServiceSchemas({
-  validator: schemaValidator
-});
-export const PaymentLinkSchemas = StripePaymentLinkServiceSchemas({
-  validator: schemaValidator
-});
-export const PlanSchemas = StripePlanServiceSchemas({
-  validator: schemaValidator
-});
-export const SubscriptionSchemas = StripeSubscriptionServiceSchemas({
-  validator: schemaValidator
-});
 
 //! defines the configuration schema for the application
 const configInjector = createConfigInjector(schemaValidator, {
@@ -363,7 +339,11 @@ const serviceDependencies = runtimeDependencies.chain({
 });
 
 //! validates the configuration and returns the dependencies for the application
-export const createDependencyContainer = (envFilePath: string) => ({
-  ci: serviceDependencies.validateConfigSingletons(envFilePath),
-  tokens: serviceDependencies.tokens()
-});
+export const createDependencyContainer = (envFilePath: string) => {
+  const ci = serviceDependencies.validateConfigSingletons(envFilePath);
+  const tokens = serviceDependencies.tokens();
+  return {
+    ci,
+    tokens
+  };
+};

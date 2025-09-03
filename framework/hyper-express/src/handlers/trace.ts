@@ -8,6 +8,7 @@ import {
   QueryObject,
   ResponsesObject,
   SchemaAuthMethods,
+  SessionObject,
   VersionSchema
 } from '@forklaunch/core/http';
 import {
@@ -79,13 +80,15 @@ export const trace = <
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
   const VersionedApi extends VersionSchema<SV, 'trace'>,
+  const SessionSchema extends SessionObject<SV>,
   const Auth extends SchemaAuthMethods<
     SV,
     P,
     ReqBody,
     ReqQuery,
     ReqHeaders,
-    VersionSchema<SV, 'trace'>,
+    VersionedApi,
+    SessionSchema,
     Request<LocalsObj>
   >
 >(
@@ -103,6 +106,7 @@ export const trace = <
     ReqHeaders,
     ResHeaders,
     VersionedApi,
+    SessionSchema,
     Request<LocalsObj>,
     Auth
   >,
@@ -116,6 +120,7 @@ export const trace = <
     ResHeaders,
     LocalsObj,
     VersionedApi,
+    SessionSchema,
     Request<LocalsObj>,
     Response<LocalsObj>,
     MiddlewareNext
@@ -133,6 +138,7 @@ export const trace = <
     ResHeaders,
     LocalsObj,
     VersionedApi,
+    SessionSchema,
     Request<LocalsObj>,
     Response<LocalsObj>,
     MiddlewareNext,

@@ -4,12 +4,12 @@
  * This is an auto-generated file. Modifications are encouraged but may inhibit automated upgrades.
  */
 
+import { createAuthClient } from '@forklaunch/better-auth/client';
 import type { BillingSdkClient } from '@forklaunch/blueprint-billing-base';
 import type { IamSdkClient } from '@forklaunch/blueprint-iam-base';
 import type { IamSdkClient as IamBetterAuthSdkClient } from '@forklaunch/blueprint-iam-better-auth';
 import type { SampleWorkerSdkClient } from '@forklaunch/blueprint-sample-worker';
 import { universalSdk } from '@forklaunch/universal-sdk';
-import { createAuthClient } from 'better-auth/client';
 
 export type ForklaunchPlatformUniversalSdk = {
   iam: IamSdkClient;

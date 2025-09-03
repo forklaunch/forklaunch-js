@@ -16,6 +16,9 @@ export class CheckoutSession extends SqlBaseEntity {
   @Enum(() => CurrencyEnum)
   currency!: CurrencyEnum;
 
+  @Property({ unique: true, nullable: true })
+  uri?: string;
+
   @Property({ nullable: true })
   successRedirectUri?: string;
 

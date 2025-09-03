@@ -9,6 +9,7 @@ import {
   QueryObject,
   ResponsesObject,
   SchemaAuthMethods,
+  SessionObject,
   VersionSchema
 } from './contractDetails.types';
 
@@ -24,6 +25,7 @@ export type ContractDetailsExpressLikeSchemaHandler<
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
   VersionedApi extends VersionSchema<SV, ContractMethod>,
+  Session extends SessionObject<SV>,
   BaseRequest,
   BaseResponse,
   NextFunction
@@ -37,6 +39,7 @@ export type ContractDetailsExpressLikeSchemaHandler<
   ResHeaders,
   LocalsObj,
   VersionedApi,
+  Session,
   BaseRequest,
   BaseResponse,
   NextFunction
@@ -55,6 +58,7 @@ export type TypedHandler<
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
   VersionedApi extends VersionSchema<SV, ContractMethod>,
+  Session extends SessionObject<SV>,
   BaseRequest,
   BaseResponse,
   NextFunction,
@@ -65,6 +69,7 @@ export type TypedHandler<
     ReqQuery,
     ReqHeaders,
     VersionedApi,
+    Session,
     BaseRequest
   >
 > = {
@@ -82,6 +87,7 @@ export type TypedHandler<
     ReqHeaders,
     ResHeaders,
     VersionedApi,
+    Session,
     BaseRequest,
     Auth
   >;
@@ -97,6 +103,7 @@ export type TypedHandler<
     ResHeaders,
     LocalsObj,
     VersionedApi,
+    Session,
     BaseRequest,
     BaseResponse,
     NextFunction
@@ -116,6 +123,7 @@ export type ExpressLikeTypedHandler<
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
   VersionedApi extends VersionSchema<SV, ContractMethod>,
+  Session extends SessionObject<SV>,
   BaseRequest,
   BaseResponse,
   NextFunction,
@@ -126,6 +134,7 @@ export type ExpressLikeTypedHandler<
     ReqQuery,
     ReqHeaders,
     VersionedApi,
+    Session,
     BaseRequest
   >
 > = {
@@ -144,6 +153,7 @@ export type ExpressLikeTypedHandler<
     ReqHeaders,
     ResHeaders,
     VersionedApi,
+    Session,
     BaseRequest,
     Auth
   >;
@@ -157,6 +167,7 @@ export type ExpressLikeTypedHandler<
     ResHeaders,
     LocalsObj,
     VersionedApi,
+    Session,
     BaseRequest,
     BaseResponse,
     NextFunction

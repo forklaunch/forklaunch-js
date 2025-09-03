@@ -28,8 +28,10 @@ import {
   QueryObject,
   ResponseBody,
   SchemaAuthMethods,
+  SessionObject,
   VersionSchema
 } from '../types/contractDetails.types';
+import { ExpressLikeApplicationOptions } from '../types/expressLikeOptions';
 import { ForklaunchRouter } from '../types/router.types';
 
 export const OPENAPI_DEFAULT_VERSION = Symbol('default');
@@ -65,7 +67,7 @@ function transformBasePath(basePath: string) {
  * @param {PathObject} paths - The paths for the Swagger document.
  * @returns {OpenAPIObject} - The Swagger document.
  */
-function generateOpenApiDocument(
+function generateOpenApiDocument<SV extends AnySchemaValidator>(
   serverUrls: string[],
   serverDescriptions: string[],
   versionedTags: Record<string | symbol, TagObject[]>,
@@ -74,17 +76,18 @@ function generateOpenApiDocument(
     string | symbol,
     Record<string, SecuritySchemeObject>
   >,
-  otherServers?: {
-    url: string;
-    description: string;
-  }[]
+  appOptions?: ExpressLikeApplicationOptions<SV, SessionObject<SV>>['openapi']
 ): Record<string | symbol, OpenAPIObject> {
+  const { title, description, contact } =
+    appOptions !== false ? (appOptions ?? {}) : {};
   return {
     [OPENAPI_DEFAULT_VERSION]: {
       openapi: '3.1.0',
       info: {
-        title: process.env.API_TITLE || 'API Definition',
-        version: process.env.VERSION || 'latest'
+        title: title || process.env.API_TITLE || 'API Definition',
+        version: 'latest',
+        description,
+        contact
       },
       components: {
         securitySchemes: versionedSecuritySchemes[OPENAPI_DEFAULT_VERSION]
@@ -94,8 +97,7 @@ function generateOpenApiDocument(
         ...serverUrls.map((url, index) => ({
           url,
           description: serverDescriptions?.[index]
-        })),
-        ...(otherServers || [])
+        }))
       ],
       paths: versionedPaths[OPENAPI_DEFAULT_VERSION]
     },
@@ -105,8 +107,10 @@ function generateOpenApiDocument(
         {
           openapi: '3.1.0',
           info: {
-            title: process.env.API_TITLE || 'API Definition',
-            version
+            title: title || process.env.API_TITLE || 'API Definition',
+            version,
+            description,
+            contact
           },
           components: {
             securitySchemes: versionedSecuritySchemes[version]
@@ -116,8 +120,7 @@ function generateOpenApiDocument(
             ...serverUrls.map((url, index) => ({
               url,
               description: serverDescriptions?.[index]
-            })),
-            ...(otherServers || [])
+            }))
           ],
           paths
         }
@@ -181,6 +184,7 @@ function generateOperationObject<SV extends AnySchemaValidator>(
     QueryObject<SV>,
     HeadersObject<SV>,
     VersionSchema<SV, Method>,
+    SessionObject<SV>,
     unknown
   >
 ) {
@@ -278,12 +282,12 @@ function generateOperationObject<SV extends AnySchemaValidator>(
   }
 
   if (auth) {
-    responses[401] = {
+    coercedResponses[401] = {
       description: HTTPStatuses[401],
       content: contentResolver(schemaValidator, schemaValidator.string)
     };
 
-    responses[403] = {
+    coercedResponses[403] = {
       description: HTTPStatuses[403],
       content: contentResolver(schemaValidator, schemaValidator.string)
     };
@@ -348,10 +352,7 @@ export function generateOpenApiSpecs<SV extends AnySchemaValidator>(
   serverUrls: string[],
   serverDescriptions: string[],
   application: ForklaunchRouter<SV>,
-  otherServers?: {
-    url: string;
-    description: string;
-  }[]
+  appOptions?: ExpressLikeApplicationOptions<SV, SessionObject<SV>>['openapi']
 ): Record<string | symbol, OpenAPIObject> {
   const versionedPaths: Record<string | symbol, PathObject> = {
     [OPENAPI_DEFAULT_VERSION]: {}
@@ -381,7 +382,19 @@ export function generateOpenApiSpecs<SV extends AnySchemaValidator>(
         `${fullPath}${route.path === '/' ? '' : route.path}`
       );
 
-      const { name, summary, params, versions, auth } = route.contractDetails;
+      const { name, summary, params, versions, auth, options } =
+        route.contractDetails;
+
+      if (
+        !(
+          options?.openapi ??
+          router.routerOptions?.openapi ??
+          appOptions !== false
+        )
+      ) {
+        return;
+      }
+
       if (versions) {
         for (const version of Object.keys(versions)) {
           if (!versionedPaths[version]) {
@@ -490,6 +503,6 @@ export function generateOpenApiSpecs<SV extends AnySchemaValidator>(
     versionedTags,
     versionedPaths,
     versionedSecuritySchemes,
-    otherServers
+    appOptions
   );
 }

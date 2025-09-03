@@ -1,5 +1,5 @@
 import {
-  ExpressOptions,
+  ExpressApplicationOptions,
   forklaunchExpress,
   forklaunchRouter,
   handlers,
@@ -36,7 +36,7 @@ import {
   uri,
   uuid,
   void_
-} from '@forklaunch/validator/zod';
+} from '@forklaunch/validator/typebox';
 
 export const schemaValidator = SchemaValidator();
 export type SchemaValidator = ReturnType<typeof SchemaValidator>;
@@ -50,7 +50,7 @@ export {
   date,
   email,
   enum_,
-  ExpressOptions,
+  ExpressApplicationOptions,
   file,
   forklaunchExpress,
   forklaunchRouter,

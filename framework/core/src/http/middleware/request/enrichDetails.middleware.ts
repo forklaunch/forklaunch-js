@@ -25,8 +25,10 @@ import {
   QueryObject,
   ResponseCompiledSchema,
   ResponsesObject,
+  SessionObject,
   VersionSchema
 } from '../../types/contractDetails.types';
+import { ExpressLikeRouterOptions } from '../../types/expressLikeOptions';
 import { MetricsDefinition } from '../../types/openTelemetryCollector.types';
 
 /**
@@ -49,7 +51,8 @@ export function enrichDetails<
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
-  VersionedApi extends VersionSchema<SV, ContractMethod>
+  VersionedApi extends VersionSchema<SV, ContractMethod>,
+  SessionSchema extends SessionObject<SV>
 >(
   path: string,
   contractDetails: HttpContractDetails<SV> | PathParamHttpContractDetails<SV>,
@@ -57,7 +60,8 @@ export function enrichDetails<
   responseSchemas:
     | ResponseCompiledSchema
     | Record<string, ResponseCompiledSchema>,
-  openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>
+  openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
+  globalOptions: () => ExpressLikeRouterOptions<SV, SessionSchema> | undefined
 ): ExpressLikeSchemaHandler<
   SV,
   P,
@@ -68,6 +72,7 @@ export function enrichDetails<
   ResHeaders,
   LocalsObj,
   VersionedApi,
+  SessionSchema,
   unknown,
   unknown,
   ForklaunchNextFunction
@@ -78,6 +83,7 @@ export function enrichDetails<
     req.requestSchema = requestSchema;
     res.responseSchemas = responseSchemas;
     req.openTelemetryCollector = openTelemetryCollector;
+    req._globalOptions = globalOptions;
 
     req.context?.span?.setAttribute(ATTR_API_NAME, req.contractDetails?.name);
     const startTime = process.hrtime();

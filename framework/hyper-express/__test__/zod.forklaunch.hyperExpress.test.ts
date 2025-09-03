@@ -197,8 +197,16 @@ describe('handlers', () => {
           'x-test': string
         },
         auth: {
+          jwt: {
+            jwksPublicKey: {
+              kty: 'RSA',
+              e: 'AQAB',
+              n: 'AQAB',
+              kid: '1234567890'
+            }
+          },
           allowedRoles: new Set(['admin']),
-          mapRoles: (_payload, _req) => {
+          surfaceRoles: (_payload, _req) => {
             return new Set(['admin']);
           }
         }

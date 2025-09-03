@@ -4,33 +4,27 @@ import {
   UserService
 } from '@forklaunch/interfaces-iam/interfaces';
 
-import { IdDto, IdsDto, InstanceTypeRecord } from '@forklaunch/common';
+import { IdDto, IdsDto } from '@forklaunch/common';
 import {
   evaluateTelemetryOptions,
   MetricsDefinition,
   OpenTelemetryCollector,
   TelemetryOptions
 } from '@forklaunch/core/http';
-import { UpdateUserDto } from '@forklaunch/interfaces-iam/types';
-import {
-  InternalMapper,
-  RequestMapperConstructor,
-  ResponseMapperConstructor,
-  transformIntoInternalMapper
-} from '@forklaunch/internal';
+import { CreateUserDto, UpdateUserDto } from '@forklaunch/interfaces-iam/types';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
 import { UserDtos } from '../domain/types/iamDto.types';
 import { UserEntities } from '../domain/types/iamEntities.types';
+import { UserMappers } from '../domain/types/user.mapper.types';
 
 export class BaseUserService<
   SchemaValidator extends AnySchemaValidator,
-  OrganizationStatus,
-  Entities extends UserEntities,
-  Dto extends UserDtos = UserDtos
+  OrganizationStatus = unknown,
+  MapperEntities extends UserEntities = UserEntities,
+  MapperDomains extends UserDtos = UserDtos
 > implements UserService
 {
-  protected _mappers: InternalMapper<InstanceTypeRecord<typeof this.mappers>>;
   private evaluatedTelemetryOptions: {
     logging?: boolean;
     metrics?: boolean;
@@ -42,31 +36,7 @@ export class BaseUserService<
   protected organizationServiceFactory: () => OrganizationService<OrganizationStatus>;
   protected openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
   protected schemaValidator: SchemaValidator;
-  protected mappers: {
-    UserMapper: ResponseMapperConstructor<
-      SchemaValidator,
-      Dto['UserMapper'],
-      Entities['UserMapper']
-    >;
-    CreateUserMapper: RequestMapperConstructor<
-      SchemaValidator,
-      Dto['CreateUserMapper'],
-      Entities['CreateUserMapper'],
-      (
-        dto: Dto['CreateUserMapper'],
-        em: EntityManager
-      ) => Promise<Entities['CreateUserMapper']>
-    >;
-    UpdateUserMapper: RequestMapperConstructor<
-      SchemaValidator,
-      Dto['UpdateUserMapper'],
-      Entities['UpdateUserMapper'],
-      (
-        dto: Dto['UpdateUserMapper'],
-        em: EntityManager
-      ) => Promise<Entities['UpdateUserMapper']>
-    >;
-  };
+  protected mappers: UserMappers<MapperEntities, MapperDomains>;
 
   constructor(
     em: EntityManager,
@@ -75,32 +45,8 @@ export class BaseUserService<
     organizationServiceFactory: () => OrganizationService<OrganizationStatus>,
     openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
     schemaValidator: SchemaValidator,
-    mappers: {
-      UserMapper: ResponseMapperConstructor<
-        SchemaValidator,
-        Dto['UserMapper'],
-        Entities['UserMapper']
-      >;
-      CreateUserMapper: RequestMapperConstructor<
-        SchemaValidator,
-        Dto['CreateUserMapper'],
-        Entities['CreateUserMapper'],
-        (
-          dto: Dto['CreateUserMapper'],
-          em: EntityManager
-        ) => Promise<Entities['CreateUserMapper']>
-      >;
-      UpdateUserMapper: RequestMapperConstructor<
-        SchemaValidator,
-        Dto['UpdateUserMapper'],
-        Entities['UpdateUserMapper'],
-        (
-          dto: Dto['UpdateUserMapper'],
-          em: EntityManager
-        ) => Promise<Entities['UpdateUserMapper']>
-      >;
-    },
-    readonly options?: {
+    mappers: UserMappers<MapperEntities, MapperDomains>,
+    options?: {
       telemetry?: TelemetryOptions;
     }
   ) {
@@ -111,7 +57,6 @@ export class BaseUserService<
     this.openTelemetryCollector = openTelemetryCollector;
     this.schemaValidator = schemaValidator;
     this.mappers = mappers;
-    this._mappers = transformIntoInternalMapper(mappers, schemaValidator);
     this.evaluatedTelemetryOptions = options?.telemetry
       ? evaluateTelemetryOptions(options.telemetry).enabled
       : {
@@ -122,16 +67,18 @@ export class BaseUserService<
   }
 
   async createUser(
-    userDto: Dto['CreateUserMapper'],
-    em?: EntityManager
-  ): Promise<Dto['UserMapper']> {
+    userDto: CreateUserDto,
+    em?: EntityManager,
+    ...args: unknown[]
+  ): Promise<MapperDomains['UserMapper']> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info('Creating user', userDto);
     }
 
-    const user = await this._mappers.CreateUserMapper.deserializeDtoToEntity(
+    const user = await this.mappers.CreateUserMapper.toEntity(
       userDto,
-      em ?? this.em
+      em ?? this.em,
+      ...args
     );
 
     if (em) {
@@ -140,22 +87,24 @@ export class BaseUserService<
       await this.em.persistAndFlush(user);
     }
 
-    return this._mappers.UserMapper.serializeEntityToDto(user);
+    return this.mappers.UserMapper.toDto(user);
   }
 
   async createBatchUsers(
-    userDtos: Dto['CreateUserMapper'][],
-    em?: EntityManager
-  ): Promise<Dto['UserMapper'][]> {
+    userDtos: CreateUserDto[],
+    em?: EntityManager,
+    ...args: unknown[]
+  ): Promise<MapperDomains['UserMapper'][]> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info('Creating batch users', userDtos);
     }
 
     const users = await Promise.all(
       userDtos.map(async (createUserDto) =>
-        this._mappers.CreateUserMapper.deserializeDtoToEntity(
+        this.mappers.CreateUserMapper.toEntity(
           createUserDto,
-          em ?? this.em
+          em ?? this.em,
+          ...args
         )
       )
     );
@@ -167,11 +116,14 @@ export class BaseUserService<
     }
 
     return Promise.all(
-      users.map((user) => this._mappers.UserMapper.serializeEntityToDto(user))
+      users.map((user) => this.mappers.UserMapper.toDto(user))
     );
   }
 
-  async getUser(idDto: IdDto, em?: EntityManager): Promise<Dto['UserMapper']> {
+  async getUser(
+    idDto: IdDto,
+    em?: EntityManager
+  ): Promise<MapperDomains['UserMapper']> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info('Getting user', idDto);
     }
@@ -180,15 +132,13 @@ export class BaseUserService<
       populate: ['id', '*']
     });
 
-    return this._mappers.UserMapper.serializeEntityToDto(
-      user as Entities['UserMapper']
-    );
+    return this.mappers.UserMapper.toDto(user as MapperEntities['UserMapper']);
   }
 
   async getBatchUsers(
     idsDto: IdsDto,
     em?: EntityManager
-  ): Promise<Dto['UserMapper'][]> {
+  ): Promise<MapperDomains['UserMapper'][]> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info('Getting batch users', idsDto);
     }
@@ -199,24 +149,24 @@ export class BaseUserService<
           populate: ['id', '*']
         })
       ).map((user) =>
-        this._mappers.UserMapper.serializeEntityToDto(
-          user as Entities['UserMapper']
-        )
+        this.mappers.UserMapper.toDto(user as MapperEntities['UserMapper'])
       )
     );
   }
 
   async updateUser(
-    userDto: Dto['UpdateUserMapper'],
-    em?: EntityManager
-  ): Promise<Dto['UserMapper']> {
+    userDto: UpdateUserDto,
+    em?: EntityManager,
+    ...args: unknown[]
+  ): Promise<MapperDomains['UserMapper']> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info('Updating user', userDto);
     }
 
-    const user = await this._mappers.UpdateUserMapper.deserializeDtoToEntity(
+    const user = await this.mappers.UpdateUserMapper.toEntity(
       userDto,
-      em ?? this.em
+      em ?? this.em,
+      ...args
     );
 
     if (em) {
@@ -225,22 +175,24 @@ export class BaseUserService<
       await this.em.persistAndFlush(user);
     }
 
-    return this._mappers.UserMapper.serializeEntityToDto(user);
+    return this.mappers.UserMapper.toDto(user);
   }
 
   async updateBatchUsers(
     userDtos: UpdateUserDto[],
-    em?: EntityManager
-  ): Promise<Dto['UserMapper'][]> {
+    em?: EntityManager,
+    ...args: unknown[]
+  ): Promise<MapperDomains['UserMapper'][]> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info('Updating batch users', userDtos);
     }
 
     const users = await Promise.all(
       userDtos.map(async (updateUserDto) =>
-        this._mappers.UpdateUserMapper.deserializeDtoToEntity(
+        this.mappers.UpdateUserMapper.toEntity(
           updateUserDto,
-          em ?? this.em
+          em ?? this.em,
+          ...args
         )
       )
     );
@@ -252,7 +204,7 @@ export class BaseUserService<
     }
 
     return Promise.all(
-      users.map((user) => this._mappers.UserMapper.serializeEntityToDto(user))
+      users.map((user) => this.mappers.UserMapper.toDto(user))
     );
   }
 

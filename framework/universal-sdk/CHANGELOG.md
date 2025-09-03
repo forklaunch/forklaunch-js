@@ -1,5 +1,131 @@
 # @forklaunch/universal-sdk
 
+## 0.7.5
+
+### Patch Changes
+
+- update internal packages
+- Updated dependencies
+  - @forklaunch/common@0.6.5
+
+## 0.7.4
+
+### Patch Changes
+
+- Update internal package versions and add mapServiceSchemas method for clean DX in implemented modules
+- Updated dependencies
+  - @forklaunch/common@0.6.4
+
+## 0.7.3
+
+### Patch Changes
+
+- toDomain -> toDto for more accurate naming conventions
+- Updated dependencies
+  - @forklaunch/common@0.6.3
+
+## 0.7.2
+
+### Patch Changes
+
+- toDto -> toDomain
+- Updated dependencies
+  - @forklaunch/common@0.6.2
+
+## 0.7.1
+
+### Patch Changes
+
+- request and response mapper discrimination and clean up of internal types
+- Updated dependencies
+  - @forklaunch/common@0.6.1
+
+## 0.7.0
+
+### Minor Changes
+
+- remove class based mappers
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/common@0.6.0
+
+## 0.6.8
+
+### Patch Changes
+
+- add mappers as functions
+- Updated dependencies
+  - @forklaunch/common@0.5.8
+
+## 0.6.7
+
+### Patch Changes
+
+- One more attempt at performance bump
+- Updated dependencies
+  - @forklaunch/common@0.5.7
+
+## 0.6.6
+
+### Patch Changes
+
+- prettify req init for slightly faster sdk access
+- Updated dependencies
+  - @forklaunch/common@0.5.6
+
+## 0.6.5
+
+### Patch Changes
+
+- attempt to make sdk pathing more efficient
+- Updated dependencies
+  - @forklaunch/common@0.5.5
+
+## 0.6.4
+
+### Patch Changes
+
+- zod validator regex relaxation for email
+- Updated dependencies
+  - @forklaunch/common@0.5.4
+
+## 0.6.3
+
+### Patch Changes
+
+- Update validator types for files to use raw streams, lazy load openapi for universal sdk, and remove private members from otel
+- Updated dependencies
+  - @forklaunch/common@0.5.3
+
+## 0.6.2
+
+### Patch Changes
+
+- update package versions
+- Updated dependencies
+  - @forklaunch/common@0.5.2
+
+## 0.6.1
+
+### Patch Changes
+
+- bump internal packages
+- Updated dependencies
+  - @forklaunch/common@0.5.1
+
+## 0.6.0
+
+### Minor Changes
+
+- Adds more configuration options for application and routers. Additionally adds optional cluster support built-in (experimental)
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/common@0.5.0
+
 ## 0.5.4
 
 ### Patch Changes

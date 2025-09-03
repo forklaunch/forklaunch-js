@@ -13,13 +13,6 @@ import {
   Lifetime
 } from '@forklaunch/core/services';
 import {
-  BaseBillingPortalServiceSchemas,
-  BaseCheckoutSessionServiceSchemas,
-  BasePaymentLinkServiceSchemas,
-  BasePlanServiceSchemas,
-  BaseSubscriptionServiceSchemas
-} from '@forklaunch/implementation-billing-base/schemas';
-import {
   BaseBillingPortalService,
   BaseCheckoutSessionService,
   BasePaymentLinkService,
@@ -67,28 +60,6 @@ import {
   Plan,
   Subscription
 } from './persistence/entities';
-
-//! defines the schemas for the billing portal service
-export const BillingPortalSchemas = BaseBillingPortalServiceSchemas({
-  uuidId: true,
-  validator: schemaValidator
-});
-export const CheckoutSessionSchemas = BaseCheckoutSessionServiceSchemas({
-  uuidId: true,
-  validator: schemaValidator
-});
-export const PaymentLinkSchemas = BasePaymentLinkServiceSchemas({
-  uuidId: true,
-  validator: schemaValidator
-});
-export const PlanSchemas = BasePlanServiceSchemas({
-  uuidId: true,
-  validator: schemaValidator
-});
-export const SubscriptionSchemas = BaseSubscriptionServiceSchemas({
-  uuidId: true,
-  validator: schemaValidator
-});
 
 //! defines the configuration schema for the application
 const configInjector = createConfigInjector(schemaValidator, {

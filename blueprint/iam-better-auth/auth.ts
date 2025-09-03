@@ -1,9 +1,9 @@
+import { BetterAuthOptions } from '@forklaunch/better-auth';
 import { mikroOrmAdapter } from '@forklaunch/better-auth-mikro-orm-fork';
+import { openAPI } from '@forklaunch/better-auth/plugins';
 import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { MikroORM } from '@mikro-orm/core';
-import { BetterAuthOptions } from 'better-auth';
-import { openAPI } from 'better-auth/plugins';
 import { readFileSync } from 'fs';
 
 export type BetterAuthConfig = ReturnType<typeof betterAuthConfig>;

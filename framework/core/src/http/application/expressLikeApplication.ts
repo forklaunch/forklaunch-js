@@ -1,10 +1,11 @@
 import { EmptyObject } from '@forklaunch/common';
 import { AnySchemaValidator } from '@forklaunch/validator';
-import { CorsOptions } from 'cors';
 import { ExpressLikeRouter } from '../interfaces/expressLikeRouter.interface';
 import { cors } from '../middleware/request/cors.middleware';
 import { ForklaunchExpressLikeRouter } from '../router/expressLikeRouter';
 import { OpenTelemetryCollector } from '../telemetry/openTelemetryCollector';
+import { SessionObject } from '../types/contractDetails.types';
+import { ExpressLikeApplicationOptions } from '../types/expressLikeOptions';
 import { MetricsDefinition } from '../types/openTelemetryCollector.types';
 
 /**
@@ -20,6 +21,7 @@ export abstract class ForklaunchExpressLikeApplication<
   BaseRequest,
   BaseResponse,
   NextFunction,
+  Session extends SessionObject<SV>,
   FetchMap extends Record<string, unknown> = EmptyObject,
   Sdk extends Record<string, unknown> = EmptyObject
 > extends ForklaunchExpressLikeRouter<
@@ -30,6 +32,7 @@ export abstract class ForklaunchExpressLikeApplication<
   BaseRequest,
   BaseResponse,
   NextFunction,
+  Session,
   FetchMap,
   Sdk
 > {
@@ -43,16 +46,19 @@ export abstract class ForklaunchExpressLikeApplication<
     readonly internal: Server,
     readonly postEnrichMiddleware: RouterHandler[],
     readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
-    readonly appOptions?: {
-      cors?: CorsOptions;
-    }
+    readonly appOptions?: ExpressLikeApplicationOptions<SV, Session>
   ) {
     super(
       '/',
       schemaValidator,
       internal,
       postEnrichMiddleware,
-      openTelemetryCollector
+      openTelemetryCollector,
+      {
+        ...appOptions,
+        openapi: appOptions?.openapi !== false,
+        mcp: appOptions?.mcp !== false
+      }
     );
 
     this.internal.use(cors(this.appOptions?.cors ?? {}) as RouterHandler);

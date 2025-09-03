@@ -8,6 +8,7 @@ import {
   QueryObject,
   ResponsesObject,
   SchemaAuthMethods,
+  SessionObject,
   VersionSchema
 } from '@forklaunch/core/http';
 import {
@@ -93,13 +94,15 @@ export const delete_ = <
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
   const VersionedApi extends VersionSchema<SV, 'delete'>,
+  SessionSchema extends SessionObject<SV>,
   const Auth extends SchemaAuthMethods<
     SV,
     P,
     ReqBody,
     ReqQuery,
     ReqHeaders,
-    VersionSchema<SV, 'delete'>,
+    VersionedApi,
+    SessionSchema,
     Request<LocalsObj>
   >
 >(
@@ -117,6 +120,7 @@ export const delete_ = <
     ReqHeaders,
     ResHeaders,
     VersionedApi,
+    SessionSchema,
     Request<LocalsObj>,
     Auth
   >,
@@ -130,6 +134,7 @@ export const delete_ = <
     ResHeaders,
     LocalsObj,
     VersionedApi,
+    SessionSchema,
     Request<LocalsObj>,
     Response<LocalsObj>,
     MiddlewareNext
@@ -147,6 +152,7 @@ export const delete_ = <
     ResHeaders,
     LocalsObj,
     VersionedApi,
+    SessionSchema,
     Request<LocalsObj>,
     Response<LocalsObj>,
     MiddlewareNext,

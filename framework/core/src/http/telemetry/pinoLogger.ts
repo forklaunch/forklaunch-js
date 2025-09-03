@@ -2,7 +2,7 @@ import { isNever } from '@forklaunch/common';
 import { trace } from '@opentelemetry/api';
 import { AnyValueMap, logs } from '@opentelemetry/api-logs';
 import pino, { LevelWithSilent, LevelWithSilentOrString, Logger } from 'pino';
-import PinoPretty from 'pino-pretty';
+import * as PinoPretty from 'pino-pretty';
 import { isLoggerMeta } from '../guards/isLoggerMeta';
 import { LogFn, LoggerMeta } from '../types/openTelemetryCollector.types';
 
@@ -61,11 +61,56 @@ function normalizeLogArgs(
   return [metadata, message.trim()];
 }
 
+/**
+ * Safely formats arguments for pretty printing with error handling
+ * @param level - Log level
+ * @param args - Arguments to format
+ * @param timestamp - Optional timestamp
+ * @returns Formatted string or fallback message
+ */
+function safePrettyFormat(
+  level: LevelWithSilent,
+  args: LoggableArg[],
+  timestamp?: string
+): string {
+  try {
+    const [metadata, message] = normalizeLogArgs(args);
+
+    // Return formatted message with level and timestamp
+    const formattedTimestamp = timestamp || new Date().toISOString();
+    return `[${formattedTimestamp}] ${level.toUpperCase()}: ${message}${
+      Object.keys(metadata).length > 0
+        ? `\n${JSON.stringify(metadata, null, 2)}`
+        : ''
+    }`;
+  } catch (error) {
+    // Ultimate fallback for any serialization errors
+    const fallbackMessage = args
+      .map((arg) => {
+        try {
+          if (typeof arg === 'string') return arg;
+          if (arg === null) return 'null';
+          if (arg === undefined) return 'undefined';
+          return JSON.stringify(arg);
+        } catch {
+          return '[Circular/Non-serializable Object]';
+        }
+      })
+      .join(' ');
+
+    return `[${new Date().toISOString()}] ${level.toUpperCase()}: ${fallbackMessage} [Pretty Print Error: ${error instanceof Error ? error.message : 'Unknown error'}]`;
+  }
+}
+
 class PinoLogger {
   private pinoLogger: Logger;
   private meta: AnyValueMap;
   private prettyPrinter = PinoPretty.prettyFactory({
-    colorize: true
+    colorize: true,
+    // Add error handling options
+    errorLikeObjectKeys: ['err', 'error'],
+    ignore: 'pid,hostname',
+    translateTime: 'SYS:standard'
   });
 
   constructor(level: LevelWithSilentOrString, meta: AnyValueMap = {}) {
@@ -79,7 +124,12 @@ class PinoLogger {
       timestamp: pino.stdTimeFunctions.isoTime,
       transport: {
         target: 'pino-pretty',
-        options: { colorize: true }
+        options: {
+          colorize: true,
+          errorLikeObjectKeys: ['err', 'error'],
+          ignore: 'pid,hostname',
+          translateTime: 'SYS:standard'
+        }
       }
     });
     this.meta = meta;
@@ -116,12 +166,23 @@ class PinoLogger {
     };
 
     this.pinoLogger[level](...normalizeLogArgs(filteredArgs));
-    logs.getLogger(process.env.OTEL_SERVICE_NAME ?? 'unknown').emit({
-      severityText: level,
-      severityNumber: mapSeverity(level),
-      body: this.prettyPrinter(filteredArgs),
-      attributes: { ...this.meta, ...meta }
-    });
+
+    const formattedBody = safePrettyFormat(level, filteredArgs);
+
+    try {
+      logs.getLogger(process.env.OTEL_SERVICE_NAME ?? 'unknown').emit({
+        severityText: level,
+        severityNumber: mapSeverity(level),
+        body: formattedBody,
+        attributes: { ...this.meta, ...meta }
+      });
+    } catch (error) {
+      console.error('Failed to emit OpenTelemetry log:', error);
+      console.log(
+        `[${new Date().toISOString()}] ${level.toUpperCase()}:`,
+        ...filteredArgs
+      );
+    }
   }
 
   error: LogFn = (

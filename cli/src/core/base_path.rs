@@ -91,6 +91,36 @@ fn find_base_path(
     None
 }
 
+pub(crate) fn find_nearest_manifest_from(start: &Path) -> Option<PathBuf> {
+    let mut base_path = start.canonicalize().ok()?;
+    loop {
+        let manifest = base_path.join(".forklaunch").join("manifest.toml");
+        if manifest.exists() {
+            return Some(base_path.clone());
+        }
+        match base_path.parent() {
+            Some(parent) => base_path = parent.to_path_buf(),
+            None => break,
+        }
+    }
+    None
+}
+
+pub(crate) fn find_nearest_manifest_root_unbounded() -> Option<PathBuf> {
+    let mut base_path = current_dir().ok()?;
+    loop {
+        let manifest = base_path.join(".forklaunch").join("manifest.toml");
+        if manifest.exists() {
+            return Some(base_path);
+        }
+        match base_path.parent() {
+            Some(parent) => base_path = parent.to_path_buf(),
+            None => break,
+        }
+    }
+    None
+}
+
 pub(crate) fn prompt_base_path(
     line_editor: &mut Editor<ArrayCompleter, DefaultHistory>,
     stdout: &mut StandardStream,

@@ -4,7 +4,8 @@ import {
   ForklaunchSendableData,
   ForklaunchStatusResponse,
   ParamsDictionary,
-  ParsedQs
+  ParsedQs,
+  SessionObject
 } from '@forklaunch/core/http';
 import {
   Request as ExpressRequest,
@@ -30,8 +31,17 @@ export interface InternalRequest<
   ReqQuery extends Record<string, unknown>,
   ReqHeaders extends Record<string, unknown>,
   LocalsObj extends Record<string, unknown>,
-  Version extends string
-> extends ForklaunchRequest<SV, P, ReqBody, ReqQuery, ReqHeaders, Version>,
+  Version extends string,
+  SessionSchema extends SessionObject<SV>
+> extends ForklaunchRequest<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      Version,
+      SessionSchema
+    >,
     Omit<
       ExpressRequest<LocalsObj>,
       'method' | 'params' | 'query' | 'headers' | 'path'

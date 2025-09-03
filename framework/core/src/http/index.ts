@@ -1,5 +1,7 @@
 export type { ParsedQs } from 'qs';
 export * from './application/expressLikeApplication';
+export * from './cluster/cluster.types';
+export * from './cluster/isPortBound';
 export * from './guards/isForklaunchRequest';
 export * from './guards/isForklaunchRouter';
 export * from './handlers/delete';
@@ -31,6 +33,7 @@ export * from './telemetry/recordMetric';
 export * from './types/apiDefinition.types';
 export * from './types/contractDetails.types';
 export * from './types/docsConfiguration.types';
+export * from './types/expressLikeOptions';
 export * from './types/expressLikeRouter.types';
 export * from './types/openTelemetryCollector.types';
 export * from './types/router.types';

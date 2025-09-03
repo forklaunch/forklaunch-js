@@ -2,8 +2,10 @@ import { AnySchemaValidator } from '@forklaunch/validator';
 import {
   HttpContractDetails,
   Method,
-  PathParamHttpContractDetails
+  PathParamHttpContractDetails,
+  SessionObject
 } from './contractDetails.types';
+import { ExpressLikeRouterOptions } from './expressLikeOptions';
 
 export interface ConstrainedForklaunchRouter<
   SV extends AnySchemaValidator,
@@ -32,6 +34,8 @@ export interface ForklaunchRouter<SV extends AnySchemaValidator> {
   sdkName?: string;
   /** The SDK paths for the router */
   sdkPaths: Record<string, string>;
+  /** Options for the router */
+  routerOptions?: ExpressLikeRouterOptions<SV, SessionObject<SV>>;
 }
 
 /**

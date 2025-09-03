@@ -1,46 +1,45 @@
-import { SchemaValidator } from '@forklaunch/blueprint-core';
-import { RequestMapper, ResponseMapper } from '@forklaunch/core/mappers';
+import { schemaValidator } from '@forklaunch/blueprint-core';
+import { requestMapper, responseMapper } from '@forklaunch/core/mappers';
 import { EntityManager } from '@mikro-orm/core';
 import { Permission } from '../../persistence/entities/permission.entity';
-import { PermissionSchemas } from '../../registrations';
+import { PermissionSchemas } from '../schemas';
 
-export class CreatePermissionMapper extends RequestMapper<
+export const CreatePermissionMapper = requestMapper(
+  schemaValidator,
+  PermissionSchemas.CreatePermissionSchema,
   Permission,
-  SchemaValidator
-> {
-  schema = PermissionSchemas.CreatePermissionSchema;
-
-  async toEntity(em: EntityManager): Promise<Permission> {
-    return Permission.create(
-      {
-        ...this.dto,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      em
-    );
+  {
+    toEntity: async (dto, em: EntityManager) => {
+      return Permission.create(
+        {
+          ...dto,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        em
+      );
+    }
   }
-}
+);
 
-export class UpdatePermissionMapper extends RequestMapper<
+export const UpdatePermissionMapper = requestMapper(
+  schemaValidator,
+  PermissionSchemas.UpdatePermissionSchema,
   Permission,
-  SchemaValidator
-> {
-  schema = PermissionSchemas.UpdatePermissionSchema;
-
-  async toEntity(em: EntityManager): Promise<Permission> {
-    return Permission.update(this.dto, em);
+  {
+    toEntity: async (dto, em: EntityManager) => {
+      return Permission.update(dto, em);
+    }
   }
-}
+);
 
-export class PermissionMapper extends ResponseMapper<
+export const PermissionMapper = responseMapper(
+  schemaValidator,
+  PermissionSchemas.PermissionSchema,
   Permission,
-  SchemaValidator
-> {
-  schema = PermissionSchemas.PermissionSchema;
-
-  async fromEntity(entity: Permission): Promise<this> {
-    this.dto = await entity.read();
-    return this;
+  {
+    toDto: async (entity: Permission) => {
+      return await entity.read();
+    }
   }
-}
+);

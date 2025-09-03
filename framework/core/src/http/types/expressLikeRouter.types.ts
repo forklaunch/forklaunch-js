@@ -20,6 +20,7 @@ import {
   QueryObject,
   ResponsesObject,
   SchemaAuthMethods,
+  SessionObject,
   VersionSchema
 } from './contractDetails.types';
 import { ConstrainedForklaunchRouter } from './router.types';
@@ -31,6 +32,7 @@ export interface LiveTypeRouteDefinition<
   ContractMethod extends Method,
   RouterHandler,
   Internal extends ExpressLikeRouter<RouterHandler, Internal>,
+  Session extends SessionObject<SV>,
   BaseRequest,
   BaseResponse,
   NextFunction,
@@ -42,7 +44,6 @@ export interface LiveTypeRouteDefinition<
   <
     Name extends string,
     Path extends `/${string}`,
-    SuppliedPath extends Path,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
     ReqBody extends Body<SV>,
@@ -50,19 +51,24 @@ export interface LiveTypeRouteDefinition<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
-    VersionedApi extends VersionSchema<SV, ContractMethod>,
-    Auth extends SchemaAuthMethods<
+    const VersionedApi extends VersionSchema<SV, ContractMethod>,
+    SessionSchema extends SessionObject<SV>,
+    ResolvedSession extends SessionObject<SV> extends SessionSchema
+      ? Session
+      : SessionSchema,
+    const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
       VersionedApi,
+      ResolvedSession,
       BaseRequest
     >
   >(
-    path: PathMatch<SuppliedPath, Path>,
-    typedHandler: TypedHandler<
+    path: Path,
+    contractDetails: ContractDetails<
       SV,
       Name,
       ContractMethod,
@@ -73,13 +79,26 @@ export interface LiveTypeRouteDefinition<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
+      VersionedApi,
+      ResolvedSession,
+      BaseRequest,
+      Auth
+    >,
+    ...middleware: ExpressLikeSchemaHandler<
+      SV,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
       LocalsObj,
       VersionedApi,
+      ResolvedSession,
       BaseRequest,
       BaseResponse,
-      NextFunction,
-      Auth
-    >
+      NextFunction
+    >[]
   ): ChainableRouter & {
     _fetchMap: Prettify<
       ChainableRouter['_fetchMap'] extends Record<
@@ -158,14 +177,19 @@ export interface LiveTypeRouteDefinition<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
-    VersionedApi extends VersionSchema<SV, ContractMethod>,
-    Auth extends SchemaAuthMethods<
+    const VersionedApi extends VersionSchema<SV, ContractMethod>,
+    SessionSchema extends SessionObject<SV>,
+    ResolvedSession extends SessionObject<SV> extends SessionSchema
+      ? Session
+      : SessionSchema,
+    const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
       VersionedApi,
+      ResolvedSession,
       BaseRequest
     >
   >(
@@ -180,6 +204,7 @@ export interface LiveTypeRouteDefinition<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      ResolvedSession,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -195,6 +220,7 @@ export interface LiveTypeRouteDefinition<
         ResHeaders,
         LocalsObj,
         VersionedApi,
+        ResolvedSession,
         BaseRequest,
         BaseResponse,
         NextFunction
@@ -212,6 +238,7 @@ export interface LiveTypeRouteDefinition<
         ResHeaders,
         LocalsObj,
         VersionedApi,
+        ResolvedSession,
         BaseRequest,
         BaseResponse,
         NextFunction,
@@ -288,6 +315,7 @@ export interface LiveTypeRouteDefinition<
   <
     Name extends string,
     Path extends `/${string}`,
+    SuppliedPath extends Path,
     P extends ParamsObject<SV>,
     ResBodyMap extends ResponsesObject<SV>,
     ReqBody extends Body<SV>,
@@ -295,19 +323,24 @@ export interface LiveTypeRouteDefinition<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
-    VersionedApi extends VersionSchema<SV, ContractMethod>,
-    Auth extends SchemaAuthMethods<
+    const VersionedApi extends VersionSchema<SV, ContractMethod>,
+    SessionSchema extends SessionObject<SV>,
+    ResolvedSession extends SessionObject<SV> extends SessionSchema
+      ? Session
+      : SessionSchema,
+    const Auth extends SchemaAuthMethods<
       SV,
       P,
       ReqBody,
       ReqQuery,
       ReqHeaders,
       VersionedApi,
+      ResolvedSession,
       BaseRequest
     >
   >(
-    path: Path,
-    contractDetails: ContractDetails<
+    path: PathMatch<SuppliedPath, Path>,
+    typedHandler: TypedHandler<
       SV,
       Name,
       ContractMethod,
@@ -318,24 +351,14 @@ export interface LiveTypeRouteDefinition<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
-      VersionedApi,
-      BaseRequest,
-      Auth
-    >,
-    ...middleware: ExpressLikeSchemaHandler<
-      SV,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders,
       LocalsObj,
       VersionedApi,
+      ResolvedSession,
       BaseRequest,
       BaseResponse,
-      NextFunction
-    >[]
+      NextFunction,
+      Auth
+    >
   ): ChainableRouter & {
     _fetchMap: Prettify<
       ChainableRouter['_fetchMap'] extends Record<
@@ -407,11 +430,161 @@ export interface LiveTypeRouteDefinition<
 export interface TypedMiddlewareDefinition<
   ChainableRouter,
   SV extends AnySchemaValidator,
+  Session extends SessionObject<SV>,
   BaseRequest,
   BaseResponse,
   NextFunction,
   RouterHandler
 > {
+  <
+    Name extends string,
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>,
+    VersionedApi extends VersionSchema<SV, 'middleware'>,
+    SessionSchema extends SessionObject<SV>,
+    ResolvedSession extends SessionObject<SV> extends SessionSchema
+      ? Session
+      : SessionSchema,
+    Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      VersionedApi,
+      ResolvedSession,
+      BaseRequest
+    >
+  >(
+    contractDetails: ContractDetails<
+      SV,
+      Name,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      VersionedApi,
+      ResolvedSession,
+      BaseRequest,
+      Auth
+    >,
+    middleware: ExpressLikeSchemaHandler<
+      SV,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj,
+      VersionedApi,
+      ResolvedSession,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
+    >,
+    ...middlewares: ExpressLikeSchemaHandler<
+      SV,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj,
+      VersionedApi,
+      ResolvedSession,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
+    >[]
+  ): ChainableRouter;
+
+  <
+    Name extends string,
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>,
+    VersionedApi extends VersionSchema<SV, 'middleware'>,
+    SessionSchema extends SessionObject<SV>,
+    ResolvedSession extends SessionObject<SV> extends SessionSchema
+      ? Session
+      : SessionSchema,
+    Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      VersionedApi,
+      ResolvedSession,
+      BaseRequest
+    >
+  >(
+    path: Path,
+    contractDetails: ContractDetails<
+      SV,
+      Name,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      VersionedApi,
+      ResolvedSession,
+      BaseRequest,
+      Auth
+    >,
+    middleware: ExpressLikeSchemaHandler<
+      SV,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj,
+      VersionedApi,
+      ResolvedSession,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
+    >,
+    ...middlewares: ExpressLikeSchemaHandler<
+      SV,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj,
+      VersionedApi,
+      ResolvedSession,
+      BaseRequest,
+      BaseResponse,
+      NextFunction
+    >[]
+  ): ChainableRouter;
+
   (
     middleware: RouterHandler,
     ...otherMiddleware: RouterHandler[]
@@ -429,6 +602,10 @@ export interface TypedMiddlewareDefinition<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     VersionedApi extends VersionSchema<SV, 'middleware'>,
+    SessionSchema extends SessionObject<SV>,
+    ResolvedSession extends SessionObject<SV> extends SessionSchema
+      ? Session
+      : SessionSchema,
     Auth extends SchemaAuthMethods<
       SV,
       P,
@@ -436,15 +613,13 @@ export interface TypedMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
+      ResolvedSession,
       BaseRequest
     >
   >(
     path: PathMatch<SuppliedPath, Path>,
-    typedHandler: TypedHandler<
+    middleware: ExpressLikeSchemaHandler<
       SV,
-      Name,
-      'middleware',
-      Path,
       P,
       ResBodyMap,
       ReqBody,
@@ -453,11 +628,47 @@ export interface TypedMiddlewareDefinition<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      ResolvedSession,
       BaseRequest,
       BaseResponse,
-      NextFunction,
-      Auth
-    >
+      NextFunction
+    >,
+    ...middlewareAndTypedHandler: [
+      ...ExpressLikeSchemaHandler<
+        SV,
+        P,
+        ResBodyMap,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders,
+        ResHeaders,
+        LocalsObj,
+        VersionedApi,
+        ResolvedSession,
+        BaseRequest,
+        BaseResponse,
+        NextFunction
+      >[],
+      TypedHandler<
+        SV,
+        Name,
+        'middleware',
+        Path,
+        P,
+        ResBodyMap,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders,
+        ResHeaders,
+        LocalsObj,
+        VersionedApi,
+        ResolvedSession,
+        BaseRequest,
+        BaseResponse,
+        NextFunction,
+        Auth
+      >
+    ]
   ): ChainableRouter;
 
   <
@@ -471,6 +682,10 @@ export interface TypedMiddlewareDefinition<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     VersionedApi extends VersionSchema<SV, 'middleware'>,
+    SessionSchema extends SessionObject<SV>,
+    ResolvedSession extends SessionObject<SV> extends SessionSchema
+      ? Session
+      : SessionSchema,
     Auth extends SchemaAuthMethods<
       SV,
       P,
@@ -478,14 +693,12 @@ export interface TypedMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
+      ResolvedSession,
       BaseRequest
     >
   >(
-    typedHandler: TypedHandler<
+    middleware: ExpressLikeSchemaHandler<
       SV,
-      Name,
-      'middleware',
-      Path,
       P,
       ResBodyMap,
       ReqBody,
@@ -494,13 +707,50 @@ export interface TypedMiddlewareDefinition<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      ResolvedSession,
       BaseRequest,
       BaseResponse,
-      NextFunction,
-      Auth
-    >
+      NextFunction
+    >,
+    ...middlewareAndTypedHandler: [
+      ...ExpressLikeSchemaHandler<
+        SV,
+        P,
+        ResBodyMap,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders,
+        ResHeaders,
+        LocalsObj,
+        VersionedApi,
+        ResolvedSession,
+        BaseRequest,
+        BaseResponse,
+        NextFunction
+      >[],
+      TypedHandler<
+        SV,
+        Name,
+        'middleware',
+        Path,
+        P,
+        ResBodyMap,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders,
+        ResHeaders,
+        LocalsObj,
+        VersionedApi,
+        ResolvedSession,
+        BaseRequest,
+        BaseResponse,
+        NextFunction,
+        Auth
+      >
+    ]
   ): ChainableRouter;
 
+  // TypedHandler overloads moved to the end
   <
     Name extends string,
     Path extends `/${string}`,
@@ -513,6 +763,10 @@ export interface TypedMiddlewareDefinition<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     VersionedApi extends VersionSchema<SV, 'middleware'>,
+    SessionSchema extends SessionObject<SV>,
+    ResolvedSession extends SessionObject<SV> extends SessionSchema
+      ? Session
+      : SessionSchema,
     Auth extends SchemaAuthMethods<
       SV,
       P,
@@ -520,154 +774,12 @@ export interface TypedMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
+      ResolvedSession,
       BaseRequest
     >
   >(
     path: PathMatch<SuppliedPath, Path>,
-    middleware: ExpressLikeSchemaHandler<
-      SV,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders,
-      LocalsObj,
-      VersionedApi,
-      BaseRequest,
-      BaseResponse,
-      NextFunction
-    >,
-    ...middlewareAndTypedHandler: [
-      ...ExpressLikeSchemaHandler<
-        SV,
-        P,
-        ResBodyMap,
-        ReqBody,
-        ReqQuery,
-        ReqHeaders,
-        ResHeaders,
-        LocalsObj,
-        VersionedApi,
-        BaseRequest,
-        BaseResponse,
-        NextFunction
-      >[],
-      TypedHandler<
-        SV,
-        Name,
-        'middleware',
-        Path,
-        P,
-        ResBodyMap,
-        ReqBody,
-        ReqQuery,
-        ReqHeaders,
-        ResHeaders,
-        LocalsObj,
-        VersionedApi,
-        BaseRequest,
-        BaseResponse,
-        NextFunction,
-        Auth
-      >
-    ]
-  ): ChainableRouter;
-
-  <
-    Name extends string,
-    Path extends `/${string}`,
-    P extends ParamsObject<SV>,
-    ResBodyMap extends ResponsesObject<SV>,
-    ReqBody extends Body<SV>,
-    ReqQuery extends QueryObject<SV>,
-    ReqHeaders extends HeadersObject<SV>,
-    ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>,
-    VersionedApi extends VersionSchema<SV, 'middleware'>,
-    Auth extends SchemaAuthMethods<
-      SV,
-      P,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      VersionedApi,
-      BaseRequest
-    >
-  >(
-    middleware: ExpressLikeSchemaHandler<
-      SV,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders,
-      LocalsObj,
-      VersionedApi,
-      BaseRequest,
-      BaseResponse,
-      NextFunction
-    >,
-    ...middlewareAndTypedHandler: [
-      ...ExpressLikeSchemaHandler<
-        SV,
-        P,
-        ResBodyMap,
-        ReqBody,
-        ReqQuery,
-        ReqHeaders,
-        ResHeaders,
-        LocalsObj,
-        VersionedApi,
-        BaseRequest,
-        BaseResponse,
-        NextFunction
-      >[],
-      TypedHandler<
-        SV,
-        Name,
-        'middleware',
-        Path,
-        P,
-        ResBodyMap,
-        ReqBody,
-        ReqQuery,
-        ReqHeaders,
-        ResHeaders,
-        LocalsObj,
-        VersionedApi,
-        BaseRequest,
-        BaseResponse,
-        NextFunction,
-        Auth
-      >
-    ]
-  ): ChainableRouter;
-
-  <
-    Name extends string,
-    Path extends `/${string}`,
-    P extends ParamsObject<SV>,
-    ResBodyMap extends ResponsesObject<SV>,
-    ReqBody extends Body<SV>,
-    ReqQuery extends QueryObject<SV>,
-    ReqHeaders extends HeadersObject<SV>,
-    ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>,
-    VersionedApi extends VersionSchema<SV, 'middleware'>,
-    Auth extends SchemaAuthMethods<
-      SV,
-      P,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      VersionedApi,
-      BaseRequest
-    >
-  >(
-    path: Path,
-    contractDetails: ContractDetails<
+    typedHandler: TypedHandler<
       SV,
       Name,
       'middleware',
@@ -678,38 +790,14 @@ export interface TypedMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
+      LocalsObj,
       VersionedApi,
+      ResolvedSession,
       BaseRequest,
+      BaseResponse,
+      NextFunction,
       Auth
-    >,
-    middleware: ExpressLikeSchemaHandler<
-      SV,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders,
-      LocalsObj,
-      VersionedApi,
-      BaseRequest,
-      BaseResponse,
-      NextFunction
-    >,
-    ...middlewares: ExpressLikeSchemaHandler<
-      SV,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders,
-      LocalsObj,
-      VersionedApi,
-      BaseRequest,
-      BaseResponse,
-      NextFunction
-    >[]
+    >
   ): ChainableRouter;
 
   <
@@ -723,6 +811,10 @@ export interface TypedMiddlewareDefinition<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     VersionedApi extends VersionSchema<SV, 'middleware'>,
+    SessionSchema extends SessionObject<SV>,
+    ResolvedSession extends SessionObject<SV> extends SessionSchema
+      ? Session
+      : SessionSchema,
     Auth extends SchemaAuthMethods<
       SV,
       P,
@@ -730,10 +822,11 @@ export interface TypedMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
+      ResolvedSession,
       BaseRequest
     >
   >(
-    contractDetails: ContractDetails<
+    typedHandler: TypedHandler<
       SV,
       Name,
       'middleware',
@@ -744,38 +837,14 @@ export interface TypedMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       ResHeaders,
+      LocalsObj,
       VersionedApi,
+      ResolvedSession,
       BaseRequest,
+      BaseResponse,
+      NextFunction,
       Auth
-    >,
-    middleware: ExpressLikeSchemaHandler<
-      SV,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders,
-      LocalsObj,
-      VersionedApi,
-      BaseRequest,
-      BaseResponse,
-      NextFunction
-    >,
-    ...middlewares: ExpressLikeSchemaHandler<
-      SV,
-      P,
-      ResBodyMap,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      ResHeaders,
-      LocalsObj,
-      VersionedApi,
-      BaseRequest,
-      BaseResponse,
-      NextFunction
-    >[]
+    >
   ): ChainableRouter;
 }
 
@@ -788,12 +857,14 @@ export interface TypedNestableMiddlewareDefinition<
   RouterHandler,
   Internal extends ExpressLikeRouter<RouterHandler, Internal>,
   SV extends AnySchemaValidator,
+  Session extends SessionObject<SV>,
   BaseRequest,
   BaseResponse,
   NextFunction
 > extends TypedMiddlewareDefinition<
     ChainableRouter,
     SV,
+    Session,
     BaseRequest,
     BaseResponse,
     NextFunction,
@@ -879,197 +950,6 @@ export interface TypedNestableMiddlewareDefinition<
     ReqHeaders extends HeadersObject<SV>,
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
-    VersionedApi extends VersionSchema<SV, 'middleware'>,
-    Router extends ConstrainedForklaunchRouter<SV, RouterHandler>,
-    Auth extends SchemaAuthMethods<
-      SV,
-      P,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      VersionedApi,
-      BaseRequest
-    >
-  >(
-    path: `/${string}` extends Router['basePath']
-      ? Path
-      : PathMatch<Path, Router['basePath']>,
-    middleware:
-      | ExpressLikeSchemaHandler<
-          SV,
-          P,
-          ResBodyMap,
-          ReqBody,
-          ReqQuery,
-          ReqHeaders,
-          ResHeaders,
-          LocalsObj,
-          VersionedApi,
-          BaseRequest,
-          BaseResponse,
-          NextFunction
-        >
-      | Router,
-    ...middlewareAndTypedHandler: [
-      ...(
-        | ExpressLikeSchemaHandler<
-            SV,
-            P,
-            ResBodyMap,
-            ReqBody,
-            ReqQuery,
-            ReqHeaders,
-            ResHeaders,
-            LocalsObj,
-            VersionedApi,
-            BaseRequest,
-            BaseResponse,
-            NextFunction
-          >
-        | Router
-      )[],
-      TypedHandler<
-        SV,
-        Name,
-        'middleware',
-        Path,
-        P,
-        ResBodyMap,
-        ReqBody,
-        ReqQuery,
-        ReqHeaders,
-        ResHeaders,
-        LocalsObj,
-        VersionedApi,
-        BaseRequest,
-        BaseResponse,
-        NextFunction,
-        Auth
-      >
-    ]
-  ): ChainableRouter & {
-    _fetchMap: Prettify<
-      ChainableRouter['_fetchMap'] & {
-        [Key in keyof Router['_fetchMap'] as Key extends string
-          ? SanitizePathSlashes<`${ChainableRouter['basePath']}${Key}`>
-          : never]: Router['_fetchMap'][Key];
-      }
-    >;
-    sdk: Prettify<
-      ChainableRouter['sdk'] & {
-        [K in PrettyCamelCase<
-          Router['sdkName'] extends string
-            ? Router['sdkName']
-            : Router['basePath']
-        >]: Prettify<Router['sdk']>;
-      }
-    >;
-  };
-
-  <
-    Name extends string,
-    Path extends `/${string}`,
-    P extends ParamsObject<SV>,
-    ResBodyMap extends ResponsesObject<SV>,
-    ReqBody extends Body<SV>,
-    ReqQuery extends QueryObject<SV>,
-    ReqHeaders extends HeadersObject<SV>,
-    ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>,
-    VersionedApi extends VersionSchema<SV, 'middleware'>,
-    Router extends ConstrainedForklaunchRouter<SV, RouterHandler>,
-    Auth extends SchemaAuthMethods<
-      SV,
-      P,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      VersionedApi,
-      BaseRequest
-    >
-  >(
-    middleware:
-      | ExpressLikeSchemaHandler<
-          SV,
-          P,
-          ResBodyMap,
-          ReqBody,
-          ReqQuery,
-          ReqHeaders,
-          ResHeaders,
-          LocalsObj,
-          VersionedApi,
-          BaseRequest,
-          BaseResponse,
-          NextFunction
-        >
-      | Router,
-    ...middlewareAndTypedHandler: [
-      ...(
-        | ExpressLikeSchemaHandler<
-            SV,
-            P,
-            ResBodyMap,
-            ReqBody,
-            ReqQuery,
-            ReqHeaders,
-            ResHeaders,
-            LocalsObj,
-            VersionedApi,
-            BaseRequest,
-            BaseResponse,
-            NextFunction
-          >
-        | Router
-      )[],
-      TypedHandler<
-        SV,
-        Name,
-        'middleware',
-        Path,
-        P,
-        ResBodyMap,
-        ReqBody,
-        ReqQuery,
-        ReqHeaders,
-        ResHeaders,
-        LocalsObj,
-        VersionedApi,
-        BaseRequest,
-        BaseResponse,
-        NextFunction,
-        Auth
-      >
-    ]
-  ): ChainableRouter & {
-    _fetchMap: Prettify<
-      ChainableRouter['_fetchMap'] & {
-        [Key in keyof Router['_fetchMap'] as Key extends string
-          ? SanitizePathSlashes<`${ChainableRouter['basePath']}${Key}`>
-          : never]: Router['_fetchMap'][Key];
-      }
-    >;
-    sdk: Prettify<
-      ChainableRouter['sdk'] & {
-        [K in PrettyCamelCase<
-          Router['sdkName'] extends string
-            ? Router['sdkName']
-            : Router['basePath']
-        >]: Prettify<Router['sdk']>;
-      }
-    >;
-  };
-
-  <
-    Name extends string,
-    Path extends `/${string}`,
-    P extends ParamsObject<SV>,
-    ResBodyMap extends ResponsesObject<SV>,
-    ReqBody extends Body<SV>,
-    ReqQuery extends QueryObject<SV>,
-    ReqHeaders extends HeadersObject<SV>,
-    ResHeaders extends HeadersObject<SV>,
-    LocalsObj extends Record<string, unknown>,
     Router extends ConstrainedForklaunchRouter<SV, RouterHandler>,
     VersionedApi extends VersionSchema<SV, 'middleware'>,
     Auth extends SchemaAuthMethods<
@@ -1079,12 +959,10 @@ export interface TypedNestableMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
+      Session,
       BaseRequest
     >
   >(
-    path: `/${string}` extends Router['basePath']
-      ? Path
-      : PathMatch<Path, Router['basePath']>,
     contractDetails: ContractDetails<
       SV,
       Name,
@@ -1097,6 +975,7 @@ export interface TypedNestableMiddlewareDefinition<
       ReqHeaders,
       ResHeaders,
       VersionedApi,
+      Session,
       BaseRequest,
       Auth
     >,
@@ -1111,6 +990,7 @@ export interface TypedNestableMiddlewareDefinition<
           ResHeaders,
           LocalsObj,
           VersionedApi,
+          Session,
           BaseRequest,
           BaseResponse,
           NextFunction
@@ -1127,6 +1007,7 @@ export interface TypedNestableMiddlewareDefinition<
           ResHeaders,
           LocalsObj,
           VersionedApi,
+          Session,
           BaseRequest,
           BaseResponse,
           NextFunction
@@ -1171,9 +1052,111 @@ export interface TypedNestableMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
+      Session,
       BaseRequest
     >
   >(
+    middleware:
+      | ExpressLikeSchemaHandler<
+          SV,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj,
+          VersionedApi,
+          Session,
+          BaseRequest,
+          BaseResponse,
+          NextFunction
+        >
+      | Router,
+    ...middlewareAndTypedHandler: [
+      ...(
+        | ExpressLikeSchemaHandler<
+            SV,
+            P,
+            ResBodyMap,
+            ReqBody,
+            ReqQuery,
+            ReqHeaders,
+            ResHeaders,
+            LocalsObj,
+            VersionedApi,
+            Session,
+            BaseRequest,
+            BaseResponse,
+            NextFunction
+          >
+        | Router
+      )[],
+      TypedHandler<
+        SV,
+        Name,
+        'middleware',
+        Path,
+        P,
+        ResBodyMap,
+        ReqBody,
+        ReqQuery,
+        ReqHeaders,
+        ResHeaders,
+        LocalsObj,
+        VersionedApi,
+        Session,
+        BaseRequest,
+        BaseResponse,
+        NextFunction,
+        Auth
+      >
+    ]
+  ): ChainableRouter & {
+    _fetchMap: Prettify<
+      ChainableRouter['_fetchMap'] & {
+        [Key in keyof Router['_fetchMap'] as Key extends string
+          ? SanitizePathSlashes<`${ChainableRouter['basePath']}${Key}`>
+          : never]: Router['_fetchMap'][Key];
+      }
+    >;
+    sdk: Prettify<
+      ChainableRouter['sdk'] & {
+        [K in PrettyCamelCase<
+          Router['sdkName'] extends string
+            ? Router['sdkName']
+            : Router['basePath']
+        >]: Prettify<Router['sdk']>;
+      }
+    >;
+  };
+
+  <
+    Name extends string,
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>,
+    Router extends ConstrainedForklaunchRouter<SV, RouterHandler>,
+    VersionedApi extends VersionSchema<SV, 'middleware'>,
+    Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      VersionedApi,
+      Session,
+      BaseRequest
+    >
+  >(
+    path: `/${string}` extends Router['basePath']
+      ? Path
+      : PathMatch<Path, Router['basePath']>,
     contractDetails: ContractDetails<
       SV,
       Name,
@@ -1186,6 +1169,7 @@ export interface TypedNestableMiddlewareDefinition<
       ReqHeaders,
       ResHeaders,
       VersionedApi,
+      Session,
       BaseRequest,
       Auth
     >,
@@ -1200,6 +1184,7 @@ export interface TypedNestableMiddlewareDefinition<
           ResHeaders,
           LocalsObj,
           VersionedApi,
+          Session,
           BaseRequest,
           BaseResponse,
           NextFunction
@@ -1216,12 +1201,231 @@ export interface TypedNestableMiddlewareDefinition<
           ResHeaders,
           LocalsObj,
           VersionedApi,
+          Session,
           BaseRequest,
           BaseResponse,
           NextFunction
         >
       | Router
     )[]
+  ): ChainableRouter & {
+    _fetchMap: Prettify<
+      ChainableRouter['_fetchMap'] & {
+        [Key in keyof Router['_fetchMap'] as Key extends string
+          ? SanitizePathSlashes<`${ChainableRouter['basePath']}${Key}`>
+          : never]: Router['_fetchMap'][Key];
+      }
+    >;
+    sdk: Prettify<
+      ChainableRouter['sdk'] & {
+        [K in PrettyCamelCase<
+          Router['sdkName'] extends string
+            ? Router['sdkName']
+            : Router['basePath']
+        >]: Prettify<Router['sdk']>;
+      }
+    >;
+  };
+
+  <
+    Name extends string,
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>,
+    Router extends ConstrainedForklaunchRouter<SV, RouterHandler>,
+    VersionedApi extends VersionSchema<SV, 'middleware'>,
+    Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      VersionedApi,
+      Session,
+      BaseRequest
+    >
+  >(
+    contractDetails: ContractDetails<
+      SV,
+      Name,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      VersionedApi,
+      Session,
+      BaseRequest,
+      Auth
+    >,
+    middleware:
+      | ExpressLikeSchemaHandler<
+          SV,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj,
+          VersionedApi,
+          Session,
+          BaseRequest,
+          BaseResponse,
+          NextFunction
+        >
+      | Router,
+    ...middlewares: (
+      | ExpressLikeSchemaHandler<
+          SV,
+          P,
+          ResBodyMap,
+          ReqBody,
+          ReqQuery,
+          ReqHeaders,
+          ResHeaders,
+          LocalsObj,
+          VersionedApi,
+          Session,
+          BaseRequest,
+          BaseResponse,
+          NextFunction
+        >
+      | Router
+    )[]
+  ): ChainableRouter & {
+    _fetchMap: Prettify<
+      ChainableRouter['_fetchMap'] & {
+        [Key in keyof Router['_fetchMap'] as Key extends string
+          ? SanitizePathSlashes<`${ChainableRouter['basePath']}${Key}`>
+          : never]: Router['_fetchMap'][Key];
+      }
+    >;
+    sdk: Prettify<
+      ChainableRouter['sdk'] & {
+        [K in PrettyCamelCase<
+          Router['sdkName'] extends string
+            ? Router['sdkName']
+            : Router['basePath']
+        >]: Prettify<Router['sdk']>;
+      }
+    >;
+  };
+
+  <
+    Name extends string,
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>,
+    Router extends ConstrainedForklaunchRouter<SV, RouterHandler>,
+    VersionedApi extends VersionSchema<SV, 'middleware'>,
+    Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      VersionedApi,
+      Session,
+      BaseRequest
+    >
+  >(
+    path: `/${string}` extends Router['basePath']
+      ? Path
+      : PathMatch<Path, Router['basePath']>,
+    typedHandler: TypedHandler<
+      SV,
+      Name,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj,
+      VersionedApi,
+      Session,
+      BaseRequest,
+      BaseResponse,
+      NextFunction,
+      Auth
+    >
+  ): ChainableRouter & {
+    _fetchMap: Prettify<
+      ChainableRouter['_fetchMap'] & {
+        [Key in keyof Router['_fetchMap'] as Key extends string
+          ? SanitizePathSlashes<`${ChainableRouter['basePath']}${Key}`>
+          : never]: Router['_fetchMap'][Key];
+      }
+    >;
+    sdk: Prettify<
+      ChainableRouter['sdk'] & {
+        [K in PrettyCamelCase<
+          Router['sdkName'] extends string
+            ? Router['sdkName']
+            : Router['basePath']
+        >]: Prettify<Router['sdk']>;
+      }
+    >;
+  };
+
+  <
+    Name extends string,
+    Path extends `/${string}`,
+    P extends ParamsObject<SV>,
+    ResBodyMap extends ResponsesObject<SV>,
+    ReqBody extends Body<SV>,
+    ReqQuery extends QueryObject<SV>,
+    ReqHeaders extends HeadersObject<SV>,
+    ResHeaders extends HeadersObject<SV>,
+    LocalsObj extends Record<string, unknown>,
+    Router extends ConstrainedForklaunchRouter<SV, RouterHandler>,
+    VersionedApi extends VersionSchema<SV, 'middleware'>,
+    Auth extends SchemaAuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      VersionedApi,
+      Session,
+      BaseRequest
+    >
+  >(
+    typedHandler: TypedHandler<
+      SV,
+      Name,
+      'middleware',
+      Path,
+      P,
+      ResBodyMap,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      ResHeaders,
+      LocalsObj,
+      VersionedApi,
+      Session,
+      BaseRequest,
+      BaseResponse,
+      NextFunction,
+      Auth
+    >
   ): ChainableRouter & {
     _fetchMap: Prettify<
       ChainableRouter['_fetchMap'] & {
@@ -1255,6 +1459,7 @@ export type ContractDetailsOrMiddlewareOrTypedHandler<
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
   VersionedApi extends VersionSchema<SV, ContractMethod>,
+  Session extends SessionObject<SV>,
   BaseRequest,
   BaseResponse,
   NextFunction,
@@ -1265,6 +1470,7 @@ export type ContractDetailsOrMiddlewareOrTypedHandler<
     ReqQuery,
     ReqHeaders,
     VersionedApi,
+    Session,
     BaseRequest
   >
 > =
@@ -1280,6 +1486,7 @@ export type ContractDetailsOrMiddlewareOrTypedHandler<
       ReqHeaders,
       ResHeaders,
       VersionedApi,
+      Session,
       BaseRequest,
       Auth
     >
@@ -1293,6 +1500,7 @@ export type ContractDetailsOrMiddlewareOrTypedHandler<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      Session,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -1310,6 +1518,7 @@ export type ContractDetailsOrMiddlewareOrTypedHandler<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      Session,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -1329,6 +1538,7 @@ export type MiddlewareOrMiddlewareWithTypedHandler<
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
   VersionedApi extends VersionSchema<SV, ContractMethod>,
+  Session extends SessionObject<SV>,
   BaseRequest,
   BaseResponse,
   NextFunction,
@@ -1339,6 +1549,7 @@ export type MiddlewareOrMiddlewareWithTypedHandler<
     ReqQuery,
     ReqHeaders,
     VersionedApi,
+    Session,
     BaseRequest
   >
 > =
@@ -1352,6 +1563,7 @@ export type MiddlewareOrMiddlewareWithTypedHandler<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      Session,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -1369,6 +1581,7 @@ export type MiddlewareOrMiddlewareWithTypedHandler<
       ResHeaders,
       LocalsObj,
       VersionedApi,
+      Session,
       BaseRequest,
       BaseResponse,
       NextFunction,

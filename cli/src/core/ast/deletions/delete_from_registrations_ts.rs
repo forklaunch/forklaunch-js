@@ -4,9 +4,8 @@ use anyhow::Result;
 use oxc_allocator::{Allocator, CloneIn, Vec};
 use oxc_ast::ast::{
     Argument, BindingPatternKind, Expression, ObjectPropertyKind, Program, PropertyKey, SourceType,
-    Statement, VariableDeclarator,
+    Statement,
 };
-use oxc_ast_visit::VisitMut;
 use oxc_codegen::{Codegen, CodegenOptions};
 
 use crate::core::ast::{
@@ -277,54 +276,6 @@ pub(crate) fn delete_from_registrations_ts_config_injector<'a>(
         .code)
 }
 
-// This is for ejections, where the schema validators need to be removed from the schema imports
-pub(crate) fn delete_from_registration_schema_validators<'a>(
-    allocator: &'a Allocator,
-    program: &mut Program<'a>,
-) {
-    struct ValidatorRemover<'a> {
-        allocator: &'a Allocator,
-    }
-
-    impl<'a> VisitMut<'a> for ValidatorRemover<'a> {
-        fn visit_variable_declarator(&mut self, declarator: &mut VariableDeclarator<'a>) {
-            if let Some(Expression::CallExpression(call_expr)) = &mut declarator.init {
-                if let Some(first_arg) = call_expr.arguments.first_mut() {
-                    if let Argument::ObjectExpression(obj_expr) = first_arg {
-                        obj_expr.properties.retain(|prop| match prop {
-                            ObjectPropertyKind::ObjectProperty(obj_prop) => match &obj_prop.key {
-                                PropertyKey::StaticIdentifier(ident) => ident.name != "validator",
-                                PropertyKey::StringLiteral(str_lit) => str_lit.value != "validator",
-                                _ => true,
-                            },
-                            _ => true,
-                        });
-
-                        if obj_expr.properties.is_empty() {
-                            call_expr.arguments.clear();
-                            declarator.init = Some(call_expr.callee.clone_in(self.allocator));
-                        }
-                    }
-                }
-            }
-
-            self.visit_variable_declarator_impl(declarator);
-        }
-    }
-
-    impl<'a> ValidatorRemover<'a> {
-        fn visit_variable_declarator_impl(&mut self, declarator: &mut VariableDeclarator<'a>) {
-            self.visit_binding_pattern(&mut declarator.id);
-            if let Some(init) = &mut declarator.init {
-                self.visit_expression(init);
-            }
-        }
-    }
-
-    let mut visitor = ValidatorRemover { allocator };
-    visitor.visit_program(program);
-}
-
 #[cfg(test)]
 mod tests {
     use oxc_allocator::Allocator;
@@ -429,38 +380,5 @@ mod tests {
         let expected_code = "const serviceDependencies = configInjector({\n\tuserService: userServiceFactory,\n\tcommentService: commentServiceFactory\n});\n";
 
         assert_eq!(result.unwrap(), expected_code);
-    }
-
-    #[test]
-    fn test_delete_from_registration_schema_validators() {
-        let allocator = Allocator::default();
-
-        let registrations_code = r#"
-        const userSchema = UserSchema({
-            validator: schemaValidator
-        });
-
-        const postSchema = PostSchema({
-            validator: schemaValidator
-        });
-
-        const commentSchema = CommentSchema({
-            validator: schemaValidator,
-            someOtherProp: "someOtherProp"
-        });
-        "#;
-        let mut registrations_program =
-            parse_ast_program(&allocator, registrations_code, SourceType::ts());
-
-        delete_from_registration_schema_validators(&allocator, &mut registrations_program);
-
-        let expected_code = "const userSchema = UserSchema;\nconst postSchema = PostSchema;\nconst commentSchema = CommentSchema({ someOtherProp: \"someOtherProp\" });\n";
-
-        let generated_code = Codegen::new()
-            .with_options(CodegenOptions::default())
-            .build(&registrations_program)
-            .code;
-
-        assert_eq!(generated_code, expected_code);
     }
 }

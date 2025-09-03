@@ -1,5 +1,105 @@
 # @forklaunch/implementation-billing-base
 
+## 0.3.3
+
+### Patch Changes
+
+- update internal packages
+- Updated dependencies
+  - @forklaunch/implementation-billing-base@0.6.3
+  - @forklaunch/interfaces-billing@0.6.2
+
+## 0.3.2
+
+### Patch Changes
+
+- Much cleaner schema syntax for registrations
+- Updated dependencies
+  - @forklaunch/implementation-billing-base@0.6.2
+  - @forklaunch/interfaces-billing@0.6.1
+
+## 0.3.1
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/implementation-billing-base@0.6.1
+
+## 0.3.0
+
+### Minor Changes
+
+- new mapper syntax, and cleaner logic
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/implementation-billing-base@0.6.0
+  - @forklaunch/interfaces-billing@0.6.0
+
+## 0.2.8
+
+### Patch Changes
+
+- internal package upgrades
+- Updated dependencies
+  - @forklaunch/implementation-billing-base@0.5.8
+  - @forklaunch/interfaces-billing@0.5.7
+
+## 0.2.7
+
+### Patch Changes
+
+- internal package bump
+- Updated dependencies
+  - @forklaunch/implementation-billing-base@0.5.7
+  - @forklaunch/interfaces-billing@0.5.6
+
+## 0.2.6
+
+### Patch Changes
+
+- upgrade internal packages
+- Updated dependencies
+  - @forklaunch/implementation-billing-base@0.5.6
+  - @forklaunch/interfaces-billing@0.5.5
+
+## 0.2.5
+
+### Patch Changes
+
+- upgrade internal packages
+- Updated dependencies
+  - @forklaunch/implementation-billing-base@0.5.5
+  - @forklaunch/interfaces-billing@0.5.4
+
+## 0.2.4
+
+### Patch Changes
+
+- internal package updates
+- Updated dependencies
+  - @forklaunch/implementation-billing-base@0.5.4
+  - @forklaunch/interfaces-billing@0.5.3
+
+## 0.2.3
+
+### Patch Changes
+
+- update internal versions
+- Updated dependencies
+  - @forklaunch/implementation-billing-base@0.5.3
+  - @forklaunch/interfaces-billing@0.5.2
+
+## 0.2.2
+
+### Patch Changes
+
+- bump internal package versions
+- Updated dependencies
+  - @forklaunch/implementation-billing-base@0.5.2
+  - @forklaunch/interfaces-billing@0.5.1
+
 ## 0.2.1
 
 ### Patch Changes

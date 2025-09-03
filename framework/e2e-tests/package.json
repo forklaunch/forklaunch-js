@@ -20,6 +20,9 @@
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
+    "perf:hello": "tsx perf/hello.ts",
+    "perf:hello:ac": "bash perf/hello.sh",
+    "perf:multi-host": "BASE_PORT=6000 INSTANCES=12 tsx perf/multi-host.ts",
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
@@ -27,19 +30,21 @@
     "@forklaunch/core": "workspace:*",
     "@forklaunch/express": "workspace:*",
     "@forklaunch/hyper-express": "workspace:*",
-    "@forklaunch/hyper-express-fork": "^6.17.34",
+    "@forklaunch/hyper-express-fork": "^6.17.35",
     "@forklaunch/universal-sdk": "workspace:*",
     "@forklaunch/validator": "workspace:*",
-    "@sinclair/typebox": "^0.34.38",
-    "zod": "^4.0.14"
+    "@sinclair/typebox": "^0.34.41",
+    "express": "^5.1.0",
+    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.52.0",
+    "zod": "^4.1.5"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",
     "@types/express-serve-static-core": "^5.0.7",
     "@types/qs": "^6.14.0",
     "@types/range-parser": "^1.2.7",
-    "@typescript/native-preview": "7.0.0-dev.20250802.1",
-    "jose": "^6.0.12",
+    "@typescript/native-preview": "7.0.0-dev.20250830.1",
+    "jose": "6.1.0",
     "tsup": "^8.5.0"
   }
 }

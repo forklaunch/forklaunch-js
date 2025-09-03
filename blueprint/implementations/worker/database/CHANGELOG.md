@@ -1,5 +1,88 @@
 # @forklaunch/implementation-billing-base
 
+## 0.6.2
+
+### Patch Changes
+
+- update internal packages
+- Updated dependencies
+  - @forklaunch/interfaces-worker@0.5.2
+
+## 0.6.1
+
+### Patch Changes
+
+- Much cleaner schema syntax for registrations
+- Updated dependencies
+  - @forklaunch/interfaces-worker@0.5.1
+
+## 0.6.0
+
+### Minor Changes
+
+- new mapper syntax, and cleaner logic
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/interfaces-worker@0.5.0
+
+## 0.5.8
+
+### Patch Changes
+
+- internal package upgrades
+- Updated dependencies
+  - @forklaunch/interfaces-worker@0.4.7
+
+## 0.5.7
+
+### Patch Changes
+
+- internal package bump
+- Updated dependencies
+  - @forklaunch/interfaces-worker@0.4.6
+
+## 0.5.6
+
+### Patch Changes
+
+- upgrade internal packages
+- Updated dependencies
+  - @forklaunch/interfaces-worker@0.4.5
+
+## 0.5.5
+
+### Patch Changes
+
+- upgrade internal packages
+- Updated dependencies
+  - @forklaunch/interfaces-worker@0.4.4
+
+## 0.5.4
+
+### Patch Changes
+
+- internal package updates
+- Updated dependencies
+  - @forklaunch/interfaces-worker@0.4.3
+
+## 0.5.3
+
+### Patch Changes
+
+- update internal versions
+- Updated dependencies
+  - @forklaunch/interfaces-worker@0.4.2
+
+## 0.5.2
+
+### Patch Changes
+
+- bump internal package versions
+- Updated dependencies
+  - @forklaunch/interfaces-worker@0.4.1
+
 ## 0.5.1
 
 ### Patch Changes

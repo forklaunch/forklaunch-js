@@ -1,6 +1,7 @@
+import { betterAuth } from '@forklaunch/better-auth';
 import {
   array,
-  ExpressOptions,
+  ExpressApplicationOptions,
   number,
   optional,
   promise,
@@ -10,18 +11,12 @@ import {
   type
 } from '@forklaunch/blueprint-core';
 import { Metrics, metrics } from '@forklaunch/blueprint-monitoring';
-import { OpenTelemetryCollector } from '@forklaunch/core/http';
+import { OpenTelemetryCollector, SessionObject } from '@forklaunch/core/http';
 import {
   createConfigInjector,
   getEnvVar,
   Lifetime
 } from '@forklaunch/core/services';
-import {
-  BaseOrganizationServiceSchemas,
-  BasePermissionServiceSchemas,
-  BaseRoleServiceSchemas,
-  BaseUserServiceSchemas
-} from '@forklaunch/implementation-iam-base/schemas';
 import {
   BaseOrganizationService,
   BasePermissionService,
@@ -29,7 +24,6 @@ import {
   BaseUserService
 } from '@forklaunch/implementation-iam-base/services';
 import { EntityManager, ForkOptions, MikroORM } from '@mikro-orm/core';
-import { betterAuth } from 'better-auth';
 import { BetterAuthConfig, betterAuthConfig } from './auth';
 import { OrganizationStatus } from './domain/enum/organizationStatus.enum';
 import {
@@ -54,30 +48,13 @@ import {
   UserMapper
 } from './domain/mappers/user.mappers';
 import {
-  OrganizationMapperTypes,
-  PermissionMapperTypes,
-  RoleMapperTypes,
-  UserMapperTypes
+  OrganizationMapperEntityTypes,
+  PermissionMapperEntityTypes,
+  RoleMapperEntityTypes,
+  UserMapperDomainObjectTypes,
+  UserMapperEntityTypes
 } from './domain/types/iamMappers.types';
 import mikroOrmOptionsConfig from './mikro-orm.config';
-
-//! defines the schemas for the organization service
-export const OrganizationSchemas = BaseOrganizationServiceSchemas({
-  uuidId: true,
-  validator: schemaValidator
-});
-export const PermissionSchemas = BasePermissionServiceSchemas({
-  uuidId: true,
-  validator: schemaValidator
-});
-export const RoleSchemas = BaseRoleServiceSchemas({
-  uuidId: true,
-  validator: schemaValidator
-});
-export const UserSchemas = BaseUserServiceSchemas({
-  uuidId: true,
-  validator: schemaValidator
-});
 
 //! defines the configuration schema for the application
 const configInjector = createConfigInjector(schemaValidator, {
@@ -196,9 +173,16 @@ const runtimeDependencies = environmentConfig.chain({
         })
       )
   },
-  ExpressOptions: {
+  ExpressApplicationOptions: {
     lifetime: Lifetime.Singleton,
-    type: promise(type<ExpressOptions<undefined>>()),
+    type: promise(
+      type<
+        ExpressApplicationOptions<
+          SchemaValidator,
+          SessionObject<SchemaValidator>
+        >
+      >()
+    ),
     factory: async ({ BETTER_AUTH_BASE_PATH, CORS_ORIGINS, BetterAuth }) => {
       const betterAuthOpenAPIContent =
         await BetterAuth.api.generateOpenAPISchema();
@@ -237,7 +221,7 @@ const serviceDependencies = runtimeDependencies.chain({
     type: BaseOrganizationService<
       SchemaValidator,
       typeof OrganizationStatus,
-      OrganizationMapperTypes
+      OrganizationMapperEntityTypes
     >,
     factory: ({ EntityManager, OpenTelemetryCollector }, resolve, context) =>
       new BaseOrganizationService(
@@ -255,7 +239,7 @@ const serviceDependencies = runtimeDependencies.chain({
   },
   PermissionService: {
     lifetime: Lifetime.Scoped,
-    type: BasePermissionService<SchemaValidator, PermissionMapperTypes>,
+    type: BasePermissionService<SchemaValidator, PermissionMapperEntityTypes>,
     factory: ({ EntityManager, OpenTelemetryCollector }, resolve, context) =>
       new BasePermissionService(
         context.entityManagerOptions
@@ -274,7 +258,7 @@ const serviceDependencies = runtimeDependencies.chain({
   },
   RoleService: {
     lifetime: Lifetime.Scoped,
-    type: BaseRoleService<SchemaValidator, RoleMapperTypes>,
+    type: BaseRoleService<SchemaValidator, RoleMapperEntityTypes>,
     factory: ({ EntityManager, OpenTelemetryCollector }, resolve, context) =>
       new BaseRoleService(
         context.entityManagerOptions
@@ -294,12 +278,8 @@ const serviceDependencies = runtimeDependencies.chain({
     type: BaseUserService<
       SchemaValidator,
       typeof OrganizationStatus,
-      UserMapperTypes,
-      {
-        UserMapper: UserMapper['dto'];
-        CreateUserMapper: CreateUserMapper['dto'];
-        UpdateUserMapper: UpdateUserMapper['dto'];
-      }
+      UserMapperEntityTypes,
+      UserMapperDomainObjectTypes
     >,
     factory: (
       {

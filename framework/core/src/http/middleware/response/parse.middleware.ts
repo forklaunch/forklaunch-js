@@ -49,7 +49,8 @@ export function parse<
   ReqHeaders extends Record<string, string>,
   ResHeaders extends Record<string, unknown>,
   LocalsObj extends Record<string, unknown>,
-  VersionedReqs extends VersionedRequests
+  VersionedReqs extends VersionedRequests,
+  SessionSchema extends Record<string, unknown>
 >(
   req: ForklaunchRequest<
     SV,
@@ -57,7 +58,8 @@ export function parse<
     ReqBody,
     ReqQuery,
     ReqHeaders,
-    Extract<keyof VersionedReqs, string>
+    Extract<keyof VersionedReqs, string>,
+    SessionSchema
   >,
   res: ForklaunchResponse<
     unknown,
@@ -70,6 +72,18 @@ export function parse<
 ) {
   let headers;
   let responses;
+
+  const globalOptions = req._globalOptions?.();
+  const collapsedOptions =
+    req.contractDetails.options?.responseValidation ??
+    (globalOptions?.validation === false
+      ? 'none'
+      : globalOptions?.validation?.response);
+
+  if (collapsedOptions === 'none') {
+    next?.();
+    return;
+  }
 
   const responseSchemas = res.responseSchemas;
   const schemaValidator = req.schemaValidator as SchemaValidator;
@@ -144,6 +158,7 @@ export function parse<
   if (parseErrors.length > 0) {
     switch (req.contractDetails.options?.responseValidation) {
       default:
+      case undefined:
       case 'error':
         res.type('text/plain');
         res.status(500);

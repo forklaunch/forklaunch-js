@@ -1,10 +1,15 @@
 import { AnySchemaValidator } from '@forklaunch/validator';
+import { createHmac } from 'crypto';
+import { JWK, JWTPayload, jwtVerify } from 'jose';
 import { ParsedQs } from 'qs';
+import { isBasicAuthMethod } from './guards/isBasicAuthMethod';
+import { isHmacMethod } from './guards/isHmacMethod';
+import { isJwtAuthMethod } from './guards/isJwtAuthMethod';
 import { VersionedRequests } from './types/apiDefinition.types';
 import {
   AuthMethods,
-  AuthMethodsBase,
   BasicAuthMethods,
+  DecodeResource,
   ParamsDictionary
 } from './types/contractDetails.types';
 
@@ -40,13 +45,14 @@ import {
  * // result.auth === authConfig.basic
  * ```
  */
-export function discriminateAuthMethod<
+export async function discriminateAuthMethod<
   SV extends AnySchemaValidator,
   P extends ParamsDictionary,
   ReqBody extends Record<string, unknown>,
   ReqQuery extends ParsedQs,
   ReqHeaders extends Record<string, string>,
   VersionedReqs extends VersionedRequests,
+  SessionSchema extends Record<string, unknown>,
   BaseRequest
 >(
   auth: AuthMethods<
@@ -56,43 +62,119 @@ export function discriminateAuthMethod<
     ReqQuery,
     ReqHeaders,
     VersionedReqs,
+    SessionSchema,
     BaseRequest
   >
-):
+): Promise<
   | {
       type: 'basic';
       auth: {
-        decodeResource?: AuthMethodsBase['decodeResource'];
+        decodeResource?: DecodeResource;
         login: BasicAuthMethods['basic']['login'];
       };
     }
   | {
       type: 'jwt';
+      auth:
+        | {
+            decodeResource?: DecodeResource;
+          }
+        | {
+            verificationFunction: (
+              token: string
+            ) => Promise<JWTPayload | undefined>;
+          };
+    }
+  | {
+      type: 'hmac';
       auth: {
-        decodeResource?: AuthMethodsBase['decodeResource'];
+        secretKeys: Record<string, string>;
+        verificationFunction: (
+          method: string,
+          path: string,
+          body: string,
+          timestamp: string,
+          nonce: string,
+          signature: string,
+          secretKey: string
+        ) => Promise<boolean | undefined>;
       };
-    } {
-  if ('basic' in auth) {
-    return {
+    }
+> {
+  let authMethod;
+  if (isBasicAuthMethod(auth)) {
+    authMethod = {
       type: 'basic' as const,
       auth: {
         decodeResource: auth.decodeResource,
         login: auth.basic.login
       }
     };
-  } else if ('jwt' in auth) {
-    return {
+  } else if (isJwtAuthMethod(auth)) {
+    const jwt = auth.jwt;
+    let verificationFunction: (
+      token: string
+    ) => Promise<JWTPayload | undefined>;
+    if ('signatureKey' in jwt) {
+      verificationFunction = async (token) => {
+        const { payload } = await jwtVerify(
+          token,
+          Buffer.from(jwt.signatureKey)
+        );
+        return payload;
+      };
+    } else {
+      let jwks: JWK[];
+      if ('jwksPublicKeyUrl' in jwt) {
+        const jwksResponse = await fetch(jwt.jwksPublicKeyUrl);
+        jwks = (await jwksResponse.json()).keys;
+      } else if ('jwksPublicKey' in jwt) {
+        jwks = [jwt.jwksPublicKey];
+      }
+      verificationFunction = async (token) => {
+        for (const key of jwks) {
+          try {
+            const { payload } = await jwtVerify(token, key);
+            return payload;
+          } catch {
+            continue;
+          }
+        }
+      };
+    }
+    authMethod = {
       type: 'jwt' as const,
       auth: {
-        decodeResource: auth.decodeResource
+        decodeResource: auth.decodeResource,
+        verificationFunction
       }
     };
-  } else {
-    return {
-      type: 'jwt' as const,
+  } else if (isHmacMethod(auth)) {
+    authMethod = {
+      type: 'hmac' as const,
       auth: {
-        decodeResource: auth.decodeResource
+        secretKeys: auth.hmac.secretKeys,
+        verificationFunction: async (
+          method: string,
+          path: string,
+          body: string,
+          timestamp: string,
+          nonce: string,
+          signature: string,
+          secretKey: string
+        ) => {
+          const hmac = createHmac('sha256', secretKey);
+
+          hmac.update(`${method}\n${path}\n${body}\n${timestamp}\n${nonce}`);
+          const digest = hmac.digest('base64');
+          return digest === signature;
+        }
       }
     };
   }
+  if (authMethod == null) {
+    throw new Error('Invalid auth method');
+  }
+
+  return authMethod;
 }

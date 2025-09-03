@@ -28,7 +28,7 @@ export const UserController = (
       {
         name: 'Create User',
         summary: 'Creates a new user',
-        body: CreateUserMapper.schema(),
+        body: CreateUserMapper.schema,
         responses: {
           201: string,
           500: string
@@ -47,7 +47,7 @@ export const UserController = (
       {
         name: 'Create Batch Users',
         summary: 'Creates multiple users',
-        body: array(CreateUserMapper.schema()),
+        body: array(CreateUserMapper.schema),
         responses: {
           201: string,
           500: string
@@ -67,7 +67,7 @@ export const UserController = (
         name: 'Get User',
         summary: 'Gets a user by ID',
         responses: {
-          200: UserMapper.schema(),
+          200: UserMapper.schema,
           500: string
         },
         params: IdSchema
@@ -85,7 +85,7 @@ export const UserController = (
         name: 'Get Batch Users',
         summary: 'Gets multiple users by IDs',
         responses: {
-          200: array(UserMapper.schema()),
+          200: array(UserMapper.schema),
           500: string
         },
         query: IdsSchema
@@ -102,7 +102,7 @@ export const UserController = (
       {
         name: 'Update User',
         summary: 'Updates a user by ID',
-        body: UpdateUserMapper.schema(),
+        body: UpdateUserMapper.schema,
         responses: {
           200: string,
           500: string
@@ -121,7 +121,7 @@ export const UserController = (
       {
         name: 'Update Batch Users',
         summary: 'Updates multiple users by IDs',
-        body: array(UpdateUserMapper.schema()),
+        body: array(UpdateUserMapper.schema),
         responses: {
           200: string,
           500: string

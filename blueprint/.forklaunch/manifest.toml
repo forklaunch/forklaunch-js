@@ -3,7 +3,7 @@
 # This is an auto-generated file. Modifications are encouraged but may inhibit automated upgrades.
 
 id = "27e13038-212c-4989-99b0-d970cc30fe4e"
-cli_version = "0.1.0"
+cli_version = "0.0.0"
 app_name = "forklaunch-framework"
 app_description = "Blueprint for forklaunch services"
 linter = "eslint"

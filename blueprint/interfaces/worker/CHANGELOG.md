@@ -1,5 +1,65 @@
 # @forklaunch/interfaces-billing
 
+## 0.5.2
+
+### Patch Changes
+
+- update internal packages
+
+## 0.5.1
+
+### Patch Changes
+
+- Much cleaner schema syntax for registrations
+
+## 0.5.0
+
+### Minor Changes
+
+- new mapper syntax, and cleaner logic
+
+## 0.4.7
+
+### Patch Changes
+
+- internal package upgrades
+
+## 0.4.6
+
+### Patch Changes
+
+- internal package bump
+
+## 0.4.5
+
+### Patch Changes
+
+- upgrade internal packages
+
+## 0.4.4
+
+### Patch Changes
+
+- upgrade internal packages
+
+## 0.4.3
+
+### Patch Changes
+
+- internal package updates
+
+## 0.4.2
+
+### Patch Changes
+
+- update internal versions
+
+## 0.4.1
+
+### Patch Changes
+
+- bump internal package versions
+
 ## 0.4.0
 
 ### Minor Changes

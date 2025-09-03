@@ -114,8 +114,7 @@ export class StripeWebhookService<
             id: event.data.object.id,
             customerId: event.data.object.customer,
             expiresAt: new Date(event.data.object.created + 5 * 60 * 1000),
-            uri: event.data.object.url,
-            providerFields: event.data.object
+            uri: event.data.object.url
           }
         );
         break;
@@ -147,8 +146,7 @@ export class StripeWebhookService<
             paymentMethods: event.data.object
               .payment_method_types as PaymentMethodEnum[],
             status: 'CREATED' as StatusEnum[keyof StatusEnum],
-            currency: event.data.object.currency as CurrencyEnum,
-            providerFields: event.data.object
+            currency: event.data.object.currency as CurrencyEnum
           });
         }
         break;
@@ -164,8 +162,7 @@ export class StripeWebhookService<
           paymentMethods: event.data.object
             .payment_method_types as PaymentMethodEnum[],
           status: 'UPDATED' as StatusEnum[keyof StatusEnum],
-          currency: event.data.object.currency as CurrencyEnum,
-          providerFields: event.data.object
+          currency: event.data.object.currency as CurrencyEnum
         });
         break;
       }
@@ -187,8 +184,7 @@ export class StripeWebhookService<
                 ? event.data.object.product
                 : event.data.object.product?.id,
             price: event.data.object.amount,
-            externalId: event.data.object.id,
-            providerFields: event.data.object
+            externalId: event.data.object.id
           });
         } else {
           throw new Error('Invalid plan');
@@ -213,8 +209,7 @@ export class StripeWebhookService<
                 ? event.data.object.product
                 : event.data.object.product?.id,
             price: event.data.object.amount,
-            externalId: event.data.object.id,
-            providerFields: event.data.object
+            externalId: event.data.object.id
           });
         } else {
           throw new Error('Invalid plan');
@@ -240,7 +235,6 @@ export class StripeWebhookService<
           description: event.data.object.description ?? undefined,
           active: true,
           productId: event.data.object.items.data[0].plan.id,
-          providerFields: event.data.object,
           externalId: event.data.object.id,
           billingProvider: BillingProviderEnum.STRIPE,
           startDate: new Date(event.data.object.created),
@@ -262,7 +256,6 @@ export class StripeWebhookService<
           partyType: 'USER' as PartyEnum[keyof PartyEnum],
           description: event.data.object.description ?? undefined,
           active: true,
-          providerFields: event.data.object,
           externalId: event.data.object.id,
           billingProvider: BillingProviderEnum.STRIPE,
           startDate: new Date(event.data.object.created),

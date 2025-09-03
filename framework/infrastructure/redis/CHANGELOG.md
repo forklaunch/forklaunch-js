@@ -1,5 +1,174 @@
 # @forklaunch/infrastructure-redis
 
+## 0.4.6
+
+### Patch Changes
+
+- update internal packages
+- Updated dependencies
+  - @forklaunch/common@0.6.5
+  - @forklaunch/core@0.14.6
+
+## 0.4.5
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.14.5
+
+## 0.4.4
+
+### Patch Changes
+
+- Update internal package versions and add mapServiceSchemas method for clean DX in implemented modules
+- Updated dependencies
+  - @forklaunch/common@0.6.4
+  - @forklaunch/core@0.14.4
+
+## 0.4.3
+
+### Patch Changes
+
+- toDomain -> toDto for more accurate naming conventions
+- Updated dependencies
+  - @forklaunch/common@0.6.3
+  - @forklaunch/core@0.14.3
+
+## 0.4.2
+
+### Patch Changes
+
+- toDto -> toDomain
+- Updated dependencies
+  - @forklaunch/common@0.6.2
+  - @forklaunch/core@0.14.2
+
+## 0.4.1
+
+### Patch Changes
+
+- request and response mapper discrimination and clean up of internal types
+- Updated dependencies
+  - @forklaunch/common@0.6.1
+  - @forklaunch/core@0.14.1
+
+## 0.4.0
+
+### Minor Changes
+
+- remove class based mappers
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/common@0.6.0
+  - @forklaunch/core@0.14.0
+
+## 0.3.9
+
+### Patch Changes
+
+- add mappers as functions
+- Updated dependencies
+  - @forklaunch/common@0.5.8
+  - @forklaunch/core@0.13.9
+
+## 0.3.8
+
+### Patch Changes
+
+- One more attempt at performance bump
+- Updated dependencies
+  - @forklaunch/common@0.5.7
+  - @forklaunch/core@0.13.8
+
+## 0.3.7
+
+### Patch Changes
+
+- prettify req init for slightly faster sdk access
+- Updated dependencies
+  - @forklaunch/common@0.5.6
+  - @forklaunch/core@0.13.7
+
+## 0.3.6
+
+### Patch Changes
+
+- attempt to make sdk pathing more efficient
+- Updated dependencies
+  - @forklaunch/common@0.5.5
+  - @forklaunch/core@0.13.6
+
+## 0.3.5
+
+### Patch Changes
+
+- zod validator regex relaxation for email
+- Updated dependencies
+  - @forklaunch/common@0.5.4
+  - @forklaunch/core@0.13.5
+
+## 0.3.4
+
+### Patch Changes
+
+- Update validator types for files to use raw streams, lazy load openapi for universal sdk, and remove private members from otel
+- Updated dependencies
+  - @forklaunch/common@0.5.3
+  - @forklaunch/core@0.13.4
+
+## 0.3.3
+
+### Patch Changes
+
+- update package versions
+- Updated dependencies
+  - @forklaunch/common@0.5.2
+  - @forklaunch/core@0.13.3
+
+## 0.3.2
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.13.2
+
+## 0.3.1
+
+### Patch Changes
+
+- bump internal packages
+- Updated dependencies
+  - @forklaunch/common@0.5.1
+  - @forklaunch/core@0.13.1
+
+## 0.3.0
+
+### Minor Changes
+
+- Adds more configuration options for application and routers. Additionally adds optional cluster support built-in (experimental)
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/common@0.5.0
+  - @forklaunch/core@0.13.0
+
+## 0.2.11
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.12.3
+
+## 0.2.10
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.12.2
+
 ## 0.2.9
 
 ### Patch Changes

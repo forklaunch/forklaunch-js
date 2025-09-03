@@ -46,7 +46,7 @@ const baseAuth = {
 const permissionControl = {
   allowedPermissions: new Set(['read:users', 'write:users']),
   forbiddenPermissions: new Set(['delete:users']),
-  mapPermissions: async (resourceId, req) => {
+  surfacePermissions: async (resourceId, req) => {
     return new Set(['read:users']);
   }
 }
@@ -57,7 +57,7 @@ const permissionControl = {
 const roleControl = {
   allowedRoles: new Set(['admin', 'editor']),
   forbiddenRoles: new Set(['blocked']),
-  mapRoles: async (resourceId, req) => {
+  surfaceRoles: async (resourceId, req) => {
     return new Set(['editor']);
   }
 }
@@ -71,7 +71,7 @@ const contractDetails = {
   auth: {
     method: 'jwt',
     allowedPermissions: new Set(['read:users']),
-    mapPermissions: async (resourceId, req) => {
+    surfacePermissions: async (resourceId, req) => {
       return new Set(['read:users']);
     }
   }
@@ -84,7 +84,7 @@ const contractDetails = {
   auth: {
     method: 'jwt',
     allowedRoles: new Set(['admin']),
-    mapRoles: async (resourceId, req) => {
+    surfaceRoles: async (resourceId, req) => {
       return new Set(['admin']);
     }
   }
@@ -98,7 +98,7 @@ const contractDetails = {
     method: 'basic',
     login: (username, password) => true,
     allowedPermissions: new Set(['read:users']),
-    mapPermissions: async (resourceId, req) => {
+    surfacePermissions: async (resourceId, req) => {
       return new Set(['read:users']);
     }
   }
@@ -112,7 +112,7 @@ const contractDetails = {
     method: 'basic',
     login: (username, password) => true,
     allowedRoles: new Set(['admin']),
-    mapRoles: async (resourceId, req) => {
+    surfaceRoles: async (resourceId, req) => {
       return new Set(['admin']);
     }
   }
@@ -127,7 +127,7 @@ const contractDetails = {
     tokenPrefix: 'Custom',
     decodeResource: (token) => token,
     allowedPermissions: new Set(['read:users']),
-    mapPermissions: async (resourceId, req) => {
+    surfacePermissions: async (resourceId, req) => {
       return new Set(['read:users']);
     }
   }
@@ -142,7 +142,7 @@ const contractDetails = {
     tokenPrefix: 'Custom',
     decodeResource: (token) => token,
     allowedRoles: new Set(['admin']),
-    mapRoles: async (resourceId, req) => {
+    surfaceRoles: async (resourceId, req) => {
       return new Set(['admin']);
     }
   }
@@ -178,7 +178,7 @@ const contractDetails = {
 | 403 | Invalid Authorization roles | Role check failed |
 | 403 | Invalid Authorization token | Token validation failed |
 | 403 | Invalid Authorization login | Basic auth failed |
-| 500 | No permission/role mapping function provided | Missing required mapper |
+| 500 | No permission/role surfacing function provided | Missing required mapper |
 
 ## Type Safety
 
@@ -190,8 +190,8 @@ type AuthMethods = {
   forbiddenPermissions?: Set<string>;
   allowedRoles?: Set<string>;
   forbiddenRoles?: Set<string>;
-  mapPermissions?: (resourceId: string, req: Request) => Promise<Set<string>>;
-  mapRoles?: (resourceId: string, req: Request) => Promise<Set<string>>;
+  surfacePermissions?: (resourceId: string, req: Request) => Promise<Set<string>>;
+  surfaceRoles?: (resourceId: string, req: Request) => Promise<Set<string>>;
 }
 ```
 

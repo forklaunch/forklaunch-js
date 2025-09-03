@@ -1,5 +1,172 @@
 # @forklaunch/core
 
+## 0.14.6
+
+### Patch Changes
+
+- update internal packages
+- Updated dependencies
+  - @forklaunch/validator@0.10.5
+  - @forklaunch/common@0.6.5
+
+## 0.14.5
+
+### Patch Changes
+
+- extend mapServiceSchemas to accept more arguments
+
+## 0.14.4
+
+### Patch Changes
+
+- Update internal package versions and add mapServiceSchemas method for clean DX in implemented modules
+- Updated dependencies
+  - @forklaunch/validator@0.10.4
+  - @forklaunch/common@0.6.4
+
+## 0.14.3
+
+### Patch Changes
+
+- toDomain -> toDto for more accurate naming conventions
+- Updated dependencies
+  - @forklaunch/validator@0.10.3
+  - @forklaunch/common@0.6.3
+
+## 0.14.2
+
+### Patch Changes
+
+- toDto -> toDomain
+- Updated dependencies
+  - @forklaunch/validator@0.10.2
+  - @forklaunch/common@0.6.2
+
+## 0.14.1
+
+### Patch Changes
+
+- request and response mapper discrimination and clean up of internal types
+- Updated dependencies
+  - @forklaunch/validator@0.10.1
+  - @forklaunch/common@0.6.1
+
+## 0.14.0
+
+### Minor Changes
+
+- remove class based mappers
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.10.0
+  - @forklaunch/common@0.6.0
+
+## 0.13.9
+
+### Patch Changes
+
+- add mappers as functions
+- Updated dependencies
+  - @forklaunch/validator@0.9.9
+  - @forklaunch/common@0.5.8
+
+## 0.13.8
+
+### Patch Changes
+
+- One more attempt at performance bump
+- Updated dependencies
+  - @forklaunch/validator@0.9.8
+  - @forklaunch/common@0.5.7
+
+## 0.13.7
+
+### Patch Changes
+
+- prettify req init for slightly faster sdk access
+- Updated dependencies
+  - @forklaunch/validator@0.9.7
+  - @forklaunch/common@0.5.6
+
+## 0.13.6
+
+### Patch Changes
+
+- attempt to make sdk pathing more efficient
+- Updated dependencies
+  - @forklaunch/validator@0.9.6
+  - @forklaunch/common@0.5.5
+
+## 0.13.5
+
+### Patch Changes
+
+- zod validator regex relaxation for email
+- Updated dependencies
+  - @forklaunch/validator@0.9.5
+  - @forklaunch/common@0.5.4
+
+## 0.13.4
+
+### Patch Changes
+
+- Update validator types for files to use raw streams, lazy load openapi for universal sdk, and remove private members from otel
+- Updated dependencies
+  - @forklaunch/validator@0.9.4
+  - @forklaunch/common@0.5.3
+
+## 0.13.3
+
+### Patch Changes
+
+- update package versions
+- Updated dependencies
+  - @forklaunch/validator@0.9.3
+  - @forklaunch/common@0.5.2
+
+## 0.13.2
+
+### Patch Changes
+
+- Auth fixes and add HMAC auth
+- Updated dependencies
+  - @forklaunch/validator@0.9.2
+
+## 0.13.1
+
+### Patch Changes
+
+- bump internal packages
+- Updated dependencies
+  - @forklaunch/validator@0.9.1
+  - @forklaunch/common@0.5.1
+
+## 0.13.0
+
+### Minor Changes
+
+- Adds more configuration options for application and routers. Additionally adds optional cluster support built-in (experimental)
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.9.0
+  - @forklaunch/common@0.5.0
+
+## 0.12.3
+
+### Patch Changes
+
+- "bump fastmcp internal version"
+
+## 0.12.2
+
+### Patch Changes
+
+- Allow for host specifier in mcp implementation
+
 ## 0.12.1
 
 ### Patch Changes

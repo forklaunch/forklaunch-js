@@ -34,18 +34,14 @@ export class Base{{pascal_case_name}}Service implements {{pascal_case_name}}Serv
   {{camel_case_name}}Post = async (
     dto: {{pascal_case_name}}RequestDto
   ): Promise<{{pascal_case_name}}ResponseDto> => {
-    const entity = await {{pascal_case_name}}RequestMapper.deserializeDtoToEntity(
-      SchemaValidator(),
+    const entity = await {{pascal_case_name}}RequestMapper.toEntity(
       dto{{^is_worker}},
       this.entityManager{{/is_worker}}
     );
     {{#is_worker}}
     await this.workerProducer.enqueueJob(entity);{{/is_worker}}{{^is_worker}}
-    this.entityManager.persistAndFlush(entity);
+    await this.entityManager.persistAndFlush(entity);
     {{/is_worker}}
-    return {{pascal_case_name}}ResponseMapper.serializeEntityToDto(
-      SchemaValidator(),
-      entity
-    );
+    return {{pascal_case_name}}ResponseMapper.toDto(entity);
   };
 }

@@ -8,6 +8,7 @@ import {
   QueryObject,
   ResponsesObject,
   SchemaAuthMethods,
+  SessionObject,
   VersionSchema
 } from '@forklaunch/core/http';
 import {
@@ -119,13 +120,15 @@ export const patch = <
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
   const VersionedApi extends VersionSchema<SV, 'patch'>,
+  const SessionSchema extends SessionObject<SV>,
   const Auth extends SchemaAuthMethods<
     SV,
     P,
     ReqBody,
     ReqQuery,
     ReqHeaders,
-    VersionSchema<SV, 'patch'>,
+    VersionedApi,
+    SessionSchema,
     Request<LocalsObj>
   >
 >(
@@ -143,6 +146,7 @@ export const patch = <
     ReqHeaders,
     ResHeaders,
     VersionedApi,
+    SessionSchema,
     Request<LocalsObj>,
     Auth
   >,
@@ -156,6 +160,7 @@ export const patch = <
     ResHeaders,
     LocalsObj,
     VersionedApi,
+    SessionSchema,
     Request<LocalsObj>,
     Response<LocalsObj>,
     MiddlewareNext
@@ -173,6 +178,7 @@ export const patch = <
     ResHeaders,
     LocalsObj,
     VersionedApi,
+    SessionSchema,
     Request<LocalsObj>,
     Response<LocalsObj>,
     MiddlewareNext,

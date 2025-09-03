@@ -1,6 +1,6 @@
 import { isNever, isRecord, safeStringify } from '@forklaunch/common';
+import { FastMCP } from '@forklaunch/fastmcp-fork';
 import { string, ZodSchemaValidator, ZodType } from '@forklaunch/validator/zod';
-import { FastMCP } from 'fastmcp';
 import { isUnionable } from '../guards/isVersionedInputSchema';
 import {
   discriminateBody,
@@ -14,8 +14,10 @@ import {
   ParamsObject,
   QueryObject,
   SchemaAuthMethods,
+  SessionObject,
   VersionSchema
 } from '../types/contractDetails.types';
+import { ExpressLikeApplicationOptions } from '../types/expressLikeOptions';
 import { ForklaunchRouter } from '../types/router.types';
 
 function generateInputSchema(
@@ -31,6 +33,7 @@ function generateInputSchema(
     QueryObject<ZodSchemaValidator>,
     HeadersObject<ZodSchemaValidator>,
     VersionSchema<ZodSchemaValidator, Method>,
+    SessionObject<ZodSchemaValidator>,
     unknown
   >
 ) {
@@ -86,6 +89,10 @@ export function generateMcpServer<
   port: number,
   version: `${number}.${number}.${number}`,
   application: ForklaunchRouter<ZodSchemaValidator>,
+  appOptions?: ExpressLikeApplicationOptions<
+    ZodSchemaValidator,
+    SessionObject<ZodSchemaValidator>
+  >['mcp'],
   options?: ConstructorParameters<typeof FastMCP<T>>[0],
   contentTypeMap?: Record<string, string>
 ) {
@@ -111,6 +118,16 @@ export function generateMcpServer<
     ])
   ].forEach(({ fullPath, router }) => {
     router.routes.forEach((route) => {
+      if (
+        !(
+          route.contractDetails.options?.mcp ??
+          router.routerOptions?.mcp ??
+          appOptions !== false
+        )
+      ) {
+        return;
+      }
+
       const inputSchemas: ZodType[] = [];
 
       if (route.contractDetails.versions) {

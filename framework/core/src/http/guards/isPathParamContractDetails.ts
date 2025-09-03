@@ -23,6 +23,7 @@ export function isPathParamHttpContractDetails<
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
   VersionedApi extends VersionSchema<SV, PathParamMethod>,
+  SessionSchema extends Record<string, unknown>,
   BaseRequest,
   const Auth extends SchemaAuthMethods<
     SV,
@@ -31,6 +32,7 @@ export function isPathParamHttpContractDetails<
     QuerySchema,
     ReqHeaders,
     VersionedApi,
+    SessionSchema,
     BaseRequest
   >
 >(
@@ -46,6 +48,7 @@ export function isPathParamHttpContractDetails<
   ReqHeaders,
   ResHeaders,
   VersionedApi,
+  SessionSchema,
   BaseRequest,
   Auth
 > {
