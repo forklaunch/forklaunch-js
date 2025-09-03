@@ -16,8 +16,8 @@ use crate::{
     CliCommand,
     constants::{ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST},
     core::{
-        base_path::{BasePathLocation, BasePathType, prompt_base_path},
-        flexible_path::{get_base_app_path, find_manifest_path, create_project_config},
+        // base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        flexible_path::{get_base_app_path, find_manifest_path, create_generic_config},
         command::command,
         manifest::application::ApplicationManifestData,
     },
@@ -65,13 +65,8 @@ impl CliCommand for DepcheckCommand {
         //     &BasePathType::Depcheck,
         // )?;
         // let base_path = Path::new(&base_path_input);
-        let current_dir = std::env::current_dir().unwrap();
-        let app_path = if let Some(temp_app_path) = get_base_app_path(&current_dir.to_string_lossy().to_string()) {
-            temp_app_path
-        } else {
-            return Err(anyhow::anyhow!("Application directory not found in current directory, src/modules, or modules directories. Please check if your application is initialized and you are in the correct directory."));
-        };
-        
+        let current_dir = current_dir().unwrap();
+    
         let app_base_path = if let Some(relative_path) = matches.get_one::<String>("base_path") {
             // User provided a relative path, resolve it relative to current directory
             let resolved_path = current_dir.join(relative_path);
@@ -82,7 +77,8 @@ impl CliCommand for DepcheckCommand {
             println!("init:depcheck:03: No path provided, app will be checked in current directory: {:?}", current_dir);
             current_dir.clone()
         };
-        let manifest_path_config = create_project_config();
+        println!("init:depcheck:04: app_base_path: {:?}", app_base_path);
+        let manifest_path_config = create_generic_config();
         let manifest_path = find_manifest_path(&app_base_path, &manifest_path_config);
         
         let config_path = if let Some(manifest) = manifest_path {
@@ -103,6 +99,9 @@ impl CliCommand for DepcheckCommand {
         // let config_path = Path::new(&base_path)
         //     .join(".forklaunch")
         //     .join("manifest.toml");
+        println!("init:depcheck:04: config_path: {:?}", config_path);
+        println!("init:depcheck:05: app_root_path: {:?}", app_root_path);
+        println!("init:depcheck:06: app_base_path: {:?}", app_base_path);
 
         let manifest_data: ApplicationManifestData = toml::from_str(
             &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
@@ -119,7 +118,7 @@ impl CliCommand for DepcheckCommand {
                     .iter()
                     .try_for_each(|project| -> Result<()> {
                         if let Some(package_json_contents) = &read_to_string(
-                            Path::new(&app_path).join(project).join("package.json"),
+                            Path::new(&app_base_path).join(project).join("package.json"),
                         )
                         .with_context(|| format!("Failed to read package.json for {}", project))
                         .ok()

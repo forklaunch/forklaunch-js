@@ -19,7 +19,7 @@ use crate::{
     },
     core::{
         // base_path::{BasePathLocation, BasePathType, prompt_base_path},
-        flexible_path::{get_base_app_path, create_generic_config, find_manifest_path},
+        flexible_path::{create_generic_config, find_manifest_path},
         command::command,
         docker::remove_service_from_docker_compose,
         manifest::{
