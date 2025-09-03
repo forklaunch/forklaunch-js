@@ -7,7 +7,11 @@ use oxc_ast::ast::{Expression, SourceType, Statement};
 use oxc_codegen::{Codegen, CodegenOptions};
 
 use crate::core::ast::{
-    injections::inject_into_server_ts::inject_into_server_ts, parse_ast_program::parse_ast_program,
+    injections::{
+        inject_into_import_statement::inject_into_import_statement,
+        inject_into_server_ts::inject_into_server_ts,
+    },
+    parse_ast_program::parse_ast_program,
 };
 
 pub(crate) fn transform_server_ts(router_name: &str, base_path: &Path) -> Result<String> {
@@ -66,10 +70,10 @@ pub(crate) fn transform_server_ts(router_name: &str, base_path: &Path) -> Result
     );
 
     // Inject the import statement at the beginning of the file
-    inject_into_server_ts(
+    inject_into_import_statement(
         &mut server_program,
         &mut forklaunch_routes_import_injection,
-        |_statements| Some(0),
+        format!("./api/routes/{router_name_camel_case}.routes").as_str(),
     )?;
 
     Ok(Codegen::new()
