@@ -113,11 +113,11 @@ impl CliCommand for RouterCommand {
         let router_base_path = if let Some(relative_path) = matches.get_one::<String>("base_path") {
             // User provided a relative path, resolve it relative to current directory
             let resolved_path = current_dir.join(relative_path);
-            println!("init:router:03: Router will be deleted at: {:?}", resolved_path);
+            println!("init:router:03: Router will be changed at: {:?}", resolved_path);
             resolved_path
         } else {
             // No path provided, assume current directory is where router should go
-            println!("init:router:03: No path provided, router will be deleted in current directory: {:?}", current_dir);
+            println!("init:router:03: No path provided, router will be changed in current directory: {:?}", current_dir);
             current_dir.clone()
         };
         let manifest_path_config = create_module_config();
