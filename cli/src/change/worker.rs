@@ -27,7 +27,7 @@ use crate::{
             transform_mikroorm_config_ts::transform_mikroorm_config_ts,
             transform_registrations_ts::transform_registrations_ts_worker_type,
         },
-        // base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        
         flexible_path::{create_generic_config, find_manifest_path},
         command::command,
         database::{get_database_variants, get_db_driver, is_in_memory_database},
@@ -418,20 +418,12 @@ impl CliCommand for WorkerCommand {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
         let mut rendered_templates_cache = RenderedTemplatesCache::new();
 
-        // let base_path_input = prompt_base_path(
-        //     &mut line_editor,
-        //     &mut stdout,
-        //     matches,
-        //     &BasePathLocation::Worker,
-        //     &BasePathType::Change,
-        // )?;
-        // let base_path = Path::new(&base_path_input);
+        
         let current_dir = std::env::current_dir().unwrap();
         // Determine where the router should be created
         let worker_base_path = if let Some(relative_path) = matches.get_one::<String>("base_path") {
             // User provided a relative path, resolve it relative to current directory
             let resolved_path = current_dir.join(relative_path);
-            println!("init:service:03: Worker will be deleted at: {:?}", resolved_path);
             resolved_path
         } else {
             current_dir.clone()
@@ -455,10 +447,6 @@ impl CliCommand for WorkerCommand {
             .to_string()
             .into();
         
-        println!("change:worker:00: config_path: {:?}", config_path);
-        println!("change:worker:01: base_path: {:?}", worker_base_path);
-        println!("change:worker:02: app_root_path: {:?}", app_root_path);
-
         let mut manifest_data: WorkerManifestData = toml::from_str::<WorkerManifestData>(
             &rendered_templates_cache
                 .get(&config_path)

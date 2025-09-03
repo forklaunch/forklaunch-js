@@ -17,7 +17,7 @@ use crate::{
         ERROR_FAILED_TO_WRITE_MANIFEST, Runtime,
     },
     core::{
-        // base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        
         command::command,
         flexible_path::{create_generic_config, find_manifest_path},
         manifest::{
@@ -66,20 +66,11 @@ impl CliCommand for LibraryCommand {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        // let base_path_input = prompt_base_path(
-        //     &mut line_editor,
-        //     &mut stdout,
-        //     matches,
-        //     &BasePathLocation::Anywhere,
-        //     &BasePathType::Delete,
-        // )?;
-        // let base_path = Path::new(&base_path_input);
         let current_dir = std::env::current_dir().unwrap();
-        // Determine where the router should be created
+        
         let library_base_path = if let Some(relative_path) = matches.get_one::<String>("base_path") {
             // User provided a relative path, resolve it relative to current directory
             let resolved_path = current_dir.join(relative_path);
-            println!("init:service:03: Library will be deleted at: {:?}", resolved_path);
             resolved_path
         } else {
             current_dir.clone()
@@ -104,9 +95,6 @@ impl CliCommand for LibraryCommand {
             .to_string()
             .into();
         
-        println!("init:service:06: config_path: {:?}", config_path);
-        println!("init:service:07: base_path: {:?}", library_base_path);
-        println!("init:service:08: app_root_path: {:?}", app_root_path);
 
         let mut manifest_data = toml::from_str::<ApplicationManifestData>(
             &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,

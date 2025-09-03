@@ -30,7 +30,7 @@ use crate::{
             },
             parse_ast_program::parse_ast_program,
         },
-        // base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        
         flexible_path::{create_module_config, find_manifest_path},
         command::command,
         manifest::{
@@ -78,24 +78,15 @@ impl CliCommand for RouterCommand {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        // let base_path_input = prompt_base_path(
-        //     &mut line_editor,
-        //     &mut stdout,
-        //     matches,
-        //     &BasePathLocation::Router,
-        //     &BasePathType::Delete,
-        // )?;
-        // let base_path = Path::new(&base_path_input);
+        
         let current_dir = std::env::current_dir().unwrap();
-        // Determine where the router should be created
+        
         let router_base_path = if let Some(relative_path) = matches.get_one::<String>("base_path") {
             // User provided a relative path, resolve it relative to current directory
             let resolved_path = current_dir.join(relative_path);
-            println!("init:router:03: Router will be deleted at: {:?}", resolved_path);
             resolved_path
         } else {
             // No path provided, assume current directory is where router should go
-            println!("init:router:03: No path provided, router will be deleted in current directory: {:?}", current_dir);
             current_dir.clone()
         };
         let manifest_path_config = create_module_config();

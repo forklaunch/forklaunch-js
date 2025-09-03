@@ -105,8 +105,6 @@ fn generate_basic_service(
     let ignore_files = vec![];
     let ignore_dirs = vec![];
     let preserve_files = vec![];
-    println!("init:service:00: template_dir: {:?}", template_dir);
-    println!("init:service:00: base_path: {:?}", base_path);
     let mut rendered_templates = generate_with_template(
         None,
         &template_dir,
@@ -149,8 +147,6 @@ fn generate_basic_service(
             context: Some(ERROR_FAILED_TO_UPDATE_DOCKERFILE.to_string()),
         });
     }
-    println!("init:service:01: template_dir: {:?}", template_dir);
-    println!("init:service:02: base_path: {:?}", base_path);
     
     add_project_to_universal_sdk(
         &mut rendered_templates,
@@ -162,8 +158,6 @@ fn generate_basic_service(
     write_rendered_templates(&rendered_templates, dryrun, stdout)
         .with_context(|| ERROR_FAILED_TO_WRITE_SERVICE_FILES)?;
 
-    println!("init:service:04: template_dir: {:?}", template_dir);
-    println!("init:service:05: base_path: {:?}", base_path);
     generate_symlinks(
         Some(base_path),
         &Path::new(&template_dir.output_path),
@@ -203,8 +197,7 @@ fn add_service_to_artifacts(
 
     let mut package_json_buffer: Option<String> = None;
     let mut pnpm_workspace_buffer: Option<String> = None;
-    println!("init:service:00: base_path: {:?}", base_path);
-    println!("init:service:00: app_root_path: {:?}", app_root_path);
+
     match runtime {
         Runtime::Bun => {
             package_json_buffer = Some(
@@ -575,9 +568,7 @@ impl CliCommand for ServiceCommand {
             .to_string()
             .into();
         
-        println!("init:service:06: config_path: {:?}", config_path);
-        println!("init:service:07: base_path: {:?}", base_path);
-        println!("init:service:08: app_root_path: {:?}", app_root_path);
+        
         let existing_manifest_data = from_str::<ApplicationManifestData>(
             &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
@@ -590,7 +581,7 @@ impl CliCommand for ServiceCommand {
             },
         ));
         
-        println!("init:service:09: existing_manifest_data: {:?}", existing_manifest_data.kebab_case_app_name);
+        
 
         let service_name = prompt_with_validation(
             &mut line_editor,

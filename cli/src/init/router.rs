@@ -24,7 +24,7 @@ use crate::{
             transform_seeders_index_ts::transform_seeders_index_ts,
             transform_server_ts::transform_server_ts,
         },
-        // base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        
         flexible_path::{create_generic_config, find_manifest_path},
         command::command,
         database::{self, is_in_memory_database},
@@ -222,30 +222,16 @@ impl CliCommand for RouterCommand {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        // let base_path_input = &prompt_base_path(
-        //     &mut line_editor,
-        //     &mut stdout,
-        //     matches,
-        //     &BasePathLocation::Router,
-        //     &BasePathType::Init,
-        // )?;
-        // let base_path = Path::new(&base_path_input);
-        // let path = Path::new(&base_path);
-
-        let current_dir = std::env::current_dir()?;
-        println!("init:router:00: Current directory: {:?}", current_dir);
-
         
 
-        // Determine where the router should be created
+        let current_dir = std::env::current_dir()?;
+        
         let router_base_path = if let Some(relative_path) = matches.get_one::<String>("base_path") {
             // User provided a relative path, resolve it relative to current directory
             let resolved_path = current_dir.join(relative_path);
-            println!("init:router:03: Router will be created at: {:?}", resolved_path);
             resolved_path
         } else {
             // No path provided, assume current directory is where router should go
-            println!("init:router:03: No path provided, router will be created in current directory: {:?}", current_dir);
             current_dir.clone()
         };
 
@@ -260,8 +246,6 @@ impl CliCommand for RouterCommand {
             anyhow::bail!("Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path.");
         };
         
-        println!("init:router:00: This is where the manifest lives: {:?}", config_path);
-        println!("init:router:01: This is where the router will be created: {:?}", router_base_path);
 
         let mut manifest_data = from_str::<RouterManifestData>(
             &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,

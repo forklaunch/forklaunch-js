@@ -469,7 +469,7 @@ impl CliCommand for ApplicationCommand {
                 },
                 |_| "Invalid path. Please provide a valid destination path.".to_string(),
             )?;
-            // println!("01: temp_path: {:?}", temp_path);
+            
             // Default behavior for other inputs
             let final_path = if temp_path == "source" {
                 format!("{}/src/modules", project_root_path)
@@ -480,9 +480,7 @@ impl CliCommand for ApplicationCommand {
             };
             final_path
         };
-        println!("02: application_path: {:?}", application_path);
-
-        println!("03: project_root_path: {:?}", project_root_path);
+        
 
         // Prompt for runtime
         let runtime: Runtime = prompt_with_validation(
@@ -750,13 +748,7 @@ impl CliCommand for ApplicationCommand {
         let mut project_peer_topology = HashMap::new();
         project_peer_topology.insert(name.to_string(), additional_projects_names.clone());
 
-        // let bun_package_json_workspace_paths = additional_projects
-        //     .clone()
-        //     .into_iter()
-        //     .map(|p| p.path.clone().unwrap())
-        //     .map(|path| path.trim_start_matches("./").to_string())
-        //     .collect::<Vec<String>>();
-        // println!("init:application:00: bun_package_json_workspace_paths: {:?}", bun_package_json_workspace_paths);
+        
         let bun_package_json_workspace_vec = match runtime {
             Runtime::Bun => Some(additional_projects_names.clone()),
             _ => None,
@@ -879,7 +871,7 @@ impl CliCommand for ApplicationCommand {
             )?)
             .unwrap(),
         );
-        // println!("init:application:00: template_dirs: {:?}", template_dirs);
+        
         // Write templates to template_dirs
         // Generate the service templates to be stored in the src/modules folder
         for template_dir in template_dirs {
@@ -975,8 +967,7 @@ impl CliCommand for ApplicationCommand {
                     docker_compose_string,
                 )?);
             }
-            // println!("init:application:01: application_path: {:?}", application_path);
-            // println!("init:application:02: template_dir: {:?}", template_dir);
+            
             rendered_templates.extend(generate_with_template(
                 Some(&application_path),
                 &template_dir,
@@ -1001,7 +992,6 @@ impl CliCommand for ApplicationCommand {
                 };
 
             let service_base_path = Path::new(&application_path).join(&template_dir.output_path);
-            // println!("init:application:03: service_base_path: {:?}", service_base_path);
             rendered_templates.push(generate_service_package_json(
                 &service_data,
                 &service_base_path,
@@ -1135,7 +1125,6 @@ impl CliCommand for ApplicationCommand {
         });
 
         // Generate the application package.json file in the src/modules folder
-        // println!("init:application:04: application_path in manifest: {:?}", data.app_path);
         rendered_templates.push(generate_application_package_json(
             &data,
             bun_package_json_workspace_vec,
@@ -1159,8 +1148,6 @@ impl CliCommand for ApplicationCommand {
             generate_gitignore(&Path::new(&project_root_path))
                 .with_context(|| ERROR_FAILED_TO_CREATE_GITIGNORE)?,
         );
-        // println!("init:application:02: application_path: {:?}", application_path);
-        // println!("init:application:03: additional_projects: {:?}", additional_projects);
         // Generate the pnpm-workspace.yaml file in the src/modules folder
         if runtime == Runtime::Node {
             rendered_templates.extend(
@@ -1178,7 +1165,6 @@ impl CliCommand for ApplicationCommand {
         create_forklaunch_dir(&Path::new(&project_root_path).to_string_lossy().to_string(), dryrun)?;
 
         // Add assets and readme files to the project root path
-        // println!("init:application:05: Testing assets and readme files now outside the template/application folder");
         rendered_templates.extend(generate_with_template(
             Some(&project_root_path),
             &PathIO {

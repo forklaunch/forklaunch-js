@@ -35,7 +35,7 @@ use crate::{
                 },
             },
         },
-        // base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        
         flexible_path::{create_generic_config, find_manifest_path},
         command::command,
         database::{get_database_variants, is_in_memory_database},
@@ -612,21 +612,13 @@ impl CliCommand for ServiceCommand {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
         let mut rendered_templates_cache = RenderedTemplatesCache::new();
 
-        // let base_path_input = prompt_base_path(
-        //     &mut line_editor,
-        //     &mut stdout,
-        //     matches,
-        //     &BasePathLocation::Service,
-        //     &BasePathType::Change,
-        // )?;
-        // let base_path = Path::new(&base_path_input);
+        
 
         let current_dir = std::env::current_dir().unwrap();
-        // Determine where the router should be created
+        
         let service_base_path = if let Some(relative_path) = matches.get_one::<String>("base_path") {
             // User provided a relative path, resolve it relative to current directory
             let resolved_path = current_dir.join(relative_path);
-            println!("init:service:03: Service will be deleted at: {:?}", resolved_path);
             resolved_path
         } else {
             current_dir.clone()
@@ -651,9 +643,7 @@ impl CliCommand for ServiceCommand {
             .to_string()
             .into();
         
-        println!("init:service:06: config_path: {:?}", config_path);
-        println!("init:service:07: base_path: {:?}", service_base_path);
-        println!("init:service:08: app_root_path: {:?}", app_root_path);
+        
 
         let mut manifest_data = toml::from_str::<ServiceManifestData>(
             &rendered_templates_cache

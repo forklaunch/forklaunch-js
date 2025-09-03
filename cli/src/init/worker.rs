@@ -101,7 +101,6 @@ fn generate_basic_worker(
     dryrun: bool,
 ) -> Result<()> {
     let output_path = base_path.join(worker_name);
-    println!("init:worker:00: output_path: {:?}", output_path);
     let template_dir = PathIO {
         input_path: Path::new("project")
             .join("worker")
@@ -624,7 +623,7 @@ impl CliCommand for WorkerCommand {
         } else {
             return Err(anyhow::anyhow!("Application directory not found in base_path, src/modules, or modules directories. Please check if your application is initialized and you are in the correct directory."));
         };
-        println!("init:worker:00: app_path: {:?}", app_path);
+        
 
 
         let manifest_path_config = create_generic_config();
@@ -645,9 +644,6 @@ impl CliCommand for WorkerCommand {
             .to_string()
             .into();
         
-        println!("init:worker:00: config_path: {:?}", config_path);
-        println!("init:worker:01: app_path: {:?}", app_path);
-        println!("init:worker:02: app_root_path: {:?}", app_root_path);
 
         let existing_manifest_data = from_str::<ApplicationManifestData>(
             &read_to_string(config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,

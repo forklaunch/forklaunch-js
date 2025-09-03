@@ -263,7 +263,6 @@ impl CliCommand for LibraryCommand {
         } else {
             return Err(anyhow::anyhow!("Application directory not found in base_path, src/modules, or modules directories. Please check if your application is initialized and you are in the correct directory."));
         };
-        println!("init:library:00: app_path: {:?}", app_path);
         let root_path_config = create_generic_config();
         let manifest_path = find_manifest_path(&base_path, &root_path_config);
         
@@ -358,7 +357,6 @@ impl CliCommand for LibraryCommand {
         };
 
         let dryrun = matches.get_flag("dryrun");
-        println!("init:library:00: This is where library is initialized: app_path: {:?}", app_path);
         generate_basic_library(
             &library_name,
             &app_path,
