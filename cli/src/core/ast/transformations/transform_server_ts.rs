@@ -69,7 +69,6 @@ pub(crate) fn transform_server_ts(router_name: &str, base_path: &Path) -> Result
         server_source_type,
     );
 
-    // Inject the import statement at the beginning of the file
     inject_into_import_statement(
         &mut server_program,
         &mut forklaunch_routes_import_injection,
