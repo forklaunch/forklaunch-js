@@ -10,6 +10,7 @@ cd "$TEST_DIR"
 # 1) Create a new application
 RUST_BACKTRACE=1 cargo run --release init application app \
   -p . \
+  -o modules \
   -d postgresql \
   -f prettier \
   -l eslint \
@@ -24,7 +25,7 @@ RUST_BACKTRACE=1 cargo run --release init application app \
   -L 'AGPL-3.0'
 
 # 2) Force manifest cli_version to match the running cargo binary (0.0.0)
-MANIFEST="app/.forklaunch/manifest.toml"
+MANIFEST=".forklaunch/manifest.toml"
 if [[ "$OSTYPE" == darwin* ]]; then
   sed -E -i '' 's/^cli_version[[:space:]]*=[[:space:]]*"[^"]*"/cli_version = "0.0.0"/' "$MANIFEST"
 else

@@ -767,7 +767,7 @@ impl CliCommand for ApplicationCommand {
             cli_version: env!("CARGO_PKG_VERSION").to_string(),
             app_path: application_path.clone(), // track the path to the src/modules or /modules folder
             manifest_path: project_root_path.clone(),
-            docker_compose_path: project_root_path.clone(),
+            docker_compose_path: "../..".to_string(), // path relative to manifest path (assuming manifest is project_root/.forklaunch/manifest.toml)
             database: database.to_string(),
             app_name: name.to_string(),
             camel_case_app_name: name.to_string().to_case(Case::Camel),

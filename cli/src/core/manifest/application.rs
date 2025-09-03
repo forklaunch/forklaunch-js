@@ -8,7 +8,7 @@ use crate::{config_struct, constants::Database};
 config_struct!(
     #[derive(Debug, Serialize, Content, Clone)]
     pub(crate) struct ApplicationManifestData {
-        #[serde(skip_serializing, skip_deserializing)]
+        
         pub(crate) app_path: String,
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) manifest_path: String,

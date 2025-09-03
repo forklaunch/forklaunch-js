@@ -18,7 +18,7 @@ RUST_BACKTRACE=1 cargo run --release eject -d @forklaunch/implementation-iam-bas
 
 pnpm build
 
-cd ../../..
+cd ../../../..
 
 RUST_BACKTRACE=1 cargo run --release init application service-test-bun-application -p ./service-test-bun-application -o source -d postgresql -f biome -l oxlint -v zod -F express -r bun -t vitest -m billing-base -m iam-base -D "Test service" -A "Rohin Bhargava" -L "MIT"
 
@@ -33,4 +33,4 @@ RUST_BACKTRACE=1 cargo run --release eject -d @forklaunch/implementation-billing
 
 bun run build
 
-cd ../../..
+cd ../../../..

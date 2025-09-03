@@ -17,8 +17,8 @@ RUST_BACKTRACE=1 cargo run --release init application dryrun-test-node-applicati
 cd dryrun-test-node-application/src/modules
 
 RUST_BACKTRACE=1 cargo run --release init library library-test -D "Test service" -p . -n
-RUST_BACKTRACE=1 cargo run --release init service service-test -d postgresql -D "Test service" -p src/modules -n
-RUST_BACKTRACE=1 cargo run --release init worker worker-test -t database -d postgresql -D "Test worker" -p src/modules -n
+RUST_BACKTRACE=1 cargo run --release init service service-test -d postgresql -D "Test service" -p . -n
+RUST_BACKTRACE=1 cargo run --release init worker worker-test -t database -d postgresql -D "Test worker" -p . -n
 
 if [ -d "library-test" ]; then
     echo "Error: library-test directory exists" >&2
@@ -36,7 +36,7 @@ if [ -d "worker-test" ]; then
 fi
 
 
-RUST_BACKTRACE=1 cargo run --release init service service-test -d postgresql -D "Test service" -p src/modules -n
+RUST_BACKTRACE=1 cargo run --release init service service-test -d postgresql -D "Test service" -p . -n
 
 cd service-test
 

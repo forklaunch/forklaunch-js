@@ -1,4 +1,4 @@
-use std::{fs::read_to_string, io::Write, path::Path};
+use std::{fs::read_to_string, io::Write, path::{Path, PathBuf}};
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, ArgMatches, Command};
@@ -17,6 +17,7 @@ use crate::{
     },
     core::{
         base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        flexible_path::{create_generic_config, find_manifest_path, get_base_app_path},
         command::command,
         database::{
             get_database_port, get_database_variants, get_db_driver, is_in_memory_database,
@@ -80,12 +81,12 @@ impl CliCommand for ModuleCommand {
                     .help("Dry run the command")
                     .action(ArgAction::SetTrue),
             )
-            .arg(
-                Arg::new("module_folder")
-                    .short('f')
-                    .long("module-folder")
-                    .help("The folder to store the module in")
-            )
+            // .arg(
+            //     Arg::new("module_folder")
+            //         .short('f')
+            //         .long("module-folder")
+            //         .help("The folder to store the module in")
+            // )
     }
 
     // pass token in from parent and perform get token above?
@@ -102,23 +103,39 @@ impl CliCommand for ModuleCommand {
             &BasePathType::Init,
         )?;
         let base_path = Path::new(&base_path_input);
-        // println!("00: base_path: {:?}", base_path);
+        
+        println!("init:module:00: base_path: {:?}", base_path);
 
-        let config_path = Path::new(&base_path)
-            .join(".forklaunch")
-            .join("manifest.toml");
-        // println!("01: config_path: {:?}", config_path);
+        let manifest_path_config = create_generic_config();
+        let manifest_path = find_manifest_path(&base_path, &manifest_path_config);
+        let config_path = if let Some(manifest) = manifest_path {
+            manifest
+        } else {
+            // No manifest found, this might be an error or we need to search more broadly
+            anyhow::bail!("Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path.");
+        };
+        println!("init:module:01: config_path: {:?}", config_path);
+        let app_root_path: PathBuf = config_path
+            .to_string_lossy()
+            .strip_suffix(".forklaunch/manifest.toml")
+            .ok_or_else(|| {
+            anyhow::anyhow!("Expected manifest path to end with .forklaunch/manifest.toml, got: {:?}", config_path)
+        })?
+            .to_string()
+            .into();
+        println!("init:module:01: app_root_path: {:?}", app_root_path);
         let existing_manifest_data = toml::from_str::<ApplicationManifestData>(
             &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
-        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
-        .initialize(InitializableManifestConfigMetadata::Application(
+        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+        
+        existing_manifest_data.initialize(InitializableManifestConfigMetadata::Application(
             ApplicationInitializationMetadata {
-                app_name: base_path.file_name().unwrap().to_string_lossy().to_string(),
+                app_name: existing_manifest_data.app_name.clone(),
                 database: None,
             },
         ));
-
+        println!("init:module:02: existing_manifest_data: {:?}", existing_manifest_data.app_name);
         let module: Module = prompt_with_validation(
             &mut line_editor,
             &mut stdout,
@@ -158,17 +175,13 @@ impl CliCommand for ModuleCommand {
         let dryrun = matches.get_flag("dryrun");
 
         // Default output path should be src/modules/(module_name)
-        let src_path = base_path.join("src");
-        let destination_path = if let Some(module_folder) = matches.get_one::<String>("module_folder") {
-            base_path.join(Path::new(&module_folder))
-        } else if src_path.exists() && src_path.is_dir() {
-            src_path
-                .join("modules")
+        let app_path = if let Some(temp_app_path) = get_base_app_path(&base_path_input) {
+            temp_app_path
         } else {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
             writeln!(
                 stdout,
-                "No 'src' folder in project root. Please confirm where module will be initialized."
+                "No 'modules' folder in application root. Please confirm where module will be initialized."
             )?;
             stdout.reset()?;
             let temp_path: String = prompt_with_validation(
@@ -190,7 +203,39 @@ impl CliCommand for ModuleCommand {
             )?;
             base_path.join(Path::new(&temp_path)).to_path_buf()
         };
-        // println!("02: destination_path: {:?}", destination_path);
+        // let src_path = base_path.join("src");
+        // let destination_path = if let Some(module_folder) = matches.get_one::<String>("module_folder") {
+        //     base_path.join(Path::new(&module_folder))
+        // } else if src_path.exists() && src_path.is_dir() {
+        //     src_path
+        //         .join("modules")
+        // } else {
+        //     stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+        //     writeln!(
+        //         stdout,
+        //         "No 'src' folder in project root. Please confirm where module will be initialized."
+        //     )?;
+        //     stdout.reset()?;
+        //     let temp_path: String = prompt_with_validation(
+        //         &mut line_editor,
+        //         &mut stdout,
+        //         "destination_path",
+        //         matches,
+        //         "Confirm where module will be initialized:",
+        //         Some(&["src/modules", "modules"]),
+        //         |input| {
+        //             let path = Path::new(&input);
+        //             if let Some(parent) = path.parent() {
+        //                 parent.exists() || parent.to_str().is_some()
+        //             } else {
+        //                 false
+        //             }
+        //         },
+        //         |_| "Invalid path. Please provide a valid destination path.".to_string(),
+        //     )?;
+        //     base_path.join(Path::new(&temp_path)).to_path_buf()
+        // };
+        println!("init:module:03: app_path: {:?}", app_path);
 
         let name = existing_manifest_data.app_name.clone();
 
@@ -258,8 +303,8 @@ impl CliCommand for ModuleCommand {
             is_better_auth: module.clone() == Module::BetterAuthIam,
             is_stripe: module.clone() == Module::StripeBilling,
         };
-        println!("init:module:00: service_data: {:?}", service_data);
-        println!("init:module:01: module: {:?}", module);
+        println!("init:module:04: service_data: {:?}", service_data.docker_compose_path);
+        println!("init:module:05: module: {:?}", module);
         let manifest_data = add_project_definition_to_manifest(
             ProjectType::Service,
             &mut service_data,
@@ -279,7 +324,7 @@ impl CliCommand for ModuleCommand {
                 .join(&module.metadata().exclusive_files.unwrap().first().unwrap())
                 .to_string_lossy()
                 .to_string(),
-            output_path: destination_path
+            output_path: app_path.clone()
                 .join(get_service_module_name(&module))
                 .to_string_lossy()
                 .to_string(),
@@ -294,10 +339,12 @@ impl CliCommand for ModuleCommand {
             content: manifest_data,
             context: Some(ERROR_FAILED_TO_WRITE_MANIFEST.to_string()),
         });
-        println!("init:module:04: docker-compose.yaml: {:?}", base_path.join("docker-compose.yaml"));
+        println!("init:module:06: docker-compose.yaml: {:?}", app_root_path.join("docker-compose.yaml"));
+        println!("init:module:07: manifest_data.docker_compose_path: {:?}", existing_manifest_data.docker_compose_path);
+        println!("init:module:08: docker relative to manifest: {:?}", app_root_path.join("docker-compose.yaml"));
         rendered_templates.push(RenderedTemplate {
-            path: base_path.join("docker-compose.yaml"),
-            content: add_service_definition_to_docker_compose(&service_data, base_path, None)?,
+            path: app_root_path.join("docker-compose.yaml"),
+            content: add_service_definition_to_docker_compose(&service_data, &app_root_path, None)?,
             context: Some(ERROR_FAILED_TO_WRITE_DOCKER_COMPOSE.to_string()),
         });
         println!("init:module:05: template_dir: {:?}", template_dir);
@@ -314,25 +361,25 @@ impl CliCommand for ModuleCommand {
         // println!("07 service_name: {:?}", get_service_module_name(&module));
         rendered_templates.push(generate_service_package_json(
             &service_data,
-            &destination_path.join(get_service_module_name(&module)),
+            &app_path.clone().join(get_service_module_name(&module)),
             None,
             None,
             None,
             None,
         )?);
-
+        println!("init:module:09: app_path: {:?}", app_path);
         match runtime {
             Runtime::Node => {
                 rendered_templates.push(RenderedTemplate {
-                    path: base_path.join("pnpm-workspace.yaml"),
-                    content: add_project_definition_to_pnpm_workspace(base_path, &service_data)?,
+                    path: app_path.join("pnpm-workspace.yaml"),
+                    content: add_project_definition_to_pnpm_workspace(&app_path, &service_data)?,
                     context: Some(ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE.to_string()),
                 });
             }
             Runtime::Bun => {
                 rendered_templates.push(RenderedTemplate {
-                    path: base_path.join("package.json"),
-                    content: add_project_definition_to_package_json(base_path, &service_data)?,
+                    path: app_path.join("package.json"),
+                    content: add_project_definition_to_package_json(&app_path, &service_data)?,
                     context: Some(ERROR_FAILED_TO_CREATE_PACKAGE_JSON.to_string()),
                 });
             }
@@ -343,8 +390,8 @@ impl CliCommand for ModuleCommand {
         // println!("module:09: destination_path: {:?}", destination_path);
         if !dryrun {
             generate_symlinks(
-                Some(base_path),
-                &destination_path.join(get_service_module_name(&module)),
+                Some(&app_path),
+                &app_path.clone().join(get_service_module_name(&module)),
                 &mut service_data,
                 dryrun,
             )?;
@@ -355,7 +402,7 @@ impl CliCommand for ModuleCommand {
                 get_service_module_name(&module)
             )?;
             stdout.reset()?;
-            format_code(&base_path, &service_data.runtime.parse()?);
+            format_code(&app_path, &service_data.runtime.parse()?);
         }
 
         Ok(())
