@@ -33,7 +33,7 @@ fi
 
 # 3) Trigger a command and decline upgrade; expect non-zero exit
 set +e
-printf "n\n" | RUST_BACKTRACE=1 cargo run --release depcheck -p app >/dev/null 2>&1
+printf "n\n" | RUST_BACKTRACE=1 cargo run --release depcheck -p . >/dev/null 2>&1
 EXIT_CODE=$?
 set -e
 

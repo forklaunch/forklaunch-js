@@ -33,7 +33,7 @@ else
 fi
 
 # 3) Run a command that triggers precheck; expect no prompt and success
-RUST_BACKTRACE=1 cargo run --release depcheck -p app
+RUST_BACKTRACE=1 cargo run --release depcheck -p .
 
 echo "OK: precheck version match allowed command to run"
 
