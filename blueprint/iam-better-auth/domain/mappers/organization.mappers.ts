@@ -1,63 +1,59 @@
-import { SchemaValidator } from '@forklaunch/blueprint-core';
-import { RequestMapper, ResponseMapper } from '@forklaunch/core/mappers';
+import { schemaValidator } from '@forklaunch/blueprint-core';
+import { requestMapper, responseMapper } from '@forklaunch/core/mappers';
 import { EntityManager } from '@mikro-orm/core';
 import { OrganizationStatus } from '../../domain/enum/organizationStatus.enum';
 import { Organization } from '../../persistence/entities/organization.entity';
-import { OrganizationSchemas } from '../../registrations';
+import { OrganizationSchemas } from '../schemas';
 import { UserMapper } from './user.mappers';
 
-export class CreateOrganizationMapper extends RequestMapper<
+export const CreateOrganizationMapper = requestMapper(
+  schemaValidator,
+  OrganizationSchemas.CreateOrganizationSchema,
   Organization,
-  SchemaValidator
-> {
-  schema = OrganizationSchemas.CreateOrganizationSchema;
-
-  async toEntity(em: EntityManager): Promise<Organization> {
-    return Organization.create(
-      {
-        ...this.dto,
-        users: [],
-        status: OrganizationStatus.ACTIVE,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      em
-    );
+  {
+    toEntity: async (dto, em: EntityManager) => {
+      return Organization.create(
+        {
+          ...dto,
+          users: [],
+          status: OrganizationStatus.ACTIVE,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        em
+      );
+    }
   }
-}
+);
 
-export class UpdateOrganizationMapper extends RequestMapper<
+export const UpdateOrganizationMapper = requestMapper(
+  schemaValidator,
+  OrganizationSchemas.UpdateOrganizationSchema,
   Organization,
-  SchemaValidator
-> {
-  schema = OrganizationSchemas.UpdateOrganizationSchema;
-
-  async toEntity(em: EntityManager): Promise<Organization> {
-    return Organization.update(this.dto, em);
+  {
+    toEntity: async (dto, em: EntityManager) => {
+      return Organization.update(dto, em);
+    }
   }
-}
-export class OrganizationMapper extends ResponseMapper<
-  Organization,
-  SchemaValidator
-> {
-  schema = OrganizationSchemas.OrganizationSchema(OrganizationStatus);
+);
 
-  async fromEntity(entity: Organization): Promise<this> {
-    this.dto = {
-      ...(await entity.read()),
-      users: await Promise.all(
-        entity.users
-          .getItems()
-          .map(async (user) =>
-            (
-              await UserMapper.fromEntity(
-                this.schemaValidator as SchemaValidator,
-                user
-              )
-            ).toDto()
+export const OrganizationMapper = responseMapper(
+  schemaValidator,
+  OrganizationSchemas.OrganizationSchema(OrganizationStatus),
+  Organization,
+  {
+    toDto: async (entity: Organization) => {
+      return {
+        ...(await entity.read()),
+        users: await Promise.all(
+          (entity.users.isInitialized()
+            ? entity.users
+            : await entity.users.init()
           )
-      )
-    };
-    return this;
+            .getItems()
+            .map(async (user) => UserMapper.toDto(user))
+        )
+      };
+    }
   }
-}
+);

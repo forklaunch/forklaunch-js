@@ -1,4 +1,4 @@
-import { IdDto, InstanceTypeRecord } from '@forklaunch/common';
+import { IdDto } from '@forklaunch/common';
 import { TtlCache } from '@forklaunch/core/cache';
 import {
   MetricsDefinition,
@@ -6,21 +6,18 @@ import {
   TelemetryOptions
 } from '@forklaunch/core/http';
 import { BaseCheckoutSessionService } from '@forklaunch/implementation-billing-base/services';
+import { CheckoutSessionMappers } from '@forklaunch/implementation-billing-base/types';
 import { CheckoutSessionService } from '@forklaunch/interfaces-billing/interfaces';
-import {
-  IdentityRequestMapper,
-  IdentityResponseMapper,
-  InternalMapper,
-  RequestMapperConstructor,
-  ResponseMapperConstructor,
-  transformIntoInternalMapper
-} from '@forklaunch/internal';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { EntityManager } from '@mikro-orm/core';
 import Stripe from 'stripe';
 import { CurrencyEnum } from '../domain/enum/currency.enum';
 import { PaymentMethodEnum } from '../domain/enum/paymentMethod.enum';
-import { StripeCheckoutSessionDtos } from '../domain/types/stripe.dto.types';
+import { StripeCheckoutSessionMappers } from '../domain/types/checkoutSession.mapper.types';
+import {
+  StripeCheckoutSessionDtos,
+  StripeCreateCheckoutSessionDto
+} from '../domain/types/stripe.dto.types';
 import { StripeCheckoutSessionEntities } from '../domain/types/stripe.entity.types';
 
 export class StripeCheckoutSessionService<
@@ -43,45 +40,22 @@ export class StripeCheckoutSessionService<
 {
   baseCheckoutSessionService: BaseCheckoutSessionService<
     SchemaValidator,
-    typeof PaymentMethodEnum,
-    typeof CurrencyEnum,
+    PaymentMethodEnum,
+    CurrencyEnum,
     StatusEnum,
     Entities,
-    Entities
+    Dto
   >;
-  protected _mappers: InternalMapper<InstanceTypeRecord<typeof this.mappers>>;
   protected readonly stripeClient: Stripe;
   protected readonly em: EntityManager;
   protected readonly cache: TtlCache;
   protected readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
   protected readonly schemaValidator: SchemaValidator;
-  protected readonly mappers: {
-    CheckoutSessionMapper: ResponseMapperConstructor<
-      SchemaValidator,
-      Dto['CheckoutSessionMapper'],
-      Entities['CheckoutSessionMapper']
-    >;
-    CreateCheckoutSessionMapper: RequestMapperConstructor<
-      SchemaValidator,
-      Dto['CreateCheckoutSessionMapper'],
-      Entities['CreateCheckoutSessionMapper'],
-      (
-        dto: Dto['CreateCheckoutSessionMapper'],
-        em: EntityManager,
-        session: Stripe.Checkout.Session
-      ) => Promise<Entities['CreateCheckoutSessionMapper']>
-    >;
-    UpdateCheckoutSessionMapper: RequestMapperConstructor<
-      SchemaValidator,
-      Dto['UpdateCheckoutSessionMapper'],
-      Entities['UpdateCheckoutSessionMapper'],
-      (
-        dto: Dto['UpdateCheckoutSessionMapper'],
-        em: EntityManager,
-        session: Stripe.Checkout.Session
-      ) => Promise<Entities['UpdateCheckoutSessionMapper']>
-    >;
-  };
+  protected readonly mappers: StripeCheckoutSessionMappers<
+    StatusEnum,
+    Entities,
+    Dto
+  >;
 
   constructor(
     stripeClient: Stripe,
@@ -89,33 +63,7 @@ export class StripeCheckoutSessionService<
     cache: TtlCache,
     openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
     schemaValidator: SchemaValidator,
-    mappers: {
-      CheckoutSessionMapper: ResponseMapperConstructor<
-        SchemaValidator,
-        Dto['CheckoutSessionMapper'],
-        Entities['CheckoutSessionMapper']
-      >;
-      CreateCheckoutSessionMapper: RequestMapperConstructor<
-        SchemaValidator,
-        Dto['CreateCheckoutSessionMapper'],
-        Entities['CreateCheckoutSessionMapper'],
-        (
-          dto: Dto['CreateCheckoutSessionMapper'],
-          em: EntityManager,
-          session: Stripe.Checkout.Session
-        ) => Promise<Entities['CreateCheckoutSessionMapper']>
-      >;
-      UpdateCheckoutSessionMapper: RequestMapperConstructor<
-        SchemaValidator,
-        Dto['UpdateCheckoutSessionMapper'],
-        Entities['UpdateCheckoutSessionMapper'],
-        (
-          dto: Dto['UpdateCheckoutSessionMapper'],
-          em: EntityManager,
-          session: Stripe.Checkout.Session
-        ) => Promise<Entities['UpdateCheckoutSessionMapper']>
-      >;
-    },
+    mappers: StripeCheckoutSessionMappers<StatusEnum, Entities, Dto>,
     readonly options?: {
       enableDatabaseBackup?: boolean;
       telemetry?: TelemetryOptions;
@@ -127,29 +75,25 @@ export class StripeCheckoutSessionService<
     this.openTelemetryCollector = openTelemetryCollector;
     this.schemaValidator = schemaValidator;
     this.mappers = mappers;
-    this._mappers = transformIntoInternalMapper(mappers, schemaValidator);
     this.baseCheckoutSessionService = new BaseCheckoutSessionService(
       em,
       cache,
       openTelemetryCollector,
       schemaValidator,
-      {
-        CheckoutSessionMapper: IdentityResponseMapper<
-          Entities['CheckoutSessionMapper']
-        >,
-        CreateCheckoutSessionMapper: IdentityRequestMapper<
-          Entities['CreateCheckoutSessionMapper']
-        >,
-        UpdateCheckoutSessionMapper: IdentityRequestMapper<
-          Entities['UpdateCheckoutSessionMapper']
-        >
-      },
+      mappers as CheckoutSessionMappers<
+        PaymentMethodEnum,
+        CurrencyEnum,
+        StatusEnum,
+        Entities,
+        Dto
+      >,
       options
     );
   }
 
   async createCheckoutSession(
-    checkoutSessionDto: Dto['CreateCheckoutSessionMapper']
+    checkoutSessionDto: StripeCreateCheckoutSessionDto<StatusEnum>,
+    ...args: unknown[]
   ): Promise<Dto['CheckoutSessionMapper']> {
     const session = await this.stripeClient.checkout.sessions.create({
       ...checkoutSessionDto.stripeFields,
@@ -159,37 +103,32 @@ export class StripeCheckoutSessionService<
       cancel_url: checkoutSessionDto.cancelRedirectUri
     });
 
-    const checkoutSessionEntity =
-      await this.baseCheckoutSessionService.createCheckoutSession(
-        await this._mappers.CreateCheckoutSessionMapper.deserializeDtoToEntity(
-          {
-            ...checkoutSessionDto,
-            id: session.id,
-            uri: session.url,
-            expiresAt: new Date(Date.now() + 5 * 60 * 1000),
-            providerFields: session
-          },
-          this.em,
-          session
-        )
-      );
-
-    return this._mappers.CheckoutSessionMapper.serializeEntityToDto(
-      checkoutSessionEntity
+    return await this.baseCheckoutSessionService.createCheckoutSession(
+      {
+        ...checkoutSessionDto,
+        id: session.id,
+        uri: session.url ?? undefined,
+        expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+        providerFields: session
+      },
+      this.em,
+      session,
+      ...args
     );
   }
 
-  async getCheckoutSession({
-    id
-  }: IdDto): Promise<Dto['CheckoutSessionMapper']> {
+  async getCheckoutSession(
+    idDto: IdDto
+  ): Promise<Dto['CheckoutSessionMapper']> {
+    const session = await this.stripeClient.checkout.sessions.retrieve(
+      idDto.id
+    );
     const databaseCheckoutSession =
-      await this.baseCheckoutSessionService.getCheckoutSession({ id });
-    return {
-      ...this._mappers.CheckoutSessionMapper.serializeEntityToDto(
-        databaseCheckoutSession
-      ),
-      stripeFields: await this.stripeClient.checkout.sessions.retrieve(id)
-    };
+      await this.baseCheckoutSessionService.getCheckoutSession(idDto);
+
+    databaseCheckoutSession.stripeFields = session;
+
+    return databaseCheckoutSession;
   }
 
   async expireCheckoutSession({ id }: IdDto): Promise<void> {

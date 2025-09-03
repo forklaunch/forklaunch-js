@@ -1,5 +1,64 @@
 # @forklaunch/universal-sdk
 
+## 0.7.5
+
+### Patch Changes
+
+- update internal packages
+- Updated dependencies
+  - @forklaunch/common@0.6.5
+
+## 0.7.4
+
+### Patch Changes
+
+- Update internal package versions and add mapServiceSchemas method for clean DX in implemented modules
+- Updated dependencies
+  - @forklaunch/common@0.6.4
+
+## 0.7.3
+
+### Patch Changes
+
+- toDomain -> toDto for more accurate naming conventions
+- Updated dependencies
+  - @forklaunch/common@0.6.3
+
+## 0.7.2
+
+### Patch Changes
+
+- toDto -> toDomain
+- Updated dependencies
+  - @forklaunch/common@0.6.2
+
+## 0.7.1
+
+### Patch Changes
+
+- request and response mapper discrimination and clean up of internal types
+- Updated dependencies
+  - @forklaunch/common@0.6.1
+
+## 0.7.0
+
+### Minor Changes
+
+- remove class based mappers
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/common@0.6.0
+
+## 0.6.8
+
+### Patch Changes
+
+- add mappers as functions
+- Updated dependencies
+  - @forklaunch/common@0.5.8
+
 ## 0.6.7
 
 ### Patch Changes

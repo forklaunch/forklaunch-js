@@ -7,25 +7,23 @@ import {
 import { RoleService } from '@forklaunch/interfaces-iam/interfaces';
 import { EntityManager } from '@mikro-orm/core';
 
-import { IdDto, IdsDto, InstanceTypeRecord } from '@forklaunch/common';
-import { RoleDto } from '@forklaunch/interfaces-iam/types';
+import { IdDto, IdsDto } from '@forklaunch/common';
 import {
-  InternalMapper,
-  RequestMapperConstructor,
-  ResponseMapperConstructor,
-  transformIntoInternalMapper
-} from '@forklaunch/internal';
+  CreateRoleDto,
+  RoleDto,
+  UpdateRoleDto
+} from '@forklaunch/interfaces-iam/types';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { RoleDtos } from '../domain/types/iamDto.types';
 import { RoleEntities } from '../domain/types/iamEntities.types';
+import { RoleMappers } from '../domain/types/role.mapper.types';
 
 export class BaseRoleService<
   SchemaValidator extends AnySchemaValidator,
-  MapperEntities extends RoleEntities,
-  MapperDto extends RoleDtos = RoleDtos
+  MapperEntities extends RoleEntities = RoleEntities,
+  MapperDomains extends RoleDtos = RoleDtos
 > implements RoleService
 {
-  protected _mappers: InternalMapper<InstanceTypeRecord<typeof this.mappers>>;
   private evaluatedTelemetryOptions: {
     logging?: boolean;
     metrics?: boolean;
@@ -34,61 +32,13 @@ export class BaseRoleService<
   public em: EntityManager;
   protected openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
   protected schemaValidator: SchemaValidator;
-  protected mappers: {
-    RoleMapper: ResponseMapperConstructor<
-      SchemaValidator,
-      MapperDto['RoleMapper'],
-      MapperEntities['RoleMapper']
-    >;
-    CreateRoleMapper: RequestMapperConstructor<
-      SchemaValidator,
-      MapperDto['CreateRoleMapper'],
-      MapperEntities['CreateRoleMapper'],
-      (
-        dto: MapperDto['CreateRoleMapper'],
-        em: EntityManager
-      ) => Promise<MapperEntities['CreateRoleMapper']>
-    >;
-    UpdateRoleMapper: RequestMapperConstructor<
-      SchemaValidator,
-      MapperDto['UpdateRoleMapper'],
-      MapperEntities['UpdateRoleMapper'],
-      (
-        dto: MapperDto['UpdateRoleMapper'],
-        em: EntityManager
-      ) => Promise<MapperEntities['UpdateRoleMapper']>
-    >;
-  };
+  protected mappers: RoleMappers<MapperEntities, MapperDomains>;
 
   constructor(
     em: EntityManager,
     openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
     schemaValidator: SchemaValidator,
-    mappers: {
-      RoleMapper: ResponseMapperConstructor<
-        SchemaValidator,
-        MapperDto['RoleMapper'],
-        MapperEntities['RoleMapper']
-      >;
-      CreateRoleMapper: RequestMapperConstructor<
-        SchemaValidator,
-        MapperDto['CreateRoleMapper'],
-        MapperEntities['CreateRoleMapper'],
-        (
-          dto: MapperDto['CreateRoleMapper'],
-          em: EntityManager
-        ) => Promise<MapperEntities['CreateRoleMapper']>
-      >;
-      UpdateRoleMapper: RequestMapperConstructor<
-        SchemaValidator,
-        MapperDto['UpdateRoleMapper'],
-        MapperEntities['UpdateRoleMapper'],
-        (
-          dto: MapperDto['UpdateRoleMapper'],
-          em: EntityManager
-        ) => Promise<MapperEntities['UpdateRoleMapper']>
-      >;
-    },
+    mappers: RoleMappers<MapperEntities, MapperDomains>,
     options?: {
       telemetry?: TelemetryOptions;
     }
@@ -97,7 +47,6 @@ export class BaseRoleService<
     this.openTelemetryCollector = openTelemetryCollector;
     this.schemaValidator = schemaValidator;
     this.mappers = mappers;
-    this._mappers = transformIntoInternalMapper(mappers, schemaValidator);
     this.evaluatedTelemetryOptions = options?.telemetry
       ? evaluateTelemetryOptions(options.telemetry).enabled
       : {
@@ -108,15 +57,17 @@ export class BaseRoleService<
   }
 
   async createRole(
-    roleDto: MapperDto['CreateRoleMapper'],
-    em?: EntityManager
-  ): Promise<MapperDto['RoleMapper']> {
+    roleDto: CreateRoleDto,
+    em?: EntityManager,
+    ...args: unknown[]
+  ): Promise<RoleDto> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info('Creating role', roleDto);
     }
-    const role = await this._mappers.CreateRoleMapper.deserializeDtoToEntity(
+    const role = await this.mappers.CreateRoleMapper.toEntity(
       roleDto,
-      em ?? this.em
+      em ?? this.em,
+      ...args
     );
 
     if (em) {
@@ -125,23 +76,21 @@ export class BaseRoleService<
       await this.em.persistAndFlush(role);
     }
 
-    return this._mappers.RoleMapper.serializeEntityToDto(role);
+    return this.mappers.RoleMapper.toDto(role);
   }
 
   async createBatchRoles(
-    roleDtos: MapperDto['CreateRoleMapper'][],
-    em?: EntityManager
-  ): Promise<MapperDto['RoleMapper'][]> {
+    roleDtos: CreateRoleDto[],
+    em?: EntityManager,
+    ...args: unknown[]
+  ): Promise<RoleDto[]> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info('Creating batch roles', roleDtos);
     }
 
     const roles = await Promise.all(
       roleDtos.map(async (roleDto) =>
-        this._mappers.CreateRoleMapper.deserializeDtoToEntity(
-          roleDto,
-          em ?? this.em
-        )
+        this.mappers.CreateRoleMapper.toEntity(roleDto, em ?? this.em, ...args)
       )
     );
 
@@ -152,7 +101,7 @@ export class BaseRoleService<
     }
 
     return Promise.all(
-      roles.map((role) => this._mappers.RoleMapper.serializeEntityToDto(role))
+      roles.map((role) => this.mappers.RoleMapper.toDto(role))
     );
   }
 
@@ -165,9 +114,7 @@ export class BaseRoleService<
       populate: ['id', '*']
     });
 
-    return this._mappers.RoleMapper.serializeEntityToDto(
-      role as MapperEntities['RoleMapper']
-    );
+    return this.mappers.RoleMapper.toDto(role as MapperEntities['RoleMapper']);
   }
 
   async getBatchRoles({ ids }: IdsDto, em?: EntityManager): Promise<RoleDto[]> {
@@ -187,24 +134,24 @@ export class BaseRoleService<
           }
         )
       ).map((role) =>
-        this._mappers.RoleMapper.serializeEntityToDto(
-          role as MapperEntities['RoleMapper']
-        )
+        this.mappers.RoleMapper.toDto(role as MapperEntities['RoleMapper'])
       )
     );
   }
 
   async updateRole(
-    roleDto: MapperDto['UpdateRoleMapper'],
-    em?: EntityManager
-  ): Promise<MapperDto['RoleMapper']> {
+    roleDto: UpdateRoleDto,
+    em?: EntityManager,
+    ...args: unknown[]
+  ): Promise<RoleDto> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info('Updating role', roleDto);
     }
 
-    const role = await this._mappers.UpdateRoleMapper.deserializeDtoToEntity(
+    const role = await this.mappers.UpdateRoleMapper.toEntity(
       roleDto,
-      em ?? this.em
+      em ?? this.em,
+      ...args
     );
 
     if (em) {
@@ -213,23 +160,21 @@ export class BaseRoleService<
       await this.em.persistAndFlush(role);
     }
 
-    return this._mappers.RoleMapper.serializeEntityToDto(role);
+    return this.mappers.RoleMapper.toDto(role);
   }
 
   async updateBatchRoles(
-    roleDtos: MapperDto['UpdateRoleMapper'][],
-    em?: EntityManager
-  ): Promise<MapperDto['RoleMapper'][]> {
+    roleDtos: UpdateRoleDto[],
+    em?: EntityManager,
+    ...args: unknown[]
+  ): Promise<RoleDto[]> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info('Updating batch roles', roleDtos);
     }
 
     const roles = await Promise.all(
       roleDtos.map(async (roleDto) =>
-        this._mappers.UpdateRoleMapper.deserializeDtoToEntity(
-          roleDto,
-          em ?? this.em
-        )
+        this.mappers.UpdateRoleMapper.toEntity(roleDto, em ?? this.em, ...args)
       )
     );
 
@@ -240,9 +185,7 @@ export class BaseRoleService<
     }
     return Promise.all(
       roles.map((role) =>
-        this._mappers.RoleMapper.serializeEntityToDto(
-          role as MapperEntities['RoleMapper']
-        )
+        this.mappers.RoleMapper.toDto(role as MapperEntities['RoleMapper'])
       )
     );
   }

@@ -28,7 +28,7 @@ export const SampleWorkerController = (
         },
         responses: {
           // specifies the success response schema using Mapper constructs
-          200: SampleWorkerResponseMapper.schema()
+          200: SampleWorkerResponseMapper.schema
         }
       },
       async (req, res) => {
@@ -49,10 +49,10 @@ export const SampleWorkerController = (
         name: 'sampleWorker',
         summary: 'SampleWorker',
         // specifies the request body schema using Mapper constructs
-        body: SampleWorkerRequestMapper.schema(),
+        body: SampleWorkerRequestMapper.schema,
         responses: {
           // specifies the success response schema using Mapper constructs
-          200: SampleWorkerResponseMapper.schema()
+          200: SampleWorkerResponseMapper.schema
         }
       },
       async (req, res) => {

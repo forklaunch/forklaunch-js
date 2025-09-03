@@ -1,5 +1,85 @@
 # @forklaunch/hyper-express
 
+## 0.9.6
+
+### Patch Changes
+
+- update internal packages
+- Updated dependencies
+  - @forklaunch/validator@0.10.5
+  - @forklaunch/common@0.6.5
+  - @forklaunch/core@0.14.6
+
+## 0.9.5
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.14.5
+
+## 0.9.4
+
+### Patch Changes
+
+- Update internal package versions and add mapServiceSchemas method for clean DX in implemented modules
+- Updated dependencies
+  - @forklaunch/validator@0.10.4
+  - @forklaunch/common@0.6.4
+  - @forklaunch/core@0.14.4
+
+## 0.9.3
+
+### Patch Changes
+
+- toDomain -> toDto for more accurate naming conventions
+- Updated dependencies
+  - @forklaunch/validator@0.10.3
+  - @forklaunch/common@0.6.3
+  - @forklaunch/core@0.14.3
+
+## 0.9.2
+
+### Patch Changes
+
+- toDto -> toDomain
+- Updated dependencies
+  - @forklaunch/validator@0.10.2
+  - @forklaunch/common@0.6.2
+  - @forklaunch/core@0.14.2
+
+## 0.9.1
+
+### Patch Changes
+
+- request and response mapper discrimination and clean up of internal types
+- Updated dependencies
+  - @forklaunch/validator@0.10.1
+  - @forklaunch/common@0.6.1
+  - @forklaunch/core@0.14.1
+
+## 0.9.0
+
+### Minor Changes
+
+- remove class based mappers
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.10.0
+  - @forklaunch/common@0.6.0
+  - @forklaunch/core@0.14.0
+
+## 0.8.9
+
+### Patch Changes
+
+- add mappers as functions
+- Updated dependencies
+  - @forklaunch/validator@0.9.9
+  - @forklaunch/common@0.5.8
+  - @forklaunch/core@0.13.9
+
 ## 0.8.8
 
 ### Patch Changes

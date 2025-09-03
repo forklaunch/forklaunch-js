@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/hyper-express",
-  "version": "0.8.8",
+  "version": "0.9.6",
   "description": "Forklaunch framework for hyper-express.",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -39,12 +39,12 @@
     "@forklaunch/core": "workspace:*",
     "@forklaunch/hyper-express-fork": "^6.17.35",
     "@forklaunch/validator": "workspace:*",
-    "@scalar/express-api-reference": "^0.8.15",
+    "@scalar/express-api-reference": "^0.8.16",
     "cors": "^2.8.5",
     "live-directory": "^3.0.3",
     "openapi3-ts": "^4.5.0",
     "qs": "^6.14.0",
-    "swagger-ui-dist": "^5.27.1",
+    "swagger-ui-dist": "^5.28.0",
     "swagger-ui-express": "^5.0.1",
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.52.0"
   },
@@ -56,8 +56,8 @@
     "@types/qs": "^6.14.0",
     "@types/swagger-ui-dist": "^3.30.6",
     "@types/swagger-ui-express": "^4.1.8",
-    "@typescript/native-preview": "7.0.0-dev.20250825.1",
-    "jest": "^30.0.5",
+    "@typescript/native-preview": "7.0.0-dev.20250830.1",
+    "jest": "^30.1.1",
     "kill-port-process": "^3.2.1",
     "prettier": "^3.6.2",
     "ts-jest": "^29.4.1",
@@ -66,6 +66,6 @@
     "tsx": "^4.20.5",
     "typedoc": "^0.28.11",
     "typescript": "^5.9.2",
-    "typescript-eslint": "^8.40.0"
+    "typescript-eslint": "^8.41.0"
   }
 }

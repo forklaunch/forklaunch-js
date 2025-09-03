@@ -21,7 +21,7 @@ use crate::{
         ERROR_FAILED_TO_PARSE_PACKAGE_JSON, ERROR_FAILED_TO_READ_MANIFEST,
     },
     core::{
-        ast::transformations::transform_registrations_ts::transform_registration_schema_ejection,
+        ast::transformations::transform_domain_schemas_index::transform_domain_schemas_index_ts,
         base_path::{BasePathLocation, BasePathType, prompt_base_path},
         command::command,
         manifest::{
@@ -248,10 +248,6 @@ fn perform_string_replacements(
             };
 
             for dependency in dependencies_to_eject {
-                if new_content.contains(format!("{}/schemas", dependency).as_str()) {
-                    new_content = transform_registration_schema_ejection(&new_content);
-                }
-
                 let module_types = [
                     "/enum",
                     "/schemas",
@@ -459,6 +455,37 @@ fn merge_index_ts_files(
     Ok(())
 }
 
+fn transform_schema_index_ts(
+    base_path: &Path,
+    ejectable_dependencies: &Vec<String>,
+    rendered_templates_cache: &mut RenderedTemplatesCache,
+) -> Result<()> {
+    let schema_index_ts_path = base_path.join("domain").join("schemas").join("index.ts");
+
+    let schema_index_ts_text = rendered_templates_cache
+        .get(&schema_index_ts_path)?
+        .unwrap()
+        .content
+        .clone();
+
+    let new_index_ts_text = transform_domain_schemas_index_ts(
+        &base_path,
+        &ejectable_dependencies,
+        Some(&schema_index_ts_text),
+    )?;
+
+    rendered_templates_cache.insert(
+        schema_index_ts_path.to_string_lossy(),
+        RenderedTemplate {
+            path: schema_index_ts_path.clone(),
+            content: new_index_ts_text,
+            context: None,
+        },
+    );
+
+    Ok(())
+}
+
 impl CliCommand for EjectCommand {
     fn command(&self) -> Command {
         command("eject", "Eject a forklaunch project")
@@ -587,6 +614,11 @@ impl CliCommand for EjectCommand {
                 &mut rendered_templates_cache,
             )?;
             merge_index_ts_files(
+                &base_path,
+                &dependencies_to_eject,
+                &mut rendered_templates_cache,
+            )?;
+            transform_schema_index_ts(
                 &base_path,
                 &dependencies_to_eject,
                 &mut rendered_templates_cache,

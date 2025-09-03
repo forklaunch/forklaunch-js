@@ -1,5 +1,78 @@
 # @forklaunch/infrastructure-redis
 
+## 0.4.6
+
+### Patch Changes
+
+- update internal packages
+- Updated dependencies
+  - @forklaunch/common@0.6.5
+  - @forklaunch/core@0.14.6
+
+## 0.4.5
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.14.5
+
+## 0.4.4
+
+### Patch Changes
+
+- Update internal package versions and add mapServiceSchemas method for clean DX in implemented modules
+- Updated dependencies
+  - @forklaunch/common@0.6.4
+  - @forklaunch/core@0.14.4
+
+## 0.4.3
+
+### Patch Changes
+
+- toDomain -> toDto for more accurate naming conventions
+- Updated dependencies
+  - @forklaunch/common@0.6.3
+  - @forklaunch/core@0.14.3
+
+## 0.4.2
+
+### Patch Changes
+
+- toDto -> toDomain
+- Updated dependencies
+  - @forklaunch/common@0.6.2
+  - @forklaunch/core@0.14.2
+
+## 0.4.1
+
+### Patch Changes
+
+- request and response mapper discrimination and clean up of internal types
+- Updated dependencies
+  - @forklaunch/common@0.6.1
+  - @forklaunch/core@0.14.1
+
+## 0.4.0
+
+### Minor Changes
+
+- remove class based mappers
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/common@0.6.0
+  - @forklaunch/core@0.14.0
+
+## 0.3.9
+
+### Patch Changes
+
+- add mappers as functions
+- Updated dependencies
+  - @forklaunch/common@0.5.8
+  - @forklaunch/core@0.13.9
+
 ## 0.3.8
 
 ### Patch Changes

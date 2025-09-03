@@ -1,5 +1,47 @@
 # @forklaunch/common
 
+## 0.6.5
+
+### Patch Changes
+
+- update internal packages
+
+## 0.6.4
+
+### Patch Changes
+
+- Update internal package versions and add mapServiceSchemas method for clean DX in implemented modules
+
+## 0.6.3
+
+### Patch Changes
+
+- toDomain -> toDto for more accurate naming conventions
+
+## 0.6.2
+
+### Patch Changes
+
+- toDto -> toDomain
+
+## 0.6.1
+
+### Patch Changes
+
+- request and response mapper discrimination and clean up of internal types
+
+## 0.6.0
+
+### Minor Changes
+
+- remove class based mappers
+
+## 0.5.8
+
+### Patch Changes
+
+- add mappers as functions
+
 ## 0.5.7
 
 ### Patch Changes

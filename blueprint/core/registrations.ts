@@ -36,7 +36,7 @@ import {
   uri,
   uuid,
   void_
-} from '@forklaunch/validator/zod';
+} from '@forklaunch/validator/typebox';
 
 export const schemaValidator = SchemaValidator();
 export type SchemaValidator = ReturnType<typeof SchemaValidator>;

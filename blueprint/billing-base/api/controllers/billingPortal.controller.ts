@@ -26,9 +26,9 @@ export const BillingPortalController = (
       {
         name: 'createBillingPortalSession',
         summary: 'Create a billing portal session',
-        body: CreateBillingPortalMapper.schema(),
+        body: CreateBillingPortalMapper.schema,
         responses: {
-          200: BillingPortalMapper.schema()
+          200: BillingPortalMapper.schema
         }
       },
       async (req, res) => {
@@ -50,7 +50,7 @@ export const BillingPortalController = (
         summary: 'Get a billing portal session',
         params: IdSchema,
         responses: {
-          200: BillingPortalMapper.schema()
+          200: BillingPortalMapper.schema
         }
       },
       async (req, res) => {
@@ -71,9 +71,9 @@ export const BillingPortalController = (
         name: 'updateBillingPortalSession',
         summary: 'Update a billing portal session',
         params: IdSchema,
-        body: UpdateBillingPortalMapper.schema(),
+        body: UpdateBillingPortalMapper.schema,
         responses: {
-          200: BillingPortalMapper.schema()
+          200: BillingPortalMapper.schema
         }
       },
       async (req, res) => {
