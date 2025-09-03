@@ -101,6 +101,7 @@ fn generate_basic_worker(
     dryrun: bool,
 ) -> Result<()> {
     let output_path = base_path.join(worker_name);
+    println!("init:worker:00: output_path: {:?}", output_path);
     let template_dir = PathIO {
         input_path: Path::new("project")
             .join("worker")
@@ -645,7 +646,7 @@ impl CliCommand for WorkerCommand {
             .into();
         
         println!("init:worker:00: config_path: {:?}", config_path);
-        println!("init:worker:01: base_path: {:?}", base_path);
+        println!("init:worker:01: app_path: {:?}", app_path);
         println!("init:worker:02: app_root_path: {:?}", app_root_path);
 
         let existing_manifest_data = from_str::<ApplicationManifestData>(
@@ -717,9 +718,9 @@ impl CliCommand for WorkerCommand {
             id: existing_manifest_data.id.clone(),
             app_name: existing_manifest_data.app_name.clone(),
             docker_compose_path: existing_manifest_data.docker_compose_path.clone(),
-            camel_case_app_name: existing_manifest_data.camel_case_app_name.clone(),
-            pascal_case_app_name: existing_manifest_data.pascal_case_app_name.clone(),
-            kebab_case_app_name: existing_manifest_data.kebab_case_app_name.clone(),
+            camel_case_app_name: existing_manifest_data.app_name.to_case(Case::Camel),
+            pascal_case_app_name: existing_manifest_data.app_name.to_case(Case::Pascal),
+            kebab_case_app_name: existing_manifest_data.app_name.to_case(Case::Kebab),
             app_description: existing_manifest_data.app_description.clone(),
             author: existing_manifest_data.author.clone(),
             cli_version: existing_manifest_data.cli_version.clone(),
