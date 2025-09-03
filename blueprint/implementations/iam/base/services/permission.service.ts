@@ -191,7 +191,7 @@ export class BasePermissionService<
     }
     const rolesCache: Record<string, MapperEntities['RoleEntityMapper']> = {};
     const permissions: MapperEntities['PermissionMapper'][] = [];
-    permissionDtos.map(async (createPermissionEntity) => {
+    for (const createPermissionEntity of permissionDtos) {
       const { permission, roles } = await this.createPermissionEntity(
         await this.extractCreatePermissionEntityToEntityData(
           createPermissionEntity,
@@ -200,14 +200,14 @@ export class BasePermissionService<
       );
       await Promise.all(
         roles.map(async (role) => {
-          if (role.permissions.isInitialized()) {
+          if (!role.permissions.isInitialized()) {
             return role.permissions.init();
           }
         })
       );
       await Promise.all(
         roles.map(async (role) => {
-          if (role.permissions.isInitialized()) {
+          if (!role.permissions.isInitialized()) {
             return role.permissions.init();
           }
         })
@@ -227,7 +227,7 @@ export class BasePermissionService<
         }
       });
       permissions.push(permission);
-    });
+    }
     const entities = [...permissions, ...Object.values(rolesCache)];
 
     if (em) {

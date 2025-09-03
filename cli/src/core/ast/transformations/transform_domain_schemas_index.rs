@@ -28,7 +28,6 @@ pub(crate) fn transform_domain_schemas_index_ts(
 
     let mut program = parse_ast_program(&allocator, &schema_index_ts_source_text, SourceType::ts());
 
-    // Transform the AST
     let mut import_replacements = HashMap::new();
     collect_import_replacements(&program, ejectable_dependencies, &mut import_replacements)?;
     remove_schema_validator_generics(&allocator, &mut program)?;
@@ -36,13 +35,11 @@ pub(crate) fn transform_domain_schemas_index_ts(
     let codegen_options = CodegenOptions::default();
     let mut result = Codegen::new().with_options(codegen_options).build(&program);
 
-    // Post-process the code to fix imports using string replacement
     result.code = apply_import_replacements(&result.code, &import_replacements)?;
 
     Ok(result.code)
 }
 
-/// Collect import replacements that need to be made
 fn collect_import_replacements(
     program: &Program,
     ejectable_dependencies: &Vec<String>,
@@ -55,7 +52,6 @@ fn collect_import_replacements(
             if implementation_regex.is_match(&import_decl.source.value) {
                 let implementation_package = import_decl.source.value.as_str();
 
-                // Only process packages that are in the ejectable_dependencies whitelist
                 if !ejectable_dependencies.contains(&implementation_package.to_string()) {
                     continue;
                 }
@@ -68,7 +64,6 @@ fn collect_import_replacements(
                         {
                             let imported_name = import_spec.imported.name().to_string();
 
-                            // Extract the service name from the imported type
                             if let Some(service_name) =
                                 extract_service_name_from_type(&imported_name)
                             {
@@ -90,7 +85,6 @@ fn collect_import_replacements(
     Ok(())
 }
 
-/// Apply import replacements using string substitution
 fn apply_import_replacements(
     code: &str,
     import_replacements: &HashMap<String, Vec<(String, String)>>,
@@ -98,7 +92,6 @@ fn apply_import_replacements(
     let mut result = code.to_string();
 
     for (implementation_package, replacements) in import_replacements {
-        // Find and remove the old import
         let escaped_package = regex::escape(implementation_package);
         let import_pattern = format!(
             "import\\s+\\{{\\s*([^}}]+)\\s*\\}}\\s+from\\s+['\"]{}['\"].*?;?",
@@ -107,10 +100,8 @@ fn apply_import_replacements(
         let import_regex = Regex::new(&import_pattern)?;
 
         if let Some(import_match) = import_regex.find(&result) {
-            // Remove the old import
             result = result.replace(import_match.as_str(), "");
 
-            // Add new individual imports
             let insertion_point = find_import_insertion_point(&result);
             let mut new_imports = String::new();
 
@@ -121,7 +112,6 @@ fn apply_import_replacements(
                 ));
             }
 
-            // Insert the new imports
             result.insert_str(insertion_point, &new_imports);
         }
     }
@@ -129,9 +119,7 @@ fn apply_import_replacements(
     Ok(result)
 }
 
-/// Find the appropriate position to insert new imports
 fn find_import_insertion_point(code: &str) -> usize {
-    // Find the position after the last @forklaunch import but before mapServiceSchemas import
     let lines: Vec<&str> = code.lines().collect();
     let mut insertion_line = 0;
 
@@ -142,19 +130,17 @@ fn find_import_insertion_point(code: &str) -> usize {
         }
     }
 
-    // Calculate the byte position
     let mut byte_position = 0;
     for (i, line) in lines.iter().enumerate() {
         if i == insertion_line {
             break;
         }
-        byte_position += line.len() + 1; // +1 for newline
+        byte_position += line.len() + 1;
     }
 
     byte_position
 }
 
-/// Remove <SchemaValidator> generics from function calls in mapServiceSchemas
 fn remove_schema_validator_generics<'a>(
     allocator: &'a Allocator,
     program: &mut Program<'a>,
@@ -177,7 +163,6 @@ fn remove_schema_validator_generics<'a>(
     Ok(())
 }
 
-/// Check if a call expression is calling mapServiceSchemas
 fn is_map_service_schemas_call(call_expr: &CallExpression) -> bool {
     if let Expression::Identifier(ident) = &call_expr.callee {
         ident.name == "mapServiceSchemas"
@@ -186,7 +171,6 @@ fn is_map_service_schemas_call(call_expr: &CallExpression) -> bool {
     }
 }
 
-/// Remove generics from function calls in object properties  
 fn remove_generics_from_object_properties<'a>(
     allocator: &'a Allocator,
     obj_expr: &mut ObjectExpression<'a>,
@@ -195,37 +179,24 @@ fn remove_generics_from_object_properties<'a>(
         if let ObjectPropertyKind::ObjectProperty(obj_prop) = property {
             match &mut obj_prop.value {
                 Expression::CallExpression(call_expr) => {
-                    // Remove type arguments if they exist
                     call_expr.type_arguments = None;
                 }
                 Expression::TSInstantiationExpression(ts_inst) => {
-                    // Convert this to just the expression without the type arguments
                     obj_prop.value = ts_inst.expression.clone_in(allocator);
                 }
-                _ => {
-                    // Other expression types don't need modification
-                }
+                _ => {}
             }
         }
     }
 }
 
-/// Extract service name from type name
-/// e.g., "StripeBillingPortalServiceSchemas" -> Some("billingPortal")
 fn extract_service_name_from_type(type_name: &str) -> Option<String> {
-    // Pattern: {Prefix}{ServiceName}ServiceSchemas
-    // We want to extract {ServiceName} and convert it to camelCase
-
     let service_schemas_suffix = "ServiceSchemas";
     if !type_name.ends_with(service_schemas_suffix) {
         return None;
     }
 
-    // Remove the suffix
     let without_suffix = &type_name[..type_name.len() - service_schemas_suffix.len()];
-
-    // Find the service name by looking for a known prefix pattern
-    // Common patterns: Stripe*, Base*, etc.
     let prefixes = ["Stripe", "Base", ""];
 
     for prefix in &prefixes {
@@ -237,7 +208,6 @@ fn extract_service_name_from_type(type_name: &str) -> Option<String> {
         }
     }
 
-    // If no prefix matched, use the whole string
     Some(without_suffix.to_string())
 }
 
@@ -305,19 +275,13 @@ export const {
         assert!(result.is_ok());
         let transformed_code = result.unwrap();
 
-        // Check key transformations instead of exact formatting
-        // 1. Check that generics are removed
         assert!(!transformed_code.contains("<SchemaValidator>"));
-
-        // 2. Check that implementation imports are replaced with relative imports
         assert!(!transformed_code.contains("@forklaunch/implementation-billing-stripe/schemas"));
         assert!(transformed_code.contains("from './billingPortal.schema'"));
         assert!(transformed_code.contains("from './checkoutSession.schema'"));
         assert!(transformed_code.contains("from './paymentLink.schema'"));
         assert!(transformed_code.contains("from './plan.schema'"));
         assert!(transformed_code.contains("from './subscription.schema'"));
-
-        // 3. Check that other imports are preserved
         assert!(transformed_code.contains("from \"@forklaunch/blueprint-core\""));
         assert!(transformed_code.contains("from \"@forklaunch/core/mappers\""));
     }
@@ -361,15 +325,10 @@ export const {
         assert!(result.is_ok());
         let transformed_code = result.unwrap();
 
-        // Check that generics are removed
         assert!(!transformed_code.contains("<SchemaValidator>"));
-
-        // Check that imports are transformed to relative paths
         assert!(transformed_code.contains("from './user.schema'"));
         assert!(transformed_code.contains("from './auth.schema'"));
         assert!(transformed_code.contains("from './session.schema'"));
-
-        // Check that the original implementation import is removed
         assert!(!transformed_code.contains("@forklaunch/implementation-iam-base/schemas"));
     }
 
@@ -483,19 +442,12 @@ export const {
         assert!(result.is_ok());
         let transformed_code = result.unwrap();
 
-        // Check that all generics are removed
         assert!(!transformed_code.contains("<SchemaValidator>"));
-
-        // Check that implementation imports are transformed
         assert!(transformed_code.contains("from './customer.schema'"));
         assert!(transformed_code.contains("from './invoice.schema'"));
         assert!(transformed_code.contains("from './notification.schema'"));
-
-        // Check that original implementation imports are removed
         assert!(!transformed_code.contains("@forklaunch/implementation-billing-stripe/schemas"));
         assert!(!transformed_code.contains("@forklaunch/implementation-notification-base/schemas"));
-
-        // Check that other imports are preserved
         assert!(transformed_code.contains("from \"@forklaunch/blueprint-core\""));
         assert!(transformed_code.contains("from \"@forklaunch/core/mappers\""));
         assert!(transformed_code.contains("from \"other-package\""));
@@ -521,16 +473,11 @@ export const { CustomSchemas } = schemas;"#;
         let temp_dir = create_temp_schema_file(input_content);
         let project_path = temp_dir.path().join("test-project");
 
-        let result = transform_domain_schemas_index_ts(
-            &project_path,
-            &vec![], // Empty ejectable_dependencies - nothing should be transformed
-            None,
-        );
+        let result = transform_domain_schemas_index_ts(&project_path, &vec![], None);
 
         assert!(result.is_ok());
         let transformed_code = result.unwrap();
 
-        // Should be essentially unchanged except for formatting
         assert!(transformed_code.contains("from \"@forklaunch/blueprint-core\""));
         assert!(transformed_code.contains("from \"@forklaunch/core/mappers\""));
         assert!(transformed_code.contains("from \"./custom.schema\""));
@@ -571,7 +518,6 @@ export const {
         let temp_dir = create_temp_schema_file(input_content);
         let project_path = temp_dir.path().join("test-project");
 
-        // Only whitelist billing-stripe, not iam-base
         let result = transform_domain_schemas_index_ts(
             &project_path,
             &vec!["@forklaunch/implementation-billing-stripe/schemas".to_string()],
@@ -581,17 +527,12 @@ export const {
         assert!(result.is_ok());
         let transformed_code = result.unwrap();
 
-        // Check that billing-stripe imports are transformed
         assert!(!transformed_code.contains("@forklaunch/implementation-billing-stripe/schemas"));
         assert!(transformed_code.contains("from './billingPortal.schema'"));
         assert!(transformed_code.contains("from './checkoutSession.schema'"));
-
-        // Check that iam-base imports are NOT transformed (not in whitelist)
         assert!(transformed_code.contains("@forklaunch/implementation-iam-base/schemas"));
         assert!(!transformed_code.contains("from './user.schema'"));
         assert!(!transformed_code.contains("from './auth.schema'"));
-
-        // Check that generics are still removed for all schemas
         assert!(!transformed_code.contains("<SchemaValidator>"));
     }
 }
