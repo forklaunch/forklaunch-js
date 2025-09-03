@@ -750,6 +750,13 @@ impl CliCommand for ApplicationCommand {
         let mut project_peer_topology = HashMap::new();
         project_peer_topology.insert(name.to_string(), additional_projects_names.clone());
 
+        // let bun_package_json_workspace_paths = additional_projects
+        //     .clone()
+        //     .into_iter()
+        //     .map(|p| p.path.clone().unwrap())
+        //     .map(|path| path.trim_start_matches("./").to_string())
+        //     .collect::<Vec<String>>();
+        // println!("init:application:00: bun_package_json_workspace_paths: {:?}", bun_package_json_workspace_paths);
         let bun_package_json_workspace_vec = match runtime {
             Runtime::Bun => Some(additional_projects_names.clone()),
             _ => None,

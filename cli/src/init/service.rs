@@ -589,6 +589,8 @@ impl CliCommand for ServiceCommand {
                 database: None,
             },
         ));
+        
+        println!("init:service:09: existing_manifest_data: {:?}", existing_manifest_data.kebab_case_app_name);
 
         let service_name = prompt_with_validation(
             &mut line_editor,
@@ -647,9 +649,9 @@ impl CliCommand for ServiceCommand {
             id: existing_manifest_data.id.clone(),
             app_name: existing_manifest_data.app_name.clone(),
             docker_compose_path: existing_manifest_data.docker_compose_path.clone(),
-            camel_case_app_name: existing_manifest_data.camel_case_app_name.clone(),
-            pascal_case_app_name: existing_manifest_data.pascal_case_app_name.clone(),
-            kebab_case_app_name: existing_manifest_data.kebab_case_app_name.clone(),
+            camel_case_app_name: existing_manifest_data.app_name.clone().to_case(Case::Camel),
+            pascal_case_app_name: existing_manifest_data.app_name.clone().to_case(Case::Pascal),
+            kebab_case_app_name: existing_manifest_data.app_name.clone().to_case(Case::Kebab),
             app_description: existing_manifest_data.app_description.clone(),
             author: existing_manifest_data.author.clone(),
             cli_version: existing_manifest_data.cli_version.clone(),
