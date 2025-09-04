@@ -194,7 +194,7 @@ mod tests {
 
         assert!(result.is_ok());
 
-        let expected_code = "export const universalSdk = ({ otherServiceHost }: {\n\totherServiceHost: string\n}): Promise<{\n\totherService: OtherServiceSdkClient\n}> => ({ otherService: await universalSdk<OtherServiceSdkClient>({\n\thost: otherServiceHost,\n\tregistryOptions: { path: \"api/v1/openapi\" }\n}) });\n";
+        let expected_code = "export const universalSdk = ({ otherServiceHost }: {\n\totherServiceHost: string;\n}): Promise<{\n\totherService: OtherServiceSdkClient;\n}> => ({ otherService: await universalSdk<OtherServiceSdkClient>({\n\thost: otherServiceHost,\n\tregistryOptions: { path: \"api/v1/openapi\" }\n}) });\n";
 
         assert_eq!(
             Codegen::new()

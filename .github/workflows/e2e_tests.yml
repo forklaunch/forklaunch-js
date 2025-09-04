@@ -5,59 +5,58 @@ on:
     branches:
       - main
     paths:
-      - 'cli/**'
+      - "cli/**"
   pull_request:
     paths:
-      - 'cli/**'
+      - "cli/**"
 
 jobs:
   test:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@stable
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-    - name: Install Bun
-      uses: oven-sh/setup-bun@v1
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v1
 
-    - name: Install pnpm
-      uses: pnpm/action-setup@v2
-      with:
-        version: 10
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10
 
-    - name: Cache Rust dependencies
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          target
-        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-    - name: Build project
-      working-directory: ./cli
-      run: cargo build --release
+      - name: Build project
+        working-directory: ./cli
+        run: cargo build --release
 
-    - name: Create .forklaunch directory
-      run: mkdir -p ~/.forklaunch
+      - name: Create .forklaunch directory
+        run: mkdir -p ~/.forklaunch
 
-    - name: Create token file
-      run: touch ~/.forklaunch/token
+      - name: Create token file
+        run: touch ~/.forklaunch/token
 
-    - name: Find and run all test scripts
-      working-directory: ./cli/tests
-      run: |
-        set -e
-        for test_script in *.sh; do
-          if [ -f "$test_script" ]; then
-            echo "Running test: $test_script"
-            ./$test_script
-          fi
-        done
-
+      - name: Find and run all test scripts
+        working-directory: ./cli/tests
+        run: |
+          set -e
+          for test_script in *.sh; do
+            if [ -f "$test_script" ]; then
+              echo "Running test: $test_script"
+              ./$test_script
+            fi
+          done

@@ -231,7 +231,7 @@ mod tests {
 
         assert!(result.is_ok());
 
-        let expected_code = "export const universalSdk = ({ userServiceHost }: {\n\tuserServiceHost: string\n}): Promise<{\n\tuserService: UserServiceSdkClient\n}> => ({ userService: await universalSdk<UserServiceSdkClient>({\n\thost: userServiceHost,\n\tregistryOptions: { path: \"api/v1/openapi\" }\n}) });\n";
+        let expected_code = "export const universalSdk = ({ userServiceHost }: {\n\tuserServiceHost: string;\n}): Promise<{\n\tuserService: UserServiceSdkClient;\n}> => ({ userService: await universalSdk<UserServiceSdkClient>({\n\thost: userServiceHost,\n\tregistryOptions: { path: \"api/v1/openapi\" }\n}) });\n";
 
         assert_eq!(
             Codegen::new()

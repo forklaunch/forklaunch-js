@@ -160,11 +160,11 @@ app.listen(port, host, () => {
 
         // Verify the import injection
         assert!(transformed_code.contains(
-            "import { UserManagementRoutes } from \"./api/routes/userManagement.routes\";"
+            "import { userManagementRouter } from \"./api/routes/userManagement.routes\";"
         ));
 
         // Verify the app.use injection
-        assert!(transformed_code.contains("app.use(userManagementRoutes);"));
+        assert!(transformed_code.contains("app.use(userManagementRouter);"));
 
         // Verify existing content is preserved
         assert!(transformed_code.contains(
@@ -191,10 +191,10 @@ app.listen(port, host, () => {
         let transformed_code = result.unwrap();
 
         // Verify camelCase conversion in variable names
-        assert!(transformed_code.contains("app.use(orderProcessingRoutes);"));
+        assert!(transformed_code.contains("app.use(orderProcessingRouter);"));
 
-        // Verify PascalCase conversion in types and function names
-        assert!(transformed_code.contains("import { OrderProcessingRoutes }"));
+        // Verify camelCase conversion in import names
+        assert!(transformed_code.contains("import { orderProcessingRouter }"));
 
         // Verify the correct route file path (should be camelCase)
         assert!(transformed_code.contains("\"./api/routes/orderProcessing.routes\""));
@@ -254,9 +254,9 @@ app.listen(port, host, () => {
         // Verify new injections are present
         assert!(
             transformed_code
-                .contains("import { NewServiceRoutes } from \"./api/routes/newService.routes\";")
+                .contains("import { newServiceRouter } from \"./api/routes/newService.routes\";")
         );
-        assert!(transformed_code.contains("app.use(newServiceRoutes);"));
+        assert!(transformed_code.contains("app.use(newServiceRouter);"));
 
         // Verify existing content is preserved
         assert!(
@@ -309,14 +309,14 @@ app.listen(port, host, () => {
             .iter()
             .position(|&line| {
                 line.contains(
-                    "import { TestServiceRoutes } from \"./api/routes/testService.routes\";",
+                    "import { testServiceRouter } from \"./api/routes/testService.routes\";",
                 )
             })
             .expect("Import injection not found");
 
         let app_use_line = lines
             .iter()
-            .position(|&line| line.contains("app.use(testServiceRoutes);"))
+            .position(|&line| line.contains("app.use(testServiceRouter);"))
             .expect("App.use injection not found");
 
         // Verify injection order: import should come before app.use
