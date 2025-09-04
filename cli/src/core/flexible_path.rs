@@ -1,18 +1,7 @@
-use std::{
-    env::current_dir,
-    path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 
-use anyhow::{Context, Result};
-use clap::ArgMatches;
-use rustyline::{Editor, history::DefaultHistory};
-use termcolor::StandardStream;
 use walkdir::WalkDir;
 
-use crate::{
-    constants::ERROR_FAILED_TO_GET_CWD,
-    prompt::{ArrayCompleter, prompt_with_validation},
-};
 
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum SearchDirection {

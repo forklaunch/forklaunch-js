@@ -1,7 +1,6 @@
 use std::{
     fs::{read_to_string, remove_dir_all},
     io::Write,
-    path::{PathBuf},
 };
 
 use anyhow::{Context, Result};
@@ -17,7 +16,6 @@ use crate::{
         ERROR_FAILED_TO_WRITE_MANIFEST, Runtime,
     },
     core::{
-        
         command::command,
         flexible_path::{create_generic_config, find_manifest_path},
         manifest::{
@@ -67,8 +65,9 @@ impl CliCommand for LibraryCommand {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
         let current_dir = std::env::current_dir().unwrap();
-        
-        let library_base_path = if let Some(relative_path) = matches.get_one::<String>("base_path") {
+
+        let library_base_path = if let Some(relative_path) = matches.get_one::<String>("base_path")
+        {
             // User provided a relative path, resolve it relative to current directory
             let resolved_path = current_dir.join(relative_path);
             resolved_path
@@ -79,22 +78,15 @@ impl CliCommand for LibraryCommand {
         // Find the manifest using flexible_path
         let root_path_config = create_generic_config();
         let manifest_path = find_manifest_path(&library_base_path, &root_path_config);
-        
+
         let config_path = if let Some(manifest) = manifest_path {
             manifest
         } else {
             // No manifest found, this might be an error or we need to search more broadly
-            anyhow::bail!("Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path.");
+            anyhow::bail!(
+                "Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path."
+            );
         };
-        let app_root_path: PathBuf = config_path
-            .to_string_lossy()
-            .strip_suffix(".forklaunch/manifest.toml")
-            .ok_or_else(|| {
-            anyhow::anyhow!("Expected manifest path to end with .forklaunch/manifest.toml, got: {:?}", config_path)
-        })?
-            .to_string()
-            .into();
-        
 
         let mut manifest_data = toml::from_str::<ApplicationManifestData>(
             &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
@@ -155,14 +147,20 @@ impl CliCommand for LibraryCommand {
             Runtime::Node => {
                 rendered_templates.push(RenderedTemplate {
                     path: library_base_path.join("pnpm-workspace.yaml"),
-                    content: remove_project_definition_to_pnpm_workspace(&library_base_path, &library_name)?,
+                    content: remove_project_definition_to_pnpm_workspace(
+                        &library_base_path,
+                        &library_name,
+                    )?,
                     context: Some(ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE.to_string()),
                 });
             }
             Runtime::Bun => {
                 rendered_templates.push(RenderedTemplate {
                     path: library_base_path.join("package.json"),
-                    content: remove_project_definition_to_package_json(&library_base_path, &library_name)?,
+                    content: remove_project_definition_to_package_json(
+                        &library_base_path,
+                        &library_name,
+                    )?,
                     context: Some(ERROR_FAILED_TO_CREATE_PACKAGE_JSON.to_string()),
                 });
             }

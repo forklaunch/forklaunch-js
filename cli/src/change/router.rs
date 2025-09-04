@@ -1,4 +1,4 @@
-use std::{io::Write, path::{Path, PathBuf}};
+use std::{io::Write, path::Path};
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, Command};

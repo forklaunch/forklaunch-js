@@ -1,7 +1,6 @@
 use std::{
     fs::{exists, read_to_string, remove_file},
     io::Write,
-    path::{Path, PathBuf},
 };
 
 use anyhow::{Context, Result};

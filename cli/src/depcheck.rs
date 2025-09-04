@@ -3,12 +3,11 @@ use std::{
     env::current_dir,
     fs::read_to_string,
     io::Write,
-    path::{Path, PathBuf},
+    path::Path,
 };
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgMatches, Command};
-use rustyline::{Editor, history::DefaultHistory};
 use serde_json::{Value, from_str, json};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
@@ -20,7 +19,6 @@ use crate::{
         flexible_path::{create_generic_config, find_manifest_path},
         manifest::application::ApplicationManifestData,
     },
-    prompt::ArrayCompleter,
 };
 
 struct ProjectDependencyVersion {
@@ -53,7 +51,6 @@ impl CliCommand for DepcheckCommand {
     }
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
-        let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
         let current_dir = current_dir().unwrap();
@@ -75,17 +72,6 @@ impl CliCommand for DepcheckCommand {
                 "Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path."
             );
         };
-        let app_root_path: PathBuf = config_path
-            .to_string_lossy()
-            .strip_suffix(".forklaunch/manifest.toml")
-            .ok_or_else(|| {
-                anyhow::anyhow!(
-                    "Expected manifest path to end with .forklaunch/manifest.toml, got: {:?}",
-                    config_path
-                )
-            })?
-            .to_string()
-            .into();
 
         let manifest_data: ApplicationManifestData = toml::from_str(
             &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,

@@ -4,7 +4,7 @@ use std::{
     fs::{exists, read_to_string},
     io::Write,
     iter::zip,
-    path::{Path, PathBuf},
+    path::Path,
     rc::Rc,
 };
 
@@ -1550,17 +1550,6 @@ impl CliCommand for ApplicationCommand {
                 "Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path."
             );
         };
-        let app_root_path: PathBuf = config_path
-            .to_string_lossy()
-            .strip_suffix(".forklaunch/manifest.toml")
-            .ok_or_else(|| {
-                anyhow::anyhow!(
-                    "Expected manifest path to end with .forklaunch/manifest.toml, got: {:?}",
-                    config_path
-                )
-            })?
-            .to_string()
-            .into();
 
         let mut manifest_data = toml::from_str::<ApplicationManifestData>(
             &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,

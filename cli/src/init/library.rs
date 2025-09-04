@@ -1,4 +1,4 @@
-use std::{fs::read_to_string, io::Write, path::{Path, PathBuf}};
+use std::{fs::read_to_string, io::Write, path::Path};
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, ArgMatches, Command};
@@ -20,8 +20,8 @@ use crate::{
     },
     core::{
         base_path::{BasePathLocation, BasePathType, prompt_base_path},
-        flexible_path::{get_base_app_path, find_manifest_path, create_generic_config},
         command::command,
+        flexible_path::{create_generic_config, find_manifest_path, get_base_app_path},
         format::format_code,
         gitignore::generate_gitignore,
         manifest::{
@@ -258,28 +258,25 @@ impl CliCommand for LibraryCommand {
         )?;
         let base_path = Path::new(&base_path_input);
 
-        let app_path = if let Some(temp_app_path) = get_base_app_path(&base_path_input.to_string()) {
+        let app_path = if let Some(temp_app_path) = get_base_app_path(&base_path_input.to_string())
+        {
             temp_app_path
         } else {
-            return Err(anyhow::anyhow!("Application directory not found in base_path, src/modules, or modules directories. Please check if your application is initialized and you are in the correct directory."));
+            return Err(anyhow::anyhow!(
+                "Application directory not found in base_path, src/modules, or modules directories. Please check if your application is initialized and you are in the correct directory."
+            ));
         };
         let root_path_config = create_generic_config();
         let manifest_path = find_manifest_path(&base_path, &root_path_config);
-        
+
         let config_path = if let Some(manifest) = manifest_path {
             manifest
         } else {
             // No manifest found, this might be an error or we need to search more broadly
-            anyhow::bail!("Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path.");
+            anyhow::bail!(
+                "Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path."
+            );
         };
-        let app_root_path: PathBuf = config_path
-            .to_string_lossy()
-            .strip_suffix(".forklaunch/manifest.toml")
-            .ok_or_else(|| {
-            anyhow::anyhow!("Expected manifest path to end with .forklaunch/manifest.toml, got: {:?}", config_path)
-        })?
-            .to_string()
-            .into();
 
         let existing_manifest_data = from_str::<ApplicationManifestData>(
             &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
@@ -291,7 +288,6 @@ impl CliCommand for LibraryCommand {
                 database: None,
             },
         ));
-        
 
         let library_name = prompt_with_validation(
             &mut line_editor,
