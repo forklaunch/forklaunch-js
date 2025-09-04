@@ -5,16 +5,16 @@ fi
 mkdir -p output/dryrun
 cd output/dryrun
 
-RUST_BACKTRACE=1 cargo run --release init application dryrun-test-node-application -p . -d postgresql -f prettier -l eslint -v zod -F express -r node -t vitest -m billing-base -m iam-base -D "Test service" -A "Rohin Bhargava" -L 'AGPL-3.0' -n
+RUST_BACKTRACE=1 cargo run --release init application dryrun-test-node-application -p ./dryrun-test-node-application -o source -d postgresql -f prettier -l eslint -v zod -F express -r node -t vitest -m billing-base -m iam-base -D "Test service" -A "Rohin Bhargava" -L 'AGPL-3.0' -n
 
 if [ "$(ls -A)" ]; then
      echo "Error: Directory not empty" >&2
      exit 1
 fi
 
-RUST_BACKTRACE=1 cargo run --release init application dryrun-test-node-application -p . -d postgresql -f prettier -l eslint -v zod -F express -r node -t vitest -m billing-base -m iam-base -D "Test service" -A "Rohin Bhargava" -L 'AGPL-3.0'
+RUST_BACKTRACE=1 cargo run --release init application dryrun-test-node-application -p ./dryrun-test-node-application -o source -d postgresql -f prettier -l eslint -v zod -F express -r node -t vitest -m billing-base -m iam-base -D "Test service" -A "Rohin Bhargava" -L 'AGPL-3.0'
 
-cd dryrun-test-node-application
+cd dryrun-test-node-application/src/modules
 
 RUST_BACKTRACE=1 cargo run --release init library library-test -D "Test service" -p . -n
 RUST_BACKTRACE=1 cargo run --release init service service-test -d postgresql -D "Test service" -p . -n
@@ -36,7 +36,7 @@ if [ -d "worker-test" ]; then
 fi
 
 
-RUST_BACKTRACE=1 cargo run --release init service service-test -d postgresql -D "Test service" -p .
+RUST_BACKTRACE=1 cargo run --release init service service-test -d postgresql -D "Test service" -p . -n
 
 cd service-test
 

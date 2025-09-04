@@ -1,5 +1,6 @@
 use std::{
     collections::{HashMap, HashSet},
+    env::current_dir,
     fs::read_to_string,
     io::Write,
     path::Path,
@@ -7,7 +8,6 @@ use std::{
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgMatches, Command};
-use rustyline::{Editor, history::DefaultHistory};
 use serde_json::{Value, from_str, json};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
@@ -15,11 +15,10 @@ use crate::{
     CliCommand,
     constants::{ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST},
     core::{
-        base_path::{BasePathLocation, BasePathType, prompt_base_path},
         command::command,
+        flexible_path::{create_generic_config, find_manifest_path},
         manifest::application::ApplicationManifestData,
     },
-    prompt::ArrayCompleter,
 };
 
 struct ProjectDependencyVersion {
@@ -52,23 +51,30 @@ impl CliCommand for DepcheckCommand {
     }
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
-        let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let base_path = prompt_base_path(
-            &mut line_editor,
-            &mut stdout,
-            matches,
-            &BasePathLocation::Anywhere,
-            &BasePathType::Depcheck,
-        )?;
+        let current_dir = current_dir().unwrap();
 
-        let config_path = Path::new(&base_path)
-            .join(".forklaunch")
-            .join("manifest.toml");
+        let app_base_path = if let Some(relative_path) = matches.get_one::<String>("base_path") {
+            let resolved_path = current_dir.join(relative_path);
+
+            resolved_path
+        } else {
+            current_dir.clone()
+        };
+        let manifest_path_config = create_generic_config();
+        let manifest_path = find_manifest_path(&app_base_path, &manifest_path_config);
+
+        let config_path = if let Some(manifest) = manifest_path {
+            manifest
+        } else {
+            anyhow::bail!(
+                "Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path."
+            );
+        };
 
         let manifest_data: ApplicationManifestData = toml::from_str(
-            &read_to_string(config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
+            &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
 
@@ -82,7 +88,7 @@ impl CliCommand for DepcheckCommand {
                     .iter()
                     .try_for_each(|project| -> Result<()> {
                         if let Some(package_json_contents) = &read_to_string(
-                            Path::new(&base_path).join(project).join("package.json"),
+                            Path::new(&app_base_path).join(project).join("package.json"),
                         )
                         .with_context(|| format!("Failed to read package.json for {}", project))
                         .ok()

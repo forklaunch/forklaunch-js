@@ -161,13 +161,11 @@ pub(crate) fn transform_base_entity_ts(
         .build(&base_entity_to_create_program)
         .code;
 
-    // This is a hack, since the AST does not properly parse non-null assertions
     let code = if database == &Database::MongoDB {
         code.replace("id:", "id!:")
     } else {
         code
     };
-    // End hack
 
     Ok(Some(code))
 }

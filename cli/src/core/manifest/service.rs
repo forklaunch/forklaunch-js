@@ -15,7 +15,12 @@ config_struct!(
     #[derive(Debug, Content, Serialize, Clone)]
     pub(crate) struct ServiceManifestData {
         #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) docker_compose_path: String,
+
+        #[serde(skip_serializing, skip_deserializing)]
         pub(crate) service_name: String,
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) service_path: String,
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) camel_case_name: String,
         #[serde(skip_serializing, skip_deserializing)]
@@ -98,6 +103,7 @@ impl InitializableManifestConfig for ServiceManifestData {
             .unwrap();
         let parsed_database = database.parse::<Database>().unwrap();
         Self {
+            
             service_name: service_name.clone(),
             camel_case_name: service_name.clone().to_case(Case::Camel),
             pascal_case_name: service_name.clone().to_case(Case::Pascal),

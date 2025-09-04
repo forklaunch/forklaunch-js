@@ -8,9 +8,13 @@ use crate::{config_struct, constants::Database};
 config_struct!(
     #[derive(Debug, Serialize, Content, Clone)]
     pub(crate) struct ApplicationManifestData {
+        
+        pub(crate) app_path: String,
         #[serde(skip_serializing, skip_deserializing)]
-        pub(crate) application_path: String,
-
+        pub(crate) manifest_path: String,
+        
+        pub(crate) docker_compose_path: String,
+        
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) database: String,
 

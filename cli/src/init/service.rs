@@ -2,7 +2,7 @@ use std::{
     collections::{HashMap, HashSet},
     fs::read_to_string,
     io::Write,
-    path::Path,
+    path::{Path, PathBuf},
 };
 
 use anyhow::{Context, Result};
@@ -29,6 +29,7 @@ use crate::{
     },
     core::{
         base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        flexible_path::{create_module_config, find_manifest_path},
         command::command,
         database::{
             add_base_entity_to_core, get_database_port, get_db_driver, is_in_memory_database,
@@ -86,6 +87,7 @@ use crate::{
 fn generate_basic_service(
     service_name: &String,
     base_path: &Path,
+    app_root_path: &Path,
     manifest_data: &mut ServiceManifestData,
     stdout: &mut StandardStream,
     dryrun: bool,
@@ -103,7 +105,6 @@ fn generate_basic_service(
     let ignore_files = vec![];
     let ignore_dirs = vec![];
     let preserve_files = vec![];
-
     let mut rendered_templates = generate_with_template(
         None,
         &template_dir,
@@ -127,7 +128,7 @@ fn generate_basic_service(
         generate_gitignore(&output_path).with_context(|| ERROR_FAILED_TO_CREATE_GITIGNORE)?,
     );
     rendered_templates.extend(
-        add_service_to_artifacts(manifest_data, base_path)
+        add_service_to_artifacts(manifest_data, base_path, app_root_path)
             .with_context(|| ERROR_FAILED_TO_ADD_SERVICE_METADATA_TO_ARTIFACTS)?,
     );
     rendered_templates.extend(
@@ -146,7 +147,7 @@ fn generate_basic_service(
             context: Some(ERROR_FAILED_TO_UPDATE_DOCKERFILE.to_string()),
         });
     }
-
+    
     add_project_to_universal_sdk(
         &mut rendered_templates,
         base_path,
@@ -171,9 +172,10 @@ fn generate_basic_service(
 fn add_service_to_artifacts(
     manifest_data: &mut ServiceManifestData,
     base_path: &Path,
+    app_root_path: &Path,
 ) -> Result<Vec<RenderedTemplate>> {
     let docker_compose_buffer =
-        add_service_definition_to_docker_compose(manifest_data, base_path, None)
+        add_service_definition_to_docker_compose(manifest_data, app_root_path, None)
             .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
 
     let forklaunch_manifest_buffer = add_project_definition_to_manifest(
@@ -214,13 +216,13 @@ fn add_service_to_artifacts(
     let mut rendered_templates = Vec::new();
 
     rendered_templates.push(RenderedTemplate {
-        path: base_path.join("docker-compose.yaml"),
+        path: app_root_path.join("docker-compose.yaml"),
         content: docker_compose_buffer,
         context: Some(ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE.to_string()),
     });
 
     rendered_templates.push(RenderedTemplate {
-        path: base_path.join(".forklaunch").join("manifest.toml"),
+        path: app_root_path.join(".forklaunch").join("manifest.toml"),
         content: forklaunch_manifest_buffer.clone(),
         context: Some(ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST.to_string()),
     });
@@ -503,7 +505,7 @@ impl CliCommand for ServiceCommand {
                 Arg::new("base_path")
                     .short('p')
                     .long("path")
-                    .help("The application path to initialize the service in"),
+                    .help("The path to initialize the service in"),
             )
             .arg(
                 Arg::new("database")
@@ -548,21 +550,38 @@ impl CliCommand for ServiceCommand {
             &BasePathType::Init,
         )?;
         let base_path = Path::new(&base_path_input);
-
-        let config_path = Path::new(&base_path)
-            .join(".forklaunch")
-            .join("manifest.toml");
-
+        let manifest_path_config = create_module_config();
+        let manifest_path = find_manifest_path(&base_path, &manifest_path_config);
+        
+        let config_path = if let Some(manifest) = manifest_path {
+            manifest
+        } else {
+            // No manifest found, this might be an error or we need to search more broadly
+            anyhow::bail!("Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path.");
+        };
+        let app_root_path: PathBuf = config_path
+            .to_string_lossy()
+            .strip_suffix(".forklaunch/manifest.toml")
+            .ok_or_else(|| {
+            anyhow::anyhow!("Expected manifest path to end with .forklaunch/manifest.toml, got: {:?}", config_path)
+        })?
+            .to_string()
+            .into();
+        
+        
         let existing_manifest_data = from_str::<ApplicationManifestData>(
-            &read_to_string(config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
+            &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
-        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
-        .initialize(InitializableManifestConfigMetadata::Application(
+        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+
+        existing_manifest_data.initialize(InitializableManifestConfigMetadata::Application(
             ApplicationInitializationMetadata {
-                app_name: base_path.file_name().unwrap().to_string_lossy().to_string(),
+                app_name: existing_manifest_data.app_name.clone(),
                 database: None,
             },
         ));
+        
+        
 
         let service_name = prompt_with_validation(
             &mut line_editor,
@@ -620,9 +639,10 @@ impl CliCommand for ServiceCommand {
             // Common fields from ApplicationManifestData
             id: existing_manifest_data.id.clone(),
             app_name: existing_manifest_data.app_name.clone(),
-            camel_case_app_name: existing_manifest_data.camel_case_app_name.clone(),
-            pascal_case_app_name: existing_manifest_data.pascal_case_app_name.clone(),
-            kebab_case_app_name: existing_manifest_data.kebab_case_app_name.clone(),
+            docker_compose_path: existing_manifest_data.docker_compose_path.clone(),
+            camel_case_app_name: existing_manifest_data.app_name.clone().to_case(Case::Camel),
+            pascal_case_app_name: existing_manifest_data.app_name.clone().to_case(Case::Pascal),
+            kebab_case_app_name: existing_manifest_data.app_name.clone().to_case(Case::Kebab),
             app_description: existing_manifest_data.app_description.clone(),
             author: existing_manifest_data.author.clone(),
             cli_version: existing_manifest_data.cli_version.clone(),
@@ -649,6 +669,7 @@ impl CliCommand for ServiceCommand {
             is_jest: existing_manifest_data.is_jest,
 
             service_name: service_name.clone(),
+            service_path: service_name.clone(),
             camel_case_name: service_name.to_case(Case::Camel),
             pascal_case_name: service_name.to_case(Case::Pascal),
             kebab_case_name: service_name.to_case(Case::Kebab),
@@ -681,6 +702,7 @@ impl CliCommand for ServiceCommand {
         generate_basic_service(
             &service_name,
             &base_path,
+            &app_root_path,
             &mut manifest_data,
             &mut stdout,
             dryrun,

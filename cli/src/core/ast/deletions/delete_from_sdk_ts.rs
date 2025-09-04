@@ -16,14 +16,12 @@ pub(crate) fn delete_from_sdk_client_input<'a>(
             _ => continue,
         };
 
-        // Find the sdkClient call
         for declarator in &mut var_decl.declarations {
             let call_expr = match &mut declarator.init {
                 Some(Expression::CallExpression(call)) => call,
                 _ => continue,
             };
 
-            // Check if this is the sdkClient call
             let callee = match &call_expr.callee {
                 Expression::Identifier(ident) => ident,
                 _ => continue,
@@ -33,14 +31,12 @@ pub(crate) fn delete_from_sdk_client_input<'a>(
                 continue;
             }
 
-            // Look for the object literal in the arguments
             for argument in &mut call_expr.arguments {
                 let object_expr = match argument {
                     Argument::ObjectExpression(object_expr) => object_expr,
                     _ => continue,
                 };
 
-                // Remove the property that matches the router name
                 let mut new_properties = Vec::new_in(allocator);
                 object_expr.properties.iter().for_each(|prop| {
                     let prop = match prop {
@@ -52,7 +48,6 @@ pub(crate) fn delete_from_sdk_client_input<'a>(
                         _ => return,
                     };
 
-                    // Remove the property that matches the router name (e.g., "postRoutes")
                     if key.name.as_str() != router_name_camel_case {
                         new_properties.push(ObjectPropertyKind::ObjectProperty(
                             prop.clone_in(&allocator),

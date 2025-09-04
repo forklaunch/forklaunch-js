@@ -15,10 +15,12 @@ use crate::{
 
 pub(crate) enum BasePathType {
     Init,
+    #[allow(dead_code)]
     Change,
     #[allow(dead_code)]
     Delete,
     Eject,
+    #[allow(dead_code)]
     Depcheck,
 }
 
@@ -27,7 +29,9 @@ pub(crate) enum BasePathLocation {
     Application,
     Service,
     Worker,
+    #[allow(dead_code)]
     Router,
+    #[allow(dead_code)]
     Anywhere,
     Library,
     DeferToType,

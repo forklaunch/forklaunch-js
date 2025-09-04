@@ -483,8 +483,6 @@ pub(crate) fn add_otel_to_docker_compose<'a>(
                     .to_string(),
             ]),
             networks: Some(vec![format!("{}-network", app_name)]),
-            // Note: OTEL Collector health check is disabled as the container is too minimal
-            // and doesn't have wget, curl, or nc available
             ..Default::default()
         },
     );

@@ -9,6 +9,7 @@ cd "$TEST_DIR"
 # 1) Create a new application
 RUST_BACKTRACE=1 cargo run --release init application app \
   -p . \
+  -o modules \
   -d postgresql \
   -f prettier \
   -l eslint \
@@ -23,7 +24,7 @@ RUST_BACKTRACE=1 cargo run --release init application app \
   -L 'AGPL-3.0'
 
 # 2) Force manifest cli_version to mismatch the running cargo binary (0.0.0)
-MANIFEST="app/.forklaunch/manifest.toml"
+MANIFEST=".forklaunch/manifest.toml"
 if [[ "$OSTYPE" == darwin* ]]; then
   sed -E -i '' 's/^cli_version[[:space:]]*=[[:space:]]*"[^"]*"/cli_version = "999.0.0"/' "$MANIFEST"
 else
@@ -32,7 +33,7 @@ fi
 
 # 3) Trigger a command and decline upgrade; expect non-zero exit
 set +e
-printf "n\n" | RUST_BACKTRACE=1 cargo run --release depcheck -p app >/dev/null 2>&1
+printf "n\n" | RUST_BACKTRACE=1 cargo run --release depcheck -p . >/dev/null 2>&1
 EXIT_CODE=$?
 set -e
 

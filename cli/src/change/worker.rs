@@ -1,4 +1,4 @@
-use std::{collections::HashSet, io::Write, path::Path};
+use std::{collections::HashSet, io::Write, path::{Path, PathBuf}};
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, Command};
@@ -27,7 +27,8 @@ use crate::{
             transform_mikroorm_config_ts::transform_mikroorm_config_ts,
             transform_registrations_ts::transform_registrations_ts_worker_type,
         },
-        base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        
+        flexible_path::{create_generic_config, find_manifest_path},
         command::command,
         database::{get_database_variants, get_db_driver, is_in_memory_database},
         docker::{
@@ -417,21 +418,35 @@ impl CliCommand for WorkerCommand {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
         let mut rendered_templates_cache = RenderedTemplatesCache::new();
 
-        let base_path_input = prompt_base_path(
-            &mut line_editor,
-            &mut stdout,
-            matches,
-            &BasePathLocation::Worker,
-            &BasePathType::Change,
-        )?;
-        let base_path = Path::new(&base_path_input);
+        
+        let current_dir = std::env::current_dir().unwrap();
+        // Determine where the router should be created
+        let worker_base_path = if let Some(relative_path) = matches.get_one::<String>("base_path") {
+            // User provided a relative path, resolve it relative to current directory
+            let resolved_path = current_dir.join(relative_path);
+            resolved_path
+        } else {
+            current_dir.clone()
+        };
 
-        let config_path = &base_path
-            .parent()
-            .unwrap()
-            .join(".forklaunch")
-            .join("manifest.toml");
-
+        let manifest_path_config = create_generic_config();
+        let manifest_path = find_manifest_path(&worker_base_path, &manifest_path_config);
+        
+        let config_path = if let Some(manifest) = manifest_path {
+            manifest
+        } else {
+            // No manifest found, this might be an error or we need to search more broadly
+            anyhow::bail!("Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path.");
+        };
+        let app_root_path: PathBuf = config_path
+            .to_string_lossy()
+            .strip_suffix(".forklaunch/manifest.toml")
+            .ok_or_else(|| {
+            anyhow::anyhow!("Expected manifest path to end with .forklaunch/manifest.toml, got: {:?}", config_path)
+        })?
+            .to_string()
+            .into();
+        
         let mut manifest_data: WorkerManifestData = toml::from_str::<WorkerManifestData>(
             &rendered_templates_cache
                 .get(&config_path)
@@ -442,7 +457,7 @@ impl CliCommand for WorkerCommand {
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
         .initialize(InitializableManifestConfigMetadata::Project(
             ProjectInitializationMetadata {
-                project_name: base_path.file_name().unwrap().to_string_lossy().to_string(),
+                project_name: worker_base_path.file_name().unwrap().to_string_lossy().to_string(),
             },
         ));
 
@@ -540,7 +555,7 @@ impl CliCommand for WorkerCommand {
         let mut removal_templates = vec![];
         let mut move_templates = vec![];
 
-        let application_package_json_path = base_path.parent().unwrap().join("package.json");
+        let application_package_json_path = worker_base_path.parent().unwrap().join("package.json");
         let application_package_json_data = rendered_templates_cache
             .get(&application_package_json_path)
             .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?
@@ -550,7 +565,7 @@ impl CliCommand for WorkerCommand {
         let mut application_package_json_to_write =
             serde_json::from_str::<ApplicationPackageJson>(&application_package_json_data)?;
 
-        let project_package_json_path = base_path.join("package.json");
+        let project_package_json_path = worker_base_path.join("package.json");
         let project_package_json_data = rendered_templates_cache
             .get(&project_package_json_path)
             .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?
@@ -560,7 +575,7 @@ impl CliCommand for WorkerCommand {
         let mut project_json_to_write =
             serde_json::from_str::<ProjectPackageJson>(&project_package_json_data)?;
 
-        let docker_compose_path = base_path.parent().unwrap().join("docker-compose.yaml");
+        let docker_compose_path = app_root_path.join("docker-compose.yaml");
         let mut docker_compose_data = serde_yml::from_str::<DockerCompose>(
             &rendered_templates_cache
                 .get(&docker_compose_path)
@@ -571,7 +586,7 @@ impl CliCommand for WorkerCommand {
 
         if let Some(r#type) = r#type {
             change_type(
-                &base_path,
+                &worker_base_path,
                 &r#type.parse()?,
                 database,
                 &mut manifest_data,
@@ -589,7 +604,7 @@ impl CliCommand for WorkerCommand {
 
         if let Some(name) = name {
             move_templates.push(change_name(
-                &base_path,
+                &worker_base_path,
                 &name,
                 confirm,
                 &mut manifest_data,
@@ -655,7 +670,7 @@ impl CliCommand for WorkerCommand {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
             writeln!(stdout, "{} changed successfully!", &manifest_data.app_name)?;
             stdout.reset()?;
-            format_code(&base_path, &manifest_data.runtime.parse()?);
+            format_code(&worker_base_path, &manifest_data.runtime.parse()?);
         }
 
         Ok(())
