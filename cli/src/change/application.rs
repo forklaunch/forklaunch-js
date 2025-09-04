@@ -31,17 +31,15 @@ use crate::{
             transform_core_registrations_ts_http_framework,
             transform_core_registrations_ts_validator,
         },
-        
-        flexible_path::{create_project_config, find_manifest_path},
         command::command,
         docker::update_dockerfile_contents,
+        flexible_path::{create_project_config, find_manifest_path},
         format::format_code,
         license::generate_license,
         manifest::{
             ApplicationInitializationMetadata, InitializableManifestConfig,
             InitializableManifestConfigMetadata, ProjectType, application::ApplicationManifestData,
         },
-        
         name::validate_name,
         package_json::{
             application_package_json::{
@@ -103,17 +101,14 @@ fn change_name(
     project_jsons_to_write: &mut HashMap<String, ProjectPackageJson>,
     rendered_templates_cache: &mut RenderedTemplatesCache,
 ) -> Result<()> {
-    
     let existing_name = manifest_data.app_name.clone();
     let existing_kebab_name = manifest_data.kebab_case_app_name.clone();
-    
 
-    
     manifest_data.app_name = name.to_string();
     manifest_data.kebab_case_app_name = name.to_case(Case::Kebab);
     manifest_data.camel_case_app_name = name.to_case(Case::Camel);
     manifest_data.pascal_case_app_name = name.to_case(Case::Pascal);
-    
+
     application_json_to_write.name = Some(
         application_json_to_write
             .name
@@ -128,9 +123,7 @@ fn change_name(
             .unwrap()
             .replace(&existing_kebab_name, &manifest_data.kebab_case_app_name),
     );
-    // update project in manifest data
     for project in project_jsons_to_write.values_mut() {
-        
         project.name = Some(
             project
                 .name
@@ -185,14 +178,13 @@ fn change_name(
 
     let mut ignore_pattern_stack: Vec<Vec<String>> = Vec::new();
     ignore_pattern_stack.push(vec!["**/node_modules/**/*".to_string()]);
-    
+
     for entry in WalkDir::new(base_path).contents_first(false) {
         let entry = entry?;
         let path = entry.path();
         let relative_path = path.strip_prefix(base_path)?;
-        
+
         if entry.file_type().is_dir() {
-            // Check for .flignore in this directory
             let flignore_path = path.join(".flignore");
             if flignore_path.exists() {
                 let new_patterns = read_to_string(flignore_path)?
@@ -203,9 +195,7 @@ fn change_name(
                 ignore_pattern_stack.push(new_patterns);
             }
 
-            // If we're exiting a directory (post-order traversal)
             if path != base_path && entry.depth() < ignore_pattern_stack.len() {
-                // Pop patterns for directories we're leaving
                 let levels_to_pop = ignore_pattern_stack.len() - entry.depth();
                 for _ in 0..levels_to_pop {
                     ignore_pattern_stack.pop();
@@ -262,7 +252,6 @@ fn change_name(
                     );
                 }
             }
-            
         }
     }
 
@@ -330,7 +319,6 @@ fn update_config_files(
 
     if let Some(exclusive_files) = exclusive_files {
         for file in exclusive_files {
-            // add config files,
             let linter_config_file_contents = TEMPLATES_DIR
                 .get_file(Path::new("application").join(file.to_string()))
                 .unwrap()
@@ -805,7 +793,7 @@ fn change_runtime(
 
     let mut removal_templates = vec![];
     let mut symlink_templates = vec![];
-    
+
     let existing_workspaces: Vec<String> = match manifest_data.runtime.parse()? {
         Runtime::Bun => application_json_to_write
             .workspaces
@@ -1540,51 +1528,40 @@ impl CliCommand for ApplicationCommand {
     }
 
     fn handler(&self, matches: &clap::ArgMatches) -> Result<()> {
-        
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
         let mut rendered_templates_cache = RenderedTemplatesCache::new();
 
-        // let base_path_input = prompt_base_path(
-        //     &mut line_editor,
-        //     &mut stdout,
-        //     matches,
-        //     &BasePathLocation::Application,
-        //     &BasePathType::Change,
-        // )?;
-        // let base_path = Path::new(&base_path_input);
-
-        // let config_path = &base_path.join(".forklaunch").join("manifest.toml");
         let current_dir = std::env::current_dir().unwrap();
-        // Determine where the router should be created
         let app_base_path = if let Some(relative_path) = matches.get_one::<String>("base_path") {
-            // User provided a relative path, resolve it relative to current directory
             let resolved_path = current_dir.join(relative_path);
-            
+
             resolved_path
         } else {
-            // No path provided, assume current directory is where router should go
             current_dir.clone()
         };
         let manifest_path_config = create_project_config();
         let manifest_path = find_manifest_path(&app_base_path, &manifest_path_config);
-        
+
         let config_path = if let Some(manifest) = manifest_path {
             manifest
         } else {
-            // No manifest found, this might be an error or we need to search more broadly
-            anyhow::bail!("Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path.");
+            anyhow::bail!(
+                "Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path."
+            );
         };
         let app_root_path: PathBuf = config_path
             .to_string_lossy()
             .strip_suffix(".forklaunch/manifest.toml")
             .ok_or_else(|| {
-            anyhow::anyhow!("Expected manifest path to end with .forklaunch/manifest.toml, got: {:?}", config_path)
-        })?
+                anyhow::anyhow!(
+                    "Expected manifest path to end with .forklaunch/manifest.toml, got: {:?}",
+                    config_path
+                )
+            })?
             .to_string()
             .into();
-        
-        
+
         let mut manifest_data = toml::from_str::<ApplicationManifestData>(
             &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
@@ -1598,8 +1575,7 @@ impl CliCommand for ApplicationCommand {
         manifest_data.kebab_case_app_name = manifest_data.app_name.to_case(Case::Kebab);
         manifest_data.camel_case_app_name = manifest_data.app_name.to_case(Case::Camel);
         manifest_data.pascal_case_app_name = manifest_data.app_name.to_case(Case::Pascal);
-        
-        
+
         let is_src_modules = if app_base_path.join("src").exists() {
             true
         } else {
@@ -1616,9 +1592,10 @@ impl CliCommand for ApplicationCommand {
         } else if is_modules {
             app_base_path.join("modules")
         } else {
-            return Err(anyhow::anyhow!("application directory not found in base_path, src/modules, or modules directories"));
+            return Err(anyhow::anyhow!(
+                "application directory not found in base_path, src/modules, or modules directories"
+            ));
         };
-        
 
         let name = matches.get_one::<String>("name");
         let formatter = matches.get_one::<String>("formatter");
@@ -1661,7 +1638,6 @@ impl CliCommand for ApplicationCommand {
         } else {
             vec![]
         };
-        // start of prompt calls
         let name = prompt_field_from_selections_with_validation(
             "name",
             name,
@@ -1805,24 +1781,21 @@ impl CliCommand for ApplicationCommand {
         )?;
 
         let mut removal_templates = vec![];
-        // let mut move_templates = vec![];
         let mut symlink_templates = vec![];
-        
-        
-        // Try to find package.json in base_path, then check src/modules and modules directories
+
         let application_package_json_path = if app_path.join("package.json").exists() {
             app_path.join("package.json")
         } else {
-            return Err(anyhow::anyhow!("package.json not found in {}", app_path.display()));
+            return Err(anyhow::anyhow!(
+                "package.json not found in {}",
+                app_path.display()
+            ));
         };
-        
-        // read package.json
+
         let application_package_json_data = read_to_string(&application_package_json_path)
             .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?;
-        // parse package.json
         let mut application_json_to_write =
             serde_json::from_str::<ApplicationPackageJson>(&application_package_json_data)?;
-        // parse project package.jsons
         let mut project_jsons_to_write: HashMap<String, ProjectPackageJson> = manifest_data
             .projects
             .iter()
@@ -1838,8 +1811,7 @@ impl CliCommand for ApplicationCommand {
                 )
             })
             .collect();
-        
-        // start of change calls
+
         if let Some(name) = name {
             clean_application(
                 &app_path,
@@ -1856,12 +1828,6 @@ impl CliCommand for ApplicationCommand {
                 &mut project_jsons_to_write,
                 &mut rendered_templates_cache,
             )?;
-
-            // move_templates.push(MoveTemplate {
-            //     path: base_path.to_path_buf(),
-            //     target: base_path.parent().unwrap().join(&name),
-            //     r#type: MoveTemplateType::Directory,
-            // });
         }
 
         if let Some(formatter) = formatter {
@@ -1917,7 +1883,7 @@ impl CliCommand for ApplicationCommand {
                 confirm,
                 &mut stdout,
             )?;
-            
+
             let (runtime_removal_templates, runtime_symlink_templates) = change_runtime(
                 &mut line_editor,
                 &mut stdout,
@@ -1973,10 +1939,6 @@ impl CliCommand for ApplicationCommand {
                 removal_templates.push(removal_template);
             }
         }
-        // end of change calls
-
-        // start of rendering calls
-        // write manifest.toml
         rendered_templates_cache.insert(
             config_path.to_string_lossy(),
             RenderedTemplate {
@@ -1985,7 +1947,6 @@ impl CliCommand for ApplicationCommand {
                 context: None,
             },
         );
-        // write package.json
         rendered_templates_cache.insert(
             application_package_json_path.to_string_lossy(),
             RenderedTemplate {
@@ -1994,7 +1955,6 @@ impl CliCommand for ApplicationCommand {
                 context: None,
             },
         );
-        // write project package.jsons
         project_jsons_to_write
             .iter()
             .for_each(|(project_name, project_json)| {
@@ -2010,23 +1970,13 @@ impl CliCommand for ApplicationCommand {
                     },
                 );
             });
-        // end of rendering calls
-
-        // start of template calls
         let rendered_templates: Vec<RenderedTemplate> = rendered_templates_cache
             .drain()
             .map(|(_, template)| template)
             .collect();
-        // end of template calls
-
-        // start of template execution calls
         remove_template_files(&removal_templates, dryrun, &mut stdout)?;
         write_rendered_templates(&rendered_templates, dryrun, &mut stdout)?;
         create_symlinks(&symlink_templates, dryrun, &mut stdout)?;
-        // move_template_files(&move_templates, dryrun, &mut stdout)?;
-        // end of template execution calls
-
-        // Success message
         if !dryrun {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
             writeln!(stdout, "{} changed successfully!", &manifest_data.app_name)?;

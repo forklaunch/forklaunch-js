@@ -136,11 +136,9 @@ app.listen(port, host, () => {
         let temp_dir = TempDir::new().expect("Failed to create temp directory");
         let temp_path = temp_dir.path();
 
-        // Create necessary directories
         create_dir_all(temp_path.join("api/routes"))
             .expect("Failed to create api/routes directory");
 
-        // Write server.ts file
         write(temp_path.join("server.ts"), server_content).expect("Failed to write server.ts");
 
         temp_dir
@@ -158,15 +156,12 @@ app.listen(port, host, () => {
 
         let transformed_code = result.unwrap();
 
-        // Verify the import injection
         assert!(transformed_code.contains(
             "import { userManagementRouter } from \"./api/routes/userManagement.routes\";"
         ));
 
-        // Verify the app.use injection
         assert!(transformed_code.contains("app.use(userManagementRouter);"));
 
-        // Verify existing content is preserved
         assert!(transformed_code.contains(
             "import { forklaunchExpress, schemaValidator } from \"@forklaunch/blueprint-core\";"
         ));
@@ -258,7 +253,6 @@ app.listen(port, host, () => {
         );
         assert!(transformed_code.contains("app.use(newServiceRouter);"));
 
-        // Verify existing content is preserved
         assert!(
             transformed_code.contains(
                 "import { organizationRouter } from \"./api/routes/organization.routes\";"

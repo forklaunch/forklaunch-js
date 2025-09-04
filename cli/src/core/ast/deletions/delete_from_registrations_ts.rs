@@ -342,8 +342,6 @@ mod tests {
 
         delete_from_registrations_ts_worker_type(&allocator, &mut registrations_program);
 
-        // The function removes ALL worker type properties from the configInjector object
-        // regardless of whether they are used by services or not
         let expected_code = "const registrations = configInjector({\n\tworkerService: {\n\t\tlifetime: Lifetime.Scoped,\n\t\tfactory: (options) => {\n\t\t\tconst { REDIS_URL, TtlCache, DB_HOST } = options;\n\t\t\treturn new WorkerService(options);\n\t\t}\n\t},\n\totherService: {\n\t\tlifetime: Lifetime.Scoped,\n\t\tfactory: (options) => {\n\t\t\tconst { OTHER_PROP } = options;\n\t\t\treturn new OtherService();\n\t\t}\n\t}\n});\n";
 
         let generated_code = Codegen::new()

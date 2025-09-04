@@ -483,8 +483,6 @@ pub(crate) fn add_otel_to_docker_compose<'a>(
                     .to_string(),
             ]),
             networks: Some(vec![format!("{}-network", app_name)]),
-            // Note: OTEL Collector health check is disabled as the container is too minimal
-            // and doesn't have wget, curl, or nc available
             ..Default::default()
         },
     );
@@ -1286,7 +1284,6 @@ pub(crate) fn add_service_definition_to_docker_compose(
     base_path: &Path,
     docker_compose_string: Option<String>,
 ) -> Result<String> {
-    
     let (mut docker_compose, port_number, mut environment) = add_base_definition_to_docker_compose(
         &manifest_data.app_name,
         &manifest_data.service_name,
@@ -1343,7 +1340,7 @@ pub(crate) fn add_service_definition_to_docker_compose(
         &mut environment,
     )
     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
-    
+
     let volumes = vec![
         format!(
             "./{}:/{}/{}",

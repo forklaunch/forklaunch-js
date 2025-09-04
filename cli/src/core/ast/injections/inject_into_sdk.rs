@@ -15,7 +15,6 @@ pub(crate) fn inject_into_sdk_client_input<'a>(
             _ => continue,
         };
 
-        // Check if this is a sdkClient declaration
         let is_sdk_client = var_declaration.declarations.iter().any(|decl| {
             if let Some(Expression::CallExpression(call)) = &decl.init {
                 if let Expression::Identifier(ident) = &call.callee {
@@ -29,13 +28,11 @@ pub(crate) fn inject_into_sdk_client_input<'a>(
             continue;
         }
 
-        // Find the object argument in the sdkClient call
         for decl in &mut var_declaration.declarations {
             if let Some(Expression::CallExpression(call)) = &mut decl.init {
                 if call.arguments.len() >= 2 {
                     let object_arg = &mut call.arguments[1];
                     if let oxc_ast::ast::Argument::ObjectExpression(app_object) = object_arg {
-                        // Process injection
                         for injection_stmt in &mut injection_program_ast.body {
                             let injection_var_decl = match injection_stmt {
                                 Statement::VariableDeclaration(decl) => decl,
@@ -48,7 +45,6 @@ pub(crate) fn inject_into_sdk_client_input<'a>(
                                 _ => continue,
                             };
 
-                            // Check if this is also a sdkClient declaration
                             let is_injection_sdk_client =
                                 injection_var_decl.declarations.iter().any(|decl| {
                                     if let Some(Expression::CallExpression(call)) = &decl.init {
@@ -63,7 +59,6 @@ pub(crate) fn inject_into_sdk_client_input<'a>(
                                 continue;
                             }
 
-                            // Find the object argument in the injection sdkClient call
                             for injection_decl in &mut injection_var_decl.declarations {
                                 if let Some(Expression::CallExpression(injection_call)) =
                                     &mut injection_decl.init
@@ -74,7 +69,6 @@ pub(crate) fn inject_into_sdk_client_input<'a>(
                                             injection_object,
                                         ) = injection_object_arg
                                         {
-                                            // Merge the properties from injection into app
                                             app_object
                                                 .properties
                                                 .extend(injection_object.properties.drain(..));

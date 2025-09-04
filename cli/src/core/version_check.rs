@@ -104,7 +104,6 @@ fn download_binary(required_version: &str) -> Result<PathBuf> {
         set_permissions(&binary_path, perms)?;
     }
 
-    // Create alias 'fl' on unix-like systems
     #[cfg(not(target_os = "windows"))]
     {
         let alias_path = dir.join("fl");

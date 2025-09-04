@@ -20,8 +20,8 @@ use crate::{
     constants::{
         Database, ERROR_FAILED_TO_CREATE_DATABASE_EXPORT_INDEX_TS,
         ERROR_FAILED_TO_CREATE_GITIGNORE, ERROR_FAILED_TO_CREATE_LICENSE,
-        ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE, ERROR_FAILED_TO_SETUP_IAM, Formatter,
-        HttpFramework, License, Linter, Module, Runtime, TestFramework, Validator, FileDestinationOption,
+        ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE, ERROR_FAILED_TO_SETUP_IAM, FileDestinationOption,
+        Formatter, HttpFramework, License, Linter, Module, Runtime, TestFramework, Validator,
         get_core_module_description, get_monitoring_module_description, get_service_module_cache,
         get_service_module_description, get_service_module_name,
         get_universal_sdk_module_description,
@@ -80,8 +80,8 @@ use crate::{
         universal_sdk::get_universal_sdk_additional_deps,
     },
     prompt::{
-        ArrayCompleter, prompt_comma_separated_list, prompt_with_validation,
-        prompt_without_validation, prompt_for_confirmation,
+        ArrayCompleter, prompt_comma_separated_list, prompt_for_confirmation,
+        prompt_with_validation, prompt_without_validation,
     },
 };
 
@@ -266,9 +266,9 @@ impl CliCommand for ApplicationCommand {
             .arg(Arg::new("name").help("The name of the application"))
             .arg(
                 Arg::new("path")
-                .short('p')
-                .long("path")
-                .help("Project path (optional, will prompt if not provided)"),
+                    .short('p')
+                    .long("path")
+                    .help("Project path (optional, will prompt if not provided)"),
             )
             .arg(
                 Arg::new("file_destination_option")
@@ -378,9 +378,7 @@ impl CliCommand for ApplicationCommand {
 
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
-        
-        // Argument parsing
-        // Prompt for application name
+
         let name = prompt_with_validation(
             &mut line_editor,
             &mut stdout,
@@ -395,18 +393,14 @@ impl CliCommand for ApplicationCommand {
             },
         )?;
 
-        // Prompt for project root path
-        // Check if path argument is provided
         let project_root_path = if let Some(custom_path) = matches.get_one::<String>("path") {
-            // Use the provided path directly
             custom_path.clone()
         } else {
-            // Use interactive prompts as before
             let use_cwd = prompt_for_confirmation(
-            &mut line_editor,
-            "Would you like to use the current directory for project files? (y/n) ",
-        )?;
-        if !use_cwd {
+                &mut line_editor,
+                "Would you like to use the current directory for project files? (y/n) ",
+            )?;
+            if !use_cwd {
                 prompt_with_validation(
                     &mut line_editor,
                     &mut stdout,
@@ -416,13 +410,13 @@ impl CliCommand for ApplicationCommand {
                     None,
                     |input: &str| {
                         let trimmed = input.trim();
-                        // Validate that the path is not empty, doesn't contain invalid characters,
-                        // and starts with a relative path indicator
-                        !trimmed.is_empty() 
+                        !trimmed.is_empty()
                             && !trimmed.contains('\0')
                             && (trimmed.starts_with('.') || trimmed.starts_with(".."))
                     },
-                    |_| "Project path must be a relative path starting with './', or '../'. Please try again".to_string(),
+                    |_| {
+                        "Project path must be a relative path starting with './', or '../'. Please try again".to_string()
+                    },
                 )?
             } else {
                 // Use current working directory
@@ -434,7 +428,9 @@ impl CliCommand for ApplicationCommand {
         };
         // Default output path should be src/modules
         let src_path = format!("{}/src", project_root_path);
-        let application_path = if let Some(file_destination_option) = matches.get_one::<String>("file_destination_option") {
+        let application_path = if let Some(file_destination_option) =
+            matches.get_one::<String>("file_destination_option")
+        {
             // Handle special input values
             if file_destination_option == "source" {
                 format!("{}/src/modules", project_root_path)
@@ -469,7 +465,7 @@ impl CliCommand for ApplicationCommand {
                 },
                 |_| "Invalid path. Please provide a valid destination path.".to_string(),
             )?;
-            
+
             // Default behavior for other inputs
             let final_path = if temp_path == "source" {
                 format!("{}/src/modules", project_root_path)
@@ -480,7 +476,6 @@ impl CliCommand for ApplicationCommand {
             };
             final_path
         };
-        
 
         // Prompt for runtime
         let runtime: Runtime = prompt_with_validation(
@@ -736,7 +731,11 @@ impl CliCommand for ApplicationCommand {
             }),
             routers: get_routers_from_standard_package(package),
             metadata: None,
-            path: Some(format!("{}/{}", application_path, get_service_module_name(&package))),
+            path: Some(format!(
+                "{}/{}",
+                application_path,
+                get_service_module_name(&package)
+            )),
         }));
 
         let additional_projects_names = additional_projects
@@ -748,7 +747,6 @@ impl CliCommand for ApplicationCommand {
         let mut project_peer_topology = HashMap::new();
         project_peer_topology.insert(name.to_string(), additional_projects_names.clone());
 
-        
         let bun_package_json_workspace_vec = match runtime {
             Runtime::Bun => Some(additional_projects_names.clone()),
             _ => None,
@@ -811,8 +809,11 @@ impl CliCommand for ApplicationCommand {
         let mut rendered_templates = Vec::new();
         // Generate the application manifest file in the project root path
         rendered_templates.extend(
-            generate_manifest(&Path::new(&project_root_path).to_string_lossy().to_string(), &data)
-                .with_context(|| "Failed to setup manifest file for application")?,
+            generate_manifest(
+                &Path::new(&project_root_path).to_string_lossy().to_string(),
+                &data,
+            )
+            .with_context(|| "Failed to setup manifest file for application")?,
         );
 
         // TODO: support different path delimiters
@@ -871,7 +872,7 @@ impl CliCommand for ApplicationCommand {
             )?)
             .unwrap(),
         );
-        
+
         // Write templates to template_dirs
         // Generate the service templates to be stored in the src/modules folder
         for template_dir in template_dirs {
@@ -967,7 +968,7 @@ impl CliCommand for ApplicationCommand {
                     docker_compose_string,
                 )?);
             }
-            
+
             rendered_templates.extend(generate_with_template(
                 Some(&application_path),
                 &template_dir,
@@ -1158,11 +1159,15 @@ impl CliCommand for ApplicationCommand {
         // Generate the iam keys file in the src/modules folder
         if additional_projects_names.contains(&"iam".to_string()) {
             rendered_templates.extend(
-                generate_iam_keys(&Path::new(&application_path)).with_context(|| ERROR_FAILED_TO_SETUP_IAM)?,
+                generate_iam_keys(&Path::new(&application_path))
+                    .with_context(|| ERROR_FAILED_TO_SETUP_IAM)?,
             );
         }
         // Create the forklaunch directory in the project root path
-        create_forklaunch_dir(&Path::new(&project_root_path).to_string_lossy().to_string(), dryrun)?;
+        create_forklaunch_dir(
+            &Path::new(&project_root_path).to_string_lossy().to_string(),
+            dryrun,
+        )?;
 
         // Add assets and readme files to the project root path
         rendered_templates.extend(generate_with_template(
@@ -1188,7 +1193,7 @@ impl CliCommand for ApplicationCommand {
         // Write the rendered templates to the project root path
         write_rendered_templates(&rendered_templates, dryrun, &mut stdout)
             .with_context(|| "Failed to write application files")?;
-        
+
         // Create the symlinks for the additional projects in the src/modules folder
         additional_projects_dirs
             .into_iter()

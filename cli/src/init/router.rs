@@ -24,10 +24,9 @@ use crate::{
             transform_seeders_index_ts::transform_seeders_index_ts,
             transform_server_ts::transform_server_ts,
         },
-        
-        flexible_path::{create_generic_config, find_manifest_path},
         command::command,
         database::{self, is_in_memory_database},
+        flexible_path::{create_generic_config, find_manifest_path},
         format::format_code,
         manifest::{
             InitializableManifestConfig, InitializableManifestConfigMetadata, ManifestData,
@@ -70,7 +69,6 @@ fn generate_basic_router(
         dryrun,
     )?;
     rendered_templates.extend(
-        // check if this also adds to app and bootstrapper
         add_router_to_artifacts(manifest_data, base_path, service_name, config_path)
             .with_context(|| "Failed to add service metadata to artifacts")?,
     );
@@ -152,36 +150,6 @@ fn add_router_to_artifacts(
     Ok(rendered_templates)
 }
 
-// fn find_manifest_path(start_dir: &Path, max_depth: usize, direction: &str) -> Option<PathBuf> {
-//     if direction == "up" {
-//         let mut current_path = Some(start_dir.to_path_buf());
-//         let mut depth = 0;
-        
-//         while let Some(current) = current_path {
-//             if depth > max_depth {
-//                 return None;
-//             }
-//             let candidate_path = current.join(".forklaunch/manifest.toml");
-//             if candidate_path.exists() {
-//                 return Some(candidate_path);
-//             }
-//             current_path = current.parent().map(|p| p.to_path_buf());
-//                 depth += 1;
-//             }
-//             None
-//     } else if direction == "down" {
-//         for entry in WalkDir::new(start_dir).max_depth(max_depth).into_iter().flatten() {
-//             let path = entry.path().join(".forklaunch/manifest.toml");
-//             if path.exists() {
-//                 return Some(path);
-//             }
-//         }
-//         None
-//     } else {
-//         None
-//     }
-// }
-
 #[derive(Debug)]
 pub(super) struct RouterCommand;
 
@@ -222,10 +190,8 @@ impl CliCommand for RouterCommand {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        
-
         let current_dir = std::env::current_dir()?;
-        
+
         let router_base_path = if let Some(relative_path) = matches.get_one::<String>("base_path") {
             // User provided a relative path, resolve it relative to current directory
             let resolved_path = current_dir.join(relative_path);
@@ -238,14 +204,15 @@ impl CliCommand for RouterCommand {
         // Find the manifest using flexible_path
         let root_path_config = create_generic_config();
         let manifest_path = find_manifest_path(&router_base_path, &root_path_config);
-        
+
         let config_path = if let Some(manifest) = manifest_path {
             manifest
         } else {
             // No manifest found, this might be an error or we need to search more broadly
-            anyhow::bail!("Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path.");
+            anyhow::bail!(
+                "Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path."
+            );
         };
-        
 
         let mut manifest_data = from_str::<RouterManifestData>(
             &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
@@ -268,7 +235,11 @@ impl CliCommand for RouterCommand {
 
         manifest_data = manifest_data.initialize(InitializableManifestConfigMetadata::Router(
             RouterInitializationMetadata {
-                project_name: router_base_path.file_name().unwrap().to_string_lossy().to_string(),
+                project_name: router_base_path
+                    .file_name()
+                    .unwrap()
+                    .to_string_lossy()
+                    .to_string(),
                 router_name: Some(router_name.clone()),
             },
         ));
@@ -297,7 +268,6 @@ impl CliCommand for RouterCommand {
             .find(|project| service_name == project.name)
             .ok_or_else(|| anyhow::anyhow!("Service '{}' not found in manifest", service_name))?;
 
-        // this needs to handle non database router cases -- for workers
         if let Some(database) = service_data.resources.as_ref().unwrap().database.clone() {
             let database: Database = database.parse()?;
             let mut manifest_data: RouterManifestData = RouterManifestData {

@@ -126,7 +126,6 @@ mod tests {
     fn test_inject_into_registrations_config_injector_successful_injection() {
         let allocator = Allocator::default();
 
-        // Original registrations with existing config injector
         let registrations_content = r#"
 import { configInjector } from '@forklaunch/core';
 
@@ -143,7 +142,6 @@ const ci = configInjector({
         let mut registrations_program =
             parse_ast_program(&allocator, registrations_content, SourceType::ts());
 
-        // Injection to add new properties
         let injection_content = r#"
 const newConfig = configInjector({
     database: {
@@ -172,10 +170,8 @@ const newConfig = configInjector({
 
         let transformed_code = code_to_string(&registrations_program);
 
-        // Verify new properties are injected (only top-level properties)
         assert!(transformed_code.contains("level: \"info\""));
 
-        // Verify existing properties are preserved
         assert!(transformed_code.contains("type: \"postgresql\""));
         assert!(transformed_code.contains("host: \"localhost\""));
         assert!(transformed_code.contains("user: true"));
@@ -185,7 +181,6 @@ const newConfig = configInjector({
     fn test_inject_into_registrations_config_injector_duplicate_properties() {
         let allocator = Allocator::default();
 
-        // Original registrations with existing config injector
         let registrations_content = r#"
 import { configInjector } from '@forklaunch/core';
 
@@ -202,7 +197,6 @@ const ci = configInjector({
         let mut registrations_program =
             parse_ast_program(&allocator, registrations_content, SourceType::ts());
 
-        // Injection with some duplicate properties
         let injection_content = r#"
 const newConfig = configInjector({
     database: {
@@ -229,10 +223,8 @@ const newConfig = configInjector({
 
         let transformed_code = code_to_string(&registrations_program);
 
-        // Verify no new properties are injected since they're duplicates
         assert!(!transformed_code.contains("order: true"));
 
-        // Verify original properties are preserved
         assert!(transformed_code.contains("type: \"postgresql\""));
         assert!(transformed_code.contains("user: true"));
     }
@@ -241,7 +233,6 @@ const newConfig = configInjector({
     fn test_inject_into_registrations_config_injector_nested_objects() {
         let allocator = Allocator::default();
 
-        // Original registrations with nested objects
         let registrations_content = r#"
 import { configInjector } from '@forklaunch/core';
 
@@ -290,7 +281,6 @@ const newConfig = configInjector({
         // Verify no injection occurred (function doesn't inject nested properties)
         assert!(!transformed_code.contains("pool: {"));
 
-        // Verify existing properties are preserved
         assert!(transformed_code.contains("type: \"postgresql\""));
         assert!(transformed_code.contains("host: \"localhost\""));
         assert!(transformed_code.contains("port: 5432"));
@@ -465,7 +455,6 @@ const newConfig = configInjector({
         // Verify new properties are injected (only properties that don't exist)
         assert!(transformed_code.contains("monitoring: {"));
 
-        // Verify existing properties are preserved
         assert!(transformed_code.contains("type: \"postgresql\""));
         assert!(transformed_code.contains("host: \"localhost\""));
         assert!(transformed_code.contains("port: 5432"));
@@ -508,7 +497,6 @@ const newConfig = configInjector({});
 
         let transformed_code = code_to_string(&registrations_program);
 
-        // Verify original properties are preserved
         assert!(transformed_code.contains("type: \"postgresql\""));
     }
 }
