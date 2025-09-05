@@ -162,6 +162,17 @@ export class Application<
     arg1?: string | ((listen_socket: uWebsockets.us_listen_socket) => void),
     arg2?: (listen_socket: uWebsockets.us_listen_socket) => void
   ): Promise<uWebsockets.us_listen_socket> {
+    if (require.main !== module) {
+      console.warn(
+        'Application was imported as a module. Server not started automatically. Call listen(port) explicitly to start the server.'
+      );
+      // Return a mock server object to prevent errors
+      return {
+        close: () => { },
+        listen: () => { },
+        address: () => null
+      } as unknown as Server;
+    };
     if (typeof arg0 === 'number') {
       const port = arg0 || Number(process.env.PORT);
       const protocol = (process.env.PROTOCOL || 'http') as 'http' | 'https';
@@ -175,10 +186,9 @@ export class Application<
         res
           .status(statusCode && statusCode >= 400 ? statusCode : 500)
           .send(
-            `Internal server error:\n\nCorrelation id: ${
-              isForklaunchRequest(req)
-                ? req.context.correlationId
-                : 'No correlation ID'
+            `Internal server error:\n\nCorrelation id: ${isForklaunchRequest(req)
+              ? req.context.correlationId
+              : 'No correlation ID'
             }`
           );
         this.openTelemetryCollector.error(err.stack ?? err.message, {
@@ -266,8 +276,7 @@ export class Application<
           this.docsConfiguration.type === 'scalar'
         ) {
           this.internal.use(
-            `/api${process.env.VERSION ? `/${process.env.VERSION}` : ''}${
-              process.env.DOCS_PATH ?? '/docs'
+            `/api${process.env.VERSION ? `/${process.env.VERSION}` : ''}${process.env.DOCS_PATH ?? '/docs'
             }`,
             apiReference({
               ...this.docsConfiguration,
@@ -282,9 +291,9 @@ export class Application<
                       ? spec
                       : this.openapiConfiguration?.discreteVersions === false
                         ? {
-                            ...openApi[OPENAPI_DEFAULT_VERSION],
-                            ...spec
-                          }
+                          ...openApi[OPENAPI_DEFAULT_VERSION],
+                          ...spec
+                        }
                         : spec,
                   title: `API Reference - ${version}`
                 })),
@@ -293,9 +302,8 @@ export class Application<
             }) as unknown as MiddlewareHandler
           );
         } else if (this.docsConfiguration?.type === 'swagger') {
-          const swaggerPath = `/api${process.env.VERSION ? `/${process.env.VERSION}` : ''}${
-            process.env.DOCS_PATH ?? '/docs'
-          }`;
+          const swaggerPath = `/api${process.env.VERSION ? `/${process.env.VERSION}` : ''}${process.env.DOCS_PATH ?? '/docs'
+            }`;
           Object.entries(openApi).forEach(([version, spec]) => {
             const versionPath = encodeURIComponent(`${swaggerPath}/${version}`);
             this.internal.use(versionPath, swaggerRedirect(versionPath));
@@ -316,9 +324,9 @@ export class Application<
                     ? spec
                     : this.openapiConfiguration?.discreteVersions === false
                       ? {
-                          ...openApi[OPENAPI_DEFAULT_VERSION],
-                          ...spec
-                        }
+                        ...openApi[OPENAPI_DEFAULT_VERSION],
+                        ...spec
+                      }
                       : spec
                 ])
               )
@@ -343,9 +351,9 @@ export class Application<
                   ? openApi[req.params.id]
                   : this.openapiConfiguration?.discreteVersions === false
                     ? {
-                        ...openApi[OPENAPI_DEFAULT_VERSION],
-                        ...openApi[req.params.id]
-                      }
+                      ...openApi[OPENAPI_DEFAULT_VERSION],
+                      ...openApi[req.params.id]
+                    }
                     : openApi[req.params.id]
               );
             }

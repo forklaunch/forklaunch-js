@@ -131,6 +131,19 @@ export class Application<
   listen(path: string, callback?: () => void): Server;
   listen(handle: unknown, listeningListener?: () => void): Server;
   listen(...args: unknown[]): Server {
+    // Check if this module was run directly from command line or imported
+    // If imported, don't start the server automatically
+    if (require.main !== module) {
+      console.warn(
+        'Application was imported as a module. Server not started automatically. Call listen(port) explicitly to start the server.'
+      );
+      // Return a mock server object to prevent errors
+      return {
+        close: () => { },
+        listen: () => { },
+        address: () => null
+      } as unknown as Server;
+    };
     const port =
       typeof args[0] === 'number' ? args[0] : Number(process.env.PORT);
     const host =
@@ -217,8 +230,7 @@ export class Application<
         this.docsConfiguration.type === 'scalar'
       ) {
         this.internal.use(
-          `/api${process.env.VERSION ? `/${process.env.VERSION}` : ''}${
-            process.env.DOCS_PATH ?? '/docs'
+          `/api${process.env.VERSION ? `/${process.env.VERSION}` : ''}${process.env.DOCS_PATH ?? '/docs'
           }`,
           apiReference({
             ...this.docsConfiguration,
@@ -233,9 +245,9 @@ export class Application<
                     ? spec
                     : this.openapiConfiguration?.discreteVersions === false
                       ? {
-                          ...openApi[OPENAPI_DEFAULT_VERSION],
-                          ...spec
-                        }
+                        ...openApi[OPENAPI_DEFAULT_VERSION],
+                        ...spec
+                      }
                       : spec,
                 title: `API Reference - ${version}`
               })),
@@ -245,8 +257,7 @@ export class Application<
         );
       } else if (this.docsConfiguration.type === 'swagger') {
         this.internal.use(
-          `/api${process.env.VERSION ? `/${process.env.VERSION}` : ''}${
-            process.env.DOCS_PATH ?? '/docs'
+          `/api${process.env.VERSION ? `/${process.env.VERSION}` : ''}${process.env.DOCS_PATH ?? '/docs'
           }`,
           swaggerUi.serveFiles(openApi),
           swaggerUi.setup(openApi)
@@ -266,9 +277,9 @@ export class Application<
                   ? spec
                   : this.openapiConfiguration?.discreteVersions === false
                     ? {
-                        ...openApi[OPENAPI_DEFAULT_VERSION],
-                        ...spec
-                      }
+                      ...openApi[OPENAPI_DEFAULT_VERSION],
+                      ...spec
+                    }
                     : spec
               ])
             )
@@ -293,9 +304,9 @@ export class Application<
                 ? openApi[req.params.id]
                 : this.openapiConfiguration?.discreteVersions === false
                   ? {
-                      ...openApi[OPENAPI_DEFAULT_VERSION],
-                      ...openApi[req.params.id]
-                    }
+                    ...openApi[OPENAPI_DEFAULT_VERSION],
+                    ...openApi[req.params.id]
+                  }
                   : openApi[req.params.id]
             );
           }
@@ -327,10 +338,9 @@ export class Application<
       res
         .status(statusCode >= 400 ? statusCode : 500)
         .send(
-          `Internal server error:\n\nCorrelation id: ${
-            isForklaunchRequest(req)
-              ? req.context.correlationId
-              : 'No correlation ID'
+          `Internal server error:\n\nCorrelation id: ${isForklaunchRequest(req)
+            ? req.context.correlationId
+            : 'No correlation ID'
           }`
         );
       this.openTelemetryCollector.error(
