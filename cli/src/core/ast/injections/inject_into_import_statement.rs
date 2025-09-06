@@ -38,6 +38,10 @@ pub(crate) fn inject_into_import_statement<'a>(
             }
         });
 
+    if injection_pos == Some(0) {
+        injection_pos = Some(1);
+    }
+
     if let Some(index) = injection_pos {
         for stmt in injection_program_ast.body.drain(..).rev() {
             app_program_ast.body.insert(index, stmt);
