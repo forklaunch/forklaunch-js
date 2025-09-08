@@ -152,7 +152,12 @@ impl CliCommand for WorkerCommand {
 
         remove_dir_all(&worker_base_path.join(&worker_name))?;
 
-        let docker_compose_path = app_root_path.join("docker-compose.yaml");
+        let docker_compose_path =
+            if let Some(docker_compose_path) = &manifest_data.docker_compose_path {
+                app_root_path.join(docker_compose_path)
+            } else {
+                app_root_path.join("docker-compose.yaml")
+            };
         let mut docker_compose = serde_yml::from_str(
             &read_to_string(&docker_compose_path)
                 .with_context(|| ERROR_FAILED_TO_READ_DOCKER_COMPOSE)?,

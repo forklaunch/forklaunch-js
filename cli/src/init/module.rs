@@ -307,8 +307,15 @@ impl CliCommand for ModuleCommand {
             context: Some(ERROR_FAILED_TO_WRITE_MANIFEST.to_string()),
         });
 
+        let docker_compose_path =
+            if let Some(docker_compose_path) = &service_data.docker_compose_path {
+                app_root_path.join(docker_compose_path)
+            } else {
+                app_root_path.join("docker-compose.yaml")
+            };
+
         rendered_templates.push(RenderedTemplate {
-            path: app_root_path.join("docker-compose.yaml"),
+            path: docker_compose_path,
             content: add_service_definition_to_docker_compose(&service_data, &app_root_path, None)?,
             context: Some(ERROR_FAILED_TO_WRITE_DOCKER_COMPOSE.to_string()),
         });

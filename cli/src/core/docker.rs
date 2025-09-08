@@ -2,7 +2,7 @@ use std::{
     collections::{HashMap, HashSet},
     env::current_dir,
     fs::read_to_string,
-    path::{MAIN_SEPARATOR, Path},
+    path::{MAIN_SEPARATOR, Path, PathBuf},
 };
 
 use anyhow::{Context, Result};
@@ -1116,7 +1116,7 @@ pub(crate) fn clean_up_unused_infrastructure_services(
 fn add_base_definition_to_docker_compose(
     app_name: &str,
     name: &str,
-    base_path: &Path,
+    docker_compose_path: &PathBuf,
     docker_compose_string: Option<String>,
 ) -> Result<(DockerCompose, i32, IndexMap<String, String>)> {
     let mut docker_compose: DockerCompose =
@@ -1125,7 +1125,7 @@ fn add_base_definition_to_docker_compose(
                 .with_context(|| ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE)?
         } else {
             from_str(
-                &read_to_string(base_path.join("docker-compose.yaml"))
+                &read_to_string(docker_compose_path)
                     .with_context(|| ERROR_FAILED_TO_READ_DOCKER_COMPOSE)?,
             )
             .with_context(|| ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE)?
@@ -1304,10 +1304,17 @@ pub(crate) fn add_service_definition_to_docker_compose(
     base_path: &Path,
     docker_compose_string: Option<String>,
 ) -> Result<String> {
+    let docker_compose_path = if let Some(docker_compose_path) = &manifest_data.docker_compose_path
+    {
+        &base_path.join(docker_compose_path)
+    } else {
+        &base_path.join("docker-compose.yaml")
+    };
+
     let (mut docker_compose, port_number, mut environment) = add_base_definition_to_docker_compose(
         &manifest_data.app_name,
         &manifest_data.service_name,
-        base_path,
+        docker_compose_path,
         docker_compose_string,
     )?;
 
@@ -1411,10 +1418,17 @@ pub(crate) fn add_worker_definition_to_docker_compose(
     base_path: &Path,
     docker_compose_string: Option<String>,
 ) -> Result<String> {
+    let docker_compose_path = if let Some(docker_compose_path) = &manifest_data.docker_compose_path
+    {
+        &base_path.join(docker_compose_path)
+    } else {
+        &base_path.join("docker-compose.yaml")
+    };
+
     let (mut docker_compose, port_number, mut environment) = add_base_definition_to_docker_compose(
         &manifest_data.app_name,
         &manifest_data.worker_name,
-        base_path,
+        docker_compose_path,
         docker_compose_string,
     )?;
 

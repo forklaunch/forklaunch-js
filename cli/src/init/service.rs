@@ -215,8 +215,15 @@ fn add_service_to_artifacts(
 
     let mut rendered_templates = Vec::new();
 
+    let docker_compose_path = if let Some(docker_compose_path) = &manifest_data.docker_compose_path
+    {
+        app_root_path.join(docker_compose_path)
+    } else {
+        app_root_path.join("docker-compose.yaml")
+    };
+
     rendered_templates.push(RenderedTemplate {
-        path: app_root_path.join("docker-compose.yaml"),
+        path: docker_compose_path,
         content: docker_compose_buffer,
         context: Some(ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE.to_string()),
     });

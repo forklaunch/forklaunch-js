@@ -2,7 +2,6 @@ use std::path::{Path, PathBuf};
 
 use walkdir::WalkDir;
 
-
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum SearchDirection {
     Up,
@@ -51,7 +50,6 @@ pub(crate) fn find_manifest_path(start_dir: &Path, config: &PathSearchConfig) ->
         SearchDirection::Up => search_upwards(start_dir, config),
         SearchDirection::Down => search_downwards(start_dir, config),
         SearchDirection::Both => {
-            // Try upwards first, then downwards if not found
             search_upwards(start_dir, config).or_else(|| search_downwards(start_dir, config))
         }
     }

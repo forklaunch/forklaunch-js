@@ -1,4 +1,8 @@
-use std::{collections::HashSet, io::Write, path::{Path, PathBuf}};
+use std::{
+    collections::HashSet,
+    io::Write,
+    path::{Path, PathBuf},
+};
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, Command};
@@ -27,8 +31,6 @@ use crate::{
             transform_mikroorm_config_ts::transform_mikroorm_config_ts,
             transform_registrations_ts::transform_registrations_ts_worker_type,
         },
-        
-        flexible_path::create_generic_config,
         command::command,
         database::{get_database_variants, get_db_driver, is_in_memory_database},
         docker::{
@@ -36,6 +38,7 @@ use crate::{
             add_redis_to_docker_compose, clean_up_unused_infrastructure_services,
         },
         env::Env,
+        flexible_path::create_generic_config,
         format::format_code,
         manifest::{
             InitializableManifestConfig, InitializableManifestConfigMetadata, ManifestData,
@@ -418,7 +421,6 @@ impl CliCommand for WorkerCommand {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
         let mut rendered_templates_cache = RenderedTemplatesCache::new();
 
-        
         let current_dir = std::env::current_dir().unwrap();
         let worker_base_path = if let Some(relative_path) = matches.get_one::<String>("base_path") {
             current_dir.join(relative_path)
@@ -435,11 +437,14 @@ impl CliCommand for WorkerCommand {
             .to_string_lossy()
             .strip_suffix(".forklaunch/manifest.toml")
             .ok_or_else(|| {
-            anyhow::anyhow!("Expected manifest path to end with .forklaunch/manifest.toml, got: {:?}", config_path)
-        })?
+                anyhow::anyhow!(
+                    "Expected manifest path to end with .forklaunch/manifest.toml, got: {:?}",
+                    config_path
+                )
+            })?
             .to_string()
             .into();
-        
+
         let mut manifest_data: WorkerManifestData = toml::from_str::<WorkerManifestData>(
             &rendered_templates_cache
                 .get(&config_path)
@@ -450,7 +455,11 @@ impl CliCommand for WorkerCommand {
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
         .initialize(InitializableManifestConfigMetadata::Project(
             ProjectInitializationMetadata {
-                project_name: worker_base_path.file_name().unwrap().to_string_lossy().to_string(),
+                project_name: worker_base_path
+                    .file_name()
+                    .unwrap()
+                    .to_string_lossy()
+                    .to_string(),
             },
         ));
 
@@ -568,7 +577,12 @@ impl CliCommand for WorkerCommand {
         let mut project_json_to_write =
             serde_json::from_str::<ProjectPackageJson>(&project_package_json_data)?;
 
-        let docker_compose_path = app_root_path.join("docker-compose.yaml");
+        let docker_compose_path =
+            if let Some(docker_compose_path) = &manifest_data.docker_compose_path {
+                app_root_path.join(docker_compose_path)
+            } else {
+                app_root_path.join("docker-compose.yaml")
+            };
         let mut docker_compose_data = serde_yml::from_str::<DockerCompose>(
             &rendered_templates_cache
                 .get(&docker_compose_path)

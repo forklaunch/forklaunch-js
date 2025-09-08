@@ -318,7 +318,7 @@ pub(crate) const ERROR_FAILED_TO_CREATE_LICENSE: &str =
 pub(crate) const ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE: &str =
     "Failed to generate pnpm-workspace.yaml.";
 pub(crate) const ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE: &str =
-    "Failed to add project metadata to docker-compose.yaml.";
+    "Failed to add project metadata to docker compose yaml.";
 pub(crate) const ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST: &str =
     "Failed to add project metadata to manifest.";
 pub(crate) const ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON: &str =

@@ -1090,8 +1090,14 @@ impl CliCommand for ApplicationCommand {
             )?);
         }
 
+        let docker_compose_path = if let Some(docker_compose_path) = &data.docker_compose_path {
+            Path::new(&generation_path).join(docker_compose_path)
+        } else {
+            Path::new(&generation_path).join("docker-compose.yaml")
+        };
+
         rendered_templates.push(RenderedTemplate {
-            path: Path::new(&generation_path).join("docker-compose.yaml"),
+            path: docker_compose_path,
             content: docker_compose_string.unwrap(),
             context: None,
         });
