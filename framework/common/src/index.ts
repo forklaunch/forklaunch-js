@@ -9,6 +9,7 @@ export * from './guards/isRecord';
 export * from './guards/isTrue';
 export * from './hashString';
 export * from './InMemoryBlob';
+export * from './loadCascadingEnv';
 export * from './noop';
 export * from './openApiCompliantPath';
 export * from './readableStreamToAsyncIterable';
