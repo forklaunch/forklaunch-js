@@ -382,15 +382,11 @@ app.listen(port, host, () => {
         let temp_dir = create_temp_project_structure(server_content);
         let temp_path = temp_dir.path();
 
-        println!("Server content: {:?}", server_content);
-
         let result = transform_server_ts("userManagement", temp_path);
 
         assert!(result.is_ok());
 
         let transformed_code = result.unwrap();
-
-        println!("Transformed code: {:?}", transformed_code);
 
         assert!(transformed_code.contains(
             "import { userManagementRouter } from \"./api/routes/userManagement.routes\";"
