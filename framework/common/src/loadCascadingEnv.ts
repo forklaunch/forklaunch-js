@@ -3,7 +3,7 @@ import { dirname, resolve } from 'path';
 
 /**
  * Gets cascading environment file paths: root .env.local -> project .env
- * Root detection: .forklaunch/manifest.toml -> .git/pnpm-workspace.yaml
+ * Root detection uses: .forklaunch/manifest.toml
  */
 export function getCascadingEnvPaths(
   projectEnvPath: string | undefined,
@@ -112,5 +112,5 @@ function findApplicationRoot(startPath: string): string {
     depth++;
   }
 
-  return startPath;
+  return currentPath;
 }
