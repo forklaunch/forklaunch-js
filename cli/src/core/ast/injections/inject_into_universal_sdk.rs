@@ -172,6 +172,7 @@ pub(crate) fn inject_into_universal_sdk<'a>(
     app_program_ast: &mut Program<'a>,
     app_name: &str,
     name: &str,
+    source_text: &str,
 ) -> Result<()> {
     let kebab_app_name = &app_name.to_case(Case::Kebab);
     let camel_case_name = &name.to_case(Case::Camel);
@@ -192,6 +193,7 @@ pub(crate) fn inject_into_universal_sdk<'a>(
         app_program_ast,
         &mut import_program,
         &format!("@{kebab_app_name}/{kebab_case_name}"),
+        source_text,
     )?;
     inject_into_universal_sdk_function(
         allocator,
