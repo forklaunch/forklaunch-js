@@ -29,9 +29,8 @@ use crate::{
             },
             parse_ast_program::parse_ast_program,
         },
-        
-        flexible_path::{create_module_config, find_manifest_path},
         command::command,
+        flexible_path::create_module_config,
         manifest::{
             InitializableManifestConfig, InitializableManifestConfigMetadata,
             RouterInitializationMetadata, remove_router_definition_from_manifest,
@@ -77,34 +76,18 @@ impl CliCommand for RouterCommand {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        
         let current_dir = std::env::current_dir().unwrap();
-        
         let router_base_path = if let Some(relative_path) = matches.get_one::<String>("base_path") {
-            // User provided a relative path, resolve it relative to current directory
-            let resolved_path = current_dir.join(relative_path);
-            resolved_path
+            current_dir.join(relative_path)
         } else {
-            // No path provided, assume current directory is where router should go
-            current_dir.clone()
+            current_dir
         };
+
         let manifest_path_config = create_module_config();
-        let manifest_path = find_manifest_path(&router_base_path, &manifest_path_config);
-        
-        let config_path = if let Some(manifest) = manifest_path {
-            manifest
-        } else {
-            // No manifest found, this might be an error or we need to search more broadly
-            anyhow::bail!("Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path.");
-        };
-        // let app_root_path: PathBuf = config_path
-        //     .to_string_lossy()
-        //     .strip_suffix(".forklaunch/manifest.toml")
-        //     .ok_or_else(|| {
-        //     anyhow::anyhow!("Expected manifest path to end with .forklaunch/manifest.toml, got: {:?}", config_path)
-        // })?
-        //     .to_string()
-        //     .into();
+        let config_path = crate::core::base_path::resolve_app_base_path_and_find_manifest(
+            matches,
+            &manifest_path_config,
+        )?;
 
         let mut manifest_data: RouterManifestData = toml::from_str(
             &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
@@ -131,7 +114,11 @@ impl CliCommand for RouterCommand {
 
         manifest_data = manifest_data.initialize(InitializableManifestConfigMetadata::Router(
             RouterInitializationMetadata {
-                project_name: router_base_path.file_name().unwrap().to_string_lossy().to_string(),
+                project_name: router_base_path
+                    .file_name()
+                    .unwrap()
+                    .to_string_lossy()
+                    .to_string(),
                 router_name: Some(router_name.clone()),
             },
         ));
@@ -296,7 +283,7 @@ impl CliCommand for RouterCommand {
         let sdk_text = read_to_string(&sdk_path)?;
         let sdk_type = SourceType::from_path(&sdk_path)?;
         let mut sdk_program = parse_ast_program(&allocator, &sdk_text, sdk_type);
-        
+
         // TODO: The following function is supposed to remove the import statement for the created router but the sdk.ts file is not being updated. This means the import statement is still present in the sdk.ts file.
         let new_sdk_content =
             delete_from_sdk_client_input(&allocator, &mut sdk_program, &camel_case_name)?;

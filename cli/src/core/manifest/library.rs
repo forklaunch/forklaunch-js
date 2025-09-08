@@ -11,8 +11,6 @@ config_struct!(
     #[derive(Debug, Content, Serialize, Clone)]
     pub(crate) struct LibraryManifestData {
         #[serde(skip_serializing, skip_deserializing)]
-        pub(crate) docker_compose_path: String,
-        #[serde(skip_serializing, skip_deserializing)]
         pub(crate) library_name: String,
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) camel_case_name: String,
@@ -45,7 +43,6 @@ impl InitializableManifestConfig for LibraryManifestData {
             .find(|p| p.name == library_metadata.project_name.clone())
             .unwrap();
         Self {
-            
             library_name: library_name.clone(),
             camel_case_name: library_name.clone().to_case(Case::Camel),
             kebab_case_name: library_name.clone().to_case(Case::Kebab),

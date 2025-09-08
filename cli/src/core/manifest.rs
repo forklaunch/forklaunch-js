@@ -111,7 +111,6 @@ pub(crate) struct ProjectEntry {
     pub(crate) resources: Option<ResourceInventory>,
     pub(crate) routers: Option<Vec<String>>,
     pub(crate) metadata: Option<ProjectMetadata>,
-    pub(crate) path: Option<String>,
 }
 
 #[macro_export]
@@ -136,6 +135,8 @@ macro_rules! internal_config_struct {
             $vis id: String,
             $vis cli_version: String,
             $vis app_name: String,
+            $vis modules_path: String,
+            $vis docker_compose_path: Option<String>,
             #[serde(skip_serializing, skip_deserializing)]
             $vis camel_case_app_name: String,
             #[serde(skip_serializing, skip_deserializing)]
@@ -233,6 +234,8 @@ macro_rules! config_struct {
                         id: shadow.id.clone(),
                         cli_version: shadow.cli_version.clone(),
                         app_name: shadow.app_name.clone(),
+                        modules_path: shadow.modules_path.clone(),
+                        docker_compose_path: shadow.docker_compose_path.clone(),
                         camel_case_app_name: shadow.camel_case_app_name.clone(),
                         pascal_case_app_name: shadow.pascal_case_app_name.clone(),
                         kebab_case_app_name: shadow.kebab_case_app_name.clone(),
@@ -346,7 +349,6 @@ pub(crate) fn add_project_definition_to_manifest<
         resources,
         routers,
         metadata,
-        path: None,
     });
 
     let app_name = manifest_data.app_name().to_owned();

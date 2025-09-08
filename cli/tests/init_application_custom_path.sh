@@ -11,7 +11,7 @@ echo "Testing current directory scenario..."
 # Test current directory scenario - use current directory
 RUST_BACKTRACE=1 cargo run --release init application "test-app-current" \
     --path "." \
-    -o "source" \
+    -o "src" \
     -d "postgresql" \
     -v "zod" \
     -f "prettier" \

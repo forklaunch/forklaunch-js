@@ -29,12 +29,12 @@ use crate::{
     },
     core::{
         base_path::{BasePathLocation, BasePathType, prompt_base_path},
-        flexible_path::{get_base_app_path, create_generic_config, find_manifest_path},
         command::command,
         database::{
             add_base_entity_to_core, get_database_port, get_db_driver, is_in_memory_database,
         },
         docker::add_worker_definition_to_docker_compose,
+        flexible_path::{create_generic_config, find_manifest_path, get_base_app_path},
         gitignore::generate_gitignore,
         manifest::{
             ApplicationInitializationMetadata, InitializableManifestConfig,
@@ -621,29 +621,33 @@ impl CliCommand for WorkerCommand {
         let app_path = if let Some(temp_app_path) = get_base_app_path(&base_path_input) {
             temp_app_path
         } else {
-            return Err(anyhow::anyhow!("Application directory not found in base_path, src/modules, or modules directories. Please check if your application is initialized and you are in the correct directory."));
+            return Err(anyhow::anyhow!(
+                "Application directory not found in base_path, src/modules, or modules directories. Please check if your application is initialized and you are in the correct directory."
+            ));
         };
-        
-
 
         let manifest_path_config = create_generic_config();
         let manifest_path = find_manifest_path(&base_path, &manifest_path_config);
-        
+
         let config_path = if let Some(manifest) = manifest_path {
             manifest
         } else {
             // No manifest found, this might be an error or we need to search more broadly
-            anyhow::bail!("Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path.");
+            anyhow::bail!(
+                "Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path."
+            );
         };
         let app_root_path: PathBuf = config_path
             .to_string_lossy()
             .strip_suffix(".forklaunch/manifest.toml")
             .ok_or_else(|| {
-            anyhow::anyhow!("Expected manifest path to end with .forklaunch/manifest.toml, got: {:?}", config_path)
-        })?
+                anyhow::anyhow!(
+                    "Expected manifest path to end with .forklaunch/manifest.toml, got: {:?}",
+                    config_path
+                )
+            })?
             .to_string()
             .into();
-        
 
         let existing_manifest_data = from_str::<ApplicationManifestData>(
             &read_to_string(config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
@@ -713,10 +717,11 @@ impl CliCommand for WorkerCommand {
             // Common fields from ApplicationManifestData
             id: existing_manifest_data.id.clone(),
             app_name: existing_manifest_data.app_name.clone(),
+            modules_path: existing_manifest_data.modules_path.clone(),
             docker_compose_path: existing_manifest_data.docker_compose_path.clone(),
-            camel_case_app_name: existing_manifest_data.app_name.to_case(Case::Camel),
-            pascal_case_app_name: existing_manifest_data.app_name.to_case(Case::Pascal),
-            kebab_case_app_name: existing_manifest_data.app_name.to_case(Case::Kebab),
+            camel_case_app_name: existing_manifest_data.camel_case_app_name.clone(),
+            pascal_case_app_name: existing_manifest_data.pascal_case_app_name.clone(),
+            kebab_case_app_name: existing_manifest_data.kebab_case_app_name.clone(),
             app_description: existing_manifest_data.app_description.clone(),
             author: existing_manifest_data.author.clone(),
             cli_version: existing_manifest_data.cli_version.clone(),

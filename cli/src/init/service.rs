@@ -29,12 +29,12 @@ use crate::{
     },
     core::{
         base_path::{BasePathLocation, BasePathType, prompt_base_path},
-        flexible_path::{create_module_config, find_manifest_path},
         command::command,
         database::{
             add_base_entity_to_core, get_database_port, get_db_driver, is_in_memory_database,
         },
         docker::{add_service_definition_to_docker_compose, update_dockerfile_contents},
+        flexible_path::{create_module_config, find_manifest_path},
         format::format_code,
         gitignore::generate_gitignore,
         manifest::{
@@ -147,7 +147,7 @@ fn generate_basic_service(
             context: Some(ERROR_FAILED_TO_UPDATE_DOCKERFILE.to_string()),
         });
     }
-    
+
     add_project_to_universal_sdk(
         &mut rendered_templates,
         base_path,
@@ -552,23 +552,27 @@ impl CliCommand for ServiceCommand {
         let base_path = Path::new(&base_path_input);
         let manifest_path_config = create_module_config();
         let manifest_path = find_manifest_path(&base_path, &manifest_path_config);
-        
+
         let config_path = if let Some(manifest) = manifest_path {
             manifest
         } else {
             // No manifest found, this might be an error or we need to search more broadly
-            anyhow::bail!("Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path.");
+            anyhow::bail!(
+                "Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path."
+            );
         };
         let app_root_path: PathBuf = config_path
             .to_string_lossy()
             .strip_suffix(".forklaunch/manifest.toml")
             .ok_or_else(|| {
-            anyhow::anyhow!("Expected manifest path to end with .forklaunch/manifest.toml, got: {:?}", config_path)
-        })?
+                anyhow::anyhow!(
+                    "Expected manifest path to end with .forklaunch/manifest.toml, got: {:?}",
+                    config_path
+                )
+            })?
             .to_string()
             .into();
-        
-        
+
         let existing_manifest_data = from_str::<ApplicationManifestData>(
             &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
@@ -580,8 +584,6 @@ impl CliCommand for ServiceCommand {
                 database: None,
             },
         ));
-        
-        
 
         let service_name = prompt_with_validation(
             &mut line_editor,
@@ -639,10 +641,11 @@ impl CliCommand for ServiceCommand {
             // Common fields from ApplicationManifestData
             id: existing_manifest_data.id.clone(),
             app_name: existing_manifest_data.app_name.clone(),
+            modules_path: existing_manifest_data.modules_path.clone(),
             docker_compose_path: existing_manifest_data.docker_compose_path.clone(),
-            camel_case_app_name: existing_manifest_data.app_name.clone().to_case(Case::Camel),
-            pascal_case_app_name: existing_manifest_data.app_name.clone().to_case(Case::Pascal),
-            kebab_case_app_name: existing_manifest_data.app_name.clone().to_case(Case::Kebab),
+            camel_case_app_name: existing_manifest_data.camel_case_app_name.clone(),
+            pascal_case_app_name: existing_manifest_data.pascal_case_app_name.clone(),
+            kebab_case_app_name: existing_manifest_data.kebab_case_app_name.clone(),
             app_description: existing_manifest_data.app_description.clone(),
             author: existing_manifest_data.author.clone(),
             cli_version: existing_manifest_data.cli_version.clone(),

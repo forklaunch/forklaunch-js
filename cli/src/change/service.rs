@@ -36,7 +36,7 @@ use crate::{
             },
         },
         
-        flexible_path::{create_generic_config, find_manifest_path},
+        flexible_path::create_generic_config,
         command::command,
         database::{get_database_variants, is_in_memory_database},
         docker::{
@@ -615,25 +615,17 @@ impl CliCommand for ServiceCommand {
         
 
         let current_dir = std::env::current_dir().unwrap();
-        
         let service_base_path = if let Some(relative_path) = matches.get_one::<String>("base_path") {
-            // User provided a relative path, resolve it relative to current directory
-            let resolved_path = current_dir.join(relative_path);
-            resolved_path
+            current_dir.join(relative_path)
         } else {
-            current_dir.clone()
+            current_dir
         };
 
-        // Find the manifest using flexible_path
         let root_path_config = create_generic_config();
-        let manifest_path = find_manifest_path(&service_base_path, &root_path_config);
-        
-        let config_path = if let Some(manifest) = manifest_path {
-            manifest
-        } else {
-            // No manifest found, this might be an error or we need to search more broadly
-            anyhow::bail!("Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path.");
-        };
+        let config_path = crate::core::base_path::resolve_app_base_path_and_find_manifest(
+            matches,
+            &root_path_config,
+        )?;
         let app_root_path: PathBuf = config_path
             .to_string_lossy()
             .strip_suffix(".forklaunch/manifest.toml")

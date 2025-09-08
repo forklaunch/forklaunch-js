@@ -1,7 +1,7 @@
 use std::{
     fs::{read_to_string, remove_dir_all},
     io::Write,
-    path::{PathBuf},
+    path::PathBuf,
 };
 
 use anyhow::{Context, Result};
@@ -18,10 +18,10 @@ use crate::{
         ERROR_FAILED_TO_WRITE_DOCKER_COMPOSE, ERROR_FAILED_TO_WRITE_MANIFEST, Runtime,
     },
     core::{
-        // base_path::{BasePathLocation, BasePathType, prompt_base_path},
-        flexible_path::{create_generic_config, find_manifest_path},
         command::command,
         docker::remove_worker_from_docker_compose,
+        // base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        flexible_path::create_generic_config,
         manifest::{
             ApplicationInitializationMetadata, InitializableManifestConfig,
             InitializableManifestConfigMetadata, ProjectType, application::ApplicationManifestData,
@@ -69,38 +69,29 @@ impl CliCommand for WorkerCommand {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        
         let current_dir = std::env::current_dir().unwrap();
-        // Determine where the router should be created
         let worker_base_path = if let Some(relative_path) = matches.get_one::<String>("base_path") {
-            // User provided a relative path, resolve it relative to current directory
-            let resolved_path = current_dir.join(relative_path);
-            
-            resolved_path
+            current_dir.join(relative_path)
         } else {
-            current_dir.clone()
+            current_dir
         };
 
-        // Find the manifest using flexible_path
         let root_path_config = create_generic_config();
-        let manifest_path = find_manifest_path(&worker_base_path, &root_path_config);
-        
-        let config_path = if let Some(manifest) = manifest_path {
-            manifest
-        } else {
-            // No manifest found, this might be an error or we need to search more broadly
-            anyhow::bail!("Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path.");
-        };
+        let config_path = crate::core::base_path::resolve_app_base_path_and_find_manifest(
+            matches,
+            &root_path_config,
+        )?;
         let app_root_path: PathBuf = config_path
             .to_string_lossy()
             .strip_suffix(".forklaunch/manifest.toml")
             .ok_or_else(|| {
-            anyhow::anyhow!("Expected manifest path to end with .forklaunch/manifest.toml, got: {:?}", config_path)
-        })?
+                anyhow::anyhow!(
+                    "Expected manifest path to end with .forklaunch/manifest.toml, got: {:?}",
+                    config_path
+                )
+            })?
             .to_string()
             .into();
-        
-        
 
         let mut manifest_data = toml::from_str::<ApplicationManifestData>(
             &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
@@ -186,14 +177,20 @@ impl CliCommand for WorkerCommand {
             Runtime::Node => {
                 rendered_templates.push(RenderedTemplate {
                     path: worker_base_path.join("pnpm-workspace.yaml"),
-                    content: remove_project_definition_to_pnpm_workspace(&worker_base_path, &worker_name)?,
+                    content: remove_project_definition_to_pnpm_workspace(
+                        &worker_base_path,
+                        &worker_name,
+                    )?,
                     context: Some(ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE.to_string()),
                 });
             }
             Runtime::Bun => {
                 rendered_templates.push(RenderedTemplate {
                     path: worker_base_path.join("package.json"),
-                    content: remove_project_definition_to_package_json(&worker_base_path, &worker_name)?,
+                    content: remove_project_definition_to_package_json(
+                        &worker_base_path,
+                        &worker_name,
+                    )?,
                     context: Some(ERROR_FAILED_TO_CREATE_PACKAGE_JSON.to_string()),
                 });
             }
@@ -201,7 +198,7 @@ impl CliCommand for WorkerCommand {
 
         remove_project_from_universal_sdk(
             &mut rendered_templates,
-            &worker_base_path,
+            &app_root_path,
             &manifest_data.app_name,
             &worker_name,
         )?;

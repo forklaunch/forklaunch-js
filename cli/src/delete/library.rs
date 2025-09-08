@@ -17,7 +17,7 @@ use crate::{
     },
     core::{
         command::command,
-        flexible_path::{create_generic_config, find_manifest_path},
+        flexible_path::create_generic_config,
         manifest::{
             ApplicationInitializationMetadata, InitializableManifestConfig,
             InitializableManifestConfigMetadata, ProjectType, application::ApplicationManifestData,
@@ -65,28 +65,18 @@ impl CliCommand for LibraryCommand {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
         let current_dir = std::env::current_dir().unwrap();
-
         let library_base_path = if let Some(relative_path) = matches.get_one::<String>("base_path")
         {
-            // User provided a relative path, resolve it relative to current directory
-            let resolved_path = current_dir.join(relative_path);
-            resolved_path
+            current_dir.join(relative_path)
         } else {
-            current_dir.clone()
+            current_dir
         };
 
-        // Find the manifest using flexible_path
         let root_path_config = create_generic_config();
-        let manifest_path = find_manifest_path(&library_base_path, &root_path_config);
-
-        let config_path = if let Some(manifest) = manifest_path {
-            manifest
-        } else {
-            // No manifest found, this might be an error or we need to search more broadly
-            anyhow::bail!(
-                "Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path."
-            );
-        };
+        let config_path = crate::core::base_path::resolve_app_base_path_and_find_manifest(
+            matches,
+            &root_path_config,
+        )?;
 
         let mut manifest_data = toml::from_str::<ApplicationManifestData>(
             &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,

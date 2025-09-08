@@ -43,7 +43,7 @@ for database in "${databases[@]}"; do
                 # Test current directory scenario
                 RUST_BACKTRACE=1 cargo run --release init application "$app_name" \
                     --path "./$app_name" \
-                    -o "source" \
+                    -o "src" \
                     -d "$database" \
                     -v "$validator" \
                     -f "$formatter" \

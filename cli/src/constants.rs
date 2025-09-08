@@ -246,9 +246,9 @@ choice! {
         }
     }
 
-    pub(crate) enum FileDestinationOption {
+    pub(crate) enum ModulesPath {
         Src = Choice {
-            id: "source",
+            id: "src/modules",
             description: Some("src/modules"),
             exclusive_files: None,
         },

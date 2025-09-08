@@ -1,13 +1,15 @@
 use std::{
     collections::{HashMap, HashSet},
+    env::current_dir,
     fs::read_to_string,
-    path::Path,
+    path::{MAIN_SEPARATOR, Path},
 };
 
 use anyhow::{Context, Result};
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use serde_yml::{Value, from_str, from_value, to_string};
+use walkdir::WalkDir;
 
 use super::manifest::{ManifestData, ProjectEntry};
 use crate::{
@@ -1190,6 +1192,8 @@ fn create_base_service(
     container_name_suffix: Option<&str>,
     entrypoint_command: &str,
     additional_depends_on: Vec<String>,
+    docker_compose_path: &Option<String>,
+    modules_path: &String,
 ) -> DockerService {
     let mut depends_on = vec![];
 
@@ -1205,6 +1209,22 @@ fn create_base_service(
 
     depends_on.extend(additional_depends_on);
 
+    let context_path = if let Some(raw_docker_compose_path) = docker_compose_path {
+        let path_components = raw_docker_compose_path.split(MAIN_SEPARATOR);
+
+        if path_components.clone().count() == 1 {
+            ".".to_string()
+        } else {
+            path_components
+                .clone()
+                .map(|_| "..")
+                .collect::<Vec<&str>>()
+                .join(&MAIN_SEPARATOR.to_string())
+        }
+    } else {
+        ".".to_string()
+    };
+
     DockerService {
         hostname: Some(component_name.to_string()),
         container_name: Some(format!(
@@ -1216,7 +1236,7 @@ fn create_base_service(
         )),
         restart: Some(Restart::Always),
         build: Some(DockerBuild {
-            context: ".".to_string(),
+            context: format!("{}{}{}", context_path, MAIN_SEPARATOR, modules_path),
             dockerfile: format!("./Dockerfile"),
         }),
         image: Some(format!(
@@ -1376,6 +1396,8 @@ pub(crate) fn add_service_definition_to_docker_compose(
                 None,
                 "dev",
                 vec![],
+                &manifest_data.docker_compose_path,
+                &manifest_data.modules_path,
             ),
         );
     }
@@ -1463,6 +1485,8 @@ pub(crate) fn add_worker_definition_to_docker_compose(
                 Some("server"),
                 "dev:server",
                 vec![],
+                &manifest_data.docker_compose_path,
+                &manifest_data.modules_path,
             ),
         );
     }
@@ -1485,12 +1509,40 @@ pub(crate) fn add_worker_definition_to_docker_compose(
                 Some("worker"),
                 "dev:worker",
                 vec![server_service_name.clone()],
+                &manifest_data.docker_compose_path,
+                &manifest_data.modules_path,
             ),
         );
     }
 
     Ok(to_string(&docker_compose)
         .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?)
+}
+
+pub(crate) fn find_docker_compose_path() -> Option<String> {
+    let current_path = current_dir().unwrap();
+
+    for entry in WalkDir::new(current_path)
+        .into_iter()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.file_type().is_file())
+    {
+        let file_name = entry.file_name().to_string_lossy();
+
+        if file_name == "docker-compose.yml" || file_name == "docker-compose.yaml" {
+            return Some(entry.path().to_string_lossy().to_string());
+        }
+
+        if file_name.ends_with(".yml") || file_name.ends_with(".yaml") {
+            if let Ok(contents) = read_to_string(entry.path()) {
+                if from_str::<DockerCompose>(&contents).is_ok() {
+                    return Some(entry.path().to_string_lossy().to_string());
+                }
+            }
+        }
+    }
+
+    None
 }
 
 const IN_MEMORY_DATABASE_DOCKERFILE_ADDENDUM: &str = "

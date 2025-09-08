@@ -15,8 +15,7 @@ use crate::{
     CliCommand,
     constants::{ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST},
     core::{
-        command::command,
-        flexible_path::{create_generic_config, find_manifest_path},
+        command::command, flexible_path::create_generic_config,
         manifest::application::ApplicationManifestData,
     },
 };
@@ -54,24 +53,17 @@ impl CliCommand for DepcheckCommand {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
         let current_dir = current_dir().unwrap();
-
         let app_base_path = if let Some(relative_path) = matches.get_one::<String>("base_path") {
-            let resolved_path = current_dir.join(relative_path);
-
-            resolved_path
+            current_dir.join(relative_path)
         } else {
-            current_dir.clone()
+            current_dir
         };
+
         let manifest_path_config = create_generic_config();
-        let manifest_path = find_manifest_path(&app_base_path, &manifest_path_config);
-
-        let config_path = if let Some(manifest) = manifest_path {
-            manifest
-        } else {
-            anyhow::bail!(
-                "Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path."
-            );
-        };
+        let config_path = crate::core::base_path::resolve_app_base_path_and_find_manifest(
+            matches,
+            &manifest_path_config,
+        )?;
 
         let manifest_data: ApplicationManifestData = toml::from_str(
             &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,

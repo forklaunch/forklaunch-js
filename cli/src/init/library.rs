@@ -316,6 +316,7 @@ impl CliCommand for LibraryCommand {
             // Common fields from ApplicationManifestData
             id: existing_manifest_data.id.clone(),
             app_name: existing_manifest_data.app_name.clone(),
+            modules_path: existing_manifest_data.modules_path.clone(),
             docker_compose_path: existing_manifest_data.docker_compose_path.clone(),
             camel_case_app_name: existing_manifest_data.camel_case_app_name.clone(),
             pascal_case_app_name: existing_manifest_data.pascal_case_app_name.clone(),

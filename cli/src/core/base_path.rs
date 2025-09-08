@@ -10,6 +10,7 @@ use termcolor::StandardStream;
 
 use crate::{
     constants::ERROR_FAILED_TO_GET_CWD,
+    core::flexible_path::{PathSearchConfig, find_manifest_path},
     prompt::{ArrayCompleter, prompt_with_validation},
 };
 
@@ -183,4 +184,26 @@ pub(crate) fn prompt_base_path(
         .unwrap()
         .to_string_lossy()
         .to_string())
+}
+
+pub(crate) fn resolve_app_base_path_and_find_manifest(
+    matches: &ArgMatches,
+    config: &PathSearchConfig,
+) -> Result<PathBuf> {
+    let current_dir = current_dir().with_context(|| ERROR_FAILED_TO_GET_CWD)?;
+
+    let app_base_path = if let Some(relative_path) = matches.get_one::<String>("base_path") {
+        current_dir.join(relative_path)
+    } else {
+        current_dir
+    };
+
+    let manifest_path = find_manifest_path(&app_base_path, config);
+
+    match manifest_path {
+        Some(manifest) => Ok(manifest),
+        None => anyhow::bail!(
+            "Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path."
+        ),
+    }
 }
