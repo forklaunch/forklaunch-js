@@ -1,6 +1,5 @@
 use std::{
     collections::{HashMap, HashSet},
-    env::current_dir,
     fs::read_to_string,
     path::{MAIN_SEPARATOR, Path, PathBuf},
 };
@@ -1533,10 +1532,8 @@ pub(crate) fn add_worker_definition_to_docker_compose(
         .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?)
 }
 
-pub(crate) fn find_docker_compose_path() -> Option<String> {
-    let current_path = current_dir().unwrap();
-
-    for entry in WalkDir::new(current_path)
+pub(crate) fn find_docker_compose_path(base_path: &Path) -> Option<String> {
+    for entry in WalkDir::new(base_path)
         .into_iter()
         .filter_map(|e| e.ok())
         .filter(|e| e.file_type().is_file())

@@ -725,7 +725,7 @@ impl CliCommand for ApplicationCommand {
             _ => None,
         };
 
-        let docker_compose_path = find_docker_compose_path();
+        let docker_compose_path = find_docker_compose_path(&Path::new(&application_path));
 
         let mut data = ApplicationManifestData {
             id: Uuid::new_v4().to_string(),
