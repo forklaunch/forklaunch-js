@@ -188,8 +188,13 @@ pub(crate) fn prompt_base_path(
 pub(crate) fn find_app_root_path(matches: &ArgMatches) -> Result<(PathBuf, String)> {
     let current_dir = current_dir().with_context(|| ERROR_FAILED_TO_GET_CWD)?;
 
-    let start_path = if let Some(relative_path) = matches.get_one::<String>("base_path") {
-        current_dir.join(relative_path)
+    let relative_path = match matches.get_one::<String>("base_path") {
+        Some(relative_path) => relative_path.clone(),
+        None => bail!("Base path is required"),
+    };
+
+    let start_path = if current_dir.join(relative_path.clone()).exists() {
+        current_dir.join(relative_path.clone())
     } else {
         current_dir
     };
@@ -197,14 +202,7 @@ pub(crate) fn find_app_root_path(matches: &ArgMatches) -> Result<(PathBuf, Strin
     let manifest_path = find_nearest_manifest_from(&start_path);
 
     match manifest_path {
-        Some(manifest) => Ok((
-            manifest,
-            start_path
-                .file_name()
-                .unwrap()
-                .to_string_lossy()
-                .to_string(),
-        )),
+        Some(manifest) => Ok((manifest, relative_path.clone())),
         None => bail!(ERROR_MANIFEST_NOT_FOUND),
     }
 }
