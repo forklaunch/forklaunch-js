@@ -22,7 +22,6 @@ use crate::{
             get_database_port, get_database_variants, get_db_driver, is_in_memory_database,
         },
         docker::add_service_definition_to_docker_compose,
-        flexible_path::get_base_app_path,
         format::format_code,
         manifest::{
             ApplicationInitializationMetadata, InitializableManifestConfig,
@@ -98,7 +97,7 @@ impl CliCommand for ModuleCommand {
         )?;
         let base_path = Path::new(&base_path_input);
 
-        let app_root_path = find_app_root_path(matches)?;
+        let (app_root_path, _) = find_app_root_path(matches)?;
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let existing_manifest_data = toml::from_str::<ApplicationManifestData>(
@@ -113,7 +112,7 @@ impl CliCommand for ModuleCommand {
             }),
         );
 
-        let base_path = base_path.join(manifest_data.modules_path.clone());
+        let app_path = base_path.join(manifest_data.modules_path.clone());
 
         let module: Module = prompt_with_validation(
             &mut line_editor,
@@ -152,36 +151,6 @@ impl CliCommand for ModuleCommand {
         .parse()?;
 
         let dryrun = matches.get_flag("dryrun");
-
-        // Default output path should be src/modules/(module_name)
-        let app_path = if let Some(temp_app_path) = get_base_app_path(&base_path_input) {
-            temp_app_path
-        } else {
-            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
-            writeln!(
-                stdout,
-                "No 'modules' folder in application root. Please confirm where module will be initialized."
-            )?;
-            stdout.reset()?;
-            let temp_path: String = prompt_with_validation(
-                &mut line_editor,
-                &mut stdout,
-                "destination_path",
-                matches,
-                "Confirm where module will be initialized:",
-                Some(&["src/modules", "modules"]),
-                |input| {
-                    let path = Path::new(&input);
-                    if let Some(parent) = path.parent() {
-                        parent.exists() || parent.to_str().is_some()
-                    } else {
-                        false
-                    }
-                },
-                |_| "Invalid path. Please provide a valid destination path.".to_string(),
-            )?;
-            base_path.join(Path::new(&temp_path)).to_path_buf()
-        };
 
         let name = manifest_data.app_name.clone();
 

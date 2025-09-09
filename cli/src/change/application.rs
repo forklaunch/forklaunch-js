@@ -4,7 +4,7 @@ use std::{
     fs::{exists, read_to_string},
     io::Write,
     iter::zip,
-    path::Path,
+    path::{Path, PathBuf},
     rc::Rc,
 };
 
@@ -93,9 +93,44 @@ fn should_ignore(path: &Path, patterns: &[Vec<String>]) -> bool {
     })
 }
 
+fn replace_name_in_content(content: &str, existing_name: &str, new_name: &str) -> String {
+    let mut new_content = content
+        .replace(
+            format!("@{}", existing_name).as_str(),
+            format!("@{}", new_name).as_str(),
+        )
+        .replace(
+            format!("{}-", existing_name).as_str(),
+            format!("{}-", new_name).as_str(),
+        )
+        .replace(
+            format!("/{}", existing_name).as_str(),
+            format!("/{}", new_name).as_str(),
+        );
+
+    for case in [Case::Kebab, Case::Camel, Case::Pascal] {
+        new_content = new_content
+            .replace(
+                format!("@{}", existing_name.to_case(case)).as_str(),
+                format!("@{}", new_name.to_case(case)).as_str(),
+            )
+            .replace(
+                format!("{}-", existing_name.to_case(case)).as_str(),
+                format!("{}-", new_name.to_case(case)).as_str(),
+            )
+            .replace(
+                format!("/{}", existing_name.to_case(case)).as_str(),
+                format!("/{}", new_name.to_case(case)).as_str(),
+            );
+    }
+
+    new_content
+}
+
 fn change_name(
     manifest_data: &mut ApplicationManifestData,
     base_path: &Path,
+    docker_compose_path: &Option<PathBuf>,
     name: &str,
     application_json_to_write: &mut ApplicationPackageJson,
     project_jsons_to_write: &mut HashMap<String, ProjectPackageJson>,
@@ -179,7 +214,7 @@ fn change_name(
     let mut ignore_pattern_stack: Vec<Vec<String>> = Vec::new();
     ignore_pattern_stack.push(vec!["**/node_modules/**/*".to_string()]);
 
-    for entry in WalkDir::new(base_path).contents_first(false) {
+    for entry in WalkDir::new(base_path) {
         let entry = entry?;
         let path = entry.path();
         let relative_path = path.strip_prefix(base_path)?;
@@ -210,36 +245,7 @@ fn change_name(
 
             if let Some(rendered_template) = rendered_templates_cache.get(path)? {
                 let contents = rendered_template.content.clone();
-
-                let mut new_contents = contents
-                    .replace(
-                        format!("@{}", &existing_name).as_str(),
-                        format!("@{}", name).as_str(),
-                    )
-                    .replace(
-                        format!("{}-", &existing_name).as_str(),
-                        format!("{}-", name).as_str(),
-                    )
-                    .replace(
-                        format!("/{}", &existing_name).as_str(),
-                        format!("/{}", name).as_str(),
-                    );
-
-                for case in [Case::Kebab, Case::Camel, Case::Pascal] {
-                    new_contents = new_contents
-                        .replace(
-                            format!("@{}", &existing_name.to_case(case)).as_str(),
-                            format!("@{}", name.to_case(case)).as_str(),
-                        )
-                        .replace(
-                            format!("{}-", &existing_name.to_case(case)).as_str(),
-                            format!("{}-", name.to_case(case)).as_str(),
-                        )
-                        .replace(
-                            format!("/{}", &existing_name.to_case(case)).as_str(),
-                            format!("/{}", name.to_case(case)).as_str(),
-                        );
-                }
+                let new_contents = replace_name_in_content(&contents, &existing_name, name);
 
                 if contents != new_contents {
                     rendered_templates_cache.insert(
@@ -252,6 +258,24 @@ fn change_name(
                     );
                 }
             }
+        }
+    }
+
+    // Handle docker-compose file separately
+    if let Some(docker_compose_path) = docker_compose_path {
+        let docker_compose_contents = read_to_string(docker_compose_path)?;
+        let new_docker_compose_contents =
+            replace_name_in_content(&docker_compose_contents, &existing_name, name);
+
+        if docker_compose_contents != new_docker_compose_contents {
+            rendered_templates_cache.insert(
+                docker_compose_path.to_string_lossy(),
+                RenderedTemplate {
+                    path: docker_compose_path.to_path_buf(),
+                    content: new_docker_compose_contents,
+                    context: None,
+                },
+            );
         }
     }
 
@@ -1532,14 +1556,7 @@ impl CliCommand for ApplicationCommand {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
         let mut rendered_templates_cache = RenderedTemplatesCache::new();
 
-        let current_dir = std::env::current_dir().unwrap();
-        let app_base_path = if let Some(relative_path) = matches.get_one::<String>("base_path") {
-            current_dir.join(relative_path)
-        } else {
-            current_dir
-        };
-
-        let app_root_path = find_app_root_path(matches)?;
+        let (app_root_path, _) = find_app_root_path(matches)?;
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let mut manifest_data = toml::from_str::<ApplicationManifestData>(
@@ -1556,7 +1573,11 @@ impl CliCommand for ApplicationCommand {
         manifest_data.camel_case_app_name = manifest_data.app_name.to_case(Case::Camel);
         manifest_data.pascal_case_app_name = manifest_data.app_name.to_case(Case::Pascal);
 
-        let app_path = app_base_path.join(manifest_data.modules_path.clone());
+        let docker_compose_path = manifest_data
+            .docker_compose_path
+            .as_ref()
+            .map(|path| app_root_path.join(path));
+        let app_path = app_root_path.join(manifest_data.modules_path.clone());
 
         let name = matches.get_one::<String>("name");
         let formatter = matches.get_one::<String>("formatter");
@@ -1783,7 +1804,8 @@ impl CliCommand for ApplicationCommand {
 
             change_name(
                 &mut manifest_data,
-                &app_base_path,
+                &app_path,
+                &docker_compose_path,
                 &name,
                 &mut application_json_to_write,
                 &mut project_jsons_to_write,
@@ -1889,7 +1911,7 @@ impl CliCommand for ApplicationCommand {
 
         if let Some(license) = license {
             let removal_template = change_license(
-                &app_base_path,
+                &app_path,
                 &license.parse()?,
                 &mut manifest_data,
                 &mut application_json_to_write,
@@ -1942,7 +1964,7 @@ impl CliCommand for ApplicationCommand {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
             writeln!(stdout, "{} changed successfully!", &manifest_data.app_name)?;
             stdout.reset()?;
-            format_code(&app_base_path, &manifest_data.runtime.parse()?);
+            format_code(&app_path, &manifest_data.runtime.parse()?);
         }
 
         Ok(())

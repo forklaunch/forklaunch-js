@@ -67,14 +67,7 @@ impl CliCommand for WorkerCommand {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let current_dir = std::env::current_dir().unwrap();
-        let worker_base_path = if let Some(relative_path) = matches.get_one::<String>("base_path") {
-            current_dir.join(relative_path)
-        } else {
-            current_dir
-        };
-
-        let app_root_path = find_app_root_path(matches)?;
+        let (app_root_path, _) = find_app_root_path(matches)?;
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let mut manifest_data = toml::from_str::<ApplicationManifestData>(
@@ -114,6 +107,8 @@ impl CliCommand for WorkerCommand {
                 },
             },
         ));
+
+        let worker_base_path = app_root_path.join(manifest_data.modules_path.clone());
 
         let continue_delete_override = matches.get_flag("continue");
 

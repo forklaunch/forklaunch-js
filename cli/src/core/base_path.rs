@@ -10,7 +10,6 @@ use termcolor::StandardStream;
 
 use crate::{
     constants::{ERROR_FAILED_TO_GET_CWD, ERROR_MANIFEST_NOT_FOUND},
-    core::flexible_path::{default_path_search_config, find_target_path},
     prompt::{ArrayCompleter, prompt_with_validation},
 };
 
@@ -186,34 +185,26 @@ pub(crate) fn prompt_base_path(
         .to_string())
 }
 
-pub(crate) fn find_app_root_path(matches: &ArgMatches) -> Result<PathBuf> {
+pub(crate) fn find_app_root_path(matches: &ArgMatches) -> Result<(PathBuf, String)> {
     let current_dir = current_dir().with_context(|| ERROR_FAILED_TO_GET_CWD)?;
 
-    let app_base_path = if let Some(relative_path) = matches.get_one::<String>("base_path") {
+    let start_path = if let Some(relative_path) = matches.get_one::<String>("base_path") {
         current_dir.join(relative_path)
     } else {
         current_dir
     };
 
-    let config = default_path_search_config();
-    let targeted_manifest_path = find_target_path(&app_base_path, &config);
-
-    let manifest_path = if let Some(path) = targeted_manifest_path {
-        if let Some(parent) = path.parent() {
-            if let Some(grandparent) = parent.parent() {
-                Some(grandparent.to_path_buf())
-            } else {
-                None
-            }
-        } else {
-            None
-        }
-    } else {
-        None
-    };
+    let manifest_path = find_nearest_manifest_from(&start_path);
 
     match manifest_path {
-        Some(manifest) => Ok(manifest),
+        Some(manifest) => Ok((
+            manifest,
+            start_path
+                .file_name()
+                .unwrap()
+                .to_string_lossy()
+                .to_string(),
+        )),
         None => bail!(ERROR_MANIFEST_NOT_FOUND),
     }
 }

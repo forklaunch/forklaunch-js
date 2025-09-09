@@ -1,103 +1,103 @@
-use std::path::{Path, PathBuf};
+// use std::path::{Path, PathBuf};
 
-use walkdir::WalkDir;
+// use walkdir::WalkDir;
 
-#[derive(Debug, Clone, PartialEq)]
-pub(crate) enum SearchDirection {
-    Up,
-    #[allow(dead_code)]
-    Down,
-    Both,
-}
+// #[derive(Debug, Clone, PartialEq)]
+// pub(crate) enum SearchDirection {
+//     Up,
+//     #[allow(dead_code)]
+//     Down,
+//     Both,
+// }
 
-#[derive(Debug, Clone)]
-pub(crate) struct PathSearchConfig {
-    pub max_depth: usize,
-    pub direction: SearchDirection,
-    pub target_name: String,
-    pub target_dir: String,
-}
+// #[derive(Debug, Clone)]
+// pub(crate) struct PathSearchConfig {
+//     pub max_depth: usize,
+//     pub direction: SearchDirection,
+//     pub target_name: String,
+//     pub target_dir: String,
+// }
 
-impl Default for PathSearchConfig {
-    fn default() -> Self {
-        Self {
-            max_depth: 4,
-            direction: SearchDirection::Both,
-            target_name: "manifest.toml".to_string(),
-            target_dir: ".forklaunch".to_string(),
-        }
-    }
-}
+// impl Default for PathSearchConfig {
+//     fn default() -> Self {
+//         Self {
+//             max_depth: 4,
+//             direction: SearchDirection::Both,
+//             target_name: "manifest.toml".to_string(),
+//             target_dir: ".forklaunch".to_string(),
+//         }
+//     }
+// }
 
-pub(crate) fn get_base_app_path(base_path: &String) -> Option<PathBuf> {
-    if base_path.contains("modules") && Path::new(&base_path).exists() {
-        Some(PathBuf::from(base_path))
-    } else if Path::new(&base_path).join("src").join("modules").exists() {
-        Some(
-            Path::new(&base_path)
-                .join("src")
-                .join("modules")
-                .to_path_buf(),
-        )
-    } else if Path::new(&base_path).join("modules").exists() {
-        Some(Path::new(&base_path).join("modules").to_path_buf())
-    } else {
-        None
-    }
-}
+// pub(crate) fn get_base_app_path(base_path: &String) -> Option<PathBuf> {
+//     if base_path.contains("modules") && Path::new(&base_path).exists() {
+//         Some(PathBuf::from(base_path))
+//     } else if Path::new(&base_path).join("src").join("modules").exists() {
+//         Some(
+//             Path::new(&base_path)
+//                 .join("src")
+//                 .join("modules")
+//                 .to_path_buf(),
+//         )
+//     } else if Path::new(&base_path).join("modules").exists() {
+//         Some(Path::new(&base_path).join("modules").to_path_buf())
+//     } else {
+//         None
+//     }
+// }
 
-pub(crate) fn find_target_path(start_dir: &Path, config: &PathSearchConfig) -> Option<PathBuf> {
-    match config.direction {
-        SearchDirection::Up => search_upwards(start_dir, config),
-        SearchDirection::Down => search_downwards(start_dir, config),
-        SearchDirection::Both => {
-            search_upwards(start_dir, config).or_else(|| search_downwards(start_dir, config))
-        }
-    }
-}
+// pub(crate) fn find_target_path(start_dir: &Path, config: &PathSearchConfig) -> Option<PathBuf> {
+//     match config.direction {
+//         SearchDirection::Up => search_upwards(start_dir, config),
+//         SearchDirection::Down => search_downwards(start_dir, config),
+//         SearchDirection::Both => {
+//             search_upwards(start_dir, config).or_else(|| search_downwards(start_dir, config))
+//         }
+//     }
+// }
 
-fn search_upwards(start_dir: &Path, config: &PathSearchConfig) -> Option<PathBuf> {
-    let mut current_path = Some(start_dir.to_path_buf());
-    let mut depth = 0;
+// fn search_upwards(start_dir: &Path, config: &PathSearchConfig) -> Option<PathBuf> {
+//     let mut current_path = Some(start_dir.to_path_buf());
+//     let mut depth = 0;
 
-    while let Some(current) = current_path {
-        if depth > config.max_depth {
-            return None;
-        }
+//     while let Some(current) = current_path {
+//         if depth > config.max_depth {
+//             return None;
+//         }
 
-        let candidate_path = current.join(&config.target_dir).join(&config.target_name);
-        if candidate_path.exists() {
-            return Some(candidate_path);
-        }
+//         let candidate_path = current.join(&config.target_dir).join(&config.target_name);
+//         if candidate_path.exists() {
+//             return Some(candidate_path);
+//         }
 
-        current_path = current.parent().map(|p| p.to_path_buf());
-        depth += 1;
-    }
-    None
-}
+//         current_path = current.parent().map(|p| p.to_path_buf());
+//         depth += 1;
+//     }
+//     None
+// }
 
-fn search_downwards(start_dir: &Path, config: &PathSearchConfig) -> Option<PathBuf> {
-    for entry in WalkDir::new(start_dir)
-        .max_depth(config.max_depth)
-        .into_iter()
-        .flatten()
-    {
-        let path = entry
-            .path()
-            .join(&config.target_dir)
-            .join(&config.target_name);
-        if path.exists() {
-            return Some(path);
-        }
-    }
-    None
-}
+// fn search_downwards(start_dir: &Path, config: &PathSearchConfig) -> Option<PathBuf> {
+//     for entry in WalkDir::new(start_dir)
+//         .max_depth(config.max_depth)
+//         .into_iter()
+//         .flatten()
+//     {
+//         let path = entry
+//             .path()
+//             .join(&config.target_dir)
+//             .join(&config.target_name);
+//         if path.exists() {
+//             return Some(path);
+//         }
+//     }
+//     None
+// }
 
-pub(crate) fn default_path_search_config() -> PathSearchConfig {
-    PathSearchConfig {
-        max_depth: 4,
-        direction: SearchDirection::Both,
-        target_name: "manifest.toml".to_string(),
-        target_dir: ".forklaunch".to_string(),
-    }
-}
+// pub(crate) fn default_path_search_config() -> PathSearchConfig {
+//     PathSearchConfig {
+//         max_depth: 4,
+//         direction: SearchDirection::Both,
+//         target_name: "manifest.toml".to_string(),
+//         target_dir: ".forklaunch".to_string(),
+//     }
+// }

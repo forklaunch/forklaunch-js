@@ -417,14 +417,7 @@ impl CliCommand for WorkerCommand {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
         let mut rendered_templates_cache = RenderedTemplatesCache::new();
 
-        let current_dir = std::env::current_dir().unwrap();
-        let worker_base_path = if let Some(relative_path) = matches.get_one::<String>("base_path") {
-            current_dir.join(relative_path)
-        } else {
-            current_dir
-        };
-
-        let app_root_path = find_app_root_path(matches)?;
+        let (app_root_path, project_name) = find_app_root_path(matches)?;
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let mut manifest_data: WorkerManifestData = toml::from_str::<WorkerManifestData>(
@@ -437,13 +430,13 @@ impl CliCommand for WorkerCommand {
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
         .initialize(InitializableManifestConfigMetadata::Project(
             ProjectInitializationMetadata {
-                project_name: worker_base_path
-                    .file_name()
-                    .unwrap()
-                    .to_string_lossy()
-                    .to_string(),
+                project_name: project_name.clone(),
             },
         ));
+
+        let worker_base_path = app_root_path
+            .join(manifest_data.modules_path.clone())
+            .join(project_name.clone());
 
         let runtime = manifest_data.runtime.parse()?;
 

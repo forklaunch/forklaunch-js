@@ -98,14 +98,7 @@ impl CliCommand for RouterCommand {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
         let mut rendered_templates_cache = RenderedTemplatesCache::new();
 
-        let current_dir = std::env::current_dir().unwrap();
-        let router_base_path = if let Some(relative_path) = matches.get_one::<String>("base_path") {
-            current_dir.join(relative_path)
-        } else {
-            current_dir
-        };
-
-        let app_root_path = find_app_root_path(matches)?;
+        let (app_root_path, project_name) = find_app_root_path(matches)?;
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let existing_name = matches.get_one::<String>("existing-name");
@@ -113,11 +106,6 @@ impl CliCommand for RouterCommand {
         let dryrun = matches.get_flag("dryrun");
         let confirm = matches.get_flag("confirm");
 
-        let project_name = router_base_path
-            .file_name()
-            .unwrap()
-            .to_string_lossy()
-            .to_string();
         let mut manifest_data = toml::from_str::<RouterManifestData>(
             &rendered_templates_cache
                 .get(&manifest_path)
@@ -132,6 +120,10 @@ impl CliCommand for RouterCommand {
                 router_name: Some(existing_name.unwrap().clone()),
             },
         ));
+
+        let router_base_path = app_root_path
+            .join(manifest_data.modules_path.clone())
+            .join(project_name.clone());
 
         let selected_options = if matches.ids().all(|id| id == "dryrun" || id == "confirm") {
             let options = vec!["name"];

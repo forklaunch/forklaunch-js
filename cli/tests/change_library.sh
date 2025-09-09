@@ -6,7 +6,7 @@ mkdir -p output/change-library
 cd output/change-library
 
 RUST_BACKTRACE=1 cargo run --release init application change-library-test-node-application -p . -o src/modules -d postgresql -f prettier -l eslint -v zod -F hyper-express -r bun -t vitest -m billing-base -m iam-base -D "Test service" -A "Rohin Bhargava" -L 'AGPL-3.0'
-RUST_BACKTRACE=1 cargo run --release init library lbry -p src/modules -D "Test library"
+RUST_BACKTRACE=1 cargo run --release init library lbry -p . -D "Test library"
 
 cd src/modules
 

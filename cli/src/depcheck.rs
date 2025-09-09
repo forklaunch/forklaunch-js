@@ -51,7 +51,7 @@ impl CliCommand for DepcheckCommand {
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let app_root_path = find_app_root_path(matches)?;
+        let (app_root_path, _) = find_app_root_path(matches)?;
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let manifest_data: ApplicationManifestData = toml::from_str(

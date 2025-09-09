@@ -64,15 +64,7 @@ impl CliCommand for LibraryCommand {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let current_dir = std::env::current_dir().unwrap();
-        let library_base_path = if let Some(relative_path) = matches.get_one::<String>("base_path")
-        {
-            current_dir.join(relative_path)
-        } else {
-            current_dir
-        };
-
-        let app_root_path = find_app_root_path(matches)?;
+        let (app_root_path, _) = find_app_root_path(matches)?;
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let mut manifest_data = toml::from_str::<ApplicationManifestData>(
@@ -103,6 +95,8 @@ impl CliCommand for LibraryCommand {
             },
         ));
 
+        let library_base_path = app_root_path.join(manifest_data.modules_path.clone());
+
         let continue_delete_override = matches.get_flag("continue");
 
         if !continue_delete_override {
@@ -122,6 +116,7 @@ impl CliCommand for LibraryCommand {
         let manifest_content =
             remove_project_definition_from_manifest(&mut manifest_data, &library_name)?;
 
+        println!("library_base_path: {:?}", library_base_path);
         remove_dir_all(&library_base_path.join(&library_name))?;
 
         let mut rendered_templates = vec![RenderedTemplate {

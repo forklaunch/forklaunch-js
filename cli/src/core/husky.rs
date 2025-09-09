@@ -5,21 +5,23 @@ use std::{
 
 use anyhow::Result;
 
-use super::flexible_path::{PathSearchConfig, SearchDirection, find_target_path};
 use crate::core::{
     manifest::application::ApplicationManifestData, rendered_template::RenderedTemplate,
 };
 
 fn find_git_root(start_dir: &Path) -> Option<PathBuf> {
-    let config = PathSearchConfig {
-        max_depth: 4,
-        direction: SearchDirection::Up,
-        target_name: ".git".to_string(),
-        target_dir: "".to_string(),
-    };
-
-    find_target_path(start_dir, &config)
-        .and_then(|git_path| git_path.parent().map(|p| p.to_path_buf()))
+    let mut base_path = start_dir.canonicalize().ok()?;
+    loop {
+        let git_dir = base_path.join(".git");
+        if git_dir.exists() {
+            return Some(base_path.clone());
+        }
+        match base_path.parent() {
+            Some(parent) => base_path = parent.to_path_buf(),
+            None => break,
+        }
+    }
+    None
 }
 
 pub(crate) fn create_or_merge_husky_pre_commit(

@@ -557,7 +557,7 @@ impl CliCommand for ServiceCommand {
         )?;
         let base_path = Path::new(&base_path_input);
 
-        let app_root_path = find_app_root_path(matches)?;
+        let (app_root_path, _) = find_app_root_path(matches)?;
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let existing_manifest_data = from_str::<ApplicationManifestData>(

@@ -119,15 +119,7 @@ impl CliCommand for LibraryCommand {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let current_dir = std::env::current_dir().unwrap();
-        let library_base_path = if let Some(relative_path) = matches.get_one::<String>("base_path")
-        {
-            current_dir.join(relative_path)
-        } else {
-            current_dir
-        };
-
-        let app_root_path = find_app_root_path(matches)?;
+        let (app_root_path, project_name) = find_app_root_path(matches)?;
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let mut manifest_data: LibraryManifestData = toml::from_str::<LibraryManifestData>(
@@ -136,13 +128,13 @@ impl CliCommand for LibraryCommand {
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
         .initialize(InitializableManifestConfigMetadata::Project(
             ProjectInitializationMetadata {
-                project_name: library_base_path
-                    .file_name()
-                    .unwrap()
-                    .to_string_lossy()
-                    .to_string(),
+                project_name: project_name.clone(),
             },
         ));
+
+        let library_base_path = app_root_path
+            .join(manifest_data.modules_path.clone())
+            .join(project_name.clone());
 
         let name = matches.get_one::<String>("name");
         let description = matches.get_one::<String>("description");

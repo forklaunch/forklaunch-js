@@ -197,7 +197,7 @@ impl CliCommand for RouterCommand {
             current_dir
         };
 
-        let app_root_path = find_app_root_path(matches)?;
+        let (app_root_path, _) = find_app_root_path(matches)?;
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let mut manifest_data = from_str::<RouterManifestData>(
