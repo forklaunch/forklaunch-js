@@ -5,6 +5,7 @@ use walkdir::WalkDir;
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum SearchDirection {
     Up,
+    #[allow(dead_code)]
     Down,
     Both,
 }
@@ -13,8 +14,8 @@ pub(crate) enum SearchDirection {
 pub(crate) struct PathSearchConfig {
     pub max_depth: usize,
     pub direction: SearchDirection,
-    pub manifest_name: String,
-    pub manifest_dir: String,
+    pub target_name: String,
+    pub target_dir: String,
 }
 
 impl Default for PathSearchConfig {
@@ -22,8 +23,8 @@ impl Default for PathSearchConfig {
         Self {
             max_depth: 4,
             direction: SearchDirection::Both,
-            manifest_name: "manifest.toml".to_string(),
-            manifest_dir: ".forklaunch".to_string(),
+            target_name: "manifest.toml".to_string(),
+            target_dir: ".forklaunch".to_string(),
         }
     }
 }
@@ -45,7 +46,7 @@ pub(crate) fn get_base_app_path(base_path: &String) -> Option<PathBuf> {
     }
 }
 
-pub(crate) fn find_manifest_path(start_dir: &Path, config: &PathSearchConfig) -> Option<PathBuf> {
+pub(crate) fn find_target_path(start_dir: &Path, config: &PathSearchConfig) -> Option<PathBuf> {
     match config.direction {
         SearchDirection::Up => search_upwards(start_dir, config),
         SearchDirection::Down => search_downwards(start_dir, config),
@@ -64,9 +65,7 @@ fn search_upwards(start_dir: &Path, config: &PathSearchConfig) -> Option<PathBuf
             return None;
         }
 
-        let candidate_path = current
-            .join(&config.manifest_dir)
-            .join(&config.manifest_name);
+        let candidate_path = current.join(&config.target_dir).join(&config.target_name);
         if candidate_path.exists() {
             return Some(candidate_path);
         }
@@ -85,8 +84,8 @@ fn search_downwards(start_dir: &Path, config: &PathSearchConfig) -> Option<PathB
     {
         let path = entry
             .path()
-            .join(&config.manifest_dir)
-            .join(&config.manifest_name);
+            .join(&config.target_dir)
+            .join(&config.target_name);
         if path.exists() {
             return Some(path);
         }
@@ -94,29 +93,11 @@ fn search_downwards(start_dir: &Path, config: &PathSearchConfig) -> Option<PathB
     None
 }
 
-pub(crate) fn create_generic_config() -> PathSearchConfig {
+pub(crate) fn default_path_search_config() -> PathSearchConfig {
     PathSearchConfig {
         max_depth: 4,
         direction: SearchDirection::Both,
-        manifest_name: "manifest.toml".to_string(),
-        manifest_dir: ".forklaunch".to_string(),
-    }
-}
-
-pub(crate) fn create_module_config() -> PathSearchConfig {
-    PathSearchConfig {
-        max_depth: 3,
-        direction: SearchDirection::Up,
-        manifest_name: "manifest.toml".to_string(),
-        manifest_dir: ".forklaunch".to_string(),
-    }
-}
-
-pub(crate) fn create_project_config() -> PathSearchConfig {
-    PathSearchConfig {
-        max_depth: 2,
-        direction: SearchDirection::Down,
-        manifest_name: "manifest.toml".to_string(),
-        manifest_dir: ".forklaunch".to_string(),
+        target_name: "manifest.toml".to_string(),
+        target_dir: ".forklaunch".to_string(),
     }
 }

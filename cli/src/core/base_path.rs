@@ -3,14 +3,14 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
 use clap::ArgMatches;
 use rustyline::{Editor, history::DefaultHistory};
 use termcolor::StandardStream;
 
 use crate::{
-    constants::ERROR_FAILED_TO_GET_CWD,
-    core::flexible_path::{PathSearchConfig, find_manifest_path},
+    constants::{ERROR_FAILED_TO_GET_CWD, ERROR_MANIFEST_NOT_FOUND},
+    core::flexible_path::{default_path_search_config, find_target_path},
     prompt::{ArrayCompleter, prompt_with_validation},
 };
 
@@ -186,10 +186,7 @@ pub(crate) fn prompt_base_path(
         .to_string())
 }
 
-pub(crate) fn resolve_app_base_path_and_find_manifest(
-    matches: &ArgMatches,
-    config: &PathSearchConfig,
-) -> Result<PathBuf> {
+pub(crate) fn find_app_root_path(matches: &ArgMatches) -> Result<PathBuf> {
     let current_dir = current_dir().with_context(|| ERROR_FAILED_TO_GET_CWD)?;
 
     let app_base_path = if let Some(relative_path) = matches.get_one::<String>("base_path") {
@@ -198,12 +195,25 @@ pub(crate) fn resolve_app_base_path_and_find_manifest(
         current_dir
     };
 
-    let manifest_path = find_manifest_path(&app_base_path, config);
+    let config = default_path_search_config();
+    let targeted_manifest_path = find_target_path(&app_base_path, &config);
+
+    let manifest_path = if let Some(path) = targeted_manifest_path {
+        if let Some(parent) = path.parent() {
+            if let Some(grandparent) = parent.parent() {
+                Some(grandparent.to_path_buf())
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    } else {
+        None
+    };
 
     match manifest_path {
         Some(manifest) => Ok(manifest),
-        None => anyhow::bail!(
-            "Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path."
-        ),
+        None => bail!(ERROR_MANIFEST_NOT_FOUND),
     }
 }

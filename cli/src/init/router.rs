@@ -24,9 +24,9 @@ use crate::{
             transform_seeders_index_ts::transform_seeders_index_ts,
             transform_server_ts::transform_server_ts,
         },
+        base_path::find_app_root_path,
         command::command,
         database::{self, is_in_memory_database},
-        flexible_path::create_generic_config,
         format::format_code,
         manifest::{
             InitializableManifestConfig, InitializableManifestConfigMetadata, ManifestData,
@@ -46,7 +46,7 @@ fn generate_basic_router(
     service_name: &String,
     stdout: &mut StandardStream,
     dryrun: bool,
-    config_path: &Path,
+    manifest_path: &Path,
 ) -> Result<()> {
     let output_path = base_path.to_string_lossy().to_string();
     let template_dir = PathIO {
@@ -69,7 +69,7 @@ fn generate_basic_router(
         dryrun,
     )?;
     rendered_templates.extend(
-        add_router_to_artifacts(manifest_data, base_path, service_name, config_path)
+        add_router_to_artifacts(manifest_data, base_path, service_name, manifest_path)
             .with_context(|| "Failed to add service metadata to artifacts")?,
     );
 
@@ -83,7 +83,7 @@ fn add_router_to_artifacts(
     manifest_data: &mut RouterManifestData,
     base_path: &Path,
     service_name: &String,
-    config_path: &Path,
+    manifest_path: &Path,
 ) -> Result<Vec<RenderedTemplate>> {
     let (project_type, forklaunch_definition_buffer) =
         add_router_definition_to_manifest(manifest_data, service_name)
@@ -142,7 +142,7 @@ fn add_router_to_artifacts(
     });
 
     rendered_templates.push(RenderedTemplate {
-        path: config_path.to_path_buf(),
+        path: manifest_path.to_path_buf(),
         content: forklaunch_definition_buffer,
         context: Some(ERROR_FAILED_TO_ADD_ROUTER_METADATA_TO_MANIFEST.to_string()),
     });
@@ -197,14 +197,11 @@ impl CliCommand for RouterCommand {
             current_dir
         };
 
-        let root_path_config = create_generic_config();
-        let config_path = crate::core::base_path::resolve_app_base_path_and_find_manifest(
-            matches,
-            &root_path_config,
-        )?;
+        let app_root_path = find_app_root_path(matches)?;
+        let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let mut manifest_data = from_str::<RouterManifestData>(
-            &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
+            &read_to_string(&manifest_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
 
@@ -291,7 +288,7 @@ impl CliCommand for RouterCommand {
                 &service_name.to_string(),
                 &mut stdout,
                 dryrun,
-                &config_path,
+                &manifest_path,
             )
             .with_context(|| "Failed to create router")?;
 

@@ -31,9 +31,9 @@ use crate::{
             transform_core_registrations_ts_http_framework,
             transform_core_registrations_ts_validator,
         },
+        base_path::find_app_root_path,
         command::command,
         docker::update_dockerfile_contents,
-        flexible_path::create_project_config,
         format::format_code,
         license::generate_license,
         manifest::{
@@ -1539,14 +1539,11 @@ impl CliCommand for ApplicationCommand {
             current_dir
         };
 
-        let manifest_path_config = create_project_config();
-        let config_path = crate::core::base_path::resolve_app_base_path_and_find_manifest(
-            matches,
-            &manifest_path_config,
-        )?;
+        let app_root_path = find_app_root_path(matches)?;
+        let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let mut manifest_data = toml::from_str::<ApplicationManifestData>(
-            &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
+            &read_to_string(&manifest_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
         manifest_data.initialize(InitializableManifestConfigMetadata::Application(
@@ -1559,26 +1556,7 @@ impl CliCommand for ApplicationCommand {
         manifest_data.camel_case_app_name = manifest_data.app_name.to_case(Case::Camel);
         manifest_data.pascal_case_app_name = manifest_data.app_name.to_case(Case::Pascal);
 
-        let is_src_modules = if app_base_path.join("src").exists() {
-            true
-        } else {
-            false
-        };
-        let is_modules = if app_base_path.join("modules").exists() {
-            true
-        } else {
-            false
-        };
-
-        let app_path = if is_src_modules {
-            app_base_path.join("src").join("modules")
-        } else if is_modules {
-            app_base_path.join("modules")
-        } else {
-            return Err(anyhow::anyhow!(
-                "application directory not found in base_path, src/modules, or modules directories"
-            ));
-        };
+        let app_path = app_base_path.join(manifest_data.modules_path.clone());
 
         let name = matches.get_one::<String>("name");
         let formatter = matches.get_one::<String>("formatter");
@@ -1923,9 +1901,9 @@ impl CliCommand for ApplicationCommand {
             }
         }
         rendered_templates_cache.insert(
-            config_path.to_string_lossy(),
+            manifest_path.to_string_lossy(),
             RenderedTemplate {
-                path: config_path.to_path_buf(),
+                path: manifest_path.to_path_buf(),
                 content: toml::to_string_pretty(&manifest_data)?,
                 context: None,
             },

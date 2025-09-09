@@ -11,8 +11,8 @@ use crate::{
     CliCommand,
     constants::{ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST, Runtime},
     core::{
+        base_path::find_app_root_path,
         command::command,
-        flexible_path::create_module_config,
         format::format_code,
         manifest::{
             InitializableManifestConfig, InitializableManifestConfigMetadata, ProjectEntry,
@@ -105,11 +105,8 @@ impl CliCommand for RouterCommand {
             current_dir
         };
 
-        let manifest_path_config = create_module_config();
-        let config_path = crate::core::base_path::resolve_app_base_path_and_find_manifest(
-            matches,
-            &manifest_path_config,
-        )?;
+        let app_root_path = find_app_root_path(matches)?;
+        let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let existing_name = matches.get_one::<String>("existing-name");
         let new_name = matches.get_one::<String>("new-name");
@@ -123,7 +120,7 @@ impl CliCommand for RouterCommand {
             .to_string();
         let mut manifest_data = toml::from_str::<RouterManifestData>(
             &rendered_templates_cache
-                .get(&config_path)
+                .get(&manifest_path)
                 .with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?
                 .unwrap()
                 .content,
@@ -190,9 +187,9 @@ impl CliCommand for RouterCommand {
         }
 
         rendered_templates_cache.insert(
-            config_path.clone().to_string_lossy(),
+            manifest_path.clone().to_string_lossy(),
             RenderedTemplate {
-                path: config_path.to_path_buf(),
+                path: manifest_path.to_path_buf(),
                 content: toml::to_string_pretty(&manifest_data)?,
                 context: None,
             },

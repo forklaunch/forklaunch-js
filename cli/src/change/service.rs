@@ -1,8 +1,4 @@
-use std::{
-    collections::HashSet,
-    io::Write,
-    path::{Path, PathBuf},
-};
+use std::{collections::HashSet, io::Write, path::Path};
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, Command};
@@ -39,6 +35,7 @@ use crate::{
                 },
             },
         },
+        base_path::find_app_root_path,
         command::command,
         database::{get_database_variants, is_in_memory_database},
         docker::{
@@ -48,7 +45,6 @@ use crate::{
             remove_s3_from_docker_compose, update_dockerfile_contents,
         },
         env::Env,
-        flexible_path::create_generic_config,
         format::format_code,
         manifest::{
             InitializableManifestConfig, InitializableManifestConfigMetadata, ManifestData,
@@ -623,26 +619,12 @@ impl CliCommand for ServiceCommand {
             current_dir
         };
 
-        let root_path_config = create_generic_config();
-        let config_path = crate::core::base_path::resolve_app_base_path_and_find_manifest(
-            matches,
-            &root_path_config,
-        )?;
-        let app_root_path: PathBuf = config_path
-            .to_string_lossy()
-            .strip_suffix(".forklaunch/manifest.toml")
-            .ok_or_else(|| {
-                anyhow::anyhow!(
-                    "Expected manifest path to end with .forklaunch/manifest.toml, got: {:?}",
-                    config_path
-                )
-            })?
-            .to_string()
-            .into();
+        let app_root_path = find_app_root_path(matches)?;
+        let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let mut manifest_data = toml::from_str::<ServiceManifestData>(
             &rendered_templates_cache
-                .get(&config_path)
+                .get(&manifest_path)
                 .with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?
                 .unwrap()
                 .content,
@@ -861,9 +843,9 @@ impl CliCommand for ServiceCommand {
         }
 
         rendered_templates_cache.insert(
-            config_path.clone().to_string_lossy(),
+            manifest_path.clone().to_string_lossy(),
             RenderedTemplate {
-                path: config_path.to_path_buf(),
+                path: manifest_path.to_path_buf(),
                 content: toml::to_string_pretty(&manifest_data)?,
                 context: None,
             },

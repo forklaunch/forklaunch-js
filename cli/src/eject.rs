@@ -546,14 +546,14 @@ impl CliCommand for EjectCommand {
 
         let base_path = Path::new(&base_path);
 
-        let config_path = base_path
+        let manifest_path = base_path
             .parent()
             .unwrap()
             .join(".forklaunch")
             .join("manifest.toml");
 
         let mut manifest_data = toml::from_str::<ApplicationManifestData>(
-            &read_to_string(config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
+            &read_to_string(manifest_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
 

@@ -1415,14 +1415,14 @@ pub(crate) fn add_service_definition_to_docker_compose(
 
 pub(crate) fn add_worker_definition_to_docker_compose(
     manifest_data: &WorkerManifestData,
-    base_path: &Path,
+    app_root_path: &Path,
     docker_compose_string: Option<String>,
 ) -> Result<String> {
     let docker_compose_path = if let Some(docker_compose_path) = &manifest_data.docker_compose_path
     {
-        &base_path.join(docker_compose_path)
+        &app_root_path.join(docker_compose_path)
     } else {
-        &base_path.join("docker-compose.yaml")
+        &app_root_path.join("docker-compose.yaml")
     };
 
     let (mut docker_compose, port_number, mut environment) = add_base_definition_to_docker_compose(

@@ -2,13 +2,14 @@
 pub(crate) mod ast;
 pub(crate) mod base_path;
 pub(crate) mod choices;
-pub(crate) mod flexible_path;
 pub(crate) mod command;
 pub(crate) mod database;
 pub(crate) mod docker;
 pub(crate) mod env;
+pub(crate) mod flexible_path;
 pub(crate) mod format;
 pub(crate) mod gitignore;
+pub(crate) mod husky;
 pub(crate) mod iam;
 pub(crate) mod license;
 pub(crate) mod manifest;

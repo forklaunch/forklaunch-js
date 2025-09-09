@@ -278,7 +278,6 @@ const newConfig = configInjector({
 
         let transformed_code = code_to_string(&registrations_program);
 
-        // Verify no injection occurred (function doesn't inject nested properties)
         assert!(!transformed_code.contains("pool: {"));
 
         assert!(transformed_code.contains("type: \"postgresql\""));

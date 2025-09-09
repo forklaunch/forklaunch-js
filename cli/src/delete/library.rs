@@ -16,8 +16,8 @@ use crate::{
         ERROR_FAILED_TO_WRITE_MANIFEST, Runtime,
     },
     core::{
+        base_path::find_app_root_path,
         command::command,
-        flexible_path::create_generic_config,
         manifest::{
             ApplicationInitializationMetadata, InitializableManifestConfig,
             InitializableManifestConfigMetadata, ProjectType, application::ApplicationManifestData,
@@ -72,14 +72,11 @@ impl CliCommand for LibraryCommand {
             current_dir
         };
 
-        let root_path_config = create_generic_config();
-        let config_path = crate::core::base_path::resolve_app_base_path_and_find_manifest(
-            matches,
-            &root_path_config,
-        )?;
+        let app_root_path = find_app_root_path(matches)?;
+        let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let mut manifest_data = toml::from_str::<ApplicationManifestData>(
-            &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
+            &read_to_string(&manifest_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
 
@@ -128,7 +125,7 @@ impl CliCommand for LibraryCommand {
         remove_dir_all(&library_base_path.join(&library_name))?;
 
         let mut rendered_templates = vec![RenderedTemplate {
-            path: config_path,
+            path: manifest_path,
             content: manifest_content,
             context: Some(ERROR_FAILED_TO_WRITE_MANIFEST.to_string()),
         }];

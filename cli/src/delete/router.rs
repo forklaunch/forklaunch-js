@@ -29,8 +29,8 @@ use crate::{
             },
             parse_ast_program::parse_ast_program,
         },
+        base_path::find_app_root_path,
         command::command,
-        flexible_path::create_module_config,
         manifest::{
             InitializableManifestConfig, InitializableManifestConfigMetadata,
             RouterInitializationMetadata, remove_router_definition_from_manifest,
@@ -83,14 +83,11 @@ impl CliCommand for RouterCommand {
             current_dir
         };
 
-        let manifest_path_config = create_module_config();
-        let config_path = crate::core::base_path::resolve_app_base_path_and_find_manifest(
-            matches,
-            &manifest_path_config,
-        )?;
+        let app_root_path = find_app_root_path(matches)?;
+        let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let mut manifest_data: RouterManifestData = toml::from_str(
-            &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
+            &read_to_string(&manifest_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
 
@@ -291,7 +288,7 @@ impl CliCommand for RouterCommand {
         write_rendered_templates(
             &vec![
                 RenderedTemplate {
-                    path: config_path,
+                    path: manifest_path,
                     content: manifest_content,
                     context: Some(ERROR_FAILED_TO_WRITE_MANIFEST.to_string()),
                 },

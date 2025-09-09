@@ -40,6 +40,7 @@ use crate::{
         },
         format::format_code,
         gitignore::generate_gitignore,
+        husky::create_or_merge_husky_pre_commit,
         iam::generate_iam_keys,
         license::generate_license,
         manifest::{
@@ -90,6 +91,7 @@ use crate::{
 
 fn generate_application_package_json(
     data: &ApplicationManifestData,
+    application_path: &Path,
     bun_workspace_projects: Option<Vec<String>>,
 ) -> Result<RenderedTemplate> {
     let test_framework: Option<TestFramework> = if let Some(test_framework) = &data.test_framework {
@@ -247,7 +249,7 @@ fn generate_application_package_json(
     };
 
     Ok(RenderedTemplate {
-        path: Path::new(&data.modules_path).join("package.json"),
+        path: application_path.join("package.json"),
         content: to_string_pretty(&package_json_contents).unwrap(),
         context: None,
     })
@@ -396,7 +398,7 @@ impl CliCommand for ApplicationCommand {
             },
         )?;
 
-        let generation_path = if let Some(custom_path) = matches.get_one::<String>("path") {
+        let origin_path = if let Some(custom_path) = matches.get_one::<String>("path") {
             Path::new(&custom_path.clone()).to_path_buf()
         } else {
             if prompt_for_confirmation(
@@ -425,14 +427,12 @@ impl CliCommand for ApplicationCommand {
             }
         };
 
-        let application_path = generation_path.to_string_lossy().to_string();
-
         let modules_path = if let Some(modules_path) = matches.get_one::<String>("modules-path") {
             match modules_path.parse::<ModulesPath>()? {
                 ModulesPath::Src => Path::new("src").join("modules"),
                 ModulesPath::Modules => Path::new("modules").to_path_buf(),
             }
-        } else if generation_path.join("src").exists() && generation_path.join("src").is_dir() {
+        } else if origin_path.join("src").exists() && origin_path.join("src").is_dir() {
             Path::new("src").join("modules")
         } else {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
@@ -456,6 +456,9 @@ impl CliCommand for ApplicationCommand {
                 ModulesPath::Modules => Path::new("modules").to_path_buf(),
             }
         };
+
+        let generation_path = origin_path.join(&modules_path);
+        let application_path = generation_path.to_string_lossy().to_string();
 
         let runtime: Runtime = prompt_with_validation(
             &mut line_editor,
@@ -781,7 +784,7 @@ impl CliCommand for ApplicationCommand {
 
         rendered_templates.extend(
             generate_manifest(
-                &Path::new(&generation_path).to_string_lossy().to_string(),
+                &Path::new(&origin_path).to_string_lossy().to_string(),
                 &data,
             )
             .with_context(|| "Failed to setup manifest file for application")?,
@@ -1091,9 +1094,9 @@ impl CliCommand for ApplicationCommand {
         }
 
         let docker_compose_path = if let Some(docker_compose_path) = &data.docker_compose_path {
-            Path::new(&generation_path).join(docker_compose_path)
+            Path::new(&origin_path).join(docker_compose_path)
         } else {
-            Path::new(&generation_path).join("docker-compose.yaml")
+            Path::new(&origin_path).join("docker-compose.yaml")
         };
 
         rendered_templates.push(RenderedTemplate {
@@ -1102,12 +1105,12 @@ impl CliCommand for ApplicationCommand {
             context: None,
         });
 
-        // Generate the application package.json file in the src/modules folder
         rendered_templates.push(generate_application_package_json(
             &data,
+            &generation_path,
             bun_package_json_workspace_vec,
         )?);
-        // Generate the index.ts file in the src/modules folder
+
         rendered_templates.push(
             generate_index_ts_database_export(
                 &Path::new(&application_path),
@@ -1116,37 +1119,41 @@ impl CliCommand for ApplicationCommand {
             )
             .with_context(|| ERROR_FAILED_TO_CREATE_DATABASE_EXPORT_INDEX_TS)?,
         );
-        // Generate the license file in the project root path
+
         rendered_templates.extend(
             generate_license(&Path::new(&generation_path), &data)
                 .with_context(|| ERROR_FAILED_TO_CREATE_LICENSE)?,
         );
-        // Generate the gitignore file in the project root path
+
         rendered_templates.extend(
             generate_gitignore(&Path::new(&generation_path))
                 .with_context(|| ERROR_FAILED_TO_CREATE_GITIGNORE)?,
         );
-        // Generate the pnpm-workspace.yaml file in the src/modules folder
+
         if runtime == Runtime::Node {
             rendered_templates.extend(
                 generate_pnpm_workspace(&application_path, &additional_projects)
                     .with_context(|| ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE)?,
             );
         }
-        // Generate the iam keys file in the src/modules folder
+
         if additional_projects_names.contains(&"iam".to_string()) {
             rendered_templates.extend(
                 generate_iam_keys(&Path::new(&application_path))
                     .with_context(|| ERROR_FAILED_TO_SETUP_IAM)?,
             );
         }
-        // Create the forklaunch directory in the project root path
+
         create_forklaunch_dir(
-            &Path::new(&generation_path).to_string_lossy().to_string(),
+            &Path::new(&origin_path).to_string_lossy().to_string(),
             dryrun,
         )?;
 
-        // Add assets and readme files to the project root path
+        rendered_templates.push(create_or_merge_husky_pre_commit(
+            &Path::new(&origin_path),
+            &data,
+        )?);
+
         rendered_templates.extend(generate_with_template(
             Some(&application_path),
             &PathIO {
@@ -1167,11 +1174,9 @@ impl CliCommand for ApplicationCommand {
             dryrun,
         )?);
 
-        // Write the rendered templates to the project root path
         write_rendered_templates(&rendered_templates, dryrun, &mut stdout)
             .with_context(|| "Failed to write application files")?;
 
-        // Create the symlinks for the additional projects in the src/modules folder
         additional_projects_dirs
             .into_iter()
             .try_for_each(|template_dir| {

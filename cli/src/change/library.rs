@@ -17,8 +17,8 @@ use crate::{
         ERROR_FAILED_TO_READ_PACKAGE_JSON,
     },
     core::{
+        base_path::find_app_root_path,
         command::command,
-        flexible_path::create_generic_config,
         format::format_code,
         manifest::{
             InitializableManifestConfig, InitializableManifestConfigMetadata, MutableManifestData,
@@ -127,14 +127,11 @@ impl CliCommand for LibraryCommand {
             current_dir
         };
 
-        let root_path_config = create_generic_config();
-        let config_path = crate::core::base_path::resolve_app_base_path_and_find_manifest(
-            matches,
-            &root_path_config,
-        )?;
+        let app_root_path = find_app_root_path(matches)?;
+        let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let mut manifest_data: LibraryManifestData = toml::from_str::<LibraryManifestData>(
-            &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
+            &read_to_string(&manifest_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
         .initialize(InitializableManifestConfigMetadata::Project(
@@ -253,9 +250,9 @@ impl CliCommand for LibraryCommand {
         );
 
         rendered_templates_cache.insert(
-            config_path.clone().to_string_lossy(),
+            manifest_path.clone().to_string_lossy(),
             RenderedTemplate {
-                path: config_path.to_path_buf(),
+                path: manifest_path.to_path_buf(),
                 content: toml::to_string_pretty(&manifest_data)?,
                 context: None,
             },
