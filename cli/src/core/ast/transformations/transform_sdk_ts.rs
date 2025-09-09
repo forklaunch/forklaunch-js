@@ -32,6 +32,7 @@ pub(crate) fn transform_sdk_ts(router_name: &str, base_path: &Path) -> Result<St
         &mut sdk_program,
         &mut sdk_router_import_injection,
         "./server",
+        &sdk_source_text,
     )?;
 
     let sdk_client_skeleton_text = format!(

@@ -20,7 +20,13 @@ pub(crate) fn transform_universal_sdk_add_sdk(
     let app_program_text = read_to_string(base_path.join("universal-sdk").join("universalSdk.ts"))?;
     let mut app_program_ast = parse_ast_program(&allocator, &app_program_text, SourceType::ts());
 
-    inject_into_universal_sdk(&allocator, &mut app_program_ast, app_name, name)?;
+    inject_into_universal_sdk(
+        &allocator,
+        &mut app_program_ast,
+        app_name,
+        name,
+        &app_program_text,
+    )?;
 
     Ok(Codegen::new()
         .with_options(CodegenOptions::default())
@@ -56,7 +62,13 @@ pub(crate) fn transform_universal_sdk_change_sdk(
     let mut app_program_ast = parse_ast_program(&allocator, &app_program_text, SourceType::ts());
 
     delete_from_universal_sdk(&allocator, &mut app_program_ast, app_name, existing_name)?;
-    inject_into_universal_sdk(&allocator, &mut app_program_ast, app_name, name)?;
+    inject_into_universal_sdk(
+        &allocator,
+        &mut app_program_ast,
+        app_name,
+        name,
+        &app_program_text,
+    )?;
 
     Ok(Codegen::new()
         .with_options(CodegenOptions::default())
