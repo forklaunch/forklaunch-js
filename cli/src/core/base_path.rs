@@ -1,6 +1,6 @@
 use std::{
     env::current_dir,
-    path::{Path, PathBuf},
+    path::{MAIN_SEPARATOR, Path, PathBuf},
 };
 
 use anyhow::{Context, Result, bail};
@@ -202,7 +202,16 @@ pub(crate) fn find_app_root_path(matches: &ArgMatches) -> Result<(PathBuf, Strin
     let manifest_path = find_nearest_manifest_from(&start_path);
 
     match manifest_path {
-        Some(manifest) => Ok((manifest, relative_path.clone())),
+        Some(manifest) => Ok((
+            manifest,
+            relative_path
+                .clone()
+                .split(MAIN_SEPARATOR)
+                .collect::<Vec<&str>>()
+                .last()
+                .unwrap()
+                .to_string(),
+        )),
         None => bail!(ERROR_MANIFEST_NOT_FOUND),
     }
 }
