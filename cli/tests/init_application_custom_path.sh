@@ -1,17 +1,11 @@
-echo "Testing custom path subset of application initialization..."
+rm -rf output/init-application-custom-path
 
-# Clean up any existing test directories
-rm -rf test-app-current test-app-custom custom-test-path output/init-application
+mkdir -p output/init-application-custom-path
+cd output/init-application-custom-path
 
-# Create output directory
-mkdir -p output/init-application
-cd output/init-application
-
-echo "Testing current directory scenario..."
-# Test current directory scenario - use current directory
 RUST_BACKTRACE=1 cargo run --release init application "test-app-current" \
     --path "." \
-    -o "src" \
+    -o "src/modules" \
     -d "postgresql" \
     -v "zod" \
     -f "prettier" \
@@ -25,12 +19,8 @@ RUST_BACKTRACE=1 cargo run --release init application "test-app-current" \
     -A "Test User" \
     -L "MIT"
 
-echo "Testing custom path scenario..."
-# Test custom path scenario - use custom path
-mkdir -p custom-test-path
-
 RUST_BACKTRACE=1 cargo run --release init application "test-app-custom" \
-    --path "./custom-test-path" \
+    --path "custom-test-path" \
     -o "modules" \
     -d "postgresql" \
     -v "zod" \
@@ -44,17 +34,3 @@ RUST_BACKTRACE=1 cargo run --release init application "test-app-custom" \
     -D "Test application" \
     -A "Test User" \
     -L "MIT"
-
-echo "Small test completed!"
-echo ""
-echo "Checking created directories:"
-ls -la
-echo ""
-echo "Checking custom path:"
-ls -la custom-test-path/ 2>/dev/null || echo "Custom path not found"
-echo ""
-echo "Checking current directory app:"
-ls -la test-app-current/ 2>/dev/null || echo "Current directory app not found"
-echo ""
-echo "Checking custom path app:"
-ls -la custom-test-path/test-app-custom/ 2>/dev/null || echo "Custom path app not found"

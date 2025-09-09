@@ -11,15 +11,17 @@ RUST_BACKTRACE=1 cargo run --release init worker wrk-test-redis -t redis -p work
 RUST_BACKTRACE=1 cargo run --release init worker wrk-test-bullmq -t bullmq -p worker-test-node-application/src/modules -D "Test worker"
 RUST_BACKTRACE=1 cargo run --release init worker wrk-test-kafka -t kafka -p worker-test-node-application/src/modules -D "Test worker"
 
-cd worker-test-node-application/src/modules
-RUST_BACKTRACE=1 cargo run --release delete worker wrk-test -c
+cd worker-test-node-application
 
+RUST_BACKTRACE=1 cargo run --release delete worker wrk-test -c
 RUST_BACKTRACE=1 cargo run --release init worker wrk-test -t database -d postgresql -D "Test worker" -p .
+
+cd src/modules
 
 pnpm install
 pnpm build
 
-cd ..
+cd ../../..
 
 RUST_BACKTRACE=1 cargo run --release init application worker-test-bun-application -p worker-test-bun-application -o src/modules -d postgresql -f biome -l oxlint -v zod -F express -r bun -t vitest -m billing-base -m iam-base -D "Test worker" -A "Rohin Bhargava" -L "MIT"
 RUST_BACKTRACE=1 cargo run --release init worker wrk-test -t database -d postgresql -p worker-test-bun-application/src/modules -D "Test worker"
@@ -27,10 +29,12 @@ RUST_BACKTRACE=1 cargo run --release init worker wrk-test-redis -t redis -p work
 RUST_BACKTRACE=1 cargo run --release init worker wrk-test-bullmq -t bullmq -p worker-test-bun-application/src/modules -D "Test worker"
 RUST_BACKTRACE=1 cargo run --release init worker wrk-test-kafka -t kafka -p worker-test-bun-application/src/modules -D "Test worker"
 
-cd worker-test-bun-application/src/modules
-RUST_BACKTRACE=1 cargo run --release delete worker wrk-test -c
+cd worker-test-bun-application
 
+RUST_BACKTRACE=1 cargo run --release delete worker wrk-test -c
 RUST_BACKTRACE=1 cargo run --release init worker wrk-test -t database -d postgresql -D "Test worker" -p .
+
+cd src/modules
 
 bun install
 bun run build
