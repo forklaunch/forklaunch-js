@@ -116,7 +116,6 @@ impl CliCommand for LibraryCommand {
         let manifest_content =
             remove_project_definition_from_manifest(&mut manifest_data, &library_name)?;
 
-        println!("library_base_path: {:?}", library_base_path);
         remove_dir_all(&library_base_path.join(&library_name))?;
 
         let mut rendered_templates = vec![RenderedTemplate {

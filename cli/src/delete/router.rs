@@ -260,7 +260,6 @@ impl CliCommand for RouterCommand {
         let sdk_type = SourceType::from_path(&sdk_path)?;
         let mut sdk_program = parse_ast_program(&allocator, &sdk_text, sdk_type);
 
-        // TODO: The following function is supposed to remove the import statement for the created router but the sdk.ts file is not being updated. This means the import statement is still present in the sdk.ts file.
         let new_sdk_content =
             delete_from_sdk_client_input(&allocator, &mut sdk_program, &camel_case_name)?;
 

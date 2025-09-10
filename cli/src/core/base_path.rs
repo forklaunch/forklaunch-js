@@ -1,6 +1,6 @@
 use std::{
     env::current_dir,
-    path::{MAIN_SEPARATOR, Path, PathBuf},
+    path::{Path, PathBuf},
 };
 
 use anyhow::{Context, Result, bail};

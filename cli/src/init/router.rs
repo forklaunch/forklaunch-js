@@ -212,8 +212,6 @@ impl CliCommand for RouterCommand {
             },
         )?;
 
-        println!("project_name: {}", project_name);
-
         manifest_data = manifest_data.initialize(InitializableManifestConfigMetadata::Router(
             RouterInitializationMetadata {
                 project_name: project_name.clone(),
