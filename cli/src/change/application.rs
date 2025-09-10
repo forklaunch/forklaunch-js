@@ -1556,7 +1556,7 @@ impl CliCommand for ApplicationCommand {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
         let mut rendered_templates_cache = RenderedTemplatesCache::new();
 
-        let (app_root_path, _) = find_app_root_path(matches)?;
+        let (app_root_path, _) = find_app_root_path(matches, None)?;
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let mut manifest_data = toml::from_str::<ApplicationManifestData>(

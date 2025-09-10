@@ -555,9 +555,8 @@ impl CliCommand for ServiceCommand {
             &BasePathLocation::Service,
             &BasePathType::Init,
         )?;
-        let base_path = Path::new(&base_path_input);
 
-        let (app_root_path, _) = find_app_root_path(matches)?;
+        let (app_root_path, _) = find_app_root_path(matches, Some(&base_path_input))?;
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let existing_manifest_data = from_str::<ApplicationManifestData>(
@@ -572,7 +571,7 @@ impl CliCommand for ServiceCommand {
             }),
         );
 
-        let base_path = base_path.join(manifest_data.modules_path.clone());
+        let base_path = app_root_path.join(manifest_data.modules_path.clone());
 
         let service_name = prompt_with_validation(
             &mut line_editor,

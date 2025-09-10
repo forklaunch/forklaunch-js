@@ -87,7 +87,6 @@ impl CliCommand for ModuleCommand {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        // base path should be the application path
         let base_path_input = prompt_base_path(
             &mut line_editor,
             &mut stdout,
@@ -95,9 +94,8 @@ impl CliCommand for ModuleCommand {
             &BasePathLocation::Application,
             &BasePathType::Init,
         )?;
-        let base_path = Path::new(&base_path_input);
 
-        let (app_root_path, _) = find_app_root_path(matches)?;
+        let (app_root_path, _) = find_app_root_path(matches, Some(&base_path_input))?;
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let existing_manifest_data = toml::from_str::<ApplicationManifestData>(
@@ -112,7 +110,7 @@ impl CliCommand for ModuleCommand {
             }),
         );
 
-        let app_path = base_path.join(manifest_data.modules_path.clone());
+        let app_path = app_root_path.join(manifest_data.modules_path.clone());
 
         let module: Module = prompt_with_validation(
             &mut line_editor,

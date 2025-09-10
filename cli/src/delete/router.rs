@@ -76,7 +76,7 @@ impl CliCommand for RouterCommand {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let (app_root_path, project_name) = find_app_root_path(matches)?;
+        let (app_root_path, project_name) = find_app_root_path(matches, None)?;
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let mut manifest_data: RouterManifestData = toml::from_str(

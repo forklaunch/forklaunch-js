@@ -190,14 +190,7 @@ impl CliCommand for RouterCommand {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let current_dir = std::env::current_dir()?;
-        let router_base_path = if let Some(relative_path) = matches.get_one::<String>("base_path") {
-            current_dir.join(relative_path)
-        } else {
-            current_dir
-        };
-
-        let (app_root_path, _) = find_app_root_path(matches)?;
+        let (app_root_path, project_name) = find_app_root_path(matches, None)?;
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let mut manifest_data = from_str::<RouterManifestData>(
@@ -219,16 +212,18 @@ impl CliCommand for RouterCommand {
             },
         )?;
 
+        println!("project_name: {}", project_name);
+
         manifest_data = manifest_data.initialize(InitializableManifestConfigMetadata::Router(
             RouterInitializationMetadata {
-                project_name: router_base_path
-                    .file_name()
-                    .unwrap()
-                    .to_string_lossy()
-                    .to_string(),
+                project_name: project_name.clone(),
                 router_name: Some(router_name.clone()),
             },
         ));
+
+        let router_base_path = app_root_path
+            .join(manifest_data.modules_path.clone())
+            .join(project_name.clone());
 
         let infrastructure: Vec<Infrastructure> = if matches.ids().all(|id| id == "dryrun") {
             prompt_comma_separated_list(

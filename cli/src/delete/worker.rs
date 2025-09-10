@@ -67,7 +67,7 @@ impl CliCommand for WorkerCommand {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let (app_root_path, _) = find_app_root_path(matches)?;
+        let (app_root_path, _) = find_app_root_path(matches, None)?;
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let mut manifest_data = toml::from_str::<ApplicationManifestData>(
@@ -182,7 +182,7 @@ impl CliCommand for WorkerCommand {
 
         remove_project_from_universal_sdk(
             &mut rendered_templates,
-            &app_root_path,
+            &worker_base_path,
             &manifest_data.app_name,
             &worker_name,
         )?;

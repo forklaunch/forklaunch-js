@@ -185,33 +185,35 @@ pub(crate) fn prompt_base_path(
         .to_string())
 }
 
-pub(crate) fn find_app_root_path(matches: &ArgMatches) -> Result<(PathBuf, String)> {
+pub(crate) fn find_app_root_path(
+    matches: &ArgMatches,
+    base_path_input: Option<&String>,
+) -> Result<(PathBuf, String)> {
     let current_dir = current_dir().with_context(|| ERROR_FAILED_TO_GET_CWD)?;
 
-    let relative_path = match matches.get_one::<String>("base_path") {
-        Some(relative_path) => relative_path.clone(),
-        None => bail!("Base path is required"),
+    let relative_path = base_path_input.or(matches.get_one::<String>("base_path"));
+
+    let start_path = match relative_path {
+        Some(relative_path) => {
+            if current_dir.join(relative_path.clone()).exists() {
+                current_dir.join(relative_path.clone())
+            } else {
+                current_dir
+            }
+        }
+        None => current_dir,
     };
 
-    let start_path = if current_dir.join(relative_path.clone()).exists() {
-        current_dir.join(relative_path.clone())
-    } else {
-        current_dir
-    };
+    let project_name = start_path
+        .file_name()
+        .unwrap()
+        .to_string_lossy()
+        .to_string();
 
     let manifest_path = find_nearest_manifest_from(&start_path);
 
     match manifest_path {
-        Some(manifest) => Ok((
-            manifest,
-            relative_path
-                .clone()
-                .split(MAIN_SEPARATOR)
-                .collect::<Vec<&str>>()
-                .last()
-                .unwrap()
-                .to_string(),
-        )),
+        Some(manifest) => Ok((manifest, project_name)),
         None => bail!(ERROR_MANIFEST_NOT_FOUND),
     }
 }
