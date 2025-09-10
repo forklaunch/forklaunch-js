@@ -32,6 +32,9 @@ bun install
 cd billing
 
 RUST_BACKTRACE=1 cargo run --release eject -d @forklaunch/implementation-billing-base -d @forklaunch/interfaces-billing -d @forklaunch/infrastructure-redis -n
+
+cd ../..
+
 RUST_BACKTRACE=1 cargo run --release eject -d @forklaunch/implementation-billing-base -d @forklaunch/interfaces-billing -d @forklaunch/infrastructure-redis -c
 
 bun run build
