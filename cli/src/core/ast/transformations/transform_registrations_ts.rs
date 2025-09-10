@@ -71,6 +71,7 @@ pub(crate) fn transform_registrations_ts_add_router(
         &mut registrations_program,
         &mut forklaunch_routes_import_injection,
         format!("./services/{router_name_camel_case}.service").as_str(),
+        &registrations_source_text,
     )?;
 
     let (dependency, em_setup, em_resolution, service_param) = match project_type {
