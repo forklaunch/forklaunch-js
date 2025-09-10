@@ -41,6 +41,8 @@ db.getSiblingDB(\"admin\").createUser({
 
 #[derive(Debug, Serialize, Default)]
 pub(crate) struct DockerCompose {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) version: Option<String>,
     pub(crate) volumes: IndexMap<String, DockerVolume>,
     pub(crate) networks: IndexMap<String, DockerNetwork>,
     pub(crate) services: IndexMap<String, DockerService>,
@@ -73,6 +75,10 @@ impl<'de> Deserialize<'de> for DockerCompose {
 
                 while let Some((key, value)) = access.next_entry::<String, Value>()? {
                     match key.as_str() {
+                        "version" => {
+                            compose.version =
+                                from_value(value).map_err(serde::de::Error::custom)?;
+                        }
                         "volumes" => {
                             compose.volumes =
                                 from_value(value).map_err(serde::de::Error::custom)?;
