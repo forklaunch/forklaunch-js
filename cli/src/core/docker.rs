@@ -1537,13 +1537,16 @@ pub(crate) fn find_docker_compose_path(base_path: &Path) -> Option<String> {
         let file_name = entry.file_name().to_string_lossy();
 
         if file_name == "docker-compose.yml" || file_name == "docker-compose.yaml" {
-            return Some(entry.path().to_string_lossy().to_string());
+            let relative_path = entry.path().strip_prefix(base_path).unwrap_or(entry.path());
+            return Some(relative_path.to_string_lossy().to_string());
         }
 
         if file_name.ends_with(".yml") || file_name.ends_with(".yaml") {
             if let Ok(contents) = read_to_string(entry.path()) {
                 if from_str::<DockerCompose>(&contents).is_ok() {
-                    return Some(entry.path().to_string_lossy().to_string());
+                    let relative_path =
+                        entry.path().strip_prefix(base_path).unwrap_or(entry.path());
+                    return Some(relative_path.to_string_lossy().to_string());
                 }
             }
         }
