@@ -41,19 +41,19 @@
   "dependencies": {
     "@forklaunch/common": "workspace:*",
     "@forklaunch/validator": "workspace:*",
-    "@mikro-orm/core": "^6.5.1"
+    "@mikro-orm/core": "^6.5.2"
   },
   "devDependencies": {
-    "@eslint/js": "^9.34.0",
-    "@types/node": "^24.3.0",
-    "@typescript/native-preview": "7.0.0-dev.20250830.1",
+    "@eslint/js": "^9.35.0",
+    "@types/node": "^24.3.1",
+    "@typescript/native-preview": "7.0.0-dev.20250910.1",
     "depcheck": "^1.4.7",
-    "eslint": "^9.34.0",
-    "globals": "^16.3.0",
+    "eslint": "^9.35.0",
+    "globals": "^16.4.0",
     "tsup": "^8.5.0",
-    "typedoc": "^0.28.11",
+    "typedoc": "^0.28.12",
     "typescript": "^5.9.2",
-    "typescript-eslint": "^8.41.0",
+    "typescript-eslint": "^8.43.0",
     "vitest": "^3.2.4"
   }
 }

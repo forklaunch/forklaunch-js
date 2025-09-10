@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.14.7
+
+### Patch Changes
+
+- Remove correlation id from metrics to reduce cardinality. Metrics are no longer filterable by correlation id
+
 ## 0.14.6
 
 ### Patch Changes
