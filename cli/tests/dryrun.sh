@@ -36,9 +36,9 @@ if [ -d "worker-test" ]; then
 fi
 
 
-RUST_BACKTRACE=1 cargo run --release init service service-test -d postgresql -D "Test service" -p . -n
+RUST_BACKTRACE=1 cargo run --release init service service-test -d postgresql -D "Test service" -p .
 
-cd service-test
+cd src/modules/service-test
 
 RUST_BACKTRACE=1 cargo run --release init router router-test -n
 

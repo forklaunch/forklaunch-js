@@ -16,7 +16,7 @@ use crate::{
         get_service_module_cache, get_service_module_description, get_service_module_name,
     },
     core::{
-        base_path::{BasePathLocation, BasePathType, find_app_root_path, prompt_base_path},
+        base_path::find_app_root_path,
         command::command,
         database::{
             get_database_port, get_database_variants, get_db_driver, is_in_memory_database,
@@ -87,15 +87,7 @@ impl CliCommand for ModuleCommand {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let base_path_input = prompt_base_path(
-            &mut line_editor,
-            &mut stdout,
-            matches,
-            &BasePathLocation::Application,
-            &BasePathType::Init,
-        )?;
-
-        let (app_root_path, _) = find_app_root_path(matches, Some(&base_path_input))?;
+        let (app_root_path, _) = find_app_root_path(matches)?;
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let existing_manifest_data = toml::from_str::<ApplicationManifestData>(

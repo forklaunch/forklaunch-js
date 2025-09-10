@@ -51,7 +51,7 @@ impl CliCommand for DepcheckCommand {
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let (app_root_path, _) = find_app_root_path(matches, None)?;
+        let (app_root_path, _) = find_app_root_path(matches)?;
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let manifest_data: ApplicationManifestData = toml::from_str(
@@ -69,7 +69,7 @@ impl CliCommand for DepcheckCommand {
                     .iter()
                     .try_for_each(|project| -> Result<()> {
                         if let Some(package_json_contents) = &read_to_string(
-                            Path::new(&app_root_path).join(project).join("package.json"),
+                            Path::new(&app_root_path).join(manifest_data.modules_path.clone()).join(project).join("package.json"),
                         )
                         .with_context(|| format!("Failed to read package.json for {}", project))
                         .ok()

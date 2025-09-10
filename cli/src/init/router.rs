@@ -190,7 +190,7 @@ impl CliCommand for RouterCommand {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let (app_root_path, project_name) = find_app_root_path(matches, None)?;
+        let (app_root_path, project_name) = find_app_root_path(matches)?;
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let mut manifest_data = from_str::<RouterManifestData>(
@@ -214,14 +214,14 @@ impl CliCommand for RouterCommand {
 
         manifest_data = manifest_data.initialize(InitializableManifestConfigMetadata::Router(
             RouterInitializationMetadata {
-                project_name: project_name.clone(),
+                project_name: project_name.clone().unwrap(),
                 router_name: Some(router_name.clone()),
             },
         ));
 
         let router_base_path = app_root_path
             .join(manifest_data.modules_path.clone())
-            .join(project_name.clone());
+            .join(project_name.clone().unwrap());
 
         let infrastructure: Vec<Infrastructure> = if matches.ids().all(|id| id == "dryrun") {
             prompt_comma_separated_list(

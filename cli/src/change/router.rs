@@ -98,7 +98,7 @@ impl CliCommand for RouterCommand {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
         let mut rendered_templates_cache = RenderedTemplatesCache::new();
 
-        let (app_root_path, project_name) = find_app_root_path(matches, None)?;
+        let (app_root_path, project_name) = find_app_root_path(matches)?;
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let existing_name = matches.get_one::<String>("existing-name");
@@ -116,14 +116,14 @@ impl CliCommand for RouterCommand {
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
         .initialize(InitializableManifestConfigMetadata::Router(
             RouterInitializationMetadata {
-                project_name: project_name.clone(),
+                project_name: project_name.clone().unwrap(),
                 router_name: Some(existing_name.unwrap().clone()),
             },
         ));
 
         let router_base_path = app_root_path
             .join(manifest_data.modules_path.clone())
-            .join(project_name.clone());
+            .join(project_name.clone().unwrap());
 
         let selected_options = if matches.ids().all(|id| id == "dryrun" || id == "confirm") {
             let options = vec!["name"];
@@ -171,7 +171,7 @@ impl CliCommand for RouterCommand {
                 &mut manifest_data
                     .projects
                     .iter_mut()
-                    .find(|project| project.name == project_name)
+                    .find(|project| project.name == project_name.clone().unwrap())
                     .unwrap(),
                 &mut rendered_templates_cache,
                 &mut stdout,

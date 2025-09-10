@@ -6,7 +6,6 @@ pub(crate) mod command;
 pub(crate) mod database;
 pub(crate) mod docker;
 pub(crate) mod env;
-pub(crate) mod flexible_path;
 pub(crate) mod format;
 pub(crate) mod gitignore;
 pub(crate) mod husky;

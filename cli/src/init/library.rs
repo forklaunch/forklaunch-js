@@ -19,7 +19,7 @@ use crate::{
         ERROR_FAILED_TO_READ_MANIFEST, Runtime, TestFramework,
     },
     core::{
-        base_path::{BasePathLocation, BasePathType, find_app_root_path, prompt_base_path},
+        base_path::find_app_root_path,
         command::command,
         format::format_code,
         gitignore::generate_gitignore,
@@ -248,15 +248,7 @@ impl CliCommand for LibraryCommand {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let base_path_input = prompt_base_path(
-            &mut line_editor,
-            &mut stdout,
-            matches,
-            &BasePathLocation::Library,
-            &BasePathType::Init,
-        )?;
-
-        let (app_root_path, _) = find_app_root_path(matches, Some(&base_path_input))?;
+        let (app_root_path, _) = find_app_root_path(matches)?;
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let existing_manifest_data = from_str::<ApplicationManifestData>(

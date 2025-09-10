@@ -19,10 +19,11 @@ use crate::{
     constants::{
         ERROR_FAILED_TO_EJECT_DIRECTORY_NOT_EJECTABLE, ERROR_FAILED_TO_PARSE_MANIFEST,
         ERROR_FAILED_TO_PARSE_PACKAGE_JSON, ERROR_FAILED_TO_READ_MANIFEST,
+        ERROR_FAILED_TO_READ_PACKAGE_JSON,
     },
     core::{
         ast::transformations::transform_domain_schemas_index::transform_domain_schemas_index_ts,
-        base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        base_path::find_app_root_path,
         command::command,
         manifest::{
             ApplicationInitializationMetadata, InitializableManifestConfig,
@@ -490,7 +491,7 @@ impl CliCommand for EjectCommand {
     fn command(&self) -> Command {
         command("eject", "Eject a forklaunch project")
             .alias("ej")
-            .arg(Arg::new("base_path").short('b'))
+            .arg(Arg::new("base_path").short('p'))
             .arg(
                 Arg::new("continue")
                     .short('c')
@@ -536,21 +537,8 @@ impl CliCommand for EjectCommand {
             }
         }
 
-        let base_path = prompt_base_path(
-            &mut line_editor,
-            &mut stdout,
-            matches,
-            &BasePathLocation::DeferToType,
-            &BasePathType::Eject,
-        )?;
-
-        let base_path = Path::new(&base_path);
-
-        let manifest_path = base_path
-            .parent()
-            .unwrap()
-            .join(".forklaunch")
-            .join("manifest.toml");
+        let (app_root_path, project_name) = find_app_root_path(matches)?;
+        let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let mut manifest_data = toml::from_str::<ApplicationManifestData>(
             &read_to_string(manifest_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
@@ -564,25 +552,31 @@ impl CliCommand for EjectCommand {
             },
         ));
 
+        let base_path = app_root_path
+            .join(manifest_data.modules_path.clone())
+            .join(project_name.clone().unwrap());
+
         let mut project_variant = None;
         if let Some(project) = manifest_data
             .projects
             .iter()
-            .find(|project| base_path.file_name().unwrap().to_str().unwrap() == project.name)
+            .find(|project| project_name.clone().unwrap() == project.name)
         {
             project_variant = project.variant.clone();
         }
 
+        println!("base_path: {}", base_path.display());
         let package_path = base_path.join("package.json");
 
         let package_data =
-            read_to_string(&package_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?;
+            read_to_string(&package_path).with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?;
 
         let mut package_json: Value =
             from_str(&package_data).with_context(|| ERROR_FAILED_TO_PARSE_PACKAGE_JSON)?;
 
         let mut rendered_templates_cache = RenderedTemplatesCache::new();
 
+        println!("base_path: {}", base_path.display());
         let (dependencies_to_eject, filtered_dependencies) = eject_dependencies(
             &project_variant,
             &mut package_json,
@@ -593,7 +587,8 @@ impl CliCommand for EjectCommand {
             dryrun,
         )?;
 
-        let app_files = WalkDir::new(base_path)
+        println!("base_path2: {}", base_path.display());
+        let app_files = WalkDir::new(base_path.clone())
             .into_iter()
             .filter_map(|e| e.ok())
             .filter(|e| {
@@ -606,6 +601,7 @@ impl CliCommand for EjectCommand {
         package_json["dependencies"] = filtered_dependencies.into();
 
         if !dryrun {
+            println!("base_path3: {}", base_path.display());
             perform_string_replacements(
                 &app_files,
                 &base_path,
@@ -613,11 +609,13 @@ impl CliCommand for EjectCommand {
                 &dependencies_to_eject,
                 &mut rendered_templates_cache,
             )?;
+            println!("base_path4: {}", base_path.display());
             merge_index_ts_files(
                 &base_path,
                 &dependencies_to_eject,
                 &mut rendered_templates_cache,
             )?;
+            println!("base_path5: {}", base_path.display());
             transform_schema_index_ts(
                 &base_path,
                 &dependencies_to_eject,
