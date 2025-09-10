@@ -1,7 +1,7 @@
 use std::{
     collections::{HashMap, HashSet},
     fs::read_to_string,
-    path::{MAIN_SEPARATOR, Path, PathBuf},
+    path::{Path, PathBuf},
 };
 
 use anyhow::{Context, Result};
