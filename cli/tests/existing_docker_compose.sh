@@ -148,29 +148,7 @@ if [ $? -ne 0 ]; then
 fi
 
 cd ../..
-echo "Validating docker-compose.yaml syntax..."
-echo "Docker Compose version:"
-docker-compose --version 2>/dev/null || docker compose version
-echo "Checking docker-compose file:"
-ls -la infra/docker-compose.yaml
-echo "First 20 lines of docker-compose file:"
-head -20 infra/docker-compose.yaml
-
-# Try both docker-compose and docker compose commands
-if command -v docker-compose >/dev/null 2>&1; then
-    COMPOSE_CMD="docker-compose"
-elif docker compose version >/dev/null 2>&1; then
-    COMPOSE_CMD="docker compose"
-else
-    echo "ERROR: Neither docker-compose nor docker compose command found"
-    exit 1
-fi
-
-echo "Using compose command: $COMPOSE_CMD"
-if ! $COMPOSE_CMD -f infra/docker-compose.yaml config > /dev/null 2>&1; then
+if ! docker-compose -f infra/docker-compose.yaml config > /dev/null 2>&1; then
     echo "ERROR: infra/docker-compose.yaml has invalid syntax"
-    echo "Full error output:"
-    $COMPOSE_CMD -f infra/docker-compose.yaml config
     exit 1
 fi
-echo "✅ Docker-compose syntax is valid"

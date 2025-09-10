@@ -50,13 +50,6 @@ jobs:
       - name: Create token file
         run: touch ~/.forklaunch/token
 
-      - name: Verify Docker Compose installation
-        run: |
-          echo "Checking Docker Compose availability..."
-          docker compose version || echo "docker compose not available"
-          docker-compose --version || echo "docker-compose not available"
-          echo "Docker Compose check complete"
-
       - name: Find and run all test scripts
         working-directory: ./cli/tests
         run: |
