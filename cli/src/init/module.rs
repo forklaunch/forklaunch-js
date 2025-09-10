@@ -16,7 +16,7 @@ use crate::{
         get_service_module_cache, get_service_module_description, get_service_module_name,
     },
     core::{
-        base_path::find_app_root_path,
+        base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
         command::command,
         database::{
             get_database_port, get_database_variants, get_db_driver, is_in_memory_database,
@@ -87,7 +87,7 @@ impl CliCommand for ModuleCommand {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let (app_root_path, _) = find_app_root_path(matches)?;
+        let (app_root_path, _) = find_app_root_path(matches, RequiredLocation::Application)?;
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let existing_manifest_data = toml::from_str::<ApplicationManifestData>(
@@ -95,14 +95,22 @@ impl CliCommand for ModuleCommand {
         )
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
 
+        let base_path = prompt_base_path(
+            &app_root_path,
+            &ManifestData::Application(&existing_manifest_data),
+            &None,
+            &mut line_editor,
+            &mut stdout,
+            matches,
+            0,
+        )?;
+
         let manifest_data = existing_manifest_data.initialize(
             InitializableManifestConfigMetadata::Application(ApplicationInitializationMetadata {
                 app_name: existing_manifest_data.app_name.clone(),
                 database: None,
             }),
         );
-
-        let app_path = app_root_path.join(manifest_data.modules_path.clone());
 
         let module: Module = prompt_with_validation(
             &mut line_editor,
@@ -228,7 +236,7 @@ impl CliCommand for ModuleCommand {
                 .join(&module.metadata().exclusive_files.unwrap().first().unwrap())
                 .to_string_lossy()
                 .to_string(),
-            output_path: app_path
+            output_path: base_path
                 .clone()
                 .join(get_service_module_name(&module))
                 .to_string_lossy()
@@ -267,7 +275,7 @@ impl CliCommand for ModuleCommand {
         )?);
         rendered_templates.push(generate_service_package_json(
             &service_data,
-            &app_path.clone().join(get_service_module_name(&module)),
+            &base_path.clone().join(get_service_module_name(&module)),
             None,
             None,
             None,
@@ -276,15 +284,15 @@ impl CliCommand for ModuleCommand {
         match runtime {
             Runtime::Node => {
                 rendered_templates.push(RenderedTemplate {
-                    path: app_path.join("pnpm-workspace.yaml"),
-                    content: add_project_definition_to_pnpm_workspace(&app_path, &service_data)?,
+                    path: base_path.join("pnpm-workspace.yaml"),
+                    content: add_project_definition_to_pnpm_workspace(&base_path, &service_data)?,
                     context: Some(ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE.to_string()),
                 });
             }
             Runtime::Bun => {
                 rendered_templates.push(RenderedTemplate {
-                    path: app_path.join("package.json"),
-                    content: add_project_definition_to_package_json(&app_path, &service_data)?,
+                    path: base_path.join("package.json"),
+                    content: add_project_definition_to_package_json(&base_path, &service_data)?,
                     context: Some(ERROR_FAILED_TO_CREATE_PACKAGE_JSON.to_string()),
                 });
             }
@@ -294,8 +302,8 @@ impl CliCommand for ModuleCommand {
 
         if !dryrun {
             generate_symlinks(
-                Some(&app_path),
-                &app_path.clone().join(get_service_module_name(&module)),
+                Some(&base_path),
+                &base_path.clone().join(get_service_module_name(&module)),
                 &mut service_data,
                 dryrun,
             )?;
@@ -306,7 +314,7 @@ impl CliCommand for ModuleCommand {
                 get_service_module_name(&module)
             )?;
             stdout.reset()?;
-            format_code(&app_path, &service_data.runtime.parse()?);
+            format_code(&base_path, &service_data.runtime.parse()?);
         }
 
         Ok(())

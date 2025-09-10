@@ -17,12 +17,12 @@ use crate::{
         ERROR_FAILED_TO_READ_PACKAGE_JSON,
     },
     core::{
-        base_path::find_app_root_path,
+        base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
         command::command,
         format::format_code,
         manifest::{
-            InitializableManifestConfig, InitializableManifestConfigMetadata, MutableManifestData,
-            ProjectInitializationMetadata, library::LibraryManifestData,
+            InitializableManifestConfig, InitializableManifestConfigMetadata, ManifestData,
+            MutableManifestData, ProjectInitializationMetadata, library::LibraryManifestData,
         },
         move_template::{MoveTemplate, move_template_files},
         name::validate_name,
@@ -119,22 +119,34 @@ impl CliCommand for LibraryCommand {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let (app_root_path, project_name) = find_app_root_path(matches)?;
+        let (app_root_path, project_name) = find_app_root_path(matches, RequiredLocation::Project)?;
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
-        let mut manifest_data: LibraryManifestData = toml::from_str::<LibraryManifestData>(
+        let existing_manifest_data: LibraryManifestData = toml::from_str::<LibraryManifestData>(
             &read_to_string(&manifest_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
-        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
-        .initialize(InitializableManifestConfigMetadata::Project(
-            ProjectInitializationMetadata {
-                project_name: project_name.clone().unwrap(),
-            },
-        ));
+        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
 
-        let library_base_path = app_root_path
-            .join(manifest_data.modules_path.clone())
-            .join(project_name.clone().unwrap());
+        let library_base_path = prompt_base_path(
+            &app_root_path,
+            &ManifestData::Library(&existing_manifest_data),
+            &project_name,
+            &mut line_editor,
+            &mut stdout,
+            matches,
+            1,
+        )?;
+
+        let mut manifest_data = existing_manifest_data.initialize(
+            InitializableManifestConfigMetadata::Project(ProjectInitializationMetadata {
+                project_name: library_base_path
+                    .file_name()
+                    .unwrap()
+                    .to_string_lossy()
+                    .to_string()
+                    .clone(),
+            }),
+        );
 
         let name = matches.get_one::<String>("name");
         let description = matches.get_one::<String>("description");

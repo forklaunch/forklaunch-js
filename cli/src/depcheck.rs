@@ -14,7 +14,8 @@ use crate::{
     CliCommand,
     constants::{ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST},
     core::{
-        base_path::find_app_root_path, command::command,
+        base_path::{RequiredLocation, find_app_root_path},
+        command::command,
         manifest::application::ApplicationManifestData,
     },
 };
@@ -51,7 +52,7 @@ impl CliCommand for DepcheckCommand {
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let (app_root_path, _) = find_app_root_path(matches)?;
+        let (app_root_path, _) = find_app_root_path(matches, RequiredLocation::Application)?;
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let manifest_data: ApplicationManifestData = toml::from_str(

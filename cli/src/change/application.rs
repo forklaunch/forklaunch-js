@@ -31,14 +31,15 @@ use crate::{
             transform_core_registrations_ts_http_framework,
             transform_core_registrations_ts_validator,
         },
-        base_path::find_app_root_path,
+        base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
         command::command,
         docker::update_dockerfile_contents,
         format::format_code,
         license::generate_license,
         manifest::{
             ApplicationInitializationMetadata, InitializableManifestConfig,
-            InitializableManifestConfigMetadata, ProjectType, application::ApplicationManifestData,
+            InitializableManifestConfigMetadata, ManifestData, ProjectType,
+            application::ApplicationManifestData,
         },
         name::validate_name,
         package_json::{
@@ -1556,28 +1557,35 @@ impl CliCommand for ApplicationCommand {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
         let mut rendered_templates_cache = RenderedTemplatesCache::new();
 
-        let (app_root_path, _) = find_app_root_path(matches)?;
+        let (app_root_path, _) = find_app_root_path(matches, RequiredLocation::Application)?;
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
-        let mut manifest_data = toml::from_str::<ApplicationManifestData>(
+        let existing_manifest_data = toml::from_str::<ApplicationManifestData>(
             &read_to_string(&manifest_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
-        manifest_data.initialize(InitializableManifestConfigMetadata::Application(
-            ApplicationInitializationMetadata {
-                app_name: manifest_data.app_name.clone(),
+
+        let app_path = prompt_base_path(
+            &app_root_path,
+            &ManifestData::Application(&existing_manifest_data),
+            &None,
+            &mut line_editor,
+            &mut stdout,
+            matches,
+            0,
+        )?;
+
+        let mut manifest_data = existing_manifest_data.initialize(
+            InitializableManifestConfigMetadata::Application(ApplicationInitializationMetadata {
+                app_name: existing_manifest_data.app_name.clone(),
                 database: None,
-            },
-        ));
-        manifest_data.kebab_case_app_name = manifest_data.app_name.to_case(Case::Kebab);
-        manifest_data.camel_case_app_name = manifest_data.app_name.to_case(Case::Camel);
-        manifest_data.pascal_case_app_name = manifest_data.app_name.to_case(Case::Pascal);
+            }),
+        );
 
         let docker_compose_path = manifest_data
             .docker_compose_path
             .as_ref()
             .map(|path| app_root_path.join(path));
-        let app_path = app_root_path.join(manifest_data.modules_path.clone());
 
         let name = matches.get_one::<String>("name");
         let formatter = matches.get_one::<String>("formatter");

@@ -23,11 +23,12 @@ use crate::{
     },
     core::{
         ast::transformations::transform_domain_schemas_index::transform_domain_schemas_index_ts,
-        base_path::find_app_root_path,
+        base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
         command::command,
         manifest::{
             ApplicationInitializationMetadata, InitializableManifestConfig,
-            InitializableManifestConfigMetadata, application::ApplicationManifestData,
+            InitializableManifestConfigMetadata, ManifestData,
+            application::ApplicationManifestData,
         },
         relative_path::get_relative_path,
         rendered_template::{RenderedTemplate, RenderedTemplatesCache, write_rendered_templates},
@@ -537,7 +538,7 @@ impl CliCommand for EjectCommand {
             }
         }
 
-        let (app_root_path, project_name) = find_app_root_path(matches)?;
+        let (app_root_path, project_name) = find_app_root_path(matches, RequiredLocation::Project)?;
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let mut manifest_data = toml::from_str::<ApplicationManifestData>(
@@ -545,16 +546,22 @@ impl CliCommand for EjectCommand {
         )
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
 
+        let base_path = prompt_base_path(
+            &app_root_path,
+            &ManifestData::Application(&manifest_data),
+            &project_name,
+            &mut line_editor,
+            &mut stdout,
+            matches,
+            1,
+        )?;
+
         manifest_data = manifest_data.initialize(InitializableManifestConfigMetadata::Application(
             ApplicationInitializationMetadata {
                 app_name: manifest_data.app_name.clone(),
                 database: None,
             },
         ));
-
-        let base_path = app_root_path
-            .join(manifest_data.modules_path.clone())
-            .join(project_name.clone().unwrap());
 
         let mut project_variant = None;
         if let Some(project) = manifest_data
@@ -565,7 +572,6 @@ impl CliCommand for EjectCommand {
             project_variant = project.variant.clone();
         }
 
-        println!("base_path: {}", base_path.display());
         let package_path = base_path.join("package.json");
 
         let package_data =
@@ -576,7 +582,6 @@ impl CliCommand for EjectCommand {
 
         let mut rendered_templates_cache = RenderedTemplatesCache::new();
 
-        println!("base_path: {}", base_path.display());
         let (dependencies_to_eject, filtered_dependencies) = eject_dependencies(
             &project_variant,
             &mut package_json,
@@ -587,7 +592,6 @@ impl CliCommand for EjectCommand {
             dryrun,
         )?;
 
-        println!("base_path2: {}", base_path.display());
         let app_files = WalkDir::new(base_path.clone())
             .into_iter()
             .filter_map(|e| e.ok())
@@ -601,7 +605,6 @@ impl CliCommand for EjectCommand {
         package_json["dependencies"] = filtered_dependencies.into();
 
         if !dryrun {
-            println!("base_path3: {}", base_path.display());
             perform_string_replacements(
                 &app_files,
                 &base_path,
@@ -609,13 +612,11 @@ impl CliCommand for EjectCommand {
                 &dependencies_to_eject,
                 &mut rendered_templates_cache,
             )?;
-            println!("base_path4: {}", base_path.display());
             merge_index_ts_files(
                 &base_path,
                 &dependencies_to_eject,
                 &mut rendered_templates_cache,
             )?;
-            println!("base_path5: {}", base_path.display());
             transform_schema_index_ts(
                 &base_path,
                 &dependencies_to_eject,

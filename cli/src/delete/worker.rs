@@ -17,13 +17,13 @@ use crate::{
         ERROR_FAILED_TO_WRITE_DOCKER_COMPOSE, ERROR_FAILED_TO_WRITE_MANIFEST, Runtime,
     },
     core::{
-        base_path::find_app_root_path,
+        base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
         command::command,
         docker::remove_worker_from_docker_compose,
         manifest::{
             ApplicationInitializationMetadata, InitializableManifestConfig,
-            InitializableManifestConfigMetadata, ProjectType, application::ApplicationManifestData,
-            remove_project_definition_from_manifest,
+            InitializableManifestConfigMetadata, ManifestData, ProjectType,
+            application::ApplicationManifestData, remove_project_definition_from_manifest,
         },
         package_json::remove_project_definition_to_package_json,
         pnpm_workspace::remove_project_definition_to_pnpm_workspace,
@@ -67,10 +67,10 @@ impl CliCommand for WorkerCommand {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let (app_root_path, _) = find_app_root_path(matches)?;
+        let (app_root_path, _) = find_app_root_path(matches, RequiredLocation::Application)?;
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
-        let mut manifest_data = toml::from_str::<ApplicationManifestData>(
+        let existing_manifest_data = toml::from_str::<ApplicationManifestData>(
             &read_to_string(&manifest_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
@@ -83,7 +83,7 @@ impl CliCommand for WorkerCommand {
             "worker name",
             None,
             |input: &str| {
-                manifest_data
+                existing_manifest_data
                     .projects
                     .iter()
                     .any(|project| project.name == input && project.r#type == ProjectType::Worker)
@@ -91,10 +91,20 @@ impl CliCommand for WorkerCommand {
             |_| "Worker not found".to_string(),
         )?;
 
-        manifest_data.initialize(InitializableManifestConfigMetadata::Application(
-            ApplicationInitializationMetadata {
-                app_name: manifest_data.app_name.clone(),
-                database: match manifest_data
+        let worker_base_path = prompt_base_path(
+            &app_root_path,
+            &ManifestData::Application(&existing_manifest_data),
+            &None,
+            &mut line_editor,
+            &mut stdout,
+            matches,
+            0,
+        )?;
+
+        let mut manifest_data = existing_manifest_data.initialize(
+            InitializableManifestConfigMetadata::Application(ApplicationInitializationMetadata {
+                app_name: existing_manifest_data.app_name.clone(),
+                database: match existing_manifest_data
                     .projects
                     .iter()
                     .find(|project| {
@@ -105,10 +115,8 @@ impl CliCommand for WorkerCommand {
                     Some(resource_inventory) => resource_inventory.database.clone(),
                     None => None,
                 },
-            },
-        ));
-
-        let worker_base_path = app_root_path.join(manifest_data.modules_path.clone());
+            }),
+        );
 
         let continue_delete_override = matches.get_flag("continue");
 

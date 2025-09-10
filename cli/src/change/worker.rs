@@ -27,7 +27,7 @@ use crate::{
             transform_mikroorm_config_ts::transform_mikroorm_config_ts,
             transform_registrations_ts::transform_registrations_ts_worker_type,
         },
-        base_path::find_app_root_path,
+        base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
         command::command,
         database::{get_database_variants, get_db_driver, is_in_memory_database},
         docker::{
@@ -417,26 +417,38 @@ impl CliCommand for WorkerCommand {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
         let mut rendered_templates_cache = RenderedTemplatesCache::new();
 
-        let (app_root_path, project_name) = find_app_root_path(matches)?;
+        let (app_root_path, project_name) = find_app_root_path(matches, RequiredLocation::Project)?;
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
-        let mut manifest_data: WorkerManifestData = toml::from_str::<WorkerManifestData>(
+        let existing_manifest_data: WorkerManifestData = toml::from_str::<WorkerManifestData>(
             &rendered_templates_cache
                 .get(&manifest_path)
                 .with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?
                 .unwrap()
                 .content,
         )
-        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
-        .initialize(InitializableManifestConfigMetadata::Project(
-            ProjectInitializationMetadata {
-                project_name: project_name.clone().unwrap(),
-            },
-        ));
+        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
 
-        let worker_base_path = app_root_path
-            .join(manifest_data.modules_path.clone())
-            .join(project_name.clone().unwrap());
+        let worker_base_path = prompt_base_path(
+            &app_root_path,
+            &ManifestData::Worker(&existing_manifest_data),
+            &project_name,
+            &mut line_editor,
+            &mut stdout,
+            matches,
+            1,
+        )?;
+
+        let mut manifest_data = existing_manifest_data.initialize(
+            InitializableManifestConfigMetadata::Project(ProjectInitializationMetadata {
+                project_name: worker_base_path
+                    .file_name()
+                    .unwrap()
+                    .to_string_lossy()
+                    .to_string()
+                    .clone(),
+            }),
+        );
 
         let runtime = manifest_data.runtime.parse()?;
 

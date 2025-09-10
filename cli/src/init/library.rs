@@ -19,7 +19,7 @@ use crate::{
         ERROR_FAILED_TO_READ_MANIFEST, Runtime, TestFramework,
     },
     core::{
-        base_path::find_app_root_path,
+        base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
         command::command,
         format::format_code,
         gitignore::generate_gitignore,
@@ -248,21 +248,30 @@ impl CliCommand for LibraryCommand {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let (app_root_path, _) = find_app_root_path(matches)?;
+        let (app_root_path, _) = find_app_root_path(matches, RequiredLocation::Application)?;
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let existing_manifest_data = from_str::<ApplicationManifestData>(
             &read_to_string(&manifest_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+
+        let base_path = prompt_base_path(
+            &app_root_path,
+            &ManifestData::Application(&existing_manifest_data),
+            &None,
+            &mut line_editor,
+            &mut stdout,
+            matches,
+            0,
+        )?;
+
         let manifest_data = existing_manifest_data.initialize(
             InitializableManifestConfigMetadata::Application(ApplicationInitializationMetadata {
                 app_name: existing_manifest_data.app_name.clone(),
                 database: None,
             }),
         );
-
-        let base_path = app_root_path.join(manifest_data.modules_path.clone());
 
         let library_name = prompt_with_validation(
             &mut line_editor,

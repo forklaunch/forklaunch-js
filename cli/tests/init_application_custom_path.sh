@@ -19,6 +19,13 @@ RUST_BACKTRACE=1 cargo run --release init application "test-app-current" \
     -A "Test User" \
     -L "MIT"
 
+cd src/modules
+
+pnpm install
+pnpm build
+
+cd ../..
+
 RUST_BACKTRACE=1 cargo run --release init application "test-app-custom" \
     --path "custom-test-path" \
     -o "modules" \
@@ -34,3 +41,8 @@ RUST_BACKTRACE=1 cargo run --release init application "test-app-custom" \
     -D "Test application" \
     -A "Test User" \
     -L "MIT"
+
+cd custom-test-path/modules
+
+pnpm install
+pnpm build

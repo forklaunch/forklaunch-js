@@ -24,7 +24,7 @@ use crate::{
             transform_seeders_index_ts::transform_seeders_index_ts,
             transform_server_ts::transform_server_ts,
         },
-        base_path::find_app_root_path,
+        base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
         command::command,
         database::{self, is_in_memory_database},
         format::format_code,
@@ -190,7 +190,8 @@ impl CliCommand for RouterCommand {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let (app_root_path, project_name) = find_app_root_path(matches)?;
+        let (app_root_path, project_name) =
+            find_app_root_path(matches, RequiredLocation::Application)?;
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let mut manifest_data = from_str::<RouterManifestData>(
@@ -212,16 +213,27 @@ impl CliCommand for RouterCommand {
             },
         )?;
 
+        let router_base_path = prompt_base_path(
+            &app_root_path,
+            &ManifestData::Router(&manifest_data),
+            &project_name,
+            &mut line_editor,
+            &mut stdout,
+            matches,
+            1,
+        )?;
+
         manifest_data = manifest_data.initialize(InitializableManifestConfigMetadata::Router(
             RouterInitializationMetadata {
-                project_name: project_name.clone().unwrap(),
+                project_name: router_base_path
+                    .file_name()
+                    .unwrap()
+                    .to_string_lossy()
+                    .to_string()
+                    .clone(),
                 router_name: Some(router_name.clone()),
             },
         ));
-
-        let router_base_path = app_root_path
-            .join(manifest_data.modules_path.clone())
-            .join(project_name.clone().unwrap());
 
         let infrastructure: Vec<Infrastructure> = if matches.ids().all(|id| id == "dryrun") {
             prompt_comma_separated_list(

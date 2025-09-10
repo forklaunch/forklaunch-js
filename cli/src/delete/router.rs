@@ -29,10 +29,10 @@ use crate::{
             },
             parse_ast_program::parse_ast_program,
         },
-        base_path::find_app_root_path,
+        base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
         command::command,
         manifest::{
-            InitializableManifestConfig, InitializableManifestConfigMetadata,
+            InitializableManifestConfig, InitializableManifestConfigMetadata, ManifestData,
             RouterInitializationMetadata, remove_router_definition_from_manifest,
             router::RouterManifestData,
         },
@@ -76,10 +76,10 @@ impl CliCommand for RouterCommand {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let (app_root_path, project_name) = find_app_root_path(matches)?;
+        let (app_root_path, project_name) = find_app_root_path(matches, RequiredLocation::Project)?;
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
-        let mut manifest_data: RouterManifestData = toml::from_str(
+        let existing_manifest_data: RouterManifestData = toml::from_str(
             &read_to_string(&manifest_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
@@ -92,26 +92,36 @@ impl CliCommand for RouterCommand {
             "router name",
             None,
             |input: &str| {
-                manifest_data.clone().projects.iter().any(|project| {
-                    if let Some(routers) = &project.routers {
-                        return routers.iter().any(|router| router == input);
-                    }
-                    false
-                })
+                existing_manifest_data
+                    .clone()
+                    .projects
+                    .iter()
+                    .any(|project| {
+                        if let Some(routers) = &project.routers {
+                            return routers.iter().any(|router| router == input);
+                        }
+                        false
+                    })
             },
             |_| "Router not found".to_string(),
         )?;
 
-        let router_base_path = app_root_path
-            .join(manifest_data.modules_path.clone())
-            .join(project_name.clone().unwrap());
+        let router_base_path = prompt_base_path(
+            &app_root_path,
+            &ManifestData::Router(&existing_manifest_data),
+            &project_name,
+            &mut line_editor,
+            &mut stdout,
+            matches,
+            1,
+        )?;
 
-        manifest_data = manifest_data.initialize(InitializableManifestConfigMetadata::Router(
-            RouterInitializationMetadata {
+        let mut manifest_data = existing_manifest_data.initialize(
+            InitializableManifestConfigMetadata::Router(RouterInitializationMetadata {
                 project_name: project_name.clone().unwrap(),
                 router_name: Some(router_name.clone()),
-            },
-        ));
+            }),
+        );
 
         let continue_delete_override = matches.get_flag("continue");
 
