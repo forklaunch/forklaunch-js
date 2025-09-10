@@ -1,5 +1,13 @@
 # @forklaunch/implementation-billing-base
 
+## 0.6.3
+
+### Patch Changes
+
+- Bump internal package versions
+- Updated dependencies
+  - @forklaunch/interfaces-worker@0.5.3
+
 ## 0.6.2
 
 ### Patch Changes
