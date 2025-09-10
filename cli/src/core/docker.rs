@@ -1208,20 +1208,16 @@ fn create_base_service(
 
     depends_on.extend(additional_depends_on);
 
-    let context_path = if let Some(raw_docker_compose_path) = docker_compose_path {
-        let path_components = raw_docker_compose_path.split(MAIN_SEPARATOR);
-
-        if path_components.clone().count() == 1 {
-            ".".to_string()
-        } else {
-            path_components
-                .clone()
-                .map(|_| "..")
-                .collect::<Vec<&str>>()
-                .join(&MAIN_SEPARATOR.to_string())
+    let context_rel = if let Some(raw) = docker_compose_path {
+        let compose_dir = std::path::Path::new(raw).parent().unwrap_or(Path::new(""));
+        let depth = compose_dir.components().count();
+        let mut up = PathBuf::new();
+        for _ in 0..depth {
+            up.push("..");
         }
+        up
     } else {
-        ".".to_string()
+        PathBuf::from(".")
     };
 
     DockerService {
@@ -1235,7 +1231,7 @@ fn create_base_service(
         )),
         restart: Some(Restart::Always),
         build: Some(DockerBuild {
-            context: format!("{}{}{}", context_path, MAIN_SEPARATOR, modules_path),
+            context: context_rel.join(modules_path).to_string_lossy().to_string(),
             dockerfile: format!("./Dockerfile"),
         }),
         image: Some(format!(

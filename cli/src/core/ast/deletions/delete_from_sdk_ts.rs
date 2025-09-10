@@ -150,7 +150,7 @@ mod tests {
 
         assert!(result.is_ok());
 
-        let generated_code = result.unwrap()
+        let generated_code = result.unwrap();
 
         assert!(!generated_code.contains("rtrTest:"));
         assert!(!generated_code.contains("rtrTestSdkRouter"));
