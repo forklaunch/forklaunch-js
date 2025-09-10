@@ -35,7 +35,9 @@ RUST_BACKTRACE=1 cargo run --release eject -d @forklaunch/implementation-billing
 
 cd ../..
 
-RUST_BACKTRACE=1 cargo run --release eject -d @forklaunch/implementation-billing-base -d @forklaunch/interfaces-billing -d @forklaunch/infrastructure-redis -c
+RUST_BACKTRACE=1 cargo run --release eject -d @forklaunch/implementation-billing-base -d @forklaunch/interfaces-billing -d @forklaunch/infrastructure-redis -p modules/billing -c
+
+cd modules
 
 bun run build
 
