@@ -1,7 +1,6 @@
 use std::{
     fs::{exists, read_to_string, remove_file},
     io::Write,
-    path::Path,
 };
 
 use anyhow::{Context, Result};
@@ -30,10 +29,10 @@ use crate::{
             },
             parse_ast_program::parse_ast_program,
         },
-        base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
         command::command,
         manifest::{
-            InitializableManifestConfig, InitializableManifestConfigMetadata,
+            InitializableManifestConfig, InitializableManifestConfigMetadata, ManifestData,
             RouterInitializationMetadata, remove_router_definition_from_manifest,
             router::RouterManifestData,
         },
@@ -61,7 +60,7 @@ impl CliCommand for RouterCommand {
                 Arg::new("base_path")
                     .short('p')
                     .long("path")
-                    .help("The application path to initialize the library in"),
+                    .help("The project path to delete the router from"),
             )
             .arg(
                 Arg::new("continue")
@@ -77,23 +76,11 @@ impl CliCommand for RouterCommand {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let base_path_input = prompt_base_path(
-            &mut line_editor,
-            &mut stdout,
-            matches,
-            &BasePathLocation::Router,
-            &BasePathType::Delete,
-        )?;
-        let base_path = Path::new(&base_path_input);
+        let (app_root_path, project_name) = find_app_root_path(matches, RequiredLocation::Project)?;
+        let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
-        let config_path = Path::new(&base_path)
-            .parent()
-            .unwrap()
-            .join(".forklaunch")
-            .join("manifest.toml");
-
-        let mut manifest_data: RouterManifestData = toml::from_str(
-            &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
+        let existing_manifest_data: RouterManifestData = toml::from_str(
+            &read_to_string(&manifest_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
 
@@ -105,36 +92,36 @@ impl CliCommand for RouterCommand {
             "router name",
             None,
             |input: &str| {
-                manifest_data.clone().projects.iter().any(|project| {
-                    if let Some(routers) = &project.routers {
-                        return routers.iter().any(|router| router == input);
-                    }
-                    false
-                })
+                existing_manifest_data
+                    .clone()
+                    .projects
+                    .iter()
+                    .any(|project| {
+                        if let Some(routers) = &project.routers {
+                            return routers.iter().any(|router| router == input);
+                        }
+                        false
+                    })
             },
             |_| "Router not found".to_string(),
         )?;
 
-        manifest_data = manifest_data.initialize(InitializableManifestConfigMetadata::Router(
-            RouterInitializationMetadata {
-                project_name: base_path.file_name().unwrap().to_string_lossy().to_string(),
-                router_name: Some(router_name.clone()),
-            },
-        ));
+        let router_base_path = prompt_base_path(
+            &app_root_path,
+            &ManifestData::Router(&existing_manifest_data),
+            &project_name,
+            &mut line_editor,
+            &mut stdout,
+            matches,
+            1,
+        )?;
 
-        let project_name = manifest_data
-            .clone()
-            .projects
-            .iter()
-            .find(|project| {
-                if let Some(routers) = &project.routers {
-                    return routers.iter().any(|router| router == &router_name);
-                }
-                false
-            })
-            .unwrap()
-            .name
-            .clone();
+        let mut manifest_data = existing_manifest_data.initialize(
+            InitializableManifestConfigMetadata::Router(RouterInitializationMetadata {
+                project_name: project_name.clone().unwrap(),
+                router_name: Some(router_name.clone()),
+            }),
+        );
 
         let continue_delete_override = matches.get_flag("continue");
 
@@ -154,7 +141,7 @@ impl CliCommand for RouterCommand {
 
         let manifest_content = remove_router_definition_from_manifest(
             &mut manifest_data,
-            &project_name,
+            &project_name.unwrap(),
             &router_name,
         )?;
 
@@ -162,39 +149,39 @@ impl CliCommand for RouterCommand {
         let pascal_case_name = router_name.to_case(Case::Pascal);
 
         let file_paths = [
-            base_path
+            router_base_path
                 .join("api")
                 .join("controllers")
                 .join(format!("{}.controller.ts", camel_case_name)),
-            base_path
+            router_base_path
                 .join("api")
                 .join("routes")
                 .join(format!("{}.routes.ts", camel_case_name)),
-            base_path
+            router_base_path
                 .join("domain")
                 .join("interfaces")
                 .join(format!("{}.interface.ts", camel_case_name)),
-            base_path
+            router_base_path
                 .join("domain")
                 .join("mappers")
                 .join(format!("{}.mappers.ts", camel_case_name)),
-            base_path
+            router_base_path
                 .join("domain")
                 .join("schemas")
                 .join(format!("{}.schema.ts", camel_case_name)),
-            base_path
+            router_base_path
                 .join("domain")
                 .join("types")
                 .join(format!("{}.types.ts", camel_case_name)),
-            base_path
+            router_base_path
                 .join("persistence")
                 .join("entities")
                 .join(format!("{}Record.entity.ts", camel_case_name)),
-            base_path
+            router_base_path
                 .join("persistence")
                 .join("seeders")
                 .join(format!("{}Record.seeder.ts", camel_case_name)),
-            base_path
+            router_base_path
                 .join("services")
                 .join(format!("{}.service.ts", camel_case_name)),
         ];
@@ -206,7 +193,7 @@ impl CliCommand for RouterCommand {
         }
 
         let allocator = Allocator::default();
-        let entities_path = base_path
+        let entities_path = router_base_path
             .join("persistence")
             .join("entities")
             .join("index.ts");
@@ -222,7 +209,7 @@ impl CliCommand for RouterCommand {
             &format!("./{}Record.entity", camel_case_name).as_str(),
         )?;
 
-        let seeders_path = base_path
+        let seeders_path = router_base_path
             .join("persistence")
             .join("seeders")
             .join("index.ts");
@@ -238,7 +225,7 @@ impl CliCommand for RouterCommand {
             &format!("./{}Record.seeder", camel_case_name).as_str(),
         )?;
 
-        let seed_data_path = base_path.join("persistence").join("seed.data.ts");
+        let seed_data_path = router_base_path.join("persistence").join("seed.data.ts");
         let seed_data_source_text = read_to_string(&seed_data_path).unwrap();
         let mut seed_data_program = parse_ast_program(
             &allocator,
@@ -253,7 +240,7 @@ impl CliCommand for RouterCommand {
         let new_seed_data_content =
             delete_from_seed_data_ts(&allocator, &mut seed_data_program, &camel_case_name)?;
 
-        let registrations_path = base_path.join("registrations.ts");
+        let registrations_path = router_base_path.join("registrations.ts");
         let registrations_text = read_to_string(&registrations_path)?;
         let registrations_type = SourceType::from_path(&registrations_path)?;
         let mut registrations_program =
@@ -270,7 +257,7 @@ impl CliCommand for RouterCommand {
             "serviceDependencies",
         )?;
 
-        let server_program_path = base_path.join("server.ts");
+        let server_program_path = router_base_path.join("server.ts");
         let server_program_text = read_to_string(&server_program_path)?;
         let server_program_type = SourceType::from_path(&server_program_path)?;
         let mut server_program =
@@ -278,17 +265,18 @@ impl CliCommand for RouterCommand {
         let new_server_content =
             delete_from_server_ts_router(&allocator, &mut server_program, &router_name)?;
 
-        let sdk_path = base_path.join("sdk.ts");
+        let sdk_path = router_base_path.join("sdk.ts");
         let sdk_text = read_to_string(&sdk_path)?;
         let sdk_type = SourceType::from_path(&sdk_path)?;
         let mut sdk_program = parse_ast_program(&allocator, &sdk_text, sdk_type);
+
         let new_sdk_content =
             delete_from_sdk_client_input(&allocator, &mut sdk_program, &camel_case_name)?;
 
         write_rendered_templates(
             &vec![
                 RenderedTemplate {
-                    path: config_path,
+                    path: manifest_path,
                     content: manifest_content,
                     context: Some(ERROR_FAILED_TO_WRITE_MANIFEST.to_string()),
                 },

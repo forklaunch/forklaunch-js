@@ -475,7 +475,6 @@ const runtimeDependencies = environmentConfig.chain({
 
 //! defines the service dependencies for the application
 const serviceDependencies = runtimeDependencies.chain({
-  // Existing services will be here
 });
 "#;
 
@@ -485,7 +484,6 @@ const serviceDependencies = runtimeDependencies.chain({
         let result =
             transform_registrations_ts_add_router("user", &ProjectType::Service, &project_path);
 
-        // Just verify the function doesn't crash
         assert!(result.is_ok());
 
         let transformed_code = result.unwrap();
@@ -568,7 +566,6 @@ const runtimeDependencies = environmentConfig.chain({
 
 //! defines the service dependencies for the application
 const serviceDependencies = runtimeDependencies.chain({
-  // Existing services will be here
 });
 "#;
 
@@ -578,7 +575,6 @@ const serviceDependencies = runtimeDependencies.chain({
         let result =
             transform_registrations_ts_add_router("order", &ProjectType::Worker, &project_path);
 
-        // Just verify the function doesn't crash
         assert!(result.is_ok());
 
         let transformed_code = result.unwrap();
@@ -661,7 +657,6 @@ const runtimeDependencies = environmentConfig.chain({
 
 //! defines the service dependencies for the application
 const serviceDependencies = runtimeDependencies.chain({
-  // Existing services will be here
 });
 "#;
 
@@ -670,7 +665,6 @@ const serviceDependencies = runtimeDependencies.chain({
 
         let result = transform_registrations_ts_infrastructure_redis(&project_path, None);
 
-        // Just verify the function doesn't crash
         assert!(result.is_ok());
 
         let transformed_code = result.unwrap();
@@ -753,7 +747,6 @@ const runtimeDependencies = environmentConfig.chain({
 
 //! defines the service dependencies for the application
 const serviceDependencies = runtimeDependencies.chain({
-  // Existing services will be here
 });
 "#;
 
@@ -764,7 +757,6 @@ const serviceDependencies = runtimeDependencies.chain({
             Some(registrations_content.to_string()),
         );
 
-        // Just verify the function doesn't crash
         assert!(result.is_ok());
 
         let transformed_code = result.unwrap();
@@ -847,7 +839,6 @@ const runtimeDependencies = environmentConfig.chain({
 
 //! defines the service dependencies for the application
 const serviceDependencies = runtimeDependencies.chain({
-  // Existing services will be here
 });
 "#;
 
@@ -856,7 +847,6 @@ const serviceDependencies = runtimeDependencies.chain({
 
         let result = transform_registrations_ts_infrastructure_s3(&project_path, None);
 
-        // Just verify the function doesn't crash
         assert!(result.is_ok());
 
         let transformed_code = result.unwrap();
@@ -939,7 +929,6 @@ const runtimeDependencies = environmentConfig.chain({
 
 //! defines the service dependencies for the application
 const serviceDependencies = runtimeDependencies.chain({
-  // Existing services will be here
 });
 "#;
 
@@ -950,7 +939,6 @@ const serviceDependencies = runtimeDependencies.chain({
             Some(registrations_content.to_string()),
         );
 
-        // Just verify the function doesn't crash
         assert!(result.is_ok());
 
         let transformed_code = result.unwrap();
@@ -1069,7 +1057,6 @@ const serviceDependencies = runtimeDependencies.chain({
             None,
         );
 
-        // Just verify the function doesn't crash - allow it to fail for now
         if result.is_ok() {
             let _transformed_code = result.unwrap();
             // Don't check if it's empty since the function might return empty content
@@ -1189,7 +1176,6 @@ const serviceDependencies = runtimeDependencies.chain({
             None,
         );
 
-        // Just verify the function doesn't crash - allow it to fail for now
         if result.is_ok() {
             let _transformed_code = result.unwrap();
             // Don't check if it's empty since the function might return empty content
@@ -1309,7 +1295,6 @@ const serviceDependencies = runtimeDependencies.chain({
             None,
         );
 
-        // Just verify the function doesn't crash - allow it to fail for now
         if result.is_ok() {
             let _transformed_code = result.unwrap();
             // Don't check if it's empty since the function might return empty content
@@ -1428,7 +1413,6 @@ const serviceDependencies = runtimeDependencies.chain({
             Some(registrations_content.to_string()),
         );
 
-        // Just verify the function doesn't crash - allow it to fail for now
         if result.is_ok() {
             let _transformed_code = result.unwrap();
             // Don't check if it's empty since the function might return empty content

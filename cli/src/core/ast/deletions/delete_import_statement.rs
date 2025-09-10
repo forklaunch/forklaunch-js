@@ -31,6 +31,7 @@ pub(crate) fn delete_import_statement<'a>(
         .code)
 }
 
+#[allow(dead_code)]
 pub(crate) fn delete_import_specifier<'a>(
     allocator: &'a Allocator,
     sdk_program_ast: &mut Program<'a>,

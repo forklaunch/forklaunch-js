@@ -17,12 +17,12 @@ use crate::{
         ERROR_FAILED_TO_READ_PACKAGE_JSON,
     },
     core::{
-        base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
         command::command,
         format::format_code,
         manifest::{
-            InitializableManifestConfig, InitializableManifestConfigMetadata, MutableManifestData,
-            ProjectInitializationMetadata, library::LibraryManifestData,
+            InitializableManifestConfig, InitializableManifestConfigMetadata, ManifestData,
+            MutableManifestData, ProjectInitializationMetadata, library::LibraryManifestData,
         },
         move_template::{MoveTemplate, move_template_files},
         name::validate_name,
@@ -119,30 +119,34 @@ impl CliCommand for LibraryCommand {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let base_path_input = prompt_base_path(
+        let (app_root_path, project_name) = find_app_root_path(matches, RequiredLocation::Project)?;
+        let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
+
+        let existing_manifest_data: LibraryManifestData = toml::from_str::<LibraryManifestData>(
+            &read_to_string(&manifest_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
+        )
+        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+
+        let library_base_path = prompt_base_path(
+            &app_root_path,
+            &ManifestData::Library(&existing_manifest_data),
+            &project_name,
             &mut line_editor,
             &mut stdout,
             matches,
-            &BasePathLocation::Library,
-            &BasePathType::Change,
+            1,
         )?;
-        let base_path = Path::new(&base_path_input);
 
-        let config_path = &base_path
-            .parent()
-            .unwrap()
-            .join(".forklaunch")
-            .join("manifest.toml");
-
-        let mut manifest_data: LibraryManifestData = toml::from_str::<LibraryManifestData>(
-            &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
-        )
-        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
-        .initialize(InitializableManifestConfigMetadata::Project(
-            ProjectInitializationMetadata {
-                project_name: base_path.file_name().unwrap().to_string_lossy().to_string(),
-            },
-        ));
+        let mut manifest_data = existing_manifest_data.initialize(
+            InitializableManifestConfigMetadata::Project(ProjectInitializationMetadata {
+                project_name: library_base_path
+                    .file_name()
+                    .unwrap()
+                    .to_string_lossy()
+                    .to_string()
+                    .clone(),
+            }),
+        );
 
         let name = matches.get_one::<String>("name");
         let description = matches.get_one::<String>("description");
@@ -201,7 +205,8 @@ impl CliCommand for LibraryCommand {
 
         let mut rendered_templates_cache = RenderedTemplatesCache::new();
 
-        let application_package_json_path = base_path.parent().unwrap().join("package.json");
+        let application_package_json_path =
+            library_base_path.parent().unwrap().join("package.json");
         let application_package_json_data = rendered_templates_cache
             .get(&application_package_json_path)
             .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?
@@ -211,7 +216,7 @@ impl CliCommand for LibraryCommand {
         let mut application_package_json_to_write =
             serde_json::from_str::<ApplicationPackageJson>(&application_package_json_data)?;
 
-        let project_package_json_path = base_path.join("package.json");
+        let project_package_json_path = library_base_path.join("package.json");
         let project_package_json_data = rendered_templates_cache
             .get(&project_package_json_path)
             .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?
@@ -227,7 +232,7 @@ impl CliCommand for LibraryCommand {
 
         if let Some(name) = name {
             move_templates.push(change_name(
-                &base_path,
+                &library_base_path,
                 &name,
                 confirm,
                 &mut manifest_data,
@@ -249,9 +254,9 @@ impl CliCommand for LibraryCommand {
         );
 
         rendered_templates_cache.insert(
-            config_path.clone().to_string_lossy(),
+            manifest_path.clone().to_string_lossy(),
             RenderedTemplate {
-                path: config_path.to_path_buf(),
+                path: manifest_path.to_path_buf(),
                 content: toml::to_string_pretty(&manifest_data)?,
                 context: None,
             },
@@ -286,7 +291,7 @@ impl CliCommand for LibraryCommand {
                 &manifest_data.library_name
             )?;
             stdout.reset()?;
-            format_code(&base_path, &manifest_data.runtime.parse()?);
+            format_code(&library_base_path, &manifest_data.runtime.parse()?);
         }
 
         Ok(())

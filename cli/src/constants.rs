@@ -245,6 +245,19 @@ choice! {
             exclusive_files: Some(&["iam-better-auth"])
         }
     }
+
+    pub(crate) enum ModulesPath {
+        Src = Choice {
+            id: "src/modules",
+            description: Some("src/modules"),
+            exclusive_files: None,
+        },
+        Modules = Choice {
+            id: "modules",
+            description: Some("modules"),
+            exclusive_files: None,
+        },
+    }
 }
 
 // ERRORS
@@ -305,7 +318,7 @@ pub(crate) const ERROR_FAILED_TO_CREATE_LICENSE: &str =
 pub(crate) const ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE: &str =
     "Failed to generate pnpm-workspace.yaml.";
 pub(crate) const ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE: &str =
-    "Failed to add project metadata to docker-compose.yaml.";
+    "Failed to add project metadata to docker compose yaml.";
 pub(crate) const ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST: &str =
     "Failed to add project metadata to manifest.";
 pub(crate) const ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON: &str =
@@ -337,6 +350,7 @@ pub(crate) const ERROR_FAILED_TO_ADD_BASE_ENTITY_TO_CORE: &str =
 pub(crate) const ERROR_FAILED_TO_WRITE_SERVICE_FILES: &str = "Failed to write service files.";
 pub(crate) const ERROR_FAILED_TO_EJECT_DIRECTORY_NOT_EJECTABLE: &str = "Failed to eject directory. Please check your target directory is a preconfigured forklaunch module.";
 pub(crate) const ERROR_FAILED_TO_UPDATE_DOCKERFILE: &str = "Failed to update Dockerfile.";
+pub(crate) const ERROR_MANIFEST_NOT_FOUND: &str = "Could not find .forklaunch/manifest.toml. Make sure you're in a valid project directory or specify the correct base_path.";
 
 pub(crate) fn get_core_module_description(name: &str) -> String {
     format!(

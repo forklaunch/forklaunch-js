@@ -28,7 +28,7 @@ use crate::{
         WorkerType,
     },
     core::{
-        base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
         command::command,
         database::{
             add_base_entity_to_core, get_database_port, get_db_driver, is_in_memory_database,
@@ -94,6 +94,7 @@ impl WorkerCommand {
 fn generate_basic_worker(
     worker_name: &String,
     base_path: &Path,
+    app_root_path: &Path,
     manifest_data: &mut WorkerManifestData,
     stdout: &mut StandardStream,
     dryrun: bool,
@@ -143,7 +144,7 @@ fn generate_basic_worker(
         generate_gitignore(&output_path).with_context(|| ERROR_FAILED_TO_CREATE_GITIGNORE)?,
     );
     rendered_templates.extend(
-        add_worker_to_artifacts(manifest_data, base_path)
+        add_worker_to_artifacts(manifest_data, base_path, app_root_path)
             .with_context(|| ERROR_FAILED_TO_ADD_SERVICE_METADATA_TO_ARTIFACTS)?,
     );
 
@@ -178,9 +179,10 @@ fn generate_basic_worker(
 fn add_worker_to_artifacts(
     manifest_data: &mut WorkerManifestData,
     base_path: &Path,
+    app_root_path: &Path,
 ) -> Result<Vec<RenderedTemplate>> {
     let docker_compose_buffer =
-        add_worker_definition_to_docker_compose(manifest_data, base_path, None)
+        add_worker_definition_to_docker_compose(manifest_data, app_root_path, None)
             .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
 
     let forklaunch_manifest_buffer = add_project_definition_to_manifest(
@@ -234,14 +236,21 @@ fn add_worker_to_artifacts(
 
     let mut rendered_templates = Vec::new();
 
+    let docker_compose_path = if let Some(docker_compose_path) = &manifest_data.docker_compose_path
+    {
+        app_root_path.join(docker_compose_path)
+    } else {
+        app_root_path.join("docker-compose.yaml")
+    };
+
     rendered_templates.push(RenderedTemplate {
-        path: base_path.join("docker-compose.yaml"),
+        path: docker_compose_path,
         content: docker_compose_buffer,
         context: Some(ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE.to_string()),
     });
 
     rendered_templates.push(RenderedTemplate {
-        path: base_path.join(".forklaunch").join("manifest.toml"),
+        path: app_root_path.join(".forklaunch").join("manifest.toml"),
         content: forklaunch_manifest_buffer.clone(),
         context: Some(ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST.to_string()),
     });
@@ -547,7 +556,7 @@ pub(crate) fn generate_worker_package_json(
             }
         }),
         mikro_orm: Some(ProjectMikroOrm {
-            config_paths: Some(
+            manifest_paths: Some(
                 MIKRO_ORM_CONFIG_PATHS
                     .iter()
                     .map(|s| s.to_string())
@@ -607,29 +616,30 @@ impl CliCommand for WorkerCommand {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let base_path_input = prompt_base_path(
+        let (app_root_path, _) = find_app_root_path(matches, RequiredLocation::Application)?;
+        let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
+
+        let existing_manifest_data = from_str::<ApplicationManifestData>(
+            &read_to_string(manifest_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
+        )
+        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+
+        let base_path = prompt_base_path(
+            &app_root_path,
+            &ManifestData::Application(&existing_manifest_data),
+            &None,
             &mut line_editor,
             &mut stdout,
             matches,
-            &BasePathLocation::Worker,
-            &BasePathType::Init,
+            0,
         )?;
-        let base_path = Path::new(&base_path_input);
 
-        let config_path = Path::new(&base_path)
-            .join(".forklaunch")
-            .join("manifest.toml");
-
-        let existing_manifest_data = from_str::<ApplicationManifestData>(
-            &read_to_string(config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
-        )
-        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
-        .initialize(InitializableManifestConfigMetadata::Application(
-            ApplicationInitializationMetadata {
-                app_name: base_path.file_name().unwrap().to_string_lossy().to_string(),
+        let manifest_data = existing_manifest_data.initialize(
+            InitializableManifestConfigMetadata::Application(ApplicationInitializationMetadata {
+                app_name: existing_manifest_data.app_name.clone(),
                 database: None,
-            },
-        ));
+            }),
+        );
 
         let worker_name = prompt_with_validation(
             &mut line_editor,
@@ -638,7 +648,7 @@ impl CliCommand for WorkerCommand {
             matches,
             "worker name",
             None,
-            |input: &str| validate_name(input) && !existing_manifest_data.app_name.contains(input),
+            |input: &str| validate_name(input) && !manifest_data.app_name.contains(input),
             |_| {
                 "Worker name cannot be a substring of the application name, empty or include numbers or spaces. Please try again"
                     .to_string()
@@ -685,35 +695,37 @@ impl CliCommand for WorkerCommand {
 
         let mut manifest_data = WorkerManifestData {
             // Common fields from ApplicationManifestData
-            id: existing_manifest_data.id.clone(),
-            app_name: existing_manifest_data.app_name.clone(),
-            camel_case_app_name: existing_manifest_data.camel_case_app_name.clone(),
-            pascal_case_app_name: existing_manifest_data.pascal_case_app_name.clone(),
-            kebab_case_app_name: existing_manifest_data.kebab_case_app_name.clone(),
-            app_description: existing_manifest_data.app_description.clone(),
-            author: existing_manifest_data.author.clone(),
-            cli_version: existing_manifest_data.cli_version.clone(),
-            formatter: existing_manifest_data.formatter.clone(),
-            linter: existing_manifest_data.linter.clone(),
-            validator: existing_manifest_data.validator.clone(),
-            runtime: existing_manifest_data.runtime.clone(),
-            test_framework: existing_manifest_data.test_framework.clone(),
-            projects: existing_manifest_data.projects.clone(),
-            http_framework: existing_manifest_data.http_framework.clone(),
-            license: existing_manifest_data.license.clone(),
-            project_peer_topology: existing_manifest_data.project_peer_topology.clone(),
-            is_biome: existing_manifest_data.is_biome,
-            is_eslint: existing_manifest_data.is_eslint,
-            is_oxlint: existing_manifest_data.is_oxlint,
-            is_prettier: existing_manifest_data.is_prettier,
-            is_express: existing_manifest_data.is_express,
-            is_hyper_express: existing_manifest_data.is_hyper_express,
-            is_zod: existing_manifest_data.is_zod,
-            is_typebox: existing_manifest_data.is_typebox,
-            is_bun: existing_manifest_data.is_bun,
-            is_node: existing_manifest_data.is_node,
-            is_vitest: existing_manifest_data.is_vitest,
-            is_jest: existing_manifest_data.is_jest,
+            id: manifest_data.id.clone(),
+            app_name: manifest_data.app_name.clone(),
+            modules_path: manifest_data.modules_path.clone(),
+            docker_compose_path: manifest_data.docker_compose_path.clone(),
+            camel_case_app_name: manifest_data.camel_case_app_name.clone(),
+            pascal_case_app_name: manifest_data.pascal_case_app_name.clone(),
+            kebab_case_app_name: manifest_data.kebab_case_app_name.clone(),
+            app_description: manifest_data.app_description.clone(),
+            author: manifest_data.author.clone(),
+            cli_version: manifest_data.cli_version.clone(),
+            formatter: manifest_data.formatter.clone(),
+            linter: manifest_data.linter.clone(),
+            validator: manifest_data.validator.clone(),
+            runtime: manifest_data.runtime.clone(),
+            test_framework: manifest_data.test_framework.clone(),
+            projects: manifest_data.projects.clone(),
+            http_framework: manifest_data.http_framework.clone(),
+            license: manifest_data.license.clone(),
+            project_peer_topology: manifest_data.project_peer_topology.clone(),
+            is_biome: manifest_data.is_biome,
+            is_eslint: manifest_data.is_eslint,
+            is_oxlint: manifest_data.is_oxlint,
+            is_prettier: manifest_data.is_prettier,
+            is_express: manifest_data.is_express,
+            is_hyper_express: manifest_data.is_hyper_express,
+            is_zod: manifest_data.is_zod,
+            is_typebox: manifest_data.is_typebox,
+            is_bun: manifest_data.is_bun,
+            is_node: manifest_data.is_node,
+            is_vitest: manifest_data.is_vitest,
+            is_jest: manifest_data.is_jest,
 
             // Worker-specific fields
             worker_name: worker_name.clone(),
@@ -801,6 +813,7 @@ impl CliCommand for WorkerCommand {
         generate_basic_worker(
             &worker_name,
             &base_path,
+            &app_root_path,
             &mut manifest_data,
             &mut stdout,
             dryrun,

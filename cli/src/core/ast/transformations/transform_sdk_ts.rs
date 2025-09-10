@@ -73,7 +73,6 @@ mod tests {
 import { schemaValidator } from '@forklaunch/core';
 
 export const sdkClient = sdkClient(schemaValidator, {
-    // Existing SDK routes
 });
 "#;
 
@@ -90,7 +89,6 @@ export const sdkClient = sdkClient(schemaValidator, {
 import { schemaValidator } from "@forklaunch/core";
 export const sdkClient = sdkClient(schemaValidator, { userManagement: userManagementSdkRouter });"#;
 
-        // Normalize both strings by removing empty lines and trimming
         let normalized_result = transformed_code
             .lines()
             .map(|line| line.trim())

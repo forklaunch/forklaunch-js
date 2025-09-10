@@ -19,14 +19,16 @@ use crate::{
     constants::{
         ERROR_FAILED_TO_EJECT_DIRECTORY_NOT_EJECTABLE, ERROR_FAILED_TO_PARSE_MANIFEST,
         ERROR_FAILED_TO_PARSE_PACKAGE_JSON, ERROR_FAILED_TO_READ_MANIFEST,
+        ERROR_FAILED_TO_READ_PACKAGE_JSON,
     },
     core::{
         ast::transformations::transform_domain_schemas_index::transform_domain_schemas_index_ts,
-        base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
         command::command,
         manifest::{
             ApplicationInitializationMetadata, InitializableManifestConfig,
-            InitializableManifestConfigMetadata, application::ApplicationManifestData,
+            InitializableManifestConfigMetadata, ManifestData,
+            application::ApplicationManifestData,
         },
         relative_path::get_relative_path,
         rendered_template::{RenderedTemplate, RenderedTemplatesCache, write_rendered_templates},
@@ -490,7 +492,7 @@ impl CliCommand for EjectCommand {
     fn command(&self) -> Command {
         command("eject", "Eject a forklaunch project")
             .alias("ej")
-            .arg(Arg::new("base_path").short('b'))
+            .arg(Arg::new("base_path").short('p'))
             .arg(
                 Arg::new("continue")
                     .short('c')
@@ -536,26 +538,23 @@ impl CliCommand for EjectCommand {
             }
         }
 
+        let (app_root_path, project_name) = find_app_root_path(matches, RequiredLocation::Project)?;
+        let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
+
+        let mut manifest_data = toml::from_str::<ApplicationManifestData>(
+            &read_to_string(manifest_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
+        )
+        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+
         let base_path = prompt_base_path(
+            &app_root_path,
+            &ManifestData::Application(&manifest_data),
+            &project_name,
             &mut line_editor,
             &mut stdout,
             matches,
-            &BasePathLocation::DeferToType,
-            &BasePathType::Eject,
+            1,
         )?;
-
-        let base_path = Path::new(&base_path);
-
-        let config_path = base_path
-            .parent()
-            .unwrap()
-            .join(".forklaunch")
-            .join("manifest.toml");
-
-        let mut manifest_data = toml::from_str::<ApplicationManifestData>(
-            &read_to_string(config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
-        )
-        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
 
         manifest_data = manifest_data.initialize(InitializableManifestConfigMetadata::Application(
             ApplicationInitializationMetadata {
@@ -568,7 +567,7 @@ impl CliCommand for EjectCommand {
         if let Some(project) = manifest_data
             .projects
             .iter()
-            .find(|project| base_path.file_name().unwrap().to_str().unwrap() == project.name)
+            .find(|project| project_name.clone().unwrap() == project.name)
         {
             project_variant = project.variant.clone();
         }
@@ -576,7 +575,7 @@ impl CliCommand for EjectCommand {
         let package_path = base_path.join("package.json");
 
         let package_data =
-            read_to_string(&package_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?;
+            read_to_string(&package_path).with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?;
 
         let mut package_json: Value =
             from_str(&package_data).with_context(|| ERROR_FAILED_TO_PARSE_PACKAGE_JSON)?;
@@ -593,7 +592,7 @@ impl CliCommand for EjectCommand {
             dryrun,
         )?;
 
-        let app_files = WalkDir::new(base_path)
+        let app_files = WalkDir::new(base_path.clone())
             .into_iter()
             .filter_map(|e| e.ok())
             .filter(|e| {

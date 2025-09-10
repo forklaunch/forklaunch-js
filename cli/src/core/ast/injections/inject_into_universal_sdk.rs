@@ -92,7 +92,6 @@ fn inject_into_universal_sdk_function<'a>(
                     }
                 }
 
-                // Handle return type annotation (Promise<{ }>) injection
                 if let Some(return_type) = &mut arrow_func.return_type {
                     if let TSType::TSTypeReference(type_ref) = &mut return_type.type_annotation {
                         if let Some(type_params) = &mut type_ref.type_arguments {

@@ -142,14 +142,12 @@ app.listen(port, () => {});
 
         let transformed_code = result.unwrap();
 
-        // Verify the order router components are removed
         assert!(!transformed_code.contains("app.use(orderRouter);"));
         assert!(
             !transformed_code
                 .contains("import { OrderRouter } from \"./api/routes/order.routes\";")
         );
 
-        // Verify other routers are preserved
         assert!(
             transformed_code
                 .contains("const UserServiceFactory = ci.scopedResolver(tokens.UserService);")
@@ -169,7 +167,6 @@ app.listen(port, () => {});
                 .contains("import { ProductRouter } from \"./api/routes/product.routes\";")
         );
 
-        // Verify basic structure is preserved
         assert!(transformed_code.contains("import express from \"express\";"));
         assert!(transformed_code.contains("const app = express();"));
         assert!(transformed_code.contains("app.listen(port"));
@@ -201,11 +198,9 @@ app.listen(port, () => {});
 
         let transformed_code = result.unwrap();
 
-        // Verify all UserManagement router components are removed
         assert!(!transformed_code.contains("app.use(userManagementRouter);"));
         assert!(!transformed_code.contains("import { UserManagementRouter }"));
 
-        // Verify basic structure is preserved
         assert!(transformed_code.contains("import express from \"express\";"));
         assert!(transformed_code.contains("const app = express();"));
         assert!(transformed_code.contains("app.listen(port"));
@@ -238,11 +233,9 @@ app.listen(port, () => {});
 
         let transformed_code = result.unwrap();
 
-        // Verify all OrderProcessing router components are removed
         assert!(!transformed_code.contains("app.use(orderProcessingRouter);"));
         assert!(!transformed_code.contains("import { OrderProcessingRouter }"));
 
-        // Verify basic structure is preserved
         assert!(transformed_code.contains("import express from \"express\";"));
         assert!(transformed_code.contains("const app = express();"));
         assert!(transformed_code.contains("app.listen(port"));
@@ -260,11 +253,9 @@ app.listen(port, () => {});
 
         let transformed_code = result.unwrap();
 
-        // Verify the user router components are removed
         assert!(!transformed_code.contains("app.use(userRouter);"));
         assert!(!transformed_code.contains("import { UserRouter }"));
 
-        // Verify basic structure is preserved
         assert!(transformed_code.contains("import express from \"express\";"));
         assert!(transformed_code.contains("const app = express();"));
         assert!(transformed_code.contains("app.listen(port"));
@@ -447,7 +438,6 @@ app.listen(port, () => {});
         assert!(!transformed_code.contains("app.use('/v1', userRouter);"));
         assert!(!transformed_code.contains("import { UserRouter }"));
 
-        // Verify basic structure is preserved
         assert!(transformed_code.contains("import express from \"express\";"));
         assert!(transformed_code.contains("const app = express();"));
         assert!(transformed_code.contains("app.listen(port"));
