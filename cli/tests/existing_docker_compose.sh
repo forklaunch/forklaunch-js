@@ -148,7 +148,7 @@ if [ $? -ne 0 ]; then
 fi
 
 cd ../..
-if ! docker-compose -f infra/docker-compose.yaml config > /dev/null 2>&1; then
+if ! docker compose -f infra/docker-compose.yaml config > /dev/null 2>&1; then
     echo "ERROR: infra/docker-compose.yaml has invalid syntax"
     exit 1
 fi
