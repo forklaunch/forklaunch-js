@@ -1,59 +1,80 @@
-use std::{
-    fs::read_to_string,
-    path::{Path, PathBuf},
-};
+use std::{fs::read_to_string, path::Path};
 
 use anyhow::Result;
 
 use crate::core::{
-    manifest::application::ApplicationManifestData, rendered_template::RenderedTemplate,
+    manifest::application::ApplicationManifestData,
+    rendered_template::{RenderedTemplate, TEMPLATES_DIR},
 };
-
-fn find_git_root(start_dir: &Path) -> Option<PathBuf> {
-    let mut base_path = start_dir.canonicalize().ok()?;
-    loop {
-        let git_dir = base_path.join(".git");
-        if git_dir.exists() {
-            return Some(base_path.clone());
-        }
-        match base_path.parent() {
-            Some(parent) => base_path = parent.to_path_buf(),
-            None => break,
-        }
-    }
-    None
-}
 
 pub(crate) fn create_or_merge_husky_pre_commit(
     path: &Path,
     manifest_data: &ApplicationManifestData,
-) -> Result<RenderedTemplate> {
-    let git_root = find_git_root(path).or(Some(path.to_path_buf())).unwrap();
+) -> Result<Vec<RenderedTemplate>> {
+    let mut rendered_templates = Vec::new();
 
-    let husky_pre_commit_path = git_root.join(".husky").join("pre-commit");
+    let husky_pre_commit_path = path.join(".husky").join("pre-commit");
 
-    let content = if husky_pre_commit_path.exists() {
-        read_to_string(&husky_pre_commit_path)?
-    } else {
-        format!(
-            "cd {}\n{} sort-package-json */package.json\n{} lint-staged --relative\n",
-            manifest_data.modules_path,
-            if manifest_data.runtime == "bun" {
-                "bun"
+    let content_to_append = format!(
+        "cd {}\n{} sort-package-json */package.json\n{} lint-staged --relative\n",
+        manifest_data.modules_path,
+        if manifest_data.runtime == "bun" {
+            "bun"
+        } else {
+            "pnpm"
+        },
+        if manifest_data.runtime == "bun" {
+            "bun"
+        } else {
+            "pnpm"
+        }
+    );
+
+    let content = format!(
+        "{}",
+        if husky_pre_commit_path.exists() {
+            let existing_content = read_to_string(&husky_pre_commit_path)?;
+            if !existing_content.contains(content_to_append.as_str()) {
+                if existing_content.ends_with("\n") {
+                    existing_content + &content_to_append
+                } else {
+                    existing_content + "\n" + &content_to_append
+                }
             } else {
-                "pnpm"
-            },
-            if manifest_data.runtime == "bun" {
-                "bun"
-            } else {
-                "pnpm"
+                existing_content
             }
-        )
-    };
+        } else {
+            content_to_append
+        }
+    );
 
-    Ok(RenderedTemplate {
+    let husky_dir = TEMPLATES_DIR.get_dir("husky/_").unwrap();
+
+    for file in husky_dir.files() {
+        rendered_templates.push(RenderedTemplate {
+            path: path.join(".husky").join("_").join(
+                file.path()
+                    .file_name()
+                    .unwrap()
+                    .to_string_lossy()
+                    .to_string(),
+            ),
+            content: file.contents_utf8().unwrap().to_string(),
+            context: None,
+        });
+    }
+
+    rendered_templates.push(RenderedTemplate {
+        path: path.join(".husky").join("_").join(".gitignore"),
+        content: "*".to_string(),
+        context: None,
+    });
+
+    rendered_templates.push(RenderedTemplate {
         path: husky_pre_commit_path,
         content,
         context: None,
-    })
+    });
+
+    Ok(rendered_templates)
 }

@@ -403,7 +403,7 @@ impl CliCommand for ApplicationCommand {
         } else {
             if prompt_for_confirmation(
                 &mut line_editor,
-                "Would you like to use the current directory for project files? (y/n) ",
+                "Would you like to use the current directory for application files? (y/N) ",
             )? {
                 std::env::current_dir()
                     .with_context(|| "Failed to get current working directory")?
@@ -411,19 +411,17 @@ impl CliCommand for ApplicationCommand {
                 Path::new(&prompt_with_validation(
                     &mut line_editor,
                     &mut stdout,
-                    "application_path",
+                    "path",
                     matches,
-                    "Please provide where you want to create the application (NOTE: this should be a relative path):",
+                    "application path",
                     None,
                     |input: &str| {
                         let trimmed = input.trim();
-                        !trimmed.is_empty()
-                            && !trimmed.contains('\0')
+                        !trimmed.is_empty() && !trimmed.contains('\0')
                     },
-                    |_| {
-                        "Project path must be a valid path. Please try again".to_string()
-                    },
-                )?).to_path_buf()
+                    |_| "Application path must be a valid path. Please try again".to_string(),
+                )?)
+                .to_path_buf()
             }
         };
 
@@ -438,7 +436,7 @@ impl CliCommand for ApplicationCommand {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
             writeln!(
                 stdout,
-                "No 'src' folder in project root. Please confirm where application files will be initialized."
+                "No 'src' folder in project root. Please confirm where project files will be initialized."
             )?;
             stdout.reset()?;
             let modules_path: String = prompt_with_validation(
@@ -446,7 +444,7 @@ impl CliCommand for ApplicationCommand {
                 &mut stdout,
                 "modules-path",
                 matches,
-                "Confirm where application files will be initialized:",
+                "preferred modules path",
                 Some(&ModulesPath::VARIANTS),
                 |input| ModulesPath::VARIANTS.contains(&input),
                 |_| "Invalid path. Please provide a valid destination path.".to_string(),
@@ -603,6 +601,10 @@ impl CliCommand for ApplicationCommand {
 
                 if validate_modules(&modules_to_test, &mut global_module_config).is_ok() {
                     break;
+                } else {
+                    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+                    writeln!(stdout, "Invalid modules combination. Please try again.")?;
+                    stdout.reset()?;
                 }
             }
             modules_to_test
@@ -1150,10 +1152,7 @@ impl CliCommand for ApplicationCommand {
             dryrun,
         )?;
 
-        rendered_templates.push(create_or_merge_husky_pre_commit(
-            &Path::new(&origin_path),
-            &data,
-        )?);
+        rendered_templates.extend(create_or_merge_husky_pre_commit(&origin_path, &data)?);
 
         rendered_templates.extend(generate_with_template(
             Some(&application_path),

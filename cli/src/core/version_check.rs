@@ -129,10 +129,20 @@ pub(crate) fn precheck_version(
         }
     }
 
-    let start_path: PathBuf = if let Some(p) = matches.get_one::<String>("base_path") {
-        PathBuf::from(p)
-    } else if let Some(p) = matches.get_one::<String>("path") {
-        PathBuf::from(p)
+    let mut current_matches = matches;
+
+    while let Some((_, sub_matches)) = current_matches.subcommand() {
+        current_matches = sub_matches;
+    }
+
+    let start_path: PathBuf = if current_matches.try_get_one::<String>("base_path").is_ok()
+        && let Some(base_path) = current_matches.get_one::<String>("base_path")
+    {
+        PathBuf::from(base_path)
+    } else if current_matches.try_get_one::<String>("path").is_ok()
+        && let Some(path) = current_matches.get_one::<String>("path")
+    {
+        PathBuf::from(path)
     } else {
         current_dir().unwrap_or_else(|_| PathBuf::from("."))
     };
