@@ -38,7 +38,7 @@ pub(crate) fn create_or_merge_husky_pre_commit(
                 if existing_content.ends_with("\n") {
                     existing_content + &content_to_append
                 } else {
-                    existing_content + "\n"
+                    existing_content + "\n" + &content_to_append
                 }
             } else {
                 existing_content

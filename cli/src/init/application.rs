@@ -1152,10 +1152,7 @@ impl CliCommand for ApplicationCommand {
             dryrun,
         )?;
 
-        rendered_templates.extend(create_or_merge_husky_pre_commit(
-            &Path::new(&origin_path),
-            &data,
-        )?);
+        rendered_templates.extend(create_or_merge_husky_pre_commit(&origin_path, &data)?);
 
         rendered_templates.extend(generate_with_template(
             Some(&application_path),
