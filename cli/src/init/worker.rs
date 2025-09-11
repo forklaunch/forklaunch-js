@@ -350,7 +350,7 @@ pub(crate) fn generate_worker_package_json(
                 } else {
                     None
                 },
-                seed: if manifest_data.is_database_enabled {
+                seed: if manifest_data.is_database_enabled && !manifest_data.is_mongo {
                     Some(PROJECT_SEED_SCRIPT.to_string())
                 } else {
                     None
