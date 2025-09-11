@@ -1,7 +1,7 @@
-import { getEnvVar } from '@forklaunch/common';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { context, trace } from '@opentelemetry/api';
 import { v4 } from 'uuid';
+import { getEnvVar } from '../../../environment';
 import {
   ATTR_CORRELATION_ID,
   ATTR_SERVICE_NAME

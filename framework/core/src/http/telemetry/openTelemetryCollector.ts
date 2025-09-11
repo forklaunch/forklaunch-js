@@ -1,4 +1,3 @@
-import { getEnvVar } from '@forklaunch/common';
 import { HyperExpressInstrumentation } from '@forklaunch/opentelemetry-instrumentation-hyper-express';
 import {
   Counter,
@@ -27,6 +26,7 @@ import {
 } from '@opentelemetry/semantic-conventions';
 import dotenv from 'dotenv';
 import { LevelWithSilent, LevelWithSilentOrString } from 'pino';
+import { getEnvVar } from '../../environment';
 import { isForklaunchRequest } from '../guards/isForklaunchRequest';
 import {
   LogFn,
