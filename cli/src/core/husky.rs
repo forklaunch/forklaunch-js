@@ -65,6 +65,12 @@ pub(crate) fn create_or_merge_husky_pre_commit(
     }
 
     rendered_templates.push(RenderedTemplate {
+        path: path.join(".husky").join("_").join(".gitignore"),
+        content: "*".to_string(),
+        context: None,
+    });
+
+    rendered_templates.push(RenderedTemplate {
         path: husky_pre_commit_path,
         content,
         context: None,
