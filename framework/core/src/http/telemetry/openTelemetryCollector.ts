@@ -213,7 +213,6 @@ export const httpRequestsTotalCounter = metrics
   .createCounter<{
     [ATTR_SERVICE_NAME]: string;
     [ATTR_API_NAME]: string;
-    [ATTR_CORRELATION_ID]: string;
     [ATTR_HTTP_REQUEST_METHOD]: string;
     [ATTR_HTTP_ROUTE]: string;
     [ATTR_HTTP_RESPONSE_STATUS_CODE]: number;
