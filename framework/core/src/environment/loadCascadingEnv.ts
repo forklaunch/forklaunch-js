@@ -89,7 +89,7 @@ export function loadCascadingEnv(
  */
 function findApplicationRoot(startPath: string): string {
   let currentPath = resolve(startPath);
-
+  const originalStart = currentPath;
   const maxDepth = 10;
   let depth = 0;
 
@@ -112,5 +112,5 @@ function findApplicationRoot(startPath: string): string {
     depth++;
   }
 
-  return currentPath;
+  return originalStart;
 }
