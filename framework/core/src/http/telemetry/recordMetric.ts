@@ -1,3 +1,4 @@
+import { getEnvVar } from '@forklaunch/common';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import {
   ATTR_HTTP_REQUEST_METHOD,
@@ -12,7 +13,6 @@ import {
   ParamsDictionary,
   VersionedRequests
 } from '..';
-import { getEnvVar } from '../../environment';
 import { ATTR_API_NAME } from './constants';
 import { httpRequestsTotalCounter } from './openTelemetryCollector';
 

@@ -1,3 +1,4 @@
+export * from '../../../common/src/getEnvVar';
 export * from '../environment';
 export { createConfigInjector } from './configInjector';
 export type { ConfigInjector, ValidConfigInjector } from './configInjector';

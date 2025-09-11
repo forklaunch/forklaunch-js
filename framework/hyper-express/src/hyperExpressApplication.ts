@@ -1,5 +1,4 @@
-import { safeStringify } from '@forklaunch/common';
-import { getEnvVar } from '@forklaunch/core/environment';
+import { getEnvVar, safeStringify } from '@forklaunch/common';
 import {
   ATTR_HTTP_RESPONSE_STATUS_CODE,
   DocsConfiguration,

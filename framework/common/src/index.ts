@@ -1,6 +1,7 @@
 export * from './camelCase';
 export * from './emptyObject';
 export * from './extractArgumentNames';
+export * from './getEnvVar';
 export * from './guards/isAsyncGenerator';
 export * from './guards/isNever';
 export * from './guards/isNodeJsWriteableStream';

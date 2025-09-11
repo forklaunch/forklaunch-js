@@ -1,3 +1,4 @@
+import dotenv from 'dotenv';
 import { existsSync } from 'fs';
 import { dirname, resolve } from 'path';
 
@@ -50,9 +51,6 @@ export function getCascadingEnvPaths(
  */
 export function loadCascadingEnv(
   projectEnvPath: string | undefined,
-  dotenvConfig: (options: { path: string; override?: boolean }) => {
-    error?: Error;
-  },
   projectRoot: string = process.cwd()
 ): {
   rootEnvLoaded: boolean;
@@ -69,12 +67,12 @@ export function loadCascadingEnv(
   };
 
   if (paths.rootEnvExists && paths.rootEnvPath) {
-    const rootResult = dotenvConfig({ path: paths.rootEnvPath });
+    const rootResult = dotenv.config({ path: paths.rootEnvPath });
     result.rootEnvLoaded = !rootResult?.error;
   }
 
   if (paths.projectEnvExists && paths.projectEnvFilePath) {
-    const projectResult = dotenvConfig({
+    const projectResult = dotenv.config({
       path: paths.projectEnvFilePath,
       override: true
     });
