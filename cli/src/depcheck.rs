@@ -7,7 +7,6 @@ use std::{
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgMatches, Command};
-use rustyline::{Editor, history::DefaultHistory};
 use serde_json::{Value, from_str, json};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
@@ -15,11 +14,10 @@ use crate::{
     CliCommand,
     constants::{ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST},
     core::{
-        base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        base_path::{RequiredLocation, find_app_root_path},
         command::command,
         manifest::application::ApplicationManifestData,
     },
-    prompt::ArrayCompleter,
 };
 
 struct ProjectDependencyVersion {
@@ -52,23 +50,13 @@ impl CliCommand for DepcheckCommand {
     }
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
-        let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let base_path = prompt_base_path(
-            &mut line_editor,
-            &mut stdout,
-            matches,
-            &BasePathLocation::Anywhere,
-            &BasePathType::Depcheck,
-        )?;
-
-        let config_path = Path::new(&base_path)
-            .join(".forklaunch")
-            .join("manifest.toml");
+        let (app_root_path, _) = find_app_root_path(matches, RequiredLocation::Application)?;
+        let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let manifest_data: ApplicationManifestData = toml::from_str(
-            &read_to_string(config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
+            &read_to_string(&manifest_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
 
@@ -82,7 +70,7 @@ impl CliCommand for DepcheckCommand {
                     .iter()
                     .try_for_each(|project| -> Result<()> {
                         if let Some(package_json_contents) = &read_to_string(
-                            Path::new(&base_path).join(project).join("package.json"),
+                            Path::new(&app_root_path).join(manifest_data.modules_path.clone()).join(project).join("package.json"),
                         )
                         .with_context(|| format!("Failed to read package.json for {}", project))
                         .ok()

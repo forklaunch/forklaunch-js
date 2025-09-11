@@ -58,7 +58,6 @@ export function enrichBetterAuthApi<T extends BetterAuthOptions>(
     httpRequestsTotalCounter.add(1, {
       [ATTR_SERVICE_NAME]: getEnvVar('OTEL_SERVICE_NAME'),
       [ATTR_API_NAME]: `Better Auth: ${req.path.replace('/api/auth/', '').replace('/', '-')}`,
-      [ATTR_CORRELATION_ID]: req.context.correlationId,
       [ATTR_HTTP_REQUEST_METHOD]: req.method,
       [ATTR_HTTP_ROUTE]: req.originalPath ?? req.path,
       [ATTR_HTTP_RESPONSE_STATUS_CODE]: Number(res.statusCode) || 0

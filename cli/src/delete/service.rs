@@ -1,7 +1,6 @@
 use std::{
     fs::{read_to_string, remove_dir_all},
     io::Write,
-    path::Path,
 };
 
 use anyhow::{Context, Result};
@@ -18,13 +17,13 @@ use crate::{
         ERROR_FAILED_TO_WRITE_DOCKER_COMPOSE, ERROR_FAILED_TO_WRITE_MANIFEST, Runtime,
     },
     core::{
-        base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
         command::command,
         docker::remove_service_from_docker_compose,
         manifest::{
             ApplicationInitializationMetadata, InitializableManifestConfig,
-            InitializableManifestConfigMetadata, ProjectType, application::ApplicationManifestData,
-            remove_project_definition_from_manifest,
+            InitializableManifestConfigMetadata, ManifestData, ProjectType,
+            application::ApplicationManifestData, remove_project_definition_from_manifest,
         },
         package_json::remove_project_definition_to_package_json,
         pnpm_workspace::remove_project_definition_to_pnpm_workspace,
@@ -68,21 +67,11 @@ impl CliCommand for ServiceCommand {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let base_path_input = prompt_base_path(
-            &mut line_editor,
-            &mut stdout,
-            matches,
-            &BasePathLocation::Anywhere,
-            &BasePathType::Delete,
-        )?;
-        let base_path = Path::new(&base_path_input);
+        let (app_root_path, _) = find_app_root_path(matches, RequiredLocation::Application)?;
+        let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
-        let config_path = Path::new(&base_path)
-            .join(".forklaunch")
-            .join("manifest.toml");
-
-        let mut manifest_data = toml::from_str::<ApplicationManifestData>(
-            &read_to_string(&config_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
+        let existing_manifest_data = toml::from_str::<ApplicationManifestData>(
+            &read_to_string(&manifest_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
 
@@ -94,7 +83,7 @@ impl CliCommand for ServiceCommand {
             "service name",
             None,
             |input: &str| {
-                manifest_data
+                existing_manifest_data
                     .projects
                     .iter()
                     .any(|project| project.name == input && project.r#type == ProjectType::Service)
@@ -102,10 +91,24 @@ impl CliCommand for ServiceCommand {
             |_| "Service not found".to_string(),
         )?;
 
-        manifest_data = manifest_data.initialize(InitializableManifestConfigMetadata::Application(
-            ApplicationInitializationMetadata {
-                app_name: base_path.file_name().unwrap().to_string_lossy().to_string(),
-                database: match manifest_data
+        let service_base_path = prompt_base_path(
+            &app_root_path,
+            &ManifestData::Application(&existing_manifest_data),
+            &None,
+            &mut line_editor,
+            &mut stdout,
+            matches,
+            0,
+        )?;
+
+        let mut manifest_data = existing_manifest_data.initialize(
+            InitializableManifestConfigMetadata::Application(ApplicationInitializationMetadata {
+                app_name: app_root_path
+                    .file_name()
+                    .unwrap()
+                    .to_string_lossy()
+                    .to_string(),
+                database: match existing_manifest_data
                     .projects
                     .iter()
                     .find(|project| {
@@ -116,8 +119,8 @@ impl CliCommand for ServiceCommand {
                     Some(resource_inventory) => resource_inventory.database.clone(),
                     None => None,
                 },
-            },
-        ));
+            }),
+        );
 
         let continue_delete_override = matches.get_flag("continue");
 
@@ -138,9 +141,14 @@ impl CliCommand for ServiceCommand {
         let manifest_content =
             remove_project_definition_from_manifest(&mut manifest_data, &service_name)?;
 
-        remove_dir_all(&base_path.join(&service_name))?;
+        remove_dir_all(&service_base_path.join(&service_name))?;
 
-        let docker_compose_path = base_path.join("docker-compose.yaml");
+        let docker_compose_path =
+            if let Some(docker_compose_path) = &manifest_data.docker_compose_path {
+                app_root_path.join(docker_compose_path)
+            } else {
+                app_root_path.join("docker-compose.yaml")
+            };
         let mut docker_compose = serde_yml::from_str(
             &read_to_string(&docker_compose_path)
                 .with_context(|| ERROR_FAILED_TO_READ_DOCKER_COMPOSE)?,
@@ -150,7 +158,7 @@ impl CliCommand for ServiceCommand {
 
         let mut rendered_templates = vec![
             RenderedTemplate {
-                path: config_path,
+                path: manifest_path,
                 content: manifest_content,
                 context: Some(ERROR_FAILED_TO_WRITE_MANIFEST.to_string()),
             },
@@ -164,15 +172,21 @@ impl CliCommand for ServiceCommand {
         match manifest_data.runtime.parse()? {
             Runtime::Node => {
                 rendered_templates.push(RenderedTemplate {
-                    path: base_path.join("pnpm-workspace.yaml"),
-                    content: remove_project_definition_to_pnpm_workspace(base_path, &service_name)?,
+                    path: service_base_path.join("pnpm-workspace.yaml"),
+                    content: remove_project_definition_to_pnpm_workspace(
+                        &service_base_path,
+                        &service_name,
+                    )?,
                     context: Some(ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE.to_string()),
                 });
             }
             Runtime::Bun => {
                 rendered_templates.push(RenderedTemplate {
-                    path: base_path.join("package.json"),
-                    content: remove_project_definition_to_package_json(base_path, &service_name)?,
+                    path: service_base_path.join("package.json"),
+                    content: remove_project_definition_to_package_json(
+                        &service_base_path,
+                        &service_name,
+                    )?,
                     context: Some(ERROR_FAILED_TO_CREATE_PACKAGE_JSON.to_string()),
                 });
             }
@@ -180,7 +194,7 @@ impl CliCommand for ServiceCommand {
 
         remove_project_from_universal_sdk(
             &mut rendered_templates,
-            base_path,
+            &service_base_path,
             &manifest_data.app_name,
             &service_name,
         )?;

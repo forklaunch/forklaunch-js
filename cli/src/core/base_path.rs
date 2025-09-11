@@ -1,94 +1,76 @@
 use std::{
     env::current_dir,
-    path::{Path, PathBuf},
+    path::{MAIN_SEPARATOR, Path, PathBuf},
 };
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
 use clap::ArgMatches;
 use rustyline::{Editor, history::DefaultHistory};
 use termcolor::StandardStream;
+use walkdir::WalkDir;
 
 use crate::{
-    constants::ERROR_FAILED_TO_GET_CWD,
+    constants::{ERROR_FAILED_TO_GET_CWD, ERROR_MANIFEST_NOT_FOUND},
+    core::manifest::ManifestData,
     prompt::{ArrayCompleter, prompt_with_validation},
 };
 
-pub(crate) enum BasePathType {
-    Init,
-    Change,
-    #[allow(dead_code)]
-    Delete,
-    Eject,
-    Depcheck,
-}
-
-#[derive(PartialEq)]
-pub(crate) enum BasePathLocation {
-    Application,
-    Service,
-    Worker,
-    Router,
-    Anywhere,
-    Library,
-    DeferToType,
-}
-
-fn base_path_parent_count(
-    base_path_location: &BasePathLocation,
-    base_path_type: &BasePathType,
-) -> i32 {
-    let count = match base_path_location {
-        BasePathLocation::Application => -1,
-        BasePathLocation::Service => 0,
-        BasePathLocation::Worker => 0,
-        BasePathLocation::Library => 0,
-        BasePathLocation::DeferToType => 0,
-        BasePathLocation::Router => 1,
-        BasePathLocation::Anywhere => 2,
-    } + match base_path_type {
-        BasePathType::Init => 0,
-        BasePathType::Change => 1,
-        BasePathType::Delete => 0,
-        BasePathType::Eject => 1,
-        BasePathType::Depcheck => 0,
-    };
-    count
-}
-
-fn check_base_path(
-    base_path: &PathBuf,
-    base_path_location: &BasePathLocation,
-    base_path_type: &BasePathType,
-) -> bool {
-    let base_path_parent_count = base_path_parent_count(base_path_location, base_path_type);
+pub(crate) fn check_base_path(base_path: &PathBuf, parent_count: usize) -> bool {
     let mut base_path_to_test = base_path.to_path_buf();
-    for _ in 0..base_path_parent_count {
+    for _ in 0..parent_count {
         base_path_to_test = base_path_to_test.parent().unwrap().to_path_buf();
     }
 
-    if base_path_to_test
+    base_path_to_test
         .join(".forklaunch")
         .join("manifest.toml")
         .exists()
-    {
-        true
-    } else {
-        false
-    }
 }
 
-fn find_base_path(
-    base_path_location: &BasePathLocation,
-    base_path_type: &BasePathType,
-) -> Option<PathBuf> {
-    let mut base_path = current_dir().unwrap().to_path_buf();
-    for _ in 0..base_path_parent_count(base_path_location, base_path_type) {
-        if base_path.join(".forklaunch").join("manifest.toml").exists() {
-            return Some(base_path);
+pub(crate) fn prompt_base_path(
+    app_root_path: &PathBuf,
+    manifest_data: &ManifestData,
+    project_name: &Option<String>,
+    line_editor: &mut Editor<ArrayCompleter, DefaultHistory>,
+    stdout: &mut StandardStream,
+    matches: &ArgMatches,
+    module_path_offset: usize,
+) -> Result<PathBuf> {
+    let modules_path = match manifest_data {
+        ManifestData::Application(application_manifest_data) => {
+            application_manifest_data.modules_path.clone()
         }
-        base_path = base_path.parent().unwrap().to_path_buf();
+        ManifestData::Router(router_manifest_data) => router_manifest_data.modules_path.clone(),
+        ManifestData::Service(service_manifest_data) => service_manifest_data.modules_path.clone(),
+        ManifestData::Library(library_manifest_data) => library_manifest_data.modules_path.clone(),
+        ManifestData::Worker(worker_manifest_data) => worker_manifest_data.modules_path.clone(),
+    };
+    let path_count = modules_path.split(MAIN_SEPARATOR).count() + module_path_offset;
+
+    let mut base_path = match project_name {
+        Some(project_name) => app_root_path
+            .join(modules_path.clone())
+            .join(project_name.clone()),
+        None => app_root_path.join(modules_path.clone()),
+    };
+
+    while !base_path.exists() || !check_base_path(&base_path, path_count) {
+        base_path = PathBuf::from(prompt_with_validation(
+            line_editor,
+            stdout,
+            "base_path",
+            matches,
+            "base path",
+            None,
+            |input: &str| {
+                let input_path = &Path::new(input).to_path_buf();
+                check_base_path(&input_path, path_count)
+            },
+            |_| "Base path is not correct. Please try again".to_string(),
+        )?);
     }
-    None
+
+    Ok(base_path)
 }
 
 pub(crate) fn find_nearest_manifest_from(start: &Path) -> Option<PathBuf> {
@@ -121,62 +103,63 @@ pub(crate) fn find_nearest_manifest_root_unbounded() -> Option<PathBuf> {
     None
 }
 
-pub(crate) fn prompt_base_path(
-    line_editor: &mut Editor<ArrayCompleter, DefaultHistory>,
-    stdout: &mut StandardStream,
-    matches: &ArgMatches,
-    base_path_location: &BasePathLocation,
-    base_path_type: &BasePathType,
-) -> Result<String> {
-    let current_path = current_dir().with_context(|| ERROR_FAILED_TO_GET_CWD)?;
+fn find_in_modules_dirs(start_dir: &Path, file_name: &str) -> Option<PathBuf> {
+    for entry in WalkDir::new(start_dir).into_iter().filter_map(|e| e.ok()) {
+        if entry.file_type().is_dir() {
+            let entry_path = entry.path();
 
-    let maybe_defined_base_path = matches.get_one::<String>("base_path");
-    let base_path = if let Some(base_path) = maybe_defined_base_path {
-        base_path.to_string()
-    } else {
-        let maybe_correct_path = match base_path_location {
-            BasePathLocation::Anywhere => {
-                if let Some(base_path) = find_base_path(base_path_location, base_path_type) {
-                    Some(base_path.to_string_lossy().to_string())
-                } else {
-                    None
-                }
+            let module_path = entry_path.join("modules").join(file_name);
+            if module_path.exists() {
+                return Some(module_path);
             }
-            _ => {
-                if check_base_path(&current_path, base_path_location, base_path_type) {
-                    Some(current_path.to_string_lossy().to_string())
-                } else {
-                    None
-                }
-            }
-        };
-
-        if let Some(base_path) = maybe_correct_path {
-            base_path
-        } else {
-            prompt_with_validation(
-                line_editor,
-                stdout,
-                "base_path",
-                matches,
-                "base path (optional, press enter for current directory)",
-                None,
-                |input: &str| {
-                    let base_path = if input.trim().is_empty() {
-                        &current_path
-                    } else {
-                        &Path::new(input).to_path_buf()
-                    };
-                    check_base_path(base_path, base_path_location, base_path_type)
-                },
-                |_| "Base path is not correct. Please try again".to_string(),
-            )?
         }
+    }
+    None
+}
+
+pub(crate) enum RequiredLocation {
+    Application,
+    Project,
+}
+
+pub(crate) fn find_app_root_path(
+    matches: &ArgMatches,
+    required_location: RequiredLocation,
+) -> Result<(PathBuf, Option<String>)> {
+    let current_dir = current_dir().with_context(|| ERROR_FAILED_TO_GET_CWD)?;
+    let relative_path = matches.get_one::<String>("base_path");
+
+    let start_path = match relative_path {
+        Some(relative_path) => {
+            if current_dir.join(relative_path.clone()).exists() {
+                current_dir.join(relative_path.clone())
+            } else {
+                let file_name = Path::new(relative_path)
+                    .file_name()
+                    .and_then(|name| name.to_str())
+                    .unwrap_or(relative_path);
+
+                find_in_modules_dirs(&current_dir, file_name).unwrap_or(current_dir.clone())
+            }
+        }
+        None => current_dir.clone(),
     };
 
-    Ok(Path::new(&base_path)
-        .canonicalize()
-        .unwrap()
-        .to_string_lossy()
-        .to_string())
+    let project_name = match required_location {
+        RequiredLocation::Application => None,
+        RequiredLocation::Project => Some(
+            start_path
+                .file_name()
+                .unwrap()
+                .to_string_lossy()
+                .to_string(),
+        ),
+    };
+
+    let manifest_path = find_nearest_manifest_from(&start_path);
+
+    match manifest_path {
+        Some(manifest) => Ok((manifest, project_name)),
+        None => bail!(ERROR_MANIFEST_NOT_FOUND),
+    }
 }

@@ -32,6 +32,7 @@ pub(crate) fn transform_sdk_ts(router_name: &str, base_path: &Path) -> Result<St
         &mut sdk_program,
         &mut sdk_router_import_injection,
         "./server",
+        &sdk_source_text,
     )?;
 
     let sdk_client_skeleton_text = format!(
@@ -72,7 +73,6 @@ mod tests {
 import { schemaValidator } from '@forklaunch/core';
 
 export const sdkClient = sdkClient(schemaValidator, {
-    // Existing SDK routes
 });
 "#;
 
@@ -89,7 +89,6 @@ export const sdkClient = sdkClient(schemaValidator, {
 import { schemaValidator } from "@forklaunch/core";
 export const sdkClient = sdkClient(schemaValidator, { userManagement: userManagementSdkRouter });"#;
 
-        // Normalize both strings by removing empty lines and trimming
         let normalized_result = transformed_code
             .lines()
             .map(|line| line.trim())

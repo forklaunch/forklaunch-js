@@ -8,6 +8,7 @@ pub(crate) mod docker;
 pub(crate) mod env;
 pub(crate) mod format;
 pub(crate) mod gitignore;
+pub(crate) mod husky;
 pub(crate) mod iam;
 pub(crate) mod license;
 pub(crate) mod manifest;

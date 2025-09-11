@@ -11,12 +11,12 @@ use crate::{
     CliCommand,
     constants::{ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST, Runtime},
     core::{
-        base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
         command::command,
         format::format_code,
         manifest::{
-            InitializableManifestConfig, InitializableManifestConfigMetadata, ProjectEntry,
-            RouterInitializationMetadata, router::RouterManifestData,
+            InitializableManifestConfig, InitializableManifestConfigMetadata, ManifestData,
+            ProjectEntry, RouterInitializationMetadata, router::RouterManifestData,
         },
         name::validate_name,
         removal_template::{RemovalTemplate, remove_template_files},
@@ -98,41 +98,44 @@ impl CliCommand for RouterCommand {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
         let mut rendered_templates_cache = RenderedTemplatesCache::new();
 
-        let base_path_input = prompt_base_path(
-            &mut line_editor,
-            &mut stdout,
-            matches,
-            &BasePathLocation::Router,
-            &BasePathType::Change,
-        )?;
-        let base_path = Path::new(&base_path_input);
-
-        let config_path = &base_path
-            .parent()
-            .unwrap()
-            .join(".forklaunch")
-            .join("manifest.toml");
+        let (app_root_path, project_name) = find_app_root_path(matches, RequiredLocation::Project)?;
+        let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let existing_name = matches.get_one::<String>("existing-name");
         let new_name = matches.get_one::<String>("new-name");
         let dryrun = matches.get_flag("dryrun");
         let confirm = matches.get_flag("confirm");
 
-        let project_name = base_path.file_name().unwrap().to_string_lossy().to_string();
-        let mut manifest_data = toml::from_str::<RouterManifestData>(
+        let existing_manifest_data = toml::from_str::<RouterManifestData>(
             &rendered_templates_cache
-                .get(&config_path)
+                .get(&manifest_path)
                 .with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?
                 .unwrap()
                 .content,
         )
-        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
-        .initialize(InitializableManifestConfigMetadata::Router(
-            RouterInitializationMetadata {
-                project_name: project_name.clone(),
+        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+
+        let router_base_path = prompt_base_path(
+            &app_root_path,
+            &ManifestData::Router(&existing_manifest_data),
+            &project_name,
+            &mut line_editor,
+            &mut stdout,
+            matches,
+            1,
+        )?;
+
+        let mut manifest_data = existing_manifest_data.initialize(
+            InitializableManifestConfigMetadata::Router(RouterInitializationMetadata {
+                project_name: router_base_path
+                    .file_name()
+                    .unwrap()
+                    .to_string_lossy()
+                    .to_string()
+                    .clone(),
                 router_name: Some(existing_name.unwrap().clone()),
-            },
-        ));
+            }),
+        );
 
         let selected_options = if matches.ids().all(|id| id == "dryrun" || id == "confirm") {
             let options = vec!["name"];
@@ -172,7 +175,7 @@ impl CliCommand for RouterCommand {
 
         if let Some(new_name) = new_name {
             removal_templates.extend(change_name(
-                &base_path,
+                &router_base_path,
                 &existing_name.unwrap(),
                 &new_name,
                 confirm,
@@ -180,7 +183,7 @@ impl CliCommand for RouterCommand {
                 &mut manifest_data
                     .projects
                     .iter_mut()
-                    .find(|project| project.name == project_name)
+                    .find(|project| project.name == project_name.clone().unwrap())
                     .unwrap(),
                 &mut rendered_templates_cache,
                 &mut stdout,
@@ -188,9 +191,9 @@ impl CliCommand for RouterCommand {
         }
 
         rendered_templates_cache.insert(
-            config_path.clone().to_string_lossy(),
+            manifest_path.clone().to_string_lossy(),
             RenderedTemplate {
-                path: config_path.to_path_buf(),
+                path: manifest_path.to_path_buf(),
                 content: toml::to_string_pretty(&manifest_data)?,
                 context: None,
             },
@@ -207,7 +210,7 @@ impl CliCommand for RouterCommand {
         if !dryrun {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
             stdout.reset()?;
-            format_code(&base_path, &manifest_data.runtime.parse()?);
+            format_code(&router_base_path, &manifest_data.runtime.parse()?);
         }
 
         Ok(())

@@ -1,6 +1,7 @@
 use std::{
     collections::{HashMap, HashSet},
     env,
+    fs::read_to_string,
     io::Write,
     path::Path,
 };
@@ -10,7 +11,7 @@ use clap::{Arg, ArgAction, ArgMatches, Command};
 use convert_case::{Case, Casing};
 use rustyline::{Editor, history::DefaultHistory};
 use serde_json::to_string_pretty;
-use serde_yml::to_string;
+use serde_yml::{from_str, to_string};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use uuid::Uuid;
 
@@ -20,9 +21,10 @@ use crate::{
     constants::{
         Database, ERROR_FAILED_TO_CREATE_DATABASE_EXPORT_INDEX_TS,
         ERROR_FAILED_TO_CREATE_GITIGNORE, ERROR_FAILED_TO_CREATE_LICENSE,
-        ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE, ERROR_FAILED_TO_SETUP_IAM, Formatter,
-        HttpFramework, License, Linter, Module, Runtime, TestFramework, Validator,
-        get_core_module_description, get_monitoring_module_description, get_service_module_cache,
+        ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE, ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE,
+        ERROR_FAILED_TO_SETUP_IAM, Formatter, HttpFramework, License, Linter, Module, ModulesPath,
+        Runtime, TestFramework, Validator, get_core_module_description,
+        get_monitoring_module_description, get_service_module_cache,
         get_service_module_description, get_service_module_name,
         get_universal_sdk_module_description,
     },
@@ -34,9 +36,11 @@ use crate::{
         },
         docker::{
             DockerCompose, add_otel_to_docker_compose, add_service_definition_to_docker_compose,
+            find_docker_compose_path,
         },
         format::format_code,
         gitignore::generate_gitignore,
+        husky::create_or_merge_husky_pre_commit,
         iam::generate_iam_keys,
         license::generate_license,
         manifest::{
@@ -80,13 +84,14 @@ use crate::{
         universal_sdk::get_universal_sdk_additional_deps,
     },
     prompt::{
-        ArrayCompleter, prompt_comma_separated_list, prompt_with_validation,
-        prompt_without_validation, prompt_for_confirmation,
+        ArrayCompleter, prompt_comma_separated_list, prompt_for_confirmation,
+        prompt_with_validation, prompt_without_validation,
     },
 };
 
 fn generate_application_package_json(
     data: &ApplicationManifestData,
+    application_path: &Path,
     bun_workspace_projects: Option<Vec<String>>,
 ) -> Result<RenderedTemplate> {
     let test_framework: Option<TestFramework> = if let Some(test_framework) = &data.test_framework {
@@ -244,7 +249,7 @@ fn generate_application_package_json(
     };
 
     Ok(RenderedTemplate {
-        path: Path::new(&data.application_path).join("package.json"),
+        path: application_path.join("package.json"),
         content: to_string_pretty(&package_json_contents).unwrap(),
         context: None,
     })
@@ -266,9 +271,16 @@ impl CliCommand for ApplicationCommand {
             .arg(Arg::new("name").help("The name of the application"))
             .arg(
                 Arg::new("path")
-                .short('p')
-                .long("path")
-                .help("Project path (optional, will prompt if not provided)"),
+                    .short('p')
+                    .long("path")
+                    .help("Project path (optional, will prompt if not provided)"),
+            )
+            .arg(
+                Arg::new("modules-path")
+                    .short('o')
+                    .long("modules-path")
+                    .help("The subpath where forklaunch modules will be initialized")
+                    .value_parser(ModulesPath::VARIANTS),
             )
             .arg(
                 Arg::new("database")
@@ -386,46 +398,67 @@ impl CliCommand for ApplicationCommand {
             },
         )?;
 
-        // Check if path argument is provided
-        let application_path = if let Some(custom_path) = matches.get_one::<String>("path") {
-            // Use the provided path directly
-            custom_path.clone()
+        let origin_path = if let Some(custom_path) = matches.get_one::<String>("path") {
+            Path::new(&custom_path.clone()).to_path_buf()
         } else {
-            // Use interactive prompts as before
-            let use_cwd = prompt_for_confirmation(
-            &mut line_editor,
-            "Would you like to use the current directory for project files? (y/n) ",
-        )?;
-
-        if !use_cwd {
-                prompt_with_validation(
+            if prompt_for_confirmation(
+                &mut line_editor,
+                "Would you like to use the current directory for project files? (y/n) ",
+            )? {
+                std::env::current_dir()
+                    .with_context(|| "Failed to get current working directory")?
+            } else {
+                Path::new(&prompt_with_validation(
                     &mut line_editor,
                     &mut stdout,
                     "application_path",
                     matches,
-                    "Please provide path to project directory:",
+                    "Please provide where you want to create the application (NOTE: this should be a relative path):",
                     None,
                     |input: &str| {
-                        // Validate that the path is not empty and doesn't contain invalid characters
-                        !input.trim().is_empty() && !input.contains('\0')
+                        let trimmed = input.trim();
+                        !trimmed.is_empty()
+                            && !trimmed.contains('\0')
                     },
-                    |_| "Project path cannot be empty or contain null characters. Please try again".to_string(),
-                )?
-            } else {
-                // Use current working directory
-                std::env::current_dir()
-                    .with_context(|| "Failed to get current working directory")?
-                    .to_string_lossy()
-                    .to_string()
+                    |_| {
+                        "Project path must be a valid path. Please try again".to_string()
+                    },
+                )?).to_path_buf()
             }
         };
 
-        // Combine the project path with the application name
-        let full_application_path = if application_path.ends_with('/') || application_path.ends_with('\\') {
-            format!("{}{}", application_path, name)
+        let modules_path = if let Some(modules_path) = matches.get_one::<String>("modules-path") {
+            match modules_path.parse::<ModulesPath>()? {
+                ModulesPath::Src => Path::new("src").join("modules"),
+                ModulesPath::Modules => Path::new("modules").to_path_buf(),
+            }
+        } else if origin_path.join("src").exists() && origin_path.join("src").is_dir() {
+            Path::new("src").join("modules")
         } else {
-            format!("{}/{}", application_path, name)
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+            writeln!(
+                stdout,
+                "No 'src' folder in project root. Please confirm where application files will be initialized."
+            )?;
+            stdout.reset()?;
+            let modules_path: String = prompt_with_validation(
+                &mut line_editor,
+                &mut stdout,
+                "modules-path",
+                matches,
+                "Confirm where application files will be initialized:",
+                Some(&ModulesPath::VARIANTS),
+                |input| ModulesPath::VARIANTS.contains(&input),
+                |_| "Invalid path. Please provide a valid destination path.".to_string(),
+            )?;
+            match modules_path.parse::<ModulesPath>()? {
+                ModulesPath::Src => Path::new("src").join("modules"),
+                ModulesPath::Modules => Path::new("modules").to_path_buf(),
+            }
         };
+
+        let generation_path = origin_path.join(&modules_path);
+        let application_path = generation_path.to_string_lossy().to_string();
 
         let runtime: Runtime = prompt_with_validation(
             &mut line_editor,
@@ -440,7 +473,6 @@ impl CliCommand for ApplicationCommand {
         .parse()?;
 
         let database_variants = get_database_variants(&runtime);
-
         let database: Database = prompt_with_validation(
             &mut line_editor,
             &mut stdout,
@@ -583,6 +615,7 @@ impl CliCommand for ApplicationCommand {
             modules_to_test
         };
 
+        // Prompt for description
         let description = prompt_without_validation(
             &mut line_editor,
             &mut stdout,
@@ -592,6 +625,7 @@ impl CliCommand for ApplicationCommand {
             None,
         )?;
 
+        // Prompt for author
         let author = prompt_with_validation(
             &mut line_editor,
             &mut stdout,
@@ -603,6 +637,7 @@ impl CliCommand for ApplicationCommand {
             |_| "Author name cannot be empty. Please try again".to_string(),
         )?;
 
+        // Prompt for license
         let license: License = prompt_with_validation(
             &mut line_editor,
             &mut stdout,
@@ -617,6 +652,7 @@ impl CliCommand for ApplicationCommand {
 
         // TODO: Add support for libraries
 
+        // Setup dryrun, ignore files, ignore dirs, and preserve files
         let dryrun = matches.get_flag("dryrun");
         let mut ignore_files = vec!["pnpm-workspace.yaml", "pnpm-lock.yml"];
         let ignore_dirs = vec![];
@@ -689,10 +725,13 @@ impl CliCommand for ApplicationCommand {
             _ => None,
         };
 
+        let docker_compose_path = find_docker_compose_path(&origin_path);
+
         let mut data = ApplicationManifestData {
             id: Uuid::new_v4().to_string(),
             cli_version: env!("CARGO_PKG_VERSION").to_string(),
-            application_path: full_application_path.clone(),
+            modules_path: modules_path.to_string_lossy().to_string(),
+            docker_compose_path: docker_compose_path.clone(),
             database: database.to_string(),
             app_name: name.to_string(),
             camel_case_app_name: name.to_string().to_case(Case::Camel),
@@ -744,11 +783,13 @@ impl CliCommand for ApplicationCommand {
         let mut rendered_templates = Vec::new();
 
         rendered_templates.extend(
-            generate_manifest(&Path::new(&full_application_path).to_string_lossy().to_string(), &data)
-                .with_context(|| "Failed to setup manifest file for application")?,
+            generate_manifest(
+                &Path::new(&origin_path).to_string_lossy().to_string(),
+                &data,
+            )
+            .with_context(|| "Failed to setup manifest file for application")?,
         );
 
-        // TODO: support different path delimiters
         let mut template_dirs = vec![];
 
         let additional_projects_dirs = additional_projects.clone().into_iter().map(|path| {
@@ -772,9 +813,8 @@ impl CliCommand for ApplicationCommand {
         });
 
         template_dirs.extend(additional_projects_dirs.clone());
-
         rendered_templates.extend(generate_with_template(
-            Some(&full_application_path),
+            Some(&application_path),
             &PathIO {
                 input_path: Path::new("application").to_string_lossy().to_string(),
                 output_path: "".to_string(),
@@ -793,23 +833,34 @@ impl CliCommand for ApplicationCommand {
             dryrun,
         )?);
 
-        // TODO: think about refactoring this to use pure docker compose and instead use a deserialization function elsewhere
+        let docker_compose_starting_point =
+            if let Some(docker_compose_path) = &docker_compose_path.clone() {
+                &mut from_str::<DockerCompose>(&read_to_string(docker_compose_path)?)
+                    .with_context(|| ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE)?
+            } else {
+                &mut DockerCompose::default()
+            };
+
         let mut docker_compose_string = Some(
             to_string(add_otel_to_docker_compose(
                 &name,
-                &mut DockerCompose::default(),
+                docker_compose_starting_point,
             )?)
             .unwrap(),
         );
+
         for template_dir in template_dirs {
             let mut service_data = ServiceManifestData {
                 id: data.id.clone(),
                 cli_version: data.cli_version.clone(),
                 app_name: data.app_name.clone(),
+                modules_path: data.modules_path.clone(),
+                docker_compose_path: data.docker_compose_path.clone(),
                 camel_case_app_name: data.camel_case_app_name.clone(),
                 pascal_case_app_name: data.pascal_case_app_name.clone(),
                 kebab_case_app_name: data.kebab_case_app_name.clone(),
-                service_name: template_dir.output_path.to_string(),
+                service_name: template_dir.output_path.clone(),
+                service_path: template_dir.output_path.to_string(),
                 camel_case_name: template_dir.output_path.to_case(Case::Camel),
                 pascal_case_name: template_dir.output_path.to_case(Case::Pascal),
                 kebab_case_name: template_dir.output_path.to_case(Case::Kebab),
@@ -888,13 +939,13 @@ impl CliCommand for ApplicationCommand {
             {
                 docker_compose_string = Some(add_service_definition_to_docker_compose(
                     &service_data,
-                    &Path::new(&full_application_path),
+                    &Path::new(&application_path),
                     docker_compose_string,
                 )?);
             }
 
             rendered_templates.extend(generate_with_template(
-                Some(&full_application_path),
+                Some(&application_path),
                 &template_dir,
                 &ManifestData::Service(&service_data),
                 &ignore_files
@@ -916,7 +967,7 @@ impl CliCommand for ApplicationCommand {
                     None
                 };
 
-            let service_base_path = Path::new(&full_application_path).join(&template_dir.output_path);
+            let service_base_path = Path::new(&application_path).join(&template_dir.output_path);
             rendered_templates.push(generate_service_package_json(
                 &service_data,
                 &service_base_path,
@@ -1043,20 +1094,27 @@ impl CliCommand for ApplicationCommand {
             )?);
         }
 
+        let docker_compose_path = if let Some(docker_compose_path) = &data.docker_compose_path {
+            Path::new(&origin_path).join(docker_compose_path)
+        } else {
+            Path::new(&origin_path).join("docker-compose.yaml")
+        };
+
         rendered_templates.push(RenderedTemplate {
-            path: Path::new(&full_application_path).join("docker-compose.yaml"),
+            path: docker_compose_path,
             content: docker_compose_string.unwrap(),
             context: None,
         });
 
         rendered_templates.push(generate_application_package_json(
             &data,
+            &generation_path,
             bun_package_json_workspace_vec,
         )?);
 
         rendered_templates.push(
             generate_index_ts_database_export(
-                &Path::new(&full_application_path),
+                &Path::new(&application_path),
                 Some(vec![database.to_string()]),
                 None,
             )
@@ -1064,29 +1122,59 @@ impl CliCommand for ApplicationCommand {
         );
 
         rendered_templates.extend(
-            generate_license(&Path::new(&full_application_path), &data)
+            generate_license(&Path::new(&generation_path), &data)
                 .with_context(|| ERROR_FAILED_TO_CREATE_LICENSE)?,
         );
 
         rendered_templates.extend(
-            generate_gitignore(&Path::new(&full_application_path))
+            generate_gitignore(&Path::new(&generation_path))
                 .with_context(|| ERROR_FAILED_TO_CREATE_GITIGNORE)?,
         );
 
         if runtime == Runtime::Node {
             rendered_templates.extend(
-                generate_pnpm_workspace(&full_application_path, &additional_projects)
+                generate_pnpm_workspace(&application_path, &additional_projects)
                     .with_context(|| ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE)?,
             );
         }
 
         if additional_projects_names.contains(&"iam".to_string()) {
             rendered_templates.extend(
-                generate_iam_keys(&Path::new(&full_application_path)).with_context(|| ERROR_FAILED_TO_SETUP_IAM)?,
+                generate_iam_keys(&Path::new(&application_path))
+                    .with_context(|| ERROR_FAILED_TO_SETUP_IAM)?,
             );
         }
 
-        create_forklaunch_dir(&Path::new(&full_application_path).to_string_lossy().to_string(), dryrun)?;
+        create_forklaunch_dir(
+            &Path::new(&origin_path).to_string_lossy().to_string(),
+            dryrun,
+        )?;
+
+        rendered_templates.push(create_or_merge_husky_pre_commit(
+            &Path::new(&origin_path),
+            &data,
+        )?);
+
+        rendered_templates.extend(generate_with_template(
+            Some(&application_path),
+            &PathIO {
+                input_path: Path::new("basic").to_string_lossy().to_string(),
+                output_path: "".to_string(),
+                module_id: None,
+            },
+            &ManifestData::Application(&data),
+            &ignore_files
+                .iter()
+                .map(|ignore_file| ignore_file.to_string())
+                .collect::<Vec<String>>(),
+            &ignore_dirs,
+            &preserve_files
+                .iter()
+                .map(|preserve_file| preserve_file.to_string())
+                .collect::<Vec<String>>(),
+            dryrun,
+        )?);
+
         write_rendered_templates(&rendered_templates, dryrun, &mut stdout)
             .with_context(|| "Failed to write application files")?;
 
@@ -1094,8 +1182,8 @@ impl CliCommand for ApplicationCommand {
             .into_iter()
             .try_for_each(|template_dir| {
                 generate_symlinks(
-                    Some(&Path::new(&full_application_path)),
-                    &Path::new(&full_application_path).join(&template_dir.output_path),
+                    Some(&Path::new(&application_path)),
+                    &Path::new(&application_path).join(&template_dir.output_path),
                     &mut data,
                     dryrun,
                 )
@@ -1105,7 +1193,7 @@ impl CliCommand for ApplicationCommand {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
             writeln!(stdout, "{} initialized successfully!", name)?;
             stdout.reset()?;
-            format_code(&Path::new(&full_application_path), &data.runtime.parse()?);
+            format_code(&Path::new(&application_path), &data.runtime.parse()?);
         }
 
         Ok(())

@@ -35,7 +35,7 @@ use crate::{
                 },
             },
         },
-        base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
         command::command,
         database::{get_database_variants, is_in_memory_database},
         docker::{
@@ -611,34 +611,38 @@ impl CliCommand for ServiceCommand {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
         let mut rendered_templates_cache = RenderedTemplatesCache::new();
 
-        let base_path_input = prompt_base_path(
-            &mut line_editor,
-            &mut stdout,
-            matches,
-            &BasePathLocation::Service,
-            &BasePathType::Change,
-        )?;
-        let base_path = Path::new(&base_path_input);
+        let (app_root_path, project_name) = find_app_root_path(matches, RequiredLocation::Project)?;
+        let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
-        let config_path = &base_path
-            .parent()
-            .unwrap()
-            .join(".forklaunch")
-            .join("manifest.toml");
-
-        let mut manifest_data = toml::from_str::<ServiceManifestData>(
+        let existing_manifest_data = toml::from_str::<ServiceManifestData>(
             &rendered_templates_cache
-                .get(&config_path)
+                .get(&manifest_path)
                 .with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?
                 .unwrap()
                 .content,
         )
-        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
-        .initialize(InitializableManifestConfigMetadata::Project(
-            ProjectInitializationMetadata {
-                project_name: base_path.file_name().unwrap().to_string_lossy().to_string(),
-            },
-        ));
+        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+
+        let service_base_path = prompt_base_path(
+            &app_root_path,
+            &ManifestData::Service(&existing_manifest_data),
+            &project_name,
+            &mut line_editor,
+            &mut stdout,
+            matches,
+            1,
+        )?;
+
+        let mut manifest_data = existing_manifest_data.initialize(
+            InitializableManifestConfigMetadata::Project(ProjectInitializationMetadata {
+                project_name: service_base_path
+                    .file_name()
+                    .unwrap()
+                    .to_string_lossy()
+                    .to_string()
+                    .clone(),
+            }),
+        );
 
         let runtime = manifest_data.runtime.parse()?;
 
@@ -748,7 +752,8 @@ impl CliCommand for ServiceCommand {
         let mut removal_templates = vec![];
         let mut move_templates = vec![];
 
-        let application_package_json_path = base_path.parent().unwrap().join("package.json");
+        let application_package_json_path =
+            service_base_path.parent().unwrap().join("package.json");
         let application_package_json_data = rendered_templates_cache
             .get(&application_package_json_path)
             .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?
@@ -758,7 +763,7 @@ impl CliCommand for ServiceCommand {
         let mut application_package_json_to_write =
             serde_json::from_str::<ApplicationPackageJson>(&application_package_json_data)?;
 
-        let project_package_json_path = base_path.join("package.json");
+        let project_package_json_path = service_base_path.join("package.json");
         let project_package_json_data = rendered_templates_cache
             .get(&project_package_json_path)
             .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?
@@ -768,7 +773,12 @@ impl CliCommand for ServiceCommand {
         let mut project_json_to_write =
             serde_json::from_str::<ProjectPackageJson>(&project_package_json_data)?;
 
-        let docker_compose_path = base_path.parent().unwrap().join("docker-compose.yaml");
+        let docker_compose_path =
+            if let Some(docker_compose_path) = &manifest_data.docker_compose_path {
+                app_root_path.join(docker_compose_path)
+            } else {
+                app_root_path.join("docker-compose.yaml")
+            };
         let mut docker_compose_data = serde_yml::from_str::<DockerCompose>(
             &rendered_templates_cache
                 .get(&docker_compose_path)
@@ -779,7 +789,7 @@ impl CliCommand for ServiceCommand {
 
         if let Some(database) = database {
             change_database(
-                &base_path,
+                &service_base_path,
                 &database.parse()?,
                 &mut manifest_data,
                 &mut application_package_json_to_write,
@@ -811,7 +821,7 @@ impl CliCommand for ServiceCommand {
                 .collect();
 
             change_infrastructure(
-                &base_path,
+                &service_base_path,
                 infrastructure_to_add,
                 infrastructure_to_remove,
                 &mut project_json_to_write,
@@ -823,7 +833,7 @@ impl CliCommand for ServiceCommand {
 
         if let Some(name) = name {
             move_templates.push(change_name(
-                &base_path,
+                &service_base_path,
                 &name,
                 confirm,
                 &mut manifest_data,
@@ -837,9 +847,9 @@ impl CliCommand for ServiceCommand {
         }
 
         rendered_templates_cache.insert(
-            config_path.clone().to_string_lossy(),
+            manifest_path.clone().to_string_lossy(),
             RenderedTemplate {
-                path: config_path.to_path_buf(),
+                path: manifest_path.to_path_buf(),
                 content: toml::to_string_pretty(&manifest_data)?,
                 context: None,
             },
@@ -892,7 +902,7 @@ impl CliCommand for ServiceCommand {
                 &manifest_data.service_name
             )?;
             stdout.reset()?;
-            format_code(&base_path, &manifest_data.runtime.parse()?);
+            format_code(&service_base_path, &manifest_data.runtime.parse()?);
         }
 
         Ok(())

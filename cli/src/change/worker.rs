@@ -27,7 +27,7 @@ use crate::{
             transform_mikroorm_config_ts::transform_mikroorm_config_ts,
             transform_registrations_ts::transform_registrations_ts_worker_type,
         },
-        base_path::{BasePathLocation, BasePathType, prompt_base_path},
+        base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
         command::command,
         database::{get_database_variants, get_db_driver, is_in_memory_database},
         docker::{
@@ -417,34 +417,38 @@ impl CliCommand for WorkerCommand {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
         let mut rendered_templates_cache = RenderedTemplatesCache::new();
 
-        let base_path_input = prompt_base_path(
-            &mut line_editor,
-            &mut stdout,
-            matches,
-            &BasePathLocation::Worker,
-            &BasePathType::Change,
-        )?;
-        let base_path = Path::new(&base_path_input);
+        let (app_root_path, project_name) = find_app_root_path(matches, RequiredLocation::Project)?;
+        let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
-        let config_path = &base_path
-            .parent()
-            .unwrap()
-            .join(".forklaunch")
-            .join("manifest.toml");
-
-        let mut manifest_data: WorkerManifestData = toml::from_str::<WorkerManifestData>(
+        let existing_manifest_data: WorkerManifestData = toml::from_str::<WorkerManifestData>(
             &rendered_templates_cache
-                .get(&config_path)
+                .get(&manifest_path)
                 .with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?
                 .unwrap()
                 .content,
         )
-        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?
-        .initialize(InitializableManifestConfigMetadata::Project(
-            ProjectInitializationMetadata {
-                project_name: base_path.file_name().unwrap().to_string_lossy().to_string(),
-            },
-        ));
+        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+
+        let worker_base_path = prompt_base_path(
+            &app_root_path,
+            &ManifestData::Worker(&existing_manifest_data),
+            &project_name,
+            &mut line_editor,
+            &mut stdout,
+            matches,
+            1,
+        )?;
+
+        let mut manifest_data = existing_manifest_data.initialize(
+            InitializableManifestConfigMetadata::Project(ProjectInitializationMetadata {
+                project_name: worker_base_path
+                    .file_name()
+                    .unwrap()
+                    .to_string_lossy()
+                    .to_string()
+                    .clone(),
+            }),
+        );
 
         let runtime = manifest_data.runtime.parse()?;
 
@@ -540,7 +544,7 @@ impl CliCommand for WorkerCommand {
         let mut removal_templates = vec![];
         let mut move_templates = vec![];
 
-        let application_package_json_path = base_path.parent().unwrap().join("package.json");
+        let application_package_json_path = worker_base_path.parent().unwrap().join("package.json");
         let application_package_json_data = rendered_templates_cache
             .get(&application_package_json_path)
             .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?
@@ -550,7 +554,7 @@ impl CliCommand for WorkerCommand {
         let mut application_package_json_to_write =
             serde_json::from_str::<ApplicationPackageJson>(&application_package_json_data)?;
 
-        let project_package_json_path = base_path.join("package.json");
+        let project_package_json_path = worker_base_path.join("package.json");
         let project_package_json_data = rendered_templates_cache
             .get(&project_package_json_path)
             .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?
@@ -560,7 +564,12 @@ impl CliCommand for WorkerCommand {
         let mut project_json_to_write =
             serde_json::from_str::<ProjectPackageJson>(&project_package_json_data)?;
 
-        let docker_compose_path = base_path.parent().unwrap().join("docker-compose.yaml");
+        let docker_compose_path =
+            if let Some(docker_compose_path) = &manifest_data.docker_compose_path {
+                app_root_path.join(docker_compose_path)
+            } else {
+                app_root_path.join("docker-compose.yaml")
+            };
         let mut docker_compose_data = serde_yml::from_str::<DockerCompose>(
             &rendered_templates_cache
                 .get(&docker_compose_path)
@@ -571,7 +580,7 @@ impl CliCommand for WorkerCommand {
 
         if let Some(r#type) = r#type {
             change_type(
-                &base_path,
+                &worker_base_path,
                 &r#type.parse()?,
                 database,
                 &mut manifest_data,
@@ -589,7 +598,7 @@ impl CliCommand for WorkerCommand {
 
         if let Some(name) = name {
             move_templates.push(change_name(
-                &base_path,
+                &worker_base_path,
                 &name,
                 confirm,
                 &mut manifest_data,
@@ -603,9 +612,9 @@ impl CliCommand for WorkerCommand {
         }
 
         rendered_templates_cache.insert(
-            config_path.clone().to_string_lossy(),
+            manifest_path.clone().to_string_lossy(),
             RenderedTemplate {
-                path: config_path.to_path_buf(),
+                path: manifest_path.to_path_buf(),
                 content: toml::to_string_pretty(&manifest_data)?,
                 context: None,
             },
@@ -655,7 +664,7 @@ impl CliCommand for WorkerCommand {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
             writeln!(stdout, "{} changed successfully!", &manifest_data.app_name)?;
             stdout.reset()?;
-            format_code(&base_path, &manifest_data.runtime.parse()?);
+            format_code(&worker_base_path, &manifest_data.runtime.parse()?);
         }
 
         Ok(())

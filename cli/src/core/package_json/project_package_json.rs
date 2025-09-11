@@ -617,7 +617,7 @@ pub(crate) static MIKRO_ORM_CONFIG_PATHS: &[&str] =
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub(crate) struct ProjectMikroOrm {
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) config_paths: Option<Vec<String>>,
+    pub(crate) manifest_paths: Option<Vec<String>>,
 }
 
 #[derive(Debug, Serialize, Default)]
