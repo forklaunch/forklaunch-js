@@ -8,6 +8,7 @@ import {
   string
 } from '@forklaunch/validator/typebox';
 import {
+  createHmacToken,
   ForklaunchExpressLikeRouter,
   MetricsDefinition,
   OpenTelemetryCollector,
@@ -180,6 +181,13 @@ xa.patch(
   {
     name: 'string',
     summary: 'string',
+    auth: {
+      hmac: {
+        secretKeys: {
+          '1': 'test'
+        }
+      }
+    },
     params: {
       name: string,
       id: number
@@ -306,6 +314,15 @@ xa.trace('/test/:name/:id', xasd).sdk.string({
     authorization: 'Basic dGVzdDp0ZXN0',
     'x-test': 4
   }
+});
+
+createHmacToken({
+  method: 'GET',
+  path: '/test/:name/:id',
+  body: '',
+  timestamp: '1234567890',
+  nonce: '1234567890',
+  secretKey: 'test'
 });
 
 xa.all(contractDetails, async (req, res) => {});

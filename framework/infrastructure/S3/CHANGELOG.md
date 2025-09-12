@@ -1,5 +1,14 @@
 # @forklaunch/infrastructure-s3
 
+## 0.4.8
+
+### Patch Changes
+
+- Update packages and expose hmac key creation function
+- Updated dependencies
+  - @forklaunch/common@0.6.6
+  - @forklaunch/core@0.14.8
+
 ## 0.4.7
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.6.6
+
+### Patch Changes
+
+- Update packages and expose hmac key creation function
+
 ## 0.6.5
 
 ### Patch Changes

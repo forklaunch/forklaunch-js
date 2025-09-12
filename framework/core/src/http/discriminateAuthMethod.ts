@@ -1,7 +1,7 @@
 import { AnySchemaValidator } from '@forklaunch/validator';
-import { createHmac } from 'crypto';
 import { JWK, JWTPayload, jwtVerify } from 'jose';
 import { ParsedQs } from 'qs';
+import { createHmacToken } from './createHmacToken';
 import { isBasicAuthMethod } from './guards/isBasicAuthMethod';
 import { isHmacMethod } from './guards/isHmacMethod';
 import { isJwtAuthMethod } from './guards/isJwtAuthMethod';
@@ -163,11 +163,16 @@ export async function discriminateAuthMethod<
           signature: string,
           secretKey: string
         ) => {
-          const hmac = createHmac('sha256', secretKey);
-
-          hmac.update(`${method}\n${path}\n${body}\n${timestamp}\n${nonce}`);
-          const digest = hmac.digest('base64');
-          return digest === signature;
+          return (
+            createHmacToken({
+              method,
+              path,
+              body,
+              timestamp,
+              nonce,
+              secretKey
+            }) === signature
+          );
         }
       }
     };

@@ -2,6 +2,7 @@ export type { ParsedQs } from 'qs';
 export * from './application/expressLikeApplication';
 export * from './cluster/cluster.types';
 export * from './cluster/isPortBound';
+export * from './createHmacToken';
 export * from './guards/isForklaunchRequest';
 export * from './guards/isForklaunchRouter';
 export * from './handlers/delete';
