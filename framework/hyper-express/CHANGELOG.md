@@ -1,5 +1,25 @@
 # @forklaunch/hyper-express
 
+## 0.9.9
+
+### Patch Changes
+
+- slight hmac token creation signature change
+- Updated dependencies
+  - @forklaunch/validator@0.10.7
+  - @forklaunch/common@0.6.7
+  - @forklaunch/core@0.14.9
+
+## 0.9.8
+
+### Patch Changes
+
+- Update packages and expose hmac key creation function
+- Updated dependencies
+  - @forklaunch/validator@0.10.6
+  - @forklaunch/common@0.6.6
+  - @forklaunch/core@0.14.8
+
 ## 0.9.7
 
 ### Patch Changes

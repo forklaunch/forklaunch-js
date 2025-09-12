@@ -1,9 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   array,
+  function_,
   number,
   schemaValidator,
-  string
+  string,
+  type
 } from '@forklaunch/blueprint-core';
 import { Metrics, metrics } from '@forklaunch/blueprint-monitoring';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
@@ -283,10 +284,13 @@ const runtimeDependencies = environmentConfig.chain({
 const serviceDependencies = runtimeDependencies.chain({
   SampleWorkerBullMqConsumer: {
     lifetime: Lifetime.Scoped,
-    type: (
-      processEventsFunction: WorkerProcessFunction<SampleWorkerEventRecord>,
-      failureHandler: WorkerFailureHandler<SampleWorkerEventRecord>
-    ) => BullMqWorkerConsumer<SampleWorkerEventRecord, BullMqWorkerOptions>,
+    type: function_(
+      [
+        type<WorkerProcessFunction<SampleWorkerEventRecord>>(),
+        type<WorkerFailureHandler<SampleWorkerEventRecord>>()
+      ],
+      type<BullMqWorkerConsumer<SampleWorkerEventRecord, BullMqWorkerOptions>>()
+    ),
     factory:
       ({ SAMPLE_WORKER_QUEUE, BullMqWorkerOptions }) =>
       (
@@ -302,10 +306,13 @@ const serviceDependencies = runtimeDependencies.chain({
   },
   SampleWorkerRedisConsumer: {
     lifetime: Lifetime.Scoped,
-    type: (
-      processEventsFunction: WorkerProcessFunction<SampleWorkerEventRecord>,
-      failureHandler: WorkerFailureHandler<SampleWorkerEventRecord>
-    ) => RedisWorkerConsumer<SampleWorkerEventRecord, RedisWorkerOptions>,
+    type: function_(
+      [
+        type<WorkerProcessFunction<SampleWorkerEventRecord>>(),
+        type<WorkerFailureHandler<SampleWorkerEventRecord>>()
+      ],
+      type<RedisWorkerConsumer<SampleWorkerEventRecord, RedisWorkerOptions>>()
+    ),
     factory:
       ({ TtlCache, SAMPLE_WORKER_QUEUE, RedisWorkerOptions }) =>
       (
@@ -322,10 +329,16 @@ const serviceDependencies = runtimeDependencies.chain({
   },
   SampleWorkerDatabaseConsumer: {
     lifetime: Lifetime.Scoped,
-    type: (
-      processEventsFunction: WorkerProcessFunction<SampleWorkerEventRecord>,
-      failureHandler: WorkerFailureHandler<SampleWorkerEventRecord>
-    ) => DatabaseWorkerConsumer<SampleWorkerEventRecord, DatabaseWorkerOptions>,
+    type: function_(
+      [
+        type<WorkerProcessFunction<SampleWorkerEventRecord>>(),
+        type<WorkerFailureHandler<SampleWorkerEventRecord>>()
+      ],
+      type<
+        DatabaseWorkerConsumer<SampleWorkerEventRecord, DatabaseWorkerOptions>
+      >()
+    ),
+
     factory:
       ({ EntityManager, DatabaseWorkerOptions }) =>
       (
@@ -342,10 +355,13 @@ const serviceDependencies = runtimeDependencies.chain({
   },
   SampleWorkerKafkaConsumer: {
     lifetime: Lifetime.Scoped,
-    type: (
-      processEventsFunction: WorkerProcessFunction<SampleWorkerEventRecord>,
-      failureHandler: WorkerFailureHandler<SampleWorkerEventRecord>
-    ) => KafkaWorkerConsumer<SampleWorkerEventRecord, KafkaWorkerOptions>,
+    type: function_(
+      [
+        type<WorkerProcessFunction<SampleWorkerEventRecord>>(),
+        type<WorkerFailureHandler<SampleWorkerEventRecord>>()
+      ],
+      type<KafkaWorkerConsumer<SampleWorkerEventRecord, KafkaWorkerOptions>>()
+    ),
     factory:
       ({ SAMPLE_WORKER_QUEUE, KafkaWorkerOptions }) =>
       (

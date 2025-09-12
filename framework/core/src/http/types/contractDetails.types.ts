@@ -353,7 +353,8 @@ export type AuthMethodsBase = TokenOptions &
     | HmacMethods
     | ({
         readonly decodeResource?: DecodeResource;
-      } & (BasicAuthMethods | JwtAuthMethods))
+      } & (PermissionSet | RoleSet) &
+        (BasicAuthMethods | JwtAuthMethods))
   );
 
 type PermissionSet =
@@ -384,7 +385,7 @@ export type SchemaAuthMethods<
   BaseRequest
 > = AuthMethodsBase &
   (
-    | ({
+    | {
         readonly surfacePermissions?: ExpressLikeSchemaAuthMapper<
           SV,
           ParamsSchema,
@@ -395,8 +396,8 @@ export type SchemaAuthMethods<
           SessionSchema,
           BaseRequest
         >;
-      } & PermissionSet)
-    | ({
+      }
+    | {
         readonly surfaceRoles?: ExpressLikeSchemaAuthMapper<
           SV,
           ParamsSchema,
@@ -407,7 +408,7 @@ export type SchemaAuthMethods<
           SessionSchema,
           BaseRequest
         >;
-      } & RoleSet)
+      }
   ) & {
     readonly sessionSchema?: SessionSchema;
     readonly requiredScope?: string;

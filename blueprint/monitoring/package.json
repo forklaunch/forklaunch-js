@@ -12,6 +12,7 @@
   },
   "license": "MIT",
   "author": "Forklift Technologies, Inc.",
+  "type": "module",
   "types": "lib/index.d.ts",
   "scripts": {
     "build": "tsc",
@@ -23,6 +24,6 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/core": "^0.14.7"
+    "@forklaunch/core": "^0.14.9"
   }
 }

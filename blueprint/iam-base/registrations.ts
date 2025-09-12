@@ -101,10 +101,10 @@ const environmentConfig = configInjector.chain({
     type: string,
     value: getEnvVar('OTEL_EXPORTER_OTLP_ENDPOINT')
   },
-  PASSWORD_ENCRYPTION_PUBLIC_KEY_PATH: {
+  HMAC_SECRET_KEY: {
     lifetime: Lifetime.Singleton,
     type: string,
-    value: getEnvVar('PASSWORD_ENCRYPTION_PUBLIC_KEY_PATH')
+    value: getEnvVar('HMAC_SECRET_KEY')
   }
 });
 
@@ -199,18 +199,9 @@ const serviceDependencies = runtimeDependencies.chain({
       typeof OrganizationStatus,
       UserMapperTypes
     >,
-    factory: (
-      {
-        EntityManager,
-        OpenTelemetryCollector,
-        PASSWORD_ENCRYPTION_PUBLIC_KEY_PATH
-      },
-      resolve,
-      context
-    ) =>
+    factory: ({ EntityManager, OpenTelemetryCollector }, resolve, context) =>
       new BaseUserService(
         EntityManager,
-        PASSWORD_ENCRYPTION_PUBLIC_KEY_PATH,
         () => resolve('RoleService', context),
         () => resolve('OrganizationService', context),
         OpenTelemetryCollector,

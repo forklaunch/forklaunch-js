@@ -186,15 +186,15 @@ async function checkAuthorizationToken<
         return invalidAuthorizationTokenFormat;
       }
 
-      const verificationResult = await auth.verificationFunction(
-        req?.method ?? '',
-        req?.path ?? '',
-        JSON.stringify(req?.body ?? ''),
-        parsedTimestamp,
-        parsedNonce,
-        parsedSignature,
-        collapsedAuthorizationMethod.hmac.secretKeys[parsedKeyId]
-      );
+      const verificationResult = await auth.verificationFunction({
+        method: req?.method ?? '',
+        path: req?.path ?? '',
+        body: req?.body,
+        timestamp: parsedTimestamp,
+        nonce: parsedNonce,
+        signature: parsedSignature,
+        secretKey: collapsedAuthorizationMethod.hmac.secretKeys[parsedKeyId]
+      });
 
       if (!verificationResult) {
         return invalidAuthorizationSignature;
