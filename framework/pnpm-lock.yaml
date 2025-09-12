@@ -57,6 +57,9 @@ importers:
 
   bunrun:
     devDependencies:
+      '@types/node':
+        specifier: ^24.3.2
+        version: 24.3.2
       '@typescript/native-preview':
         specifier: 7.0.0-dev.20250912.1
         version: 7.0.0-dev.20250912.1
