@@ -89,15 +89,23 @@ export async function discriminateAuthMethod<
       type: 'hmac';
       auth: {
         secretKeys: Record<string, string>;
-        verificationFunction: (
-          method: string,
-          path: string,
-          body: string,
-          timestamp: string,
-          nonce: string,
-          signature: string,
-          secretKey: string
-        ) => Promise<boolean | undefined>;
+        verificationFunction: ({
+          body,
+          path,
+          method,
+          timestamp,
+          nonce,
+          signature,
+          secretKey
+        }: {
+          method: string;
+          path: string;
+          body?: unknown;
+          timestamp: string;
+          nonce: string;
+          signature: string;
+          secretKey: string;
+        }) => Promise<boolean | undefined>;
       };
     }
 > {
@@ -154,15 +162,23 @@ export async function discriminateAuthMethod<
       type: 'hmac' as const,
       auth: {
         secretKeys: auth.hmac.secretKeys,
-        verificationFunction: async (
-          method: string,
-          path: string,
-          body: string,
-          timestamp: string,
-          nonce: string,
-          signature: string,
-          secretKey: string
-        ) => {
+        verificationFunction: async ({
+          method,
+          path,
+          body,
+          timestamp,
+          nonce,
+          signature,
+          secretKey
+        }: {
+          method: string;
+          path: string;
+          body?: unknown;
+          timestamp: string;
+          nonce: string;
+          signature: string;
+          secretKey: string;
+        }) => {
           return (
             createHmacToken({
               method,

@@ -1,5 +1,14 @@
 # @forklaunch/infrastructure-redis
 
+## 0.4.9
+
+### Patch Changes
+
+- slight hmac token creation signature change
+- Updated dependencies
+  - @forklaunch/common@0.6.7
+  - @forklaunch/core@0.14.9
+
 ## 0.4.8
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @forklaunch/validator
 
+## 0.10.7
+
+### Patch Changes
+
+- slight hmac token creation signature change
+- Updated dependencies
+  - @forklaunch/common@0.6.7
+
 ## 0.10.6
 
 ### Patch Changes

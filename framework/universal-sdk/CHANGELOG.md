@@ -1,5 +1,13 @@
 # @forklaunch/universal-sdk
 
+## 0.7.7
+
+### Patch Changes
+
+- slight hmac token creation signature change
+- Updated dependencies
+  - @forklaunch/common@0.6.7
+
 ## 0.7.6
 
 ### Patch Changes

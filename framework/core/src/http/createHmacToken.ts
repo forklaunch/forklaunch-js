@@ -1,3 +1,4 @@
+import { safeStringify } from '@forklaunch/common';
 import { createHmac } from 'crypto';
 
 /**
@@ -20,12 +21,13 @@ export function createHmacToken({
 }: {
   method: string;
   path: string;
-  body: string;
+  body?: unknown;
   timestamp: string;
   nonce: string;
   secretKey: string;
 }) {
   const hmac = createHmac('sha256', secretKey);
-  hmac.update(`${method}\n${path}\n${body}\n${timestamp}\n${nonce}`);
+  const bodyString = body ? `${safeStringify(body)}\n` : undefined;
+  hmac.update(`${method}\n${path}\n${bodyString}${timestamp}\n${nonce}`);
   return hmac.digest('base64');
 }

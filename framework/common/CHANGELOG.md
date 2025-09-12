@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.6.7
+
+### Patch Changes
+
+- slight hmac token creation signature change
+
 ## 0.6.6
 
 ### Patch Changes
