@@ -17,6 +17,7 @@ use super::core::{
 };
 use crate::{
     CliCommand,
+    change::core::change_database::change_database_seed_script,
     constants::{
         Database, ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_DOCKER_COMPOSE,
         ERROR_FAILED_TO_READ_MANIFEST, ERROR_FAILED_TO_READ_PACKAGE_JSON, Infrastructure,
@@ -210,6 +211,7 @@ fn change_database(
     );
 
     change_database_postinstall_script(application_package_json, database);
+    change_database_seed_script(project_package_json, database);
 
     let removal_template = change_database_base_entity(
         base_path,

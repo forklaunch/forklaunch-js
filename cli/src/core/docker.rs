@@ -1383,6 +1383,8 @@ pub(crate) fn add_service_definition_to_docker_compose(
             manifest_data.app_name, manifest_data.service_name
         ),
         format!("/{}/core/node_modules", manifest_data.app_name),
+        format!("/{}/monitoring/node_modules", manifest_data.app_name),
+        format!("/{}/universal-sdk/node_modules", manifest_data.app_name),
         format!("/{}/node_modules", manifest_data.app_name),
     ];
 

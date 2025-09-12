@@ -13,7 +13,7 @@ use crate::{
         manifest::ProjectEntry,
         package_json::{
             application_package_json::ApplicationPackageJson,
-            package_json_constants::MIKRO_ORM_DATABASE_VERSION,
+            package_json_constants::{MIKRO_ORM_DATABASE_VERSION, PROJECT_SEED_SCRIPT},
             project_package_json::ProjectPackageJson,
         },
         removal_template::{RemovalTemplate, RemovalTemplateType},
@@ -216,4 +216,14 @@ pub(crate) fn change_database_postinstall_script(
         .as_mut()
         .unwrap()
         .postinstall = get_postinstall_script(database);
+}
+
+pub(crate) fn change_database_seed_script(
+    project_package_json: &mut ProjectPackageJson,
+    database: &Database,
+) {
+    project_package_json.scripts.as_mut().unwrap().seed = match database {
+        Database::MongoDB => None,
+        _ => Some(PROJECT_SEED_SCRIPT.to_string()),
+    };
 }

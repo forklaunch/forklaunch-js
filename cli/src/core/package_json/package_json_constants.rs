@@ -107,7 +107,7 @@ pub(crate) fn application_docs_script(runtime: &Runtime) -> String {
 fn get_package_manager(runtime: &Runtime) -> String {
     let package_manager = match runtime {
         Runtime::Bun => "bun --filter='*'",
-        Runtime::Node => "pnpm -r",
+        Runtime::Node => "pnpm -r --no-bail",
     };
 
     String::from(package_manager)
@@ -204,7 +204,9 @@ pub(crate) fn application_test_script<'a>(
 
 pub(crate) fn application_up_packages_script(runtime: &Runtime) -> String {
     String::from(match runtime {
-        Runtime::Bun => "bun update --latest && bun --filter='*' update --latest",
+        Runtime::Bun => {
+            "bun update --latest && bun --filter='*' run update --latest && bun install"
+        }
         Runtime::Node => "pnpm -r --no-bail update --latest",
     })
 }
