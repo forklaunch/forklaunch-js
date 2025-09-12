@@ -2,6 +2,15 @@
   "name": "@forklaunch/bunrun",
   "version": "0.0.1",
   "description": "Bun-native TypeScript workspace script runner with topological ordering",
+  "keywords": [
+    "bun",
+    "workspace",
+    "monorepo",
+    "build",
+    "topological",
+    "typescript",
+    "cli"
+  ],
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
     "url": "https://github.com/forklaunch/forklaunch-js/issues"
@@ -16,20 +25,8 @@
   "bin": {
     "bunrun": "dist/index.mjs"
   },
-  "engines": {
-    "bun": ">=1.1.0"
-  },
   "files": [
     "dist"
-  ],
-  "keywords": [
-    "bun",
-    "workspace",
-    "monorepo",
-    "build",
-    "topological",
-    "typescript",
-    "cli"
   ],
   "scripts": {
     "build": "tsgo --noEmit && tsup",
@@ -47,5 +44,8 @@
     "@typescript/native-preview": "7.0.0-dev.20250911.1",
     "tsup": "^8.0.0",
     "typescript": "^5.6.0"
+  },
+  "engines": {
+    "bun": ">=1.1.0"
   }
 }
