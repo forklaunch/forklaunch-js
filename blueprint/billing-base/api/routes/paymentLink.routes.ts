@@ -5,6 +5,7 @@ import { PaymentLinkController } from '../controllers/paymentLink.controller';
 
 const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
 const paymentLinkServiceFactory = ci.scopedResolver(tokens.PaymentLinkService);
+const HMAC_SECRET_KEY = ci.resolve(tokens.HMAC_SECRET_KEY);
 
 export type PaymentLinkServiceFactory = typeof paymentLinkServiceFactory;
 
@@ -15,7 +16,8 @@ export const paymentLinkRouter = forklaunchRouter(
 );
 const controller = PaymentLinkController(
   paymentLinkServiceFactory,
-  openTelemetryCollector
+  openTelemetryCollector,
+  HMAC_SECRET_KEY
 );
 
 paymentLinkRouter.post('/', controller.createPaymentLink);

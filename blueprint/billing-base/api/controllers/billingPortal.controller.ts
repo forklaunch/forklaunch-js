@@ -1,6 +1,7 @@
 import {
   handlers,
   IdSchema,
+  ROLES,
   schemaValidator,
   string
 } from '@forklaunch/blueprint-core';
@@ -17,7 +18,8 @@ import { BillingPortalServiceFactory } from '../routes/billingPortal.routes';
 
 export const BillingPortalController = (
   serviceFactory: BillingPortalServiceFactory,
-  openTelemetryCollector: OpenTelemetryCollector<Metrics>
+  openTelemetryCollector: OpenTelemetryCollector<Metrics>,
+  JWKS_PUBLIC_KEY_URL: string
 ) =>
   ({
     createBillingPortalSession: handlers.post(
@@ -26,6 +28,12 @@ export const BillingPortalController = (
       {
         name: 'createBillingPortalSession',
         summary: 'Create a billing portal session',
+        auth: {
+          jwt: {
+            jwksPublicKeyUrl: JWKS_PUBLIC_KEY_URL
+          },
+          allowedRoles: new Set([ROLES.ADMIN])
+        },
         body: CreateBillingPortalMapper.schema,
         responses: {
           200: BillingPortalMapper.schema
@@ -48,6 +56,12 @@ export const BillingPortalController = (
       {
         name: 'getBillingPortalSession',
         summary: 'Get a billing portal session',
+        auth: {
+          jwt: {
+            jwksPublicKeyUrl: JWKS_PUBLIC_KEY_URL
+          },
+          allowedRoles: new Set([ROLES.ADMIN])
+        },
         params: IdSchema,
         responses: {
           200: BillingPortalMapper.schema
@@ -70,6 +84,12 @@ export const BillingPortalController = (
       {
         name: 'updateBillingPortalSession',
         summary: 'Update a billing portal session',
+        auth: {
+          jwt: {
+            jwksPublicKeyUrl: JWKS_PUBLIC_KEY_URL
+          },
+          allowedRoles: new Set([ROLES.ADMIN])
+        },
         params: IdSchema,
         body: UpdateBillingPortalMapper.schema,
         responses: {
@@ -96,6 +116,12 @@ export const BillingPortalController = (
       {
         name: 'expireBillingPortalSession',
         summary: 'Expire a billing portal session',
+        auth: {
+          jwt: {
+            jwksPublicKeyUrl: JWKS_PUBLIC_KEY_URL
+          },
+          allowedRoles: new Set([ROLES.ADMIN])
+        },
         params: IdSchema,
         responses: {
           200: string

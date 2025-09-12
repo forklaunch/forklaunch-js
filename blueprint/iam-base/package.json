@@ -47,7 +47,9 @@
     "@mikro-orm/seeder": "^6.5.2",
     "@mikro-orm/sqlite": "^6.5.2",
     "@sinclair/typebox": "^0.34.41",
+    "@types/uuid": "^10.0.0",
     "dotenv": "^17.2.2",
+    "uuid": "^13.0.0",
     "zod": "^4.1.8"
   },
   "devDependencies": {

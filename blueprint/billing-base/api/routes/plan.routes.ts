@@ -5,6 +5,7 @@ import { PlanController } from '../controllers/plan.controller';
 
 const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
 const planServiceFactory = ci.scopedResolver(tokens.PlanService);
+const HMAC_SECRET_KEY = ci.resolve(tokens.HMAC_SECRET_KEY);
 
 export type PlanServiceFactory = typeof planServiceFactory;
 
@@ -13,7 +14,11 @@ export const planRouter = forklaunchRouter(
   schemaValidator,
   openTelemetryCollector
 );
-const controller = PlanController(planServiceFactory, openTelemetryCollector);
+const controller = PlanController(
+  planServiceFactory,
+  openTelemetryCollector,
+  HMAC_SECRET_KEY
+);
 
 planRouter.post('/', controller.createPlan);
 planRouter.get('/:id', controller.getPlan);

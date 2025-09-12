@@ -7,6 +7,7 @@ const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
 const checkoutSessionServiceFactory = ci.scopedResolver(
   tokens.CheckoutSessionService
 );
+const HMAC_SECRET_KEY = ci.resolve(tokens.HMAC_SECRET_KEY);
 
 export type CheckoutSessionServiceFactory =
   typeof checkoutSessionServiceFactory;
@@ -18,7 +19,8 @@ export const checkoutSessionRouter = forklaunchRouter(
 );
 const controller = CheckoutSessionController(
   checkoutSessionServiceFactory,
-  openTelemetryCollector
+  openTelemetryCollector,
+  HMAC_SECRET_KEY
 );
 
 checkoutSessionRouter.post('/', controller.createCheckoutSession);

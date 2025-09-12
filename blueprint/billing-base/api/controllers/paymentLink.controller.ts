@@ -22,7 +22,8 @@ import { PaymentLinkServiceFactory } from '../routes/paymentLink.routes';
 
 export const PaymentLinkController = (
   serviceFactory: PaymentLinkServiceFactory,
-  openTelemetryCollector: OpenTelemetryCollector<Metrics>
+  openTelemetryCollector: OpenTelemetryCollector<Metrics>,
+  HMAC_SECRET_KEY: string
 ) =>
   ({
     createPaymentLink: handlers.post(
@@ -31,6 +32,13 @@ export const PaymentLinkController = (
       {
         name: 'createPaymentLink',
         summary: 'Create a payment link',
+        auth: {
+          hmac: {
+            secretKeys: {
+              default: HMAC_SECRET_KEY
+            }
+          }
+        },
         body: CreatePaymentLinkMapper.schema,
         responses: {
           200: PaymentLinkMapper.schema
@@ -50,6 +58,13 @@ export const PaymentLinkController = (
       {
         name: 'getPaymentLink',
         summary: 'Get a payment link',
+        auth: {
+          hmac: {
+            secretKeys: {
+              default: HMAC_SECRET_KEY
+            }
+          }
+        },
         params: IdSchema,
         responses: {
           200: PaymentLinkMapper.schema
@@ -67,6 +82,13 @@ export const PaymentLinkController = (
       {
         name: 'updatePaymentLink',
         summary: 'Update a payment link',
+        auth: {
+          hmac: {
+            secretKeys: {
+              default: HMAC_SECRET_KEY
+            }
+          }
+        },
         body: UpdatePaymentLinkMapper.schema,
         params: IdSchema,
         responses: {
@@ -87,6 +109,13 @@ export const PaymentLinkController = (
       {
         name: 'expirePaymentLink',
         summary: 'Expire a payment link',
+        auth: {
+          hmac: {
+            secretKeys: {
+              default: HMAC_SECRET_KEY
+            }
+          }
+        },
         params: IdSchema,
         responses: {
           200: string

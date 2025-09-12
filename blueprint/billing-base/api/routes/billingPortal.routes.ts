@@ -7,6 +7,7 @@ const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
 const billingPortalServiceFactory = ci.scopedResolver(
   tokens.BillingPortalService
 );
+const JWKS_PUBLIC_KEY_URL = ci.resolve(tokens.JWKS_PUBLIC_KEY_URL);
 
 export type BillingPortalServiceFactory = typeof billingPortalServiceFactory;
 
@@ -17,7 +18,8 @@ export const billingPortalRouter = forklaunchRouter(
 );
 const controller = BillingPortalController(
   billingPortalServiceFactory,
-  openTelemetryCollector
+  openTelemetryCollector,
+  JWKS_PUBLIC_KEY_URL
 );
 
 billingPortalRouter.post('/', controller.createBillingPortalSession);

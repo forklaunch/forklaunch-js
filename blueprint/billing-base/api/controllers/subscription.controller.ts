@@ -21,7 +21,8 @@ import { SubscriptionServiceFactory } from '../routes/subscription.routes';
 
 export const SubscriptionController = (
   serviceFactory: SubscriptionServiceFactory,
-  openTelemetryCollector: OpenTelemetryCollector<Metrics>
+  openTelemetryCollector: OpenTelemetryCollector<Metrics>,
+  HMAC_SECRET_KEY: string
 ) =>
   ({
     createSubscription: handlers.post(
@@ -30,6 +31,13 @@ export const SubscriptionController = (
       {
         name: 'createSubscription',
         summary: 'Create a subscription',
+        auth: {
+          hmac: {
+            secretKeys: {
+              default: HMAC_SECRET_KEY
+            }
+          }
+        },
         body: CreateSubscriptionMapper.schema,
         responses: {
           200: SubscriptionMapper.schema
@@ -49,6 +57,13 @@ export const SubscriptionController = (
       {
         name: 'getSubscription',
         summary: 'Get a subscription',
+        auth: {
+          hmac: {
+            secretKeys: {
+              default: HMAC_SECRET_KEY
+            }
+          }
+        },
         params: IdSchema,
         responses: {
           200: SubscriptionMapper.schema
@@ -68,6 +83,13 @@ export const SubscriptionController = (
       {
         name: 'getUserSubscription',
         summary: 'Get a user subscription',
+        auth: {
+          hmac: {
+            secretKeys: {
+              default: HMAC_SECRET_KEY
+            }
+          }
+        },
         params: IdSchema,
         responses: {
           200: SubscriptionMapper.schema
@@ -90,6 +112,13 @@ export const SubscriptionController = (
       {
         name: 'getOrganizationSubscription',
         summary: 'Get an organization subscription',
+        auth: {
+          hmac: {
+            secretKeys: {
+              default: HMAC_SECRET_KEY
+            }
+          }
+        },
         params: IdSchema,
         responses: {
           200: SubscriptionMapper.schema
@@ -112,6 +141,13 @@ export const SubscriptionController = (
       {
         name: 'updateSubscription',
         summary: 'Update a subscription',
+        auth: {
+          hmac: {
+            secretKeys: {
+              default: HMAC_SECRET_KEY
+            }
+          }
+        },
         params: IdSchema,
         body: UpdateSubscriptionMapper.schema,
         responses: {
@@ -132,6 +168,13 @@ export const SubscriptionController = (
       {
         name: 'deleteSubscription',
         summary: 'Delete a subscription',
+        auth: {
+          hmac: {
+            secretKeys: {
+              default: HMAC_SECRET_KEY
+            }
+          }
+        },
         params: IdSchema,
         responses: {
           200: string
@@ -151,6 +194,13 @@ export const SubscriptionController = (
         name: 'listSubscriptions',
         summary: 'List subscriptions',
         query: IdsSchema,
+        auth: {
+          hmac: {
+            secretKeys: {
+              default: HMAC_SECRET_KEY
+            }
+          }
+        },
         responses: {
           200: array(SubscriptionMapper.schema)
         }
@@ -170,6 +220,13 @@ export const SubscriptionController = (
         name: 'cancelSubscription',
         summary: 'Cancel a subscription',
         params: IdSchema,
+        auth: {
+          hmac: {
+            secretKeys: {
+              default: HMAC_SECRET_KEY
+            }
+          }
+        },
         responses: {
           200: string
         }
@@ -188,6 +245,13 @@ export const SubscriptionController = (
         name: 'resumeSubscription',
         summary: 'Resume a subscription',
         params: IdSchema,
+        auth: {
+          hmac: {
+            secretKeys: {
+              default: HMAC_SECRET_KEY
+            }
+          }
+        },
         responses: {
           200: string
         }

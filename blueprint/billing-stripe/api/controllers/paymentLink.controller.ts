@@ -24,7 +24,8 @@ import { PaymentLinkServiceFactory } from '../routes/paymentLink.routes';
 
 export const PaymentLinkController = (
   serviceFactory: PaymentLinkServiceFactory,
-  openTelemetryCollector: OpenTelemetryCollector<Metrics>
+  openTelemetryCollector: OpenTelemetryCollector<Metrics>,
+  HMAC_SECRET_KEY: string
 ) =>
   ({
     createPaymentLink: handlers.post(
@@ -33,6 +34,13 @@ export const PaymentLinkController = (
       {
         name: 'createPaymentLink',
         summary: 'Create a payment link',
+        auth: {
+          hmac: {
+            secretKeys: {
+              default: HMAC_SECRET_KEY
+            }
+          }
+        },
         body: CreatePaymentLinkMapper.schema,
         responses: {
           200: PaymentLinkMapper.schema
@@ -52,6 +60,13 @@ export const PaymentLinkController = (
       {
         name: 'getPaymentLink',
         summary: 'Get a payment link',
+        auth: {
+          hmac: {
+            secretKeys: {
+              default: HMAC_SECRET_KEY
+            }
+          }
+        },
         params: IdSchema,
         responses: {
           200: PaymentLinkMapper.schema
@@ -69,6 +84,13 @@ export const PaymentLinkController = (
       {
         name: 'updatePaymentLink',
         summary: 'Update a payment link',
+        auth: {
+          hmac: {
+            secretKeys: {
+              default: HMAC_SECRET_KEY
+            }
+          }
+        },
         body: UpdatePaymentLinkMapper.schema,
         params: IdSchema,
         responses: {
@@ -89,6 +111,13 @@ export const PaymentLinkController = (
       {
         name: 'expirePaymentLink',
         summary: 'Expire a payment link',
+        auth: {
+          hmac: {
+            secretKeys: {
+              default: HMAC_SECRET_KEY
+            }
+          }
+        },
         params: IdSchema,
         responses: {
           200: string
@@ -107,6 +136,13 @@ export const PaymentLinkController = (
       {
         name: 'handlePaymentSuccess',
         summary: 'Handle a payment success',
+        auth: {
+          hmac: {
+            secretKeys: {
+              default: HMAC_SECRET_KEY
+            }
+          }
+        },
         params: IdSchema,
         responses: {
           200: string
@@ -128,6 +164,13 @@ export const PaymentLinkController = (
       {
         name: 'handlePaymentFailure',
         summary: 'Handle a payment failure',
+        auth: {
+          hmac: {
+            secretKeys: {
+              default: HMAC_SECRET_KEY
+            }
+          }
+        },
         params: IdSchema,
         responses: {
           200: string
@@ -150,6 +193,13 @@ export const PaymentLinkController = (
         name: 'listPaymentLinks',
         summary: 'List payment links',
         query: IdsSchema,
+        auth: {
+          hmac: {
+            secretKeys: {
+              default: HMAC_SECRET_KEY
+            }
+          }
+        },
         responses: {
           200: array(PaymentLinkMapper.schema)
         }

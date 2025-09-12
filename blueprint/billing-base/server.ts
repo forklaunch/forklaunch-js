@@ -1,4 +1,9 @@
-import { forklaunchExpress, schemaValidator } from '@forklaunch/blueprint-core';
+import {
+  forklaunchExpress,
+  PERMISSIONS,
+  ROLES,
+  schemaValidator
+} from '@forklaunch/blueprint-core';
 import { billingPortalRouter } from './api/routes/billingPortal.routes';
 import { checkoutSessionRouter } from './api/routes/checkoutSession.routes';
 import { paymentLinkRouter } from './api/routes/paymentLink.routes';
@@ -10,7 +15,20 @@ import { ci, tokens } from './bootstrapper';
 const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
 
 //! creates an instance of forklaunchExpress
-const app = forklaunchExpress(schemaValidator, openTelemetryCollector);
+const app = forklaunchExpress(schemaValidator, openTelemetryCollector, {
+  auth: {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    surfacePermissions: async (_payload, _req) => {
+      //! return the permissions for the user, this is a placeholder
+      return new Set([PERMISSIONS.PLATFORM_READ]);
+    },
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    surfaceRoles: async (_payload, _req) => {
+      //! return the roles for the user, this is a placeholder
+      return new Set([ROLES.ADMIN]);
+    }
+  }
+});
 
 //! resolves the host, port, and version from the configuration
 const host = ci.resolve(tokens.HOST);

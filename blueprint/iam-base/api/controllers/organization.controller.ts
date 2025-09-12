@@ -1,6 +1,7 @@
 import {
   handlers,
   IdSchema,
+  PLATFORM_ADMIN_ROLES,
   schemaValidator,
   string
 } from '@forklaunch/blueprint-core';
@@ -19,7 +20,9 @@ import type { OrganizationServiceFactory } from '../routes/organization.routes';
 
 export const OrganizationController = (
   serviceFactory: OrganizationServiceFactory,
-  openTelemetryCollector: OpenTelemetryCollector<Metrics>
+  openTelemetryCollector: OpenTelemetryCollector<Metrics>,
+  HMAC_SECRET_KEY: string,
+  JWT_PUBLIC_KEY_URL: string
 ) =>
   ({
     createOrganization: handlers.post(
@@ -28,6 +31,13 @@ export const OrganizationController = (
       {
         name: 'Create Organization',
         summary: 'Creates a new organization',
+        auth: {
+          hmac: {
+            secretKeys: {
+              default: HMAC_SECRET_KEY
+            }
+          }
+        },
         body: CreateOrganizationMapper.schema,
         responses: {
           201: OrganizationMapper.schema,
@@ -60,6 +70,12 @@ export const OrganizationController = (
       {
         name: 'Get Organization',
         summary: 'Gets an organization by ID',
+        auth: {
+          jwt: {
+            jwksPublicKeyUrl: JWT_PUBLIC_KEY_URL
+          },
+          allowedRoles: PLATFORM_ADMIN_ROLES
+        },
         responses: {
           200: OrganizationMapper.schema,
           404: string
@@ -86,6 +102,12 @@ export const OrganizationController = (
       {
         name: 'Update Organization',
         summary: 'Updates an organization by ID',
+        auth: {
+          jwt: {
+            jwksPublicKeyUrl: JWT_PUBLIC_KEY_URL
+          },
+          allowedRoles: PLATFORM_ADMIN_ROLES
+        },
         body: UpdateOrganizationMapper.schema,
         responses: {
           200: OrganizationMapper.schema,
@@ -106,6 +128,13 @@ export const OrganizationController = (
       {
         name: 'Delete Organization',
         summary: 'Deletes an organization by ID',
+        auth: {
+          hmac: {
+            secretKeys: {
+              default: HMAC_SECRET_KEY
+            }
+          }
+        },
         responses: {
           200: string,
           404: string

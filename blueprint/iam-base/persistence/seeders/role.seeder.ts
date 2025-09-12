@@ -1,11 +1,16 @@
 import { EntityManager } from '@mikro-orm/core';
 import { Seeder } from '@mikro-orm/seeder';
 import { Role } from '../entities/role.entity';
-import { role } from '../seed.data';
+import { adminRole, editorRole, systemRole, viewerRole } from '../seed.data';
 
 export class RoleSeeder extends Seeder {
   async run(em: EntityManager): Promise<void> {
-    const createdRole = em.create(Role, role);
-    return em.persistAndFlush(createdRole);
+    const roles = [
+      em.create(Role, viewerRole),
+      em.create(Role, editorRole),
+      em.create(Role, adminRole),
+      em.create(Role, systemRole)
+    ];
+    return em.persistAndFlush(roles);
   }
 }

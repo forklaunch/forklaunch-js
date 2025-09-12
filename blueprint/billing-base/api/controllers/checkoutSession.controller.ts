@@ -19,7 +19,8 @@ import { CheckoutSessionServiceFactory } from '../routes/checkoutSession.routes'
 
 export const CheckoutSessionController = (
   serviceFactory: CheckoutSessionServiceFactory,
-  openTelemetryCollector: OpenTelemetryCollector<Metrics>
+  openTelemetryCollector: OpenTelemetryCollector<Metrics>,
+  HMAC_SECRET_KEY: string
 ) =>
   ({
     createCheckoutSession: handlers.post(
@@ -28,6 +29,13 @@ export const CheckoutSessionController = (
       {
         name: 'createCheckoutSession',
         summary: 'Create a checkout session',
+        auth: {
+          hmac: {
+            secretKeys: {
+              default: HMAC_SECRET_KEY
+            }
+          }
+        },
         body: CreateCheckoutSessionMapper.schema,
         responses: {
           200: CheckoutSessionMapper.schema
@@ -47,6 +55,13 @@ export const CheckoutSessionController = (
       {
         name: 'getCheckoutSession',
         summary: 'Get a checkout session',
+        auth: {
+          hmac: {
+            secretKeys: {
+              default: HMAC_SECRET_KEY
+            }
+          }
+        },
         params: IdSchema,
         responses: {
           200: CheckoutSessionMapper.schema
@@ -66,6 +81,13 @@ export const CheckoutSessionController = (
       {
         name: 'expireCheckoutSession',
         summary: 'Expire a checkout session',
+        auth: {
+          hmac: {
+            secretKeys: {
+              default: HMAC_SECRET_KEY
+            }
+          }
+        },
         params: IdSchema,
         responses: {
           200: string
@@ -84,6 +106,13 @@ export const CheckoutSessionController = (
       {
         name: 'handleCheckoutSuccess',
         summary: 'Handle a checkout success',
+        auth: {
+          hmac: {
+            secretKeys: {
+              default: HMAC_SECRET_KEY
+            }
+          }
+        },
         params: IdSchema,
         responses: {
           200: string
@@ -104,6 +133,13 @@ export const CheckoutSessionController = (
       {
         name: 'handleCheckoutFailure',
         summary: 'Handle a checkout failure',
+        auth: {
+          hmac: {
+            secretKeys: {
+              default: HMAC_SECRET_KEY
+            }
+          }
+        },
         params: IdSchema,
         responses: {
           200: string

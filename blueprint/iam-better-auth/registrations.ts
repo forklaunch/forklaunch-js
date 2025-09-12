@@ -176,45 +176,6 @@ const runtimeDependencies = environmentConfig.chain({
           openTelemetryCollector: OpenTelemetryCollector
         })
       )
-  },
-  ExpressApplicationOptions: {
-    lifetime: Lifetime.Singleton,
-    type: promise(
-      type<
-        ExpressApplicationOptions<
-          SchemaValidator,
-          SessionObject<SchemaValidator>
-        >
-      >()
-    ),
-    factory: async ({ BETTER_AUTH_BASE_PATH, CORS_ORIGINS, BetterAuth }) => {
-      const betterAuthOpenAPIContent =
-        await BetterAuth.api.generateOpenAPISchema();
-
-      return {
-        cors: {
-          origin: CORS_ORIGINS,
-          methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-          credentials: true
-        },
-        docs: {
-          type: 'scalar' as const,
-          sources: [
-            {
-              name: 'BetterAuth',
-              content: {
-                ...betterAuthOpenAPIContent,
-                paths: Object.fromEntries(
-                  Object.entries(betterAuthOpenAPIContent.paths).map(
-                    ([key, value]) => [`${BETTER_AUTH_BASE_PATH}${key}`, value]
-                  )
-                )
-              }
-            }
-          ]
-        }
-      };
-    }
   }
 });
 
@@ -301,8 +262,87 @@ const serviceDependencies = runtimeDependencies.chain({
   }
 });
 
+//! defines the express application options for the application
+const expressApplicationOptions = serviceDependencies.chain({
+  ExpressApplicationOptions: {
+    lifetime: Lifetime.Singleton,
+    type: promise(
+      type<
+        ExpressApplicationOptions<
+          SchemaValidator,
+          SessionObject<SchemaValidator>
+        >
+      >()
+    ),
+    factory: async ({
+      BETTER_AUTH_BASE_PATH,
+      CORS_ORIGINS,
+      BetterAuth,
+      UserService
+    }) => {
+      const betterAuthOpenAPIContent =
+        await BetterAuth.api.generateOpenAPISchema();
+
+      const options: ExpressApplicationOptions<
+        SchemaValidator,
+        SessionObject<SchemaValidator>
+      > = {
+        auth: {
+          surfacePermissions: async (payload) => {
+            if (!payload.sub) {
+              return new Set();
+            }
+            return new Set(
+              (
+                await UserService.surfacePermissions({
+                  id: payload.sub
+                })
+              ).map((permission) => permission.slug)
+            );
+          },
+          surfaceRoles: async (payload) => {
+            if (!payload.sub) {
+              return new Set();
+            }
+            return new Set(
+              (
+                await UserService.surfaceRoles({
+                  id: payload.sub
+                })
+              ).map((role) => role.name)
+            );
+          }
+        },
+        cors: {
+          origin: CORS_ORIGINS,
+          methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+          credentials: true
+        },
+        docs: {
+          type: 'scalar' as const,
+          sources: [
+            {
+              title: 'BetterAuth',
+              content: {
+                ...betterAuthOpenAPIContent,
+                paths: Object.fromEntries(
+                  Object.entries(betterAuthOpenAPIContent.paths).map(
+                    ([key, value]) => [`${BETTER_AUTH_BASE_PATH}${key}`, value]
+                  )
+                )
+              }
+            }
+          ]
+        }
+      };
+
+      return options;
+    }
+  }
+});
+
 //! validates the configuration and returns the dependencies for the application
 export const createDependencyContainer = (envFilePath: string) => ({
-  ci: serviceDependencies.validateConfigSingletons(envFilePath),
-  tokens: serviceDependencies.tokens()
+  ci: expressApplicationOptions.validateConfigSingletons(envFilePath),
+  tokens: expressApplicationOptions.tokens()
 });

@@ -7,6 +7,7 @@ const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
 const subscriptionServiceFactory = ci.scopedResolver(
   tokens.SubscriptionService
 );
+const HMAC_SECRET_KEY = ci.resolve(tokens.HMAC_SECRET_KEY);
 
 export type SubscriptionServiceFactory = typeof subscriptionServiceFactory;
 
@@ -17,7 +18,8 @@ export const subscriptionRouter = forklaunchRouter(
 );
 const controller = SubscriptionController(
   subscriptionServiceFactory,
-  openTelemetryCollector
+  openTelemetryCollector,
+  HMAC_SECRET_KEY
 );
 
 subscriptionRouter.post('/', controller.createSubscription);

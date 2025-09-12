@@ -25,7 +25,8 @@ import { PlanServiceFactory } from '../routes/plan.routes';
 
 export const PlanController = (
   serviceFactory: PlanServiceFactory,
-  openTelemetryCollector: OpenTelemetryCollector<Metrics>
+  openTelemetryCollector: OpenTelemetryCollector<Metrics>,
+  HMAC_SECRET_KEY: string
 ) =>
   ({
     createPlan: handlers.post(
@@ -34,6 +35,13 @@ export const PlanController = (
       {
         name: 'createPlan',
         summary: 'Create a plan',
+        auth: {
+          hmac: {
+            secretKeys: {
+              default: HMAC_SECRET_KEY
+            }
+          }
+        },
         body: CreatePlanMapper.schema,
         responses: {
           200: PlanMapper.schema
@@ -51,6 +59,13 @@ export const PlanController = (
       {
         name: 'getPlan',
         summary: 'Get a plan',
+        auth: {
+          hmac: {
+            secretKeys: {
+              default: HMAC_SECRET_KEY
+            }
+          }
+        },
         params: IdSchema,
         responses: {
           200: PlanSchemas.PlanSchema
@@ -68,6 +83,13 @@ export const PlanController = (
       {
         name: 'updatePlan',
         summary: 'Update a plan',
+        auth: {
+          hmac: {
+            secretKeys: {
+              default: HMAC_SECRET_KEY
+            }
+          }
+        },
         body: UpdatePlanMapper.schema,
         responses: {
           200: PlanMapper.schema
@@ -85,6 +107,13 @@ export const PlanController = (
       {
         name: 'deletePlan',
         summary: 'Delete a plan',
+        auth: {
+          hmac: {
+            secretKeys: {
+              default: HMAC_SECRET_KEY
+            }
+          }
+        },
         params: IdSchema,
         responses: {
           200: string
@@ -104,6 +133,13 @@ export const PlanController = (
         name: 'listPlans',
         summary: 'List plans',
         query: IdsSchema,
+        auth: {
+          hmac: {
+            secretKeys: {
+              default: HMAC_SECRET_KEY
+            }
+          }
+        },
         responses: {
           200: array(PlanSchemas.PlanSchema)
         }
