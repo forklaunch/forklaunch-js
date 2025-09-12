@@ -46,8 +46,8 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.35.0",
-    "@types/node": "^24.3.1",
-    "@typescript/native-preview": "7.0.0-dev.20250911.1",
+    "@types/node": "^24.3.2",
+    "@typescript/native-preview": "7.0.0-dev.20250912.1",
     "depcheck": "^1.4.7",
     "eslint": "^9.35.0",
     "globals": "^16.4.0",

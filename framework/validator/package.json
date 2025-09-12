@@ -78,8 +78,8 @@
   "devDependencies": {
     "@eslint/js": "^9.35.0",
     "@types/jest": "^30.0.0",
-    "@types/node": "^24.3.1",
-    "@typescript/native-preview": "7.0.0-dev.20250911.1",
+    "@types/node": "^24.3.2",
+    "@typescript/native-preview": "7.0.0-dev.20250912.1",
     "@vitest/coverage-v8": "^3.2.4",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
