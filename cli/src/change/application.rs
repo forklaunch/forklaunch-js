@@ -33,7 +33,7 @@ use crate::{
         },
         base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
         command::command,
-        docker::{DockerCompose, find_docker_compose_path, update_dockerfile_contents},
+        docker::{DockerCompose, update_dockerfile_contents},
         format::format_code,
         license::generate_license,
         manifest::{

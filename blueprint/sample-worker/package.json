@@ -11,6 +11,7 @@
   },
   "license": "MIT",
   "author": "Forklift Technologies, Inc.",
+  "type": "module",
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist bun.lockb bun.lock node_modules",
