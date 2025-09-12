@@ -303,7 +303,11 @@ pub(crate) fn generate_service_package_json(
                 migrate_down: Some(project_migrate_script("down")),
                 migrate_init: Some(project_migrate_script("init")),
                 migrate_up: Some(project_migrate_script("up")),
-                seed: Some(PROJECT_SEED_SCRIPT.to_string()),
+                seed: if !manifest_data.is_mongo {
+                    Some(PROJECT_SEED_SCRIPT.to_string())
+                } else {
+                    None
+                },
                 start: Some(project_start_server_script(
                     &manifest_data.runtime.parse()?,
                     manifest_data.database.parse::<Database>().ok(),
