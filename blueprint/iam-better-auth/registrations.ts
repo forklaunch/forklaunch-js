@@ -24,6 +24,7 @@ import {
   BaseUserService
 } from '@forklaunch/implementation-iam-base/services';
 import { EntityManager, ForkOptions, MikroORM } from '@mikro-orm/core';
+import { readFileSync } from 'fs';
 import { BetterAuthConfig, betterAuthConfig } from './auth';
 import { OrganizationStatus } from './domain/enum/organizationStatus.enum';
 import {
@@ -108,15 +109,13 @@ const environmentConfig = configInjector.chain({
     type: string,
     value: getEnvVar('OTEL_EXPORTER_OTLP_ENDPOINT')
   },
-  PASSWORD_ENCRYPTION_PUBLIC_KEY_PATH: {
+  PASSWORD_ENCRYPTION_SECRET: {
     lifetime: Lifetime.Singleton,
     type: string,
-    value: getEnvVar('PASSWORD_ENCRYPTION_PUBLIC_KEY_PATH')
-  },
-  PASSWORD_ENCRYPTION_SECRET_PATH: {
-    lifetime: Lifetime.Singleton,
-    type: string,
-    value: getEnvVar('PASSWORD_ENCRYPTION_SECRET_PATH')
+    value:
+      readFileSync(getEnvVar('PASSWORD_ENCRYPTION_SECRET_PATH'), 'utf8').split(
+        '\n'
+      )[1] || getEnvVar('PASSWORD_ENCRYPTION_SECRET')
   },
   BETTER_AUTH_BASE_PATH: {
     lifetime: Lifetime.Singleton,
@@ -127,6 +126,11 @@ const environmentConfig = configInjector.chain({
     lifetime: Lifetime.Singleton,
     type: array(string),
     value: getEnvVar('CORS_ORIGINS')?.split(',')
+  },
+  HMAC_SECRET_KEY: {
+    lifetime: Lifetime.Singleton,
+    type: string,
+    value: getEnvVar('HMAC_SECRET_KEY')
   }
 });
 
@@ -158,7 +162,7 @@ const runtimeDependencies = environmentConfig.chain({
     type: type<ReturnType<typeof betterAuth<BetterAuthConfig>>>(),
     factory: ({
       BETTER_AUTH_BASE_PATH,
-      PASSWORD_ENCRYPTION_SECRET_PATH,
+      PASSWORD_ENCRYPTION_SECRET,
       CORS_ORIGINS,
       MikroORM,
       OpenTelemetryCollector
@@ -166,7 +170,7 @@ const runtimeDependencies = environmentConfig.chain({
       betterAuth(
         betterAuthConfig({
           BETTER_AUTH_BASE_PATH,
-          PASSWORD_ENCRYPTION_SECRET_PATH,
+          PASSWORD_ENCRYPTION_SECRET,
           CORS_ORIGINS,
           orm: MikroORM,
           openTelemetryCollector: OpenTelemetryCollector
@@ -281,18 +285,9 @@ const serviceDependencies = runtimeDependencies.chain({
       UserMapperEntityTypes,
       UserMapperDomainObjectTypes
     >,
-    factory: (
-      {
-        EntityManager,
-        OpenTelemetryCollector,
-        PASSWORD_ENCRYPTION_PUBLIC_KEY_PATH
-      },
-      resolve,
-      context
-    ) =>
+    factory: ({ EntityManager, OpenTelemetryCollector }, resolve, context) =>
       new BaseUserService(
         EntityManager,
-        PASSWORD_ENCRYPTION_PUBLIC_KEY_PATH,
         () => resolve('RoleService', context),
         () => resolve('OrganizationService', context),
         OpenTelemetryCollector,

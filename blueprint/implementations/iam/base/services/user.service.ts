@@ -31,7 +31,6 @@ export class BaseUserService<
     tracing?: boolean;
   };
   public em: EntityManager;
-  protected passwordEncryptionPublicKeyPath: string;
   protected roleServiceFactory: () => RoleService;
   protected organizationServiceFactory: () => OrganizationService<OrganizationStatus>;
   protected openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
@@ -40,7 +39,6 @@ export class BaseUserService<
 
   constructor(
     em: EntityManager,
-    passwordEncryptionPublicKeyPath: string,
     roleServiceFactory: () => RoleService,
     organizationServiceFactory: () => OrganizationService<OrganizationStatus>,
     openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
@@ -51,7 +49,6 @@ export class BaseUserService<
     }
   ) {
     this.em = em;
-    this.passwordEncryptionPublicKeyPath = passwordEncryptionPublicKeyPath;
     this.roleServiceFactory = roleServiceFactory;
     this.organizationServiceFactory = organizationServiceFactory;
     this.openTelemetryCollector = openTelemetryCollector;
@@ -222,40 +219,29 @@ export class BaseUserService<
     await (em ?? this.em).nativeDelete('User', idsDto);
   }
 
-  async verifyHasRole(idDto: IdDto, roleId: string): Promise<void> {
+  async surfaceRoles(
+    idDto: IdDto,
+    em?: EntityManager
+  ): Promise<MapperDomains['UserMapper']['roles']> {
     if (this.evaluatedTelemetryOptions.logging) {
-      this.openTelemetryCollector.info('Verifying user has role', {
-        idDto,
-        roleId
+      this.openTelemetryCollector.info('Surfacing user roles', {
+        idDto
       });
     }
-    const user = await this.getUser(idDto);
-    if (
-      user.roles.filter((role) => {
-        return roleId == role.id;
-      }).length === 0
-    ) {
-      throw new Error(`User ${idDto.id} does not have role ${roleId}`);
-    }
+    const user = await this.getUser(idDto, em);
+    return user.roles;
   }
 
-  async verifyHasPermission(idDto: IdDto, permissionId: string): Promise<void> {
+  async surfacePermissions(
+    idDto: IdDto,
+    em?: EntityManager
+  ): Promise<MapperDomains['UserMapper']['roles'][0]['permissions']> {
     if (this.evaluatedTelemetryOptions.logging) {
-      this.openTelemetryCollector.info('Verifying user has permission', {
-        idDto,
-        permissionId
+      this.openTelemetryCollector.info('Surfacing user permissions', {
+        idDto
       });
     }
-    const user = await this.getUser(idDto);
-    if (
-      user.roles
-        .map((role) => role.permissions.map((permission) => permission.id))
-        .flat()
-        .filter((id) => id == permissionId).length === 0
-    ) {
-      throw new Error(
-        `User ${idDto.id} does not have permission ${permissionId}`
-      );
-    }
+    const user = await this.getUser(idDto, em);
+    return user.roles.map((role) => role.permissions).flat();
   }
 }

@@ -5,6 +5,7 @@ import { UserController } from '../controllers/user.controller';
 
 const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
 const userServiceFactory = ci.scopedResolver(tokens.UserService);
+const HMAC_SECRET_KEY = ci.resolve(tokens.HMAC_SECRET_KEY);
 
 export type UserServiceFactory = typeof userServiceFactory;
 
@@ -13,7 +14,11 @@ export const userRouter = forklaunchRouter(
   schemaValidator,
   openTelemetryCollector
 );
-const controller = UserController(userServiceFactory, openTelemetryCollector);
+const controller = UserController(
+  userServiceFactory,
+  openTelemetryCollector,
+  HMAC_SECRET_KEY
+);
 
 userRouter.post('/', controller.createUser);
 userRouter.post('/batch', controller.createBatchUsers);
@@ -23,10 +28,7 @@ userRouter.put('/', controller.updateUser);
 userRouter.put('/batch', controller.updateBatchUsers);
 userRouter.delete('/:id', controller.deleteUser);
 userRouter.delete('/batch', controller.deleteBatchUsers);
-userRouter.get('/:id/verify-role/:roleId', controller.verifyHasRole);
-userRouter.get(
-  '/:id/verify-permission/:permissionId',
-  controller.verifyHasPermission
-);
+userRouter.get('/:id/surface-roles', controller.surfaceRoles);
+userRouter.get('/:id/surface-permissions', controller.surfacePermissions);
 
 export const userSdkRouter = sdkRouter(schemaValidator, controller, userRouter);

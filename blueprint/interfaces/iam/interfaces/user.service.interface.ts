@@ -30,15 +30,12 @@ export interface UserService<
   ): Promise<Params['UserDto'][]>;
   deleteUser(idDto: Params['IdDto'], em?: EntityManager): Promise<void>;
   deleteBatchUsers(idsDto: Params['IdsDto'], em?: EntityManager): Promise<void>;
-
-  verifyHasRole(
+  surfaceRoles(
     idDto: Params['IdDto'],
-    roleId: string,
     em?: EntityManager
-  ): Promise<void>;
-  verifyHasPermission(
+  ): Promise<Params['UserDto']['roles']>;
+  surfacePermissions(
     idDto: Params['IdDto'],
-    permissionId: string,
     em?: EntityManager
-  ): Promise<void>;
+  ): Promise<Params['UserDto']['roles'][0]['permissions']>;
 }

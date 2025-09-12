@@ -10,6 +10,8 @@ import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { Controller } from '@forklaunch/core/controllers';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { UserService } from '@forklaunch/interfaces-iam/interfaces';
+import { PermissionMapper } from '../../domain/mappers/permission.mappers';
+import { RoleMapper } from '../../domain/mappers/role.mappers';
 import {
   CreateUserMapper,
   UpdateUserMapper,
@@ -19,7 +21,8 @@ import { UserServiceFactory } from '../routes/user.routes';
 
 export const UserController = (
   serviceFactory: UserServiceFactory,
-  openTelemetryCollector: OpenTelemetryCollector<Metrics>
+  openTelemetryCollector: OpenTelemetryCollector<Metrics>,
+  HMAC_SECRET_KEY: string
 ) =>
   ({
     createUser: handlers.post(
@@ -173,54 +176,105 @@ export const UserController = (
       }
     ),
 
-    verifyHasRole: handlers.get(
+    /**
+     * Surface User Roles
+     * @param req - The request object
+     * @param res - The response object
+     * @returns The permissions for the user
+     *
+     * Leverages the HMAC authentication method to verify the user's permissions.
+     *
+     * To create the HMAC token, use the createHmacToken function:
+     * ```typescript
+     * createHmacToken({
+     *   method: 'GET',
+     *   path: '/123414/surface-roles',
+     *   body?: {
+     *     someKey: '123414'
+     *   },
+     *   timestamp: '1234567890',
+     *   nonce: '1234567890',
+     *   secretKey: 'test'
+     * });
+     * ```
+     */
+    surfaceRoles: handlers.get(
       schemaValidator,
-      '/:id/verify-role/:roleId',
+      '/:id/surface-roles',
       {
-        name: 'Verify User Role',
-        summary: 'Verifies if a user has a specified role',
+        name: 'Surface User Roles',
+        summary: 'Surfaces the roles for a user',
+        auth: {
+          hmac: {
+            secretKeys: {
+              default: HMAC_SECRET_KEY
+            }
+          }
+        },
         responses: {
-          200: string,
+          200: array(RoleMapper.schema),
           500: string
         },
         params: {
-          ...IdSchema,
-          roleId: string
+          ...IdSchema
         }
       },
       async (req, res) => {
         openTelemetryCollector.debug('Verifying user role', req.params);
-        const { id, roleId } = req.params;
-        await serviceFactory().verifyHasRole({ id }, roleId);
-        res.status(200).send('User has the specified role');
+        const { id } = req.params;
+        const roles = await serviceFactory().surfaceRoles({ id });
+        res.status(200).json(roles);
       }
     ),
 
-    verifyHasPermission: handlers.get(
+    /**
+     * Surface User Permissions
+     * @param req - The request object
+     * @param res - The response object
+     * @returns The permissions for the user
+     *
+     * Leverages the HMAC authentication method to verify the user's permissions.
+     *
+     * To create the HMAC token, use the createHmacToken function:
+     * ```typescript
+     * createHmacToken({
+     *   method: 'GET',
+     *   path: '/123414/surface-permissions',
+     *   body?: {
+     *     someKey: '123414'
+     *   },
+     *   timestamp: '1234567890',
+     *   nonce: '1234567890',
+     *   secretKey: 'test'
+     * });
+     * ```
+     */
+    surfacePermissions: handlers.get(
       schemaValidator,
-      '/:id/verify-permission/:permissionId',
+      '/:id/surface-permissions',
       {
-        name: 'Verify User Permission',
+        name: 'Surface User Permissions',
         summary: 'Verifies if a user has a specified permission',
+        auth: {
+          hmac: {
+            secretKeys: {
+              default: HMAC_SECRET_KEY
+            }
+          }
+        },
         responses: {
-          200: string,
+          200: array(PermissionMapper.schema),
           500: string
         },
         params: {
-          ...IdSchema,
-          permissionId: string
+          ...IdSchema
         }
       },
       async (req, res) => {
         openTelemetryCollector.debug('Verifying user permission', req.params);
-        const { id, permissionId } = req.params;
-        await serviceFactory().verifyHasPermission(
-          {
-            id
-          },
-          permissionId
-        );
-        res.status(200).send('User has the specified permission');
+        const { id } = req.params;
+        const permissions = await serviceFactory().surfacePermissions({ id });
+        res.status(200).json(permissions);
       }
     )
   }) satisfies Controller<UserService>;

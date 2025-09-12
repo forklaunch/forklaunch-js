@@ -1,5 +1,13 @@
 # @forklaunch/implementation-iam-base
 
+## 0.6.4
+
+### Patch Changes
+
+- Use more appropriate auth apis for use with auth around the app
+- Updated dependencies
+  - @forklaunch/interfaces-iam@0.6.4
+
 ## 0.6.3
 
 ### Patch Changes
