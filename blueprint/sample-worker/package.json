@@ -29,10 +29,10 @@
     "migrate:down": "NODE_OPTIONS='--import=tsx' mikro-orm migration:down",
     "migrate:init": "NODE_OPTIONS='--import=tsx' mikro-orm migration:create --initial",
     "migrate:up": "NODE_OPTIONS='--import=tsx' mikro-orm migration:up",
+    "prepare": "pnpm run build",
     "seed": "DOTENV_FILE_PATH=.env.local NODE_OPTIONS='--import=tsx' mikro-orm seeder:run",
     "start:server": "DOTENV_FILE_PATH=.env.prod && pnpm migrate:up && node --import tsx dist/server.js",
     "start:worker": "DOTENV_FILE_PATH=.env.prod && node --import tsx dist/worker.js",
-    "prepare": "pnpm run build",
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
