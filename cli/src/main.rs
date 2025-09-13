@@ -10,6 +10,7 @@ use login::LoginCommand;
 use logout::LogoutCommand;
 use version::VersionCommand;
 use whoami::WhoAmICommand;
+use sync::SyncCommand;
 
 mod change;
 mod config;
@@ -24,6 +25,7 @@ mod logout;
 mod prompt;
 mod version;
 mod whoami;
+mod sync;
 
 pub(crate) trait CliCommand {
     fn command(&self) -> Command;
@@ -42,6 +44,7 @@ fn main() -> Result<()> {
     let logout = LogoutCommand::new();
     let whoami = WhoAmICommand::new();
     let version = VersionCommand::new();
+    let sync = SyncCommand::new();
 
     let matches = command!()
         .propagate_version(true)
@@ -57,6 +60,7 @@ fn main() -> Result<()> {
         .subcommand(logout.command())
         .subcommand(whoami.command())
         .subcommand(version.command())
+        .subcommand(sync.command())
         .get_matches();
 
     if let Some((cmd, sub_matches)) = matches.subcommand() {
@@ -74,6 +78,7 @@ fn main() -> Result<()> {
         Some(("logout", sub_matches)) => logout.handler(sub_matches),
         Some(("whoami", sub_matches)) => whoami.handler(sub_matches),
         Some(("version", sub_matches)) => version.handler(sub_matches),
+        Some(("sync", sub_matches)) => sync.handler(sub_matches),
         _ => unreachable!(),
     };
 
