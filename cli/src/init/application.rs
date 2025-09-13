@@ -56,23 +56,23 @@ use crate::{
             },
             package_json_constants::{
                 AJV_VERSION, APP_DEV_BUILD_SCRIPT, APP_DEV_SCRIPT, APP_PREPARE_SCRIPT,
-                BETTER_AUTH_VERSION, BETTER_SQLITE3_VERSION, BIOME_VERSION, COMMON_VERSION,
-                CORE_VERSION, DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION, GLOBALS_VERSION,
-                HUSKY_VERSION, HYPER_EXPRESS_VERSION, JEST_TYPES_VERSION, JEST_VERSION,
-                LINT_STAGED_VERSION, MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION,
-                MIKRO_ORM_MIGRATIONS_VERSION, MIKRO_ORM_REFLECTION_VERSION, NODE_GYP_VERSION,
-                OXLINT_VERSION, PRETTIER_VERSION, PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT,
-                SORT_PACKAGE_JSON_VERSION, SQLITE3_VERSION, TS_JEST_VERSION, TS_NODE_VERSION,
-                TSX_VERSION, TYPEBOX_VERSION, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION,
-                TYPES_EXPRESS_VERSION, TYPES_QS_VERSION, TYPES_UUID_VERSION,
-                TYPESCRIPT_ESLINT_VERSION, TYPESCRIPT_VERSION, UNIVERSAL_SDK_VERSION, UUID_VERSION,
-                VALIDATOR_VERSION, VITEST_VERSION, ZOD_VERSION, application_build_script,
-                application_clean_purge_script, application_clean_script, application_docs_script,
-                application_format_script, application_lint_fix_script, application_lint_script,
-                application_migrate_script, application_seed_script, application_setup_script,
-                application_test_script, application_up_packages_script, project_clean_script,
-                project_format_script, project_lint_fix_script, project_lint_script,
-                project_test_script,
+                BETTER_AUTH_VERSION, BETTER_SQLITE3_VERSION, BIOME_VERSION, BUNRUN_VERSION,
+                COMMON_VERSION, CORE_VERSION, DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION,
+                GLOBALS_VERSION, HUSKY_VERSION, HYPER_EXPRESS_VERSION, JEST_TYPES_VERSION,
+                JEST_VERSION, LINT_STAGED_VERSION, MIKRO_ORM_CORE_VERSION,
+                MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
+                MIKRO_ORM_REFLECTION_VERSION, NODE_GYP_VERSION, OXLINT_VERSION, PRETTIER_VERSION,
+                PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT, SORT_PACKAGE_JSON_VERSION,
+                SQLITE3_VERSION, TS_JEST_VERSION, TS_NODE_VERSION, TSX_VERSION, TYPEBOX_VERSION,
+                TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION, TYPES_QS_VERSION,
+                TYPES_UUID_VERSION, TYPESCRIPT_ESLINT_VERSION, TYPESCRIPT_VERSION,
+                UNIVERSAL_SDK_VERSION, UUID_VERSION, VALIDATOR_VERSION, VITEST_VERSION,
+                ZOD_VERSION, application_build_script, application_clean_purge_script,
+                application_clean_script, application_docs_script, application_format_script,
+                application_lint_fix_script, application_lint_script, application_migrate_script,
+                application_seed_script, application_setup_script, application_test_script,
+                application_up_packages_script, project_clean_script, project_format_script,
+                project_lint_fix_script, project_lint_script, project_test_script,
             },
             project_package_json::{ProjectDependencies, ProjectDevDependencies, ProjectScripts},
         },
@@ -159,6 +159,11 @@ fn generate_application_package_json(
             },
             eslint_js: if data.is_eslint {
                 Some(ESLINT_VERSION.to_string())
+            } else {
+                None
+            },
+            bunrun: if data.is_bun {
+                Some(BUNRUN_VERSION.to_string())
             } else {
                 None
             },

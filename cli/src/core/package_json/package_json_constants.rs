@@ -71,12 +71,9 @@ pub(crate) fn application_lint_fix_script(linter: &Linter) -> String {
     })
 }
 
-pub(crate) fn application_build_script(runtime: &Runtime, app_name: &str) -> String {
+pub(crate) fn application_build_script(runtime: &Runtime) -> String {
     match runtime {
-        Runtime::Bun => format!(
-            "bun --filter='!@{}/universal-sdk' run build && bun --filter='@{}/universal-sdk' run build",
-            app_name, app_name
-        ),
+        Runtime::Bun => "bunrun build".to_string(),
         Runtime::Node => "pnpm -r --no-bail run build".to_string(),
     }
 }
@@ -204,9 +201,7 @@ pub(crate) fn application_test_script<'a>(
 
 pub(crate) fn application_up_packages_script(runtime: &Runtime) -> String {
     String::from(match runtime {
-        Runtime::Bun => {
-            "bun update --latest && bun --filter='*' run update --latest && bun install"
-        }
+        Runtime::Bun => "bunrun up:latest --sequential",
         Runtime::Node => "pnpm -r --no-bail update --latest",
     })
 }
@@ -220,6 +215,8 @@ pub(crate) const BETTER_AUTH_MIKRO_ORM_VERSION: &str = "~0.4.105";
 pub(crate) const APP_CORE_VERSION: &str = "workspace:*";
 // @forklaunch/blueprint-monitoring
 pub(crate) const APP_MONITORING_VERSION: &str = "workspace:*";
+// @forklaunch/bunrun
+pub(crate) const BUNRUN_VERSION: &str = "~0.0.2";
 // @forklaunch/common
 pub(crate) const COMMON_VERSION: &str = "~0.6.7";
 // @forklaunch/core
