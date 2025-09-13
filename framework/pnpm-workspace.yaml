@@ -9,3 +9,4 @@ packages:
   - infrastructure/redis
   - infrastructure/S3
   - internal
+  - bunrun
