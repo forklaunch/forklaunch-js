@@ -65,7 +65,7 @@
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
-    "prepare": "pnpm run build",
+    "prepack": "pnpm run build",
     "publish:package": "./publish-package.bash",
     "test": "vitest --passWithNoTests"
   },

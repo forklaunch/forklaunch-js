@@ -26,7 +26,7 @@
     "migrate:down": "NODE_OPTIONS='--import=tsx' mikro-orm migration:down",
     "migrate:init": "NODE_OPTIONS='--import=tsx' mikro-orm migration:create --initial",
     "migrate:up": "NODE_OPTIONS='--import=tsx' mikro-orm migration:up",
-    "prepare": "pnpm run build",
+    "prepack": "pnpm run build",
     "seed": "DOTENV_FILE_PATH=.env.local NODE_OPTIONS='--import=tsx' mikro-orm seeder:run",
     "start": "node --import=tsx dist/server.js",
     "start:bun": "bun run migrate:up && bun dist/server.js",
