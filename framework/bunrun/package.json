@@ -1,12 +1,15 @@
 {
-  "name": "@forklaunch/universal-sdk",
-  "version": "0.7.7",
-  "description": "Cross runtime fetch library for forklaunch router sdks",
+  "name": "@forklaunch/bunrun",
+  "version": "0.0.1",
+  "description": "Bun-native TypeScript workspace script runner with topological ordering",
   "keywords": [
-    "fetch",
-    "http",
-    "express",
-    "hyper-express"
+    "bun",
+    "workspace",
+    "monorepo",
+    "build",
+    "topological",
+    "typescript",
+    "cli"
   ],
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -18,21 +21,17 @@
   },
   "license": "MIT",
   "author": "Rohin Bhargava",
-  "exports": {
-    ".": {
-      "types": "./lib/index.d.ts",
-      "import": "./lib/index.mjs",
-      "require": "./lib/index.js",
-      "default": "./lib/index.js"
-    }
+  "type": "module",
+  "bin": {
+    "bunrun": "dist/index.mjs"
   },
-  "types": "lib/index.d.ts",
   "files": [
-    "lib/**"
+    "dist"
   ],
   "scripts": {
-    "build": "tsgo --noEmit && tsup index.ts --format cjs,esm --no-splitting --dts --tsconfig tsconfig.json --out-dir lib --clean",
-    "clean": "rm -rf lib pnpm.lock.yaml node_modules",
+    "build": "tsgo --noEmit && tsup",
+    "check": "depcheck",
+    "clean": "rm -rf dist pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
     "lint": "eslint . -c eslint.config.mjs",
@@ -41,20 +40,13 @@
     "publish:package": "./publish-package.bash",
     "test": "vitest --passWithNoTests"
   },
-  "dependencies": {
-    "@forklaunch/common": "workspace:*",
-    "ajv": "^8.17.1",
-    "ajv-formats": "^3.0.1"
-  },
   "devDependencies": {
     "@types/node": "^24.3.2",
     "@typescript/native-preview": "7.0.0-dev.20250912.1",
-    "fetch-mock": "^12.5.4",
-    "jest": "^30.1.3",
-    "openapi3-ts": "^4.5.0",
-    "prettier": "^3.6.2",
-    "ts-jest": "^29.4.1",
     "tsup": "^8.5.0",
-    "typedoc": "^0.28.12"
+    "typescript": "^5.9.2"
+  },
+  "engines": {
+    "bun": ">=1.1.0"
   }
 }
