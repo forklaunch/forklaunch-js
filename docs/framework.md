@@ -23,6 +23,10 @@ The `ForkLaunch` framework collects a set of lightweight libraries and exposes u
 - `@forklaunch/core`: Core framework library containing shared utilities, base classes, and common interfaces
 - `@forklaunch/internal`: Internal utilities for ForkLaunch framework
 
+### Infrastructure Components
+- `@forklaunch/infrastructure-redis`: Redis integration for caching and session management
+- `@forklaunch/infrastructure-s3`: AWS S3 integration for file storage and management
+
 ## Framework Features
 
 - [HTTP Frameworks](/docs/framework/http.md)

@@ -25,60 +25,137 @@ To add a module to your application, run the following command:
   </Tab>
 </CodeTabs>
 
-This adds a new module to your application. Modules are pre-built libraries or integrations that help you accelerate development and add functionality to your stack.
+This adds a new preconfigured module to your application. Modules are production-ready services that provide common functionality like authentication, billing, and payment processing.
 
-`ForkLaunch` will automatically add the module to your workspace and register any necessary scripts.
+`ForkLaunch` will automatically add the module to your workspace, configure Docker Compose, and register any necessary scripts.
 
 By default, you will not need to run any scripts to get going, but if your module depends on external services or configuration, you may need to run `build` and `install` scripts from the top level of the application.
 
-### Choices
+### Available Modules
 
-| Component    | Valid Options              | Description                           | How to Change                                  |
-| :----------- | :------------------------- | :------------------------------------ | :---------------------------------------------- |
-| _ModuleType_ | e.g. `auth`, `billing`     | The module to add to your application | Change via the module selection during command  |
+| Module ID | Description | Purpose |
+| :-------- | :---------- | :------ |
+| `billing-base` | App hooks only | Base billing infrastructure with extensible payment provider interface |
+| `billing-stripe` | Stripe billing implementation | Complete Stripe integration with webhook handling and payment flow |
+| `iam-base` | Authorization only | Base Identity and Access Management with JWT support and custom auth methods |
+| `iam-better-auth` | Better auth implementation for IAM | BetterAuth integration for advanced authentication features |
 
-### Project Structure
+### Command Options
 
-A minimal module will have the following structure:
+| Option | Short | Description | Valid Values |
+| :----- | :---- | :---------- | :----------- |
+| `--module` | `-m` | The module type to initialize | `billing-base`, `billing-stripe`, `iam-base`, `iam-better-auth` |
+| `--database` | `-d` | The database to use | `postgresql`, `mysql`, `mariadb`, `mssql`, `mongodb`, `libsql`, `sqlite`, `better-sqlite` |
+| `--path` | `-p` | The application path to initialize the module in | Any valid directory path |
+| `--dryrun` | `-n` | Dry run the command | Flag (no value) |
+
+### Module Structure
+
+Modules are generated as complete service implementations with the following structure:
 
 ```bash
-.
-├── index.ts            # module entry point
-├── lib.ts              # module logic or exports
-├── package.json
-├── tsconfig.json
-├── eslint.config.mjs -> ../eslint.config.mjs # symlinked from parent for consistency
-└── vitest.config.ts -> ../vitest.config.ts   # symlinked from parent for consistency
+module-name/
+├── api/
+│   ├── controllers/     # HTTP request handlers
+│   └── routes/         # Route definitions  
+├── domain/
+│   ├── enum/           # Enumerations and constants
+│   ├── mappers/        # Data transformation logic
+│   ├── schemas/        # Validation schemas
+│   └── types/          # TypeScript type definitions
+├── persistence/
+│   ├── entities/       # Database entity definitions
+│   ├── seeders/        # Database seed data
+│   └── seed.data.ts    # Seed configuration
+├── bootstrapper.ts     # Service initialization
+├── index.ts           # Service entry point
+├── registrations.ts   # Dependency injection setup
+├── sdk.ts             # Service SDK for internal use
+├── server.ts          # HTTP server configuration
+├── package.json       # Dependencies and scripts
+├── mikro-orm.config.ts # Database ORM configuration
+└── eslint.config.mjs   # ESLint configuration
 ```
+
+### Module Features
+
+Each module includes:
+- **Complete API**: RESTful endpoints with OpenAPI documentation
+- **Database Integration**: Entities, migrations, and seeders
+- **Authentication**: Built-in auth middleware and JWT support
+- **Validation**: Request/response validation with Zod or TypeBox
+- **Testing**: Test setup with Vitest or Jest
+- **Docker Support**: Dockerfile and docker-compose integration
+- **Type Safety**: Full TypeScript support with generated types
 
 ### Environment Variables
 
-Some modules may require environment variables:
+Each module requires specific environment variables:
+
 ```bash
-# Example:
-MODULE_API_KEY=your_module_api_key
+# Database configuration (all modules)
+DATABASE_URL=postgresql://user:password@localhost:5432/dbname
+DATABASE_TYPE=postgresql
+
+# IAM modules (iam-base, iam-better-auth)
+JWT_SECRET=your-jwt-secret-key
+SESSION_SECRET=your-session-secret
+
+# Billing modules (billing-base, billing-stripe)
+# Stripe-specific (billing-stripe only)
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+
+# Cache configuration (billing modules)
+REDIS_URL=redis://localhost:6379
 ```
-Check the module's documentation for required variables.
+
+Check the generated `.env.example` file for complete variable lists.
+
+### Usage Examples
+
+#### Adding a Billing Module
+```bash
+# Interactive mode
+forklaunch init module
+
+# Direct specification
+forklaunch init module billing --module billing-stripe --database postgresql
+```
+
+#### Adding an IAM Module  
+```bash
+# Base IAM with JWT
+forklaunch init module auth --module iam-base --database postgresql
+
+# BetterAuth implementation
+forklaunch init module auth --module iam-better-auth --database postgresql
+```
 
 ### Next Steps
 
 After creating a module:
-1. Review the module's documentation for usage details
-2. Import the module in your service, worker, or library where needed
-3. Configure any required environment variables
-4. Extend or customize the module if necessary
-5. Write tests for your integration
+1. Configure environment variables in `.env.local`
+2. Run database migrations: `npm run migrate:up`
+3. Seed initial data: `npm run seed`
+4. Start the module: `npm run dev`
+5. Review the generated API documentation at `/docs`
+6. Test the endpoints using the OpenAPI interface
+7. Integrate with other services using the generated SDK
 
 ### Common Issues
 
-1. **Missing Configuration**: Ensure all required environment variables are set
-2. **Dependency Errors**: Run `pnpm/bun install` if you see missing dependency errors
-3. **Version Conflicts**: Make sure your module is compatible with your application version
+1. **Module Conflicts**: Only one module of each type (IAM/Billing) can be added per application
+2. **Database Connection**: Ensure your database is running and environment variables are correct
+3. **Port Conflicts**: Modules use sequential ports starting from 3000
+4. **Migration Errors**: Run `npm run migrate:up` before starting the module
+5. **Cache Dependencies**: Billing modules require Redis to be running
 
 ### Best Practices
 
-1. Use modules to share common logic or integrations across projects
-2. Keep modules decoupled from specific business logic
-3. Document the public API surface of your modules
-4. Write comprehensive tests for any module extensions
-5. Update modules regularly to receive bug fixes and improvements
+1. **Choose the Right Implementation**: Use base modules for custom integrations, specific modules (Stripe, BetterAuth) for faster setup
+2. **Environment Management**: Keep environment variables in `.env.local` for development
+3. **Database Migrations**: Always run migrations after adding a module
+4. **API Documentation**: Use the generated OpenAPI docs for integration
+5. **Testing**: Test module endpoints before building dependent services
+6. **Monitoring**: Enable logging and monitoring for production deployments

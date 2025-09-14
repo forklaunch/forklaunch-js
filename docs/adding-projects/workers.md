@@ -25,21 +25,54 @@ To add a worker to your application, run the following command:
   </Tab>
 </CodeTabs>
 
-This adds a new worker that has a `worker` and `client` entry point. The `client` handles the production of events, and the `worker` handles the consumption of events.
+This adds a new worker that has a `worker` and `server` entry point. The worker handles asynchronous job processing, and the server provides health checks and optionally exposes management APIs.
 
-`ForkLaunch` will automatically add both the worker and client to your workspace, docker-compose, and register any necessary scripts.
+`ForkLaunch` will automatically add the worker to your workspace, docker-compose, and register any necessary scripts.
 
-By default, you will not need to run any scripts to get going, but if you have added a net new backend, you may need to run `build` and `install` scripts from the top level of the application.
+By default, you will not need to run any scripts to get going, but if you have added a new backend, you may need to run `build` and `install` scripts from the top level of the application.
 
-### Choices
+### Command Options
 
-| Component | Valid Options       | Description                                                                                                                | How to Change                                                        |
-| :-------- | :------------------ | :------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------- |
-| _Backend_ | `cache`, `database` | The backend to use for your worker. By default, the database worker will use `postgresql`, and the cache will use `redis`. | Not trivial. It may be easier to add a new worker with the new type. |
+| Option | Short | Description | Valid Values |
+| :----- | :---- | :---------- | :----------- |
+| `--type` | `-t` | The worker type to use | `database`, `redis`, `kafka`, `bullmq` |
+| `--database` | `-d` | The database to use (for database workers) | `postgresql`, `mysql`, `mariadb`, `mssql`, `mongodb`, `libsql`, `sqlite`, `better-sqlite` |
+| `--path` | `-p` | The application path to initialize the worker in | Any valid directory path |
+| `--description` | `-D` | The description of the worker | Any string |
+| `--dryrun` | `-n` | Dry run the command | Flag (no value) |
+
+### Worker Aliases
+
+The `worker` command has an alias for convenience:
+- `wrk`
+
+### Worker Types
+
+ForkLaunch supports multiple worker implementations, each optimized for different use cases:
+
+#### Database Worker (`--type database`)
+- **Use Case**: Persistent job processing with full ACID guarantees
+- **Features**: Database-backed job queue, complex job relationships, full audit trail
+- **Best For**: Critical jobs that need durability, complex workflows, financial transactions
+
+#### Redis Worker (`--type redis`) 
+- **Use Case**: High-performance, lightweight job processing
+- **Features**: In-memory job processing, fast throughput, simple pub/sub
+- **Best For**: Real-time notifications, cache invalidation, simple background tasks
+
+#### BullMQ Worker (`--type bullmq`)
+- **Use Case**: Redis-based job queue with advanced features
+- **Features**: Job scheduling, retry logic, job prioritization, dashboard UI
+- **Best For**: Scheduled tasks, email processing, complex retry scenarios
+
+#### Kafka Worker (`--type kafka`)
+- **Use Case**: Event streaming and distributed event processing  
+- **Features**: Event streaming, topic-based routing, consumer groups
+- **Best For**: Event sourcing, microservice communication, analytics pipelines
 
 ### Project Structure
 
-A minimal worker will have the following structure:
+A worker follows the standard ForkLaunch service structure:
 
 ```bash
 .
@@ -73,6 +106,25 @@ A minimal worker will have the following structure:
 └── server.ts
 ```
 
+### Usage Examples
+
+```bash
+# Basic database worker
+forklaunch init worker email-processor --type database --database postgresql
+
+# Redis worker for real-time tasks
+forklaunch init worker notification-worker --type redis
+
+# BullMQ worker with advanced features
+forklaunch init worker scheduled-jobs --type bullmq
+
+# Kafka worker for event streaming
+forklaunch init worker analytics-consumer --type kafka
+
+# Custom path and description
+forklaunch init worker background-tasks --path ./workers --description "Background task processor"
+```
+
 ### Next Steps
 
 After creating a worker:
@@ -85,18 +137,20 @@ After creating a worker:
 
 ### Common Issues
 
-1. **Backend Connection**: Ensure your backend credentials are correct
-2. **Event Processing**: Check that events are being properly acknowledged
-3. **Concurrent Processing**: Verify worker instances aren't competing for the same events
-4. **Memory Management**: Monitor for memory leaks in long-running workers
-5. **Dead Letter Queues**: Set up proper handling for failed events
+1. **Backend Connection**: Ensure backend services (Redis, Kafka, DB) are running and accessible
+2. **Environment Variables**: Verify all required variables are set correctly
+3. **Concurrency**: Configure appropriate concurrency limits for your worker type
+4. **Memory Management**: Monitor for memory leaks in long-running job processing
+5. **Error Handling**: Implement proper retry logic and dead letter queues
+6. **Scaling**: Configure worker scaling based on job queue length
 
 ### Best Practices
 
-1. Keep workers focused on a single responsibility
-2. Implement proper error handling and retries
-3. Use dead letter queues for failed events
-4. Monitor worker performance and health
-5. Handle graceful shutdowns
-6. Implement idempotent processing
-7. Use transactions when necessary (database workers)
+1. **Choose the Right Type**: Select worker type based on durability and performance needs
+2. **Idempotent Processing**: Ensure jobs can be safely retried
+3. **Error Handling**: Implement comprehensive error handling and logging
+4. **Monitoring**: Track job success/failure rates and processing times
+5. **Graceful Shutdown**: Handle shutdown signals properly to avoid job loss
+6. **Resource Management**: Set appropriate timeouts and concurrency limits
+7. **Testing**: Test with realistic job volumes and failure scenarios
+8. **Documentation**: Document job types and expected data structures

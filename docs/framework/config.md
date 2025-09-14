@@ -6,106 +6,140 @@ description: Reference for using ConfigInjector in ForkLaunch.
 
 ## Overview
 
-The `ConfigInjector` abstraction makes it easy, safe and convenient to inject properly constructed dependencies when necessary. It is designed around the `Inversion of Control` principle, but does minimal _magic_ where construction is hidden and hard to debug.
+The `ConfigInjector` from `@forklaunch/core` provides a type-safe dependency injection system designed around the `Inversion of Control` principle. It offers minimal magic while ensuring proper dependency construction and lifecycle management.
 
-It follows a simple structure:
-1. you define a set of dependencies and their return types
-2. you register the dependencies in a definition dictionary specifying the lifetime and how to construct the dependency when resolved
-3. you control the creation of scopes (with helpful utilities for doing so)
+The system follows a clear structure:
+1. **Define dependencies** and their return types using a schema validator
+2. **Register dependencies** with lifetime management (Singleton, Constructed, Transient)
+3. **Resolve dependencies** with automatic type inference and validation
+4. **Manage scopes** for request-scoped dependencies
 
 ## Basic Usage
 
 ```typescript
-// example instantiation
-// Define your dependencies and their types
+import { createConfigInjector } from '@forklaunch/core/services';
+import { createZodValidator } from '@forklaunch/validator/zod';
+import { z } from 'zod';
+
+// Define your dependencies and their types using schema validator
+const schemaValidator = createZodValidator();
+
 const configShapes = {
-    databaseClient: DatabaseClient,
-    logger: LoggerService,
-    apiKey: string
+    databaseClient: z.instanceof(DatabaseClient),
+    logger: z.instanceof(LoggerService),
+    apiKey: z.string()
 } as const;
 
 // Create the injector with definitions
 const configInjector = createConfigInjector(
     schemaValidator,
-    configShapes,
     {
         databaseClient: {
-            lifetime: Lifetime.Transient,
+            lifetime: 'transient',
             factory: ({ logger }) => new DatabaseClient(logger)
         },
         logger: {
-            lifetime: Lifetime.Scoped,
+            lifetime: 'scoped',
             factory: () => new LoggerService()
         },
         apiKey: {
-            lifetime: Lifetime.Singleton,
+            lifetime: 'singleton',
             value: process.env.API_KEY
         }
     }
 );
 ```
 
-To aide in construction of dependencies, the `factory` method conforms to the simplified signature:
+The factory method provides access to other dependencies and context:
 
 ```typescript
-function factory<T extends keyof ConfigShapes>(args: SplayedArgs<keyof ConfigShapes>, resolve: (token: T) => ConfigShapes[T], context: Record<string, unknown>);
+// Factory signature with dependency injection
+factory: (dependencies: Partial<ConfigShapes>, context?: Record<string, unknown>) => ConfigShapes[K]
 ```
 
-This solves multiple problems:
-  1. allows you to instantiate other dependencies subject to their definition, 
-  2. circumvent circular dependencies by creating callbacks,
-  3. pass outside context to construction
+This enables:
+1. **Dependency injection** - Access other registered dependencies
+2. **Circular dependency resolution** - Create callbacks for complex dependencies
+3. **Context passing** - Include external data in construction
 
 ## Lifetime Management
 
-The ConfigInjector supports three types of lifetimes:
+The ConfigInjector supports three lifetime types:
 
-- `Singleton`: Created once and reused across all scopes
-- `Scoped`: Created once per scope
-- `Transient`: Created new for each resolution
+- **`singleton`**: Created once and reused across all scopes
+- **`scoped`**: Created once per scope (typically per request)
+- **`transient`**: Created new for each resolution
 
 ```typescript
-enum Lifetime {
-    Singleton = 'singleton',
-    Scoped = 'scoped',
-    Transient = 'transient'
-}
+type Lifetime = 'singleton' | 'scoped' | 'transient';
+
+// Example with different lifetimes
+const configInjector = createConfigInjector(schemaValidator, {
+  // Singleton - shared across all requests
+  databaseConnection: {
+    lifetime: 'singleton',
+    value: new DatabaseConnection()
+  },
+  
+  // Scoped - per request/scope
+  userContext: {
+    lifetime: 'scoped',
+    factory: ({ requestId }) => new UserContext(requestId)
+  },
+  
+  // Transient - new instance each time
+  validator: {
+    lifetime: 'transient',
+    factory: () => new Validator()
+  }
+});
 ```
 
 ## Dependency Resolution
 
-Dependencies can be resolved simply by supplying the resolution token, which can be populated by autocomplete.
+Dependencies are resolved with full type safety and autocomplete support:
 
-### Resolution
 ```typescript
-const logger = configInjector.resolve('logger');
+// Resolve dependencies with type inference
+const logger = configInjector.resolve('logger');        // LoggerService
+const db = configInjector.resolve('databaseClient');    // DatabaseClient
+const apiKey = configInjector.resolve('apiKey');        // string
 ```
 
 ## Scoping
 
-The ConfigInjector supports creating scopes for managing dependency lifetimes:
+The ConfigInjector supports request-scoped dependencies:
 
 ```typescript
-// Create a new scope
+// Create a new scope (typically per HTTP request)
 const scope = configInjector.createScope();
 
 // Resolve scoped dependencies
-const service = scope.resolve('someService');
+const userContext = scope.resolve('userContext');  // New instance per scope
+const logger = scope.resolve('logger');            // Scoped instance
 
-// Clean up scope
+// Clean up scope when request completes
 scope.dispose();
 ```
 
 ## Validation
 
-The ConfigInjector includes built-in validation:
+The ConfigInjector includes built-in schema validation:
 
 ```typescript
-// Safe validation that returns a result
-const validationResult = configInjector.safeValidateConfigSingletons();
+// Validate configuration on startup
+try {
+  configInjector.validateConfig();
+  console.log('Configuration is valid');
+} catch (error) {
+  console.error('Configuration validation failed:', error);
+}
 
-// Validation that throws on error
-const validInjector = configInjector.validateConfigSingletons('MyConfig');
+// Safe validation that returns a result
+const validationResult = configInjector.safeValidateConfig();
+if (!validationResult.success) {
+  console.error('Validation errors:', validationResult.errors);
+}
 ```
 
 ## Circular Dependency Detection

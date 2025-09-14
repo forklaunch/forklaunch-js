@@ -6,20 +6,98 @@ description: Reference for OpenTelemetry integration in ForkLaunch.
 
 ## Overview
 
-ForkLaunch provides built-in observability through OpenTelemetry integration, automatically instrumenting your applications with:
-- **Preconfigured OpenTelemetry collector** - Ready-to-use telemetry pipeline
-- **LGTM stack** (Loki, Grafana, Tempo, Mimir) - Complete observability platform
-- **Ready-to-use Grafana dashboards** - Pre-built visualizations for common metrics
-- **Context-aware instrumentation** - Automatic correlation IDs and request tracing
+ForkLaunch provides comprehensive observability through the `@forklaunch/core` package's OpenTelemetry integration, automatically instrumenting your applications with:
 
-Integrates seamlessly with [Error Handling](/docs/framework/error-handling.md) correlation IDs and [Authorization](/docs/framework/authorization.md) events.
+- **Built-in OpenTelemetry collector** (`OpenTelemetryCollector`) - Ready-to-use telemetry pipeline
+- **Pino logger integration** - High-performance structured logging
+- **Automatic metrics collection** - HTTP request/response metrics and custom business metrics
+- **Context-aware instrumentation** - Automatic correlation IDs and request tracing
+- **Multiple export formats** - OTLP HTTP, Prometheus, and custom exporters
+
+The telemetry system is built into every ForkLaunch application and integrates seamlessly with:
+- **HTTP frameworks** for automatic request/response instrumentation
+- **Error handling** for correlation ID propagation
+- **Authorization** for security event tracking
+
+## Package Structure
+
+### Core Telemetry Components
+- **`OpenTelemetryCollector`** - Main telemetry collector class
+- **`MetricsDefinition`** - Type-safe metrics configuration
+- **`PinoLogger`** - Structured logging with correlation IDs
+- **Telemetry constants** - Standard metric names and labels
+
+## Usage
+
+### Creating OpenTelemetry Collector
+
+```typescript
+import { createOpenTelemetryCollector } from '@forklaunch/core/http';
+
+// Create collector with default configuration
+const openTelemetryCollector = createOpenTelemetryCollector();
+
+// Use with HTTP frameworks
+const app = forklaunchExpress(
+  schemaValidator,
+  openTelemetryCollector,
+  {
+    docs: { enabled: true }
+  }
+);
+```
+
+### Custom Metrics Definition
+
+```typescript
+import { MetricsDefinition } from '@forklaunch/core/http';
+
+const customMetrics: MetricsDefinition = {
+  userRegistrations: {
+    type: 'counter',
+    name: 'user_registrations_total',
+    description: 'Total number of user registrations',
+    labels: ['source', 'plan']
+  },
+  apiLatency: {
+    type: 'histogram',
+    name: 'api_request_duration_ms',
+    description: 'API request duration in milliseconds',
+    labels: ['method', 'route', 'status'],
+    buckets: [10, 50, 100, 500, 1000, 5000]
+  }
+};
+```
+
+### Structured Logging
+
+```typescript
+import { PinoLogger } from '@forklaunch/core/http';
+
+// Logger automatically includes correlation IDs
+const logger = new PinoLogger();
+
+// Use in your handlers
+userRouter.post('/', {
+  name: 'createUser',
+  body: userSchema,
+  responses: { 201: userSchema }
+}, async (req, res) => {
+  logger.info('Creating user', { 
+    userId: req.body.id,
+    email: req.body.email 
+  });
+  
+  // Your handler logic
+});
+```
 
 ## Default Setup
 
 Your application automatically sends:
 - **Traces** to OpenTelemetry collector with full request lifecycle
 - **Metrics** to Prometheus for performance monitoring
-- **Logs** to Loki with structured formatting and correlation IDs
+- **Logs** to structured JSON format with correlation IDs
 
 Access your observability dashboard at `http://localhost:3000`
 

@@ -35,18 +35,34 @@ Unexpected errors with safe error messages
 
 ### HTTP Contract Error Handling
 ```typescript
+import { forklaunchExpress } from '@forklaunch/express';
+import { z } from 'zod';
+
+const app = forklaunchExpress(schemaValidator, openTelemetryCollector);
+
 // Errors are automatically handled and formatted
 app.post('/users', {
   name: 'Create User',
-  body: { name: string, email: email }, // Validation errors → 400
+  body: z.object({ 
+    name: z.string().min(1), 
+    email: z.string().email() 
+  }), // Validation errors → 400
   responses: {
-    201: { id: number },
-    // override default error responses
-    400: { error: string }, // Validation failure
-    401: { error: string }, // Auth required
-    500: { error: string, correlationId: string }
+    201: z.object({ id: z.string() }),
+    // Override default error responses
+    400: z.object({ error: z.string() }), // Validation failure
+    401: z.object({ error: z.string() }), // Auth required
+    403: z.object({ error: z.string() }), // Forbidden
+    500: z.object({ 
+      error: z.string(), 
+      correlationId: z.string() 
+    })
   }
-}, handler);
+}, async (req, res) => {
+  // Your handler logic
+  const user = await createUser(req.body);
+  res.status(201).json({ id: user.id });
+});
 ```
 
 ### Authorization Integration
@@ -54,10 +70,13 @@ app.post('/users', {
 // Authorization errors are handled automatically
 const contractDetails = {
   auth: {
-    method: 'jwt',
+    jwt: { signatureKey: process.env.JWT_SECRET },
     allowedRoles: new Set(['admin']),
+    surfaceRoles: async (resourceId: string, req: Request) => {
+      return new Set(['admin']);
+    }
   },
-  // 401/403 responses added automatically
+  // 401/403 responses added automatically based on auth configuration
 };
 ```
 

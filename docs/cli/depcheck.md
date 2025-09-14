@@ -11,7 +11,25 @@ Check dependency consistency across your application's projects for version mism
 ## Usage
 
 ```bash
+forklaunch depcheck [OPTIONS]
+```
+
+## Options
+
+| Option | Short | Description | Values |
+| :----- | :---- | :---------- | :----- |
+| `--path` | `-p` | The application path to initialize the service in | _string_ |
+| `--help` | `-h` | Print help | Flag |
+| `--version` | `-V` | Print version | Flag |
+
+## Examples
+
+```bash
+# Check dependencies in current directory
 forklaunch depcheck
+
+# Check dependencies in specific application directory
+forklaunch depcheck --path ./my-app
 ```
 
 ## Configuration
