@@ -3,7 +3,7 @@ import { existsSync } from 'fs';
 import { dirname, resolve } from 'path';
 
 /**
- * Gets cascading environment file paths: root .env.local -> project .env
+ * Gets cascading environment file paths: collects all .env.local files from project directory up to root
  * Root detection uses: .forklaunch/manifest.toml
  */
 export function getCascadingEnvPaths(
@@ -26,11 +26,13 @@ export function getCascadingEnvPaths(
 
   const applicationRoot = findApplicationRoot(projectRoot);
 
+  const envLocalFiles = collectEnvLocalFiles(projectRoot, applicationRoot);
+  result.loadOrder.push(...envLocalFiles);
+
   const rootEnvPath = resolve(applicationRoot, '.env.local');
-  if (existsSync(rootEnvPath)) {
+  if (envLocalFiles.includes(rootEnvPath)) {
     result.rootEnvExists = true;
     result.rootEnvPath = rootEnvPath;
-    result.loadOrder.push(rootEnvPath);
   }
 
   if (projectEnvPath) {
@@ -46,8 +48,7 @@ export function getCascadingEnvPaths(
 }
 
 /**
- * Loads environment variables with cascading precedence: root .env.local -> project .env
- * If projectEnvPath is undefined, only loads root .env.local
+ * Loads environment variables with cascading precedence: all .env.local files from root to project, then project env file
  */
 export function loadCascadingEnv(
   projectEnvPath: string | undefined,
@@ -57,29 +58,73 @@ export function loadCascadingEnv(
   projectEnvLoaded: boolean;
   rootEnvPath?: string;
   projectEnvFilePath?: string;
+  envFilesLoaded: string[];
+  totalEnvFilesLoaded: number;
 } {
   const paths = getCascadingEnvPaths(projectEnvPath, projectRoot);
   const result = {
     rootEnvLoaded: false,
     projectEnvLoaded: false,
     rootEnvPath: paths.rootEnvPath,
-    projectEnvFilePath: paths.projectEnvFilePath
+    projectEnvFilePath: paths.projectEnvFilePath,
+    envFilesLoaded: [] as string[],
+    totalEnvFilesLoaded: 0
   };
 
-  if (paths.rootEnvExists && paths.rootEnvPath) {
-    const rootResult = dotenv.config({ path: paths.rootEnvPath });
-    result.rootEnvLoaded = !rootResult?.error;
-  }
-
-  if (paths.projectEnvExists && paths.projectEnvFilePath) {
-    const projectResult = dotenv.config({
-      path: paths.projectEnvFilePath,
+  for (const envPath of paths.loadOrder) {
+    const envResult = dotenv.config({
+      path: envPath,
       override: true
     });
-    result.projectEnvLoaded = !projectResult?.error;
+
+    if (!envResult?.error) {
+      result.envFilesLoaded.push(envPath);
+      result.totalEnvFilesLoaded++;
+
+      if (envPath === paths.rootEnvPath) {
+        result.rootEnvLoaded = true;
+      }
+      if (envPath === paths.projectEnvFilePath) {
+        result.projectEnvLoaded = true;
+      }
+    }
   }
 
   return result;
+}
+
+/**
+ * Collects all .env.local files from project directory up to application root
+ * Returns paths in order from root to project (for proper precedence)
+ */
+function collectEnvLocalFiles(
+  projectRoot: string,
+  applicationRoot: string
+): string[] {
+  const envLocalPaths: string[] = [];
+
+  let currentPath = resolve(projectRoot);
+  const normalizedAppRoot = resolve(applicationRoot);
+
+  while (currentPath.length >= normalizedAppRoot.length) {
+    const envLocalPath = resolve(currentPath, '.env.local');
+    if (existsSync(envLocalPath)) {
+      envLocalPaths.push(envLocalPath);
+    }
+
+    if (currentPath === normalizedAppRoot) {
+      break;
+    }
+
+    const parentPath = dirname(currentPath);
+    if (parentPath === currentPath) {
+      break;
+    }
+
+    currentPath = parentPath;
+  }
+
+  return envLocalPaths.reverse();
 }
 
 /**
