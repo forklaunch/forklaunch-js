@@ -14,9 +14,10 @@ RUST_BACKTRACE=1 cargo run --release init service svc-test -d postgresql -D "Tes
 
 cd src/modules
 RUST_BACKTRACE=1 cargo run --release init worker wrk-test -t database -d postgresql -D "Test worker"
+RUST_BACKTRACE=1 cargo run --release init router router-test -p .
 
 
-rm -rf iam wrk-test svc-test
+rm -rf iam wrk-test svc-test router-test
 
 cd ../..
 RUST_BACKTRACE=1 cargo run --release sync -p . -c
