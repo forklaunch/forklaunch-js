@@ -6,6 +6,7 @@ import {
   put as innerPut,
   ParamsObject,
   QueryObject,
+  ResolvedSessionObject,
   ResponsesObject,
   SchemaAuthMethods,
   SessionObject,
@@ -94,7 +95,6 @@ export const put = <
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
   const VersionedApi extends VersionSchema<SV, 'put'>,
-  const SessionSchema extends SessionObject<SV>,
   const Auth extends SchemaAuthMethods<
     SV,
     P,
@@ -102,7 +102,6 @@ export const put = <
     ReqQuery,
     ReqHeaders,
     VersionedApi,
-    SessionSchema,
     Request<LocalsObj>
   >
 >(
@@ -120,7 +119,6 @@ export const put = <
     ReqHeaders,
     ResHeaders,
     VersionedApi,
-    SessionSchema,
     Request<LocalsObj>,
     Auth
   >,
@@ -134,7 +132,7 @@ export const put = <
     ResHeaders,
     LocalsObj,
     VersionedApi,
-    SessionSchema,
+    ResolvedSessionObject<SV, Auth, SessionObject<SV>>,
     Request<LocalsObj>,
     Response<LocalsObj>,
     MiddlewareNext
@@ -152,7 +150,6 @@ export const put = <
     ResHeaders,
     LocalsObj,
     VersionedApi,
-    SessionSchema,
     Request<LocalsObj>,
     Response<LocalsObj>,
     MiddlewareNext,

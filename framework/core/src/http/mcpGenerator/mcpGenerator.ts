@@ -33,7 +33,6 @@ function generateInputSchema(
     QueryObject<ZodSchemaValidator>,
     HeadersObject<ZodSchemaValidator>,
     VersionSchema<ZodSchemaValidator, Method>,
-    SessionObject<ZodSchemaValidator>,
     unknown
   >
 ) {

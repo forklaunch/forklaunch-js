@@ -32,48 +32,60 @@ export type ExpressLikeGlobalAuthOptions<
       /**
        * Function to extract a set of scopes from the JWT payload and request.
        */
-      surfaceScopes?: (
-        payload: JWTPayload & SessionSchema,
-        req?: ForklaunchRequest<
-          SV,
-          Record<string, string>,
-          Record<string, unknown>,
-          Record<string, unknown>,
-          Record<string, unknown>,
-          string,
-          SessionSchema
-        >
-      ) => Set<string> | Promise<Set<string>>;
+      surfaceScopes?: SessionSchema extends infer ResolvedSessionSchema
+        ? ResolvedSessionSchema extends SessionObject<SV>
+          ? (
+              payload: JWTPayload & ResolvedSessionSchema,
+              req?: ForklaunchRequest<
+                SV,
+                Record<string, string>,
+                Record<string, unknown>,
+                Record<string, unknown>,
+                Record<string, unknown>,
+                string,
+                ResolvedSessionSchema
+              >
+            ) => Set<string> | Promise<Set<string>>
+          : never
+        : never;
       /**
        * Function to extract a set of permissions from the JWT payload and request.
        */
-      surfacePermissions?: (
-        payload: JWTPayload & SessionSchema,
-        req?: ForklaunchRequest<
-          SV,
-          Record<string, string>,
-          Record<string, unknown>,
-          Record<string, unknown>,
-          Record<string, unknown>,
-          string,
-          SessionSchema
-        >
-      ) => Set<string> | Promise<Set<string>>;
+      surfacePermissions?: SessionSchema extends infer ResolvedSessionSchema
+        ? ResolvedSessionSchema extends SessionObject<SV>
+          ? (
+              payload: JWTPayload & ResolvedSessionSchema,
+              req?: ForklaunchRequest<
+                SV,
+                Record<string, string>,
+                Record<string, unknown>,
+                Record<string, unknown>,
+                Record<string, unknown>,
+                string,
+                ResolvedSessionSchema
+              >
+            ) => Set<string> | Promise<Set<string>>
+          : never
+        : never;
       /**
        * Function to extract a set of roles from the JWT payload and request.
        */
-      surfaceRoles?: (
-        payload: JWTPayload & SessionSchema,
-        req?: ForklaunchRequest<
-          SV,
-          Record<string, string>,
-          Record<string, unknown>,
-          Record<string, unknown>,
-          Record<string, unknown>,
-          string,
-          SessionSchema
-        >
-      ) => Set<string> | Promise<Set<string>>;
+      surfaceRoles?: SessionSchema extends infer ResolvedSessionSchema
+        ? ResolvedSessionSchema extends SessionObject<SV>
+          ? (
+              payload: JWTPayload & ResolvedSessionSchema,
+              req?: ForklaunchRequest<
+                SV,
+                Record<string, string>,
+                Record<string, unknown>,
+                Record<string, unknown>,
+                Record<string, unknown>,
+                string,
+                ResolvedSessionSchema
+              >
+            ) => Set<string> | Promise<Set<string>>
+          : never
+        : never;
     };
 
 /**

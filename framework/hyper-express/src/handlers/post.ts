@@ -6,6 +6,7 @@ import {
   post as innerPost,
   ParamsObject,
   QueryObject,
+  ResolvedSessionObject,
   ResponsesObject,
   SchemaAuthMethods,
   SessionObject,
@@ -113,7 +114,6 @@ export const post = <
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
   const VersionedApi extends VersionSchema<SV, 'post'>,
-  const SessionSchema extends SessionObject<SV>,
   const Auth extends SchemaAuthMethods<
     SV,
     P,
@@ -121,7 +121,6 @@ export const post = <
     ReqQuery,
     ReqHeaders,
     VersionedApi,
-    SessionSchema,
     Request<LocalsObj>
   >
 >(
@@ -139,7 +138,6 @@ export const post = <
     ReqHeaders,
     ResHeaders,
     VersionedApi,
-    SessionSchema,
     Request<LocalsObj>,
     Auth
   >,
@@ -153,7 +151,7 @@ export const post = <
     ResHeaders,
     LocalsObj,
     VersionedApi,
-    SessionSchema,
+    ResolvedSessionObject<SV, Auth, SessionObject<SV>>,
     Request<LocalsObj>,
     Response<LocalsObj>,
     MiddlewareNext
@@ -171,7 +169,6 @@ export const post = <
     ResHeaders,
     LocalsObj,
     VersionedApi,
-    SessionSchema,
     Request<LocalsObj>,
     Response<LocalsObj>,
     MiddlewareNext,

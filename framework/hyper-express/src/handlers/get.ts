@@ -6,6 +6,7 @@ import {
   get as innerGet,
   ParamsObject,
   QueryObject,
+  ResolvedSessionObject,
   ResponsesObject,
   SchemaAuthMethods,
   SessionObject,
@@ -106,7 +107,6 @@ export const get = <
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
   const VersionedApi extends VersionSchema<SV, 'get'>,
-  SessionSchema extends SessionObject<SV>,
   const Auth extends SchemaAuthMethods<
     SV,
     P,
@@ -114,7 +114,6 @@ export const get = <
     ReqQuery,
     ReqHeaders,
     VersionedApi,
-    SessionSchema,
     Request<LocalsObj>
   >
 >(
@@ -132,7 +131,6 @@ export const get = <
     ReqHeaders,
     ResHeaders,
     VersionedApi,
-    SessionSchema,
     Request<LocalsObj>,
     Auth
   >,
@@ -146,7 +144,7 @@ export const get = <
     ResHeaders,
     LocalsObj,
     VersionedApi,
-    SessionSchema,
+    ResolvedSessionObject<SV, Auth, SessionObject<SV>>,
     Request<LocalsObj>,
     Response<LocalsObj>,
     MiddlewareNext
@@ -164,7 +162,6 @@ export const get = <
     ResHeaders,
     LocalsObj,
     VersionedApi,
-    SessionSchema,
     Request<LocalsObj>,
     Response<LocalsObj>,
     MiddlewareNext,

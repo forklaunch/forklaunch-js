@@ -52,7 +52,6 @@ export async function discriminateAuthMethod<
   ReqQuery extends ParsedQs,
   ReqHeaders extends Record<string, string>,
   VersionedReqs extends VersionedRequests,
-  SessionSchema extends Record<string, unknown>,
   BaseRequest
 >(
   auth: AuthMethods<
@@ -62,7 +61,6 @@ export async function discriminateAuthMethod<
     ReqQuery,
     ReqHeaders,
     VersionedReqs,
-    SessionSchema,
     BaseRequest
   >
 ): Promise<
@@ -101,7 +99,7 @@ export async function discriminateAuthMethod<
           method: string;
           path: string;
           body?: unknown;
-          timestamp: string;
+          timestamp: Date;
           nonce: string;
           signature: string;
           secretKey: string;
@@ -174,7 +172,7 @@ export async function discriminateAuthMethod<
           method: string;
           path: string;
           body?: unknown;
-          timestamp: string;
+          timestamp: Date;
           nonce: string;
           signature: string;
           secretKey: string;

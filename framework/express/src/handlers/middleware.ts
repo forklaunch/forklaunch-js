@@ -6,6 +6,7 @@ import {
   middleware as innerMiddleware,
   ParamsObject,
   QueryObject,
+  ResolvedSessionObject,
   ResponsesObject,
   SchemaAuthMethods,
   SessionObject,
@@ -85,7 +86,6 @@ export const middleware = <
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
   const VersionedApi extends VersionSchema<SV, 'middleware'>,
-  const SessionSchema extends SessionObject<SV>,
   const Auth extends SchemaAuthMethods<
     SV,
     P,
@@ -93,7 +93,6 @@ export const middleware = <
     ReqQuery,
     ReqHeaders,
     VersionedApi,
-    SessionSchema,
     Request
   >
 >(
@@ -111,7 +110,6 @@ export const middleware = <
     ReqHeaders,
     ResHeaders,
     VersionedApi,
-    SessionSchema,
     Request,
     Auth
   >,
@@ -125,7 +123,7 @@ export const middleware = <
     ResHeaders,
     LocalsObj,
     VersionedApi,
-    SessionSchema,
+    ResolvedSessionObject<SV, Auth, SessionObject<SV>>,
     Request,
     Response,
     NextFunction
@@ -143,7 +141,6 @@ export const middleware = <
     ResHeaders,
     LocalsObj,
     VersionedApi,
-    SessionSchema,
     Request,
     Response,
     NextFunction,
