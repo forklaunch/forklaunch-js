@@ -1,5 +1,20 @@
 # @forklaunch/core
 
+## 0.14.11
+
+### Patch Changes
+
+- update internal packages
+- Updated dependencies
+  - @forklaunch/validator@0.10.8
+  - @forklaunch/common@0.6.8
+
+## 0.14.10
+
+### Patch Changes
+
+- Allow for session schema typings
+
 ## 0.14.9
 
 ### Patch Changes

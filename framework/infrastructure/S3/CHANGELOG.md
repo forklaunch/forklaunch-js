@@ -1,5 +1,21 @@
 # @forklaunch/infrastructure-s3
 
+## 0.4.11
+
+### Patch Changes
+
+- update internal packages
+- Updated dependencies
+  - @forklaunch/common@0.6.8
+  - @forklaunch/core@0.14.11
+
+## 0.4.10
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.14.10
+
 ## 0.4.9
 
 ### Patch Changes
