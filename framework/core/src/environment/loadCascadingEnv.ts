@@ -40,7 +40,9 @@ export function getCascadingEnvPaths(
     if (existsSync(fullProjectEnvPath)) {
       result.projectEnvExists = true;
       result.projectEnvFilePath = fullProjectEnvPath;
-      result.loadOrder.push(fullProjectEnvPath);
+      if (!result.loadOrder.includes(fullProjectEnvPath)) {
+        result.loadOrder.push(fullProjectEnvPath);
+      }
     }
   }
 
@@ -71,7 +73,13 @@ export function loadCascadingEnv(
     totalEnvFilesLoaded: 0
   };
 
+  const seen = new Set<string>();
   for (const envPath of paths.loadOrder) {
+    if (seen.has(envPath)) {
+      continue;
+    }
+    seen.add(envPath);
+
     const envResult = dotenv.config({
       path: envPath,
       override: true
