@@ -1,5 +1,9 @@
 import { isNever } from '@forklaunch/common';
-import { AnySchemaValidator } from '@forklaunch/validator';
+import {
+  AnySchemaValidator,
+  prettyPrintParseErrors,
+  SchemaValidator
+} from '@forklaunch/validator';
 import { JWTPayload } from 'jose';
 import { ParsedQs } from 'qs';
 import { discriminateAuthMethod } from '../../discriminateAuthMethod';
@@ -128,7 +132,7 @@ async function checkAuthorizationToken<
   >,
   authorizationToken?: string,
   globalOptions?: ExpressLikeGlobalAuthOptions<SV, SessionSchema>
-): Promise<readonly [401 | 403 | 500, string] | undefined> {
+): Promise<readonly [400 | 401 | 403 | 500, string] | undefined> {
   if (authorizationMethod == null) {
     return undefined;
   }
@@ -293,6 +297,18 @@ async function checkAuthorizationToken<
   }
 
   req.session = sessionPayload;
+  if (collapsedAuthorizationMethod.sessionSchema) {
+    const parsedSession = (req.schemaValidator as SchemaValidator).parse(
+      collapsedAuthorizationMethod.sessionSchema,
+      sessionPayload
+    );
+    if (!parsedSession.ok) {
+      return [
+        400,
+        `Invalid session: ${prettyPrintParseErrors(parsedSession.errors, 'Session')}`
+      ];
+    }
+  }
 
   if (hasScopeChecks(collapsedAuthorizationMethod)) {
     if (collapsedAuthorizationMethod.surfaceScopes) {
