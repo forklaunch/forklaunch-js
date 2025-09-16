@@ -54,6 +54,12 @@
       "import": "./lib/services/index.mjs",
       "require": "./lib/services/index.js",
       "default": "./lib/services/index.js"
+    },
+    "./environment": {
+      "types": "./lib/environment/index.d.ts",
+      "import": "./lib/environment/index.mjs",
+      "require": "./lib/environment/index.js",
+      "default": "./lib/environment/index.js"
     }
   },
   "types": "lib/index.d.ts",
@@ -64,7 +70,7 @@
     "lib/**"
   ],
   "scripts": {
-    "build": "tsgo --noEmit && tsup ./src/cache/index.ts ./src/controllers/index.ts ./src/mappers/index.ts ./src/objectstore/index.ts ./src/persistence/index.ts ./src/http/index.ts ./src/services/index.ts --format cjs,esm --no-splitting --dts --tsconfig tsconfig.json --out-dir lib --clean --sourcemap",
+    "build": "tsgo --noEmit && tsup ./src/cache/index.ts ./src/controllers/index.ts ./src/mappers/index.ts ./src/objectstore/index.ts ./src/persistence/index.ts ./src/http/index.ts ./src/services/index.ts ./src/environment/index.ts --format cjs,esm --no-splitting --dts --tsconfig tsconfig.json --out-dir lib --clean --sourcemap",
     "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
