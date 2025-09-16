@@ -108,10 +108,7 @@ fn generate_application_package_json(
         author: Some(data.author.clone()),
         workspaces: bun_workspace_projects,
         scripts: Some(ApplicationScripts {
-            build: Some(application_build_script(
-                &data.runtime.parse()?,
-                &data.kebab_case_app_name,
-            )),
+            build: Some(application_build_script(&data.runtime.parse()?)),
             clean: Some(application_clean_script(&data.runtime.parse()?)),
             clean_purge: Some(application_clean_purge_script(&data.runtime.parse()?)),
             database_setup: Some(application_setup_script(&data.runtime.parse()?)),
@@ -852,6 +849,7 @@ impl CliCommand for ApplicationCommand {
             to_string(add_otel_to_docker_compose(
                 &name,
                 docker_compose_starting_point,
+                &data,
             )?)
             .unwrap(),
         );

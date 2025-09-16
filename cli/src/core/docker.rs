@@ -17,7 +17,10 @@ use crate::{
         ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE, ERROR_FAILED_TO_READ_DOCKER_COMPOSE, Infrastructure,
         Runtime, WorkerType,
     },
-    core::manifest::{service::ServiceManifestData, worker::WorkerManifestData},
+    core::manifest::{
+        application::ApplicationManifestData, service::ServiceManifestData,
+        worker::WorkerManifestData,
+    },
 };
 
 const MONGO_INIT_COMMAND: &str = r#"sh -c "sleep 5; mongosh --host mongodb:27017 --eval '
@@ -367,14 +370,23 @@ pub(crate) struct DockerNetwork {
 pub(crate) fn add_otel_to_docker_compose<'a>(
     app_name: &str,
     docker_compose: &'a mut DockerCompose,
+    manifest_data: &ApplicationManifestData,
 ) -> Result<&'a mut DockerCompose> {
+    let context_path = get_relative_context_path(
+        &manifest_data.docker_compose_path,
+        &manifest_data.modules_path,
+    );
+
     docker_compose.services.insert(
         "tempo".to_string(),
         DockerService {
             image: Some("grafana/tempo:latest".to_string()),
             command: Some(Command::Simple("-config.file=/etc/tempo.yaml".to_string())),
             ports: Some(vec!["3200:3200".to_string(), "4317:4317".to_string()]),
-            volumes: Some(vec!["./monitoring/tempo.yaml:/etc/tempo.yaml".to_string()]),
+            volumes: Some(vec![format!(
+                "{}/monitoring/tempo.yaml:/etc/tempo.yaml",
+                context_path.to_string_lossy()
+            )]),
             networks: Some(vec![format!("{}-network", app_name)]),
             healthcheck: Some(Healthcheck {
                 test: HealthTest::List(vec![
@@ -425,9 +437,10 @@ pub(crate) fn add_otel_to_docker_compose<'a>(
         DockerService {
             image: Some("prom/prometheus:latest".to_string()),
             ports: Some(vec!["9090:9090".to_string()]),
-            volumes: Some(vec![
-                "./monitoring/prometheus.yaml:/etc/prometheus/prometheus.yml".to_string(),
-            ]),
+            volumes: Some(vec![format!(
+                "{}/monitoring/prometheus.yaml:/etc/prometheus/prometheus.yml",
+                context_path.to_string_lossy()
+            )]),
             networks: Some(vec![format!("{}-network", app_name)]),
             healthcheck: Some(Healthcheck {
                 test: HealthTest::List(vec![
@@ -454,8 +467,8 @@ pub(crate) fn add_otel_to_docker_compose<'a>(
             image: Some("grafana/grafana:latest".to_string()),
             ports: Some(vec!["3000:3000".to_string()]),
             volumes: Some(vec![
-                "./monitoring/grafana-provisioning/datasources:/etc/grafana/provisioning/datasources".to_string(),
-                "./monitoring/grafana-provisioning/dashboards:/etc/grafana/provisioning/dashboards".to_string()
+                format!("{}/monitoring/grafana-provisioning/datasources:/etc/grafana/provisioning/datasources", context_path.to_string_lossy()),
+                format!("{}/monitoring/grafana-provisioning/dashboards:/etc/grafana/provisioning/dashboards", context_path.to_string_lossy())
             ]),
             networks: Some(vec![format!("{}-network", app_name)]),
             healthcheck: Some(Healthcheck {
@@ -485,10 +498,10 @@ pub(crate) fn add_otel_to_docker_compose<'a>(
                 "--config=/etc/otel-collector-config.yaml".to_string(),
             )),
             ports: Some(vec!["4318:4318".to_string(), "8889:8889".to_string()]),
-            volumes: Some(vec![
-                "./monitoring/otel-collector-config.yaml:/etc/otel-collector-config.yaml"
-                    .to_string(),
-            ]),
+            volumes: Some(vec![format!(
+                "{}/monitoring/otel-collector-config.yaml:/etc/otel-collector-config.yaml",
+                context_path.to_string_lossy()
+            )]),
             networks: Some(vec![format!("{}-network", app_name)]),
             ..Default::default()
         },
@@ -1197,8 +1210,7 @@ fn create_base_service(
     container_name_suffix: Option<&str>,
     entrypoint_command: &str,
     additional_depends_on: Vec<String>,
-    docker_compose_path: &Option<String>,
-    modules_path: &String,
+    context_path: &PathBuf,
 ) -> DockerService {
     let mut depends_on = vec![];
 
@@ -1214,18 +1226,6 @@ fn create_base_service(
 
     depends_on.extend(additional_depends_on);
 
-    let context_rel = if let Some(raw) = docker_compose_path {
-        let compose_dir = std::path::Path::new(raw).parent().unwrap_or(Path::new(""));
-        let depth = compose_dir.components().count();
-        let mut up = PathBuf::new();
-        for _ in 0..depth {
-            up.push("..");
-        }
-        up
-    } else {
-        PathBuf::from(".")
-    };
-
     DockerService {
         hostname: Some(component_name.to_string()),
         container_name: Some(format!(
@@ -1237,7 +1237,7 @@ fn create_base_service(
         )),
         restart: Some(Restart::Always),
         build: Some(DockerBuild {
-            context: context_rel.join(modules_path).to_string_lossy().to_string(),
+            context: context_path.to_string_lossy().to_string(),
             dockerfile: format!("./Dockerfile"),
         }),
         image: Some(format!(
@@ -1312,6 +1312,11 @@ pub(crate) fn add_service_definition_to_docker_compose(
         &base_path.join("docker-compose.yaml")
     };
 
+    let context_path = get_relative_context_path(
+        &manifest_data.docker_compose_path,
+        &manifest_data.modules_path,
+    );
+
     let (mut docker_compose, port_number, mut environment) = add_base_definition_to_docker_compose(
         &manifest_data.app_name,
         &manifest_data.service_name,
@@ -1371,8 +1376,11 @@ pub(crate) fn add_service_definition_to_docker_compose(
 
     let volumes = vec![
         format!(
-            "./{}:/{}/{}",
-            manifest_data.service_name, manifest_data.app_name, manifest_data.service_name
+            "{}/{}:/{}/{}",
+            context_path.to_string_lossy(),
+            manifest_data.service_name,
+            manifest_data.app_name,
+            manifest_data.service_name
         ),
         format!(
             "/{}/{}/dist",
@@ -1406,14 +1414,31 @@ pub(crate) fn add_service_definition_to_docker_compose(
                 None,
                 "dev",
                 vec![],
-                &manifest_data.docker_compose_path,
-                &manifest_data.modules_path,
+                &context_path,
             ),
         );
     }
 
     Ok(to_string(&docker_compose)
         .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?)
+}
+
+fn get_relative_context_path(
+    docker_compose_path: &Option<String>,
+    modules_path: &String,
+) -> PathBuf {
+    let context_rel = if let Some(raw) = docker_compose_path {
+        let compose_dir = Path::new(raw).parent().unwrap_or(Path::new(""));
+        let depth = compose_dir.components().count();
+        let mut up = PathBuf::new();
+        for _ in 0..depth {
+            up.push("..");
+        }
+        up
+    } else {
+        PathBuf::from(".")
+    };
+    context_rel.join(&modules_path)
 }
 
 pub(crate) fn add_worker_definition_to_docker_compose(
@@ -1427,6 +1452,11 @@ pub(crate) fn add_worker_definition_to_docker_compose(
     } else {
         &app_root_path.join("docker-compose.yaml")
     };
+
+    let context_path = get_relative_context_path(
+        &manifest_data.docker_compose_path,
+        &manifest_data.modules_path,
+    );
 
     let (mut docker_compose, port_number, mut environment) = add_base_definition_to_docker_compose(
         &manifest_data.app_name,
@@ -1469,8 +1499,11 @@ pub(crate) fn add_worker_definition_to_docker_compose(
 
     let volumes = vec![
         format!(
-            "./{}:/{}/{}",
-            manifest_data.worker_name, manifest_data.app_name, manifest_data.worker_name
+            "{}/{}:/{}/{}",
+            context_path.to_string_lossy(),
+            manifest_data.worker_name,
+            manifest_data.app_name,
+            manifest_data.worker_name
         ),
         format!(
             "/{}/{}/dist",
@@ -1502,8 +1535,7 @@ pub(crate) fn add_worker_definition_to_docker_compose(
                 Some("server"),
                 "dev:server",
                 vec![],
-                &manifest_data.docker_compose_path,
-                &manifest_data.modules_path,
+                &context_path,
             ),
         );
     }
@@ -1526,8 +1558,7 @@ pub(crate) fn add_worker_definition_to_docker_compose(
                 Some("worker"),
                 "dev:worker",
                 vec![server_service_name.clone()],
-                &manifest_data.docker_compose_path,
-                &manifest_data.modules_path,
+                &context_path,
             ),
         );
     }
