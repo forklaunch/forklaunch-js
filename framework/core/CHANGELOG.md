@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.14.12
+
+### Patch Changes
+
+- package version bump
+
 ## 0.14.11
 
 ### Patch Changes
