@@ -1,5 +1,14 @@
 # @forklaunch/core
 
+## 0.14.16
+
+### Patch Changes
+
+- Update internal package versions
+- Updated dependencies
+  - @forklaunch/validator@0.10.10
+  - @forklaunch/common@0.6.10
+
 ## 0.14.15
 
 ### Patch Changes

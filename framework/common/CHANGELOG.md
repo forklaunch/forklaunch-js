@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.6.10
+
+### Patch Changes
+
+- Update internal package versions
+
 ## 0.6.9
 
 ### Patch Changes
