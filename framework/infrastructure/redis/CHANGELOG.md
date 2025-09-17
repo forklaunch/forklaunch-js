@@ -1,5 +1,14 @@
 # @forklaunch/infrastructure-redis
 
+## 0.4.12
+
+### Patch Changes
+
+- update internal packages and loosen global auth constraint
+- Updated dependencies
+  - @forklaunch/common@0.6.9
+  - @forklaunch/core@0.14.11
+
 ## 0.4.11
 
 ### Patch Changes

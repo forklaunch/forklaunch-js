@@ -1,5 +1,15 @@
 # @forklaunch/express
 
+## 0.9.12
+
+### Patch Changes
+
+- update internal packages and loosen global auth constraint
+- Updated dependencies
+  - @forklaunch/validator@0.10.9
+  - @forklaunch/common@0.6.9
+  - @forklaunch/core@0.14.11
+
 ## 0.9.11
 
 ### Patch Changes

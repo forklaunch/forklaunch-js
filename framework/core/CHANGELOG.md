@@ -4,6 +4,15 @@
 
 ### Patch Changes
 
+- update internal packages and loosen global auth constraint
+- Updated dependencies
+  - @forklaunch/validator@0.10.9
+  - @forklaunch/common@0.6.9
+
+## 0.14.11
+
+### Patch Changes
+
 - update internal packages
 - Updated dependencies
   - @forklaunch/validator@0.10.8

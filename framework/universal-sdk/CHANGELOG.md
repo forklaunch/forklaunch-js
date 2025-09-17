@@ -1,5 +1,13 @@
 # @forklaunch/universal-sdk
 
+## 0.7.9
+
+### Patch Changes
+
+- update internal packages and loosen global auth constraint
+- Updated dependencies
+  - @forklaunch/common@0.6.9
+
 ## 0.7.8
 
 ### Patch Changes

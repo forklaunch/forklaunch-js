@@ -390,6 +390,8 @@ forklaunchApplication.get(
   }
 );
 
+export { forklaunchApplication };
+
 export function start() {
   const port = Number(process.env.PORT) || 6935;
   return forklaunchApplication.listen(port, () => {

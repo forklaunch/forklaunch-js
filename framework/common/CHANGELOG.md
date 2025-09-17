@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.6.9
+
+### Patch Changes
+
+- update internal packages and loosen global auth constraint
+
 ## 0.6.8
 
 ### Patch Changes
