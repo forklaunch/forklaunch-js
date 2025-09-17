@@ -507,6 +507,7 @@ export async function parseRequestAuth<
       req._globalOptions?.()?.auth
     )) ?? [];
   if (error != null) {
+    req.openTelemetryCollector.error(error, message);
     res.type('text/plain');
     res.status(error).send(message as never);
     return;

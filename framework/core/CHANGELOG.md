@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.14.14
+
+### Patch Changes
+
+- better debugging for auth errors and fix hmac check
+
 ## 0.14.13
 
 ### Patch Changes
