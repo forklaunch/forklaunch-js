@@ -13,12 +13,52 @@ import {
   ParamsDictionary
 } from './types/contractDetails.types';
 
-const DEFAULT_TTL = 60 * 1000 * 5;
-const memoizedJwks = {
+const DEFAULT_TTL = process.env.JWKS_TTL
+  ? parseInt(process.env.JWKS_TTL)
+  : 60 * 1000 * 5;
+
+const cachedJwks = {
   value: null as JWK[] | null,
   lastUpdated: null as Date | null,
   ttl: DEFAULT_TTL
 };
+
+/**
+ * Retrieves and caches the JSON Web Key Set (JWKS) from a given public key URL.
+ *
+ * This function fetches the JWKS from the specified URL and caches the result in memory
+ * to avoid unnecessary network requests. The cache is considered valid for a duration
+ * specified by the `cache-control` header in the JWKS HTTP response (in seconds), or
+ * falls back to a default TTL if the header is not present. If the cache is still valid,
+ * the cached keys are returned immediately.
+ *
+ * @param {string} jwksPublicKeyUrl - The URL to fetch the JWKS from.
+ * @returns {Promise<JWK[]>} A promise that resolves to an array of JWK objects.
+ *
+ * @example
+ * const jwks = await getCachedJwks('https://example.com/.well-known/jwks.json');
+ * // Use jwks for JWT verification, etc.
+ */
+export async function getCachedJwks(jwksPublicKeyUrl: string): Promise<JWK[]> {
+  if (
+    cachedJwks.value &&
+    cachedJwks.lastUpdated &&
+    Date.now() - cachedJwks.lastUpdated.getTime() < cachedJwks.ttl
+  ) {
+    return cachedJwks.value;
+  } else {
+    const jwksResponse = await fetch(jwksPublicKeyUrl);
+    const jwks = (await jwksResponse.json()).keys;
+    cachedJwks.value = jwks;
+    cachedJwks.lastUpdated = new Date();
+    cachedJwks.ttl =
+      parseInt(
+        jwksResponse.headers.get('cache-control')?.split('=')[1] ??
+          `${DEFAULT_TTL / 1000}`
+      ) * 1000;
+    return jwks;
+  }
+}
 
 /**
  * Discriminates between different authentication methods and returns a typed result.
@@ -139,23 +179,7 @@ export async function discriminateAuthMethod<
     } else {
       let jwks: JWK[];
       if ('jwksPublicKeyUrl' in jwt) {
-        if (
-          memoizedJwks.value &&
-          memoizedJwks.lastUpdated &&
-          Date.now() - memoizedJwks.lastUpdated.getTime() < memoizedJwks.ttl
-        ) {
-          jwks = memoizedJwks.value;
-        } else {
-          const jwksResponse = await fetch(jwt.jwksPublicKeyUrl);
-          jwks = (await jwksResponse.json()).keys;
-          memoizedJwks.value = jwks;
-          memoizedJwks.lastUpdated = new Date();
-          memoizedJwks.ttl =
-            parseInt(
-              jwksResponse.headers.get('cache-control')?.split('=')[1] ??
-                `${DEFAULT_TTL / 1000}`
-            ) * 1000;
-        }
+        jwks = await getCachedJwks(jwt.jwksPublicKeyUrl);
       } else if ('jwksPublicKey' in jwt) {
         jwks = [jwt.jwksPublicKey];
       }
@@ -165,9 +189,9 @@ export async function discriminateAuthMethod<
             const { payload } = await jwtVerify(token, key);
             return payload;
           } catch {
-            memoizedJwks.value = null;
-            memoizedJwks.lastUpdated = null;
-            memoizedJwks.ttl = DEFAULT_TTL;
+            cachedJwks.value = null;
+            cachedJwks.lastUpdated = null;
+            cachedJwks.ttl = DEFAULT_TTL;
             continue;
           }
         }

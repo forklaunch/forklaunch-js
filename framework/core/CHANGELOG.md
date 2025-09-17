@@ -1,5 +1,11 @@
 # @forklaunch/core
 
+## 0.14.15
+
+### Patch Changes
+
+- expose cached jwks method
+
 ## 0.14.14
 
 ### Patch Changes

@@ -1,5 +1,12 @@
 # @forklaunch/infrastructure-redis
 
+## 0.4.16
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.14.15
+
 ## 0.4.15
 
 ### Patch Changes
