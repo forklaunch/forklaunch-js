@@ -1,10 +1,12 @@
 use anyhow::{Context, Result};
+use oxc_allocator::Allocator;
+use oxc_ast::ast::{CallExpression, Expression};
+use oxc_ast_visit::Visit;
+use oxc_parser::{Parser, ParserReturn};
+use oxc_span::SourceType;
 use std::collections::HashSet;
 use std::fs;
 use std::path::Path;
-use swc_core::ecma::ast::*;
-use swc_core::ecma::parser::{Parser, StringInput, Syntax, TsSyntax, lexer::Lexer};
-use swc_core::ecma::visit::{Visit, VisitWith};
 
 #[derive(Debug, Clone)]
 pub struct EnvVarUsage {
@@ -16,45 +18,39 @@ pub struct EnvVarUsage {
 
 pub struct EnvVarVisitor {
     pub env_vars: Vec<EnvVarUsage>,
-    pub source_map: swc_core::common::SourceMap,
 }
 
 impl EnvVarVisitor {
-    pub fn new(source_map: swc_core::common::SourceMap) -> Self {
+    pub fn new() -> Self {
         Self {
             env_vars: Vec::new(),
-            source_map,
         }
     }
 }
 
-impl Visit for EnvVarVisitor {
-    fn visit_call_expr(&mut self, call: &CallExpr) {
+impl<'a> Visit<'a> for EnvVarVisitor {
+    fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
         // Look for getEnvVar function calls
-        if let Callee::Expr(expr) = &call.callee {
-            if let Expr::Ident(ident) = expr.as_ref() {
-                if ident.sym.as_ref() == "getEnvVar" {
-                    // Extract the environment variable name from the first argument
-                    if let Some(arg) = call.args.first() {
-                        if let Expr::Lit(Lit::Str(str_lit)) = arg.expr.as_ref() {
-                            let var_name = str_lit.value.to_string();
+        if let Expression::Identifier(ident) = &call.callee {
+            if ident.name == "getEnvVar" {
+                // Extract the environment variable name from the first argument
+                if let Some(arg) = call.arguments.first() {
+                    if let Some(Expression::StringLiteral(str_lit)) = arg.as_expression() {
+                        let var_name = str_lit.value.to_string();
 
-                            // Get line and column information
-                            let loc = self.source_map.lookup_char_pos(call.span.lo);
+                        let line = str_lit.span.start as usize;
 
-                            self.env_vars.push(EnvVarUsage {
-                                var_name,
-                                line: loc.line,
-                                column: loc.col_display,
-                            });
-                        }
+                        self.env_vars.push(EnvVarUsage {
+                            var_name,
+                            line,
+                            column: 0,
+                        });
                     }
                 }
             }
         }
 
-        // Continue visiting child nodes
-        call.visit_children_with(self);
+        self.visit_arguments(&call.arguments);
     }
 }
 
@@ -68,34 +64,23 @@ pub fn extract_env_vars_from_file(file_path: &Path) -> Result<Vec<EnvVarUsage>> 
 
 /// Parse TypeScript source code and extract all getEnvVar calls
 pub fn extract_env_vars_from_source(source_code: &str) -> Result<Vec<EnvVarUsage>> {
-    let source_map = swc_core::common::SourceMap::default();
-    let source_file = source_map.new_source_file(
-        swc_core::common::sync::Lrc::new(swc_core::common::FileName::Custom(
-            "registrations.ts".into(),
-        )),
-        source_code.to_string(),
-    );
+    let allocator = Allocator::default();
 
-    let lexer = Lexer::new(
-        Syntax::Typescript(TsSyntax {
-            tsx: false,
-            decorators: false,
-            dts: false,
-            no_early_errors: false,
-            disallow_ambiguous_jsx_like: true,
-        }),
-        Default::default(),
-        StringInput::from(&*source_file),
-        None,
-    );
+    let ParserReturn {
+        program, errors, ..
+    } = Parser::new(
+        &allocator,
+        source_code,
+        SourceType::default().with_typescript(true),
+    )
+    .parse();
 
-    let mut parser = Parser::new_from(lexer);
-    let module = parser
-        .parse_module()
-        .map_err(|e| anyhow::anyhow!("Failed to parse TypeScript: {:?}", e))?;
+    if !errors.is_empty() {
+        return Err(anyhow::anyhow!("Failed to parse TypeScript: {:?}", errors));
+    }
 
-    let mut visitor = EnvVarVisitor::new(source_map);
-    module.visit_with(&mut visitor);
+    let mut visitor = EnvVarVisitor::new();
+    visitor.visit_program(&program);
 
     Ok(visitor.env_vars)
 }
