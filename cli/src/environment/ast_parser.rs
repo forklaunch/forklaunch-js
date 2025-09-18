@@ -50,7 +50,8 @@ impl<'a> Visit<'a> for EnvVarVisitor {
             }
         }
 
-        self.visit_arguments(&call.arguments);
+        // Continue visiting all child nodes
+        oxc_ast_visit::walk::walk_call_expression(self, call);
     }
 }
 
