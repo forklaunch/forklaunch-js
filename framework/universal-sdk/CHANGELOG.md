@@ -1,5 +1,13 @@
 # @forklaunch/universal-sdk
 
+## 0.7.11
+
+### Patch Changes
+
+- Set the stage for improved universal sdk performance, and update internal packages
+- Updated dependencies
+  - @forklaunch/common@0.6.11
+
 ## 0.7.10
 
 ### Patch Changes

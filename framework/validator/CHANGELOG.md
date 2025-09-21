@@ -1,5 +1,13 @@
 # @forklaunch/validator
 
+## 0.10.11
+
+### Patch Changes
+
+- Set the stage for improved universal sdk performance, and update internal packages
+- Updated dependencies
+  - @forklaunch/common@0.6.11
+
 ## 0.10.10
 
 ### Patch Changes

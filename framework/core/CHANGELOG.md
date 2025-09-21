@@ -1,5 +1,17 @@
 # @forklaunch/core
 
+## 0.15.0
+
+### Minor Changes
+
+- Set the stage for improved universal sdk performance, and update internal packages
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.10.11
+  - @forklaunch/common@0.6.11
+
 ## 0.14.16
 
 ### Patch Changes

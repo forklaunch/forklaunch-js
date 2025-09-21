@@ -1,5 +1,11 @@
 # @forklaunch/bunrun
 
+## 0.0.6
+
+### Patch Changes
+
+- Set the stage for improved universal sdk performance, and update internal packages
+
 ## 0.0.5
 
 ### Patch Changes

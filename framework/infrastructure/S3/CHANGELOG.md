@@ -1,5 +1,14 @@
 # @forklaunch/infrastructure-s3
 
+## 0.4.18
+
+### Patch Changes
+
+- Set the stage for improved universal sdk performance, and update internal packages
+- Updated dependencies
+  - @forklaunch/core@0.15.0
+  - @forklaunch/common@0.6.11
+
 ## 0.4.17
 
 ### Patch Changes

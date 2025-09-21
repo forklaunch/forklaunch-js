@@ -1,5 +1,15 @@
 # @forklaunch/hyper-express
 
+## 0.9.18
+
+### Patch Changes
+
+- Set the stage for improved universal sdk performance, and update internal packages
+- Updated dependencies
+  - @forklaunch/core@0.15.0
+  - @forklaunch/validator@0.10.11
+  - @forklaunch/common@0.6.11
+
 ## 0.9.17
 
 ### Patch Changes
