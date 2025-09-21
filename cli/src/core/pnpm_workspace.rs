@@ -74,6 +74,18 @@ pub(crate) fn remove_project_definition_to_pnpm_workspace(
     {
         pnpm_workspace.packages.remove(position);
     }
+    println!("pnpm_workspace:77 pnpm_workspace: {:?}", pnpm_workspace);
+    Ok(to_string(&pnpm_workspace)
+        .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?)
+}
+
+pub(crate) fn remove_project_definition_from_pnpm_workspace(
+    pnpm_workspace: &mut PnpmWorkspace,
+    project_name: &str,
+) -> Result<String> {
+    if let Some(position) = pnpm_workspace.packages.iter().position(|name| name == project_name) {
+        pnpm_workspace.packages.remove(position);
+    }
     Ok(to_string(&pnpm_workspace)
         .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?)
 }
