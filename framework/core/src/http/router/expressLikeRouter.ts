@@ -3,9 +3,11 @@ import { ParsedQs } from 'qs';
 
 import {
   EmptyObject,
+  hashString,
   isRecord,
   Prettify,
   PrettyCamelCase,
+  safeStringify,
   sanitizePathSlashes,
   SanitizePathSlashes,
   toPrettyCamelCase,
@@ -19,6 +21,7 @@ import { isForklaunchExpressLikeRouter } from '../guards/isForklaunchExpressLike
 import { isForklaunchRouter } from '../guards/isForklaunchRouter';
 import { isHttpContractDetails } from '../guards/isHttpContractDetails';
 import { isPathParamHttpContractDetails } from '../guards/isPathParamContractDetails';
+import { isSdkHandler } from '../guards/isSdkHandler';
 import { isTypedHandler } from '../guards/isTypedHandler';
 import {
   ExpressLikeRouter,
@@ -70,7 +73,7 @@ import {
   ForklaunchRoute,
   ForklaunchRouter
 } from '../types/router.types';
-import { FetchFunction } from '../types/sdk.types';
+import { FetchFunction, SdkHandlerObject } from '../types/sdk.types';
 import {
   discriminateBody,
   discriminateResponseBodies
@@ -3471,6 +3474,70 @@ export class ForklaunchExpressLikeRouter<
       ...middlewareOrMiddlewareWithTypedHandler
     );
   };
+
+  insertIntoRouterSdkPaths({
+    sdkPath,
+    path,
+    method,
+    name
+  }: {
+    sdkPath: string;
+    name: string;
+    path: string;
+    method: string;
+  }) {
+    const routePath = [method, path].join('.');
+    for (const route of this.routes) {
+      if (
+        route.path === path &&
+        route.method === method &&
+        route.contractDetails.name === name
+      ) {
+        this.sdkPaths[routePath] = sdkPath;
+      }
+    }
+
+    for (const router of this.routers) {
+      router.insertIntoRouterSdkPaths?.({
+        sdkPath,
+        path,
+        method,
+        name
+      });
+    }
+  }
+
+  private unpackSdks(
+    sdks: SdkHandlerObject<SV>,
+    path: string[],
+    routerUniquenessCache: Set<number>
+  ) {
+    Object.entries(sdks).forEach(([key, maybeHandler]) => {
+      if (isSdkHandler(maybeHandler)) {
+        const cacheKey = hashString(safeStringify(maybeHandler));
+        if (routerUniquenessCache.has(cacheKey)) {
+          throw new Error(`SDK handler ${key} is already registered`);
+        }
+        routerUniquenessCache.add(cacheKey);
+        if (!maybeHandler._method || !maybeHandler._path) {
+          throw new Error(`SDK handler ${key} is missing method or path`);
+        }
+        this.insertIntoRouterSdkPaths({
+          sdkPath: [...path, key].join('.'),
+          path: maybeHandler._path,
+          method: maybeHandler._method,
+          name: maybeHandler.contractDetails.name
+        });
+        routerUniquenessCache.add(cacheKey);
+      } else {
+        this.unpackSdks(maybeHandler, [...path, key], routerUniquenessCache);
+      }
+    });
+  }
+
+  registerSdks(sdks: SdkHandlerObject<SV>) {
+    this.unpackSdks(sdks, [], new Set());
+  }
 
   protected cloneInternals(clone: this): void {
     clone.routers = [...this.routers];
