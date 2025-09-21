@@ -40,11 +40,11 @@
     "test": "vitest --passWithNoTests"
   },
   "devDependencies": {
-    "@eslint/js": "^9.35.0",
-    "@types/node": "^24.5.1",
-    "@typescript/native-preview": "7.0.0-dev.20250917.1",
+    "@eslint/js": "^9.36.0",
+    "@types/node": "^24.5.2",
+    "@typescript/native-preview": "7.0.0-dev.20250921.1",
     "depcheck": "^1.4.7",
-    "eslint": "^9.35.0",
+    "eslint": "^9.36.0",
     "globals": "^16.4.0",
     "tsup": "^8.5.0",
     "typedoc": "^0.28.13",
