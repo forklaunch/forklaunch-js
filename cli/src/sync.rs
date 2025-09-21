@@ -37,7 +37,7 @@ use crate::{
         base_path::{RequiredLocation, find_app_root_path},
         package_json::{application_package_json::ApplicationPackageJson, remove_project_definition_to_package_json},
         pnpm_workspace::{PnpmWorkspace, remove_project_definition_from_pnpm_workspace},
-        rendered_template::{RenderedTemplate, write_rendered_templates},
+        rendered_template::{RenderedTemplate, RenderedTemplatesCache, write_rendered_templates},
     },
     prompt::{prompt_for_confirmation, ArrayCompleter},
 };
@@ -465,30 +465,32 @@ impl CliCommand for SyncCommand {
                         if continue_sync {
                             let pnpm_workspace_path = modules_path.join("pnpm-workspace.yaml");
                             let mut pnpm_workspace: PnpmWorkspace = from_str(&read_to_string(&pnpm_workspace_path)?)?;
+                            println!("sync:468 pnpm_workspace: {:?}", pnpm_workspace);
                             for package in &runtime_projects_to_remove {
+                                println!("sync:471 package: {:?}", package);
                                 pnpm_workspace = remove_project_definition_from_pnpm_workspace(
                                         &mut pnpm_workspace,
                                         &package,
-                                    )?
+                                    )?;
+                                println!("sync:474 content: {:?}", pnpm_workspace);
                             }
+                            println!("sync:478 content: {:?}", pnpm_workspace);
                             rendered_templates.push(RenderedTemplate {
                                     path: modules_path.join("pnpm-workspace.yaml"),
                                     content: to_string(&pnpm_workspace)?,
                                     context: Some(ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE.to_string()),
                                 });
-                        }
-                        let pnpm_workspace_data = read_to_string(&modules_path.join("pnpm-workspace.yaml"))?;
-                        let pnpm_workspace: PnpmWorkspace = from_str(&pnpm_workspace_data)?;
-                        let new_pnpm_workspace_projects: HashSet<String> = pnpm_workspace.packages.iter().cloned().filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str())).collect();
-                        println!("sync:480 new_pnpm_workspace_projects: {:?}", new_pnpm_workspace_projects);
-                        if new_pnpm_workspace_projects.difference(&dir_project_names_set).count() != 0 {
-                            println!("sync:482 difference: {:?}", new_pnpm_workspace_projects.difference(&dir_project_names_set));
-                            return Err(anyhow::anyhow!("Some projects were not removed from pnpm-workspace.yaml"));
-                        } else {
-                            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-                            writeln!(stdout, "Successfully removed {} project(s) from pnpm-workspace.yaml", runtime_projects_to_remove.len())?;
-                            stdout.reset()?;
-                        }
+                            let new_pnpm_workspace_projects: HashSet<String> = pnpm_workspace.packages.iter().cloned().filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str())).collect();
+                            println!("sync:480 new_pnpm_workspace_projects: {:?}", new_pnpm_workspace_projects);
+                            if new_pnpm_workspace_projects.difference(&dir_project_names_set).count() != 0 {
+                                println!("sync:482 difference: {:?}", new_pnpm_workspace_projects.difference(&dir_project_names_set));
+                                return Err(anyhow::anyhow!("Some projects were not removed from pnpm-workspace.yaml"));
+                            } else {
+                                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+                                writeln!(stdout, "Successfully removed {} project(s) from pnpm-workspace.yaml", runtime_projects_to_remove.len())?;
+                                stdout.reset()?;
+                            }
+                        }  
                     } else {
                         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
                         writeln!(stdout, "No projects to remove from pnpm-workspace.yaml")?;
@@ -526,28 +528,31 @@ impl CliCommand for SyncCommand {
                             &mut stdout, 
                             "Do you want to remove these packages from package.json? (y/N) ")?;
                         if continue_sync {
+                            let package_json_path = modules_path.join("package.json");
+                            let mut package_json: ApplicationPackageJson = from_str(&read_to_string(&package_json_path)?)?;
+                            println!("sync:533 package_json: {:?}", package_json);
                             for package in &runtime_projects_to_remove {
-                                rendered_templates.push(RenderedTemplate {
-                                path: modules_path.join("package.json"),
-                                content: remove_project_definition_to_package_json(
-                                    &modules_path,
+                                package_json = remove_project_definition_from_package_json(
+                                    &mut package_json,
                                     &package,
-                                )?,
+                                )?;
+                                println!("sync:538 package_json: {:?}", package_json);
+                            }
+                            rendered_templates.push(RenderedTemplate {
+                                path: modules_path.join("package.json"),
+                                content: to_string(&package_json)?,
                                 context: Some(ERROR_FAILED_TO_CREATE_PACKAGE_JSON.to_string()),
                                 });
+                            let new_package_json_projects: HashSet<String> = package_json.workspaces.as_ref().unwrap().iter().cloned().filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str())).collect();
+                            println!("sync:540 new_package_json_projects: {:?}", new_package_json_projects);
+                            if new_package_json_projects.difference(&dir_project_names_set).count() != 0 {
+                                println!("sync:542 difference: {:?}", new_package_json_projects.difference(&dir_project_names_set));
+                                return Err(anyhow::anyhow!("Some projects were not removed from package.json"));
+                            } else {
+                                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+                                writeln!(stdout, "Successfully removed {} project(s) from package.json", runtime_projects_to_remove.len())?;
+                                stdout.reset()?;
                             }
-                        }
-                        let new_package_json_data = read_to_string(&modules_path.join("package.json"))?;
-                        let new_package_json: ApplicationPackageJson = from_str(&new_package_json_data)?;
-                        let new_package_json_projects: HashSet<String> = new_package_json.workspaces.as_ref().unwrap().iter().cloned().filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str())).collect();
-                        println!("sync:540 new_package_json_projects: {:?}", new_package_json_projects);
-                        if new_package_json_projects.difference(&dir_project_names_set).count() != 0 {
-                            println!("sync:542 difference: {:?}", new_package_json_projects.difference(&dir_project_names_set));
-                            return Err(anyhow::anyhow!("Some projects were not removed from package.json"));
-                        } else {
-                            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-                            writeln!(stdout, "Successfully removed {} project(s) from package.json", runtime_projects_to_remove.len())?;
-                            stdout.reset()?;
                         }
                     } else {
                         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
