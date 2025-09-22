@@ -68,16 +68,18 @@ impl CliCommand for SyncCommand {
 
         for (project_name, env_vars) in &project_env_vars {
             let project_path = modules_path.join(project_name);
-            let mut missing_vars = Vec::new();
+            let mut missing_set = std::collections::HashSet::new();
 
             for env_var in env_vars {
                 if !is_env_var_defined(&project_path, &env_var.var_name)? {
-                    missing_vars.push(env_var.var_name.clone());
+                    missing_set.insert(env_var.var_name.clone());
                 }
             }
 
-            if !missing_vars.is_empty() {
-                missing_vars_by_project.insert(project_name.clone(), missing_vars);
+            if !missing_set.is_empty() {
+                let mut vars: Vec<String> = missing_set.into_iter().collect();
+                vars.sort();
+                missing_vars_by_project.insert(project_name.clone(), vars);
             }
         }
 

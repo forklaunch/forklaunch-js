@@ -77,7 +77,7 @@ pub fn extract_env_vars_from_source(source_code: &str) -> Result<Vec<EnvVarUsage
     .parse();
 
     if !errors.is_empty() {
-        return Err(anyhow::anyhow!("Failed to parse TypeScript: {:?}", errors));
+        log::debug!("TypeScript parse errors during env scan: {:?}", errors);
     }
 
     let mut visitor = EnvVarVisitor::new();

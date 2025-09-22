@@ -221,11 +221,14 @@ fn analyze_env_hierarchy(
     let mut var_counts: HashMap<String, Vec<String>> = HashMap::new();
 
     for (project_name, env_vars) in project_env_vars {
+        let mut seen: std::collections::HashSet<&str> = std::collections::HashSet::new();
         for env_var in env_vars {
-            var_counts
-                .entry(env_var.var_name.clone())
-                .or_insert_with(Vec::new)
-                .push(project_name.clone());
+            if seen.insert(env_var.var_name.as_str()) {
+                var_counts
+                    .entry(env_var.var_name.clone())
+                    .or_insert_with(Vec::new)
+                    .push(project_name.clone());
+            }
         }
     }
 

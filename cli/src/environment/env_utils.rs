@@ -61,7 +61,7 @@ pub fn find_env_files(project_path: &Path) -> Result<Vec<PathBuf>> {
     }
 
     // Regex pattern to match all .env files (.env, .env.local, .env.development, etc.)
-    let env_regex = Regex::new(r"^\.env(\.[a-zA-Z0-9_-]+)?$")?;
+    let env_regex = Regex::new(r"^\.env(\.[a-zA-Z0-9_-]+)*$")?;
 
     // Find all .env* files in the directory
     if let Ok(entries) = fs::read_dir(project_path) {
@@ -256,7 +256,7 @@ pub fn get_cascading_env_paths(project_path: &Path, workspace_root: &Path) -> Re
     let mut env_paths = Vec::new();
 
     // Regex pattern to match all .env files (.env, .env.local, .env.development, etc.)
-    let env_regex = Regex::new(r"^\.env(\.[a-zA-Z0-9_-]+)?$")?;
+    let env_regex = Regex::new(r"^\.env(\.[a-zA-Z0-9_-]+)*$")?;
 
     // Collect all .env* files from project directory up to workspace root
     let mut current_path = project_path.canonicalize()?;
