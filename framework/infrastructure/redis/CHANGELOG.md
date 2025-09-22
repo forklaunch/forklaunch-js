@@ -1,5 +1,14 @@
 # @forklaunch/infrastructure-redis
 
+## 0.4.19
+
+### Patch Changes
+
+- Update internal packages and expose RegistryOptions from universal sdk
+- Updated dependencies
+  - @forklaunch/common@0.6.12
+  - @forklaunch/core@0.15.1
+
 ## 0.4.18
 
 ### Patch Changes

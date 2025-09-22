@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.6.12
+
+### Patch Changes
+
+- Update internal packages and expose RegistryOptions from universal sdk
+
 ## 0.6.11
 
 ### Patch Changes

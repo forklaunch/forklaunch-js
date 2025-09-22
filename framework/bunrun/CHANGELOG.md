@@ -1,5 +1,11 @@
 # @forklaunch/bunrun
 
+## 0.0.7
+
+### Patch Changes
+
+- Update internal packages and expose RegistryOptions from universal sdk
+
 ## 0.0.6
 
 ### Patch Changes

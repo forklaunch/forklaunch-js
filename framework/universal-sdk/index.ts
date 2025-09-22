@@ -83,3 +83,5 @@ export const universalSdk = async <TypedController>(options: {
 
   return proxyInternal as TypedController;
 };
+
+export { RegistryOptions };

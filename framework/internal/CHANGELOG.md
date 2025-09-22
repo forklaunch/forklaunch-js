@@ -1,5 +1,14 @@
 # @forklaunch/common
 
+## 0.3.12
+
+### Patch Changes
+
+- Update internal packages and expose RegistryOptions from universal sdk
+- Updated dependencies
+  - @forklaunch/validator@0.10.12
+  - @forklaunch/common@0.6.12
+
 ## 0.3.11
 
 ### Patch Changes

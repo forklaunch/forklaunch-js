@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/universal-sdk",
-  "version": "0.7.11",
+  "version": "0.7.12",
   "description": "Cross runtime fetch library for forklaunch router sdks",
   "keywords": [
     "fetch",
@@ -48,7 +48,7 @@
   },
   "devDependencies": {
     "@types/node": "^24.5.2",
-    "@typescript/native-preview": "7.0.0-dev.20250921.1",
+    "@typescript/native-preview": "7.0.0-dev.20250922.1",
     "fetch-mock": "^12.5.4",
     "jest": "^30.1.3",
     "openapi3-ts": "^4.5.0",

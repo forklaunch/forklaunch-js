@@ -1,5 +1,15 @@
 # @forklaunch/express
 
+## 0.9.19
+
+### Patch Changes
+
+- Update internal packages and expose RegistryOptions from universal sdk
+- Updated dependencies
+  - @forklaunch/validator@0.10.12
+  - @forklaunch/common@0.6.12
+  - @forklaunch/core@0.15.1
+
 ## 0.9.18
 
 ### Patch Changes
