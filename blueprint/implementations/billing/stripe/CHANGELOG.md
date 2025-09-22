@@ -1,5 +1,17 @@
 # @forklaunch/implementation-billing-base
 
+## 0.4.0
+
+### Minor Changes
+
+- Major universal sdk refactor, better handler ergonomics and update internal package versions
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/implementation-billing-base@0.7.0
+  - @forklaunch/interfaces-billing@0.7.0
+
 ## 0.3.5
 
 ### Patch Changes

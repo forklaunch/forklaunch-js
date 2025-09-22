@@ -6,215 +6,193 @@ import {
   schemaValidator,
   string
 } from '@forklaunch/blueprint-core';
-import { Metrics } from '@forklaunch/blueprint-monitoring';
-import { Controller } from '@forklaunch/core/controllers';
-import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import {
-  CurrencyEnum,
-  PaymentMethodEnum
-} from '@forklaunch/implementation-billing-stripe/enum';
-import { PaymentLinkService } from '@forklaunch/interfaces-billing/interfaces';
-import { StatusEnum } from '../../domain/enum/status.enum';
+import { ci, tokens } from '../../bootstrapper';
 import {
   CreatePaymentLinkMapper,
   PaymentLinkMapper,
   UpdatePaymentLinkMapper
 } from '../../domain/mappers/paymentLink.mappers';
-import { PaymentLinkServiceFactory } from '../routes/paymentLink.routes';
 
-export const PaymentLinkController = (
-  serviceFactory: PaymentLinkServiceFactory,
-  openTelemetryCollector: OpenTelemetryCollector<Metrics>,
-  HMAC_SECRET_KEY: string
-) =>
-  ({
-    createPaymentLink: handlers.post(
-      schemaValidator,
-      '/',
-      {
-        name: 'createPaymentLink',
-        summary: 'Create a payment link',
-        auth: {
-          hmac: {
-            secretKeys: {
-              default: HMAC_SECRET_KEY
-            }
-          }
-        },
-        body: CreatePaymentLinkMapper.schema,
-        responses: {
-          200: PaymentLinkMapper.schema
-        }
-      },
-      async (req, res) => {
-        openTelemetryCollector.debug('Creating payment link', req.body);
-        res
-          .status(200)
-          .json(await serviceFactory().createPaymentLink(req.body));
-      }
-    ),
+const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
+const serviceFactory = ci.scopedResolver(tokens.PaymentLinkService);
+const HMAC_SECRET_KEY = ci.resolve(tokens.HMAC_SECRET_KEY);
 
-    getPaymentLink: handlers.get(
-      schemaValidator,
-      '/:id',
-      {
-        name: 'getPaymentLink',
-        summary: 'Get a payment link',
-        auth: {
-          hmac: {
-            secretKeys: {
-              default: HMAC_SECRET_KEY
-            }
-          }
-        },
-        params: IdSchema,
-        responses: {
-          200: PaymentLinkMapper.schema
+export const createPaymentLink = handlers.post(
+  schemaValidator,
+  '/',
+  {
+    name: 'createPaymentLink',
+    summary: 'Create a payment link',
+    auth: {
+      hmac: {
+        secretKeys: {
+          default: HMAC_SECRET_KEY
         }
-      },
-      async (req, res) => {
-        openTelemetryCollector.debug('Retrieving payment link', req.params);
-        res.status(200).json(await serviceFactory().getPaymentLink(req.params));
       }
-    ),
+    },
+    body: CreatePaymentLinkMapper.schema,
+    responses: {
+      200: PaymentLinkMapper.schema
+    }
+  },
+  async (req, res) => {
+    openTelemetryCollector.debug('Creating payment link', req.body);
+    res.status(200).json(await serviceFactory().createPaymentLink(req.body));
+  }
+);
 
-    updatePaymentLink: handlers.put(
-      schemaValidator,
-      '/:id',
-      {
-        name: 'updatePaymentLink',
-        summary: 'Update a payment link',
-        auth: {
-          hmac: {
-            secretKeys: {
-              default: HMAC_SECRET_KEY
-            }
-          }
-        },
-        body: UpdatePaymentLinkMapper.schema,
-        params: IdSchema,
-        responses: {
-          200: PaymentLinkMapper.schema
+export const getPaymentLink = handlers.get(
+  schemaValidator,
+  '/:id',
+  {
+    name: 'getPaymentLink',
+    summary: 'Get a payment link',
+    auth: {
+      hmac: {
+        secretKeys: {
+          default: HMAC_SECRET_KEY
         }
-      },
-      async (req, res) => {
-        openTelemetryCollector.debug('Updating payment link', req.body);
-        res
-          .status(200)
-          .json(await serviceFactory().updatePaymentLink(req.body));
       }
-    ),
+    },
+    params: IdSchema,
+    responses: {
+      200: PaymentLinkMapper.schema
+    }
+  },
+  async (req, res) => {
+    openTelemetryCollector.debug('Retrieving payment link', req.params);
+    res.status(200).json(await serviceFactory().getPaymentLink(req.params));
+  }
+);
 
-    expirePaymentLink: handlers.delete(
-      schemaValidator,
-      '/:id',
-      {
-        name: 'expirePaymentLink',
-        summary: 'Expire a payment link',
-        auth: {
-          hmac: {
-            secretKeys: {
-              default: HMAC_SECRET_KEY
-            }
-          }
-        },
-        params: IdSchema,
-        responses: {
-          200: string
+export const updatePaymentLink = handlers.put(
+  schemaValidator,
+  '/:id',
+  {
+    name: 'updatePaymentLink',
+    summary: 'Update a payment link',
+    auth: {
+      hmac: {
+        secretKeys: {
+          default: HMAC_SECRET_KEY
         }
-      },
-      async (req, res) => {
-        openTelemetryCollector.debug('Expiring payment link', req.params);
-        await serviceFactory().expirePaymentLink(req.params);
-        res.status(200).send(`Expired payment link ${req.params.id}`);
       }
-    ),
+    },
+    body: UpdatePaymentLinkMapper.schema,
+    params: IdSchema,
+    responses: {
+      200: PaymentLinkMapper.schema
+    }
+  },
+  async (req, res) => {
+    openTelemetryCollector.debug('Updating payment link', {
+      ...req.params,
+      ...req.body
+    });
+    res.status(200).json(
+      await serviceFactory().updatePaymentLink({
+        ...req.params,
+        ...req.body
+      })
+    );
+  }
+);
 
-    handlePaymentSuccess: handlers.get(
-      schemaValidator,
-      '/:id/success',
-      {
-        name: 'handlePaymentSuccess',
-        summary: 'Handle a payment success',
-        auth: {
-          hmac: {
-            secretKeys: {
-              default: HMAC_SECRET_KEY
-            }
-          }
-        },
-        params: IdSchema,
-        responses: {
-          200: string
+export const expirePaymentLink = handlers.delete(
+  schemaValidator,
+  '/:id',
+  {
+    name: 'expirePaymentLink',
+    summary: 'Expire a payment link',
+    auth: {
+      hmac: {
+        secretKeys: {
+          default: HMAC_SECRET_KEY
         }
-      },
-      async (req, res) => {
-        openTelemetryCollector.debug(
-          'Handling payment link success',
-          req.params
-        );
-        await serviceFactory().handlePaymentSuccess(req.params);
-        res.status(200).send(`Handled payment success for ${req.params.id}`);
       }
-    ),
+    },
+    params: IdSchema,
+    responses: {
+      200: string
+    }
+  },
+  async (req, res) => {
+    openTelemetryCollector.debug('Expiring payment link', req.params);
+    await serviceFactory().expirePaymentLink(req.params);
+    res.status(200).send(`Expired payment link ${req.params.id}`);
+  }
+);
 
-    handlePaymentFailure: handlers.get(
-      schemaValidator,
-      '/:id/failure',
-      {
-        name: 'handlePaymentFailure',
-        summary: 'Handle a payment failure',
-        auth: {
-          hmac: {
-            secretKeys: {
-              default: HMAC_SECRET_KEY
-            }
-          }
-        },
-        params: IdSchema,
-        responses: {
-          200: string
+export const handlePaymentSuccess = handlers.get(
+  schemaValidator,
+  '/:id/success',
+  {
+    name: 'handlePaymentSuccess',
+    summary: 'Handle a payment success',
+    auth: {
+      hmac: {
+        secretKeys: {
+          default: HMAC_SECRET_KEY
         }
-      },
-      async (req, res) => {
-        openTelemetryCollector.debug(
-          'Handling payment link failure',
-          req.params
-        );
-        await serviceFactory().handlePaymentFailure(req.params);
-        res.status(200).send(`Handled payment failure for ${req.params.id}`);
       }
-    ),
+    },
+    params: IdSchema,
+    responses: {
+      200: string
+    }
+  },
+  async (req, res) => {
+    openTelemetryCollector.debug('Handling payment link success', req.params);
+    await serviceFactory().handlePaymentSuccess(req.params);
+    res.status(200).send(`Handled payment success for ${req.params.id}`);
+  }
+);
 
-    listPaymentLinks: handlers.get(
-      schemaValidator,
-      '/',
-      {
-        name: 'listPaymentLinks',
-        summary: 'List payment links',
-        query: IdsSchema,
-        auth: {
-          hmac: {
-            secretKeys: {
-              default: HMAC_SECRET_KEY
-            }
-          }
-        },
-        responses: {
-          200: array(PaymentLinkMapper.schema)
+export const handlePaymentFailure = handlers.get(
+  schemaValidator,
+  '/:id/failure',
+  {
+    name: 'handlePaymentFailure',
+    summary: 'Handle a payment failure',
+    auth: {
+      hmac: {
+        secretKeys: {
+          default: HMAC_SECRET_KEY
         }
-      },
-      async (req, res) => {
-        openTelemetryCollector.debug('Listing payment links', req.query);
-        res
-          .status(200)
-          .json(await serviceFactory().listPaymentLinks(req.query));
       }
-    )
-  }) satisfies Controller<
-    PaymentLinkService<
-      typeof PaymentMethodEnum,
-      typeof CurrencyEnum,
-      typeof StatusEnum
-    >
-  >;
+    },
+    params: IdSchema,
+    responses: {
+      200: string
+    }
+  },
+  async (req, res) => {
+    openTelemetryCollector.debug('Handling payment link failure', req.params);
+    await serviceFactory().handlePaymentFailure(req.params);
+    res.status(200).send(`Handled payment failure for ${req.params.id}`);
+  }
+);
+
+export const listPaymentLinks = handlers.get(
+  schemaValidator,
+  '/',
+  {
+    name: 'listPaymentLinks',
+    summary: 'List payment links',
+    query: IdsSchema,
+    auth: {
+      hmac: {
+        secretKeys: {
+          default: HMAC_SECRET_KEY
+        }
+      }
+    },
+    responses: {
+      200: array(PaymentLinkMapper.schema)
+    }
+  },
+  async (req, res) => {
+    openTelemetryCollector.debug('Listing payment links', req.query);
+    res.status(200).json(await serviceFactory().listPaymentLinks(req.query));
+  }
+);

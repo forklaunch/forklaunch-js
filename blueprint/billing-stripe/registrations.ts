@@ -130,6 +130,11 @@ const environmentConfig = configInjector.chain({
     lifetime: Lifetime.Singleton,
     type: string,
     value: getEnvVar('JWKS_PUBLIC_KEY_URL')
+  },
+  STRIPE_WEBHOOK_SECRET: {
+    lifetime: Lifetime.Singleton,
+    type: string,
+    value: getEnvVar('STRIPE_WEBHOOK_SECRET')
   }
 });
 

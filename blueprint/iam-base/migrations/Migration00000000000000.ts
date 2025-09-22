@@ -1,6 +1,6 @@
 import { Migration } from '@mikro-orm/migrations';
 
-export class Migration20250311041303 extends Migration {
+export class Migration00000000000000 extends Migration {
   override async up(): Promise<void> {
     this.addSql(
       `create table "organization" ("id" uuid not null, "created_at" timestamptz not null, "updated_at" timestamptz not null, "name" text not null, "domain" text not null, "logo_url" text null, "subscription" text not null, "status" text not null default 'active', constraint "organization_pkey" primary key ("id"));`
@@ -52,5 +52,14 @@ export class Migration20250311041303 extends Migration {
     this.addSql(
       `alter table "user_roles" add constraint "user_roles_role_id_foreign" foreign key ("role_id") references "role" ("id") on update cascade on delete cascade;`
     );
+  }
+
+  override async down(): Promise<void> {
+    this.addSql(`drop table if exists "user_roles" cascade;`);
+    this.addSql(`drop table if exists "user" cascade;`);
+    this.addSql(`drop table if exists "role_permissions" cascade;`);
+    this.addSql(`drop table if exists "role" cascade;`);
+    this.addSql(`drop table if exists "permission" cascade;`);
+    this.addSql(`drop table if exists "organization" cascade;`);
   }
 }

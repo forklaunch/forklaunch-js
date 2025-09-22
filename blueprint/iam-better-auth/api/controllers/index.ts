@@ -1,0 +1,1 @@
+../../../iam-base/api/controllers/index.ts

@@ -1,5 +1,16 @@
 # @forklaunch/implementation-billing-base
 
+## 0.7.0
+
+### Minor Changes
+
+- Major universal sdk refactor, better handler ergonomics and update internal package versions
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/interfaces-worker@0.6.0
+
 ## 0.6.4
 
 ### Patch Changes

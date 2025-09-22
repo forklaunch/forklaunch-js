@@ -1,41 +1,45 @@
-import {
-  handlers,
-  schemaValidator,
-  SchemaValidator,
-  string,
-  type
-} from '@forklaunch/blueprint-core';
-import { Metrics } from '@forklaunch/blueprint-monitoring';
-import { Controller } from '@forklaunch/core/controllers';
-import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { StripeWebhookService } from '@forklaunch/implementation-billing-stripe/services';
-import Stripe from 'stripe';
-import { PartyEnum } from '../../domain/enum/party.enum';
-import { StatusEnum } from '../../domain/enum/status.enum';
-import { WebhookServiceFactory } from '../routes/webhook.routes';
+import { handlers, schemaValidator, string } from '@forklaunch/blueprint-core';
+import { default as Stripe, default as stripe } from 'stripe';
+import { ci, tokens } from '../../bootstrapper';
 
-export const WebhookController = (
-  serviceFactory: WebhookServiceFactory,
-  openTelemetryCollector: OpenTelemetryCollector<Metrics>
-) =>
-  ({
-    handleWebhookEvent: handlers.post(
-      schemaValidator,
-      '/',
-      {
-        name: 'handleWebhookEvent',
-        summary: 'Handle a stripe event via webhook',
-        body: type<Stripe.Event>(),
-        responses: {
-          200: string
-        }
-      },
-      async (req, res) => {
-        openTelemetryCollector.debug('Processing stripe event', req.body);
-        await serviceFactory().handleWebhookEvent(req.body);
-        res.status(200).send('ok');
-      }
-    )
-  }) satisfies Controller<
-    StripeWebhookService<SchemaValidator, typeof StatusEnum, typeof PartyEnum>
-  >;
+const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
+const serviceFactory = ci.scopedResolver(tokens.WebhookService);
+const STRIPE_WEBHOOK_SECRET = ci.resolve(tokens.STRIPE_WEBHOOK_SECRET);
+
+export const handleWebhookEvent = handlers.post(
+  schemaValidator,
+  '/',
+  {
+    name: 'handleWebhookEvent',
+    summary: 'Handle a stripe event via webhook',
+    body: {
+      text: string
+    },
+    requestHeaders: {
+      'stripe-signature': string
+    },
+    responses: {
+      200: string
+    }
+  },
+  async (req, res) => {
+    const signature = req.headers['stripe-signature'];
+    let event: Stripe.Event;
+    try {
+      event = stripe.webhooks.constructEvent(
+        req.body,
+        signature,
+        STRIPE_WEBHOOK_SECRET
+      );
+    } catch (err) {
+      openTelemetryCollector.error(
+        `Webhook signature verification failed.`,
+        err instanceof Error ? err.message : 'Unknown error'
+      );
+      return res.status(400).send('Webhook signature verification failed');
+    }
+    openTelemetryCollector.debug('Processing stripe event', event);
+    await serviceFactory().handleWebhookEvent(event);
+    res.status(200).send('Webhook event processed');
+  }
+);

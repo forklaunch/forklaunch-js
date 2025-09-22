@@ -1,5 +1,11 @@
 # @forklaunch/interfaces-billing
 
+## 0.6.0
+
+### Minor Changes
+
+- Major universal sdk refactor, better handler ergonomics and update internal package versions
+
 ## 0.5.4
 
 ### Patch Changes

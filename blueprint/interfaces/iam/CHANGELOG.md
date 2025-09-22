@@ -1,5 +1,11 @@
 # @forklaunch/interfaces-iam
 
+## 0.7.0
+
+### Minor Changes
+
+- Major universal sdk refactor, better handler ergonomics and update internal package versions
+
 ## 0.6.4
 
 ### Patch Changes

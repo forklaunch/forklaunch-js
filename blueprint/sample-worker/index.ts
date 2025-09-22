@@ -1,1 +1,1 @@
-export type { SampleWorkerSdkClient } from './sdk';
+export * from './sdk';

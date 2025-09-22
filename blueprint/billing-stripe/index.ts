@@ -1,1 +1,1 @@
-export type { BillingSdkClient } from './sdk';
+export * from './sdk';

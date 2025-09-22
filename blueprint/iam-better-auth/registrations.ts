@@ -1,4 +1,3 @@
-import { betterAuth } from '@forklaunch/better-auth';
 import {
   array,
   ExpressApplicationOptions,
@@ -24,8 +23,9 @@ import {
   BaseUserService
 } from '@forklaunch/implementation-iam-base/services';
 import { EntityManager, ForkOptions, MikroORM } from '@mikro-orm/core';
+import { betterAuth } from 'better-auth';
 import { readFileSync } from 'fs';
-import { BetterAuthConfig, betterAuthConfig } from './auth';
+import { BetterAuth, betterAuthConfig } from './auth';
 import { OrganizationStatus } from './domain/enum/organizationStatus.enum';
 import {
   CreateOrganizationMapper,
@@ -131,6 +131,11 @@ const environmentConfig = configInjector.chain({
     lifetime: Lifetime.Singleton,
     type: string,
     value: getEnvVar('HMAC_SECRET_KEY')
+  },
+  JWKS_PUBLIC_KEY_URL: {
+    lifetime: Lifetime.Singleton,
+    type: string,
+    value: getEnvVar('JWKS_PUBLIC_KEY_URL')
   }
 });
 
@@ -156,26 +161,6 @@ const runtimeDependencies = environmentConfig.chain({
     type: EntityManager,
     factory: ({ MikroORM }, _resolve, context) =>
       MikroORM.em.fork(context?.entityManagerOptions as ForkOptions | undefined)
-  },
-  BetterAuth: {
-    lifetime: Lifetime.Singleton,
-    type: type<ReturnType<typeof betterAuth<BetterAuthConfig>>>(),
-    factory: ({
-      BETTER_AUTH_BASE_PATH,
-      PASSWORD_ENCRYPTION_SECRET,
-      CORS_ORIGINS,
-      MikroORM,
-      OpenTelemetryCollector
-    }) =>
-      betterAuth(
-        betterAuthConfig({
-          BETTER_AUTH_BASE_PATH,
-          PASSWORD_ENCRYPTION_SECRET,
-          CORS_ORIGINS,
-          orm: MikroORM,
-          openTelemetryCollector: OpenTelemetryCollector
-        })
-      )
   }
 });
 
@@ -264,6 +249,26 @@ const serviceDependencies = runtimeDependencies.chain({
 
 //! defines the express application options for the application
 const expressApplicationOptions = serviceDependencies.chain({
+  BetterAuth: {
+    lifetime: Lifetime.Singleton,
+    type: type<unknown>(),
+    factory: ({
+      BETTER_AUTH_BASE_PATH,
+      PASSWORD_ENCRYPTION_SECRET,
+      CORS_ORIGINS,
+      MikroORM,
+      OpenTelemetryCollector
+    }) =>
+      betterAuth(
+        betterAuthConfig({
+          BETTER_AUTH_BASE_PATH,
+          PASSWORD_ENCRYPTION_SECRET,
+          CORS_ORIGINS,
+          orm: MikroORM,
+          openTelemetryCollector: OpenTelemetryCollector
+        })
+      ) as BetterAuth
+  },
   ExpressApplicationOptions: {
     lifetime: Lifetime.Singleton,
     type: promise(
@@ -280,8 +285,9 @@ const expressApplicationOptions = serviceDependencies.chain({
       BetterAuth,
       UserService
     }) => {
-      const betterAuthOpenAPIContent =
-        await BetterAuth.api.generateOpenAPISchema();
+      const betterAuthOpenAPIContent = await (
+        BetterAuth as BetterAuth
+      ).api.generateOpenAPISchema();
 
       const options: ExpressApplicationOptions<
         SchemaValidator,
@@ -342,7 +348,10 @@ const expressApplicationOptions = serviceDependencies.chain({
 });
 
 //! validates the configuration and returns the dependencies for the application
-export const createDependencyContainer = (envFilePath: string) => ({
+export const createDependencyContainer: (envFilePath: string) => {
+  ci: ReturnType<typeof expressApplicationOptions.validateConfigSingletons>;
+  tokens: ReturnType<typeof expressApplicationOptions.tokens>;
+} = (envFilePath: string) => ({
   ci: expressApplicationOptions.validateConfigSingletons(envFilePath),
   tokens: expressApplicationOptions.tokens()
 });
