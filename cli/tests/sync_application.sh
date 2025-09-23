@@ -8,16 +8,16 @@ cd output/sync-application
 RUST_BACKTRACE=1 cargo run --release init application sync-test-node-application -p ./sync-test-node-application -o src/modules -d postgresql -m billing-base -m iam-base -f prettier -l eslint -v zod -F express -r node -t vitest -D "Test Sync Application" -A "Mushroom Research" -L 'AGPL-3.0'
 RUST_BACKTRACE=1 cargo run --release init library lib-test -p ./sync-test-node-application -D "Test library"
 RUST_BACKTRACE=1 cargo run --release delete library lib-test -p ./sync-test-node-application -c
-RUST_BACKTRACE=1 cargo run --release init service svc-test -d postgresql -D "Test service"
+RUST_BACKTRACE=1 cargo run --release init service svc-test -d postgresql -p ./sync-test-node-application/src/modules -D "Test service"
 
-cd src/modules
+cd sync-test-node-application/src/modules
 RUST_BACKTRACE=1 cargo run --release init worker wrk-test -t database -d postgresql -D "Test worker"
 
 
 rm -rf iam wrk-test svc-test
 
 cd ../..
-RUST_BACKTRACE=1 cargo run --release sync -p ./sync-test-node-application -c
+RUST_BACKTRACE=1 cargo run --release sync -p . -c
 
 cd src/modules
 

@@ -3,14 +3,23 @@ use std::{collections::HashMap, fs::read_to_string, path::Path};
 use anyhow::{Context, Result};
 use convert_case::{Case, Casing};
 use serde_json::from_str;
-use regex::Regex;
+use oxc_allocator::Allocator;
+use oxc_ast::ast::SourceType;
+// use oxc_ast_visit::{Visit, walk::{walk_statement, walk_program}};
+// use oxc_ast::ast::{SourceType, Statement, Expression, TSType, Declaration, TSSignature, ObjectPropertyKind};
+use oxc_codegen::{Codegen, CodegenOptions};
+
 
 use crate::{
     constants::{ERROR_FAILED_TO_PARSE_PACKAGE_JSON, ERROR_FAILED_TO_READ_PACKAGE_JSON},
     core::{
-        ast::transformations::transform_universal_sdk::{
-            transform_universal_sdk_add_sdk, transform_universal_sdk_change_sdk,
-            transform_universal_sdk_remove_sdk,
+        ast::{
+            deletions::delete_from_universal_sdk::delete_from_universal_sdk,
+            transformations::transform_universal_sdk::{
+                transform_universal_sdk_add_sdk, transform_universal_sdk_change_sdk,
+                transform_universal_sdk_remove_sdk,
+            }, 
+            parse_ast_program::parse_ast_program
         },
         package_json::project_package_json::ProjectPackageJson,
         rendered_template::{RenderedTemplate, RenderedTemplatesCache},
@@ -169,53 +178,62 @@ pub(crate) fn change_project_in_universal_sdk(
     Ok(())
 }
 
-pub(crate) fn validate_universal_sdk_changes(
+pub(crate) fn remove_project_vec_from_universal_sdk(
+    rendered_templates: &mut Vec<RenderedTemplate>,
     base_path: &Path,
     app_name: &str,
     projects_to_remove: &Vec<String>,
 ) -> Result<()> {
     let kebab_case_app_name = &app_name.to_case(Case::Kebab);
+    let allocator = Allocator::default();
+    let app_program_text = read_to_string(base_path.join("universal-sdk").join("universalSdk.ts"))?;
+    let mut app_program_ast = parse_ast_program(&allocator, &app_program_text, SourceType::ts());
+    for project in projects_to_remove {
+        delete_from_universal_sdk(&allocator, &mut app_program_ast, app_name, project)?;
+    }
+    let universal_sdk_content = Codegen::new()
+        .with_options(CodegenOptions::default())
+        .build(&app_program_ast)
+        .code;
+    println!("universal_sdk:197 universal_sdk_content: {:?}", universal_sdk_content);
+    
+    rendered_templates.push(RenderedTemplate {
+        path: base_path.join("universal-sdk").join("universalSdk.ts"),
+        content: universal_sdk_content.clone(),
+        context: None,
+    });
 
-    let universal_sdk_project_json = from_str::<ProjectPackageJson>(
+    let mut universal_sdk_project_json = from_str::<ProjectPackageJson>(
         &read_to_string(base_path.join("universal-sdk").join("package.json"))
             .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?,
     )
     .with_context(|| ERROR_FAILED_TO_PARSE_PACKAGE_JSON)?;
 
-    let current_deps = &universal_sdk_project_json.dev_dependencies.as_ref().unwrap().additional_deps;
-    println!("universal_sdk:185 current_deps: {:?}", current_deps);
-
     for project in projects_to_remove {
         let kebab_case_project = &project.to_case(Case::Kebab);
-        let dep_key = format!("@{}/{}", &kebab_case_app_name, &kebab_case_project);
-        println!("universal_sdk:190 dep_key: {:?}", dep_key);
-        if current_deps.contains_key(&dep_key) {
-            return Err(anyhow::anyhow!("Project {} is still in universal-sdk/package.json", project));
-        }
+        println!("universal_sdk:212 kebab_case_project: {:?}", kebab_case_project);
+        universal_sdk_project_json
+            .dev_dependencies
+            .as_mut()
+            .unwrap()
+            .additional_deps
+            .remove(&format!("@{}/{}", &kebab_case_app_name, &kebab_case_project));
     }
 
-    let universal_sdk_content = read_to_string(base_path.join("universal-sdk").join("universalSdk.ts"))
-        .with_context(|| "Failed to read universal-sdk/universalSdk.ts")?;
-    let failed_projects = vec![];
-    for project in projects_to_remove {
-        let kebab_case_project = &project.to_case(Case::Kebab);
-        let escaped = regex::escape(kebab_case_project);
-        println!("universal_sdk:203 escaped: {:?}", escaped);
-        let pattern = format!(r#"(?m)^\s*(import|export)\b.*{escaped}.*"#);
-        let re = Regex::new(&pattern).unwrap();
-        filtered_lines = universal_sdk_content.lines().filter(|line| re.is_match(line)).map(|line| line.to_string()).collect();
-        if filtered_lines.is_empty() {
-            println!("universal_sdk:208 No imports/exports found for project {}", project);
-        } else {
-            println!("universal_sdk:210 Imports/exports found for project {}", project);
-            failed_projects.push(project);
-        }
-    }
-    if failed_projects.is_empty() {
-        println!("universal_sdk:216 Successfully removed projects from universal-sdk/universalSdk.ts");
-    } else {
-        println!("universal_sdk:218 Failed to remove projects from universal-sdk/universalSdk.ts: {:?}", failed_projects);
-        return Err(anyhow::anyhow!("Failed to remove projects from universal-sdk/universalSdk.ts: {:?}", failed_projects));
-    }
+    rendered_templates.push(RenderedTemplate {
+        path: base_path.join("universal-sdk").join("package.json"),
+        content: serde_json::to_string_pretty(&universal_sdk_project_json)?,
+        context: None,
+    });
+    // TODO: Automate validation later
+    // println!("universal_sdk:226 validating universal SDK changes");
+    // validate_remove_from_universal_sdk(
+    //         &app_name,
+    //         &universal_sdk_content,
+    //         &universal_sdk_project_json,
+    //         &projects_to_remove,
+    //     )?;
+    // println!("universal_sdk:234 Successfully validated universal SDK changes for {} project(s)", projects_to_remove.len());
     Ok(())
 }
+

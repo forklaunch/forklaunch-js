@@ -35,9 +35,10 @@ use crate::{
             remove_service_from_docker_compose, remove_worker_from_docker_compose, DockerCompose,
         },
         base_path::{RequiredLocation, find_app_root_path},
-        package_json::{application_package_json::ApplicationPackageJson, remove_project_definition_to_package_json},
+        package_json::{application_package_json::ApplicationPackageJson, remove_project_definition_from_package_json},
         pnpm_workspace::{PnpmWorkspace, remove_project_definition_from_pnpm_workspace},
-        rendered_template::{RenderedTemplate, RenderedTemplatesCache, write_rendered_templates},
+        rendered_template::{RenderedTemplate, write_rendered_templates},
+        universal_sdk::{remove_project_vec_from_universal_sdk},
     },
     prompt::{prompt_for_confirmation, ArrayCompleter},
 };
@@ -484,16 +485,16 @@ impl CliCommand for SyncCommand {
                             println!("sync:484 new_pnpm_workspace_projects: {:?}", new_pnpm_workspace_projects);
                             if new_pnpm_workspace_projects.difference(&dir_project_names_set).count() != 0 {
                                 println!("sync:486 difference: {:?}", new_pnpm_workspace_projects.difference(&dir_project_names_set));
-                                return Err(anyhow::anyhow!("Some projects were not removed from pnpm-workspace.yaml"));
+                                return Err(anyhow::anyhow!("Some packages were not removed from pnpm-workspace.yaml"));
                             } else {
                                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-                                writeln!(stdout, "Successfully removed {} project(s) from pnpm-workspace.yaml", runtime_projects_to_remove.len())?;
+                                writeln!(stdout, "Successfully removed {} package(s) from pnpm-workspace.yaml", runtime_projects_to_remove.len())?;
                                 stdout.reset()?;
                             }
                         }  
                     } else {
                         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-                        writeln!(stdout, "No projects to remove from pnpm-workspace.yaml")?;
+                        writeln!(stdout, "No packages to remove from pnpm-workspace.yaml")?;
                         stdout.reset()?;
                     }
                     if !runtime_projects_to_add.is_empty() {
@@ -502,7 +503,6 @@ impl CliCommand for SyncCommand {
                         for package in &runtime_projects_to_add {
                             writeln!(stdout, "  - {}", package)?;
                         }
-                        stdout.reset()?;
                         writeln!(stdout, "Please add these packages to pnpm-workspace.yaml")?;
                         stdout.reset()?;
                         // TODO: add packages to pnpm-workspace.yml
@@ -547,16 +547,16 @@ impl CliCommand for SyncCommand {
                             println!("sync:547 new_package_json_projects: {:?}", new_package_json_projects);
                             if new_package_json_projects.difference(&dir_project_names_set).count() != 0 {
                                 println!("sync:549 difference: {:?}", new_package_json_projects.difference(&dir_project_names_set));
-                                return Err(anyhow::anyhow!("Some projects were not removed from package.json"));
+                                return Err(anyhow::anyhow!("Some packages were not removed from package.json"));
                             } else {
                                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-                                writeln!(stdout, "Successfully removed {} project(s) from package.json", runtime_projects_to_remove.len())?;
+                                writeln!(stdout, "Successfully removed {} package(s) from package.json", runtime_projects_to_remove.len())?;
                                 stdout.reset()?;
                             }
                         }
                     } else {
                         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-                        writeln!(stdout, "No projects to remove from package.json")?;
+                        writeln!(stdout, "No packages to remove from package.json")?;
                         stdout.reset()?;
                     }
                     if !runtime_projects_to_add.is_empty() {
@@ -565,7 +565,6 @@ impl CliCommand for SyncCommand {
                         for package in &runtime_projects_to_add {
                             writeln!(stdout, "  - {}", package)?;
                         }
-                        stdout.reset()?;
                         writeln!(stdout, "Please add these packages to package.json")?;
                         stdout.reset()?;
                         // TODO: add packages to package.json
@@ -579,24 +578,46 @@ impl CliCommand for SyncCommand {
             }
             println!("sync:580 removing projects from universal SDK");
             if !runtime_projects_to_remove.is_empty() {
-                for project_name in &runtime_projects_to_remove {
-                    remove_project_from_universal_sdk(
+                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+                writeln!(stdout, "Found {} project(s) in directories that are in universal SDK that no longer exist:", runtime_projects_to_remove.len())?;
+                for project in &runtime_projects_to_remove {
+                    writeln!(stdout, "  - {}", project)?;
+                }
+                stdout.reset()?;
+                let continue_sync = prompt_sync_confirmation(
+                    matches, 
+                    &mut line_editor, 
+                    &mut stdout, 
+                    "Do you want to remove these projects from universal SDK? (y/N) ")?;
+                if continue_sync {
+                    println!("sync:593 app_name: {:?}", manifest_data.app_name);
+                    remove_project_vec_from_universal_sdk(
                         &mut rendered_templates,
                         &modules_path,
                         &manifest_data.app_name,
-                        project_name,
+                        &runtime_projects_to_remove,
                     )?;
                 }
-                validate_universal_sdk_changes(
-                    &modules_path,
-                    &manifest_data.app_name,
-                    &runtime_projects_to_remove,
-                )?;
+            } else {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-                writeln!(stdout, "Successfully validated universal SDK changes for {} project(s)", runtime_projects_to_remove.len())?;
+                writeln!(stdout, "No projects to remove from universal SDK")?;
                 stdout.reset()?;
             }
-            // TODO: Add projects to universal SDK
+            if !runtime_projects_to_add.is_empty() {
+                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+                writeln!(stdout, "Found {} package(s) in directories that are not in universal SDK:", runtime_projects_to_add.len())?;
+                for package in &runtime_projects_to_add {
+                    writeln!(stdout, "  - {}", package)?;
+                }
+                writeln!(stdout, "Please add these packages to universal SDK")?;
+                stdout.reset()?;
+                // TODO: Add packages to universal SDK
+            } else {
+                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+                writeln!(stdout, "No packages to add to universal SDK")?;
+                stdout.reset()?;
+            }
+            
 
             write_rendered_templates(&rendered_templates, false, &mut stdout)?;
 

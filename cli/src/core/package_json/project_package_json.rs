@@ -25,7 +25,7 @@ impl Serialize for ProjectDependenciesWithProjectName {
     }
 }
 
-#[derive(Debug, Serialize, Default)]
+#[derive(Debug, Serialize, Default, Clone)]
 pub(crate) struct ProjectScripts {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) build: Option<String>,
