@@ -42,7 +42,7 @@ pub(crate) fn transform_universal_sdk_remove_sdk(
     let allocator = Allocator::default();
     let app_program_text = read_to_string(base_path.join("universal-sdk").join("universalSdk.ts"))?;
     let mut app_program_ast = parse_ast_program(&allocator, &app_program_text, SourceType::ts());
-
+    
     delete_from_universal_sdk(&allocator, &mut app_program_ast, app_name, name)?;
 
     Ok(Codegen::new()
