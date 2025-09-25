@@ -34,30 +34,30 @@
   "dependencies": {
     "@forklaunch/blueprint-core": "workspace:*",
     "@forklaunch/blueprint-monitoring": "workspace:*",
-    "@forklaunch/core": "^0.14.7",
+    "@forklaunch/core": "^0.15.2",
     "@forklaunch/hyper-express-fork": "^6.17.35",
     "@forklaunch/implementation-iam-base": "workspace:*",
     "@forklaunch/interfaces-iam": "workspace:*",
-    "@mikro-orm/core": "^6.5.2",
-    "@mikro-orm/migrations": "^6.5.2",
-    "@mikro-orm/mongodb": "^6.5.2",
-    "@mikro-orm/mysql": "^6.5.2",
-    "@mikro-orm/postgresql": "^6.5.2",
-    "@mikro-orm/reflection": "^6.5.2",
-    "@mikro-orm/seeder": "^6.5.2",
-    "@mikro-orm/sqlite": "^6.5.2",
+    "@mikro-orm/core": "^6.5.5",
+    "@mikro-orm/migrations": "^6.5.5",
+    "@mikro-orm/mongodb": "^6.5.5",
+    "@mikro-orm/mysql": "^6.5.5",
+    "@mikro-orm/postgresql": "^6.5.5",
+    "@mikro-orm/reflection": "^6.5.5",
+    "@mikro-orm/seeder": "^6.5.5",
+    "@mikro-orm/sqlite": "^6.5.5",
     "@sinclair/typebox": "^0.34.41",
     "dotenv": "^17.2.2",
-    "zod": "^4.1.5"
+    "zod": "^4.1.11"
   },
   "devDependencies": {
-    "@mikro-orm/cli": "^6.5.2",
+    "@mikro-orm/cli": "^6.5.5",
     "@types/express": "^5.0.3",
     "@types/express-serve-static-core": "^5.0.7",
     "@types/qs": "^6.14.0",
     "depcheck": "^1.4.7",
     "prettier": "^3.6.2",
-    "typedoc": "^0.28.12"
+    "typedoc": "^0.28.13"
   },
   "mikro-orm": {
     "configPaths": [

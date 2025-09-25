@@ -53,22 +53,22 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/common": "^0.6.5",
-    "@forklaunch/core": "^0.14.7",
+    "@forklaunch/common": "^0.6.13",
+    "@forklaunch/core": "^0.15.2",
     "@forklaunch/implementation-billing-base": "workspace:*",
     "@forklaunch/interfaces-billing": "workspace:*",
-    "@forklaunch/internal": "^0.3.5",
-    "@forklaunch/validator": "^0.10.5",
-    "@mikro-orm/core": "^6.5.2",
+    "@forklaunch/internal": "^0.3.13",
+    "@forklaunch/validator": "^0.10.13",
+    "@mikro-orm/core": "^6.5.5",
     "@sinclair/typebox": "^0.34.41",
     "ajv": "^8.17.1",
     "stripe": "^18.5.0",
-    "zod": "^4.1.5"
+    "zod": "^4.1.11"
   },
   "devDependencies": {
-    "@typescript/native-preview": "7.0.0-dev.20250910.1",
+    "@typescript/native-preview": "7.0.0-dev.20250924.1",
     "depcheck": "^1.4.7",
     "prettier": "^3.6.2",
-    "typedoc": "^0.28.12"
+    "typedoc": "^0.28.13"
   }
 }
