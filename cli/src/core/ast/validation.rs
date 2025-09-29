@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use anyhow::Result;
 use convert_case::{Case, Casing};
 
-use convert_case::{Case, Casing};
 use oxc_allocator::Allocator;
 use oxc_ast_visit::{Visit, walk::{walk_statement, walk_program}};
 use oxc_ast::ast::{SourceType, Statement, Expression, TSType, Declaration, TSSignature, BindingPatternKind, ObjectPropertyKind, Argument};
@@ -10,7 +9,7 @@ use oxc_ast::ast::{SourceType, Statement, Expression, TSType, Declaration, TSSig
 use crate::core::{
     ast::parse_ast_program::parse_ast_program,
     package_json::project_package_json::ProjectPackageJson,
-}
+};
 
 struct ProjectReferenceValidator<'a> {
     projects_to_remove: &'a Vec<String>,
@@ -213,7 +212,7 @@ pub(crate) fn validate_project_removal_with_ast(
     Ok(validator.matches)
 }
 
-fn validate_remove_from_universal_sdk(
+pub(crate) fn validate_remove_from_universal_sdk(
     app_name: &str,
     content: &str,
     project_json: &ProjectPackageJson,

@@ -21,7 +21,7 @@ use crate::{
         ERROR_FAILED_TO_READ_PNPM_WORKSPACE,
         ERROR_FAILED_TO_PARSE_PNPM_WORKSPACE,
         ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE,
-        Runtime,
+        Runtime, InitializeType,
     },
     core::{
         command::command,
@@ -40,7 +40,7 @@ use crate::{
         rendered_template::{RenderedTemplate, write_rendered_templates},
         universal_sdk::{remove_project_vec_from_universal_sdk},
     },
-    prompt::{prompt_for_confirmation, ArrayCompleter},
+    prompt::{prompt_for_confirmation, prompt_with_validation, ArrayCompleter},
 };
 
 #[derive(Debug)]
@@ -101,26 +101,57 @@ const RUNTIME_PROJECTS_TO_IGNORE: &[&str] = &[
     "universal-sdk",
 ];
 
-fn find_project_dir_names(modules_path: &Path) -> Result<Vec<String>> {
-    let mut project_dirs = vec![];
+/// Generic function to find directory names in any given path
+/// 
+/// # Arguments
+/// * `path` - The path to search for directories
+/// * `ignore_patterns` - Optional slice of directory names to ignore (if None, no directories are ignored)
+/// 
+/// # Returns
+/// * `Result<Vec<String>>` - Vector of directory names found in the path
+fn find_directory_names<P: AsRef<Path>>(
+    path: P, 
+    ignore_patterns: Option<&[&str]>
+) -> Result<Vec<String>> {
+    let path = path.as_ref();
+    let mut directories = vec![];
     
-    if !modules_path.exists() {
-        return Ok(project_dirs);
+    if !path.exists() {
+        return Ok(directories);
     }
     
-    for entry in fs::read_dir(modules_path)? {
+    for entry in fs::read_dir(path)? {
         let entry = entry?;
         if entry.file_type()?.is_dir() {
             if let Some(dir_name) = entry.path().file_name() {
                 let dir_name_str = dir_name.to_string_lossy().to_string();
-                if !DIRS_TO_IGNORE.contains(&dir_name_str.as_str()) {
-                    project_dirs.push(dir_name.to_string_lossy().to_string());
+                
+                // Only ignore if ignore_patterns is Some and contains the directory name
+                let should_ignore = ignore_patterns
+                    .map(|patterns| patterns.contains(&dir_name_str.as_str()))
+                    .unwrap_or(false);
+                
+                if !should_ignore {
+                    directories.push(dir_name_str);
                 }
             }
         }
     }
-    println!("sync:121 project_dirs: {:?}", project_dirs);
-    Ok(project_dirs)
+    
+    Ok(directories)
+}
+
+/// Legacy function that maintains the original behavior for backward compatibility
+fn find_project_dir_names(modules_path: &Path) -> Result<Vec<String>> {
+    let directories = find_directory_names(modules_path, Some(DIRS_TO_IGNORE))?;
+    println!("sync:121 project_dirs: {:?}", directories);
+    Ok(directories)
+}
+
+fn find_file_names(path: &Path) -> Result<Vec<String>> {
+    let files = fs::read_dir(path)?;
+    let files = files.map(|file| file.unwrap().path().file_name().unwrap().to_string_lossy().to_string()).collect();
+    Ok(files)
 }
 
 fn check_manifest(manifest_data: &ApplicationManifestData, dir_project_names: &Vec<String>) -> Result<(Vec<String>, Vec<String>)> {
@@ -244,6 +275,58 @@ fn prompt_sync_confirmation(
     Ok(true)
 }
 
+fn init_service(service_name: &str, app_root_path: &Path, modules_path: &Path, manifest_data: &mut ApplicationManifestData, stdout: &mut StandardStream) -> Result<()> {
+    let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
+    let mut stdout = StandardStream::stdout(ColorChoice::Always);
+
+    
+    let service_base_path = modules_path.join(service_name);
+    let service_directories = find_project_dir_names(&service_base_path)?;
+    let service_manifest_data = ServiceManifestData::default();
+    let service_manifest_data = service_manifest_data.initialize(
+        InitializableManifestConfigMetadata::Project(ProjectInitializationMetadata {
+            project_name: service_name.clone(),
+        }),
+    );
+
+    let database = prompt_with_validation(
+        &mut line_editor,
+        &mut stdout,
+        "database",
+        matches,
+        "database type",
+        Some(&Database::VARIANTS),
+        |input| Database::VARIANTS.contains(&input),
+        |_| "Invalid database type. Please try again".to_string(),
+    )?
+    .parse()?;
+     let description = prompt_without_validation(
+        &mut line_editor,
+        &mut stdout,
+        "description",
+        matches,
+        "description",
+        None,
+    )?;
+    Ok(())
+}
+
+fn init_library(project_name: &str, modules_path: &Path, manifest_data: &mut ApplicationManifestData, stdout: &mut StandardStream) -> Result<()> {
+    Ok(())
+}
+
+fn init_worker(project_name: &str, modules_path: &Path, manifest_data: &mut ApplicationManifestData, stdout: &mut StandardStream) -> Result<()> {
+    Ok(())
+}
+
+fn init_module(project_name: &str, modules_path: &Path, manifest_data: &mut ApplicationManifestData, stdout: &mut StandardStream) -> Result<()> {
+    Ok(())
+}
+
+fn init_router(project_name: &str, modules_path: &Path, manifest_data: &mut ApplicationManifestData, stdout: &mut StandardStream) -> Result<()> {
+    Ok(())
+}
+
 impl CliCommand for SyncCommand {
     fn command(&self) -> Command {
         command(
@@ -261,6 +344,13 @@ impl CliCommand for SyncCommand {
                 .short('c')
                 .long("confirm")
                 .help("Flag to confirm any prompts")
+                .action(ArgAction::SetTrue),
+        )
+        .arg(
+            Arg::new("skip-prompt")
+                .short('s')
+                .long("skip-prompt")
+                .help("Flag to skip any prompts")
                 .action(ArgAction::SetTrue),
         )
     }
@@ -359,16 +449,46 @@ impl CliCommand for SyncCommand {
                 writeln!(stdout, "No projects to remove from manifest.toml")?;
                 stdout.reset()?;
             }
-            if !manifest_projects_to_add.is_empty() {
+            if !manifest_projects_to_add.is_empty() && !matches.get_flag("skip-prompt") {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
                 writeln!(stdout, "Found {} project(s) in directories that are not in manifest:", manifest_projects_to_add.len())?;
                 for project_name in &manifest_projects_to_add {
                     writeln!(stdout, "  - {}", project_name)?;
                 }
                 stdout.reset()?;
-                writeln!(stdout, "Please add these projects to the manifest.")?;
+                // writeln!(stdout, "Please add these projects to the manifest.")?;
                 // TODO: add projects to manifest.toml
                 // read directory, create manifest data, add project to manifest.toml
+                for project_name in &manifest_projects_to_add {
+                    let Some(project_type) = prompt_with_validation(
+                        &mut line_editor,
+                        &mut stdout,
+                        "type",
+                        matches,
+                        "project type",
+                        Some(&InitializeType::VARIANTS),
+                        |input| InitializeType::VARIANTS.contains(&input),
+                        |_| "Invalid project type. Please try again".to_string(),
+                    )?
+                    .parse()?;
+                    match project_type {
+                        InitializeType::Service => {
+                            init_service(project_name, &modules_path, &manifest_data, &mut stdout)?;
+                        }
+                        InitializeType::Library => {
+                            init_library(project_name, &modules_path, &manifest_data, &mut stdout)?;
+                        }
+                        InitializeType::Worker => {
+                            init_worker(project_name, &modules_path, &manifest_data, &mut stdout)?;
+                        }
+                        InitializeType::Module => {
+                            init_module(project_name, &modules_path, &manifest_data, &mut stdout)?;
+                        }
+                        InitializeType::Router => {
+                            init_router(project_name, &modules_path, &manifest_data, &mut stdout)?;
+                        }
+                    }
+                }
             } else {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
                 writeln!(stdout, "No projects to add to manifest.toml")?;
@@ -633,4 +753,5 @@ impl CliCommand for SyncCommand {
 
         Ok(())
     }
+}
 }
