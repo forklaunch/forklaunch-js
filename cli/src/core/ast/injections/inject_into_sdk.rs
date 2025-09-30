@@ -1,7 +1,102 @@
 use anyhow::{Result, bail};
-use oxc_ast::ast::{Declaration, Expression, Program, Statement};
+use oxc_ast::ast::{
+    BindingPatternKind, Declaration, Expression, ObjectPropertyKind, Program, PropertyKey,
+    Statement, TSSignature, TSType,
+};
 
 pub(crate) fn inject_into_sdk_client_input<'a>(
+    app_program_ast: &mut Program<'a>,
+    injection_program_ast: &mut Program<'a>,
+) -> Result<()> {
+    // First, inject into the Sdk type definition
+    inject_into_sdk_type_definition(app_program_ast, injection_program_ast)?;
+
+    // Then, inject into the SdkClient object
+    inject_into_sdk_client_object(app_program_ast, injection_program_ast)?;
+
+    Ok(())
+}
+
+fn inject_into_sdk_type_definition<'a>(
+    app_program_ast: &mut Program<'a>,
+    injection_program_ast: &mut Program<'a>,
+) -> Result<()> {
+    // Find the Sdk type definition in the app program
+    for stmt in app_program_ast.body.iter_mut() {
+        let export = match stmt {
+            Statement::ExportNamedDeclaration(export) => export,
+            _ => continue,
+        };
+
+        let ts_declaration = match &mut export.declaration {
+            Some(Declaration::TSTypeAliasDeclaration(ts_decl)) => ts_decl,
+            _ => continue,
+        };
+
+        // Check if this is the Sdk type definition (ends with "Sdk")
+        let is_sdk_type = ts_declaration.id.name.ends_with("Sdk");
+        if !is_sdk_type {
+            continue;
+        }
+
+        // Get the type literal from the type annotation
+        let type_literal = match &mut ts_declaration.type_annotation {
+            TSType::TSTypeLiteral(literal) => literal,
+            _ => continue,
+        };
+
+        // Find the injection data from the injection program
+        for injection_stmt in &mut injection_program_ast.body {
+            let injection_export = match injection_stmt {
+                Statement::ExportNamedDeclaration(export) => export,
+                _ => continue,
+            };
+
+            let injection_ts_declaration = match &mut injection_export.declaration {
+                Some(Declaration::TSTypeAliasDeclaration(ts_decl)) => ts_decl,
+                _ => continue,
+            };
+
+            // Get the injection type literal
+            let injection_type_literal = match &mut injection_ts_declaration.type_annotation {
+                TSType::TSTypeLiteral(literal) => literal,
+                _ => continue,
+            };
+
+            // Get existing property names to avoid duplicates
+            let existing_keys: Vec<String> = type_literal
+                .members
+                .iter()
+                .filter_map(|m| match m {
+                    TSSignature::TSPropertySignature(prop) => match &prop.key {
+                        PropertyKey::StaticIdentifier(id) => Some(id.name.to_string()),
+                        _ => None,
+                    },
+                    _ => None,
+                })
+                .collect();
+
+            // Move properties from injection to app, avoiding duplicates
+            let mut moved: Vec<TSSignature> = vec![];
+            for member in injection_type_literal.members.drain(..) {
+                if let TSSignature::TSPropertySignature(prop_sig) = &member {
+                    if let PropertyKey::StaticIdentifier(id) = &prop_sig.key {
+                        if existing_keys.contains(&id.name.to_string()) {
+                            continue;
+                        }
+                    }
+                }
+                moved.push(member);
+            }
+            type_literal.members.extend(moved);
+            return Ok(());
+        }
+    }
+
+    bail!("Failed to inject into Sdk type definition");
+}
+
+fn inject_into_sdk_client_object<'a>(
     app_program_ast: &mut Program<'a>,
     injection_program_ast: &mut Program<'a>,
 ) -> Result<()> {
@@ -15,68 +110,85 @@ pub(crate) fn inject_into_sdk_client_input<'a>(
             _ => continue,
         };
 
-        let is_sdk_client = var_declaration.declarations.iter().any(|decl| {
-            if let Some(Expression::CallExpression(call)) = &decl.init {
-                if let Expression::Identifier(ident) = &call.callee {
-                    return ident.name == "sdkClient";
+        for decl in &mut var_declaration.declarations {
+            let mut maybe_object = None;
+            if let Some(init) = &mut decl.init {
+                match init {
+                    Expression::ObjectExpression(obj) => {
+                        maybe_object = Some(obj);
+                    }
+                    Expression::TSSatisfiesExpression(ts_sat) => {
+                        if let Expression::ObjectExpression(obj) = &mut ts_sat.expression {
+                            maybe_object = Some(obj);
+                        }
+                    }
+                    _ => {}
                 }
             }
-            false
-        });
 
-        if !is_sdk_client {
-            continue;
-        }
+            let app_object = match maybe_object {
+                Some(obj) => obj,
+                None => continue,
+            };
 
-        for decl in &mut var_declaration.declarations {
-            if let Some(Expression::CallExpression(call)) = &mut decl.init {
-                if call.arguments.len() >= 2 {
-                    let object_arg = &mut call.arguments[1];
-                    if let oxc_ast::ast::Argument::ObjectExpression(app_object) = object_arg {
-                        for injection_stmt in &mut injection_program_ast.body {
-                            let injection_var_decl = match injection_stmt {
-                                Statement::VariableDeclaration(decl) => decl,
-                                Statement::ExportNamedDeclaration(export) => {
-                                    match &mut export.declaration {
-                                        Some(Declaration::VariableDeclaration(decl)) => decl,
-                                        _ => continue,
-                                    }
-                                }
-                                _ => continue,
-                            };
+            let is_sdk_client_var = matches!(&decl.id.kind, BindingPatternKind::BindingIdentifier(id) if id.name.ends_with("SdkClient"));
+            if !is_sdk_client_var {
+                continue;
+            }
 
-                            let is_injection_sdk_client =
-                                injection_var_decl.declarations.iter().any(|decl| {
-                                    if let Some(Expression::CallExpression(call)) = &decl.init {
-                                        if let Expression::Identifier(ident) = &call.callee {
-                                            return ident.name == "sdkClient";
-                                        }
-                                    }
-                                    false
-                                });
+            for injection_stmt in &mut injection_program_ast.body {
+                let injection_var_decl = match injection_stmt {
+                    Statement::VariableDeclaration(decl) => decl,
+                    Statement::ExportNamedDeclaration(export) => match &mut export.declaration {
+                        Some(Declaration::VariableDeclaration(decl)) => decl,
+                        _ => continue,
+                    },
+                    _ => continue,
+                };
 
-                            if !is_injection_sdk_client {
-                                continue;
+                for injection_decl in &mut injection_var_decl.declarations {
+                    if let Some(init) = &mut injection_decl.init {
+                        let mut maybe_injection_object = None;
+                        match init {
+                            Expression::ObjectExpression(obj) => {
+                                maybe_injection_object = Some(obj);
                             }
-
-                            for injection_decl in &mut injection_var_decl.declarations {
-                                if let Some(Expression::CallExpression(injection_call)) =
-                                    &mut injection_decl.init
-                                {
-                                    if injection_call.arguments.len() >= 2 {
-                                        let injection_object_arg = &mut injection_call.arguments[1];
-                                        if let oxc_ast::ast::Argument::ObjectExpression(
-                                            injection_object,
-                                        ) = injection_object_arg
-                                        {
-                                            app_object
-                                                .properties
-                                                .extend(injection_object.properties.drain(..));
-                                            return Ok(());
-                                        }
-                                    }
+                            Expression::TSSatisfiesExpression(ts_sat) => {
+                                if let Expression::ObjectExpression(obj) = &mut ts_sat.expression {
+                                    maybe_injection_object = Some(obj);
                                 }
                             }
+                            _ => {}
+                        }
+
+                        if let Some(injection_object) = maybe_injection_object {
+                            let existing_keys: Vec<String> = app_object
+                                .properties
+                                .iter()
+                                .filter_map(|p| match p {
+                                    ObjectPropertyKind::ObjectProperty(prop) => match &prop.key {
+                                        PropertyKey::StaticIdentifier(id) => {
+                                            Some(id.name.to_string())
+                                        }
+                                        _ => None,
+                                    },
+                                    _ => None,
+                                })
+                                .collect();
+
+                            let mut moved: Vec<ObjectPropertyKind> = vec![];
+                            for prop in injection_object.properties.drain(..) {
+                                if let ObjectPropertyKind::ObjectProperty(prop_obj) = &prop {
+                                    if let PropertyKey::StaticIdentifier(id) = &prop_obj.key {
+                                        if existing_keys.contains(&id.name.to_string()) {
+                                            continue;
+                                        }
+                                    }
+                                }
+                                moved.push(prop);
+                            }
+                            app_object.properties.extend(moved);
+                            return Ok(());
                         }
                     }
                 }
@@ -84,7 +196,7 @@ pub(crate) fn inject_into_sdk_client_input<'a>(
         }
     }
 
-    bail!("Failed to inject into export declaration");
+    bail!("Failed to inject into SdkClient object");
 }
 
 #[cfg(test)]
@@ -101,16 +213,22 @@ mod tests {
         let allocator = Allocator::default();
 
         let app_code = r#"
-        export const sdkClient = sdkClient(schemaValidator, {
+        export type TestSdk = {
+            mySdkClientRoutes: typeof mySdkClientSdkRouter;
+        };
+        export const testSdkClient = {
             mySdkClientRoutes: mySdkClientSdkRouter
-        });
+        } satisfies TestSdk;
         "#;
         let mut app_program = parse_ast_program(&allocator, app_code, SourceType::ts());
 
         let injection_code = r#"
-        export const sdkClient = sdkClient(schemaValidator, {
+        export type TestSdk = {
+            mySdkClient2Routes: typeof mySdkClient2SdkRouter;
+        };
+        export const injectedSdkClient = {
             mySdkClient2Routes: mySdkClient2SdkRouter
-        });
+        } satisfies TestSdk;
         "#;
         let mut injection_program = parse_ast_program(&allocator, injection_code, SourceType::ts());
 
@@ -118,14 +236,11 @@ mod tests {
 
         assert!(result.is_ok());
 
-        let expected_code = "export const sdkClient = sdkClient(schemaValidator, {\n\tmySdkClientRoutes: mySdkClientSdkRouter,\n\tmySdkClient2Routes: mySdkClient2SdkRouter\n});\n";
-
-        assert_eq!(
-            Codegen::new()
-                .with_options(CodegenOptions::default())
-                .build(&app_program)
-                .code,
-            expected_code
-        );
+        let generated = Codegen::new()
+            .with_options(CodegenOptions::default())
+            .build(&app_program)
+            .code;
+        assert!(generated.contains("mySdkClientRoutes"));
+        assert!(generated.contains("mySdkClient2Routes"));
     }
 }

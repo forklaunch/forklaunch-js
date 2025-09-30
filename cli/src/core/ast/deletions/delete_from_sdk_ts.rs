@@ -1,11 +1,14 @@
 use anyhow::Result;
 use oxc_allocator::{Allocator, CloneIn, Vec};
 use oxc_ast::ast::{
-    Argument, Declaration, Expression, ObjectPropertyKind, Program, PropertyKey, Statement,
+    BindingPatternKind, Declaration, Expression, ObjectPropertyKind, Program, PropertyKey,
+    Statement,
 };
 use oxc_codegen::{Codegen, CodegenOptions};
 
-use crate::core::ast::deletions::delete_import_statement::delete_import_statement;
+use crate::core::ast::deletions::delete_import_statement::{
+    delete_import_specifier, delete_import_statement,
+};
 
 pub(crate) fn delete_from_sdk_client_input<'a>(
     allocator: &'a Allocator,
@@ -23,47 +26,63 @@ pub(crate) fn delete_from_sdk_client_input<'a>(
         };
 
         for declarator in &mut var_decl.declarations {
-            let call_expr = match &mut declarator.init {
-                Some(Expression::CallExpression(call)) => call,
-                _ => continue,
-            };
-
-            let callee = match &call_expr.callee {
-                Expression::Identifier(ident) => ident,
-                _ => continue,
-            };
-
-            if callee.name != "sdkClient" {
+            let is_sdk_client_var = matches!(&declarator.id.kind, BindingPatternKind::BindingIdentifier(id) if id.name.ends_with("SdkClient"));
+            if !is_sdk_client_var {
                 continue;
             }
 
-            for argument in &mut call_expr.arguments {
-                let object_expr = match argument {
-                    Argument::ObjectExpression(object_expr) => object_expr,
-                    _ => continue,
+            let mut maybe_object = None;
+            if let Some(init) = &mut declarator.init {
+                match init {
+                    Expression::ObjectExpression(obj) => {
+                        maybe_object = Some(obj);
+                    }
+                    Expression::TSSatisfiesExpression(ts_sat) => {
+                        if let Expression::ObjectExpression(obj) = &mut ts_sat.expression {
+                            maybe_object = Some(obj);
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            let object_expr = match maybe_object {
+                Some(obj) => obj,
+                None => continue,
+            };
+
+            let mut new_properties = Vec::new_in(allocator);
+            object_expr.properties.iter().for_each(|prop| {
+                let prop = match prop {
+                    ObjectPropertyKind::ObjectProperty(prop) => prop,
+                    _ => return,
+                };
+                let key = match &prop.key {
+                    PropertyKey::StaticIdentifier(identifier) => identifier,
+                    _ => return,
                 };
 
-                let mut new_properties = Vec::new_in(allocator);
-                object_expr.properties.iter().for_each(|prop| {
-                    let prop = match prop {
-                        ObjectPropertyKind::ObjectProperty(prop) => prop,
-                        _ => return,
-                    };
-                    let key = match &prop.key {
-                        PropertyKey::StaticIdentifier(identifier) => identifier,
-                        _ => return,
-                    };
-
-                    if key.name.as_str() != router_name_camel_case {
-                        new_properties.push(ObjectPropertyKind::ObjectProperty(
-                            prop.clone_in(&allocator),
-                        ));
-                    }
-                });
-                object_expr.properties = new_properties;
-            }
+                if key.name.as_str() != router_name_camel_case {
+                    new_properties.push(ObjectPropertyKind::ObjectProperty(
+                        prop.clone_in(&allocator),
+                    ));
+                }
+            });
+            object_expr.properties = new_properties;
         }
     }
+
+    let _ = delete_import_specifier(
+        &allocator,
+        sdk_program_ast,
+        &format!("{}Get", router_name_camel_case),
+        "./api/controllers",
+    )?;
+    let _ = delete_import_specifier(
+        &allocator,
+        sdk_program_ast,
+        &format!("{}Post", router_name_camel_case),
+        "./api/controllers",
+    )?;
 
     let _ = delete_import_statement(
         &allocator,
@@ -90,21 +109,23 @@ mod tests {
         let allocator = Allocator::default();
 
         let sdk_code = r#"
-        const testSdk = sdkClient(schemaValidator, {
-            userRoutes: userSdkRouter,
-            postRoutes: postSdkRouter,
-            commentRoutes: commentSdkRouter
-        });
+        import { userManagementGet, userManagementPost } from './api/controllers';
+        const testSdkClient = {
+            userManagement: { userManagementGet: userManagementGet, userManagementPost: userManagementPost },
+            comment: { commentGet: commentGet, commentPost: commentPost }
+        } satisfies TestSdk;
         "#;
         let mut sdk_program = parse_ast_program(&allocator, sdk_code, SourceType::ts());
 
-        let result = delete_from_sdk_client_input(&allocator, &mut sdk_program, "postRoutes");
+        let result = delete_from_sdk_client_input(&allocator, &mut sdk_program, "userManagement");
 
         assert!(result.is_ok());
 
-        let expected_code = "const testSdk = sdkClient(schemaValidator, {\n\tuserRoutes: userSdkRouter,\n\tcommentRoutes: commentSdkRouter\n});\n";
-
-        assert_eq!(result.unwrap(), expected_code);
+        let generated = result.unwrap();
+        assert!(!generated.contains("userManagement:"));
+        assert!(!generated.contains("userManagementGet"));
+        assert!(!generated.contains("userManagementPost"));
+        assert!(generated.contains("comment:"));
     }
 
     #[test]
@@ -112,21 +133,23 @@ mod tests {
         let allocator = Allocator::default();
 
         let sdk_code = r#"
-        export const testSdk = sdkClient(schemaValidator, {
-            userRoutes: userSdkRouter,
-            postRoutes: postSdkRouter,
-            commentRoutes: commentSdkRouter
-        });
+        import { postGet, postPost } from './api/controllers';
+        export const testSdkClient = {
+            user: { userGet: userGet, userPost: userPost },
+            post: { postGet: postGet, postPost: postPost }
+        } satisfies TestSdk;
         "#;
         let mut sdk_program = parse_ast_program(&allocator, sdk_code, SourceType::ts());
 
-        let result = delete_from_sdk_client_input(&allocator, &mut sdk_program, "postRoutes");
+        let result = delete_from_sdk_client_input(&allocator, &mut sdk_program, "post");
 
         assert!(result.is_ok());
 
-        let expected_code = "export const testSdk = sdkClient(schemaValidator, {\n\tuserRoutes: userSdkRouter,\n\tcommentRoutes: commentSdkRouter\n});\n";
-
-        assert_eq!(result.unwrap(), expected_code);
+        let generated = result.unwrap();
+        assert!(generated.contains("user:"));
+        assert!(!generated.contains("post:"));
+        assert!(!generated.contains("postGet"));
+        assert!(!generated.contains("postPost"));
     }
 
     #[test]
@@ -134,15 +157,15 @@ mod tests {
         let allocator = Allocator::default();
 
         let sdk_code = r#"
-        import { rtrTestSdkRouter } from './api/routes/rtrTest.routes';
-        export const testSdk = sdkClient(schemaValidator, {
-            billingPortal: billingPortalSdkRouter,
-            checkoutSession: checkoutSessionSdkRouter,
-            paymentLink: paymentLinkSdkRouter,
-            plan: planSdkRouter,
-            subscription: subscriptionSdkRouter,
-            rtrTest: rtrTestSdkRouter
-        });
+        import { rtrTestGet, rtrTestPost } from './api/controllers';
+        export const testSdkClient = {
+            billingPortal: billingPortal,
+            checkoutSession: checkoutSession,
+            paymentLink: paymentLink,
+            plan: plan,
+            subscription: subscription,
+            rtrTest: { rtrTestGet: rtrTestGet, rtrTestPost: rtrTestPost }
+        } satisfies TestSdk;
         "#;
         let mut sdk_program = parse_ast_program(&allocator, sdk_code, SourceType::ts());
 
@@ -153,15 +176,15 @@ mod tests {
         let generated_code = result.unwrap();
 
         assert!(!generated_code.contains("rtrTest:"));
-        assert!(!generated_code.contains("rtrTestSdkRouter"));
-        assert!(!generated_code.contains("import { rtrTestSdkRouter }"));
-        assert!(!generated_code.contains("./api/routes/rtrTest.routes"));
+        assert!(!generated_code.contains("rtrTestGet"));
+        assert!(!generated_code.contains("rtrTestPost"));
+        assert!(!generated_code.contains("import { rtrTestGet"));
 
-        assert!(generated_code.contains("export const testSdk"));
-        assert!(generated_code.contains("billingPortal:"));
-        assert!(generated_code.contains("checkoutSession:"));
-        assert!(generated_code.contains("paymentLink:"));
-        assert!(generated_code.contains("plan:"));
-        assert!(generated_code.contains("subscription:"));
+        assert!(generated_code.contains("export const testSdkClient"));
+        assert!(generated_code.contains("billingPortal"));
+        assert!(generated_code.contains("checkoutSession"));
+        assert!(generated_code.contains("paymentLink"));
+        assert!(generated_code.contains("plan"));
+        assert!(generated_code.contains("subscription"));
     }
 }
