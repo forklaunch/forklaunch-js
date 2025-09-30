@@ -46,7 +46,7 @@ use crate::{
         package_json::{
             add_project_definition_to_package_json,
             package_json_constants::{
-                AJV_VERSION, APP_CORE_VERSION, APP_MONITORING_VERSION,
+                AJV_VERSION, APP_CORE_VERSION, APP_MONITORING_VERSION, APP_UNIVERSAL_SDK_VERSION,
                 BETTER_AUTH_MIKRO_ORM_VERSION, BETTER_AUTH_VERSION, BETTER_SQLITE3_VERSION,
                 BILLING_BASE_VERSION, BILLING_INTERFACES_VERSION, BILLING_STRIPE_VERSION,
                 BIOME_VERSION, COMMON_VERSION, CORE_VERSION, DOTENV_VERSION, ESLINT_VERSION,
@@ -326,6 +326,7 @@ pub(crate) fn generate_service_package_json(
                 databases: HashSet::from([manifest_data.database.parse()?]),
                 app_core: Some(APP_CORE_VERSION.to_string()),
                 app_monitoring: Some(APP_MONITORING_VERSION.to_string()),
+                app_universal_sdk: Some(APP_UNIVERSAL_SDK_VERSION.to_string()),
                 forklaunch_better_auth_mikro_orm_fork: if manifest_data.is_better_auth {
                     Some(BETTER_AUTH_MIKRO_ORM_VERSION.to_string())
                 } else {

@@ -216,6 +216,8 @@ pub(crate) const BETTER_AUTH_MIKRO_ORM_VERSION: &str = "~0.4.106";
 pub(crate) const APP_CORE_VERSION: &str = "workspace:*";
 // @forklaunch/blueprint-monitoring
 pub(crate) const APP_MONITORING_VERSION: &str = "workspace:*";
+// @forklaunch/blueprint-universal-sdk
+pub(crate) const APP_UNIVERSAL_SDK_VERSION: &str = "workspace:*";
 // @forklaunch/bunrun
 pub(crate) const BUNRUN_VERSION: &str = "~0.0.2";
 // @forklaunch/common

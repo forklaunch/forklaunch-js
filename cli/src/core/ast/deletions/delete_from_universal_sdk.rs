@@ -46,17 +46,14 @@ pub(crate) fn delete_from_universal_sdk<'a>(
     app_name: &str,
     name: &str,
 ) -> Result<()> {
-    let _kebab_app_name = &app_name.to_case(Case::Kebab);
+    let kebab_app_name = &app_name.to_case(Case::Kebab);
     let camel_case_name = &name.to_case(Case::Camel);
     let kebab_case_name = &name.to_case(Case::Kebab);
 
-    let import_source = if kebab_case_name == "iam-better-auth" {
-        format!("@forklaunch/blueprint-{}/serialized", kebab_case_name)
-    } else {
-        format!("@forklaunch/blueprint-{}", kebab_case_name)
-    };
-
+    let import_source = format!("@{}/{}", kebab_app_name, kebab_case_name);
     delete_import_statement(allocator, app_program_ast, &import_source)?;
+    let serialized_import_source = format!("@{}/{}/serialized", kebab_app_name, kebab_case_name);
+    delete_import_statement(allocator, app_program_ast, &serialized_import_source)?;
     delete_from_universal_sdk_function(allocator, app_program_ast, camel_case_name)?;
 
     Ok(())
