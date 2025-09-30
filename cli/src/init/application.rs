@@ -1056,6 +1056,8 @@ impl CliCommand for ApplicationCommand {
                             global_module_config.billing.is_some(),
                             global_module_config.iam.is_some(),
                         ),
+                        types_express: Some(TYPES_EXPRESS_VERSION.to_string()),
+                        types_qs: Some(TYPES_QS_VERSION.to_string()),
                         ..Default::default()
                     }),
                     _ => None,

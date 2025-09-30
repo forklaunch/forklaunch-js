@@ -11,6 +11,8 @@ cd service-test-node-application/src/modules
 
 pnpm install
 
+pnpm build
+
 RUST_BACKTRACE=1 cargo run --release sdk mode -t generated
 
 pnpm build
