@@ -23,7 +23,7 @@ RUST_BACKTRACE=1 cargo run --release init module -m billing-base -d postgresql -
 cd service-test-bun-application/src/modules
 
 bun install --trusted
-bun pm trust
+bun pm trust --all
 bun run build
 
 cd ../../..

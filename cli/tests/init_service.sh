@@ -29,5 +29,5 @@ RUST_BACKTRACE=1 cargo run --release delete service svc-test -c
 RUST_BACKTRACE=1 cargo run --release init service svc-test -d postgresql -D "Test service" -p .
 
 bun install --trusted
-bun pm trust
+bun pm trust --all
 bun run build
