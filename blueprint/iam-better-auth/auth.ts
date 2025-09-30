@@ -107,6 +107,5 @@ export const betterAuthConfig = ({
     logger: openTelemetryCollector
   }) satisfies BetterAuthOptions;
 
-export type BetterAuth = ReturnType<
-  typeof betterAuth<ReturnType<typeof betterAuthConfig>>
->;
+export type BetterAuthConfig = ReturnType<typeof betterAuthConfig>;
+export type BetterAuth = ReturnType<typeof betterAuth<BetterAuthConfig>>;

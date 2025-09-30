@@ -1,5 +1,23 @@
 # @forklaunch/interfaces-billing
 
+## 0.7.3
+
+### Patch Changes
+
+- export internal transitive dependencies
+
+## 0.7.2
+
+### Patch Changes
+
+- package upgrade
+
+## 0.7.1
+
+### Patch Changes
+
+- Internal package dependency bump
+
 ## 0.7.0
 
 ### Minor Changes

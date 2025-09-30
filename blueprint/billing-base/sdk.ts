@@ -1,3 +1,5 @@
+import { SchemaValidator } from '@forklaunch/blueprint-core';
+import { MapToSdk } from '@forklaunch/core/http';
 import {
   cancelSubscription,
   createBillingPortalSession,
@@ -116,3 +118,5 @@ export const billingSdkClient = {
     expireBillingPortalSession: expireBillingPortalSession
   }
 } satisfies BillingSdk;
+
+export type BillingSdkClient = MapToSdk<SchemaValidator, BillingSdk>;

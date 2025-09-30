@@ -31,10 +31,7 @@ export const createOrganization = handlers.post(
         }
       }
     },
-    body: {
-      ...CreateOrganizationMapper.schema,
-      m: string
-    },
+    body: CreateOrganizationMapper.schema,
     responses: {
       201: OrganizationMapper.schema,
       409: string

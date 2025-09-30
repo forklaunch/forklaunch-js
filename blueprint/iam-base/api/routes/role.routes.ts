@@ -21,9 +21,9 @@ export const roleRouter = forklaunchRouter(
 
 roleRouter.post('/', createRole);
 roleRouter.post('/batch', createBatchRoles);
-roleRouter.get('/:id', getRole);
 roleRouter.get('/batch', getBatchRoles);
+roleRouter.get('/:id', getRole);
 roleRouter.put('/', updateRole);
 roleRouter.put('/batch', updateBatchRoles);
-roleRouter.delete('/:id', deleteRole);
 roleRouter.delete('/batch', deleteBatchRoles);
+roleRouter.delete('/:id', deleteRole);

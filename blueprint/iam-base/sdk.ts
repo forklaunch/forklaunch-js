@@ -1,3 +1,5 @@
+import { SchemaValidator } from '@forklaunch/blueprint-core';
+import { MapToSdk } from '@forklaunch/core/http';
 import {
   createBatchPermissions,
   createBatchRoles,
@@ -112,3 +114,5 @@ export const iamSdkClient = {
     deleteBatchPermissions: deleteBatchPermissions
   }
 } satisfies IamSdk;
+
+export type IamSdkClient = MapToSdk<SchemaValidator, IamSdk>;

@@ -1,5 +1,29 @@
 # @forklaunch/implementation-billing-base
 
+## 0.7.3
+
+### Patch Changes
+
+- export internal transitive dependencies
+- Updated dependencies
+  - @forklaunch/interfaces-billing@0.7.3
+
+## 0.7.2
+
+### Patch Changes
+
+- package upgrade
+- Updated dependencies
+  - @forklaunch/interfaces-billing@0.7.2
+
+## 0.7.1
+
+### Patch Changes
+
+- Internal package dependency bump
+- Updated dependencies
+  - @forklaunch/interfaces-billing@0.7.1
+
 ## 0.7.0
 
 ### Minor Changes

@@ -17,7 +17,7 @@ export const planRouter = forklaunchRouter(
 );
 
 planRouter.post('/', createPlan);
+planRouter.get('/', listPlans);
 planRouter.get('/:id', getPlan);
 planRouter.put('/', updatePlan);
 planRouter.delete('/:id', deletePlan);
-planRouter.get('/', listPlans);

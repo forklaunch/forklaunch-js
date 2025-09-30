@@ -19,9 +19,9 @@ export const paymentLinkRouter = forklaunchRouter(
 );
 
 paymentLinkRouter.post('/', createPaymentLink);
-paymentLinkRouter.get('/:id', getPaymentLink);
-paymentLinkRouter.put('/:id', updatePaymentLink);
 paymentLinkRouter.get('/', listPaymentLinks);
-paymentLinkRouter.delete('/:id', expirePaymentLink);
 paymentLinkRouter.get('/:id/success', handlePaymentSuccess);
 paymentLinkRouter.get('/:id/failure', handlePaymentFailure);
+paymentLinkRouter.get('/:id', getPaymentLink);
+paymentLinkRouter.put('/:id', updatePaymentLink);
+paymentLinkRouter.delete('/:id', expirePaymentLink);

@@ -1,3 +1,5 @@
+import { SchemaValidator } from '@forklaunch/blueprint-core';
+import { MapToSdk } from '@forklaunch/core/http';
 import { sampleWorkerGet, sampleWorkerPost } from './api/controllers';
 
 export type SampleWorkerSdk = {
@@ -13,3 +15,5 @@ export const sampleWorkerSdkClient = {
     sampleWorkerPost: sampleWorkerPost
   }
 } satisfies SampleWorkerSdk;
+
+export type SampleWorkerSdkClient = MapToSdk<SchemaValidator, SampleWorkerSdk>;
