@@ -1,5 +1,61 @@
 # @forklaunch/universal-sdk
 
+## 0.7.14
+
+### Patch Changes
+
+- package upgrade
+- Updated dependencies
+  - @forklaunch/common@0.6.14
+
+## 0.7.13
+
+### Patch Changes
+
+- upgrade package dependencies and add global options to nested routers
+- Updated dependencies
+  - @forklaunch/common@0.6.13
+
+## 0.7.12
+
+### Patch Changes
+
+- Update internal packages and expose RegistryOptions from universal sdk
+- Updated dependencies
+  - @forklaunch/common@0.6.12
+
+## 0.7.11
+
+### Patch Changes
+
+- Set the stage for improved universal sdk performance, and update internal packages
+- Updated dependencies
+  - @forklaunch/common@0.6.11
+
+## 0.7.10
+
+### Patch Changes
+
+- Update internal package versions
+- Updated dependencies
+  - @forklaunch/common@0.6.10
+
+## 0.7.9
+
+### Patch Changes
+
+- update internal packages and loosen global auth constraint
+- Updated dependencies
+  - @forklaunch/common@0.6.9
+
+## 0.7.8
+
+### Patch Changes
+
+- update internal packages
+- Updated dependencies
+  - @forklaunch/common@0.6.8
+
 ## 0.7.7
 
 ### Patch Changes

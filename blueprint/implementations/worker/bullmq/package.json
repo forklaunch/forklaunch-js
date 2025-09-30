@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/implementation-worker-bullmq",
-  "version": "0.6.4",
+  "version": "0.7.3",
   "description": "BullMQ implementation for forklaunch workers",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -49,24 +49,24 @@
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
     "package:eject": "./eject-package.bash",
-    "prepare": "pnpm run build",
+    "prepack": "pnpm run build",
     "publish:package": "./publish-package.bash",
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/core": "^0.14.9",
+    "@forklaunch/core": "^0.15.3",
     "@forklaunch/interfaces-worker": "workspace:*",
-    "@forklaunch/internal": "^0.3.7",
+    "@forklaunch/internal": "^0.3.14",
     "@sinclair/typebox": "^0.34.41",
-    "bullmq": "^5.58.5",
-    "zod": "^4.1.8"
+    "bullmq": "^5.59.0",
+    "zod": "^4.1.11"
   },
   "devDependencies": {
-    "@typescript/native-preview": "7.0.0-dev.20250911.1",
+    "@typescript/native-preview": "7.0.0-dev.20250930.1",
     "depcheck": "^1.4.7",
-    "eslint": "^9.35.0",
+    "eslint": "^9.36.0",
     "prettier": "^3.6.2",
-    "typedoc": "^0.28.12",
-    "typescript-eslint": "^8.43.0"
+    "typedoc": "^0.28.13",
+    "typescript-eslint": "^8.45.0"
   }
 }

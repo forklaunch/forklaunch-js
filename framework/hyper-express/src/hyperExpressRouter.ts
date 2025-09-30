@@ -9,6 +9,7 @@ import {
   OpenTelemetryCollector,
   ParamsObject,
   QueryObject,
+  ResolvedSessionObject,
   ResponsesObject,
   SchemaAuthMethods,
   SessionObject,
@@ -96,10 +97,6 @@ export class Router<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     const VersionedApi extends VersionSchema<SV, 'middleware'>,
-    const SessionSchema extends SessionObject<SV>,
-    const ResolvedSession extends SessionObject<SV> extends SessionSchema
-      ? RouterSession
-      : SessionSchema,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
@@ -107,7 +104,6 @@ export class Router<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      ResolvedSession,
       Request<Record<string, unknown>>
     >
   >(
@@ -126,10 +122,10 @@ export class Router<
           ResHeaders,
           LocalsObj,
           VersionedApi,
-          ResolvedSession,
           Request<Record<string, unknown>>,
           Response<Record<string, unknown>>,
           MiddlewareNext,
+          ResolvedSessionObject<SV, Auth, RouterSession>,
           Auth
         >,
     contractDetailsOrMiddlewareOrTypedHandler?: ContractDetailsOrMiddlewareOrTypedHandler<
@@ -145,10 +141,10 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      ResolvedSession,
       Request<Record<string, unknown>>,
       Response<Record<string, unknown>>,
       MiddlewareNext,
+      ResolvedSessionObject<SV, Auth, RouterSession>,
       Auth
     >,
     ...middlewareOrMiddlewareWithTypedHandler: MiddlewareOrMiddlewareWithTypedHandler<
@@ -164,10 +160,10 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      ResolvedSession,
       Request<Record<string, unknown>>,
       Response<Record<string, unknown>>,
       MiddlewareNext,
+      ResolvedSessionObject<SV, Auth, RouterSession>,
       Auth
     >[]
   ) => {
@@ -182,7 +178,6 @@ export class Router<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      ResolvedSession,
       Auth
     >(
       this.internal.any,

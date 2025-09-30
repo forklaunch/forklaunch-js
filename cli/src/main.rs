@@ -12,6 +12,8 @@ use logout::LogoutCommand;
 use version::VersionCommand;
 use whoami::WhoAmICommand;
 
+use crate::sdk::SdkCommand;
+
 mod change;
 mod config;
 mod constants;
@@ -24,6 +26,7 @@ mod init;
 mod login;
 mod logout;
 mod prompt;
+mod sdk;
 mod version;
 mod whoami;
 
@@ -43,6 +46,7 @@ fn main() -> Result<()> {
     let environment = EnvironmentCommand::new();
     let login = LoginCommand::new();
     let logout = LogoutCommand::new();
+    let sdk = SdkCommand::new();
     let whoami = WhoAmICommand::new();
     let version = VersionCommand::new();
 
@@ -59,6 +63,7 @@ fn main() -> Result<()> {
         .subcommand(environment.command())
         .subcommand(login.command())
         .subcommand(logout.command())
+        .subcommand(sdk.command())
         .subcommand(whoami.command())
         .subcommand(version.command())
         .get_matches();
@@ -77,6 +82,7 @@ fn main() -> Result<()> {
         Some(("environment", sub_matches)) => environment.handler(sub_matches),
         Some(("login", sub_matches)) => login.handler(sub_matches),
         Some(("logout", sub_matches)) => logout.handler(sub_matches),
+        Some(("sdk", sub_matches)) => sdk.handler(sub_matches),
         Some(("whoami", sub_matches)) => whoami.handler(sub_matches),
         Some(("version", sub_matches)) => version.handler(sub_matches),
         _ => unreachable!(),

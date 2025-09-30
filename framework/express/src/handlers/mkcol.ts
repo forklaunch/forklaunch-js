@@ -6,6 +6,7 @@ import {
   middleware,
   ParamsObject,
   QueryObject,
+  ResolvedSessionObject,
   ResponsesObject,
   SchemaAuthMethods,
   SessionObject,
@@ -94,7 +95,6 @@ export const mkcol = <
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
   const VersionedApi extends VersionSchema<SV, 'middleware'>,
-  const SessionSchema extends SessionObject<SV>,
   const Auth extends SchemaAuthMethods<
     SV,
     P,
@@ -102,7 +102,6 @@ export const mkcol = <
     ReqQuery,
     ReqHeaders,
     VersionedApi,
-    SessionSchema,
     Request
   >
 >(
@@ -120,7 +119,6 @@ export const mkcol = <
     ReqHeaders,
     ResHeaders,
     VersionedApi,
-    SessionSchema,
     Request,
     Auth
   >,
@@ -134,7 +132,7 @@ export const mkcol = <
     ResHeaders,
     LocalsObj,
     VersionedApi,
-    SessionSchema,
+    ResolvedSessionObject<SV, Auth, SessionObject<SV>>,
     Request,
     Response,
     NextFunction
@@ -152,7 +150,6 @@ export const mkcol = <
     ResHeaders,
     LocalsObj,
     VersionedApi,
-    SessionSchema,
     Request,
     Response,
     NextFunction,

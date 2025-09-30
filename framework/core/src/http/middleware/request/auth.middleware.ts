@@ -1,5 +1,9 @@
 import { isNever } from '@forklaunch/common';
-import { AnySchemaValidator } from '@forklaunch/validator';
+import {
+  AnySchemaValidator,
+  prettyPrintParseErrors,
+  SchemaValidator
+} from '@forklaunch/validator';
 import { JWTPayload } from 'jose';
 import { ParsedQs } from 'qs';
 import { discriminateAuthMethod } from '../../discriminateAuthMethod';
@@ -108,19 +112,7 @@ async function checkAuthorizationToken<
   SessionSchema extends SessionObject<SV>,
   BaseRequest
 >(
-  authorizationMethod?: AuthMethods<
-    SV,
-    P,
-    ReqBody,
-    ReqQuery,
-    ReqHeaders,
-    VersionedReqs,
-    SessionSchema,
-    BaseRequest
-  >,
-  globalOptions?: ExpressLikeGlobalAuthOptions<SV, SessionSchema>,
-  authorizationToken?: string,
-  req?: ForklaunchRequest<
+  req: ForklaunchRequest<
     SV,
     P,
     ReqBody,
@@ -128,8 +120,19 @@ async function checkAuthorizationToken<
     ReqHeaders,
     Extract<keyof VersionedReqs, string>,
     SessionSchema
-  >
-): Promise<readonly [401 | 403 | 500, string] | undefined> {
+  >,
+  authorizationMethod?: AuthMethods<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    VersionedReqs,
+    BaseRequest
+  >,
+  authorizationToken?: string,
+  globalOptions?: ExpressLikeGlobalAuthOptions<SV, SessionSchema>
+): Promise<readonly [400 | 401 | 403 | 500, string] | undefined> {
   if (authorizationMethod == null) {
     return undefined;
   }
@@ -149,10 +152,18 @@ async function checkAuthorizationToken<
     return invalidAuthorizationTokenFormat;
   }
 
-  let resourceId: (JWTPayload & SessionSchema) | null;
+  let sessionPayload: (JWTPayload & SessionSchema) | null;
 
   const { type, auth } = await discriminateAuthMethod(
-    collapsedAuthorizationMethod
+    collapsedAuthorizationMethod as AuthMethods<
+      SV,
+      P,
+      ReqBody,
+      ReqQuery,
+      ReqHeaders,
+      VersionedReqs,
+      BaseRequest
+    >
   );
 
   switch (type) {
@@ -190,7 +201,7 @@ async function checkAuthorizationToken<
         method: req?.method ?? '',
         path: req?.path ?? '',
         body: req?.body,
-        timestamp: parsedTimestamp,
+        timestamp: new Date(parsedTimestamp),
         nonce: parsedNonce,
         signature: parsedSignature,
         secretKey: collapsedAuthorizationMethod.hmac.secretKeys[parsedKeyId]
@@ -200,7 +211,7 @@ async function checkAuthorizationToken<
         return invalidAuthorizationSignature;
       }
 
-      resourceId = null;
+      sessionPayload = null;
       break;
     }
     case 'jwt': {
@@ -223,7 +234,7 @@ async function checkAuthorizationToken<
           return invalidAuthorizationToken;
         }
 
-        resourceId = decodedJwt as JWTPayload & SessionSchema;
+        sessionPayload = decodedJwt as JWTPayload & SessionSchema;
       } catch (error) {
         (
           req as ForklaunchRequest<
@@ -251,7 +262,7 @@ async function checkAuthorizationToken<
       }
 
       if (auth.decodeResource) {
-        resourceId = (await auth.decodeResource(token)) as JWTPayload &
+        sessionPayload = (await auth.decodeResource(token)) as JWTPayload &
           SessionSchema;
       } else {
         const [username, password] = Buffer.from(token, 'base64')
@@ -266,7 +277,7 @@ async function checkAuthorizationToken<
           return invalidAuthorizationLogin;
         }
 
-        resourceId = {
+        sessionPayload = {
           sub: username
         } as JWTPayload & SessionSchema;
       }
@@ -277,18 +288,32 @@ async function checkAuthorizationToken<
       return [401, 'Invalid Authorization method.'];
   }
 
-  if (isHmacMethod(collapsedAuthorizationMethod) && resourceId == null) {
+  if (isHmacMethod(collapsedAuthorizationMethod) && sessionPayload == null) {
     return;
   }
 
-  if (resourceId == null) {
+  if (sessionPayload == null) {
     return invalidAuthorizationToken;
+  }
+
+  req.session = sessionPayload;
+  if (collapsedAuthorizationMethod.sessionSchema) {
+    const parsedSession = (req.schemaValidator as SchemaValidator).parse(
+      collapsedAuthorizationMethod.sessionSchema,
+      sessionPayload
+    );
+    if (!parsedSession.ok) {
+      return [
+        400,
+        `Invalid session: ${prettyPrintParseErrors(parsedSession.errors, 'Session')}`
+      ];
+    }
   }
 
   if (hasScopeChecks(collapsedAuthorizationMethod)) {
     if (collapsedAuthorizationMethod.surfaceScopes) {
       const resourceScopes = await collapsedAuthorizationMethod.surfaceScopes(
-        resourceId,
+        sessionPayload,
         req as ResolvedForklaunchRequest<
           SV,
           P,
@@ -325,7 +350,7 @@ async function checkAuthorizationToken<
 
     const resourcePermissions =
       await collapsedAuthorizationMethod.surfacePermissions(
-        resourceId,
+        sessionPayload,
         req as ResolvedForklaunchRequest<
           SV,
           P,
@@ -369,7 +394,7 @@ async function checkAuthorizationToken<
     }
 
     const resourceRoles = await collapsedAuthorizationMethod.surfaceRoles(
-      resourceId,
+      sessionPayload,
       req as ResolvedForklaunchRequest<
         SV,
         P,
@@ -460,7 +485,6 @@ export async function parseRequestAuth<
         MapReqQuerySchema<SV, ReqQuery>,
         MapReqHeadersSchema<SV, ReqHeaders>,
         MapVersionedReqsSchema<SV, VersionedApi>,
-        MapSessionSchema<SV, SessionSchema>,
         unknown
       >
     | undefined;
@@ -476,13 +500,14 @@ export async function parseRequestAuth<
       MapSessionSchema<SV, SessionSchema>,
       unknown
     >(
+      req,
       auth,
-      req._globalOptions?.()?.auth,
       (req.headers[auth?.headerName ?? 'Authorization'] as string) ||
         (req.headers[auth?.headerName ?? 'authorization'] as string),
-      req
+      req._globalOptions?.()?.auth
     )) ?? [];
   if (error != null) {
+    req.openTelemetryCollector.error(error, message);
     res.type('text/plain');
     res.status(error).send(message as never);
     return;

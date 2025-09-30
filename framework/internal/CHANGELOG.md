@@ -1,5 +1,68 @@
 # @forklaunch/common
 
+## 0.3.14
+
+### Patch Changes
+
+- package upgrade
+- Updated dependencies
+  - @forklaunch/validator@0.10.14
+  - @forklaunch/common@0.6.14
+
+## 0.3.13
+
+### Patch Changes
+
+- upgrade package dependencies and add global options to nested routers
+- Updated dependencies
+  - @forklaunch/validator@0.10.13
+  - @forklaunch/common@0.6.13
+
+## 0.3.12
+
+### Patch Changes
+
+- Update internal packages and expose RegistryOptions from universal sdk
+- Updated dependencies
+  - @forklaunch/validator@0.10.12
+  - @forklaunch/common@0.6.12
+
+## 0.3.11
+
+### Patch Changes
+
+- Set the stage for improved universal sdk performance, and update internal packages
+- Updated dependencies
+  - @forklaunch/validator@0.10.11
+  - @forklaunch/common@0.6.11
+
+## 0.3.10
+
+### Patch Changes
+
+- Update internal package versions
+- Updated dependencies
+  - @forklaunch/validator@0.10.10
+  - @forklaunch/common@0.6.10
+
+## 0.3.9
+
+### Patch Changes
+
+- update internal packages and loosen global auth constraint
+- Updated dependencies
+  - @forklaunch/validator@0.10.9
+  - @forklaunch/common@0.6.9
+
+## 0.3.8
+
+### Patch Changes
+
+- update internal packages
+- Updated dependencies
+  - @forklaunch/validator@0.10.8
+  - @forklaunch/common@0.6.8
+
 ## 0.3.7
 
 ### Patch Changes

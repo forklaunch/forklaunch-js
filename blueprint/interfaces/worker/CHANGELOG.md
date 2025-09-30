@@ -1,5 +1,29 @@
 # @forklaunch/interfaces-billing
 
+## 0.6.3
+
+### Patch Changes
+
+- export internal transitive dependencies
+
+## 0.6.2
+
+### Patch Changes
+
+- package upgrade
+
+## 0.6.1
+
+### Patch Changes
+
+- Internal package dependency bump
+
+## 0.6.0
+
+### Minor Changes
+
+- Major universal sdk refactor, better handler ergonomics and update internal package versions
+
 ## 0.5.4
 
 ### Patch Changes

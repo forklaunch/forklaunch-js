@@ -184,7 +184,6 @@ function generateOperationObject<SV extends AnySchemaValidator>(
     QueryObject<SV>,
     HeadersObject<SV>,
     VersionSchema<SV, Method>,
-    SessionObject<SV>,
     unknown
   >
 ) {

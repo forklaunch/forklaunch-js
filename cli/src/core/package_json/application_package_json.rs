@@ -40,6 +40,8 @@ pub(crate) struct ApplicationScripts {
     pub(crate) seed: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) test: Option<String>,
+    #[serde(rename = "types:watch", skip_serializing_if = "Option::is_none")]
+    pub(crate) types_watch: Option<String>,
     #[serde(rename = "up:packages", skip_serializing_if = "Option::is_none")]
     pub(crate) up_packages: Option<String>,
 
@@ -86,6 +88,7 @@ impl<'de> Deserialize<'de> for ApplicationScripts {
                     migrate_up: None,
                     seed: None,
                     test: None,
+                    types_watch: None,
                     up_packages: None,
                     additional_scripts: HashMap::new(),
                 };
@@ -110,6 +113,7 @@ impl<'de> Deserialize<'de> for ApplicationScripts {
                         "migrate:up" => scripts.migrate_up = Some(value),
                         "seed" => scripts.seed = Some(value),
                         "test" => scripts.test = Some(value),
+                        "types:watch" => scripts.types_watch = Some(value),
                         "up:packages" => scripts.up_packages = Some(value),
                         _ => {
                             scripts.additional_scripts.insert(key, value);
@@ -131,6 +135,8 @@ pub(crate) struct ApplicationDevDependencies {
     pub(crate) biome: Option<String>,
     #[serde(rename = "@eslint/js", skip_serializing_if = "Option::is_none")]
     pub(crate) eslint_js: Option<String>,
+    #[serde(rename = "@forklaunch/bunrun", skip_serializing_if = "Option::is_none")]
+    pub(crate) bunrun: Option<String>,
     #[serde(rename = "@types/jest", skip_serializing_if = "Option::is_none")]
     pub(crate) types_jest: Option<String>,
     #[serde(rename = "better-sqlite3", skip_serializing_if = "Option::is_none")]
@@ -194,6 +200,7 @@ impl<'de> Deserialize<'de> for ApplicationDevDependencies {
             {
                 let mut deps = ApplicationDevDependencies {
                     biome: None,
+                    bunrun: None,
                     eslint_js: None,
                     types_jest: None,
                     better_sqlite3: None,
@@ -220,6 +227,7 @@ impl<'de> Deserialize<'de> for ApplicationDevDependencies {
                     match key.as_str() {
                         "@biomejs/biome" => deps.biome = Some(value),
                         "@eslint/js" => deps.eslint_js = Some(value),
+                        "@forklaunch/bunrun" => deps.bunrun = Some(value),
                         "@types/jest" => deps.types_jest = Some(value),
                         "better-sqlite3" => deps.better_sqlite3 = Some(value),
                         "eslint" => deps.eslint = Some(value),

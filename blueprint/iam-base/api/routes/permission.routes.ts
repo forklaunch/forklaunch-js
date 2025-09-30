@@ -1,12 +1,17 @@
 import { forklaunchRouter, schemaValidator } from '@forklaunch/blueprint-core';
-import { sdkRouter } from '@forklaunch/core/http';
 import { ci, tokens } from '../../bootstrapper';
-import { PermissionController } from '../controllers/permission.controller';
+import {
+  createBatchPermissions,
+  createPermission,
+  deleteBatchPermissions,
+  deletePermission,
+  getBatchPermissions,
+  getPermission,
+  updateBatchPermissions,
+  updatePermission
+} from '../controllers/permission.controller';
 
 const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
-const permissionServiceFactory = ci.scopedResolver(tokens.PermissionService);
-
-export type PermissionServiceFactory = typeof permissionServiceFactory;
 
 export const permissionRouter = forklaunchRouter(
   '/permission',
@@ -14,22 +19,11 @@ export const permissionRouter = forklaunchRouter(
   openTelemetryCollector
 );
 
-const controller = PermissionController(
-  permissionServiceFactory,
-  openTelemetryCollector
-);
-
-permissionRouter.post('/', controller.createPermission);
-permissionRouter.post('/batch', controller.createBatchPermissions);
-permissionRouter.get('/:id', controller.getPermission);
-permissionRouter.get('/batch', controller.getBatchPermissions);
-permissionRouter.put('/', controller.updatePermission);
-permissionRouter.put('/batch', controller.updateBatchPermissions);
-permissionRouter.delete('/:id', controller.deletePermission);
-permissionRouter.delete('/batch', controller.deleteBatchPermissions);
-
-export const permissionSdkRouter = sdkRouter(
-  schemaValidator,
-  controller,
-  permissionRouter
-);
+permissionRouter.post('/', createPermission);
+permissionRouter.post('/batch', createBatchPermissions);
+permissionRouter.get('/batch', getBatchPermissions);
+permissionRouter.get('/:id', getPermission);
+permissionRouter.put('/', updatePermission);
+permissionRouter.put('/batch', updateBatchPermissions);
+permissionRouter.delete('/batch', deleteBatchPermissions);
+permissionRouter.delete('/:id', deletePermission);

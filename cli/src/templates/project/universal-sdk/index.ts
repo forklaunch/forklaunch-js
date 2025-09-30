@@ -1,1 +1,1 @@
-../../../../../blueprint/universal-sdk/index.ts
+export * from "./universalSdk";

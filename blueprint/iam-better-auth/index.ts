@@ -1,1 +1,2 @@
-export type { IamSdkClient } from './sdk';
+export { BetterAuthConfig } from './auth';
+export { IamSdkClient } from './sdk';

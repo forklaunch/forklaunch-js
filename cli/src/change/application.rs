@@ -895,13 +895,10 @@ fn change_runtime(
         &mut application_package_json_scripts.additional_scripts,
         application_package_json_scripts.build.clone(),
         Some(existing_runtime.to_string()),
-        Some(application_build_script(
-            &existing_runtime,
-            &manifest_data.kebab_case_app_name,
-        )),
+        Some(application_build_script(&existing_runtime)),
         "build",
         &runtime.to_string(),
-        &application_build_script(runtime, &manifest_data.kebab_case_app_name),
+        &application_build_script(runtime),
         None,
     ));
     application_package_json_scripts.clean = Some(attempt_replacement(

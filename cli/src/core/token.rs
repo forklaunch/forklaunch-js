@@ -4,7 +4,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 
 pub(crate) fn get_token_path() -> Result<PathBuf> {
     Ok(Path::new(&var("HOME")?).join(".forklaunch").join("token"))

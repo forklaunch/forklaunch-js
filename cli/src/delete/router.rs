@@ -28,6 +28,7 @@ use crate::{
                 delete_import_statement::delete_import_statement,
             },
             parse_ast_program::parse_ast_program,
+            transformations::transform_controllers_index_ts::transform_controllers_index_ts_delete,
         },
         base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
         command::command,
@@ -225,6 +226,13 @@ impl CliCommand for RouterCommand {
             &format!("./{}Record.seeder", camel_case_name).as_str(),
         )?;
 
+        let controllers_path = router_base_path
+            .join("api")
+            .join("controllers")
+            .join("index.ts");
+        let new_controllers_index_content =
+            transform_controllers_index_ts_delete(&router_name, &router_base_path)?;
+
         let seed_data_path = router_base_path.join("persistence").join("seed.data.ts");
         let seed_data_source_text = read_to_string(&seed_data_path).unwrap();
         let mut seed_data_program = parse_ast_program(
@@ -308,6 +316,11 @@ impl CliCommand for RouterCommand {
                 RenderedTemplate {
                     path: sdk_path,
                     content: new_sdk_content,
+                    context: Some(ERROR_FAILED_TO_WRITE_SERVICE_FILES.to_string()),
+                },
+                RenderedTemplate {
+                    path: controllers_path,
+                    content: new_controllers_index_content,
                     context: Some(ERROR_FAILED_TO_WRITE_SERVICE_FILES.to_string()),
                 },
             ],

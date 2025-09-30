@@ -1,9 +1,19 @@
-import { schemaValidator } from '@forklaunch/blueprint-core';
-import { sdkClient } from '@forklaunch/core/http';
-import { sampleWorkerSdkRouter } from './api/routes/sampleWorker.routes';
+import { SchemaValidator } from '@forklaunch/blueprint-core';
+import { MapToSdk } from '@forklaunch/core/http';
+import { sampleWorkerGet, sampleWorkerPost } from './api/controllers';
 
-//! creates an instance of the sdkClient
-export const sampleWorkerSdkClient = sdkClient(schemaValidator, {
-  sampleWorker: sampleWorkerSdkRouter
-});
-export type SampleWorkerSdkClient = typeof sampleWorkerSdkClient;
+export type SampleWorkerSdk = {
+  sampleWorker: {
+    sampleWorkerGet: typeof sampleWorkerGet;
+    sampleWorkerPost: typeof sampleWorkerPost;
+  };
+};
+
+export const sampleWorkerSdkClient = {
+  sampleWorker: {
+    sampleWorkerGet: sampleWorkerGet,
+    sampleWorkerPost: sampleWorkerPost
+  }
+} satisfies SampleWorkerSdk;
+
+export type SampleWorkerSdkClient = MapToSdk<SchemaValidator, SampleWorkerSdk>;

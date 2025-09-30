@@ -21,6 +21,15 @@ import { typedAuthHandler } from '../src/http/handlers/typedAuthHandler';
 const contractDetails = {
   name: 'string',
   summary: 'string',
+  auth: {
+    sessionSchema: {
+      name: string
+    },
+    jwt: {
+      signatureKey: 'test'
+    },
+    allowedPermissions: new Set(['admin', 'user'])
+  },
   params: {
     name: string,
     id: number
@@ -108,7 +117,14 @@ const xa = new ForklaunchExpressLikeRouter(
     trace: () => {}
   },
   [],
-  {} as OpenTelemetryCollector<MetricsDefinition>
+  {} as OpenTelemetryCollector<MetricsDefinition>,
+  {
+    auth: {
+      sessionSchema: {
+        nameRouter: string
+      }
+    }
+  }
 );
 
 const bl = xa.trace(
@@ -182,11 +198,13 @@ xa.patch(
     name: 'string',
     summary: 'string',
     auth: {
-      hmac: {
-        secretKeys: {
-          '1': 'test'
-        }
-      }
+      sessionSchema: {
+        name: string
+      },
+      jwt: {
+        signatureKey: 'test'
+      },
+      allowedPermissions: new Set(['admin', 'user'])
     },
     params: {
       name: string,
@@ -320,7 +338,7 @@ createHmacToken({
   method: 'GET',
   path: '/test/:name/:id',
   body: '',
-  timestamp: '1234567890',
+  timestamp: new Date(),
   nonce: '1234567890',
   secretKey: 'test'
 });

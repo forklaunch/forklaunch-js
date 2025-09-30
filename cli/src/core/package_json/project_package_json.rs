@@ -152,6 +152,7 @@ pub(crate) struct ProjectDependencies {
     pub(crate) databases: HashSet<Database>,
     pub(crate) app_core: Option<String>,
     pub(crate) app_monitoring: Option<String>,
+    pub(crate) app_universal_sdk: Option<String>,
     pub(crate) forklaunch_better_auth_mikro_orm_fork: Option<String>,
     pub(crate) forklaunch_common: Option<String>,
     pub(crate) forklaunch_core: Option<String>,
@@ -184,6 +185,7 @@ pub(crate) struct ProjectDependencies {
     pub(crate) better_sqlite3: Option<String>,
     pub(crate) bullmq: Option<String>,
     pub(crate) dotenv: Option<String>,
+    pub(crate) jose: Option<String>,
     pub(crate) sqlite3: Option<String>,
     pub(crate) stripe: Option<String>,
     pub(crate) uuid: Option<String>,
@@ -205,6 +207,9 @@ impl Serialize for ProjectDependencies {
         }
         if let Some(ref v) = self.app_monitoring {
             map.serialize_entry(&format!("@{}/monitoring", self.app_name), v)?;
+        }
+        if let Some(ref v) = self.app_universal_sdk {
+            map.serialize_entry(&format!("@{}/universal-sdk", self.app_name), v)?;
         }
         if let Some(ref v) = self.better_auth {
             map.serialize_entry("@forklaunch/better-auth", v)?;
@@ -310,6 +315,9 @@ impl Serialize for ProjectDependencies {
         if let Some(ref v) = self.dotenv {
             map.serialize_entry("dotenv", v)?;
         }
+        if let Some(ref v) = self.jose {
+            map.serialize_entry("jose", v)?;
+        }
         if let Some(ref v) = self.sqlite3 {
             map.serialize_entry("sqlite3", v)?;
         }
@@ -371,6 +379,13 @@ impl<'de> Deserialize<'de> for ProjectDependencies {
                         && key.ends_with("monitoring")
                     {
                         deps.app_monitoring = Some(value);
+                        continue;
+                    }
+                    if deps.app_name.len() > 0
+                        && key.starts_with(&format!("@{}", deps.app_name))
+                        && key.ends_with("universal-sdk")
+                    {
+                        deps.app_universal_sdk = Some(value);
                         continue;
                     }
                     if key.starts_with("@mikro-orm") && key.ends_with("mongodb") {
@@ -491,6 +506,7 @@ impl<'de> Deserialize<'de> for ProjectDependencies {
                         "bullmq" => deps.bullmq = Some(value),
                         "better-sqlite3" => deps.better_sqlite3 = Some(value),
                         "dotenv" => deps.dotenv = Some(value),
+                        "jose" => deps.jose = Some(value),
                         "sqlite3" => deps.sqlite3 = Some(value),
                         "stripe" => deps.stripe = Some(value),
                         "uuid" => deps.uuid = Some(value),
@@ -640,6 +656,8 @@ pub(crate) struct ProjectPackageJson {
     pub(crate) main: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) types: Option<String>,
+    #[serde(rename = "typesVersions", skip_serializing_if = "Option::is_none")]
+    pub(crate) types_versions: Option<HashMap<String, HashMap<String, Vec<String>>>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) scripts: Option<ProjectScripts>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -681,6 +699,7 @@ impl<'de> Deserialize<'de> for ProjectPackageJson {
                     author: None,
                     main: None,
                     types: None,
+                    types_versions: None,
                     scripts: None,
                     dependencies: None,
                     dev_dependencies: None,
@@ -732,6 +751,11 @@ impl<'de> Deserialize<'de> for ProjectPackageJson {
                         }
                         "types" => {
                             package.types = Some(
+                                serde_json::from_value(value).map_err(serde::de::Error::custom)?,
+                            )
+                        }
+                        "typesVersions" => {
+                            package.types_versions = Some(
                                 serde_json::from_value(value).map_err(serde::de::Error::custom)?,
                             )
                         }
