@@ -22,8 +22,7 @@ RUST_BACKTRACE=1 cargo run --release delete router rtr-test -p router-test-bun-a
 
 cd router-test-bun-application/src/modules
 
-bun install --trusted
-bun pm trust --all
+bun install
 bun run build
 
 cd ../../..

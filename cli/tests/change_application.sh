@@ -18,8 +18,7 @@ RUST_BACKTRACE=1 cargo run --release change application -p change-application -N
 
 cd change-application/src/modules
 
-bun install --trusted
-bun pm trust --all
+bun install
 cd core
 bun run build
 cd ..

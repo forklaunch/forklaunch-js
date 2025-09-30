@@ -30,7 +30,6 @@ RUST_BACKTRACE=1 cargo run --release init library lib-test -D "Test library" -p 
 
 cd src/modules
 
-bun install --trusted
-bun pm trust --all
+bun install
 bun run build
 

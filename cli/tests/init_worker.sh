@@ -36,6 +36,5 @@ RUST_BACKTRACE=1 cargo run --release init worker wrk-test -t database -d postgre
 
 cd src/modules
 
-bun install --trusted
-bun pm trust --all
+bun install
 bun run build

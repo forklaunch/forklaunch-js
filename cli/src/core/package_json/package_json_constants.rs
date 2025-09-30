@@ -74,7 +74,7 @@ pub(crate) fn application_lint_fix_script(linter: &Linter) -> String {
 
 pub(crate) fn application_build_script(runtime: &Runtime) -> String {
     match runtime {
-        Runtime::Bun => "bunrun build".to_string(),
+        Runtime::Bun => "bunx -y @forklaunch/bunrun build".to_string(),
         Runtime::Node => "pnpm -r --no-bail run build".to_string(),
     }
 }
@@ -202,7 +202,7 @@ pub(crate) fn application_test_script<'a>(
 
 pub(crate) fn application_up_packages_script(runtime: &Runtime) -> String {
     String::from(match runtime {
-        Runtime::Bun => "bunrun up:latest --sequential",
+        Runtime::Bun => "bunx -y @forklaunch/bunrun up:latest --sequential",
         Runtime::Node => "pnpm -r --no-bail update --latest",
     })
 }

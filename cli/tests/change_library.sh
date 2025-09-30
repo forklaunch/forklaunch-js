@@ -12,6 +12,5 @@ cd src/modules
 
 RUST_BACKTRACE=1 cargo run --release change library -p lbry -N newlbry -D "Test library 2" -c
 
-bun install --trusted
-bun pm trust --all
+bun install
 bun run build

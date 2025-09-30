@@ -15,6 +15,5 @@ RUST_BACKTRACE=1 cargo run --release change router -p src/modules/svc -e rtr -N 
 
 cd src/modules
 
-bun install --trusted
-bun pm trust --all
+bun install
 bun run build

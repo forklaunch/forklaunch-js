@@ -26,8 +26,7 @@ RUST_BACKTRACE=1 cargo run --release init router router-test -p compile-test-bun
 
 cd compile-test-bun-application/src/modules
 
-bun install --trusted
-bun pm trust --all
+bun install
 bun run build
 bun database:setup
 
