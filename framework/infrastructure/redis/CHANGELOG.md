@@ -1,5 +1,23 @@
 # @forklaunch/infrastructure-redis
 
+## 0.4.21
+
+### Patch Changes
+
+- package upgrade
+- Updated dependencies
+  - @forklaunch/common@0.6.14
+  - @forklaunch/core@0.15.3
+
+## 0.4.20
+
+### Patch Changes
+
+- upgrade package dependencies and add global options to nested routers
+- Updated dependencies
+  - @forklaunch/common@0.6.13
+  - @forklaunch/core@0.15.2
+
 ## 0.4.19
 
 ### Patch Changes

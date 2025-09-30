@@ -1,5 +1,17 @@
 # @forklaunch/common
 
+## 0.6.14
+
+### Patch Changes
+
+- package upgrade
+
+## 0.6.13
+
+### Patch Changes
+
+- upgrade package dependencies and add global options to nested routers
+
 ## 0.6.12
 
 ### Patch Changes

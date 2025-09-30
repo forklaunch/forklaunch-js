@@ -1,5 +1,17 @@
 # @forklaunch/bunrun
 
+## 0.0.9
+
+### Patch Changes
+
+- package upgrade
+
+## 0.0.8
+
+### Patch Changes
+
+- upgrade package dependencies and add global options to nested routers
+
 ## 0.0.7
 
 ### Patch Changes

@@ -1,5 +1,25 @@
 # @forklaunch/express
 
+## 0.9.21
+
+### Patch Changes
+
+- package upgrade
+- Updated dependencies
+  - @forklaunch/validator@0.10.14
+  - @forklaunch/common@0.6.14
+  - @forklaunch/core@0.15.3
+
+## 0.9.20
+
+### Patch Changes
+
+- upgrade package dependencies and add global options to nested routers
+- Updated dependencies
+  - @forklaunch/validator@0.10.13
+  - @forklaunch/common@0.6.13
+  - @forklaunch/core@0.15.2
+
 ## 0.9.19
 
 ### Patch Changes

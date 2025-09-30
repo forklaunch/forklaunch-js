@@ -2238,6 +2238,20 @@ export class ForklaunchExpressLikeRouter<
     return this;
   }
 
+  private addRouterOptions(
+    router: ConstrainedForklaunchRouter<SV, RouterHandler>
+  ) {
+    router.routerOptions = {
+      ...(this.routerOptions ?? {}),
+      ...(router.routerOptions ?? {})
+    } as typeof this.routerOptions;
+    router.routers.forEach((subRouter) => {
+      this.addRouterOptions(
+        subRouter as ConstrainedForklaunchRouter<SV, RouterHandler>
+      );
+    });
+  }
+
   use: TypedNestableMiddlewareDefinition<
     this,
     RouterHandler,
@@ -2346,10 +2360,9 @@ export class ForklaunchExpressLikeRouter<
     ].forEach((arg) => {
       if (isForklaunchRouter<SV>(arg)) {
         this.routers.push(arg);
-        arg.routerOptions = {
-          ...(this.routerOptions ?? {}),
-          ...(arg.routerOptions ?? {})
-        } as typeof this.routerOptions;
+        this.addRouterOptions(
+          arg as ConstrainedForklaunchRouter<SV, RouterHandler>
+        );
       }
     });
 

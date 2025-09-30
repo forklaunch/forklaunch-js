@@ -1,5 +1,21 @@
 # @forklaunch/universal-sdk
 
+## 0.7.14
+
+### Patch Changes
+
+- package upgrade
+- Updated dependencies
+  - @forklaunch/common@0.6.14
+
+## 0.7.13
+
+### Patch Changes
+
+- upgrade package dependencies and add global options to nested routers
+- Updated dependencies
+  - @forklaunch/common@0.6.13
+
 ## 0.7.12
 
 ### Patch Changes

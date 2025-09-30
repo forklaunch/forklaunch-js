@@ -1,5 +1,23 @@
 # @forklaunch/core
 
+## 0.15.3
+
+### Patch Changes
+
+- package upgrade
+- Updated dependencies
+  - @forklaunch/validator@0.10.14
+  - @forklaunch/common@0.6.14
+
+## 0.15.2
+
+### Patch Changes
+
+- upgrade package dependencies and add global options to nested routers
+- Updated dependencies
+  - @forklaunch/validator@0.10.13
+  - @forklaunch/common@0.6.13
+
 ## 0.15.1
 
 ### Patch Changes
