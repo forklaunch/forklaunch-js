@@ -31,11 +31,13 @@ pub(crate) fn inject_into_index_ts_export<'a>(
             };
         });
 
-    if let Some(splice_pos) = maybe_splice_pos {
-        let insert_pos = splice_pos + 1;
-        for stmt in injection_program_ast.body.drain(..).rev() {
-            index_program.body.insert(insert_pos, stmt);
-        }
+    let insert_pos = match maybe_splice_pos {
+        Some(splice_pos) => splice_pos + 1,
+        None => 0,
+    };
+
+    for stmt in injection_program_ast.body.drain(..).rev() {
+        index_program.body.insert(insert_pos, stmt);
     }
 
     Ok(())
@@ -98,5 +100,73 @@ export * from './zeta.controller';";
             mango_pos < zeta_pos,
             "existing order should be preserved after insertion"
         );
+    }
+
+    #[test]
+    fn inserts_at_start_when_smallest() {
+        let allocator = Allocator::default();
+
+        // Existing exports start after 'gamma'
+        let index_text = "\
+export * from './gamma.controller';
+export * from './omega.controller';";
+
+        let mut index_program = crate::core::ast::parse_ast_program::parse_ast_program(
+            &allocator,
+            index_text,
+            SourceType::ts(),
+        );
+
+        // Inject 'beta' which should become the first
+        let injection_text = "export * from './beta.controller';";
+        let mut injection_program = crate::core::ast::parse_ast_program::parse_ast_program(
+            &allocator,
+            injection_text,
+            SourceType::ts(),
+        );
+
+        let _ = inject_into_index_ts_export(&mut index_program, &mut injection_program, "beta");
+        let output = codegen(&index_program);
+
+        // Ensure order beta, gamma, omega
+        let beta_pos = output.find("./beta.controller").unwrap();
+        let gamma_pos = output.find("./gamma.controller").unwrap();
+        let omega_pos = output.find("./omega.controller").unwrap();
+
+        assert!(beta_pos < gamma_pos);
+        assert!(gamma_pos < omega_pos);
+    }
+
+    #[test]
+    fn inserts_at_end_when_largest() {
+        let allocator = Allocator::default();
+
+        let index_text = "\
+export * from './alpha.controller';
+export * from './beta.controller';";
+
+        let mut index_program = crate::core::ast::parse_ast_program::parse_ast_program(
+            &allocator,
+            index_text,
+            SourceType::ts(),
+        );
+
+        // Inject 'zeta' which should be appended
+        let injection_text = "export * from './zeta.controller';";
+        let mut injection_program = crate::core::ast::parse_ast_program::parse_ast_program(
+            &allocator,
+            injection_text,
+            SourceType::ts(),
+        );
+
+        let _ = inject_into_index_ts_export(&mut index_program, &mut injection_program, "zeta");
+        let output = codegen(&index_program);
+
+        let alpha_pos = output.find("./alpha.controller").unwrap();
+        let beta_pos = output.find("./beta.controller").unwrap();
+        let zeta_pos = output.find("./zeta.controller").unwrap();
+
+        assert!(alpha_pos < beta_pos);
+        assert!(beta_pos < zeta_pos);
     }
 }
