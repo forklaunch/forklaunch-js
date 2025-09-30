@@ -26,6 +26,7 @@ RUST_BACKTRACE=1 cargo run --release init application service-test-bun-applicati
 cd service-test-bun-application/src/modules
 
 bun install --trusted
+bun pm trust
 
 RUST_BACKTRACE=1 cargo run --release sdk mode -t generated
 

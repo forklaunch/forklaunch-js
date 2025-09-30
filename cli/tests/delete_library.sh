@@ -23,6 +23,7 @@ RUST_BACKTRACE=1 cargo run --release delete library lib-test -p library-test-bun
 cd library-test-bun-application/src/modules
 
 bun install --trusted
+bun pm trust
 bun run build
 
 cd ../../..

@@ -22,6 +22,7 @@ RUST_BACKTRACE=1 cargo run --release init application billing-stripe-bun -p bill
 cd billing-stripe-bun/src/modules
 
 bun install --trusted
+bun pm trust
 bun run build
 bun database:setup
 

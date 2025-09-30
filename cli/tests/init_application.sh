@@ -64,6 +64,7 @@ for database in "${databases[@]}"; do
                 cd "$app_name/src/modules"
                 if [ "$runtime" = "bun" ]; then
                   bun install --trusted
+bun pm trust
                 else
                   pnpm install
                 fi
