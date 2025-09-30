@@ -65,14 +65,15 @@ use crate::{
                 PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT, SORT_PACKAGE_JSON_VERSION,
                 SQLITE3_VERSION, TS_JEST_VERSION, TS_NODE_VERSION, TSX_VERSION, TYPEBOX_VERSION,
                 TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION, TYPES_QS_VERSION,
-                TYPES_UUID_VERSION, TYPESCRIPT_ESLINT_VERSION, TYPESCRIPT_VERSION,
-                UNIVERSAL_SDK_VERSION, UUID_VERSION, VALIDATOR_VERSION, VITEST_VERSION,
-                ZOD_VERSION, application_build_script, application_clean_purge_script,
-                application_clean_script, application_docs_script, application_format_script,
-                application_lint_fix_script, application_lint_script, application_migrate_script,
-                application_seed_script, application_setup_script, application_test_script,
-                application_up_packages_script, project_clean_script, project_format_script,
-                project_lint_fix_script, project_lint_script, project_test_script,
+                TYPES_UUID_VERSION, TYPES_WATCH_SCRIPT, TYPESCRIPT_ESLINT_VERSION,
+                TYPESCRIPT_VERSION, UNIVERSAL_SDK_VERSION, UUID_VERSION, VALIDATOR_VERSION,
+                VITEST_VERSION, ZOD_VERSION, application_build_script,
+                application_clean_purge_script, application_clean_script, application_docs_script,
+                application_format_script, application_lint_fix_script, application_lint_script,
+                application_migrate_script, application_seed_script, application_setup_script,
+                application_test_script, application_up_packages_script, project_clean_script,
+                project_format_script, project_lint_fix_script, project_lint_script,
+                project_test_script,
             },
             project_package_json::{ProjectDependencies, ProjectDevDependencies, ProjectScripts},
         },
@@ -82,6 +83,7 @@ use crate::{
         template::{PathIO, generate_with_template, get_routers_from_standard_package},
         token::get_token,
         universal_sdk::get_universal_sdk_additional_deps,
+        vscode::generate_vscode_settings,
     },
     prompt::{
         ArrayCompleter, prompt_comma_separated_list, prompt_for_confirmation,
@@ -145,6 +147,7 @@ fn generate_application_package_json(
                 &HashSet::from([data.database.parse()?]),
             )),
             test: application_test_script(&data.runtime.parse()?, &test_framework),
+            types_watch: Some(TYPES_WATCH_SCRIPT.to_string()),
             up_packages: Some(application_up_packages_script(&data.runtime.parse()?)),
             additional_scripts: HashMap::new(),
         }),
@@ -1110,6 +1113,12 @@ impl CliCommand for ApplicationCommand {
             content: docker_compose_string.unwrap(),
             context: None,
         });
+
+        let maybe_vscode_settings = generate_vscode_settings(&generation_path)?;
+
+        if let Some(vscode_settings) = maybe_vscode_settings {
+            rendered_templates.push(vscode_settings);
+        }
 
         rendered_templates.push(generate_application_package_json(
             &data,

@@ -1,9 +1,9 @@
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use clap::{ArgMatches, Command};
 use pull::PullCommand;
 use push::PushCommand;
 
-use crate::{core::command::command, CliCommand};
+use crate::{CliCommand, core::command::command};
 
 mod pull;
 mod push;

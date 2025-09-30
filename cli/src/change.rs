@@ -6,7 +6,7 @@ use router::RouterCommand;
 use service::ServiceCommand;
 use worker::WorkerCommand;
 
-use crate::{core::command::command, CliCommand};
+use crate::{CliCommand, core::command::command};
 
 pub(crate) mod application;
 pub(crate) mod core;

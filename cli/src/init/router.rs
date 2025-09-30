@@ -18,6 +18,7 @@ use crate::{
     },
     core::{
         ast::transformations::{
+            transform_controllers_index_ts::transform_controllers_index_ts,
             transform_entities_index_ts::transform_entities_index_ts,
             transform_registrations_ts::transform_registrations_ts_add_router,
             transform_sdk_ts::transform_sdk_ts, transform_seed_data_ts::transform_seed_data_ts,
@@ -138,6 +139,12 @@ fn add_router_to_artifacts(
             &project_type,
             &base_path,
         )?,
+        context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER.to_string()),
+    });
+
+    rendered_templates.push(RenderedTemplate {
+        path: base_path.join("api").join("controllers").join("index.ts"),
+        content: transform_controllers_index_ts(manifest_data.router_name.as_str(), &base_path)?,
         context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER.to_string()),
     });
 

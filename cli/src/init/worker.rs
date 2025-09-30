@@ -60,7 +60,7 @@ use crate::{
                 project_clean_script, project_dev_local_worker_script, project_dev_server_script,
                 project_dev_worker_client_script, project_format_script, project_lint_fix_script,
                 project_lint_script, project_migrate_script, project_start_worker_script,
-                project_test_script,
+                project_test_script, project_types_versions_value,
             },
             project_package_json::{
                 MIKRO_ORM_CONFIG_PATHS, ProjectDependencies, ProjectDevDependencies,
@@ -72,7 +72,7 @@ use crate::{
         rendered_template::{RenderedTemplate, write_rendered_templates},
         symlinks::generate_symlinks,
         template::{PathIO, generate_with_template},
-        tsconfig::generate_tsconfig,
+        tsconfig::generate_project_tsconfig,
         universal_sdk::add_project_to_universal_sdk,
         worker_type::{
             get_default_worker_options, get_worker_consumer_factory, get_worker_producer_factory,
@@ -138,8 +138,9 @@ fn generate_basic_worker(
         None,
         None,
     )?);
-    rendered_templates
-        .extend(generate_tsconfig(&output_path).with_context(|| ERROR_FAILED_TO_CREATE_TSCONFIG)?);
+    rendered_templates.extend(
+        generate_project_tsconfig(&output_path).with_context(|| ERROR_FAILED_TO_CREATE_TSCONFIG)?,
+    );
     rendered_templates.extend(
         generate_gitignore(&output_path).with_context(|| ERROR_FAILED_TO_CREATE_GITIGNORE)?,
     );
@@ -160,6 +161,7 @@ fn generate_basic_worker(
         base_path,
         &manifest_data.app_name,
         &manifest_data.worker_name,
+        None,
     )?;
 
     write_rendered_templates(&rendered_templates, dryrun, stdout)
@@ -302,6 +304,7 @@ pub(crate) fn generate_worker_package_json(
         author: Some(manifest_data.author.to_string()),
         main: main_override,
         types: None,
+        types_versions: Some(project_types_versions_value()),
         scripts: Some(if let Some(scripts) = scripts_override {
             scripts
         } else {
@@ -487,6 +490,7 @@ pub(crate) fn generate_worker_package_json(
                     None
                 },
                 dotenv: Some(DOTENV_VERSION.to_string()),
+                jose: None,
                 sqlite3: if manifest_data.is_node
                     && manifest_data.is_database_enabled
                     && manifest_data.is_sqlite

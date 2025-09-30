@@ -1,12 +1,12 @@
 use std::{fs::write, path::Path};
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use clap::{Arg, ArgMatches, Command};
-use reqwest::{blocking::Client, StatusCode};
+use reqwest::{StatusCode, blocking::Client};
 
-use super::{unwrap_id, CliCommand};
+use super::{CliCommand, unwrap_id};
 use crate::{
-    constants::{error_failed_to_write_file, ERROR_FAILED_TO_SEND_REQUEST, PROD_API_URL},
+    constants::{ERROR_FAILED_TO_SEND_REQUEST, PROD_API_URL, error_failed_to_write_file},
     core::{command::command, token::get_token},
 };
 

@@ -5,8 +5,8 @@ use clap::{ArgMatches, Command};
 use termcolor::{ColorChoice, StandardStream};
 
 use crate::{
-    core::{command::command, token::get_token},
     CliCommand,
+    core::{command::command, token::get_token},
 };
 
 #[derive(Debug)]
