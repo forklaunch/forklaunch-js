@@ -11,5 +11,5 @@ RUST_BACKTRACE=1 cargo run --release change service -p svc -N newsvc -d mongodb 
 
 cd src/modules
 
-bun install
+bun install --trusted
 bun run build

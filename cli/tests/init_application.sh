@@ -63,7 +63,7 @@ for database in "${databases[@]}"; do
                 
                 cd "$app_name/src/modules"
                 if [ "$runtime" = "bun" ]; then
-                  bun install
+                  bun install --trusted
                 else
                   pnpm install
                 fi

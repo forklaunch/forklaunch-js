@@ -22,7 +22,7 @@ RUST_BACKTRACE=1 cargo run --release delete worker wrk-test -p worker-test-bun-a
 
 cd worker-test-bun-application/src/modules
 
-bun install
+bun install --trusted
 bun run build
 
 cd ../../..

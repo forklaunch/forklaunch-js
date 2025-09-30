@@ -24,5 +24,5 @@ cd router-test-bun-application/modules/iam
 
 RUST_BACKTRACE=1 cargo run --release init router rtr-test-two
 
-bun install
+bun install --trusted
 bun run build

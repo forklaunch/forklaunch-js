@@ -21,7 +21,7 @@ RUST_BACKTRACE=1 cargo run --release init application iam-better-auth-bun -p iam
 
 cd iam-better-auth-bun/src/modules
 
-bun install
+bun install --trusted
 bun run build
 bun database:setup
 

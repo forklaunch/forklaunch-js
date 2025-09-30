@@ -12,5 +12,5 @@ cd src/modules
 
 RUST_BACKTRACE=1 cargo run --release change worker -p workr -N newworkr -t bullmq -D "Test worker 2" -c
 
-bun install
+bun install --trusted
 bun run build

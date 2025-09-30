@@ -1114,7 +1114,7 @@ impl CliCommand for ApplicationCommand {
             context: None,
         });
 
-        let maybe_vscode_settings = generate_vscode_settings(&generation_path)?;
+        let maybe_vscode_settings = generate_vscode_settings(&origin_path)?;
 
         if let Some(vscode_settings) = maybe_vscode_settings {
             rendered_templates.push(vscode_settings);

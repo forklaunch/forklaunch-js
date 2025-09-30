@@ -28,7 +28,7 @@ RUST_BACKTRACE=1 cargo run --release delete service svc-test -p . -c
 
 cd src/modules
 
-bun install
+bun install --trusted
 bun run build
 
 cd ../../..
