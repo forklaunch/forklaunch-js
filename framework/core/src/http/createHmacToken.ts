@@ -22,12 +22,14 @@ export function createHmacToken({
   method: string;
   path: string;
   body?: unknown;
-  timestamp: string;
+  timestamp: Date;
   nonce: string;
   secretKey: string;
 }) {
   const hmac = createHmac('sha256', secretKey);
   const bodyString = body ? `${safeStringify(body)}\n` : undefined;
-  hmac.update(`${method}\n${path}\n${bodyString}${timestamp}\n${nonce}`);
+  hmac.update(
+    `${method}\n${path}\n${bodyString}${timestamp.toISOString()}\n${nonce}`
+  );
   return hmac.digest('base64');
 }

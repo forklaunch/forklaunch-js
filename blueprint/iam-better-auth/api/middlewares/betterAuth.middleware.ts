@@ -1,5 +1,3 @@
-import { betterAuth, BetterAuthOptions } from '@forklaunch/better-auth';
-import { toNodeHandler } from '@forklaunch/better-auth/node';
 import { NextFunction, Request, Response } from '@forklaunch/blueprint-core';
 import { getEnvVar } from '@forklaunch/common';
 import {
@@ -12,6 +10,8 @@ import {
   httpRequestsTotalCounter
 } from '@forklaunch/core/http';
 import { context, trace } from '@opentelemetry/api';
+import { betterAuth, BetterAuthOptions } from 'better-auth';
+import { toNodeHandler } from 'better-auth/node';
 import {
   Request as ExpressRequest,
   Response as ExpressResponse

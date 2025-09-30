@@ -1,11 +1,17 @@
-import { BetterAuthOptions } from '@forklaunch/better-auth';
 import { mikroOrmAdapter } from '@forklaunch/better-auth-mikro-orm-fork';
-import { openAPI } from '@forklaunch/better-auth/plugins';
 import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { MikroORM } from '@mikro-orm/core';
+import { betterAuth, BetterAuthOptions } from 'better-auth';
+import { openAPI } from 'better-auth/plugins';
 
-export type BetterAuthConfig = ReturnType<typeof betterAuthConfig>;
+type Plugins = [ReturnType<typeof openAPI>];
+const plugins: Plugins = [
+  openAPI({
+    disableDefaultReference: true
+  })
+];
+
 export const betterAuthConfig = ({
   BETTER_AUTH_BASE_PATH,
   PASSWORD_ENCRYPTION_SECRET,
@@ -27,11 +33,7 @@ export const betterAuthConfig = ({
     emailAndPassword: {
       enabled: true
     },
-    plugins: [
-      openAPI({
-        disableDefaultReference: true
-      })
-    ],
+    plugins,
     user: {
       additionalFields: {
         firstName: {
@@ -104,3 +106,6 @@ export const betterAuthConfig = ({
     },
     logger: openTelemetryCollector
   }) satisfies BetterAuthOptions;
+
+export type BetterAuthConfig = ReturnType<typeof betterAuthConfig>;
+export type BetterAuth = ReturnType<typeof betterAuth<BetterAuthConfig>>;

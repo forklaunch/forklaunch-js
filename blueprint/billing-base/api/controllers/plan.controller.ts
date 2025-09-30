@@ -6,10 +6,7 @@ import {
   schemaValidator,
   string
 } from '@forklaunch/blueprint-core';
-import { Metrics } from '@forklaunch/blueprint-monitoring';
-import { Controller } from '@forklaunch/core/controllers';
-import { OpenTelemetryCollector } from '@forklaunch/core/http';
-import { PlanService } from '@forklaunch/interfaces-billing/interfaces';
+import { ci, tokens } from '../../bootstrapper';
 import { BillingProviderEnum } from '../../domain/enum/billingProvider.enum';
 import { CurrencyEnum } from '../../domain/enum/currency.enum';
 import { PlanCadenceEnum } from '../../domain/enum/planCadence.enum';
@@ -19,111 +16,138 @@ import {
   UpdatePlanMapper
 } from '../../domain/mappers/plan.mappers';
 import { PlanSchemas } from '../../domain/schemas';
-import { PlanServiceFactory } from '../routes/plan.routes';
-export const PlanController = (
-  serviceFactory: PlanServiceFactory,
-  openTelemetryCollector: OpenTelemetryCollector<Metrics>
-) =>
-  ({
-    createPlan: handlers.post(
-      schemaValidator,
-      '/',
-      {
-        name: 'createPlan',
-        summary: 'Create a plan',
-        body: CreatePlanMapper.schema,
-        responses: {
-          200: PlanMapper.schema
-        }
-      },
-      async (req, res) => {
-        openTelemetryCollector.debug('Creating plan', req.body);
-        res.status(200).json(await serviceFactory().createPlan(req.body));
-      }
-    ),
 
-    getPlan: handlers.get(
-      schemaValidator,
-      '/:id',
-      {
-        name: 'getPlan',
-        summary: 'Get a plan',
-        params: IdSchema,
-        responses: {
-          200: PlanSchemas.PlanSchema(
-            PlanCadenceEnum,
-            CurrencyEnum,
-            BillingProviderEnum
-          )
-        }
-      },
-      async (req, res) => {
-        openTelemetryCollector.debug('Retrieving plan', req.params);
-        res.status(200).json(await serviceFactory().getPlan(req.params));
-      }
-    ),
+const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
+const serviceFactory = ci.scopedResolver(tokens.PlanService);
+const HMAC_SECRET_KEY = ci.resolve(tokens.HMAC_SECRET_KEY);
 
-    updatePlan: handlers.put(
-      schemaValidator,
-      '/',
-      {
-        name: 'updatePlan',
-        summary: 'Update a plan',
-        body: UpdatePlanMapper.schema,
-        responses: {
-          200: PlanMapper.schema
+export const createPlan = handlers.post(
+  schemaValidator,
+  '/',
+  {
+    name: 'createPlan',
+    summary: 'Create a plan',
+    auth: {
+      hmac: {
+        secretKeys: {
+          default: HMAC_SECRET_KEY
         }
-      },
-      async (req, res) => {
-        openTelemetryCollector.debug('Updating plan', req.body);
-        res.status(200).json(await serviceFactory().updatePlan(req.body));
       }
-    ),
+    },
+    body: CreatePlanMapper.schema,
+    responses: {
+      200: PlanMapper.schema
+    }
+  },
+  async (req, res) => {
+    openTelemetryCollector.debug('Creating plan', req.body);
+    res.status(200).json(await serviceFactory().createPlan(req.body));
+  }
+);
 
-    deletePlan: handlers.delete(
-      schemaValidator,
-      '/:id',
-      {
-        name: 'deletePlan',
-        summary: 'Delete a plan',
-        params: IdSchema,
-        responses: {
-          200: string
+export const getPlan = handlers.get(
+  schemaValidator,
+  '/:id',
+  {
+    name: 'getPlan',
+    summary: 'Get a plan',
+    auth: {
+      hmac: {
+        secretKeys: {
+          default: HMAC_SECRET_KEY
         }
-      },
-      async (req, res) => {
-        openTelemetryCollector.debug('Deleting plan', req.params);
-        await serviceFactory().deletePlan(req.params);
-        res.status(200).send(`Deleted plan ${req.params.id}`);
       }
-    ),
+    },
+    params: IdSchema,
+    responses: {
+      200: PlanSchemas.PlanSchema(
+        PlanCadenceEnum,
+        CurrencyEnum,
+        BillingProviderEnum
+      )
+    }
+  },
+  async (req, res) => {
+    openTelemetryCollector.debug('Retrieving plan', req.params);
+    res.status(200).json(await serviceFactory().getPlan(req.params));
+  }
+);
 
-    listPlans: handlers.get(
-      schemaValidator,
-      '/',
-      {
-        name: 'listPlans',
-        summary: 'List plans',
-        query: IdsSchema,
-        responses: {
-          200: array(
-            PlanSchemas.PlanSchema(
-              PlanCadenceEnum,
-              CurrencyEnum,
-              BillingProviderEnum
-            )
-          )
+export const updatePlan = handlers.put(
+  schemaValidator,
+  '/',
+  {
+    name: 'updatePlan',
+    summary: 'Update a plan',
+    body: UpdatePlanMapper.schema,
+    auth: {
+      hmac: {
+        secretKeys: {
+          default: HMAC_SECRET_KEY
         }
-      },
-      async (req, res) => {
-        openTelemetryCollector.debug('Listing plans', req.query);
-        res.status(200).json(await serviceFactory().listPlans(req.query));
       }
-    )
-  }) satisfies Controller<
-    PlanService<
-      typeof PlanCadenceEnum,
-      typeof CurrencyEnum,
-      typeof BillingProviderEnum
-    >
-  >;
+    },
+    responses: {
+      200: PlanMapper.schema
+    }
+  },
+  async (req, res) => {
+    openTelemetryCollector.debug('Updating plan', req.body);
+    res.status(200).json(await serviceFactory().updatePlan(req.body));
+  }
+);
+
+export const deletePlan = handlers.delete(
+  schemaValidator,
+  '/:id',
+  {
+    name: 'deletePlan',
+    summary: 'Delete a plan',
+    params: IdSchema,
+    auth: {
+      hmac: {
+        secretKeys: {
+          default: HMAC_SECRET_KEY
+        }
+      }
+    },
+    responses: {
+      200: string
+    }
+  },
+  async (req, res) => {
+    openTelemetryCollector.debug('Deleting plan', req.params);
+    await serviceFactory().deletePlan(req.params);
+    res.status(200).send(`Deleted plan ${req.params.id}`);
+  }
+);
+
+export const listPlans = handlers.get(
+  schemaValidator,
+  '/',
+  {
+    name: 'listPlans',
+    summary: 'List plans',
+    query: IdsSchema,
+    auth: {
+      hmac: {
+        secretKeys: {
+          default: HMAC_SECRET_KEY
+        }
+      }
+    },
+    responses: {
+      200: array(
+        PlanSchemas.PlanSchema(
+          PlanCadenceEnum,
+          CurrencyEnum,
+          BillingProviderEnum
+        )
+      )
+    }
+  },
+  async (req, res) => {
+    openTelemetryCollector.debug('Listing plans', req.query);
+    res.status(200).json(await serviceFactory().listPlans(req.query));
+  }
+);

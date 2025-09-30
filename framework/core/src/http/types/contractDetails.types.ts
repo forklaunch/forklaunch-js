@@ -335,6 +335,7 @@ export type HmacMethods = {
     readonly secretKeys: Record<string, string>;
   };
 
+  readonly sessionSchema?: never;
   readonly basic?: never;
   readonly jwt?: never;
 };
@@ -381,10 +382,22 @@ export type SchemaAuthMethods<
   QuerySchema extends QueryObject<SV>,
   ReqHeaders extends HeadersObject<SV>,
   VersionedApi extends VersionSchema<SV, Method>,
-  SessionSchema extends SessionObject<SV>,
   BaseRequest
-> = AuthMethodsBase &
-  (
+> = AuthMethodsBase & {
+  readonly sessionSchema?: SessionObject<SV>;
+  readonly requiredScope?: string;
+  readonly scopeHeirarchy?: string[];
+  readonly surfaceScopes?: ExpressLikeSchemaAuthMapper<
+    SV,
+    ParamsSchema,
+    ReqBody,
+    QuerySchema,
+    ReqHeaders,
+    VersionedApi,
+    SessionObject<SV>,
+    BaseRequest
+  >;
+} & (
     | {
         readonly surfacePermissions?: ExpressLikeSchemaAuthMapper<
           SV,
@@ -393,7 +406,7 @@ export type SchemaAuthMethods<
           QuerySchema,
           ReqHeaders,
           VersionedApi,
-          SessionSchema,
+          SessionObject<SV>,
           BaseRequest
         >;
       }
@@ -405,25 +418,11 @@ export type SchemaAuthMethods<
           QuerySchema,
           ReqHeaders,
           VersionedApi,
-          SessionSchema,
+          SessionObject<SV>,
           BaseRequest
         >;
       }
-  ) & {
-    readonly sessionSchema?: SessionSchema;
-    readonly requiredScope?: string;
-    readonly scopeHeirarchy?: string[];
-    readonly surfaceScopes?: ExpressLikeSchemaAuthMapper<
-      SV,
-      ParamsSchema,
-      ReqBody,
-      QuerySchema,
-      ReqHeaders,
-      VersionedApi,
-      SessionSchema,
-      BaseRequest
-    >;
-  };
+  );
 
 export type AuthMethods<
   SV extends AnySchemaValidator,
@@ -432,10 +431,22 @@ export type AuthMethods<
   ReqQuery extends Record<string, unknown>,
   ReqHeaders extends Record<string, string>,
   VersionedReqs extends VersionedRequests,
-  SessionSchema extends Record<string, unknown>,
   BaseRequest
-> = AuthMethodsBase &
-  (
+> = AuthMethodsBase & {
+  readonly sessionSchema?: SessionObject<SV>;
+  readonly requiredScope?: string;
+  readonly scopeHeirarchy?: string[];
+  readonly surfaceScopes?: ExpressLikeAuthMapper<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    VersionedReqs,
+    SessionObject<SV>,
+    BaseRequest
+  >;
+} & (
     | ({
         readonly surfacePermissions?: ExpressLikeAuthMapper<
           SV,
@@ -444,7 +455,7 @@ export type AuthMethods<
           ReqQuery,
           ReqHeaders,
           VersionedReqs,
-          SessionSchema,
+          SessionObject<SV>,
           BaseRequest
         >;
       } & PermissionSet)
@@ -456,25 +467,11 @@ export type AuthMethods<
           ReqQuery,
           ReqHeaders,
           VersionedReqs,
-          SessionSchema,
+          SessionObject<SV>,
           BaseRequest
         >;
       } & RoleSet)
-  ) & {
-    readonly sessionSchema?: SessionSchema;
-    readonly requiredScope?: string;
-    readonly scopeHeirarchy?: string[];
-    readonly surfaceScopes?: ExpressLikeAuthMapper<
-      SV,
-      P,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      VersionedReqs,
-      SessionSchema,
-      BaseRequest
-    >;
-  };
+  );
 
 /**
  * Type representing a mapped schema.
@@ -612,7 +609,6 @@ export type PathParamHttpContractDetails<
     SV,
     PathParamMethod
   >,
-  SessionSchema extends SessionObject<SV> = SessionObject<SV>,
   BaseRequest = unknown,
   Auth extends SchemaAuthMethods<
     SV,
@@ -621,7 +617,6 @@ export type PathParamHttpContractDetails<
     QuerySchema,
     ReqHeaders,
     VersionedApi,
-    SessionSchema,
     BaseRequest
   > = SchemaAuthMethods<
     SV,
@@ -630,7 +625,6 @@ export type PathParamHttpContractDetails<
     QuerySchema,
     ReqHeaders,
     VersionedApi,
-    SessionSchema,
     BaseRequest
   >
 > = BasePathParamHttpContractDetails<SV, Name, Path, ParamsSchema> &
@@ -686,7 +680,6 @@ export type HttpContractDetails<
     SV,
     HttpMethod
   >,
-  SessionSchema extends SessionObject<SV> = SessionObject<SV>,
   BaseRequest = unknown,
   Auth extends SchemaAuthMethods<
     SV,
@@ -695,7 +688,6 @@ export type HttpContractDetails<
     QuerySchema,
     ReqHeaders,
     VersionedApi,
-    SessionSchema,
     BaseRequest
   > = SchemaAuthMethods<
     SV,
@@ -704,7 +696,6 @@ export type HttpContractDetails<
     QuerySchema,
     ReqHeaders,
     VersionedApi,
-    SessionSchema,
     BaseRequest
   >
 > = BasePathParamHttpContractDetails<SV, Name, Path, ParamsSchema> &
@@ -754,7 +745,6 @@ export type MiddlewareContractDetails<
     SV,
     'middleware'
   >,
-  SessionSchema extends SessionObject<SV> = SessionObject<SV>,
   BaseRequest = unknown,
   Auth extends SchemaAuthMethods<
     SV,
@@ -763,7 +753,6 @@ export type MiddlewareContractDetails<
     QuerySchema,
     ReqHeaders,
     VersionedApi,
-    SessionSchema,
     BaseRequest
   > = SchemaAuthMethods<
     SV,
@@ -772,7 +761,6 @@ export type MiddlewareContractDetails<
     QuerySchema,
     ReqHeaders,
     VersionedApi,
-    SessionSchema,
     BaseRequest
   >
 > = Omit<
@@ -788,7 +776,6 @@ export type MiddlewareContractDetails<
       ReqHeaders,
       ResHeaders,
       VersionedApi,
-      SessionSchema,
       BaseRequest,
       Auth
     >
@@ -826,7 +813,6 @@ export type ContractDetails<
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
   VersionedApi extends VersionSchema<SV, ContractMethod>,
-  SessionSchema extends SessionObject<SV>,
   BaseRequest,
   Auth extends SchemaAuthMethods<
     SV,
@@ -835,7 +821,6 @@ export type ContractDetails<
     QuerySchema,
     ReqHeaders,
     VersionedApi,
-    SessionSchema,
     BaseRequest
   >
 > = ContractMethod extends PathParamMethod
@@ -850,7 +835,6 @@ export type ContractDetails<
       ReqHeaders,
       ResHeaders,
       VersionedApi,
-      SessionSchema,
       BaseRequest,
       Auth
     >
@@ -866,7 +850,6 @@ export type ContractDetails<
         ReqHeaders,
         ResHeaders,
         VersionedApi,
-        SessionSchema,
         BaseRequest,
         Auth
       >
@@ -882,8 +865,31 @@ export type ContractDetails<
           ReqHeaders,
           ResHeaders,
           VersionedApi,
-          SessionSchema,
           BaseRequest,
           Auth
         >
       : never;
+
+/**
+ * Resolves the session object type to use for authentication.
+ *
+ * If `AuthSession` is provided and extends `SessionObject<SV>`, it is used as the session type.
+ * Otherwise, the `FallbackSession` type is used.
+ *
+ * @template SV - The schema validator type.
+ * @template AuthSession - The session object type provided by the authentication method, or undefined.
+ * @template FallbackSession - The fallback session object type to use if `AuthSession` is not provided.
+ */
+export type ResolvedSessionObject<
+  SV extends AnySchemaValidator,
+  AuthSession extends SessionObject<SV> | undefined,
+  FallbackSession extends SessionObject<SV>
+> = AuthSession extends
+  | {
+      readonly sessionSchema?: infer ResolvedSessionSchema | undefined;
+    }
+  | undefined
+  ? ResolvedSessionSchema extends SessionObject<SV>
+    ? ResolvedSessionSchema
+    : FallbackSession
+  : FallbackSession;

@@ -4,7 +4,7 @@
 
 id = "27e13038-212c-4989-99b0-d970cc30fe4e"
 cli_version = "0.0.0"
-app_name = "forklaunch-framework"
+app_name = "forklaunch-blueprint"
 modules_path = "."
 app_description = "Blueprint for forklaunch services"
 linter = "eslint"
@@ -93,4 +93,4 @@ forklaunch_framework = [
     "iam-better-auth",
     "sample-worker",
 ]
-forklaunch-framework = ["universal-sdk"]
+forklaunch-blueprint = ["universal-sdk"]

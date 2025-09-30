@@ -21,10 +21,10 @@
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
-    "prepare": "pnpm run build",
+    "prepack": "pnpm run build",
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/core": "^0.14.9"
+    "@forklaunch/core": "^0.15.3"
   }
 }

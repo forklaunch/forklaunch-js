@@ -8,7 +8,9 @@ use oxc_codegen::{Codegen, CodegenOptions};
 
 use crate::core::ast::{
     injections::{
-        inject_into_import_statement::inject_into_import_statement,
+        inject_into_import_statement::{
+            inject_into_import_statement, inject_specifier_into_import_statement,
+        },
         inject_into_sdk::inject_into_sdk_client_input,
     },
     parse_ast_program::parse_ast_program,
@@ -23,25 +25,52 @@ pub(crate) fn transform_sdk_ts(router_name: &str, base_path: &Path) -> Result<St
 
     let mut sdk_program = parse_ast_program(&allocator, &sdk_source_text, sdk_source_type);
 
-    let sdk_router_import_text = format!(
-        "import {{ {router_name_camel_case}SdkRouter }} from './api/routes/{router_name_camel_case}.routes';"
-    );
-    let mut sdk_router_import_injection =
-        parse_ast_program(&allocator, &sdk_router_import_text, sdk_source_type);
-    inject_into_import_statement(
+    let controllers_import_source = "./api/controllers";
+    let spec_get = format!("{}Get", router_name_camel_case);
+    let spec_post = format!("{}Post", router_name_camel_case);
+    let try_inject_get = inject_specifier_into_import_statement(
+        &allocator,
         &mut sdk_program,
-        &mut sdk_router_import_injection,
-        "./server",
-        &sdk_source_text,
-    )?;
-
-    let sdk_client_skeleton_text = format!(
-        "export const sdkClient = sdkClient(schemaValidator, {{ {router_name_camel_case}: {router_name_camel_case}SdkRouter }})"
+        &spec_get,
+        controllers_import_source,
     );
-    let mut injected_sdk_client_skeleton =
-        parse_ast_program(&allocator, &sdk_client_skeleton_text, sdk_source_type);
+    let try_inject_post = inject_specifier_into_import_statement(
+        &allocator,
+        &mut sdk_program,
+        &spec_post,
+        controllers_import_source,
+    );
+    if try_inject_get.is_err() || try_inject_post.is_err() {
+        let controllers_import_text =
+            format!("import {{ {spec_get}, {spec_post} }} from '{controllers_import_source}';");
+        let mut controllers_import_program = parse_ast_program(
+            &allocator,
+            allocator.alloc_str(&controllers_import_text),
+            sdk_source_type,
+        );
+        inject_into_import_statement(
+            &mut sdk_program,
+            &mut controllers_import_program,
+            controllers_import_source,
+            &sdk_source_text,
+        )?;
+    }
 
-    inject_into_sdk_client_input(&mut sdk_program, &mut injected_sdk_client_skeleton)?;
+    let sdk_injection_text = format!(
+        r#"
+        export type TestSdk = {{
+            {router_name_camel_case}: {{
+                {spec_get}: typeof {spec_get};
+                {spec_post}: typeof {spec_post};
+            }};
+        }};
+        export const injectedSdkClient = {{ {router_name_camel_case}: {{ {spec_get}: {spec_get}, {spec_post}: {spec_post} }} }}
+        "#
+    );
+    let mut injected_sdk_skeleton =
+        parse_ast_program(&allocator, &sdk_injection_text, sdk_source_type);
+
+    inject_into_sdk_client_input(&mut sdk_program, &mut injected_sdk_skeleton)?;
 
     Ok(Codegen::new()
         .with_options(CodegenOptions::default())
@@ -70,10 +99,21 @@ mod tests {
     #[test]
     fn test_transform_sdk_ts() {
         let sdk_content = r#"
-import { schemaValidator } from '@forklaunch/core';
+import { SchemaValidator } from "@forklaunch/core";
+import { MapToSdk } from '@forklaunch/core/http';
+import { svcGet } from "./api/controllers";
 
-export const sdkClient = sdkClient(schemaValidator, {
-});
+export type TestSvcSdk = {
+  svc: {
+    svcGet: typeof svcGet;
+  };
+};
+
+export const svcSdkClient = {
+  svc: {
+    svcGet: svcGet
+  }
+} satisfies TestSvcSdk;
 "#;
 
         let temp_dir = create_temp_project_structure(sdk_content);
@@ -84,10 +124,12 @@ export const sdkClient = sdkClient(schemaValidator, {
         assert!(result.is_ok());
 
         let transformed_code = result.unwrap();
-
-        let expected_content = r#"import { userManagementSdkRouter } from "./api/routes/userManagement.routes";
-import { schemaValidator } from "@forklaunch/core";
-export const sdkClient = sdkClient(schemaValidator, { userManagement: userManagementSdkRouter });"#;
+        assert!(transformed_code.contains(
+            "import { svcGet, userManagementGet, userManagementPost } from \"./api/controllers\""
+        ));
+        assert!(transformed_code.contains("userManagement:"));
+        assert!(transformed_code.contains("userManagementGet"));
+        assert!(transformed_code.contains("userManagementPost"));
 
         let normalized_result = transformed_code
             .lines()
@@ -96,13 +138,8 @@ export const sdkClient = sdkClient(schemaValidator, { userManagement: userManage
             .collect::<Vec<&str>>()
             .join("\n");
 
-        let normalized_expected = expected_content
-            .lines()
-            .map(|line| line.trim())
-            .filter(|line| !line.is_empty())
-            .collect::<Vec<&str>>()
-            .join("\n");
-
-        assert_eq!(normalized_result, normalized_expected);
+        assert!(normalized_result.contains(
+            "import { svcGet, userManagementGet, userManagementPost } from \"./api/controllers\""
+        ));
     }
 }

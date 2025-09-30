@@ -1,5 +1,5 @@
 {
-  "name": "@forklaunch-framework/universal-sdk",
+  "name": "@forklaunch/blueprint-universal-sdk",
   "version": "0.1.0",
   "description": "The forklaunch universal SDK to be used anywhere",
   "keywords": [],
@@ -12,17 +12,21 @@
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
-    "prepare": "pnpm run build",
+    "prepack": "pnpm run build",
     "test": "pnpm vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/better-auth": "^1.3.8",
-    "@forklaunch/common": "^0.6.7"
+    "@forklaunch/common": "^0.6.14",
+    "@forklaunch/universal-sdk": "^0.7.14",
+    "better-auth": "^1.3.23"
   },
   "devDependencies": {
     "@forklaunch/blueprint-billing-base": "workspace:*",
+    "@forklaunch/blueprint-billing-stripe": "workspace:*",
+    "@forklaunch/blueprint-core": "workspace:*",
     "@forklaunch/blueprint-iam-base": "workspace:*",
     "@forklaunch/blueprint-iam-better-auth": "workspace:*",
-    "@forklaunch/blueprint-sample-worker": "workspace:*"
+    "@forklaunch/blueprint-sample-worker": "workspace:*",
+    "@forklaunch/core": "^0.15.3"
   }
 }

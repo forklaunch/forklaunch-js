@@ -3,7 +3,7 @@ use std::fs::read;
 use anyhow::{Context, Result};
 use clap::{Arg, ArgMatches, Command};
 
-use super::{unwrap_id, CliCommand};
+use super::{CliCommand, unwrap_id};
 use crate::{
     constants::{ERROR_FAILED_TO_SEND_REQUEST, PROD_API_URL},
     core::{command::command, token::get_token},

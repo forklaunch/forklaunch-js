@@ -6,8 +6,10 @@ import {
   ParamsObject,
   PathParamHttpContractDetails,
   QueryObject,
+  ResolvedSessionObject,
   ResponsesObject,
   SchemaAuthMethods,
+  SessionObject,
   VersionSchema
 } from '../types/contractDetails.types';
 import { typedHandler } from './typedHandler';
@@ -24,7 +26,6 @@ export const delete_ = <
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
   VersionedApi extends VersionSchema<SV, 'delete'>,
-  SessionSchema extends Record<string, unknown>,
   BaseRequest,
   BaseResponse,
   NextFunction,
@@ -35,7 +36,6 @@ export const delete_ = <
     ReqQuery,
     ReqHeaders,
     VersionedApi,
-    SessionSchema,
     BaseRequest
   >
 >(
@@ -52,7 +52,6 @@ export const delete_ = <
     ReqHeaders,
     ResHeaders,
     VersionedApi,
-    SessionSchema,
     BaseRequest,
     Auth
   >,
@@ -66,7 +65,7 @@ export const delete_ = <
     ResHeaders,
     LocalsObj,
     VersionedApi,
-    SessionSchema,
+    ResolvedSessionObject<SV, Auth, SessionObject<SV>>,
     BaseRequest,
     BaseResponse,
     NextFunction
@@ -85,7 +84,6 @@ export const delete_ = <
     ResHeaders,
     LocalsObj,
     VersionedApi,
-    SessionSchema,
     BaseRequest,
     BaseResponse,
     NextFunction,

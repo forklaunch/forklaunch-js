@@ -1,5 +1,47 @@
 # @forklaunch/common
 
+## 0.6.14
+
+### Patch Changes
+
+- package upgrade
+
+## 0.6.13
+
+### Patch Changes
+
+- upgrade package dependencies and add global options to nested routers
+
+## 0.6.12
+
+### Patch Changes
+
+- Update internal packages and expose RegistryOptions from universal sdk
+
+## 0.6.11
+
+### Patch Changes
+
+- Set the stage for improved universal sdk performance, and update internal packages
+
+## 0.6.10
+
+### Patch Changes
+
+- Update internal package versions
+
+## 0.6.9
+
+### Patch Changes
+
+- update internal packages and loosen global auth constraint
+
+## 0.6.8
+
+### Patch Changes
+
+- update internal packages
+
 ## 0.6.7
 
 ### Patch Changes

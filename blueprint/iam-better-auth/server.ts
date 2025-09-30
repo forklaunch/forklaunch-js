@@ -7,7 +7,9 @@ import { organizationRouter } from './api/routes/organization.routes';
 import { permissionRouter } from './api/routes/permission.routes';
 import { roleRouter } from './api/routes/role.routes';
 import { userRouter } from './api/routes/user.routes';
+import { BetterAuth } from './auth';
 import { ci, tokens } from './bootstrapper';
+import { iamSdkClient } from './sdk';
 
 //! resolves the openTelemetryCollector from the configuration
 const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
@@ -23,7 +25,7 @@ const app = forklaunchExpress(
 app.internal.all(
   '/api/auth/{*any}',
   betterAuthTelemetryHookMiddleware,
-  enrichBetterAuthApi(ci.resolve(tokens.BetterAuth))
+  enrichBetterAuthApi(ci.resolve(tokens.BetterAuth) as BetterAuth)
 );
 
 //! resolves the host, port, and version from the configuration
@@ -37,6 +39,9 @@ app.use(organizationRouter);
 app.use(permissionRouter);
 app.use(roleRouter);
 app.use(userRouter);
+
+//! register the sdk client
+app.registerSdks(iamSdkClient);
 
 //! starts the server
 app.listen(port, host, () => {

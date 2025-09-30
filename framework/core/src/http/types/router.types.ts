@@ -36,6 +36,13 @@ export interface ForklaunchRouter<SV extends AnySchemaValidator> {
   sdkPaths: Record<string, string>;
   /** Options for the router */
   routerOptions?: ExpressLikeRouterOptions<SV, SessionObject<SV>>;
+  /** Insert the SDK path into the router */
+  insertIntoRouterSdkPaths?: (params: {
+    sdkPath: string;
+    path: string;
+    method: string;
+    name: string;
+  }) => void;
 }
 
 /**

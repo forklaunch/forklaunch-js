@@ -7,6 +7,7 @@ import {
   Method,
   ParamsObject,
   QueryObject,
+  ResolvedSessionObject,
   ResponsesObject,
   SchemaAuthMethods,
   SessionObject,
@@ -23,7 +24,15 @@ export function typedAuthHandler<
   ReqHeaders extends HeadersObject<SV>,
   ResHeaders extends HeadersObject<SV>,
   VersionedApi extends VersionSchema<SV, Method>,
-  SessionSchema extends SessionObject<SV>,
+  Auth extends SchemaAuthMethods<
+    SV,
+    P,
+    ReqBody,
+    ReqQuery,
+    ReqHeaders,
+    VersionedApi,
+    BaseRequest
+  >,
   BaseRequest
 >(
   _schemaValidator: SV,
@@ -39,18 +48,8 @@ export function typedAuthHandler<
     ReqHeaders,
     ResHeaders,
     VersionedApi,
-    SessionSchema,
     BaseRequest,
-    SchemaAuthMethods<
-      SV,
-      P,
-      ReqBody,
-      ReqQuery,
-      ReqHeaders,
-      VersionedApi,
-      SessionSchema,
-      BaseRequest
-    >
+    Auth
   >,
   authHandler: ExpressLikeSchemaAuthMapper<
     SV,
@@ -59,7 +58,7 @@ export function typedAuthHandler<
     ReqQuery,
     ReqHeaders,
     VersionedApi,
-    SessionSchema,
+    ResolvedSessionObject<SV, Auth, SessionObject<SV>>,
     BaseRequest
   >
 ) {

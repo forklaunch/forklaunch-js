@@ -134,40 +134,29 @@ export type RouterMap<SV extends AnySchemaValidator> = {
 };
 
 /**
- * Tail-recursive type that extracts SDK interfaces from a RouterMap structure.
- * This version uses an accumulator pattern to avoid deep recursion and improve performance.
- * Traverses the nested router map and collects all SDK interfaces into a flat structure.
+ * Recursive type representing a hierarchical map of SDK handlers.
+ * Each key can either be a leaf node containing a SdkHandler, or a nested SdkHandlerObject for deeper structures.
  *
- * @template SV - The schema validator type
- * @template T - The RouterMap to extract SDKs from
- * @template Acc - The accumulator type for collecting SDK interfaces (defaults to empty object)
- * @param SV - Must extend AnySchemaValidator
- * @param T - Must extend RouterMap<SV>
- * @param Acc - The accumulated SDK interfaces so far
- *
- * @returns A mapped type where each key corresponds to the original router structure,
- *         but values are the extracted SDK interfaces instead of the full router configuration
+ * @template SV - The schema validator type that constrains the handler structure.
  *
  * @example
  * ```typescript
- * // Given a RouterMap with nested structure
- * type ExtractedSdk = MapToSdk<ZodValidator, typeof routerMap>;
- * // Results in: { api: { users: { getUser: () => Promise<{}> }, posts: { getPosts: () => Promise<[]> } } }
+ * const handlers: SdkHandlerObject<ZodValidator> = {
+ *   users: {
+ *     getUser: someSdkHandler,
+ *     posts: {
+ *       getPosts: anotherSdkHandler
+ *     }
+ *   }
+ * };
  * ```
  */
-export type MapToSdk<
-  SV extends AnySchemaValidator,
-  T extends RouterMap<SV>,
-  Acc extends Record<string, unknown> = Record<string, never>
-> = Prettify<{
-  [K in keyof T]: T[K] extends { sdk: unknown }
-    ? T[K]['sdk']
-    : T[K] extends RouterMap<SV>
-      ? MapToSdk<SV, T[K], Acc>
-      : never;
-}>;
+export type SdkHandlerObject<SV extends AnySchemaValidator> = {
+  [K: string]: SdkHandler | SdkHandlerObject<SV>;
+};
 
 /**
+ * @deprecated
  * Tail-recursive type that extracts and flattens fetch map interfaces from a RouterMap structure.
  * This version uses an accumulator pattern to avoid deep recursion and improve performance.
  * Similar to MapToSdk but focuses on _fetchMap properties and merges all fetch maps into a single intersection type.
@@ -205,14 +194,6 @@ export type MapToFetch<
     }[keyof T]
   >
 >;
-
-// === PERFORMANCE OPTIMIZATION FOR LIVESDKFUNCTION COLLECTIONS ===
-// These optimizations improve performance when consuming many LiveSdkFunction types
-// without changing the underlying logic that e2e tests depend on
-
-// Optimize collection access by caching the whole type
-type CollectionOptimized<T> = T extends infer U ? U : never;
-
 /**
  * Base interface for controller entries that defines the structure
  * of each controller method with its path, HTTP method, and contract details.
@@ -262,60 +243,77 @@ export type SdkHandler = {
   };
 };
 
-export type MapControllerToSdk<
-  SV extends AnySchemaValidator,
-  T extends Record<string, SdkHandler>
-> = CollectionOptimized<{
-  [K in keyof T]: LiveSdkFunction<
-    SV,
-    T[K]['contractDetails']['params'] extends infer Params | undefined
-      ? Params extends ParamsObject<SV>
-        ? Params
-        : ParamsObject<SV>
-      : ParamsObject<SV>,
-    T[K]['contractDetails']['responses'] extends infer Responses | undefined
-      ? Responses extends ResponsesObject<SV>
-        ? Responses
-        : ResponsesObject<SV>
-      : ResponsesObject<SV>,
-    T[K]['contractDetails']['body'] extends infer B | undefined
-      ? B extends Body<SV>
-        ? B
-        : Body<SV>
-      : Body<SV>,
-    T[K]['contractDetails']['query'] extends infer Q | undefined
-      ? Q extends QueryObject<SV>
-        ? Q
-        : QueryObject<SV>
-      : QueryObject<SV>,
-    T[K]['contractDetails']['requestHeaders'] extends
-      | infer RequestHeaders
-      | undefined
-      ? RequestHeaders extends HeadersObject<SV>
-        ? RequestHeaders
-        : HeadersObject<SV>
-      : HeadersObject<SV>,
-    T[K]['contractDetails']['responseHeaders'] extends
-      | infer ResponseHeaders
-      | undefined
-      ? ResponseHeaders extends HeadersObject<SV>
-        ? ResponseHeaders
-        : HeadersObject<SV>
-      : HeadersObject<SV>,
-    T[K]['contractDetails']['versions'] extends infer Versions | undefined
-      ? Versions extends VersionSchema<SV, Method>
-        ? Versions
-        : VersionSchema<SV, Method>
-      : VersionSchema<SV, Method>,
-    T[K]['contractDetails']['auth'] extends infer Auth | undefined
-      ? Auth extends AuthMethodsBase
-        ? Auth
-        : AuthMethodsBase
-      : AuthMethodsBase
-  >;
-}>;
-
 /**
+ * Recursively maps a client controller definition to its corresponding live SDK function types.
+ *
+ * This utility type traverses the structure of a client controller object, replacing each
+ * {@link SdkHandler} with its corresponding {@link MapHandlerToLiveSdk} type, while recursively
+ * processing nested objects. This enables type-safe SDK generation for complex controller hierarchies.
+ *
+ * @template SV - The schema validator type (e.g., zod, typebox).
+ * @template Client - The client controller object to map.
+ *
+ * @example
+ * type MySdk = MapToSdk<typeof z, typeof myController>;
+ */
+export type MapToSdk<SV extends AnySchemaValidator, Client> = {
+  [K in keyof Client]: Client[K] extends SdkHandler
+    ? MapHandlerToLiveSdk<SV, Client[K]>
+    : MapToSdk<SV, Client[K]>;
+};
+
+export type MapHandlerToLiveSdk<
+  SV extends AnySchemaValidator,
+  T extends SdkHandler
+> = LiveSdkFunction<
+  SV,
+  T['contractDetails']['params'] extends infer Params | undefined
+    ? Params extends ParamsObject<SV>
+      ? Params
+      : ParamsObject<SV>
+    : ParamsObject<SV>,
+  T['contractDetails']['responses'] extends infer Responses | undefined
+    ? Responses extends ResponsesObject<SV>
+      ? Responses
+      : ResponsesObject<SV>
+    : ResponsesObject<SV>,
+  T['contractDetails']['body'] extends infer B | undefined
+    ? B extends Body<SV>
+      ? B
+      : Body<SV>
+    : Body<SV>,
+  T['contractDetails']['query'] extends infer Q | undefined
+    ? Q extends QueryObject<SV>
+      ? Q
+      : QueryObject<SV>
+    : QueryObject<SV>,
+  T['contractDetails']['requestHeaders'] extends
+    | infer RequestHeaders
+    | undefined
+    ? RequestHeaders extends HeadersObject<SV>
+      ? RequestHeaders
+      : HeadersObject<SV>
+    : HeadersObject<SV>,
+  T['contractDetails']['responseHeaders'] extends
+    | infer ResponseHeaders
+    | undefined
+    ? ResponseHeaders extends HeadersObject<SV>
+      ? ResponseHeaders
+      : HeadersObject<SV>
+    : HeadersObject<SV>,
+  T['contractDetails']['versions'] extends infer Versions | undefined
+    ? Versions extends VersionSchema<SV, Method>
+      ? Versions
+      : VersionSchema<SV, Method>
+    : VersionSchema<SV, Method>,
+  T['contractDetails']['auth'] extends infer Auth | undefined
+    ? Auth extends AuthMethodsBase
+      ? Auth
+      : AuthMethodsBase
+    : AuthMethodsBase
+>;
+/**
+ * @deprecated
  * Extracts and constructs a LiveTypeFunction from an SdkHandler object.
  * This optimized version reduces redundant type inference while maintaining type safety.
  *
@@ -391,6 +389,7 @@ export type ExtractLiveTypeFn<
 >;
 
 /**
+ * @deprecated
  * Transforms a controller object into a fetch map structure that provides
  * type-safe access to HTTP endpoints. This optimized version reduces complexity
  * while maintaining full type safety and discriminated union behavior.

@@ -1,5 +1,110 @@
 # @forklaunch/hyper-express
 
+## 0.9.21
+
+### Patch Changes
+
+- package upgrade
+- Updated dependencies
+  - @forklaunch/validator@0.10.14
+  - @forklaunch/common@0.6.14
+  - @forklaunch/core@0.15.3
+
+## 0.9.20
+
+### Patch Changes
+
+- upgrade package dependencies and add global options to nested routers
+- Updated dependencies
+  - @forklaunch/validator@0.10.13
+  - @forklaunch/common@0.6.13
+  - @forklaunch/core@0.15.2
+
+## 0.9.19
+
+### Patch Changes
+
+- Update internal packages and expose RegistryOptions from universal sdk
+- Updated dependencies
+  - @forklaunch/validator@0.10.12
+  - @forklaunch/common@0.6.12
+  - @forklaunch/core@0.15.1
+
+## 0.9.18
+
+### Patch Changes
+
+- Set the stage for improved universal sdk performance, and update internal packages
+- Updated dependencies
+  - @forklaunch/core@0.15.0
+  - @forklaunch/validator@0.10.11
+  - @forklaunch/common@0.6.11
+
+## 0.9.17
+
+### Patch Changes
+
+- Update internal package versions
+- Updated dependencies
+  - @forklaunch/validator@0.10.10
+  - @forklaunch/common@0.6.10
+  - @forklaunch/core@0.14.16
+
+## 0.9.16
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.14.15
+
+## 0.9.15
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.14.14
+
+## 0.9.14
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.14.13
+
+## 0.9.13
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.14.12
+
+## 0.9.12
+
+### Patch Changes
+
+- update internal packages and loosen global auth constraint
+- Updated dependencies
+  - @forklaunch/validator@0.10.9
+  - @forklaunch/common@0.6.9
+  - @forklaunch/core@0.14.11
+
+## 0.9.11
+
+### Patch Changes
+
+- update internal packages
+- Updated dependencies
+  - @forklaunch/validator@0.10.8
+  - @forklaunch/common@0.6.8
+  - @forklaunch/core@0.14.11
+
+## 0.9.10
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.14.10
+
 ## 0.9.9
 
 ### Patch Changes

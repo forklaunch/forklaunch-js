@@ -1,10 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { noop } from '@forklaunch/common';
-import {
-  OpenTelemetryCollector,
-  sdkClient,
-  sdkRouter
-} from '@forklaunch/core/http';
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import {
   forklaunchExpress,
   forklaunchRouter,
@@ -274,45 +270,55 @@ const sampleController = {
   patch: jsonPatchHandler,
   multipart: multipartHandler
 };
-const sampleController2 = {
+const sampleController2: {
+  urlEncodedForm: typeof urlEncodedFormHandler;
+  file: typeof filePostHandler;
+} = {
   urlEncodedForm: urlEncodedFormHandler,
   file: filePostHandler
 };
 
-const sampleSdkRouter = sdkRouter(
-  zodSchemaValidator,
-  sampleController,
-  sdkRoutes
-);
-
-const sampleSdkRouter2 = sdkRouter(
-  zodSchemaValidator,
-  sampleController2,
-  sdkRoutes
-);
-
-export const sampleSdkClient = sdkClient(zodSchemaValidator, {
+export const sampleSdkClient: {
   sample: {
     path: {
       a: {
-        b: sampleSdkRouter
+        b: typeof sampleController;
+      };
+    };
+    c: {
+      d: typeof sampleController2;
+    };
+  };
+} = {
+  sample: {
+    path: {
+      a: {
+        b: sampleController
       }
     },
     c: {
-      d: sampleSdkRouter2
+      d: sampleController2
     }
   }
-});
+};
 
-export const sampleSdkClient2 = sdkClient(zodSchemaValidator, {
+export const sampleSdkClient2: {
   sample: {
     path: {
       a: {
-        b: sdkRoutes
+        b: typeof sampleController2;
+      };
+    };
+  };
+} = {
+  sample: {
+    path: {
+      a: {
+        b: sampleController2
       }
     }
   }
-});
+};
 
 forklaunchApplication.get(
   '/alfalfa',

@@ -1,8 +1,8 @@
-import { sampleSdkClient } from '../servers/express-zod';
+import { flRouter } from '../servers/express-zod';
 
 describe('liveTests', () => {
   it('should call getTest', async () => {
-    const getTest = await sampleSdkClient.sdk.sample.path.a.b.get['2.0.0']({
+    const getTest = await flRouter.sdk.testFile['2.0.0']({
       headers: {
         authorization: 'bb string'
       }
@@ -11,7 +11,7 @@ describe('liveTests', () => {
   });
 
   it('should fetch getTest', async () => {
-    const getTest = await sampleSdkClient.fetch('/testpath/test', {
+    const getTest = await flRouter.fetch('/testpath/test', {
       method: 'GET',
       headers: {
         authorization: 'bb string',
@@ -23,7 +23,7 @@ describe('liveTests', () => {
   });
 
   it('should call postTest', async () => {
-    const postTest = await sampleSdkClient.sdk.sample.path.a.b.post['2.0.0']({
+    const postTest = await flRouter.sdk.testSse['2.0.0']({
       headers: {
         xyz: 'Basic string'
       },
@@ -36,7 +36,7 @@ describe('liveTests', () => {
   });
 
   it('should fetch postTest', async () => {
-    const postTest = await sampleSdkClient.fetch('/testpath/test', {
+    const postTest = await flRouter.fetch('/testpath/test', {
       method: 'POST',
       body: {
         f: '!',
@@ -51,7 +51,7 @@ describe('liveTests', () => {
   });
 
   it('should call jsonPatchTest', async () => {
-    const jsonPatchTest = await sampleSdkClient.sdk.sample.path.a.b.patch({
+    const jsonPatchTest = await flRouter.sdk.testJsonPatch({
       body: {
         f: 'ok',
         h: 'b658f7e0-9b8a-4e1f-b6d8-1c0b7d8b3f59'
@@ -67,7 +67,7 @@ describe('liveTests', () => {
   });
 
   it('should fetch jsonPatchTest', async () => {
-    const jsonPatchTest = await sampleSdkClient.fetch('/testpath/test', {
+    const jsonPatchTest = await flRouter.fetch('/testpath/test', {
       method: 'PATCH',
       body: {
         f: 'ok',
@@ -84,7 +84,7 @@ describe('liveTests', () => {
   });
 
   it('should call multipartTest', async () => {
-    const multipartTest = await sampleSdkClient.sdk.sample.path.a.b.multipart({
+    const multipartTest = await flRouter.sdk.testMultipart({
       headers: {
         'x-test': 'test'
       },
@@ -99,42 +99,38 @@ describe('liveTests', () => {
   });
 
   it('should fetch multipartTest', async () => {
-    const multipartTest = await sampleSdkClient.fetch(
-      '/testpath/test/multipart',
-      {
-        method: 'POST',
-        body: {
-          multipartForm: {
-            fileName: '!',
-            g: new File(['Hello World'], 'test.txt', { type: 'text/plain' })
-          }
-        },
-        headers: {
-          'x-test': 'test'
+    const multipartTest = await flRouter.fetch('/testpath/test/multipart', {
+      method: 'POST',
+      body: {
+        multipartForm: {
+          fileName: '!',
+          g: new File(['Hello World'], 'test.txt', { type: 'text/plain' })
         }
+      },
+      headers: {
+        'x-test': 'test'
       }
-    );
+    });
     expect(multipartTest.code).toBe(200);
   });
 
   it('should call urlEncodedFormTest', async () => {
-    const urlEncodedFormTest =
-      await sampleSdkClient.sdk.sample.c.d.urlEncodedForm({
-        params: {
-          id: '123'
-        },
-        body: {
-          urlEncodedForm: {
-            f: '!',
-            h: 444
-          }
+    const urlEncodedFormTest = await flRouter.sdk.testUrlEncodedForm({
+      params: {
+        id: '123'
+      },
+      body: {
+        urlEncodedForm: {
+          f: '!',
+          h: 444
         }
-      });
+      }
+    });
     expect(urlEncodedFormTest.code).toBe(200);
   });
 
   it('should fetch urlEncodedFormTest', async () => {
-    const urlEncodedFormTest = await sampleSdkClient.fetch(
+    const urlEncodedFormTest = await flRouter.fetch(
       '/testpath/test/url-encoded-form/:id',
       {
         method: 'POST',
@@ -153,14 +149,14 @@ describe('liveTests', () => {
   });
 
   it('should call filePostTest', async () => {
-    const filePostTest = await sampleSdkClient.sdk.sample.c.d.file({
+    const filePostTest = await flRouter.sdk.testFileUploadDownload({
       body: new File(['Hello World'], 'test.txt', { type: 'text/plain' })
     });
     expect(filePostTest.code).toBe(200);
   });
 
   it('should fetch filePostTest', async () => {
-    const filePostTest = await sampleSdkClient.fetch('/testpath/test/file', {
+    const filePostTest = await flRouter.fetch('/testpath/test/file', {
       method: 'POST',
       body: new File(['Hello World'], 'test.txt', { type: 'text/plain' })
     });

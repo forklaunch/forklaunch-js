@@ -258,6 +258,19 @@ choice! {
             exclusive_files: None,
         },
     }
+
+    pub(crate) enum SdkModeType {
+        Generated = Choice {
+            id: "generated",
+            description: Some("generated"),
+            exclusive_files: None,
+        },
+        Live = Choice {
+            id: "live",
+            description: Some("live"),
+            exclusive_files: None,
+        },
+    }
 }
 
 // ERRORS

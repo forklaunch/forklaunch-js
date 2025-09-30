@@ -13,7 +13,7 @@ import {
 } from '@forklaunch/core/http';
 import { CreateUserDto, UpdateUserDto } from '@forklaunch/interfaces-iam/types';
 import { AnySchemaValidator } from '@forklaunch/validator';
-import { EntityManager } from '@mikro-orm/core';
+import { EntityManager, FilterQuery } from '@mikro-orm/core';
 import { UserDtos } from '../domain/types/iamDto.types';
 import { UserEntities } from '../domain/types/iamEntities.types';
 import { UserMappers } from '../domain/types/user.mapper.types';
@@ -117,8 +117,18 @@ export class BaseUserService<
     );
   }
 
-  async getUser(
+  async getOrganizationIdByUserId(
     idDto: IdDto,
+    em?: EntityManager
+  ): Promise<string> {
+    const user = await (em ?? this.em).findOneOrFail('User', idDto, {
+      populate: ['id', 'organization']
+    });
+    return user.organization?.id;
+  }
+
+  async getUser(
+    idDto: IdDto & FilterQuery<MapperEntities['UserMapper']>,
     em?: EntityManager
   ): Promise<MapperDomains['UserMapper']> {
     if (this.evaluatedTelemetryOptions.logging) {
@@ -220,7 +230,7 @@ export class BaseUserService<
   }
 
   async surfaceRoles(
-    idDto: IdDto,
+    idDto: IdDto & FilterQuery<MapperEntities['UserMapper']>,
     em?: EntityManager
   ): Promise<MapperDomains['UserMapper']['roles']> {
     if (this.evaluatedTelemetryOptions.logging) {
@@ -233,7 +243,7 @@ export class BaseUserService<
   }
 
   async surfacePermissions(
-    idDto: IdDto,
+    idDto: IdDto & FilterQuery<MapperEntities['UserMapper']>,
     em?: EntityManager
   ): Promise<MapperDomains['UserMapper']['roles'][0]['permissions']> {
     if (this.evaluatedTelemetryOptions.logging) {

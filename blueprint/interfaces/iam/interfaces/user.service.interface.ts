@@ -12,6 +12,10 @@ export interface UserService<
     userDtos: Params['CreateUserDto'][],
     em?: EntityManager
   ): Promise<Params['UserDto'][]>;
+  getOrganizationIdByUserId(
+    idDto: Params['IdDto'],
+    em?: EntityManager
+  ): Promise<string>;
   getUser(
     idDto: Params['IdDto'],
     em?: EntityManager

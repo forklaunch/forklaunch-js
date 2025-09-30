@@ -6,6 +6,7 @@ import {
   middleware,
   ParamsObject,
   QueryObject,
+  ResolvedSessionObject,
   ResponsesObject,
   SchemaAuthMethods,
   SessionObject,
@@ -119,7 +120,6 @@ export const merge = <
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
   const VersionedApi extends VersionSchema<SV, 'middleware'>,
-  const SessionSchema extends SessionObject<SV>,
   const Auth extends SchemaAuthMethods<
     SV,
     P,
@@ -127,7 +127,6 @@ export const merge = <
     ReqQuery,
     ReqHeaders,
     VersionedApi,
-    SessionSchema,
     Request
   >
 >(
@@ -145,7 +144,6 @@ export const merge = <
     ReqHeaders,
     ResHeaders,
     VersionedApi,
-    SessionSchema,
     Request,
     Auth
   >,
@@ -159,7 +157,7 @@ export const merge = <
     ResHeaders,
     LocalsObj,
     VersionedApi,
-    SessionSchema,
+    ResolvedSessionObject<SV, Auth, SessionObject<SV>>,
     Request,
     Response,
     NextFunction
@@ -177,7 +175,6 @@ export const merge = <
     ResHeaders,
     LocalsObj,
     VersionedApi,
-    SessionSchema,
     Request,
     Response,
     NextFunction,
