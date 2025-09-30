@@ -10,21 +10,23 @@ pub(crate) fn delete_from_index_ts_export<'a>(
 ) -> Result<String> {
     let mut new_body = Vec::new_in(allocator);
     index_program.body.iter().for_each(|stmt| {
-        let expr = match stmt {
-            Statement::ExportNamedDeclaration(expr) => expr,
-            _ => {
-                new_body.push(stmt.clone_in(allocator));
-                return;
+        let should_skip = match stmt {
+            Statement::ExportNamedDeclaration(expr) => {
+                if let Some(source) = &expr.source {
+                    source.value.as_str() == export_identifier
+                } else {
+                    false
+                }
             }
+            Statement::ExportAllDeclaration(expr) => {
+                expr.source.value.as_str() == export_identifier
+            }
+            _ => false,
         };
 
-        if let Some(source) = &expr.source {
-            if source.value.as_str() == export_identifier {
-                return;
-            }
+        if !should_skip {
+            new_body.push(stmt.clone_in(allocator));
         }
-
-        new_body.push(stmt.clone_in(allocator));
     });
 
     index_program.body = new_body;

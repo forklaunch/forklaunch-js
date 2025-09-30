@@ -2,7 +2,7 @@ use anyhow::Result;
 use oxc_allocator::{Allocator, CloneIn, Vec};
 use oxc_ast::ast::{
     BindingPatternKind, Declaration, Expression, ObjectPropertyKind, Program, PropertyKey,
-    Statement,
+    Statement, TSSignature, TSType,
 };
 use oxc_codegen::{Codegen, CodegenOptions};
 
@@ -15,6 +15,48 @@ pub(crate) fn delete_from_sdk_client_input<'a>(
     sdk_program_ast: &mut Program<'a>,
     router_name_camel_case: &str,
 ) -> Result<String> {
+    for stmt in sdk_program_ast.body.iter_mut() {
+        let export = match stmt {
+            Statement::ExportNamedDeclaration(export) => export,
+            _ => continue,
+        };
+
+        let ts_declaration = match &mut export.declaration {
+            Some(Declaration::TSTypeAliasDeclaration(ts_decl)) => ts_decl,
+            _ => continue,
+        };
+
+        // Check if this is the Sdk type definition (ends with "Sdk")
+        let is_sdk_type = ts_declaration.id.name.ends_with("Sdk");
+        if !is_sdk_type {
+            continue;
+        }
+
+        // Get the type literal from the type annotation
+        let type_literal = match &mut ts_declaration.type_annotation {
+            TSType::TSTypeLiteral(literal) => literal,
+            _ => continue,
+        };
+
+        // Remove the router property from the type definition
+        let mut new_members = Vec::new_in(allocator);
+        for member in &type_literal.members {
+            let should_skip = match member {
+                TSSignature::TSPropertySignature(prop) => match &prop.key {
+                    PropertyKey::StaticIdentifier(id) => id.name.as_str() == router_name_camel_case,
+                    PropertyKey::StringLiteral(lit) => lit.value.as_str() == router_name_camel_case,
+                    _ => false,
+                },
+                _ => false,
+            };
+
+            if !should_skip {
+                new_members.push(member.clone_in(allocator));
+            }
+        }
+        type_literal.members = new_members;
+    }
+
     for stmt in sdk_program_ast.body.iter_mut() {
         let var_decl = match stmt {
             Statement::VariableDeclaration(var_decl) => var_decl,
@@ -33,16 +75,26 @@ pub(crate) fn delete_from_sdk_client_input<'a>(
 
             let mut maybe_object = None;
             if let Some(init) = &mut declarator.init {
-                match init {
-                    Expression::ObjectExpression(obj) => {
-                        maybe_object = Some(obj);
-                    }
-                    Expression::TSSatisfiesExpression(ts_sat) => {
-                        if let Expression::ObjectExpression(obj) = &mut ts_sat.expression {
+                let mut expr_opt: Option<&mut Expression> = Some(init);
+                while let Some(expr) = expr_opt {
+                    match expr {
+                        Expression::ObjectExpression(obj) => {
                             maybe_object = Some(obj);
+                            break;
+                        }
+                        Expression::TSSatisfiesExpression(ts_sat) => {
+                            expr_opt = Some(&mut ts_sat.expression);
+                        }
+                        Expression::TSAsExpression(ts_as) => {
+                            expr_opt = Some(&mut ts_as.expression);
+                        }
+                        Expression::ParenthesizedExpression(paren) => {
+                            expr_opt = Some(&mut paren.expression);
+                        }
+                        _ => {
+                            break;
                         }
                     }
-                    _ => {}
                 }
             }
             let object_expr = match maybe_object {

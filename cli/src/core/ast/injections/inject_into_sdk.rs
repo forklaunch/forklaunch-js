@@ -8,10 +8,8 @@ pub(crate) fn inject_into_sdk_client_input<'a>(
     app_program_ast: &mut Program<'a>,
     injection_program_ast: &mut Program<'a>,
 ) -> Result<()> {
-    // First, inject into the Sdk type definition
     inject_into_sdk_type_definition(app_program_ast, injection_program_ast)?;
 
-    // Then, inject into the SdkClient object
     inject_into_sdk_client_object(app_program_ast, injection_program_ast)?;
 
     Ok(())
@@ -70,6 +68,7 @@ fn inject_into_sdk_type_definition<'a>(
                 .filter_map(|m| match m {
                     TSSignature::TSPropertySignature(prop) => match &prop.key {
                         PropertyKey::StaticIdentifier(id) => Some(id.name.to_string()),
+                        PropertyKey::StringLiteral(lit) => Some(lit.value.to_string()),
                         _ => None,
                     },
                     _ => None,
@@ -80,10 +79,18 @@ fn inject_into_sdk_type_definition<'a>(
             let mut moved: Vec<TSSignature> = vec![];
             for member in injection_type_literal.members.drain(..) {
                 if let TSSignature::TSPropertySignature(prop_sig) = &member {
-                    if let PropertyKey::StaticIdentifier(id) = &prop_sig.key {
-                        if existing_keys.contains(&id.name.to_string()) {
-                            continue;
+                    match &prop_sig.key {
+                        PropertyKey::StaticIdentifier(id) => {
+                            if existing_keys.contains(&id.name.to_string()) {
+                                continue;
+                            }
                         }
+                        PropertyKey::StringLiteral(lit) => {
+                            if existing_keys.contains(&lit.value.to_string()) {
+                                continue;
+                            }
+                        }
+                        _ => {}
                     }
                 }
                 moved.push(member);
@@ -113,16 +120,27 @@ fn inject_into_sdk_client_object<'a>(
         for decl in &mut var_declaration.declarations {
             let mut maybe_object = None;
             if let Some(init) = &mut decl.init {
-                match init {
-                    Expression::ObjectExpression(obj) => {
-                        maybe_object = Some(obj);
-                    }
-                    Expression::TSSatisfiesExpression(ts_sat) => {
-                        if let Expression::ObjectExpression(obj) = &mut ts_sat.expression {
+                // Peel common TS wrappers to find the underlying object literal
+                let mut expr_opt: Option<&mut Expression> = Some(init);
+                while let Some(expr) = expr_opt {
+                    match expr {
+                        Expression::ObjectExpression(obj) => {
                             maybe_object = Some(obj);
+                            break;
+                        }
+                        Expression::TSSatisfiesExpression(ts_sat) => {
+                            expr_opt = Some(&mut ts_sat.expression);
+                        }
+                        Expression::TSAsExpression(ts_as) => {
+                            expr_opt = Some(&mut ts_as.expression);
+                        }
+                        Expression::ParenthesizedExpression(paren) => {
+                            expr_opt = Some(&mut paren.expression);
+                        }
+                        _ => {
+                            break;
                         }
                     }
-                    _ => {}
                 }
             }
 
@@ -170,6 +188,9 @@ fn inject_into_sdk_client_object<'a>(
                                         PropertyKey::StaticIdentifier(id) => {
                                             Some(id.name.to_string())
                                         }
+                                        PropertyKey::StringLiteral(lit) => {
+                                            Some(lit.value.to_string())
+                                        }
                                         _ => None,
                                     },
                                     _ => None,
@@ -179,10 +200,18 @@ fn inject_into_sdk_client_object<'a>(
                             let mut moved: Vec<ObjectPropertyKind> = vec![];
                             for prop in injection_object.properties.drain(..) {
                                 if let ObjectPropertyKind::ObjectProperty(prop_obj) = &prop {
-                                    if let PropertyKey::StaticIdentifier(id) = &prop_obj.key {
-                                        if existing_keys.contains(&id.name.to_string()) {
-                                            continue;
+                                    match &prop_obj.key {
+                                        PropertyKey::StaticIdentifier(id) => {
+                                            if existing_keys.contains(&id.name.to_string()) {
+                                                continue;
+                                            }
                                         }
+                                        PropertyKey::StringLiteral(lit) => {
+                                            if existing_keys.contains(&lit.value.to_string()) {
+                                                continue;
+                                            }
+                                        }
+                                        _ => {}
                                     }
                                 }
                                 moved.push(prop);
