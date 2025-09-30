@@ -1,5 +1,4 @@
 import { handlers, schemaValidator } from '@{{app_name}}/core';
-import { {{pascal_case_name}}Service } from '../../domain/interfaces/{{camel_case_name}}.interface';
 import { {{pascal_case_name}}RequestMapper, {{pascal_case_name}}ResponseMapper } from '../../domain/mappers/{{camel_case_name}}.mappers';
 import { ci, tokens } from '../../bootstrapper';
 

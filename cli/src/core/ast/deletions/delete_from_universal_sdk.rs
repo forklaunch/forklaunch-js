@@ -54,6 +54,17 @@ pub(crate) fn delete_from_universal_sdk<'a>(
     delete_import_statement(allocator, app_program_ast, &import_source)?;
     let serialized_import_source = format!("@{}/{}/serialized", kebab_app_name, kebab_case_name);
     delete_import_statement(allocator, app_program_ast, &serialized_import_source)?;
+
+    let blueprint_import_source =
+        format!("@{}/{}{}", kebab_app_name, "blueprint-", kebab_case_name);
+    delete_import_statement(allocator, app_program_ast, &blueprint_import_source)?;
+    let blueprint_serialized_import_source = format!("{}/serialized", blueprint_import_source);
+    delete_import_statement(
+        allocator,
+        app_program_ast,
+        &blueprint_serialized_import_source,
+    )?;
+
     delete_from_universal_sdk_function(allocator, app_program_ast, camel_case_name)?;
 
     Ok(())
