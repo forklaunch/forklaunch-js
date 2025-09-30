@@ -5,3 +5,4 @@ export * from './plan.service';
 export * from './subscription.service';
 
 export * from '@forklaunch/interfaces-billing/interfaces';
+export * from '@forklaunch/interfaces-billing/types';

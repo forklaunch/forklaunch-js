@@ -6,3 +6,4 @@ export * from './subscription.service';
 export * from './webhook.service';
 
 export * from '@forklaunch/interfaces-billing/interfaces';
+export * from '@forklaunch/interfaces-billing/types';

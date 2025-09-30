@@ -1,5 +1,13 @@
 # @forklaunch/implementation-billing-base
 
+## 0.4.4
+
+### Patch Changes
+
+- export internal types interface deps
+- Updated dependencies
+  - @forklaunch/implementation-billing-base@0.7.4
+
 ## 0.4.3
 
 ### Patch Changes
