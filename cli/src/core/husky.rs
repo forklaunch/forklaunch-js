@@ -36,9 +36,9 @@ pub(crate) fn create_or_merge_husky_pre_commit(
             let existing_content = read_to_string(&husky_pre_commit_path)?;
             if !existing_content.contains(content_to_append.as_str()) {
                 if existing_content.ends_with("\n") {
-                    existing_content + &content_to_append
+                    existing_content + content_to_append.as_str()
                 } else {
-                    existing_content + "\n" + &content_to_append
+                    existing_content + "\n" + content_to_append.as_str()
                 }
             } else {
                 existing_content

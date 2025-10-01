@@ -5,6 +5,7 @@ use config::ConfigCommand;
 use delete::DeleteCommand;
 use depcheck::DepcheckCommand;
 use eject::EjectCommand;
+use environment::EnvironmentCommand;
 use init::InitCommand;
 use login::LoginCommand;
 use logout::LogoutCommand;
@@ -20,6 +21,7 @@ mod core;
 mod delete;
 mod depcheck;
 mod eject;
+mod environment;
 mod init;
 mod login;
 mod logout;
@@ -41,6 +43,7 @@ fn main() -> Result<()> {
     let delete = DeleteCommand::new();
     let depcheck = DepcheckCommand::new();
     let eject = EjectCommand::new();
+    let environment = EnvironmentCommand::new();
     let login = LoginCommand::new();
     let logout = LogoutCommand::new();
     let sdk = SdkCommand::new();
@@ -57,6 +60,7 @@ fn main() -> Result<()> {
         .subcommand(eject.command())
         .subcommand(depcheck.command())
         .subcommand(config.command())
+        .subcommand(environment.command())
         .subcommand(login.command())
         .subcommand(logout.command())
         .subcommand(sdk.command())
@@ -75,6 +79,7 @@ fn main() -> Result<()> {
         Some(("delete", sub_matches)) => delete.handler(sub_matches),
         Some(("depcheck", sub_matches)) => depcheck.handler(sub_matches),
         Some(("eject", sub_matches)) => eject.handler(sub_matches),
+        Some(("environment", sub_matches)) => environment.handler(sub_matches),
         Some(("login", sub_matches)) => login.handler(sub_matches),
         Some(("logout", sub_matches)) => logout.handler(sub_matches),
         Some(("sdk", sub_matches)) => sdk.handler(sub_matches),
