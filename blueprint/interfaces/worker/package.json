@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/interfaces-worker",
-  "version": "0.5.3",
+  "version": "0.6.3",
   "description": "Worker interfaces for forklaunch",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -37,15 +37,16 @@
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
     "package:eject": "./eject-package.bash",
+    "prepack": "pnpm run build",
     "publish:package": "./publish-package.bash",
     "test": "vitest --passWithNoTests"
   },
   "devDependencies": {
-    "@typescript/native-preview": "7.0.0-dev.20250924.1",
+    "@typescript/native-preview": "7.0.0-dev.20250930.1",
     "depcheck": "^1.4.7",
     "eslint": "^9.36.0",
     "prettier": "^3.6.2",
     "typedoc": "^0.28.13",
-    "typescript-eslint": "^8.44.1"
+    "typescript-eslint": "^8.45.0"
   }
 }

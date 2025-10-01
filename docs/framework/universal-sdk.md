@@ -6,22 +6,40 @@ description: Reference for using the ForkLaunch Universal SDK.
 
 ## Overview
 
-The Universal SDK provides a type-safe way to interact with ForkLaunch APIs across any TypeScript client. It uses a proxy-based approach that supports both traditional fetch calls and chainable SDK method calls. It handles:
-- URL parameter encoding
-- Query string formatting
-- Request/response type safety
-- Header management
-- JSON parsing
-- Path-based SDK method calls
+The Universal SDK (`@forklaunch/universal-sdk`) provides a type-safe, cross-runtime HTTP client for interacting with ForkLaunch APIs. Built on AJV for validation and supporting multiple content types, it offers:
 
-Chaining requests copies correlation ID and other useful debugging context.
+- **Proxy-based method chaining** for intuitive API calls
+- **Automatic OpenAPI schema validation** using AJV
+- **Cross-runtime compatibility** (Node.js, Bun, browsers)
+- **Type-safe request/response handling** with full TypeScript support
+- **Content type parsing** with extensible parser mapping
+- **URL parameter encoding** and query string formatting
+- **Request correlation** and debugging context preservation
+
+## Package Structure
+
+The Universal SDK is built on:
+- **AJV** for JSON Schema validation and type coercion
+- **OpenAPI 3.0** schema integration for automatic API discovery
+- **Proxy-based architecture** for method chaining and path resolution
+- **Content type mapping** for flexible response parsing
 
 ## Basic Usage
 
-### Fetch-Style Calls
+### SDK Initialization
+
 ```typescript
-// Initialize SDK
-const sdk = createUniversalSdk<LiveAPIType>('https://api.example.com');
+import { universalSdk } from '@forklaunch/universal-sdk';
+
+// Initialize SDK with OpenAPI registry
+const sdk = await universalSdk<LiveAPIType>({
+  host: 'https://api.example.com',
+  registryOptions: {
+    // OpenAPI schema registry configuration
+    openApiJson: openApiSchema,
+    openApiHash: 'schema-hash-for-caching'
+  }
+});
 
 // Make fetch requests
 const response = await sdk.fetch('/users/:id', {
@@ -29,6 +47,24 @@ const response = await sdk.fetch('/users/:id', {
   params: { id: 123 },
   query: { include: 'profile' },
   headers: { 'x-api-key': 'key' }
+});
+```
+
+### Content Type Parsing
+
+```typescript
+// Custom content type parsers
+const sdk = await universalSdk<LiveAPIType>({
+  host: 'https://api.example.com',
+  registryOptions: {
+    openApiJson: openApiSchema,
+    openApiHash: 'schema-hash'
+  },
+  contentTypeParserMap: {
+    'application/json': (data) => JSON.parse(data),
+    'application/xml': (data) => parseXML(data),
+    'text/csv': (data) => parseCSV(data)
+  }
 });
 ```
 

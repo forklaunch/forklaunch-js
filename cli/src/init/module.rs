@@ -16,6 +16,7 @@ use crate::{
         get_service_module_cache, get_service_module_description, get_service_module_name,
     },
     core::{
+        ast::injections::inject_into_universal_sdk::UniversalSdkSpecialCase,
         base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
         command::command,
         database::{
@@ -35,6 +36,7 @@ use crate::{
         rendered_template::{RenderedTemplate, write_rendered_templates},
         symlinks::generate_symlinks,
         template::{PathIO, generate_with_template, get_routers_from_standard_package},
+        universal_sdk::add_project_to_universal_sdk,
     },
     prompt::{ArrayCompleter, prompt_with_validation},
 };
@@ -281,6 +283,20 @@ impl CliCommand for ModuleCommand {
             None,
             None,
         )?);
+
+        let special_case = if module == Module::BetterAuthIam {
+            Some(UniversalSdkSpecialCase::BetterAuth)
+        } else {
+            None
+        };
+        add_project_to_universal_sdk(
+            &mut rendered_templates,
+            &base_path,
+            &service_data.app_name,
+            &service_data.service_name,
+            special_case,
+        )?;
+
         match runtime {
             Runtime::Node => {
                 rendered_templates.push(RenderedTemplate {

@@ -1,14 +1,13 @@
 import { forklaunchRouter, schemaValidator } from '@forklaunch/blueprint-core';
-import { sdkRouter } from '@forklaunch/core/http';
 import { ci, tokens } from '../../bootstrapper';
-import { OrganizationController } from '../controllers/organization.controller';
+import {
+  createOrganization,
+  deleteOrganization,
+  getOrganization,
+  updateOrganization
+} from '../controllers/organization.controller';
 
 const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
-const organizationServiceFactory = ci.scopedResolver(
-  tokens.OrganizationService
-);
-
-export type OrganizationServiceFactory = typeof organizationServiceFactory;
 
 export const organizationRouter = forklaunchRouter(
   '/organization',
@@ -16,18 +15,7 @@ export const organizationRouter = forklaunchRouter(
   openTelemetryCollector
 );
 
-const controller = OrganizationController(
-  organizationServiceFactory,
-  openTelemetryCollector
-);
-
-organizationRouter.post('/', controller.createOrganization);
-organizationRouter.get('/:id', controller.getOrganization);
-organizationRouter.put('/', controller.updateOrganization);
-organizationRouter.delete('/:id', controller.deleteOrganization);
-
-export const organizationSdkRouter = sdkRouter(
-  schemaValidator,
-  controller,
-  organizationRouter
-);
+organizationRouter.post('/', createOrganization);
+organizationRouter.get('/:id', getOrganization);
+organizationRouter.put('/', updateOrganization);
+organizationRouter.delete('/:id', deleteOrganization);

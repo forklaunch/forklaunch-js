@@ -105,6 +105,19 @@ export class StripeWebhookService<
     if (this.openTelemetryCollector) {
       this.openTelemetryCollector.info('Handling webhook event', event);
     }
+
+    if (
+      await this.em.findOne('StripeWebhookEvent', {
+        idempotencyKey: event.request?.idempotency_key
+      })
+    ) {
+      this.openTelemetryCollector.info(
+        'Webhook event already processed',
+        event
+      );
+      return;
+    }
+
     const eventType = event.type;
 
     switch (eventType) {
@@ -296,5 +309,13 @@ export class StripeWebhookService<
         );
         break;
     }
+
+    await this.em.insert('StripeWebhookEvent', {
+      stripeId: event.id,
+      idempotencyKey: event.request?.idempotency_key,
+      eventType: event.type,
+      eventData: event.data
+    });
+    await this.em.flush();
   }
 }

@@ -1,5 +1,77 @@
 # @forklaunch/validator
 
+## 0.10.14
+
+### Patch Changes
+
+- package upgrade
+- Updated dependencies
+  - @forklaunch/common@0.6.14
+
+## 0.10.13
+
+### Patch Changes
+
+- upgrade package dependencies and add global options to nested routers
+- Updated dependencies
+  - @forklaunch/common@0.6.13
+
+## 0.10.12
+
+### Patch Changes
+
+- Update internal packages and expose RegistryOptions from universal sdk
+- Updated dependencies
+  - @forklaunch/common@0.6.12
+
+## 0.10.11
+
+### Patch Changes
+
+- Set the stage for improved universal sdk performance, and update internal packages
+- Updated dependencies
+  - @forklaunch/common@0.6.11
+
+## 0.10.10
+
+### Patch Changes
+
+- Update internal package versions
+- Updated dependencies
+  - @forklaunch/common@0.6.10
+
+## 0.10.9
+
+### Patch Changes
+
+- update internal packages and loosen global auth constraint
+- Updated dependencies
+  - @forklaunch/common@0.6.9
+
+## 0.10.8
+
+### Patch Changes
+
+- update internal packages
+- Updated dependencies
+  - @forklaunch/common@0.6.8
+
+## 0.10.7
+
+### Patch Changes
+
+- slight hmac token creation signature change
+- Updated dependencies
+  - @forklaunch/common@0.6.7
+
+## 0.10.6
+
+### Patch Changes
+
+- Update packages and expose hmac key creation function
+- Updated dependencies
+  - @forklaunch/common@0.6.6
+
 ## 0.10.5
 
 ### Patch Changes

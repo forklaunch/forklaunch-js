@@ -1,7 +1,7 @@
 import { AnySchemaValidator } from '@forklaunch/validator';
-import { createHmac } from 'crypto';
 import { JWK, JWTPayload, jwtVerify } from 'jose';
 import { ParsedQs } from 'qs';
+import { createHmacToken } from './createHmacToken';
 import { isBasicAuthMethod } from './guards/isBasicAuthMethod';
 import { isHmacMethod } from './guards/isHmacMethod';
 import { isJwtAuthMethod } from './guards/isJwtAuthMethod';
@@ -12,6 +12,53 @@ import {
   DecodeResource,
   ParamsDictionary
 } from './types/contractDetails.types';
+
+const DEFAULT_TTL = process.env.JWKS_TTL
+  ? parseInt(process.env.JWKS_TTL)
+  : 60 * 1000 * 5;
+
+const cachedJwks = {
+  value: null as JWK[] | null,
+  lastUpdated: null as Date | null,
+  ttl: DEFAULT_TTL
+};
+
+/**
+ * Retrieves and caches the JSON Web Key Set (JWKS) from a given public key URL.
+ *
+ * This function fetches the JWKS from the specified URL and caches the result in memory
+ * to avoid unnecessary network requests. The cache is considered valid for a duration
+ * specified by the `cache-control` header in the JWKS HTTP response (in seconds), or
+ * falls back to a default TTL if the header is not present. If the cache is still valid,
+ * the cached keys are returned immediately.
+ *
+ * @param {string} jwksPublicKeyUrl - The URL to fetch the JWKS from.
+ * @returns {Promise<JWK[]>} A promise that resolves to an array of JWK objects.
+ *
+ * @example
+ * const jwks = await getCachedJwks('https://example.com/.well-known/jwks.json');
+ * // Use jwks for JWT verification, etc.
+ */
+export async function getCachedJwks(jwksPublicKeyUrl: string): Promise<JWK[]> {
+  if (
+    cachedJwks.value &&
+    cachedJwks.lastUpdated &&
+    Date.now() - cachedJwks.lastUpdated.getTime() < cachedJwks.ttl
+  ) {
+    return cachedJwks.value;
+  } else {
+    const jwksResponse = await fetch(jwksPublicKeyUrl);
+    const jwks = (await jwksResponse.json()).keys;
+    cachedJwks.value = jwks;
+    cachedJwks.lastUpdated = new Date();
+    cachedJwks.ttl =
+      parseInt(
+        jwksResponse.headers.get('cache-control')?.split('=')[1] ??
+          `${DEFAULT_TTL / 1000}`
+      ) * 1000;
+    return jwks;
+  }
+}
 
 /**
  * Discriminates between different authentication methods and returns a typed result.
@@ -52,7 +99,6 @@ export async function discriminateAuthMethod<
   ReqQuery extends ParsedQs,
   ReqHeaders extends Record<string, string>,
   VersionedReqs extends VersionedRequests,
-  SessionSchema extends Record<string, unknown>,
   BaseRequest
 >(
   auth: AuthMethods<
@@ -62,7 +108,6 @@ export async function discriminateAuthMethod<
     ReqQuery,
     ReqHeaders,
     VersionedReqs,
-    SessionSchema,
     BaseRequest
   >
 ): Promise<
@@ -89,15 +134,23 @@ export async function discriminateAuthMethod<
       type: 'hmac';
       auth: {
         secretKeys: Record<string, string>;
-        verificationFunction: (
-          method: string,
-          path: string,
-          body: string,
-          timestamp: string,
-          nonce: string,
-          signature: string,
-          secretKey: string
-        ) => Promise<boolean | undefined>;
+        verificationFunction: ({
+          body,
+          path,
+          method,
+          timestamp,
+          nonce,
+          signature,
+          secretKey
+        }: {
+          method: string;
+          path: string;
+          body?: unknown;
+          timestamp: Date;
+          nonce: string;
+          signature: string;
+          secretKey: string;
+        }) => Promise<boolean | undefined>;
       };
     }
 > {
@@ -126,8 +179,7 @@ export async function discriminateAuthMethod<
     } else {
       let jwks: JWK[];
       if ('jwksPublicKeyUrl' in jwt) {
-        const jwksResponse = await fetch(jwt.jwksPublicKeyUrl);
-        jwks = (await jwksResponse.json()).keys;
+        jwks = await getCachedJwks(jwt.jwksPublicKeyUrl);
       } else if ('jwksPublicKey' in jwt) {
         jwks = [jwt.jwksPublicKey];
       }
@@ -137,6 +189,9 @@ export async function discriminateAuthMethod<
             const { payload } = await jwtVerify(token, key);
             return payload;
           } catch {
+            cachedJwks.value = null;
+            cachedJwks.lastUpdated = null;
+            cachedJwks.ttl = DEFAULT_TTL;
             continue;
           }
         }
@@ -154,20 +209,33 @@ export async function discriminateAuthMethod<
       type: 'hmac' as const,
       auth: {
         secretKeys: auth.hmac.secretKeys,
-        verificationFunction: async (
-          method: string,
-          path: string,
-          body: string,
-          timestamp: string,
-          nonce: string,
-          signature: string,
-          secretKey: string
-        ) => {
-          const hmac = createHmac('sha256', secretKey);
-
-          hmac.update(`${method}\n${path}\n${body}\n${timestamp}\n${nonce}`);
-          const digest = hmac.digest('base64');
-          return digest === signature;
+        verificationFunction: async ({
+          method,
+          path,
+          body,
+          timestamp,
+          nonce,
+          signature,
+          secretKey
+        }: {
+          method: string;
+          path: string;
+          body?: unknown;
+          timestamp: Date;
+          nonce: string;
+          signature: string;
+          secretKey: string;
+        }) => {
+          return (
+            createHmacToken({
+              method,
+              path,
+              body,
+              timestamp,
+              nonce,
+              secretKey
+            }) === signature
+          );
         }
       }
     };

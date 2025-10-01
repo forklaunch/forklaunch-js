@@ -13,7 +13,7 @@ import {
 } from '@forklaunch/core/http';
 import { CreateUserDto, UpdateUserDto } from '@forklaunch/interfaces-iam/types';
 import { AnySchemaValidator } from '@forklaunch/validator';
-import { EntityManager } from '@mikro-orm/core';
+import { EntityManager, FilterQuery } from '@mikro-orm/core';
 import { UserDtos } from '../domain/types/iamDto.types';
 import { UserEntities } from '../domain/types/iamEntities.types';
 import { UserMappers } from '../domain/types/user.mapper.types';
@@ -31,7 +31,6 @@ export class BaseUserService<
     tracing?: boolean;
   };
   public em: EntityManager;
-  protected passwordEncryptionPublicKeyPath: string;
   protected roleServiceFactory: () => RoleService;
   protected organizationServiceFactory: () => OrganizationService<OrganizationStatus>;
   protected openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>;
@@ -40,7 +39,6 @@ export class BaseUserService<
 
   constructor(
     em: EntityManager,
-    passwordEncryptionPublicKeyPath: string,
     roleServiceFactory: () => RoleService,
     organizationServiceFactory: () => OrganizationService<OrganizationStatus>,
     openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
@@ -51,7 +49,6 @@ export class BaseUserService<
     }
   ) {
     this.em = em;
-    this.passwordEncryptionPublicKeyPath = passwordEncryptionPublicKeyPath;
     this.roleServiceFactory = roleServiceFactory;
     this.organizationServiceFactory = organizationServiceFactory;
     this.openTelemetryCollector = openTelemetryCollector;
@@ -120,8 +117,18 @@ export class BaseUserService<
     );
   }
 
-  async getUser(
+  async getOrganizationIdByUserId(
     idDto: IdDto,
+    em?: EntityManager
+  ): Promise<string> {
+    const user = await (em ?? this.em).findOneOrFail('User', idDto, {
+      populate: ['id', 'organization']
+    });
+    return user.organization?.id;
+  }
+
+  async getUser(
+    idDto: IdDto & FilterQuery<MapperEntities['UserMapper']>,
     em?: EntityManager
   ): Promise<MapperDomains['UserMapper']> {
     if (this.evaluatedTelemetryOptions.logging) {
@@ -222,40 +229,29 @@ export class BaseUserService<
     await (em ?? this.em).nativeDelete('User', idsDto);
   }
 
-  async verifyHasRole(idDto: IdDto, roleId: string): Promise<void> {
+  async surfaceRoles(
+    idDto: IdDto & FilterQuery<MapperEntities['UserMapper']>,
+    em?: EntityManager
+  ): Promise<MapperDomains['UserMapper']['roles']> {
     if (this.evaluatedTelemetryOptions.logging) {
-      this.openTelemetryCollector.info('Verifying user has role', {
-        idDto,
-        roleId
+      this.openTelemetryCollector.info('Surfacing user roles', {
+        idDto
       });
     }
-    const user = await this.getUser(idDto);
-    if (
-      user.roles.filter((role) => {
-        return roleId == role.id;
-      }).length === 0
-    ) {
-      throw new Error(`User ${idDto.id} does not have role ${roleId}`);
-    }
+    const user = await this.getUser(idDto, em);
+    return user.roles;
   }
 
-  async verifyHasPermission(idDto: IdDto, permissionId: string): Promise<void> {
+  async surfacePermissions(
+    idDto: IdDto & FilterQuery<MapperEntities['UserMapper']>,
+    em?: EntityManager
+  ): Promise<MapperDomains['UserMapper']['roles'][0]['permissions']> {
     if (this.evaluatedTelemetryOptions.logging) {
-      this.openTelemetryCollector.info('Verifying user has permission', {
-        idDto,
-        permissionId
+      this.openTelemetryCollector.info('Surfacing user permissions', {
+        idDto
       });
     }
-    const user = await this.getUser(idDto);
-    if (
-      user.roles
-        .map((role) => role.permissions.map((permission) => permission.id))
-        .flat()
-        .filter((id) => id == permissionId).length === 0
-    ) {
-      throw new Error(
-        `User ${idDto.id} does not have permission ${permissionId}`
-      );
-    }
+    const user = await this.getUser(idDto, em);
+    return user.roles.map((role) => role.permissions).flat();
   }
 }

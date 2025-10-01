@@ -12,18 +12,22 @@ Delete ForkLaunch project components with confirmation prompts.
 
 ## Usage
 
+```bash
+forklaunch delete <COMMAND>
+```
+
 ### Service
 
 ```bash
-forklaunch delete service <service-name> [OPTIONS]
+forklaunch delete service [OPTIONS] [name]
 ```
 
 | Option              | Description                   | Values                                |
 | :------------------ | :---------------------------- | :------------------------------------ |
-| `<service-name>`    | Name of the service to delete | _string_                              |
-| `-p, --path <path>` | Application path              | _string_ (default: current directory) |
-| `-c, --continue`    | Skip confirmation prompt      | None                                  |
-| `-h, --help`        | Show help                     | None                                  |
+| `[name]`            | The name of the service       | _string_                              |
+| `-p, --path`        | The application path to initialize the library in | _string_ |
+| `-c, --continue`    | Continue the eject operation  | Flag                                  |
+| `-h, --help`        | Show help                     | Flag                                  |
 
 **Examples:**
 
@@ -43,15 +47,15 @@ forklaunch delete service billing --path ~/my-app
 Delete a worker and its queue configuration.
 
 ```bash
-forklaunch delete worker <worker-name> [OPTIONS]
+forklaunch delete worker [OPTIONS] [name]
 ```
 
 | Option              | Description                  | Values                                |
 | :------------------ | :--------------------------- | :------------------------------------ |
-| `<worker-name>`     | Name of the worker to delete | _string_                              |
-| `-p, --path <path>` | Application path             | _string_ (default: current directory) |
-| `-c, --continue`    | Skip confirmation prompt     | None                                  |
-| `-h, --help`        | Show help                    | None                                  |
+| `[name]`            | The name of the worker       | _string_                              |
+| `-p, --path`        | The application path to initialize the library in | _string_ |
+| `-c, --continue`    | Continue the eject operation | Flag                                  |
+| `-h, --help`        | Show help                    | Flag                                  |
 
 **Examples:**
 
@@ -69,15 +73,15 @@ forklaunch delete worker sms-processor --continue
 Delete a router and its route definitions.
 
 ```bash
-forklaunch delete router <router-name> [OPTIONS]
+forklaunch delete router [OPTIONS] [name]
 ```
 
 | Option              | Description                  | Values                                |
 | :------------------ | :--------------------------- | :------------------------------------ |
-| `<router-name>`     | Name of the router to delete | _string_                              |
-| `-p, --path <path>` | Application path             | _string_ (default: current directory) |
-| `-c, --continue`    | Skip confirmation prompt     | None                                  |
-| `-h, --help`        | Show help                    | None                                  |
+| `[name]`            | The name of the router       | _string_                              |
+| `-p, --path`        | The project path to delete the router from | _string_ |
+| `-c, --continue`    | Continue the eject operation | Flag                                  |
+| `-h, --help`        | Show help                    | Flag                                  |
 
 **Examples:**
 
@@ -94,15 +98,15 @@ forklaunch delete router admin --path ./microservice
 Delete a library and its exports.
 
 ```bash
-forklaunch delete library <library-name> [OPTIONS]
+forklaunch delete library [OPTIONS] [name]
 ```
 
 | Option              | Description                   | Values                                |
 | :------------------ | :---------------------------- | :------------------------------------ |
-| `<library-name>`    | Name of the library to delete | _string_                              |
-| `-p, --path <path>` | Application path              | _string_ (default: current directory) |
-| `-c, --continue`    | Skip confirmation prompt      | None                                  |
-| `-h, --help`        | Show help                     | None                                  |
+| `[name]`            | The name of the library       | _string_                              |
+| `-p, --path`        | The application path to initialize the library in | _string_ |
+| `-c, --continue`    | Continue the eject operation  | Flag                                  |
+| `-h, --help`        | Show help                     | Flag                                  |
 
 **Examples:**
 

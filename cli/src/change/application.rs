@@ -33,7 +33,7 @@ use crate::{
         },
         base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
         command::command,
-        docker::update_dockerfile_contents,
+        docker::{DockerCompose, update_dockerfile_contents},
         format::format_code,
         license::generate_license,
         manifest::{
@@ -895,13 +895,10 @@ fn change_runtime(
         &mut application_package_json_scripts.additional_scripts,
         application_package_json_scripts.build.clone(),
         Some(existing_runtime.to_string()),
-        Some(application_build_script(
-            &existing_runtime,
-            &manifest_data.kebab_case_app_name,
-        )),
+        Some(application_build_script(&existing_runtime)),
         "build",
         &runtime.to_string(),
-        &application_build_script(runtime, &manifest_data.kebab_case_app_name),
+        &application_build_script(runtime),
         None,
     ));
     application_package_json_scripts.clean = Some(attempt_replacement(
@@ -1251,6 +1248,67 @@ fn change_runtime(
             context: None,
         },
     );
+
+    if let Some(docker_compose_path) = &manifest_data.docker_compose_path {
+        let docker_compose_file_path = base_path.join(&docker_compose_path);
+        if exists(&docker_compose_file_path)? {
+            let existing_docker_compose_content = read_to_string(&docker_compose_file_path)?;
+            let mut docker_compose: DockerCompose =
+                serde_yml::from_str(&existing_docker_compose_content)?;
+
+            let mut updated = false;
+            for (_, service) in docker_compose.services.iter_mut() {
+                if let Some(entrypoint) = &mut service.entrypoint {
+                    match existing_runtime {
+                        Runtime::Node => {
+                            if entrypoint.iter().any(|arg| arg.contains("pnpm")) {
+                                for arg in entrypoint.iter_mut() {
+                                    if arg.contains("pnpm") {
+                                        *arg = arg.replace(
+                                            "pnpm",
+                                            match runtime {
+                                                Runtime::Bun => "bun",
+                                                Runtime::Node => "pnpm", // No change needed
+                                            },
+                                        );
+                                        updated = true;
+                                    }
+                                }
+                            }
+                        }
+                        Runtime::Bun => {
+                            if entrypoint.iter().any(|arg| arg.contains("bun")) {
+                                for arg in entrypoint.iter_mut() {
+                                    if arg.contains("bun") {
+                                        *arg = arg.replace(
+                                            "bun",
+                                            match runtime {
+                                                Runtime::Bun => "bun", // No change needed
+                                                Runtime::Node => "pnpm",
+                                            },
+                                        );
+                                        updated = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if updated {
+                let updated_docker_compose_content = serde_yml::to_string(&docker_compose)?;
+                rendered_templates_cache.insert(
+                    docker_compose_file_path.to_string_lossy(),
+                    RenderedTemplate {
+                        path: docker_compose_file_path.clone(),
+                        content: updated_docker_compose_content,
+                        context: None,
+                    },
+                );
+            }
+        }
+    }
 
     let readme = rendered_templates_cache.get(&base_path.join("README.md"))?;
     if let Some(readme) = readme {

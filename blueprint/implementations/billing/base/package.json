@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/implementation-billing-base",
-  "version": "0.6.4",
+  "version": "0.7.4",
   "description": "Billing basic implementation for forklaunch",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -43,22 +43,23 @@
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
     "package:eject": "./eject-package.bash",
+    "prepack": "pnpm run build",
     "publish:package": "./publish-package.bash",
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/common": "^0.6.13",
-    "@forklaunch/core": "^0.15.2",
+    "@forklaunch/common": "^0.6.14",
+    "@forklaunch/core": "^0.15.3",
     "@forklaunch/interfaces-billing": "workspace:*",
-    "@forklaunch/internal": "^0.3.13",
-    "@forklaunch/validator": "^0.10.13",
-    "@mikro-orm/core": "^6.5.5",
+    "@forklaunch/internal": "^0.3.14",
+    "@forklaunch/validator": "^0.10.14",
+    "@mikro-orm/core": "^6.5.6",
     "@sinclair/typebox": "^0.34.41",
     "ajv": "^8.17.1",
     "zod": "^4.1.11"
   },
   "devDependencies": {
-    "@typescript/native-preview": "7.0.0-dev.20250924.1",
+    "@typescript/native-preview": "7.0.0-dev.20250930.1",
     "depcheck": "^1.4.7",
     "prettier": "^3.6.2",
     "typedoc": "^0.28.13"

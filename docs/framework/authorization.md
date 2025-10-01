@@ -6,60 +6,132 @@ description: Reference for Authorization in ForkLaunch.
 
 ## Overview
 
-ForkLaunch provides built-in authorization through the ContractDetails auth property, combining authentication methods with access control strategies.
+ForkLaunch provides comprehensive authorization through the `@forklaunch/core` package's authentication system, built into the `ContractDetails` auth property. The system supports multiple authentication methods with flexible access control strategies.
 
-## Authorization Methods
+## Authentication Methods
 
-Choose an authentication base and combine it with either permission-based or role-based access control.
+The authorization system supports three main authentication methods:
 
-### Authentication Bases
+### JWT Authentication
 
-#### JWT Authentication
 ```typescript
-const baseAuth = {
-  method: 'jwt'  // Validates Bearer tokens using JWT_SECRET
+const jwtAuth = {
+  jwt: {
+    // Option 1: Direct JWK key
+    jwksPublicKey: jwkKey,
+    
+    // Option 2: JWKS URL for key discovery
+    jwksPublicKeyUrl: 'https://auth.example.com/.well-known/jwks.json',
+    
+    // Option 3: Signature key for simple JWT validation
+    signatureKey: 'your-secret-key'
+  }
 }
 ```
 
-#### Basic Authentication
+### Basic Authentication
+
 ```typescript
-const baseAuth = {
-  method: 'basic',
-  login: (username: string, password: string) => boolean
+const basicAuth = {
+  basic: {
+    login: (username: string, password: string) => boolean
+  }
 }
 ```
 
-#### Custom Authentication
+### HMAC Authentication
+
 ```typescript
-const baseAuth = {
-  method: 'other',
-  tokenPrefix: 'Custom',
-  headerName: 'X-Custom-Auth', // optional, defaults to 'Authorization'
-  decodeResource: (token: string) => string
+const hmacAuth = {
+  hmac: {
+    secretKeys: {
+      'key-id-1': 'secret-key-1',
+      'key-id-2': 'secret-key-2'
+    }
+  }
 }
 ```
 
-### Access Control Strategies
+### Token Options
 
-#### Permission-Based Access Control
+All authentication methods support optional token configuration:
+
+```typescript
+const authWithTokenOptions = {
+  jwt: { signatureKey: 'secret' },
+  tokenPrefix: 'Bearer',        // Default: 'Bearer'
+  headerName: 'Authorization'   // Default: 'Authorization'
+}
+```
+
+## Access Control Strategies
+
+The authorization system supports permission-based and role-based access control, with optional scope-based authorization:
+
+### Permission-Based Access Control
+
 ```typescript
 const permissionControl = {
+  // Allow specific permissions
   allowedPermissions: new Set(['read:users', 'write:users']),
+  
+  // OR forbid specific permissions
   forbiddenPermissions: new Set(['delete:users']),
-  surfacePermissions: async (resourceId, req) => {
+  
+  // Dynamic permission resolution
+  surfacePermissions: async (resourceId: string, req: Request) => {
+    // Return user's permissions for this resource
     return new Set(['read:users']);
   }
 }
 ```
 
-#### Role-Based Access Control
+### Role-Based Access Control
+
 ```typescript
 const roleControl = {
+  // Allow specific roles
   allowedRoles: new Set(['admin', 'editor']),
+  
+  // OR forbid specific roles
   forbiddenRoles: new Set(['blocked']),
-  surfaceRoles: async (resourceId, req) => {
+  
+  // Dynamic role resolution
+  surfaceRoles: async (resourceId: string, req: Request) => {
+    // Return user's roles for this resource
     return new Set(['editor']);
   }
+}
+```
+
+### Scope-Based Access Control
+
+```typescript
+const scopeControl = {
+  // Required scope for this endpoint
+  requiredScope: 'users:read',
+  
+  // Scope hierarchy (more specific scopes include less specific ones)
+  scopeHierarchy: ['admin', 'users:write', 'users:read'],
+  
+  // Dynamic scope resolution
+  surfaceScopes: async (resourceId: string, req: Request) => {
+    // Return user's scopes for this resource
+    return ['users:read'];
+  }
+}
+```
+
+### Session Schema
+
+Define the structure of user session data:
+
+```typescript
+const sessionSchema = {
+  userId: z.string(),
+  email: z.string().email(),
+  roles: z.array(z.string()),
+  permissions: z.array(z.string())
 }
 ```
 
@@ -69,10 +141,16 @@ const roleControl = {
 ```typescript
 const contractDetails = {
   auth: {
-    method: 'jwt',
+    jwt: { signatureKey: process.env.JWT_SECRET },
     allowedPermissions: new Set(['read:users']),
-    surfacePermissions: async (resourceId, req) => {
+    surfacePermissions: async (resourceId: string, req: Request) => {
+      // Extract permissions from JWT payload or database
       return new Set(['read:users']);
+    },
+    sessionSchema: {
+      userId: z.string(),
+      email: z.string().email(),
+      permissions: z.array(z.string())
     }
   }
 }
@@ -82,9 +160,10 @@ const contractDetails = {
 ```typescript
 const contractDetails = {
   auth: {
-    method: 'jwt',
+    jwt: { jwksPublicKeyUrl: 'https://auth.example.com/.well-known/jwks.json' },
     allowedRoles: new Set(['admin']),
-    surfaceRoles: async (resourceId, req) => {
+    surfaceRoles: async (resourceId: string, req: Request) => {
+      // Extract roles from JWT payload or database
       return new Set(['admin']);
     }
   }
@@ -95,55 +174,75 @@ const contractDetails = {
 ```typescript
 const contractDetails = {
   auth: {
-    method: 'basic',
-    login: (username, password) => true,
+    basic: {
+      login: async (username: string, password: string) => {
+        // Validate credentials against database
+        const user = await getUserByUsername(username);
+        return user && await verifyPassword(password, user.hashedPassword);
+      }
+    },
     allowedPermissions: new Set(['read:users']),
-    surfacePermissions: async (resourceId, req) => {
+    surfacePermissions: async (resourceId: string, req: Request) => {
+      // Get user permissions from database
+      const user = await getUserByUsername(req.basicAuth?.username);
+      return new Set(user?.permissions || []);
+    }
+  }
+}
+```
+
+### HMAC Authentication
+```typescript
+const contractDetails = {
+  auth: {
+    hmac: {
+      secretKeys: {
+        'api-key-1': 'secret-key-1',
+        'api-key-2': 'secret-key-2'
+      }
+    },
+    allowedPermissions: new Set(['read:users']),
+    surfacePermissions: async (resourceId: string, req: Request) => {
+      // Get permissions based on API key
       return new Set(['read:users']);
     }
   }
 }
 ```
 
-### Basic Auth + Roles
+### Scope-Based Authorization
 ```typescript
 const contractDetails = {
   auth: {
-    method: 'basic',
-    login: (username, password) => true,
-    allowedRoles: new Set(['admin']),
-    surfaceRoles: async (resourceId, req) => {
-      return new Set(['admin']);
+    jwt: { signatureKey: process.env.JWT_SECRET },
+    requiredScope: 'users:read',
+    scopeHierarchy: ['admin', 'users:write', 'users:read'],
+    surfaceScopes: async (resourceId: string, req: Request) => {
+      // Extract scopes from JWT or determine based on user context
+      return ['users:read'];
     }
   }
 }
 ```
 
-### Custom Auth + Permissions
+### Combined Authorization
 ```typescript
 const contractDetails = {
   auth: {
-    method: 'other',
-    tokenPrefix: 'Custom',
-    decodeResource: (token) => token,
-    allowedPermissions: new Set(['read:users']),
-    surfacePermissions: async (resourceId, req) => {
+    jwt: { signatureKey: process.env.JWT_SECRET },
+    allowedRoles: new Set(['admin', 'editor']),
+    allowedPermissions: new Set(['read:users', 'write:users']),
+    surfaceRoles: async (resourceId: string, req: Request) => {
+      return new Set(['editor']);
+    },
+    surfacePermissions: async (resourceId: string, req: Request) => {
       return new Set(['read:users']);
-    }
-  }
-}
-```
-
-### Custom Auth + Roles
-```typescript
-const contractDetails = {
-  auth: {
-    method: 'other',
-    tokenPrefix: 'Custom',
-    decodeResource: (token) => token,
-    allowedRoles: new Set(['admin']),
-    surfaceRoles: async (resourceId, req) => {
-      return new Set(['admin']);
+    },
+    sessionSchema: {
+      userId: z.string(),
+      email: z.string().email(),
+      roles: z.array(z.string()),
+      permissions: z.array(z.string())
     }
   }
 }

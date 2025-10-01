@@ -31,76 +31,126 @@ This adds a new service to your application, with a `RCSIDES` (`route`, `control
 
 By default, you will not need to run any scripts to get going, but if you have added a new database, you may need to run `build` and `install` scripts from the top level of the application.
 
-### Choices
+### Command Options
 
-| Component  | Valid Options           | Description                           | How to Change                                                |
-| :--------- | :---------------------- | :------------------------------------ | :----------------------------------------------------------- |
-| _Database_ | `postgresql`, `mongodb` | The database to use for your service. | Edit entity import paths and change the database import path |
+| Option | Short | Description | Valid Values |
+| :----- | :---- | :---------- | :----------- |
+| `--database` | `-d` | The database to use | `postgresql`, `mysql`, `mariadb`, `mssql`, `mongodb`, `libsql`, `sqlite`, `better-sqlite` |
+| `--infrastructure` | `-i` | Add optional infrastructure (can specify multiple) | `redis`, `s3` |
+| `--path` | `-p` | The path to initialize the service in | Any valid directory path |
+| `--description` | `-D` | The description of the service | Any string |
+| `--dryrun` | `-n` | Dry run the command | Flag (no value) |
+
+### Service Aliases
+
+The `service` command has several aliases for convenience:
+- `svc`
+- `project` 
+- `proj`
 
 ### Project Structure
 
-A minimal service will have the following structure:
+A service follows the standard ForkLaunch RCSIDES structure:
 
 ```bash
-.
-├── registrations.ts # the dependency injector/configuration loader
-├── constants
-│   └── seed.data.ts # seed data for new entity types
-├── controllers
-│   └── newService.controller.ts # the controller for the service, defining the API handlers
-├── eslint.config.mjs -> ../eslint.config.mjs # symlinked from parent for consistency
-├── interfaces
-│   └── newService.interface.ts # the interface for the service, defining the business logic contract
-├── mikro-orm.config.ts # the configuration for the database
-├── models
-│   ├── mappers
-│   │   └── newService.mappers.ts # the data transfer object mapper for mapping between DTOs and entities
-│   ├── persistence
-│   │   ├── index.ts
-│   │   └── newServiceRecord.entity.ts # the entity for the service, defining the database schema
-│   ├── seeder.ts # boilerplate for running a seeder
-│   └── seeders
-│       ├── index.ts
-│       └── newServiceRecord.seeder.ts # the seeder for the specific entity (boilerplate)
-├── package.json
-├── routes
-│   └── newService.routes.ts # the routes definition for the service
-├── server.ts # the entry point for the service
-├── services
-│   └── newService.service.ts # the business logic for the service
-├── tsconfig.json
-└── vitest.config.ts -> ../vitest.config.ts # symlinked from parent for consistency
+service-name/
+├── api/
+│   ├── controllers/     # HTTP request handlers
+│   └── routes/         # Route definitions
+├── domain/
+│   ├── enum/           # Enumerations and constants
+│   ├── mappers/        # Data transformation logic
+│   ├── schemas/        # Validation schemas
+│   └── types/          # TypeScript type definitions
+├── persistence/
+│   ├── entities/       # Database entity definitions
+│   ├── seeders/        # Database seed data
+│   └── seed.data.ts    # Seed configuration
+├── services/
+│   └── serviceLogic.ts # Business logic implementation
+├── bootstrapper.ts     # Service initialization
+├── index.ts           # Service entry point
+├── registrations.ts   # Dependency injection setup
+├── server.ts          # HTTP server configuration
+├── package.json       # Dependencies and scripts
+├── mikro-orm.config.ts # Database ORM configuration
+├── tsconfig.json      # TypeScript configuration
+├── eslint.config.mjs  # ESLint configuration
+└── .gitignore         # Git ignore rules
 ```
+
+### Service Features
+
+Each service includes:
+- **Complete RCSIDES Stack**: Routes, Controllers, Services, Interfaces, Domain, Entities, Seeders
+- **Database Integration**: Full ORM setup with migrations and seeders
+- **API Documentation**: OpenAPI/Swagger documentation generation
+- **Validation**: Request/response validation with configurable validators
+- **Testing**: Test setup with chosen test framework
+- **Docker Support**: Dockerfile and docker-compose integration
+- **Infrastructure**: Optional Redis and S3 integration
 
 ### Environment Variables
 
 Required environment variables:
 ```bash
-DATABASE_URL=your_database_connection_string
-PORT=service_port_number
-NODE_NODE_ENV=development|production
+# Database configuration
+DATABASE_URL=postgresql://user:password@localhost:5432/dbname
+DATABASE_TYPE=postgresql
+
+# Server configuration
+PORT=3000
+NODE_ENV=development
+
+# Infrastructure (if enabled)
+REDIS_URL=redis://localhost:6379
+AWS_ACCESS_KEY_ID=your_access_key
+AWS_SECRET_ACCESS_KEY=your_secret_key
+S3_BUCKET_NAME=your_bucket_name
+```
+
+### Usage Examples
+
+```bash
+# Basic service
+forklaunch init service users --database postgresql
+
+# Service with Redis cache
+forklaunch init service products --database postgresql --infrastructure redis
+
+# Service with multiple infrastructure
+forklaunch init service files --database postgresql --infrastructure redis s3
+
+# Custom path and description
+forklaunch init service orders --path ./services --description "Order management service"
 ```
 
 ### Next Steps
 
 After creating a service:
-1. Define your data model in the entity file
-2. Implement your business logic in the service
-3. Set up your API routes
-4. Add test data using the seeder
-5. Configure environment variables
-6. Write tests for your implementation
+1. Configure environment variables in `.env.local`
+2. Define your data model in the entities
+3. Implement your business logic in the service layer
+4. Set up your API routes and controllers  
+5. Run database migrations: `npm run migrate:up`
+6. Add test data using seeders: `npm run seed`
+7. Start the service: `npm run dev`
+8. Review the API documentation at `/docs`
 
 ### Common Issues
 
-1. **Database Connection**: Ensure your database credentials are correct in the environment variables
-2. **Port Conflicts**: Check that the PORT specified isn't already in use
-3. **Dependencies**: Run `pnpm/bun install` if you see missing dependency errors
+1. **Database Connection**: Ensure database is running and environment variables are correct
+2. **Port Conflicts**: Services use sequential ports (3000, 3001, etc.)
+3. **Migration Errors**: Run migrations before starting the service
+4. **Infrastructure Dependencies**: Ensure Redis/S3 are configured if enabled
+5. **Path Conflicts**: Avoid service names that conflict with existing directories
 
 ### Best Practices
 
-1. Keep services focused on a single responsibility
-2. Use the interface for defining your service contract
-3. Implement proper error handling in your service layer
-4. Write comprehensive tests for your business logic
-5. Use Mappers for data transformation between layers
+1. **Single Responsibility**: Keep services focused on one business domain
+2. **RCSIDES Pattern**: Use the full stack for clean architecture
+3. **Error Handling**: Implement comprehensive error handling in service layer
+4. **Validation**: Use domain schemas for request/response validation
+5. **Testing**: Write tests for business logic and API endpoints
+6. **Documentation**: Document API endpoints and business rules
+7. **Infrastructure**: Use Redis for caching, S3 for file storage when needed

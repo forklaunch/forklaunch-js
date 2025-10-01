@@ -8,6 +8,7 @@ import {
   string
 } from '@forklaunch/validator/typebox';
 import {
+  createHmacToken,
   ForklaunchExpressLikeRouter,
   MetricsDefinition,
   OpenTelemetryCollector,
@@ -20,6 +21,15 @@ import { typedAuthHandler } from '../src/http/handlers/typedAuthHandler';
 const contractDetails = {
   name: 'string',
   summary: 'string',
+  auth: {
+    sessionSchema: {
+      name: string
+    },
+    jwt: {
+      signatureKey: 'test'
+    },
+    allowedPermissions: new Set(['admin', 'user'])
+  },
   params: {
     name: string,
     id: number
@@ -107,7 +117,14 @@ const xa = new ForklaunchExpressLikeRouter(
     trace: () => {}
   },
   [],
-  {} as OpenTelemetryCollector<MetricsDefinition>
+  {} as OpenTelemetryCollector<MetricsDefinition>,
+  {
+    auth: {
+      sessionSchema: {
+        nameRouter: string
+      }
+    }
+  }
 );
 
 const bl = xa.trace(
@@ -180,6 +197,15 @@ xa.patch(
   {
     name: 'string',
     summary: 'string',
+    auth: {
+      sessionSchema: {
+        name: string
+      },
+      jwt: {
+        signatureKey: 'test'
+      },
+      allowedPermissions: new Set(['admin', 'user'])
+    },
     params: {
       name: string,
       id: number
@@ -306,6 +332,15 @@ xa.trace('/test/:name/:id', xasd).sdk.string({
     authorization: 'Basic dGVzdDp0ZXN0',
     'x-test': 4
   }
+});
+
+createHmacToken({
+  method: 'GET',
+  path: '/test/:name/:id',
+  body: '',
+  timestamp: new Date(),
+  nonce: '1234567890',
+  secretKey: 'test'
 });
 
 xa.all(contractDetails, async (req, res) => {});

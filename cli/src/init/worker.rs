@@ -45,22 +45,23 @@ use crate::{
         package_json::{
             add_project_definition_to_package_json,
             package_json_constants::{
-                AJV_VERSION, APP_CORE_VERSION, APP_MONITORING_VERSION, BETTER_SQLITE3_VERSION,
-                BIOME_VERSION, BULLMQ_VERSION, COMMON_VERSION, CORE_VERSION, DOTENV_VERSION,
-                ESLINT_VERSION, EXPRESS_VERSION, HYPER_EXPRESS_VERSION,
-                INFRASTRUCTURE_REDIS_VERSION, INTERNAL_VERSION, MIKRO_ORM_CLI_VERSION,
-                MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
-                MIKRO_ORM_REFLECTION_VERSION, MIKRO_ORM_SEEDER_VERSION, OXLINT_VERSION,
-                PRETTIER_VERSION, PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT, PROJECT_SEED_SCRIPT,
-                PROJECT_START_WORKER_CLIENT_SCRIPT, SQLITE3_VERSION, TSX_VERSION, TYPEBOX_VERSION,
-                TYPEDOC_VERSION, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION,
-                TYPES_QS_VERSION, TYPES_UUID_VERSION, TYPESCRIPT_ESLINT_VERSION, UUID_VERSION,
-                VALIDATOR_VERSION, WORKER_BULLMQ_VERSION, WORKER_DATABASE_VERSION,
-                WORKER_INTERFACES_VERSION, WORKER_KAFKA_VERSION, WORKER_REDIS_VERSION, ZOD_VERSION,
-                project_clean_script, project_dev_local_worker_script, project_dev_server_script,
+                AJV_VERSION, APP_CORE_VERSION, APP_MONITORING_VERSION, APP_UNIVERSAL_SDK_VERSION,
+                BETTER_SQLITE3_VERSION, BIOME_VERSION, BULLMQ_VERSION, COMMON_VERSION,
+                CORE_VERSION, DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION,
+                HYPER_EXPRESS_VERSION, INFRASTRUCTURE_REDIS_VERSION, INTERNAL_VERSION,
+                MIKRO_ORM_CLI_VERSION, MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION,
+                MIKRO_ORM_MIGRATIONS_VERSION, MIKRO_ORM_REFLECTION_VERSION,
+                MIKRO_ORM_SEEDER_VERSION, OXLINT_VERSION, PRETTIER_VERSION, PROJECT_BUILD_SCRIPT,
+                PROJECT_DOCS_SCRIPT, PROJECT_SEED_SCRIPT, PROJECT_START_WORKER_CLIENT_SCRIPT,
+                SQLITE3_VERSION, TSX_VERSION, TYPEBOX_VERSION, TYPEDOC_VERSION,
+                TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION, TYPES_QS_VERSION,
+                TYPES_UUID_VERSION, TYPESCRIPT_ESLINT_VERSION, UUID_VERSION, VALIDATOR_VERSION,
+                WORKER_BULLMQ_VERSION, WORKER_DATABASE_VERSION, WORKER_INTERFACES_VERSION,
+                WORKER_KAFKA_VERSION, WORKER_REDIS_VERSION, ZOD_VERSION, project_clean_script,
+                project_dev_local_worker_script, project_dev_server_script,
                 project_dev_worker_client_script, project_format_script, project_lint_fix_script,
                 project_lint_script, project_migrate_script, project_start_worker_script,
-                project_test_script,
+                project_test_script, project_types_versions_value,
             },
             project_package_json::{
                 MIKRO_ORM_CONFIG_PATHS, ProjectDependencies, ProjectDevDependencies,
@@ -72,7 +73,7 @@ use crate::{
         rendered_template::{RenderedTemplate, write_rendered_templates},
         symlinks::generate_symlinks,
         template::{PathIO, generate_with_template},
-        tsconfig::generate_tsconfig,
+        tsconfig::generate_project_tsconfig,
         universal_sdk::add_project_to_universal_sdk,
         worker_type::{
             get_default_worker_options, get_worker_consumer_factory, get_worker_producer_factory,
@@ -138,8 +139,9 @@ fn generate_basic_worker(
         None,
         None,
     )?);
-    rendered_templates
-        .extend(generate_tsconfig(&output_path).with_context(|| ERROR_FAILED_TO_CREATE_TSCONFIG)?);
+    rendered_templates.extend(
+        generate_project_tsconfig(&output_path).with_context(|| ERROR_FAILED_TO_CREATE_TSCONFIG)?,
+    );
     rendered_templates.extend(
         generate_gitignore(&output_path).with_context(|| ERROR_FAILED_TO_CREATE_GITIGNORE)?,
     );
@@ -160,6 +162,7 @@ fn generate_basic_worker(
         base_path,
         &manifest_data.app_name,
         &manifest_data.worker_name,
+        None,
     )?;
 
     write_rendered_templates(&rendered_templates, dryrun, stdout)
@@ -302,6 +305,7 @@ pub(crate) fn generate_worker_package_json(
         author: Some(manifest_data.author.to_string()),
         main: main_override,
         types: None,
+        types_versions: Some(project_types_versions_value()),
         scripts: Some(if let Some(scripts) = scripts_override {
             scripts
         } else {
@@ -350,7 +354,7 @@ pub(crate) fn generate_worker_package_json(
                 } else {
                     None
                 },
-                seed: if manifest_data.is_database_enabled {
+                seed: if manifest_data.is_database_enabled && !manifest_data.is_mongo {
                     Some(PROJECT_SEED_SCRIPT.to_string())
                 } else {
                     None
@@ -378,6 +382,7 @@ pub(crate) fn generate_worker_package_json(
                 },
                 app_core: Some(APP_CORE_VERSION.to_string()),
                 app_monitoring: Some(APP_MONITORING_VERSION.to_string()),
+                app_universal_sdk: Some(APP_UNIVERSAL_SDK_VERSION.to_string()),
                 forklaunch_better_auth_mikro_orm_fork: None,
                 forklaunch_common: Some(COMMON_VERSION.to_string()),
                 forklaunch_core: Some(CORE_VERSION.to_string()),
@@ -487,6 +492,7 @@ pub(crate) fn generate_worker_package_json(
                     None
                 },
                 dotenv: Some(DOTENV_VERSION.to_string()),
+                jose: None,
                 sqlite3: if manifest_data.is_node
                     && manifest_data.is_database_enabled
                     && manifest_data.is_sqlite

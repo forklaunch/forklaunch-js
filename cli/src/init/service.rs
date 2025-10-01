@@ -46,23 +46,23 @@ use crate::{
         package_json::{
             add_project_definition_to_package_json,
             package_json_constants::{
-                AJV_VERSION, APP_CORE_VERSION, APP_MONITORING_VERSION,
+                AJV_VERSION, APP_CORE_VERSION, APP_MONITORING_VERSION, APP_UNIVERSAL_SDK_VERSION,
                 BETTER_AUTH_MIKRO_ORM_VERSION, BETTER_AUTH_VERSION, BETTER_SQLITE3_VERSION,
                 BILLING_BASE_VERSION, BILLING_INTERFACES_VERSION, BILLING_STRIPE_VERSION,
                 BIOME_VERSION, COMMON_VERSION, CORE_VERSION, DOTENV_VERSION, ESLINT_VERSION,
                 EXPRESS_VERSION, HYPER_EXPRESS_VERSION, IAM_BASE_VERSION, IAM_INTERFACES_VERSION,
                 INFRASTRUCTURE_REDIS_VERSION, INFRASTRUCTURE_S3_VERSION, INTERNAL_VERSION,
-                MIKRO_ORM_CLI_VERSION, MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION,
-                MIKRO_ORM_MIGRATIONS_VERSION, MIKRO_ORM_REFLECTION_VERSION,
-                MIKRO_ORM_SEEDER_VERSION, OPENTELEMETRY_API_VERSION, OXLINT_VERSION,
-                PRETTIER_VERSION, PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT, PROJECT_SEED_SCRIPT,
-                SQLITE3_VERSION, STRIPE_VERSION, TSX_VERSION, TYPEBOX_VERSION, TYPEDOC_VERSION,
-                TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION, TYPES_QS_VERSION,
-                TYPES_UUID_VERSION, TYPESCRIPT_ESLINT_VERSION, UUID_VERSION, VALIDATOR_VERSION,
-                ZOD_VERSION, project_clean_script, project_dev_local_script,
+                JOSE_VERSION, MIKRO_ORM_CLI_VERSION, MIKRO_ORM_CORE_VERSION,
+                MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
+                MIKRO_ORM_REFLECTION_VERSION, MIKRO_ORM_SEEDER_VERSION, OPENTELEMETRY_API_VERSION,
+                OXLINT_VERSION, PRETTIER_VERSION, PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT,
+                PROJECT_SEED_SCRIPT, SQLITE3_VERSION, STRIPE_VERSION, TSX_VERSION, TYPEBOX_VERSION,
+                TYPEDOC_VERSION, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION,
+                TYPES_QS_VERSION, TYPES_UUID_VERSION, TYPESCRIPT_ESLINT_VERSION, UUID_VERSION,
+                VALIDATOR_VERSION, ZOD_VERSION, project_clean_script, project_dev_local_script,
                 project_dev_server_script, project_format_script, project_lint_fix_script,
                 project_lint_script, project_migrate_script, project_start_server_script,
-                project_test_script,
+                project_test_script, project_types_versions_value,
             },
             project_package_json::{
                 MIKRO_ORM_CONFIG_PATHS, ProjectDependencies, ProjectDevDependencies,
@@ -74,7 +74,7 @@ use crate::{
         rendered_template::{RenderedTemplate, write_rendered_templates},
         symlinks::generate_symlinks,
         template::{PathIO, generate_with_template},
-        tsconfig::generate_tsconfig,
+        tsconfig::generate_project_tsconfig,
         universal_sdk::add_project_to_universal_sdk,
     },
     prompt::{
@@ -121,8 +121,9 @@ fn generate_basic_service(
         None,
         None,
     )?);
-    rendered_templates
-        .extend(generate_tsconfig(&output_path).with_context(|| ERROR_FAILED_TO_CREATE_TSCONFIG)?);
+    rendered_templates.extend(
+        generate_project_tsconfig(&output_path).with_context(|| ERROR_FAILED_TO_CREATE_TSCONFIG)?,
+    );
     rendered_templates.extend(
         generate_gitignore(&output_path).with_context(|| ERROR_FAILED_TO_CREATE_GITIGNORE)?,
     );
@@ -152,6 +153,7 @@ fn generate_basic_service(
         base_path,
         &manifest_data.app_name,
         &manifest_data.service_name,
+        None,
     )?;
 
     write_rendered_templates(&rendered_templates, dryrun, stdout)
@@ -280,6 +282,7 @@ pub(crate) fn generate_service_package_json(
         author: Some(manifest_data.author.to_string()),
         main: main_override,
         types: None,
+        types_versions: Some(project_types_versions_value()),
         scripts: Some(if let Some(scripts) = scripts_override {
             scripts
         } else {
@@ -303,7 +306,11 @@ pub(crate) fn generate_service_package_json(
                 migrate_down: Some(project_migrate_script("down")),
                 migrate_init: Some(project_migrate_script("init")),
                 migrate_up: Some(project_migrate_script("up")),
-                seed: Some(PROJECT_SEED_SCRIPT.to_string()),
+                seed: if !manifest_data.is_mongo {
+                    Some(PROJECT_SEED_SCRIPT.to_string())
+                } else {
+                    None
+                },
                 start: Some(project_start_server_script(
                     &manifest_data.runtime.parse()?,
                     manifest_data.database.parse::<Database>().ok(),
@@ -319,6 +326,7 @@ pub(crate) fn generate_service_package_json(
                 databases: HashSet::from([manifest_data.database.parse()?]),
                 app_core: Some(APP_CORE_VERSION.to_string()),
                 app_monitoring: Some(APP_MONITORING_VERSION.to_string()),
+                app_universal_sdk: Some(APP_UNIVERSAL_SDK_VERSION.to_string()),
                 forklaunch_better_auth_mikro_orm_fork: if manifest_data.is_better_auth {
                     Some(BETTER_AUTH_MIKRO_ORM_VERSION.to_string())
                 } else {
@@ -410,6 +418,11 @@ pub(crate) fn generate_service_package_json(
                     None
                 },
                 dotenv: Some(DOTENV_VERSION.to_string()),
+                jose: if manifest_data.is_iam {
+                    Some(JOSE_VERSION.to_string())
+                } else {
+                    None
+                },
                 sqlite3: if manifest_data.is_node
                     && manifest_data.is_database_enabled
                     && manifest_data.is_sqlite

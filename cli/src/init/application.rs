@@ -56,17 +56,18 @@ use crate::{
             },
             package_json_constants::{
                 AJV_VERSION, APP_DEV_BUILD_SCRIPT, APP_DEV_SCRIPT, APP_PREPARE_SCRIPT,
-                BETTER_AUTH_VERSION, BETTER_SQLITE3_VERSION, BIOME_VERSION, COMMON_VERSION,
-                CORE_VERSION, DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION, GLOBALS_VERSION,
-                HUSKY_VERSION, HYPER_EXPRESS_VERSION, JEST_TYPES_VERSION, JEST_VERSION,
-                LINT_STAGED_VERSION, MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION,
-                MIKRO_ORM_MIGRATIONS_VERSION, MIKRO_ORM_REFLECTION_VERSION, NODE_GYP_VERSION,
-                OXLINT_VERSION, PRETTIER_VERSION, PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT,
-                SORT_PACKAGE_JSON_VERSION, SQLITE3_VERSION, TS_JEST_VERSION, TS_NODE_VERSION,
-                TSX_VERSION, TYPEBOX_VERSION, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION,
-                TYPES_EXPRESS_VERSION, TYPES_QS_VERSION, TYPES_UUID_VERSION,
-                TYPESCRIPT_ESLINT_VERSION, TYPESCRIPT_VERSION, UNIVERSAL_SDK_VERSION, UUID_VERSION,
-                VALIDATOR_VERSION, VITEST_VERSION, ZOD_VERSION, application_build_script,
+                BETTER_AUTH_VERSION, BETTER_SQLITE3_VERSION, BIOME_VERSION, BUNRUN_VERSION,
+                COMMON_VERSION, CORE_VERSION, DOTENV_VERSION, ESLINT_VERSION, EXPRESS_VERSION,
+                GLOBALS_VERSION, HUSKY_VERSION, HYPER_EXPRESS_VERSION, JEST_TYPES_VERSION,
+                JEST_VERSION, LINT_STAGED_VERSION, MIKRO_ORM_CORE_VERSION,
+                MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
+                MIKRO_ORM_REFLECTION_VERSION, NODE_GYP_VERSION, OXLINT_VERSION, PRETTIER_VERSION,
+                PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT, SORT_PACKAGE_JSON_VERSION,
+                SQLITE3_VERSION, TS_JEST_VERSION, TS_NODE_VERSION, TSX_VERSION, TYPEBOX_VERSION,
+                TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION, TYPES_QS_VERSION,
+                TYPES_UUID_VERSION, TYPES_WATCH_SCRIPT, TYPESCRIPT_ESLINT_VERSION,
+                TYPESCRIPT_VERSION, UNIVERSAL_SDK_VERSION, UUID_VERSION, VALIDATOR_VERSION,
+                VITEST_VERSION, ZOD_VERSION, application_build_script,
                 application_clean_purge_script, application_clean_script, application_docs_script,
                 application_format_script, application_lint_fix_script, application_lint_script,
                 application_migrate_script, application_seed_script, application_setup_script,
@@ -82,6 +83,7 @@ use crate::{
         template::{PathIO, generate_with_template, get_routers_from_standard_package},
         token::get_token,
         universal_sdk::get_universal_sdk_additional_deps,
+        vscode::generate_vscode_settings,
     },
     prompt::{
         ArrayCompleter, prompt_comma_separated_list, prompt_for_confirmation,
@@ -108,10 +110,7 @@ fn generate_application_package_json(
         author: Some(data.author.clone()),
         workspaces: bun_workspace_projects,
         scripts: Some(ApplicationScripts {
-            build: Some(application_build_script(
-                &data.runtime.parse()?,
-                &data.kebab_case_app_name,
-            )),
+            build: Some(application_build_script(&data.runtime.parse()?)),
             clean: Some(application_clean_script(&data.runtime.parse()?)),
             clean_purge: Some(application_clean_purge_script(&data.runtime.parse()?)),
             database_setup: Some(application_setup_script(&data.runtime.parse()?)),
@@ -148,6 +147,7 @@ fn generate_application_package_json(
                 &HashSet::from([data.database.parse()?]),
             )),
             test: application_test_script(&data.runtime.parse()?, &test_framework),
+            types_watch: Some(TYPES_WATCH_SCRIPT.to_string()),
             up_packages: Some(application_up_packages_script(&data.runtime.parse()?)),
             additional_scripts: HashMap::new(),
         }),
@@ -159,6 +159,11 @@ fn generate_application_package_json(
             },
             eslint_js: if data.is_eslint {
                 Some(ESLINT_VERSION.to_string())
+            } else {
+                None
+            },
+            bunrun: if data.is_bun {
+                Some(BUNRUN_VERSION.to_string())
             } else {
                 None
             },
@@ -403,7 +408,7 @@ impl CliCommand for ApplicationCommand {
         } else {
             if prompt_for_confirmation(
                 &mut line_editor,
-                "Would you like to use the current directory for project files? (y/n) ",
+                "Would you like to use the current directory for application files? (y/N) ",
             )? {
                 std::env::current_dir()
                     .with_context(|| "Failed to get current working directory")?
@@ -411,19 +416,17 @@ impl CliCommand for ApplicationCommand {
                 Path::new(&prompt_with_validation(
                     &mut line_editor,
                     &mut stdout,
-                    "application_path",
+                    "path",
                     matches,
-                    "Please provide where you want to create the application (NOTE: this should be a relative path):",
+                    "application path",
                     None,
                     |input: &str| {
                         let trimmed = input.trim();
-                        !trimmed.is_empty()
-                            && !trimmed.contains('\0')
+                        !trimmed.is_empty() && !trimmed.contains('\0')
                     },
-                    |_| {
-                        "Project path must be a valid path. Please try again".to_string()
-                    },
-                )?).to_path_buf()
+                    |_| "Application path must be a valid path. Please try again".to_string(),
+                )?)
+                .to_path_buf()
             }
         };
 
@@ -438,7 +441,7 @@ impl CliCommand for ApplicationCommand {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
             writeln!(
                 stdout,
-                "No 'src' folder in project root. Please confirm where application files will be initialized."
+                "No 'src' folder in project root. Please confirm where project files will be initialized."
             )?;
             stdout.reset()?;
             let modules_path: String = prompt_with_validation(
@@ -446,7 +449,7 @@ impl CliCommand for ApplicationCommand {
                 &mut stdout,
                 "modules-path",
                 matches,
-                "Confirm where application files will be initialized:",
+                "preferred modules path",
                 Some(&ModulesPath::VARIANTS),
                 |input| ModulesPath::VARIANTS.contains(&input),
                 |_| "Invalid path. Please provide a valid destination path.".to_string(),
@@ -603,6 +606,10 @@ impl CliCommand for ApplicationCommand {
 
                 if validate_modules(&modules_to_test, &mut global_module_config).is_ok() {
                     break;
+                } else {
+                    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+                    writeln!(stdout, "Invalid modules combination. Please try again.")?;
+                    stdout.reset()?;
                 }
             }
             modules_to_test
@@ -845,6 +852,7 @@ impl CliCommand for ApplicationCommand {
             to_string(add_otel_to_docker_compose(
                 &name,
                 docker_compose_starting_point,
+                &data,
             )?)
             .unwrap(),
         );
@@ -1048,6 +1056,8 @@ impl CliCommand for ApplicationCommand {
                             global_module_config.billing.is_some(),
                             global_module_config.iam.is_some(),
                         ),
+                        types_express: Some(TYPES_EXPRESS_VERSION.to_string()),
+                        types_qs: Some(TYPES_QS_VERSION.to_string()),
                         ..Default::default()
                     }),
                     _ => None,
@@ -1106,6 +1116,12 @@ impl CliCommand for ApplicationCommand {
             context: None,
         });
 
+        let maybe_vscode_settings = generate_vscode_settings(&origin_path)?;
+
+        if let Some(vscode_settings) = maybe_vscode_settings {
+            rendered_templates.push(vscode_settings);
+        }
+
         rendered_templates.push(generate_application_package_json(
             &data,
             &generation_path,
@@ -1150,10 +1166,7 @@ impl CliCommand for ApplicationCommand {
             dryrun,
         )?;
 
-        rendered_templates.push(create_or_merge_husky_pre_commit(
-            &Path::new(&origin_path),
-            &data,
-        )?);
+        rendered_templates.extend(create_or_merge_husky_pre_commit(&origin_path, &data)?);
 
         rendered_templates.extend(generate_with_template(
             Some(&application_path),

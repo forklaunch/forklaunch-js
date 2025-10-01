@@ -18,6 +18,7 @@ import {
   Method,
   ParamsObject,
   QueryObject,
+  ResolvedSessionObject,
   ResponsesObject,
   SchemaAuthMethods,
   SessionObject,
@@ -52,10 +53,6 @@ export interface LiveTypeRouteDefinition<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     const VersionedApi extends VersionSchema<SV, ContractMethod>,
-    SessionSchema extends SessionObject<SV>,
-    ResolvedSession extends SessionObject<SV> extends SessionSchema
-      ? Session
-      : SessionSchema,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
@@ -63,7 +60,6 @@ export interface LiveTypeRouteDefinition<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      ResolvedSession,
       BaseRequest
     >
   >(
@@ -80,7 +76,6 @@ export interface LiveTypeRouteDefinition<
       ReqHeaders,
       ResHeaders,
       VersionedApi,
-      ResolvedSession,
       BaseRequest,
       Auth
     >,
@@ -94,7 +89,7 @@ export interface LiveTypeRouteDefinition<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      ResolvedSession,
+      ResolvedSessionObject<SV, Auth, Session>,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -178,10 +173,6 @@ export interface LiveTypeRouteDefinition<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     const VersionedApi extends VersionSchema<SV, ContractMethod>,
-    SessionSchema extends SessionObject<SV>,
-    ResolvedSession extends SessionObject<SV> extends SessionSchema
-      ? Session
-      : SessionSchema,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
@@ -189,7 +180,6 @@ export interface LiveTypeRouteDefinition<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      ResolvedSession,
       BaseRequest
     >
   >(
@@ -204,7 +194,7 @@ export interface LiveTypeRouteDefinition<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      ResolvedSession,
+      ResolvedSessionObject<SV, Auth, Session>,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -220,7 +210,7 @@ export interface LiveTypeRouteDefinition<
         ResHeaders,
         LocalsObj,
         VersionedApi,
-        ResolvedSession,
+        ResolvedSessionObject<SV, Auth, Session>,
         BaseRequest,
         BaseResponse,
         NextFunction
@@ -238,7 +228,6 @@ export interface LiveTypeRouteDefinition<
         ResHeaders,
         LocalsObj,
         VersionedApi,
-        ResolvedSession,
         BaseRequest,
         BaseResponse,
         NextFunction,
@@ -324,10 +313,6 @@ export interface LiveTypeRouteDefinition<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     const VersionedApi extends VersionSchema<SV, ContractMethod>,
-    SessionSchema extends SessionObject<SV>,
-    ResolvedSession extends SessionObject<SV> extends SessionSchema
-      ? Session
-      : SessionSchema,
     const Auth extends SchemaAuthMethods<
       SV,
       P,
@@ -335,7 +320,6 @@ export interface LiveTypeRouteDefinition<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      ResolvedSession,
       BaseRequest
     >
   >(
@@ -353,7 +337,6 @@ export interface LiveTypeRouteDefinition<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      ResolvedSession,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -447,10 +430,6 @@ export interface TypedMiddlewareDefinition<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     VersionedApi extends VersionSchema<SV, 'middleware'>,
-    SessionSchema extends SessionObject<SV>,
-    ResolvedSession extends SessionObject<SV> extends SessionSchema
-      ? Session
-      : SessionSchema,
     Auth extends SchemaAuthMethods<
       SV,
       P,
@@ -458,7 +437,6 @@ export interface TypedMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      ResolvedSession,
       BaseRequest
     >
   >(
@@ -474,7 +452,6 @@ export interface TypedMiddlewareDefinition<
       ReqHeaders,
       ResHeaders,
       VersionedApi,
-      ResolvedSession,
       BaseRequest,
       Auth
     >,
@@ -488,7 +465,7 @@ export interface TypedMiddlewareDefinition<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      ResolvedSession,
+      ResolvedSessionObject<SV, Auth, Session>,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -503,7 +480,7 @@ export interface TypedMiddlewareDefinition<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      ResolvedSession,
+      ResolvedSessionObject<SV, Auth, Session>,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -522,9 +499,6 @@ export interface TypedMiddlewareDefinition<
     LocalsObj extends Record<string, unknown>,
     VersionedApi extends VersionSchema<SV, 'middleware'>,
     SessionSchema extends SessionObject<SV>,
-    ResolvedSession extends SessionObject<SV> extends SessionSchema
-      ? Session
-      : SessionSchema,
     Auth extends SchemaAuthMethods<
       SV,
       P,
@@ -532,7 +506,6 @@ export interface TypedMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      ResolvedSession,
       BaseRequest
     >
   >(
@@ -549,7 +522,6 @@ export interface TypedMiddlewareDefinition<
       ReqHeaders,
       ResHeaders,
       VersionedApi,
-      ResolvedSession,
       BaseRequest,
       Auth
     >,
@@ -563,7 +535,7 @@ export interface TypedMiddlewareDefinition<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      ResolvedSession,
+      ResolvedSessionObject<SV, Auth, Session>,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -578,7 +550,8 @@ export interface TypedMiddlewareDefinition<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      ResolvedSession,
+      // ResolvedSession,
+      SessionSchema,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -602,10 +575,6 @@ export interface TypedMiddlewareDefinition<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     VersionedApi extends VersionSchema<SV, 'middleware'>,
-    SessionSchema extends SessionObject<SV>,
-    ResolvedSession extends SessionObject<SV> extends SessionSchema
-      ? Session
-      : SessionSchema,
     Auth extends SchemaAuthMethods<
       SV,
       P,
@@ -613,7 +582,6 @@ export interface TypedMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      ResolvedSession,
       BaseRequest
     >
   >(
@@ -628,7 +596,7 @@ export interface TypedMiddlewareDefinition<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      ResolvedSession,
+      ResolvedSessionObject<SV, Auth, Session>,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -644,7 +612,7 @@ export interface TypedMiddlewareDefinition<
         ResHeaders,
         LocalsObj,
         VersionedApi,
-        ResolvedSession,
+        ResolvedSessionObject<SV, Auth, Session>,
         BaseRequest,
         BaseResponse,
         NextFunction
@@ -662,7 +630,6 @@ export interface TypedMiddlewareDefinition<
         ResHeaders,
         LocalsObj,
         VersionedApi,
-        ResolvedSession,
         BaseRequest,
         BaseResponse,
         NextFunction,
@@ -682,10 +649,6 @@ export interface TypedMiddlewareDefinition<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     VersionedApi extends VersionSchema<SV, 'middleware'>,
-    SessionSchema extends SessionObject<SV>,
-    ResolvedSession extends SessionObject<SV> extends SessionSchema
-      ? Session
-      : SessionSchema,
     Auth extends SchemaAuthMethods<
       SV,
       P,
@@ -693,7 +656,6 @@ export interface TypedMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      ResolvedSession,
       BaseRequest
     >
   >(
@@ -707,7 +669,7 @@ export interface TypedMiddlewareDefinition<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      ResolvedSession,
+      ResolvedSessionObject<SV, Auth, Session>,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -723,7 +685,7 @@ export interface TypedMiddlewareDefinition<
         ResHeaders,
         LocalsObj,
         VersionedApi,
-        ResolvedSession,
+        ResolvedSessionObject<SV, Auth, Session>,
         BaseRequest,
         BaseResponse,
         NextFunction
@@ -741,7 +703,6 @@ export interface TypedMiddlewareDefinition<
         ResHeaders,
         LocalsObj,
         VersionedApi,
-        ResolvedSession,
         BaseRequest,
         BaseResponse,
         NextFunction,
@@ -763,10 +724,6 @@ export interface TypedMiddlewareDefinition<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     VersionedApi extends VersionSchema<SV, 'middleware'>,
-    SessionSchema extends SessionObject<SV>,
-    ResolvedSession extends SessionObject<SV> extends SessionSchema
-      ? Session
-      : SessionSchema,
     Auth extends SchemaAuthMethods<
       SV,
       P,
@@ -774,7 +731,6 @@ export interface TypedMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      ResolvedSession,
       BaseRequest
     >
   >(
@@ -792,7 +748,6 @@ export interface TypedMiddlewareDefinition<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      ResolvedSession,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -811,10 +766,6 @@ export interface TypedMiddlewareDefinition<
     ResHeaders extends HeadersObject<SV>,
     LocalsObj extends Record<string, unknown>,
     VersionedApi extends VersionSchema<SV, 'middleware'>,
-    SessionSchema extends SessionObject<SV>,
-    ResolvedSession extends SessionObject<SV> extends SessionSchema
-      ? Session
-      : SessionSchema,
     Auth extends SchemaAuthMethods<
       SV,
       P,
@@ -822,7 +773,6 @@ export interface TypedMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      ResolvedSession,
       BaseRequest
     >
   >(
@@ -839,7 +789,6 @@ export interface TypedMiddlewareDefinition<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      ResolvedSession,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -959,7 +908,6 @@ export interface TypedNestableMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      Session,
       BaseRequest
     >
   >(
@@ -975,7 +923,6 @@ export interface TypedNestableMiddlewareDefinition<
       ReqHeaders,
       ResHeaders,
       VersionedApi,
-      Session,
       BaseRequest,
       Auth
     >,
@@ -1052,7 +999,6 @@ export interface TypedNestableMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      Session,
       BaseRequest
     >
   >(
@@ -1105,7 +1051,6 @@ export interface TypedNestableMiddlewareDefinition<
         ResHeaders,
         LocalsObj,
         VersionedApi,
-        Session,
         BaseRequest,
         BaseResponse,
         NextFunction,
@@ -1150,7 +1095,6 @@ export interface TypedNestableMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      Session,
       BaseRequest
     >
   >(
@@ -1169,7 +1113,6 @@ export interface TypedNestableMiddlewareDefinition<
       ReqHeaders,
       ResHeaders,
       VersionedApi,
-      Session,
       BaseRequest,
       Auth
     >,
@@ -1246,7 +1189,6 @@ export interface TypedNestableMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      Session,
       BaseRequest
     >
   >(
@@ -1262,7 +1204,6 @@ export interface TypedNestableMiddlewareDefinition<
       ReqHeaders,
       ResHeaders,
       VersionedApi,
-      Session,
       BaseRequest,
       Auth
     >,
@@ -1339,7 +1280,6 @@ export interface TypedNestableMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      Session,
       BaseRequest
     >
   >(
@@ -1359,7 +1299,6 @@ export interface TypedNestableMiddlewareDefinition<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      Session,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -1403,7 +1342,6 @@ export interface TypedNestableMiddlewareDefinition<
       ReqQuery,
       ReqHeaders,
       VersionedApi,
-      Session,
       BaseRequest
     >
   >(
@@ -1420,7 +1358,6 @@ export interface TypedNestableMiddlewareDefinition<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      Session,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -1459,10 +1396,10 @@ export type ContractDetailsOrMiddlewareOrTypedHandler<
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
   VersionedApi extends VersionSchema<SV, ContractMethod>,
-  Session extends SessionObject<SV>,
   BaseRequest,
   BaseResponse,
   NextFunction,
+  BaseSession extends SessionObject<SV>,
   Auth extends SchemaAuthMethods<
     SV,
     P,
@@ -1470,7 +1407,6 @@ export type ContractDetailsOrMiddlewareOrTypedHandler<
     ReqQuery,
     ReqHeaders,
     VersionedApi,
-    Session,
     BaseRequest
   >
 > =
@@ -1486,7 +1422,6 @@ export type ContractDetailsOrMiddlewareOrTypedHandler<
       ReqHeaders,
       ResHeaders,
       VersionedApi,
-      Session,
       BaseRequest,
       Auth
     >
@@ -1500,7 +1435,7 @@ export type ContractDetailsOrMiddlewareOrTypedHandler<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      Session,
+      ResolvedSessionObject<SV, Auth, BaseSession>,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -1518,7 +1453,6 @@ export type ContractDetailsOrMiddlewareOrTypedHandler<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      Session,
       BaseRequest,
       BaseResponse,
       NextFunction,
@@ -1538,10 +1472,10 @@ export type MiddlewareOrMiddlewareWithTypedHandler<
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
   VersionedApi extends VersionSchema<SV, ContractMethod>,
-  Session extends SessionObject<SV>,
   BaseRequest,
   BaseResponse,
   NextFunction,
+  BaseSession extends SessionObject<SV>,
   Auth extends SchemaAuthMethods<
     SV,
     P,
@@ -1549,7 +1483,6 @@ export type MiddlewareOrMiddlewareWithTypedHandler<
     ReqQuery,
     ReqHeaders,
     VersionedApi,
-    Session,
     BaseRequest
   >
 > =
@@ -1563,7 +1496,7 @@ export type MiddlewareOrMiddlewareWithTypedHandler<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      Session,
+      ResolvedSessionObject<SV, Auth, BaseSession>,
       BaseRequest,
       BaseResponse,
       NextFunction
@@ -1581,7 +1514,6 @@ export type MiddlewareOrMiddlewareWithTypedHandler<
       ResHeaders,
       LocalsObj,
       VersionedApi,
-      Session,
       BaseRequest,
       BaseResponse,
       NextFunction,

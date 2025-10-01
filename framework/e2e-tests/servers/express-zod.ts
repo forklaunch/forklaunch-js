@@ -1,10 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { noop } from '@forklaunch/common';
-import {
-  OpenTelemetryCollector,
-  sdkClient,
-  sdkRouter
-} from '@forklaunch/core/http';
+import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import {
   forklaunchExpress,
   forklaunchRouter,
@@ -311,7 +307,7 @@ const filePostHandler = handlers.post(
   }
 );
 
-const flRouter = forklaunchRouterInstance
+export const flRouter = forklaunchRouterInstance
   .get('/test', getHandler)
   .post('/test', postHandler)
   .patch('/test', jsonPatchHandler)
@@ -319,7 +315,7 @@ const flRouter = forklaunchRouterInstance
   .post('/test/url-encoded-form/:id', urlEncodedFormHandler)
   .post('/test/file', filePostHandler);
 
-const flNestedRouter = forklaunchRouter(
+export const flNestedRouter = forklaunchRouter(
   '/nested',
   zodSchemaValidator,
   openTelemetryCollector
@@ -341,40 +337,28 @@ const sampleController2 = {
   file: filePostHandler
 };
 
-const sampleSdkRouter = sdkRouter(
-  zodSchemaValidator,
-  sampleController,
-  sdkRoutes
-);
-
-const sampleSdkRouter2 = sdkRouter(
-  zodSchemaValidator,
-  sampleController2,
-  sdkRoutes
-);
-
-export const sampleSdkClient = sdkClient(zodSchemaValidator, {
+export const sampleSdkClient = {
   sample: {
     path: {
       a: {
-        b: sampleSdkRouter
+        b: sampleController
       }
     },
     c: {
-      d: sampleSdkRouter2
+      d: sampleController2
     }
   }
-});
+};
 
-export const sampleSdkClient2 = sdkClient(zodSchemaValidator, {
+export const sampleSdkClient2 = {
   sample: {
     path: {
       a: {
-        b: sdkRoutes
+        b: sampleController
       }
     }
   }
-});
+};
 
 forklaunchApplication.get(
   '/alfalfa',
@@ -389,6 +373,10 @@ forklaunchApplication.get(
     res.status(200).send('Hello World');
   }
 );
+
+forklaunchApplication.registerSdks(sampleSdkClient);
+
+export { forklaunchApplication };
 
 export function start() {
   const port = Number(process.env.PORT) || 6935;

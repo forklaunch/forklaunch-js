@@ -8,20 +8,34 @@ description: Complete guide for modifying ForkLaunch service configuration, data
 
 The `forklaunch change service` command allows you to modify existing service configuration including database types, infrastructure components, and service metadata. This guide covers all available options and migration strategies.
 
-```bash
-forklaunch change service [service-name] [options]
-```
+<CodeTabs type="instantiate">
+  <Tab title="Basic">
 
-If no service name is provided, you'll be prompted to select from available services.
+  ```bash
+  forklaunch change service
+  ```
 
-## Available Options
+  </Tab>
+  <Tab title="With Options">
 
-| Option                     | Type              | Description                | Default                |
-| -------------------------- | ----------------- | -------------------------- | ---------------------- |
-| `--name <name>`            | string            | Change service name        | Current name           |
-| `--description <desc>`     | string            | Update service description | Current description    |
-| `--database <database>`    | See options below | Change database type       | Current database       |
-| `--infrastructure <infra>` | `redis`, `s3`     | Add/remove infrastructure  | Current infrastructure |
+  ```bash
+  forklaunch change service --path ./my-service --database postgresql
+  ```
+
+  </Tab>
+</CodeTabs>
+
+## Command Options
+
+| Option | Short | Description | Valid Values |
+| :----- | :---- | :---------- | :----------- |
+| `--path` | `-p` | The service path | Path to service directory |
+| `--name` | `-N` | The name of the service | Any valid service name |
+| `--database` | `-d` | The database to use | See database options below |
+| `--description` | `-D` | The description of the service | Any string |
+| `--infrastructure` | `-i` | The infrastructure to use (can specify multiple) | `redis`, `s3` |
+| `--dryrun` | `-n` | Dry run the command | Flag (no value) |
+| `--confirm` | `-c` | Flag to confirm any prompts | Flag (no value) |
 
 ## Database Options
 
@@ -43,7 +57,7 @@ Available database types:
 Add infrastructure, e.g. Redis for caching and session management:
 
 ```bash
-forklaunch change service user-service --infrastructure redis
+forklaunch change service --path ./user-service --infrastructure redis
 ```
 
 ### Removing Infrastructure
@@ -51,7 +65,7 @@ forklaunch change service user-service --infrastructure redis
 Remove Redis if no longer needed:
 
 ```bash
-forklaunch change service user-service --infrastructure
+forklaunch change service --path ./user-service --infrastructure
 ```
 
 Note: Pass empty value to remove all infrastructure dependencies.
@@ -63,7 +77,8 @@ Note: Pass empty value to remove all infrastructure dependencies.
 Upgrade database and add infrastructure:
 
 ```bash
-forklaunch change service user-service \
+forklaunch change service \
+  --path ./user-service \
   --database postgresql \
   --infrastructure redis \
   --description "High-performance user management service"
@@ -75,9 +90,9 @@ Update multiple services with same configuration:
 
 ```bash
 # Upgrade all services to PostgreSQL
-forklaunch change service user-service --database postgresql
-forklaunch change service billing-service --database postgresql
-forklaunch change service analytics-service --database postgresql
+forklaunch change service --path ./user-service --database postgresql
+forklaunch change service --path ./billing-service --database postgresql
+forklaunch change service --path ./analytics-service --database postgresql
 ```
 
 ## Migration Strategies
@@ -88,10 +103,10 @@ forklaunch change service analytics-service --database postgresql
 
 ````bash
 # Update to production database
-forklaunch change service user-service --database postgresql
+forklaunch change service --path ./user-service --database postgresql
 
 # Add Redis for performance
-forklaunch change service user-service --infrastructure redis
+forklaunch change service --path ./user-service --infrastructure redis
 
 # Test thoroughly
 <CodeTabs type="terminal">
@@ -173,13 +188,13 @@ Prepare service for production load:
 
 ```bash
 # Step 1: Upgrade to PostgreSQL
-forklaunch change service user-service --database postgresql
+forklaunch change service --path ./user-service --database postgresql
 
 # Step 2: Add Redis for caching
-forklaunch change service user-service --infrastructure redis
+forklaunch change service --path ./user-service --infrastructure redis
 
 # Step 3: Update service description
-forklaunch change service user-service --description "Production-ready user management service with Redis caching"
+forklaunch change service --path ./user-service --description "Production-ready user management service with Redis caching"
 ```
 
 ### Scenario 2: Development Simplification
@@ -188,10 +203,10 @@ Simplify for local development:
 
 ```bash
 # Use SQLite for easier local setup
-forklaunch change service user-service --database sqlite
+forklaunch change service --path ./user-service --database sqlite
 
 # Remove Redis dependency
-forklaunch change service user-service --infrastructure
+forklaunch change service --path ./user-service --infrastructure
 ```
 
 ### Scenario 3: Microservice Refactoring
@@ -200,11 +215,11 @@ Split monolithic service:
 
 ```bash
 # Create specialized services
-forklaunch change service user-service --name authentication-service \
+forklaunch change service --path ./user-service --name authentication-service \
   --description "User authentication and authorization"
 
 # Add new user profile service separately
-forklaunch add service profile-service --database postgresql
+forklaunch init service profile-service --database postgresql
 ```
 
 ## Best Practices

@@ -6,6 +6,7 @@ import {
   patch as innerPatch,
   ParamsObject,
   QueryObject,
+  ResolvedSessionObject,
   ResponsesObject,
   SchemaAuthMethods,
   SessionObject,
@@ -109,7 +110,6 @@ export const patch = <
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
   const VersionedApi extends VersionSchema<SV, 'patch'>,
-  const SessionSchema extends SessionObject<SV>,
   const Auth extends SchemaAuthMethods<
     SV,
     P,
@@ -117,7 +117,6 @@ export const patch = <
     ReqQuery,
     ReqHeaders,
     VersionedApi,
-    SessionSchema,
     Request
   >
 >(
@@ -135,7 +134,6 @@ export const patch = <
     ReqHeaders,
     ResHeaders,
     VersionedApi,
-    SessionSchema,
     Request,
     Auth
   >,
@@ -149,7 +147,7 @@ export const patch = <
     ResHeaders,
     LocalsObj,
     VersionedApi,
-    SessionSchema,
+    ResolvedSessionObject<SV, Auth, SessionObject<SV>>,
     Request,
     Response,
     NextFunction
@@ -167,7 +165,6 @@ export const patch = <
     ResHeaders,
     LocalsObj,
     VersionedApi,
-    SessionSchema,
     Request,
     Response,
     NextFunction,

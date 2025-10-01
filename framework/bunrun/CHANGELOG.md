@@ -1,0 +1,49 @@
+# @forklaunch/bunrun
+
+## 0.0.9
+
+### Patch Changes
+
+- package upgrade
+
+## 0.0.8
+
+### Patch Changes
+
+- upgrade package dependencies and add global options to nested routers
+
+## 0.0.7
+
+### Patch Changes
+
+- Update internal packages and expose RegistryOptions from universal sdk
+
+## 0.0.6
+
+### Patch Changes
+
+- Set the stage for improved universal sdk performance, and update internal packages
+
+## 0.0.5
+
+### Patch Changes
+
+- Update internal package versions
+
+## 0.0.4
+
+### Patch Changes
+
+- update internal packages and loosen global auth constraint
+
+## 0.0.3
+
+### Patch Changes
+
+- update internal packages
+
+## 0.0.2
+
+### Patch Changes
+
+- change linked binary file

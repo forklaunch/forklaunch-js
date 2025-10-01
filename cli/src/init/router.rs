@@ -18,6 +18,7 @@ use crate::{
     },
     core::{
         ast::transformations::{
+            transform_controllers_index_ts::transform_controllers_index_ts,
             transform_entities_index_ts::transform_entities_index_ts,
             transform_registrations_ts::transform_registrations_ts_add_router,
             transform_sdk_ts::transform_sdk_ts, transform_seed_data_ts::transform_seed_data_ts,
@@ -142,6 +143,12 @@ fn add_router_to_artifacts(
     });
 
     rendered_templates.push(RenderedTemplate {
+        path: base_path.join("api").join("controllers").join("index.ts"),
+        content: transform_controllers_index_ts(manifest_data.router_name.as_str(), &base_path)?,
+        context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER.to_string()),
+    });
+
+    rendered_templates.push(RenderedTemplate {
         path: manifest_path.to_path_buf(),
         content: forklaunch_definition_buffer,
         context: Some(ERROR_FAILED_TO_ADD_ROUTER_METADATA_TO_MANIFEST.to_string()),
@@ -190,8 +197,7 @@ impl CliCommand for RouterCommand {
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
-        let (app_root_path, project_name) =
-            find_app_root_path(matches, RequiredLocation::Application)?;
+        let (app_root_path, project_name) = find_app_root_path(matches, RequiredLocation::Project)?;
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
 
         let mut manifest_data = from_str::<RouterManifestData>(

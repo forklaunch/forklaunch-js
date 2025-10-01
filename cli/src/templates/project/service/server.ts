@@ -1,6 +1,7 @@
 import { forklaunchExpress, SchemaValidator } from '@{{app_name}}/core';
 import { {{camel_case_name}}Router } from './api/routes/{{camel_case_name}}.routes';
 import { ci, tokens } from './bootstrapper';
+import { {{camel_case_name}}SdkClient } from './sdk';
 
 /**
  * Creates an instance of OpenTelemetryCollector
@@ -21,6 +22,9 @@ const docsPath = ci.resolve(tokens.DOCS_PATH);
 
 //! mounts the routes to the app
 app.use({{camel_case_name}}Router);
+
+//! mounts the sdk to the app
+app.registerSdks({{camel_case_name}}SdkClient);
 
 //! starts the server
 app.listen(port, host, () => {

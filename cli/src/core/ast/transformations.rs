@@ -1,4 +1,5 @@
 pub(crate) mod transform_base_entity_ts;
+pub(crate) mod transform_controllers_index_ts;
 pub(crate) mod transform_core_registrations_ts;
 pub(crate) mod transform_domain_schemas_index;
 pub(crate) mod transform_entities_index_ts;

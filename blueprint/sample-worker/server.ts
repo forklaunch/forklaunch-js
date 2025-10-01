@@ -3,6 +3,7 @@ import { getEnvVar } from '@forklaunch/common';
 import dotenv from 'dotenv';
 import { sampleWorkerRouter } from './api/routes/sampleWorker.routes';
 import { createDependencyContainer } from './registrations';
+import { sampleWorkerSdkClient } from './sdk';
 
 //! bootstrap resources and config
 const envFilePath = getEnvVar('DOTENV_FILE_PATH');
@@ -25,6 +26,9 @@ const docsPath = ci.resolve(tokens.DOCS_PATH);
 
 //! mounts the routes to the app
 app.use(sampleWorkerRouter);
+
+//! registers the sdk client
+app.registerSdks(sampleWorkerSdkClient);
 
 //! starts the server
 app.listen(port, host, () => {

@@ -1,4 +1,4 @@
-import { {{#is_kafka_enabled}}array,{{/is_kafka_enabled}} number, SchemaValidator, string } from "@{{app_name}}/core";
+import { {{#is_kafka_enabled}}array, {{/is_kafka_enabled}}{{#is_worker}}function_, {{/is_worker}}number, SchemaValidator, string{{#is_worker}}, type{{/is_worker}} } from "@{{app_name}}/core";
 import { metrics } from "@{{app_name}}/monitoring";{{#is_cache_enabled}}
 import { RedisTtlCache } from "@forklaunch/infrastructure-redis";{{/is_cache_enabled}}{{#is_s3_enabled}}
 import { S3ObjectStore } from "@forklaunch/infrastructure-s3";{{/is_s3_enabled}}
@@ -207,10 +207,12 @@ const runtimeDependencies = environmentConfig.chain({
 const serviceDependencies = runtimeDependencies.chain({ {{#is_worker}}
   WorkerConsumer: {
     lifetime: Lifetime.Scoped,
-    type: (
-      processEventsFunction: WorkerProcessFunction<{{pascal_case_name}}EventRecord>,
-      failureHandler: WorkerFailureHandler<{{pascal_case_name}}EventRecord>
-    ) => {{worker_type}}WorkerConsumer<{{pascal_case_name}}EventRecord, {{worker_type}}WorkerOptions>,
+    type: function_([
+      type<WorkerProcessFunction<{{pascal_case_name}}EventRecord>>(),
+      type<WorkerFailureHandler<{{pascal_case_name}}EventRecord>>()
+    ],
+      type<{{worker_type}}WorkerConsumer<{{pascal_case_name}}EventRecord, {{worker_type}}WorkerOptions>>()
+    ),
     factory: 
       {{{worker_consumer_factory}}}
   },

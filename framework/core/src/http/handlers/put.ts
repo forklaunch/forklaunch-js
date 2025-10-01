@@ -6,6 +6,7 @@ import {
   HttpContractDetails,
   ParamsObject,
   QueryObject,
+  ResolvedSessionObject,
   ResponsesObject,
   SchemaAuthMethods,
   SessionObject,
@@ -25,7 +26,6 @@ export const put = <
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
   VersionedApi extends VersionSchema<SV, 'put'>,
-  SessionSchema extends SessionObject<SV>,
   BaseRequest,
   BaseResponse,
   NextFunction,
@@ -36,7 +36,6 @@ export const put = <
     ReqQuery,
     ReqHeaders,
     VersionedApi,
-    SessionSchema,
     BaseRequest
   >
 >(
@@ -53,7 +52,6 @@ export const put = <
     ReqHeaders,
     ResHeaders,
     VersionedApi,
-    SessionSchema,
     BaseRequest,
     Auth
   >,
@@ -67,7 +65,7 @@ export const put = <
     ResHeaders,
     LocalsObj,
     VersionedApi,
-    SessionSchema,
+    ResolvedSessionObject<SV, Auth, SessionObject<SV>>,
     BaseRequest,
     BaseResponse,
     NextFunction
@@ -86,7 +84,6 @@ export const put = <
     ResHeaders,
     LocalsObj,
     VersionedApi,
-    SessionSchema,
     BaseRequest,
     BaseResponse,
     NextFunction,

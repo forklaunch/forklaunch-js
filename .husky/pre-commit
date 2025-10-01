@@ -6,4 +6,3 @@ cd framework
 pnpm sort-package-json */package.json
 pnpm lint-staged --relative
 cd ..
-

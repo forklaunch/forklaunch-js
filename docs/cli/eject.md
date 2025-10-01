@@ -11,17 +11,17 @@ Copy ForkLaunch dependencies into your project for customization.
 ## Usage
 
 ```bash
-forklaunch eject [options]
+forklaunch eject [OPTIONS]
 ```
 
 ## Options
 
 | Option | Short | Description | Default |
 |--------|--------|-------------|---------|
+| `--base_path` | `-p` | The application path to eject from | Current directory |
 | `--continue` | `-c` | Continue the eject operation without confirmation | `false` |
-| `--dependencies` | `-d` | Specify which dependencies to eject | Interactive selection |
-| `--dryrun` | `-n` | Show what would be ejected without making changes | `false` |
-| `--base_path` | `-b` | Path to the application directory | Current directory |
+| `--dependencies` | `-d` | The dependencies to eject (can specify multiple) | Interactive selection |
+| `--dryrun` | `-n` | Dry run the application (show what would be ejected) | `false` |
 
 ## Interactive Mode
 
@@ -57,13 +57,16 @@ When run without specifying dependencies, the command will:
 forklaunch eject
 
 # Eject specific dependencies
-forklaunch eject -d @forklaunch/infrastructure-redis -d @forklaunch/service-billing
+forklaunch eject --dependencies @forklaunch/infrastructure-redis @forklaunch/service-billing
 
 # Preview changes
-forklaunch eject --dryrun -d @forklaunch/service-iam
+forklaunch eject --dryrun --dependencies @forklaunch/service-iam
 
 # Skip confirmation
-forklaunch eject --continue -d @forklaunch/infrastructure-redis
+forklaunch eject --continue --dependencies @forklaunch/infrastructure-redis
+
+# Specify application path
+forklaunch eject --base_path ./my-app --dependencies @forklaunch/service-iam
 ```
 
 ## File Collision Handling

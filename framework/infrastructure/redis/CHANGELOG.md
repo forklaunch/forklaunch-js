@@ -1,5 +1,121 @@
 # @forklaunch/infrastructure-redis
 
+## 0.4.21
+
+### Patch Changes
+
+- package upgrade
+- Updated dependencies
+  - @forklaunch/common@0.6.14
+  - @forklaunch/core@0.15.3
+
+## 0.4.20
+
+### Patch Changes
+
+- upgrade package dependencies and add global options to nested routers
+- Updated dependencies
+  - @forklaunch/common@0.6.13
+  - @forklaunch/core@0.15.2
+
+## 0.4.19
+
+### Patch Changes
+
+- Update internal packages and expose RegistryOptions from universal sdk
+- Updated dependencies
+  - @forklaunch/common@0.6.12
+  - @forklaunch/core@0.15.1
+
+## 0.4.18
+
+### Patch Changes
+
+- Set the stage for improved universal sdk performance, and update internal packages
+- Updated dependencies
+  - @forklaunch/core@0.15.0
+  - @forklaunch/common@0.6.11
+
+## 0.4.17
+
+### Patch Changes
+
+- Update internal package versions
+- Updated dependencies
+  - @forklaunch/common@0.6.10
+  - @forklaunch/core@0.14.16
+
+## 0.4.16
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.14.15
+
+## 0.4.15
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.14.14
+
+## 0.4.14
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.14.13
+
+## 0.4.13
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.14.12
+
+## 0.4.12
+
+### Patch Changes
+
+- update internal packages and loosen global auth constraint
+- Updated dependencies
+  - @forklaunch/common@0.6.9
+  - @forklaunch/core@0.14.11
+
+## 0.4.11
+
+### Patch Changes
+
+- update internal packages
+- Updated dependencies
+  - @forklaunch/common@0.6.8
+  - @forklaunch/core@0.14.11
+
+## 0.4.10
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.14.10
+
+## 0.4.9
+
+### Patch Changes
+
+- slight hmac token creation signature change
+- Updated dependencies
+  - @forklaunch/common@0.6.7
+  - @forklaunch/core@0.14.9
+
+## 0.4.8
+
+### Patch Changes
+
+- Update packages and expose hmac key creation function
+- Updated dependencies
+  - @forklaunch/common@0.6.6
+  - @forklaunch/core@0.14.8
+
 ## 0.4.7
 
 ### Patch Changes

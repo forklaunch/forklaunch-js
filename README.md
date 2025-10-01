@@ -12,6 +12,10 @@ The **CLI** handles manifest updates, docker/environment management, and ensures
 
 The **framework** provides database integration, authentication, validation, and other common backend functionality, with maximum type-safety in mind, to get you up and running quickly.
 
+**Incrementally Adoptable**: ForkLaunch works as an Express DSL that seamlessly integrates with your existing Express applications. You can adopt it gradually, starting with a single endpoint and expanding as needed.
+
+**Real Examples**: See [`e2e-tests/servers`](framework/e2e-tests/servers) for complete working examples of ForkLaunch applications in action.
+
 The best part? If you don't like it, you can easily change it.
 
 ## Documentation

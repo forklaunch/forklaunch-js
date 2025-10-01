@@ -117,6 +117,16 @@ const environmentConfig = configInjector.chain({
     lifetime: Lifetime.Singleton,
     type: string,
     value: getEnvVar('OTEL_EXPORTER_OTLP_ENDPOINT')
+  },
+  HMAC_SECRET_KEY: {
+    lifetime: Lifetime.Singleton,
+    type: string,
+    value: getEnvVar('HMAC_SECRET_KEY')
+  },
+  JWKS_PUBLIC_KEY_URL: {
+    lifetime: Lifetime.Singleton,
+    type: string,
+    value: getEnvVar('JWKS_PUBLIC_KEY_URL')
   }
 });
 

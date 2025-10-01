@@ -20,8 +20,8 @@ forklaunch config [COMMAND]
 
 | Command     | Description                          | Options                                 |
 | :---------- | :----------------------------------- | :-------------------------------------- |
-| `pull <id>` | Download configuration from platform | `-o, --output` - Save to specific file  |
-| `push <id>` | Upload configuration to platform     | `-i, --input` - Read from specific file |
+| `pull <id>` | Retrieves a configuration from the forklaunch platform | `-o, --output` - Path to the configuration file to push |
+| `push <id>` | Push a configuration to the forklaunch platform | `-i, --input` - Path to the configuration file to push |
 
 ### Examples
 

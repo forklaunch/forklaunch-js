@@ -5,8 +5,8 @@ use clap::{ArgMatches, Command};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 use crate::{
-    core::{command::command, token::get_token_path},
     CliCommand,
+    core::{command::command, token::get_token_path},
 };
 
 pub(super) struct LogoutCommand;

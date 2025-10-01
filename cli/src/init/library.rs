@@ -43,7 +43,7 @@ use crate::{
         rendered_template::{RenderedTemplate, write_rendered_templates},
         symlinks::generate_symlinks,
         template::{PathIO, generate_with_template},
-        tsconfig::generate_tsconfig,
+        tsconfig::generate_project_tsconfig,
     },
     prompt::{ArrayCompleter, prompt_with_validation, prompt_without_validation},
 };
@@ -81,8 +81,9 @@ fn generate_basic_library(
         dryrun,
     )?;
     rendered_templates.push(generate_library_package_json(manifest_data, &output_path)?);
-    rendered_templates
-        .extend(generate_tsconfig(&output_path).with_context(|| ERROR_FAILED_TO_CREATE_TSCONFIG)?);
+    rendered_templates.extend(
+        generate_project_tsconfig(&output_path).with_context(|| ERROR_FAILED_TO_CREATE_TSCONFIG)?,
+    );
     rendered_templates.extend(
         generate_gitignore(&output_path).with_context(|| ERROR_FAILED_TO_CREATE_GITIGNORE)?,
     );

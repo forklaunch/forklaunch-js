@@ -3,6 +3,8 @@
     "declaration": true,
     "declarationMap": true,
     "experimentalDecorators": true,
+    "sourceMap": true,
+    "inlineSources": true,
 
     "lib": ["ESNext", "DOM"],
     "target": "ESNext",

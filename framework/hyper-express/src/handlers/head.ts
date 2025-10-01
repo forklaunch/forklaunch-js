@@ -6,6 +6,7 @@ import {
   head as innerHead,
   ParamsObject,
   QueryObject,
+  ResolvedSessionObject,
   ResponsesObject,
   SchemaAuthMethods,
   SessionObject,
@@ -98,7 +99,6 @@ export const head = <
   ResHeaders extends HeadersObject<SV>,
   LocalsObj extends Record<string, unknown>,
   const VersionedApi extends VersionSchema<SV, 'head'>,
-  const SessionSchema extends SessionObject<SV>,
   const Auth extends SchemaAuthMethods<
     SV,
     P,
@@ -106,7 +106,6 @@ export const head = <
     ReqQuery,
     ReqHeaders,
     VersionedApi,
-    SessionSchema,
     Request<LocalsObj>
   >
 >(
@@ -124,7 +123,6 @@ export const head = <
     ReqHeaders,
     ResHeaders,
     VersionedApi,
-    SessionSchema,
     Request<LocalsObj>,
     Auth
   >,
@@ -138,7 +136,7 @@ export const head = <
     ResHeaders,
     LocalsObj,
     VersionedApi,
-    SessionSchema,
+    ResolvedSessionObject<SV, Auth, SessionObject<SV>>,
     Request<LocalsObj>,
     Response<LocalsObj>,
     MiddlewareNext
@@ -156,7 +154,6 @@ export const head = <
     ResHeaders,
     LocalsObj,
     VersionedApi,
-    SessionSchema,
     Request<LocalsObj>,
     Response<LocalsObj>,
     MiddlewareNext,

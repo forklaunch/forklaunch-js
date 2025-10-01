@@ -219,9 +219,11 @@ const urlEncodedFormTest = forklaunchRouterInstance.post(
 
 forklaunchApplication.use(forklaunchRouterInstance);
 
-forklaunchApplication.listen(6935, () => {
-  console.log('server started on 6935');
-});
+if (import.meta.url === `file://${process.argv[1]}`) {
+  forklaunchApplication.listen(6935, () => {
+    console.log('server started on 6935');
+  });
+}
 
 export const liveTests = {
   getTest,
@@ -230,6 +232,8 @@ export const liveTests = {
   multipartTest,
   urlEncodedFormTest
 };
+
+export { forklaunchApplication };
 
 export function start() {
   return forklaunchApplication.listen(6935, () => {

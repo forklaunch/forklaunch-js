@@ -1,40 +1,39 @@
-import { BetterAuthOptions } from '@forklaunch/better-auth';
 import { mikroOrmAdapter } from '@forklaunch/better-auth-mikro-orm-fork';
-import { openAPI } from '@forklaunch/better-auth/plugins';
 import { Metrics } from '@forklaunch/blueprint-monitoring';
 import { OpenTelemetryCollector } from '@forklaunch/core/http';
 import { MikroORM } from '@mikro-orm/core';
-import { readFileSync } from 'fs';
+import { betterAuth, BetterAuthOptions } from 'better-auth';
+import { openAPI } from 'better-auth/plugins';
 
-export type BetterAuthConfig = ReturnType<typeof betterAuthConfig>;
+type Plugins = [ReturnType<typeof openAPI>];
+const plugins: Plugins = [
+  openAPI({
+    disableDefaultReference: true
+  })
+];
+
 export const betterAuthConfig = ({
   BETTER_AUTH_BASE_PATH,
-  PASSWORD_ENCRYPTION_SECRET_PATH,
+  PASSWORD_ENCRYPTION_SECRET,
   CORS_ORIGINS,
   orm,
   openTelemetryCollector
 }: {
   BETTER_AUTH_BASE_PATH: string;
-  PASSWORD_ENCRYPTION_SECRET_PATH: string;
+  PASSWORD_ENCRYPTION_SECRET: string;
   CORS_ORIGINS: string[];
   orm: MikroORM;
   openTelemetryCollector: OpenTelemetryCollector<Metrics>;
 }) =>
   ({
     basePath: BETTER_AUTH_BASE_PATH,
-    secret: readFileSync(PASSWORD_ENCRYPTION_SECRET_PATH, 'utf8').split(
-      '\n'
-    )[1],
+    secret: PASSWORD_ENCRYPTION_SECRET,
     trustedOrigins: CORS_ORIGINS,
     database: mikroOrmAdapter(orm),
     emailAndPassword: {
       enabled: true
     },
-    plugins: [
-      openAPI({
-        disableDefaultReference: true
-      })
-    ],
+    plugins,
     user: {
       additionalFields: {
         firstName: {
@@ -107,3 +106,6 @@ export const betterAuthConfig = ({
     },
     logger: openTelemetryCollector
   }) satisfies BetterAuthOptions;
+
+export type BetterAuthConfig = ReturnType<typeof betterAuthConfig>;
+export type BetterAuth = ReturnType<typeof betterAuth<BetterAuthConfig>>;

@@ -4,12 +4,41 @@ import { permissionRouter } from './api/routes/permission.routes';
 import { roleRouter } from './api/routes/role.routes';
 import { userRouter } from './api/routes/user.routes';
 import { ci, tokens } from './bootstrapper';
+import { iamSdkClient } from './sdk';
 
 //! resolves the openTelemetryCollector from the configuration
 const openTelemetryCollector = ci.resolve(tokens.OpenTelemetryCollector);
+const userService = ci.resolve(tokens.UserService);
 
 //! creates an instance of forklaunchExpress
-const app = forklaunchExpress(schemaValidator, openTelemetryCollector);
+const app = forklaunchExpress(schemaValidator, openTelemetryCollector, {
+  auth: {
+    surfacePermissions: async (payload) => {
+      if (!payload.sub) {
+        return new Set();
+      }
+      return new Set(
+        (
+          await userService.surfacePermissions({
+            id: payload.sub
+          })
+        ).map((permission) => permission.slug)
+      );
+    },
+    surfaceRoles: async (payload) => {
+      if (!payload.sub) {
+        return new Set();
+      }
+      return new Set(
+        (
+          await userService.surfaceRoles({
+            id: payload.sub
+          })
+        ).map((role) => role.name)
+      );
+    }
+  }
+});
 
 //! resolves the host, port, and version from the configuration
 const host = ci.resolve(tokens.HOST);
@@ -22,6 +51,9 @@ app.use(organizationRouter);
 app.use(permissionRouter);
 app.use(roleRouter);
 app.use(userRouter);
+
+//! register the sdk client
+app.registerSdks(iamSdkClient);
 
 //! starts the server
 app.listen(port, host, () => {

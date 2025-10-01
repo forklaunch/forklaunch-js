@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/interfaces-iam",
-  "version": "0.6.3",
+  "version": "0.7.3",
   "description": "IAM interfaces for forklaunch",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -37,15 +37,16 @@
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
     "package:eject": "./eject-package.bash",
+    "prepack": "pnpm run build",
     "publish:package": "./publish-package.bash",
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/common": "^0.6.13",
-    "@mikro-orm/core": "^6.5.5"
+    "@forklaunch/common": "^0.6.14",
+    "@mikro-orm/core": "^6.5.6"
   },
   "devDependencies": {
-    "@typescript/native-preview": "7.0.0-dev.20250924.1",
+    "@typescript/native-preview": "7.0.0-dev.20250930.1",
     "depcheck": "^1.4.7",
     "prettier": "^3.6.2",
     "typedoc": "^0.28.13"

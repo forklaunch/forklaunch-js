@@ -217,6 +217,9 @@ describe('handlers', () => {
           'x-test': string
         },
         auth: {
+          sessionSchema: {
+            organizationId: string
+          },
           tokenPrefix: 'Bearerz',
           basic: {
             login: (username: string, password: string) => {

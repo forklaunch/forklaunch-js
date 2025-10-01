@@ -12,6 +12,7 @@
   },
   "license": "MIT",
   "author": "Forklift Technologies, Inc.",
+  "type": "module",
   "types": "lib/index.d.ts",
   "scripts": {
     "build": "tsc",
@@ -20,9 +21,10 @@
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
     "lint": "eslint . -c eslint.config.mjs",
     "lint:fix": "eslint . -c eslint.config.mjs --fix",
+    "prepack": "pnpm run build",
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/core": "^0.15.2"
+    "@forklaunch/core": "^0.15.3"
   }
 }

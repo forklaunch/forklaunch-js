@@ -169,7 +169,7 @@ fn get_comment_style(filename: &str) -> Option<CommentStyle> {
     let styles = get_comment_styles();
     let extension = filename.rsplit('.').next().unwrap_or("").to_lowercase();
 
-    if extension == "json" || filename.to_lowercase() == "readme.md" {
+    if extension.is_empty() || extension == "json" || filename.to_lowercase() == "readme.md" {
         return None;
     }
 

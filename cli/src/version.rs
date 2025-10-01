@@ -4,7 +4,7 @@ use anyhow::Result;
 use clap::{ArgMatches, Command};
 use termcolor::{ColorChoice, StandardStream};
 
-use crate::{core::command::command, CliCommand};
+use crate::{CliCommand, core::command::command};
 
 #[derive(Debug)]
 pub(crate) struct VersionCommand;

@@ -12,6 +12,7 @@ use crate::{
     constants::{ERROR_FAILED_TO_PARSE_PACKAGE_JSON, ERROR_FAILED_TO_READ_PACKAGE_JSON},
     core::{
         ast::{
+            injections::inject_into_universal_sdk::UniversalSdkSpecialCase,
             deletions::delete_from_universal_sdk::delete_from_universal_sdk,
             transformations::transform_universal_sdk::{
                 transform_universal_sdk_add_sdk, transform_universal_sdk_change_sdk,
@@ -31,7 +32,7 @@ pub(crate) fn get_universal_sdk_additional_deps(
     is_iam_enabled: bool,
 ) -> HashMap<String, String> {
     let mut additional_deps = HashMap::new();
-    
+
     if is_billing_enabled {
         additional_deps.insert(format!("@{app_name}/billing"), "workspace:*".to_string());
     }
@@ -46,13 +47,19 @@ pub(crate) fn add_project_to_universal_sdk(
     base_path: &Path,
     app_name: &str,
     name: &str,
+    special_case: Option<UniversalSdkSpecialCase>,
 ) -> Result<()> {
     let kebab_case_app_name = &app_name.to_case(Case::Kebab);
     let kebab_case_name = &name.to_case(Case::Kebab);
 
     rendered_templates.push(RenderedTemplate {
         path: base_path.join("universal-sdk").join("universalSdk.ts"),
-        content: transform_universal_sdk_add_sdk(base_path, app_name, name)?,
+        content: transform_universal_sdk_add_sdk_with_special_case(
+            base_path,
+            app_name,
+            name,
+            special_case,
+        )?,
         context: None,
     });
 
