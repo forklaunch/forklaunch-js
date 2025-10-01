@@ -1,15 +1,16 @@
 use anyhow::Result;
 use clap::{ArgMatches, Command};
-use colored::Colorize;
 use std::collections::HashMap;
+use std::io::Write;
 use std::path::Path;
+use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
-use super::ast_parser::find_all_env_vars;
-use super::env_utils::{
+use crate::CliCommand;
+use crate::core::ast::infrastructure::env::find_all_env_vars;
+use crate::core::env::{
     add_env_vars_to_file, find_workspace_root, get_modules_path, get_target_env_file,
     is_env_var_defined,
 };
-use crate::CliCommand;
 
 #[derive(Debug)]
 pub(crate) struct SyncCommand;
@@ -35,35 +36,38 @@ impl CliCommand for SyncCommand {
     }
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
+        let mut stdout = StandardStream::stdout(ColorChoice::Always);
         let dry_run = matches.get_flag("dry-run");
 
         if dry_run {
-            println!(
-                "{}",
-                "🔍 Dry run mode - no changes will be made".yellow().bold()
-            );
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+            writeln!(stdout, "Dry run mode - no changes will be made")?;
+            stdout.reset()?;
         } else {
-            println!("{}", "🔄 Syncing environment variables...".blue().bold());
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
+            writeln!(stdout, "Syncing environment variables...")?;
+            stdout.reset()?;
         }
 
-        // Find workspace root and modules path
         let current_dir = std::env::current_dir()?;
         let workspace_root = find_workspace_root(&current_dir)?;
         let modules_path = get_modules_path(&workspace_root)?;
 
-        println!("📁 Workspace: {}", workspace_root.display());
-        println!("📦 Modules path: {}", modules_path.display());
+        writeln!(stdout, "Workspace: {}", workspace_root.display())?;
+        writeln!(stdout, "Modules path: {}", modules_path.display())?;
 
-        // Extract environment variables from all registrations.ts files
         let project_env_vars = find_all_env_vars(&modules_path)?;
 
         if project_env_vars.is_empty() {
-            println!("{}", "⚠️  No projects with registrations.ts found".yellow());
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+            writeln!(stdout, "No projects with registrations.ts found")?;
+            stdout.reset()?;
             return Ok(());
         }
 
-        // First, run validation to see what's missing
-        println!("\n{}", "🔍 Running validation first...".blue());
+        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
+        writeln!(stdout, "\nRunning validation first...")?;
+        stdout.reset()?;
         let mut missing_vars_by_project = HashMap::new();
 
         for (project_name, env_vars) in &project_env_vars {
@@ -84,28 +88,32 @@ impl CliCommand for SyncCommand {
         }
 
         if missing_vars_by_project.is_empty() {
-            println!(
-                "{}",
-                "✅ No missing environment variables found!".green().bold()
-            );
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+            writeln!(stdout, "No missing environment variables found!")?;
+            stdout.reset()?;
             return Ok(());
         }
 
-        // Analyze which variables should go to root vs project level
         let sync_plan = create_sync_plan(&missing_vars_by_project, &workspace_root, &modules_path)?;
 
-        display_sync_plan(&sync_plan);
+        display_sync_plan(&sync_plan, &mut stdout)?;
 
         if !dry_run {
-            execute_sync_plan(&sync_plan)?;
-            println!("\n{}", "✅ Environment sync completed!".green().bold());
-            println!("💡 Remember to fill in the actual values for the added variables.");
+            execute_sync_plan(&sync_plan, &mut stdout)?;
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+            writeln!(stdout, "\nEnvironment sync completed!")?;
+            stdout.reset()?;
+            writeln!(
+                stdout,
+                "Remember to fill in the actual values for the added variables."
+            )?;
         } else {
-            println!(
-                "\n{}",
-                "ℹ️  This was a dry run. Use 'forklaunch environment sync' to apply changes."
-                    .blue()
-            );
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
+            writeln!(
+                stdout,
+                "\nThis was a dry run. Use 'forklaunch environment sync' to apply changes."
+            )?;
+            stdout.reset()?;
         }
 
         Ok(())
@@ -172,29 +180,36 @@ fn create_sync_plan(
     })
 }
 
-fn display_sync_plan(plan: &SyncPlan) {
-    println!("\n{}", "📋 Sync Plan".blue().bold());
-    println!("{}", "═".repeat(40));
+fn display_sync_plan(plan: &SyncPlan, stdout: &mut StandardStream) -> Result<()> {
+    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
+    writeln!(stdout, "\nSync Plan")?;
+    stdout.reset()?;
+    writeln!(stdout, "{}", "=".repeat(40))?;
 
     if !plan.root_vars.is_empty() {
-        println!(
-            "\n🌍 {} variables to add to root .env.local:",
+        writeln!(
+            stdout,
+            "\n{} variables to add to root .env.local:",
             plan.root_vars.len()
-        );
-        println!("   📄 {}", plan.root_env_file.display());
+        )?;
+        writeln!(stdout, "   {}", plan.root_env_file.display())?;
         for var_name in &plan.root_vars {
-            println!("   • {}", var_name.cyan());
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
+            writeln!(stdout, "   - {}", var_name)?;
+            stdout.reset()?;
         }
     }
 
     if !plan.project_vars.is_empty() {
-        println!("\n📦 Project-specific variables:");
+        writeln!(stdout, "\nProject-specific variables:")?;
         for (project_name, vars) in &plan.project_vars {
             if let Some(env_file) = plan.project_env_files.get(project_name) {
-                println!("\n   {} ({} variables):", project_name.bold(), vars.len());
-                println!("   📄 {}", env_file.display());
+                writeln!(stdout, "\n   {} ({} variables):", project_name, vars.len())?;
+                writeln!(stdout, "   {}", env_file.display())?;
                 for var_name in vars {
-                    println!("   • {}", var_name.cyan());
+                    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
+                    writeln!(stdout, "   - {}", var_name)?;
+                    stdout.reset()?;
                 }
             }
         }
@@ -203,21 +218,24 @@ fn display_sync_plan(plan: &SyncPlan) {
     let total_vars =
         plan.root_vars.len() + plan.project_vars.values().map(|v| v.len()).sum::<usize>();
 
-    println!(
-        "\n📊 Total variables to add: {}",
-        total_vars.to_string().yellow().bold()
-    );
+    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+    writeln!(stdout, "\nTotal variables to add: {}", total_vars)?;
+    stdout.reset()?;
+
+    Ok(())
 }
 
-fn execute_sync_plan(plan: &SyncPlan) -> Result<()> {
-    println!("\n{}", "🚀 Executing sync plan...".blue().bold());
+fn execute_sync_plan(plan: &SyncPlan, stdout: &mut StandardStream) -> Result<()> {
+    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
+    writeln!(stdout, "\nExecuting sync plan...")?;
+    stdout.reset()?;
 
-    // Add root variables
     if !plan.root_vars.is_empty() {
-        println!(
-            "📝 Adding {} variables to root .env.local...",
+        writeln!(
+            stdout,
+            "Adding {} variables to root .env.local...",
             plan.root_vars.len()
-        );
+        )?;
 
         let mut root_vars_map = HashMap::new();
         for var_name in &plan.root_vars {
@@ -225,16 +243,23 @@ fn execute_sync_plan(plan: &SyncPlan) -> Result<()> {
         }
 
         add_env_vars_to_file(&plan.root_env_file, &root_vars_map)?;
-        println!(
-            "   ✅ Root variables added to {}",
+        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+        writeln!(
+            stdout,
+            "   Root variables added to {}",
             plan.root_env_file.display()
-        );
+        )?;
+        stdout.reset()?;
     }
 
-    // Add project-specific variables
     for (project_name, vars) in &plan.project_vars {
         if let Some(env_file) = plan.project_env_files.get(project_name) {
-            println!("📝 Adding {} variables to {}...", vars.len(), project_name);
+            writeln!(
+                stdout,
+                "Adding {} variables to {}...",
+                vars.len(),
+                project_name
+            )?;
 
             let mut project_vars_map = HashMap::new();
             for var_name in vars {
@@ -242,7 +267,9 @@ fn execute_sync_plan(plan: &SyncPlan) -> Result<()> {
             }
 
             add_env_vars_to_file(env_file, &project_vars_map)?;
-            println!("   ✅ Variables added to {}", env_file.display());
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+            writeln!(stdout, "   Variables added to {}", env_file.display())?;
+            stdout.reset()?;
         }
     }
 

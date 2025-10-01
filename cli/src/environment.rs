@@ -5,8 +5,6 @@ use validate::ValidateCommand;
 
 use crate::{CliCommand, core::command::command};
 
-pub(crate) mod ast_parser;
-pub(crate) mod env_utils;
 pub(crate) mod sync;
 pub(crate) mod validate;
 
