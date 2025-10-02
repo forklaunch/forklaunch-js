@@ -209,7 +209,7 @@ pub(crate) fn application_up_packages_script(runtime: &Runtime) -> String {
 
 // Project package.json dependencies constants
 // @forklaunch/better-auth
-pub(crate) const BETTER_AUTH_VERSION: &str = "^1.3.8";
+pub(crate) const BETTER_AUTH_VERSION: &str = "^1.3.23";
 // @forklaunch/better-auth-mikro-orm-fork
 pub(crate) const BETTER_AUTH_MIKRO_ORM_VERSION: &str = "~0.4.106";
 // @forklaunch/blueprint-core
@@ -308,8 +308,6 @@ pub(crate) const TYPES_UUID_VERSION: &str = "^11.0.0";
 // Project package.json scripts constants
 pub(crate) const PROJECT_BUILD_SCRIPT: &str = "tsc";
 pub(crate) const PROJECT_DOCS_SCRIPT: &str = "typedoc --out docs *";
-pub(crate) const PROJECT_START_WORKER_CLIENT_SCRIPT: &str =
-    "DOTENV_FILE_PATH=.env.prod node --import tsx dist/client.js";
 pub(crate) const PROJECT_SEED_SCRIPT: &str = "[ -z $DOTENV_FILE_PATH ] && export DOTENV_FILE_PATH=.env.local; NODE_OPTIONS='--import=tsx' mikro-orm seeder:run";
 
 pub(crate) fn project_format_script(formatter: &Formatter) -> String {
@@ -416,7 +414,11 @@ pub(crate) fn project_migrate_script(command: &str) -> String {
 
 pub(crate) fn project_start_server_script(runtime: &Runtime, database: Option<Database>) -> String {
     format!(
-        "{}DOTENV_FILE_PATH=.env.prod node --import tsx dist/server.js",
+        "{}DOTENV_FILE_PATH=.env.prod {} dist/server.js",
+        match runtime {
+            Runtime::Bun => "bun",
+            Runtime::Node => "node --import=tsx",
+        },
         if database.is_some_and(|db| db != Database::MongoDB) {
             format!(
                 "DOTENV_FILE_PATH=.env.prod {} migrate:up && ",
@@ -433,7 +435,11 @@ pub(crate) fn project_start_server_script(runtime: &Runtime, database: Option<Da
 }
 pub(crate) fn project_start_worker_script(runtime: &Runtime, database: Option<Database>) -> String {
     format!(
-        "{}DOTENV_FILE_PATH=.env.prod node --import tsx dist/worker.js",
+        "{}DOTENV_FILE_PATH=.env.prod {} dist/worker.js",
+        match runtime {
+            Runtime::Bun => "bun",
+            Runtime::Node => "node --import=tsx",
+        },
         if database.is_some_and(|db| db != Database::MongoDB) {
             format!(
                 "{} migrate:up && ",

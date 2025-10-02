@@ -21,4 +21,4 @@ export const iamSdkClient = {{#is_better_auth}}({
         plugins: [inferAdditionalFields<BetterAuthConfig>()]
     })
 }{{/is_better_auth}};{{#is_billing}}
-export const billingSdkClient = universalSdk<BillingSdkClient>;
+export const billingSdkClient = universalSdk<BillingSdkClient>;{{/is_billing}}

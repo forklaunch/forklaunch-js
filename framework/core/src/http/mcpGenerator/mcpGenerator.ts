@@ -1,7 +1,6 @@
 import { isNever, isRecord, safeStringify } from '@forklaunch/common';
 import { FastMCP } from '@forklaunch/fastmcp-fork';
 import { string, ZodSchemaValidator, ZodType } from '@forklaunch/validator/zod';
-import { isUnionable } from '../guards/isVersionedInputSchema';
 import {
   discriminateBody,
   discriminateResponseBodies
@@ -50,8 +49,16 @@ function generateInputSchema(
           body: schemaValidator.schemify(discriminatedBody.schema)
         }
       : {}),
-    ...(params ? { params: schemaValidator.schemify(params) } : {}),
-    ...(query ? { query: schemaValidator.schemify(query) } : {}),
+    ...(params
+      ? {
+          params: schemaValidator.schemify(params)
+        }
+      : {}),
+    ...(query
+      ? {
+          query: schemaValidator.schemify(query)
+        }
+      : {}),
     ...(requestHeaders
       ? {
           headers: schemaValidator.schemify({
@@ -155,196 +162,203 @@ export function generateMcpServer<
         );
       }
 
-      mcpServer.addTool({
-        name: route.contractDetails.name,
-        description: route.contractDetails.summary,
-        parameters: isUnionable(inputSchemas)
-          ? schemaValidator.union(inputSchemas)
-          : inputSchemas[0],
-        execute: async (args) => {
-          const { contentType, body, params, query, headers } = args as {
-            contentType?: string;
-            params?: Record<string, string | number | boolean>;
-            body?: Record<string, unknown> | string;
-            query?: Record<string, string | number | boolean>;
-            headers?: Record<string, unknown>;
-          };
+      inputSchemas.forEach((inputSchema, index) => {
+        mcpServer.addTool({
+          name:
+            route.contractDetails.name +
+            (Object.keys(route.contractDetails.versions ?? {}).length > 1
+              ? ` [v${Object.keys(route.contractDetails.versions ?? {})[index]}]`
+              : ''),
+          description: route.contractDetails.summary,
+          parameters: inputSchema,
+          execute: async (args) => {
+            const { contentType, body, params, query, headers } = args as {
+              contentType?: string;
+              params?: Record<string, string | number | boolean>;
+              body?: Record<string, unknown> | string;
+              query?: Record<string, string | number | boolean>;
+              headers?: Record<string, unknown>;
+            };
 
-          let url = `${protocol}://${host}:${port}${fullPath}${route.path}`;
+            let url = `${protocol}://${host}:${port}${fullPath}${route.path}`;
 
-          if (params) {
-            for (const key in params) {
-              url = url.replace(
-                `:${key}`,
-                encodeURIComponent(params[key] as string)
+            if (params) {
+              for (const key in params) {
+                url = url.replace(
+                  `:${key}`,
+                  encodeURIComponent(params[key] as string)
+                );
+              }
+            }
+
+            let bodySchema;
+            let responsesSchemas;
+            if (route.contractDetails.versions) {
+              const version = route.contractDetails.versions[index];
+              if (version.body && schemaValidator.parse(inputSchema, args).ok) {
+                bodySchema = version.body;
+                responsesSchemas = version.responses;
+              }
+            } else {
+              bodySchema = route.contractDetails.body;
+              responsesSchemas = route.contractDetails.responses;
+            }
+
+            const discriminatedBody = bodySchema
+              ? discriminateBody(schemaValidator, bodySchema)
+              : undefined;
+
+            let parsedBody;
+            if (discriminatedBody) {
+              switch (discriminatedBody.parserType) {
+                case 'json': {
+                  parsedBody = safeStringify(body);
+                  break;
+                }
+                case 'text': {
+                  parsedBody = body;
+                  break;
+                }
+                case 'file': {
+                  parsedBody = Buffer.from(safeStringify(body));
+                  break;
+                }
+                case 'multipart': {
+                  const formData = new FormData();
+                  if (isRecord(body)) {
+                    for (const key in body) {
+                      if (typeof body[key] === 'string') {
+                        if (
+                          schemaValidator.isInstanceOf(
+                            body[key],
+                            schemaValidator.file
+                          )
+                        ) {
+                          formData.append(
+                            key,
+                            new Blob([Buffer.from(body[key])])
+                          );
+                        } else {
+                          formData.append(key, body[key]);
+                        }
+                      } else {
+                        throw new Error('Body is not a valid multipart object');
+                      }
+                    }
+                  } else {
+                    throw new Error('Body is not a valid multipart object');
+                  }
+                  parsedBody = formData;
+                  break;
+                }
+                case 'urlEncoded': {
+                  if (isRecord(body)) {
+                    parsedBody = new URLSearchParams(
+                      Object.entries(body).map(([key, value]) => [
+                        key,
+                        safeStringify(value)
+                      ])
+                    );
+                  } else {
+                    throw new Error('Body is not a valid url encoded object');
+                  }
+                  break;
+                }
+                default: {
+                  isNever(discriminatedBody.parserType);
+                  parsedBody = safeStringify(body);
+                  break;
+                }
+              }
+            }
+
+            if (query) {
+              const queryString = new URLSearchParams(
+                Object.entries(query).map(([key, value]) => [
+                  key,
+                  safeStringify(value)
+                ])
+              ).toString();
+              url += queryString ? `?${queryString}` : '';
+            }
+
+            const response = await fetch(encodeURI(url), {
+              method: route.method.toUpperCase(),
+              headers: {
+                ...headers,
+                ...(discriminatedBody?.contentType != 'multipart/form-data'
+                  ? {
+                      'Content-Type':
+                        contentType ?? discriminatedBody?.contentType
+                    }
+                  : {})
+              },
+              body: parsedBody as BodyInit | null | undefined
+            });
+
+            if (response.status >= 300) {
+              throw new Error(
+                `Error received while proxying request to ${url}: ${await response.text()}`
               );
             }
-          }
 
-          let bodySchema;
-          let responsesSchemas;
-          if (route.contractDetails.versions) {
-            Object.values(route.contractDetails.versions).forEach(
-              (version, index) => {
-                if (
-                  version.body &&
-                  schemaValidator.parse(inputSchemas[index], args).ok
-                ) {
-                  bodySchema = version.body;
-                  responsesSchemas = version.responses;
-                }
-              }
-            );
-          } else {
-            bodySchema = route.contractDetails.body;
-            responsesSchemas = route.contractDetails.responses;
-          }
+            if (!responsesSchemas) {
+              throw new Error('No responses schemas found');
+            }
 
-          const discriminatedBody = bodySchema
-            ? discriminateBody(schemaValidator, bodySchema)
-            : undefined;
-
-          let parsedBody;
-          if (discriminatedBody) {
-            switch (discriminatedBody.parserType) {
-              case 'json': {
-                parsedBody = safeStringify(body);
-                break;
-              }
-              case 'text': {
-                parsedBody = body;
-                break;
-              }
-              case 'file': {
-                parsedBody = body;
-                break;
-              }
-              case 'multipart': {
-                const formData = new FormData();
-                if (isRecord(body)) {
-                  for (const key in body) {
-                    if (
-                      typeof body[key] === 'string' ||
-                      body[key] instanceof Blob
-                    ) {
-                      formData.append(key, body[key]);
-                    } else {
-                      throw new Error('Body is not a valid multipart object');
+            const contractContentType = discriminateResponseBodies(
+              schemaValidator,
+              responsesSchemas
+            )[response.status].contentType;
+            switch (
+              contentTypeMap && contentTypeMap[contractContentType]
+                ? contentTypeMap[contractContentType]
+                : contractContentType
+            ) {
+              case 'application/json':
+                return {
+                  content: [
+                    {
+                      type: 'text' as const,
+                      text: safeStringify(await response.json())
                     }
-                  }
-                } else {
-                  throw new Error('Body is not a valid multipart object');
-                }
-                parsedBody = formData;
-                break;
-              }
-              case 'urlEncoded': {
-                if (isRecord(body)) {
-                  parsedBody = new URLSearchParams(
-                    Object.entries(body).map(([key, value]) => [
-                      key,
-                      safeStringify(value)
-                    ])
-                  );
-                } else {
-                  throw new Error('Body is not a valid url encoded object');
-                }
-                break;
-              }
-              default: {
-                isNever(discriminatedBody.parserType);
-                parsedBody = safeStringify(body);
-                break;
-              }
+                  ]
+                };
+              case 'text/plain':
+                return {
+                  content: [
+                    { type: 'text' as const, text: await response.text() }
+                  ]
+                };
+              case 'application/octet-stream':
+                return {
+                  content: [
+                    {
+                      type: 'resource' as const,
+                      resource: {
+                        uri: response.url,
+                        blob: Buffer.from(
+                          await (await response.blob()).arrayBuffer()
+                        ).toString('base64')
+                      }
+                    }
+                  ]
+                };
+              case 'text/event-stream':
+                return {
+                  content: [
+                    { type: 'text' as const, text: await response.text() }
+                  ]
+                };
+              default:
+                return {
+                  content: [
+                    { type: 'text' as const, text: await response.text() }
+                  ]
+                };
             }
           }
-
-          if (query) {
-            const queryString = new URLSearchParams(
-              Object.entries(query).map(([key, value]) => [
-                key,
-                safeStringify(value)
-              ])
-            ).toString();
-            url += queryString ? `?${queryString}` : '';
-          }
-
-          const response = await fetch(encodeURI(url), {
-            method: route.method.toUpperCase(),
-            headers: {
-              ...headers,
-              ...(discriminatedBody?.contentType != 'multipart/form-data'
-                ? {
-                    'Content-Type':
-                      contentType ?? discriminatedBody?.contentType
-                  }
-                : {})
-            },
-            body: parsedBody as BodyInit | null | undefined
-          });
-
-          if (response.status >= 300) {
-            throw new Error(
-              `Error received while proxying request to ${url}: ${await response.text()}`
-            );
-          }
-
-          if (!responsesSchemas) {
-            throw new Error('No responses schemas found');
-          }
-
-          const contractContentType = discriminateResponseBodies(
-            schemaValidator,
-            responsesSchemas
-          )[response.status].contentType;
-          switch (
-            contentTypeMap && contentTypeMap[contractContentType]
-              ? contentTypeMap[contractContentType]
-              : contractContentType
-          ) {
-            case 'application/json':
-              return {
-                content: [
-                  {
-                    type: 'text' as const,
-                    text: safeStringify(await response.json())
-                  }
-                ]
-              };
-            case 'text/plain':
-              return {
-                content: [
-                  { type: 'text' as const, text: await response.text() }
-                ]
-              };
-            case 'application/octet-stream':
-              return {
-                content: [
-                  {
-                    type: 'resource' as const,
-                    resource: {
-                      uri: response.url,
-                      blob: Buffer.from(
-                        await (await response.blob()).arrayBuffer()
-                      ).toString('base64')
-                    }
-                  }
-                ]
-              };
-            case 'text/event-stream':
-              return {
-                content: [
-                  { type: 'text' as const, text: await response.text() }
-                ]
-              };
-            default:
-              return {
-                content: [
-                  { type: 'text' as const, text: await response.text() }
-                ]
-              };
-          }
-        }
+        });
       });
     });
   });

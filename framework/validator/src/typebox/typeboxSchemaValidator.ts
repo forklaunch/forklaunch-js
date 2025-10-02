@@ -326,16 +326,51 @@ export class TypeboxSchemaValidator
       }
       return '';
     });
-  file: TTransform<TUnsafe<Buffer<ArrayBuffer>>, Blob> = Type.Transform(
-    Type.Unsafe<Buffer<ArrayBuffer>>({
-      errorType: 'binary',
-      format: 'binary',
-      example: 'a raw buffer or file stream',
-      title: 'File'
-    })
+  file: TTransform<
+    TUnion<[TUnsafe<Buffer>, TUnsafe<ArrayBuffer>, TUnsafe<Blob>, TString]>,
+    Blob
+  > = Type.Transform(
+    Type.Union([
+      Type.Unsafe<Buffer>({
+        errorType: 'binary',
+        format: 'binary',
+        example: 'a raw buffer or file stream',
+        title: 'File'
+      }),
+      Type.Unsafe<ArrayBuffer>({
+        errorType: 'binary',
+        format: 'binary',
+        example: 'an array buffer',
+        title: 'File'
+      }),
+      Type.Unsafe<Blob>({
+        errorType: 'binary',
+        format: 'binary',
+        example: 'a blob object',
+        title: 'File'
+      }),
+      Type.String({
+        errorType: 'binary',
+        format: 'binary',
+        example: 'a string content',
+        title: 'File'
+      })
+    ])
   )
     .Decode((value) => {
-      return new InMemoryBlob(value) as Blob;
+      if (value instanceof Buffer) {
+        return new InMemoryBlob(value as Buffer<ArrayBuffer>) as Blob;
+      }
+      if (value instanceof ArrayBuffer) {
+        return new InMemoryBlob(Buffer.from(value)) as Blob;
+      }
+      if (value instanceof Blob) {
+        return value as Blob;
+      }
+      if (typeof value === 'string') {
+        return new InMemoryBlob(Buffer.from(value)) as Blob;
+      }
+      return new InMemoryBlob(Buffer.from(value)) as Blob;
     })
     .Encode((value) => (value as InMemoryBlob).content);
   type = <T>() => this.any as TTransform<TAny, T>;

@@ -46,6 +46,9 @@ describe('universalSdkBasic', async () => {
     const getTest = await client.sample.path.a.b.get['2.0.0']({
       headers: {
         authorization: 'bb YmFzaWN1c2VyOnBhc3N3b3Jk'
+      },
+      params: {
+        id: '123'
       }
     });
     expect(getTest.code).toBe(200);

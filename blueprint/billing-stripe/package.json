@@ -12,6 +12,7 @@
   },
   "license": "MIT",
   "author": "Forklift Technologies, Inc.",
+  "type": "module",
   "typesVersions": {
     "*": {
       ".": [
