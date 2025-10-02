@@ -41,6 +41,7 @@ use crate::{
         universal_sdk::{remove_project_vec_from_universal_sdk},
     },
     prompt::{prompt_for_confirmation, prompt_with_validation, ArrayCompleter},
+    sync::{service::sync_add_service_to_manifest, constants::RUNTIME_PROJECTS_TO_IGNORE},
 };
 
 #[derive(Debug)]
@@ -52,54 +53,7 @@ impl SyncCommand {
     }
 }
 
-const DIRS_TO_IGNORE: &[&str] = &[
-    "node_modules",
-    "assets",
-    "patches",
-    ".git",
-    ".github",
-    ".vscode",
-    "monitoring",
-    "core",
-    "universal-sdk",
-];
-const DOCKER_SERVICES_TO_IGNORE: &[&str] = &[
-    "redis",
-    "postgres",
-    "mysql",
-    "mariadb",
-    "sqlite",
-    "better-sqlite",
-    "libsql",
-    "mssql",
-    "mongodb",
-    "rabbitmq",
-    "tempo",
-    "loki",
-    "prometheus",
-    "grafana",
-    "otel-collector",
-    "redis",
-    "postgresql",
-    "mysql",
-    "mariadb",
-    "sqlite",
-    "better-sqlite",
-    "libsql",
-    "mssql",
-    "mongodb",
-    "rabbitmq",
-    "tempo",
-    "loki",
-    "prometheus",
-    "grafana",
-    "otel-collector",
-];
-const RUNTIME_PROJECTS_TO_IGNORE: &[&str] = &[
-    "core",
-    "monitoring",
-    "universal-sdk",
-];
+
 
 /// Generic function to find directory names in any given path
 /// 
@@ -275,144 +229,6 @@ fn prompt_sync_confirmation(
     Ok(true)
 }
 
-fn init_service(service_name: &str, app_root_path: &Path, modules_path: &Path, manifest_data: &mut ApplicationManifestData, stdout: &mut StandardStream) -> Result<()> {
-    let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
-    let mut stdout = StandardStream::stdout(ColorChoice::Always);
-
-    
-    let service_base_path = modules_path.join(service_name);
-    let service_directories = find_project_dir_names(&service_base_path)?;
-    let service_files = find_file_names(&service_base_path)?;
-    println!("sync:286 service_directories: {:?}", service_directories);
-    println!("sync:287 service_files: {:?}", service_files);
-    
-    let service_manifest_data = ServiceManifestData::default();
-    let service_manifest_data = service_manifest_data.initialize(
-        InitializableManifestConfigMetadata::Project(ProjectInitializationMetadata {
-            project_name: service_name.clone(),
-        }),
-    );
-
-    let database = prompt_with_validation(
-        &mut line_editor,
-        &mut stdout,
-        "database",
-        matches,
-        "database type",
-        Some(&Database::VARIANTS),
-        |input| Database::VARIANTS.contains(&input),
-        |_| "Invalid database type. Please try again".to_string(),
-    )?
-    .parse()?;
-     let description = prompt_without_validation(
-        &mut line_editor,
-        &mut stdout,
-        "description",
-        matches,
-        "description",
-        None,
-    )?;
-    let mut manifest_data: ServiceManifestData = ServiceManifestData {
-        // Common fields from ApplicationManifestData
-        id: manifest_data.id.clone(),
-        app_name: manifest_data.app_name.clone(),
-        modules_path: manifest_data.modules_path.clone(),
-        docker_compose_path: manifest_data.docker_compose_path.clone(),
-        camel_case_app_name: manifest_data.camel_case_app_name.clone(),
-        pascal_case_app_name: manifest_data.pascal_case_app_name.clone(),
-        kebab_case_app_name: manifest_data.kebab_case_app_name.clone(),
-        app_description: manifest_data.app_description.clone(),
-        author: manifest_data.author.clone(),
-        cli_version: manifest_data.cli_version.clone(),
-        formatter: manifest_data.formatter.clone(),
-        linter: manifest_data.linter.clone(),
-        validator: manifest_data.validator.clone(),
-        runtime: manifest_data.runtime.clone(),
-        test_framework: manifest_data.test_framework.clone(),
-        projects: manifest_data.projects.clone(),
-        http_framework: manifest_data.http_framework.clone(),
-        license: manifest_data.license.clone(),
-        project_peer_topology: manifest_data.project_peer_topology.clone(),
-        is_biome: manifest_data.is_biome,
-        is_eslint: manifest_data.is_eslint,
-        is_oxlint: manifest_data.is_oxlint,
-        is_prettier: manifest_data.is_prettier,
-        is_express: manifest_data.is_express,
-        is_hyper_express: manifest_data.is_hyper_express,
-        is_zod: manifest_data.is_zod,
-        is_typebox: manifest_data.is_typebox,
-        is_bun: manifest_data.is_bun,
-        is_node: manifest_data.is_node,
-        is_vitest: manifest_data.is_vitest,
-        is_jest: manifest_data.is_jest,
-
-        service_name: service_name.clone(),
-        service_path: service_name.clone(),
-        camel_case_name: service_name.to_case(Case::Camel),
-        pascal_case_name: service_name.to_case(Case::Pascal),
-        kebab_case_name: service_name.to_case(Case::Kebab),
-        description: description.clone(),
-        database: database.to_string(),
-        database_port: get_database_port(&database),
-        db_driver: get_db_driver(&database),
-
-        is_mongo: database == Database::MongoDB,
-        is_postgres: database == Database::PostgreSQL,
-        is_sqlite: database == Database::SQLite,
-        is_mysql: database == Database::MySQL,
-        is_mariadb: database == Database::MariaDB,
-        is_better_sqlite: database == Database::BetterSQLite,
-        is_libsql: database == Database::LibSQL,
-        is_mssql: database == Database::MsSQL,
-        is_in_memory_database: is_in_memory_database(&database),
-
-        is_iam: false,
-        is_billing: false,
-        is_cache_enabled: infrastructure.contains(&Infrastructure::Redis),
-        is_s3_enabled: infrastructure.contains(&Infrastructure::S3),
-        is_database_enabled: true,
-
-        is_better_auth: false,
-        is_stripe: false,
-    };
-
-    print("sync:379 Initialize service here...")
-    // TODO: implement service initialization
-    // let dryrun = False;
-    // generate_basic_service(
-    //     &service_name,
-    //     &service_base_path,
-    //     &app_root_path,
-    //     &mut service_manifest_data,
-    //     &mut stdout,
-    //     dryrun,
-    // )?;
-    // if !dryrun {
-    //     stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-    //     writeln!(stdout, "{} initialized successfully!", service_name)?;
-    //     stdout.reset()?;
-    //     format_code(&base_path, &manifest_data.runtime.parse()?);
-    // }
-
-    Ok(())
-}
-
-fn init_library(project_name: &str, modules_path: &Path, manifest_data: &mut ApplicationManifestData, stdout: &mut StandardStream) -> Result<()> {
-    Ok(())
-}
-
-fn init_worker(project_name: &str, modules_path: &Path, manifest_data: &mut ApplicationManifestData, stdout: &mut StandardStream) -> Result<()> {
-    Ok(())
-}
-
-fn init_module(project_name: &str, modules_path: &Path, manifest_data: &mut ApplicationManifestData, stdout: &mut StandardStream) -> Result<()> {
-    Ok(())
-}
-
-fn init_router(project_name: &str, modules_path: &Path, manifest_data: &mut ApplicationManifestData, stdout: &mut StandardStream) -> Result<()> {
-    Ok(())
-}
-
 impl CliCommand for SyncCommand {
     fn command(&self) -> Command {
         command(
@@ -535,7 +351,7 @@ impl CliCommand for SyncCommand {
                 writeln!(stdout, "No projects to remove from manifest.toml")?;
                 stdout.reset()?;
             }
-            if !manifest_projects_to_add.is_empty() && !matches.get_flag("skip-prompt") {
+            if !manifest_projects_to_add.is_empty() {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
                 writeln!(stdout, "Found {} project(s) in directories that are not in manifest:", manifest_projects_to_add.len())?;
                 for project_name in &manifest_projects_to_add {
@@ -545,35 +361,21 @@ impl CliCommand for SyncCommand {
                 // writeln!(stdout, "Please add these projects to the manifest.")?;
                 // TODO: add projects to manifest.toml
                 // read directory, create manifest data, add project to manifest.toml
-                for project_name in &manifest_projects_to_add {
-                    let Some(project_type) = prompt_with_validation(
-                        &mut line_editor,
+                for dir_name in &manifest_projects_to_add {
+                    let package_type = prompt_project_type(
+                        &mut line_editor, 
+                        &mut stdout, 
+                        matches)?;
+                    add_package_to_artifact(
+                        &mut manifest_data,
+                        &modules_path,
+                        "manifest",
+                        &package_type,
+                        &manifest_data.runtime,
+                        &dir_project_names_set,
+                        &mut rendered_templates,
                         &mut stdout,
-                        "type",
-                        matches,
-                        "project type",
-                        Some(&InitializeType::VARIANTS),
-                        |input| InitializeType::VARIANTS.contains(&input),
-                        |_| "Invalid project type. Please try again".to_string(),
-                    )?
-                    .parse()?;
-                    match project_type {
-                        InitializeType::Service => {
-                            init_service(project_name, &app_root_path, &modules_path, &manifest_data, &mut stdout)?;
-                        }
-                        InitializeType::Library => {
-                            init_library(project_name, &modules_path, &manifest_data, &mut stdout)?;
-                        }
-                        InitializeType::Worker => {
-                            init_worker(project_name, &modules_path, &manifest_data, &mut stdout)?;
-                        }
-                        InitializeType::Module => {
-                            init_module(project_name, &modules_path, &manifest_data, &mut stdout)?;
-                        }
-                        InitializeType::Router => {
-                            init_router(project_name, &modules_path, &manifest_data, &mut stdout)?;
-                        }
-                    }
+                    )?;
                 }
             } else {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;

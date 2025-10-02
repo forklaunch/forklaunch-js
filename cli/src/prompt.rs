@@ -257,3 +257,21 @@ pub(crate) fn prompt_comma_separated_list_from_selections(
         Ok(None)
     }
 }
+
+pub(crate) fn prompt_project_type(
+    line_editor: &mut Editor<ArrayCompleter, DefaultHistory>,
+    stdout: &mut StandardStream,
+    matches: &ArgMatches,
+) -> Result<String> {
+    let project_type = prompt_with_validation(
+        line_editor, 
+        stdout, 
+        "type", 
+        matches, 
+        "project type", 
+        Some(&InitializeType::VARIANTS), 
+        |input| InitializeType::VARIANTS.contains(&input), 
+        |_| "Invalid project type. Please try again.".to_string())
+
+    Ok(project_type)
+}
