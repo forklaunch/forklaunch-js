@@ -1,5 +1,11 @@
 # @forklaunch/bunrun
 
+## 0.0.10
+
+### Patch Changes
+
+- Minor bugfixes and package version bumps
+
 ## 0.0.9
 
 ### Patch Changes
