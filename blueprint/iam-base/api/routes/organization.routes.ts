@@ -15,7 +15,19 @@ export const organizationRouter = forklaunchRouter(
   openTelemetryCollector
 );
 
-organizationRouter.post('/', createOrganization);
-organizationRouter.get('/:id', getOrganization);
-organizationRouter.put('/', updateOrganization);
-organizationRouter.delete('/:id', deleteOrganization);
+export const createOrganizationRoute = organizationRouter.post(
+  '/',
+  createOrganization
+);
+export const getOrganizationRoute = organizationRouter.get(
+  '/:id',
+  getOrganization
+);
+export const updateOrganizationRoute = organizationRouter.put(
+  '/',
+  updateOrganization
+);
+export const deleteOrganizationRoute = organizationRouter.delete(
+  '/:id',
+  deleteOrganization
+);

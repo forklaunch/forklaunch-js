@@ -264,7 +264,11 @@ export class BasePermissionService<
       this.openTelemetryCollector.info('Getting batch permissions', idsDto);
     }
     return Promise.all(
-      (await (em ?? this.em).find('Permission', idsDto)).map((permission) =>
+      (
+        await (em ?? this.em).find('Permission', {
+          id: { $in: idsDto.ids }
+        })
+      ).map((permission) =>
         this.mappers.PermissionMapper.toDto(
           permission as MapperEntities['PermissionMapper']
         )

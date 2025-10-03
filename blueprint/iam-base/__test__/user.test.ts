@@ -1,196 +1,37 @@
-import { EntityManager, MikroORM } from '@mikro-orm/core';
-import { GenericContainer, StartedTestContainer } from 'testcontainers';
-import { afterAll, beforeAll, beforeEach, vi } from 'vitest';
-
-const MOCK_AUTH_TOKEN = 'Bearer test-token';
-const MOCK_HMAC_TOKEN =
-  'HMAC keyId=test-key ts=1234567890 nonce=test-nonce signature=test-signature';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import {
+  cleanupTestDatabase,
+  clearDatabase,
+  MOCK_AUTH_TOKEN,
+  MOCK_HMAC_TOKEN,
+  mockPermissionResponse,
+  mockRoleResponse,
+  mockUpdateUserData,
+  mockUserData,
+  setupTestData,
+  setupTestDatabase,
+  TestSetupResult
+} from './test-utils';
 
 describe('User Routes E2E Tests with PostgreSQL Container', () => {
-  let container: StartedTestContainer;
-  let orm: MikroORM;
+  let container: TestSetupResult['container'];
+  let orm: TestSetupResult['orm'];
 
   beforeAll(async () => {
-    container = await new GenericContainer('postgres:latest')
-      .withExposedPorts(5432)
-      .withEnvironment({
-        POSTGRES_USER: 'test_user',
-        POSTGRES_PASSWORD: 'test_password',
-        POSTGRES_DB: 'test_db'
-      })
-      .withCommand(['postgres', '-c', 'log_statement=all'])
-      .start();
-
-    process.env.DB_NAME = 'test_db';
-    process.env.DB_HOST = container.getHost();
-    process.env.DB_USER = 'test_user';
-    process.env.DB_PASSWORD = 'test_password';
-    process.env.DB_PORT = container.getMappedPort(5432).toString();
-    process.env.HMAC_SECRET_KEY = 'test-secret-key';
-    process.env.JWKS_PUBLIC_KEY_URL =
-      'http://localhost:3000/.well-known/jwks.json';
-    process.env.OTEL_SERVICE_NAME = 'test-service';
-    process.env.OTEL_EXPORTER_OTLP_ENDPOINT = 'http://localhost:4318';
-    process.env.HOST = 'localhost';
-    process.env.PORT = '3000';
-    process.env.NODE_ENV = 'test';
-    process.env.VERSION = 'v1';
-    process.env.DOCS_PATH = '/docs';
-    process.env.OTEL_LEVEL = 'info';
-    process.env.DOTENV_FILE_PATH = '.env.test';
-
-    const { default: mikroOrmConfig } = await import('../mikro-orm.config');
-    const path = await import('path');
-
-    const config = {
-      ...mikroOrmConfig,
-      dbName: 'test_db',
-      host: container.getHost(),
-      user: 'test_user',
-      password: 'test_password',
-      port: container.getMappedPort(5432),
-      debug: false,
-      migrations: {
-        path: path.join(__dirname, '../migrations'),
-        glob: '!(*.d).{js,ts}',
-        dropTables: true
-      }
-    };
-
-    orm = await MikroORM.init(config);
-
-    await orm.getMigrator().up();
+    const setup = await setupTestDatabase();
+    container = setup.container;
+    orm = setup.orm;
   }, 60000);
 
   beforeEach(async () => {
-    vi.clearAllMocks();
-
+    await clearDatabase(orm);
     const em = orm.em.fork();
-    const entities = Object.values(orm.getMetadata().getAll());
-
-    for (const entity of entities.reverse()) {
-      try {
-        await em.nativeDelete(entity.class, {});
-      } catch (error) {
-        if (!(error as Error).message?.includes('does not exist')) {
-          throw error;
-        }
-      }
-    }
-
-    await em.flush();
-
     await setupTestData(em);
   });
 
-  const setupTestData = async (em: EntityManager) => {
-    const { Permission } = await import(
-      '../persistence/entities/permission.entity'
-    );
-    const { Role } = await import('../persistence/entities/role.entity');
-    const { User } = await import('../persistence/entities/user.entity');
-    const { Organization } = await import(
-      '../persistence/entities/organization.entity'
-    );
-    const { OrganizationStatus } = await import(
-      '../domain/enum/organizationStatus.enum'
-    );
-
-    const organization = em.create(Organization, {
-      id: '123e4567-e89b-12d3-a456-426614174001',
-      name: 'Test Organization',
-      domain: 'test.com',
-      subscription: 'premium',
-      status: OrganizationStatus.ACTIVE,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    });
-
-    const permission = em.create(Permission, {
-      id: '123e4567-e89b-12d3-a456-426614174002',
-      slug: 'read:users',
-      createdAt: new Date(),
-      updatedAt: new Date()
-    });
-
-    const role = em.create(Role, {
-      id: '123e4567-e89b-12d3-a456-426614174000',
-      name: 'admin',
-      permissions: [permission],
-      createdAt: new Date(),
-      updatedAt: new Date()
-    });
-
-    em.create(User, {
-      id: '123e4567-e89b-12d3-a456-426614174000',
-      email: 'test@example.com',
-      firstName: 'John',
-      lastName: 'Doe',
-      phoneNumber: '+1234567890',
-      organization: organization,
-      roles: [role],
-      subscription: 'enterprise',
-      createdAt: new Date(),
-      updatedAt: new Date()
-    });
-
-    await em.flush();
-  };
-
   afterAll(async () => {
-    if (orm) {
-      await orm.close();
-    }
-    if (container) {
-      await container.stop({ remove: true, removeVolumes: true });
-    }
+    await cleanupTestDatabase(orm, container);
   }, 30000);
-
-  const mockUserData = {
-    email: 'newuser@example.com',
-    password: 'password123',
-    firstName: 'New',
-    lastName: 'User',
-    organization: '123e4567-e89b-12d3-a456-426614174001',
-    roles: ['123e4567-e89b-12d3-a456-426614174000'],
-    phoneNumber: '+1234567890',
-    subscription: 'premium'
-  };
-
-  const mockUpdateUserData = {
-    id: '123e4567-e89b-12d3-a456-426614174000',
-    email: 'updated@example.com',
-    firstName: 'Jane',
-    lastName: 'Smith',
-    roles: ['123e4567-e89b-12d3-a456-426614174000'],
-    phoneNumber: '+0987654321'
-  };
-
-  const mockRoleResponse = [
-    {
-      id: '123e4567-e89b-12d3-a456-426614174000',
-      name: 'admin',
-      permissions: [
-        {
-          id: '123e4567-e89b-12d3-a456-426614174002',
-          slug: 'read:users',
-          createdAt: expect.any(Date),
-          updatedAt: expect.any(Date)
-        }
-      ],
-      createdAt: expect.any(Date),
-      updatedAt: expect.any(Date)
-    }
-  ];
-
-  const mockPermissionResponse = [
-    {
-      id: '123e4567-e89b-12d3-a456-426614174002',
-      slug: 'read:users',
-      createdAt: expect.any(Date),
-      updatedAt: expect.any(Date)
-    }
-  ];
 
   describe('POST /user - createUser', () => {
     it('should create a user successfully', async () => {

@@ -1,0 +1,34 @@
+{
+  "data": {
+    "_id": 2000,
+    "properties": {
+      "slug": {
+        "name": "slug",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "string",
+        "array": false,
+        "runtimeType": "string"
+      }
+    },
+    "primaryKeys": [],
+    "filters": {},
+    "hooks": {},
+    "indexes": [],
+    "uniques": [],
+    "className": "Permission",
+    "path": "../iam-base/persistence/entities/permission.entity.ts",
+    "name": "Permission",
+    "abstract": false,
+    "internal": true,
+    "constructorParams": [],
+    "toJsonParams": [],
+    "extends": "SqlBaseEntity",
+    "useCache": true,
+    "collection": "permission"
+  },
+  "origin": "../iam-base/persistence/entities/permission.entity.ts",
+  "hash": "50c0fe9b9316fabf74274436c410549d",
+  "version": "6.5.6"
+}

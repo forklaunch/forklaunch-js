@@ -19,11 +19,17 @@ export const roleRouter = forklaunchRouter(
   openTelemetryCollector
 );
 
-roleRouter.post('/', createRole);
-roleRouter.post('/batch', createBatchRoles);
-roleRouter.get('/batch', getBatchRoles);
-roleRouter.get('/:id', getRole);
-roleRouter.put('/', updateRole);
-roleRouter.put('/batch', updateBatchRoles);
-roleRouter.delete('/batch', deleteBatchRoles);
-roleRouter.delete('/:id', deleteRole);
+export const createRoleRoute = roleRouter.post('/', createRole);
+export const createBatchRolesRoute = roleRouter.post(
+  '/batch',
+  createBatchRoles
+);
+export const getBatchRolesRoute = roleRouter.get('/batch', getBatchRoles);
+export const getRoleRoute = roleRouter.get('/:id', getRole);
+export const updateRoleRoute = roleRouter.put('/', updateRole);
+export const updateBatchRolesRoute = roleRouter.put('/batch', updateBatchRoles);
+export const deleteBatchRolesRoute = roleRouter.delete(
+  '/batch',
+  deleteBatchRoles
+);
+export const deleteRoleRoute = roleRouter.delete('/:id', deleteRole);
