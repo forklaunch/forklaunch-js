@@ -42,9 +42,9 @@
     "test": "vitest --passWithNoTests"
   },
   "devDependencies": {
-    "@typescript/native-preview": "7.0.0-dev.20250930.1",
+    "@typescript/native-preview": "7.0.0-dev.20251003.1",
     "depcheck": "^1.4.7",
-    "eslint": "^9.36.0",
+    "eslint": "^9.37.0",
     "prettier": "^3.6.2",
     "typedoc": "^0.28.13",
     "typescript-eslint": "^8.45.0"

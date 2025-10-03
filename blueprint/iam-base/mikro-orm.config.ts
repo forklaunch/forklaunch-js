@@ -64,6 +64,10 @@ const mikroOrmOptionsConfig = defineConfig({
   metadataProvider: TsMorphMetadataProvider,
   debug: true,
   extensions: [Migrator],
+  migrations: {
+    path: './migrations',
+    glob: '!(*.d).{js,ts}'
+  },
   discovery: {
     getMappedType(type: string, platform: Platform) {
       switch (type.toLowerCase()) {

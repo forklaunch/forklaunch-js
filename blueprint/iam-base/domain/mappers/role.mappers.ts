@@ -41,19 +41,18 @@ export const RoleMapper = responseMapper(
   {
     toDto: async (entity: Role) => {
       if (!entity.isInitialized()) {
-        throw new Error('Role is not initialized');
+        await entity.init();
       }
 
       return {
         ...(await entity.read()),
         permissions: await Promise.all(
-          (entity.permissions.isInitialized()
+          (entity.permissions && entity.permissions.isInitialized()
             ? entity.permissions
             : await entity.permissions.init()
           )
             .getItems()
             .map(async (permission) => {
-              // Use the mapper function directly to avoid circular dependency
               return PermissionMapper.toDto(permission);
             })
         )

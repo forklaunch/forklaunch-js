@@ -9,52 +9,52 @@ import {
   BillingPortalSchema as TypeboxBillingPortalSchema,
   CreateBillingPortalSchema as TypeboxCreateBillingPortalSchema,
   UpdateBillingPortalSchema as TypeboxUpdateBillingPortalSchema
-} from '../schemas/typebox/billingPortal.schema';
+} from '../domain/schemas/typebox/billingPortal.schema';
 import {
   CheckoutSessionSchema as TypeboxCheckoutSessionSchema,
   CreateCheckoutSessionSchema as TypeboxCreateCheckoutSessionSchema,
   UpdateCheckoutSessionSchema as TypeboxUpdateCheckoutSessionSchema
-} from '../schemas/typebox/checkoutSession.schema';
+} from '../domain/schemas/typebox/checkoutSession.schema';
 import {
   CreatePaymentLinkSchema as TypeboxCreatePaymentLinkSchema,
   PaymentLinkSchema as TypeboxPaymentLinkSchema,
   UpdatePaymentLinkSchema as TypeboxUpdatePaymentLinkSchema
-} from '../schemas/typebox/paymentLink.schema';
+} from '../domain/schemas/typebox/paymentLink.schema';
 import {
   CreatePlanSchema as TypeboxCreatePlanSchema,
   PlanSchema as TypeboxPlanSchema,
   UpdatePlanSchema as TypeboxUpdatePlanSchema
-} from '../schemas/typebox/plan.schema';
+} from '../domain/schemas/typebox/plan.schema';
 import {
   CreateSubscriptionSchema as TypeboxCreateSubscriptionSchema,
   SubscriptionSchema as TypeboxSubscriptionSchema,
   UpdateSubscriptionSchema as TypeboxUpdateSubscriptionSchema
-} from '../schemas/typebox/subscription.schema';
+} from '../domain/schemas/typebox/subscription.schema';
 import {
   BillingPortalSchema as ZodBillingPortalSchema,
   CreateBillingPortalSchema as ZodCreateBillingPortalSchema,
   UpdateBillingPortalSchema as ZodUpdateBillingPortalSchema
-} from '../schemas/zod/billingPortal.schema';
+} from '../domain/schemas/zod/billingPortal.schema';
 import {
   CheckoutSessionSchema as ZodCheckoutSessionSchema,
   CreateCheckoutSessionSchema as ZodCreateCheckoutSessionSchema,
   UpdateCheckoutSessionSchema as ZodUpdateCheckoutSessionSchema
-} from '../schemas/zod/checkoutSession.schema';
+} from '../domain/schemas/zod/checkoutSession.schema';
 import {
   CreatePaymentLinkSchema as ZodCreatePaymentLinkSchema,
   PaymentLinkSchema as ZodPaymentLinkSchema,
   UpdatePaymentLinkSchema as ZodUpdatePaymentLinkSchema
-} from '../schemas/zod/paymentLink.schema';
+} from '../domain/schemas/zod/paymentLink.schema';
 import {
   CreatePlanSchema as ZodCreatePlanSchema,
   PlanSchema as ZodPlanSchema,
   UpdatePlanSchema as ZodUpdatePlanSchema
-} from '../schemas/zod/plan.schema';
+} from '../domain/schemas/zod/plan.schema';
 import {
   CreateSubscriptionSchema as ZodCreateSubscriptionSchema,
   SubscriptionSchema as ZodSubscriptionSchema,
   UpdateSubscriptionSchema as ZodUpdateSubscriptionSchema
-} from '../schemas/zod/subscription.schema';
+} from '../domain/schemas/zod/subscription.schema';
 import {
   StripeBillingPortalDto,
   StripeCheckoutSessionDto,
@@ -71,7 +71,7 @@ import {
   StripeUpdatePaymentLinkDto,
   StripeUpdatePlanDto,
   StripeUpdateSubscriptionDto
-} from '../types/stripe.dto.types';
+} from '../domain/types/stripe.dto.types';
 
 const zodCreateCheckoutSessionSchema =
   ZodCreateCheckoutSessionSchema(DummyEnum);
@@ -164,6 +164,7 @@ describe('schema equality', () => {
             cancelRedirectUri: 'https://example.com',
             expiresAt: new Date(),
             status: DummyEnum.A,
+            uri: 'https://example.com',
             stripeFields: {}
           }
         )
@@ -200,6 +201,7 @@ describe('schema equality', () => {
             cancelRedirectUri: 'https://example.com',
             expiresAt: new Date(),
             status: DummyEnum.A,
+            uri: 'https://example.com',
             stripeFields: {} as Stripe.Checkout.Session
           }
         )

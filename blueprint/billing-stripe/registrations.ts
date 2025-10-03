@@ -51,12 +51,17 @@ import {
   UpdateSubscriptionMapper
 } from './domain/mappers/subscription.mappers';
 import {
-  BillingPortalEntities,
-  CheckoutSessionEntities,
-  PaymentLinkEntities,
-  PlanEntities,
-  SubscriptionEntities
-} from './domain/types/mapperEntities.types';
+  BillingPortalDtoTypes,
+  BillingPortalMapperTypes,
+  CheckoutSessionDtoTypes,
+  CheckoutSessionMapperTypes,
+  PaymentLinkDtoTypes,
+  PaymentLinkMapperTypes,
+  PlanDtoTypes,
+  PlanMapperTypes,
+  SubscriptionDtoTypes,
+  SubscriptionMapperTypes
+} from './domain/types/billingMappers.types';
 import mikroOrmOptionsConfig from './mikro-orm.config';
 
 //! defines the configuration schema for the application
@@ -188,7 +193,11 @@ const runtimeDependencies = environmentConfig.chain({
 const serviceDependencies = runtimeDependencies.chain({
   BillingPortalService: {
     lifetime: Lifetime.Scoped,
-    type: StripeBillingPortalService<SchemaValidator, BillingPortalEntities>,
+    type: StripeBillingPortalService<
+      SchemaValidator,
+      BillingPortalMapperTypes,
+      BillingPortalDtoTypes
+    >,
     factory: (
       { StripeClient, EntityManager, TtlCache, OpenTelemetryCollector },
       resolve,
@@ -214,7 +223,8 @@ const serviceDependencies = runtimeDependencies.chain({
     type: StripeCheckoutSessionService<
       SchemaValidator,
       typeof StatusEnum,
-      CheckoutSessionEntities
+      CheckoutSessionMapperTypes,
+      CheckoutSessionDtoTypes
     >,
     factory: (
       { StripeClient, EntityManager, TtlCache, OpenTelemetryCollector },
@@ -241,7 +251,8 @@ const serviceDependencies = runtimeDependencies.chain({
     type: StripePaymentLinkService<
       SchemaValidator,
       typeof StatusEnum,
-      PaymentLinkEntities
+      PaymentLinkMapperTypes,
+      PaymentLinkDtoTypes
     >,
     factory: (
       { StripeClient, EntityManager, TtlCache, OpenTelemetryCollector },
@@ -265,7 +276,7 @@ const serviceDependencies = runtimeDependencies.chain({
   },
   PlanService: {
     lifetime: Lifetime.Scoped,
-    type: StripePlanService<SchemaValidator, PlanEntities>,
+    type: StripePlanService<SchemaValidator, PlanMapperTypes, PlanDtoTypes>,
     factory: (
       { StripeClient, EntityManager, OpenTelemetryCollector },
       resolve,
@@ -290,7 +301,8 @@ const serviceDependencies = runtimeDependencies.chain({
     type: StripeSubscriptionService<
       SchemaValidator,
       typeof PartyEnum,
-      SubscriptionEntities
+      SubscriptionMapperTypes,
+      SubscriptionDtoTypes
     >,
     factory: (
       { StripeClient, EntityManager, OpenTelemetryCollector },
@@ -317,11 +329,11 @@ const serviceDependencies = runtimeDependencies.chain({
       SchemaValidator,
       typeof StatusEnum,
       typeof PartyEnum,
-      BillingPortalEntities,
-      CheckoutSessionEntities,
-      PaymentLinkEntities,
-      PlanEntities,
-      SubscriptionEntities
+      BillingPortalMapperTypes,
+      CheckoutSessionMapperTypes,
+      PaymentLinkMapperTypes,
+      PlanMapperTypes,
+      SubscriptionMapperTypes
     >,
     factory: (
       {
