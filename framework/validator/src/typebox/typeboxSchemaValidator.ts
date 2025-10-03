@@ -420,8 +420,11 @@ export class TypeboxSchemaValidator
 
     const newSchema: TObjectShape = {};
     Object.getOwnPropertyNames(schema).forEach((key) => {
-      if (KindGuard.IsSchema(schema[key])) {
-        newSchema[key] = schema[key];
+      if (
+        KindGuard.IsSchema(schema[key]) ||
+        KindGuard.IsTransform(schema[key])
+      ) {
+        newSchema[key] = schema[key] as TSchema;
       } else {
         const schemified = this.schemify(schema[key]);
         newSchema[key] = schemified;
@@ -704,23 +707,28 @@ export class TypeboxSchemaValidator
    * @returns {SchemaObject} The OpenAPI schema object.
    */
   openapi<T extends TIdiomaticSchema | TCatchall>(schema: T): SchemaObject {
-    let schemified: TCatchall = this.schemify(schema);
+    const schemified: TCatchall = this.schemify(schema);
+    let processedSchema: TCatchall;
 
     if (KindGuard.IsDate(schemified)) {
-      schemified = Type.String({
+      processedSchema = Type.String({
         format: 'date-time'
       });
+    } else {
+      processedSchema = JSON.parse(JSON.stringify(schemified));
     }
 
-    const newSchema: SchemaObject = Object.assign({}, schemified);
+    const newSchema: SchemaObject = Object.assign({}, processedSchema);
 
     if (Object.hasOwn(newSchema, 'properties')) {
       if (newSchema.properties) {
-        Object.entries({ ...schemified.properties }).forEach(([key, value]) => {
-          if (KindGuard.IsSchema(value) && newSchema.properties) {
-            newSchema.properties[key] = this.openapi(value);
+        Object.entries({ ...processedSchema.properties }).forEach(
+          ([key, value]) => {
+            if (KindGuard.IsSchema(value) && newSchema.properties) {
+              newSchema.properties[key] = this.openapi(value);
+            }
           }
-        });
+        );
       }
     }
     if (Object.hasOwn(newSchema, 'items')) {

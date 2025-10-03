@@ -32,9 +32,13 @@ describe('redisTtlCache', () => {
   }, 30000);
 
   afterAll(async () => {
-    await cache.disconnect();
-    await container.stop();
-  });
+    if (cache) {
+      await cache.disconnect();
+    }
+    if (container) {
+      await container.stop({ remove: true, removeVolumes: true });
+    }
+  }, 30000);
 
   it('put', async () => {
     await cache.putRecord({ key, value, ttlMilliseconds });

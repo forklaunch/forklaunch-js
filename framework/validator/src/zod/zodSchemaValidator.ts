@@ -518,6 +518,6 @@ export class ZodSchemaValidator
    * @returns {SchemaObject} The OpenAPI schema object.
    */
   openapi<T extends ZodIdiomaticSchema | ZodCatchall>(schema: T): SchemaObject {
-    return generateSchema(this.schemify(schema));
+    return generateSchema(JSON.parse(JSON.stringify(this.schemify(schema))));
   }
 }

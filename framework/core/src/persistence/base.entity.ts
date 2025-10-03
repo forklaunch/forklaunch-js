@@ -58,7 +58,7 @@ export class BaseEntity extends MikroORMBaseEntity {
   ): Promise<T> {
     const instance = new this(...constructorArgs);
     if (em) {
-      return em.upsert(instance, data);
+      return em.merge(this, data);
     } else {
       Object.assign(instance, {
         ...data,
