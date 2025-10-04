@@ -21,7 +21,7 @@ export const createPaymentLink = handlers.post(
   schemaValidator,
   '/',
   {
-    name: 'createPaymentLink',
+    name: 'Create Payment Link',
     summary: 'Create a payment link',
     auth: {
       hmac: {
@@ -45,7 +45,7 @@ export const getPaymentLink = handlers.get(
   schemaValidator,
   '/:id',
   {
-    name: 'getPaymentLink',
+    name: 'Get Payment Link',
     summary: 'Get a payment link',
     auth: {
       hmac: {
@@ -69,7 +69,7 @@ export const updatePaymentLink = handlers.put(
   schemaValidator,
   '/:id',
   {
-    name: 'updatePaymentLink',
+    name: 'Update Payment Link',
     summary: 'Update a payment link',
     auth: {
       hmac: {
@@ -102,7 +102,7 @@ export const expirePaymentLink = handlers.delete(
   schemaValidator,
   '/:id',
   {
-    name: 'expirePaymentLink',
+    name: 'Expire Payment Link',
     summary: 'Expire a payment link',
     auth: {
       hmac: {
@@ -127,7 +127,7 @@ export const handlePaymentSuccess = handlers.get(
   schemaValidator,
   '/:id/success',
   {
-    name: 'handlePaymentSuccess',
+    name: 'Handle Payment Success',
     summary: 'Handle a payment success',
     auth: {
       hmac: {
@@ -152,7 +152,7 @@ export const handlePaymentFailure = handlers.get(
   schemaValidator,
   '/:id/failure',
   {
-    name: 'handlePaymentFailure',
+    name: 'Handle Payment Failure',
     summary: 'Handle a payment failure',
     auth: {
       hmac: {
@@ -177,7 +177,7 @@ export const listPaymentLinks = handlers.get(
   schemaValidator,
   '/',
   {
-    name: 'listPaymentLinks',
+    name: 'List Payment Links',
     summary: 'List payment links',
     query: IdsSchema,
     auth: {

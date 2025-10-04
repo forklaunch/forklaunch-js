@@ -20,7 +20,7 @@ export const createBillingPortalSession = handlers.post(
   schemaValidator,
   '/',
   {
-    name: 'createBillingPortalSession',
+    name: 'Create Billing Portal Session',
     summary: 'Create a billing portal session',
     auth: {
       jwt: {
@@ -45,7 +45,7 @@ export const getBillingPortalSession = handlers.get(
   schemaValidator,
   '/:id',
   {
-    name: 'getBillingPortalSession',
+    name: 'Get Billing Portal Session',
     summary: 'Get a billing portal session',
     auth: {
       jwt: {
@@ -73,7 +73,7 @@ export const updateBillingPortalSession = handlers.put(
   schemaValidator,
   '/:id',
   {
-    name: 'updateBillingPortalSession',
+    name: 'Update Billing Portal Session',
     summary: 'Update a billing portal session',
     auth: {
       jwt: {
@@ -105,7 +105,7 @@ export const expireBillingPortalSession = handlers.delete(
   schemaValidator,
   '/:id',
   {
-    name: 'expireBillingPortalSession',
+    name: 'Expire Billing Portal Session',
     summary: 'Expire a billing portal session',
     auth: {
       jwt: {

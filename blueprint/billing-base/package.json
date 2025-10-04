@@ -76,9 +76,12 @@
     "@types/uuid": "^11.0.0",
     "@typescript/native-preview": "7.0.0-dev.20251003.1",
     "depcheck": "^1.4.7",
+    "ioredis": "^5.8.0",
     "prettier": "^3.6.2",
+    "testcontainers": "^11.7.1",
     "ts-node": "^10.9.2",
-    "typedoc": "^0.28.13"
+    "typedoc": "^0.28.13",
+    "vitest": "^3.2.4"
   },
   "mikro-orm": {
     "configPaths": [

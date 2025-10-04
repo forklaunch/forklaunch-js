@@ -18,7 +18,7 @@ export const createCheckoutSession = handlers.post(
   schemaValidator,
   '/',
   {
-    name: 'createCheckoutSession',
+    name: 'Create Checkout Session',
     summary: 'Create a checkout session',
     auth: {
       hmac: {
@@ -44,7 +44,7 @@ export const getCheckoutSession = handlers.get(
   schemaValidator,
   '/:id',
   {
-    name: 'getCheckoutSession',
+    name: 'Get Checkout Session',
     summary: 'Get a checkout session',
     auth: {
       hmac: {
@@ -68,7 +68,7 @@ export const expireCheckoutSession = handlers.get(
   schemaValidator,
   '/:id/expire',
   {
-    name: 'expireCheckoutSession',
+    name: 'Expire Checkout Session',
     summary: 'Expire a checkout session',
     auth: {
       hmac: {
@@ -93,7 +93,7 @@ export const handleCheckoutSuccess = handlers.get(
   schemaValidator,
   '/:id/success',
   {
-    name: 'handleCheckoutSuccess',
+    name: 'Handle Checkout Success',
     summary: 'Handle a checkout success',
     auth: {
       hmac: {
@@ -120,7 +120,7 @@ export const handleCheckoutFailure = handlers.get(
   schemaValidator,
   '/:id/failure',
   {
-    name: 'handleCheckoutFailure',
+    name: 'Handle Checkout Failure',
     summary: 'Handle a checkout failure',
     auth: {
       hmac: {

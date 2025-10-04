@@ -18,10 +18,31 @@ export const paymentLinkRouter = forklaunchRouter(
   openTelemetryCollector
 );
 
-paymentLinkRouter.post('/', createPaymentLink);
-paymentLinkRouter.get('/', listPaymentLinks);
-paymentLinkRouter.get('/:id/success', handlePaymentSuccess);
-paymentLinkRouter.get('/:id/failure', handlePaymentFailure);
-paymentLinkRouter.get('/:id', getPaymentLink);
-paymentLinkRouter.put('/:id', updatePaymentLink);
-paymentLinkRouter.delete('/:id', expirePaymentLink);
+export const createPaymentLinkRoute = paymentLinkRouter.post(
+  '/',
+  createPaymentLink
+);
+export const listPaymentLinksRoute = paymentLinkRouter.get(
+  '/',
+  listPaymentLinks
+);
+export const handlePaymentSuccessRoute = paymentLinkRouter.get(
+  '/:id/success',
+  handlePaymentSuccess
+);
+export const handlePaymentFailureRoute = paymentLinkRouter.get(
+  '/:id/failure',
+  handlePaymentFailure
+);
+export const getPaymentLinkRoute = paymentLinkRouter.get(
+  '/:id',
+  getPaymentLink
+);
+export const updatePaymentLinkRoute = paymentLinkRouter.put(
+  '/:id',
+  updatePaymentLink
+);
+export const expirePaymentLinkRoute = paymentLinkRouter.delete(
+  '/:id',
+  expirePaymentLink
+);
