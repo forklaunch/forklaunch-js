@@ -2,7 +2,7 @@ import {
   array,
   handlers,
   IdSchema,
-  IdsSchema,
+  optional,
   schemaValidator,
   string
 } from '@forklaunch/blueprint-core';
@@ -179,7 +179,9 @@ export const listPaymentLinks = handlers.get(
   {
     name: 'List Payment Links',
     summary: 'List payment links',
-    query: IdsSchema,
+    query: {
+      ids: optional(array(string))
+    },
     auth: {
       hmac: {
         secretKeys: {
@@ -193,6 +195,12 @@ export const listPaymentLinks = handlers.get(
   },
   async (req, res) => {
     openTelemetryCollector.debug('Listing payment links', req.query);
-    res.status(200).json(await serviceFactory().listPaymentLinks(req.query));
+    res
+      .status(200)
+      .json(
+        await serviceFactory().listPaymentLinks(
+          req.query.ids ? { ids: req.query.ids } : undefined
+        )
+      );
   }
 );

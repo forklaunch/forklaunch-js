@@ -1,6 +1,6 @@
 import { EntityManager, MikroORM } from '@mikro-orm/core';
 import { GenericContainer, StartedTestContainer } from 'testcontainers';
-import { vi } from 'vitest';
+import { expect, vi } from 'vitest';
 
 export const MOCK_AUTH_TOKEN = 'Bearer test-token';
 export const MOCK_HMAC_TOKEN =

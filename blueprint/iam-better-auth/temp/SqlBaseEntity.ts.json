@@ -35,17 +35,17 @@
     "indexes": [],
     "uniques": [],
     "className": "SqlBaseEntity",
-    "path": "../core/lib/persistence/sql.base.entity.js",
+    "path": "../core/persistence/sql.base.entity.ts",
     "abstract": true,
     "internal": true,
     "constructorParams": [],
     "toJsonParams": [],
-    "extends": "BaseEntity2",
+    "extends": "BaseEntity",
     "useCache": true,
     "compositePK": false,
     "simplePK": true
   },
-  "origin": "../core/lib/persistence/sql.base.entity.js",
-  "hash": "b1e54b14f964453dfc1249e576d5a3af",
-  "version": "6.4.16"
+  "origin": "../core/persistence/sql.base.entity.ts",
+  "hash": "d5259a2cf94ae837542f055ee95cf5f9",
+  "version": "6.5.6"
 }

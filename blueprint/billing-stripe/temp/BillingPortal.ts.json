@@ -1,0 +1,63 @@
+{
+  "data": {
+    "_id": 2000,
+    "properties": {
+      "customerId": {
+        "name": "customerId",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "string",
+        "array": false,
+        "runtimeType": "string"
+      },
+      "uri": {
+        "name": "uri",
+        "kind": "scalar",
+        "nullable": true,
+        "getter": false,
+        "setter": false,
+        "type": "string",
+        "array": false,
+        "optional": true,
+        "runtimeType": "string"
+      },
+      "expiresAt": {
+        "name": "expiresAt",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "Date",
+        "array": false,
+        "runtimeType": "Date"
+      },
+      "providerFields": {
+        "name": "providerFields",
+        "kind": "scalar",
+        "type": "json",
+        "getter": false,
+        "setter": false,
+        "array": false,
+        "runtimeType": "Stripe.BillingPortal.Session"
+      }
+    },
+    "primaryKeys": [],
+    "filters": {},
+    "hooks": {},
+    "indexes": [],
+    "uniques": [],
+    "className": "BillingPortal",
+    "path": "./persistence/entities/billingPortal.entity.ts",
+    "name": "BillingPortal",
+    "abstract": false,
+    "internal": true,
+    "constructorParams": [],
+    "toJsonParams": [],
+    "extends": "SqlBaseEntity",
+    "useCache": true,
+    "collection": "billing_portal"
+  },
+  "origin": "./persistence/entities/billingPortal.entity.ts",
+  "hash": "5f273e4c87deff50769cff4bae4c1e47",
+  "version": "6.5.6"
+}

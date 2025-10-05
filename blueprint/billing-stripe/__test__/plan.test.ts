@@ -1,6 +1,8 @@
+import {
+  BillingProviderEnum,
+  CurrencyEnum
+} from '@forklaunch/implementation-billing-stripe/enum';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { BillingProviderEnum } from '../domain/enum/billingProvider.enum';
-import { CurrencyEnum } from '../domain/enum/currency.enum';
 import {
   cleanupTestDatabase,
   clearDatabase,
@@ -70,7 +72,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
         ...mockPlanData,
         name: '',
         price: -100,
-        billingProvider: 'INVALID_PROVIDER' as 'stripe' | 'none' | 'adyen'
+        billingProvider: 'INVALID_PROVIDER' as never
       };
 
       try {

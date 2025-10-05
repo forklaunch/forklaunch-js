@@ -179,7 +179,12 @@ export class BasePaymentLinkService<
       throw new Error('Payment link not found');
     }
 
-    return this.mappers.PaymentLinkMapper.toDto(paymentLink.value);
+    return this.mappers.PaymentLinkMapper.toDto(
+      await this.mappers.UpdatePaymentLinkMapper.toEntity(
+        paymentLink.value,
+        this.em
+      )
+    );
   }
 
   async expirePaymentLink({ id }: IdDto): Promise<void> {
@@ -231,7 +236,10 @@ export class BasePaymentLinkService<
         const paymentLink =
           await this.cache.readRecord<MapperEntities['PaymentLinkMapper']>(key);
         const paymentLinkDto = this.mappers.PaymentLinkMapper.toDto(
-          paymentLink.value
+          await this.mappers.UpdatePaymentLinkMapper.toEntity(
+            paymentLink.value,
+            this.em
+          )
         );
         return paymentLinkDto;
       })

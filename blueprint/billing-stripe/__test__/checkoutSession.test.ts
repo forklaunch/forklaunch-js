@@ -1,6 +1,5 @@
+import { CurrencyEnum } from '@forklaunch/implementation-billing-stripe/enum';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { CurrencyEnum } from '../domain/enum/currency.enum';
-import { PaymentMethodEnum } from '../domain/enum/paymentMethod.enum';
 import { StatusEnum } from '../domain/enum/status.enum';
 import {
   cleanupTestDatabase,
@@ -121,7 +120,7 @@ describe('CheckoutSession Routes E2E Tests with PostgreSQL Container', () => {
 
       const invalidData = {
         ...mockCheckoutSessionData,
-        paymentMethods: ['INVALID_METHOD' as PaymentMethodEnum]
+        paymentMethods: ['INVALID_METHOD' as never]
       };
 
       try {

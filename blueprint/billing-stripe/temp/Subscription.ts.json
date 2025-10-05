@@ -27,8 +27,8 @@
         "setter": false,
         "type": "string",
         "array": false,
-        "runtimeType": "string",
-        "optional": true
+        "optional": true,
+        "runtimeType": "string"
       },
       "active": {
         "name": "active",
@@ -48,16 +48,14 @@
         "array": false,
         "runtimeType": "string"
       },
-      "extraFields": {
-        "name": "extraFields",
+      "providerFields": {
+        "name": "providerFields",
         "kind": "scalar",
         "type": "json",
-        "nullable": true,
         "getter": false,
         "setter": false,
         "array": false,
-        "runtimeType": "unknown",
-        "optional": true
+        "runtimeType": "Stripe.Subscription"
       },
       "externalId": {
         "name": "externalId",
@@ -72,12 +70,12 @@
         "name": "billingProvider",
         "kind": "scalar",
         "enum": true,
-        "items": ["none", "stripe", "adyen"],
+        "items": ["stripe"],
         "nullable": true,
-        "type": "BillingProviderEnum",
+        "type": "\"stripe\"",
         "array": false,
-        "runtimeType": "BillingProviderEnum",
-        "optional": true
+        "optional": true,
+        "runtimeType": "\"stripe\""
       },
       "startDate": {
         "name": "startDate",
@@ -91,10 +89,12 @@
       "endDate": {
         "name": "endDate",
         "kind": "scalar",
+        "nullable": true,
         "getter": false,
         "setter": false,
         "type": "Date",
         "array": false,
+        "optional": true,
         "runtimeType": "Date"
       },
       "status": {
@@ -124,6 +124,6 @@
     "collection": "subscription"
   },
   "origin": "./persistence/entities/subscription.entity.ts",
-  "hash": "c2f8e410a1ff64519ef4ce50abb1f22d",
-  "version": "6.4.16"
+  "hash": "629087fb51f9e86481cab8986a124199",
+  "version": "6.5.6"
 }

@@ -132,7 +132,10 @@ export class BaseCheckoutSessionService<
     }
 
     return this.mappers.CheckoutSessionMapper.toDto(
-      checkoutSessionDetails.value
+      await this.mappers.UpdateCheckoutSessionMapper.toEntity(
+        checkoutSessionDetails.value,
+        this.em
+      )
     );
   }
 

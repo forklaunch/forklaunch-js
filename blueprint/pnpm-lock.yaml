@@ -121,13 +121,13 @@ importers:
         version: 6.5.6
       '@mikro-orm/migrations':
         specifier: ^6.5.6
-        version: 6.5.6(@mikro-orm/core@6.5.6)(@types/node@24.6.2)(better-sqlite3@12.4.1)(libsql@0.5.22)(mariadb@3.4.5)(pg@8.16.3)
+        version: 6.5.6(@mikro-orm/core@6.5.6)(@types/node@24.6.2)(better-sqlite3@12.4.1)(libsql@0.5.22)(mariadb@3.4.5)(sqlite3@5.1.7)
       '@mikro-orm/mongodb':
         specifier: ^6.5.6
         version: 6.5.6(@mikro-orm/core@6.5.6)(socks@2.8.7)
       '@mikro-orm/mysql':
         specifier: ^6.5.6
-        version: 6.5.6(@mikro-orm/core@6.5.6)(better-sqlite3@12.4.1)(libsql@0.5.22)(mariadb@3.4.5)(pg@8.16.3)
+        version: 6.5.6(@mikro-orm/core@6.5.6)(better-sqlite3@12.4.1)(libsql@0.5.22)(mariadb@3.4.5)(sqlite3@5.1.7)
       '@mikro-orm/postgresql':
         specifier: ^6.5.6
         version: 6.5.6(@mikro-orm/core@6.5.6)(better-sqlite3@12.4.1)(libsql@0.5.22)(mariadb@3.4.5)
@@ -139,7 +139,7 @@ importers:
         version: 6.5.6(@mikro-orm/core@6.5.6)
       '@mikro-orm/sqlite':
         specifier: ^6.5.6
-        version: 6.5.6(@mikro-orm/core@6.5.6)(better-sqlite3@12.4.1)(libsql@0.5.22)(mariadb@3.4.5)(pg@8.16.3)
+        version: 6.5.6(@mikro-orm/core@6.5.6)(better-sqlite3@12.4.1)(libsql@0.5.22)(mariadb@3.4.5)
       '@sinclair/typebox':
         specifier: ^0.34.41
         version: 0.34.41
@@ -161,7 +161,7 @@ importers:
         version: link:../universal-sdk
       '@mikro-orm/cli':
         specifier: ^6.5.6
-        version: 6.5.6(better-sqlite3@12.4.1)(libsql@0.5.22)(mariadb@3.4.5)(pg@8.16.3)
+        version: 6.5.6(better-sqlite3@12.4.1)(libsql@0.5.22)(mariadb@3.4.5)(sqlite3@5.1.7)
       '@types/express':
         specifier: ^5.0.3
         version: 5.0.3
@@ -239,13 +239,13 @@ importers:
         version: 6.5.6
       '@mikro-orm/migrations':
         specifier: ^6.5.6
-        version: 6.5.6(@mikro-orm/core@6.5.6)(@types/node@24.6.2)(better-sqlite3@12.4.1)(libsql@0.5.22)(mariadb@3.4.5)(sqlite3@5.1.7)
+        version: 6.5.6(@mikro-orm/core@6.5.6)(@types/node@24.6.2)(better-sqlite3@12.4.1)(libsql@0.5.22)(mariadb@3.4.5)(pg@8.16.3)
       '@mikro-orm/mongodb':
         specifier: ^6.5.6
         version: 6.5.6(@mikro-orm/core@6.5.6)(socks@2.8.7)
       '@mikro-orm/mysql':
         specifier: ^6.5.6
-        version: 6.5.6(@mikro-orm/core@6.5.6)(better-sqlite3@12.4.1)(libsql@0.5.22)(mariadb@3.4.5)(sqlite3@5.1.7)
+        version: 6.5.6(@mikro-orm/core@6.5.6)(better-sqlite3@12.4.1)(libsql@0.5.22)(mariadb@3.4.5)(pg@8.16.3)
       '@mikro-orm/postgresql':
         specifier: ^6.5.6
         version: 6.5.6(@mikro-orm/core@6.5.6)(better-sqlite3@12.4.1)(libsql@0.5.22)(mariadb@3.4.5)
@@ -257,7 +257,7 @@ importers:
         version: 6.5.6(@mikro-orm/core@6.5.6)
       '@mikro-orm/sqlite':
         specifier: ^6.5.6
-        version: 6.5.6(@mikro-orm/core@6.5.6)(better-sqlite3@12.4.1)(libsql@0.5.22)(mariadb@3.4.5)
+        version: 6.5.6(@mikro-orm/core@6.5.6)(better-sqlite3@12.4.1)(libsql@0.5.22)(mariadb@3.4.5)(pg@8.16.3)
       '@sinclair/typebox':
         specifier: ^0.34.41
         version: 0.34.41
@@ -279,7 +279,7 @@ importers:
     devDependencies:
       '@mikro-orm/cli':
         specifier: ^6.5.6
-        version: 6.5.6(better-sqlite3@12.4.1)(libsql@0.5.22)(mariadb@3.4.5)(sqlite3@5.1.7)
+        version: 6.5.6(better-sqlite3@12.4.1)(libsql@0.5.22)(mariadb@3.4.5)(pg@8.16.3)
       '@types/express':
         specifier: ^5.0.3
         version: 5.0.3
@@ -298,6 +298,9 @@ importers:
       depcheck:
         specifier: ^1.4.7
         version: 1.4.7
+      ioredis:
+        specifier: ^5.8.0
+        version: 5.8.0
       prettier:
         specifier: ^3.6.2
         version: 3.6.2
@@ -8381,7 +8384,7 @@ snapshots:
       strict-event-emitter-types: 2.0.0
       undici: 7.16.0
       uri-templates: 0.2.0
-      xsschema: 0.3.5(zod-to-json-schema@3.24.6(zod@4.1.11))(zod@3.25.76)
+      xsschema: 0.3.5(zod-to-json-schema@3.24.6(zod@3.25.76))(zod@3.25.76)
       yargs: 18.0.0
       zod: 3.25.76
       zod-to-json-schema: 3.24.6(zod@3.25.76)
@@ -14853,10 +14856,10 @@ snapshots:
     dependencies:
       is-wsl: 3.1.0
 
-  xsschema@0.3.5(zod-to-json-schema@3.24.6(zod@4.1.11))(zod@3.25.76):
+  xsschema@0.3.5(zod-to-json-schema@3.24.6(zod@3.25.76))(zod@3.25.76):
     optionalDependencies:
       zod: 3.25.76
-      zod-to-json-schema: 3.24.6(zod@4.1.11)
+      zod-to-json-schema: 3.24.6(zod@3.25.76)
 
   xtend@4.0.2: {}
 
@@ -14922,11 +14925,6 @@ snapshots:
   zod-to-json-schema@3.24.6(zod@3.25.76):
     dependencies:
       zod: 3.25.76
-
-  zod-to-json-schema@3.24.6(zod@4.1.11):
-    dependencies:
-      zod: 4.1.11
-    optional: true
 
   zod@3.25.76: {}
 

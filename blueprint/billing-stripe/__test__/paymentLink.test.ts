@@ -1,6 +1,8 @@
+import {
+  CurrencyEnum,
+  PaymentMethodEnum
+} from '@forklaunch/implementation-billing-stripe/enum';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { CurrencyEnum } from '../domain/enum/currency.enum';
-import { PaymentMethodEnum } from '../domain/enum/paymentMethod.enum';
 import { StatusEnum } from '../domain/enum/status.enum';
 import {
   cleanupTestDatabase,
@@ -52,7 +54,7 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
 
       expect(response.code).toBe(200);
       expect(response.response).toMatchObject({
-        amount: mockPaymentLinkData.price,
+        amount: mockPaymentLinkData.amount,
         paymentMethods: mockPaymentLinkData.paymentMethods,
         currency: mockPaymentLinkData.currency,
         description: mockPaymentLinkData.description,
@@ -70,7 +72,8 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
 
       const invalidData = {
         ...mockPaymentLinkData,
-        amount: -100
+        amount: -100,
+        stripeFields: mockPaymentLinkData.stripeFields
       };
 
       try {
@@ -93,7 +96,8 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
 
       const invalidData = {
         ...mockPaymentLinkData,
-        currency: 'INVALID_CURRENCY' as CurrencyEnum
+        currency: 'INVALID_CURRENCY' as never,
+        stripeFields: mockPaymentLinkData.stripeFields
       };
 
       try {
@@ -116,7 +120,8 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
 
       const invalidData = {
         ...mockPaymentLinkData,
-        paymentMethods: ['INVALID_METHOD' as PaymentMethodEnum]
+        paymentMethods: ['invalid_method'] as never[],
+        stripeFields: mockPaymentLinkData.stripeFields
       };
 
       try {
@@ -186,7 +191,7 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
       expect(response.code).toBe(200);
       expect(response.response).toMatchObject({
         id: paymentLinkId,
-        amount: mockPaymentLinkData.price,
+        amount: mockPaymentLinkData.amount,
         paymentMethods: mockPaymentLinkData.paymentMethods,
         currency: mockPaymentLinkData.currency,
         description: mockPaymentLinkData.description,
@@ -255,10 +260,10 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
       const updateData = {
         id: paymentLinkId,
         amount: 14999,
-        paymentMethods: ['credit_card' as const],
-        currency: 'GBP' as const,
+        paymentMethods: [PaymentMethodEnum.CARD],
+        currency: CurrencyEnum.GBP,
         description: 'An updated test payment link',
-        status: 'COMPLETED' as const,
+        status: StatusEnum.COMPLETED,
         createdAt: new Date(),
         updatedAt: new Date()
       };
@@ -292,10 +297,10 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
       const updateData = {
         id: '123e4567-e89b-12d3-a456-426614174999',
         amount: 14999,
-        paymentMethods: ['credit_card' as const],
-        currency: 'USD' as const,
+        paymentMethods: [PaymentMethodEnum.CARD],
+        currency: CurrencyEnum.USD,
         description: 'Updated payment link',
-        status: 'COMPLETED' as const
+        status: StatusEnum.COMPLETED
       };
 
       try {
@@ -333,10 +338,10 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
       const invalidUpdateData = {
         id: paymentLinkId,
         amount: -100,
-        paymentMethods: ['credit_card' as const],
-        currency: 'USD' as const,
+        paymentMethods: [PaymentMethodEnum.CARD],
+        currency: CurrencyEnum.USD,
         description: 'Updated payment link',
-        status: 'PENDING' as const
+        status: StatusEnum.PENDING
       };
 
       try {
@@ -428,6 +433,7 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
       });
 
       const response = await listPaymentLinksRoute.sdk.listPaymentLinks({
+        query: { ids: [] },
         headers: {
           authorization: MOCK_HMAC_TOKEN
         }

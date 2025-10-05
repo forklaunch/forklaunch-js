@@ -1,5 +1,5 @@
+import { BillingProviderEnum } from '@forklaunch/implementation-billing-stripe/enum';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { BillingProviderEnum } from '../domain/enum/billingProvider.enum';
 import { PartyEnum } from '../domain/enum/party.enum';
 import {
   cleanupTestDatabase,
@@ -405,6 +405,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
       });
 
       const response = await listSubscriptions.sdk.listSubscriptions({
+        query: { ids: [] },
         headers: {
           authorization: MOCK_HMAC_TOKEN
         }
