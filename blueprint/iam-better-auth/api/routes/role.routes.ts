@@ -33,4 +33,3 @@ export const deleteBatchRolesRoute = roleRouter.delete(
   deleteBatchRoles
 );
 export const deleteRoleRoute = roleRouter.delete('/:id', deleteRole);
-

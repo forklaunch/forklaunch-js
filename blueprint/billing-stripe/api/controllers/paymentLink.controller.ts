@@ -195,6 +195,7 @@ export const listPaymentLinks = handlers.get(
   },
   async (req, res) => {
     openTelemetryCollector.debug('Listing payment links', req.query);
+    openTelemetryCollector.log('info', req.query.ids ?? 'ids is undefined');
     res
       .status(200)
       .json(

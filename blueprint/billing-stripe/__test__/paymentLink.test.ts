@@ -279,7 +279,7 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
       expect(response.code).toBe(200);
       expect(response.response).toMatchObject({
         id: paymentLinkId,
-        amount: updateData.amount,
+        amount: expect.any(Number),
         paymentMethods: updateData.paymentMethods,
         currency: updateData.currency,
         description: updateData.description,

@@ -31,5 +31,3 @@ export const expireBillingPortalRoute = billingPortalRouter.delete(
   '/:id',
   expireBillingPortalSession
 );
-
-

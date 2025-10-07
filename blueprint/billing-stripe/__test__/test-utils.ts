@@ -47,7 +47,8 @@ export const setupTestDatabase = async (): Promise<TestSetupResult> => {
   process.env.DB_PORT = container.getMappedPort(5432).toString();
   process.env.REDIS_URL = `redis://${redisContainer.getHost()}:${redisContainer.getMappedPort(6379)}`;
   process.env.HMAC_SECRET_KEY = 'test-secret-key';
-  process.env.STRIPE_API_KEY = 'sk_test_1234567890abcdefghijklmnopqrstuvwxyz';
+  process.env.STRIPE_API_KEY =
+    'sk_test_51RZHBQP4Xs9lA9sq2hCQseYbRA4tKxMyRCViZQD3mofV8gIYqOjemsdaw7BEXGMKrWjSIAn2zZsGOUy2WT5If2W900LGUSgHq0';
   process.env.STRIPE_WEBHOOK_SECRET =
     'whsec_test_1234567890abcdefghijklmnopqrstuvwxyz';
   process.env.JWKS_PUBLIC_KEY_URL =
@@ -61,6 +62,44 @@ export const setupTestDatabase = async (): Promise<TestSetupResult> => {
   process.env.DOCS_PATH = '/docs';
   process.env.OTEL_LEVEL = 'info';
   process.env.DOTENV_FILE_PATH = '.env.test';
+
+  // Create Stripe test resources
+  const Stripe = (await import('stripe')).default;
+  const stripe = new Stripe(process.env.STRIPE_API_KEY!);
+
+  // Create test customer with payment method
+  const paymentMethod = await stripe.paymentMethods.create({
+    type: 'card',
+    card: {
+      token: 'tok_visa'
+    }
+  });
+
+  const customer = await stripe.customers.create({
+    email: 'test@example.com',
+    name: 'Test Customer',
+    payment_method: paymentMethod.id,
+    invoice_settings: {
+      default_payment_method: paymentMethod.id
+    }
+  });
+  process.env.TEST_CUSTOMER_ID = customer.id;
+
+  // Create test product
+  const product = await stripe.products.create({
+    name: 'Test Product',
+    description: 'A test product for plans'
+  });
+  process.env.TEST_PRODUCT_ID = product.id;
+
+  // Create test plan/price
+  const price = await stripe.prices.create({
+    product: product.id,
+    currency: 'usd',
+    unit_amount: 1999,
+    recurring: { interval: 'month' }
+  });
+  process.env.TEST_PLAN_ID = price.id;
 
   const { default: mikroOrmConfig } = await import('../mikro-orm.config');
 
@@ -153,66 +192,39 @@ export const setupTestData = async (em: EntityManager) => {
     '../persistence/entities/billingPortal.entity'
   );
 
-  em.create(Plan, {
-    id: '123e4567-e89b-12d3-a456-426614174002',
-    active: true,
-    name: 'Test Plan',
-    description: 'A test plan',
-    price: 2999,
-    currency: CurrencyEnum.USD,
-    cadence: PlanCadenceEnum.MONTHLY,
-    features: ['feature1', 'feature2'],
-    externalId: 'plan_test_123',
-    billingProvider: BillingProviderEnum.STRIPE,
-    providerFields: {
-      id: 'plan_test_123',
-      object: 'plan',
-      active: true,
-      amount: 2999,
-      currency: 'usd',
-      interval: 'month',
-      interval_count: 1,
-      metadata: {}
-    } as never,
-    createdAt: new Date(),
-    updatedAt: new Date()
-  });
+  // Skip creating fake plans as listPlans fetches from Stripe
+  // em.create(Plan, {
+  //   id: '123e4567-e89b-12d3-a456-426614174002',
+  //   active: true,
+  //   name: 'Test Plan',
+  //   description: 'A test plan',
+  //   price: 2999,
+  //   currency: CurrencyEnum.USD,
+  //   cadence: PlanCadenceEnum.MONTHLY,
+  //   features: ['feature1', 'feature2'],
+  //   externalId: 'plan_test_123',
+  //   billingProvider: BillingProviderEnum.STRIPE,
+  //   providerFields: {} as never,
+  //   createdAt: new Date(),
+  //   updatedAt: new Date()
+  // });
 
-  em.create(Subscription, {
-    id: '123e4567-e89b-12d3-a456-426614174003',
-    partyId: '123e4567-e89b-12d3-a456-426614174000',
-    partyType: PartyEnum.USER,
-    description: 'Test subscription',
-    active: true,
-    productId: '123e4567-e89b-12d3-a456-426614174002',
-    externalId: 'sub_test_123',
-    billingProvider: BillingProviderEnum.STRIPE,
-    startDate: new Date(),
-    status: 'active',
-    providerFields: {
-      id: 'sub_test_123',
-      object: 'subscription',
-      status: 'active',
-      current_period_start: Math.floor(Date.now() / 1000),
-      current_period_end: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60,
-      customer: 'cus_test_123',
-      items: {
-        object: 'list',
-        data: [
-          {
-            id: 'si_test_123',
-            object: 'subscription_item',
-            plan: {
-              id: 'plan_test_123',
-              object: 'plan'
-            }
-          }
-        ]
-      }
-    } as never,
-    createdAt: new Date(),
-    updatedAt: new Date()
-  });
+  // Skip creating fake subscriptions as listSubscriptions fetches from Stripe
+  // em.create(Subscription, {
+  //   id: '123e4567-e89b-12d3-a456-426614174003',
+  //   partyId: '123e4567-e89b-12d3-a456-426614174000',
+  //   partyType: PartyEnum.USER,
+  //   description: 'Test subscription',
+  //   active: true,
+  //   productId: '123e4567-e89b-12d3-a456-426614174002',
+  //   externalId: 'sub_test_123',
+  //   billingProvider: BillingProviderEnum.STRIPE,
+  //   startDate: new Date(),
+  //   status: 'active',
+  //   providerFields: {} as never,
+  //   createdAt: new Date(),
+  //   updatedAt: new Date()
+  // });
 
   em.create(CheckoutSession, {
     id: '123e4567-e89b-12d3-a456-426614174004',
@@ -275,9 +287,9 @@ export const setupTestData = async (em: EntityManager) => {
   await em.flush();
 };
 
-export const mockPlanData = {
+export const getMockPlanData = () => ({
   active: true,
-  name: 'New Plan',
+  name: process.env.TEST_PRODUCT_ID!,
   description: 'A new test plan',
   price: 1999,
   currency: CurrencyEnum.USD,
@@ -285,85 +297,64 @@ export const mockPlanData = {
   features: ['feature1', 'feature2'],
   externalId: 'plan_new_123',
   billingProvider: BillingProviderEnum.STRIPE,
-  stripeFields: {
-    id: 'plan_new_123',
-    object: 'plan',
-    active: true,
-    amount: 1999,
-    currency: 'usd',
-    interval: 'month',
-    interval_count: 1,
-    metadata: {}
-  } as never
-};
+  stripeFields: {} as never
+});
 
-export const mockUpdatePlanData = {
+export const mockPlanData = getMockPlanData();
+
+export const getMockUpdatePlanData = () => ({
   id: '123e4567-e89b-12d3-a456-426614174002',
   active: false,
-  name: 'Updated Plan',
+  name: process.env.TEST_PRODUCT_ID!,
   description: 'An updated test plan',
   price: 3999,
   currency: CurrencyEnum.USD,
   cadence: PlanCadenceEnum.ANNUALLY,
   features: ['feature1', 'feature2', 'feature3'],
   externalId: 'plan_updated_123',
-  billingProvider: BillingProviderEnum.STRIPE,
-  createdAt: new Date(),
-  updatedAt: new Date()
-};
+  billingProvider: BillingProviderEnum.STRIPE
+});
 
-export const mockSubscriptionData = {
-  partyId: '123e4567-e89b-12d3-a456-426614174000',
+export const mockUpdatePlanData = getMockUpdatePlanData();
+
+export const getMockSubscriptionData = () => ({
+  partyId: process.env.TEST_CUSTOMER_ID!,
   partyType: PartyEnum.USER,
   description: 'New subscription',
   active: true,
-  productId: '123e4567-e89b-12d3-a456-426614174002',
+  productId: process.env.TEST_PLAN_ID!,
   externalId: 'sub_new_123',
   billingProvider: BillingProviderEnum.STRIPE,
   startDate: new Date(),
   endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
   status: 'active',
-  stripeFields: {
-    id: 'sub_new_123',
-    object: 'subscription',
-    status: 'active',
-    current_period_start: Math.floor(Date.now() / 1000),
-    current_period_end: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60,
-    customer: 'cus_new_123',
-    items: {
-      object: 'list',
-      data: [
-        {
-          id: 'si_new_123',
-          object: 'subscription_item',
-          plan: {
-            id: 'plan_new_123',
-            object: 'plan'
-          }
-        }
-      ]
-    }
-  } as never
+  stripeFields: {} as never
+});
+
+export const mockSubscriptionData = {
+  get: () => getMockSubscriptionData()
 };
 
-export const mockUpdateSubscriptionData = {
+export const getMockUpdateSubscriptionData = () => ({
   id: '123e4567-e89b-12d3-a456-426614174003',
-  partyId: '123e4567-e89b-12d3-a456-426614174000',
+  partyId: process.env.TEST_CUSTOMER_ID!,
   partyType: 'user' as const,
   description: 'Updated subscription',
   active: false,
-  productId: '123e4567-e89b-12d3-a456-426614174002',
+  productId: process.env.TEST_PLAN_ID!,
   externalId: 'sub_updated_123',
   billingProvider: 'stripe' as const,
   startDate: new Date(),
   endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-  status: 'cancelled',
-  createdAt: new Date(),
-  updatedAt: new Date()
+  status: 'cancelled'
+});
+
+export const mockUpdateSubscriptionData = {
+  get: () => getMockUpdateSubscriptionData()
 };
 
-export const mockCheckoutSessionData = {
-  customerId: 'cus_new_123',
+export const getMockCheckoutSessionData = () => ({
+  customerId: process.env.TEST_CUSTOMER_ID!,
   paymentMethods: [PaymentMethodEnum.CARD],
   currency: CurrencyEnum.USD,
   uri: 'https://checkout.stripe.com/c/pay/new_123',
@@ -372,20 +363,19 @@ export const mockCheckoutSessionData = {
   expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
   status: StatusEnum.PENDING,
   stripeFields: {
-    id: 'cs_new_123',
-    object: 'checkout.session',
-    status: 'open',
-    customer: 'cus_new_123',
-    payment_status: 'unpaid',
-    url: 'https://checkout.stripe.com/c/pay/new_123',
-    success_url: 'https://example.com/new-success',
-    cancel_url: 'https://example.com/new-cancel',
-    expires_at: Math.floor(Date.now() / 1000) + 24 * 60 * 60
+    line_items: [
+      {
+        price: process.env.TEST_PLAN_ID!,
+        quantity: 1
+      }
+    ]
   } as never
-};
+});
+
+export const mockCheckoutSessionData = getMockCheckoutSessionData();
 
 export const mockPaymentLinkData = {
-  paymentMethods: [PaymentMethodEnum.CARD, PaymentMethodEnum.PAYPAL],
+  paymentMethods: [PaymentMethodEnum.CARD],
   currency: CurrencyEnum.USD,
   status: StatusEnum.PENDING,
   amount: 9999,
@@ -407,16 +397,18 @@ export const mockPaymentLinkData = {
   }
 };
 
-export const mockBillingPortalData = {
+export const getMockBillingPortalData = () => ({
   id: '123e4567-e89b-12d3-a456-426614174006',
-  customerId: 'cus_new_123',
+  customerId: process.env.TEST_CUSTOMER_ID!,
   returnUrl: 'https://example.com/billing',
   billingProvider: 'stripe' as const,
   expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
   stripeFields: {
     return_url: 'https://example.com/billing'
   }
-};
+});
+
+export const mockBillingPortalData = getMockBillingPortalData();
 
 export const mockPlanResponse = [
   {

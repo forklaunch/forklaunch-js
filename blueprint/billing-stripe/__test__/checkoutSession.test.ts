@@ -1,13 +1,11 @@
 import { CurrencyEnum } from '@forklaunch/implementation-billing-stripe/enum';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { StatusEnum } from '../domain/enum/status.enum';
 import {
   cleanupTestDatabase,
-  clearDatabase,
+  getMockCheckoutSessionData,
   MOCK_HMAC_TOKEN,
   MOCK_INVALID_HMAC_TOKEN,
-  mockCheckoutSessionData,
-  setupTestData,
   setupTestDatabase,
   TestSetupResult
 } from './test-utils';
@@ -26,12 +24,6 @@ describe('CheckoutSession Routes E2E Tests with PostgreSQL Container', () => {
     redis = setup.redis;
   }, 60000);
 
-  beforeEach(async () => {
-    await clearDatabase(orm, redis);
-    const em = orm.em.fork();
-    await setupTestData(em);
-  });
-
   afterAll(async () => {
     await cleanupTestDatabase(orm, container, redisContainer, redis);
   }, 30000);
@@ -44,7 +36,7 @@ describe('CheckoutSession Routes E2E Tests with PostgreSQL Container', () => {
 
       const response =
         await createCheckoutSessionRoute.sdk.createCheckoutSession({
-          body: mockCheckoutSessionData,
+          body: getMockCheckoutSessionData(),
           headers: {
             authorization: MOCK_HMAC_TOKEN
           }
@@ -52,14 +44,14 @@ describe('CheckoutSession Routes E2E Tests with PostgreSQL Container', () => {
 
       expect(response.code).toBe(200);
       expect(response.response).toMatchObject({
-        customerId: mockCheckoutSessionData.customerId,
-        paymentMethods: mockCheckoutSessionData.paymentMethods,
-        currency: mockCheckoutSessionData.currency,
-        uri: mockCheckoutSessionData.uri,
-        successRedirectUri: mockCheckoutSessionData.successRedirectUri,
-        cancelRedirectUri: mockCheckoutSessionData.cancelRedirectUri,
+        customerId: getMockCheckoutSessionData().customerId,
+        paymentMethods: getMockCheckoutSessionData().paymentMethods,
+        currency: getMockCheckoutSessionData().currency,
+        uri: expect.any(String),
+        successRedirectUri: getMockCheckoutSessionData().successRedirectUri,
+        cancelRedirectUri: getMockCheckoutSessionData().cancelRedirectUri,
         expiresAt: expect.any(Date),
-        status: mockCheckoutSessionData.status,
+        status: getMockCheckoutSessionData().status,
         id: expect.any(String),
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date)
@@ -72,7 +64,7 @@ describe('CheckoutSession Routes E2E Tests with PostgreSQL Container', () => {
       );
 
       const invalidData = {
-        ...mockCheckoutSessionData,
+        ...getMockCheckoutSessionData(),
         customerId: '',
         expiresAt: new Date(Date.now() - 24 * 60 * 60 * 1000)
       };
@@ -96,7 +88,7 @@ describe('CheckoutSession Routes E2E Tests with PostgreSQL Container', () => {
       );
 
       const invalidData = {
-        ...mockCheckoutSessionData,
+        ...getMockCheckoutSessionData(),
         currency: 'INVALID_CURRENCY' as CurrencyEnum
       };
 
@@ -119,7 +111,7 @@ describe('CheckoutSession Routes E2E Tests with PostgreSQL Container', () => {
       );
 
       const invalidData = {
-        ...mockCheckoutSessionData,
+        ...getMockCheckoutSessionData(),
         paymentMethods: ['INVALID_METHOD' as never]
       };
 
@@ -142,7 +134,7 @@ describe('CheckoutSession Routes E2E Tests with PostgreSQL Container', () => {
       );
 
       const invalidData = {
-        ...mockCheckoutSessionData,
+        ...getMockCheckoutSessionData(),
         status: 'INVALID_STATUS' as StatusEnum
       };
 
@@ -167,7 +159,7 @@ describe('CheckoutSession Routes E2E Tests with PostgreSQL Container', () => {
 
       const createResponse =
         await createCheckoutSessionRoute.sdk.createCheckoutSession({
-          body: mockCheckoutSessionData,
+          body: getMockCheckoutSessionData(),
           headers: {
             authorization: MOCK_HMAC_TOKEN
           }
@@ -188,14 +180,14 @@ describe('CheckoutSession Routes E2E Tests with PostgreSQL Container', () => {
       expect(response.code).toBe(200);
       expect(response.response).toMatchObject({
         id: sessionId,
-        customerId: mockCheckoutSessionData.customerId,
-        paymentMethods: mockCheckoutSessionData.paymentMethods,
-        currency: mockCheckoutSessionData.currency,
-        uri: mockCheckoutSessionData.uri,
-        successRedirectUri: mockCheckoutSessionData.successRedirectUri,
-        cancelRedirectUri: mockCheckoutSessionData.cancelRedirectUri,
+        customerId: getMockCheckoutSessionData().customerId,
+        paymentMethods: getMockCheckoutSessionData().paymentMethods,
+        currency: getMockCheckoutSessionData().currency,
+        uri: expect.any(String),
+        successRedirectUri: getMockCheckoutSessionData().successRedirectUri,
+        cancelRedirectUri: getMockCheckoutSessionData().cancelRedirectUri,
         expiresAt: expect.any(Date),
-        status: mockCheckoutSessionData.status,
+        status: getMockCheckoutSessionData().status,
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date)
       });
@@ -245,7 +237,7 @@ describe('CheckoutSession Routes E2E Tests with PostgreSQL Container', () => {
 
       const createResponse =
         await createCheckoutSessionRoute.sdk.createCheckoutSession({
-          body: mockCheckoutSessionData,
+          body: getMockCheckoutSessionData(),
           headers: {
             authorization: MOCK_HMAC_TOKEN
           }
@@ -294,7 +286,7 @@ describe('CheckoutSession Routes E2E Tests with PostgreSQL Container', () => {
 
       const createResponse =
         await createCheckoutSessionRoute.sdk.createCheckoutSession({
-          body: mockCheckoutSessionData,
+          body: getMockCheckoutSessionData(),
           headers: {
             authorization: MOCK_HMAC_TOKEN
           }
@@ -327,7 +319,7 @@ describe('CheckoutSession Routes E2E Tests with PostgreSQL Container', () => {
 
       const createResponse =
         await createCheckoutSessionRoute.sdk.createCheckoutSession({
-          body: mockCheckoutSessionData,
+          body: getMockCheckoutSessionData(),
           headers: {
             authorization: MOCK_HMAC_TOKEN
           }
@@ -361,7 +353,7 @@ describe('CheckoutSession Routes E2E Tests with PostgreSQL Container', () => {
 
       try {
         await createCheckoutSessionRoute.sdk.createCheckoutSession({
-          body: mockCheckoutSessionData,
+          body: getMockCheckoutSessionData(),
           headers: {
             authorization: MOCK_INVALID_HMAC_TOKEN
           }

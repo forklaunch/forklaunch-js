@@ -36,5 +36,3 @@ export const handleCheckoutFailureRoute = checkoutSessionRouter.get(
   '/:id/failure',
   handleCheckoutFailure
 );
-
-

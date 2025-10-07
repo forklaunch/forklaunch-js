@@ -76,8 +76,8 @@ export class BaseBillingPortalService<
 
     const billingPortal = await this.mappers.CreateBillingPortalMapper.toEntity(
       billingPortalDto,
-      this.em,
-      ...args
+      args[0] instanceof EntityManager ? args[0] : this.em,
+      ...(args[0] instanceof EntityManager ? args.slice(1) : args)
     );
 
     if (this.enableDatabaseBackup) {
@@ -111,7 +111,12 @@ export class BaseBillingPortalService<
       throw new Error('Session not found');
     }
 
-    return billingPortalDetails.value;
+    return this.mappers.BillingPortalMapper.toDto(
+      await this.mappers.UpdateBillingPortalMapper.toEntity(
+        billingPortalDetails.value,
+        this.em
+      )
+    );
   }
 
   async updateBillingPortalSession(
@@ -137,8 +142,8 @@ export class BaseBillingPortalService<
 
     const billingPortal = await this.mappers.UpdateBillingPortalMapper.toEntity(
       billingPortalDto,
-      this.em,
-      ...args
+      args[0] instanceof EntityManager ? args[0] : this.em,
+      ...(args[0] instanceof EntityManager ? args.slice(1) : args)
     );
 
     if (this.enableDatabaseBackup) {
@@ -158,7 +163,13 @@ export class BaseBillingPortalService<
       ttlMilliseconds: this.cache.getTtlMilliseconds()
     });
 
-    return updatedBillingPortalDto;
+    console.log('updatedBillingPortalDto', updatedBillingPortalDto);
+    return this.mappers.BillingPortalMapper.toDto(
+      await this.mappers.UpdateBillingPortalMapper.toEntity(
+        billingPortal,
+        this.em
+      )
+    );
   }
 
   async expireBillingPortalSession(idDto: IdDto): Promise<void> {

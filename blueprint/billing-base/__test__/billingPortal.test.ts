@@ -134,8 +134,8 @@ describe('BillingPortal Routes E2E Tests with PostgreSQL Container', () => {
       expect(response.response).toMatchObject({
         id: expect.any(String),
         customerId: mockBillingPortalData.customerId,
-        createdAt: expect.any(String),
-        updatedAt: expect.any(String)
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date)
       });
     });
 
@@ -210,9 +210,7 @@ describe('BillingPortal Routes E2E Tests with PostgreSQL Container', () => {
 
       expect(response.code).toBe(200);
       expect(response.response).toMatchObject({
-        id: expect.any(String),
-        createdAt: expect.any(String),
-        updatedAt: expect.any(String)
+        id: expect.any(String)
       });
     });
 

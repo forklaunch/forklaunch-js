@@ -6,6 +6,7 @@ import {
   schemaValidator,
   string
 } from '@forklaunch/blueprint-core';
+import { IdsDto } from '@forklaunch/common';
 import { ci, tokens } from '../../bootstrapper';
 import {
   CreateSubscriptionMapper,
@@ -200,7 +201,9 @@ export const listSubscriptions = handlers.get(
   },
   async (req, res) => {
     openTelemetryCollector.debug('Listing subscriptions', req.query);
-    res.status(200).json(await serviceFactory().listSubscriptions(req.query));
+    res
+      .status(200)
+      .json(await serviceFactory().listSubscriptions(req.query as IdsDto));
   }
 );
 

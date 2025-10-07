@@ -1,4 +1,4 @@
-import { IdDto } from '@forklaunch/common';
+import { IdDto, IdsDto } from '@forklaunch/common';
 import {
   evaluateTelemetryOptions,
   MetricsDefinition,
@@ -78,7 +78,7 @@ export class BaseSubscriptionService<
     const subscription = await this.mappers.CreateSubscriptionMapper.toEntity(
       subscriptionDto,
       em ?? this.em,
-      ...args
+      ...(args[0] instanceof EntityManager ? args.slice(1) : args)
     );
     await (em ?? this.em).transactional(async (innerEm) => {
       await innerEm.persist(subscription);
@@ -180,29 +180,22 @@ export class BaseSubscriptionService<
   }
 
   async listSubscriptions(
-    idsDto: { ids?: string[] },
+    idsDto?: IdsDto,
     em?: EntityManager
   ): Promise<Dto['SubscriptionMapper'][]> {
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info('Listing subscriptions', idsDto);
     }
-    const subscriptions = await (em ?? this.em).findAll('Subscription', {
-      where: idsDto.ids
-        ? {
-            id: {
-              $in: idsDto.ids
-            }
-          }
-        : undefined
-    });
-
     return Promise.all(
-      subscriptions.map((subscription) => {
-        const subscriptionDto = this.mappers.SubscriptionMapper.toDto(
+      (
+        await (em ?? this.em).findAll('Subscription', {
+          where: idsDto?.ids?.length ? { id: { $in: idsDto.ids } } : undefined
+        })
+      ).map((subscription) =>
+        this.mappers.SubscriptionMapper.toDto(
           subscription as Entities['SubscriptionMapper']
-        );
-        return subscriptionDto;
-      })
+        )
+      )
     );
   }
 

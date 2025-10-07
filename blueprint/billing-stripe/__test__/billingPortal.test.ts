@@ -2,8 +2,8 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import {
   cleanupTestDatabase,
   clearDatabase,
+  getMockBillingPortalData,
   MOCK_AUTH_TOKEN,
-  mockBillingPortalData,
   setupTestData,
   setupTestDatabase,
   TestSetupResult
@@ -41,7 +41,7 @@ describe('BillingPortal Routes E2E Tests with PostgreSQL Container', () => {
 
       const response =
         await createBillingPortalRoute.sdk.createBillingPortalSession({
-          body: mockBillingPortalData,
+          body: getMockBillingPortalData(),
           headers: {
             authorization: MOCK_AUTH_TOKEN
           }
@@ -49,7 +49,7 @@ describe('BillingPortal Routes E2E Tests with PostgreSQL Container', () => {
 
       expect(response.code).toBe(200);
       expect(response.response).toMatchObject({
-        customerId: mockBillingPortalData.customerId,
+        customerId: getMockBillingPortalData().customerId,
         id: expect.any(String),
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date)
@@ -62,7 +62,7 @@ describe('BillingPortal Routes E2E Tests with PostgreSQL Container', () => {
       );
 
       const invalidData = {
-        ...mockBillingPortalData,
+        ...getMockBillingPortalData(),
         customerId: '',
         returnUrl: 'invalid-url'
       };
@@ -86,7 +86,7 @@ describe('BillingPortal Routes E2E Tests with PostgreSQL Container', () => {
       );
 
       const invalidData = {
-        ...mockBillingPortalData,
+        ...getMockBillingPortalData(),
         billingProvider: 'INVALID_PROVIDER'
       };
 
@@ -112,7 +112,7 @@ describe('BillingPortal Routes E2E Tests with PostgreSQL Container', () => {
 
       const createResponse =
         await createBillingPortalRoute.sdk.createBillingPortalSession({
-          body: mockBillingPortalData,
+          body: getMockBillingPortalData(),
           headers: {
             authorization: MOCK_AUTH_TOKEN
           }
@@ -133,9 +133,9 @@ describe('BillingPortal Routes E2E Tests with PostgreSQL Container', () => {
       expect(response.code).toBe(200);
       expect(response.response).toMatchObject({
         id: expect.any(String),
-        customerId: mockBillingPortalData.customerId,
-        createdAt: expect.any(String),
-        updatedAt: expect.any(String)
+        customerId: getMockBillingPortalData().customerId,
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date)
       });
     });
 
@@ -183,7 +183,7 @@ describe('BillingPortal Routes E2E Tests with PostgreSQL Container', () => {
 
       const createResponse =
         await createBillingPortalRoute.sdk.createBillingPortalSession({
-          body: mockBillingPortalData,
+          body: getMockBillingPortalData(),
           headers: {
             authorization: MOCK_AUTH_TOKEN
           }
@@ -195,8 +195,8 @@ describe('BillingPortal Routes E2E Tests with PostgreSQL Container', () => {
       const portalId = createResponse.response.id;
       const updateData = {
         id: portalId,
-        customerId: mockBillingPortalData.customerId,
-        expiresAt: mockBillingPortalData.expiresAt
+        customerId: getMockBillingPortalData().customerId,
+        expiresAt: getMockBillingPortalData().expiresAt
       };
 
       const response =
@@ -211,8 +211,8 @@ describe('BillingPortal Routes E2E Tests with PostgreSQL Container', () => {
       expect(response.code).toBe(200);
       expect(response.response).toMatchObject({
         id: expect.any(String),
-        createdAt: expect.any(String),
-        updatedAt: expect.any(String)
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date)
       });
     });
 
@@ -248,7 +248,7 @@ describe('BillingPortal Routes E2E Tests with PostgreSQL Container', () => {
 
       const createResponse =
         await createBillingPortalRoute.sdk.createBillingPortalSession({
-          body: mockBillingPortalData,
+          body: getMockBillingPortalData(),
           headers: {
             authorization: MOCK_AUTH_TOKEN
           }
@@ -284,7 +284,7 @@ describe('BillingPortal Routes E2E Tests with PostgreSQL Container', () => {
 
       const createResponse =
         await createBillingPortalRoute.sdk.createBillingPortalSession({
-          body: mockBillingPortalData,
+          body: getMockBillingPortalData(),
           headers: {
             authorization: MOCK_AUTH_TOKEN
           }
@@ -336,7 +336,7 @@ describe('BillingPortal Routes E2E Tests with PostgreSQL Container', () => {
 
       try {
         await createBillingPortalRoute.sdk.createBillingPortalSession({
-          body: mockBillingPortalData,
+          body: getMockBillingPortalData(),
           headers: {
             authorization: 'Bearer invalid-token'
           }

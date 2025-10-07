@@ -43,4 +43,3 @@ export const deleteBatchUsersRoute = userRouter.delete(
   deleteBatchUsers
 );
 export const deleteUserRoute = userRouter.delete('/:id', deleteUser);
-

@@ -48,4 +48,3 @@ export const deletePermissionRoute = permissionRouter.delete(
   '/:id',
   deletePermission
 );
-

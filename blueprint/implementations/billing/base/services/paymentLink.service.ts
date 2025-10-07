@@ -101,8 +101,8 @@ export class BasePaymentLinkService<
 
     const paymentLink = await this.mappers.CreatePaymentLinkMapper.toEntity(
       paymentLinkDto,
-      this.em,
-      ...args
+      args[0] instanceof EntityManager ? args[0] : this.em,
+      ...(args[0] instanceof EntityManager ? args.slice(1) : args)
     );
 
     if (this.enableDatabaseBackup) {
@@ -142,8 +142,8 @@ export class BasePaymentLinkService<
     }
     const paymentLink = await this.mappers.UpdatePaymentLinkMapper.toEntity(
       paymentLinkDto,
-      this.em,
-      ...args
+      args[0] instanceof EntityManager ? args[0] : this.em,
+      ...(args[0] instanceof EntityManager ? args.slice(1) : args)
     );
 
     if (this.enableDatabaseBackup) {
@@ -228,9 +228,11 @@ export class BasePaymentLinkService<
     idsDto?: IdsDto
   ): Promise<MapperDomains['PaymentLinkMapper'][]> {
     const keys =
-      idsDto?.ids.map((id) => this.createCacheKey(id)) ??
-      (await this.cache.listKeys(this.cacheKeyPrefix));
+      idsDto?.ids && idsDto.ids.length > 0
+        ? idsDto?.ids.map((id) => this.createCacheKey(id))
+        : await this.cache.listKeys(this.cacheKeyPrefix);
 
+    console.log('keys', keys);
     return Promise.all(
       keys.map(async (key) => {
         const paymentLink =

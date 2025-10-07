@@ -46,5 +46,3 @@ export const expirePaymentLinkRoute = paymentLinkRouter.delete(
   '/:id',
   expirePaymentLink
 );
-
-

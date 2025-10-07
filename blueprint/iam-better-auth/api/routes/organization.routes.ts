@@ -31,4 +31,3 @@ export const deleteOrganizationRoute = organizationRouter.delete(
   '/:id',
   deleteOrganization
 );
-

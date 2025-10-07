@@ -101,8 +101,8 @@ export class BaseCheckoutSessionService<
     const checkoutSession =
       await this.mappers.CreateCheckoutSessionMapper.toEntity(
         checkoutSessionDto,
-        this.em,
-        ...args
+        args[0] instanceof EntityManager ? args[0] : this.em,
+        ...(args[0] instanceof EntityManager ? args.slice(1) : args)
       );
 
     const createdCheckoutSessionDto =

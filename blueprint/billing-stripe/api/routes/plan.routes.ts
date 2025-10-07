@@ -21,5 +21,3 @@ export const listPlansRoute = planRouter.get('/', listPlans);
 export const getPlanRoute = planRouter.get('/:id', getPlan);
 export const updatePlanRoute = planRouter.put('/', updatePlan);
 export const deletePlanRoute = planRouter.delete('/:id', deletePlan);
-
-

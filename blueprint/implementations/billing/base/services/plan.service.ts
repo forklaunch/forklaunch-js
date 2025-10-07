@@ -84,10 +84,11 @@ export class BasePlanService<
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info('Listing plans', idsDto);
     }
+
     return Promise.all(
       (
         await (em ?? this.em).findAll('Plan', {
-          filters: idsDto?.ids ? { id: { $in: idsDto.ids } } : undefined
+          where: idsDto?.ids?.length ? { id: { $in: idsDto.ids } } : undefined
         })
       ).map((plan) =>
         this.mappers.PlanMapper.toDto(plan as MapperEntities['PlanMapper'])
@@ -106,7 +107,7 @@ export class BasePlanService<
     const plan = await this.mappers.CreatePlanMapper.toEntity(
       planDto,
       em ?? this.em,
-      ...args
+      ...(args[0] instanceof EntityManager ? args.slice(1) : args)
     );
     await (em ?? this.em).transactional(async (innerEm) => {
       await innerEm.persist(plan);
