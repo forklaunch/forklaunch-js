@@ -70,6 +70,7 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@forklaunch/testing": "^0.0.3",
     "@mikro-orm/cli": "^6.5.7",
     "@types/express": "^5.0.3",
     "@types/express-serve-static-core": "^5.1.0",
@@ -81,7 +82,8 @@
     "prettier": "^3.6.2",
     "testcontainers": "^11.7.1",
     "ts-node": "^10.9.2",
-    "typedoc": "^0.28.13"
+    "typedoc": "^0.28.13",
+    "vitest": "^3.2.4"
   },
   "mikro-orm": {
     "configPaths": [

@@ -184,6 +184,6 @@
     "collection": "plan"
   },
   "origin": "./persistence/entities/plan.entity.ts",
-  "hash": "9d5478ddabd404741c4200f5cccda4bf",
-  "version": "6.5.6"
+  "hash": "4c472e077a9565a56a48c90db7c0e0d8",
+  "version": "6.5.7"
 }

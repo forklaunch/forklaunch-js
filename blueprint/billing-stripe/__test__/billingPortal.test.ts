@@ -1,24 +1,19 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import {
   cleanupTestDatabase,
   clearDatabase,
   getMockBillingPortalData,
-  MOCK_AUTH_TOKEN,
   setupTestData,
   setupTestDatabase,
+  TEST_TOKENS,
   TestSetupResult
 } from './test-utils';
 
 describe('BillingPortal Routes E2E Tests with PostgreSQL Container', () => {
-  let container: TestSetupResult['container'];
-  let redisContainer: TestSetupResult['redisContainer'];
   let orm: TestSetupResult['orm'];
   let redis: TestSetupResult['redis'];
 
   beforeAll(async () => {
     const setup = await setupTestDatabase();
-    container = setup.container;
-    redisContainer = setup.redisContainer;
     orm = setup.orm;
     redis = setup.redis;
   }, 60000);
@@ -30,7 +25,7 @@ describe('BillingPortal Routes E2E Tests with PostgreSQL Container', () => {
   });
 
   afterAll(async () => {
-    await cleanupTestDatabase(orm, container, redisContainer, redis);
+    await cleanupTestDatabase();
   }, 30000);
 
   describe('POST /billing-portal - createBillingPortalSession', () => {
@@ -43,7 +38,7 @@ describe('BillingPortal Routes E2E Tests with PostgreSQL Container', () => {
         await createBillingPortalRoute.sdk.createBillingPortalSession({
           body: getMockBillingPortalData(),
           headers: {
-            authorization: MOCK_AUTH_TOKEN
+            authorization: TEST_TOKENS.AUTH
           }
         });
 
@@ -71,7 +66,7 @@ describe('BillingPortal Routes E2E Tests with PostgreSQL Container', () => {
         await createBillingPortalRoute.sdk.createBillingPortalSession({
           body: invalidData,
           headers: {
-            authorization: MOCK_AUTH_TOKEN
+            authorization: TEST_TOKENS.AUTH
           }
         });
         expect(true).toBe(false);
@@ -94,7 +89,7 @@ describe('BillingPortal Routes E2E Tests with PostgreSQL Container', () => {
         await createBillingPortalRoute.sdk.createBillingPortalSession({
           body: invalidData,
           headers: {
-            authorization: MOCK_AUTH_TOKEN
+            authorization: TEST_TOKENS.AUTH
           }
         });
         expect(true).toBe(false);
@@ -114,7 +109,7 @@ describe('BillingPortal Routes E2E Tests with PostgreSQL Container', () => {
         await createBillingPortalRoute.sdk.createBillingPortalSession({
           body: getMockBillingPortalData(),
           headers: {
-            authorization: MOCK_AUTH_TOKEN
+            authorization: TEST_TOKENS.AUTH
           }
         });
 
@@ -126,7 +121,7 @@ describe('BillingPortal Routes E2E Tests with PostgreSQL Container', () => {
       const response = await getBillingPortalRoute.sdk.getBillingPortalSession({
         params: { id: portalId },
         headers: {
-          authorization: MOCK_AUTH_TOKEN
+          authorization: TEST_TOKENS.AUTH
         }
       });
 
@@ -148,7 +143,7 @@ describe('BillingPortal Routes E2E Tests with PostgreSQL Container', () => {
         await getBillingPortalRoute.sdk.getBillingPortalSession({
           params: { id: '123e4567-e89b-12d3-a456-426614174999' },
           headers: {
-            authorization: MOCK_AUTH_TOKEN
+            authorization: TEST_TOKENS.AUTH
           }
         });
         expect(true).toBe(false);
@@ -166,7 +161,7 @@ describe('BillingPortal Routes E2E Tests with PostgreSQL Container', () => {
         await getBillingPortalRoute.sdk.getBillingPortalSession({
           params: { id: 'invalid-uuid' },
           headers: {
-            authorization: MOCK_AUTH_TOKEN
+            authorization: TEST_TOKENS.AUTH
           }
         });
         expect(true).toBe(false);
@@ -185,7 +180,7 @@ describe('BillingPortal Routes E2E Tests with PostgreSQL Container', () => {
         await createBillingPortalRoute.sdk.createBillingPortalSession({
           body: getMockBillingPortalData(),
           headers: {
-            authorization: MOCK_AUTH_TOKEN
+            authorization: TEST_TOKENS.AUTH
           }
         });
 
@@ -204,7 +199,7 @@ describe('BillingPortal Routes E2E Tests with PostgreSQL Container', () => {
           params: { id: portalId },
           body: updateData,
           headers: {
-            authorization: MOCK_AUTH_TOKEN
+            authorization: TEST_TOKENS.AUTH
           }
         });
 
@@ -233,7 +228,7 @@ describe('BillingPortal Routes E2E Tests with PostgreSQL Container', () => {
           params: { id: '123e4567-e89b-12d3-a456-426614174999' },
           body: updateData,
           headers: {
-            authorization: MOCK_AUTH_TOKEN
+            authorization: TEST_TOKENS.AUTH
           }
         });
         expect(true).toBe(false);
@@ -250,7 +245,7 @@ describe('BillingPortal Routes E2E Tests with PostgreSQL Container', () => {
         await createBillingPortalRoute.sdk.createBillingPortalSession({
           body: getMockBillingPortalData(),
           headers: {
-            authorization: MOCK_AUTH_TOKEN
+            authorization: TEST_TOKENS.AUTH
           }
         });
 
@@ -267,7 +262,7 @@ describe('BillingPortal Routes E2E Tests with PostgreSQL Container', () => {
           params: { id: portalId },
           body: invalidUpdateData,
           headers: {
-            authorization: MOCK_AUTH_TOKEN
+            authorization: TEST_TOKENS.AUTH
           }
         });
         expect(true).toBe(false);
@@ -286,7 +281,7 @@ describe('BillingPortal Routes E2E Tests with PostgreSQL Container', () => {
         await createBillingPortalRoute.sdk.createBillingPortalSession({
           body: getMockBillingPortalData(),
           headers: {
-            authorization: MOCK_AUTH_TOKEN
+            authorization: TEST_TOKENS.AUTH
           }
         });
 
@@ -299,7 +294,7 @@ describe('BillingPortal Routes E2E Tests with PostgreSQL Container', () => {
         await expireBillingPortalRoute.sdk.expireBillingPortalSession({
           params: { id: portalId },
           headers: {
-            authorization: MOCK_AUTH_TOKEN
+            authorization: TEST_TOKENS.AUTH
           }
         });
 
@@ -318,7 +313,7 @@ describe('BillingPortal Routes E2E Tests with PostgreSQL Container', () => {
         await expireBillingPortalRoute.sdk.expireBillingPortalSession({
           params: { id: '123e4567-e89b-12d3-a456-426614174999' },
           headers: {
-            authorization: MOCK_AUTH_TOKEN
+            authorization: TEST_TOKENS.AUTH
           }
         });
         expect(true).toBe(false);

@@ -163,7 +163,6 @@ export class BaseBillingPortalService<
       ttlMilliseconds: this.cache.getTtlMilliseconds()
     });
 
-    console.log('updatedBillingPortalDto', updatedBillingPortalDto);
     return this.mappers.BillingPortalMapper.toDto(
       await this.mappers.UpdateBillingPortalMapper.toEntity(
         billingPortal,

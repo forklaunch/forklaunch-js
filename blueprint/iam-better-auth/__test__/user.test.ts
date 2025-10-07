@@ -47,6 +47,8 @@ describe('User Routes E2E Tests with PostgreSQL Container', () => {
       const { createUserRoute } = await import('../api/routes/user.routes');
       const invalidData = {
         email: 'invalid-email',
+        emailVerified: true,
+        name: '',
         password: '123',
         firstName: '',
         lastName: '',
@@ -78,6 +80,7 @@ describe('User Routes E2E Tests with PostgreSQL Container', () => {
         {
           ...mockUserData,
           email: 'test2@example.com',
+          name: 'Jane User',
           firstName: 'Jane',
           subscription: 'basic'
         }

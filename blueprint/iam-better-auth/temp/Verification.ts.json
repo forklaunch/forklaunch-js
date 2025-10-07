@@ -1,9 +1,9 @@
 {
   "data": {
-    "_id": 2000,
+    "_id": 8000,
     "properties": {
-      "customerId": {
-        "name": "customerId",
+      "identifier": {
+        "name": "identifier",
         "kind": "scalar",
         "getter": false,
         "setter": false,
@@ -11,15 +11,13 @@
         "array": false,
         "runtimeType": "string"
       },
-      "uri": {
-        "name": "uri",
+      "value": {
+        "name": "value",
         "kind": "scalar",
-        "nullable": true,
         "getter": false,
         "setter": false,
         "type": "string",
         "array": false,
-        "optional": true,
         "runtimeType": "string"
       },
       "expiresAt": {
@@ -30,15 +28,6 @@
         "type": "Date",
         "array": false,
         "runtimeType": "Date"
-      },
-      "providerFields": {
-        "name": "providerFields",
-        "kind": "scalar",
-        "type": "json",
-        "getter": false,
-        "setter": false,
-        "array": false,
-        "runtimeType": "Stripe.BillingPortal.Session"
       }
     },
     "primaryKeys": [],
@@ -46,18 +35,18 @@
     "hooks": {},
     "indexes": [],
     "uniques": [],
-    "className": "BillingPortal",
-    "path": "./persistence/entities/billingPortal.entity.ts",
-    "name": "BillingPortal",
+    "className": "Verification",
+    "path": "./persistence/entities/verification.entity.ts",
+    "name": "Verification",
     "abstract": false,
     "internal": true,
     "constructorParams": [],
     "toJsonParams": [],
     "extends": "SqlBaseEntity",
     "useCache": true,
-    "collection": "billing_portal"
+    "collection": "verification"
   },
-  "origin": "./persistence/entities/billingPortal.entity.ts",
-  "hash": "6f93d8289bb78550d59c15837029fe6b",
+  "origin": "./persistence/entities/verification.entity.ts",
+  "hash": "e178bce53dcf32d2a46dba8797cd609c",
   "version": "6.5.7"
 }

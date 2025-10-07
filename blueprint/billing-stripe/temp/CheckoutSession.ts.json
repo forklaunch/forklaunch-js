@@ -212,6 +212,6 @@
     "collection": "checkout_session"
   },
   "origin": "./persistence/entities/checkoutSession.entity.ts",
-  "hash": "9c9817f197551cb81f4438a4f3be7422",
-  "version": "6.5.6"
+  "hash": "1c6431a14064ae404a6bf3040037e244",
+  "version": "6.5.7"
 }

@@ -4,150 +4,78 @@ import {
   PaymentMethodEnum,
   PlanCadenceEnum
 } from '@forklaunch/implementation-billing-stripe/enum';
+import {
+  BlueprintTestHarness,
+  clearTestDatabase,
+  TEST_TOKENS,
+  TestSetupResult
+} from '@forklaunch/testing';
 import { EntityManager, MikroORM } from '@mikro-orm/core';
 import Redis from 'ioredis';
-import { GenericContainer, StartedTestContainer } from 'testcontainers';
-import { expect, vi } from 'vitest';
 import { PartyEnum } from '../domain/enum/party.enum';
 import { StatusEnum } from '../domain/enum/status.enum';
 
-export const MOCK_AUTH_TOKEN = 'Bearer test-token';
-export const MOCK_HMAC_TOKEN =
-  'HMAC keyId=test-key ts=1234567890 nonce=test-nonce signature=test-signature';
-export const MOCK_INVALID_HMAC_TOKEN =
-  'HMAC keyId=invalid-key ts=1234567890 nonce=invalid-nonce signature=invalid-signature';
+export { TEST_TOKENS, TestSetupResult };
 
-export interface TestSetupResult {
-  container: StartedTestContainer;
-  redisContainer: StartedTestContainer;
-  orm: MikroORM;
-  redis: Redis;
-}
+let harness: BlueprintTestHarness;
 
 export const setupTestDatabase = async (): Promise<TestSetupResult> => {
-  const container = await new GenericContainer('postgres:latest')
-    .withExposedPorts(5432)
-    .withEnvironment({
-      POSTGRES_USER: 'test_user',
-      POSTGRES_PASSWORD: 'test_password',
-      POSTGRES_DB: 'test_db'
-    })
-    .withCommand(['postgres', '-c', 'log_statement=all'])
-    .start();
+  harness = new BlueprintTestHarness({
+    getConfig: async () => {
+      const { default: config } = await import('../mikro-orm.config');
+      return config;
+    },
+    databaseType: 'postgres',
+    useMigrations: false,
+    needsRedis: true,
+    customEnvVars: {
+      STRIPE_API_KEY:
+        'sk_test_51RZHBQP4Xs9lA9sq2hCQseYbRA4tKxMyRCViZQD3mofV8gIYqOjemsdaw7BEXGMKrWjSIAn2zZsGOUy2WT5If2W900LGUSgHq0',
+      STRIPE_WEBHOOK_SECRET: 'whsec_test_1234567890abcdefghijklmnopqrstuvwxyz'
+    },
+    onSetup: async () => {
+      const Stripe = (await import('stripe')).default;
+      const stripe = new Stripe(process.env.STRIPE_API_KEY!);
 
-  const redisContainer = await new GenericContainer('redis:latest')
-    .withExposedPorts(6379)
-    .withCommand(['redis-server', '--appendonly', 'yes'])
-    .start();
+      const paymentMethod = await stripe.paymentMethods.create({
+        type: 'card',
+        card: {
+          token: 'tok_visa'
+        }
+      });
 
-  process.env.DB_NAME = 'test_db';
-  process.env.DB_HOST = container.getHost();
-  process.env.DB_USER = 'test_user';
-  process.env.DB_PASSWORD = 'test_password';
-  process.env.DB_PORT = container.getMappedPort(5432).toString();
-  process.env.REDIS_URL = `redis://${redisContainer.getHost()}:${redisContainer.getMappedPort(6379)}`;
-  process.env.HMAC_SECRET_KEY = 'test-secret-key';
-  process.env.STRIPE_API_KEY =
-    'sk_test_51RZHBQP4Xs9lA9sq2hCQseYbRA4tKxMyRCViZQD3mofV8gIYqOjemsdaw7BEXGMKrWjSIAn2zZsGOUy2WT5If2W900LGUSgHq0';
-  process.env.STRIPE_WEBHOOK_SECRET =
-    'whsec_test_1234567890abcdefghijklmnopqrstuvwxyz';
-  process.env.JWKS_PUBLIC_KEY_URL =
-    'http://localhost:3000/.well-known/jwks.json';
-  process.env.OTEL_SERVICE_NAME = 'test-service';
-  process.env.OTEL_EXPORTER_OTLP_ENDPOINT = 'http://localhost:4318';
-  process.env.HOST = 'localhost';
-  process.env.PORT = '3000';
-  process.env.NODE_ENV = 'test';
-  process.env.VERSION = 'v1';
-  process.env.DOCS_PATH = '/docs';
-  process.env.OTEL_LEVEL = 'info';
-  process.env.DOTENV_FILE_PATH = '.env.test';
+      const customer = await stripe.customers.create({
+        email: 'test@example.com',
+        name: 'Test Customer',
+        payment_method: paymentMethod.id,
+        invoice_settings: {
+          default_payment_method: paymentMethod.id
+        }
+      });
+      process.env.TEST_CUSTOMER_ID = customer.id;
 
-  // Create Stripe test resources
-  const Stripe = (await import('stripe')).default;
-  const stripe = new Stripe(process.env.STRIPE_API_KEY!);
+      const product = await stripe.products.create({
+        name: 'Test Product',
+        description: 'A test product for plans'
+      });
+      process.env.TEST_PRODUCT_ID = product.id;
 
-  // Create test customer with payment method
-  const paymentMethod = await stripe.paymentMethods.create({
-    type: 'card',
-    card: {
-      token: 'tok_visa'
+      const price = await stripe.prices.create({
+        product: product.id,
+        currency: 'usd',
+        unit_amount: 1999,
+        recurring: { interval: 'month' }
+      });
+      process.env.TEST_PLAN_ID = price.id;
     }
   });
 
-  const customer = await stripe.customers.create({
-    email: 'test@example.com',
-    name: 'Test Customer',
-    payment_method: paymentMethod.id,
-    invoice_settings: {
-      default_payment_method: paymentMethod.id
-    }
-  });
-  process.env.TEST_CUSTOMER_ID = customer.id;
-
-  // Create test product
-  const product = await stripe.products.create({
-    name: 'Test Product',
-    description: 'A test product for plans'
-  });
-  process.env.TEST_PRODUCT_ID = product.id;
-
-  // Create test plan/price
-  const price = await stripe.prices.create({
-    product: product.id,
-    currency: 'usd',
-    unit_amount: 1999,
-    recurring: { interval: 'month' }
-  });
-  process.env.TEST_PLAN_ID = price.id;
-
-  const { default: mikroOrmConfig } = await import('../mikro-orm.config');
-
-  const config = {
-    ...mikroOrmConfig,
-    dbName: 'test_db',
-    host: container.getHost(),
-    user: 'test_user',
-    password: 'test_password',
-    port: container.getMappedPort(5432),
-    debug: false,
-    schemaGenerator: {
-      createForeignKeyConstraints: false,
-      wrap: false
-    }
-  };
-
-  const orm = await MikroORM.init(config);
-  await orm.getSchemaGenerator().createSchema();
-
-  const redis = new Redis({
-    host: redisContainer.getHost(),
-    port: redisContainer.getMappedPort(6379),
-    maxRetriesPerRequest: 3
-  });
-
-  await redis.ping();
-
-  return { container, redisContainer, orm, redis };
+  return await harness.setup();
 };
 
-export const cleanupTestDatabase = async (
-  orm: MikroORM,
-  container: StartedTestContainer,
-  redisContainer: StartedTestContainer,
-  redis: Redis
-): Promise<void> => {
-  if (redis) {
-    await redis.quit();
-  }
-  if (orm) {
-    await orm.close();
-  }
-  if (redisContainer) {
-    await redisContainer.stop({ remove: true, removeVolumes: true });
-  }
-  if (container) {
-    await container.stop({ remove: true, removeVolumes: true });
+export const cleanupTestDatabase = async (): Promise<void> => {
+  if (harness) {
+    await harness.cleanup();
   }
 };
 
@@ -155,26 +83,7 @@ export const clearDatabase = async (
   orm: MikroORM,
   redis?: Redis
 ): Promise<void> => {
-  vi.clearAllMocks();
-
-  if (redis) {
-    await redis.flushall();
-  }
-
-  const em = orm.em.fork();
-  const entities = Object.values(orm.getMetadata().getAll());
-
-  for (const entity of entities.reverse()) {
-    try {
-      await em.nativeDelete(entity.class, {});
-    } catch (error) {
-      if (!(error as Error).message?.includes('does not exist')) {
-        throw error;
-      }
-    }
-  }
-
-  await em.flush();
+  await clearTestDatabase(orm, redis);
 };
 
 export const setupTestData = async (em: EntityManager) => {

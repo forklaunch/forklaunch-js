@@ -19,7 +19,12 @@ export const setupTestDatabase = async (): Promise<TestSetupResult> => {
     },
     databaseType: 'postgres',
     useMigrations: true,
-    migrationsPath: path.join(__dirname, '../migrations')
+    migrationsPath: path.join(__dirname, '../migrations'),
+    customEnvVars: {
+      PASSWORD_ENCRYPTION_SECRET: 'test-password-secret-key-for-testing',
+      PASSWORD_ENCRYPTION_SECRET_PATH: '/tmp/test-password-secret.txt',
+      CORS_ORIGINS: 'http://localhost:3000'
+    }
   });
 
   return await harness.setup();
@@ -53,6 +58,7 @@ export const setupTestData = async (em: EntityManager) => {
     id: '123e4567-e89b-12d3-a456-426614174001',
     name: 'Test Organization',
     domain: 'test.com',
+    logoUrl: 'https://example.com/test-logo.png',
     subscription: 'premium',
     status: OrganizationStatus.ACTIVE,
     createdAt: new Date(),
@@ -80,6 +86,8 @@ export const setupTestData = async (em: EntityManager) => {
   em.create(User, {
     id: '123e4567-e89b-12d3-a456-426614174000',
     email: 'test@example.com',
+    emailVerified: true,
+    name: 'John Doe',
     firstName: 'John',
     lastName: 'Doe',
     phoneNumber: '+1234567890',
@@ -96,7 +104,9 @@ export const setupTestData = async (em: EntityManager) => {
 // Mock data constants
 export const mockUserData = {
   email: 'newuser@example.com',
+  emailVerified: true,
   password: 'password123',
+  name: 'New User',
   firstName: 'New',
   lastName: 'User',
   organization: '123e4567-e89b-12d3-a456-426614174001',
@@ -184,6 +194,7 @@ export const mockOrganizationResponse = {
   id: '123e4567-e89b-12d3-a456-426614174001',
   name: 'Test Organization',
   domain: 'test.com',
+  logoUrl: 'https://example.com/test-logo.png',
   subscription: 'premium',
   status: 'active',
   createdAt: expect.any(Date),

@@ -2,33 +2,21 @@ import {
   BillingProviderEnum,
   CurrencyEnum
 } from '@forklaunch/implementation-billing-stripe/enum';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   cleanupTestDatabase,
   getMockPlanData,
   getMockUpdatePlanData,
-  MOCK_HMAC_TOKEN,
-  MOCK_INVALID_HMAC_TOKEN,
   setupTestDatabase,
-  TestSetupResult
+  TEST_TOKENS
 } from './test-utils';
 
 describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
-  let container: TestSetupResult['container'];
-  let redisContainer: TestSetupResult['redisContainer'];
-  let orm: TestSetupResult['orm'];
-  let redis: TestSetupResult['redis'];
-
   beforeAll(async () => {
-    const setup = await setupTestDatabase();
-    container = setup.container;
-    redisContainer = setup.redisContainer;
-    orm = setup.orm;
-    redis = setup.redis;
+    await setupTestDatabase();
   }, 60000);
 
   afterAll(async () => {
-    await cleanupTestDatabase(orm, container, redisContainer, redis);
+    await cleanupTestDatabase();
   }, 30000);
 
   describe('POST /plan - createPlan', () => {
@@ -37,7 +25,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
       const response = await createPlanRoute.sdk.createPlan({
         body: getMockPlanData(),
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -72,7 +60,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
         await createPlanRoute.sdk.createPlan({
           body: invalidData,
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         });
         expect(true).toBe(false);
@@ -92,7 +80,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
         await createPlanRoute.sdk.createPlan({
           body: invalidData,
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         });
         expect(true).toBe(false);
@@ -112,7 +100,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
         await createPlanRoute.sdk.createPlan({
           body: invalidData,
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         });
         expect(true).toBe(false);
@@ -130,7 +118,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
       const createResponse = await createPlan.sdk.createPlan({
         body: getMockPlanData(),
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -142,7 +130,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
       const response = await getPlan.sdk.getPlan({
         params: { id: planId },
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -172,7 +160,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
         await getPlan.sdk.getPlan({
           params: { id: '123e4567-e89b-12d3-a456-426614174999' },
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         });
         expect(true).toBe(false);
@@ -190,7 +178,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
         await getPlan.sdk.getPlan({
           params: { id: 'invalid-uuid' },
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         });
         expect(true).toBe(false);
@@ -208,7 +196,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
       const createResponse = await createPlan.sdk.createPlan({
         body: getMockPlanData(),
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -224,7 +212,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
       const response = await updatePlan.sdk.updatePlan({
         body: updateData,
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -259,7 +247,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
         await updatePlan.sdk.updatePlan({
           body: updateData,
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         });
         expect(true).toBe(false);
@@ -275,7 +263,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
       const createResponse = await createPlan.sdk.createPlan({
         body: getMockPlanData(),
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -294,7 +282,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
         await updatePlan.sdk.updatePlan({
           body: invalidUpdateData,
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         });
         expect(true).toBe(false);
@@ -313,7 +301,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
       await createPlanRoute.sdk.createPlan({
         body: getMockPlanData(),
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -323,14 +311,14 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
           externalId: 'plan_second_123'
         },
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
       const response = await listPlans.sdk.listPlans({
         query: { ids: [] },
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -355,7 +343,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
       const plan1Response = await createPlan.sdk.createPlan({
         body: getMockPlanData(),
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -365,7 +353,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
           externalId: 'plan_second_123'
         },
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -378,7 +366,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
           ids: [plan1Response.response.id, plan2Response.response.id]
         },
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -404,7 +392,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
           ids: ['123e4567-e89b-12d3-a456-426614174999']
         },
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -421,7 +409,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
       const createResponse = await createPlan.sdk.createPlan({
         body: getMockPlanData(),
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -433,7 +421,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
       const response = await deletePlan.sdk.deletePlan({
         params: { id: planId },
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -450,7 +438,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
         await deletePlan.sdk.deletePlan({
           params: { id: '123e4567-e89b-12d3-a456-426614174999' },
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         });
         expect(true).toBe(false);
@@ -467,7 +455,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
         await createPlanRoute.sdk.createPlan({
           body: getMockPlanData(),
           headers: {
-            authorization: MOCK_INVALID_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC_INVALID
           }
         });
         expect(true).toBe(false);
@@ -485,7 +473,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
         await getPlan.sdk.getPlan({
           params: { id: '123e4567-e89b-12d3-a456-426614174000' },
           headers: {
-            authorization: MOCK_INVALID_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC_INVALID
           }
         });
         expect(true).toBe(false);
@@ -506,7 +494,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
             id: '123e4567-e89b-12d3-a456-426614174000'
           },
           headers: {
-            authorization: MOCK_INVALID_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC_INVALID
           }
         });
         expect(true).toBe(false);
@@ -524,7 +512,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
         await deletePlan.sdk.deletePlan({
           params: { id: '123e4567-e89b-12d3-a456-426614174000' },
           headers: {
-            authorization: MOCK_INVALID_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC_INVALID
           }
         });
         expect(true).toBe(false);
@@ -542,7 +530,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
         await listPlans.sdk.listPlans({
           query: { ids: [] },
           headers: {
-            authorization: MOCK_INVALID_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC_INVALID
           }
         });
         expect(true).toBe(false);
@@ -561,7 +549,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
       const createResponse = await createPlanRoute.sdk.createPlan({
         body: getMockPlanData(),
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -573,7 +561,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
       const response1 = await getPlanRoute.sdk.getPlan({
         params: { id: planId },
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -584,7 +572,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
         const response2 = await getPlanRoute.sdk.getPlan({
           params: { id: planId },
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         });
 

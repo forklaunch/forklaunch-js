@@ -124,6 +124,6 @@
     "collection": "subscription"
   },
   "origin": "./persistence/entities/subscription.entity.ts",
-  "hash": "629087fb51f9e86481cab8986a124199",
-  "version": "6.5.6"
+  "hash": "e98d62e28f61269c94882573d469cf89",
+  "version": "6.5.7"
 }

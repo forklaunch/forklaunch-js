@@ -1,28 +1,22 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { CurrencyEnum } from '../domain/enum/currency.enum';
 import { PaymentMethodEnum } from '../domain/enum/paymentMethod.enum';
 import { StatusEnum } from '../domain/enum/status.enum';
 import {
   cleanupTestDatabase,
   clearDatabase,
-  MOCK_HMAC_TOKEN,
-  MOCK_INVALID_HMAC_TOKEN,
   mockPaymentLinkData,
   setupTestData,
   setupTestDatabase,
+  TEST_TOKENS,
   TestSetupResult
 } from './test-utils';
 
 describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
-  let container: TestSetupResult['container'];
-  let redisContainer: TestSetupResult['redisContainer'];
   let orm: TestSetupResult['orm'];
   let redis: TestSetupResult['redis'];
 
   beforeAll(async () => {
     const setup = await setupTestDatabase();
-    container = setup.container;
-    redisContainer = setup.redisContainer;
     orm = setup.orm;
     redis = setup.redis;
   }, 60000);
@@ -34,7 +28,7 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
   });
 
   afterAll(async () => {
-    await cleanupTestDatabase(orm, container, redisContainer, redis);
+    await cleanupTestDatabase();
   }, 30000);
 
   describe('POST /payment-link - createPaymentLink', () => {
@@ -46,7 +40,7 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
       const response = await createPaymentLinkRoute.sdk.createPaymentLink({
         body: mockPaymentLinkData,
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -77,7 +71,7 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
         await createPaymentLinkRoute.sdk.createPaymentLink({
           body: invalidData,
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         });
         expect(true).toBe(false);
@@ -100,7 +94,7 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
         await createPaymentLinkRoute.sdk.createPaymentLink({
           body: invalidData,
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         });
         expect(true).toBe(false);
@@ -123,7 +117,7 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
         await createPaymentLinkRoute.sdk.createPaymentLink({
           body: invalidData,
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         });
         expect(true).toBe(false);
@@ -146,7 +140,7 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
         await createPaymentLinkRoute.sdk.createPaymentLink({
           body: invalidData,
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         });
         expect(true).toBe(false);
@@ -166,7 +160,7 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
         {
           body: mockPaymentLinkData,
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         }
       );
@@ -179,7 +173,7 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
       const response = await getPaymentLinkRoute.sdk.getPaymentLink({
         params: { id: paymentLinkId },
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -205,7 +199,7 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
         await getPaymentLinkRoute.sdk.getPaymentLink({
           params: { id: '123e4567-e89b-12d3-a456-426614174999' },
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         });
         expect(true).toBe(false);
@@ -223,7 +217,7 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
         await getPaymentLinkRoute.sdk.getPaymentLink({
           params: { id: 'invalid-uuid' },
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         });
         expect(true).toBe(false);
@@ -243,7 +237,7 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
         {
           body: mockPaymentLinkData,
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         }
       );
@@ -267,7 +261,7 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
         params: { id: paymentLinkId },
         body: updateData,
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -303,7 +297,7 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
           params: { id: '123e4567-e89b-12d3-a456-426614174999' },
           body: updateData,
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         });
         expect(true).toBe(false);
@@ -321,7 +315,7 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
         {
           body: mockPaymentLinkData,
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         }
       );
@@ -344,7 +338,7 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
           params: { id: paymentLinkId },
           body: invalidUpdateData,
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         });
         expect(true).toBe(false);
@@ -364,7 +358,7 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
         {
           body: mockPaymentLinkData,
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         }
       );
@@ -377,7 +371,7 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
       const response = await expirePaymentLinkRoute.sdk.expirePaymentLink({
         params: { id: paymentLinkId },
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -394,7 +388,7 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
         await expirePaymentLinkRoute.sdk.expirePaymentLink({
           params: { id: '123e4567-e89b-12d3-a456-426614174999' },
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         });
         expect(true).toBe(false);
@@ -413,7 +407,7 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
       await createPaymentLinkRoute.sdk.createPaymentLink({
         body: mockPaymentLinkData,
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -423,13 +417,13 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
           amount: 19999
         },
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
       const response = await listPaymentLinksRoute.sdk.listPaymentLinks({
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -454,7 +448,7 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
         await createPaymentLinkRoute.sdk.createPaymentLink({
           body: mockPaymentLinkData,
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         });
 
@@ -465,7 +459,7 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
             amount: 19999
           },
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         });
 
@@ -484,7 +478,7 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
           ]
         },
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -511,7 +505,7 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
             ids: ['123e4567-e89b-12d3-a456-426614174999']
           },
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         });
 
@@ -531,7 +525,7 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
         {
           body: mockPaymentLinkData,
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         }
       );
@@ -545,7 +539,7 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
         {
           params: { id: paymentLinkId },
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         }
       );
@@ -566,7 +560,7 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
         {
           body: mockPaymentLinkData,
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         }
       );
@@ -580,7 +574,7 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
         {
           params: { id: paymentLinkId },
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         }
       );
@@ -602,7 +596,7 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
         await createPaymentLinkRoute.sdk.createPaymentLink({
           body: mockPaymentLinkData,
           headers: {
-            authorization: MOCK_INVALID_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC_INVALID
           }
         });
         expect(true).toBe(false);
@@ -620,7 +614,7 @@ describe('PaymentLink Routes E2E Tests with PostgreSQL Container', () => {
         await getPaymentLinkRoute.sdk.getPaymentLink({
           params: { id: '123e4567-e89b-12d3-a456-426614174000' },
           headers: {
-            authorization: MOCK_INVALID_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC_INVALID
           }
         });
         expect(true).toBe(false);

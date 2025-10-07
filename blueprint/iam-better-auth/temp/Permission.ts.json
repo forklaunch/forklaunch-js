@@ -29,6 +29,6 @@
     "collection": "permission"
   },
   "origin": "../iam-base/persistence/entities/permission.entity.ts",
-  "hash": "50c0fe9b9316fabf74274436c410549d",
-  "version": "6.5.6"
+  "hash": "63033b9d02f623e68bb5a9f5d6689ea4",
+  "version": "6.5.7"
 }

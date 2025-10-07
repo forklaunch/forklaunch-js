@@ -76,6 +76,6 @@
     "collection": "organization"
   },
   "origin": "../iam-base/persistence/entities/organization.entity.ts",
-  "hash": "b0ba31acdc1f129ca2dcb3d0526c3552",
-  "version": "6.5.6"
+  "hash": "6729b8e0147868a09b66a139353fe583",
+  "version": "6.5.7"
 }

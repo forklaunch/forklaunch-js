@@ -183,6 +183,6 @@
     "collection": "payment_link"
   },
   "origin": "./persistence/entities/paymentLink.entity.ts",
-  "hash": "77ad36ef64ecad4a1caa98d58f50f3d5",
-  "version": "6.5.6"
+  "hash": "2abdb5a3391ed6de8c1d7864d55aa4e7",
+  "version": "6.5.7"
 }

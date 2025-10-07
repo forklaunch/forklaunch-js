@@ -1,28 +1,22 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { BillingProviderEnum } from '../domain/enum/billingProvider.enum';
 import { PartyEnum } from '../domain/enum/party.enum';
 import {
   cleanupTestDatabase,
   clearDatabase,
-  MOCK_HMAC_TOKEN,
-  MOCK_INVALID_HMAC_TOKEN,
   mockSubscriptionData,
   mockUpdateSubscriptionData,
   setupTestData,
   setupTestDatabase,
+  TEST_TOKENS,
   TestSetupResult
 } from './test-utils';
 
 describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
-  let container: TestSetupResult['container'];
-  let redisContainer: TestSetupResult['redisContainer'];
   let orm: TestSetupResult['orm'];
   let redis: TestSetupResult['redis'];
 
   beforeAll(async () => {
     const setup = await setupTestDatabase();
-    container = setup.container;
-    redisContainer = setup.redisContainer;
     orm = setup.orm;
     redis = setup.redis;
   }, 60000);
@@ -34,7 +28,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
   });
 
   afterAll(async () => {
-    await cleanupTestDatabase(orm, container, redisContainer, redis);
+    await cleanupTestDatabase();
   }, 30000);
 
   describe('POST /subscription - createSubscription', () => {
@@ -46,7 +40,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
       const response = await createSubscription.sdk.createSubscription({
         body: mockSubscriptionData,
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -82,7 +76,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
         await createSubscription.sdk.createSubscription({
           body: invalidData,
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         });
         expect(true).toBe(false);
@@ -105,7 +99,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
         await createSubscription.sdk.createSubscription({
           body: invalidData,
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         });
         expect(true).toBe(false);
@@ -128,7 +122,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
         await createSubscription.sdk.createSubscription({
           body: invalidData,
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         });
         expect(true).toBe(false);
@@ -148,7 +142,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
       const createResponse = await createSubscription.sdk.createSubscription({
         body: mockSubscriptionData,
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -160,7 +154,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
       const response = await getSubscription.sdk.getSubscription({
         params: { id: subscriptionId },
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -190,7 +184,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
         await getSubscription.sdk.getSubscription({
           params: { id: '123e4567-e89b-12d3-a456-426614174999' },
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         });
         expect(true).toBe(false);
@@ -208,7 +202,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
         await getSubscription.sdk.getSubscription({
           params: { id: 'invalid-uuid' },
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         });
         expect(true).toBe(false);
@@ -228,7 +222,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
       const createResponse = await createSubscription.sdk.createSubscription({
         body: mockSubscriptionData,
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -245,7 +239,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
         params: { id: subscriptionId },
         body: updateData,
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -282,7 +276,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
           params: { id: '123e4567-e89b-12d3-a456-426614174999' },
           body: updateData,
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         });
         expect(true).toBe(false);
@@ -300,7 +294,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
       const createResponse = await createSubscription.sdk.createSubscription({
         body: mockSubscriptionData,
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -320,7 +314,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
           params: { id: subscriptionId },
           body: invalidUpdateData,
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         });
         expect(true).toBe(false);
@@ -340,7 +334,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
       const createResponse = await createSubscription.sdk.createSubscription({
         body: mockSubscriptionData,
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -352,7 +346,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
       const response = await deleteSubscription.sdk.deleteSubscription({
         params: { id: subscriptionId },
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -369,7 +363,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
         await deleteSubscription.sdk.deleteSubscription({
           params: { id: '123e4567-e89b-12d3-a456-426614174999' },
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         });
         expect(true).toBe(false);
@@ -389,7 +383,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
       await createSubscription.sdk.createSubscription({
         body: mockSubscriptionData,
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -400,13 +394,13 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
           externalId: 'sub_second_123'
         },
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
       const response = await listSubscriptions.sdk.listSubscriptions({
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -435,7 +429,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
         await createSubscription.sdk.createSubscription({
           body: mockSubscriptionData,
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         });
 
@@ -447,7 +441,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
             externalId: 'sub_second_123'
           },
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         });
 
@@ -466,7 +460,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
           ]
         },
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -492,7 +486,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
           ids: ['123e4567-e89b-12d3-a456-426614174999']
         },
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -511,7 +505,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
         await createSubscription.sdk.createSubscription({
           body: mockSubscriptionData,
           headers: {
-            authorization: MOCK_INVALID_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC_INVALID
           }
         });
         expect(true).toBe(false);
@@ -529,7 +523,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
         await getSubscription.sdk.getSubscription({
           params: { id: '123e4567-e89b-12d3-a456-426614174000' },
           headers: {
-            authorization: MOCK_INVALID_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC_INVALID
           }
         });
         expect(true).toBe(false);
@@ -551,7 +545,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
             id: '123e4567-e89b-12d3-a456-426614174000'
           },
           headers: {
-            authorization: MOCK_INVALID_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC_INVALID
           }
         });
         expect(true).toBe(false);
@@ -569,7 +563,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
         await deleteSubscription.sdk.deleteSubscription({
           params: { id: '123e4567-e89b-12d3-a456-426614174000' },
           headers: {
-            authorization: MOCK_INVALID_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC_INVALID
           }
         });
         expect(true).toBe(false);
@@ -587,7 +581,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
         await listSubscriptions.sdk.listSubscriptions({
           query: { ids: [] },
           headers: {
-            authorization: MOCK_INVALID_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC_INVALID
           }
         });
         expect(true).toBe(false);
