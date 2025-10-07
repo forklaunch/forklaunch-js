@@ -1,5 +1,17 @@
 # @forklaunch/common
 
+## 0.6.17
+
+### Patch Changes
+
+- Update internal packages
+
+## 0.6.16
+
+### Patch Changes
+
+- Introduce testing package and deepclone openapi objects
+
 ## 0.6.15
 
 ### Patch Changes

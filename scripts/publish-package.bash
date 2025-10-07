@@ -14,3 +14,4 @@ if [ "$CURRENT_VERSION" != "$LAST_PUBLISHED_VERSION" ]; then
 else
   echo "Version has not changed for $PACKAGE_NAME, skipping publish."
 fi
+

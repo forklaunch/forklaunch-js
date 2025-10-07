@@ -5,7 +5,7 @@
  * @module TypeboxSchemaValidator
  */
 
-import { InMemoryBlob } from '@forklaunch/common';
+import { deepCloneWithoutUndefined, InMemoryBlob } from '@forklaunch/common';
 import {
   FormatRegistry,
   Kind,
@@ -715,7 +715,7 @@ export class TypeboxSchemaValidator
         format: 'date-time'
       });
     } else {
-      processedSchema = JSON.parse(JSON.stringify(schemified));
+      processedSchema = deepCloneWithoutUndefined(schemified);
     }
 
     const newSchema: SchemaObject = Object.assign({}, processedSchema);

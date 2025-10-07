@@ -1,5 +1,24 @@
 # @forklaunch/hyper-express
 
+## 0.9.24
+
+### Patch Changes
+
+- Update internal packages
+- Updated dependencies
+  - @forklaunch/validator@0.10.17
+  - @forklaunch/common@0.6.17
+  - @forklaunch/core@0.15.6
+
+## 0.9.23
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.10.16
+  - @forklaunch/common@0.6.16
+  - @forklaunch/core@0.15.5
+
 ## 0.9.22
 
 ### Patch Changes

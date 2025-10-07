@@ -5,6 +5,7 @@ packages:
   - hyper-express
   - universal-sdk
   - validator
+  - testing
   - e2e-tests
   - infrastructure/redis
   - infrastructure/S3

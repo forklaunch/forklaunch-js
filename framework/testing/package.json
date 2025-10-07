@@ -1,13 +1,7 @@
 {
-  "name": "@forklaunch/universal-sdk",
-  "version": "0.7.17",
-  "description": "Cross runtime fetch library for forklaunch router sdks",
-  "keywords": [
-    "fetch",
-    "http",
-    "express",
-    "hyper-express"
-  ],
+  "name": "@forklaunch/testing",
+  "version": "0.0.2",
+  "description": "Testing utilities for forklaunch-js blueprints including testcontainer management",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
     "url": "https://github.com/forklaunch/forklaunch-js/issues"
@@ -27,11 +21,14 @@
     }
   },
   "types": "lib/index.d.ts",
+  "directories": {
+    "test": "__test__"
+  },
   "files": [
     "lib/**"
   ],
   "scripts": {
-    "build": "tsgo --noEmit && tsup index.ts --format cjs,esm --no-splitting --dts --tsconfig tsconfig.json --out-dir lib --clean",
+    "build": "tsc --noEmit && tsup ./src/index.ts --format cjs,esm --no-splitting --dts --tsconfig tsconfig.json --out-dir lib --clean --sourcemap",
     "clean": "rm -rf lib pnpm.lock.yaml node_modules",
     "docs": "typedoc --out docs *",
     "format": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
@@ -42,19 +39,23 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@forklaunch/common": "workspace:*",
-    "ajv": "^8.17.1",
-    "ajv-formats": "^3.0.1"
+    "@mikro-orm/core": "^6.5.7",
+    "ioredis": "^5.8.1",
+    "testcontainers": "^11.7.1"
   },
   "devDependencies": {
+    "@eslint/js": "^9.37.0",
     "@types/node": "^24.7.0",
     "@typescript/native-preview": "7.0.0-dev.20251007.1",
-    "fetch-mock": "^12.5.4",
-    "jest": "^30.2.0",
-    "openapi3-ts": "^4.5.0",
+    "globals": "^16.4.0",
     "prettier": "^3.6.2",
-    "ts-jest": "^29.4.4",
+    "ts-node": "^10.9.2",
     "tsup": "^8.5.0",
-    "typedoc": "^0.28.13"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.0",
+    "vitest": "^3.2.4"
+  },
+  "peerDependencies": {
+    "vitest": "^3.0.0"
   }
 }

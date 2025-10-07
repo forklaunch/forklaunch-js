@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/hyper-express",
-  "version": "0.9.22",
+  "version": "0.9.24",
   "description": "Forklaunch framework for hyper-express.",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -57,7 +57,7 @@
     "@types/qs": "^6.14.0",
     "@types/swagger-ui-dist": "^3.30.6",
     "@types/swagger-ui-express": "^4.1.8",
-    "@typescript/native-preview": "7.0.0-dev.20251003.1",
+    "@typescript/native-preview": "7.0.0-dev.20251007.1",
     "jest": "^30.2.0",
     "kill-port-process": "^3.2.1",
     "prettier": "^3.6.2",
@@ -67,6 +67,6 @@
     "tsx": "^4.20.6",
     "typedoc": "^0.28.13",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.45.0"
+    "typescript-eslint": "^8.46.0"
   }
 }
