@@ -178,10 +178,6 @@ export const clearDatabase = async (
 };
 
 export const setupTestData = async (em: EntityManager) => {
-  const { Plan } = await import('../persistence/entities/plan.entity');
-  const { Subscription } = await import(
-    '../persistence/entities/subscription.entity'
-  );
   const { CheckoutSession } = await import(
     '../persistence/entities/checkoutSession.entity'
   );
@@ -191,40 +187,6 @@ export const setupTestData = async (em: EntityManager) => {
   const { BillingPortal } = await import(
     '../persistence/entities/billingPortal.entity'
   );
-
-  // Skip creating fake plans as listPlans fetches from Stripe
-  // em.create(Plan, {
-  //   id: '123e4567-e89b-12d3-a456-426614174002',
-  //   active: true,
-  //   name: 'Test Plan',
-  //   description: 'A test plan',
-  //   price: 2999,
-  //   currency: CurrencyEnum.USD,
-  //   cadence: PlanCadenceEnum.MONTHLY,
-  //   features: ['feature1', 'feature2'],
-  //   externalId: 'plan_test_123',
-  //   billingProvider: BillingProviderEnum.STRIPE,
-  //   providerFields: {} as never,
-  //   createdAt: new Date(),
-  //   updatedAt: new Date()
-  // });
-
-  // Skip creating fake subscriptions as listSubscriptions fetches from Stripe
-  // em.create(Subscription, {
-  //   id: '123e4567-e89b-12d3-a456-426614174003',
-  //   partyId: '123e4567-e89b-12d3-a456-426614174000',
-  //   partyType: PartyEnum.USER,
-  //   description: 'Test subscription',
-  //   active: true,
-  //   productId: '123e4567-e89b-12d3-a456-426614174002',
-  //   externalId: 'sub_test_123',
-  //   billingProvider: BillingProviderEnum.STRIPE,
-  //   startDate: new Date(),
-  //   status: 'active',
-  //   providerFields: {} as never,
-  //   createdAt: new Date(),
-  //   updatedAt: new Date()
-  // });
 
   em.create(CheckoutSession, {
     id: '123e4567-e89b-12d3-a456-426614174004',
