@@ -47,10 +47,8 @@ export const setupTestDatabase = async (): Promise<TestSetupResult> => {
   process.env.DB_PORT = container.getMappedPort(5432).toString();
   process.env.REDIS_URL = `redis://${redisContainer.getHost()}:${redisContainer.getMappedPort(6379)}`;
   process.env.HMAC_SECRET_KEY = 'test-secret-key';
-  process.env.STRIPE_API_KEY =
-    'sk_test_51RZHBQP4Xs9lA9sq2hCQseYbRA4tKxMyRCViZQD3mofV8gIYqOjemsdaw7BEXGMKrWjSIAn2zZsGOUy2WT5If2W900LGUSgHq0';
-  process.env.STRIPE_WEBHOOK_SECRET =
-    'whsec_test_1234567890abcdefghijklmnopqrstuvwxyz';
+  process.env.STRIPE_API_KEY = '';
+  process.env.STRIPE_WEBHOOK_SECRET = '';
   process.env.JWKS_PUBLIC_KEY_URL =
     'http://localhost:3000/.well-known/jwks.json';
   process.env.OTEL_SERVICE_NAME = 'test-service';
