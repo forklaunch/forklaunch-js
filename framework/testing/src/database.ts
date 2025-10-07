@@ -5,9 +5,9 @@ import { DatabaseType } from './containers';
 
 export interface MikroOrmTestConfig {
   /**
-   * Path to the MikroORM config file (e.g., '../mikro-orm.config')
+   * MikroORM config object (imported from mikro-orm.config)
    */
-  mikroOrmConfigPath: string;
+  mikroOrmConfig: Options;
 
   /**
    * Database type (postgres, mysql, mongodb, etc.)
@@ -64,14 +64,11 @@ export async function setupTestORM(
   config: MikroOrmTestConfig
 ): Promise<MikroORM> {
   const {
-    mikroOrmConfigPath,
+    mikroOrmConfig,
     databaseType,
     useMigrations = false,
     container
   } = config;
-
-  // Dynamically import the MikroORM config
-  const { default: mikroOrmConfig } = await import(mikroOrmConfigPath);
 
   const dbPort = getDatabasePort(databaseType);
 
@@ -96,8 +93,7 @@ export async function setupTestORM(
           }
         : {
             schemaGenerator: {
-              createForeignKeyConstraints: false,
-              wrap: false
+              createForeignKeyConstraints: false
             }
           })
     };
@@ -122,8 +118,7 @@ export async function setupTestORM(
           }
         : {
             schemaGenerator: {
-              createForeignKeyConstraints: false,
-              wrap: false
+              createForeignKeyConstraints: false
             }
           })
     };

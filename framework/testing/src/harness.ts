@@ -1,4 +1,4 @@
-import { MikroORM } from '@mikro-orm/core';
+import { MikroORM, Options } from '@mikro-orm/core';
 import Redis from 'ioredis';
 import { StartedTestContainer } from 'testcontainers';
 import { DatabaseType, TestContainerManager } from './containers';
@@ -7,9 +7,10 @@ import { setupTestEnvironment } from './environment';
 
 export interface BlueprintTestConfig {
   /**
-   * Path to the MikroORM config file (e.g., '../mikro-orm.config')
+   * Function that imports and returns the MikroORM config
+   * This is called AFTER environment variables are set
    */
-  mikroOrmConfigPath: string;
+  getConfig: () => Promise<Options>;
 
   /**
    * Database type (postgres, mysql, mongodb, etc.)
@@ -102,9 +103,12 @@ export class BlueprintTestHarness {
       customVars: this.config.customEnvVars
     });
 
+    // Get the config AFTER environment is set
+    const mikroOrmConfig = await this.config.getConfig();
+
     // Setup ORM
     const orm = await setupTestORM({
-      mikroOrmConfigPath: this.config.mikroOrmConfigPath,
+      mikroOrmConfig,
       databaseType,
       useMigrations: this.config.useMigrations,
       migrationsPath: this.config.migrationsPath,
