@@ -1,15 +1,21 @@
+import { getEnvVar } from '@forklaunch/common';
 import {
   BlueprintTestHarness,
   clearTestDatabase,
+  DatabaseType,
   TEST_TOKENS,
   TestSetupResult
 } from '@forklaunch/testing';
 import { EntityManager, MikroORM } from '@mikro-orm/core';
+import dotenv from 'dotenv';
 {{#is_cache_enabled}}import Redis from 'ioredis';{{/is_cache_enabled}}
+import * as path from 'path';
 
 export { TEST_TOKENS, TestSetupResult };
 
 let harness: BlueprintTestHarness;
+
+dotenv.config({ path: path.join(__dirname, '../.env.test') });
 
 export const setupTestDatabase = async (): Promise<TestSetupResult> => {
   harness = new BlueprintTestHarness({
@@ -17,7 +23,7 @@ export const setupTestDatabase = async (): Promise<TestSetupResult> => {
       const { default: config } = await import('../mikro-orm.config');
       return config;
     },
-    databaseType: '{{database_type}}',
+    databaseType: getEnvVar('DATABASE_TYPE') as DatabaseType,
     useMigrations: false,
     needsRedis: {{#is_cache_enabled}}true{{/is_cache_enabled}}{{^is_cache_enabled}}false{{/is_cache_enabled}},
     customEnvVars: {
