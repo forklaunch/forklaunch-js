@@ -9,10 +9,9 @@ use convert_case::{Case, Casing};
 
 use crate::{
     CliCommand,
-    constants::{Database, Infrastructure,
+    constants::{
         ERROR_FAILED_TO_PARSE_MANIFEST,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
-        ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE,
     },
@@ -24,45 +23,43 @@ use crate::{
             InitializableManifestConfigMetadata, 
             ManifestData, ProjectType, 
             application::ApplicationManifestData, 
-            add_project_to_manifest, 
-            service::ServiceManifestData,
+            add_project_to_manifest,
             add_project_definition_to_manifest,
+            service::ServiceManifestData,
+            ResourceInventory,
         },
         package_json::project_package_json::ProjectPackageJson,
         rendered_template::RenderedTemplate,
-        init::service::add_service_to_artifacts,
+        init::module::add_module_to_artifacts,
         universal_sdk::add_project_to_universal_sdk,
         sync::{constants::{DIRS_TO_IGNORE, 
-            DOCKER_SERVICES_TO_IGNORE, 
             RUNTIME_PROJECTS_TO_IGNORE},
             utils::validate_addition_to_artifact,
     },
-    prompt::{ArrayCompleter, prompt_with_validation, prompt_without_validation, prompt_comma_separated_list},
+    prompt::{ArrayCompleter, prompt_without_validation},
 };
 
-
-
-fn add_service_to_manifest_with_validation(
-    manifest_data: &mut ServiceManifestData,
+fn add_module_to_manifest_with_validation(
+    service_data: &mut ServiceManifestData,
     base_path: &Path,
     app_root_path: &Path,
     stdout: &mut StandardStream,
 ) -> Result<String> {
     let forklaunch_manifest_buffer = add_project_definition_to_manifest(
         ProjectType::Service,
-        manifest_data,
-        None,
+        &mut service_data,
+        Some(module.clone().to_string()),
         Some(ResourceInventory {
-            database: Some(manifest_data.database.to_owned()),
-            cache: None,
+            database: Some(database.to_string()),
+            cache: get_service_module_cache(&module),
             queue: None,
             object_store: None,
         }),
-        Some(vec![manifest_data.service_name.clone()]),
+        get_routers_from_standard_package(module.clone()),
         None,
-    )
+    )?;
     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
-    let service_name = manifest_data.service_name.clone();
+    let module_name = manifest_data.library_name.clone();
     let new_manifest_projects: HashSet<String> = manifest_data.projects
         .iter()
         .map(|project| project.name.clone())
@@ -70,69 +67,58 @@ fn add_service_to_manifest_with_validation(
         .collect();
     
     let validation_result = validate_addition_to_artifact(
-        &service_name,
+        &module_name,
         &new_manifest_projects,
-        &format!("Successfully added {} to manifest.toml", service_name),
-        &format!("Project {} was not added to manifest.toml", service_name),
-        "sync:service:73",
+        &format!("Successfully added {} to manifest.toml", module_name),
+        &format!("Project {} was not added to manifest.toml", module_name),
+        "sync:module:73",
         forklaunch_manifest_buffer,
         stdout,
-    )
+    );
     if validation_result {
         Ok(forklaunch_manifest_buffer)
     } else {
-        Err(anyhow::anyhow!("Failed to add {} to manifest.toml", service_name))
+        Err(anyhow::anyhow!("Failed to add {} to manifest.toml", module_name))
     }
 }
 
-fn add_service_to_docker_compose_with_validation(
-    manifest_data: &mut ServiceManifestData,
+pub(crate) fn add_module_to_docker_compose_with_validation(
+    service_data: &mut ServiceManifestData,
     base_path: &Path,
     app_root_path: &Path,
-    docker_compose: Option<String>,
+    stdout: &mut StandardStream,
 ) -> Result<String> {
-    let docker_compose_path = if let Some(docker_compose_path) = &manifest_data.docker_compose_path
-    {
+    let docker_compose_path = if let Some(docker_compose_path) = &service_data.docker_compose_path {
         app_root_path.join(docker_compose_path)
     } else {
         app_root_path.join("docker-compose.yaml")
     };
-
-    let docker_compose_buffer =
-        add_service_definition_to_docker_compose(manifest_data, app_root_path, docker_compose)
-            .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
-    
-    let new_docker_services: HashSet<String> = docker_compose_buffer
-        .services
-        .keys()
-        .cloned()
-        .filter(|service| !DOCKER_SERVICES_TO_IGNORE.contains(&service.as_str()))
-        .collect();
-    
+    let docker_compose_buffer = add_service_definition_to_docker_compose(&service_data, &app_root_path, None)?;
+    let new_docker_services: HashSet<String> = docker_compose_buffer.services.keys().cloned().filter(|service| !DOCKER_SERVICES_TO_IGNORE.contains(&service.as_str())).collect();
     let validation_result = validate_addition_to_artifact(
-        &manifest_data.service_name,
+        &service_data.service_name,
         &new_docker_services,
-        &format!("Successfully added {} to docker-compose.yaml", manifest_data.service_name),
-        &format!("Service {} was not added to docker-compose.yaml", manifest_data.service_name),
-        "sync:service:113",
+        &format!("Successfully added {} to docker-compose.yaml", service_data.service_name),
+        &format!("Service {} was not added to docker-compose.yaml", service_data.service_name),
+        "sync:module:100",
         docker_compose_buffer,
         stdout,
-    )
+    );
     if validation_result {
         Ok(docker_compose_buffer)
     } else {
-        Err(anyhow::anyhow!("Failed to add {} to docker-compose.yaml", manifest_data.service_name))
+        Err(anyhow::anyhow!("Failed to add {} to docker-compose.yaml", service_data.service_name))
     }
 }
     
-pub(crate) fn add_service_to_runtime_files_with_validation(
-    manifest_data: &mut ServiceManifestData,
+pub(crate) fn add_module_to_runtime_files_with_validation(
+    service_data: &mut ServiceManifestData,
     base_path: &Path,
     app_root_path: &Path,
     dir_project_names_set: &HashSet<String>,
     stdout: &mut StandardStream,
 ) -> Result<(Option<String>, Option<String>)> {
-    let runtime = manifest_data.runtime.parse()?;
+    let runtime = service_data.runtime.parse()?;
 
     let mut package_json_buffer: Option<String> = None;
     let mut pnpm_workspace_buffer: Option<String> = None;
@@ -140,56 +126,56 @@ pub(crate) fn add_service_to_runtime_files_with_validation(
     match runtime {
         Runtime::Bun => {
             package_json_buffer = Some(
-                add_project_definition_to_package_json(base_path, manifest_data)
+                add_project_definition_to_package_json(base_path, service_data)
                     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON)?,
             );
             let new_package_json_projects: HashSet<String> = package_json_buffer.iter().cloned().filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str())).collect();
             
             let validation_result = validate_addition_to_artifact(
-                &manifest_data.service_name,
+                &service_data.service_name,
                 &new_package_json_projects,
-                &format!("Successfully added {} to package.json", manifest_data.service_name),
-                &format!("Service {} was not added to package.json", manifest_data.service_name),
-                "sync:service:145",
+                &format!("Successfully added {} to package.json", service_data.service_name),
+                &format!("Module {} was not added to package.json", service_data.service_name),
+                "sync:module:145",
                 package_json_buffer,
                 stdout,
-            )
+            );
             if validation_result {
                 Ok(package_json_buffer)
             } else {
-                Err(anyhow::anyhow!("Failed to add {} to package.json", manifest_data.service_name))
+                Err(anyhow::anyhow!("Failed to add {} to package.json", service_data.service_name))
             }
         }
         Runtime::Node => {
             pnpm_workspace_buffer = Some(
-                add_project_definition_to_pnpm_workspace(base_path, manifest_data)
+                add_project_definition_to_pnpm_workspace(base_path, service_data)
                     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?,
             );
             let new_pnpm_workspace_projects: HashSet<String> = pnpm_workspace_buffer.packages.iter().cloned().filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str())).collect();
             
-            let validation_result = validate_service_in_projects(
-                &service_name,
+            let validation_result = validate_module_in_projects(
+                &service_data.service_name,
                 &new_pnpm_workspace_projects,
                 &RUNTIME_PROJECTS_TO_IGNORE,
-                &format!("Successfully added {} to pnpm-workspace.yaml", service_name),
-                &format!("Service {} was not added to pnpm-workspace.yaml", service_name),
-                "sync:484",
+                &format!("Successfully added {} to pnpm-workspace.yaml", service_data.service_name),
+                &format!("Module {} was not added to pnpm-workspace.yaml", service_data.service_name),
+                "sync:module:484",
                 pnpm_workspace_buffer,
                 stdout,
-            )
+            );
             if validation_result {
                 Ok(pnpm_workspace_buffer)
             } else {
-                Err(anyhow::anyhow!("Failed to add {} to pnpm-workspace.yaml", manifest_data.service_name))
+                Err(anyhow::anyhow!("Failed to add {} to pnpm-workspace.yaml", manifest_data.library_name))
             }
         }
     }
 
-    Ok(package_json_buffer, pnpm_workspace_buffer)
+    Ok((package_json_buffer, pnpm_workspace_buffer))
 }
 
-pub(crate) fn sync_service_setup(
-    service_name: &str, 
+pub(crate) fn sync_module_setup(
+    module_name: &str, 
     app_root_path: &Path, 
     modules_path: &Path, 
     manifest_data: &mut ApplicationManifestData,
@@ -198,101 +184,50 @@ pub(crate) fn sync_service_setup(
 ) -> Result<ServiceManifestData> {
     let mut line_editor = Editor::<(), DefaultHistory>::new()?;
 
-    let database = prompt_with_validation(
+    let runtime = manifest_data.runtime.parse()?;
+    let database_variants = get_database_variants(&runtime);
+
+    let database: Database = prompt_with_validation(
         &mut line_editor,
         &mut stdout,
         "database",
         matches,
-        Some(&Database::VARIANTS),
-        |input| Database::VARIANTS.contains(&input),
-        |_| "Invalid database. Please try again".to_string(),
-    )?;
-
-    let infrastructure = prompt_comma_separated_list(
-        &mut line_editor,
-        &mut stdout,
-        "infrastructure",
-        matches,
-        &Infrastructure::VARIANTS,
-        None,
-        "additional infrastructure components",
-        true,
-        Some(&Infrastructure::VARIANTS),
-        |input| Infrastructure::VARIANTS.contains(&input),
-        |_| "Invalid infrastructure. Please try again".to_string(),
+        "database",
+        Some(database_variants),
+        |input| database_variants.contains(&input),
+        |_| "Invalid database type. Please try again".to_string(),
     )?
-    .iter()
-    .map(|s| s.parse().unwrap())
-    .collect();
+    .parse()?;
 
-    let description = prompt_without_validation(
-        &mut line_editor,
-        &mut stdout,
-        "description",
-        matches,
-        "service description (optional)",
-        None,
-    )?;
-
-    let service_package_json_path = modules_path.join(service_name).join("package.json");
-    if !service_package_json_path.exists() {
-        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
-        writeln!(stdout, "Service package.json not found in service directory. Please run `forklaunch sync service -i {}` to generate it.", service_name)?;
-        stdout.reset()?;
-    }
-    let service_package_json_data = read_to_string(&service_package_json_path)?;
-    let service_package_json: ProjectPackageJson = from_str(&service_package_json_data)?;
-    
-    let database = if database == "none" {
-        // Try to detect database from package.json dependencies
-        let package_json_path = modules_path.join(service_name).join("package.json");
-        let package_json_content = read_to_string(&package_json_path)?;
-        let full_package_json: ProjectPackageJson = from_str(&package_json_content)?;
-        
-        if let Some(deps) = &full_package_json.dependencies {
-            // Check if any database variant is found in the dependencies
-            let found_variant = Database::VARIANTS.iter()
-                .find(|variant| {
-                    // Check if any dependency key contains this database variant
-                    deps.keys()
-                        .any(|dep_key| dep_key.contains(variant))
-                });
-            
-            if let Some(variant) = found_variant {
-                variant.to_string()
-            } else {
-                "none".to_string()
-            }
-        } else {
-            "none".to_string()
-        }
-    } else {
-        database
-    };
-
-    let mut new_manifest_data: ServiceManifestData = ServiceManifestData {
-        // Common fields from ApplicationManifestData
+    let mut service_data = ServiceManifestData {
         id: manifest_data.id.clone(),
-        app_name: manifest_data.app_name.clone(),
+        cli_version: manifest_data.cli_version.clone(),
+        app_name: name.clone(),
         modules_path: manifest_data.modules_path.clone(),
         docker_compose_path: manifest_data.docker_compose_path.clone(),
         camel_case_app_name: manifest_data.camel_case_app_name.clone(),
         pascal_case_app_name: manifest_data.pascal_case_app_name.clone(),
         kebab_case_app_name: manifest_data.kebab_case_app_name.clone(),
-        app_description: manifest_data.app_description.clone(),
-        author: manifest_data.author.clone(),
-        cli_version: manifest_data.cli_version.clone(),
+        service_name: get_service_module_name(&module),
+        service_path: get_service_module_name(&module),
+        camel_case_name: get_service_module_name(&module).to_case(Case::Camel),
+        pascal_case_name: get_service_module_name(&module).to_case(Case::Pascal),
+        kebab_case_name: get_service_module_name(&module).to_case(Case::Kebab),
         formatter: manifest_data.formatter.clone(),
         linter: manifest_data.linter.clone(),
         validator: manifest_data.validator.clone(),
+        http_framework: manifest_data.http_framework.clone(),
         runtime: manifest_data.runtime.clone(),
         test_framework: manifest_data.test_framework.clone(),
         projects: manifest_data.projects.clone(),
-        http_framework: manifest_data.http_framework.clone(),
-        license: manifest_data.license.clone(),
         project_peer_topology: manifest_data.project_peer_topology.clone(),
-        is_biome: manifest_data.is_biome,
+        author: manifest_data.author.clone(),
+        app_description: manifest_data.app_description.clone(),
+        license: manifest_data.license.clone(),
+        description: get_service_module_description(&name, &module),
+
         is_eslint: manifest_data.is_eslint,
+        is_biome: manifest_data.is_biome,
         is_oxlint: manifest_data.is_oxlint,
         is_prettier: manifest_data.is_prettier,
         is_express: manifest_data.is_express,
@@ -304,17 +239,6 @@ pub(crate) fn sync_service_setup(
         is_vitest: manifest_data.is_vitest,
         is_jest: manifest_data.is_jest,
 
-        service_name: service_name.clone(),
-        service_path: service_name.clone(),
-        camel_case_name: service_name.to_case(Case::Camel),
-        pascal_case_name: service_name.to_case(Case::Pascal),
-        kebab_case_name: service_name.to_case(Case::Kebab),
-        description: description.clone(),
-        database: database.to_string(),
-        database_port: get_database_port(&database),
-        db_driver: get_db_driver(&database),
-
-        is_mongo: database == Database::MongoDB,
         is_postgres: database == Database::PostgreSQL,
         is_sqlite: database == Database::SQLite,
         is_mysql: database == Database::MySQL,
@@ -322,84 +246,75 @@ pub(crate) fn sync_service_setup(
         is_better_sqlite: database == Database::BetterSQLite,
         is_libsql: database == Database::LibSQL,
         is_mssql: database == Database::MsSQL,
+        is_mongo: database == Database::MongoDB,
         is_in_memory_database: is_in_memory_database(&database),
 
-        is_iam: false,
-        is_billing: false,
-        is_cache_enabled: infrastructure.contains(&Infrastructure::Redis),
-        is_s3_enabled: infrastructure.contains(&Infrastructure::S3),
+        database: database.to_string(),
+        database_port: get_database_port(&database),
+        db_driver: get_db_driver(&database),
+
+        is_iam: module.clone() == Module::BaseIam || module.clone() == Module::BetterAuthIam,
+        is_billing: module.clone() == Module::BaseBilling
+            || module.clone() == Module::StripeBilling,
+        is_cache_enabled: module.clone() == Module::BaseBilling
+            || module.clone() == Module::StripeBilling,
+        is_s3_enabled: false,
         is_database_enabled: true,
 
-        is_better_auth: false,
-        is_stripe: false,
+        is_better_auth: module.clone() == Module::BetterAuthIam,
+        is_stripe: module.clone() == Module::StripeBilling,
     };
 
     // rendered_templates.extend(
-    //     add_service_to_artifacts(
+    //     add_module_to_artifacts(
     //         &mut new_manifest_data, 
     //         &modules_path, 
-    //         &app_root_path,
-    //         docker_compose)?);
+    //         &app_root_path)?);
 
     // add_project_to_universal_sdk(
     //     &mut rendered_templates, 
     //     &modules_path, 
     //     &manifest_data.app_name, 
-    //     &manifest_data.service_name, 
+    //     &manifest_data.library_name, 
     //     None)?;
     Ok(new_manifest_data)
 }
 
 // TODO: Implement subcommand structure
-// impl CliCommand for ServiceCommand {
+// impl CliCommand for ModuleCommand {
 //     fn command(&self) -> Command {
-//         command("service", "Sync a new service")
-//             .alias("svc")
-//             .alias("project")
-//             .alias("proj")
+//         command("module", "Sync a new module")
+//             .alias("mod")
+//             .alias("lib")
 //             .arg(
 //                 Arg::new("name")
-//                 .help("The name of the service"))
+//                 .help("The name of the module"))
 //             .arg(
 //                 Arg::new("base_path")
 //                     .short('p')
 //                     .long("path")
-//                     .help("The path to sync the service in"),
+//                     .help("The path to sync the module in"),
 //             )
 //             .arg(
 //                 Arg::new("add")
 //                     .short('a')
 //                     .long("add")
-//                     .help("Add a service to application artifacts")
+//                     .help("Add a module to application artifacts")
 //                     .action(ArgAction::SetTrue),
 //             )
 //             .arg(
 //                 Arg::new("remove")
 //                     .short('r')
 //                     .long("remove")
-//                     .help("Remove a service from application artifacts")
+//                     .help("Remove a module from application artifacts")
 //                     .action(ArgAction::SetTrue),
 //             )
 //             .arg(
 //                 Arg::new("artifacts")
 //                     .short('f')
 //                     .long("artifacts")
-//                     .help("The artifacts to add to the service")
+//                     .help("The artifacts to add to the module")
 //                     .value_parser(Artifact::VARIANTS)
-//                     .num_args(0..)
-//                     .action(ArgAction::Append),
-//             )
-//             .arg(
-//                 Arg::new("database")
-//                     .short('d')
-//                     .long("database")
-//                     .help("The database to use"))
-//             .arg(
-//                 Arg::new("infrastructure")
-//                     .short('i')
-//                     .long("infrastructure")
-//                     .help("The infrastructure to use")
-//                     .value_parser(Infrastructure::VARIANTS)
 //                     .num_args(0..)
 //                     .action(ArgAction::Append),
 //             )
@@ -407,7 +322,7 @@ pub(crate) fn sync_service_setup(
 //                 Arg::new("description")
 //                     .short('D')
 //                     .long("description")
-//                     .help("The description of the service"),
+//                     .help("The description of the module"),
 //             )
 //     }
 
@@ -445,7 +360,7 @@ pub(crate) fn sync_service_setup(
 //             }),
 //         );
         
-//         let manifest_data = sync_service_setup(&service_name, &base_path, &modules_path, &manifest_data, &mut stdout, matches)?;
+//         let manifest_data = sync_module_setup(&module_name, &base_path, &modules_path, &manifest_data, &mut stdout, matches)?;
 //         let mut new_manifest_data = manifest_data.clone();
 //         let add = matches.get_flag("add");
 //         let remove = matches.get_flag("remove");
@@ -460,11 +375,11 @@ pub(crate) fn sync_service_setup(
 //             for artifact in artifacts {
 //                 if add {
 //                     add_package_to_artifact(
-//                         &service_name,
+//                         &module_name,
 //                         &new_manifest_data,
 //                         &modules_path,
 //                         artifact,
-//                         "service",
+//                         "module",
 //                         manifest_data.runtime.clone(),
 //                         &HashSet::new(),
 //                         &mut rendered_templates,
@@ -473,12 +388,12 @@ pub(crate) fn sync_service_setup(
 //                 }
 //                 if remove {
 //                     if artifact == "manifest" {
-//                         remove_project_definition_from_manifest(&mut new_manifest_data, &service_name)?;
+//                         remove_project_definition_from_manifest(&mut new_manifest_data, &module_name)?;
 //                     }
 //                 }
 //             }
 //         }
-//         // TODO: check for package.json in service directory and generate if it doesn't exist
+//         // TODO: check for package.json in module directory and generate if it doesn't exist
 //         Ok(())
         
 //     }

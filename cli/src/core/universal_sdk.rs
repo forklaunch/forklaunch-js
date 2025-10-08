@@ -12,11 +12,12 @@ use crate::{
     constants::{ERROR_FAILED_TO_PARSE_PACKAGE_JSON, ERROR_FAILED_TO_READ_PACKAGE_JSON},
     core::{
         ast::{
-            injections::inject_into_universal_sdk::UniversalSdkSpecialCase,
+            injections::inject_into_universal_sdk::{UniversalSdkSpecialCase, inject_into_universal_sdk},
             deletions::delete_from_universal_sdk::delete_from_universal_sdk,
             transformations::transform_universal_sdk::{
-                transform_universal_sdk_add_sdk, transform_universal_sdk_change_sdk,
+                transform_universal_sdk_change_sdk,
                 transform_universal_sdk_remove_sdk,
+                transform_universal_sdk_add_sdk_with_special_case,
             }, 
             parse_ast_program::parse_ast_program,
             validation::validate_remove_from_universal_sdk,
@@ -240,5 +241,55 @@ pub(crate) fn remove_project_vec_from_universal_sdk(
             &projects_to_remove,
         )?;
     println!("universal_sdk:234 Successfully validated universal SDK changes for {} project(s)", projects_to_remove.len());
+    Ok(())
+}
+
+pub(crate) fn add_project_vec_to_universal_sdk(
+    rendered_templates: &mut Vec<RenderedTemplate>,
+    base_path: &Path,
+    app_name: &str,
+    projects_to_add: &Vec<String>,
+) -> Result<()> {
+    let kebab_case_app_name = &app_name.to_case(Case::Kebab);
+    let allocator = Allocator::default();
+    let app_program_text = read_to_string(base_path.join("universal-sdk").join("universalSdk.ts"))?;
+    let mut app_program_ast = parse_ast_program(&allocator, &app_program_text, SourceType::ts());
+    for project in projects_to_add {
+        let kebab_case_project = &project.to_case(Case::Kebab);
+        inject_into_universal_sdk(&allocator, &mut app_program_ast, app_name, kebab_case_project, &app_program_text, None)?;
+    }
+    let universal_sdk_content = Codegen::new()
+        .with_options(CodegenOptions::default())
+        .build(&app_program_ast)
+        .code;
+    println!("universal_sdk:259 universal_sdk_content: {:?}", universal_sdk_content);
+    rendered_templates.push(RenderedTemplate {
+        path: base_path.join("universal-sdk").join("universalSdk.ts"),
+        content: universal_sdk_content.clone(),
+        context: None,
+    });
+    let mut universal_sdk_project_json = from_str::<ProjectPackageJson>(
+        &read_to_string(base_path.join("universal-sdk").join("package.json"))
+            .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?,
+    )
+    .with_context(|| ERROR_FAILED_TO_PARSE_PACKAGE_JSON)?;
+    for project in projects_to_add {
+        let kebab_case_project = &project.to_case(Case::Kebab);
+        universal_sdk_project_json
+        .dev_dependencies
+        .as_mut()
+        .unwrap()
+        .additional_deps
+        .insert(
+            format!("@{}/{}", &kebab_case_app_name, &kebab_case_project),
+            "workspace:*".to_string(),
+        );
+    }
+    rendered_templates.push(RenderedTemplate {
+        path: base_path.join("universal-sdk").join("package.json"),
+        content: serde_json::to_string_pretty(&universal_sdk_project_json)?,
+        context: None,
+    });
+    // TODO: validate universal SDK changes
     Ok(())
 }

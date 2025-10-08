@@ -35,26 +35,44 @@ use crate::{
             remove_service_from_docker_compose, remove_worker_from_docker_compose, DockerCompose,
         },
         base_path::{RequiredLocation, find_app_root_path},
-        package_json::{application_package_json::ApplicationPackageJson, remove_project_definition_from_package_json},
-        pnpm_workspace::{PnpmWorkspace, remove_project_definition_from_pnpm_workspace},
+        package_json::{application_package_json::ApplicationPackageJson, remove_project_definition_from_package_json, add_project_definition_to_package_json},
+        pnpm_workspace::{PnpmWorkspace, remove_project_definition_from_pnpm_workspace, add_project_definition_to_pnpm_workspace},
         rendered_template::{RenderedTemplate, write_rendered_templates},
-        universal_sdk::{remove_project_vec_from_universal_sdk},
+        universal_sdk::{remove_project_vec_from_universal_sdk, add_project_vec_to_universal_sdk},
     },
     prompt::{prompt_for_confirmation, prompt_with_validation, ArrayCompleter},
-    sync::{service::sync_add_service_to_manifest, constants::RUNTIME_PROJECTS_TO_IGNORE},
+    sync::{
+        constants::{RUNTIME_PROJECTS_TO_IGNORE, DIRS_TO_IGNORE, DOCKER_SERVICES_TO_IGNORE}, 
+        utils::{validate_removal_from_artifact, validate_addition_to_artifact, add_package_to_artifact}},
 };
 
 #[derive(Debug)]
-pub(crate) struct SyncCommand;
+pub(crate) struct SyncAllCommand;
 
-impl SyncCommand {
+impl SyncAllCommand {
     pub(crate) fn new() -> Self {
         Self {}
     }
 }
 
 
-
+fn prompt_initialize_category(
+    line_editor: &mut Editor<ArrayCompleter, DefaultHistory>,
+    stdout: &mut StandardStream,
+    matches: &ArgMatches,
+) -> Result<Option<String>> {
+    let initialize_category = prompt_with_validation(
+        line_editor, 
+        stdout, 
+        "category", 
+        matches, 
+        "initialize category", 
+        Some(&InitializeType::VARIANTS), 
+        |input| InitializeType::VARIANTS.contains(&input), 
+        |_| "Invalid initialize category. Please try again.".to_string()
+    )?;
+    Ok(initialize_category)
+}
 /// Generic function to find directory names in any given path
 /// 
 /// # Arguments
@@ -229,11 +247,11 @@ fn prompt_sync_confirmation(
     Ok(true)
 }
 
-impl CliCommand for SyncCommand {
+impl CliCommand for SyncAllCommand {
     fn command(&self) -> Command {
         command(
-            "sync",
-            "Sync manifest with application files",
+            "sync-all",
+            "Sync all aplication artifacts with application directories",
         )
         .arg(
             Arg::new("base_path")
@@ -338,13 +356,19 @@ impl CliCommand for SyncCommand {
                 }
                 let new_manifest_projects: HashSet<String> = manifest_data.projects.iter().map(|project| project.name.clone()).filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str())).collect();
                 println!("sync:347 new_manifest_projects: {:?}", new_manifest_projects);
-                if new_manifest_projects.difference(&dir_project_names_set).count() != 0 {
-                    println!("sync:349 difference: {:?}", new_manifest_projects.difference(&dir_project_names_set));
-                    return Err(anyhow::anyhow!("Some projects were not removed from manifest.toml"));
-                } else {
+                let validation_result = validate_removal_from_artifact(
+                    &new_manifest_projects,
+                    &dir_project_names_set,
+                    &format!("Successfully removed {} project(s) from manifest.toml", manifest_projects_to_remove.len()),
+                    &format!("Some projects were not removed from manifest.toml"),
+                    "sync:345",
+                    &mut stdout)?;
+                if validation_result {
                     stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
                     writeln!(stdout, "Successfully removed {} project(s) from manifest.toml", manifest_projects_to_remove.len())?;
                     stdout.reset()?;
+                } else {
+                    return Err(anyhow::anyhow!("Failed to remove {} project(s) from manifest.toml", manifest_projects_to_remove.len()));
                 }
             } else {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
@@ -361,21 +385,33 @@ impl CliCommand for SyncCommand {
                 // writeln!(stdout, "Please add these projects to the manifest.")?;
                 // TODO: add projects to manifest.toml
                 // read directory, create manifest data, add project to manifest.toml
-                for dir_name in &manifest_projects_to_add {
-                    let package_type = prompt_project_type(
-                        &mut line_editor, 
-                        &mut stdout, 
-                        matches)?;
-                    add_package_to_artifact(
-                        &mut manifest_data,
-                        &modules_path,
-                        "manifest",
-                        &package_type,
-                        &manifest_data.runtime,
-                        &dir_project_names_set,
-                        &mut rendered_templates,
-                        &mut stdout,
-                    )?;
+                let continue_sync = prompt_sync_confirmation(
+                    matches, 
+                    &mut line_editor, 
+                    &mut stdout, 
+                    "Do you want to add these projects to manifest.toml? (y/N) ")?;
+                if continue_sync {
+                    let mut new_manifest_data = manifest_data.clone();
+                    for dir_name in &manifest_projects_to_add {
+                        let package_type = prompt_initialize_category(
+                            &mut line_editor, 
+                            &mut stdout, 
+                            matches,
+                        )?;
+                        let _artifacts = add_package_to_artifact(
+                            &dir_name,
+                            &mut new_manifest_data,
+                            &app_root_path,
+                            &modules_path,
+                            "manifest",
+                            &package_type,
+                            &dir_project_names_set,
+                            &mut stdout,
+                            matches,
+                            None,
+                        )?;
+                        new_manifest_data = &_artifacts[0];
+                    }
                 }
             } else {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
@@ -383,17 +419,24 @@ impl CliCommand for SyncCommand {
                 stdout.reset()?;
             }
             
-            // write manifest.toml
-            let manifest_content = toml::to_string_pretty(&manifest_data)
-                .with_context(|| ERROR_FAILED_TO_WRITE_MANIFEST)?;
-            rendered_templates.push(
-                RenderedTemplate {
-                    path: manifest_path,
-                    content: manifest_content,
-                    context: Some(ERROR_FAILED_TO_WRITE_MANIFEST.to_string()),
-                },
-            );
-
+            let (new_manifest_projects_to_remove, new_manifest_projects_to_add) = check_manifest(&new_manifest_data, &dir_project_names)?;
+            if new_manifest_projects_to_remove.is_empty() && new_manifest_projects_to_add.is_empty() {
+                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+                writeln!(stdout, "Successfully synced manifest.toml")?;
+                stdout.reset()?;
+                // write manifest.toml
+                let manifest_content = toml::to_string_pretty(&new_manifest_data)
+                    .with_context(|| ERROR_FAILED_TO_WRITE_MANIFEST)?;
+                rendered_templates.push(
+                    RenderedTemplate {
+                        path: manifest_path,
+                        content: manifest_content,
+                        context: Some(ERROR_FAILED_TO_WRITE_MANIFEST.to_string()),
+                    },
+                );
+            } else {
+                return Err(anyhow::anyhow!("Failed to sync manifest.toml"));
+            }
             
             // remove projects from docker-compose.yaml
             if !services_to_remove_docker.is_empty() {
@@ -416,13 +459,19 @@ impl CliCommand for SyncCommand {
                 }
                 let new_docker_services: HashSet<String> = docker_compose.services.keys().cloned().filter(|service| !DOCKER_SERVICES_TO_IGNORE.contains(&service.as_str())).collect();
                 println!("sync:409 new_docker_services: {:?}", new_docker_services);
-                if new_docker_services.difference(&dir_project_names_set).count() != 0 {
-                    println!("sync:411 difference: {:?}", new_docker_services.difference(&dir_project_names_set));
-                    return Err(anyhow::anyhow!("Some services were not removed from docker-compose.yaml"));
-                } else {
+                let validation_result = validate_removal_from_artifact(
+                    &new_docker_services,
+                    &dir_project_names_set,
+                    &format!("Successfully removed {} service(s) from docker-compose.yaml", services_to_remove_docker.len()),
+                    &format!("Some services were not removed from docker-compose.yaml"),
+                    "sync:467",
+                    &mut stdout)?;
+                if validation_result {
                     stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
                     writeln!(stdout, "Successfully removed {} service(s) from docker-compose.yaml", services_to_remove_docker.len())?;
                     stdout.reset()?;
+                } else {
+                    return Err(anyhow::anyhow!("Failed to remove {} service(s) from docker-compose.yaml", services_to_remove_docker.len()));
                 }
             } else {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
@@ -436,22 +485,57 @@ impl CliCommand for SyncCommand {
                     writeln!(stdout, "  - {}", service)?;
                 }
                 stdout.reset()?;
-                writeln!(stdout, "Please add these services to docker-compose.yaml")?;
-                // TODO: add services to docker-compose.yml
-                // read directory, create ServiceManifestData, add service to docker-compose.yml
+                let continue_sync = prompt_sync_confirmation(
+                    matches, 
+                    &mut line_editor, 
+                    &mut stdout, 
+                    "Do you want to add these services to docker-compose.yaml? (y/N) ")?;
+                if continue_sync {
+                    for dir_name in &services_to_add_docker {
+                        let package_type = prompt_initialize_category(
+                            &mut line_editor, 
+                            &mut stdout, 
+                            matches,
+                        )?;
+                        if package_type.as_ref().map(|s| s.as_str()) != Some("router") {
+                            let _artifacts = add_package_to_artifact(
+                                &dir_name,
+                                &mut manifest_data,
+                                &app_root_path,
+                                &modules_path,
+                                "docker_compose",
+                                &package_type,
+                                &dir_project_names_set,
+                                &mut stdout,
+                                matches,
+                                Some(&mut docker_compose),
+                            )?;
+                        }
+                    }
+                }
             } else {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
                 writeln!(stdout, "No services to add to docker-compose.yaml")?;
                 stdout.reset()?;
             }
 
-            rendered_templates.push(
-                RenderedTemplate {
-                    path: docker_compose_path,
-                    content: to_string(&docker_compose)?,
-                    context: Some(ERROR_FAILED_TO_WRITE_DOCKER_COMPOSE.to_string()),
-                },
-            );
+            let (new_docker_services_to_remove, new_docker_services_to_add) = check_docker_compose(&docker_compose, &dir_project_names)?;
+            if new_docker_services_to_remove.is_empty() && new_docker_services_to_add.is_empty() {
+                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+                writeln!(stdout, "Successfully synced docker-compose.yaml")?;
+                stdout.reset()?;
+                // write docker-compose.yaml
+                rendered_templates.push(
+                    RenderedTemplate {
+                        path: docker_compose_path,
+                        content: to_string(&docker_compose)?,
+                        context: Some(ERROR_FAILED_TO_WRITE_DOCKER_COMPOSE.to_string()),
+                    },
+                );
+            } else {
+                return Err(anyhow::anyhow!("Failed to sync docker-compose.yaml"));
+            }
+            
             // projects to remove from pnpm-workspace.yaml and package.json
             let (runtime_projects_to_remove, runtime_projects_to_add) = check_runtime_files(&manifest_data.runtime.parse::<Runtime>()?, &modules_path, &dir_project_names)?;
             println!("sync:448 runtime_projects_to_remove: {:?}", runtime_projects_to_remove);
@@ -513,8 +597,39 @@ impl CliCommand for SyncCommand {
                         }
                         writeln!(stdout, "Please add these packages to pnpm-workspace.yaml")?;
                         stdout.reset()?;
-                        // TODO: add packages to pnpm-workspace.yml
-                        // read directory, create PnpmWorkspace, add package to pnpm-workspace.yml
+                        let continue_sync = prompt_sync_confirmation(
+                            matches, 
+                            &mut line_editor, 
+                            &mut stdout, 
+                            "Do you want to add these packages to pnpm-workspace.yaml? (y/N) ")?;
+                        if continue_sync {
+                            for dir_name in &runtime_projects_to_add {
+                                let package_type = prompt_initialize_category(
+                                    &mut line_editor, 
+                                    &mut stdout, 
+                                    matches,
+                                )?;
+                                // check if package type is router, if not router use add_project_definition_to_pnpm_workspace
+                                if package_type.as_ref().map(|s| s.as_str()) != Some("router") {
+                                    let pnpm_workspace = add_project_definition_to_pnpm_workspace(
+                                        &modules_path,
+                                        &mut new_manifest_data,
+                                    )?;
+                                }
+                            }
+                            let new_pnpm_workspace_projects: HashSet<String> = pnpm_workspace.packages.iter().cloned().filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str())).collect();
+                            let validation_result = validate_addition_to_artifact(
+                                &dir_name,
+                                &new_pnpm_workspace_projects,
+                                &format!("Successfully added {} to pnpm-workspace.yaml", dir_name),
+                                &format!("Package {} was not added to pnpm-workspace.yaml", dir_name),
+                                "sync:582",
+                                &mut stdout,
+                            )?;
+                            if !validation_result {
+                                return Err(anyhow::anyhow!("Failed to add {} to pnpm-workspace.yaml", dir_name));
+                            }
+                        }
                     } else {
                         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
                         writeln!(stdout, "No packages to add to pnpm-workspace.yaml")?;
@@ -546,20 +661,18 @@ impl CliCommand for SyncCommand {
                                 )?;
                                 println!("sync:539 package_json: {:?}", package_json);
                             }
-                            rendered_templates.push(RenderedTemplate {
-                                path: modules_path.join("package.json"),
-                                content: to_string(&package_json)?,
-                                context: Some(ERROR_FAILED_TO_CREATE_PACKAGE_JSON.to_string()),
-                                });
                             let new_package_json_projects: HashSet<String> = package_json.workspaces.as_ref().unwrap().iter().cloned().filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str())).collect();
                             println!("sync:547 new_package_json_projects: {:?}", new_package_json_projects);
-                            if new_package_json_projects.difference(&dir_project_names_set).count() != 0 {
-                                println!("sync:549 difference: {:?}", new_package_json_projects.difference(&dir_project_names_set));
-                                return Err(anyhow::anyhow!("Some packages were not removed from package.json"));
-                            } else {
-                                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-                                writeln!(stdout, "Successfully removed {} package(s) from package.json", runtime_projects_to_remove.len())?;
-                                stdout.reset()?;
+                            let validation_result = validate_removal_from_artifact(
+                                &new_package_json_projects,
+                                &dir_project_names_set,
+                                &format!("Successfully removed {} package(s) from package.json", runtime_projects_to_remove.len()),
+                                &format!("Some packages were not removed from package.json"),
+                                "sync:547",
+                                &mut stdout,
+                            )?;
+                            if !validation_result {
+                                return Err(anyhow::anyhow!("Failed to remove {} package(s) from package.json", runtime_projects_to_remove.len()));
                             }
                         }
                     } else {
@@ -575,8 +688,39 @@ impl CliCommand for SyncCommand {
                         }
                         writeln!(stdout, "Please add these packages to package.json")?;
                         stdout.reset()?;
-                        // TODO: add packages to package.json
-                        // read directory, create ApplicationPackageJson, add package to package.json
+                        let continue_sync = prompt_sync_confirmation(
+                            matches, 
+                            &mut line_editor, 
+                            &mut stdout, 
+                            "Do you want to add these packages to package.json? (y/N) ")?;
+                        if continue_sync {
+                            for dir_name in &runtime_projects_to_add {
+                                let package_type = prompt_initialize_category(
+                                    &mut line_editor, 
+                                    &mut stdout, 
+                                    matches,
+                                )?;
+                                if package_type.as_ref().map(|s| s.as_str()) != Some("router") {
+                                    let package_json = add_project_definition_to_package_json(
+                                        &modules_path,
+                                        &mut new_manifest_data,
+                                    )?;
+                                }
+                            }
+                            let new_package_json_projects: HashSet<String> = package_json.workspaces.as_ref().unwrap().iter().cloned().filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str())).collect();
+                            let validation_result = validate_addition_to_artifact(
+                                &dir_name,
+                                &new_package_json_projects,
+                                &format!("Successfully added {} to package.json", dir_name),
+                                &format!("Package {} was not added to package.json", dir_name),
+                                "sync:677",
+                                package_json,
+                                stdout,
+                            );
+                            if !validation_result {
+                                return Err(anyhow::anyhow!("Failed to add {} to package.json", dir_name));
+                            }
+                        }
                     } else {
                         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
                         writeln!(stdout, "No packages to add to package.json")?;
@@ -584,11 +728,23 @@ impl CliCommand for SyncCommand {
                     }
                 }
             }
+            rendered_templates.push(RenderedTemplate {
+                path: modules_path.join("package.json"),
+                content: to_string(&package_json)?,
+                context: Some(ERROR_FAILED_TO_CREATE_PACKAGE_JSON.to_string()),
+                });
+            if Some(pnpm_workspace) {
+                rendered_templates.push(RenderedTemplate {
+                    path: modules_path.join("pnpm-workspace.yaml"),
+                    content: to_string(&pnpm_workspace)?,
+                    context: Some(ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE.to_string()),
+                });
+            }
             println!("sync:580 removing projects from universal SDK");
-            if !runtime_projects_to_remove.is_empty() {
+            if !manifest_projects_to_remove.is_empty() {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
                 writeln!(stdout, "Found {} project(s) in directories that are in universal SDK that no longer exist:", runtime_projects_to_remove.len())?;
-                for project in &runtime_projects_to_remove {
+                for project in &manifest_projects_to_remove {
                     writeln!(stdout, "  - {}", project)?;
                 }
                 stdout.reset()?;
@@ -603,7 +759,7 @@ impl CliCommand for SyncCommand {
                         &mut rendered_templates,
                         &modules_path,
                         &manifest_data.app_name,
-                        &runtime_projects_to_remove,
+                        &manifest_projects_to_remove,
                     )?;
                 }
             } else {
@@ -611,15 +767,27 @@ impl CliCommand for SyncCommand {
                 writeln!(stdout, "No projects to remove from universal SDK")?;
                 stdout.reset()?;
             }
-            if !runtime_projects_to_add.is_empty() {
+            if !manifest_projects_to_add.is_empty() {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
-                writeln!(stdout, "Found {} package(s) in directories that are not in universal SDK:", runtime_projects_to_add.len())?;
-                for package in &runtime_projects_to_add {
+                writeln!(stdout, "Found {} package(s) in directories that are not in universal SDK:", manifest_projects_to_add.len())?;
+                for package in &manifest_projects_to_add {
                     writeln!(stdout, "  - {}", package)?;
                 }
-                writeln!(stdout, "Please add these packages to universal SDK")?;
                 stdout.reset()?;
-                // TODO: Add packages to universal SDK
+                let continue_sync = prompt_sync_confirmation(
+                    matches, 
+                    &mut line_editor, 
+                    &mut stdout, 
+                    "Do you want to add these packages to universal SDK? (y/N) ")?;
+                if continue_sync {
+                    println!("sync:741 app_name: {:?}", manifest_data.app_name);
+                    add_project_vec_to_universal_sdk(
+                        &mut rendered_templates,
+                        &modules_path,
+                        &manifest_data.app_name,
+                        &manifest_projects_to_add,
+                    )?;
+                }
             } else {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
                 writeln!(stdout, "No packages to add to universal SDK")?;
@@ -637,9 +805,6 @@ impl CliCommand for SyncCommand {
             writeln!(stdout, "No modules path configured in manifest")?;
             stdout.reset()?;
         }
-        
-
         Ok(())
     }
-}
 }

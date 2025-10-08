@@ -9,7 +9,7 @@ use convert_case::{Case, Casing};
 
 use crate::{
     CliCommand,
-    constants::{Database, Infrastructure,
+    constants::{Database, Infrastructure, WorkerType,
         ERROR_FAILED_TO_PARSE_MANIFEST,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE,
@@ -25,12 +25,12 @@ use crate::{
             ManifestData, ProjectType, 
             application::ApplicationManifestData, 
             add_project_to_manifest, 
-            service::ServiceManifestData,
+            worker::WorkerManifestData,
             add_project_definition_to_manifest,
         },
         package_json::project_package_json::ProjectPackageJson,
         rendered_template::RenderedTemplate,
-        init::service::add_service_to_artifacts,
+        init::worker::add_worker_to_artifacts,
         universal_sdk::add_project_to_universal_sdk,
         sync::{constants::{DIRS_TO_IGNORE, 
             DOCKER_SERVICES_TO_IGNORE, 
@@ -40,29 +40,42 @@ use crate::{
     prompt::{ArrayCompleter, prompt_with_validation, prompt_without_validation, prompt_comma_separated_list},
 };
 
-
-
-fn add_service_to_manifest_with_validation(
-    manifest_data: &mut ServiceManifestData,
+fn add_worker_to_manifest_with_validation(
+    manifest_data: &mut WorkerManifestData,
     base_path: &Path,
     app_root_path: &Path,
     stdout: &mut StandardStream,
 ) -> Result<String> {
     let forklaunch_manifest_buffer = add_project_definition_to_manifest(
-        ProjectType::Service,
+        ProjectType::Worker,
         manifest_data,
-        None,
+        Some(manifest_data.worker_type.clone()),
         Some(ResourceInventory {
-            database: Some(manifest_data.database.to_owned()),
-            cache: None,
-            queue: None,
+            database: if manifest_data.is_database_enabled {
+                Some(manifest_data.database.clone().unwrap())
+            } else {
+                None
+            },
+            cache: if manifest_data.is_cache_enabled {
+                Some(manifest_data.worker_type_lowercase.clone())
+            } else {
+                None
+            },
+            queue: if manifest_data.is_kafka_enabled {
+                Some(manifest_data.worker_type_lowercase.clone())
+            } else {
+                None
+            },
             object_store: None,
         }),
-        Some(vec![manifest_data.service_name.clone()]),
-        None,
+        Some(vec![manifest_data.worker_name.clone()]),
+        Some(ProjectMetadata {
+            r#type: Some(manifest_data.worker_type_lowercase.clone()),
+        }),
     )
     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
-    let service_name = manifest_data.service_name.clone();
+
+    let worker_name = manifest_data.worker_name.clone();
     let new_manifest_projects: HashSet<String> = manifest_data.projects
         .iter()
         .map(|project| project.name.clone())
@@ -70,23 +83,23 @@ fn add_service_to_manifest_with_validation(
         .collect();
     
     let validation_result = validate_addition_to_artifact(
-        &service_name,
+        &worker_name,
         &new_manifest_projects,
-        &format!("Successfully added {} to manifest.toml", service_name),
-        &format!("Project {} was not added to manifest.toml", service_name),
-        "sync:service:73",
+        &format!("Successfully added {} to manifest.toml", worker_name),
+        &format!("Project {} was not added to manifest.toml", worker_name),
+        "sync:worker:73",
         forklaunch_manifest_buffer,
         stdout,
-    )
+    );
     if validation_result {
         Ok(forklaunch_manifest_buffer)
     } else {
-        Err(anyhow::anyhow!("Failed to add {} to manifest.toml", service_name))
+        Err(anyhow::anyhow!("Failed to add {} to manifest.toml", worker_name))
     }
 }
 
-fn add_service_to_docker_compose_with_validation(
-    manifest_data: &mut ServiceManifestData,
+fn add_worker_to_docker_compose_with_validation(
+    manifest_data: &mut WorkerManifestData,
     base_path: &Path,
     app_root_path: &Path,
     docker_compose: Option<String>,
@@ -99,7 +112,7 @@ fn add_service_to_docker_compose_with_validation(
     };
 
     let docker_compose_buffer =
-        add_service_definition_to_docker_compose(manifest_data, app_root_path, docker_compose)
+        add_worker_definition_to_docker_compose(manifest_data, app_root_path, docker_compose)
             .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
     
     let new_docker_services: HashSet<String> = docker_compose_buffer
@@ -110,23 +123,23 @@ fn add_service_to_docker_compose_with_validation(
         .collect();
     
     let validation_result = validate_addition_to_artifact(
-        &manifest_data.service_name,
+        &manifest_data.worker_name,
         &new_docker_services,
-        &format!("Successfully added {} to docker-compose.yaml", manifest_data.service_name),
-        &format!("Service {} was not added to docker-compose.yaml", manifest_data.service_name),
-        "sync:service:113",
+        &format!("Successfully added {} to docker-compose.yaml", manifest_data.worker_name),
+        &format!("Worker {} was not added to docker-compose.yaml", manifest_data.worker_name),
+        "sync:worker:113",
         docker_compose_buffer,
         stdout,
-    )
+    );
     if validation_result {
         Ok(docker_compose_buffer)
     } else {
-        Err(anyhow::anyhow!("Failed to add {} to docker-compose.yaml", manifest_data.service_name))
+        Err(anyhow::anyhow!("Failed to add {} to docker-compose.yaml", manifest_data.worker_name))
     }
 }
     
-pub(crate) fn add_service_to_runtime_files_with_validation(
-    manifest_data: &mut ServiceManifestData,
+pub(crate) fn add_worker_to_runtime_files_with_validation(
+    manifest_data: &mut WorkerManifestData,
     base_path: &Path,
     app_root_path: &Path,
     dir_project_names_set: &HashSet<String>,
@@ -146,18 +159,18 @@ pub(crate) fn add_service_to_runtime_files_with_validation(
             let new_package_json_projects: HashSet<String> = package_json_buffer.iter().cloned().filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str())).collect();
             
             let validation_result = validate_addition_to_artifact(
-                &manifest_data.service_name,
+                &manifest_data.worker_name,
                 &new_package_json_projects,
-                &format!("Successfully added {} to package.json", manifest_data.service_name),
-                &format!("Service {} was not added to package.json", manifest_data.service_name),
-                "sync:service:145",
+                &format!("Successfully added {} to package.json", manifest_data.worker_name),
+                &format!("Worker {} was not added to package.json", manifest_data.worker_name),
+                "sync:worker:145",
                 package_json_buffer,
                 stdout,
-            )
+            );
             if validation_result {
                 Ok(package_json_buffer)
             } else {
-                Err(anyhow::anyhow!("Failed to add {} to package.json", manifest_data.service_name))
+                Err(anyhow::anyhow!("Failed to add {} to package.json", manifest_data.worker_name))
             }
         }
         Runtime::Node => {
@@ -167,110 +180,75 @@ pub(crate) fn add_service_to_runtime_files_with_validation(
             );
             let new_pnpm_workspace_projects: HashSet<String> = pnpm_workspace_buffer.packages.iter().cloned().filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str())).collect();
             
-            let validation_result = validate_service_in_projects(
-                &service_name,
+            let validation_result = validate_worker_in_projects(
+                &worker_name,
                 &new_pnpm_workspace_projects,
                 &RUNTIME_PROJECTS_TO_IGNORE,
-                &format!("Successfully added {} to pnpm-workspace.yaml", service_name),
-                &format!("Service {} was not added to pnpm-workspace.yaml", service_name),
-                "sync:484",
+                &format!("Successfully added {} to pnpm-workspace.yaml", worker_name),
+                &format!("Worker {} was not added to pnpm-workspace.yaml", worker_name),
+                "sync:worker:484",
                 pnpm_workspace_buffer,
                 stdout,
-            )
+            );
             if validation_result {
                 Ok(pnpm_workspace_buffer)
             } else {
-                Err(anyhow::anyhow!("Failed to add {} to pnpm-workspace.yaml", manifest_data.service_name))
+                Err(anyhow::anyhow!("Failed to add {} to pnpm-workspace.yaml", manifest_data.worker_name))
             }
         }
     }
 
-    Ok(package_json_buffer, pnpm_workspace_buffer)
+    Ok((package_json_buffer, pnpm_workspace_buffer))
 }
 
-pub(crate) fn sync_service_setup(
-    service_name: &str, 
+pub(crate) fn sync_worker_setup(
+    worker_name: &str, 
     app_root_path: &Path, 
     modules_path: &Path, 
     manifest_data: &mut ApplicationManifestData,
     stdout: &mut StandardStream,
     matches: &ArgMatches,
-) -> Result<ServiceManifestData> {
+) -> Result<WorkerManifestData> {
     let mut line_editor = Editor::<(), DefaultHistory>::new()?;
 
-    let database = prompt_with_validation(
+    let r#type: WorkerType = prompt_with_validation(
         &mut line_editor,
         &mut stdout,
-        "database",
+        "type",
         matches,
-        Some(&Database::VARIANTS),
-        |input| Database::VARIANTS.contains(&input),
-        |_| "Invalid database. Please try again".to_string(),
+        "worker type",
+        Some(&WorkerType::VARIANTS),
+        |input| WorkerType::VARIANTS.contains(&input),
+        |_| "Invalid worker type. Please try again".to_string(),
     )?;
 
-    let infrastructure = prompt_comma_separated_list(
-        &mut line_editor,
-        &mut stdout,
-        "infrastructure",
-        matches,
-        &Infrastructure::VARIANTS,
-        None,
-        "additional infrastructure components",
-        true,
-        Some(&Infrastructure::VARIANTS),
-        |input| Infrastructure::VARIANTS.contains(&input),
-        |_| "Invalid infrastructure. Please try again".to_string(),
-    )?
-    .iter()
-    .map(|s| s.parse().unwrap())
-    .collect();
+    let mut database: Option<Database> = None;
+    if r#type == WorkerType::Database {
+        database = Some(
+            prompt_with_validation(
+                &mut line_editor,
+                &mut stdout,
+                "database",
+                matches,
+                "worker database type",
+                Some(&Database::VARIANTS),
+                |input| Database::VARIANTS.contains(&input),
+                |_| "Invalid worker database type. Please try again".to_string(),
+            )?
+            .parse()?,
+        );
+    }
 
     let description = prompt_without_validation(
         &mut line_editor,
         &mut stdout,
         "description",
         matches,
-        "service description (optional)",
+        "worker description (optional)",
         None,
     )?;
 
-    let service_package_json_path = modules_path.join(service_name).join("package.json");
-    if !service_package_json_path.exists() {
-        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
-        writeln!(stdout, "Service package.json not found in service directory. Please run `forklaunch sync service -i {}` to generate it.", service_name)?;
-        stdout.reset()?;
-    }
-    let service_package_json_data = read_to_string(&service_package_json_path)?;
-    let service_package_json: ProjectPackageJson = from_str(&service_package_json_data)?;
-    
-    let database = if database == "none" {
-        // Try to detect database from package.json dependencies
-        let package_json_path = modules_path.join(service_name).join("package.json");
-        let package_json_content = read_to_string(&package_json_path)?;
-        let full_package_json: ProjectPackageJson = from_str(&package_json_content)?;
-        
-        if let Some(deps) = &full_package_json.dependencies {
-            // Check if any database variant is found in the dependencies
-            let found_variant = Database::VARIANTS.iter()
-                .find(|variant| {
-                    // Check if any dependency key contains this database variant
-                    deps.keys()
-                        .any(|dep_key| dep_key.contains(variant))
-                });
-            
-            if let Some(variant) = found_variant {
-                variant.to_string()
-            } else {
-                "none".to_string()
-            }
-        } else {
-            "none".to_string()
-        }
-    } else {
-        database
-    };
-
-    let mut new_manifest_data: ServiceManifestData = ServiceManifestData {
+    let mut manifest_data = WorkerManifestData {
         // Common fields from ApplicationManifestData
         id: manifest_data.id.clone(),
         app_name: manifest_data.app_name.clone(),
@@ -304,91 +282,133 @@ pub(crate) fn sync_service_setup(
         is_vitest: manifest_data.is_vitest,
         is_jest: manifest_data.is_jest,
 
-        service_name: service_name.clone(),
-        service_path: service_name.clone(),
-        camel_case_name: service_name.to_case(Case::Camel),
-        pascal_case_name: service_name.to_case(Case::Pascal),
-        kebab_case_name: service_name.to_case(Case::Kebab),
+        // Worker-specific fields
+        worker_name: worker_name.clone(),
+        camel_case_name: worker_name.to_case(Case::Camel),
+        pascal_case_name: worker_name.to_case(Case::Pascal),
+        kebab_case_name: worker_name.to_case(Case::Kebab),
         description: description.clone(),
-        database: database.to_string(),
-        database_port: get_database_port(&database),
-        db_driver: get_db_driver(&database),
+        database: if let Some(database) = &database {
+            Some(database.to_string())
+        } else {
+            None
+        },
+        db_driver: if let Some(database) = &database {
+            Some(get_db_driver(&database))
+        } else {
+            None
+        },
+        database_port: if let Some(database) = &database {
+            get_database_port(&database)
+        } else {
+            None
+        },
+        is_worker: true,
+        is_cache_enabled: r#type == WorkerType::BullMQCache || r#type == WorkerType::RedisCache,
+        is_database_enabled: r#type == WorkerType::Database,
+        is_kafka_enabled: r#type == WorkerType::Kafka,
 
-        is_mongo: database == Database::MongoDB,
-        is_postgres: database == Database::PostgreSQL,
-        is_sqlite: database == Database::SQLite,
-        is_mysql: database == Database::MySQL,
-        is_mariadb: database == Database::MariaDB,
-        is_better_sqlite: database == Database::BetterSQLite,
-        is_libsql: database == Database::LibSQL,
-        is_mssql: database == Database::MsSQL,
-        is_in_memory_database: is_in_memory_database(&database),
+        is_postgres: if let Some(database) = &database {
+            database == &Database::PostgreSQL
+        } else {
+            false
+        },
+        is_mongo: if let Some(database) = &database {
+            database == &Database::MongoDB
+        } else {
+            false
+        },
+        is_mysql: if let Some(database) = &database {
+            database == &Database::MySQL
+        } else {
+            false
+        },
+        is_mariadb: if let Some(database) = &database {
+            database == &Database::MariaDB
+        } else {
+            false
+        },
+        is_mssql: if let Some(database) = &database {
+            database == &Database::MsSQL
+        } else {
+            false
+        },
+        is_sqlite: if let Some(database) = &database {
+            database == &Database::SQLite
+        } else {
+            false
+        },
+        is_better_sqlite: if let Some(database) = &database {
+            database == &Database::BetterSQLite
+        } else {
+            false
+        },
+        is_libsql: if let Some(database) = &database {
+            database == &Database::LibSQL
+        } else {
+            false
+        },
+        is_in_memory_database: if let Some(database) = &database {
+            is_in_memory_database(database)
+        } else {
+            false
+        },
 
-        is_iam: false,
-        is_billing: false,
-        is_cache_enabled: infrastructure.contains(&Infrastructure::Redis),
-        is_s3_enabled: infrastructure.contains(&Infrastructure::S3),
-        is_database_enabled: true,
-
-        is_better_auth: false,
-        is_stripe: false,
+        worker_type: get_worker_type_name(&r#type),
+        worker_type_lowercase: get_worker_type_name(&r#type).to_lowercase(),
+        default_worker_options: get_default_worker_options(&r#type),
+        worker_consumer_factory: get_worker_consumer_factory(
+            &r#type,
+            &worker_name.to_case(Case::Pascal),
+        ),
+        worker_producer_factory: get_worker_producer_factory(&r#type),
     };
-
-    // rendered_templates.extend(
-    //     add_service_to_artifacts(
-    //         &mut new_manifest_data, 
-    //         &modules_path, 
-    //         &app_root_path,
-    //         docker_compose)?);
-
-    // add_project_to_universal_sdk(
-    //     &mut rendered_templates, 
-    //     &modules_path, 
-    //     &manifest_data.app_name, 
-    //     &manifest_data.service_name, 
-    //     None)?;
     Ok(new_manifest_data)
 }
 
 // TODO: Implement subcommand structure
-// impl CliCommand for ServiceCommand {
+// impl CliCommand for WorkerCommand {
 //     fn command(&self) -> Command {
-//         command("service", "Sync a new service")
-//             .alias("svc")
-//             .alias("project")
-//             .alias("proj")
+//         command("worker", "Sync a new worker")
+//             .alias("wk")
+//             .alias("job")
 //             .arg(
 //                 Arg::new("name")
-//                 .help("The name of the service"))
+//                 .help("The name of the worker"))
 //             .arg(
 //                 Arg::new("base_path")
 //                     .short('p')
 //                     .long("path")
-//                     .help("The path to sync the service in"),
+//                     .help("The path to sync the worker in"),
 //             )
 //             .arg(
 //                 Arg::new("add")
 //                     .short('a')
 //                     .long("add")
-//                     .help("Add a service to application artifacts")
+//                     .help("Add a worker to application artifacts")
 //                     .action(ArgAction::SetTrue),
 //             )
 //             .arg(
 //                 Arg::new("remove")
 //                     .short('r')
 //                     .long("remove")
-//                     .help("Remove a service from application artifacts")
+//                     .help("Remove a worker from application artifacts")
 //                     .action(ArgAction::SetTrue),
 //             )
 //             .arg(
 //                 Arg::new("artifacts")
 //                     .short('f')
 //                     .long("artifacts")
-//                     .help("The artifacts to add to the service")
+//                     .help("The artifacts to add to the worker")
 //                     .value_parser(Artifact::VARIANTS)
 //                     .num_args(0..)
 //                     .action(ArgAction::Append),
 //             )
+//             .arg(
+//                 Arg::new("worker_type")
+//                     .short('t')
+//                     .long("type")
+//                     .help("The type of worker"))
 //             .arg(
 //                 Arg::new("database")
 //                     .short('d')
@@ -407,7 +427,7 @@ pub(crate) fn sync_service_setup(
 //                 Arg::new("description")
 //                     .short('D')
 //                     .long("description")
-//                     .help("The description of the service"),
+//                     .help("The description of the worker"),
 //             )
 //     }
 
@@ -445,7 +465,7 @@ pub(crate) fn sync_service_setup(
 //             }),
 //         );
         
-//         let manifest_data = sync_service_setup(&service_name, &base_path, &modules_path, &manifest_data, &mut stdout, matches)?;
+//         let manifest_data = sync_worker_setup(&worker_name, &base_path, &modules_path, &manifest_data, &mut stdout, matches)?;
 //         let mut new_manifest_data = manifest_data.clone();
 //         let add = matches.get_flag("add");
 //         let remove = matches.get_flag("remove");
@@ -460,11 +480,11 @@ pub(crate) fn sync_service_setup(
 //             for artifact in artifacts {
 //                 if add {
 //                     add_package_to_artifact(
-//                         &service_name,
+//                         &worker_name,
 //                         &new_manifest_data,
 //                         &modules_path,
 //                         artifact,
-//                         "service",
+//                         "worker",
 //                         manifest_data.runtime.clone(),
 //                         &HashSet::new(),
 //                         &mut rendered_templates,
@@ -473,12 +493,12 @@ pub(crate) fn sync_service_setup(
 //                 }
 //                 if remove {
 //                     if artifact == "manifest" {
-//                         remove_project_definition_from_manifest(&mut new_manifest_data, &service_name)?;
+//                         remove_project_definition_from_manifest(&mut new_manifest_data, &worker_name)?;
 //                     }
 //                 }
 //             }
 //         }
-//         // TODO: check for package.json in service directory and generate if it doesn't exist
+//         // TODO: check for package.json in worker directory and generate if it doesn't exist
 //         Ok(())
         
 //     }

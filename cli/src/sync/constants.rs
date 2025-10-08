@@ -48,3 +48,13 @@ pub(crate) const RUNTIME_PROJECTS_TO_IGNORE: &[&str] = &[
     "monitoring",
     "universal-sdk",
 ];
+
+choice! {
+    pub(crate) enum ARTIFACTS {
+        All = "all",
+        Manifest = "manifest",
+        DockerCompose = "docker_compose",
+        Runtime = "runtime",
+        Sdk = "sdk",
+    }
+}
