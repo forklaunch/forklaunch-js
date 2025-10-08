@@ -87,11 +87,11 @@ describe('{{pascal_case_name}} Routes E2E Tests', () => {
       });
 
       const em = orm.em.fork();
-      const { {{pascal_case_name}}EventRecord } = await import(
-        '../persistence/entities/{{camel_case_name}}EventRecord.entity'
+      const { {{pascal_case_name}}Record } = await import(
+        '../persistence/entities/{{camel_case_name}}Record.entity'
       );
 
-      const records = await em.find({{pascal_case_name}}EventRecord, {
+      const records = await em.find({{pascal_case_name}}Record, {
         message: mock{{pascal_case_name}}Data.message
       });
 
