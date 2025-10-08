@@ -2,13 +2,12 @@ import { getEnvVar } from '@forklaunch/common';
 import {
   BlueprintTestHarness,
   clearTestDatabase,
-  DatabaseType,
-  TEST_TOKENS,
+  {{#is_database_enabled}}DatabaseType,
+  {{/is_database_enabled}}TEST_TOKENS,
   TestSetupResult
 } from '@forklaunch/testing';
-import { EntityManager, MikroORM } from '@mikro-orm/core';
-import dotenv from 'dotenv';
-{{#is_cache_enabled}}import Redis from 'ioredis';{{/is_cache_enabled}}
+{{#is_database_enabled}}import { EntityManager } from '@mikro-orm/core';
+{{/is_database_enabled}}import dotenv from 'dotenv';
 import * as path from 'path';
 
 export { TEST_TOKENS, TestSetupResult };
@@ -19,13 +18,13 @@ dotenv.config({ path: path.join(__dirname, '../.env.test') });
 
 export const setupTestDatabase = async (): Promise<TestSetupResult> => {
   harness = new BlueprintTestHarness({
-    getConfig: async () => {
+    {{#is_database_enabled}}getConfig: async () => {
       const { default: config } = await import('../mikro-orm.config');
       return config;
     },
     databaseType: getEnvVar('DATABASE_TYPE') as DatabaseType,
     useMigrations: false,
-    needsRedis: {{#is_cache_enabled}}true{{/is_cache_enabled}}{{^is_cache_enabled}}false{{/is_cache_enabled}},
+    {{/is_database_enabled}}needsRedis: {{#is_cache_enabled}}true{{/is_cache_enabled}}{{^is_cache_enabled}}false{{/is_cache_enabled}},
     customEnvVars: {
       PROTOCOL: 'http',
       HOST: 'localhost',
@@ -58,11 +57,12 @@ export const cleanupTestDatabase = async (): Promise<void> => {
 };
 
 export const clearDatabase = async (
-  orm: MikroORM{{#is_cache_enabled}},
-  redis?: Redis{{/is_cache_enabled}}
+  orm?: TestSetupResult['orm'],
+  redis?: TestSetupResult['redis']
 ): Promise<void> => {
-  await clearTestDatabase(orm{{#is_cache_enabled}}, redis{{/is_cache_enabled}});
+  await clearTestDatabase(orm, redis);
 };
+{{#is_database_enabled}}
 
 export const setupTestData = async (em: EntityManager) => {
   const { {{pascal_case_name}}EventRecord } = await import(
@@ -80,6 +80,7 @@ export const setupTestData = async (em: EntityManager) => {
 
   await em.flush();
 };
+{{/is_database_enabled}}
 
 export const mock{{pascal_case_name}}Data = {
   message: 'New test message'

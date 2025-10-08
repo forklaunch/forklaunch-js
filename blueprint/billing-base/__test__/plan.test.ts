@@ -23,6 +23,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
 
   beforeEach(async () => {
     await clearDatabase(orm, redis);
+    if (!orm) throw new Error('ORM not initialized');
     const em = orm.em.fork();
     await setupTestData(em);
   });

@@ -2,7 +2,9 @@ import { PERMISSIONS, ROLES } from '@forklaunch/blueprint-core';
 import { RequiredEntityData } from '@mikro-orm/core';
 import { v4 as uuidv4 } from 'uuid';
 import { OrganizationStatus } from '../domain/enum/organizationStatus.enum';
-import { Organization, Permission, Role } from './entities';
+import { Organization } from './entities/organization.entity';
+import { Permission } from './entities/permission.entity';
+import { Role } from './entities/role.entity';
 import { User } from './entities/user.entity';
 
 //! Begin seed data - RBAC Permissions

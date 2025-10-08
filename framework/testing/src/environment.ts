@@ -3,7 +3,7 @@ import { DatabaseType } from './containers';
 
 export interface TestEnvConfig {
   database: StartedTestContainer | null;
-  databaseType: DatabaseType;
+  databaseType?: DatabaseType;
   redis?: StartedTestContainer;
   hmacSecret?: string;
   customVars?: Record<string, string>;
@@ -46,24 +46,27 @@ export function setupTestEnvironment(config: TestEnvConfig): void {
     customVars = {}
   } = config;
 
-  const dbPort = getDatabasePort(databaseType);
+  // Only set database environment variables if database is configured
+  if (databaseType) {
+    const dbPort = getDatabasePort(databaseType);
 
-  // Database environment variables
-  process.env.DB_NAME = 'test_db';
+    // Database environment variables
+    process.env.DB_NAME = 'test_db';
 
-  // SQLite databases are file-based, no container needed
-  if (
-    databaseType === 'sqlite' ||
-    databaseType === 'better-sqlite' ||
-    databaseType === 'libsql'
-  ) {
-    process.env.DB_PATH = ':memory:'; // In-memory SQLite for tests
-  } else if (database) {
-    process.env.DB_HOST = database.getHost();
-    process.env.DB_USER = databaseType === 'mssql' ? 'SA' : 'test_user';
-    process.env.DB_PASSWORD =
-      databaseType === 'mssql' ? 'Test_Password123!' : 'test_password';
-    process.env.DB_PORT = database.getMappedPort(dbPort).toString();
+    // SQLite databases are file-based, no container needed
+    if (
+      databaseType === 'sqlite' ||
+      databaseType === 'better-sqlite' ||
+      databaseType === 'libsql'
+    ) {
+      process.env.DB_PATH = ':memory:'; // In-memory SQLite for tests
+    } else if (database) {
+      process.env.DB_HOST = database.getHost();
+      process.env.DB_USER = databaseType === 'mssql' ? 'SA' : 'test_user';
+      process.env.DB_PASSWORD =
+        databaseType === 'mssql' ? 'Test_Password123!' : 'test_password';
+      process.env.DB_PORT = database.getMappedPort(dbPort).toString();
+    }
   }
 
   // Redis environment variables (if provided)

@@ -211,9 +211,6 @@ impl Serialize for ProjectDependencies {
         if let Some(ref v) = self.app_universal_sdk {
             map.serialize_entry(&format!("@{}/universal-sdk", self.app_name), v)?;
         }
-        if let Some(ref v) = self.better_auth {
-            map.serialize_entry("@forklaunch/better-auth", v)?;
-        }
         if let Some(ref v) = self.forklaunch_better_auth_mikro_orm_fork {
             map.serialize_entry("@forklaunch/better-auth-mikro-orm-fork", v)?;
         }
@@ -305,6 +302,9 @@ impl Serialize for ProjectDependencies {
         }
         if let Some(ref v) = self.ajv {
             map.serialize_entry("ajv", v)?;
+        }
+        if let Some(ref v) = self.better_auth {
+            map.serialize_entry("better-auth", v)?;
         }
         if let Some(ref v) = self.bullmq {
             map.serialize_entry("bullmq", v)?;
@@ -450,7 +450,6 @@ impl<'de> Deserialize<'de> for ProjectDependencies {
                     }
 
                     match key.as_str() {
-                        "@forklaunch/better-auth" => deps.better_auth = Some(value),
                         "@forklaunch/better-auth-mikro-orm-fork" => {
                             deps.forklaunch_better_auth_mikro_orm_fork = Some(value);
                         }
@@ -503,6 +502,7 @@ impl<'de> Deserialize<'de> for ProjectDependencies {
                         "@opentelemetry/api" => deps.opentelemetry_api = Some(value),
                         "@sinclair/typebox" => deps.typebox = Some(value),
                         "ajv" => deps.ajv = Some(value),
+                        "better-auth" => deps.better_auth = Some(value),
                         "bullmq" => deps.bullmq = Some(value),
                         "better-sqlite3" => deps.better_sqlite3 = Some(value),
                         "dotenv" => deps.dotenv = Some(value),

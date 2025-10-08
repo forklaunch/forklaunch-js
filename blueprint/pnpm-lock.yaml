@@ -160,8 +160,8 @@ importers:
         specifier: workspace:*
         version: link:../universal-sdk
       '@forklaunch/testing':
-        specifier: ^0.0.3
-        version: 0.0.3(vitest@3.2.4(@types/node@24.7.0)(tsx@4.20.6)(yaml@2.8.1))
+        specifier: ^0.0.4
+        version: 0.0.4(vitest@3.2.4(@types/node@24.7.0)(tsx@4.20.6)(yaml@2.8.1))
       '@mikro-orm/cli':
         specifier: ^6.5.7
         version: 6.5.7(better-sqlite3@12.4.1)(libsql@0.5.22)(mariadb@3.4.5)(pg@8.16.3)
@@ -281,8 +281,8 @@ importers:
         version: 4.1.12
     devDependencies:
       '@forklaunch/testing':
-        specifier: ^0.0.3
-        version: 0.0.3(vitest@3.2.4(@types/node@24.7.0)(tsx@4.20.6)(yaml@2.8.1))
+        specifier: ^0.0.4
+        version: 0.0.4(vitest@3.2.4(@types/node@24.7.0)(tsx@4.20.6)(yaml@2.8.1))
       '@mikro-orm/cli':
         specifier: ^6.5.7
         version: 6.5.7(better-sqlite3@12.4.1)(libsql@0.5.22)(mariadb@3.4.5)(sqlite3@5.1.7)
@@ -436,8 +436,8 @@ importers:
         version: 4.1.12
     devDependencies:
       '@forklaunch/testing':
-        specifier: ^0.0.3
-        version: 0.0.3(vitest@3.2.4(@types/node@24.7.0)(tsx@4.20.6)(yaml@2.8.1))
+        specifier: ^0.0.4
+        version: 0.0.4(vitest@3.2.4(@types/node@24.7.0)(tsx@4.20.6)(yaml@2.8.1))
       '@mikro-orm/cli':
         specifier: ^6.5.7
         version: 6.5.7(better-sqlite3@12.4.1)(libsql@0.5.22)(mariadb@3.4.5)(sqlite3@5.1.7)
@@ -487,8 +487,8 @@ importers:
         specifier: workspace:*
         version: link:../interfaces/iam
       '@forklaunch/testing':
-        specifier: ^0.0.3
-        version: 0.0.3(vitest@3.2.4(@types/node@24.7.0)(tsx@4.20.6)(yaml@2.8.1))
+        specifier: ^0.0.4
+        version: 0.0.4(vitest@3.2.4(@types/node@24.7.0)(tsx@4.20.6)(yaml@2.8.1))
       '@mikro-orm/core':
         specifier: ^6.5.7
         version: 6.5.7
@@ -1032,8 +1032,8 @@ importers:
         version: 4.1.12
     devDependencies:
       '@forklaunch/testing':
-        specifier: ^0.0.3
-        version: 0.0.3(vitest@3.2.4(@types/node@24.7.0)(tsx@4.20.6)(yaml@2.8.1))
+        specifier: ^0.0.4
+        version: 0.0.4(vitest@3.2.4(@types/node@24.7.0)(tsx@4.20.6)(yaml@2.8.1))
       '@mikro-orm/cli':
         specifier: ^6.5.7
         version: 6.5.7(better-sqlite3@12.4.1)(libsql@0.5.22)(mariadb@3.4.5)(sqlite3@5.1.7)
@@ -1870,8 +1870,8 @@ packages:
     peerDependencies:
       '@opentelemetry/api': ^1.3.0
 
-  '@forklaunch/testing@0.0.3':
-    resolution: {integrity: sha512-RwYu3kORJjXWVmQ6mIRa5iIc3JNRHEkP0MqWD4bAQT3p8ScFEAEch+syspMeE6/A8kuc1hdWnbv5w5CUwRJhIg==}
+  '@forklaunch/testing@0.0.4':
+    resolution: {integrity: sha512-7hpI9XMxlGaEC/7IwrEYKLXHKx1m0IBAe0h2JphlRL7RakeZxjNSzKCo8+nNKbVk9cNUqYOKoSHpPhnhyJf43Q==}
     peerDependencies:
       vitest: ^3.0.0
 
@@ -8526,7 +8526,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@forklaunch/testing@0.0.3(vitest@3.2.4(@types/node@24.7.0)(tsx@4.20.6)(yaml@2.8.1))':
+  '@forklaunch/testing@0.0.4(vitest@3.2.4(@types/node@24.7.0)(tsx@4.20.6)(yaml@2.8.1))':
     dependencies:
       '@mikro-orm/core': 6.5.7
       ioredis: 5.8.1

@@ -1,5 +1,11 @@
 # @forklaunch/testing
 
+## 0.0.4
+
+### Patch Changes
+
+- Make database options optional
+
 ## 0.0.3
 
 ### Patch Changes

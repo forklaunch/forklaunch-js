@@ -208,8 +208,6 @@ pub(crate) fn application_up_packages_script(runtime: &Runtime) -> String {
 }
 
 // Project package.json dependencies constants
-// @forklaunch/better-auth
-pub(crate) const BETTER_AUTH_VERSION: &str = "^1.3.23";
 // @forklaunch/better-auth-mikro-orm-fork
 pub(crate) const BETTER_AUTH_MIKRO_ORM_VERSION: &str = "~0.4.106";
 // @forklaunch/blueprint-core
@@ -255,7 +253,7 @@ pub(crate) const WORKER_INTERFACES_VERSION: &str = "~0.7.0";
 // @forklaunch/internal
 pub(crate) const INTERNAL_VERSION: &str = "~0.3.17";
 // @forklaunch/testing
-pub(crate) const TESTING_VERSION: &str = "~0.0.3";
+pub(crate) const TESTING_VERSION: &str = "~0.0.4";
 // @forklaunch/universal-sdk
 pub(crate) const UNIVERSAL_SDK_VERSION: &str = "~0.7.17";
 // @forklaunch/validator
@@ -276,6 +274,8 @@ pub(crate) const OPENTELEMETRY_API_VERSION: &str = "^1.9.0";
 pub(crate) const TYPEBOX_VERSION: &str = "^0.34.41";
 // ajv
 pub(crate) const AJV_VERSION: &str = "^8.17.1";
+// better-auth
+pub(crate) const BETTER_AUTH_VERSION: &str = "^1.3.23";
 // bullmq
 pub(crate) const BULLMQ_VERSION: &str = "^5.61.0";
 // better-sqlite3

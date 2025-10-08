@@ -2,8 +2,8 @@ import {
   cleanupTestDatabase,
   clearDatabase,
   mock{{pascal_case_name}}Data,
-  setupTestData,
-  setupTestDatabase,
+  {{#is_database_enabled}}setupTestData,
+  {{/is_database_enabled}}setupTestDatabase,
   TestSetupResult
 } from './test-utils';
 
@@ -18,8 +18,9 @@ describe('{{pascal_case_name}} Routes E2E Tests', () => {
   }, 60000);
 
   beforeEach(async () => {
-    await clearDatabase({{#is_database_enabled}}orm{{/is_database_enabled}}{{#is_cache_enabled}}{{#is_database_enabled}}, {{/is_database_enabled}}redis{{/is_cache_enabled}});
-    {{#is_database_enabled}}const em = orm.em.fork();
+    await clearDatabase({{#is_database_enabled}}orm{{/is_database_enabled}}{{^is_database_enabled}}undefined{{/is_database_enabled}}, {{#is_cache_enabled}}redis{{/is_cache_enabled}}{{^is_cache_enabled}}undefined{{/is_cache_enabled}});
+    {{#is_database_enabled}}if (!orm) throw new Error('ORM not initialized');
+    const em = orm.em.fork();
     await setupTestData(em);{{/is_database_enabled}}
   });
 
@@ -86,6 +87,7 @@ describe('{{pascal_case_name}} Routes E2E Tests', () => {
         body: mock{{pascal_case_name}}Data
       });
 
+      if (!orm) throw new Error('ORM not initialized');
       const em = orm.em.fork();
       const { {{pascal_case_name}}{{#is_worker}}Event{{/is_worker}}Record } = await import(
         '../persistence/entities/{{camel_case_name}}{{#is_worker}}Event{{/is_worker}}Record.entity'

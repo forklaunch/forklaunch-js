@@ -21,6 +21,7 @@ describe('SampleWorker Routes E2E Tests with PostgreSQL Container', () => {
 
   beforeEach(async () => {
     await clearDatabase(orm, redis);
+    if (!orm) throw new Error('ORM not initialized');
     const em = orm.em.fork();
     await setupTestData(em);
   });
@@ -147,6 +148,7 @@ describe('SampleWorker Routes E2E Tests with PostgreSQL Container', () => {
         expect(response.response.retryCount).toBe(0);
       }
 
+      if (!orm) throw new Error('ORM not initialized');
       const em = orm.em.fork();
       const { SampleWorkerEventRecord } = await import(
         '../persistence/entities/sampleWorkerRecord.entity'

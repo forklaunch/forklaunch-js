@@ -2,13 +2,12 @@ import { getEnvVar } from '@forklaunch/common';
 import {
   BlueprintTestHarness,
   clearTestDatabase,
-  DatabaseType,
-  TEST_TOKENS,
+  {{#is_database_enabled}}DatabaseType,
+  {{/is_database_enabled}}TEST_TOKENS,
   TestSetupResult
 } from '@forklaunch/testing';
-{{#is_database_enabled}}import { EntityManager, MikroORM } from '@mikro-orm/core';{{/is_database_enabled}}
+{{#is_database_enabled}}import { EntityManager } from '@mikro-orm/core';{{/is_database_enabled}}
 import dotenv from 'dotenv';
-{{#is_cache_enabled}}import Redis from 'ioredis';{{/is_cache_enabled}}
 import * as path from 'path';
 
 export { TEST_TOKENS, TestSetupResult };
@@ -25,7 +24,6 @@ export const setupTestDatabase = async (): Promise<TestSetupResult> => {
     },
     databaseType: getEnvVar('DATABASE_TYPE') as DatabaseType,
     useMigrations: false,
-    {{/is_database_enabled}}{{^is_database_enabled}}getConfig: async () => ({}),
     {{/is_database_enabled}}needsRedis: {{#is_cache_enabled}}true{{/is_cache_enabled}}{{^is_cache_enabled}}false{{/is_cache_enabled}},
     customEnvVars: {
       PROTOCOL: 'http',
@@ -59,10 +57,10 @@ export const cleanupTestDatabase = async (): Promise<void> => {
 };
 
 export const clearDatabase = async (
-  {{#is_database_enabled}}orm: MikroORM{{/is_database_enabled}}{{#is_cache_enabled}}{{#is_database_enabled}},
-  {{/is_database_enabled}}redis?: Redis{{/is_cache_enabled}}
+  orm?: TestSetupResult['orm'],
+  redis?: TestSetupResult['redis']
 ): Promise<void> => {
-  await clearTestDatabase({{#is_database_enabled}}orm{{/is_database_enabled}}{{^is_database_enabled}}undefined as any{{/is_database_enabled}}{{#is_cache_enabled}}, redis{{/is_cache_enabled}});
+  await clearTestDatabase(orm, redis);
 };
 {{#is_database_enabled}}
 
@@ -79,11 +77,6 @@ export const setupTestData = async (em: EntityManager) => {
   });
 
   await em.flush();
-};
-{{/is_database_enabled}}{{^is_database_enabled}}
-
-export const setupTestData = async () => {
-  // No database configured, no test data to set up
 };
 {{/is_database_enabled}}
 

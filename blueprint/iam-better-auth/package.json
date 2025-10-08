@@ -52,7 +52,7 @@
     "@forklaunch/core": "^0.15.6",
     "@forklaunch/implementation-iam-base": "workspace:*",
     "@forklaunch/interfaces-iam": "workspace:*",
-    "@forklaunch/testing": "^0.0.3",
+    "@forklaunch/testing": "^0.0.4",
     "@mikro-orm/core": "^6.5.7",
     "@mikro-orm/migrations": "^6.5.7",
     "@mikro-orm/mongodb": "^6.5.7",
@@ -71,7 +71,7 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
-    "@forklaunch/testing": "^0.0.3",
+    "@forklaunch/testing": "^0.0.4",
     "@mikro-orm/cli": "^6.5.7",
     "@types/express": "^5.0.3",
     "@types/express-serve-static-core": "^5.1.0",

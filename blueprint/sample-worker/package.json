@@ -81,7 +81,7 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
-    "@forklaunch/testing": "^0.0.3",
+    "@forklaunch/testing": "^0.0.4",
     "@mikro-orm/cli": "^6.5.7",
     "@types/express": "^5.0.3",
     "@types/express-serve-static-core": "^5.1.0",

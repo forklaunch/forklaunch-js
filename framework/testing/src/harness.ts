@@ -9,12 +9,13 @@ export interface BlueprintTestConfig {
   /**
    * Function that imports and returns the MikroORM config
    * This is called AFTER environment variables are set
+   * Optional - if not provided, no database will be set up
    */
-  getConfig: () => Promise<Options>;
+  getConfig?: () => Promise<Options>;
 
   /**
    * Database type (postgres, mysql, mongodb, etc.)
-   * @default 'postgres'
+   * Optional - if not provided, no database will be set up
    */
   databaseType?: DatabaseType;
 
@@ -47,7 +48,7 @@ export interface BlueprintTestConfig {
 export interface TestSetupResult {
   container: StartedTestContainer | null;
   redisContainer?: StartedTestContainer;
-  orm: MikroORM;
+  orm?: MikroORM;
   redis?: Redis;
 }
 
@@ -56,10 +57,14 @@ export interface TestSetupResult {
  *
  * Handles container setup, environment configuration, and database initialization
  *
- * @example
+ * @example Database with ORM
  * ```typescript
  * const harness = new BlueprintTestHarness({
- *   mikroOrmConfigPath: '../mikro-orm.config',
+ *   getConfig: async () => {
+ *     const { default: config } = await import('../mikro-orm.config');
+ *     return config;
+ *   },
+ *   databaseType: 'postgres',
  *   useMigrations: false,
  *   needsRedis: true,
  *   customEnvVars: {
@@ -68,7 +73,21 @@ export interface TestSetupResult {
  * });
  *
  * const setup = await harness.setup();
- * // ... run tests
+ * // ... run tests with setup.orm and setup.redis
+ * await harness.cleanup();
+ * ```
+ *
+ * @example Cache-only (no database)
+ * ```typescript
+ * const harness = new BlueprintTestHarness({
+ *   needsRedis: true,
+ *   customEnvVars: {
+ *     API_KEY: 'test_key'
+ *   }
+ * });
+ *
+ * const setup = await harness.setup();
+ * // ... run tests with setup.redis only (setup.orm is undefined)
  * await harness.cleanup();
  * ```
  */
@@ -84,36 +103,50 @@ export class BlueprintTestHarness {
    * Setup all test infrastructure (containers, ORM, Redis)
    */
   async setup(): Promise<TestSetupResult> {
-    const databaseType = this.config.databaseType || 'postgres';
+    // Setup database container only if database is needed
+    let container: StartedTestContainer | null = null;
+    let orm: MikroORM | undefined;
+    let redisContainer: StartedTestContainer | undefined;
 
-    // Setup database container
-    const container =
-      await this.containers.setupDatabaseContainer(databaseType);
+    // Setup Redis container if needed (for both database and cache-only modes)
+    if (this.config.needsRedis) {
+      redisContainer = await this.containers.setupRedisContainer();
+    }
 
-    // Setup Redis container if needed
-    const redisContainer = this.config.needsRedis
-      ? await this.containers.setupRedisContainer()
-      : undefined;
+    if (this.config.databaseType && this.config.getConfig) {
+      const databaseType = this.config.databaseType;
 
-    // Setup environment variables
-    setupTestEnvironment({
-      database: container,
-      databaseType,
-      redis: redisContainer,
-      customVars: this.config.customEnvVars
-    });
+      // Setup database container
+      container = await this.containers.setupDatabaseContainer(databaseType);
 
-    // Get the config AFTER environment is set
-    const mikroOrmConfig = await this.config.getConfig();
+      // Setup environment variables
+      setupTestEnvironment({
+        database: container,
+        databaseType,
+        redis: redisContainer,
+        customVars: this.config.customEnvVars
+      });
 
-    // Setup ORM
-    const orm = await setupTestORM({
-      mikroOrmConfig,
-      databaseType,
-      useMigrations: this.config.useMigrations,
-      migrationsPath: this.config.migrationsPath,
-      container
-    });
+      // Get the config AFTER environment is set
+      const mikroOrmConfig = await this.config.getConfig();
+
+      // Setup ORM
+      orm = await setupTestORM({
+        mikroOrmConfig,
+        databaseType,
+        useMigrations: this.config.useMigrations,
+        migrationsPath: this.config.migrationsPath,
+        container
+      });
+    } else {
+      // Cache-only mode: no database
+      setupTestEnvironment({
+        database: null,
+        databaseType: undefined,
+        redis: redisContainer,
+        customVars: this.config.customEnvVars
+      });
+    }
 
     // Setup Redis client if needed
     let redis: Redis | undefined;
@@ -151,7 +184,7 @@ export class BlueprintTestHarness {
   }
 
   /**
-   * Clear all data from the database
+   * Clear all data from the database and/or cache
    */
   async clearDatabase(): Promise<void> {
     if (this.result) {

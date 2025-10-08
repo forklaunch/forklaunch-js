@@ -137,10 +137,10 @@ export async function setupTestORM(
 }
 
 /**
- * Clear all data from the test database
+ * Clear all data from the test database and/or cache
  */
 export async function clearTestDatabase(
-  orm: MikroORM,
+  orm?: MikroORM,
   redis?: Redis
 ): Promise<void> {
   // Clear Redis if provided
@@ -148,21 +148,23 @@ export async function clearTestDatabase(
     await redis.flushall();
   }
 
-  // Clear all database entities
-  const em = orm.em.fork();
-  const entities = Object.values(orm.getMetadata().getAll());
+  // Clear all database entities (if ORM is provided)
+  if (orm) {
+    const em = orm.em.fork();
+    const entities = Object.values(orm.getMetadata().getAll());
 
-  // Delete in reverse order to avoid foreign key constraints
-  for (const entity of entities.reverse()) {
-    try {
-      await em.nativeDelete(entity.class, {});
-    } catch (error) {
-      // Ignore "table does not exist" errors
-      if (!(error as Error).message?.includes('does not exist')) {
-        throw error;
+    // Delete in reverse order to avoid foreign key constraints
+    for (const entity of entities.reverse()) {
+      try {
+        await em.nativeDelete(entity.class, {});
+      } catch (error) {
+        // Ignore "table does not exist" errors
+        if (!(error as Error).message?.includes('does not exist')) {
+          throw error;
+        }
       }
     }
-  }
 
-  await em.flush();
+    await em.flush();
+  }
 }
