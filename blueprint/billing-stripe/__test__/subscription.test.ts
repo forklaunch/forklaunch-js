@@ -315,40 +315,34 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
   });
 
   describe('DELETE /subscription/:id - deleteSubscription', () => {
-    it(
-      'should delete an existing subscription successfully',
-      { timeout: 15000 },
-      async () => {
-        const {
-          createSubscriptionRoute: createSubscription,
-          deleteSubscriptionRoute: deleteSubscription
-        } = await import('../api/routes/subscription.routes');
+    it('should delete an existing subscription successfully', async () => {
+      const {
+        createSubscriptionRoute: createSubscription,
+        deleteSubscriptionRoute: deleteSubscription
+      } = await import('../api/routes/subscription.routes');
 
-        const createResponse = await createSubscription.sdk.createSubscription({
-          body: getMockSubscriptionData(),
-          headers: {
-            authorization: TEST_TOKENS.HMAC
-          }
-        });
-
-        if (createResponse.code !== 200) {
-          throw new Error('Failed to create subscription');
+      const createResponse = await createSubscription.sdk.createSubscription({
+        body: getMockSubscriptionData(),
+        headers: {
+          authorization: TEST_TOKENS.HMAC
         }
-        const subscriptionId = createResponse.response.id;
+      });
 
-        const response = await deleteSubscription.sdk.deleteSubscription({
-          params: { id: subscriptionId },
-          headers: {
-            authorization: TEST_TOKENS.HMAC
-          }
-        });
-
-        expect(response.code).toBe(200);
-        expect(response.response).toBe(
-          `Deleted subscription ${subscriptionId}`
-        );
+      if (createResponse.code !== 200) {
+        throw new Error('Failed to create subscription');
       }
-    );
+      const subscriptionId = createResponse.response.id;
+
+      const response = await deleteSubscription.sdk.deleteSubscription({
+        params: { id: subscriptionId },
+        headers: {
+          authorization: TEST_TOKENS.HMAC
+        }
+      });
+
+      expect(response.code).toBe(200);
+      expect(response.response).toBe(`Deleted subscription ${subscriptionId}`);
+    }, 15000);
 
     it('should handle deleting non-existent subscription', async () => {
       const { deleteSubscriptionRoute: deleteSubscription } = await import(
@@ -370,15 +364,59 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
   });
 
   describe('GET /subscription - listSubscriptions', () => {
-    it(
-      'should list all subscriptions when no IDs provided',
-      { timeout: 20000 },
-      async () => {
-        const {
-          createSubscriptionRoute: createSubscription,
-          listSubscriptionsRoute: listSubscriptions
-        } = await import('../api/routes/subscription.routes');
+    it('should list all subscriptions when no IDs provided', async () => {
+      const {
+        createSubscriptionRoute: createSubscription,
+        listSubscriptionsRoute: listSubscriptions
+      } = await import('../api/routes/subscription.routes');
 
+      await createSubscription.sdk.createSubscription({
+        body: getMockSubscriptionData(),
+        headers: {
+          authorization: TEST_TOKENS.HMAC
+        }
+      });
+
+      await createSubscription.sdk.createSubscription({
+        body: {
+          ...getMockSubscriptionData(),
+          partyId: process.env.TEST_CUSTOMER_ID!,
+          externalId: 'sub_second_123'
+        },
+        headers: {
+          authorization: TEST_TOKENS.HMAC
+        }
+      });
+
+      const response = await listSubscriptions.sdk.listSubscriptions({
+        query: { ids: [] },
+        headers: {
+          authorization: TEST_TOKENS.HMAC
+        }
+      });
+
+      expect(response.code).toBe(200);
+      expect(response.response.length).toBeGreaterThanOrEqual(2);
+      expect(response.response[0]).toMatchObject({
+        partyId: expect.any(String),
+        partyType: expect.any(String),
+        active: expect.any(Boolean),
+        productId: expect.any(String),
+        status: expect.any(String),
+        externalId: expect.any(String),
+        billingProvider: expect.any(String),
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date)
+      });
+    }, 20000);
+
+    it('should list specific subscriptions when IDs provided', async () => {
+      const {
+        createSubscriptionRoute: createSubscription,
+        listSubscriptionsRoute: listSubscriptions
+      } = await import('../api/routes/subscription.routes');
+
+      const subscription1Response =
         await createSubscription.sdk.createSubscription({
           body: getMockSubscriptionData(),
           headers: {
@@ -386,6 +424,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
           }
         });
 
+      const subscription2Response =
         await createSubscription.sdk.createSubscription({
           body: {
             ...getMockSubscriptionData(),
@@ -397,89 +436,36 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
           }
         });
 
-        const response = await listSubscriptions.sdk.listSubscriptions({
-          query: { ids: [] },
-          headers: {
-            authorization: TEST_TOKENS.HMAC
-          }
-        });
-
-        expect(response.code).toBe(200);
-        expect(response.response.length).toBeGreaterThanOrEqual(2);
-        expect(response.response[0]).toMatchObject({
-          partyId: expect.any(String),
-          partyType: expect.any(String),
-          active: expect.any(Boolean),
-          productId: expect.any(String),
-          status: expect.any(String),
-          externalId: expect.any(String),
-          billingProvider: expect.any(String),
-          createdAt: expect.any(Date),
-          updatedAt: expect.any(Date)
-        });
+      if (
+        subscription1Response.code !== 200 ||
+        subscription2Response.code !== 200
+      ) {
+        throw new Error('Failed to create subscriptions');
       }
-    );
 
-    it(
-      'should list specific subscriptions when IDs provided',
-      { timeout: 20000 },
-      async () => {
-        const {
-          createSubscriptionRoute: createSubscription,
-          listSubscriptionsRoute: listSubscriptions
-        } = await import('../api/routes/subscription.routes');
-
-        const subscription1Response =
-          await createSubscription.sdk.createSubscription({
-            body: getMockSubscriptionData(),
-            headers: {
-              authorization: TEST_TOKENS.HMAC
-            }
-          });
-
-        const subscription2Response =
-          await createSubscription.sdk.createSubscription({
-            body: {
-              ...getMockSubscriptionData(),
-              partyId: process.env.TEST_CUSTOMER_ID!,
-              externalId: 'sub_second_123'
-            },
-            headers: {
-              authorization: TEST_TOKENS.HMAC
-            }
-          });
-
-        if (
-          subscription1Response.code !== 200 ||
-          subscription2Response.code !== 200
-        ) {
-          throw new Error('Failed to create subscriptions');
-        }
-
-        const response = await listSubscriptions.sdk.listSubscriptions({
-          query: {
-            ids: [
-              subscription1Response.response.id,
-              subscription2Response.response.id
-            ]
-          },
-          headers: {
-            authorization: TEST_TOKENS.HMAC
-          }
-        });
-
-        expect(response.code).toBe(200);
-        if (response.code === 200) {
-          expect(response.response).toHaveLength(2);
-          expect(response.response.map((s: { id: string }) => s.id)).toContain(
-            subscription1Response.response.id
-          );
-          expect(response.response.map((s: { id: string }) => s.id)).toContain(
+      const response = await listSubscriptions.sdk.listSubscriptions({
+        query: {
+          ids: [
+            subscription1Response.response.id,
             subscription2Response.response.id
-          );
+          ]
+        },
+        headers: {
+          authorization: TEST_TOKENS.HMAC
         }
+      });
+
+      expect(response.code).toBe(200);
+      if (response.code === 200) {
+        expect(response.response).toHaveLength(2);
+        expect(response.response.map((s: { id: string }) => s.id)).toContain(
+          subscription1Response.response.id
+        );
+        expect(response.response.map((s: { id: string }) => s.id)).toContain(
+          subscription2Response.response.id
+        );
       }
-    );
+    }, 20000);
 
     it('should return empty array when no subscriptions match provided IDs', async () => {
       const { listSubscriptionsRoute: listSubscriptions } = await import(
