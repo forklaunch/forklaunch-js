@@ -81,12 +81,16 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@forklaunch/testing": "file:../../framework/testing",
     "@mikro-orm/cli": "^6.5.7",
     "@types/express": "^5.0.3",
     "@types/express-serve-static-core": "^5.1.0",
     "@types/qs": "^6.14.0",
     "depcheck": "^1.4.7",
     "eslint": "^9.37.0",
+    "ioredis": "^5.8.1",
+    "prettier": "^3.6.2",
+    "testcontainers": "^11.7.1",
     "tsx": "^4.20.6",
     "typedoc": "^0.28.13",
     "typescript-eslint": "^8.46.0"

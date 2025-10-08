@@ -565,9 +565,6 @@ importers:
       typedoc:
         specifier: ^0.28.13
         version: 0.28.13(typescript@5.9.3)
-      vitest:
-        specifier: ^3.2.4
-        version: 3.2.4(@types/node@24.7.0)(tsx@4.20.6)(yaml@2.8.1)
 
   implementations/billing/base:
     dependencies:
@@ -1034,6 +1031,9 @@ importers:
         specifier: ^4.1.12
         version: 4.1.12
     devDependencies:
+      '@forklaunch/testing':
+        specifier: file:../../framework/testing
+        version: file:../framework/testing(vitest@3.2.4(@types/node@24.7.0)(tsx@4.20.6)(yaml@2.8.1))
       '@mikro-orm/cli':
         specifier: ^6.5.7
         version: 6.5.7(better-sqlite3@12.4.1)(libsql@0.5.22)(mariadb@3.4.5)(sqlite3@5.1.7)
@@ -1052,6 +1052,15 @@ importers:
       eslint:
         specifier: ^9.37.0
         version: 9.37.0
+      ioredis:
+        specifier: ^5.8.1
+        version: 5.8.1
+      prettier:
+        specifier: ^3.6.2
+        version: 3.6.2
+      testcontainers:
+        specifier: ^11.7.1
+        version: 11.7.1
       tsx:
         specifier: ^4.20.6
         version: 4.20.6
@@ -1061,6 +1070,9 @@ importers:
       typescript-eslint:
         specifier: ^8.46.0
         version: 8.46.0(eslint@9.37.0)(typescript@5.9.3)
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/node@24.7.0)(tsx@4.20.6)(yaml@2.8.1)
 
   universal-sdk:
     dependencies:
@@ -1869,6 +1881,11 @@ packages:
 
   '@forklaunch/testing@0.0.3':
     resolution: {integrity: sha512-RwYu3kORJjXWVmQ6mIRa5iIc3JNRHEkP0MqWD4bAQT3p8ScFEAEch+syspMeE6/A8kuc1hdWnbv5w5CUwRJhIg==}
+    peerDependencies:
+      vitest: ^3.0.0
+
+  '@forklaunch/testing@file:../framework/testing':
+    resolution: {directory: ../framework/testing, type: directory}
     peerDependencies:
       vitest: ^3.0.0
 
@@ -8694,6 +8711,17 @@ snapshots:
       - supports-color
 
   '@forklaunch/testing@0.0.3(vitest@3.2.4(@types/node@24.7.0)(tsx@4.20.6)(yaml@2.8.1))':
+    dependencies:
+      '@mikro-orm/core': 6.5.7
+      ioredis: 5.8.1
+      testcontainers: 11.7.1
+      vitest: 3.2.4(@types/node@24.7.0)(tsx@4.20.6)(yaml@2.8.1)
+    transitivePeerDependencies:
+      - bare-buffer
+      - react-native-b4a
+      - supports-color
+
+  '@forklaunch/testing@file:../framework/testing(vitest@3.2.4(@types/node@24.7.0)(tsx@4.20.6)(yaml@2.8.1))':
     dependencies:
       '@mikro-orm/core': 6.5.7
       ioredis: 5.8.1

@@ -13,5 +13,11 @@ export const sampleWorkerRouter = forklaunchRouter(
   openTelemetryCollector
 );
 
-sampleWorkerRouter.get('/:id', sampleWorkerGet);
-sampleWorkerRouter.post('/', sampleWorkerPost);
+export const sampleWorkerGetRoute = sampleWorkerRouter.get(
+  '/:id',
+  sampleWorkerGet
+);
+export const sampleWorkerPostRoute = sampleWorkerRouter.post(
+  '/',
+  sampleWorkerPost
+);

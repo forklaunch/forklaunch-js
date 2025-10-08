@@ -46,6 +46,6 @@
     "simplePK": true
   },
   "origin": "../core/persistence/sql.base.entity.ts",
-  "hash": "d5259a2cf94ae837542f055ee95cf5f9",
-  "version": "6.5.6"
+  "hash": "226b4ef543654ef69ccddeb6323cade7",
+  "version": "6.5.7"
 }
