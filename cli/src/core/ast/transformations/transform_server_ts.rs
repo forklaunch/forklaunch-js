@@ -235,13 +235,10 @@ app.listen(port, host, () => {
 
         let transformed_code = result.unwrap();
 
-        // Verify camelCase conversion in variable names
         assert!(transformed_code.contains("app.use(orderProcessingRouter);"));
 
-        // Verify camelCase conversion in import names
         assert!(transformed_code.contains("import { orderProcessingRouter }"));
 
-        // Verify the correct route file path (should be camelCase)
         assert!(transformed_code.contains("\"./api/routes/orderProcessing.routes\""));
     }
 
@@ -296,7 +293,6 @@ app.listen(port, host, () => {
 
         let transformed_code = result.unwrap();
 
-        // Verify new injections are present
         assert!(
             transformed_code
                 .contains("import { newServiceRouter } from \"./api/routes/newService.routes\";")
@@ -331,7 +327,6 @@ app.listen(port, host, () => {
 
         let result = transform_server_ts("testService", temp_path);
 
-        // Should fail because server.ts doesn't exist
         assert!(result.is_err());
     }
 
@@ -348,7 +343,6 @@ app.listen(port, host, () => {
         let transformed_code = result.unwrap();
         let lines: Vec<&str> = transformed_code.lines().collect();
 
-        // Find line indices for verification
         let import_line = lines
             .iter()
             .position(|&line| {
@@ -363,7 +357,6 @@ app.listen(port, host, () => {
             .position(|&line| line.contains("app.use(testServiceRouter);"))
             .expect("App.use injection not found");
 
-        // Verify injection order: import should come before app.use
         assert!(
             import_line < app_use_line,
             "Import should be injected before app.use"

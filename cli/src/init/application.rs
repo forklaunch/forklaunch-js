@@ -622,7 +622,6 @@ impl CliCommand for ApplicationCommand {
             modules_to_test
         };
 
-        // Prompt for description
         let description = prompt_without_validation(
             &mut line_editor,
             &mut stdout,
@@ -632,7 +631,6 @@ impl CliCommand for ApplicationCommand {
             None,
         )?;
 
-        // Prompt for author
         let author = prompt_with_validation(
             &mut line_editor,
             &mut stdout,
@@ -644,7 +642,6 @@ impl CliCommand for ApplicationCommand {
             |_| "Author name cannot be empty. Please try again".to_string(),
         )?;
 
-        // Prompt for license
         let license: License = prompt_with_validation(
             &mut line_editor,
             &mut stdout,
@@ -659,7 +656,6 @@ impl CliCommand for ApplicationCommand {
 
         // TODO: Add support for libraries
 
-        // Setup dryrun, ignore files, ignore dirs, and preserve files
         let dryrun = matches.get_flag("dryrun");
         let mut ignore_files = vec!["pnpm-workspace.yaml", "pnpm-lock.yml"];
         let ignore_dirs = vec![];
@@ -671,8 +667,6 @@ impl CliCommand for ApplicationCommand {
             ignore_files.extend(test_framework.unwrap().all_other_files());
         }
         ignore_files.extend(database.all_other_files());
-
-        // Inline specific perms checks here. Make remote calls to receive templates for specific services if needed here (premium only).
 
         let mut additional_projects = vec![
             ProjectEntry {

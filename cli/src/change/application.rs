@@ -262,7 +262,6 @@ fn change_name(
         }
     }
 
-    // Handle docker-compose file separately
     if let Some(docker_compose_path) = docker_compose_path {
         let docker_compose_contents = read_to_string(docker_compose_path)?;
         let new_docker_compose_contents =
@@ -1268,7 +1267,7 @@ fn change_runtime(
                                             "pnpm",
                                             match runtime {
                                                 Runtime::Bun => "bun",
-                                                Runtime::Node => "pnpm", // No change needed
+                                                Runtime::Node => "pnpm",
                                             },
                                         );
                                         updated = true;
@@ -1283,7 +1282,7 @@ fn change_runtime(
                                         *arg = arg.replace(
                                             "bun",
                                             match runtime {
-                                                Runtime::Bun => "bun", // No change needed
+                                                Runtime::Bun => "bun",
                                                 Runtime::Node => "pnpm",
                                             },
                                         );

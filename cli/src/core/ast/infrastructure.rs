@@ -3,3 +3,4 @@ pub(crate) mod env;
 pub(crate) mod kafka;
 pub(crate) mod redis;
 pub(crate) mod s3;
+pub(crate) mod test_utils;

@@ -26,19 +26,16 @@ pub(crate) fn delete_from_sdk_client_input<'a>(
             _ => continue,
         };
 
-        // Check if this is the Sdk type definition (ends with "Sdk")
         let is_sdk_type = ts_declaration.id.name.ends_with("Sdk");
         if !is_sdk_type {
             continue;
         }
 
-        // Get the type literal from the type annotation
         let type_literal = match &mut ts_declaration.type_annotation {
             TSType::TSTypeLiteral(literal) => literal,
             _ => continue,
         };
 
-        // Remove the router property from the type definition
         let mut new_members = Vec::new_in(allocator);
         for member in &type_literal.members {
             let should_skip = match member {

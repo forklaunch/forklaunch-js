@@ -269,7 +269,6 @@ app.listen(port, () => {});
 
         let result = delete_from_server_ts_router(&allocator, &mut server_program, "nonexistent");
 
-        // Should fail because the router doesn't exist
         assert!(result.is_err());
         assert!(
             result
@@ -292,7 +291,6 @@ app.listen(port, () => {});
         let transformed_code = result.unwrap();
         let lines: Vec<&str> = transformed_code.lines().collect();
 
-        // Find indices of remaining components
         let user_factory_line = lines.iter().position(|&line| {
             line.contains("const UserServiceFactory = ci.scopedResolver(tokens.UserService);")
         });
@@ -306,7 +304,6 @@ app.listen(port, () => {});
             .iter()
             .position(|&line| line.contains("app.use(productRouter);"));
 
-        // Verify order is preserved (user comes before product in original)
         assert!(user_factory_line.is_some());
         assert!(product_factory_line.is_some());
         assert!(user_routes_line.is_some());
@@ -351,11 +348,9 @@ app.listen(port, () => {});
 
         let transformed_code = result.unwrap();
 
-        // Verify order router components are removed
         assert!(!transformed_code.contains("app.use(orderRouter);"));
         assert!(!transformed_code.contains("import { OrderRouter }"));
 
-        // Verify user router and middleware are preserved
         assert!(transformed_code.contains("app.use(userRouter);"));
         assert!(transformed_code.contains("app.use(express.json());"));
         assert!(transformed_code.contains("app.use(express.urlencoded({ extended: true }));"));
@@ -398,10 +393,8 @@ app.listen(port, () => {});
 
         let transformed_code = result.unwrap();
 
-        // Verify order router components are removed
         assert!(!transformed_code.contains("app.use(orderRouter);"));
 
-        // Verify user router is preserved
         assert!(transformed_code.contains("app.use(userRouter);"));
     }
 
@@ -432,7 +425,6 @@ app.listen(port, () => {});
 
         let transformed_code = result.unwrap();
 
-        // Verify all user router usages are removed
         assert!(!transformed_code.contains("app.use(userRouter);"));
         assert!(!transformed_code.contains("app.use('/api', userRouter);"));
         assert!(!transformed_code.contains("app.use('/v1', userRouter);"));
@@ -458,7 +450,6 @@ app.listen(3000, () => {});
 "#;
         let mut server_program = parse_ast_program(&allocator, server_content, SourceType::ts());
 
-        // Delete the second statement (index 1)
         let result = delete_from_server_ts(&mut server_program, |statements| {
             statements.iter().enumerate().find_map(|(index, stmt)| {
                 if let Statement::VariableDeclaration(expr) = stmt {
@@ -479,10 +470,8 @@ app.listen(3000, () => {});
             .build(&server_program)
             .code;
 
-        // Verify the second statement is removed
         assert!(!transformed_code.contains("const secondStatement"));
 
-        // Verify other statements are preserved
         assert!(transformed_code.contains("const firstStatement"));
         assert!(transformed_code.contains("const thirdStatement"));
     }
@@ -500,12 +489,8 @@ app.listen(3000, () => {});
 "#;
         let mut server_program = parse_ast_program(&allocator, server_content, SourceType::ts());
 
-        // Try to delete a statement that doesn't exist
-        let result = delete_from_server_ts(&mut server_program, |_statements| {
-            None // Never return a position
-        });
+        let result = delete_from_server_ts(&mut server_program, |_statements| None);
 
-        // Should fail because no match was found
         assert!(result.is_err());
         assert!(
             result
@@ -525,15 +510,10 @@ const port = 3000;
 "#;
         let mut server_program = parse_ast_program(&allocator, server_content, SourceType::ts());
 
-        // Delete the second statement (const app = express();)
-        let result = delete_from_server_ts(&mut server_program, |_statements| {
-            Some(1) // Delete the app declaration
-        });
+        let result = delete_from_server_ts(&mut server_program, |_statements| Some(1));
 
-        // Should succeed
         assert!(result.is_ok());
 
-        // Verify the statement was removed
         let transformed_code = Codegen::new()
             .with_options(CodegenOptions::default())
             .build(&server_program)

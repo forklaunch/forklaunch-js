@@ -95,7 +95,7 @@ pub(crate) fn update_application_package_json(
 
         let mut services: Vec<&str> = docker_cmd
             .split("-d")
-            .skip(1) // Skip the "docker compose up --watch" part
+            .skip(1)
             .map(str::trim)
             .filter(|s| !s.is_empty())
             .collect();

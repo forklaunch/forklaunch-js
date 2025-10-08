@@ -32,7 +32,6 @@ fn delete_from_universal_sdk_function<'a>(
         }
     }
 
-    // Remove statements in reverse order to maintain indices
     for &index in statements_to_remove.iter().rev() {
         app_program_ast.body.remove(index);
     }

@@ -34,6 +34,11 @@ use crate::{
                     transform_registrations_ts_infrastructure_redis,
                     transform_registrations_ts_infrastructure_s3,
                 },
+                transform_test_utils_ts::{
+                    transform_test_utils_add_database, transform_test_utils_add_infrastructure,
+                    transform_test_utils_remove_database,
+                    transform_test_utils_remove_infrastructure,
+                },
             },
         },
         base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
@@ -226,6 +231,23 @@ fn change_database(
         removal_templates.push(removal_template);
     }
 
+    let test_utils_path = base_path.join("__test__").join("test-utils.ts");
+    if test_utils_path.exists() {
+        let current_content = rendered_templates_cache.get(&test_utils_path)?;
+        if current_content.is_some() || std::fs::read_to_string(&test_utils_path).is_ok() {
+            let new_content = transform_test_utils_remove_database(&base_path)
+                .and_then(|_| transform_test_utils_add_database(&base_path, database))?;
+            rendered_templates_cache.insert(
+                test_utils_path.to_string_lossy(),
+                RenderedTemplate {
+                    path: test_utils_path.clone(),
+                    content: new_content,
+                    context: None,
+                },
+            );
+        }
+    }
+
     Ok(())
 }
 
@@ -306,6 +328,21 @@ fn change_infrastructure(
                     },
                 );
 
+                let test_utils_path = base_path.join("__test__").join("test-utils.ts");
+                if test_utils_path.exists() {
+                    rendered_templates_cache.insert(
+                        test_utils_path.to_string_lossy(),
+                        RenderedTemplate {
+                            path: test_utils_path.clone(),
+                            content: transform_test_utils_add_infrastructure(
+                                &base_path,
+                                &Infrastructure::Redis,
+                            )?,
+                            context: None,
+                        },
+                    );
+                }
+
                 project_package_json
                     .dependencies
                     .as_mut()
@@ -381,6 +418,21 @@ fn change_infrastructure(
                         context: None,
                     },
                 );
+
+                let test_utils_path = base_path.join("__test__").join("test-utils.ts");
+                if test_utils_path.exists() {
+                    rendered_templates_cache.insert(
+                        test_utils_path.to_string_lossy(),
+                        RenderedTemplate {
+                            path: test_utils_path.clone(),
+                            content: transform_test_utils_add_infrastructure(
+                                &base_path,
+                                &Infrastructure::S3,
+                            )?,
+                            context: None,
+                        },
+                    );
+                }
 
                 project_package_json
                     .dependencies
@@ -462,6 +514,21 @@ fn change_infrastructure(
                     },
                 );
 
+                let test_utils_path = base_path.join("__test__").join("test-utils.ts");
+                if test_utils_path.exists() {
+                    rendered_templates_cache.insert(
+                        test_utils_path.to_string_lossy(),
+                        RenderedTemplate {
+                            path: test_utils_path.clone(),
+                            content: transform_test_utils_remove_infrastructure(
+                                &base_path,
+                                &Infrastructure::Redis,
+                            )?,
+                            context: None,
+                        },
+                    );
+                }
+
                 project_package_json
                     .dependencies
                     .as_mut()
@@ -539,6 +606,21 @@ fn change_infrastructure(
                         context: None,
                     },
                 );
+
+                let test_utils_path = base_path.join("__test__").join("test-utils.ts");
+                if test_utils_path.exists() {
+                    rendered_templates_cache.insert(
+                        test_utils_path.to_string_lossy(),
+                        RenderedTemplate {
+                            path: test_utils_path.clone(),
+                            content: transform_test_utils_remove_infrastructure(
+                                &base_path,
+                                &Infrastructure::S3,
+                            )?,
+                            context: None,
+                        },
+                    );
+                }
 
                 project_package_json
                     .dependencies
