@@ -1,3 +1,4 @@
+import { getEnvVar } from '@forklaunch/common';
 import {
   BillingProviderEnum,
   CurrencyEnum,
@@ -7,11 +8,14 @@ import {
 import {
   BlueprintTestHarness,
   clearTestDatabase,
+  DatabaseType,
   TEST_TOKENS,
   TestSetupResult
 } from '@forklaunch/testing';
 import { EntityManager, MikroORM } from '@mikro-orm/core';
+import dotenv from 'dotenv';
 import Redis from 'ioredis';
+import * as path from 'path';
 import { PartyEnum } from '../domain/enum/party.enum';
 import { StatusEnum } from '../domain/enum/status.enum';
 
@@ -19,23 +23,24 @@ export { TEST_TOKENS, TestSetupResult };
 
 let harness: BlueprintTestHarness;
 
+dotenv.config({ path: path.join(__dirname, '../.env.test') });
+
 export const setupTestDatabase = async (): Promise<TestSetupResult> => {
   harness = new BlueprintTestHarness({
     getConfig: async () => {
       const { default: config } = await import('../mikro-orm.config');
       return config;
     },
-    databaseType: 'postgres',
+    databaseType: getEnvVar('DATABASE_TYPE') as DatabaseType,
     useMigrations: false,
     needsRedis: true,
     customEnvVars: {
-      STRIPE_API_KEY:
-        'sk_test_51RZHBQP4Xs9lA9sq2hCQseYbRA4tKxMyRCViZQD3mofV8gIYqOjemsdaw7BEXGMKrWjSIAn2zZsGOUy2WT5If2W900LGUSgHq0',
-      STRIPE_WEBHOOK_SECRET: 'whsec_test_1234567890abcdefghijklmnopqrstuvwxyz'
+      STRIPE_API_KEY: getEnvVar('STRIPE_API_KEY'),
+      STRIPE_WEBHOOK_SECRET: getEnvVar('STRIPE_WEBHOOK_SECRET')
     },
     onSetup: async () => {
       const Stripe = (await import('stripe')).default;
-      const stripe = new Stripe(process.env.STRIPE_API_KEY!);
+      const stripe = new Stripe(getEnvVar('STRIPE_API_KEY'));
 
       const paymentMethod = await stripe.paymentMethods.create({
         type: 'card',
@@ -160,7 +165,7 @@ export const setupTestData = async (em: EntityManager) => {
 
 export const getMockPlanData = () => ({
   active: true,
-  name: process.env.TEST_PRODUCT_ID!,
+  name: getEnvVar('TEST_PRODUCT_ID'),
   description: 'A new test plan',
   price: 1999,
   currency: CurrencyEnum.USD,
@@ -176,7 +181,7 @@ export const mockPlanData = getMockPlanData();
 export const getMockUpdatePlanData = () => ({
   id: '123e4567-e89b-12d3-a456-426614174002',
   active: false,
-  name: process.env.TEST_PRODUCT_ID!,
+  name: getEnvVar('TEST_PRODUCT_ID'),
   description: 'An updated test plan',
   price: 3999,
   currency: CurrencyEnum.USD,
@@ -189,11 +194,11 @@ export const getMockUpdatePlanData = () => ({
 export const mockUpdatePlanData = getMockUpdatePlanData();
 
 export const getMockSubscriptionData = () => ({
-  partyId: process.env.TEST_CUSTOMER_ID!,
+  partyId: getEnvVar('TEST_CUSTOMER_ID'),
   partyType: PartyEnum.USER,
   description: 'New subscription',
   active: true,
-  productId: process.env.TEST_PLAN_ID!,
+  productId: getEnvVar('TEST_PLAN_ID'),
   externalId: 'sub_new_123',
   billingProvider: BillingProviderEnum.STRIPE,
   startDate: new Date(),
@@ -208,11 +213,11 @@ export const mockSubscriptionData = {
 
 export const getMockUpdateSubscriptionData = () => ({
   id: '123e4567-e89b-12d3-a456-426614174003',
-  partyId: process.env.TEST_CUSTOMER_ID!,
+  partyId: getEnvVar('TEST_CUSTOMER_ID'),
   partyType: 'user' as const,
   description: 'Updated subscription',
   active: false,
-  productId: process.env.TEST_PLAN_ID!,
+  productId: getEnvVar('TEST_PLAN_ID'),
   externalId: 'sub_updated_123',
   billingProvider: 'stripe' as const,
   startDate: new Date(),
@@ -225,7 +230,7 @@ export const mockUpdateSubscriptionData = {
 };
 
 export const getMockCheckoutSessionData = () => ({
-  customerId: process.env.TEST_CUSTOMER_ID!,
+  customerId: getEnvVar('TEST_CUSTOMER_ID'),
   paymentMethods: [PaymentMethodEnum.CARD],
   currency: CurrencyEnum.USD,
   uri: 'https://checkout.stripe.com/c/pay/new_123',
@@ -236,7 +241,7 @@ export const getMockCheckoutSessionData = () => ({
   stripeFields: {
     line_items: [
       {
-        price: process.env.TEST_PLAN_ID!,
+        price: getEnvVar('TEST_PLAN_ID'),
         quantity: 1
       }
     ]
@@ -270,7 +275,7 @@ export const mockPaymentLinkData = {
 
 export const getMockBillingPortalData = () => ({
   id: '123e4567-e89b-12d3-a456-426614174006',
-  customerId: process.env.TEST_CUSTOMER_ID!,
+  customerId: getEnvVar('TEST_CUSTOMER_ID'),
   returnUrl: 'https://example.com/billing',
   billingProvider: 'stripe' as const,
   expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),

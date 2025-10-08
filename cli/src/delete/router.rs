@@ -28,7 +28,10 @@ use crate::{
                 delete_import_statement::delete_import_statement,
             },
             parse_ast_program::parse_ast_program,
-            transformations::transform_controllers_index_ts::transform_controllers_index_ts_delete,
+            transformations::{
+                transform_controllers_index_ts::transform_controllers_index_ts_delete,
+                transform_test_utils_ts::transform_test_utils_remove_router,
+            },
         },
         base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
         command::command,
@@ -281,6 +284,14 @@ impl CliCommand for RouterCommand {
         let new_sdk_content =
             delete_from_sdk_client_input(&allocator, &mut sdk_program, &camel_case_name)?;
 
+        let new_test_utils_content = transform_test_utils_remove_router(
+            &router_base_path,
+            &camel_case_name,
+            &pascal_case_name,
+        )?;
+
+        let test_utils_path = router_base_path.join("__test__").join("test-utils.ts");
+
         write_rendered_templates(
             &vec![
                 RenderedTemplate {
@@ -321,6 +332,11 @@ impl CliCommand for RouterCommand {
                 RenderedTemplate {
                     path: controllers_path,
                     content: new_controllers_index_content,
+                    context: Some(ERROR_FAILED_TO_WRITE_SERVICE_FILES.to_string()),
+                },
+                RenderedTemplate {
+                    path: test_utils_path,
+                    content: new_test_utils_content,
                     context: Some(ERROR_FAILED_TO_WRITE_SERVICE_FILES.to_string()),
                 },
             ],

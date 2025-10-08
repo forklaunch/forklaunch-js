@@ -300,12 +300,16 @@ pub(crate) const MIKRO_ORM_CLI_VERSION: &str = "^6.5.7";
 pub(crate) const TYPES_EXPRESS_VERSION: &str = "^5.0.3";
 // @types/express-serve-static-core
 pub(crate) const TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION: &str = "^5.1.0";
-// @types/qs
-pub(crate) const TYPES_QS_VERSION: &str = "^6.14.0";
-// typedoc
-pub(crate) const TYPEDOC_VERSION: &str = "^0.28.13";
+// @types/jest
+pub(crate) const TYPES_JEST_VERSION: &str = "^30.0.0";
 // @types/uuid
 pub(crate) const TYPES_UUID_VERSION: &str = "^11.0.0";
+// @types/qs
+pub(crate) const TYPES_QS_VERSION: &str = "^6.14.0";
+// ioredis
+pub(crate) const IOREDIS_VERSION: &str = "^5.3.5";
+// typedoc
+pub(crate) const TYPEDOC_VERSION: &str = "^0.28.13";
 
 // Project package.json scripts constants
 pub(crate) const PROJECT_BUILD_SCRIPT: &str = "tsc";

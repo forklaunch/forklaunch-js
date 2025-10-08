@@ -1,15 +1,20 @@
+import { getEnvVar } from '@forklaunch/common';
 import {
   BlueprintTestHarness,
   clearTestDatabase,
+  DatabaseType,
   TEST_TOKENS,
   TestSetupResult
 } from '@forklaunch/testing';
 import { EntityManager, MikroORM } from '@mikro-orm/core';
+import dotenv from 'dotenv';
 import * as path from 'path';
 
 export { TEST_TOKENS, TestSetupResult };
 
 let harness: BlueprintTestHarness;
+
+dotenv.config({ path: path.join(__dirname, '../.env.test') });
 
 export const setupTestDatabase = async (): Promise<TestSetupResult> => {
   harness = new BlueprintTestHarness({
@@ -17,13 +22,15 @@ export const setupTestDatabase = async (): Promise<TestSetupResult> => {
       const { default: config } = await import('../mikro-orm.config');
       return config;
     },
-    databaseType: 'postgres',
+    databaseType: getEnvVar('DATABASE_TYPE') as DatabaseType,
     useMigrations: true,
     migrationsPath: path.join(__dirname, '../migrations'),
     customEnvVars: {
-      PASSWORD_ENCRYPTION_SECRET: 'test-password-secret-key-for-testing',
-      PASSWORD_ENCRYPTION_SECRET_PATH: '/tmp/test-password-secret.txt',
-      CORS_ORIGINS: 'http://localhost:3000'
+      PASSWORD_ENCRYPTION_SECRET: getEnvVar('PASSWORD_ENCRYPTION_SECRET'),
+      PASSWORD_ENCRYPTION_SECRET_PATH: getEnvVar(
+        'PASSWORD_ENCRYPTION_SECRET_PATH'
+      ),
+      CORS_ORIGINS: getEnvVar('CORS_ORIGINS')
     }
   });
 

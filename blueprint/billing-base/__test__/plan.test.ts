@@ -123,10 +123,11 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
 
   describe('GET /plan/:id - getPlan', () => {
     it('should retrieve an existing plan successfully', async () => {
-      const { createPlanRoute: createPlan, getPlanRoute: getPlan } =
-        await import('../api/routes/plan.routes');
+      const { createPlanRoute, getPlanRoute } = await import(
+        '../api/routes/plan.routes'
+      );
 
-      const createResponse = await createPlan.sdk.createPlan({
+      const createResponse = await createPlanRoute.sdk.createPlan({
         body: mockPlanData,
         headers: {
           authorization: TEST_TOKENS.HMAC
@@ -138,7 +139,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
       }
       const planId = createResponse.response.id;
 
-      const response = await getPlan.sdk.getPlan({
+      const response = await getPlanRoute.sdk.getPlan({
         params: { id: planId },
         headers: {
           authorization: TEST_TOKENS.HMAC
@@ -162,12 +163,10 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
     });
 
     it('should handle non-existent plan ID', async () => {
-      const { getPlanRoute: getPlan } = await import(
-        '../api/routes/plan.routes'
-      );
+      const { getPlanRoute } = await import('../api/routes/plan.routes');
 
       try {
-        await getPlan.sdk.getPlan({
+        await getPlanRoute.sdk.getPlan({
           params: { id: '123e4567-e89b-12d3-a456-426614174999' },
           headers: {
             authorization: TEST_TOKENS.HMAC
@@ -180,12 +179,10 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
     });
 
     it('should handle invalid UUID format', async () => {
-      const { getPlanRoute: getPlan } = await import(
-        '../api/routes/plan.routes'
-      );
+      const { getPlanRoute } = await import('../api/routes/plan.routes');
 
       try {
-        await getPlan.sdk.getPlan({
+        await getPlanRoute.sdk.getPlan({
           params: { id: 'invalid-uuid' },
           headers: {
             authorization: TEST_TOKENS.HMAC
@@ -200,10 +197,11 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
 
   describe('PUT /plan - updatePlan', () => {
     it('should update an existing plan successfully', async () => {
-      const { createPlanRoute: createPlan, updatePlanRoute: updatePlan } =
-        await import('../api/routes/plan.routes');
+      const { createPlanRoute, updatePlanRoute } = await import(
+        '../api/routes/plan.routes'
+      );
 
-      const createResponse = await createPlan.sdk.createPlan({
+      const createResponse = await createPlanRoute.sdk.createPlan({
         body: mockPlanData,
         headers: {
           authorization: TEST_TOKENS.HMAC
@@ -219,7 +217,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
         id: planId
       };
 
-      const response = await updatePlan.sdk.updatePlan({
+      const response = await updatePlanRoute.sdk.updatePlan({
         body: updateData,
         headers: {
           authorization: TEST_TOKENS.HMAC
@@ -244,9 +242,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
     });
 
     it('should handle updating non-existent plan', async () => {
-      const { updatePlanRoute: updatePlan } = await import(
-        '../api/routes/plan.routes'
-      );
+      const { updatePlanRoute } = await import('../api/routes/plan.routes');
 
       const updateData = {
         ...mockUpdatePlanData,
@@ -254,7 +250,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
       };
 
       try {
-        await updatePlan.sdk.updatePlan({
+        await updatePlanRoute.sdk.updatePlan({
           body: updateData,
           headers: {
             authorization: TEST_TOKENS.HMAC
@@ -267,10 +263,11 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
     });
 
     it('should handle validation errors when updating plan', async () => {
-      const { createPlanRoute: createPlan, updatePlanRoute: updatePlan } =
-        await import('../api/routes/plan.routes');
+      const { createPlanRoute, updatePlanRoute } = await import(
+        '../api/routes/plan.routes'
+      );
 
-      const createResponse = await createPlan.sdk.createPlan({
+      const createResponse = await createPlanRoute.sdk.createPlan({
         body: mockPlanData,
         headers: {
           authorization: TEST_TOKENS.HMAC
@@ -289,7 +286,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
       };
 
       try {
-        await updatePlan.sdk.updatePlan({
+        await updatePlanRoute.sdk.updatePlan({
           body: invalidUpdateData,
           headers: {
             authorization: TEST_TOKENS.HMAC
@@ -304,10 +301,11 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
 
   describe('DELETE /plan/:id - deletePlan', () => {
     it('should delete an existing plan successfully', async () => {
-      const { createPlanRoute: createPlan, deletePlanRoute: deletePlan } =
-        await import('../api/routes/plan.routes');
+      const { createPlanRoute, deletePlanRoute } = await import(
+        '../api/routes/plan.routes'
+      );
 
-      const createResponse = await createPlan.sdk.createPlan({
+      const createResponse = await createPlanRoute.sdk.createPlan({
         body: mockPlanData,
         headers: {
           authorization: TEST_TOKENS.HMAC
@@ -319,7 +317,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
       }
       const planId = createResponse.response.id;
 
-      const response = await deletePlan.sdk.deletePlan({
+      const response = await deletePlanRoute.sdk.deletePlan({
         params: { id: planId },
         headers: {
           authorization: TEST_TOKENS.HMAC
@@ -331,12 +329,10 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
     });
 
     it('should handle deleting non-existent plan', async () => {
-      const { deletePlanRoute: deletePlan } = await import(
-        '../api/routes/plan.routes'
-      );
+      const { deletePlanRoute } = await import('../api/routes/plan.routes');
 
       try {
-        await deletePlan.sdk.deletePlan({
+        await deletePlanRoute.sdk.deletePlan({
           params: { id: '123e4567-e89b-12d3-a456-426614174999' },
           headers: {
             authorization: TEST_TOKENS.HMAC
@@ -351,7 +347,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
 
   describe('GET /plan - listPlans', () => {
     it('should list all plans when no IDs provided', async () => {
-      const { createPlanRoute, listPlansRoute: listPlans } = await import(
+      const { createPlanRoute, listPlansRoute } = await import(
         '../api/routes/plan.routes'
       );
 
@@ -373,7 +369,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
         }
       });
 
-      const response = await listPlans.sdk.listPlans({
+      const response = await listPlansRoute.sdk.listPlans({
         query: { ids: [] },
         headers: {
           authorization: TEST_TOKENS.HMAC
@@ -395,17 +391,18 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
     });
 
     it('should list specific plans when IDs provided', async () => {
-      const { createPlanRoute: createPlan, listPlansRoute: listPlans } =
-        await import('../api/routes/plan.routes');
+      const { createPlanRoute, listPlansRoute } = await import(
+        '../api/routes/plan.routes'
+      );
 
-      const plan1Response = await createPlan.sdk.createPlan({
+      const plan1Response = await createPlanRoute.sdk.createPlan({
         body: mockPlanData,
         headers: {
           authorization: TEST_TOKENS.HMAC
         }
       });
 
-      const plan2Response = await createPlan.sdk.createPlan({
+      const plan2Response = await createPlanRoute.sdk.createPlan({
         body: {
           ...mockPlanData,
           name: 'Second Plan',
@@ -420,7 +417,7 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
         throw new Error('Failed to create plans');
       }
 
-      const response = await listPlans.sdk.listPlans({
+      const response = await listPlansRoute.sdk.listPlans({
         query: {
           ids: [plan1Response.response.id, plan2Response.response.id]
         },
@@ -442,11 +439,9 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
     });
 
     it('should return empty array when no plans match provided IDs', async () => {
-      const { listPlansRoute: listPlans } = await import(
-        '../api/routes/plan.routes'
-      );
+      const { listPlansRoute } = await import('../api/routes/plan.routes');
 
-      const response = await listPlans.sdk.listPlans({
+      const response = await listPlansRoute.sdk.listPlans({
         query: {
           ids: ['123e4567-e89b-12d3-a456-426614174999']
         },
@@ -477,12 +472,10 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
     });
 
     it('should require HMAC authentication for getPlan', async () => {
-      const { getPlanRoute: getPlan } = await import(
-        '../api/routes/plan.routes'
-      );
+      const { getPlanRoute } = await import('../api/routes/plan.routes');
 
       try {
-        await getPlan.sdk.getPlan({
+        await getPlanRoute.sdk.getPlan({
           params: { id: '123e4567-e89b-12d3-a456-426614174000' },
           headers: {
             authorization: TEST_TOKENS.HMAC_INVALID
@@ -495,12 +488,10 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
     });
 
     it('should require HMAC authentication for updatePlan', async () => {
-      const { updatePlanRoute: updatePlan } = await import(
-        '../api/routes/plan.routes'
-      );
+      const { updatePlanRoute } = await import('../api/routes/plan.routes');
 
       try {
-        await updatePlan.sdk.updatePlan({
+        await updatePlanRoute.sdk.updatePlan({
           body: {
             ...mockUpdatePlanData,
             id: '123e4567-e89b-12d3-a456-426614174000'
@@ -516,12 +507,10 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
     });
 
     it('should require HMAC authentication for deletePlan', async () => {
-      const { deletePlanRoute: deletePlan } = await import(
-        '../api/routes/plan.routes'
-      );
+      const { deletePlanRoute } = await import('../api/routes/plan.routes');
 
       try {
-        await deletePlan.sdk.deletePlan({
+        await deletePlanRoute.sdk.deletePlan({
           params: { id: '123e4567-e89b-12d3-a456-426614174000' },
           headers: {
             authorization: TEST_TOKENS.HMAC_INVALID
@@ -534,12 +523,10 @@ describe('Plan Routes E2E Tests with PostgreSQL Container', () => {
     });
 
     it('should require HMAC authentication for listPlans', async () => {
-      const { listPlansRoute: listPlans } = await import(
-        '../api/routes/plan.routes'
-      );
+      const { listPlansRoute } = await import('../api/routes/plan.routes');
 
       try {
-        await listPlans.sdk.listPlans({
+        await listPlansRoute.sdk.listPlans({
           query: { ids: [] },
           headers: {
             authorization: TEST_TOKENS.HMAC_INVALID

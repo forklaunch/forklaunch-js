@@ -143,6 +143,8 @@ macro_rules! internal_config_struct {
             $vis pascal_case_app_name: String,
             #[serde(skip_serializing, skip_deserializing)]
             $vis kebab_case_app_name: String,
+            #[serde(skip_serializing, skip_deserializing)]
+            $vis title_case_app_name: String,
             $vis app_description: String,
             $vis linter: String,
             $vis formatter: String,
@@ -239,6 +241,7 @@ macro_rules! config_struct {
                         camel_case_app_name: shadow.camel_case_app_name.clone(),
                         pascal_case_app_name: shadow.pascal_case_app_name.clone(),
                         kebab_case_app_name: shadow.kebab_case_app_name.clone(),
+                        title_case_app_name: shadow.title_case_app_name.clone(),
                         app_description: shadow.app_description.clone(),
                         linter: shadow.linter.clone(),
                         formatter: shadow.formatter.clone(),

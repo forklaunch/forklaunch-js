@@ -540,6 +540,8 @@ pub(crate) struct ProjectDevDependencies {
     pub(crate) mikro_orm_cli: Option<String>,
     #[serde(rename = "@types/express", skip_serializing_if = "Option::is_none")]
     pub(crate) types_express: Option<String>,
+    #[serde(rename = "@types/jest", skip_serializing_if = "Option::is_none")]
+    pub(crate) types_jest: Option<String>,
     #[serde(
         rename = "@types/express-serve-static-core",
         skip_serializing_if = "Option::is_none"
@@ -557,6 +559,8 @@ pub(crate) struct ProjectDevDependencies {
     pub(crate) prettier: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) tsx: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) ioredis: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) typedoc: Option<String>,
     #[serde(rename = "typescript-eslint", skip_serializing_if = "Option::is_none")]
@@ -591,12 +595,14 @@ impl<'de> Deserialize<'de> for ProjectDevDependencies {
                     mikro_orm_cli: None,
                     types_express: None,
                     types_express_serve_static_core: None,
+                    types_jest: None,
                     types_qs: None,
                     types_uuid: None,
                     eslint: None,
                     oxlint: None,
                     prettier: None,
                     tsx: None,
+                    ioredis: None,
                     typedoc: None,
                     typescript_eslint: None,
                     additional_deps: HashMap::new(),
@@ -612,6 +618,7 @@ impl<'de> Deserialize<'de> for ProjectDevDependencies {
                         "@types/express-serve-static-core" => {
                             deps.types_express_serve_static_core = Some(value)
                         }
+                        "@types/jest" => deps.types_jest = Some(value),
                         "@types/qs" => deps.types_qs = Some(value),
                         "@types/uuid" => deps.types_uuid = Some(value),
                         "eslint" => deps.eslint = Some(value),

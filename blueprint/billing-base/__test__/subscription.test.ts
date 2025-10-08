@@ -33,11 +33,11 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
 
   describe('POST /subscription - createSubscription', () => {
     it('should create a subscription successfully', async () => {
-      const { createSubscriptionRoute: createSubscription } = await import(
+      const { createSubscriptionRoute } = await import(
         '../api/routes/subscription.routes'
       );
 
-      const response = await createSubscription.sdk.createSubscription({
+      const response = await createSubscriptionRoute.sdk.createSubscription({
         body: mockSubscriptionData,
         headers: {
           authorization: TEST_TOKENS.HMAC
@@ -62,7 +62,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
     });
 
     it('should handle validation errors when creating subscription', async () => {
-      const { createSubscriptionRoute: createSubscription } = await import(
+      const { createSubscriptionRoute } = await import(
         '../api/routes/subscription.routes'
       );
 
@@ -73,7 +73,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
       };
 
       try {
-        await createSubscription.sdk.createSubscription({
+        await createSubscriptionRoute.sdk.createSubscription({
           body: invalidData,
           headers: {
             authorization: TEST_TOKENS.HMAC
@@ -86,7 +86,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
     });
 
     it('should handle invalid party type enum', async () => {
-      const { createSubscriptionRoute: createSubscription } = await import(
+      const { createSubscriptionRoute } = await import(
         '../api/routes/subscription.routes'
       );
 
@@ -96,7 +96,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
       };
 
       try {
-        await createSubscription.sdk.createSubscription({
+        await createSubscriptionRoute.sdk.createSubscription({
           body: invalidData,
           headers: {
             authorization: TEST_TOKENS.HMAC
@@ -109,7 +109,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
     });
 
     it('should handle invalid billing provider enum', async () => {
-      const { createSubscriptionRoute: createSubscription } = await import(
+      const { createSubscriptionRoute } = await import(
         '../api/routes/subscription.routes'
       );
 
@@ -119,7 +119,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
       };
 
       try {
-        await createSubscription.sdk.createSubscription({
+        await createSubscriptionRoute.sdk.createSubscription({
           body: invalidData,
           headers: {
             authorization: TEST_TOKENS.HMAC
@@ -134,24 +134,24 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
 
   describe('GET /subscription/:id - getSubscription', () => {
     it('should retrieve an existing subscription successfully', async () => {
-      const {
-        createSubscriptionRoute: createSubscription,
-        getSubscriptionRoute: getSubscription
-      } = await import('../api/routes/subscription.routes');
+      const { createSubscriptionRoute, getSubscriptionRoute } = await import(
+        '../api/routes/subscription.routes'
+      );
 
-      const createResponse = await createSubscription.sdk.createSubscription({
-        body: mockSubscriptionData,
-        headers: {
-          authorization: TEST_TOKENS.HMAC
-        }
-      });
+      const createResponse =
+        await createSubscriptionRoute.sdk.createSubscription({
+          body: mockSubscriptionData,
+          headers: {
+            authorization: TEST_TOKENS.HMAC
+          }
+        });
 
       if (createResponse.code !== 200) {
         throw new Error('Failed to create subscription');
       }
       const subscriptionId = createResponse.response.id;
 
-      const response = await getSubscription.sdk.getSubscription({
+      const response = await getSubscriptionRoute.sdk.getSubscription({
         params: { id: subscriptionId },
         headers: {
           authorization: TEST_TOKENS.HMAC
@@ -176,12 +176,12 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
     });
 
     it('should handle non-existent subscription ID', async () => {
-      const { getSubscriptionRoute: getSubscription } = await import(
+      const { getSubscriptionRoute } = await import(
         '../api/routes/subscription.routes'
       );
 
       try {
-        await getSubscription.sdk.getSubscription({
+        await getSubscriptionRoute.sdk.getSubscription({
           params: { id: '123e4567-e89b-12d3-a456-426614174999' },
           headers: {
             authorization: TEST_TOKENS.HMAC
@@ -194,12 +194,12 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
     });
 
     it('should handle invalid UUID format', async () => {
-      const { getSubscriptionRoute: getSubscription } = await import(
+      const { getSubscriptionRoute } = await import(
         '../api/routes/subscription.routes'
       );
 
       try {
-        await getSubscription.sdk.getSubscription({
+        await getSubscriptionRoute.sdk.getSubscription({
           params: { id: 'invalid-uuid' },
           headers: {
             authorization: TEST_TOKENS.HMAC
@@ -214,17 +214,17 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
 
   describe('PUT /subscription - updateSubscription', () => {
     it('should update an existing subscription successfully', async () => {
-      const {
-        createSubscriptionRoute: createSubscription,
-        updateSubscriptionRoute: updateSubscription
-      } = await import('../api/routes/subscription.routes');
+      const { createSubscriptionRoute, updateSubscriptionRoute } = await import(
+        '../api/routes/subscription.routes'
+      );
 
-      const createResponse = await createSubscription.sdk.createSubscription({
-        body: mockSubscriptionData,
-        headers: {
-          authorization: TEST_TOKENS.HMAC
-        }
-      });
+      const createResponse =
+        await createSubscriptionRoute.sdk.createSubscription({
+          body: mockSubscriptionData,
+          headers: {
+            authorization: TEST_TOKENS.HMAC
+          }
+        });
 
       if (createResponse.code !== 200) {
         throw new Error('Failed to create subscription');
@@ -235,7 +235,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
         id: subscriptionId
       };
 
-      const response = await updateSubscription.sdk.updateSubscription({
+      const response = await updateSubscriptionRoute.sdk.updateSubscription({
         params: { id: subscriptionId },
         body: updateData,
         headers: {
@@ -262,7 +262,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
     });
 
     it('should handle updating non-existent subscription', async () => {
-      const { updateSubscriptionRoute: updateSubscription } = await import(
+      const { updateSubscriptionRoute } = await import(
         '../api/routes/subscription.routes'
       );
 
@@ -272,7 +272,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
       };
 
       try {
-        await updateSubscription.sdk.updateSubscription({
+        await updateSubscriptionRoute.sdk.updateSubscription({
           params: { id: '123e4567-e89b-12d3-a456-426614174999' },
           body: updateData,
           headers: {
@@ -286,17 +286,17 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
     });
 
     it('should handle validation errors when updating subscription', async () => {
-      const {
-        createSubscriptionRoute: createSubscription,
-        updateSubscriptionRoute: updateSubscription
-      } = await import('../api/routes/subscription.routes');
+      const { createSubscriptionRoute, updateSubscriptionRoute } = await import(
+        '../api/routes/subscription.routes'
+      );
 
-      const createResponse = await createSubscription.sdk.createSubscription({
-        body: mockSubscriptionData,
-        headers: {
-          authorization: TEST_TOKENS.HMAC
-        }
-      });
+      const createResponse =
+        await createSubscriptionRoute.sdk.createSubscription({
+          body: mockSubscriptionData,
+          headers: {
+            authorization: TEST_TOKENS.HMAC
+          }
+        });
 
       if (createResponse.code !== 200) {
         throw new Error('Failed to create subscription');
@@ -310,7 +310,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
       };
 
       try {
-        await updateSubscription.sdk.updateSubscription({
+        await updateSubscriptionRoute.sdk.updateSubscription({
           params: { id: subscriptionId },
           body: invalidUpdateData,
           headers: {
@@ -326,24 +326,24 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
 
   describe('DELETE /subscription/:id - deleteSubscription', () => {
     it('should delete an existing subscription successfully', async () => {
-      const {
-        createSubscriptionRoute: createSubscription,
-        deleteSubscriptionRoute: deleteSubscription
-      } = await import('../api/routes/subscription.routes');
+      const { createSubscriptionRoute, deleteSubscriptionRoute } = await import(
+        '../api/routes/subscription.routes'
+      );
 
-      const createResponse = await createSubscription.sdk.createSubscription({
-        body: mockSubscriptionData,
-        headers: {
-          authorization: TEST_TOKENS.HMAC
-        }
-      });
+      const createResponse =
+        await createSubscriptionRoute.sdk.createSubscription({
+          body: mockSubscriptionData,
+          headers: {
+            authorization: TEST_TOKENS.HMAC
+          }
+        });
 
       if (createResponse.code !== 200) {
         throw new Error('Failed to create subscription');
       }
       const subscriptionId = createResponse.response.id;
 
-      const response = await deleteSubscription.sdk.deleteSubscription({
+      const response = await deleteSubscriptionRoute.sdk.deleteSubscription({
         params: { id: subscriptionId },
         headers: {
           authorization: TEST_TOKENS.HMAC
@@ -355,12 +355,12 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
     });
 
     it('should handle deleting non-existent subscription', async () => {
-      const { deleteSubscriptionRoute: deleteSubscription } = await import(
+      const { deleteSubscriptionRoute } = await import(
         '../api/routes/subscription.routes'
       );
 
       try {
-        await deleteSubscription.sdk.deleteSubscription({
+        await deleteSubscriptionRoute.sdk.deleteSubscription({
           params: { id: '123e4567-e89b-12d3-a456-426614174999' },
           headers: {
             authorization: TEST_TOKENS.HMAC
@@ -375,19 +375,18 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
 
   describe('GET /subscription - listSubscriptions', () => {
     it('should list all subscriptions when no IDs provided', async () => {
-      const {
-        createSubscriptionRoute: createSubscription,
-        listSubscriptionsRoute: listSubscriptions
-      } = await import('../api/routes/subscription.routes');
+      const { createSubscriptionRoute, listSubscriptionsRoute } = await import(
+        '../api/routes/subscription.routes'
+      );
 
-      await createSubscription.sdk.createSubscription({
+      await createSubscriptionRoute.sdk.createSubscription({
         body: mockSubscriptionData,
         headers: {
           authorization: TEST_TOKENS.HMAC
         }
       });
 
-      await createSubscription.sdk.createSubscription({
+      await createSubscriptionRoute.sdk.createSubscription({
         body: {
           ...mockSubscriptionData,
           partyId: '123e4567-e89b-12d3-a456-426614174001',
@@ -398,7 +397,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
         }
       });
 
-      const response = await listSubscriptions.sdk.listSubscriptions({
+      const response = await listSubscriptionsRoute.sdk.listSubscriptions({
         headers: {
           authorization: TEST_TOKENS.HMAC
         }
@@ -420,13 +419,12 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
     });
 
     it('should list specific subscriptions when IDs provided', async () => {
-      const {
-        createSubscriptionRoute: createSubscription,
-        listSubscriptionsRoute: listSubscriptions
-      } = await import('../api/routes/subscription.routes');
+      const { createSubscriptionRoute, listSubscriptionsRoute } = await import(
+        '../api/routes/subscription.routes'
+      );
 
       const subscription1Response =
-        await createSubscription.sdk.createSubscription({
+        await createSubscriptionRoute.sdk.createSubscription({
           body: mockSubscriptionData,
           headers: {
             authorization: TEST_TOKENS.HMAC
@@ -434,7 +432,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
         });
 
       const subscription2Response =
-        await createSubscription.sdk.createSubscription({
+        await createSubscriptionRoute.sdk.createSubscription({
           body: {
             ...mockSubscriptionData,
             partyId: '123e4567-e89b-12d3-a456-426614174001',
@@ -452,7 +450,7 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
         throw new Error('Failed to create subscriptions');
       }
 
-      const response = await listSubscriptions.sdk.listSubscriptions({
+      const response = await listSubscriptionsRoute.sdk.listSubscriptions({
         query: {
           ids: [
             subscription1Response.response.id,
@@ -477,11 +475,11 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
     });
 
     it('should return empty array when no subscriptions match provided IDs', async () => {
-      const { listSubscriptionsRoute: listSubscriptions } = await import(
+      const { listSubscriptionsRoute } = await import(
         '../api/routes/subscription.routes'
       );
 
-      const response = await listSubscriptions.sdk.listSubscriptions({
+      const response = await listSubscriptionsRoute.sdk.listSubscriptions({
         query: {
           ids: ['123e4567-e89b-12d3-a456-426614174999']
         },
@@ -497,12 +495,12 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
 
   describe('Authentication', () => {
     it('should require HMAC authentication for createSubscription', async () => {
-      const { createSubscriptionRoute: createSubscription } = await import(
+      const { createSubscriptionRoute } = await import(
         '../api/routes/subscription.routes'
       );
 
       try {
-        await createSubscription.sdk.createSubscription({
+        await createSubscriptionRoute.sdk.createSubscription({
           body: mockSubscriptionData,
           headers: {
             authorization: TEST_TOKENS.HMAC_INVALID
@@ -515,12 +513,12 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
     });
 
     it('should require HMAC authentication for getSubscription', async () => {
-      const { getSubscriptionRoute: getSubscription } = await import(
+      const { getSubscriptionRoute } = await import(
         '../api/routes/subscription.routes'
       );
 
       try {
-        await getSubscription.sdk.getSubscription({
+        await getSubscriptionRoute.sdk.getSubscription({
           params: { id: '123e4567-e89b-12d3-a456-426614174000' },
           headers: {
             authorization: TEST_TOKENS.HMAC_INVALID
@@ -533,12 +531,12 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
     });
 
     it('should require HMAC authentication for updateSubscription', async () => {
-      const { updateSubscriptionRoute: updateSubscription } = await import(
+      const { updateSubscriptionRoute } = await import(
         '../api/routes/subscription.routes'
       );
 
       try {
-        await updateSubscription.sdk.updateSubscription({
+        await updateSubscriptionRoute.sdk.updateSubscription({
           params: { id: '123e4567-e89b-12d3-a456-426614174000' },
           body: {
             ...mockUpdateSubscriptionData,
@@ -555,12 +553,12 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
     });
 
     it('should require HMAC authentication for deleteSubscription', async () => {
-      const { deleteSubscriptionRoute: deleteSubscription } = await import(
+      const { deleteSubscriptionRoute } = await import(
         '../api/routes/subscription.routes'
       );
 
       try {
-        await deleteSubscription.sdk.deleteSubscription({
+        await deleteSubscriptionRoute.sdk.deleteSubscription({
           params: { id: '123e4567-e89b-12d3-a456-426614174000' },
           headers: {
             authorization: TEST_TOKENS.HMAC_INVALID
@@ -573,12 +571,12 @@ describe('Subscription Routes E2E Tests with PostgreSQL Container', () => {
     });
 
     it('should require HMAC authentication for listSubscriptions', async () => {
-      const { listSubscriptionsRoute: listSubscriptions } = await import(
+      const { listSubscriptionsRoute } = await import(
         '../api/routes/subscription.routes'
       );
 
       try {
-        await listSubscriptions.sdk.listSubscriptions({
+        await listSubscriptionsRoute.sdk.listSubscriptions({
           query: { ids: [] },
           headers: {
             authorization: TEST_TOKENS.HMAC_INVALID

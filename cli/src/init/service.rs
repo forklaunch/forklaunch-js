@@ -52,13 +52,13 @@ use crate::{
                 BIOME_VERSION, COMMON_VERSION, CORE_VERSION, DOTENV_VERSION, ESLINT_VERSION,
                 EXPRESS_VERSION, HYPER_EXPRESS_VERSION, IAM_BASE_VERSION, IAM_INTERFACES_VERSION,
                 INFRASTRUCTURE_REDIS_VERSION, INFRASTRUCTURE_S3_VERSION, INTERNAL_VERSION,
-                JOSE_VERSION, MIKRO_ORM_CLI_VERSION, MIKRO_ORM_CORE_VERSION,
+                IOREDIS_VERSION, JOSE_VERSION, MIKRO_ORM_CLI_VERSION, MIKRO_ORM_CORE_VERSION,
                 MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
                 MIKRO_ORM_REFLECTION_VERSION, MIKRO_ORM_SEEDER_VERSION, OPENTELEMETRY_API_VERSION,
                 OXLINT_VERSION, PRETTIER_VERSION, PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT,
                 PROJECT_SEED_SCRIPT, SQLITE3_VERSION, STRIPE_VERSION, TESTING_VERSION, TSX_VERSION,
                 TYPEBOX_VERSION, TYPEDOC_VERSION, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION,
-                TYPES_EXPRESS_VERSION, TYPES_QS_VERSION, TYPES_UUID_VERSION,
+                TYPES_EXPRESS_VERSION, TYPES_JEST_VERSION, TYPES_QS_VERSION, TYPES_UUID_VERSION,
                 TYPESCRIPT_ESLINT_VERSION, UUID_VERSION, VALIDATOR_VERSION, ZOD_VERSION,
                 project_clean_script, project_dev_local_script, project_dev_server_script,
                 project_format_script, project_lint_fix_script, project_lint_script,
@@ -105,6 +105,7 @@ fn generate_basic_service(
     let ignore_files = vec![];
     let ignore_dirs = vec![];
     let preserve_files = vec![];
+
     let mut rendered_templates = generate_with_template(
         None,
         &template_dir,
@@ -114,6 +115,7 @@ fn generate_basic_service(
         &preserve_files,
         dryrun,
     )?;
+
     rendered_templates.push(generate_service_package_json(
         manifest_data,
         &output_path,
@@ -122,16 +124,20 @@ fn generate_basic_service(
         None,
         None,
     )?);
+
     rendered_templates.extend(
         generate_project_tsconfig(&output_path).with_context(|| ERROR_FAILED_TO_CREATE_TSCONFIG)?,
     );
+
     rendered_templates.extend(
         generate_gitignore(&output_path).with_context(|| ERROR_FAILED_TO_CREATE_GITIGNORE)?,
     );
+
     rendered_templates.extend(
         add_service_to_artifacts(manifest_data, base_path, app_root_path)
             .with_context(|| ERROR_FAILED_TO_ADD_SERVICE_METADATA_TO_ARTIFACTS)?,
     );
+
     rendered_templates.extend(
         add_base_entity_to_core(&ManifestData::Service(manifest_data), base_path)
             .with_context(|| ERROR_FAILED_TO_ADD_BASE_ENTITY_TO_CORE)?,
@@ -480,12 +486,18 @@ pub(crate) fn generate_service_package_json(
                 tsx: Some(TSX_VERSION.to_string()),
                 typedoc: Some(TYPEDOC_VERSION.to_string()),
                 typescript_eslint: Some(TYPESCRIPT_ESLINT_VERSION.to_string()),
-                types_uuid: Some(TYPES_UUID_VERSION.to_string()),
                 types_express: Some(TYPES_EXPRESS_VERSION.to_string()),
                 types_express_serve_static_core: Some(
                     TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION.to_string(),
                 ),
+                types_jest: Some(TYPES_JEST_VERSION.to_string()),
                 types_qs: Some(TYPES_QS_VERSION.to_string()),
+                types_uuid: Some(TYPES_UUID_VERSION.to_string()),
+                ioredis: if manifest_data.is_billing {
+                    Some(IOREDIS_VERSION.to_string())
+                } else {
+                    None
+                },
                 additional_deps: HashMap::new(),
             }
         }),
@@ -649,6 +661,7 @@ impl CliCommand for ServiceCommand {
             camel_case_app_name: manifest_data.camel_case_app_name.clone(),
             pascal_case_app_name: manifest_data.pascal_case_app_name.clone(),
             kebab_case_app_name: manifest_data.kebab_case_app_name.clone(),
+            title_case_app_name: manifest_data.title_case_app_name.clone(),
             app_description: manifest_data.app_description.clone(),
             author: manifest_data.author.clone(),
             cli_version: manifest_data.cli_version.clone(),
@@ -679,6 +692,7 @@ impl CliCommand for ServiceCommand {
             camel_case_name: service_name.to_case(Case::Camel),
             pascal_case_name: service_name.to_case(Case::Pascal),
             kebab_case_name: service_name.to_case(Case::Kebab),
+            title_case_name: service_name.to_case(Case::Title),
             description: description.clone(),
             database: database.to_string(),
             database_port: get_database_port(&database),

@@ -54,11 +54,11 @@ use crate::{
                 MIKRO_ORM_SEEDER_VERSION, OXLINT_VERSION, PRETTIER_VERSION, PROJECT_BUILD_SCRIPT,
                 PROJECT_DOCS_SCRIPT, PROJECT_SEED_SCRIPT, SQLITE3_VERSION, TESTING_VERSION,
                 TSX_VERSION, TYPEBOX_VERSION, TYPEDOC_VERSION,
-                TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION, TYPES_QS_VERSION,
-                TYPES_UUID_VERSION, TYPESCRIPT_ESLINT_VERSION, UUID_VERSION, VALIDATOR_VERSION,
-                WORKER_BULLMQ_VERSION, WORKER_DATABASE_VERSION, WORKER_INTERFACES_VERSION,
-                WORKER_KAFKA_VERSION, WORKER_REDIS_VERSION, ZOD_VERSION, project_clean_script,
-                project_dev_local_worker_script, project_dev_server_script,
+                TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION, TYPES_JEST_VERSION,
+                TYPES_QS_VERSION, TYPES_UUID_VERSION, TYPESCRIPT_ESLINT_VERSION, UUID_VERSION,
+                VALIDATOR_VERSION, WORKER_BULLMQ_VERSION, WORKER_DATABASE_VERSION,
+                WORKER_INTERFACES_VERSION, WORKER_KAFKA_VERSION, WORKER_REDIS_VERSION, ZOD_VERSION,
+                project_clean_script, project_dev_local_worker_script, project_dev_server_script,
                 project_dev_worker_client_script, project_format_script, project_lint_fix_script,
                 project_lint_script, project_migrate_script, project_start_worker_script,
                 project_test_script, project_types_versions_value,
@@ -559,12 +559,14 @@ pub(crate) fn generate_worker_package_json(
                 types_express_serve_static_core: Some(
                     TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION.to_string(),
                 ),
+                types_jest: Some(TYPES_JEST_VERSION.to_string()),
                 types_qs: Some(TYPES_QS_VERSION.to_string()),
                 types_uuid: if manifest_data.is_database_enabled {
                     Some(TYPES_UUID_VERSION.to_string())
                 } else {
                     None
                 },
+                ioredis: None,
                 additional_deps: HashMap::new(),
             }
         }),
@@ -715,6 +717,7 @@ impl CliCommand for WorkerCommand {
             camel_case_app_name: manifest_data.camel_case_app_name.clone(),
             pascal_case_app_name: manifest_data.pascal_case_app_name.clone(),
             kebab_case_app_name: manifest_data.kebab_case_app_name.clone(),
+            title_case_app_name: manifest_data.title_case_app_name.clone(),
             app_description: manifest_data.app_description.clone(),
             author: manifest_data.author.clone(),
             cli_version: manifest_data.cli_version.clone(),
@@ -745,6 +748,7 @@ impl CliCommand for WorkerCommand {
             camel_case_name: worker_name.to_case(Case::Camel),
             pascal_case_name: worker_name.to_case(Case::Pascal),
             kebab_case_name: worker_name.to_case(Case::Kebab),
+            title_case_name: worker_name.to_case(Case::Title),
             description: description.clone(),
             database: if let Some(database) = &database {
                 Some(database.to_string())

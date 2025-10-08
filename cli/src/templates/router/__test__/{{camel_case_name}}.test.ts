@@ -8,7 +8,7 @@ import {
   TestSetupResult
 } from './test-utils';
 
-describe('{{pascal_case_name}} Service E2E Tests', () => {
+describe('{{pascal_case_name}} Routes E2E Tests', () => {
   {{#is_database_enabled}}let orm: TestSetupResult['orm'];{{/is_database_enabled}}
   {{#is_cache_enabled}}let redis: TestSetupResult['redis'];{{/is_cache_enabled}}
 
@@ -28,30 +28,64 @@ describe('{{pascal_case_name}} Service E2E Tests', () => {
     await cleanupTestDatabase();
   }, 30000);
 
-  describe('{{pascal_case_name}}Service - Business Logic', () => {
-    it('should process {{camel_case_name}} data successfully', async () => {
-      const { Base{{pascal_case_name}}Service } = await import(
-        '../services/{{camel_case_name}}.service'
+  describe('GET /{{camel_case_name}} - {{camel_case_name}}Get', () => {
+    it('should handle {{camel_case_name}} get request successfully', async () => {
+      const { {{camel_case_name}}GetRoute } = await import(
+        '../api/routes/{{camel_case_name}}.routes'
       );
-      {{#is_database_enabled}}const em = orm.em.fork();{{/is_database_enabled}}
-      const { ci, tokens } = await import('../bootstrapper');
-      
-      const scope = ci.createScope({{#is_database_enabled}}{ entityManagerOptions: {} }{{/is_database_enabled}});
-      const service = scope.resolve(tokens.{{pascal_case_name}}Service);
 
-      const result = await service.{{camel_case_name}}Post(mock{{pascal_case_name}}Data);
+      const response = await {{camel_case_name}}GetRoute.sdk.{{camel_case_name}}Get();
 
-      expect(result).toBeDefined();
-      expect(result.message).toBeDefined();
+      expect(response.code).toBe(200);
+      expect(response.response).toBeDefined();
+    });
+  });
+
+  describe('POST /{{camel_case_name}} - {{camel_case_name}}Post', () => {
+    it('should handle {{camel_case_name}} request successfully', async () => {
+      const { {{camel_case_name}}PostRoute } = await import(
+        '../api/routes/{{camel_case_name}}.routes'
+      );
+
+      const response = await {{camel_case_name}}PostRoute.sdk.{{camel_case_name}}Post({
+        body: mock{{pascal_case_name}}Data
+      });
+
+      expect(response.code).toBe(200);
+      expect(response.response).toBeDefined();
+      if (response.code === 200) {
+        expect(response.response.message).toBeDefined();
+      }
+    });
+
+    it('should handle validation errors', async () => {
+      const { {{camel_case_name}}PostRoute } = await import(
+        '../api/routes/{{camel_case_name}}.routes'
+      );
+
+      const invalidData = {
+        message: ''
+      };
+
+      try {
+        await {{camel_case_name}}PostRoute.sdk.{{camel_case_name}}Post({
+          body: invalidData
+        });
+        expect(true).toBe(false);
+      } catch (error: unknown) {
+        expect(error).toBeDefined();
+      }
     });
     {{#is_database_enabled}}
 
     it('should persist data to database', async () => {
-      const { ci, tokens } = await import('../bootstrapper');
-      const scope = ci.createScope({ entityManagerOptions: {} });
-      const service = scope.resolve(tokens.{{pascal_case_name}}Service);
+      const { {{camel_case_name}}PostRoute } = await import(
+        '../api/routes/{{camel_case_name}}.routes'
+      );
 
-      await service.{{camel_case_name}}Post(mock{{pascal_case_name}}Data);
+      await {{camel_case_name}}PostRoute.sdk.{{camel_case_name}}Post({
+        body: mock{{pascal_case_name}}Data
+      });
 
       const em = orm.em.fork();
       const { {{pascal_case_name}}Record } = await import(
@@ -62,7 +96,7 @@ describe('{{pascal_case_name}} Service E2E Tests', () => {
         message: mock{{pascal_case_name}}Data.message
       });
 
-      expect(records.length).toBeGreaterThanOrEqual(0);
+      expect(records.length).toBeGreaterThan(0);
     });
     {{/is_database_enabled}}
   });

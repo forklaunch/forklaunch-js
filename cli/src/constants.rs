@@ -348,6 +348,8 @@ pub(crate) const ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER: &str =
     "Failed to add router metadata to bootstrapper.";
 pub(crate) const ERROR_FAILED_TO_ADD_ROUTER_METADATA_TO_MANIFEST: &str =
     "Failed to add router metadata to manifest.";
+pub(crate) const ERROR_FAILED_TO_ADD_ROUTER_TEST_UTILITIES: &str =
+    "Failed to add router test utilities.";
 pub(crate) const ERROR_FAILED_TO_REMOVE_PROJECT_METADATA_FROM_MANIFEST: &str =
     "Failed to remove project metadata from manifest.";
 pub(crate) const ERROR_FAILED_TO_CREATE_DATABASE_EXPORT_INDEX_TS: &str =

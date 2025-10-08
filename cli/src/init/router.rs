@@ -12,9 +12,9 @@ use crate::{
     CliCommand,
     constants::{
         Database, ERROR_DATABASE_INFORMATION, ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
-        ERROR_FAILED_TO_ADD_ROUTER_METADATA_TO_MANIFEST, ERROR_FAILED_TO_ADD_ROUTER_TO_APP,
-        ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER, ERROR_FAILED_TO_PARSE_MANIFEST,
-        ERROR_FAILED_TO_READ_MANIFEST, Infrastructure,
+        ERROR_FAILED_TO_ADD_ROUTER_METADATA_TO_MANIFEST, ERROR_FAILED_TO_ADD_ROUTER_TEST_UTILITIES,
+        ERROR_FAILED_TO_ADD_ROUTER_TO_APP, ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER,
+        ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST, Infrastructure,
     },
     core::{
         ast::transformations::{
@@ -24,6 +24,7 @@ use crate::{
             transform_sdk_ts::transform_sdk_ts, transform_seed_data_ts::transform_seed_data_ts,
             transform_seeders_index_ts::transform_seeders_index_ts,
             transform_server_ts::transform_server_ts,
+            transform_test_utils_ts::transform_test_utils_add_router,
         },
         base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
         command::command,
@@ -146,6 +147,16 @@ fn add_router_to_artifacts(
         path: base_path.join("api").join("controllers").join("index.ts"),
         content: transform_controllers_index_ts(manifest_data.router_name.as_str(), &base_path)?,
         context: Some(ERROR_FAILED_TO_ADD_ROUTER_TO_BOOTSTRAPPER.to_string()),
+    });
+
+    rendered_templates.push(RenderedTemplate {
+        path: base_path.join("__test__").join("test-utils.ts"),
+        content: transform_test_utils_add_router(
+            &base_path,
+            manifest_data.camel_case_name.as_str(),
+            manifest_data.pascal_case_name.as_str(),
+        )?,
+        context: Some(ERROR_FAILED_TO_ADD_ROUTER_TEST_UTILITIES.to_string()),
     });
 
     rendered_templates.push(RenderedTemplate {
@@ -272,7 +283,9 @@ impl CliCommand for RouterCommand {
                 camel_case_name: router_name.to_case(Case::Camel),
                 pascal_case_name: router_name.to_case(Case::Pascal),
                 kebab_case_name: router_name.to_case(Case::Kebab),
+                title_case_name: router_name.to_case(Case::Title),
 
+                is_database_enabled: true,
                 database: database.to_string(),
                 db_driver: get_db_driver(&database),
 
