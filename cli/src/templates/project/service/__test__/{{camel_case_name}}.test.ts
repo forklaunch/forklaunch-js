@@ -1,0 +1,1 @@
+../../../router/__test__/{{camel_case_name}}.test.ts
