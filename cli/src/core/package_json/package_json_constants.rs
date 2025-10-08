@@ -254,6 +254,8 @@ pub(crate) const IAM_INTERFACES_VERSION: &str = "~0.7.3";
 pub(crate) const WORKER_INTERFACES_VERSION: &str = "~0.6.3";
 // @forklaunch/internal
 pub(crate) const INTERNAL_VERSION: &str = "~0.3.14";
+// @forklaunch/testing
+pub(crate) const TESTING_VERSION: &str = "~0.0.3";
 // @forklaunch/universal-sdk
 pub(crate) const UNIVERSAL_SDK_VERSION: &str = "~0.7.14";
 // @forklaunch/validator

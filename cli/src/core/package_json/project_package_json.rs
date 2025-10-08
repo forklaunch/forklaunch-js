@@ -531,6 +531,11 @@ pub(crate) struct ProjectDevDependencies {
     pub(crate) biome: Option<String>,
     #[serde(rename = "@eslint/js", skip_serializing_if = "Option::is_none")]
     pub(crate) eslint_js: Option<String>,
+    #[serde(
+        rename = "@forklaunch/testing",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub(crate) testing: Option<String>,
     #[serde(rename = "@mikro-orm/cli", skip_serializing_if = "Option::is_none")]
     pub(crate) mikro_orm_cli: Option<String>,
     #[serde(rename = "@types/express", skip_serializing_if = "Option::is_none")]
@@ -582,6 +587,7 @@ impl<'de> Deserialize<'de> for ProjectDevDependencies {
                 let mut deps = ProjectDevDependencies {
                     biome: None,
                     eslint_js: None,
+                    testing: None,
                     mikro_orm_cli: None,
                     types_express: None,
                     types_express_serve_static_core: None,
@@ -600,6 +606,7 @@ impl<'de> Deserialize<'de> for ProjectDevDependencies {
                     match key.as_str() {
                         "@biomejs/biome" => deps.biome = Some(value),
                         "@eslint/js" => deps.eslint_js = Some(value),
+                        "@forklaunch/testing" => deps.testing = Some(value),
                         "@mikro-orm/cli" => deps.mikro_orm_cli = Some(value),
                         "@types/express" => deps.types_express = Some(value),
                         "@types/express-serve-static-core" => {

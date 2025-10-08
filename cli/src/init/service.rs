@@ -56,13 +56,14 @@ use crate::{
                 MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
                 MIKRO_ORM_REFLECTION_VERSION, MIKRO_ORM_SEEDER_VERSION, OPENTELEMETRY_API_VERSION,
                 OXLINT_VERSION, PRETTIER_VERSION, PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT,
-                PROJECT_SEED_SCRIPT, SQLITE3_VERSION, STRIPE_VERSION, TSX_VERSION, TYPEBOX_VERSION,
-                TYPEDOC_VERSION, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION,
-                TYPES_QS_VERSION, TYPES_UUID_VERSION, TYPESCRIPT_ESLINT_VERSION, UUID_VERSION,
-                VALIDATOR_VERSION, ZOD_VERSION, project_clean_script, project_dev_local_script,
-                project_dev_server_script, project_format_script, project_lint_fix_script,
-                project_lint_script, project_migrate_script, project_start_server_script,
-                project_test_script, project_types_versions_value,
+                PROJECT_SEED_SCRIPT, SQLITE3_VERSION, STRIPE_VERSION, TESTING_VERSION, TSX_VERSION,
+                TYPEBOX_VERSION, TYPEDOC_VERSION, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION,
+                TYPES_EXPRESS_VERSION, TYPES_QS_VERSION, TYPES_UUID_VERSION,
+                TYPESCRIPT_ESLINT_VERSION, UUID_VERSION, VALIDATOR_VERSION, ZOD_VERSION,
+                project_clean_script, project_dev_local_script, project_dev_server_script,
+                project_format_script, project_lint_fix_script, project_lint_script,
+                project_migrate_script, project_start_server_script, project_test_script,
+                project_types_versions_value,
             },
             project_package_json::{
                 MIKRO_ORM_CONFIG_PATHS, ProjectDependencies, ProjectDevDependencies,
@@ -459,6 +460,7 @@ pub(crate) fn generate_service_package_json(
                 } else {
                     None
                 },
+                testing: Some(TESTING_VERSION.to_string()),
                 eslint_js: if manifest_data.is_eslint {
                     Some(ESLINT_VERSION.to_string())
                 } else {
