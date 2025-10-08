@@ -47,6 +47,28 @@ export interface RedisConfig {
   command?: string[];
 }
 
+export interface KafkaConfig {
+  /** Kafka cluster ID */
+  clusterId?: string;
+  /** Number of partitions */
+  numPartitions?: number;
+  /** Replication factor */
+  replicationFactor?: number;
+  /** Additional environment variables */
+  env?: Record<string, string>;
+}
+
+export interface S3Config {
+  /** MinIO root user (access key) */
+  rootUser?: string;
+  /** MinIO root password (secret key) */
+  rootPassword?: string;
+  /** Default bucket to create */
+  defaultBucket?: string;
+  /** Region */
+  region?: string;
+}
+
 export type DatabaseConfig =
   | PostgresConfig
   | MySQLConfig
@@ -238,6 +260,100 @@ export class TestContainerManager {
       .withExposedPorts(6379)
       .withCommand(command)
       .start();
+
+    this.containers.push(container);
+    return container;
+  }
+
+  /**
+   * Setup Kafka test container
+   */
+  async setupKafkaContainer(
+    config: KafkaConfig = {}
+  ): Promise<StartedTestContainer> {
+    const {
+      clusterId = 'test-cluster',
+      numPartitions = 1,
+      replicationFactor = 1,
+      env = {}
+    } = config;
+
+    const container = await new GenericContainer('confluentinc/cp-kafka:latest')
+      .withExposedPorts(9092, 9093)
+      .withEnvironment({
+        KAFKA_BROKER_ID: '1',
+        KAFKA_LISTENER_SECURITY_PROTOCOL_MAP:
+          'PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT',
+        KAFKA_ADVERTISED_LISTENERS:
+          'PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092',
+        KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: replicationFactor.toString(),
+        KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: '1',
+        KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: '1',
+        KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: '0',
+        KAFKA_NUM_PARTITIONS: numPartitions.toString(),
+        KAFKA_CLUSTER_ID: clusterId,
+        KAFKA_PROCESS_ROLES: 'broker,controller',
+        KAFKA_NODE_ID: '1',
+        KAFKA_CONTROLLER_QUORUM_VOTERS: '1@localhost:9093',
+        KAFKA_LISTENERS:
+          'PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093,PLAINTEXT_HOST://0.0.0.0:9092',
+        KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT',
+        KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER',
+        KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs',
+        ...env
+      })
+      .start();
+
+    // Wait for Kafka to be ready
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+
+    this.containers.push(container);
+    return container;
+  }
+
+  /**
+   * Setup MinIO (S3-compatible) test container
+   */
+  async setupS3Container(config: S3Config = {}): Promise<StartedTestContainer> {
+    const {
+      rootUser = 'minioadmin',
+      rootPassword = 'minioadmin',
+      defaultBucket = 'test-bucket',
+      region = 'us-east-1'
+    } = config;
+
+    const container = await new GenericContainer('minio/minio:latest')
+      .withExposedPorts(9000, 9001)
+      .withEnvironment({
+        MINIO_ROOT_USER: rootUser,
+        MINIO_ROOT_PASSWORD: rootPassword,
+        MINIO_REGION: region
+      })
+      .withCommand(['server', '/data', '--console-address', ':9001'])
+      .start();
+
+    // Wait for MinIO to be ready
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    // Create default bucket if specified
+    if (defaultBucket) {
+      try {
+        // Using MinIO client command via exec
+        await container.exec([
+          'mc',
+          'alias',
+          'set',
+          'local',
+          'http://localhost:9000',
+          rootUser,
+          rootPassword
+        ]);
+        await container.exec(['mc', 'mb', `local/${defaultBucket}`]);
+      } catch (error) {
+        // Bucket creation might fail, but container is still usable
+        console.warn('Could not create default bucket:', error);
+      }
+    }
 
     this.containers.push(container);
     return container;

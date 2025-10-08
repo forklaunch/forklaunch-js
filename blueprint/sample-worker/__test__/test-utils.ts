@@ -42,11 +42,11 @@ export const cleanupTestDatabase = async (): Promise<void> => {
   }
 };
 
-export const clearDatabase = async (
-  orm?: TestSetupResult['orm'],
-  redis?: TestSetupResult['redis']
-): Promise<void> => {
-  await clearTestDatabase(orm, redis);
+export const clearDatabase = async (options?: {
+  orm?: TestSetupResult['orm'];
+  redis?: TestSetupResult['redis'];
+}): Promise<void> => {
+  await clearTestDatabase(options);
 };
 
 export const setupTestData = async (em: EntityManager) => {

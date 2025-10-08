@@ -10,11 +10,13 @@
 export {
   DatabaseConfig,
   DatabaseType,
+  KafkaConfig,
   MongoDBConfig,
   MSSQLConfig,
   MySQLConfig,
   PostgresConfig,
   RedisConfig,
+  S3Config,
   SQLiteConfig,
   TestContainerManager
 } from './containers';

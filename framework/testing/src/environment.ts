@@ -5,6 +5,8 @@ export interface TestEnvConfig {
   database: StartedTestContainer | null;
   databaseType?: DatabaseType;
   redis?: StartedTestContainer;
+  kafka?: StartedTestContainer;
+  s3?: StartedTestContainer;
   hmacSecret?: string;
   customVars?: Record<string, string>;
 }
@@ -42,6 +44,8 @@ export function setupTestEnvironment(config: TestEnvConfig): void {
     database,
     databaseType,
     redis,
+    kafka,
+    s3,
     hmacSecret = 'test-secret-key',
     customVars = {}
   } = config;
@@ -72,6 +76,26 @@ export function setupTestEnvironment(config: TestEnvConfig): void {
   // Redis environment variables (if provided)
   if (redis) {
     process.env.REDIS_URL = `redis://${redis.getHost()}:${redis.getMappedPort(6379)}`;
+    process.env.REDIS_HOST = redis.getHost();
+    process.env.REDIS_PORT = redis.getMappedPort(6379).toString();
+  }
+
+  // Kafka environment variables (if provided)
+  if (kafka) {
+    const kafkaBroker = `${kafka.getHost()}:${kafka.getMappedPort(9092)}`;
+    process.env.KAFKA_BROKERS = kafkaBroker;
+    process.env.KAFKA_CLIENT_ID = 'test-client';
+    process.env.KAFKA_GROUP_ID = 'test-group';
+  }
+
+  // S3/MinIO environment variables (if provided)
+  if (s3) {
+    process.env.S3_ENDPOINT = `http://${s3.getHost()}:${s3.getMappedPort(9000)}`;
+    process.env.S3_ACCESS_KEY_ID = 'minioadmin';
+    process.env.S3_SECRET_ACCESS_KEY = 'minioadmin';
+    process.env.S3_REGION = 'us-east-1';
+    process.env.S3_BUCKET = 'test-bucket';
+    process.env.S3_FORCE_PATH_STYLE = 'true'; // Required for MinIO
   }
 
   // Standard test environment variables

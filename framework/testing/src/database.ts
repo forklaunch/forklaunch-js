@@ -139,10 +139,12 @@ export async function setupTestORM(
 /**
  * Clear all data from the test database and/or cache
  */
-export async function clearTestDatabase(
-  orm?: MikroORM,
-  redis?: Redis
-): Promise<void> {
+export async function clearTestDatabase(options?: {
+  orm?: MikroORM;
+  redis?: Redis;
+}): Promise<void> {
+  const { orm, redis } = options || {};
+
   // Clear Redis if provided
   if (redis) {
     await redis.flushall();

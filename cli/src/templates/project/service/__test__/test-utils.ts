@@ -25,7 +25,10 @@ export const setupTestDatabase = async (): Promise<TestSetupResult> => {
     databaseType: getEnvVar('DATABASE_TYPE') as DatabaseType,
     useMigrations: false,
     {{/is_database_enabled}}needsRedis: {{#is_cache_enabled}}true{{/is_cache_enabled}}{{^is_cache_enabled}}false{{/is_cache_enabled}},
-    customEnvVars: {
+    {{#is_kafka_enabled}}needsKafka: true,
+    {{/is_kafka_enabled}}{{#is_s3_enabled}}needsS3: true,
+    s3Bucket: 'test-bucket',
+    {{/is_s3_enabled}}customEnvVars: {
       PROTOCOL: 'http',
       HOST: 'localhost',
       PORT: '3000',
@@ -33,17 +36,8 @@ export const setupTestDatabase = async (): Promise<TestSetupResult> => {
       DOCS_PATH: '/docs',
       OTEL_SERVICE_NAME: 'test-service',
       OTEL_LEVEL: 'info',
-      OTEL_EXPORTER_OTLP_ENDPOINT: 'http://localhost:4318'{{#is_cache_enabled}},
-      REDIS_URL: process.env.REDIS_URL || 'redis://localhost:6379'{{/is_cache_enabled}}{{#is_kafka_enabled}},
-      KAFKA_BROKERS: 'localhost:9092',
-      KAFKA_CLIENT_ID: 'test-client',
-      KAFKA_GROUP_ID: 'test-group'{{/is_kafka_enabled}}{{#is_worker}},
-      QUEUE_NAME: 'test-queue'{{/is_worker}}{{#is_s3_enabled}},
-      S3_REGION: 'us-east-1',
-      S3_ACCESS_KEY_ID: 'test-access-key',
-      S3_SECRET_ACCESS_KEY: 'test-secret-key',
-      S3_BUCKET: 'test-bucket',
-      S3_URL: 'http://localhost:9000'{{/is_s3_enabled}}
+      OTEL_EXPORTER_OTLP_ENDPOINT: 'http://localhost:4318'{{#is_worker}},
+      QUEUE_NAME: 'test-queue'{{/is_worker}}
     }
   });
 
@@ -56,11 +50,11 @@ export const cleanupTestDatabase = async (): Promise<void> => {
   }
 };
 
-export const clearDatabase = async (
-  orm?: TestSetupResult['orm'],
-  redis?: TestSetupResult['redis']
-): Promise<void> => {
-  await clearTestDatabase(orm, redis);
+export const clearDatabase = async (options?: {
+  orm?: TestSetupResult['orm'];
+  redis?: TestSetupResult['redis'];
+}): Promise<void> => {
+  await clearTestDatabase(options);
 };
 {{#is_database_enabled}}
 

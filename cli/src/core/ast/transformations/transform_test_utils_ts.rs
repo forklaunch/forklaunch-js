@@ -594,9 +594,8 @@ export const mockTestData = {
 
         let content = result.unwrap();
         write(base_path.join("__test__").join("test-utils.ts"), &content).unwrap();
-        assert!(content.contains("KAFKA_BROKERS"));
-        assert!(content.contains("KAFKA_CLIENT_ID"));
-        assert!(content.contains("KAFKA_GROUP_ID"));
+        assert!(content.contains("needsKafka"));
+        assert!(content.contains("true"));
     }
 
     #[test]
@@ -615,9 +614,7 @@ export const mockTestData = {
         assert!(result.is_ok());
 
         let content = result.unwrap();
-        assert!(!content.contains("KAFKA_BROKERS"));
-        assert!(!content.contains("KAFKA_CLIENT_ID"));
-        assert!(!content.contains("KAFKA_GROUP_ID"));
+        assert!(!content.contains("needsKafka"));
     }
 
     #[test]
@@ -629,11 +626,8 @@ export const mockTestData = {
 
         let content = result.unwrap();
         write(base_path.join("__test__").join("test-utils.ts"), &content).unwrap();
-        assert!(content.contains("S3_REGION"));
-        assert!(content.contains("S3_ACCESS_KEY_ID"));
-        assert!(content.contains("S3_SECRET_ACCESS_KEY"));
-        assert!(content.contains("S3_BUCKET"));
-        assert!(content.contains("S3_URL"));
+        assert!(content.contains("needsS3"));
+        assert!(content.contains("true"));
     }
 
     #[test]
@@ -652,11 +646,7 @@ export const mockTestData = {
         assert!(result.is_ok());
 
         let content = result.unwrap();
-        assert!(!content.contains("S3_REGION"));
-        assert!(!content.contains("S3_ACCESS_KEY_ID"));
-        assert!(!content.contains("S3_SECRET_ACCESS_KEY"));
-        assert!(!content.contains("S3_BUCKET"));
-        assert!(!content.contains("S3_URL"));
+        assert!(!content.contains("needsS3"));
     }
 
     #[test]
@@ -681,8 +671,7 @@ export const mockTestData = {
 
         let content = result.unwrap();
         write(base_path.join("__test__").join("test-utils.ts"), &content).unwrap();
-        assert!(content.contains("S3_REGION"));
-        assert!(content.contains("S3_BUCKET"));
+        assert!(content.contains("needsS3"));
     }
 
     #[test]
@@ -738,8 +727,8 @@ export const mockTestData = {
         let content = result.unwrap();
         assert!(content.contains("@mikro-orm/core"));
         assert!(content.contains("ioredis"));
-        assert!(content.contains("KAFKA_BROKERS"));
-        assert!(content.contains("S3_REGION"));
+        assert!(content.contains("needsKafka"));
+        assert!(content.contains("needsS3"));
     }
 
     #[test]

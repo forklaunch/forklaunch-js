@@ -18,7 +18,7 @@ describe('Permission Routes E2E Tests with PostgreSQL Container', () => {
   }, 60000);
 
   beforeEach(async () => {
-    await clearDatabase(orm);
+    await clearDatabase({ orm });
     if (!orm) throw new Error('ORM not initialized');
     const em = orm.em.fork();
     await setupTestData(em);
