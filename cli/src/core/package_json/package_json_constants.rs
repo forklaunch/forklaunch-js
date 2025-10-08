@@ -307,7 +307,7 @@ pub(crate) const TYPES_UUID_VERSION: &str = "^11.0.0";
 // @types/qs
 pub(crate) const TYPES_QS_VERSION: &str = "^6.14.0";
 // ioredis
-pub(crate) const IOREDIS_VERSION: &str = "^5.3.5";
+pub(crate) const IOREDIS_VERSION: &str = "^5.8.1";
 // typedoc
 pub(crate) const TYPEDOC_VERSION: &str = "^0.28.13";
 
