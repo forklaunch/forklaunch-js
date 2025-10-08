@@ -1,5 +1,17 @@
 # @forklaunch/implementation-billing-base
 
+## 0.5.0
+
+### Minor Changes
+
+- Update service implementations and add tests
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/implementation-billing-base@0.8.0
+  - @forklaunch/interfaces-billing@0.8.0
+
 ## 0.4.4
 
 ### Patch Changes
