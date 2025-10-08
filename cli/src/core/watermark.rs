@@ -202,8 +202,8 @@ pub(crate) fn generate_watermark(filename: &str) -> Option<String> {
     let mut result = vec![style.open.to_string()];
     result.extend(content.iter().map(|line| format!("{}{}", style.line, line)));
     result.push(style.close.to_string());
-    result.push(String::new()); // Empty line after watermark
-    result.push(String::new()); // Second empty line for better spacing
+    result.push(String::new());
+    result.push(String::new());
 
     Some(result.join("\n"))
 }

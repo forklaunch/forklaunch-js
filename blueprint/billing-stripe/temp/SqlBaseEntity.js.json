@@ -40,12 +40,12 @@
     "internal": true,
     "constructorParams": [],
     "toJsonParams": [],
-    "extends": "BaseEntity2",
+    "extends": "BaseEntity",
     "useCache": true,
     "compositePK": false,
     "simplePK": true
   },
   "origin": "../core/lib/persistence/sql.base.entity.js",
-  "hash": "b1e54b14f964453dfc1249e576d5a3af",
-  "version": "6.4.16"
+  "hash": "a723db94dbe4444de96b2f2ef1b66775",
+  "version": "6.5.7"
 }

@@ -211,9 +211,6 @@ impl Serialize for ProjectDependencies {
         if let Some(ref v) = self.app_universal_sdk {
             map.serialize_entry(&format!("@{}/universal-sdk", self.app_name), v)?;
         }
-        if let Some(ref v) = self.better_auth {
-            map.serialize_entry("@forklaunch/better-auth", v)?;
-        }
         if let Some(ref v) = self.forklaunch_better_auth_mikro_orm_fork {
             map.serialize_entry("@forklaunch/better-auth-mikro-orm-fork", v)?;
         }
@@ -305,6 +302,9 @@ impl Serialize for ProjectDependencies {
         }
         if let Some(ref v) = self.ajv {
             map.serialize_entry("ajv", v)?;
+        }
+        if let Some(ref v) = self.better_auth {
+            map.serialize_entry("better-auth", v)?;
         }
         if let Some(ref v) = self.bullmq {
             map.serialize_entry("bullmq", v)?;
@@ -450,7 +450,6 @@ impl<'de> Deserialize<'de> for ProjectDependencies {
                     }
 
                     match key.as_str() {
-                        "@forklaunch/better-auth" => deps.better_auth = Some(value),
                         "@forklaunch/better-auth-mikro-orm-fork" => {
                             deps.forklaunch_better_auth_mikro_orm_fork = Some(value);
                         }
@@ -503,6 +502,7 @@ impl<'de> Deserialize<'de> for ProjectDependencies {
                         "@opentelemetry/api" => deps.opentelemetry_api = Some(value),
                         "@sinclair/typebox" => deps.typebox = Some(value),
                         "ajv" => deps.ajv = Some(value),
+                        "better-auth" => deps.better_auth = Some(value),
                         "bullmq" => deps.bullmq = Some(value),
                         "better-sqlite3" => deps.better_sqlite3 = Some(value),
                         "dotenv" => deps.dotenv = Some(value),
@@ -531,10 +531,17 @@ pub(crate) struct ProjectDevDependencies {
     pub(crate) biome: Option<String>,
     #[serde(rename = "@eslint/js", skip_serializing_if = "Option::is_none")]
     pub(crate) eslint_js: Option<String>,
+    #[serde(
+        rename = "@forklaunch/testing",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub(crate) testing: Option<String>,
     #[serde(rename = "@mikro-orm/cli", skip_serializing_if = "Option::is_none")]
     pub(crate) mikro_orm_cli: Option<String>,
     #[serde(rename = "@types/express", skip_serializing_if = "Option::is_none")]
     pub(crate) types_express: Option<String>,
+    #[serde(rename = "@types/jest", skip_serializing_if = "Option::is_none")]
+    pub(crate) types_jest: Option<String>,
     #[serde(
         rename = "@types/express-serve-static-core",
         skip_serializing_if = "Option::is_none"
@@ -552,6 +559,8 @@ pub(crate) struct ProjectDevDependencies {
     pub(crate) prettier: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) tsx: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) ioredis: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) typedoc: Option<String>,
     #[serde(rename = "typescript-eslint", skip_serializing_if = "Option::is_none")]
@@ -582,15 +591,18 @@ impl<'de> Deserialize<'de> for ProjectDevDependencies {
                 let mut deps = ProjectDevDependencies {
                     biome: None,
                     eslint_js: None,
+                    testing: None,
                     mikro_orm_cli: None,
                     types_express: None,
                     types_express_serve_static_core: None,
+                    types_jest: None,
                     types_qs: None,
                     types_uuid: None,
                     eslint: None,
                     oxlint: None,
                     prettier: None,
                     tsx: None,
+                    ioredis: None,
                     typedoc: None,
                     typescript_eslint: None,
                     additional_deps: HashMap::new(),
@@ -600,11 +612,13 @@ impl<'de> Deserialize<'de> for ProjectDevDependencies {
                     match key.as_str() {
                         "@biomejs/biome" => deps.biome = Some(value),
                         "@eslint/js" => deps.eslint_js = Some(value),
+                        "@forklaunch/testing" => deps.testing = Some(value),
                         "@mikro-orm/cli" => deps.mikro_orm_cli = Some(value),
                         "@types/express" => deps.types_express = Some(value),
                         "@types/express-serve-static-core" => {
                             deps.types_express_serve_static_core = Some(value)
                         }
+                        "@types/jest" => deps.types_jest = Some(value),
                         "@types/qs" => deps.types_qs = Some(value),
                         "@types/uuid" => deps.types_uuid = Some(value),
                         "eslint" => deps.eslint = Some(value),

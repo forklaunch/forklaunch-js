@@ -1,5 +1,16 @@
 # @forklaunch/implementation-billing-base
 
+## 0.8.0
+
+### Minor Changes
+
+- Update service implementations and add tests
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/interfaces-worker@0.7.0
+
 ## 0.7.3
 
 ### Patch Changes

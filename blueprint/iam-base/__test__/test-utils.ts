@@ -1,99 +1,46 @@
-import { EntityManager, MikroORM } from '@mikro-orm/core';
-import { GenericContainer, StartedTestContainer } from 'testcontainers';
-import { vi } from 'vitest';
+import { getEnvVar } from '@forklaunch/common';
+import {
+  BlueprintTestHarness,
+  clearTestDatabase,
+  DatabaseType,
+  TEST_TOKENS,
+  TestSetupResult
+} from '@forklaunch/testing';
+import { EntityManager } from '@mikro-orm/core';
+import dotenv from 'dotenv';
+import * as path from 'path';
 
-export const MOCK_AUTH_TOKEN = 'Bearer test-token';
-export const MOCK_HMAC_TOKEN =
-  'HMAC keyId=test-key ts=1234567890 nonce=test-nonce signature=test-signature';
+export { TEST_TOKENS, TestSetupResult };
 
-export interface TestSetupResult {
-  container: StartedTestContainer;
-  orm: MikroORM;
-}
+let harness: BlueprintTestHarness;
+
+dotenv.config({ path: path.join(__dirname, '../.env.test') });
 
 export const setupTestDatabase = async (): Promise<TestSetupResult> => {
-  const container = await new GenericContainer('postgres:latest')
-    .withExposedPorts(5432)
-    .withEnvironment({
-      POSTGRES_USER: 'test_user',
-      POSTGRES_PASSWORD: 'test_password',
-      POSTGRES_DB: 'test_db'
-    })
-    .withCommand(['postgres', '-c', 'log_statement=all'])
-    .start();
+  harness = new BlueprintTestHarness({
+    getConfig: async () => {
+      const { default: config } = await import('../mikro-orm.config');
+      return config;
+    },
+    databaseType: getEnvVar('DATABASE_TYPE') as DatabaseType,
+    useMigrations: true,
+    migrationsPath: path.join(__dirname, '../migrations')
+  });
 
-  // Set environment variables
-  process.env.DB_NAME = 'test_db';
-  process.env.DB_HOST = container.getHost();
-  process.env.DB_USER = 'test_user';
-  process.env.DB_PASSWORD = 'test_password';
-  process.env.DB_PORT = container.getMappedPort(5432).toString();
-  process.env.HMAC_SECRET_KEY = 'test-secret-key';
-  process.env.JWKS_PUBLIC_KEY_URL =
-    'http://localhost:3000/.well-known/jwks.json';
-  process.env.OTEL_SERVICE_NAME = 'test-service';
-  process.env.OTEL_EXPORTER_OTLP_ENDPOINT = 'http://localhost:4318';
-  process.env.HOST = 'localhost';
-  process.env.PORT = '3000';
-  process.env.NODE_ENV = 'test';
-  process.env.VERSION = 'v1';
-  process.env.DOCS_PATH = '/docs';
-  process.env.OTEL_LEVEL = 'info';
-  process.env.DOTENV_FILE_PATH = '.env.test';
-
-  const { default: mikroOrmConfig } = await import('../mikro-orm.config');
-  const path = await import('path');
-
-  const config = {
-    ...mikroOrmConfig,
-    dbName: 'test_db',
-    host: container.getHost(),
-    user: 'test_user',
-    password: 'test_password',
-    port: container.getMappedPort(5432),
-    debug: false,
-    migrations: {
-      path: path.join(__dirname, '../migrations'),
-      glob: '!(*.d).{js,ts}',
-      dropTables: true
-    }
-  };
-
-  const orm = await MikroORM.init(config);
-  await orm.getMigrator().up();
-
-  return { container, orm };
+  return await harness.setup();
 };
 
-export const cleanupTestDatabase = async (
-  orm: MikroORM,
-  container: StartedTestContainer
-): Promise<void> => {
-  if (orm) {
-    await orm.close();
-  }
-  if (container) {
-    await container.stop({ remove: true, removeVolumes: true });
+export const cleanupTestDatabase = async (): Promise<void> => {
+  if (harness) {
+    await harness.cleanup();
   }
 };
 
-export const clearDatabase = async (orm: MikroORM): Promise<void> => {
-  vi.clearAllMocks();
-
-  const em = orm.em.fork();
-  const entities = Object.values(orm.getMetadata().getAll());
-
-  for (const entity of entities.reverse()) {
-    try {
-      await em.nativeDelete(entity.class, {});
-    } catch (error) {
-      if (!(error as Error).message?.includes('does not exist')) {
-        throw error;
-      }
-    }
-  }
-
-  await em.flush();
+export const clearDatabase = async (options?: {
+  orm?: TestSetupResult['orm'];
+  redis?: TestSetupResult['redis'];
+}): Promise<void> => {
+  await clearTestDatabase(options);
 };
 
 export const setupTestData = async (em: EntityManager) => {

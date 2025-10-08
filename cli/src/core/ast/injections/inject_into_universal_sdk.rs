@@ -14,7 +14,6 @@ fn inject_into_universal_sdk_function<'a>(
     camel_case_name: &str,
     pascal_case_name: &str,
 ) -> Result<()> {
-    // Create the new export statement
     let export_text = format!(
         "export const {}SdkClient = universalSdk<{}SdkClient>;",
         camel_case_name, pascal_case_name

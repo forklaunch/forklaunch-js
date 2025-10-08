@@ -91,6 +91,7 @@ export class StripePlanService<
   ): Promise<Dto['PlanMapper']> {
     const stripePlan = await this.stripeClient.plans.create({
       ...planDto.stripeFields,
+      amount: planDto.price,
       interval: planDto.cadence,
       product: planDto.name,
       currency: planDto.currency as string
@@ -110,17 +111,11 @@ export class StripePlanService<
   }
 
   async getPlan(idDto: IdDto, em?: EntityManager): Promise<Dto['PlanMapper']> {
-    const plan = await this.stripeClient.plans.retrieve(idDto.id);
-    const id = (
-      await em?.findOne<{ id: string; externalId: string }>(
-        this.options?.databaseTableName ?? 'plan',
-        { externalId: idDto.id }
-      )
-    )?.id;
-    if (!id) {
+    const planEntity = await this.basePlanService.getPlan(idDto, em);
+    if (!planEntity.externalId) {
       throw new Error('Plan not found');
     }
-    const planEntity = await this.basePlanService.getPlan({ id }, em);
+    const plan = await this.stripeClient.plans.retrieve(planEntity.externalId);
     planEntity.stripeFields = plan;
     return planEntity;
   }
@@ -129,35 +124,58 @@ export class StripePlanService<
     planDto: StripeUpdatePlanDto,
     em?: EntityManager
   ): Promise<Dto['PlanMapper']> {
-    const existingPlan = await this.stripeClient.plans.retrieve(planDto.id);
-    const plan = await this.stripeClient.plans.del(planDto.id).then(() =>
-      this.stripeClient.plans.create({
-        ...planDto.stripeFields,
-        interval: planDto.cadence ?? existingPlan.interval,
-        product: planDto.name,
-        currency: planDto.currency ?? existingPlan.currency
-      })
-    );
-
-    const planEntity = await this.basePlanService.updatePlan(
-      await this.mappers.UpdatePlanMapper.toEntity(
-        {
-          ...planDto,
-          externalId: plan.id,
-          billingProvider: 'stripe'
-        },
-        em ?? this.em,
-        plan
-      ),
+    const planEntity = await this.basePlanService.getPlan(
+      {
+        id: planDto.id
+      },
       em
     );
-    planEntity.stripeFields = plan;
 
-    return planEntity;
+    const existingPlan = await this.stripeClient.plans.retrieve(
+      planEntity.externalId
+    );
+
+    const existingProduct = existingPlan.product;
+    if (!existingProduct) {
+      throw new Error('Plan product not found');
+    }
+
+    const productId =
+      typeof existingProduct === 'string'
+        ? existingProduct
+        : existingProduct.id;
+
+    await this.stripeClient.plans.del(planEntity.externalId);
+    const updatedPlan = await this.stripeClient.plans.create({
+      ...planDto.stripeFields,
+      interval: planDto.cadence ?? existingPlan.interval,
+      currency: planDto.currency ?? existingPlan.currency,
+      amount: planDto.price ?? existingPlan.amount ?? undefined,
+      product: productId
+    });
+
+    const updatedPlanEntity = await this.basePlanService.updatePlan(
+      {
+        ...planDto,
+        externalId: updatedPlan.id,
+        name: planDto.name,
+        billingProvider: 'stripe'
+      },
+      em,
+      updatedPlan
+    );
+
+    updatedPlanEntity.stripeFields = updatedPlan;
+
+    return updatedPlanEntity;
   }
 
-  async deletePlan(idDto: { id: string }, em?: EntityManager): Promise<void> {
-    await this.stripeClient.plans.del(idDto.id);
+  async deletePlan(idDto: IdDto, em?: EntityManager): Promise<void> {
+    const plan = await this.basePlanService.getPlan(idDto, em);
+    if (!plan.externalId) {
+      throw new Error('Plan not found');
+    }
+    await this.stripeClient.plans.del(plan.externalId);
     await this.basePlanService.deletePlan(idDto, em);
   }
 
@@ -165,30 +183,27 @@ export class StripePlanService<
     idsDto?: IdsDto,
     em?: EntityManager
   ): Promise<Dto['PlanMapper'][]> {
-    const plans = await this.stripeClient.plans.list({
-      active: true
-    });
-    const planIds = (
-      await em?.findAll<{ id: string; externalId: string }>(
-        this.options?.databaseTableName ?? 'plan',
-        { where: { externalId: { $in: plans.data.map((plan) => plan.id) } } }
-      )
-    )
-      ?.filter((s) => idsDto?.ids?.includes(s.id))
-      ?.map((s) => s.id);
+    const plans = await this.basePlanService.listPlans(idsDto, em);
 
-    if (!planIds) {
-      throw new Error('Plans not found');
+    if (!plans || plans.length === 0) {
+      return [];
     }
-    return await Promise.all(
-      (await this.basePlanService.listPlans({ ids: planIds }, em)).map(
-        async (plan) => ({
-          ...plan,
-          stripeFields: plans.data.find(
-            (stripePlan) => stripePlan.id === plan.externalId
-          )
-        })
-      )
+
+    const stripePlans = await Promise.all(
+      plans.map(async (plan) => {
+        try {
+          return await this.stripeClient.plans.retrieve(plan.externalId);
+        } catch {
+          return null;
+        }
+      })
     );
+
+    return plans
+      .map((plan, index) => ({
+        ...plan,
+        stripeFields: stripePlans[index]
+      }))
+      .filter((plan) => plan.stripeFields !== null);
   }
 }

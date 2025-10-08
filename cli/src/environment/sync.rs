@@ -1,15 +1,18 @@
+use std::{collections::HashMap, io::Write, path::Path};
+
 use anyhow::Result;
 use clap::{ArgMatches, Command};
-use std::collections::HashMap;
-use std::io::Write;
-use std::path::Path;
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
-use crate::CliCommand;
-use crate::core::ast::infrastructure::env::find_all_env_vars;
-use crate::core::env::{
-    add_env_vars_to_file, find_workspace_root, get_modules_path, get_target_env_file,
-    is_env_var_defined,
+use crate::{
+    CliCommand,
+    core::{
+        ast::infrastructure::env::find_all_env_vars,
+        env::{
+            add_env_vars_to_file, find_workspace_root, get_modules_path, get_target_env_file,
+            is_env_var_defined,
+        },
+    },
 };
 
 #[derive(Debug)]
@@ -133,7 +136,6 @@ fn create_sync_plan(
     workspace_root: &Path,
     modules_path: &Path,
 ) -> Result<SyncPlan> {
-    // Count how many projects use each variable
     let mut var_usage_count: HashMap<String, Vec<String>> = HashMap::new();
 
     for (project_name, missing_vars) in missing_vars_by_project {
@@ -145,7 +147,6 @@ fn create_sync_plan(
         }
     }
 
-    // Variables used by 2+ projects should go to root
     let mut root_vars = Vec::new();
     let mut project_specific_vars: HashMap<String, Vec<String>> = HashMap::new();
 
@@ -153,7 +154,6 @@ fn create_sync_plan(
         if projects.len() >= 2 {
             root_vars.push(var_name);
         } else {
-            // Single project variable
             let project_name = &projects[0];
             project_specific_vars
                 .entry(project_name.clone())
@@ -162,7 +162,6 @@ fn create_sync_plan(
         }
     }
 
-    // Determine target files
     let root_env_file = workspace_root.join(".env.local");
     let mut project_env_files = HashMap::new();
 

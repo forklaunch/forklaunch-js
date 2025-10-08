@@ -5,7 +5,7 @@
  * @module TypeboxSchemaValidator
  */
 
-import { InMemoryBlob } from '@forklaunch/common';
+import { deepCloneWithoutUndefined, InMemoryBlob } from '@forklaunch/common';
 import {
   FormatRegistry,
   Kind,
@@ -33,7 +33,8 @@ import {
   TUnknown,
   TUnsafe,
   TVoid,
-  Type
+  Type,
+  TypeRegistry
 } from '@sinclair/typebox';
 import { TypeCheck, TypeCompiler } from '@sinclair/typebox/compiler';
 import {
@@ -60,6 +61,13 @@ import {
 } from './types/schema.types';
 
 FormatRegistry.Set('binary', (value) => typeof value === 'string');
+
+TypeRegistry.Set('Blob', (_schema, value) => value instanceof Blob);
+TypeRegistry.Set(
+  'ArrayBuffer',
+  (_schema, value) => value instanceof ArrayBuffer
+);
+TypeRegistry.Set('Buffer', (_schema, value) => value instanceof Buffer);
 
 /**
  * Typebox custom error function
@@ -332,18 +340,21 @@ export class TypeboxSchemaValidator
   > = Type.Transform(
     Type.Union([
       Type.Unsafe<Buffer>({
+        [Kind]: 'Buffer',
         errorType: 'binary',
         format: 'binary',
         example: 'a raw buffer or file stream',
         title: 'File'
       }),
       Type.Unsafe<ArrayBuffer>({
+        [Kind]: 'ArrayBuffer',
         errorType: 'binary',
         format: 'binary',
         example: 'an array buffer',
         title: 'File'
       }),
       Type.Unsafe<Blob>({
+        [Kind]: 'Blob',
         errorType: 'binary',
         format: 'binary',
         example: 'a blob object',
@@ -677,7 +688,7 @@ export class TypeboxSchemaValidator
           errors: errors.flatMap((error) => {
             if (
               error.type === ValueErrorType.Union &&
-              error.schema.errorType.includes('any of')
+              error.schema.errorType?.includes('any of')
             ) {
               return error.errors.flatMap((e, idx) =>
                 Array.from(e).map((e) => ({
@@ -715,7 +726,7 @@ export class TypeboxSchemaValidator
         format: 'date-time'
       });
     } else {
-      processedSchema = JSON.parse(JSON.stringify(schemified));
+      processedSchema = deepCloneWithoutUndefined(schemified);
     }
 
     const newSchema: SchemaObject = Object.assign({}, processedSchema);

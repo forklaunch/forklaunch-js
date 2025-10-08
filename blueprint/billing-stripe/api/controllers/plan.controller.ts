@@ -22,7 +22,7 @@ export const createPlan = handlers.post(
   schemaValidator,
   '/',
   {
-    name: 'createPlan',
+    name: 'Create Plan',
     summary: 'Create a plan',
     auth: {
       hmac: {
@@ -46,7 +46,7 @@ export const getPlan = handlers.get(
   schemaValidator,
   '/:id',
   {
-    name: 'getPlan',
+    name: 'Get Plan',
     summary: 'Get a plan',
     auth: {
       hmac: {
@@ -70,8 +70,9 @@ export const updatePlan = handlers.put(
   schemaValidator,
   '/',
   {
-    name: 'updatePlan',
+    name: 'Update Plan',
     summary: 'Update a plan',
+    body: UpdatePlanMapper.schema,
     auth: {
       hmac: {
         secretKeys: {
@@ -79,7 +80,6 @@ export const updatePlan = handlers.put(
         }
       }
     },
-    body: UpdatePlanMapper.schema,
     responses: {
       200: PlanMapper.schema
     }
@@ -94,8 +94,9 @@ export const deletePlan = handlers.delete(
   schemaValidator,
   '/:id',
   {
-    name: 'deletePlan',
+    name: 'Delete Plan',
     summary: 'Delete a plan',
+    params: IdSchema,
     auth: {
       hmac: {
         secretKeys: {
@@ -103,7 +104,6 @@ export const deletePlan = handlers.delete(
         }
       }
     },
-    params: IdSchema,
     responses: {
       200: string
     }
@@ -119,7 +119,7 @@ export const listPlans = handlers.get(
   schemaValidator,
   '/',
   {
-    name: 'listPlans',
+    name: 'List Plans',
     summary: 'List plans',
     query: IdsSchema,
     auth: {

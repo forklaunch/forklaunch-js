@@ -20,12 +20,39 @@ export const subscriptionRouter = forklaunchRouter(
   openTelemetryCollector
 );
 
-subscriptionRouter.post('/', createSubscription);
-subscriptionRouter.get('/', listSubscriptions);
-subscriptionRouter.get('/user/:id', getUserSubscription);
-subscriptionRouter.get('/organization/:id', getOrganizationSubscription);
-subscriptionRouter.get('/:id/cancel', cancelSubscription);
-subscriptionRouter.get('/:id/resume', resumeSubscription);
-subscriptionRouter.get('/:id', getSubscription);
-subscriptionRouter.put('/:id', updateSubscription);
-subscriptionRouter.delete('/:id', deleteSubscription);
+export const createSubscriptionRoute = subscriptionRouter.post(
+  '/',
+  createSubscription
+);
+export const listSubscriptionsRoute = subscriptionRouter.get(
+  '/',
+  listSubscriptions
+);
+export const getUserSubscriptionRoute = subscriptionRouter.get(
+  '/user/:id',
+  getUserSubscription
+);
+export const getOrganizationSubscriptionRoute = subscriptionRouter.get(
+  '/organization/:id',
+  getOrganizationSubscription
+);
+export const cancelSubscriptionRoute = subscriptionRouter.get(
+  '/:id/cancel',
+  cancelSubscription
+);
+export const resumeSubscriptionRoute = subscriptionRouter.get(
+  '/:id/resume',
+  resumeSubscription
+);
+export const getSubscriptionRoute = subscriptionRouter.get(
+  '/:id',
+  getSubscription
+);
+export const updateSubscriptionRoute = subscriptionRouter.put(
+  '/:id',
+  updateSubscription
+);
+export const deleteSubscriptionRoute = subscriptionRouter.delete(
+  '/:id',
+  deleteSubscription
+);

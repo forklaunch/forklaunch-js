@@ -21,12 +21,17 @@ use crate::{
     change::core::change_database::change_database_seed_script,
     constants::{
         Database, ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_DOCKER_COMPOSE,
-        ERROR_FAILED_TO_READ_MANIFEST, ERROR_FAILED_TO_READ_PACKAGE_JSON, WorkerType,
+        ERROR_FAILED_TO_READ_MANIFEST, ERROR_FAILED_TO_READ_PACKAGE_JSON, Infrastructure,
+        WorkerType,
     },
     core::{
         ast::transformations::{
             transform_mikroorm_config_ts::transform_mikroorm_config_ts,
             transform_registrations_ts::transform_registrations_ts_worker_type,
+            transform_test_utils_ts::{
+                transform_test_utils_add_database, transform_test_utils_add_infrastructure,
+                transform_test_utils_remove_database, transform_test_utils_remove_infrastructure,
+            },
         },
         base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
         command::command,
@@ -365,6 +370,40 @@ fn change_type(
         docker_compose_data,
         manifest_data.projects.clone(),
     );
+
+    let test_utils_path = base_path.join("__test__").join("test-utils.ts");
+    if test_utils_path.exists() {
+        let _ = transform_test_utils_remove_database(&base_path);
+        let _ = transform_test_utils_remove_infrastructure(&base_path, &Infrastructure::Redis);
+
+        let test_content = match r#type {
+            WorkerType::Database => {
+                let db = database.unwrap();
+                let content = transform_test_utils_add_database(&base_path, &db)?;
+                use crate::core::ast::transformations::transform_test_utils_ts::transform_test_utils_remove_kafka;
+                transform_test_utils_remove_kafka(&base_path).unwrap_or(content)
+            }
+            WorkerType::RedisCache | WorkerType::BullMQCache => {
+                let content =
+                    transform_test_utils_add_infrastructure(&base_path, &Infrastructure::Redis)?;
+                use crate::core::ast::transformations::transform_test_utils_ts::transform_test_utils_remove_kafka;
+                transform_test_utils_remove_kafka(&base_path).unwrap_or(content)
+            }
+            WorkerType::Kafka => {
+                use crate::core::ast::transformations::transform_test_utils_ts::transform_test_utils_add_kafka;
+                transform_test_utils_add_kafka(&base_path)?
+            }
+        };
+
+        rendered_templates_cache.insert(
+            test_utils_path.to_string_lossy(),
+            RenderedTemplate {
+                path: test_utils_path.clone(),
+                content: test_content,
+                context: None,
+            },
+        );
+    }
 
     Ok(())
 }

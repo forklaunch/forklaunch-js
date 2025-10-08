@@ -1,9 +1,27 @@
 {
   "data": {
-    "_id": 4000,
+    "_id": 3000,
     "properties": {
       "email": {
         "name": "email",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "string",
+        "array": false,
+        "runtimeType": "string"
+      },
+      "emailVerified": {
+        "name": "emailVerified",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "boolean",
+        "array": false,
+        "runtimeType": "boolean"
+      },
+      "name": {
+        "name": "name",
         "kind": "scalar",
         "getter": false,
         "setter": false,
@@ -27,6 +45,16 @@
         "setter": false,
         "type": "string",
         "array": false,
+        "runtimeType": "string"
+      },
+      "image": {
+        "name": "image",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "string",
+        "array": false,
+        "optional": true,
         "runtimeType": "string"
       },
       "phoneNumber": {
@@ -89,9 +117,13 @@
     "filters": {},
     "hooks": {},
     "indexes": [],
-    "uniques": [{ "properties": "email" }, { "properties": "subscription" }],
+    "uniques": [
+      { "properties": "email" },
+      { "properties": "name" },
+      { "properties": "subscription" }
+    ],
     "className": "User",
-    "path": "../iam-base/persistence/entities/user.entity.ts",
+    "path": "./persistence/entities/user.entity.ts",
     "name": "User",
     "abstract": false,
     "internal": true,
@@ -101,7 +133,7 @@
     "useCache": true,
     "collection": "user"
   },
-  "origin": "../iam-base/persistence/entities/user.entity.ts",
-  "hash": "30b1bcb1d3b9c1a9872e57d58569503b",
-  "version": "6.5.6"
+  "origin": "./persistence/entities/user.entity.ts",
+  "hash": "ef61f613188e5cefc9e50c9022c3dd49",
+  "version": "6.5.7"
 }

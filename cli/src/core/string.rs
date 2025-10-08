@@ -3,12 +3,12 @@ pub(crate) fn split_preserve_spaces(input: &str) -> Vec<String> {
     let mut current = String::new();
 
     for c in input.chars() {
-        if c == ' ' {
+        if c == ' ' || c == '\n' || c == '\r' || c == '\t' {
             if !current.is_empty() {
                 result.push(current.clone());
                 current.clear();
             }
-            result.push(" ".to_string());
+            result.push(c.to_string());
         } else {
             current.push(c);
         }

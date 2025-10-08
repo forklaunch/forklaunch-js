@@ -40,6 +40,6 @@
     "collection": "role"
   },
   "origin": "../iam-base/persistence/entities/role.entity.ts",
-  "hash": "1ffaa1353886a46a015d8e48c8c1408d",
-  "version": "6.5.6"
+  "hash": "6d642c00a11b6cc76fc77787d1f37aa1",
+  "version": "6.5.7"
 }

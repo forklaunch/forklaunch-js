@@ -2,10 +2,11 @@ import {
   array,
   handlers,
   IdSchema,
-  IdsSchema,
+  optional,
   schemaValidator,
   string
 } from '@forklaunch/blueprint-core';
+import { IdsDto } from '@forklaunch/common';
 import { ci, tokens } from '../../bootstrapper';
 import {
   CreateSubscriptionMapper,
@@ -21,7 +22,7 @@ export const createSubscription = handlers.post(
   schemaValidator,
   '/',
   {
-    name: 'createSubscription',
+    name: 'Create Subscription',
     summary: 'Create a subscription',
     auth: {
       hmac: {
@@ -45,7 +46,7 @@ export const getSubscription = handlers.get(
   schemaValidator,
   '/:id',
   {
-    name: 'getSubscription',
+    name: 'Get Subscription',
     summary: 'Get a subscription',
     auth: {
       hmac: {
@@ -69,7 +70,7 @@ export const getUserSubscription = handlers.get(
   schemaValidator,
   '/user/:id',
   {
-    name: 'getUserSubscription',
+    name: 'Get User Subscription',
     summary: 'Get a user subscription',
     auth: {
       hmac: {
@@ -95,7 +96,7 @@ export const getOrganizationSubscription = handlers.get(
   schemaValidator,
   '/organization/:id',
   {
-    name: 'getOrganizationSubscription',
+    name: 'Get Organization Subscription',
     summary: 'Get an organization subscription',
     auth: {
       hmac: {
@@ -124,7 +125,7 @@ export const updateSubscription = handlers.put(
   schemaValidator,
   '/:id',
   {
-    name: 'updateSubscription',
+    name: 'Update Subscription',
     summary: 'Update a subscription',
     auth: {
       hmac: {
@@ -157,7 +158,7 @@ export const deleteSubscription = handlers.delete(
   schemaValidator,
   '/:id',
   {
-    name: 'deleteSubscription',
+    name: 'Delete Subscription',
     summary: 'Delete a subscription',
     auth: {
       hmac: {
@@ -182,9 +183,11 @@ export const listSubscriptions = handlers.get(
   schemaValidator,
   '/',
   {
-    name: 'listSubscriptions',
+    name: 'List Subscriptions',
     summary: 'List subscriptions',
-    query: IdsSchema,
+    query: {
+      ids: optional(array(string))
+    },
     auth: {
       hmac: {
         secretKeys: {
@@ -198,7 +201,9 @@ export const listSubscriptions = handlers.get(
   },
   async (req, res) => {
     openTelemetryCollector.debug('Listing subscriptions', req.query);
-    res.status(200).json(await serviceFactory().listSubscriptions(req.query));
+    res
+      .status(200)
+      .json(await serviceFactory().listSubscriptions(req.query as IdsDto));
   }
 );
 
@@ -206,7 +211,7 @@ export const cancelSubscription = handlers.get(
   schemaValidator,
   '/:id/cancel',
   {
-    name: 'cancelSubscription',
+    name: 'Cancel Subscription',
     summary: 'Cancel a subscription',
     params: IdSchema,
     auth: {
@@ -231,7 +236,7 @@ export const resumeSubscription = handlers.get(
   schemaValidator,
   '/:id/resume',
   {
-    name: 'resumeSubscription',
+    name: 'Resume Subscription',
     summary: 'Resume a subscription',
     params: IdSchema,
     auth: {

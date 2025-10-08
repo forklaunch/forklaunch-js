@@ -56,8 +56,11 @@ export const SubscriptionMapper = responseMapper(
   Subscription,
   {
     toDto: async (entity: Subscription) => {
+      const data = await entity.read();
       return {
-        ...(await entity.read()),
+        ...data,
+        // Convert null endDate to undefined for DTO validation
+        endDate: data.endDate ?? undefined,
         stripeFields: entity.providerFields
       };
     }

@@ -1,12 +1,13 @@
-use std::collections::HashMap;
+use std::{
+    collections::{HashMap, HashSet},
+    fs,
+    io::Write,
+    path::{Path, PathBuf},
+};
 
 use anyhow::{Context, Result};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
-use std::fs;
-use std::io::Write;
-use std::path::{Path, PathBuf};
 
 #[derive(Debug, Serialize)]
 pub(crate) struct Env {
@@ -199,7 +200,6 @@ impl<'de> Deserialize<'de> for Env {
     }
 }
 
-/// Represents an environment file with its variables
 #[derive(Debug, Clone)]
 pub(crate) struct EnvFile {
     #[allow(dead_code)]
@@ -207,7 +207,6 @@ pub(crate) struct EnvFile {
     pub(crate) variables: HashMap<String, String>,
 }
 
-/// Load environment variables from a .env file
 pub(crate) fn load_env_file(path: &Path) -> Result<HashMap<String, String>> {
     if !path.exists() {
         return Ok(HashMap::new());
@@ -244,7 +243,6 @@ pub(crate) fn load_env_file(path: &Path) -> Result<HashMap<String, String>> {
     Ok(variables)
 }
 
-/// Find all .env files in a project directory using regex pattern
 pub(crate) fn find_env_files(project_path: &Path) -> Result<Vec<PathBuf>> {
     let mut env_files = Vec::new();
 
@@ -252,10 +250,8 @@ pub(crate) fn find_env_files(project_path: &Path) -> Result<Vec<PathBuf>> {
         return Ok(env_files);
     }
 
-    // Regex pattern to match all .env files (.env, .env.local, .env.development, etc.)
     let env_regex = Regex::new(r"^\.env(\.[a-zA-Z0-9_-]+)*$")?;
 
-    // Find all .env* files in the directory
     if let Ok(entries) = fs::read_dir(project_path) {
         for entry in entries {
             if let Ok(entry) = entry {
@@ -268,19 +264,17 @@ pub(crate) fn find_env_files(project_path: &Path) -> Result<Vec<PathBuf>> {
         }
     }
 
-    // Sort files for consistent ordering (.env.local typically takes precedence)
     env_files.sort_by(|a, b| {
         let a_name = a.file_name().unwrap().to_str().unwrap();
         let b_name = b.file_name().unwrap().to_str().unwrap();
 
-        // Priority order: .env.local > .env.development > .env.production > .env.test > .env
         let get_priority = |name: &str| match name {
             ".env.local" => 0,
             ".env.development" => 1,
             ".env.production" => 2,
             ".env.test" => 3,
             ".env" => 4,
-            _ => 5, // Other .env.* files
+            _ => 5,
         };
 
         get_priority(a_name).cmp(&get_priority(b_name))
@@ -289,7 +283,6 @@ pub(crate) fn find_env_files(project_path: &Path) -> Result<Vec<PathBuf>> {
     Ok(env_files)
 }
 
-/// Load all environment files for a project
 pub(crate) fn load_project_env_files(project_path: &Path) -> Result<Vec<EnvFile>> {
     let env_file_paths = find_env_files(project_path)?;
     let mut env_files = Vec::new();
@@ -302,7 +295,6 @@ pub(crate) fn load_project_env_files(project_path: &Path) -> Result<Vec<EnvFile>
     Ok(env_files)
 }
 
-/// Get all environment variables defined across all .env files in a project
 #[allow(dead_code)]
 pub(crate) fn get_all_env_vars_in_project(project_path: &Path) -> Result<HashSet<String>> {
     let env_files = load_project_env_files(project_path)?;
@@ -317,9 +309,7 @@ pub(crate) fn get_all_env_vars_in_project(project_path: &Path) -> Result<HashSet
     Ok(all_vars)
 }
 
-/// Check if an environment variable is defined in any of the project's .env files or cascading hierarchy
 pub(crate) fn is_env_var_defined(project_path: &Path, var_name: &str) -> Result<bool> {
-    // First check project-level .env files
     let env_files = load_project_env_files(project_path)?;
     for env_file in env_files {
         if env_file.variables.contains_key(var_name) {
@@ -327,7 +317,6 @@ pub(crate) fn is_env_var_defined(project_path: &Path, var_name: &str) -> Result<
         }
     }
 
-    // Then check cascading hierarchy (root .env.local files)
     if let Ok(workspace_root) = find_workspace_root(project_path) {
         let cascading_env_paths = get_cascading_env_paths(project_path, &workspace_root)?;
 
@@ -343,8 +332,6 @@ pub(crate) fn is_env_var_defined(project_path: &Path, var_name: &str) -> Result<
     Ok(false)
 }
 
-/// Find the most appropriate .env file to add a variable to
-/// Priority: .env.local > .env > create .env.local
 pub(crate) fn get_target_env_file(project_path: &Path) -> Result<PathBuf> {
     let env_local = project_path.join(".env.local");
     let env_default = project_path.join(".env");
@@ -354,12 +341,10 @@ pub(crate) fn get_target_env_file(project_path: &Path) -> Result<PathBuf> {
     } else if env_default.exists() {
         Ok(env_default)
     } else {
-        // Create .env.local as the default
         Ok(env_local)
     }
 }
 
-/// Add environment variables to an .env file
 pub(crate) fn add_env_vars_to_file(file_path: &Path, vars: &HashMap<String, String>) -> Result<()> {
     let mut content = String::new();
 
@@ -389,7 +374,6 @@ pub(crate) fn add_env_vars_to_file(file_path: &Path, vars: &HashMap<String, Stri
     Ok(())
 }
 
-/// Find the workspace root by looking for .forklaunch/manifest.toml
 pub(crate) fn find_workspace_root(start_path: &Path) -> Result<PathBuf> {
     let mut current_path = start_path.canonicalize()?;
 
@@ -410,7 +394,6 @@ pub(crate) fn find_workspace_root(start_path: &Path) -> Result<PathBuf> {
     }
 }
 
-/// Get the modules path from the manifest.toml file
 pub(crate) fn get_modules_path(workspace_root: &Path) -> Result<PathBuf> {
     let manifest_path = workspace_root.join(".forklaunch").join("manifest.toml");
 
@@ -424,7 +407,6 @@ pub(crate) fn get_modules_path(workspace_root: &Path) -> Result<PathBuf> {
     let manifest_content = fs::read_to_string(&manifest_path)
         .with_context(|| format!("Failed to read manifest: {}", manifest_path.display()))?;
 
-    // Parse TOML to get modules_path
     let manifest: toml::Value =
         toml::from_str(&manifest_content).with_context(|| "Failed to parse manifest.toml")?;
 
@@ -436,7 +418,6 @@ pub(crate) fn get_modules_path(workspace_root: &Path) -> Result<PathBuf> {
     Ok(workspace_root.join(modules_path))
 }
 
-/// Get cascading environment file paths from project directory up to workspace root
 pub(crate) fn get_cascading_env_paths(
     project_path: &Path,
     workspace_root: &Path,
@@ -449,7 +430,6 @@ pub(crate) fn get_cascading_env_paths(
     let normalized_workspace_root = workspace_root.canonicalize()?;
 
     while current_path.starts_with(&normalized_workspace_root) {
-        // Find all .env* files in current directory
         if let Ok(entries) = fs::read_dir(&current_path) {
             let mut current_dir_env_files = Vec::new();
 
@@ -463,19 +443,17 @@ pub(crate) fn get_cascading_env_paths(
                 }
             }
 
-            // Sort files for consistent ordering (.env.local typically takes precedence)
             current_dir_env_files.sort_by(|a, b| {
                 let a_name = a.file_name().unwrap().to_str().unwrap();
                 let b_name = b.file_name().unwrap().to_str().unwrap();
 
-                // Priority order: .env.local > .env > .env.development > .env.production > .env.test
                 let get_priority = |name: &str| match name {
                     ".env.local" => 0,
                     ".env" => 1,
                     ".env.development" => 2,
                     ".env.production" => 3,
                     ".env.test" => 4,
-                    _ => 5, // Other .env.* files
+                    _ => 5,
                 };
 
                 get_priority(a_name).cmp(&get_priority(b_name))
@@ -494,7 +472,6 @@ pub(crate) fn get_cascading_env_paths(
         }
     }
 
-    // Reverse to get root-to-project order (root variables loaded first, can be overridden by project)
     env_paths.reverse();
 
     Ok(env_paths)
@@ -502,8 +479,9 @@ pub(crate) fn get_cascading_env_paths(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use tempfile::TempDir;
+
+    use super::*;
 
     #[test]
     fn test_load_env_file() {

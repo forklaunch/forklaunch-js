@@ -117,8 +117,11 @@ export class StripeSubscriptionService<
   ): Promise<Dto['SubscriptionMapper']> {
     const subscriptionEntity =
       await this.baseSubscriptionService.getSubscription(idDto, em);
+    if (!subscriptionEntity.externalId) {
+      throw new Error('Subscription not found');
+    }
     const stripeSubscription = await this.stripeClient.subscriptions.retrieve(
-      idDto.id
+      subscriptionEntity.externalId
     );
     subscriptionEntity.stripeFields = stripeSubscription;
     return subscriptionEntity;
@@ -130,8 +133,11 @@ export class StripeSubscriptionService<
   ): Promise<Dto['SubscriptionMapper']> {
     const subscriptionEntity =
       await this.baseSubscriptionService.getUserSubscription(idDto, em);
+    if (!subscriptionEntity.externalId) {
+      throw new Error('Subscription not found');
+    }
     const stripeSubscription = await this.stripeClient.subscriptions.retrieve(
-      idDto.id
+      subscriptionEntity.externalId
     );
     subscriptionEntity.stripeFields = stripeSubscription;
     return subscriptionEntity;
@@ -141,104 +147,130 @@ export class StripeSubscriptionService<
     idDto: IdDto,
     em?: EntityManager
   ): Promise<Dto['SubscriptionMapper']> {
-    const id = (
-      await em?.findOne<{ id: string; externalId: string }>(
-        this.options?.databaseTableName ?? 'subscription',
-        { externalId: idDto.id }
-      )
-    )?.id;
-    if (!id) {
+    const subscriptionEntity =
+      await this.baseSubscriptionService.getOrganizationSubscription(idDto, em);
+    if (!subscriptionEntity.externalId) {
       throw new Error('Subscription not found');
     }
-    const subscriptionEntity =
-      await this.baseSubscriptionService.getOrganizationSubscription(
-        { id },
-        em
-      );
     const stripeSubscription = await this.stripeClient.subscriptions.retrieve(
-      idDto.id
+      subscriptionEntity.externalId
     );
     subscriptionEntity.stripeFields = stripeSubscription;
     return subscriptionEntity;
   }
 
   async updateSubscription(
-    subscriptionDto: StripeUpdateSubscriptionDto<PartyType>,
+    subscriptionDto: StripeUpdateSubscriptionDto<PartyType> & IdDto,
     em?: EntityManager
   ): Promise<Dto['SubscriptionMapper']> {
-    const subscription = await this.stripeClient.subscriptions.update(
-      subscriptionDto.id,
+    const subscriptionEntity =
+      await this.baseSubscriptionService.getSubscription(
+        {
+          id: subscriptionDto.id
+        },
+        em
+      );
+    if (!subscriptionEntity.externalId) {
+      throw new Error('Subscription not found');
+    }
+
+    const existingStripeSubscription =
+      await this.stripeClient.subscriptions.retrieve(
+        subscriptionEntity.externalId
+      );
+
+    const updatedSubscription = await this.stripeClient.subscriptions.update(
+      subscriptionEntity.externalId,
       {
         ...subscriptionDto.stripeFields,
-        items: [
-          {
-            plan: subscriptionDto.productId
-          }
-        ]
+        items: existingStripeSubscription.items.data.map((item) => ({
+          id: item.id,
+          plan: subscriptionDto.productId || item.plan?.id
+        }))
       }
     );
 
-    return await this.baseSubscriptionService.updateSubscription(
-      {
-        ...subscriptionDto,
-        externalId: subscription.id,
-        billingProvider: 'stripe',
-        providerFields: subscription
-      },
-      em ?? this.em,
-      subscription
-    );
+    const updatedSubscriptionEntity =
+      await this.baseSubscriptionService.updateSubscription(
+        {
+          ...subscriptionDto,
+          externalId: updatedSubscription.id,
+          billingProvider: 'stripe'
+        },
+        em ?? this.em,
+        updatedSubscription
+      );
+
+    updatedSubscriptionEntity.stripeFields = updatedSubscription;
+    return updatedSubscriptionEntity;
   }
 
-  async deleteSubscription(
-    idDto: { id: string },
-    em?: EntityManager
-  ): Promise<void> {
-    await this.stripeClient.subscriptions.cancel(idDto.id);
+  async deleteSubscription(idDto: IdDto, em?: EntityManager): Promise<void> {
+    const subscription = await this.baseSubscriptionService.getSubscription(
+      idDto,
+      em
+    );
+    if (!subscription.externalId) {
+      throw new Error('Subscription not found');
+    }
+    await this.stripeClient.subscriptions.cancel(subscription.externalId);
     await this.baseSubscriptionService.deleteSubscription(idDto, em);
   }
 
   async listSubscriptions(
-    idsDto: IdsDto,
+    idsDto?: IdsDto,
     em?: EntityManager
   ): Promise<Dto['SubscriptionMapper'][]> {
-    const subscriptions = (
-      await this.stripeClient.subscriptions.list({
-        status: 'active'
-      })
-    ).data.filter((s) => idsDto.ids?.includes(s.id));
+    const subscriptions = await this.baseSubscriptionService.listSubscriptions(
+      idsDto,
+      em
+    );
 
-    const ids = (
-      await em?.findAll<{ id: string; externalId: string }>(
-        this.options?.databaseTableName ?? 'subscription',
-        { where: { externalId: { $in: subscriptions.map((s) => s.id) } } }
-      )
-    )?.map((s) => s.id);
-
-    if (!ids) {
-      throw new Error('Subscriptions not found');
+    if (!subscriptions || subscriptions.length === 0) {
+      return [];
     }
 
-    return await Promise.all(
-      (await this.baseSubscriptionService.listSubscriptions({ ids }, em)).map(
-        async (subscription) => {
-          const stripeSubscription = subscriptions.find(
-            (s) => s.id === subscription.externalId
-          )!;
-          subscription.stripeFields = stripeSubscription;
-          return subscription;
+    const stripeSubscriptions = await Promise.all(
+      subscriptions.map(async (subscription) => {
+        try {
+          return await this.stripeClient.subscriptions.retrieve(
+            subscription.externalId
+          );
+        } catch {
+          return null;
         }
-      )
+      })
     );
+
+    return subscriptions
+      .map((subscription, index) => ({
+        ...subscription,
+        stripeFields: stripeSubscriptions[index]
+      }))
+      .filter((subscription) => subscription.stripeFields !== null);
   }
 
   async cancelSubscription(idDto: IdDto, em?: EntityManager): Promise<void> {
-    await this.stripeClient.subscriptions.cancel(idDto.id);
+    const subscription = await this.baseSubscriptionService.getSubscription(
+      idDto,
+      em
+    );
+    if (!subscription.externalId) {
+      throw new Error('Subscription not found');
+    }
+    await this.stripeClient.subscriptions.cancel(subscription.externalId);
     await this.baseSubscriptionService.cancelSubscription(idDto, em);
   }
 
   async resumeSubscription(idDto: IdDto, em?: EntityManager): Promise<void> {
-    await this.stripeClient.subscriptions.resume(idDto.id);
+    const subscription = await this.baseSubscriptionService.getSubscription(
+      idDto,
+      em
+    );
+    if (!subscription.externalId) {
+      throw new Error('Subscription not found');
+    }
+    await this.stripeClient.subscriptions.resume(subscription.externalId);
     await this.baseSubscriptionService.resumeSubscription(idDto, em);
   }
 }

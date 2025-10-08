@@ -19,7 +19,6 @@ fn inject_into_sdk_type_definition<'a>(
     app_program_ast: &mut Program<'a>,
     injection_program_ast: &mut Program<'a>,
 ) -> Result<()> {
-    // Find the Sdk type definition in the app program
     for stmt in app_program_ast.body.iter_mut() {
         let export = match stmt {
             Statement::ExportNamedDeclaration(export) => export,
@@ -31,19 +30,16 @@ fn inject_into_sdk_type_definition<'a>(
             _ => continue,
         };
 
-        // Check if this is the Sdk type definition (ends with "Sdk")
         let is_sdk_type = ts_declaration.id.name.ends_with("Sdk");
         if !is_sdk_type {
             continue;
         }
 
-        // Get the type literal from the type annotation
         let type_literal = match &mut ts_declaration.type_annotation {
             TSType::TSTypeLiteral(literal) => literal,
             _ => continue,
         };
 
-        // Find the injection data from the injection program
         for injection_stmt in &mut injection_program_ast.body {
             let injection_export = match injection_stmt {
                 Statement::ExportNamedDeclaration(export) => export,
@@ -55,13 +51,11 @@ fn inject_into_sdk_type_definition<'a>(
                 _ => continue,
             };
 
-            // Get the injection type literal
             let injection_type_literal = match &mut injection_ts_declaration.type_annotation {
                 TSType::TSTypeLiteral(literal) => literal,
                 _ => continue,
             };
 
-            // Get existing property names to avoid duplicates
             let existing_keys: Vec<String> = type_literal
                 .members
                 .iter()
@@ -75,7 +69,6 @@ fn inject_into_sdk_type_definition<'a>(
                 })
                 .collect();
 
-            // Move properties from injection to app, avoiding duplicates
             let mut moved: Vec<TSSignature> = vec![];
             for member in injection_type_literal.members.drain(..) {
                 if let TSSignature::TSPropertySignature(prop_sig) = &member {
@@ -120,7 +113,6 @@ fn inject_into_sdk_client_object<'a>(
         for decl in &mut var_declaration.declarations {
             let mut maybe_object = None;
             if let Some(init) = &mut decl.init {
-                // Peel common TS wrappers to find the underlying object literal
                 let mut expr_opt: Option<&mut Expression> = Some(init);
                 while let Some(expr) = expr_opt {
                     match expr {

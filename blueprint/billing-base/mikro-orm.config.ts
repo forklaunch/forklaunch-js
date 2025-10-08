@@ -61,10 +61,9 @@ const mikroOrmOptionsConfig = defineConfig({
   password: validConfigInjector.resolve('DB_PASSWORD'),
   port: validConfigInjector.resolve('DB_PORT'),
   entities: Object.values(entities),
-  metadataProvider: TsMorphMetadataProvider,
-  debug: validConfigInjector.resolve('NODE_ENV') === 'development',
-  extensions: [Migrator],
   discovery: {
+    // disableDynamicFileAccess: true,
+    requireEntitiesArray: true,
     getMappedType(type: string, platform: Platform) {
       if (type === 'string') {
         return Type.getType(TextType);
@@ -73,6 +72,9 @@ const mikroOrmOptionsConfig = defineConfig({
       return platform.getDefaultMappedType(type);
     }
   },
+  metadataProvider: TsMorphMetadataProvider,
+  debug: validConfigInjector.resolve('NODE_ENV') === 'development',
+  extensions: [Migrator],
   seeder: {
     path: 'dist/persistence',
     glob: 'seeder.js'

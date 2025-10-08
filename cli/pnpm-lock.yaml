@@ -6,7 +6,17 @@ settings:
 
 importers:
 
-  .: {}
+  .:
+    dependencies:
+      dotenv:
+        specifier: ^17.2.3
+        version: 17.2.3
+
+packages:
+
+  dotenv@17.2.3:
+    resolution: {integrity: sha512-JVUnt+DUIzu87TABbhPmNfVdBDt18BLOWjMUFJMSi/Qqg7NTYtabbvSNJGOJ7afbRuv9D/lngizHtP7QyLQ+9w==}
+    engines: {node: '>=12'}
 
 networks:
   compile-test-bun-application-network:
@@ -249,6 +259,10 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+
+snapshots:
+
+  dotenv@17.2.3: {}
 
 volumes:
   compile-test-bun-application-postgresql-data:

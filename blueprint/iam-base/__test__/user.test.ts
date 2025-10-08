@@ -1,36 +1,33 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import {
   cleanupTestDatabase,
   clearDatabase,
-  MOCK_AUTH_TOKEN,
-  MOCK_HMAC_TOKEN,
   mockPermissionResponse,
   mockRoleResponse,
   mockUpdateUserData,
   mockUserData,
   setupTestData,
   setupTestDatabase,
+  TEST_TOKENS,
   TestSetupResult
 } from './test-utils';
 
 describe('User Routes E2E Tests with PostgreSQL Container', () => {
-  let container: TestSetupResult['container'];
   let orm: TestSetupResult['orm'];
 
   beforeAll(async () => {
     const setup = await setupTestDatabase();
-    container = setup.container;
     orm = setup.orm;
   }, 60000);
 
   beforeEach(async () => {
-    await clearDatabase(orm);
+    await clearDatabase({ orm });
+    if (!orm) throw new Error('ORM not initialized');
     const em = orm.em.fork();
     await setupTestData(em);
   });
 
   afterAll(async () => {
-    await cleanupTestDatabase(orm, container);
+    await cleanupTestDatabase();
   }, 30000);
 
   describe('POST /user - createUser', () => {
@@ -39,7 +36,7 @@ describe('User Routes E2E Tests with PostgreSQL Container', () => {
       const response = await createUserRoute.sdk.createUser({
         body: mockUserData,
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -62,7 +59,7 @@ describe('User Routes E2E Tests with PostgreSQL Container', () => {
         await createUserRoute.sdk.createUser({
           body: invalidData,
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         });
         expect(true).toBe(false);
@@ -90,7 +87,7 @@ describe('User Routes E2E Tests with PostgreSQL Container', () => {
       const response = await createBatchUsersRoute.sdk.createBatchUsers({
         body: batchData,
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -105,7 +102,7 @@ describe('User Routes E2E Tests with PostgreSQL Container', () => {
       const response = await getUserRoute.sdk.getUser({
         params: { id: '123e4567-e89b-12d3-a456-426614174000' },
         headers: {
-          authorization: MOCK_AUTH_TOKEN
+          authorization: TEST_TOKENS.AUTH
         }
       });
 
@@ -196,7 +193,7 @@ describe('User Routes E2E Tests with PostgreSQL Container', () => {
       const response = await surfaceRolesRoute.sdk.surfaceUserRoles({
         params: { id: '123e4567-e89b-12d3-a456-426614174000' },
         headers: {
-          authorization: MOCK_HMAC_TOKEN
+          authorization: TEST_TOKENS.HMAC
         }
       });
 
@@ -214,7 +211,7 @@ describe('User Routes E2E Tests with PostgreSQL Container', () => {
         {
           params: { id: '123e4567-e89b-12d3-a456-426614174000' },
           headers: {
-            authorization: MOCK_HMAC_TOKEN
+            authorization: TEST_TOKENS.HMAC
           }
         }
       );
@@ -224,3 +221,4 @@ describe('User Routes E2E Tests with PostgreSQL Container', () => {
     });
   });
 });
+// Test unsymlink

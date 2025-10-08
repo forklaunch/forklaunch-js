@@ -622,7 +622,6 @@ impl CliCommand for ApplicationCommand {
             modules_to_test
         };
 
-        // Prompt for description
         let description = prompt_without_validation(
             &mut line_editor,
             &mut stdout,
@@ -632,7 +631,6 @@ impl CliCommand for ApplicationCommand {
             None,
         )?;
 
-        // Prompt for author
         let author = prompt_with_validation(
             &mut line_editor,
             &mut stdout,
@@ -644,7 +642,6 @@ impl CliCommand for ApplicationCommand {
             |_| "Author name cannot be empty. Please try again".to_string(),
         )?;
 
-        // Prompt for license
         let license: License = prompt_with_validation(
             &mut line_editor,
             &mut stdout,
@@ -659,7 +656,6 @@ impl CliCommand for ApplicationCommand {
 
         // TODO: Add support for libraries
 
-        // Setup dryrun, ignore files, ignore dirs, and preserve files
         let dryrun = matches.get_flag("dryrun");
         let mut ignore_files = vec!["pnpm-workspace.yaml", "pnpm-lock.yml"];
         let ignore_dirs = vec![];
@@ -671,8 +667,6 @@ impl CliCommand for ApplicationCommand {
             ignore_files.extend(test_framework.unwrap().all_other_files());
         }
         ignore_files.extend(database.all_other_files());
-
-        // Inline specific perms checks here. Make remote calls to receive templates for specific services if needed here (premium only).
 
         let mut additional_projects = vec![
             ProjectEntry {
@@ -744,6 +738,7 @@ impl CliCommand for ApplicationCommand {
             camel_case_app_name: name.to_string().to_case(Case::Camel),
             pascal_case_app_name: name.to_string().to_case(Case::Pascal),
             kebab_case_app_name: name.to_string().to_case(Case::Kebab),
+            title_case_app_name: name.to_string().to_case(Case::Title),
             formatter: formatter.to_string(),
             linter: linter.to_string(),
             validator: validator.to_string(),
@@ -867,11 +862,13 @@ impl CliCommand for ApplicationCommand {
                 camel_case_app_name: data.camel_case_app_name.clone(),
                 pascal_case_app_name: data.pascal_case_app_name.clone(),
                 kebab_case_app_name: data.kebab_case_app_name.clone(),
+                title_case_app_name: data.title_case_app_name.clone(),
                 service_name: template_dir.output_path.clone(),
                 service_path: template_dir.output_path.to_string(),
                 camel_case_name: template_dir.output_path.to_case(Case::Camel),
                 pascal_case_name: template_dir.output_path.to_case(Case::Pascal),
                 kebab_case_name: template_dir.output_path.to_case(Case::Kebab),
+                title_case_name: template_dir.output_path.to_case(Case::Title),
                 formatter: data.formatter.clone(),
                 linter: data.linter.clone(),
                 validator: data.validator.clone(),

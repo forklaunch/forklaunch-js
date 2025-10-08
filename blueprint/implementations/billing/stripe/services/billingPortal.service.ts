@@ -120,13 +120,13 @@ export class StripeBillingPortalService<
       });
     const session = await this.stripeClient.billingPortal.sessions.create({
       ...billingPortalDto.stripeFields,
-      customer: existingSession.customerId
+      customer: billingPortalDto.customerId || existingSession.customerId
     });
 
     return await this.baseBillingPortalService.updateBillingPortalSession(
       {
         ...billingPortalDto,
-        id: session.id,
+        id: existingSession.id, // Use the original database ID, not the new Stripe session ID
         uri: session.url,
         expiresAt: new Date(
           Date.now() + this.billingPortalSessionExpiryDurationMs

@@ -1,1 +1,4 @@
-../../../iam-base/api/controllers/index.ts
+export * from './organization.controller';
+export * from './permission.controller';
+export * from './role.controller';
+export * from './user.controller';

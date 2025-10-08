@@ -163,11 +163,13 @@ impl CliCommand for ModuleCommand {
             camel_case_app_name: manifest_data.camel_case_app_name.clone(),
             pascal_case_app_name: manifest_data.pascal_case_app_name.clone(),
             kebab_case_app_name: manifest_data.kebab_case_app_name.clone(),
+            title_case_app_name: manifest_data.title_case_app_name.clone(),
             service_name: get_service_module_name(&module),
             service_path: get_service_module_name(&module),
             camel_case_name: get_service_module_name(&module).to_case(Case::Camel),
             pascal_case_name: get_service_module_name(&module).to_case(Case::Pascal),
             kebab_case_name: get_service_module_name(&module).to_case(Case::Kebab),
+            title_case_name: get_service_module_name(&module).to_case(Case::Title),
             formatter: manifest_data.formatter.clone(),
             linter: manifest_data.linter.clone(),
             validator: manifest_data.validator.clone(),
@@ -266,6 +268,7 @@ impl CliCommand for ModuleCommand {
             content: add_service_definition_to_docker_compose(&service_data, &app_root_path, None)?,
             context: Some(ERROR_FAILED_TO_WRITE_DOCKER_COMPOSE.to_string()),
         });
+
         rendered_templates.extend(generate_with_template(
             None,
             &template_dir,
@@ -275,6 +278,7 @@ impl CliCommand for ModuleCommand {
             &vec![],
             dryrun,
         )?);
+
         rendered_templates.push(generate_service_package_json(
             &service_data,
             &base_path.clone().join(get_service_module_name(&module)),

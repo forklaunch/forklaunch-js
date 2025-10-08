@@ -14,5 +14,5 @@ export const {{camel_case_name}}Router = forklaunchRouter(
 );
 
 // mount the routes
-{{camel_case_name}}Router.get('/', {{camel_case_name}}Get)
-{{camel_case_name}}Router.post('/', {{camel_case_name}}Post);
+export const {{camel_case_name}}GetRoute = {{camel_case_name}}Router.get('/', {{camel_case_name}}Get);
+export const {{camel_case_name}}PostRoute = {{camel_case_name}}Router.post('/', {{camel_case_name}}Post);

@@ -5,6 +5,7 @@
  * @module ZodSchemaValidator
  */
 
+import { deepCloneWithoutUndefined } from '@forklaunch/common';
 import { SchemaObject } from 'openapi3-ts/oas31';
 import {
   z,
@@ -518,6 +519,7 @@ export class ZodSchemaValidator
    * @returns {SchemaObject} The OpenAPI schema object.
    */
   openapi<T extends ZodIdiomaticSchema | ZodCatchall>(schema: T): SchemaObject {
-    return generateSchema(JSON.parse(JSON.stringify(this.schemify(schema))));
+    const schemified = this.schemify(schema);
+    return generateSchema(deepCloneWithoutUndefined(schemified));
   }
 }

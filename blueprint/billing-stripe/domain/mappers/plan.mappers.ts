@@ -29,8 +29,18 @@ export const UpdatePlanMapper = requestMapper(
   PlanSchemas.UpdatePlanSchema,
   Plan,
   {
-    toEntity: async (dto, em: EntityManager) => {
-      return Plan.update(dto, em);
+    toEntity: async (dto, em: EntityManager, providerFields: Stripe.Plan) => {
+      // Find the existing plan first
+      const existingPlan = await em.findOneOrFail(Plan, { id: dto.id });
+
+      // Update the existing plan with new data
+      Object.assign(existingPlan, {
+        ...dto,
+        providerFields,
+        updatedAt: new Date()
+      });
+
+      return existingPlan;
     }
   }
 );
@@ -41,8 +51,9 @@ export const PlanMapper = responseMapper(
   Plan,
   {
     toDto: async (entity: Plan) => {
+      const baseData = await entity.read();
       return {
-        ...(await entity.read()),
+        ...baseData,
         stripeFields: entity.providerFields
       };
     }

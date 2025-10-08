@@ -17,6 +17,10 @@ config_struct!(
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) kebab_case_name: String,
         #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) title_case_name: String,
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) is_database_enabled: bool,
+        #[serde(skip_serializing, skip_deserializing)]
         pub(crate) database: String,
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) db_driver: String,
