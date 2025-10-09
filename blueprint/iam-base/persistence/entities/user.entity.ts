@@ -7,8 +7,8 @@ import {
   Property,
   Unique
 } from '@mikro-orm/core';
-import { Organization } from './organization.entity';
-import { Role } from './role.entity';
+import type { Organization } from './organization.entity';
+import type { Role } from './role.entity';
 
 @Entity()
 export class User extends SqlBaseEntity {
@@ -25,10 +25,10 @@ export class User extends SqlBaseEntity {
   @Property({ nullable: true })
   phoneNumber?: string;
 
-  @ManyToOne(() => Organization, { nullable: true })
+  @ManyToOne({ nullable: true })
   organization?: Organization;
 
-  @ManyToMany(() => Role)
+  @ManyToMany()
   roles = new Collection<Role>(this);
 
   @Property()

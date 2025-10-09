@@ -1,5 +1,14 @@
 # @forklaunch/infrastructure-redis
 
+## 0.4.25
+
+### Patch Changes
+
+- update packages, make OpenTelemetryCollector type more transparent, attempt to fix error loggings
+- Updated dependencies
+  - @forklaunch/common@0.6.18
+  - @forklaunch/core@0.15.7
+
 ## 0.4.24
 
 ### Patch Changes

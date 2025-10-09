@@ -1,5 +1,11 @@
 # @forklaunch/bunrun
 
+## 0.0.12
+
+### Patch Changes
+
+- update packages, make OpenTelemetryCollector type more transparent, attempt to fix error loggings
+
 ## 0.0.11
 
 ### Patch Changes

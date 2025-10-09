@@ -1,5 +1,11 @@
 # @forklaunch/testing
 
+## 0.0.7
+
+### Patch Changes
+
+- update packages, make OpenTelemetryCollector type more transparent, attempt to fix error loggings
+
 ## 0.0.6
 
 ### Patch Changes

@@ -49,7 +49,7 @@
     "globals": "^16.4.0",
     "jest": "^30.2.0",
     "lint-staged": "^16.2.3",
-    "oxlint": "^1.20.0",
+    "oxlint": "^1.22.0",
     "prettier": "^3.6.2",
     "sort-package-json": "^3.4.0",
     "ts-jest": "^29.4.4",
@@ -60,12 +60,12 @@
     "vitest": "^3.2.4"
   },
   "dependencies": {
-    "@forklaunch/common": "^0.6.17",
-    "@forklaunch/core": "^0.15.6",
-    "@forklaunch/express": "^0.9.24",
-    "@forklaunch/hyper-express": "^0.9.24",
-    "@forklaunch/universal-sdk": "^0.7.17",
-    "@forklaunch/validator": "^0.10.17"
+    "@forklaunch/common": "^0.6.18",
+    "@forklaunch/core": "^0.15.7",
+    "@forklaunch/express": "^0.9.25",
+    "@forklaunch/hyper-express": "^0.9.25",
+    "@forklaunch/universal-sdk": "^0.7.18",
+    "@forklaunch/validator": "^0.10.18"
   },
   "pnpm": {
     "patchedDependencies": {
