@@ -1,5 +1,15 @@
 # @forklaunch/express
 
+## 0.9.25
+
+### Patch Changes
+
+- update packages, make OpenTelemetryCollector type more transparent, attempt to fix error loggings
+- Updated dependencies
+  - @forklaunch/validator@0.10.18
+  - @forklaunch/common@0.6.18
+  - @forklaunch/core@0.15.7
+
 ## 0.9.24
 
 ### Patch Changes

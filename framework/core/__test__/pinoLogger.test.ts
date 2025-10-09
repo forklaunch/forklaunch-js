@@ -2,10 +2,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { logger, meta } from '../src/http/telemetry/pinoLogger';
 
 // Mock OpenTelemetry to test error scenarios
+let mockEmit = vi.fn();
 vi.mock('@opentelemetry/api-logs', () => ({
   logs: {
     getLogger: vi.fn(() => ({
-      emit: vi.fn()
+      emit: mockEmit
     }))
   }
 }));
@@ -21,6 +22,7 @@ describe('PinoLogger Error Handling', () => {
   let consoleSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
+    mockEmit = vi.fn();
     testLogger = logger('debug');
     consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.spyOn(console, 'log').mockImplementation(() => {});
@@ -214,6 +216,193 @@ describe('PinoLogger Error Handling', () => {
       expect(() => {
         child2.info('Nested child logger', { complex: { data: 'test' } });
       }).not.toThrow();
+    });
+  });
+
+  describe('Error Object Serialization', () => {
+    it('should capture error message, name, and stack', () => {
+      const error = new Error('Test error message');
+      error.name = 'CustomError';
+
+      testLogger.error('An error occurred', error);
+
+      expect(mockEmit).toHaveBeenCalled();
+      const emitCall = mockEmit.mock.calls[0][0];
+
+      expect(emitCall.attributes.err).toBeDefined();
+      expect(emitCall.attributes.err.message).toBe('Test error message');
+      expect(emitCall.attributes.err.name).toBe('CustomError');
+      expect(emitCall.attributes.err.stack).toBeDefined();
+      expect(typeof emitCall.attributes.err.stack).toBe('string');
+    });
+
+    it('should capture custom properties on Error objects', () => {
+      const error = new Error('Test error') as Error & {
+        statusCode: number;
+        requestId: string;
+      };
+      error.statusCode = 500;
+      error.requestId = 'req-123';
+
+      testLogger.error('Error with custom props', error);
+
+      expect(mockEmit).toHaveBeenCalled();
+      const emitCall = mockEmit.mock.calls[0][0];
+
+      expect(emitCall.attributes.err.statusCode).toBe(500);
+      expect(emitCall.attributes.err.requestId).toBe('req-123');
+    });
+
+    it('should handle Error as first argument', () => {
+      const error = new Error('Primary error');
+
+      testLogger.error(error);
+
+      expect(mockEmit).toHaveBeenCalled();
+      const emitCall = mockEmit.mock.calls[0][0];
+
+      expect(emitCall.attributes.err).toBeDefined();
+      expect(emitCall.attributes.err.message).toBe('Primary error');
+    });
+
+    it('should handle multiple Error objects', () => {
+      const error1 = new Error('First error');
+      const error2 = new Error('Second error');
+
+      testLogger.error('Multiple errors', error1, error2);
+
+      expect(mockEmit).toHaveBeenCalled();
+      const emitCall = mockEmit.mock.calls[0][0];
+
+      // The second error should overwrite the first due to Object.assign
+      expect(emitCall.attributes.err.message).toBe('Second error');
+    });
+
+    it('should handle Error with other metadata', () => {
+      const error = new Error('Test error');
+      const metadata = meta({ requestId: 'req-456', userId: 'user-789' });
+
+      testLogger.error('Error with metadata', error, metadata);
+
+      expect(mockEmit).toHaveBeenCalled();
+      const emitCall = mockEmit.mock.calls[0][0];
+
+      expect(emitCall.attributes.err).toBeDefined();
+      expect(emitCall.attributes.err.message).toBe('Test error');
+      expect(emitCall.attributes.requestId).toBe('req-456');
+      expect(emitCall.attributes.userId).toBe('user-789');
+    });
+
+    it('should handle Error with additional objects', () => {
+      const error = new Error('Database error');
+      const context = { table: 'users', operation: 'INSERT' };
+
+      testLogger.error('Database operation failed', error, context);
+
+      expect(mockEmit).toHaveBeenCalled();
+      const emitCall = mockEmit.mock.calls[0][0];
+
+      expect(emitCall.attributes.err.message).toBe('Database error');
+      expect(emitCall.attributes.table).toBe('users');
+      expect(emitCall.attributes.operation).toBe('INSERT');
+    });
+
+    it('should handle TypeError objects', () => {
+      const error = new TypeError('Type error occurred');
+
+      testLogger.error('Type error', error);
+
+      expect(mockEmit).toHaveBeenCalled();
+      const emitCall = mockEmit.mock.calls[0][0];
+
+      expect(emitCall.attributes.err.message).toBe('Type error occurred');
+      expect(emitCall.attributes.err.name).toBe('TypeError');
+    });
+
+    it('should handle RangeError objects', () => {
+      const error = new RangeError('Range error occurred');
+
+      testLogger.error('Range error', error);
+
+      expect(mockEmit).toHaveBeenCalled();
+      const emitCall = mockEmit.mock.calls[0][0];
+
+      expect(emitCall.attributes.err.message).toBe('Range error occurred');
+      expect(emitCall.attributes.err.name).toBe('RangeError');
+    });
+
+    it('should handle custom Error subclasses', () => {
+      class CustomAppError extends Error {
+        constructor(
+          message: string,
+          public code: string,
+          public statusCode: number
+        ) {
+          super(message);
+          this.name = 'CustomAppError';
+        }
+      }
+
+      const error = new CustomAppError('Application error', 'APP_001', 400);
+
+      testLogger.error('Custom error occurred', error);
+
+      expect(mockEmit).toHaveBeenCalled();
+      const emitCall = mockEmit.mock.calls[0][0];
+
+      expect(emitCall.attributes.err.message).toBe('Application error');
+      expect(emitCall.attributes.err.name).toBe('CustomAppError');
+      expect(emitCall.attributes.err.code).toBe('APP_001');
+      expect(emitCall.attributes.err.statusCode).toBe(400);
+    });
+
+    it('should handle Error in info level', () => {
+      const error = new Error('Info level error');
+
+      testLogger.info('Info with error', error);
+
+      expect(mockEmit).toHaveBeenCalled();
+      const emitCall = mockEmit.mock.calls[0][0];
+
+      expect(emitCall.severityText).toBe('info');
+      expect(emitCall.attributes.err.message).toBe('Info level error');
+    });
+
+    it('should handle Error in warn level', () => {
+      const error = new Error('Warning error');
+
+      testLogger.warn('Warning with error', error);
+
+      expect(mockEmit).toHaveBeenCalled();
+      const emitCall = mockEmit.mock.calls[0][0];
+
+      expect(emitCall.severityText).toBe('warn');
+      expect(emitCall.attributes.err.message).toBe('Warning error');
+    });
+
+    it('should handle Error in debug level', () => {
+      const error = new Error('Debug error');
+
+      testLogger.debug('Debug with error', error);
+
+      expect(mockEmit).toHaveBeenCalled();
+      const emitCall = mockEmit.mock.calls[0][0];
+
+      expect(emitCall.severityText).toBe('debug');
+      expect(emitCall.attributes.err.message).toBe('Debug error');
+    });
+
+    it('should include error in formatted body for pretty printing', () => {
+      const error = new Error('Pretty print error');
+
+      testLogger.error('Error message', error);
+
+      expect(mockEmit).toHaveBeenCalled();
+      const emitCall = mockEmit.mock.calls[0][0];
+
+      // The body should contain formatted error information
+      expect(emitCall.body).toContain('ERROR');
+      expect(emitCall.body).toContain('Error message');
     });
   });
 });
