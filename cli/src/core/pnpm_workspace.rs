@@ -88,3 +88,13 @@ pub(crate) fn remove_project_definition_from_pnpm_workspace(
     }
     Ok(pnpm_workspace.clone())
 }
+
+pub(crate) fn add_project_definition_to_pnpm_workspace_mut(
+    pnpm_workspace: &mut PnpmWorkspace,
+    project_name: &str,
+) -> Result<PnpmWorkspace> {
+    if !pnpm_workspace.packages.contains(&project_name.to_string()) {
+        pnpm_workspace.packages.push(project_name.to_string().clone());
+    }
+    Ok(pnpm_workspace.clone())
+}

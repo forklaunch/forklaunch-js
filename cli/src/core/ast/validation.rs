@@ -2,12 +2,12 @@ use std::collections::HashMap;
 use anyhow::Result;
 use convert_case::{Case, Casing};
 
-use oxc_allocator::Allocator;
+// use oxc_allocator::Allocator;
 use oxc_ast_visit::{Visit, walk::{walk_statement, walk_program}};
-use oxc_ast::ast::{SourceType, Statement, Expression, TSType, Declaration, TSSignature, BindingPatternKind, ObjectPropertyKind, Argument};
+use oxc_ast::ast::{Statement, Expression, TSType, Declaration, TSSignature, BindingPatternKind, ObjectPropertyKind, Argument, Program};
 
 use crate::core::{
-    ast::parse_ast_program::parse_ast_program,
+    // ast::parse_ast_program::parse_ast_program,
     package_json::project_package_json::ProjectPackageJson,
 };
 
@@ -194,18 +194,16 @@ impl<'a, 'ast> Visit<'ast> for ProjectReferenceValidator<'a> {
 }
 
 pub(crate) fn validate_project_removal_with_ast(
-    content: &str,
+    content: &Program,
     projects_to_remove: &Vec<String>,
 ) -> Result<HashMap<String, Vec<String>>> {
-    let allocator = Allocator::default();
-    let program = parse_ast_program(&allocator, content, SourceType::ts());
     
     let mut validator = ProjectReferenceValidator {
         projects_to_remove: projects_to_remove,
         matches: HashMap::new(),
     };
     
-    walk_program(&mut validator, &program);
+    walk_program(&mut validator, &content);
 
     println!("universal_sdk:281 validator.found: {:?}", validator.matches);
     
@@ -214,7 +212,7 @@ pub(crate) fn validate_project_removal_with_ast(
 
 pub(crate) fn validate_remove_from_universal_sdk(
     app_name: &str,
-    content: &str,
+    content: &Program,
     project_json: &ProjectPackageJson,
     projects_to_remove: &Vec<String>,
 ) -> Result<()> {

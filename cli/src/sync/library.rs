@@ -1,36 +1,38 @@
-use std::{path::Path, fs::read_to_string, collections::HashSet};
+use std::{path::Path, 
+    collections::HashSet};
 
+use convert_case::{Case, Casing};
 use anyhow::{Context, Result};
 use rustyline::{Editor, history::DefaultHistory};
-use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
-use serde_yml::to_string;
+use termcolor::{StandardStream};
+use clap::ArgMatches;
 
 use crate::{
-    CliCommand,
+    // CliCommand,
     constants::{
-        ERROR_FAILED_TO_READ_MANIFEST, ERROR_FAILED_TO_PARSE_MANIFEST,
+        Runtime,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE,
     },
     core::{
-        manifest::{InitializableManifestConfig, InitializableManifestConfigMetadata, ManifestData, ProjectType, add_project_definition_to_manifest, library::LibraryManifestData}, name::validate_name},
-        package_json::project_package_json::ProjectPackageJson,
-        rendered_template::RenderedTemplate,
-        init::library::add_library_to_artifacts,
-        universal_sdk::add_project_to_universal_sdk,
-        sync::{constants::{DIRS_TO_IGNORE, 
-            DOCKER_SERVICES_TO_IGNORE, 
-            RUNTIME_PROJECTS_TO_IGNORE},
-            utils::validate_addition_to_artifact,
+        manifest::{
+            ProjectType, 
+            add_project_definition_to_manifest, 
+            library::LibraryManifestData
+        },
+        package_json::{add_project_definition_to_package_json},
+        pnpm_workspace::{add_project_definition_to_pnpm_workspace},
     },
-    prompt::{ArrayCompleter, prompt_with_validation},
+    prompt::{ArrayCompleter, prompt_without_validation},
+    sync::{constants::{DIRS_TO_IGNORE,
+        RUNTIME_PROJECTS_TO_IGNORE},
+        utils::validate_addition_to_artifact,
+    },
 };
 
-fn add_library_to_manifest_with_validation(
+pub(crate) fn add_library_to_manifest_with_validation(
     manifest_data: &mut LibraryManifestData,
-    base_path: &Path,
-    manifest_path: &Path,
     stdout: &mut StandardStream,
 ) -> Result<String> {
     let forklaunch_manifest_buffer = add_project_definition_to_manifest(
@@ -55,23 +57,22 @@ fn add_library_to_manifest_with_validation(
         &format!("Successfully added {} to manifest.toml", library_name),
         &format!("Library {} was not added to manifest.toml", library_name),
         "sync:library:55",
-        forklaunch_manifest_buffer,
-        stdout,
-    )
+        &mut stdout,
+    )?;
     if validation_result {
         Ok(forklaunch_manifest_buffer)
     } else {
-        Err(anyhow::anyhow!("Failed to add {} to manifest.toml", library_name))
+        return Err(anyhow::anyhow!("Failed to add {} to manifest.toml", library_name))
     }
 }
 
-fn add_library_to_runtime_files_with_validation(
+pub(crate) fn add_library_to_runtime_files_with_validation(
     manifest_data: &mut LibraryManifestData,
     base_path: &Path,
     app_root_path: &Path,
     dir_project_names_set: &HashSet<String>,
     stdout: &mut StandardStream,
-) -> Result<(HashSet<String>, Option<String>, Option<String>)> {
+) -> Result<(Option<String>, Option<String>)> {
     let runtime = manifest_data.runtime.parse()?;
 
     let mut package_json_buffer: Option<String> = None;
@@ -90,13 +91,10 @@ fn add_library_to_runtime_files_with_validation(
                 &format!("Successfully added {} to package.json", manifest_data.library_name),
                 &format!("Library {} was not added to package.json", manifest_data.library_name),
                 "sync:library:86",
-                package_json_buffer,
-                stdout,
-            )
-            if validation_result {
-                Ok(package_json_buffer)
-            } else {
-                Err(anyhow::anyhow!("Failed to add {} to package.json", manifest_data.library_name))
+                &mut stdout,
+            )?;
+            if !validation_result {
+                return Err(anyhow::anyhow!("Failed to add {} to package.json", manifest_data.library_name))
             }
         }
         Runtime::Node => {
@@ -111,39 +109,23 @@ fn add_library_to_runtime_files_with_validation(
                 &format!("Successfully added {} to pnpm-workspace.yaml", manifest_data.library_name),
                 &format!("Library {} was not added to pnpm-workspace.yaml", manifest_data.library_name),
                 "sync:library:95",
-                pnpm_workspace_buffer,
-                stdout,
-            )
-            if validation_result {
-                Ok(pnpm_workspace_buffer)
-            } else {
-                Err(anyhow::anyhow!("Failed to add {} to pnpm-workspace.yaml", manifest_data.library_name))
+                &mut stdout,
+            )?;
+            if !validation_result {
+                return Err(anyhow::anyhow!("Failed to add {} to pnpm-workspace.yaml", manifest_data.library_name))
             }
         }
     }
-
-    Ok(package_json_buffer, pnpm_workspace_buffer)
+    Ok((package_json_buffer, pnpm_workspace_buffer))
 }
 
-fn sync_library_setup(
+pub(crate) fn sync_library_setup(
     library_name: &str,
-    app_root_path: &Path,
-    modules_path: &Path,
     manifest_data: &mut LibraryManifestData,
-    stdout: &mut StandardStream,
+    stdout: StandardStream,
     matches: &ArgMatches,
 ) -> Result<LibraryManifestData> {
-    let mut line_editor = Editor::<(), DefaultHistory>::new()?;
-
-    let library_name = prompt_with_validation(
-        &mut line_editor,
-        &mut stdout,
-        "name",
-        matches,
-        "library name",
-        None,
-        |input: &str| validate_name(input) && !manifest_data.app_name.contains(input),
-    )?;
+    let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
 
     let description = prompt_without_validation(
         &mut line_editor,
@@ -151,9 +133,10 @@ fn sync_library_setup(
         "description",
         matches,
         "library description (optional)",
+        None,
     )?;
 
-    let mut manifest_data: LibraryManifestData = LibraryManifestData {
+    let manifest_data: LibraryManifestData = LibraryManifestData {
             // Common fields from ApplicationManifestData
             id: manifest_data.id.clone(),
             app_name: manifest_data.app_name.clone(),
@@ -188,7 +171,7 @@ fn sync_library_setup(
             is_jest: manifest_data.is_jest,
 
             // Library-specific fields
-            library_name: library_name.clone(),
+            library_name: library_name.clone().to_string(),
             camel_case_name: library_name.to_case(Case::Camel),
             kebab_case_name: library_name.to_case(Case::Kebab),
             description: description.clone(),

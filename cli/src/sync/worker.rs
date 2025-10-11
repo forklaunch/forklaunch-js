@@ -1,51 +1,69 @@
-use std::{fs::read_to_string, path::Path, collections::HashSet};
+use std::{path::Path, collections::HashSet,};
 
-use anyhow::Result;
-use clap::{Arg, ArgAction, ArgMatches, Command};
+use anyhow::{Context, Result};
+use clap::{ArgMatches};
 use rustyline::{Editor, history::DefaultHistory};
 use serde_json::from_str;
-use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
+use toml::from_str as toml_from_str;
+use termcolor::{StandardStream};
 use convert_case::{Case, Casing};
 
 use crate::{
-    CliCommand,
-    constants::{Database, Infrastructure, WorkerType,
-        ERROR_FAILED_TO_PARSE_MANIFEST,
+    // CliCommand,
+    constants::{Database, WorkerType, Runtime,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE,
     },
     core::{
-        base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
-        command::command,
-        manifest::{ApplicationInitializationMetadata, 
-            InitializableManifestConfig, 
-            InitializableManifestConfigMetadata, 
-            ManifestData, ProjectType, 
+        // base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
+        // command::command,
+        database::{
+            get_db_driver, 
+            get_database_port,
+            is_in_memory_database,
+        },
+        docker::add_worker_definition_to_docker_compose,
+        manifest::{
+            // InitializableManifestConfig, 
+            // InitializableManifestConfigMetadata, 
+            ProjectType, 
             application::ApplicationManifestData, 
-            add_project_to_manifest, 
             worker::WorkerManifestData,
             add_project_definition_to_manifest,
+            ResourceInventory, ProjectMetadata,
         },
-        package_json::project_package_json::ProjectPackageJson,
-        rendered_template::RenderedTemplate,
-        init::worker::add_worker_to_artifacts,
-        universal_sdk::add_project_to_universal_sdk,
-        sync::{constants::{DIRS_TO_IGNORE, 
-            DOCKER_SERVICES_TO_IGNORE, 
-            RUNTIME_PROJECTS_TO_IGNORE},
-            utils::validate_addition_to_artifact,
+        package_json::{
+            project_package_json::ProjectPackageJson,
+            application_package_json::ApplicationPackageJson,
+            add_project_definition_to_package_json,
+        },
+        pnpm_workspace::{
+            PnpmWorkspace,
+            add_project_definition_to_pnpm_workspace,
+        },
+        
+        worker_type::{
+            get_default_worker_options, get_worker_consumer_factory, get_worker_producer_factory,
+            get_worker_type_name,
+        },
     },
-    prompt::{ArrayCompleter, prompt_with_validation, prompt_without_validation, prompt_comma_separated_list},
+    prompt::{ArrayCompleter, prompt_with_validation, prompt_without_validation},
+    sync::{constants::{DIRS_TO_IGNORE, 
+        DOCKER_SERVICES_TO_IGNORE, 
+        RUNTIME_PROJECTS_TO_IGNORE},
+        utils::validate_addition_to_artifact,
+    },
 };
 
-fn add_worker_to_manifest_with_validation(
+pub(crate) fn add_worker_to_manifest_with_validation(
     manifest_data: &mut WorkerManifestData,
     base_path: &Path,
     app_root_path: &Path,
     stdout: &mut StandardStream,
 ) -> Result<String> {
+    let worker_name = manifest_data.worker_name.clone();
     let forklaunch_manifest_buffer = add_project_definition_to_manifest(
         ProjectType::Worker,
         manifest_data,
@@ -74,9 +92,8 @@ fn add_worker_to_manifest_with_validation(
         }),
     )
     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
-
-    let worker_name = manifest_data.worker_name.clone();
-    let new_manifest_projects: HashSet<String> = manifest_data.projects
+    let temp: WorkerManifestData = toml_from_str(&forklaunch_manifest_buffer).unwrap();
+    let new_manifest_projects: HashSet<String> = temp.projects
         .iter()
         .map(|project| project.name.clone())
         .filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str()))
@@ -88,17 +105,15 @@ fn add_worker_to_manifest_with_validation(
         &format!("Successfully added {} to manifest.toml", worker_name),
         &format!("Project {} was not added to manifest.toml", worker_name),
         "sync:worker:73",
-        forklaunch_manifest_buffer,
-        stdout,
-    );
-    if validation_result {
-        Ok(forklaunch_manifest_buffer)
-    } else {
-        Err(anyhow::anyhow!("Failed to add {} to manifest.toml", worker_name))
+        &mut stdout,
+    )?;
+    if !validation_result {
+        return Err(anyhow::anyhow!("Failed to add {} to manifest.toml", worker_name))
     }
+    Ok(forklaunch_manifest_buffer)
 }
 
-fn add_worker_to_docker_compose_with_validation(
+pub(crate) fn add_worker_to_docker_compose_with_validation(
     manifest_data: &mut WorkerManifestData,
     base_path: &Path,
     app_root_path: &Path,
@@ -128,14 +143,12 @@ fn add_worker_to_docker_compose_with_validation(
         &format!("Successfully added {} to docker-compose.yaml", manifest_data.worker_name),
         &format!("Worker {} was not added to docker-compose.yaml", manifest_data.worker_name),
         "sync:worker:113",
-        docker_compose_buffer,
-        stdout,
-    );
-    if validation_result {
-        Ok(docker_compose_buffer)
-    } else {
-        Err(anyhow::anyhow!("Failed to add {} to docker-compose.yaml", manifest_data.worker_name))
+        &mut stdout,
+    )?;
+    if !validation_result {
+        return Err(anyhow::anyhow!("Failed to add {} to docker-compose.yaml", manifest_data.worker_name))
     }
+    Ok(docker_compose_buffer)
 }
     
 pub(crate) fn add_worker_to_runtime_files_with_validation(
@@ -156,7 +169,8 @@ pub(crate) fn add_worker_to_runtime_files_with_validation(
                 add_project_definition_to_package_json(base_path, manifest_data)
                     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON)?,
             );
-            let new_package_json_projects: HashSet<String> = package_json_buffer.iter().cloned().filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str())).collect();
+            let temp: ApplicationPackageJson = from_str(&package_json_buffer.unwrap()).unwrap();
+            let new_package_json_projects: HashSet<String> = temp.workspaces.unwrap_or_default().iter().cloned().filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str())).collect();
             
             let validation_result = validate_addition_to_artifact(
                 &manifest_data.worker_name,
@@ -164,13 +178,10 @@ pub(crate) fn add_worker_to_runtime_files_with_validation(
                 &format!("Successfully added {} to package.json", manifest_data.worker_name),
                 &format!("Worker {} was not added to package.json", manifest_data.worker_name),
                 "sync:worker:145",
-                package_json_buffer,
-                stdout,
-            );
-            if validation_result {
-                Ok(package_json_buffer)
-            } else {
-                Err(anyhow::anyhow!("Failed to add {} to package.json", manifest_data.worker_name))
+                &mut stdout,
+            )?;
+            if !validation_result {
+                return Err(anyhow::anyhow!("Failed to add {} to package.json", manifest_data.worker_name));
             }
         }
         Runtime::Node => {
@@ -178,22 +189,19 @@ pub(crate) fn add_worker_to_runtime_files_with_validation(
                 add_project_definition_to_pnpm_workspace(base_path, manifest_data)
                     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?,
             );
-            let new_pnpm_workspace_projects: HashSet<String> = pnpm_workspace_buffer.packages.iter().cloned().filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str())).collect();
+            let temp: PnpmWorkspace = from_str(&pnpm_workspace_buffer.unwrap()).unwrap();
+            let new_pnpm_workspace_projects: HashSet<String> = temp.packages.iter().cloned().filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str())).collect();
             
-            let validation_result = validate_worker_in_projects(
-                &worker_name,
+            let validation_result = validate_addition_to_artifact(
+                &manifest_data.worker_name,
                 &new_pnpm_workspace_projects,
-                &RUNTIME_PROJECTS_TO_IGNORE,
-                &format!("Successfully added {} to pnpm-workspace.yaml", worker_name),
-                &format!("Worker {} was not added to pnpm-workspace.yaml", worker_name),
+                &format!("Successfully added {} to pnpm-workspace.yaml", manifest_data.worker_name),
+                &format!("Worker {} was not added to pnpm-workspace.yaml", manifest_data.worker_name),
                 "sync:worker:484",
-                pnpm_workspace_buffer,
-                stdout,
-            );
-            if validation_result {
-                Ok(pnpm_workspace_buffer)
-            } else {
-                Err(anyhow::anyhow!("Failed to add {} to pnpm-workspace.yaml", manifest_data.worker_name))
+                &mut stdout,
+            )?;
+            if !validation_result {
+                return Err(anyhow::anyhow!("Failed to add {} to pnpm-workspace.yaml", manifest_data.worker_name));
             }
         }
     }
@@ -203,13 +211,11 @@ pub(crate) fn add_worker_to_runtime_files_with_validation(
 
 pub(crate) fn sync_worker_setup(
     worker_name: &str, 
-    app_root_path: &Path, 
-    modules_path: &Path, 
     manifest_data: &mut ApplicationManifestData,
     stdout: &mut StandardStream,
     matches: &ArgMatches,
 ) -> Result<WorkerManifestData> {
-    let mut line_editor = Editor::<(), DefaultHistory>::new()?;
+    let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
 
     let r#type: WorkerType = prompt_with_validation(
         &mut line_editor,
@@ -220,7 +226,7 @@ pub(crate) fn sync_worker_setup(
         Some(&WorkerType::VARIANTS),
         |input| WorkerType::VARIANTS.contains(&input),
         |_| "Invalid worker type. Please try again".to_string(),
-    )?;
+    )?.parse()?;
 
     let mut database: Option<Database> = None;
     if r#type == WorkerType::Database {
@@ -248,7 +254,7 @@ pub(crate) fn sync_worker_setup(
         None,
     )?;
 
-    let mut manifest_data = WorkerManifestData {
+    let worker_data: WorkerManifestData = WorkerManifestData {
         // Common fields from ApplicationManifestData
         id: manifest_data.id.clone(),
         app_name: manifest_data.app_name.clone(),
@@ -283,7 +289,7 @@ pub(crate) fn sync_worker_setup(
         is_jest: manifest_data.is_jest,
 
         // Worker-specific fields
-        worker_name: worker_name.clone(),
+        worker_name: worker_name.clone().to_string(),
         camel_case_name: worker_name.to_case(Case::Camel),
         pascal_case_name: worker_name.to_case(Case::Pascal),
         kebab_case_name: worker_name.to_case(Case::Kebab),
@@ -363,7 +369,7 @@ pub(crate) fn sync_worker_setup(
         ),
         worker_producer_factory: get_worker_producer_factory(&r#type),
     };
-    Ok(new_manifest_data)
+    Ok(worker_data)
 }
 
 // TODO: Implement subcommand structure

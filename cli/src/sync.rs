@@ -1,10 +1,21 @@
 use anyhow::Result;
 use clap::{ArgMatches, Command};
-use sync::SyncAllCommand;
 
-use crate::{CliCommand, core::command::command};
+use crate::{
+    CliCommand, 
+    core::command::command, 
+    sync::all::SyncAllCommand
+};
 
-pub(crate) mod sync;
+
+pub(crate) mod constants;
+pub(crate) mod utils;
+pub(crate) mod all;
+pub(crate) mod library;
+pub(crate) mod module;
+pub(crate) mod router;
+pub(crate) mod service;
+pub(crate) mod worker;
 
 #[derive(Debug)]
 pub(crate) struct SyncCommand {
@@ -27,7 +38,7 @@ impl CliCommand for SyncCommand {
 
     fn handler(&self, matches: &ArgMatches) -> Result<()> {
         match matches.subcommand() {
-            Some(("sync", sub_matches)) => self.sync.handler(sub_matches),
+            Some(("all", sub_matches)) => self.sync.handler(sub_matches),
             _ => unreachable!(),
         }
     }

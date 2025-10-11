@@ -239,3 +239,15 @@ pub(crate) fn remove_project_definition_from_package_json(
     }
     Ok(package_json.clone())
 }
+
+pub(crate) fn add_project_definition_to_package_json_mut(
+    package_json: &mut ApplicationPackageJson,
+    project_name: &str,
+) -> Result<ApplicationPackageJson> {
+    if let Some(workspaces) = package_json.workspaces.as_mut() {
+        if !workspaces.contains(&project_name.to_string()) {
+            workspaces.push(project_name.to_string().clone());
+        }
+    }
+    Ok(package_json.clone())
+}

@@ -1,3 +1,4 @@
+
 pub(crate) const DIRS_TO_IGNORE: &[&str] = &[
     "node_modules",
     "assets",
@@ -49,12 +50,11 @@ pub(crate) const RUNTIME_PROJECTS_TO_IGNORE: &[&str] = &[
     "universal-sdk",
 ];
 
-choice! {
-    pub(crate) enum ARTIFACTS {
-        All = "all",
-        Manifest = "manifest",
-        DockerCompose = "docker_compose",
-        Runtime = "runtime",
-        Sdk = "sdk",
-    }
-}
+
+pub(crate) const ARTIFACTS: &[&str] = &[
+    "all",
+    "manifest",
+    "docker_compose",
+    "runtime",
+    "sdk",
+];

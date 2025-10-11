@@ -1,53 +1,63 @@
-use std::{fs::read_to_string, path::Path, collections::HashSet};
+use std::{path::Path, collections::HashSet,};
 
-use anyhow::Result;
-use clap::{Arg, ArgAction, ArgMatches, Command};
+use anyhow::{Context, Result};
+use clap::{ArgMatches};
 use rustyline::{Editor, history::DefaultHistory};
-use serde_json::from_str;
-use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use convert_case::{Case, Casing};
+use toml::from_str as toml_from_str;
+use termcolor::{StandardStream};
 
 use crate::{
-    CliCommand,
+    // CliCommand,
     constants::{Database, Infrastructure,
-        ERROR_FAILED_TO_PARSE_MANIFEST,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
-        ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE,
-        ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON,
-        ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE,
     },
     core::{
-        base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
-        command::command,
-        manifest::{ApplicationInitializationMetadata, 
-            InitializableManifestConfig, 
-            InitializableManifestConfigMetadata, 
-            ManifestData, ProjectType, 
-            application::ApplicationManifestData, 
-            add_project_to_manifest, 
-            router::RouterManifestData,
-            add_project_definition_to_manifest,
+        ast::transformations::{
+            transform_controllers_index_ts::transform_controllers_index_ts,
+            transform_entities_index_ts::transform_entities_index_ts,
+            transform_registrations_ts::transform_registrations_ts_add_router,
+            transform_sdk_ts::transform_sdk_ts, 
+            transform_seed_data_ts::transform_seed_data_ts,
+            transform_seeders_index_ts::transform_seeders_index_ts,
+            transform_server_ts::transform_server_ts,
         },
-        package_json::project_package_json::ProjectPackageJson,
-        rendered_template::RenderedTemplate,
-        init::router::add_router_to_artifacts,
-        universal_sdk::add_project_to_universal_sdk,
-        sync::{constants::{DIRS_TO_IGNORE, 
-            DOCKER_SERVICES_TO_IGNORE, 
-            RUNTIME_PROJECTS_TO_IGNORE},
-            utils::validate_addition_to_artifact,
+        base_path::{prompt_base_path},
+        // command::command,
+        database::{get_db_driver, is_in_memory_database},
+        manifest::{
+            ManifestData, ProjectType,
+            application::ApplicationManifestData, 
+            router::RouterManifestData,
+            // add_project_definition_to_manifest,
+            add_router_definition_to_manifest,
+            InitializableManifestConfigMetadata,
+            RouterInitializationMetadata,
+            InitializableManifestConfig,
+        },
+        
     },
-    prompt::{ArrayCompleter, prompt_with_validation, prompt_without_validation, prompt_comma_separated_list},
+    prompt::{ArrayCompleter, prompt_comma_separated_list},
+    sync::{constants::{DIRS_TO_IGNORE},
+        utils::validate_addition_to_artifact,
+    },
 };
 
-fn add_router_to_manifest_with_validation(
+pub(crate) fn add_router_to_manifest_with_validation(
     manifest_data: &mut RouterManifestData,
     base_path: &Path,
     app_root_path: &Path,
     stdout: &mut StandardStream,
 ) -> Result<(ProjectType, String)> {
-    let (project_type, forklaunch_definition_buffer) =
-        add_router_definition_to_manifest(manifest_data, service_name)
+    let service_name = base_path.file_name().unwrap().to_str().unwrap();
+    let service_data = manifest_data
+        .projects
+        .iter()
+        .find(|project| service_name == project.name)
+        .ok_or_else(|| anyhow::anyhow!("Service '{}' not found in manifest", service_name))?;
+    
+    let forklaunch_manifest_buffer =
+        add_router_definition_to_manifest(manifest_data, &service_name.to_string())
             .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
 
     let router_name = manifest_data.router_name.clone();
@@ -63,22 +73,18 @@ fn add_router_to_manifest_with_validation(
         &format!("Successfully added {} to manifest.toml", router_name),
         &format!("Project {} was not added to manifest.toml", router_name),
         "sync:router:73",
-        forklaunch_definition_buffer,
         stdout,
-    );
+    )?;
     if validation_result {
-        Ok(project_type, forklaunch_manifest_buffer)
+        Ok(forklaunch_manifest_buffer)
     } else {
-        Err(anyhow::anyhow!("Failed to add {} to manifest.toml", router_name))
+        return Err(anyhow::anyhow!("Failed to add {} to manifest.toml", router_name))
     }
 }
     
 pub(crate) fn add_router_server_with_validation(
     manifest_data: &mut RouterManifestData,
-    project_type: ProjectType,
     base_path: &Path,
-    app_root_path: &Path,
-    stdout: &mut StandardStream,
 ) -> Result<String> {
     let content = transform_server_ts(manifest_data.router_name.as_str(), &base_path)?;
     Ok(content)
@@ -86,10 +92,7 @@ pub(crate) fn add_router_server_with_validation(
 
 pub(crate) fn add_router_sdk_with_validation(
     manifest_data: &mut RouterManifestData,
-    project_type: ProjectType,
     base_path: &Path,
-    app_root_path: &Path,
-    stdout: &mut StandardStream,
 ) -> Result<String> {
     let content = transform_sdk_ts(manifest_data.router_name.as_str(), &base_path)?;
     Ok(content)
@@ -99,8 +102,6 @@ pub(crate) fn add_router_registrations_with_validation(
     manifest_data: &mut RouterManifestData,
     project_type: ProjectType,
     base_path: &Path,
-    app_root_path: &Path,
-    stdout: &mut StandardStream,
 ) -> Result<String> {
     let content = transform_registrations_ts_add_router(
         manifest_data.router_name.as_str(),
@@ -114,20 +115,16 @@ pub(crate) fn add_router_persistence_with_validation(
     manifest_data: &mut RouterManifestData,
     project_type: ProjectType,
     base_path: &Path,
-    app_root_path: &Path,
-    stdout: &mut StandardStream,
 ) -> Result<(String, String, String)> {
     let entities_index_ts = transform_entities_index_ts(manifest_data.router_name.as_str(), &base_path)?;
     let seeders_index_ts = transform_seeders_index_ts(manifest_data.router_name.as_str(), &base_path)?;
     let seed_data_ts = transform_seed_data_ts(manifest_data.router_name.as_str(), &project_type, &base_path)?;
-    Ok(entities_index_ts, seeders_index_ts, seed_data_ts)
+    Ok((entities_index_ts, seeders_index_ts, seed_data_ts))
 }
 
 pub(crate) fn add_router_controllers_with_validation(
     manifest_data: &mut RouterManifestData,
     base_path: &Path,
-    app_root_path: &Path,
-    stdout: &mut StandardStream,
 ) -> Result<String> {
     let content = transform_controllers_index_ts(manifest_data.router_name.as_str(), &base_path)?;
     Ok(content)
@@ -141,7 +138,7 @@ pub(crate) fn sync_router_setup(
     stdout: &mut StandardStream,
     matches: &ArgMatches,
 ) -> Result<RouterManifestData> {
-    let mut line_editor = Editor::<(), DefaultHistory>::new()?;
+    let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
 
     let infrastructure: Vec<Infrastructure> = if matches.ids().all(|id| id == "dryrun") {
         prompt_comma_separated_list(
@@ -159,19 +156,43 @@ pub(crate) fn sync_router_setup(
     } else {
         vec![]
     };
-
+    let app_root_path_buf = app_root_path.clone().to_path_buf();
+    let router_manifest_data: RouterManifestData = toml_from_str(&toml::to_string_pretty(&manifest_data).unwrap()).unwrap();
+    let router_base_path = prompt_base_path(
+        &app_root_path_buf,
+        &ManifestData::Router(&router_manifest_data),
+        Some(router_name.to_string()),
+        &mut line_editor,
+        &mut stdout,
+        matches,
+        1,
+    )?;
+    
+    
+    router_manifest_data = router_manifest_data.initialize(InitializableManifestConfigMetadata::Router(
+        RouterInitializationMetadata {
+            project_name: router_base_path
+                .file_name()
+                .unwrap()
+                .to_string_lossy()
+                .to_string()
+                .clone(),
+            router_name: Some(router_name.clone().to_string()),
+        },
+    ));
+    
     let service_name = router_base_path.file_name().unwrap().to_str().unwrap();
-        let service_data = manifest_data
-            .projects
-            .iter()
-            .find(|project| service_name == project.name)
-            .ok_or_else(|| anyhow::anyhow!("Service '{}' not found in manifest", service_name))?;
+    let service_data = manifest_data
+        .projects
+        .iter()
+        .find(|project| service_name == project.name)
+        .ok_or_else(|| anyhow::anyhow!("Service '{}' not found in manifest", service_name))?;
         
 
     if let Some(database) = service_data.resources.as_ref().unwrap().database.clone() {
         let database: Database = database.parse()?;
-        let mut new_manifest_data: RouterManifestData = RouterManifestData {
-            router_name: router_name.clone(),
+        let mut router_manifest_data: RouterManifestData = RouterManifestData {
+            router_name: router_name.clone().to_string(),
             camel_case_name: router_name.to_case(Case::Camel),
             pascal_case_name: router_name.to_case(Case::Pascal),
             kebab_case_name: router_name.to_case(Case::Kebab),
@@ -192,9 +213,29 @@ pub(crate) fn sync_router_setup(
             is_cache_enabled: infrastructure.contains(&Infrastructure::Redis),
             is_s3_enabled: infrastructure.contains(&Infrastructure::S3),
 
-            ..manifest_data
+            ..router_manifest_data
         };
-    Ok(new_manifest_data)
+    }
+    Ok(router_manifest_data)
+}
+
+pub(crate) fn check_router_artifacts(
+    base_path: &Path,
+) -> Result<Vec<String>> {
+    let mut router_artifacts_to_add = Vec::new();
+    for router_artifact in vec![
+        "server.ts",
+        "sdk.ts",
+        "registrations.ts",
+        "persistence/entities/index.ts",
+        "persistence/seeders/index.ts",
+    ] {
+        let path = base_path.join(router_artifact);
+        if !path.exists() {
+            router_artifacts_to_add.push(router_artifact.to_string());
+        }
+    }
+    Ok(router_artifacts_to_add)
 }
 
 // TODO: Implement subcommand structure
