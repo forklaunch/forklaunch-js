@@ -5,7 +5,7 @@ use std::{
     fs::{File, create_dir_all, metadata, read_to_string, remove_file, set_permissions},
     io::{Write, copy},
     path::PathBuf,
-    process::{Command as OsCommand, exit},
+    process::{Command as OsCommand, Stdio, exit},
 };
 
 use anyhow::{Context, Result};
@@ -208,18 +208,27 @@ pub(crate) fn precheck_version(
     )?;
     stdout.reset()?;
 
-    let status = OsCommand::new(&binary_path).args(args().skip(1)).status();
+    let mut child = OsCommand::new(&binary_path)
+        .args(args().skip(1))
+        .current_dir(current_dir().unwrap_or_else(|_| PathBuf::from(".")))
+        .stdin(Stdio::inherit())
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
+        .spawn()?;
 
-    match status {
-        Ok(s) => {
-            exit(s.code().unwrap_or(0));
+    let status = child.wait()?;
+
+    match status.code() {
+        Some(code) => {
+            exit(code);
         }
-        Err(_) => {
+        None => {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
             writeln!(
                 &mut stdout,
-                "Installed forklaunch v{} at {:?}. Please re-run your command.",
-                required_version, binary_path
+                "Installed forklaunch v{} at {}. Please re-run your command.",
+                required_version,
+                binary_path.display()
             )?;
             stdout.reset()?;
             Ok(VersionCheckOutcome::ReexecNotSupported)
