@@ -40,14 +40,11 @@ use crate::{
             add_project_definition_to_pnpm_workspace,
             PnpmWorkspace,
         },
-        prompt::{
-            prompt_with_validation,
-        },
-        
         template::{
             get_routers_from_standard_package,
         },
     },
+    prompt::{ArrayCompleter, prompt_with_validation},
     sync::{constants::{DIRS_TO_IGNORE, 
                 RUNTIME_PROJECTS_TO_IGNORE,
                 DOCKER_SERVICES_TO_IGNORE,
@@ -58,8 +55,6 @@ use crate::{
 
 pub(crate) fn add_module_to_manifest_with_validation(
     service_data: &mut ServiceManifestData,
-    base_path: &Path,
-    app_root_path: &Path,
     stdout: &mut StandardStream,
 ) -> Result<String> {
     let module_name = service_data.service_name.clone();
@@ -91,7 +86,7 @@ pub(crate) fn add_module_to_manifest_with_validation(
         &format!("Successfully added {} to manifest.toml", module_name),
         &format!("Project {} was not added to manifest.toml", module_name),
         "sync:module:73",
-        &mut stdout,
+        stdout,
     )?;
     if validation_result {
         Ok(forklaunch_manifest_buffer)
@@ -102,16 +97,11 @@ pub(crate) fn add_module_to_manifest_with_validation(
 
 pub(crate) fn add_module_to_docker_compose_with_validation(
     service_data: &mut ServiceManifestData,
-    base_path: &Path,
     app_root_path: &Path,
+    docker_compose: &String,
     stdout: &mut StandardStream,
 ) -> Result<String> {
-    let docker_compose_path = if let Some(docker_compose_path) = &service_data.docker_compose_path {
-        app_root_path.join(docker_compose_path)
-    } else {
-        app_root_path.join("docker-compose.yaml")
-    };
-    let docker_compose_buffer = add_service_definition_to_docker_compose(&service_data, &app_root_path, None)?;
+    let docker_compose_buffer = add_service_definition_to_docker_compose(&service_data, &app_root_path, Some(docker_compose.clone()))?;
     let temp: DockerCompose = from_str(&docker_compose_buffer).unwrap();
     let new_docker_services: HashSet<String> = temp.services.keys().cloned().filter(|service| !DOCKER_SERVICES_TO_IGNORE.contains(&service.as_str())).collect();
     let validation_result = validate_addition_to_artifact(
@@ -120,7 +110,7 @@ pub(crate) fn add_module_to_docker_compose_with_validation(
         &format!("Successfully added {} to docker-compose.yaml", service_data.service_name),
         &format!("Service {} was not added to docker-compose.yaml", service_data.service_name),
         "sync:module:100",
-        &mut stdout,
+        stdout,
     )?;
     if validation_result {
         Ok(docker_compose_buffer)
@@ -132,8 +122,6 @@ pub(crate) fn add_module_to_docker_compose_with_validation(
 pub(crate) fn add_module_to_runtime_files_with_validation(
     service_data: &mut ServiceManifestData,
     base_path: &Path,
-    app_root_path: &Path,
-    dir_project_names_set: &HashSet<String>,
     stdout: &mut StandardStream,
 ) -> Result<(Option<String>, Option<String>)> {
     let runtime = service_data.runtime.parse()?;
@@ -147,7 +135,7 @@ pub(crate) fn add_module_to_runtime_files_with_validation(
                 add_project_definition_to_package_json(base_path, service_data)
                     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON)?,
             );
-            let temp: ApplicationPackageJson = from_str(&package_json_buffer.unwrap()).unwrap();
+            let temp: ApplicationPackageJson = from_str(package_json_buffer.as_ref().unwrap()).unwrap();
             let new_package_json_projects: HashSet<String> = temp.workspaces.unwrap_or_default().iter().cloned().filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str())).collect();
             
             let validation_result = validate_addition_to_artifact(
@@ -156,7 +144,7 @@ pub(crate) fn add_module_to_runtime_files_with_validation(
                 &format!("Successfully added {} to package.json", service_data.service_name),
                 &format!("Module {} was not added to package.json", service_data.service_name),
                 "sync:module:145",
-                &mut stdout,
+                stdout,
             )?;
             if !validation_result {
                 return Err(anyhow::anyhow!("Failed to add {} to package.json", service_data.service_name))
@@ -167,17 +155,16 @@ pub(crate) fn add_module_to_runtime_files_with_validation(
                 add_project_definition_to_pnpm_workspace(base_path, service_data)
                     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?,
             );
-            let temp: PnpmWorkspace = from_str(&pnpm_workspace_buffer.unwrap()).unwrap();
+            let temp: PnpmWorkspace = from_str(pnpm_workspace_buffer.as_ref().unwrap()).unwrap();
             let new_pnpm_workspace_projects: HashSet<String> = temp.packages.iter().cloned().filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str())).collect();
                 
             let validation_result = validate_addition_to_artifact(
                 &service_data.service_name,
                 &new_pnpm_workspace_projects,
-                &RUNTIME_PROJECTS_TO_IGNORE,
                 &format!("Successfully added {} to pnpm-workspace.yaml", service_data.service_name),
                 &format!("Module {} was not added to pnpm-workspace.yaml", service_data.service_name),
                 "sync:module:484",
-                &mut stdout,
+                stdout,
             )?;
             if !validation_result {
                 return Err(anyhow::anyhow!("Failed to add {} to pnpm-workspace.yaml", service_data.service_name))
@@ -189,21 +176,19 @@ pub(crate) fn add_module_to_runtime_files_with_validation(
 }
 
 pub(crate) fn sync_module_setup(
-    module_name: &str, 
-    app_root_path: &Path, 
-    modules_path: &Path, 
+    module_name: &str,
     manifest_data: &mut ApplicationManifestData,
     stdout: &mut StandardStream,
     matches: &ArgMatches,
 ) -> Result<ServiceManifestData> {
-    let mut line_editor = Editor::<(), DefaultHistory>::new()?;
+    let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
 
     let runtime = manifest_data.runtime.parse()?;
     let database_variants = get_database_variants(&runtime);
 
     let database: Database = prompt_with_validation(
         &mut line_editor,
-        &mut stdout,
+        stdout,
         "database",
         matches,
         "database",
@@ -214,7 +199,7 @@ pub(crate) fn sync_module_setup(
     .parse()?;
     let module: Module = module_name.parse()?;
 
-    let mut service_data = ServiceManifestData {
+    let service_data = ServiceManifestData {
         id: manifest_data.id.clone(),
         cli_version: manifest_data.cli_version.clone(),
         app_name: manifest_data.app_name.clone(),
@@ -280,18 +265,6 @@ pub(crate) fn sync_module_setup(
         is_stripe: module.clone() == Module::StripeBilling,
     };
 
-    // rendered_templates.extend(
-    //     add_module_to_artifacts(
-    //         &mut new_manifest_data, 
-    //         &modules_path, 
-    //         &app_root_path)?);
-
-    // add_project_to_universal_sdk(
-    //     &mut rendered_templates, 
-    //     &modules_path, 
-    //     &manifest_data.app_name, 
-    //     &manifest_data.library_name, 
-    //     None)?;
     Ok(service_data)
 }
 
@@ -398,7 +371,7 @@ pub(crate) fn sync_module_setup(
 //                         manifest_data.runtime.clone(),
 //                         &HashSet::new(),
 //                         &mut rendered_templates,
-//                         &mut stdout,
+//                         stdout,
 //                     )?;
 //                 }
 //                 if remove {

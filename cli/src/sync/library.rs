@@ -18,6 +18,7 @@ use crate::{
     core::{
         manifest::{
             ProjectType, 
+            application::ApplicationManifestData,
             add_project_definition_to_manifest, 
             library::LibraryManifestData
         },
@@ -57,7 +58,7 @@ pub(crate) fn add_library_to_manifest_with_validation(
         &format!("Successfully added {} to manifest.toml", library_name),
         &format!("Library {} was not added to manifest.toml", library_name),
         "sync:library:55",
-        &mut stdout,
+        stdout,
     )?;
     if validation_result {
         Ok(forklaunch_manifest_buffer)
@@ -69,8 +70,6 @@ pub(crate) fn add_library_to_manifest_with_validation(
 pub(crate) fn add_library_to_runtime_files_with_validation(
     manifest_data: &mut LibraryManifestData,
     base_path: &Path,
-    app_root_path: &Path,
-    dir_project_names_set: &HashSet<String>,
     stdout: &mut StandardStream,
 ) -> Result<(Option<String>, Option<String>)> {
     let runtime = manifest_data.runtime.parse()?;
@@ -91,7 +90,7 @@ pub(crate) fn add_library_to_runtime_files_with_validation(
                 &format!("Successfully added {} to package.json", manifest_data.library_name),
                 &format!("Library {} was not added to package.json", manifest_data.library_name),
                 "sync:library:86",
-                &mut stdout,
+                stdout,
             )?;
             if !validation_result {
                 return Err(anyhow::anyhow!("Failed to add {} to package.json", manifest_data.library_name))
@@ -109,7 +108,7 @@ pub(crate) fn add_library_to_runtime_files_with_validation(
                 &format!("Successfully added {} to pnpm-workspace.yaml", manifest_data.library_name),
                 &format!("Library {} was not added to pnpm-workspace.yaml", manifest_data.library_name),
                 "sync:library:95",
-                &mut stdout,
+                stdout,
             )?;
             if !validation_result {
                 return Err(anyhow::anyhow!("Failed to add {} to pnpm-workspace.yaml", manifest_data.library_name))
@@ -121,15 +120,15 @@ pub(crate) fn add_library_to_runtime_files_with_validation(
 
 pub(crate) fn sync_library_setup(
     library_name: &str,
-    manifest_data: &mut LibraryManifestData,
-    stdout: StandardStream,
+    manifest_data: &mut ApplicationManifestData,
+    stdout: &mut StandardStream,
     matches: &ArgMatches,
 ) -> Result<LibraryManifestData> {
     let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
 
     let description = prompt_without_validation(
         &mut line_editor,
-        &mut stdout,
+        stdout,
         "description",
         matches,
         "library description (optional)",

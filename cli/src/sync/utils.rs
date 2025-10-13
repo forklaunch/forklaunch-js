@@ -6,8 +6,7 @@ use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
 use crate::{
     constants::InitializeType,
     core::{
-        manifest::{application::ApplicationManifestData}, 
-        docker::DockerCompose,
+        manifest::{application::ApplicationManifestData, ProjectType}, 
     },
     sync::{
         service::{sync_service_setup, add_service_to_manifest_with_validation, add_service_to_docker_compose_with_validation, add_service_to_runtime_files_with_validation}, 
@@ -18,37 +17,55 @@ use crate::{
     },
 };
 
-pub(crate) fn add_package_to_artifact<T>(
+#[derive(Clone, Debug)]
+pub enum ArtifactResult {
+    String(String),
+    ProjectType(ProjectType),
+}
+
+impl From<String> for ArtifactResult {
+    fn from(s: String) -> Self {
+        ArtifactResult::String(s)
+    }
+}
+
+impl From<ProjectType> for ArtifactResult {
+    fn from(pt: ProjectType) -> Self {
+        ArtifactResult::ProjectType(pt)
+    }
+}
+
+pub(crate) fn add_package_to_artifact(
     package_name: &str,
     manifest_data: &mut ApplicationManifestData,
     app_root_path: &Path,
     modules_path: &Path,
     artifact_type: &str,
     package_type: &InitializeType,
-    dir_project_names_set: &HashSet<String>,
     stdout: &mut StandardStream,
     matches: &ArgMatches,
-    docker_compose: Option<&mut DockerCompose>, //optional
-) -> Result<Vec<T>> {
+    docker_compose: Option<String>, //optional
+    _project_type: Option<ProjectType>, //optional
+) -> Result<Vec<ArtifactResult>>
+{
     let mut results = Vec::new();
     match package_type {
         InitializeType::Service => {
             let mut service_manifest_data = sync_service_setup(
                 &package_name, 
-                &app_root_path, 
                 &modules_path, 
-                &mut manifest_data, 
-                &mut stdout, 
+                manifest_data, 
+                stdout, 
                 matches)?;
             match artifact_type {
                 "manifest" => {
-                    let forklaunch_manifest_buffer = add_service_to_manifest_with_validation(&mut service_manifest_data, modules_path, app_root_path, stdout)?;
-                    results.push(forklaunch_manifest_buffer);
+                    let forklaunch_manifest_buffer = add_service_to_manifest_with_validation(&mut service_manifest_data, stdout)?;
+                    results.push(ArtifactResult::from(forklaunch_manifest_buffer));
                 }
                 "docker_compose" => {
                     if let Some(docker_compose) = docker_compose {
-                        let docker_compose_buffer = add_service_to_docker_compose_with_validation(&mut service_manifest_data, modules_path, app_root_path, stdout)?;
-                        results.push(docker_compose_buffer);
+                        let docker_compose_buffer = add_service_to_docker_compose_with_validation(&mut service_manifest_data, modules_path, &docker_compose, stdout)?;
+                        results.push(ArtifactResult::from(docker_compose_buffer));
                     } else {
                         return Err(anyhow::anyhow!("Docker compose data is required to proceed."));
                     }
@@ -56,11 +73,9 @@ pub(crate) fn add_package_to_artifact<T>(
                 "runtime" => {
                     let (package_json_buffer, pnpm_workspace_buffer) = add_service_to_runtime_files_with_validation(
                         &mut service_manifest_data, 
-                        modules_path, 
-                        app_root_path, 
-                        dir_project_names_set, 
+                        modules_path,
                         stdout)?;
-                    let items = [package_json_buffer, pnpm_workspace_buffer].into_iter().flatten();
+                    let items = [package_json_buffer, pnpm_workspace_buffer].into_iter().flatten().map(ArtifactResult::from);
                     results.extend(items);
                 }
                 _ => {
@@ -71,24 +86,20 @@ pub(crate) fn add_package_to_artifact<T>(
         InitializeType::Library => {
             let mut library_manifest_data = sync_library_setup(
                 &package_name,
-                &app_root_path,
-                &modules_path,
-                &mut manifest_data,
-                &mut stdout,
+                manifest_data,
+                stdout,
                 matches)?;
             match artifact_type {
                 "manifest" => {
                     let forklaunch_manifest_buffer = add_library_to_manifest_with_validation(&mut library_manifest_data, stdout)?;
-                    results.push(forklaunch_manifest_buffer);
+                    results.push(ArtifactResult::from(forklaunch_manifest_buffer));
                 }
                 "runtime" => {
                     let (package_json_buffer, pnpm_workspace_buffer) = add_library_to_runtime_files_with_validation(
                         &mut library_manifest_data, 
                         modules_path, 
-                        app_root_path, 
-                        dir_project_names_set, 
                         stdout)?;
-                    let items = [package_json_buffer, pnpm_workspace_buffer].into_iter().flatten();
+                    let items = [package_json_buffer, pnpm_workspace_buffer].into_iter().flatten().map(ArtifactResult::from);
                     results.extend(items);
                 }
                 _ => {
@@ -99,20 +110,18 @@ pub(crate) fn add_package_to_artifact<T>(
         InitializeType::Module => {
             let mut module_manifest_data = sync_module_setup(
                 &package_name,
-                &app_root_path,
-                &modules_path,
-                &mut manifest_data,
-                &mut stdout,
+                manifest_data,
+                stdout,
                 matches)?;
             match artifact_type {
                 "manifest" => {
-                    let forklaunch_manifest_buffer = add_module_to_manifest_with_validation(&mut module_manifest_data, modules_path, app_root_path, stdout)?;
-                    results.push(forklaunch_manifest_buffer);
+                    let forklaunch_manifest_buffer = add_module_to_manifest_with_validation(&mut module_manifest_data, stdout)?;
+                    results.push(ArtifactResult::from(forklaunch_manifest_buffer));
                 }
                 "docker_compose" => {
                     if let Some(docker_compose) = docker_compose {
-                        let docker_compose_buffer = add_module_to_docker_compose_with_validation(&mut module_manifest_data, modules_path, app_root_path, stdout)?;
-                        results.push(docker_compose_buffer);
+                        let docker_compose_buffer = add_module_to_docker_compose_with_validation(&mut module_manifest_data, app_root_path, &docker_compose, stdout)?;
+                        results.push(ArtifactResult::from(docker_compose_buffer));
                     } else {
                         return Err(anyhow::anyhow!("Docker compose data is required to proceed."));
                     }
@@ -121,10 +130,8 @@ pub(crate) fn add_package_to_artifact<T>(
                     let (package_json_buffer, pnpm_workspace_buffer) = add_module_to_runtime_files_with_validation(
                         &mut module_manifest_data, 
                         modules_path, 
-                        app_root_path, 
-                        dir_project_names_set, 
                         stdout)?;
-                    let items = [package_json_buffer, pnpm_workspace_buffer].into_iter().flatten();
+                    let items = [package_json_buffer, pnpm_workspace_buffer].into_iter().flatten().map(ArtifactResult::from);
                     results.extend(items);
                 }
                 _ => {
@@ -133,40 +140,40 @@ pub(crate) fn add_package_to_artifact<T>(
             }
         }
         InitializeType::Router => {
-            let mut router_manifest_data = sync_router_setup(
+            let (mut router_manifest_data, service_name) = sync_router_setup(
                 &package_name,
                 &app_root_path,
-                &modules_path,
-                &mut manifest_data,
-                &mut stdout,
+                manifest_data,
+                stdout,
                 matches)?;
-            let project_type = router_manifest_data.projects_mut().iter().find(|project| project.name == package_name).unwrap().r#type.clone();
+            let project_type = router_manifest_data.projects.iter().find(|project| project.name == package_name).unwrap().r#type.clone();
             match artifact_type {
                 "manifest" => {
-                    let forklaunch_manifest_buffer = add_router_to_manifest_with_validation(&mut router_manifest_data, modules_path, app_root_path, stdout)?;
-                    results.push(forklaunch_manifest_buffer);
+                    let (project_type, forklaunch_manifest_buffer) = add_router_to_manifest_with_validation(&mut router_manifest_data, &service_name, modules_path, app_root_path, stdout)?;
+                    results.push(ArtifactResult::from(forklaunch_manifest_buffer));
+                    results.push(ArtifactResult::from(project_type));
                 }
                 "server" => {
                     let server_buffer = add_router_server_with_validation(&mut router_manifest_data, modules_path)?;
-                    results.push(server_buffer);
+                    results.push(ArtifactResult::from(server_buffer));
                 }
                 "sdk" => {
                     let sdk_buffer = add_router_sdk_with_validation(&mut router_manifest_data, modules_path)?;
-                    results.push(sdk_buffer);
+                    results.push(ArtifactResult::from(sdk_buffer));
                 }
                 "registrations" => {
                     let registrations_buffer = add_router_registrations_with_validation(&mut router_manifest_data, project_type, modules_path)?;
-                    results.push(registrations_buffer);
+                    results.push(ArtifactResult::from(registrations_buffer));
                 }
                 "persistence" => {
                     let (entities_index_ts, seeders_index_ts, seed_data_ts) = add_router_persistence_with_validation(&mut router_manifest_data, project_type, modules_path)?;
-                    results.push(entities_index_ts);
-                    results.push(seeders_index_ts);
-                    results.push(seed_data_ts);
+                    results.push(ArtifactResult::from(entities_index_ts));
+                    results.push(ArtifactResult::from(seeders_index_ts));
+                    results.push(ArtifactResult::from(seed_data_ts));
                 }
                 "controllers" => {
                     let controllers_buffer = add_router_controllers_with_validation(&mut router_manifest_data, modules_path)?;
-                    results.push(controllers_buffer);
+                    results.push(ArtifactResult::from(controllers_buffer));
                 }
                 _ => {
                     return Err(anyhow::anyhow!("Invalid artifact type"));
@@ -174,22 +181,20 @@ pub(crate) fn add_package_to_artifact<T>(
             }
         }
         InitializeType::Worker => {
-            let worker_manifest_data = sync_worker_setup(
+            let mut worker_manifest_data = sync_worker_setup(
                 &package_name,
-                &app_root_path,
-                &modules_path,
-                &mut manifest_data,
-                &mut stdout,
+                manifest_data,
+                stdout,
                 matches)?;
             match artifact_type {
                 "manifest" => {
-                    let forklaunch_manifest_buffer = add_worker_to_manifest_with_validation(&mut worker_manifest_data, modules_path, app_root_path, stdout)?;
-                    results.push(forklaunch_manifest_buffer);
+                    let forklaunch_manifest_buffer = add_worker_to_manifest_with_validation(&mut worker_manifest_data, stdout)?;
+                    results.push(ArtifactResult::from(forklaunch_manifest_buffer));
                 }
                 "docker_compose" => {
                     if let Some(docker_compose) = docker_compose {
-                        let docker_compose_buffer = add_worker_to_docker_compose_with_validation(&mut worker_manifest_data, modules_path, app_root_path, stdout)?;
-                        results.push(docker_compose_buffer);
+                        let docker_compose_buffer = add_worker_to_docker_compose_with_validation(&mut worker_manifest_data, app_root_path, &docker_compose, stdout)?;
+                        results.push(ArtifactResult::from(docker_compose_buffer));
                     } else {
                         return Err(anyhow::anyhow!("Docker compose data is required to proceed."));
                     }
@@ -198,19 +203,14 @@ pub(crate) fn add_package_to_artifact<T>(
                     let (package_json_buffer, pnpm_workspace_buffer) = add_worker_to_runtime_files_with_validation(
                         &mut worker_manifest_data, 
                         modules_path, 
-                        app_root_path, 
-                        dir_project_names_set, 
                         stdout)?;
-                    let items = [package_json_buffer, pnpm_workspace_buffer].into_iter().flatten();
+                    let items = [package_json_buffer, pnpm_workspace_buffer].into_iter().flatten().map(ArtifactResult::from);
                     results.extend(items);
                 }
                 _ => {
                     return Err(anyhow::anyhow!("Invalid artifact type"));
                 }
             }
-        }
-        _ => {
-            return Err(anyhow::anyhow!("Invalid package type"));
         }
     }
     

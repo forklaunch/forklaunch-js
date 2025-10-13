@@ -45,19 +45,15 @@ use crate::{
 
 pub(crate) fn add_router_to_manifest_with_validation(
     manifest_data: &mut RouterManifestData,
-    base_path: &Path,
-    app_root_path: &Path,
+    service_name: &String,
+    _base_path: &Path,
+    _app_root_path: &Path,
     stdout: &mut StandardStream,
 ) -> Result<(ProjectType, String)> {
-    let service_name = base_path.file_name().unwrap().to_str().unwrap();
-    let service_data = manifest_data
-        .projects
-        .iter()
-        .find(|project| service_name == project.name)
-        .ok_or_else(|| anyhow::anyhow!("Service '{}' not found in manifest", service_name))?;
+    
     
     let forklaunch_manifest_buffer =
-        add_router_definition_to_manifest(manifest_data, &service_name.to_string())
+        add_router_definition_to_manifest(manifest_data, service_name)
             .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST)?;
 
     let router_name = manifest_data.router_name.clone();
@@ -132,12 +128,11 @@ pub(crate) fn add_router_controllers_with_validation(
 
 pub(crate) fn sync_router_setup(
     router_name: &str, 
-    app_root_path: &Path, 
-    modules_path: &Path, 
+    app_root_path: &Path,  
     manifest_data: &mut ApplicationManifestData,
     stdout: &mut StandardStream,
     matches: &ArgMatches,
-) -> Result<RouterManifestData> {
+) -> Result<(RouterManifestData, String)> {
     let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
 
     let infrastructure: Vec<Infrastructure> = if matches.ids().all(|id| id == "dryrun") {
@@ -157,13 +152,13 @@ pub(crate) fn sync_router_setup(
         vec![]
     };
     let app_root_path_buf = app_root_path.clone().to_path_buf();
-    let router_manifest_data: RouterManifestData = toml_from_str(&toml::to_string_pretty(&manifest_data).unwrap()).unwrap();
+    let mut router_manifest_data: RouterManifestData = toml_from_str(&toml::to_string_pretty(&manifest_data).unwrap()).unwrap();
     let router_base_path = prompt_base_path(
         &app_root_path_buf,
         &ManifestData::Router(&router_manifest_data),
-        Some(router_name.to_string()),
+        &Some(router_name.to_string()),
         &mut line_editor,
-        &mut stdout,
+        stdout,
         matches,
         1,
     )?;
@@ -191,7 +186,7 @@ pub(crate) fn sync_router_setup(
 
     if let Some(database) = service_data.resources.as_ref().unwrap().database.clone() {
         let database: Database = database.parse()?;
-        let mut router_manifest_data: RouterManifestData = RouterManifestData {
+        router_manifest_data = RouterManifestData {
             router_name: router_name.clone().to_string(),
             camel_case_name: router_name.to_case(Case::Camel),
             pascal_case_name: router_name.to_case(Case::Pascal),
@@ -216,7 +211,7 @@ pub(crate) fn sync_router_setup(
             ..router_manifest_data
         };
     }
-    Ok(router_manifest_data)
+    Ok((router_manifest_data, service_name.to_string()))
 }
 
 pub(crate) fn check_router_artifacts(
@@ -355,7 +350,7 @@ pub(crate) fn check_router_artifacts(
 //                         manifest_data.runtime.clone(),
 //                         &HashSet::new(),
 //                         &mut rendered_templates,
-//                         &mut stdout,
+//                         stdout,
 //                     )?;
 //                 }
 //                 if remove {

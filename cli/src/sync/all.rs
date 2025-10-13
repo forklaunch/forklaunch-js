@@ -4,6 +4,7 @@ use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use rustyline::{Editor, history::DefaultHistory};
 use serde_yml::{from_str, to_string};
+use toml::from_str as toml_from_str;
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 use crate::{
@@ -46,12 +47,12 @@ use crate::{
             add_project_definition_to_pnpm_workspace_mut,
         },
         rendered_template::{RenderedTemplate, write_rendered_templates},
-        universal_sdk::{remove_project_vec_from_universal_sdk, add_project_vec_to_universal_sdk, write_universal_sdk_content, read_universal_sdk_content},
+        universal_sdk::{remove_project_vec_from_universal_sdk, add_project_vec_to_universal_sdk, read_universal_sdk_content},
     },
     prompt::{prompt_for_confirmation, prompt_with_validation, ArrayCompleter},
     sync::{
         constants::{RUNTIME_PROJECTS_TO_IGNORE, DIRS_TO_IGNORE, DOCKER_SERVICES_TO_IGNORE}, 
-        utils::{validate_removal_from_artifact, validate_addition_to_artifact, add_package_to_artifact}},
+        utils::{validate_removal_from_artifact, validate_addition_to_artifact, add_package_to_artifact, ArtifactResult}},
 };
 
 #[derive(Debug)]
@@ -188,21 +189,25 @@ fn check_runtime_files(
     dir_project_names: &Vec<String>
 ) -> Result<(Vec<String>, Vec<String>)> {
     if *runtime == Runtime::Node {
-        let full_pnpm_workspace = pnpm_workspace.clone().unwrap();
-        let pnpm_workspace_projects: HashSet<String> = full_pnpm_workspace.packages.iter().cloned().filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str())).collect();
-        let dir_project_names_set: HashSet<String> = dir_project_names.iter().cloned().filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str())).collect();
-        let pnpm_workspace_projects_to_remove: Vec<String> = pnpm_workspace_projects
-            .difference(&dir_project_names_set)
-            .cloned()
-            .collect();
-        let pnpm_workspace_projects_to_add: Vec<String> = dir_project_names_set
-            .difference(&pnpm_workspace_projects)
-            .cloned()
-            .collect();
-        println!("sync:190 pnpm_workspace_projects: {:?}", pnpm_workspace_projects);
-        println!("sync:191 pnpm_workspace_projects_to_remove: {:?}", pnpm_workspace_projects_to_remove);
-        println!("sync:192 pnpm_workspace_projects_to_add: {:?}", pnpm_workspace_projects_to_add);
-        Ok((pnpm_workspace_projects_to_remove, pnpm_workspace_projects_to_add))
+        if let Some(pnpm_workspace) = pnpm_workspace {
+            let pnpm_workspace_projects: HashSet<String> = pnpm_workspace.packages.iter().cloned().filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str())).collect();
+            let dir_project_names_set: HashSet<String> = dir_project_names.iter().cloned().filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str())).collect();
+            let pnpm_workspace_projects_to_remove: Vec<String> = pnpm_workspace_projects
+                .difference(&dir_project_names_set)
+                .cloned()
+                .collect();
+            let pnpm_workspace_projects_to_add: Vec<String> = dir_project_names_set
+                .difference(&pnpm_workspace_projects)
+                .cloned()
+                .collect();
+            println!("sync:190 pnpm_workspace_projects: {:?}", pnpm_workspace_projects);
+            println!("sync:191 pnpm_workspace_projects_to_remove: {:?}", pnpm_workspace_projects_to_remove);
+            println!("sync:192 pnpm_workspace_projects_to_add: {:?}", pnpm_workspace_projects_to_add);
+            Ok((pnpm_workspace_projects_to_remove, pnpm_workspace_projects_to_add))
+        } else {
+            return Ok((Vec::new(), Vec::new()));
+        }
+        
     } else if *runtime == Runtime::Bun {
         let full_package_json = package_json.clone();
         let package_json_projects: HashSet<String> = full_package_json.workspaces.unwrap_or_default().iter().cloned().filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str())).collect();
@@ -281,7 +286,7 @@ impl CliCommand for SyncAllCommand {
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
         
         // Read in manifest.toml
-        let existing_manifest_data = toml::from_str::<ApplicationManifestData>(
+        let existing_manifest_data = toml_from_str::<ApplicationManifestData>(
             &fs::read_to_string(&manifest_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
@@ -393,21 +398,27 @@ impl CliCommand for SyncAllCommand {
                             &mut line_editor, 
                             &mut stdout, 
                             matches,
-                        ).parse()?;
-                        let _artifacts = add_package_to_artifact(
+                        )?.parse()?;
+                        let artifacts = add_package_to_artifact(
                             &dir_name,
                             &mut new_manifest_data,
                             &app_root_path,
                             &modules_path,
                             "manifest",
                             &package_type,
-                            &dir_project_names_set,
                             &mut stdout,
                             matches,
                             None,
+                            None,
                         )?;
+                        if let Some(ArtifactResult::String(s)) = artifacts.first() {
+                            new_manifest_data = toml_from_str::<ApplicationManifestData>(s).unwrap();
+                        }
+                        // project_type = artifacts[1].clone();
                         
                     }
+                    manifest_data = new_manifest_data;
+                    // project_type = artifacts[1].clone();
                 }
             } else {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
@@ -474,6 +485,7 @@ impl CliCommand for SyncAllCommand {
                 writeln!(stdout, "No services to remove from docker-compose.yaml")?;
                 stdout.reset()?;
             }
+            let mut docker_compose_string = String::new();
             if !services_to_add_docker.is_empty() {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
                 writeln!(stdout, "Found {} service(s) in directories that are not in docker-compose.yaml:", services_to_add_docker.len())?;
@@ -487,25 +499,30 @@ impl CliCommand for SyncAllCommand {
                     &mut stdout, 
                     "Do you want to add these services to docker-compose.yaml? (y/N) ")?;
                 if continue_sync {
+                    docker_compose_string = to_string(&docker_compose)?;
                     for dir_name in &services_to_add_docker {
                         let package_type: InitializeType = prompt_initialize_category(
                             &mut line_editor, 
                             &mut stdout, 
                             matches,
-                        ).parse()?;
-                        if package_type != "router" {
-                            let _artifacts = add_package_to_artifact(
+                        )?.parse()?;
+                        if package_type != InitializeType::Router {
+                            //TODO: make it so less times convert to string and back to DockerCompose
+                            let artifacts = add_package_to_artifact(
                                 &dir_name,
                                 &mut manifest_data,
                                 &app_root_path,
                                 &modules_path,
                                 "docker_compose",
                                 &package_type,
-                                &dir_project_names_set,
                                 &mut stdout,
                                 matches,
-                                Some(&mut docker_compose),
+                                Some(docker_compose_string.clone()),
+                                None,
                             )?;
+                            if let Some(ArtifactResult::String(s)) = artifacts.first() {
+                                docker_compose_string = s.clone();
+                            }
                         }
                     }
                 }
@@ -514,8 +531,12 @@ impl CliCommand for SyncAllCommand {
                 writeln!(stdout, "No services to add to docker-compose.yaml")?;
                 stdout.reset()?;
             }
-
-            let (new_docker_services_to_remove, new_docker_services_to_add) = check_docker_compose(&docker_compose, &dir_project_names)?;
+            if docker_compose_string.is_empty() {
+                println!("sync:535 docker_compose_string is empty");
+                docker_compose_string = to_string(&docker_compose)?;
+            }
+            let docker_compose_data: DockerCompose = from_str(&docker_compose_string)?;
+            let (new_docker_services_to_remove, new_docker_services_to_add) = check_docker_compose(&docker_compose_data, &dir_project_names)?;
             if new_docker_services_to_remove.is_empty() && new_docker_services_to_add.is_empty() {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
                 writeln!(stdout, "Successfully synced docker-compose.yaml")?;
@@ -524,7 +545,7 @@ impl CliCommand for SyncAllCommand {
                 rendered_templates.push(
                     RenderedTemplate {
                         path: docker_compose_path,
-                        content: to_string(&docker_compose)?,
+                        content: docker_compose_string,
                         context: Some(ERROR_FAILED_TO_WRITE_DOCKER_COMPOSE.to_string()),
                     },
                 );
@@ -547,7 +568,7 @@ impl CliCommand for SyncAllCommand {
             )
             .with_context(|| ERROR_FAILED_TO_PARSE_PACKAGE_JSON)?;
             let pnpm_workspace_path = modules_path.join("pnpm-workspace.yaml");
-            let pnpm_workspace: Option<PnpmWorkspace> = if pnpm_workspace_path.exists() {
+            let mut pnpm_workspace: Option<PnpmWorkspace> = if pnpm_workspace_path.exists() {
                 Some(from_str(
                     &read_to_string(pnpm_workspace_path)
                         .with_context(|| ERROR_FAILED_TO_READ_PNPM_WORKSPACE)?,
@@ -558,7 +579,7 @@ impl CliCommand for SyncAllCommand {
             };
             let (runtime_projects_to_remove, runtime_projects_to_add) = check_runtime_files(
                 &manifest_data.runtime.parse::<Runtime>()?, 
-                &pnpm_workspace, 
+                pnpm_workspace.as_ref(), 
                 &package_json, 
                 &dir_project_names)?;
             println!("sync:448 runtime_projects_to_remove: {:?}", runtime_projects_to_remove);
@@ -585,14 +606,14 @@ impl CliCommand for SyncAllCommand {
                             println!("sync:468 pnpm_workspace: {:?}", pnpm_workspace);
                             for package in &runtime_projects_to_remove {
                                 println!("sync:470 package: {:?}", package);
-                                pnpm_workspace = remove_project_definition_from_pnpm_workspace(
+                                pnpm_workspace = Some(remove_project_definition_from_pnpm_workspace(
                                         &mut pnpm_workspace.unwrap(),
                                         &package,
-                                    )?;
+                                    )?);
                                 println!("sync:475 content: {:?}", pnpm_workspace);
                             }
                             println!("sync:477 content: {:?}", pnpm_workspace);
-                            let new_pnpm_workspace_projects: HashSet<String> = pnpm_workspace.packages.iter().cloned().filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str())).collect();
+                            let new_pnpm_workspace_projects: HashSet<String> = pnpm_workspace.as_ref().unwrap().packages.iter().cloned().filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str())).collect();
                             println!("sync:484 new_pnpm_workspace_projects: {:?}", new_pnpm_workspace_projects);
                             let validation_result = validate_removal_from_artifact(
                                 &new_pnpm_workspace_projects,
@@ -629,15 +650,17 @@ impl CliCommand for SyncAllCommand {
                                     &mut line_editor, 
                                     &mut stdout, 
                                     matches,
-                                ).parse()?;
+                                )?.parse()?;
                                 // check if package type is router, if not router use add_project_definition_to_pnpm_workspace
-                                if package_type != "router" {
-                                    pnpm_workspace = add_project_definition_to_pnpm_workspace_mut(
-                                        &pnpm_workspace,
-                                        &dir_name,
-                                    )?;
+                                if package_type != InitializeType::Router {
+                                    if let Some(ref mut pnpm_workspace) = pnpm_workspace {
+                                        *pnpm_workspace = add_project_definition_to_pnpm_workspace_mut(
+                                                pnpm_workspace,
+                                                &dir_name,
+                                            )?;
+                                    }
                                 }
-                                let new_pnpm_workspace_projects: HashSet<String> = pnpm_workspace.packages.iter().cloned().filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str())).collect();
+                                let new_pnpm_workspace_projects: HashSet<String> = pnpm_workspace.as_ref().unwrap().packages.iter().cloned().filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str())).collect();
                                 let validation_result = validate_addition_to_artifact(
                                     &dir_name,
                                     &new_pnpm_workspace_projects,
@@ -719,8 +742,8 @@ impl CliCommand for SyncAllCommand {
                                     &mut line_editor, 
                                     &mut stdout, 
                                     matches,
-                                ).parse()?;
-                                if package_type != "router" {
+                                )?.parse()?;
+                                if package_type != InitializeType::Router {
                                     package_json = add_project_definition_to_package_json_mut(
                                         &mut package_json,
                                         &dir_name,
@@ -757,16 +780,13 @@ impl CliCommand for SyncAllCommand {
             if let Some(pnpm_workspace_buffer) = pnpm_workspace_buffer {
                 rendered_templates.push(RenderedTemplate {
                     path: modules_path.join("pnpm-workspace.yaml"),
-                    content: pnpm_workspace_buffer.unwrap(),
+                    content: pnpm_workspace_buffer,
                     context: Some(ERROR_FAILED_TO_GENERATE_PNPM_WORKSPACE.to_string()),
                 });
             }
 
             println!("sync:580 removing projects from universal SDK");
-            let (universal_sdk_program, universal_sdk_project_json) = read_universal_sdk_content(
-                &modules_path,
-                &manifest_data.app_name,
-            )?;
+            let (mut sdk_ast_program_text, mut sdk_project_json) = read_universal_sdk_content(&modules_path)?;
             if !manifest_projects_to_remove.is_empty() {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
                 writeln!(stdout, "Found {} project(s) in directories that are in universal SDK that no longer exist:", runtime_projects_to_remove.len())?;
@@ -781,11 +801,11 @@ impl CliCommand for SyncAllCommand {
                     "Do you want to remove these projects from universal SDK? (y/N) ")?;
                 if continue_sync {
                     println!("sync:593 app_name: {:?}", manifest_data.app_name);
-                    remove_project_vec_from_universal_sdk(
+                    (sdk_ast_program_text, sdk_project_json) = remove_project_vec_from_universal_sdk(
                         &manifest_data.app_name,
                         &manifest_projects_to_remove,
-                        &universal_sdk_program,
-                        &universal_sdk_project_json,
+                        &mut sdk_ast_program_text,
+                        &mut sdk_project_json,
                     )?;
                 }
             } else {
@@ -807,11 +827,11 @@ impl CliCommand for SyncAllCommand {
                     "Do you want to add these packages to universal SDK? (y/N) ")?;
                 if continue_sync {
                     println!("sync:741 app_name: {:?}", manifest_data.app_name);
-                    add_project_vec_to_universal_sdk(
+                    (sdk_ast_program_text, sdk_project_json) = add_project_vec_to_universal_sdk(
                         &manifest_data.app_name,
                         &manifest_projects_to_add,
-                        &universal_sdk_program,
-                        &universal_sdk_project_json,
+                        &mut sdk_ast_program_text,
+                        &mut sdk_project_json,
                     )?;
                 }
             } else {
@@ -820,18 +840,15 @@ impl CliCommand for SyncAllCommand {
                 stdout.reset()?;
             }
 
-            let (universal_sdk_content, universal_sdk_project_json_content) = write_universal_sdk_content(
-                &universal_sdk_program,
-                &universal_sdk_project_json,
-            )?;
+            
             rendered_templates.push(RenderedTemplate {
                 path: modules_path.join("universal-sdk").join("universalSdk.ts"),
-                content: universal_sdk_content,
+                content: sdk_ast_program_text,
                 context: None,
             });
             rendered_templates.push(RenderedTemplate {
                 path: modules_path.join("universal-sdk").join("package.json"),
-                content: universal_sdk_project_json_content,
+                content: serde_json::to_string_pretty(&sdk_project_json)?,
                 context: None,
             });
 

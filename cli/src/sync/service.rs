@@ -2,7 +2,7 @@ use std::{
     path::Path, 
     collections::HashSet, 
     fs::{read_to_string}, 
-    io::{Write, stdout},
+    io::{Write},
 };
 
 use anyhow::{Context, Result};
@@ -23,7 +23,7 @@ use crate::{
         // base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
         // command::command,
         database::{get_database_port, get_db_driver, is_in_memory_database},
-        docker::{add_service_definition_to_docker_compose},
+        docker::{add_service_definition_to_docker_compose, DockerCompose},
         manifest::{
             ProjectType, 
             application::ApplicationManifestData, 
@@ -31,7 +31,9 @@ use crate::{
             add_project_definition_to_manifest,
             ResourceInventory,
         },
-        package_json::{project_package_json::ProjectPackageJson,
+        package_json::{
+            project_package_json::ProjectPackageJson,
+            application_package_json::ApplicationPackageJson,
             add_project_definition_to_package_json,
         },
         pnpm_workspace::{
@@ -51,8 +53,6 @@ use crate::{
 
 pub(crate) fn add_service_to_manifest_with_validation(
     manifest_data: &mut ServiceManifestData,
-    base_path: &Path,
-    app_root_path: &Path,
     stdout: &mut StandardStream,
 ) -> Result<String> {
     let forklaunch_manifest_buffer = add_project_definition_to_manifest(
@@ -82,7 +82,7 @@ pub(crate) fn add_service_to_manifest_with_validation(
         &format!("Successfully added {} to manifest.toml", service_name),
         &format!("Project {} was not added to manifest.toml", service_name),
         "sync:service:73",
-        &mut stdout,
+        stdout,
     )?;
     if validation_result {
         Ok(forklaunch_manifest_buffer)
@@ -93,19 +93,13 @@ pub(crate) fn add_service_to_manifest_with_validation(
 
 pub(crate) fn add_service_to_docker_compose_with_validation(
     manifest_data: &mut ServiceManifestData,
-    base_path: &Path,
     app_root_path: &Path,
-    docker_compose: Option<String>,
+    docker_compose: &String,
+    stdout: &mut StandardStream,
 ) -> Result<String> {
-    let docker_compose_path = if let Some(docker_compose_path) = &manifest_data.docker_compose_path
-    {
-        app_root_path.join(docker_compose_path)
-    } else {
-        app_root_path.join("docker-compose.yaml")
-    };
 
     let docker_compose_buffer =
-        add_service_definition_to_docker_compose(manifest_data, app_root_path, docker_compose)
+        add_service_definition_to_docker_compose(manifest_data, app_root_path, Some(docker_compose.clone()))
             .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
     
     let temp: DockerCompose = from_str(&docker_compose_buffer).unwrap();
@@ -121,7 +115,7 @@ pub(crate) fn add_service_to_docker_compose_with_validation(
         &format!("Successfully added {} to docker-compose.yaml", manifest_data.service_name),
         &format!("Service {} was not added to docker-compose.yaml", manifest_data.service_name),
         "sync:service:113",
-        &mut stdout,
+        stdout,
     )?;
     if validation_result {
         Ok(docker_compose_buffer)
@@ -133,8 +127,6 @@ pub(crate) fn add_service_to_docker_compose_with_validation(
 pub(crate) fn add_service_to_runtime_files_with_validation(
     manifest_data: &mut ServiceManifestData,
     base_path: &Path,
-    app_root_path: &Path,
-    dir_project_names_set: &HashSet<String>,
     stdout: &mut StandardStream,
 ) -> Result<(Option<String>, Option<String>)> {
     let runtime = manifest_data.runtime.parse()?;
@@ -148,8 +140,8 @@ pub(crate) fn add_service_to_runtime_files_with_validation(
                 add_project_definition_to_package_json(base_path, manifest_data)
                     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON)?,
             );
-            let temp: ProjectPackageJson = from_str(&package_json_buffer.unwrap()).unwrap();
-            let new_package_json_projects: HashSet<String> = temp.workspaces.iter().filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str())).cloned().collect();
+            let temp: ApplicationPackageJson = from_str(package_json_buffer.as_ref().unwrap()).unwrap();
+            let new_package_json_projects: HashSet<String> = temp.workspaces.unwrap_or_default().iter().filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str())).cloned().collect();
             println!("sync:service:153 new_package_json_projects: {:?}", new_package_json_projects);
             let validation_result = validate_addition_to_artifact(
                 &manifest_data.service_name,
@@ -157,7 +149,7 @@ pub(crate) fn add_service_to_runtime_files_with_validation(
                 &format!("Successfully added {} to package.json", manifest_data.service_name),
                 &format!("Service {} was not added to package.json", manifest_data.service_name),
                 "sync:service:143",
-                &mut stdout,
+                stdout,
             )?;
             if !validation_result {
                 return Err(anyhow::anyhow!("Failed to add {} to package.json", manifest_data.service_name))
@@ -168,7 +160,7 @@ pub(crate) fn add_service_to_runtime_files_with_validation(
                 add_project_definition_to_pnpm_workspace(base_path, manifest_data)
                     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?,
             );
-            let temp: PnpmWorkspace = from_str(&pnpm_workspace_buffer.unwrap()).unwrap();
+            let temp: PnpmWorkspace = from_str(pnpm_workspace_buffer.as_ref().unwrap()).unwrap();
             let new_pnpm_workspace_projects: HashSet<String> = temp.packages.iter().filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str())).cloned().collect();
             
             let validation_result = validate_addition_to_artifact(
@@ -177,7 +169,7 @@ pub(crate) fn add_service_to_runtime_files_with_validation(
                 &format!("Successfully added {} to pnpm-workspace.yaml", manifest_data.service_name),
                 &format!("Service {} was not added to pnpm-workspace.yaml", manifest_data.service_name),
                 "sync:service:164",
-                &mut stdout,
+                stdout,
             )?;
             if !validation_result {
                 return Err(anyhow::anyhow!("Failed to add {} to pnpm-workspace.yaml", manifest_data.service_name))
@@ -190,7 +182,6 @@ pub(crate) fn add_service_to_runtime_files_with_validation(
 
 pub(crate) fn sync_service_setup(
     service_name: &str, 
-    app_root_path: &Path, 
     modules_path: &Path, 
     manifest_data: &mut ApplicationManifestData,
     stdout: &mut StandardStream,
@@ -202,7 +193,7 @@ pub(crate) fn sync_service_setup(
     database_options.extend_from_slice(&Database::VARIANTS);
     let database_input = prompt_with_validation(
         &mut line_editor,
-        &mut stdout,
+        stdout,
         "database",
         matches,
         "database type",
@@ -226,7 +217,7 @@ pub(crate) fn sync_service_setup(
 
     let description = prompt_without_validation(
         &mut line_editor,
-        &mut stdout,
+        stdout,
         "description",
         matches,
         "service description (optional)",
@@ -238,27 +229,24 @@ pub(crate) fn sync_service_setup(
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
         writeln!(stdout, "Service package.json not found in service directory. Please run `forklaunch sync service -i {}` to generate it.", service_name)?;
         stdout.reset()?;
+        return Err(anyhow::anyhow!("Service package.json not found in service directory. Please run `forklaunch sync service -i {}` to generate it.", service_name))
     }
     let service_package_json_data = read_to_string(&service_package_json_path)?;
     let service_package_json: ProjectPackageJson = from_str(&service_package_json_data)?;
     
     let database: Database = if database_input == "none" {
         // Try to detect database from package.json dependencies
-        let package_json_path = modules_path.join(service_name).join("package.json");
-        let package_json_content = read_to_string(&package_json_path)?;
-        let full_package_json: ProjectPackageJson = from_str(&package_json_content)?;
         
-        if let Some(deps) = &full_package_json.dependencies {
+        if let Some(deps) = &service_package_json.dependencies {
             // Check if any database variant is found in the dependencies
-            let found_variant = Database::VARIANTS.iter()
-                .find(|variant| {
-                    // Check if any dependency contains this database variant
-                    deps.databases.iter()
-                        .any(|dep| dep == variant)
+            let found_database = deps.databases.iter()
+                .find(|db| {
+                    // Check if this database enum matches any of the variants
+                    Database::VARIANTS.contains(&db.to_string().as_str())
                 });
             
-            if let Some(variant) = found_variant {
-                variant.parse()?
+            if let Some(database) = found_database {
+                *database
             } else {
                 return Err(anyhow::anyhow!("No database variant found in package.json dependencies"))
             }
@@ -269,7 +257,7 @@ pub(crate) fn sync_service_setup(
         database_input.parse()?
     };
 
-    let mut new_manifest_data: ServiceManifestData = ServiceManifestData {
+    let new_manifest_data: ServiceManifestData = ServiceManifestData {
         // Common fields from ApplicationManifestData
         id: manifest_data.id.clone(),
         app_name: manifest_data.app_name.clone(),
@@ -417,7 +405,7 @@ pub(crate) fn sync_service_setup(
 //             &ManifestData::Application(&existing_manifest_data),
 //             &None,
 //             &mut line_editor,
-//             &mut stdout,
+//             stdout,
 //             matches,
 //             0,
 //         )?;
@@ -454,7 +442,7 @@ pub(crate) fn sync_service_setup(
 //                         manifest_data.runtime.clone(),
 //                         &HashSet::new(),
 //                         &mut rendered_templates,
-//                         &mut stdout,
+//                         stdout,
 //                     )?;
 //                 }
 //                 if remove {

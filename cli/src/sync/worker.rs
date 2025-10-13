@@ -1,4 +1,4 @@
-use std::{path::Path, collections::HashSet,};
+use std::{path::Path, collections::HashSet};
 
 use anyhow::{Context, Result};
 use clap::{ArgMatches};
@@ -24,7 +24,7 @@ use crate::{
             get_database_port,
             is_in_memory_database,
         },
-        docker::add_worker_definition_to_docker_compose,
+        docker::{add_worker_definition_to_docker_compose, DockerCompose},
         manifest::{
             // InitializableManifestConfig, 
             // InitializableManifestConfigMetadata, 
@@ -35,7 +35,6 @@ use crate::{
             ResourceInventory, ProjectMetadata,
         },
         package_json::{
-            project_package_json::ProjectPackageJson,
             application_package_json::ApplicationPackageJson,
             add_project_definition_to_package_json,
         },
@@ -59,8 +58,6 @@ use crate::{
 
 pub(crate) fn add_worker_to_manifest_with_validation(
     manifest_data: &mut WorkerManifestData,
-    base_path: &Path,
-    app_root_path: &Path,
     stdout: &mut StandardStream,
 ) -> Result<String> {
     let worker_name = manifest_data.worker_name.clone();
@@ -105,7 +102,7 @@ pub(crate) fn add_worker_to_manifest_with_validation(
         &format!("Successfully added {} to manifest.toml", worker_name),
         &format!("Project {} was not added to manifest.toml", worker_name),
         "sync:worker:73",
-        &mut stdout,
+        stdout,
     )?;
     if !validation_result {
         return Err(anyhow::anyhow!("Failed to add {} to manifest.toml", worker_name))
@@ -115,22 +112,17 @@ pub(crate) fn add_worker_to_manifest_with_validation(
 
 pub(crate) fn add_worker_to_docker_compose_with_validation(
     manifest_data: &mut WorkerManifestData,
-    base_path: &Path,
     app_root_path: &Path,
-    docker_compose: Option<String>,
+    docker_compose: &String,
+    stdout: &mut StandardStream,
 ) -> Result<String> {
-    let docker_compose_path = if let Some(docker_compose_path) = &manifest_data.docker_compose_path
-    {
-        app_root_path.join(docker_compose_path)
-    } else {
-        app_root_path.join("docker-compose.yaml")
-    };
 
     let docker_compose_buffer =
-        add_worker_definition_to_docker_compose(manifest_data, app_root_path, docker_compose)
+        add_worker_definition_to_docker_compose(manifest_data, app_root_path, Some(docker_compose.clone()))
             .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
     
-    let new_docker_services: HashSet<String> = docker_compose_buffer
+    let temp: DockerCompose = from_str(&docker_compose_buffer).unwrap();
+    let new_docker_services: HashSet<String> = temp
         .services
         .keys()
         .cloned()
@@ -143,7 +135,7 @@ pub(crate) fn add_worker_to_docker_compose_with_validation(
         &format!("Successfully added {} to docker-compose.yaml", manifest_data.worker_name),
         &format!("Worker {} was not added to docker-compose.yaml", manifest_data.worker_name),
         "sync:worker:113",
-        &mut stdout,
+        stdout,
     )?;
     if !validation_result {
         return Err(anyhow::anyhow!("Failed to add {} to docker-compose.yaml", manifest_data.worker_name))
@@ -154,8 +146,6 @@ pub(crate) fn add_worker_to_docker_compose_with_validation(
 pub(crate) fn add_worker_to_runtime_files_with_validation(
     manifest_data: &mut WorkerManifestData,
     base_path: &Path,
-    app_root_path: &Path,
-    dir_project_names_set: &HashSet<String>,
     stdout: &mut StandardStream,
 ) -> Result<(Option<String>, Option<String>)> {
     let runtime = manifest_data.runtime.parse()?;
@@ -169,7 +159,7 @@ pub(crate) fn add_worker_to_runtime_files_with_validation(
                 add_project_definition_to_package_json(base_path, manifest_data)
                     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON)?,
             );
-            let temp: ApplicationPackageJson = from_str(&package_json_buffer.unwrap()).unwrap();
+            let temp: ApplicationPackageJson = from_str(package_json_buffer.as_ref().unwrap()).unwrap();
             let new_package_json_projects: HashSet<String> = temp.workspaces.unwrap_or_default().iter().cloned().filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str())).collect();
             
             let validation_result = validate_addition_to_artifact(
@@ -178,7 +168,7 @@ pub(crate) fn add_worker_to_runtime_files_with_validation(
                 &format!("Successfully added {} to package.json", manifest_data.worker_name),
                 &format!("Worker {} was not added to package.json", manifest_data.worker_name),
                 "sync:worker:145",
-                &mut stdout,
+                stdout,
             )?;
             if !validation_result {
                 return Err(anyhow::anyhow!("Failed to add {} to package.json", manifest_data.worker_name));
@@ -189,7 +179,7 @@ pub(crate) fn add_worker_to_runtime_files_with_validation(
                 add_project_definition_to_pnpm_workspace(base_path, manifest_data)
                     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?,
             );
-            let temp: PnpmWorkspace = from_str(&pnpm_workspace_buffer.unwrap()).unwrap();
+            let temp: PnpmWorkspace = from_str(pnpm_workspace_buffer.as_ref().unwrap()).unwrap();
             let new_pnpm_workspace_projects: HashSet<String> = temp.packages.iter().cloned().filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str())).collect();
             
             let validation_result = validate_addition_to_artifact(
@@ -198,7 +188,7 @@ pub(crate) fn add_worker_to_runtime_files_with_validation(
                 &format!("Successfully added {} to pnpm-workspace.yaml", manifest_data.worker_name),
                 &format!("Worker {} was not added to pnpm-workspace.yaml", manifest_data.worker_name),
                 "sync:worker:484",
-                &mut stdout,
+                stdout,
             )?;
             if !validation_result {
                 return Err(anyhow::anyhow!("Failed to add {} to pnpm-workspace.yaml", manifest_data.worker_name));
@@ -219,7 +209,7 @@ pub(crate) fn sync_worker_setup(
 
     let r#type: WorkerType = prompt_with_validation(
         &mut line_editor,
-        &mut stdout,
+        stdout,
         "type",
         matches,
         "worker type",
@@ -233,7 +223,7 @@ pub(crate) fn sync_worker_setup(
         database = Some(
             prompt_with_validation(
                 &mut line_editor,
-                &mut stdout,
+                stdout,
                 "database",
                 matches,
                 "worker database type",
@@ -247,7 +237,7 @@ pub(crate) fn sync_worker_setup(
 
     let description = prompt_without_validation(
         &mut line_editor,
-        &mut stdout,
+        stdout,
         "description",
         matches,
         "worker description (optional)",
@@ -457,7 +447,7 @@ pub(crate) fn sync_worker_setup(
 //             &ManifestData::Application(&existing_manifest_data),
 //             &None,
 //             &mut line_editor,
-//             &mut stdout,
+//             stdout,
 //             matches,
 //             0,
 //         )?;
@@ -494,7 +484,7 @@ pub(crate) fn sync_worker_setup(
 //                         manifest_data.runtime.clone(),
 //                         &HashSet::new(),
 //                         &mut rendered_templates,
-//                         &mut stdout,
+//                         stdout,
 //                     )?;
 //                 }
 //                 if remove {
