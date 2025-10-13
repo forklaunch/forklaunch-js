@@ -51,9 +51,10 @@ use crate::{
         package_json::{
             application_package_json::ApplicationPackageJson,
             package_json_constants::{
-                BULLMQ_VERSION, MIKRO_ORM_CORE_VERSION, MIKRO_ORM_DATABASE_VERSION,
-                MIKRO_ORM_MIGRATIONS_VERSION, MIKRO_ORM_REFLECTION_VERSION, WORKER_BULLMQ_VERSION,
-                WORKER_DATABASE_VERSION, WORKER_KAFKA_VERSION, WORKER_REDIS_VERSION,
+                BULLMQ_VERSION, INFRASTRUCTURE_REDIS_VERSION, MIKRO_ORM_CORE_VERSION,
+                MIKRO_ORM_DATABASE_VERSION, MIKRO_ORM_MIGRATIONS_VERSION,
+                MIKRO_ORM_REFLECTION_VERSION, WORKER_BULLMQ_VERSION, WORKER_DATABASE_VERSION,
+                WORKER_KAFKA_VERSION, WORKER_REDIS_VERSION,
             },
             project_package_json::ProjectPackageJson,
         },
@@ -202,6 +203,9 @@ fn change_type(
             dependencies.bullmq = Some(BULLMQ_VERSION.to_string());
             dependencies.forklaunch_implementation_worker_bullmq =
                 Some(WORKER_BULLMQ_VERSION.to_string());
+            // Ensure redis infrastructure is available when cache is used
+            dependencies.forklaunch_infrastructure_redis =
+                Some(INFRASTRUCTURE_REDIS_VERSION.to_string());
             resources.cache = Some(WorkerType::RedisCache.to_string());
             let _ = add_redis_to_docker_compose(
                 &manifest_data.app_name,
@@ -315,6 +319,9 @@ fn change_type(
         WorkerType::RedisCache => {
             dependencies.forklaunch_implementation_worker_redis =
                 Some(WORKER_REDIS_VERSION.to_string());
+            // Ensure redis infrastructure is available when cache is used
+            dependencies.forklaunch_infrastructure_redis =
+                Some(INFRASTRUCTURE_REDIS_VERSION.to_string());
             resources.cache = Some(WorkerType::RedisCache.to_string());
             let _ = add_redis_to_docker_compose(
                 &manifest_data.app_name,
