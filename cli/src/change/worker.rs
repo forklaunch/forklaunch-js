@@ -203,7 +203,6 @@ fn change_type(
             dependencies.bullmq = Some(BULLMQ_VERSION.to_string());
             dependencies.forklaunch_implementation_worker_bullmq =
                 Some(WORKER_BULLMQ_VERSION.to_string());
-            // Ensure redis infrastructure is available when cache is used
             dependencies.forklaunch_infrastructure_redis =
                 Some(INFRASTRUCTURE_REDIS_VERSION.to_string());
             resources.cache = Some(WorkerType::RedisCache.to_string());
@@ -319,7 +318,6 @@ fn change_type(
         WorkerType::RedisCache => {
             dependencies.forklaunch_implementation_worker_redis =
                 Some(WORKER_REDIS_VERSION.to_string());
-            // Ensure redis infrastructure is available when cache is used
             dependencies.forklaunch_infrastructure_redis =
                 Some(INFRASTRUCTURE_REDIS_VERSION.to_string());
             resources.cache = Some(WorkerType::RedisCache.to_string());
