@@ -269,13 +269,6 @@ impl CliCommand for SyncAllCommand {
                 .help("Flag to confirm any prompts")
                 .action(ArgAction::SetTrue),
         )
-        .arg(
-            Arg::new("skip-prompt")
-                .short('s')
-                .long("skip-prompt")
-                .help("Flag to skip any prompts")
-                .action(ArgAction::SetTrue),
-        )
     }
 
     fn handler(&self, matches: &clap::ArgMatches) -> Result<()> {
@@ -283,7 +276,12 @@ impl CliCommand for SyncAllCommand {
         // remove necessary projects from manifest.toml, update docker-compose.yml, pnpm-workspace.yaml, and package.json accordingly
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
-
+        let is_ci = std::env::var("CI").is_ok();
+        if is_ci {
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+            writeln!(stdout, "Running in CI mode - All additions to artifact prompts and actions will be skipped")?;
+            stdout.reset()?;
+        }
         let (app_root_path, _) = find_app_root_path(matches, RequiredLocation::Application)?;
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
         
@@ -379,7 +377,7 @@ impl CliCommand for SyncAllCommand {
                 writeln!(stdout, "No projects to remove from manifest.toml")?;
                 stdout.reset()?;
             }
-            if !manifest_projects_to_add.is_empty() {
+            if !manifest_projects_to_add.is_empty() && !is_ci {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
                 writeln!(stdout, "Found {} project(s) in directories that are not in manifest:", manifest_projects_to_add.len())?;
                 for project_name in &manifest_projects_to_add {
@@ -490,7 +488,7 @@ impl CliCommand for SyncAllCommand {
                 stdout.reset()?;
             }
             let mut docker_compose_string = String::new();
-            if !services_to_add_docker.is_empty() {
+            if !services_to_add_docker.is_empty() && !is_ci {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
                 writeln!(stdout, "Found {} service(s) in directories that are not in docker-compose.yaml:", services_to_add_docker.len())?;
                 for service in &services_to_add_docker {
@@ -640,7 +638,7 @@ impl CliCommand for SyncAllCommand {
                         writeln!(stdout, "No packages to remove from pnpm-workspace.yaml")?;
                         stdout.reset()?;
                     }
-                    if !runtime_projects_to_add.is_empty() {
+                    if !runtime_projects_to_add.is_empty() && !is_ci {
                         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
                         writeln!(stdout, "Found {} package(s) in directories that are not in pnpm-workspace.yaml:", runtime_projects_to_add.len())?;
                         for package in &runtime_projects_to_add {
@@ -736,7 +734,7 @@ impl CliCommand for SyncAllCommand {
                         writeln!(stdout, "No packages to remove from package.json")?;
                         stdout.reset()?;
                     }
-                    if !runtime_projects_to_add.is_empty() {
+                    if !runtime_projects_to_add.is_empty() && !is_ci {
                         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
                         writeln!(stdout, "Found {} package(s) in directories that are not in package.json:", runtime_projects_to_add.len())?;
                         for package in &runtime_projects_to_add {
@@ -826,7 +824,7 @@ impl CliCommand for SyncAllCommand {
                 writeln!(stdout, "No projects to remove from universal SDK")?;
                 stdout.reset()?;
             }
-            if !manifest_projects_to_add.is_empty() {
+            if !manifest_projects_to_add.is_empty() && !is_ci {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
                 writeln!(stdout, "Found {} package(s) in directories that are not in universal SDK:", manifest_projects_to_add.len())?;
                 for package in &manifest_projects_to_add {
@@ -868,7 +866,7 @@ impl CliCommand for SyncAllCommand {
             write_rendered_templates(&rendered_templates, false, &mut stdout)?;
 
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-            writeln!(stdout, "Successfully removed {} project(s)/package(s) from manifest, docker-compose.yml, and runtime files", manifest_projects_to_remove.len() + services_to_remove_docker.len() + runtime_projects_to_remove.len())?;
+            writeln!(stdout, "Successfully synced {} project(s)/package(s) from manifest, docker-compose.yml, and runtime files", manifest_projects_to_remove.len() + services_to_remove_docker.len() + runtime_projects_to_remove.len())?;
             stdout.reset()?;
         } else {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;

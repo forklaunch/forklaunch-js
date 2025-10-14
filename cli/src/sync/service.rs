@@ -240,9 +240,9 @@ pub(crate) fn sync_service_setup(
     }
     let service_package_json_data = read_to_string(&service_package_json_path)?;
     let service_package_json: ProjectPackageJson = json_from_str(&service_package_json_data)?;
-    println!("sync:237 service_package_json: {:?}", service_package_json);
+    println!("sync:service:237 service_package_json: {:?}", service_package_json);
     
-    println!("sync:237 Try and get database from package.json");
+    println!("sync:service:237 Try and get database from package.json");
     let database: Database = if database_input == "none" {
         // Try to detect database from package.json dependencies
         
