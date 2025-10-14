@@ -191,7 +191,8 @@ pub(crate) fn sync_router_setup(
             camel_case_name: router_name.to_case(Case::Camel),
             pascal_case_name: router_name.to_case(Case::Pascal),
             kebab_case_name: router_name.to_case(Case::Kebab),
-
+            title_case_name: router_name.to_case(Case::Title),
+            
             database: database.to_string(),
             db_driver: get_db_driver(&database),
 

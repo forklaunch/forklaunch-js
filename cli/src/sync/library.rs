@@ -144,6 +144,7 @@ pub(crate) fn sync_library_setup(
             camel_case_app_name: manifest_data.camel_case_app_name.clone(),
             pascal_case_app_name: manifest_data.pascal_case_app_name.clone(),
             kebab_case_app_name: manifest_data.kebab_case_app_name.clone(),
+            title_case_app_name: manifest_data.title_case_app_name.clone(),
             app_description: manifest_data.app_description.clone(),
             author: manifest_data.author.clone(),
             cli_version: manifest_data.cli_version.clone(),
@@ -173,6 +174,7 @@ pub(crate) fn sync_library_setup(
             library_name: library_name.to_string(),
             camel_case_name: library_name.to_case(Case::Camel),
             kebab_case_name: library_name.to_case(Case::Kebab),
+            title_case_name: library_name.to_case(Case::Title),
             description: description.clone(),
         };
 
