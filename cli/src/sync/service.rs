@@ -9,7 +9,9 @@ use anyhow::{Context, Result};
 use clap::{ArgMatches};
 use rustyline::{Editor, history::DefaultHistory};
 use convert_case::{Case, Casing};
-use toml::from_str;
+use serde_json::{from_str as json_from_str, to_string_pretty as json_to_string_pretty};
+use serde_yml::{from_str as yaml_from_str, to_string as yaml_to_string};
+use toml::{from_str as toml_from_str, to_string_pretty as toml_to_string_pretty};
 use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
 
 use crate::{
@@ -81,7 +83,7 @@ pub(crate) fn add_service_to_manifest_with_validation(
         &new_manifest_projects,
         &format!("Successfully added {} to manifest.toml", service_name),
         &format!("Project {} was not added to manifest.toml", service_name),
-        "sync:service:73",
+        "sync:service:85",
         stdout,
     )?;
     if validation_result {
@@ -97,12 +99,14 @@ pub(crate) fn add_service_to_docker_compose_with_validation(
     docker_compose: &String,
     stdout: &mut StandardStream,
 ) -> Result<String> {
+    println!("sync:service:101 add_service_to_docker_compose_with_validation");
 
     let docker_compose_buffer =
         add_service_definition_to_docker_compose(manifest_data, app_root_path, Some(docker_compose.clone()))
             .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
-    
-    let temp: DockerCompose = from_str(&docker_compose_buffer).unwrap();
+    println!("sync:service:106 docker compose buffer: {:?}", docker_compose_buffer);
+    println!("sync:service:106 checking docker compose buffer");
+    let temp: DockerCompose = yaml_from_str(&docker_compose_buffer)?;
     let new_docker_services: HashSet<String> = temp.services
         .keys()
         .cloned()
@@ -140,7 +144,7 @@ pub(crate) fn add_service_to_runtime_files_with_validation(
                 add_project_definition_to_package_json(base_path, manifest_data)
                     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON)?,
             );
-            let temp: ApplicationPackageJson = from_str(package_json_buffer.as_ref().unwrap()).unwrap();
+            let temp: ApplicationPackageJson = json_from_str(package_json_buffer.as_ref().unwrap()).unwrap();
             let new_package_json_projects: HashSet<String> = temp.workspaces.unwrap_or_default().iter().filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str())).cloned().collect();
             println!("sync:service:153 new_package_json_projects: {:?}", new_package_json_projects);
             let validation_result = validate_addition_to_artifact(
@@ -160,7 +164,7 @@ pub(crate) fn add_service_to_runtime_files_with_validation(
                 add_project_definition_to_pnpm_workspace(base_path, manifest_data)
                     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?,
             );
-            let temp: PnpmWorkspace = from_str(pnpm_workspace_buffer.as_ref().unwrap()).unwrap();
+            let temp: PnpmWorkspace = yaml_from_str(pnpm_workspace_buffer.as_ref().unwrap()).unwrap();
             let new_pnpm_workspace_projects: HashSet<String> = temp.packages.iter().filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str())).cloned().collect();
             
             let validation_result = validate_addition_to_artifact(
@@ -188,6 +192,9 @@ pub(crate) fn sync_service_setup(
     matches: &ArgMatches,
 ) -> Result<ServiceManifestData> {
     let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
+    println!("sync:service:195 sync_service_setup");
+    println!("sync:service:195 service_name: {:?}", service_name);
+    println!("sync:service:195 modules_path: {:?}", modules_path);
 
     let mut database_options = vec!["none"];
     database_options.extend_from_slice(&Database::VARIANTS);
@@ -232,8 +239,10 @@ pub(crate) fn sync_service_setup(
         return Err(anyhow::anyhow!("Service package.json not found in service directory. Please run `forklaunch sync service -i {}` to generate it.", service_name))
     }
     let service_package_json_data = read_to_string(&service_package_json_path)?;
-    let service_package_json: ProjectPackageJson = from_str(&service_package_json_data)?;
+    let service_package_json: ProjectPackageJson = json_from_str(&service_package_json_data)?;
+    println!("sync:237 service_package_json: {:?}", service_package_json);
     
+    println!("sync:237 Try and get database from package.json");
     let database: Database = if database_input == "none" {
         // Try to detect database from package.json dependencies
         
@@ -251,12 +260,12 @@ pub(crate) fn sync_service_setup(
                 return Err(anyhow::anyhow!("No database variant found in package.json dependencies"))
             }
         } else {
-            return Err(anyhow::anyhow!("No dependencies found in package.json"))
+            return Err(anyhow::anyhow!("No dependencies found in package.json, please check initialize type and try again"))
         }
     } else {
         database_input.parse()?
     };
-
+    println!("sync:260 database: {:?}", database);
     let new_manifest_data: ServiceManifestData = ServiceManifestData {
         // Common fields from ApplicationManifestData
         id: manifest_data.id.clone(),
@@ -291,8 +300,8 @@ pub(crate) fn sync_service_setup(
         is_vitest: manifest_data.is_vitest,
         is_jest: manifest_data.is_jest,
 
-        service_name: service_name.clone().to_string(),
-        service_path: service_name.clone().to_string(),
+        service_name: service_name.to_string(),
+        service_path: service_name.to_string(),
         camel_case_name: service_name.to_case(Case::Camel),
         pascal_case_name: service_name.to_case(Case::Pascal),
         kebab_case_name: service_name.to_case(Case::Kebab),

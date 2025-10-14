@@ -170,7 +170,7 @@ pub(crate) fn sync_library_setup(
             is_jest: manifest_data.is_jest,
 
             // Library-specific fields
-            library_name: library_name.clone().to_string(),
+            library_name: library_name.to_string(),
             camel_case_name: library_name.to_case(Case::Camel),
             kebab_case_name: library_name.to_case(Case::Kebab),
             description: description.clone(),

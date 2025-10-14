@@ -46,8 +46,11 @@ pub(crate) fn add_package_to_artifact(
     matches: &ArgMatches,
     docker_compose: Option<String>, //optional
     _project_type: Option<ProjectType>, //optional
-) -> Result<Vec<ArtifactResult>>
-{
+) -> Result<Vec<ArtifactResult>> {
+    println!("sync:utils:49 add_package_to_artifact");
+    println!("sync:utils:49 package_name: {:?}", package_name);
+    println!("sync:utils:49 artifact_type: {:?}", artifact_type);
+    println!("sync:utils:49 package_type: {:?}", package_type);
     let mut results = Vec::new();
     match package_type {
         InitializeType::Service => {
@@ -229,7 +232,7 @@ pub(crate) fn validate_addition_to_artifact(
 ) -> Result<bool> {
     println!("{debug_context} new_projects: {:?}", new_projects);
     
-    if new_projects.contains(package_name) {
+    if new_projects.iter().any(|project| project.contains(package_name)) {
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
         writeln!(stdout, "{}", success_message)?;
         stdout.reset()?;

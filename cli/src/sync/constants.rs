@@ -51,10 +51,10 @@ pub(crate) const RUNTIME_PROJECTS_TO_IGNORE: &[&str] = &[
 ];
 
 
-pub(crate) const ARTIFACTS: &[&str] = &[
-    "all",
-    "manifest",
-    "docker_compose",
-    "runtime",
-    "sdk",
-];
+// pub(crate) const ARTIFACTS: &[&str] = &[
+//     "all",
+//     "manifest",
+//     "docker_compose",
+//     "runtime",
+//     "sdk",
+// ];

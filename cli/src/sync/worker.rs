@@ -3,8 +3,9 @@ use std::{path::Path, collections::HashSet};
 use anyhow::{Context, Result};
 use clap::{ArgMatches};
 use rustyline::{Editor, history::DefaultHistory};
-use serde_json::from_str;
-use toml::from_str as toml_from_str;
+use serde_json::{from_str as json_from_str, to_string_pretty as json_to_string_pretty};
+use serde_yml::{from_str as yaml_from_str, to_string as yaml_to_string};
+use toml::{from_str as toml_from_str, to_string_pretty as toml_to_string_pretty};
 use termcolor::{StandardStream};
 use convert_case::{Case, Casing};
 
@@ -121,7 +122,7 @@ pub(crate) fn add_worker_to_docker_compose_with_validation(
         add_worker_definition_to_docker_compose(manifest_data, app_root_path, Some(docker_compose.clone()))
             .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
     
-    let temp: DockerCompose = from_str(&docker_compose_buffer).unwrap();
+    let temp: DockerCompose = yaml_from_str(&docker_compose_buffer).unwrap();
     let new_docker_services: HashSet<String> = temp
         .services
         .keys()
@@ -159,7 +160,7 @@ pub(crate) fn add_worker_to_runtime_files_with_validation(
                 add_project_definition_to_package_json(base_path, manifest_data)
                     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON)?,
             );
-            let temp: ApplicationPackageJson = from_str(package_json_buffer.as_ref().unwrap()).unwrap();
+            let temp: ApplicationPackageJson = json_from_str(package_json_buffer.as_ref().unwrap()).unwrap();
             let new_package_json_projects: HashSet<String> = temp.workspaces.unwrap_or_default().iter().cloned().filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str())).collect();
             
             let validation_result = validate_addition_to_artifact(
@@ -179,7 +180,7 @@ pub(crate) fn add_worker_to_runtime_files_with_validation(
                 add_project_definition_to_pnpm_workspace(base_path, manifest_data)
                     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?,
             );
-            let temp: PnpmWorkspace = from_str(pnpm_workspace_buffer.as_ref().unwrap()).unwrap();
+            let temp: PnpmWorkspace = yaml_from_str(pnpm_workspace_buffer.as_ref().unwrap()).unwrap();
             let new_pnpm_workspace_projects: HashSet<String> = temp.packages.iter().cloned().filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str())).collect();
             
             let validation_result = validate_addition_to_artifact(
@@ -220,6 +221,7 @@ pub(crate) fn sync_worker_setup(
 
     let mut database: Option<Database> = None;
     if r#type == WorkerType::Database {
+        // TODO: get database from package.json
         database = Some(
             prompt_with_validation(
                 &mut line_editor,
@@ -234,6 +236,7 @@ pub(crate) fn sync_worker_setup(
             .parse()?,
         );
     }
+    // TODO: Find worker type from somewhere in the worker directory
 
     let description = prompt_without_validation(
         &mut line_editor,
@@ -279,7 +282,7 @@ pub(crate) fn sync_worker_setup(
         is_jest: manifest_data.is_jest,
 
         // Worker-specific fields
-        worker_name: worker_name.clone().to_string(),
+        worker_name: worker_name.to_string(),
         camel_case_name: worker_name.to_case(Case::Camel),
         pascal_case_name: worker_name.to_case(Case::Pascal),
         kebab_case_name: worker_name.to_case(Case::Kebab),

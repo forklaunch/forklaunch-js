@@ -151,7 +151,7 @@ pub(crate) fn sync_router_setup(
     } else {
         vec![]
     };
-    let app_root_path_buf = app_root_path.clone().to_path_buf();
+    let app_root_path_buf = app_root_path.to_path_buf();
     let mut router_manifest_data: RouterManifestData = toml_from_str(&toml::to_string_pretty(&manifest_data).unwrap()).unwrap();
     let router_base_path = prompt_base_path(
         &app_root_path_buf,
@@ -172,7 +172,7 @@ pub(crate) fn sync_router_setup(
                 .to_string_lossy()
                 .to_string()
                 .clone(),
-            router_name: Some(router_name.clone().to_string()),
+            router_name: Some(router_name.to_string()),
         },
     ));
     
@@ -187,7 +187,7 @@ pub(crate) fn sync_router_setup(
     if let Some(database) = service_data.resources.as_ref().unwrap().database.clone() {
         let database: Database = database.parse()?;
         router_manifest_data = RouterManifestData {
-            router_name: router_name.clone().to_string(),
+            router_name: router_name.to_string(),
             camel_case_name: router_name.to_case(Case::Camel),
             pascal_case_name: router_name.to_case(Case::Pascal),
             kebab_case_name: router_name.to_case(Case::Kebab),

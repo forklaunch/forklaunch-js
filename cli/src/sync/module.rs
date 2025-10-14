@@ -3,8 +3,9 @@ use std::{path::Path, collections::HashSet,};
 use anyhow::{Result, Context};
 use clap::{ArgMatches};
 use rustyline::{Editor, history::DefaultHistory};
-use serde_json::from_str;
-use toml::from_str as toml_from_str;
+use serde_json::{from_str as json_from_str, to_string_pretty as json_to_string_pretty};
+use serde_yml::{from_str as yaml_from_str, to_string as yaml_to_string};
+use toml::{from_str as toml_from_str, to_string_pretty as toml_to_string_pretty};
 use termcolor::{StandardStream};
 use convert_case::{Case, Casing};
 
@@ -102,7 +103,7 @@ pub(crate) fn add_module_to_docker_compose_with_validation(
     stdout: &mut StandardStream,
 ) -> Result<String> {
     let docker_compose_buffer = add_service_definition_to_docker_compose(&service_data, &app_root_path, Some(docker_compose.clone()))?;
-    let temp: DockerCompose = from_str(&docker_compose_buffer).unwrap();
+    let temp: DockerCompose = yaml_from_str(&docker_compose_buffer).unwrap();
     let new_docker_services: HashSet<String> = temp.services.keys().cloned().filter(|service| !DOCKER_SERVICES_TO_IGNORE.contains(&service.as_str())).collect();
     let validation_result = validate_addition_to_artifact(
         &service_data.service_name,
@@ -135,7 +136,7 @@ pub(crate) fn add_module_to_runtime_files_with_validation(
                 add_project_definition_to_package_json(base_path, service_data)
                     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON)?,
             );
-            let temp: ApplicationPackageJson = from_str(package_json_buffer.as_ref().unwrap()).unwrap();
+            let temp: ApplicationPackageJson = json_from_str(package_json_buffer.as_ref().unwrap()).unwrap();
             let new_package_json_projects: HashSet<String> = temp.workspaces.unwrap_or_default().iter().cloned().filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str())).collect();
             
             let validation_result = validate_addition_to_artifact(
@@ -155,7 +156,7 @@ pub(crate) fn add_module_to_runtime_files_with_validation(
                 add_project_definition_to_pnpm_workspace(base_path, service_data)
                     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?,
             );
-            let temp: PnpmWorkspace = from_str(pnpm_workspace_buffer.as_ref().unwrap()).unwrap();
+            let temp: PnpmWorkspace = yaml_from_str(pnpm_workspace_buffer.as_ref().unwrap()).unwrap();
             let new_pnpm_workspace_projects: HashSet<String> = temp.packages.iter().cloned().filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str())).collect();
                 
             let validation_result = validate_addition_to_artifact(
