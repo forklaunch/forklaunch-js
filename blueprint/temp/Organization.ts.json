@@ -1,0 +1,81 @@
+{
+  "data": {
+    "_id": 5000,
+    "properties": {
+      "name": {
+        "name": "name",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "string",
+        "array": false,
+        "runtimeType": "string"
+      },
+      "users": {
+        "name": "users",
+        "kind": "1:m",
+        "cascade": ["persist"],
+        "type": "User",
+        "array": false,
+        "runtimeType": "User"
+      },
+      "domain": {
+        "name": "domain",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "string",
+        "array": false,
+        "runtimeType": "string"
+      },
+      "logoUrl": {
+        "name": "logoUrl",
+        "kind": "scalar",
+        "nullable": true,
+        "getter": false,
+        "setter": false,
+        "type": "string",
+        "array": false,
+        "optional": true,
+        "runtimeType": "string"
+      },
+      "subscription": {
+        "name": "subscription",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "string",
+        "array": false,
+        "runtimeType": "string"
+      },
+      "status": {
+        "name": "status",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "string",
+        "default": "active",
+        "runtimeType": "string",
+        "array": false
+      }
+    },
+    "primaryKeys": [],
+    "filters": {},
+    "hooks": {},
+    "indexes": [],
+    "uniques": [{ "properties": "subscription" }],
+    "className": "Organization",
+    "path": "./iam-base/persistence/entities/organization.entity.ts",
+    "name": "Organization",
+    "abstract": false,
+    "internal": true,
+    "constructorParams": [],
+    "toJsonParams": [],
+    "extends": "SqlBaseEntity",
+    "useCache": true,
+    "collection": "organization"
+  },
+  "origin": "./iam-base/persistence/entities/organization.entity.ts",
+  "hash": "b0ba31acdc1f129ca2dcb3d0526c3552",
+  "version": "6.5.6"
+}

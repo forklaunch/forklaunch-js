@@ -1,12 +1,11 @@
+use std::{collections::HashSet, fs, path::Path};
+
 use anyhow::{Context, Result};
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{CallExpression, Expression};
 use oxc_ast_visit::Visit;
 use oxc_parser::{Parser, ParserReturn};
 use oxc_span::SourceType;
-use std::collections::HashSet;
-use std::fs;
-use std::path::Path;
 
 #[derive(Debug, Clone)]
 pub struct EnvVarUsage {
@@ -30,10 +29,8 @@ impl EnvVarVisitor {
 
 impl<'a> Visit<'a> for EnvVarVisitor {
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
-        // Look for getEnvVar function calls
         if let Expression::Identifier(ident) = &call.callee {
             if ident.name == "getEnvVar" {
-                // Extract the environment variable name from the first argument
                 if let Some(arg) = call.arguments.first() {
                     if let Some(Expression::StringLiteral(str_lit)) = arg.as_expression() {
                         let var_name = str_lit.value.to_string();
@@ -50,12 +47,10 @@ impl<'a> Visit<'a> for EnvVarVisitor {
             }
         }
 
-        // Continue visiting all child nodes
         oxc_ast_visit::walk::walk_call_expression(self, call);
     }
 }
 
-/// Parse a registrations.ts file and extract all getEnvVar calls
 pub fn extract_env_vars_from_file(file_path: &Path) -> Result<Vec<EnvVarUsage>> {
     let source_code = fs::read_to_string(file_path)
         .with_context(|| format!("Failed to read file: {}", file_path.display()))?;
@@ -63,7 +58,6 @@ pub fn extract_env_vars_from_file(file_path: &Path) -> Result<Vec<EnvVarUsage>> 
     extract_env_vars_from_source(&source_code)
 }
 
-/// Parse TypeScript source code and extract all getEnvVar calls
 pub fn extract_env_vars_from_source(source_code: &str) -> Result<Vec<EnvVarUsage>> {
     let allocator = Allocator::default();
 
@@ -86,13 +80,11 @@ pub fn extract_env_vars_from_source(source_code: &str) -> Result<Vec<EnvVarUsage
     Ok(visitor.env_vars)
 }
 
-/// Find all environment variables used across all registrations.ts files in the workspace
 pub fn find_all_env_vars(
     modules_path: &Path,
 ) -> Result<std::collections::HashMap<String, Vec<EnvVarUsage>>> {
     let mut all_env_vars = std::collections::HashMap::new();
 
-    // Find all registrations.ts files
     let registrations_files = find_registrations_files(modules_path)?;
 
     for file_path in registrations_files {
@@ -104,7 +96,6 @@ pub fn find_all_env_vars(
     Ok(all_env_vars)
 }
 
-/// Find all registrations.ts files in the modules directory
 fn find_registrations_files(modules_path: &Path) -> Result<Vec<std::path::PathBuf>> {
     let mut registrations_files = Vec::new();
 
@@ -127,7 +118,6 @@ fn find_registrations_files(modules_path: &Path) -> Result<Vec<std::path::PathBu
     Ok(registrations_files)
 }
 
-/// Extract project name from the registrations.ts file path
 fn get_project_name_from_path(file_path: &Path) -> Result<String> {
     let parent = file_path
         .parent()
@@ -142,7 +132,6 @@ fn get_project_name_from_path(file_path: &Path) -> Result<String> {
     Ok(project_name)
 }
 
-/// Get unique environment variables across all projects
 #[allow(dead_code)]
 pub fn get_unique_env_vars(
     project_env_vars: &std::collections::HashMap<String, Vec<EnvVarUsage>>,

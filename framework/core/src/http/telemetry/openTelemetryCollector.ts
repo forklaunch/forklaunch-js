@@ -35,14 +35,14 @@ import {
   MetricType
 } from '../types/openTelemetryCollector.types';
 import { ATTR_API_NAME, ATTR_CORRELATION_ID } from './constants';
-import { logger } from './pinoLogger';
+import { logger, PinoLogger } from './pinoLogger';
 
 export class OpenTelemetryCollector<
   AppliedMetricsDefinition extends MetricsDefinition
 > {
-  private readonly logger;
-  private readonly serviceName: string;
-  private readonly metrics: Record<
+  #logger: PinoLogger;
+  #serviceName: string;
+  #metrics: Record<
     keyof AppliedMetricsDefinition,
     | Counter
     | Gauge
@@ -59,10 +59,10 @@ export class OpenTelemetryCollector<
     level?: LevelWithSilentOrString,
     metricDefinitions?: AppliedMetricsDefinition
   ) {
-    this.serviceName = serviceName;
-    this.logger = logger(level || 'info');
+    this.#serviceName = serviceName;
+    this.#logger = logger(level || 'info');
 
-    this.metrics = {} as Record<
+    this.#metrics = {} as Record<
       keyof AppliedMetricsDefinition,
       MetricType<AppliedMetricsDefinition[keyof AppliedMetricsDefinition]>
     >;
@@ -72,38 +72,38 @@ export class OpenTelemetryCollector<
     )) {
       switch (metricType) {
         case 'counter':
-          this.metrics[metricId as keyof AppliedMetricsDefinition] = metrics
-            .getMeter(this.serviceName)
+          this.#metrics[metricId as keyof AppliedMetricsDefinition] = metrics
+            .getMeter(this.#serviceName)
             .createCounter(metricId);
           break;
         case 'gauge':
-          this.metrics[metricId as keyof AppliedMetricsDefinition] = metrics
-            .getMeter(this.serviceName)
+          this.#metrics[metricId as keyof AppliedMetricsDefinition] = metrics
+            .getMeter(this.#serviceName)
             .createGauge(metricId);
           break;
         case 'histogram':
-          this.metrics[metricId as keyof AppliedMetricsDefinition] = metrics
-            .getMeter(this.serviceName)
+          this.#metrics[metricId as keyof AppliedMetricsDefinition] = metrics
+            .getMeter(this.#serviceName)
             .createHistogram(metricId);
           break;
         case 'upDownCounter':
-          this.metrics[metricId as keyof AppliedMetricsDefinition] = metrics
-            .getMeter(this.serviceName)
+          this.#metrics[metricId as keyof AppliedMetricsDefinition] = metrics
+            .getMeter(this.#serviceName)
             .createUpDownCounter(metricId);
           break;
         case 'observableCounter':
-          this.metrics[metricId as keyof AppliedMetricsDefinition] = metrics
-            .getMeter(this.serviceName)
+          this.#metrics[metricId as keyof AppliedMetricsDefinition] = metrics
+            .getMeter(this.#serviceName)
             .createObservableCounter(metricId);
           break;
         case 'observableGauge':
-          this.metrics[metricId as keyof AppliedMetricsDefinition] = metrics
-            .getMeter(this.serviceName)
+          this.#metrics[metricId as keyof AppliedMetricsDefinition] = metrics
+            .getMeter(this.#serviceName)
             .createObservableGauge(metricId);
           break;
         case 'observableUpDownCounter':
-          this.metrics[metricId as keyof AppliedMetricsDefinition] = metrics
-            .getMeter(this.serviceName)
+          this.#metrics[metricId as keyof AppliedMetricsDefinition] = metrics
+            .getMeter(this.#serviceName)
             .createObservableUpDownCounter(metricId);
           break;
       }
@@ -116,48 +116,48 @@ export class OpenTelemetryCollector<
   }
 
   log(level: LevelWithSilent, ...args: (string | unknown | LoggerMeta)[]) {
-    this.logger.log(level, ...args);
+    this.#logger.log(level, ...args);
   }
 
   info: LogFn = (
     msg: string | unknown | LoggerMeta,
     ...args: (string | unknown | LoggerMeta)[]
   ) => {
-    this.logger.log('info', msg, ...args);
+    this.#logger.log('info', msg, ...args);
   };
 
   error: LogFn = (
     msg: string | unknown | LoggerMeta,
     ...args: (string | unknown | LoggerMeta)[]
   ) => {
-    this.logger.log('error', msg, ...args);
+    this.#logger.log('error', msg, ...args);
   };
 
   warn: LogFn = (
     msg: string | unknown | LoggerMeta,
     ...args: (string | unknown | LoggerMeta)[]
   ) => {
-    this.logger.log('warn', msg, ...args);
+    this.#logger.log('warn', msg, ...args);
   };
 
   debug: LogFn = (
     msg: string | unknown | LoggerMeta,
     ...args: (string | unknown | LoggerMeta)[]
   ) => {
-    this.logger.log('debug', msg, ...args);
+    this.#logger.log('debug', msg, ...args);
   };
 
   trace: LogFn = (
     msg: string | unknown | LoggerMeta,
     ...args: (string | unknown | LoggerMeta)[]
   ) => {
-    this.logger.log('trace', msg, ...args);
+    this.#logger.log('trace', msg, ...args);
   };
 
   getMetric<T extends keyof AppliedMetricsDefinition>(
     metricId: T
   ): MetricType<AppliedMetricsDefinition[T]> {
-    return this.metrics[metricId] as MetricType<AppliedMetricsDefinition[T]>;
+    return this.#metrics[metricId] as MetricType<AppliedMetricsDefinition[T]>;
   }
 }
 

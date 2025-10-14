@@ -42,10 +42,13 @@ const expressMiddleware = (req: Request, res: Response, next: NextFunction) => {
 
 const getHandler = handlers.get(
   zodSchemaValidator,
-  '/test',
+  '/test/:id',
   {
     name: 'Test File',
     summary: 'Gets a sample file back',
+    params: {
+      id: string
+    },
     versions: {
       '1.0.0': {
         requestHeaders: {
@@ -308,7 +311,7 @@ const filePostHandler = handlers.post(
 );
 
 export const flRouter = forklaunchRouterInstance
-  .get('/test', getHandler)
+  .get('/test/:id', getHandler)
   .post('/test', postHandler)
   .patch('/test', jsonPatchHandler)
   .post('/test/multipart', multipartHandler)
@@ -320,7 +323,7 @@ export const flNestedRouter = forklaunchRouter(
   zodSchemaValidator,
   openTelemetryCollector
 )
-  .get('/test', getHandler)
+  .get('/test/:id', getHandler)
   .post('/test', postHandler);
 
 const sdkRoutes = flRouter.use(flNestedRouter);
@@ -361,10 +364,13 @@ export const sampleSdkClient2 = {
 };
 
 forklaunchApplication.get(
-  '/alfalfa',
+  '/alfalfa/:id',
   {
     name: 'Test',
     summary: 'Test',
+    params: {
+      id: string
+    },
     responses: {
       200: string
     }

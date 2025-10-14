@@ -1,5 +1,44 @@
 # @forklaunch/hyper-express
 
+## 0.9.25
+
+### Patch Changes
+
+- update packages, make OpenTelemetryCollector type more transparent, attempt to fix error loggings
+- Updated dependencies
+  - @forklaunch/validator@0.10.18
+  - @forklaunch/common@0.6.18
+  - @forklaunch/core@0.15.7
+
+## 0.9.24
+
+### Patch Changes
+
+- Update internal packages
+- Updated dependencies
+  - @forklaunch/validator@0.10.17
+  - @forklaunch/common@0.6.17
+  - @forklaunch/core@0.15.6
+
+## 0.9.23
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/validator@0.10.16
+  - @forklaunch/common@0.6.16
+  - @forklaunch/core@0.15.5
+
+## 0.9.22
+
+### Patch Changes
+
+- Minor bugfixes and package version bumps
+- Updated dependencies
+  - @forklaunch/validator@0.10.15
+  - @forklaunch/common@0.6.15
+  - @forklaunch/core@0.15.4
+
 ## 0.9.21
 
 ### Patch Changes

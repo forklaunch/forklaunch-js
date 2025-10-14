@@ -249,7 +249,6 @@ const ci = configInjector({
         let mut registrations_program =
             parse_ast_program(&allocator, registrations_content, SourceType::ts());
 
-        // Injection with nested object properties
         let injection_content = r#"
 const newConfig = configInjector({
     database: {
@@ -289,7 +288,6 @@ const newConfig = configInjector({
     fn test_inject_into_registrations_config_injector_wrong_declaration_name() {
         let allocator = Allocator::default();
 
-        // Original registrations
         let registrations_content = r#"
 import { configInjector } from '@forklaunch/core';
 
@@ -302,7 +300,6 @@ const ci = configInjector({
         let mut registrations_program =
             parse_ast_program(&allocator, registrations_content, SourceType::ts());
 
-        // Injection
         let injection_content = r#"
 const newConfig = configInjector({
     services: {
@@ -317,23 +314,21 @@ const newConfig = configInjector({
             &allocator,
             &mut registrations_program,
             &mut injection_program,
-            "wrongName", // Wrong declaration name
+            "wrongName",
         );
 
-        assert!(result.is_ok()); // Function should not error, just not inject anything
+        assert!(result.is_ok());
 
         let transformed_code = code_to_string(&registrations_program);
 
-        // Verify no injection occurred
         assert!(!transformed_code.contains("user: true"));
-        assert!(transformed_code.contains("type: \"postgresql\"")); // Original preserved
+        assert!(transformed_code.contains("type: \"postgresql\""));
     }
 
     #[test]
     fn test_inject_into_registrations_config_injector_no_matching_declaration() {
         let allocator = Allocator::default();
 
-        // Original registrations with no config injector
         let registrations_content = r#"
 import { configInjector } from '@forklaunch/core';
 
@@ -343,7 +338,6 @@ const anotherVar = { key: 'value' };
         let mut registrations_program =
             parse_ast_program(&allocator, registrations_content, SourceType::ts());
 
-        // Injection
         let injection_content = r#"
 const newConfig = configInjector({
     services: {
@@ -361,11 +355,9 @@ const newConfig = configInjector({
             "ci",
         );
 
-        assert!(result.is_ok()); // Function should not error
-
+        assert!(result.is_ok());
         let transformed_code = code_to_string(&registrations_program);
 
-        // Verify no injection occurred
         assert!(!transformed_code.contains("user: true"));
         assert!(transformed_code.contains("otherVar = \"test\""));
         assert!(transformed_code.contains("anotherVar = { key: \"value\" }"));
@@ -375,7 +367,6 @@ const newConfig = configInjector({
     fn test_inject_into_registrations_config_injector_complex_structure() {
         let allocator = Allocator::default();
 
-        // Original registrations with complex structure
         let registrations_content = r#"
 import { configInjector } from '@forklaunch/core';
 
@@ -403,7 +394,6 @@ const ci = configInjector({
         let mut registrations_program =
             parse_ast_program(&allocator, registrations_content, SourceType::ts());
 
-        // Complex injection
         let injection_content = r#"
 const newConfig = configInjector({
     database: {
@@ -451,7 +441,6 @@ const newConfig = configInjector({
 
         let transformed_code = code_to_string(&registrations_program);
 
-        // Verify new properties are injected (only properties that don't exist)
         assert!(transformed_code.contains("monitoring: {"));
 
         assert!(transformed_code.contains("type: \"postgresql\""));
@@ -465,7 +454,6 @@ const newConfig = configInjector({
     fn test_inject_into_registrations_config_injector_empty_injection() {
         let allocator = Allocator::default();
 
-        // Original registrations
         let registrations_content = r#"
 import { configInjector } from '@forklaunch/core';
 
@@ -478,7 +466,6 @@ const ci = configInjector({
         let mut registrations_program =
             parse_ast_program(&allocator, registrations_content, SourceType::ts());
 
-        // Empty injection
         let injection_content = r#"
 const newConfig = configInjector({});
 "#;

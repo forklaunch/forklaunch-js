@@ -51,13 +51,12 @@ export const UserMapper = responseMapper(
       return {
         ...(await entity.read()),
         roles: await Promise.all(
-          (entity.roles.isInitialized()
+          (entity.roles && entity.roles.isInitialized()
             ? entity.roles
             : await entity.roles.init()
           )
             .getItems()
             .map(async (role) => {
-              // Use the mapper function directly to avoid circular dependency
               return RoleMapper.toDto(role);
             })
         )

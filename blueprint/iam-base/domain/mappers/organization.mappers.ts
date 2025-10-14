@@ -43,8 +43,11 @@ export const OrganizationMapper = responseMapper(
   Organization,
   {
     toDto: async (entity: Organization) => {
+      const entityData = await entity.read();
+
       return {
-        ...(await entity.read()),
+        ...entityData,
+        logoUrl: entityData.logoUrl || undefined, // Convert null to undefined
         users: await Promise.all(
           (entity.users.isInitialized()
             ? entity.users

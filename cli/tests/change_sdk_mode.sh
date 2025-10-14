@@ -29,6 +29,8 @@ cd service-test-bun-application/src/modules
 
 bun install
 
+bun run build
+
 RUST_BACKTRACE=1 cargo run --release sdk mode -t generated
 
 bun run build

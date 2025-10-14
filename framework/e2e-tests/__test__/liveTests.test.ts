@@ -5,17 +5,23 @@ describe('liveTests', () => {
     const getTest = await flRouter.sdk.testFile['2.0.0']({
       headers: {
         authorization: 'bb string'
+      },
+      params: {
+        id: '123'
       }
     });
     expect(getTest.code).toBe(200);
   });
 
   it('should fetch getTest', async () => {
-    const getTest = await flRouter.fetch('/testpath/test', {
+    const getTest = await flRouter.fetch('/testpath/test/:id', {
       method: 'GET',
       headers: {
         authorization: 'bb string',
         'x-test': 'test'
+      },
+      params: {
+        id: '123'
       },
       version: '1.0.0'
     });

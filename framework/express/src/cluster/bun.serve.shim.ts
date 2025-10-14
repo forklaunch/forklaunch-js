@@ -280,6 +280,9 @@ export function serveExpress(
 
       const resEE = new EventEmitter();
 
+      // eslint-disable-next-line prefer-const
+      let req: ExpressRequest;
+
       // Parse URL and extract potential route parameters
       const pathname = url.pathname;
       const searchParams = url.searchParams;
@@ -1167,7 +1170,7 @@ export function serveExpress(
         }
       });
 
-      const req: ExpressRequest = Object.assign(reqEE, {
+      req = Object.assign(reqEE, {
         method: request.method,
         url: url.pathname + url.search,
         originalUrl: url.pathname + url.search,

@@ -39,6 +39,10 @@ export const PermissionMapper = responseMapper(
   Permission,
   {
     toDto: async (entity: Permission) => {
+      if (!entity.isInitialized()) {
+        await entity.init();
+      }
+
       return await entity.read();
     }
   }

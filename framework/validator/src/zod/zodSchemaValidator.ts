@@ -5,6 +5,7 @@
  * @module ZodSchemaValidator
  */
 
+import { deepCloneWithoutUndefined } from '@forklaunch/common';
 import { SchemaObject } from 'openapi3-ts/oas31';
 import {
   z,
@@ -237,9 +238,30 @@ export class ZodSchemaValidator
       example: 'a base-64 encodable string'
     });
   file = z
-    .instanceof(Buffer<ArrayBuffer>)
+    .union([
+      z.instanceof(Buffer),
+      z.instanceof(ArrayBuffer),
+      z.instanceof(Blob),
+      z.string()
+    ])
     .transform((val) => {
-      return new Blob([val]);
+      if (val instanceof Buffer) {
+        return new Blob([val as Buffer<ArrayBuffer>]);
+      }
+      if (val instanceof ArrayBuffer) {
+        return new Blob([val]);
+      }
+      if (val instanceof Blob) {
+        return val;
+      }
+      if (typeof val === 'string') {
+        return new Blob([val]);
+      }
+      return new Blob([val as Buffer<ArrayBuffer>]);
+    })
+    .refine((val) => val instanceof Blob, {
+      message:
+        'Invalid file type: expected Buffer, ArrayBuffer, Blob, or string'
     })
     .openapi({
       title: 'File',
@@ -497,6 +519,7 @@ export class ZodSchemaValidator
    * @returns {SchemaObject} The OpenAPI schema object.
    */
   openapi<T extends ZodIdiomaticSchema | ZodCatchall>(schema: T): SchemaObject {
-    return generateSchema(this.schemify(schema));
+    const schemified = this.schemify(schema);
+    return generateSchema(deepCloneWithoutUndefined(schemified));
   }
 }

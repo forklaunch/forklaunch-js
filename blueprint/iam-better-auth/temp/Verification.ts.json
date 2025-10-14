@@ -1,0 +1,52 @@
+{
+  "data": {
+    "_id": 8000,
+    "properties": {
+      "identifier": {
+        "name": "identifier",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "string",
+        "array": false,
+        "runtimeType": "string"
+      },
+      "value": {
+        "name": "value",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "string",
+        "array": false,
+        "runtimeType": "string"
+      },
+      "expiresAt": {
+        "name": "expiresAt",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "Date",
+        "array": false,
+        "runtimeType": "Date"
+      }
+    },
+    "primaryKeys": [],
+    "filters": {},
+    "hooks": {},
+    "indexes": [],
+    "uniques": [],
+    "className": "Verification",
+    "path": "./persistence/entities/verification.entity.ts",
+    "name": "Verification",
+    "abstract": false,
+    "internal": true,
+    "constructorParams": [],
+    "toJsonParams": [],
+    "extends": "SqlBaseEntity",
+    "useCache": true,
+    "collection": "verification"
+  },
+  "origin": "./persistence/entities/verification.entity.ts",
+  "hash": "e178bce53dcf32d2a46dba8797cd609c",
+  "version": "6.5.7"
+}

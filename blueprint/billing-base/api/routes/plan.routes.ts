@@ -16,8 +16,8 @@ export const planRouter = forklaunchRouter(
   openTelemetryCollector
 );
 
-planRouter.post('/', createPlan);
-planRouter.get('/', listPlans);
-planRouter.get('/:id', getPlan);
-planRouter.put('/', updatePlan);
-planRouter.delete('/:id', deletePlan);
+export const createPlanRoute = planRouter.post('/', createPlan);
+export const listPlansRoute = planRouter.get('/', listPlans);
+export const getPlanRoute = planRouter.get('/:id', getPlan);
+export const updatePlanRoute = planRouter.put('/', updatePlan);
+export const deletePlanRoute = planRouter.delete('/:id', deletePlan);

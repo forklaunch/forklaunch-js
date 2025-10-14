@@ -1,5 +1,37 @@
 # @forklaunch/validator
 
+## 0.10.18
+
+### Patch Changes
+
+- update packages, make OpenTelemetryCollector type more transparent, attempt to fix error loggings
+- Updated dependencies
+  - @forklaunch/common@0.6.18
+
+## 0.10.17
+
+### Patch Changes
+
+- Update internal packages
+- Updated dependencies
+  - @forklaunch/common@0.6.17
+
+## 0.10.16
+
+### Patch Changes
+
+- Introduce testing package and deepclone openapi objects
+- Updated dependencies
+  - @forklaunch/common@0.6.16
+
+## 0.10.15
+
+### Patch Changes
+
+- Minor bugfixes and package version bumps
+- Updated dependencies
+  - @forklaunch/common@0.6.15
+
 ## 0.10.14
 
 ### Patch Changes

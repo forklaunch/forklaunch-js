@@ -52,14 +52,19 @@ import {
   SubscriptionMapper,
   UpdateSubscriptionMapper
 } from './domain/mappers/subscription.mappers';
-import mikroOrmOptionsConfig from './mikro-orm.config';
 import {
-  BillingPortal,
-  CheckoutSession,
-  PaymentLink,
-  Plan,
-  Subscription
-} from './persistence/entities';
+  BillingPortalDtoTypes,
+  BillingPortalMapperTypes,
+  CheckoutSessionDtoTypes,
+  CheckoutSessionMapperTypes,
+  PaymentLinkDtoTypes,
+  PaymentLinkMapperTypes,
+  PlanDtoTypes,
+  PlanMapperTypes,
+  SubscriptionDtoTypes,
+  SubscriptionMapperTypes
+} from './domain/types/billingMappers.types';
+import mikroOrmOptionsConfig from './mikro-orm.config';
 
 //! defines the configuration schema for the application
 const configInjector = createConfigInjector(schemaValidator, {
@@ -177,11 +182,8 @@ const serviceDependencies = runtimeDependencies.chain({
     lifetime: Lifetime.Scoped,
     type: BaseBillingPortalService<
       SchemaValidator,
-      {
-        BillingPortalMapper: BillingPortal;
-        CreateBillingPortalMapper: BillingPortal;
-        UpdateBillingPortalMapper: BillingPortal;
-      }
+      BillingPortalMapperTypes,
+      BillingPortalDtoTypes
     >,
     factory: (
       { EntityManager, TtlCache, OpenTelemetryCollector },
@@ -209,11 +211,8 @@ const serviceDependencies = runtimeDependencies.chain({
       typeof PaymentMethodEnum,
       typeof CurrencyEnum,
       typeof StatusEnum,
-      {
-        CheckoutSessionMapper: CheckoutSession;
-        CreateCheckoutSessionMapper: CheckoutSession;
-        UpdateCheckoutSessionMapper: CheckoutSession;
-      }
+      CheckoutSessionMapperTypes,
+      CheckoutSessionDtoTypes
     >,
     factory: (
       { EntityManager, TtlCache, OpenTelemetryCollector },
@@ -241,11 +240,8 @@ const serviceDependencies = runtimeDependencies.chain({
       typeof PaymentMethodEnum,
       typeof CurrencyEnum,
       typeof StatusEnum,
-      {
-        PaymentLinkMapper: PaymentLink;
-        CreatePaymentLinkMapper: PaymentLink;
-        UpdatePaymentLinkMapper: PaymentLink;
-      }
+      PaymentLinkMapperTypes,
+      PaymentLinkDtoTypes
     >,
     factory: (
       { EntityManager, TtlCache, OpenTelemetryCollector },
@@ -273,11 +269,8 @@ const serviceDependencies = runtimeDependencies.chain({
       typeof PlanCadenceEnum,
       typeof CurrencyEnum,
       typeof BillingProviderEnum,
-      {
-        PlanMapper: Plan;
-        CreatePlanMapper: Plan;
-        UpdatePlanMapper: Plan;
-      }
+      PlanMapperTypes,
+      PlanDtoTypes
     >,
     factory: ({ EntityManager, OpenTelemetryCollector }, resolve, context) =>
       new BasePlanService(
@@ -299,11 +292,8 @@ const serviceDependencies = runtimeDependencies.chain({
       SchemaValidator,
       typeof PartyEnum,
       typeof BillingProviderEnum,
-      {
-        SubscriptionMapper: Subscription;
-        CreateSubscriptionMapper: Subscription;
-        UpdateSubscriptionMapper: Subscription;
-      }
+      SubscriptionMapperTypes,
+      SubscriptionDtoTypes
     >,
     factory: ({ EntityManager, OpenTelemetryCollector }, resolve, context) =>
       new BaseSubscriptionService(

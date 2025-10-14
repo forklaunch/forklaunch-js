@@ -1,0 +1,45 @@
+{
+  "data": {
+    "_id": 3000,
+    "properties": {
+      "name": {
+        "name": "name",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "string",
+        "array": false,
+        "runtimeType": "string"
+      },
+      "permissions": {
+        "name": "permissions",
+        "kind": "m:n",
+        "cascade": ["persist"],
+        "fixedOrder": false,
+        "owner": true,
+        "createForeignKeyConstraint": true,
+        "type": "Permission",
+        "array": false,
+        "runtimeType": "Permission"
+      }
+    },
+    "primaryKeys": [],
+    "filters": {},
+    "hooks": {},
+    "indexes": [],
+    "uniques": [],
+    "className": "Role",
+    "path": "../iam-base/persistence/entities/role.entity.ts",
+    "name": "Role",
+    "abstract": false,
+    "internal": true,
+    "constructorParams": [],
+    "toJsonParams": [],
+    "extends": "SqlBaseEntity",
+    "useCache": true,
+    "collection": "role"
+  },
+  "origin": "../iam-base/persistence/entities/role.entity.ts",
+  "hash": "6d642c00a11b6cc76fc77787d1f37aa1",
+  "version": "6.5.7"
+}

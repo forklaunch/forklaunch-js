@@ -41,7 +41,10 @@ export const SubscriptionMapper = responseMapper(
   Subscription,
   {
     toDto: async (entity: Subscription) => {
-      return await entity.read();
+      return {
+        ...(await entity.read()),
+        endDate: entity.endDate || undefined
+      };
     }
   }
 );

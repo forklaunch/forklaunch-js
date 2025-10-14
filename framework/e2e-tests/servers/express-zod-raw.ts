@@ -38,9 +38,32 @@ const getHandler = handlers.get(
     summary: 'Test Summary',
     responses: {
       200: {
-        file: z.instanceof(Buffer<ArrayBuffer>).transform((val) => {
-          return new Blob([val]);
-        })
+        file: z
+          .union([
+            z.instanceof(Buffer),
+            z.instanceof(ArrayBuffer),
+            z.instanceof(Blob),
+            z.string()
+          ])
+          .transform((val) => {
+            if (val instanceof Buffer) {
+              return new Blob([val as Buffer<ArrayBuffer>]);
+            }
+            if (val instanceof ArrayBuffer) {
+              return new Blob([val]);
+            }
+            if (val instanceof Blob) {
+              return val;
+            }
+            if (typeof val === 'string') {
+              return new Blob([val]);
+            }
+            return new Blob([val as Buffer<ArrayBuffer>]);
+          })
+          .refine((val) => val instanceof Blob, {
+            message:
+              'Invalid file type: expected Buffer, ArrayBuffer, Blob, or string'
+          })
       }
     }
   },

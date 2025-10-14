@@ -1,0 +1,9 @@
+src/
+__test__/
+
+docs/
+jest.config.js
+package-lock.json
+tsconfig.json
+node_modules
+*.log

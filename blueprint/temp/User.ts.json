@@ -1,0 +1,107 @@
+{
+  "data": {
+    "_id": 4000,
+    "properties": {
+      "email": {
+        "name": "email",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "string",
+        "array": false,
+        "runtimeType": "string"
+      },
+      "firstName": {
+        "name": "firstName",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "string",
+        "array": false,
+        "runtimeType": "string"
+      },
+      "lastName": {
+        "name": "lastName",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "string",
+        "array": false,
+        "runtimeType": "string"
+      },
+      "phoneNumber": {
+        "name": "phoneNumber",
+        "kind": "scalar",
+        "nullable": true,
+        "getter": false,
+        "setter": false,
+        "type": "string",
+        "array": false,
+        "optional": true,
+        "runtimeType": "string"
+      },
+      "organization": {
+        "name": "organization",
+        "kind": "m:1",
+        "cascade": ["persist"],
+        "nullable": true,
+        "owner": true,
+        "createForeignKeyConstraint": true,
+        "type": "Organization",
+        "array": false,
+        "optional": true,
+        "runtimeType": "Organization"
+      },
+      "roles": {
+        "name": "roles",
+        "kind": "m:n",
+        "cascade": ["persist"],
+        "fixedOrder": false,
+        "owner": true,
+        "createForeignKeyConstraint": true,
+        "type": "Role",
+        "array": false,
+        "runtimeType": "Role"
+      },
+      "subscription": {
+        "name": "subscription",
+        "kind": "scalar",
+        "getter": false,
+        "setter": false,
+        "type": "string",
+        "array": false,
+        "optional": true,
+        "runtimeType": "string"
+      },
+      "providerFields": {
+        "name": "providerFields",
+        "kind": "scalar",
+        "type": "json",
+        "nullable": true,
+        "getter": false,
+        "setter": false,
+        "array": false,
+        "optional": true,
+        "runtimeType": "unknown"
+      }
+    },
+    "primaryKeys": [],
+    "filters": {},
+    "hooks": {},
+    "indexes": [],
+    "uniques": [{ "properties": "email" }, { "properties": "subscription" }],
+    "className": "User",
+    "path": "./iam-base/persistence/entities/user.entity.ts",
+    "name": "User",
+    "abstract": false,
+    "internal": true,
+    "constructorParams": [],
+    "toJsonParams": [],
+    "extends": "SqlBaseEntity",
+    "useCache": true,
+    "collection": "user"
+  },
+  "origin": "./iam-base/persistence/entities/user.entity.ts",
+  "hash": "30b1bcb1d3b9c1a9872e57d58569503b",
+  "version": "6.5.6"
+}

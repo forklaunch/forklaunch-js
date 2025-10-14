@@ -1,6 +1,6 @@
 {
   "data": {
-    "_id": 0,
+    "_id": 1000,
     "properties": {
       "id": {
         "name": "id",
@@ -34,17 +34,18 @@
     "hooks": {},
     "indexes": [],
     "uniques": [],
-    "className": "BaseEntity",
-    "path": "../core/lib/models/persistence/base.entity.js",
+    "className": "SqlBaseEntity",
+    "path": "./core/lib/persistence/sql.base.entity.js",
     "abstract": true,
     "internal": true,
     "constructorParams": [],
     "toJsonParams": [],
+    "extends": "BaseEntity",
     "useCache": true,
     "compositePK": false,
     "simplePK": true
   },
-  "origin": "../core/lib/models/persistence/base.entity.js",
-  "hash": "c89c086bfe4bffa08b88dc2780932172",
-  "version": "6.4.11"
+  "origin": "./core/lib/persistence/sql.base.entity.js",
+  "hash": "3fe5811c0838ffd4822e64a15782920f",
+  "version": "6.5.6"
 }

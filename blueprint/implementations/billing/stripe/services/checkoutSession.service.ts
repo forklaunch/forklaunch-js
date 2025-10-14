@@ -97,6 +97,7 @@ export class StripeCheckoutSessionService<
   ): Promise<Dto['CheckoutSessionMapper']> {
     const session = await this.stripeClient.checkout.sessions.create({
       ...checkoutSessionDto.stripeFields,
+      mode: 'subscription',
       payment_method_types: checkoutSessionDto.paymentMethods,
       currency: checkoutSessionDto.currency as string,
       success_url: checkoutSessionDto.successRedirectUri,

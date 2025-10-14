@@ -5,17 +5,23 @@ describe('nestedPaths', () => {
     const getTest = await flNestedRouter.sdk.testFile['2.0.0']({
       headers: {
         authorization: 'bb string'
+      },
+      params: {
+        id: '123'
       }
     });
     expect(getTest.code).toBe(200);
   });
 
   it('should fetch nested getTest', async () => {
-    const getTest = await flNestedRouter.fetch('/nested/test', {
+    const getTest = await flNestedRouter.fetch('/nested/test/:id', {
       method: 'GET',
       headers: {
         authorization: 'bb string',
         'x-test': 'test'
+      },
+      params: {
+        id: '123'
       },
       version: '1.0.0'
     });

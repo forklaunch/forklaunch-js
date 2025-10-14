@@ -42,9 +42,13 @@ import {
   UserMapper
 } from './domain/mappers/user.mappers';
 import {
+  OrganizationDtoTypes,
   OrganizationMapperTypes,
+  PermissionDtoTypes,
   PermissionMapperTypes,
+  RoleDtoTypes,
   RoleMapperTypes,
+  UserDtoTypes,
   UserMapperTypes
 } from './domain/types/iamMappers.types';
 import mikroOrmOptionsConfig from './mikro-orm.config';
@@ -109,7 +113,7 @@ const environmentConfig = configInjector.chain({
   JWKS_PUBLIC_KEY_URL: {
     lifetime: Lifetime.Singleton,
     type: string,
-    value: JSON.parse(getEnvVar('JWKS_PUBLIC_KEY_URL'))
+    value: getEnvVar('JWKS_PUBLIC_KEY_URL')
   }
 });
 
@@ -145,7 +149,8 @@ const serviceDependencies = runtimeDependencies.chain({
     type: BaseOrganizationService<
       SchemaValidator,
       typeof OrganizationStatus,
-      OrganizationMapperTypes
+      OrganizationMapperTypes,
+      OrganizationDtoTypes
     >,
     factory: ({ EntityManager, OpenTelemetryCollector }, resolve, context) =>
       new BaseOrganizationService(
@@ -163,7 +168,11 @@ const serviceDependencies = runtimeDependencies.chain({
   },
   PermissionService: {
     lifetime: Lifetime.Scoped,
-    type: BasePermissionService<SchemaValidator, PermissionMapperTypes>,
+    type: BasePermissionService<
+      SchemaValidator,
+      PermissionMapperTypes,
+      PermissionDtoTypes
+    >,
     factory: ({ EntityManager, OpenTelemetryCollector }, resolve, context) =>
       new BasePermissionService(
         context.entityManagerOptions
@@ -182,7 +191,7 @@ const serviceDependencies = runtimeDependencies.chain({
   },
   RoleService: {
     lifetime: Lifetime.Scoped,
-    type: BaseRoleService<SchemaValidator, RoleMapperTypes>,
+    type: BaseRoleService<SchemaValidator, RoleMapperTypes, RoleDtoTypes>,
     factory: ({ EntityManager, OpenTelemetryCollector }, resolve, context) =>
       new BaseRoleService(
         context.entityManagerOptions
@@ -202,7 +211,8 @@ const serviceDependencies = runtimeDependencies.chain({
     type: BaseUserService<
       SchemaValidator,
       typeof OrganizationStatus,
-      UserMapperTypes
+      UserMapperTypes,
+      UserDtoTypes
     >,
     factory: ({ EntityManager, OpenTelemetryCollector }, resolve, context) =>
       new BaseUserService(

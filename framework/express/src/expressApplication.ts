@@ -156,7 +156,7 @@ export class Application<
         zodSchemaValidator,
         protocol,
         host,
-        finalMcpPort,
+        port,
         version ?? '1.0.0',
         this as unknown as ForklaunchRouter<ZodSchemaValidator>,
         this.mcpConfiguration,

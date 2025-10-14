@@ -109,10 +109,11 @@ export class StripePaymentLinkService<
         ...paymentLinkDto,
         id: session.id,
         amount:
+          paymentLinkDto.amount ??
           session.line_items?.data.reduce<number>(
             (total, item) => total + item.amount_total,
             0
-          ) ?? 0
+          )
       },
       this.em,
       session,
@@ -197,6 +198,7 @@ export class StripePaymentLinkService<
   }
 
   async listPaymentLinks(idsDto?: IdsDto): Promise<Dto['PaymentLinkMapper'][]> {
+    this.openTelemetryCollector.log('info', idsDto ?? 'idsDto is undefined');
     const stripePaymentLinks = await this.stripeClient.paymentLinks.list({
       active: true
     });
@@ -204,19 +206,17 @@ export class StripePaymentLinkService<
     const databasePaymentLinks =
       await this.basePaymentLinkService.listPaymentLinks(idsDto);
 
-    return await Promise.all(
-      databasePaymentLinks.map(async (paymentLink) => {
+    return databasePaymentLinks
+      .map((paymentLink) => {
         const stripePaymentLink = stripePaymentLinks.data.find(
           (sp) => sp.id === paymentLink.id
         );
         if (!stripePaymentLink) {
-          throw new Error(
-            `Stripe payment link not found for id: ${paymentLink.id}`
-          );
+          return null;
         }
         paymentLink.stripeFields = stripePaymentLink;
         return paymentLink;
       })
-    );
+      .filter((paymentLink) => paymentLink !== null);
   }
 }

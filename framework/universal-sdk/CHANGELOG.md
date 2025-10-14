@@ -1,5 +1,36 @@
 # @forklaunch/universal-sdk
 
+## 0.7.18
+
+### Patch Changes
+
+- update packages, make OpenTelemetryCollector type more transparent, attempt to fix error loggings
+- Updated dependencies
+  - @forklaunch/common@0.6.18
+
+## 0.7.17
+
+### Patch Changes
+
+- Update internal packages
+- Updated dependencies
+  - @forklaunch/common@0.6.17
+
+## 0.7.16
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/common@0.6.16
+
+## 0.7.15
+
+### Patch Changes
+
+- Minor bugfixes and package version bumps
+- Updated dependencies
+  - @forklaunch/common@0.6.15
+
 ## 0.7.14
 
 ### Patch Changes

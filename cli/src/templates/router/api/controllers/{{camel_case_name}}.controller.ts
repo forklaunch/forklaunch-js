@@ -15,8 +15,8 @@ export const {{camel_case_name}}Get = handlers.get(
   schemaValidator,
   '/',
   {
-    name: '{{camel_case_name}}',
-    summary: '{{pascal_case_name}}',
+    name: '{{title_case_name}} Get',
+    summary: 'Gets {{title_case_name}}',
     responses: {
       // specifies the success response schema using Mapper constructs
       200: {{pascal_case_name}}ResponseMapper.schema
@@ -37,8 +37,8 @@ export const {{camel_case_name}}Post = handlers.post(
   schemaValidator,
   '/',
   {
-    name: '{{camel_case_name}}', 
-    summary: '{{pascal_case_name}}',
+    name: '{{title_case_name}} Post', 
+    summary: 'Posts {{title_case_name}}',
     // specifies the request body schema using Mapper constructs
     body: {{pascal_case_name}}RequestMapper.schema,
     responses: {

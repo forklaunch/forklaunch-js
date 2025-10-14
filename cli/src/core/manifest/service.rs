@@ -24,6 +24,8 @@ config_struct!(
         pub(crate) pascal_case_name: String,
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) kebab_case_name: String,
+        #[serde(skip_serializing, skip_deserializing)]
+        pub(crate) title_case_name: String,
         #[serde(skip_deserializing, skip_serializing)]
         pub(crate) database: String,
         #[serde(skip_serializing, skip_deserializing)]

@@ -1,4 +1,4 @@
-use std::{collections::HashSet, path::Path};
+use std::{collections::HashSet, fs::read_to_string, path::Path};
 
 use anyhow::{Result, bail};
 use convert_case::{Case, Casing};
@@ -80,31 +80,35 @@ pub(crate) fn change_name_in_files(
                 continue;
             }
             let relative_path = entry.path().strip_prefix(base_path)?;
-            if let Some(template) = rendered_templates_cache.get(entry.path()).ok().unwrap() {
-                let content = template.content;
 
-                let new_content = short_circuit_replacement(&content, &replacements);
-                let new_file_name = short_circuit_replacement(
-                    &relative_path.to_string_lossy().to_string(),
-                    &replacements,
-                );
+            let content =
+                if let Some(template) = rendered_templates_cache.get(entry.path()).ok().unwrap() {
+                    template.content.clone()
+                } else {
+                    read_to_string(entry.path())?
+                };
 
-                let new_path = base_path.join(new_file_name.clone());
-                rendered_templates_cache.insert(
-                    entry.path().to_string_lossy(),
-                    RenderedTemplate {
-                        path: new_path.clone().into(),
-                        content: new_content,
-                        context: None,
-                    },
-                );
+            let new_content = short_circuit_replacement(&content, &replacements);
+            let new_file_name = short_circuit_replacement(
+                &relative_path.to_string_lossy().to_string(),
+                &replacements,
+            );
 
-                if relative_path.to_string_lossy().to_string() != new_file_name.clone() {
-                    removal_templates.push(RemovalTemplate {
-                        path: entry.path().to_path_buf(),
-                        r#type: RemovalTemplateType::File,
-                    })
-                }
+            let new_path = base_path.join(new_file_name.clone());
+            rendered_templates_cache.insert(
+                entry.path().to_string_lossy(),
+                RenderedTemplate {
+                    path: new_path.clone().into(),
+                    content: new_content,
+                    context: None,
+                },
+            );
+
+            if relative_path.to_string_lossy().to_string() != new_file_name.clone() {
+                removal_templates.push(RemovalTemplate {
+                    path: entry.path().to_path_buf(),
+                    r#type: RemovalTemplateType::File,
+                })
             }
         }
     }

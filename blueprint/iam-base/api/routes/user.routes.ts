@@ -21,13 +21,25 @@ export const userRouter = forklaunchRouter(
   openTelemetryCollector
 );
 
-userRouter.post('/', createUser);
-userRouter.post('/batch', createBatchUsers);
-userRouter.get('/batch', getBatchUsers);
-userRouter.get('/:id/surface-roles', surfaceRoles);
-userRouter.get('/:id/surface-permissions', surfacePermissions);
-userRouter.get('/:id', getUser);
-userRouter.put('/', updateUser);
-userRouter.put('/batch', updateBatchUsers);
-userRouter.delete('/batch', deleteBatchUsers);
-userRouter.delete('/:id', deleteUser);
+export const createUserRoute = userRouter.post('/', createUser);
+export const createBatchUsersRoute = userRouter.post(
+  '/batch',
+  createBatchUsers
+);
+export const getBatchUsersRoute = userRouter.get('/batch', getBatchUsers);
+export const surfaceRolesRoute = userRouter.get(
+  '/:id/surface-roles',
+  surfaceRoles
+);
+export const surfacePermissionsRoute = userRouter.get(
+  '/:id/surface-permissions',
+  surfacePermissions
+);
+export const getUserRoute = userRouter.get('/:id', getUser);
+export const updateUserRoute = userRouter.put('/', updateUser);
+export const updateBatchUsersRoute = userRouter.put('/batch', updateBatchUsers);
+export const deleteBatchUsersRoute = userRouter.delete(
+  '/batch',
+  deleteBatchUsers
+);
+export const deleteUserRoute = userRouter.delete('/:id', deleteUser);

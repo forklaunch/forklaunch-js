@@ -62,7 +62,6 @@ mod tests {
     fn injects_export_in_expected_sorted_position() {
         let allocator = Allocator::default();
 
-        // Existing exports (alphabetical by basename): alpha, mango, zeta
         let index_text = "\
 export * from './alpha.controller';
 export * from './mango.controller';
@@ -74,7 +73,6 @@ export * from './zeta.controller';";
             SourceType::ts(),
         );
 
-        // Inject for router "beta" -> expect order: alpha, beta, mango, zeta
         let injection_text = "export * from './beta.controller';";
         let mut injection_program = crate::core::ast::parse_ast_program::parse_ast_program(
             &allocator,
@@ -88,7 +86,6 @@ export * from './zeta.controller';";
 
         let output = codegen(&index_program);
 
-        // Quick structure assertions
         let alpha_pos = output.find("./alpha.controller").unwrap();
         let beta_pos = output.find("./beta.controller").unwrap();
         let mango_pos = output.find("./mango.controller").unwrap();
@@ -106,7 +103,6 @@ export * from './zeta.controller';";
     fn inserts_at_start_when_smallest() {
         let allocator = Allocator::default();
 
-        // Existing exports start after 'gamma'
         let index_text = "\
 export * from './gamma.controller';
 export * from './omega.controller';";
@@ -117,7 +113,6 @@ export * from './omega.controller';";
             SourceType::ts(),
         );
 
-        // Inject 'beta' which should become the first
         let injection_text = "export * from './beta.controller';";
         let mut injection_program = crate::core::ast::parse_ast_program::parse_ast_program(
             &allocator,
@@ -128,7 +123,6 @@ export * from './omega.controller';";
         let _ = inject_into_index_ts_export(&mut index_program, &mut injection_program, "beta");
         let output = codegen(&index_program);
 
-        // Ensure order beta, gamma, omega
         let beta_pos = output.find("./beta.controller").unwrap();
         let gamma_pos = output.find("./gamma.controller").unwrap();
         let omega_pos = output.find("./omega.controller").unwrap();
@@ -151,7 +145,6 @@ export * from './beta.controller';";
             SourceType::ts(),
         );
 
-        // Inject 'zeta' which should be appended
         let injection_text = "export * from './zeta.controller';";
         let mut injection_program = crate::core::ast::parse_ast_program::parse_ast_program(
             &allocator,

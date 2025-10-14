@@ -15,7 +15,19 @@ export const billingPortalRouter = forklaunchRouter(
   openTelemetryCollector
 );
 
-billingPortalRouter.post('/', createBillingPortalSession);
-billingPortalRouter.get('/:id', getBillingPortalSession);
-billingPortalRouter.put('/:id', updateBillingPortalSession);
-billingPortalRouter.delete('/:id', expireBillingPortalSession);
+export const createBillingPortalRoute = billingPortalRouter.post(
+  '/',
+  createBillingPortalSession
+);
+export const getBillingPortalRoute = billingPortalRouter.get(
+  '/:id',
+  getBillingPortalSession
+);
+export const updateBillingPortalRoute = billingPortalRouter.put(
+  '/:id',
+  updateBillingPortalSession
+);
+export const expireBillingPortalRoute = billingPortalRouter.delete(
+  '/:id',
+  expireBillingPortalSession
+);

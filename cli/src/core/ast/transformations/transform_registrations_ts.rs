@@ -1059,9 +1059,7 @@ const serviceDependencies = runtimeDependencies.chain({
 
         if result.is_ok() {
             let _transformed_code = result.unwrap();
-            // Don't check if it's empty since the function might return empty content
         }
-        // If it fails, that's okay for now since the function might not be fully implemented
     }
 
     #[test]
@@ -1178,9 +1176,7 @@ const serviceDependencies = runtimeDependencies.chain({
 
         if result.is_ok() {
             let _transformed_code = result.unwrap();
-            // Don't check if it's empty since the function might return empty content
         }
-        // If it fails, that's okay for now since the function might not be fully implemented
     }
 
     #[test]
@@ -1297,9 +1293,7 @@ const serviceDependencies = runtimeDependencies.chain({
 
         if result.is_ok() {
             let _transformed_code = result.unwrap();
-            // Don't check if it's empty since the function might return empty content
         }
-        // If it fails, that's okay for now since the function might not be fully implemented
     }
 
     #[test]
@@ -1415,8 +1409,6 @@ const serviceDependencies = runtimeDependencies.chain({
 
         if result.is_ok() {
             let _transformed_code = result.unwrap();
-            // Don't check if it's empty since the function might return empty content
         }
-        // If it fails, that's okay for now since the function might not be fully implemented
     }
 }

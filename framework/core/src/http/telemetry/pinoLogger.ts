@@ -2,7 +2,6 @@ import { isNever } from '@forklaunch/common';
 import { trace } from '@opentelemetry/api';
 import { AnyValueMap, logs } from '@opentelemetry/api-logs';
 import pino, { LevelWithSilent, LevelWithSilentOrString, Logger } from 'pino';
-import * as PinoPretty from 'pino-pretty';
 import { isLoggerMeta } from '../guards/isLoggerMeta';
 import { LogFn, LoggerMeta } from '../types/openTelemetryCollector.types';
 
@@ -50,6 +49,15 @@ function normalizeLogArgs(
   for (const arg of args) {
     if (typeof arg === 'string' && message === '') {
       message = arg;
+    } else if (arg instanceof Error) {
+      metaObjects.push({
+        err: {
+          message: arg.message,
+          name: arg.name,
+          stack: arg.stack,
+          ...(Object.keys(arg).length > 0 ? arg : {})
+        }
+      });
     } else if (arg && typeof arg === 'object' && !Array.isArray(arg)) {
       metaObjects.push(arg as Record<string, unknown>);
     } else {
@@ -102,16 +110,9 @@ function safePrettyFormat(
   }
 }
 
-class PinoLogger {
+export class PinoLogger {
   private pinoLogger: Logger;
   private meta: AnyValueMap;
-  private prettyPrinter = PinoPretty.prettyFactory({
-    colorize: true,
-    // Add error handling options
-    errorLikeObjectKeys: ['err', 'error'],
-    ignore: 'pid,hostname',
-    translateTime: 'SYS:standard'
-  });
 
   constructor(level: LevelWithSilentOrString, meta: AnyValueMap = {}) {
     this.pinoLogger = pino({
@@ -145,6 +146,9 @@ class PinoLogger {
       }
       return true;
     }) as LoggableArg[];
+
+    const [errorMetadata] = normalizeLogArgs(filteredArgs);
+    Object.assign(meta, errorMetadata);
 
     const activeSpan = trace.getActiveSpan();
     if (activeSpan) {

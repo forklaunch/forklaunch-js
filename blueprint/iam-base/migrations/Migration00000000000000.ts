@@ -22,7 +22,7 @@ export class Migration00000000000000 extends Migration {
     );
 
     this.addSql(
-      `create table "user" ("id" uuid not null, "created_at" timestamptz not null, "updated_at" timestamptz not null, "email" text not null, "password_hash" text not null, "first_name" text not null, "last_name" text not null, "phone_number" text null, "organization_id" uuid null, "subscription" text null, "extra_fields" jsonb null, constraint "user_pkey" primary key ("id"));`
+      `create table "user" ("id" uuid not null, "created_at" timestamptz not null, "updated_at" timestamptz not null, "email" text not null, "first_name" text not null, "last_name" text not null, "phone_number" text null, "organization_id" uuid null, "subscription" text null, "provider_fields" jsonb null, constraint "user_pkey" primary key ("id"));`
     );
     this.addSql(
       `alter table "user" add constraint "user_email_unique" unique ("email");`

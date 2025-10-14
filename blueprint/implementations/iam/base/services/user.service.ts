@@ -152,9 +152,13 @@ export class BaseUserService<
 
     return Promise.all(
       (
-        await (em ?? this.em).find('User', idsDto, {
-          populate: ['id', '*']
-        })
+        await (em ?? this.em).find(
+          'User',
+          { id: { $in: idsDto.ids } },
+          {
+            populate: ['id', '*']
+          }
+        )
       ).map((user) =>
         this.mappers.UserMapper.toDto(user as MapperEntities['UserMapper'])
       )
@@ -226,7 +230,7 @@ export class BaseUserService<
     if (this.evaluatedTelemetryOptions.logging) {
       this.openTelemetryCollector.info('Deleting batch users', idsDto);
     }
-    await (em ?? this.em).nativeDelete('User', idsDto);
+    await (em ?? this.em).nativeDelete('User', { id: { $in: idsDto.ids } });
   }
 
   async surfaceRoles(

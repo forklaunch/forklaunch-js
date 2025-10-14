@@ -5,7 +5,7 @@
  * @module TypeboxSchemaValidator
  */
 
-import { InMemoryBlob } from '@forklaunch/common';
+import { deepCloneWithoutUndefined, InMemoryBlob } from '@forklaunch/common';
 import {
   FormatRegistry,
   Kind,
@@ -33,7 +33,8 @@ import {
   TUnknown,
   TUnsafe,
   TVoid,
-  Type
+  Type,
+  TypeRegistry
 } from '@sinclair/typebox';
 import { TypeCheck, TypeCompiler } from '@sinclair/typebox/compiler';
 import {
@@ -60,6 +61,13 @@ import {
 } from './types/schema.types';
 
 FormatRegistry.Set('binary', (value) => typeof value === 'string');
+
+TypeRegistry.Set('Blob', (_schema, value) => value instanceof Blob);
+TypeRegistry.Set(
+  'ArrayBuffer',
+  (_schema, value) => value instanceof ArrayBuffer
+);
+TypeRegistry.Set('Buffer', (_schema, value) => value instanceof Buffer);
 
 /**
  * Typebox custom error function
@@ -326,16 +334,54 @@ export class TypeboxSchemaValidator
       }
       return '';
     });
-  file: TTransform<TUnsafe<Buffer<ArrayBuffer>>, Blob> = Type.Transform(
-    Type.Unsafe<Buffer<ArrayBuffer>>({
-      errorType: 'binary',
-      format: 'binary',
-      example: 'a raw buffer or file stream',
-      title: 'File'
-    })
+  file: TTransform<
+    TUnion<[TUnsafe<Buffer>, TUnsafe<ArrayBuffer>, TUnsafe<Blob>, TString]>,
+    Blob
+  > = Type.Transform(
+    Type.Union([
+      Type.Unsafe<Buffer>({
+        [Kind]: 'Buffer',
+        errorType: 'binary',
+        format: 'binary',
+        example: 'a raw buffer or file stream',
+        title: 'File'
+      }),
+      Type.Unsafe<ArrayBuffer>({
+        [Kind]: 'ArrayBuffer',
+        errorType: 'binary',
+        format: 'binary',
+        example: 'an array buffer',
+        title: 'File'
+      }),
+      Type.Unsafe<Blob>({
+        [Kind]: 'Blob',
+        errorType: 'binary',
+        format: 'binary',
+        example: 'a blob object',
+        title: 'File'
+      }),
+      Type.String({
+        errorType: 'binary',
+        format: 'binary',
+        example: 'a string content',
+        title: 'File'
+      })
+    ])
   )
     .Decode((value) => {
-      return new InMemoryBlob(value) as Blob;
+      if (value instanceof Buffer) {
+        return new InMemoryBlob(value as Buffer<ArrayBuffer>) as Blob;
+      }
+      if (value instanceof ArrayBuffer) {
+        return new InMemoryBlob(Buffer.from(value)) as Blob;
+      }
+      if (value instanceof Blob) {
+        return value as Blob;
+      }
+      if (typeof value === 'string') {
+        return new InMemoryBlob(Buffer.from(value)) as Blob;
+      }
+      return new InMemoryBlob(Buffer.from(value)) as Blob;
     })
     .Encode((value) => (value as InMemoryBlob).content);
   type = <T>() => this.any as TTransform<TAny, T>;
@@ -385,8 +431,11 @@ export class TypeboxSchemaValidator
 
     const newSchema: TObjectShape = {};
     Object.getOwnPropertyNames(schema).forEach((key) => {
-      if (KindGuard.IsSchema(schema[key])) {
-        newSchema[key] = schema[key];
+      if (
+        KindGuard.IsSchema(schema[key]) ||
+        KindGuard.IsTransform(schema[key])
+      ) {
+        newSchema[key] = schema[key] as TSchema;
       } else {
         const schemified = this.schemify(schema[key]);
         newSchema[key] = schemified;
@@ -639,7 +688,7 @@ export class TypeboxSchemaValidator
           errors: errors.flatMap((error) => {
             if (
               error.type === ValueErrorType.Union &&
-              error.schema.errorType.includes('any of')
+              error.schema.errorType?.includes('any of')
             ) {
               return error.errors.flatMap((e, idx) =>
                 Array.from(e).map((e) => ({
@@ -669,23 +718,28 @@ export class TypeboxSchemaValidator
    * @returns {SchemaObject} The OpenAPI schema object.
    */
   openapi<T extends TIdiomaticSchema | TCatchall>(schema: T): SchemaObject {
-    let schemified: TCatchall = this.schemify(schema);
+    const schemified: TCatchall = this.schemify(schema);
+    let processedSchema: TCatchall;
 
     if (KindGuard.IsDate(schemified)) {
-      schemified = Type.String({
+      processedSchema = Type.String({
         format: 'date-time'
       });
+    } else {
+      processedSchema = deepCloneWithoutUndefined(schemified);
     }
 
-    const newSchema: SchemaObject = Object.assign({}, schemified);
+    const newSchema: SchemaObject = Object.assign({}, processedSchema);
 
     if (Object.hasOwn(newSchema, 'properties')) {
       if (newSchema.properties) {
-        Object.entries({ ...schemified.properties }).forEach(([key, value]) => {
-          if (KindGuard.IsSchema(value) && newSchema.properties) {
-            newSchema.properties[key] = this.openapi(value);
+        Object.entries({ ...processedSchema.properties }).forEach(
+          ([key, value]) => {
+            if (KindGuard.IsSchema(value) && newSchema.properties) {
+              newSchema.properties[key] = this.openapi(value);
+            }
           }
-        });
+        );
       }
     }
     if (Object.hasOwn(newSchema, 'items')) {

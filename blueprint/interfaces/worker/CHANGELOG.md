@@ -1,5 +1,17 @@
 # @forklaunch/interfaces-billing
 
+## 0.7.1
+
+### Patch Changes
+
+- Update internal packages
+
+## 0.7.0
+
+### Minor Changes
+
+- Update service implementations and add tests
+
 ## 0.6.3
 
 ### Patch Changes
