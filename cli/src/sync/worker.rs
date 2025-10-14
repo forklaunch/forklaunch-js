@@ -1,4 +1,9 @@
-use std::{path::Path, collections::HashSet, io::Write};
+use std::{
+    path::Path, 
+    collections::HashSet, 
+    io::Write,
+    fs::read_to_string,
+};
 
 use anyhow::{Context, Result};
 use clap::{ArgMatches, Arg};
@@ -16,6 +21,7 @@ use crate::{
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE,
+        ERROR_FAILED_TO_READ_PACKAGE_JSON,
     },
     core::{
         // base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
@@ -37,6 +43,7 @@ use crate::{
         },
         package_json::{
             application_package_json::ApplicationPackageJson,
+            project_package_json::ProjectPackageJson,
             add_project_definition_to_package_json,
         },
         pnpm_workspace::{
@@ -180,7 +187,7 @@ pub(crate) fn add_worker_to_runtime_files_with_validation(
                 add_project_definition_to_pnpm_workspace(base_path, manifest_data)
                     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?,
             );
-            let temp: PnpmWorkspace = yaml_from_str(pnpm_workspace_buffer.as_ref().unwrap()).unwrap();
+            let temp: PnpmWorkspace = yaml_from_str(&pnpm_workspace_buffer.as_ref().unwrap()).unwrap();
             let new_pnpm_workspace_projects: HashSet<String> = temp.packages.iter().cloned().filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str())).collect();
             
             let validation_result = validate_addition_to_artifact(
@@ -220,7 +227,7 @@ pub(crate) fn sync_worker_setup(
     )?.parse()?;
     // TODO: Find worker type from somewhere in the worker directory
 
-    let mut database: Option<Database> = None;
+    
     let mut database_options = vec!["none"];
     database_options.extend_from_slice(&Database::VARIANTS);
     if r#type == WorkerType::Database {
@@ -238,8 +245,8 @@ pub(crate) fn sync_worker_setup(
             )?
             .parse()?,
         );
-        database = if database_input == "none" {
-            let modules_path = manifest_data.modules_path.clone();
+        let database: Database = if database_input == "none" {
+            let modules_path = Path::new(&manifest_data.modules_path.clone());
             let worker_package_json_path = modules_path.join(worker_name).join("package.json");
             if !worker_package_json_path.exists() {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
@@ -247,7 +254,7 @@ pub(crate) fn sync_worker_setup(
                 stdout.reset()?;
                 return Err(anyhow::anyhow!("Worker package.json not found in worker directory. Please run `forklaunch sync worker -i {}` to generate it.", worker_name))
             }
-            let worker_package_json_data = json_from_str(&read_to_string(&worker_package_json_path)?);
+            let worker_package_json_data = read_to_string(&worker_package_json_path).with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?;
             let worker_package_json: ProjectPackageJson = json_from_str(&worker_package_json_data)?;
             
             // Try to detect database from package.json dependencies
