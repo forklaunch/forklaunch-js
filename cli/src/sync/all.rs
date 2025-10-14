@@ -540,7 +540,7 @@ impl CliCommand for SyncAllCommand {
                 println!("sync:535 docker_compose_string is empty");
                 docker_compose_string = yaml_to_string(&docker_compose)?;
             }
-            let docker_compose_data: DockerCompose = from_str(&docker_compose_string)?;
+            let docker_compose_data: DockerCompose = yaml_from_str(&docker_compose_string)?;
             let (new_docker_services_to_remove, new_docker_services_to_add) = check_docker_compose(&docker_compose_data, &dir_project_names)?;
             if new_docker_services_to_remove.is_empty() && new_docker_services_to_add.is_empty() {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
