@@ -1,12 +1,12 @@
-use std::{path::Path, collections::HashSet};
+use std::{path::Path, collections::HashSet, io::Write};
 
 use anyhow::{Context, Result};
-use clap::{ArgMatches};
+use clap::{ArgMatches, Arg};
 use rustyline::{Editor, history::DefaultHistory};
 use serde_json::{from_str as json_from_str, to_string_pretty as json_to_string_pretty};
 use serde_yml::{from_str as yaml_from_str, to_string as yaml_to_string};
 use toml::{from_str as toml_from_str, to_string_pretty as toml_to_string_pretty};
-use termcolor::{StandardStream};
+use termcolor::{StandardStream, WriteColor, Color, ColorSpec};
 use convert_case::{Case, Casing};
 
 use crate::{
@@ -225,7 +225,7 @@ pub(crate) fn sync_worker_setup(
     database_options.extend_from_slice(&Database::VARIANTS);
     if r#type == WorkerType::Database {
         // TODO: get database from package.json
-        database_input = Some(
+        let database_input = Some(
             prompt_with_validation(
                 &mut line_editor,
                 stdout,
@@ -239,6 +239,7 @@ pub(crate) fn sync_worker_setup(
             .parse()?,
         );
         database = if database_input == "none" {
+            let modules_path = manifest_data.modules_path.clone();
             let worker_package_json_path = modules_path.join(worker_name).join("package.json");
             if !worker_package_json_path.exists() {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
@@ -246,7 +247,7 @@ pub(crate) fn sync_worker_setup(
                 stdout.reset()?;
                 return Err(anyhow::anyhow!("Worker package.json not found in worker directory. Please run `forklaunch sync worker -i {}` to generate it.", worker_name))
             }
-            let worker_package_json_data = read_to_string(&worker_package_json_path)?;
+            let worker_package_json_data = json_from_str(&read_to_string(&worker_package_json_path)?);
             let worker_package_json: ProjectPackageJson = json_from_str(&worker_package_json_data)?;
             
             // Try to detect database from package.json dependencies
