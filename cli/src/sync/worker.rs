@@ -248,23 +248,20 @@ pub(crate) fn sync_worker_setup(
             }
             let worker_package_json_data = read_to_string(&worker_package_json_path)?;
             let worker_package_json: ProjectPackageJson = json_from_str(&worker_package_json_data)?;
-            let database: Database = if database_input == "none" {
+            
             // Try to detect database from package.json dependencies
-                if let Some(deps) = &worker_package_json.dependencies {
-                    // Check if any database variant is found in the dependencies
-                    let found_database = deps.databases.iter()
-                        .find(|db| {
-                            // Check if this database enum matches any of the variants
-                            Database::VARIANTS.contains(&db.to_string().as_str())
-                        });
-                    
-                    if let Some(database) = found_database {
-                        *database
-                    } else {
-                        return Err(anyhow::anyhow!("No database variant found in package.json dependencies"))
-                    }
+            if let Some(deps) = &worker_package_json.dependencies {
+                // Check if any database variant is found in the dependencies
+                let found_database = deps.databases.iter()
+                    .find(|db| {
+                        // Check if this database enum matches any of the variants
+                        Database::VARIANTS.contains(&db.to_string().as_str())
+                    });
+                
+                if let Some(database) = found_database {
+                    *database
                 } else {
-                    return Err(anyhow::anyhow!("No dependencies found in package.json, please check initialize type and try again"))
+                    return Err(anyhow::anyhow!("No database variant found in package.json dependencies"))
                 }
             } else {
                 return Err(anyhow::anyhow!("No dependencies found in package.json, please check initialize type and try again"))
