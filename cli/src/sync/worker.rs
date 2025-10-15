@@ -232,7 +232,7 @@ pub(crate) fn sync_worker_setup(
     // database_options.extend_from_slice(&Database::VARIANTS);
     if r#type == WorkerType::Database {
         // TODO: get database from package.json
-        let database = Some(
+        database = Some(
             prompt_with_validation(
                 &mut line_editor,
                 stdout,
