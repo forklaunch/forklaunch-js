@@ -228,55 +228,56 @@ pub(crate) fn sync_worker_setup(
     // TODO: Find worker type from somewhere in the worker directory
 
     let database: Option<Database> = None;
-    let mut database_options = vec!["none"];
-    database_options.extend_from_slice(&Database::VARIANTS);
+    // let mut database_options = vec!["none"];
+    // database_options.extend_from_slice(&Database::VARIANTS);
     if r#type == WorkerType::Database {
         // TODO: get database from package.json
-        let database_input = Some(
+        let database = Some(
             prompt_with_validation(
                 &mut line_editor,
                 stdout,
                 "database",
                 matches,
                 "worker database type",
-                Some(&database_options),
-                |input| database_options.contains(&input),
+                Some(&Database::VARIANTS),
+                |input| Database::VARIANTS.contains(&input),
                 |_| "Invalid worker database type. Please try again".to_string(),
             )?
             .parse()?,
         );
-        let database: Database = if database_input == Some("none") {
-            let modules_path = Path::new(&manifest_data.modules_path.clone());
-            let worker_package_json_path = modules_path.join(worker_name).join("package.json");
-            if !worker_package_json_path.exists() {
-                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
-                writeln!(stdout, "Worker package.json not found in worker directory. Please run `forklaunch sync worker -i {}` to generate it.", worker_name)?;
-                stdout.reset()?;
-                return Err(anyhow::anyhow!("Worker package.json not found in worker directory. Please run `forklaunch sync worker -i {}` to generate it.", worker_name))
-            }
-            let worker_package_json_data = read_to_string(&worker_package_json_path).with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?;
-            let worker_package_json: ProjectPackageJson = json_from_str(&worker_package_json_data)?;
+        // TODO: Implement database detection from package.json
+        // let database: Database = if database_input == Some("none") {
+        //     let modules_path = Path::new(&manifest_data.modules_path.clone());
+        //     let worker_package_json_path = modules_path.join(worker_name).join("package.json");
+        //     if !worker_package_json_path.exists() {
+        //         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
+        //         writeln!(stdout, "Worker package.json not found in worker directory. Please run `forklaunch sync worker -i {}` to generate it.", worker_name)?;
+        //         stdout.reset()?;
+        //         return Err(anyhow::anyhow!("Worker package.json not found in worker directory. Please run `forklaunch sync worker -i {}` to generate it.", worker_name))
+        //     }
+        //     let worker_package_json_data = read_to_string(&worker_package_json_path).with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?;
+        //     let worker_package_json: ProjectPackageJson = json_from_str(&worker_package_json_data)?;
             
-            // Try to detect database from package.json dependencies
-            if let Some(deps) = &worker_package_json.dependencies {
-                // Check if any database variant is found in the dependencies
-                let found_database = deps.databases.iter()
-                    .find(|db| {
-                        // Check if this database enum matches any of the variants
-                        Database::VARIANTS.contains(&db.to_string().as_str())
-                    });
+        //     // Try to detect database from package.json dependencies
+        //     if let Some(deps) = &worker_package_json.dependencies {
+        //         // Check if any database variant is found in the dependencies
+        //         let found_database = deps.databases.iter()
+        //             .find(|db| {
+        //                 // Check if this database enum matches any of the variants
+        //                 Database::VARIANTS.contains(&db.to_string().as_str())
+        //             });
                 
-                if let Some(database) = found_database {
-                    *database
-                } else {
-                    return Err(anyhow::anyhow!("No database variant found in package.json dependencies"))
-                }
-            } else {
-                return Err(anyhow::anyhow!("No dependencies found in package.json, please check initialize type and try again"))
-            }
-        } else {
-            database_input.unwrap()
-        };
+        //         if let Some(database) = found_database {
+        //             *database
+        //         } else {
+        //             return Err(anyhow::anyhow!("No database variant found in package.json dependencies"))
+        //         }
+        //     } else {
+        //         return Err(anyhow::anyhow!("No dependencies found in package.json, please check initialize type and try again"))
+        //     }
+        // } else {
+        //     database_input.unwrap()
+        // };
     }
     
 
