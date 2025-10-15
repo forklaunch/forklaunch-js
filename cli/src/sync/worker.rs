@@ -245,7 +245,7 @@ pub(crate) fn sync_worker_setup(
             )?
             .parse()?,
         );
-        let database: Database = if database_input == "none" {
+        let database: Database = if database_input == Some("none") {
             let modules_path = Path::new(&manifest_data.modules_path.clone());
             let worker_package_json_path = modules_path.join(worker_name).join("package.json");
             if !worker_package_json_path.exists() {
@@ -275,7 +275,7 @@ pub(crate) fn sync_worker_setup(
                 return Err(anyhow::anyhow!("No dependencies found in package.json, please check initialize type and try again"))
             }
         } else {
-            database_input.parse()?
+            database_input.unwrap()
         };
     }
     
