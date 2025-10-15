@@ -70,4 +70,4 @@ for source_path in "${!copy_operations[@]}"; do
     copy_with_check "$source_path" "$destination_path"
 done
 
-RUST_BACKTRACE=1 cargo run --release sync all -p . -c
+RUST_BACKTRACE=1 cargo run --release sync all -p ./sync-test-node-application -c
