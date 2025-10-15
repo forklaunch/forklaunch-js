@@ -276,7 +276,7 @@ pub(crate) fn sync_worker_setup(
             }
         } else {
             database_input.parse()?
-        }
+        };
     }
     
 
