@@ -227,7 +227,7 @@ pub(crate) fn sync_worker_setup(
     )?.parse()?;
     // TODO: Find worker type from somewhere in the worker directory
 
-    let database: Option<Database> = None;
+    let mut database: Option<Database> = None;
     // let mut database_options = vec!["none"];
     // database_options.extend_from_slice(&Database::VARIANTS);
     if r#type == WorkerType::Database {
