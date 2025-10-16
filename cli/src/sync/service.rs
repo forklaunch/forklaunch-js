@@ -415,463 +415,463 @@ pub(crate) fn sync_service_setup(
     Ok(new_manifest_data)
 }
 
-// fn is_service_in_manifest(
-//     manifest_data: &ApplicationManifestData,
-//     service_name: &str,
-// ) -> Result<bool> {
-//     let manifest_project_names: HashSet<String> = manifest_data.projects.iter().map(|project| project.name.clone()).collect();
-//     if manifest_project_names.contains(service_name) {
-//         return Ok(true)
-//     }
-//     return Ok(false)
-// }
+fn is_service_in_manifest(
+    manifest_data: &ApplicationManifestData,
+    service_name: &str,
+) -> Result<bool> {
+    let manifest_project_names: HashSet<String> = manifest_data.projects.iter().map(|project| project.name.clone()).collect();
+    if manifest_project_names.contains(service_name) {
+        return Ok(true)
+    }
+    return Ok(false)
+}
 
-// fn is_service_in_docker_compose(
-//     docker_compose: &DockerCompose,
-//     service_name: &str,
-// ) -> Result<bool> {
-//     let docker_services: HashSet<String> = docker_compose.services.keys().cloned().collect();
-//     if docker_services.contains(service_name) {
-//         return Ok(true)
-//     }
-//     return Ok(false)
-// }
+fn is_service_in_docker_compose(
+    docker_compose: &DockerCompose,
+    service_name: &str,
+) -> Result<bool> {
+    let docker_services: HashSet<String> = docker_compose.services.keys().cloned().collect();
+    if docker_services.contains(service_name) {
+        return Ok(true)
+    }
+    return Ok(false)
+}
 
-// fn is_service_in_runtime_files(
-//     runtime: &Runtime,
-//     pnpm_workspace: Option<&PnpmWorkspace>,
-//     package_json: &ApplicationPackageJson,
-//     service_name: &str,
-// ) -> Result<bool> {
-//     match runtime {
-//         Runtime::Bun => {
-//             let package_json_projects: HashSet<String> = package_json.workspaces.unwrap_or_default().iter().collect();
-//             if package_json_projects.contains(service_name) {
-//                 return Ok(true)
-//             }
-//         }
-//         Runtime::Node => {
-//             let pnpm_workspace_projects: HashSet<String> = pnpm_workspace.unwrap().packages.iter().collect();
-//             if pnpm_workspace_projects.contains(service_name) {
-//                 return Ok(true)
-//             }
-//         }
-//     }
-//     return Ok(false)
-// }
+fn is_service_in_runtime_files(
+    runtime: &Runtime,
+    pnpm_workspace: Option<&PnpmWorkspace>,
+    package_json: &ApplicationPackageJson,
+    service_name: &str,
+) -> Result<bool> {
+    match runtime {
+        Runtime::Bun => {
+            let package_json_projects: HashSet<String> = package_json.workspaces.unwrap_or_default().iter().collect();
+            if package_json_projects.contains(service_name) {
+                return Ok(true)
+            }
+        }
+        Runtime::Node => {
+            let pnpm_workspace_projects: HashSet<String> = pnpm_workspace.unwrap().packages.iter().collect();
+            if pnpm_workspace_projects.contains(service_name) {
+                return Ok(true)
+            }
+        }
+    }
+    return Ok(false)
+}
 
-// // TODO: is_service_in_universal_sdk
+// TODO: is_service_in_universal_sdk
 
-// fn is_service_in_artifact(
-//     artifact: &String,
-//     service_name: &str,
-//     manifest_data: Option<&ApplicationManifestData>,
-//     docker_compose: Option<&DockerCompose>,
-//     runtime: Option<&Runtime>,
-//     pnpm_workspace: Option<&PnpmWorkspace>,
-//     package_json: Option<&ApplicationPackageJson>,
-//     program_text: Option<&String>,
-//     sdk_json: Option<&ProjectPackageJson>,
-// ) -> Result<bool> {
-//     match artifact {
-//         "manifest" => {
-//             if let Some(manifest_data) = manifest_data {
-//                 return is_service_in_manifest(manifest_data, service_name)?;
-//             } else {
-//                 return Err(anyhow::anyhow!("Manifest data is required to proceed."))
-//             }
-//         }
-//         "docker_compose" => {
-//             if let Some(docker_compose) = docker_compose {
-//                 return is_service_in_docker_compose(docker_compose, service_name)?;
-//             } else {
-//                 return Err(anyhow::anyhow!("Docker compose data is required to proceed."))
-//             }
-//         }
-//         "runtime" => {
-//             if let Some(runtime) = runtime {
-//                 match runtime {
-//                     Runtime::Bun => {
-//                         if let Some(package_json) = package_json {
-//                             return is_service_in_runtime_files(runtime, pnpm_workspace, package_json, service_name)?;
-//                         } else {
-//                             return Err(anyhow::anyhow!("Package json data is required to proceed."))
-//                         }
-//                     }
-//                     Runtime::Node => {
-//                         if let Some(pnpm_workspace) = pnpm_workspace {
-//                             return is_service_in_runtime_files(runtime, pnpm_workspace, package_json, service_name)?;
-//                         } else {
-//                             return Err(anyhow::anyhow!("Pnpm workspace data is required to proceed."))
-//                         }
-//                     }
-//                 }
-//             }
-//         }
-//         // "universal_sdk" => {
-//         //     if let Some(sdk_json) = sdk_json {
-//         //         return is_service_in_universal_sdk(program_text, sdk_json, service_name)?;
-//         //     } else {
-//         //         return Err(anyhow::anyhow!("Sdk json data is required to proceed."))
-//         //     }
-//         // }
-//     }
-//     return Ok(false)
-// }
+fn is_service_in_artifact(
+    artifact: &String,
+    service_name: &str,
+    manifest_data: Option<&ApplicationManifestData>,
+    docker_compose: Option<&DockerCompose>,
+    runtime: Option<&Runtime>,
+    pnpm_workspace: Option<&PnpmWorkspace>,
+    package_json: Option<&ApplicationPackageJson>,
+    program_text: Option<&String>,
+    sdk_json: Option<&ProjectPackageJson>,
+) -> Result<bool> {
+    match artifact {
+        "manifest" => {
+            if let Some(manifest_data) = manifest_data {
+                return is_service_in_manifest(manifest_data, service_name)?;
+            } else {
+                return Err(anyhow::anyhow!("Manifest data is required to proceed."))
+            }
+        }
+        "docker_compose" => {
+            if let Some(docker_compose) = docker_compose {
+                return is_service_in_docker_compose(docker_compose, service_name)?;
+            } else {
+                return Err(anyhow::anyhow!("Docker compose data is required to proceed."))
+            }
+        }
+        "runtime" => {
+            if let Some(runtime) = runtime {
+                match runtime {
+                    Runtime::Bun => {
+                        if let Some(package_json) = package_json {
+                            return is_service_in_runtime_files(runtime, pnpm_workspace, package_json, service_name)?;
+                        } else {
+                            return Err(anyhow::anyhow!("Package json data is required to proceed."))
+                        }
+                    }
+                    Runtime::Node => {
+                        if let Some(pnpm_workspace) = pnpm_workspace {
+                            return is_service_in_runtime_files(runtime, pnpm_workspace, package_json, service_name)?;
+                        } else {
+                            return Err(anyhow::anyhow!("Pnpm workspace data is required to proceed."))
+                        }
+                    }
+                }
+            }
+        }
+        // "universal_sdk" => {
+        //     if let Some(sdk_json) = sdk_json {
+        //         return is_service_in_universal_sdk(program_text, sdk_json, service_name)?;
+        //     } else {
+        //         return Err(anyhow::anyhow!("Sdk json data is required to proceed."))
+        //     }
+        // }
+    }
+    return Ok(false)
+}
 
 
-// #[derive(Debug)]
-// pub(super) struct ServiceCommand;
+#[derive(Debug)]
+pub(super) struct ServiceCommand;
 
-// impl ServiceCommand {
-//     pub(super) fn new() -> Self {
-//         Self {}
-//     }
-// }
+impl ServiceCommand {
+    pub(super) fn new() -> Self {
+        Self {}
+    }
+}
 
-// impl CliCommand for ServiceCommand {
-//     fn command(&self) -> Command {
-//         command("service", "Sync a new service")
-//             .alias("svc")
-//             .alias("project")
-//             .alias("proj")
-//             .arg(
-//                 Arg::new("name")
-//                 .help("The name of the service"))
-//             .arg(
-//                 Arg::new("base_path")
-//                     .short('p')
-//                     .long("path")
-//                     .help("The path to modules directory"),
-//             )
-//             .arg(
-//                 Arg::new("add")
-//                     .short('a')
-//                     .long("add")
-//                     .help("Add a service to application artifacts")
-//                     .action(ArgAction::SetTrue),
-//             )
-//             .arg(
-//                 Arg::new("remove")
-//                     .short('r')
-//                     .long("remove")
-//                     .help("Remove a service from application artifacts")
-//                     .action(ArgAction::SetTrue),
-//             )
-//             .arg(
-//                 Arg::new("artifacts")
-//                     .short('f')
-//                     .long("artifacts")
-//                     .help("The artifacts to add the service to")
-//                     .value_parser(Artifact::VARIANTS)
-//                     .num_args(0..)
-//                     .action(ArgAction::Append),
-//             )
-//             .arg(
-//                 Arg::new("database")
-//                     .short('d')
-//                     .long("database")
-//                     .help("The database to use"),
-//                     .value_parser(Database::VARIANTS),
-//             )
-//             .arg(
-//                 Arg::new("infrastructure")
-//                     .short('i')
-//                     .long("infrastructure")
-//                     .help("The infrastructure to use")
-//                     .value_parser(Infrastructure::VARIANTS)
-//                     .num_args(0..)
-//                     .action(ArgAction::Append),
-//             )
-//             .arg(
-//                 Arg::new("description")
-//                     .short('D')
-//                     .long("description")
-//                     .help("The description of the service"),
-//             )
-//     }
+impl CliCommand for ServiceCommand {
+    fn command(&self) -> Command {
+        command("service", "Sync a new service")
+            .alias("svc")
+            .alias("project")
+            .alias("proj")
+            .arg(
+                Arg::new("name")
+                .help("The name of the service"))
+            .arg(
+                Arg::new("base_path")
+                    .short('p')
+                    .long("path")
+                    .help("The path to modules directory"),
+            )
+            .arg(
+                Arg::new("add")
+                    .short('a')
+                    .long("add")
+                    .help("Add a service to application artifacts")
+                    .action(ArgAction::SetTrue),
+            )
+            .arg(
+                Arg::new("remove")
+                    .short('r')
+                    .long("remove")
+                    .help("Remove a service from application artifacts")
+                    .action(ArgAction::SetTrue),
+            )
+            .arg(
+                Arg::new("artifacts")
+                    .short('f')
+                    .long("artifacts")
+                    .help("The artifacts to add the service to")
+                    .value_parser(Artifact::VARIANTS)
+                    .num_args(0..)
+                    .action(ArgAction::Append),
+            )
+            .arg(
+                Arg::new("database")
+                    .short('d')
+                    .long("database")
+                    .help("The database to use"),
+                    .value_parser(Database::VARIANTS),
+            )
+            .arg(
+                Arg::new("infrastructure")
+                    .short('i')
+                    .long("infrastructure")
+                    .help("The infrastructure to use")
+                    .value_parser(Infrastructure::VARIANTS)
+                    .num_args(0..)
+                    .action(ArgAction::Append),
+            )
+            .arg(
+                Arg::new("description")
+                    .short('D')
+                    .long("description")
+                    .help("The description of the service"),
+            )
+    }
 
-//     fn handler(&self, matches: &ArgMatches) -> Result<()> {
-//         let mut line_editor = Editor::<(), DefaultHistory>::new()?;
-//         let mut stdout = StandardStream::stdout(ColorChoice::Always);
+    fn handler(&self, matches: &ArgMatches) -> Result<()> {
+        let mut line_editor = Editor::<(), DefaultHistory>::new()?;
+        let mut stdout = StandardStream::stdout(ColorChoice::Always);
         
-//         let mut rendered_templates = Vec::<RenderedTemplate>::new();
-//         let mut rendered_templates_cache = RenderedTemplatesCache::new();
+        let mut rendered_templates = Vec::<RenderedTemplate>::new();
+        let mut rendered_templates_cache = RenderedTemplatesCache::new();
         
-//         let (app_root_path, _) = find_app_root_path(matches, RequiredLocation::Project)?;
+        let (app_root_path, _) = find_app_root_path(matches, RequiredLocation::Project)?;
         
-//         let service_name = matches.get_one::<String>("name").unwrap();
+        let service_name = matches.get_one::<String>("name").unwrap();
         
-//         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
-//         let existing_manifest_data = from_str::<ApplicationManifestData>(
-//             &read_to_string(&manifest_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
-//         )
-//         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
-//         let modules_path = Path::new(&existing_manifest_data.modules_path.clone());
-//         let runtime = existing_manifest_data.runtime.parse()?;
-//         let service_base_path = prompt_base_path(
-//             &app_root_path,
-//             &ManifestData::Application(&existing_manifest_data),
-//             &Some(service_name.clone()),
-//             &mut line_editor,
-//             stdout,
-//             matches,
-//             0,
-//         )?;
+        let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
+        let existing_manifest_data = from_str::<ApplicationManifestData>(
+            &read_to_string(&manifest_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
+        )
+        .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
+        let modules_path = Path::new(&existing_manifest_data.modules_path.clone());
+        let runtime = existing_manifest_data.runtime.parse()?;
+        let service_base_path = prompt_base_path(
+            &app_root_path,
+            &ManifestData::Application(&existing_manifest_data),
+            &Some(service_name.clone()),
+            &mut line_editor,
+            stdout,
+            matches,
+            0,
+        )?;
 
-//         let dir_project_names_set: HashSet<String> = HashSet::new(service_name);
+        let dir_project_names_set: HashSet<String> = HashSet::new(service_name);
 
-//         let docker_compose_path = app_root_path.join("docker-compose.yaml");
-//         let docker_compose = if docker_compose_path.exists() {
-//             Some(yaml_from_str::<DockerCompose>(
-//                 &read_to_string(&docker_compose_path).with_context(|| ERROR_FAILED_TO_READ_DOCKER_COMPOSE)?,
-//             )
-//             .with_context(|| ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE)?)
-//         } else {
-//             None
-//         };
-//         let application_package_json_path = app_root_path.join("package.json");
-//         let application_package_json = if application_package_json_path.exists() {
-//             Some(json_from_str::<ApplicationPackageJson>(
-//                 &read_to_string(&application_package_json_path).with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?,
-//             )
-//             .with_context(|| ERROR_FAILED_TO_PARSE_PACKAGE_JSON)?)
-//         } else {
-//             None
-//         };
+        let docker_compose_path = app_root_path.join("docker-compose.yaml");
+        let docker_compose = if docker_compose_path.exists() {
+            Some(yaml_from_str::<DockerCompose>(
+                &read_to_string(&docker_compose_path).with_context(|| ERROR_FAILED_TO_READ_DOCKER_COMPOSE)?,
+            )
+            .with_context(|| ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE)?)
+        } else {
+            None
+        };
+        let application_package_json_path = app_root_path.join("package.json");
+        let application_package_json = if application_package_json_path.exists() {
+            Some(json_from_str::<ApplicationPackageJson>(
+                &read_to_string(&application_package_json_path).with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?,
+            )
+            .with_context(|| ERROR_FAILED_TO_PARSE_PACKAGE_JSON)?)
+        } else {
+            None
+        };
         
-//         let service_package_json = if service_base_path.join("package.json").exists() {
-//             Some(json_from_str::<ProjectPackageJson>(
-//                 &read_to_string(&service_base_path.join("package.json")).with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?,
-//             )
-//             .with_context(|| ERROR_FAILED_TO_PARSE_PACKAGE_JSON)?)
-//         } else {
-//             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
-//             writeln!(stdout, "Service package.json not found in service directory. Generating it...")?;
-//             stdout.reset()?;
-//             let service_package_json_path = service_base_path.join("package.json");
-//             let service_package_json_template = generate_service_package_json(service_name, service_base_path)?;
-//             rendered_templates_cache.insert(service_package_json_path.to_string_lossy(), service_package_json_template);
-//             Some(service_package_json_template.content)
-//         };
+        let service_package_json = if service_base_path.join("package.json").exists() {
+            Some(json_from_str::<ProjectPackageJson>(
+                &read_to_string(&service_base_path.join("package.json")).with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?,
+            )
+            .with_context(|| ERROR_FAILED_TO_PARSE_PACKAGE_JSON)?)
+        } else {
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
+            writeln!(stdout, "Service package.json not found in service directory. Generating it...")?;
+            stdout.reset()?;
+            let service_package_json_path = service_base_path.join("package.json");
+            let service_package_json_template = generate_service_package_json(service_name, service_base_path)?;
+            rendered_templates_cache.insert(service_package_json_path.to_string_lossy(), service_package_json_template);
+            Some(service_package_json_template.content)
+        };
 
-//         let pnpm_workspace_path = app_root_path.join("pnpm-workspace.yaml");
-//         let pnpm_workspace = if pnpm_workspace_path.exists() {
-//             Some(yaml_from_str::<PnpmWorkspace>(
-//                 &read_to_string(&pnpm_workspace_path).with_context(|| ERROR_FAILED_TO_READ_PNPM_WORKSPACE)?,
-//             )
-//             .with_context(|| ERROR_FAILED_TO_PARSE_PNPM_WORKSPACE)?)
-//         } else {
-//             if existing_manifest_data.runtime == Runtime::Node {
-//                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
-//                 writeln!(stdout, "Pnpm workspace not found in application directory. This may indicate the app was not initialized properly. Please run `forklaunch init` to initialize the app.")?;
-//                 stdout.reset()?;
-//                 return Err(anyhow::anyhow!("Pnpm workspace not found in application directory. This may indicate the app was not initialized properly. Please run `forklaunch init` to initialize the app."))
-//             } else {
-//                 None
-//             }
-//         };
+        let pnpm_workspace_path = app_root_path.join("pnpm-workspace.yaml");
+        let pnpm_workspace = if pnpm_workspace_path.exists() {
+            Some(yaml_from_str::<PnpmWorkspace>(
+                &read_to_string(&pnpm_workspace_path).with_context(|| ERROR_FAILED_TO_READ_PNPM_WORKSPACE)?,
+            )
+            .with_context(|| ERROR_FAILED_TO_PARSE_PNPM_WORKSPACE)?)
+        } else {
+            if existing_manifest_data.runtime == Runtime::Node {
+                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
+                writeln!(stdout, "Pnpm workspace not found in application directory. This may indicate the app was not initialized properly. Please run `forklaunch init` to initialize the app.")?;
+                stdout.reset()?;
+                return Err(anyhow::anyhow!("Pnpm workspace not found in application directory. This may indicate the app was not initialized properly. Please run `forklaunch init` to initialize the app."))
+            } else {
+                None
+            }
+        };
 
-//         let (mut usdk_ast_program_text, mut usdk_json) = read_universal_sdk_content(&modules_path)?;
+        let (mut usdk_ast_program_text, mut usdk_json) = read_universal_sdk_content(&modules_path)?;
         
 
-//         let mode = if matches.get_flag("add") {
-//             ArtifactModification::Add
-//         } else if matches.get_flag("remove") {
-//             ArtifactModification::Remove
-//         } else {
-//             return Err(anyhow::anyhow!("Invalid mode. Please use --add or --remove."))
-//         };
-//         let artifacts = matches.get_many::<String>("artifacts");
-//         // TODO: Implement artifact handling
-//         // if "all" then sync all artifacts else sync only the specified artifacts
-//         if artifacts.is_some() {
-//             let artifacts = artifacts.unwrap();
-//             if artifacts.contains("all") {
-//                 artifacts = ARTIFACTS.iter().cloned().map(|s| s.to_string()).filter(|s| s != "all").collect();
-//             }
-//         }
-//         let mut to_modify = Vec::<String>::new();
-//         for artifact in artifacts {
-//             let is_present = is_service_in_artifact(
-//                 &artifact, 
-//                 &service_name, 
-//                 Some(&existing_manifest_data), 
-//                 Some(&docker_compose), 
-//                 Some(&runtime), 
-//                 Some(&pnpm_workspace), 
-//                 Some(&application_package_json), 
-//                 Some(&usdk_ast_program_text), 
-//                 Some(&usdk_json))?;
-//             match mode {
-//                 ArtifactModification::Add => {
-//                     if !is_present {
-//                         to_modify.push(artifact);
-//                     }
-//                 }
-//                 ArtifactModification::Remove => {
-//                     if is_present {
-//                         to_modify.push(artifact);
-//                     }
-//                 }
-//             }
-//         }
-//         if to_modify.is_empty() {
-//             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-//             writeln!(stdout, "No artifacts to modify.")?;
-//             stdout.reset()?;
-//             return Ok(())
-//         }
-//         println!("sync:service:625 to_modify: {:?}", to_modify);
-//         println!("sync:service:626 Processing {} artifacts", to_modify.len());
+        let mode = if matches.get_flag("add") {
+            ArtifactModification::Add
+        } else if matches.get_flag("remove") {
+            ArtifactModification::Remove
+        } else {
+            return Err(anyhow::anyhow!("Invalid mode. Please use --add or --remove."))
+        };
+        let artifacts = matches.get_many::<String>("artifacts");
+        // TODO: Implement artifact handling
+        // if "all" then sync all artifacts else sync only the specified artifacts
+        if artifacts.is_some() {
+            let artifacts = artifacts.unwrap();
+            if artifacts.contains("all") {
+                artifacts = ARTIFACTS.iter().cloned().map(|s| s.to_string()).filter(|s| s != "all").collect();
+            }
+        }
+        let mut to_modify = Vec::<String>::new();
+        for artifact in artifacts {
+            let is_present = is_service_in_artifact(
+                &artifact, 
+                &service_name, 
+                Some(&existing_manifest_data), 
+                Some(&docker_compose), 
+                Some(&runtime), 
+                Some(&pnpm_workspace), 
+                Some(&application_package_json), 
+                Some(&usdk_ast_program_text), 
+                Some(&usdk_json))?;
+            match mode {
+                ArtifactModification::Add => {
+                    if !is_present {
+                        to_modify.push(artifact);
+                    }
+                }
+                ArtifactModification::Remove => {
+                    if is_present {
+                        to_modify.push(artifact);
+                    }
+                }
+            }
+        }
+        if to_modify.is_empty() {
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+            writeln!(stdout, "No artifacts to modify.")?;
+            stdout.reset()?;
+            return Ok(())
+        }
+        println!("sync:service:625 to_modify: {:?}", to_modify);
+        println!("sync:service:626 Processing {} artifacts", to_modify.len());
 
-//         match mode {
-//             ArtifactModification::Add => {
-//                 for artifact in to_modify {
-//                     println!("sync:service:631 Adding service to artifact: {:?}", artifact);
-//                     let results = add_package_to_artifact(
-//                         service_name, 
-//                         &existing_manifest_data,
-//                         &app_root_path,
-//                         &modules_path,
-//                         &artifact,
-//                         InitializeType::Service,
-//                         stdout,
-//                         matches,
-//                         Some(&docker_compose),
-//                         Some(&runtime),
-//                         Some(&pnpm_workspace),
-//                         Some(&application_package_json),
-//                         Some(&program_text),
-//                         Some(&sdk_json),
-//                         None,
-//                     )?;
-//                     for _artifact_name, result in results {
-//                         match artifact {
-//                             "manifest" => {
-//                                 let new_manifest_data = result["manifest"].to_string();
-//                                 rendered_templates.push(RenderedTemplate {
-//                                     path: manifest_path,
-//                                     content: new_manifest_data,
-//                                     context: Some(ERROR_FAILED_TO_WRITE_MANIFEST.to_string()),
-//                                 });
-//                             }
-//                             "docker_compose" => {
-//                                 let new_docker_compose = result["docker_compose"].to_string();
-//                                 rendered_templates.push(RenderedTemplate {
-//                                     path: docker_compose_path,
-//                                     content: new_docker_compose,
-//                                     context: Some(ERROR_FAILED_TO_WRITE_DOCKER_COMPOSE.to_string()),
-//                                 });
-//                             }
-//                             "runtime" => {
-//                                 let pnpm_workspace = result["pnpm_workspace"].to_string();
-//                                 let application_package_json = result["package_json"].to_string();
-//                                 rendered_templates.push(RenderedTemplate {
-//                                     path: modules_path.join("package.json"),
-//                                     content: application_package_json,
-//                                     context: Some(ERROR_FAILED_TO_WRITE_PACKAGE_JSON.to_string()),
-//                                 });
-//                                 if let Some(pnpm_workspace) = pnpm_workspace {
-//                                     rendered_templates.push(RenderedTemplate {
-//                                         path: modules_path.join("pnpm-workspace.yaml"),
-//                                             content: pnpm_workspace,
-//                                             context: Some(ERROR_FAILED_TO_WRITE_PNPM_WORKSPACE.to_string()),
-//                                         });
-//                                 }
-//                             }
-//                             "sdk" => {
-//                                 rendered_templates.push(RenderedTemplate {
-//                                     path: modules_path.join("universal-sdk").join("universalSdk.ts"),
-//                                     content: results["sdk_ast_program_text"].to_string(),
-//                                     context: None,
-//                                 });
-//                                 rendered_templates.push(RenderedTemplate {
-//                                     path: modules_path.join("universal-sdk").join("package.json"),
-//                                     content: results["sdk_project_json"].to_string(),
-//                                     context: None,
-//                                 });
-//                             }
-//                         }
-//                     }
-//                 }
-//             }
-//             ArtifactModification::Remove => {
-//                 for artifact in to_modify {
-//                     println!("sync:service:635 Removing service from artifact: {:?}", artifact);
-//                     let results = remove_package_from_artifact(
-//                         vec![service_name.clone()],
-//                         &mut existing_manifest_data,
-//                         Some(&mut docker_compose),
-//                         Some(&mut runtime),
-//                         Some(&mut pnpm_workspace),
-//                         Some(&mut application_package_json),
-//                         Some(&mut usdk_ast_program_text),
-//                         Some(&mut usdk_json),
-//                         &app_root_path,
-//                         &modules_path,
-//                         &artifact,
-//                     )?;
-//                     for _artifact_name, result in results {
-//                         match artifact {
-//                             "manifest" => {
-//                                 rendered_templates.push(RenderedTemplate {
-//                                     path: manifest_path,
-//                                     content: result["manifest"].to_string(),
-//                                     context: Some(ERROR_FAILED_TO_WRITE_MANIFEST.to_string()),
-//                                 });
-//                             }
-//                             "docker_compose" => {
-//                                 rendered_templates.push(RenderedTemplate {
-//                                     path: docker_compose_path,
-//                                     content: result["docker_compose"].to_string(),
-//                                     context: Some(ERROR_FAILED_TO_WRITE_DOCKER_COMPOSE.to_string()),
-//                                 });
-//                             }
-//                             "runtime" => {
-//                                 rendered_templates.push(RenderedTemplate {
-//                                     path: modules_path.join("package.json"),
-//                                     content: result["package_json"].to_string(),
-//                                     context: Some(ERROR_FAILED_TO_WRITE_PACKAGE_JSON.to_string()),
-//                                 });
-//                                 if let Some(pnpm_workspace) = pnpm_workspace {
-//                                     rendered_templates.push(RenderedTemplate {
-//                                         path: modules_path.join("pnpm-workspace.yaml"),
-//                                         content: pnpm_workspace,
-//                                         context: Some(ERROR_FAILED_TO_WRITE_PNPM_WORKSPACE.to_string()),
-//                                     });
-//                                 }
-//                             }
-//                             "universal-sdk" => {
-//                                 rendered_templates.push(RenderedTemplate {
-//                                     path: modules_path.join("universal-sdk").join("universalSdk.ts"),
-//                                     content: result["sdk_ast_program_text"].to_string(),
-//                                     context: None,
-//                                 });
-//                                 rendered_templates.push(RenderedTemplate {
-//                                     path: modules_path.join("universal-sdk").join("package.json"),
-//                                     content: result["sdk_project_json"].to_string(),
-//                                     context: None,
-//                                 });
-//                             }
-//                         }
-//                     }
-//                 }
-//             }
-//         }
+        match mode {
+            ArtifactModification::Add => {
+                for artifact in to_modify {
+                    println!("sync:service:631 Adding service to artifact: {:?}", artifact);
+                    let results = add_package_to_artifact(
+                        service_name, 
+                        &existing_manifest_data,
+                        &app_root_path,
+                        &modules_path,
+                        &artifact,
+                        InitializeType::Service,
+                        stdout,
+                        matches,
+                        Some(&docker_compose),
+                        Some(&runtime),
+                        Some(&pnpm_workspace),
+                        Some(&application_package_json),
+                        Some(&program_text),
+                        Some(&sdk_json),
+                        None,
+                    )?;
+                    for _artifact_name, result in results {
+                        match artifact {
+                            "manifest" => {
+                                let new_manifest_data = result["manifest"].to_string();
+                                rendered_templates.push(RenderedTemplate {
+                                    path: manifest_path,
+                                    content: new_manifest_data,
+                                    context: Some(ERROR_FAILED_TO_WRITE_MANIFEST.to_string()),
+                                });
+                            }
+                            "docker_compose" => {
+                                let new_docker_compose = result["docker_compose"].to_string();
+                                rendered_templates.push(RenderedTemplate {
+                                    path: docker_compose_path,
+                                    content: new_docker_compose,
+                                    context: Some(ERROR_FAILED_TO_WRITE_DOCKER_COMPOSE.to_string()),
+                                });
+                            }
+                            "runtime" => {
+                                let pnpm_workspace = result["pnpm_workspace"].to_string();
+                                let application_package_json = result["package_json"].to_string();
+                                rendered_templates.push(RenderedTemplate {
+                                    path: modules_path.join("package.json"),
+                                    content: application_package_json,
+                                    context: Some(ERROR_FAILED_TO_WRITE_PACKAGE_JSON.to_string()),
+                                });
+                                if let Some(pnpm_workspace) = pnpm_workspace {
+                                    rendered_templates.push(RenderedTemplate {
+                                        path: modules_path.join("pnpm-workspace.yaml"),
+                                            content: pnpm_workspace,
+                                            context: Some(ERROR_FAILED_TO_WRITE_PNPM_WORKSPACE.to_string()),
+                                        });
+                                }
+                            }
+                            "sdk" => {
+                                rendered_templates.push(RenderedTemplate {
+                                    path: modules_path.join("universal-sdk").join("universalSdk.ts"),
+                                    content: results["sdk_ast_program_text"].to_string(),
+                                    context: None,
+                                });
+                                rendered_templates.push(RenderedTemplate {
+                                    path: modules_path.join("universal-sdk").join("package.json"),
+                                    content: results["sdk_project_json"].to_string(),
+                                    context: None,
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            ArtifactModification::Remove => {
+                for artifact in to_modify {
+                    println!("sync:service:635 Removing service from artifact: {:?}", artifact);
+                    let results = remove_package_from_artifact(
+                        vec![service_name.clone()],
+                        &mut existing_manifest_data,
+                        Some(&mut docker_compose),
+                        Some(&mut runtime),
+                        Some(&mut pnpm_workspace),
+                        Some(&mut application_package_json),
+                        Some(&mut usdk_ast_program_text),
+                        Some(&mut usdk_json),
+                        &app_root_path,
+                        &modules_path,
+                        &artifact,
+                    )?;
+                    for _artifact_name, result in results {
+                        match artifact {
+                            "manifest" => {
+                                rendered_templates.push(RenderedTemplate {
+                                    path: manifest_path,
+                                    content: result["manifest"].to_string(),
+                                    context: Some(ERROR_FAILED_TO_WRITE_MANIFEST.to_string()),
+                                });
+                            }
+                            "docker_compose" => {
+                                rendered_templates.push(RenderedTemplate {
+                                    path: docker_compose_path,
+                                    content: result["docker_compose"].to_string(),
+                                    context: Some(ERROR_FAILED_TO_WRITE_DOCKER_COMPOSE.to_string()),
+                                });
+                            }
+                            "runtime" => {
+                                rendered_templates.push(RenderedTemplate {
+                                    path: modules_path.join("package.json"),
+                                    content: result["package_json"].to_string(),
+                                    context: Some(ERROR_FAILED_TO_WRITE_PACKAGE_JSON.to_string()),
+                                });
+                                if let Some(pnpm_workspace) = pnpm_workspace {
+                                    rendered_templates.push(RenderedTemplate {
+                                        path: modules_path.join("pnpm-workspace.yaml"),
+                                        content: pnpm_workspace,
+                                        context: Some(ERROR_FAILED_TO_WRITE_PNPM_WORKSPACE.to_string()),
+                                    });
+                                }
+                            }
+                            "universal-sdk" => {
+                                rendered_templates.push(RenderedTemplate {
+                                    path: modules_path.join("universal-sdk").join("universalSdk.ts"),
+                                    content: result["sdk_ast_program_text"].to_string(),
+                                    context: None,
+                                });
+                                rendered_templates.push(RenderedTemplate {
+                                    path: modules_path.join("universal-sdk").join("package.json"),
+                                    content: result["sdk_project_json"].to_string(),
+                                    context: None,
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
-//         for rendered_template in rendered_templates_cache {
-//             rendered_templates.push(rendered_template);
-//         }
+        for rendered_template in rendered_templates_cache {
+            rendered_templates.push(rendered_template);
+        }
 
-//         write_rendered_templates(&rendered_templates, false, &mut stdout)?;
+        write_rendered_templates(&rendered_templates, false, &mut stdout)?;
 
-//         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-//         writeln!(stdout, "Successfully synced {} project(s)/package(s) from service artifacts", to_modify.len())?;
-//         stdout.reset()?;
+        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+        writeln!(stdout, "Successfully synced {} project(s)/package(s) from service artifacts", to_modify.len())?;
+        stdout.reset()?;
 
-//         Ok(())
+        Ok(())
         
         
-//     }
-// }
+    }
+}
