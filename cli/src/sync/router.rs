@@ -128,7 +128,7 @@ pub(crate) fn add_router_controllers_with_validation(
 
 pub(crate) fn sync_router_setup(
     router_name: &str, 
-    app_root_path: &Path,  
+    app_root_path: &Path, 
     manifest_data: &mut ApplicationManifestData,
     stdout: &mut StandardStream,
     matches: &ArgMatches,
@@ -182,7 +182,7 @@ pub(crate) fn sync_router_setup(
         .iter()
         .find(|project| service_name == project.name)
         .ok_or_else(|| anyhow::anyhow!("Service '{}' not found in manifest", service_name))?;
-        
+    
 
     if let Some(database) = service_data.resources.as_ref().unwrap().database.clone() {
         let database: Database = database.parse()?;

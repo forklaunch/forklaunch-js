@@ -82,19 +82,19 @@ pub(crate) fn remove_project_definition_to_pnpm_workspace(
 pub(crate) fn remove_project_definition_from_pnpm_workspace(
     pnpm_workspace: &mut PnpmWorkspace,
     project_name: &str,
-) -> Result<PnpmWorkspace> {
+) -> Result<()> {
     if let Some(position) = pnpm_workspace.packages.iter().position(|name| name == project_name) {
         pnpm_workspace.packages.remove(position);
     }
-    Ok(pnpm_workspace.clone())
+    Ok(())
 }
 
 pub(crate) fn add_project_definition_to_pnpm_workspace_mut(
     pnpm_workspace: &mut PnpmWorkspace,
     project_name: &str,
-) -> Result<PnpmWorkspace> {
+) -> Result<()> {
     if !pnpm_workspace.packages.contains(&project_name.to_string()) {
         pnpm_workspace.packages.push(project_name.to_string().clone());
     }
-    Ok(pnpm_workspace.clone())
+    Ok(())
 }

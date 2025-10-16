@@ -86,7 +86,7 @@ pub(crate) fn add_module_to_manifest_with_validation(
         &new_manifest_projects,
         &format!("Successfully added {} to manifest.toml", module_name),
         &format!("Project {} was not added to manifest.toml", module_name),
-        "sync:module:73",
+        "sync:module:89",
         stdout,
     )?;
     if validation_result {
@@ -110,7 +110,7 @@ pub(crate) fn add_module_to_docker_compose_with_validation(
         &new_docker_services,
         &format!("Successfully added {} to docker-compose.yaml", service_data.service_name),
         &format!("Service {} was not added to docker-compose.yaml", service_data.service_name),
-        "sync:module:100",
+        "sync:module:112",
         stdout,
     )?;
     if validation_result {
@@ -144,7 +144,7 @@ pub(crate) fn add_module_to_runtime_files_with_validation(
                 &new_package_json_projects,
                 &format!("Successfully added {} to package.json", service_data.service_name),
                 &format!("Module {} was not added to package.json", service_data.service_name),
-                "sync:module:145",
+                "sync:module:147",
                 stdout,
             )?;
             if !validation_result {
@@ -164,7 +164,7 @@ pub(crate) fn add_module_to_runtime_files_with_validation(
                 &new_pnpm_workspace_projects,
                 &format!("Successfully added {} to pnpm-workspace.yaml", service_data.service_name),
                 &format!("Module {} was not added to pnpm-workspace.yaml", service_data.service_name),
-                "sync:module:484",
+                "sync:module:167",
                 stdout,
             )?;
             if !validation_result {

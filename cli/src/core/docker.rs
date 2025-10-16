@@ -42,7 +42,7 @@ db.getSiblingDB(\"admin\").createUser({
 });
 '""#;
 
-#[derive(Debug, Serialize, Default)]
+#[derive(Debug, Serialize, Default, Clone)]
 pub(crate) struct DockerCompose {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) version: Option<String>,
@@ -350,7 +350,7 @@ impl<'de> Deserialize<'de> for DockerService {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub(crate) struct DockerVolume {
     pub(crate) driver: String,
 }

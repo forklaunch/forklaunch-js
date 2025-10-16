@@ -1,38 +1,41 @@
-use std::{path::Path, collections::HashSet, io::Write};
+use std::{path::Path, collections::{HashSet, HashMap}, io::Write};
 
 use anyhow::Result;
 use clap::ArgMatches;
 use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
+use serde_json::{from_str as json_from_str, to_string_pretty as json_to_string_pretty};
+use serde_yml::to_string as yaml_to_string;
+use derive_more::From;
+
 use crate::{
-    constants::InitializeType,
+    constants::{InitializeType, Runtime},
     core::{
-        manifest::{application::ApplicationManifestData, ProjectType}, 
+        manifest::{application::ApplicationManifestData, ProjectType, remove_project_definition_from_manifest}, 
+        docker::{DockerCompose, remove_service_from_docker_compose, remove_worker_from_docker_compose},
+        package_json::{application_package_json::ApplicationPackageJson, project_package_json::ProjectPackageJson, add_project_definition_to_package_json_mut, remove_project_definition_from_package_json},
+        pnpm_workspace::{PnpmWorkspace, add_project_definition_to_pnpm_workspace_mut, remove_project_definition_from_pnpm_workspace},
+        universal_sdk::{read_universal_sdk_content, add_project_vec_to_universal_sdk, remove_project_vec_from_universal_sdk},
     },
     sync::{
-        service::{sync_service_setup, add_service_to_manifest_with_validation, add_service_to_docker_compose_with_validation, add_service_to_runtime_files_with_validation}, 
-        library::{sync_library_setup, add_library_to_manifest_with_validation, add_library_to_runtime_files_with_validation}, 
-        module::{sync_module_setup, add_module_to_manifest_with_validation, add_module_to_docker_compose_with_validation, add_module_to_runtime_files_with_validation}, 
+        constants::{RUNTIME_PROJECTS_TO_IGNORE, DIRS_TO_IGNORE, DOCKER_SERVICES_TO_IGNORE},
+        service::{sync_service_setup, add_service_to_manifest_with_validation, add_service_to_docker_compose_with_validation}, 
+        library::{sync_library_setup, add_library_to_manifest_with_validation}, 
+        module::{sync_module_setup, add_module_to_manifest_with_validation, add_module_to_docker_compose_with_validation}, 
         router::{sync_router_setup, add_router_to_manifest_with_validation, add_router_server_with_validation, add_router_sdk_with_validation, add_router_registrations_with_validation, add_router_persistence_with_validation, add_router_controllers_with_validation}, 
-        worker::{sync_worker_setup, add_worker_to_manifest_with_validation, add_worker_to_docker_compose_with_validation, add_worker_to_runtime_files_with_validation},
+        worker::{sync_worker_setup, add_worker_to_manifest_with_validation, add_worker_to_docker_compose_with_validation},
     },
 };
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, From)]
 pub enum ArtifactResult {
     String(String),
     ProjectType(ProjectType),
-}
-
-impl From<String> for ArtifactResult {
-    fn from(s: String) -> Self {
-        ArtifactResult::String(s)
-    }
-}
-
-impl From<ProjectType> for ArtifactResult {
-    fn from(pt: ProjectType) -> Self {
-        ArtifactResult::ProjectType(pt)
-    }
+    Manifest(ApplicationManifestData),
+    DockerCompose(DockerCompose),
+    PackageJson(ApplicationPackageJson),
+    PnpmWorkspace(PnpmWorkspace),
+    USdkJson(ProjectPackageJson),
+    OptionString(Option<String>),
 }
 
 pub(crate) fn add_package_to_artifact(
@@ -44,14 +47,19 @@ pub(crate) fn add_package_to_artifact(
     package_type: &InitializeType,
     stdout: &mut StandardStream,
     matches: &ArgMatches,
-    docker_compose: Option<String>, //optional
+    docker_compose: Option<&mut DockerCompose>, //optional
+    pnpm_workspace: Option<&mut PnpmWorkspace>, //optional
+    package_json: Option<&mut ApplicationPackageJson>, //optional
+    usdk_ast_program_text: Option<&mut String>, //optional
+    usdk_json: Option<&mut String>, //optional
     _project_type: Option<ProjectType>, //optional
-) -> Result<Vec<ArtifactResult>> {
+    service_name: Option<String>, //optional
+) -> Result<HashMap<String, ArtifactResult>> {
     println!("sync:utils:49 add_package_to_artifact");
     println!("sync:utils:49 package_name: {:?}", package_name);
     println!("sync:utils:49 artifact_type: {:?}", artifact_type);
     println!("sync:utils:49 package_type: {:?}", package_type);
-    let mut results = Vec::new();
+    let mut results = HashMap::new();
     match package_type {
         InitializeType::Service => {
             let mut service_manifest_data = sync_service_setup(
@@ -63,23 +71,90 @@ pub(crate) fn add_package_to_artifact(
             match artifact_type {
                 "manifest" => {
                     let forklaunch_manifest_buffer = add_service_to_manifest_with_validation(&mut service_manifest_data, stdout)?;
-                    results.push(ArtifactResult::from(forklaunch_manifest_buffer));
+                    results.insert("manifest".to_string(), ArtifactResult::String(forklaunch_manifest_buffer));
                 }
                 "docker_compose" => {
                     if let Some(docker_compose) = docker_compose {
-                        let docker_compose_buffer = add_service_to_docker_compose_with_validation(&mut service_manifest_data, modules_path, &docker_compose, stdout)?;
-                        results.push(ArtifactResult::from(docker_compose_buffer));
+                        let docker_compose_buffer = add_service_to_docker_compose_with_validation(&mut service_manifest_data, app_root_path, &yaml_to_string(&docker_compose)?, stdout)?;
+                        results.insert("docker_compose".to_string(), ArtifactResult::String(docker_compose_buffer));
                     } else {
                         return Err(anyhow::anyhow!("Docker compose data is required to proceed."));
                     }
                 }
                 "runtime" => {
-                    let (package_json_buffer, pnpm_workspace_buffer) = add_service_to_runtime_files_with_validation(
-                        &mut service_manifest_data, 
-                        modules_path,
-                        stdout)?;
-                    let items = [package_json_buffer, pnpm_workspace_buffer].into_iter().flatten().map(ArtifactResult::from);
-                    results.extend(items);
+                    let runtime = manifest_data.runtime.parse()?;
+                    match runtime {
+                        Runtime::Bun => {
+                            if let Some(package_json) = package_json {
+                                add_project_definition_to_package_json_mut(
+                                    package_json,
+                                    &package_name,)?;
+                                let new_package_json_projects: HashSet<String> = package_json.workspaces
+                                    .as_ref()
+                                    .unwrap_or(&Vec::new())
+                                    .iter()
+                                    .filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str()))
+                                    .cloned()
+                                    .collect();
+                                let validation_result = validate_addition_to_artifact(
+                                    &package_name,
+                                    &new_package_json_projects,
+                                    &format!("Successfully added {} to package.json", package_name),
+                                    &format!("Service {} was not added to package.json", package_name),
+                                    "sync:utils:93",
+                                    stdout,
+                                )?;
+                                if !validation_result {
+                                    return Err(anyhow::anyhow!("Failed to add {} to package.json", package_name));
+                                }
+                                let application_package_json_buffer = json_to_string_pretty(&package_json)?;
+                                results.insert("package_json".to_string(), ArtifactResult::String(application_package_json_buffer));
+                            } else {
+                                return Err(anyhow::anyhow!("Package.json data is required for Bun runtime."));
+                            }
+                        }
+                        Runtime::Node => {
+                            if let Some(pnpm_workspace) = pnpm_workspace {
+                                add_project_definition_to_pnpm_workspace_mut(
+                                    pnpm_workspace, &package_name)?;
+                                let new_pnpm_workspace_projects: HashSet<String> = pnpm_workspace.packages
+                                    .iter()
+                                    .filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str()))
+                                    .cloned()
+                                    .collect();
+                                let validation_result = validate_addition_to_artifact(
+                                    &package_name,
+                                    &new_pnpm_workspace_projects,
+                                    &format!("Successfully added {} to pnpm-workspace.yaml", package_name),
+                                    &format!("Service {} was not added to pnpm-workspace.yaml", package_name),
+                                    "sync:utils:111",
+                                    stdout,
+                                )?;
+                                if !validation_result {
+                                    return Err(anyhow::anyhow!("Failed to add {} to pnpm-workspace.yaml", package_name));
+                                }
+                                let application_pnpm_workspace_buffer = yaml_to_string(&pnpm_workspace)?;
+                                results.insert("pnpm_workspace".to_string(), ArtifactResult::String(application_pnpm_workspace_buffer));
+                            } else {
+                                return Err(anyhow::anyhow!("Pnpm workspace data is required for Node runtime."));
+                            }
+                        }
+                    }
+                }
+                "universal-sdk" => {
+                    if let (Some(program_text), Some(sdk_json)) = (usdk_ast_program_text, usdk_json) {
+                        let mut sdk_project_json = json_from_str::<ProjectPackageJson>(&sdk_json)?;
+                        let (sdk_ast_program_text, sdk_project_json) = add_project_vec_to_universal_sdk(
+                            &manifest_data.app_name,
+                            &vec![package_name.to_string()],
+                            &program_text,
+                            &mut sdk_project_json,
+                        )?;
+                        results.insert("sdk_ast_program_text".to_string(), ArtifactResult::String(sdk_ast_program_text));
+                        results.insert("sdk_project_json".to_string(), ArtifactResult::String(json_to_string_pretty(&sdk_project_json)?));
+                    } else {
+                        return Err(anyhow::anyhow!("Program text and SDK JSON data are required for universal-sdk artifact type."));
+                    }
                 }
                 _ => {
                     return Err(anyhow::anyhow!("Invalid artifact type"));
@@ -95,15 +170,67 @@ pub(crate) fn add_package_to_artifact(
             match artifact_type {
                 "manifest" => {
                     let forklaunch_manifest_buffer = add_library_to_manifest_with_validation(&mut library_manifest_data, stdout)?;
-                    results.push(ArtifactResult::from(forklaunch_manifest_buffer));
+                    results.insert("manifest".to_string(), ArtifactResult::String(forklaunch_manifest_buffer));
                 }
                 "runtime" => {
-                    let (package_json_buffer, pnpm_workspace_buffer) = add_library_to_runtime_files_with_validation(
-                        &mut library_manifest_data, 
-                        modules_path, 
-                        stdout)?;
-                    let items = [package_json_buffer, pnpm_workspace_buffer].into_iter().flatten().map(ArtifactResult::from);
-                    results.extend(items);
+                    let runtime = manifest_data.runtime.parse()?;
+                    match runtime {
+                        Runtime::Bun => {
+                            if let Some(package_json) = package_json {
+                                add_project_definition_to_package_json_mut(
+                                    package_json,
+                                    &package_name,)?;
+                                let new_package_json_projects: HashSet<String> = package_json.workspaces
+                                    .as_ref()
+                                    .unwrap_or(&Vec::new())
+                                    .iter()
+                                    .filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str()))
+                                    .cloned()
+                                    .collect();
+                                let validation_result = validate_addition_to_artifact(
+                                    &package_name,
+                                    &new_package_json_projects,
+                                    &format!("Successfully added {} to package.json", package_name),
+                                    &format!("Library {} was not added to package.json", package_name),
+                                    "sync:library:95",
+                                    stdout,
+                                )?;
+                                if !validation_result {
+                                    return Err(anyhow::anyhow!("Failed to add {} to package.json", package_name));
+                                }
+                                let application_package_json_buffer = json_to_string_pretty(&package_json)?;
+                                results.insert("package_json".to_string(), ArtifactResult::String(application_package_json_buffer));
+                            } else {
+                                return Err(anyhow::anyhow!("Package.json data is required for Bun runtime."));
+                            }
+                        }
+                        Runtime::Node => {
+                            if let Some(pnpm_workspace) = pnpm_workspace {
+                                add_project_definition_to_pnpm_workspace_mut(
+                                    pnpm_workspace, &package_name)?;
+                                let new_pnpm_workspace_projects: HashSet<String> = pnpm_workspace.packages
+                                    .iter()
+                                    .filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str()))
+                                    .map(|project| project.to_string().to_owned())
+                                    .collect();
+                                let validation_result = validate_addition_to_artifact(
+                                    &package_name,
+                                    &new_pnpm_workspace_projects,
+                                    &format!("Successfully added {} to pnpm-workspace.yaml", package_name),
+                                    &format!("Library {} was not added to pnpm-workspace.yaml", package_name),
+                                    "sync:library:95",
+                                    stdout,
+                                )?;
+                                if !validation_result {
+                                    return Err(anyhow::anyhow!("Failed to add {} to pnpm-workspace.yaml", package_name));
+                                }
+                                let application_pnpm_workspace_buffer = yaml_to_string(&pnpm_workspace)?;
+                                results.insert("pnpm_workspace".to_string(), ArtifactResult::String(application_pnpm_workspace_buffer));
+                            } else {
+                                return Err(anyhow::anyhow!("Pnpm workspace data is required for Node runtime."));
+                            }
+                        }
+                    }
                 }
                 _ => {
                     return Err(anyhow::anyhow!("Invalid artifact type"));
@@ -119,23 +246,74 @@ pub(crate) fn add_package_to_artifact(
             match artifact_type {
                 "manifest" => {
                     let forklaunch_manifest_buffer = add_module_to_manifest_with_validation(&mut module_manifest_data, stdout)?;
-                    results.push(ArtifactResult::from(forklaunch_manifest_buffer));
+                    results.insert("manifest".to_string(), ArtifactResult::String(forklaunch_manifest_buffer));
                 }
                 "docker_compose" => {
                     if let Some(docker_compose) = docker_compose {
-                        let docker_compose_buffer = add_module_to_docker_compose_with_validation(&mut module_manifest_data, app_root_path, &docker_compose, stdout)?;
-                        results.push(ArtifactResult::from(docker_compose_buffer));
+                        let docker_compose_buffer = add_module_to_docker_compose_with_validation(&mut module_manifest_data, app_root_path, &yaml_to_string(&docker_compose)?, stdout)?;
+                        results.insert("docker_compose".to_string(), ArtifactResult::String(docker_compose_buffer));
                     } else {
                         return Err(anyhow::anyhow!("Docker compose data is required to proceed."));
                     }
                 }
                 "runtime" => {
-                    let (package_json_buffer, pnpm_workspace_buffer) = add_module_to_runtime_files_with_validation(
-                        &mut module_manifest_data, 
-                        modules_path, 
-                        stdout)?;
-                    let items = [package_json_buffer, pnpm_workspace_buffer].into_iter().flatten().map(ArtifactResult::from);
-                    results.extend(items);
+                    let runtime = manifest_data.runtime.parse()?;
+                    match runtime {
+                        Runtime::Bun => {
+                            if let Some(package_json) = package_json {
+                                add_project_definition_to_package_json_mut(
+                                    package_json,
+                                    &package_name,)?;
+                                let new_package_json_projects: HashSet<String> = package_json.workspaces
+                                    .iter()
+                                    .flatten()
+                                    .filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str()))
+                                    .cloned()
+                                    .collect();
+                                let validation_result = validate_addition_to_artifact(
+                                    &package_name,
+                                    &new_package_json_projects,
+                                    &format!("Successfully added {} to package.json", package_name),
+                                    &format!("Module {} was not added to package.json", package_name),
+                                    "sync:module:95",
+                                    stdout,
+                                )?;
+                                if !validation_result {
+                                    return Err(anyhow::anyhow!("Failed to add {} to package.json", package_name));
+                                }
+                                let application_package_json_buffer = json_to_string_pretty(&package_json)?;
+                                results.insert("package_json".to_string(), ArtifactResult::String(application_package_json_buffer));
+                            } else {
+                                return Err(anyhow::anyhow!("Package.json data is required for Bun runtime."));
+                            }
+                        }
+                        Runtime::Node => {
+                            if let Some(pnpm_workspace) = pnpm_workspace {
+                                add_project_definition_to_pnpm_workspace_mut(
+                                    pnpm_workspace, &package_name)?;
+                                let new_pnpm_workspace_projects: HashSet<String> = pnpm_workspace.packages
+                                    .iter()
+                                    .filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str()))
+                                    .map(|project| project.as_str().to_owned())
+                                    .collect();
+                                let validation_result = validate_addition_to_artifact(
+                                    &package_name,
+                                    &new_pnpm_workspace_projects,
+                                    &format!("Successfully added {} to pnpm-workspace.yaml", package_name),
+                                    &format!("Module {} was not added to pnpm-workspace.yaml", package_name),
+                                    "sync:module:95",
+                                    stdout,
+                                )?;
+                                if !validation_result {
+                                    return Err(anyhow::anyhow!("Failed to add {} to pnpm-workspace.yaml", package_name));
+                                }
+                                let application_pnpm_workspace_buffer = yaml_to_string(&pnpm_workspace)?;
+                                results.insert("pnpm_workspace".to_string(), ArtifactResult::String(application_pnpm_workspace_buffer));
+                            } else {
+                                return Err(anyhow::anyhow!("Pnpm workspace data is required for Node runtime."));
+                            }
+                        }
+                    }
                 }
                 _ => {
                     return Err(anyhow::anyhow!("Invalid artifact type"));
@@ -153,30 +331,30 @@ pub(crate) fn add_package_to_artifact(
             match artifact_type {
                 "manifest" => {
                     let (project_type, forklaunch_manifest_buffer) = add_router_to_manifest_with_validation(&mut router_manifest_data, &service_name, modules_path, app_root_path, stdout)?;
-                    results.push(ArtifactResult::from(forklaunch_manifest_buffer));
-                    results.push(ArtifactResult::from(project_type));
+                    results.insert("manifest".to_string(), ArtifactResult::String(forklaunch_manifest_buffer));
+                    results.insert("project_type".to_string(), ArtifactResult::ProjectType(project_type));
                 }
                 "server" => {
                     let server_buffer = add_router_server_with_validation(&mut router_manifest_data, modules_path)?;
-                    results.push(ArtifactResult::from(server_buffer));
+                    results.insert("server".to_string(), ArtifactResult::String(server_buffer));
                 }
                 "sdk" => {
                     let sdk_buffer = add_router_sdk_with_validation(&mut router_manifest_data, modules_path)?;
-                    results.push(ArtifactResult::from(sdk_buffer));
+                    results.insert("sdk".to_string(), ArtifactResult::String(sdk_buffer));
                 }
                 "registrations" => {
                     let registrations_buffer = add_router_registrations_with_validation(&mut router_manifest_data, project_type, modules_path)?;
-                    results.push(ArtifactResult::from(registrations_buffer));
+                    results.insert("registrations".to_string(), ArtifactResult::String(registrations_buffer));
                 }
                 "persistence" => {
                     let (entities_index_ts, seeders_index_ts, seed_data_ts) = add_router_persistence_with_validation(&mut router_manifest_data, project_type, modules_path)?;
-                    results.push(ArtifactResult::from(entities_index_ts));
-                    results.push(ArtifactResult::from(seeders_index_ts));
-                    results.push(ArtifactResult::from(seed_data_ts));
+                    results.insert("entities_index_ts".to_string(), ArtifactResult::String(entities_index_ts));
+                    results.insert("seeders_index_ts".to_string(), ArtifactResult::String(seeders_index_ts));
+                    results.insert("seed_data_ts".to_string(), ArtifactResult::String(seed_data_ts));
                 }
                 "controllers" => {
                     let controllers_buffer = add_router_controllers_with_validation(&mut router_manifest_data, modules_path)?;
-                    results.push(ArtifactResult::from(controllers_buffer));
+                    results.insert("controllers".to_string(), ArtifactResult::String(controllers_buffer));
                 }
                 _ => {
                     return Err(anyhow::anyhow!("Invalid artifact type"));
@@ -192,23 +370,75 @@ pub(crate) fn add_package_to_artifact(
             match artifact_type {
                 "manifest" => {
                     let forklaunch_manifest_buffer = add_worker_to_manifest_with_validation(&mut worker_manifest_data, stdout)?;
-                    results.push(ArtifactResult::from(forklaunch_manifest_buffer));
+                    results.insert("manifest".to_string(), ArtifactResult::String(forklaunch_manifest_buffer));
                 }
                 "docker_compose" => {
                     if let Some(docker_compose) = docker_compose {
-                        let docker_compose_buffer = add_worker_to_docker_compose_with_validation(&mut worker_manifest_data, app_root_path, &docker_compose, stdout)?;
-                        results.push(ArtifactResult::from(docker_compose_buffer));
+                        let docker_compose_buffer = add_worker_to_docker_compose_with_validation(&mut worker_manifest_data, app_root_path, &yaml_to_string(&docker_compose)?, stdout)?;
+                        results.insert("docker_compose".to_string(), ArtifactResult::String(docker_compose_buffer));
                     } else {
                         return Err(anyhow::anyhow!("Docker compose data is required to proceed."));
                     }
                 }
                 "runtime" => {
-                    let (package_json_buffer, pnpm_workspace_buffer) = add_worker_to_runtime_files_with_validation(
-                        &mut worker_manifest_data, 
-                        modules_path, 
-                        stdout)?;
-                    let items = [package_json_buffer, pnpm_workspace_buffer].into_iter().flatten().map(ArtifactResult::from);
-                    results.extend(items);
+                    let runtime = manifest_data.runtime.parse()?;
+                    match runtime {
+                        Runtime::Bun => {
+                            if let Some(package_json) = package_json {
+                                add_project_definition_to_package_json_mut(
+                                    package_json,
+                                    &package_name,)?;
+                                let new_package_json_projects: HashSet<String> = package_json.workspaces
+                                    .as_ref()
+                                    .unwrap_or(&Vec::new())
+                                    .iter()
+                                    .filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str()))
+                                    .cloned()
+                                    .collect();
+                                let validation_result = validate_addition_to_artifact(
+                                    &package_name,
+                                    &new_package_json_projects,
+                                    &format!("Successfully added {} to package.json", package_name),
+                                    &format!("Worker {} was not added to package.json", package_name),
+                                    "sync:worker:95",
+                                    stdout,
+                                )?;
+                                if !validation_result {
+                                    return Err(anyhow::anyhow!("Failed to add {} to package.json", package_name));
+                                }
+                                let application_package_json_buffer = json_to_string_pretty(&package_json)?;
+                                results.insert("package_json".to_string(), ArtifactResult::String(application_package_json_buffer));
+                            } else {
+                                return Err(anyhow::anyhow!("Package.json data is required for Bun runtime."));
+                            }
+                        }
+                        Runtime::Node => {
+                            if let Some(pnpm_workspace) = pnpm_workspace {
+                                add_project_definition_to_pnpm_workspace_mut(
+                                    pnpm_workspace, &package_name)?;
+                                let new_pnpm_workspace_projects: HashSet<String> = pnpm_workspace.packages
+                                    .iter()
+                                    .filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str()))
+                                    .map(|project| project.as_str().to_owned())
+                                    .collect();
+                                let validation_result = validate_addition_to_artifact(
+                                    &package_name,
+                                    &new_pnpm_workspace_projects,
+                                    &format!("Successfully added {} to pnpm-workspace.yaml", package_name),
+                                    &format!("Worker {} was not added to pnpm-workspace.yaml", package_name),
+                                    "sync:worker:95",
+                                    stdout,
+                                )?;
+                                if !validation_result {
+                                    return Err(anyhow::anyhow!("Failed to add {} to pnpm-workspace.yaml", package_name));
+                                }
+                                let application_pnpm_workspace_buffer = yaml_to_string(&pnpm_workspace)?;
+                                results.insert("pnpm_workspace".to_string(), ArtifactResult::String(application_pnpm_workspace_buffer));
+                            } else {
+                                return Err(anyhow::anyhow!("Pnpm workspace data is required for Node runtime."));
+                            }
+                        }
+                    }
                 }
                 _ => {
                     return Err(anyhow::anyhow!("Invalid artifact type"));
@@ -217,6 +447,142 @@ pub(crate) fn add_package_to_artifact(
         }
     }
     
+    Ok(results)
+}
+
+pub(crate) fn remove_package_from_artifact(
+    packages_to_remove: &Vec<String>,
+    manifest_data: &mut ApplicationManifestData,
+    docker_compose: Option<&mut DockerCompose>,
+    package_json: Option<&mut ApplicationPackageJson>,
+    pnpm_workspace: Option<&mut PnpmWorkspace>,
+    universal_sdk_program_text: Option<&mut String>,
+    universal_sdk_json: Option<&mut String>,
+    app_root_path: &Path,
+    modules_path: &Path,
+    artifact_type: &str,
+    stdout: &mut StandardStream,
+) -> Result<HashMap<String, ArtifactResult>> {
+    let mut results = HashMap::new();
+    match artifact_type {
+        "manifest" => {
+            for project_name in packages_to_remove {
+                remove_project_definition_from_manifest(manifest_data, &project_name)?;
+            }
+            let new_manifest_projects: HashSet<String> = manifest_data.projects
+                .iter()
+                .map(|project| project.name.clone())
+                .filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str()))
+                .collect();
+            let validation_result = validate_removal_from_artifact(
+                &new_manifest_projects,
+                &packages_to_remove.into_iter().cloned().collect(),
+                &format!("Successfully removed {} project(s) from manifest.toml", packages_to_remove.len()),
+                &format!("Some projects were not removed from manifest.toml"),
+                "sync:utils:404",
+                stdout,
+            )?;
+            if !validation_result {
+                return Err(anyhow::anyhow!("Failed to remove {} project(s) from manifest.toml", packages_to_remove.len()));
+            }
+            results.insert("manifest".to_string(), ArtifactResult::Manifest(manifest_data.clone()));
+        }
+        "docker_compose" => {
+            if let Some(docker_compose) = docker_compose {
+                for project_name in packages_to_remove {
+                    remove_service_from_docker_compose(docker_compose, &project_name)?;
+                    remove_worker_from_docker_compose(docker_compose, &project_name)?;
+                }
+                let new_docker_services: HashSet<String> = docker_compose.services
+                    .keys()
+                    .filter(|service| !DOCKER_SERVICES_TO_IGNORE.contains(&service.as_str()))
+                    .cloned()
+                    .collect();
+                let validation_result = validate_removal_from_artifact(
+                    &new_docker_services,
+                    &packages_to_remove.into_iter().cloned().collect(),
+                    &format!("Successfully removed {} project(s) from docker-compose.yml", packages_to_remove.len()),
+                    &format!("Some projects were not removed from docker-compose.yml"),
+                    "sync:utils:421",
+                    stdout,
+                )?;
+                if !validation_result {
+                    return Err(anyhow::anyhow!("Failed to remove {} project(s) from docker-compose.yml", packages_to_remove.len()));
+                }
+                results.insert("docker_compose".to_string(), ArtifactResult::DockerCompose(docker_compose.clone()));
+            } else {
+                return Err(anyhow::anyhow!("Docker compose data is required to proceed."));
+            }
+        }
+        "runtime" => {
+            match manifest_data.runtime.parse()? {
+                Runtime::Node => {
+                    if let Some(pnpm_workspace) = pnpm_workspace {
+                        for project_name in packages_to_remove {
+                            remove_project_definition_from_pnpm_workspace(pnpm_workspace, &project_name)?;
+                        }
+                        let new_pnpm_workspace_projects: HashSet<String> = pnpm_workspace.packages
+                            .iter()
+                            .filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str()))
+                            .cloned()
+                            .collect();
+                        let validation_result = validate_removal_from_artifact(
+                            &new_pnpm_workspace_projects,
+                            &packages_to_remove.into_iter().cloned().collect(),
+                            &format!("Successfully removed {} project(s) from pnpm-workspace.yaml", packages_to_remove.len()),
+                            &format!("Some projects were not removed from pnpm-workspace.yaml"),
+                            "sync:utils:440",
+                            stdout,
+                        )?;
+                        if !validation_result {
+                            return Err(anyhow::anyhow!("Failed to remove {} project(s) from pnpm-workspace.yaml", packages_to_remove.len()));
+                        }
+                        results.insert("pnpm_workspace".to_string(), ArtifactResult::PnpmWorkspace(pnpm_workspace.clone()));
+                    }
+                }
+                Runtime::Bun => {
+                    if let Some(package_json) = package_json {
+                        for project_name in packages_to_remove {
+                            remove_project_definition_from_package_json(package_json, &project_name)?;
+                        }
+                        let new_package_json_projects: HashSet<String> = package_json.workspaces
+                            .as_ref()
+                            .unwrap_or(&Vec::new())
+                            .iter()
+                            .filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str()))
+                            .cloned()
+                            .collect();
+                        let validation_result = validate_removal_from_artifact(
+                            &new_package_json_projects,
+                            &packages_to_remove.into_iter().cloned().collect(),
+                            &format!("Successfully removed {} project(s) from package.json", packages_to_remove.len()),
+                            &format!("Some projects were not removed from package.json"),
+                            "sync:utils:445",
+                            stdout,
+                        )?;
+                        if !validation_result {
+                            return Err(anyhow::anyhow!("Failed to remove {} project(s) from package.json", packages_to_remove.len()));
+                        }
+                        results.insert("package_json".to_string(), ArtifactResult::PackageJson(package_json.clone()));
+                    }
+                }
+            }
+        }
+        "universal-sdk" => {
+            let (mut universal_sdk_program_text, mut universal_sdk_project_json) = read_universal_sdk_content(&modules_path)?;
+            (universal_sdk_program_text, universal_sdk_project_json) = remove_project_vec_from_universal_sdk(
+                &manifest_data.app_name,
+                &packages_to_remove,
+                &universal_sdk_program_text,
+                &mut universal_sdk_project_json,
+            )?;
+            results.insert("sdk_ast_program_text".to_string(), ArtifactResult::String(universal_sdk_program_text));
+            results.insert("sdk_project_json".to_string(), ArtifactResult::String(json_to_string_pretty(&universal_sdk_project_json)?));
+        }
+        _ => {
+            return Err(anyhow::anyhow!("Invalid artifact type"));
+        }
+    }
     Ok(results)
 }
 

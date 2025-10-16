@@ -412,9 +412,14 @@ impl CliCommand for SyncAllCommand {
                             matches,
                             None,
                             None,
+                            None,
+                            None,
+                            None,
+                            None,
+                            None,
                         )?;
-                        if let Some(ArtifactResult::String(s)) = artifacts.first() {
-                            new_manifest_data = toml_from_str::<ApplicationManifestData>(s).unwrap();
+                        if let Some(ArtifactResult::String(manifest_str)) = artifacts.get("manifest") {
+                            new_manifest_data = toml_from_str::<ApplicationManifestData>(manifest_str)?;
                         }
                         // project_type = artifacts[1].clone();
                         
@@ -444,7 +449,12 @@ impl CliCommand for SyncAllCommand {
                     },
                 );
             } else {
-                return Err(anyhow::anyhow!("Failed to sync manifest.toml"));
+                if !is_ci {
+                    return Err(anyhow::anyhow!("Failed to sync manifest.toml"));
+                }
+                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+                writeln!(stdout, "Skipping validation for manifest.toml due to CI mode")?;
+                stdout.reset()?;
             }
             
             // remove projects from docker-compose.yaml
@@ -480,14 +490,19 @@ impl CliCommand for SyncAllCommand {
                     writeln!(stdout, "Successfully removed {} service(s) from docker-compose.yaml", services_to_remove_docker.len())?;
                     stdout.reset()?;
                 } else {
-                    return Err(anyhow::anyhow!("Failed to remove {} service(s) from docker-compose.yaml", services_to_remove_docker.len()));
+                    if !is_ci {
+                        return Err(anyhow::anyhow!("Failed to remove {} service(s) from docker-compose.yaml", services_to_remove_docker.len()));
+                    }
+                    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+                    writeln!(stdout, "Skipping validation for docker-compose.yaml due to CI mode")?;
+                    stdout.reset()?;
                 }
             } else {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
                 writeln!(stdout, "No services to remove from docker-compose.yaml")?;
                 stdout.reset()?;
             }
-            let mut docker_compose_string = String::new();
+            // let mut docker_compose_string = String::new();
             if !services_to_add_docker.is_empty() && !is_ci {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
                 writeln!(stdout, "Found {} service(s) in directories that are not in docker-compose.yaml:", services_to_add_docker.len())?;
@@ -501,7 +516,7 @@ impl CliCommand for SyncAllCommand {
                     &mut stdout, 
                     "Do you want to add these services to docker-compose.yaml? (y/N) ")?;
                 if continue_sync {
-                    docker_compose_string = yaml_to_string(&docker_compose)?;
+                    // docker_compose_string = yaml_to_string(&docker_compose)?;
                     for dir_name in &services_to_add_docker {
                         let package_type: InitializeType = prompt_initialize_category(
                             &mut line_editor, 
@@ -520,11 +535,16 @@ impl CliCommand for SyncAllCommand {
                                 &package_type,
                                 &mut stdout,
                                 matches,
-                                Some(docker_compose_string.clone()),
+                                Some(&mut docker_compose),
+                                None,
+                                None,
+                                None,
+                                None,
+                                None,
                                 None,
                             )?;
-                            if let Some(ArtifactResult::String(s)) = artifacts.first() {
-                                docker_compose_string = s.clone();
+                            if let Some(ArtifactResult::String(s)) = artifacts.get("docker_compose") {
+                                docker_compose = yaml_from_str(&s)?;
                             }
                         }
                     }
@@ -534,12 +554,12 @@ impl CliCommand for SyncAllCommand {
                 writeln!(stdout, "No services to add to docker-compose.yaml")?;
                 stdout.reset()?;
             }
-            if docker_compose_string.is_empty() {
-                println!("sync:535 docker_compose_string is empty");
-                docker_compose_string = yaml_to_string(&docker_compose)?;
-            }
-            let docker_compose_data: DockerCompose = yaml_from_str(&docker_compose_string)?;
-            let (new_docker_services_to_remove, new_docker_services_to_add) = check_docker_compose(&docker_compose_data, &dir_project_names)?;
+            // if docker_compose_string.is_empty() {
+            //     println!("sync:535 docker_compose_string is empty");
+            //     docker_compose_string = yaml_to_string(&docker_compose)?;
+            // }
+            // let docker_compose_data: DockerCompose = yaml_from_str(&docker_compose_string)?;
+            let (new_docker_services_to_remove, new_docker_services_to_add) = check_docker_compose(&docker_compose, &dir_project_names)?;
             if new_docker_services_to_remove.is_empty() && new_docker_services_to_add.is_empty() {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
                 writeln!(stdout, "Successfully synced docker-compose.yaml")?;
@@ -553,7 +573,7 @@ impl CliCommand for SyncAllCommand {
             rendered_templates.push(
                 RenderedTemplate {
                     path: docker_compose_path,
-                    content: docker_compose_string,
+                    content: yaml_to_string(&docker_compose)?,
                     context: Some(ERROR_FAILED_TO_WRITE_DOCKER_COMPOSE.to_string()),
                 },
             );
@@ -591,7 +611,7 @@ impl CliCommand for SyncAllCommand {
             println!("sync:449 runtime_projects_to_add: {:?}", runtime_projects_to_add);
             // remove projects from pnpm-workspace.yaml and package.json
             let mut pnpm_workspace_buffer: Option<String> = None;
-            let mut application_package_json_buffer: Option<String> = None;
+            let mut application_package_json_buffer: Option<String> = Some(yaml_to_string(&package_json)?);
             match manifest_data.runtime.parse::<Runtime>()? {
                 Runtime::Node => {
                     if !runtime_projects_to_remove.is_empty() {
@@ -612,10 +632,10 @@ impl CliCommand for SyncAllCommand {
                             if let Some(ref mut pnpm_workspace) = pnpm_workspace {
                                 for package in &runtime_projects_to_remove {
                                     println!("sync:470 package: {:?}", package);
-                                    *pnpm_workspace = remove_project_definition_from_pnpm_workspace(
-                                            pnpm_workspace,
-                                            &package,
-                                        )?;
+                                    remove_project_definition_from_pnpm_workspace(
+                                        pnpm_workspace,
+                                        &package,
+                                    )?;
                                     println!("sync:475 content: {:?}", pnpm_workspace);
                                 }
                                 println!("sync:477 content: {:?}", pnpm_workspace);
@@ -662,7 +682,7 @@ impl CliCommand for SyncAllCommand {
                                 // check if package type is router, if not router use add_project_definition_to_pnpm_workspace
                                 if package_type != InitializeType::Router {
                                     if let Some(ref mut pnpm_workspace) = pnpm_workspace {
-                                        *pnpm_workspace = add_project_definition_to_pnpm_workspace_mut(
+                                        add_project_definition_to_pnpm_workspace_mut(
                                                 pnpm_workspace,
                                                 &dir_name,
                                             )?;
@@ -690,7 +710,6 @@ impl CliCommand for SyncAllCommand {
                         stdout.reset()?;
                     }
                     pnpm_workspace_buffer = Some(yaml_to_string(&pnpm_workspace)?);
-                    application_package_json_buffer = Some(json_to_string_pretty(&package_json)?);
                 }
                 Runtime::Bun => {
                     println!("sync:533 package_json: {:?}", package_json);
@@ -709,7 +728,7 @@ impl CliCommand for SyncAllCommand {
                         if continue_sync {
                             for package in &runtime_projects_to_remove {
                                 println!("sync:536 package: {:?}", package);
-                                package_json = remove_project_definition_from_package_json(
+                                remove_project_definition_from_package_json(
                                     &mut package_json,
                                     &package,
                                 )?;
@@ -756,7 +775,7 @@ impl CliCommand for SyncAllCommand {
                                     &dir_name,
                                 )?.parse()?;
                                 if package_type != InitializeType::Router {
-                                    package_json = add_project_definition_to_package_json_mut(
+                                    add_project_definition_to_package_json_mut(
                                         &mut package_json,
                                         &dir_name,
                                     )?;
