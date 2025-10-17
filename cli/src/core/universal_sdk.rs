@@ -6,7 +6,7 @@ use serde_json::from_str;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::SourceType;
 use oxc_codegen::{Codegen, CodegenOptions};
-use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
+use termcolor::StandardStream;
 
 
 use crate::{

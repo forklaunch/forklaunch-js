@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, io::Write};
 use anyhow::Result;
 use convert_case::{Case, Casing};
 use termcolor::{Color, ColorSpec, StandardStream, WriteColor};

@@ -3,9 +3,9 @@ use std::{path::Path, collections::HashSet,};
 use anyhow::{Result, Context};
 use clap::{ArgMatches};
 use rustyline::{Editor, history::DefaultHistory};
-use serde_json::{from_str as json_from_str, to_string_pretty as json_to_string_pretty};
-use serde_yml::{from_str as yaml_from_str, to_string as yaml_to_string};
-use toml::{from_str as toml_from_str, to_string_pretty as toml_to_string_pretty};
+use serde_json::{from_str as json_from_str};
+use serde_yml::{from_str as yaml_from_str};
+use toml::{from_str as toml_from_str};
 use termcolor::{StandardStream};
 use convert_case::{Case, Casing};
 

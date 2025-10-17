@@ -15,20 +15,17 @@ use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
 
 
 use crate::{
-    constants::{Database, Infrastructure, Runtime, InitializeType,
+    constants::{Database, Infrastructure, Runtime,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE,
-        ERROR_FAILED_TO_READ_MANIFEST, 
-        ERROR_FAILED_TO_PARSE_MANIFEST,
-        ERROR_FAILED_TO_WRITE_MANIFEST,
+
     },
     core::{
-        base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
-        database::{get_database_port, get_db_driver},
+        database::{get_database_port, get_db_driver, is_in_memory_database},
         docker::{add_service_definition_to_docker_compose, DockerCompose},
         manifest::{
-            ProjectType, ManifestData,
+            ProjectType,
             application::ApplicationManifestData, 
             service::ServiceManifestData,
             add_project_definition_to_manifest,
@@ -46,7 +43,6 @@ use crate::{
             PnpmWorkspace,
         },
     },
-    init::service::generate_service_package_json,
     prompt::{ArrayCompleter, prompt_with_validation, prompt_without_validation, prompt_comma_separated_list},
     sync::{constants::{DIRS_TO_IGNORE, 
         DOCKER_SERVICES_TO_IGNORE, 

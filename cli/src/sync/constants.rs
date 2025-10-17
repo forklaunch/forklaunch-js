@@ -50,19 +50,3 @@ pub(crate) const RUNTIME_PROJECTS_TO_IGNORE: &[&str] = &[
     "universal-sdk",
 ];
 
-
-pub(crate) const ARTIFACTS: &[&str] = &[
-    "all",
-    "manifest",
-    "docker_compose",
-    "runtime",
-    "universal-sdk",
-];
-
-pub(crate) const ROUTER_ARTIFACTS: &[&str] = &[
-    "server",
-    "sdk",
-    "registrations",
-    "persistence",
-    "controllers",
-];

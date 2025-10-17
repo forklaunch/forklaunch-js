@@ -312,7 +312,7 @@ impl CliCommand for SyncAllCommand {
         if modules_path.exists() {
             let mut rendered_templates = vec![];
             // project names in directories
-            let dir_project_names = find_project_dir_names(&modules_path)?;
+            let dir_project_names = find_project_dir_names(&modules_path, &mut stdout)?;
             let dir_project_names_set: HashSet<String> = dir_project_names.iter().cloned().collect();
             
             // projects to remove and add from manifest.toml
@@ -812,7 +812,7 @@ impl CliCommand for SyncAllCommand {
                         &manifest_projects_to_remove,
                         &mut sdk_ast_program_text,
                         &mut sdk_project_json,
-                        stdout,
+                        &mut stdout,
                     )?;
                 }
             } else {

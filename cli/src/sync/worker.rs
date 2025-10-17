@@ -1,17 +1,15 @@
 use std::{
     path::Path, 
     collections::HashSet, 
-    io::Write,
-    fs::read_to_string,
 };
 
 use anyhow::{Context, Result};
-use clap::{ArgMatches, Arg};
+use clap::{ArgMatches};
 use rustyline::{Editor, history::DefaultHistory};
-use serde_json::{from_str as json_from_str, to_string_pretty as json_to_string_pretty};
-use serde_yml::{from_str as yaml_from_str, to_string as yaml_to_string};
-use toml::{from_str as toml_from_str, to_string_pretty as toml_to_string_pretty};
-use termcolor::{StandardStream, WriteColor, Color, ColorSpec};
+use serde_json::{from_str as json_from_str};
+use serde_yml::{from_str as yaml_from_str};
+use toml::{from_str as toml_from_str};
+use termcolor::{StandardStream};
 use convert_case::{Case, Casing};
 
 use crate::{
@@ -20,7 +18,6 @@ use crate::{
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE,
-        ERROR_FAILED_TO_READ_PACKAGE_JSON,
     },
     core::{
         database::{

@@ -455,9 +455,9 @@ pub(crate) fn remove_package_from_artifact(
     docker_compose: Option<&mut DockerCompose>,
     package_json: Option<&mut ApplicationPackageJson>,
     pnpm_workspace: Option<&mut PnpmWorkspace>,
-    universal_sdk_program_text: Option<&mut String>,
-    universal_sdk_json: Option<&mut String>,
-    app_root_path: &Path,
+    _universal_sdk_program_text: Option<&mut String>,
+    _universal_sdk_json: Option<&mut String>,
+    _app_root_path: &Path,
     modules_path: &Path,
     artifact_type: &str,
     stdout: &mut StandardStream,
@@ -568,16 +568,16 @@ pub(crate) fn remove_package_from_artifact(
             }
         }
         "universal-sdk" => {
-            let (mut universal_sdk_program_text, mut universal_sdk_project_json) = read_universal_sdk_content(&modules_path)?;
-            (universal_sdk_program_text, universal_sdk_project_json) = remove_project_vec_from_universal_sdk(
+            let (mut universal_sdk_program_text, mut universal_sdk_json) = read_universal_sdk_content(&modules_path)?;
+            (universal_sdk_program_text, universal_sdk_json) = remove_project_vec_from_universal_sdk(
                 &manifest_data.app_name,
                 &packages_to_remove,
                 &universal_sdk_program_text,
-                &mut universal_sdk_project_json,
+                &mut universal_sdk_json,
                 stdout,
             )?;
             results.insert("sdk_ast_program_text".to_string(), ArtifactResult::String(universal_sdk_program_text));
-            results.insert("sdk_project_json".to_string(), ArtifactResult::String(json_to_string_pretty(&universal_sdk_project_json)?));
+            results.insert("sdk_project_json".to_string(), ArtifactResult::String(json_to_string_pretty(&universal_sdk_json)?));
         }
         _ => {
             return Err(anyhow::anyhow!("Invalid artifact type"));
