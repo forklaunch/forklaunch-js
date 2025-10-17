@@ -3,12 +3,10 @@ use anyhow::Result;
 use convert_case::{Case, Casing};
 use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
 
-// use oxc_allocator::Allocator;
 use oxc_ast_visit::{Visit, walk::{walk_statement, walk_program}};
 use oxc_ast::ast::{Statement, Expression, TSType, Declaration, TSSignature, BindingPatternKind, ObjectPropertyKind, Argument, Program};
 
 use crate::core::{
-    // ast::parse_ast_program::parse_ast_program,
     package_json::project_package_json::ProjectPackageJson,
 };
 
