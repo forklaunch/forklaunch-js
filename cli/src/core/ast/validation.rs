@@ -222,7 +222,9 @@ pub(crate) fn validate_remove_from_universal_sdk(
 
     let universal_sdk_project_json = project_json;
 
-    let current_deps = &universal_sdk_project_json.dev_dependencies.as_ref().unwrap().additional_deps;
+    let current_deps = &universal_sdk_project_json.dev_dependencies
+        .as_ref()
+        .map(|d| &d.additional_deps)
     println!("universal_sdk:299 current_deps: {:?}", current_deps);
 
     for project in projects_to_remove {

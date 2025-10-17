@@ -6,13 +6,13 @@ use std::{
 };
 
 use anyhow::{Context, Result};
-use clap::{ArgMatches};
+use clap::{Arg, ArgMatches, ArgAction, Command};
 use rustyline::{Editor, history::DefaultHistory};
 use convert_case::{Case, Casing};
 use serde_json::{from_str as json_from_str, to_string_pretty as json_to_string_pretty};
 use serde_yml::{from_str as yaml_from_str, to_string as yaml_to_string};
 use toml::{from_str as toml_from_str, to_string_pretty as toml_to_string_pretty};
-use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
+use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 
 use crate::{
@@ -430,7 +430,11 @@ fn is_service_in_docker_compose(
     docker_compose: &DockerCompose,
     service_name: &str,
 ) -> Result<bool> {
-    let docker_services: HashSet<String> = docker_compose.services.keys().cloned().collect();
+    let docker_services: HashSet<String> = docker_compose.services
+        .keys()
+        .cloned()
+        .filter(|service| !DOCKER_SERVICES_TO_IGNORE.contains(&service.as_str()))
+        .collect();
     if docker_services.contains(service_name) {
         return Ok(true)
     }
@@ -445,7 +449,10 @@ fn is_service_in_runtime_files(
 ) -> Result<bool> {
     match runtime {
         Runtime::Bun => {
-            let package_json_projects: HashSet<String> = package_json.workspaces.unwrap_or_default().iter().collect();
+            let package_json_projects: HashSet<String> = package_json.workspaces
+                .unwrap_or_default()
+                .iter()
+                .collect();
             if package_json_projects.contains(service_name) {
                 return Ok(true)
             }
@@ -571,7 +578,7 @@ impl CliCommand for ServiceCommand {
                 Arg::new("database")
                     .short('d')
                     .long("database")
-                    .help("The database to use"),
+                    .help("The database to use")
                     .value_parser(Database::VARIANTS),
             )
             .arg(
@@ -603,7 +610,7 @@ impl CliCommand for ServiceCommand {
         let service_name = matches.get_one::<String>("name").unwrap();
         
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
-        let existing_manifest_data = from_str::<ApplicationManifestData>(
+        let existing_manifest_data = toml_from_str::<ApplicationManifestData>(
             &read_to_string(&manifest_path).with_context(|| ERROR_FAILED_TO_READ_MANIFEST)?,
         )
         .with_context(|| ERROR_FAILED_TO_PARSE_MANIFEST)?;
@@ -742,11 +749,11 @@ impl CliCommand for ServiceCommand {
                         Some(&runtime),
                         Some(&pnpm_workspace),
                         Some(&application_package_json),
-                        Some(&program_text),
-                        Some(&sdk_json),
+                        Some(&usdk_ast_program_text),
+                        Some(&usdk_json),
                         None,
                     )?;
-                    for _artifact_name, result in results {
+                    for (_artifact_name, result) in results {
                         match artifact {
                             "manifest" => {
                                 let new_manifest_data = result["manifest"].to_string();
@@ -812,7 +819,7 @@ impl CliCommand for ServiceCommand {
                         &modules_path,
                         &artifact,
                     )?;
-                    for _artifact_name, result in results {
+                    for (_artifact_name, result) in results {
                         match artifact {
                             "manifest" => {
                                 rendered_templates.push(RenderedTemplate {
