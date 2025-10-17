@@ -74,7 +74,7 @@ pub(crate) fn remove_project_definition_to_pnpm_workspace(
     {
         pnpm_workspace.packages.remove(position);
     }
-    println!("pnpm_workspace:77 pnpm_workspace: {:?}", pnpm_workspace);
+    
     Ok(to_string(&pnpm_workspace)
         .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?)
 }

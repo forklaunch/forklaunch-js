@@ -15,7 +15,6 @@ use termcolor::{StandardStream, WriteColor, Color, ColorSpec};
 use convert_case::{Case, Casing};
 
 use crate::{
-    // CliCommand,
     constants::{Database, WorkerType, Runtime,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE,
@@ -24,8 +23,6 @@ use crate::{
         ERROR_FAILED_TO_READ_PACKAGE_JSON,
     },
     core::{
-        // base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
-        // command::command,
         database::{
             get_db_driver, 
             get_database_port,
@@ -33,17 +30,14 @@ use crate::{
         },
         docker::{add_worker_definition_to_docker_compose, DockerCompose},
         manifest::{
-            // InitializableManifestConfig, 
-            // InitializableManifestConfigMetadata, 
             ProjectType, 
             application::ApplicationManifestData, 
             worker::WorkerManifestData,
-            add_project_definition_to_manifest,
             ResourceInventory, ProjectMetadata,
+            add_project_definition_to_manifest,
         },
         package_json::{
             application_package_json::ApplicationPackageJson,
-            project_package_json::ProjectPackageJson,
             add_project_definition_to_package_json,
         },
         pnpm_workspace::{

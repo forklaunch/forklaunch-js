@@ -10,7 +10,6 @@ use termcolor::{StandardStream};
 use convert_case::{Case, Casing};
 
 use crate::{
-    // CliCommand,
     constants::{
         Runtime, Module, Database,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON,
@@ -20,7 +19,6 @@ use crate::{
         get_service_module_description,
     },
     core::{
-        // base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
         database::{
             get_database_variants,
             get_database_port, get_db_driver, is_in_memory_database,
@@ -41,9 +39,7 @@ use crate::{
             add_project_definition_to_pnpm_workspace,
             PnpmWorkspace,
         },
-        template::{
-            get_routers_from_standard_package,
-        },
+        template::get_routers_from_standard_package,
     },
     prompt::{ArrayCompleter, prompt_with_validation},
     sync::{constants::{DIRS_TO_IGNORE, 

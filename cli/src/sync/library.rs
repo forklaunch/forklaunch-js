@@ -8,7 +8,6 @@ use termcolor::{StandardStream};
 use clap::ArgMatches;
 
 use crate::{
-    // CliCommand,
     constants::{
         Runtime,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,

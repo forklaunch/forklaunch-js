@@ -9,14 +9,12 @@ use anyhow::{Context, Result};
 use clap::{ArgMatches};
 use rustyline::{Editor, history::DefaultHistory};
 use convert_case::{Case, Casing};
-use serde_json::{from_str as json_from_str, to_string_pretty as json_to_string_pretty};
-use serde_yml::{from_str as yaml_from_str, to_string as yaml_to_string};
-use toml::{from_str as toml_from_str, to_string_pretty as toml_to_string_pretty};
+use serde_json::{from_str as json_from_str};
+use serde_yml::{from_str as yaml_from_str};
 use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
 
 
 use crate::{
-    CliCommand,
     constants::{Database, Infrastructure, Runtime, InitializeType,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON,
@@ -24,18 +22,10 @@ use crate::{
         ERROR_FAILED_TO_READ_MANIFEST, 
         ERROR_FAILED_TO_PARSE_MANIFEST,
         ERROR_FAILED_TO_WRITE_MANIFEST,
-        ERROR_FAILED_TO_READ_DOCKER_COMPOSE,
-        ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE,
-        ERROR_FAILED_TO_WRITE_DOCKER_COMPOSE,
-        ERROR_FAILED_TO_READ_PNPM_WORKSPACE,
-        ERROR_FAILED_TO_PARSE_PNPM_WORKSPACE,
-        ERROR_FAILED_TO_READ_PACKAGE_JSON,
-        ERROR_FAILED_TO_PARSE_PACKAGE_JSON,
     },
     core::{
         base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
-        command::command,
-        database::{get_database_port, get_db_driver, is_in_memory_database},
+        database::{get_database_port, get_db_driver},
         docker::{add_service_definition_to_docker_compose, DockerCompose},
         manifest::{
             ProjectType, ManifestData,
@@ -55,24 +45,16 @@ use crate::{
             add_project_definition_to_pnpm_workspace_mut,
             PnpmWorkspace,
         },
-        rendered_template::{RenderedTemplate, RenderedTemplatesCache, write_rendered_templates},
-        universal_sdk::{read_universal_sdk_content, add_project_vec_to_universal_sdk, remove_project_vec_from_universal_sdk},
     },
     init::service::generate_service_package_json,
     prompt::{ArrayCompleter, prompt_with_validation, prompt_without_validation, prompt_comma_separated_list},
     sync::{constants::{DIRS_TO_IGNORE, 
         DOCKER_SERVICES_TO_IGNORE, 
         RUNTIME_PROJECTS_TO_IGNORE,
-        ARTIFACTS,
     },
-        utils::{validate_addition_to_artifact, add_package_to_artifact, remove_package_from_artifact},
+    utils::{validate_addition_to_artifact},
     },
 };
-
-enum ArtifactModification {
-    Add,
-    Remove,
-}
 
 pub(crate) fn add_service_to_manifest_with_validation(
     manifest_data: &mut ServiceManifestData,
@@ -120,13 +102,11 @@ pub(crate) fn add_service_to_docker_compose_with_validation(
     docker_compose: &String,
     stdout: &mut StandardStream,
 ) -> Result<String> {
-    println!("sync:service:101 add_service_to_docker_compose_with_validation");
+    
 
     let docker_compose_buffer =
         add_service_definition_to_docker_compose(manifest_data, app_root_path, Some(docker_compose.clone()))
             .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?;
-    println!("sync:service:106 docker compose buffer: {:?}", docker_compose_buffer);
-    println!("sync:service:106 checking docker compose buffer");
     let temp: DockerCompose = yaml_from_str(&docker_compose_buffer)?;
     let new_docker_services: HashSet<String> = temp.services
         .keys()
@@ -167,7 +147,6 @@ pub(crate) fn add_service_to_runtime_files_with_validation(
             );
             let temp: ApplicationPackageJson = json_from_str(package_json_buffer.as_ref().unwrap()).unwrap();
             let new_package_json_projects: HashSet<String> = temp.workspaces.unwrap_or_default().iter().filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str())).cloned().collect();
-            println!("sync:service:153 new_package_json_projects: {:?}", new_package_json_projects);
             let validation_result = validate_addition_to_artifact(
                 &manifest_data.service_name,
                 &new_package_json_projects,
@@ -272,9 +251,6 @@ pub(crate) fn sync_service_setup(
     matches: &ArgMatches,
 ) -> Result<ServiceManifestData> {
     let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
-    println!("sync:service:195 sync_service_setup");
-    println!("sync:service:195 service_name: {:?}", service_name);
-    println!("sync:service:195 modules_path: {:?}", modules_path);
 
     let mut database_options = vec!["none"];
     database_options.extend_from_slice(&Database::VARIANTS);
@@ -320,9 +296,6 @@ pub(crate) fn sync_service_setup(
     }
     let service_package_json_data = read_to_string(&service_package_json_path)?;
     let service_package_json: ProjectPackageJson = json_from_str(&service_package_json_data)?;
-    println!("sync:service:237 service_package_json: {:?}", service_package_json);
-    
-    println!("sync:service:237 Try and get database from package.json");
     let database: Database = if database_input == "none" {
         // Try to detect database from package.json dependencies
         
@@ -345,7 +318,6 @@ pub(crate) fn sync_service_setup(
     } else {
         database_input.parse()?
     };
-    println!("sync:260 database: {:?}", database);
     let new_manifest_data: ServiceManifestData = ServiceManifestData {
         // Common fields from ApplicationManifestData
         id: manifest_data.id.clone(),

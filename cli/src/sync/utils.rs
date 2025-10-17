@@ -55,10 +55,9 @@ pub(crate) fn add_package_to_artifact(
     _project_type: Option<ProjectType>, //optional
     service_name: Option<String>, //optional
 ) -> Result<HashMap<String, ArtifactResult>> {
-    println!("sync:utils:49 add_package_to_artifact");
-    println!("sync:utils:49 package_name: {:?}", package_name);
-    println!("sync:utils:49 artifact_type: {:?}", artifact_type);
-    println!("sync:utils:49 package_type: {:?}", package_type);
+    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+    writeln!(stdout, "Adding package {} to artifact: {}", package_name, artifact_type)?;
+    stdout.reset()?;
     let mut results = HashMap::new();
     match package_type {
         InitializeType::Service => {
@@ -575,6 +574,7 @@ pub(crate) fn remove_package_from_artifact(
                 &packages_to_remove,
                 &universal_sdk_program_text,
                 &mut universal_sdk_project_json,
+                stdout,
             )?;
             results.insert("sdk_ast_program_text".to_string(), ArtifactResult::String(universal_sdk_program_text));
             results.insert("sdk_project_json".to_string(), ArtifactResult::String(json_to_string_pretty(&universal_sdk_project_json)?));

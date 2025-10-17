@@ -125,9 +125,11 @@ fn find_directory_names<P: AsRef<Path>>(
 }
 
 /// Legacy function that maintains the original behavior for backward compatibility
-fn find_project_dir_names(modules_path: &Path) -> Result<Vec<String>> {
+fn find_project_dir_names(modules_path: &Path, stdout: &mut StandardStream) -> Result<Vec<String>> {
     let directories = find_directory_names(modules_path, Some(DIRS_TO_IGNORE))?;
-    println!("sync:121 project_dirs: {:?}", directories);
+    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+    writeln!(stdout, "Found these directories: {:?}", directories)?;
+    stdout.reset()?;
     Ok(directories)
 }
 
@@ -142,7 +144,7 @@ fn check_manifest(manifest_data: &ApplicationManifestData, dir_project_names: &V
         .iter()
         .map(|project| project.name.clone())
         .collect();
-    println!("sync:130 manifest_project_names: {:?}", manifest_project_names);
+    
     let dir_project_names_set: HashSet<String> = dir_project_names
         .iter()
         .cloned()
@@ -153,12 +155,10 @@ fn check_manifest(manifest_data: &ApplicationManifestData, dir_project_names: &V
         .cloned()
         .filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str()))
         .collect();
-    println!("sync:141 projects_to_remove: {:?}", projects_to_remove);
     let projects_to_add: Vec<String> = dir_project_names_set
         .difference(&manifest_project_names)
         .cloned()
         .collect();
-    println!("sync:146 projects_to_add: {:?}", projects_to_add);
     Ok((projects_to_remove, projects_to_add))
 }
 
@@ -168,19 +168,16 @@ fn check_docker_compose(docker_compose: &DockerCompose, dir_project_names: &Vec<
         .cloned()
         .filter(|service| !DOCKER_SERVICES_TO_IGNORE.contains(&service.as_str()))
         .collect();
-    println!("sync:156 docker_services: {:?}", docker_services);
     let services_to_remove_docker: Vec<String> = docker_services
         .iter()
         .filter(|service| !dir_project_names.iter().any(|m| service.contains(m)))
         .cloned()
         .collect();
-    println!("sync:162 services_to_remove_docker: {:?}", services_to_remove_docker);
     let services_to_add_docker: Vec<String> = dir_project_names
         .iter()
         .filter(|project| !docker_services.iter().any(|m| m.contains(project.as_str())))
         .cloned()
         .collect();
-    println!("sync:168 services_to_add_docker: {:?}", services_to_add_docker);
     Ok((services_to_remove_docker, services_to_add_docker))
 }
 
@@ -202,9 +199,6 @@ fn check_runtime_files(
                 .difference(&pnpm_workspace_projects)
                 .cloned()
                 .collect();
-            println!("sync:190 pnpm_workspace_projects: {:?}", pnpm_workspace_projects);
-            println!("sync:191 pnpm_workspace_projects_to_remove: {:?}", pnpm_workspace_projects_to_remove);
-            println!("sync:192 pnpm_workspace_projects_to_add: {:?}", pnpm_workspace_projects_to_add);
             Ok((pnpm_workspace_projects_to_remove, pnpm_workspace_projects_to_add))
         } else {
             return Ok((Vec::new(), Vec::new()));
@@ -214,7 +208,6 @@ fn check_runtime_files(
         let full_package_json = package_json.clone();
         let package_json_projects: HashSet<String> = full_package_json.workspaces.unwrap_or_default().iter().cloned().filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str())).collect();
         let dir_project_names_set: HashSet<String> = dir_project_names.iter().cloned().filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str())).collect();
-        println!("sync:210 package_json_projects: {:?}", package_json_projects);
         let package_json_projects_to_remove: Vec<String> = package_json_projects
             .difference(&dir_project_names_set)
             .cloned()
@@ -223,8 +216,6 @@ fn check_runtime_files(
             .difference(&package_json_projects)
             .cloned()
             .collect();
-        println!("sync:219 package_json_projects_to_remove: {:?}", package_json_projects_to_remove);
-        println!("sync:220 package_json_projects_to_add: {:?}", package_json_projects_to_add);
         Ok((package_json_projects_to_remove, package_json_projects_to_add))
     } else {
         Ok((Vec::new(), Vec::new()))
@@ -300,7 +291,6 @@ impl CliCommand for SyncAllCommand {
 
         let modules_path = app_root_path.join(Path::new(&existing_manifest_data
             .modules_path));
-        println!("sync:291 modules_path: {:?}", modules_path);
         
         // Read in docker-compose.yaml
         let docker_compose_path = if app_root_path.join("docker-compose.yaml").exists() {
@@ -318,15 +308,13 @@ impl CliCommand for SyncAllCommand {
         )
         .with_context(|| ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE)?;
 
-        println!("sync:309 Here we begin the sync operations. Starting with manifest.toml");
+        
         if modules_path.exists() {
             let mut rendered_templates = vec![];
             // project names in directories
             let dir_project_names = find_project_dir_names(&modules_path)?;
             let dir_project_names_set: HashSet<String> = dir_project_names.iter().cloned().collect();
-            println!("sync:315 dir_project_names: {:?}", dir_project_names);
-            println!("sync:316 dir_project_names_set: {:?}", dir_project_names_set);
-
+            
             // projects to remove and add from manifest.toml
             let (manifest_projects_to_remove, manifest_projects_to_add) = check_manifest(&manifest_data, &dir_project_names)?;
             
@@ -357,13 +345,13 @@ impl CliCommand for SyncAllCommand {
                     }
                 }
                 let new_manifest_projects: HashSet<String> = manifest_data.projects.iter().map(|project| project.name.clone()).filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str())).collect();
-                println!("sync:347 new_manifest_projects: {:?}", new_manifest_projects);
+                
                 let validation_result = validate_removal_from_artifact(
                     &new_manifest_projects,
                     &dir_project_names_set,
                     &format!("Successfully removed {} project(s) from manifest.toml", manifest_projects_to_remove.len()),
                     &format!("Some projects were not removed from manifest.toml"),
-                    "sync:345",
+                    "sync:354",
                     &mut stdout)?;
                 if validation_result {
                     stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
@@ -477,13 +465,13 @@ impl CliCommand for SyncAllCommand {
                     }
                 }
                 let new_docker_services: HashSet<String> = docker_compose.services.keys().cloned().filter(|service| !DOCKER_SERVICES_TO_IGNORE.contains(&service.as_str())).collect();
-                println!("sync:409 new_docker_services: {:?}", new_docker_services);
+                
                 let validation_result = validate_removal_from_artifact(
                     &new_docker_services,
                     &dir_project_names_set,
                     &format!("Successfully removed {} service(s) from docker-compose.yaml", services_to_remove_docker.len()),
                     &format!("Some services were not removed from docker-compose.yaml"),
-                    "sync:467",
+                    "sync:474",
                     &mut stdout)?;
                 if validation_result {
                     stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
@@ -554,11 +542,6 @@ impl CliCommand for SyncAllCommand {
                 writeln!(stdout, "No services to add to docker-compose.yaml")?;
                 stdout.reset()?;
             }
-            // if docker_compose_string.is_empty() {
-            //     println!("sync:535 docker_compose_string is empty");
-            //     docker_compose_string = yaml_to_string(&docker_compose)?;
-            // }
-            // let docker_compose_data: DockerCompose = yaml_from_str(&docker_compose_string)?;
             let (new_docker_services_to_remove, new_docker_services_to_add) = check_docker_compose(&docker_compose, &dir_project_names)?;
             if new_docker_services_to_remove.is_empty() && new_docker_services_to_add.is_empty() {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
@@ -607,9 +590,8 @@ impl CliCommand for SyncAllCommand {
                 pnpm_workspace.as_ref(), 
                 &package_json, 
                 &dir_project_names)?;
-            println!("sync:448 runtime_projects_to_remove: {:?}", runtime_projects_to_remove);
-            println!("sync:449 runtime_projects_to_add: {:?}", runtime_projects_to_add);
-            // remove projects from pnpm-workspace.yaml and package.json
+            
+            
             let mut pnpm_workspace_buffer: Option<String> = None;
             let mut application_package_json_buffer: Option<String> = Some(yaml_to_string(&package_json)?);
             match manifest_data.runtime.parse::<Runtime>()? {
@@ -628,25 +610,21 @@ impl CliCommand for SyncAllCommand {
                             "Do you want to remove these packages from pnpm-workspace.yaml? (y/N) ")?;
                         if continue_sync {
                             
-                            println!("sync:468 pnpm_workspace: {:?}", pnpm_workspace);
+                            
                             if let Some(ref mut pnpm_workspace) = pnpm_workspace {
                                 for package in &runtime_projects_to_remove {
-                                    println!("sync:470 package: {:?}", package);
                                     remove_project_definition_from_pnpm_workspace(
                                         pnpm_workspace,
                                         &package,
                                     )?;
-                                    println!("sync:475 content: {:?}", pnpm_workspace);
                                 }
-                                println!("sync:477 content: {:?}", pnpm_workspace);
                                 let new_pnpm_workspace_projects: HashSet<String> = pnpm_workspace.packages.iter().cloned().filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str())).collect();
-                                println!("sync:484 new_pnpm_workspace_projects: {:?}", new_pnpm_workspace_projects);
                                 let validation_result = validate_removal_from_artifact(
                                     &new_pnpm_workspace_projects,
                                     &dir_project_names_set,
                                     &format!("Successfully removed {} package(s) from pnpm-workspace.yaml", runtime_projects_to_remove.len()),
                                     &format!("Some packages were not removed from pnpm-workspace.yaml"),
-                                    "sync:484",
+                                    "sync:653",
                                     &mut stdout)?;
                                 if !validation_result {
                                     return Err(anyhow::anyhow!("Failed to remove {} package(s) from pnpm-workspace.yaml", runtime_projects_to_remove.len()));
@@ -695,7 +673,7 @@ impl CliCommand for SyncAllCommand {
                                         &new_pnpm_workspace_projects,
                                         &format!("Successfully added {} to pnpm-workspace.yaml", dir_name),
                                         &format!("Package {} was not added to pnpm-workspace.yaml", dir_name),
-                                        "sync:679",
+                                        "sync:681",
                                         &mut stdout,
                                     )?;
                                     if !validation_result {
@@ -712,7 +690,7 @@ impl CliCommand for SyncAllCommand {
                     pnpm_workspace_buffer = Some(yaml_to_string(&pnpm_workspace)?);
                 }
                 Runtime::Bun => {
-                    println!("sync:533 package_json: {:?}", package_json);
+                    
                     if !runtime_projects_to_remove.is_empty() {
                         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
                         writeln!(stdout, "Found {} package(s) in package.json that no longer exist in directories:", runtime_projects_to_remove.len())?;
@@ -727,21 +705,20 @@ impl CliCommand for SyncAllCommand {
                             "Do you want to remove these packages from package.json? (y/N) ")?;
                         if continue_sync {
                             for package in &runtime_projects_to_remove {
-                                println!("sync:536 package: {:?}", package);
+                                
                                 remove_project_definition_from_package_json(
                                     &mut package_json,
                                     &package,
                                 )?;
-                                println!("sync:539 package_json: {:?}", package_json);
+                                
                             }
                             let new_package_json_projects: HashSet<String> = package_json.workspaces.as_ref().unwrap_or(&vec![]).iter().cloned().filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str())).collect();
-                            println!("sync:547 new_package_json_projects: {:?}", new_package_json_projects);
                             let validation_result = validate_removal_from_artifact(
                                 &new_package_json_projects,
                                 &dir_project_names_set,
                                 &format!("Successfully removed {} package(s) from package.json", runtime_projects_to_remove.len()),
                                 &format!("Some packages were not removed from package.json"),
-                                "sync:547",
+                                "sync:727",
                                 &mut stdout,
                             )?;
                             if !validation_result {
@@ -786,7 +763,7 @@ impl CliCommand for SyncAllCommand {
                                     &new_package_json_projects,
                                     &format!("Successfully added {} to package.json", dir_name),
                                     &format!("Package {} was not added to package.json", dir_name),
-                                    "sync:677",
+                                    "sync:772",
                                     &mut stdout,
                                 )?;
                                 if !validation_result {
@@ -815,7 +792,6 @@ impl CliCommand for SyncAllCommand {
                 });
             }
 
-            println!("sync:580 removing projects from universal SDK");
             let (mut sdk_ast_program_text, mut sdk_project_json) = read_universal_sdk_content(&modules_path)?;
             if !manifest_projects_to_remove.is_empty() {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
@@ -830,12 +806,13 @@ impl CliCommand for SyncAllCommand {
                     &mut stdout, 
                     "Do you want to remove these projects from universal SDK? (y/N) ")?;
                 if continue_sync {
-                    println!("sync:593 app_name: {:?}", manifest_data.app_name);
+                    
                     (sdk_ast_program_text, sdk_project_json) = remove_project_vec_from_universal_sdk(
                         &manifest_data.app_name,
                         &manifest_projects_to_remove,
                         &mut sdk_ast_program_text,
                         &mut sdk_project_json,
+                        stdout,
                     )?;
                 }
             } else {
@@ -856,7 +833,6 @@ impl CliCommand for SyncAllCommand {
                     &mut stdout, 
                     "Do you want to add these packages to universal SDK? (y/N) ")?;
                 if continue_sync {
-                    println!("sync:741 app_name: {:?}", manifest_data.app_name);
                     (sdk_ast_program_text, sdk_project_json) = add_project_vec_to_universal_sdk(
                         &manifest_data.app_name,
                         &manifest_projects_to_add,

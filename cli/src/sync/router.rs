@@ -8,7 +8,6 @@ use toml::from_str as toml_from_str;
 use termcolor::{StandardStream};
 
 use crate::{
-    // CliCommand,
     constants::{Database, Infrastructure,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
     },
@@ -23,13 +22,11 @@ use crate::{
             transform_server_ts::transform_server_ts,
         },
         base_path::{prompt_base_path},
-        // command::command,
         database::{get_db_driver, is_in_memory_database},
         manifest::{
             ManifestData, ProjectType,
             application::ApplicationManifestData, 
             router::RouterManifestData,
-            // add_project_definition_to_manifest,
             add_router_definition_to_manifest,
             InitializableManifestConfigMetadata,
             RouterInitializationMetadata,
