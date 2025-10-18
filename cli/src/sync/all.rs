@@ -1,4 +1,4 @@
-use std::{fs::{self, read_to_string}, path::{Path}, io::{Write}, collections::HashSet};
+use std::{fs::{self, read_to_string}, path::{Path}, io::{Write}, collections::{HashSet, HashMap}};
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, ArgMatches, Command};
@@ -50,10 +50,12 @@ use crate::{
         rendered_template::{RenderedTemplate, write_rendered_templates},
         universal_sdk::{remove_project_vec_from_universal_sdk, add_project_vec_to_universal_sdk, read_universal_sdk_content},
     },
-    prompt::{prompt_for_confirmation, prompt_with_validation, ArrayCompleter},
+    prompt::{prompt_for_confirmation, prompt_with_validation, ArrayCompleter, prompt_with_validation_with_answers},
     sync::{
         constants::{RUNTIME_PROJECTS_TO_IGNORE, DIRS_TO_IGNORE, DOCKER_SERVICES_TO_IGNORE}, 
-        utils::{validate_removal_from_artifact, validate_addition_to_artifact, add_package_to_artifact, ArtifactResult}},
+        utils::{validate_removal_from_artifact, validate_addition_to_artifact, add_package_to_artifact, ArtifactResult},
+        router::{check_for_router_in_service},
+    },
 };
 
 #[derive(Debug)]
@@ -70,17 +72,22 @@ fn prompt_initialize_category(
     line_editor: &mut Editor<ArrayCompleter, DefaultHistory>,
     stdout: &mut StandardStream,
     matches: &ArgMatches,
+    matches_key: &str,
+    prompt: &str,
+    prompts_map: &HashMap<String, HashMap<String, String>>,
     dir_name: &str,
 ) -> Result<String> {
-    let initialize_category = prompt_with_validation(
+    let initialize_category = prompt_with_validation_with_answers(
         line_editor, 
         stdout, 
-        "category", 
+        matches_key, 
         matches, 
         &format!("initialize category for {}", dir_name), 
         Some(&InitializeType::VARIANTS), 
         |input| InitializeType::VARIANTS.contains(&input), 
-        |_| "Invalid initialize category. Please try again.".to_string()
+        |_| "Invalid initialize category. Please try again.".to_string(),
+        dir_name,
+        prompts_map,
     )?;
     Ok(initialize_category)
 }
@@ -137,6 +144,48 @@ fn find_file_names(path: &Path) -> Result<Vec<String>> {
     let files = fs::read_dir(path)?;
     let files = files.map(|file| file.unwrap().path().file_name().unwrap().to_string_lossy().to_string()).collect();
     Ok(files)
+}
+
+fn check_routers_for_all_services(
+    modules_path: &Path,
+    manifest_data: &ApplicationManifestData,
+) -> Result<HashMap<String, (Vec<String>, Vec<String>)>> {
+    let mut router_results = HashMap::new();
+    
+    if !modules_path.exists() {
+        return Ok(router_results);
+    }
+    
+    for entry in fs::read_dir(modules_path)? {
+        let entry = entry?;
+        let service_path = entry.path();
+        
+        if service_path.is_dir() {
+            if let Some(service_name) = service_path.file_name() {
+                let service_name_str = service_name.to_string_lossy().to_string();
+                
+                // Check if this is a service directory by looking for api/routes
+                let routes_path = service_path.join("api").join("routes");
+                if routes_path.exists() {
+                    match check_for_router_in_service(
+                        &service_path,
+                        manifest_data,
+                        &service_name_str,
+                    ) {
+                        Ok((routers_to_add, routers_to_remove)) => {
+                            router_results.insert(service_name_str, (routers_to_add, routers_to_remove));
+                        }
+                        Err(e) => {
+                            // Log error but continue with other services
+                            eprintln!("Error checking routers for service {}: {}", service_name_str, e);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    Ok(router_results)
 }
 
 fn check_manifest(manifest_data: &ApplicationManifestData, dir_project_names: &Vec<String>) -> Result<(Vec<String>, Vec<String>)> {
@@ -260,6 +309,13 @@ impl CliCommand for SyncAllCommand {
                 .help("Flag to confirm any prompts")
                 .action(ArgAction::SetTrue),
         )
+        .arg(
+            Arg::new("prompts")
+                .short('P')
+                .long("prompts")
+                .help("JSON object with pre-provided answers for prompts (e.g., {\"svs-dummy\": {\"database\": \"none\", \"infrastructure\": \"none\", \"description\": \"none\"}})")
+                .value_name("JSON"),
+        )
     }
 
     fn handler(&self, matches: &clap::ArgMatches) -> Result<()> {
@@ -267,12 +323,20 @@ impl CliCommand for SyncAllCommand {
         // remove necessary projects from manifest.toml, update docker-compose.yml, pnpm-workspace.yaml, and package.json accordingly
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
-        let is_ci = std::env::var("CI").is_ok();
-        if is_ci {
-            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
-            writeln!(stdout, "Running in CI mode - All additions to artifact prompts and actions will be skipped")?;
+
+        // Parse prompts JSON if provided
+        let prompts_map: HashMap<String, HashMap<String, String>> = if let Some(prompts_json) = matches.get_one::<String>("prompts") {
+            let parsed: HashMap<String, HashMap<String, String>> = json_from_str(prompts_json).with_context(|| "Failed to parse prompts JSON")?;
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
+            writeln!(stdout, "Parsed prompts for {} projects:", parsed.len())?;
+            for (project_name, project_prompts) in &parsed {
+                writeln!(stdout, "  {}: {:?}", project_name, project_prompts)?;
+            }
             stdout.reset()?;
-        }
+            parsed
+        } else {
+            HashMap::new()
+        };
         let (app_root_path, _) = find_app_root_path(matches, RequiredLocation::Application)?;
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
         
@@ -321,7 +385,29 @@ impl CliCommand for SyncAllCommand {
             // projects to remove from docker-compose.yml
             let (services_to_remove_docker, services_to_add_docker) = check_docker_compose(&docker_compose, &dir_project_names)?;
             
-            // RODO: check routers for services in directory {service_name}/services against manifest.toml
+            // Check routers for all services
+            let router_results = check_routers_for_all_services(&modules_path, &manifest_data)?;
+            
+            // Log router sync results
+            for (service_name, (routers_to_add, routers_to_remove)) in &router_results {
+                if !routers_to_add.is_empty() || !routers_to_remove.is_empty() {
+                    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
+                    writeln!(stdout, "Router sync results for service '{}':", service_name)?;
+                    stdout.reset()?;
+                    
+                    if !routers_to_add.is_empty() {
+                        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+                        writeln!(stdout, "  Routers to add: {:?}", routers_to_add)?;
+                        stdout.reset()?;
+                    }
+                    
+                    if !routers_to_remove.is_empty() {
+                        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
+                        writeln!(stdout, "  Routers to remove: {:?}", routers_to_remove)?;
+                        stdout.reset()?;
+                    }
+                }
+            }
             
             // remove projects from manifest.toml
             if !manifest_projects_to_remove.is_empty() {
@@ -365,7 +451,7 @@ impl CliCommand for SyncAllCommand {
                 writeln!(stdout, "No projects to remove from manifest.toml")?;
                 stdout.reset()?;
             }
-            if !manifest_projects_to_add.is_empty() && !is_ci {
+            if !manifest_projects_to_add.is_empty() {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
                 writeln!(stdout, "Found {} project(s) in directories that are not in manifest:", manifest_projects_to_add.len())?;
                 for project_name in &manifest_projects_to_add {
@@ -387,6 +473,9 @@ impl CliCommand for SyncAllCommand {
                             &mut line_editor, 
                             &mut stdout, 
                             matches,
+                            "category",
+                            &format!("initialize category for {}", dir_name),
+                            &prompts_map,
                             &dir_name,
                         )?.parse()?;
                         let artifacts = add_package_to_artifact(
@@ -405,6 +494,7 @@ impl CliCommand for SyncAllCommand {
                             None,
                             None,
                             None,
+                            &prompts_map,
                         )?;
                         if let Some(ArtifactResult::String(manifest_str)) = artifacts.get("manifest") {
                             new_manifest_data = toml_from_str::<ApplicationManifestData>(manifest_str)?;
@@ -437,12 +527,7 @@ impl CliCommand for SyncAllCommand {
                     },
                 );
             } else {
-                if !is_ci {
-                    return Err(anyhow::anyhow!("Failed to sync manifest.toml"));
-                }
-                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
-                writeln!(stdout, "Skipping validation for manifest.toml due to CI mode")?;
-                stdout.reset()?;
+                return Err(anyhow::anyhow!("Failed to sync manifest.toml"));
             }
             
             // remove projects from docker-compose.yaml
@@ -478,12 +563,7 @@ impl CliCommand for SyncAllCommand {
                     writeln!(stdout, "Successfully removed {} service(s) from docker-compose.yaml", services_to_remove_docker.len())?;
                     stdout.reset()?;
                 } else {
-                    if !is_ci {
-                        return Err(anyhow::anyhow!("Failed to remove {} service(s) from docker-compose.yaml", services_to_remove_docker.len()));
-                    }
-                    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
-                    writeln!(stdout, "Skipping validation for docker-compose.yaml due to CI mode")?;
-                    stdout.reset()?;
+                    return Err(anyhow::anyhow!("Failed to remove {} service(s) from docker-compose.yaml", services_to_remove_docker.len()));
                 }
             } else {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
@@ -491,7 +571,7 @@ impl CliCommand for SyncAllCommand {
                 stdout.reset()?;
             }
             // let mut docker_compose_string = String::new();
-            if !services_to_add_docker.is_empty() && !is_ci {
+            if !services_to_add_docker.is_empty() {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
                 writeln!(stdout, "Found {} service(s) in directories that are not in docker-compose.yaml:", services_to_add_docker.len())?;
                 for service in &services_to_add_docker {
@@ -510,6 +590,9 @@ impl CliCommand for SyncAllCommand {
                             &mut line_editor, 
                             &mut stdout, 
                             matches,
+                            "category",
+                            &format!("initialize category for {}", dir_name),
+                            &prompts_map,
                             &dir_name,
                         )?.parse()?;
                         if !matches!(package_type, InitializeType::Router | InitializeType::Library) {
@@ -530,6 +613,7 @@ impl CliCommand for SyncAllCommand {
                                 None,
                                 None,
                                 None,
+                                &prompts_map,
                             )?;
                             if let Some(ArtifactResult::String(s)) = artifacts.get("docker_compose") {
                                 docker_compose = yaml_from_str(&s)?;
@@ -636,7 +720,7 @@ impl CliCommand for SyncAllCommand {
                         writeln!(stdout, "No packages to remove from pnpm-workspace.yaml")?;
                         stdout.reset()?;
                     }
-                    if !runtime_projects_to_add.is_empty() && !is_ci {
+                    if !runtime_projects_to_add.is_empty() {
                         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
                         writeln!(stdout, "Found {} package(s) in directories that are not in pnpm-workspace.yaml:", runtime_projects_to_add.len())?;
                         for package in &runtime_projects_to_add {
@@ -655,6 +739,9 @@ impl CliCommand for SyncAllCommand {
                                     &mut line_editor, 
                                     &mut stdout, 
                                     matches,
+                                    "category",
+                                    &format!("initialize category for {}", dir_name),
+                                    &prompts_map,
                                     &dir_name,
                                 )?.parse()?;
                                 // check if package type is router, if not router use add_project_definition_to_pnpm_workspace
@@ -730,7 +817,7 @@ impl CliCommand for SyncAllCommand {
                         writeln!(stdout, "No packages to remove from package.json")?;
                         stdout.reset()?;
                     }
-                    if !runtime_projects_to_add.is_empty() && !is_ci {
+                    if !runtime_projects_to_add.is_empty() {
                         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
                         writeln!(stdout, "Found {} package(s) in directories that are not in package.json:", runtime_projects_to_add.len())?;
                         for package in &runtime_projects_to_add {
@@ -749,6 +836,9 @@ impl CliCommand for SyncAllCommand {
                                     &mut line_editor, 
                                     &mut stdout, 
                                     matches,
+                                    "category",
+                                    &format!("initialize category for {}", dir_name),
+                                    &prompts_map,
                                     &dir_name,
                                 )?.parse()?;
                                 if package_type != InitializeType::Router {
@@ -820,7 +910,7 @@ impl CliCommand for SyncAllCommand {
                 writeln!(stdout, "No projects to remove from universal SDK")?;
                 stdout.reset()?;
             }
-            if !manifest_projects_to_add.is_empty() && !is_ci {
+            if !manifest_projects_to_add.is_empty() {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
                 writeln!(stdout, "Found {} package(s) in directories that are not in universal SDK:", manifest_projects_to_add.len())?;
                 for package in &manifest_projects_to_add {

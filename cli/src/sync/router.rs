@@ -1,4 +1,4 @@
-use std::{path::Path, collections::HashSet,};
+use std::{path::Path, collections::{HashSet, HashMap},};
 
 use anyhow::{Context, Result};
 use clap::{ArgMatches};
@@ -34,11 +34,60 @@ use crate::{
         },
         
     },
-    prompt::{ArrayCompleter, prompt_comma_separated_list},
+    prompt::{ArrayCompleter, prompt_comma_separated_list, prompt_comma_separated_list_with_answers},
     sync::{constants::{DIRS_TO_IGNORE},
         utils::validate_addition_to_artifact,
     },
 };
+
+
+pub(crate) fn check_for_router_in_service(
+    service_path: &Path,
+    manifest_data: &ApplicationManifestData,
+    service_name: &str,
+) -> Result<(Vec<String>, Vec<String>)> {
+    let existing_router_names: HashSet<String> = manifest_data.projects
+        .iter()
+        .find(|project| project.name == service_name)
+        .ok_or_else(|| anyhow::anyhow!("Service '{}' not found in manifest", service_name))?
+        .routers
+        .as_ref()
+        .map(|routers| routers.iter().cloned().collect())
+        .unwrap_or_default();
+    
+    let router_names = extract_router_names_from_routes(service_path)?;
+    let routers_to_add: Vec<String> = router_names.difference(&existing_router_names).cloned().collect();
+    let routers_to_remove: Vec<String> = existing_router_names.difference(&router_names).cloned().collect();
+    Ok((routers_to_add, routers_to_remove))
+}
+
+pub(crate) fn extract_router_names_from_routes(
+    service_path: &Path
+) -> Result<HashSet<String>> {
+    let routes_path = service_path.join("api").join("routes");
+    let mut router_names = HashSet::new();
+    
+    if !routes_path.exists() {
+        return Ok(router_names);
+    }
+    
+    for entry in std::fs::read_dir(&routes_path)? {
+        let entry = entry?;
+        let path = entry.path();
+        
+        if path.is_file() && path.extension().map_or(false, |ext| ext == "ts") {
+            if let Some(file_name) = path.file_stem() {
+                let file_name_str = file_name.to_string_lossy();
+                // Extract router name from filename (e.g., "userRouter.routes.ts" -> "userRouter")
+                if let Some(router_name) = file_name_str.strip_suffix(".routes") {
+                    router_names.insert(router_name.to_string());
+                }
+            }
+        }
+    }
+    
+    Ok(router_names)
+}
 
 pub(crate) fn add_router_to_manifest_with_validation(
     manifest_data: &mut RouterManifestData,
@@ -129,11 +178,12 @@ pub(crate) fn sync_router_setup(
     manifest_data: &mut ApplicationManifestData,
     stdout: &mut StandardStream,
     matches: &ArgMatches,
+    prompts_map: &HashMap<String, HashMap<String, String>>,
 ) -> Result<(RouterManifestData, String)> {
     let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
 
     let infrastructure: Vec<Infrastructure> = if matches.ids().all(|id| id == "dryrun") {
-        prompt_comma_separated_list(
+        prompt_comma_separated_list_with_answers(
             &mut line_editor,
             "infrastructure",
             matches,
@@ -141,6 +191,8 @@ pub(crate) fn sync_router_setup(
             None,
             "additional infrastructure components",
             true,
+            router_name,
+            prompts_map,
         )?
         .iter()
         .map(|s| s.parse().unwrap())

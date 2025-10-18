@@ -1,6 +1,6 @@
 use std::{
     path::Path, 
-    collections::HashSet, 
+    collections::{HashSet, HashMap}, 
 };
 
 use anyhow::{Context, Result};
@@ -47,7 +47,7 @@ use crate::{
             get_worker_type_name,
         },
     },
-    prompt::{ArrayCompleter, prompt_with_validation, prompt_without_validation},
+    prompt::{ArrayCompleter, prompt_with_validation, prompt_without_validation, prompt_with_validation_with_answers, prompt_without_validation_with_answers},
     sync::{constants::{DIRS_TO_IGNORE, 
         DOCKER_SERVICES_TO_IGNORE, 
         RUNTIME_PROJECTS_TO_IGNORE},
@@ -203,10 +203,11 @@ pub(crate) fn sync_worker_setup(
     manifest_data: &mut ApplicationManifestData,
     stdout: &mut StandardStream,
     matches: &ArgMatches,
+    prompts_map: &HashMap<String, HashMap<String, String>>,
 ) -> Result<WorkerManifestData> {
     let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
 
-    let r#type: WorkerType = prompt_with_validation(
+    let r#type: WorkerType = prompt_with_validation_with_answers(
         &mut line_editor,
         stdout,
         "type",
@@ -215,6 +216,8 @@ pub(crate) fn sync_worker_setup(
         Some(&WorkerType::VARIANTS),
         |input| WorkerType::VARIANTS.contains(&input),
         |_| "Invalid worker type. Please try again".to_string(),
+        worker_name,
+        prompts_map,
     )?.parse()?;
     // TODO: Find worker type from somewhere in the worker directory
 
@@ -224,7 +227,7 @@ pub(crate) fn sync_worker_setup(
     if r#type == WorkerType::Database {
         // TODO: get database from package.json
         database = Some(
-            prompt_with_validation(
+            prompt_with_validation_with_answers(
                 &mut line_editor,
                 stdout,
                 "database",
@@ -233,6 +236,8 @@ pub(crate) fn sync_worker_setup(
                 Some(&Database::VARIANTS),
                 |input| Database::VARIANTS.contains(&input),
                 |_| "Invalid worker database type. Please try again".to_string(),
+                worker_name,
+                prompts_map,
             )?
             .parse()?,
         );
@@ -272,13 +277,15 @@ pub(crate) fn sync_worker_setup(
     }
     
 
-    let description = prompt_without_validation(
+    let description = prompt_without_validation_with_answers(
         &mut line_editor,
         stdout,
         "description",
         matches,
         "worker description (optional)",
         None,
+        worker_name,
+        prompts_map,
     )?;
 
     let worker_data: WorkerManifestData = WorkerManifestData {

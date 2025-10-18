@@ -1,6 +1,6 @@
 use std::{
     path::Path, 
-    collections::HashSet, 
+    collections::{HashSet, HashMap}, 
     fs::{read_to_string}, 
     io::{Write},
 };
@@ -43,7 +43,7 @@ use crate::{
             PnpmWorkspace,
         },
     },
-    prompt::{ArrayCompleter, prompt_with_validation, prompt_without_validation, prompt_comma_separated_list},
+    prompt::{ArrayCompleter, prompt_with_validation, prompt_without_validation, prompt_comma_separated_list, prompt_with_validation_with_answers, prompt_without_validation_with_answers, prompt_comma_separated_list_with_answers},
     sync::{constants::{DIRS_TO_IGNORE, 
         DOCKER_SERVICES_TO_IGNORE, 
         RUNTIME_PROJECTS_TO_IGNORE,
@@ -125,118 +125,118 @@ pub(crate) fn add_service_to_docker_compose_with_validation(
     }
 }
     
-pub(crate) fn add_service_to_runtime_files_with_validation(
-    manifest_data: &mut ServiceManifestData,
-    base_path: &Path,
-    stdout: &mut StandardStream,
-) -> Result<(Option<String>, Option<String>)> {
-    let runtime = manifest_data.runtime.parse()?;
+// pub(crate) fn add_service_to_runtime_files_with_validation(
+//     manifest_data: &mut ServiceManifestData,
+//     base_path: &Path,
+//     stdout: &mut StandardStream,
+// ) -> Result<(Option<String>, Option<String>)> {
+//     let runtime = manifest_data.runtime.parse()?;
 
-    let mut package_json_buffer: Option<String> = None;
-    let mut pnpm_workspace_buffer: Option<String> = None;
+//     let mut package_json_buffer: Option<String> = None;
+//     let mut pnpm_workspace_buffer: Option<String> = None;
 
-    match runtime {
-        Runtime::Bun => {
-            package_json_buffer = Some(
-                add_project_definition_to_package_json(base_path, manifest_data)
-                    .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON)?,
-            );
-            let temp: ApplicationPackageJson = json_from_str(package_json_buffer.as_ref().unwrap()).unwrap();
-            let new_package_json_projects: HashSet<String> = temp.workspaces.unwrap_or_default().iter().filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str())).cloned().collect();
-            let validation_result = validate_addition_to_artifact(
-                &manifest_data.service_name,
-                &new_package_json_projects,
-                &format!("Successfully added {} to package.json", manifest_data.service_name),
-                &format!("Service {} was not added to package.json", manifest_data.service_name),
-                "sync:service:143",
-                stdout,
-            )?;
-            if !validation_result {
-                return Err(anyhow::anyhow!("Failed to add {} to package.json", manifest_data.service_name))
-            }
-        }
-        Runtime::Node => {
-            pnpm_workspace_buffer = Some(
-                add_project_definition_to_pnpm_workspace(base_path, manifest_data)
-                    .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?,
-            );
-            let temp: PnpmWorkspace = yaml_from_str(pnpm_workspace_buffer.as_ref().unwrap()).unwrap();
-            let new_pnpm_workspace_projects: HashSet<String> = temp.packages.iter().filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str())).cloned().collect();
+//     match runtime {
+//         Runtime::Bun => {
+//             package_json_buffer = Some(
+//                 add_project_definition_to_package_json(base_path, manifest_data)
+//                     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON)?,
+//             );
+//             let temp: ApplicationPackageJson = json_from_str(package_json_buffer.as_ref().unwrap()).unwrap();
+//             let new_package_json_projects: HashSet<String> = temp.workspaces.unwrap_or_default().iter().filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str())).cloned().collect();
+//             let validation_result = validate_addition_to_artifact(
+//                 &manifest_data.service_name,
+//                 &new_package_json_projects,
+//                 &format!("Successfully added {} to package.json", manifest_data.service_name),
+//                 &format!("Service {} was not added to package.json", manifest_data.service_name),
+//                 "sync:service:143",
+//                 stdout,
+//             )?;
+//             if !validation_result {
+//                 return Err(anyhow::anyhow!("Failed to add {} to package.json", manifest_data.service_name))
+//             }
+//         }
+//         Runtime::Node => {
+//             pnpm_workspace_buffer = Some(
+//                 add_project_definition_to_pnpm_workspace(base_path, manifest_data)
+//                     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?,
+//             );
+//             let temp: PnpmWorkspace = yaml_from_str(pnpm_workspace_buffer.as_ref().unwrap()).unwrap();
+//             let new_pnpm_workspace_projects: HashSet<String> = temp.packages.iter().filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str())).cloned().collect();
             
-            let validation_result = validate_addition_to_artifact(
-                &manifest_data.service_name,
-                &new_pnpm_workspace_projects,
-                &format!("Successfully added {} to pnpm-workspace.yaml", manifest_data.service_name),
-                &format!("Service {} was not added to pnpm-workspace.yaml", manifest_data.service_name),
-                "sync:service:164",
-                stdout,
-            )?;
-            if !validation_result {
-                return Err(anyhow::anyhow!("Failed to add {} to pnpm-workspace.yaml", manifest_data.service_name))
-            }
-        }
-    }
+//             let validation_result = validate_addition_to_artifact(
+//                 &manifest_data.service_name,
+//                 &new_pnpm_workspace_projects,
+//                 &format!("Successfully added {} to pnpm-workspace.yaml", manifest_data.service_name),
+//                 &format!("Service {} was not added to pnpm-workspace.yaml", manifest_data.service_name),
+//                 "sync:service:164",
+//                 stdout,
+//             )?;
+//             if !validation_result {
+//                 return Err(anyhow::anyhow!("Failed to add {} to pnpm-workspace.yaml", manifest_data.service_name))
+//             }
+//         }
+//     }
 
-    Ok((package_json_buffer, pnpm_workspace_buffer))
-}
+//     Ok((package_json_buffer, pnpm_workspace_buffer))
+// }
 
-// For use later
-pub(crate) fn add_service_to_runtime_files_mut_with_validation(
-    package_json: &mut ApplicationPackageJson,
-    runtime: &Runtime,
-    package_name: &str,
-    stdout: &mut StandardStream,
-    pnpm_workspace: Option<&mut PnpmWorkspace>,
-) -> Result<()> {
-    match runtime {
-        Runtime::Bun => {
-            add_project_definition_to_package_json_mut(
-                package_json,
-                &package_name,)?;
-            let new_package_json_projects: HashSet<String> = package_json.workspaces
-                .as_ref()
-                .unwrap_or(&Vec::new())
-                .iter()
-                .filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str()))
-                .cloned()
-                .collect();
-            let validation_result = validate_addition_to_artifact(
-                &package_name,
-                &new_package_json_projects,
-                &format!("Successfully added {} to package.json", package_name),
-                &format!("Service {} was not added to package.json", package_name),
-                "sync:service:86",
-                stdout,
-            )?;
-            if !validation_result {
-                return Err(anyhow::anyhow!("Failed to add {} to package.json", package_name));
-            }
-        }
-        Runtime::Node => {
-            if let Some(pnpm_workspace) = pnpm_workspace {
-                add_project_definition_to_pnpm_workspace_mut(
-                    pnpm_workspace, &package_name)?;
-                let new_pnpm_workspace_projects: HashSet<String> = pnpm_workspace.packages
-                    .iter()
-                    .filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str()))
-                    .cloned()
-                    .collect();
-                let validation_result = validate_addition_to_artifact(
-                    &package_name,
-                    &new_pnpm_workspace_projects,
-                    &format!("Successfully added {} to pnpm-workspace.yaml", package_name),
-                    &format!("Service {} was not added to pnpm-workspace.yaml", package_name),
-                    "sync:service:245",
-                    stdout,
-                )?;
-                if !validation_result {
-                    return Err(anyhow::anyhow!("Failed to add {} to pnpm-workspace.yaml", package_name));
-                }
-            }
-        }
-    }
-    Ok(())
-}
+// // For use later
+// pub(crate) fn add_service_to_runtime_files_mut_with_validation(
+//     package_json: &mut ApplicationPackageJson,
+//     runtime: &Runtime,
+//     package_name: &str,
+//     stdout: &mut StandardStream,
+//     pnpm_workspace: Option<&mut PnpmWorkspace>,
+// ) -> Result<()> {
+//     match runtime {
+//         Runtime::Bun => {
+//             add_project_definition_to_package_json_mut(
+//                 package_json,
+//                 &package_name,)?;
+//             let new_package_json_projects: HashSet<String> = package_json.workspaces
+//                 .as_ref()
+//                 .unwrap_or(&Vec::new())
+//                 .iter()
+//                 .filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str()))
+//                 .cloned()
+//                 .collect();
+//             let validation_result = validate_addition_to_artifact(
+//                 &package_name,
+//                 &new_package_json_projects,
+//                 &format!("Successfully added {} to package.json", package_name),
+//                 &format!("Service {} was not added to package.json", package_name),
+//                 "sync:service:86",
+//                 stdout,
+//             )?;
+//             if !validation_result {
+//                 return Err(anyhow::anyhow!("Failed to add {} to package.json", package_name));
+//             }
+//         }
+//         Runtime::Node => {
+//             if let Some(pnpm_workspace) = pnpm_workspace {
+//                 add_project_definition_to_pnpm_workspace_mut(
+//                     pnpm_workspace, &package_name)?;
+//                 let new_pnpm_workspace_projects: HashSet<String> = pnpm_workspace.packages
+//                     .iter()
+//                     .filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str()))
+//                     .cloned()
+//                     .collect();
+//                 let validation_result = validate_addition_to_artifact(
+//                     &package_name,
+//                     &new_pnpm_workspace_projects,
+//                     &format!("Successfully added {} to pnpm-workspace.yaml", package_name),
+//                     &format!("Service {} was not added to pnpm-workspace.yaml", package_name),
+//                     "sync:service:245",
+//                     stdout,
+//                 )?;
+//                 if !validation_result {
+//                     return Err(anyhow::anyhow!("Failed to add {} to pnpm-workspace.yaml", package_name));
+//                 }
+//             }
+//         }
+//     }
+//     Ok(())
+// }
 
 
 pub(crate) fn sync_service_setup(
@@ -245,12 +245,13 @@ pub(crate) fn sync_service_setup(
     manifest_data: &mut ApplicationManifestData,
     stdout: &mut StandardStream,
     matches: &ArgMatches,
+    prompts_map: &HashMap<String, HashMap<String, String>>,
 ) -> Result<ServiceManifestData> {
     let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
 
     let mut database_options = vec!["none"];
     database_options.extend_from_slice(&Database::VARIANTS);
-    let database_input = prompt_with_validation(
+    let database_input = prompt_with_validation_with_answers(
         &mut line_editor,
         stdout,
         "database",
@@ -259,28 +260,67 @@ pub(crate) fn sync_service_setup(
         Some(&database_options),
         |input| database_options.contains(&input),
         |_| "Invalid database type. Please try again".to_string(),
+        service_name,
+        prompts_map,
     )?;
 
-    let infrastructure: Vec<Infrastructure> = prompt_comma_separated_list(
-        &mut line_editor,
-        "infrastructure",
-        matches,
-        &Infrastructure::VARIANTS,
-        None,
-        "additional infrastructure components",
-        true,
-    )?
-    .iter()
-    .map(|s| s.parse().unwrap())
-    .collect();
+    let infrastructure: Vec<Infrastructure> = if let Some(project_prompts) = prompts_map.get(service_name) {
+        if let Some(infrastructure_value) = project_prompts.get("infrastructure") {
+            println!("sync:service: Using pre-provided infrastructure value: {}", infrastructure_value);
+            if infrastructure_value == "none" {
+                vec![]
+            } else {
+                infrastructure_value
+                    .split(',')
+                    .map(|s| s.trim().to_string())
+                    .filter(|s| !s.is_empty())
+                    .map(|s| s.parse().unwrap())
+                    .collect()
+            }
+        } else {
+            println!("sync:service: No infrastructure prompt found for {}, using interactive prompt", service_name);
+            prompt_comma_separated_list_with_answers(
+                &mut line_editor,
+                "infrastructure",
+                matches,
+                &Infrastructure::VARIANTS,
+                None,
+                "additional infrastructure components",
+                true,
+                service_name,
+                prompts_map,
+            )?
+            .iter()
+            .map(|s| s.parse().unwrap())
+            .collect()
+        }
+    } else {
+        println!("sync:service: No prompts found for service {}, using interactive prompt", service_name);
+        prompt_comma_separated_list_with_answers(
+            &mut line_editor,
+            "infrastructure",
+            matches,
+            &Infrastructure::VARIANTS,
+            None,
+            "additional infrastructure components",
+            true,
+            service_name,
+            prompts_map,
+        )?
+        .iter()
+        .map(|s| s.parse().unwrap())
+        .collect()
+    };
 
-    let description = prompt_without_validation(
+    let description = prompt_without_validation_with_answers(
         &mut line_editor,
         stdout,
         "description",
         matches,
         "service description (optional)",
         None,
+        service_name,
+        prompts_map,
     )?;
 
     let service_package_json_path = modules_path.join(service_name).join("package.json");
