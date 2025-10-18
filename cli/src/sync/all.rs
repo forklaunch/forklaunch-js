@@ -1,4 +1,4 @@
-use std::{fs::{self, read_to_string}, path::{Path}, io::{Write}, collections::HashSet};
+use std::{fs::{self, read_to_string}, path::{Path}, io::{Write}, collections::{HashSet, HashMap}};
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, ArgMatches, Command};
@@ -50,10 +50,12 @@ use crate::{
         rendered_template::{RenderedTemplate, write_rendered_templates},
         universal_sdk::{remove_project_vec_from_universal_sdk, add_project_vec_to_universal_sdk, read_universal_sdk_content},
     },
-    prompt::{prompt_for_confirmation, prompt_with_validation, ArrayCompleter},
+    prompt::{prompt_for_confirmation, prompt_with_validation, ArrayCompleter, prompt_with_validation_with_answers},
     sync::{
         constants::{RUNTIME_PROJECTS_TO_IGNORE, DIRS_TO_IGNORE, DOCKER_SERVICES_TO_IGNORE}, 
-        utils::{validate_removal_from_artifact, validate_addition_to_artifact, add_package_to_artifact, ArtifactResult}},
+        utils::{validate_removal_from_artifact, validate_addition_to_artifact, add_package_to_artifact, ArtifactResult},
+        router::{check_for_router_in_service},
+    },
 };
 
 #[derive(Debug)]
@@ -70,17 +72,22 @@ fn prompt_initialize_category(
     line_editor: &mut Editor<ArrayCompleter, DefaultHistory>,
     stdout: &mut StandardStream,
     matches: &ArgMatches,
+    matches_key: &str,
+    prompt: &str,
+    prompts_map: &HashMap<String, HashMap<String, String>>,
     dir_name: &str,
 ) -> Result<String> {
-    let initialize_category = prompt_with_validation(
+    let initialize_category = prompt_with_validation_with_answers(
         line_editor, 
         stdout, 
-        "category", 
+        matches_key, 
         matches, 
         &format!("initialize category for {}", dir_name), 
         Some(&InitializeType::VARIANTS), 
         |input| InitializeType::VARIANTS.contains(&input), 
-        |_| "Invalid initialize category. Please try again.".to_string()
+        |_| "Invalid initialize category. Please try again.".to_string(),
+        dir_name,
+        prompts_map,
     )?;
     Ok(initialize_category)
 }
@@ -125,9 +132,11 @@ fn find_directory_names<P: AsRef<Path>>(
 }
 
 /// Legacy function that maintains the original behavior for backward compatibility
-fn find_project_dir_names(modules_path: &Path) -> Result<Vec<String>> {
+fn find_project_dir_names(modules_path: &Path, stdout: &mut StandardStream) -> Result<Vec<String>> {
     let directories = find_directory_names(modules_path, Some(DIRS_TO_IGNORE))?;
-    println!("sync:121 project_dirs: {:?}", directories);
+    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+    writeln!(stdout, "Found these directories: {:?}", directories)?;
+    stdout.reset()?;
     Ok(directories)
 }
 
@@ -137,12 +146,54 @@ fn find_file_names(path: &Path) -> Result<Vec<String>> {
     Ok(files)
 }
 
+fn check_routers_for_all_services(
+    modules_path: &Path,
+    manifest_data: &ApplicationManifestData,
+) -> Result<HashMap<String, (Vec<String>, Vec<String>)>> {
+    let mut router_results = HashMap::new();
+    
+    if !modules_path.exists() {
+        return Ok(router_results);
+    }
+    
+    for entry in fs::read_dir(modules_path)? {
+        let entry = entry?;
+        let service_path = entry.path();
+        
+        if service_path.is_dir() {
+            if let Some(service_name) = service_path.file_name() {
+                let service_name_str = service_name.to_string_lossy().to_string();
+                
+                // Check if this is a service directory by looking for api/routes
+                let routes_path = service_path.join("api").join("routes");
+                if routes_path.exists() {
+                    match check_for_router_in_service(
+                        &service_path,
+                        manifest_data,
+                        &service_name_str,
+                    ) {
+                        Ok((routers_to_add, routers_to_remove)) => {
+                            router_results.insert(service_name_str, (routers_to_add, routers_to_remove));
+                        }
+                        Err(e) => {
+                            // Log error but continue with other services
+                            eprintln!("Error checking routers for service {}: {}", service_name_str, e);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    Ok(router_results)
+}
+
 fn check_manifest(manifest_data: &ApplicationManifestData, dir_project_names: &Vec<String>) -> Result<(Vec<String>, Vec<String>)> {
     let manifest_project_names: HashSet<String> = manifest_data.projects
         .iter()
         .map(|project| project.name.clone())
         .collect();
-    println!("sync:130 manifest_project_names: {:?}", manifest_project_names);
+    
     let dir_project_names_set: HashSet<String> = dir_project_names
         .iter()
         .cloned()
@@ -153,12 +204,10 @@ fn check_manifest(manifest_data: &ApplicationManifestData, dir_project_names: &V
         .cloned()
         .filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str()))
         .collect();
-    println!("sync:141 projects_to_remove: {:?}", projects_to_remove);
     let projects_to_add: Vec<String> = dir_project_names_set
         .difference(&manifest_project_names)
         .cloned()
         .collect();
-    println!("sync:146 projects_to_add: {:?}", projects_to_add);
     Ok((projects_to_remove, projects_to_add))
 }
 
@@ -168,19 +217,16 @@ fn check_docker_compose(docker_compose: &DockerCompose, dir_project_names: &Vec<
         .cloned()
         .filter(|service| !DOCKER_SERVICES_TO_IGNORE.contains(&service.as_str()))
         .collect();
-    println!("sync:156 docker_services: {:?}", docker_services);
     let services_to_remove_docker: Vec<String> = docker_services
         .iter()
         .filter(|service| !dir_project_names.iter().any(|m| service.contains(m)))
         .cloned()
         .collect();
-    println!("sync:162 services_to_remove_docker: {:?}", services_to_remove_docker);
     let services_to_add_docker: Vec<String> = dir_project_names
         .iter()
         .filter(|project| !docker_services.iter().any(|m| m.contains(project.as_str())))
         .cloned()
         .collect();
-    println!("sync:168 services_to_add_docker: {:?}", services_to_add_docker);
     Ok((services_to_remove_docker, services_to_add_docker))
 }
 
@@ -202,9 +248,6 @@ fn check_runtime_files(
                 .difference(&pnpm_workspace_projects)
                 .cloned()
                 .collect();
-            println!("sync:190 pnpm_workspace_projects: {:?}", pnpm_workspace_projects);
-            println!("sync:191 pnpm_workspace_projects_to_remove: {:?}", pnpm_workspace_projects_to_remove);
-            println!("sync:192 pnpm_workspace_projects_to_add: {:?}", pnpm_workspace_projects_to_add);
             Ok((pnpm_workspace_projects_to_remove, pnpm_workspace_projects_to_add))
         } else {
             return Ok((Vec::new(), Vec::new()));
@@ -214,7 +257,6 @@ fn check_runtime_files(
         let full_package_json = package_json.clone();
         let package_json_projects: HashSet<String> = full_package_json.workspaces.unwrap_or_default().iter().cloned().filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str())).collect();
         let dir_project_names_set: HashSet<String> = dir_project_names.iter().cloned().filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str())).collect();
-        println!("sync:210 package_json_projects: {:?}", package_json_projects);
         let package_json_projects_to_remove: Vec<String> = package_json_projects
             .difference(&dir_project_names_set)
             .cloned()
@@ -223,8 +265,6 @@ fn check_runtime_files(
             .difference(&package_json_projects)
             .cloned()
             .collect();
-        println!("sync:219 package_json_projects_to_remove: {:?}", package_json_projects_to_remove);
-        println!("sync:220 package_json_projects_to_add: {:?}", package_json_projects_to_add);
         Ok((package_json_projects_to_remove, package_json_projects_to_add))
     } else {
         Ok((Vec::new(), Vec::new()))
@@ -269,6 +309,13 @@ impl CliCommand for SyncAllCommand {
                 .help("Flag to confirm any prompts")
                 .action(ArgAction::SetTrue),
         )
+        .arg(
+            Arg::new("prompts")
+                .short('P')
+                .long("prompts")
+                .help("JSON object with pre-provided answers for prompts (e.g., {\"svs-dummy\": {\"database\": \"none\", \"infrastructure\": \"none\", \"description\": \"none\"}})")
+                .value_name("JSON"),
+        )
     }
 
     fn handler(&self, matches: &clap::ArgMatches) -> Result<()> {
@@ -276,12 +323,20 @@ impl CliCommand for SyncAllCommand {
         // remove necessary projects from manifest.toml, update docker-compose.yml, pnpm-workspace.yaml, and package.json accordingly
         let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
-        let is_ci = std::env::var("CI").is_ok();
-        if is_ci {
-            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
-            writeln!(stdout, "Running in CI mode - All additions to artifact prompts and actions will be skipped")?;
+
+        // Parse prompts JSON if provided
+        let prompts_map: HashMap<String, HashMap<String, String>> = if let Some(prompts_json) = matches.get_one::<String>("prompts") {
+            let parsed: HashMap<String, HashMap<String, String>> = json_from_str(prompts_json).with_context(|| "Failed to parse prompts JSON")?;
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
+            writeln!(stdout, "Parsed prompts for {} projects:", parsed.len())?;
+            for (project_name, project_prompts) in &parsed {
+                writeln!(stdout, "  {}: {:?}", project_name, project_prompts)?;
+            }
             stdout.reset()?;
-        }
+            parsed
+        } else {
+            HashMap::new()
+        };
         let (app_root_path, _) = find_app_root_path(matches, RequiredLocation::Application)?;
         let manifest_path = app_root_path.join(".forklaunch").join("manifest.toml");
         
@@ -300,7 +355,6 @@ impl CliCommand for SyncAllCommand {
 
         let modules_path = app_root_path.join(Path::new(&existing_manifest_data
             .modules_path));
-        println!("sync:291 modules_path: {:?}", modules_path);
         
         // Read in docker-compose.yaml
         let docker_compose_path = if app_root_path.join("docker-compose.yaml").exists() {
@@ -318,22 +372,42 @@ impl CliCommand for SyncAllCommand {
         )
         .with_context(|| ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE)?;
 
-        println!("sync:309 Here we begin the sync operations. Starting with manifest.toml");
+        
         if modules_path.exists() {
             let mut rendered_templates = vec![];
             // project names in directories
-            let dir_project_names = find_project_dir_names(&modules_path)?;
+            let dir_project_names = find_project_dir_names(&modules_path, &mut stdout)?;
             let dir_project_names_set: HashSet<String> = dir_project_names.iter().cloned().collect();
-            println!("sync:315 dir_project_names: {:?}", dir_project_names);
-            println!("sync:316 dir_project_names_set: {:?}", dir_project_names_set);
-
+            
             // projects to remove and add from manifest.toml
             let (manifest_projects_to_remove, manifest_projects_to_add) = check_manifest(&manifest_data, &dir_project_names)?;
             
             // projects to remove from docker-compose.yml
             let (services_to_remove_docker, services_to_add_docker) = check_docker_compose(&docker_compose, &dir_project_names)?;
             
-            // RODO: check routers for services in directory {service_name}/services against manifest.toml
+            // Check routers for all services
+            let router_results = check_routers_for_all_services(&modules_path, &manifest_data)?;
+            
+            // Log router sync results
+            for (service_name, (routers_to_add, routers_to_remove)) in &router_results {
+                if !routers_to_add.is_empty() || !routers_to_remove.is_empty() {
+                    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
+                    writeln!(stdout, "Router sync results for service '{}':", service_name)?;
+                    stdout.reset()?;
+                    
+                    if !routers_to_add.is_empty() {
+                        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+                        writeln!(stdout, "  Routers to add: {:?}", routers_to_add)?;
+                        stdout.reset()?;
+                    }
+                    
+                    if !routers_to_remove.is_empty() {
+                        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
+                        writeln!(stdout, "  Routers to remove: {:?}", routers_to_remove)?;
+                        stdout.reset()?;
+                    }
+                }
+            }
             
             // remove projects from manifest.toml
             if !manifest_projects_to_remove.is_empty() {
@@ -357,13 +431,13 @@ impl CliCommand for SyncAllCommand {
                     }
                 }
                 let new_manifest_projects: HashSet<String> = manifest_data.projects.iter().map(|project| project.name.clone()).filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str())).collect();
-                println!("sync:347 new_manifest_projects: {:?}", new_manifest_projects);
+                
                 let validation_result = validate_removal_from_artifact(
                     &new_manifest_projects,
                     &dir_project_names_set,
                     &format!("Successfully removed {} project(s) from manifest.toml", manifest_projects_to_remove.len()),
                     &format!("Some projects were not removed from manifest.toml"),
-                    "sync:345",
+                    "sync:354",
                     &mut stdout)?;
                 if validation_result {
                     stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
@@ -377,7 +451,7 @@ impl CliCommand for SyncAllCommand {
                 writeln!(stdout, "No projects to remove from manifest.toml")?;
                 stdout.reset()?;
             }
-            if !manifest_projects_to_add.is_empty() && !is_ci {
+            if !manifest_projects_to_add.is_empty() {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
                 writeln!(stdout, "Found {} project(s) in directories that are not in manifest:", manifest_projects_to_add.len())?;
                 for project_name in &manifest_projects_to_add {
@@ -399,6 +473,9 @@ impl CliCommand for SyncAllCommand {
                             &mut line_editor, 
                             &mut stdout, 
                             matches,
+                            "category",
+                            &format!("initialize category for {}", dir_name),
+                            &prompts_map,
                             &dir_name,
                         )?.parse()?;
                         let artifacts = add_package_to_artifact(
@@ -417,6 +494,7 @@ impl CliCommand for SyncAllCommand {
                             None,
                             None,
                             None,
+                            &prompts_map,
                         )?;
                         if let Some(ArtifactResult::String(manifest_str)) = artifacts.get("manifest") {
                             new_manifest_data = toml_from_str::<ApplicationManifestData>(manifest_str)?;
@@ -449,12 +527,7 @@ impl CliCommand for SyncAllCommand {
                     },
                 );
             } else {
-                if !is_ci {
-                    return Err(anyhow::anyhow!("Failed to sync manifest.toml"));
-                }
-                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
-                writeln!(stdout, "Skipping validation for manifest.toml due to CI mode")?;
-                stdout.reset()?;
+                return Err(anyhow::anyhow!("Failed to sync manifest.toml"));
             }
             
             // remove projects from docker-compose.yaml
@@ -477,25 +550,20 @@ impl CliCommand for SyncAllCommand {
                     }
                 }
                 let new_docker_services: HashSet<String> = docker_compose.services.keys().cloned().filter(|service| !DOCKER_SERVICES_TO_IGNORE.contains(&service.as_str())).collect();
-                println!("sync:409 new_docker_services: {:?}", new_docker_services);
+                
                 let validation_result = validate_removal_from_artifact(
                     &new_docker_services,
                     &dir_project_names_set,
                     &format!("Successfully removed {} service(s) from docker-compose.yaml", services_to_remove_docker.len()),
                     &format!("Some services were not removed from docker-compose.yaml"),
-                    "sync:467",
+                    "sync:474",
                     &mut stdout)?;
                 if validation_result {
                     stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
                     writeln!(stdout, "Successfully removed {} service(s) from docker-compose.yaml", services_to_remove_docker.len())?;
                     stdout.reset()?;
                 } else {
-                    if !is_ci {
-                        return Err(anyhow::anyhow!("Failed to remove {} service(s) from docker-compose.yaml", services_to_remove_docker.len()));
-                    }
-                    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
-                    writeln!(stdout, "Skipping validation for docker-compose.yaml due to CI mode")?;
-                    stdout.reset()?;
+                    return Err(anyhow::anyhow!("Failed to remove {} service(s) from docker-compose.yaml", services_to_remove_docker.len()));
                 }
             } else {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
@@ -503,7 +571,7 @@ impl CliCommand for SyncAllCommand {
                 stdout.reset()?;
             }
             // let mut docker_compose_string = String::new();
-            if !services_to_add_docker.is_empty() && !is_ci {
+            if !services_to_add_docker.is_empty() {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
                 writeln!(stdout, "Found {} service(s) in directories that are not in docker-compose.yaml:", services_to_add_docker.len())?;
                 for service in &services_to_add_docker {
@@ -522,6 +590,9 @@ impl CliCommand for SyncAllCommand {
                             &mut line_editor, 
                             &mut stdout, 
                             matches,
+                            "category",
+                            &format!("initialize category for {}", dir_name),
+                            &prompts_map,
                             &dir_name,
                         )?.parse()?;
                         if !matches!(package_type, InitializeType::Router | InitializeType::Library) {
@@ -542,6 +613,7 @@ impl CliCommand for SyncAllCommand {
                                 None,
                                 None,
                                 None,
+                                &prompts_map,
                             )?;
                             if let Some(ArtifactResult::String(s)) = artifacts.get("docker_compose") {
                                 docker_compose = yaml_from_str(&s)?;
@@ -554,11 +626,6 @@ impl CliCommand for SyncAllCommand {
                 writeln!(stdout, "No services to add to docker-compose.yaml")?;
                 stdout.reset()?;
             }
-            // if docker_compose_string.is_empty() {
-            //     println!("sync:535 docker_compose_string is empty");
-            //     docker_compose_string = yaml_to_string(&docker_compose)?;
-            // }
-            // let docker_compose_data: DockerCompose = yaml_from_str(&docker_compose_string)?;
             let (new_docker_services_to_remove, new_docker_services_to_add) = check_docker_compose(&docker_compose, &dir_project_names)?;
             if new_docker_services_to_remove.is_empty() && new_docker_services_to_add.is_empty() {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
@@ -607,9 +674,8 @@ impl CliCommand for SyncAllCommand {
                 pnpm_workspace.as_ref(), 
                 &package_json, 
                 &dir_project_names)?;
-            println!("sync:448 runtime_projects_to_remove: {:?}", runtime_projects_to_remove);
-            println!("sync:449 runtime_projects_to_add: {:?}", runtime_projects_to_add);
-            // remove projects from pnpm-workspace.yaml and package.json
+            
+            
             let mut pnpm_workspace_buffer: Option<String> = None;
             let mut application_package_json_buffer: Option<String> = Some(yaml_to_string(&package_json)?);
             match manifest_data.runtime.parse::<Runtime>()? {
@@ -628,25 +694,21 @@ impl CliCommand for SyncAllCommand {
                             "Do you want to remove these packages from pnpm-workspace.yaml? (y/N) ")?;
                         if continue_sync {
                             
-                            println!("sync:468 pnpm_workspace: {:?}", pnpm_workspace);
+                            
                             if let Some(ref mut pnpm_workspace) = pnpm_workspace {
                                 for package in &runtime_projects_to_remove {
-                                    println!("sync:470 package: {:?}", package);
                                     remove_project_definition_from_pnpm_workspace(
                                         pnpm_workspace,
                                         &package,
                                     )?;
-                                    println!("sync:475 content: {:?}", pnpm_workspace);
                                 }
-                                println!("sync:477 content: {:?}", pnpm_workspace);
                                 let new_pnpm_workspace_projects: HashSet<String> = pnpm_workspace.packages.iter().cloned().filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str())).collect();
-                                println!("sync:484 new_pnpm_workspace_projects: {:?}", new_pnpm_workspace_projects);
                                 let validation_result = validate_removal_from_artifact(
                                     &new_pnpm_workspace_projects,
                                     &dir_project_names_set,
                                     &format!("Successfully removed {} package(s) from pnpm-workspace.yaml", runtime_projects_to_remove.len()),
                                     &format!("Some packages were not removed from pnpm-workspace.yaml"),
-                                    "sync:484",
+                                    "sync:653",
                                     &mut stdout)?;
                                 if !validation_result {
                                     return Err(anyhow::anyhow!("Failed to remove {} package(s) from pnpm-workspace.yaml", runtime_projects_to_remove.len()));
@@ -658,7 +720,7 @@ impl CliCommand for SyncAllCommand {
                         writeln!(stdout, "No packages to remove from pnpm-workspace.yaml")?;
                         stdout.reset()?;
                     }
-                    if !runtime_projects_to_add.is_empty() && !is_ci {
+                    if !runtime_projects_to_add.is_empty() {
                         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
                         writeln!(stdout, "Found {} package(s) in directories that are not in pnpm-workspace.yaml:", runtime_projects_to_add.len())?;
                         for package in &runtime_projects_to_add {
@@ -677,6 +739,9 @@ impl CliCommand for SyncAllCommand {
                                     &mut line_editor, 
                                     &mut stdout, 
                                     matches,
+                                    "category",
+                                    &format!("initialize category for {}", dir_name),
+                                    &prompts_map,
                                     &dir_name,
                                 )?.parse()?;
                                 // check if package type is router, if not router use add_project_definition_to_pnpm_workspace
@@ -695,7 +760,7 @@ impl CliCommand for SyncAllCommand {
                                         &new_pnpm_workspace_projects,
                                         &format!("Successfully added {} to pnpm-workspace.yaml", dir_name),
                                         &format!("Package {} was not added to pnpm-workspace.yaml", dir_name),
-                                        "sync:679",
+                                        "sync:681",
                                         &mut stdout,
                                     )?;
                                     if !validation_result {
@@ -712,7 +777,7 @@ impl CliCommand for SyncAllCommand {
                     pnpm_workspace_buffer = Some(yaml_to_string(&pnpm_workspace)?);
                 }
                 Runtime::Bun => {
-                    println!("sync:533 package_json: {:?}", package_json);
+                    
                     if !runtime_projects_to_remove.is_empty() {
                         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
                         writeln!(stdout, "Found {} package(s) in package.json that no longer exist in directories:", runtime_projects_to_remove.len())?;
@@ -727,21 +792,20 @@ impl CliCommand for SyncAllCommand {
                             "Do you want to remove these packages from package.json? (y/N) ")?;
                         if continue_sync {
                             for package in &runtime_projects_to_remove {
-                                println!("sync:536 package: {:?}", package);
+                                
                                 remove_project_definition_from_package_json(
                                     &mut package_json,
                                     &package,
                                 )?;
-                                println!("sync:539 package_json: {:?}", package_json);
+                                
                             }
                             let new_package_json_projects: HashSet<String> = package_json.workspaces.as_ref().unwrap_or(&vec![]).iter().cloned().filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str())).collect();
-                            println!("sync:547 new_package_json_projects: {:?}", new_package_json_projects);
                             let validation_result = validate_removal_from_artifact(
                                 &new_package_json_projects,
                                 &dir_project_names_set,
                                 &format!("Successfully removed {} package(s) from package.json", runtime_projects_to_remove.len()),
                                 &format!("Some packages were not removed from package.json"),
-                                "sync:547",
+                                "sync:727",
                                 &mut stdout,
                             )?;
                             if !validation_result {
@@ -753,7 +817,7 @@ impl CliCommand for SyncAllCommand {
                         writeln!(stdout, "No packages to remove from package.json")?;
                         stdout.reset()?;
                     }
-                    if !runtime_projects_to_add.is_empty() && !is_ci {
+                    if !runtime_projects_to_add.is_empty() {
                         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
                         writeln!(stdout, "Found {} package(s) in directories that are not in package.json:", runtime_projects_to_add.len())?;
                         for package in &runtime_projects_to_add {
@@ -772,6 +836,9 @@ impl CliCommand for SyncAllCommand {
                                     &mut line_editor, 
                                     &mut stdout, 
                                     matches,
+                                    "category",
+                                    &format!("initialize category for {}", dir_name),
+                                    &prompts_map,
                                     &dir_name,
                                 )?.parse()?;
                                 if package_type != InitializeType::Router {
@@ -786,7 +853,7 @@ impl CliCommand for SyncAllCommand {
                                     &new_package_json_projects,
                                     &format!("Successfully added {} to package.json", dir_name),
                                     &format!("Package {} was not added to package.json", dir_name),
-                                    "sync:677",
+                                    "sync:772",
                                     &mut stdout,
                                 )?;
                                 if !validation_result {
@@ -815,7 +882,6 @@ impl CliCommand for SyncAllCommand {
                 });
             }
 
-            println!("sync:580 removing projects from universal SDK");
             let (mut sdk_ast_program_text, mut sdk_project_json) = read_universal_sdk_content(&modules_path)?;
             if !manifest_projects_to_remove.is_empty() {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
@@ -830,12 +896,13 @@ impl CliCommand for SyncAllCommand {
                     &mut stdout, 
                     "Do you want to remove these projects from universal SDK? (y/N) ")?;
                 if continue_sync {
-                    println!("sync:593 app_name: {:?}", manifest_data.app_name);
+                    
                     (sdk_ast_program_text, sdk_project_json) = remove_project_vec_from_universal_sdk(
                         &manifest_data.app_name,
                         &manifest_projects_to_remove,
                         &mut sdk_ast_program_text,
                         &mut sdk_project_json,
+                        &mut stdout,
                     )?;
                 }
             } else {
@@ -843,7 +910,7 @@ impl CliCommand for SyncAllCommand {
                 writeln!(stdout, "No projects to remove from universal SDK")?;
                 stdout.reset()?;
             }
-            if !manifest_projects_to_add.is_empty() && !is_ci {
+            if !manifest_projects_to_add.is_empty() {
                 stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
                 writeln!(stdout, "Found {} package(s) in directories that are not in universal SDK:", manifest_projects_to_add.len())?;
                 for package in &manifest_projects_to_add {
@@ -856,7 +923,6 @@ impl CliCommand for SyncAllCommand {
                     &mut stdout, 
                     "Do you want to add these packages to universal SDK? (y/N) ")?;
                 if continue_sync {
-                    println!("sync:741 app_name: {:?}", manifest_data.app_name);
                     (sdk_ast_program_text, sdk_project_json) = add_project_vec_to_universal_sdk(
                         &manifest_data.app_name,
                         &manifest_projects_to_add,

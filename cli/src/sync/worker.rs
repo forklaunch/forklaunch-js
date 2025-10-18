@@ -1,31 +1,25 @@
 use std::{
     path::Path, 
-    collections::HashSet, 
-    io::Write,
-    fs::read_to_string,
+    collections::{HashSet, HashMap}, 
 };
 
 use anyhow::{Context, Result};
-use clap::{ArgMatches, Arg};
+use clap::{ArgMatches};
 use rustyline::{Editor, history::DefaultHistory};
-use serde_json::{from_str as json_from_str, to_string_pretty as json_to_string_pretty};
-use serde_yml::{from_str as yaml_from_str, to_string as yaml_to_string};
-use toml::{from_str as toml_from_str, to_string_pretty as toml_to_string_pretty};
-use termcolor::{StandardStream, WriteColor, Color, ColorSpec};
+use serde_json::{from_str as json_from_str};
+use serde_yml::{from_str as yaml_from_str};
+use toml::{from_str as toml_from_str};
+use termcolor::{StandardStream};
 use convert_case::{Case, Casing};
 
 use crate::{
-    // CliCommand,
     constants::{Database, WorkerType, Runtime,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE,
-        ERROR_FAILED_TO_READ_PACKAGE_JSON,
     },
     core::{
-        // base_path::{RequiredLocation, find_app_root_path, prompt_base_path},
-        // command::command,
         database::{
             get_db_driver, 
             get_database_port,
@@ -33,17 +27,14 @@ use crate::{
         },
         docker::{add_worker_definition_to_docker_compose, DockerCompose},
         manifest::{
-            // InitializableManifestConfig, 
-            // InitializableManifestConfigMetadata, 
             ProjectType, 
             application::ApplicationManifestData, 
             worker::WorkerManifestData,
-            add_project_definition_to_manifest,
             ResourceInventory, ProjectMetadata,
+            add_project_definition_to_manifest,
         },
         package_json::{
             application_package_json::ApplicationPackageJson,
-            project_package_json::ProjectPackageJson,
             add_project_definition_to_package_json,
         },
         pnpm_workspace::{
@@ -56,7 +47,7 @@ use crate::{
             get_worker_type_name,
         },
     },
-    prompt::{ArrayCompleter, prompt_with_validation, prompt_without_validation},
+    prompt::{ArrayCompleter, prompt_with_validation, prompt_without_validation, prompt_with_validation_with_answers, prompt_without_validation_with_answers},
     sync::{constants::{DIRS_TO_IGNORE, 
         DOCKER_SERVICES_TO_IGNORE, 
         RUNTIME_PROJECTS_TO_IGNORE},
@@ -212,10 +203,11 @@ pub(crate) fn sync_worker_setup(
     manifest_data: &mut ApplicationManifestData,
     stdout: &mut StandardStream,
     matches: &ArgMatches,
+    prompts_map: &HashMap<String, HashMap<String, String>>,
 ) -> Result<WorkerManifestData> {
     let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
 
-    let r#type: WorkerType = prompt_with_validation(
+    let r#type: WorkerType = prompt_with_validation_with_answers(
         &mut line_editor,
         stdout,
         "type",
@@ -224,6 +216,8 @@ pub(crate) fn sync_worker_setup(
         Some(&WorkerType::VARIANTS),
         |input| WorkerType::VARIANTS.contains(&input),
         |_| "Invalid worker type. Please try again".to_string(),
+        worker_name,
+        prompts_map,
     )?.parse()?;
     // TODO: Find worker type from somewhere in the worker directory
 
@@ -233,7 +227,7 @@ pub(crate) fn sync_worker_setup(
     if r#type == WorkerType::Database {
         // TODO: get database from package.json
         database = Some(
-            prompt_with_validation(
+            prompt_with_validation_with_answers(
                 &mut line_editor,
                 stdout,
                 "database",
@@ -242,6 +236,8 @@ pub(crate) fn sync_worker_setup(
                 Some(&Database::VARIANTS),
                 |input| Database::VARIANTS.contains(&input),
                 |_| "Invalid worker database type. Please try again".to_string(),
+                worker_name,
+                prompts_map,
             )?
             .parse()?,
         );
@@ -281,13 +277,15 @@ pub(crate) fn sync_worker_setup(
     }
     
 
-    let description = prompt_without_validation(
+    let description = prompt_without_validation_with_answers(
         &mut line_editor,
         stdout,
         "description",
         matches,
         "worker description (optional)",
         None,
+        worker_name,
+        prompts_map,
     )?;
 
     let worker_data: WorkerManifestData = WorkerManifestData {

@@ -1,5 +1,5 @@
 use std::{path::Path, 
-    collections::HashSet};
+    collections::{HashSet, HashMap}};
 
 use convert_case::{Case, Casing};
 use anyhow::{Context, Result};
@@ -8,7 +8,6 @@ use termcolor::{StandardStream};
 use clap::ArgMatches;
 
 use crate::{
-    // CliCommand,
     constants::{
         Runtime,
         ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_MANIFEST,
@@ -25,7 +24,7 @@ use crate::{
         package_json::{add_project_definition_to_package_json},
         pnpm_workspace::{add_project_definition_to_pnpm_workspace},
     },
-    prompt::{ArrayCompleter, prompt_without_validation},
+    prompt::{ArrayCompleter, prompt_without_validation, prompt_without_validation_with_answers},
     sync::{constants::{DIRS_TO_IGNORE,
         RUNTIME_PROJECTS_TO_IGNORE},
         utils::validate_addition_to_artifact,
@@ -67,72 +66,75 @@ pub(crate) fn add_library_to_manifest_with_validation(
     }
 }
 
-pub(crate) fn add_library_to_runtime_files_with_validation(
-    manifest_data: &mut LibraryManifestData,
-    base_path: &Path,
-    stdout: &mut StandardStream,
-) -> Result<(Option<String>, Option<String>)> {
-    let runtime = manifest_data.runtime.parse()?;
+// pub(crate) fn add_library_to_runtime_files_with_validation(
+//     manifest_data: &mut LibraryManifestData,
+//     base_path: &Path,
+//     stdout: &mut StandardStream,
+// ) -> Result<(Option<String>, Option<String>)> {
+//     let runtime = manifest_data.runtime.parse()?;
 
-    let mut package_json_buffer: Option<String> = None;
-    let mut pnpm_workspace_buffer: Option<String> = None;
+//     let mut package_json_buffer: Option<String> = None;
+//     let mut pnpm_workspace_buffer: Option<String> = None;
 
-    match runtime {
-        Runtime::Bun => {
-            package_json_buffer = Some(
-                add_project_definition_to_package_json(base_path, manifest_data)
-                    .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON)?,
-            );
-            let new_package_json_projects: HashSet<String> = package_json_buffer.iter().cloned().filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str())).collect();
-            let validation_result = validate_addition_to_artifact(
-                &manifest_data.library_name,
-                &new_package_json_projects,
-                &format!("Successfully added {} to package.json", manifest_data.library_name),
-                &format!("Library {} was not added to package.json", manifest_data.library_name),
-                "sync:library:86",
-                stdout,
-            )?;
-            if !validation_result {
-                return Err(anyhow::anyhow!("Failed to add {} to package.json", manifest_data.library_name))
-            }
-        }
-        Runtime::Node => {
-            pnpm_workspace_buffer = Some(
-                add_project_definition_to_pnpm_workspace(base_path, manifest_data)
-                    .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?,
-            );
-            let new_pnpm_workspace_projects: HashSet<String> = pnpm_workspace_buffer.iter().cloned().filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str())).collect();
-            let validation_result = validate_addition_to_artifact(
-                &manifest_data.library_name,
-                &new_pnpm_workspace_projects,
-                &format!("Successfully added {} to pnpm-workspace.yaml", manifest_data.library_name),
-                &format!("Library {} was not added to pnpm-workspace.yaml", manifest_data.library_name),
-                "sync:library:95",
-                stdout,
-            )?;
-            if !validation_result {
-                return Err(anyhow::anyhow!("Failed to add {} to pnpm-workspace.yaml", manifest_data.library_name))
-            }
-        }
-    }
-    Ok((package_json_buffer, pnpm_workspace_buffer))
-}
+//     match runtime {
+//         Runtime::Bun => {
+//             package_json_buffer = Some(
+//                 add_project_definition_to_package_json(base_path, manifest_data)
+//                     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PACKAGE_JSON)?,
+//             );
+//             let new_package_json_projects: HashSet<String> = package_json_buffer.iter().cloned().filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str())).collect();
+//             let validation_result = validate_addition_to_artifact(
+//                 &manifest_data.library_name,
+//                 &new_package_json_projects,
+//                 &format!("Successfully added {} to package.json", manifest_data.library_name),
+//                 &format!("Library {} was not added to package.json", manifest_data.library_name),
+//                 "sync:library:86",
+//                 stdout,
+//             )?;
+//             if !validation_result {
+//                 return Err(anyhow::anyhow!("Failed to add {} to package.json", manifest_data.library_name))
+//             }
+//         }
+//         Runtime::Node => {
+//             pnpm_workspace_buffer = Some(
+//                 add_project_definition_to_pnpm_workspace(base_path, manifest_data)
+//                     .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_PNPM_WORKSPACE)?,
+//             );
+//             let new_pnpm_workspace_projects: HashSet<String> = pnpm_workspace_buffer.iter().cloned().filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str())).collect();
+//             let validation_result = validate_addition_to_artifact(
+//                 &manifest_data.library_name,
+//                 &new_pnpm_workspace_projects,
+//                 &format!("Successfully added {} to pnpm-workspace.yaml", manifest_data.library_name),
+//                 &format!("Library {} was not added to pnpm-workspace.yaml", manifest_data.library_name),
+//                 "sync:library:95",
+//                 stdout,
+//             )?;
+//             if !validation_result {
+//                 return Err(anyhow::anyhow!("Failed to add {} to pnpm-workspace.yaml", manifest_data.library_name))
+//             }
+//         }
+//     }
+//     Ok((package_json_buffer, pnpm_workspace_buffer))
+// }
 
 pub(crate) fn sync_library_setup(
     library_name: &str,
     manifest_data: &mut ApplicationManifestData,
     stdout: &mut StandardStream,
     matches: &ArgMatches,
+    prompts_map: &HashMap<String, HashMap<String, String>>,
 ) -> Result<LibraryManifestData> {
     let mut line_editor = Editor::<ArrayCompleter, DefaultHistory>::new()?;
 
-    let description = prompt_without_validation(
+    let description = prompt_without_validation_with_answers(
         &mut line_editor,
         stdout,
         "description",
         matches,
         "library description (optional)",
         None,
+        library_name,
+        prompts_map,
     )?;
 
     let manifest_data: LibraryManifestData = LibraryManifestData {

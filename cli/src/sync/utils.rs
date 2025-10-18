@@ -1,4 +1,4 @@
-use std::{path::Path, collections::{HashSet, HashMap}, io::Write};
+use std::{path::Path, collections::{HashSet, HashMap}, io::Write, fs::read_to_string};
 
 use anyhow::Result;
 use clap::ArgMatches;
@@ -6,6 +6,8 @@ use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
 use serde_json::{from_str as json_from_str, to_string_pretty as json_to_string_pretty};
 use serde_yml::to_string as yaml_to_string;
 use derive_more::From;
+use oxc_allocator::Allocator;
+use oxc_ast::ast::SourceType;
 
 use crate::{
     constants::{InitializeType, Runtime},
@@ -15,6 +17,7 @@ use crate::{
         package_json::{application_package_json::ApplicationPackageJson, project_package_json::ProjectPackageJson, add_project_definition_to_package_json_mut, remove_project_definition_from_package_json},
         pnpm_workspace::{PnpmWorkspace, add_project_definition_to_pnpm_workspace_mut, remove_project_definition_from_pnpm_workspace},
         universal_sdk::{read_universal_sdk_content, add_project_vec_to_universal_sdk, remove_project_vec_from_universal_sdk},
+        ast::{parse_ast_program::parse_ast_program, validation::analyze_project_references_against_target},
     },
     sync::{
         constants::{RUNTIME_PROJECTS_TO_IGNORE, DIRS_TO_IGNORE, DOCKER_SERVICES_TO_IGNORE},
@@ -30,12 +33,12 @@ use crate::{
 pub enum ArtifactResult {
     String(String),
     ProjectType(ProjectType),
-    Manifest(ApplicationManifestData),
-    DockerCompose(DockerCompose),
-    PackageJson(ApplicationPackageJson),
-    PnpmWorkspace(PnpmWorkspace),
-    USdkJson(ProjectPackageJson),
-    OptionString(Option<String>),
+    // Manifest(ApplicationManifestData),
+    // DockerCompose(DockerCompose),
+    // PackageJson(ApplicationPackageJson),
+    // PnpmWorkspace(PnpmWorkspace),
+    // USdkJson(ProjectPackageJson),
+    // OptionString(Option<String>),
 }
 
 pub(crate) fn add_package_to_artifact(
@@ -53,12 +56,12 @@ pub(crate) fn add_package_to_artifact(
     usdk_ast_program_text: Option<&mut String>, //optional
     usdk_json: Option<&mut String>, //optional
     _project_type: Option<ProjectType>, //optional
-    service_name: Option<String>, //optional
+    _service_name: Option<String>, //optional
+    prompts_map: &HashMap<String, HashMap<String, String>>, //optional
 ) -> Result<HashMap<String, ArtifactResult>> {
-    println!("sync:utils:49 add_package_to_artifact");
-    println!("sync:utils:49 package_name: {:?}", package_name);
-    println!("sync:utils:49 artifact_type: {:?}", artifact_type);
-    println!("sync:utils:49 package_type: {:?}", package_type);
+    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+    writeln!(stdout, "Adding package {} to artifact: {}", package_name, artifact_type)?;
+    stdout.reset()?;
     let mut results = HashMap::new();
     match package_type {
         InitializeType::Service => {
@@ -67,7 +70,8 @@ pub(crate) fn add_package_to_artifact(
                 &modules_path, 
                 manifest_data, 
                 stdout, 
-                matches)?;
+                matches,
+                prompts_map)?;
             match artifact_type {
                 "manifest" => {
                     let forklaunch_manifest_buffer = add_service_to_manifest_with_validation(&mut service_manifest_data, stdout)?;
@@ -166,7 +170,8 @@ pub(crate) fn add_package_to_artifact(
                 &package_name,
                 manifest_data,
                 stdout,
-                matches)?;
+                matches,
+                prompts_map)?;
             match artifact_type {
                 "manifest" => {
                     let forklaunch_manifest_buffer = add_library_to_manifest_with_validation(&mut library_manifest_data, stdout)?;
@@ -242,7 +247,8 @@ pub(crate) fn add_package_to_artifact(
                 &package_name,
                 manifest_data,
                 stdout,
-                matches)?;
+                matches,
+                prompts_map)?;
             match artifact_type {
                 "manifest" => {
                     let forklaunch_manifest_buffer = add_module_to_manifest_with_validation(&mut module_manifest_data, stdout)?;
@@ -326,7 +332,8 @@ pub(crate) fn add_package_to_artifact(
                 &app_root_path,
                 manifest_data,
                 stdout,
-                matches)?;
+                matches,
+                prompts_map)?;
             let project_type = router_manifest_data.projects.iter().find(|project| project.name == package_name).unwrap().r#type.clone();
             match artifact_type {
                 "manifest" => {
@@ -366,7 +373,8 @@ pub(crate) fn add_package_to_artifact(
                 &package_name,
                 manifest_data,
                 stdout,
-                matches)?;
+                matches,
+                prompts_map)?;
             match artifact_type {
                 "manifest" => {
                     let forklaunch_manifest_buffer = add_worker_to_manifest_with_validation(&mut worker_manifest_data, stdout)?;
@@ -450,141 +458,142 @@ pub(crate) fn add_package_to_artifact(
     Ok(results)
 }
 
-pub(crate) fn remove_package_from_artifact(
-    packages_to_remove: &Vec<String>,
-    manifest_data: &mut ApplicationManifestData,
-    docker_compose: Option<&mut DockerCompose>,
-    package_json: Option<&mut ApplicationPackageJson>,
-    pnpm_workspace: Option<&mut PnpmWorkspace>,
-    universal_sdk_program_text: Option<&mut String>,
-    universal_sdk_json: Option<&mut String>,
-    app_root_path: &Path,
-    modules_path: &Path,
-    artifact_type: &str,
-    stdout: &mut StandardStream,
-) -> Result<HashMap<String, ArtifactResult>> {
-    let mut results = HashMap::new();
-    match artifact_type {
-        "manifest" => {
-            for project_name in packages_to_remove {
-                remove_project_definition_from_manifest(manifest_data, &project_name)?;
-            }
-            let new_manifest_projects: HashSet<String> = manifest_data.projects
-                .iter()
-                .map(|project| project.name.clone())
-                .filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str()))
-                .collect();
-            let validation_result = validate_removal_from_artifact(
-                &new_manifest_projects,
-                &packages_to_remove.into_iter().cloned().collect(),
-                &format!("Successfully removed {} project(s) from manifest.toml", packages_to_remove.len()),
-                &format!("Some projects were not removed from manifest.toml"),
-                "sync:utils:404",
-                stdout,
-            )?;
-            if !validation_result {
-                return Err(anyhow::anyhow!("Failed to remove {} project(s) from manifest.toml", packages_to_remove.len()));
-            }
-            results.insert("manifest".to_string(), ArtifactResult::Manifest(manifest_data.clone()));
-        }
-        "docker_compose" => {
-            if let Some(docker_compose) = docker_compose {
-                for project_name in packages_to_remove {
-                    remove_service_from_docker_compose(docker_compose, &project_name)?;
-                    remove_worker_from_docker_compose(docker_compose, &project_name)?;
-                }
-                let new_docker_services: HashSet<String> = docker_compose.services
-                    .keys()
-                    .filter(|service| !DOCKER_SERVICES_TO_IGNORE.contains(&service.as_str()))
-                    .cloned()
-                    .collect();
-                let validation_result = validate_removal_from_artifact(
-                    &new_docker_services,
-                    &packages_to_remove.into_iter().cloned().collect(),
-                    &format!("Successfully removed {} project(s) from docker-compose.yml", packages_to_remove.len()),
-                    &format!("Some projects were not removed from docker-compose.yml"),
-                    "sync:utils:421",
-                    stdout,
-                )?;
-                if !validation_result {
-                    return Err(anyhow::anyhow!("Failed to remove {} project(s) from docker-compose.yml", packages_to_remove.len()));
-                }
-                results.insert("docker_compose".to_string(), ArtifactResult::DockerCompose(docker_compose.clone()));
-            } else {
-                return Err(anyhow::anyhow!("Docker compose data is required to proceed."));
-            }
-        }
-        "runtime" => {
-            match manifest_data.runtime.parse()? {
-                Runtime::Node => {
-                    if let Some(pnpm_workspace) = pnpm_workspace {
-                        for project_name in packages_to_remove {
-                            remove_project_definition_from_pnpm_workspace(pnpm_workspace, &project_name)?;
-                        }
-                        let new_pnpm_workspace_projects: HashSet<String> = pnpm_workspace.packages
-                            .iter()
-                            .filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str()))
-                            .cloned()
-                            .collect();
-                        let validation_result = validate_removal_from_artifact(
-                            &new_pnpm_workspace_projects,
-                            &packages_to_remove.into_iter().cloned().collect(),
-                            &format!("Successfully removed {} project(s) from pnpm-workspace.yaml", packages_to_remove.len()),
-                            &format!("Some projects were not removed from pnpm-workspace.yaml"),
-                            "sync:utils:440",
-                            stdout,
-                        )?;
-                        if !validation_result {
-                            return Err(anyhow::anyhow!("Failed to remove {} project(s) from pnpm-workspace.yaml", packages_to_remove.len()));
-                        }
-                        results.insert("pnpm_workspace".to_string(), ArtifactResult::PnpmWorkspace(pnpm_workspace.clone()));
-                    }
-                }
-                Runtime::Bun => {
-                    if let Some(package_json) = package_json {
-                        for project_name in packages_to_remove {
-                            remove_project_definition_from_package_json(package_json, &project_name)?;
-                        }
-                        let new_package_json_projects: HashSet<String> = package_json.workspaces
-                            .as_ref()
-                            .unwrap_or(&Vec::new())
-                            .iter()
-                            .filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str()))
-                            .cloned()
-                            .collect();
-                        let validation_result = validate_removal_from_artifact(
-                            &new_package_json_projects,
-                            &packages_to_remove.into_iter().cloned().collect(),
-                            &format!("Successfully removed {} project(s) from package.json", packages_to_remove.len()),
-                            &format!("Some projects were not removed from package.json"),
-                            "sync:utils:445",
-                            stdout,
-                        )?;
-                        if !validation_result {
-                            return Err(anyhow::anyhow!("Failed to remove {} project(s) from package.json", packages_to_remove.len()));
-                        }
-                        results.insert("package_json".to_string(), ArtifactResult::PackageJson(package_json.clone()));
-                    }
-                }
-            }
-        }
-        "universal-sdk" => {
-            let (mut universal_sdk_program_text, mut universal_sdk_project_json) = read_universal_sdk_content(&modules_path)?;
-            (universal_sdk_program_text, universal_sdk_project_json) = remove_project_vec_from_universal_sdk(
-                &manifest_data.app_name,
-                &packages_to_remove,
-                &universal_sdk_program_text,
-                &mut universal_sdk_project_json,
-            )?;
-            results.insert("sdk_ast_program_text".to_string(), ArtifactResult::String(universal_sdk_program_text));
-            results.insert("sdk_project_json".to_string(), ArtifactResult::String(json_to_string_pretty(&universal_sdk_project_json)?));
-        }
-        _ => {
-            return Err(anyhow::anyhow!("Invalid artifact type"));
-        }
-    }
-    Ok(results)
-}
+// pub(crate) fn remove_package_from_artifact(
+//     packages_to_remove: &Vec<String>,
+//     manifest_data: &mut ApplicationManifestData,
+//     docker_compose: Option<&mut DockerCompose>,
+//     package_json: Option<&mut ApplicationPackageJson>,
+//     pnpm_workspace: Option<&mut PnpmWorkspace>,
+//     _universal_sdk_program_text: Option<&mut String>,
+//     _universal_sdk_json: Option<&mut String>,
+//     _app_root_path: &Path,
+//     modules_path: &Path,
+//     artifact_type: &str,
+//     stdout: &mut StandardStream,
+// ) -> Result<HashMap<String, ArtifactResult>> {
+//     let mut results = HashMap::new();
+//     match artifact_type {
+//         "manifest" => {
+//             for project_name in packages_to_remove {
+//                 remove_project_definition_from_manifest(manifest_data, &project_name)?;
+//             }
+//             let new_manifest_projects: HashSet<String> = manifest_data.projects
+//                 .iter()
+//                 .map(|project| project.name.clone())
+//                 .filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str()))
+//                 .collect();
+//             let validation_result = validate_removal_from_artifact(
+//                 &new_manifest_projects,
+//                 &packages_to_remove.into_iter().cloned().collect(),
+//                 &format!("Successfully removed {} project(s) from manifest.toml", packages_to_remove.len()),
+//                 &format!("Some projects were not removed from manifest.toml"),
+//                 "sync:utils:404",
+//                 stdout,
+//             )?;
+//             if !validation_result {
+//                 return Err(anyhow::anyhow!("Failed to remove {} project(s) from manifest.toml", packages_to_remove.len()));
+//             }
+//             results.insert("manifest".to_string(), ArtifactResult::Manifest(manifest_data.clone()));
+//         }
+//         "docker_compose" => {
+//             if let Some(docker_compose) = docker_compose {
+//                 for project_name in packages_to_remove {
+//                     remove_service_from_docker_compose(docker_compose, &project_name)?;
+//                     remove_worker_from_docker_compose(docker_compose, &project_name)?;
+//                 }
+//                 let new_docker_services: HashSet<String> = docker_compose.services
+//                     .keys()
+//                     .filter(|service| !DOCKER_SERVICES_TO_IGNORE.contains(&service.as_str()))
+//                     .cloned()
+//                     .collect();
+//                 let validation_result = validate_removal_from_artifact(
+//                     &new_docker_services,
+//                     &packages_to_remove.into_iter().cloned().collect(),
+//                     &format!("Successfully removed {} project(s) from docker-compose.yml", packages_to_remove.len()),
+//                     &format!("Some projects were not removed from docker-compose.yml"),
+//                     "sync:utils:421",
+//                     stdout,
+//                 )?;
+//                 if !validation_result {
+//                     return Err(anyhow::anyhow!("Failed to remove {} project(s) from docker-compose.yml", packages_to_remove.len()));
+//                 }
+//                 results.insert("docker_compose".to_string(), ArtifactResult::DockerCompose(docker_compose.clone()));
+//             } else {
+//                 return Err(anyhow::anyhow!("Docker compose data is required to proceed."));
+//             }
+//         }
+//         "runtime" => {
+//             match manifest_data.runtime.parse()? {
+//                 Runtime::Node => {
+//                     if let Some(pnpm_workspace) = pnpm_workspace {
+//                         for project_name in packages_to_remove {
+//                             remove_project_definition_from_pnpm_workspace(pnpm_workspace, &project_name)?;
+//                         }
+//                         let new_pnpm_workspace_projects: HashSet<String> = pnpm_workspace.packages
+//                             .iter()
+//                             .filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str()))
+//                             .cloned()
+//                             .collect();
+//                         let validation_result = validate_removal_from_artifact(
+//                             &new_pnpm_workspace_projects,
+//                             &packages_to_remove.into_iter().cloned().collect(),
+//                             &format!("Successfully removed {} project(s) from pnpm-workspace.yaml", packages_to_remove.len()),
+//                             &format!("Some projects were not removed from pnpm-workspace.yaml"),
+//                             "sync:utils:440",
+//                             stdout,
+//                         )?;
+//                         if !validation_result {
+//                             return Err(anyhow::anyhow!("Failed to remove {} project(s) from pnpm-workspace.yaml", packages_to_remove.len()));
+//                         }
+//                         results.insert("pnpm_workspace".to_string(), ArtifactResult::PnpmWorkspace(pnpm_workspace.clone()));
+//                     }
+//                 }
+//                 Runtime::Bun => {
+//                     if let Some(package_json) = package_json {
+//                         for project_name in packages_to_remove {
+//                             remove_project_definition_from_package_json(package_json, &project_name)?;
+//                         }
+//                         let new_package_json_projects: HashSet<String> = package_json.workspaces
+//                             .as_ref()
+//                             .unwrap_or(&Vec::new())
+//                             .iter()
+//                             .filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str()))
+//                             .cloned()
+//                             .collect();
+//                         let validation_result = validate_removal_from_artifact(
+//                             &new_package_json_projects,
+//                             &packages_to_remove.into_iter().cloned().collect(),
+//                             &format!("Successfully removed {} project(s) from package.json", packages_to_remove.len()),
+//                             &format!("Some projects were not removed from package.json"),
+//                             "sync:utils:445",
+//                             stdout,
+//                         )?;
+//                         if !validation_result {
+//                             return Err(anyhow::anyhow!("Failed to remove {} project(s) from package.json", packages_to_remove.len()));
+//                         }
+//                         results.insert("package_json".to_string(), ArtifactResult::PackageJson(package_json.clone()));
+//                     }
+//                 }
+//             }
+//         }
+//         "universal-sdk" => {
+//             let (mut universal_sdk_program_text, mut universal_sdk_json) = read_universal_sdk_content(&modules_path)?;
+//             (universal_sdk_program_text, universal_sdk_json) = remove_project_vec_from_universal_sdk(
+//                 &manifest_data.app_name,
+//                 &packages_to_remove,
+//                 &universal_sdk_program_text,
+//                 &mut universal_sdk_json,
+//                 stdout,
+//             )?;
+//             results.insert("sdk_ast_program_text".to_string(), ArtifactResult::String(universal_sdk_program_text));
+//             results.insert("sdk_project_json".to_string(), ArtifactResult::String(json_to_string_pretty(&universal_sdk_json)?));
+//         }
+//         _ => {
+//             return Err(anyhow::anyhow!("Invalid artifact type"));
+//         }
+//     }
+//     Ok(results)
+// }
 
 
 /// Validates that a service name is present in a collection of project names and provides appropriate feedback
@@ -627,4 +636,27 @@ pub(crate) fn validate_removal_from_artifact(
         stdout.reset()?;
         Ok(true)
     }
+}
+
+/// Analyzes project references in a TypeScript file and compares against a target list
+/// 
+/// # Arguments
+/// * `file_path` - Path to the TypeScript file to analyze
+/// * `target_projects` - List of project names to compare against
+/// 
+/// # Returns
+/// * `Result<(Vec<String>, Vec<String>)>` - Tuple of (projects_to_add, projects_to_remove)
+///   - projects_to_add: projects in target_projects but not found in AST
+///   - projects_to_remove: projects found in AST but not in target_projects
+pub(crate) fn find_project_references_in_ts_file(
+    file_path: &Path,
+    target_projects: &Vec<String>,
+) -> Result<(Vec<String>, Vec<String>)> {
+    let source_text = read_to_string(file_path)?;
+    let source_type = SourceType::from_path(file_path)?;
+    
+    let allocator = Allocator::default();
+    let program = parse_ast_program(&allocator, &source_text, source_type);
+    
+    analyze_project_references_against_target(&program, target_projects)
 }

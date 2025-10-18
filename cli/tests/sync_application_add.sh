@@ -70,4 +70,4 @@ for source_path in "${!copy_operations[@]}"; do
     copy_with_check "$source_path" "$destination_path"
 done
 
-RUST_BACKTRACE=1 cargo run --release sync all -p ./sync-test-node-application -c
+RUST_BACKTRACE=1 cargo run --release sync all -p ./sync-test-node-application -c -P '{"svc-dummy": {"category": "service", "database": "none", "infrastructure": "none", "description": "none"}, "lib-dummy": {"category": "library", "description": "lib dummy"}, "rtr-dummy": {"category": "router", "infrastructure": "none"}, "wrk-dummy": {"category": "worker", "type": "database", "database": "postgresql", "description": "worker dummy"}}'

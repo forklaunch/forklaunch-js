@@ -1,26 +1,24 @@
-use std::collections::HashMap;
+use std::{collections::{HashMap, HashSet}, io::Write};
 use anyhow::Result;
 use convert_case::{Case, Casing};
+use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
 
-// use oxc_allocator::Allocator;
 use oxc_ast_visit::{Visit, walk::{walk_statement, walk_program}};
 use oxc_ast::ast::{Statement, Expression, TSType, Declaration, TSSignature, BindingPatternKind, ObjectPropertyKind, Argument, Program};
 
 use crate::core::{
-    // ast::parse_ast_program::parse_ast_program,
     package_json::project_package_json::ProjectPackageJson,
 };
 
 struct ProjectReferenceValidator<'a> {
-    projects_to_remove: &'a Vec<String>,
+    projects_to_find: &'a Vec<String>,
     matches: HashMap<String, Vec<String>>,
 }
 
 impl<'a, 'ast> ProjectReferenceValidator<'a> {
     fn check_str(&mut self, s: &str) {
-        for project in self.projects_to_remove {
+        for project in self.projects_to_find {
             let kebab_case_project = &project.to_case(Case::Kebab);
-            println!("universal_sdk:247 kebab_case_project: {:?}", kebab_case_project);
             if s.contains(kebab_case_project) {
                 self.matches.entry(kebab_case_project.clone()).or_default().push(s.to_string());
             }
@@ -199,15 +197,144 @@ pub(crate) fn validate_project_removal_with_ast(
 ) -> Result<HashMap<String, Vec<String>>> {
     
     let mut validator = ProjectReferenceValidator {
-        projects_to_remove: projects_to_remove,
+        projects_to_find: projects_to_remove,
         matches: HashMap::new(),
     };
     
     walk_program(&mut validator, &content);
 
-    println!("universal_sdk:281 validator.found: {:?}", validator.matches);
     
     Ok(validator.matches)
+}
+
+pub(crate) fn validate_project_addition_with_ast(
+    content: &Program,
+    projects_to_add: &Vec<String>,
+) -> Result<HashMap<String, Vec<String>>> {
+    
+    let mut validator = ProjectReferenceValidator {
+        projects_to_find: projects_to_add,
+        matches: HashMap::new(),
+    };
+    
+    walk_program(&mut validator, &content);
+
+    
+    Ok(validator.matches)
+}
+
+/// Analyzes project references in AST and compares against a target list
+/// 
+/// # Arguments
+/// * `content` - The parsed AST program
+/// * `target_projects` - List of projects to compare against
+/// 
+/// # Returns
+/// * `Result<(Vec<String>, Vec<String>)>` - Tuple of (projects_to_add, projects_to_remove)
+///   - projects_to_add: projects in target_projects but not found in AST
+///   - projects_to_remove: projects found in AST but not in target_projects
+pub(crate) fn analyze_project_references_against_target(
+    content: &Program,
+    projects_to_sync: &Vec<String>,
+) -> Result<(Vec<String>, Vec<String>)> {
+    
+    let mut validator = ProjectReferenceValidator {
+        projects_to_find: projects_to_sync,
+        matches: HashMap::new(),
+    };
+    
+    walk_program(&mut validator, &content);
+    
+    // Convert target projects to kebab-case for comparison
+    let target_kebab: HashSet<String> = projects_to_sync
+        .iter()
+        .map(|p| p.to_case(Case::Kebab))
+        .collect();
+    
+    // Get found projects (keys from matches)
+    let found_kebab: HashSet<String> = validator.matches.keys().cloned().collect();
+    
+    // Calculate differences
+    let projects_to_add: Vec<String> = target_kebab
+        .difference(&found_kebab)
+        .cloned()
+        .collect();
+    
+    let projects_to_remove: Vec<String> = found_kebab
+        .difference(&target_kebab)
+        .cloned()
+        .collect();
+    
+    Ok((projects_to_add, projects_to_remove))
+}
+
+pub(crate) fn validate_add_to_universal_sdk(
+    app_name: &str,
+    content: &Program,
+    project_json: &ProjectPackageJson,
+    projects_to_add: &Vec<String>,
+    stdout: &mut StandardStream,
+) -> Result<()> {
+    let kebab_case_app_name = &app_name.to_case(Case::Kebab);
+
+    let universal_sdk_project_json = project_json;
+
+    let current_deps = &universal_sdk_project_json.dev_dependencies.as_ref().unwrap().additional_deps;
+
+    for project in projects_to_add {
+        let kebab_case_project = &project.to_case(Case::Kebab);
+        let dep_key = format!("@{}/{}", &kebab_case_app_name, &kebab_case_project);
+        if !current_deps.contains_key(&dep_key) {
+            return Err(anyhow::anyhow!("Project {} is not in universal-sdk/package.json", project));
+        } else {
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+            writeln!(stdout, "AST validation: Project {} successfully found in package.json", project)?;
+            stdout.reset()?;
+        }
+    }
+    
+    let mut missing_projects = vec![];
+    match validate_project_addition_with_ast(content, projects_to_add) {
+        Ok(matches) => {
+            for project in projects_to_add {
+                let kebab_case_project = &project.to_case(Case::Kebab);
+                if let Some(found) = matches.get(kebab_case_project) {
+                    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+                    writeln!(stdout, "AST validation: Found {} references for project '{}':", found.len(), project)?;
+                    stdout.reset()?;
+                    for (i, reference) in found.iter().enumerate() {
+                        writeln!(stdout, "   {}. {}", i + 1, reference)?;
+                    }
+                } else {
+                    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
+                    writeln!(stdout, "AST validation: No references found for project '{}'", project)?;
+                    stdout.reset()?;
+                    missing_projects.push(project.clone());
+                }
+            } 
+        }
+        Err(e) => {
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
+            writeln!(stdout, "AST validation error: {}", e)?;
+            stdout.reset()?;
+            return Err(anyhow::anyhow!("Failed to validate project addition with AST: {}", e));
+        }
+    }
+    
+    if missing_projects.is_empty() {
+        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+        writeln!(stdout, "AST validation: Successfully found all projects in universal-sdk/universalSdk.ts")?;
+        writeln!(stdout, "AST validation: All {} projects were found", projects_to_add.len())?;
+        stdout.reset()?;
+    } else {
+        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
+        writeln!(stdout, "AST validation: Failed to find {} out of {} projects in universal-sdk/universalSdk.ts", 
+                 missing_projects.len(), projects_to_add.len())?;
+        writeln!(stdout, "AST validation: Missing projects: {:?}", missing_projects)?;
+        stdout.reset()?;
+        return Err(anyhow::anyhow!("Failed to find projects in universal-sdk/universalSdk.ts: {:?}", missing_projects));
+    }
+    Ok(())
 }
 
 pub(crate) fn validate_remove_from_universal_sdk(
@@ -215,9 +342,8 @@ pub(crate) fn validate_remove_from_universal_sdk(
     content: &Program,
     project_json: &ProjectPackageJson,
     projects_to_remove: &Vec<String>,
+    stdout: &mut StandardStream,
 ) -> Result<()> {
-    println!("universal_sdk:293 Validating universal SDK changes");
-    println!("universal_sdk:294 projects_to_remove: {:?}", projects_to_remove);
     let kebab_case_app_name = &app_name.to_case(Case::Kebab);
 
     let universal_sdk_project_json = project_json;
@@ -230,11 +356,12 @@ pub(crate) fn validate_remove_from_universal_sdk(
     for project in projects_to_remove {
         let kebab_case_project = &project.to_case(Case::Kebab);
         let dep_key = format!("@{}/{}", &kebab_case_app_name, &kebab_case_project);
-        println!("universal_sdk:305 dep_key: {:?}", dep_key);
         if current_deps.contains_key(&dep_key) {
             return Err(anyhow::anyhow!("Project {} is still in universal-sdk/package.json", project));
         } else {
-            println!("universal_sdk:309 ✅ AST validation: Project {} successfully removed from package.json", project);
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+            writeln!(stdout, "AST validation: Project {} successfully removed from package.json", project)?;
+            stdout.reset()?;
         }
     }
     
@@ -244,30 +371,39 @@ pub(crate) fn validate_remove_from_universal_sdk(
             for project in projects_to_remove {
                 let kebab_case_project = &project.to_case(Case::Kebab);
                 if let Some(found) = matches.get(kebab_case_project) {
-                    println!("❌ AST validation: Found {} references for project '{}':", found.len(), project);
+                    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
+                    writeln!(stdout, "AST validation: Found {} references for project '{}':", found.len(), project)?;
+                    stdout.reset()?;
                     for (i, reference) in found.iter().enumerate() {
-                        println!("   {}. {}", i + 1, reference);
+                        writeln!(stdout, "   {}. {}", i + 1, reference)?;
                     }
                     failed_projects.push(project.clone());
                 } else {
-                    println!("✅ AST validation: No references found for project '{}'", project);
+                    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+                    writeln!(stdout, "AST validation: No references found for project '{}'", project)?;
+                    stdout.reset()?;
                 }
-                println!("universal_sdk:331 failed_projects: {:?}", failed_projects);
             } 
         }
         Err(e) => {
-            println!("❌ AST validation error: {}", e);
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
+            writeln!(stdout, "AST validation error: {}", e)?;
+            stdout.reset()?;
             return Err(anyhow::anyhow!("Failed to validate project removal with AST: {}", e));
         }
     }
     
     if failed_projects.is_empty() {
-        println!("🎉 AST validation: Successfully removed all projects from universal-sdk/universalSdk.ts");
-        println!("🎉 AST validation: All {} projects were cleanly removed", projects_to_remove.len());
+        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+        writeln!(stdout, "AST validation: Successfully removed all projects from universal-sdk/universalSdk.ts")?;
+        writeln!(stdout, "AST validation: All {} projects were cleanly removed", projects_to_remove.len())?;
+        stdout.reset()?;
     } else {
-        println!("❌ AST validation: Failed to remove {} out of {} projects from universal-sdk/universalSdk.ts", 
-                 failed_projects.len(), projects_to_remove.len());
-        println!("❌ AST validation: Failed projects: {:?}", failed_projects);
+        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
+        writeln!(stdout, "AST validation: Failed to remove {} out of {} projects from universal-sdk/universalSdk.ts", 
+                 failed_projects.len(), projects_to_remove.len())?;
+        writeln!(stdout, "AST validation: Failed projects: {:?}", failed_projects)?;
+        stdout.reset()?;
         return Err(anyhow::anyhow!("Failed to remove projects from universal-sdk/universalSdk.ts: {:?}", failed_projects));
     }
     Ok(())

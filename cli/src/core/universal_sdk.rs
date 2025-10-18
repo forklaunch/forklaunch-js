@@ -6,6 +6,7 @@ use serde_json::from_str;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::SourceType;
 use oxc_codegen::{Codegen, CodegenOptions};
+use termcolor::StandardStream;
 
 
 use crate::{
@@ -207,6 +208,7 @@ pub(crate) fn remove_project_vec_from_universal_sdk<'a>(
     projects_to_remove: &Vec<String>,
     ast_program_text: &String,
     project_json: &mut ProjectPackageJson,
+    stdout: &mut StandardStream,
 ) -> Result<(String, ProjectPackageJson)> {
     let allocator = Allocator::default();
     let mut ast_program_ast = parse_ast_program(&allocator, ast_program_text, SourceType::ts());
@@ -215,7 +217,6 @@ pub(crate) fn remove_project_vec_from_universal_sdk<'a>(
         delete_from_universal_sdk(&allocator, &mut ast_program_ast, app_name, project)?;
         
         let kebab_case_project = &project.to_case(Case::Kebab);
-        println!("universal_sdk:212 kebab_case_project: {:?}", kebab_case_project);
         project_json
             .dev_dependencies
             .as_mut()
@@ -224,14 +225,13 @@ pub(crate) fn remove_project_vec_from_universal_sdk<'a>(
             .remove(&format!("@{}/{}", &kebab_case_app_name, &kebab_case_project));
     }
     
-    println!("universal_sdk:226 validating universal SDK changes");
     validate_remove_from_universal_sdk(
             &app_name,
             &ast_program_ast,
             &project_json,
             &projects_to_remove,
+            stdout,
         )?;
-    println!("universal_sdk:234 Successfully validated universal SDK changes for {} project(s)", projects_to_remove.len());
 
     Ok((Codegen::new()
         .with_options(CodegenOptions::default())
