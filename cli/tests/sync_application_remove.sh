@@ -17,7 +17,7 @@ RUST_BACKTRACE=1 cargo run --release init worker wrk-test -t database -d postgre
 rm -rf iam wrk-test svc-test
 
 cd ../..
-RUST_BACKTRACE=1 cargo run --release sync -p . -c
+RUST_BACKTRACE=1 cargo run --release sync all -p ./sync-test-node-application -c
 
 cd src/modules
 
@@ -38,7 +38,7 @@ RUST_BACKTRACE=1 cargo run --release init worker wrk-test -t database -d postgre
 rm -rf iam wrk-test svc-test
 
 cd ../../..
-RUST_BACKTRACE=1 cargo run --release sync -p ./sync-test-bun-application -c
+RUST_BACKTRACE=1 cargo run --release sync all -p ./sync-test-bun-application -c
 
 cd src/modules
 

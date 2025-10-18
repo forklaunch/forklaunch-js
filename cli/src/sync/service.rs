@@ -752,6 +752,9 @@ impl CliCommand for ServiceCommand {
                         Some(&usdk_ast_program_text),
                         Some(&usdk_json),
                         None,
+                        None,
+                        None,
+                        &prompts_map,
                     )?;
                     for (_artifact_name, result) in results {
                         match artifact {
