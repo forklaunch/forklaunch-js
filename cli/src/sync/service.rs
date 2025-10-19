@@ -450,15 +450,22 @@ fn is_service_in_runtime_files(
     match runtime {
         Runtime::Bun => {
             let package_json_projects: HashSet<String> = package_json.workspaces
-                .unwrap_or_default()
+                .as_ref()
+                .unwrap_or(&Vec::new())
                 .iter()
+                .filter(|project| !DIRS_TO_IGNORE.contains(&project.as_str()))
+                .cloned()
                 .collect();
             if package_json_projects.contains(service_name) {
                 return Ok(true)
             }
         }
         Runtime::Node => {
-            let pnpm_workspace_projects: HashSet<String> = pnpm_workspace.unwrap().packages.iter().collect();
+            let pnpm_workspace_projects: HashSet<String> = pnpm_workspace.packages
+                .iter()
+                .filter(|project| !RUNTIME_PROJECTS_TO_IGNORE.contains(&project.as_str()))
+                .cloned()
+                .collect();
             if pnpm_workspace_projects.contains(service_name) {
                 return Ok(true)
             }

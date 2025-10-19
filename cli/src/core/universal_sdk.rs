@@ -21,7 +21,7 @@ use crate::{
                 transform_universal_sdk_add_sdk_with_special_case,
             }, 
             parse_ast_program::parse_ast_program,
-            validation::validate_remove_from_universal_sdk,
+            validation::{validate_remove_from_universal_sdk, validate_add_to_universal_sdk},
         },
         package_json::project_package_json::ProjectPackageJson,
         rendered_template::{RenderedTemplate, RenderedTemplatesCache},
@@ -244,6 +244,7 @@ pub(crate) fn add_project_vec_to_universal_sdk<'a>(
     projects_to_add: &Vec<String>,
     ast_program_text: &String,
     project_json: &mut ProjectPackageJson,
+    stdout: &mut StandardStream,
 ) -> Result<(String, ProjectPackageJson)> {
     let allocator = Allocator::default();
     let mut ast_program_ast = parse_ast_program(&allocator, ast_program_text, SourceType::ts());
@@ -264,7 +265,13 @@ pub(crate) fn add_project_vec_to_universal_sdk<'a>(
             );
     }
     
-    // TODO: validate universal SDK changes
+    validate_add_to_universal_sdk(
+        &app_name,
+        &ast_program_ast,
+        &project_json,
+        &projects_to_add,
+        stdout,
+    )?;
     Ok((Codegen::new()
         .with_options(CodegenOptions::default())
         .build(&ast_program_ast)

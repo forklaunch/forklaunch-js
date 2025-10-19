@@ -928,6 +928,7 @@ impl CliCommand for SyncAllCommand {
                         &manifest_projects_to_add,
                         &mut sdk_ast_program_text,
                         &mut sdk_project_json,
+                        &mut stdout,
                     )?;
                 }
             } else {
