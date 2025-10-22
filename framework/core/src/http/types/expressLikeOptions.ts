@@ -2,6 +2,7 @@ import { FastMCP } from '@forklaunch/fastmcp-fork';
 import { AnySchemaValidator } from '@forklaunch/validator';
 import { CorsOptions } from 'cors';
 import { JWTPayload } from 'jose';
+import { OAuthConfig } from '../oauth/types/oauth.types';
 import { ForklaunchRequest, MapSessionSchema } from './apiDefinition.types';
 import { SessionObject } from './contractDetails.types';
 import { DocsConfiguration } from './docsConfiguration.types';
@@ -202,6 +203,10 @@ export type ExpressLikeApplicationOptions<
          * Version of the MCP server.
          */
         version?: `${number}.${number}.${number}`;
+        /**
+         * OAuth configuration for MCP server.
+         */
+        oauth?: OAuthConfig;
       };
   /**
    * OpenAPI documentation options.
