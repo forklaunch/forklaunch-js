@@ -175,11 +175,17 @@ export function enrichExpressLikeSend<
               originalSend.call(instance, errorString);
               errorSent = true;
               callback(new Error(errorString));
+            } else {
+              let data = '';
+              for (const [key, value] of Object.entries(chunk)) {
+                data += `${key}: ${typeof value === 'string' ? value : safeStringify(value)}\n`;
+              }
+              data += '\n';
+              callback(null, data);
             }
           });
           firstPass = false;
-        }
-        if (!errorSent) {
+        } else if (!errorSent) {
           let data = '';
           for (const [key, value] of Object.entries(chunk)) {
             data += `${key}: ${typeof value === 'string' ? value : safeStringify(value)}\n`;
@@ -239,18 +245,16 @@ export function enrichExpressLikeSend<
         res.status(500);
         originalSend.call(instance, errorString);
         errorSent = true;
+      } else {
+        if (typeof data === 'string') {
+          res.type('text/plain');
+          originalSend.call(instance, data);
+        } else if (!(data instanceof File)) {
+          res.sent = true;
+          originalOperation.call(instance, data);
+        }
       }
     });
-
-    if (!errorSent) {
-      if (typeof data === 'string') {
-        res.type('text/plain');
-        originalSend.call(instance, data);
-      } else if (!(data instanceof File)) {
-        res.sent = true;
-        originalOperation.call(instance, data);
-      }
-    }
   }
 
   if (shouldEnrich) {

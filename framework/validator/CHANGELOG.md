@@ -1,5 +1,29 @@
 # @forklaunch/validator
 
+## 0.10.21
+
+### Patch Changes
+
+- Update package versions, and add x-powered-by forklaunch
+- Updated dependencies
+  - @forklaunch/common@0.6.21
+
+## 0.10.20
+
+### Patch Changes
+
+- update internal package versions
+- Updated dependencies
+  - @forklaunch/common@0.6.20
+
+## 0.10.19
+
+### Patch Changes
+
+- update package versions
+- Updated dependencies
+  - @forklaunch/common@0.6.19
+
 ## 0.10.18
 
 ### Patch Changes

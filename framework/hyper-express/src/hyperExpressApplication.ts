@@ -24,6 +24,7 @@ import { AnySchemaValidator } from '@forklaunch/validator';
 import { ZodSchemaValidator } from '@forklaunch/validator/zod';
 import { apiReference } from '@scalar/express-api-reference';
 import crypto from 'crypto';
+import fs from 'fs';
 import * as uWebsockets from 'uWebSockets.js';
 import { startHyperExpressCluster } from './cluster/hyperExpress.cluster';
 import { contentParse } from './middleware/contentParse.middleware';
@@ -162,6 +163,28 @@ export class Application<
     arg1?: string | ((listen_socket: uWebsockets.us_listen_socket) => void),
     arg2?: (listen_socket: uWebsockets.us_listen_socket) => void
   ): Promise<uWebsockets.us_listen_socket> {
+    if (process.env.FORKLAUNCH_MODE === 'openapi') {
+      const openApiSpec = generateOpenApiSpecs<SV>(
+        this.schemaValidator,
+        [],
+        [],
+        this,
+        this.openapiConfiguration
+      );
+      fs.writeFileSync(
+        process.env.FORKLAUNCH_OPENAPI_OUTPUT as string,
+        JSON.stringify(
+          {
+            ...openApiSpec,
+            '': openApiSpec[OPENAPI_DEFAULT_VERSION]
+          },
+          null,
+          2
+        )
+      );
+      process.exit(0);
+    }
+
     if (typeof arg0 === 'number') {
       const port = arg0 || Number(process.env.PORT);
       const protocol = (process.env.PROTOCOL || 'http') as 'http' | 'https';
@@ -184,6 +207,11 @@ export class Application<
         this.openTelemetryCollector.error(err.stack ?? err.message, {
           [ATTR_HTTP_RESPONSE_STATUS_CODE]: statusCode ?? 500
         });
+      });
+
+      this.internal.use('*', (req, res, next) => {
+        res.setHeader('X-Powered-By', 'forklaunch');
+        next();
       });
 
       if (

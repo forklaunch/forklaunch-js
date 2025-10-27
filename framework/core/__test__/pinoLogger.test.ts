@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { logger, meta } from '../src/http/telemetry/pinoLogger';
 
@@ -19,7 +20,7 @@ vi.mock('@opentelemetry/api', () => ({
 
 describe('PinoLogger Error Handling', () => {
   let testLogger: ReturnType<typeof logger>;
-  let consoleSpy: ReturnType<typeof vi.spyOn>;
+  let consoleSpy: Mock;
 
   beforeEach(() => {
     mockEmit = vi.fn();

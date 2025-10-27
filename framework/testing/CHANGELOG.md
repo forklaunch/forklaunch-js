@@ -1,5 +1,23 @@
 # @forklaunch/testing
 
+## 0.0.10
+
+### Patch Changes
+
+- Update package versions, and add x-powered-by forklaunch
+
+## 0.0.9
+
+### Patch Changes
+
+- update internal package versions
+
+## 0.0.8
+
+### Patch Changes
+
+- update package versions
+
 ## 0.0.7
 
 ### Patch Changes
