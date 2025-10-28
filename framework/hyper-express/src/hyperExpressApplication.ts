@@ -209,7 +209,7 @@ export class Application<
         });
       });
 
-      this.internal.use('*', (req, res, next) => {
+      this.internal.any('/*', (req, res, next) => {
         res.setHeader('X-Powered-By', 'forklaunch');
         next();
       });

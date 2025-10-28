@@ -1,29 +1,18 @@
+import { logs } from '@opentelemetry/api-logs';
 import type { Mock } from 'vitest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { logger, meta } from '../src/http/telemetry/pinoLogger';
 
-// Mock OpenTelemetry to test error scenarios
-let mockEmit = vi.fn();
-vi.mock('@opentelemetry/api-logs', () => ({
-  logs: {
-    getLogger: vi.fn(() => ({
-      emit: mockEmit
-    }))
-  }
-}));
-
-vi.mock('@opentelemetry/api', () => ({
-  trace: {
-    getActiveSpan: vi.fn(() => null)
-  }
-}));
-
 describe('PinoLogger Error Handling', () => {
   let testLogger: ReturnType<typeof logger>;
   let consoleSpy: Mock;
+  let mockEmit: Mock;
 
   beforeEach(() => {
     mockEmit = vi.fn();
+    vi.spyOn(logs, 'getLogger').mockReturnValue({
+      emit: mockEmit
+    });
     testLogger = logger('debug');
     consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.spyOn(console, 'log').mockImplementation(() => {});
