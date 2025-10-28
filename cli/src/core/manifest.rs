@@ -137,6 +137,8 @@ macro_rules! internal_config_struct {
             $vis app_name: String,
             $vis modules_path: String,
             $vis docker_compose_path: Option<String>,
+            $vis dockerfile: Option<String>,
+            $vis git_repository: Option<String>,
             #[serde(skip_serializing, skip_deserializing)]
             $vis camel_case_app_name: String,
             #[serde(skip_serializing, skip_deserializing)]
@@ -238,6 +240,8 @@ macro_rules! config_struct {
                         app_name: shadow.app_name.clone(),
                         modules_path: shadow.modules_path.clone(),
                         docker_compose_path: shadow.docker_compose_path.clone(),
+                        dockerfile: shadow.dockerfile.clone(),
+                        git_repository: shadow.git_repository.clone(),
                         camel_case_app_name: shadow.camel_case_app_name.clone(),
                         pascal_case_app_name: shadow.pascal_case_app_name.clone(),
                         kebab_case_app_name: shadow.kebab_case_app_name.clone(),

@@ -1,5 +1,29 @@
 # @forklaunch/common
 
+## 0.6.22
+
+### Patch Changes
+
+- fix hyper express header, fix tests
+
+## 0.6.21
+
+### Patch Changes
+
+- Update package versions, and add x-powered-by forklaunch
+
+## 0.6.20
+
+### Patch Changes
+
+- update internal package versions
+
+## 0.6.19
+
+### Patch Changes
+
+- update package versions
+
 ## 0.6.18
 
 ### Patch Changes

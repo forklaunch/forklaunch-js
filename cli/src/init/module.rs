@@ -160,6 +160,8 @@ impl CliCommand for ModuleCommand {
             app_name: name.clone(),
             modules_path: manifest_data.modules_path.clone(),
             docker_compose_path: manifest_data.docker_compose_path.clone(),
+            dockerfile: manifest_data.dockerfile.clone(),
+            git_repository: manifest_data.git_repository.clone(),
             camel_case_app_name: manifest_data.camel_case_app_name.clone(),
             pascal_case_app_name: manifest_data.pascal_case_app_name.clone(),
             kebab_case_app_name: manifest_data.kebab_case_app_name.clone(),
@@ -282,6 +284,7 @@ impl CliCommand for ModuleCommand {
         rendered_templates.push(generate_service_package_json(
             &service_data,
             &base_path.clone().join(get_service_module_name(&module)),
+            None,
             None,
             None,
             None,

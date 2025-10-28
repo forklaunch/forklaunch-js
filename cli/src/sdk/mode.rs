@@ -2,12 +2,16 @@ use std::{fs::read_to_string, io::Write, path::PathBuf};
 
 use anyhow::{Context, Result};
 use clap::{Arg, ArgAction, ArgMatches, Command};
+use serde_json::{from_str as json_from_str, to_string_pretty};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use toml::from_str;
 
 use crate::{
     CliCommand,
-    constants::{ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_READ_MANIFEST, SdkModeType},
+    constants::{
+        ERROR_FAILED_TO_PARSE_MANIFEST, ERROR_FAILED_TO_PARSE_PACKAGE_JSON,
+        ERROR_FAILED_TO_READ_MANIFEST, ERROR_FAILED_TO_READ_PACKAGE_JSON, SdkModeType,
+    },
     core::{
         ast::transformations::transform_universal_sdk::{
             transform_universal_sdk_use_generated_path, transform_universal_sdk_use_live_sdk,
@@ -15,6 +19,7 @@ use crate::{
         base_path::{RequiredLocation, find_app_root_path},
         command::command,
         manifest::application::ApplicationManifestData,
+        package_json::project_package_json::ProjectPackageJson,
         removal_template::{RemovalTemplate, RemovalTemplateType, remove_template_files},
         rendered_template::{RenderedTemplate, RenderedTemplatesCache, write_rendered_templates},
         tsconfig::generate_root_tsconfig,
@@ -68,6 +73,32 @@ fn use_generated_sdk_mode(
         );
     }
 
+    let modules_path = app_root_path.join(manifest_data.modules_path.clone());
+    for project in &manifest_data.projects {
+        if project.name == "universal-sdk" {
+            continue;
+        }
+
+        let package_json_path = modules_path.join(&project.name).join("package.json");
+        if package_json_path.exists() {
+            let content = read_to_string(&package_json_path)
+                .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?;
+            let mut package_json: ProjectPackageJson =
+                json_from_str(&content).with_context(|| ERROR_FAILED_TO_PARSE_PACKAGE_JSON)?;
+
+            package_json.types = Some("index.d.ts".to_string());
+
+            rendered_templates_cache.insert(
+                package_json_path.to_string_lossy(),
+                RenderedTemplate {
+                    path: package_json_path.clone(),
+                    content: to_string_pretty(&package_json)?,
+                    context: None,
+                },
+            );
+        }
+    }
+
     Ok(())
 }
 
@@ -101,6 +132,32 @@ fn use_live_sdk_mode(
         path: app_root_path.join(".vscode").join("tasks.json"),
         r#type: RemovalTemplateType::File,
     });
+
+    let modules_path = app_root_path.join(manifest_data.modules_path.clone());
+    for project in &manifest_data.projects {
+        if project.name == "universal-sdk" {
+            continue;
+        }
+
+        let package_json_path = modules_path.join(&project.name).join("package.json");
+        if package_json_path.exists() {
+            let content = read_to_string(&package_json_path)
+                .with_context(|| ERROR_FAILED_TO_READ_PACKAGE_JSON)?;
+            let mut package_json: ProjectPackageJson =
+                json_from_str(&content).with_context(|| ERROR_FAILED_TO_PARSE_PACKAGE_JSON)?;
+
+            package_json.types = None;
+
+            rendered_templates_cache.insert(
+                package_json_path.to_string_lossy(),
+                RenderedTemplate {
+                    path: package_json_path.clone(),
+                    content: to_string_pretty(&package_json)?,
+                    context: None,
+                },
+            );
+        }
+    }
 
     Ok(removal_templates)
 }

@@ -25,10 +25,10 @@ export class User extends SqlBaseEntity {
   @Property({ nullable: true })
   phoneNumber?: string;
 
-  @ManyToOne(() => 'Organization', { nullable: true })
+  @ManyToOne('Organization', { nullable: true })
   organization?: Organization;
 
-  @ManyToMany(() => 'Role')
+  @ManyToMany('Role')
   roles = new Collection<Role>(this);
 
   @Property()

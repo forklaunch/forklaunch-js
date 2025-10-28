@@ -27,6 +27,7 @@ import express, {
   RequestHandler,
   Response
 } from 'express';
+import fs from 'fs';
 import { Server } from 'http';
 import swaggerUi from 'swagger-ui-express';
 import { startBunCluster } from './cluster/bun.cluster';
@@ -131,6 +132,28 @@ export class Application<
   listen(path: string, callback?: () => void): Server;
   listen(handle: unknown, listeningListener?: () => void): Server;
   listen(...args: unknown[]): Server {
+    if (process.env.FORKLAUNCH_MODE === 'openapi') {
+      const openApiSpec = generateOpenApiSpecs<SV>(
+        this.schemaValidator,
+        [],
+        [],
+        this,
+        this.openapiConfiguration
+      );
+      fs.writeFileSync(
+        process.env.FORKLAUNCH_OPENAPI_OUTPUT as string,
+        JSON.stringify(
+          {
+            ...openApiSpec,
+            '': openApiSpec[OPENAPI_DEFAULT_VERSION]
+          },
+          null,
+          2
+        )
+      );
+      process.exit(0);
+    }
+
     const port =
       typeof args[0] === 'number' ? args[0] : Number(process.env.PORT);
     const host =
@@ -341,6 +364,11 @@ export class Application<
       );
     };
     this.internal.use(errorHandler);
+
+    this.internal.use((req, res, next) => {
+      res.setHeader('X-Powered-By', 'forklaunch');
+      next();
+    });
 
     const { workerCount, ssl, routingStrategy } =
       this.hostingConfiguration ?? {};

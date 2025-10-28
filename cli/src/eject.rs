@@ -492,7 +492,12 @@ impl CliCommand for EjectCommand {
     fn command(&self) -> Command {
         command("eject", "Eject a forklaunch project")
             .alias("ej")
-            .arg(Arg::new("base_path").short('p'))
+            .arg(
+                Arg::new("base_path")
+                    .short('p')
+                    .long("path")
+                    .help("The application root path"),
+            )
             .arg(
                 Arg::new("continue")
                     .short('c')

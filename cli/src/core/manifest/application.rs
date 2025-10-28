@@ -28,6 +28,16 @@ config_struct!(
         pub(crate) is_mongo: bool,
         #[serde(skip_serializing, skip_deserializing)]
         pub(crate) is_in_memory_database: bool,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub(crate) platform_application_id: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub(crate) platform_organization_id: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub(crate) release_version: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub(crate) release_git_commit: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub(crate) release_git_branch: Option<String>,
     }
 );
 

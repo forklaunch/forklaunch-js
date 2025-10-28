@@ -1,0 +1,114 @@
+# Example manifest.toml with Platform Integration
+# This shows what the manifest looks like after running `forklaunch integrate`
+
+# ============================================================================
+# EXISTING FIELDS (Already Supported)
+# ============================================================================
+
+id = "550e8400-e29b-41d4-a716-446655440000"
+cli_version = "0.2.0"
+app_name = "my-awesome-app"
+modules_path = "blueprint"
+docker_compose_path = "docker-compose.yml"
+app_description = "A full-featured application built with ForkLaunch"
+linter = "eslint"
+formatter = "prettier"
+validator = "zod"
+http_framework = "express"
+runtime = "node"
+test_framework = "vitest"
+author = "Your Name"
+license = "MIT"
+database = "postgresql"
+
+# Existing project definitions
+[[projects]]
+type = "Service"
+name = "iam-base"
+description = "Identity and Access Management service"
+variant = "base"
+routers = ["user", "organization", "role", "permission"]
+
+[projects.resources]
+database = "postgresql"
+cache = "redis"
+object_store = "s3"
+
+[[projects]]
+type = "Worker"
+name = "email-worker"
+description = "Handles email notifications"
+
+[projects.resources]
+queue = "sqs"
+
+# Existing project topology
+[project_peer_topology]
+my-awesome-app = ["iam-base", "email-worker"]
+
+# ============================================================================
+# NEW: Platform Integration (Added by `forklaunch integrate`)
+# ============================================================================
+
+[platform]
+application_id = "app-550e8400-e29b-41d4-a716-446655440000"  # Platform application ID
+organization_id = "org-acme-corp"                            # Organization on platform
+last_synced = "2024-10-15T10:30:00Z"                         # Last sync timestamp
+
+# ============================================================================
+# NEW: Optional Deployment Preferences (All have defaults)
+# ============================================================================
+
+[deployment]
+cloud_provider = "aws"                    # Default: "aws"
+default_regions = ["us-east-1"]           # Default: ["us-east-1"]
+
+# ============================================================================
+# NEW: Optional Release Tracking (Auto-populated by `forklaunch release create`)
+# ============================================================================
+
+[release]
+current_version = "1.0.0"                 # Latest release version
+git_commit = "abc123def456"               # Git commit SHA
+git_branch = "main"                       # Git branch
+
+# ============================================================================
+# NEW: Optional Resource Hints (Platform applies free tier defaults)
+# ============================================================================
+
+# Just specify types - platform handles sizing, backups, HA, etc.
+[[infrastructure.resources]]
+id = "main-db"
+type = "postgresql"
+# Platform will provision: db.t3.micro, 20GB, single AZ (free tier)
+
+[[infrastructure.resources]]
+id = "session-cache"
+type = "redis"
+# Platform will provision: cache.t3.micro, 1 node (free tier)
+
+[[infrastructure.resources]]
+id = "email-queue"
+type = "sqs"
+# Platform will provision: standard queue with DLQ
+
+# ============================================================================
+# NOTES
+# ============================================================================
+
+# What's NOT in this manifest:
+# ❌ Environment variable VALUES (managed via Platform UI/API)
+# ❌ Secrets, passwords, API keys (managed via Platform UI/API)
+# ❌ Detailed infrastructure config (platform provides free tier defaults)
+# ❌ Instance sizes, storage amounts (platform provides optimal free tier sizing)
+# ❌ Network configuration (platform handles VPC, load balancers, security)
+# ❌ Monitoring configuration (platform provides OTEL auto-configuration)
+#
+# This manifest defines:
+# ✅ Application structure (services, workers, libraries)
+# ✅ Resource types needed (postgres, redis, sqs)
+# ✅ Platform integration (application ID for API calls)
+# ✅ Optional deployment preferences (cloud provider, regions)
+#
+# Everything else is handled by the platform with intelligent free tier defaults!
+

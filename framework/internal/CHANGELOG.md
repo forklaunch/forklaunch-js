@@ -1,5 +1,41 @@
 # @forklaunch/common
 
+## 0.3.22
+
+### Patch Changes
+
+- fix hyper express header, fix tests
+- Updated dependencies
+  - @forklaunch/validator@0.10.22
+  - @forklaunch/common@0.6.22
+
+## 0.3.21
+
+### Patch Changes
+
+- Update package versions, and add x-powered-by forklaunch
+- Updated dependencies
+  - @forklaunch/validator@0.10.21
+  - @forklaunch/common@0.6.21
+
+## 0.3.20
+
+### Patch Changes
+
+- update internal package versions
+- Updated dependencies
+  - @forklaunch/validator@0.10.20
+  - @forklaunch/common@0.6.20
+
+## 0.3.19
+
+### Patch Changes
+
+- update package versions
+- Updated dependencies
+  - @forklaunch/validator@0.10.19
+  - @forklaunch/common@0.6.19
+
 ## 0.3.18
 
 ### Patch Changes

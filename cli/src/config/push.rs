@@ -5,7 +5,7 @@ use clap::{Arg, ArgMatches, Command};
 
 use super::{CliCommand, unwrap_id};
 use crate::{
-    constants::{ERROR_FAILED_TO_SEND_REQUEST, PROD_API_URL},
+    constants::{ERROR_FAILED_TO_SEND_REQUEST, get_api_url},
     core::{command::command, token::get_token},
 };
 
@@ -44,7 +44,7 @@ impl CliCommand for PushCommand {
         let input = format!("{}.env", id);
         let input = matches.get_one::<String>("input").unwrap_or(&input);
 
-        let url = format!("{}/config/{}", PROD_API_URL, id);
+        let url = format!("{}/config/{}", get_api_url(), id);
         let client = reqwest::blocking::Client::new();
         // TODO: fix this, this doesn't seem right
         let request = client.post(url).bearer_auth(token).body(read(input)?);
