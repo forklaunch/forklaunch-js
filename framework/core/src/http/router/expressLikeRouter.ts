@@ -112,7 +112,11 @@ export class ForklaunchExpressLikeRouter<
     readonly openTelemetryCollector: OpenTelemetryCollector<MetricsDefinition>,
     readonly routerOptions?: ExpressLikeRouterOptions<SV, RouterSession>
   ) {
-    if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
+    if (
+      process.env.NODE_ENV !== 'test' &&
+      !process.env.VITEST &&
+      process.env.FORKLAUNCH_MODE !== 'openapi'
+    ) {
       process.on('uncaughtException', (err) => {
         this.openTelemetryCollector.error(`Uncaught exception: ${err}`);
         process.exit(1);

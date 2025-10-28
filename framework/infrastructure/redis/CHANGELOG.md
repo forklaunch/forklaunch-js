@@ -1,5 +1,48 @@
 # @forklaunch/infrastructure-redis
 
+## 0.4.30
+
+### Patch Changes
+
+- fix hyper express header, fix tests
+- Updated dependencies
+  - @forklaunch/common@0.6.22
+  - @forklaunch/core@0.15.12
+
+## 0.4.29
+
+### Patch Changes
+
+- Update package versions, and add x-powered-by forklaunch
+- Updated dependencies
+  - @forklaunch/common@0.6.21
+  - @forklaunch/core@0.15.11
+
+## 0.4.28
+
+### Patch Changes
+
+- update internal package versions
+- Updated dependencies
+  - @forklaunch/common@0.6.20
+  - @forklaunch/core@0.15.10
+
+## 0.4.27
+
+### Patch Changes
+
+- Updated dependencies
+  - @forklaunch/core@0.15.9
+
+## 0.4.26
+
+### Patch Changes
+
+- update package versions
+- Updated dependencies
+  - @forklaunch/common@0.6.19
+  - @forklaunch/core@0.15.8
+
 ## 0.4.25
 
 ### Patch Changes

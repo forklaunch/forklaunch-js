@@ -1,5 +1,59 @@
 # @forklaunch/hyper-express
 
+## 0.9.31
+
+### Patch Changes
+
+- fix hyper express header, fix tests
+- Updated dependencies
+  - @forklaunch/validator@0.10.22
+  - @forklaunch/common@0.6.22
+  - @forklaunch/core@0.15.12
+
+## 0.9.30
+
+### Patch Changes
+
+- Update package versions, and add x-powered-by forklaunch
+- Updated dependencies
+  - @forklaunch/validator@0.10.21
+  - @forklaunch/common@0.6.21
+  - @forklaunch/core@0.15.11
+
+## 0.9.29
+
+### Patch Changes
+
+- update internal package versions
+- Updated dependencies
+  - @forklaunch/validator@0.10.20
+  - @forklaunch/common@0.6.20
+  - @forklaunch/core@0.15.10
+
+## 0.9.28
+
+### Patch Changes
+
+- Updates for openapi publishing mode
+- Updated dependencies
+  - @forklaunch/core@0.15.9
+
+## 0.9.27
+
+### Patch Changes
+
+- update package versions
+- Updated dependencies
+  - @forklaunch/validator@0.10.19
+  - @forklaunch/common@0.6.19
+  - @forklaunch/core@0.15.8
+
+## 0.9.26
+
+### Patch Changes
+
+- Allow for OpenAPI writer mode for listen, for seamless printing of openapi
+
 ## 0.9.25
 
 ### Patch Changes

@@ -16,7 +16,7 @@ export class Organization extends SqlBaseEntity {
   name!: string;
 
   @OneToMany(
-    () => 'User',
+    'User',
     (user: { organization: Organization }) => user.organization
   )
   users = new Collection<User>(this);

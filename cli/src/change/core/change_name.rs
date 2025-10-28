@@ -21,6 +21,7 @@ use crate::{
         removal_template::{RemovalTemplate, RemovalTemplateType},
         rendered_template::{RenderedTemplate, RenderedTemplatesCache},
         string::short_circuit_replacement,
+        tsconfig::update_project_in_modules_tsconfig,
         universal_sdk::change_project_in_universal_sdk,
     },
 };
@@ -369,6 +370,13 @@ pub(crate) fn change_name(
             &name,
         )?;
     }
+
+    let tsconfig_update =
+        update_project_in_modules_tsconfig(base_path.parent().unwrap(), &existing_name, &name)?;
+    rendered_templates_cache.insert(
+        tsconfig_update.path.to_string_lossy().to_string(),
+        tsconfig_update,
+    );
 
     Ok(MoveTemplate {
         path: base_path.to_path_buf(),

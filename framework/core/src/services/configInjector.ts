@@ -103,6 +103,10 @@ export class ConfigInjector<
     context?: Record<string, unknown>,
     resolutionPath: (keyof CV)[] = []
   ): ResolvedConfigValidator<SV, CV>[T] {
+    if (process.env.FORKLAUNCH_MODE === 'openapi') {
+      return {} as ResolvedConfigValidator<SV, CV>[T];
+    }
+
     const injectorArgument = extractArgumentNames(definition.factory)[0];
     // short circuit as no args
     if (!injectorArgument || injectorArgument === '_args') {
@@ -276,6 +280,10 @@ export class ConfigInjector<
   }
 
   validateConfigSingletons(configName: string): ValidConfigInjector<SV, CV> {
+    if (process.env.FORKLAUNCH_MODE === 'openapi') {
+      return this.createScope() as ValidConfigInjector<SV, CV>;
+    }
+
     const safeValidateResult = this.safeValidateConfigSingletons();
 
     if (safeValidateResult.ok) {

@@ -4,7 +4,7 @@ import { User } from './user.entity';
 
 @Entity()
 export class Account extends SqlBaseEntity {
-  @ManyToOne(() => User)
+  @ManyToOne('User')
   user!: User;
 
   @Property()

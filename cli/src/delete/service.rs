@@ -28,6 +28,7 @@ use crate::{
         package_json::remove_project_definition_to_package_json,
         pnpm_workspace::remove_project_definition_to_pnpm_workspace,
         rendered_template::{RenderedTemplate, write_rendered_templates},
+        tsconfig::remove_project_from_modules_tsconfig,
         universal_sdk::remove_project_from_universal_sdk,
     },
     prompt::{ArrayCompleter, prompt_for_confirmation, prompt_with_validation},
@@ -198,6 +199,11 @@ impl CliCommand for ServiceCommand {
             &manifest_data.app_name,
             &service_name,
         )?;
+
+        rendered_templates.push(
+            remove_project_from_modules_tsconfig(&service_base_path, &service_name)
+                .with_context(|| "Failed to remove service from modules tsconfig.json")?,
+        );
 
         write_rendered_templates(&rendered_templates, false, &mut stdout)?;
 

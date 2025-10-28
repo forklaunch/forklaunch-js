@@ -20,9 +20,9 @@
     "build": "pnpm -r run build",
     "clean": "rm -rf node_modules pnpm-lock.yaml && pnpm --parallel -r clean && pnpm store prune",
     "clean:purge": "pnpm run clean && pnpm store clear",
-    "dev": "RUNTIME=node docker compose -f docker-compose.base.yml -f docker-compose.node.yml up --watch",
+    "dev": "RUNTIME=node docker compose -f docker-compose.base.yml -f docker-compose.node.yml up",
     "dev:build": "RUNTIME=node docker compose -f docker-compose.base.yml -f docker-compose.node.yml build",
-    "dev:bun": "pnpm clean && RUNTIME=bun docker compose -f docker-compose.base.yml -f docker-compose.bun.yml up --watch",
+    "dev:bun": "pnpm clean && RUNTIME=bun docker compose -f docker-compose.base.yml -f docker-compose.bun.yml up",
     "docs": "pnpm --parallel -r run docs",
     "format": "biome format --write .",
     "format:prettier": "prettier --ignore-path=.prettierignore --config .prettierrc '**/*.{ts,tsx,json}' --write",
@@ -41,35 +41,43 @@
     "up:packages": "pnpm -r update --latest"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.2.5",
+    "@biomejs/biome": "2.3.1",
     "@changesets/cli": "^2.29.7",
-    "@eslint/js": "^9.37.0",
+    "@eslint/js": "^9.38.0",
     "@types/jest": "^30.0.0",
-    "eslint": "^9.37.0",
+    "eslint": "^9.38.0",
     "globals": "^16.4.0",
     "jest": "^30.2.0",
-    "lint-staged": "^16.2.3",
-    "oxlint": "^1.22.0",
+    "lint-staged": "^16.2.6",
+    "oxlint": "^1.24.0",
     "prettier": "^3.6.2",
     "sort-package-json": "^3.4.0",
-    "ts-jest": "^29.4.4",
+    "ts-jest": "^29.4.5",
     "tsup": "^8.5.0",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.46.0",
-    "vitest": "^3.2.4"
+    "typescript-eslint": "^8.46.2",
+    "vitest": "^4.0.4"
   },
   "dependencies": {
-    "@forklaunch/common": "^0.6.18",
-    "@forklaunch/core": "^0.15.7",
-    "@forklaunch/express": "^0.9.25",
-    "@forklaunch/hyper-express": "^0.9.25",
-    "@forklaunch/universal-sdk": "^0.7.18",
-    "@forklaunch/validator": "^0.10.18"
+    "@forklaunch/common": "^0.6.22",
+    "@forklaunch/core": "^0.15.12",
+    "@forklaunch/express": "^0.9.31",
+    "@forklaunch/hyper-express": "^0.9.31",
+    "@forklaunch/universal-sdk": "^0.7.22",
+    "@forklaunch/validator": "^0.10.22"
   },
   "pnpm": {
     "patchedDependencies": {
       "@jercle/yargonaut@1.1.5": "./patches/@jercle__yargonaut.patch"
+    },
+    "overrides": {
+      "@forklaunch/common": "^0.6.20",
+      "@forklaunch/validator": "^0.10.20",
+      "@forklaunch/core": "^0.15.10",
+      "@forklaunch/express": "^0.9.29",
+      "@forklaunch/hyper-express": "^0.9.29",
+      "@forklaunch/universal-sdk": "^0.7.20"
     }
   }
 }

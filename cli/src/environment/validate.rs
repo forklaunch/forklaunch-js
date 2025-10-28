@@ -1,13 +1,19 @@
+use std::{collections::HashMap, io::Write, path::Path};
+
 use anyhow::Result;
 use clap::{ArgMatches, Command};
-use std::collections::HashMap;
-use std::io::Write;
-use std::path::Path;
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
-use crate::CliCommand;
-use crate::core::ast::infrastructure::env::{EnvVarUsage, find_all_env_vars};
-use crate::core::env::{find_workspace_root, get_modules_path, is_env_var_defined};
+use crate::{
+    CliCommand,
+    core::{
+        ast::infrastructure::env::{EnvVarUsage, find_all_env_vars},
+        base_path::{RequiredLocation, find_app_root_path},
+        env::{find_workspace_root, get_modules_path, is_env_var_defined},
+        env_scope::{EnvironmentVariableScope, ScopedEnvVar, determine_env_var_scopes},
+        manifest::application::ApplicationManifestData,
+    },
+};
 
 #[derive(Debug)]
 pub(crate) struct ValidateCommand;
@@ -25,7 +31,7 @@ impl CliCommand for ValidateCommand {
             .long_about("Validates that all environment variables referenced in registrations.ts files have corresponding entries in .env files")
     }
 
-    fn handler(&self, _matches: &ArgMatches) -> Result<()> {
+    fn handler(&self, matches: &ArgMatches) -> Result<()> {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
         stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
@@ -53,6 +59,13 @@ impl CliCommand for ValidateCommand {
             writeln!(stdout, "  - {}", project_name)?;
         }
 
+        let (app_root, _) = find_app_root_path(matches, RequiredLocation::Application)?;
+        let manifest_path = app_root.join(".forklaunch").join("manifest.toml");
+        let manifest_content = std::fs::read_to_string(&manifest_path)?;
+        let manifest: ApplicationManifestData = toml::from_str(&manifest_content)?;
+
+        let scoped_env_vars = determine_env_var_scopes(&project_env_vars, &manifest)?;
+
         let mut validation_results = ValidationResults::new();
 
         for (project_name, env_vars) in &project_env_vars {
@@ -61,7 +74,7 @@ impl CliCommand for ValidateCommand {
             validation_results.add_project_result(project_name.clone(), project_result);
         }
 
-        display_validation_results(&validation_results, &mut stdout)?;
+        display_validation_results(&validation_results, &scoped_env_vars, &mut stdout)?;
 
         analyze_env_hierarchy(
             &project_env_vars,
@@ -137,6 +150,7 @@ fn validate_project(
 
 fn display_validation_results(
     results: &ValidationResults,
+    scoped_env_vars: &[ScopedEnvVar],
     stdout: &mut StandardStream,
 ) -> Result<()> {
     stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
@@ -144,44 +158,54 @@ fn display_validation_results(
     stdout.reset()?;
     writeln!(stdout, "{}", "=".repeat(50))?;
 
+    let app_vars: Vec<_> = scoped_env_vars
+        .iter()
+        .filter(|v| v.scope == EnvironmentVariableScope::Application)
+        .collect();
+    let service_vars: Vec<_> = scoped_env_vars
+        .iter()
+        .filter(|v| v.scope == EnvironmentVariableScope::Service)
+        .collect();
+    let worker_vars: Vec<_> = scoped_env_vars
+        .iter()
+        .filter(|v| v.scope == EnvironmentVariableScope::Worker)
+        .collect();
+
     let mut has_any_missing = false;
 
-    for (project_name, result) in &results.projects {
-        writeln!(stdout, "\n{}", project_name)?;
-
-        if result.missing_vars.is_empty() {
-            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-            writeln!(stdout, "  All environment variables are defined")?;
-            stdout.reset()?;
-        } else {
-            has_any_missing = true;
-            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
-            writeln!(
-                stdout,
-                "  {} missing environment variables:",
-                result.missing_vars.len()
-            )?;
-            stdout.reset()?;
-
-            for missing_var in &result.missing_vars {
-                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
-                write!(stdout, "    - {}", missing_var.var_name)?;
-                stdout.reset()?;
-                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
-                writeln!(stdout, " (line {})", missing_var.line)?;
-                stdout.reset()?;
-            }
+    // Display application-level variables
+    if !app_vars.is_empty() {
+        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)).set_bold(true))?;
+        writeln!(
+            stdout,
+            "\nApplication-Level Variables ({}):",
+            app_vars.len()
+        )?;
+        stdout.reset()?;
+        for var in &app_vars {
+            display_scoped_var_status(var, results, stdout, &mut has_any_missing)?;
         }
+    }
 
-        if !result.defined_vars.is_empty() {
-            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-            writeln!(stdout, "  {} defined variables:", result.defined_vars.len())?;
-            stdout.reset()?;
-            for defined_var in &result.defined_vars {
-                stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-                writeln!(stdout, "    - {}", defined_var)?;
-                stdout.reset()?;
-            }
+    if !service_vars.is_empty() {
+        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)).set_bold(true))?;
+        writeln!(
+            stdout,
+            "\nService-Level Variables ({}):",
+            service_vars.len()
+        )?;
+        stdout.reset()?;
+        for var in &service_vars {
+            display_scoped_var_status(var, results, stdout, &mut has_any_missing)?;
+        }
+    }
+
+    if !worker_vars.is_empty() {
+        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)).set_bold(true))?;
+        writeln!(stdout, "\nWorker-Level Variables ({}):", worker_vars.len())?;
+        stdout.reset()?;
+        for var in &worker_vars {
+            display_scoped_var_status(var, results, stdout, &mut has_any_missing)?;
         }
     }
 
@@ -236,6 +260,57 @@ fn display_validation_results(
         stdout.reset()?;
     }
 
+    Ok(())
+}
+
+fn display_scoped_var_status(
+    var: &ScopedEnvVar,
+    results: &ValidationResults,
+    stdout: &mut StandardStream,
+    has_any_missing: &mut bool,
+) -> Result<()> {
+    // Check if this variable is defined in any of the projects that use it
+    let mut is_defined = false;
+    let mut is_missing = false;
+
+    for project_name in &var.used_by {
+        if let Some(project_result) = results.projects.get(project_name) {
+            if project_result.defined_vars.contains(&var.name) {
+                is_defined = true;
+            }
+            if project_result
+                .missing_vars
+                .iter()
+                .any(|v| v.var_name == var.name)
+            {
+                is_missing = true;
+            }
+        }
+    }
+
+    if is_missing {
+        *has_any_missing = true;
+        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
+        write!(stdout, "  [MISSING] {}", var.name)?;
+        stdout.reset()?;
+    } else if is_defined {
+        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+        write!(stdout, "  [OK] {}", var.name)?;
+        stdout.reset()?;
+    } else {
+        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+        write!(stdout, "  [UNKNOWN] {}", var.name)?;
+        stdout.reset()?;
+    }
+
+    // Show scope details
+    if let Some(scope_id) = &var.scope_id {
+        stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+        write!(stdout, " ({})", scope_id)?;
+        stdout.reset()?;
+    }
+
+    writeln!(stdout)?;
     Ok(())
 }
 

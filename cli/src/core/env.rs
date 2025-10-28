@@ -29,7 +29,7 @@ pub(crate) struct Env {
     pub(crate) s3_bucket: Option<String>,
     #[serde(rename = "S3_REGION", skip_serializing_if = "Option::is_none")]
     pub(crate) s3_region: Option<String>,
-    #[serde(rename = "S3_SECRET_KEY_ID", skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "S3_ACCESS_KEY_ID", skip_serializing_if = "Option::is_none")]
     pub(crate) s3_access_key: Option<String>,
     #[serde(
         rename = "S3_SECRET_ACCESS_KEY",
@@ -82,6 +82,13 @@ pub(crate) struct Env {
     pub(crate) cors_origins: Option<String>,
     #[serde(rename = "STRIPE_API_KEY", skip_serializing_if = "Option::is_none")]
     pub(crate) stripe_api_key: Option<String>,
+    #[serde(rename = "HMAC_SECRET_KEY", skip_serializing_if = "Option::is_none")]
+    pub(crate) hmac_secret_key: Option<String>,
+    #[serde(
+        rename = "JWKS_PUBLIC_KEY_URL",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub(crate) jwks_public_key_url: Option<String>,
     #[serde(flatten, default)]
     pub(crate) additional_env_vars: HashMap<String, String>,
 }
@@ -113,6 +120,8 @@ impl<'de> Deserialize<'de> for Env {
             Version,
             DocsPath,
             PasswordEncryptionPublicKeyPath,
+            HmacSecretKey,
+            JwksPublicKeyUrl,
             Other(String),
         }
 
@@ -158,6 +167,8 @@ impl<'de> Deserialize<'de> for Env {
                     better_auth_base_path: None,
                     cors_origins: None,
                     stripe_api_key: None,
+                    hmac_secret_key: None,
+                    jwks_public_key_url: None,
                     additional_env_vars: HashMap::new(),
                 };
 
@@ -185,6 +196,10 @@ impl<'de> Deserialize<'de> for Env {
                         Field::DocsPath => env.docs_path = Some(map.next_value()?),
                         Field::PasswordEncryptionPublicKeyPath => {
                             env.password_encryption_public_key_path = Some(map.next_value()?)
+                        }
+                        Field::HmacSecretKey => env.hmac_secret_key = Some(map.next_value()?),
+                        Field::JwksPublicKeyUrl => {
+                            env.jwks_public_key_url = Some(map.next_value()?)
                         }
                         Field::Other(key) => {
                             env.additional_env_vars.insert(key, map.next_value()?);

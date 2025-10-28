@@ -6,7 +6,7 @@ use reqwest::{StatusCode, blocking::Client};
 
 use super::{CliCommand, unwrap_id};
 use crate::{
-    constants::{ERROR_FAILED_TO_SEND_REQUEST, PROD_API_URL, error_failed_to_write_file},
+    constants::{ERROR_FAILED_TO_SEND_REQUEST, error_failed_to_write_file, get_api_url},
     core::{command::command, token::get_token},
 };
 
@@ -48,7 +48,7 @@ impl CliCommand for PullCommand {
         let output = format!("{}.env", id);
         let output = matches.get_one::<String>("output").unwrap_or(&output);
 
-        let url = format!("{}/config/{}", PROD_API_URL, id);
+        let url = format!("{}/config/{}", get_api_url(), id);
         let client = Client::new();
         let request = client.get(url).bearer_auth(token);
         let response = request

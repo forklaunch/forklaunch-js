@@ -7,6 +7,6 @@ export class Role extends SqlBaseEntity {
   @Property()
   name!: string;
 
-  @ManyToMany(() => Permission)
+  @ManyToMany('Permission')
   permissions = new Collection<Permission>(this);
 }

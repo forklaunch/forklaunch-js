@@ -9,12 +9,12 @@ import type {
 import { Duplex } from 'stream';
 
 export class BunSocketShim extends Duplex implements Socket {
-  public remoteAddress?: string;
-  public remotePort?: number;
-  public remoteFamily?: string;
-  public localAddress?: string;
-  public localPort?: number;
-  public localFamily?: string;
+  public remoteAddress: string;
+  public remotePort: number;
+  public remoteFamily: string;
+  public localAddress: string;
+  public localPort: number;
+  public localFamily: string;
   public bytesRead: number = 0;
   public bytesWritten: number = 0;
   public connecting: boolean = false;
@@ -46,11 +46,11 @@ export class BunSocketShim extends Duplex implements Socket {
       objectMode: false
     });
 
-    this.remoteAddress = options.remoteAddress || '127.0.0.1';
-    this.remotePort = options.remotePort || 0;
+    this.remoteAddress = options.remoteAddress ?? '127.0.0.1';
+    this.remotePort = options.remotePort ?? 0;
     this.remoteFamily = 'IPv4';
-    this.localAddress = options.localAddress || 'localhost';
-    this.localPort = options.localPort || 0;
+    this.localAddress = options.localAddress ?? 'localhost';
+    this.localPort = options.localPort ?? 0;
     this.localFamily = 'IPv4';
     this._abortController = options.abortController || new AbortController();
     this._request = options.request;
@@ -221,9 +221,9 @@ export class BunSocketShim extends Duplex implements Socket {
     } else if (typeof optionsPortOrPath === 'string') {
       // IPC connection with string path
       this.remoteAddress = optionsPortOrPath;
-      this.remotePort = undefined;
+      this.remotePort = 0;
       this.localAddress = optionsPortOrPath;
-      this.localPort = undefined;
+      this.localPort = 0;
       this.remoteFamily = 'Unix';
       this.localFamily = 'Unix';
 
@@ -238,9 +238,9 @@ export class BunSocketShim extends Duplex implements Socket {
       if ('path' in options) {
         // IPC connection - Unix domain socket or named pipe
         this.remoteAddress = options.path;
-        this.remotePort = undefined;
+        this.remotePort = 0;
         this.localAddress = options.path;
-        this.localPort = undefined;
+        this.localPort = 0;
         this.remoteFamily = 'Unix';
         this.localFamily = 'Unix';
       } else {
@@ -281,8 +281,12 @@ export class BunSocketShim extends Duplex implements Socket {
       this.connecting = false;
       this.pending = false;
       this.readyState = 'open';
-      this.remotePort = port;
-      this.remoteAddress = host;
+      if (port !== undefined) {
+        this.remotePort = port;
+      }
+      if (host !== undefined) {
+        this.remoteAddress = host;
+      }
       this.emit('connect');
     });
 

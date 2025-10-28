@@ -145,6 +145,41 @@ After creating a service:
 4. **Infrastructure Dependencies**: Ensure Redis/S3 are configured if enabled
 5. **Path Conflicts**: Avoid service names that conflict with existing directories
 
+### Deployment Defaults
+
+When you deploy a service using `forklaunch deploy`, the platform automatically provisions resources using **AWS Free Tier** defaults to minimize costs:
+
+#### Compute (Per Service)
+- **CPU**: 256m (0.25 vCPU) - Fargate free tier eligible
+- **Memory**: 512Mi (0.5 GB) - Fargate free tier eligible  
+- **Replicas**: 1 minimum, 2 maximum - Auto-scaling enabled
+- **Health Checks**: `/health` endpoint, 30s interval
+
+#### Database (If specified)
+- **PostgreSQL**: db.t3.micro (750 hours/month free)
+- **Storage**: 20 GB (free tier limit)
+- **Backups**: 7 day retention
+- **Availability**: Single AZ (free tier)
+- **Encryption**: Enabled (at rest)
+
+#### Cache (If Redis specified)
+- **Instance**: cache.t3.micro (free tier eligible)
+- **Nodes**: 1 (single node)
+- **Snapshots**: 1 day retention
+- **Encryption**: Disabled (not in free tier)
+
+#### Storage (If S3 specified)
+- **Bucket**: Versioning enabled
+- **Encryption**: AWS managed keys
+- **Lifecycle**: Optional archiving to Glacier after 90 days
+
+**Note**: You can upgrade these defaults via the Platform UI when your application grows. The free tier defaults are designed to keep costs at $0/month for development and small production workloads.
+
+**Cost Estimate**: 
+- Development: $0/month (within free tier)
+- Small Production: $5-15/month (after free tier)
+- Can scale up via Platform UI as needed
+
 ### Best Practices
 
 1. **Single Responsibility**: Keep services focused on one business domain
@@ -154,3 +189,4 @@ After creating a service:
 5. **Testing**: Write tests for business logic and API endpoints
 6. **Documentation**: Document API endpoints and business rules
 7. **Infrastructure**: Use Redis for caching, S3 for file storage when needed
+8. **Free Tier**: Start with free tier defaults, upgrade when needed via Platform UI

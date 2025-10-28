@@ -567,25 +567,32 @@ pub(crate) fn add_s3_to_docker_compose<'a>(
         format!("{}-{}-dev", app_name, service_name).to_string(),
     );
     environment.insert("S3_REGION".to_string(), "us-east-1".to_string());
-    environment.insert("S3_SECRET_KEY_ID".to_string(), "minioadmin".to_string());
+    environment.insert("S3_ACCESS_KEY_ID".to_string(), "minioadmin".to_string());
     environment.insert("S3_SECRET_ACCESS_KEY".to_string(), "minioadmin".to_string());
     if !docker_compose.services.contains_key("minio") {
+        let mut minio_environment = IndexMap::new();
+        minio_environment.insert("MINIO_ROOT_USER".to_string(), "minioadmin".to_string());
+        minio_environment.insert("MINIO_ROOT_PASSWORD".to_string(), "minioadmin".to_string());
+
         docker_compose.services.insert(
             "minio".to_string(),
             DockerService {
                 image: Some("minio/minio".to_string()),
                 container_name: Some(format!("{}-minio", app_name)),
                 restart: Some(Restart::Always),
-                ports: Some(vec!["9000:9000".to_string()]),
+                environment: Some(minio_environment),
+                ports: Some(vec!["9000:9000".to_string(), "9001:9001".to_string()]),
                 networks: Some(vec![format!("{}-network", app_name)]),
+                volumes: Some(vec!["minio-data:/data".to_string()]),
+                command: Some(Command::Simple(
+                    "server /data --console-address :9001".to_string(),
+                )),
                 healthcheck: Some(Healthcheck {
                     test: HealthTest::List(vec![
                         "CMD".to_string(),
-                        "wget".to_string(),
-                        "--no-verbose".to_string(),
-                        "--tries=1".to_string(),
-                        "--spider".to_string(),
-                        "http://localhost:9000/minio/health/live".to_string(),
+                        "mc".to_string(),
+                        "ready".to_string(),
+                        "local".to_string(),
                     ]),
                     interval: "30s".to_string(),
                     timeout: "10s".to_string(),
@@ -597,6 +604,17 @@ pub(crate) fn add_s3_to_docker_compose<'a>(
             },
         );
     }
+
+    // Add minio-data volume if not present
+    if !docker_compose.volumes.contains_key("minio-data") {
+        docker_compose.volumes.insert(
+            "minio-data".to_string(),
+            DockerVolume {
+                driver: "local".to_string(),
+            },
+        );
+    }
+
     Ok(docker_compose)
 }
 
@@ -606,7 +624,7 @@ pub(crate) fn remove_s3_from_docker_compose<'a>(
 ) -> Result<&'a mut DockerCompose> {
     environment.shift_remove("S3_URL");
     environment.shift_remove("S3_REGION");
-    environment.shift_remove("S3_SECRET_KEY_ID");
+    environment.shift_remove("S3_ACCESS_KEY_ID");
     environment.shift_remove("S3_SECRET_ACCESS_KEY");
     environment.shift_remove("S3_BUCKET");
     if docker_compose.services.contains_key("minio") {
@@ -1567,7 +1585,142 @@ pub(crate) fn add_worker_definition_to_docker_compose(
         .with_context(|| ERROR_FAILED_TO_ADD_PROJECT_METADATA_TO_DOCKER_COMPOSE)?)
 }
 
+fn is_valid_docker_compose(compose: &DockerCompose) -> bool {
+    if compose.services.is_empty() {
+        return false;
+    }
+
+    let has_docker_service_fields = compose.services.values().any(|service| {
+        service.image.is_some()
+            || service.build.is_some()
+            || service.container_name.is_some()
+            || service.ports.is_some()
+            || service.environment.is_some()
+            || service.volumes.is_some()
+            || service.depends_on.is_some()
+    });
+
+    if !has_docker_service_fields {
+        return false;
+    }
+
+    if compose.additional_entries.contains_key("lockfileVersion")
+        || compose.additional_entries.contains_key("packages")
+        || compose.additional_entries.contains_key("dependencies")
+    {
+        return false;
+    }
+
+    if compose.additional_entries.contains_key("apiVersion")
+        || compose.additional_entries.contains_key("kind")
+        || compose.additional_entries.contains_key("metadata")
+        || compose.additional_entries.contains_key("spec")
+    {
+        return false;
+    }
+
+    if compose.additional_entries.contains_key("openapi")
+        || compose.additional_entries.contains_key("swagger")
+        || compose.additional_entries.contains_key("info")
+        || compose.additional_entries.contains_key("paths")
+    {
+        return false;
+    }
+
+    if compose.additional_entries.contains_key("name")
+        && (compose.additional_entries.contains_key("on")
+            || compose.additional_entries.contains_key("jobs"))
+    {
+        return false;
+    }
+
+    if compose.additional_entries.contains_key("stages")
+        || compose.additional_entries.contains_key("pipeline")
+        || compose.additional_entries.contains_key("workflows")
+    {
+        return false;
+    }
+
+    true
+}
+
+fn should_skip_file(file_name: &str, path: &Path) -> bool {
+    if file_name.contains("lock") || file_name.contains("package") {
+        return true;
+    }
+
+    if file_name.starts_with('.') {
+        return true;
+    }
+
+    let excluded_patterns = [
+        "openapi",
+        "swagger",
+        "kubernetes",
+        "k8s",
+        "helm",
+        "chart",
+        "deployment",
+        "service",
+        "ingress",
+        "config",
+        "ci",
+        "gitlab",
+        "circleci",
+        "travis",
+        "azure-pipelines",
+        "buildkite",
+        "cloudbuild",
+    ];
+
+    if excluded_patterns
+        .iter()
+        .any(|pattern| file_name.to_lowercase().contains(pattern))
+    {
+        return true;
+    }
+
+    if let Some(path_str) = path.to_str() {
+        let excluded_dirs = [
+            ".github",
+            ".gitlab",
+            ".circleci",
+            "kubernetes",
+            "k8s",
+            "helm",
+            ".forklaunch/openapi",
+            "docs",
+            "documentation",
+        ];
+
+        if excluded_dirs.iter().any(|dir| path_str.contains(dir)) {
+            return true;
+        }
+    }
+
+    false
+}
+
+fn count_dockerfiles(base_path: &Path) -> usize {
+    WalkDir::new(base_path)
+        .into_iter()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.file_type().is_file())
+        .filter(|e| {
+            let file_name = e.file_name().to_string_lossy();
+            file_name == "Dockerfile"
+                || file_name.starts_with("Dockerfile.")
+                || file_name.ends_with(".dockerfile")
+        })
+        .count()
+}
+
 pub(crate) fn find_docker_compose_path(base_path: &Path) -> Option<String> {
+    let dockerfile_count = count_dockerfiles(base_path);
+    if dockerfile_count > 1 {
+        return None;
+    }
+
     for entry in WalkDir::new(base_path)
         .into_iter()
         .filter_map(|e| e.ok())
@@ -1575,17 +1728,30 @@ pub(crate) fn find_docker_compose_path(base_path: &Path) -> Option<String> {
     {
         let file_name = entry.file_name().to_string_lossy();
 
+        if should_skip_file(&file_name, entry.path()) {
+            continue;
+        }
+
         if file_name == "docker-compose.yml" || file_name == "docker-compose.yaml" {
-            let relative_path = entry.path().strip_prefix(base_path).unwrap_or(entry.path());
-            return Some(relative_path.to_string_lossy().to_string());
+            if let Ok(contents) = read_to_string(entry.path()) {
+                if let Ok(compose) = from_str::<DockerCompose>(&contents) {
+                    if is_valid_docker_compose(&compose) {
+                        let relative_path =
+                            entry.path().strip_prefix(base_path).unwrap_or(entry.path());
+                        return Some(relative_path.to_string_lossy().to_string());
+                    }
+                }
+            }
         }
 
         if file_name.ends_with(".yml") || file_name.ends_with(".yaml") {
             if let Ok(contents) = read_to_string(entry.path()) {
-                if from_str::<DockerCompose>(&contents).is_ok() {
-                    let relative_path =
-                        entry.path().strip_prefix(base_path).unwrap_or(entry.path());
-                    return Some(relative_path.to_string_lossy().to_string());
+                if let Ok(compose) = from_str::<DockerCompose>(&contents) {
+                    if is_valid_docker_compose(&compose) {
+                        let relative_path =
+                            entry.path().strip_prefix(base_path).unwrap_or(entry.path());
+                        return Some(relative_path.to_string_lossy().to_string());
+                    }
                 }
             }
         }

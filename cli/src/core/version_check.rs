@@ -157,7 +157,7 @@ pub(crate) fn precheck_version(
     };
 
     let current = current_cli_version();
-    if current == required_version {
+    if current == required_version || current == "0.0.0" {
         return Ok(VersionCheckOutcome::Ok);
     }
 

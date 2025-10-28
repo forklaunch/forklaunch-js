@@ -4,11 +4,15 @@ use clap::{ArgMatches, Command, command};
 use config::ConfigCommand;
 use delete::DeleteCommand;
 use depcheck::DepcheckCommand;
+use deploy::DeployCommand;
 use eject::EjectCommand;
 use environment::EnvironmentCommand;
 use init::InitCommand;
+use integrate::IntegrateCommand;
 use login::LoginCommand;
 use logout::LogoutCommand;
+use openapi::OpenApiCommand;
+use release::ReleaseCommand;
 use version::VersionCommand;
 use whoami::WhoAmICommand;
 use sync::SyncCommand;
@@ -21,12 +25,16 @@ mod constants;
 mod core;
 mod delete;
 mod depcheck;
+mod deploy;
 mod eject;
 mod environment;
 mod init;
+mod integrate;
 mod login;
 mod logout;
+mod openapi;
 mod prompt;
+mod release;
 mod sdk;
 mod version;
 mod whoami;
@@ -44,10 +52,14 @@ fn main() -> Result<()> {
     let config = ConfigCommand::new();
     let delete = DeleteCommand::new();
     let depcheck = DepcheckCommand::new();
+    let deploy = DeployCommand::new();
     let eject = EjectCommand::new();
     let environment = EnvironmentCommand::new();
+    let integrate = IntegrateCommand::new();
     let login = LoginCommand::new();
     let logout = LogoutCommand::new();
+    let openapi = OpenApiCommand::new();
+    let release = ReleaseCommand::new();
     let sdk = SdkCommand::new();
     let whoami = WhoAmICommand::new();
     let version = VersionCommand::new();
@@ -63,7 +75,11 @@ fn main() -> Result<()> {
         .subcommand(eject.command())
         .subcommand(depcheck.command())
         .subcommand(config.command())
+        .subcommand(deploy.command())
         .subcommand(environment.command())
+        .subcommand(integrate.command())
+        .subcommand(openapi.command())
+        .subcommand(release.command())
         .subcommand(login.command())
         .subcommand(logout.command())
         .subcommand(sdk.command())
@@ -82,8 +98,12 @@ fn main() -> Result<()> {
         Some(("config", sub_matches)) => config.handler(sub_matches),
         Some(("delete", sub_matches)) => delete.handler(sub_matches),
         Some(("depcheck", sub_matches)) => depcheck.handler(sub_matches),
+        Some(("deploy", sub_matches)) => deploy.handler(sub_matches),
         Some(("eject", sub_matches)) => eject.handler(sub_matches),
         Some(("environment", sub_matches)) => environment.handler(sub_matches),
+        Some(("integrate", sub_matches)) => integrate.handler(sub_matches),
+        Some(("openapi", sub_matches)) => openapi.handler(sub_matches),
+        Some(("release", sub_matches)) => release.handler(sub_matches),
         Some(("login", sub_matches)) => login.handler(sub_matches),
         Some(("logout", sub_matches)) => logout.handler(sub_matches),
         Some(("sdk", sub_matches)) => sdk.handler(sub_matches),

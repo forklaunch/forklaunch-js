@@ -1,6 +1,6 @@
 {
   "name": "@forklaunch/infrastructure-s3",
-  "version": "0.4.25",
+  "version": "0.4.30",
   "description": "S3 infrastructure for ForkLaunch components.",
   "homepage": "https://github.com/forklaunch/forklaunch-js#readme",
   "bugs": {
@@ -40,22 +40,22 @@
     "test": "vitest --passWithNoTests"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.906.0",
+    "@aws-sdk/client-s3": "^3.918.0",
     "@forklaunch/common": "workspace:*",
     "@forklaunch/core": "workspace:*"
   },
   "devDependencies": {
-    "@eslint/js": "^9.37.0",
+    "@eslint/js": "^9.38.0",
     "@types/jest": "^30.0.0",
-    "@typescript/native-preview": "7.0.0-dev.20251008.1",
+    "@typescript/native-preview": "7.0.0-dev.20251027.1",
     "globals": "^16.4.0",
     "jest": "^30.2.0",
     "prettier": "^3.6.2",
-    "ts-jest": "^29.4.4",
+    "ts-jest": "^29.4.5",
     "ts-node": "^10.9.2",
     "tsup": "^8.5.0",
-    "typedoc": "^0.28.13",
+    "typedoc": "^0.28.14",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.46.0"
+    "typescript-eslint": "^8.46.2"
   }
 }

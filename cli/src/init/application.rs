@@ -64,10 +64,10 @@ use crate::{
                 MIKRO_ORM_REFLECTION_VERSION, NODE_GYP_VERSION, OXLINT_VERSION, PRETTIER_VERSION,
                 PROJECT_BUILD_SCRIPT, PROJECT_DOCS_SCRIPT, SORT_PACKAGE_JSON_VERSION,
                 SQLITE3_VERSION, TS_JEST_VERSION, TS_NODE_VERSION, TSX_VERSION, TYPEBOX_VERSION,
-                TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION, TYPES_QS_VERSION,
-                TYPES_UUID_VERSION, TYPES_WATCH_SCRIPT, TYPESCRIPT_ESLINT_VERSION,
-                TYPESCRIPT_VERSION, UNIVERSAL_SDK_VERSION, UUID_VERSION, VALIDATOR_VERSION,
-                VITEST_VERSION, ZOD_VERSION, application_build_script,
+                TYPES_BUILD_SCRIPT, TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION, TYPES_EXPRESS_VERSION,
+                TYPES_QS_VERSION, TYPES_UUID_VERSION, TYPES_WATCH_SCRIPT,
+                TYPESCRIPT_ESLINT_VERSION, TYPESCRIPT_VERSION, UNIVERSAL_SDK_VERSION, UUID_VERSION,
+                VALIDATOR_VERSION, VITEST_VERSION, ZOD_VERSION, application_build_script,
                 application_clean_purge_script, application_clean_script, application_docs_script,
                 application_format_script, application_lint_fix_script, application_lint_script,
                 application_migrate_script, application_seed_script, application_setup_script,
@@ -82,6 +82,7 @@ use crate::{
         symlinks::generate_symlinks,
         template::{PathIO, generate_with_template, get_routers_from_standard_package},
         token::get_token,
+        tsconfig::generate_modules_tsconfig,
         universal_sdk::get_universal_sdk_additional_deps,
         vscode::generate_vscode_settings,
     },
@@ -147,6 +148,7 @@ fn generate_application_package_json(
                 &HashSet::from([data.database.parse()?]),
             )),
             test: application_test_script(&data.runtime.parse()?, &test_framework),
+            types_build: Some(TYPES_BUILD_SCRIPT.to_string()),
             types_watch: Some(TYPES_WATCH_SCRIPT.to_string()),
             up_packages: Some(application_up_packages_script(&data.runtime.parse()?)),
             additional_scripts: HashMap::new(),
@@ -733,6 +735,8 @@ impl CliCommand for ApplicationCommand {
             cli_version: env!("CARGO_PKG_VERSION").to_string(),
             modules_path: modules_path.to_string_lossy().to_string(),
             docker_compose_path: docker_compose_path.clone(),
+            dockerfile: None,
+            git_repository: None,
             database: database.to_string(),
             app_name: name.to_string(),
             camel_case_app_name: name.to_string().to_case(Case::Camel),
@@ -780,6 +784,11 @@ impl CliCommand for ApplicationCommand {
             is_mssql: database == Database::MsSQL,
             is_mongo: database == Database::MongoDB,
             is_in_memory_database: is_in_memory_database(&database),
+            platform_application_id: None,
+            platform_organization_id: None,
+            release_version: None,
+            release_git_commit: None,
+            release_git_branch: None,
         };
 
         let mut rendered_templates = Vec::new();
@@ -859,6 +868,8 @@ impl CliCommand for ApplicationCommand {
                 app_name: data.app_name.clone(),
                 modules_path: data.modules_path.clone(),
                 docker_compose_path: data.docker_compose_path.clone(),
+                dockerfile: data.dockerfile.clone(),
+                git_repository: data.git_repository.clone(),
                 camel_case_app_name: data.camel_case_app_name.clone(),
                 pascal_case_app_name: data.pascal_case_app_name.clone(),
                 kebab_case_app_name: data.kebab_case_app_name.clone(),
@@ -1098,6 +1109,10 @@ impl CliCommand for ApplicationCommand {
                     "universal-sdk" => None,
                     _ => None,
                 },
+                match service_data.service_name.as_str() {
+                    "universal-sdk" => Some(None),
+                    _ => None,
+                },
             )?);
         }
 
@@ -1132,6 +1147,11 @@ impl CliCommand for ApplicationCommand {
                 None,
             )
             .with_context(|| ERROR_FAILED_TO_CREATE_DATABASE_EXPORT_INDEX_TS)?,
+        );
+
+        rendered_templates.push(
+            generate_modules_tsconfig(&Path::new(&application_path), &data)
+                .with_context(|| "Failed to generate modules tsconfig.json")?,
         );
 
         rendered_templates.extend(

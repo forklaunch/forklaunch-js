@@ -10,6 +10,7 @@ use oxc_span::SourceType;
 #[derive(Debug, Clone)]
 pub struct EnvVarUsage {
     pub var_name: String,
+    #[allow(dead_code)]
     pub line: usize,
     #[allow(dead_code)]
     pub column: usize,

@@ -40,6 +40,8 @@ pub(crate) struct ApplicationScripts {
     pub(crate) seed: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) test: Option<String>,
+    #[serde(rename = "types:build", skip_serializing_if = "Option::is_none")]
+    pub(crate) types_build: Option<String>,
     #[serde(rename = "types:watch", skip_serializing_if = "Option::is_none")]
     pub(crate) types_watch: Option<String>,
     #[serde(rename = "up:packages", skip_serializing_if = "Option::is_none")]
@@ -88,6 +90,7 @@ impl<'de> Deserialize<'de> for ApplicationScripts {
                     migrate_up: None,
                     seed: None,
                     test: None,
+                    types_build: None,
                     types_watch: None,
                     up_packages: None,
                     additional_scripts: HashMap::new(),
@@ -113,6 +116,7 @@ impl<'de> Deserialize<'de> for ApplicationScripts {
                         "migrate:up" => scripts.migrate_up = Some(value),
                         "seed" => scripts.seed = Some(value),
                         "test" => scripts.test = Some(value),
+                        "types:build" => scripts.types_build = Some(value),
                         "types:watch" => scripts.types_watch = Some(value),
                         "up:packages" => scripts.up_packages = Some(value),
                         _ => {

@@ -28,6 +28,7 @@ use crate::{
         package_json::remove_project_definition_to_package_json,
         pnpm_workspace::remove_project_definition_to_pnpm_workspace,
         rendered_template::{RenderedTemplate, write_rendered_templates},
+        tsconfig::remove_project_from_modules_tsconfig,
         universal_sdk::remove_project_from_universal_sdk,
     },
     prompt::{ArrayCompleter, prompt_for_confirmation, prompt_with_validation},
@@ -194,6 +195,11 @@ impl CliCommand for WorkerCommand {
             &manifest_data.app_name,
             &worker_name,
         )?;
+
+        rendered_templates.push(
+            remove_project_from_modules_tsconfig(&worker_base_path, &worker_name)
+                .with_context(|| "Failed to remove worker from modules tsconfig.json")?,
+        );
 
         write_rendered_templates(&rendered_templates, false, &mut stdout)?;
 
