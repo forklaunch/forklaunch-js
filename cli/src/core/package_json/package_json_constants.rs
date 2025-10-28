@@ -9,7 +9,7 @@ use crate::{
 // @biomejs/biome
 pub(crate) const BIOME_VERSION: &str = "1.9.4";
 // @eslint/js
-pub(crate) const ESLINT_VERSION: &str = "^9.37.0";
+pub(crate) const ESLINT_VERSION: &str = "^9.38.0";
 // @types/jest
 pub(crate) const JEST_TYPES_VERSION: &str = "^30.0.0";
 // jest
@@ -19,13 +19,13 @@ pub(crate) const OXLINT_VERSION: &str = "^0.16.6";
 // prettier
 pub(crate) const PRETTIER_VERSION: &str = "^3.6.2";
 // ts-jest
-pub(crate) const TS_JEST_VERSION: &str = "^29.4.4";
+pub(crate) const TS_JEST_VERSION: &str = "^29.4.5";
 // ts-nodef
 pub(crate) const TS_NODE_VERSION: &str = "^10.9.2";
 // typescript-eslint
-pub(crate) const TYPESCRIPT_ESLINT_VERSION: &str = "^8.46.0";
+pub(crate) const TYPESCRIPT_ESLINT_VERSION: &str = "^8.46.2";
 // vitest
-pub(crate) const VITEST_VERSION: &str = "^3.2.4";
+pub(crate) const VITEST_VERSION: &str = "^4.0.4";
 
 // Application package.json dependencies constants
 // globals
@@ -35,7 +35,7 @@ pub(crate) const HUSKY_VERSION: &str = "^9.1.7";
 // lint-staged
 pub(crate) const LINT_STAGED_VERSION: &str = "^15.4.3";
 // node-gyp
-pub(crate) const NODE_GYP_VERSION: &str = "^11.4.2";
+pub(crate) const NODE_GYP_VERSION: &str = "^11.5.0";
 // sort-package-json
 pub(crate) const SORT_PACKAGE_JSON_VERSION: &str = "^3.0.0";
 // tsx
@@ -44,10 +44,11 @@ pub(crate) const TSX_VERSION: &str = "^4.20.6";
 pub(crate) const TYPESCRIPT_VERSION: &str = "^5.9.3";
 
 // Application package.json scripts constants
-pub(crate) const APP_DEV_SCRIPT: &str = "docker compose up --watch";
+pub(crate) const APP_DEV_SCRIPT: &str = "docker compose up";
 pub(crate) const APP_DEV_BUILD_SCRIPT: &str = "docker compose build --no-cache";
 pub(crate) const APP_PREPARE_SCRIPT: &str = "husky";
 pub(crate) const TYPES_WATCH_SCRIPT: &str = "tsc -b -w";
+pub(crate) const TYPES_BUILD_SCRIPT: &str = "tsc -b --emitDeclarationOnly";
 
 pub(crate) fn application_format_script(formatter: &Formatter) -> String {
     String::from(match formatter {
@@ -81,9 +82,11 @@ pub(crate) fn application_build_script(runtime: &Runtime) -> String {
 
 pub(crate) fn application_clean_script(runtime: &Runtime) -> String {
     String::from(match runtime {
-        Runtime::Bun => "rm -rf node_modules bun.lockb bun.lock && bun --filter='*' clean",
+        Runtime::Bun => {
+            "rm -rf node_modules bun.lockb bun.lock tsconfig.tsbuildinfo && bun --filter='*' clean"
+        }
         Runtime::Node => {
-            "rm -rf node_modules pnpm-lock.yaml && pnpm --parallel -r --no-bail clean && pnpm store prune"
+            "rm -rf node_modules pnpm-lock.yaml tsconfig.tsbuildinfo && pnpm --parallel -r --no-bail clean && pnpm store prune"
         }
     })
 }
@@ -203,7 +206,7 @@ pub(crate) fn application_test_script<'a>(
 pub(crate) fn application_up_packages_script(runtime: &Runtime) -> String {
     String::from(match runtime {
         Runtime::Bun => "bunx -y @forklaunch/bunrun up:latest --sequential",
-        Runtime::Node => "pnpm -r --no-bail update --latest",
+        Runtime::Node => "pnpm -r update --latest",
     })
 }
 
@@ -219,55 +222,55 @@ pub(crate) const APP_UNIVERSAL_SDK_VERSION: &str = "workspace:*";
 // @forklaunch/bunrun
 pub(crate) const BUNRUN_VERSION: &str = "~0.0.2";
 // @forklaunch/common
-pub(crate) const COMMON_VERSION: &str = "~0.6.18";
+pub(crate) const COMMON_VERSION: &str = "~0.6.21";
 // @forklaunch/core
-pub(crate) const CORE_VERSION: &str = "~0.15.7";
+pub(crate) const CORE_VERSION: &str = "~0.15.11";
 // @forklaunch/express
-pub(crate) const EXPRESS_VERSION: &str = "~0.9.25";
+pub(crate) const EXPRESS_VERSION: &str = "~0.9.30";
 // @forklaunch/hyper-express
-pub(crate) const HYPER_EXPRESS_VERSION: &str = "~0.9.25";
+pub(crate) const HYPER_EXPRESS_VERSION: &str = "~0.9.30";
 // @forklaunch/implementation-billing-base
-pub(crate) const BILLING_BASE_VERSION: &str = "~0.8.1";
+pub(crate) const BILLING_BASE_VERSION: &str = "~0.8.5";
 // @forklaunch/implementation-billing-stripe
-pub(crate) const BILLING_STRIPE_VERSION: &str = "~0.5.1";
+pub(crate) const BILLING_STRIPE_VERSION: &str = "~0.5.5";
 // @forklaunch/implementation-iam-base
-pub(crate) const IAM_BASE_VERSION: &str = "~0.8.1";
+pub(crate) const IAM_BASE_VERSION: &str = "~0.8.5";
 // @forklaunch/implementation-worker-bullmq
-pub(crate) const WORKER_BULLMQ_VERSION: &str = "~0.8.1";
+pub(crate) const WORKER_BULLMQ_VERSION: &str = "~0.8.5";
 // @forklaunch/implementation-worker-redis
-pub(crate) const WORKER_REDIS_VERSION: &str = "~0.8.1";
+pub(crate) const WORKER_REDIS_VERSION: &str = "~0.8.5";
 // @forklaunch/implementation-worker-database
-pub(crate) const WORKER_DATABASE_VERSION: &str = "~0.8.1";
+pub(crate) const WORKER_DATABASE_VERSION: &str = "~0.8.5";
 // @forklaunch/implementation-worker-kafka
-pub(crate) const WORKER_KAFKA_VERSION: &str = "~0.8.1";
+pub(crate) const WORKER_KAFKA_VERSION: &str = "~0.8.5";
 // @forklaunch/infrastructure-redis
-pub(crate) const INFRASTRUCTURE_REDIS_VERSION: &str = "~0.4.25";
+pub(crate) const INFRASTRUCTURE_REDIS_VERSION: &str = "~0.4.29";
 // @forklaunch/infrastructure-s3
-pub(crate) const INFRASTRUCTURE_S3_VERSION: &str = "~0.4.25";
+pub(crate) const INFRASTRUCTURE_S3_VERSION: &str = "~0.4.29";
 // @forklaunch/interfaces-billing
-pub(crate) const BILLING_INTERFACES_VERSION: &str = "~0.8.1";
+pub(crate) const BILLING_INTERFACES_VERSION: &str = "~0.8.5";
 // @forklaunch/interfaces-iam
-pub(crate) const IAM_INTERFACES_VERSION: &str = "~0.8.1";
+pub(crate) const IAM_INTERFACES_VERSION: &str = "~0.8.5";
 // @forklaunch/interfaces-worker
-pub(crate) const WORKER_INTERFACES_VERSION: &str = "~0.7.1";
+pub(crate) const WORKER_INTERFACES_VERSION: &str = "~0.7.5";
 // @forklaunch/internal
-pub(crate) const INTERNAL_VERSION: &str = "~0.3.18";
+pub(crate) const INTERNAL_VERSION: &str = "~0.3.21";
 // @forklaunch/testing
-pub(crate) const TESTING_VERSION: &str = "~0.0.7";
+pub(crate) const TESTING_VERSION: &str = "~0.0.10";
 // @forklaunch/universal-sdk
-pub(crate) const UNIVERSAL_SDK_VERSION: &str = "~0.7.18";
+pub(crate) const UNIVERSAL_SDK_VERSION: &str = "~0.7.21";
 // @forklaunch/validator
-pub(crate) const VALIDATOR_VERSION: &str = "~0.10.18";
+pub(crate) const VALIDATOR_VERSION: &str = "~0.10.21";
 // @mikro-orm/core
-pub(crate) const MIKRO_ORM_CORE_VERSION: &str = "^6.5.7";
+pub(crate) const MIKRO_ORM_CORE_VERSION: &str = "^6.5.9";
 // @mikro-orm/migrations
-pub(crate) const MIKRO_ORM_MIGRATIONS_VERSION: &str = "^6.5.7";
+pub(crate) const MIKRO_ORM_MIGRATIONS_VERSION: &str = "^6.5.9";
 // @mikro-orm/postgresql,@mikro-orm/mongodb,@mikro-orm/mysql,@mikro-orm/better-sqlite,@mikro-orm/sqlite,@mikro-orm/mariadb,@mikro-orm/libsql,@mikro-orm/mssql
-pub(crate) const MIKRO_ORM_DATABASE_VERSION: &str = "^6.5.7";
+pub(crate) const MIKRO_ORM_DATABASE_VERSION: &str = "^6.5.9";
 // @mikro-orm/reflection
-pub(crate) const MIKRO_ORM_REFLECTION_VERSION: &str = "^6.5.7";
+pub(crate) const MIKRO_ORM_REFLECTION_VERSION: &str = "^6.5.9";
 // @mikro-orm/seeder
-pub(crate) const MIKRO_ORM_SEEDER_VERSION: &str = "^6.5.7";
+pub(crate) const MIKRO_ORM_SEEDER_VERSION: &str = "^6.5.9";
 // @opentelemetry/api
 pub(crate) const OPENTELEMETRY_API_VERSION: &str = "^1.9.0";
 // @sinclair/typebox
@@ -275,9 +278,9 @@ pub(crate) const TYPEBOX_VERSION: &str = "^0.34.41";
 // ajv
 pub(crate) const AJV_VERSION: &str = "^8.17.1";
 // better-auth
-pub(crate) const BETTER_AUTH_VERSION: &str = "^1.3.27";
+pub(crate) const BETTER_AUTH_VERSION: &str = "^1.3.32";
 // bullmq
-pub(crate) const BULLMQ_VERSION: &str = "^5.61.0";
+pub(crate) const BULLMQ_VERSION: &str = "^5.61.2";
 // better-sqlite3
 pub(crate) const BETTER_SQLITE3_VERSION: &str = "^12.4.1";
 // dotenv
@@ -295,9 +298,9 @@ pub(crate) const ZOD_VERSION: &str = "^4.1.12";
 
 // Project package.json devDependencies constants
 // @mikro-orm/cli
-pub(crate) const MIKRO_ORM_CLI_VERSION: &str = "^6.5.7";
+pub(crate) const MIKRO_ORM_CLI_VERSION: &str = "^6.5.9";
 // @types/express
-pub(crate) const TYPES_EXPRESS_VERSION: &str = "^5.0.3";
+pub(crate) const TYPES_EXPRESS_VERSION: &str = "^5.0.5";
 // @types/express-serve-static-core
 pub(crate) const TYPES_EXPRESS_SERVE_STATIC_CORE_VERSION: &str = "^5.1.0";
 // @types/jest
@@ -307,9 +310,9 @@ pub(crate) const TYPES_UUID_VERSION: &str = "^11.0.0";
 // @types/qs
 pub(crate) const TYPES_QS_VERSION: &str = "^6.14.0";
 // ioredis
-pub(crate) const IOREDIS_VERSION: &str = "^5.8.1";
+pub(crate) const IOREDIS_VERSION: &str = "^5.8.2";
 // typedoc
-pub(crate) const TYPEDOC_VERSION: &str = "^0.28.13";
+pub(crate) const TYPEDOC_VERSION: &str = "^0.28.14";
 
 // Project package.json scripts constants
 pub(crate) const PROJECT_BUILD_SCRIPT: &str = "tsc";
@@ -341,8 +344,8 @@ pub(crate) fn project_lint_fix_script(linter: &Linter) -> String {
 
 pub(crate) fn project_clean_script(runtime: &Runtime) -> String {
     String::from(match runtime {
-        Runtime::Bun => "rm -rf dist bun.lockb bun.lock node_modules",
-        Runtime::Node => "rm -rf dist pnpm.lock.yaml node_modules",
+        Runtime::Bun => "rm -rf dist bun.lockb bun.lock tsconfig.tsbuildinfo node_modules",
+        Runtime::Node => "rm -rf dist pnpm.lock.yaml tsconfig.tsbuildinfo node_modules",
     })
 }
 
@@ -490,18 +493,6 @@ pub(crate) fn project_dev_local_worker_script(
             }
         ),
     })
-}
-
-pub(crate) fn project_types_versions_value() -> HashMap<String, HashMap<String, Vec<String>>> {
-    let mut types_versions = HashMap::new();
-    let mut wildcard = HashMap::new();
-    wildcard.insert(".".to_string(), vec!["index.ts".to_string()]);
-    wildcard.insert(
-        "serialized".to_string(),
-        vec!["./dist/index.d.ts".to_string()],
-    );
-    types_versions.insert("*".to_string(), wildcard);
-    types_versions
 }
 
 pub(crate) const SQLITE_POSTINSTALL_SCRIPT: &str =

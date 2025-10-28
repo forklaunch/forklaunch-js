@@ -43,7 +43,7 @@ use crate::{
         rendered_template::{RenderedTemplate, write_rendered_templates},
         symlinks::generate_symlinks,
         template::{PathIO, generate_with_template},
-        tsconfig::generate_project_tsconfig,
+        tsconfig::{add_project_to_modules_tsconfig, generate_project_tsconfig},
     },
     prompt::{ArrayCompleter, prompt_with_validation, prompt_without_validation},
 };
@@ -90,6 +90,11 @@ fn generate_basic_library(
     rendered_templates.extend(
         add_library_to_artifacts(manifest_data, base_path, manifest_path)
             .with_context(|| "Failed to add library metadata to artifacts")?,
+    );
+
+    rendered_templates.push(
+        add_project_to_modules_tsconfig(base_path, &manifest_data.library_name)
+            .with_context(|| "Failed to add library to modules tsconfig.json")?,
     );
 
     write_rendered_templates(&rendered_templates, dryrun, stdout)
@@ -186,7 +191,7 @@ fn generate_library_package_json(
         keywords: Some(vec![]),
         license: Some(manifest_data.license.clone()),
         author: Some(manifest_data.author.clone()),
-        types: None,
+        types: Some("index.d.ts".to_string()),
         scripts: Some(ProjectScripts {
             build: Some(PROJECT_BUILD_SCRIPT.to_string()),
             clean: Some(project_clean_script(&manifest_data.runtime.parse()?)),
@@ -303,6 +308,8 @@ impl CliCommand for LibraryCommand {
             app_name: manifest_data.app_name.clone(),
             modules_path: manifest_data.modules_path.clone(),
             docker_compose_path: manifest_data.docker_compose_path.clone(),
+            dockerfile: manifest_data.dockerfile.clone(),
+            git_repository: manifest_data.git_repository.clone(),
             camel_case_app_name: manifest_data.camel_case_app_name.clone(),
             pascal_case_app_name: manifest_data.pascal_case_app_name.clone(),
             kebab_case_app_name: manifest_data.kebab_case_app_name.clone(),

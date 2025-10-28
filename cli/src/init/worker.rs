@@ -61,7 +61,7 @@ use crate::{
                 project_clean_script, project_dev_local_worker_script, project_dev_server_script,
                 project_dev_worker_client_script, project_format_script, project_lint_fix_script,
                 project_lint_script, project_migrate_script, project_start_worker_script,
-                project_test_script, project_types_versions_value,
+                project_test_script,
             },
             project_package_json::{
                 MIKRO_ORM_CONFIG_PATHS, ProjectDependencies, ProjectDevDependencies,
@@ -73,7 +73,7 @@ use crate::{
         rendered_template::{RenderedTemplate, write_rendered_templates},
         symlinks::generate_symlinks,
         template::{PathIO, generate_with_template},
-        tsconfig::generate_project_tsconfig,
+        tsconfig::{add_project_to_modules_tsconfig, generate_project_tsconfig},
         universal_sdk::add_project_to_universal_sdk,
         worker_type::{
             get_default_worker_options, get_worker_consumer_factory, get_worker_producer_factory,
@@ -138,6 +138,7 @@ fn generate_basic_worker(
         None,
         None,
         None,
+        None,
     )?);
     rendered_templates.extend(
         generate_project_tsconfig(&output_path).with_context(|| ERROR_FAILED_TO_CREATE_TSCONFIG)?,
@@ -164,6 +165,12 @@ fn generate_basic_worker(
         &manifest_data.worker_name,
         None,
     )?;
+
+    // Add project reference to modules tsconfig.json
+    rendered_templates.push(
+        add_project_to_modules_tsconfig(base_path, &manifest_data.worker_name)
+            .with_context(|| "Failed to add worker to modules tsconfig.json")?,
+    );
 
     write_rendered_templates(&rendered_templates, dryrun, stdout)
         .with_context(|| ERROR_FAILED_TO_WRITE_SERVICE_FILES)?;
@@ -285,6 +292,7 @@ pub(crate) fn generate_worker_package_json(
     dev_dependencies_override: Option<ProjectDevDependencies>,
     scripts_override: Option<ProjectScripts>,
     main_override: Option<String>,
+    types_override: Option<Option<String>>,
 ) -> Result<RenderedTemplate> {
     let test_framework: Option<TestFramework> =
         if let Some(test_framework) = &manifest_data.test_framework {
@@ -304,8 +312,8 @@ pub(crate) fn generate_worker_package_json(
         license: Some(manifest_data.license.to_string()),
         author: Some(manifest_data.author.to_string()),
         main: main_override,
-        types: None,
-        types_versions: Some(project_types_versions_value()),
+        types: types_override.unwrap_or(None),
+        types_versions: None,
         scripts: Some(if let Some(scripts) = scripts_override {
             scripts
         } else {
@@ -714,6 +722,8 @@ impl CliCommand for WorkerCommand {
             app_name: manifest_data.app_name.clone(),
             modules_path: manifest_data.modules_path.clone(),
             docker_compose_path: manifest_data.docker_compose_path.clone(),
+            dockerfile: manifest_data.dockerfile.clone(),
+            git_repository: manifest_data.git_repository.clone(),
             camel_case_app_name: manifest_data.camel_case_app_name.clone(),
             pascal_case_app_name: manifest_data.pascal_case_app_name.clone(),
             kebab_case_app_name: manifest_data.kebab_case_app_name.clone(),

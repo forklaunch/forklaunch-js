@@ -19,4 +19,4 @@ export const {{camel_case_name}}SdkClient = {
 } satisfies {{pascal_case_name}}Sdk;
 
 //! exports the universally friendly sdk typings
-export type {{pascal_case_name}}SdkClient = MapToSdk<SchemaValidator, typeof {{camel_case_name}}SdkClient>;
+export type {{pascal_case_name}}SdkClient = MapToSdk<SchemaValidator, {{pascal_case_name}}Sdk>;

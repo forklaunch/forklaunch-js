@@ -144,13 +144,62 @@ After creating a worker:
 5. **Error Handling**: Implement proper retry logic and dead letter queues
 6. **Scaling**: Configure worker scaling based on job queue length
 
+### Deployment Defaults
+
+When you deploy a worker using `forklaunch deploy`, the platform automatically provisions resources using **AWS Free Tier** defaults to minimize costs:
+
+#### Compute (Per Worker)
+- **CPU**: 256m (0.25 vCPU) - Fargate free tier eligible
+- **Memory**: 512Mi (0.5 GB) - Fargate free tier eligible
+- **Replicas**: 1 minimum, 2 maximum - Auto-scaling based on queue depth
+- **Concurrency**: 5 concurrent jobs per worker instance
+
+#### Queue Backend (By Worker Type)
+
+**Database Workers**:
+- Uses same database as application (see service defaults)
+- Job table with indexing
+- Polling interval: 5 seconds
+
+**Redis Workers**:
+- **Instance**: cache.t3.micro (free tier eligible)
+- **Connection Pool**: 10 connections
+- **Persistence**: RDB snapshots (1 day retention)
+
+**BullMQ Workers**:
+- Uses Redis (same as Redis workers above)
+- **Job Retention**: 24 hours for completed jobs
+- **Failed Job Retention**: 7 days
+- **Rate Limiting**: 100 jobs/minute per worker
+
+**Kafka Workers**:
+- **Not in free tier** - minimum cost ~$70/month
+- Consider Redis or Database workers for free tier deployments
+- Recommended for production event streaming only
+
+#### Storage
+- **Dead Letter Queue**: Automatic for failed jobs
+- **Job Logs**: 7 day retention in CloudWatch
+- **Metrics**: Job duration, success rate, queue depth
+
+**Note**: You can upgrade these defaults via the Platform UI when your application grows. The free tier defaults are designed to keep costs at $0/month for development and small production workloads.
+
+**Cost Estimate**:
+- Database/Redis/BullMQ Workers: $0/month (within free tier)
+- Kafka Workers: $70+/month (not free tier eligible)
+- Can scale up via Platform UI as needed
+
+**Recommendation**: Start with Database or BullMQ workers for free tier deployments. Migrate to Kafka only when you need high-throughput event streaming.
+
 ### Best Practices
 
 1. **Choose the Right Type**: Select worker type based on durability and performance needs
-2. **Idempotent Processing**: Ensure jobs can be safely retried
-3. **Error Handling**: Implement comprehensive error handling and logging
-4. **Monitoring**: Track job success/failure rates and processing times
-5. **Graceful Shutdown**: Handle shutdown signals properly to avoid job loss
-6. **Resource Management**: Set appropriate timeouts and concurrency limits
-7. **Testing**: Test with realistic job volumes and failure scenarios
-8. **Documentation**: Document job types and expected data structures
+2. **Free Tier First**: Use Database or BullMQ workers to stay in free tier
+3. **Idempotent Processing**: Ensure jobs can be safely retried
+4. **Error Handling**: Implement comprehensive error handling and logging
+5. **Monitoring**: Track job success/failure rates and processing times
+6. **Graceful Shutdown**: Handle shutdown signals properly to avoid job loss
+7. **Resource Management**: Set appropriate timeouts and concurrency limits
+8. **Testing**: Test with realistic job volumes and failure scenarios
+9. **Documentation**: Document job types and expected data structures
+10. **Scale Smart**: Monitor costs via Platform UI before upgrading resources

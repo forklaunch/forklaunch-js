@@ -2,7 +2,15 @@ use std::path::Path;
 
 use crate::{choice, core::choices::Choice};
 
-pub(crate) const PROD_API_URL: &str = "https://api.forklaunch.com";
+// pub(crate) const DEFAULT_API_URL: &str = "https://api.forklaunch.com";
+pub(crate) const DEFAULT_API_URL: &str = "http://localhost:8004";
+pub(crate) const PLATFORM_UI_URL: &str = "https://forklaunch.com";
+
+pub(crate) const RELEASE_MANIFEST_SCHEMA_VERSION: &str = "1.0.0";
+
+pub(crate) fn get_api_url() -> String {
+    std::env::var("FORKLAUNCH_API_URL").unwrap_or_else(|_| DEFAULT_API_URL.to_string())
+}
 
 choice! {
     pub(crate) enum Database {
@@ -302,11 +310,11 @@ pub(crate) const ERROR_FAILED_TO_PARSE_MANIFEST: &str =
     "Failed to parse manifest file. Please verify the file is valid toml.";
 pub(crate) const ERROR_FAILED_TO_WRITE_MANIFEST: &str =
     "Failed to write manifest file. Please check your target directory is writable.";
-pub(crate) const ERROR_FAILED_TO_READ_DOCKER_COMPOSE: &str = "Failed to read docker_compose.yaml. Please check your target directory is a forklaunch application.";
+pub(crate) const ERROR_FAILED_TO_READ_DOCKER_COMPOSE: &str = "Failed to read docker-compose.yaml. Please check your target directory is a forklaunch application.";
 pub(crate) const ERROR_FAILED_TO_PARSE_DOCKER_COMPOSE: &str =
-    "Failed to parse docker_compose.yaml. Please verify the file is valid yaml.";
+    "Failed to parse docker-compose.yaml. Please verify the file is valid yaml.";
 pub(crate) const ERROR_FAILED_TO_WRITE_DOCKER_COMPOSE: &str =
-    "Failed to write docker_compose.yaml. Please check your target directory is writable.";
+    "Failed to write docker-compose.yaml. Please check your target directory is writable.";
 pub(crate) const ERROR_FAILED_TO_CREATE_PACKAGE_JSON: &str =
     "Failed to create package.json. Please check your target directory is writable.";
 pub(crate) const ERROR_FAILED_TO_READ_PACKAGE_JSON: &str =
