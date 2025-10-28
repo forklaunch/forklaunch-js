@@ -1,5 +1,11 @@
 # @forklaunch/interfaces-billing
 
+## 0.8.6
+
+### Patch Changes
+
+- update framework package versions
+
 ## 0.8.5
 
 ### Patch Changes

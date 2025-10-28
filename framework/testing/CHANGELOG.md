@@ -1,5 +1,11 @@
 # @forklaunch/testing
 
+## 0.0.11
+
+### Patch Changes
+
+- fix hyper express header, fix tests
+
 ## 0.0.10
 
 ### Patch Changes

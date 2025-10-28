@@ -1,5 +1,13 @@
 # @forklaunch/universal-sdk
 
+## 0.7.22
+
+### Patch Changes
+
+- fix hyper express header, fix tests
+- Updated dependencies
+  - @forklaunch/common@0.6.22
+
 ## 0.7.21
 
 ### Patch Changes

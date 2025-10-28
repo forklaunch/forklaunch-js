@@ -1,5 +1,14 @@
 # @forklaunch/infrastructure-s3
 
+## 0.4.30
+
+### Patch Changes
+
+- fix hyper express header, fix tests
+- Updated dependencies
+  - @forklaunch/common@0.6.22
+  - @forklaunch/core@0.15.12
+
 ## 0.4.29
 
 ### Patch Changes

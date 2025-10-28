@@ -1,5 +1,14 @@
 # @forklaunch/implementation-billing-base
 
+## 0.5.6
+
+### Patch Changes
+
+- update framework package versions
+- Updated dependencies
+  - @forklaunch/implementation-billing-base@0.8.6
+  - @forklaunch/interfaces-billing@0.8.6
+
 ## 0.5.5
 
 ### Patch Changes

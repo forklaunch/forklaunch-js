@@ -1,5 +1,11 @@
 # @forklaunch/bunrun
 
+## 0.0.16
+
+### Patch Changes
+
+- fix hyper express header, fix tests
+
 ## 0.0.15
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @forklaunch/common
 
+## 0.6.22
+
+### Patch Changes
+
+- fix hyper express header, fix tests
+
 ## 0.6.21
 
 ### Patch Changes

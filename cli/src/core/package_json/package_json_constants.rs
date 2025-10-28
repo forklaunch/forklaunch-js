@@ -222,45 +222,45 @@ pub(crate) const APP_UNIVERSAL_SDK_VERSION: &str = "workspace:*";
 // @forklaunch/bunrun
 pub(crate) const BUNRUN_VERSION: &str = "~0.0.2";
 // @forklaunch/common
-pub(crate) const COMMON_VERSION: &str = "~0.6.21";
+pub(crate) const COMMON_VERSION: &str = "~0.6.22";
 // @forklaunch/core
-pub(crate) const CORE_VERSION: &str = "~0.15.11";
+pub(crate) const CORE_VERSION: &str = "~0.15.12";
 // @forklaunch/express
-pub(crate) const EXPRESS_VERSION: &str = "~0.9.30";
+pub(crate) const EXPRESS_VERSION: &str = "~0.9.31";
 // @forklaunch/hyper-express
-pub(crate) const HYPER_EXPRESS_VERSION: &str = "~0.9.30";
+pub(crate) const HYPER_EXPRESS_VERSION: &str = "~0.9.31";
 // @forklaunch/implementation-billing-base
-pub(crate) const BILLING_BASE_VERSION: &str = "~0.8.5";
+pub(crate) const BILLING_BASE_VERSION: &str = "~0.8.6";
 // @forklaunch/implementation-billing-stripe
-pub(crate) const BILLING_STRIPE_VERSION: &str = "~0.5.5";
+pub(crate) const BILLING_STRIPE_VERSION: &str = "~0.5.6";
 // @forklaunch/implementation-iam-base
-pub(crate) const IAM_BASE_VERSION: &str = "~0.8.5";
+pub(crate) const IAM_BASE_VERSION: &str = "~0.8.6";
 // @forklaunch/implementation-worker-bullmq
-pub(crate) const WORKER_BULLMQ_VERSION: &str = "~0.8.5";
+pub(crate) const WORKER_BULLMQ_VERSION: &str = "~0.8.6";
 // @forklaunch/implementation-worker-redis
-pub(crate) const WORKER_REDIS_VERSION: &str = "~0.8.5";
+pub(crate) const WORKER_REDIS_VERSION: &str = "~0.8.6";
 // @forklaunch/implementation-worker-database
-pub(crate) const WORKER_DATABASE_VERSION: &str = "~0.8.5";
+pub(crate) const WORKER_DATABASE_VERSION: &str = "~0.8.6";
 // @forklaunch/implementation-worker-kafka
-pub(crate) const WORKER_KAFKA_VERSION: &str = "~0.8.5";
+pub(crate) const WORKER_KAFKA_VERSION: &str = "~0.8.6";
 // @forklaunch/infrastructure-redis
-pub(crate) const INFRASTRUCTURE_REDIS_VERSION: &str = "~0.4.29";
+pub(crate) const INFRASTRUCTURE_REDIS_VERSION: &str = "~0.4.30";
 // @forklaunch/infrastructure-s3
-pub(crate) const INFRASTRUCTURE_S3_VERSION: &str = "~0.4.29";
+pub(crate) const INFRASTRUCTURE_S3_VERSION: &str = "~0.4.30";
 // @forklaunch/interfaces-billing
-pub(crate) const BILLING_INTERFACES_VERSION: &str = "~0.8.5";
+pub(crate) const BILLING_INTERFACES_VERSION: &str = "~0.8.6";
 // @forklaunch/interfaces-iam
-pub(crate) const IAM_INTERFACES_VERSION: &str = "~0.8.5";
+pub(crate) const IAM_INTERFACES_VERSION: &str = "~0.8.6";
 // @forklaunch/interfaces-worker
-pub(crate) const WORKER_INTERFACES_VERSION: &str = "~0.7.5";
+pub(crate) const WORKER_INTERFACES_VERSION: &str = "~0.7.6";
 // @forklaunch/internal
-pub(crate) const INTERNAL_VERSION: &str = "~0.3.21";
+pub(crate) const INTERNAL_VERSION: &str = "~0.3.22";
 // @forklaunch/testing
-pub(crate) const TESTING_VERSION: &str = "~0.0.10";
+pub(crate) const TESTING_VERSION: &str = "~0.0.11";
 // @forklaunch/universal-sdk
-pub(crate) const UNIVERSAL_SDK_VERSION: &str = "~0.7.21";
+pub(crate) const UNIVERSAL_SDK_VERSION: &str = "~0.7.22";
 // @forklaunch/validator
-pub(crate) const VALIDATOR_VERSION: &str = "~0.10.21";
+pub(crate) const VALIDATOR_VERSION: &str = "~0.10.22";
 // @mikro-orm/core
 pub(crate) const MIKRO_ORM_CORE_VERSION: &str = "^6.5.9";
 // @mikro-orm/migrations
@@ -278,9 +278,9 @@ pub(crate) const TYPEBOX_VERSION: &str = "^0.34.41";
 // ajv
 pub(crate) const AJV_VERSION: &str = "^8.17.1";
 // better-auth
-pub(crate) const BETTER_AUTH_VERSION: &str = "^1.3.32";
+pub(crate) const BETTER_AUTH_VERSION: &str = "^1.3.33";
 // bullmq
-pub(crate) const BULLMQ_VERSION: &str = "^5.61.2";
+pub(crate) const BULLMQ_VERSION: &str = "^5.62.0";
 // better-sqlite3
 pub(crate) const BETTER_SQLITE3_VERSION: &str = "^12.4.1";
 // dotenv

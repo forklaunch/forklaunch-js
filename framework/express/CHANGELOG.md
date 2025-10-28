@@ -1,5 +1,15 @@
 # @forklaunch/express
 
+## 0.9.31
+
+### Patch Changes
+
+- fix hyper express header, fix tests
+- Updated dependencies
+  - @forklaunch/validator@0.10.22
+  - @forklaunch/common@0.6.22
+  - @forklaunch/core@0.15.12
+
 ## 0.9.30
 
 ### Patch Changes

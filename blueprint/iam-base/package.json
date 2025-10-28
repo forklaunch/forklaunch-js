@@ -46,11 +46,11 @@
     "@forklaunch/blueprint-core": "workspace:*",
     "@forklaunch/blueprint-monitoring": "workspace:*",
     "@forklaunch/blueprint-universal-sdk": "workspace:*",
-    "@forklaunch/core": "^0.15.11",
+    "@forklaunch/core": "^0.15.12",
     "@forklaunch/hyper-express-fork": "^6.17.35",
     "@forklaunch/implementation-iam-base": "workspace:*",
     "@forklaunch/interfaces-iam": "workspace:*",
-    "@forklaunch/validator": "^0.10.21",
+    "@forklaunch/validator": "^0.10.22",
     "@mikro-orm/core": "^6.5.9",
     "@mikro-orm/migrations": "^6.5.9",
     "@mikro-orm/mongodb": "^6.5.9",
@@ -67,7 +67,7 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
-    "@forklaunch/testing": "^0.0.10",
+    "@forklaunch/testing": "^0.0.11",
     "@mikro-orm/cli": "^6.5.9",
     "@types/express": "^5.0.5",
     "@types/express-serve-static-core": "^5.1.0",
